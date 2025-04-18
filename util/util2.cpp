@@ -1,6 +1,6 @@
 /* util2.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "util/util2.h"
 
@@ -19,7 +19,7 @@ static char *s_tilde_name{};
 static char *s_tilde_dir{};
 #endif
 
-/* copy a string to a safe spot */
+// copy a string to a safe spot
 
 char *save_str(const char *str)
 {
@@ -29,7 +29,7 @@ char *save_str(const char *str)
     return newaddr;
 }
 
-/* safe version of string copy */
+// safe version of string copy
 char *safe_copy(char *to, const char *from, int len)
 {
     char* dest = to;
@@ -46,7 +46,7 @@ char *safe_copy(char *to, const char *from, int len)
     return to;
 }
 
-/* copy a string up to some (non-backslashed) delimiter, if any */
+// copy a string up to some (non-backslashed) delimiter, if any
 char *copy_till(char *to, char *from, int delim)
 {
     while (*from)
@@ -65,9 +65,9 @@ char *copy_till(char *to, char *from, int delim)
     return from;
 }
 
-/* expand filename via %, ~, and $ interpretation */
-/* returns pointer to static area */
-/* Note that there is a 1-deep cache of ~name interpretation */
+// expand filename via %, ~, and $ interpretation
+// returns pointer to static area
+// Note that there is a 1-deep cache of ~name interpretation
 
 char *file_exp(const char *text)
 {
@@ -78,15 +78,15 @@ char *file_exp(const char *text)
     static char filename[CMD_BUF_LEN];
     char scrbuf[CMD_BUF_LEN];
 
-    /* interpret any % escapes */
+    // interpret any % escapes
     do_interp(filename,sizeof filename,s,nullptr,nullptr);
     s = filename;
-    if (*s == '~')      /* does destination start with ~? */
+    if (*s == '~')      // does destination start with ~?
     {
         if (!*(++s) || *s == '/')
         {
             std::sprintf(scrbuf, "%s%s", g_home_dir, s);
-            /* swap $HOME for it */
+            // swap $HOME for it
             std::strcpy(filename, scrbuf);
         }
         else if (*s == '~' && (!s[1] || s[1] == '/'))
@@ -127,7 +127,7 @@ char *file_exp(const char *text)
                 }
                 s_tilde_dir = nullptr;
                 s_tilde_name = save_str(scrbuf);
-#ifdef HAS_GETPWENT     /* getpwnam() is not the paragon of efficiency */
+#ifdef HAS_GETPWENT     // getpwnam() is not the paragon of efficiency
                 {
                     struct passwd *pwd = getpwnam(s_tilde_name);
                     if (pwd == nullptr)
@@ -140,8 +140,8 @@ char *file_exp(const char *text)
                     std::strcpy(filename, scrbuf);
                     endpwent();
                 }
-#else                   /* this will run faster, and is less D space */
-                { /* just be sure LOGDIRFIELD is correct */
+#else                   // this will run faster, and is less D space
+                { // just be sure LOGDIRFIELD is correct
                     std::FILE *pfp = std::fopen(file_exp(PASSFILE), "r");
                     char tmpbuf[512];
 
@@ -179,7 +179,7 @@ char *file_exp(const char *text)
                 }
 #endif
             }
-#else /* !TILDENAME */
+#else // !TILDENAME
             if (g_verbose)
             {
                 std::fputs("~loginname not implemented.\n", stdout);
@@ -192,7 +192,7 @@ char *file_exp(const char *text)
         }
     }
     else if (*s == '$')
-    { /* starts with some env variable? */
+    { // starts with some env variable?
         char *d = scrbuf;
         *d++ = '%';
         if (s[1] == '{')
@@ -206,17 +206,17 @@ char *file_exp(const char *text)
             {
                 *d++ = *s;
             }
-            /* skip over token */
+            // skip over token
             *d++ = '}';
             std::strcpy(d, s);
         }
-        /* this might do some extra '%'s, but that's how the Mercedes Benz */
+        // this might do some extra '%'s, but that's how the Mercedes Benz
         do_interp(filename, sizeof filename, scrbuf, nullptr, nullptr);
     }
     return filename;
 }
 
-/* return ptr to little string in big string, nullptr if not found */
+// return ptr to little string in big string, nullptr if not found
 
 char *in_string(char *big, const char *little, bool case_matters)
 {
