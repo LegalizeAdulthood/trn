@@ -1,6 +1,6 @@
 /* trn-artchk.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 
 /* A program to check an article's validity and print warnings if problems
@@ -33,7 +33,7 @@ int nntp_handle_timeout();
 char       *g_server_name{};
 std::string g_nntp_auth_file;
 int         debug{};
-char        g_buf[LINE_BUF_LEN + 1]; /* general purpose line buffer */
+char        g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
 
 int main(int argc, char *argv[])
 {
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         std::exit(1);
     }
 
-    /* Check the header for proper format and report on the newsgroups */
+    // Check the header for proper format and report on the newsgroups
     while (std::fgets(buff, LINE_BUF_LEN, fp))
     {
         line_num++;
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
         printf("\nERROR: the \"Newsgroups:\" line is missing from the header.\n");
     }
 
-    /* Check the body of the article for long lines */
+    // Check the body of the article for long lines
     while (std::fgets(buff, LINE_BUF_LEN, fp))
     {
         line_num++;
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
     if (ngcnt && (check_ng || check_active))
     {
         int ngleft;
-        /* Print a note about each newsgroup */
+        // Print a note about each newsgroup
         std::printf("\nYour article's newsgroup%s:\n", plural(ngcnt));
         if (!check_active)
         {
@@ -324,16 +324,16 @@ int main(int argc, char *argv[])
             {
                 for (int i = 0; i < ngcnt; i++)
                 {
-                    /* issue a description list command */
+                    // issue a description list command
                     std::sprintf(g_ser_line, "XGTITLE %s", ngptrs[i]);
                     if (nntp_command(g_ser_line) <= 0)
                     {
                         break;
                     }
-                    /* TODO: use list newsgroups if this fails...? */
+                    // TODO: use list newsgroups if this fails...?
                     if (nntp_check() > 0)
                     {
-                        /* write results to fp_ng */
+                        // write results to fp_ng
                         while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0)
                         {
                             if (nntp_at_list_end(g_ser_line))
