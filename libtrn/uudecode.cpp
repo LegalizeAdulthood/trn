@@ -1,6 +1,6 @@
 /* uudecode.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/string_case_compare.h>
 
@@ -48,7 +48,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         s = skip_digits(s);
         if (!std::strncmp(s, " of ", 4))
         {
-            /* "section N of ... of file F ..." */
+            // "section N of ... of file F ..."
             for (s += 4; *s && std::strncmp(s," of file ",9) != 0; s++)
             {
             }
@@ -248,14 +248,14 @@ all_done:
         }
         switch (state)
         {
-        case DECODE_START:    /* Looking for start of uuencoded file */
+        case DECODE_START:    // Looking for start of uuencoded file
         case DECODE_MAYBE_DONE:
         {
             if (std::strncmp(g_buf, "begin ", 6) != 0)
             {
                 break;
             }
-            /* skip mode */
+            // skip mode
             p = skip_non_space(g_buf + 6);
             p = skip_space(p);
             char *filename = p;
@@ -270,7 +270,7 @@ all_done:
             }
             filename = decode_fix_filename(filename);
 
-            /* Create output file and start decoding */
+            // Create output file and start decoding
             ofp = std::fopen(filename, "wb");
             if (!ofp)
             {
@@ -282,7 +282,7 @@ all_done:
             break;
         }
 
-        case DECODE_INACTIVE: /* Looking for uuencoded data to resume */
+        case DECODE_INACTIVE: // Looking for uuencoded data to resume
             if (*g_buf != 'M' || std::strlen(g_buf) != line_length)
             {
                 if (*g_buf == 'B' && !std::strncmp(g_buf, "BEGIN", 5))
@@ -292,14 +292,14 @@ all_done:
                 break;
             }
             state = DECODE_ACTIVE;
-            /* FALL THROUGH */
+            // FALL THROUGH
 
         case DECODE_SET_LEN:
             line_length = std::strlen(g_buf);
             state = DECODE_ACTIVE;
-            /* FALL THROUGH */
+            // FALL THROUGH
 
-        case DECODE_ACTIVE:   /* Decoding data */
+        case DECODE_ACTIVE:   // Decoding data
             if (*g_buf == 'M' && std::strlen(g_buf) == line_length)
             {
                 uudecode_line(g_buf, ofp);
@@ -310,9 +310,9 @@ all_done:
                 state = DECODE_INACTIVE;
                 break;
             }
-            /* May be nearing end of file, so save this line */
+            // May be nearing end of file, so save this line
             std::strcpy(lastline, g_buf);
-            /* some encoders put the end line right after the last M line */
+            // some encoders put the end line right after the last M line
             if (!std::strncmp(g_buf, "end", 3))
             {
                 goto end;
@@ -327,7 +327,7 @@ all_done:
             }
             break;
 
-        case DECODE_NEXT_TO_LAST:/* May be nearing end of file */
+        case DECODE_NEXT_TO_LAST:// May be nearing end of file
             if (!std::strncmp(g_buf, "end", 3))
             {
                 goto end;
@@ -342,10 +342,10 @@ all_done:
             }
             break;
 
-        case DECODE_LAST:     /* Should be at end of file */
+        case DECODE_LAST:     // Should be at end of file
             if (!std::strncmp(g_buf, "end", 3) && std::isspace(g_buf[3]))
             {
-                /* Handle that last line we saved */
+                // Handle that last line we saved
                 uudecode_line(lastline, ofp);
 end:            if (ofp)
                 {
@@ -375,10 +375,10 @@ end:            if (ofp)
 
 #define DEC(c)  (((c) - ' ') & 077)
 
-/* Decode a uuencoded line to 'ofp' */
+// Decode a uuencoded line to 'ofp'
 static void uudecode_line(char *line, std::FILE *ofp)
 {
-    /* Calculate expected length and pad if necessary */
+    // Calculate expected length and pad if necessary
     int len = ((DEC(line[0]) + 2) / 3) * 4;
     len = std::min(len, static_cast<int>(UU_LENGTH));
     for (int c = std::strlen(line) - 1; c <= len; c++)
