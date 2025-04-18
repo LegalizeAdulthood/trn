@@ -18,10 +18,10 @@ struct ScoreFileEntry
     char          *str1;      // first string part
     char          *str2;      // second string part
     CompiledRegex *compex;    // regular expression ptr
-    char           flags;     /* 1: regex is valid
-                               * 2: rule has been applied to the current article.
-                               * 4: use faster rule checking  (later)
-                               */
+    char           flags;     // 1: regex is valid
+                              // 2: rule has been applied to the current article.
+                              // 4: use faster rule checking  (later)
+                              //
 };
 // note that negative header #s are used to indicate special entries...
 
@@ -46,10 +46,10 @@ int sf_check_extra_headers(const char *head);
 void sf_add_extra_header(const char *head);
 char *sf_get_extra_header(ArticleNum art, int hnum);
 
-/* Returns true if text pointed to by s is a text representation of
- * the number 0.  Used for error checking.
- * Note: does not check for trailing garbage ("+00kjsdfk" returns true).
- */
+// Returns true if text pointed to by s is a text representation of
+// the number 0.  Used for error checking.
+// Note: does not check for trailing garbage ("+00kjsdfk" returns true).
+//
 inline bool is_text_zero(const char *s)
 {
     return *s == '0' || ((*s == '+' || *s == '-') && s[1]=='0');
