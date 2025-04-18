@@ -1,6 +1,6 @@
 /* trn/ngsrch.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_NGSRCH_H
 #define TRN_NGSRCH_H
 
