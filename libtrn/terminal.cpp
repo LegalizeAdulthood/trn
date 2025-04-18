@@ -1,7 +1,7 @@
 /* term.c
  * vi: set sw=4 ts=8 ai sm noet :
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/terminal.h"
@@ -41,8 +41,8 @@
 #undef TIOCGWINSZ
 #endif
 
-#undef  USETITE         /* use terminal init/exit seqences (not recommended) */
-#undef  USEKSKE         /* use keypad start/end sequences */
+#undef  USETITE         // use terminal init/exit seqences (not recommended)
+#undef  USEKSKE         // use keypad start/end sequences
 
 #ifdef I_TERMIOS
 termios g_tty;
@@ -50,10 +50,10 @@ termios g_oldtty;
 int     g_tty_ch{2};
 #endif
 
-char          g_erase_char{}; /* rubout character */
-char          g_kill_char{};  /* line delete character */
+char          g_erase_char{}; // rubout character
+char          g_kill_char{};  // line delete character
 unsigned char g_last_char{};  //
-bool          g_bizarre{};    /* do we need to restore terminal? */
+bool          g_bizarre{};    // do we need to restore terminal?
 int           g_univ_sel_btn_cnt{};
 int           g_newsrc_sel_btn_cnt{};
 int           g_add_sel_btn_cnt{};
@@ -68,66 +68,66 @@ char         *g_newsgroup_sel_btns{};
 char         *g_news_sel_btns{};
 char         *g_option_sel_btns{};
 char         *g_art_pager_btns{};
-bool          g_muck_up_clear{};                  /* -loco */
-bool          g_erase_screen{};                   /* -e */
+bool          g_muck_up_clear{};                  // -loco
+bool          g_erase_screen{};                   // -e
 bool          g_can_home{};                       //
-bool          g_erase_each_line{};                /* fancy -e */
-bool          g_allow_typeahead{};                /* -T */
-bool          g_verify{};                         /* -v */
-MarkingMode   g_marking{NO_MARKING};              /* -m */
+bool          g_erase_each_line{};                // fancy -e
+bool          g_allow_typeahead{};                // -T
+bool          g_verify{};                         // -v
+MarkingMode   g_marking{NO_MARKING};              // -m
 MarkingAreas  g_marking_areas{HALF_PAGE_MARKING}; //
-ArticleLine   g_init_lines{};                     /* -i */
+ArticleLine   g_init_lines{};                     // -i
 bool          g_use_mouse{};                      //
 char          g_mouse_modes[32]{"acjlptwvK"};     //
-MinorMode     g_mode{MM_INITIALIZING};            /* current state of trn */
-GeneralMode   g_general_mode{GM_INIT};            /* general mode of trn */
+MinorMode     g_mode{MM_INITIALIZING};            // current state of trn
+GeneralMode   g_general_mode{GM_INIT};            // general mode of trn
 
 #ifdef HAS_TERMLIB
-bool  g_tc_GT{};              /* hardware tabs */
-char *g_tc_BC{};              /* backspace character */
-char *g_tc_UP{};              /* move cursor up one line */
-char *g_tc_CR{};              /* get to left margin, somehow */
-char *g_tc_VB{};              /* visible bell */
-char *g_tc_CE{};              /* clear to end of line */
-char *g_tc_CM{};              /* cursor motion */
-char *g_tc_HO{};              /* home cursor */
-char *g_tc_IL{};              /* insert line */
-char *g_tc_CD{};              /* clear to end of display */
-char *g_tc_SO{};              /* begin standout mode */
-char *g_tc_SE{};              /* end standout mode */
-char *g_tc_US{};              /* start underline mode */
-char *g_tc_UE{};              /* end underline mode */
-char *g_tc_UC{};              /* underline a character, if that's how it's done */
-bool  g_tc_UG{};              /* blanks left by US and UE */
-bool  g_tc_AM{};              /* does terminal have automatic margins? */
-bool  g_tc_XN{};              /* does it eat 1st newline after automatic wrap? */
+bool  g_tc_GT{};              // hardware tabs
+char *g_tc_BC{};              // backspace character
+char *g_tc_UP{};              // move cursor up one line
+char *g_tc_CR{};              // get to left margin, somehow
+char *g_tc_VB{};              // visible bell
+char *g_tc_CE{};              // clear to end of line
+char *g_tc_CM{};              // cursor motion
+char *g_tc_HO{};              // home cursor
+char *g_tc_IL{};              // insert line
+char *g_tc_CD{};              // clear to end of display
+char *g_tc_SO{};              // begin standout mode
+char *g_tc_SE{};              // end standout mode
+char *g_tc_US{};              // start underline mode
+char *g_tc_UE{};              // end underline mode
+char *g_tc_UC{};              // underline a character, if that's how it's done
+bool  g_tc_UG{};              // blanks left by US and UE
+bool  g_tc_AM{};              // does terminal have automatic margins?
+bool  g_tc_XN{};              // does it eat 1st newline after automatic wrap?
 int   g_fire_is_out{1};       //
 int   g_tc_LINES{};           //
 int   g_tc_COLS{};            //
 int   g_term_line;            //
 int   g_term_col;             //
-int   g_term_scrolled;        /* how many lines scrolled away */
-int   g_just_a_sec{960};      /* 1 sec at current baud rate (number of nulls) */
-int   g_page_line{1};         /* line number for paging in print_line (origin 1) */
+int   g_term_scrolled;        // how many lines scrolled away
+int   g_just_a_sec{960};      // 1 sec at current baud rate (number of nulls)
+int   g_page_line{1};         // line number for paging in print_line (origin 1)
 bool  g_error_occurred{};     //
 int   g_mouse_bar_cnt{};      //
 int   g_mouse_bar_width{};    //
 bool  g_mouse_is_down{};      //
-int   g_auto_arrow_macros{2}; /* -A */
+int   g_auto_arrow_macros{2}; // -A
 
 static char *s_mouse_bar_btns{};
 static int   s_mouse_bar_start{};
 static bool  s_xmouse_is_on{};
-static char *s_tc_CL{}; /* home and clear screen */
-static char *s_tc_TI{}; /* initialize terminal */
-static char *s_tc_TE{}; /* reset terminal */
-static char *s_tc_KS{}; /* enter `keypad transmit' mode */
-static char *s_tc_KE{}; /* exit `keypad transmit' mode */
-static char  s_tc_PC{}; /* pad character for use by tputs() */
+static char *s_tc_CL{}; // home and clear screen
+static char *s_tc_TI{}; // initialize terminal
+static char *s_tc_TE{}; // reset terminal
+static char *s_tc_KS{}; // enter `keypad transmit' mode
+static char *s_tc_KE{}; // exit `keypad transmit' mode
+static char  s_tc_PC{}; // pad character for use by tputs()
 #ifdef _POSIX_SOURCE
-static speed_t s_out_speed{}; /* terminal output speed, */
+static speed_t s_out_speed{}; // terminal output speed,
 #else
-static long s_out_speed{}; /*    for use by tputs() */
+static long s_out_speed{}; // for use by tputs()
 #endif
 #endif
 
@@ -154,7 +154,7 @@ enum
 
 enum
 {
-    TC_STRINGS = 48 /* number of colors we can keep track of */
+    TC_STRINGS = 48 // number of colors we can keep track of
 };
 
 static char        s_circle_buf[PUSH_SIZE]{};
@@ -163,14 +163,14 @@ static int         s_next_out{};
 static const char *s_read_err{"rn read error"};
 
 #ifndef MSDOS
-static char s_termcap_area[TCSIZE]; /* area for "compiled" termcap strings */
+static char s_termcap_area[TCSIZE]; // area for "compiled" termcap strings
 #endif
 static KeyMap *s_top_map{};
 static char   *s_lines_export{};
 static char   *s_cols_export{};
 static int     s_left_cost{};
 static int     s_up_cost{};
-static bool    s_got_a_char{}; /* true if we got a char since eating */
+static bool    s_got_a_char{}; // true if we got a char since eating
 
 static void    mac_init(char *tcbuf);
 static KeyMap *new_key_map();
@@ -179,17 +179,17 @@ static int     echo_char(char_int ch);
 static void    line_col_calcs();
 static void    mouse_input(const char *cp);
 
-/* terminal initialization */
+// terminal initialization
 
 void term_init()
 {
-    save_tty();                          /* remember current tty state */
+    save_tty();                          // remember current tty state
 
 #ifdef I_TERMIOS
-    s_out_speed = cfgetospeed(&g_tty);  /* for tputs() (output) */
-    g_erase_char = g_tty.c_cc[VERASE]; /* for finish_command() */
-    g_kill_char = g_tty.c_cc[VKILL];   /* for finish_command() */
-#else /* !I_TERMIOS */
+    s_out_speed = cfgetospeed(&g_tty);  // for tputs() (output)
+    g_erase_char = g_tty.c_cc[VERASE]; // for finish_command()
+    g_kill_char = g_tty.c_cc[VKILL];   // for finish_command()
+#else // !I_TERMIOS
 #ifdef MSDOS
     s_out_speed = B19200;
     g_erase_char = '\b';
@@ -197,13 +197,13 @@ void term_init()
     g_tc_GT = true;
 #else
     ..."Don't know how to initialize the terminal!"
-#endif /* !MSDOS */
-#endif /* !I_TERMIOS */
+#endif // !MSDOS
+#endif // !I_TERMIOS
 
-    /* The following could be a table but I can't be sure that there isn't */
-    /* some degree of sparsity out there in the world. */
+    // The following could be a table but I can't be sure that there isn't
+    // some degree of sparsity out there in the world.
 
-    switch (s_out_speed)                         /* 1 second of padding */
+    switch (s_out_speed)                         // 1 second of padding
     {
 #ifdef BEXTA
     case BEXTA:  g_just_a_sec = 1920; break;
@@ -219,7 +219,7 @@ void term_init()
     case B1200:  g_just_a_sec =  120; break;
     case B600:   g_just_a_sec =   60; break;
     case B300:   g_just_a_sec =   30; break;
-    /* do I really have to type the rest of this??? */
+    // do I really have to type the rest of this???
     case B200:   g_just_a_sec =   20; break;
     case B150:   g_just_a_sec =   15; break;
     case B134:   g_just_a_sec =   13; break;
@@ -227,8 +227,8 @@ void term_init()
     case B75:    g_just_a_sec =    8; break;
     case B50:    g_just_a_sec =    5; break;
     default:     g_just_a_sec =  960; break;
-                                    /* if we are running detached I */
-    }                               /*  don't want to know about it! */
+                                    // if we are running detached I
+    }                               // don't want to know about it!
 }
 
 #ifdef PENDING
@@ -239,8 +239,8 @@ int devtty;
 
 #ifdef HAS_TERMLIB
 #ifndef MSDOS
-/* guarantee capability pointer != nullptr */
-/* (I believe terminfo will ignore the &tmpaddr argument.) */
+// guarantee capability pointer != nullptr
+// (I believe terminfo will ignore the &tmpaddr argument.)
 inline char *Tgetstr(const char *key)
 {
     char *tmpaddr{};
@@ -251,12 +251,12 @@ inline char *Tgetstr(const char *key)
 #endif
 #endif
 
-/* set terminal characteristics */
+// set terminal characteristics
 
-//char* tcbuf;          /* temp area for "uncompiled" termcap entry */
+//char* tcbuf;          // temp area for "uncompiled" termcap entry
 void term_set(char *tcbuf)
 {
-    char* tmpaddr;                      /* must not be register */
+    char* tmpaddr;                      // must not be register
     char* tmpstr;
     char* s;
     int status;
@@ -266,7 +266,7 @@ void term_set(char *tcbuf)
 
 #ifdef PENDING
 #if !defined (FIONREAD) && !defined (HAS_RDCHK) && !defined(MSDOS)
-    /* do no delay reads on something that always gets closed on exit */
+    // do no delay reads on something that always gets closed on exit
 
     devtty = fileno(stdin);
     if (isatty(devtty))
@@ -282,7 +282,7 @@ void term_set(char *tcbuf)
 #endif
 #endif
 
-    /* get all that good termcap stuff */
+    // get all that good termcap stuff
 
 #ifdef HAS_TERMLIB
 #ifdef MSDOS
@@ -308,68 +308,68 @@ void term_set(char *tcbuf)
     g_tc_AM = true;
 #else
     s = getenv("TERM");
-    status = tgetent(tcbuf,s? s : "dumb");      /* get termcap entry */
+    status = tgetent(tcbuf,s? s : "dumb");      // get termcap entry
     if (status < 1)
     {
         std::printf("No termcap %s found.\n", status ? "file" : "entry");
         finalize(1);
     }
-    tmpaddr = s_termcap_area;                 /* set up strange tgetstr pointer */
-    s = Tgetstr("pc");                  /* get pad character */
-    s_tc_PC = *s;                               /* get it where tputs wants it */
-    if (!tgetflag("bs"))                /* is backspace not used? */
+    tmpaddr = s_termcap_area;                 // set up strange tgetstr pointer
+    s = Tgetstr("pc");                  // get pad character
+    s_tc_PC = *s;                               // get it where tputs wants it
+    if (!tgetflag("bs"))                // is backspace not used?
     {
-        g_tc_BC = Tgetstr("bc");                /* find out what is */
-        if (empty(g_tc_BC))             /* terminfo grok's 'bs' but not 'bc' */
+        g_tc_BC = Tgetstr("bc");                // find out what is
+        if (empty(g_tc_BC))             // terminfo grok's 'bs' but not 'bc'
         {
             g_tc_BC = Tgetstr("le");
             if (empty(g_tc_BC))
             {
-                g_tc_BC = "\b";         /* better than nothing... */
+                g_tc_BC = "\b";         // better than nothing...
             }
         }
     }
     else
     {
-        g_tc_BC = "\b";                 /* make a backspace handy */
+        g_tc_BC = "\b";                 // make a backspace handy
     }
-    g_tc_UP = Tgetstr("up");            /* move up a line */
-    s_tc_CL = Tgetstr("cl");            /* get clear string */
-    g_tc_CE = Tgetstr("ce");            /* clear to end of line string */
-    s_tc_TI = Tgetstr("ti");            /* initialize display */
-    s_tc_TE = Tgetstr("te");            /* reset display */
-    s_tc_KS = Tgetstr("ks");            /* enter `keypad transmit' mode */
-    s_tc_KE = Tgetstr("ke");            /* exit `keypad transmit' mode */
-    g_tc_HO = Tgetstr("ho");            /* home cursor */
-    g_tc_IL = Tgetstr("al");            /* insert (add) line */
-    g_tc_CM = Tgetstr("cm");            /* cursor motion */
-    g_tc_CD = Tgetstr("cd");            /* clear to end of display */
+    g_tc_UP = Tgetstr("up");            // move up a line
+    s_tc_CL = Tgetstr("cl");            // get clear string
+    g_tc_CE = Tgetstr("ce");            // clear to end of line string
+    s_tc_TI = Tgetstr("ti");            // initialize display
+    s_tc_TE = Tgetstr("te");            // reset display
+    s_tc_KS = Tgetstr("ks");            // enter `keypad transmit' mode
+    s_tc_KE = Tgetstr("ke");            // exit `keypad transmit' mode
+    g_tc_HO = Tgetstr("ho");            // home cursor
+    g_tc_IL = Tgetstr("al");            // insert (add) line
+    g_tc_CM = Tgetstr("cm");            // cursor motion
+    g_tc_CD = Tgetstr("cd");            // clear to end of display
     if (!*g_tc_CE)
     {
         g_tc_CE = g_tc_CD;
     }
-    g_tc_SO = Tgetstr("so");            /* begin standout */
-    g_tc_SE = Tgetstr("se");            /* end standout */
+    g_tc_SO = Tgetstr("so");            // begin standout
+    g_tc_SE = Tgetstr("se");            // end standout
     const bool tc_SG = tgetnum("sg") > 0; // standout glitch; blanks left by SG, SE
-    g_tc_US = Tgetstr("us");            /* start underline */
-    g_tc_UE = Tgetstr("ue");            /* end underline */
+    g_tc_US = Tgetstr("us");            // start underline
+    g_tc_UE = Tgetstr("ue");            // end underline
     g_tc_UG = tgetnum("ug") > 0;        // underline glitch
     if (*g_tc_US)
     {
-        g_tc_UC = "";           /* UC must not be nullptr */
+        g_tc_UC = "";           // UC must not be nullptr
     }
     else
     {
-        g_tc_UC = Tgetstr("uc");                /* underline a character */
+        g_tc_UC = Tgetstr("uc");                // underline a character
     }
-    if (!*g_tc_US && !*g_tc_UC)                 /* no underline mode? */
+    if (!*g_tc_US && !*g_tc_UC)                 // no underline mode?
     {
-        g_tc_US = g_tc_SO;                      /* substitute standout mode */
+        g_tc_US = g_tc_SO;                      // substitute standout mode
         g_tc_UE = g_tc_SE;
         g_tc_UG = tc_SG;
     }
-    g_tc_LINES = tgetnum("li");         /* lines per page */
-    g_tc_COLS = tgetnum("co");          /* columns on page */
+    g_tc_LINES = tgetnum("li");         // lines per page
+    g_tc_COLS = tgetnum("co");          // columns on page
 
 #ifdef TIOCGWINSZ
     {
@@ -382,8 +382,8 @@ void term_set(char *tcbuf)
     }
 #endif
 
-    g_tc_AM = tgetflag("am");           /* terminal wraps automatically? */
-    g_tc_XN = tgetflag("xn");           /* then eats next newline? */
+    g_tc_AM = tgetflag("am");           // terminal wraps automatically?
+    g_tc_XN = tgetflag("xn");           // then eats next newline?
     g_tc_VB = Tgetstr("vb");
     if (!*g_tc_VB)
     {
@@ -416,31 +416,31 @@ void term_set(char *tcbuf)
     }
 # endif
 #endif
-    if (!*g_tc_UP)                      /* no UP string? */
+    if (!*g_tc_UP)                      // no UP string?
     {
-        g_marking = NO_MARKING;          /* disable any marking */
+        g_marking = NO_MARKING;          // disable any marking
     }
     if (*g_tc_CM || *g_tc_HO)
     {
         g_can_home = true;
     }
-    if (!*g_tc_CD || !g_can_home)               /* can we CE, CD, and home? */
+    if (!*g_tc_CD || !g_can_home)               // can we CE, CD, and home?
     {
-        g_erase_each_line = false;      /*  no, so disable use of clear eol */
+        g_erase_each_line = false;      // no, so disable use of clear eol
     }
-    if (g_muck_up_clear)                        /* this is for weird HPs */
+    if (g_muck_up_clear)                        // this is for weird HPs
     {
         s_tc_CL = nullptr;
     }
     s_left_cost = std::strlen(g_tc_BC);
     s_up_cost = std::strlen(g_tc_UP);
-#else /* !HAS_TERMLIB */
+#else // !HAS_TERMLIB
     ..."Don't know how to set the terminal!"
-#endif /* !HAS_TERMLIB */
+#endif // !HAS_TERMLIB
     termlib_init();
     line_col_calcs();
-    no_echo();                           /* turn off echo */
-    cr_mode();                           /* enter cbreak mode */
+    no_echo();                           // turn off echo
+    cr_mode();                           // enter cbreak mode
     std::sprintf(g_buf, "%d", g_tc_LINES);
     s_lines_export = export_var("LINES",g_buf);
     std::sprintf(g_buf, "%d", g_tc_COLS);
@@ -449,8 +449,8 @@ void term_set(char *tcbuf)
     mac_init(tcbuf);
 }
 
-//char* seq;    /* input sequence of keys */
-//char* def;    /* definition */
+//char* seq;    // input sequence of keys
+//char* def;    // definition
 void set_macro(char *seq, char *def)
 {
     mac_line(def,seq,0);
@@ -461,14 +461,14 @@ void set_macro(char *seq, char *def)
      */
     if (seq[0] == '\033' && seq[1] == '[' && seq[2])
     {
-        char lbuf[LINE_BUF_LEN];     /* copy of possibly non-writable string */
+        char lbuf[LINE_BUF_LEN];     // copy of possibly non-writable string
         std::strcpy(lbuf,seq);
         lbuf[1] = 'O';
         mac_line(def,lbuf,0);
     }
     if (seq[0] == '\033' && seq[1] == 'O' && seq[2])
     {
-        char lbuf[LINE_BUF_LEN];     /* copy of possibly non-writable string */
+        char lbuf[LINE_BUF_LEN];     // copy of possibly non-writable string
         std::strcpy(lbuf,seq);
         lbuf[1] = '[';
         mac_line(def,lbuf,0);
@@ -477,30 +477,30 @@ void set_macro(char *seq, char *def)
 
 static char* s_up[] = {
     "^@",
-    /* '(' at article or pager, '[' in thread sel, 'p' otherwise */
+    // '(' at article or pager, '[' in thread sel, 'p' otherwise
     "%(%m=[ap]?\\(:%(%m=t?[:p))",
-    /* '(' at article or pager, '[' in thread sel, 'p' otherwise */
+    // '(' at article or pager, '[' in thread sel, 'p' otherwise
     "%(%m=[ap]?\\(:%(%m=t?[:p))"
 };
 static char *s_down[] = {
     "^@",
-    /* ')' at article or pager, ']' in thread sel, 'n' otherwise */
+    // ')' at article or pager, ']' in thread sel, 'n' otherwise
     "%(%m=[ap]?\\):%(%m=t?]:n))",
-    /* ')' at article or pager, ']' in thread sel, 'n' otherwise */
+    // ')' at article or pager, ']' in thread sel, 'n' otherwise
     "%(%m=[ap]?\\):%(%m=t?]:n))"
 };
 static char *s_left[] = {
     "^@",
-    /* '[' at article or pager, 'Q' otherwise */
+    // '[' at article or pager, 'Q' otherwise
     "%(%m=[ap]?\\[:Q)",
-    /* '[' at article or pager, '<' otherwise */
+    // '[' at article or pager, '<' otherwise
     "%(%m=[ap]?\\[:<)"
 };
 static char *s_right[] = {
     "^@",
-    /* ']' at article or pager, CR otherwise */
+    // ']' at article or pager, CR otherwise
     "%(%m=[ap]?\\]:^j)",
-    /* CR at newsgroups, ']' at article or pager, '>' otherwise */
+    // CR at newsgroups, ']' at article or pager, '>' otherwise
     "%(%m=n?^j:%(%m=[ap]?\\]:>))"
 };
 
@@ -510,7 +510,7 @@ static char *s_right[] = {
 void arrow_macros(char *tmpbuf)
 {
 #ifdef HAS_TERMLIB
-    char lbuf[256];                     /* should be long enough */
+    char lbuf[256];                     // should be long enough
 #ifndef MSDOS
     char* tmpaddr = tmpbuf;
 #endif
@@ -522,7 +522,7 @@ void arrow_macros(char *tmpbuf)
 #ifdef MSDOS
     std::strcpy(lbuf,"\035\110");
 #else
-    std::strcpy(lbuf,Tgetstr("ku"));         /* up */
+    std::strcpy(lbuf,Tgetstr("ku"));         // up
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -532,7 +532,7 @@ void arrow_macros(char *tmpbuf)
 #ifdef MSDOS
     std::strcpy(lbuf,"\035\120");
 #else
-    std::strcpy(lbuf,Tgetstr("kd"));         /* down */
+    std::strcpy(lbuf,Tgetstr("kd"));         // down
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -542,7 +542,7 @@ void arrow_macros(char *tmpbuf)
 #ifdef MSDOS
     std::strcpy(lbuf,"\035\113");
 #else
-    std::strcpy(lbuf,Tgetstr("kl"));         /* left */
+    std::strcpy(lbuf,Tgetstr("kl"));         // left
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -552,7 +552,7 @@ void arrow_macros(char *tmpbuf)
 #ifdef MSDOS
     std::strcpy(lbuf,"\035\115");
 #else
-    std::strcpy(lbuf,Tgetstr("kr"));         /* right */
+    std::strcpy(lbuf,Tgetstr("kr"));         // right
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -681,7 +681,7 @@ static KeyMap *new_key_map()
     map = (KeyMap*)safe_malloc(sizeof(KeyMap));
 #else
     map = nullptr;
-#endif /* lint */
+#endif // lint
     for (int i = 127; i >= 0; i--)
     {
         map->km_ptr[i].km_km = nullptr;
@@ -771,7 +771,7 @@ void set_mode(GeneralMode new_gmode, MinorMode new_mode)
     }
 }
 
-/* routine to pass to tputs */
+// routine to pass to tputs
 
 int put_char(char_int ch)
 {
@@ -823,31 +823,31 @@ bool finput_pending(bool check_term)
         long iocount;
         ioctl(0, FIONREAD, &iocount);
         return (int)iocount;
-# else /* !FIONREAD */
+# else // !FIONREAD
 #  ifdef HAS_RDCHK
         return rdchk(0);
-#  else /* !HAS_RDCHK */
+#  else // !HAS_RDCHK
 #   ifdef MSDOS
         return kbhit();
-#   else /* !MSDOS */
+#   else // !MSDOS
         return circfill();
-#   endif /* !MSDOS */
-#  endif /* !HAS_RDCHK */
-#  endif /* !FIONREAD */
+#   endif // !MSDOS
+#  endif // !HAS_RDCHK
+#  endif // !FIONREAD
     }
-# endif /* !PENDING */
+# endif // !PENDING
     return false;
 }
 
-/* input the 2nd and succeeding characters of a multi-character command */
-/* returns true if command finished, false if they rubbed out first character */
+// input the 2nd and succeeding characters of a multi-character command
+// returns true if command finished, false if they rubbed out first character
 
 static int s_buff_limit = LINE_BUF_LEN;
 
 bool finish_command(int donewline)
 {
     char *s = g_buf;
-    if (s[1] != FINISH_CMD)              /* someone faking up a command? */
+    if (s[1] != FINISH_CMD)              // someone faking up a command?
     {
         return true;
     }
@@ -861,9 +861,9 @@ bool finish_command(int donewline)
     do
     {
         s = edit_buf(s, g_buf);
-        if (s == g_buf)                         /* entire string gone? */
+        if (s == g_buf)                         // entire string gone?
         {
-            std::fflush(stdout);             /* return to single char command mode */
+            std::fflush(stdout);             // return to single char command mode
             set_mode(gmode_save,g_mode);
             return false;
         }
@@ -875,16 +875,16 @@ bool finish_command(int donewline)
         get_cmd(s);
         if (errno || *s == '\f')
         {
-            *s = Ctl('r');              /* force rewrite on CONT */
+            *s = Ctl('r');              // force rewrite on CONT
         }
-    } while (*s != '\r' && *s != '\n'); /* until CR or NL (not echoed) */
+    } while (*s != '\r' && *s != '\n'); // until CR or NL (not echoed)
     g_mouse_is_down = false;
 
     while (s[-1] == ' ')
     {
         s--;
     }
-    *s = '\0';                          /* terminate the string nicely */
+    *s = '\0';                          // terminate the string nicely
 
     if (donewline)
     {
@@ -892,7 +892,7 @@ bool finish_command(int donewline)
     }
 
     set_mode(gmode_save,g_mode);
-    return true;                        /* retrn success */
+    return true;                        // retrn success
 }
 
 static int echo_char(char_int ch)
@@ -913,9 +913,9 @@ static int echo_char(char_int ch)
     return 1;
 }
 
-static bool s_screen_is_dirty{}; /* TODO: remove this? */
+static bool s_screen_is_dirty{}; // TODO: remove this?
 
-/* Process the character *s in the buffer g_buf returning the new 's' */
+// Process the character *s in the buffer g_buf returning the new 's'
 
 char *edit_buf(char *s, const char *cmd)
 {
@@ -928,7 +928,7 @@ char *edit_buf(char *s, const char *cmd)
             goto echo_it;
         }
     }
-    if (*s == '\033')           /* substitution desired? */
+    if (*s == '\033')           // substitution desired?
     {
         char  tmpbuf[4];
         char *cpybuf;
@@ -962,12 +962,12 @@ char *edit_buf(char *s, const char *cmd)
         }
         return s;
     }
-    if (*s == g_erase_char)                /* they want to rubout a char? */
+    if (*s == g_erase_char)                // they want to rubout a char?
     {
         if (s != g_buf)
         {
             rubout();
-            s--;                        /* discount the char rubbed out */
+            s--;                        // discount the char rubbed out
             if (!at_norm_char(s))
             {
                 rubout();
@@ -975,9 +975,9 @@ char *edit_buf(char *s, const char *cmd)
         }
         return s;
     }
-    if (*s == g_kill_char)                 /* wipe out the whole line? */
+    if (*s == g_kill_char)                 // wipe out the whole line?
     {
-        while (s != g_buf)              /* emulate that many ERASEs */
+        while (s != g_buf)              // emulate that many ERASEs
         {
             rubout();
             s--;
@@ -988,7 +988,7 @@ char *edit_buf(char *s, const char *cmd)
         }
         return s;
     }
-    if (*s == Ctl('w'))            /* wipe out one word? */
+    if (*s == Ctl('w'))            // wipe out one word?
     {
         if (s == g_buf)
         {
@@ -1047,26 +1047,26 @@ bool finish_dbl_char()
     return ret;
 }
 
-/* discard any characters typed ahead */
+// discard any characters typed ahead
 
 void eat_typeahead()
 {
     static double last_time = 0.;
     double this_time = current_time();
 
-    /* do not eat typeahead while creating virtual group */
+    // do not eat typeahead while creating virtual group
     if (g_univ_ng_virt_flag)
     {
       return;
     }
-    /* Don't eat twice before getting a character */
+    // Don't eat twice before getting a character
     if (!s_got_a_char)
     {
         return;
     }
     s_got_a_char = false;
 
-    /* cancel only keyboard stuff */
+    // cancel only keyboard stuff
     if (!g_allow_typeahead && !g_mouse_is_down && !macro_pending() //
         && this_time - last_time > 0.3)
     {
@@ -1104,13 +1104,13 @@ void eat_typeahead()
 
             switch (curmap->km_type[lc] & KM_TMASK)
             {
-            case KM_STRING:           /* a string? */
-            case KM_NOTHING:           /* no entry? */
+            case KM_STRING:           // a string?
+            case KM_NOTHING:           // no entry?
                 curmap = s_top_map;
                 j = 0;
                 continue;
 
-            case KM_KEYMAP:           /* another keymap? */
+            case KM_KEYMAP:           // another keymap?
                 curmap = curmap->km_ptr[lc].km_km;
                 break;
             }
@@ -1118,11 +1118,11 @@ void eat_typeahead()
 dbl_break:
         if (j)
         {
-            /* Don't delete a partial macro sequence */
+            // Don't delete a partial macro sequence
             g_buf[j] = '\0';
             push_string(g_buf,0);
         }
-#else /* this is probably v7 */
+#else // this is probably v7
 #ifdef I_TERMIOS
         tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty);
 #else
@@ -1148,8 +1148,8 @@ void settle_down()
 {
     dingaling();
     std::fflush(stdout);
-    /*sleep(1);*/
-    s_next_out = s_next_in;                       /* empty s_circlebuf */
+    // sleep(1);
+    s_next_out = s_next_in;                       // empty s_circlebuf
     s_not_echoing = 0;
     eat_typeahead();
 }
@@ -1166,7 +1166,7 @@ Signal_t alarm_catcher(int signo)
 }
 #endif
 
-/* read a character from the terminal, with multi-character pushback */
+// read a character from the terminal, with multi-character pushback
 
 int read_tty(char *addr, int size)
 {
@@ -1213,8 +1213,8 @@ int circfill()
     }
     return Howmany;
 }
-# endif /* FIONREAD */
-#endif /* PENDING */
+# endif // FIONREAD
+#endif // PENDING
 
 void push_char(char_int c)
 {
@@ -1231,50 +1231,50 @@ void push_char(char_int c)
     s_circle_buf[s_next_out] = c;
 }
 
-/* print an underlined string, one way or another */
+// print an underlined string, one way or another
 
 void under_print(const char *s)
 {
     TRN_ASSERT(g_tc_UC);
-    if (*g_tc_UC)       /* char by char underline? */
+    if (*g_tc_UC)       // char by char underline?
     {
         while (*s)
         {
             if (!at_norm_char(s))
             {
                 std::putchar('^');
-                backspace();/* back up over it */
-                underchar();/* and do the underline */
+                backspace();// back up over it
+                underchar();// and do the underline
                 std::putchar((*s & 0x7F) | 64);
-                backspace();/* back up over it */
-                underchar();/* and do the underline */
+                backspace();// back up over it
+                underchar();// and do the underline
             }
             else
             {
                 std::putchar(*s);
-                backspace();/* back up over it */
-                underchar();/* and do the underline */
+                backspace();// back up over it
+                underchar();// and do the underline
             }
             s++;
         }
     }
-    else                /* start and stop underline */
+    else                // start and stop underline
     {
-        underline();    /* start underlining */
+        underline();    // start underlining
         while (*s)
         {
             echo_char(*s++);
         }
-        un_underline(); /* stop underlining */
+        un_underline(); // stop underlining
     }
 }
 
-/* keep screen from flashing strangely on magic cookie terminals */
+// keep screen from flashing strangely on magic cookie terminals
 
 #ifdef NO_FIREWORKS
 void no_so_fire()
 {
-    /* should we disable fireworks? */
+    // should we disable fireworks?
     if (!(g_fire_is_out & STANDOUT) && (g_term_line | g_term_col) == 0 && *g_tc_UP && *g_tc_SE)
     {
         newline();
@@ -1288,7 +1288,7 @@ void no_so_fire()
 #ifdef NO_FIREWORKS
 void no_ul_fire()
 {
-    /* should we disable fireworks? */
+    // should we disable fireworks?
     if (!(g_fire_is_out & UNDERLINE) && (g_term_line | g_term_col) == 0 && *g_tc_UP && *g_tc_US)
     {
         newline();
@@ -1299,11 +1299,11 @@ void no_ul_fire()
 }
 #endif
 
-/* get a character into a buffer */
+// get a character into a buffer
 
 void get_cmd(char *whatbuf)
 {
-    int times = 0;                      /* loop detector */
+    int times = 0;                      // loop detector
 
     if (!input_pending())
     {
@@ -1358,22 +1358,22 @@ tryagain:
 
         switch (curmap->km_type[g_last_char] & KM_TMASK)
         {
-        case KM_NOTHING:               /* no entry? */
-            if (curmap == s_top_map)     /* unmapped canonical */
+        case KM_NOTHING:               // no entry?
+            if (curmap == s_top_map)     // unmapped canonical
             {
                 goto got_canonical;
             }
             settle_down();
             goto tryagain;
 
-        case KM_KEYMAP:               /* another keymap? */
+        case KM_KEYMAP:               // another keymap?
             curmap = curmap->km_ptr[g_last_char].km_km;
             TRN_ASSERT(curmap != nullptr);
             break;
 
-        case KM_STRING:               /* a string? */
+        case KM_STRING:               // a string?
             push_string(curmap->km_ptr[g_last_char].km_str,0200);
-            if (++times > 20)           /* loop? */
+            if (++times > 20)           // loop?
             {
                 std::fputs("\nmacro loop?\n",stdout);
                 term_down(2);
@@ -1385,7 +1385,7 @@ tryagain:
     }
 
 got_canonical:
-    /* This hack is for mouse support */
+    // This hack is for mouse support
     if (s_xmouse_is_on && *whatbuf == Ctl('c'))
     {
         mouse_input(whatbuf+1);
@@ -1400,7 +1400,7 @@ got_canonical:
 #endif
     if (whatbuf == g_buf)
     {
-        whatbuf[1] = FINISH_CMD;         /* tell finish_command to work */
+        whatbuf[1] = FINISH_CMD;         // tell finish_command to work
     }
 #ifdef SIGALRM
     (void) alarm(0);
@@ -1426,7 +1426,7 @@ int get_anything()
     MinorMode mode_save = g_mode;
 
 reask_anything:
-    unflush_output();                   /* disable any ^O in effect */
+    unflush_output();                   // disable any ^O in effect
     color_object(COLOR_MORE, true);
     if (g_verbose)
     {
@@ -1436,7 +1436,7 @@ reask_anything:
     {
         std::fputs("[MORE] ",stdout);
     }
-    color_pop();        /* of COLOR_MORE */
+    color_pop();        // of COLOR_MORE
     std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
@@ -1449,8 +1449,8 @@ reask_anything:
     set_mode(g_general_mode,mode_save);
     if (errno || *tmpbuf == '\f')
     {
-        newline();                      /* if return from stop signal */
-        goto reask_anything;            /* give them a prompt again */
+        newline();                      // if return from stop signal
+        goto reask_anything;            // give them a prompt again
     }
     if (*tmpbuf == 'h')
     {
@@ -1467,7 +1467,7 @@ reask_anything:
     }
     else if (*tmpbuf != ' ' && *tmpbuf != '\n')
     {
-        erase_line(false);      /* erase the prompt */
+        erase_line(false);      // erase the prompt
         return *tmpbuf == 'q' ? -1 : *tmpbuf;
     }
     if (*tmpbuf == '\n')
@@ -1478,13 +1478,13 @@ reask_anything:
     else
     {
         g_page_line = 1;
-        if (g_erase_screen)             /* -e? */
+        if (g_erase_screen)             // -e?
         {
-            clear();                    /* clear screen */
+            clear();                    // clear screen
         }
         else
         {
-            erase_line(false);          /* erase the prompt */
+            erase_line(false);          // erase the prompt
         }
     }
     return 0;
@@ -1494,7 +1494,7 @@ int pause_get_cmd()
 {
     MinorMode mode_save = g_mode;
 
-    unflush_output();                   /* disable any ^O in effect */
+    unflush_output();                   // disable any ^O in effect
     color_object(COLOR_CMD, true);
     if (g_verbose)
     {
@@ -1504,7 +1504,7 @@ int pause_get_cmd()
     {
         std::fputs("[CMD] ",stdout);
     }
-    color_pop();        /* of COLOR_CMD */
+    color_pop();        // of COLOR_CMD
     std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
@@ -1517,11 +1517,11 @@ int pause_get_cmd()
     set_mode(g_general_mode,mode_save);
     if (errno || *g_buf == '\f')
     {
-        return 0;                       /* if return from stop signal */
+        return 0;                       // if return from stop signal
     }
     if (*g_buf != ' ')
     {
-        erase_line(false);      /* erase the prompt */
+        erase_line(false);      // erase the prompt
         return *g_buf;
     }
     return 0;
@@ -1543,7 +1543,7 @@ void in_char(const char *prompt, MinorMode newmode, const char *dflt)
     }
 
 reask_in_char:
-    unflush_output();                   /* disable any ^O in effect */
+    unflush_output();                   // disable any ^O in effect
     std::printf("%s [%s] ", prompt, dflt);
     std::fflush(stdout);
     term_down(newlines);
@@ -1552,8 +1552,8 @@ reask_in_char:
     get_cmd(g_buf);
     if (errno || *g_buf == '\f')
     {
-        newline();                      /* if return from stop signal */
-        goto reask_in_char;             /* give them a prompt again */
+        newline();                      // if return from stop signal
+        goto reask_in_char;             // give them a prompt again
     }
     set_def(g_buf,dflt);
     set_mode(gmode_save,mode_save);
@@ -1565,7 +1565,7 @@ void in_answer(const char *prompt, MinorMode newmode)
     GeneralMode gmode_save = g_general_mode;
 
 reask_in_answer:
-    unflush_output();                   /* disable any ^O in effect */
+    unflush_output();                   // disable any ^O in effect
     std::fputs(prompt,stdout);
     std::fflush(stdout);
     eat_typeahead();
@@ -1574,8 +1574,8 @@ reinp_in_answer:
     get_cmd(g_buf);
     if (errno || *g_buf == '\f')
     {
-        newline();                      /* if return from stop signal */
-        goto reask_in_answer;           /* give them a prompt again */
+        newline();                      // if return from stop signal
+        goto reask_in_answer;           // give them a prompt again
     }
     if (*g_buf == g_erase_char)
     {
@@ -1596,14 +1596,14 @@ reinp_in_answer:
     set_mode(gmode_save,mode_save);
 }
 
-/* If this takes more than one line, return false */
+// If this takes more than one line, return false
 
 bool in_choice(const char *prompt, char *value, char *choices, MinorMode newmode)
 {
     MinorMode mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
 
-    unflush_output();                   /* disable any ^O in effect */
+    unflush_output();                   // disable any ^O in effect
     eat_typeahead();
     set_mode(GM_CHOICE,newmode);
     s_screen_is_dirty = false;
@@ -1655,7 +1655,7 @@ bool in_choice(const char *prompt, char *value, char *choices, MinorMode newmode
                 {
                     *dest++ = *cp;
                 } while (*cp++ != '>');
-                any_val_OK = true; /* flag that '<' was found */
+                any_val_OK = true; // flag that '<' was found
             }
             else
             {
@@ -1776,7 +1776,7 @@ reinp_in_choice:
     }
     std::fflush(stdout);
     get_cmd(s);
-    if (errno || *s == '\f')            /* if return from stop signal */
+    if (errno || *s == '\f')            // if return from stop signal
     {
         *s = '\n';
     }
@@ -1937,7 +1937,7 @@ int check_page_line()
         int cmd = -1;
         if (g_int_count || (cmd = get_anything()))
         {
-            g_page_line = -1;           /* disable further printing */
+            g_page_line = -1;           // disable further printing
             if (cmd > 0)
             {
                 push_char(cmd);
@@ -1998,7 +1998,7 @@ void pad(int num)
     std::fflush(stdout);
 }
 
-/* echo the command just typed */
+// echo the command just typed
 
 void print_cmd()
 {
@@ -2022,9 +2022,9 @@ void print_cmd()
 
 void rubout()
 {
-    backspace();                        /* do the old backspace, */
-    std::putchar(' ');                  /*   space, */
-    backspace();                        /*     backspace trick */
+    backspace();                        // do the old backspace,
+    std::putchar(' ');                  // space,
+    backspace();                        // backspace trick
 }
 
 void reprint()
@@ -2049,7 +2049,7 @@ void erase_line(bool to_eos)
     {
         erase_eol();
     }
-    carriage_return();          /* Resets kernel's tab column counter to 0 */
+    carriage_return();          // Resets kernel's tab column counter to 0
     std::fflush(stdout);
 }
 
@@ -2080,21 +2080,21 @@ void clear()
 
 void home_cursor()
 {
-    if (!*g_tc_HO)              /* no home sequence? */
+    if (!*g_tc_HO)              // no home sequence?
     {
-        if (!*g_tc_CM)                  /* no cursor motion either? */
+        if (!*g_tc_CM)                  // no cursor motion either?
         {
             std::fputs("\n\n\n", stdout);
             term_down(3);
-            return;             /* forget it. */
+            return;             // forget it.
         }
-        tputs(tgoto(g_tc_CM, 0, 0), 1, put_char); /* go to home via CM */
+        tputs(tgoto(g_tc_CM, 0, 0), 1, put_char); // go to home via CM
     }
-    else                        /* we have home sequence */
+    else                        // we have home sequence
     {
-        tputs(g_tc_HO, 1, put_char);/* home via HO */
+        tputs(g_tc_HO, 1, put_char);// home via HO
     }
-    carriage_return();  /* Resets kernel's tab column counter to 0 */
+    carriage_return();  // Resets kernel's tab column counter to 0
     g_term_line = 0;
     g_term_col = 0;
 }
@@ -2195,50 +2195,50 @@ void goto_xy(int to_col, int to_line)
 
 static void line_col_calcs()
 {
-    if (g_tc_LINES > 0)                 /* is this a crt? */
+    if (g_tc_LINES > 0)                 // is this a crt?
     {
         if (!g_init_lines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
         {
-            /* no -i or unreasonable value for g_initlines */
-            if (s_out_speed >= B9600)    /* whole page at >= 9600 baud */
+            // no -i or unreasonable value for g_initlines
+            if (s_out_speed >= B9600)    // whole page at >= 9600 baud
             {
                 g_init_lines = g_tc_LINES;
             }
-            else if (s_out_speed >= B4800)       /* 16 lines at 4800 */
+            else if (s_out_speed >= B4800)       // 16 lines at 4800
             {
                 g_init_lines = 16;
             }
-            else                        /* otherwise just header */
+            else                        // otherwise just header
             {
                 g_init_lines = 8;
             }
         }
-        /* Check for g_initlines bigger than the screen and fix it! */
+        // Check for g_initlines bigger than the screen and fix it!
         g_init_lines = std::min(g_init_lines, g_tc_LINES);
     }
-    else                                /* not a crt */
+    else                                // not a crt
     {
-        g_tc_LINES = 30000;             /* so don't page */
-        s_tc_CL = "\n\n";                       /* put a couple of lines between */
+        g_tc_LINES = 30000;             // so don't page
+        s_tc_CL = "\n\n";                       // put a couple of lines between
         if (!g_init_lines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
         {
-            g_init_lines = 8;            /* make g_initlines reasonable */
+            g_init_lines = 8;            // make g_initlines reasonable
         }
     }
     if (g_tc_COLS <= 0)
     {
         g_tc_COLS = 80;
     }
-    s_resize_win();     /* let various parts know */
+    s_resize_win();     // let various parts know
 }
 
 #ifdef SIGWINCH
 Signal_t winch_catcher(int dummy)
 {
-    /* Reset signal in case of System V dain bramage */
+    // Reset signal in case of System V dain bramage
     sigset(SIGWINCH, winch_catcher);
 
-    /* Come here if window size change signal received */
+    // Come here if window size change signal received
 #ifdef TIOCGWINSZ
     {
         struct winsize ws;
@@ -2253,16 +2253,16 @@ Signal_t winch_catcher(int dummy)
                 std::sprintf(s_cols_export, "%d", g_tc_COLS);
                 if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p')
                 {
-                    force_me("\f");      /* cause a refresh */
-                                        /* (defined only if TIOCSTI defined) */
+                    force_me("\f");      // cause a refresh
+                                        // (defined only if TIOCSTI defined)
                 }
             }
         }
     }
 #else
-    /* Well, if SIGWINCH is defined, but TIOCGWINSZ isn't, there's    */
-    /* almost certainly something wrong.  Figure it out for yourself, */
-    /* because I don't know how to deal with it :-)                   */
+    // Well, if SIGWINCH is defined, but TIOCGWINSZ isn't, there's
+    // almost certainly something wrong.  Figure it out for yourself,
+    // because I don't know how to deal with it :-)
     ERROR!
 #endif
 }
@@ -2321,7 +2321,7 @@ void xmouse_init(const char *progname)
     }
     else if (progname[std::strlen(progname) - 1] == 'x')
     {
-        /* an 'x' at the end means enable Xterm mouse tracking */
+        // an 'x' at the end means enable Xterm mouse tracking
         set_option(OI_USE_MOUSE, "y");
     }
 }
@@ -2389,7 +2389,7 @@ void xmouse_check()
 
             default:
                 s_mouse_bar_btns = "";
-                /*g_mousebar_cnt = 0;*/
+                // g_mousebar_cnt = 0;
                 break;
             }
             char *s = s_mouse_bar_btns;
@@ -2424,7 +2424,7 @@ void xmouse_on()
 {
     if (!s_xmouse_is_on)
     {
-        /* save old highlight mouse tracking and enable mouse tracking */
+        // save old highlight mouse tracking and enable mouse tracking
         std::fputs("\033[?1001s\033[?1000h",stdout);
         std::fflush(stdout);
         s_xmouse_is_on = true;
@@ -2435,7 +2435,7 @@ void xmouse_off()
 {
     if (s_xmouse_is_on)
     {
-        /* disable mouse tracking and restore old highlight mouse tracking */
+        // disable mouse tracking and restore old highlight mouse tracking
         std::fputs("\033[?1000l\033[?1001r",stdout);
         std::fflush(stdout);
         s_xmouse_is_on = false;
@@ -2471,7 +2471,7 @@ void draw_mouse_bar(int limit, bool restore_cursor)
             {
             case 0:
                 *t++ = ' ';
-                /* FALL THROUGH */
+                // FALL THROUGH
 
             case 1:  case 2:
                 *t++ = ' ';
@@ -2644,7 +2644,7 @@ bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 }
                 if (btn == 3)
                 {
-                    color_pop();        /* of COLOR_MOUSE */
+                    color_pop();        // of COLOR_MOUSE
                 }
                 goto_xy(tcol,tline);
                 std::fflush(stdout);
@@ -2671,12 +2671,12 @@ static int s_tc_string_cnt{};
 
 struct ColorCapability
 {
-    char *capability; /* name of capability, e.g. "foreground red" */
-    char *string;     /* escape sequence, e.g. "\033[31m" */
+    char *capability; // name of capability, e.g. "foreground red"
+    char *string;     // escape sequence, e.g. "\033[31m"
 };
 static ColorCapability s_tc_strings[TC_STRINGS];
 
-/* Parse a line from the [termcap] section of trnrc. */
+// Parse a line from the [termcap] section of trnrc.
 void add_tc_string(const char *capability, const char *string)
 {
     int i;
@@ -2704,7 +2704,7 @@ void add_tc_string(const char *capability, const char *string)
     s_tc_strings[i].string = save_str(string);
 }
 
-/* Return the named termcap color capability's string. */
+// Return the named termcap color capability's string.
 char *tc_color_capability(const char *capability)
 {
     for (int c = 0; c < s_tc_string_cnt; c++)
