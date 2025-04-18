@@ -512,8 +512,7 @@ static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)
     return add_group_order_group_name(app1, app2);
 }
 
-/* Sort the newsgroups into the chosen order.
-*/
+// Sort the newsgroups into the chosen order.
 void sort_add_groups()
 {
     AddGroup* ap;
