@@ -1,6 +1,6 @@
 /* trn/rt-ov.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_RT_OV_H
 #define TRN_RT_OV_H
 
@@ -8,7 +8,7 @@
 
 struct Article;
 
-/* The usual order for the overview data fields. */
+// The usual order for the overview data fields.
 enum OverviewFieldNum
 {
     OV_NUM = 0,
