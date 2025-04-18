@@ -164,10 +164,10 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
 
     // Get filename
 
-    /* Grab the first filename-like string.  Explicitly ignore strings with
-     * prefix "v<digit>" ending in ":", since that is a popular volume/issue
-     * representation syntax
-     */
+    // Grab the first filename-like string.  Explicitly ignore strings with
+    // prefix "v<digit>" ending in ":", since that is a popular volume/issue
+    // representation syntax
+    //
     char *end = s + std::strlen(s);
     do
     {
@@ -192,9 +192,9 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
     } while (t == s || (t[0] == 'v' && std::isdigit(t[1]) && *s == ':'));
     *s++ = '\0';
 
-    /* Try looking for a filename with a "." in it later in the subject line.
-     * Exclude <digit>.<digit>, since that is usually a version number.
-     */
+    // Try looking for a filename with a "." in it later in the subject line.
+    // Exclude <digit>.<digit>, since that is usually a version number.
+    //
     if (!hasdot)
     {
         while (*(t = s) != '\0' && *s != '\n')
@@ -300,9 +300,9 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
     return filename;
 }
 
-/*
- * Handle a piece of a split file.
- */
+//
+// Handle a piece of a split file.
+//
 bool decode_piece(MimeCapEntry *mcp, char *first_line)
 {
     *g_msg = '\0';
@@ -409,9 +409,9 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
             }
         }
 
-        /* Check to see if we have all parts.  Start from the highest numbers
-         * as we are more likely not to have them.
-         */
+        // Check to see if we have all parts.  Start from the highest numbers
+        // as we are more likely not to have them.
+        //
         for (part = total; part; part--)
         {
             std::sprintf(g_buf, "%s%d", dir, part);
