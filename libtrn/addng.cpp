@@ -150,7 +150,7 @@ static void new_nntp_groups(DataSource *dp)
 {
     char* s;
     int len;
-    bool  foundSomething = false;
+    bool  found_something = false;
     long  high;
     long  low;
 
@@ -186,7 +186,7 @@ static void new_nntp_groups(DataSource *dp)
         {
             break;
         }
-        foundSomething = true;
+        found_something = true;
         s = std::strchr(g_ser_line, ' ');
         if (s != nullptr)
         {
@@ -239,7 +239,7 @@ static void new_nntp_groups(DataSource *dp)
         }
         add_to_hash(new_newsgroups, g_ser_line, high-low, auto_subscribe(g_ser_line));
     }
-    if (foundSomething)
+    if (found_something)
     {
         hash_walk(new_newsgroups, build_add_group_list, 0);
         source_file_end_append(&dp->act_sf, dp->extra_name);
