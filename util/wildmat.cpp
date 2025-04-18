@@ -38,11 +38,11 @@
 
 #include "util/wildmat.h"
 
-    /* What character marks an inverted character class? */
+    // What character marks an inverted character class?
 #define NEGATE_CLASS            '^'
 
-#define OPTIMIZE_JUST_STAR /* Is "*" a common pattern? */
-#undef MATCH_TAR_PATTERN   /* Do tar(1) matching rules, which ignore a trailing slash? */
+#define OPTIMIZE_JUST_STAR // Is "*" a common pattern?
+#undef MATCH_TAR_PATTERN   // Do tar(1) matching rules, which ignore a trailing slash?
 
 static bool do_match(const char *text, const char *p);
 
@@ -60,9 +60,9 @@ static bool do_match(const char *text, const char *p)
         switch (*p)
         {
         case '\\':
-            /* Literal match with following character. */
+            // Literal match with following character.
             p++;
-            /* FALLTHROUGH */
+            // FALLTHROUGH
 
         default:
             if (*text != *p)
@@ -72,17 +72,17 @@ static bool do_match(const char *text, const char *p)
             continue;
 
         case '?':
-            /* Match anything. */
+            // Match anything.
             continue;
 
         case '*':
             while (*++p == '*')
             {
-                /* Consecutive stars act just like one. */
+                // Consecutive stars act just like one.
             }
             if (*p == '\0')
             {
-                /* Trailing star matches everything. */
+                // Trailing star matches everything.
                 return true;
             }
             while (*text)
@@ -99,13 +99,13 @@ static bool do_match(const char *text, const char *p)
             const bool reverse = p[1] == NEGATE_CLASS;
             if (reverse)
             {
-                /* Inverted character class. */
+                // Inverted character class.
                 p++;
             }
             bool matched{};
             for (int last = 0400; *++p && *p != ']'; last = *p)
             {
-                /* This next line requires a good C compiler. */
+                // This next line requires a good C compiler.
                 if (*p == '-' ? *text <= *++p && *text >= last : *text == *p)
                 {
                     matched = true;
@@ -125,7 +125,7 @@ static bool do_match(const char *text, const char *p)
     {
         return true;
     }
-#endif  /* MATCH_TAR_ATTERN */
+#endif  // MATCH_TAR_ATTERN
     return *text == '\0';
 }
 
@@ -140,7 +140,7 @@ bool wildcard_match(const char *text, const char *p)
     {
         return true;
     }
-#endif  /* OPTIMIZE_JUST_STAR */
+#endif  // OPTIMIZE_JUST_STAR
     return do_match(text, p);
 }
 
@@ -149,7 +149,7 @@ bool wildcard_match(const char *text, const char *p)
 
 int main()
 {
-    /* Yes, we use gets not fgets.  Sue me. */
+    // Yes, we use gets not fgets.  Sue me.
     extern char* gets();
     char         p[80];
     char         text[80];
@@ -176,7 +176,7 @@ int main()
             }
             if (text[0] == '\0')
             {
-                /* Blank line; go back and get a new pattern. */
+                // Blank line; go back and get a new pattern.
                 break;
             }
             printf("      %s\n", wildmat(text, p) ? "YES" : "NO");
@@ -185,4 +185,4 @@ int main()
 
     return 0;
 }
-#endif  /* TEST */
+#endif  // TEST
