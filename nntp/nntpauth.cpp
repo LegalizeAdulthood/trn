@@ -1,6 +1,6 @@
 /* nntpauth.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "nntp/nntpauth.h"
 
@@ -16,7 +16,7 @@ int nntp_handle_auth_err()
 {
     char last_command_save[NNTP_STRLEN];
 
-    /* save previous command */
+    // save previous command
     std::strcpy(last_command_save, g_last_command);
 
     {
