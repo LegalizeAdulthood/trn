@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* trn/sacmd.h
  *
  * main command loop
