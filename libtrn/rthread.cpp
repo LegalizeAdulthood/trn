@@ -1,6 +1,6 @@
 /* rthread.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/string_case_compare.h>
 
@@ -38,8 +38,8 @@ ArticleNum g_obj_count{};
 int        g_subject_count{};
 bool       g_output_chase_phrase{};
 HashTable *g_msg_id_hash{};
-bool       g_thread_always{}; /* -a */
-bool       g_breadth_first{}; /* -b */
+bool       g_thread_always{}; // -a
+bool       g_breadth_first{}; // -b
 
 static int      cleanup_msg_id_hash(int keylen, HashDatum *data, int extra);
 static Article *first_sib(Article *ta, int depth);
@@ -79,12 +79,12 @@ void thread_open()
 
     if (!g_msg_id_hash)
     {
-        g_msg_id_hash = hash_create(1999, msg_id_cmp); /*TODO: pick a better size */
+        g_msg_id_hash = hash_create(1999, msg_id_cmp); // TODO: pick a better size
     }
     if (g_threaded_group)
     {
-        /* Parse input and use g_msgid_hash for quick article lookups. */
-        /* If cached but not threaded articles exist, set up to thread them. */
+        // Parse input and use g_msgid_hash for quick article lookups.
+        // If cached but not threaded articles exist, set up to thread them.
         if (g_first_subject)
         {
             g_first_cached = g_first_art;
@@ -122,7 +122,7 @@ void thread_open()
             g_spin_estimate = g_newsgroup_ptr->to_read;
             if (g_first_art > g_last_art)
             {
-                /* If no unread articles, see if ov. exists as fast as possible */
+                // If no unread articles, see if ov. exists as fast as possible
                 (void) ov_data(g_abs_first, g_abs_first, false);
                 g_cached_all_in_range = false;
             }
@@ -152,7 +152,7 @@ void thread_open()
     if (g_last_cached > g_last_art)
     {
         g_newsgroup_ptr->to_read += (ArticleUnread)(g_last_cached-g_last_art);
-        /* ensure getngsize() knows the new maximum */
+        // ensure getngsize() knows the new maximum
         g_newsgroup_ptr->ng_max = g_last_cached;
         g_last_art = g_last_cached;
     }
@@ -169,8 +169,8 @@ void thread_open()
     }
 
     std::time_t save_ov_opened = g_data_source->ov_opened;
-    g_data_source->ov_opened = 0; /* avoid trying to call ov_data twice for high arts */
-    thread_grow();          /* thread any new articles not yet in the database */
+    g_data_source->ov_opened = 0; // avoid trying to call ov_data twice for high arts
+    thread_grow();          // thread any new articles not yet in the database
     g_data_source->ov_opened = save_ov_opened;
     g_added_articles = 0;
     g_sel_page_sp = nullptr;
@@ -201,7 +201,7 @@ void thread_close()
 {
     g_curr_artp = nullptr;
     g_artp = nullptr;
-    init_tree();                        /* free any tree lines */
+    init_tree();                        // free any tree lines
 
     update_thread_kill_file();
     if (g_msg_id_hash)
@@ -316,7 +316,7 @@ void inc_article(bool sel_flag, bool rereading)
     Article* ap = g_artp;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
-    /* Use the explicit article-order if it exists */
+    // Use the explicit article-order if it exists
     if (g_art_ptr_list)
     {
         Article** limit = g_art_ptr_list + g_art_ptr_list_size;
@@ -357,7 +357,7 @@ void inc_article(bool sel_flag, bool rereading)
         return;
     }
 
-    /* Use subject- or thread-order when possible */
+    // Use subject- or thread-order when possible
     if (g_threaded_group || g_search_ahead)
     {
         Subject* sp;
@@ -421,7 +421,7 @@ void inc_article(bool sel_flag, bool rereading)
         return;
     }
 
-    /* Otherwise, just increment through the art numbers */
+    // Otherwise, just increment through the art numbers
 num_inc:
     if (!ap)
     {
@@ -459,7 +459,7 @@ void dec_article(bool sel_flag, bool rereading)
     Article* ap = g_artp;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
-    /* Use the explicit article-order if it exists */
+    // Use the explicit article-order if it exists
     if (g_art_ptr_list)
     {
         Article** limit = g_art_ptr_list + g_art_ptr_list_size;
@@ -491,7 +491,7 @@ void dec_article(bool sel_flag, bool rereading)
         return;
     }
 
-    /* Use subject- or thread-order when possible */
+    // Use subject- or thread-order when possible
     if (g_threaded_group || g_search_ahead)
     {
         Subject* sp;
@@ -540,7 +540,7 @@ void dec_article(bool sel_flag, bool rereading)
         return;
     }
 
-    /* Otherwise, just decrement through the art numbers */
+    // Otherwise, just decrement through the art numbers
 num_dec:
     while (true)
     {
@@ -1749,14 +1749,14 @@ static int subject_order_lines(const Subject **spp1, const Subject**spp2)
     return eq? eq > 0? g_sel_direction : -g_sel_direction : subject_order_date(spp1,spp2);
 }
 
-/* for now, highest eligible article score */
+// for now, highest eligible article score
 static int subject_score_high(const Subject *sp)
 {
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     int hiscore = 0;
     int hiscore_found = 0;
 
-    /* find highest score of desired articles */
+    // find highest score of desired articles
     for (Article *ap = sp->articles; ap; ap = ap->subj_next)
     {
         if ((ap->flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
@@ -1772,7 +1772,7 @@ static int subject_score_high(const Subject *sp)
     return hiscore;
 }
 
-/* later make a subject-thread score routine */
+// later make a subject-thread score routine
 static int subject_order_score(const Subject** spp1, const Subject** spp2)
 {
     int sc1 = subject_score_high(*spp1);
@@ -1911,7 +1911,7 @@ static int thread_score_high(const Subject *tp)
             hiscore_found = 1;
             hiscore = sc;
         }
-        /* break *after* doing the last item */
+        // break *after* doing the last item
         if (tp == sp)
         {
             break;
@@ -1945,7 +1945,7 @@ void sort_subjects()
     Subject**lp;
     int (*   sort_procedure)(const Subject **spp1, const Subject**spp2);
 
-    /* If we don't have at least two subjects, we're done! */
+    // If we don't have at least two subjects, we're done!
     if (!g_first_subject || !g_first_subject->next)
     {
         return;
@@ -1974,7 +1974,7 @@ void sort_subjects()
                           thread_order_lines : subject_order_lines);
         break;
 
-    /* if SCORE is undefined, use the default above */
+    // if SCORE is undefined, use the default above
     case SS_SCORE:
         sort_procedure = (g_sel_mode == SM_THREAD?
                           thread_order_score : subject_order_score);
@@ -2084,7 +2084,7 @@ void sort_articles()
 
     build_article_ptrs();
 
-    /* If we don't have at least two articles, we're done! */
+    // If we don't have at least two articles, we're done!
     if (g_art_ptr_list_size < 2)
     {
         return;
