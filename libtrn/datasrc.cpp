@@ -1,7 +1,7 @@
 /* datasrc.c
  * vi: set sw=4 ts=8 ai sm noet :
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
@@ -47,12 +47,12 @@ struct utimbuf
 #include <ctime>
 #include <string>
 
-List       *g_data_source_list{};                     /* a list of all DataSources */
-DataSource *g_data_source{};                          /* the current datasrc */
+List       *g_data_source_list{};                     // a list of all DataSources
+DataSource *g_data_source{};                          // the current datasrc
 int         g_data_source_cnt{};                      //
 char       *g_trn_access_mem{};                       //
 std::string g_nntp_auth_file;                         //
-time_t      g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */
+time_t      g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
 
 enum
 {
@@ -151,7 +151,7 @@ void data_source_init()
             machine = nullptr;
             actname = ACTIVE;
         }
-        prep_ini_words(s_datasrc_ini);  /* re-zero the values */
+        prep_ini_words(s_datasrc_ini);  // re-zero the values
 
         vals[DI_NNTP_SERVER] = machine;
         vals[DI_ACTIVE_FILE] = actname;
@@ -299,7 +299,7 @@ static DataSource *new_data_source(const char *name, char **vals)
     dp->extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
     if (dp->flags & DF_REMOTE)
     {
-        /* FYI, we know extra_name to be nullptr in this case. */
+        // FYI, we know extra_name to be nullptr in this case.
         if (vals[DI_ACTIVE_FILE])
         {
             dp->extra_name = save_str(file_exp(vals[DI_ACTIVE_FILE]));
@@ -470,7 +470,7 @@ bool open_data_source(DataSource *dp)
                     success = active_file_hash(dp);
                     break;
                 }
-                /* FALL THROUGH */
+                // FALL THROUGH
 
             case 0:
                 dp->flags |= DF_USE_LIST_ACTIVE;
@@ -641,14 +641,14 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
     char* lbp;
     int lbp_len;
 
-    /* Do a quick, hashed lookup */
+    // Do a quick, hashed lookup
 
     outbuf[0] = '\0';
     HashDatum data = hash_fetch(dp->act_sf.hp, nam, len);
     if (data.dat_ptr)
     {
         ListNode* node = (ListNode*)data.dat_ptr;
-        /*dp->act_sf.lp->recent = node;*/
+        // dp->act_sf.lp->recent = node;
         act_pos = node->low + data.dat_len;
         lbp = node->data + data.dat_len;
         lbp_len = std::strchr(lbp, '\n') - lbp + 1;
@@ -675,7 +675,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
             break;
 
         case -2:
-            /* TODO */
+            // TODO
             break;
         }
         set_data_source(save_datasrc);
@@ -688,7 +688,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
             return true;
         }
 # ifndef ANCIENT_NEWS
-        /* Safely update the low-water mark */
+        // Safely update the low-water mark
         {
             char* f = std::strrchr(outbuf, ' ');
             char* t = lbp + lbp_len;
@@ -735,7 +735,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
             goto use_cache;
         }
 
-        /* hopefully this forces a reread */
+        // hopefully this forces a reread
         std::fseek(fp,2000000000L,1);
 
         /* if line has changed length or is not there, we should
@@ -744,17 +744,17 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
             && std::fgets(outbuf, LINE_BUF_LEN, fp) != nullptr //
             && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ')
         {
-            /* Remember the latest info in our cache. */
+            // Remember the latest info in our cache.
             (void) std::memcpy(lbp,outbuf,lbp_len);
             return true;
         }
 use_cache:
-        /* Return our cached version */
+        // Return our cached version
         (void) std::memcpy(outbuf,lbp,lbp_len);
         outbuf[lbp_len] = '\0';
         return true;
     }
-    return false;       /* no such group */
+    return false;       // no such group
 }
 
 const char *find_group_desc(DataSource *dp, const char *group_name)
@@ -775,7 +775,7 @@ const char *find_group_desc(DataSource *dp, const char *group_name)
             if ((dp->flags & (DF_TMP_GROUP_DESC | DF_NO_XGTITLE)) == DF_TMP_GROUP_DESC //
                 && g_net_speed < 5)
             {
-                (void)source_file_open(&dp->desc_sf,nullptr, /* TODO: check return? */
+                (void)source_file_open(&dp->desc_sf,nullptr, // TODO: check return?
                                    nullptr,nullptr);
                 grouplen = std::strlen(group_name);
                 goto try_xgtitle;
@@ -813,7 +813,7 @@ const char *find_group_desc(DataSource *dp, const char *group_name)
     if (HashDatum data = hash_fetch(dp->desc_sf.hp, group_name, grouplen); data.dat_ptr)
     {
         ListNode*node = (ListNode*)data.dat_ptr;
-        /*dp->act_sf.lp->recent = node;*/
+        // dp->act_sf.lp->recent = node;
         return node->data + data.dat_len + grouplen + 1;
     }
 
@@ -908,7 +908,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
             {
                 std::printf("Getting %s file from %s.", fetch_cmd, server);
                 std::fflush(stdout);
-                /* tell server we want the file */
+                // tell server we want the file
                 if (!(g_nntp_link.flags & NNTP_NEW_CMD_OK))
                 {
                     use_buffered_nntp_gets = true;
@@ -960,7 +960,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
 
     source_file_close(sfp);
 
-    /* Create a list with one character per item using a large chunk size. */
+    // Create a list with one character per item using a large chunk size.
     sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
     sfp->hp = hash_create(3001, source_file_cmp);
     sfp->fp = fp;
@@ -1150,7 +1150,7 @@ void source_file_close(SourceFile *sfp)
 
 static int source_file_cmp(const char *key, int key_len, HashDatum data)
 {
-    /* We already know that the lengths are equal, just compare the strings */
+    // We already know that the lengths are equal, just compare the strings
     return std::memcmp(key, ((ListNode*)data.dat_ptr)->data + data.dat_len, key_len);
 }
 
@@ -1183,9 +1183,9 @@ static int source_file_cmp(const char *key, int key_len, HashDatum data)
  * or not they had precisely the same edit distance, but oh well.
  */
 
-static char **s_newsgroup_ptrs{}; /* List of potential matches */
-static int    s_newsgroup_num{};  /* Length of list in s_ngptrs[] */
-static int    s_best_match{};     /* Value of best match */
+static char **s_newsgroup_ptrs{}; // List of potential matches
+static int    s_newsgroup_num{};  // Length of list in s_ngptrs[]
+static int    s_best_match{};     // Value of best match
 
 int find_close_match()
 {
@@ -1195,7 +1195,7 @@ int find_close_match()
     s_newsgroup_ptrs = (char**)safe_malloc(MAX_NG * sizeof (char*));
     s_newsgroup_num = 0;
 
-    /* Iterate over all legal newsgroups */
+    // Iterate over all legal newsgroups
     for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
     {
         if (dp->flags & DF_OPEN)
@@ -1217,7 +1217,7 @@ int find_close_match()
         ret = 0;
     }
 
-    /* s_ngn is the number of possibilities.  If there's just one, go with it. */
+    // s_ngn is the number of possibilities.  If there's just one, go with it.
 
     switch (s_newsgroup_num)
     {
@@ -1268,7 +1268,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
         name = ((ListNode *) data->dat_ptr)->data + data->dat_len;
     }
 
-    /* Efficiency: don't call edit_dist when the lengths are too different. */
+    // Efficiency: don't call edit_dist when the lengths are too different.
     const int ngname_len = static_cast<int>(g_newsgroup_name.length());
     if (len < ngname_len)
     {
@@ -1326,7 +1326,7 @@ static int get_near_miss()
     {
         std::printf("However, here are some close matches:\n");
     }
-    s_newsgroup_num = std::min(s_newsgroup_num, 9);         /* Since we're using single digits.... */
+    s_newsgroup_num = std::min(s_newsgroup_num, 9);         // Since we're using single digits....
     for (int i = 0; i < s_newsgroup_num; i++)
     {
         char* cp = std::strchr(s_newsgroup_ptrs[i], ' ');
@@ -1335,7 +1335,7 @@ static int get_near_miss()
             *cp = '\0';
         }
         std::printf("  %d.  %s\n", i+1, s_newsgroup_ptrs[i]);
-        std::sprintf(op++, "%d", i+1);       /* Expensive, but avoids ASCII deps */
+        std::sprintf(op++, "%d", i+1);       // Expensive, but avoids ASCII deps
         if (cp)
         {
             *cp = ' ';
