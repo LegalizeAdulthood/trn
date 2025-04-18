@@ -18,7 +18,7 @@
 
 #include <string>
 
-/* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
+// Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 extern std::string g_charsets;
 extern const char* g_char_subst;
 
