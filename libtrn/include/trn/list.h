@@ -1,6 +1,6 @@
 /* trn/list.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_LIST_H
 #define TRN_LIST_H
 
@@ -22,7 +22,7 @@ struct ListNode
     long      low;
     long      high;
     char     *data_high;
-    char      data[1]; /* this is actually longer */
+    char      data[1]; // this is actually longer
 };
 
 struct List
