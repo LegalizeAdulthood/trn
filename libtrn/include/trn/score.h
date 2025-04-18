@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* trn/score.h
  *
  */
@@ -7,22 +7,22 @@
 
 #include <config/typedef.h>
 
-/* RETHINK LOWSCORE: (especially for 16-bit scores?) */
-/* score given to unavailable articles */
+// RETHINK LOWSCORE: (especially for 16-bit scores?)
+// score given to unavailable articles
 enum
 {
     LOW_SCORE = -999999
 };
 
 extern bool       g_kill_thresh_active;
-extern int        g_kill_thresh;     /* KILL articles at or below this score */
-extern ArticleNum g_sc_fill_max;     /* maximum art# scored by fill-routine */
-extern bool       g_sc_fill_read;    /* true if also scoring read arts... */
-extern bool       g_sc_initialized;  /* has score been initialized (are we "in" scoring?) */
-extern bool       g_sc_scoring;      /* are we currently scoring an article (prevents loops) */
-extern bool       g_score_new_first; /* changes order of sorting (artnum comparison) when scores are equal */
-extern bool       g_sc_saves_cores;  /* If true, save the scores for this group on exit. */
-extern bool       g_sc_delay;        /* If true, delay initialization of scoring until explicitly required */
+extern int        g_kill_thresh;     // KILL articles at or below this score
+extern ArticleNum g_sc_fill_max;     // maximum art# scored by fill-routine
+extern bool       g_sc_fill_read;    // true if also scoring read arts...
+extern bool       g_sc_initialized;  // has score been initialized (are we "in" scoring?)
+extern bool       g_sc_scoring;      // are we currently scoring an article (prevents loops)
+extern bool       g_score_new_first; // changes order of sorting (artnum comparison) when scores are equal
+extern bool       g_sc_saves_cores;  // If true, save the scores for this group on exit.
+extern bool       g_sc_delay;        // If true, delay initialization of scoring until explicitly required
 
 void sc_init(bool pend_wait);
 void sc_cleanup();
