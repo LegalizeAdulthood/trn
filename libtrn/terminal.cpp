@@ -163,7 +163,7 @@ static int         s_next_out{};
 static const char *s_read_err{"rn read error"};
 
 #ifndef MSDOS
-static char s_termcap_area[TCSIZE]; // area for "compiled" termcap strings
+static char s_termcap_area[TC_SIZE]; // area for "compiled" termcap strings
 #endif
 static KeyMap *s_top_map{};
 static char   *s_lines_export{};
@@ -314,12 +314,12 @@ void term_set(char *tcbuf)
         std::printf("No termcap %s found.\n", status ? "file" : "entry");
         finalize(1);
     }
-    tmpaddr = s_termcap_area;                 // set up strange tgetstr pointer
+    tmpaddr = s_termcap_area;           // set up strange tgetstr pointer
     s = Tgetstr("pc");                  // get pad character
-    s_tc_PC = *s;                               // get it where tputs wants it
+    s_tc_PC = *s;                       // get it where tputs wants it
     if (!tgetflag("bs"))                // is backspace not used?
     {
-        g_tc_BC = Tgetstr("bc");                // find out what is
+        g_tc_BC = Tgetstr("bc");        // find out what is
         if (empty(g_tc_BC))             // terminfo grok's 'bs' but not 'bc'
         {
             g_tc_BC = Tgetstr("le");
