@@ -13,7 +13,7 @@
 #include <string>
 
 static char *s_nntp_password{};
-static char s_nomem[] = "trn: out of memory!\n";
+static char s_no_memory[] = "trn: out of memory!\n";
 
 int do_shell(const char *shell, const char *cmd)
 {
@@ -34,7 +34,7 @@ char *safe_malloc(MemorySize size)
     char *ptr = (char*)std::malloc(size ? size : (MemorySize)1);
     if (!ptr)
     {
-        std::fputs(s_nomem,stdout);
+        std::fputs(s_no_memory,stdout);
         finalize(1);
     }
     return ptr;
@@ -49,7 +49,7 @@ char *safe_realloc(char *where, MemorySize size)
     char *ptr = (char*)std::realloc(where, size ? size : (MemorySize)1);
     if (!ptr)
     {
-        std::fputs(s_nomem,stdout);
+        std::fputs(s_no_memory,stdout);
         finalize(1);
     }
     return ptr;

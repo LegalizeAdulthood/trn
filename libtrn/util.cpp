@@ -53,19 +53,19 @@ bool g_waiting{}; /* waiting for subprocess (in doshell)? */
 bool g_no_wait_fork{};
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
-int      g_len_last_line_got{};
+int        g_len_last_line_got{};
 MemorySize g_buf_len_last_line_got{};
 
 #ifndef USE_DEBUGGING_MALLOC
-static char s_nomem[] = "trn: out of memory!\n";
+static char s_no_memory[] = "trn: out of memory!\n";
 #endif
 
 static char  s_null_export[] = "_=X"; /* Just in case doshell precedes util_init */
-static char *s_newsactive_export = s_null_export + 2;
-static char *s_grpdesc_export = s_null_export + 2;
-static char *s_quotechars_export = s_null_export + 2;
-static char *s_nntpserver_export = s_null_export + 2;
-static char *s_nntpforce_export = s_null_export + 2;
+static char *s_newsa_ctive_export = s_null_export + 2;
+static char *s_group_desc_export = s_null_export + 2;
+static char *s_quote_chars_export = s_null_export + 2;
+static char *s_nntp_server_export = s_null_export + 2;
+static char *s_nntp_force_export = s_null_export + 2;
 
 void util_init()
 {
@@ -77,13 +77,13 @@ void util_init()
         *cp++ = 'X';
     }
     *cp = '\0';
-    s_newsactive_export = export_var("NEWSACTIVE", g_buf);
-    s_grpdesc_export = export_var("NEWSDESCRIPTIONS", g_buf);
-    s_nntpserver_export = export_var("NNTPSERVER", g_buf);
+    s_newsa_ctive_export = export_var("NEWSACTIVE", g_buf);
+    s_group_desc_export = export_var("NEWSDESCRIPTIONS", g_buf);
+    s_nntp_server_export = export_var("NNTPSERVER", g_buf);
     g_buf[64] = '\0';
-    s_quotechars_export = export_var("QUOTECHARS",g_buf);
+    s_quote_chars_export = export_var("QUOTECHARS",g_buf);
     g_buf[3] = '\0';
-    s_nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
+    s_nntp_force_export = export_var("NNTP_FORCE_AUTH", g_buf);
     export_var("TRN_VERSION", g_patch_level.c_str());
 }
 
@@ -116,14 +116,14 @@ int do_shell(const char *shell, const char *cmd)
 #endif
     if (g_data_source && (g_data_source->flags & DF_REMOTE))
     {
-        re_export(s_nntpserver_export,g_data_source->news_id,512);
+        re_export(s_nntp_server_export,g_data_source->news_id,512);
         if (g_data_source->nntp_link.flags & NNTP_FORCE_AUTH_NEEDED)
         {
-            re_export(s_nntpforce_export,"yes",3);
+            re_export(s_nntp_force_export,"yes",3);
         }
         else
         {
-            un_export(s_nntpforce_export);
+            un_export(s_nntp_force_export);
         }
         if (g_data_source->auth_user)
         {
@@ -142,46 +142,46 @@ int do_shell(const char *shell, const char *cmd)
         }
         if (g_nntplink.port_number)
         {
-            int len = std::strlen(s_nntpserver_export);
+            int len = std::strlen(s_nntp_server_export);
             std::sprintf(g_buf,";%d",g_nntplink.port_number);
             if (len + (int)std::strlen(g_buf) < 511)
             {
-                std::strcpy(s_nntpserver_export+len, g_buf);
+                std::strcpy(s_nntp_server_export+len, g_buf);
             }
         }
         if (g_data_source->act_sf.fp)
         {
-            re_export(s_newsactive_export, g_data_source->extra_name, 512);
+            re_export(s_newsa_ctive_export, g_data_source->extra_name, 512);
         }
         else
         {
-            re_export(s_newsactive_export, "none", 512);
+            re_export(s_newsa_ctive_export, "none", 512);
         }
     }
     else
     {
-        un_export(s_nntpserver_export);
-        un_export(s_nntpforce_export);
+        un_export(s_nntp_server_export);
+        un_export(s_nntp_force_export);
         if (g_data_source)
         {
-            re_export(s_newsactive_export, g_data_source->news_id, 512);
+            re_export(s_newsa_ctive_export, g_data_source->news_id, 512);
         }
         else
         {
-            un_export(s_newsactive_export);
+            un_export(s_newsa_ctive_export);
         }
     }
     if (g_data_source)
     {
-        re_export(s_grpdesc_export, g_data_source->group_desc, 512);
+        re_export(s_group_desc_export, g_data_source->group_desc, 512);
     }
     else
     {
-        un_export(s_grpdesc_export);
+        un_export(s_group_desc_export);
     }
     interp(g_buf,64-1+2,"%I");
     g_buf[std::strlen(g_buf)-1] = '\0';
-    re_export(s_quotechars_export, g_buf+1, 64);
+    re_export(s_quote_chars_export, g_buf+1, 64);
     if (shell == nullptr)
     {
         shell = get_val_const("SHELL", nullptr);
@@ -270,7 +270,7 @@ char *safe_malloc(MemorySize size)
     char *ptr = (char*)std::malloc(size ? size : (MemorySize)1);
     if (!ptr)
     {
-        std::fputs(s_nomem,stdout);
+        std::fputs(s_no_memory,stdout);
         sig_catcher(0);
     }
     return ptr;
@@ -294,7 +294,7 @@ char *safe_realloc(char *where, MemorySize size)
     }
     if (!ptr)
     {
-        std::fputs(s_nomem,stdout);
+        std::fputs(s_no_memory,stdout);
         sig_catcher(0);
     }
     return ptr;
