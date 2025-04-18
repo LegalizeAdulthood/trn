@@ -51,7 +51,7 @@ ArticleLine     g_highlight{-1};         /* next line to be highlighted */
 ArticleLine     g_first_view{};          //
 ArticlePosition g_raw_art_size{};        /* size in bytes of raw article */
 ArticlePosition g_art_size{};            /* size in bytes of article */
-char            g_art_line[LBUFLEN];     /* place for article lines */
+char            g_art_line[LINE_BUF_LEN];     /* place for article lines */
 int             g_g_line{};              //
 ArticlePosition g_inner_search{};        /* g_artpos of end of line we want to visit */
 ArticleLine     g_inner_light{};         /* highlight position for g_innersearch or 0 */
@@ -432,7 +432,7 @@ DoArticleResult do_article()
                 {
                     if (g_marking == STANDOUT)
                     {
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
                         if (g_erase_screen)
                         {
                             no_so_fire();
@@ -442,7 +442,7 @@ DoArticleResult do_article()
                     }
                     else
                     {
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
                         if (g_erase_screen)
                         {
                             no_ul_fire();

@@ -157,7 +157,7 @@ enum
     TC_STRINGS = 48 /* number of colors we can keep track of */
 };
 
-static char        s_circle_buf[PUSHSIZE]{};
+static char        s_circle_buf[PUSH_SIZE]{};
 static int         s_next_in{};
 static int         s_next_out{};
 static const char *s_read_err{"rn read error"};
@@ -461,14 +461,14 @@ void set_macro(char *seq, char *def)
      */
     if (seq[0] == '\033' && seq[1] == '[' && seq[2])
     {
-        char lbuf[LBUFLEN];     /* copy of possibly non-writable string */
+        char lbuf[LINE_BUF_LEN];     /* copy of possibly non-writable string */
         std::strcpy(lbuf,seq);
         lbuf[1] = 'O';
         mac_line(def,lbuf,0);
     }
     if (seq[0] == '\033' && seq[1] == 'O' && seq[2])
     {
-        char lbuf[LBUFLEN];     /* copy of possibly non-writable string */
+        char lbuf[LINE_BUF_LEN];     /* copy of possibly non-writable string */
         std::strcpy(lbuf,seq);
         lbuf[1] = '[';
         mac_line(def,lbuf,0);
@@ -806,7 +806,7 @@ bool finput_pending(bool check_term)
 
         case 1:
             s_next_out++;
-            s_next_out %= PUSHSIZE;
+            s_next_out %= PUSH_SIZE;
             s_not_echoing = 0;
             break;
 
@@ -842,12 +842,12 @@ bool finput_pending(bool check_term)
 /* input the 2nd and succeeding characters of a multi-character command */
 /* returns true if command finished, false if they rubbed out first character */
 
-static int s_buff_limit = LBUFLEN;
+static int s_buff_limit = LINE_BUF_LEN;
 
 bool finish_command(int donewline)
 {
     char *s = g_buf;
-    if (s[1] != FINISHCMD)              /* someone faking up a command? */
+    if (s[1] != FINISH_CMD)              /* someone faking up a command? */
     {
         return true;
     }
@@ -1173,7 +1173,7 @@ int read_tty(char *addr, int size)
     if (macro_pending())
     {
         *addr = s_circle_buf[s_next_out++];
-        s_next_out %= PUSHSIZE;
+        s_next_out %= PUSH_SIZE;
         return 1;
     }
 #ifdef MSDOS
@@ -1221,7 +1221,7 @@ void push_char(char_int c)
     s_next_out--;
     if (s_next_out < 0)
     {
-        s_next_out = PUSHSIZE - 1;
+        s_next_out = PUSH_SIZE - 1;
     }
     if (s_next_out == s_next_in)
     {
@@ -1271,7 +1271,7 @@ void under_print(const char *s)
 
 /* keep screen from flashing strangely on magic cookie terminals */
 
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
 void no_so_fire()
 {
     /* should we disable fireworks? */
@@ -1285,7 +1285,7 @@ void no_so_fire()
 }
 #endif
 
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
 void no_ul_fire()
 {
     /* should we disable fireworks? */
@@ -1400,7 +1400,7 @@ got_canonical:
 #endif
     if (whatbuf == g_buf)
     {
-        whatbuf[1] = FINISHCMD;         /* tell finish_command to work */
+        whatbuf[1] = FINISH_CMD;         /* tell finish_command to work */
     }
 #ifdef SIGALRM
     (void) alarm(0);
@@ -1409,11 +1409,11 @@ got_canonical:
 
 void push_string(char *str, char_int bits)
 {
-    char tmpbuf[PUSHSIZE];
+    char tmpbuf[PUSH_SIZE];
     char* s = tmpbuf;
 
     TRN_ASSERT(str != nullptr);
-    interp(tmpbuf,PUSHSIZE,str);
+    interp(tmpbuf,PUSH_SIZE,str);
     for (int i = std::strlen(s) - 1; i >= 0; i--)
     {
         push_char(s[i] ^ bits);
@@ -1859,7 +1859,7 @@ int print_lines(const char *what_to_print, int hilite)
         }
         if (hilite == STANDOUT)
         {
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
             if (g_erase_screen)
             {
                 no_so_fire();
@@ -1869,7 +1869,7 @@ int print_lines(const char *what_to_print, int hilite)
         }
         else if (hilite == UNDERLINE)
         {
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
             if (g_erase_screen)
             {
                 no_ul_fire();
@@ -2002,7 +2002,7 @@ void pad(int num)
 
 void print_cmd()
 {
-    if (g_verify && g_buf[1] == FINISHCMD)
+    if (g_verify && g_buf[1] == FINISH_CMD)
     {
         if (!at_norm_char(g_buf))
         {

@@ -93,7 +93,7 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
 /* add port support later? */
 bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 {
-#ifdef USEFTP
+#ifdef USE_FTP
     static char cmdline[1024];
     static char path[512];      /* use to make writable copy */
     /* buffers used because because filexp overwrites previous call results */

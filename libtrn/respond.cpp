@@ -63,8 +63,8 @@ SaveResult save_article()
 {
     char* s;
     char* c;
-    char altbuf[CBUFLEN];
-    bool interactive = (g_buf[1] == FINISHCMD);
+    char altbuf[CMD_BUF_LEN];
+    bool interactive = (g_buf[1] == FINISH_CMD);
     char cmd = *g_buf;
 
     if (!finish_command(interactive))   /* get rest of command */
@@ -483,7 +483,7 @@ SaveResult save_article()
             }
             else
             {
-                if (std::fread(g_buf, 1, LBUFLEN, s_tmp_fp))
+                if (std::fread(g_buf, 1, LINE_BUF_LEN, s_tmp_fp))
                 {
                     c = g_buf;
                     if (!std::isspace(MBOXCHAR))   /* if non-zero, */
@@ -538,7 +538,7 @@ SaveResult save_article()
                 std::fprintf(s_tmp_fp, "Article: %ld of %s\n", g_art, g_newsgroup_name.c_str());
             }
             seek_art(g_save_from);
-            while (read_art(g_buf, LBUFLEN) != nullptr)
+            while (read_art(g_buf, LINE_BUF_LEN) != nullptr)
             {
                 if (quote_From && string_case_equal(g_buf, "from ",5))
                 {
@@ -657,7 +657,7 @@ SaveResult view_article()
 
 int cancel_article()
 {
-    char hbuf[5*LBUFLEN];
+    char hbuf[5*LINE_BUF_LEN];
     int  myuid = current_user_id();
     int  r = -1;
 
@@ -729,7 +729,7 @@ done:
 
 int supersede_article()         /* Supersedes: */
 {
-    char hbuf[5*LBUFLEN];
+    char hbuf[5*LINE_BUF_LEN];
     int  myuid = current_user_id();
     int  r = -1;
     bool incl_body = (*g_buf == 'Z');
@@ -792,7 +792,7 @@ int supersede_article()         /* Supersedes: */
         {
             parse_header(g_art);
             seek_art(g_header_type[PAST_HEADER].min_pos);
-            while (read_art(g_buf,LBUFLEN) != nullptr)
+            while (read_art(g_buf,LINE_BUF_LEN) != nullptr)
             {
                 std::fputs(g_buf, header);
             }
@@ -861,7 +861,7 @@ static void follow_it_up()
 
 void reply()
 {
-    char hbuf[5*LBUFLEN];
+    char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'R' && g_art);
     char* maildoer = save_str(get_val_const("MAILPOSTER",MAILPOSTER));
 
@@ -923,7 +923,7 @@ done:
 
 void forward()
 {
-    char hbuf[5*LBUFLEN];
+    char hbuf[5*LINE_BUF_LEN];
     char* maildoer = save_str(get_val_const("FORWARDPOSTER",FORWARDPOSTER));
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
@@ -1066,7 +1066,7 @@ void forward()
 
 void followup()
 {
-    char hbuf[5*LBUFLEN];
+    char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'F' && g_art);
     ArticleNum oldart = g_art;
 

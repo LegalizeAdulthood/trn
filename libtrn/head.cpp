@@ -108,7 +108,7 @@ void head_init()
                                             * sizeof (UserHeaderType));
     g_user_htype[g_user_htype_count++].name = "*";
 
-    s_head_buf_size = LBUFLEN * 8;
+    s_head_buf_size = LINE_BUF_LEN * 8;
     g_head_buf = safe_malloc(s_head_buf_size);
 }
 
@@ -436,16 +436,16 @@ bool parse_header(ArticleNum art_num)
     char *bp = g_head_buf;
     while (g_in_header)
     {
-        if (s_head_buf_size < g_art_pos + LBUFLEN)
+        if (s_head_buf_size < g_art_pos + LINE_BUF_LEN)
         {
             len = bp - g_head_buf;
-            s_head_buf_size += LBUFLEN * 4;
+            s_head_buf_size += LINE_BUF_LEN * 4;
             g_head_buf = safe_realloc(g_head_buf,s_head_buf_size);
             bp = g_head_buf + len;
         }
         if (s_reading_nntp_header)
         {
-            found_nl = nntp_gets(bp,LBUFLEN) == NGSR_FULL_LINE;
+            found_nl = nntp_gets(bp,LINE_BUF_LEN) == NGSR_FULL_LINE;
             if (found_nl < 0)
             {
                 std::strcpy(bp, ".");
@@ -468,7 +468,7 @@ bool parse_header(ArticleNum art_num)
         }
         else
         {
-            if (read_art(bp,LBUFLEN) == nullptr)
+            if (read_art(bp,LINE_BUF_LEN) == nullptr)
             {
                 break;
             }
@@ -622,7 +622,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         spin(20);
         if (copy)
         {
-            size = LBUFLEN;
+            size = LINE_BUF_LEN;
             s = safe_malloc((MemorySize) size);
         }
         else

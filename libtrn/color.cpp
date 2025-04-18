@@ -399,14 +399,14 @@ static void output_color()
         break;
 
     case STANDOUT:
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
         no_so_fire();
 #endif
         standout();
         break;
 
     case UNDERLINE:
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
         no_ul_fire();
 #endif
         underline();

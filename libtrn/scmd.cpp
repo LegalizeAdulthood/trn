@@ -45,7 +45,7 @@ int s_finish_cmd(const char *string)
         std::printf("%s",string);
         std::fflush(stdout);
     }
-    g_buf[1] = FINISHCMD;
+    g_buf[1] = FINISH_CMD;
     return finish_command(false);       /* do not echo newline */
 }
 
@@ -252,7 +252,7 @@ int s_do_cmd()
         break;
 
     case Ctl('f'):    /* refresh (mail) display */
-#ifdef MAILCALL
+#ifdef MAIL_CALL
         set_mail(true);
 #endif
         g_s_ref_bot = true;
@@ -345,17 +345,17 @@ int s_do_cmd()
     return 0;           /* keep on looping! */
 }
 
-static char s_search_text[LBUFLEN]{};
+static char s_search_text[LINE_BUF_LEN]{};
 static char s_search_init{};
 
 bool s_match_description(long ent)
 {
-    static char lbuf[LBUFLEN];
+    static char lbuf[LINE_BUF_LEN];
 
     int lines = s_ent_lines(ent);
     for (int i = 1; i <= lines; i++)
     {
-        std::strncpy(lbuf,s_get_desc(ent,i,false),LBUFLEN);
+        std::strncpy(lbuf,s_get_desc(ent,i,false),LINE_BUF_LEN);
         for (char *s = lbuf; *s; s++)
         {
             if (std::isupper(*s))
@@ -433,7 +433,7 @@ void s_search()
         /* make leading space skip an option later? */
         /* (it isn't too important because substring matching is used) */
         char *s = skip_eq(g_buf + 1, ' '); /* skip leading spaces */
-        std::strncpy(s_search_text,s,LBUFLEN);
+        std::strncpy(s_search_text,s,LINE_BUF_LEN);
         for (char *t = s_search_text; *t != '\0'; t++)
         {
             if (std::isupper(*t))

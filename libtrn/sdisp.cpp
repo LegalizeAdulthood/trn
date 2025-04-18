@@ -34,7 +34,7 @@ void s_mail_and_place()
     bool previous;
     bool next;
 
-#ifdef MAILCALL
+#ifdef MAIL_CALL
     set_mail(false);             /* another chance to check mail */
     std::printf("%s",g_mail_call);
 #endif /* MAILCALL */

@@ -1615,7 +1615,7 @@ static void sel_prompt()
     {
         goto_xy(0, g_sel_last_line);
     }
-#ifdef MAILCALL
+#ifdef MAIL_CALL
     set_mail(false);
 #endif
     if (g_sel_at_end)
@@ -2030,7 +2030,7 @@ static DisplayState sel_command(char_int ch)
     }
   do_command:
     *g_buf = ch;
-    g_buf[1] = FINISHCMD;
+    g_buf[1] = FINISH_CMD;
     g_output_chase_phrase = true;
     switch (ch)
     {
@@ -2072,7 +2072,7 @@ static DisplayState sel_command(char_int ch)
     case Ctl('^'):
         erase_line(false);              /* erase the prompt */
         s_removed_prompt |= RP_NEWLINE;
-#ifdef MAILCALL
+#ifdef MAIL_CALL
         set_mail(true);          /* force a mail check */
 #endif
         break;

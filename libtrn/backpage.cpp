@@ -13,7 +13,7 @@
 #include <cstdio>
 
 static int             s_vary_fd{0};         /* virtual array file for storing  file offsets */
-static ArticlePosition s_vary_buf[VARYSIZE]; /* current window onto virtual array */
+static ArticlePosition s_vary_buf[VARY_SIZE]; /* current window onto virtual array */
 static long            s_old_offset{-1};     /* offset to block currently in window */
 
 void back_page_init()
@@ -48,7 +48,7 @@ ArticlePosition virtual_read(ArticleLine index)
     {
         return 0;
     }
-    subindx = index % VARYSIZE;
+    subindx = index % VARY_SIZE;
     offset = (index - subindx) * sizeof(s_vary_buf[0]);
     if (offset != s_old_offset)
     {
@@ -92,7 +92,7 @@ void virtual_write(ArticleLine index, ArticlePosition value)
         maxindx = indx;
     }
 #endif
-    subindx = index % VARYSIZE;
+    subindx = index % VARY_SIZE;
     offset = (index - subindx) * sizeof(s_vary_buf[0]);
     if (offset != s_old_offset)
     {

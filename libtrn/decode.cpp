@@ -541,7 +541,7 @@ DecodeFunc decode_function(MimeEncoding encoding)
 /* return a directory to use for unpacking the pieces of a given filename */
 char *decode_mkdir(const char *filename)
 {
-    static char dir[LBUFLEN];
+    static char dir[LINE_BUF_LEN];
 
 #ifdef MSDOS
     interp(dir, sizeof dir, "%Y/parts/");

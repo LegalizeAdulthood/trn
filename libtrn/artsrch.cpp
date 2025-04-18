@@ -334,7 +334,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
     if (saltaway)
     {
-        char  saltbuf[LBUFLEN];
+        char  saltbuf[LINE_BUF_LEN];
         char *s = saltbuf;
         const char *f = pattern;
         *s++ = '/';
@@ -364,11 +364,11 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             *s++ = g_scope_str[howmuch];
             if (howmuch == ARTSCOPE_ONE_HDR)
             {
-                safe_copy(s,g_header_type[srchhdr].name,LBUFLEN-(s-saltbuf));
+                safe_copy(s,g_header_type[srchhdr].name,LINE_BUF_LEN-(s-saltbuf));
                 s += g_header_type[srchhdr].length;
-                if (s - saltbuf > LBUFLEN-2)
+                if (s - saltbuf > LINE_BUF_LEN-2)
                 {
-                    s = saltbuf + LBUFLEN - 2;
+                    s = saltbuf + LINE_BUF_LEN - 2;
                 }
             }
         }
@@ -377,7 +377,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         {
             cmdlst = save_str("j");
         }
-        safe_copy(s,cmdlst,LBUFLEN-(s-saltbuf));
+        safe_copy(s,cmdlst,LINE_BUF_LEN-(s-saltbuf));
         kill_file_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd)

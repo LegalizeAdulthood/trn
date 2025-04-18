@@ -1785,7 +1785,7 @@ const char *quote_string(const char *val)
 
 void cwd_check()
 {
-    char tmpbuf[LBUFLEN];
+    char tmpbuf[LINE_BUF_LEN];
 
     if (g_priv_dir.empty())
     {

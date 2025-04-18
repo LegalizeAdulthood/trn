@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <cstring>
 
-static char s_sa_buf[LBUFLEN];    /* misc. buffer */
+static char s_sa_buf[LINE_BUF_LEN];    /* misc. buffer */
 
 /* returns statchars in temp space... */
 // int line;            /* which status line (1 = first) */

@@ -741,7 +741,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
         /* if line has changed length or is not there, we should
          * discard/close the active file, and re-open it. */
         if (std::fseek(fp, act_pos, 0) >= 0               //
-            && std::fgets(outbuf, LBUFLEN, fp) != nullptr //
+            && std::fgets(outbuf, LINE_BUF_LEN, fp) != nullptr //
             && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ')
         {
             /* Remember the latest info in our cache. */

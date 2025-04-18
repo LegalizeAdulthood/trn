@@ -60,7 +60,7 @@ Article   *g_artp{};            /* the article ptr we use when art is 0 */
 int        g_check_count{};     /* how many articles have we read in the current newsgroup since the last checkpoint? */
 int        g_do_check_when{20}; /* how often to do checkpoint */
 char      *g_subj_line{};       /* what format to use for '=' */
-#ifdef MAILCALL
+#ifdef MAIL_CALL
 int        g_mail_count{};      /* check for mail when 0 mod 10 */
 #endif
 char       *g_mail_call{""};
@@ -482,7 +482,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 /* if these gotos bother you, think of this as a little state machine */
 
 reask_article:
-#ifdef MAILCALL
+#ifdef MAIL_CALL
         set_mail(false);
 #endif
         set_default_cmd();
@@ -663,7 +663,7 @@ static ArticleSwitchResult art_switch()
 
     case '"':                 /* append to local SCORE file */
         g_buf[0] = ':';         /* enter command on next line */
-        g_buf[1] = FINISHCMD;
+        g_buf[1] = FINISH_CMD;
         std::printf("\nEnter score append command or type RETURN for a menu\n");
         term_down(2);
         std::fflush(stdout);
@@ -675,7 +675,7 @@ static ArticleSwitchResult art_switch()
 
     case '\'':                /* execute scoring command */
         g_buf[0] = ':';
-        g_buf[1] = FINISHCMD;
+        g_buf[1] = FINISH_CMD;
         std::printf("\nEnter scoring command or type RETURN for a menu\n");
         term_down(2);
         std::fflush(stdout);
@@ -1594,7 +1594,7 @@ run_the_selector:
 
     case Ctl('^'):
         erase_line(false);              /* erase the prompt */
-#ifdef MAILCALL
+#ifdef MAIL_CALL
         set_mail(true);          /* force a mail check */
 #endif
         return AS_ASK;
@@ -1850,7 +1850,7 @@ run_the_selector:
 
 /* see if there is any mail */
 
-#ifdef MAILCALL
+#ifdef MAIL_CALL
 void set_mail(bool force)
 {
     if (force)
@@ -1973,7 +1973,7 @@ reask_catchup:
     }
     if (isdigit(ch))
     {
-        g_buf[1] = FINISHCMD;
+        g_buf[1] = FINISH_CMD;
         if (!finish_command(false))
         {
             use_one_line = false;

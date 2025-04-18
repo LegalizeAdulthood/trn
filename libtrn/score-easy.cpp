@@ -14,7 +14,7 @@
 #include <cstring>
 
 /* new line to return to the caller. */
-static char s_sc_e_newline[LBUFLEN];
+static char s_sc_e_newline[LINE_BUF_LEN];
 
 /* returns new string or nullptr to abort. */
 char *sc_easy_append()
@@ -108,7 +108,7 @@ char *sc_easy_append()
             std::printf("Enter the line below:\n");
             std::fflush(stdout);
             g_buf[0] = '>';
-            g_buf[1] = FINISHCMD;
+            g_buf[1] = FINISH_CMD;
             if (finish_command(true))
             {
                 std::sprintf(s,"%s",g_buf+1);
@@ -134,7 +134,7 @@ char *sc_easy_append()
         std::printf("Enter a score amount (like 10 or -6):");
         std::fflush(stdout);
         g_buf[0] = ' ';
-        g_buf[1] = FINISHCMD;
+        g_buf[1] = FINISH_CMD;
         if (finish_command(true))
         {
             long score = atoi(g_buf + 1);

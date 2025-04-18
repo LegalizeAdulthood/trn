@@ -158,7 +158,7 @@ int do_kill_file(std::FILE *kfp, int entering)
     g_art = g_last_art+1;
     g_kill_first = g_first_art;
     std::fseek(kfp,0L,0);                    /* rewind file */
-    while (std::fgets(g_buf, LBUFLEN, kfp) != nullptr)
+    while (std::fgets(g_buf, LINE_BUF_LEN, kfp) != nullptr)
     {
         if (*(cp = g_buf + std::strlen(g_buf) - 1) == '\n')
         {
@@ -522,7 +522,7 @@ void rewrite_kill_file(ArticleNum thru)
     if (s_new_kill_file_fp != nullptr)
     {
         std::fprintf(s_new_kill_file_fp,"THRU %s %ld\n",g_newsgroup_ptr->rc->name,(long)thru);
-        while (g_local_kfp && std::fgets(g_buf, LBUFLEN, g_local_kfp) != nullptr)
+        while (g_local_kfp && std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
         {
             if (!std::strncmp(g_buf, "THRU", 4))
             {
@@ -565,7 +565,7 @@ void rewrite_kill_file(ArticleNum thru)
         if (has_star_commands)
         {
             std::fseek(g_local_kfp,0L,0);                     /* rewind file */
-            while (std::fgets(g_buf, LBUFLEN, g_local_kfp) != nullptr)
+            while (std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
             {
                 bp = skip_space(g_buf);
                 if (*bp == '*')
@@ -833,7 +833,7 @@ void edit_kill_file()
         {
             std::fseek(g_local_kfp,0L,0);     /* rewind file */
             g_kf_state &= ~KFS_NORMAL_LINES;
-            while (std::fgets(g_buf, LBUFLEN, g_local_kfp) != nullptr)
+            while (std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
             {
                 bp = skip_space(g_buf);
                 if (*bp == '/' || *bp == '*')

@@ -213,7 +213,7 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     std::memset((char*)rp,0,sizeof (Newsrc));
     rp->data_source = dp;
     rp->name = save_str(file_exp(newsrc));
-    char tmpbuf[CBUFLEN];
+    char tmpbuf[CMD_BUF_LEN];
     std::sprintf(tmpbuf, RCNAME_OLD, rp->name);
     rp->old_name = save_str(tmpbuf);
     std::sprintf(tmpbuf, RCNAME_NEW, rp->name);
@@ -422,10 +422,10 @@ static bool lock_newsrc(Newsrc *rp)
     char *runninghost;
     if (std::FILE *fp = std::fopen(rp->lock_name, "r"))
     {
-        if (std::fgets(g_buf, LBUFLEN, fp))
+        if (std::fgets(g_buf, LINE_BUF_LEN, fp))
         {
             processnum = std::atol(g_buf);
-            if (std::fgets(g_buf, LBUFLEN, fp) && *g_buf //
+            if (std::fgets(g_buf, LINE_BUF_LEN, fp) && *g_buf //
                 && *(s = g_buf + std::strlen(g_buf) - 1) == '\n')
             {
                 *s = '\0';
@@ -646,7 +646,7 @@ static bool open_newsrc(Newsrc *rp)
     /* read in the .newsrc file */
 
     char* some_buf;
-    while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr)
+    while ((some_buf = get_a_line(g_buf, LINE_BUF_LEN, false, rcfp)) != nullptr)
     {
         long length = g_len_last_line_got; /* side effect of get_a_line */
         if (length <= 1)                   /* only a newline??? */
@@ -869,7 +869,7 @@ void abandon_newsgroup(NewsgroupData *np)
     {
         int length = np->num_offset - 1;
 
-        while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr)
+        while ((some_buf = get_a_line(g_buf, LINE_BUF_LEN, false, rcfp)) != nullptr)
         {
             if (g_len_last_line_got <= 0)
             {

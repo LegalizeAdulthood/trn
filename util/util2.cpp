@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#ifdef TILDENAME
+#ifdef TILDE_NAME
 static char *s_tilde_name{};
 static char *s_tilde_dir{};
 #endif
@@ -72,11 +72,11 @@ char *copy_till(char *to, char *from, int delim)
 char *file_exp(const char *text)
 {
     // sbuf exists so that we can have a const input
-    static char sbuf[CBUFLEN];
+    static char sbuf[CMD_BUF_LEN];
     std::strcpy(sbuf, text);
     char *s = sbuf;
-    static char filename[CBUFLEN];
-    char scrbuf[CBUFLEN];
+    static char filename[CMD_BUF_LEN];
+    char scrbuf[CMD_BUF_LEN];
 
     /* interpret any % escapes */
     do_interp(filename,sizeof filename,s,nullptr,nullptr);
@@ -100,7 +100,7 @@ char *file_exp(const char *text)
         }
         else
         {
-#ifdef TILDENAME
+#ifdef TILDE_NAME
             {
                 char *d = scrbuf;
                 while (isalnum(*s))

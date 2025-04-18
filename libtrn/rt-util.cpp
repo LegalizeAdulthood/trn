@@ -581,7 +581,7 @@ char *compress_address(char *name, int max)
 */
 char *compress_from(const char *from, int size)
 {
-    static char lbuf[LBUFLEN];
+    static char lbuf[LINE_BUF_LEN];
 
     str_char_subst(lbuf, from ? from : "", sizeof lbuf, *g_char_subst);
     char *s = extract_name(lbuf);

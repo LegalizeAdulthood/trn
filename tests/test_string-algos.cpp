@@ -15,11 +15,11 @@ struct StringAlgosTest : Test
 protected:
     void configure_before_after(const char *before, const char *after)
     {
-        std::strncpy(m_buffer, before, LBUFLEN);
+        std::strncpy(m_buffer, before, LINE_BUF_LEN);
         m_after = after;
     }
 
-    char        m_buffer[LBUFLEN]{};
+    char        m_buffer[LINE_BUF_LEN]{};
     const char *m_after{};
 };
 

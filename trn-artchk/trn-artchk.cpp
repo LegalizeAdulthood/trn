@@ -33,7 +33,7 @@ int nntp_handle_timeout();
 char       *g_server_name{};
 std::string g_nntp_auth_file;
 int         debug{};
-char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
+char        g_buf[LINE_BUF_LEN + 1]; /* general purpose line buffer */
 
 int main(int argc, char *argv[])
 {
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     std::FILE *fp_ng{};
     bool check_active = false;
     bool check_ng = false;
-    char buff[LBUFLEN];
+    char buff[LINE_BUF_LEN];
     char*cp;
     char*ngptrs[MAX_NGS];
     int  nglens[MAX_NGS];
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     }
 
     /* Check the header for proper format and report on the newsgroups */
-    while (std::fgets(buff, LBUFLEN, fp))
+    while (std::fgets(buff, LINE_BUF_LEN, fp))
     {
         line_num++;
         buff[std::strlen(buff)-1] = '\0';
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
     }
 
     /* Check the body of the article for long lines */
-    while (std::fgets(buff, LBUFLEN, fp))
+    while (std::fgets(buff, LINE_BUF_LEN, fp))
     {
         line_num++;
         int col = std::strlen(buff) - 1;
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
         else if (fp_active != nullptr)
         {
             ngleft = ngcnt;
-            while (std::fgets(buff, LBUFLEN, fp_active))
+            while (std::fgets(buff, LINE_BUF_LEN, fp_active))
             {
                 if (!ngleft)
                 {
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
         if (fp_ng != nullptr)
         {
             ngleft = ngcnt;
-            while (std::fgets(buff, LBUFLEN, fp_ng))
+            while (std::fgets(buff, LINE_BUF_LEN, fp_ng))
             {
                 if (!ngleft)
                 {

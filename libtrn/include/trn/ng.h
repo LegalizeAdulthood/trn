@@ -20,7 +20,7 @@ extern Article   *g_artp;        /* the article ptr we use when g_art is 0 */
 extern int        g_check_count; /* how many articles have we read in the current newsgroup since the last checkpoint? */
 extern int        g_do_check_when; /* how often to do checkpoint */
 extern char      *g_subj_line;     /* what format to use for '=' */
-#ifdef MAILCALL
+#ifdef MAIL_CALL
 extern int g_mail_count;           /* check for mail when 0 mod 5 */
 #endif
 extern char       *g_mail_call;
@@ -46,7 +46,7 @@ enum DoNewsgroupResult
 
 void ng_init();
 DoNewsgroupResult do_newsgroup(char *start_command);
-#ifdef MAILCALL
+#ifdef MAIL_CALL
 void set_mail(bool force);
 #endif
 void set_default_cmd();

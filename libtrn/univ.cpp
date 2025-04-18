@@ -581,7 +581,7 @@ void univ_use_group_line(char *line, int type)
 /* returns true on success, false otherwise */
 static bool univ_use_file(const char *fname, const char *label)
 {
-    static char lbuf[LBUFLEN];
+    static char lbuf[LINE_BUF_LEN];
 
     bool begin_top = true;      /* default assumption (might be changed later) */
 

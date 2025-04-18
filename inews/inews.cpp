@@ -27,7 +27,7 @@ int debug{};
 int new_connection{};
 char *g_server_name{};
 std::string g_nntp_auth_file;
-char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
+char g_buf[LINE_BUF_LEN + 1]{}; /* general purpose line buffer */
 
 int valid_header(char *h);
 void append_signature();
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     char *cp;
     int  i;
 
-    int   headbuf_size = LBUFLEN * 8;
+    int   headbuf_size = LINE_BUF_LEN * 8;
     char *headbuf = safe_malloc(headbuf_size);
 
 #ifdef LAX_INEWS
@@ -155,10 +155,10 @@ int main(int argc, char *argv[])
 
     while (true)
     {
-        if (headbuf_size < artpos + LBUFLEN + 1)
+        if (headbuf_size < artpos + LINE_BUF_LEN + 1)
         {
             len = cp - headbuf;
-            headbuf_size += LBUFLEN * 4;
+            headbuf_size += LINE_BUF_LEN * 4;
             headbuf = safe_realloc(headbuf,headbuf_size);
             cp = headbuf + len;
         }
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
             }
             break;
         }
-        if (i == EOF || !std::fgets(cp + 1, LBUFLEN - 1, stdin))
+        if (i == EOF || !std::fgets(cp + 1, LINE_BUF_LEN - 1, stdin))
         {
             /* Still in header after EOF?  Hmm... */
             std::fprintf(stderr,"Article was all header -- no body.\n");

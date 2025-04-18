@@ -76,7 +76,7 @@ std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
         }
         else
         {
-            char art_name[MAXFILENAME]; /* filename of current article */
+            char art_name[MAX_FILENAME]; /* filename of current article */
             std::sprintf(art_name, "%ld", (long) art_num);
             g_art_fp = std::fopen(art_name, "r");
         }
@@ -232,9 +232,9 @@ char *read_art_buf(bool view_inline)
   read_more:
     extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
-    if (s_art_buf_size < g_art_buf_pos + o + LBUFLEN)
+    if (s_art_buf_size < g_art_buf_pos + o + LINE_BUF_LEN)
     {
-        s_art_buf_size += LBUFLEN * 4;
+        s_art_buf_size += LINE_BUF_LEN * 4;
         g_art_buf = safe_realloc(g_art_buf,s_art_buf_size);
         bp = g_art_buf + g_art_buf_pos;
     }

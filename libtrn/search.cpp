@@ -34,7 +34,7 @@
 
 enum
 {
-    BMAPSIZ = (127 / BITSPERBYTE + 1)
+    BMAPSIZ = (127 / BITS_PER_BYTE + 1)
 };
 
 enum
@@ -348,11 +348,11 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                     }
                     while (c <= i)
                     {
-                        ep[c / BITSPERBYTE] |= 1 << (c % BITSPERBYTE);
+                        ep[c / BITS_PER_BYTE] |= 1 << (c % BITS_PER_BYTE);
                         if (fold && std::isalpha(c))
                         {
-                            ep[(c ^ 32) / BITSPERBYTE] |=
-                                1 << ((c ^ 32) % BITSPERBYTE);
+                            ep[(c ^ 32) / BITS_PER_BYTE] |=
+                                1 << ((c ^ 32) % BITS_PER_BYTE);
                                     /* set the other bit too */
                         }
                         c++;

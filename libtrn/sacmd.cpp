@@ -692,7 +692,7 @@ int sa_do_cmd()
         g_s_ref_all = true;
         std::printf("Enter score append command or type RETURN for a menu\n");
         g_buf[0] = ':';
-        g_buf[1] = FINISHCMD;
+        g_buf[1] = FINISH_CMD;
         if (!finish_command(false))
         {
             break;
@@ -709,7 +709,7 @@ int sa_do_cmd()
         g_s_ref_all = true;
         std::printf("\nEnter scoring command or type RETURN for a menu\n");
         g_buf[0] = ':';
-        g_buf[1] = FINISHCMD;
+        g_buf[1] = FINISH_CMD;
         if (!finish_command(false))
         {
             break;
@@ -733,8 +733,8 @@ bool sa_extract_start()
 {
     if (s_sa_extract_dest == nullptr)
     {
-        s_sa_extract_dest = (char*)safe_malloc(LBUFLEN);
-        safe_copy(s_sa_extract_dest,file_exp("%p"),LBUFLEN);
+        s_sa_extract_dest = (char*)safe_malloc(LINE_BUF_LEN);
+        safe_copy(s_sa_extract_dest,file_exp("%p"),LINE_BUF_LEN);
     }
     s_go_bot();
     std::printf("To directory (default %s)\n",s_sa_extract_dest);
@@ -747,7 +747,7 @@ bool sa_extract_start()
     /* if the user typed something, copy it to the destination */
     if (g_buf[1] != '\0')
     {
-        safe_copy(s_sa_extract_dest,file_exp(g_buf+1),LBUFLEN);
+        safe_copy(s_sa_extract_dest,file_exp(g_buf+1),LINE_BUF_LEN);
     }
     /* set a mode for this later? */
     std::printf("\nMark extracted articles as read? [yn]");
@@ -819,7 +819,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         sa_clear_mark(a);
         g_art = artnum;
         *g_buf = 'e';           /* fake up the extract command */
-        safe_copy(g_buf+1,s_sa_extract_dest,LBUFLEN);
+        safe_copy(g_buf+1,s_sa_extract_dest,LINE_BUF_LEN);
         (void)save_article();
         if (s_sa_extract_junk)
         {

@@ -48,7 +48,7 @@ int nntp_connect(const char *machine, bool verbose)
     case NNTP_GOODBYE_VAL:
         if (atoi(g_ser_line) == response)
         {
-            char tmpbuf[LBUFLEN];
+            char tmpbuf[LINE_BUF_LEN];
             if (verbose)
             {
                 std::printf("failed: %s\n",&g_ser_line[4]);

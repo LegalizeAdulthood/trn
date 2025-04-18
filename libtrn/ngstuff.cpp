@@ -51,7 +51,7 @@ void newsgroup_stuff_init()
 
 int escapade()
 {
-    bool interactive = (g_buf[1] == FINISHCMD);
+    bool interactive = (g_buf[1] == FINISH_CMD);
     char whereiam[1024];
 
     if (!finish_command(interactive))   /* get remainder of command */
@@ -87,7 +87,7 @@ int escapade()
             sig_catcher(0);
         }
     }
-#ifdef MAILCALL
+#ifdef MAIL_CALL
     g_mail_count = 0;                    /* force recheck */
 #endif
     return 0;
@@ -130,7 +130,7 @@ int switcheroo()
         }
         else
         {
-            char tmpbuf[LBUFLEN];
+            char tmpbuf[LINE_BUF_LEN];
             char *s = skip_space(g_buf + 2);
             mac_line(s,tmpbuf,(sizeof tmpbuf));
         }
@@ -139,7 +139,7 @@ int switcheroo()
     {
         bool docd = (in_string(g_buf,"-d", true) != nullptr);
          char whereami[1024];
-        char tmpbuf[LBUFLEN+16];
+        char tmpbuf[LINE_BUF_LEN+16];
 
         if (docd)
         {
@@ -180,7 +180,7 @@ NumNumResult num_num()
     char* s;
     char* c;
     ArticleNum oldart = g_art;
-    char tmpbuf[LBUFLEN];
+    char tmpbuf[LINE_BUF_LEN];
     bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool justone = true;                /* assume only one article */
 
@@ -218,7 +218,7 @@ NumNumResult num_num()
     }
     *s++ = ',';
     *s = '\0';
-    safe_copy(tmpbuf,g_buf,LBUFLEN);
+    safe_copy(tmpbuf,g_buf,LINE_BUF_LEN);
     if (!output_level && !justone)
     {
         std::printf("Processing...");
@@ -496,7 +496,7 @@ int perform(char *cmdlst, int output_level)
 {
     int ch;
     int savemode = 0;
-    char tbuf[LBUFLEN+1];
+    char tbuf[LINE_BUF_LEN+1];
 
     /* A quick fix to avoid reuse of g_buf and cmdlst by shell commands. */
     safe_copy(tbuf, cmdlst, sizeof tbuf);

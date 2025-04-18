@@ -57,7 +57,7 @@ static bool            s_sf_pattern_status{}; /* should we match by pattern? */
 static bool            s_reply_active{};      /* if true, s_reply_score is active */
 static int             s_reply_score{};       /* score amount added to an article reply */
 static int             s_sf_file_level{};     /* how deep are we? */
-static char            s_sf_buf[LBUFLEN]{};
+static char            s_sf_buf[LINE_BUF_LEN]{};
 static char          **s_sf_extra_headers{};
 static int             s_sf_num_extra_headers{};
 static bool            s_sf_has_extra_headers{};
@@ -242,7 +242,7 @@ void sf_grow()
 //char* head;           /* header name, (without ':' character) */
 int sf_check_extra_headers(const char *head)
 {
-    static char lbuf[LBUFLEN];
+    static char lbuf[LINE_BUF_LEN];
 
     /* convert to lower case */
     safe_copy(lbuf,head,sizeof lbuf - 1);
@@ -269,7 +269,7 @@ int sf_check_extra_headers(const char *head)
 //char* head;           /* new header name, (without ':' character) */
 void sf_add_extra_header(const char *head)
 {
-    static char lbuf[LBUFLEN]; /* ick. */
+    static char lbuf[LINE_BUF_LEN]; /* ick. */
 
     /* check to see if it's already known */
     /* first see if it is a known system header */
@@ -306,7 +306,7 @@ void sf_add_extra_header(const char *head)
 //int hnum;             /* header number: offset into s_sf_extra_headers */
 char *sf_get_extra_header(ArticleNum art, int hnum)
 {
-    static char lbuf[LBUFLEN];
+    static char lbuf[LINE_BUF_LEN];
 
     parse_header(art);   /* fast if already parsed */
 
@@ -345,7 +345,7 @@ char *sf_get_extra_header(ArticleNum art, int hnum)
 }
 
 /* keep this one outside the functions because it is shared */
-static char s_sf_file[LBUFLEN];
+static char s_sf_file[LINE_BUF_LEN];
 
 /* filenames of type a/b/c/foo.bar.misc for group foo.bar.misc */
 char *sf_get_filename(int level)
@@ -382,7 +382,7 @@ char *sf_get_filename(int level)
 /* given a string, if no slashes prepends SCOREDIR env. variable */
 char *sf_cmd_fname(char *s)
 {
-    static char lbuf[LBUFLEN];
+    static char lbuf[LINE_BUF_LEN];
 
     char *s1 = std::strchr(s, '/');
     if (s1)
@@ -993,14 +993,14 @@ int sf_score(ArticleNum a)
 /* returns changed score line or nullptr if no changes */
 char *sf_missing_score(const char *line)
 {
-    static char lbuf[LBUFLEN];
+    static char lbuf[LINE_BUF_LEN];
 
     /* save line since it is probably pointing at (the TRN-global) g_buf */
     char *s = save_str(line);
     std::printf("Possibly missing score.\n"
            "Type a score now or delete the colon to abort this entry:\n");
     g_buf[0] = ':';
-    g_buf[1] = FINISHCMD;
+    g_buf[1] = FINISH_CMD;
     int i = finish_command(true); /* print the CR */
     if (!i)                       /* there was no score */
     {
@@ -1022,7 +1022,7 @@ void sf_append(char *line)
 {
     const char* scoretext; /* text after the score# */
     char*       filename;  /* expanded filename */
-    static char filebuf[LBUFLEN];
+    static char filebuf[LINE_BUF_LEN];
     char*       s;
 
     if (!line)
@@ -1075,7 +1075,7 @@ void sf_append(char *line)
     /* special one-character shortcuts */
     if (*scoretext && scoretext[1] == '\0')
     {
-        static char lbuf[LBUFLEN];
+        static char lbuf[LINE_BUF_LEN];
         switch (*scoretext)
         {
         case 'F':     /* domain-shortened FROM line */
@@ -1157,7 +1157,7 @@ void sf_append(char *line)
 /* returns a lowercased copy of the header line type h in private buffer */
 char *sf_get_line(ArticleNum a, HeaderLineType h)
 {
-    static char sf_getline[LBUFLEN];
+    static char sf_getline[LINE_BUF_LEN];
     char* s;
 
     if (h <= SOME_LINE)
@@ -1357,7 +1357,7 @@ void sf_exclude_file(const char *fname)
 //char* filespec;               /* file abbrev. or name */
 void sf_edit_file(const char *filespec)
 {
-    char filebuf[LBUFLEN];      /* clean up buffers */
+    char filebuf[LINE_BUF_LEN];      /* clean up buffers */
 
     if (!filespec || !*filespec)
     {
@@ -1463,7 +1463,7 @@ static int sf_open_file(const char *name)
         s_sf_files[i].num_lines = -1;
         return -1;
     }
-    while ((s = std::fgets(s_sf_buf, LBUFLEN - 4, fp)) != nullptr)
+    while ((s = std::fgets(s_sf_buf, LINE_BUF_LEN - 4, fp)) != nullptr)
     {
         if (s_sf_files[i].num_lines >= s_sf_files[i].num_alloc)
         {

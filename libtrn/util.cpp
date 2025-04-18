@@ -646,7 +646,7 @@ char *secs_to_text(std::time_t secs)
 char *temp_filename()
 {
     static int tmpfile_num = 0;
-    char tmpbuf[CBUFLEN];
+    char tmpbuf[CMD_BUF_LEN];
     extern long g_our_pid;
     std::sprintf(tmpbuf,"%s/trn%d.%ld",g_tmp_dir.c_str(),tmpfile_num++,g_our_pid);
     return save_str(tmpbuf);

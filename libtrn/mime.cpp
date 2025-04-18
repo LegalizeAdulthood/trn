@@ -310,20 +310,20 @@ int mime_exec(char *cmd)
 {
     char* t = g_cmd_buf;
 
-    for (char *f = cmd; *f && t - g_cmd_buf < CBUFLEN - 2; f++)
+    for (char *f = cmd; *f && t - g_cmd_buf < CMD_BUF_LEN - 2; f++)
     {
         if (*f == '%')
         {
             switch (*++f)
             {
             case 's':
-                safe_copy(t, g_decode_filename, CBUFLEN-(t-g_cmd_buf));
+                safe_copy(t, g_decode_filename, CMD_BUF_LEN-(t-g_cmd_buf));
                 t += std::strlen(t);
                 break;
 
             case 't':
                 *t++ = '\'';
-                safe_copy(t, g_mime_section->type_name, CBUFLEN-(t-g_cmd_buf)-1);
+                safe_copy(t, g_mime_section->type_name, CMD_BUF_LEN-(t-g_cmd_buf)-1);
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
@@ -341,7 +341,7 @@ int mime_exec(char *cmd)
                 *s = '}'; /* restore */
                 f = s;
                 *t++ = '\'';
-                safe_copy(t, p, CBUFLEN-(t-g_cmd_buf)-1);
+                safe_copy(t, p, CMD_BUF_LEN-(t-g_cmd_buf)-1);
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
@@ -647,10 +647,10 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
     {
         for (int pos = 0;; pos += std::strlen(line + pos))
         {
-            int len = pos + (next_line ? std::strlen(next_line) : 0) + LBUFLEN;
+            int len = pos + (next_line ? std::strlen(next_line) : 0) + LINE_BUF_LEN;
             if (line_size < len)
             {
-                line_size = len + LBUFLEN;
+                line_size = len + LINE_BUF_LEN;
                 line = safe_realloc(line, line_size);
             }
             if (next_line)
@@ -660,12 +660,12 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
             }
             else if (ifp)
             {
-                if (!std::fgets(line + pos, LBUFLEN, ifp))
+                if (!std::fgets(line + pos, LINE_BUF_LEN, ifp))
                 {
                     break;
                 }
             }
-            else if (!read_art(line + pos, LBUFLEN))
+            else if (!read_art(line + pos, LINE_BUF_LEN))
             {
                 break;
             }

@@ -62,7 +62,7 @@ void rc_to_bits()
                                         /* find numbers in rc line */
     long i = std::strlen(s);
 #ifndef lint
-    if (i >= LBUFLEN-2)                 /* bigger than g_buf? */
+    if (i >= LINE_BUF_LEN-2)                 /* bigger than g_buf? */
     {
         mybuf = safe_malloc((MemorySize) (i + 2));
     }
@@ -220,7 +220,7 @@ void bits_to_rc()
     char* mybuf = g_buf;
     ArticleNum i;
     ArticleNum count=0;
-    int safelen = LBUFLEN - 32;
+    int safelen = LINE_BUF_LEN - 32;
 
     std::strcpy(g_buf,g_newsgroup_ptr->rc_line);            /* start with the newsgroup name */
     char *s = g_buf + g_newsgroup_ptr->num_offset - 1; /* use s for buffer pointer */

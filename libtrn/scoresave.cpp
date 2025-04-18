@@ -29,8 +29,8 @@ static long       s_sc_save_new{}; /* new articles (unloaded) */
 static int        s_num_lines{};
 static int        s_lines_alloc{};
 static char     **s_lines{};
-static char       s_line_buf[LBUFLEN]{};
-static char       s_line_buf2[LBUFLEN]{}; /* what's another buffer between... */
+static char       s_line_buf[LINE_BUF_LEN]{};
+static char       s_line_buf2[LINE_BUF_LEN]{}; /* what's another buffer between... */
 static int        s_loaded{};
 static int        s_used{};
 static int        s_saved{};
@@ -104,7 +104,7 @@ void sc_sv_get_file()
 #endif
         return;
     }
-    while (std::fgets(s_line_buf, LBUFLEN - 2, fp))
+    while (std::fgets(s_line_buf, LINE_BUF_LEN - 2, fp))
     {
         s_line_buf[std::strlen(s_line_buf)-1] = '\0';        /* strip \n */
         sc_sv_add(s_line_buf);

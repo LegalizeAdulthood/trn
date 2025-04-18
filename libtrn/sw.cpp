@@ -147,7 +147,7 @@ void decode_switch(const char *s)
     else                                /* normal switch */
     {
         bool upordown = *s == '-';
-        char tmpbuf[LBUFLEN];
+        char tmpbuf[LINE_BUF_LEN];
 
         switch (*++s)
         {

@@ -7,9 +7,9 @@
 
 /* various things of type char */
 
-char g_msg[CBUFLEN];     /* general purpose message buffer */
-char g_buf[LBUFLEN + 1]; /* general purpose line buffer */
-char g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
+char g_msg[CMD_BUF_LEN];     /* general purpose message buffer */
+char g_buf[LINE_BUF_LEN + 1]; /* general purpose line buffer */
+char g_cmd_buf[CMD_BUF_LEN]; /* buffer for formatting system commands */
 
 /* Factored strings */
 const char *g_h_for_help{"Type h for help.\n"};

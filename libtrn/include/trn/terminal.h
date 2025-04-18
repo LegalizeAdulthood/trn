@@ -187,7 +187,7 @@ int circfill();
 #endif
 void push_char(char_int c);
 void under_print(const char *s);
-#ifdef NOFIREWORKS
+#ifdef NO_FIREWORKS
 void no_so_fire();
 void no_ul_fire();
 #endif

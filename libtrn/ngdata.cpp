@@ -351,7 +351,7 @@ void newsgroup_skip()
 
 ArticleNum get_newsgroup_size(NewsgroupData *gp)
 {
-    char tmpbuf[LBUFLEN];
+    char tmpbuf[LINE_BUF_LEN];
     long last;
     long first;
     char ch;

@@ -269,7 +269,7 @@ static void new_local_groups(DataSource *dp)
     std::time_t last_one = std::time(nullptr) - 24L * 60 * 60 - 1;
     HashTable *new_newsgroups = hash_create(33, add_newsgroup_cmp);
 
-    while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)
+    while (std::fgets(g_buf, LINE_BUF_LEN, fp) != nullptr)
     {
         char *s;
         if ((s = std::strchr(g_buf, ' ')) == nullptr || (last_one = std::atol(s + 1)) < dp->last_new_group)
@@ -277,7 +277,7 @@ static void new_local_groups(DataSource *dp)
             continue;
         }
         *s = '\0';
-        char tmp_buf[LBUFLEN];
+        char tmp_buf[LINE_BUF_LEN];
         if (!find_active_group(g_data_source, tmp_buf, g_buf, s - g_buf, (ArticleNum)0))
         {
             continue;
