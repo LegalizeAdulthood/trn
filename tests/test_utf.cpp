@@ -206,7 +206,7 @@ TEST(UTFVisualAdvanceWidthTest, cjk_basic)
     ASSERT_EQ(3, sp - sp0) << "put_char_adv(" << sp0 << ")";
 }
 
-/* code point decoding */
+// code point decoding
 TEST(UTFCodePointDecodingTest, nullptr)
 {
     ASSERT_EQ(INVALID_CODE_POINT, code_point_at(nullptr));
@@ -313,7 +313,7 @@ TEST(UTFInsertUnicodeAtTest, kissing_face_with_closed_eyes)
     ASSERT_EQ(std::string{"\360\237\230\232"}, buf);
 }
 
-/* create copy of string converted to utf8 */
+// create copy of string converted to utf8
 
 class CreateUTF8CopyTest : public Test
 {
@@ -363,7 +363,7 @@ TEST_F(CreateUTF8CopyTest, iso8859_1)
         << "create_utf8_copy of ISO-8859-1 string did not create a corresponding UTF-8 copy";
 }
 
-/* terminate string at nth visual column instead of at the nth byte */
+// terminate string at nth visual column instead of at the nth byte
 class UTFTerminateStringAtVisualIndexTest : public Test
 {
 protected:
