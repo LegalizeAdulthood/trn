@@ -1,6 +1,6 @@
 /* nntplist.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/common.h>
 #include <config/string_case_compare.h>
@@ -21,7 +21,7 @@ static void usage();
 
 static char *s_server_name{};
 std::string g_nntp_auth_file;
-int debug{};             /* make nntpclient happy */
+int debug{};             // make nntpclient happy
 
 int main(int argc, char *argv[])
 {
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
             default:
                 usage();
-                /* NO RETURN */
+                // NO RETURN
             }
         }
         else if (!action)
