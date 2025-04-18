@@ -1,6 +1,6 @@
 /* env.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "util/env-internal.h"
 
@@ -34,17 +34,17 @@
 #include <functional>
 #include <memory>
 
-char       *g_home_dir{};    /* login directory */
-std::string g_dot_dir;       /* where . files go */
-std::string g_trn_dir;       /* usually %./.trn */
-std::string g_lib;           /* news library */
-std::string g_rn_lib;        /* private news program library */
-std::string g_tmp_dir;       /* where tmp files go */
-std::string g_login_name;    /* login name of user */
-std::string g_real_name;     /* real name of user */
-std::string g_p_host_name;   /* host name in a posting */
-char       *g_local_host{};  /* local host name */
-int         g_net_speed{20}; /* how fast our net-connection is */
+char       *g_home_dir{};    // login directory
+std::string g_dot_dir;       // where . files go
+std::string g_trn_dir;       // usually %./.trn
+std::string g_lib;           // news library
+std::string g_rn_lib;        // private news program library
+std::string g_tmp_dir;       // where tmp files go
+std::string g_login_name;    // login name of user
+std::string g_real_name;     // real name of user
+std::string g_p_host_name;   // host name in a posting
+char       *g_local_host{};  // local host name
+int         g_net_speed{20}; // how fast our net-connection is
 
 static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
 
@@ -90,7 +90,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
         g_tmp_dir = val;
     }
 
-    /* try to set g_login_name */
+    // try to set g_login_name
     if (lax)
     {
         const char *login_name = s_getenv_fn("USER");
@@ -133,7 +133,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
 #endif
 
-    /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
+    // Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr).
     if (!set_user_name_fn(tcbuf))
     {
         g_login_name.clear();
@@ -142,7 +142,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
     env_init2();
 
-    /* set g_p_host_name to the hostname of our local machine */
+    // set g_p_host_name to the hostname of our local machine
     if (!set_host_name_fn(tcbuf))
     {
         if (!g_local_host)
@@ -193,7 +193,7 @@ void env_final()
 
 static void env_init2()
 {
-    if (!g_dot_dir.empty()) /* Avoid running multiple times. */
+    if (!g_dot_dir.empty()) // Avoid running multiple times.
     {
         return;
     }
@@ -260,18 +260,18 @@ static bool set_user_name(char *tmpbuf)
         *c = '\0';
     }
     s = cpytill(g_buf,s,'&');
-    if (*s == '&')                      /* whoever thought this one up was */
+    if (*s == '&')                      // whoever thought this one up was
     {
-        c = g_buf + std::strlen(g_buf);      /* in the middle of the night */
-        std::strcat(c, g_login_name.c_str()); /* before the morning after */
+        c = g_buf + std::strlen(g_buf);      // in the middle of the night
+        std::strcat(c, g_login_name.c_str()); // before the morning after
         std::strcat(c,s+1);
         if (std::islower(*c))
         {
-            *c = std::toupper(*c);           /* gack and double gack */
+            *c = std::toupper(*c);           // gack and double gack
         }
     }
     g_real_name = g_buf;
-#else /* !BERKNAMES */
+#else // !BERKNAMES
     c = std::strchr(s, '(');
     if (c != nullptr)
     {
@@ -283,11 +283,11 @@ static bool set_user_name(char *tmpbuf)
         s = c;
     }
     g_real_name = s;
-#endif /* !BERKNAMES */
+#endif // !BERKNAMES
 #endif
 #ifndef PASSNAMES
     {
-        env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
+        env_init2(); // Make sure g_home_dir/g_dot_dir/etc. are set.
         std::FILE *fp = std::fopen(file_exp(FULLNAMEFILE), "r");
         if (fp != nullptr)
         {
@@ -331,7 +331,7 @@ static bool set_user_name(char *tmpbuf)
         g_real_name = "?Unknown";
     }
 #endif
-#endif /* !PASSNAMES */
+#endif // !PASSNAMES
 #ifdef HAS_GETPWENT
     endpwent();
 #endif
@@ -347,7 +347,7 @@ static bool set_p_host_name(char *tmpbuf)
     std::FILE* fp;
     bool hostname_ok = true;
 
-    /* Find the local hostname */
+    // Find the local hostname
 
 #ifdef HAS_GETHOSTNAME
 #ifdef WIN32
@@ -358,7 +358,7 @@ static bool set_p_host_name(char *tmpbuf)
     gethostname(tmpbuf,TCBUF_SIZE);
 #else
 # ifdef HAS_UNAME
-    /* get sysname */
+    // get sysname
     uname(&utsn);
     std::strcpy(tmpbuf,utsn.nodename);
 # else
@@ -372,17 +372,17 @@ static bool set_p_host_name(char *tmpbuf)
             finalize(1);
         }
         std::fgets(tmpbuf,TCBUF_SIZE,pipefp);
-        tmpbuf[std::strlen(tmpbuf)-1] = '\0';        /* wipe out newline */
+        tmpbuf[std::strlen(tmpbuf)-1] = '\0';        // wipe out newline
         pclose(pipefp);
     }
 #  else
     std::strcpy(tmpbuf, "!INVALID!");
-#  endif /* PHOSTCMD */
-# endif /* HAS_UNAME */
-#endif /* HAS_GETHOSTNAME */
+#  endif // PHOSTCMD
+# endif // HAS_UNAME
+#endif // HAS_GETHOSTNAME
     g_local_host = save_str(tmpbuf);
 
-    /* Build the host name that goes in postings */
+    // Build the host name that goes in postings
 
     const char *filename{PHOSTNAME};
     if (FILE_REF(filename) || filename[0] == '~')
@@ -488,40 +488,40 @@ char *export_var(const char *nam, const char *val)
     return buff;
 #else
     int namlen = std::strlen(nam);
-    int i=envix(nam,namlen);    /* where does it go? */
+    int i=envix(nam,namlen);    // where does it go?
 
-    if (!environ[i])                    /* does not exist yet */
+    if (!environ[i])                    // does not exist yet
     {
-        if (s_first_export)              /* need we copy environment? */
+        if (s_first_export)              // need we copy environment?
         {
 #ifndef lint
-            char** tmpenv = (char**)    /* point our wand at memory */
+            char** tmpenv = (char**)    // point our wand at memory
                 safe_malloc((MemorySize) (i+2) * sizeof(char*));
 #else
             char** tmpenv = nullptr;
-#endif /* lint */
+#endif // lint
 
             s_first_export = false;
-            for (int j = 0; j < i; j++) /* copy environment */
+            for (int j = 0; j < i; j++) // copy environment
             {
                 tmpenv[j] = environ[j];
             }
-            environ = tmpenv;           /* tell exec where it is now */
+            environ = tmpenv;           // tell exec where it is now
         }
 #ifndef lint
         else
         {
             environ = (char**) safe_realloc((char*) environ,
                 (MemorySize) (i+2) * sizeof(char*));
-                                        /* just expand it a bit */
+                                        // just expand it a bit
         }
-#endif /* lint */
-        environ[i+1] = nullptr; /* make sure it's null terminated */
+#endif // lint
+        environ[i+1] = nullptr; // make sure it's null terminated
     }
     environ[i] = safe_malloc((MemorySize)(namlen + std::strlen(val) + 2));
-                                        /* this may or may not be in */
-                                        /* the old environ structure */
-    std::sprintf(environ[i],"%s=%s",nam,val);/* all that work just for this */
+                                        // this may or may not be in
+                                        // the old environ structure
+    std::sprintf(environ[i],"%s=%s",nam,val);// all that work just for this
     return environ[i] + namlen + 1;
 #endif
 }
@@ -553,8 +553,8 @@ static int envix(const char *nam, int len)
     {
         if (!std::strncmp(environ[i], nam, len) && environ[i][len] == '=')
         {
-            break;                      /* strncmp must come first to avoid */
+            break;                      // strncmp must come first to avoid
         }
-    }                                   /* potential SEGV's */
+    }                                   // potential SEGV's
     return i;
 }
