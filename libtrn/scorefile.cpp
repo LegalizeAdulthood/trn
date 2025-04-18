@@ -236,9 +236,9 @@ void sf_grow()
     s_sf_entries[g_sf_num_entries - 1] = ScoreFileEntry{}; // init
 }
 
-/* Returns -1 if no matching extra header found, otherwise returns offset
- * into the s_sf_extra_headers array.
- */
+// Returns -1 if no matching extra header found, otherwise returns offset
+// into the s_sf_extra_headers array.
+//
 //char* head;           // header name, (without ':' character)
 int sf_check_extra_headers(const char *head)
 {
@@ -263,9 +263,9 @@ int sf_check_extra_headers(const char *head)
     return -1;
 }
 
-/* adds the header to the list of known extra headers if it is not already
- * known.
- */
+// adds the header to the list of known extra headers if it is not already
+// known.
+//
 //char* head;           // new header name, (without ':' character)
 void sf_add_extra_header(const char *head)
 {
@@ -921,8 +921,8 @@ int sf_score(ArticleNum a)
         {
             continue;   // the outer for loop
         }
-        /* if this head_type has been done before, this entry
-           has already been done */
+        // if this head_type has been done before, this entry
+        // has already been done
         if (s_sf_entries[i].flags & 2)          // rule has been applied
         {
             s_sf_entries[i].flags &= 0xfd; // turn off flag
@@ -1051,8 +1051,8 @@ void sf_append(char *line)
     char *scoreline = skip_hor_space(line + 1);
 
     char ch = *scoreline; // first non-whitespace after filechar
-    /* If the scorefile line does not begin with a number,
-       and is not a valid command, request a score */
+    // If the scorefile line does not begin with a number,
+    // and is not a valid command, request a score
     if (!std::isdigit(ch) && ch != '+' && ch != '-' && ch != ':' && ch != '!' && ch != '#')
     {
         if (!sf_do_line(scoreline,true))    // just checking
@@ -1323,10 +1323,9 @@ void sf_exclude_file(const char *fname)
 
     int newnum = g_sf_num_entries - (end - start) - 1;
 #ifdef UNDEF
-    /* Deal with exclusion of all scorefile entries.
-     * This cannot happen since the exclusion command has to be within a
-     * file.  Code kept in case online exclusions allowed later.
-     */
+    // Deal with exclusion of all scorefile entries.
+    // This cannot happen since the exclusion command has to be within a
+    // file.  Code kept in case online exclusions allowed later.
     if (newnum==0)
     {
         g_sf_num_entries = 0;
