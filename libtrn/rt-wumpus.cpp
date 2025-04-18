@@ -66,10 +66,10 @@ static char    *s_tree_lines[11]{};
 static char     s_tree_buff[128]{};
 static char    *s_str{};
 
-static void find_depth(Article *article, int depth);
-static void cache_tree(Article *ap, int depth, char *cp);
+static void     find_depth(Article *article, int depth);
+static void     cache_tree(Article *ap, int depth, char *cp);
 static Article *find_artp(Article *article, int x);
-static void display_tree(Article *article, char *cp);
+static void     display_tree(Article *article, char *cp);
 
 /* Prepare tree display for inclusion in the article header.
 */
