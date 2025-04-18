@@ -47,7 +47,7 @@ enum DisplayState
     DS_RESTART,
     DS_STATUS,
     DS_QUIT,
-    DS_DOCOMMAND,
+    DS_DO_COMMAND,
     DS_ERROR
 };
 
@@ -58,52 +58,52 @@ enum UniversalReadResult
     UR_ERROR = 3  /* non-normal return */
 };
 
-bool           g_sel_rereading{};
-SelectionMode       g_sel_mode{};
-SelectionMode       g_sel_default_mode{SM_THREAD};
-SelectionMode       g_sel_thread_mode{SM_THREAD};
-const char    *g_sel_mode_string{};
-SelectionSortMode  g_sel_sort{};
-SelectionSortMode  g_sel_art_sort{SS_GROUPS};
-SelectionSortMode  g_sel_thread_sort{SS_DATE};
-SelectionSortMode  g_sel_newsgroup_sort{SS_NATURAL};
-const char    *g_sel_sort_string{};
-int            g_sel_direction{1};
-bool           g_sel_exclusive{};
-AddGroupFlags g_sel_mask{AGF_SEL};
-bool           g_selected_only{};
+bool              g_sel_rereading{};
+SelectionMode     g_sel_mode{};
+SelectionMode     g_sel_default_mode{SM_THREAD};
+SelectionMode     g_sel_thread_mode{SM_THREAD};
+const char       *g_sel_mode_string{};
+SelectionSortMode g_sel_sort{};
+SelectionSortMode g_sel_art_sort{SS_GROUPS};
+SelectionSortMode g_sel_thread_sort{SS_DATE};
+SelectionSortMode g_sel_newsgroup_sort{SS_NATURAL};
+const char       *g_sel_sort_string{};
+int               g_sel_direction{1};
+bool              g_sel_exclusive{};
+AddGroupFlags     g_sel_mask{AGF_SEL};
+bool              g_selected_only{};
 ArticleUnread     g_selected_count{};
-int            g_selected_subj_cnt{};
-int            g_added_articles{};
-char          *g_sel_chars{};
-int            g_sel_item_index{};
-int            g_sel_last_line{};
-bool           g_sel_at_end{};
-int            g_keep_the_group_static{}; /* -K */
-char           g_newsrc_sel_cmds[3]{"Z>"};
-char           g_add_sel_cmds[3]{"Z>"};
-char           g_newsgroup_sel_cmds[3]{"Z>"};
-char           g_news_sel_cmds[3]{"Z>"};
-char           g_option_sel_cmds[3]{"Z>"};
-bool           g_use_sel_num{};
-bool           g_sel_num_goto{};
+int               g_selected_subj_cnt{};
+int               g_added_articles{};
+char             *g_sel_chars{};
+int               g_sel_item_index{};
+int               g_sel_last_line{};
+bool              g_sel_at_end{};
+int               g_keep_the_group_static{}; /* -K */
+char              g_newsrc_sel_cmds[3]{"Z>"};
+char              g_add_sel_cmds[3]{"Z>"};
+char              g_newsgroup_sel_cmds[3]{"Z>"};
+char              g_news_sel_cmds[3]{"Z>"};
+char              g_option_sel_cmds[3]{"Z>"};
+bool              g_use_sel_num{};
+bool              g_sel_num_goto{};
 
 enum RemovedPrompt
 {
     RP_NONE = 0,
-    RP_MOUSEBAR = 1,
+    RP_MOUSE_BAR = 1,
     RP_NEWLINE = 2,
     RP_ALL = 3,
 };
 DECLARE_FLAGS_ENUM(RemovedPrompt, int);
 
-static char           s_sel_ret{};
-static char           s_page_char{};
-static char           s_end_char{};
-static int            s_disp_status_line{};
-static bool           s_clean_screen{};
+static char          s_sel_ret{};
+static char          s_page_char{};
+static char          s_end_char{};
+static int           s_disp_status_line{};
+static bool          s_clean_screen{};
 static RemovedPrompt s_removed_prompt{};
-static int            s_force_sel_pos{};
+static int           s_force_sel_pos{};
 static DisplayState (*s_extra_commands)(char_int){};
 
 namespace
@@ -126,7 +126,7 @@ public:
     }
 
 private:
-    MinorMode m_save_mode;
+    MinorMode   m_save_mode;
     GeneralMode m_save_gmode;
 };
 
@@ -184,29 +184,29 @@ private:
         g_univ_vg_hash = save_univ_vg_hash;   \
     } while (false)
 
-static void             sel_dogroups();
+static void                sel_do_groups();
 static UniversalReadResult univ_read(UniversalItem *ui);
-static void             sel_display();
-static void             sel_status_msg(const char *cp);
-static char             sel_input();
-static void             sel_prompt();
-static bool             select_item(Selection u);
-static bool             delay_return_item(Selection u);
-static bool             deselect_item(Selection u);
-static bool             select_option(OptionIndex i);
-static void             sel_cleanup();
-static bool             mark_DEL_as_READ(char *ptr, int arg);
-static DisplayState    sel_command(char_int ch);
-static bool             sel_perform_change(long cnt, const char *obj_type);
-static char             another_command(char_int ch);
-static DisplayState    article_commands(char_int ch);
-static DisplayState    newsgroup_commands(char_int ch);
-static DisplayState    addgroup_commands(char_int ch);
-static DisplayState    multirc_commands(char_int ch);
-static DisplayState    option_commands(char_int ch);
-static DisplayState    universal_commands(char_int ch);
-static void             switch_dmode(char **dmode_cpp);
-static int              find_line(int y);
+static void                sel_display();
+static void                sel_status_msg(const char *cp);
+static char                sel_input();
+static void                sel_prompt();
+static bool                select_item(Selection u);
+static bool                delay_return_item(Selection u);
+static bool                deselect_item(Selection u);
+static bool                select_option(OptionIndex i);
+static void                sel_cleanup();
+static bool                mark_del_as_read(char *ptr, int arg);
+static DisplayState        sel_command(char_int ch);
+static bool                sel_perform_change(long cnt, const char *obj_type);
+static char                another_command(char_int ch);
+static DisplayState        article_commands(char_int ch);
+static DisplayState        newsgroup_commands(char_int ch);
+static DisplayState        add_group_commands(char_int ch);
+static DisplayState        multirc_commands(char_int ch);
+static DisplayState        option_commands(char_int ch);
+static DisplayState        universal_commands(char_int ch);
+static void                switch_dmode(char **dmode_cpp);
+static int                 find_line(int y);
 
 /* Display a menu of threads/subjects/articles for the user to choose from.
 ** If "cmd" is '+' we display all the unread items and allow the user to mark
@@ -360,7 +360,7 @@ sel_exit:
     return s_sel_ret;
 }
 
-static void sel_dogroups()
+static void sel_do_groups()
 {
     int ret;
     int save_selected_count = g_selected_count;
@@ -574,7 +574,7 @@ char newsgroup_selector()
                 np->flags &= ~NF_VISIT;
             }
         }
-        sel_dogroups();
+        sel_do_groups();
         save_selected_count = g_selected_count;
         POP_SELECTOR();
         if (g_multirc)
@@ -626,7 +626,7 @@ char add_group_selector(GetNewsgroupFlags flags)
         g_sel_mask = AGF_SEL;
     }
     g_sel_page_gp = nullptr;
-    s_extra_commands = addgroup_commands;
+    s_extra_commands = add_group_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_item_index = 0;
@@ -1087,10 +1087,10 @@ static char sel_input()
       int got_dash = 0;
       int got_goto = 0;
     s_force_sel_pos = -1;
-    if (s_removed_prompt & RP_MOUSEBAR)
+    if (s_removed_prompt & RP_MOUSE_BAR)
     {
         draw_mouse_bar(g_tc_COLS,false);
-        s_removed_prompt &= ~RP_MOUSEBAR;
+        s_removed_prompt &= ~RP_MOUSE_BAR;
     }
     if (g_can_home)
     {
@@ -1098,7 +1098,7 @@ static char sel_input()
     }
 
 reinp_selector:
-    if (s_removed_prompt & RP_MOUSEBAR)
+    if (s_removed_prompt & RP_MOUSE_BAR)
     {
         goto position_selector; /* (TRN considered harmful? :-) */
     }
@@ -1132,7 +1132,7 @@ reinp_selector:
             erase_line(false);
             if (g_term_line == g_tc_LINES-1)
             {
-                s_removed_prompt |= RP_MOUSEBAR;
+                s_removed_prompt |= RP_MOUSE_BAR;
             }
         }
         s_disp_status_line = 0;
@@ -1179,7 +1179,7 @@ reinp_selector:
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
-                    s_removed_prompt |= RP_MOUSEBAR;
+                    s_removed_prompt |= RP_MOUSE_BAR;
                 }
             }
             s_disp_status_line = 0;
@@ -1252,7 +1252,7 @@ reinp_selector:
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
-                    s_removed_prompt |= RP_MOUSEBAR;
+                    s_removed_prompt |= RP_MOUSE_BAR;
                 }
             }
             s_disp_status_line = 0;
@@ -1460,10 +1460,10 @@ reinp_selector:
                 newline();
                 std::fputs(g_msg,stdout);
                 g_term_col = std::strlen(g_msg);
-                if (s_removed_prompt & RP_MOUSEBAR)
+                if (s_removed_prompt & RP_MOUSE_BAR)
                 {
                     draw_mouse_bar(g_tc_COLS,false);
-                    s_removed_prompt &= ~RP_MOUSEBAR;
+                    s_removed_prompt &= ~RP_MOUSE_BAR;
                 }
                 s_disp_status_line = 2;
             }
@@ -1971,7 +1971,7 @@ static void sel_cleanup()
         {
             if (g_sel_mode == SM_ARTICLE)
             {
-                article_walk(mark_DEL_as_READ, 0);
+                article_walk(mark_del_as_read, 0);
             }
             else
             {
@@ -1996,7 +1996,7 @@ static void sel_cleanup()
     }
 }
 
-static bool mark_DEL_as_READ(char *ptr, int arg)
+static bool mark_del_as_read(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
     if (ap->flags & AF_DEL)
@@ -2194,7 +2194,7 @@ static DisplayState sel_command(char_int ch)
         case DS_ERROR:
             break;
 
-        case DS_DOCOMMAND:
+        case DS_DO_COMMAND:
             ch = s_sel_ret;
             goto do_command;
 
@@ -2792,7 +2792,7 @@ static DisplayState article_commands(char_int ch)
         }
         if (another_command(1))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -2832,7 +2832,7 @@ static DisplayState article_commands(char_int ch)
         newline();
         if (another_command(help_article_selector()))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -3070,7 +3070,7 @@ static DisplayState newsgroup_commands(char_int ch)
         }
         if (another_command(1))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -3116,7 +3116,7 @@ static DisplayState newsgroup_commands(char_int ch)
         newline();
         if (another_command(help_newsgroup_selector()))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -3226,7 +3226,7 @@ static DisplayState newsgroup_commands(char_int ch)
         newline();
         if (another_command(1))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
     }
@@ -3234,7 +3234,7 @@ static DisplayState newsgroup_commands(char_int ch)
     return DS_ASK;
 }
 
-static DisplayState addgroup_commands(char_int ch)
+static DisplayState add_group_commands(char_int ch)
 {
     switch (ch)
     {
@@ -3429,7 +3429,7 @@ static DisplayState addgroup_commands(char_int ch)
         }
         if (another_command(1))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -3442,7 +3442,7 @@ static DisplayState addgroup_commands(char_int ch)
         newline();
         if (another_command(help_add_group_selector()))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -3484,7 +3484,7 @@ static DisplayState multirc_commands(char_int ch)
         newline();
         if (another_command(help_multirc()))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -3580,7 +3580,7 @@ static DisplayState option_commands(char_int ch)
         newline();
         if (another_command(help_options()))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
@@ -3636,7 +3636,7 @@ static DisplayState universal_commands(char_int ch)
         newline();
         if (another_command(help_univ()))
         {
-            return DS_DOCOMMAND;
+            return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
 
