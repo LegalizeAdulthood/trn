@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* sadesc.c
  *
  */
@@ -8,34 +8,34 @@
 
 #include "trn/list.h"
 #include "trn/cache.h"
-#include "trn/head.h"    /* currently used for fast author fetch when group is threaded */
-#include "trn/rt-util.h" /* compress_from() */
+#include "trn/head.h"    // currently used for fast author fetch when group is threaded
+#include "trn/rt-util.h" // compress_from()
 #include "trn/samain.h"
 #include "trn/sathread.h"
 #include "trn/scan.h"
 #include "trn/scanart.h"
 #include "trn/score.h"
-#include "trn/terminal.h" /* for standout */
+#include "trn/terminal.h" // for standout
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
-static char s_sa_buf[LINE_BUF_LEN];    /* misc. buffer */
+static char s_sa_buf[LINE_BUF_LEN];    // misc. buffer
 
-/* returns statchars in temp space... */
-// int line;            /* which status line (1 = first) */
+// returns statchars in temp space...
+// int line;            // which status line (1 = first)
 const char *sa_get_stat_chars(long a, int line)
 {
     static char char_buf[16];
 
-/* Debug */
+// Debug
 #if 0
     std::printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line);
 #endif
 
 #if 0
-    /* old 5-column status */
+    // old 5-column status
     switch (line)
     {
     case 1:
@@ -61,7 +61,7 @@ const char *sa_get_stat_chars(long a, int line)
     default:
         std::strcpy(char_buf,"     ");
         break;
-    } /* switch */
+    } // switch
 #else
     switch (line)
     {
@@ -88,7 +88,7 @@ const char *sa_get_stat_chars(long a, int line)
     default:
         std::strcpy(char_buf,"   ");
         break;
-    } /* switch */
+    } // switch
 #endif
     return char_buf;
 }
@@ -97,7 +97,7 @@ const char *sa_desc_subject(long e)
 {
     static char sa_subj_buf[256];
 
-    /* fetchlines saves its arguments */
+    // fetchlines saves its arguments
     char *s = fetch_lines(g_sa_ents[e].artnum, SUBJ_LINE);
 
     if (!s || !*s)
@@ -118,7 +118,7 @@ const char *sa_desc_subject(long e)
         {
             if (*++s1 == ':')
             {
-                *s1 = '>';              /* more cosmetic "Re:" */
+                *s1 = '>';              // more cosmetic "Re:"
                 return s1;
             }
         }
@@ -126,9 +126,9 @@ const char *sa_desc_subject(long e)
     return sa_subj_buf;
 }
 
-/* NOTE: should redesign later for the "menu" style... */
-// long e;              /* entry number */
-// bool trunc;          /* should it be truncated? */
+// NOTE: should redesign later for the "menu" style...
+// long e;              // entry number
+// bool trunc;          // should it be truncated?
 const char *sa_get_desc(long e, int line, bool trunc)
 {
     static char desc_buf[1024];
@@ -139,7 +139,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
     switch (line)
     {
     case 1:
-        desc_buf[0] = '\0';     /* initialize the buffer */
+        desc_buf[0] = '\0';     // initialize the buffer
         if (g_sa_mode_desc_art_num)
         {
             std::sprintf(s_sa_buf,"%6d ",(int)artnum);
@@ -147,7 +147,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
         }
         if (g_sc_initialized && g_sa_mode_desc_score)
         {
-            /* we'd like the score now */
+            // we'd like the score now
             std::sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
             std::strcat(desc_buf,s_sa_buf);
         }
@@ -186,19 +186,19 @@ const char *sa_get_desc(long e, int line, bool trunc)
         }
         break;
 
-    case 2:   /* summary line (test) */
+    case 2:   // summary line (test)
         s = fetch_lines(artnum,SUMMARY_LINE);
-        if (s && *s)   /* we really have one */
+        if (s && *s)   // we really have one
         {
-            int i;              /* number of spaces to indent */
-            char* s2;   /* for indenting */
+            int i;              // number of spaces to indent
+            char* s2;   // for indenting
 
-/* include the following line to use standout mode */
+// include the following line to use standout mode
 #if 0
             use_standout = true;
 #endif
             i = 0;
-            /* if variable widths used later, use them */
+            // if variable widths used later, use them
             if (g_sa_mode_desc_art_num)
             {
                 i += 7;
@@ -228,21 +228,21 @@ const char *sa_get_desc(long e, int line, bool trunc)
             }
             break;
         }
-        /* otherwise, we might have had a keyword */
-        /* FALL THROUGH */
+        // otherwise, we might have had a keyword
+        // FALL THROUGH
 
-    case 3:   /* Keywords (test) */
+    case 3:   // Keywords (test)
         s = fetch_lines(artnum,KEYW_LINE);
-        if (s && *s)   /* we really have one */
+        if (s && *s)   // we really have one
         {
-            int i;              /* number of spaces to indent */
-            char* s2;   /* for indenting */
-/* include the following line to use standout mode */
+            int i;              // number of spaces to indent
+            char* s2;   // for indenting
+// include the following line to use standout mode
 #if 0
             use_standout = true;
 #endif
             i = 0;
-            /* if variable widths used later, use them */
+            // if variable widths used later, use them
             if (g_sa_mode_desc_art_num)
             {
                 i += 7;
@@ -272,24 +272,24 @@ const char *sa_get_desc(long e, int line, bool trunc)
             }
             break;
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
-    default:  /* no line I know of */
-        /* later return nullptr */
+    default:  // no line I know of
+        // later return nullptr
         std::sprintf(desc_buf,"Entry %ld: Nonimplemented Description LINE",e);
         break;
-    } /* switch (line) */
+    } // switch (line)
     if (trunc)
     {
-        desc_buf[g_s_desc_cols] = '\0'; /* make sure it's not too long */
+        desc_buf[g_s_desc_cols] = '\0'; // make sure it's not too long
     }
 #ifdef HAS_TERMLIB
     if (use_standout)
     {
-        std::strcat(desc_buf,g_tc_SE);       /* end standout mode */
+        std::strcat(desc_buf,g_tc_SE);       // end standout mode
     }
 #endif
-    /* take out bad characters (replace with one space) */
+    // take out bad characters (replace with one space)
     for (char *t = desc_buf; *t; t++)
     {
         switch (*t)
@@ -304,8 +304,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
     return desc_buf;
 }
 
-/* returns # of lines the article occupies in total... */
-// long e;                      /* the entry number */
+// returns # of lines the article occupies in total...
+// long e;                      // the entry number
 int sa_ent_lines(long e)
 {
     char*s;
@@ -317,7 +317,7 @@ int sa_ent_lines(long e)
         s = fetch_lines(artnum,SUMMARY_LINE);
         if (s && *s)
         {
-            num++;      /* just a test */
+            num++;      // just a test
         }
         if (s)
         {
@@ -329,7 +329,7 @@ int sa_ent_lines(long e)
         s = fetch_lines(artnum,KEYW_LINE);
         if (s && *s)
         {
-            num++;      /* just a test */
+            num++;      // just a test
         }
         if (s)
         {
