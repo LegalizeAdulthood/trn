@@ -1,6 +1,6 @@
 /* trn/rthread.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_RTHREAD_H
 #define TRN_RTHREAD_H
 
@@ -14,10 +14,10 @@ extern ArticleNum g_obj_count;
 extern int        g_subject_count;
 extern bool       g_output_chase_phrase;
 extern HashTable *g_msg_id_hash;
-extern bool       g_thread_always; /* -a */
-extern bool       g_breadth_first; /* -b */
+extern bool       g_thread_always; // -a
+extern bool       g_breadth_first; // -b
 
-/* Values to pass to count_subjects() */
+// Values to pass to count_subjects()
 enum CountSubjectMode
 {
     CS_RETAIN = 0,
