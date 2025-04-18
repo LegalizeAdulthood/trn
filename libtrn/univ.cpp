@@ -1288,7 +1288,7 @@ void sort_univ()
     }
     TRN_ASSERT(lp - univ_sort_list == cnt);
 
-    std::qsort(univ_sort_list, cnt, sizeof(UniversalItem *), (int(*)(void const *, void const *))sort_procedure);
+    std::qsort(univ_sort_list, cnt, sizeof(UniversalItem *), (int(*)(const void *, const void *))sort_procedure);
 
     g_first_univ = univ_sort_list[0];
     lp = univ_sort_list;

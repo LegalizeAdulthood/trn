@@ -270,7 +270,7 @@ void sort_newsgroups()
     }
     TRN_ASSERT(lp - ng_list == g_newsgroup_count);
 
-    std::qsort(ng_list, g_newsgroup_count, sizeof (NewsgroupData*), (int(*)(void const *, void const *))sort_procedure);
+    std::qsort(ng_list, g_newsgroup_count, sizeof (NewsgroupData*), (int(*)(const void *, const void *))sort_procedure);
 
     g_first_newsgroup = ng_list[0];
     g_first_newsgroup->prev = nullptr;

@@ -1988,7 +1988,7 @@ void sort_subjects()
     }
     TRN_ASSERT(lp - subj_list == g_subject_count);
 
-    std::qsort(subj_list, g_subject_count, sizeof (Subject*), ((int(*)(void const *, void const *))sort_procedure));
+    std::qsort(subj_list, g_subject_count, sizeof (Subject*), ((int(*)(const void *, const void *))sort_procedure));
 
     g_first_subject = subj_list[0];
     sp = subj_list[0];
@@ -2122,7 +2122,7 @@ void sort_articles()
         break;
     }
     g_sel_page_app = nullptr;
-    std::qsort(g_art_ptr_list, g_art_ptr_list_size, sizeof (Article*), ((int(*)(void const *, void const *))sort_procedure));
+    std::qsort(g_art_ptr_list, g_art_ptr_list_size, sizeof (Article*), ((int(*)(const void *, const void *))sort_procedure));
 }
 
 static void build_article_ptrs()

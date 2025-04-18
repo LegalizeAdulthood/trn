@@ -82,7 +82,7 @@ void add_ng_init()
 
 bool find_new_groups()
 {
-    NewsgroupNum const oldcnt = g_newsgroup_count;      /* remember # newsgroups */
+    const NewsgroupNum oldcnt = g_newsgroup_count;      /* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
     if (g_quick_start)
@@ -90,7 +90,7 @@ bool find_new_groups()
         return false;
     }
 
-    for (Newsrc const *rp = g_multirc->first; rp; rp = rp->next)
+    for (const Newsrc *rp = g_multirc->first; rp; rp = rp->next)
     {
         if (all_bits(rp->flags, RF_ADD_NEW_GROUPS | RF_ACTIVE))
         {
@@ -156,7 +156,7 @@ static void new_nntp_groups(DataSource *dp)
 
     set_data_source(dp);
 
-    std::time_t const server_time = nntp_time();
+    const std::time_t server_time = nntp_time();
     if (server_time == -2)
     {
         return;
@@ -307,8 +307,8 @@ static void new_local_groups(DataSource *dp)
 
 static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch)
 {
-    HashDatum data;
-    unsigned const namelen = std::strlen(name);
+    HashDatum      data;
+    const unsigned namelen = std::strlen(name);
     data.dat_len = namelen + sizeof (AddGroup);
     AddGroup *node = (AddGroup*)safe_malloc(data.dat_len);
     data.dat_ptr = (char *)node;
@@ -377,7 +377,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 
 bool scan_active(bool add_matching)
 {
-    NewsgroupNum const oldcnt = g_newsgroup_count;      /* remember # of newsgroups */
+    const NewsgroupNum oldcnt = g_newsgroup_count;      /* remember # of newsgroups */
 
     if (!add_matching)
     {
@@ -442,8 +442,8 @@ bool scan_active(bool add_matching)
 
 static int list_groups(int keylen, HashDatum *data, int add_matching)
 {
-    char* bp = ((ListNode*)data->dat_ptr)->data + data->dat_len;
-    int const linelen = std::strchr(bp, '\n') - bp + 1;
+    char     *bp = ((ListNode *) data->dat_ptr)->data + data->dat_len;
+    const int linelen = std::strchr(bp, '\n') - bp + 1;
     (void) memcpy(g_buf,bp,linelen);
     g_buf[linelen] = '\0';
     scan_line(g_buf,add_matching);
@@ -493,7 +493,7 @@ static void scan_line(char *actline, bool add_matching)
 
 static int add_group_order_number(const AddGroup **app1, const AddGroup **app2)
 {
-    ArticleNum const eq = (*app1)->num - (*app2)->num;
+    const ArticleNum eq = (*app1)->num - (*app2)->num;
     return eq > 0? g_sel_direction : -g_sel_direction;
 }
 
@@ -504,7 +504,7 @@ static int add_group_order_group_name(const AddGroup **app1, const AddGroup **ap
 
 static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)
 {
-    long const eq = (*app1)->to_read - (*app2)->to_read;
+    const long eq = (*app1)->to_read - (*app2)->to_read;
     if (eq)
     {
         return eq > 0 ? g_sel_direction : -g_sel_direction;
@@ -541,7 +541,7 @@ void sort_add_groups()
     }
     TRN_ASSERT(lp - ag_list == s_add_group_count);
 
-    std::qsort(ag_list, s_add_group_count, sizeof(AddGroup*), (int(*)(void const *, void const *)) sort_procedure);
+    std::qsort(ag_list, s_add_group_count, sizeof(AddGroup*), (int(*)(const void *, const void *)) sort_procedure);
 
     ap = ag_list[0];
     g_first_add_group = ag_list[0];
