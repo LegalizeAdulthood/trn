@@ -15,16 +15,16 @@
 #include <cstdio>
 
 /* the current values */
-long     *g_s_ent_sort{};       /* sorted list of entries in the context */
-long      g_s_ent_sort_max{};   /* maximum index of sorted array */
-long      g_s_ent_sorted_max{}; /* maximum index *that is sorted* */
-long     *g_s_ent_index{};      /* indexes into ent_sorted */
-long      g_s_ent_index_max{};  /* maximum entry number added */
-int       g_s_page_size{};      /* number of entries allocated for page (usually fixed, > max screen lines) */
+long      *g_s_ent_sort{};       /* sorted list of entries in the context */
+long       g_s_ent_sort_max{};   /* maximum index of sorted array */
+long       g_s_ent_sorted_max{}; /* maximum index *that is sorted* */
+long      *g_s_ent_index{};      /* indexes into ent_sorted */
+long       g_s_ent_index_max{};  /* maximum entry number added */
+int        g_s_page_size{};      /* number of entries allocated for page (usually fixed, > max screen lines) */
 PageEntry *g_page_ents{};        /* array of entries on page; -1 means not initialized for top and bottom entry */
-long      g_s_top_ent{};        /* top entry on page */
-long      g_s_bot_ent{};        /* bottom entry (note change) */
-bool      g_s_refill{};         /* does the page need refilling? */
+long       g_s_top_ent{};        /* top entry on page */
+long       g_s_bot_ent{};        /* bottom entry (note change) */
+bool       g_s_refill{};         /* does the page need refilling? */
 /* refresh entries */
 bool  g_s_ref_all{};    /* refresh all on page */
 bool  g_s_ref_top{};    /* top status bar */
@@ -32,18 +32,18 @@ bool  g_s_ref_bot{};    /* bottom status bar */
 short g_s_ref_status{}; /* line to start refreshing status from; -1 means don't refresh */
 short g_s_ref_desc{};   /* line to start refreshing descript. from; -1 means don't refresh */
 /* screen sizes */
-short g_s_top_lines{};    /* lines for top status bar */
-short g_s_bot_lines{};    /* lines for bottom status bar */
-short g_s_status_cols{};  /* characters for status column */
-short g_s_cursor_cols{};  /* characters for cursor column */
+short g_s_top_lines{};     /* lines for top status bar */
+short g_s_bot_lines{};     /* lines for bottom status bar */
+short g_s_status_cols{};   /* characters for status column */
+short g_s_cursor_cols{};   /* characters for cursor column */
 short g_s_item_num_cols{}; /* characters for item number column */
-short g_s_desc_cols{};    /* characters for description column */
+short g_s_desc_cols{};     /* characters for description column */
 /* pointer info */
-short         g_s_ptr_page_line{}; /* page_ent index */
-long          g_s_flags{};         /* misc. flags */
-int           g_s_num_contexts{};  //
-ScanContext     *g_s_contexts{};      /* array of context structures */
-int           g_s_cur_context{};   /* current context number */
+short           g_s_ptr_page_line{}; /* page_ent index */
+long            g_s_flags{};         /* misc. flags */
+int             g_s_num_contexts{};  //
+ScanContext    *g_s_contexts{};      /* array of context structures */
+int             g_s_cur_context{};   /* current context number */
 ScanContextType g_s_cur_type{};      /* current context type (for fast switching) */
 /* options */
 int g_s_item_num{true}; /* show item numbers by default */
