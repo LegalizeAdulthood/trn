@@ -1,18 +1,18 @@
 /* trn/intrp.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_INTRP_H
 #define TRN_INTRP_H
 
 #include <string>
 
-extern std::string g_orig_dir;  /* cwd when rn invoked */
-extern char       *g_host_name; /* host name to match local postings */
+extern std::string g_orig_dir;  // cwd when rn invoked
+extern char       *g_host_name; // host name to match local postings
 extern std::string g_head_name;
 extern int         g_perform_count;
 
 #ifdef HAS_NEWS_ADMIN
-extern const std::string g_news_admin; /* news administrator */
+extern const std::string g_news_admin; // news administrator
 extern int g_news_uid;
 #endif
 
