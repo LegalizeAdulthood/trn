@@ -1,6 +1,6 @@
 /* trn/kfile.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_KFILE_H
 #define TRN_KFILE_H
 
@@ -48,8 +48,8 @@ enum AutoKillFlags : std::uint16_t
      * in combination with the AUTO_* flags above. */
     AFFECT_UNSEL = 0,
     AFFECT_ALL = 0x0001,
-    ALSO_ECHO = 0x0002,    /* only works with [un]select_article() */
-    SET_TO_RETURN = 0x0004 /* only works with kill_*() */
+    ALSO_ECHO = 0x0002,    // only works with [un]select_article()
+    SET_TO_RETURN = 0x0004 // only works with kill_*()
 };
 DECLARE_FLAGS_ENUM(AutoKillFlags, std::uint16_t);
 
@@ -63,11 +63,11 @@ enum
     KF_MAX_DAYS = 30
 };
 
-extern std::FILE         *g_local_kfp;             /* local (for this newsgroup) file */
-extern KillFileStateFlags g_kf_state;              /* the state of our kill files */
-extern KillFileStateFlags g_kfs_thread_change_set; /* bits to set for thread changes */
-extern int                g_kf_change_thread_cnt;  /* # entries changed from old to new */
-extern ArticleNum         g_kill_first;            /* used as g_firstart when killing */
+extern std::FILE         *g_local_kfp;             // local (for this newsgroup) file
+extern KillFileStateFlags g_kf_state;              // the state of our kill files
+extern KillFileStateFlags g_kfs_thread_change_set; // bits to set for thread changes
+extern int                g_kf_change_thread_cnt;  // # entries changed from old to new
+extern ArticleNum         g_kill_first;            // used as g_firstart when killing
 
 void kill_file_init();
 int  do_kill_file(std::FILE *kfp, int entering);
