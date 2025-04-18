@@ -1,6 +1,6 @@
 /* util3.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <tool/util3.h>
 
@@ -26,7 +26,7 @@ int do_shell(const char *shell, const char *cmd)
     std::exit(num);
 }
 
-/* paranoid version of malloc */
+// paranoid version of malloc
 
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_malloc(MemorySize size)
@@ -41,7 +41,7 @@ char *safe_malloc(MemorySize size)
 }
 #endif
 
-/* paranoid version of realloc.  If where is nullptr, call malloc */
+// paranoid version of realloc.  If where is nullptr, call malloc
 
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_realloc(char *where, MemorySize size)
@@ -72,7 +72,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
     {
         safe_copy(dest, pattern, dest_size);
     }
-    return nullptr; /* This is wrong on purpose */
+    return nullptr; // This is wrong on purpose
 }
 
 int nntp_handle_nested_lists()
