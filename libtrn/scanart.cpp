@@ -1,4 +1,4 @@
-/* This file is Copyright 1992, 1993 by Clifford A. Adams */
+// This file is Copyright 1992, 1993 by Clifford A. Adams
 /* scanart.c
  *
  * article scan mode: screen oriented article interface
@@ -10,28 +10,28 @@
 #include "trn/scanart.h"
 
 #include "trn/ngdata.h"
-#include "trn/artstate.h"  /* for g_reread */
-#include "trn/ng.h"        /* variable g_art, the next article to read. */
-#include "trn/rt-select.h" /* g_selected_only */
+#include "trn/artstate.h"  // for g_reread
+#include "trn/ng.h"        // variable g_art, the next article to read.
+#include "trn/rt-select.h" // g_selected_only
 #include "trn/samain.h"
 #include "trn/samisc.h"
 #include "trn/scan.h"
 #include "trn/smisc.h"
-#include "trn/terminal.h" /* macro to clear... */
+#include "trn/terminal.h" // macro to clear...
 
 ScanArticleEntryData *g_sa_ents{};
 int                   g_sa_num_ents{};
-bool                  g_sa_initialized{};           /* Have we initialized? */
-bool                  g_sa_never_initialized{true}; /* Have we ever initialized? */
-/* note: g_sa_in should be checked for returning to SA */
-bool       g_sa_in{};             /* Are we "in" SA? */
-bool       g_sa_go{};             /* go to sa.  Do not pass GO (:-) */
-bool       g_sa_go_explicit{};    /* want to bypass read-next-marked */
-ArticleNum g_sa_art{};            /* used to pass an article number to read soon */
-bool       g_sa_do_sel_threads{}; /* select threads from TRN thread selector; re-implement later */
-bool       g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/scanart.h for world-visibilty */
+bool                  g_sa_initialized{};           // Have we initialized?
+bool                  g_sa_never_initialized{true}; // Have we ever initialized?
+// note: g_sa_in should be checked for returning to SA
+bool       g_sa_in{};             // Are we "in" SA?
+bool       g_sa_go{};             // go to sa.  Do not pass GO (:-)
+bool       g_sa_go_explicit{};    // want to bypass read-next-marked
+ArticleNum g_sa_art{};            // used to pass an article number to read soon
+bool       g_sa_do_sel_threads{}; // select threads from TRN thread selector; re-implement later
+bool       g_sa_mode_read_elig{}; // true if read articles are eligible in trn/scanart.h for world-visibilty
 
-/* Options */
+// Options
 /* Display order variable:
  *
  * 1: Arrival order
@@ -39,24 +39,24 @@ bool       g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/s
  */
 SaDisplayOrder g_sa_mode_order{SA_ORDER_DESCENDING};
 
-/* if true, don't move the cursor after marking or selecting articles */
+// if true, don't move the cursor after marking or selecting articles
 bool g_sa_mark_stay{};
 
-/* if true, re-"fold" after an un-zoom operation. */
-/* This flag is useful for very slow terminals */
+// if true, re-"fold" after an un-zoom operation.
+// This flag is useful for very slow terminals
 bool g_sa_unzoom_refold{};
 
-/* true if in "fold" mode */
+// true if in "fold" mode
 bool g_sa_mode_fold{};
 
-/* Follow threads by default? */
+// Follow threads by default?
 bool g_sa_follow{true};
 
-/* Options: what to display */
-bool g_sa_mode_desc_art_num{};    /* show art#s */
-bool g_sa_mode_desc_author{true}; /* show author */
-bool g_sa_mode_desc_score{true};  /* show score */
-/* flags to determine whether to display various things */
+// Options: what to display
+bool g_sa_mode_desc_art_num{};    // show art#s
+bool g_sa_mode_desc_author{true}; // show author
+bool g_sa_mode_desc_score{true};  // show score
+// flags to determine whether to display various things
 bool g_sa_mode_desc_thread_count{};
 bool g_sa_mode_desc_subject{true};
 bool g_sa_mode_desc_summary{};
@@ -65,7 +65,7 @@ bool g_sa_mode_desc_keyw{};
 SaMainResult sa_main()
 {
     g_sa_in = true;
-    g_sa_go = false;    /* ...do not collect $200... */
+    g_sa_go = false;    // ...do not collect $200...
     g_s_follow_temp = false;
 
     if (g_last_art < g_abs_first)
@@ -76,27 +76,27 @@ SaMainResult sa_main()
     if (!g_sa_initialized)
     {
         sa_init();
-        if (!g_sa_initialized)          /* still not working... */
+        if (!g_sa_initialized)          // still not working...
         {
-            return SA_ERR;              /* we don't belong here */
+            return SA_ERR;              // we don't belong here
         }
-        g_sa_never_initialized = false; /* we have entered at least once */
+        g_sa_never_initialized = false; // we have entered at least once
     }
     else
     {
         s_change_context(g_sa_scan_context);
     }
 
-    /* unless "explicit" entry, read any marked articles */
+    // unless "explicit" entry, read any marked articles
     if (!g_sa_go_explicit)
     {
         long a = sa_read_marked_elig();
-        if (a)          /* there was an article */
+        if (a)          // there was an article
         {
             g_art = g_sa_ents[a].artnum;
             g_reread = true;
             sa_clear_mark(a);
-            /* trn 3.x won't read an unselected article if g_selected_only */
+            // trn 3.x won't read an unselected article if g_selected_only
             g_selected_only = false;
             s_save_context();
             return SA_NORM;
@@ -111,19 +111,19 @@ SaMainResult sa_main()
     {
         sa_sel_threads();
         g_sa_do_sel_threads = false;
-        g_sa_mode_zoom = true;          /* zoom in by default */
-        g_s_top_ent = -1;               /* go to top of arts... */
+        g_sa_mode_zoom = true;          // zoom in by default
+        g_s_top_ent = -1;               // go to top of arts...
     }
 
-    MinorMode sa_oldmode = g_mode; /* save mode */
-    g_mode = MM_S;             /* for RN macros */
+    MinorMode sa_oldmode = g_mode; // save mode
+    g_mode = MM_S;             // for RN macros
     SaMainResult i = sa_main_loop();
-    g_mode = sa_oldmode;                        /* restore mode */
+    g_mode = sa_oldmode;                        // restore mode
 
     if (i == SA_NORM || i == SA_FAKE)
     {
         g_art = g_sa_art;
-        /* trn 3.x won't read an unselected article if g_selected_only */
+        // trn 3.x won't read an unselected article if g_selected_only
         g_selected_only = false;
         if (g_sa_mode_read_elig)
         {
@@ -137,7 +137,7 @@ SaMainResult sa_main()
     return i;
 }
 
-/* called when more articles arrive */
+// called when more articles arrive
 void sa_grow(ArticleNum oldlast, ArticleNum last)
 {
     if (!g_sa_initialized)
@@ -158,6 +158,6 @@ void sa_cleanup()
     }
 
     sa_clean_main();
-    clear();            /* should something else clear the screen? */
-    g_sa_initialized = false;           /* goodbye... */
+    clear();            // should something else clear the screen?
+    g_sa_initialized = false;           // goodbye...
 }
