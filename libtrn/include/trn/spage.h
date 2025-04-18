@@ -1,4 +1,4 @@
-/* This file Copyright 1992, 1993 by Clifford A. Adams */
+// This file Copyright 1992, 1993 by Clifford A. Adams
 /* trn/spage.h
  *
  * functions to manage a page of entries.
