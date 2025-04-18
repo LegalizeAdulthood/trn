@@ -1,4 +1,4 @@
-/* This file Copyright 1993 by Clifford A. Adams */
+// This file Copyright 1993 by Clifford A. Adams
 /* trn/url.h
  *
  * Routines for handling WWW URL references.
