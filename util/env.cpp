@@ -440,7 +440,7 @@ static bool set_p_host_name(char *tmpbuf)
         else
 #endif
 #ifdef HAS_GETDOMAINNAME
-        if (getdomainname(g_buf,LBUFLEN) == 0)
+        if (getdomainname(g_buf,LINE_BUF_LEN) == 0)
         {
             std::strcat(tmpbuf,g_buf);
         }

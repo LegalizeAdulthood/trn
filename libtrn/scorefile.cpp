@@ -1097,7 +1097,7 @@ void sf_append(char *line)
             {
                 s += 4;
             }
-            // change this next line if LBUFLEN changes
+            // change this next line if LINE_BUF_LEN changes
             std::sprintf(lbuf+(std::strlen(lbuf)-1),"subject: %.900s",s);
             scoreline = lbuf;
             break;
