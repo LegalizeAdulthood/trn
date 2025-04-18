@@ -1,4 +1,4 @@
-/* This file Copyright 1992,1995 by Clifford A. Adams */
+// This file Copyright 1992,1995 by Clifford A. Adams
 /* trn/sathread.h
  *
  */
