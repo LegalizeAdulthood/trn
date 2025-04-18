@@ -1,4 +1,4 @@
-/* This file is Copyright 1993 by Clifford A. Adams */
+// This file is Copyright 1993 by Clifford A. Adams
 /* scmd.c
  *
  * Scan command loop.
@@ -12,7 +12,7 @@
 #include "trn/help.h"
 #include "trn/ng.h"
 #include "trn/ngstuff.h"
-#include "trn/sacmd.h" /* sa_docmd */
+#include "trn/sacmd.h" // sa_docmd
 #include "trn/samain.h"
 #include "trn/scan.h"
 #include "trn/sdisp.h"
@@ -29,14 +29,14 @@
 
 void s_go_bot()
 {
-    g_s_ref_bot = true;                 /* help uses whole screen */
-    s_goxy(0,g_tc_LINES-g_s_bot_lines); /* go to bottom bar */
-    erase_eol();                        /* erase to end of line */
-    s_goxy(0,g_tc_LINES-g_s_bot_lines); /* go (back?) to bottom bar */
+    g_s_ref_bot = true;                 // help uses whole screen
+    s_goxy(0,g_tc_LINES-g_s_bot_lines); // go to bottom bar
+    erase_eol();                        // erase to end of line
+    s_goxy(0,g_tc_LINES-g_s_bot_lines); // go (back?) to bottom bar
 }
 
-/* finishes a command on the bottom line... */
-/* returns true if command entered, false if wiped out... */
+// finishes a command on the bottom line...
+// returns true if command entered, false if wiped out...
 int s_finish_cmd(const char *string)
 {
     s_go_bot();
@@ -46,43 +46,43 @@ int s_finish_cmd(const char *string)
         std::fflush(stdout);
     }
     g_buf[1] = FINISH_CMD;
-    return finish_command(false);       /* do not echo newline */
+    return finish_command(false);       // do not echo newline
 }
 
-/* returns an entry # selected, S_QUIT, or S_ERR */
+// returns an entry # selected, S_QUIT, or S_ERR
 int s_cmd_loop()
 {
     int i;
 
-    /* initialization stuff for entry into s_cmdloop */
+    // initialization stuff for entry into s_cmdloop
     g_s_ref_all = true;
-    eat_typeahead();    /* no typeahead before entry */
+    eat_typeahead();    // no typeahead before entry
     while (true)
     {
         s_refresh();
-        s_place_ptr();          /* place article pointer */
+        s_place_ptr();          // place article pointer
         g_bos_on_stop = true;
-        s_look_ahead();          /* do something useful while waiting */
+        s_look_ahead();          // do something useful while waiting
         get_cmd(g_buf);
         g_bos_on_stop = false;
-        eat_typeahead();        /* stay in control. */
-        /* check for window resizing and refresh */
-        /* if window is resized, refill and redraw */
+        eat_typeahead();        // stay in control.
+        // check for window resizing and refresh
+        // if window is resized, refill and redraw
         if (g_s_resized)
         {
             char ch = *g_buf;
             i = s_fill_page();
-            if (i == -1 || i == 0)      /* can't fillpage */
+            if (i == -1 || i == 0)      // can't fillpage
             {
                 return S_QUIT;
             }
             *g_buf = Ctl('l');
             (void)s_do_cmd();
             *g_buf = ch;
-            g_s_resized = false;                /* dealt with */
+            g_s_resized = false;                // dealt with
         }
         i = s_do_cmd();
-        if (i == S_NOT_FOUND)    /* command not in common set */
+        if (i == S_NOT_FOUND)    // command not in common set
         {
             switch (g_s_cur_type)
             {
@@ -91,23 +91,23 @@ int s_cmd_loop()
                 break;
 
             default:
-                i = 0;  /* just keep looping */
+                i = 0;  // just keep looping
                 break;
             }
         }
-        if (i != 0)     /* either an entry # or a return code */
+        if (i != 0)     // either an entry # or a return code
         {
             return i;
         }
         if (g_s_refill)
         {
             i = s_fill_page();
-            if (i == -1 || i == 0)      /* can't fillpage */
+            if (i == -1 || i == 0)      // can't fillpage
             {
                 return S_QUIT;
             }
         }
-        /* otherwise just keep on looping... */
+        // otherwise just keep on looping...
     }
 }
 
@@ -124,33 +124,33 @@ void s_look_ahead()
     }
 }
 
-/* Do some simple, common Scan commands for any mode */
+// Do some simple, common Scan commands for any mode
 /* Interprets command in g_buf, returning 0 to continue looping or
  * a condition code (negative #s).  Responsible for setting refresh flags
  * if necessary.
  */
 int s_do_cmd()
 {
-    bool flag; /* misc */
+    bool flag; // misc
 
     long a = g_page_ents[g_s_ptr_page_line].ent_num;
-    if (*g_buf == '\f') /* map form feed to ^l */
+    if (*g_buf == '\f') // map form feed to ^l
     {
         *g_buf = Ctl('l');
     }
     switch (*g_buf)
     {
-    case 'j':         /* vi mode */
+    case 'j':         // vi mode
         if (!g_s_mode_vi)
         {
             return S_NOT_FOUND;
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
-    case 'n':         /* next art */
+    case 'n':         // next art
     case ']':
         s_rub_ptr();
-        if (g_s_ptr_page_line < g_s_bot_ent)    /* more on page... */
+        if (g_s_ptr_page_line < g_s_bot_ent)    // more on page...
         {
             g_s_ptr_page_line +=1;
         }
@@ -162,21 +162,21 @@ int s_do_cmd()
                 g_s_refill = true;
                 break;
             }
-            s_go_next_page();   /* will jump to top too... */
+            s_go_next_page();   // will jump to top too...
         }
         break;
 
-    case 'k': /* vi mode */
+    case 'k': // vi mode
         if (!g_s_mode_vi)
         {
             return S_NOT_FOUND;
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
-    case 'p': /* previous art */
+    case 'p': // previous art
     case '[':
         s_rub_ptr();
-        if (g_s_ptr_page_line > 0)      /* more on page... */
+        if (g_s_ptr_page_line > 0)      // more on page...
         {
             g_s_ptr_page_line = g_s_ptr_page_line - 1;
         }
@@ -185,7 +185,7 @@ int s_do_cmd()
             if (s_prev_elig(g_page_ents[0].ent_num))
             {
                 s_go_prev_page();
-                g_s_ptr_page_line = g_s_bot_ent; /* go to page bot. */
+                g_s_ptr_page_line = g_s_bot_ent; // go to page bot.
             }
             else
             {
@@ -195,48 +195,48 @@ int s_do_cmd()
         }
         break;
 
-    case 't': /* top of page */
+    case 't': // top of page
         s_rub_ptr();
         s_go_top_page();
         break;
 
-    case 'b': /* bottom of page */
+    case 'b': // bottom of page
         s_rub_ptr();
         s_go_bot_page();
         break;
 
-    case '>': /* next page */
+    case '>': // next page
         s_rub_ptr();
         a = s_next_elig(g_page_ents[g_s_bot_ent].ent_num);
-        if (!a)                 /* at end of articles */
+        if (!a)                 // at end of articles
         {
             s_beep();
             break;
         }
-        s_go_next_page();               /* will beep if no next page */
+        s_go_next_page();               // will beep if no next page
         break;
 
-    case '<': /* previous page */
+    case '<': // previous page
         s_rub_ptr();
         if (!s_prev_elig(g_page_ents[0].ent_num))
         {
             s_beep();
             break;
         }
-        s_go_prev_page();               /* will beep if no prior page */
+        s_go_prev_page();               // will beep if no prior page
         break;
 
-    case 'T':         /* top of ents */
+    case 'T':         // top of ents
     case '^':
         s_rub_ptr();
         flag = s_go_top_ents();
-        if (!flag)              /* failure */
+        if (!flag)              // failure
         {
             return S_QUIT;
         }
         break;
 
-    case 'B': /* bottom of ents */
+    case 'B': // bottom of ents
     case '$':
         s_rub_ptr();
         flag = s_go_bot_ents();
@@ -246,29 +246,29 @@ int s_do_cmd()
         }
         break;
 
-    case Ctl('r'):    /* refresh screen */
+    case Ctl('r'):    // refresh screen
     case Ctl('l'):
           g_s_ref_all = true;
         break;
 
-    case Ctl('f'):    /* refresh (mail) display */
+    case Ctl('f'):    // refresh (mail) display
 #ifdef MAIL_CALL
         set_mail(true);
 #endif
         g_s_ref_bot = true;
         break;
 
-    case 'h': /* universal help */
+    case 'h': // universal help
         s_go_bot();
         g_s_ref_all = true;
         univ_help(UHELP_SCANART);
         eat_typeahead();
         break;
 
-    case 'H': /* help */
+    case 'H': // help
         s_go_bot();
         g_s_ref_all = true;
-        /* any commands typed during help are unused. (might change) */
+        // any commands typed during help are unused. (might change)
         switch (g_s_cur_type)
         {
         case S_ART:
@@ -284,9 +284,9 @@ int s_do_cmd()
         eat_typeahead();
         break;
 
-    case '!': /* shell command */
+    case '!': // shell command
         s_go_bot();
-        g_s_ref_all = true;                     /* will need refresh */
+        g_s_ref_all = true;                     // will need refresh
         if (!escapade())
         {
             (void)get_anything();
@@ -295,14 +295,14 @@ int s_do_cmd()
         break;
 
 #if 0
-    case '&':         /* see/set switches... */
+    case '&':         // see/set switches...
         /* The new option stuff makes this potentially recursive.
          * Something similar to the 'H' (extended help) code needs to be done.
          * It may be necessary for this code to do the context saving.
          */
         s_go_bot();
-        g_s_ref_all = true;                     /* will need refresh */
-        if (!switcheroo())              /* XXX same semantics in trn4? */
+        g_s_ref_all = true;                     // will need refresh
+        if (!switcheroo())              // XXX same semantics in trn4?
         {
             (void)get_anything();
         }
@@ -312,7 +312,7 @@ int s_do_cmd()
 
     case '/':
     case '?':
-    case 'g':         /* goto (search for) group */
+    case 'g':         // goto (search for) group
         s_search();
         break;
 
@@ -321,17 +321,17 @@ int s_do_cmd()
         s_jump_num(*g_buf);
         break;
 
-    case '#':         /* Toggle item numbers */
+    case '#':         // Toggle item numbers
         if (g_s_item_num)
         {
-            /* turn off item numbers */
+            // turn off item numbers
             g_s_desc_cols += g_s_item_num_cols;
             g_s_item_num_cols = 0;
             g_s_item_num = 0;
         }
         else
         {
-            /* turn on item numbers */
+            // turn on item numbers
             g_s_item_num_cols = 3;
             g_s_desc_cols -= g_s_item_num_cols;
             g_s_item_num = 1;
@@ -340,9 +340,9 @@ int s_do_cmd()
         break;
 
     default:
-        return S_NOT_FOUND;              /* not one of the simple commands */
-    } /* switch */
-    return 0;           /* keep on looping! */
+        return S_NOT_FOUND;              // not one of the simple commands
+    } // switch
+    return 0;           // keep on looping!
 }
 
 static char s_search_text[LINE_BUF_LEN]{};
@@ -360,7 +360,7 @@ bool s_match_description(long ent)
         {
             if (std::isupper(*s))
             {
-                *s = std::tolower(*s);               /* convert to lower case */
+                *s = std::tolower(*s);               // convert to lower case
             }
         }
         if (std::strstr(lbuf,s_search_text))
@@ -411,10 +411,10 @@ long s_backward_search(long ent)
     return ent;
 }
 
-/* perhaps later have a wraparound search? */
+// perhaps later have a wraparound search?
 void s_search()
 {
-    int  fill_type; /* 0: forward, 1: backward */
+    int  fill_type; // 0: forward, 1: backward
     char*error_msg;
 
     if (!s_search_init)
@@ -428,17 +428,17 @@ void s_search()
     {
         return;
     }
-    if (g_buf[1])       /* new text */
+    if (g_buf[1])       // new text
     {
-        /* make leading space skip an option later? */
-        /* (it isn't too important because substring matching is used) */
-        char *s = skip_eq(g_buf + 1, ' '); /* skip leading spaces */
+        // make leading space skip an option later?
+        // (it isn't too important because substring matching is used)
+        char *s = skip_eq(g_buf + 1, ' '); // skip leading spaces
         std::strncpy(s_search_text,s,LINE_BUF_LEN);
         for (char *t = s_search_text; *t != '\0'; t++)
         {
             if (std::isupper(*t))
             {
-                *t = std::tolower(*t);               /* convert to lower case */
+                *t = std::tolower(*t);               // convert to lower case
             }
         }
     }
@@ -459,21 +459,21 @@ void s_search()
     case '/':
         error_msg = "No matches forward from current point.";
         ent = s_forward_search(ent);
-        fill_type = 0;          /* forwards fill */
+        fill_type = 0;          // forwards fill
         break;
 
     case '?':
         error_msg = "No matches backward from current point.";
         ent = s_backward_search(ent);
-        fill_type = 1;          /* backwards fill */
+        fill_type = 1;          // backwards fill
         break;
 
     case 'g':
         ent = s_forward_search(ent);
         if (!ent)
         {
-            ent = s_forward_search(0);  /* from top */
-            /* did we just loop around? */
+            ent = s_forward_search(0);  // from top
+            // did we just loop around?
             if (ent == g_page_ents[g_s_ptr_page_line].ent_num)
             {
                 ent = 0;
@@ -484,7 +484,7 @@ void s_search()
                 error_msg = "No matches.";
             }
         }
-        fill_type = 0;          /* forwards fill */
+        fill_type = 0;          // forwards fill
         break;
 
     default:
@@ -502,13 +502,13 @@ void s_search()
     }
     for (int i = 0; i <= g_s_bot_ent; i++)
     {
-        if (g_page_ents[i].ent_num == ent)               /* entry is on same page */
+        if (g_page_ents[i].ent_num == ent)               // entry is on same page
         {
             g_s_ptr_page_line = i;
             return;
         }
     }
-    /* entry is not on page... */
+    // entry is not on page...
     if (fill_type == 1)
     {
         (void)s_fill_page_backward(ent);
