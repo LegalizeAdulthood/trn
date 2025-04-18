@@ -25,10 +25,10 @@ void s_goxy(int x, int y)
     tputs(tgoto(g_tc_CM, x, y), 1, put_char);
 }
 
-/* Print a string with the placing of the page and mail status.
- * sample: "(mail)-MIDDLE-"
- * Good for most bottom status bars.
- */
+// Print a string with the placing of the page and mail status.
+// sample: "(mail)-MIDDLE-"
+// Good for most bottom status bars.
+//
 void s_mail_and_place()
 {
     bool previous;
