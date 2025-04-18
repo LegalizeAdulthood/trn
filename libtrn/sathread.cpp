@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* sathread.c
  *
  */
@@ -9,7 +9,7 @@
 #include "trn/cache.h"
 #include "trn/hash.h"
 #include "trn/mempool.h"
-#include "trn/sadesc.h" /* sa_desc_subject() */
+#include "trn/sadesc.h" // sa_desc_subject()
 #include "trn/samisc.h"
 #include "trn/sorder.h"
 
@@ -29,12 +29,12 @@ void sa_init_threads()
     }
 }
 
-/* called only if the macro didn't find a value */
+// called only if the macro didn't find a value
 /* XXX: dependent on hash feature that data.dat_len is not used in
  * the default comparison function, so it can be used for a number.
  * later: write a custom comparison function.
  */
-//long e;                       /* entry number */
+//long e;                       // entry number
 long sa_get_subj_thread(long e)
 {
     bool old_untrim = g_untrim_cache;
@@ -85,7 +85,7 @@ int sa_subj_thread_count(long a)
     return count;
 }
 
-/* returns basic_elig previous subject thread */
+// returns basic_elig previous subject thread
 long sa_subj_thread_prev(long a)
 {
     int j;
