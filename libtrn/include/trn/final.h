@@ -1,17 +1,17 @@
 /* trn/final.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_FINAL_H
 #define TRN_FINAL_H
 
 #include <config/config.h>
 
-/* cleanup status for fast exits */
+// cleanup status for fast exits
 
-extern bool g_panic;       /* we got hung up or something-- so leave tty alone */
-extern bool g_doing_ng;    /* do we need to reconstitute current rc line? */
-extern char g_int_count;   /* how many interrupts we've had */
-extern bool g_bos_on_stop; /* set when handling the stop signal would leave the screen a mess */
+extern bool g_panic;       // we got hung up or something-- so leave tty alone
+extern bool g_doing_ng;    // do we need to reconstitute current rc line?
+extern char g_int_count;   // how many interrupts we've had
+extern bool g_bos_on_stop; // set when handling the stop signal would leave the screen a mess
 
 void final_init();
 [[noreturn]] void finalize(int status);
