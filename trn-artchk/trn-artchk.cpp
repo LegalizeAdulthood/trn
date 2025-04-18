@@ -3,11 +3,11 @@
 // This software is copyrighted as detailed in the LICENSE file.
 
 
-/* A program to check an article's validity and print warnings if problems
-** are found.
-**
-** Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>
-*/
+// A program to check an article's validity and print warnings if problems
+// are found.
+//
+// Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>
+//
 
 #include <config/common.h>
 #include <nntp/nntpclient.h>
