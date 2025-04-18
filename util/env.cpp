@@ -208,9 +208,9 @@ static void env_init2()
     g_rn_lib = file_exp(PRIVLIB);
 }
 
-/* Set g_login_name to the user's login name and g_real_name to the user's
-** real name.
-*/
+// Set g_login_name to the user's login name and g_real_name to the user's
+// real name.
+//
 static bool set_user_name(char *tmpbuf)
 {
     char* s;
