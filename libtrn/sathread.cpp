@@ -30,10 +30,10 @@ void sa_init_threads()
 }
 
 // called only if the macro didn't find a value
-/* XXX: dependent on hash feature that data.dat_len is not used in
- * the default comparison function, so it can be used for a number.
- * later: write a custom comparison function.
- */
+// XXX: dependent on hash feature that data.dat_len is not used in
+// the default comparison function, so it can be used for a number.
+// later: write a custom comparison function.
+//
 //long e;                       // entry number
 long sa_get_subj_thread(long e)
 {
