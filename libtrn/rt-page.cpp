@@ -1,7 +1,7 @@
 /* rt-page.c
  * vi: set sw=4 ts=8 ai sm noet :
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/rt-page.h"
@@ -93,7 +93,7 @@ bool set_sel_mode(char_int ch)
                 g_threaded_group = false;
             }
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case 'T':
         set_selector(g_sel_default_mode = SM_THREAD, SS_MAGIC_NUMBER);
@@ -447,8 +447,8 @@ try_again:
             }
             else
             {
-                /*g_ngptr = np; ??*/
-                /*set_ngname(np->rcline);*/
+                // g_ngptr = np; ??
+                // set_ngname(np->rcline);
                 set_to_read(np, ST_LAX);
                 if (!np->rc->data_source->act_sf.fp)
                 {
@@ -459,7 +459,7 @@ try_again:
             {
                 g_current_newsgroup = np;
                 g_newsgroup_ptr = np;
-                /* this may move newsgroups around */
+                // this may move newsgroups around
                 cleanup_newsrc(np->rc);
                 goto try_again;
             }
@@ -594,8 +594,8 @@ try_again:
             case UN_GROUP_DESEL:
             case UN_VGROUP_DESEL:
             case UN_DELETED:
-            case UN_VGROUP:               /* first-pass item */
-                /* always ineligible items */
+            case UN_VGROUP:               // first-pass item
+                // always ineligible items
                 ui_elig = false;
                 break;
 
@@ -626,7 +626,7 @@ try_again:
             }
 
             case UN_ARTICLE:
-                /* later: use the datasrc of the newsgroup */
+                // later: use the datasrc of the newsgroup
                 ui_elig = !was_read_group(g_data_source, ui->data.virt.num,
                                           ui->data.virt.ng);
                 if (g_sel_rereading)
@@ -778,7 +778,7 @@ try_again:
         {
             g_sel_page_sp = g_sel_page_sp->next;
         }
-        /* The g_artptr_list contains only unread or read articles, never both */
+        // The g_artptr_list contains only unread or read articles, never both
         limit = g_art_ptr_list + g_art_ptr_list_size;
         for (app = g_art_ptr_list; app < limit; app++)
         {
@@ -1246,7 +1246,7 @@ bool prev_page()
 {
     int item_cnt = 0;
 
-    /* Scan the items in reverse to go back a page */
+    // Scan the items in reverse to go back a page
     switch (g_sel_mode)
     {
     case SM_MULTIRC:
@@ -1484,7 +1484,7 @@ bool prev_page()
     return false;
 }
 
-/* Return true if we had to change pages to find the object */
+// Return true if we had to change pages to find the object
 bool calc_page(Selection u)
 {
     int ret = false;
@@ -1747,7 +1747,7 @@ void display_page_title(bool home_only)
         {
             std::printf(" (group #%d: %s)", g_multirc->num, g_buf + 2);
         }
-        color_pop();    /* of COLOR_HEADING */
+        color_pop();    // of COLOR_HEADING
     }
     if (home_only || (g_erase_screen && g_erase_each_line))
     {
@@ -1890,7 +1890,7 @@ start_of_loop:
                     newline();
                     g_current_newsgroup = np;
                     g_newsgroup_ptr = np;
-                    /* this may move newsgroups around */
+                    // this may move newsgroups around
                     cleanup_newsrc(np->rc);
                     init_pages(PRESERVE_PAGE);
                     display_page_title(false);
@@ -2120,7 +2120,7 @@ start_of_loop:
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
             g_sel_page_obj_cnt++;
-            /* Output the article, with optional author */
+            // Output the article, with optional author
             display_article(ap, g_sel_page_item_cnt, sel);
             g_sel_page_item_cnt++;
         }
@@ -2137,7 +2137,7 @@ start_of_loop:
     {
         int line_cnt;
         int etc = 0;
-        int ix = -1;    /* item # or -1 */
+        int ix = -1;    // item # or -1
 
         Subject *sp = g_sel_page_sp;
         for (; sp && !etc && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next)
@@ -2149,7 +2149,7 @@ start_of_loop:
 
             if (sp->flags & SF_INCLUDED)
             {
-                /* Compute how many lines we need to display this group */
+                // Compute how many lines we need to display this group
                 if (g_sel_mode == SM_THREAD)
                 {
                     line_cnt = count_thread_lines(sp, &sel);
@@ -2168,7 +2168,7 @@ start_of_loop:
                         etc = line_cnt;
                         line_cnt = s_sel_max_line_cnt;
                     }
-                    /* If it doesn't fit, save it for the next page */
+                    // If it doesn't fit, save it for the next page
                     if (g_term_line + line_cnt > s_sel_max_line_cnt + 2)
                     {
                         break;
@@ -2311,7 +2311,7 @@ void output_sel(int ix, int sel, bool update)
 
     if (g_use_sel_num)
     {
-        /* later consider no-leading-zero option */
+        // later consider no-leading-zero option
         std::printf("%02d",ix+1);
     }
     else
@@ -2321,15 +2321,15 @@ void output_sel(int ix, int sel, bool update)
 
     switch (sel)
     {
-    case 1:                   /* '+' */
+    case 1:                   // '+'
         color_object(COLOR_PLUS, true);
         break;
 
-    case 2:                   /* '-' */
+    case 2:                   // '-'
         color_object(COLOR_MINUS, true);
         break;
 
-    case 3:                   /* '*' */
+    case 3:                   // '*'
         color_object(COLOR_STAR, true);
         break;
 
@@ -2339,7 +2339,7 @@ void output_sel(int ix, int sel, bool update)
         break;
     }
     std::putchar(" +-*"[sel]);
-    color_pop();        /* of COLOR_PLUS/MINUS/STAR/DEFAULT */
+    color_pop();        // of COLOR_PLUS/MINUS/STAR/DEFAULT
 
     if (update)
     {
@@ -2462,7 +2462,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
     int     from_width = g_tc_COLS / 5;
     int     date_width = g_tc_COLS / 5;
 #ifdef USE_UTF_HACK
-    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8); /* FIXME */
+    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8); // FIXME
 #endif
 
     maybe_eol();
@@ -2479,7 +2479,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
     else
     {
         Article* first_ap;
-        /* Find the first unread article so we get the author right */
+        // Find the first unread article so we get the author right
         if ((first_ap = subj->thread) != nullptr                    //
             && (first_ap->subj != subj || first_ap->from == nullptr //
                 || (!(first_ap->flags & AF_UNREAD) ^ g_sel_rereading)))
@@ -2622,7 +2622,7 @@ static void display_universal(const UniversalItem *ui)
         {
         case UN_NEWSGROUP:
         {
-              /* later error check the UI? */
+              // later error check the UI?
             NewsgroupData *np = find_newsgroup(ui->data.group.ng);
             if (!np)
             {
@@ -2630,7 +2630,7 @@ static void display_universal(const UniversalItem *ui)
             }
             else
             {
-                /* XXX set_toread() can print sometimes... */
+                // XXX set_toread() can print sometimes...
                 if (!np->abs_first)
                 {
                     set_to_read(np, ST_LAX);
