@@ -1,6 +1,6 @@
 /* rcln.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/rcln.h"
@@ -81,7 +81,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
     }
 }
 
-/* add an article number to a newsgroup, if it isn't already read */
+// add an article number to a newsgroup, if it isn't already read
 
 int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 {
@@ -99,11 +99,11 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
         return 0;
     }
     NewsgroupData *np = find_newsgroup(newsgroup_name);
-    if (np == nullptr)                  /* not found in newsrc? */
+    if (np == nullptr)                  // not found in newsrc?
     {
         return 0;
     }
-    if (dp != np->rc->data_source)          /* punt on cross-host xrefs */
+    if (dp != np->rc->data_source)          // punt on cross-host xrefs
     {
 #ifdef DEBUG
         if (debug & DEB_XREF_MARKER)
@@ -120,18 +120,18 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 #ifndef ANCIENT_NEWS
     if (!np->abs_first)
     {
-        /* Trim down the list due to expires if we haven't done so yet. */
+        // Trim down the list due to expires if we haven't done so yet.
         set_to_read(np, ST_LAX);
     }
 #endif
 #if 0
-    if (artnum > np->ngmax + 200)       /* allow for incoming articles */
+    if (artnum > np->ngmax + 200)       // allow for incoming articles
     {
         std::printf("\nCorrupt Xref line!!!  %ld --> %s(1..%ld)\n",
             artnum,ngnam,
             np->ngmax);
-        g_paranoid = true;              /* paranoia reigns supreme */
-        return -1;                      /* hope this was the first newsgroup */
+        g_paranoid = true;              // paranoia reigns supreme
+        return -1;                      // hope this was the first newsgroup
     }
 #endif
 
@@ -154,70 +154,70 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
           np->rcline + np->numoffset);
     }
 #endif
-    s = skip_eq(np->rc_line + np->num_offset, ' '); /* skip spaces */
+    s = skip_eq(np->rc_line + np->num_offset, ' '); // skip spaces
     t = s;
     while (std::isdigit(*s) && art_num >= (min = std::atol(s)))
     {
-                                        /* while it might have been read */
-        t = skip_digits(s);             /* skip number */
-        if (*t == '-')                  /* is it a range? */
+                                        // while it might have been read
+        t = skip_digits(s);             // skip number
+        if (*t == '-')                  // is it a range?
         {
-            t++;                        /* skip to next number */
+            t++;                        // skip to next number
             if (art_num <= (max = std::atol(t)))
             {
-                return 0;               /* it is in range => already read */
+                return 0;               // it is in range => already read
             }
-            lastnum = max;              /* remember it */
-            maxt = t;                   /* remember position in case we */
-                                        /* want to overwrite the max */
-            t = skip_digits(t);         /* skip second number */
+            lastnum = max;              // remember it
+            maxt = t;                   // remember position in case we
+                                        // want to overwrite the max
+            t = skip_digits(t);         // skip second number
         }
         else
         {
-            if (art_num == min)          /* explicitly a read article? */
+            if (art_num == min)          // explicitly a read article?
             {
                 return 0;
             }
-            lastnum = min;              /* remember what the number was */
-            maxt = nullptr;             /* last one was not a range */
+            lastnum = min;              // remember what the number was
+            maxt = nullptr;             // last one was not a range
         }
         while (*t && !std::isdigit(*t))
         {
-            t++;                        /* skip comma and any spaces */
+            t++;                        // skip comma and any spaces
         }
         s = t;
     }
 
-    /* we have not read it, so insert the article number before s */
+    // we have not read it, so insert the article number before s
 
-    morenum = std::isdigit(*s);              /* will it need a comma after? */
+    morenum = std::isdigit(*s);              // will it need a comma after?
     *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
     mbuf = safe_malloc((MemorySize)(std::strlen(s)+(s - np->rc_line)+MAX_DIGITS+2+1));
-    std::strcpy(mbuf,np->rc_line);            /* make new rc line */
+    std::strcpy(mbuf,np->rc_line);            // make new rc line
     if (maxt && lastnum && art_num == lastnum+1)
-                                        /* can we just extend last range? */
+                                        // can we just extend last range?
     {
-        t = mbuf + (maxt - np->rc_line); /* then overwrite previous max */
+        t = mbuf + (maxt - np->rc_line); // then overwrite previous max
     }
     else
     {
-        t = mbuf + (t - np->rc_line);    /* point t into new line instead */
-        if (lastnum)                    /* have we parsed any line? */
+        t = mbuf + (t - np->rc_line);    // point t into new line instead
+        if (lastnum)                    // have we parsed any line?
         {
-            if (!morenum)               /* are we adding to the tail? */
+            if (!morenum)               // are we adding to the tail?
             {
-                *t++ = ',';             /* supply comma before */
+                *t++ = ',';             // supply comma before
             }
             if (!maxt && art_num == lastnum+1 && *(t-1) == ',')
-                                        /* adjacent singletons? */
+                                        // adjacent singletons?
             {
-                *(t-1) = '-';           /* turn them into a range */
+                *(t-1) = '-';           // turn them into a range
             }
         }
     }
-    if (morenum)                        /* is there more to life? */
+    if (morenum)                        // is there more to life?
     {
-        if (min == art_num+1)            /* can we consolidate further? */
+        if (min == art_num+1)            // can we consolidate further?
         {
             bool range_before = (*(t-1) == '-');
             char *nextmax = skip_digits(s);
@@ -225,28 +225,28 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 
             if (range_before)
             {
-                *t = '\0';              /* artnum is redundant */
+                *t = '\0';              // artnum is redundant
             }
             else
             {
-                std::sprintf(t,"%ld-",(long)art_num);/* artnum will be new min */
+                std::sprintf(t,"%ld-",(long)art_num);// artnum will be new min
             }
 
             if (range_after)
             {
-                s = nextmax;            /* *s is redundant */
+                s = nextmax;            // *s is redundant
             }
         }
         else
         {
-            std::sprintf(t,"%ld,",(long)art_num);     /* put the number and comma */
+            std::sprintf(t,"%ld,",(long)art_num);     // put the number and comma
         }
     }
     else
     {
-        std::sprintf(t,"%ld",(long)art_num);  /* put the number there (wherever) */
+        std::sprintf(t,"%ld",(long)art_num);  // put the number there (wherever)
     }
-    std::strcat(t,s);                        /* copy remainder of line */
+    std::strcat(t,s);                        // copy remainder of line
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER)
     {
@@ -254,17 +254,17 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     }
 #endif
     std::free(np->rc_line);
-    np->rc_line = mbuf;          /* pull the switcheroo */
+    np->rc_line = mbuf;          // pull the switcheroo
     *(np->rc_line + np->num_offset - 1) = '\0';
-                                        /* wipe out : or ! */
-    if (np->to_read > TR_NONE)   /* lest we turn unsub into bogus */
+                                        // wipe out : or !
+    if (np->to_read > TR_NONE)   // lest we turn unsub into bogus
     {
         np->to_read--;
     }
     return 0;
 }
 
-/* delete an article number from a newsgroup, if it is there */
+// delete an article number from a newsgroup, if it is there
 
 #ifdef MCHASE
 void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
@@ -281,11 +281,11 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
         return;
     }
     np = find_ng(ngnam);
-    if (np == nullptr)                  /* not found in newsrc? */
+    if (np == nullptr)                  // not found in newsrc?
     {
         return;
     }
-    if (dp != np->rc->g_datasrc)                /* punt on cross-host xrefs */
+    if (dp != np->rc->g_datasrc)                // punt on cross-host xrefs
     {
         return;
     }
@@ -301,15 +301,15 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
     }
 #endif
     s = np->rcline + np->numoffset;
-    s = skip_eq(s, ' ');                /* skip spaces */
+    s = skip_eq(s, ' ');                // skip spaces
 
-    /* a little optimization, since it is almost always the last number */
+    // a little optimization, since it is almost always the last number
 
-    for (t=s; *t; t++)                  /* find end of string */
+    for (t=s; *t; t++)                  // find end of string
     {
     }
     curlen = t - np->rcline;
-    for (t--; std::isdigit(*t); t--)         /* find previous delim */
+    for (t--; std::isdigit(*t); t--)         // find previous delim
     {
     }
     if (*t == ',' && std::atol(t + 1) == artnum)
@@ -328,20 +328,20 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
         return;
     }
 
-    /* not the last number, oh well, we may need the length anyway */
+    // not the last number, oh well, we may need the length anyway
 
     while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
     {
-                                        /* while it might have been read */
-        t = skip_digits(s);             /* skip number */
-        if (*t == '-')                  /* is it a range? */
+                                        // while it might have been read
+        t = skip_digits(s);             // skip number
+        if (*t == '-')                  // is it a range?
         {
-            t++;                        /* skip to next number */
+            t++;                        // skip to next number
             max = std::atol(t);
-            t = skip_digit(t);          /* skip second number */
+            t = skip_digit(t);          // skip second number
             if (artnum <= max)
             {
-                                        /* it is in range => already read */
+                                        // it is in range => already read
                 if (artnum == min)
                 {
                     min++;
@@ -355,21 +355,21 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 *(np->rcline + np->numoffset - 1) = np->subscribechar;
                 mbuf = safe_malloc((MemorySize)(curlen+(artnum?(MAX_DIGITS+1)*2+1:1+1)));
                 *s = '\0';
-                std::strcpy(mbuf,np->rcline);        /* make new rc line */
+                std::strcpy(mbuf,np->rcline);        // make new rc line
                 s = mbuf + (s - np->rcline);
-                                        /* point s into mbuf now */
-                if (artnum)             /* split into two ranges? */
+                                        // point s into mbuf now
+                if (artnum)             // split into two ranges?
                 {
                     prange(s,min,artnum-1);
                     s += std::strlen(s);
                     *s++ = ',';
                     prange(s,artnum+1,max);
                 }
-                else                    /* only one range */
+                else                    // only one range
                 {
                     prange(s,min,max);
                 }
-                std::strcat(s,t);            /* copy remainder over */
+                std::strcat(s,t);            // copy remainder over
 #ifdef DEBUG
                 if (debug & DEB_XREF_MARKER)
                 {
@@ -377,9 +377,9 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 }
 #endif
                 std::free(np->rcline);
-                np->rcline = mbuf;      /* pull the switcheroo */
+                np->rcline = mbuf;      // pull the switcheroo
                 *(np->rcline + np->numoffset - 1) = '\0';
-                                        /* wipe out : or ! */
+                                        // wipe out : or !
                 if (np->toread >= TR_NONE)
                 {
                     np->toread++;
@@ -389,9 +389,9 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
         }
         else
         {
-            if (artnum == min)          /* explicitly a read article? */
+            if (artnum == min)          // explicitly a read article?
             {
-                if (*t == ',')          /* pick a comma, any comma */
+                if (*t == ',')          // pick a comma, any comma
                 {
                     t++;
                 }
@@ -399,11 +399,11 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 {
                     s--;
                 }
-                else if (s[-2] == ',')  /* (in case of space) */
+                else if (s[-2] == ',')  // (in case of space)
                 {
                     s -= 2;
                 }
-                std::strcpy(s,t);            /* no need to realloc */
+                std::strcpy(s,t);            // no need to realloc
                 if (np->toread >= TR_NONE)
                 {
                     np->toread++;
@@ -418,7 +418,7 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 return;
             }
         }
-        while (*t && !std::isdigit(*t))      /* skip comma and any spaces */
+        while (*t && !std::isdigit(*t))      // skip comma and any spaces
         {
             t++;
         }
@@ -439,7 +439,7 @@ void prange(char *where, ART_NUM min, ART_NUM max)
 }
 #endif
 
-/* calculate the number of unread articles for a newsgroup */
+// calculate the number of unread articles for a newsgroup
 
 void set_to_read(NewsgroupData *np, bool lax_high_check)
 {
@@ -471,7 +471,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         std::sprintf(tmpbuf," 1-%ld",(long)ngsize);
         if (std::strcmp(tmpbuf,np->rc_line+np->num_offset) != 0)
         {
-            check_expired(np,np->abs_first);        /* this might realloc rcline */
+            check_expired(np,np->abs_first);        // this might realloc rcline
         }
     }
     char *nums = np->rc_line + np->num_offset;
@@ -484,11 +484,11 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     mybuf[length++] = ',';
     mybuf[length] = '\0';
     char *s = skip_space(mybuf);
-    for ( ; (c = std::strchr(s,',')) != nullptr ; s = ++c)    /* for each range */
+    for ( ; (c = std::strchr(s,',')) != nullptr ; s = ++c)    // for each range
     {
-        *c = '\0';                  /* keep index from running off */
+        *c = '\0';                  // keep index from running off
         char *h = std::strchr(s, '-');
-        if (h != nullptr) /* find - in range, if any */
+        if (h != nullptr) // find - in range, if any
         {
             unread -= (newmax = atol(h + 1)) - atol(s) + 1;
         }
@@ -498,9 +498,9 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         }
         if (newmax != 0)
         {
-            unread--;           /* recalculate length */
+            unread--;           // recalculate length
         }
-        if (newmax > ngsize)    /* paranoia check */
+        if (newmax > ngsize)    // paranoia check
         {
             if (!lax_high_check && newmax > ngsize)
             {
@@ -512,16 +512,16 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
             ngsize = newmax;
         }
     }
-    if (unread < 0)                     /* SOMEONE RESET THE NEWSGROUP!!! */
+    if (unread < 0)                     // SOMEONE RESET THE NEWSGROUP!!!
     {
-        unread = (ArticleUnread)ngsize;    /* assume nothing carried over */
+        unread = (ArticleUnread)ngsize;    // assume nothing carried over
         if (!g_to_read_quiet)
         {
             std::printf("\nSomebody reset %s -- assuming nothing read.\n",
                    np->rc_line);
         }
         *(np->rc_line + np->num_offset) = '\0';
-        g_paranoid = true;          /* enough to make a guy paranoid */
+        g_paranoid = true;          // enough to make a guy paranoid
         np->rc->flags |= RF_RC_CHANGED;
     }
     if (np->subscribe_char == NEGCHAR)
@@ -547,7 +547,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
             }
         }
     }
-    np->to_read = (ArticleUnread)unread;    /* remember how many are left */
+    np->to_read = (ArticleUnread)unread;    // remember how many are left
 
     if (mybuf != tmpbuf)
     {
@@ -555,7 +555,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     }
 }
 
-/* make sure expired articles are marked as read */
+// make sure expired articles are marked as read
 
 void check_expired(NewsgroupData *np, ArticleNum a1st)
 {
@@ -588,7 +588,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
         lastnum = num;
     }
     len = std::strlen(s);
-    if (len && s[-1] == '-')                    /* landed in a range? */
+    if (len && s[-1] == '-')                    // landed in a range?
     {
         if (lastnum != 1)
         {
@@ -616,7 +616,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
     }
     else
     {
-        /* s now points to what should follow the first range */
+        // s now points to what should follow the first range
         char numbuf[32];
 
         std::sprintf(numbuf," 1-%ld",(long)(a1st - (lastnum != a1st)));
@@ -669,8 +669,8 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
 #endif
 }
 
-/* Returns true if article is marked as read or does not exist */
-/* could use a better name */
+// Returns true if article is marked as read or does not exist
+// could use a better name
 bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
 {
     char*   s;
@@ -683,19 +683,19 @@ bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
         return true;
     }
     NewsgroupData *np = find_newsgroup(ngnam);
-    if (np == nullptr)          /* not found in newsrc? */
+    if (np == nullptr)          // not found in newsrc?
     {
         return true;
     }
-    if (!np->num_offset)         /* no numbers on line */
+    if (!np->num_offset)         // no numbers on line
     {
         return false;
     }
 #if 0
-    /* consider this code later */
+    // consider this code later
     if (!np->abs1st)
     {
-        /* Trim down the list due to expires if we haven't done so yet. */
+        // Trim down the list due to expires if we haven't done so yet.
         set_toread(np, ST_LAX);
     }
 #endif
@@ -706,44 +706,44 @@ bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
     }
     if (artnum > np->ng_max)
     {
-        return false;           /* probably doesn't exist, however */
+        return false;           // probably doesn't exist, however
     }
-    s = skip_eq(np->rc_line + np->num_offset, ' '); /* skip spaces */
+    s = skip_eq(np->rc_line + np->num_offset, ' '); // skip spaces
     t = s;
     while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
     {
         char*   maxt = nullptr;
         ArticleNum lastnum = 0;
-        /* while it might have been read */
-        t = skip_digits(s);             /* skip number */
-        if (*t == '-')                  /* is it a range? */
+        // while it might have been read
+        t = skip_digits(s);             // skip number
+        if (*t == '-')                  // is it a range?
         {
-            t++;                        /* skip to next number */
+            t++;                        // skip to next number
             if (artnum <= (max = std::atol(t)))
             {
-                return true;            /* it is in range => already read */
+                return true;            // it is in range => already read
             }
-            lastnum = max;              /* remember it */
-            maxt = t;                   /* remember position in case we */
-                                        /* want to overwrite the max */
-            t = skip_digits(t);         /* skip second number */
+            lastnum = max;              // remember it
+            maxt = t;                   // remember position in case we
+                                        // want to overwrite the max
+            t = skip_digits(t);         // skip second number
         }
         else
         {
-            if (artnum == min)          /* explicitly a read article? */
+            if (artnum == min)          // explicitly a read article?
             {
                 return true;
             }
-            lastnum = min;              /* remember what the number was */
-            maxt = nullptr;             /* last one was not a range */
+            lastnum = min;              // remember what the number was
+            maxt = nullptr;             // last one was not a range
         }
         while (*t && !std::isdigit(*t))
         {
-            t++;                        /* skip comma and any spaces */
+            t++;                        // skip comma and any spaces
         }
         s = t;
     }
 
-    /* we have not read it, so return false */
+    // we have not read it, so return false
     return false;
 }
