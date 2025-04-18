@@ -59,12 +59,12 @@ void sc_init(bool pend_wait)
     }
     s_sc_sf_delay = false;
 
-/* Consider the relationships between scoring and article scan mode.
- * Should one be able to initialize the other?  How much can they depend on
- * each other when both are #defined?
- * Consider this especially in a later redesign or porting these systems
- * to other newsreaders.
- */
+// Consider the relationships between scoring and article scan mode.
+// Should one be able to initialize the other?  How much can they depend on
+// each other when both are #defined?
+// Consider this especially in a later redesign or porting these systems
+// to other newsreaders.
+//
     g_kill_thresh_active = false;  // kill thresholds are generic
     // July 24, 1993: changed default of g_sc_savescores to true
     g_sc_saves_cores = true;
@@ -302,9 +302,9 @@ void sc_fill_score_list(ArticleNum first, ArticleNum last)
 
 // consider having this return a flag (is finished/is not finished)
 
-/* flag == true means sort now, false means wait until later (not used)
- * nowait == true means start scoring immediately (group entry)
- */
+// flag == true means sort now, false means wait until later (not used)
+// nowait == true means start scoring immediately (group entry)
+//
 void sc_look_ahead(bool flag, bool nowait)
 {
     ArticleNum oldart = g_open_art;
@@ -584,8 +584,8 @@ void sc_score_cmd(const char *line)
         sc_look_ahead(true,false);
         s_sc_do_spin = false;
         set_spin(SPIN_POP);
-        /* consider a "done" message later,
-         * *if* lookahead did all the arts */
+        // consider a "done" message later,
+        // *if* lookahead did all the arts
         std::putchar('\n');
         break;
 
