@@ -1,4 +1,4 @@
-/* This file is Copyright 1993 by Clifford A. Adams */
+// This file is Copyright 1993 by Clifford A. Adams
 /* smisc.c
  *
  * Lots of misc. stuff.
@@ -13,8 +13,8 @@
 
 #include <cstdio>
 
-bool g_s_default_cmd{}; /* true if the last command (run through setdef()) was the default */
-bool g_s_follow_temp{}; /* explicitly follow until end of thread */
+bool g_s_default_cmd{}; // true if the last command (run through setdef()) was the default
+bool g_s_follow_temp{}; // explicitly follow until end of thread
 
 bool s_eligible(long ent)
 {
