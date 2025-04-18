@@ -1,4 +1,4 @@
-/* This file Copyright 1993 by Clifford A. Adams */
+// This file Copyright 1993 by Clifford A. Adams
 /* trn/scoresave.h
  *
  */
@@ -7,7 +7,7 @@
 
 #include <config/typedef.h>
 
-extern int g_sc_loaded_count; /* how many articles were loaded? */
+extern int g_sc_loaded_count; // how many articles were loaded?
 
 void       sc_sv_add(const char *str);
 void       sc_sv_del_group(const char *gname);
