@@ -1,6 +1,6 @@
 /* sw.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/fdio.h>
 
@@ -56,7 +56,7 @@ void sw_file(char **tcbufptr)
     }
 }
 
-/* decode a list of space separated switches */
+// decode a list of space separated switches
 
 void sw_list(char *swlist)
 {
@@ -65,9 +65,9 @@ void sw_list(char *swlist)
 
     char *s = swlist;
     p = swlist;
-    while (*s)                          /* "String, or nothing" */
+    while (*s)                          // "String, or nothing"
     {
-        if (!inquote && std::isspace(*s))    /* word delimiter? */
+        if (!inquote && std::isspace(*s))    // word delimiter?
         {
             while (true)
             {
@@ -80,22 +80,22 @@ void sw_list(char *swlist)
             }
             if (p != swlist)
             {
-                *p++ = '\0';            /* chop here */
+                *p++ = '\0';            // chop here
             }
         }
         else if (inquote == *s)
         {
-            s++;                        /* delete trailing quote */
-            inquote = 0;                /* no longer quoting */
+            s++;                        // delete trailing quote
+            inquote = 0;                // no longer quoting
         }
         else if (!inquote && (*s == '"' || *s == '\''))
         {
-                                        /* OK, I know when I am not wanted */
-            inquote = *s++;             /* remember & del single or double */
+                                        // OK, I know when I am not wanted
+            inquote = *s++;             // remember & del single or double
         }
-        else if (*s == '\\')            /* quoted something? */
+        else if (*s == '\\')            // quoted something?
         {
-            if (*++s != '\n')           /* newline? */
+            if (*++s != '\n')           // newline?
             {
                 s = interp_backslash(p, s);
                 p++;
@@ -104,11 +104,11 @@ void sw_list(char *swlist)
         }
         else
         {
-            *p++ = *s++;                /* normal char */
+            *p++ = *s++;                // normal char
         }
     }
     *p++ = '\0';
-    *p = '\0';                          /* put an extra null on the end */
+    *p = '\0';                          // put an extra null on the end
     if (inquote)
     {
         std::printf("Unmatched %c in switch\n",inquote);
@@ -119,16 +119,16 @@ void sw_list(char *swlist)
         decode_switch(c);
         while (*c++)
         {
-                                        /* point at null + 1 */
+                                        // point at null + 1
         }
     }
 }
 
-/* decode a single switch */
+// decode a single switch
 
 void decode_switch(const char *s)
 {
-    s = skip_space(s);          /* ignore leading spaces */
+    s = skip_space(s);          // ignore leading spaces
 #ifdef DEBUG
     if (debug)
     {
@@ -136,7 +136,7 @@ void decode_switch(const char *s)
         term_down(1);
     }
 #endif
-    if (*s != '-' && *s != '+')         /* newsgroup pattern */
+    if (*s != '-' && *s != '+')         // newsgroup pattern
     {
         set_newsgroup_to_do(s);
         if (g_mode == MM_INITIALIZING)
@@ -144,7 +144,7 @@ void decode_switch(const char *s)
             g_newsgroup_min_to_read = 0;
         }
     }
-    else                                /* normal switch */
+    else                                // normal switch
     {
         bool upordown = *s == '-';
         char tmpbuf[LINE_BUF_LEN];
@@ -291,14 +291,14 @@ void decode_switch(const char *s)
         case 'h':
             if (!s[1])
             {
-                /* Free old g_user_htype list */
+                // Free old g_user_htype list
                 while (g_user_htype_count > 1)
                 {
                     std::free(g_user_htype[--g_user_htype_count].name);
                 }
                 std::memset(g_user_htype_index,0,26);
             }
-            /* FALL THROUGH */
+            // FALL THROUGH
 
         case 'H':
             if (g_check_flag)
