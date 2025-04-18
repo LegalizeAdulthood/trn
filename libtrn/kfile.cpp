@@ -747,16 +747,16 @@ void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags s
     {
         if (g_sel_mode == SM_THREAD)
         {
-            select_arts_thread(ap, AUTO_SEL_THD);
+            select_articles_thread(ap, AUTO_SEL_THD);
         }
         else
         {
-            select_arts_subject(ap, AUTO_SEL_THD);
+            select_articles_subject(ap, AUTO_SEL_THD);
         }
     }
     else if (subj_flags & AUTO_SEL_SBJ)
     {
-        select_arts_subject(ap, AUTO_SEL_SBJ);
+        select_articles_subject(ap, AUTO_SEL_SBJ);
     }
     else if (chain_flags & AUTO_SEL_FOL)
     {
@@ -771,16 +771,16 @@ void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags s
     {
         if (g_sel_mode == SM_THREAD)
         {
-            kill_arts_thread(ap, AFFECT_ALL | AUTO_KILL_THD);
+            kill_articles_thread(ap, AFFECT_ALL | AUTO_KILL_THD);
         }
         else
         {
-            kill_arts_subject(ap, AFFECT_ALL | AUTO_KILL_THD);
+            kill_articles_subject(ap, AFFECT_ALL | AUTO_KILL_THD);
         }
     }
     else if (subj_flags & AUTO_KILL_SBJ)
     {
-        kill_arts_subject(ap, AFFECT_ALL | AUTO_KILL_SBJ);
+        kill_articles_subject(ap, AFFECT_ALL | AUTO_KILL_SBJ);
     }
     else if (chain_flags & AUTO_KILL_FOL)
     {

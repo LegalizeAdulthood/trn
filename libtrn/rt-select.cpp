@@ -1719,7 +1719,7 @@ static bool delay_return_item(Selection u)
         Article* ap;
         if (g_sel_mode == SM_THREAD)
         {
-            for (ap = first_art(u.sp); ap; ap = next_art(ap))
+            for (ap = first_art(u.sp); ap; ap = next_article(ap))
             {
                 if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
                 {

@@ -116,7 +116,7 @@ void sa_sel_threads()
     {
         if ((sp->flags & subj_mask) == subj_mask)
         {
-            for (Article *ap = first_art(sp); ap; ap = next_art(ap))
+            for (Article *ap = first_art(sp); ap; ap = next_article(ap))
             {
                 long art = article_num(ap);
                 if ((ap->flags & AF_SEL) //

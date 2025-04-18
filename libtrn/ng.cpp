@@ -392,7 +392,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                || (g_selected_only && !(g_artp->flags & AF_SEL))))
         {
                                         /* has this article been read? */
-            inc_art(g_selected_only,false);/* then skip it */
+            inc_article(g_selected_only,false);/* then skip it */
             continue;
         }
         else if (!g_reread && (!(g_artp->flags & AF_EXISTS) || !parse_header(g_art)))
@@ -1016,7 +1016,7 @@ not_threaded:
         g_univ_follow_temp = true;
         do
         {
-            dec_art(g_selected_only,false);
+            dec_article(g_selected_only,false);
         } while (g_art >= g_first_art && (was_read(g_art) || !parse_header(g_art)));
         g_search_ahead = 0;
         if (g_art >= g_first_art)
@@ -1029,7 +1029,7 @@ not_threaded:
     case 'P':         /* goto previous article */
         g_s_follow_temp = true; /* keep going until change req. */
         g_univ_follow_temp = true;
-        dec_art(false,true);
+        dec_article(false,true);
       check_dec_art:
         if (g_art < g_abs_first)
         {
@@ -1102,7 +1102,7 @@ not_threaded:
         else if (g_scan_on && !g_threaded_group && g_search_ahead)
         {
             *g_buf = Ctl('n');
-            if (!next_art_with_subj())
+            if (!next_article_with_subj())
             {
                 goto normal_search;
             }
@@ -1114,7 +1114,7 @@ not_threaded:
             if (g_sa_in && g_threaded_group)
             {
                 Article* old_artp = g_artp;
-                inc_art(g_selected_only,false);
+                inc_article(g_selected_only,false);
                 if (!g_artp || !old_artp)
                 {
                     return AS_SA;
@@ -1149,7 +1149,7 @@ not_threaded:
             }
             else
             {
-                inc_art(g_selected_only,false);
+                inc_article(g_selected_only,false);
             }
             if (g_art > g_last_art)
             {
@@ -1194,13 +1194,13 @@ not_threaded:
                 }
                 else
                 {
-                    inc_art(false,true);
+                    inc_article(false,true);
                 }
             }
         }
         else
         {
-            inc_art(false,true);
+            inc_article(false,true);
         }
         if (g_art <= g_last_art)
         {
@@ -1277,7 +1277,7 @@ not_threaded:
         {
             g_s_follow_temp = true;     /* keep going until change req. */
         }
-        if (*g_buf == Ctl('n')? next_art_with_subj() : prev_art_with_subj())
+        if (*g_buf == Ctl('n')? next_article_with_subj() : prev_article_with_subj())
         {
             return AS_NORM;
         }
@@ -1772,12 +1772,12 @@ run_the_selector:
             }
             if (g_threaded_group)
             {
-                select_arts_thread(g_artp, AUTO_KILL_NONE);
+                select_articles_thread(g_artp, AUTO_KILL_NONE);
                 std::printf("\nSelected all articles in this thread.\n");
             }
             else
             {
-                select_arts_subject(g_artp, AUTO_KILL_NONE);
+                select_articles_subject(g_artp, AUTO_KILL_NONE);
                 std::printf("\nSelected all articles in this subject.\n");
             }
             term_down(2);
@@ -1799,12 +1799,12 @@ run_the_selector:
             }
             if (g_sel_mode == SM_THREAD)
             {
-                deselect_arts_thread(g_artp);
+                deselect_articles_thread(g_artp);
                 std::printf("\nDeselected all articles in this thread.\n");
             }
             else
             {
-                deselect_arts_subject(g_artp);
+                deselect_articles_subject(g_artp);
                 std::printf("\nDeselected all articles in this subject.\n");
             }
             term_down(2);
@@ -1834,7 +1834,7 @@ run_the_selector:
             {
                 goto not_threaded;
             }
-            kill_arts_thread(g_artp, SET_TO_RETURN | AFFECT_ALL);
+            kill_articles_thread(g_artp, SET_TO_RETURN | AFFECT_ALL);
             return AS_NORM;
         }
         /* FALL THROUGH */
@@ -2242,7 +2242,7 @@ reask_memorize:
         }
         else
         {
-            select_arts_thread(g_artp, AUTO_SEL_THD);
+            select_articles_thread(g_artp, AUTO_SEL_THD);
             ch = (use_one_line? '+' : '.');
         }
         if (g_general_mode != GM_SELECTOR)
@@ -2253,7 +2253,7 @@ reask_memorize:
     }
     else if (ch == 'S')
     {
-        select_arts_subject(g_artp, AUTO_SEL_SBJ);
+        select_articles_subject(g_artp, AUTO_SEL_SBJ);
         ch = (use_one_line? '+' : '.');
         if (g_general_mode != GM_SELECTOR)
         {

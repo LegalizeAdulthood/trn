@@ -338,7 +338,7 @@ void check_poster(Article *ap)
                         break;
 
                     case '+':
-                        select_arts_thread(ap,AUTO_SEL_THD);
+                        select_articles_thread(ap,AUTO_SEL_THD);
                         break;
 
                     case 'p':
@@ -796,7 +796,7 @@ void look_ahead()
     if (g_threaded_group)
     {
         g_artp = g_curr_artp;
-        inc_art(g_selected_only,false);
+        inc_article(g_selected_only,false);
         if (g_artp)
         {
             parse_header(g_art);

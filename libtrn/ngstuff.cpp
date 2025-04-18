@@ -375,9 +375,9 @@ int thread_perform()
         }
         else
         {
-            sp = next_subj((Subject *) nullptr, bits);
+            sp = next_subject((Subject *) nullptr, bits);
         }
-        for (; sp; sp = next_subj(sp, bits))
+        for (; sp; sp = next_subject(sp, bits))
         {
             if ((!(sp->flags & g_sel_mask) ^ !bits) || !sp->misc)
             {
@@ -458,11 +458,11 @@ int thread_perform()
             }
             else
             {
-                sp = next_subj((Subject *) nullptr, bits);
+                sp = next_subject((Subject *) nullptr, bits);
             }
-            for (; sp; sp = next_subj(sp, bits))
+            for (; sp; sp = next_subject(sp, bits))
             {
-                for (ap = first_art(sp); ap; ap = next_art(ap))
+                for (ap = first_art(sp); ap; ap = next_article(ap))
                 {
                     if ((!(ap->flags & AF_UNREAD) ^ want_unread)
                         && !(ap->flags & g_sel_mask) ^ !!bits)
@@ -541,11 +541,11 @@ int perform(char *cmdlst, int output_level)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
-                    select_arts_thread(g_artp, savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
+                    select_articles_thread(g_artp, savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
                 }
                 else
                 {
-                    select_arts_subject(g_artp, savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
+                    select_articles_subject(g_artp, savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
                 }
                 if (cmdlst[1] == '+')
                 {
@@ -559,7 +559,7 @@ int perform(char *cmdlst, int output_level)
         }
         else if (ch == 'S')
         {
-            select_arts_subject(g_artp, AUTO_SEL_SBJ);
+            select_articles_subject(g_artp, AUTO_SEL_SBJ);
         }
         else if (ch == '.')
         {
@@ -571,11 +571,11 @@ int perform(char *cmdlst, int output_level)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
-                    deselect_arts_thread(g_artp);
+                    deselect_articles_thread(g_artp);
                 }
                 else
                 {
-                    deselect_arts_subject(g_artp);
+                    deselect_articles_subject(g_artp);
                 }
                 cmdlst++;
             }
@@ -592,16 +592,16 @@ int perform(char *cmdlst, int output_level)
         {
             if (g_sel_mode == SM_THREAD)
             {
-                kill_arts_thread(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
+                kill_articles_thread(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
             }
             else
             {
-                kill_arts_subject(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
+                kill_articles_subject(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
             }
         }
         else if (ch == 'K' || ch == 'k')
         {
-            kill_arts_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : AUTO_KILL_NONE));
+            kill_articles_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : AUTO_KILL_NONE));
         }
         else if (ch == 'x')
         {

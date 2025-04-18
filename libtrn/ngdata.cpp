@@ -343,7 +343,7 @@ void newsgroup_skip()
                 sleep(2);
             }
         }
-        inc_art(g_selected_only,false); /* try next article */
+        inc_article(g_selected_only,false); /* try next article */
     }
 }
 
