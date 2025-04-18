@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* trn/scanart.h
  *
  * Interface to rest of [t]rn
@@ -10,17 +10,17 @@
 
 #include "trn/enum-flags.h"
 
-/* return codes for sa_main */
+// return codes for sa_main
 enum SaMainResult
 {
-    SA_READ = -7,     /* read article pointed to by g_art (always) */
-    SA_QUIT_SEL = -6, /* quit, and return to previous selector (backtick) */
-    SA_PRIOR = -5,    /* go to and enter prior newsgroup */
-    SA_NEXT = -4,     /* go to and enter next newsgroup */
-    SA_FAKE = -3,     /* Fake a command (g_buf and g_art already set up) */
-    SA_ERR = -2,      /* error, quit out one level */
-    SA_QUIT = -1,     /* quit out one level and clean up... */
-    SA_NORM = 0       /* do the normal thing (usually read article pointed to by g_art) */
+    SA_READ = -7,     // read article pointed to by g_art (always)
+    SA_QUIT_SEL = -6, // quit, and return to previous selector (backtick)
+    SA_PRIOR = -5,    // go to and enter prior newsgroup
+    SA_NEXT = -4,     // go to and enter next newsgroup
+    SA_FAKE = -3,     // Fake a command (g_buf and g_art already set up)
+    SA_ERR = -2,      // error, quit out one level
+    SA_QUIT = -1,     // quit out one level and clean up...
+    SA_NORM = 0       // do the normal thing (usually read article pointed to by g_art)
 };
 
 /* sa_flags character bitmap:
@@ -39,38 +39,38 @@ enum ScanArticleFlags : unsigned char
 };
 DECLARE_FLAGS_ENUM(ScanArticleFlags, unsigned char);
 
-/* per-entry data */
+// per-entry data
 struct ScanArticleEntryData
 {
     ArticleNum       artnum;
     long             subj_thread_num;
-    ScanArticleFlags sa_flags; /* status bitmap (marked, select, etc...) */
+    ScanArticleFlags sa_flags; // status bitmap (marked, select, etc...)
 };
 
 extern ScanArticleEntryData *g_sa_ents;
 extern int g_sa_num_ents;
 
-extern bool g_sa_initialized;       /* Have we initialized? */
-extern bool g_sa_never_initialized; /* Have we ever initialized? */
+extern bool g_sa_initialized;       // Have we initialized?
+extern bool g_sa_never_initialized; // Have we ever initialized?
 
-/* note: g_sa_in should be checked for returning to SA */
-extern bool g_sa_in; /* Are we "in" SA? */
+// note: g_sa_in should be checked for returning to SA
+extern bool g_sa_in; // Are we "in" SA?
 
-extern bool g_sa_go;          /* go to sa.  Do not pass GO (:-) */
-extern bool g_sa_go_explicit; /* want to bypass read-next-marked */
+extern bool g_sa_go;          // go to sa.  Do not pass GO (:-)
+extern bool g_sa_go_explicit; // want to bypass read-next-marked
 
-/* used to pass an article number to read soon */
+// used to pass an article number to read soon
 extern ArticleNum g_sa_art;
 
-/* reimplement later */
-/* select threads from TRN thread selector */
+// reimplement later
+// select threads from TRN thread selector
 extern bool g_sa_do_sel_threads;
 
-/* true if read articles are eligible */
-/* in trn/scanart.h for world-visibilty */
+// true if read articles are eligible
+// in trn/scanart.h for world-visibilty
 extern bool g_sa_mode_read_elig;
 
-/* Options */
+// Options
 /* Display order variable:
  *
  * 1: Arrival order
@@ -84,24 +84,24 @@ enum SaDisplayOrder
 };
 extern SaDisplayOrder g_sa_mode_order;
 
-/* if true, don't move the cursor after marking or selecting articles */
+// if true, don't move the cursor after marking or selecting articles
 extern bool g_sa_mark_stay;
 
-/* if true, re-"fold" after an un-zoom operation. */
-/* This flag is useful for very slow terminals */
+// if true, re-"fold" after an un-zoom operation.
+// This flag is useful for very slow terminals
 extern bool g_sa_unzoom_refold;
 
-/* true if in "fold" mode */
+// true if in "fold" mode
 extern bool g_sa_mode_fold;
 
-/* Follow threads by default? */
+// Follow threads by default?
 extern bool g_sa_follow;
 
-/* Options: what to display */
-extern bool g_sa_mode_desc_art_num; /* show art#s */
-extern bool g_sa_mode_desc_author; /* show author */
-extern bool g_sa_mode_desc_score;  /* show score */
-/* flags to determine whether to display various things */
+// Options: what to display
+extern bool g_sa_mode_desc_art_num; // show art#s
+extern bool g_sa_mode_desc_author; // show author
+extern bool g_sa_mode_desc_score;  // show score
+// flags to determine whether to display various things
 extern bool g_sa_mode_desc_thread_count;
 extern bool g_sa_mode_desc_subject;
 extern bool g_sa_mode_desc_summary;
@@ -138,7 +138,7 @@ inline bool sa_selected1(int a)
     return g_sa_ents[a].sa_flags & SAF_SELECT1;
 }
 
-/* sa_select2 is not currently used */
+// sa_select2 is not currently used
 inline void sa_select2(int a)
 {
     g_sa_ents[a].sa_flags |= SAF_SELECT2;
