@@ -35,10 +35,10 @@ static char *s_sa_extract_dest{}; // use this command on an extracted file
 static bool  s_sa_extract_junk{}; // junk articles after extracting them
 
 // several basic commands are already done by s_docmd (Scan level)
-/* interprets command in g_buf, returning 0 to continue looping,
- * a condition code (negative #s) or an art# to read.  Also responsible
- * for setting refresh flags if necessary.
- */
+// interprets command in g_buf, returning 0 to continue looping,
+// a condition code (negative #s) or an art# to read.  Also responsible
+// for setting refresh flags if necessary.
+//
 int sa_do_cmd()
 {
     long    b; // misc. artnum
@@ -89,9 +89,8 @@ int sa_do_cmd()
         for (int j = 0; j <= g_s_bot_ent; j++)
         {
             // This is a difficult decision, with no obviously good behavior.
-            /* Do not kill threads with the first article marked, as it is probably
-             * not what the user wanted.
-             */
+            // Do not kill threads with the first article marked, as it is probably
+            // not what the user wanted.
             if (!sa_marked(g_page_ents[j].ent_num) || !g_sa_mode_fold)
             {
                 (void)sa_art_cmd(g_sa_mode_fold,SA_KILL_UNMARKED,
@@ -153,8 +152,8 @@ int sa_do_cmd()
             {
             }
         }
-        /* New action: if in fold mode, will not delete an article which
-           has a thread-prior marked article. */
+        // New action: if in fold mode, will not delete an article which
+        // has a thread-prior marked article.
         for (; i; i = s_next(i))
         {
             if (!sa_basic_elig(i))
@@ -547,9 +546,8 @@ int sa_do_cmd()
             s_rub_ptr();
         }
         (void)sa_art_cmd((*g_buf == 'S'),SA_SELECT,a);
-        /* if in zoom mode, selection will remove article(s) from the
-         * page, so that moving the cursor down is unnecessary
-         */
+        // if in zoom mode, selection will remove article(s) from the
+        // page, so that moving the cursor down is unnecessary
         if (!g_sa_mark_stay && !g_sa_mode_zoom)
         {
             // go to next art on page or top of page if at bottom
