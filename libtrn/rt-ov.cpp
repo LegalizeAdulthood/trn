@@ -1,6 +1,6 @@
 /* rt-ov.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/string_case_compare.h>
 
@@ -34,7 +34,7 @@
 #include <cstring>
 #include <ctime>
 
-/* How many overview lines to read with one NNTP call */
+// How many overview lines to read with one NNTP call
 enum
 {
     OV_CHUNK_SIZE = 40
@@ -58,7 +58,7 @@ bool ov_init()
     std::FILE *overview;
     if (!g_data_source->over_dir)
     {
-        /* Check if the server is XOVER compliant */
+        // Check if the server is XOVER compliant
         if (nntp_command("XOVER") <= 0)
         {
             return false;
@@ -71,7 +71,7 @@ bool ov_init()
         {
             return false;
         }
-        /* Just in case... */
+        // Just in case...
         if (*g_ser_line == NNTP_CLASS_OK)
         {
             nntp_finish_list();
@@ -171,7 +171,7 @@ OverviewFieldNum ov_num(char *hdr, char *end)
     case SUBJ_LINE:
         return OV_SUBJ;
 
-    case AUTHOR_LINE:         /* This hack is for the Baen NNTP server */
+    case AUTHOR_LINE:         // This hack is for the Baen NNTP server
     case FROM_LINE:
         return OV_FROM;
 
@@ -416,7 +416,7 @@ exit:
     }
     if (!cheating && g_data_source->ov_in)
     {
-        std::fseek(g_data_source->ov_in, 0L, 0); /* rewind it for the cheating phase */
+        std::fseek(g_data_source->ov_in, 0L, 0); // rewind it for the cheating phase
     }
     if (success && real_first <= g_first_cached)
     {
@@ -503,7 +503,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     if (!fields[OV_SUBJ] || !fields[OV_MSG_ID]
      || !fields[OV_FROM] || !fields[OV_DATE])
     {
-        return;         /* skip this line if it's too short */
+        return;         // skip this line if it's too short
     }
 
     if (!article->subj)
@@ -535,7 +535,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     {
         if (!article->xrefs && fields[OV_XREF])
         {
-            /* Exclude an xref for just this group */
+            // Exclude an xref for just this group
             cp = std::strchr(fields[OV_XREF], ':');
             if (cp && std::strchr(cp+1, ':'))
             {
