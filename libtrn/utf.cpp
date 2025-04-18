@@ -1,9 +1,9 @@
-/* This file written 2020 by Ambrose Li */
+// This file written 2020 by Ambrose Li
 /* utf.c - Functions for handling Unicode sort of properly
  *
  * vi: set sw=4 ts=8 ai sm noet :
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/utf.h"
@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 
-/* OK - valid second and subsequent bytes in UTF-8 */
+// OK - valid second and subsequent bytes in UTF-8
 #define OK(s) ((*(s) & 0xC0) == 0x80)
 #define U(c) (((Uchar)(c)) & 0xFF)
 
@@ -79,7 +79,7 @@ struct CharsetDesc
 };
 
 static const CharsetDesc s_charset_descs[] = {
-    /* Tags defined in trn/utf.h go first; these are short labels for charsubst.c */
+    // Tags defined in trn/utf.h go first; these are short labels for charsubst.c
     // clang-format off
     { CHARSET_NAME_ASCII, CHARSET_ASCII, nullptr },
     { "us-ascii", CHARSET_ASCII, nullptr },
@@ -212,7 +212,7 @@ const char *output_charset_name()
 
 int byte_length_at(const char *s)
 {
-    int it = s != nullptr; /* correct for ASCII */
+    int it = s != nullptr; // correct for ASCII
     if (!it)
     {
     }
@@ -243,7 +243,7 @@ int byte_length_at(const char *s)
         }
         else
         {
-            /* FIXME - invalid UTF-8 */
+            // FIXME - invalid UTF-8
         }
     }
     else if (IS_SINGLE_BYTE(s_gs.in))
@@ -259,7 +259,7 @@ int byte_length_at(const char *s)
     return it;
 }
 
-/* NOTE: correctness is not guaranteed; this is only a rough generalization */
+// NOTE: correctness is not guaranteed; this is only a rough generalization
 int visual_width_at(const char *s)
 {
     CodePoint c = code_point_at(s);
@@ -276,21 +276,21 @@ int visual_width_at(const char *s)
     {
         it = (c & 0x80)? 2: 1;
     }
-    else if ((c >= 0x00300 && c <= 0x0036F)     /* combining diacritics */
+    else if ((c >= 0x00300 && c <= 0x0036F)     // combining diacritics
              || (c >= 0x01AB0 && c <= 0x01AFF)  //
              || (c >= 0x01DC0 && c <= 0x01DFF)  //
-             || (c >= 0x0200B && c <= 0x0200F)  /* zwsp, zwnj, zwj, lrm, rlm */
-             || (c >= 0x0202A && c <= 0x0202E)  /* lre, rle, pdf, lro, rlo */
-             || (c >= 0x02060 && c <= 0x02064)) /* wj,..., invisible plus */
+             || (c >= 0x0200B && c <= 0x0200F)  // zwsp, zwnj, zwj, lrm, rlm
+             || (c >= 0x0202A && c <= 0x0202E)  // lre, rle, pdf, lro, rlo
+             || (c >= 0x02060 && c <= 0x02064)) // wj,..., invisible plus
     {
         it = 0;
     }
-    else if ((c >= 0x02E80 && c <= 0x04DBF)     /* CJK misc, kana, hangul */
-             || (c >= 0x04E00 && c <= 0x09FFF)  /* CJK ideographs */
-             || (c >= 0x0FE30 && c <= 0x0FE4F)  /* CJK compatibility forms */
-             || (c >= 0x0FF00 && c <= 0x0FF60)  /* CJK fullwidth forms */
+    else if ((c >= 0x02E80 && c <= 0x04DBF)     // CJK misc, kana, hangul
+             || (c >= 0x04E00 && c <= 0x09FFF)  // CJK ideographs
+             || (c >= 0x0FE30 && c <= 0x0FE4F)  // CJK compatibility forms
+             || (c >= 0x0FF00 && c <= 0x0FF60)  // CJK fullwidth forms
              || (c >= 0x0FFE0 && c <= 0x0FFE6)  //
-             || (c >= 0x20000 && c <= 0x2FA1F)) /* more CJK ideographs */
+             || (c >= 0x20000 && c <= 0x2FA1F)) // more CJK ideographs
     {
         it = 2;
     }
@@ -378,7 +378,7 @@ CodePoint code_point_at(const char *s)
         }
         else if (s_gs.himap_in != nullptr)
         {
-            it = *s & 0xFF; /* I hate signed/unsigned conversions */
+            it = *s & 0xFF; // I hate signed/unsigned conversions
             if (it & 0x80)
             {
                 it = s_gs.himap_in[it & 0x7F];
@@ -395,7 +395,7 @@ CodePoint code_point_at(const char *s)
 static int insert_utf8_at(char *s, CodePoint c)
 {
     int it;
-    /* FIXME - should we check if s has enough space? */
+    // FIXME - should we check if s has enough space?
     if (s == nullptr)
     {
         it = 0;
@@ -451,7 +451,7 @@ static int insert_utf8_at(char *s, CodePoint c)
 int insert_unicode_at(char *s, CodePoint c)
 {
     int it;
-    /* FIXME - should we check if s has enough space? */
+    // FIXME - should we check if s has enough space?
     if (s == nullptr)
     {
         it = 0;
@@ -547,7 +547,7 @@ char *create_utf8_copy(char *s)
         int  tlen;
         char buf[7];
 
-        /* Precalculate size of required space */
+        // Precalculate size of required space
         for (slen = tlen = 0; s[slen];)
         {
             int sw = byte_length_at(s+slen);
@@ -556,7 +556,7 @@ char *create_utf8_copy(char *s)
             tlen += tw;
         }
 
-        /* Create the actual copy */
+        // Create the actual copy
         it = (char*) std::malloc(tlen + 1);
         if (it)
         {
