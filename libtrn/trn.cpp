@@ -1,5 +1,5 @@
-/* This software is copyrighted as detailed in the LICENSE file. */
-/* vi: set sw=4 ts=8 ai sm noet : */
+// This software is copyrighted as detailed in the LICENSE file.
+// vi: set sw=4 ts=8 ai sm noet :
 
 /*  trn -- threaded readnews program based on rn 4.4
  *
@@ -74,11 +74,11 @@
 #include <string>
 #include <ctime>
 
-std::string g_newsgroup_name;                             /* name of current newsgroup */
-std::string g_newsgroup_dir;                              /* same thing in directory name form */
+std::string g_newsgroup_name;                             // name of current newsgroup
+std::string g_newsgroup_dir;                              // same thing in directory name form
 std::string g_patch_level{PATCHLEVEL};             //
-int         g_find_last{};                         /* -r */
-bool        g_verbose{true};                      /* +t */
+int         g_find_last{};                         // -r
+bool        g_verbose{true};                      // +t
 bool        g_use_univ_selector{};                //
 bool        g_use_newsrc_selector{};              //
 bool        g_use_newsgroup_selector{true};       //
@@ -99,7 +99,7 @@ int trn_main(int argc, char *argv[])
     bool foundany;
     char* s;
 
-    /* Figure out our executable's name. */
+    // Figure out our executable's name.
 #ifdef MSDOS
     strlwr(argv[0]);
     s = std::strrchr(argv[0],'\\');
@@ -118,7 +118,7 @@ int trn_main(int argc, char *argv[])
         s++;
     }
 #if !THREAD_INIT
-    /* Default to threaded operation if our name starts with a 't' or 's'. */
+    // Default to threaded operation if our name starts with a 't' or 's'.
     if (*s == 't' || *s == 's')
     {
         g_use_threads = true;
@@ -136,17 +136,17 @@ int trn_main(int argc, char *argv[])
         finalize(0);
     }
 
-    if (find_new_groups())              /* did we add any new groups? */
+    if (find_new_groups())              // did we add any new groups?
     {
         foundany = true;
-        g_start_here = nullptr;          /* start ng scan from the top */
+        g_start_here = nullptr;          // start ng scan from the top
     }
 
     if (g_max_newsgroup_to_do)
     {
         g_start_here = nullptr;
     }
-    else if (!foundany)                 /* nothing to do? */
+    else if (!foundany)                 // nothing to do?
     {
         if (g_verbose)
         {
@@ -161,27 +161,27 @@ int trn_main(int argc, char *argv[])
     do_multirc();
 
     finalize(0);
-    /* NOT REACHED */
+    // NOT REACHED
     return 0;
 }
 
 void do_multirc()
 {
-    bool special = false;       /* allow newsgroup with no unread news? */
+    bool special = false;       // allow newsgroup with no unread news?
     MinorMode mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
 
     if (g_use_univ_selector)
     {
-        univ_startup();         /* load startup file */
+        univ_startup();         // load startup file
         char ch = universal_selector();
         if (ch != 'Q')
         {
-            /* section copied from bug_out below */
-            /* now write the newsrc(s) back out */
+            // section copied from bug_out below
+            // now write the newsrc(s) back out
             if (!write_newsrcs(g_multirc))
             {
-                s_restore_old_newsrc = true; /* TODO: ask to retry! */
+                s_restore_old_newsrc = true; // TODO: ask to retry!
             }
             if (s_restore_old_newsrc)
             {
@@ -213,7 +213,7 @@ ng_start_sel:
         g_use_newsgroup_selector = false;
     }
 
-    /* loop through all unread news */
+    // loop through all unread news
   restart:
     g_current_newsgroup = g_first_newsgroup;
     while (true)
@@ -250,9 +250,9 @@ ng_start_sel:
         {
             g_newsgroup_ptr = g_first_newsgroup;
         }
-        while (true)                        /* for each newsgroup */
+        while (true)                        // for each newsgroup
         {
-            if (g_newsgroup_ptr == nullptr)     /* after the last newsgroup? */
+            if (g_newsgroup_ptr == nullptr)     // after the last newsgroup?
             {
                 set_mode(GM_READ,MM_FINISH_NEWSGROUP_LIST);
                 if (g_max_newsgroup_to_do)
@@ -281,7 +281,7 @@ ng_start_sel:
                             std::fputs("\nNo \"only\" articles.",stdout);
                         }
                         term_down(2);
-                        end_only();     /* release the restriction */
+                        end_only();     // release the restriction
                         std::printf("\n%s\n", g_msg);
                         term_down(2);
                         retry = true;
@@ -290,10 +290,10 @@ ng_start_sel:
             }
             else
             {
-                bool shoe_fits; /* newsgroup matches restriction? */
+                bool shoe_fits; // newsgroup matches restriction?
 
                 set_mode(GM_READ,MM_NEWSGROUP_LIST);
-                if (g_newsgroup_ptr->to_read >= TR_NONE)         /* recalc toread? */
+                if (g_newsgroup_ptr->to_read >= TR_NONE)         // recalc toread?
                 {
                     set_newsgroup_name(g_newsgroup_ptr->rc_line);
                     shoe_fits = in_list(g_newsgroup_name.c_str());
@@ -305,7 +305,7 @@ ng_start_sel:
                     {
                         g_recent_newsgroup = g_current_newsgroup;
                         g_current_newsgroup = g_newsgroup_ptr;
-                        cleanup_newsrc(g_newsgroup_ptr->rc); /* this may move newsgroups around */
+                        cleanup_newsrc(g_newsgroup_ptr->rc); // this may move newsgroups around
                         set_newsgroup(g_current_newsgroup);
                     }
                 }
@@ -314,7 +314,7 @@ ng_start_sel:
                     shoe_fits = true;
                 }
                 if (g_newsgroup_ptr->to_read < (special ? TR_NONE : g_newsgroup_min_to_read) //
-                    || !shoe_fits)                                          /* unwanted newsgroup? */
+                    || !shoe_fits)                                          // unwanted newsgroup?
                 {
                     if (s_go_forward)
                     {
@@ -332,14 +332,14 @@ ng_start_sel:
                     continue;
                 }
             }
-            special = false;    /* go back to normal mode */
+            special = false;    // go back to normal mode
             if (g_newsgroup_ptr != g_current_newsgroup)
             {
-                g_recent_newsgroup = g_current_newsgroup;     /* remember previous newsgroup */
-                g_current_newsgroup = g_newsgroup_ptr; /* remember current newsgroup */
+                g_recent_newsgroup = g_current_newsgroup;     // remember previous newsgroup
+                g_current_newsgroup = g_newsgroup_ptr; // remember current newsgroup
             }
 reask_newsgroup:
-            unflush_output();   /* disable any ^O in effect */
+            unflush_output();   // disable any ^O in effect
                 if (g_newsgroup_ptr == nullptr)
                 {
                 g_default_cmd = retry ? "npq" : "qnp";
@@ -433,10 +433,10 @@ reinp_newsgroup:
     }
 
 bug_out:
-    /* now write the newsrc(s) back out */
+    // now write the newsrc(s) back out
     if (!write_newsrcs(g_multirc))
     {
-        s_restore_old_newsrc = true; /* TODO: ask to retry! */
+        s_restore_old_newsrc = true; // TODO: ask to retry!
     }
     if (s_restore_old_newsrc)
     {
@@ -454,7 +454,7 @@ InputNewsgroupResult input_newsgroup()
     get_cmd(g_buf);
     if (errno || *g_buf == '\f')
     {
-        newline();              /* if return from stop signal */
+        newline();              // if return from stop signal
         return ING_ASK;
     }
     g_buf[2] = *g_buf;
@@ -466,11 +466,11 @@ InputNewsgroupResult input_newsgroup()
     }
 
 do_command:
-    s_go_forward = true;                /* default to forward motion */
+    s_go_forward = true;                // default to forward motion
     switch (*g_buf)
     {
-    case 'P':                           /* goto previous newsgroup */
-    case 'p':                           /* find previous unread newsgroup */
+    case 'P':                           // goto previous newsgroup
+    case 'p':                           // find previous unread newsgroup
         if (!g_newsgroup_ptr)
         {
             g_newsgroup_ptr = g_last_newsgroup;
@@ -479,7 +479,7 @@ do_command:
         {
             g_newsgroup_ptr = g_newsgroup_ptr->prev;
         }
-        s_go_forward = false;           /* go backward in the newsrc */
+        s_go_forward = false;           // go backward in the newsrc
         if (*g_buf == 'P')
         {
             return ING_SPECIAL;
@@ -487,7 +487,7 @@ do_command:
         break;
 
     case '-':
-        g_newsgroup_ptr = g_recent_newsgroup;          /* recall previous newsgroup */
+        g_newsgroup_ptr = g_recent_newsgroup;          // recall previous newsgroup
         if (g_newsgroup_ptr)
         {
             if (!get_newsgroup(g_newsgroup_ptr->rc_line,GNG_NONE))
@@ -512,7 +512,7 @@ do_command:
         s_restore_old_newsrc = true;
         return ING_QUIT;
 
-    case 'q': case 'Q':       /* quit? */
+    case 'q': case 'Q':       // quit?
         newline();
         return ING_QUIT;
 
@@ -524,8 +524,8 @@ do_command:
         g_newsgroup_ptr = g_first_newsgroup;
         break;
 
-    case 'N':                 /* goto next newsgroup */
-    case 'n':                 /* find next unread newsgroup */
+    case 'N':                 // goto next newsgroup
+    case 'n':                 // find next unread newsgroup
         if (g_newsgroup_ptr == nullptr)
         {
             newline();
@@ -538,19 +538,19 @@ do_command:
         }
         break;
 
-    case '1':                 /* goto 1st newsgroup */
+    case '1':                 // goto 1st newsgroup
         g_newsgroup_ptr = g_first_newsgroup;
         return ING_SPECIAL;
 
     case '$':
-        g_newsgroup_ptr = nullptr;              /* go past last newsgroup */
+        g_newsgroup_ptr = nullptr;              // go past last newsgroup
         break;
 
     case 'L':
         list_newsgroups();
         return ING_ASK;
 
-    case '/': case '?':       /* scan for newsgroup pattern */
+    case '/': case '?':       // scan for newsgroup pattern
         switch (newsgroup_search(g_buf,true))
         {
         case NGS_ERROR:
@@ -599,12 +599,12 @@ do_command:
         not_incl("m");
         break;
 
-    case 'g': /* goto named newsgroup */
+    case 'g': // goto named newsgroup
         if (!finish_command(false))
         {
             return ING_INPUT;
         }
-        s = skip_eq(g_buf+1, ' '); /* skip leading spaces */
+        s = skip_eq(g_buf+1, ' '); // skip leading spaces
         if (!*s && *g_buf == 'm' && !g_newsgroup_name.empty() && g_newsgroup_ptr)
         {
             std::strcpy(s,g_newsgroup_name.c_str());
@@ -613,7 +613,7 @@ do_command:
             char* _s = skip_digits(s);
             if (*_s)
             {
-                /* found non-digit before hitting end */
+                // found non-digit before hitting end
                 set_newsgroup_name(s);
             }
             else
@@ -636,10 +636,10 @@ do_command:
                 set_newsgroup_name(g_newsgroup_ptr->rc_line);
             }
         }
-        /* try to find newsgroup */
+        // try to find newsgroup
         if (!get_newsgroup(g_newsgroup_name.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
         {
-            g_newsgroup_ptr = g_current_newsgroup;     /* if not found, go nowhere */
+            g_newsgroup_ptr = g_current_newsgroup;     // if not found, go nowhere
         }
         g_add_new_by_default = ADDNEW_ASK;
         return ING_SPECIAL;
@@ -649,24 +649,24 @@ do_command:
         return ING_ASK;
 #endif
 
-    case '!':                 /* shell escape */
-        if (escapade())         /* do command */
+    case '!':                 // shell escape
+        if (escapade())         // do command
         {
             return ING_INPUT;
         }
         return ING_ASK;
 
-    case Ctl('k'):            /* edit global KILL file */
+    case Ctl('k'):            // edit global KILL file
         edit_kill_file();
         return ING_ASK;
 
-    case Ctl('n'):            /* next newsrc list */
+    case Ctl('n'):            // next newsrc list
         end_only();
         newline();
         use_next_multirc(g_multirc);
         goto display_multirc;
 
-    case Ctl('p'):            /* prev newsrc list */
+    case Ctl('p'):            // prev newsrc list
         end_only();
         newline();
         use_next_multirc(g_multirc);
@@ -691,7 +691,7 @@ display_multirc:
             return ING_RESTART;
         }
 
-    case 'c':                 /* catch up */
+    case 'c':                 // catch up
         if (g_newsgroup_ptr)
         {
             ask_catchup();
@@ -718,16 +718,16 @@ display_multirc:
         term_down(3);
         return ING_SPECIAL;
 
-    case 'u':                 /* unsubscribe */
-        if (g_newsgroup_ptr && g_newsgroup_ptr->to_read >= TR_NONE)  /* unsubscribable? */
+    case 'u':                 // unsubscribe
+        if (g_newsgroup_ptr && g_newsgroup_ptr->to_read >= TR_NONE)  // unsubscribable?
         {
             newline();
             std::printf(g_unsub_to,g_newsgroup_ptr->rc_line);
             term_down(1);
-            g_newsgroup_ptr->subscribe_char = NEGCHAR;   /* unsubscribe it */
-            g_newsgroup_ptr->to_read = TR_UNSUB;         /* and make line invisible */
+            g_newsgroup_ptr->subscribe_char = NEGCHAR;   // unsubscribe it
+            g_newsgroup_ptr->to_read = TR_UNSUB;         // and make line invisible
             g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
-            g_newsgroup_ptr = g_newsgroup_ptr->next;            /* do an automatic 'n' */
+            g_newsgroup_ptr = g_newsgroup_ptr->next;            // do an automatic 'n'
             g_newsgroup_to_read--;
         }
         break;
@@ -736,7 +736,7 @@ display_multirc:
         univ_help(UHELP_NG);
         return ING_ASK;
 
-    case 'H':                 /* help */
+    case 'H':                 // help
         help_newsgroup();
         return ING_ASK;
 
@@ -777,13 +777,13 @@ reask_abandon:
         return ING_SPECIAL;
 
     case 'a':
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case 'o':
     case 'O':
     {
         bool doscan = (*g_buf == 'a');
-        if (!finish_command(true)) /* get rest of command */
+        if (!finish_command(true)) // get rest of command
         {
             return ING_INPUT;
         }
@@ -804,7 +804,7 @@ reask_abandon:
             g_newsgroup_min_to_read = *g_buf == g_empty_only_char && g_max_newsgroup_to_do
                           ? TR_NONE : TR_ONE;
         }
-        g_newsgroup_ptr = g_first_newsgroup;   /* simulate ^ */
+        g_newsgroup_ptr = g_first_newsgroup;   // simulate ^
         if (*g_msg && !g_max_newsgroup_to_do)
         {
             return ING_MESSAGE;
@@ -813,19 +813,19 @@ reask_abandon:
     }
 
     case '&':
-        if (switcheroo())       /* get rest of command */
+        if (switcheroo())       // get rest of command
         {
-            return ING_INPUT;   /* if rubbed out, try something else */
+            return ING_INPUT;   // if rubbed out, try something else
         }
         return ING_ASK;
 
-    case 'l':                 /* list other newsgroups */
+    case 'l':                 // list other newsgroups
     {
-        if (!finish_command(true)) /* get rest of command */
+        if (!finish_command(true)) // get rest of command
         {
-            return ING_INPUT;   /* if rubbed out, try something else */
+            return ING_INPUT;   // if rubbed out, try something else
         }
-        s = skip_eq(g_buf+1, ' '); /* skip leading spaces */
+        s = skip_eq(g_buf+1, ' '); // skip leading spaces
         push_only();
         if (*s)
         {
@@ -866,7 +866,7 @@ ng_start_sel:
     case ';':
     case 'U': case '+':
     case '.': case '=':
-    case 'y': case 'Y': case '\t': /* do normal thing */
+    case 'y': case 'Y': case '\t': // do normal thing
     case ' ': case '\r': case '\n':
         if (!g_newsgroup_ptr)
         {
@@ -879,17 +879,17 @@ ng_start_sel:
          * Just to be safe, make sure it is legal.
          */
         s = "";
-        if (*g_buf == '.')              /* start command? */
+        if (*g_buf == '.')              // start command?
         {
-            if (!finish_command(false)) /* get rest of command */
+            if (!finish_command(false)) // get rest of command
             {
                 return ING_INPUT;
             }
-            s = save_str(g_buf+1);               /* do_newsgroup will free it */
+            s = save_str(g_buf+1);               // do_newsgroup will free it
         }
         else if (*g_buf == '+' || *g_buf == 'U' || *g_buf == '=' || *g_buf == ';')
         {
-            *g_buf = g_last_char; /* restore 0200 if from a macro */
+            *g_buf = g_last_char; // restore 0200 if from a macro
             save_typeahead(g_buf+1, sizeof g_buf - 1);
             s = save_str(g_buf);
         }
@@ -923,23 +923,23 @@ redo_newsgroup:
             goto do_command;
 
         case NG_MINUS:
-            g_newsgroup_ptr = g_recent_newsgroup;      /* recall previous newsgroup */
+            g_newsgroup_ptr = g_recent_newsgroup;      // recall previous newsgroup
             return ING_SPECIAL;
 
         case NG_NO_SERVER:
             nntp_server_died(g_newsgroup_ptr->rc->data_source);
             return ING_NO_SERVER;
 
-        /* extensions */
+        // extensions
         case NG_GO_ARTICLE:
             g_newsgroup_ptr = g_ng_go_newsgroup_ptr;
-            s = save_str("y");           /* enter with minimal fuss */
+            s = save_str("y");           // enter with minimal fuss
             goto redo_newsgroup;
-          /* later: possible go-to-newsgroup */
+          // later: possible go-to-newsgroup
         }
         break;
 
-    case ':':         /* execute command on selected groups */
+    case ':':         // execute command on selected groups
         if (!newsgroup_sel_perform())
         {
             return ING_INPUT;
