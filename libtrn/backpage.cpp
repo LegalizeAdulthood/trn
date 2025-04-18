@@ -15,16 +15,19 @@
 static int             s_vary_fd{0};         /* virtual array file for storing  file offsets */
 static ArticlePosition s_vary_buf[VARY_SIZE]; /* current window onto virtual array */
 static long            s_old_offset{-1};     /* offset to block currently in window */
+#ifdef DEBUG
+static int             s_max_index{-1};
+#endif
 
 void back_page_init()
 {
-    const char *varyname = file_exp(VARYNAME);
-    close(creat(varyname,0600));
-    s_vary_fd = open(varyname,2);
-    remove(varyname);
+    const char *vary_name = file_exp(VARYNAME);
+    close(creat(vary_name,0600));
+    s_vary_fd = open(vary_name,2);
+    remove(vary_name);
     if (s_vary_fd < 0)
     {
-        std::printf(g_cant_open,varyname);
+        std::printf(g_cant_open,vary_name);
         sig_catcher(0);
     }
 
@@ -34,13 +37,13 @@ void back_page_init()
 
 ArticlePosition virtual_read(ArticleLine index)
 {
-    int subindx;
+    int sub_index;
     long offset;
 
 #ifdef DEBUG
-    if (indx > maxindx)
+    if (indx > s_max_index)
     {
-        std::printf("vrdary(%ld) > %ld\n",(long)indx, (long)maxindx);
+        std::printf("vrdary(%ld) > %ld\n",(long)indx, (long)s_max_index);
         return 0;
     }
 #endif
@@ -48,8 +51,8 @@ ArticlePosition virtual_read(ArticleLine index)
     {
         return 0;
     }
-    subindx = index % VARY_SIZE;
-    offset = (index - subindx) * sizeof(s_vary_buf[0]);
+    sub_index = index % VARY_SIZE;
+    offset = (index - sub_index) * sizeof(s_vary_buf[0]);
     if (offset != s_old_offset)
     {
         if (s_old_offset >= 0)
@@ -65,35 +68,35 @@ ArticlePosition virtual_read(ArticleLine index)
 #endif /* lint */
         s_old_offset = offset;
     }
-    return s_vary_buf[subindx];
+    return s_vary_buf[sub_index];
 }
 
 /* write to virtual array */
 void virtual_write(ArticleLine index, ArticlePosition value)
 {
-    int subindx;
+    int sub_index;
     long offset;
 
 #ifdef DEBUG
-    if (indx < 0)
+    if (index < 0)
     {
-        std::printf("vwtary(%ld)\n",(long)indx);
+        std::printf("vwtary(%ld)\n",(long)index);
     }
-    if (!indx)
+    if (!index)
     {
-        maxindx = 0;
+        s_max_index = 0;
     }
-    if (indx > maxindx)
+    if (index > s_max_index)
     {
-        if (indx != maxindx + 1)
+        if (index != s_max_index + 1)
         {
-            std::printf("indx skipped %d-%d\n",maxindx+1,indx-1);
+            std::printf("index skipped %d-%d\n",s_max_index+1,index-1);
         }
-        maxindx = indx;
+        s_max_index = index;
     }
 #endif
-    subindx = index % VARY_SIZE;
-    offset = (index - subindx) * sizeof(s_vary_buf[0]);
+    sub_index = index % VARY_SIZE;
+    offset = (index - sub_index) * sizeof(s_vary_buf[0]);
     if (offset != s_old_offset)
     {
         if (s_old_offset >= 0)
@@ -109,5 +112,5 @@ void virtual_write(ArticleLine index, ArticlePosition value)
 #endif /* lint */
         s_old_offset = offset;
     }
-    s_vary_buf[subindx] = value;
+    s_vary_buf[sub_index] = value;
 }
