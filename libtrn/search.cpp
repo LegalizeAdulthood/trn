@@ -39,28 +39,26 @@ enum
 
 enum
 {
-    MNULL = 64 /* Bit is set in a meta-character defn to
+    META_NULL = 64 /* Bit is set in a meta-character defn to
                           indicate that the metacharacter can match
                           a null string.  advance() uses this. */
 };
 
 /* meta characters in the "compiled" form of a regular expression */
-#define CBRA    (2|MNULL)       /* \( -- begin bracket */
-#define CCHR    4               /* a vanilla character */
-#define CDOT    6               /* . -- match anything except a newline */
-#define CCL     8               /* [...] -- character class */
-#define NCCL    10              /* [^...] -- negated character class */
-#define CDOL    (12|MNULL)      /* $ -- matches the end of a line */
-#define CEND    (14|MNULL)      /* The end of the pattern */
-#define CKET    (16|MNULL)      /* \) -- close bracket */
-#define CBACK   (18|MNULL)      /* \N -- backreference to the Nth bracketed
-                                   string */
-#define CIRC    (20|MNULL)      /* ^ matches the beginning of a line */
-
-#define WORD    32              /* matches word character \w */
-#define NWORD   34              /* matches non-word characer \W */
-#define WBOUND  (36|MNULL)      /* matches word boundary \b */
-#define NWBOUND (38|MNULL)      /* matches non-(word boundary) \B */
+#define CBRA (2 | META_NULL)     /* \( -- begin bracket */
+#define CCHR 4                   /* a vanilla character */
+#define CDOT 6                   /* . -- match anything except a newline */
+#define CCL 8                    /* [...] -- character class */
+#define NCCL 10                  /* [^...] -- negated character class */
+#define CDOL (12 | META_NULL)    /* $ -- matches the end of a line */
+#define CEND (14 | META_NULL)    /* The end of the pattern */
+#define CKET (16 | META_NULL)    /* \) -- close bracket */
+#define CBACK (18 | META_NULL)   /* \N -- backreference to the Nth bracketed string */
+#define CIRC (20 | META_NULL)    /* ^ matches the beginning of a line */
+#define WORD 32                  /* matches word character \w */
+#define NWORD 34                 /* matches non-word characer \W */
+#define WBOUND (36 | META_NULL)  /* matches word boundary \b */
+#define NWBOUND (38 | META_NULL) /* matches non-(word boundary) \B */
 
 enum
 {
@@ -72,10 +70,10 @@ enum
 };
 using TranslationTable = Uchar[ASCSIZ];
 
-static TranslationTable  s_trans{};
-static bool        s_folding{};
-static int         s_err{};
-static const char *s_first_character{};
+static TranslationTable s_trans{};
+static bool             s_folding{};
+static int              s_err{};
+static const char      *s_first_character{};
 
 void search_init()
 {
@@ -464,7 +462,7 @@ bool advance(CompiledRegex *compex, const char *lp, const char *ep)
     Uchar* trt = s_trans;
     int i;
 
-    while (*lp || (*ep & (STAR | MNULL)))
+    while (*lp || (*ep & (STAR | META_NULL)))
     {
         switch (*ep++)
         {
