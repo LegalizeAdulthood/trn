@@ -1,6 +1,6 @@
 /* rt-wumpus.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/rt-wumpus.h"
@@ -77,7 +77,7 @@ void init_tree()
 {
     Article*thread;
 
-    while (s_max_line >= 0)             /* free any previous tree data */
+    while (s_max_line >= 0)             // free any previous tree data
     {
         std::free(s_tree_lines[s_max_line--]);
     }
@@ -90,7 +90,7 @@ void init_tree()
     {
         return;
     }
-    /* Enumerate our subjects for display */
+    // Enumerate our subjects for display
     Subject *sp = thread->subj;
     int      num = 0;
     do
@@ -141,16 +141,16 @@ void init_tree()
         s_max_line = s_first_line + g_max_tree_lines-1;
     }
 
-    s_str = s_tree_buff;                /* initialize first line's data */
+    s_str = s_tree_buff;                // initialize first line's data
     *s_str++ = ' ';
     s_node_on_line = false;
     s_line_num = 0;
-    /* cache our portion of the tree */
+    // cache our portion of the tree
     cache_tree(thread, 0, s_tree_indent);
 
-    s_max_depth = (s_max_depth-s_first_depth+1) * 5;    /* turn depth into char width */
-    s_max_line -= s_first_line;                 /* turn s_max_line into count */
-    /* shorten tree if lower lines aren't visible */
+    s_max_depth = (s_max_depth-s_first_depth+1) * 5;    // turn depth into char width
+    s_max_line -= s_first_line;                 // turn s_max_line into count
+    // shorten tree if lower lines aren't visible
     if (s_node_line_cnt < s_max_line)
     {
         s_max_line = s_node_line_cnt + 1;
@@ -378,7 +378,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     int      len;
     char     ch;
 
-    /* Make a modifiable copy of the line */
+    // Make a modifiable copy of the line
     char *cp = std::strchr(orig_line, '\n');
     if (cp != nullptr)
     {
@@ -389,7 +389,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         len = std::strlen(orig_line);
     }
 
-    /* Copy line, filtering encoded and control characters. */
+    // Copy line, filtering encoded and control characters.
     if (header_conv())
     {
         tmpbuf = safe_malloc(len * 2 + 2);
@@ -397,7 +397,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     }
     else
     {
-        tmpbuf = safe_malloc(len + 2); /* yes, I mean "2" */
+        tmpbuf = safe_malloc(len + 2); // yes, I mean "2"
         line = tmpbuf;
     }
     if (g_do_hiding)
@@ -423,7 +423,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     }
 
     color_object(COLOR_HEADER, true);
-    /* If this is the first subject line, output it with a preceeding [1] */
+    // If this is the first subject line, output it with a preceeding [1]
     if (is_subject && !std::isspace(*line))
     {
         if (g_threaded_group)
@@ -470,7 +470,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         }
         else
         {
-            /* Skip whitespace of continuation lines and prepare to indent */
+            // Skip whitespace of continuation lines and prepare to indent
             line = skip_eq(++line, ' ');
             i = s_header_indent;
         }
@@ -487,7 +487,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             }
         }
         g_term_col = s_header_indent;
-        /* If no (more) tree lines, wrap at g_tc_COLS-1 */
+        // If no (more) tree lines, wrap at g_tc_COLS-1
         if (s_max_line < 0 || header_line > s_max_line+1)
         {
             wrap_at = g_tc_COLS - 1;
@@ -496,7 +496,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         {
             wrap_at = g_tc_COLS - s_max_depth - 3;
         }
-        /* Figure padding between header and tree output, wrapping long lines */
+        // Figure padding between header and tree output, wrapping long lines
         int pad_cnt = wrap_at - (end - line + s_header_indent);
         if (pad_cnt <= 0)
         {
@@ -518,7 +518,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             }
             ch = *cp;
             *cp = '\0';
-            /* keep rn's backpager happy */
+            // keep rn's backpager happy
             virtual_write(g_art_line_num, virtual_read(g_art_line_num - 1));
             g_art_line_num++;
         }
@@ -540,13 +540,13 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             std::fputs(line, stdout);
         }
         *cp = ch;
-        /* Skip whitespace in wrapped line */
+        // Skip whitespace in wrapped line
         while (*cp == ' ')
         {
             cp++;
         }
         line = cp;
-        /* Check if we've got any tree lines to output */
+        // Check if we've got any tree lines to output
         if (wrap_at != g_tc_COLS - 1 && header_line <= s_max_line)
         {
             do
@@ -591,23 +591,23 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
                     *cp++ = '@';
                 }
                 std::putchar(*cp++);
-                color_pop();    /* of COLOR_TREE_MARK */
+                color_pop();    // of COLOR_TREE_MARK
                 if (*cp)
                 {
                     std::fputs(cp, stdout);
                 }
-            }/* while */
-            color_pop();        /* of COLOR_TREE */
-        }/* if */
+            }// while
+            color_pop();        // of COLOR_TREE
+        }// if
         newline();
         header_line++;
-    }/* for remainder of line */
+    }// for remainder of line
 
-    /* free allocated copy of line */
+    // free allocated copy of line
     std::free(tmpbuf);
 
-    color_pop();        /* of COLOR_HEADER */
-    /* return number of lines displayed */
+    color_pop();        // of COLOR_HEADER
+    // return number of lines displayed
     return header_line - start_line;
 }
 
@@ -622,7 +622,7 @@ int  finish_tree(ArticleLine last_line)
     {
         g_art_line_num++;
         last_line += tree_puts("+", last_line, 0);
-        virtual_write(g_art_line_num, g_art_pos);    /* keep rn's backpager happy */
+        virtual_write(g_art_line_num, g_art_pos);    // keep rn's backpager happy
     }
     return last_line - start_line;
 }
@@ -670,7 +670,7 @@ void entire_tree(Article* ap)
     }
     newline();
     Article *thread = ap->subj->thread;
-    /* Enumerate our subjects for display */
+    // Enumerate our subjects for display
     Subject *sp = thread->subj;
     int      num = 0;
     do
@@ -743,7 +743,7 @@ static void display_tree(Article *article, char *cp)
             std::putchar(g_buf[0]);
             color_object(COLOR_TREE_MARK, true);
             std::putchar(g_buf[1]);
-            color_pop();        /* of COLOR_TREE_MARK */
+            color_pop();        // of COLOR_TREE_MARK
             std::putchar(g_buf[2]);
         }
         else
@@ -762,7 +762,7 @@ static void display_tree(Article *article, char *cp)
         if (article->child1)
         {
             std::putchar((article->child1->sibling)? '+' : '-');
-            color_pop();        /* of COLOR_TREE */
+            color_pop();        // of COLOR_TREE
             display_tree(article->child1, cp);
             color_object(COLOR_TREE, true);
             cp[1] = '\0';
@@ -787,7 +787,7 @@ static void display_tree(Article *article, char *cp)
         }
         std::fputs(s_tree_indent+5, stdout);
     }
-    color_pop();        /* of COLOR_TREE */
+    color_pop();        // of COLOR_TREE
 }
 
 /* Calculate the subject letter representation.  "Place-holder" nodes
