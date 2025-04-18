@@ -196,8 +196,7 @@ OverviewFieldNum ov_num(char *hdr, char *end)
     return OV_NUM;
 }
 
-/* Process the data in the group's news-overview file.
-*/
+// Process the data in the group's news-overview file.
 bool ov_data(ArticleNum first, ArticleNum last, bool cheating)
 {
     ArticleNum  artnum;
@@ -588,10 +587,10 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     spin(100);
 }
 
-/* Change a newsgroup name into the name of the overview data file.  We
-** subsitute any '.'s in the group name into '/'s, prepend the path, and
-** append the '/.overview' or '.ov') on to the end.
-*/
+// Change a newsgroup name into the name of the overview data file.  We
+// subsitute any '.'s in the group name into '/'s, prepend the path, and
+// append the '/.overview' or '.ov') on to the end.
+//
 static const char *ov_name(const char *group)
 {
     std::strcpy(g_buf, g_data_source->over_dir);
