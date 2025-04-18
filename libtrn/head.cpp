@@ -156,10 +156,10 @@ HeaderLineType set_line_type(char *bufptr, const char *colon)
     f = g_msg;                          // get g_msg into a register
     int len = t - f;
 
-    /* now scan the HEADTYPE table, backwards so we don't have to supply an
-     * extra terminating value, using first letter as index, and length as
-     * optimization to avoid calling subroutine strEQ unnecessarily.  Hauls.
-     */
+    // now scan the HEADTYPE table, backwards so we don't have to supply an
+    // extra terminating value, using first letter as index, and length as
+    // optimization to avoid calling subroutine strEQ unnecessarily.  Hauls.
+    //
     if (*f >= 'a' && *f <= 'z')
     {
         for (int i = s_htypeix[*f - 'a']; *g_header_type[i].name == *f; i--)
@@ -361,9 +361,9 @@ void end_header()
         g_header_type[PAST_HEADER].min_pos = tell_art();
     }
 
-    /* If there's no References: line, then the In-Reply-To: line may give us
-    ** more information.
-    */
+    // If there's no References: line, then the In-Reply-To: line may give us
+    // more information.
+    //
     if (g_threaded_group //
         && (!(ap->flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= 0))
     {
