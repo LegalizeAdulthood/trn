@@ -40,24 +40,24 @@ static int         default_cmp(const char *key, int keylen, HashDatum data);
 static HashEntry  *hash_entry_alloc();
 static void        hash_entry_free(HashEntry *hp);
 
-/* In the future it might be a good idea to preallocate a region
- * of hashents, since allocation overhead on some systems will be as
- * large as the structure itself.
- */
+// In the future it might be a good idea to preallocate a region
+// of hashents, since allocation overhead on some systems will be as
+// large as the structure itself.
+//
 // grab this many hashents at a time (under 1024 for malloc overhead)
 enum
 {
     HASH_ENTRY_BLOCK_SIZE = 1000
 };
 
-/* define the following if you actually want to free the hashents
- * You probably don't want to do this with the usual malloc...
- */
+// define the following if you actually want to free the hashents
+// You probably don't want to do this with the usual malloc...
+//
 // #define HASH_FREE_ENTRIES
 
-/* increased from 600.  Each threaded article requires at least
- * one hashent, and various newsgroup hashes can easily get large.
- */
+// increased from 600.  Each threaded article requires at least
+// one hashent, and various newsgroup hashes can easily get large.
+//
 // tunable parameters
 enum
 {
@@ -86,9 +86,9 @@ HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
     return tbl;
 }
 
-/* Free all the memory associated with tbl, erase the pointers to it, and
-** invalidate tbl to prevent further use via other pointers to it.
-*/
+// Free all the memory associated with tbl, erase the pointers to it, and
+// invalidate tbl to prevent further use via other pointers to it.
+//
 void hash_destroy(HashTable *tbl)
 {
     HashEntry* next;
@@ -174,9 +174,9 @@ void hash_store_last(HashDatum data)
     hp->he_data = data;         // supersede any old data for this key
 }
 
-/* Visit each entry by calling nodefunc at each, with keylen, data,
-** and extra as arguments.
-*/
+// Visit each entry by calling nodefunc at each, with keylen, data,
+// and extra as arguments.
+//
 void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 {
     HashEntry* next;
@@ -208,11 +208,11 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
     }
 }
 
-/* The returned value is the address of the pointer that refers to the
-** found object.  Said pointer may be nullptr if the object was not found;
-** if so, this pointer should be updated with the address of the object
-** to be inserted, if insertion is desired.
-*/
+// The returned value is the address of the pointer that refers to the
+// found object.  Said pointer may be nullptr if the object was not found;
+// if so, this pointer should be updated with the address of the object
+// to be inserted, if insertion is desired.
+//
 static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen)
 {
     HashEntry* prevhp = nullptr;
