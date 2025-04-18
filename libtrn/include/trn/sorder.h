@@ -1,4 +1,4 @@
-/* This file Copyright 1993 by Clifford A. Adams */
+// This file Copyright 1993 by Clifford A. Adams
 /* trn/sorder.h
  *
  * scan ordering
@@ -6,7 +6,7 @@
 #ifndef TRN_SORDER_H
 #define TRN_SORDER_H
 
-extern bool g_s_order_changed; /* If true, resort next time order is considered */
+extern bool g_s_order_changed; // If true, resort next time order is considered
 
 int s_compare(long a, long b);
 void s_sort_basic();
