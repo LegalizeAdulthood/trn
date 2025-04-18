@@ -1,6 +1,6 @@
 /* trn/cache.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_CACHE_H
 #define TRN_CACHE_H
 
@@ -32,7 +32,7 @@ enum SubjectFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(SubjectFlags, std::uint16_t);
 
-/* Subjects get their own structure */
+// Subjects get their own structure
 struct Subject
 {
     Subject     *next;
@@ -43,7 +43,7 @@ struct Subject
     char        *str;
     std::time_t  date;
     SubjectFlags flags;
-    short        misc; /* used for temporary totals and subject numbers */
+    short        misc; // used for temporary totals and subject numbers
 };
 
 enum ArticleFlags : std::uint16_t
@@ -77,16 +77,16 @@ enum ArticleFlags2 : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(ArticleFlags2, std::uint16_t);
 
-/* specific scoreflag meanings:  (note: bad placement, but where else?) */
+// specific scoreflag meanings:  (note: bad placement, but where else?)
 enum ScoreFlags
 {
     SFLAG_NONE = 0x00,
-    SFLAG_AUTHOR = 0x01, /* author has a score (match on FROM: line) */
-    SFLAG_SCORED = 0x10  /* if true, the article has been scored */
+    SFLAG_AUTHOR = 0x01, // author has a score (match on FROM: line)
+    SFLAG_SCORED = 0x10  // if true, the article has been scored
 };
 DECLARE_FLAGS_ENUM(ScoreFlags, std::uint16_t)
 
-/* This is our article-caching structure */
+// This is our article-caching structure
 struct Article
 {
     ArticleNum    num;
@@ -95,31 +95,31 @@ struct Article
     char         *from;
     char         *msg_id;
     char         *xrefs;
-    Article      *parent;    /* parent article */
-    Article      *child1;    /* first child of a chain */
-    Article      *sibling;   /* our next sibling */
-    Article      *subj_next; /* next article in subject order */
+    Article      *parent;    // parent article
+    Article      *child1;    // first child of a chain
+    Article      *sibling;   // our next sibling
+    Article      *subj_next; // next article in subject order
     long          bytes;
     long          lines;
     int           score;
     ScoreFlags    score_flags;
-    ArticleFlags  flags;      /* article state flags */
-    ArticleFlags2 flags2;     /* more state flags */
-    AutoKillFlags auto_flags; /* auto-processing flags */
+    ArticleFlags  flags;      // article state flags
+    ArticleFlags2 flags2;     // more state flags
+    AutoKillFlags auto_flags; // auto-processing flags
 };
 
-/* See trn/kfile.h for the AUTO_* flags */
+// See trn/kfile.h for the AUTO_* flags
 enum : bool
 {
     DONT_FILL_CACHE = false,
     FILL_CACHE = true
 };
 
-extern List      *g_article_list; /* a list of ARTICLEs */
-extern Article  **g_art_ptr_list; /* the article-selector creates this */
-extern Article  **g_art_ptr;      /* ditto -- used for article order */
+extern List      *g_article_list; // a list of ARTICLEs
+extern Article  **g_art_ptr_list; // the article-selector creates this
+extern Article  **g_art_ptr;      // ditto -- used for article order
 extern ArticleNum g_art_ptr_list_size;
-extern ArticleNum g_search_ahead; /* are we in subject scan mode? (if so, contains art # found or -1) */
+extern ArticleNum g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
 extern ArticleNum g_first_cached;
 extern ArticleNum g_last_cached;
 extern bool       g_cached_all_in_range;
@@ -127,9 +127,9 @@ extern Article   *g_sentinel_art_ptr;
 extern Subject   *g_first_subject;
 extern Subject   *g_last_subject;
 extern bool       g_untrim_cache;
-extern int        g_join_subject_len;     /* -J */
-extern int        g_olden_days;           /* -o */
-extern char       g_auto_select_postings; /* -p */
+extern int        g_join_subject_len;     // -J
+extern int        g_olden_days;           // -o
+extern char       g_auto_select_postings; // -p
 
 void  cache_init();
 void  build_cache();
