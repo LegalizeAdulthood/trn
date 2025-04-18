@@ -1,6 +1,6 @@
 /* nntp.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/string_case_compare.h>
 
@@ -29,7 +29,7 @@ static int nntp_copy_body(char *s, int limit, ArticlePosition pos);
 static ArticlePosition s_body_pos{-1};
 static ArticlePosition s_body_end{};
 #ifdef SUPPORT_XTHREAD
-static long s_raw_bytes{-1}; /* bytes remaining to be transferred */
+static long s_raw_bytes{-1}; // bytes remaining to be transferred
 #endif
 
 int nntp_list(const char *type, const char *arg, int len)
@@ -103,7 +103,7 @@ void nntp_finish_list()
     } while (ret > 0 && !nntp_at_list_end(g_ser_line));
 }
 
-/* try to access the specified group */
+// try to access the specified group
 
 int nntp_group(const char *group, NewsgroupData *gp)
 {
@@ -142,7 +142,7 @@ int nntp_group(const char *group, NewsgroupData *gp)
         long last;
 
         (void) std::sscanf(g_ser_line,"%*d%ld%ld%ld",&count,&first,&last);
-        /* NNTP mangles the high/low values when no articles are present. */
+        // NNTP mangles the high/low values when no articles are present.
         if (!count)
         {
             gp->abs_first = gp->ng_max + 1;
@@ -156,7 +156,7 @@ int nntp_group(const char *group, NewsgroupData *gp)
     return 1;
 }
 
-/* check on an article's existence */
+// check on an article's existence
 
 int nntp_stat(ArticleNum art_num)
 {
@@ -168,7 +168,7 @@ int nntp_stat(ArticleNum art_num)
     return nntp_check();
 }
 
-/* check on an article's existence by its message id */
+// check on an article's existence by its message id
 
 ArticleNum nntp_stat_id(char *msg_id)
 {
@@ -203,7 +203,7 @@ ArticleNum nntp_next_art()
     return (ArticleNum)artnum;
 }
 
-/* prepare to get the header */
+// prepare to get the header
 
 int nntp_header(ArticleNum art_num)
 {
@@ -215,11 +215,11 @@ int nntp_header(ArticleNum art_num)
     return nntp_check();
 }
 
-/* copy the body of an article to a temporary file */
+// copy the body of an article to a temporary file
 
 void nntp_body(ArticleNum art_num)
 {
-    char *artname = nntp_art_name(art_num, false); /* Is it already in a tmp file? */
+    char *artname = nntp_art_name(art_num, false); // Is it already in a tmp file?
     if (artname)
     {
         if (s_body_pos >= 0)
@@ -235,7 +235,7 @@ void nntp_body(ArticleNum art_num)
         return;
     }
 
-    artname = nntp_art_name(art_num, true);   /* Allocate a tmp file */
+    artname = nntp_art_name(art_num, true);   // Allocate a tmp file
     if (!(g_art_fp = std::fopen(artname, "w+")))
     {
         std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
@@ -266,7 +266,7 @@ void nntp_body(ArticleNum art_num)
     case 0:
         std::fclose(g_art_fp);
         g_art_fp = nullptr;
-        errno = ENOENT;                 /* Simulate file-not-found */
+        errno = ENOENT;                 // Simulate file-not-found
         return;
     }
     s_body_pos = 0;
@@ -345,9 +345,9 @@ int nntp_finish_body(FinishBodyMode bmode)
     if (bmode == FB_DISCARD)
     {
 #if 0
-        /* Implement this if flushing the data becomes possible */
-        nntp_artname(g_openart, -1); /* Or something... */
-        g_openart = 0;  /* Since we didn't finish the art, forget its number */
+        // Implement this if flushing the data becomes possible
+        nntp_artname(g_openart, -1); // Or something...
+        g_openart = 0;  // Since we didn't finish the art, forget its number
 #endif
     }
     else if (bmode == FB_OUTPUT)
@@ -386,7 +386,7 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     if (bmode == FB_OUTPUT)
     {
-        erase_line(false); /* erase the prompt */
+        erase_line(false); // erase the prompt
     }
     return 1;
 }
@@ -439,14 +439,14 @@ char *nntp_read_art(char *s, int limit)
         s_body_pos = std::ftell(g_art_fp);
         if (s_body_pos == s_body_end)
         {
-            std::fseek(g_art_fp, (long) s_body_pos, 0); /* Prepare for coming write */
+            std::fseek(g_art_fp, (long) s_body_pos, 0); // Prepare for coming write
         }
         return s;
     }
     return std::fgets(s, limit, g_art_fp);
 }
 
-/* This is a 1-relative list */
+// This is a 1-relative list
 static int s_maxdays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 std::time_t nntp_time()
@@ -469,7 +469,7 @@ std::time_t nntp_time()
     s[4] = '\0';
     int year = std::atoi(s);
 
-    /* This simple algorithm will be valid until the year 2100 */
+    // This simple algorithm will be valid until the year 2100
     if (year % 4)
     {
         s_maxdays[2] = 28;
@@ -630,7 +630,7 @@ int nntp_handle_nested_lists()
 {
     if (string_case_equal(g_last_command, "quit"))
     {
-        return 0; /* TODO: flush data needed? */
+        return 0; // TODO: flush data needed?
     }
     if (nntp_finish_body(FB_DISCARD))
     {
@@ -670,7 +670,7 @@ int nntp_handle_timeout()
     {
         return -1;
     }
-    std::strcpy(g_last_command, last_command_save); /* TODO: Is this really needed? */
+    std::strcpy(g_last_command, last_command_save); // TODO: Is this really needed?
     handling_timeout = false;
     return 1;
 }
@@ -696,7 +696,7 @@ void nntp_server_died(DataSource *dp)
 #ifdef SUPPORT_XTHREAD
 long nntp_read_check()
 {
-    /* try to get the status line and the status code */
+    // try to get the status line and the status code
     switch (nntp_check())
     {
     case -2:
@@ -707,7 +707,7 @@ long nntp_read_check()
         return s_raw_bytes = -1;
     }
 
-    /* try to get the number of bytes being transfered */
+    // try to get the number of bytes being transfered
     if (std::sscanf(g_ser_line, "%*d%ld", &s_raw_bytes) != 1)
     {
         return s_raw_bytes = -1;
@@ -722,7 +722,7 @@ long nntp_read_check()
 #ifdef SUPPORT_XTHREAD
 long nntp_read(char *buf, long n)
 {
-    /* if no bytes to read, then just return EOF */
+    // if no bytes to read, then just return EOF
     if (s_raw_bytes < 0)
     {
         return 0;
@@ -732,7 +732,7 @@ long nntp_read(char *buf, long n)
     sighold(SIGINT);
 #endif
 
-    /* try to read some data from the server */
+    // try to read some data from the server
     if (s_raw_bytes)
     {
         boost::system::error_code ec;
@@ -744,10 +744,10 @@ long nntp_read(char *buf, long n)
         n = 0;
     }
 
-    /* if no more left, then fetch the end-of-command signature */
+    // if no more left, then fetch the end-of-command signature
     if (s_raw_bytes == 0)
     {
-        char buf[5];    /* "\r\n.\r\n" */
+        char buf[5];    // "\r\n.\r\n"
 
         boost::system::error_code ec;
         int num_remaining = 5;
@@ -762,4 +762,4 @@ long nntp_read(char *buf, long n)
 #endif
     return n;
 }
-#endif /* SUPPORT_XTHREAD */
+#endif // SUPPORT_XTHREAD
