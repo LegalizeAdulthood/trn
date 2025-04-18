@@ -738,8 +738,8 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
         // hopefully this forces a reread
         std::fseek(fp,2000000000L,1);
 
-        /* if line has changed length or is not there, we should
-         * discard/close the active file, and re-open it. */
+        // if line has changed length or is not there, we should
+        // discard/close the active file, and re-open it.
         if (std::fseek(fp, act_pos, 0) >= 0               //
             && std::fgets(outbuf, LINE_BUF_LEN, fp) != nullptr //
             && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ')
@@ -851,11 +851,11 @@ try_xgtitle:
     return "";
 }
 
-/* NOTE: This was factored from srcfile_open and srcfile_append and is
- * basically same as dectrl() except the s++, *s != '\n' and return s.
- * Because we need to keep track of s we can't really reuse dectrl()
- * from cache.c; if we want to factor further we need a new function.
- */
+// NOTE: This was factored from srcfile_open and srcfile_append and is
+// basically same as dectrl() except the s++, *s != '\n' and return s.
+// Because we need to keep track of s we can't really reuse dectrl()
+// from cache.c; if we want to factor further we need a new function.
+//
 static char *adv_then_find_next_nl_and_dectrl(char *s)
 {
     if (s == nullptr)
@@ -1154,34 +1154,34 @@ static int source_file_cmp(const char *key, int key_len, HashDatum data)
     return std::memcmp(key, ((ListNode*)data.dat_ptr)->data + data.dat_len, key_len);
 }
 
-/* Edit Distance extension to trn
- *
- *      Mark Maimone (mwm@cmu.edu)
- *      Carnegie Mellon Computer Science
- *      9 May 1993
- *
- *      This code helps trn handle typos in newsgroup names much more
- *   gracefully.  Instead of "... does not exist!!", it will pick the
- *   nearest one, or offer you a choice if there are several options.
- */
+// Edit Distance extension to trn
+//
+//      Mark Maimone (mwm@cmu.edu)
+//      Carnegie Mellon Computer Science
+//      9 May 1993
+//
+//      This code helps trn handle typos in newsgroup names much more
+//   gracefully.  Instead of "... does not exist!!", it will pick the
+//   nearest one, or offer you a choice if there are several options.
+//
 
-/* find_close_match -- Finds the closest match for the string given in
- * global g_ngname.  If found, the result will be the corrected string
- * returned in that global.
- *
- * We compare the (presumably misspelled) newsgroup name with all legal
- * newsgroups, using the Edit Distance metric.  The edit distance between
- * two strings is the minimum number of simple operations required to
- * convert one string to another (the implementation here supports INSERT,
- * DELETE, CHANGE and SWAP).  This gives every legal newsgroup an integer
- * rank.
- *
- * You might want to present all of the closest matches, and let the user
- * choose among them.  But because I'm lazy I chose to only keep track of
- * all with newsgroups with the *single* smallest error, in array s_ngptrs[].
- * A more flexible approach would keep around the 10 best matches, whether
- * or not they had precisely the same edit distance, but oh well.
- */
+// find_close_match -- Finds the closest match for the string given in
+// global g_ngname.  If found, the result will be the corrected string
+// returned in that global.
+//
+// We compare the (presumably misspelled) newsgroup name with all legal
+// newsgroups, using the Edit Distance metric.  The edit distance between
+// two strings is the minimum number of simple operations required to
+// convert one string to another (the implementation here supports INSERT,
+// DELETE, CHANGE and SWAP).  This gives every legal newsgroup an integer
+// rank.
+//
+// You might want to present all of the closest matches, and let the user
+// choose among them.  But because I'm lazy I chose to only keep track of
+// all with newsgroups with the//single* smallest error, in array s_ngptrs[].
+// A more flexible approach would keep around the 10 best matches, whether
+// or not they had precisely the same edit distance, but oh well.
+//
 
 static char **s_newsgroup_ptrs{}; // List of potential matches
 static int    s_newsgroup_num{};  // Length of list in s_ngptrs[]
@@ -1313,9 +1313,9 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
     return 0;
 }
 
-/* Now we've got several potential matches, and have to choose between them
-** somehow.  Again, results will be returned in global g_ngname.
-*/
+// Now we've got several potential matches, and have to choose between them
+// somehow.  Again, results will be returned in global g_ngname.
+//
 static int get_near_miss()
 {
     char promptbuf[256];
