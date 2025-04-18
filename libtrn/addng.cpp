@@ -1,6 +1,6 @@
 /* addng.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/string_case_compare.h>
 
@@ -34,7 +34,7 @@ AddGroup *g_first_add_group{};
 AddGroup *g_last_add_group{};
 AddGroup *g_sel_page_gp{};
 AddGroup *g_sel_next_gp{};
-bool      g_quick_start{};           /* -q */
+bool      g_quick_start{};           // -q
 bool      g_use_add_selector{true}; //
 
 static int s_add_group_count{};
@@ -82,9 +82,9 @@ void add_ng_init()
 
 bool find_new_groups()
 {
-    const NewsgroupNum old_cnt = g_newsgroup_count;      /* remember # newsgroups */
+    const NewsgroupNum old_cnt = g_newsgroup_count;      // remember # newsgroups
 
-    /* Skip this check if the -q flag was given. */
+    // Skip this check if the -q flag was given.
     if (g_quick_start)
     {
         return false;
@@ -135,7 +135,7 @@ static void process_list(GetNewsgroupFlags flag)
         }
         else if (!g_use_add_selector)
         {
-            get_newsgroup(node->name, flag); /* add newsgroup -- maybe */
+            get_newsgroup(node->name, flag); // add newsgroup -- maybe
         }
         AddGroup *prev_node = node;
         node = node->next;
@@ -253,7 +253,7 @@ static void new_local_groups(DataSource *dp)
     g_data_source = dp;
 
     const long file_size{static_cast<long>(std::filesystem::file_size(dp->extra_name))};
-    /* did active.times file grow? */
+    // did active.times file grow?
     if (file_size == dp->act_sf.recent_cnt)
     {
         return;
@@ -377,7 +377,7 @@ static void add_to_list(const char *name, int to_read, char_int ch)
 
 bool scan_active(bool add_matching)
 {
-    const NewsgroupNum old_count = g_newsgroup_count;      /* remember # of newsgroups */
+    const NewsgroupNum old_count = g_newsgroup_count;      // remember # of newsgroups
 
     if (!add_matching)
     {
@@ -458,7 +458,7 @@ static void scan_active_line(char *active_line, bool add_matching)
         return;
     }
 
-    *s++ = '\0';                /* this buffer is expendable */
+    *s++ = '\0';                // this buffer is expendable
     long high;
     long low;
     char ch;
@@ -481,7 +481,7 @@ static void scan_active_line(char *active_line, bool add_matching)
     }
     if (add_matching || np)
     {
-        /* it's not in a newsrc */
+        // it's not in a newsrc
         add_to_list(active_line, high-low, 0);
     }
     else
