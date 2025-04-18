@@ -104,10 +104,10 @@ enum OptionIndex
 
     OI_TRN_LAST = OI_OLD_MTHREADS_DATABASE,
 
-    /* There are no current plans for scan modes other than article.
-     * The general-scan options might as well be displayed in the same
-     * section as the article-scan options.
-     */
+    // There are no current plans for scan modes other than article.
+    // The general-scan options might as well be displayed in the same
+    // section as the article-scan options.
+    //
     OI_SCAN_ART_FOLLOW = OI_TRN_LAST + 2,
     OI_SCAN_ART_FOLD,
     OI_SCAN_ART_UNZOOM_FOLD,
