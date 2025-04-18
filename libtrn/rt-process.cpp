@@ -22,9 +22,9 @@
 #include <cstdlib>
 #include <cstring>
 
-static void fix_msgid(char *msgid);
+static void  fix_msg_id(char *msgid);
 static char *valid_message_id(char *start, char *end);
-static void unlink_child(Article *child);
+static void  unlink_child(Article *child);
 
 /* This depends on art being set to the current article number.
 */
@@ -46,7 +46,7 @@ Article *allocate_article(ArticleNum artnum)
     return article;
 }
 
-static void fix_msgid(char *msgid)
+static void fix_msg_id(char *msgid)
 {
     char *cp = std::strchr(msgid, '@');
     if (cp != nullptr)
@@ -79,7 +79,7 @@ bool valid_article(Article *article)
 
     if (msgid)
     {
-        fix_msgid(msgid);
+        fix_msg_id(msgid);
         HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
         if (data.dat_len)
         {
@@ -205,7 +205,7 @@ Article *get_article(char *msgid)
 {
     Article* article;
 
-    fix_msgid(msgid);
+    fix_msg_id(msgid);
 
     HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
     if (data.dat_len)
