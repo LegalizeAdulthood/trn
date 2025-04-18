@@ -482,7 +482,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
 
     if (state != DECODE_DONE)
     {
-        (void) decoder((FILE*)nullptr, DECODE_DONE);
+        (void) decoder(nullptr, DECODE_DONE);
         if (state != DECODE_MAYBE_DONE)
         {
             std::strcpy(g_msg,"Premature EOF.");

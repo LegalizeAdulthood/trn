@@ -1727,7 +1727,7 @@ bool write_newsrcs(Multirc *mptr)
             continue;
         }
 
-        FILE *rcfp = fopen(rp->new_name, "w");
+        std::FILE *rcfp = std::fopen(rp->new_name, "w");
         if (rcfp == nullptr)
         {
             std::printf(s_cant_recreate,rp->name);

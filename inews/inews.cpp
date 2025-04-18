@@ -388,7 +388,7 @@ int valid_header(char *h)
 void append_signature()
 {
     char* cp;
-    FILE* fp;
+    std::FILE* fp;
     int count = 0;
 
 #ifdef NO_INEWS_DOTDIR

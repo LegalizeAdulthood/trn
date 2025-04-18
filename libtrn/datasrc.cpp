@@ -637,7 +637,7 @@ bool active_file_hash(DataSource *dp)
 bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high)
 {
     ActivePosition act_pos;
-    FILE* fp = dp->act_sf.fp;
+    std::FILE* fp = dp->act_sf.fp;
     char* lbp;
     int lbp_len;
 

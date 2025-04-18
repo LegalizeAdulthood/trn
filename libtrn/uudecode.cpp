@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <cstring>
 
-static void uudecode_line(char *line, FILE *ofp);
+static void uudecode_line(char *line, std::FILE *ofp);
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 {
@@ -376,7 +376,7 @@ end:            if (ofp)
 #define DEC(c)  (((c) - ' ') & 077)
 
 /* Decode a uuencoded line to 'ofp' */
-static void uudecode_line(char *line, FILE *ofp)
+static void uudecode_line(char *line, std::FILE *ofp)
 {
     /* Calculate expected length and pad if necessary */
     int len = ((DEC(line[0]) + 2) / 3) * 4;
