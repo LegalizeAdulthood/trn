@@ -43,7 +43,7 @@ char        *g_mime_getc_line{};
 
 // clang-format off
 static HtmlTag s_tag_attr[LAST_TAG] = {
- /* name               length   flags */
+ // name               length   flags
     {"blockquote",      10,     TF_BLOCK | TF_P | TF_NL                 },
     {"br",               2,     TF_NL | TF_BR                           },
     {"div",              3,     TF_BLOCK | TF_NL                        },
@@ -60,7 +60,7 @@ static HtmlTag s_tag_attr[LAST_TAG] = {
     {"tr",               2,     TF_NL                                   },
     {"title",            5,     TF_BLOCK | TF_HIDE                      },
     {"ul",               2,     TF_BLOCK | TF_P | TF_NL | TF_LIST       },
-    {"xml",              3,     TF_BLOCK | TF_HIDE                      }, /* non-standard but seen in the wild */
+    {"xml",              3,     TF_BLOCK | TF_HIDE                      }, // non-standard but seen in the wild
 };
 // clang-format on
 static List        *s_mimecap_list{};
@@ -226,7 +226,7 @@ void mime_read_mimecap(const char *mcname)
                 }
                 else if (arg && (string_case_equal(t, "description") || string_case_equal(t, "label")))
                 {
-                    mcp->description = save_str(arg); /* 'label' is the legacy name for description */
+                    mcp->description = save_str(arg); // 'label' is the legacy name for description
                 }
             }
         }
@@ -338,7 +338,7 @@ int mime_exec(char *cmd)
                 f++;
                 *s = '\0';
                 char *p = mime_find_param(g_mime_section->type_params, f);
-                *s = '}'; /* restore */
+                *s = '}'; // restore
                 f = s;
                 *t++ = '\'';
                 safe_copy(t, p, CMD_BUF_LEN-(t-g_cmd_buf)-1);
@@ -398,7 +398,7 @@ bool mime_pop_section()
     return false;
 }
 
-/* Free up this mime structure's resources */
+// Free up this mime structure's resources
 void mime_clear_struct(MimeSection *mp)
 {
     safe_free0(mp->filename);
@@ -417,11 +417,11 @@ void mime_clear_struct(MimeSection *mp)
     mp->html_line_start = 0;
 }
 
-/* Setup g_mime_article structure based on article's headers */
+// Setup g_mime_article structure based on article's headers
 void mime_set_article()
 {
     mime_init_sections();
-    /* TODO: Check mime version #? */
+    // TODO: Check mime version #?
     g_multimedia_mime = false;
     g_is_mime = g_header_type[MIME_VER_LINE].flags & HT_MAGIC
             && g_header_type[MIME_VER_LINE].min_pos >= 0;
@@ -455,7 +455,7 @@ void mime_set_article()
     }
 }
 
-/* Use the Content-Type to set values in the mime structure */
+// Use the Content-Type to set values in the mime structure
 void mime_parse_type(MimeSection *mp, char *s)
 {
     safe_free0(mp->type_name);
@@ -484,7 +484,7 @@ void mime_parse_type(MimeSection *mp, char *s)
             return;
         }
 #ifdef USE_UTF_HACK
-        utf_init(mime_find_param(mp->type_params,"charset"), CHARSET_NAME_UTF8); /*FIXME*/
+        utf_init(mime_find_param(mp->type_params,"charset"), CHARSET_NAME_UTF8); // FIXME
 #endif
         if (string_case_equal(s, "html", 4))
         {
@@ -565,7 +565,7 @@ void mime_parse_type(MimeSection *mp, char *s)
     mp->type = UNHANDLED_MIME;
 }
 
-/* Use the Content-Disposition to set values in the mime structure */
+// Use the Content-Disposition to set values in the mime structure
 void mime_parse_disposition(MimeSection *mp, char *s)
 {
     char *params = mime_parse_params(s);
@@ -583,7 +583,7 @@ void mime_parse_disposition(MimeSection *mp, char *s)
     safe_free(params);
 }
 
-/* Use the Content-Transfer-Encoding to set values in the mime structure */
+// Use the Content-Transfer-Encoding to set values in the mime structure
 void mime_parse_encoding(MimeSection *mp, char *s)
 {
     s = mime_skip_whitespace(s);
@@ -635,7 +635,7 @@ void mime_parse_encoding(MimeSection *mp, char *s)
     }
 }
 
-/* Parse a multipart mime header and affect the *g_mime_section structure */
+// Parse a multipart mime header and affect the *g_mime_section structure
 
 void mime_parse_sub_header(std::FILE *ifp, char *next_line)
 {
@@ -747,7 +747,7 @@ void mime_set_state(char *bp)
     if (g_mime_state == MULTIPART_MIME)
     {
         mime_push_section();
-        g_mime_state = SKIP_MIME;               /* Skip anything before 1st part */
+        g_mime_state = SKIP_MIME;               // Skip anything before 1st part
     }
 
     int ret = mime_end_of_section(bp);
@@ -784,12 +784,12 @@ int mime_end_of_section(char *bp)
     }
     if (mp)
     {
-        /* have we read all the data in this part? */
+        // have we read all the data in this part?
         if (bp[0] == '-' && bp[1] == '-' //
             && !std::strncmp(bp + 2, mp->boundary, mp->boundary_len))
         {
             int len = 2 + mp->boundary_len;
-            /* have we found the last boundary? */
+            // have we found the last boundary?
             if (bp[len] == '-' && bp[len+1] == '-'
              && (bp[len+2] == '\n' || bp[len+2] == '\0'))
             {
@@ -870,7 +870,7 @@ char *mime_find_param(char *s, const char *param)
     return nullptr;
 }
 
-/* Skip whitespace and RFC-822 comments. */
+// Skip whitespace and RFC-822 comments.
 
 char *mime_skip_whitespace(char *s)
 {
@@ -942,9 +942,9 @@ void mime_decode_article(bool view)
         case HTML_TEXT_MIME:
         case ISO_TEXT_MIME:
         case MESSAGE_MIME:
-            /* TODO: Check for uuencoded file here? */
+            // TODO: Check for uuencoded file here?
             g_mime_state = SKIP_MIME;
-            /* FALL THROUGH */
+            // FALL THROUGH
 
         case SKIP_MIME:
         {
@@ -1000,7 +1000,7 @@ void mime_description(MimeSection *mp, char *s, int limit)
     char* fn = decode_fix_filename(mp->filename);
     int flen = std::strlen(fn);
 
-    limit -= 2;  /* leave room for the trailing ']' and '\n' */
+    limit -= 2;  // leave room for the trailing ']' and '\n'
     std::sprintf(s, "[Attachment type=%s, name=", mp->type_name);
     int len = std::strlen(s);
     if (len + flen <= limit)
@@ -1061,7 +1061,7 @@ int qp_decode_string(char *t, const char *f, bool in_header)
             }
             break;
 
-        case '=':     /* decode a hex-value */
+        case '=':     // decode a hex-value
             if (f[1] == '\n')
             {
                 f += 2;
@@ -1077,7 +1077,7 @@ int qp_decode_string(char *t, const char *f, bool in_header)
                 }
                 break;
             }
-            /* FALL THROUGH */
+            // FALL THROUGH
 
         default:
             *t++ = *f++;
@@ -1416,10 +1416,10 @@ static const char* s_named_entities[] = {
     "gt",       ">",
     "amp",      "&",
     "quot",     "\"",
-    "apo",      "'",    /* non-standard but seen in the wild */
+    "apo",      "'",    // non-standard but seen in the wild
 #ifndef USE_UTF_HACK
     "nbsp",     " ",
-    "ensp",     " ",    /* seen in the wild */
+    "ensp",     " ",    // seen in the wild
     "lsquo",    "'",
     "rsquo",    "'",
     "ldquo",    "\"",
@@ -1430,11 +1430,11 @@ static const char* s_named_entities[] = {
     "trade",    "(TM)",
     "zwsp",     "",
     "zwnj",     "",
-    "ccedil",   "c",    /* per charsubst.c */
+    "ccedil",   "c",    // per charsubst.c
     "eacute",   "e",
-#else /* USE_UTF_HACK */
+#else // USE_UTF_HACK
     "nbsp",     " ",
-    "ensp",     " ",    /* U+2002 */
+    "ensp",     " ",    // U+2002
     "lsquo",    "‘",
     "rsquo",    "’",
     "ldquo",    "“",
@@ -1589,7 +1589,7 @@ int filter_html(char *t, const char *f)
                 {
                     ncr_found = 2 + is_hex + i;
                 }
-                else if (!(det == '-' || std::isalnum(det))) /* see html-spec.txt 3.2.1 */
+                else if (!(det == '-' || std::isalnum(det))) // see html-spec.txt 3.2.1
                 {
                     ncr_found = 1 + is_hex + i;
                 }
@@ -1607,7 +1607,7 @@ int filter_html(char *t, const char *f)
                 *t++ = *f;
             }
         }
-        else if (*f == '&' && std::isalpha(f[1]))   /* see html-spec.txt 3.2.1 */
+        else if (*f == '&' && std::isalpha(f[1]))   // see html-spec.txt 3.2.1
         {
             int i;
             int entity_found = 0;
@@ -1622,7 +1622,7 @@ int filter_html(char *t, const char *f)
                     {
                         entity_found = n + 1;
                     }
-                    else if (!(det == '-' || isalnum(det))) /* see html-spec.txt 3.2.1 */
+                    else if (!(det == '-' || isalnum(det))) // see html-spec.txt 3.2.1
                     {
                         entity_found = n;
                     }
@@ -1653,13 +1653,13 @@ int filter_html(char *t, const char *f)
         }
         else if ((*f == ' ' || at_grey_space(f)) && !(g_mime_section->html & HF_IN_PRE))
         {
-            /* We don't want to call output_prep() here. */
+            // We don't want to call output_prep() here.
             if (*f == ' ' || (g_mime_section->html & HF_SPACE_OK))
             {
                 g_mime_section->html &= ~HF_SPACE_OK;
                 *t++ = ' ';
             }
-            /* In non-PRE mode spaces should be collapsed */
+            // In non-PRE mode spaces should be collapsed
             while (true)
             {
                 int w = byte_length_at(f);
@@ -1670,7 +1670,7 @@ int filter_html(char *t, const char *f)
                 f += w;
             }
         }
-        else if (*f == '\n')   /* Handle the HF_IN_PRE case */
+        else if (*f == '\n')   // Handle the HF_IN_PRE case
         {
             t = output_prep(t);
             g_mime_section->html |= HF_NL_OK;
