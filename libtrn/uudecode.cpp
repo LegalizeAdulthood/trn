@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <cstring>
 
-static void uudecodeline(char *line, FILE *ofp);
+static void uudecode_line(char *line, FILE *ofp);
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 {
@@ -302,7 +302,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
         case DECODE_ACTIVE:   /* Decoding data */
             if (*g_buf == 'M' && std::strlen(g_buf) == line_length)
             {
-                uudecodeline(g_buf, ofp);
+                uudecode_line(g_buf, ofp);
                 break;
             }
             if ((int)std::strlen(g_buf) > line_length)
@@ -346,7 +346,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
             if (!std::strncmp(g_buf, "end", 3) && std::isspace(g_buf[3]))
             {
                 /* Handle that last line we saved */
-                uudecodeline(lastline, ofp);
+                uudecode_line(lastline, ofp);
 end:            if (ofp)
                 {
                     std::fclose(ofp);
@@ -376,7 +376,7 @@ end:            if (ofp)
 #define DEC(c)  (((c) - ' ') & 077)
 
 /* Decode a uuencoded line to 'ofp' */
-static void uudecodeline(char *line, FILE *ofp)
+static void uudecode_line(char *line, FILE *ofp)
 {
     /* Calculate expected length and pad if necessary */
     int len = ((DEC(line[0]) + 2) / 3) * 4;
