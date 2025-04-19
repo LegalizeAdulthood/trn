@@ -167,7 +167,7 @@ Signal_t int_catcher(int dummy)
 
 Signal_t sig_catcher(int signo)
 {
-    static char *signame[]{
+    static const char *signame[]{
         "",
         "HUP",
         "INT",
