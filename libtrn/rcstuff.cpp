@@ -342,7 +342,7 @@ bool use_next_multirc(Multirc *mptr)
 
 bool use_prev_multirc(Multirc *mptr)
 {
-    Multirc* mp = multirc_ptr(mptr->num);
+    Multirc *mp = multirc_ptr(mptr->num);
 
     unuse_multirc(mptr);
 
@@ -366,7 +366,7 @@ bool use_prev_multirc(Multirc *mptr)
     return true;
 }
 
-char *multirc_name(Multirc *mp)
+const char *multirc_name(const Multirc *mp)
 {
     if (mp->first->next)
     {
