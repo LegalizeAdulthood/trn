@@ -3,77 +3,11 @@
 #ifndef TRN_TYPEDEF_H
 #define TRN_TYPEDEF_H
 
+#include <config/StrongInt.h>
+
 // some important types
 
-template <typename T>
-struct StrongInt
-{
-    T num{};
-
-
-    explicit operator bool() const
-    {
-        return static_cast<bool>(num);
-    }
-};
-template <typename T>
-bool operator==(StrongInt<T> lhs, StrongInt<T> rhs)
-{
-    return lhs.num == rhs.num;
-}
-template <typename T>
-bool operator!=(StrongInt<T> lhs, StrongInt<T> rhs)
-{
-    return lhs.num != rhs.num;
-}
-template <typename T>
-bool operator<(StrongInt<T> lhs, StrongInt<T> rhs)
-{
-    return lhs.num < rhs.num;
-}
-template <typename T>
-bool operator>(StrongInt<T> lhs, StrongInt<T> rhs)
-{
-    return lhs.num > rhs.num;
-}
-template <typename T>
-bool operator<=(StrongInt<T> lhs, StrongInt<T> rhs)
-{
-    return lhs.num <= rhs.num;
-}
-template <typename T>
-bool operator>=(StrongInt<T> lhs, StrongInt<T> rhs)
-{
-    return lhs.num >= rhs.num;
-}
-template <typename T, typename U>
-StrongInt<T> operator+(StrongInt<T> lhs, U rhs)
-{
-    return StrongInt<T>{lhs.num + rhs};
-}
-template <typename T, typename U>
-StrongInt<T> operator-(StrongInt<T> lhs, U rhs)
-{
-    return StrongInt<T>{lhs.num - rhs};
-}
-template <typename T>
-StrongInt<T> operator-(StrongInt<T> lhs, StrongInt<T> rhs)
-{
-    return StrongInt<T>{lhs.num - rhs.num};
-}
-template <typename T>
-StrongInt<T> &operator+=(StrongInt<T> &lhs, StrongInt<T> rhs)
-{
-    lhs.num += rhs.num;
-    return lhs;
-}
-template <typename T>
-StrongInt<T> &operator-=(StrongInt<T> &lhs, StrongInt<T> rhs)
-{
-    lhs.num -= rhs.num;
-    return lhs;
-}
-
+// newsgroup number
 struct NewsgroupNum : StrongInt<int>
 {
 };
