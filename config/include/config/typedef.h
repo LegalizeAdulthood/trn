@@ -5,65 +5,83 @@
 
 // some important types
 
-using NewsgroupNum = int;        // newsgroup number
-
-// article number
-struct ArticleNum
+template <typename T>
+struct StrongInt
 {
-    long num{};
+    T num{};
+
 
     explicit operator bool() const
     {
         return static_cast<bool>(num);
     }
 };
-inline bool operator==(ArticleNum lhs, ArticleNum rhs)
+template <typename T>
+bool operator==(StrongInt<T> lhs, StrongInt<T> rhs)
 {
     return lhs.num == rhs.num;
 }
-inline bool operator!=(ArticleNum lhs, ArticleNum rhs)
+template <typename T>
+bool operator!=(StrongInt<T> lhs, StrongInt<T> rhs)
 {
     return lhs.num != rhs.num;
 }
-inline bool operator<(ArticleNum lhs, ArticleNum rhs)
+template <typename T>
+bool operator<(StrongInt<T> lhs, StrongInt<T> rhs)
 {
     return lhs.num < rhs.num;
 }
-inline bool operator>(ArticleNum lhs, ArticleNum rhs)
+template <typename T>
+bool operator>(StrongInt<T> lhs, StrongInt<T> rhs)
 {
     return lhs.num > rhs.num;
 }
-inline bool operator<=(ArticleNum lhs, ArticleNum rhs)
+template <typename T>
+bool operator<=(StrongInt<T> lhs, StrongInt<T> rhs)
 {
     return lhs.num <= rhs.num;
 }
-inline bool operator>=(ArticleNum lhs, ArticleNum rhs)
+template <typename T>
+bool operator>=(StrongInt<T> lhs, StrongInt<T> rhs)
 {
     return lhs.num >= rhs.num;
 }
-
-inline ArticleNum operator+(ArticleNum lhs, long rhs)
+template <typename T, typename U>
+StrongInt<T> operator+(StrongInt<T> lhs, U rhs)
 {
-    return ArticleNum{lhs.num + rhs};
+    return StrongInt<T>{lhs.num + rhs};
 }
-inline ArticleNum operator-(ArticleNum lhs, long rhs)
+template <typename T, typename U>
+StrongInt<T> operator-(StrongInt<T> lhs, U rhs)
 {
-    return ArticleNum{lhs.num - rhs};
+    return StrongInt<T>{lhs.num - rhs};
 }
-inline ArticleNum operator-(ArticleNum lhs, ArticleNum rhs)
+template <typename T>
+StrongInt<T> operator-(StrongInt<T> lhs, StrongInt<T> rhs)
 {
-    return ArticleNum{lhs.num - rhs.num};
+    return StrongInt<T>{lhs.num - rhs.num};
 }
-inline ArticleNum &operator+=(ArticleNum &lhs, ArticleNum rhs)
+template <typename T>
+StrongInt<T> &operator+=(StrongInt<T> &lhs, StrongInt<T> rhs)
 {
     lhs.num += rhs.num;
     return lhs;
 }
-inline ArticleNum &operator-=(ArticleNum &lhs, ArticleNum rhs)
+template <typename T>
+StrongInt<T> &operator-=(StrongInt<T> &lhs, StrongInt<T> rhs)
 {
     lhs.num -= rhs.num;
     return lhs;
 }
+
+struct NewsgroupNum : StrongInt<int>
+{
+};
+
+// article number
+struct ArticleNum : StrongInt<long>
+{
+};
 
 using ArticleUnread = long;      // could be short to save space
 using ArticlePosition = long;    // char position in article file

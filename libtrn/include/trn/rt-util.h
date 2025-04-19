@@ -34,8 +34,8 @@ const char *compress_subj(const Article *ap, int max);
 void set_spin(SpinMode mode);
 void spin(int count);
 bool in_background();
-void perform_status_init(long cnt);
-void perform_status(long cnt, int spin);
+void perform_status_init(int cnt);
+void perform_status(int cnt, int spin);
 int perform_status_end(long cnt, const char *obj_type);
 
 #endif

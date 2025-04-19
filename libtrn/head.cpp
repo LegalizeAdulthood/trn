@@ -576,13 +576,13 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
 {
-    std::sprintf(g_ser_line,"XHDR %s %ld",g_header_type[which_line].name.c_str(),artnum);
+    std::sprintf(g_ser_line,"XHDR %s %ld",g_header_type[which_line].name.c_str(),artnum.num);
     return nntp_command(g_ser_line);
 }
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum lastnum)
 {
-    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name.c_str(), artnum, lastnum);
+    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name.c_str(), artnum.num, lastnum.num);
     return nntp_command(g_ser_line);
 }
 
@@ -627,12 +627,12 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
             size = sizeof g_cmd_buf;
         }
         *s = '\0';
-        ArticleNum priornum = art_num - 1;
+        ArticleNum prior_num{art_num.num - 1};
         bool    cached = (g_header_type[which_line].flags & HT_CACHED);
         int     status;
         if (cached != 0)
         {
-            lastnum = art_num + PREFETCH_SIZE - 1;
+            lastnum = ArticleNum{art_num.num + PREFETCH_SIZE - 1};
             lastnum = std::min(lastnum, g_last_art);
             status = nntp_xhdr(which_line, art_num, lastnum);
         }
@@ -679,9 +679,9 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                 }
                 if (!(g_data_source->flags & DF_XHDR_BROKEN))
                 {
-                    while ((priornum = article_next(priornum)) < num)
+                    while ((prior_num = article_next(prior_num)) < num)
                     {
-                        uncache_article(article_ptr(priornum), false);
+                        uncache_article(article_ptr(prior_num), false);
                     }
                 }
                 ap = article_find(num);
@@ -716,9 +716,9 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         }
         if (hasxhdr && !(g_data_source->flags & DF_XHDR_BROKEN))
         {
-            for (priornum = article_first(priornum); priornum < lastnum; priornum = article_next(priornum))
+            for (prior_num = article_first(prior_num); prior_num < lastnum; prior_num = article_next(prior_num))
             {
-                uncache_article(article_ptr(priornum), false);
+                uncache_article(article_ptr(prior_num), false);
             }
         }
         if (copy)

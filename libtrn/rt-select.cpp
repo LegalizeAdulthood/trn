@@ -220,7 +220,7 @@ char article_selector(char_int cmd)
 
     g_sel_rereading = (cmd == 'U');
 
-    g_art = g_last_art+1;
+    g_art = ArticleNum{g_last_art + 1};
     s_extra_commands = article_commands;
     g_keep_the_group_static = (g_keep_the_group_static == 1);
 
@@ -2755,7 +2755,7 @@ reask_sort:
                 // Force the search to begin at g_absfirst or g_firstart,
                 // depending upon whether they specified the 'r' option.
                //
-                g_art = g_last_art+1;
+                g_art = ArticleNum{g_last_art + 1};
                 switch (art_search(g_buf, sizeof g_buf, false))
                 {
                 case SRCH_ERROR:
@@ -2922,7 +2922,7 @@ static DisplayState newsgroup_commands(char_int ch)
         {
             if (np->to_read > TR_UNSUB && np->to_read < g_newsgroup_min_to_read)
             {
-                g_newsgroup_to_read++;
+                g_newsgroup_to_read.num++;
             }
             np->abs_first.num = 0;
         }
@@ -3058,7 +3058,7 @@ reask_sort:
             }
             g_sel_item_index = 0;
 
-            if (sel_perform_change(g_newsgroup_to_read, "newsgroup"))
+            if (sel_perform_change(g_newsgroup_to_read.num, "newsgroup"))
             {
                 return DS_UPDATE;
             }
@@ -3417,7 +3417,7 @@ reask_sort:
             }
             g_sel_item_index = 0;
 
-            if (sel_perform_change(g_newsgroup_to_read, "newsgroup"))
+            if (sel_perform_change(g_newsgroup_to_read.num, "newsgroup"))
             {
                 return DS_UPDATE;
             }

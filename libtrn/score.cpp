@@ -68,7 +68,7 @@ void sc_init(bool pend_wait)
     g_sc_saves_cores = true;
 
 // CONSIDER: (for sc_init callers) is g_lastart properly set yet?
-    g_sc_fill_max = g_abs_first - 1;
+    g_sc_fill_max = ArticleNum{g_abs_first - 1};
     g_sc_fill_read = g_sa_mode_read_elig || g_first_art > g_last_art;
 
     if (g_sf_verbose)
@@ -89,7 +89,7 @@ void sc_init(bool pend_wait)
         }
         if (s_sc_sf_force_init)
         {
-            i = g_last_art+1;    // skip loop
+            i = ArticleNum{g_last_art + 1}; // skip loop
         }
         for (i = article_first(i); i <= g_last_art; i = article_next(i))
         {
@@ -337,7 +337,7 @@ void sc_look_ahead(bool flag, bool nowait)
     // prevent needless looping below
     if (g_sc_fill_max < g_first_art && !g_sc_fill_read)
     {
-        g_sc_fill_max = article_first(g_first_art)-1;
+        g_sc_fill_max = ArticleNum{article_first(g_first_art) - 1};
     }
     else
     {

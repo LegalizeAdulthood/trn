@@ -621,7 +621,7 @@ do_command:
                 int rcnum = std::atoi(s);
                 for (g_newsgroup_ptr = g_first_newsgroup; g_newsgroup_ptr; g_newsgroup_ptr = g_newsgroup_ptr->next)
                 {
-                    if (g_newsgroup_ptr->num == rcnum)
+                    if (g_newsgroup_ptr->num.num == rcnum)
                     {
                         break;
                     }
@@ -629,7 +629,7 @@ do_command:
                 if (!g_newsgroup_ptr)
                 {
                     g_newsgroup_ptr = g_current_newsgroup;
-                    std::printf("\nOnly %d groups. Try again.\n", g_newsgroup_count);
+                    std::printf("\nOnly %d groups. Try again.\n", g_newsgroup_count.num);
                     term_down(2);
                     return ING_ASK;
                 }
@@ -728,7 +728,7 @@ display_multirc:
             g_newsgroup_ptr->to_read = TR_UNSUB;         // and make line invisible
             g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr = g_newsgroup_ptr->next;            // do an automatic 'n'
-            g_newsgroup_to_read--;
+            g_newsgroup_to_read.num--;
         }
         break;
 

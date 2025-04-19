@@ -48,7 +48,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
                 std::printf("\nAll but %d marked as read.\n", leave_count);
             }
         }
-        check_expired(np, get_newsgroup_size(np) - leave_count + 1);
+        check_expired(np, ArticleNum{get_newsgroup_size(np) - leave_count + 1});
         set_to_read(np, ST_STRICT);
     }
     else
@@ -70,7 +70,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
         *(np->rc_line + np->num_offset - 1) = '\0';
         if (g_newsgroup_min_to_read > TR_NONE && np->to_read > TR_NONE)
         {
-            g_newsgroup_to_read--;
+            g_newsgroup_to_read.num--;
         }
         np->to_read = TR_NONE;
     }
@@ -460,7 +460,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         g_paranoid = true;
         if (virgin_ng || np->to_read >= g_newsgroup_min_to_read)
         {
-            g_newsgroup_to_read--;
+            g_newsgroup_to_read.num--;
             g_missing_count++;
         }
         np->to_read = TR_BOGUS;
@@ -507,7 +507,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
                 unread.num = -1;
                 break;
             }
-            unread += newmax - ngsize;
+            unread.num += newmax.num - ngsize.num;
             np->ng_max = newmax;
             ngsize = newmax;
         }
@@ -533,14 +533,14 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     {
         if (!virgin_ng && np->to_read < g_newsgroup_min_to_read)
         {
-            g_newsgroup_to_read++;
+            g_newsgroup_to_read.num++;
         }
     }
     else if (unread.num <= 0)
     {
         if (np->to_read > g_newsgroup_min_to_read)
         {
-            g_newsgroup_to_read--;
+            g_newsgroup_to_read.num--;
             if (virgin_ng)
             {
                 g_missing_count++;

@@ -725,7 +725,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
                 cp = skip_digits(cp);
                 while (*--cp != ' ')
                 {
-                    int num = high.num % 10;
+                    long num = high.num % 10;
                     high.num /= 10;
                     *cp = '0' + (char)num;
                 }

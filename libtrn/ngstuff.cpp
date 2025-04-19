@@ -412,7 +412,7 @@ int thread_perform()
     else if (*cmdstr == 'p')
     {
         ArticleNum oldart = g_art;
-        g_art = g_last_art+1;
+        g_art = ArticleNum{g_last_art + 1};
         followup();
         g_force_grow = true;
         g_art = oldart;
@@ -504,7 +504,7 @@ int perform(char *cmdlst, int output_level)
 
     if (output_level == 1)
     {
-        std::printf("%-6ld ",g_art);
+        std::printf("%-6ld ",g_art.num);
         std::fflush(stdout);
     }
 
@@ -721,7 +721,7 @@ int perform(char *cmdlst, int output_level)
                 if (output_level != 1)
                 {
                     erase_line(false);
-                    std::printf("%-6ld ",g_art);
+                    std::printf("%-6ld ",g_art.num);
                 }
                 if (ch == 'a')
                 {
@@ -796,7 +796,7 @@ int newsgroup_sel_perform()
     }
     char *cmdstr = save_str(g_buf + len);
 
-    perform_status_init(g_newsgroup_to_read);
+    perform_status_init(g_newsgroup_to_read.num);
     len = std::strlen(cmdstr);
 
     if (one_group)
@@ -821,7 +821,7 @@ int newsgroup_sel_perform()
                 break;
             }
         }
-        perform_status(g_newsgroup_to_read, 50);
+        perform_status(g_newsgroup_to_read.num, 50);
     }
 
 break_out:
@@ -883,7 +883,7 @@ deselect:
             g_newsgroup_ptr->to_read = TR_UNSUB;
             g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
-            g_newsgroup_to_read--;
+            g_newsgroup_to_read.num--;
             goto deselect;
 
         default:
@@ -946,7 +946,7 @@ int add_group_sel_perform()
     }
     char *cmdstr = save_str(g_buf + len);
 
-    perform_status_init(g_newsgroup_to_read);
+    perform_status_init(g_newsgroup_to_read.num);
     len = std::strlen(cmdstr);
 
     if (one_group)
@@ -963,7 +963,7 @@ int add_group_sel_perform()
                 break;
             }
         }
-        perform_status(g_newsgroup_to_read, 50);
+        perform_status(g_newsgroup_to_read.num, 50);
     }
 
 break_out:

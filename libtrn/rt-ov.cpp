@@ -229,9 +229,9 @@ beginning:
     }
     if (remote)
     {
-        if ((last - first).num > ov_chunk_size + ov_chunk_size / 2 - 1)
+        if ((last.num - first.num) > ov_chunk_size + ov_chunk_size / 2 - 1)
         {
-            last = first + ov_chunk_size - 1;
+            last = ArticleNum{first + ov_chunk_size - 1};
             line_cnt = 0;
         }
     }
@@ -290,7 +290,7 @@ beginning:
         g_data_source->ov_opened = started_request;
     }
 
-    artnum = first-1;
+    artnum = ArticleNum{first - 1};
     while (true)
     {
         if (remote)
@@ -354,7 +354,7 @@ beginning:
         an = nntp_find_real_art(last);
         if (an.num > 0)
         {
-            last = an - 1;
+            last = ArticleNum{an - 1};
             g_spin_todo -= last.num - artnum.num;
             artnum = last;
         }
@@ -406,7 +406,7 @@ exit:
                 {
                     ov_chunk_size = max_chunk_size;
                 }
-                first = last+1;
+                first = ArticleNum{last + 1};
                 last = real_last;
                 goto beginning;
             }

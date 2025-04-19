@@ -289,16 +289,16 @@ ArticleNum sc_sv_make_line(ArticleNum a)
     {
         if (article_unread(art) && article_scored(art))
         {
-            if (s_last != art - 1)
+            if (s_last.num != art.num - 1)
             {
-                if (s_last == art - 2)
+                if (s_last.num == art.num - 2)
                 {
                     *s++ = 's';
                     num_output++;
                 }
                 else
                 {
-                    std::sprintf(s,"s%ld",(art-s_last)-1);
+                    std::sprintf(s, "s%ld", (art.num - s_last.num) - 1);
                     s = s_line_buf + std::strlen(s_line_buf);
                     num_output++;
                 }
@@ -499,9 +499,9 @@ void sc_save_scores()
     sc_sv_add(s_line_buf2);
 
     ArticleNum a = g_first_art;
-    std::sprintf(s_line_buf2,":%ld",a);
+    std::sprintf(s_line_buf2, ":%ld", a.num);
     sc_sv_add(s_line_buf2);
-    s_last = a-1;
+    s_last.num = a.num - 1;
     while (a <= g_last_art)
     {
         a = sc_sv_make_line(a);

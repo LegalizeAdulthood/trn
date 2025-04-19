@@ -921,7 +921,7 @@ static long        s_ps_sel{};
 static long        s_ps_cnt{};
 static long        s_ps_missing{};
 
-void perform_status_init(long cnt)
+void perform_status_init(int cnt)
 {
     g_perform_count = 0;
     g_error_occurred = false;
@@ -940,7 +940,7 @@ void perform_status_init(long cnt)
     s_spin_chars = "v>^<";
 }
 
-void perform_status(long cnt, int spin)
+void perform_status(int cnt, int spin)
 {
     if (!(++g_spin_count % spin))
     {

@@ -178,8 +178,8 @@ void grow_newsgroup(ArticleNum new_last)
     if (new_last > g_last_art)
     {
         ArticleNum tmpart = g_art;
-        g_newsgroup_ptr->to_read += (ArticleUnread)(new_last-g_last_art).num;
-        ArticleNum tmpfirst = g_last_art + 1;
+        g_newsgroup_ptr->to_read += (ArticleUnread)(new_last.num-g_last_art.num);
+        ArticleNum tmpfirst = ArticleNum{g_last_art + 1};
         // Increase the size of article scan arrays.
         sa_grow(g_last_art,new_last);
         do
@@ -194,7 +194,7 @@ void grow_newsgroup(ArticleNum new_last)
         if (g_verbose)
         {
             std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
-                    (long) (g_last_art - tmpfirst + 1).num, (g_last_art > tmpfirst ? "s have" : " has"));
+                    (long) (g_last_art.num - tmpfirst.num + 1), (g_last_art > tmpfirst ? "s have" : " has"));
         }
         else                    // my, my, how clever we are
         {
@@ -215,7 +215,7 @@ void grow_newsgroup(ArticleNum new_last)
 
 static int newsgroup_order_number(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
-    return (int)((*npp1)->num - (*npp2)->num) * g_sel_direction;
+    return (int)((*npp1)->num.num - (*npp2)->num.num) * g_sel_direction;
 }
 
 static int newsgroup_order_group_name(const NewsgroupData **npp1, const NewsgroupData **npp2)
@@ -230,7 +230,7 @@ static int newsgroup_order_count(const NewsgroupData **npp1, const NewsgroupData
     {
         return eq * g_sel_direction;
     }
-    return (int)((*npp1)->num - (*npp2)->num);
+    return (int)((*npp1)->num.num - (*npp2)->num.num);
 }
 
 // Sort the newsgroups into the chosen order.
@@ -261,20 +261,20 @@ void sort_newsgroups()
         break;
     }
 
-    NewsgroupData **ng_list = (NewsgroupData**)safe_malloc(g_newsgroup_count * sizeof(NewsgroupData*));
+    NewsgroupData **ng_list = (NewsgroupData**)safe_malloc(g_newsgroup_count.num * sizeof(NewsgroupData*));
     lp = ng_list;
     for (NewsgroupData* np = g_first_newsgroup; np; np = np->next)
     {
         *lp++ = np;
     }
-    TRN_ASSERT(lp - ng_list == g_newsgroup_count);
+    TRN_ASSERT(lp - ng_list == g_newsgroup_count.num);
 
-    std::qsort(ng_list, g_newsgroup_count, sizeof (NewsgroupData*), (int(*)(const void *, const void *))sort_procedure);
+    std::qsort(ng_list, g_newsgroup_count.num, sizeof (NewsgroupData*), (int(*)(const void *, const void *))sort_procedure);
 
     g_first_newsgroup = ng_list[0];
     g_first_newsgroup->prev = nullptr;
     lp = ng_list;
-    for (int i = g_newsgroup_count; --i; lp++)
+    for (NewsgroupNum i = g_newsgroup_count; --i.num; lp++)
     {
         lp[0]->next = lp[1];
         lp[1]->prev = lp[0];
@@ -309,7 +309,7 @@ void newsgroup_skip()
         {
             // tries to grab PREFETCH_SIZE XHDRS, flagging missing articles
             (void) fetch_subj(g_art, false);
-            ArticleNum artnum = g_art + PREFETCH_SIZE - 1;
+            ArticleNum artnum = ArticleNum{g_art + PREFETCH_SIZE - 1};
             artnum = std::min(artnum, g_last_art);
             while (g_art <= artnum)
             {
@@ -364,7 +364,7 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
         {
             gp->subscribe_char = NEGCHAR;
             gp->rc->flags |= RF_RC_CHANGED;
-            g_newsgroup_to_read--;
+            g_newsgroup_to_read.num--;
         }
         return ArticleNum{TR_BOGUS};
     }

@@ -88,7 +88,7 @@ void build_cache()
         {
             set_selector(g_sel_thread_mode, g_sel_thread_sort);
         }
-        for (ArticleNum an = g_last_cached + 1; an <= g_last_art; an.num++)
+        for (ArticleNum an{g_last_cached.num + 1}; an <= g_last_art; an.num++)
         {
             article_ptr(an)->flags |= AF_EXISTS;
         }
@@ -108,7 +108,7 @@ void build_cache()
 
     set_first_art(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset);
     g_first_cached = g_thread_always? g_abs_first : g_first_art;
-    g_last_cached = g_first_cached-1;
+    g_last_cached.num = g_first_cached.num - 1;
     g_cached_all_in_range = false;
 #ifdef PENDING
     s_subj_to_get = g_first_art;
@@ -1014,7 +1014,7 @@ bool cache_all_arts()
     ArticleNum old_last_cached = g_last_cached;
     if (!g_cached_all_in_range)
     {
-        g_last_cached = g_first_cached - 1;
+        g_last_cached.num = g_first_cached.num - 1;
     }
     if (g_last_cached >= g_last_art && g_first_cached <= g_abs_first)
     {
@@ -1027,9 +1027,9 @@ bool cache_all_arts()
     {
         if (g_data_source->ov_opened)
         {
-            ov_data(g_last_cached + 1, g_last_art, true);
+            ov_data(ArticleNum{g_last_cached.num + 1}, g_last_art, true);
         }
-        if (!art_data(g_last_cached + 1, g_last_art, true, true))
+        if (!art_data(ArticleNum{g_last_cached.num + 1}, g_last_art, true, true))
         {
             g_last_cached = old_last_cached;
             return false;
@@ -1040,11 +1040,11 @@ bool cache_all_arts()
     {
         if (g_data_source->ov_opened)
         {
-            ov_data(g_abs_first, g_first_cached - 1, true);
+            ov_data(g_abs_first, ArticleNum{g_first_cached.num - 1}, true);
         }
         else
         {
-            art_data(g_abs_first, g_first_cached - 1, true, true);
+            art_data(g_abs_first, ArticleNum{g_first_cached.num - 1}, true, true);
         }
         // If we got interrupted, make a quick exit
         if (g_first_cached > g_abs_first)
@@ -1074,7 +1074,7 @@ bool cache_unread_arts()
         return true;
     }
     set_spin(SPIN_BACKGROUND);
-    return art_data(g_last_cached+1, g_last_art, true, false);
+    return art_data(ArticleNum{g_last_cached.num + 1}, g_last_art, true, false);
 }
 #endif
 
@@ -1105,7 +1105,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
         }
 
         g_spin_todo -= i.num - expected_i.num;
-        expected_i = i + 1;
+        expected_i.num = i.num + 1;
 
         // This parses the header which will cache/thread the article
         (void) parse_header(i);
@@ -1149,15 +1149,15 @@ bool cache_range(ArticleNum first, ArticleNum last)
     if (g_sel_rereading && !g_cached_all_in_range)
     {
         g_first_cached = first;
-        g_last_cached = first-1;
+        g_last_cached.num = first.num - 1;
     }
     if (first < g_first_cached)
     {
-        count = g_first_cached - first;
+        count.num = g_first_cached.num - first.num;
     }
     if (last > g_last_cached)
     {
-        count += last - g_last_cached;
+        count.num += last.num - g_last_cached.num;
     }
     if (!count)
     {
@@ -1191,12 +1191,12 @@ bool cache_range(ArticleNum first, ArticleNum last)
     {
         if (g_data_source->ov_opened)
         {
-            ov_data(g_abs_first,g_first_cached-1,false);
+            ov_data(g_abs_first, ArticleNum{g_first_cached.num - 1}, false);
             success = (g_first_cached == g_abs_first);
         }
         else
         {
-            success = art_data(first, g_first_cached-1, false, all_arts);
+            success = art_data(first, ArticleNum{g_first_cached.num - 1}, false, all_arts);
             g_cached_all_in_range = (all_arts && success);
         }
     }
@@ -1204,9 +1204,9 @@ bool cache_range(ArticleNum first, ArticleNum last)
     {
         if (g_data_source->ov_opened)
         {
-            ov_data(g_last_cached + 1, last, false);
+            ov_data(ArticleNum{g_last_cached.num + 1}, last, false);
         }
-        success = art_data(g_last_cached+1, last, false, all_arts);
+        success = art_data(ArticleNum{g_last_cached.num + 1}, last, false, all_arts);
         g_cached_all_in_range = (all_arts && success);
     }
     set_spin(SPIN_POP);

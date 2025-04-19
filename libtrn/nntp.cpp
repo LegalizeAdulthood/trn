@@ -145,7 +145,7 @@ int nntp_group(const char *group, NewsgroupData *gp)
         // NNTP mangles the high/low values when no articles are present.
         if (!count)
         {
-            gp->abs_first = gp->ng_max + 1;
+            gp->abs_first = ArticleNum{gp->ng_max + 1};
         }
         else
         {
@@ -564,7 +564,7 @@ ArticleNum nntp_find_real_art(ArticleNum after)
         {
             return an;
         }
-        if ((after - an).num > 10)
+        if ((after.num - an.num) > 10)
         {
             break;
         }

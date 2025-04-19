@@ -61,7 +61,7 @@ static int build_add_group_list(int key_len, HashDatum *data, int extra)
 {
     AddGroup* node = (AddGroup*)data->dat_ptr;
 
-    node->num = s_add_group_count++;
+    node->num.num = s_add_group_count++;
     node->next = nullptr;
     node->prev = g_last_add_group;
     if (g_last_add_group)
@@ -359,7 +359,7 @@ static void add_to_list(const char *name, int to_read, char_int ch)
         break;
     }
     node->to_read.num = (to_read < 0)? 0 : to_read;
-    node->num = s_add_group_count++;
+    node->num.num = s_add_group_count++;
     std::strcpy(node->name, name);
     node->data_src = g_data_source;
     node->next = nullptr;
@@ -493,7 +493,7 @@ static void scan_active_line(char *active_line, bool add_matching)
 
 static int add_group_order_number(const AddGroup **app1, const AddGroup **app2)
 {
-    const NewsgroupNum eq = (*app1)->num - (*app2)->num;
+    const int eq = (*app1)->num.num - (*app2)->num.num;
     return eq > 0? g_sel_direction : -g_sel_direction;
 }
 

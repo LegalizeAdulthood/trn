@@ -44,7 +44,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         }
     }
 
-    perform_status_init(g_newsgroup_to_read);
+    perform_status_init(g_newsgroup_to_read.num);
     const char cmdchr = *patbuf;         // what kind of search?
     char *s = copy_till(g_buf, patbuf + 1, cmdchr); // ok to cpy g_buf+1 to g_buf
     char *pattern;                                // unparsed pattern
@@ -127,7 +127,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             }
             if (!output_level && g_page_line == 1)
             {
-                perform_status(g_newsgroup_to_read, 50);
+                perform_status(g_newsgroup_to_read.num, 50);
             }
         } while ((gp = gp->next) != nullptr);
         if (cmdlst)
@@ -219,7 +219,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         }
         if (!output_level && g_page_line == 1)
         {
-            perform_status(g_newsgroup_to_read, 50);
+            perform_status(g_newsgroup_to_read.num, 50);
         }
     } while ((g_newsgroup_ptr = (backward? (g_newsgroup_ptr->prev? g_newsgroup_ptr->prev : g_last_newsgroup)
                                : (g_newsgroup_ptr->next? g_newsgroup_ptr->next : g_first_newsgroup)))

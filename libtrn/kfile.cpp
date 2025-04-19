@@ -155,7 +155,7 @@ int do_kill_file(std::FILE *kfp, int entering)
     char* cp;
     char* bp;
 
-    g_art = g_last_art+1;
+    g_art = ArticleNum{g_last_art.num + 1};
     g_kill_first = g_first_art;
     std::fseek(kfp,0L,0);                    // rewind file
     while (std::fgets(g_buf, LINE_BUF_LEN, kfp) != nullptr)
@@ -177,7 +177,7 @@ int do_kill_file(std::FILE *kfp, int entering)
             g_kill_first = std::max(g_kill_first, g_first_art);
             if (g_kill_first > g_last_art)
             {
-                g_kill_first = g_last_art + 1;
+                g_kill_first = ArticleNum{g_last_art.num + 1};
             }
             continue;
         }
@@ -352,7 +352,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                     }
                 }
             }
-            g_art = g_last_art+1;
+            g_art = ArticleNum{g_last_art.num + 1};
             g_kf_state |= KFS_THREAD_LINES;
         }
         else if (*bp == '<')

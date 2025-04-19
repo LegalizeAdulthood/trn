@@ -1901,7 +1901,7 @@ start_of_loop:
                 {
                     np->flags &= ~NF_INCLUDED;
                     g_sel_total_obj_cnt--;
-                    g_newsgroup_to_read--;
+                    g_newsgroup_to_read.num--;
                     g_missing_count++;
                     continue;
                 }

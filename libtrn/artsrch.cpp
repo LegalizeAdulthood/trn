@@ -402,7 +402,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                       : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0)? g_first_art : g_kill_first;
     if (top_start || g_art == ArticleNum{})
     {
-        g_art = g_last_art+1;
+        g_art.num = g_last_art.num+1;
         top_start = false;
     }
     if (backward)
@@ -416,7 +416,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     {
         if (g_art > g_last_art)
         {
-            g_art = search_first - 1;
+            g_art.num = search_first.num - 1;
         }
         else if (cmd_lst && g_art >= g_abs_first)
         {
@@ -427,7 +427,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     {
         if (!backward)
         {
-            g_art = g_search_ahead - 1;
+            g_art.num = g_search_ahead.num - 1;
         }
         g_search_ahead = ArticleNum{-1};
     }
