@@ -546,7 +546,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
         {
             if (!article->xrefs)
             {
-                article->xrefs = "";
+                article->xrefs = save_str("");
             }
         }
         else if (fields[OV_XREF])
@@ -556,7 +556,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
                 Article *ap = article_ptr(an);
                 if (!ap->xrefs)
                 {
-                    ap->xrefs = "";
+                    ap->xrefs = save_str("");
                 }
             }
             fieldflags[OV_XREF] |= FF_HAS_FIELD;

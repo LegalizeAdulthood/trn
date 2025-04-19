@@ -737,7 +737,7 @@ void set_cached_line(Article *ap, int which_line, char *s)
         break;
 
     case XREF_LINE:
-        if (ap->xrefs && !empty(ap->xrefs))
+        if (!empty(ap->xrefs))
         {
             std::free(ap->xrefs);
         }
@@ -746,7 +746,7 @@ void set_cached_line(Article *ap, int which_line, char *s)
         if (!cp || !std::strchr(cp + 1, ':'))
         {
             std::free(s);
-            s = "";
+            s = save_str("");
         }
         ap->xrefs = s;
         break;
@@ -1223,7 +1223,7 @@ void clear_article(Article *ap)
     {
         std::free(ap->msg_id);
     }
-    if (ap->xrefs && !empty(ap->xrefs))
+    if (!empty(ap->xrefs))
     {
         std::free(ap->xrefs);
     }
