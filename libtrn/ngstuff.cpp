@@ -737,7 +737,7 @@ int perform(char *cmdlst, int output_level)
         }
         else
         {
-            std::sprintf(g_msg,"Unknown command: %s",cmdlst);
+            std::snprintf(g_msg, CMD_BUF_LEN, "Unknown command: %s", cmdlst);
             error_msg(g_msg);
             return -1;
         }
