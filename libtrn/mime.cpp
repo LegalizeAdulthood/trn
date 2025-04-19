@@ -72,11 +72,11 @@ constexpr bool OPENING_TAG = true;
 
 static char *mime_parse_entry_arg(char **cpp);
 static int   mime_getc(std::FILE *fp);
-static char *tag_action(char *t, char *word, bool opening_tag);
+static char *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, HtmlFlags flag);
 static int   do_indent(char *t);
-static char *find_attr(char *str, const char *attr);
+static const char *find_attr(const char *str, const char *attr);
 
 inline MimeCapEntry *mimecap_ptr(long n)
 {
@@ -1750,9 +1750,8 @@ static char s_letters[2] = {'a', 'A'};
 static char s_roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
 static int  s_roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 
-static char *tag_action(char *t, char *word, bool opening_tag)
+static char *tag_action(char *t, const char *word, bool opening_tag)
 {
-    char *cp;
     int   j;
     int   tnum;
     int   itype;
@@ -1761,10 +1760,11 @@ static char *tag_action(char *t, char *word, bool opening_tag)
     bool match = false;
     HtmlBlock* blks = g_mime_section->html_blocks;
 
-    for (cp = word; *cp && *cp != ' '; cp++)
+    const char *tmp;
+    for (tmp = word; *tmp && *tmp != ' '; tmp++)
     {
     }
-    int len = cp - word;
+    int len = tmp - word;
 
     if (!std::isalpha(*word))
     {
@@ -1861,6 +1861,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             g_mime_section->html |= HF_IN_HIDING;
         }
 
+        char *tcp;
+        const char *cp;
         switch (tnum)
         {
         case TAG_BLOCKQUOTE:
@@ -1990,14 +1992,14 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                     }
                 }
 roman_numerals:
-                cp = t - 6;
+                tcp = t - 6;
                 cnt = ++blks[j].count;
                 for (int i = 0; cnt && i < 7; i++)
                 {
                     num = s_roman_values[i];
                     while (cnt >= num)
                     {
-                        *cp++ = s_roman_letters[i];
+                        *tcp++ = s_roman_letters[i];
                         cnt -= num;
                     }
                     j = (i | 1) + 1;
@@ -2006,27 +2008,27 @@ roman_numerals:
                         num -= s_roman_values[j];
                         if (cnt >= num)
                         {
-                            *cp++ = s_roman_letters[j];
-                            *cp++ = s_roman_letters[i];
+                            *tcp++ = s_roman_letters[j];
+                            *tcp++ = s_roman_letters[i];
                             cnt -= num;
                         }
                     }
                 }
-                if (cp < t - 2)
+                if (tcp < t - 2)
                 {
                     t -= 2;
                     for (cnt = t - cp; cp-- != t - 4; )
                     {
-                        cp[cnt] = *cp;
+                        tcp[cnt] = *cp;
                     }
                     while (cnt--)
                     {
-                        *++cp = ' ';
+                        *++tcp = ' ';
                     }
                 }
                 else
                 {
-                    t = cp;
+                    t = tcp;
                 }
                 *t++ = '.';
                 *t++ = ' ';
@@ -2221,11 +2223,11 @@ static int do_indent(char *t)
     return len;
 }
 
-static char *find_attr(char *str, const char *attr)
+static const char *find_attr(const char *str, const char *attr)
 {
     int len = std::strlen(attr);
-    char* cp = str;
-    char* s;
+    const char* cp = str;
+    const char* s;
 
     while ((cp = std::strchr(cp + 1, '=')) != nullptr)
     {

@@ -129,9 +129,9 @@ enum
 
 struct HtmlTag
 {
-    char    *name;
-    char     length;
-    TagFlags flags;
+    const char *name;
+    char        length;
+    TagFlags    flags;
 };
 
 extern MimeSection  g_mime_article;
