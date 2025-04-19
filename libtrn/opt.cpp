@@ -1469,7 +1469,7 @@ static char *hidden_list()
     for (int i = 1; i < g_user_htype_count; i++)
     {
         std::sprintf(g_buf+std::strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
-                g_user_htype[i].name);
+                g_user_htype[i].name.c_str());
     }
     return g_buf+1;
 }
@@ -1499,7 +1499,7 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const
         // Free old g_user_htype list
         while (g_user_htype_count > 1)
         {
-            std::free(g_user_htype[--g_user_htype_count].name);
+            g_user_htype[--g_user_htype_count].name.clear();
         }
         std::memset((char*)g_user_htype_index,0,sizeof g_user_htype_index);
     }
@@ -1566,17 +1566,16 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         int  add_at = 0;
         int  killed = 0;
         bool save_it = true;
-        for (int i = g_user_htype_index[ch - 'a']; *g_user_htype[i].name == ch; i--)
+        for (int i = g_user_htype_index[ch - 'a']; g_user_htype[i].name[0] == ch; i--)
         {
             if (len <= g_user_htype[i].length //
-                && string_case_equal(s, g_user_htype[i].name, len))
+                && string_case_equal(s, g_user_htype[i].name.c_str(), len))
             {
-                std::free(g_user_htype[i].name);
-                g_user_htype[i].name = nullptr;
+                g_user_htype[i].name.clear();
                 killed = i;
             }
             else if (len > g_user_htype[i].length //
-                     && string_case_equal(s, g_user_htype[i].name, g_user_htype[i].length))
+                     && string_case_equal(s, g_user_htype[i].name.c_str(), g_user_htype[i].length))
             {
                 if (!add_at)
                 {
@@ -1590,13 +1589,12 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         }
         if (save_it)
         {
-            if (!killed || (add_at && g_user_htype[add_at].name))
+            if (!killed || (add_at && !g_user_htype[add_at].name.empty()))
             {
                 if (g_user_htype_count >= g_user_htype_max)
                 {
-                    g_user_htype = (UserHeaderType*)
-                        std::realloc(g_user_htype, (g_user_htype_max += 10)
-                                            * sizeof (UserHeaderType));
+                    g_user_htype_max += 10;
+                    g_user_htype.resize(g_user_htype_max);
                 }
                 if (!add_at)
                 {
@@ -1618,24 +1616,24 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
             }
             g_user_htype[add_at].length = len;
             g_user_htype[add_at].flags = setit? flag : 0;
-            g_user_htype[add_at].name = save_str(s);
-            for (char *tmp = g_user_htype[add_at].name; *tmp; tmp++)
+            g_user_htype[add_at].name = s;
+            for (char &c : g_user_htype[add_at].name)
             {
-                if (std::isupper(*tmp))
+                if (std::isupper(c))
                 {
-                    *tmp = static_cast<char>(std::tolower(*tmp));
+                    c = static_cast<char>(std::tolower(c));
                 }
             }
         }
         if (killed)
         {
-            while (killed < g_user_htype_count && g_user_htype[killed].name != nullptr)
+            while (killed < g_user_htype_count && !g_user_htype[killed].name.empty())
             {
                 killed++;
             }
             for (int i = killed + 1; i < g_user_htype_count; i++)
             {
-                if (g_user_htype[i].name != nullptr)
+                if (!g_user_htype[i].name.empty())
                 {
                     g_user_htype[killed++] = g_user_htype[i];
                 }
@@ -1645,7 +1643,7 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         std::memset((char*)g_user_htype_index,0,sizeof g_user_htype_index);
         for (int i = 1; i < g_user_htype_count; i++)
         {
-            g_user_htype_index[*g_user_htype[i].name - 'a'] = i;
+            g_user_htype_index[g_user_htype[i].name[0] - 'a'] = i;
         }
     }
 }

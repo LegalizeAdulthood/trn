@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 struct Article;
 
@@ -77,19 +78,19 @@ struct HeaderType
 
 struct UserHeaderType
 {
-    char *name;   // user-defined headers
-    char  length; // the header's string length
-    char  flags;  // the header's flags
+    std::string name;   // user-defined headers
+    char        length; // the header's string length
+    char        flags;  // the header's flags
 };
 
-extern HeaderType      g_header_type[HEAD_LAST];
-extern UserHeaderType *g_user_htype;
-extern short           g_user_htype_index[26];
-extern int             g_user_htype_count;
-extern int             g_user_htype_max;
-extern ArticleNum      g_parsed_art; // the article number we've parsed
-extern HeaderLineType  g_in_header;  // are we decoding the header?
-extern char           *g_head_buf;
+extern HeaderType                  g_header_type[HEAD_LAST];
+extern std::vector<UserHeaderType> g_user_htype;
+extern short                       g_user_htype_index[26];
+extern int                         g_user_htype_count;
+extern int                         g_user_htype_max;
+extern ArticleNum                  g_parsed_art; // the article number we've parsed
+extern HeaderLineType              g_in_header;  // are we decoding the header?
+extern char                       *g_head_buf;
 
 enum
 {

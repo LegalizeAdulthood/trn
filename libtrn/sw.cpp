@@ -294,7 +294,7 @@ void decode_switch(const char *s)
                 // Free old g_user_htype list
                 while (g_user_htype_count > 1)
                 {
-                    std::free(g_user_htype[--g_user_htype_count].name);
+                    g_user_htype[--g_user_htype_count].name.clear();
                 }
                 std::memset(g_user_htype_index,0,26);
             }

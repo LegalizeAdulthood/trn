@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 #define HIDDEN    (HT_HIDE|HT_DEF_HIDE)
 #define MAGIC_ON  (HT_MAGIC_OK|HT_MAGIC|HT_DEF_MAGIC)
@@ -82,13 +83,13 @@ HeaderType g_header_type[HEAD_LAST] = {
 #undef NGS_CACHED
 #undef XREF_CACHED
 
-UserHeaderType *g_user_htype{};
-short           g_user_htype_index[26];
-int             g_user_htype_count{};
-int             g_user_htype_max{};
-ArticleNum      g_parsed_art{}; // the article number we've parsed
-HeaderLineType  g_in_header{};  // are we decoding the header?
-char           *g_head_buf;
+std::vector<UserHeaderType> g_user_htype;
+short                       g_user_htype_index[26];
+int                         g_user_htype_count{};
+int                         g_user_htype_max{};
+ArticleNum                  g_parsed_art{}; // the article number we've parsed
+HeaderLineType              g_in_header{};  // are we decoding the header?
+char                       *g_head_buf;
 
 static Article       *s_parsed_artp{}; // the article ptr we've parsed
 static long           s_head_buf_size;
@@ -104,8 +105,7 @@ void head_init()
     }
 
     g_user_htype_max = 10;
-    g_user_htype = (UserHeaderType*)safe_malloc(g_user_htype_max
-                                            * sizeof (UserHeaderType));
+    g_user_htype.resize(g_user_htype_max);
     g_user_htype[g_user_htype_count++].name = "*";
 
     s_head_buf_size = LINE_BUF_LEN * 8;
@@ -115,7 +115,8 @@ void head_init()
 void head_final()
 {
     safe_free0(g_head_buf);
-    safe_free0(g_user_htype);
+    g_user_htype.clear();
+    g_user_htype.shrink_to_fit();
     g_user_htype_count = 0;
 }
 
@@ -173,10 +174,10 @@ HeaderLineType set_line_type(char *bufptr, const char *colon)
         {
             return CUSTOM_LINE;
         }
-        for (int i = g_user_htype_index[*f - 'a']; *g_user_htype[i].name == *f; i--)
+        for (int i = g_user_htype_index[*f - 'a']; g_user_htype[i].name[0] == *f; i--)
         {
             if (len >= g_user_htype[i].length //
-                && !std::strncmp(f, g_user_htype[i].name, g_user_htype[i].length))
+                && !std::strncmp(f, g_user_htype[i].name.c_str(), g_user_htype[i].length))
             {
                 if (g_user_htype[i].flags & HT_HIDE)
                 {
