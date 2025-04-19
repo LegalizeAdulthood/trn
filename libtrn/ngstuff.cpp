@@ -95,11 +95,11 @@ int escapade()
 
 // process & command
 
-int switcheroo()
+bool switcheroo()
 {
     if (!finish_command(true)) // get rest of command
     {
-        return -1;      // if rubbed out, try something else
+        return true;      // if rubbed out, try something else
     }
     if (!g_buf[1])
     {
@@ -107,7 +107,7 @@ int switcheroo()
         if (s_option_sel_lock)
         {
             g_buf[1] = '\0';
-            return 0;
+            return false;
         }
         s_option_sel_lock = true;
         if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS)
@@ -167,7 +167,7 @@ int switcheroo()
             }
         }
     }
-    return 0;
+    return false;
 }
 
 // process range commands

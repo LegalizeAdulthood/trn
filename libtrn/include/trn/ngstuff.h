@@ -20,8 +20,8 @@ extern bool        g_one_command; // no ':' processing in perform()
 extern std::string g_save_dir;     // -d
 
 void newsgroup_stuff_init();
-int escapade();
-int switcheroo();
+int          escapade();
+bool         switcheroo();
 NumNumResult num_num();
 int thread_perform();
 int perform(char *cmdlst, int output_level);
