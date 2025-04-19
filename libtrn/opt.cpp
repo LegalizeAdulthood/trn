@@ -1466,10 +1466,10 @@ static char *hidden_list()
 {
     g_buf[0] = '\0';
     g_buf[1] = '\0';
-    for (int i = 1; i < g_user_htype_count; i++)
+    for (int i = 1; i < g_user_header_type_count; i++)
     {
-        std::sprintf(g_buf+std::strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
-                g_user_htype[i].name.c_str());
+        std::sprintf(g_buf+std::strlen(g_buf),",%s%s", g_user_header_type[i].flags? "" : "!",
+                g_user_header_type[i].name.c_str());
     }
     return g_buf+1;
 }
@@ -1497,11 +1497,11 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const
     if (flag == HT_HIDE || flag == HT_DEF_HIDE)
     {
         // Free old g_user_htype list
-        while (g_user_htype_count > 1)
+        while (g_user_header_type_count > 1)
         {
-            g_user_htype[--g_user_htype_count].name.clear();
+            g_user_header_type[--g_user_header_type_count].name.clear();
         }
-        std::memset((char*)g_user_htype_index,0,sizeof g_user_htype_index);
+        std::memset((char*)g_user_header_type_index,0,sizeof g_user_header_type_index);
     }
 
     if (!*str)
@@ -1566,20 +1566,20 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         int  add_at = 0;
         int  killed = 0;
         bool save_it = true;
-        for (int i = g_user_htype_index[ch - 'a']; g_user_htype[i].name[0] == ch; i--)
+        for (int i = g_user_header_type_index[ch - 'a']; g_user_header_type[i].name[0] == ch; i--)
         {
-            if (len <= g_user_htype[i].length //
-                && string_case_equal(s, g_user_htype[i].name.c_str(), len))
+            if (len <= g_user_header_type[i].length //
+                && string_case_equal(s, g_user_header_type[i].name.c_str(), len))
             {
-                g_user_htype[i].name.clear();
+                g_user_header_type[i].name.clear();
                 killed = i;
             }
-            else if (len > g_user_htype[i].length //
-                     && string_case_equal(s, g_user_htype[i].name.c_str(), g_user_htype[i].length))
+            else if (len > g_user_header_type[i].length //
+                     && string_case_equal(s, g_user_header_type[i].name.c_str(), g_user_header_type[i].length))
             {
                 if (!add_at)
                 {
-                    if (g_user_htype[i].flags == (setit? flag : 0))
+                    if (g_user_header_type[i].flags == (setit? flag : 0))
                     {
                         save_it = false;
                     }
@@ -1589,35 +1589,35 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         }
         if (save_it)
         {
-            if (!killed || (add_at && !g_user_htype[add_at].name.empty()))
+            if (!killed || (add_at && !g_user_header_type[add_at].name.empty()))
             {
-                if (g_user_htype_count >= g_user_htype_max)
+                if (g_user_header_type_count >= g_user_header_type_max)
                 {
-                    g_user_htype_max += 10;
-                    g_user_htype.resize(g_user_htype_max);
+                    g_user_header_type_max += 10;
+                    g_user_header_type.resize(g_user_header_type_max);
                 }
                 if (!add_at)
                 {
-                    add_at = g_user_htype_index[ch - 'a']+1;
+                    add_at = g_user_header_type_index[ch - 'a']+1;
                     if (add_at == 1)
                     {
-                        add_at = g_user_htype_count;
+                        add_at = g_user_header_type_count;
                     }
                 }
-                for (int i = g_user_htype_count; i > add_at; i--)
+                for (int i = g_user_header_type_count; i > add_at; i--)
                 {
-                    g_user_htype[i] = g_user_htype[i - 1];
+                    g_user_header_type[i] = g_user_header_type[i - 1];
                 }
-                g_user_htype_count++;
+                g_user_header_type_count++;
             }
             else if (!add_at)
             {
                 add_at = killed;
             }
-            g_user_htype[add_at].length = len;
-            g_user_htype[add_at].flags = setit? flag : 0;
-            g_user_htype[add_at].name = s;
-            for (char &c : g_user_htype[add_at].name)
+            g_user_header_type[add_at].length = len;
+            g_user_header_type[add_at].flags = setit? flag : 0;
+            g_user_header_type[add_at].name = s;
+            for (char &c : g_user_header_type[add_at].name)
             {
                 if (std::isupper(c))
                 {
@@ -1627,23 +1627,23 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         }
         if (killed)
         {
-            while (killed < g_user_htype_count && !g_user_htype[killed].name.empty())
+            while (killed < g_user_header_type_count && !g_user_header_type[killed].name.empty())
             {
                 killed++;
             }
-            for (int i = killed + 1; i < g_user_htype_count; i++)
+            for (int i = killed + 1; i < g_user_header_type_count; i++)
             {
-                if (!g_user_htype[i].name.empty())
+                if (!g_user_header_type[i].name.empty())
                 {
-                    g_user_htype[killed++] = g_user_htype[i];
+                    g_user_header_type[killed++] = g_user_header_type[i];
                 }
             }
-            g_user_htype_count = killed;
+            g_user_header_type_count = killed;
         }
-        std::memset((char*)g_user_htype_index,0,sizeof g_user_htype_index);
-        for (int i = 1; i < g_user_htype_count; i++)
+        std::memset((char*)g_user_header_type_index,0,sizeof g_user_header_type_index);
+        for (int i = 1; i < g_user_header_type_count; i++)
         {
-            g_user_htype_index[g_user_htype[i].name[0] - 'a'] = i;
+            g_user_header_type_index[g_user_header_type[i].name[0] - 'a'] = i;
         }
     }
 }

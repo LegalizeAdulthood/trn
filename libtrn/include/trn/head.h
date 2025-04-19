@@ -84,10 +84,10 @@ struct UserHeaderType
 };
 
 extern HeaderType                  g_header_type[HEAD_LAST];
-extern std::vector<UserHeaderType> g_user_htype;
-extern short                       g_user_htype_index[26];
-extern int                         g_user_htype_count;
-extern int                         g_user_htype_max;
+extern std::vector<UserHeaderType> g_user_header_type;
+extern short                       g_user_header_type_index[26];
+extern int                         g_user_header_type_count;
+extern int                         g_user_header_type_max;
 extern ArticleNum                  g_parsed_art; // the article number we've parsed
 extern HeaderLineType              g_in_header;  // are we decoding the header?
 extern char                       *g_head_buf;
