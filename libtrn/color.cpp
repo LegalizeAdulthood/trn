@@ -37,12 +37,13 @@
 
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 struct ColorObj
 {
     const char* name;
-    char* fg;
-    char* bg;
+    std::string fg;
+    std::string bg;
     int attr;
 };
 
@@ -65,26 +66,26 @@ static void output_color();
 static ColorObj s_objects[MAX_COLORS] =
 // clang-format off
 {
-    { "default",        "", "", NO_MARKING       },
-    { "ngname",         "", "", STANDOUT        },
-    { "plus",           "", "", LAST_MARKING     },
-    { "minus",          "", "", LAST_MARKING     },
-    { "star",           "", "", LAST_MARKING     },
-    { "header",         "", "", LAST_MARKING     },
-    { "subject",        "", "", UNDERLINE       },
-    { "tree",           "", "", LAST_MARKING     },
-    { "tree marker",    "", "", STANDOUT        },
-    { "more",           "", "", STANDOUT        },
-    { "heading",        "", "", STANDOUT        },
-    { "command",        "", "", STANDOUT        },
-    { "mouse bar",      "", "", STANDOUT        },
-    { "notice",         "", "", STANDOUT        },
-    { "score",          "", "", STANDOUT        },
-    { "art heading",    "", "", LAST_MARKING     },
-    { "mime separator", "", "", STANDOUT        },
-    { "mime description","","", UNDERLINE       },
-    { "cited text",     "", "", LAST_MARKING     },
-    { "body text",      "", "", NO_MARKING       },
+    { "default",          {}, {}, NO_MARKING   },
+    { "ngname",           {}, {}, STANDOUT     },
+    { "plus",             {}, {}, LAST_MARKING },
+    { "minus",            {}, {}, LAST_MARKING },
+    { "star",             {}, {}, LAST_MARKING },
+    { "header",           {}, {}, LAST_MARKING },
+    { "subject",          {}, {}, UNDERLINE    },
+    { "tree",             {}, {}, LAST_MARKING },
+    { "tree marker",      {}, {}, STANDOUT     },
+    { "more",             {}, {}, STANDOUT     },
+    { "heading",          {}, {}, STANDOUT     },
+    { "command",          {}, {}, STANDOUT     },
+    { "mouse bar",        {}, {}, STANDOUT     },
+    { "notice",           {}, {}, STANDOUT     },
+    { "score",            {}, {}, STANDOUT     },
+    { "art heading",      {}, {}, LAST_MARKING },
+    { "mime separator",   {}, {}, STANDOUT     },
+    { "mime description", {}, {}, UNDERLINE    },
+    { "cited text",       {}, {}, LAST_MARKING },
+    { "body text",        {}, {}, NO_MARKING   },
 };
 // clang-format on
 
@@ -98,13 +99,13 @@ void color_init()
     if (s_use_colors)
     {
         // Get default capabilities.
-        char *fg = tc_color_capability("fg default");
+        const char *fg = tc_color_capability("fg default");
         if (fg == nullptr)
         {
             std::fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
             finalize(1);
         }
-        char *bg = tc_color_capability("bg default");
+        const char *bg = tc_color_capability("bg default");
         if (bg == nullptr)
         {
             std::fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
@@ -116,11 +117,11 @@ void color_init()
         }
         for (ColorObj &obj : s_objects)
         {
-            if (empty(obj.fg))
+            if (obj.fg.empty())
             {
                 obj.fg = fg;
             }
-            if (empty(obj.bg))
+            if (obj.bg.empty())
             {
                 obj.bg = bg;
             }
@@ -184,8 +185,8 @@ void color_rc_attribute(const char *object, char *value)
     s = skip_space(s);
     if (!*s)
     {
-        s_objects[i].fg = "";
-        s_objects[i].bg = "";
+        s_objects[i].fg.clear();
+        s_objects[i].bg.clear();
         return;
     }
     char *t = skip_non_space(s);
@@ -203,13 +204,13 @@ void color_rc_attribute(const char *object, char *value)
     // Parse the foreground color.
     if (*s == '-')
     {
-        s_objects[i].fg = nullptr;
+        s_objects[i].fg.clear();
     }
     else
     {
         std::sprintf(g_buf, "fg %s", s);
         s_objects[i].fg = tc_color_capability(g_buf);
-        if (s_objects[i].fg == nullptr)
+        if (s_objects[i].fg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
                     g_buf, object);
@@ -247,7 +248,7 @@ void color_rc_attribute(const char *object, char *value)
     {
         std::sprintf(g_buf, "bg %s", s);
         s_objects[i].bg = tc_color_capability(g_buf);
-        if (s_objects[i].bg == nullptr)
+        if (s_objects[i].bg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
                     g_buf, object);
@@ -268,11 +269,11 @@ void color_object(int object, bool push)
     ColorObj merged = s_color_stack[s_stack_pointer];
 
     // Merge in the new colors/attributes.
-    if (s_objects[object].fg)
+    if (!s_objects[object].fg.empty())
     {
         merged.fg = s_objects[object].fg;
     }
-    if (s_objects[object].bg)
+    if (!s_objects[object].bg.empty())
     {
         merged.bg = s_objects[object].bg;
     }
@@ -346,7 +347,7 @@ void color_default()
 // Set colors/attribute for an object.
 static void output_color()
 {
-    static ColorObj prior{"", nullptr, nullptr, NO_MARKING};
+    static ColorObj prior{"", {}, {}, NO_MARKING};
     ColorObj* op = &s_color_stack[s_stack_pointer];
 
     // If no change, just return.
@@ -361,8 +362,10 @@ static void output_color()
         if (s_objects[COLOR_DEFAULT].fg != prior.fg //
             || s_objects[COLOR_DEFAULT].bg != prior.bg)
         {
-            std::fputs(prior.fg = s_objects[COLOR_DEFAULT].fg, stdout);
-            std::fputs(prior.bg = s_objects[COLOR_DEFAULT].bg, stdout);
+            prior.fg = s_objects[COLOR_DEFAULT].fg;
+            prior.bg = s_objects[COLOR_DEFAULT].bg;
+            std::fputs(prior.fg.c_str(), stdout);
+            std::fputs(prior.bg.c_str(), stdout);
         }
     }
     switch (prior.attr)
@@ -384,11 +387,13 @@ static void output_color()
     {
         if (op->fg != prior.fg)
         {
-            std::fputs(prior.fg = op->fg, stdout);
+            prior.fg = op->fg;
+            std::fputs(prior.fg.c_str(), stdout);
         }
         if (op->bg != prior.bg)
         {
-            std::fputs(prior.bg = op->bg, stdout);
+            prior.bg = op->bg;
+            std::fputs(prior.bg.c_str(), stdout);
         }
     }
 
