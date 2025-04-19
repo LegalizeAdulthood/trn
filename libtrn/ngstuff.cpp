@@ -103,7 +103,7 @@ int switcheroo()
     }
     if (!g_buf[1])
     {
-        const std::string prior_savedir = g_save_dir;
+        const std::string prior_save_dir = g_save_dir;
         if (s_option_sel_lock)
         {
             g_buf[1] = '\0';
@@ -115,7 +115,7 @@ int switcheroo()
             option_selector();
         }
         s_option_sel_lock = false;
-        if (g_save_dir != prior_savedir)
+        if (g_save_dir != prior_save_dir)
         {
             cwd_check();
         }
@@ -130,39 +130,39 @@ int switcheroo()
         }
         else
         {
-            char tmpbuf[LINE_BUF_LEN];
+            char tmp_buf[LINE_BUF_LEN];
             char *s = skip_space(g_buf + 2);
-            mac_line(s,tmpbuf,(sizeof tmpbuf));
+            mac_line(s,tmp_buf,(sizeof tmp_buf));
         }
     }
     else
     {
-        bool docd = (in_string(g_buf,"-d", true) != nullptr);
-         char whereami[1024];
-        char tmpbuf[LINE_BUF_LEN+16];
+        bool do_cd = in_string(g_buf, "-d", true) != nullptr;
+        char where_am_i[1024];
+        char tmp_buf[LINE_BUF_LEN+16];
 
-        if (docd)
+        if (do_cd)
         {
-            trn_getwd(whereami, sizeof(whereami));
+            trn_getwd(where_am_i, sizeof(where_am_i));
         }
         if (g_buf[1] == '-' || g_buf[1] == '+')
         {
-            std::strcpy(tmpbuf,g_buf+1);
-            sw_list(tmpbuf);
+            std::strcpy(tmp_buf,g_buf+1);
+            sw_list(tmp_buf);
         }
         else
         {
-            std::sprintf(tmpbuf,"[options]\n%s\n",g_buf+1);
-            prep_ini_data(tmpbuf,"'&' input");
-            parse_ini_section(tmpbuf+10,g_options_ini);
+            std::sprintf(tmp_buf,"[options]\n%s\n",g_buf+1);
+            prep_ini_data(tmp_buf,"'&' input");
+            parse_ini_section(tmp_buf+10,g_options_ini);
             set_options(ini_values(g_options_ini));
         }
-        if (docd)
+        if (do_cd)
         {
             cwd_check();
-            if (change_dir(whereami))                // -d does chdirs
+            if (change_dir(where_am_i))                // -d does chdirs
             {
-                std::printf(g_no_cd,whereami);
+                std::printf(g_no_cd,where_am_i);
                 sig_catcher(0);
             }
         }
