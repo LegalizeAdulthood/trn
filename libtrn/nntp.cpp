@@ -170,21 +170,19 @@ int nntp_stat(ArticleNum art_num)
 
 // check on an article's existence by its message id
 
-ArticleNum nntp_stat_id(char *msg_id)
+ArticleNum nntp_stat_id(const char *msg_id)
 {
-    long artnum;
-
     std::sprintf(g_ser_line, "STAT %s", msg_id);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
     }
-    artnum = nntp_check();
-    if (artnum > 0 && std::sscanf(g_ser_line, "%*d%ld", &artnum) != 1)
+    long art_num{nntp_check()};
+    if (art_num > 0 && std::sscanf(g_ser_line, "%*d%ld", &art_num) != 1)
     {
-        artnum = 0;
+        art_num = 0;
     }
-    return (ArticleNum)artnum;
+    return (ArticleNum) art_num;
 }
 
 ArticleNum nntp_next_art()
