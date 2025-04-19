@@ -935,16 +935,16 @@ void abandon_newsgroup(NewsgroupData *np)
 
 bool get_newsgroup(const char *what, GetNewsgroupFlags flags)
 {
-    char* ntoforget;
-    char promptbuf[128];
+    const char *n_to_forget;
+    char prompt_buf[128];
 
     if (g_verbose)
     {
-        ntoforget = "Type n to forget about this newsgroup.\n";
+        n_to_forget = "Type n to forget about this newsgroup.\n";
     }
     else
     {
-        ntoforget = "n to forget it.\n";
+        n_to_forget = "n to forget it.\n";
     }
     if (std::strchr(what, '/'))
     {
@@ -1039,14 +1039,14 @@ check_fuzzy_match:
         {
             if (g_verbose)
             {
-                std::sprintf(promptbuf, "\nNewsgroup %s not in .newsrc -- subscribe?", g_newsgroup_name.c_str());
+                std::sprintf(prompt_buf, "\nNewsgroup %s not in .newsrc -- subscribe?", g_newsgroup_name.c_str());
             }
             else
             {
-                std::sprintf(promptbuf,"\nSubscribe %s?",g_newsgroup_name.c_str());
+                std::sprintf(prompt_buf,"\nSubscribe %s?",g_newsgroup_name.c_str());
             }
 reask_add:
-            in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
+            in_char(prompt_buf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
             print_cmd();
             newline();
             if (*g_buf == 'h')
@@ -1065,7 +1065,7 @@ reask_add:
                           stdout);
                     term_down(1);
                 }
-                std::fputs(ntoforget,stdout);
+                std::fputs(n_to_forget,stdout);
                 term_down(1);
                 goto reask_add;
             }
@@ -1133,14 +1133,14 @@ reask_add:
     {
         if (g_verbose)
         {
-            std::sprintf(promptbuf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_newsgroup_name.c_str());
+            std::sprintf(prompt_buf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_newsgroup_name.c_str());
         }
         else
         {
-            std::sprintf(promptbuf, "\nResubscribe %s?", g_newsgroup_name.c_str());
+            std::sprintf(prompt_buf, "\nResubscribe %s?", g_newsgroup_name.c_str());
         }
 reask_unsub:
-        in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
+        in_char(prompt_buf,MM_RESUBSCRIBE_PROMPT,"yn");
         print_cmd();
         newline();
         if (*g_buf == 'h')
@@ -1153,7 +1153,7 @@ reask_unsub:
             {
                 std::fputs("y or SP to resubscribe.\n", stdout);
             }
-            std::fputs(ntoforget,stdout);
+            std::fputs(n_to_forget,stdout);
             term_down(2);
             goto reask_unsub;
         }
