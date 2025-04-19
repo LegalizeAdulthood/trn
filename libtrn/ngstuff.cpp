@@ -49,14 +49,14 @@ void newsgroup_stuff_init()
 
 // do a shell escape
 
-int escapade()
+bool escapade()
 {
     bool interactive = (g_buf[1] == FINISH_CMD);
     char whereiam[1024];
 
     if (!finish_command(interactive))   // get remainder of command
     {
-        return -1;
+        return true;
     }
     char *s = g_buf + 1;
     bool  docd = *s != '!';
@@ -90,7 +90,7 @@ int escapade()
 #ifdef MAIL_CALL
     g_mail_count = 0;                    // force recheck
 #endif
-    return 0;
+    return false;
 }
 
 // process & command

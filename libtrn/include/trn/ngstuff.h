@@ -19,8 +19,8 @@ enum NumNumResult
 extern bool        g_one_command; // no ':' processing in perform()
 extern std::string g_save_dir;     // -d
 
-void newsgroup_stuff_init();
-int          escapade();
+void         newsgroup_stuff_init();
+bool         escapade();
 bool         switcheroo();
 NumNumResult num_num();
 int thread_perform();
