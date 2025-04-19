@@ -1861,11 +1861,11 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             g_mime_section->html |= HF_IN_HIDING;
         }
 
-        char *tcp;
-        const char *cp;
         switch (tnum)
         {
         case TAG_BLOCKQUOTE:
+        {
+            const char *cp;
             if (((cp = find_attr(word, "type")) != nullptr && string_case_equal(cp, "cite", 4)) ||
                 ((cp = find_attr(word, "style")) != nullptr && string_case_equal(cp, "border-left:", 12)))
             {
@@ -1876,6 +1876,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
                 blks[j].indent = ' ';
             }
             break;
+        }
 
         case TAG_HR:
             t = output_prep(t);
@@ -1897,8 +1898,9 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             break;
 
         case TAG_OL:
+        {
             itype = 4;
-            cp = find_attr(word, "type");
+            const char *cp = find_attr(word, "type");
             if (cp != nullptr)
             {
                 switch (*cp)
@@ -1912,10 +1914,12 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             }
             blks[j].indent = itype;
             break;
+        }
 
         case TAG_UL:
+        {
             itype = 1;
-            cp = find_attr(word, "type");
+            const char *cp = find_attr(word, "type");
             if (cp != nullptr)
             {
                 switch (*cp)
@@ -1940,6 +1944,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             }
             blks[j].indent = itype;
             break;
+        }
 
         case TAG_LI:
             t = output_prep(t);
@@ -1991,8 +1996,10 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
                         s_roman_letters[i] = std::toupper(s_roman_letters[i]);
                     }
                 }
+
 roman_numerals:
-                tcp = t - 6;
+            {
+                char *tcp = t - 6;
                 cnt = ++blks[j].count;
                 for (int i = 0; cnt && i < 7; i++)
                 {
@@ -2033,6 +2040,7 @@ roman_numerals:
                 *t++ = '.';
                 *t++ = ' ';
                 break;
+            }
 
             default:
                 *t++ = '*';
