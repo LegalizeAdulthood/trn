@@ -52,21 +52,21 @@ void newsgroup_stuff_init()
 bool escapade()
 {
     bool interactive = (g_buf[1] == FINISH_CMD);
-    char whereiam[1024];
+    char where_i_am[1024];
 
     if (!finish_command(interactive))   // get remainder of command
     {
         return true;
     }
     char *s = g_buf + 1;
-    bool  docd = *s != '!';
-    if (!docd)
+    bool  do_cd = *s != '!';
+    if (!do_cd)
     {
         s++;
     }
     else
     {
-        trn_getwd(whereiam, sizeof(whereiam));
+        trn_getwd(where_i_am, sizeof(where_i_am));
         if (change_dir(g_priv_dir))
         {
             std::printf(g_no_cd,g_priv_dir.c_str());
@@ -79,11 +79,11 @@ bool escapade()
     do_shell(nullptr,g_cmd_buf); // invoke the shell
     no_echo();                           // and make terminal
     cr_mode();                           // unfriendly again
-    if (docd)
+    if (do_cd)
     {
-        if (change_dir(whereiam))
+        if (change_dir(where_i_am))
         {
-            std::printf(g_no_cd,whereiam);
+            std::printf(g_no_cd,where_i_am);
             sig_catcher(0);
         }
     }
