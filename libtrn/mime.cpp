@@ -2017,9 +2017,9 @@ roman_numerals:
                 if (tcp < t - 2)
                 {
                     t -= 2;
-                    for (cnt = t - cp; cp-- != t - 4; )
+                    for (cnt = t - tcp; tcp-- != t - 4; )
                     {
-                        tcp[cnt] = *cp;
+                        tcp[cnt] = *tcp;
                     }
                     while (cnt--)
                     {
