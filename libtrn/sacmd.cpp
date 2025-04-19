@@ -487,7 +487,7 @@ int sa_do_cmd()
                 return 0;                       // beep but do nothing
             }
         }
-        g_sa_art = (ArticleNum)i;
+        g_sa_art.num = i;
         return SA_READ;                 // special code to really return
 
     case 'N': // next newsgroup

@@ -98,7 +98,7 @@ int access_newsgroup()
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art < 0) // Impossible...
+        if (g_last_art.num < 0) // Impossible...
         {
             return 0;
         }
@@ -148,7 +148,7 @@ int access_newsgroup()
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art < 0) // Impossible...
+        if (g_last_art.num < 0) // Impossible...
         {
             return 0;
         }
@@ -178,23 +178,23 @@ void grow_newsgroup(ArticleNum new_last)
     if (new_last > g_last_art)
     {
         ArticleNum tmpart = g_art;
-        g_newsgroup_ptr->to_read += (ArticleUnread)(new_last-g_last_art);
+        g_newsgroup_ptr->to_read += (ArticleUnread)(new_last-g_last_art).num;
         ArticleNum tmpfirst = g_last_art + 1;
         // Increase the size of article scan arrays.
         sa_grow(g_last_art,new_last);
         do
         {
-            g_last_art++;
+            g_last_art.num++;
             article_ptr(g_last_art)->flags |= AF_EXISTS|AF_UNREAD;
         } while (g_last_art < new_last);
-        g_article_list->high = g_last_art;
+        g_article_list->high = g_last_art.num;
         thread_grow();
         // Score all new articles now just in case they weren't done above.
         sc_fill_score_list(tmpfirst,new_last);
         if (g_verbose)
         {
             std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
-                    (long) (g_last_art - tmpfirst + 1), (g_last_art > tmpfirst ? "s have" : " has"));
+                    (long) (g_last_art - tmpfirst + 1).num, (g_last_art > tmpfirst ? "s have" : " has"));
         }
         else                    // my, my, how clever we are
         {
@@ -329,11 +329,11 @@ void newsgroup_skip()
             clear();
             if (g_verbose)
             {
-                std::printf("\n(Article %ld exists but is unreadable.)\n", (long) g_art);
+                std::printf("\n(Article %ld exists but is unreadable.)\n", (long) g_art.num);
             }
             else
             {
-                std::printf("\n(%ld unreadable.)\n", (long) g_art);
+                std::printf("\n(%ld unreadable.)\n", (long) g_art.num);
             }
             term_down(2);
             if (g_novice_delays)
@@ -366,7 +366,7 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
             gp->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_to_read--;
         }
-        return TR_BOGUS;
+        return ArticleNum{TR_BOGUS};
     }
 
 #ifdef ANCIENT_NEWS
@@ -377,7 +377,7 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
 #endif
     if (!gp->abs_first)
     {
-        gp->abs_first = (ArticleNum) first;
+        gp->abs_first = ArticleNum{first};
     }
     if (!g_in_ng)
     {
@@ -418,9 +418,9 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
             break;
         }
     }
-    if (last <= gp->ng_max)
+    if (last <= gp->ng_max.num)
     {
         return gp->ng_max;
     }
-    return gp->ng_max = (ArticleNum)last;
+    return gp->ng_max = ArticleNum{last};
 }

@@ -33,7 +33,7 @@ static bool s_sa_context_init{}; // has context been initialized?
 void sa_init()
 {
     sa_init_context();
-    if (g_last_art == 0 || g_abs_first > g_last_art)
+    if (g_last_art.num == 0 || g_abs_first > g_last_art)
     {
         return;         // no articles
     }
@@ -118,9 +118,9 @@ void sa_clean_main()
     g_sa_in = false;
 }
 
-void sa_grow_arts(long oldlast, long last)
+void sa_grow_arts(ArticleNum oldlast, ArticleNum last)
 {
-    for (int i = oldlast + 1; i <= last; i++)
+    for (ArticleNum i = oldlast + 1; i <= last; i.num++)
     {
         (void)sa_add_ent(i);
     }
@@ -146,7 +146,7 @@ bool sa_init_arts()
 {
     sa_init_ents();
     // add all available articles to entry list
-    for (int a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
+    for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
         if (article_exists(a))
         {

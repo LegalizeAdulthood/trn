@@ -149,8 +149,8 @@ int nntp_group(const char *group, NewsgroupData *gp)
         }
         else
         {
-            gp->abs_first = (ArticleNum)first;
-            gp->ng_max = (ArticleNum)last;
+            gp->abs_first = ArticleNum{first};
+            gp->ng_max = ArticleNum{last};
         }
     }
     return 1;
@@ -160,7 +160,7 @@ int nntp_group(const char *group, NewsgroupData *gp)
 
 int nntp_stat(ArticleNum art_num)
 {
-    std::sprintf(g_ser_line, "STAT %ld", (long)art_num);
+    std::sprintf(g_ser_line, "STAT %ld", (long)art_num.num);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
@@ -175,14 +175,14 @@ ArticleNum nntp_stat_id(const char *msg_id)
     std::sprintf(g_ser_line, "STAT %s", msg_id);
     if (nntp_command(g_ser_line) <= 0)
     {
-        return -2;
+        return {-2};
     }
     long art_num{nntp_check()};
     if (art_num > 0 && std::sscanf(g_ser_line, "%*d%ld", &art_num) != 1)
     {
         art_num = 0;
     }
-    return (ArticleNum) art_num;
+    return {art_num};
 }
 
 ArticleNum nntp_next_art()
@@ -191,21 +191,21 @@ ArticleNum nntp_next_art()
 
     if (nntp_command("NEXT") <= 0)
     {
-        return -2;
+        return {-2};
     }
     artnum = nntp_check();
     if (artnum > 0 && std::sscanf(g_ser_line, "%*d %ld", &artnum) != 1)
     {
         artnum = 0;
     }
-    return (ArticleNum)artnum;
+    return {artnum};
 }
 
 // prepare to get the header
 
 int nntp_header(ArticleNum art_num)
 {
-    std::sprintf(g_ser_line, "HEAD %ld", (long)art_num);
+    std::sprintf(g_ser_line, "HEAD %ld", (long)art_num.num);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
@@ -245,11 +245,11 @@ void nntp_body(ArticleNum art_num)
 #endif
     if (g_parsed_art == art_num)
     {
-        std::sprintf(g_ser_line, "BODY %ld", (long) art_num);
+        std::sprintf(g_ser_line, "BODY %ld", (long) art_num.num);
     }
     else
     {
-        std::sprintf(g_ser_line, "ARTICLE %ld", (long) art_num);
+        std::sprintf(g_ser_line, "ARTICLE %ld", (long) art_num.num);
     }
     if (nntp_command(g_ser_line) <= 0)
     {
@@ -554,23 +554,23 @@ ArticleNum nntp_find_real_art(ArticleNum after)
     {
         if (nntp_stat_id("") > after)
         {
-            return 0;
+            return {};
         }
     }
 
-    while ((an = nntp_next_art()) > 0)
+    while ((an = nntp_next_art()).num > 0)
     {
         if (an > after)
         {
             return an;
         }
-        if (after - an > 10)
+        if ((after - an).num > 10)
         {
             break;
         }
     }
 
-    return 0;
+    return {};
 }
 
 char *nntp_art_name(ArticleNum art_num, bool allocate)
@@ -583,7 +583,7 @@ char *nntp_art_name(ArticleNum art_num, bool allocate)
     {
         for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
         {
-            artnums[i] = 0;
+            artnums[i].num = 0;
             artages[i] = 0;
         }
         return nullptr;

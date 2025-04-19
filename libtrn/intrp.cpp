@@ -608,7 +608,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     if (g_in_ng)
                     {
                         s = scrbuf;
-                        std::sprintf(s,"%ld",(long)g_art);
+                        std::sprintf(s,"%ld", g_art.num);
                     }
                     else
                     {
@@ -634,7 +634,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         }
                         else
                         {
-                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->spool_dir, g_newsgroup_dir.c_str(), (long) g_art);
+                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->spool_dir, g_newsgroup_dir.c_str(), g_art.num);
                         }
                     }
                     else
@@ -1196,7 +1196,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         s = s_empty;
                         break;
                     }
-                    std::sprintf(scrbuf, "%5s", std::to_string(std::filesystem::file_size(std::to_string(g_art))).c_str());
+                    std::sprintf(scrbuf, "%5s", std::to_string(std::filesystem::file_size(std::to_string(g_art.num))).c_str());
                     s = scrbuf;
                     break;
 

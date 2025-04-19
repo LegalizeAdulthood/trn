@@ -264,9 +264,9 @@ sel_restart:
     if (g_added_articles)
     {
         long i = g_added_articles;
-        for (long j = g_last_art - i + 1; j <= g_last_art; j++)
+        for (long j = g_last_art.num - i + 1; j <= g_last_art.num; j++)
         {
-            if (!article_unread(j))
+            if (!article_unread(ArticleNum{j}))
             {
                 i--;
             }
@@ -331,12 +331,12 @@ sel_exit:
         g_art_ptr = nullptr;
         if (!g_threaded_group)
         {
-            g_search_ahead = -1;
+            g_search_ahead.num = -1;
         }
     }
     else
     {
-        g_search_ahead = 0;
+        g_search_ahead.num = 0;
     }
     g_selected_only = (g_selected_count != 0);
     if (s_sel_ret == '+')
@@ -2541,7 +2541,7 @@ reask_sort:
             if (g_sel_mode == SM_ARTICLE)
             {
                 Article** app;
-                Article **limit = g_art_ptr_list + g_art_ptr_list_size;
+                Article **limit = g_art_ptr_list + g_art_ptr_list_size.num;
                 if (ch == 'D')
                 {
                     app = g_sel_page_app;
@@ -2712,7 +2712,7 @@ reask_sort:
         }
         else
         {
-            g_art = 0;
+            g_art.num = 0;
         }
         // FALL THROUGH
 
@@ -2924,7 +2924,7 @@ static DisplayState newsgroup_commands(char_int ch)
             {
                 g_newsgroup_to_read++;
             }
-            np->abs_first = 0;
+            np->abs_first.num = 0;
         }
         erase_line(false);
         check_active_refetch(true);
@@ -3539,7 +3539,7 @@ static DisplayState option_commands(char_int ch)
         int j = g_sel_items[g_sel_item_index].u.op;
         do
         {
-            if (++i > g_obj_count)
+            if (++i > g_obj_count.num)
             {
                 i = 1;
             }

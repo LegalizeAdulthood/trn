@@ -43,9 +43,7 @@ static bool s_sc_rescoring{};     // are we rescoring now?
 //bool pend_wait;       // if true, enter pending mode when scoring...
 void sc_init(bool pend_wait)
 {
-    int i;
-
-    if (g_last_art == 0 || g_last_art < g_abs_first)
+    if (g_last_art.num == 0 || g_last_art < g_abs_first)
     {
 #if 0
         std::printf("No articles exist to be scored.\n");
@@ -84,7 +82,7 @@ void sc_init(bool pend_wait)
     if (!s_sc_rescoring)        // don't load if rescoring
     {
         sc_load_scores();       // will be quiet if non-existent
-        i = g_first_art;
+        ArticleNum i = g_first_art;
         if (g_sc_fill_read)
         {
             i = g_abs_first;
@@ -116,6 +114,7 @@ void sc_init(bool pend_wait)
     }
 
     s_sc_do_spin = false;
+    ArticleNum i;
     for (i = article_last(g_last_art); i >= g_abs_first; i = article_prev(i))
     {
         if (article_scored(i))
@@ -294,7 +293,7 @@ int sc_score_art(ArticleNum a, bool now)
 // CONSIDER: option for scoring only unread articles (obey sc_fill_unread?)
 void sc_fill_score_list(ArticleNum first, ArticleNum last)
 {
-    for (int i = article_first(first); i <= last; i = article_next(i))
+    for (ArticleNum i = article_first(first); i <= last; i = article_next(i))
     {
         (void)sc_score_art(i,false);    // will be sorted later...
     }

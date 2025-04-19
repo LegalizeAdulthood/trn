@@ -162,7 +162,7 @@ void clear_article(Article *ap);
 
 inline Article *article_ptr(ArticleNum an)
 {
-    return (Article *) list_get_item(g_article_list, an);
+    return (Article *) list_get_item(g_article_list, an.num);
 }
 inline ArticleNum article_num(const Article *ap)
 {
@@ -170,11 +170,11 @@ inline ArticleNum article_num(const Article *ap)
 }
 inline bool article_hasdata(ArticleNum an)
 {
-    return existing_list_index(g_article_list, an, 0) != 0;
+    return existing_list_index(g_article_list, an.num, 0) != 0;
 }
 inline Article *article_find(ArticleNum an)
 {
-    return an <= g_last_art && article_hasdata(an) ? article_ptr(an) : nullptr;
+    return an.num <= g_last_art.num && article_hasdata(an) ? article_ptr(an) : nullptr;
 }
 inline bool article_walk(bool (*callback)(char *, int), int arg)
 {
@@ -182,19 +182,19 @@ inline bool article_walk(bool (*callback)(char *, int), int arg)
 }
 inline ArticleNum article_first(ArticleNum an)
 {
-    return existing_list_index(g_article_list, an, 1);
+    return ArticleNum{existing_list_index(g_article_list, an.num, 1)};
 }
 inline ArticleNum article_next(ArticleNum an)
 {
-    return existing_list_index(g_article_list, an + 1, 1);
+    return ArticleNum{existing_list_index(g_article_list, an.num + 1, 1)};
 }
 inline ArticleNum article_last(ArticleNum an)
 {
-    return existing_list_index(g_article_list, an, -1);
+    return ArticleNum{existing_list_index(g_article_list, an.num, -1)};
 }
 inline ArticleNum article_prev(ArticleNum an)
 {
-    return existing_list_index(g_article_list, an - 1, -1);
+    return ArticleNum{existing_list_index(g_article_list, an.num - 1, -1)};
 }
 inline Article *article_nextp(Article *ap)
 {
@@ -214,7 +214,7 @@ inline bool was_read(ArticleNum an)
 }
 inline bool is_available(ArticleNum an)
 {
-    return an <= g_last_art && article_hasdata(an) && article_exists(an);
+    return an.num <= g_last_art.num && article_hasdata(an) && article_exists(an);
 }
 inline bool is_unavailable(ArticleNum an)
 {

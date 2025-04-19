@@ -52,11 +52,11 @@ void art_io_final()
 
 // open an article, unless it's already open
 
-std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
+std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
 {
     Article* ap = article_find(art_num);
 
-    if (!ap || !art_num || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
+    if (!ap || !art_num.num || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
     {
         errno = ENOENT;
         return nullptr;
@@ -77,7 +77,7 @@ std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
         else
         {
             char art_name[MAX_FILENAME]; // filename of current article
-            std::sprintf(art_name, "%ld", (long) art_num);
+            std::sprintf(art_name, "%ld", art_num.num);
             g_art_fp = std::fopen(art_name, "r");
         }
         if (!g_art_fp)
@@ -114,7 +114,7 @@ void art_close()
         }
         std::fclose(g_art_fp);                        // close it
         g_art_fp = nullptr;                      // and tell the world
-        g_open_art = 0;
+        g_open_art = ArticleNum{};
         clear_art_buf();
     }
 }

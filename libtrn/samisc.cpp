@@ -20,7 +20,7 @@
 #include "trn/score.h"
 #include "trn/sorder.h"
 
-inline int check_article(long a)
+inline int check_article(ArticleNum a)
 {
     return a >= g_abs_first && a <= g_last_art;
 }
@@ -118,13 +118,13 @@ void sa_sel_threads()
         {
             for (Article *ap = first_art(sp); ap; ap = next_article(ap))
             {
-                long art = article_num(ap);
+                ArticleNum art = article_num(ap);
                 if ((ap->flags & AF_SEL) //
                     && (!(ap->flags & AF_UNREAD) ^ want_unread))
                 {
                     // this was a trn-thread selected article
                     sa_select1(sa_artnum_to_ent(art));
-    // if scoring, make sure that this article is scored...
+                    // if scoring, make sure that this article is scored...
                     if (g_sa_mode_order == SA_ORDER_DESCENDING) // score order
                     {
                         sc_score_art(art,false);
@@ -158,7 +158,7 @@ int sa_number_arts()
 // needed for a couple functions which act within the
 // scope of an article.
 //
-void sa_go_art(long a)
+void sa_go_art(ArticleNum a)
 {
     g_art = a;
     (void)article_find(g_art);

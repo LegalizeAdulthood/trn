@@ -188,14 +188,14 @@ NumNumResult num_num()
     {
         return NN_INP;
     }
-    if (g_last_art < 1)
+    if (g_last_art.num < 1)
     {
         error_msg("No articles");
         return NN_ASK;
     }
     if (g_search_ahead)
     {
-        g_search_ahead = -1;
+        g_search_ahead.num = -1;
     }
 
     perform_status_init(g_newsgroup_ptr->to_read);
@@ -233,12 +233,12 @@ NumNumResult num_num()
         }
         else
         {
-            min = std::atol(t);
+            min.num = std::atol(t);
         }
         if (min < g_abs_first)
         {
             min = g_abs_first;
-            std::sprintf(g_msg,"(First article is %ld)",(long)g_abs_first);
+            std::sprintf(g_msg,"(First article is %ld)",(long)g_abs_first.num);
             warn_msg(g_msg);
         }
         if ((t = std::strchr(t, '-')) != nullptr)
@@ -254,7 +254,7 @@ NumNumResult num_num()
             }
             else
             {
-                max = std::atol(t);
+                max.num = std::atol(t);
             }
         }
         else
@@ -265,7 +265,7 @@ NumNumResult num_num()
         {
             max = g_last_art;
             min = std::min(min, max);
-            std::sprintf(g_msg,"(Last article is %ld)",(long)g_last_art);
+            std::sprintf(g_msg,"(Last article is %ld)",(long)g_last_art.num);
             warn_msg(g_msg);
         }
         if (max < min)
@@ -289,11 +289,11 @@ NumNumResult num_num()
             {
                 if (g_verbose)
                 {
-                    std::sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art);
+                    std::sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art.num);
                 }
                 else
                 {
-                    std::sprintf(g_msg, "(Intr at %ld)", (long) g_art);
+                    std::sprintf(g_msg, "(Intr at %ld)", (long) g_art.num);
                 }
                 error_msg(g_msg);
                 if (cmdlst)
@@ -424,7 +424,7 @@ int thread_perform()
         // Use the explicit article-order if it exists
         if (g_art_ptr_list)
         {
-            Article** limit = g_art_ptr_list + g_art_ptr_list_size;
+            Article** limit = g_art_ptr_list + g_art_ptr_list_size.num;
             sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
             for (Article **app = g_art_ptr_list; app < limit; app++)
             {

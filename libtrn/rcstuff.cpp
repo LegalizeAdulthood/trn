@@ -827,9 +827,9 @@ static void init_newsgroup_node(List *list, ListNode *node)
 {
     std::memset(node->data,0,list->items_per_node * list->item_size);
     NewsgroupData *np = (NewsgroupData*)node->data;
-    for (ArticleNum i = node->low; i <= node->high; i++, np++)
+    for (ArticleNum i{node->low}; i.num <= node->high; i.num++, np++)
     {
-        np->num = i;
+        np->num = i.num;
     }
 }
 
@@ -902,7 +902,7 @@ void abandon_newsgroup(NewsgroupData *np)
             some_buf++;
         }
         *some_buf = '\0';
-        np->abs_first = 0;         // force group to be re-calculated
+        np->abs_first = ArticleNum{};         // force group to be re-calculated
     }
     else
     {
@@ -981,7 +981,7 @@ check_fuzzy_match:
                 continue;
             }
             // TODO: this may scan a datasrc multiple times...
-            if (find_active_group(rp->data_source,g_buf,g_newsgroup_name.c_str(),g_newsgroup_name.length(),(ArticleNum)0))
+            if (find_active_group(rp->data_source,g_buf,g_newsgroup_name.c_str(),g_newsgroup_name.length(),ArticleNum{}))
             {
                 break; // TODO: let them choose which server
             }

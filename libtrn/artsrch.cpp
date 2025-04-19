@@ -183,7 +183,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         g_art_do_read = do_read;
         if (g_search_ahead)
         {
-            g_search_ahead = -1;
+            g_search_ahead = ArticleNum{-1};
         }
     }
     else
@@ -282,7 +282,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
         else if (!g_search_ahead)
         {
-            g_search_ahead = -1;
+            g_search_ahead = ArticleNum{-1};
         }
 
         {                       // compensate for notes files
@@ -400,7 +400,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
     search_first = do_read || g_sel_rereading? g_abs_first
                       : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0)? g_first_art : g_kill_first;
-    if (top_start || g_art == 0)
+    if (top_start || g_art == ArticleNum{})
     {
         g_art = g_last_art+1;
         top_start = false;
@@ -409,7 +409,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     {
         if (cmd_lst && g_art <= g_last_art)
         {
-            g_art++;                    // include current article
+            g_art.num++;                // include current article
         }
     }
     else
@@ -420,16 +420,16 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
         else if (cmd_lst && g_art >= g_abs_first)
         {
-            g_art--;                    // include current article
+            g_art.num--;                // include current article
         }
     }
-    if (g_search_ahead > 0)
+    if (g_search_ahead > ArticleNum{})
     {
         if (!backward)
         {
             g_art = g_search_ahead - 1;
         }
-        g_search_ahead = -1;
+        g_search_ahead = ArticleNum{-1};
     }
     TRN_ASSERT(!cmd_lst || *cmd_lst);
     perform_status_init(g_newsgroup_ptr->to_read);
@@ -463,9 +463,9 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                     return SRCH_INTR;
                 }
             }
-            else if (output_level && !cmd_lst && !(g_art % 50))
+            else if (output_level && !cmd_lst && !(g_art.num % 50))
             {
-                std::printf("...%ld",(long)g_art);
+                std::printf("...%ld", g_art.num);
                 std::fflush(stdout);
             }
         }

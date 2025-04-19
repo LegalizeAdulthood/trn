@@ -31,7 +31,7 @@ extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 
 void art_io_init();
 void art_io_final();
-std::FILE *art_open(ArticleNum art_num, ArticleNum pos);
+std::FILE *art_open(ArticleNum art_num, ArticlePosition pos);
 void art_close();
 int seek_art(ArticlePosition pos);
 ArticlePosition tell_art();

@@ -148,7 +148,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     s_exit_code = NG_NORM;
     g_kf_state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES
                  |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
-    g_kill_first = 0;
+    g_kill_first = ArticleNum{};
 
     g_extract_dest.clear();
     g_extract_prog.clear();
@@ -168,7 +168,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     }
 
     g_search_ahead = (g_scan_on && !g_threaded_group        // did they say -S?
-              && ((ArticleNum)g_newsgroup_ptr->to_read) >= g_scan_on ? -1 : 0);
+              && g_newsgroup_ptr->to_read >= g_scan_on ? ArticleNum{-1} : ArticleNum{});
 
     // FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED
 
@@ -234,7 +234,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             g_art = g_ng_go_art_num;
             g_artp = article_ptr(g_art);
         }
-        g_ng_go_art_num = 0;
+        g_ng_go_art_num = ArticleNum{};
     }
 
     g_doing_ng = true;                  // enter the twilight zone
@@ -278,7 +278,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_art = g_last_art + 1;
             }
         }
-        if (g_art != 0 || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
+        if (g_art.num != 0 || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
         {
             g_artp = article_find(g_art);
         }
@@ -321,7 +321,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             count_subjects(CS_RETAIN);
             article_walk(count_uncached_article, 0);
-            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count;
+            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.num;
             if (g_artp != g_curr_artp)
             {
                 g_recent_art = g_curr_art;      // remember last article # (for '-')
@@ -359,11 +359,11 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 if (g_selected_only)
                 {
                     std::printf("  (%ld + %ld articles still unread)", (long) g_selected_count,
-                           (long) g_obj_count - g_selected_count);
+                           g_obj_count.num - g_selected_count);
                 }
                 else
                 {
-                    std::printf("  (%ld article%s still unread)", (long) g_obj_count, plural(g_obj_count));
+                    std::printf("  (%ld article%s still unread)", (long) g_obj_count.num, plural(g_obj_count.num));
                 }
             }
             if (g_redirected)
@@ -384,7 +384,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             set_mode(g_general_mode,MM_ARTICLE_END);
             g_prompt = whatnext;
-            g_search_ahead = 0;                // no more subject search mode
+            g_search_ahead.num = 0;                // no more subject search mode
             std::fputs("\n\n",stdout);
             term_down(2);
         }
@@ -421,11 +421,11 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                         // (line # within article file)
             }
             clear();                    // clear screen
-            if (g_art == 0 && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
+            if (g_art.num == 0 && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
                 && !(g_artp->flags & AF_CACHED))
             {
                 g_art = nntp_stat_id(g_artp->msg_id);
-                if (g_art < 0)
+                if (g_art.num < 0)
                 {
                     s_exit_code = NG_NO_SERVER;
                     goto cleanup;
@@ -454,7 +454,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 virtual_write(g_art_line_num,(ArticlePosition)0);
                 finish_tree(linenum);
                 g_prompt = whatnext;
-                g_search_ahead = 0;
+                g_search_ahead.num = 0;
             }
             else                        // found it, so print it
             {
@@ -786,7 +786,7 @@ reask_unread:
             check_first(g_abs_first);
             article_walk(mark_all_unread, 0);
             count_subjects(CS_NORM);
-            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count;
+            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.num;
         }
         else if (*g_buf == '+')
         {
@@ -1018,7 +1018,7 @@ not_threaded:
         {
             dec_article(g_selected_only,false);
         } while (g_art >= g_first_art && (was_read(g_art) || !parse_header(g_art)));
-        g_search_ahead = 0;
+        g_search_ahead.num = 0;
         if (g_art >= g_first_art)
         {
             return AS_NORM;
@@ -1051,18 +1051,18 @@ check_dec_art:
             return AS_ASK;
         }
         g_reread = true;
-        g_search_ahead = 0;
+        g_search_ahead.num = 0;
         return AS_NORM;
 
     case '-':
     case '\b':  case '\177':
-        if (g_recent_art >= 0)
+        if (g_recent_art.num >= 0)
         {
             g_art = g_recent_art;
             g_artp = g_recent_artp;
             g_reread = true;
             g_force_last = true;
-            g_search_ahead = -(g_search_ahead != 0);
+            g_search_ahead.num = -(g_search_ahead.num != 0);
             return AS_NORM;
         }
         s_exit_code = NG_MINUS;
@@ -1156,7 +1156,7 @@ check_dec_art:
                 top_article();
             }
         }
-        g_search_ahead = 0;
+        g_search_ahead.num = 0;
         return AS_NORM;
 
     case 'N':                 // goto next article
@@ -1210,14 +1210,14 @@ check_dec_art:
         {
             g_force_last = true;
         }
-        g_search_ahead = 0;
+        g_search_ahead.num = 0;
         return AS_NORM;
 
     case '$':
         g_art = g_last_art+1;
         g_artp = nullptr;
         g_force_last = true;
-        g_search_ahead = 0;
+        g_search_ahead.num = 0;
         return AS_NORM;
 
     case '0':
@@ -1237,7 +1237,7 @@ check_dec_art:
             g_reread = true;
             if (g_search_ahead)
             {
-                g_search_ahead = -1;
+                g_search_ahead.num = -1;
             }
             break;
 
@@ -1303,11 +1303,11 @@ normal_search:
         case SRCH_INTR:
             if (g_verbose)
             {
-                std::printf("\n(Interrupted at article %ld)\n",(long)g_art);
+                std::printf("\n(Interrupted at article %ld)\n",(long)g_art.num);
             }
             else
             {
-                std::printf("\n(Intr at %ld)\n",(long)g_art);
+                std::printf("\n(Intr at %ld)\n",(long)g_art.num);
             }
             term_down(2);
             g_art = g_curr_art;     // restore to current article
@@ -1379,7 +1379,7 @@ normal_search:
         {
             delay_unmark(g_artp);
             one_less(g_artp);
-            std::printf("\nArticle %ld will return.\n",(long)g_art);
+            std::printf("\nArticle %ld will return.\n",(long)g_art.num);
             term_down(2);
         }
         return AS_ASK;
@@ -1388,7 +1388,7 @@ normal_search:
         if (g_art >= g_abs_first && g_art <= g_last_art)
         {
             unmark_as_read(g_artp);
-            std::printf("\nArticle %ld marked as still unread.\n",(long)g_art);
+            std::printf("\nArticle %ld marked as still unread.\n",(long)g_art.num);
             term_down(2);
         }
         return AS_ASK;
@@ -1450,11 +1450,11 @@ normal_search:
     case '#':
         if (g_verbose)
         {
-            std::printf("\nThe last article is %ld.\n",(long)g_last_art);
+            std::printf("\nThe last article is %ld.\n",(long)g_last_art.num);
         }
         else
         {
-            std::printf("\n%ld\n",(long)g_last_art);
+            std::printf("\n%ld\n",(long)g_last_art.num);
         }
         term_down(2);
         return AS_ASK;
@@ -1526,7 +1526,7 @@ run_the_selector:
 
     case '^':
         top_article();
-        g_search_ahead = 0;
+        g_search_ahead.num = 0;
         return AS_NORM;
 
 #ifdef DEBUG
@@ -1746,7 +1746,7 @@ refresh_screen:
         switch (g_buf[1] & 0177)
         {
         case 'P':
-            g_art--;
+            g_art.num--;
             goto check_dec_art;
 
         case 'N':
@@ -1756,13 +1756,13 @@ refresh_screen:
             }
             else
             {
-                g_art++;
+                g_art.num++;
             }
             if (g_art <= g_last_art)
             {
                 g_reread = true;
             }
-            g_search_ahead = 0;
+            g_search_ahead.num = 0;
             return AS_NORM;
 
         case '+':
@@ -2000,7 +2000,7 @@ reask_catchup:
         if (leave_unread)
         {
             count_subjects(CS_NORM);
-            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count;
+            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.num;
         }
         else
         {
@@ -2038,7 +2038,7 @@ static bool count_uncached_article(char *ptr, int arg)
     Article* ap = (Article*)ptr;
     if ((ap->flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
     {
-        g_obj_count++;
+        g_obj_count.num++;
     }
     return false;
 }
@@ -2060,7 +2060,7 @@ static bool mark_all_unread(char *ptr, int arg)
     if ((ap->flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
     {
         ap->flags |= AF_UNREAD;         // mark as unread
-        g_obj_count++;
+        g_obj_count.num++;
     }
     return false;
 }

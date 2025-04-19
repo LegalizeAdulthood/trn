@@ -26,7 +26,7 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam);
 void prange(char *where, ART_NUM min, ART_NUM max);
 #endif
 void set_to_read(NewsgroupData *np, bool lax_high_check);
-void check_expired(NewsgroupData *np, ArticleNum a1st);
+void check_expired(NewsgroupData *np, ArticleNum first);
 bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam);
 
 #endif

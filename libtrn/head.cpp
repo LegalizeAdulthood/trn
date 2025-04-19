@@ -672,7 +672,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                     continue;
                 }
                 t++;
-                num = std::atol(line);
+                num.num = std::atol(line);
                 if (num < art_num || num > lastnum)
                 {
                     continue;

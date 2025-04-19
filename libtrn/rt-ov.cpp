@@ -221,7 +221,7 @@ beginning:
             break;
         }
         g_spin_todo--;
-        first++;
+        first.num++;
     }
     if (first > last)
     {
@@ -229,7 +229,7 @@ beginning:
     }
     if (remote)
     {
-        if (last - first > ov_chunk_size + ov_chunk_size / 2 - 1)
+        if ((last - first).num > ov_chunk_size + ov_chunk_size / 2 - 1)
         {
             last = first + ov_chunk_size - 1;
             line_cnt = 0;
@@ -244,12 +244,12 @@ beginning:
             break;
         }
         g_spin_todo--;
-        last--;
+        last.num--;
     }
 
     if (remote)
     {
-        std::sprintf(g_ser_line, "XOVER %ld-%ld", (long)first, (long)last);
+        std::sprintf(g_ser_line, "XOVER %ld-%ld", (long)first.num, (long)last.num);
         if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
         {
             success = false;
@@ -309,7 +309,7 @@ beginning:
 
         last_buf = line;
         last_buflen = g_buf_len_last_line_got;
-        an = std::atol(line);
+        an.num = std::atol(line);
         if (an < first)
         {
             continue;
@@ -323,7 +323,7 @@ beginning:
             }
             break;
         }
-        g_spin_todo -= an - artnum - 1;
+        g_spin_todo -= an.num - artnum.num - 1;
         ov_parse(line, artnum = an, remote);
         if (g_int_count)
         {
@@ -352,10 +352,10 @@ beginning:
     if (remote && line_cnt == 0 && last < real_last)
     {
         an = nntp_find_real_art(last);
-        if (an > 0)
+        if (an.num > 0)
         {
             last = an - 1;
-            g_spin_todo -= last - artnum;
+            g_spin_todo -= last.num - artnum.num;
             artnum = last;
         }
     }
@@ -371,7 +371,7 @@ beginning:
                 one_missing(ap);
             }
         }
-        g_spin_todo -= last - artnum;
+        g_spin_todo -= last.num - artnum.num;
     }
     if (artnum > g_last_cached && artnum >= first)
     {
@@ -633,7 +633,7 @@ const char *ov_field(Article *ap, int num)
 
     if (fn == OV_NUM)
     {
-        std::sprintf(g_cmd_buf, "%ld", (long)ap->num);
+        std::sprintf(g_cmd_buf, "%ld", (long)ap->num.num);
         return g_cmd_buf;
     }
 

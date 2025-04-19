@@ -788,7 +788,7 @@ void set_spin(SpinMode mode)
         if (!s_spin_level++)
         {
             s_spin_art = g_open_art;
-            if (s_spin_art != 0 && g_art_fp)
+            if (s_spin_art.num != 0 && g_art_fp)
             {
                 s_spin_tell = tell_art();
             }
@@ -845,7 +845,7 @@ void set_spin(SpinMode mode)
         if (s_spin_art)
         {
             art_open(s_spin_art,s_spin_tell);   // do not screw up the pager
-            s_spin_art = 0;
+            s_spin_art.num = 0;
         }
         s_spin_mode = SPIN_OFF;
         g_spin_char = ' ';

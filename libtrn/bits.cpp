@@ -77,46 +77,47 @@ void rc_to_bits()
     if (set_first_art(s))
     {
         s = std::strchr(s,',') + 1;
-        for (i = article_first(g_abs_first); i < g_first_art; i = article_next(i))
+        ArticleNum n;
+        for (n = article_first(g_abs_first); n < g_first_art; n = article_next(n))
         {
-            article_ptr(i)->flags &= ~AF_UNREAD;
+            article_ptr(n)->flags &= ~AF_UNREAD;
         }
-        g_first_art = i;
+        g_first_art = n;
     }
     else
     {
         g_first_art = article_first(g_first_art);
     }
-    unread = 0;
+    unread = ArticleNum{};
 #ifdef DEBUG
     if (debug & DEB_CTLAREA_BITMAP)
     {
         std::printf("\n%s\n",mybuf);
         term_down(2);
-        for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
+        for (ArticleNum i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
         {
             if (article_unread(i))
             {
-                std::printf("%ld ",(long)i);
+                std::printf("%ld ", i.num);
             }
         }
     }
 #endif
-    i = g_first_art;
+    ArticleNum n = g_first_art;
     for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c)    // for each range
     {
         ArticleNum max;
         *c = '\0';                      // do not let index see past comma
         h = std::strchr(s,'-');
-        ArticleNum min = std::atol(s);
+        ArticleNum min{std::atol(s)};
         min = std::max(min, g_first_art);    // make sure range is in range
         if (min > g_last_art)
         {
             min = g_last_art + 1;
         }
-        for (; i < min; i = article_next(i))
+        for (; n < min; n = article_next(n))
         {
-            ap = article_ptr(i);
+            ap = article_ptr(n);
             if (ap->flags & AF_EXISTS)
             {
                 if (ap->auto_flags & AUTO_KILL_MASK)
@@ -126,7 +127,7 @@ void rc_to_bits()
                 else
                 {
                     ap->flags |= AF_UNREAD;
-                    unread++;
+                    unread.num++;
                     if (ap->auto_flags & AUTO_SEL_MASK)
                     {
                         select_article(ap, ap->auto_flags);
@@ -138,15 +139,15 @@ void rc_to_bits()
         {
             max = min;
         }
-        else if ((max = std::atol(h+1)) < min)
+        else if ((max = ArticleNum{std::atol(h + 1)}) < min)
         {
             max = min - 1;
         }
         max = std::min(max, g_last_art);
         // mark all arts in range as read
-        for ( ; i <= max; i = article_next(i))
+        for ( ; n <= max; n = article_next(n))
         {
-            article_ptr(i)->flags &= ~AF_UNREAD;
+            article_ptr(n)->flags &= ~AF_UNREAD;
         }
 #ifdef DEBUG
         if (debug & DEB_CTLAREA_BITMAP)
@@ -162,11 +163,11 @@ void rc_to_bits()
             }
         }
 #endif
-        i = article_next(max);
+        n = article_next(max);
     }
-    for (; i <= g_last_art; i = article_next(i))
+    for (; n <= g_last_art; n = article_next(n))
     {
-        ap = article_ptr(i);
+        ap = article_ptr(n);
         if (ap->flags & AF_EXISTS)
         {
             if (ap->auto_flags & AUTO_KILL_MASK)
@@ -176,7 +177,7 @@ void rc_to_bits()
             else
             {
                 ap->flags |= AF_UNREAD;
-                unread++;
+                unread.num++;
                 if (ap->auto_flags & AUTO_SEL_MASK)
                 {
                     select_article(ap, ap->auto_flags);
@@ -196,7 +197,7 @@ void rc_to_bits()
     {
         std::free(my_buf);
     }
-    g_newsgroup_ptr->to_read = unread;
+    g_newsgroup_ptr->to_read = unread.num;
 }
 
 bool set_first_art(const char *s)
@@ -204,7 +205,7 @@ bool set_first_art(const char *s)
     s = skip_eq(s, ' ');
     if (!std::strncmp(s,"1-",2))                     // can we save some time here?
     {
-        g_first_art = std::atol(s+2)+1;               // process first range thusly
+        g_first_art.num = std::atol(s+2)+1;               // process first range thusly
         g_first_art = std::max(g_first_art, g_abs_first);
         return true;
     }
@@ -219,7 +220,7 @@ void bits_to_rc()
 {
     char* mybuf = g_buf;
     ArticleNum i;
-    ArticleNum count=0;
+    ArticleNum count{};
     int safe_len = LINE_BUF_LEN - 32;
 
     std::strcpy(g_buf,g_newsgroup_ptr->rc_line);            // start with the newsgroup name
@@ -232,9 +233,9 @@ void bits_to_rc()
             break;
         }
     }
-    std::sprintf(s," 1-%ld,",(long)i-1);
+    std::sprintf(s," 1-%ld,", i.num -1);
     s += std::strlen(s);
-    for (; i<=g_last_art; i++)   // for each article in newsgroup
+    for (; i<=g_last_art; i.num++)   // for each article in newsgroup
     {
         if (s-mybuf > safe_len)          // running out of room?
         {
@@ -256,22 +257,22 @@ void bits_to_rc()
         }
         if (!was_read(i))               // still unread?
         {
-            count++;                    // then count it
+            count.num++;                    // then count it
         }
         else                            // article was read
         {
-            std::sprintf(s,"%ld",(long)i); // put out the min of the range
+            std::sprintf(s,"%ld",(long)i.num); // put out the min of the range
             s += std::strlen(s);           // keeping house
             ArticleNum old_i = i;         // remember this spot
             do
             {
-                i++;
+                i.num++;
             } while (i <= g_last_art && was_read(i));
                                         // find 1st unread article or end
-            i--;                        // backup to last read article
+            i.num--;                        // backup to last read article
             if (i > old_i)               // range of more than 1?
             {
-                std::sprintf(s,"-%ld,",(long)i);
+                std::sprintf(s,"-%ld,",(long)i.num);
                                         // then it out as a range
                 s += std::strlen(s);         // and house keep
             }
@@ -314,7 +315,7 @@ void bits_to_rc()
     }
     else
     {
-        g_newsgroup_ptr->to_read = (ArticleUnread)count; // otherwise, remember the count
+        g_newsgroup_ptr->to_read = (ArticleUnread)count.num; // otherwise, remember the count
     }
     g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
 }
@@ -345,7 +346,7 @@ void find_existing_articles()
                 {
                     break;
                 }
-                an = (ArticleNum)std::atol(g_ser_line);
+                an = ArticleNum{std::atol(g_ser_line)};
                 if (an < g_abs_first)
                 {
                     continue;   // Ignore some whacked-out NNTP servers
@@ -378,7 +379,7 @@ void find_existing_articles()
                     }
                 }
             }
-            for (an = g_abs_first; an < g_first_cached; an++)
+            for (an = g_abs_first; an < g_first_cached; an.num++)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -386,7 +387,7 @@ void find_existing_articles()
                     ap->flags |= AF_EXISTS;
                 }
             }
-            for (an = g_last_cached + 1; an <= g_last_art; an++)
+            for (an = g_last_cached + 1; an <= g_last_art; an.num++)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -397,7 +398,7 @@ void find_existing_articles()
         }
         else
         {
-            for (an = g_abs_first; an <= g_last_art; an++)
+            for (an = g_abs_first; an <= g_last_art; an.num++)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -411,7 +412,7 @@ void find_existing_articles()
     {
         namespace fs = std::filesystem;
         ArticleNum first = g_last_art+1;
-        ArticleNum last = 0;
+        ArticleNum last{};
         fs::path cwd(".");
         char ch;
         long l_num;
@@ -435,7 +436,7 @@ void find_existing_articles()
             std::string filename{entry.path().filename().string()};
             if (std::sscanf(filename.c_str(), "%ld%c", &l_num, &ch) == 1)
             {
-                an = (ArticleNum)l_num;
+                an = ArticleNum{l_num};
                 if (an <= g_last_art && an >= g_abs_first)
                 {
                     first = std::min(an, first);
@@ -769,7 +770,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
                 break;
             }
             *xartnum++ = '\0';
-            if (!(x = std::atol(xartnum)))
+            if (!(x.num = std::atol(xartnum)))
             {
                 continue;
             }

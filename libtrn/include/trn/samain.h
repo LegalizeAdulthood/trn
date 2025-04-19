@@ -16,7 +16,7 @@ void sa_init_ents();
 void sa_clean_ents();
 long sa_add_ent(ArticleNum artnum);
 void sa_clean_main();
-void sa_grow_arts(long oldlast, long last);
+void sa_grow_arts(ArticleNum oldlast, ArticleNum last);
 void sa_init_context();
 bool sa_init_arts();
 void sa_init_mode();

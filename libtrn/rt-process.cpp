@@ -209,7 +209,7 @@ Article *get_article(char *msgid)
     HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
     if (data.dat_len)
     {
-        article = allocate_article(0);
+        article = allocate_article(ArticleNum{});
         article->auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
         if ((data.dat_len & KF_AGE_MASK) == 0)
         {
@@ -226,7 +226,7 @@ Article *get_article(char *msgid)
     }
     else if (!(article = (Article *) data.dat_ptr))
     {
-        article = allocate_article(0);
+        article = allocate_article(ArticleNum{});
         data.dat_ptr = (char*)article;
         article->msg_id = save_str(msgid);
         hash_store_last(data);
@@ -453,7 +453,7 @@ void rover_thread(Article *article, char *s)
         s = skip_eq(++s, ' ');
         if (std::isdigit(*s))
         {
-            article = article_ptr(std::atol(s));
+            article = article_ptr(ArticleNum{std::atol(s)});
             prev->parent = article;
             link_child(prev);
             break;

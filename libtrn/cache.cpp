@@ -88,12 +88,12 @@ void build_cache()
         {
             set_selector(g_sel_thread_mode, g_sel_thread_sort);
         }
-        for (ArticleNum an = g_last_cached + 1; an <= g_last_art; an++)
+        for (ArticleNum an = g_last_cached + 1; an <= g_last_art; an.num++)
         {
             article_ptr(an)->flags |= AF_EXISTS;
         }
         rc_to_bits();
-        g_article_list->high = g_last_art;
+        g_article_list->high = g_last_art.num;
         thread_grow();
         return;
     }
@@ -102,7 +102,7 @@ void build_cache()
 
     s_cached_ng = g_newsgroup_ptr;
     s_cached_time = std::time(nullptr);
-    g_article_list = new_list(g_abs_first, g_last_art, sizeof (Article), 371,
+    g_article_list = new_list(g_abs_first.num, g_last_art.num, sizeof (Article), 371,
                               LF_SPARSE, init_article_node);
     s_subj_hash = hash_create(991, subject_cmp); // TODO: pick a better size
 
@@ -124,7 +124,7 @@ void close_cache()
 {
     Subject* next;
 
-    nntp_art_name(0, false);             // clear the tmp file cache
+    nntp_art_name(ArticleNum{}, false);             // clear the tmp file cache
 
     if (s_subj_hash)
     {
@@ -146,7 +146,7 @@ void close_cache()
     g_first_subject = nullptr;
     g_last_subject = nullptr;
     g_subject_count = 0;                // just to be sure
-    g_parsed_art = 0;
+    g_parsed_art = ArticleNum{};
 
     if (g_art_ptr_list)
     {
@@ -170,7 +170,7 @@ static void init_article_node(List *list, ListNode *node)
 {
     std::memset(node->data, 0, list->items_per_node * list->item_size);
     Article *ap = (Article *) node->data;
-    for (ArticleNum i = node->low; i <= node->high; i++, ap++)
+    for (ArticleNum i = ArticleNum{node->low}; i <= ArticleNum{node->high}; i.num++, ap++)
     {
         ap->num = i;
     }
@@ -1011,7 +1011,7 @@ bool cache_xrefs()
 
 bool cache_all_arts()
 {
-    int old_last_cached = g_last_cached;
+    ArticleNum old_last_cached = g_last_cached;
     if (!g_cached_all_in_range)
     {
         g_last_cached = g_first_cached - 1;
@@ -1104,7 +1104,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
             continue;
         }
 
-        g_spin_todo -= i - expected_i;
+        g_spin_todo -= i.num - expected_i.num;
         expected_i = i + 1;
 
         // This parses the header which will cache/thread the article
@@ -1144,7 +1144,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
 {
     bool success = true;
     bool all_arts = (g_sel_rereading || g_thread_always);
-    ArticleNum count = 0;
+    ArticleNum count{};
 
     if (g_sel_rereading && !g_cached_all_in_range)
     {
@@ -1163,7 +1163,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
     {
         return true;
     }
-    g_spin_todo = count;
+    g_spin_todo = count.num;
 
     if (g_first_cached > g_last_cached)
     {
@@ -1171,18 +1171,18 @@ bool cache_range(ArticleNum first, ArticleNum last)
         {
             if (g_first_subject)
             {
-                count -= g_newsgroup_ptr->to_read;
+                count.num -= g_newsgroup_ptr->to_read;
             }
         }
         else if (first == g_first_art && last == g_last_art && !all_arts)
         {
-            count = g_newsgroup_ptr->to_read;
+            count.num = g_newsgroup_ptr->to_read;
         }
     }
-    g_spin_estimate = count;
+    g_spin_estimate = count.num;
 
     std::printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
-           (long)count, plural(count));
+           (long)count.num, plural(count.num));
     term_down(1);
 
     set_spin(SPIN_FOREGROUND);

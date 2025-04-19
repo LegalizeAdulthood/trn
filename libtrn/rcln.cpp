@@ -64,7 +64,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
                 std::fputs("\nMarked read\n", stdout);
             }
         }
-        std::sprintf(tmpbuf,"%s: 1-%ld", np->rc_line,(long)get_newsgroup_size(np));
+        std::sprintf(tmpbuf,"%s: 1-%ld", np->rc_line,(long)get_newsgroup_size(np).num);
         std::free(np->rc_line);
         np->rc_line = save_str(tmpbuf);
         *(np->rc_line + np->num_offset - 1) = '\0';
@@ -88,9 +88,9 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     char*   s;
     char*   t;
     char*   maxt = nullptr;
-    ArticleNum min = 0;
-    ArticleNum max = -1;
-    ArticleNum lastnum = 0;
+    ArticleNum min{};
+    ArticleNum max{-1};
+    ArticleNum lastnum{};
     char*   mbuf;
     bool    morenum;
 
@@ -143,7 +143,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     {
         if (np->to_read > TR_NONE)
         {
-            np->to_read += art_num - np->ng_max;
+            np->to_read += art_num.num - np->ng_max.num;
         }
         np->ng_max = art_num;
     }
@@ -156,14 +156,14 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 #endif
     s = skip_eq(np->rc_line + np->num_offset, ' '); // skip spaces
     t = s;
-    while (std::isdigit(*s) && art_num >= (min = std::atol(s)))
+    while (std::isdigit(*s) && art_num >= (min = ArticleNum{std::atol(s)}))
     {
                                         // while it might have been read
         t = skip_digits(s);             // skip number
         if (*t == '-')                  // is it a range?
         {
             t++;                        // skip to next number
-            if (art_num <= (max = std::atol(t)))
+            if (art_num <= (max = ArticleNum{std::atol(t)}))
             {
                 return 0;               // it is in range => already read
             }
@@ -229,7 +229,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
             }
             else
             {
-                std::sprintf(t,"%ld-",(long)art_num);// artnum will be new min
+                std::sprintf(t,"%ld-",(long)art_num.num);// artnum will be new min
             }
 
             if (range_after)
@@ -239,12 +239,12 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
         }
         else
         {
-            std::sprintf(t,"%ld,",(long)art_num);     // put the number and comma
+            std::sprintf(t,"%ld,",(long)art_num.num);     // put the number and comma
         }
     }
     else
     {
-        std::sprintf(t,"%ld",(long)art_num);  // put the number there (wherever)
+        std::sprintf(t,"%ld",(long)art_num.num);  // put the number there (wherever)
     }
     std::strcat(t,s);                        // copy remainder of line
 #ifdef DEBUG
@@ -451,7 +451,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     ArticleNum unread = ngsize;
     ArticleNum newmax;
 
-    if (ngsize == TR_BOGUS)
+    if (ngsize.num == TR_BOGUS)
     {
         if (!g_to_read_quiet)
         {
@@ -468,7 +468,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     }
     if (virgin_ng)
     {
-        std::sprintf(tmpbuf," 1-%ld",(long)ngsize);
+        std::sprintf(tmpbuf," 1-%ld",(long)ngsize.num);
         if (std::strcmp(tmpbuf,np->rc_line+np->num_offset) != 0)
         {
             check_expired(np,np->abs_first);        // this might realloc rcline
@@ -490,21 +490,21 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         char *h = std::strchr(s, '-');
         if (h != nullptr) // find - in range, if any
         {
-            unread -= (newmax = atol(h + 1)) - atol(s) + 1;
+            unread -= (newmax = ArticleNum{atol(h + 1)}) - atol(s) + 1;
         }
         else
         {
-            newmax = std::atol(s);
+            newmax.num = std::atol(s);
         }
-        if (newmax != 0)
+        if (newmax.num != 0)
         {
-            unread--;           // recalculate length
+            unread.num--;           // recalculate length
         }
         if (newmax > ngsize)    // paranoia check
         {
             if (!lax_high_check && newmax > ngsize)
             {
-                unread = -1;
+                unread.num = -1;
                 break;
             }
             unread += newmax - ngsize;
@@ -512,9 +512,9 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
             ngsize = newmax;
         }
     }
-    if (unread < 0)                     // SOMEONE RESET THE NEWSGROUP!!!
+    if (unread.num < 0)                     // SOMEONE RESET THE NEWSGROUP!!!
     {
-        unread = (ArticleUnread)ngsize;    // assume nothing carried over
+        unread = ngsize;                // assume nothing carried over
         if (!g_to_read_quiet)
         {
             std::printf("\nSomebody reset %s -- assuming nothing read.\n",
@@ -526,17 +526,17 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     }
     if (np->subscribe_char == NEGCHAR)
     {
-        unread = TR_UNSUB;
+        unread.num = TR_UNSUB;
     }
 
-    if (unread >= g_newsgroup_min_to_read)
+    if (unread.num >= g_newsgroup_min_to_read)
     {
         if (!virgin_ng && np->to_read < g_newsgroup_min_to_read)
         {
             g_newsgroup_to_read++;
         }
     }
-    else if (unread <= 0)
+    else if (unread.num <= 0)
     {
         if (np->to_read > g_newsgroup_min_to_read)
         {
@@ -547,7 +547,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
             }
         }
     }
-    np->to_read = (ArticleUnread)unread;    // remember how many are left
+    np->to_read = (ArticleUnread)unread.num;    // remember how many are left
 
     if (mybuf != tmpbuf)
     {
@@ -557,16 +557,16 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
 
 // make sure expired articles are marked as read
 
-void check_expired(NewsgroupData *np, ArticleNum a1st)
+void check_expired(NewsgroupData *np, ArticleNum first)
 {
     char   *s;
     ArticleNum num;
-    ArticleNum lastnum = 0;
+    ArticleNum lastnum{};
     char   * mbuf;
     char* cp;
     int len;
 
-    if (a1st<=1)
+    if (first.num<=1)
     {
         return;
     }
@@ -578,7 +578,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
     }
 #endif
     s = skip_space(np->rc_line + np->num_offset);
-    while (*s && (num = std::atol(s)) <= a1st)
+    while (*s && (num = ArticleNum{std::atol(s)}) <= first)
     {
         s = skip_digits(s);
         while (*s && !std::isdigit(*s))
@@ -590,7 +590,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
     len = std::strlen(s);
     if (len && s[-1] == '-')                    // landed in a range?
     {
-        if (lastnum != 1)
+        if (lastnum.num != 1)
         {
             if (3+len <= (int)std::strlen(np->rc_line+np->num_offset))
             {
@@ -619,7 +619,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
         // s now points to what should follow the first range
         char numbuf[32];
 
-        std::sprintf(numbuf," 1-%ld",(long)(a1st - (lastnum != a1st)));
+        std::sprintf(numbuf," 1-%ld",(long)(first.num - (lastnum != first)));
         int nlen = std::strlen(numbuf) + (len != 0);
 
         if (s - np->rc_line >= np->num_offset + nlen)
@@ -675,8 +675,8 @@ bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
 {
     char*   s;
     char*   t;
-    ArticleNum min = 0;
-    ArticleNum max = -1;
+    ArticleNum min{};
+    ArticleNum max{-1};
 
     if (!artnum)
     {
@@ -710,16 +710,16 @@ bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
     }
     s = skip_eq(np->rc_line + np->num_offset, ' '); // skip spaces
     t = s;
-    while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
+    while (std::isdigit(*s) && artnum >= (min = ArticleNum{std::atol(s)}))
     {
         char*   maxt = nullptr;
-        ArticleNum lastnum = 0;
+        ArticleNum lastnum{};
         // while it might have been read
         t = skip_digits(s);             // skip number
         if (*t == '-')                  // is it a range?
         {
             t++;                        // skip to next number
-            if (artnum <= (max = std::atol(t)))
+            if (artnum <= (max = ArticleNum{std::atol(t)}))
             {
                 return true;            // it is in range => already read
             }

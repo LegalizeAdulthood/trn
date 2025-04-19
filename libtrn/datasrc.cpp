@@ -712,7 +712,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
             }
         }
 # endif
-        high = (ArticleNum)std::atol(outbuf+len+1);
+        high = ArticleNum{std::atol(outbuf+len+1)};
     }
 
     if (lbp_len)
@@ -720,13 +720,13 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
         if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs)
         {
             char* cp;
-            if (high && high != (ArticleNum) std::atol(cp = lbp + len + 1))
+            if (high && high != ArticleNum{std::atol(cp = lbp + len + 1)})
             {
                 cp = skip_digits(cp);
                 while (*--cp != ' ')
                 {
-                    int num = high % 10;
-                    high = high / 10;
+                    int num = high.num % 10;
+                    high.num /= 10;
                     *cp = '0' + (char)num;
                 }
                 std::fseek(fp, act_pos, 0);

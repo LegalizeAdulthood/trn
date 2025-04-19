@@ -196,7 +196,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                 sc_set_score(a,score);
                 s_used++;
             }
-            a++;
+            a.num++;
             break;
 
         case 'J': case 'K': case 'L': case 'M': case 'N':
@@ -218,7 +218,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                 sc_set_score(a,score);
                 s_used++;
             }
-            a++;
+            a.num++;
             break;
 
         case 'r':     // repeat
@@ -246,7 +246,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                     sc_set_score(a,score);
                     s_used++;
                 }
-                a++;
+                a.num++;
             }
             break;
 
@@ -256,7 +256,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
             if (!std::isdigit(*s))
             {
                 // simple case, just "s"
-                a += 1;
+                a.num += 1;
             }
             else
             {
@@ -266,7 +266,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                 *s = '\0';
                 x = std::atoi(p);
                 *s = c1;
-                a += x;
+                a.num += x;
             }
             break;
         } // switch
@@ -367,7 +367,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
 void sc_load_scores()
 {
     // lots of cleanup needed here
-    ArticleNum a = 0;
+    ArticleNum a{};
     char*   s;
 
     s_sc_save_new = -1;         // just in case we exit early
@@ -415,7 +415,7 @@ void sc_load_scores()
         switch (*s)
         {
         case ':':
-            a = std::atoi(s+1);         // set the article #
+            a.num = std::atoi(s+1);         // set the article #
             break;
 
         case '.':                       // longer score line
@@ -481,7 +481,7 @@ void sc_load_scores()
 void sc_save_scores()
 {
     s_saved = 0;
-    s_last = 0;
+    s_last.num = 0;
 
     g_waiting = true;   // DON'T interrupt
     char *gname = save_str(file_exp("%C"));

@@ -440,7 +440,7 @@ bool s_go_top_ents()
         // just go to the top of all the entries
         if (g_s_cur_type == S_ART)
         {
-            g_s_top_ent = g_abs_first;
+            g_s_top_ent = g_abs_first.num;
         }
         else
         {
