@@ -1484,7 +1484,7 @@ static char *magic_list()
         {
             std::sprintf(g_buf+std::strlen(g_buf),",%s%s",
                     (g_header_type[i].flags & HT_DEF_MAGIC)? "!" : "",
-                    g_header_type[i].name);
+                    g_header_type[i].name.c_str());
         }
     }
     return g_buf+1;
@@ -1548,7 +1548,7 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
     int len = std::strlen(s);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!len || string_case_equal(s, g_header_type[i].name, len))
+        if (!len || string_case_equal(s, g_header_type[i].name.c_str(), len))
         {
             if (setit && (flag != HT_MAGIC || (g_header_type[i].flags & HT_MAGIC_OK)))
             {

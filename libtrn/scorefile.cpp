@@ -1213,7 +1213,7 @@ void sf_print_match(int indx)
 {
     int  i;
     int  level; // level is initialized iff used
-    char*head_name;
+    const char*head_name;
     char*pattern;
 
     for (i = indx; i >= 0; i--)
@@ -1275,7 +1275,7 @@ void sf_print_match(int indx)
     }
     else
     {
-        head_name = g_header_type[s_sf_entries[indx].head_type].name;
+        head_name = g_header_type[s_sf_entries[indx].head_type].name.c_str();
     }
     std::printf("%d %s%s: %s", s_sf_entries[indx].score,pattern,head_name,
            s_sf_entries[indx].str1);

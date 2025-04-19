@@ -488,7 +488,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
                     break;
                 }
                 if (s - cp != g_header_type[s_header_num[fn]].length
-                 || string_case_compare(cp,g_header_type[s_header_num[fn]].name,g_header_type[s_header_num[fn]].length))
+                 || string_case_compare(cp,g_header_type[s_header_num[fn]].name.c_str(),g_header_type[s_header_num[fn]].length))
                 {
                     continue;
                 }
@@ -620,7 +620,7 @@ void ov_close()
 
 const char *ov_field_name(int num)
 {
-    return g_header_type[s_header_num[num]].name;
+    return g_header_type[s_header_num[num]].name.c_str();
 }
 
 const char *ov_field(Article *ap, int num)

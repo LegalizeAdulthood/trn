@@ -100,7 +100,7 @@ void head_init()
 {
     for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
     {
-        s_htypeix[*g_header_type[i].name - 'a'] = static_cast<HeaderLineType>(i);
+        s_htypeix[g_header_type[i].name[0] - 'a'] = static_cast<HeaderLineType>(i);
     }
 
     g_user_htype_max = 10;
@@ -126,7 +126,7 @@ static void dump_header(char *where)
 
     for (int i = HEAD_FIRST - 1; i < HEAD_LAST; i++)
     {
-        std::printf("%15s %4ld %4ld %03o\n",g_header_type[i].name,
+        std::printf("%15s %4ld %4ld %03o\n",g_header_type[i].name.c_str(),
                (long)g_htype[i].minpos, (long)g_header_type[i].maxpos,
                g_header_type[i].flags);
     }
@@ -162,15 +162,14 @@ HeaderLineType set_line_type(char *bufptr, const char *colon)
     //
     if (*f >= 'a' && *f <= 'z')
     {
-        for (int i = s_htypeix[*f - 'a']; *g_header_type[i].name == *f; i--)
+        for (int i = s_htypeix[*f - 'a']; g_header_type[i].name[0] == *f; i--)
         {
-            if (len == g_header_type[i].length && !std::strcmp(f, g_header_type[i].name))
+            if (len == g_header_type[i].length && f == g_header_type[i].name)
             {
                 return static_cast<HeaderLineType>(i);
             }
         }
-        if (len == g_header_type[CUSTOM_LINE].length
-         && !std::strcmp(f,g_header_type[(((0+1)+1)+1)].name))
+        if (len == g_header_type[CUSTOM_LINE].length && f == g_header_type[(((0 + 1) + 1) + 1)].name)
         {
             return CUSTOM_LINE;
         }
@@ -198,11 +197,7 @@ HeaderLineType get_header_num(char *s)
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
-        if (!empty(g_header_type[CUSTOM_LINE].name))
-        {
-            std::free(g_header_type[CUSTOM_LINE].name);
-        }
-        g_header_type[CUSTOM_LINE].name = save_str(g_msg);
+        g_header_type[CUSTOM_LINE].name = g_msg;
         g_header_type[CUSTOM_LINE].length = end - s;
         g_header_type[CUSTOM_LINE].flags = g_header_type[i].flags;
         g_header_type[CUSTOM_LINE].min_pos = -1;
@@ -580,13 +575,13 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
 {
-    std::sprintf(g_ser_line,"XHDR %s %ld",g_header_type[which_line].name,artnum);
+    std::sprintf(g_ser_line,"XHDR %s %ld",g_header_type[which_line].name.c_str(),artnum);
     return nntp_command(g_ser_line);
 }
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum lastnum)
 {
-    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name, artnum, lastnum);
+    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name.c_str(), artnum, lastnum);
     return nntp_command(g_ser_line);
 }
 

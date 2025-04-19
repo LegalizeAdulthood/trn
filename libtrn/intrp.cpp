@@ -356,7 +356,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                             *s++ = g_scope_str[g_art_how_much];
                             if (g_art_how_much == ARTSCOPE_ONE_HDR)
                             {
-                                safe_copy(s,g_header_type[g_art_srch_hdr].name,
+                                safe_copy(s,g_header_type[g_art_srch_hdr].name.c_str(),
                                         (sizeof scrbuf) - (s-scrbuf));
                                 if (!(s = std::strchr(s,':')))
                                 {

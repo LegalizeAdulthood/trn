@@ -10,6 +10,7 @@
 #include "trn/mempool.h"
 
 #include <cstdint>
+#include <string>
 
 struct Article;
 
@@ -67,7 +68,7 @@ DECLARE_FLAGS_ENUM(HeaderTypeFlags, std::uint8_t);
 
 struct HeaderType
 {
-    char           *name;    // header line identifier
+    std::string     name;    // header line identifier
     ArticlePosition min_pos; // pointer to beginning of line in article
     ArticlePosition max_pos; // pointer to end of line in article
     char            length;  // the header's string length

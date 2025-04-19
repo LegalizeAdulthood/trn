@@ -364,7 +364,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             *s++ = g_scope_str[how_much];
             if (how_much == ARTSCOPE_ONE_HDR)
             {
-                safe_copy(s,g_header_type[search_header].name,LINE_BUF_LEN-(s-salt_buf));
+                safe_copy(s,g_header_type[search_header].name.c_str(),LINE_BUF_LEN-(s-salt_buf));
                 s += g_header_type[search_header].length;
                 if (s - salt_buf > LINE_BUF_LEN-2)
                 {
@@ -514,7 +514,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
 
     case ARTSCOPE_ONE_HDR:
         g_untrim_cache = true;
-        std::sprintf(g_buf, "%s: %s", g_header_type[g_art_srch_hdr].name,
+        std::sprintf(g_buf, "%s: %s", g_header_type[g_art_srch_hdr].name.c_str(),
                 prefetch_lines(art_num,g_art_srch_hdr,false));
         g_untrim_cache = false;
         break;
