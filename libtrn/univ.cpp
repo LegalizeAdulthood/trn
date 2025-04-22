@@ -680,8 +680,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
         {
         case '0':             // test vector: "desc" $v0
             s++;
-            (void)univ_add_virt_num(desc? desc : s,
-                                    "news.software.readers",ArticleNum{15000});
+            (void) univ_add_virt_num(desc ? desc : s, "news.software.readers", ArticleNum{15000});
             break;
 
         case '1':             // "desc" $v1 1500 news.admin

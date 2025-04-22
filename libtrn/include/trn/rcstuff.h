@@ -99,7 +99,7 @@ bool           use_prev_multirc(Multirc *mptr);
 const char    *multirc_name(const Multirc *mp);
 void           abandon_newsgroup(NewsgroupData *np);
 bool           get_newsgroup(const char *what, GetNewsgroupFlags flags);
-bool           relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum);
+bool           relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum new_num);
 void           list_newsgroups();
 NewsgroupData *find_newsgroup(const char *ngnam);
 void           cleanup_newsrc(Newsrc *rp);

@@ -175,8 +175,8 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     g_force_last = true;                 // if 0 unread, do not bomb out
     g_recent_artp = nullptr;
     g_curr_artp = nullptr;
-    g_recent_art = g_last_art + ArticleNum{1};
-    g_curr_art = g_last_art + ArticleNum{1};
+    g_recent_art = article_after(g_last_art);
+    g_curr_art = article_after(g_last_art);
     g_prompt = whatnext;
     g_char_subst = g_charsets.c_str();
 
@@ -244,7 +244,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         g_check_count = 0;               // do not checkpoint for a while
     }
     g_do_fseek = false;                 // start 1st article at top
-    while (g_art <= g_last_art + ArticleNum{1})     // for each article
+    while (g_art <= article_after(g_last_art))     // for each article
     {
         set_mode(GM_READ,MM_ARTICLE);
 
@@ -275,7 +275,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             if (g_force_last && g_art > oldlast)
             {
-                g_art = g_last_art + ArticleNum{1};
+                g_art = article_after(g_last_art);
             }
         }
         if (g_art != ArticleNum{} || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
@@ -302,8 +302,8 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             start_command = nullptr;
             if (input_pending())
             {
-                g_art = g_last_art + ArticleNum{1};
-                g_curr_art = g_last_art + ArticleNum{1};
+                g_art = article_after(g_last_art);
+                g_curr_art = article_after(g_last_art);
                 g_artp = nullptr;
                 g_curr_artp = nullptr;
                 goto reinp_article;
@@ -311,7 +311,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         }
         if (g_art > g_last_art)                  // are we off the end still?
         {
-            g_art = g_last_art + ArticleNum{1};  // keep pointer references sane
+            g_art = article_after(g_last_art);  // keep pointer references sane
             if (!g_force_last && g_newsgroup_ptr->to_read && g_selected_only && !g_selected_count)
             {
                 g_art = g_curr_art;
@@ -1214,7 +1214,7 @@ check_dec_art:
         return AS_NORM;
 
     case '$':
-        g_art = g_last_art + ArticleNum{1};
+        g_art = article_after(g_last_art);
         g_artp = nullptr;
         g_force_last = true;
         g_search_ahead = ArticleNum{};
@@ -1401,7 +1401,7 @@ normal_search:
         case 'u':
             return AS_CLEAN;
         }
-        g_art = g_last_art + ArticleNum{1};
+        g_art = article_after(g_last_art);
         g_artp = nullptr;
         g_force_last = false;
         return AS_NORM;

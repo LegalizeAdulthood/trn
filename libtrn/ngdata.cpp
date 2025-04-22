@@ -179,7 +179,7 @@ void grow_newsgroup(ArticleNum new_last)
     {
         ArticleNum tmpart = g_art;
         g_newsgroup_ptr->to_read += (ArticleUnread)(new_last-g_last_art).value_of();
-        ArticleNum tmpfirst = g_last_art + ArticleNum{1};
+        ArticleNum tmpfirst = article_after(g_last_art);
         // Increase the size of article scan arrays.
         sa_grow(g_last_art,new_last);
         do

@@ -145,7 +145,7 @@ int nntp_group(const char *group, NewsgroupData *gp)
         // NNTP mangles the high/low values when no articles are present.
         if (!count)
         {
-            gp->abs_first = gp->ng_max + ArticleNum{1};
+            gp->abs_first = article_after(gp->ng_max);
         }
         else
         {

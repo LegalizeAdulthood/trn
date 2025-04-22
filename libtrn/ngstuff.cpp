@@ -412,7 +412,7 @@ int thread_perform()
     else if (*cmdstr == 'p')
     {
         ArticleNum oldart = g_art;
-        g_art = g_last_art + ArticleNum{1};
+        g_art = article_after(g_last_art);
         followup();
         g_force_grow = true;
         g_art = oldart;

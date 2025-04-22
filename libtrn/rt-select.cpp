@@ -220,7 +220,7 @@ char article_selector(char_int cmd)
 
     g_sel_rereading = (cmd == 'U');
 
-    g_art = g_last_art + ArticleNum{1};
+    g_art = article_after(g_last_art);
     s_extra_commands = article_commands;
     g_keep_the_group_static = (g_keep_the_group_static == 1);
 
@@ -2755,7 +2755,7 @@ reask_sort:
                 // Force the search to begin at g_absfirst or g_firstart,
                 // depending upon whether they specified the 'r' option.
                //
-                g_art = g_last_art + ArticleNum{1};
+                g_art = article_after(g_last_art);
                 switch (art_search(g_buf, sizeof g_buf, false))
                 {
                 case SRCH_ERROR:

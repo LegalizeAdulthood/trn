@@ -88,7 +88,7 @@ void thread_open()
         if (g_first_subject)
         {
             g_first_cached = g_first_art;
-            g_last_cached = g_first_art - ArticleNum{1};
+            g_last_cached = article_before(g_first_art);
             g_parsed_art = ArticleNum{};
         }
     }
@@ -184,7 +184,7 @@ void thread_grow()
     g_added_articles += (g_last_art - g_last_cached).value_of();
     if (g_added_articles && g_thread_always)
     {
-        cache_range(g_last_cached + ArticleNum{1}, g_last_art);
+        cache_range(article_after(g_last_cached), g_last_art);
     }
     count_subjects(CS_NORM);
     if (g_art_ptr_list)
@@ -246,7 +246,7 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
 
 void top_article()
 {
-    g_art = g_last_art + ArticleNum{1};
+    g_art = article_after(g_last_art);
     g_artp = nullptr;
     inc_article(g_selected_only, false);
     if (g_art > g_last_art && g_last_cached < g_last_art)
@@ -351,7 +351,7 @@ void inc_article(bool sel_flag, bool rereading)
         else
         {
             g_artp = nullptr;
-            g_art = g_last_art + ArticleNum{1};
+            g_art = article_after(g_last_art);
             g_art_ptr = g_art_ptr_list;
         }
         return;
@@ -403,7 +403,7 @@ void inc_article(bool sel_flag, bool rereading)
         {
             if (g_art <= g_last_cached)
             {
-                g_art = g_last_cached + ArticleNum{1};
+                g_art = article_after(g_last_cached);
             }
             else
             {
@@ -415,7 +415,7 @@ void inc_article(bool sel_flag, bool rereading)
             }
             else
             {
-                g_art = g_last_art + ArticleNum{1};
+                g_art = article_after(g_last_art);
             }
         }
         return;
@@ -425,14 +425,14 @@ void inc_article(bool sel_flag, bool rereading)
 num_inc:
     if (!ap)
     {
-        g_art = g_first_art - ArticleNum{1};
+        g_art = article_before(g_first_art);
     }
     while (true)
     {
         g_art = article_next(g_art);
         if (g_art > g_last_art)
         {
-            g_art = g_last_art + ArticleNum{1};
+            g_art = article_after(g_last_art);
             ap = nullptr;
             break;
         }
@@ -535,7 +535,7 @@ void dec_article(bool sel_flag, bool rereading)
         }
         else
         {
-            g_art = g_abs_first - ArticleNum{1};
+            g_art = article_before(g_abs_first);
         }
         return;
     }
@@ -547,7 +547,7 @@ num_dec:
         g_art = article_prev(g_art);
         if (g_art < g_abs_first)
         {
-            g_art = g_abs_first - ArticleNum{1};
+            g_art = article_before(g_abs_first);
             ap = nullptr;
             break;
         }
@@ -1390,7 +1390,7 @@ void visit_next_thread()
         g_reread = false;
     }
     g_artp = nullptr;
-    g_art = g_last_art + ArticleNum{1};
+    g_art = article_after(g_last_art);
     g_force_last = true;
 }
 
@@ -1414,7 +1414,7 @@ void visit_prev_thread()
         g_reread = false;
     }
     g_artp = nullptr;
-    g_art = g_last_art + ArticleNum{1};
+    g_art = article_after(g_last_art);
     g_force_last = true;
 }
 
@@ -1603,7 +1603,7 @@ void count_subjects(CountSubjectMode cmode)
     g_selected_subj_cnt = 0;
     if (g_last_cached >= g_last_art)
     {
-        g_first_art = g_last_art + ArticleNum{1};
+        g_first_art = article_after(g_last_art);
     }
 
     switch (cmode)

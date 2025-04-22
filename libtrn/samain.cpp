@@ -56,7 +56,7 @@ void sa_init()
     if (g_sa_mode_read_elig)
     {
         g_sc_fill_read = true;
-        g_sc_fill_max = g_abs_first - ArticleNum{1};
+        g_sc_fill_max = article_before(g_abs_first);
     }
 #endif
     s_save_context();
@@ -120,7 +120,7 @@ void sa_clean_main()
 
 void sa_grow_arts(ArticleNum oldlast, ArticleNum last)
 {
-    for (ArticleNum i{oldlast + ArticleNum{1}}; i <= last; ++i)
+    for (ArticleNum i{article_after(oldlast)}; i <= last; ++i)
     {
         (void)sa_add_ent(i);
     }

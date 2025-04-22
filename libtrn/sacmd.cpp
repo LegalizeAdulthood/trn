@@ -292,7 +292,7 @@ int sa_do_cmd()
             if (g_sa_mode_read_elig)
             {
                 g_sc_fill_read = true;
-                g_sc_fill_max = g_abs_first - ArticleNum{1};
+                g_sc_fill_max = article_before(g_abs_first);
             }
             if (!g_sa_mode_read_elig)
             {

@@ -113,7 +113,7 @@ void rc_to_bits()
         min = std::max(min, g_first_art);    // make sure range is in range
         if (min > g_last_art)
         {
-            min = g_last_art + ArticleNum{1};
+            min = article_after(g_last_art);
         }
         for (; n < min; n = article_next(n))
         {
@@ -141,7 +141,7 @@ void rc_to_bits()
         }
         else if ((max = ArticleNum{std::atol(h + 1)}) < min)
         {
-            max = min - ArticleNum{1};
+            max = article_before(min);
         }
         max = std::min(max, g_last_art);
         // mark all arts in range as read
@@ -387,7 +387,7 @@ void find_existing_articles()
                     ap->flags |= AF_EXISTS;
                 }
             }
-            for (an = g_last_cached + ArticleNum{1}; an <= g_last_art; ++an)
+            for (an = article_after(g_last_cached); an <= g_last_art; ++an)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -411,7 +411,7 @@ void find_existing_articles()
     else
     {
         namespace fs = std::filesystem;
-        ArticleNum first{g_last_art + ArticleNum{1}};
+        ArticleNum first{article_after(g_last_art)};
         ArticleNum last{};
         fs::path cwd(".");
         char ch;
@@ -470,12 +470,12 @@ void find_existing_articles()
     g_first_art = std::max(g_first_art, g_abs_first);
     if (g_first_art > g_last_art)
     {
-        g_first_art = g_last_art + ArticleNum{1};
+        g_first_art = article_after(g_last_art);
     }
     g_first_cached = std::max(g_first_cached, g_abs_first);
     if (g_last_cached < g_abs_first)
     {
-        g_last_cached = g_abs_first - ArticleNum{1};
+        g_last_cached = article_before(g_abs_first);
     }
 }
 

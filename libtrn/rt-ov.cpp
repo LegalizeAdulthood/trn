@@ -290,7 +290,7 @@ beginning:
         g_data_source->ov_opened = started_request;
     }
 
-    artnum = first - ArticleNum{1};
+    artnum = article_before(first);
     while (true)
     {
         if (remote)
@@ -354,7 +354,7 @@ beginning:
         an = nntp_find_real_art(last);
         if (an.value_of() > 0)
         {
-            last = an - ArticleNum{1};
+            last = article_before(an);
             g_spin_todo -= (last - artnum).value_of();
             artnum = last;
         }
@@ -406,7 +406,7 @@ exit:
                 {
                     ov_chunk_size = max_chunk_size;
                 }
-                first = last + ArticleNum{1};
+                first = article_after(last);
                 last = real_last;
                 goto beginning;
             }

@@ -1081,7 +1081,7 @@ void followup()
         }
         if (*g_buf != 'n')
         {
-            g_art = g_last_art + ArticleNum{1};
+            g_art = article_after(g_last_art);
         }
     }
     art_open(g_art,(ArticlePosition)0);

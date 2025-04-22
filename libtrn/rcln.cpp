@@ -194,7 +194,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
     mbuf = safe_malloc((MemorySize)(std::strlen(s)+(s - np->rc_line)+MAX_DIGITS+2+1));
     std::strcpy(mbuf,np->rc_line);            // make new rc line
-    if (maxt && lastnum && art_num == lastnum + ArticleNum{1})
+    if (maxt && lastnum && art_num == article_after(lastnum))
                                         // can we just extend last range?
     {
         t = mbuf + (maxt - np->rc_line); // then overwrite previous max
@@ -208,7 +208,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
             {
                 *t++ = ',';             // supply comma before
             }
-            if (!maxt && art_num == lastnum + ArticleNum{1} && *(t - 1) == ',')
+            if (!maxt && art_num == article_after(lastnum) && *(t - 1) == ',')
                                         // adjacent singletons?
             {
                 *(t-1) = '-';           // turn them into a range
@@ -217,7 +217,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     }
     if (morenum)                        // is there more to life?
     {
-        if (min == art_num + ArticleNum{1}) // can we consolidate further?
+        if (min == article_after(art_num)) // can we consolidate further?
         {
             bool range_before = (*(t-1) == '-');
             char *nextmax = skip_digits(s);
@@ -491,7 +491,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         if (h != nullptr) // find - in range, if any
         {
             newmax = ArticleNum{atol(h + 1)};
-            unread -= newmax - ArticleNum{atol(s)} + ArticleNum{1};
+            unread -= newmax - article_after(ArticleNum{atol(s)});
         }
         else
         {

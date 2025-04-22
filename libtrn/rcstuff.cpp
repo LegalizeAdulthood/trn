@@ -1363,7 +1363,7 @@ reinp_reloc:
             newnum = std::max(newnum, NewsgroupNum{});
             if (newnum >= g_newsgroup_count)
             {
-                newnum = g_newsgroup_count - NewsgroupNum{1};
+                newnum = newsgroup_before(g_newsgroup_count);
             }
         }
         else if (*g_buf == '^')
@@ -1373,7 +1373,7 @@ reinp_reloc:
         }
         else if (*g_buf == '$')
         {
-            newnum = g_newsgroup_count - NewsgroupNum{1};
+            newnum = newsgroup_before(g_newsgroup_count);
         }
         else if (*g_buf == '.')
         {
@@ -1406,7 +1406,8 @@ reinp_reloc:
             goto reask_reloc;
         }
     }
-    if (newnum < g_newsgroup_count - NewsgroupNum{1})
+
+    if (newnum < newsgroup_before(g_newsgroup_count))
     {
         for (np = g_first_newsgroup; np; np = np->next)
         {

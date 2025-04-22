@@ -627,7 +627,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
             size = sizeof g_cmd_buf;
         }
         *s = '\0';
-        ArticleNum prior_num{art_num - ArticleNum{1}};
+        ArticleNum prior_num{article_before(art_num)};
         bool    cached = (g_header_type[which_line].flags & HT_CACHED);
         int     status;
         if (cached != 0)
