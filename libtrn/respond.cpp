@@ -79,7 +79,7 @@ SaveResult save_article()
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
-    g_save_from = (cmd == 'w' || cmd == 'e')? g_header_type[PAST_HEADER].min_pos : 0;
+    g_save_from = (cmd == 'w' || cmd == 'e')? g_header_type[PAST_HEADER].min_pos : ArticlePosition{};
     if (art_open(g_art, g_save_from) == nullptr)
     {
         if (g_verbose)
@@ -533,7 +533,7 @@ reask_save:
                 quote_From = true;
 #endif
             }
-            if (g_save_from == 0 && g_art != ArticleNum{})
+            if (g_save_from == ArticlePosition{} && g_art != ArticleNum{})
             {
                 std::fprintf(s_tmp_fp, "Article: %ld of %s\n", g_art.value_of(), g_newsgroup_name.c_str());
             }

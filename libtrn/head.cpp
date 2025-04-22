@@ -38,42 +38,44 @@
 #define NGS_CACHED  HT_NONE
 #define FILT_CACHED HT_NONE
 
+static constexpr ArticlePosition s_zero{};
+
 // This array must stay in the same order as the enum values header_line_type
 // clang-format off
 HeaderType g_header_type[HEAD_LAST] = {
     // name             minpos  maxpos  length   flag
-    {"",/*BODY*/        0,      0,      0,      HT_NONE         },
-    {"",/*SHOWN*/       0,      0,      0,      HT_NONE         },
-    {"",/*HIDDEN*/      0,      0,      0,      HIDDEN          },
-    {"",/*CUSTOM*/      0,      0,      0,      HT_NONE         },
-    {"unrecognized",    0,      0,      12,     HIDDEN          },
-    {"author",          0,      0,      6,      HT_NONE         },
-    {"bytes",           0,      0,      5,      HIDDEN|HT_CACHED},
-    {"content-name",    0,      0,      12,     HIDDEN          },
+    {"",/*BODY*/        s_zero, s_zero,      0,      HT_NONE         },
+    {"",/*SHOWN*/       s_zero, s_zero,      0,      HT_NONE         },
+    {"",/*HIDDEN*/      s_zero, s_zero,      0,      HIDDEN          },
+    {"",/*CUSTOM*/      s_zero, s_zero,      0,      HT_NONE         },
+    {"unrecognized",    s_zero, s_zero,      12,     HIDDEN          },
+    {"author",          s_zero, s_zero,      6,      HT_NONE         },
+    {"bytes",           s_zero, s_zero,      5,      HIDDEN|HT_CACHED},
+    {"content-name",    s_zero, s_zero,      12,     HIDDEN          },
     {"content-disposition",
-                        0,      0,      19,     HIDDEN          },
-    {"content-length",  0,      0,      14,     HIDDEN          },
+                        s_zero, s_zero,      19,     HIDDEN          },
+    {"content-length",  s_zero, s_zero,      14,     HIDDEN          },
     {"content-transfer-encoding",
-                        0,      0,      25,     HIDDEN          },
-    {"content-type",    0,      0,      12,     HIDDEN          },
-    {"distribution",    0,      0,      12,     HT_NONE         },
-    {"date",            0,      0,      4,      MAGIC_ON        },
-    {"expires",         0,      0,      7,      HIDDEN|MAGIC_ON },
-    {"followup-to",     0,      0,      11,     HT_NONE         },
-    {"from",            0,      0,      4,      MAGIC_OFF|HT_CACHED},
-    {"in-reply-to",     0,      0,      11,     HIDDEN          },
-    {"keywords",        0,      0,      8,      HT_NONE         },
-    {"lines",           0,      0,      5,      HT_CACHED       },
-    {"mime-version",    0,      0,      12,     MAGIC_ON|HIDDEN },
-    {"message-id",      0,      0,      10,     HIDDEN|HT_CACHED},
-    {"newsgroups",      0,      0,      10,     MAGIC_ON|HIDDEN|NGS_CACHED},
-    {"path",            0,      0,      4,      HIDDEN          },
-    {"relay-version",   0,      0,      13,     HIDDEN          },
-    {"reply-to",        0,      0,      8,      HT_NONE         },
-    {"references",      0,      0,      10,     HIDDEN|FILT_CACHED},
-    {"summary",         0,      0,      7,      HT_NONE         },
-    {"subject",         0,      0,      7,      MAGIC_ON|HT_CACHED},
-    {"xref",            0,      0,      4,      HIDDEN|XREF_CACHED},
+                        s_zero, s_zero,      25,     HIDDEN          },
+    {"content-type",    s_zero, s_zero,      12,     HIDDEN          },
+    {"distribution",    s_zero, s_zero,      12,     HT_NONE         },
+    {"date",            s_zero, s_zero,      4,      MAGIC_ON        },
+    {"expires",         s_zero, s_zero,      7,      HIDDEN|MAGIC_ON },
+    {"followup-to",     s_zero, s_zero,      11,     HT_NONE         },
+    {"from",            s_zero, s_zero,      4,      MAGIC_OFF|HT_CACHED},
+    {"in-reply-to",     s_zero, s_zero,      11,     HIDDEN          },
+    {"keywords",        s_zero, s_zero,      8,      HT_NONE         },
+    {"lines",           s_zero, s_zero,      5,      HT_CACHED       },
+    {"mime-version",    s_zero, s_zero,      12,     MAGIC_ON|HIDDEN },
+    {"message-id",      s_zero, s_zero,      10,     HIDDEN|HT_CACHED},
+    {"newsgroups",      s_zero, s_zero,      10,     MAGIC_ON|HIDDEN|NGS_CACHED},
+    {"path",            s_zero, s_zero,      4,      HIDDEN          },
+    {"relay-version",   s_zero, s_zero,      13,     HIDDEN          },
+    {"reply-to",        s_zero, s_zero,      8,      HT_NONE         },
+    {"references",      s_zero, s_zero,      10,     HIDDEN|FILT_CACHED},
+    {"summary",         s_zero, s_zero,      7,      HT_NONE         },
+    {"subject",         s_zero, s_zero,      7,      MAGIC_ON|HT_CACHED},
+    {"xref",            s_zero, s_zero,      4,      HIDDEN|XREF_CACHED},
 };
 // clang-format on
 
@@ -201,8 +203,8 @@ HeaderLineType get_header_num(char *s)
         g_header_type[CUSTOM_LINE].name = g_msg;
         g_header_type[CUSTOM_LINE].length = end - s;
         g_header_type[CUSTOM_LINE].flags = g_header_type[i].flags;
-        g_header_type[CUSTOM_LINE].min_pos = -1;
-        g_header_type[CUSTOM_LINE].max_pos = 0;
+        g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{-1};
+        g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{};
         for (char *bp = g_head_buf; *bp; bp = end)
         {
             if (!(end = std::strchr(bp,'\n')) || end == bp)
@@ -217,7 +219,7 @@ HeaderLineType get_header_num(char *s)
             {
                 continue;
             }
-            g_header_type[CUSTOM_LINE].min_pos = bp - g_head_buf;
+            g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{bp - g_head_buf};
             while (is_hor_space(*end))
             {
                 if (!(end = std::strchr(end, '\n')))
@@ -227,7 +229,7 @@ HeaderLineType get_header_num(char *s)
                 }
                 end++;
             }
-            g_header_type[CUSTOM_LINE].max_pos = end - g_head_buf;
+            g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{end - g_head_buf};
             break;
         }
         i = CUSTOM_LINE;
@@ -245,8 +247,8 @@ void start_header(ArticleNum artnum)
 #endif
     for (HeaderType &i : g_header_type)
     {
-        i.min_pos = -1;
-        i.max_pos = 0;
+        i.min_pos = ArticlePosition{-1};
+        i.max_pos = ArticlePosition{};
     }
     g_in_header = SOME_LINE;
     s_first_one = false;
@@ -265,13 +267,13 @@ void end_header_line()
         {
             if (!get_cached_line(s_parsed_artp, g_in_header, true))
             {
-                int start = g_header_type[g_in_header].min_pos
+                int start = g_header_type[g_in_header].min_pos.value_of()
                           + g_header_type[g_in_header].length + 1;
                 while (is_hor_space(g_head_buf[start]))
                 {
                     start++;
                 }
-                MemorySize size = g_art_pos - start + 1 - 1;   // pre-strip newline
+                MemorySize size = g_art_pos.value_of() - start + 1 - 1;   // pre-strip newline
                 if (g_in_header == SUBJ_LINE)
                 {
                     set_subj_line(s_parsed_artp, g_head_buf + start, size - 1);
@@ -309,7 +311,7 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
     else                // it is a new header line
     {
             g_in_header = set_line_type(art_buf,s);
-            s_first_one = (g_header_type[g_in_header].min_pos < 0);
+            s_first_one = (g_header_type[g_in_header].min_pos < ArticlePosition{});
             if (s_first_one)
             {
                 g_header_type[g_in_header].min_pos = g_art_pos;
@@ -350,7 +352,7 @@ void end_header()
     if (s_reading_nntp_header)
     {
         s_reading_nntp_header = false;
-        g_header_type[PAST_HEADER].min_pos = g_art_pos + 1;     // nntp_body will fix this
+        g_header_type[PAST_HEADER].min_pos = g_art_pos + ArticlePosition{1};     // nntp_body will fix this
     }
     else
     {
@@ -361,7 +363,7 @@ void end_header()
     // more information.
     //
     if (g_threaded_group //
-        && (!(ap->flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= 0))
+        && (!(ap->flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= ArticlePosition{}))
     {
         if (valid_article(ap))
         {
@@ -428,11 +430,11 @@ bool parse_header(ArticleNum art_num)
     }
 
     start_header(art_num);
-    g_art_pos = 0;
+    g_art_pos = ArticlePosition{};
     char *bp = g_head_buf;
     while (g_in_header)
     {
-        if (s_head_buf_size < g_art_pos + LINE_BUF_LEN)
+        if (s_head_buf_size < g_art_pos.value_of() + LINE_BUF_LEN)
         {
             len = bp - g_head_buf;
             s_head_buf_size += LINE_BUF_LEN * 4;
@@ -476,7 +478,7 @@ bool parse_header(ArticleNum art_num)
             parse_line(bp, false, false);
         }
         had_nl = found_nl;
-        g_art_pos += len;
+        g_art_pos += ArticlePosition{len};
         bp += len;
     }
     *bp = '\0';
@@ -503,15 +505,15 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
         }
     }
     ArticlePosition firstpos = g_header_type[which_line].min_pos;
-    if (firstpos < 0)
+    if (firstpos < ArticlePosition{})
     {
         return save_str("");
     }
 
-    firstpos += g_header_type[which_line].length + 1;
+    firstpos += ArticlePosition{g_header_type[which_line].length + 1};
     ArticlePosition lastpos = g_header_type[which_line].max_pos;
-    int size = lastpos - firstpos;
-    char *t = g_head_buf + firstpos;
+    int             size = (lastpos - firstpos).value_of();
+    char *t = g_head_buf + firstpos.value_of();
     while (is_hor_space(*t))
     {
         t++;
@@ -548,15 +550,15 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
         }
     }
     ArticlePosition firstpos = g_header_type[which_line].min_pos;
-    if (firstpos < 0)
+    if (firstpos < ArticlePosition{})
     {
         return mp_save_str("", pool);
     }
 
-    firstpos += g_header_type[which_line].length + 1;
+    firstpos += ArticlePosition{g_header_type[which_line].length + 1};
     ArticlePosition lastpos = g_header_type[which_line].max_pos;
-    int size = lastpos - firstpos;
-    char *t = g_head_buf + firstpos;
+    int             size = (lastpos - firstpos).value_of();
+    char *t = g_head_buf + firstpos.value_of();
     while (is_hor_space(*t))
     {
         t++;
@@ -734,7 +736,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     {
         s = fetch_cache(art_num, which_line, FILL_CACHE);
     }
-    if (g_parsed_art == art_num && (firstpos = g_header_type[which_line].min_pos) < 0)
+    if (g_parsed_art == art_num && (firstpos = g_header_type[which_line].min_pos) < ArticlePosition{})
     {
         s = "";
     }
@@ -747,10 +749,10 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         return s;
     }
 
-    firstpos += g_header_type[which_line].length + 1;
+    firstpos += ArticlePosition{g_header_type[which_line].length + 1};
     ArticlePosition lastpos = g_header_type[which_line].max_pos;
-    int size = lastpos - firstpos;
-    t = g_head_buf + firstpos;
+    int             size = (lastpos - firstpos).value_of();
+    t = g_head_buf + firstpos.value_of();
     while (is_hor_space(*t))
     {
         t++;

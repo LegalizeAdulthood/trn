@@ -650,7 +650,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
 
                 case 'B':
                     s = scrbuf;
-                    std::sprintf(s,"%ld",(long)g_save_from);
+                    std::sprintf(s,"%ld", g_save_from.value_of());
                     break;
 
                 case 'c':
@@ -718,7 +718,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     if (g_in_ng)
                     {
                         parse_header(g_art);
-                        if (g_header_type[REPLY_LINE].min_pos >= 0 && !comment_parse)
+                        if (g_header_type[REPLY_LINE].min_pos >= ArticlePosition{} && !comment_parse)
                         {
                                                 // was there a reply line?
                             if (!(s=reply_buf))
@@ -743,7 +743,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     if (g_in_ng)
                     {
                         parse_header(g_art);
-                        if (g_header_type[FOLLOW_LINE].min_pos >= 0)
+                        if (g_header_type[FOLLOW_LINE].min_pos >= ArticlePosition{})
                                         // is there a Followup-To line?
                         {
                             follow_buf = fetch_lines(g_art, FOLLOW_LINE);
@@ -910,7 +910,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     {
                         parse_header(g_art);
                         safe_free0(refs_buf);
-                        if (g_header_type[REFS_LINE].min_pos >= 0)
+                        if (g_header_type[REFS_LINE].min_pos >= ArticlePosition{})
                         {
                             refs_buf = fetch_lines(g_art,REFS_LINE);
                             normalize_refs(refs_buf);
@@ -934,7 +934,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     parse_header(g_art);
                     safe_free0(refs_buf);
                     int len;
-                    if (g_header_type[REFS_LINE].min_pos >= 0)
+                    if (g_header_type[REFS_LINE].min_pos >= ArticlePosition{})
                     {
                         refs_buf = fetch_lines(g_art,REFS_LINE);
                         len = std::strlen(refs_buf)+1;
@@ -1028,7 +1028,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         break;
                     }
                     parse_header(g_art);
-                    if (g_header_type[REPLY_LINE].min_pos >= 0)
+                    if (g_header_type[REPLY_LINE].min_pos >= ArticlePosition{})
                     {
                                         // was there a reply line?
                         if (!(s=reply_buf))
@@ -1048,7 +1048,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     if (*pattern == 'T')
                     {
-                        if (g_header_type[PATH_LINE].min_pos >= 0)
+                        if (g_header_type[PATH_LINE].min_pos >= ArticlePosition{})
                         {
                                         // should we substitute path?
                             path_buf = fetch_lines(g_art, PATH_LINE);

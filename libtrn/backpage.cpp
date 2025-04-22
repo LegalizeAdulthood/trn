@@ -47,12 +47,12 @@ ArticlePosition virtual_read(ArticleLine index)
         return 0;
     }
 #endif
-    if (index < 0)
+    if (index < ArticleLine{})
     {
-        return 0;
+        return ArticlePosition{};
     }
-    sub_index = index % VARY_SIZE;
-    offset = (index - sub_index) * sizeof(s_vary_buf[0]);
+    sub_index = index.value_of() % VARY_SIZE;
+    offset = (index.value_of() - sub_index) * sizeof(s_vary_buf[0]);
     if (offset != s_old_offset)
     {
         if (s_old_offset >= 0)
@@ -95,8 +95,8 @@ void virtual_write(ArticleLine index, ArticlePosition value)
         s_max_index = index;
     }
 #endif
-    sub_index = index % VARY_SIZE;
-    offset = (index - sub_index) * sizeof(s_vary_buf[0]);
+    sub_index = index.value_of() % VARY_SIZE;
+    offset = (index.value_of() - sub_index) * sizeof(s_vary_buf[0]);
     if (offset != s_old_offset)
     {
         if (s_old_offset >= 0)

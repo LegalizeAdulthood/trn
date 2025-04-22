@@ -31,7 +31,7 @@ std::FILE      *g_art_fp{};               // current article file pointer
 ArticleNum      g_open_art{};             // the article number we have open
 char           *g_art_buf{};              //
 long            g_art_buf_pos{};          //
-long            g_art_buf_seek{};         //
+long            g_art_buf_seek{};         // TODO: ArticlePosition
 long            g_art_buf_len{};          //
 char            g_wrapped_nl{WRAPPED_NL}; //
 int             g_word_wrap_offset{8};    // right-hand column size (0 is off)
@@ -125,7 +125,7 @@ int seek_art(ArticlePosition pos)
     {
         return nntp_seek_art(pos);
     }
-    return std::fseek(g_art_fp,(long)pos,0);
+    return std::fseek(g_art_fp, pos.value_of(), 0);
 }
 
 ArticlePosition tell_art()
@@ -164,7 +164,7 @@ int seek_art_buf(ArticlePosition pos)
     pos -= g_header_type[PAST_HEADER].min_pos;
     g_art_buf_pos = g_art_buf_len;
 
-    while (g_art_buf_pos < pos)
+    while (g_art_buf_pos < pos.value_of())
     {
         if (!read_art_buf(false))
         {
@@ -172,7 +172,7 @@ int seek_art_buf(ArticlePosition pos)
         }
     }
 
-    g_art_buf_pos = pos;
+    g_art_buf_pos = pos.value_of();
 
     return 0;
 }
@@ -194,11 +194,11 @@ char *read_art_buf(bool view_inline)
     if (!g_do_hiding)
     {
         bp = read_art(g_art_line,(sizeof g_art_line)-1);
-        g_art_buf_seek = tell_art() - g_header_type[PAST_HEADER].min_pos;
+        g_art_buf_seek = (tell_art() - g_header_type[PAST_HEADER].min_pos).value_of();
         g_art_buf_pos = g_art_buf_seek;
         return bp;
     }
-    if (g_art_buf_pos == g_art_size - g_header_type[PAST_HEADER].min_pos)
+    if (g_art_buf_pos == (g_art_size - g_header_type[PAST_HEADER].min_pos).value_of())
     {
         return nullptr;
     }
@@ -400,7 +400,7 @@ mime_switch:
         if (!mp)
         {
             g_art_buf_len = g_art_buf_pos;
-            g_art_size = g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+            g_art_size = ArticlePosition{g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
             read_something = 0;
             bp = nullptr;
         }
@@ -430,7 +430,7 @@ mime_switch:
             if (g_data_source->flags & DF_REMOTE)
             {
                 nntp_finish_body(FB_SILENT);
-                g_raw_art_size = nntp_art_size();
+                g_raw_art_size = ArticlePosition{nntp_art_size()};
             }
             seek_art(g_raw_art_size);
         }
@@ -544,11 +544,12 @@ done:
     g_art_buf_pos += len;
     if (read_something)
     {
-        g_art_buf_seek = tell_art();
+        g_art_buf_seek = tell_art().value_of();
         g_art_buf_len = g_art_buf_pos + extra_chars;
-        if (g_art_size >= 0)
+        if (g_art_size >= ArticlePosition{})
         {
-            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+            g_art_size =
+                g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
         }
     }
 

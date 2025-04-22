@@ -37,10 +37,18 @@ inline ArticleNum article_before(ArticleNum value, long increment = 1)
     return value - ArticleNum{increment};
 }
 
-using ArticleUnread = long;      // could be short to save space
-using ArticlePosition = long;    // char position in article file
-using ArticleLine = int;         // line position in article file
-using ActivePosition = long;     // char position in active file
+// could be short to save space
+using ArticleUnread = long;
+
+// char position in article file
+using ArticlePosition = Number<long, struct ArticlePositionTag>;
+
+// line position in article file
+using ArticleLine = Number<int, struct ArticleLineTag>;
+
+// char position in active file
+using ActivePosition = Number<long, struct ActivePositionTag>;
+
 using MemorySize = unsigned int; // for passing to malloc
 using Uchar = unsigned char;     // more space-efficient
 using stat_t = struct stat;

@@ -424,7 +424,7 @@ void mime_set_article()
     // TODO: Check mime version #?
     g_multimedia_mime = false;
     g_is_mime = g_header_type[MIME_VER_LINE].flags & HT_MAGIC
-            && g_header_type[MIME_VER_LINE].min_pos >= 0;
+            && g_header_type[MIME_VER_LINE].min_pos >= ArticlePosition{};
 
     {
         char *s = fetch_lines(g_art, CONT_TYPE_LINE);

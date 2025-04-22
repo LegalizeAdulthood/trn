@@ -649,7 +649,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
     {
         ListNode* node = (ListNode*)data.dat_ptr;
         // dp->act_sf.lp->recent = node;
-        act_pos = node->low + data.dat_len;
+        act_pos = ActivePosition{node->low + data.dat_len};
         lbp = node->data + data.dat_len;
         lbp_len = std::strchr(lbp, '\n') - lbp + 1;
     }
@@ -729,7 +729,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
                     high /= ArticleNum{10};
                     *cp = '0' + (char)num;
                 }
-                std::fseek(fp, act_pos, 0);
+                std::fseek(fp, act_pos.value_of(), 0);
                 std::fwrite(lbp, 1, lbp_len, fp);
             }
             goto use_cache;
@@ -740,7 +740,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
 
         // if line has changed length or is not there, we should
         // discard/close the active file, and re-open it.
-        if (std::fseek(fp, act_pos, 0) >= 0               //
+        if (std::fseek(fp, act_pos.value_of(), 0) >= 0         //
             && std::fgets(outbuf, LINE_BUF_LEN, fp) != nullptr //
             && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ')
         {

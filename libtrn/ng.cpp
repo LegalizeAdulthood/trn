@@ -253,7 +253,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         if ((g_art > g_last_art || g_force_grow) && !g_keep_the_group_static)
         {
             ArticleNum oldlast = g_last_art;
-            if (g_art_size < 0)
+            if (g_art_size < ArticlePosition{})
             {
                 nntp_finish_body(FB_SILENT);
             }
@@ -329,7 +329,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_recent_artp = g_curr_artp;
                 g_curr_artp = g_artp;
                 g_char_subst = g_charsets.c_str();
-                g_first_view = 0;
+                g_first_view = ArticleLine{};
             }
             if (g_sa_in)
             {
@@ -410,14 +410,14 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_recent_artp = g_curr_artp;
                 g_curr_artp = g_artp;
                 g_char_subst = g_charsets.c_str();
-                g_first_view = 0;
+                g_first_view = ArticleLine{};
                 g_do_hiding = true;
                 g_rotate = false;
             }
             if (!g_do_fseek)            // starting at top of article?
             {
-                g_art_line_num = 0;          // start at the beginning
-                g_top_line = -1;         // and remember top line of screen
+                g_art_line_num = ArticleLine{}; // start at the beginning
+                g_top_line = ArticleLine{-1};   // and remember top line of screen
                                         // (line # within article file)
             }
             clear();                    // clear screen
@@ -450,8 +450,8 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                         std::sprintf(tmpbuf, "%s: article may show up in a moment.", g_newsgroup_name.c_str());
                     }
                 }
-                ArticleLine linenum = tree_puts(tmpbuf, 0, 0);
-                virtual_write(g_art_line_num,(ArticlePosition)0);
+                ArticleLine linenum = ArticleLine{tree_puts(tmpbuf, ArticleLine{}, 0)};
+                virtual_write(g_art_line_num, ArticlePosition{});
                 finish_tree(linenum);
                 g_prompt = whatnext;
                 g_search_ahead = ArticleNum{};
@@ -1418,7 +1418,7 @@ normal_search:
         g_auto_view_inline = !g_auto_view_inline;
         if (g_auto_view_inline != 0)
         {
-            g_first_view = 0;
+            g_first_view = ArticleLine{};
         }
         std::printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
         term_down(2);
@@ -1588,7 +1588,7 @@ refresh_screen:
             clear();
             g_do_fseek = true;
             g_art_line_num = g_top_line;
-            g_art_line_num = std::max(g_art_line_num, 0);
+            g_art_line_num = std::max(g_art_line_num, ArticleLine{});
         }
         return AS_NORM;
 
@@ -1602,11 +1602,12 @@ refresh_screen:
     case Ctl('e'):
         if (g_art <= g_last_art)
         {
-            if (g_art_size < 0)
+            if (g_art_size < ArticlePosition{})
             {
                 nntp_finish_body(FB_OUTPUT);
-                g_raw_art_size = nntp_art_size();
-                g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_header_type[PAST_HEADER].min_pos;
+                g_raw_art_size = ArticlePosition{nntp_art_size()};
+                g_art_size = g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} +
+                             g_header_type[PAST_HEADER].min_pos;
             }
             if (g_do_hiding)
             {
@@ -1616,7 +1617,7 @@ refresh_screen:
             g_reread = true;
             g_do_fseek = true;
             g_top_line = g_art_line_num;
-            g_inner_light = g_art_line_num - 1;
+            g_inner_light = g_art_line_num - ArticleLine{1};
             g_inner_search = g_art_size;
             g_g_line = 0;
             g_hide_everything = 'b';
@@ -1634,26 +1635,27 @@ refresh_screen:
             g_do_fseek = true;
             if (*g_buf == 'B')
             {
-                target = g_top_line - 1;
+                target = g_top_line - ArticleLine{1};
             }
             else
             {
-                target = g_top_line - (g_tc_LINES - 2);
+                target = g_top_line - ArticleLine{g_tc_LINES - 2};
                 if (g_marking && (g_marking_areas & BACK_PAGE_MARKING))
                 {
                     g_highlight = g_top_line;
                 }
             }
             g_art_line_num = g_top_line;
-            if (g_art_line_num >= 0)
+            if (g_art_line_num >= ArticleLine{})
             {
                 do
                 {
                     g_art_line_num--;
-                } while (g_art_line_num >= 0 && g_art_line_num > target && virtual_read(g_art_line_num - 1) >= 0);
+                } while (g_art_line_num >= ArticleLine{} && g_art_line_num > target &&
+                         virtual_read(g_art_line_num - ArticleLine{1}) >= ArticlePosition{});
             }
             g_top_line = g_art_line_num;
-            g_art_line_num = std::max(g_art_line_num, 0);
+            g_art_line_num = std::max(g_art_line_num, ArticleLine{});
         }
         return AS_NORM;
 

@@ -53,7 +53,7 @@ static char s_tree_indent[] = {
 // clang-format on
 static Article *s_tree_article{};
 static int      s_max_depth{};
-static int      s_max_line{-1};
+static int      s_max_line{-1}; // TODO: ArticleLine?
 static int      s_first_depth{};
 static int      s_first_line{};
 static int      s_my_depth{};
@@ -482,7 +482,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         }
         g_term_col = s_header_indent;
         // If no (more) tree lines, wrap at g_tc_COLS-1
-        if (s_max_line < 0 || header_line > s_max_line+1)
+        if (s_max_line < 0 || header_line > ArticleLine{s_max_line+1})
         {
             wrap_at = g_tc_COLS - 1;
         }
@@ -513,8 +513,8 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             ch = *cp;
             *cp = '\0';
             // keep rn's backpager happy
-            virtual_write(g_art_line_num, virtual_read(g_art_line_num - 1));
-            g_art_line_num++;
+            virtual_write(g_art_line_num, virtual_read(g_art_line_num - ArticleLine{1}));
+            ++g_art_line_num;
         }
         else
         {
@@ -541,7 +541,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         }
         line = cp;
         // Check if we've got any tree lines to output
-        if (wrap_at != g_tc_COLS - 1 && header_line <= s_max_line)
+        if (wrap_at != g_tc_COLS - 1 && header_line <= ArticleLine{s_max_line})
         {
             do
             {
@@ -550,7 +550,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             g_term_col = wrap_at;
             // Check string for the '*' flagging our current node
             // and the '@' flagging our prior node.
-            cp = s_tree_lines[header_line];
+            cp = s_tree_lines[header_line.value_of()];
             char *cp1 = std::strchr(cp, '*');
             char *cp2 = std::strchr(cp, '@');
             if (cp1 != nullptr)
@@ -592,7 +592,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             color_pop();        // of COLOR_TREE
         }// if
         newline();
-        header_line++;
+        ++header_line;
     }// for remainder of line
 
     // free allocated copy of line
@@ -600,7 +600,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
 
     color_pop();        // of COLOR_HEADER
     // return number of lines displayed
-    return header_line - start_line;
+    return (header_line - start_line).value_of();
 }
 
 // Output any parts of the tree that are left to display.  Called at the
@@ -610,13 +610,13 @@ int  finish_tree(ArticleLine last_line)
 {
     ArticleLine start_line = last_line;
 
-    while (last_line <= s_max_line)
+    while (last_line <= ArticleLine{s_max_line})
     {
-        g_art_line_num++;
-        last_line += tree_puts("+", last_line, 0);
+        ++g_art_line_num;
+        last_line += ArticleLine{tree_puts("+", last_line, 0)};
         virtual_write(g_art_line_num, g_art_pos);    // keep rn's backpager happy
     }
-    return last_line - start_line;
+    return (last_line - start_line).value_of();
 }
 
 // Output the entire article tree for the user.

@@ -666,7 +666,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_INITIAL_ARTICLE_LINES:
-        g_init_lines = std::atoi(s);
+        g_init_lines = ArticleLine{std::atoi(s)};
         break;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:

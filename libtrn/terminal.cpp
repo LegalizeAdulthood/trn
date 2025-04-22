@@ -2202,19 +2202,19 @@ static void line_col_calcs()
             // no -i or unreasonable value for g_initlines
             if (s_out_speed >= B9600)    // whole page at >= 9600 baud
             {
-                g_init_lines = g_tc_LINES;
+                g_init_lines = ArticleLine{g_tc_LINES};
             }
             else if (s_out_speed >= B4800)       // 16 lines at 4800
             {
-                g_init_lines = 16;
+                g_init_lines = ArticleLine{16};
             }
             else                        // otherwise just header
             {
-                g_init_lines = 8;
+                g_init_lines = ArticleLine{8};
             }
         }
         // Check for g_initlines bigger than the screen and fix it!
-        g_init_lines = std::min(g_init_lines, g_tc_LINES);
+        g_init_lines = std::min(g_init_lines, ArticleLine{g_tc_LINES});
     }
     else                                // not a crt
     {
@@ -2222,7 +2222,7 @@ static void line_col_calcs()
         s_tc_CL = "\n\n";                       // put a couple of lines between
         if (!g_init_lines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
         {
-            g_init_lines = 8;            // make g_initlines reasonable
+            g_init_lines = ArticleLine{8};            // make g_initlines reasonable
         }
     }
     if (g_tc_COLS <= 0)
