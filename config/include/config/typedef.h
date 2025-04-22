@@ -3,19 +3,19 @@
 #ifndef TRN_TYPEDEF_H
 #define TRN_TYPEDEF_H
 
-#include <config/StrongInt.h>
+#include <strong_type/strong_type.hpp>
 
 // some important types
 
+template <typename Base, typename Tag>
+using Number = strong::type<Base, Tag, strong::arithmetic, strong::bicrementable, strong::ordered, strong::equality,
+                            strong::default_constructible, strong::boolean>;
+
 // newsgroup number
-struct NewsgroupNum : StrongInt<int>
-{
-};
+using NewsgroupNum  = Number<int, struct NewsgroupNumTag>;
 
 // article number
-struct ArticleNum : StrongInt<long>
-{
-};
+using ArticleNum = Number<long, struct ArticleNumTag>;
 
 using ArticleUnread = long;      // could be short to save space
 using ArticlePosition = long;    // char position in article file

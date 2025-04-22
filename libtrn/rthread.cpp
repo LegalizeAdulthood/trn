@@ -88,8 +88,8 @@ void thread_open()
         if (g_first_subject)
         {
             g_first_cached = g_first_art;
-            g_last_cached.num = g_first_art.num - 1;
-            g_parsed_art.num = 0;
+            g_last_cached = g_first_art - ArticleNum{1};
+            g_parsed_art = ArticleNum{};
         }
     }
 
@@ -106,8 +106,8 @@ void thread_open()
     {
         if (g_thread_always)
         {
-            g_spin_todo = g_last_art.num - g_abs_first.num + 1;
-            g_spin_estimate = g_last_art.num - g_abs_first.num + 1;
+            g_spin_todo = (g_last_art - g_abs_first).value_of() + 1;
+            g_spin_estimate = (g_last_art - g_abs_first).value_of() + 1;
             (void) ov_data(g_abs_first, g_last_art, false);
             if (g_data_source->ov_opened && find_existing && g_data_source->over_dir == nullptr)
             {
@@ -118,7 +118,7 @@ void thread_open()
         }
         else
         {
-            g_spin_todo = g_last_art.num - g_first_art.num + 1;
+            g_spin_todo = (g_last_art - g_first_art).value_of() + 1;
             g_spin_estimate = g_newsgroup_ptr->to_read;
             if (g_first_art > g_last_art)
             {
@@ -151,12 +151,12 @@ void thread_open()
 
     if (g_last_cached > g_last_art)
     {
-        g_newsgroup_ptr->to_read += (ArticleUnread)(g_last_cached.num-g_last_art.num);
+        g_newsgroup_ptr->to_read += (ArticleUnread)(g_last_cached-g_last_art).value_of();
         // ensure getngsize() knows the new maximum
         g_newsgroup_ptr->ng_max = g_last_cached;
         g_last_art = g_last_cached;
     }
-    g_article_list->high = g_last_art.num;
+    g_article_list->high = g_last_art.value_of();
 
     for (ap = article_ptr(article_first(g_abs_first));
          ap && article_num(ap) <= g_last_art;
@@ -181,10 +181,10 @@ void thread_open()
 //
 void thread_grow()
 {
-    g_added_articles += g_last_art.num - g_last_cached.num;
+    g_added_articles += (g_last_art - g_last_cached).value_of();
     if (g_added_articles && g_thread_always)
     {
-        cache_range(ArticleNum{g_last_cached + 1}, g_last_art);
+        cache_range(g_last_cached + ArticleNum{1}, g_last_art);
     }
     count_subjects(CS_NORM);
     if (g_art_ptr_list)
@@ -246,7 +246,7 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
 
 void top_article()
 {
-    g_art = ArticleNum{g_last_art + 1};
+    g_art = g_last_art + ArticleNum{1};
     g_artp = nullptr;
     inc_article(g_selected_only, false);
     if (g_art > g_last_art && g_last_cached < g_last_art)
@@ -319,7 +319,7 @@ void inc_article(bool sel_flag, bool rereading)
     // Use the explicit article-order if it exists
     if (g_art_ptr_list)
     {
-        Article** limit = g_art_ptr_list + g_art_ptr_list_size.num;
+        Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
         if (!ap)
         {
             g_art_ptr = g_art_ptr_list - 1;
@@ -351,7 +351,7 @@ void inc_article(bool sel_flag, bool rereading)
         else
         {
             g_artp = nullptr;
-            g_art = ArticleNum{g_last_art + 1};
+            g_art = g_last_art + ArticleNum{1};
             g_art_ptr = g_art_ptr_list;
         }
         return;
@@ -403,11 +403,11 @@ void inc_article(bool sel_flag, bool rereading)
         {
             if (g_art <= g_last_cached)
             {
-                g_art = ArticleNum{g_last_cached + 1};
+                g_art = g_last_cached + ArticleNum{1};
             }
             else
             {
-                g_art.num++;
+                ++g_art;
             }
             if (g_art <= g_last_art)
             {
@@ -415,7 +415,7 @@ void inc_article(bool sel_flag, bool rereading)
             }
             else
             {
-                g_art = ArticleNum{g_last_art + 1};
+                g_art = g_last_art + ArticleNum{1};
             }
         }
         return;
@@ -425,14 +425,14 @@ void inc_article(bool sel_flag, bool rereading)
 num_inc:
     if (!ap)
     {
-        g_art = ArticleNum{g_first_art - 1};
+        g_art = g_first_art - ArticleNum{1};
     }
     while (true)
     {
         g_art = article_next(g_art);
         if (g_art > g_last_art)
         {
-            g_art = ArticleNum{g_last_art + 1};
+            g_art = g_last_art + ArticleNum{1};
             ap = nullptr;
             break;
         }
@@ -462,7 +462,7 @@ void dec_article(bool sel_flag, bool rereading)
     // Use the explicit article-order if it exists
     if (g_art_ptr_list)
     {
-        Article** limit = g_art_ptr_list + g_art_ptr_list_size.num;
+        Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
         if (!ap)
         {
             g_art_ptr = limit;
@@ -535,7 +535,7 @@ void dec_article(bool sel_flag, bool rereading)
         }
         else
         {
-            g_art = ArticleNum{g_abs_first - 1};
+            g_art = g_abs_first - ArticleNum{1};
         }
         return;
     }
@@ -547,7 +547,7 @@ num_dec:
         g_art = article_prev(g_art);
         if (g_art < g_abs_first)
         {
-            g_art = ArticleNum{g_abs_first - 1};
+            g_art = g_abs_first - ArticleNum{1};
             ap = nullptr;
             break;
         }
@@ -712,7 +712,7 @@ bool next_article_with_subj()
           || (g_selected_only && !(ap->flags & AF_SEL)));
     g_artp = ap;
     g_art = article_num(ap);
-    g_search_ahead.num = -1;
+    g_search_ahead = ArticleNum{-1};
     return true;
 }
 
@@ -1390,7 +1390,7 @@ void visit_next_thread()
         g_reread = false;
     }
     g_artp = nullptr;
-    g_art = ArticleNum{g_last_art + 1};
+    g_art = g_last_art + ArticleNum{1};
     g_force_last = true;
 }
 
@@ -1414,7 +1414,7 @@ void visit_prev_thread()
         g_reread = false;
     }
     g_artp = nullptr;
-    g_art = ArticleNum{g_last_art + 1};
+    g_art = g_last_art + ArticleNum{1};
     g_force_last = true;
 }
 
@@ -1598,12 +1598,12 @@ void count_subjects(CountSubjectMode cmode)
     Subject*sp;
     int     desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
 
-    g_obj_count.num = 0;
+    g_obj_count = ArticleNum{};
     g_selected_count = 0;
     g_selected_subj_cnt = 0;
     if (g_last_cached >= g_last_art)
     {
-        g_first_art = ArticleNum{g_last_art + 1};
+        g_first_art = g_last_art + ArticleNum{1};
     }
 
     switch (cmode)
@@ -1676,7 +1676,7 @@ void count_subjects(CountSubjectMode cmode)
         {
             sp->date = sp->articles->date;
         }
-        g_obj_count.num += count;
+        g_obj_count += ArticleNum{count};
         if (cmode == CS_RESELECT)
         {
             if (sp->flags & SF_VISIT)
@@ -2044,7 +2044,7 @@ static int article_order_author(const Article **art1, const Article **art2)
 
 static int article_order_number(const Article **art1, const Article **art2)
 {
-    const int eq{article_num(*art1).num - article_num(*art2).num};
+    const int eq{article_num(*art1).value_of() - article_num(*art2).value_of()};
     return eq > 0 ? g_sel_direction : -g_sel_direction;
 }
 
@@ -2085,7 +2085,7 @@ void sort_articles()
     build_article_ptrs();
 
     // If we don't have at least two articles, we're done!
-    if (g_art_ptr_list_size.num < 2)
+    if (g_art_ptr_list_size.value_of() < 2)
     {
         return;
     }
@@ -2122,7 +2122,7 @@ void sort_articles()
         break;
     }
     g_sel_page_app = nullptr;
-    std::qsort(g_art_ptr_list, g_art_ptr_list_size.num, sizeof (Article*), ((int(*)(const void *, const void *))sort_procedure));
+    std::qsort(g_art_ptr_list, g_art_ptr_list_size.value_of(), sizeof (Article*), ((int(*)(const void *, const void *))sort_procedure));
 }
 
 static void build_article_ptrs()
@@ -2132,8 +2132,8 @@ static void build_article_ptrs()
 
     if (!g_art_ptr_list || g_art_ptr_list_size != count)
     {
-        g_art_ptr_list = (Article**)safe_realloc((char*)g_art_ptr_list,
-                (MemorySize)count.num * sizeof (Article*));
+        g_art_ptr_list =
+            (Article **) safe_realloc((char *) g_art_ptr_list, (MemorySize) count.value_of() * sizeof(Article *));
         g_art_ptr_list_size = count;
     }
     Article **app = g_art_ptr_list;
@@ -2143,7 +2143,7 @@ static void build_article_ptrs()
         if ((ap->flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
         {
             *app++ = ap;
-            count.num--;
+            --count;
         }
     }
 }

@@ -402,32 +402,32 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                       : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0)? g_first_art : g_kill_first;
     if (top_start || g_art == ArticleNum{})
     {
-        g_art.num = g_last_art.num+1;
+        g_art = g_last_art + ArticleNum{1};
         top_start = false;
     }
     if (backward)
     {
         if (cmd_lst && g_art <= g_last_art)
         {
-            g_art.num++;                // include current article
+            ++g_art;                // include current article
         }
     }
     else
     {
         if (g_art > g_last_art)
         {
-            g_art.num = search_first.num - 1;
+            g_art = search_first - ArticleNum{1};
         }
         else if (cmd_lst && g_art >= g_abs_first)
         {
-            g_art.num--;                // include current article
+            --g_art;                // include current article
         }
     }
     if (g_search_ahead > ArticleNum{})
     {
         if (!backward)
         {
-            g_art.num = g_search_ahead.num - 1;
+            g_art = g_search_ahead - ArticleNum{1};
         }
         g_search_ahead = ArticleNum{-1};
     }
@@ -463,9 +463,9 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                     return SRCH_INTR;
                 }
             }
-            else if (output_level && !cmd_lst && !(g_art.num % 50))
+            else if (output_level && !cmd_lst && !(g_art % ArticleNum{50}))
             {
-                std::printf("...%ld", g_art.num);
+                std::printf("...%ld", g_art.value_of());
                 std::fflush(stdout);
             }
         }

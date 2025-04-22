@@ -576,13 +576,13 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
 {
-    std::sprintf(g_ser_line,"XHDR %s %ld",g_header_type[which_line].name.c_str(),artnum.num);
+    std::sprintf(g_ser_line,"XHDR %s %ld",g_header_type[which_line].name.c_str(),artnum.value_of());
     return nntp_command(g_ser_line);
 }
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum lastnum)
 {
-    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name.c_str(), artnum.num, lastnum.num);
+    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name.c_str(), artnum.value_of(), lastnum.value_of());
     return nntp_command(g_ser_line);
 }
 
@@ -627,12 +627,12 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
             size = sizeof g_cmd_buf;
         }
         *s = '\0';
-        ArticleNum prior_num{art_num.num - 1};
+        ArticleNum prior_num{art_num - ArticleNum{1}};
         bool    cached = (g_header_type[which_line].flags & HT_CACHED);
         int     status;
         if (cached != 0)
         {
-            lastnum = ArticleNum{art_num.num + PREFETCH_SIZE - 1};
+            lastnum = art_num + ArticleNum{PREFETCH_SIZE - 1};
             lastnum = std::min(lastnum, g_last_art);
             status = nntp_xhdr(which_line, art_num, lastnum);
         }
@@ -672,7 +672,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                     continue;
                 }
                 t++;
-                num.num = std::atol(line);
+                num = ArticleNum{std::atol(line)};
                 if (num < art_num || num > lastnum)
                 {
                     continue;

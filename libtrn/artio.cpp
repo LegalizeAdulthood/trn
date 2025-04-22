@@ -56,7 +56,7 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
 {
     Article* ap = article_find(art_num);
 
-    if (!ap || !art_num.num || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
+    if (!ap || !art_num.value_of() || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
     {
         errno = ENOENT;
         return nullptr;
@@ -77,7 +77,7 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
         else
         {
             char art_name[MAX_FILENAME]; // filename of current article
-            std::sprintf(art_name, "%ld", art_num.num);
+            std::sprintf(art_name, "%ld", art_num.value_of());
             g_art_fp = std::fopen(art_name, "r");
         }
         if (!g_art_fp)

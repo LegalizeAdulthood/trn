@@ -292,7 +292,7 @@ int sa_do_cmd()
             if (g_sa_mode_read_elig)
             {
                 g_sc_fill_read = true;
-                g_sc_fill_max = ArticleNum{g_abs_first - 1};
+                g_sc_fill_max = g_abs_first - ArticleNum{1};
             }
             if (!g_sa_mode_read_elig)
             {
@@ -487,7 +487,7 @@ int sa_do_cmd()
                 return 0;                       // beep but do nothing
             }
         }
-        g_sa_art.num = i;
+        g_sa_art = ArticleNum{i};
         return SA_READ;                 // special code to really return
 
     case 'N': // next newsgroup

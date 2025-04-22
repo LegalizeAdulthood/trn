@@ -98,7 +98,7 @@ void rc_to_bits()
         {
             if (article_unread(i))
             {
-                std::printf("%ld ", i.num);
+                std::printf("%ld ", i.value_of());
             }
         }
     }
@@ -113,7 +113,7 @@ void rc_to_bits()
         min = std::max(min, g_first_art);    // make sure range is in range
         if (min > g_last_art)
         {
-            min = ArticleNum{g_last_art.num + 1};
+            min = g_last_art + ArticleNum{1};
         }
         for (; n < min; n = article_next(n))
         {
@@ -127,7 +127,7 @@ void rc_to_bits()
                 else
                 {
                     ap->flags |= AF_UNREAD;
-                    unread.num++;
+                    ++unread;
                     if (ap->auto_flags & AUTO_SEL_MASK)
                     {
                         select_article(ap, ap->auto_flags);
@@ -141,7 +141,7 @@ void rc_to_bits()
         }
         else if ((max = ArticleNum{std::atol(h + 1)}) < min)
         {
-            max = ArticleNum{min.num - 1};
+            max = min - ArticleNum{1};
         }
         max = std::min(max, g_last_art);
         // mark all arts in range as read
@@ -177,7 +177,7 @@ void rc_to_bits()
             else
             {
                 ap->flags |= AF_UNREAD;
-                unread.num++;
+                ++unread;
                 if (ap->auto_flags & AUTO_SEL_MASK)
                 {
                     select_article(ap, ap->auto_flags);
@@ -197,7 +197,7 @@ void rc_to_bits()
     {
         std::free(my_buf);
     }
-    g_newsgroup_ptr->to_read = unread.num;
+    g_newsgroup_ptr->to_read = unread.value_of();
 }
 
 bool set_first_art(const char *s)
@@ -205,7 +205,7 @@ bool set_first_art(const char *s)
     s = skip_eq(s, ' ');
     if (!std::strncmp(s,"1-",2))                     // can we save some time here?
     {
-        g_first_art.num = std::atol(s+2)+1;               // process first range thusly
+        g_first_art = ArticleNum{std::atol(s+2)+1};               // process first range thusly
         g_first_art = std::max(g_first_art, g_abs_first);
         return true;
     }
@@ -233,9 +233,9 @@ void bits_to_rc()
             break;
         }
     }
-    std::sprintf(s," 1-%ld,", i.num -1);
+    std::sprintf(s," 1-%ld,", i.value_of() -1);
     s += std::strlen(s);
-    for (; i<=g_last_art; i.num++)   // for each article in newsgroup
+    for (; i<=g_last_art; ++i)   // for each article in newsgroup
     {
         if (s-mybuf > safe_len)          // running out of room?
         {
@@ -257,22 +257,22 @@ void bits_to_rc()
         }
         if (!was_read(i))               // still unread?
         {
-            count.num++;                    // then count it
+            ++count;                    // then count it
         }
         else                            // article was read
         {
-            std::sprintf(s,"%ld",(long)i.num); // put out the min of the range
+            std::sprintf(s,"%ld",i.value_of()); // put out the min of the range
             s += std::strlen(s);           // keeping house
             ArticleNum old_i = i;         // remember this spot
             do
             {
-                i.num++;
+                ++i;
             } while (i <= g_last_art && was_read(i));
                                         // find 1st unread article or end
-            i.num--;                        // backup to last read article
-            if (i > old_i)               // range of more than 1?
+            --i;                        // backup to last read article
+            if (i > old_i)              // range of more than 1?
             {
-                std::sprintf(s,"-%ld,",(long)i.num);
+                std::sprintf(s,"-%ld,", i.value_of());
                                         // then it out as a range
                 s += std::strlen(s);         // and house keep
             }
@@ -315,7 +315,7 @@ void bits_to_rc()
     }
     else
     {
-        g_newsgroup_ptr->to_read = (ArticleUnread)count.num; // otherwise, remember the count
+        g_newsgroup_ptr->to_read = (ArticleUnread)count.value_of(); // otherwise, remember the count
     }
     g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
 }
@@ -379,7 +379,7 @@ void find_existing_articles()
                     }
                 }
             }
-            for (an = g_abs_first; an < g_first_cached; an.num++)
+            for (an = g_abs_first; an < g_first_cached; ++an)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -387,7 +387,7 @@ void find_existing_articles()
                     ap->flags |= AF_EXISTS;
                 }
             }
-            for (an = ArticleNum{g_last_cached.num + 1}; an <= g_last_art; an.num++)
+            for (an = g_last_cached + ArticleNum{1}; an <= g_last_art; ++an)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -398,7 +398,7 @@ void find_existing_articles()
         }
         else
         {
-            for (an = g_abs_first; an <= g_last_art; an.num++)
+            for (an = g_abs_first; an <= g_last_art; ++an)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -411,7 +411,7 @@ void find_existing_articles()
     else
     {
         namespace fs = std::filesystem;
-        ArticleNum first{g_last_art.num + 1};
+        ArticleNum first{g_last_art + ArticleNum{1}};
         ArticleNum last{};
         fs::path cwd(".");
         char ch;
@@ -470,12 +470,12 @@ void find_existing_articles()
     g_first_art = std::max(g_first_art, g_abs_first);
     if (g_first_art > g_last_art)
     {
-        g_first_art.num = g_last_art.num + 1;
+        g_first_art = g_last_art + ArticleNum{1};
     }
     g_first_cached = std::max(g_first_cached, g_abs_first);
     if (g_last_cached < g_abs_first)
     {
-        g_last_cached.num = g_abs_first.num - 1;
+        g_last_cached = g_abs_first - ArticleNum{1};
     }
 }
 
@@ -770,7 +770,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
                 break;
             }
             *xartnum++ = '\0';
-            if (!(x.num = std::atol(xartnum)))
+            if (!(value_of(x) = std::atol(xartnum)))
             {
                 continue;
             }

@@ -196,7 +196,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                 sc_set_score(a,score);
                 s_used++;
             }
-            a.num++;
+            ++a;
             break;
 
         case 'J': case 'K': case 'L': case 'M': case 'N':
@@ -218,7 +218,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                 sc_set_score(a,score);
                 s_used++;
             }
-            a.num++;
+            ++a;
             break;
 
         case 'r':     // repeat
@@ -246,7 +246,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                     sc_set_score(a,score);
                     s_used++;
                 }
-                a.num++;
+                ++a;
             }
             break;
 
@@ -256,7 +256,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
             if (!std::isdigit(*s))
             {
                 // simple case, just "s"
-                a.num += 1;
+                ++a;
             }
             else
             {
@@ -266,7 +266,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
                 *s = '\0';
                 x = std::atoi(p);
                 *s = c1;
-                a.num += x;
+                a += ArticleNum{x};
             }
             break;
         } // switch
@@ -289,16 +289,16 @@ ArticleNum sc_sv_make_line(ArticleNum a)
     {
         if (article_unread(art) && article_scored(art))
         {
-            if (s_last.num != art.num - 1)
+            if (s_last != art - ArticleNum{1})
             {
-                if (s_last.num == art.num - 2)
+                if (s_last == art - ArticleNum{2})
                 {
                     *s++ = 's';
                     num_output++;
                 }
                 else
                 {
-                    std::sprintf(s, "s%ld", (art.num - s_last.num) - 1);
+                    std::sprintf(s, "s%ld", (art.value_of() - s_last.value_of()) - 1);
                     s = s_line_buf + std::strlen(s_line_buf);
                     num_output++;
                 }
@@ -415,7 +415,7 @@ void sc_load_scores()
         switch (*s)
         {
         case ':':
-            a.num = std::atoi(s+1);         // set the article #
+            a = ArticleNum{std::atoi(s+1)};         // set the article #
             break;
 
         case '.':                       // longer score line
@@ -481,7 +481,7 @@ void sc_load_scores()
 void sc_save_scores()
 {
     s_saved = 0;
-    s_last.num = 0;
+    s_last = ArticleNum{};
 
     g_waiting = true;   // DON'T interrupt
     char *gname = save_str(file_exp("%C"));
@@ -499,9 +499,9 @@ void sc_save_scores()
     sc_sv_add(s_line_buf2);
 
     ArticleNum a = g_first_art;
-    std::sprintf(s_line_buf2, ":%ld", a.num);
+    std::sprintf(s_line_buf2, ":%ld", a.value_of());
     sc_sv_add(s_line_buf2);
-    s_last.num = a.num - 1;
+    s_last = a - ArticleNum{1};
     while (a <= g_last_art)
     {
         a = sc_sv_make_line(a);

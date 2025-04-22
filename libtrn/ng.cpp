@@ -175,8 +175,8 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     g_force_last = true;                 // if 0 unread, do not bomb out
     g_recent_artp = nullptr;
     g_curr_artp = nullptr;
-    g_recent_art = ArticleNum{g_last_art.num + 1};
-    g_curr_art = ArticleNum{g_last_art.num + 1};
+    g_recent_art = g_last_art + ArticleNum{1};
+    g_curr_art = g_last_art + ArticleNum{1};
     g_prompt = whatnext;
     g_char_subst = g_charsets.c_str();
 
@@ -244,7 +244,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         g_check_count = 0;               // do not checkpoint for a while
     }
     g_do_fseek = false;                 // start 1st article at top
-    while (g_art <= ArticleNum{g_last_art.num + 1})     // for each article
+    while (g_art <= g_last_art + ArticleNum{1})     // for each article
     {
         set_mode(GM_READ,MM_ARTICLE);
 
@@ -275,10 +275,10 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             if (g_force_last && g_art > oldlast)
             {
-                g_art = ArticleNum{g_last_art + 1};
+                g_art = g_last_art + ArticleNum{1};
             }
         }
-        if (g_art.num != 0 || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
+        if (g_art != ArticleNum{} || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
         {
             g_artp = article_find(g_art);
         }
@@ -302,8 +302,8 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             start_command = nullptr;
             if (input_pending())
             {
-                g_art = ArticleNum{g_last_art.num + 1};
-                g_curr_art = ArticleNum{g_last_art.num + 1};
+                g_art = g_last_art + ArticleNum{1};
+                g_curr_art = g_last_art + ArticleNum{1};
                 g_artp = nullptr;
                 g_curr_artp = nullptr;
                 goto reinp_article;
@@ -311,7 +311,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         }
         if (g_art > g_last_art)                  // are we off the end still?
         {
-            g_art = ArticleNum{g_last_art.num + 1};  // keep pointer references sane
+            g_art = g_last_art + ArticleNum{1};  // keep pointer references sane
             if (!g_force_last && g_newsgroup_ptr->to_read && g_selected_only && !g_selected_count)
             {
                 g_art = g_curr_art;
@@ -321,7 +321,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             count_subjects(CS_RETAIN);
             article_walk(count_uncached_article, 0);
-            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.num;
+            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.value_of();
             if (g_artp != g_curr_artp)
             {
                 g_recent_art = g_curr_art;      // remember last article # (for '-')
@@ -359,11 +359,11 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 if (g_selected_only)
                 {
                     std::printf("  (%ld + %ld articles still unread)", (long) g_selected_count,
-                           g_obj_count.num - g_selected_count);
+                           g_obj_count.value_of() - g_selected_count);
                 }
                 else
                 {
-                    std::printf("  (%ld article%s still unread)", (long) g_obj_count.num, plural(g_obj_count.num));
+                    std::printf("  (%ld article%s still unread)", (long) g_obj_count.value_of(), plural(g_obj_count.value_of()));
                 }
             }
             if (g_redirected)
@@ -384,7 +384,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             set_mode(g_general_mode,MM_ARTICLE_END);
             g_prompt = whatnext;
-            g_search_ahead.num = 0;                // no more subject search mode
+            g_search_ahead = ArticleNum{};                // no more subject search mode
             std::fputs("\n\n",stdout);
             term_down(2);
         }
@@ -421,11 +421,11 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                         // (line # within article file)
             }
             clear();                    // clear screen
-            if (g_art.num == 0 && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
+            if (g_art == ArticleNum{} && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
                 && !(g_artp->flags & AF_CACHED))
             {
                 g_art = nntp_stat_id(g_artp->msg_id);
-                if (g_art.num < 0)
+                if (g_art < ArticleNum{})
                 {
                     s_exit_code = NG_NO_SERVER;
                     goto cleanup;
@@ -454,7 +454,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 virtual_write(g_art_line_num,(ArticlePosition)0);
                 finish_tree(linenum);
                 g_prompt = whatnext;
-                g_search_ahead.num = 0;
+                g_search_ahead = ArticleNum{};
             }
             else                        // found it, so print it
             {
@@ -786,7 +786,7 @@ reask_unread:
             check_first(g_abs_first);
             article_walk(mark_all_unread, 0);
             count_subjects(CS_NORM);
-            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.num;
+            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.value_of();
         }
         else if (*g_buf == '+')
         {
@@ -1018,7 +1018,7 @@ not_threaded:
         {
             dec_article(g_selected_only,false);
         } while (g_art >= g_first_art && (was_read(g_art) || !parse_header(g_art)));
-        g_search_ahead.num = 0;
+        g_search_ahead = ArticleNum{};
         if (g_art >= g_first_art)
         {
             return AS_NORM;
@@ -1051,18 +1051,18 @@ check_dec_art:
             return AS_ASK;
         }
         g_reread = true;
-        g_search_ahead.num = 0;
+        g_search_ahead = ArticleNum{};
         return AS_NORM;
 
     case '-':
     case '\b':  case '\177':
-        if (g_recent_art.num >= 0)
+        if (g_recent_art >= ArticleNum{})
         {
             g_art = g_recent_art;
             g_artp = g_recent_artp;
             g_reread = true;
             g_force_last = true;
-            g_search_ahead.num = -(g_search_ahead.num != 0);
+            g_search_ahead = ArticleNum{-(g_search_ahead.value_of() != 0)};
             return AS_NORM;
         }
         s_exit_code = NG_MINUS;
@@ -1156,7 +1156,7 @@ check_dec_art:
                 top_article();
             }
         }
-        g_search_ahead.num = 0;
+        g_search_ahead = ArticleNum{};
         return AS_NORM;
 
     case 'N':                 // goto next article
@@ -1210,14 +1210,14 @@ check_dec_art:
         {
             g_force_last = true;
         }
-        g_search_ahead.num = 0;
+        g_search_ahead = ArticleNum{};
         return AS_NORM;
 
     case '$':
-        g_art = ArticleNum{g_last_art + 1};
+        g_art = g_last_art + ArticleNum{1};
         g_artp = nullptr;
         g_force_last = true;
-        g_search_ahead.num = 0;
+        g_search_ahead = ArticleNum{};
         return AS_NORM;
 
     case '0':
@@ -1237,7 +1237,7 @@ check_dec_art:
             g_reread = true;
             if (g_search_ahead)
             {
-                g_search_ahead.num = -1;
+                g_search_ahead = ArticleNum{-1};
             }
             break;
 
@@ -1303,11 +1303,11 @@ normal_search:
         case SRCH_INTR:
             if (g_verbose)
             {
-                std::printf("\n(Interrupted at article %ld)\n",(long)g_art.num);
+                std::printf("\n(Interrupted at article %ld)\n",(long)g_art.value_of());
             }
             else
             {
-                std::printf("\n(Intr at %ld)\n",(long)g_art.num);
+                std::printf("\n(Intr at %ld)\n",(long)g_art.value_of());
             }
             term_down(2);
             g_art = g_curr_art;     // restore to current article
@@ -1371,7 +1371,7 @@ normal_search:
         term_down(1);
         g_newsgroup_ptr->subscribe_char = NEGCHAR;
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
-        g_newsgroup_to_read.num--;
+        --g_newsgroup_to_read;
         return AS_CLEAN;
 
     case 'M':
@@ -1379,7 +1379,7 @@ normal_search:
         {
             delay_unmark(g_artp);
             one_less(g_artp);
-            std::printf("\nArticle %ld will return.\n",(long)g_art.num);
+            std::printf("\nArticle %ld will return.\n", g_art.value_of());
             term_down(2);
         }
         return AS_ASK;
@@ -1388,7 +1388,7 @@ normal_search:
         if (g_art >= g_abs_first && g_art <= g_last_art)
         {
             unmark_as_read(g_artp);
-            std::printf("\nArticle %ld marked as still unread.\n",(long)g_art.num);
+            std::printf("\nArticle %ld marked as still unread.\n", g_art.value_of());
             term_down(2);
         }
         return AS_ASK;
@@ -1401,7 +1401,7 @@ normal_search:
         case 'u':
             return AS_CLEAN;
         }
-        g_art = ArticleNum{g_last_art + 1};
+        g_art = g_last_art + ArticleNum{1};
         g_artp = nullptr;
         g_force_last = false;
         return AS_NORM;
@@ -1450,11 +1450,11 @@ normal_search:
     case '#':
         if (g_verbose)
         {
-            std::printf("\nThe last article is %ld.\n",(long)g_last_art.num);
+            std::printf("\nThe last article is %ld.\n",(long)g_last_art.value_of());
         }
         else
         {
-            std::printf("\n%ld\n",(long)g_last_art.num);
+            std::printf("\n%ld\n",(long)g_last_art.value_of());
         }
         term_down(2);
         return AS_ASK;
@@ -1526,7 +1526,7 @@ run_the_selector:
 
     case '^':
         top_article();
-        g_search_ahead.num = 0;
+        g_search_ahead = ArticleNum{};
         return AS_NORM;
 
 #ifdef DEBUG
@@ -1746,7 +1746,7 @@ refresh_screen:
         switch (g_buf[1] & 0177)
         {
         case 'P':
-            g_art.num--;
+            --g_art;
             goto check_dec_art;
 
         case 'N':
@@ -1756,13 +1756,13 @@ refresh_screen:
             }
             else
             {
-                g_art.num++;
+                ++g_art;
             }
             if (g_art <= g_last_art)
             {
                 g_reread = true;
             }
-            g_search_ahead.num = 0;
+            g_search_ahead = ArticleNum{};
             return AS_NORM;
 
         case '+':
@@ -2000,7 +2000,7 @@ reask_catchup:
         if (leave_unread)
         {
             count_subjects(CS_NORM);
-            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.num;
+            g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count.value_of();
         }
         else
         {
@@ -2024,7 +2024,7 @@ reask_catchup:
     {
         g_newsgroup_ptr->subscribe_char = NEGCHAR;
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
-        g_newsgroup_to_read.num--;
+        --g_newsgroup_to_read;
         newline();
         std::printf(g_unsub_to,g_newsgroup_name.c_str());
         std::printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
@@ -2038,7 +2038,7 @@ static bool count_uncached_article(char *ptr, int arg)
     Article* ap = (Article*)ptr;
     if ((ap->flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
     {
-        g_obj_count.num++;
+        ++g_obj_count;
     }
     return false;
 }
@@ -2046,7 +2046,7 @@ static bool count_uncached_article(char *ptr, int arg)
 static bool mark_all_read(char *ptr, int leave_unread)
 {
     Article* ap = (Article*)ptr;
-    if (article_num(ap) > g_last_art - leave_unread)
+    if (article_num(ap) > g_last_art - ArticleNum{leave_unread})
     {
         return true;
     }
@@ -2060,7 +2060,7 @@ static bool mark_all_unread(char *ptr, int arg)
     if ((ap->flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
     {
         ap->flags |= AF_UNREAD;         // mark as unread
-        g_obj_count.num++;
+        ++g_obj_count;
     }
     return false;
 }
@@ -2092,7 +2092,7 @@ bool output_subject(char *ptr, int flag)
     char *  s = fetch_subj(i, false);
     if (s != nullptr)
     {
-        std::sprintf(tmpbuf,"%-5ld ", i.num);
+        std::sprintf(tmpbuf,"%-5ld ", i.value_of());
         int len = std::strlen(tmpbuf);
         if (!empty(g_subj_line))
         {

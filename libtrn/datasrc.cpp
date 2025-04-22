@@ -725,8 +725,8 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
                 cp = skip_digits(cp);
                 while (*--cp != ' ')
                 {
-                    long num = high.num % 10;
-                    high.num /= 10;
+                    long num = value_of(high) % 10;
+                    high /= ArticleNum{10};
                     *cp = '0' + (char)num;
                 }
                 std::fseek(fp, act_pos, 0);

@@ -140,7 +140,7 @@ DoArticleResult do_article()
     }
     std::sprintf(prompt_buf, g_mouse_bar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
         : "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
-        g_art.num, g_last_art.num);   // format prompt string
+        g_art.value_of(), g_last_art.value_of());   // format prompt string
     g_prompt = prompt_buf;
     g_int_count = 0;            // interrupt count is 0
     s_first_page = (g_top_line < 0);
@@ -211,19 +211,19 @@ DoArticleResult do_article()
 
                 int selected = (g_curr_artp->flags & AF_SEL);
                 int unseen = article_unread(g_art) ? 1 : 0;
-                std::sprintf(g_art_line,"%s%s #%ld",g_newsgroup_name.c_str(),g_moderated.c_str(), g_art.num);
+                std::sprintf(g_art_line,"%s%s #%ld",g_newsgroup_name.c_str(),g_moderated.c_str(), g_art.value_of());
                 if (g_selected_only)
                 {
-                    i.num = g_selected_count - (unseen && selected);
+                    value_of(i) = g_selected_count - (unseen && selected);
                     std::sprintf(g_art_line+std::strlen(g_art_line)," (%ld + %ld more)",
-                            i.num,(long)g_newsgroup_ptr->to_read - g_selected_count
+                            i.value_of(),(long)g_newsgroup_ptr->to_read - g_selected_count
                                         - (!selected && unseen));
                 }
                 else if ((i = ArticleNum{g_newsgroup_ptr->to_read - unseen}) != ArticleNum{} //
                          || (!g_threaded_group && g_dm_count))
                 {
                     std::sprintf(g_art_line+std::strlen(g_art_line),
-                            " (%ld more)", i.num);
+                            " (%ld more)", i.value_of());
                 }
                 if (!g_threaded_group && g_dm_count)
                 {

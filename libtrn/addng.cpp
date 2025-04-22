@@ -61,7 +61,7 @@ static int build_add_group_list(int key_len, HashDatum *data, int extra)
 {
     AddGroup* node = (AddGroup*)data->dat_ptr;
 
-    node->num.num = s_add_group_count++;
+    value_of(node->num) = s_add_group_count++;
     node->next = nullptr;
     node->prev = g_last_add_group;
     if (g_last_add_group)
@@ -324,7 +324,7 @@ static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int c
         node->flags = AGF_NONE;
         break;
     }
-    node->to_read.num = (to_read < 0)? 0 : to_read;
+    value_of(node->to_read) = (to_read < 0) ? 0 : to_read;
     std::strcpy(node->name, name);
     node->data_src = g_data_source;
     node->next = nullptr;
@@ -358,8 +358,8 @@ static void add_to_list(const char *name, int to_read, char_int ch)
         node->flags = AGF_NONE;
         break;
     }
-    node->to_read.num = (to_read < 0)? 0 : to_read;
-    node->num.num = s_add_group_count++;
+    value_of(node->to_read) = (to_read < 0) ? 0 : to_read;
+    value_of(node->num) = s_add_group_count++;
     std::strcpy(node->name, name);
     node->data_src = g_data_source;
     node->next = nullptr;
@@ -493,8 +493,8 @@ static void scan_active_line(char *active_line, bool add_matching)
 
 static int add_group_order_number(const AddGroup **app1, const AddGroup **app2)
 {
-    const int eq = (*app1)->num.num - (*app2)->num.num;
-    return eq > 0? g_sel_direction : -g_sel_direction;
+    const NewsgroupNum eq = (*app1)->num - (*app2)->num;
+    return eq.value_of() > 0? g_sel_direction : -g_sel_direction;
 }
 
 static int add_group_order_group_name(const AddGroup **app1, const AddGroup **app2)
@@ -504,10 +504,10 @@ static int add_group_order_group_name(const AddGroup **app1, const AddGroup **ap
 
 static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)
 {
-    const long eq = (*app1)->to_read.num - (*app2)->to_read.num;
-    if (eq)
+    const ArticleNum eq = (*app1)->to_read - (*app2)->to_read;
+    if (eq != ArticleNum{})
     {
-        return eq > 0 ? g_sel_direction : -g_sel_direction;
+        return eq > ArticleNum{} ? g_sel_direction : -g_sel_direction;
     }
     return add_group_order_group_name(app1, app2);
 }

@@ -309,8 +309,8 @@ void unuse_multirc(Multirc *mptr)
         g_sel_page_np = nullptr;
     }
     g_newsgroup_data_count = 0;
-    g_newsgroup_count.num = 0;
-    g_newsgroup_to_read.num= 0;
+    g_newsgroup_count = NewsgroupNum{};
+    g_newsgroup_to_read = NewsgroupNum{};
     g_multirc = nullptr;
 }
 
@@ -665,7 +665,7 @@ static bool open_newsrc(Newsrc *rp)
         np->prev = prev_np;
         prev_np = np;
         np->rc = rp;
-        g_newsgroup_count.num++;
+        ++g_newsgroup_count;
         if (some_buf[length-1] == '\n')
         {
             some_buf[--length] = '\0';  // wipe out newline
@@ -703,7 +703,7 @@ static bool open_newsrc(Newsrc *rp)
             set_hash(np);
             continue;
         }
-        g_newsgroup_to_read.num++;
+        ++g_newsgroup_to_read;
 
         // now find out how much there is to read
 
@@ -827,9 +827,9 @@ static void init_newsgroup_node(List *list, ListNode *node)
 {
     std::memset(node->data,0,list->items_per_node * list->item_size);
     NewsgroupData *np = (NewsgroupData*)node->data;
-    for (ArticleNum i{node->low}; i.num <= node->high; i.num++, np++)
+    for (ArticleNum i{node->low}; i.value_of() <= node->high; ++i, np++)
     {
-        np->num.num = i.num;
+        np->num = NewsgroupNum{i.value_of()};
     }
 }
 
@@ -1207,7 +1207,7 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
     }
     np->next = nullptr;
     g_last_newsgroup = np;
-    g_newsgroup_count.num++;
+    ++g_newsgroup_count;
 
     np->rc = rp;
     np->num_offset = std::strlen(ngn) + 1;
@@ -1217,7 +1217,7 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
     np->subscribe_char = c;              // subscribe or unsubscribe
     if (c != NEGCHAR)
     {
-        g_newsgroup_to_read.num++;
+        ++g_newsgroup_to_read;
     }
     np->to_read = TR_NONE;               // just for prettiness
     set_hash(np);                        // so we can find it again
@@ -1234,7 +1234,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
 
     if (g_sel_newsgroup_sort != SS_NATURAL)
     {
-        if (newnum.num < 0)
+        if (newnum < NewsgroupNum{})
         {
             // ask if they want to keep the current order
             in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); // TODO: !'D'
@@ -1281,11 +1281,11 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
     // Renumber the groups according to current order
     for (np = g_first_newsgroup, i = 0; np; np = np->next, i++)
     {
-        np->num.num = i;
+        np->num = NewsgroupNum{i};
     }
     move_np->rc->flags |= RF_RC_CHANGED;
 
-    if (newnum.num < 0)
+    if (newnum < NewsgroupNum{})
     {
 reask_reloc:
         unflush_output();               // disable any ^O in effect
@@ -1316,12 +1316,12 @@ reinp_reloc:
                        "\n"
                        "Type ^ to put the newsgroup first (position 0).\n"
                        "Type $ to put the newsgroup last (position %d).\n",
-                       g_newsgroup_count.num - 1);
+                       g_newsgroup_count.value_of() - 1);
                 std::printf("Type . to put it before the current newsgroup.\n"
                        "Type -newsgroup name to put it before that newsgroup.\n"
                        "Type +newsgroup name to put it after that newsgroup.\n"
                        "Type a number between 0 and %d to put it at that position.\n",
-                       g_newsgroup_count.num - 1);
+                       g_newsgroup_count.value_of() - 1);
                 std::printf("Type L for a listing of newsgroups and their positions.\n"
                        "Type q to abort the current action.\n");
             }
@@ -1331,14 +1331,14 @@ reinp_reloc:
                        "\n"
                        "^ to put newsgroup first (pos 0).\n"
                        "$ to put last (pos %d).\n",
-                       g_newsgroup_count.num - 1);
+                       g_newsgroup_count.value_of() - 1);
                 std::printf(". to put before current newsgroup.\n"
                        "-newsgroup to put before newsgroup.\n"
                        "+newsgroup to put after.\n"
                        "number in 0-%d to put at that pos.\n"
                        "L for list of newsrc.\n"
                        "q to abort\n",
-                       g_newsgroup_count.num - 1);
+                       g_newsgroup_count.value_of() - 1);
             }
             term_down(10);
             goto reask_reloc;
@@ -1359,21 +1359,21 @@ reinp_reloc:
             {
                 goto reinp_reloc;
             }
-            newnum.num = std::atol(g_buf);
+            newnum = NewsgroupNum{std::atol(g_buf)};
             newnum = std::max(newnum, NewsgroupNum{});
-            if (newnum.num >= g_newsgroup_count.num)
+            if (newnum >= g_newsgroup_count)
             {
-                newnum.num = g_newsgroup_count.num - 1;
+                newnum = g_newsgroup_count - NewsgroupNum{1};
             }
         }
         else if (*g_buf == '^')
         {
             newline();
-            newnum.num = 0;
+            newnum = NewsgroupNum{};
         }
         else if (*g_buf == '$')
         {
-            newnum.num = g_newsgroup_count.num-1;
+            newnum = g_newsgroup_count - NewsgroupNum{1};
         }
         else if (*g_buf == '.')
         {
@@ -1395,7 +1395,7 @@ reinp_reloc:
             newnum = np->num;
             if (*g_buf == '+')
             {
-                newnum.num++;
+                ++newnum;
             }
         }
         else
@@ -1406,11 +1406,11 @@ reinp_reloc:
             goto reask_reloc;
         }
     }
-    if (newnum.num < g_newsgroup_count.num - 1)
+    if (newnum < g_newsgroup_count - NewsgroupNum{1})
     {
         for (np = g_first_newsgroup; np; np = np->next)
         {
-            if (np->num.num >= newnum.num)
+            if (np->num >= newnum)
             {
                 break;
             }
@@ -1436,8 +1436,8 @@ reinp_reloc:
         }
         np->prev = move_np;
 
-        move_np->num.num = newnum.num++;
-        for (; np; np = np->next, newnum.num++)
+        move_np->num = newnum++;
+        for (; np; np = np->next, ++newnum)
         {
             np->num = newnum;
         }
@@ -1462,7 +1462,7 @@ void list_newsgroups()
 
     page_start();
     print_lines("  #  Status  Newsgroup\n", STANDOUT);
-    for (np = g_first_newsgroup, i = NewsgroupNum{}; np && !g_int_count; np = np->next, i.num++)
+    for (np = g_first_newsgroup, i = NewsgroupNum{}; np && !g_int_count; np = np->next, ++i)
     {
         if (np->to_read >= 0)
         {
@@ -1471,11 +1471,11 @@ void list_newsgroups()
         *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
         if (np->to_read > 0)
         {
-            std::sprintf(tmpbuf, "%3d %6ld   ", i.num, (long) np->to_read);
+            std::sprintf(tmpbuf, "%3d %6ld   ", i.value_of(), (long) np->to_read);
         }
         else
         {
-            std::sprintf(tmpbuf, "%3d %7s  ", i.num, status[-np->to_read]);
+            std::sprintf(tmpbuf, "%3d %7s  ", i.value_of(), status[-np->to_read]);
         }
         safe_copy(tmpbuf+13, np->rc_line, sizeof tmpbuf - 13);
         *(np->rc_line + np->num_offset - 1) = '\0';
@@ -1519,14 +1519,14 @@ void cleanup_newsrc(Newsrc *rp)
 // #endif
         if (np->to_read == TR_BOGUS)
         {
-            bogosity.num++;
+            ++bogosity;
         }
     }
     for (np = g_last_newsgroup; np && np->to_read == TR_BOGUS; np = np->prev)
     {
-        bogosity.num--;                     // discount already moved ones
+        --bogosity;                     // discount already moved ones
     }
-    if (g_newsgroup_count.num > 5 && bogosity.num > g_newsgroup_count.num / 2)
+    if (g_newsgroup_count > NewsgroupNum{5} && bogosity > g_newsgroup_count / NewsgroupNum{2})
     {
         std::fputs("It looks like the active file is messed up.  Contact your news administrator,\n",
               stdout);
@@ -1534,7 +1534,7 @@ void cleanup_newsrc(Newsrc *rp)
               stdout);
         term_down(2);
     }
-    else if (bogosity.num)
+    else if (bogosity)
     {
         if (g_verbose)
         {
@@ -1550,7 +1550,7 @@ void cleanup_newsrc(Newsrc *rp)
             NewsgroupData *prev_np = np->prev;
             if (np->to_read == TR_BOGUS)
             {
-                relocate_newsgroup(np, NewsgroupNum{g_newsgroup_count.num - 1});
+                relocate_newsgroup(np, NewsgroupNum{g_newsgroup_count.value_of() - 1});
             }
             np = prev_np;
         }
@@ -1584,7 +1584,7 @@ reask_bogus:
             {
                 hash_delete(g_newsrc_hash, np->rc_line, np->num_offset - 1);
                 clear_newsgroup_item((char*)np,0);
-                g_newsgroup_count.num--;
+                --g_newsgroup_count;
             }
             rp->flags |= RF_RC_CHANGED; // TODO: needed?
             g_last_newsgroup = np;

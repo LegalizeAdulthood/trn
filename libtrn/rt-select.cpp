@@ -220,7 +220,7 @@ char article_selector(char_int cmd)
 
     g_sel_rereading = (cmd == 'U');
 
-    g_art = ArticleNum{g_last_art + 1};
+    g_art = g_last_art + ArticleNum{1};
     s_extra_commands = article_commands;
     g_keep_the_group_static = (g_keep_the_group_static == 1);
 
@@ -264,7 +264,7 @@ sel_restart:
     if (g_added_articles)
     {
         long i = g_added_articles;
-        for (long j = g_last_art.num - i + 1; j <= g_last_art.num; j++)
+        for (long j = g_last_art.value_of() - i + 1; j <= g_last_art.value_of(); j++)
         {
             if (!article_unread(ArticleNum{j}))
             {
@@ -331,12 +331,12 @@ sel_exit:
         g_art_ptr = nullptr;
         if (!g_threaded_group)
         {
-            g_search_ahead.num = -1;
+            g_search_ahead = ArticleNum{-1};
         }
     }
     else
     {
-        g_search_ahead.num = 0;
+        g_search_ahead = ArticleNum{};
     }
     g_selected_only = (g_selected_count != 0);
     if (s_sel_ret == '+')
@@ -2541,7 +2541,7 @@ reask_sort:
             if (g_sel_mode == SM_ARTICLE)
             {
                 Article** app;
-                Article **limit = g_art_ptr_list + g_art_ptr_list_size.num;
+                Article **limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
                 if (ch == 'D')
                 {
                     app = g_sel_page_app;
@@ -2712,7 +2712,7 @@ reask_sort:
         }
         else
         {
-            g_art.num = 0;
+            g_art = ArticleNum{};
         }
         // FALL THROUGH
 
@@ -2755,7 +2755,7 @@ reask_sort:
                 // Force the search to begin at g_absfirst or g_firstart,
                 // depending upon whether they specified the 'r' option.
                //
-                g_art = ArticleNum{g_last_art + 1};
+                g_art = g_last_art + ArticleNum{1};
                 switch (art_search(g_buf, sizeof g_buf, false))
                 {
                 case SRCH_ERROR:
@@ -2922,9 +2922,9 @@ static DisplayState newsgroup_commands(char_int ch)
         {
             if (np->to_read > TR_UNSUB && np->to_read < g_newsgroup_min_to_read)
             {
-                g_newsgroup_to_read.num++;
+                ++g_newsgroup_to_read;
             }
-            np->abs_first.num = 0;
+            np->abs_first = ArticleNum{};
         }
         erase_line(false);
         check_active_refetch(true);
@@ -3058,7 +3058,7 @@ reask_sort:
             }
             g_sel_item_index = 0;
 
-            if (sel_perform_change(g_newsgroup_to_read.num, "newsgroup"))
+            if (sel_perform_change(g_newsgroup_to_read.value_of(), "newsgroup"))
             {
                 return DS_UPDATE;
             }
@@ -3417,7 +3417,7 @@ reask_sort:
             }
             g_sel_item_index = 0;
 
-            if (sel_perform_change(g_newsgroup_to_read.num, "newsgroup"))
+            if (sel_perform_change(g_newsgroup_to_read.value_of(), "newsgroup"))
             {
                 return DS_UPDATE;
             }
@@ -3539,7 +3539,7 @@ static DisplayState option_commands(char_int ch)
         int j = g_sel_items[g_sel_item_index].u.op;
         do
         {
-            if (++i > g_obj_count.num)
+            if (++i > g_obj_count.value_of())
             {
                 i = 1;
             }

@@ -4,6 +4,7 @@
   "version": "5.0.0",
   "dependencies": [
     "boost-asio",
+    "gtest",
     {
       "name": "ncurses",
       "platform": "!windows"
@@ -12,6 +13,6 @@
       "name": "pdcurses",
       "platform": "windows"
     },
-    "gtest"
+    "strong-type"
   ]
 }

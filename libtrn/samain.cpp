@@ -33,7 +33,7 @@ static bool s_sa_context_init{}; // has context been initialized?
 void sa_init()
 {
     sa_init_context();
-    if (g_last_art.num == 0 || g_abs_first > g_last_art)
+    if (g_last_art == ArticleNum{} || g_abs_first > g_last_art)
     {
         return;         // no articles
     }
@@ -56,7 +56,7 @@ void sa_init()
     if (g_sa_mode_read_elig)
     {
         g_sc_fill_read = true;
-        g_sc_fill_max = ArticleNum{g_abs_first - 1};
+        g_sc_fill_max = g_abs_first - ArticleNum{1};
     }
 #endif
     s_save_context();
@@ -120,7 +120,7 @@ void sa_clean_main()
 
 void sa_grow_arts(ArticleNum oldlast, ArticleNum last)
 {
-    for (ArticleNum i{oldlast + 1}; i <= last; i.num++)
+    for (ArticleNum i{oldlast + ArticleNum{1}}; i <= last; ++i)
     {
         (void)sa_add_ent(i);
     }

@@ -98,7 +98,7 @@ int access_newsgroup()
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art.num < 0) // Impossible...
+        if (g_last_art < ArticleNum{}) // Impossible...
         {
             return 0;
         }
@@ -148,7 +148,7 @@ int access_newsgroup()
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art.num < 0) // Impossible...
+        if (g_last_art < ArticleNum{}) // Impossible...
         {
             return 0;
         }
@@ -178,23 +178,24 @@ void grow_newsgroup(ArticleNum new_last)
     if (new_last > g_last_art)
     {
         ArticleNum tmpart = g_art;
-        g_newsgroup_ptr->to_read += (ArticleUnread)(new_last.num-g_last_art.num);
-        ArticleNum tmpfirst = ArticleNum{g_last_art + 1};
+        g_newsgroup_ptr->to_read += (ArticleUnread)(new_last-g_last_art).value_of();
+        ArticleNum tmpfirst = g_last_art + ArticleNum{1};
         // Increase the size of article scan arrays.
         sa_grow(g_last_art,new_last);
         do
         {
-            g_last_art.num++;
+            ++g_last_art;
             article_ptr(g_last_art)->flags |= AF_EXISTS|AF_UNREAD;
         } while (g_last_art < new_last);
-        g_article_list->high = g_last_art.num;
+        g_article_list->high = g_last_art.value_of();
         thread_grow();
         // Score all new articles now just in case they weren't done above.
         sc_fill_score_list(tmpfirst,new_last);
         if (g_verbose)
         {
             std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
-                    (long) (g_last_art.num - tmpfirst.num + 1), (g_last_art > tmpfirst ? "s have" : " has"));
+                         g_last_art.value_of() - tmpfirst.value_of() + 1,
+                         g_last_art > tmpfirst ? "s have" : " has");
         }
         else                    // my, my, how clever we are
         {
@@ -215,7 +216,7 @@ void grow_newsgroup(ArticleNum new_last)
 
 static int newsgroup_order_number(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
-    return (int)((*npp1)->num.num - (*npp2)->num.num) * g_sel_direction;
+    return (int)((*npp1)->num.value_of() - (*npp2)->num.value_of()) * g_sel_direction;
 }
 
 static int newsgroup_order_group_name(const NewsgroupData **npp1, const NewsgroupData **npp2)
@@ -230,7 +231,7 @@ static int newsgroup_order_count(const NewsgroupData **npp1, const NewsgroupData
     {
         return eq * g_sel_direction;
     }
-    return (int)((*npp1)->num.num - (*npp2)->num.num);
+    return (int)((*npp1)->num.value_of() - (*npp2)->num.value_of());
 }
 
 // Sort the newsgroups into the chosen order.
@@ -261,20 +262,20 @@ void sort_newsgroups()
         break;
     }
 
-    NewsgroupData **ng_list = (NewsgroupData**)safe_malloc(g_newsgroup_count.num * sizeof(NewsgroupData*));
+    NewsgroupData **ng_list = (NewsgroupData**)safe_malloc(g_newsgroup_count.value_of() * sizeof(NewsgroupData*));
     lp = ng_list;
     for (NewsgroupData* np = g_first_newsgroup; np; np = np->next)
     {
         *lp++ = np;
     }
-    TRN_ASSERT(lp - ng_list == g_newsgroup_count.num);
+    TRN_ASSERT(lp - ng_list == g_newsgroup_count.value_of());
 
-    std::qsort(ng_list, g_newsgroup_count.num, sizeof (NewsgroupData*), (int(*)(const void *, const void *))sort_procedure);
+    std::qsort(ng_list, g_newsgroup_count.value_of(), sizeof (NewsgroupData*), (int(*)(const void *, const void *))sort_procedure);
 
     g_first_newsgroup = ng_list[0];
     g_first_newsgroup->prev = nullptr;
     lp = ng_list;
-    for (NewsgroupNum i = g_newsgroup_count; --i.num; lp++)
+    for (NewsgroupNum i = g_newsgroup_count; --i; lp++)
     {
         lp[0]->next = lp[1];
         lp[1]->prev = lp[0];
@@ -309,7 +310,7 @@ void newsgroup_skip()
         {
             // tries to grab PREFETCH_SIZE XHDRS, flagging missing articles
             (void) fetch_subj(g_art, false);
-            ArticleNum artnum = ArticleNum{g_art + PREFETCH_SIZE - 1};
+            ArticleNum artnum = g_art + ArticleNum{PREFETCH_SIZE - 1};
             artnum = std::min(artnum, g_last_art);
             while (g_art <= artnum)
             {
@@ -329,11 +330,11 @@ void newsgroup_skip()
             clear();
             if (g_verbose)
             {
-                std::printf("\n(Article %ld exists but is unreadable.)\n", (long) g_art.num);
+                std::printf("\n(Article %ld exists but is unreadable.)\n", (long) g_art.value_of());
             }
             else
             {
-                std::printf("\n(%ld unreadable.)\n", (long) g_art.num);
+                std::printf("\n(%ld unreadable.)\n", (long) g_art.value_of());
             }
             term_down(2);
             if (g_novice_delays)
@@ -364,7 +365,7 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
         {
             gp->subscribe_char = NEGCHAR;
             gp->rc->flags |= RF_RC_CHANGED;
-            g_newsgroup_to_read.num--;
+            --g_newsgroup_to_read;
         }
         return ArticleNum{TR_BOGUS};
     }
@@ -418,7 +419,7 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
             break;
         }
     }
-    if (last <= gp->ng_max.num)
+    if (last <= gp->ng_max.value_of())
     {
         return gp->ng_max;
     }

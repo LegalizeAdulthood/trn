@@ -1,3 +1,5 @@
+find_package(strong_type CONFIG REQUIRED)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(configure_trn)
 configure_trn()
@@ -6,7 +8,6 @@ add_library(config
     common.cpp include/config/common.h
     include/config/config2.h
     include/config/msdos.h
-    include/config/StrongInt.h
     include/config/typedef.h
     include/config/user_id.h
     cmake/config.h.in
@@ -23,6 +24,7 @@ add_library(config
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/string_case_compare.h" ${STRING_CASE_COMPARE_SOURCES}
 )
 target_include_directories(config PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include" include)
+target_link_libraries(config PUBLIC strong_type::strong_type)
 target_folder(config "Libraries")
 source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")

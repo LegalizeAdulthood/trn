@@ -1162,7 +1162,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
 
     if (h <= SOME_LINE)
     {
-        std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.num,h);
+        std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.value_of(),h);
         std::printf("(Internal error: header number too low)\n");
         *sf_getline = '\0';
         return sf_getline;
@@ -1175,7 +1175,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
         }
         else
         {
-            std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.num,h);
+            std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.value_of(),h);
             std::printf("(Internal error: header number too high)\n");
             *sf_getline = '\0';
             return sf_getline;

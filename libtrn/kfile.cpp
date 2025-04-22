@@ -155,7 +155,7 @@ int do_kill_file(std::FILE *kfp, int entering)
     char* cp;
     char* bp;
 
-    g_art = ArticleNum{g_last_art.num + 1};
+    g_art = g_last_art + ArticleNum{1};
     g_kill_first = g_first_art;
     std::fseek(kfp,0L,0);                    // rewind file
     while (std::fgets(g_buf, LINE_BUF_LEN, kfp) != nullptr)
@@ -173,11 +173,11 @@ int do_kill_file(std::FILE *kfp, int entering)
             {
                 continue;
             }
-            g_kill_first.num = std::atol(cp+len+1)+1;
+            g_kill_first = ArticleNum{std::atol(cp+len+1)+1};
             g_kill_first = std::max(g_kill_first, g_first_art);
             if (g_kill_first > g_last_art)
             {
-                g_kill_first = ArticleNum{g_last_art.num + 1};
+                g_kill_first = g_last_art + ArticleNum{1};
             }
             continue;
         }
@@ -260,11 +260,11 @@ int do_kill_file(std::FILE *kfp, int entering)
             case SRCH_INTR:
                 if (g_verbose)
                 {
-                    std::printf("\n(Interrupted at article %ld)\n", g_art.num);
+                    std::printf("\n(Interrupted at article %ld)\n", g_art.value_of());
                 }
                 else
                 {
-                    std::printf("\n(Intr at %ld)\n", g_art.num);
+                    std::printf("\n(Intr at %ld)\n", g_art.value_of());
                 }
                 term_down(2);
                 return -1;
@@ -352,7 +352,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                     }
                 }
             }
-            g_art = ArticleNum{g_last_art.num + 1};
+            g_art = g_last_art + ArticleNum{1};
             g_kf_state |= KFS_THREAD_LINES;
         }
         else if (*bp == '<')
@@ -521,7 +521,7 @@ void rewrite_kill_file(ArticleNum thru)
     s_new_kill_file_fp = std::fopen(killname, "w");
     if (s_new_kill_file_fp != nullptr)
     {
-        std::fprintf(s_new_kill_file_fp,"THRU %s %ld\n",g_newsgroup_ptr->rc->name, thru.num);
+        std::fprintf(s_new_kill_file_fp,"THRU %s %ld\n",g_newsgroup_ptr->rc->name, thru.value_of());
         while (g_local_kfp && std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
         {
             if (!std::strncmp(g_buf, "THRU", 4))

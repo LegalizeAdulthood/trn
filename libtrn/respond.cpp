@@ -533,9 +533,9 @@ reask_save:
                 quote_From = true;
 #endif
             }
-            if (g_save_from == 0 && g_art.num != 0)
+            if (g_save_from == 0 && g_art != ArticleNum{})
             {
-                std::fprintf(s_tmp_fp, "Article: %ld of %s\n", g_art.num, g_newsgroup_name.c_str());
+                std::fprintf(s_tmp_fp, "Article: %ld of %s\n", g_art.value_of(), g_newsgroup_name.c_str());
             }
             seek_art(g_save_from);
             while (read_art(g_buf, LINE_BUF_LEN) != nullptr)
@@ -1081,7 +1081,7 @@ void followup()
         }
         if (*g_buf != 'n')
         {
-            g_art = ArticleNum{g_last_art + 1};
+            g_art = g_last_art + ArticleNum{1};
         }
     }
     art_open(g_art,(ArticlePosition)0);

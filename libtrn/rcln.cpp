@@ -48,7 +48,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
                 std::printf("\nAll but %d marked as read.\n", leave_count);
             }
         }
-        check_expired(np, ArticleNum{get_newsgroup_size(np) - leave_count + 1});
+        check_expired(np, get_newsgroup_size(np) - ArticleNum{leave_count + 1});
         set_to_read(np, ST_STRICT);
     }
     else
@@ -64,13 +64,13 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
                 std::fputs("\nMarked read\n", stdout);
             }
         }
-        std::sprintf(tmpbuf,"%s: 1-%ld", np->rc_line,(long)get_newsgroup_size(np).num);
+        std::sprintf(tmpbuf,"%s: 1-%ld", np->rc_line,(long)get_newsgroup_size(np).value_of());
         std::free(np->rc_line);
         np->rc_line = save_str(tmpbuf);
         *(np->rc_line + np->num_offset - 1) = '\0';
         if (g_newsgroup_min_to_read > TR_NONE && np->to_read > TR_NONE)
         {
-            g_newsgroup_to_read.num--;
+            --g_newsgroup_to_read;
         }
         np->to_read = TR_NONE;
     }
@@ -143,7 +143,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     {
         if (np->to_read > TR_NONE)
         {
-            np->to_read += art_num.num - np->ng_max.num;
+            np->to_read += (ArticleUnread)(art_num - np->ng_max).value_of();
         }
         np->ng_max = art_num;
     }
@@ -194,7 +194,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
     mbuf = safe_malloc((MemorySize)(std::strlen(s)+(s - np->rc_line)+MAX_DIGITS+2+1));
     std::strcpy(mbuf,np->rc_line);            // make new rc line
-    if (maxt && lastnum && art_num == lastnum+1)
+    if (maxt && lastnum && art_num == lastnum + ArticleNum{1})
                                         // can we just extend last range?
     {
         t = mbuf + (maxt - np->rc_line); // then overwrite previous max
@@ -208,7 +208,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
             {
                 *t++ = ',';             // supply comma before
             }
-            if (!maxt && art_num == lastnum+1 && *(t-1) == ',')
+            if (!maxt && art_num == lastnum + ArticleNum{1} && *(t - 1) == ',')
                                         // adjacent singletons?
             {
                 *(t-1) = '-';           // turn them into a range
@@ -217,7 +217,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     }
     if (morenum)                        // is there more to life?
     {
-        if (min == art_num+1)            // can we consolidate further?
+        if (min == art_num + ArticleNum{1}) // can we consolidate further?
         {
             bool range_before = (*(t-1) == '-');
             char *nextmax = skip_digits(s);
@@ -229,7 +229,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
             }
             else
             {
-                std::sprintf(t,"%ld-",(long)art_num.num);// artnum will be new min
+                std::sprintf(t,"%ld-",(long)art_num.value_of());// artnum will be new min
             }
 
             if (range_after)
@@ -239,12 +239,12 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
         }
         else
         {
-            std::sprintf(t,"%ld,",(long)art_num.num);     // put the number and comma
+            std::sprintf(t,"%ld,",(long)art_num.value_of());     // put the number and comma
         }
     }
     else
     {
-        std::sprintf(t,"%ld",(long)art_num.num);  // put the number there (wherever)
+        std::sprintf(t,"%ld",(long)art_num.value_of());  // put the number there (wherever)
     }
     std::strcat(t,s);                        // copy remainder of line
 #ifdef DEBUG
@@ -451,7 +451,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     ArticleNum unread = ngsize;
     ArticleNum newmax;
 
-    if (ngsize.num == TR_BOGUS)
+    if (ngsize.value_of() == TR_BOGUS)
     {
         if (!g_to_read_quiet)
         {
@@ -460,7 +460,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         g_paranoid = true;
         if (virgin_ng || np->to_read >= g_newsgroup_min_to_read)
         {
-            g_newsgroup_to_read.num--;
+            --g_newsgroup_to_read;
             g_missing_count++;
         }
         np->to_read = TR_BOGUS;
@@ -468,7 +468,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     }
     if (virgin_ng)
     {
-        std::sprintf(tmpbuf," 1-%ld",(long)ngsize.num);
+        std::sprintf(tmpbuf," 1-%ld",(long)ngsize.value_of());
         if (std::strcmp(tmpbuf,np->rc_line+np->num_offset) != 0)
         {
             check_expired(np,np->abs_first);        // this might realloc rcline
@@ -490,29 +490,30 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         char *h = std::strchr(s, '-');
         if (h != nullptr) // find - in range, if any
         {
-            unread -= (newmax = ArticleNum{atol(h + 1)}) - atol(s) + 1;
+            newmax = ArticleNum{atol(h + 1)};
+            unread -= newmax - ArticleNum{atol(s)} + ArticleNum{1};
         }
         else
         {
-            newmax.num = std::atol(s);
+            newmax = ArticleNum{std::atol(s)};
         }
-        if (newmax.num != 0)
+        if (newmax != ArticleNum{})
         {
-            unread.num--;           // recalculate length
+            --unread;           // recalculate length
         }
         if (newmax > ngsize)    // paranoia check
         {
             if (!lax_high_check && newmax > ngsize)
             {
-                unread.num = -1;
+                unread = ArticleNum{-1};
                 break;
             }
-            unread.num += newmax.num - ngsize.num;
+            unread += newmax - ngsize;
             np->ng_max = newmax;
             ngsize = newmax;
         }
     }
-    if (unread.num < 0)                     // SOMEONE RESET THE NEWSGROUP!!!
+    if (unread < ArticleNum{})                     // SOMEONE RESET THE NEWSGROUP!!!
     {
         unread = ngsize;                // assume nothing carried over
         if (!g_to_read_quiet)
@@ -526,28 +527,28 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     }
     if (np->subscribe_char == NEGCHAR)
     {
-        unread.num = TR_UNSUB;
+        unread = ArticleNum{TR_UNSUB};
     }
 
-    if (unread.num >= g_newsgroup_min_to_read)
+    if (unread.value_of() >= g_newsgroup_min_to_read)
     {
         if (!virgin_ng && np->to_read < g_newsgroup_min_to_read)
         {
-            g_newsgroup_to_read.num++;
+            ++g_newsgroup_to_read;
         }
     }
-    else if (unread.num <= 0)
+    else if (unread <= ArticleNum{})
     {
         if (np->to_read > g_newsgroup_min_to_read)
         {
-            g_newsgroup_to_read.num--;
+            --g_newsgroup_to_read;
             if (virgin_ng)
             {
                 g_missing_count++;
             }
         }
     }
-    np->to_read = (ArticleUnread)unread.num;    // remember how many are left
+    np->to_read = (ArticleUnread)unread.value_of();    // remember how many are left
 
     if (mybuf != tmpbuf)
     {
@@ -566,7 +567,7 @@ void check_expired(NewsgroupData *np, ArticleNum first)
     char* cp;
     int len;
 
-    if (first.num<=1)
+    if (first <= ArticleNum{1})
     {
         return;
     }
@@ -590,7 +591,7 @@ void check_expired(NewsgroupData *np, ArticleNum first)
     len = std::strlen(s);
     if (len && s[-1] == '-')                    // landed in a range?
     {
-        if (lastnum.num != 1)
+        if (lastnum != ArticleNum{1})
         {
             if (3+len <= (int)std::strlen(np->rc_line+np->num_offset))
             {
@@ -619,7 +620,7 @@ void check_expired(NewsgroupData *np, ArticleNum first)
         // s now points to what should follow the first range
         char numbuf[32];
 
-        std::sprintf(numbuf," 1-%ld",(long)(first.num - (lastnum != first)));
+        std::sprintf(numbuf," 1-%ld",(long)(first.value_of() - (lastnum != first)));
         int nlen = std::strlen(numbuf) + (len != 0);
 
         if (s - np->rc_line >= np->num_offset + nlen)

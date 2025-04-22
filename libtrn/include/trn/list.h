@@ -30,8 +30,8 @@ struct List
     ListNode *first;
     ListNode *recent;
     void (*init_node)(List *, ListNode *);
-    long      low;
-    long      high;
+    long      low;  // TODO: ArticleNum
+    long      high; // TODO: ArticleNum
     int       item_size;
     int       items_per_node;
     ListFlags flags;

@@ -143,8 +143,8 @@ void InterpolatorTest::TearDown()
     g_general_mode = GM_INIT;
     g_mode = MM_INITIALIZING;
     g_dm_count = 0;
-    g_last_art.num = 0;
-    g_art.num = 0;
+    g_last_art = ArticleNum{};
+    g_art = ArticleNum{};
     g_in_ng = false;
     g_data_source = nullptr;
 
@@ -261,7 +261,7 @@ TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
 {
     char pattern[]{"%a"};
     g_in_ng = true;
-    g_art.num = TRN_TEST_ARTICLE_NUM;
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
 
     const char *new_pattern = interpolate(pattern);
 
@@ -284,8 +284,8 @@ TEST_F(InterpolatorTest, articleNameInsideLocalNewsgroupArticleClosed)
     char pattern[]{"%A"};
     g_in_ng = true;
     g_newsgroup_dir = TRN_TEST_NEWSGROUP_SUBDIR;
-    g_last_art.num = TRN_TEST_ARTICLE_NUM;
-    g_art.num = TRN_TEST_ARTICLE_NUM;
+    g_last_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
 
     const char *new_pattern = interpolate(pattern);
 
@@ -1423,8 +1423,8 @@ void InterpolatorNewsgroupTest::SetUp()
 {
     InterpolatorTest::SetUp();
     g_in_ng = true;
-    g_art.num = TRN_TEST_ARTICLE_NUM;
-    g_last_art.num = TRN_TEST_NEWSGROUP_HIGH;
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
+    g_last_art = ArticleNum{TRN_TEST_NEWSGROUP_HIGH};
     g_newsgroup_ptr = g_first_newsgroup;
     m_curdir.push(TRN_TEST_NEWSGROUP_DIR);
     build_cache();
@@ -1435,8 +1435,8 @@ void InterpolatorNewsgroupTest::TearDown()
     art_close();
     close_cache();
     g_in_ng = false;
-    g_art.num = -1;
-    g_last_art.num = -1;
+    g_art = ArticleNum{-1};
+    g_last_art = ArticleNum{-1};
     g_newsgroup_ptr = nullptr;
     InterpolatorTest::TearDown();
 }
@@ -1466,7 +1466,7 @@ TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
 {
-    g_art.num = TRN_TEST_ARTICLE_NO_FALLBACKS_NUM;
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
     char pattern[]{"%f"};
 
     const char *new_pattern = interpolate(pattern);
@@ -1497,7 +1497,7 @@ TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
 
 TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
 {
-    g_art.num = TRN_TEST_ARTICLE_NO_FALLBACKS_NUM;
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
     char pattern[]{"%F"};
 
     const char *new_pattern = interpolate(pattern);
@@ -1557,7 +1557,7 @@ TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroupNoArticleIsEmpty)
 {
-    g_art.num = 0;
+    g_art = ArticleNum{};
     char pattern[]{"%s"};
 
     const char *new_pattern = interpolate(pattern);
@@ -1600,7 +1600,7 @@ TEST_F(InterpolatorNewsgroupTest, toFromReplyToInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, toFromFromInNewsgroup)
 {
-    g_art.num = TRN_TEST_ARTICLE_NO_FALLBACKS_NUM;
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
     char pattern[]{"%t"};
 
     const char *new_pattern = interpolate(pattern);

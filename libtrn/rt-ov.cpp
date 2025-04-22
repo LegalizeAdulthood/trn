@@ -221,7 +221,7 @@ beginning:
             break;
         }
         g_spin_todo--;
-        first.num++;
+        ++first;
     }
     if (first > last)
     {
@@ -229,9 +229,9 @@ beginning:
     }
     if (remote)
     {
-        if ((last.num - first.num) > ov_chunk_size + ov_chunk_size / 2 - 1)
+        if ((last - first).value_of() > ov_chunk_size + ov_chunk_size / 2 - 1)
         {
-            last = ArticleNum{first + ov_chunk_size - 1};
+            last = first + ArticleNum{ov_chunk_size - 1};
             line_cnt = 0;
         }
     }
@@ -244,12 +244,12 @@ beginning:
             break;
         }
         g_spin_todo--;
-        last.num--;
+        --last;
     }
 
     if (remote)
     {
-        std::sprintf(g_ser_line, "XOVER %ld-%ld", (long)first.num, (long)last.num);
+        std::sprintf(g_ser_line, "XOVER %ld-%ld", (long)first.value_of(), (long)last.value_of());
         if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
         {
             success = false;
@@ -290,7 +290,7 @@ beginning:
         g_data_source->ov_opened = started_request;
     }
 
-    artnum = ArticleNum{first - 1};
+    artnum = first - ArticleNum{1};
     while (true)
     {
         if (remote)
@@ -309,7 +309,7 @@ beginning:
 
         last_buf = line;
         last_buflen = g_buf_len_last_line_got;
-        an.num = std::atol(line);
+        an = ArticleNum{std::atol(line)};
         if (an < first)
         {
             continue;
@@ -323,7 +323,7 @@ beginning:
             }
             break;
         }
-        g_spin_todo -= an.num - artnum.num - 1;
+        g_spin_todo -= (an - artnum).value_of() - 1;
         ov_parse(line, artnum = an, remote);
         if (g_int_count)
         {
@@ -352,10 +352,10 @@ beginning:
     if (remote && line_cnt == 0 && last < real_last)
     {
         an = nntp_find_real_art(last);
-        if (an.num > 0)
+        if (an.value_of() > 0)
         {
-            last = ArticleNum{an - 1};
-            g_spin_todo -= last.num - artnum.num;
+            last = an - ArticleNum{1};
+            g_spin_todo -= (last - artnum).value_of();
             artnum = last;
         }
     }
@@ -371,7 +371,7 @@ beginning:
                 one_missing(ap);
             }
         }
-        g_spin_todo -= last.num - artnum.num;
+        g_spin_todo -= (last - artnum).value_of();
     }
     if (artnum > g_last_cached && artnum >= first)
     {
@@ -406,7 +406,7 @@ exit:
                 {
                     ov_chunk_size = max_chunk_size;
                 }
-                first = ArticleNum{last + 1};
+                first = last + ArticleNum{1};
                 last = real_last;
                 goto beginning;
             }
@@ -633,7 +633,7 @@ const char *ov_field(Article *ap, int num)
 
     if (fn == OV_NUM)
     {
-        std::sprintf(g_cmd_buf, "%ld", (long)ap->num.num);
+        std::sprintf(g_cmd_buf, "%ld", (long)ap->num.value_of());
         return g_cmd_buf;
     }
 

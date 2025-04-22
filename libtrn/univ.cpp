@@ -691,7 +691,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
             p = skip_digits(s);
             ch = *p;
             *p = '\0';
-            a.num = atoi(s);
+            a = ArticleNum{atoi(s)};
             *p = ch;
             if (*p)
             {

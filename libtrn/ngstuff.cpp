@@ -188,14 +188,14 @@ NumNumResult num_num()
     {
         return NN_INP;
     }
-    if (g_last_art.num < 1)
+    if (g_last_art < ArticleNum{1})
     {
         error_msg("No articles");
         return NN_ASK;
     }
     if (g_search_ahead)
     {
-        g_search_ahead.num = -1;
+        g_search_ahead = ArticleNum{-1};
     }
 
     perform_status_init(g_newsgroup_ptr->to_read);
@@ -233,12 +233,12 @@ NumNumResult num_num()
         }
         else
         {
-            min.num = std::atol(t);
+            min = ArticleNum{std::atol(t)};
         }
         if (min < g_abs_first)
         {
             min = g_abs_first;
-            std::sprintf(g_msg,"(First article is %ld)",(long)g_abs_first.num);
+            std::sprintf(g_msg,"(First article is %ld)",(long)g_abs_first.value_of());
             warn_msg(g_msg);
         }
         if ((t = std::strchr(t, '-')) != nullptr)
@@ -254,7 +254,7 @@ NumNumResult num_num()
             }
             else
             {
-                max.num = std::atol(t);
+                max = ArticleNum{std::atol(t)};
             }
         }
         else
@@ -265,7 +265,7 @@ NumNumResult num_num()
         {
             max = g_last_art;
             min = std::min(min, max);
-            std::sprintf(g_msg,"(Last article is %ld)",(long)g_last_art.num);
+            std::sprintf(g_msg,"(Last article is %ld)",(long)g_last_art.value_of());
             warn_msg(g_msg);
         }
         if (max < min)
@@ -289,11 +289,11 @@ NumNumResult num_num()
             {
                 if (g_verbose)
                 {
-                    std::sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art.num);
+                    std::sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art.value_of());
                 }
                 else
                 {
-                    std::sprintf(g_msg, "(Intr at %ld)", (long) g_art.num);
+                    std::sprintf(g_msg, "(Intr at %ld)", (long) g_art.value_of());
                 }
                 error_msg(g_msg);
                 if (cmdlst)
@@ -412,7 +412,7 @@ int thread_perform()
     else if (*cmdstr == 'p')
     {
         ArticleNum oldart = g_art;
-        g_art = ArticleNum{g_last_art + 1};
+        g_art = g_last_art + ArticleNum{1};
         followup();
         g_force_grow = true;
         g_art = oldart;
@@ -424,7 +424,7 @@ int thread_perform()
         // Use the explicit article-order if it exists
         if (g_art_ptr_list)
         {
-            Article** limit = g_art_ptr_list + g_art_ptr_list_size.num;
+            Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
             sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
             for (Article **app = g_art_ptr_list; app < limit; app++)
             {
@@ -504,7 +504,7 @@ int perform(char *cmdlst, int output_level)
 
     if (output_level == 1)
     {
-        std::printf("%-6ld ",g_art.num);
+        std::printf("%-6ld ",g_art.value_of());
         std::fflush(stdout);
     }
 
@@ -721,7 +721,7 @@ int perform(char *cmdlst, int output_level)
                 if (output_level != 1)
                 {
                     erase_line(false);
-                    std::printf("%-6ld ",g_art.num);
+                    std::printf("%-6ld ",g_art.value_of());
                 }
                 if (ch == 'a')
                 {
@@ -796,7 +796,7 @@ int newsgroup_sel_perform()
     }
     char *cmdstr = save_str(g_buf + len);
 
-    perform_status_init(g_newsgroup_to_read.num);
+    perform_status_init(g_newsgroup_to_read.value_of());
     len = std::strlen(cmdstr);
 
     if (one_group)
@@ -821,7 +821,7 @@ int newsgroup_sel_perform()
                 break;
             }
         }
-        perform_status(g_newsgroup_to_read.num, 50);
+        perform_status(g_newsgroup_to_read.value_of(), 50);
     }
 
 break_out:
@@ -883,7 +883,7 @@ deselect:
             g_newsgroup_ptr->to_read = TR_UNSUB;
             g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
-            g_newsgroup_to_read.num--;
+            --g_newsgroup_to_read;
             goto deselect;
 
         default:
@@ -946,7 +946,7 @@ int add_group_sel_perform()
     }
     char *cmdstr = save_str(g_buf + len);
 
-    perform_status_init(g_newsgroup_to_read.num);
+    perform_status_init(g_newsgroup_to_read.value_of());
     len = std::strlen(cmdstr);
 
     if (one_group)
@@ -963,7 +963,7 @@ int add_group_sel_perform()
                 break;
             }
         }
-        perform_status(g_newsgroup_to_read.num, 50);
+        perform_status(g_newsgroup_to_read.value_of(), 50);
     }
 
 break_out:

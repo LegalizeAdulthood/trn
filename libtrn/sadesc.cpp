@@ -142,7 +142,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
         desc_buf[0] = '\0';     // initialize the buffer
         if (g_sa_mode_desc_art_num)
         {
-            std::sprintf(s_sa_buf,"%6d ",(int)artnum.num);
+            std::sprintf(s_sa_buf,"%6d ",(int)artnum.value_of());
             std::strcat(desc_buf,s_sa_buf);
         }
         if (g_sc_initialized && g_sa_mode_desc_score)
