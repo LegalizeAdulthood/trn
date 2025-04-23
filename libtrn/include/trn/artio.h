@@ -35,6 +35,7 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos);
 void art_close();
 int seek_art(ArticlePosition pos);
 ArticlePosition tell_art();
+ArticlePosition ftell_art();
 char *read_art(char *s, int limit);
 void clear_art_buf();
 int seek_art_buf(ArticlePosition pos);

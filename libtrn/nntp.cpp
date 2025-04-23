@@ -270,7 +270,7 @@ void nntp_body(ArticleNum art_num)
     if (g_parsed_art == art_num)
     {
         std::fwrite(g_head_buf, 1, std::strlen(g_head_buf), g_art_fp);
-        s_body_end = (ArticlePosition) std::ftell(g_art_fp);
+        s_body_end = ftell_art();
         g_header_type[PAST_HEADER].min_pos = s_body_end;
     }
     else
@@ -326,7 +326,7 @@ static int nntp_copy_body(char *s, int limit, ArticlePosition pos)
             std::strcpy(s + len, "\n");
         }
         std::fputs(s, g_art_fp);
-        s_body_end = ArticlePosition{std::ftell(g_art_fp)};
+        s_body_end = ftell_art();
         had_nl = result == NGSR_FULL_LINE;
     }
     return 1;
@@ -412,7 +412,7 @@ int nntp_seek_art(ArticlePosition pos)
 
 ArticlePosition nntp_tell_art()
 {
-    return s_body_pos < ArticlePosition{} ? ArticlePosition{std::ftell(g_art_fp)} : s_body_pos;
+    return s_body_pos < ArticlePosition{} ? ftell_art() : s_body_pos;
 }
 
 char *nntp_read_art(char *s, int limit)
@@ -433,7 +433,7 @@ char *nntp_read_art(char *s, int limit)
             std::fseek(g_art_fp, s_body_pos.value_of(), 0);
         }
         s = std::fgets(s, limit, g_art_fp);
-        s_body_pos = ArticlePosition{std::ftell(g_art_fp)};
+        s_body_pos = ftell_art();
         if (s_body_pos == s_body_end)
         {
             std::fseek(g_art_fp, s_body_pos.value_of(), 0); // Prepare for coming write

@@ -128,13 +128,18 @@ int seek_art(ArticlePosition pos)
     return std::fseek(g_art_fp, pos.value_of(), 0);
 }
 
+ArticlePosition ftell_art()
+{
+    return ArticlePosition{std::ftell(g_art_fp)};
+}
+
 ArticlePosition tell_art()
 {
     if (g_data_source->flags & DF_REMOTE)
     {
         return nntp_tell_art();
     }
-    return (ArticlePosition)std::ftell(g_art_fp);
+    return ftell_art();
 }
 
 char *read_art(char *s, int limit)
