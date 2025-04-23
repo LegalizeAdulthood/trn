@@ -362,7 +362,7 @@ inline bool header_conv()
 
 // Output a header line with possible tree display on the right hand side.
 // Does automatic wrapping of lines that are too long.
-int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
+ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
 {
     char*    tmpbuf;
     char*    line;
@@ -600,7 +600,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
 
     color_pop();        // of COLOR_HEADER
     // return number of lines displayed
-    return (header_line - start_line).value_of();
+    return header_line - start_line;
 }
 
 // Output any parts of the tree that are left to display.  Called at the
@@ -613,7 +613,7 @@ int  finish_tree(ArticleLine last_line)
     while (last_line <= ArticleLine{s_max_line})
     {
         ++g_art_line_num;
-        last_line += ArticleLine{tree_puts("+", last_line, 0)};
+        last_line += tree_puts("+", last_line, 0);
         virtual_write(g_art_line_num, g_art_pos);    // keep rn's backpager happy
     }
     return (last_line - start_line).value_of();

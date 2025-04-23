@@ -206,7 +206,7 @@ DoArticleResult do_article()
             if (g_first_line)
             {
                 interp(g_art_line,sizeof g_art_line,g_first_line);
-                line_num += ArticleLine{tree_puts(g_art_line,line_num+g_top_line,0)};
+                line_num += tree_puts(g_art_line,line_num+g_top_line,0);
             }
             else
             {
@@ -232,7 +232,7 @@ DoArticleResult do_article()
                 {
                     std::sprintf(g_art_line + std::strlen(g_art_line) - 1, " + %ld Marked to return)", (long) g_dm_count);
                 }
-                line_num += ArticleLine{tree_puts(g_art_line,line_num+g_top_line,0)};
+                line_num += tree_puts(g_art_line,line_num+g_top_line,0);
             }
             start_header(g_art);
             g_force_last = false;        // we will have our day in court
@@ -409,7 +409,7 @@ DoArticleResult do_article()
                         buf_ptr = s;
                     }
                     // tree_puts(, ,1) underlines subject
-                    line_num += ArticleLine{tree_puts(buf_ptr,line_num+g_top_line,1)-1};
+                    line_num += tree_puts(buf_ptr, line_num + g_top_line, 1) - ArticleLine{1};
                 }
             }
             else if (hide_this_line && g_do_hiding)     // do not print line?
@@ -423,7 +423,7 @@ DoArticleResult do_article()
             else if (g_in_header)
             {
                 ++g_art_line_num;
-                line_num += ArticleLine{tree_puts(buf_ptr,line_num+g_top_line,0)-1};
+                line_num += tree_puts(buf_ptr, line_num + g_top_line, 0) - ArticleLine{1};
             }
             else                          // just a normal line
             {

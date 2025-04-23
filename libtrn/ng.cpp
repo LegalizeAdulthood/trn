@@ -450,7 +450,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                         std::sprintf(tmpbuf, "%s: article may show up in a moment.", g_newsgroup_name.c_str());
                     }
                 }
-                ArticleLine linenum = ArticleLine{tree_puts(tmpbuf, ArticleLine{}, 0)};
+                ArticleLine linenum = tree_puts(tmpbuf, ArticleLine{}, 0);
                 virtual_write(g_art_line_num, ArticlePosition{});
                 finish_tree(linenum);
                 g_prompt = whatnext;
