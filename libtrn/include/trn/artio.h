@@ -23,9 +23,9 @@ extern ArticleLine     g_art_line_num; // current line number in article file
 extern std::FILE      *g_art_fp;       // current article file pointer
 extern ArticleNum      g_open_art;     // the article number we have open
 extern char           *g_art_buf;
-extern long            g_art_buf_pos;
+extern ArticlePosition g_art_buf_pos;
 extern ArticlePosition g_art_buf_seek;
-extern long            g_art_buf_len;
+extern ArticlePosition g_art_buf_len;
 extern char            g_wrapped_nl;
 extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 

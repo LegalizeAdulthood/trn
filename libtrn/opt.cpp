@@ -1267,7 +1267,7 @@ const char *option_value(OptionIndex num)
         {
             return "$LINES";
         }
-        std::sprintf(g_buf,"%d",g_init_lines);
+        std::sprintf(g_buf, "%d", g_init_lines.value_of());
         return g_buf;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:

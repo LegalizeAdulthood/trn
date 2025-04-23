@@ -707,7 +707,7 @@ skip_put:
             }
             else
             {
-                g_art_pos = ArticlePosition{g_art_buf_pos} + g_header_type[PAST_HEADER].min_pos;
+                g_art_pos = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
             }
             virtual_write(g_art_line_num,g_art_pos); // remember pos in file
         } // end of line loop
@@ -733,17 +733,16 @@ skip_put:
 
         if (g_art_size < ArticlePosition{} && (g_raw_art_size = nntp_art_size()) >= ArticlePosition{})
         {
-            g_art_size =
-                g_raw_art_size - g_art_buf_seek + ArticlePosition{g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
+            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
         }
 recheck_pager:
         if (g_do_hiding && g_art_buf_pos == g_art_buf_len)
         {
             // If we're filtering we need to figure out if any
             // remaining text is going to vanish or not.
-            long seek_pos = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos.value_of();
+            ArticlePosition seek_pos = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
             read_art_buf(false);
-            seek_art_buf(ArticlePosition{seek_pos});
+            seek_art_buf(seek_pos);
         }
         if (g_art_pos == g_art_size)  // did we just now reach EOF?
         {
@@ -799,8 +798,7 @@ reask_pager:
         cache_until_key();
         if (g_art_size < ArticlePosition{} && (g_raw_art_size = nntp_art_size()) >= ArticlePosition{})
         {
-            g_art_size =
-                g_raw_art_size - g_art_buf_seek + ArticlePosition{g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
+            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
             goto_xy(s_more_prompt_col,g_term_line);
             goto recheck_pager;
         }
@@ -1010,7 +1008,7 @@ caseG:
             }
             if (success)
             {
-                g_inner_search = ArticlePosition{g_art_buf_pos} + g_header_type[PAST_HEADER].min_pos;
+                g_inner_search = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
                 break;
             }
         }
@@ -1089,8 +1087,7 @@ refresh_screen:
         {
             nntp_finish_body(FB_OUTPUT);
             g_raw_art_size = nntp_art_size();
-            g_art_size =
-                g_raw_art_size - g_art_buf_seek + ArticlePosition{g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
+            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
         }
         if (g_do_hiding)
         {
