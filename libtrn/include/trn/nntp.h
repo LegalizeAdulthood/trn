@@ -4,6 +4,8 @@
 #ifndef TRN_NNTP_H
 #define TRN_NNTP_H
 
+#include "addng.h"
+
 #include <config/typedef.h>
 
 #include <ctime>
@@ -32,7 +34,7 @@ ArticleNum      nntp_stat_id(const char *msg_id);
 ArticleNum      nntp_next_art();
 int             nntp_header(ArticleNum art_num);
 void            nntp_body(ArticleNum art_num);
-long            nntp_art_size();
+ArticlePosition nntp_art_size();
 int             nntp_finish_body(FinishBodyMode bmode);
 int             nntp_seek_art(ArticlePosition pos);
 ArticlePosition nntp_tell_art();

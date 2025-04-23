@@ -121,8 +121,9 @@ DoArticleResult do_article()
 
     if (g_data_source->flags & DF_REMOTE)
     {
-        g_raw_art_size = ArticlePosition{nntp_art_size()};
-        g_art_size = ArticlePosition{nntp_art_size()};
+        const ArticlePosition art_size{nntp_art_size()};
+        g_raw_art_size = art_size;
+        g_art_size = art_size;
     }
     else
     {
@@ -135,8 +136,9 @@ DoArticleResult do_article()
         {
             return DA_NORM;
         }
-        g_raw_art_size = ArticlePosition{art_stat.st_size};
-        g_art_size = ArticlePosition{art_stat.st_size};
+        const ArticlePosition art_size{art_stat.st_size};
+        g_raw_art_size = art_size;
+        g_art_size = art_size;
     }
     std::sprintf(prompt_buf, g_mouse_bar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
         : "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
@@ -729,7 +731,7 @@ skip_put:
 
         // extra loop bombout
 
-        if (g_art_size < ArticlePosition{} && (g_raw_art_size = ArticlePosition{nntp_art_size()}) >= ArticlePosition{})
+        if (g_art_size < ArticlePosition{} && (g_raw_art_size = nntp_art_size()) >= ArticlePosition{})
         {
             g_art_size =
                 g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
@@ -795,7 +797,7 @@ reask_pager:
             update_thread_kill_file();
         }
         cache_until_key();
-        if (g_art_size < ArticlePosition{} && (g_raw_art_size = ArticlePosition{nntp_art_size()}) >= ArticlePosition{})
+        if (g_art_size < ArticlePosition{} && (g_raw_art_size = nntp_art_size()) >= ArticlePosition{})
         {
             g_art_size =
                 g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
@@ -1086,7 +1088,7 @@ refresh_screen:
         if (g_art_size < ArticlePosition{})
         {
             nntp_finish_body(FB_OUTPUT);
-            g_raw_art_size = ArticlePosition{nntp_art_size()};
+            g_raw_art_size = nntp_art_size();
             g_art_size =
                 g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
         }

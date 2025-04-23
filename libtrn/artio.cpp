@@ -430,7 +430,7 @@ mime_switch:
             if (g_data_source->flags & DF_REMOTE)
             {
                 nntp_finish_body(FB_SILENT);
-                g_raw_art_size = ArticlePosition{nntp_art_size()};
+                g_raw_art_size = nntp_art_size();
             }
             seek_art(g_raw_art_size);
         }

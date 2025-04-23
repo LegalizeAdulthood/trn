@@ -224,20 +224,19 @@ void nntp_body(ArticleNum art_num)
         {
             nntp_finish_body(FB_DISCARD);
         }
-        g_art_fp = std::fopen(artname,"r");
+        g_art_fp = std::fopen(artname, "r");
         stat_t art_stat{};
-        if (g_art_fp && fstat(fileno(g_art_fp),&art_stat) == 0)
+        if (g_art_fp && fstat(fileno(g_art_fp), &art_stat) == 0)
         {
             s_body_end = ArticlePosition{art_stat.st_size};
         }
         return;
     }
 
-    artname = nntp_art_name(art_num, true);   // Allocate a tmp file
+    artname = nntp_art_name(art_num, true); // Allocate a tmp file
     if (!(g_art_fp = std::fopen(artname, "w+")))
     {
-        std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
-                artname);
+        std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n", artname);
         finalize(1);
     }
 #ifndef MSDOS
@@ -264,14 +263,14 @@ void nntp_body(ArticleNum art_num)
     case 0:
         std::fclose(g_art_fp);
         g_art_fp = nullptr;
-        errno = ENOENT;                 // Simulate file-not-found
+        errno = ENOENT; // Simulate file-not-found
         return;
     }
     s_body_pos = ArticlePosition{};
     if (g_parsed_art == art_num)
     {
         std::fwrite(g_head_buf, 1, std::strlen(g_head_buf), g_art_fp);
-        s_body_end = (ArticlePosition)std::ftell(g_art_fp);
+        s_body_end = (ArticlePosition) std::ftell(g_art_fp);
         g_header_type[PAST_HEADER].min_pos = s_body_end;
     }
     else
@@ -292,9 +291,9 @@ void nntp_body(ArticleNum art_num)
     g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
 }
 
-long nntp_art_size()
+ArticlePosition nntp_art_size()
 {
-    return s_body_pos < ArticlePosition{} ? s_body_end.value_of() : -1;
+    return s_body_pos < ArticlePosition{} ? s_body_end : ArticlePosition{-1};
 }
 
 static int nntp_copy_body(char *s, int limit, ArticlePosition pos)
@@ -366,7 +365,7 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     if (bmode != FB_BACKGROUND)
     {
-        nntp_copy_body(b, sizeof b, (ArticlePosition) 0x7fffffffL);
+        nntp_copy_body(b, sizeof b, ArticlePosition{0x7fffffffL});
     }
     else
     {

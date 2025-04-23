@@ -1605,7 +1605,7 @@ refresh_screen:
             if (g_art_size < ArticlePosition{})
             {
                 nntp_finish_body(FB_OUTPUT);
-                g_raw_art_size = ArticlePosition{nntp_art_size()};
+                g_raw_art_size = nntp_art_size();
                 g_art_size = g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} +
                              g_header_type[PAST_HEADER].min_pos;
             }
