@@ -45,15 +45,15 @@ extern char *g_news_sel_btns;
 extern char *g_option_sel_btns;
 extern char *g_art_pager_btns;
 
-extern bool     g_muck_up_clear;   // -loco
-extern bool     g_erase_screen;    // -e
-extern bool     g_can_home;        //
-extern bool     g_erase_each_line; // fancy -e
-extern bool     g_allow_typeahead; // -T
-extern bool     g_verify;          // -v
-extern ArticleLine g_init_lines;       // -i
-extern bool     g_use_mouse;       //
-extern char     g_mouse_modes[32]; //
+extern bool        g_muck_up_clear;   // -loco
+extern bool        g_erase_screen;    // -e
+extern bool        g_can_home;        //
+extern bool        g_erase_each_line; // fancy -e
+extern bool        g_allow_typeahead; // -T
+extern bool        g_verify;          // -v
+extern ArticleLine g_init_lines;      // -i
+extern bool        g_use_mouse;       //
+extern char        g_mouse_modes[32]; //
 
 // These identifiers are a best guess based on usage in the code.
 enum GeneralMode : char
