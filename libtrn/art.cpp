@@ -151,7 +151,7 @@ DoArticleResult do_article()
         parse_header(g_art);
         mime_set_article();
         clear_art_buf();
-        g_art_buf_seek = g_header_type[PAST_HEADER].min_pos.value_of();
+        g_art_buf_seek = g_header_type[PAST_HEADER].min_pos;
         seek_art(g_header_type[PAST_HEADER].min_pos);
     }
     g_term_scrolled = 0;
@@ -169,7 +169,7 @@ DoArticleResult do_article()
             if (!*g_art_buf)
             {
                 mime_set_article();
-                g_art_buf_seek = g_header_type[PAST_HEADER].min_pos.value_of();
+                g_art_buf_seek = g_header_type[PAST_HEADER].min_pos;
             }
             g_art_pos = virtual_read(g_art_line_num);
             if (g_art_pos < ArticlePosition{})
@@ -188,7 +188,7 @@ DoArticleResult do_article()
             }
             else
             {
-                seek_art(ArticlePosition{g_art_buf_seek});
+                seek_art(g_art_buf_seek);
                 seek_art_buf(g_art_pos);
             }
             g_do_fseek = false;
@@ -300,7 +300,7 @@ DoArticleResult do_article()
                 {
                     line_num += ArticleLine{finish_tree(line_num+g_top_line)};
                     end_header();
-                    seek_art(ArticlePosition{g_art_buf_seek});
+                    seek_art(g_art_buf_seek);
                 }
             }
             else if (notes_files && g_do_hiding && !s_continuation //
@@ -322,7 +322,7 @@ DoArticleResult do_article()
                 mime_set_article();
                 clear_art_buf();         // exclude notes files droppings
                 g_header_type[PAST_HEADER].min_pos = tell_art();
-                g_art_buf_seek = tell_art().value_of();
+                g_art_buf_seek = tell_art();
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
@@ -734,7 +734,7 @@ skip_put:
         if (g_art_size < ArticlePosition{} && (g_raw_art_size = nntp_art_size()) >= ArticlePosition{})
         {
             g_art_size =
-                g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
+                g_raw_art_size - g_art_buf_seek + ArticlePosition{g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
         }
 recheck_pager:
         if (g_do_hiding && g_art_buf_pos == g_art_buf_len)
@@ -800,7 +800,7 @@ reask_pager:
         if (g_art_size < ArticlePosition{} && (g_raw_art_size = nntp_art_size()) >= ArticlePosition{})
         {
             g_art_size =
-                g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
+                g_raw_art_size - g_art_buf_seek + ArticlePosition{g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
             goto_xy(s_more_prompt_col,g_term_line);
             goto recheck_pager;
         }
@@ -1090,7 +1090,7 @@ refresh_screen:
             nntp_finish_body(FB_OUTPUT);
             g_raw_art_size = nntp_art_size();
             g_art_size =
-                g_raw_art_size - ArticlePosition{g_art_buf_seek + g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
+                g_raw_art_size - g_art_buf_seek + ArticlePosition{g_art_buf_len} + g_header_type[PAST_HEADER].min_pos;
         }
         if (g_do_hiding)
         {
