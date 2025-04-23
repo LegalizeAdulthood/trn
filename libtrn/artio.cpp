@@ -553,7 +553,7 @@ done:
     {
         g_art_buf_seek = tell_art();
         g_art_buf_len = g_art_buf_pos + ArticlePosition{extra_chars};
-        if (g_art_size >= ArticlePosition{})
+        if (g_art_size >= 0)
         {
             g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
         }

@@ -220,7 +220,7 @@ void nntp_body(ArticleNum art_num)
     char *artname = nntp_art_name(art_num, false); // Is it already in a tmp file?
     if (artname)
     {
-        if (s_body_pos >= ArticlePosition{})
+        if (s_body_pos >= 0)
         {
             nntp_finish_body(FB_DISCARD);
         }
@@ -293,7 +293,7 @@ void nntp_body(ArticleNum art_num)
 
 ArticlePosition nntp_art_size()
 {
-    return s_body_pos < ArticlePosition{} ? s_body_end : ArticlePosition{-1};
+    return s_body_pos < 0 ? s_body_end : ArticlePosition{-1};
 }
 
 static int nntp_copy_body(char *s, int limit, ArticlePosition pos)
@@ -335,7 +335,7 @@ static int nntp_copy_body(char *s, int limit, ArticlePosition pos)
 int nntp_finish_body(FinishBodyMode bmode)
 {
     char b[NNTP_STRLEN];
-    if (s_body_pos < ArticlePosition{})
+    if (s_body_pos < 0)
     {
         return 0;
     }
@@ -376,7 +376,7 @@ int nntp_finish_body(FinishBodyMode bmode)
                 break;
             }
         }
-        if (s_body_pos >= ArticlePosition{})
+        if (s_body_pos >= 0)
         {
             std::fseek(g_art_fp, s_body_pos.value_of(), 0);
         }
@@ -390,14 +390,14 @@ int nntp_finish_body(FinishBodyMode bmode)
 
 int nntp_seek_art(ArticlePosition pos)
 {
-    if (s_body_pos >= ArticlePosition{})
+    if (s_body_pos >= 0)
     {
         if (s_body_end < pos)
         {
             char b[NNTP_STRLEN];
             std::fseek(g_art_fp, s_body_end.value_of(), 0);
             nntp_copy_body(b, sizeof b, pos);
-            if (s_body_pos >= ArticlePosition{})
+            if (s_body_pos >= 0)
             {
                 s_body_pos = pos;
             }
@@ -412,12 +412,12 @@ int nntp_seek_art(ArticlePosition pos)
 
 ArticlePosition nntp_tell_art()
 {
-    return s_body_pos < ArticlePosition{} ? ftell_art() : s_body_pos;
+    return s_body_pos < 0 ? ftell_art() : s_body_pos;
 }
 
 char *nntp_read_art(char *s, int limit)
 {
-    if (s_body_pos >= ArticlePosition{})
+    if (s_body_pos >= 0)
     {
         if (s_body_pos == s_body_end)
         {
@@ -557,13 +557,13 @@ ArticleNum nntp_find_real_art(ArticleNum after)
         }
     }
 
-    while ((an = nntp_next_art()) > ArticleNum{})
+    while ((an = nntp_next_art()) > 0)
     {
         if (an > after)
         {
             return an;
         }
-        if ((after - an) > ArticleNum{10})
+        if (after - an > 10)
         {
             break;
         }

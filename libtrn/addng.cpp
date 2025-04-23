@@ -505,9 +505,9 @@ static int add_group_order_group_name(const AddGroup **app1, const AddGroup **ap
 static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)
 {
     const ArticleNum eq = (*app1)->to_read - (*app2)->to_read;
-    if (eq != ArticleNum{})
+    if (eq != 0)
     {
-        return eq > ArticleNum{} ? g_sel_direction : -g_sel_direction;
+        return eq > 0 ? g_sel_direction : -g_sel_direction;
     }
     return add_group_order_group_name(app1, app2);
 }

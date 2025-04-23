@@ -400,7 +400,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
     search_first = do_read || g_sel_rereading? g_abs_first
                       : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0)? g_first_art : g_kill_first;
-    if (top_start || g_art == ArticleNum{})
+    if (top_start || g_art == 0)
     {
         g_art = article_after(g_last_art);
         top_start = false;
@@ -423,7 +423,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             --g_art;                // include current article
         }
     }
-    if (g_search_ahead > ArticleNum{})
+    if (g_search_ahead > 0)
     {
         if (!backward)
         {

@@ -788,7 +788,7 @@ void set_spin(SpinMode mode)
         if (!s_spin_level++)
         {
             s_spin_art = g_open_art;
-            if (s_spin_art != ArticleNum{} && g_art_fp)
+            if (s_spin_art != 0 && g_art_fp)
             {
                 s_spin_tell = tell_art();
             }

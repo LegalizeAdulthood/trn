@@ -43,7 +43,7 @@ static bool s_sc_rescoring{};     // are we rescoring now?
 //bool pend_wait;       // if true, enter pending mode when scoring...
 void sc_init(bool pend_wait)
 {
-    if (g_last_art == ArticleNum{} || g_last_art < g_abs_first)
+    if (g_last_art == 0 || g_last_art < g_abs_first)
     {
 #if 0
         std::printf("No articles exist to be scored.\n");

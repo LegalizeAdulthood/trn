@@ -98,7 +98,7 @@ int access_newsgroup()
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art < ArticleNum{}) // Impossible...
+        if (g_last_art < 0) // Impossible...
         {
             return 0;
         }
@@ -148,7 +148,7 @@ int access_newsgroup()
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art < ArticleNum{}) // Impossible...
+        if (g_last_art < 0) // Impossible...
         {
             return 0;
         }

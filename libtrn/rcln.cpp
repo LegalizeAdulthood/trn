@@ -497,7 +497,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         {
             newmax = ArticleNum{std::atol(s)};
         }
-        if (newmax != ArticleNum{})
+        if (newmax != 0)
         {
             --unread;           // recalculate length
         }
@@ -513,7 +513,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
             ngsize = newmax;
         }
     }
-    if (unread < ArticleNum{})                     // SOMEONE RESET THE NEWSGROUP!!!
+    if (unread < 0)                     // SOMEONE RESET THE NEWSGROUP!!!
     {
         unread = ngsize;                // assume nothing carried over
         if (!g_to_read_quiet)
@@ -537,7 +537,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
             ++g_newsgroup_to_read;
         }
     }
-    else if (unread <= ArticleNum{})
+    else if (unread <= 0)
     {
         if (np->to_read > g_newsgroup_min_to_read)
         {
@@ -567,7 +567,7 @@ void check_expired(NewsgroupData *np, ArticleNum first)
     char* cp;
     int len;
 
-    if (first <= ArticleNum{1})
+    if (first <= 1)
     {
         return;
     }
@@ -591,7 +591,7 @@ void check_expired(NewsgroupData *np, ArticleNum first)
     len = std::strlen(s);
     if (len && s[-1] == '-')                    // landed in a range?
     {
-        if (lastnum != ArticleNum{1})
+        if (lastnum != 1)
         {
             if (3+len <= (int)std::strlen(np->rc_line+np->num_offset))
             {

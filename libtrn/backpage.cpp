@@ -47,7 +47,7 @@ ArticlePosition virtual_read(ArticleLine index)
         return 0;
     }
 #endif
-    if (index < ArticleLine{})
+    if (index < 0)
     {
         return ArticlePosition{};
     }

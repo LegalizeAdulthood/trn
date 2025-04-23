@@ -188,7 +188,7 @@ NumNumResult num_num()
     {
         return NN_INP;
     }
-    if (g_last_art < ArticleNum{1})
+    if (g_last_art < 1)
     {
         error_msg("No articles");
         return NN_ASK;

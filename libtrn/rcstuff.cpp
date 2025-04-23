@@ -1234,7 +1234,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
 
     if (g_sel_newsgroup_sort != SS_NATURAL)
     {
-        if (newnum < NewsgroupNum{})
+        if (newnum < 0)
         {
             // ask if they want to keep the current order
             in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); // TODO: !'D'
@@ -1285,7 +1285,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
     }
     move_np->rc->flags |= RF_RC_CHANGED;
 
-    if (newnum < NewsgroupNum{})
+    if (newnum < 0)
     {
 reask_reloc:
         unflush_output();               // disable any ^O in effect
@@ -1527,7 +1527,7 @@ void cleanup_newsrc(Newsrc *rp)
     {
         --bogosity;                     // discount already moved ones
     }
-    if (g_newsgroup_count > NewsgroupNum{5} && bogosity > g_newsgroup_count / NewsgroupNum{2})
+    if (g_newsgroup_count > 5 && bogosity > g_newsgroup_count / NewsgroupNum{2})
     {
         std::fputs("It looks like the active file is messed up.  Contact your news administrator,\n",
               stdout);

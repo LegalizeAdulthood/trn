@@ -482,7 +482,7 @@ ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         }
         g_term_col = s_header_indent;
         // If no (more) tree lines, wrap at g_tc_COLS-1
-        if (s_max_line < 0 || header_line > ArticleLine{s_max_line+1})
+        if (s_max_line < 0 || header_line > s_max_line+1)
         {
             wrap_at = g_tc_COLS - 1;
         }
@@ -541,7 +541,7 @@ ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         }
         line = cp;
         // Check if we've got any tree lines to output
-        if (wrap_at != g_tc_COLS - 1 && header_line <= ArticleLine{s_max_line})
+        if (wrap_at != g_tc_COLS - 1 && header_line <= s_max_line)
         {
             do
             {
@@ -610,7 +610,7 @@ ArticleLine finish_tree(ArticleLine last_line)
 {
     ArticleLine start_line = last_line;
 
-    while (last_line <= ArticleLine{s_max_line})
+    while (last_line <= s_max_line)
     {
         ++g_art_line_num;
         last_line += tree_puts("+", last_line, 0);

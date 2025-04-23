@@ -363,7 +363,7 @@ void end_header()
     // more information.
     //
     if (g_threaded_group //
-        && (!(ap->flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= ArticlePosition{}))
+        && (!(ap->flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= 0))
     {
         if (valid_article(ap))
         {
@@ -505,7 +505,7 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
         }
     }
     ArticlePosition firstpos = g_header_type[which_line].min_pos;
-    if (firstpos < ArticlePosition{})
+    if (firstpos < 0)
     {
         return save_str("");
     }
@@ -550,7 +550,7 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
         }
     }
     ArticlePosition firstpos = g_header_type[which_line].min_pos;
-    if (firstpos < ArticlePosition{})
+    if (firstpos < 0)
     {
         return mp_save_str("", pool);
     }
@@ -736,7 +736,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     {
         s = fetch_cache(art_num, which_line, FILL_CACHE);
     }
-    if (g_parsed_art == art_num && (firstpos = g_header_type[which_line].min_pos) < ArticlePosition{})
+    if (g_parsed_art == art_num && (firstpos = g_header_type[which_line].min_pos) < 0)
     {
         s = "";
     }

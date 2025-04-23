@@ -8,8 +8,16 @@
 // some important types
 
 template <typename Base, typename Tag>
-using Number = strong::type<Base, Tag, strong::arithmetic, strong::bicrementable, strong::ordered, strong::equality,
-                            strong::default_constructible, strong::boolean>;
+using Number = strong::type<Base, Tag,                     //
+                            strong::arithmetic,            //
+                            strong::bicrementable,         //
+                            strong::ordered,               //
+                            strong::equality,              //
+                            strong::default_constructible, //
+                            strong::boolean,               //
+                            strong::ordered_with<Base>,    //
+                            strong::equality_with<Base>    //
+                            >;
 
 // newsgroup number
 using NewsgroupNum  = Number<int, struct NewsgroupNumTag>;

@@ -253,7 +253,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         if ((g_art > g_last_art || g_force_grow) && !g_keep_the_group_static)
         {
             ArticleNum oldlast = g_last_art;
-            if (g_art_size < ArticlePosition{})
+            if (g_art_size < 0)
             {
                 nntp_finish_body(FB_SILENT);
             }
@@ -278,7 +278,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_art = article_after(g_last_art);
             }
         }
-        if (g_art != ArticleNum{} || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
+        if (g_art != 0 || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
         {
             g_artp = article_find(g_art);
         }
@@ -421,11 +421,11 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                         // (line # within article file)
             }
             clear();                    // clear screen
-            if (g_art == ArticleNum{} && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
+            if (g_art == 0 && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
                 && !(g_artp->flags & AF_CACHED))
             {
                 g_art = nntp_stat_id(g_artp->msg_id);
-                if (g_art < ArticleNum{})
+                if (g_art < 0)
                 {
                     s_exit_code = NG_NO_SERVER;
                     goto cleanup;
@@ -1056,7 +1056,7 @@ check_dec_art:
 
     case '-':
     case '\b':  case '\177':
-        if (g_recent_art >= ArticleNum{})
+        if (g_recent_art >= 0)
         {
             g_art = g_recent_art;
             g_artp = g_recent_artp;
@@ -1602,7 +1602,7 @@ refresh_screen:
     case Ctl('e'):
         if (g_art <= g_last_art)
         {
-            if (g_art_size < ArticlePosition{})
+            if (g_art_size < 0)
             {
                 nntp_finish_body(FB_OUTPUT);
                 g_raw_art_size = nntp_art_size();
@@ -1645,13 +1645,13 @@ refresh_screen:
                 }
             }
             g_art_line_num = g_top_line;
-            if (g_art_line_num >= ArticleLine{})
+            if (g_art_line_num >= 0)
             {
                 do
                 {
                     g_art_line_num--;
-                } while (g_art_line_num >= ArticleLine{} && g_art_line_num > target &&
-                         virtual_read(line_before(g_art_line_num)) >= ArticlePosition{});
+                } while (g_art_line_num >= 0 && g_art_line_num > target &&
+                         virtual_read(line_before(g_art_line_num)) >= 0);
             }
             g_top_line = g_art_line_num;
             g_art_line_num = std::max(g_art_line_num, ArticleLine{});

@@ -33,7 +33,7 @@ static bool s_sa_context_init{}; // has context been initialized?
 void sa_init()
 {
     sa_init_context();
-    if (g_last_art == ArticleNum{} || g_abs_first > g_last_art)
+    if (g_last_art == 0 || g_abs_first > g_last_art)
     {
         return;         // no articles
     }

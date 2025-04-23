@@ -533,7 +533,7 @@ reask_save:
                 quote_From = true;
 #endif
             }
-            if (g_save_from == ArticlePosition{} && g_art != ArticleNum{})
+            if (g_save_from == 0 && g_art != 0)
             {
                 std::fprintf(s_tmp_fp, "Article: %ld of %s\n", g_art.value_of(), g_newsgroup_name.c_str());
             }
