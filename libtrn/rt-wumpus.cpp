@@ -606,7 +606,7 @@ ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
 // Output any parts of the tree that are left to display.  Called at the
 // end of each header.
 //
-int  finish_tree(ArticleLine last_line)
+ArticleLine finish_tree(ArticleLine last_line)
 {
     ArticleLine start_line = last_line;
 
@@ -616,7 +616,7 @@ int  finish_tree(ArticleLine last_line)
         last_line += tree_puts("+", last_line, 0);
         virtual_write(g_art_line_num, g_art_pos);    // keep rn's backpager happy
     }
-    return (last_line - start_line).value_of();
+    return last_line - start_line;
 }
 
 // Output the entire article tree for the user.

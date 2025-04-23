@@ -298,7 +298,7 @@ DoArticleResult do_article()
                 hide_this_line = parse_line(buf_ptr,g_do_hiding,hide_this_line);
                 if (!g_in_header)
                 {
-                    line_num += ArticleLine{finish_tree(line_num+g_top_line)};
+                    line_num += finish_tree(line_num+g_top_line);
                     end_header();
                     seek_art(g_art_buf_seek);
                 }

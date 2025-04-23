@@ -15,7 +15,7 @@ extern int g_max_tree_lines;
 void init_tree();
 Article    *get_tree_artp(int x, int y);
 ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject);
-int  finish_tree(ArticleLine last_line);
+ArticleLine finish_tree(ArticleLine last_line);
 void entire_tree(Article *ap);
 char thread_letter(Article *ap);
 
