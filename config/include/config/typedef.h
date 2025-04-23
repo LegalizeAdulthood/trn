@@ -46,6 +46,16 @@ using ArticlePosition = Number<long, struct ArticlePositionTag>;
 // line position in article file
 using ArticleLine = Number<int, struct ArticleLineTag>;
 
+inline ArticleLine line_after(ArticleLine value)
+{
+    return value + ArticleLine{1};
+}
+
+inline ArticleLine line_before(ArticleLine value)
+{
+    return value - ArticleLine{1};
+}
+
 // char position in active file
 using ActivePosition = Number<long, struct ActivePositionTag>;
 

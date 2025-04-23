@@ -513,7 +513,7 @@ ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             ch = *cp;
             *cp = '\0';
             // keep rn's backpager happy
-            virtual_write(g_art_line_num, virtual_read(g_art_line_num - ArticleLine{1}));
+            virtual_write(g_art_line_num, virtual_read(line_before(g_art_line_num)));
             ++g_art_line_num;
         }
         else

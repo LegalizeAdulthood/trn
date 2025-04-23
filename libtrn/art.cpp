@@ -409,7 +409,7 @@ DoArticleResult do_article()
                         buf_ptr = s;
                     }
                     // tree_puts(, ,1) underlines subject
-                    line_num += tree_puts(buf_ptr, line_num + g_top_line, 1) - ArticleLine{1};
+                    line_num += line_before(tree_puts(buf_ptr, line_num + g_top_line, 1));
                 }
             }
             else if (hide_this_line && g_do_hiding)     // do not print line?
@@ -423,7 +423,7 @@ DoArticleResult do_article()
             else if (g_in_header)
             {
                 ++g_art_line_num;
-                line_num += tree_puts(buf_ptr, line_num + g_top_line, 0) - ArticleLine{1};
+                line_num += line_before(tree_puts(buf_ptr, line_num + g_top_line, 0));
             }
             else                          // just a normal line
             {
@@ -692,7 +692,7 @@ skip_put:
                 ++g_art_line_num;    // count the line just printed
                             // did we just scroll top line off?
                             // then recompute top line #
-                g_top_line = std::max(g_art_line_num - ArticleLine{g_tc_LINES} + ArticleLine{1}, g_top_line);
+                g_top_line = std::max(line_after(g_art_line_num) - ArticleLine{g_tc_LINES}, g_top_line);
             }
 
             // determine actual position in file
@@ -721,8 +721,8 @@ skip_put:
         }
         if (line_num >= ArticleLine{32700})   // did last line have form feed?
         {
-            virtual_write(g_art_line_num - ArticleLine{1}, -virtual_read(g_art_line_num - ArticleLine{1}));
-                                // remember by negating pos in file
+            // remember by negating pos in file
+            virtual_write(line_before(g_art_line_num), -virtual_read(line_before(g_art_line_num)));
         }
 
         s_special = false;      // end of page, so reset page length
@@ -1030,13 +1030,13 @@ caseG:
         {
             if (g_inner_search < g_art_pos)
             {
-                g_art_line_num = g_top_line + ArticleLine{1};
+                g_art_line_num = line_after(g_top_line);
                 while (virtual_read(g_art_line_num) < g_inner_search)
                 {
                     ++g_art_line_num;
                 }
             }
-            g_highlight = g_art_line_num - ArticleLine{1};
+            g_highlight = line_before(g_art_line_num);
 #ifdef DEBUG
             if (debug & DEB_INNERSRCH)
             {
@@ -1095,7 +1095,7 @@ refresh_screen:
             seek_art_buf(g_art_pos);
         }
         g_top_line = g_art_line_num;
-        g_inner_light = g_art_line_num - ArticleLine{1};
+        g_inner_light = line_before(g_art_line_num);
         g_inner_search = g_art_size;
         g_g_line = 0;
         g_hide_everything = 'b';
@@ -1111,7 +1111,7 @@ refresh_screen:
             home_cursor();
             insert_line();
             carriage_return();
-            ArticlePosition pos = virtual_read(g_top_line - ArticleLine{1});
+            ArticlePosition pos = virtual_read(line_before(g_top_line));
             if (pos < ArticlePosition{})
             {
                 pos = -pos;
@@ -1141,7 +1141,7 @@ refresh_screen:
                         g_art_pos = -g_art_pos;
                     }
                     seek_art_buf(g_art_pos);
-                    s_a_line_begin = virtual_read(g_art_line_num - ArticleLine{1});
+                    s_a_line_begin = virtual_read(line_before(g_art_line_num));
                     if (s_a_line_begin < ArticlePosition{})
                     {
                         s_a_line_begin = -s_a_line_begin;
@@ -1171,7 +1171,7 @@ refresh_screen:
         g_do_fseek = true;      // reposition article file
         if (*g_buf == 'B')
         {
-            target = g_top_line - ArticleLine{1};
+            target = line_before(g_top_line);
         }
         else
         {
@@ -1188,7 +1188,7 @@ refresh_screen:
             {
                 --g_art_line_num;
             } while (g_art_line_num >= ArticleLine{} && g_art_line_num > target &&
-                     virtual_read(g_art_line_num - ArticleLine{1}) >= ArticlePosition{});
+                     virtual_read(line_before(g_art_line_num)) >= ArticlePosition{});
         }
         g_top_line = g_art_line_num;  // remember top line of screen
                                 // (line # within article file)
@@ -1402,7 +1402,7 @@ bool inner_more()
         }
         else
         {
-            g_highlight = g_art_line_num - ArticleLine{1};
+            g_highlight = line_before(g_art_line_num);
         }
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)

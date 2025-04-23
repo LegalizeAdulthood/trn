@@ -1616,7 +1616,7 @@ refresh_screen:
             g_reread = true;
             g_do_fseek = true;
             g_top_line = g_art_line_num;
-            g_inner_light = g_art_line_num - ArticleLine{1};
+            g_inner_light = line_before(g_art_line_num);
             g_inner_search = g_art_size;
             g_g_line = 0;
             g_hide_everything = 'b';
@@ -1634,7 +1634,7 @@ refresh_screen:
             g_do_fseek = true;
             if (*g_buf == 'B')
             {
-                target = g_top_line - ArticleLine{1};
+                target = line_before(g_top_line);
             }
             else
             {
@@ -1651,7 +1651,7 @@ refresh_screen:
                 {
                     g_art_line_num--;
                 } while (g_art_line_num >= ArticleLine{} && g_art_line_num > target &&
-                         virtual_read(g_art_line_num - ArticleLine{1}) >= ArticlePosition{});
+                         virtual_read(line_before(g_art_line_num)) >= ArticlePosition{});
             }
             g_top_line = g_art_line_num;
             g_art_line_num = std::max(g_art_line_num, ArticleLine{});
