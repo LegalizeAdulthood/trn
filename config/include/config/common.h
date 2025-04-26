@@ -606,7 +606,13 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 
 // how to cancel an article, continued
 #ifndef CANCELHEADER
-#   define CANCELHEADER "Newsgroups: %n\nSubject: cancel\n%(%{FROM}=^$?:From: %{FROM}\n)Control: cancel %i\nDistribution: %D\n\n%i was cancelled from within trn.\n"
+#   define CANCELHEADER "Newsgroups: %n\n" \
+        "Subject: cancel\n" \
+        "%(%{FROM}=^$?:From: %{FROM}\n)" \
+        "Control: cancel %i\n" \
+        "Distribution: %D\n" \
+        "\n" \
+        "%i was cancelled from within trn.\n"
 #endif
 
 // how to supersede an article
