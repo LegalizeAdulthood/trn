@@ -57,6 +57,7 @@ function(configure_trn)
     if(NOT (MBOX_CHAR_LEN EQUAL 1))
         message(FATAL_ERROR "Option MBOX_CHAR ('${MBOX_CHAR}') must be set to a single character.")
     endif()
+    option(PASS_NAMES "Indicates that full names are stored in the /etc/passwd file." OFF)
 
     set(HAS_TERMLIB ON)
     if(WIN32)
