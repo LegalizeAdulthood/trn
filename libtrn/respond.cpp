@@ -943,7 +943,7 @@ void forward()
         term_down(1);
         goto done;
     }
-    interp(hbuf, sizeof hbuf, get_val("FORWARDHEADER",FORWARDHEADER));
+    interp(hbuf, sizeof hbuf, get_val("FORWARDHEADER",FORWARD_HEADER));
     std::fputs(hbuf,header);
 #ifdef REGEX_WORKS_RIGHT
     if (!compile(&mime_compex,"Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
