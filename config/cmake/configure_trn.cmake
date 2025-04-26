@@ -96,7 +96,7 @@ function(configure_trn)
     set(ORGNAME "%X/organization")
     set(PHOSTNAME "localhost")
     set(ROOT_ID "0")
-    set(SERVER_NAME "news.gmane.io")
+    set(SERVER_NAME "news.gmane.io" CACHE STRING "The default server name or a file to open to read the server name.")
     # TODO: Does any modern platform return non-void from a signal handler?
     # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")
