@@ -141,7 +141,7 @@ char *file_exp(const char *text)
                     endpwent();
                 }
 #else                   // this will run faster, and is less D space
-                { // just be sure LOGDIRFIELD is correct
+                { // just be sure LOGIN_DIR_FIELD is correct
                     std::FILE *pfp = std::fopen(file_exp(PASSWORD_FILE), "r");
                     char tmpbuf[512];
 
@@ -152,7 +152,7 @@ char *file_exp(const char *text)
                             char *d = copy_till(scrbuf, tmpbuf, ':');
                             if (!std::strcmp(scrbuf, s_tilde_name))
                             {
-                                for (int i = LOGDIRFIELD - 2; i; i--)
+                                for (int i = LOGIN_DIR_FIELD - 2; i; i--)
                                 {
                                     if (d)
                                     {

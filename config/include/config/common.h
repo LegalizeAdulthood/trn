@@ -205,8 +205,8 @@ enum
 #   endif
 #endif
 
-#ifndef LOGDIRFIELD
-#   define LOGDIRFIELD 6                // Which field (origin 1) is the
+#ifndef LOGIN_DIR_FIELD
+#   define LOGIN_DIR_FIELD 6            // Which field (origin 1) is the
                                         // login directory in /etc/passwd?
                                         // (If it is not kept in passwd,
                                         // but getpwnam() returns it,
