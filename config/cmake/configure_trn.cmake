@@ -105,6 +105,7 @@ function(configure_trn)
     set(POSTING_HOSTNAME "%X/posting-hostname" CACHE STRING
         "This symbol contains the posting host's name or a file from which to read its name.")
     option(HOST_BITS "Set to true if we should compare only the domain portion of the hostname when looking for local articles." ON)
+    set(PRIVATE_LIB "%x/trn" CACHE STRING "The path to private executables; ~, %x and %l expansion allowed.")
 
     if(WIN32)
         set(MSDOS ON)
@@ -121,9 +122,6 @@ function(configure_trn)
     set(THREADDIR "%X/threads")
     set(TRN_INIT OFF)
     set(TRN_SELECT ON)
-    if(WIN32)
-        set(PRIVATE_LIB "${_ProgramData}/trn/lib")
-    endif()
 
     configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config/config.h)
     set(STRING_CASE_COMPARE_SOURCES "")
