@@ -104,6 +104,7 @@ function(configure_trn)
         "Either the organization name or the full pathname of a file containing the organization name.")
     set(POSTING_HOSTNAME "%X/posting-hostname" CACHE STRING
         "This symbol contains the posting host's name or a file from which to read its name.")
+    option(HOST_BITS "Set to true if we should compare only the domain portion of the hostname when looking for local articles." ON)
 
     if(WIN32)
         set(MSDOS ON)
@@ -113,7 +114,6 @@ function(configure_trn)
         set(NEWS_ADMIN "root")
     endif()
     set(NORM_SIG ON)
-    set(HOST_BITS ON)
     # TODO: Does any modern platform return non-void from a signal handler?
     # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")
