@@ -222,11 +222,11 @@
  */
 #cmakedefine HAS_TERMLIB
 
-/* IGNOREORG:
+/* IGNORE_ORG:
  *      This symbol, if defined, indicates that the ORGANIZATION environment
  *      variable does not contain an organization name.
  */
-#cmakedefine IGNOREORG
+#cmakedefine IGNORE_ORG
 
 /* SERVER_NAME:
  *      When using NNTP, this symbol indicates the server name or a

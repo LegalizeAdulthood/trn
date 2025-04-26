@@ -850,7 +850,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     break;
 
                 case 'o':                       // organization
-#ifdef IGNOREORG
+#ifdef IGNORE_ORG
                     s = get_val("NEWSORG",s_orgname);
 #else
                     s = get_val("NEWSORG",nullptr);
