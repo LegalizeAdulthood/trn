@@ -118,7 +118,7 @@ function(configure_trn)
     if(WIN32)
         set(PRIVLIB "${_ProgramData}/trn/lib")
     endif()
-    set(GROUPDESC "")
+    set(GROUP_DESC "")
     set(NEWSSPOOL "%X/spool")
 
     configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config/config.h)

@@ -159,7 +159,7 @@ void data_source_init()
         vals[DI_OVERVIEW_DIR] = OVERVIEW_DIR;
         vals[DI_OVERVIEW_FMT] = OVERVIEW_FMT;
         vals[DI_ACTIVE_TIMES] = ACTIVE_TIMES;
-        vals[DI_GROUP_DESC] = GROUPDESC;
+        vals[DI_GROUP_DESC] = GROUP_DESC;
         if (machine)
         {
             vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),

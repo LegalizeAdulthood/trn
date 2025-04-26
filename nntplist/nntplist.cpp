@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
         }
         else if (string_case_equal(action, "newsgroups"))
         {
-            cp = GROUPDESC;
+            cp = GROUP_DESC;
         }
         else if (string_case_equal(action, "subscriptions"))
         {

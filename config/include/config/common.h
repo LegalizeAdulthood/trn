@@ -316,8 +316,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #ifndef ACTIVE_TIMES
 #   define ACTIVE_TIMES "none"
 #endif
-#ifndef GROUPDESC
-#   define GROUPDESC "%x/newsgroups"
+#ifndef GROUP_DESC
+#   define GROUP_DESC "%x/newsgroups"
 #endif
 #ifndef DBINIT
 #   define DBINIT "%W/db.init"

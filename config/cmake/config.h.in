@@ -258,11 +258,11 @@
  */
 #define EXTRA_INEWS "@EXTRA_INEWS@"
 
-/* GROUPDESC:
+/* GROUP_DESC:
  *      Contains the full path and filename of the "newsgroups" file for
  *      group descriptions, or nothing.
  */
-#define GROUPDESC "@GROUPDESC@"
+#define GROUP_DESC "@GROUP_DESC@"
 
 /* SUBSCRIPTIONS:
  *      Contains the full path and filename of the list of default
