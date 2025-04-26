@@ -192,7 +192,7 @@ enum
 #   define ROOTID 0         // uid of superuser
 #endif
 
-#ifdef NORMSIG
+#ifdef NORM_SIG
 #   define sigset signal
 #   define sigignore(sig) signal(sig,SIG_IGN)
 #endif
