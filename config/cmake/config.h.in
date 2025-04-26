@@ -308,8 +308,8 @@
 /* OVERVIEW_FMT:
  *      The overview.fmt file.
  */
-#define OVERVIEW_DIR    "@OVERVIEWDIR@"
-#define OVERVIEW_FMT    "@OVERVIEWFMT@"
+#define OVERVIEW_DIR    "@OVERVIEW_DIR@"
+#define OVERVIEW_FMT    "@OVERVIEW_FMT@"
 
 /* THREAD_INIT:
  *      This symbol indicates we act like trn no matter what our name is.
