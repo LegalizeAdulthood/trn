@@ -100,6 +100,8 @@ function(configure_trn)
     set(GROUP_DESC "" CACHE FILEPATH "The full path of the \"newsgroups\" file for group descriptions, or nothing.")
     set(SUBSCRIPTIONS "" CACHE FILEPATH "The full path of the list of default subscriptions, or nothing (~ expansion OK).")
     set(NEWS_SPOOL "%X/spool" CACHE STRING "The directory name where news articles are spooled (~, % expansion OK.).")
+    set(ORG_NAME "%X/organization" CACHE STRING
+        "Either the organization name or the full pathname of a file containing the organization name.")
 
     if(WIN32)
         set(MSDOS ON)
@@ -110,7 +112,6 @@ function(configure_trn)
     endif()
     set(NORM_SIG ON)
     set(HOSTBITS ON)
-    set(ORG_NAME "%X/organization")
     # TODO: Does any modern platform return non-void from a signal handler?
     # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")
