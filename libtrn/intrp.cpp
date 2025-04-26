@@ -856,7 +856,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     s = get_val("NEWSORG",nullptr);
                     if (s == nullptr)
                     {
-                        std::strcpy(scrbuf, ORGNAME);
+                        std::strcpy(scrbuf, ORG_NAME);
                         s = get_val("ORGANIZATION", scrbuf);
                     }
 #endif

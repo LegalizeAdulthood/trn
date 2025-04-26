@@ -110,7 +110,7 @@ function(configure_trn)
     endif()
     set(NORM_SIG ON)
     set(HOSTBITS ON)
-    set(ORGNAME "%X/organization")
+    set(ORG_NAME "%X/organization")
     # TODO: Does any modern platform return non-void from a signal handler?
     # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")

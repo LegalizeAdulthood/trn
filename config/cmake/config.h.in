@@ -276,12 +276,12 @@
  */
 #define NEWS_SPOOL "@NEWS_SPOOL@"
 
-/* ORGNAME:
+/* ORG_NAME:
  *      This symbol contains either the organization name or the full pathname
  *      of a file containing the organization name, which the program must
  *      be prepared to open and substitute the contents of.
  */
-#define ORGNAME "@ORGNAME@"
+#define ORG_NAME "@ORG_NAME@"
 
 /* PHOSTNAME:
  *      This symbol contains the posting host's name or a file from which

@@ -583,7 +583,7 @@ TEST_F(InterpolatorTest, realNameFromNAME)
     ASSERT_EQ("John Yeager", buffer());
 }
 
-TEST_F(InterpolatorTest, newsOrgFromORGNAME)
+TEST_F(InterpolatorTest, newsOrgFromConfiguration)
 {
     char pattern[]{"%o"};
     m_env.expect_no_envar("NEWSORG");

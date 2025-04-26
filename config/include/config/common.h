@@ -180,8 +180,8 @@ enum
 // NOTE: many of these are defined in the config.h file
 
 // name of organization
-#ifndef ORGNAME
-#   define ORGNAME "ACME Widget Company, Widget Falls, Southern North Dakota"
+#ifndef ORG_NAME
+#   define ORG_NAME "ACME Widget Company, Widget Falls, Southern North Dakota"
 #endif
 
 #ifndef MBOX_CHAR
