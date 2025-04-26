@@ -317,11 +317,6 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define GROUP_DESC "%x/newsgroups"
 #endif
 
-// location of history file
-#ifndef ARTFILE         // % and ~
-#    define ARTFILE "%x/history"
-#endif
-
 // preferred shell for use in doshell routine
 // ksh or sh would be okay here
 #ifndef PREF_SHELL
@@ -376,15 +371,6 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define OV_FILE_NAME "/overview"
 # else
 #   define OV_FILE_NAME "/.overview"
-# endif
-#endif
-
-// The name to append to the directory name to read a thread file.
-#ifndef MT_FILE_NAME
-# ifdef LIMITED_FILENAMES
-#   define MT_FILE_NAME "/thread"
-# else
-#   define MT_FILE_NAME "/.thread"
 # endif
 #endif
 
