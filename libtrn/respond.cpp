@@ -890,7 +890,7 @@ void reply()
     if (incl_body && g_art_fp != nullptr)
     {
         char* s;
-        interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
+        interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOU_SAID));
         std::fprintf(header,"%s\n",g_buf);
         parse_header(g_art);
         mime_set_article();

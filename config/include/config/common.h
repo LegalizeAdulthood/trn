@@ -482,8 +482,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
         "\n"
 #endif
 
-#ifndef YOUSAID         // %
-#   define YOUSAID "In article %i you write:"
+#ifndef YOU_SAID         // %
+#   define YOU_SAID "In article %i you write:"
 #endif
 
 // command to forward an article
