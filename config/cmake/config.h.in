@@ -321,8 +321,8 @@
 #cmakedefine01 SELECT_INIT
 
 #define CALL_INEWS "@USE_INEWS@ -h <%h"
-#define NEWS_POSTER "@BIN@/Pnews -h %h"
-#define MAILPOSTER "@BIN@/Rnmail -h %h"
+#define NEWS_POSTER "@BIN_DIR@/Pnews -h %h"
+#define MAILPOSTER "@BIN_DIR@/Rnmail -h %h"
 
 /* MSDOS:
  *      This is defined if this is an MSDOS system.

@@ -111,6 +111,8 @@ function(configure_trn)
     option(THREAD_INIT "If ON, indicates we act like trn no matter what our name is." OFF)
     option(SELECT_INIT "If ON, indicates we default to the selector for group entry." OFF)
     set(USE_INEWS "%x/inews" CACHE STRING "Full path to the inews to use for posting.")
+    # TODO: How to properly configure BIN_DIR to work when developing and after installation?
+    set(BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "Path of the bin directory where the package will be installed.")
 
     if(WIN32)
         set(MSDOS ON)
