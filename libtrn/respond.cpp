@@ -223,7 +223,7 @@ SaveResult save_article()
         {
             std::printf("Extracting article into %s using %s\n",c,g_extract_prog.c_str());
             term_down(1);
-            interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
+            interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOM_SAVER));
             invoke(g_cmd_buf, nullptr);
         }
         else if (g_is_mime)

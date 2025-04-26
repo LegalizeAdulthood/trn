@@ -551,8 +551,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define SHAR_SAVER "tail +%Bc %A | /bin/sh"
 #endif
 
-#ifndef CUSTOMSAVER
-#   define CUSTOMSAVER "tail +%Bc %A | %e"
+#ifndef CUSTOM_SAVER
+#   define CUSTOM_SAVER "tail +%Bc %A | %e"
 #endif
 
 #ifndef VERIFY_RIPEM
