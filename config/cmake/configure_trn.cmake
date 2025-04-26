@@ -84,6 +84,8 @@ function(configure_trn)
     set(PIPE_HOST_CMD "" CACHE STRING "A command to feed to the popen() routine to derive the host name.")
     set(HAS_TERMLIB ON CACHE BOOL "Indicates that termlib-style routines are available")
     option(IGNORE_ORG "Indicates that the ORGANIZATION environment variable does not contain an organization name." OFF)
+    set(SERVER_NAME "news.gmane.io" CACHE STRING "The default server name or a file to open to read the server name.")
+    option(HAS_LOCAL_SPOOL "Indicates that there's a local spool directory configured into trn." OFF)
 
     if(WIN32)
         set(MSDOS ON)
@@ -95,9 +97,6 @@ function(configure_trn)
     set(NORM_SIG ON)
     set(HOSTBITS ON)
     set(ORGNAME "%X/organization")
-    set(PHOSTNAME "localhost")
-    set(ROOT_ID "0")
-    set(SERVER_NAME "news.gmane.io" CACHE STRING "The default server name or a file to open to read the server name.")
     # TODO: Does any modern platform return non-void from a signal handler?
     # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")
