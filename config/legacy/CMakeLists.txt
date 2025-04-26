@@ -5,7 +5,6 @@ add_library(legacy INTERFACE
     filexp.SH
     fixConf
     GNUmakefile
-    makedir.SH
     Makefile.SH
     MANIFEST.txt
     mbox_saver.SH
