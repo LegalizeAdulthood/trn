@@ -5,7 +5,6 @@ add_library(legacy INTERFACE
     filexp.SH
     fixConf
     GNUmakefile
-    makedepend.SH
     makedir.SH
     Makefile.SH
     MANIFEST.txt
