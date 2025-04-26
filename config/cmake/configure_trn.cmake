@@ -39,6 +39,8 @@ function(configure_trn)
         check_symbol_exists(gethostname "WinSock2.h" HAS_GETHOSTNAME)
         unset(CMAKE_REQUIRED_LIBRARIES)
     endif()
+    # TODO: How to check for UNION_WAIT?
+
     set(HAS_TERMLIB ON)
     set(MBOX_CHAR "F")
     if(WIN32)
