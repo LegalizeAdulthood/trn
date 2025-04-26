@@ -56,7 +56,7 @@ static AutoKillFlags      s_thread_cmd_flag[]{
 };
 static char       s_kill_global[] = KILL_GLOBAL;
 static char       s_kill_local[] = KILL_LOCAL;
-static char       s_kill_threads[] = KILLTHREADS;
+static char       s_kill_threads[] = KILL_THREADS;
 static bool       s_kill_mentioned;
 static std::FILE *s_new_kill_file_fp{};
 

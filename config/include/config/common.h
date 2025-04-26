@@ -591,8 +591,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define KILL_LOCAL "%p/%c/KILL"
 #endif
 
-#ifndef KILLTHREADS     // % and ~
-#   define KILLTHREADS "%+/Kill/Threads"
+#ifndef KILL_THREADS     // % and ~
+#   define KILL_THREADS "%+/Kill/Threads"
 #endif
 
 // how to cancel an article
