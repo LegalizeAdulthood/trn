@@ -507,7 +507,7 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // command to forward an article
-#define FORWARDPOSTER MAIL_POSTER
+#define FORWARD_POSTER MAIL_POSTER
 
 #ifndef FORWARDHEADER   // %
 #define FORWARDHEADER                                                                                                  \

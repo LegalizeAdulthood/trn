@@ -924,7 +924,7 @@ done:
 void forward()
 {
     char hbuf[5*LINE_BUF_LEN];
-    char* maildoer = save_str(get_val_const("FORWARDPOSTER",FORWARDPOSTER));
+    char* maildoer = save_str(get_val_const("FORWARDPOSTER",FORWARD_POSTER));
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
