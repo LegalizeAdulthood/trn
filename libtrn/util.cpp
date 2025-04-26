@@ -1050,7 +1050,7 @@ int edit_file(const char *fname)
 
     // XXX paranoia check on length
     std::sprintf(g_cmd_buf,"%s ",
-            file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))));
+            file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFAULT_EDITOR))));
     std::strcat(g_cmd_buf, file_exp(fname));
     term_down(3);
     reset_tty();                  // make sure tty is friendly

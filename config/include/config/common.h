@@ -340,8 +340,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // path to default editor
-#ifndef DEFEDITOR
-#   define DEFEDITOR "/usr/ucb/vi"
+#ifndef DEFAULT_EDITOR
+#   define DEFAULT_EDITOR "/usr/ucb/vi"
 #endif
 
 // the user's init files

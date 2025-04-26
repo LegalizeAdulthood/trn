@@ -820,7 +820,7 @@ void edit_kill_file()
     if (!make_dir(g_buf, MD_FILE))
     {
         std::sprintf(g_cmd_buf,"%s %s",
-            file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
+            file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFAULT_EDITOR))),g_buf);
         std::printf("\nEditing %s KILL file:\n%s\n",
             (g_in_ng?"local":"global"),g_cmd_buf);
         term_down(3);

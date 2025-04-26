@@ -71,10 +71,10 @@
  */
 #cmakedefine USE_WIFSTAT
 
-/* DEFEDITOR:
+/* DEFAULT_EDITOR:
  *      This symbol contains the full pathname of the default editor.
  */
-#define DEFEDITOR "@DEFAULT_EDITOR@"
+#define DEFAULT_EDITOR "@DEFAULT_EDITOR@"
 
 /* I_SYS_STAT:
  *      This symbol, if defined, indicates to the C program that it should
