@@ -713,7 +713,7 @@ int cancel_article()
             term_down(1);
             goto done;
         }
-        interp(hbuf, sizeof hbuf, get_val("CANCELHEADER",CANCELHEADER));
+        interp(hbuf, sizeof hbuf, get_val("CANCELHEADER",CANCEL_HEADER));
         std::fputs(hbuf,header);
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);

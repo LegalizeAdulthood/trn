@@ -605,8 +605,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // how to cancel an article, continued
-#ifndef CANCELHEADER
-#   define CANCELHEADER "Newsgroups: %n\n" \
+#ifndef CANCEL_HEADER
+#   define CANCEL_HEADER "Newsgroups: %n\n" \
         "Subject: cancel\n" \
         "%(%{FROM}=^$?:From: %{FROM}\n)" \
         "Control: cancel %i\n" \
