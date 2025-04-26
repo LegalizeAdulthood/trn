@@ -172,10 +172,10 @@
  */
 #define PREF_SHELL "@PREF_SHELL@"
 
-/* ROOTID:
+/* ROOT_UID:
  *      This symbol contains the uid of root, normally 0.
  */
-#define ROOTID @ROOT_ID@
+#define ROOT_UID @ROOT_UID@
 
 /* ACTIVE:
  *      The name of the active file for the news system.  This file contains

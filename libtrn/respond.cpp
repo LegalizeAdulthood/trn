@@ -684,7 +684,7 @@ int cancel_article()
 #ifdef HAS_NEWS_ADMIN
                 && myuid != g_news_uid //
 #endif
-                && myuid != ROOTID)))
+                && myuid != ROOT_UID)))
     {
 #ifdef DEBUG
         if (debug)
@@ -757,7 +757,7 @@ int supersede_article()         // Supersedes:
 #ifdef HAS_NEWS_ADMIN                                                //
                 && myuid != g_news_uid                                //
 #endif
-                && myuid != ROOTID)))
+                && myuid != ROOT_UID)))
     {
 #ifdef DEBUG
         if (debug)

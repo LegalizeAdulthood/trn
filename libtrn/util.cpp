@@ -355,7 +355,7 @@ int mod;
         return -1;
     }
     euid = geteuid();
-    if (euid == ROOTID)
+    if (euid == ROOT_UID)
     {
         return 0;
     }

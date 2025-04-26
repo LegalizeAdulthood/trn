@@ -188,8 +188,8 @@ enum
 #   define MBOX_CHAR 'F'     // how to recognize a mailbox by 1st char
 #endif
 
-#ifndef ROOTID
-#   define ROOTID 0         // uid of superuser
+#ifndef ROOT_UID
+#   define ROOT_UID 0         // uid of superuser
 #endif
 
 #ifdef NORM_SIG
