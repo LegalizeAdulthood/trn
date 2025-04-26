@@ -107,8 +107,8 @@ void interp_init(char *tcbuf, int tcbuf_len)
     g_head_name = file_exp(HEADNAME);
 
     // the hostname to use in local-article comparisons
-#if HOSTBITS != 0
-    int i = (HOSTBITS < 2? 2 : HOSTBITS);
+#if HOST_BITS != 0
+    int i = (HOST_BITS < 2? 2 : HOST_BITS);
     static char buff[128];
     std::strcpy(buff, g_p_host_name.c_str());
     g_host_name = buff+std::strlen(buff)-1;

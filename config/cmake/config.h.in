@@ -287,12 +287,12 @@
  *      This symbol contains the posting host's name or a file from which
  *      to read its name.
  */
-/* HOSTBITS:
+/* HOST_BITS:
  *      Set to true if we should compare only the domain portion of the
  *      hostname when looking for local articles.
  */
 #define POSTING_HOSTNAME "@POSTING_HOSTNAME@"
-#cmakedefine01 HOSTBITS
+#cmakedefine01 HOST_BITS
 
 /* PRIVLIB:
  *      This symbol contains the name of the private library for this package.
