@@ -1093,7 +1093,7 @@ void followup()
         g_art = oldart;
         return;
     }
-    interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
+    interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWS_HEADER));
     std::fputs(hbuf,header);
     if (incl_body && g_art_fp != nullptr)
     {

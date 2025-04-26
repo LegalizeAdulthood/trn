@@ -521,8 +521,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define NEWS_POSTER "Pnews -h %h"
 #endif
 
-#ifndef NEWSHEADER      // %
-#   define NEWSHEADER "%(%[followup-to]=^$?:%(%[followup-to]=^%n$?:X-ORIGINAL-NEWSGROUPS: %n\n))Newsgroups: %(%F=^$?%C:%F)\nSubject: %(%S=^$?%\"\n\nSubject: \":Re: %S)\nSummary: \nExpires: \n%(%R=^$?:References: %R\n)Sender: \nFollowup-To: \n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)Distribution: %(%i=^$?%\"Distribution: \":%D)\nOrganization: %o\nKeywords: %[keywords]\nCc: %(%F=poster?%t:%(%F!=@?:%F))\n\n"
+#ifndef NEWS_HEADER      // %
+#   define NEWS_HEADER "%(%[followup-to]=^$?:%(%[followup-to]=^%n$?:X-ORIGINAL-NEWSGROUPS: %n\n))Newsgroups: %(%F=^$?%C:%F)\nSubject: %(%S=^$?%\"\n\nSubject: \":Re: %S)\nSummary: \nExpires: \n%(%R=^$?:References: %R\n)Sender: \nFollowup-To: \n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)Distribution: %(%i=^$?%\"Distribution: \":%D)\nOrganization: %o\nKeywords: %[keywords]\nCc: %(%F=poster?%t:%(%F!=@?:%F))\n\n"
 #endif
 
 #ifndef ATTRIBUTION     // %
