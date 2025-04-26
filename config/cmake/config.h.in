@@ -294,13 +294,13 @@
 #define POSTING_HOSTNAME "@POSTING_HOSTNAME@"
 #cmakedefine01 HOST_BITS
 
-/* PRIVLIB:
+/* PRIVATE_LIB:
  *      This symbol contains the name of the private library for this package.
  *      The library is private in the sense that it needn't be in anyone's
  *      execution path, but it should be accessible by the world.  The program
  *      should be prepared to do ~ expansion.
  */
-#define PRIVLIB "@PRIVLIB@"
+#define PRIVATE_LIB "@PRIVATE_LIB@"
 
 /* OVERVIEW_DIR:
  *      This symbol indicates where the overview files go.

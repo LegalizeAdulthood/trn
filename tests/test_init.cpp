@@ -289,7 +289,7 @@ TEST_F(InitTest, libDirFromConfiguration)
 
 TEST_F(InitTest, rnLibDirFromConfiguration)
 {
-    const char *rn_lib_dir{PRIVLIB};
+    const char *rn_lib_dir{PRIVATE_LIB};
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 

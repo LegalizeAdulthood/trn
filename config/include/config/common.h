@@ -290,8 +290,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // path to private executables
-#ifndef PRIVLIB         // ~, %x and %l only
-#   define PRIVLIB "%x/trn"
+#ifndef PRIVATE_LIB         // ~, %x and %l only
+#   define PRIVATE_LIB "%x/trn"
 #endif
 
 // system-wide RNINIT switches

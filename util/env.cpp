@@ -205,7 +205,7 @@ static void env_init2()
     g_dot_dir = get_val_const("DOTDIR",g_home_dir);
     g_trn_dir = file_exp(get_val_const("TRNDIR",TRNDIR));
     g_lib = file_exp(NEWS_LIB);
-    g_rn_lib = file_exp(PRIVLIB);
+    g_rn_lib = file_exp(PRIVATE_LIB);
 }
 
 // Set g_login_name to the user's login name and g_real_name to the user's

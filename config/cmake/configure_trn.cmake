@@ -122,7 +122,7 @@ function(configure_trn)
     set(TRN_INIT OFF)
     set(TRN_SELECT ON)
     if(WIN32)
-        set(PRIVLIB "${_ProgramData}/trn/lib")
+        set(PRIVATE_LIB "${_ProgramData}/trn/lib")
     endif()
 
     configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config/config.h)
