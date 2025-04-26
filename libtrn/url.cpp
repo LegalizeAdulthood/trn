@@ -95,7 +95,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 #ifdef USE_FTP
     static char cmdline[1024];
     static char path[512];      // use to make writable copy
-    // buffers used because because filexp overwrites previous call results
+    // buffers used because because file_exp overwrites previous call results
     static char username[128];
     static char userhost[128];
     int         status;

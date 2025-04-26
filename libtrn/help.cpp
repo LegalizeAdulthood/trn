@@ -691,7 +691,7 @@ int help_scan_article()
     int cmd;
 #ifdef UNDEF
     // implement this later?
-    doshell(SH, filexp(SAHELP));
+    do_shell(SH, file_exp(SAHELP));
 #else
     page_start();
     if ((cmd = print_lines("Article scan commands:\n", STANDOUT)) ||

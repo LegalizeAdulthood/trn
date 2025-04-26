@@ -79,10 +79,10 @@ void interp_init(char *tcbuf, int tcbuf_len)
         }
 #else
 #ifdef TILDENAME
-        char tildenews[2+sizeof NEWS_ADMIN];
-        std::strcpy(tildenews, "~");
-        std::strcat(tildenews, NEWS_ADMIN);
-        (void) filexp(tildenews);
+        char tilde_news[2+sizeof NEWS_ADMIN];
+        std::strcpy(tilde_news, "~");
+        std::strcat(tilde_news, NEWS_ADMIN);
+        (void) file_exp(tilde_news);
 #else
         ... "Define either HAS_GETPWENT or TILDENAME to get NEWS_ADMIN"
 #endif  // TILDENAME

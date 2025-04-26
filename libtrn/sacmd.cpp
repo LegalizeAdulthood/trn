@@ -607,7 +607,7 @@ int sa_do_cmd()
             std::printf("\nIncomplete file: %s\n",decode_dest);
             std::printf("Continue with command? [ny]");
             std::fflush(stdout);
-            getcmd(g_buf);
+            get_cmd(g_buf);
             std::printf("\n");
             if (*g_buf == 'n' || *g_buf == ' ' || *g_buf == '\n')
             {
@@ -615,7 +615,7 @@ int sa_do_cmd()
             }
             std::printf("Remove this file? [ny]");
             std::fflush(stdout);
-            getcmd(g_buf);
+            get_cmd(g_buf);
             std::printf("\n");
             if (*g_buf == 'y' || *g_buf == 'Y')
             {
@@ -628,7 +628,7 @@ int sa_do_cmd()
         if (!sa_extracted_use)
         {
             sa_extracted_use = safe_malloc(LINE_BUF_LEN);
-// later consider a variable for the default command
+            // later consider a variable for the default command
             *sa_extracted_use = '\0';
         }
         if (!*decode_dest)
@@ -643,18 +643,18 @@ int sa_do_cmd()
             {
                 break;
             }
-            safecpy(decode_dest,g_buf+1,MAXFILENAME);
+            safe_copy(decode_dest,g_buf+1,MAXFILENAME);
             std::printf("\n");
         }
         if (s_sa_extract_dest == nullptr)
         {
             s_sa_extract_dest = (char*)safe_malloc(LINE_BUF_LEN);
-            safecpy(s_sa_extract_dest,filexp("%p"),LINE_BUF_LEN);
+            safe_copy(s_sa_extract_dest,file_exp("%p"),LINE_BUF_LEN);
         }
         if (*decode_dest != '/' && *decode_dest != '~' && *decode_dest != '%')
         {
             std::sprintf(g_buf,"%s/%s",s_sa_extract_dest,decode_dest);
-            safecpy(decode_dest,g_buf,MAXFILENAME);
+            safe_copy(decode_dest,g_buf,MAXFILENAME);
         }
         if (*sa_extracted_use)
         {
@@ -671,7 +671,7 @@ int sa_do_cmd()
         }
         if (g_buf[1] != '\0')           // typed in a command
         {
-            safecpy(sa_extracted_use,g_buf+1,LINE_BUF_LEN);
+            safe_copy(sa_extracted_use,g_buf+1,LINE_BUF_LEN);
         }
         if (*sa_extracted_use == '\0')  // no command
         {
