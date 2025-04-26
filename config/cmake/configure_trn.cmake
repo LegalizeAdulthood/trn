@@ -59,6 +59,7 @@ function(configure_trn)
     endif()
     option(PASS_NAMES "Indicates that full names are stored in the /etc/passwd file." OFF)
     option(BERKELEY_NAMES "Indicates that full names are stored in the /etc/passwd file in Berkeley format." OFF)
+    set(INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE STRING "The name of the install prefix for this package, defaults to CMAKE_INSTALL_PREFIX.")
 
     set(HAS_TERMLIB ON)
     if(WIN32)
