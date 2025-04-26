@@ -547,8 +547,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define PIPE_SAVER "%(%B=^0$?<%A:tail +%Bc %A |) %b"
 #endif
 
-#ifndef SHARSAVER
-#   define SHARSAVER "tail +%Bc %A | /bin/sh"
+#ifndef SHAR_SAVER
+#   define SHAR_SAVER "tail +%Bc %A | /bin/sh"
 #endif
 
 #ifndef CUSTOMSAVER

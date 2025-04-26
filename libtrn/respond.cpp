@@ -290,7 +290,7 @@ SaveResult save_article()
             case 1:
                 std::printf("Extracting shar into %s:\n", c);
                 term_down(1);
-                interp(g_cmd_buf,(sizeof g_cmd_buf),get_val("SHARSAVER",SHARSAVER));
+                interp(g_cmd_buf,(sizeof g_cmd_buf),get_val("SHARSAVER",SHAR_SAVER));
                 invoke(g_cmd_buf, nullptr);
                 break;
 
