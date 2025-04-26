@@ -302,8 +302,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // default characters to use in the selection menu
-#ifndef SELECTCHARS
-#   define SELECTCHARS "abdefgijlorstuvwxyz1234567890BCFGIKVW"
+#ifndef SELECTION_CHARS
+#   define SELECTION_CHARS "abdefgijlorstuvwxyz1234567890BCFGIKVW"
 #endif
 
 // file containing list of active newsgroups and max article numbers
