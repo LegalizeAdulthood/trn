@@ -136,12 +136,12 @@
  */
 #cmakedefine I_VFORK
 
-/* MAILFILE:
+/* MAIL_FILE:
  *      This symbol contains the interpretable name of the mail spool file
  *      for the current user.  The program must be prepared to substitute
  *      the HOME directory for %~, and the login id for %L.
  */
-#define MAILFILE "@MAIL_FILE@"
+#define MAIL_FILE "@MAIL_FILE@"
 
 /* MBOXCHAR:
  *      This symbol contains a character which will match the beginning

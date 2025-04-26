@@ -625,8 +625,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // where to find the mail file
-#ifndef MAILFILE
-#   define MAILFILE "/usr/spool/mail/%L"
+#ifndef MAIL_FILE
+#   define MAIL_FILE "/usr/spool/mail/%L"
 #endif
 
 #ifndef HAS_VFORK
