@@ -1045,7 +1045,7 @@ void forward()
         }
         else
         {
-            interp(g_buf, (sizeof g_buf), get_val("FORWARDMSGEND",FORWARDMSGEND));
+            interp(g_buf, (sizeof g_buf), get_val("FORWARDMSGEND",FORWARD_MSG_END));
             if (*g_buf)
             {
                 std::fprintf(header, "%s\n", g_buf);
