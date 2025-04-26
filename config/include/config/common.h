@@ -483,8 +483,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // command to send a reply
-#ifndef MAILPOSTER      // % and ~
-#   define MAILPOSTER "Rnmail -h %h"
+#ifndef MAIL_POSTER      // % and ~
+#   define MAIL_POSTER "Rnmail -h %h"
 #endif
 
 #ifndef MAILHEADER      // %
@@ -507,7 +507,7 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // command to forward an article
-#define FORWARDPOSTER MAILPOSTER
+#define FORWARDPOSTER MAIL_POSTER
 
 #ifndef FORWARDHEADER   // %
 #define FORWARDHEADER                                                                                                  \

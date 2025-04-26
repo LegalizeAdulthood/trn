@@ -863,7 +863,7 @@ void reply()
 {
     char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'R' && g_art);
-    char* maildoer = save_str(get_val_const("MAILPOSTER",MAILPOSTER));
+    char* maildoer = save_str(get_val_const("MAILPOSTER",MAIL_POSTER));
 
     art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file

@@ -322,7 +322,7 @@
 
 #define CALL_INEWS "@USE_INEWS@ -h <%h"
 #define NEWS_POSTER "@BIN_DIR@/Pnews -h %h"
-#define MAILPOSTER "@BIN_DIR@/Rnmail -h %h"
+#define MAIL_POSTER "@BIN_DIR@/Rnmail -h %h"
 
 /* MSDOS:
  *      This is defined if this is an MSDOS system.
