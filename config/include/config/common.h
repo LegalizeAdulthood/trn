@@ -508,8 +508,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
     "\n"
 #endif
 
-#ifndef FORWARDMSG      // %
-#   define FORWARDMSG "------- start of forwarded message -------"
+#ifndef FORWARD_MSG      // %
+#   define FORWARD_MSG "------- start of forwarded message -------"
 #endif
 
 #ifndef FORWARD_MSG_END   // %

@@ -1014,7 +1014,7 @@ void forward()
     }
     if (g_art_fp != nullptr)
     {
-        interp(g_buf, sizeof g_buf, get_val("FORWARDMSG",FORWARDMSG));
+        interp(g_buf, sizeof g_buf, get_val("FORWARDMSG",FORWARD_MSG));
         if (mime_boundary)
         {
             if (*g_buf && string_case_compare(g_buf, "Content-", 8))
