@@ -143,11 +143,11 @@
  */
 #define MAIL_FILE "@MAIL_FILE@"
 
-/* MBOXCHAR:
+/* MBOX_CHAR:
  *      This symbol contains a character which will match the beginning
  *      of a mailbox file.
  */
-#define MBOXCHAR '@MBOX_CHAR@'
+#define MBOX_CHAR '@MBOX_CHAR@'
 
 /* PASSNAMES:
  *      This symbol, if defined, indicates that full names are stored in

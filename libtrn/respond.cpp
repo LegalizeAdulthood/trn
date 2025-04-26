@@ -486,11 +486,11 @@ reask_save:
                 if (std::fread(g_buf, 1, LINE_BUF_LEN, s_tmp_fp))
                 {
                     c = g_buf;
-                    if (!std::isspace(MBOXCHAR))   // if non-zero,
+                    if (!std::isspace(MBOX_CHAR))   // if non-zero,
                     {
                         c = skip_space(c);   // check the first character
                     }
-                    mailbox = (*c == MBOXCHAR);
+                    mailbox = (*c == MBOX_CHAR);
                 }
                 else
                 {
@@ -525,7 +525,7 @@ reask_save:
             std::fseek(s_tmp_fp,0,2);
             if (mailbox)
             {
-#if MBOXCHAR == '\001'
+#if MBOX_CHAR == '\001'
                 std::fprintf(s_tmpfp,"\001\001\001\001\n");
 #else
                 interp(g_cmd_buf, sizeof g_cmd_buf, "From %t %`LANG= date`\n");
@@ -547,7 +547,7 @@ reask_save:
                 std::fputs(g_buf, s_tmp_fp);
             }
             std::fputs("\n\n", s_tmp_fp);
-#if MBOXCHAR == '\001'
+#if MBOX_CHAR == '\001'
             if (mailbox)
             {
                 std::fprintf(s_tmpfp,"\001\001\001\001\n");

@@ -184,8 +184,8 @@ enum
 #   define ORGNAME "ACME Widget Company, Widget Falls, Southern North Dakota"
 #endif
 
-#ifndef MBOXCHAR
-#   define MBOXCHAR 'F'     // how to recognize a mailbox by 1st char
+#ifndef MBOX_CHAR
+#   define MBOX_CHAR 'F'     // how to recognize a mailbox by 1st char
 #endif
 
 #ifndef ROOTID
