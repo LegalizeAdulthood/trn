@@ -242,7 +242,7 @@ static bool set_user_name(char *tmpbuf)
     s = pwd->pw_gecos;
 #endif
 #ifdef PASS_NAMES
-#ifdef BERKNAMES
+#ifdef BERKELEY_NAMES
 #ifdef BERKJUNK
     while (*s && !isalnum(*s) && *s != '&')
     {
@@ -271,7 +271,7 @@ static bool set_user_name(char *tmpbuf)
         }
     }
     g_real_name = g_buf;
-#else // !BERKNAMES
+#else // !BERKELEY_NAMES
     c = std::strchr(s, '(');
     if (c != nullptr)
     {
@@ -283,7 +283,7 @@ static bool set_user_name(char *tmpbuf)
         s = c;
     }
     g_real_name = s;
-#endif // !BERKNAMES
+#endif // !BERKELEY_NAMES
 #endif
 #ifndef PASS_NAMES
     {
