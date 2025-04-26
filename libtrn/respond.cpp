@@ -815,7 +815,7 @@ static int nntp_date()
 
 static void follow_it_up()
 {
-    safe_copy(g_cmd_buf,file_exp(get_val_const("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
+    safe_copy(g_cmd_buf,file_exp(get_val_const("NEWSPOSTER",NEWS_POSTER)), sizeof g_cmd_buf);
     if (invoke(g_cmd_buf, g_orig_dir.c_str()) == 42)
     {
         int ret;

@@ -537,8 +537,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // command to submit a followup article
-#ifndef NEWSPOSTER      // % and ~
-#   define NEWSPOSTER "Pnews -h %h"
+#ifndef NEWS_POSTER      // % and ~
+#   define NEWS_POSTER "Pnews -h %h"
 #endif
 
 #ifndef NEWSHEADER      // %
