@@ -117,7 +117,7 @@ function(configure_trn)
     if(WIN32)
         set(PRIVLIB "${_ProgramData}/trn/lib")
     endif()
-    set(EXTRAINEWS "")
+    set(EXTRA_INEWS "")
     set(GROUPDESC "")
     set(NEWSSPOOL "%X/spool")
 

@@ -252,11 +252,11 @@
  */
 #define NEWS_LIB "@NEWS_LIB@"
 
-/* EXTRAINEWS:
+/* EXTRA_INEWS:
  *      Contains the full path and filename of an inews to use for local
  *      postings, or nothing.
  */
-#define EXTRAINEWS "@EXTRAINEWS@"
+#define EXTRA_INEWS "@EXTRA_INEWS@"
 
 /* GROUPDESC:
  *      Contains the full path and filename of the "newsgroups" file for

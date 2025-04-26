@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        std::sprintf(g_buf, "%s -h", EXTRAINEWS);
+        std::sprintf(g_buf, "%s -h", EXTRA_INEWS);
         inews_wr_fp = popen(g_buf,"w");
         if (!inews_wr_fp)
         {
