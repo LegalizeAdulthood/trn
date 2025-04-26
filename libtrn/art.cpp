@@ -379,7 +379,7 @@ DoArticleResult do_article()
                     {
                         std::strncpy(g_art_line,buf_ptr,6);
                         std::strftime(g_art_line+6, (sizeof g_art_line)-6,
-                                 get_val_const("LOCALTIMEFMT", LOCALTIMEFMT),
+                                 get_val_const("LOCALTIMEFMT", LOCALTIME_FMT),
                                  std::localtime(&g_curr_artp->date));
                         buf_ptr = g_art_line;
                     }

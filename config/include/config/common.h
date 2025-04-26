@@ -634,8 +634,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
         "\n"
 #endif
 
-#ifndef LOCALTIMEFMT
-#   define LOCALTIMEFMT "%a %b %d %X %Z %Y"
+#ifndef LOCALTIME_FMT
+#   define LOCALTIME_FMT "%a %b %d %X %Z %Y"
 #endif
 
 // where to find the mail file
