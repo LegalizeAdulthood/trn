@@ -102,6 +102,8 @@ function(configure_trn)
     set(NEWS_SPOOL "%X/spool" CACHE STRING "The directory name where news articles are spooled (~, % expansion OK.).")
     set(ORG_NAME "%X/organization" CACHE STRING
         "Either the organization name or the full pathname of a file containing the organization name.")
+    set(POSTING_HOSTNAME "%X/posting-hostname" CACHE STRING
+        "This symbol contains the posting host's name or a file from which to read its name.")
 
     if(WIN32)
         set(MSDOS ON)
