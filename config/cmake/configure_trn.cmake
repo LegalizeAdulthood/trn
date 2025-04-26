@@ -51,6 +51,7 @@ function(configure_trn)
         set(EDITOR_PATH "")
     endif()
     set(DEFAULT_EDITOR "${EDITOR_PATH}" CACHE STRING "The full pathname of the default editor.")
+    set(MAIL_FILE "" CACHE STRING "The interpretable name of the mail spool file for the current user.  The program must be prepared to substitute the HOME directory for %~, and the login id for %L.")
 
     set(HAS_TERMLIB ON)
     set(MBOX_CHAR "F")
