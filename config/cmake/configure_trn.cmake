@@ -43,6 +43,9 @@ function(configure_trn)
     if(NOT HAS_GETHOSTNAME)
         check_symbol_exists(uname "sys/utsname.h" HAS_UNAME)
     endif()
+    if(NOT HAS_GETDOMAINNAME)
+        check_symbol_exists(res_init "arpa/nameser.h;netinet/in.h;resolv.h" HAS_RES_INIT)
+    endif()
     # TODO: How to check for UNION_WAIT?
     # TODO: Related: USE_WIFSTAT; seems antiquated.
     if(WIN32)
@@ -78,6 +81,7 @@ function(configure_trn)
     set(ROOT_UID "0" CACHE STRING "On POSIX systems, the uid of root, normally 0.")
     set(ACTIVE "" CACHE STRING "The name of the active file for the news system. (~ interpolation OK)")
     set(ACTIVE_TIMES "" CACHE STRING "The name of the active.times file for the news system.")
+    set(PIPE_HOST_CMD "" CACHE STRING "A command to feed to the popen() routine to derive the host name.")
 
     set(HAS_TERMLIB ON)
     if(WIN32)
