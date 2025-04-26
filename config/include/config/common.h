@@ -367,7 +367,7 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 
 // location of full name
 #ifndef FULLNAMEFILE
-#   ifndef PASSNAMES
+#   ifndef PASS_NAMES
 #     ifdef LIMITED_FILENAMES
 #       define FULLNAMEFILE "%./fullname"
 #     else

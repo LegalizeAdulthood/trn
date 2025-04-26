@@ -241,7 +241,7 @@ static bool set_user_name(char *tmpbuf)
     }
     s = pwd->pw_gecos;
 #endif
-#ifdef PASSNAMES
+#ifdef PASS_NAMES
 #ifdef BERKNAMES
 #ifdef BERKJUNK
     while (*s && !isalnum(*s) && *s != '&')
@@ -285,7 +285,7 @@ static bool set_user_name(char *tmpbuf)
     g_real_name = s;
 #endif // !BERKNAMES
 #endif
-#ifndef PASSNAMES
+#ifndef PASS_NAMES
     {
         env_init2(); // Make sure g_home_dir/g_dot_dir/etc. are set.
         std::FILE *fp = std::fopen(file_exp(FULLNAMEFILE), "r");
@@ -331,7 +331,7 @@ static bool set_user_name(char *tmpbuf)
         g_real_name = "?Unknown";
     }
 #endif
-#endif // !PASSNAMES
+#endif // !PASS_NAMES
 #ifdef HAS_GETPWENT
     endpwent();
 #endif
