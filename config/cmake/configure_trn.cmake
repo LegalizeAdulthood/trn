@@ -108,6 +108,7 @@ function(configure_trn)
     set(PRIVATE_LIB "%x/trn" CACHE STRING "The path to private executables; ~, %x and %l expansion allowed.")
     set(OVERVIEW_DIR "" CACHE STRING "The directory containing overview files.")
     set(OVERVIEW_FMT "" CACHE STRING "The name of the overview.fmt file.")
+    option(THREAD_INIT "If ON, indicates we act like trn no matter what our name is." OFF)
 
     if(WIN32)
         set(MSDOS ON)
