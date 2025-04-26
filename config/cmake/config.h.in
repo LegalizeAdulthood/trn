@@ -40,12 +40,6 @@
  */
 #cmakedefine HAS_SIGHOLD
 
-/* HAS_STRCASECMP:
- *      This symbol, if defined, indicates that the strcasecmp() routine is
- *      available for case-insensitive string compares.
- */
-#cmakedefine HAS_STRCASECMP
-
 /* UNION_WAIT:
  *      This symbol if defined indicates to the C program that the argument
  *      for the wait() system call should be declared as 'union wait status'
