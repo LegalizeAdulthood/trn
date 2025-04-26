@@ -873,7 +873,7 @@ void reply()
         term_down(1);
         goto done;
     }
-    interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
+    interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAIL_HEADER));
     std::fputs(hbuf,header);
     if (!in_string(maildoer, "%h", true))
     {

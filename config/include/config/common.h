@@ -467,8 +467,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define MAIL_POSTER "Rnmail -h %h"
 #endif
 
-#ifndef MAILHEADER      // %
-#   define MAILHEADER \
+#ifndef MAIL_HEADER      // %
+#   define MAIL_HEADER \
         "To: %t\n" \
         "Subject: %(%i=^$?:Re: %S\n" \
         "X-Newsgroups: %n\n" \
