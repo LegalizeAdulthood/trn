@@ -195,9 +195,9 @@
  *      This symbol, if defined, indicates that the C program may use the
  *      uname() routine to derive the host name.
  */
-/* PHOSTCMD:
+/* PIPE_HOST_CMD:
  *      This symbol, if defined, indicates that the C program may use the
- *      contents of PHOSTCMD as a command to feed to the popen() routine
+ *      contents of PIPE_HOST_CMD as a command to feed to the popen() routine
  *      to derive the host name.
  *      Note that the command uses a fully qualified path, so that it is safe
  *      even if used by a process with super-user privileges.
@@ -212,7 +212,7 @@
  */
 #cmakedefine HAS_GETHOSTNAME
 #cmakedefine HAS_UNAME
-#cmakedefine PHOSTCMD "@APHOSTCMD@"     // How to get the host name
+#cmakedefine PIPE_HOST_CMD "@PIPE_HOST_CMD@"     // How to get the host name
 #cmakedefine HAS_RES_INIT
 #cmakedefine HAS_GETDOMAINNAME
 

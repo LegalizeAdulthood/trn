@@ -362,9 +362,9 @@ static bool set_p_host_name(char *tmpbuf)
     uname(&utsn);
     std::strcpy(tmpbuf,utsn.nodename);
 # else
-#  ifdef PHOSTCMD
+#  ifdef PIPE_HOST_CMD
     {
-        std::FILE* pipefp = popen(PHOSTCMD,"r");
+        std::FILE* pipefp = popen(PIPE_HOST_CMD,"r");
 
         if (pipefp == nullptr)
         {
@@ -377,7 +377,7 @@ static bool set_p_host_name(char *tmpbuf)
     }
 #  else
     std::strcpy(tmpbuf, "!INVALID!");
-#  endif // PHOSTCMD
+#  endif // PIPE_HOST_CMD
 # endif // HAS_UNAME
 #endif // HAS_GETHOSTNAME
     g_local_host = save_str(tmpbuf);
