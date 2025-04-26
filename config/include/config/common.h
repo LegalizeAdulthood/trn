@@ -212,9 +212,6 @@ enum
                                         // but getpwnam() returns it,
                                         // define the symbol HAS_GETPWENT)
 #endif
-#ifndef GCOSFIELD
-#   define GCOSFIELD 5
-#endif
 
 #ifndef NEGCHAR
 #   define NEGCHAR '!'
