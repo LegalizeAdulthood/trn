@@ -8,7 +8,6 @@ add_library(legacy INTERFACE
     Makefile.SH
     MANIFEST.txt
     mbox_saver.SH
-    myinstall.SH
     newsnews.SH
     norm_saver.SH
     Pnews.SH
