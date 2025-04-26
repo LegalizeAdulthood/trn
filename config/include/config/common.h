@@ -587,8 +587,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define KILL_GLOBAL "%p/KILL"
 #endif
 
-#ifndef KILLLOCAL       // % and ~
-#   define KILLLOCAL "%p/%c/KILL"
+#ifndef KILL_LOCAL       // % and ~
+#   define KILL_LOCAL "%p/%c/KILL"
 #endif
 
 #ifndef KILLTHREADS     // % and ~
