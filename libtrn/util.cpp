@@ -188,7 +188,7 @@ int do_shell(const char *shell, const char *cmd)
     }
     if (shell == nullptr)
     {
-        shell = PREFSHELL;
+        shell = PREF_SHELL;
     }
     termlib_reset();
 #ifdef MSDOS

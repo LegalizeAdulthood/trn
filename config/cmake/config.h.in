@@ -166,11 +166,11 @@
  */
 #define INSTALL_PREFIX "@INSTALL_PREFIX@"
 
-/* PREFSHELL:
+/* PREF_SHELL:
  *      This symbol contains the full name of the preferred user shell on this
  *      system.  Usual values are /bin/csh, /bin/ksh, /bin/sh.
  */
-#define PREFSHELL "@PREF_SHELL@"
+#define PREF_SHELL "@PREF_SHELL@"
 
 /* ROOTID:
  *      This symbol contains the uid of root, normally 0.

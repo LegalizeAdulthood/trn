@@ -330,8 +330,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 
 // preferred shell for use in doshell routine
 // ksh or sh would be okay here
-#ifndef PREFSHELL
-#   define PREFSHELL "/bin/csh"
+#ifndef PREF_SHELL
+#   define PREF_SHELL "/bin/csh"
 #endif
 
 // path to fastest starting shell
