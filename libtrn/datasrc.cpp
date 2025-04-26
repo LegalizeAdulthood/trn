@@ -155,7 +155,7 @@ void data_source_init()
 
         vals[DI_NNTP_SERVER] = machine;
         vals[DI_ACTIVE_FILE] = actname;
-        vals[DI_SPOOL_DIR] = NEWSSPOOL;
+        vals[DI_SPOOL_DIR] = NEWS_SPOOL;
         vals[DI_OVERVIEW_DIR] = OVERVIEW_DIR;
         vals[DI_OVERVIEW_FMT] = OVERVIEW_FMT;
         vals[DI_ACTIVE_TIMES] = ACTIVE_TIMES;

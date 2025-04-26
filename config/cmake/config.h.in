@@ -270,11 +270,11 @@
  */
 #define SUBSCRIPTIONS "@SUBSCRIPTIONS@"
 
-/* NEWSSPOOL:
+/* NEWS_SPOOL:
  *      This symbol contains the directory name where news articles are
  *      spooled.  The program must be prepared to do ~ expansion on it.
  */
-#define NEWSSPOOL "@NEWSSPOOL@"
+#define NEWS_SPOOL "@NEWS_SPOOL@"
 
 /* ORGNAME:
  *      This symbol contains either the organization name or the full pathname

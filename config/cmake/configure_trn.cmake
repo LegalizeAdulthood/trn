@@ -120,7 +120,7 @@ function(configure_trn)
     if(WIN32)
         set(PRIVLIB "${_ProgramData}/trn/lib")
     endif()
-    set(NEWSSPOOL "%X/spool")
+    set(NEWS_SPOOL "%X/spool")
 
     configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config/config.h)
     set(STRING_CASE_COMPARE_SOURCES "")

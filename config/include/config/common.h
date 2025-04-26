@@ -123,7 +123,7 @@ enum
  *      %o      Organization (yours)
  *      %O      Original working directory (where you ran trn from)
  *      %p      Your private news directory (-d switch)
- *      %P      Public news spool directory (NEWSSPOOL)
+ *      %P      Public news spool directory (NEWS_SPOOL)
  *      %q      The last quoted input (via %").
  *      %r      Last reference (parent article id)
  *      %R      New references list
@@ -300,8 +300,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // where to find news files
-#ifndef NEWSSPOOL       // % and ~
-#   define NEWSSPOOL "/usr/spool/news"
+#ifndef NEWS_SPOOL       // % and ~
+#   define NEWS_SPOOL "/usr/spool/news"
 #endif
 
 // default characters to use in the selection menu

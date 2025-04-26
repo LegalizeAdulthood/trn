@@ -931,7 +931,7 @@ void abandon_newsgroup(NewsgroupData *np)
 
 // try to find or add an explicitly specified newsgroup
 // returns true if found or added, false if not.
-// assumes that we are chdir'ed to NEWSSPOOL
+// assumes that we are chdir'ed to NEWS_SPOOL
 
 bool get_newsgroup(const char *what, GetNewsgroupFlags flags)
 {
