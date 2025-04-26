@@ -617,7 +617,21 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 
 // how to supersede an article
 #ifndef SUPERSEDEHEADER
-#   define SUPERSEDEHEADER "Newsgroups: %n\nSubject: %[subject]\n%(%{FROM}=^$?:From: %{FROM}\n)Summary: %[summary]\nExpires: %[expires]\nReferences: %[references]\nFrom: %[from]\nReply-To: %[reply-to]\nSupersedes: %i\nSender: %[sender]\nFollowup-To: %[followup-to]\nDistribution: %D\nOrganization: %o\nKeywords: %[keywords]\n\n"
+#   define SUPERSEDEHEADER "Newsgroups: %n\n" \
+        "Subject: %[subject]\n" \
+        "%(%{FROM}=^$?:From: %{FROM}\n)" \
+        "Summary: %[summary]\n" \
+        "Expires: %[expires]\n" \
+        "References: %[references]\n" \
+        "From: %[from]\n" \
+        "Reply-To: %[reply-to]\n" \
+        "Supersedes: %i\n" \
+        "Sender: %[sender]\n" \
+        "Followup-To: %[followup-to]\n" \
+        "Distribution: %D\n" \
+        "Organization: %o\n" \
+        "Keywords: %[keywords]\n" \
+        "\n"
 #endif
 
 #ifndef LOCALTIMEFMT
