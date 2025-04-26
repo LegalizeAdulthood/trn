@@ -13,7 +13,7 @@ char g_cmd_buf[CMD_BUF_LEN]; // buffer for formatting system commands
 
 // Factored strings
 const char *g_h_for_help{"Type h for help.\n"};
-#ifdef STRICTCR
+#ifdef STRICT_CR
 char g_bad_cr[]{"\nUnnecessary CR ignored.\n"};
 #endif
 const char *g_unsub_to{"Unsubscribed to newsgroup %s\n"};

@@ -480,7 +480,7 @@ void set_def(char *buffer, const char *dflt)
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
     if (*buffer == ' '                        //
-#ifndef STRICTCR                              //
+#ifndef STRICT_CR                              //
         || *buffer == '\n' || *buffer == '\r' //
 #endif                                        //
     )

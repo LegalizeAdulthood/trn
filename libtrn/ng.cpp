@@ -1733,7 +1733,7 @@ refresh_screen:
         top_article();                  // from the beginning
         return AS_NORM;                 // pretend nothing happened
 
-#ifdef STRICTCR
+#ifdef STRICT_CR
     case '\n':   case '\r':
         std::fputs(g_bad_cr,stdout);
         return AS_ASK;
