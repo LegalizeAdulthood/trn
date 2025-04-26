@@ -283,7 +283,7 @@
  */
 #define ORG_NAME "@ORG_NAME@"
 
-/* PHOSTNAME:
+/* POSTING_HOSTNAME:
  *      This symbol contains the posting host's name or a file from which
  *      to read its name.
  */
@@ -291,7 +291,7 @@
  *      Set to true if we should compare only the domain portion of the
  *      hostname when looking for local articles.
  */
-#define PHOSTNAME "@PHOSTNAME@"
+#define POSTING_HOSTNAME "@POSTING_HOSTNAME@"
 #cmakedefine01 HOSTBITS
 
 /* PRIVLIB:

@@ -384,7 +384,7 @@ static bool set_p_host_name(char *tmpbuf)
 
     // Build the host name that goes in postings
 
-    const char *filename{PHOSTNAME};
+    const char *filename{POSTING_HOSTNAME};
     if (FILE_REF(filename) || filename[0] == '~')
     {
         fp = std::fopen(file_exp(filename), "r");
@@ -405,7 +405,7 @@ static bool set_p_host_name(char *tmpbuf)
     }
     else
     {
-        std::strcpy(tmpbuf, PHOSTNAME);
+        std::strcpy(tmpbuf, POSTING_HOSTNAME);
     }
 
     if (tmpbuf[0] == '.')
