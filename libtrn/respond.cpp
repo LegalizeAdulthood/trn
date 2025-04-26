@@ -328,7 +328,7 @@ SaveResult save_article()
         {
             nntp_finish_body(FB_SILENT);
         }
-        interp(g_cmd_buf, (sizeof g_cmd_buf), get_val("PIPESAVER",PIPESAVER));
+        interp(g_cmd_buf, (sizeof g_cmd_buf), get_val("PIPESAVER",PIPE_SAVER));
                                 // then set up for command
         termlib_reset();
         reset_tty();              // restore tty state

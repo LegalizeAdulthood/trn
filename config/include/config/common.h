@@ -543,8 +543,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #   define ATTRIBUTION "In article %i,%?%)f <%>f> wrote:"
 #endif
 
-#ifndef PIPESAVER       // %
-#   define PIPESAVER "%(%B=^0$?<%A:tail +%Bc %A |) %b"
+#ifndef PIPE_SAVER       // %
+#   define PIPE_SAVER "%(%B=^0$?<%A:tail +%Bc %A |) %b"
 #endif
 
 #ifndef SHARSAVER
