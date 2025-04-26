@@ -161,10 +161,10 @@
 #cmakedefine PASS_NAMES // (undef to take name from ~/.fullname)
 #cmakedefine BERKELEY_NAMES // (that is, ":name,stuff:")
 
-/* INSTALLPREFIX:
+/* INSTALL_PREFIX:
  *      This symbol contains the name of the install prefix for this package.
  */
-#define INSTALLPREFIX "@INSTALL_PREFIX@"
+#define INSTALL_PREFIX "@INSTALL_PREFIX@"
 
 /* PREFSHELL:
  *      This symbol contains the full name of the preferred user shell on this

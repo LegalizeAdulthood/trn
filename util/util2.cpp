@@ -94,7 +94,7 @@ char *file_exp(const char *text)
             const char *prefix = get_val_const("TRNPREFIX");
             if (!prefix)
             {
-                prefix = INSTALLPREFIX;
+                prefix = INSTALL_PREFIX;
             }
             std::sprintf(scrbuf, "%s%s", prefix, s + 1);
         }
