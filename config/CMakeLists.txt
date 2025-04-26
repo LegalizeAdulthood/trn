@@ -29,6 +29,7 @@ target_folder(config "Libraries")
 source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 
+add_subdirectory(data)
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()

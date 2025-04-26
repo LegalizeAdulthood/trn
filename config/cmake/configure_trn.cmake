@@ -126,9 +126,6 @@ function(configure_trn)
     # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")
     set(SUPPORT_XTHREAD ON)
-    set(THREADDIR "%X/threads")
-    set(TRN_INIT OFF)
-    set(TRN_SELECT ON)
 
     configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config/config.h)
     set(STRING_CASE_COMPARE_SOURCES "")

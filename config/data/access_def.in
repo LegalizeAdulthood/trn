@@ -1,9 +1,3 @@
-: see end of file for revision information
-case $CONFIG in
-    '') . ./config.sh ;;
-esac
-echo "Extracting access.def (with variable substitutions)"
-cat >access.def <<!GROK!THIS!
 # This is a sample access.def file.
 
 #   This section defines the available news sources and gives them an
@@ -32,14 +26,14 @@ cat >access.def <<!GROK!THIS!
 # expires (something like "7 days" might be good).
 
 #[default]
-#NNTP Server = $servername
-#Active File = $active
+#NNTP Server = @SERVER_NAME@
+#Active File = @ACTIVE@
 #Active File Refetch = [never|1 day, 4 hours, 5 mins]
-#Spool Dir = $newsspool
-#Overview Dir = $overviewdir
-#Overview Format File = $overviewfmt
-#Active Times = $acttimes
-#Group Desc = $groupdesc
+#Spool Dir = @NEWS_SPOOL@
+#Overview Dir = @OVERVIEW_DIR@
+#Overview Format File = @OVERVIEW_FMT@
+#Active Times = @ACTIVE_TIMES@
+#Group Desc = @GROUP_DESC@
 #Group Desc Refetch = [never|7 days 1 hour 90 minutes]
 #Auth User =
 #Auth Password =
@@ -67,6 +61,3 @@ cat >access.def <<!GROK!THIS!
 
 [Group 1]
 ID = default
-!GROK!THIS!
-#
-# This software is copyrighted as detailed in the LICENSE file.
