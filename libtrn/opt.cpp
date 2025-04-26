@@ -206,7 +206,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     {
         g_check_flag=true;                       // so we can optimize for -c
     }
-    interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
+    interp(*tcbufptr,TCBUF_SIZE,GLOBAL_INIT);
     opt_file(*tcbufptr,tcbufptr,false);
 
     const int len = ini_len(g_options_ini);

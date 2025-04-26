@@ -292,8 +292,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // system-wide RNINIT switches
-#ifndef GLOBINIT
-#   define GLOBINIT "%X/INIT"
+#ifndef GLOBAL_INIT
+#   define GLOBAL_INIT "%X/INIT"
 #endif
 
 // where to find news files
