@@ -316,9 +316,6 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #ifndef GROUP_DESC
 #   define GROUP_DESC "%x/newsgroups"
 #endif
-#ifndef DBINIT
-#   define DBINIT "%W/db.init"
-#endif
 
 // location of history file
 #ifndef ARTFILE         // % and ~
