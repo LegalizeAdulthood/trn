@@ -197,11 +197,11 @@ enum
 #   define sigignore(sig) signal(sig,SIG_IGN)
 #endif
 
-#ifndef PASSFILE
+#ifndef PASSWORD_FILE
 #   ifdef LIMITED_FILENAMES
-#       define PASSFILE "%X/passwd"
+#       define PASSWORD_FILE "%X/passwd"
 #   else
-#       define PASSFILE "/etc/passwd"
+#       define PASSWORD_FILE "/etc/passwd"
 #   endif
 #endif
 

@@ -142,7 +142,7 @@ char *file_exp(const char *text)
                 }
 #else                   // this will run faster, and is less D space
                 { // just be sure LOGDIRFIELD is correct
-                    std::FILE *pfp = std::fopen(file_exp(PASSFILE), "r");
+                    std::FILE *pfp = std::fopen(file_exp(PASSWORD_FILE), "r");
                     char tmpbuf[512];
 
                     if (pfp)
