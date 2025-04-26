@@ -244,7 +244,7 @@
  *      what programs get run when handling mime articles.  It is often
  *      metamail's "mailcap" file, and is the same format.
  */
-#define MIMECAP "%./.mimecap:~/.mailcap:@MIMECAP@"
+#define MIMECAP "@MIMECAP@"
 
 /* NEWSLIB:
  *      This symbol contains the name of the directory serving as the news
