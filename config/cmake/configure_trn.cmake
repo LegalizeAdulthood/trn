@@ -87,7 +87,7 @@ function(configure_trn)
     option(IGNORE_ORG "Indicates that the ORGANIZATION environment variable does not contain an organization name." OFF)
     set(SERVER_NAME "news.gmane.io" CACHE STRING "The default server name or a file to open to read the server name.")
     option(HAS_LOCAL_SPOOL "Indicates that there's a local spool directory configured into trn." OFF)
-    set(MIMECAP "%./.mimecap:~/.mailcap" CACHE STRING
+    set(MIMECAP "/etc/mailcap" CACHE STRING
         "The pathname of the mimecap file, which controls what programs get run when handling mime articles.")
     if(WIN32)
         string(REPLACE "\\" "/" _ProgramData "$ENV{ProgramData}")
@@ -113,6 +113,7 @@ function(configure_trn)
     set(USE_INEWS "%x/inews" CACHE STRING "Full path to the inews to use for posting.")
     # TODO: How to properly configure BIN_DIR to work when developing and after installation?
     set(BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "Path of the bin directory where the package will be installed.")
+    set(PAGER "more" CACHE STRING "The name of the preferred pager on the system.")
 
     if(WIN32)
         set(MSDOS ON)

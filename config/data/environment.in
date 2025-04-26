@@ -1,14 +1,3 @@
-case $CONFIG in
-    '') . ./config.sh ;;
-esac
-echo "Extracting HelpFiles/config/environment (with variable substitutions)"
-if test "X$src" != "X." ; then
-    for ff in `$grep '^HelpFiles/' $src/MANIFEST | sed -e 's/[	 ].*//'`; do
-	./makedir $ff 1
-	cp $src/$ff $ff
-    done
-fi
-$spitshell >HelpFiles/config/environment <<!GROK!THIS!
 In this list, variables marked with (%) are subject to percent interpolation,
 and variables marked with (~) are subject to both percent and home-directory
 interpolation.
@@ -93,14 +82,14 @@ Valid substitutions for strings marked with % are:
       %+      Directory containing a user's init files, usually %./.trn
       %#      count of articles saved in current command (from 1 to n)
       %^#     ever-increasing number (from 1 to n)
-      %\$     current process number
+      %$      current process number
       %{name} Environment variable "name".  %{name-default} form allowed.
       %<name> Like %{name}, but variable "name" will itself be subject to
               interpolation before being used.
       %[name] Header line beginning with "Name: ", without "Name: "
       %"prompt"
               Print prompt and insert what is typed.
-      %\`command\`
+      %`command`
               Insert output of command.
       %(test_text=pattern?if_text:else_text)
               Substitute if_text if test_text matches pattern, otherwise
@@ -183,12 +172,12 @@ The variables:
  DOTDIR (%)
       Where to find your dot files, if they aren't in your home directory.
 
-      Default: \$HOME
+      Default: $HOME
 
  EDITOR (~)
       The name of your editor, if VISUAL is undefined.
 
-      Default: $defeditor
+      Default: @DEFAULT_EDITOR@
 
  EXSAVER (%)
       The shell command to execute in order to extract data to either
@@ -203,7 +192,7 @@ The variables:
       The default (ignoring the Marked to return display in unthreaded
       groups) is approximately:
 
-      %C #%a%(%Z=^0\$?%(%U!=^0\$?  (%U  more\)):  (%U  +  %v more\))
+      %C #%a%(%Z=^0$?%(%U!=^0$?  (%U  more)):  (%U  +  %v more))
 
  FORWARDHEADER (%)
       The format of the header file for forwarding messages.  If these
@@ -216,15 +205,15 @@ The variables:
       Default:
 
       To: %"\n\nTo: "
-      Subject: %(%i=^\$?:%[subject] (fwd\\)
-      %(%{FROM}=^\$?:From: %{FROM}
-      )%(%{REPLYTO}=^\$?:Reply-To: %{REPLYTO}
+      Subject: %(%i=^$?:%[subject] (fwd\)
+      %(%{FROM}=^$?:From: %{FROM}
+      )%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}
       )X-Newsgroups: %n
       In-Reply-To: %i)
-      %(%[references]=^\$?:References: %[references]
+      %(%[references]=^$?:References: %[references]
       )Organization: %o
       Mime-Version: 1.0
-      Content-Type: multipart/mixed; boundary=\"=%\$%^#=--\"
+      Content-Type: multipart/mixed; boundary="=%$%^#=--"
       Cc: 
       Bcc: \n\n
 
@@ -272,7 +261,7 @@ The variables:
       something different from the default or the content of the
       PAGER variable (see PAGER).
 
-      Default: \$PAGER or 'more'.
+      Default: $PAGER or 'more'.
 
  HIDELINE
       If defined, contains a regular expression which matches article
@@ -294,7 +283,7 @@ The variables:
       Your home directory.  Affects ~ interpretation, and the location 
       of your dot files if DOTDIR is not defined.
 
-      Default: \$LOGDIR
+      Default: $LOGDIR
 
  KILLGLOBAL (~)
       Where to find the KILL file to apply to every newsgroup.  See the
@@ -315,7 +304,7 @@ The variables:
 
       Default: none.
 
-      Explanation: you must have either \$HOME or \$LOGDIR.
+      Explanation: you must have either $HOME or $LOGDIR.
 
  LOGNAME
       Your login name, if USER is undefined.  May be interpolated
@@ -340,12 +329,12 @@ The variables:
  MAILCAPS
       A colon-separated search path for mailcap files.
 
-      Default: %./.mimecap:~/.mailcap:$mimecap
+      Default: %./.mimecap:~/.mailcap:@MIMECAP@
 
  MAILFILE (~)
       Where to check for mail.
 
-      Default: $mailfile
+      Default: @MAIL_FILE@
 
  MAILHEADER (%)
       The format of the header file for mail replies.  See also
@@ -354,12 +343,12 @@ The variables:
       Default:
 
       To: %t
-      Subject: %(%i=^\$?:Re: %S
+      Subject: %(%i=^$?:Re: %S
       X-Newsgroups: %n
       In-Reply-To: %i)
-      %(%{FROM}=^\$?:From: %{FROM}
-      )%(%{REPLYTO}=^\$?:Reply-To: %{REPLYTO}
-      )%(%[references]=^\$?:References: %[references]
+      %(%{FROM}=^$?:From: %{FROM}
+      )%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}
+      )%(%[references]=^$?:References: %[references]
       )Organization: %o
       Cc: 
       Bcc: \n\n
@@ -375,7 +364,7 @@ The variables:
  MBOXSAVER (~)
       The shell command to save an article in mailbox format.
 
-      Default: %X/mbox.saver %A %P %c %a %B %C "%b" "From %t %\`date\`"
+      Default: %X/mbox.saver %A %P %c %a %B %C "%b" "From %t %`date`"
 
       Explanation: the first seven arguments are the same as for
       NORMSAVER.  The eighth argument to the shell script is the new
@@ -399,17 +388,17 @@ The variables:
 
       Default:
 
-      %(%[followup-to]=^\$?:%(%[followup-to]=^%n\$?:X-ORIGINAL-NEWSGROUPS: %n
-      ))Newsgroups: %(%F=^\$?%C:%F)
-      Subject: %(%S=^\$?%\"\n\nSubject: \":Re: %S)
+      %(%[followup-to]=^$?:%(%[followup-to]=^%n$?:X-ORIGINAL-NEWSGROUPS: %n
+      ))Newsgroups: %(%F=^$?%C:%F)
+      Subject: %(%S=^$?%"\n\nSubject: ":Re: %S)
       Summary: 
       Expires: 
-      %(%R=^\$?:References: %R
+      %(%R=^$?:References: %R
       )Sender: 
       Followup-To: 
-      %(%{FROM}=^\$?:From: %{FROM}
-      )%(%{REPLYTO}=^\$?:Reply-To: %{REPLYTO}
-      )Distribution: %(%i=^\$?%\"Distribution: \":%D)
+      %(%{FROM}=^$?:From: %{FROM}
+      )%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}
+      )Distribution: %(%i=^$?%"Distribution: ":%D)
       Organization: %o
       Keywords: %[keywords]
       Cc: %(%F=poster?%t:%(%F!=@?:%F))\n\n
@@ -421,7 +410,7 @@ The variables:
       override ORGANIZATION if both are present.)  May be interpolated using
       "%o".
 
-      Default: $orgname
+      Default: @ORG_NAME@
 
  NEWSPOSTER (~)
       The shell command to be used by the follow-up commands (f and F) in
@@ -439,13 +428,13 @@ The variables:
       appear in your editor when composing an article, while .signature
       will not.
 
-      Default: \$DOTDIR/.news_sig.
+      Default: $DOTDIR/.news_sig.
 
  NNTPSERVER
       The hostname of your news server.  [This does not apply unless you
       are running the NNTP version of trn.]
 
-      Default: $servername
+      Default: @SERVER_NAME@
 
  NO_ORIGINATOR
       If set, instructs inews not to add its Originator header.  The value
@@ -471,13 +460,13 @@ The variables:
       containing the name of your organization.  (If NEWSORG is set, it
       will override ORGANIZATION.)  May be interpolated using "%o".
 
-      Default: $orgname
+      Default: @ORG_NAME@
 
  PAGER
       The pager to be used by the internal help system.  See also
       HELPPAGER.
 
-      Default: $pager
+      Default: @PAGER@
 
  PAGESTOP
       If defined, contains a regular expression which matches article
@@ -485,7 +474,7 @@ The variables:
       you might want to do with this.  To cause page breaks between
       articles in a digest, you might define it as "^--------".   To
       force a page break before a signature, you could define it as
-      "^-- \$".  (Then, when you see  "--" at the bottom of the page, you
+      "^-- $".  (Then, when you see  "--" at the bottom of the page, you
       can skip the signature if you so desire by typing 'n' instead of
       space.)  To do both, you could use "^--".  If you want to break on
       more than one pattern, you can use "|" to separate the alternatives.
@@ -501,7 +490,7 @@ The variables:
       ("s | command" or "w | command").  The command typed by the user is
       substituted in as %b.
 
-      Default: %(%B=^0\$?<%A:tail +%Bc %A |) %b
+      Default: %(%B=^0$?<%A:tail +%Bc %A |) %b
 
       Explanation: if %B is 0, the command is "<%A  %b", otherwise the
       command is "tail +%Bc %A | %b".
@@ -565,7 +554,7 @@ The variables:
       The name of your preferred shell.  It will be used by the '!', 'S'
       and 'W' commands.
 
-      Default: $prefshell
+      Default: @PREF_SHELL@
 
  SUBJLINE (%)
       Controls the format of the lines displayed by the '=' command at the
@@ -638,12 +627,12 @@ The variables:
  USER
       Your login name.  May be interpolated using "%L".
 
-      Default: \$LOGNAME
+      Default: $LOGNAME
 
  VISUAL (~)
       The name of your editor.
 
-      Default: \$EDITOR
+      Default: @DEFAULT_EDITOR@
 
  XTERMMOUSE
       If you set this variable to 'y' (yes), trn will enable the use of the
@@ -661,5 +650,3 @@ The variables:
       included by an R (reply-by-mail) command.
 
       Default: In article %i you write:
-
-!GROK!THIS!
