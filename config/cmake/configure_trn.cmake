@@ -72,6 +72,7 @@ function(configure_trn)
         message(FATAL_ERROR "Couldn't locate preferred shell '${DEFAULT_PREF_SHELL}'")
     endif()
     set(PREF_SHELL "${DEFAULT_PREF_SHELL_PATH}" CACHE STRING "The full path of the preferred user shell on this system.")
+    set(ROOT_UID "0" CACHE STRING "On POSIX systems, the uid of root, normally 0.")
 
     set(HAS_TERMLIB ON)
     if(WIN32)
