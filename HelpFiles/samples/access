@@ -20,7 +20,7 @@
 # or the NEWGROUPS command for remote), or enter a custom file name for your
 # active.times file.
 #   Specify "none" for "Group Desc" if you don't have a file with newsgroup
-# descriptions, leave it blank for the default (NEWSLIB/newsgroups for local
+# descriptions, leave it blank for the default (NEWS_LIB/newsgroups for local
 # access or the XGTITLE/LIST_NEWSGROUPS command for remote), or enter a
 # custom file name for your newsgroups file.  If this is an NNTP source
 # you can also set "Group Desc Refetch" to a time value when the file

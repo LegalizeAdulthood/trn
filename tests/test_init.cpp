@@ -278,7 +278,7 @@ TEST_F(InitTest, trnDirFromDefaultValue)
 
 TEST_F(InitTest, libDirFromConfiguration)
 {
-    const char *lib_dir{NEWSLIB};
+    const char *lib_dir{NEWS_LIB};
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 

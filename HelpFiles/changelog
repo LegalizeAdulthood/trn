@@ -217,7 +217,7 @@ Changes from trn 3.3 to trn 3.4.1:
 
 Changes from trn 3.2 to trn 3.3:
 
-   o	Newsetup now looks for NEWSLIB/subscriptions for a default list
+   o	Newsetup now looks for NEWS_LIB/subscriptions for a default list
 	of groups to subscribe the user to.  If the file doesn't exist
 	the NNTP version will attempt to grab it via the LIST SUBSCRIPTIONS
 	command (available in INN and some nntp patches).

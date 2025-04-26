@@ -285,8 +285,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 // More System Dependencies
 
 // news library
-#ifndef NEWSLIB         // ~ and %l only ("~%l" is permissible)
-#   define NEWSLIB "/usr/lib/news"
+#ifndef NEWS_LIB         // ~ and %l only ("~%l" is permissible)
+#   define NEWS_LIB "/usr/lib/news"
 #endif
 
 // path to private executables

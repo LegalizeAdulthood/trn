@@ -246,11 +246,11 @@
  */
 #define MIMECAP "@MIMECAP@"
 
-/* NEWSLIB:
+/* NEWS_LIB:
  *      This symbol contains the name of the directory serving as the news
  *      library.  The program must be prepared to do ~ expansion on it.
  */
-#define NEWSLIB "@NEWSLIB@"
+#define NEWS_LIB "@NEWS_LIB@"
 
 /* EXTRAINEWS:
  *      Contains the full path and filename of an inews to use for local
