@@ -616,8 +616,8 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 #endif
 
 // how to supersede an article
-#ifndef SUPERSEDEHEADER
-#   define SUPERSEDEHEADER "Newsgroups: %n\n" \
+#ifndef SUPERSEDE_HEADER
+#   define SUPERSEDE_HEADER "Newsgroups: %n\n" \
         "Subject: %[subject]\n" \
         "%(%{FROM}=^$?:From: %{FROM}\n)" \
         "Summary: %[summary]\n" \

@@ -786,7 +786,7 @@ int supersede_article()         // Supersedes:
             term_down(1);
             goto done;
         }
-        interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
+        interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDE_HEADER));
         std::fputs(hbuf,header);
         if (incl_body && g_art_fp != nullptr)
         {
