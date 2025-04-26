@@ -320,7 +320,7 @@
 #cmakedefine01 THREAD_INIT
 #cmakedefine01 SELECT_INIT
 
-#define CALL_INEWS "@USEINEWS@ -h <%h"
+#define CALL_INEWS "@USE_INEWS@ -h <%h"
 #define NEWSPOSTER "@BIN@/Pnews -h %h"
 #define MAILPOSTER "@BIN@/Rnmail -h %h"
 

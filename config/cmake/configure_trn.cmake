@@ -110,6 +110,7 @@ function(configure_trn)
     set(OVERVIEW_FMT "" CACHE STRING "The name of the overview.fmt file.")
     option(THREAD_INIT "If ON, indicates we act like trn no matter what our name is." OFF)
     option(SELECT_INIT "If ON, indicates we default to the selector for group entry." OFF)
+    set(USE_INEWS "%x/inews" CACHE STRING "Full path to the inews to use for posting.")
 
     if(WIN32)
         set(MSDOS ON)
