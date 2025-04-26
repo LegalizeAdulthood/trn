@@ -724,7 +724,7 @@ display_multirc:
             newline();
             std::printf(g_unsub_to,g_newsgroup_ptr->rc_line);
             term_down(1);
-            g_newsgroup_ptr->subscribe_char = NEGCHAR;   // unsubscribe it
+            g_newsgroup_ptr->subscribe_char = UNSUBSCRIBED_CHAR;   // unsubscribe it
             g_newsgroup_ptr->to_read = TR_UNSUB;         // and make line invisible
             g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr = g_newsgroup_ptr->next;            // do an automatic 'n'

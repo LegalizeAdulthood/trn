@@ -309,7 +309,7 @@ void bits_to_rc()
         g_newsgroup_ptr->rc_line = mybuf;
     }
     *(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset - 1) = '\0';
-    if (g_newsgroup_ptr->subscribe_char == NEGCHAR)// did they unsubscribe?
+    if (g_newsgroup_ptr->subscribe_char == UNSUBSCRIBED_CHAR)// did they unsubscribe?
     {
         g_newsgroup_ptr->to_read = TR_UNSUB;     // make line invisible
     }

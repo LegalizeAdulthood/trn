@@ -213,8 +213,8 @@ enum
                                         // define the symbol HAS_GETPWENT)
 #endif
 
-#ifndef NEGCHAR
-#   define NEGCHAR '!'
+#ifndef UNSUBSCRIBED_CHAR
+#   define UNSUBSCRIBED_CHAR '!'
 #endif
 
 // Space conservation section

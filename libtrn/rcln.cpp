@@ -525,7 +525,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         g_paranoid = true;          // enough to make a guy paranoid
         np->rc->flags |= RF_RC_CHANGED;
     }
-    if (np->subscribe_char == NEGCHAR)
+    if (np->subscribe_char == UNSUBSCRIBED_CHAR)
     {
         unread = ArticleNum{TR_UNSUB};
     }

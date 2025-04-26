@@ -1369,7 +1369,7 @@ normal_search:
         newline();
         std::printf(g_unsub_to,g_newsgroup_name.c_str());
         term_down(1);
-        g_newsgroup_ptr->subscribe_char = NEGCHAR;
+        g_newsgroup_ptr->subscribe_char = UNSUBSCRIBED_CHAR;
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
         --g_newsgroup_to_read;
         return AS_CLEAN;
@@ -2023,7 +2023,7 @@ reask_catchup:
     }
     if (ch == 'u')
     {
-        g_newsgroup_ptr->subscribe_char = NEGCHAR;
+        g_newsgroup_ptr->subscribe_char = UNSUBSCRIBED_CHAR;
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
         --g_newsgroup_to_read;
         newline();

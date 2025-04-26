@@ -363,7 +363,7 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
     {
         if (gp->subscribe_char == ':')
         {
-            gp->subscribe_char = NEGCHAR;
+            gp->subscribe_char = UNSUBSCRIBED_CHAR;
             gp->rc->flags |= RF_RC_CHANGED;
             --g_newsgroup_to_read;
         }

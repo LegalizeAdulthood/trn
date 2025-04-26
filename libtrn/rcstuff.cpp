@@ -697,7 +697,7 @@ static bool open_newsrc(Newsrc *rp)
             np->to_read = TR_IGNORE;
             continue;
         }
-        if (np->subscribe_char == NEGCHAR)
+        if (np->subscribe_char == UNSUBSCRIBED_CHAR)
         {
             np->to_read = TR_UNSUB;
             set_hash(np);
@@ -837,7 +837,7 @@ static void parse_rcline(NewsgroupData *np)
 {
     char* s;
 
-    for (s=np->rc_line; *s && *s!=':' && *s!=NEGCHAR && !std::isspace(*s); s++)
+    for (s=np->rc_line; *s && *s!=':' && *s!=UNSUBSCRIBED_CHAR && !std::isspace(*s); s++)
     {
     }
     int len = s - np->rc_line;
@@ -876,7 +876,7 @@ void abandon_newsgroup(NewsgroupData *np)
                 continue;
             }
             some_buf[g_len_last_line_got-1] = '\0'; // wipe out newline
-            if ((some_buf[length] == ':' || some_buf[length] == NEGCHAR) //
+            if ((some_buf[length] == ':' || some_buf[length] == UNSUBSCRIBED_CHAR) //
                 && !std::strncmp(np->rc_line, some_buf, length))
             {
                 break;
@@ -921,7 +921,7 @@ void abandon_newsgroup(NewsgroupData *np)
         }
     }
     parse_rcline(np);
-    if (np->subscribe_char == NEGCHAR)
+    if (np->subscribe_char == UNSUBSCRIBED_CHAR)
     {
         np->subscribe_char = ':';
     }
@@ -1073,7 +1073,7 @@ reask_add:
             {
                 if (g_append_unsub)
                 {
-                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), NEGCHAR);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), UNSUBSCRIBED_CHAR);
                 }
                 return false;
             }
@@ -1106,7 +1106,7 @@ reask_add:
                     std::printf("(Adding %s to end of your .newsrc unsubscribed)\n",
                            g_newsgroup_name.c_str());
                     term_down(1);
-                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), NEGCHAR);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), UNSUBSCRIBED_CHAR);
                     flags &= ~GNG_RELOC;
                 }
                 else
@@ -1129,7 +1129,7 @@ reask_add:
     {
         return false;
     }
-    else if (g_newsgroup_ptr->subscribe_char == NEGCHAR)  // unsubscribed?
+    else if (g_newsgroup_ptr->subscribe_char == UNSUBSCRIBED_CHAR)  // unsubscribed?
     {
         if (g_verbose)
         {
@@ -1215,7 +1215,7 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
     std::strcpy(np->rc_line,ngn);             // and copy over the name
     std::strcpy(np->rc_line + np->num_offset, " ");
     np->subscribe_char = c;              // subscribe or unsubscribe
-    if (c != NEGCHAR)
+    if (c != UNSUBSCRIBED_CHAR)
     {
         ++g_newsgroup_to_read;
     }

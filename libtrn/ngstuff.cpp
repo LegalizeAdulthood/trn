@@ -879,7 +879,7 @@ deselect:
                 std::printf(g_unsub_to,g_newsgroup_ptr->rc_line);
                 term_down(1);
             }
-            g_newsgroup_ptr->subscribe_char = NEGCHAR;
+            g_newsgroup_ptr->subscribe_char = UNSUBSCRIBED_CHAR;
             g_newsgroup_ptr->to_read = TR_UNSUB;
             g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
