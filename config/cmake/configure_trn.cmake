@@ -41,6 +41,16 @@ function(configure_trn)
         unset(CMAKE_REQUIRED_LIBRARIES)
     endif()
     # TODO: How to check for UNION_WAIT?
+    # TODO: Related: USE_WIFSTAT; seems antiquated.
+    if(WIN32)
+        find_program(EDITOR_PATH "notepad")
+    else()
+        find_program(EDITOR_PATH "vi")
+    endif()
+    if(NOT EDITOR_PATH)
+        set(EDITOR_PATH "")
+    endif()
+    set(DEFAULT_EDITOR "${EDITOR_PATH}" CACHE STRING "The full pathname of the default editor.")
 
     set(HAS_TERMLIB ON)
     set(MBOX_CHAR "F")
@@ -57,6 +67,8 @@ function(configure_trn)
     set(PHOSTNAME "localhost")
     set(ROOT_ID "0")
     set(SERVER_NAME "news.gmane.io")
+    # TODO: Does any modern platform return non-void from a signal handler?
+    # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")
     set(SUPPORT_XTHREAD ON)
     set(THREADDIR "%X/threads")
