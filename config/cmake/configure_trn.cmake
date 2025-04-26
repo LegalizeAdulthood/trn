@@ -40,6 +40,9 @@ function(configure_trn)
         check_symbol_exists(gethostname "WinSock2.h" HAS_GETHOSTNAME)
         unset(CMAKE_REQUIRED_LIBRARIES)
     endif()
+    if(NOT HAS_GETHOSTNAME)
+        check_symbol_exists(uname "sys/utsname.h" HAS_UNAME)
+    endif()
     # TODO: How to check for UNION_WAIT?
     # TODO: Related: USE_WIFSTAT; seems antiquated.
     if(WIN32)
