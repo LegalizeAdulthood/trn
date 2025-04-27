@@ -52,7 +52,6 @@ add_library(legacy INTERFACE
     U/pager.U
     U/perlpath.U
     U/phost.U
-    U/privlib.U
     U/prototype.U
     U/README
     U/src.U
