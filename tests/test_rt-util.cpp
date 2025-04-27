@@ -14,10 +14,7 @@
 
 using namespace testing;
 
-enum
-{
-    NAME_MAX = 29
-};
+constexpr int COMPRESSED_NAME_MAX{29};
 
 class CompressNameTest : public Test
 {
@@ -198,7 +195,7 @@ TEST_F(CompressNameTest, SAIC)
 {
     configure_before_expected("School of the Art Institute of Chicago", "School o t A I o Chicago");
 
-    char *result = compress_name(m_buffer, NAME_MAX);
+    char *result = compress_name(m_buffer, COMPRESSED_NAME_MAX);
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
@@ -208,7 +205,7 @@ TEST_F(CompressNameTest, PCS)
 {
     configure_before_expected("IEEE Professional Communication Society", "IEEE P C Society");
 
-    char *result = compress_name(m_buffer, NAME_MAX);
+    char *result = compress_name(m_buffer, COMPRESSED_NAME_MAX);
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
