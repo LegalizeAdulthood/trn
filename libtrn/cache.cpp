@@ -356,10 +356,10 @@ void check_poster(Article *ap)
                 else
                 {
 #ifdef REPLYTO_POSTER_CHECKING
-                    char* reply_buf = fetchlines(article_num(ap),REPLY_LINE);
+                    char* reply_buf = fetch_lines(article_num(ap),REPLY_LINE);
                     if (in_string(reply_buf, g_login_name.c_str(), true))
                     {
-                        select_subthread(ap,AUTO_SEL_FOL);
+                        select_sub_thread(ap,AUTO_SEL_FOL);
                     }
                     std::free(reply_buf);
 #endif

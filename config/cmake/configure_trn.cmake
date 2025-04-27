@@ -157,6 +157,7 @@ function(configure_trn)
     # TODO: How to properly configure BIN_DIR to work when developing and after installation?
     set(BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "Path of the bin directory where the package will be installed.")
     set(PAGER "more" CACHE STRING "The name of the preferred pager on the system.")
+    option(REPLYTO_POSTER_CHECKING "If ON, makes -p also check Reply-To (slow)" OFF)
 
     if(WIN32)
         set(MSDOS ON)

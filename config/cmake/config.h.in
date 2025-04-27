@@ -329,4 +329,9 @@
  */
 #cmakedefine MSDOS
 
+/* REPLYTO_POSTER_CHECKING:
+ *      Makes -p also check Reply-To (slow)
+ */
+#cmakedefine REPLYTO_POSTER_CHECKING
+
 #endif
