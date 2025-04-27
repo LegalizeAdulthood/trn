@@ -41,7 +41,6 @@ add_library(legacy INTERFACE
     hints/sunos.sh
     hints/svr4.sh
     msdos/config.sh
-    U/active.U
     U/bin.U
     U/ccflags.U
     U/Config_h.U
@@ -88,5 +87,5 @@ add_library(legacy INTERFACE
 )
 source_group("MetaConfig Units" REGULAR_EXPRESSION "^.*\\.U$")
 source_group("Shell Templates" REGULAR_EXPRESSION "^.*\\.SH$")
-source_group("Shell Scripts" REGULAR_EXPRESSION "^.*\\.sh$")
+source_group("Configure Hints" REGULAR_EXPRESSION "^.*hints/.*\\.sh$")
 target_folder(legacy "Libraries")
