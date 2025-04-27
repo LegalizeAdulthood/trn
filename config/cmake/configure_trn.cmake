@@ -4,7 +4,8 @@ include(CheckSymbolExists)
 function(configure_flavor_header name flavor)
     configure_file(
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/${name}.${flavor}.h.in"
-        "include/config/${name}.h")
+        "include/config/${name}.h"
+        COPYONLY)
 endfunction()
 
 function(configure_trn)

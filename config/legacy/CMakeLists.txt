@@ -8,7 +8,6 @@ add_library(legacy INTERFACE
     norm_saver.SH
     Pnews.SH
     Rnmail.SH
-    Speller.SH
     hints/aix_rs.sh
     hints/altos486.sh
     hints/convexos.sh
@@ -38,7 +37,6 @@ add_library(legacy INTERFACE
     U/bin.U
     U/filexp.U
     U/filexp2.U
-    U/ispell_prg.U
     U/Loc.U
     U/locdist.U
     U/mansrc.U
