@@ -49,8 +49,6 @@ add_library(legacy INTERFACE
     U/locdist.U
     U/mansrc.U
     U/mimecap.U
-    U/Oldconfig.U
-    U/Oldsym.U
     U/Options.U
     U/orgname.U
     U/pager.U
