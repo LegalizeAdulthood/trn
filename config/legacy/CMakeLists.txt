@@ -11,7 +11,6 @@ add_library(legacy INTERFACE
     newsnews.SH
     norm_saver.SH
     Pnews.SH
-    Policy_sh.SH
     Rnmail.SH
     Speller.SH
     hints/aix_rs.sh
