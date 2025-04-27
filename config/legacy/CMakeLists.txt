@@ -42,7 +42,6 @@ add_library(legacy INTERFACE
     hints/svr4.sh
     msdos/config.sh
     U/bin.U
-    U/ccflags.U
     U/Config_h.U
     U/Config_sh.U
     U/d_gethname.U
