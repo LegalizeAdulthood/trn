@@ -1,0 +1,11 @@
+			*** NEWS NEWS ***
+
+Welcome to trn @CMAKE_PROJECT_VERSION@.
+
+Type 'h' at any prompt to get help.  The old (rn-compatible) help
+is usually available by typing 'H' as well.
+
+This message will not be displayed again unless it is updated with new
+information.
+
+   - The friendly folks at <https://github.com/LegalizeAdulthood/trn>

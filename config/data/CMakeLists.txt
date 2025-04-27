@@ -20,14 +20,17 @@ set(SPELL_PROGRAM "${spell_DEFAULT}" CACHE STRING "Program to use for spell chec
 
 configure_file(access_def.in access_def @ONLY)
 configure_file(environment.in environment @ONLY)
+configure_file(newsnews.in newsnews @ONLY)
 configure_file(Speller.in Speller @ONLY)
 
 add_library(data INTERFACE
     access_def.in
     environment.in
+    newsnews.in
     Speller.in
     "${CMAKE_CURRENT_BINARY_DIR}/access_def"
     "${CMAKE_CURRENT_BINARY_DIR}/environment"
+    "${CMAKE_CURRENT_BINARY_DIR}/newsnews"
     "${CMAKE_CURRENT_BINARY_DIR}/Speller"
 )
 source_group("CMake Templates" REGULAR_EXPRESSION ".*\\.in$")
