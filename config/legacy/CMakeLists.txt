@@ -3,7 +3,6 @@ add_library(legacy INTERFACE
     CMakeLists.txt
     Configure
     filexp.SH
-    fixConf
     Makefile.SH
     MANIFEST.txt
     mbox_saver.SH
