@@ -1,6 +1,4 @@
 add_library(legacy INTERFACE
-    .package
-    CMakeLists.txt
     Configure
     filexp.SH
     Makefile.SH
