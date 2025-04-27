@@ -42,7 +42,6 @@ add_library(legacy INTERFACE
     hints/svr4.sh
     msdos/config.sh
     U/bin.U
-    U/d_speedopt.U
     U/Extract.U
     U/filexp.U
     U/filexp2.U
