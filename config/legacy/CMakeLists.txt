@@ -45,7 +45,6 @@ add_library(legacy INTERFACE
     U/filexp.U
     U/filexp2.U
     U/ispell_prg.U
-    U/libsearch.U
     U/Loc.U
     U/locdist.U
     U/mansrc.U
