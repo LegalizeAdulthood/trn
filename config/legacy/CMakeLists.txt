@@ -52,7 +52,6 @@ add_library(legacy INTERFACE
     U/pager.U
     U/perlpath.U
     U/README
-    U/src.U
     U/strn.U
     U/threaddir.U
     U/tk.U
