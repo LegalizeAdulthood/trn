@@ -49,7 +49,6 @@ add_library(legacy INTERFACE
     U/locdist.U
     U/mansrc.U
     U/mimecap.U
-    U/myhostname.U
     U/Myinit.U
     U/newslib.U
     U/newsspool.U
