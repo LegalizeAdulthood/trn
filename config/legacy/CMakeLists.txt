@@ -49,7 +49,6 @@ add_library(legacy INTERFACE
     U/locdist.U
     U/mansrc.U
     U/mimecap.U
-    U/Options.U
     U/orgname.U
     U/pager.U
     U/perlpath.U
