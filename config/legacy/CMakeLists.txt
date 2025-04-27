@@ -51,7 +51,6 @@ add_library(legacy INTERFACE
     U/mimecap.U
     U/pager.U
     U/perlpath.U
-    U/prototype.U
     U/README
     U/src.U
     U/strn.U
