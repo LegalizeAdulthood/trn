@@ -44,7 +44,6 @@ add_library(legacy INTERFACE
     U/bin.U
     U/filexp.U
     U/filexp2.U
-    U/Finish.U
     U/h_fcntl.U
     U/ispell_prg.U
     U/i_time.U
