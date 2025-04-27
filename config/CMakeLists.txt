@@ -12,12 +12,12 @@ add_library(config
     include/config/user_id.h
     cmake/config.h.in
     cmake/configure_trn.cmake
-    cmake/fdio.Linux.h.in
-    cmake/fdio.Windows.h.in
-    cmake/pipe_io.Linux.h.in
-    cmake/pipe_io.Windows.h.in
-    cmake/string_case_compare.Linux.h.in
-    cmake/string_case_compare.Windows.h.in
+    cmake/fdio.fcntl.h.in
+    cmake/fdio.io.h.in
+    cmake/pipe_io.standard.h.in
+    cmake/pipe_io.underscore.h.in
+    cmake/string_case_compare.strings.h.in
+    cmake/string_case_compare.manual.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/config.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/fdio.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/pipe_io.h"
