@@ -51,7 +51,6 @@ add_library(legacy INTERFACE
     U/mimecap.U
     U/pager.U
     U/perlpath.U
-    U/README
 )
 source_group("MetaConfig Units" REGULAR_EXPRESSION "^.*\\.U$")
 source_group("Shell Templates" REGULAR_EXPRESSION "^.*\\.SH$")
