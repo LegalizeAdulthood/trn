@@ -2044,7 +2044,7 @@ static int article_order_author(const Article **art1, const Article **art2)
 
 static int article_order_number(const Article **art1, const Article **art2)
 {
-    const int eq{article_num(*art1).value_of() - article_num(*art2).value_of()};
+    const long eq{(article_num(*art1) - article_num(*art2)).value_of()};
     return eq > 0 ? g_sel_direction : -g_sel_direction;
 }
 
