@@ -56,6 +56,7 @@ jobs:
 
     - name: Add NuGet sources Windows
       if: ${{matrix.os != 'ubuntu-latest'}}
+      shell: bash
       run: |
         ${{matrix.nuget}} \
           sources add \
