@@ -1,6 +1,5 @@
 add_library(legacy INTERFACE
     Configure
-    filexp.SH
     Makefile.SH
     MANIFEST.txt
     mbox_saver.SH

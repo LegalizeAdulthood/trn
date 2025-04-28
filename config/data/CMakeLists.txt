@@ -6,8 +6,8 @@ function(find_program_default name)
     set("${name}_DEFAULT" "${PATH}" PARENT_SCOPE)
 endfunction()
 
-find_program_default(ed)
 find_program_default(diff)
+find_program_default(ed)
 find_program_default(ispell)
 find_program_default(spell)
 
@@ -20,16 +20,19 @@ set(SPELL_PROGRAM "${spell_DEFAULT}" CACHE STRING "Program to use for spell chec
 
 configure_file(access_def.in access_def @ONLY)
 configure_file(environment.in environment @ONLY)
+configure_file(filexp.in filexp @ONLY)
 configure_file(newsnews.in newsnews @ONLY)
 configure_file(Speller.in Speller @ONLY)
 
 add_library(data INTERFACE
     access_def.in
     environment.in
+    filexp.in
     newsnews.in
     Speller.in
     "${CMAKE_CURRENT_BINARY_DIR}/access_def"
     "${CMAKE_CURRENT_BINARY_DIR}/environment"
+    "${CMAKE_CURRENT_BINARY_DIR}/filexp"
     "${CMAKE_CURRENT_BINARY_DIR}/newsnews"
     "${CMAKE_CURRENT_BINARY_DIR}/Speller"
 )
