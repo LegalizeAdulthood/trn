@@ -31,12 +31,11 @@ jobs:
       if: ${{matrix.os == 'windows-latest'}}
       run: ${{github.workspace}}/vcpkg/bootstrap-vcpkg.bat
 
-    - name: Add NuGet sources
+    - name: Add NuGet sources Linux
       if: ${{matrix.os == 'ubuntu-latest'}}
       shell: bash
       env: 
         VCPKG_EXE: ${{github.workspace}}/vcpkg/vcpkg
-        USERNAME: ${{github.repository_owner}}
         FEED_URL: https://nuget.pkg.github.com/${{github.repository_owner}}/index.json
         VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{github.repository_owner}}/index.json,readwrite"
       run: |
@@ -45,9 +44,28 @@ jobs:
           -Source "${{env.FEED_URL}}" \
           -StorePasswordInClearText \
           -Name GitHubPackages \
-          -UserName "${{env.USERNAME}}" \
+          -UserName "${{github.repository_owner}}" \
           -Password "${{secrets.GH_PACKAGES_TOKEN}}"
         mono `${{env.VCPKG_EXE}} fetch nuget | tail -n 1` \
+          setapikey "${{secrets.GH_PACKAGES_TOKEN}}" \
+          -Source "${{env.FEED_URL}}"
+
+    - name: Add NuGet sources Windows
+      if: ${{matrix.os != 'ubuntu-latest'}}
+      shell: bash
+      env: 
+        VCPKG_EXE: ${{github.workspace}}/vcpkg/vcpkg
+        FEED_URL: https://nuget.pkg.github.com/${{github.repository_owner}}/index.json
+        VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{github.repository_owner}}/index.json,readwrite"
+      run: |
+        `${{env.VCPKG_EXE}} fetch nuget | tail -n 1` \
+          sources add \
+          -Source "${{env.FEED_URL}}" \
+          -StorePasswordInClearText \
+          -Name GitHubPackages \
+          -UserName "${{github.repository_owner}}" \
+          -Password "${{secrets.GH_PACKAGES_TOKEN}}"
+        `${{env.VCPKG_EXE}} fetch nuget | tail -n 1` \
           setapikey "${{secrets.GH_PACKAGES_TOKEN}}" \
           -Source "${{env.FEED_URL}}"
 
@@ -57,12 +75,11 @@ jobs:
     - name: CMake Linux workflow
       if: ${{matrix.os == 'ubuntu-latest'}}
       env: 
-        VCPKG_EXE: ${{github.workspace}}/vcpkg/vcpkg
-        USERNAME: ${{github.repository_owner}}
-        FEED_URL: https://nuget.pkg.github.com/${{github.repository_owner}}/index.json
         VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{github.repository_owner}}/index.json,readwrite"
       run: cmake --workflow --preset ci-linux
 
     - name: CMake workflow
       if: ${{matrix.os != 'ubuntu-latest'}}
+      env: 
+        VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{github.repository_owner}}/index.json,readwrite"
       run: cmake --workflow --preset default
