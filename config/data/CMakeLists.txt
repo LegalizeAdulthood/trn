@@ -17,23 +17,31 @@ set(ED_PROGRAM "${ed_DEFAULT}" CACHE STRING "Program to use for automated line e
 set(ISPELL_PROGRAM "${ispell_DEFAULT}" CACHE STRING "ispell program to use for spell checking.")
 set(ISPELL_OPTIONS "" CACHE STRING "Options to pass to ISPELL_PROGRAM for spell checking.")
 set(SPELL_PROGRAM "${spell_DEFAULT}" CACHE STRING "Program to use for spell checking if ispell not found.")
+# MMDF mailbox magic separator
+string(ASCII 1 CTRL_A)
 
 configure_file(access_def.in access_def @ONLY)
 configure_file(environment.in environment @ONLY)
 configure_file(filexp.in filexp @ONLY)
+configure_file(mbox.saver.in mbox.saver @ONLY)
 configure_file(newsnews.in newsnews @ONLY)
+configure_file(norm.saver.in norm.saver @ONLY)
 configure_file(Speller.in Speller @ONLY)
 
 add_library(data INTERFACE
     access_def.in
     environment.in
     filexp.in
+    mbox.saver.in
     newsnews.in
+    norm.saver.in
     Speller.in
     "${CMAKE_CURRENT_BINARY_DIR}/access_def"
     "${CMAKE_CURRENT_BINARY_DIR}/environment"
     "${CMAKE_CURRENT_BINARY_DIR}/filexp"
+    "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver"
     "${CMAKE_CURRENT_BINARY_DIR}/newsnews"
+    "${CMAKE_CURRENT_BINARY_DIR}/norm.saver"
     "${CMAKE_CURRENT_BINARY_DIR}/Speller"
 )
 source_group("CMake Templates" REGULAR_EXPRESSION ".*\\.in$")

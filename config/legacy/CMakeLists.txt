@@ -2,8 +2,6 @@ add_library(legacy INTERFACE
     Configure
     Makefile.SH
     MANIFEST.txt
-    mbox_saver.SH
-    norm_saver.SH
     Pnews.SH
     Rnmail.SH
     hints/aix_rs.sh

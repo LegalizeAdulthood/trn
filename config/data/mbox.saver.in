@@ -1,0 +1,38 @@
+@SHELL_START@
+# mbox.saver
+# 
+# This software is copyrighted as detailed in the LICENSE file.
+# 
+#	Arguments:
+#	1 Full name of article (%A)
+#	2 Public news spool directory (%P)
+#	3 Directory of current newsgroup (%c)
+#	4 Article number (%a)
+#	5 Where in article to start (%B)
+#	6 Newsgroup name (%C)
+#	7 Save destination (%b)
+#	8 First line of message, normally From...
+#
+export PATH || (echo "OOPS, this isn't sh.  Desperation time.  I will feed myself to sh."; sh $0; kill $$)
+
+case "@MBOX_CHAR@" in
+"@CTRL_A@")
+( echo "@CTRL_A@@CTRL_A@@CTRL_A@@CTRL_A@"
+  if test "$5" = 0 -a ! "$4" = 0 ; then
+    echo "Article: $4 of $6"
+  fi
+  tail +$5c $1
+  echo ""
+  echo ""
+  echo "@CTRL_A@@CTRL_A@@CTRL_A@@CTRL_A@" ) >> $7
+    ;;
+*)
+ ( echo "$8"
+  if test "$5" = 0 -a ! "$4" = 0 ; then
+    echo "Article: $4 of $6"
+  fi
+  tail +$5c $1 | $sed "s/^[Ff]rom />&/"
+  echo ""
+  echo "" ) >> $7
+    ;;
+esac
