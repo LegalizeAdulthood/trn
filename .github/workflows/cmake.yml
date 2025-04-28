@@ -15,9 +15,6 @@ jobs:
         # os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{matrix.os}}
 
-    env: 
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-
     steps:
     - uses: actions/checkout@v4.1.1
       with:
