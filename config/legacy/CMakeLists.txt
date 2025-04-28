@@ -37,7 +37,6 @@ add_library(legacy INTERFACE
     U/locdist.U
     U/mansrc.U
     U/mimecap.U
-    U/pager.U
     U/perlpath.U
 )
 source_group("MetaConfig Units" REGULAR_EXPRESSION "^.*\\.U$")
