@@ -26,7 +26,9 @@ jobs:
     - name: Bootstrap vcpkg Linux
       if: ${{matrix.os == 'ubuntu-latest'}}
       shell: bash
-      run: ${{github.workspace}}/vcpkg/bootstrap-vcpkg.sh
+      run: |
+        ${{github.workspace}}/vcpkg/bootstrap-vcpkg.sh
+        sudo apt install mono-complete
 
     - name: Bootstrap vcpkg Windows
       if: ${{matrix.os == 'windows-latest'}}
