@@ -16,7 +16,7 @@ jobs:
         include:
           - os: ubuntu-latest
             cmake-preset: ci-linux
-            nuget: mono `${{github.workspace}}/vcpkg/vcpkg fetch nuget | tail -n 1`
+            nuget: mono `./vcpkg/vcpkg fetch nuget | tail -n 1`
           - os: windows-latest
             cmake-preset: default
             nuget: nuget
@@ -37,25 +37,7 @@ jobs:
         ${{github.workspace}}/vcpkg/bootstrap-vcpkg.sh
         sudo apt install mono-complete
 
-    - name: Add NuGet sources Linux
-      if: ${{matrix.os == 'ubuntu-latest'}}
-      shell: bash
-      env: 
-        VCPKG_EXE: ${{github.workspace}}/vcpkg/vcpkg
-      run: |
-        ${{matrix.nuget}} \
-          sources add \
-          -Source "${{env.FEED_URL}}" \
-          -StorePasswordInClearText \
-          -Name GitHubPackages \
-          -UserName "${{github.repository_owner}}" \
-          -Password "${{secrets.GH_PACKAGES_TOKEN}}"
-        ${{matrix.nuget}} \
-          setapikey "${{secrets.GH_PACKAGES_TOKEN}}" \
-          -Source "${{env.FEED_URL}}"
-
-    - name: Add NuGet sources Windows
-      if: ${{matrix.os != 'ubuntu-latest'}}
+    - name: Add NuGet sources
       shell: bash
       run: |
         ${{matrix.nuget}} \
