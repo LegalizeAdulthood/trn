@@ -35,6 +35,8 @@ jobs:
       run: ${{github.workspace}}/vcpkg/bootstrap-vcpkg.bat
 
     - name: Add NuGet sources
+      if: ${{matrix.os == 'ubuntu-latest'}}
+      shell: bash
       env: 
         VCPKG_EXE: ${{github.workspace}}/vcpkg/vcpkg
         USERNAME: ${{github.repository_owner}}
@@ -66,9 +68,4 @@ jobs:
 
     - name: CMake workflow
       if: ${{matrix.os != 'ubuntu-latest'}}
-      env: 
-        VCPKG_EXE: ${{github.workspace}}/vcpkg/vcpkg
-        USERNAME: ${{github.repository_owner}}
-        FEED_URL: https://nuget.pkg.github.com/${{github.repository_owner}}/index.json
-        VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{github.repository_owner}}/index.json,readwrite"
       run: cmake --workflow --preset default
