@@ -868,7 +868,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     }
 
 #ifdef DEBUG
-    if (debug)
+    if (g_debug)
     {
         std::printf("Xref not from %s -- ignoring\n",inews_site);
         term_down(1);

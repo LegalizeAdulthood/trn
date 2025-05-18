@@ -785,7 +785,7 @@ void look_ahead()
     char* s;
 
 #ifdef DEBUG
-    if (debug && g_srchahead)
+    if (g_debug && g_srchahead)
     {
         std::printf("(%ld)",(long)g_srchahead);
         std::fflush(stdout);
@@ -823,7 +823,7 @@ void look_ahead()
             *h = '\0';
         }
 #ifdef DEBUG
-        if (debug & DEB_SEARCH_AHEAD)
+        if (g_debug & DEB_SEARCH_AHEAD)
         {
             std::fputs("(hit CR)",stdout);
             std::fflush(stdout);
@@ -849,7 +849,7 @@ void look_ahead()
                 if (g_srchahead > g_lastart)   // out of articles?
                 {
 #ifdef DEBUG
-                    if (debug)
+                    if (g_debug)
                     {
                         std::fputs("(not found)",stdout);
                     }
@@ -861,7 +861,7 @@ void look_ahead()
                 {
                                     // does the shoe fit?
 #ifdef DEBUG
-                    if (debug)
+                    if (g_debug)
                     {
                         std::printf("(%ld)",(long)g_srchahead);
                     }

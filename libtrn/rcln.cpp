@@ -294,7 +294,7 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
         return;
     }
 #ifdef DEBUG
-    if (debug & DEB_XREF_MARKER)
+    if (g_debug & DEB_XREF_MARKER)
     {
         std::printf("%ld<-\n%s%c%s\n",(long)artnum,np->rcline,np->subscribechar,
           np->rcline + np->numoffset);
@@ -320,7 +320,7 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
             ++np->toread;
         }
 #ifdef DEBUG
-        if (debug & DEB_XREF_MARKER)
+        if (g_debug & DEB_XREF_MARKER)
         {
             std::printf("%s%c %s\n",np->rcline,np->subscribechar,s);
         }
@@ -371,7 +371,7 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 }
                 std::strcat(s,t);            // copy remainder over
 #ifdef DEBUG
-                if (debug & DEB_XREF_MARKER)
+                if (g_debug & DEB_XREF_MARKER)
                 {
                     std::printf("%s\n",mbuf);
                 }
@@ -409,7 +409,7 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
                     np->toread++;
                 }
 #ifdef DEBUG
-                if (debug & DEB_XREF_MARKER)
+                if (g_debug & DEB_XREF_MARKER)
                 {
                     std::printf("%s%c%s\n",np->rcline,np->subscribechar,
                       np->rcline + np->numoffset);

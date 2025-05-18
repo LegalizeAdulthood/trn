@@ -280,7 +280,7 @@ Signal_t stop_catcher(int signo)
         termlib_reset();
         reset_tty();              // this is the point of all this
 #ifdef DEBUG
-        if (debug)
+        if (g_debug)
         {
             write(2,"stop_catcher\n",13);
         }

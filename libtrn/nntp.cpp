@@ -71,7 +71,7 @@ int nntp_list(const char *type, const char *arg, int len)
         return -1;
     }
 #if defined(DEBUG) && defined(FLUSH)
-    if (debug & DEB_NNTP)
+    if (g_debug & DEB_NNTP)
     {
         std::printf("<%s\n", g_ser_line);
     }

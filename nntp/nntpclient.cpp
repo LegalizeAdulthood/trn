@@ -162,7 +162,7 @@ int nntp_command(const char *bp)
 {
     std::time_t now;
 #if defined(DEBUG) && defined(FLUSH)
-    if (debug & DEB_NNTP)
+    if (g_debug & DEB_NNTP)
     {
         std::printf(">%s\n", bp);
     }
@@ -275,7 +275,7 @@ read_it:
         g_ser_line[len-2] = '\0';
     }
 #if defined(DEBUG) && defined(FLUSH)
-    if (debug & DEB_NNTP)
+    if (g_debug & DEB_NNTP)
     {
         std::printf("<%s\n", g_ser_line);
     }
