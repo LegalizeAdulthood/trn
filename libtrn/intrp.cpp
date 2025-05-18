@@ -140,7 +140,7 @@ void interp_final()
 static char *skip_interp(char *pattern, const char *stoppers)
 {
 #ifdef DEBUG
-    if (debug & DEB_INTRP)
+    if (g_debug & DEB_INTRP)
     {
         std::printf("skipinterp %s (till %s)\n",pattern,stoppers?stoppers:"");
     }

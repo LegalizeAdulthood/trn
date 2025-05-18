@@ -1646,7 +1646,7 @@ static int rcline_cmp(const char *key, int keylen, HashDatum data)
 void checkpoint_newsrcs()
 {
 #ifdef DEBUG
-    if (debug & DEB_CHECKPOINTING)
+    if (g_debug & DEB_CHECKPOINTING)
     {
         std::fputs("(ckpt)",stdout);
         std::fflush(stdout);
@@ -1661,7 +1661,7 @@ void checkpoint_newsrcs()
         get_anything();
     }
 #ifdef DEBUG
-    if (debug & DEB_CHECKPOINTING)
+    if (g_debug & DEB_CHECKPOINTING)
     {
         std::fputs("(done)",stdout);
         std::fflush(stdout);
@@ -1766,9 +1766,9 @@ bool write_newsrcs(Multirc *mptr)
                 delim = nullptr;
             }
 #ifdef DEBUG
-            if (debug & DEB_NEWSRC_LINE)
+            if (g_debug & DEB_NEWSRC_LINE)
             {
-                std::printf("%s\n",np->rcline);
+                std::printf("%s\n",np->rc_line);
                 term_down(1);
             }
 #endif

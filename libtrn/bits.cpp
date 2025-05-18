@@ -90,11 +90,11 @@ void rc_to_bits()
     }
     unread = ArticleNum{};
 #ifdef DEBUG
-    if (debug & DEB_CTLAREA_BITMAP)
+    if (g_debug & DEB_CTLAREA_BITMAP)
     {
-        std::printf("\n%s\n",mybuf);
+        std::printf("\n%s\n",my_buf);
         term_down(2);
-        for (ArticleNum i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
+        for (ArticleNum i = article_first(g_abs_first); i < g_first_art; i = article_next(i))
         {
             if (article_unread(i))
             {
@@ -150,15 +150,15 @@ void rc_to_bits()
             article_ptr(n)->flags &= ~AF_UNREAD;
         }
 #ifdef DEBUG
-        if (debug & DEB_CTLAREA_BITMAP)
+        if (g_debug & DEB_CTLAREA_BITMAP)
         {
             std::printf("\n%s\n",s);
             term_down(2);
-            for (i = g_absfirst; i <= g_lastart; i++)
+            for (ArticleNum a = g_abs_first; a <= g_last_art; a++)
             {
-                if (!was_read(i))
+                if (!was_read(a))
                 {
-                    std::printf("%ld ",(long)i);
+                    std::printf("%ld ",a.value_of());
                 }
             }
         }
@@ -186,7 +186,7 @@ void rc_to_bits()
         }
     }
 #ifdef DEBUG
-    if (debug & DEB_CTLAREA_BITMAP)
+    if (g_debug & DEB_CTLAREA_BITMAP)
     {
         std::fputs("\n(hit CR)",stdout);
         term_down(1);
@@ -288,9 +288,9 @@ void bits_to_rc()
     }
     *s++ = '\0';                        // and terminate string
 #ifdef DEBUG
-    if ((debug & DEB_NEWSRC_LINE) && !g_panic)
+    if ((g_debug & DEB_NEWSRC_LINE) && !g_panic)
     {
-        std::printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset);
+        std::printf("%s: %s\n",g_newsgroup_ptr->rc_line,g_newsgroup_ptr->rc_line+g_newsgroup_ptr->num_offset);
         std::printf("%s\n",mybuf);
         term_down(2);
     }
@@ -750,7 +750,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 
     xref_buf = save_str(xref_buf);
 # ifdef DEBUG
-    if (debug & DEB_XREF_MARKER)
+    if (g_debug & DEB_XREF_MARKER)
     {
         std::printf("Xref: %s\n",xref_buf);
         term_down(1);

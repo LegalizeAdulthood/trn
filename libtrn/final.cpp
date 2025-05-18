@@ -67,7 +67,7 @@ void final_init()
 
 #ifdef DEBUG
     // sometimes we WANT a core dump
-    if (debug & DEB_COREDUMPSOK)
+    if (g_debug & DEB_COREDUMPSOK)
         return;
 #endif
     sigset(SIGILL, sig_catcher);
@@ -144,7 +144,7 @@ Signal_t int_catcher(int dummy)
 {
     sigset(SIGINT,int_catcher);
 #ifdef DEBUG
-    if (debug)
+    if (g_debug)
     {
         write(2,"int_catcher\n",12);
     }
@@ -203,7 +203,7 @@ Signal_t sig_catcher(int signo)
         };
 
 #ifdef DEBUG
-    if (debug)
+    if (g_debug)
     {
         std::printf("\nSIG%s--.newsrc not restored in debug\n",signame[signo]);
         finalize(-1);

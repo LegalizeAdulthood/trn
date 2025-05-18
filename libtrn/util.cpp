@@ -703,9 +703,9 @@ void prep_ini_data(char *cp, const char *filename)
     char* t = cp;
 
 #ifdef DEBUG
-    if (debug & DEB_RCFILES)
+    if (g_debug & DEB_RCFILES)
     {
-        std::printf("Read %d bytes from %s\n",std::strlen(cp),filename);
+        std::printf("Read %d bytes from %s\n", static_cast<int>(std::strlen(cp)),filename);
     }
 #endif
 
@@ -896,7 +896,7 @@ char *next_ini_section(char *cp, char **section, char **cond)
     *cond = cp;
     cp += std::strlen(cp) + 1;
 #ifdef DEBUG
-    if (debug & DEB_RCFILES)
+    if (g_debug & DEB_RCFILES)
     {
         std::printf("Section [%s] (condition: %s)\n",*section,
                **cond? *cond : "<none>");
@@ -952,7 +952,7 @@ char *parse_ini_section(char *cp, IniWords words[])
     }
 
 #ifdef DEBUG
-    if (debug & DEB_RCFILES)
+    if (g_debug & DEB_RCFILES)
     {
         std::printf("Ini_words: %s\n", words[0].item);
         for (int i = 1; words[i].checksum; i++)

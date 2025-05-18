@@ -687,9 +687,9 @@ int cancel_article()
                 && myuid != ROOT_UID)))
     {
 #ifdef DEBUG
-        if (debug)
+        if (g_debug)
         {
-            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
+            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf);
             std::printf("%s != %s\n",get_val("FROM",""),from_buf);
             term_down(3);
         }
@@ -760,9 +760,9 @@ int supersede_article()         // Supersedes:
                 && myuid != ROOT_UID)))
     {
 #ifdef DEBUG
-        if (debug)
+        if (g_debug)
         {
-            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
+            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf);
             std::printf("%s != %s\n",get_val("FROM",""),from_buf);
             term_down(3);
         }
@@ -1144,7 +1144,7 @@ int invoke(const char *cmd, const char *dir)
         nntp_finish_body(FB_SILENT);
     }
 #ifdef DEBUG
-    if (debug)
+    if (g_debug)
     {
         std::printf("\nInvoking command: %s\n",cmd);
     }

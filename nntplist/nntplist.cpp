@@ -21,7 +21,6 @@ static void usage();
 
 static char *s_server_name{};
 std::string g_nntp_auth_file;
-int debug{};             // make nntpclient happy
 
 int main(int argc, char *argv[])
 {

@@ -658,7 +658,7 @@ extern char g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
 extern char g_cmd_buf[CMD_BUF_LEN]; // buffer for formatting system commands
 
 #ifdef DEBUG
-extern int debug; // -D
+extern int g_debug; // -D
 #   define DEB_COREDUMPSOK 2
 #   define DEB_HEADER 4
 #   define DEB_INTRP 8

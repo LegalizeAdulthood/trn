@@ -1531,7 +1531,7 @@ run_the_selector:
 
 #ifdef DEBUG
     case 'D':
-        std::printf("\nFirst article: %ld\n",(long)g_firstart);
+        std::printf("\nFirst article: %ld\n",g_first_art.value_of());
         term_down(2);
         article_walk(debug_article_output, 0);
         g_int_count = 0;
@@ -2119,18 +2119,18 @@ bool output_subject(char *ptr, int flag)
 #ifdef DEBUG
 static bool debug_article_output(char *ptr, int arg)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
     if (g_int_count)
     {
-        return 1;
+        return true;
     }
-    if (article_num(ap) >= g_firstart && ap->subj)
+    if (article_num(ap) >= g_first_art && ap->subj)
     {
-        std::printf("%5ld %c %s\n", article_num(ap),
+        std::printf("%5ld %c %s\n", article_num(ap).value_of(),
                (ap->flags & AF_UNREAD)? 'y' : 'n', ap->subj->str);
         term_down(1);
     }
-    return 0;
+    return false;
 }
 #endif
 

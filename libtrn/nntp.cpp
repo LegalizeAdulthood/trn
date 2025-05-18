@@ -36,7 +36,7 @@ int nntp_list(const char *type, const char *arg, int len)
 {
     int ret;
 #ifdef DEBUG
-    if (len && (debug & 1) && string_case_equal(type, "active"))
+    if (len && (g_debug & 1) && string_case_equal(type, "active"))
     {
         return -1;
     }

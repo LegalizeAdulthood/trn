@@ -296,7 +296,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             *h = '\0';
         }
 #ifdef DEBUG
-        if (debug)
+        if (g_debug)
         {
             std::printf("\npattern = %s\n",pattern);
             term_down(2);
@@ -500,7 +500,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         std::strcpy(g_buf,"Subject: ");
         std::strncpy(g_buf+9,fetch_subj(art_num,false),256);
 #ifdef DEBUG
-        if (debug & DEB_SEARCH_AHEAD)
+        if (g_debug & DEB_SEARCH_AHEAD)
         {
             std::printf("%s\n",g_buf);
         }

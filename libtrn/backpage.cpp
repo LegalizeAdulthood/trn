@@ -41,10 +41,10 @@ ArticlePosition virtual_read(ArticleLine index)
     long offset;
 
 #ifdef DEBUG
-    if (indx > s_max_index)
+    if (index > s_max_index)
     {
-        std::printf("vrdary(%ld) > %ld\n",(long)indx, (long)s_max_index);
-        return 0;
+        std::printf("vrdary(%ld) > %ld\n",(long)index.value_of(), (long)s_max_index);
+        return ArticlePosition{};
     }
 #endif
     if (index < 0)
@@ -80,7 +80,7 @@ void virtual_write(ArticleLine index, ArticlePosition value)
 #ifdef DEBUG
     if (index < 0)
     {
-        std::printf("vwtary(%ld)\n",(long)index);
+        std::printf("vwtary(%ld)\n",(long)index.value_of());
     }
     if (!index)
     {
@@ -90,9 +90,9 @@ void virtual_write(ArticleLine index, ArticlePosition value)
     {
         if (index != s_max_index + 1)
         {
-            std::printf("index skipped %d-%d\n",s_max_index+1,index-1);
+            std::printf("index skipped %d-%d\n",s_max_index+1,index.value_of()-1);
         }
-        s_max_index = index;
+        s_max_index = index.value_of();
     }
 #endif
     sub_index = index.value_of() % VARY_SIZE;

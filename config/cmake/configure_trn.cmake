@@ -185,6 +185,7 @@ function(configure_trn)
     # This seems like a pre-POSIX coping strategy.
     set(SIGNAL_T "void")
     set(SUPPORT_XTHREAD ON)
+    option(DEBUG "Compile with debug logging enabled." ON)
 
     configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config/config.h)
     set(STRING_CASE_COMPARE_SOURCES_strings "")

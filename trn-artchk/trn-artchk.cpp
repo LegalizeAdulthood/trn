@@ -32,7 +32,6 @@ int nntp_handle_timeout();
 
 char       *g_server_name{};
 std::string g_nntp_auth_file;
-int         debug{};
 char        g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
 
 int main(int argc, char *argv[])

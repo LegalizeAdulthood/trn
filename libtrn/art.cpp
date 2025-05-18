@@ -533,7 +533,7 @@ DoArticleResult do_article()
                             i = put_char_adv(&buf_ptr, output_ok);
                             buf_ptr--;
 #else // !USE_UTF_HACK
-                            i = putsubstchar(*bufptr, g_tc_COLS - outpos, outputok);
+                            i = putsubstchar(*bufptr, g_tc_COLS - out_pos, outputok);
 #endif // USE_UTF_HACK
                             if (i < 0)
                             {
@@ -558,10 +558,10 @@ skip_put:
                             un_underline();
                         }
 #ifdef DEBUG
-                        if (debug & DEB_INNERSRCH && outpos < g_tc_COLS - 6)
+                        if (g_debug & DEB_INNERSRCH && out_pos < g_tc_COLS - 6)
                         {
                             standout();
-                            std::printf("%4d",g_artline);
+                            std::printf("%4d",g_art_line_num.value_of());
                             un_standout();
                         }
 #endif
@@ -780,9 +780,9 @@ reask_pager:
         g_term_col = out_pos;
         eat_typeahead();
 #ifdef DEBUG
-        if (debug & DEB_CHECKPOINTING)
+        if (g_debug & DEB_CHECKPOINTING)
         {
-            std::printf("(%d %d %d)",g_check_count,line_num,g_art_line_num);
+            std::printf("(%d %d %d)",g_check_count,line_num.value_of(),g_art_line_num.value_of());
             std::fflush(stdout);
         }
 #endif
@@ -964,9 +964,9 @@ caseG:
             g_g_line = g_tc_LINES - 2;
         }
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH)
+        if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("Start here? %d  >=? %d\n",g_topline + g_gline + 1,g_artline);
+            std::printf("Start here? %d  >=? %d\n",g_top_line.value_of() + g_g_line + 1,g_art_line_num.value_of());
             term_down(1);
         }
 #endif
@@ -996,7 +996,7 @@ caseG:
                 *nl_ptr = '\0';
             }
 #ifdef DEBUG
-            if (debug & DEB_INNERSRCH)
+            if (g_debug & DEB_INNERSRCH)
             {
                 std::printf("Test %s\n",s);
             }
@@ -1020,9 +1020,9 @@ caseG:
             return PS_ASK;
         }
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH)
+        if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("On page? %ld <=? %ld\n",(long)g_inner_search,(long)g_art_pos);
+            std::printf("On page? %ld <=? %ld\n",g_inner_search.value_of(),g_art_pos.value_of());
             term_down(1);
         }
 #endif
@@ -1038,9 +1038,9 @@ caseG:
             }
             g_highlight = line_before(g_art_line_num);
 #ifdef DEBUG
-            if (debug & DEB_INNERSRCH)
+            if (g_debug & DEB_INNERSRCH)
             {
-                std::printf("@ %d\n",g_highlight);
+                std::printf("@ %d\n",g_highlight.value_of());
                 term_down(1);
             }
 #endif
@@ -1069,9 +1069,9 @@ caseG:
     case '\f':                // refresh screen
 refresh_screen:
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH)
+        if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("Topline = %d",g_top_line);
+            std::printf("Topline = %d",g_top_line.value_of());
             std::fgets(g_buf, sizeof g_buf, stdin);
         }
 #endif
@@ -1386,9 +1386,9 @@ bool inner_more()
     if (g_art_pos < g_inner_search)               // not even on page yet?
     {
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH)
+        if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("Not on page %ld < %ld\n",(long)g_artpos,(long)g_innersearch);
+            std::printf("Not on page %ld < %ld\n",g_art_pos.value_of(),g_inner_search.value_of());
         }
 #endif
         return true;
@@ -1405,10 +1405,10 @@ bool inner_more()
             g_highlight = line_before(g_art_line_num);
         }
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH)
+        if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("There it is %ld = %ld, %d @ %d\n",(long)g_artpos,
-                (long)g_innersearch,g_hide_everything,g_highlight);
+            std::printf("There it is %ld = %ld, %d @ %d\n",g_art_pos.value_of(),
+                g_inner_search.value_of(),g_hide_everything,g_highlight.value_of());
             term_down(1);
         }
 #endif
@@ -1419,9 +1419,9 @@ bool inner_more()
         }
     }
 #ifdef DEBUG
-    if (debug & DEB_INNERSRCH)
+    if (g_debug & DEB_INNERSRCH)
     {
-        std::printf("Not far enough? %d <? %d + %d\n",g_artline,s_isrchline,g_gline);
+        std::printf("Not far enough? %d <? %d + %d\n",g_art_line_num.value_of(),s_i_search_line.value_of(),g_g_line);
         term_down(1);
     }
 #endif

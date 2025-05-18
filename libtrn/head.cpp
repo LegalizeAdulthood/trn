@@ -125,12 +125,12 @@ void head_final()
 #ifdef DEBUG
 static void dump_header(char *where)
 {
-    std::printf("header: %ld %s", (long)g_parsed_art, where);
+    std::printf("header: %ld %s", g_parsed_art.value_of(), where);
 
     for (int i = HEAD_FIRST - 1; i < HEAD_LAST; i++)
     {
         std::printf("%15s %4ld %4ld %03o\n",g_header_type[i].name.c_str(),
-               (long)g_htype[i].minpos, (long)g_header_type[i].maxpos,
+               g_header_type[i].min_pos.value_of(), g_header_type[i].max_pos.value_of(),
                g_header_type[i].flags);
     }
 }
@@ -240,7 +240,7 @@ HeaderLineType get_header_num(char *s)
 void start_header(ArticleNum artnum)
 {
 #ifdef DEBUG
-    if (debug & DEB_HEADER)
+    if (g_debug & DEB_HEADER)
     {
         dump_header("start_header\n");
     }
@@ -324,7 +324,7 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
                 }
             }
 #ifdef DEBUG
-            if (debug & DEB_HEADER)
+            if (g_debug & DEB_HEADER)
             {
                 dump_header(art_buf);
             }
@@ -520,9 +520,9 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
         size--;
     }
 #ifdef DEBUG
-    if (debug && (size < 1 || size > 1000))
+    if (g_debug && (size < 1 || size > 1000))
     {
-        std::printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
+        std::printf("Firstpos = %ld, lastpos = %ld\n",firstpos.value_of(),lastpos.value_of());
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
@@ -565,9 +565,9 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
         size--;
     }
 #ifdef DEBUG
-    if (debug && (size < 1 || size > 1000))
+    if (g_debug && (size < 1 || size > 1000))
     {
-        std::printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
+        std::printf("Firstpos = %ld, lastpos = %ld\n",firstpos.value_of(),lastpos.value_of());
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
@@ -655,7 +655,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
             {
                 char *line = nntp_get_a_line(last_buf, last_buflen, last_buf!=g_ser_line);
 # ifdef DEBUG
-                if (debug & DEB_NNTP)
+                if (g_debug & DEB_NNTP)
                     std::printf("<%s", line? line : "<EOF>");
 # endif
                 if (nntp_at_list_end(line))

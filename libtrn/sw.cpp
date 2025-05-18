@@ -130,7 +130,7 @@ void decode_switch(const char *s)
 {
     s = skip_space(s);          // ignore leading spaces
 #ifdef DEBUG
-    if (debug)
+    if (g_debug)
     {
         std::printf("Switch: %s\n",s);
         term_down(1);
@@ -216,22 +216,22 @@ void decode_switch(const char *s)
             {
                 if (upordown)
                 {
-                    debug |= std::atoi(s);
+                    g_debug |= std::atoi(s);
                 }
                 else
                 {
-                    debug &= ~std::atoi(s);
+                    g_debug &= ~std::atoi(s);
                 }
             }
             else
             {
                 if (upordown)
                 {
-                    debug |= 1;
+                    g_debug |= 1;
                 }
                 else
                 {
-                    debug = 0;
+                    g_debug = 0;
                 }
             }
 #else

@@ -106,9 +106,9 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     if (dp != np->rc->data_source)          // punt on cross-host xrefs
     {
 #ifdef DEBUG
-        if (debug & DEB_XREF_MARKER)
+        if (g_debug & DEB_XREF_MARKER)
         {
-            std::printf("Cross-host xref to group %s ignored.\n",ngnam);
+            std::printf("Cross-host xref to group %s ignored.\n",newsgroup_name);
         }
 #endif
         return 0;
@@ -148,10 +148,10 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
         np->ng_max = art_num;
     }
 #ifdef DEBUG
-    if (debug & DEB_XREF_MARKER)
+    if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("%ld->\n%s%c%s\n",(long)artnum,np->rcline, np->subscribechar,
-          np->rcline + np->numoffset);
+        std::printf("%ld->\n%s%c%s\n",art_num.value_of(),np->rc_line, np->subscribe_char,
+          np->rc_line + np->num_offset);
     }
 #endif
     s = skip_eq(np->rc_line + np->num_offset, ' '); // skip spaces
@@ -248,7 +248,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     }
     std::strcat(t,s);                        // copy remainder of line
 #ifdef DEBUG
-    if (debug & DEB_XREF_MARKER)
+    if (g_debug & DEB_XREF_MARKER)
     {
         std::printf("%s\n",mbuf);
     }
@@ -572,10 +572,10 @@ void check_expired(NewsgroupData *np, ArticleNum first)
         return;
     }
 #ifdef DEBUG
-    if (debug & DEB_XREF_MARKER)
+    if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("1-%ld->\n%s%c%s\n",(long)(a1st-1),np->rcline,np->subscribechar,
-          np->rcline + np->numoffset);
+        std::printf("1-%ld->\n%s%c%s\n",first.value_of()-1,np->rc_line,np->subscribe_char,
+          np->rc_line + np->num_offset);
     }
 #endif
     s = skip_space(np->rc_line + np->num_offset);
@@ -662,10 +662,10 @@ void check_expired(NewsgroupData *np, ArticleNum first)
     }
 
 #ifdef DEBUG
-    if (debug & DEB_XREF_MARKER)
+    if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("%s%c%s\n",np->rcline,np->subscribechar,
-          np->rcline + np->numoffset);
+        std::printf("%s%c%s\n",np->rc_line,np->subscribe_char,
+          np->rc_line + np->num_offset);
     }
 #endif
 }

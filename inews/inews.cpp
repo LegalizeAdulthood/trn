@@ -23,7 +23,6 @@ enum
     MAX_SIGNATURE = 4
 };
 
-int debug{};
 int new_connection{};
 char *g_server_name{};
 std::string g_nntp_auth_file;

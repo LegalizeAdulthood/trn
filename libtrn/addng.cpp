@@ -177,7 +177,7 @@ static void new_nntp_groups(DataSource *dp)
             break;
         }
 #ifdef DEBUG
-        if (debug & DEB_NNTP)
+        if (g_debug & DEB_NNTP)
         {
             std::printf("<%s\n", g_ser_line);
         }
