@@ -26,6 +26,8 @@ configure_file(filexp.in filexp @ONLY)
 configure_file(mbox.saver.in mbox.saver @ONLY)
 configure_file(newsnews.in newsnews @ONLY)
 configure_file(norm.saver.in norm.saver @ONLY)
+configure_file(Pnews.in Pnews @ONLY)
+configure_file(Pnews.header.in Pnews.header @ONLY)
 configure_file(Speller.in Speller @ONLY)
 
 add_library(data INTERFACE
@@ -35,6 +37,8 @@ add_library(data INTERFACE
     mbox.saver.in
     newsnews.in
     norm.saver.in
+    Pnews.in
+    Pnews.header.in
     Speller.in
     "${CMAKE_CURRENT_BINARY_DIR}/access_def"
     "${CMAKE_CURRENT_BINARY_DIR}/environment"
@@ -42,6 +46,8 @@ add_library(data INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver"
     "${CMAKE_CURRENT_BINARY_DIR}/newsnews"
     "${CMAKE_CURRENT_BINARY_DIR}/norm.saver"
+    "${CMAKE_CURRENT_BINARY_DIR}/Pnews"
+    "${CMAKE_CURRENT_BINARY_DIR}/Pnews.header"
     "${CMAKE_CURRENT_BINARY_DIR}/Speller"
 )
 source_group("CMake Templates" REGULAR_EXPRESSION ".*\\.in$")

@@ -2,7 +2,6 @@ add_library(legacy INTERFACE
     Configure
     Makefile.SH
     MANIFEST.txt
-    Pnews.SH
     Rnmail.SH
     hints/aix_rs.sh
     hints/altos486.sh
