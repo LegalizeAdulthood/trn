@@ -10,7 +10,7 @@
 #include <trn/string-algos.h>
 #include <util/env.h>
 #include <util/util2.h>
-#include <util/wildmat.h>
+#include <wildmat/wildmat.h>
 
 #include <cstdio>
 #include <cstdlib>
