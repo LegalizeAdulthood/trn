@@ -450,7 +450,7 @@ try_again:
                 // g_ngptr = np; ??
                 // set_ngname(np->rcline);
                 set_to_read(np, ST_LAX);
-                if (!np->rc->data_source->act_sf.m_fp)
+                if (!np->rc->data_source->m_act_sf.m_fp)
                 {
                     save_the_rest = (g_sel_rereading ^ (np->to_read > TR_NONE));
                 }
@@ -1735,7 +1735,7 @@ void display_page_title(bool home_only)
         {
             if (rp->flags & RF_ACTIVE)
             {
-                std::sprintf(g_buf+len, ", %s", rp->data_source->name);
+                std::sprintf(g_buf+len, ", %s", rp->data_source->m_name);
                 len += std::strlen(g_buf+len);
             }
         }
@@ -1843,7 +1843,7 @@ try_again:
             maybe_eol();
             for (rp = mp->first, len = 0; rp && len < 34; rp = rp->next)
             {
-                std::sprintf(g_buf+len, ", %s", rp->data_source->name);
+                std::sprintf(g_buf+len, ", %s", rp->data_source->m_name);
                 len += std::strlen(g_buf+len);
             }
             if (rp)
@@ -2679,7 +2679,7 @@ static void display_group(DataSource *dp, char *group, int len, int max_len)
     {
         char* end;
         char buff[256];
-        std::strcpy(buff, find_group_desc(dp, group));
+        std::strcpy(buff, dp->find_group_desc(group));
         char* cp = buff;
         if (*cp != '?' && (end = std::strchr(cp, '\n')) != nullptr //
             && end != cp)

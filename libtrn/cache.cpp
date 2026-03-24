@@ -902,7 +902,7 @@ void cache_until_key()
         return;
     }
 
-    if ((g_data_source->flags & DF_REMOTE) && nntp_finish_body(FB_BACKGROUND))
+    if ((g_data_source->m_flags & DF_REMOTE) && nntp_finish_body(FB_BACKGROUND))
     {
         return;
     }
@@ -989,7 +989,7 @@ bool cache_xrefs()
 {
     ArticleNum an;
 
-    if (g_olden_days || (g_data_source->flags & DF_NO_XREFS) || s_xref_to_get > g_last_art)
+    if (g_olden_days || (g_data_source->m_flags & DF_NO_XREFS) || s_xref_to_get > g_last_art)
     {
         return true;
     }
@@ -1025,7 +1025,7 @@ bool cache_all_arts()
     set_spin(SPIN_BACKGROUND);
     if (g_last_cached < g_last_art)
     {
-        if (g_data_source->ov_opened)
+        if (g_data_source->m_ov_opened)
         {
             ov_data(article_after(g_last_cached), g_last_art, true);
         }
@@ -1038,7 +1038,7 @@ bool cache_all_arts()
     }
     if (g_first_cached > g_abs_first)
     {
-        if (g_data_source->ov_opened)
+        if (g_data_source->m_ov_opened)
         {
             ov_data(g_abs_first, article_before(g_first_cached), true);
         }
@@ -1093,7 +1093,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
     }
     else
     {
-        int lots_to_do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
+        int lots_to_do = ((g_data_source->m_flags & DF_REMOTE)? g_net_speed : 20) * 25;
         set_spin(g_spin_estimate > lots_to_do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
@@ -1189,7 +1189,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
 
     if (first < g_first_cached)
     {
-        if (g_data_source->ov_opened)
+        if (g_data_source->m_ov_opened)
         {
             ov_data(g_abs_first, article_before(g_first_cached), false);
             success = (g_first_cached == g_abs_first);
@@ -1202,7 +1202,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
     }
     if (success && g_last_cached < last)
     {
-        if (g_data_source->ov_opened)
+        if (g_data_source->m_ov_opened)
         {
             ov_data(article_after(g_last_cached), last, false);
         }

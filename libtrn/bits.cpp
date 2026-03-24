@@ -325,7 +325,7 @@ void find_existing_articles()
     ArticleNum an;
     Article* ap;
 
-    if (g_data_source->flags & DF_REMOTE)
+    if (g_data_source->m_flags & DF_REMOTE)
     {
         // Parse the LISTGROUP output and remember everything we find
         if (nntp_art_nums())
@@ -360,7 +360,7 @@ void find_existing_articles()
         }
         else if (g_first_subject && g_cached_all_in_range)
         {
-            if (!g_data_source->ov_opened || g_data_source->over_dir != nullptr)
+            if (!g_data_source->m_ov_opened || g_data_source->m_over_dir != nullptr)
             {
                 for (ap = article_ptr(article_first(g_first_cached));
                      ap && article_num(ap) <= g_last_cached;
@@ -707,7 +707,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
     char *cur_xref;
     char tmp_buf[128];
 
-    if (g_data_source->flags & DF_NO_XREFS)
+    if (g_data_source->m_flags & DF_NO_XREFS)
     {
         return 0;
     }

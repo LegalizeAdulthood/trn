@@ -119,7 +119,7 @@ DoArticleResult do_article()
     MinorMode old_mode = g_mode;
     bool output_ok = true;
 
-    if (g_data_source->flags & DF_REMOTE)
+    if (g_data_source->m_flags & DF_REMOTE)
     {
         const ArticlePosition art_size{nntp_art_size()};
         g_raw_art_size = art_size;

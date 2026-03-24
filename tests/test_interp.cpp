@@ -705,7 +705,7 @@ TEST_F(InterpolatorTest, newsSpoolDirectory)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(g_data_source->spool_dir, buffer());
+    ASSERT_EQ(g_data_source->m_spool_dir, buffer());
 }
 
 TEST_F(InterpolatorTest, lastInputStringInitiallyEmpty)

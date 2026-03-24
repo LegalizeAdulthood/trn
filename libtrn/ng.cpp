@@ -139,9 +139,9 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
     set_data_source(g_newsgroup_ptr->rc->data_source);
 
-    if (change_dir(g_data_source->spool_dir))
+    if (change_dir(g_data_source->m_spool_dir))
     {
-        std::printf(g_no_cd,g_data_source->spool_dir);
+        std::printf(g_no_cd,g_data_source->m_spool_dir);
         return NG_ERROR;
     }
 
@@ -257,9 +257,9 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             {
                 nntp_finish_body(FB_SILENT);
             }
-            if (g_data_source->flags & DF_REMOTE)
+            if (g_data_source->m_flags & DF_REMOTE)
             {
-                if (g_data_source->act_sf.m_fp || get_newsgroup_size(g_newsgroup_ptr) > g_last_art)
+                if (g_data_source->m_act_sf.m_fp || get_newsgroup_size(g_newsgroup_ptr) > g_last_art)
                 {
                     if (nntp_group(g_newsgroup_name.c_str(), g_newsgroup_ptr) <= 0)
                     {
@@ -421,7 +421,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                         // (line # within article file)
             }
             clear();                    // clear screen
-            if (g_art == 0 && g_artp && g_artp->m_msg_id && (g_data_source->flags & DF_REMOTE) //
+            if (g_art == 0 && g_artp && g_artp->m_msg_id && (g_data_source->m_flags & DF_REMOTE) //
                 && !(g_artp->m_flags & AF_CACHED))
             {
                 g_art = nntp_stat_id(g_artp->m_msg_id);

@@ -70,24 +70,31 @@ DECLARE_FLAGS_ENUM(FieldFlags, std::uint8_t)
 
 struct DataSource
 {
-    char            *name;       // our user-friendly name
-    char            *news_id;    // the active file name or host name
-    SourceFile       act_sf;     // the active file's hashed contents
-    char            *group_desc; // the newsgroup description file or tmp
-    SourceFile       desc_sf;    // the group description's hashed contents
-    char            *extra_name; // local active.times or server's active file
-    NNTPLink         nntp_link;
-    char            *spool_dir;
-    char            *over_dir;
-    char            *over_fmt;
-    char            *auth_user;
-    char            *auth_pass;
-    long             last_new_group; // time of last newgroup check
-    std::FILE       *ov_in;          // the overview's file handle
-    std::time_t      ov_opened;      // time overview file was opened
-    OverviewFieldNum field_num[OV_MAX_FIELDS];
-    FieldFlags       field_flags[OV_MAX_FIELDS];
-    DataSourceFlags  flags;
+    bool             open();
+    void             close();
+    bool             active_file_hash();
+    bool             find_active_group(char *outbuf, const char *nam, int len, ArticleNum high);
+    const char      *find_group_desc(const char *group_name);
+    inline NNTPFlags nntp_flags() const;
+
+    char            *m_name;       // our user-friendly name
+    char            *m_news_id;    // the active file name or host name
+    SourceFile       m_act_sf;     // the active file's hashed contents
+    char            *m_group_desc; // the newsgroup description file or tmp
+    SourceFile       m_desc_sf;    // the group description's hashed contents
+    char            *m_extra_name; // local active.times or server's active file
+    NNTPLink         m_nntp_link;
+    char            *m_spool_dir;
+    char            *m_over_dir;
+    char            *m_over_fmt;
+    char            *m_auth_user;
+    char            *m_auth_pass;
+    long             m_last_new_group; // time of last newgroup check
+    std::FILE       *m_ov_in;          // the overview's file handle
+    std::time_t      m_ov_opened;      // time overview file was opened
+    OverviewFieldNum m_field_num[OV_MAX_FIELDS];
+    FieldFlags       m_field_flags[OV_MAX_FIELDS];
+    DataSourceFlags  m_flags;
 };
 
 enum
@@ -110,18 +117,13 @@ void        data_source_init();
 void        data_source_finalize();
 char       *read_data_sources(const char *filename);
 DataSource *get_data_source(const char *name);
-bool        open_data_source(DataSource *dp);
 void        set_data_source(DataSource *dp);
 void        check_data_sources();
-void        close_data_source(DataSource *dp);
-bool        active_file_hash(DataSource *dp);
-bool        find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high);
-const char *find_group_desc(DataSource *dp, const char *group_name);
 int         find_close_match();
 
-inline NNTPFlags data_source_nntp_flags(const DataSource *dp)
+inline NNTPFlags DataSource::nntp_flags() const
 {
-    return dp == g_data_source ? g_nntp_link.flags : dp->nntp_link.flags;
+    return this == g_data_source ? g_nntp_link.flags : m_nntp_link.flags;
 }
 
 inline DataSource *data_source_ptr(int n)

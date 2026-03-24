@@ -619,12 +619,12 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 case 'A':
                     if (g_in_ng)
                     {
-                        if (g_data_source->flags & DF_REMOTE)
+                        if (g_data_source->m_flags & DF_REMOTE)
                         {
                             if (art_open(g_art, (ArticlePosition) 0))
                             {
                                 nntp_finish_body(FB_SILENT);
-                                std::sprintf(s = scrbuf,"%s/%s",g_data_source->spool_dir,
+                                std::sprintf(s = scrbuf,"%s/%s",g_data_source->m_spool_dir,
                                         nntp_art_name(g_art, false));
                             }
                             else
@@ -634,7 +634,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         }
                         else
                         {
-                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->spool_dir, g_newsgroup_dir.c_str(), g_art.value_of());
+                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->m_spool_dir, g_newsgroup_dir.c_str(), g_art.value_of());
                         }
                     }
                     else
@@ -666,7 +666,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 case 'd':
                     if (!g_newsgroup_dir.empty())
                     {
-                        std::sprintf(scrbuf, "%s/%s", g_data_source->spool_dir, g_newsgroup_dir.c_str());
+                        std::sprintf(scrbuf, "%s/%s", g_data_source->m_spool_dir, g_newsgroup_dir.c_str());
                         s = scrbuf;
                     }
                     else
@@ -897,7 +897,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     break;
 
                 case 'P':
-                    s = g_data_source ? g_data_source->spool_dir : s_empty;
+                    s = g_data_source ? g_data_source->m_spool_dir : s_empty;
                     break;
 
                 case 'q':

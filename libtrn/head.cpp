@@ -404,7 +404,7 @@ bool parse_header(ArticleNum art_num)
         return false;
     }
     spin(20);
-    if (g_data_source->flags & DF_REMOTE)
+    if (g_data_source->m_flags & DF_REMOTE)
     {
         char *s = nntp_art_name(art_num, false);
         if (s)
@@ -599,7 +599,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     char* t;
     ArticlePosition firstpos;
 
-    if ((g_data_source->flags & DF_REMOTE) && g_parsed_art != art_num)
+    if ((g_data_source->m_flags & DF_REMOTE) && g_parsed_art != art_num)
     {
         Article*ap;
         int     size;
@@ -679,7 +679,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                 {
                     continue;
                 }
-                if (!(g_data_source->flags & DF_XHDR_BROKEN))
+                if (!(g_data_source->m_flags & DF_XHDR_BROKEN))
                 {
                     while ((prior_num = article_next(prior_num)) < num)
                     {
@@ -716,7 +716,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
             }
             s = fetch_lines(art_num,which_line);
         }
-        if (hasxhdr && !(g_data_source->flags & DF_XHDR_BROKEN))
+        if (hasxhdr && !(g_data_source->m_flags & DF_XHDR_BROKEN))
         {
             for (prior_num = article_first(prior_num); prior_num < lastnum; prior_num = article_next(prior_num))
             {

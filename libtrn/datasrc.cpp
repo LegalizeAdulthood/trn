@@ -176,9 +176,9 @@ void data_source_finalize()
 {
     if (g_data_source_list)
     {
-        for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
+        for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
         {
-            close_data_source(dp);
+            dp->close();
         }
 
         delete_list(g_data_source_list);
@@ -232,9 +232,9 @@ char *read_data_sources(const char *filename)
 
 DataSource *get_data_source(const char *name)
 {
-    for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
+    for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
     {
-        if (dp->name == std::string{name})
+        if (dp->m_name == std::string{name})
         {
             return dp;
         }
@@ -248,128 +248,128 @@ static DataSource *new_data_source(const char *name, char **vals)
 
     if (vals[DI_NNTP_SERVER])
     {
-        dp->flags |= DF_REMOTE;
+        dp->m_flags |= DF_REMOTE;
     }
     else if (!vals[DI_ACTIVE_FILE])
     {
         return nullptr;
     }
 
-    dp->name = save_str(name);
+    dp->m_name = save_str(name);
     if (!std::strcmp(name,"default"))
     {
-        dp->flags |= DF_DEFAULT;
+        dp->m_flags |= DF_DEFAULT;
     }
 
     const char *v = vals[DI_NNTP_SERVER];
     if (v != nullptr)
     {
-        dp->news_id = save_str(v);
-        char *cp = std::strchr(dp->news_id, ';');
+        dp->m_news_id = save_str(v);
+        char *cp = std::strchr(dp->m_news_id, ';');
         if (cp != nullptr)
         {
             *cp = '\0';
-            dp->nntp_link.port_number = std::atoi(cp+1);
+            dp->m_nntp_link.port_number = std::atoi(cp+1);
         }
 
         v = vals[DI_ACT_REFETCH];
         if (v != nullptr && *v)
         {
-            dp->act_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
+            dp->m_act_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
         else if (!vals[DI_ACTIVE_FILE])
         {
-            dp->act_sf.m_refetch_secs = g_def_refetch_secs;
+            dp->m_act_sf.m_refetch_secs = g_def_refetch_secs;
         }
     }
     else
     {
-        dp->news_id = save_str(file_exp(vals[DI_ACTIVE_FILE]));
+        dp->m_news_id = save_str(file_exp(vals[DI_ACTIVE_FILE]));
     }
 
-    dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
-    if (!dp->spool_dir)
+    dp->m_spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
+    if (!dp->m_spool_dir)
     {
-        dp->spool_dir = save_str(g_tmp_dir.c_str());
+        dp->m_spool_dir = save_str(g_tmp_dir.c_str());
     }
 
-    dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
-    dp->over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
-    dp->group_desc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
-    dp->extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
-    if (dp->flags & DF_REMOTE)
+    dp->m_over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
+    dp->m_over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
+    dp->m_group_desc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
+    dp->m_extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
+    if (dp->m_flags & DF_REMOTE)
     {
         // FYI, we know extra_name to be nullptr in this case.
         if (vals[DI_ACTIVE_FILE])
         {
-            dp->extra_name = save_str(file_exp(vals[DI_ACTIVE_FILE]));
+            dp->m_extra_name = save_str(file_exp(vals[DI_ACTIVE_FILE]));
             stat_t extra_stat{};
-            if (stat(dp->extra_name,&extra_stat) >= 0)
+            if (stat(dp->m_extra_name,&extra_stat) >= 0)
             {
-                dp->act_sf.m_last_fetch = extra_stat.st_mtime;
+                dp->m_act_sf.m_last_fetch = extra_stat.st_mtime;
             }
         }
         else
         {
-            dp->extra_name = temp_filename();
-            dp->flags |= DF_TMP_ACTIVE_FILE;
-            if (!dp->act_sf.m_refetch_secs)
+            dp->m_extra_name = temp_filename();
+            dp->m_flags |= DF_TMP_ACTIVE_FILE;
+            if (!dp->m_act_sf.m_refetch_secs)
             {
-                dp->act_sf.m_refetch_secs = 1;
+                dp->m_act_sf.m_refetch_secs = 1;
             }
         }
 
         v = vals[DI_DESC_REFETCH];
         if (v != nullptr && *v)
         {
-            dp->desc_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
+            dp->m_desc_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
-        else if (!dp->group_desc)
+        else if (!dp->m_group_desc)
         {
-            dp->desc_sf.m_refetch_secs = g_def_refetch_secs;
+            dp->m_desc_sf.m_refetch_secs = g_def_refetch_secs;
         }
-        if (dp->group_desc)
+        if (dp->m_group_desc)
         {
             stat_t desc_stat{};
-            if (stat(dp->group_desc,&desc_stat) >= 0)
+            if (stat(dp->m_group_desc,&desc_stat) >= 0)
             {
-                dp->desc_sf.m_last_fetch = desc_stat.st_mtime;
+                dp->m_desc_sf.m_last_fetch = desc_stat.st_mtime;
             }
         }
         else
         {
-            dp->group_desc = temp_filename();
-            dp->flags |= DF_TMP_GROUP_DESC;
-            if (!dp->desc_sf.m_refetch_secs)
+            dp->m_group_desc = temp_filename();
+            dp->m_flags |= DF_TMP_GROUP_DESC;
+            if (!dp->m_desc_sf.m_refetch_secs)
             {
-                dp->desc_sf.m_refetch_secs = 1;
+                dp->m_desc_sf.m_refetch_secs = 1;
             }
         }
     }
     v = vals[DI_FORCE_AUTH];
     if (v != nullptr && (*v == 'y' || *v == 'Y'))
     {
-        dp->nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
+        dp->m_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
     }
     v = vals[DI_AUTH_USER];
     if (v != nullptr)
     {
-        dp->auth_user = save_str(v);
+        dp->m_auth_user = save_str(v);
     }
     v = vals[DI_AUTH_PASS];
     if (v != nullptr)
     {
-        dp->auth_pass = save_str(v);
+        dp->m_auth_pass = save_str(v);
     }
     v = vals[DI_XHDR_BROKEN];
     if (v != nullptr && (*v == 'y' || *v == 'Y'))
     {
-        dp->flags |= DF_XHDR_BROKEN;
+        dp->m_flags |= DF_XHDR_BROKEN;
     }
     v = vals[DI_XREFS];
     if (v != nullptr && (*v == 'n' || *v == 'N'))
     {
-        dp->flags |= DF_NO_XREFS;
+        dp->m_flags |= DF_NO_XREFS;
     }
 
     return dp;
@@ -379,31 +379,31 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
 {
     if (!dir || !*dir || !std::strcmp(dir, "remote"))
     {
-        dp->flags |= flag;
-        if (dp->flags & DF_REMOTE)
+        dp->m_flags |= flag;
+        if (dp->m_flags & DF_REMOTE)
         {
             return nullptr;
         }
         if (flag == DF_ADD_OK)
         {
-            char* cp = safe_malloc(std::strlen(dp->news_id)+6+1);
-            std::sprintf(cp,"%s.times",dp->news_id);
+            char* cp = safe_malloc(std::strlen(dp->m_news_id)+6+1);
+            std::sprintf(cp,"%s.times",dp->m_news_id);
             return cp;
         }
         if (flag == DF_NONE)
         {
-            char* cp = std::strrchr(dp->news_id,'/');
+            char* cp = std::strrchr(dp->m_news_id,'/');
             if (!cp)
             {
                 return nullptr;
             }
-            int len = cp - dp->news_id + 1;
+            int len = cp - dp->m_news_id + 1;
             cp = safe_malloc(len+10+1);
-            std::strcpy(cp,dp->news_id);
+            std::strcpy(cp,dp->m_news_id);
             std::strcpy(cp+len,"newsgroups");
             return cp;
         }
-        return dp->spool_dir;
+        return dp->m_spool_dir;
     }
 
     if (!std::strcmp(dir,"none"))
@@ -411,11 +411,11 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
         return nullptr;
     }
 
-    dp->flags |= flag;
+    dp->m_flags |= flag;
     dir = file_exp(dir);
-    if (!std::strcmp(dir,dp->spool_dir))
+    if (!std::strcmp(dir,dp->m_spool_dir))
     {
-        return dp->spool_dir;
+        return dp->m_spool_dir;
     }
     return save_str(dir);
 }
@@ -429,29 +429,29 @@ static char *file_or_none(char *fn)
     return save_str(file_exp(fn));
 }
 
-bool open_data_source(DataSource *dp)
+bool DataSource::open()
 {
     bool success;
 
-    if (dp->flags & DF_UNAVAILABLE)
+    if (m_flags & DF_UNAVAILABLE)
     {
         return false;
     }
-    set_data_source(dp);
-    if (dp->flags & DF_OPEN)
+    set_data_source(this);
+    if (m_flags & DF_OPEN)
     {
         return true;
     }
-    if (dp->flags & DF_REMOTE)
+    if (m_flags & DF_REMOTE)
     {
-        if (nntp_connect(dp->news_id, true) <= 0)
+        if (nntp_connect(m_news_id, true) <= 0)
         {
-            dp->flags |= DF_UNAVAILABLE;
+            m_flags |= DF_UNAVAILABLE;
             return false;
         }
         g_nntp_allow_timeout = false;
-        dp->nntp_link = g_nntp_link;
-        if (dp->act_sf.m_refetch_secs)
+        m_nntp_link = g_nntp_link;
+        if (m_act_sf.m_refetch_secs)
         {
             switch (nntp_list("active", "control", 7))
             {
@@ -459,68 +459,68 @@ bool open_data_source(DataSource *dp)
                 if (std::strncmp(g_ser_line, "control ", 8) != 0)
                 {
                     std::strcpy(g_buf, g_ser_line);
-                    dp->act_sf.m_last_fetch = 0;
-                    success = active_file_hash(dp);
+                    m_act_sf.m_last_fetch = 0;
+                    success = active_file_hash();
                     break;
                 }
                 if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_FULL_LINE //
                     && !nntp_at_list_end(g_buf))
                 {
                     nntp_finish_list();
-                    success = active_file_hash(dp);
+                    success = active_file_hash();
                     break;
                 }
                 // FALL THROUGH
 
             case 0:
-                dp->flags |= DF_USE_LIST_ACTIVE;
-                if (dp->flags & DF_TMP_ACTIVE_FILE)
+                m_flags |= DF_USE_LIST_ACTIVE;
+                if (m_flags & DF_TMP_ACTIVE_FILE)
                 {
-                    dp->flags &= ~DF_TMP_ACTIVE_FILE;
-                    std::free(dp->extra_name);
-                    dp->extra_name = nullptr;
-                    dp->act_sf.m_refetch_secs = 0;
-                    success = dp->act_sf.open(nullptr, nullptr, nullptr);
+                    m_flags &= ~DF_TMP_ACTIVE_FILE;
+                    std::free(m_extra_name);
+                    m_extra_name = nullptr;
+                    m_act_sf.m_refetch_secs = 0;
+                    success = m_act_sf.open(nullptr, nullptr, nullptr);
                 }
                 else
                 {
-                    success = active_file_hash(dp);
+                    success = active_file_hash();
                 }
                 break;
 
             case -2:
-                std::printf("Failed to open news server %s:\n%s\n", dp->news_id, g_ser_line);
+                std::printf("Failed to open news server %s:\n%s\n", m_news_id, g_ser_line);
                 term_down(2);
                 success = false;
                 break;
 
             default:
-                success = active_file_hash(dp);
+                success = active_file_hash();
                 break;
             }
         }
         else
         {
-            success = active_file_hash(dp);
+            success = active_file_hash();
         }
     }
     else
     {
-        success = active_file_hash(dp);
+        success = active_file_hash();
     }
     if (success)
     {
-        dp->flags |= DF_OPEN;
-        if (dp->flags & DF_TRY_OVERVIEW)
+        m_flags |= DF_OPEN;
+        if (m_flags & DF_TRY_OVERVIEW)
         {
             ov_init();
         }
     }
     else
     {
-        dp->flags |= DF_UNAVAILABLE;
+        m_flags |= DF_UNAVAILABLE;
     }
-    if (dp->flags & DF_REMOTE)
+    if (m_flags & DF_REMOTE)
     {
         g_nntp_allow_timeout = true;
     }
@@ -531,11 +531,11 @@ void set_data_source(DataSource *dp)
 {
     if (g_data_source)
     {
-        g_data_source->nntp_link = g_nntp_link;
+        g_data_source->m_nntp_link = g_nntp_link;
     }
     if (dp)
     {
-        g_nntp_link = dp->nntp_link;
+        g_nntp_link = dp->m_nntp_link;
     }
     g_data_source = dp;
 }
@@ -546,17 +546,17 @@ void check_data_sources()
 
     if (g_data_source_list)
     {
-        for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
+        for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
         {
-            if ((dp->flags & DF_OPEN) && dp->nntp_link.connection)
+            if ((dp->m_flags & DF_OPEN) && dp->m_nntp_link.connection)
             {
-                std::time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
-                if (now - dp->nntp_link.last_command > limit)
+                std::time_t limit = ((dp->m_flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
+                if (now - dp->m_nntp_link.last_command > limit)
                 {
                     DataSource* save_datasrc = g_data_source;
                     set_data_source(dp);
                     nntp_close(true);
-                    dp->nntp_link = g_nntp_link;
+                    dp->m_nntp_link = g_nntp_link;
                     set_data_source(save_datasrc);
                 }
             }
@@ -564,90 +564,90 @@ void check_data_sources()
     }
 }
 
-void close_data_source(DataSource *dp)
+void DataSource ::close()
 {
-    if (dp->flags & DF_REMOTE)
+    if (m_flags & DF_REMOTE)
     {
-        if (dp->flags & DF_TMP_ACTIVE_FILE)
+        if (m_flags & DF_TMP_ACTIVE_FILE)
         {
-            remove(dp->extra_name);
+            remove(m_extra_name);
         }
         else
         {
-            dp->act_sf.end_append(dp->extra_name);
+            m_act_sf.end_append(m_extra_name);
         }
-        if (dp->group_desc)
+        if (m_group_desc)
         {
-            if (dp->flags & DF_TMP_GROUP_DESC)
+            if (m_flags & DF_TMP_GROUP_DESC)
             {
-                remove(dp->group_desc);
+                remove(m_group_desc);
             }
             else
             {
-                dp->desc_sf.end_append(dp->group_desc);
+                m_desc_sf.end_append(m_group_desc);
             }
         }
     }
 
-    if (!(dp->flags & DF_OPEN))
+    if (!(m_flags & DF_OPEN))
     {
         return;
     }
 
-    if (dp->flags & DF_REMOTE)
+    if (m_flags & DF_REMOTE)
     {
         DataSource* save_datasrc = g_data_source;
-        set_data_source(dp);
+        set_data_source(this);
         nntp_close(true);
-        dp->nntp_link = g_nntp_link;
+        m_nntp_link = g_nntp_link;
         set_data_source(save_datasrc);
     }
-    dp->act_sf.close();
-    dp->desc_sf.close();
-    dp->flags &= ~DF_OPEN;
-    if (g_data_source == dp)
+    m_act_sf.close();
+    m_desc_sf.close();
+    m_flags &= ~DF_OPEN;
+    if (g_data_source == this)
     {
         g_data_source = nullptr;
     }
 }
 
-bool active_file_hash(DataSource *dp)
+bool DataSource::active_file_hash()
 {
     int ret;
-    if (dp->flags & DF_REMOTE)
+    if (m_flags & DF_REMOTE)
     {
         DataSource* save_datasrc = g_data_source;
-        set_data_source(dp);
-        g_spin_todo = dp->act_sf.m_recent_cnt;
-        ret = dp->act_sf.open(dp->extra_name, "active", dp->news_id);
+        set_data_source(this);
+        g_spin_todo = m_act_sf.m_recent_cnt;
+        ret = m_act_sf.open(m_extra_name, "active", m_news_id);
         if (g_spin_count > 0)
         {
-            dp->act_sf.m_recent_cnt = g_spin_count;
+            m_act_sf.m_recent_cnt = g_spin_count;
         }
         set_data_source(save_datasrc);
     }
     else
     {
-        ret = dp->act_sf.open(dp->news_id, nullptr, nullptr);
+        ret = m_act_sf.open(m_news_id, nullptr, nullptr);
     }
     return ret != 0;
 }
 
-bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high)
+bool DataSource::find_active_group(char *outbuf, const char *nam, int len, ArticleNum high)
 {
     ActivePosition act_pos;
-    std::FILE* fp = dp->act_sf.m_fp;
+    std::FILE* fp = m_act_sf.m_fp;
     char* lbp;
     int lbp_len;
 
     // Do a quick, hashed lookup
 
     outbuf[0] = '\0';
-    HashDatum data = hash_fetch(dp->act_sf.m_hp, nam, len);
+    HashDatum data = hash_fetch(m_act_sf.m_hp, nam, len);
     if (data.dat_ptr)
     {
         ListNode* node = (ListNode*)data.dat_ptr;
-        // dp->act_sf.lp->recent = node;
+        // m_act_sf.lp->recent = node;
         act_pos = ActivePosition{node->low + data.dat_len};
         lbp = node->data + data.dat_len;
         lbp_len = std::strchr(lbp, '\n') - lbp + 1;
@@ -657,11 +657,11 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
         lbp = nullptr;
         lbp_len = 0;
     }
-    if ((dp->flags & DF_USE_LIST_ACTIVE) //
-        && (data_source_nntp_flags(dp) & NNTP_NEW_CMD_OK))
+    if (m_flags & DF_USE_LIST_ACTIVE //
+        && nntp_flags() & NNTP_NEW_CMD_OK)
     {
         DataSource* save_datasrc = g_data_source;
-        set_data_source(dp);
+        set_data_source(this);
         switch (nntp_list("active", nam, len))
         {
         case 0:
@@ -682,7 +682,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
         {
             if (fp)
             {
-                (void) dp->act_sf.append(outbuf, len);
+                (void) m_act_sf.append(outbuf, len);
             }
             return true;
         }
@@ -716,7 +716,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
 
     if (lbp_len)
     {
-        if ((dp->flags & DF_REMOTE) && dp->act_sf.m_refetch_secs)
+        if ((m_flags & DF_REMOTE) && m_act_sf.m_refetch_secs)
         {
             char* cp;
             if (high && high != ArticleNum{std::atol(cp = lbp + len + 1)})
@@ -756,68 +756,68 @@ use_cache:
     return false;       // no such group
 }
 
-const char *find_group_desc(DataSource *dp, const char *group_name)
+const char *DataSource::find_group_desc(const char *group_name)
 {
     int grouplen;
 
-    if (!dp->group_desc)
+    if (!m_group_desc)
     {
         return "";
     }
 
-    if (!dp->desc_sf.m_hp)
+    if (!m_desc_sf.m_hp)
     {
         int ret;
-        if ((dp->flags & DF_REMOTE) && dp->desc_sf.m_refetch_secs)
+        if ((m_flags & DF_REMOTE) && m_desc_sf.m_refetch_secs)
         {
-            set_data_source(dp);
-            if ((dp->flags & (DF_TMP_GROUP_DESC | DF_NO_XGTITLE)) == DF_TMP_GROUP_DESC //
+            set_data_source(this);
+            if ((m_flags & (DF_TMP_GROUP_DESC | DF_NO_XGTITLE)) == DF_TMP_GROUP_DESC //
                 && g_net_speed < 5)
             {
-                (void) dp->desc_sf.open(nullptr, nullptr, nullptr);
+                (void) m_desc_sf.open(nullptr, nullptr, nullptr);
                 grouplen = std::strlen(group_name);
                 goto try_xgtitle;
             }
-            g_spin_todo = dp->desc_sf.m_recent_cnt;
-            ret = dp->desc_sf.open(dp->group_desc, "newsgroups", dp->news_id);
+            g_spin_todo = m_desc_sf.m_recent_cnt;
+            ret = m_desc_sf.open(m_group_desc, "newsgroups", m_news_id);
             if (g_spin_count > 0)
             {
-                dp->desc_sf.m_recent_cnt = g_spin_count;
+                m_desc_sf.m_recent_cnt = g_spin_count;
             }
         }
         else
         {
-            ret = dp->desc_sf.open(dp->group_desc, nullptr, nullptr);
+            ret = m_desc_sf.open(m_group_desc, nullptr, nullptr);
         }
         if (!ret)
         {
-            if (dp->flags & DF_TMP_GROUP_DESC)
+            if (m_flags & DF_TMP_GROUP_DESC)
             {
-                dp->flags &= ~DF_TMP_GROUP_DESC;
-                remove(dp->group_desc);
+                m_flags &= ~DF_TMP_GROUP_DESC;
+                remove(m_group_desc);
             }
-            std::free(dp->group_desc);
-            dp->group_desc = nullptr;
+            std::free(m_group_desc);
+            m_group_desc = nullptr;
             return "";
         }
-        if (ret == 2 || !dp->desc_sf.m_refetch_secs)
+        if (ret == 2 || !m_desc_sf.m_refetch_secs)
         {
-            dp->flags |= DF_NO_XGTITLE;
+            m_flags |= DF_NO_XGTITLE;
         }
     }
 
     grouplen = std::strlen(group_name);
-    if (HashDatum data = hash_fetch(dp->desc_sf.m_hp, group_name, grouplen); data.dat_ptr)
+    if (HashDatum data = hash_fetch(m_desc_sf.m_hp, group_name, grouplen); data.dat_ptr)
     {
         ListNode*node = (ListNode*)data.dat_ptr;
-        // dp->act_sf.lp->recent = node;
+        // m_act_sf.lp->recent = node;
         return node->data + data.dat_len + grouplen + 1;
     }
 
 try_xgtitle:
-    if ((dp->flags & (DF_REMOTE | DF_NO_XGTITLE)) == DF_REMOTE)
+    if ((m_flags & (DF_REMOTE | DF_NO_XGTITLE)) == DF_REMOTE)
     {
-        set_data_source(dp);
+        set_data_source(this);
         if (nntp_xgtitle(group_name) > 0)
         {
             nntp_gets(g_buf, sizeof g_buf - 1); // TODO: check return value?
@@ -830,19 +830,19 @@ try_xgtitle:
                 nntp_finish_list();
                 std::strcat(g_buf, "\n");
             }
-            group_name = dp->desc_sf.append(g_buf, grouplen);
+            group_name = m_desc_sf.append(g_buf, grouplen);
             return group_name+grouplen+1;
         }
-        dp->flags |= DF_NO_XGTITLE;
-        if (dp->desc_sf.m_lp->high == -1)
+        m_flags |= DF_NO_XGTITLE;
+        if (m_desc_sf.m_lp->high == -1)
         {
-            dp->desc_sf.close();
-            if (dp->flags & DF_TMP_GROUP_DESC)
+            m_desc_sf.close();
+            if (m_flags & DF_TMP_GROUP_DESC)
             {
-                return find_group_desc(dp, group_name);
+                return find_group_desc(group_name);
             }
-            std::free(dp->group_desc);
-            dp->group_desc = nullptr;
+            std::free(m_group_desc);
+            m_group_desc = nullptr;
         }
     }
     return "";
@@ -1193,13 +1193,13 @@ int find_close_match()
     s_newsgroup_num = 0;
 
     // Iterate over all legal newsgroups
-    for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
+    for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
     {
-        if (dp->flags & DF_OPEN)
+        if (dp->m_flags & DF_OPEN)
         {
-            if (dp->act_sf.m_hp)
+            if (dp->m_act_sf.m_hp)
             {
-                hash_walk(dp->act_sf.m_hp, check_distance, 0);
+                hash_walk(dp->m_act_sf.m_hp, check_distance, 0);
             }
             else
             {

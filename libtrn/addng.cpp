@@ -94,7 +94,7 @@ bool find_new_groups()
     {
         if (all_bits(rp->flags, RF_ADD_NEW_GROUPS | RF_ACTIVE))
         {
-            if (rp->data_source->flags & DF_REMOTE)
+            if (rp->data_source->m_flags & DF_REMOTE)
             {
                 new_nntp_groups(rp->data_source);
             }
@@ -161,7 +161,7 @@ static void new_nntp_groups(DataSource *dp)
     {
         return;
     }
-    if (nntp_new_groups(dp->last_new_group) < 1)
+    if (nntp_new_groups(dp->m_last_new_group) < 1)
     {
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
@@ -196,9 +196,9 @@ static void new_nntp_groups(DataSource *dp)
         {
             len = std::strlen(g_ser_line);
         }
-        if (dp->act_sf.m_fp)
+        if (dp->m_act_sf.m_fp)
         {
-            if (find_active_group(dp, g_buf, g_ser_line, len, ArticleNum{}))
+            if (dp->find_active_group(g_buf, g_ser_line, len, ArticleNum{}))
             {
                 if (!s)
                 {
@@ -217,7 +217,7 @@ static void new_nntp_groups(DataSource *dp)
                     s = g_ser_line + len;
                 }
                 std::sprintf(s, " %010ld %05ld %c\n", high, low, ch);
-                (void) dp->act_sf.append(g_ser_line, len);
+                (void) dp->m_act_sf.append(g_ser_line, len);
             }
         }
         if (s)
@@ -242,8 +242,8 @@ static void new_nntp_groups(DataSource *dp)
     if (found_something)
     {
         hash_walk(new_newsgroups, build_add_group_list, 0);
-        dp->act_sf.end_append(dp->extra_name);
-        dp->last_new_group = server_time;
+        dp->m_act_sf.end_append(dp->m_extra_name);
+        dp->m_last_new_group = server_time;
     }
     hash_destroy(new_newsgroups);
 }
@@ -252,17 +252,17 @@ static void new_local_groups(DataSource *dp)
 {
     g_data_source = dp;
 
-    const long file_size{static_cast<long>(std::filesystem::file_size(dp->extra_name))};
+    const long file_size{static_cast<long>(std::filesystem::file_size(dp->m_extra_name))};
     // did active.times file grow?
-    if (file_size == dp->act_sf.m_recent_cnt)
+    if (file_size == dp->m_act_sf.m_recent_cnt)
     {
         return;
     }
 
-    std::FILE *fp = std::fopen(dp->extra_name, "r");
+    std::FILE *fp = std::fopen(dp->m_extra_name, "r");
     if (fp == nullptr)
     {
-        std::printf(g_cant_open, dp->extra_name);
+        std::printf(g_cant_open, dp->m_extra_name);
         term_down(1);
         return;
     }
@@ -272,13 +272,13 @@ static void new_local_groups(DataSource *dp)
     while (std::fgets(g_buf, LINE_BUF_LEN, fp) != nullptr)
     {
         char *s;
-        if ((s = std::strchr(g_buf, ' ')) == nullptr || (last_one = std::atol(s + 1)) < dp->last_new_group)
+        if ((s = std::strchr(g_buf, ' ')) == nullptr || (last_one = std::atol(s + 1)) < dp->m_last_new_group)
         {
             continue;
         }
         *s = '\0';
         char tmp_buf[LINE_BUF_LEN];
-        if (!find_active_group(g_data_source, tmp_buf, g_buf, s - g_buf, ArticleNum{}))
+        if (!g_data_source->find_active_group(tmp_buf, g_buf, s - g_buf, ArticleNum{}))
         {
             continue;
         }
@@ -301,8 +301,8 @@ static void new_local_groups(DataSource *dp)
 
     hash_walk(new_newsgroups, build_add_group_list, 0);
     hash_destroy(new_newsgroups);
-    dp->last_new_group = last_one+1;
-    dp->act_sf.m_recent_cnt = file_size;
+    dp->m_last_new_group = last_one+1;
+    dp->m_act_sf.m_recent_cnt = file_size;
 }
 
 static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int ch)
@@ -384,16 +384,16 @@ bool scan_active(bool add_matching)
         print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
     }
 
-    for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
+    for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
     {
-        if (!(dp->flags & DF_OPEN))
+        if (!(dp->m_flags & DF_OPEN))
         {
             continue;
         }
         set_data_source(dp);
-        if (dp->act_sf.m_fp)
+        if (dp->m_act_sf.m_fp)
         {
-            hash_walk(dp->act_sf.m_hp, list_groups, add_matching);
+            hash_walk(dp->m_act_sf.m_hp, list_groups, add_matching);
         }
         else
         {

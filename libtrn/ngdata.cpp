@@ -85,7 +85,7 @@ int access_newsgroup()
 {
     ArticleNum old_first = g_newsgroup_ptr->abs_first;
 
-    if (g_data_source->flags & DF_REMOTE)
+    if (g_data_source->m_flags & DF_REMOTE)
     {
         int ret = nntp_group(g_newsgroup_name.c_str(),g_newsgroup_ptr);
         if (ret == -2)
@@ -165,7 +165,7 @@ int access_newsgroup()
 
 void chdir_news_dir()
 {
-    if (change_dir(g_data_source->spool_dir) || (!(g_data_source->flags & DF_REMOTE) && change_dir(g_newsgroup_dir)))
+    if (change_dir(g_data_source->m_spool_dir) || (!(g_data_source->m_flags & DF_REMOTE) && change_dir(g_newsgroup_dir)))
     {
         std::printf(g_no_cd,g_newsgroup_dir.c_str());
         sig_catcher(0);
@@ -287,7 +287,7 @@ void sort_newsgroups()
 
 void newsgroup_skip()
 {
-    if (g_data_source->flags & DF_REMOTE)
+    if (g_data_source->m_flags & DF_REMOTE)
     {
         clear();
         if (g_verbose)
@@ -359,7 +359,7 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
     char *nam = gp->rc_line;
     int   len = gp->num_offset - 1;
 
-    if (!find_active_group(gp->rc->data_source, tmpbuf, nam, len, gp->ng_max))
+    if (!gp->rc->data_source->find_active_group(tmpbuf, nam, len, gp->ng_max))
     {
         if (gp->subscribe_char == ':')
         {

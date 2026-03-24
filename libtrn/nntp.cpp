@@ -508,7 +508,7 @@ int nntp_new_groups(std::time_t t)
 
 int nntp_art_nums()
 {
-    if (g_data_source->flags & DF_NO_LIST_GROUP)
+    if (g_data_source->m_flags & DF_NO_LIST_GROUP)
     {
         return 0;
     }
@@ -518,7 +518,7 @@ int nntp_art_nums()
     }
     if (nntp_check() <= 0)
     {
-        g_data_source->flags |= DF_NO_LIST_GROUP;
+        g_data_source->m_flags |= DF_NO_LIST_GROUP;
         return 0;
     }
     return 1;
@@ -653,12 +653,12 @@ int nntp_handle_timeout()
     handling_timeout = true;
     std::strcpy(last_command_save, g_last_command);
     nntp_close(false);
-    g_data_source->nntp_link = g_nntp_link;
-    if (nntp_connect(g_data_source->news_id, false) <= 0)
+    g_data_source->m_nntp_link = g_nntp_link;
+    if (nntp_connect(g_data_source->m_news_id, false) <= 0)
     {
         return -2;
     }
-    g_data_source->nntp_link = g_nntp_link;
+    g_data_source->m_nntp_link = g_nntp_link;
     if (g_in_ng && nntp_group(g_newsgroup_name.c_str(), (NewsgroupData*)nullptr) <= 0)
     {
         return -2;
@@ -675,8 +675,8 @@ int nntp_handle_timeout()
 void nntp_server_died(DataSource *dp)
 {
     Multirc* mp = g_multirc;
-    close_data_source(dp);
-    dp->flags |= DF_UNAVAILABLE;
+    dp->close();
+    dp->m_flags |= DF_UNAVAILABLE;
     unuse_multirc(mp);
     if (!use_multirc(mp))
     {

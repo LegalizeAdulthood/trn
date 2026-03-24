@@ -324,7 +324,7 @@ SaveResult save_article()
         s = skip_eq(s, ' ');
         safe_copy(altbuf,file_exp(s),sizeof altbuf);
         g_save_dest = altbuf;
-        if (g_data_source->flags & DF_REMOTE)
+        if (g_data_source->m_flags & DF_REMOTE)
         {
             nntp_finish_body(FB_SILENT);
         }
@@ -508,7 +508,7 @@ reask_save:
                 std::fclose(s_tmp_fp);
             }
             safe_copy(g_cmd_buf, file_exp(s), sizeof g_cmd_buf);
-            if (g_data_source->flags & DF_REMOTE)
+            if (g_data_source->m_flags & DF_REMOTE)
             {
                 nntp_finish_body(FB_SILENT);
             }
@@ -819,7 +819,7 @@ static void follow_it_up()
     if (invoke(g_cmd_buf, g_orig_dir.c_str()) == 42)
     {
         int ret;
-        if ((g_data_source->flags & DF_REMOTE) &&
+        if ((g_data_source->m_flags & DF_REMOTE) &&
             (nntp_date() <= 0 || (nntp_check() < 0 && std::atoi(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
         {
             ret = 1;
@@ -1139,7 +1139,7 @@ int invoke(const char *cmd, const char *dir)
     MinorMode oldmode = g_mode;
     int ret = -1;
 
-    if (g_data_source->flags & DF_REMOTE)
+    if (g_data_source->m_flags & DF_REMOTE)
     {
         nntp_finish_body(FB_SILENT);
     }

@@ -226,7 +226,7 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
         break;
 
     default:
-        if (dp->flags & DF_ADD_OK)
+        if (dp->m_flags & DF_ADD_OK)
         {
             rp->flags |= RF_ADD_NEW_GROUPS;
         }
@@ -247,15 +247,15 @@ bool use_multirc(Multirc *mp)
 
     for (Newsrc *rp = mp->first; rp; rp = rp->next)
     {
-        if ((rp->data_source->flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
-            || !open_data_source(rp->data_source) || !open_newsrc(rp))
+        if ((rp->data_source->m_flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
+            || !rp->data_source->open() || !open_newsrc(rp))
         {
             unlock_newsrc(rp);
             had_trouble = true;
         }
         else
         {
-            rp->data_source->flags |= DF_ACTIVE;
+            rp->data_source->m_flags |= DF_ACTIVE;
             rp->flags |= RF_ACTIVE;
             had_success = true;
         }
@@ -291,7 +291,7 @@ void unuse_multirc(Multirc *mptr)
     {
         unlock_newsrc(rp);
         rp->flags &= ~RF_ACTIVE;
-        rp->data_source->flags &= ~DF_ACTIVE;
+        rp->data_source->m_flags &= ~DF_ACTIVE;
     }
     if (g_newsgroup_data_list)
     {
@@ -575,7 +575,7 @@ static bool open_newsrc(Newsrc *rp)
             return false;
         }
         const char *some_buf = SUBSCRIPTIONS;
-        if ((rp->data_source->flags & DF_REMOTE) //
+        if ((rp->data_source->m_flags & DF_REMOTE) //
             && nntp_list("SUBSCRIPTIONS", "", 0) == 1)
         {
             do
@@ -792,8 +792,8 @@ static bool open_newsrc(Newsrc *rp)
                 if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
                                 &g_last_new_time, &actnum, &descnum) == 3)
                 {
-                    rp->data_source->act_sf.m_recent_cnt = actnum;
-                    rp->data_source->desc_sf.m_recent_cnt = descnum;
+                    rp->data_source->m_act_sf.m_recent_cnt = actnum;
+                    rp->data_source->m_desc_sf.m_recent_cnt = descnum;
                 }
             }
             std::fclose(info);
@@ -802,18 +802,18 @@ static bool open_newsrc(Newsrc *rp)
     else
     {
         read_last();
-        if (rp->data_source->flags & DF_REMOTE)
+        if (rp->data_source->m_flags & DF_REMOTE)
         {
-            rp->data_source->act_sf.m_recent_cnt = g_last_active_size;
-            rp->data_source->desc_sf.m_recent_cnt = g_last_extra_num;
+            rp->data_source->m_act_sf.m_recent_cnt = g_last_active_size;
+            rp->data_source->m_desc_sf.m_recent_cnt = g_last_extra_num;
         }
         else
         {
-            rp->data_source->act_sf.m_recent_cnt = g_last_extra_num;
-            rp->data_source->desc_sf.m_recent_cnt = 0;
+            rp->data_source->m_act_sf.m_recent_cnt = g_last_extra_num;
+            rp->data_source->m_desc_sf.m_recent_cnt = 0;
         }
     }
-    rp->data_source->last_new_group = g_last_new_time;
+    rp->data_source->m_last_new_group = g_last_new_time;
 
     if (g_paranoid && !g_check_flag)
     {
@@ -981,7 +981,8 @@ check_fuzzy_match:
                 continue;
             }
             // TODO: this may scan a datasrc multiple times...
-            if (find_active_group(rp->data_source,g_buf,g_newsgroup_name.c_str(),g_newsgroup_name.length(),ArticleNum{}))
+            if (rp->data_source->find_active_group(g_buf, g_newsgroup_name.c_str(), g_newsgroup_name.length(),
+                                                   ArticleNum{}))
             {
                 break; // TODO: let them choose which server
             }
@@ -1701,25 +1702,25 @@ bool write_newsrcs(Multirc *mptr)
             if (info != nullptr)
             {
                 std::fprintf(info,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-                        g_newsgroup_name.c_str(),rp->data_source->last_new_group,
-                        rp->data_source->act_sf.m_recent_cnt,
-                        rp->data_source->desc_sf.m_recent_cnt);
+                        g_newsgroup_name.c_str(),rp->data_source->m_last_new_group,
+                        rp->data_source->m_act_sf.m_recent_cnt,
+                        rp->data_source->m_desc_sf.m_recent_cnt);
                 std::fclose(info);
             }
         }
         else
         {
             read_last();
-            if (rp->data_source->flags & DF_REMOTE)
+            if (rp->data_source->m_flags & DF_REMOTE)
             {
-                g_last_active_size = rp->data_source->act_sf.m_recent_cnt;
-                g_last_extra_num = rp->data_source->desc_sf.m_recent_cnt;
+                g_last_active_size = rp->data_source->m_act_sf.m_recent_cnt;
+                g_last_extra_num = rp->data_source->m_desc_sf.m_recent_cnt;
             }
             else
             {
-                g_last_extra_num = rp->data_source->act_sf.m_recent_cnt;
+                g_last_extra_num = rp->data_source->m_act_sf.m_recent_cnt;
             }
-            g_last_new_time = rp->data_source->last_new_group;
+            g_last_new_time = rp->data_source->m_last_new_group;
             write_last();
         }
 
