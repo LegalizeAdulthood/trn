@@ -317,9 +317,9 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
                 g_header_type[g_in_header].min_pos = g_art_pos;
                 if (g_in_header == DATE_LINE)
                 {
-                    if (!s_parsed_artp->date)
+                    if (!s_parsed_artp->m_date)
                     {
-                        s_parsed_artp->date = parsedate(art_buf + 6);
+                        s_parsed_artp->m_date = parsedate(art_buf + 6);
                     }
                 }
             }
@@ -344,7 +344,7 @@ void end_header()
     end_header_line();
     g_in_header = PAST_HEADER;  // just to be sure
 
-    if (!ap->subj)
+    if (!ap->m_subj)
     {
         set_subj_line(ap, "<NONE>", 6);
     }
@@ -363,7 +363,7 @@ void end_header()
     // more information.
     //
     if (g_threaded_group //
-        && (!(ap->flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= 0))
+        && (!(ap->m_flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= 0))
     {
         if (valid_article(ap))
         {
@@ -380,7 +380,7 @@ void end_header()
             check_poster(ap);
         }
     }
-    else if (!(ap->flags & AF_CACHED))
+    else if (!(ap->m_flags & AF_CACHED))
     {
         cache_article(ap);
         check_poster(ap);

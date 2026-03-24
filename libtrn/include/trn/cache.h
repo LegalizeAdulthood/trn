@@ -89,23 +89,23 @@ DECLARE_FLAGS_ENUM(ScoreFlags, std::uint16_t)
 // This is our article-caching structure
 struct Article
 {
-    ArticleNum    num;
-    std::time_t   date;
-    Subject      *subj;
-    char         *from;
-    char         *msg_id;
-    char         *xrefs;
-    Article      *parent;    // parent article
-    Article      *child1;    // first child of a chain
-    Article      *sibling;   // our next sibling
-    Article      *subj_next; // next article in subject order
-    long          bytes;
-    long          lines;
-    int           score;
-    ScoreFlags    score_flags;
-    ArticleFlags  flags;      // article state flags
-    ArticleFlags2 flags2;     // more state flags
-    AutoKillFlags auto_flags; // auto-processing flags
+    ArticleNum    m_num;
+    std::time_t   m_date;
+    Subject      *m_subj;
+    char         *m_from;
+    char         *m_msg_id;
+    char         *m_xrefs;
+    Article      *m_parent;    // parent article
+    Article      *m_child1;    // first child of a chain
+    Article      *m_sibling;   // our next sibling
+    Article      *m_subj_next; // next article in subject order
+    long          m_bytes;
+    long          m_lines;
+    int           m_score;
+    ScoreFlags    m_score_flags;
+    ArticleFlags  m_flags;      // article state flags
+    ArticleFlags2 m_flags2;     // more state flags
+    AutoKillFlags m_auto_flags; // auto-processing flags
 };
 
 // See trn/kfile.h for the AUTO_* flags
@@ -166,7 +166,7 @@ inline Article *article_ptr(ArticleNum an)
 }
 inline ArticleNum article_num(const Article *ap)
 {
-    return ap->num;
+    return ap->m_num;
 }
 inline bool article_hasdata(ArticleNum an)
 {
@@ -202,11 +202,11 @@ inline Article *article_nextp(Article *ap)
 }
 inline bool article_exists(ArticleNum an)
 {
-    return article_ptr(an)->flags & AF_EXISTS;
+    return article_ptr(an)->m_flags & AF_EXISTS;
 }
 inline bool article_unread(ArticleNum an)
 {
-    return article_ptr(an)->flags & AF_UNREAD;
+    return article_ptr(an)->m_flags & AF_UNREAD;
 }
 inline bool was_read(ArticleNum an)
 {
@@ -222,7 +222,7 @@ inline bool is_unavailable(ArticleNum an)
 }
 inline bool article_scored(ArticleNum an)
 {
-    return article_ptr(an)->score_flags & SFLAG_SCORED;
+    return article_ptr(an)->m_score_flags & SFLAG_SCORED;
 }
 
 #endif

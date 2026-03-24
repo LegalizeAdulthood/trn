@@ -40,7 +40,7 @@ Article *allocate_article(ArticleNum artnum)
     {
         article = (Article*)safe_malloc(sizeof (Article));
         std::memset((char*)article,0,sizeof (Article));
-        article->flags |= AF_FAKE|AF_TMP_MEM;
+        article->m_flags |= AF_FAKE|AF_TMP_MEM;
     }
     return article;
 }
@@ -67,14 +67,14 @@ int msg_id_cmp(const char *key, int key_len, HashDatum data)
     {
         return std::memcmp(key, data.dat_ptr, key_len);
     }
-    return std::memcmp(key, ((Article*)data.dat_ptr)->msg_id, key_len);
+    return std::memcmp(key, ((Article*)data.dat_ptr)->m_msg_id, key_len);
 }
 
 static Subject *s_fake_had_subj; // the fake-turned-real article had this subject
 
 bool valid_article(Article *article)
 {
-    char* msgid = article->msg_id;
+    char* msgid = article->m_msg_id;
 
     if (msgid)
     {
@@ -83,10 +83,10 @@ bool valid_article(Article *article)
         if (data.dat_len)
         {
             safe_free0(data.dat_ptr);
-            article->auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+            article->m_auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
             if ((data.dat_len & KF_AGE_MASK) == 0)
             {
-                article->auto_flags |= AUTO_OLD;
+                article->m_auto_flags |= AUTO_OLD;
             }
             else
             {
@@ -110,15 +110,15 @@ bool valid_article(Article *article)
 
         // Whenever we replace a fake art with a real one, it's a lot of work
         // cleaning up the references.  Fortunately, this is not often.
-        if (fake_ap && (fake_ap->flags & AF_TMP_MEM))
+        if (fake_ap && (fake_ap->m_flags & AF_TMP_MEM))
         {
-            article->parent = fake_ap->parent;
-            article->child1 = fake_ap->child1;
-            article->sibling = fake_ap->sibling;
-            s_fake_had_subj = fake_ap->subj;
-            if (fake_ap->auto_flags)
+            article->m_parent = fake_ap->m_parent;
+            article->m_child1 = fake_ap->m_child1;
+            article->m_sibling = fake_ap->m_sibling;
+            s_fake_had_subj = fake_ap->m_subj;
+            if (fake_ap->m_auto_flags)
             {
-                article->auto_flags |= fake_ap->auto_flags;
+                article->m_auto_flags |= fake_ap->m_auto_flags;
                 g_kf_state |= g_kfs_thread_change_set;
             }
             if (g_curr_artp == fake_ap)
@@ -131,25 +131,25 @@ bool valid_article(Article *article)
                 g_recent_artp = article;
                 g_recent_art = article_num(article);
             }
-            Article *ap = article->parent;
+            Article *ap = article->m_parent;
             if (ap != nullptr)
             {
-                if (ap->child1 == fake_ap)
+                if (ap->m_child1 == fake_ap)
                 {
-                    ap->child1 = article;
+                    ap->m_child1 = article;
                 }
                 else
                 {
-                    ap = ap->child1;
+                    ap = ap->m_child1;
                     // This sibling-search code is duplicated below
-                    while (ap->sibling)
+                    while (ap->m_sibling)
                     {
-                        if (ap->sibling == fake_ap)
+                        if (ap->m_sibling == fake_ap)
                         {
-                            ap->sibling = article;
+                            ap->m_sibling = article;
                             break;
                         }
-                        ap = ap->sibling;
+                        ap = ap->m_sibling;
                     }
                     // End of sibling-search code
                 }
@@ -169,21 +169,21 @@ bool valid_article(Article *article)
                 else
                 {
                     // This sibling-search code is duplicated above
-                    while (ap->sibling)
+                    while (ap->m_sibling)
                     {
-                        if (ap->sibling == fake_ap)
+                        if (ap->m_sibling == fake_ap)
                         {
-                            ap->sibling = article;
+                            ap->m_sibling = article;
                             break;
                         }
-                        ap = ap->sibling;
+                        ap = ap->m_sibling;
                     }
                     // End of sibling-search code
                 }
             }
-            for (ap = article->child1; ap; ap = ap->sibling)
+            for (ap = article->m_child1; ap; ap = ap->m_sibling)
             {
-                ap->parent = article;
+                ap->m_parent = article;
             }
             clear_article(fake_ap);
             std::free(fake_ap);
@@ -210,16 +210,16 @@ Article *get_article(char *msgid)
     if (data.dat_len)
     {
         article = allocate_article(ArticleNum{});
-        article->auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+        article->m_auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
         if ((data.dat_len & KF_AGE_MASK) == 0)
         {
-            article->auto_flags |= AUTO_OLD;
+            article->m_auto_flags |= AUTO_OLD;
         }
         else
         {
             g_kf_change_thread_cnt++;
         }
-        article->msg_id = data.dat_ptr;
+        article->m_msg_id = data.dat_ptr;
         data.dat_ptr = (char*)article;
         data.dat_len = 0;
         hash_store_last(data);
@@ -228,7 +228,7 @@ Article *get_article(char *msgid)
     {
         article = allocate_article(ArticleNum{});
         data.dat_ptr = (char*)article;
-        article->msg_id = save_str(msgid);
+        article->m_msg_id = save_str(msgid);
         hash_store_last(data);
     }
     return article;
@@ -244,44 +244,44 @@ void thread_article(Article *article, char *references)
     char* cp;
     char* end;
     AutoKillFlags chain_autofl =
-        article->auto_flags | (article->subj->articles ? article->subj->articles->auto_flags : AUTO_KILL_NONE);
+        article->m_auto_flags | (article->m_subj->articles ? article->m_subj->articles->m_auto_flags : AUTO_KILL_NONE);
     AutoKillFlags subj_autofl = AUTO_KILL_NONE;
-    const bool rethreading = (article->flags & AF_THREADED) != 0;
+    const bool rethreading = (article->m_flags & AF_THREADED) != 0;
 
     // We're definitely not a fake anymore
-    article->flags = (article->flags & ~AF_FAKE) | AF_THREADED;
+    article->m_flags = (article->m_flags & ~AF_FAKE) | AF_THREADED;
 
     // If the article was already part of an existing thread, unlink it
     // to try to put it in the best possible spot.
     if (s_fake_had_subj)
     {
-        if (s_fake_had_subj->thread != article->subj->thread)
+        if (s_fake_had_subj->thread != article->m_subj->thread)
         {
-            merge_threads(s_fake_had_subj, article->subj);
+            merge_threads(s_fake_had_subj, article->m_subj);
         }
         // Check for a real or shared-fake parent
-        ap = article->parent;
-        while (ap && (ap->flags & AF_FAKE) && !ap->child1->sibling)
+        ap = article->m_parent;
+        while (ap && (ap->m_flags & AF_FAKE) && !ap->m_child1->m_sibling)
         {
             prev = ap;
-            ap = ap->parent;
+            ap = ap->m_parent;
         }
         Article *stopper = ap;
         unlink_child(article);
         // We'll assume that this article has as good or better references
         // than the child that faked us initially.  Free the fake reference-
         // chain and process our references as usual.
-        for (ap = article->parent; ap != stopper; ap = prev)
+        for (ap = article->m_parent; ap != stopper; ap = prev)
         {
             unlink_child(ap);
-            prev = ap->parent;
-            ap->date = 0;
-            ap->subj = nullptr;
-            ap->parent = nullptr;
+            prev = ap->m_parent;
+            ap->m_date = 0;
+            ap->m_subj = nullptr;
+            ap->m_parent = nullptr;
             // don't free it until group exit since we probably re-use it
         }
-        article->parent = nullptr;              // neaten up
-        article->sibling = nullptr;
+        article->m_parent = nullptr;              // neaten up
+        article->m_sibling = nullptr;
     }
 
     // If we have references, process them from the right end one at a time
@@ -319,17 +319,17 @@ void thread_article(Article *article, char *references)
             }
             ap = get_article(cp);
             *cp = '\0';
-            chain_autofl |= ap->auto_flags;
-            if (ap->subj == article->subj)
+            chain_autofl |= ap->m_auto_flags;
+            if (ap->m_subj == article->m_subj)
             {
-                subj_autofl |= ap->auto_flags;
+                subj_autofl |= ap->m_auto_flags;
             }
 
             // Check for duplicates on the reference line.  Brand-new data has
             // no date.  Data we just allocated earlier on this line has a
             // date but no subj.  Special-case the article itself, since it
             // does have a subj.
-            if ((ap->date && !ap->subj) || ap == article)
+            if ((ap->m_date && !ap->m_subj) || ap == article)
             {
                 ap = prev;
                 if (ap == article)
@@ -341,18 +341,18 @@ void thread_article(Article *article, char *references)
 
             // When we're doing late processing of In-Reply-To: lines, we may
             // have to move an article from an old position.
-            if (rethreading && prev->subj)
+            if (rethreading && prev->m_subj)
             {
                 unlink_child(prev);
             }
-            prev->parent = ap;
+            prev->m_parent = ap;
             link_child(prev);
-            if (ap->subj)
+            if (ap->m_subj)
             {
                 break;
             }
 
-            ap->date = article->date;
+            ap->m_date = article->m_date;
             prev = ap;
 next:
             if (cp > references)
@@ -372,33 +372,33 @@ next:
 
         // Check if we ran into anybody that was already linked.  If so, we
         // just use their thread.
-        if (ap->subj)
+        if (ap->m_subj)
         {
             // See if this article spans the gap between what we thought
             // were two different threads.
-            if (article->subj->thread != ap->subj->thread)
+            if (article->m_subj->thread != ap->m_subj->thread)
             {
-                merge_threads(ap->subj, article->subj);
+                merge_threads(ap->m_subj, article->m_subj);
             }
         }
         else
         {
             // We didn't find anybody we knew, so either create a new thread
             // or use the article's thread if it was previously faked.
-            ap->subj = article->subj;
+            ap->m_subj = article->m_subj;
             link_child(ap);
         }
         // Set the subj of faked articles we created as references.
-        for (ap = article->parent; ap && !ap->subj; ap = ap->parent)
+        for (ap = article->m_parent; ap && !ap->m_subj; ap = ap->m_parent)
         {
-            ap->subj = article->subj;
+            ap->m_subj = article->m_subj;
         }
 
         // Make sure we didn't circularly link to a child article(!), by
         // ensuring that we run off the top before we run into ourself.
-        while (ap && ap->parent != article)
+        while (ap && ap->m_parent != article)
         {
-            ap = ap->parent;
+            ap = ap->m_parent;
         }
         if (ap)
         {
@@ -407,7 +407,7 @@ next:
             // really one of our ancestors. Cut off the bogus child branch
             // right where we are and link it to the thread.
             unlink_child(ap);
-            ap->parent = nullptr;
+            ap->m_parent = nullptr;
             link_child(ap);
         }
     }
@@ -422,24 +422,24 @@ no_references:
             link_child(article);
         }
     }
-    if (!(article->flags & AF_CACHED))
+    if (!(article->m_flags & AF_CACHED))
     {
         cache_article(article);
     }
     AutoKillFlags thread_autofl = chain_autofl;
     if (g_sel_mode == SM_THREAD)
     {
-        Subject* sp = article->subj->thread_link;
-        while (sp != article->subj)
+        Subject* sp = article->m_subj->thread_link;
+        while (sp != article->m_subj)
         {
             if (sp->articles)
             {
-                thread_autofl |= sp->articles->auto_flags;
+                thread_autofl |= sp->articles->m_auto_flags;
             }
             sp = sp->thread_link;
         }
     }
-    subj_autofl |= article->subj->articles->auto_flags;
+    subj_autofl |= article->m_subj->articles->m_auto_flags;
 
     perform_auto_flags(article, thread_autofl, subj_autofl, chain_autofl);
 }
@@ -454,7 +454,7 @@ void rover_thread(Article *article, char *s)
         if (std::isdigit(*s))
         {
             article = article_ptr(ArticleNum{std::atol(s)});
-            prev->parent = article;
+            prev->m_parent = article;
             link_child(prev);
             break;
         }
@@ -466,7 +466,7 @@ void rover_thread(Article *article, char *s)
         char ch = end[1];
         end[1] = '\0';
         article = get_article(s);
-        prev->parent = article;
+        prev->m_parent = article;
         link_child(prev);
         if (!ch)
         {
@@ -517,17 +517,17 @@ static void unlink_child(Article *child)
 {
     Article* last;
 
-    if (!(last = child->parent))
+    if (!(last = child->m_parent))
     {
-        Subject* sp = child->subj;
+        Subject* sp = child->m_subj;
         last = sp->thread;
         if (last == child)
         {
             do
             {
-                sp->thread = child->sibling;
+                sp->thread = child->m_sibling;
                 sp = sp->thread_link;
-            } while (sp != child->subj);
+            } while (sp != child->m_subj);
         }
         else
         {
@@ -536,21 +536,21 @@ static void unlink_child(Article *child)
     }
     else
     {
-        if (last->child1 == child)
+        if (last->m_child1 == child)
         {
-            last->child1 = child->sibling;
+            last->m_child1 = child->m_sibling;
         }
         else
         {
-            last = last->child1;
+            last = last->m_child1;
 sibling_search:
-            while (last && last->sibling != child)
+            while (last && last->m_sibling != child)
             {
-                last = last->sibling;
+                last = last->m_sibling;
             }
             if (last)
             {
-                last->sibling = child->sibling;
+                last->m_sibling = child->m_sibling;
             }
         }
     }
@@ -562,18 +562,18 @@ void link_child(Article *child)
 {
     Article* ap;
 
-    if (!(ap = child->parent))
+    if (!(ap = child->m_parent))
     {
-        Subject* sp = child->subj;
+        Subject* sp = child->m_subj;
         ap = sp->thread;
-        if (!ap || child->date < ap->date)
+        if (!ap || child->m_date < ap->m_date)
         {
             do
             {
                 sp->thread = child;
                 sp = sp->thread_link;
-            } while (sp != child->subj);
-            child->sibling = ap;
+            } while (sp != child->m_subj);
+            child->m_sibling = ap;
         }
         else
         {
@@ -582,21 +582,21 @@ void link_child(Article *child)
     }
     else
     {
-        ap = ap->child1;
-        if (!ap || child->date < ap->date)
+        ap = ap->m_child1;
+        if (!ap || child->m_date < ap->m_date)
         {
-            child->sibling = ap;
-            child->parent->child1 = child;
+            child->m_sibling = ap;
+            child->m_parent->m_child1 = child;
         }
         else
         {
 sibling_search:
-            while (ap->sibling && ap->sibling->date <= child->date)
+            while (ap->m_sibling && ap->m_sibling->m_date <= child->m_date)
             {
-                ap = ap->sibling;
+                ap = ap->m_sibling;
             }
-            child->sibling = ap->sibling;
-            ap->sibling = child;
+            child->m_sibling = ap->m_sibling;
+            ap->m_sibling = child;
         }
     }
 }
@@ -674,7 +674,7 @@ artlink:
     // Link each article that was attached to t2 to t1.
       for (t1 = t2; t1; t1 = t2)
       {
-        t2 = t2->sibling;
+        t2 = t2->m_sibling;
         link_child(t1);      // parent is null, thread is newly set
     }
 }

@@ -317,7 +317,7 @@ int do_kill_file(std::FILE *kfp, int entering)
             Article *ap = get_article(bp);
             if (ap != nullptr)
             {
-                if ((ap->flags & AF_FAKE) && !ap->child1)
+                if ((ap->m_flags & AF_FAKE) && !ap->m_child1)
                 {
                     if (*cp == 'T')
                     {
@@ -326,8 +326,8 @@ int do_kill_file(std::FILE *kfp, int entering)
                     cp = std::strchr(s_thread_cmd_ltr, *cp);
                     if (cp != nullptr)
                     {
-                        ap->auto_flags = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
-                        if (ap->auto_flags & AUTO_KILL_MASK)
+                        ap->m_auto_flags = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
+                        if (ap->m_auto_flags & AUTO_KILL_MASK)
                         {
                             thread_kill_cnt++;
                         }
@@ -342,11 +342,11 @@ int do_kill_file(std::FILE *kfp, int entering)
                     g_art = article_num(ap);
                     g_artp = ap;
                     perform(cp,false);
-                    if (ap->auto_flags & AUTO_SEL_MASK)
+                    if (ap->m_auto_flags & AUTO_SEL_MASK)
                     {
                         thread_select_cnt++;
                     }
-                    else if (ap->auto_flags & AUTO_KILL_MASK)
+                    else if (ap->m_auto_flags & AUTO_KILL_MASK)
                     {
                         thread_kill_cnt++;
                     }
@@ -405,13 +405,13 @@ int do_kill_file(std::FILE *kfp, int entering)
 static bool kill_file_junk(char *ptr, int killmask)
 {
     Article* ap = (Article*)ptr;
-    if ((ap->flags & killmask) == AF_UNREAD)
+    if ((ap->m_flags & killmask) == AF_UNREAD)
     {
         set_read(ap);
     }
-    else if (ap->flags & g_sel_mask)
+    else if (ap->m_flags & g_sel_mask)
     {
-        ap->flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+        ap->m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         if (!g_selected_count--)
         {
             g_selected_count = 0;
@@ -480,10 +480,10 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
 static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
 {
     Article* ap = (Article*)data->dat_ptr;
-    int autofl = ap->auto_flags;
+    int autofl = ap->m_auto_flags;
     char ch;
 
-    if (autofl && ((ap->flags & AF_EXISTS) || ap->child1))
+    if (autofl && ((ap->m_flags & AF_EXISTS) || ap->m_child1))
     {
         // The arrays are in priority order, so find highest priority bit.
         for (int i = 0; s_thread_cmd_ltr[i]; i++)
@@ -494,7 +494,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
                 break;
             }
         }
-        std::fprintf(s_new_kill_file_fp,"%s T%c\n", ap->msg_id, ch);
+        std::fprintf(s_new_kill_file_fp,"%s T%c\n", ap->m_msg_id, ch);
     }
     return 0;
 }
@@ -617,14 +617,14 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
     else
     {
         Article* ap = (Article*)data->dat_ptr;
-        autofl = ap->auto_flags;
+        autofl = ap->m_auto_flags;
         if (!autofl || (appending && (autofl & AUTO_OLD)))
         {
             return 0;
         }
-        ap->auto_flags |= AUTO_OLD;
+        ap->m_auto_flags |= AUTO_OLD;
         age = 0;
-        msgid = ap->msg_id;
+        msgid = ap->m_msg_id;
     }
 
     // The arrays are in priority order, so find highest priority bit.
@@ -658,9 +658,9 @@ static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
     else
     {
         Article* ap = (Article*)data->dat_ptr;
-        if (ap->auto_flags & AUTO_OLD)
+        if (ap->m_auto_flags & AUTO_OLD)
         {
-            ap->auto_flags &= ~AUTO_OLD;
+            ap->m_auto_flags &= ~AUTO_OLD;
             g_kf_change_thread_cnt++;
             g_kf_state |= KFS_THREAD_CHANGES;
         }
@@ -717,26 +717,26 @@ void update_thread_kill_file()
 
 void change_auto_flags(Article *ap, AutoKillFlags auto_flag)
 {
-    if (auto_flag > (ap->auto_flags & (AUTO_KILL_MASK | AUTO_SEL_MASK)))
+    if (auto_flag > (ap->m_auto_flags & (AUTO_KILL_MASK | AUTO_SEL_MASK)))
     {
-        if (ap->auto_flags & AUTO_OLD)
+        if (ap->m_auto_flags & AUTO_OLD)
         {
             g_kf_change_thread_cnt++;
         }
-        ap->auto_flags = auto_flag;
+        ap->m_auto_flags = auto_flag;
         g_kf_state |= g_kfs_thread_change_set;
     }
 }
 
 void clear_auto_flags(Article *ap)
 {
-    if (ap->auto_flags)
+    if (ap->m_auto_flags)
     {
-        if (ap->auto_flags & AUTO_OLD)
+        if (ap->m_auto_flags & AUTO_OLD)
         {
             g_kf_change_thread_cnt++;
         }
-        ap->auto_flags = AUTO_KILL_NONE;
+        ap->m_auto_flags = AUTO_KILL_NONE;
         g_kf_state |= g_kfs_thread_change_set;
     }
 }
@@ -762,7 +762,7 @@ void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags s
     {
         select_sub_thread(ap, AUTO_SEL_FOL);
     }
-    else if (ap->auto_flags & AUTO_SEL_1)
+    else if (ap->m_auto_flags & AUTO_SEL_1)
     {
         select_article(ap, AUTO_SEL_1);
     }
@@ -786,7 +786,7 @@ void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags s
     {
         kill_sub_thread(ap, AFFECT_ALL | AUTO_KILL_FOL);
     }
-    else if (ap->auto_flags & AUTO_KILL_1)
+    else if (ap->m_auto_flags & AUTO_KILL_1)
     {
         mark_as_read(ap);
     }
@@ -861,7 +861,7 @@ void edit_kill_file()
                         cp = std::strchr(s_thread_cmd_ltr, *cp);
                         if (cp != nullptr)
                         {
-                            ap->auto_flags |= s_thread_cmd_flag[cp - s_thread_cmd_ltr];
+                            ap->m_auto_flags |= s_thread_cmd_flag[cp - s_thread_cmd_ltr];
                         }
                     }
                 }

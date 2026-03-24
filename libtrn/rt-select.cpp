@@ -250,7 +250,7 @@ sel_restart:
         if (g_curr_artp)
         {
             g_sel_last_ap = g_curr_artp;
-            g_sel_last_sp = g_curr_artp->subj;
+            g_sel_last_sp = g_curr_artp->m_subj;
         }
         g_sel_mask = AGF_SEL;
     }
@@ -1362,11 +1362,11 @@ reinp_selector:
             Article *ap = g_sel_items[g_sel_item_index].u.ap;
             if (g_sel_items[g_sel_item_index].sel)
             {
-                deselect_subject(ap->subj);
+                deselect_subject(ap->m_subj);
             }
             else
             {
-                select_subject(ap->subj, AUTO_KILL_NONE);
+                select_subject(ap->m_subj, AUTO_KILL_NONE);
             }
             update_page();
         }
@@ -1720,7 +1720,7 @@ static bool delay_return_item(Selection u)
         {
             for (ap = first_art(u.sp); ap; ap = next_article(ap))
             {
-                if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
+                if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
                 {
                     delay_unmark(ap);
                 }
@@ -1728,9 +1728,9 @@ static bool delay_return_item(Selection u)
         }
         else
         {
-            for (ap = u.sp->articles; ap; ap = ap->subj_next)
+            for (ap = u.sp->articles; ap; ap = ap->m_subj_next)
             {
-                if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
+                if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
                 {
                     delay_unmark(ap);
                 }
@@ -1998,9 +1998,9 @@ static void sel_cleanup()
 static bool mark_del_as_read(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
-    if (ap->flags & AF_DEL)
+    if (ap->m_flags & AF_DEL)
     {
-        ap->flags &= ~AF_DEL;
+        ap->m_flags &= ~AF_DEL;
         set_read(ap);
     }
     return false;
@@ -2364,7 +2364,7 @@ static DisplayState article_commands(char_int ch)
         if (g_sel_mode == SM_ARTICLE)
         {
             set_selector(g_sel_thread_mode, SS_MAGIC_NUMBER);
-            g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->subj : nullptr;
+            g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->m_subj : nullptr;
         }
         else
         {
@@ -2553,9 +2553,9 @@ reask_sort:
                 while (app < limit)
                 {
                     Article *ap = *app;
-                    if ((!(ap->flags & AF_SEL) ^ (ch == 'J')) || (ap->flags & AF_DEL))
+                    if ((!(ap->m_flags & AF_SEL) ^ (ch == 'J')) || (ap->m_flags & AF_DEL))
                     {
-                        if (ch == 'J' || !g_sel_exclusive || (ap->flags & AF_INCLUDED))
+                        if (ch == 'J' || !g_sel_exclusive || (ap->m_flags & AF_INCLUDED))
                         {
                             set_read(ap);
                         }

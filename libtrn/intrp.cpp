@@ -1085,7 +1085,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     const bool unseen = g_art <= g_last_art && !was_read(g_art);
                     if (g_selected_only)
                     {
-                        const bool selected = g_curr_artp != nullptr && (g_curr_artp->flags & AF_SEL) != AF_NONE;
+                        const bool selected = g_curr_artp != nullptr && (g_curr_artp->m_flags & AF_SEL) != AF_NONE;
                         std::sprintf(scrbuf, "%ld", g_selected_count - (selected && unseen ? 1 : 0));
                     }
                     else
@@ -1100,7 +1100,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 {
                     if (g_in_ng)
                     {
-                        const bool selected = g_curr_artp && g_curr_artp->flags & AF_SEL;
+                        const bool selected = g_curr_artp && g_curr_artp->m_flags & AF_SEL;
                         const bool unseen = g_art <= g_last_art && !was_read(g_art);
                         std::sprintf(scrbuf, "%ld",
                                 g_newsgroup_ptr->to_read - g_selected_count - (!selected && unseen ? 1 : 0));

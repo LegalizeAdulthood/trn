@@ -80,7 +80,7 @@ void rc_to_bits()
         ArticleNum n;
         for (n = article_first(g_abs_first); n < g_first_art; n = article_next(n))
         {
-            article_ptr(n)->flags &= ~AF_UNREAD;
+            article_ptr(n)->m_flags &= ~AF_UNREAD;
         }
         g_first_art = n;
     }
@@ -118,19 +118,19 @@ void rc_to_bits()
         for (; n < min; n = article_next(n))
         {
             ap = article_ptr(n);
-            if (ap->flags & AF_EXISTS)
+            if (ap->m_flags & AF_EXISTS)
             {
-                if (ap->auto_flags & AUTO_KILL_MASK)
+                if (ap->m_auto_flags & AUTO_KILL_MASK)
                 {
-                    ap->flags &= ~AF_UNREAD;
+                    ap->m_flags &= ~AF_UNREAD;
                 }
                 else
                 {
-                    ap->flags |= AF_UNREAD;
+                    ap->m_flags |= AF_UNREAD;
                     ++unread;
-                    if (ap->auto_flags & AUTO_SEL_MASK)
+                    if (ap->m_auto_flags & AUTO_SEL_MASK)
                     {
-                        select_article(ap, ap->auto_flags);
+                        select_article(ap, ap->m_auto_flags);
                     }
                 }
             }
@@ -147,7 +147,7 @@ void rc_to_bits()
         // mark all arts in range as read
         for ( ; n <= max; n = article_next(n))
         {
-            article_ptr(n)->flags &= ~AF_UNREAD;
+            article_ptr(n)->m_flags &= ~AF_UNREAD;
         }
 #ifdef DEBUG
         if (g_debug & DEB_CTLAREA_BITMAP)
@@ -168,19 +168,19 @@ void rc_to_bits()
     for (; n <= g_last_art; n = article_next(n))
     {
         ap = article_ptr(n);
-        if (ap->flags & AF_EXISTS)
+        if (ap->m_flags & AF_EXISTS)
         {
-            if (ap->auto_flags & AUTO_KILL_MASK)
+            if (ap->m_auto_flags & AUTO_KILL_MASK)
             {
-                ap->flags &= ~AF_UNREAD;
+                ap->m_flags &= ~AF_UNREAD;
             }
             else
             {
-                ap->flags |= AF_UNREAD;
+                ap->m_flags |= AF_UNREAD;
                 ++unread;
-                if (ap->auto_flags & AUTO_SEL_MASK)
+                if (ap->m_auto_flags & AUTO_SEL_MASK)
                 {
-                    select_article(ap, ap->auto_flags);
+                    select_article(ap, ap->m_auto_flags);
                 }
             }
         }
@@ -334,7 +334,7 @@ void find_existing_articles()
                  ap && article_num(ap) <= g_last_art;
                  ap = article_nextp(ap))
             {
-                ap->flags &= ~AF_EXISTS;
+                ap->m_flags &= ~AF_EXISTS;
             }
             while (true)
             {
@@ -352,9 +352,9 @@ void find_existing_articles()
                     continue;   // Ignore some whacked-out NNTP servers
                 }
                 ap = article_ptr(an);
-                if (!(ap->flags2 & AF2_BOGUS))
+                if (!(ap->m_flags2 & AF2_BOGUS))
                 {
-                    ap->flags |= AF_EXISTS;
+                    ap->m_flags |= AF_EXISTS;
                 }
 #if 0
                 s = std::strchr(g_ser_line, ' ');
@@ -373,26 +373,26 @@ void find_existing_articles()
                      ap && article_num(ap) <= g_last_cached;
                      ap = article_nextp(ap))
                 {
-                    if (ap->flags & AF_CACHED)
+                    if (ap->m_flags & AF_CACHED)
                     {
-                        ap->flags |= AF_EXISTS;
+                        ap->m_flags |= AF_EXISTS;
                     }
                 }
             }
             for (an = g_abs_first; an < g_first_cached; ++an)
             {
                 ap = article_ptr(an);
-                if (!(ap->flags2 & AF2_BOGUS))
+                if (!(ap->m_flags2 & AF2_BOGUS))
                 {
-                    ap->flags |= AF_EXISTS;
+                    ap->m_flags |= AF_EXISTS;
                 }
             }
             for (an = article_after(g_last_cached); an <= g_last_art; ++an)
             {
                 ap = article_ptr(an);
-                if (!(ap->flags2 & AF2_BOGUS))
+                if (!(ap->m_flags2 & AF2_BOGUS))
                 {
-                    ap->flags |= AF_EXISTS;
+                    ap->m_flags |= AF_EXISTS;
                 }
             }
         }
@@ -401,9 +401,9 @@ void find_existing_articles()
             for (an = g_abs_first; an <= g_last_art; ++an)
             {
                 ap = article_ptr(an);
-                if (!(ap->flags2 & AF2_BOGUS))
+                if (!(ap->m_flags2 & AF2_BOGUS))
                 {
-                    ap->flags |= AF_EXISTS;
+                    ap->m_flags |= AF_EXISTS;
                 }
             }
         }
@@ -428,7 +428,7 @@ void find_existing_articles()
              ap && article_num(ap) <= g_last_art;
              ap = article_nextp(ap))
         {
-            ap->flags &= ~AF_EXISTS;
+            ap->m_flags &= ~AF_EXISTS;
         }
 
         for (const fs::directory_entry &entry : entries)
@@ -442,9 +442,9 @@ void find_existing_articles()
                     first = std::min(an, first);
                     last = std::max(an, last);
                     ap = article_ptr(an);
-                    if (!(ap->flags2 & AF2_BOGUS))
+                    if (!(ap->m_flags2 & AF2_BOGUS))
                     {
-                        ap->flags |= AF_EXISTS;
+                        ap->m_flags |= AF_EXISTS;
                     }
                 }
             }
@@ -483,26 +483,26 @@ void find_existing_articles()
 
 void one_more(Article *ap)
 {
-    if (!(ap->flags & AF_UNREAD))
+    if (!(ap->m_flags & AF_UNREAD))
     {
         ArticleNum art_num = article_num(ap);
         check_first(art_num);
-        ap->flags |= AF_UNREAD;
-        ap->flags &= ~AF_DEL;
+        ap->m_flags |= AF_UNREAD;
+        ap->m_flags &= ~AF_DEL;
         g_newsgroup_ptr->to_read++;
-        if (ap->subj)
+        if (ap->m_subj)
         {
             if (g_selected_only)
             {
-                if (ap->subj->flags & static_cast<SubjectFlags>(g_sel_mask))
+                if (ap->m_subj->flags & static_cast<SubjectFlags>(g_sel_mask))
                 {
-                    ap->flags |= static_cast<ArticleFlags>(g_sel_mask);
+                    ap->m_flags |= static_cast<ArticleFlags>(g_sel_mask);
                     g_selected_count++;
                 }
             }
             else
             {
-                ap->subj->flags |= SF_VISIT;
+                ap->m_subj->flags |= SF_VISIT;
             }
         }
     }
@@ -512,14 +512,14 @@ void one_more(Article *ap)
 
 void one_less(Article *ap)
 {
-    if (ap->flags & AF_UNREAD)
+    if (ap->m_flags & AF_UNREAD)
     {
-        ap->flags &= ~AF_UNREAD;
+        ap->m_flags &= ~AF_UNREAD;
         // Keep g_selected_count accurate
-        if (ap->flags & static_cast<ArticleFlags>(g_sel_mask))
+        if (ap->m_flags & static_cast<ArticleFlags>(g_sel_mask))
         {
             g_selected_count--;
-            ap->flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+            ap->m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         }
         if (g_newsgroup_ptr->to_read > TR_NONE)
         {
@@ -539,9 +539,9 @@ void one_less_art_num(ArticleNum art_num)
 
 void one_missing(Article *ap)
 {
-    g_missing_count += (ap->flags & AF_UNREAD) != 0;
+    g_missing_count += (ap->m_flags & AF_UNREAD) != 0;
     one_less(ap);
-    ap->flags = (ap->flags & ~(AF_HAS_RE|AF_YANK_BACK|AF_EXISTS))
+    ap->m_flags = (ap->m_flags & ~(AF_HAS_RE|AF_YANK_BACK|AF_EXISTS))
               | AF_CACHED|AF_THREADED;
 }
 
@@ -551,9 +551,9 @@ void unmark_as_read(Article *ap)
 {
     one_more(ap);
 #ifdef MCHASE
-    if (!empty(ap->xrefs) && !(ap->flags & AF_MCHASE))
+    if (!empty(ap->m_xrefs) && !(ap->m_flags & AF_MCHASE))
     {
-        ap->flags |= AF_MCHASE;
+        ap->m_flags |= AF_MCHASE;
         s_chase_count++;
     }
 #endif
@@ -565,9 +565,9 @@ void unmark_as_read(Article *ap)
 void set_read(Article *ap)
 {
     one_less(ap);
-    if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_K_CHASE))
+    if (!g_olden_days && !empty(ap->m_xrefs) && !(ap->m_flags & AF_K_CHASE))
     {
-        ap->flags |= AF_K_CHASE;
+        ap->m_flags |= AF_K_CHASE;
         s_chase_count++;
     }
 }
@@ -577,9 +577,9 @@ void set_read(Article *ap)
 
 void delay_unmark(Article *ap)
 {
-    if (!(ap->flags & AF_YANK_BACK))
+    if (!(ap->m_flags & AF_YANK_BACK))
     {
-        ap->flags |= AF_YANK_BACK;
+        ap->m_flags |= AF_YANK_BACK;
         g_dm_count++;
     }
 }
@@ -590,9 +590,9 @@ void delay_unmark(Article *ap)
 void mark_as_read(Article *ap)
 {
     one_less(ap);
-    if (!empty(ap->xrefs) && !(ap->flags & AF_K_CHASE))
+    if (!empty(ap->m_xrefs) && !(ap->m_flags & AF_K_CHASE))
     {
-        ap->flags |= AF_K_CHASE;
+        ap->m_flags |= AF_K_CHASE;
         s_chase_count++;
     }
     g_check_count++;             // get more worried about crashes
@@ -604,7 +604,7 @@ void mark_missing_articles()
          ap && article_num(ap) <= g_last_art;
          ap = article_nextp(ap))
     {
-        if (!(ap->flags & AF_EXISTS))
+        if (!(ap->m_flags & AF_EXISTS))
         {
             one_missing(ap);
         }
@@ -645,14 +645,14 @@ void yank_back()
 static bool yank_article(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
-    if (ap->flags & AF_YANK_BACK)
+    if (ap->m_flags & AF_YANK_BACK)
     {
         unmark_as_read(ap);
         if (g_selected_only)
         {
             select_article(ap, AUTO_KILL_NONE);
         }
-        ap->flags &= ~AF_YANK_BACK;
+        ap->m_flags &= ~AF_YANK_BACK;
     }
     return false;
 }
@@ -677,20 +677,20 @@ static bool check_chase(char *ptr, int until_key)
 {
     Article* ap = (Article*)ptr;
 
-    if (ap->flags & AF_K_CHASE)
+    if (ap->m_flags & AF_K_CHASE)
     {
         chase_xref(article_num(ap), true);
-        ap->flags &= ~AF_K_CHASE;
+        ap->m_flags &= ~AF_K_CHASE;
         if (!--s_chase_count)
         {
             return true;
         }
     }
 #ifdef MCHASE
-    if (ap->flags & AF_MCHASE)
+    if (ap->m_flags & AF_MCHASE)
     {
         chase_xref(article_num(ap), true);
-        ap->flags &= ~AF_MCHASE;
+        ap->m_flags &= ~AF_MCHASE;
         if (!--s_chase_count)
         {
             return 1;

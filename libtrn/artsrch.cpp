@@ -448,7 +448,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             break;
         }
         g_artp = article_ptr(g_art);
-        if (do_read || (!(g_artp->flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE)))
+        if (do_read || (!(g_artp->m_flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE)))
         {
             if (wanted(compex, g_art, how_much))
             {
@@ -489,7 +489,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
 {
     Article* ap = article_find(art_num);
 
-    if (!ap || !(ap->flags & AF_EXISTS))
+    if (!ap || !(ap->m_flags & AF_EXISTS))
     {
         return false;
     }

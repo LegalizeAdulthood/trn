@@ -90,7 +90,7 @@ void build_cache()
         }
         for (ArticleNum an{article_after(g_last_cached)}; an <= g_last_art; ++an)
         {
-            article_ptr(an)->flags |= AF_EXISTS;
+            article_ptr(an)->m_flags |= AF_EXISTS;
         }
         rc_to_bits();
         g_article_list->high = g_last_art.value_of();
@@ -172,7 +172,7 @@ static void init_article_node(List *list, ListNode *node)
     Article *ap = (Article *) node->data;
     for (ArticleNum i = ArticleNum{node->low}; i <= ArticleNum{node->high}; ++i, ++ap)
     {
-        ap->num = i;
+        ap->m_num = i;
     }
 }
 
@@ -190,34 +190,34 @@ void cache_article(Article *ap)
     Article* next;
     Article* ap2;
 
-    if (!(next = ap->subj->articles) || ap->date < next->date)
+    if (!(next = ap->m_subj->articles) || ap->m_date < next->m_date)
     {
-        ap->subj->articles = ap;
+        ap->m_subj->articles = ap;
     }
     else
     {
-        while ((next = (ap2 = next)->subj_next) && next->date <= ap->date)
+        while ((next = (ap2 = next)->m_subj_next) && next->m_date <= ap->m_date)
         {
         }
-        ap2->subj_next = ap;
+        ap2->m_subj_next = ap;
     }
-    ap->subj_next = next;
-    ap->flags |= AF_CACHED;
+    ap->m_subj_next = next;
+    ap->m_flags |= AF_CACHED;
 
-    if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
+    if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
     {
-        if (ap->subj->flags & g_sel_mask)
+        if (ap->m_subj->flags & g_sel_mask)
         {
             select_article(ap, AUTO_KILL_NONE);
         }
         else
         {
-            if (ap->subj->flags & SF_WAS_SELECTED)
+            if (ap->m_subj->flags & SF_WAS_SELECTED)
             {
 #if 0
                 if (g_selected_only)
                 {
-                    ap->flags |= g_sel_mask;
+                    ap->m_flags |= g_sel_mask;
                 }
                 else
 #endif
@@ -225,7 +225,7 @@ void cache_article(Article *ap)
                     select_article(ap, AUTO_KILL_NONE);
                 }
             }
-            ap->subj->flags |= SF_VISIT;
+            ap->m_subj->flags |= SF_VISIT;
         }
     }
 
@@ -245,7 +245,7 @@ void check_for_near_subj(Article *ap)
     }
     else
     {
-        sp = ap->subj;
+        sp = ap->m_subj;
         if (sp->next)
         {
             sp = nullptr;
@@ -290,13 +290,13 @@ void change_join_subject_len(int len)
 
 void check_poster(Article *ap)
 {
-    if (g_auto_select_postings && (ap->flags & AF_EXISTS) && ap->from)
+    if (g_auto_select_postings && (ap->m_flags & AF_EXISTS) && ap->m_from)
     {
         {
             char* s = g_cmd_buf;
             char* u;
             char* h;
-            std::strcpy(s,ap->from);
+            std::strcpy(s,ap->m_from);
             if ((h=std::strchr(s,'<')) != nullptr)   // grab the good part
             {
                 s = h+1;
@@ -342,9 +342,9 @@ void check_poster(Article *ap)
                         break;
 
                     case 'p':
-                        if (ap->parent)
+                        if (ap->m_parent)
                         {
-                            select_sub_thread(ap->parent,AUTO_SEL_FOL);
+                            select_sub_thread(ap->m_parent,AUTO_SEL_FOL);
                         }
                         else
                         {
@@ -375,32 +375,32 @@ void check_poster(Article *ap)
 //
 void uncache_article(Article *ap, bool remove_empties)
 {
-    if (ap->subj)
+    if (ap->m_subj)
     {
-        if (all_bits(ap->flags, AF_CACHED | AF_EXISTS))
+        if (all_bits(ap->m_flags, AF_CACHED | AF_EXISTS))
         {
-            Article *next = ap->subj->articles;
+            Article *next = ap->m_subj->articles;
             if (next == ap)
             {
-                ap->subj->articles = ap->subj_next;
+                ap->m_subj->articles = ap->m_subj_next;
             }
             else
             {
                 while (next)
                 {
-                    Article *ap2 = next->subj_next;
+                    Article *ap2 = next->m_subj_next;
                     if (ap2 == ap)
                     {
-                        next->subj_next = ap->subj_next;
+                        next->m_subj_next = ap->m_subj_next;
                         break;
                     }
                     next = ap2;
                 }
             }
         }
-        if (remove_empties && !ap->subj->articles)
+        if (remove_empties && !ap->m_subj->articles)
         {
-            Subject* sp = ap->subj;
+            Subject* sp = ap->m_subj;
             if (sp == g_first_subject)
             {
                 g_first_subject = sp->next;
@@ -419,11 +419,11 @@ void uncache_article(Article *ap, bool remove_empties)
             }
             hash_delete(s_subj_hash, sp->str+4, std::strlen(sp->str+4));
             std::free((char*)sp);
-            ap->subj = nullptr;
+            ap->m_subj = nullptr;
             g_subject_count--;
         }
     }
-    ap->flags2 |= AF2_BOGUS;
+    ap->m_flags2 |= AF2_BOGUS;
     one_missing(ap);
 }
 
@@ -436,7 +436,7 @@ char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache
     bool cached = (g_header_type[which_line].flags & HT_CACHED);
 
     // article_find() returns a nullptr if the article number value is invalid
-    if (!(ap = article_find(art_num)) || !(ap->flags & AF_EXISTS))
+    if (!(ap = article_find(art_num)) || !(ap->m_flags & AF_EXISTS))
     {
         return "";
     }
@@ -469,32 +469,32 @@ char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
     switch (which_line)
     {
     case SUBJ_LINE:
-        if (!ap->subj || (no_truncs && (ap->subj->flags & SF_SUBJ_TRUNCATED)))
+        if (!ap->m_subj || (no_truncs && (ap->m_subj->flags & SF_SUBJ_TRUNCATED)))
         {
             s = nullptr;
         }
         else
         {
-            s = ap->subj->str + ((ap->flags & AF_HAS_RE) ? 0 : 4);
+            s = ap->m_subj->str + ((ap->m_flags & AF_HAS_RE) ? 0 : 4);
         }
         break;
 
     case FROM_LINE:
-        s = ap->from;
+        s = ap->m_from;
         break;
 
     case XREF_LINE:
-        s = ap->xrefs;
+        s = ap->m_xrefs;
         break;
 
     case MSG_ID_LINE:
-        s = ap->msg_id;
+        s = ap->m_msg_id;
         break;
 
     case LINES_LINE:
     {
         static char lines_buf[32];
-        std::sprintf(lines_buf, "%ld", ap->lines);
+        std::sprintf(lines_buf, "%ld", ap->m_lines);
         s = lines_buf;
         break;
     }
@@ -502,7 +502,7 @@ char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
     case BYTES_LINE:
     {
         static char bytes_buf[32];
-        std::sprintf(bytes_buf, "%ld", ap->bytes);
+        std::sprintf(bytes_buf, "%ld", ap->m_bytes);
         s = bytes_buf;
         break;
     }
@@ -523,7 +523,7 @@ void set_subj_line(Article *ap, char *subj, int size)
 
     if (subject_has_re(subj, &subj_start))
     {
-        ap->flags |= AF_HAS_RE;
+        ap->m_flags |= AF_HAS_RE;
     }
     if ((size -= subj_start - subj) < 0)
     {
@@ -537,7 +537,7 @@ void set_subj_line(Article *ap, char *subj, int size)
     // Do the Re:-stripping over again, just in case it was encoded.
     if (subject_has_re(new_subj + 4, &subj_start))
     {
-        ap->flags |= AF_HAS_RE;
+        ap->m_flags |= AF_HAS_RE;
     }
     if (subj_start != new_subj + 4)
     {
@@ -547,19 +547,19 @@ void set_subj_line(Article *ap, char *subj, int size)
             size = 0;
         }
     }
-    if (ap->subj && !std::strncmp(ap->subj->str + 4, new_subj + 4, size))
+    if (ap->m_subj && !std::strncmp(ap->m_subj->str + 4, new_subj + 4, size))
     {
         std::free(new_subj);
         return;
     }
 
-    if (ap->subj)
+    if (ap->m_subj)
     {
         // This only happens when we freshen truncated subjects
-        hash_delete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
-        std::free(ap->subj->str);
-        ap->subj->str = new_subj;
-        data.dat_ptr = (char*)ap->subj;
+        hash_delete(s_subj_hash, ap->m_subj->str+4, std::strlen(ap->m_subj->str+4));
+        std::free(ap->m_subj->str);
+        ap->m_subj->str = new_subj;
+        data.dat_ptr = (char*)ap->m_subj;
         hash_store(s_subj_hash, new_subj + 4, size, data);
     }
     else
@@ -591,7 +591,7 @@ void set_subj_line(Article *ap, char *subj, int size)
         {
             std::free(new_subj);
         }
-        ap->subj = sp;
+        ap->m_subj = sp;
     }
 }
 
@@ -728,18 +728,18 @@ void set_cached_line(Article *ap, int which_line, char *s)
     switch (which_line)
     {
     case FROM_LINE:
-        if (ap->from)
+        if (ap->m_from)
         {
-            std::free(ap->from);
+            std::free(ap->m_from);
         }
         decode_header(s, s, std::strlen(s));
-        ap->from = s;
+        ap->m_from = s;
         break;
 
     case XREF_LINE:
-        if (!empty(ap->xrefs))
+        if (!empty(ap->m_xrefs))
         {
-            std::free(ap->xrefs);
+            std::free(ap->m_xrefs);
         }
         // Exclude an xref for just this group or "(none)".
         cp = std::strchr(s, ':');
@@ -748,23 +748,23 @@ void set_cached_line(Article *ap, int which_line, char *s)
             std::free(s);
             s = save_str("");
         }
-        ap->xrefs = s;
+        ap->m_xrefs = s;
         break;
 
     case MSG_ID_LINE:
-        if (ap->msg_id)
+        if (ap->m_msg_id)
         {
-            std::free(ap->msg_id);
+            std::free(ap->m_msg_id);
         }
-        ap->msg_id = s;
+        ap->m_msg_id = s;
         break;
 
     case LINES_LINE:
-        ap->lines = std::atol(s);
+        ap->m_lines = std::atol(s);
         break;
 
     case BYTES_LINE:
-        ap->bytes = std::atol(s);
+        ap->m_bytes = std::atol(s);
         break;
     }
 }
@@ -1055,7 +1055,7 @@ bool cache_all_arts()
     }
     // We're all done threading the group, so if the current article is
     // still in doubt, tell them it's missing.
-    if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
+    if (g_curr_artp && !(g_curr_artp->m_flags & AF_CACHED) && !input_pending())
     {
         push_char('\f' | 0200);
     }
@@ -1099,7 +1099,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
     // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
     for (i = article_first(first); i <= last; i = article_next(i))
     {
-        if ((article_ptr(i)->flags & cache_mask) ^ cache_mask2)
+        if ((article_ptr(i)->m_flags & cache_mask) ^ cache_mask2)
         {
             continue;
         }
@@ -1215,16 +1215,16 @@ bool cache_range(ArticleNum first, ArticleNum last)
 
 void clear_article(Article *ap)
 {
-    if (ap->from)
+    if (ap->m_from)
     {
-        std::free(ap->from);
+        std::free(ap->m_from);
     }
-    if (ap->msg_id)
+    if (ap->m_msg_id)
     {
-        std::free(ap->msg_id);
+        std::free(ap->m_msg_id);
     }
-    if (!empty(ap->xrefs))
+    if (!empty(ap->m_xrefs))
     {
-        std::free(ap->xrefs);
+        std::free(ap->m_xrefs);
     }
 }

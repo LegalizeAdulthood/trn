@@ -216,7 +216,7 @@ beginning:
     while (true)
     {
         artnum = article_first(first);
-        if (artnum > first || !(article_ptr(artnum)->flags & AF_CACHED))
+        if (artnum > first || !(article_ptr(artnum)->m_flags & AF_CACHED))
         {
             break;
         }
@@ -239,7 +239,7 @@ beginning:
     while (true)
     {
         artnum = article_last(last);
-        if (artnum < last || !(article_ptr(artnum)->flags & AF_CACHED))
+        if (artnum < last || !(article_ptr(artnum)->m_flags & AF_CACHED))
         {
             break;
         }
@@ -366,7 +366,7 @@ beginning:
              ap && article_num(ap) <= artnum;
              ap = article_nextp(ap))
         {
-            if (!(ap->flags & cachemask))
+            if (!(ap->m_flags & cachemask))
             {
                 one_missing(ap);
             }
@@ -438,7 +438,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     char         *tab;
 
     Article *article = article_ptr(artnum);
-    if (article->flags & AF_THREADED)
+    if (article->m_flags & AF_THREADED)
     {
         g_spin_todo--;
         return;
@@ -505,48 +505,48 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
         return;         // skip this line if it's too short
     }
 
-    if (!article->subj)
+    if (!article->m_subj)
     {
         set_subj_line(article, fields[OV_SUBJ], std::strlen(fields[OV_SUBJ]));
     }
-    if (!article->msg_id)
+    if (!article->m_msg_id)
     {
         set_cached_line(article, MSG_ID_LINE, save_str(fields[OV_MSG_ID]));
     }
-    if (!article->from)
+    if (!article->m_from)
     {
         set_cached_line(article, FROM_LINE, save_str(fields[OV_FROM]));
     }
-    if (!article->date)
+    if (!article->m_date)
     {
-        article->date = parsedate(fields[OV_DATE]);
+        article->m_date = parsedate(fields[OV_DATE]);
     }
-    if (!article->bytes && fields[OV_BYTES])
+    if (!article->m_bytes && fields[OV_BYTES])
     {
         set_cached_line(article, BYTES_LINE, fields[OV_BYTES]);
     }
-    if (!article->lines && fields[OV_LINES])
+    if (!article->m_lines && fields[OV_LINES])
     {
         set_cached_line(article, LINES_LINE, fields[OV_LINES]);
     }
 
     if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD))
     {
-        if (!article->xrefs && fields[OV_XREF])
+        if (!article->m_xrefs && fields[OV_XREF])
         {
             // Exclude an xref for just this group
             cp = std::strchr(fields[OV_XREF], ':');
             if (cp && std::strchr(cp+1, ':'))
             {
-                article->xrefs = save_str(fields[OV_XREF]);
+                article->m_xrefs = save_str(fields[OV_XREF]);
             }
         }
 
         if (fieldflags[OV_XREF] & FF_HAS_FIELD)
         {
-            if (!article->xrefs)
+            if (!article->m_xrefs)
             {
-                article->xrefs = save_str("");
+                article->m_xrefs = save_str("");
             }
         }
         else if (fields[OV_XREF])
@@ -554,9 +554,9 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
             for (ArticleNum an = article_first(g_abs_first); an < artnum; an = article_next(an))
             {
                 Article *ap = article_ptr(an);
-                if (!ap->xrefs)
+                if (!ap->m_xrefs)
                 {
-                    ap->xrefs = save_str("");
+                    ap->m_xrefs = save_str("");
                 }
             }
             fieldflags[OV_XREF] |= FF_HAS_FIELD;
@@ -565,7 +565,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 
     if (remote)
     {
-        article->flags |= AF_EXISTS;
+        article->m_flags |= AF_EXISTS;
     }
 
     if (g_threaded_group)
@@ -575,12 +575,12 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
             thread_article(article, fields[OV_REFS]);
         }
     }
-    else if (!(article->flags & AF_CACHED))
+    else if (!(article->m_flags & AF_CACHED))
     {
         cache_article(article);
     }
 
-    if (article->flags & AF_UNREAD)
+    if (article->m_flags & AF_UNREAD)
     {
         check_poster(article);
     }
@@ -633,13 +633,13 @@ const char *ov_field(Article *ap, int num)
 
     if (fn == OV_NUM)
     {
-        std::sprintf(g_cmd_buf, "%ld", (long)ap->num.value_of());
+        std::sprintf(g_cmd_buf, "%ld", (long)ap->m_num.value_of());
         return g_cmd_buf;
     }
 
     if (fn == OV_DATE)
     {
-        std::sprintf(g_cmd_buf, "%ld", (long)ap->date);
+        std::sprintf(g_cmd_buf, "%ld", (long)ap->m_date);
         return g_cmd_buf;
     }
 

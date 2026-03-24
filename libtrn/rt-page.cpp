@@ -747,7 +747,7 @@ try_again:
             for (app = g_sel_page_app; app < limit; app++)
             {
                 ap = *app;
-                if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags)
+                if ((ap->m_flags & (AF_EXISTS|AF_UNREAD)) == desired_flags)
                 {
                     break;
                 }
@@ -783,24 +783,24 @@ try_again:
         for (app = g_art_ptr_list; app < limit; app++)
         {
             ap = *app;
-            if (g_sel_rereading && !(ap->flags & g_sel_mask))
+            if (g_sel_rereading && !(ap->m_flags & g_sel_mask))
             {
-                ap->flags |= AF_DEL;
+                ap->m_flags |= AF_DEL;
             }
             if (g_sel_page_app == app //
-                || (!g_sel_page_app && ap->subj == g_sel_page_sp))
+                || (!g_sel_page_app && ap->m_subj == g_sel_page_sp))
             {
                 g_sel_page_app = app;
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
-            if (!g_sel_exclusive || (ap->flags & g_sel_mask))
+            if (!g_sel_exclusive || (ap->m_flags & g_sel_mask))
             {
                 g_sel_total_obj_cnt++;
-                ap->flags |= AF_INCLUDED;
+                ap->m_flags |= AF_INCLUDED;
             }
             else
             {
-                ap->flags &= ~AF_INCLUDED;
+                ap->m_flags &= ~AF_INCLUDED;
             }
         }
         if (g_sel_exclusive && !g_sel_total_obj_cnt)
@@ -1011,7 +1011,7 @@ bool first_page()
         Article **limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
         for (Article **app = g_art_ptr_list; app < limit; app++)
         {
-            if ((*app)->flags & AF_INCLUDED)
+            if ((*app)->m_flags & AF_INCLUDED)
             {
                 if (g_sel_page_app != app)
                 {
@@ -1416,7 +1416,7 @@ bool prev_page()
 
         for (Article **app = g_sel_page_app; --app >= g_art_ptr_list;)
         {
-            if ((*app)->flags & AF_INCLUDED)
+            if ((*app)->m_flags & AF_INCLUDED)
             {
                 page_app = app;
                 g_sel_prior_obj_cnt--;
@@ -1608,7 +1608,7 @@ try_again:
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if ((*app)->flags & AF_INCLUDED)
+            if ((*app)->m_flags & AF_INCLUDED)
             {
                 g_sel_page_item_cnt++;
             }
@@ -2111,11 +2111,11 @@ start_of_loop:
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (!(ap->flags & AF_INCLUDED))
+            if (!(ap->m_flags & AF_INCLUDED))
             {
                 continue;
             }
-            sel = !!(ap->flags & g_sel_mask) + (ap->flags & AF_DEL);
+            sel = !!(ap->m_flags & g_sel_mask) + (ap->m_flags & AF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.ap = ap;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -2270,7 +2270,7 @@ void update_page()
             break;
 
         case SM_ARTICLE:
-            sel = !!(u.ap->flags & g_sel_mask) + (u.ap->flags & AF_DEL);
+            sel = !!(u.ap->m_flags & g_sel_mask) + (u.ap->m_flags & AF_DEL);
             break;
 
         case SM_THREAD:
@@ -2360,10 +2360,10 @@ static int count_subject_lines(const Subject *subj, int *selptr)
     else if (subj->flags & g_sel_mask)
     {
         sel = 1;
-        for (Article *ap = subj->articles; ap; ap = ap->subj_next)
+        for (Article *ap = subj->articles; ap; ap = ap->m_subj_next)
         {
-            if ((!!(ap->flags & AF_UNREAD) ^ g_sel_rereading) //
-                && !(ap->flags & g_sel_mask))
+            if ((!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading) //
+                && !(ap->m_flags & g_sel_mask))
             {
                 sel = 3;
                 break;
@@ -2434,7 +2434,7 @@ static void display_article(const Article *ap, int ix, int sel)
     output_sel(ix, sel, false);
     if (*g_sel_art_display_mode == 's' || from_width < 8)
     {
-        std::printf("  %s\n", compress_subj(ap->subj->articles, subj_width));
+        std::printf("  %s\n", compress_subj(ap->m_subj->articles, subj_width));
     }
     else if (*g_sel_art_display_mode == 'd')
     {
@@ -2445,7 +2445,7 @@ static void display_article(const Article *ap, int ix, int sel)
     else
     {
         std::printf("%s  %s\n",
-               compress_from(ap->from, from_width),
+               compress_from(ap->m_from, from_width),
                compress_subj(ap, subj_width - from_width));
     }
     term_down(1);
@@ -2478,14 +2478,14 @@ static void display_subject(const Subject *subj, int ix, int sel)
         Article* first_ap;
         // Find the first unread article so we get the author right
         if ((first_ap = subj->thread) != nullptr                    //
-            && (first_ap->subj != subj || first_ap->from == nullptr //
-                || (!(first_ap->flags & AF_UNREAD) ^ g_sel_rereading)))
+            && (first_ap->m_subj != subj || first_ap->m_from == nullptr //
+                || (!(first_ap->m_flags & AF_UNREAD) ^ g_sel_rereading)))
         {
             first_ap = nullptr;
         }
-        for (ap = subj->articles; ap; ap = ap->subj_next)
+        for (ap = subj->articles; ap; ap = ap->m_subj_next)
         {
-            if (!!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
+            if (!!(ap->m_flags&AF_UNREAD) ^ g_sel_rereading)
             {
                 break;
             }
@@ -2503,16 +2503,16 @@ static void display_subject(const Subject *subj, int ix, int sel)
         else
         {
             std::printf("%s%3d  %s\n",
-                   compress_from(first_ap? first_ap->from : nullptr, from_width), j,
+                   compress_from(first_ap? first_ap->m_from : nullptr, from_width), j,
                    compress_subj(first_ap, subj_width - from_width));
         }
         term_down(1);
         int i = -1;
         if (*g_sel_art_display_mode != 'd' && --j && ap)
         {
-            for (; ap && j; ap = ap->subj_next)
+            for (; ap && j; ap = ap->m_subj_next)
             {
-                if ((!(ap->flags & AF_UNREAD) ^ g_sel_rereading) //
+                if ((!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading) //
                     || ap == first_ap)
                 {
                     continue;
@@ -2555,7 +2555,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                             std::putchar(' ');
                         }
                         std::printf("  %s      ",
-                               compress_from(ap? ap->from : nullptr, from_width));
+                               compress_from(ap? ap->m_from : nullptr, from_width));
                         continue;
                     }
                 }
@@ -2568,7 +2568,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                 {
                     std::putchar(' ');
                 }
-                std::printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width));
+                std::printf("  %s\n", compress_from(ap? ap->m_from : nullptr, from_width));
                 term_down(1);
             }
         }

@@ -278,7 +278,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_art = article_after(g_last_art);
             }
         }
-        if (g_art != 0 || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
+        if (g_art != 0 || (g_artp && !(g_artp->m_flags & AF_TMP_MEM)))
         {
             g_artp = article_find(g_art);
         }
@@ -389,13 +389,13 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             term_down(2);
         }
         else if (!g_reread && (was_read(g_art) //
-                               || (g_selected_only && !(g_artp->flags & AF_SEL))))
+                               || (g_selected_only && !(g_artp->m_flags & AF_SEL))))
         {
                                         // has this article been read?
             inc_article(g_selected_only,false);// then skip it
             continue;
         }
-        else if (!g_reread && (!(g_artp->flags & AF_EXISTS) || !parse_header(g_art)))
+        else if (!g_reread && (!(g_artp->m_flags & AF_EXISTS) || !parse_header(g_art)))
         {
             one_less(g_artp);            // mark deleted as read
             newsgroup_skip();
@@ -421,10 +421,10 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                         // (line # within article file)
             }
             clear();                    // clear screen
-            if (g_art == 0 && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
-                && !(g_artp->flags & AF_CACHED))
+            if (g_art == 0 && g_artp && g_artp->m_msg_id && (g_data_source->flags & DF_REMOTE) //
+                && !(g_artp->m_flags & AF_CACHED))
             {
-                g_art = nntp_stat_id(g_artp->msg_id);
+                g_art = nntp_stat_id(g_artp->m_msg_id);
                 if (g_art < 0)
                 {
                     s_exit_code = NG_NO_SERVER;
@@ -442,7 +442,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 // see if we have tree data for this article anyway
                 init_tree();
                 std::sprintf(tmpbuf,"%s: article is not available.",g_newsgroup_name.c_str());
-                if (g_artp && !(g_artp->flags & AF_CACHED))
+                if (g_artp && !(g_artp->m_flags & AF_CACHED))
                 {
                     if (g_abs_first < g_first_cached || g_last_cached < g_last_art
                      || !g_cached_all_in_range)
@@ -763,15 +763,15 @@ reask_unread:
         }
         else if (*g_buf == 't' && *u_help_thread)
         {
-            if (g_artp->subj->thread)
+            if (g_artp->m_subj->thread)
             {
-                unkill_thread(g_artp->subj->thread);
+                unkill_thread(g_artp->m_subj->thread);
             }
             else
             {
-                unkill_subject(g_artp->subj);
+                unkill_subject(g_artp->m_subj);
             }
-            g_artp = first_art(g_artp->subj);
+            g_artp = first_art(g_artp->m_subj);
             if (g_artp != nullptr)
             {
                 g_art = article_num(g_artp);
@@ -932,7 +932,7 @@ not_threaded:
         (void)art_search(g_buf, (sizeof g_buf), true);
         g_art = g_curr_art;
         g_artp = g_curr_artp;
-        kill_subject(g_artp->subj,AFFECT_ALL);// take care of any prior subjects
+        kill_subject(g_artp->m_subj,AFFECT_ALL);// take care of any prior subjects
         if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
         {
             return AS_SA;
@@ -965,7 +965,7 @@ not_threaded:
         }
         if (g_threaded_group)
         {
-            kill_thread(g_artp->subj->thread,AFFECT_ALL);
+            kill_thread(g_artp->m_subj->thread,AFFECT_ALL);
             if (g_sa_in)
             {
                 return AS_SA;
@@ -979,7 +979,7 @@ not_threaded:
         {
             goto not_threaded;
         }
-        kill_subject(g_artp->subj,AFFECT_ALL);
+        kill_subject(g_artp->m_subj,AFFECT_ALL);
         if (!g_threaded_group || g_last_cached < g_last_art)
         {
             *g_buf = 'k';
@@ -1129,14 +1129,14 @@ check_dec_art:
                     break;
 
                 case SM_SUBJECT:
-                    if (old_artp->subj != g_artp->subj)
+                    if (old_artp->m_subj != g_artp->m_subj)
                     {
                         return AS_SA;
                     }
                     break;
 
                 case SM_THREAD:
-                    if (old_artp->subj->thread != g_artp->subj->thread)
+                    if (old_artp->m_subj->thread != g_artp->m_subj->thread)
                     {
                         return AS_SA;
                     }
@@ -1188,7 +1188,7 @@ check_dec_art:
             else
             {
                 g_artp = g_first_subject->articles;
-                if (g_artp->flags & AF_EXISTS)
+                if (g_artp->m_flags & AF_EXISTS)
                 {
                     g_art = article_num(g_artp);
                 }
@@ -1782,7 +1782,7 @@ refresh_screen:
                 std::printf("\nSelected all articles in this subject.\n");
             }
             term_down(2);
-            g_artp = first_art(g_artp->subj);
+            g_artp = first_art(g_artp->m_subj);
             if (g_artp != nullptr)
             {
                 if (g_art == article_num(g_artp))
@@ -2037,7 +2037,7 @@ reask_catchup:
 static bool count_uncached_article(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
-    if ((ap->flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
+    if ((ap->m_flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
     {
         ++g_obj_count;
     }
@@ -2051,16 +2051,16 @@ static bool mark_all_read(char *ptr, int leave_unread)
     {
         return true;
     }
-    ap->flags &= ~(static_cast<ArticleFlags>(g_sel_mask) |AF_UNREAD);
+    ap->m_flags &= ~(static_cast<ArticleFlags>(g_sel_mask) |AF_UNREAD);
     return false;
 }
 
 static bool mark_all_unread(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
-    if ((ap->flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
+    if ((ap->m_flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
     {
-        ap->flags |= AF_UNREAD;         // mark as unread
+        ap->m_flags |= AF_UNREAD;         // mark as unread
         ++g_obj_count;
     }
     return false;
@@ -2085,7 +2085,7 @@ bool output_subject(char *ptr, int flag)
     }
 
     Article *ap = (Article*)ptr;
-    if (flag && !(ap->flags & flag))
+    if (flag && !(ap->m_flags & flag))
     {
         return false;
     }
@@ -2124,10 +2124,10 @@ static bool debug_article_output(char *ptr, int arg)
     {
         return true;
     }
-    if (article_num(ap) >= g_first_art && ap->subj)
+    if (article_num(ap) >= g_first_art && ap->m_subj)
     {
         std::printf("%5ld %c %s\n", article_num(ap).value_of(),
-               (ap->flags & AF_UNREAD)? 'y' : 'n', ap->subj->str);
+               (ap->m_flags & AF_UNREAD)? 'y' : 'n', ap->m_subj->str);
         term_down(1);
     }
     return false;
@@ -2305,7 +2305,7 @@ reask_memorize:
         }
         else
         {
-            kill_thread(g_artp->subj->thread, AFFECT_ALL | AUTO_KILL_THD);
+            kill_thread(g_artp->m_subj->thread, AFFECT_ALL | AUTO_KILL_THD);
         }
         if (g_general_mode != GM_SELECTOR)
         {
@@ -2328,7 +2328,7 @@ reask_memorize:
     }
     else if (ch == 'K')
     {
-        kill_subject(g_artp->subj,AFFECT_ALL|AUTO_KILL_SBJ);
+        kill_subject(g_artp->m_subj,AFFECT_ALL|AUTO_KILL_SBJ);
         if (g_general_mode != GM_SELECTOR)
         {
             std::printf("\nKill memorized.\n");
@@ -2357,11 +2357,11 @@ reask_memorize:
     {
         if (thread_cmd)
         {
-            clear_thread(g_artp->subj->thread);
+            clear_thread(g_artp->m_subj->thread);
         }
         else
         {
-            clear_subject(g_artp->subj);
+            clear_subject(g_artp->m_subj);
         }
     }
     else if (ch == 'c')

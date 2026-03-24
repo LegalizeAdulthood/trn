@@ -304,13 +304,13 @@ ArticleNum sc_sv_make_line(ArticleNum a)
                 }
             }
             // print article's score
-            int score = article_ptr(art)->score;
+            int score = article_ptr(art)->m_score;
             // check for repeating scores
             if (score == lastscore && lastscore_valid)
             {
                 art = article_next(art);
                 for (i = 1; art <= g_last_art && article_unread(art) && article_scored(art)
-                         && article_ptr(art)->score == score; i++)
+                         && article_ptr(art)->m_score == score; i++)
                 {
                     art = article_next(art);
                 }

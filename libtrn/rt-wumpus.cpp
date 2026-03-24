@@ -81,22 +81,22 @@ void init_tree()
         std::free(s_tree_lines[s_max_line--]);
     }
 
-    if (!(s_tree_article = g_curr_artp) || !s_tree_article->subj)
+    if (!(s_tree_article = g_curr_artp) || !s_tree_article->m_subj)
     {
         return;
     }
-    if (!(thread = s_tree_article->subj->thread))
+    if (!(thread = s_tree_article->m_subj->thread))
     {
         return;
     }
     // Enumerate our subjects for display
-    Subject *sp = thread->subj;
+    Subject *sp = thread->m_subj;
     int      num = 0;
     do
     {
         sp->misc = num++;
         sp = sp->thread_link;
-    } while (sp != thread->subj);
+    } while (sp != thread->m_subj);
 
     s_max_depth = 0;
     s_max_line = 0;
@@ -167,15 +167,15 @@ static void find_depth(Article *article, int depth)
             s_my_depth = depth;
             s_my_line = s_max_line;
         }
-        if (article->child1)
+        if (article->m_child1)
         {
-            find_depth(article->child1, depth + 1);
+            find_depth(article->m_child1, depth + 1);
         }
         else
         {
             s_max_line++;
         }
-        if (!(article = article->sibling))
+        if (!(article = article->m_sibling))
         {
             break;
         }
@@ -210,17 +210,17 @@ static void cache_tree(Article *ap, int depth, char *cp)
         {
             char ch;
 
-            *s_str++ = ((ap->flags & AF_HAS_RE) || ap->parent) ? '-' : ' ';
+            *s_str++ = ((ap->m_flags & AF_HAS_RE) || ap->m_parent) ? '-' : ' ';
             if (ap == s_tree_article)
             {
                 *s_str++ = '*';
             }
-            if (!(ap->flags & AF_UNREAD))
+            if (!(ap->m_flags & AF_UNREAD))
             {
                 *s_str++ = '(';
                 ch = ')';
             }
-            else if (!g_selected_only || (ap->flags & AF_SEL))
+            else if (!g_selected_only || (ap->m_flags & AF_SEL))
             {
                 *s_str++ = '[';
                 ch = ']';
@@ -236,11 +236,11 @@ static void cache_tree(Article *ap, int depth, char *cp)
             }
             *s_str++ = thread_letter(ap);
             *s_str++ = ch;
-            if (ap->child1)
+            if (ap->m_child1)
             {
-                *s_str++ = (ap->child1->sibling ? '+' : '-');
+                *s_str++ = (ap->m_child1->m_sibling ? '+' : '-');
             }
-            if (ap->sibling)
+            if (ap->m_sibling)
             {
                 *cp = '|';
             }
@@ -253,16 +253,16 @@ static void cache_tree(Article *ap, int depth, char *cp)
         }
 
         case 2:
-            *s_tree_buff = (!ap->child1)? ' ' :
-                (ap->child1->sibling)? '+' : '-';
+            *s_tree_buff = (!ap->m_child1)? ' ' :
+                (ap->m_child1->m_sibling)? '+' : '-';
             break;
 
         default:
             break;
         }
-        if (ap->child1)
+        if (ap->m_child1)
         {
-            cache_tree(ap->child1, depth+1, cp);
+            cache_tree(ap->m_child1, depth+1, cp);
             cp[1] = '\0';
         }
         else
@@ -289,11 +289,11 @@ static void cache_tree(Article *ap, int depth, char *cp)
             s_line_num++;
             s_node_on_line = false;
         }
-        if (!(ap = ap->sibling) || s_line_num > s_max_line)
+        if (!(ap = ap->m_sibling) || s_line_num > s_max_line)
         {
             break;
         }
-        if (!ap->sibling)
+        if (!ap->m_sibling)
         {
             *cp = '\\';
         }
@@ -310,11 +310,11 @@ static int s_find_artp_y{};
 
 Article *get_tree_artp(int x, int y)
 {
-    if (!s_tree_article || !s_tree_article->subj)
+    if (!s_tree_article || !s_tree_article->m_subj)
     {
         return nullptr;
     }
-    Article *ap = s_tree_article->subj->thread;
+    Article *ap = s_tree_article->m_subj->thread;
     x -= g_tc_COLS-1 - s_max_depth;
     if (x < 0 || y > s_max_line || !ap)
     {
@@ -335,9 +335,9 @@ static Article *find_artp(Article *article, int x)
         {
             return article;
         }
-        if (article->child1)
+        if (article->m_child1)
         {
-            Article* ap = find_artp(article->child1, x-1);
+            Article* ap = find_artp(article->m_child1, x-1);
             if (ap)
             {
                 return ap;
@@ -347,7 +347,7 @@ static Article *find_artp(Article *article, int x)
         {
             return nullptr;
         }
-        if (!(article = article->sibling))
+        if (!(article = article->m_sibling))
         {
             break;
         }
@@ -652,7 +652,7 @@ void entire_tree(Article* ap)
         count_subjects(CS_NORM);
         newline();
     }
-    if (!(ap->flags & AF_THREADED))
+    if (!(ap->m_flags & AF_THREADED))
     {
         parse_header(article_num(ap));
     }
@@ -661,9 +661,9 @@ void entire_tree(Article* ap)
         return;
     }
     newline();
-    Article *thread = ap->subj->thread;
+    Article *thread = ap->m_subj->thread;
     // Enumerate our subjects for display
-    Subject *sp = thread->subj;
+    Subject *sp = thread->m_subj;
     int      num = 0;
     do
     {
@@ -675,7 +675,7 @@ void entire_tree(Article* ap)
         term_down(1);
         sp->misc = num++;
         sp = sp->thread_link;
-    } while (sp != thread->subj);
+    } while (sp != thread->m_subj);
     if (check_page_line())
     {
         return;
@@ -709,13 +709,13 @@ static void display_tree(Article *article, char *cp)
     color_object(COLOR_TREE, true);
     while (true)
     {
-        std::putchar(((article->flags&AF_HAS_RE) || article->parent) ? '-' : ' ');
-        if (!(article->flags & AF_UNREAD))
+        std::putchar(((article->m_flags&AF_HAS_RE) || article->m_parent) ? '-' : ' ');
+        if (!(article->m_flags & AF_UNREAD))
         {
             g_buf[0] = '(';
             g_buf[2] = ')';
         }
-        else if (!g_selected_only || (article->flags & AF_SEL))
+        else if (!g_selected_only || (article->m_flags & AF_SEL))
         {
             g_buf[0] = '[';
             g_buf[2] = ']';
@@ -743,7 +743,7 @@ static void display_tree(Article *article, char *cp)
             std::fputs(g_buf, stdout);
         }
 
-        if (article->sibling)
+        if (article->m_sibling)
         {
             *cp = '|';
         }
@@ -751,11 +751,11 @@ static void display_tree(Article *article, char *cp)
         {
             *cp = ' ';
         }
-        if (article->child1)
+        if (article->m_child1)
         {
-            std::putchar((article->child1->sibling)? '+' : '-');
+            std::putchar((article->m_child1->m_sibling)? '+' : '-');
             color_pop();        // of COLOR_TREE
-            display_tree(article->child1, cp);
+            display_tree(article->m_child1, cp);
             color_object(COLOR_TREE, true);
             cp[1] = '\0';
         }
@@ -763,11 +763,11 @@ static void display_tree(Article *article, char *cp)
         {
             newline();
         }
-        if (!(article = article->sibling))
+        if (!(article = article->m_sibling))
         {
             break;
         }
-        if (!article->sibling)
+        if (!article->m_sibling)
         {
             *cp = '\\';
         }
@@ -788,15 +788,15 @@ static void display_tree(Article *article, char *cp)
 //
 char thread_letter(Article *ap)
 {
-    int subj = ap->subj->misc;
+    int subj = ap->m_subj->misc;
 
-    if (!(ap->flags & AF_CACHED)
+    if (!(ap->m_flags & AF_CACHED)
      && (g_abs_first < g_first_cached || g_last_cached < g_last_art
       || !g_cached_all_in_range))
     {
         return '?';
     }
-    if (!(ap->flags & AF_EXISTS))
+    if (!(ap->m_flags & AF_EXISTS))
     {
         return ' ';
     }

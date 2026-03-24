@@ -119,8 +119,8 @@ void sa_sel_threads()
             for (Article *ap = first_art(sp); ap; ap = next_article(ap))
             {
                 ArticleNum art = article_num(ap);
-                if ((ap->flags & AF_SEL) //
-                    && (!(ap->flags & AF_UNREAD) ^ want_unread))
+                if ((ap->m_flags & AF_SEL) //
+                    && (!(ap->m_flags & AF_UNREAD) ^ want_unread))
                 {
                     // this was a trn-thread selected article
                     sa_select1(sa_artnum_to_ent(art));

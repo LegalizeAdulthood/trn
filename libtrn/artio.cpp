@@ -56,7 +56,7 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
 {
     Article* ap = article_find(art_num);
 
-    if (!ap || !art_num.value_of() || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
+    if (!ap || !art_num.value_of() || (ap->m_flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
     {
         errno = ENOENT;
         return nullptr;

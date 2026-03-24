@@ -619,7 +619,7 @@ char *compress_date(const Article *ap, int size)
 {
     char* t;
 
-    std::strncpy(t = g_cmd_buf, std::ctime(&ap->date), size);
+    std::strncpy(t = g_cmd_buf, std::ctime(&ap->m_date), size);
     char *s = std::strchr(t, '\n');
     if (s != nullptr)
     {
@@ -699,13 +699,13 @@ const char *compress_subj(const Article *ap, int max)
 
     // Put a preceding '>' on subjects that are replies to other articles
     char *   cp = g_buf;
-    Article *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
-    if (ap != first || (ap->flags & AF_HAS_RE)
-     || (!(ap->flags&AF_UNREAD) ^ g_sel_rereading))
+    Article *first = (g_threaded_group ? ap->m_subj->thread : ap->m_subj->articles);
+    if (ap != first || (ap->m_flags & AF_HAS_RE)
+     || (!(ap->m_flags&AF_UNREAD) ^ g_sel_rereading))
     {
         *cp++ = '>';
     }
-    str_char_subst(cp, ap->subj->str + 4, (sizeof g_buf) - (cp-g_buf), *g_char_subst);
+    str_char_subst(cp, ap->m_subj->str + 4, (sizeof g_buf) - (cp-g_buf), *g_char_subst);
 
     // Remove "(was: oldsubject)", because we already know the old subjects.
     // Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.

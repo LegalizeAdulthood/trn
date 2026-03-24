@@ -171,11 +171,11 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #endif
             if (trunc)
             {
-                std::strcat(desc_buf, compress_from(article_ptr(artnum)->from, 16));
+                std::strcat(desc_buf, compress_from(article_ptr(artnum)->m_from, 16));
             }
             else
             {
-                std::strcat(desc_buf, compress_from(article_ptr(artnum)->from, 200));
+                std::strcat(desc_buf, compress_from(article_ptr(artnum)->m_from, 200));
             }
             std::strcat(desc_buf," ");
         }

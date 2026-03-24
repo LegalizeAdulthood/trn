@@ -185,7 +185,7 @@ void grow_newsgroup(ArticleNum new_last)
         do
         {
             ++g_last_art;
-            article_ptr(g_last_art)->flags |= AF_EXISTS|AF_UNREAD;
+            article_ptr(g_last_art)->m_flags |= AF_EXISTS|AF_UNREAD;
         } while (g_last_art < new_last);
         g_article_list->high = g_last_art.value_of();
         thread_grow();
@@ -314,7 +314,7 @@ void newsgroup_skip()
             artnum = std::min(artnum, g_last_art);
             while (g_art <= artnum)
             {
-                if (g_artp->flags & AF_EXISTS)
+                if (g_artp->m_flags & AF_EXISTS)
                 {
                     return;
                 }

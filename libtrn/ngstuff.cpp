@@ -371,7 +371,7 @@ int thread_perform()
         g_performed_article_loop = false;
         if (one_thread)
         {
-            sp = (g_sel_mode == SM_THREAD ? g_artp->subj->thread->subj : g_artp->subj);
+            sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->thread->m_subj : g_artp->m_subj);
         }
         else
         {
@@ -425,16 +425,16 @@ int thread_perform()
         if (g_art_ptr_list)
         {
             Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
-            sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
+            sp = (g_sel_mode==SM_THREAD? g_artp->m_subj->thread->m_subj : g_artp->m_subj);
             for (Article **app = g_art_ptr_list; app < limit; app++)
             {
                 ap = *app;
-                if (one_thread && ap->subj->thread != sp->thread)
+                if (one_thread && ap->m_subj->thread != sp->thread)
                 {
                     continue;
                 }
-                if ((!(ap->flags & AF_UNREAD) ^ want_unread) //
-                    && !(ap->flags & g_sel_mask) ^ !!bits)
+                if ((!(ap->m_flags & AF_UNREAD) ^ want_unread) //
+                    && !(ap->m_flags & g_sel_mask) ^ !!bits)
                 {
                     g_art = article_num(ap);
                     g_artp = ap;
@@ -454,7 +454,7 @@ int thread_perform()
         {
             if (one_thread)
             {
-                sp = (g_sel_mode == SM_THREAD ? g_artp->subj->thread->subj : g_artp->subj);
+                sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->thread->m_subj : g_artp->m_subj);
             }
             else
             {
@@ -464,8 +464,8 @@ int thread_perform()
             {
                 for (ap = first_art(sp); ap; ap = next_article(ap))
                 {
-                    if ((!(ap->flags & AF_UNREAD) ^ want_unread)
-                        && !(ap->flags & g_sel_mask) ^ !!bits)
+                    if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
+                        && !(ap->m_flags & g_sel_mask) ^ !!bits)
                     {
                         g_art = article_num(ap);
                         g_artp = ap;
@@ -636,7 +636,7 @@ int perform(char *cmdlst, int output_level)
             {
                 change_auto_flags(g_artp, AUTO_SEL_1);
             }
-            else if ((g_artp->flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
+            else if ((g_artp->m_flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
             {
                 unmark_as_read(g_artp);
                 if (output_level && g_verbose)

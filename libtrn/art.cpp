@@ -212,7 +212,7 @@ DoArticleResult do_article()
             {
                 ArticleNum i;
 
-                int selected = (g_curr_artp->flags & AF_SEL);
+                int selected = (g_curr_artp->m_flags & AF_SEL);
                 int unseen = article_unread(g_art) ? 1 : 0;
                 std::sprintf(g_art_line,"%s%s #%ld",g_newsgroup_name.c_str(),g_moderated.c_str(), g_art.value_of());
                 if (g_selected_only)
@@ -375,12 +375,12 @@ DoArticleResult do_article()
                     break;
 
                 case DATE_LINE:
-                    if (g_curr_artp->date != -1)
+                    if (g_curr_artp->m_date != -1)
                     {
                         std::strncpy(g_art_line,buf_ptr,6);
                         std::strftime(g_art_line+6, (sizeof g_art_line)-6,
                                  get_val_const("LOCALTIMEFMT", LOCALTIME_FMT),
-                                 std::localtime(&g_curr_artp->date));
+                                 std::localtime(&g_curr_artp->m_date));
                         buf_ptr = g_art_line;
                     }
                     break;
