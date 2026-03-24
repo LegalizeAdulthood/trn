@@ -265,7 +265,7 @@ void end_header_line()
         g_header_type[g_in_header].max_pos = g_art_pos;
         if (g_header_type[g_in_header].flags & HT_CACHED)
         {
-            if (!get_cached_line(s_parsed_artp, g_in_header, true))
+            if (!s_parsed_artp->get_cached_line(g_in_header, true))
             {
                 int start = g_header_type[g_in_header].min_pos.value_of()
                           + g_header_type[g_in_header].length + 1;
@@ -276,13 +276,13 @@ void end_header_line()
                 MemorySize size = g_art_pos.value_of() - start + 1 - 1;   // pre-strip newline
                 if (g_in_header == SUBJ_LINE)
                 {
-                    set_subj_line(s_parsed_artp, g_head_buf + start, size - 1);
+                    s_parsed_artp->set_subj_line(g_head_buf + start, size - 1);
                 }
                 else
                 {
                     char* s = safe_malloc(size);
                     safe_copy(s,g_head_buf+start,size);
-                    set_cached_line(s_parsed_artp,g_in_header,s);
+                    s_parsed_artp->set_cached_line(g_in_header,s);
                 }
             }
         }
@@ -346,7 +346,7 @@ void end_header()
 
     if (!ap->m_subj)
     {
-        set_subj_line(ap, "<NONE>", 6);
+        ap->set_subj_line("<NONE>", 6);
     }
 
     if (s_reading_nntp_header)
@@ -365,7 +365,7 @@ void end_header()
     if (g_threaded_group //
         && (!(ap->m_flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= 0))
     {
-        if (valid_article(ap))
+        if (ap->valid_article())
         {
             Article* artp_hold = g_artp;
             char* references = fetch_lines(g_parsed_art, REFS_LINE);
@@ -373,17 +373,17 @@ void end_header()
             int reflen = std::strlen(references) + 1;
             grow_str(&references, &reflen, reflen + std::strlen(inreply) + 1);
             safe_cat(references, inreply, reflen);
-            thread_article(ap, references);
+            ap->thread_article(references);
             std::free(inreply);
             std::free(references);
             g_artp = artp_hold;
-            check_poster(ap);
+            ap->check_poster();
         }
     }
     else if (!(ap->m_flags & AF_CACHED))
     {
-        cache_article(ap);
-        check_poster(ap);
+        ap->cache_article();
+        ap->check_poster();
     }
 }
 
@@ -416,7 +416,7 @@ bool parse_header(ArticleNum art_num)
         }
         else if (nntp_header(art_num) <= 0)
         {
-            uncache_article(article_ptr(art_num),false);
+            article_ptr(art_num)->uncache_article(false);
             return false;
         }
         else
@@ -683,17 +683,17 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                 {
                     while ((prior_num = article_next(prior_num)) < num)
                     {
-                        uncache_article(article_ptr(prior_num), false);
+                        article_ptr(prior_num)->uncache_article(false);
                     }
                 }
                 ap = article_find(num);
                 if (which_line == SUBJ_LINE)
                 {
-                    set_subj_line(ap, t, std::strlen(t));
+                    ap->set_subj_line(t, std::strlen(t));
                 }
                 else if (cached)
                 {
-                    set_cached_line(ap, which_line, save_str(t));
+                    ap->set_cached_line(which_line, save_str(t));
                 }
                 if (num == art_num)
                 {
@@ -720,7 +720,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         {
             for (prior_num = article_first(prior_num); prior_num < lastnum; prior_num = article_next(prior_num))
             {
-                uncache_article(article_ptr(prior_num), false);
+                article_ptr(prior_num)->uncache_article(false);
             }
         }
         if (copy)

@@ -462,7 +462,7 @@ int thread_perform()
             }
             for (; sp; sp = next_subject(sp, bits))
             {
-                for (ap = first_art(sp); ap; ap = next_article(ap))
+                for (ap = first_art(sp); ap; ap = ap->next_article())
                 {
                     if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
                         && !(ap->m_flags & g_sel_mask) ^ !!bits)
@@ -519,12 +519,12 @@ int perform(char *cmdlst, int output_level)
         {
             if (savemode)
             {
-                mark_as_read(g_artp);
-                change_auto_flags(g_artp, AUTO_KILL_1);
+                g_artp->mark_as_read();
+                g_artp->change_auto_flags(AUTO_KILL_1);
             }
             else if (!was_read(g_art))
             {
-                mark_as_read(g_artp);
+                g_artp->mark_as_read();
                 if (output_level && g_verbose)
                 {
                     std::fputs("\tJunked", stdout);
@@ -532,7 +532,7 @@ int perform(char *cmdlst, int output_level)
             }
             if (g_sel_rereading)
             {
-                deselect_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+                g_artp->deselect_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
         }
         else if (ch == '+')
@@ -541,11 +541,11 @@ int perform(char *cmdlst, int output_level)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
-                    select_articles_thread(g_artp, savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
+                    g_artp->select_articles_thread(savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
                 }
                 else
                 {
-                    select_articles_subject(g_artp, savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
+                    g_artp->select_articles_subject(savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
                 }
                 if (cmdlst[1] == '+')
                 {
@@ -554,12 +554,12 @@ int perform(char *cmdlst, int output_level)
             }
             else
             {
-                select_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+                g_artp->select_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
         }
         else if (ch == 'S')
         {
-            select_articles_subject(g_artp, AUTO_SEL_SBJ);
+            g_artp->select_articles_subject(AUTO_SEL_SBJ);
         }
         else if (ch == '.')
         {
@@ -571,17 +571,17 @@ int perform(char *cmdlst, int output_level)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
-                    deselect_articles_thread(g_artp);
+                    g_artp->deselect_articles_thread();
                 }
                 else
                 {
-                    deselect_articles_subject(g_artp);
+                    g_artp->deselect_articles_subject();
                 }
                 cmdlst++;
             }
             else
             {
-                deselect_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+                g_artp->deselect_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
         }
         else if (ch == ',')
@@ -592,22 +592,22 @@ int perform(char *cmdlst, int output_level)
         {
             if (g_sel_mode == SM_THREAD)
             {
-                kill_articles_thread(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
+                g_artp->kill_articles_thread(AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
             }
             else
             {
-                kill_articles_subject(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
+                g_artp->kill_articles_subject(AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
             }
         }
         else if (ch == 'K' || ch == 'k')
         {
-            kill_articles_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : AUTO_KILL_NONE));
+            g_artp->kill_articles_subject(AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
         }
         else if (ch == 'x')
         {
             if (!was_read(g_art))
             {
-                one_less(g_artp);
+                g_artp->one_less();
                 if (output_level && g_verbose)
                 {
                     std::fputs("\tKilled", stdout);
@@ -615,7 +615,7 @@ int perform(char *cmdlst, int output_level)
             }
             if (g_sel_rereading)
             {
-                deselect_article(g_artp, AUTO_KILL_NONE);
+                g_artp->deselect_article(AUTO_KILL_NONE);
             }
         }
         else if (ch == 't')
@@ -634,11 +634,11 @@ int perform(char *cmdlst, int output_level)
         {
             if (savemode)
             {
-                change_auto_flags(g_artp, AUTO_SEL_1);
+                g_artp->change_auto_flags(AUTO_SEL_1);
             }
             else if ((g_artp->m_flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
             {
-                unmark_as_read(g_artp);
+                g_artp->unmark_as_read();
                 if (output_level && g_verbose)
                 {
                     std::fputs("\tMarked unread", stdout);
@@ -647,8 +647,8 @@ int perform(char *cmdlst, int output_level)
         }
         else if (ch == 'M')
         {
-            delay_unmark(g_artp);
-            one_less(g_artp);
+            g_artp->delay_unmark();
+            g_artp->one_less();
             if (output_level && g_verbose)
             {
                 std::fputs("\tWill return", stdout);

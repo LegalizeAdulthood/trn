@@ -234,7 +234,7 @@ static void cache_tree(Article *ap, int depth, char *cp)
             {
                 *s_str++ = '@';
             }
-            *s_str++ = thread_letter(ap);
+            *s_str++ = ap->thread_letter();
             *s_str++ = ch;
             if (ap->m_child1)
             {
@@ -425,7 +425,7 @@ ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         {
             color_object(COLOR_TREE_MARK, true);
             std::putchar('[');
-            std::putchar(thread_letter(g_curr_artp));
+            std::putchar(g_curr_artp->thread_letter());
             std::putchar(']');
             color_pop();
             std::putchar(' ');
@@ -621,6 +621,8 @@ ArticleLine finish_tree(ArticleLine last_line)
 
 // Output the entire article tree for the user.
 //
+// TODO: why does this check ap for nullptr?
+//
 void entire_tree(Article* ap)
 {
     if (!ap)
@@ -725,7 +727,7 @@ static void display_tree(Article *article, char *cp)
             g_buf[0] = '<';
             g_buf[2] = '>';
         }
-        g_buf[1] = thread_letter(article);
+        g_buf[1] = article->thread_letter();
         if (article == g_curr_artp)
         {
             color_string(COLOR_TREE_MARK,g_buf);
@@ -786,17 +788,17 @@ static void display_tree(Article *article, char *cp)
 // are marked with a ' ', others get a letter in the sequence:
 //      ' ', '1'-'9', 'A'-'Z', 'a'-'z', '+'
 //
-char thread_letter(Article *ap)
+char Article::thread_letter()
 {
-    int subj = ap->m_subj->misc;
+    int subj = m_subj->misc;
 
-    if (!(ap->m_flags & AF_CACHED)
+    if (!(m_flags & AF_CACHED)
      && (g_abs_first < g_first_cached || g_last_cached < g_last_art
       || !g_cached_all_in_range))
     {
         return '?';
     }
-    if (!(ap->m_flags & AF_EXISTS))
+    if (!(m_flags & AF_EXISTS))
     {
         return ' ';
     }

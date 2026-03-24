@@ -89,6 +89,46 @@ DECLARE_FLAGS_ENUM(ScoreFlags, std::uint16_t)
 // This is our article-caching structure
 struct Article
 {
+    void     cache_article();
+    void     check_for_near_subj();
+    void     check_poster();
+    void     uncache_article(bool remove_empties);
+    char *   get_cached_line(HeaderLineType which_line, bool no_truncs);
+    void     set_subj_line(char *subj, int size);
+    void     set_cached_line(int which_line, char *s);
+    void     clear_article();
+    void     one_more();
+    void     one_less();
+    void     one_missing();
+    void     unmark_as_read();
+    void     set_read();
+    void     delay_unmark();
+    void     mark_as_read();
+    Article *bump_article();
+    Article *next_article();
+    Article *prev_article();
+    void     select_article(AutoKillFlags auto_flags);
+    void     select_articles_subject(AutoKillFlags auto_flags);
+    void     select_articles_thread(AutoKillFlags auto_flags);
+    void     select_thread(AutoKillFlags auto_flags);
+    void     deselect_article(AutoKillFlags auto_flags);
+    void     deselect_articles_subject();
+    void     deselect_articles_thread();
+    void     deselect_thread();
+    void     kill_articles_subject(AutoKillFlags auto_flags);
+    void     kill_articles_thread(AutoKillFlags auto_flags);
+    void     kill_thread(AutoKillFlags auto_flags);
+    void     unkill_thread();
+    void     clear_thread();
+    void     change_auto_flags(AutoKillFlags auto_flag);
+    void     clear_auto_flags();
+    void     perform_auto_flags(AutoKillFlags thread_flags, AutoKillFlags subj_flags, AutoKillFlags chain_flags);
+    bool     valid_article();
+    void     thread_article(char *references);
+    void     link_child();
+    char *   compress_date(int size) const;
+    char     thread_letter();
+
     ArticleNum    m_num;
     std::time_t   m_date;
     Subject      *m_subj;
@@ -134,17 +174,10 @@ extern char       g_auto_select_postings; // -p
 void  cache_init();
 void  build_cache();
 void  close_cache();
-void  cache_article(Article *ap);
-void  check_for_near_subj(Article *ap);
 void  change_join_subject_len(int len);
-void  check_poster(Article *ap);
-void  uncache_article(Article *ap, bool remove_empties);
 char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
-char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs);
-void  set_subj_line(Article *ap, char *subj, int size);
 int   decode_header(char *to, char *from, int size);
 void  dectrl(char *str);
-void  set_cached_line(Article *ap, int which_line, char *s);
 int   subject_cmp(const char *key, int key_len, HashDatum data);
 #ifdef PENDING
 void look_ahead();
@@ -158,7 +191,6 @@ bool cache_all_arts();
 bool cache_unread_arts();
 bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles);
 bool cache_range(ArticleNum first, ArticleNum last);
-void clear_article(Article *ap);
 
 inline Article *article_ptr(ArticleNum an)
 {

@@ -164,7 +164,7 @@ void thread_open()
     {
         if (ap->m_flags & AF_CACHED)
         {
-            check_poster(ap);
+            ap->check_poster();
         }
     }
 
@@ -237,7 +237,7 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
         }
         if (ap->m_flags & AF_TMP_MEM)
         {
-            clear_article(ap);
+            ap->clear_article();
             std::free(ap);
         }
     }
@@ -260,8 +260,8 @@ Article *first_art(Subject *sp)
     Article* ap = (g_threaded_group? sp->thread : sp->articles);
     if (ap && !(ap->m_flags & AF_EXISTS))
     {
-        one_less(ap);
-        ap = next_article(ap);
+        ap->one_less();
+        ap = ap->next_article();
     }
     return ap;
 }
@@ -300,8 +300,8 @@ Article *last_art(Subject *sp)
         }
         if (!(ap->m_flags & AF_EXISTS))
         {
-            one_less(ap);
-            ap = prev_article(ap);
+            ap->one_less();
+            ap = ap->prev_article();
         }
     }
     return ap;
@@ -377,7 +377,7 @@ void inc_article(bool sel_flag, bool rereading)
         {
             if (ap)
             {
-                ap = next_article(ap);
+                ap = ap->next_article();
             }
             else
             {
@@ -439,7 +439,7 @@ num_inc:
         ap = article_ptr(g_art);
         if (!(ap->m_flags & AF_EXISTS))
         {
-            one_less(ap);
+            ap->one_less();
         }
         else if ((rereading || (ap->m_flags & AF_UNREAD))
               && (!sel_flag || (ap->m_flags & AF_SEL)))
@@ -511,7 +511,7 @@ void dec_article(bool sel_flag, bool rereading)
         {
             if (ap)
             {
-                ap = prev_article(ap);
+                ap = ap->prev_article();
             }
             else
             {
@@ -554,7 +554,7 @@ num_dec:
         ap = article_ptr(g_art);
         if (!(ap->m_flags & AF_EXISTS))
         {
-            one_less(ap);
+            ap->one_less();
         }
         else if ((rereading || (ap->m_flags & AF_UNREAD))
               && (!sel_flag || (ap->m_flags & AF_SEL)))
@@ -567,15 +567,17 @@ num_dec:
 
 // Bump the param to the next article in depth-first order.
 //
-Article *bump_article(Article *ap)
+Article *Article::bump_article()
 {
-    if (ap->m_child1)
+    if (m_child1)
     {
-        return ap->m_child1;
+        return m_child1;
     }
+    Article *ap{this};
     while (!ap->m_sibling)
     {
-        if (!(ap = ap->m_parent))
+        ap = ap->m_parent;
+        if (!ap)
         {
             return nullptr;
         }
@@ -586,8 +588,9 @@ Article *bump_article(Article *ap)
 // Bump the param to the next REAL article.  Uses subject order in a
 // non-threaded group; honors the g_breadth_first flag in a threaded one.
 //
-Article *next_article(Article *ap)
+Article *Article::next_article()
 {
+    Article *ap{this};
 try_again:
     if (!g_threaded_group)
     {
@@ -629,7 +632,7 @@ try_again:
 done:
     if (ap && !(ap->m_flags & AF_EXISTS))
     {
-        one_less(ap);
+        ap->one_less();
         goto try_again;
     }
     return ap;
@@ -638,8 +641,9 @@ done:
 // Bump the param to the previous REAL article.  Uses subject order in a
 // non-threaded group.
 //
-Article *prev_article(Article *ap)
+Article *Article::prev_article()
 {
+    Article *ap{this};
 try_again:
     Article *initial_ap = ap;
     if (!g_threaded_group)
@@ -679,7 +683,7 @@ try_again:
 done:
     if (ap && !(ap->m_flags & AF_EXISTS))
     {
-        one_less(ap);
+        ap->one_less();
         goto try_again;
     }
     return ap;
@@ -812,14 +816,14 @@ Subject *prev_subject(Subject *sp, int subj_mask)
 
 // Select a single article.
 //
-void select_article(Article *ap, AutoKillFlags auto_flags)
+void Article::select_article(AutoKillFlags auto_flags)
 {
     const ArticleFlags desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
-    if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
+    if ((m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
     {
-        if (!(ap->m_flags & static_cast<ArticleFlags>(g_sel_mask)))
+        if (!(m_flags & static_cast<ArticleFlags>(g_sel_mask)))
         {
             g_selected_count++;
             if (g_verbose && echo && g_general_mode != GM_SELECTOR)
@@ -827,34 +831,34 @@ void select_article(Article *ap, AutoKillFlags auto_flags)
                 std::fputs("\tSelected", stdout);
             }
         }
-        ap->m_flags = (ap->m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel_mask);
+        m_flags = (m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel_mask);
     }
     if (auto_flags)
     {
-        change_auto_flags(ap, auto_flags);
+        change_auto_flags(auto_flags);
     }
-    if (ap->m_subj)
+    if (m_subj)
     {
-        if (!(ap->m_subj->flags & g_sel_mask))
+        if (!(m_subj->flags & g_sel_mask))
         {
             g_selected_subj_cnt++;
         }
-        ap->m_subj->flags = (ap->m_subj->flags&~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
+        m_subj->flags = (m_subj->flags&~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
     }
     g_selected_only = (g_selected_only || g_selected_count != 0);
 }
 
 // Select this article's subject.
 //
-void select_articles_subject(Article *ap, AutoKillFlags auto_flags)
+void Article::select_articles_subject(AutoKillFlags auto_flags)
 {
-    if (ap->m_subj && ap->m_subj->articles)
+    if (m_subj && m_subj->articles)
     {
-        select_subject(ap->m_subj, auto_flags);
+        select_subject(m_subj, auto_flags);
     }
     else
     {
-        select_article(ap, auto_flags);
+        select_article(auto_flags);
     }
 }
 
@@ -875,7 +879,7 @@ void select_subject(Subject *subj, AutoKillFlags auto_flags)
         }
         if (auto_flags)
         {
-            change_auto_flags(ap, auto_flags);
+            ap->change_auto_flags(auto_flags);
         }
     }
     if (g_selected_count > old_count)
@@ -896,31 +900,33 @@ void select_subject(Subject *subj, AutoKillFlags auto_flags)
 
 // Select this article's thread.
 //
-void select_articles_thread(Article *ap, AutoKillFlags auto_flags)
+void Article::select_articles_thread(AutoKillFlags auto_flags)
 {
-    if (ap->m_subj && ap->m_subj->thread)
+    if (m_subj && m_subj->thread)
     {
-        select_thread(ap->m_subj->thread, auto_flags);
+        m_subj->thread->select_thread(auto_flags);
     }
     else
     {
-        select_articles_subject(ap, auto_flags);
+        select_articles_subject(auto_flags);
     }
 }
 
 // Select all the articles in a thread.
 //
-void select_thread(Article *thread, AutoKillFlags auto_flags)
+void Article::select_thread(AutoKillFlags auto_flags)
 {
-    Subject *sp = thread->m_subj;
+    Subject *sp = m_subj;
     do
     {
         select_subject(sp, auto_flags);
         sp = sp->thread_link;
-    } while (sp != thread->m_subj);
+    } while (sp != m_subj);
 }
 
 // Select the subthread attached to this article.
+//
+// TODO: why does this check ap for nullptr?
 //
 void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
 {
@@ -943,7 +949,7 @@ void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
     }
 
     auto_flags &= AUTO_SEL_MASK;
-    for (; ap != limit; ap = bump_article(ap))
+    for (; ap != limit; ap = ap->bump_article())
     {
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD | g_sel_mask)) == desired_flags)
         {
@@ -952,7 +958,7 @@ void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
         }
         if (auto_flags)
         {
-            change_auto_flags(ap, auto_flags);
+            ap->change_auto_flags(auto_flags);
         }
     }
     if (subj && g_selected_count > old_count)
@@ -968,13 +974,13 @@ void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
 
 // Deselect a single article.
 //
-void deselect_article(Article *ap, AutoKillFlags auto_flags)
+void Article::deselect_article(AutoKillFlags auto_flags)
 {
     const bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
-    if (ap->m_flags & static_cast<ArticleFlags>(g_sel_mask))
+    if (m_flags & static_cast<ArticleFlags>(g_sel_mask))
     {
-        ap->m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+        m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         if (!g_selected_count--)
         {
             g_selected_count = 0;
@@ -986,21 +992,21 @@ void deselect_article(Article *ap, AutoKillFlags auto_flags)
     }
     if (g_sel_rereading && g_sel_mode == SM_ARTICLE)
     {
-        ap->m_flags |= AF_DEL;
+        m_flags |= AF_DEL;
     }
 }
 
 // Deselect this article's subject.
 //
-void deselect_articles_subject(Article *ap)
+void Article::deselect_articles_subject()
 {
-    if (ap->m_subj && ap->m_subj->articles)
+    if (m_subj && m_subj->articles )
     {
-        deselect_subject(ap->m_subj);
+        deselect_subject(m_subj);
     }
     else
     {
-        deselect_article(ap, AUTO_KILL_NONE);
+        deselect_article(AUTO_KILL_NONE);
     }
 }
 
@@ -1037,28 +1043,28 @@ void deselect_subject(Subject *subj)
 
 // Deselect this article's thread.
 //
-void deselect_articles_thread(Article *ap)
+void Article::deselect_articles_thread()
 {
-    if (ap->m_subj && ap->m_subj->thread)
+    if (m_subj && m_subj->thread)
     {
-        deselect_thread(ap->m_subj->thread);
+        m_subj->thread->deselect_thread();
     }
     else
     {
-        deselect_articles_subject(ap);
+        deselect_articles_subject();
     }
 }
 
 // Deselect all the articles in a thread.
 //
-void deselect_thread(Article *thread)
+void Article::deselect_thread()
 {
-    Subject *sp = thread->m_subj;
+    Subject *sp = m_subj;
     do
     {
         deselect_subject(sp);
         sp = sp->thread_link;
-    } while (sp != thread->m_subj);
+    } while (sp != m_subj);
 }
 
 // Deselect everything.
@@ -1080,23 +1086,23 @@ void deselect_all()
 
 // Kill all unread articles attached to this article's subject.
 //
-void kill_articles_subject(Article *ap, AutoKillFlags auto_flags)
+void Article::kill_articles_subject(AutoKillFlags auto_flags)
 {
-    if (ap->m_subj && ap->m_subj->articles)
+    if (m_subj && m_subj->articles)
     {
-        kill_subject(ap->m_subj, auto_flags);
+        kill_subject(m_subj, auto_flags);
     }
     else
     {
         if (auto_flags & SET_TO_RETURN)
         {
-            delay_unmark(ap);
+            delay_unmark();
         }
-        set_read(ap);
+        set_read();
         auto_flags &= AUTO_KILL_MASK;
         if (auto_flags)
         {
-            change_auto_flags(ap, auto_flags);
+            change_auto_flags(auto_flags);
         }
     }
 }
@@ -1113,15 +1119,15 @@ void kill_subject(Subject *subj, AutoKillFlags auto_flags)
     {
         if (toreturn)
         {
-            delay_unmark(ap);
+            ap->delay_unmark();
         }
         if ((ap->m_flags & (AF_UNREAD|killmask)) == AF_UNREAD)
         {
-            set_read(ap);
+            ap->set_read();
         }
         if (auto_flags)
         {
-            change_auto_flags(ap, auto_flags);
+            ap->change_auto_flags(auto_flags);
         }
     }
     subj->flags &= ~(SF_VISIT | SF_WAS_SELECTED);
@@ -1129,31 +1135,33 @@ void kill_subject(Subject *subj, AutoKillFlags auto_flags)
 
 // Kill all unread articles attached to this article's thread.
 //
-void kill_articles_thread(Article *ap, AutoKillFlags auto_flags)
+void Article::kill_articles_thread(AutoKillFlags auto_flags)
 {
-    if (ap->m_subj && ap->m_subj->thread)
+    if (m_subj && m_subj->thread)
     {
-        kill_thread(ap->m_subj->thread, auto_flags);
+        m_subj->thread->kill_thread(auto_flags);
     }
     else
     {
-        kill_articles_subject(ap, auto_flags);
+        kill_articles_subject(auto_flags);
     }
 }
 
 // Kill all unread articles attached to the given thread.
 //
-void kill_thread(Article *thread, AutoKillFlags auto_flags)
+void Article::kill_thread(AutoKillFlags auto_flags)
 {
-    Subject *sp = thread->m_subj;
+    Subject *sp = m_subj;
     do
     {
         kill_subject(sp, auto_flags);
         sp = sp->thread_link;
-    } while (sp != thread->m_subj);
+    } while (sp != m_subj);
 }
 
 // Kill the subthread attached to this article.
+//
+// TODO: why does this check ap for nullptr?
 //
 void kill_sub_thread(Article *ap, AutoKillFlags auto_flags)
 {
@@ -1174,19 +1182,19 @@ void kill_sub_thread(Article *ap, AutoKillFlags auto_flags)
     }
 
     auto_flags &= AUTO_KILL_MASK;
-    for (; ap != limit; ap = bump_article(ap))
+    for (; ap != limit; ap = ap->bump_article())
     {
         if (toreturn)
         {
-            delay_unmark(ap);
+            ap->delay_unmark();
         }
         if (all_bits(ap->m_flags, AF_EXISTS | AF_UNREAD))
         {
-            set_read(ap);
+            ap->set_read();
         }
         if (auto_flags)
         {
-            change_auto_flags(ap, auto_flags);
+            ap->change_auto_flags(auto_flags);
         }
     }
 }
@@ -1222,7 +1230,7 @@ void unkill_subject(Subject *subj)
         {
             if ((ap->m_flags & (AF_EXISTS|AF_UNREAD)) == AF_EXISTS)
             {
-                one_more(ap);
+                ap->one_more();
             }
             if (g_selected_only && (ap->m_flags & (AF_SEL | AF_UNREAD)) == AF_UNREAD)
             {
@@ -1242,17 +1250,19 @@ void unkill_subject(Subject *subj)
 
 // Unkill all the articles attached to the given thread.
 //
-void unkill_thread(Article *thread)
+void Article::unkill_thread()
 {
-    Subject *sp = thread->m_subj;
+    Subject *sp = m_subj;
     do
     {
         unkill_subject(sp);
         sp = sp->thread_link;
-    } while (sp != thread->m_subj);
+    } while (sp != m_subj);
 }
 
 // Unkill the subthread attached to this article.
+//
+// TODO: why does this check ap for nullptr?
 //
 void unkill_sub_thread(Article *ap)
 {
@@ -1272,11 +1282,11 @@ void unkill_sub_thread(Article *ap)
     }
 
     Subject *sp = ap->m_subj;
-    for (; ap != limit; ap = bump_article(ap))
+    for (; ap != limit; ap = ap->bump_article())
     {
         if ((ap->m_flags & (AF_EXISTS|AF_UNREAD)) == AF_EXISTS)
         {
-            one_more(ap);
+            ap->one_more();
         }
         if (g_selected_only && !(ap->m_flags & AF_SEL))
         {
@@ -1298,23 +1308,25 @@ void clear_subject(Subject *subj)
 {
     for (Article *ap = subj->articles; ap; ap = ap->m_subj_next)
     {
-        clear_auto_flags(ap);
+        ap->clear_auto_flags();
     }
 }
 
 // Clear the auto flags in all unread articles attached to the given thread.
 //
-void clear_thread(Article *thread)
+void Article::clear_thread()
 {
-    Subject *sp = thread->m_subj;
+    Subject *sp = m_subj;
     do
     {
         clear_subject(sp);
         sp = sp->thread_link;
-    } while (sp != thread->m_subj);
+    } while (sp != m_subj);
 }
 
 // Clear the auto flags in the subthread attached to this article.
+//
+// TODO: why does this check ap for nullptr?
 //
 void clear_sub_thread(Article *ap)
 {
@@ -1333,9 +1345,9 @@ void clear_sub_thread(Article *ap)
         }
     }
 
-    for (; ap != limit; ap = bump_article(ap))
+    for (; ap != limit; ap = ap->bump_article())
     {
-        clear_auto_flags(ap);
+        ap->clear_auto_flags();
     }
 }
 
@@ -1348,7 +1360,7 @@ Article *subj_article(Subject *sp)
     Article *ap = first_art(sp);
     while (ap && (ap->m_flags & art_mask) != art_mask)
     {
-        ap = next_article(ap);
+        ap = ap->next_article();
     }
     if (!ap)
     {
@@ -1358,7 +1370,7 @@ Article *subj_article(Subject *sp)
         {
             while (ap && !(ap->m_flags & AF_SEL))
             {
-                ap = next_article(ap);
+                ap = ap->next_article();
             }
             if (!ap)
             {

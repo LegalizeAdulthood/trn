@@ -17,6 +17,5 @@ Article    *get_tree_artp(int x, int y);
 ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject);
 ArticleLine finish_tree(ArticleLine last_line);
 void entire_tree(Article *ap);
-char thread_letter(Article *ap);
 
 #endif

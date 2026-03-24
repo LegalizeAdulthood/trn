@@ -7,15 +7,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 ## addng.h
 - *(none)*
 
-## bits.h
-- `void one_more(Article *ap);`
-- `void one_less(Article *ap);`
-- `void one_missing(Article *ap);`
-- `void unmark_as_read(Article *ap);`
-- `void set_read(Article *ap);`
-- `void delay_unmark(Article *ap);`
-- `void mark_as_read(Article *ap);`
-
 ## cache.h
 - *(none for Subject)*
 
@@ -38,11 +29,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `HashDatum hash_fetch(HashTable *tbl, ...);`
 - `void hash_store_last(HashDatum data);`
 - `void hash_walk(HashTable *tbl, ...);`
-
-## kfile.h
-- `void change_auto_flags(Article *ap, AutoKillFlags auto_flag);`
-- `void clear_auto_flags(Article *ap);`
-- `void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags subj_flags, AutoKillFlags chain_flags);`
 
 ## list.h
 - `char *list_get_item(List *list, long index);`
@@ -73,53 +59,28 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `void check_expired(NewsgroupData *np, ArticleNum first);`
 - `bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam);`
 
-## rt-ov.h
-- `const char *ov_field(Article *ap, int num);`
-
 ## rt-process.h
-- `void thread_article(Article *article, char *references);`
-- `void rover_thread(Article *article, char *s);`
-- `void link_child(Article *child);`
 - `void merge_threads(Subject *s1, Subject *s2);`
-- `bool valid_article(Article *article);`
 - `Article *get_article(char *msgid);`
 - `Article *allocate_article(ArticleNum artnum);`
 
 ## rt-util.h
-- `const char *compress_date(const Article *ap, int size);`
 - `const char *compress_subj(const Article *ap, int max);`
 
 ## rt-wumpus.h
 - `void entire_tree(Article *ap);`
-- `char thread_letter(Article *ap);`
 
 ## rthread.h
-- `Article *bump_article(Article *ap);`
-- `Article *next_article(Article *ap);`
-- `Article *prev_article(Article *ap);`
 - `Subject *next_subject(Subject *sp, int subj_mask);`
 - `Subject *prev_subject(Subject *sp, int subj_mask);`
-- `void select_article(Article *ap, AutoKillFlags auto_flags);`
-- `void select_articles_subject(Article *ap, AutoKillFlags auto_flags);`
 - `void select_subject(Subject *subj, AutoKillFlags auto_flags);`
-- `void select_articles_thread(Article *ap, AutoKillFlags auto_flags);`
-- `void select_thread(Article *thread, AutoKillFlags auto_flags);`
 - `void select_sub_thread(Article *ap, AutoKillFlags auto_flags);`
-- `void deselect_article(Article *ap, AutoKillFlags auto_flags);`
-- `void deselect_articles_subject(Article *ap);`
 - `void deselect_subject(Subject *subj);`
-- `void deselect_articles_thread(Article *ap);`
-- `void deselect_thread(Article *thread);`
-- `void kill_articles_subject(Article *ap, AutoKillFlags auto_flags);`
 - `void kill_subject(Subject *subj, AutoKillFlags auto_flags);`
-- `void kill_articles_thread(Article *ap, AutoKillFlags auto_flags);`
-- `void kill_thread(Article *thread, AutoKillFlags auto_flags);`
 - `void kill_sub_thread(Article *ap, AutoKillFlags auto_flags);`
 - `void unkill_subject(Subject *subj);`
-- `void unkill_thread(Article *thread);`
 - `void unkill_sub_thread(Article *ap);`
 - `void clear_subject(Subject *subj);`
-- `void clear_thread(Article *thread);`
 - `void clear_sub_thread(Article *ap);`
 - `Article *subj_article(Subject *sp);`
 

@@ -27,7 +27,6 @@ char *extract_name(char *name);
 char *compress_name(char *name, int max);
 char *compress_address(char *name, int max);
 char *compress_from(const char *from, int size);
-char *compress_date(const Article *ap, int size);
 bool strip_one_re(char *str, char **strp);
 bool subject_has_re(char *str, char **strp);
 const char *compress_subj(const Article *ap, int max);

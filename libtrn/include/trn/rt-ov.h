@@ -27,6 +27,5 @@ bool        ov_init();
 bool        ov_data(ArticleNum first, ArticleNum last, bool cheating);
 void        ov_close();
 const char *ov_field_name(int num);
-const char *ov_field(Article *ap, int num);
 
 #endif

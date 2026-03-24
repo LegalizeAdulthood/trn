@@ -2439,7 +2439,7 @@ static void display_article(const Article *ap, int ix, int sel)
     else if (*g_sel_art_display_mode == 'd')
     {
           std::printf("%s  %s\n",
-               compress_date(ap, date_width),
+               ap->compress_date(date_width),
                compress_subj(ap, subj_width - date_width));
     }
     else
@@ -2497,7 +2497,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
         if (*g_sel_art_display_mode == 'd')
         {
             std::printf("%s%3d  %s\n",
-                   compress_date(first_ap, date_width), j,
+                   first_ap->compress_date(date_width), j,
                    compress_subj(first_ap, subj_width - date_width));
         }
         else

@@ -389,7 +389,7 @@ DoArticleResult do_article()
             if (g_in_header == SUBJ_LINE && g_do_hiding   //
                 && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
             {
-                s = get_cached_line(g_artp, SUBJ_LINE, false);
+                s = g_artp->get_cached_line(SUBJ_LINE, false);
                 if (s && s_continuation)
                 {
                     // continuation lines were already output
@@ -1240,7 +1240,7 @@ refresh_screen:
     case 'u':
     case 'w': case 'W':
     case '|':
-        mark_as_read(g_artp);   // mark article as read
+        g_artp->mark_as_read();   // mark article as read
         // FALL THROUGH
 
     case 'U': case ',':

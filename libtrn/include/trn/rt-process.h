@@ -13,11 +13,7 @@ struct Subject;
 
 Article *allocate_article(ArticleNum artnum);
 int      msg_id_cmp(const char *key, int key_len, HashDatum data);
-bool     valid_article(Article *article);
 Article *get_article(char *msgid);
-void     thread_article(Article *article, char *references);
-void     rover_thread(Article *article, char *s);
-void     link_child(Article *child);
 void     merge_threads(Subject *s1, Subject *s2);
 
 #endif

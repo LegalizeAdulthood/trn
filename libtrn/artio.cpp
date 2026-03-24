@@ -92,7 +92,7 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
             {
                 continue;
             }
-            uncache_article(ap, false);
+            ap->uncache_article(false);
         }
         else
         {

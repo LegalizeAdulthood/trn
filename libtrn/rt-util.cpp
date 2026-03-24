@@ -615,11 +615,11 @@ char *compress_from(const char *from, int size)
 }
 
 // Fit the date in <max> chars.
-char *compress_date(const Article *ap, int size)
+char *Article::compress_date(int size) const
 {
     char* t;
 
-    std::strncpy(t = g_cmd_buf, std::ctime(&ap->m_date), size);
+    std::strncpy(t = g_cmd_buf, std::ctime(&m_date), size);
     char *s = std::strchr(t, '\n');
     if (s != nullptr)
     {
@@ -689,6 +689,8 @@ bool subject_has_re(char *str, char **strp)
 
 // Output a subject in <max> chars.  Does intelligent trimming that tries to
 // save the last two words on the line, excluding "(was: blah)" if needed.
+//
+// TODO: why does this check ap for nullptr?
 //
 const char *compress_subj(const Article *ap, int max)
 {

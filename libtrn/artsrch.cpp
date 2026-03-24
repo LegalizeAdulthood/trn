@@ -251,7 +251,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                 {
                     cmd_lst = save_str("j");
                 }
-                mark_as_read(article_ptr(g_art));       // this article needs to die
+                article_ptr(g_art)->mark_as_read();       // this article needs to die
             }
             if (!*h)
             {

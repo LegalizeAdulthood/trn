@@ -407,7 +407,7 @@ static bool kill_file_junk(char *ptr, int killmask)
     Article* ap = (Article*)ptr;
     if ((ap->m_flags & killmask) == AF_UNREAD)
     {
-        set_read(ap);
+        ap->set_read();
     }
     else if (ap->m_flags & g_sel_mask)
     {
@@ -715,80 +715,80 @@ void update_thread_kill_file()
     g_kf_state &= ~KFS_THREAD_CHANGES;
 }
 
-void change_auto_flags(Article *ap, AutoKillFlags auto_flag)
+void Article::change_auto_flags(AutoKillFlags auto_flag)
 {
-    if (auto_flag > (ap->m_auto_flags & (AUTO_KILL_MASK | AUTO_SEL_MASK)))
+    if (auto_flag > (m_auto_flags & (AUTO_KILL_MASK | AUTO_SEL_MASK)))
     {
-        if (ap->m_auto_flags & AUTO_OLD)
+        if (m_auto_flags & AUTO_OLD)
         {
             g_kf_change_thread_cnt++;
         }
-        ap->m_auto_flags = auto_flag;
+        m_auto_flags = auto_flag;
         g_kf_state |= g_kfs_thread_change_set;
     }
 }
 
-void clear_auto_flags(Article *ap)
+void Article::clear_auto_flags()
 {
-    if (ap->m_auto_flags)
+    if (m_auto_flags)
     {
-        if (ap->m_auto_flags & AUTO_OLD)
+        if (m_auto_flags & AUTO_OLD)
         {
             g_kf_change_thread_cnt++;
         }
-        ap->m_auto_flags = AUTO_KILL_NONE;
+        m_auto_flags = AUTO_KILL_NONE;
         g_kf_state |= g_kfs_thread_change_set;
     }
 }
 
-void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags subj_flags, AutoKillFlags chain_flags)
+void Article::perform_auto_flags(AutoKillFlags thread_flags, AutoKillFlags subj_flags, AutoKillFlags chain_flags)
 {
     if (thread_flags & AUTO_SEL_THD)
     {
         if (g_sel_mode == SM_THREAD)
         {
-            select_articles_thread(ap, AUTO_SEL_THD);
+            select_articles_thread(AUTO_SEL_THD);
         }
         else
         {
-            select_articles_subject(ap, AUTO_SEL_THD);
+            select_articles_subject(AUTO_SEL_THD);
         }
     }
     else if (subj_flags & AUTO_SEL_SBJ)
     {
-        select_articles_subject(ap, AUTO_SEL_SBJ);
+        select_articles_subject(AUTO_SEL_SBJ);
     }
     else if (chain_flags & AUTO_SEL_FOL)
     {
-        select_sub_thread(ap, AUTO_SEL_FOL);
+        select_sub_thread(this, AUTO_SEL_FOL);
     }
-    else if (ap->m_auto_flags & AUTO_SEL_1)
+    else if (m_auto_flags & AUTO_SEL_1)
     {
-        select_article(ap, AUTO_SEL_1);
+        select_article(AUTO_SEL_1);
     }
 
     if (thread_flags & AUTO_KILL_THD)
     {
         if (g_sel_mode == SM_THREAD)
         {
-            kill_articles_thread(ap, AFFECT_ALL | AUTO_KILL_THD);
+            kill_articles_thread(AFFECT_ALL | AUTO_KILL_THD);
         }
         else
         {
-            kill_articles_subject(ap, AFFECT_ALL | AUTO_KILL_THD);
+            kill_articles_subject(AFFECT_ALL | AUTO_KILL_THD);
         }
     }
     else if (subj_flags & AUTO_KILL_SBJ)
     {
-        kill_articles_subject(ap, AFFECT_ALL | AUTO_KILL_SBJ);
+        kill_articles_subject(AFFECT_ALL | AUTO_KILL_SBJ);
     }
     else if (chain_flags & AUTO_KILL_FOL)
     {
-        kill_sub_thread(ap, AFFECT_ALL | AUTO_KILL_FOL);
+        kill_sub_thread(this, AFFECT_ALL | AUTO_KILL_FOL);
     }
-    else if (ap->m_auto_flags & AUTO_KILL_1)
+    else if (m_auto_flags & AUTO_KILL_1)
     {
-        mark_as_read(ap);
+        mark_as_read();
     }
 }
 

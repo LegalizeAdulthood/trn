@@ -130,7 +130,7 @@ void rc_to_bits()
                     ++unread;
                     if (ap->m_auto_flags & AUTO_SEL_MASK)
                     {
-                        select_article(ap, ap->m_auto_flags);
+                        ap->select_article(ap->m_auto_flags);
                     }
                 }
             }
@@ -180,7 +180,7 @@ void rc_to_bits()
                 ++unread;
                 if (ap->m_auto_flags & AUTO_SEL_MASK)
                 {
-                    select_article(ap, ap->m_auto_flags);
+                    ap->select_article(ap->m_auto_flags);
                 }
             }
         }
@@ -356,13 +356,6 @@ void find_existing_articles()
                 {
                     ap->m_flags |= AF_EXISTS;
                 }
-#if 0
-                s = std::strchr(g_ser_line, ' ');
-                if (s)
-                {
-                    rover_thread(article_ptr(an), s);
-                }
-#endif
             }
         }
         else if (g_first_subject && g_cached_all_in_range)
@@ -460,7 +453,7 @@ void find_existing_articles()
                  g_abs_first < first;
                  g_abs_first = article_next(g_abs_first))
             {
-                one_missing(article_ptr(g_abs_first));
+                article_ptr(g_abs_first)->one_missing();
             }
             g_abs_first = first;
         }
@@ -480,46 +473,46 @@ void find_existing_articles()
 }
 
 // mark an article unread, keeping track of to_read[]
-
-void one_more(Article *ap)
+//
+void Article::one_more()
 {
-    if (!(ap->m_flags & AF_UNREAD))
+    if (!(m_flags & AF_UNREAD))
     {
-        ArticleNum art_num = article_num(ap);
+        ArticleNum art_num = article_num(this);
         check_first(art_num);
-        ap->m_flags |= AF_UNREAD;
-        ap->m_flags &= ~AF_DEL;
+        m_flags |= AF_UNREAD;
+        m_flags &= ~AF_DEL;
         g_newsgroup_ptr->to_read++;
-        if (ap->m_subj)
+        if (m_subj)
         {
             if (g_selected_only)
             {
-                if (ap->m_subj->flags & static_cast<SubjectFlags>(g_sel_mask))
+                if (m_subj->flags & static_cast<SubjectFlags>(g_sel_mask))
                 {
-                    ap->m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+                    m_flags |= static_cast<ArticleFlags>(g_sel_mask);
                     g_selected_count++;
                 }
             }
             else
             {
-                ap->m_subj->flags |= SF_VISIT;
+                m_subj->flags |= SF_VISIT;
             }
         }
     }
 }
 
 // mark an article read, keeping track of to_read[]
-
-void one_less(Article *ap)
+//
+void Article::one_less()
 {
-    if (ap->m_flags & AF_UNREAD)
+    if (m_flags & AF_UNREAD)
     {
-        ap->m_flags &= ~AF_UNREAD;
+        m_flags &= ~AF_UNREAD;
         // Keep g_selected_count accurate
-        if (ap->m_flags & static_cast<ArticleFlags>(g_sel_mask))
+        if (m_flags & static_cast<ArticleFlags>(g_sel_mask))
         {
             g_selected_count--;
-            ap->m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+            m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         }
         if (g_newsgroup_ptr->to_read > TR_NONE)
         {
@@ -533,27 +526,27 @@ void one_less_art_num(ArticleNum art_num)
     Article* ap = article_find(art_num);
     if (ap)
     {
-        one_less(ap);
+        ap->one_less();
     }
 }
 
-void one_missing(Article *ap)
+void Article::one_missing()
 {
-    g_missing_count += (ap->m_flags & AF_UNREAD) != 0;
-    one_less(ap);
-    ap->m_flags = (ap->m_flags & ~(AF_HAS_RE|AF_YANK_BACK|AF_EXISTS))
+    g_missing_count += (m_flags & AF_UNREAD) != 0;
+    one_less();
+    m_flags = (m_flags & ~(AF_HAS_RE|AF_YANK_BACK|AF_EXISTS))
               | AF_CACHED|AF_THREADED;
 }
 
 // mark an article as unread, with possible xref chasing
-
-void unmark_as_read(Article *ap)
+//
+void Article::unmark_as_read()
 {
-    one_more(ap);
+    one_more();
 #ifdef MCHASE
-    if (!empty(ap->m_xrefs) && !(ap->m_flags & AF_MCHASE))
+    if (!empty(m_xrefs) && !(m_flags & AF_MCHASE))
     {
-        ap->m_flags |= AF_MCHASE;
+        m_flags |= AF_MCHASE;
         s_chase_count++;
     }
 #endif
@@ -562,37 +555,37 @@ void unmark_as_read(Article *ap)
 // Mark an article as read in this newsgroup and possibly chase xrefs.
 // Don't call this on missing articles.
 //
-void set_read(Article *ap)
+void Article::set_read()
 {
-    one_less(ap);
-    if (!g_olden_days && !empty(ap->m_xrefs) && !(ap->m_flags & AF_K_CHASE))
+    one_less();
+    if (!g_olden_days && !empty(m_xrefs) && !(m_flags & AF_K_CHASE))
     {
-        ap->m_flags |= AF_K_CHASE;
+        m_flags |= AF_K_CHASE;
         s_chase_count++;
     }
 }
 
 // temporarily mark article as read.  When newsgroup is exited, articles
 // will be marked as unread.  Called via M command
-
-void delay_unmark(Article *ap)
+//
+void Article::delay_unmark()
 {
-    if (!(ap->m_flags & AF_YANK_BACK))
+    if (!(m_flags & AF_YANK_BACK))
     {
-        ap->m_flags |= AF_YANK_BACK;
+        m_flags |= AF_YANK_BACK;
         g_dm_count++;
     }
 }
 
-// mark article as read.  If article is cross referenced to other
+// mark article as read.  If article is cross-referenced to other
 // newsgroups, mark them read there also.
-
-void mark_as_read(Article *ap)
+//
+void Article::mark_as_read()
 {
-    one_less(ap);
-    if (!empty(ap->m_xrefs) && !(ap->m_flags & AF_K_CHASE))
+    one_less();
+    if (!empty(m_xrefs) && !(m_flags & AF_K_CHASE))
     {
-        ap->m_flags |= AF_K_CHASE;
+        m_flags |= AF_K_CHASE;
         s_chase_count++;
     }
     g_check_count++;             // get more worried about crashes
@@ -606,7 +599,7 @@ void mark_missing_articles()
     {
         if (!(ap->m_flags & AF_EXISTS))
         {
-            one_missing(ap);
+            ap->one_missing();
         }
     }
 }
@@ -647,10 +640,10 @@ static bool yank_article(char *ptr, int arg)
     Article* ap = (Article*)ptr;
     if (ap->m_flags & AF_YANK_BACK)
     {
-        unmark_as_read(ap);
+        ap->unmark_as_read();
         if (g_selected_only)
         {
-            select_article(ap, AUTO_KILL_NONE);
+            ap->select_article(AUTO_KILL_NONE);
         }
         ap->m_flags &= ~AF_YANK_BACK;
     }
@@ -782,7 +775,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
                 }
                 if (mark_read)
                 {
-                    one_less(article_ptr(x)); // take care of old C newses
+                    article_ptr(x)->one_less(); // take care of old C newses
                 }
 # ifdef MCHASE
                 else

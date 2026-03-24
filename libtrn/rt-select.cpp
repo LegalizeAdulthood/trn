@@ -1676,7 +1676,7 @@ static bool select_item(Selection u)
         break;
 
     case SM_THREAD:
-        select_thread(u.sp->thread, AUTO_KILL_NONE);
+        u.sp->thread->select_thread(AUTO_KILL_NONE);
         break;
 
     case SM_SUBJECT:
@@ -1684,7 +1684,7 @@ static bool select_item(Selection u)
         break;
 
     case SM_ARTICLE:
-        select_article(u.ap, AUTO_KILL_NONE);
+        u.ap->select_article(AUTO_KILL_NONE);
         break;
 
     case SM_UNIVERSAL:
@@ -1710,7 +1710,7 @@ static bool delay_return_item(Selection u)
         return false;
 
     case SM_ARTICLE:
-        delay_unmark(u.ap);
+        u.ap->delay_unmark();
         break;
 
     default:
@@ -1718,11 +1718,11 @@ static bool delay_return_item(Selection u)
         Article* ap;
         if (g_sel_mode == SM_THREAD)
         {
-            for (ap = first_art(u.sp); ap; ap = next_article(ap))
+            for (ap = first_art(u.sp); ap; ap = ap->next_article())
             {
                 if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
                 {
-                    delay_unmark(ap);
+                    ap->delay_unmark();
                 }
             }
         }
@@ -1732,7 +1732,7 @@ static bool delay_return_item(Selection u)
             {
                 if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
                 {
-                    delay_unmark(ap);
+                    ap->delay_unmark();
                 }
             }
         }
@@ -1794,7 +1794,7 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_THREAD:
-        deselect_thread(u.sp->thread);
+        u.sp->thread->deselect_thread();
         break;
 
     case SM_SUBJECT:
@@ -1814,7 +1814,7 @@ static bool deselect_item(Selection u)
         break;
 
     default:
-        deselect_article(u.ap, AUTO_KILL_NONE);
+        u.ap->deselect_article(AUTO_KILL_NONE);
         break;
     }
     return true;
@@ -1981,7 +1981,7 @@ static void sel_cleanup()
                         sp->flags &= ~SF_DEL;
                         if (g_sel_mode == SM_THREAD)
                         {
-                            kill_thread(sp->thread, AFFECT_UNSEL);
+                            sp->thread->kill_thread(AFFECT_UNSEL);
                         }
                         else
                         {
@@ -2001,7 +2001,7 @@ static bool mark_del_as_read(char *ptr, int arg)
     if (ap->m_flags & AF_DEL)
     {
         ap->m_flags &= ~AF_DEL;
-        set_read(ap);
+        ap->set_read();
     }
     return false;
 }
@@ -2557,7 +2557,7 @@ reask_sort:
                     {
                         if (ch == 'J' || !g_sel_exclusive || (ap->m_flags & AF_INCLUDED))
                         {
-                            set_read(ap);
+                            ap->set_read();
                         }
                     }
                     app++;
@@ -2740,7 +2740,7 @@ reask_sort:
                             sp->flags = SF_NONE;
                             if (g_sel_mode == SM_THREAD)
                             {
-                                kill_thread(sp->thread, AFFECT_UNSEL);
+                                sp->thread->kill_thread(AFFECT_UNSEL);
                             }
                             else
                             {

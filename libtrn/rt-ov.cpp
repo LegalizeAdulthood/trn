@@ -368,7 +368,7 @@ beginning:
         {
             if (!(ap->m_flags & cachemask))
             {
-                one_missing(ap);
+                ap->one_missing();
             }
         }
         g_spin_todo -= (last - artnum).value_of();
@@ -507,15 +507,15 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 
     if (!article->m_subj)
     {
-        set_subj_line(article, fields[OV_SUBJ], std::strlen(fields[OV_SUBJ]));
+        article->set_subj_line(fields[OV_SUBJ], std::strlen(fields[OV_SUBJ]));
     }
     if (!article->m_msg_id)
     {
-        set_cached_line(article, MSG_ID_LINE, save_str(fields[OV_MSG_ID]));
+        article->set_cached_line(MSG_ID_LINE, save_str(fields[OV_MSG_ID]));
     }
     if (!article->m_from)
     {
-        set_cached_line(article, FROM_LINE, save_str(fields[OV_FROM]));
+        article->set_cached_line(FROM_LINE, save_str(fields[OV_FROM]));
     }
     if (!article->m_date)
     {
@@ -523,11 +523,11 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     }
     if (!article->m_bytes && fields[OV_BYTES])
     {
-        set_cached_line(article, BYTES_LINE, fields[OV_BYTES]);
+        article->set_cached_line(BYTES_LINE, fields[OV_BYTES]);
     }
     if (!article->m_lines && fields[OV_LINES])
     {
-        set_cached_line(article, LINES_LINE, fields[OV_LINES]);
+        article->set_cached_line(LINES_LINE, fields[OV_LINES]);
     }
 
     if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD))
@@ -570,19 +570,19 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 
     if (g_threaded_group)
     {
-        if (valid_article(article))
+        if (article->valid_article())
         {
-            thread_article(article, fields[OV_REFS]);
+            article->thread_article(fields[OV_REFS]);
         }
     }
     else if (!(article->m_flags & AF_CACHED))
     {
-        cache_article(article);
+        article->cache_article();
     }
 
     if (article->m_flags & AF_UNREAD)
     {
-        check_poster(article);
+        article->check_poster();
     }
     spin(100);
 }
@@ -621,28 +621,4 @@ void ov_close()
 const char *ov_field_name(int num)
 {
     return g_header_type[s_header_num[num]].name.c_str();
-}
-
-const char *ov_field(Article *ap, int num)
-{
-    OverviewFieldNum fn = g_data_source->field_num[num];
-    if (!(g_data_source->field_flags[fn] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD)))
-    {
-        return nullptr;
-    }
-
-    if (fn == OV_NUM)
-    {
-        std::sprintf(g_cmd_buf, "%ld", (long)ap->m_num.value_of());
-        return g_cmd_buf;
-    }
-
-    if (fn == OV_DATE)
-    {
-        std::sprintf(g_cmd_buf, "%ld", (long)ap->m_date);
-        return g_cmd_buf;
-    }
-
-    const char *s = get_cached_line(ap, s_header_num[fn], true);
-    return s ? s : "";
 }
