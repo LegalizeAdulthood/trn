@@ -275,11 +275,11 @@ static DataSource *new_data_source(const char *name, char **vals)
         v = vals[DI_ACT_REFETCH];
         if (v != nullptr && *v)
         {
-            dp->act_sf.refetch_secs = text_to_secs(v, g_def_refetch_secs);
+            dp->act_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
         else if (!vals[DI_ACTIVE_FILE])
         {
-            dp->act_sf.refetch_secs = g_def_refetch_secs;
+            dp->act_sf.m_refetch_secs = g_def_refetch_secs;
         }
     }
     else
@@ -306,43 +306,43 @@ static DataSource *new_data_source(const char *name, char **vals)
             stat_t extra_stat{};
             if (stat(dp->extra_name,&extra_stat) >= 0)
             {
-                dp->act_sf.last_fetch = extra_stat.st_mtime;
+                dp->act_sf.m_last_fetch = extra_stat.st_mtime;
             }
         }
         else
         {
             dp->extra_name = temp_filename();
             dp->flags |= DF_TMP_ACTIVE_FILE;
-            if (!dp->act_sf.refetch_secs)
+            if (!dp->act_sf.m_refetch_secs)
             {
-                dp->act_sf.refetch_secs = 1;
+                dp->act_sf.m_refetch_secs = 1;
             }
         }
 
         v = vals[DI_DESC_REFETCH];
         if (v != nullptr && *v)
         {
-            dp->desc_sf.refetch_secs = text_to_secs(v, g_def_refetch_secs);
+            dp->desc_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
         else if (!dp->group_desc)
         {
-            dp->desc_sf.refetch_secs = g_def_refetch_secs;
+            dp->desc_sf.m_refetch_secs = g_def_refetch_secs;
         }
         if (dp->group_desc)
         {
             stat_t desc_stat{};
             if (stat(dp->group_desc,&desc_stat) >= 0)
             {
-                dp->desc_sf.last_fetch = desc_stat.st_mtime;
+                dp->desc_sf.m_last_fetch = desc_stat.st_mtime;
             }
         }
         else
         {
             dp->group_desc = temp_filename();
             dp->flags |= DF_TMP_GROUP_DESC;
-            if (!dp->desc_sf.refetch_secs)
+            if (!dp->desc_sf.m_refetch_secs)
             {
-                dp->desc_sf.refetch_secs = 1;
+                dp->desc_sf.m_refetch_secs = 1;
             }
         }
     }
@@ -451,7 +451,7 @@ bool open_data_source(DataSource *dp)
         }
         g_nntp_allow_timeout = false;
         dp->nntp_link = g_nntp_link;
-        if (dp->act_sf.refetch_secs)
+        if (dp->act_sf.m_refetch_secs)
         {
             switch (nntp_list("active", "control", 7))
             {
@@ -459,7 +459,7 @@ bool open_data_source(DataSource *dp)
                 if (std::strncmp(g_ser_line, "control ", 8) != 0)
                 {
                     std::strcpy(g_buf, g_ser_line);
-                    dp->act_sf.last_fetch = 0;
+                    dp->act_sf.m_last_fetch = 0;
                     success = active_file_hash(dp);
                     break;
                 }
@@ -479,9 +479,8 @@ bool open_data_source(DataSource *dp)
                     dp->flags &= ~DF_TMP_ACTIVE_FILE;
                     std::free(dp->extra_name);
                     dp->extra_name = nullptr;
-                    dp->act_sf.refetch_secs = 0;
-                    success = source_file_open(&dp->act_sf,nullptr,
-                                           nullptr,nullptr);
+                    dp->act_sf.m_refetch_secs = 0;
+                    success = dp->act_sf.open(nullptr, nullptr, nullptr);
                 }
                 else
                 {
@@ -575,7 +574,7 @@ void close_data_source(DataSource *dp)
         }
         else
         {
-            source_file_end_append(&dp->act_sf, dp->extra_name);
+            dp->act_sf.end_append(dp->extra_name);
         }
         if (dp->group_desc)
         {
@@ -585,7 +584,7 @@ void close_data_source(DataSource *dp)
             }
             else
             {
-                source_file_end_append(&dp->desc_sf, dp->group_desc);
+                dp->desc_sf.end_append(dp->group_desc);
             }
         }
     }
@@ -603,8 +602,8 @@ void close_data_source(DataSource *dp)
         dp->nntp_link = g_nntp_link;
         set_data_source(save_datasrc);
     }
-    source_file_close(&dp->act_sf);
-    source_file_close(&dp->desc_sf);
+    dp->act_sf.close();
+    dp->desc_sf.close();
     dp->flags &= ~DF_OPEN;
     if (g_data_source == dp)
     {
@@ -619,17 +618,17 @@ bool active_file_hash(DataSource *dp)
     {
         DataSource* save_datasrc = g_data_source;
         set_data_source(dp);
-        g_spin_todo = dp->act_sf.recent_cnt;
-        ret = source_file_open(&dp->act_sf, dp->extra_name, "active", dp->news_id);
+        g_spin_todo = dp->act_sf.m_recent_cnt;
+        ret = dp->act_sf.open(dp->extra_name, "active", dp->news_id);
         if (g_spin_count > 0)
         {
-            dp->act_sf.recent_cnt = g_spin_count;
+            dp->act_sf.m_recent_cnt = g_spin_count;
         }
         set_data_source(save_datasrc);
     }
     else
     {
-        ret = source_file_open(&dp->act_sf, dp->news_id, nullptr, nullptr);
+        ret = dp->act_sf.open(dp->news_id, nullptr, nullptr);
     }
     return ret != 0;
 }
@@ -637,14 +636,14 @@ bool active_file_hash(DataSource *dp)
 bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high)
 {
     ActivePosition act_pos;
-    std::FILE* fp = dp->act_sf.fp;
+    std::FILE* fp = dp->act_sf.m_fp;
     char* lbp;
     int lbp_len;
 
     // Do a quick, hashed lookup
 
     outbuf[0] = '\0';
-    HashDatum data = hash_fetch(dp->act_sf.hp, nam, len);
+    HashDatum data = hash_fetch(dp->act_sf.m_hp, nam, len);
     if (data.dat_ptr)
     {
         ListNode* node = (ListNode*)data.dat_ptr;
@@ -683,7 +682,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
         {
             if (fp)
             {
-                (void) source_file_append(&dp->act_sf, outbuf, len);
+                (void) dp->act_sf.append(outbuf, len);
             }
             return true;
         }
@@ -717,7 +716,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
 
     if (lbp_len)
     {
-        if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs)
+        if ((dp->flags & DF_REMOTE) && dp->act_sf.m_refetch_secs)
         {
             char* cp;
             if (high && high != ArticleNum{std::atol(cp = lbp + len + 1)})
@@ -766,31 +765,29 @@ const char *find_group_desc(DataSource *dp, const char *group_name)
         return "";
     }
 
-    if (!dp->desc_sf.hp)
+    if (!dp->desc_sf.m_hp)
     {
         int ret;
-        if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs)
+        if ((dp->flags & DF_REMOTE) && dp->desc_sf.m_refetch_secs)
         {
             set_data_source(dp);
             if ((dp->flags & (DF_TMP_GROUP_DESC | DF_NO_XGTITLE)) == DF_TMP_GROUP_DESC //
                 && g_net_speed < 5)
             {
-                (void)source_file_open(&dp->desc_sf,nullptr, // TODO: check return?
-                                   nullptr,nullptr);
+                (void) dp->desc_sf.open(nullptr, nullptr, nullptr);
                 grouplen = std::strlen(group_name);
                 goto try_xgtitle;
             }
-            g_spin_todo = dp->desc_sf.recent_cnt;
-            ret = source_file_open(&dp->desc_sf, dp->group_desc,
-                               "newsgroups", dp->news_id);
+            g_spin_todo = dp->desc_sf.m_recent_cnt;
+            ret = dp->desc_sf.open(dp->group_desc, "newsgroups", dp->news_id);
             if (g_spin_count > 0)
             {
-                dp->desc_sf.recent_cnt = g_spin_count;
+                dp->desc_sf.m_recent_cnt = g_spin_count;
             }
         }
         else
         {
-            ret = source_file_open(&dp->desc_sf, dp->group_desc, nullptr, nullptr);
+            ret = dp->desc_sf.open(dp->group_desc, nullptr, nullptr);
         }
         if (!ret)
         {
@@ -803,14 +800,14 @@ const char *find_group_desc(DataSource *dp, const char *group_name)
             dp->group_desc = nullptr;
             return "";
         }
-        if (ret == 2 || !dp->desc_sf.refetch_secs)
+        if (ret == 2 || !dp->desc_sf.m_refetch_secs)
         {
             dp->flags |= DF_NO_XGTITLE;
         }
     }
 
     grouplen = std::strlen(group_name);
-    if (HashDatum data = hash_fetch(dp->desc_sf.hp, group_name, grouplen); data.dat_ptr)
+    if (HashDatum data = hash_fetch(dp->desc_sf.m_hp, group_name, grouplen); data.dat_ptr)
     {
         ListNode*node = (ListNode*)data.dat_ptr;
         // dp->act_sf.lp->recent = node;
@@ -833,13 +830,13 @@ try_xgtitle:
                 nntp_finish_list();
                 std::strcat(g_buf, "\n");
             }
-            group_name = source_file_append(&dp->desc_sf, g_buf, grouplen);
+            group_name = dp->desc_sf.append(g_buf, grouplen);
             return group_name+grouplen+1;
         }
         dp->flags |= DF_NO_XGTITLE;
-        if (dp->desc_sf.lp->high == -1)
+        if (dp->desc_sf.m_lp->high == -1)
         {
-            source_file_close(&dp->desc_sf);
+            dp->desc_sf.close();
             if (dp->flags & DF_TMP_GROUP_DESC)
             {
                 return find_group_desc(dp, group_name);
@@ -878,7 +875,7 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
     return s;
 }
 
-int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cmd, const char *server)
+int SourceFile::open(const char *filename, const char *fetch_cmd, const char *server)
 {
     unsigned offset;
     char* s;
@@ -895,13 +892,13 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
     }
     else if (server)
     {
-        if (!sfp->refetch_secs)
+        if (!m_refetch_secs)
         {
             server = nullptr;
             fp = std::fopen(filename, "r");
             g_spin_todo = 0;
         }
-        else if (now - sfp->last_fetch > sfp->refetch_secs && (sfp->refetch_secs != 2 || !sfp->last_fetch))
+        else if (now - m_last_fetch > m_refetch_secs && (m_refetch_secs != 2 || !m_last_fetch))
         {
             fp = std::fopen(filename, "w+");
             if (fp)
@@ -921,7 +918,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
                     std::fclose(fp);
                     return 0;
                 }
-                sfp->last_fetch = now;
+                m_last_fetch = now;
                 if (g_net_speed > 8)
                 {
                     g_spin_todo = 0;
@@ -934,14 +931,14 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
             fp = std::fopen(filename, "r+");
             if (!fp)
             {
-                sfp->refetch_secs = 0;
+                m_refetch_secs = 0;
                 fp = std::fopen(filename, "r");
             }
             g_spin_todo = 0;
         }
-        if (sfp->refetch_secs & 3)
+        if (m_refetch_secs & 3)
         {
-            sfp->refetch_secs += 365L * 24 * 60 * 60;
+            m_refetch_secs += 365L * 24 * 60 * 60;
         }
     }
     else
@@ -958,23 +955,23 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
     }
     set_spin(g_spin_todo > 0? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
 
-    source_file_close(sfp);
+    close();
 
     // Create a list with one character per item using a large chunk size.
-    sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
-    sfp->hp = hash_create(3001, source_file_cmp);
-    sfp->fp = fp;
+    m_lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
+    m_hp = hash_create(3001, source_file_cmp);
+    m_fp = fp;
 
     if (!filename)
     {
-        (void) list_get_item(sfp->lp, 0);
-        sfp->lp->high = -1;
+        (void) list_get_item(m_lp, 0);
+        m_lp->high = -1;
         set_spin(SPIN_OFF);
         return 1;
     }
 
-    char *lbp = list_get_item(sfp->lp, 0);
-    data.dat_ptr = (char*)sfp->lp->first;
+    char *lbp = list_get_item(m_lp, 0);
+    data.dat_ptr = (char*)m_lp->first;
 
     for (offset = 0, node_low = 0;; offset += linelen, lbp += linelen)
     {
@@ -988,7 +985,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
             {
                 std::printf("\nError getting %s file.\n", fetch_cmd);
                 term_down(2);
-                source_file_close(sfp);
+                close();
                 set_spin(SPIN_OFF);
                 return 0;
             }
@@ -1034,19 +1031,19 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
         }
         if (offset + linelen > SRCFILE_CHUNK_SIZE)
         {
-            ListNode* node = sfp->lp->recent;
+            ListNode* node = m_lp->recent;
             node_low += offset;
             node->high = node_low - 1;
             node->data_high = node->data + offset - 1;
             offset = 0;
-            lbp = list_get_item(sfp->lp, node_low);
-            data.dat_ptr = (char*)sfp->lp->recent;
+            lbp = list_get_item(m_lp, node_low);
+            data.dat_ptr = (char*)m_lp->recent;
         }
         data.dat_len = offset;
         (void) std::memcpy(lbp,g_buf,linelen);
-        hash_store(sfp->hp, g_buf, keylen, data);
+        hash_store(m_hp, g_buf, keylen, data);
     }
-    sfp->lp->high = node_low + offset - 1;
+    m_lp->high = node_low + offset - 1;
     set_spin(SPIN_OFF);
 
     if (server)
@@ -1056,7 +1053,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
         {
             std::printf("\nError writing the %s file %s.\n",fetch_cmd,filename);
             term_down(2);
-            source_file_close(sfp);
+            close();
             return 0;
         }
         newline();
@@ -1066,20 +1063,20 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
     return server? 2 : 1;
 }
 
-char *source_file_append(SourceFile *sfp, char *bp, int key_len)
+char *SourceFile::append(char *bp, int key_len)
 {
     HashDatum data;
 
-    long pos = sfp->lp->high + 1;
-    char *lbp = list_get_item(sfp->lp, pos);
-    ListNode *node = sfp->lp->recent;
+    long pos = m_lp->high + 1;
+    char *lbp = list_get_item(m_lp, pos);
+    ListNode *node = m_lp->recent;
     data.dat_len = pos - node->low;
 
     char *s = bp + key_len + 1;
-    if (sfp->fp && sfp->refetch_secs && *s != '\n')
+    if (m_fp && m_refetch_secs && *s != '\n')
     {
-        std::fseek(sfp->fp, 0, 2);
-        std::fputs(bp, sfp->fp);
+        std::fseek(m_fp, 0, 2);
+        std::fputs(bp, m_fp);
     }
 
     if (*s != '\n' && std::isspace(*s))
@@ -1101,50 +1098,50 @@ char *source_file_append(SourceFile *sfp, char *bp, int key_len)
     {
         node->high = pos - 1;
         node->data_high = node->data + data.dat_len - 1;
-        lbp = list_get_item(sfp->lp, pos);
-        node = sfp->lp->recent;
+        lbp = list_get_item(m_lp, pos);
+        node = m_lp->recent;
         data.dat_len = 0;
     }
     data.dat_ptr = (char*)node;
     (void) std::memcpy(lbp,bp,linelen);
-    hash_store(sfp->hp, bp, key_len, data);
-    sfp->lp->high = pos + linelen - 1;
+    hash_store(m_hp, bp, key_len, data);
+    m_lp->high = pos + linelen - 1;
 
     return lbp;
 }
 
-void source_file_end_append(SourceFile *sfp, const char *filename)
+void SourceFile::end_append(const char *filename)
 {
-    if (sfp->fp && sfp->refetch_secs)
+    if (m_fp && m_refetch_secs)
     {
-        std::fflush(sfp->fp);
+        std::fflush(m_fp);
 
-        if (sfp->last_fetch)
+        if (m_last_fetch)
         {
             struct utimbuf ut;
             std::time(&ut.actime);
-            ut.modtime = sfp->last_fetch;
+            ut.modtime = m_last_fetch;
             (void) utime(filename, &ut);
         }
     }
 }
 
-void source_file_close(SourceFile *sfp)
+void SourceFile::close()
 {
-    if (sfp->fp)
+    if (m_fp)
     {
-        std::fclose(sfp->fp);
-        sfp->fp = nullptr;
+        std::fclose(m_fp);
+        m_fp = nullptr;
     }
-    if (sfp->lp)
+    if (m_lp)
     {
-        delete_list(sfp->lp);
-        sfp->lp = nullptr;
+        delete_list(m_lp);
+        m_lp = nullptr;
     }
-    if (sfp->hp)
+    if (m_hp)
     {
-        hash_destroy(sfp->hp);
-        sfp->hp = nullptr;
+        hash_destroy(m_hp);
+        m_hp = nullptr;
     }
 }
 
@@ -1200,9 +1197,9 @@ int find_close_match()
     {
         if (dp->flags & DF_OPEN)
         {
-            if (dp->act_sf.hp)
+            if (dp->act_sf.m_hp)
             {
-                hash_walk(dp->act_sf.hp, check_distance, 0);
+                hash_walk(dp->act_sf.m_hp, check_distance, 0);
             }
             else
             {

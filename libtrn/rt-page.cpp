@@ -450,7 +450,7 @@ try_again:
                 // g_ngptr = np; ??
                 // set_ngname(np->rcline);
                 set_to_read(np, ST_LAX);
-                if (!np->rc->data_source->act_sf.fp)
+                if (!np->rc->data_source->act_sf.m_fp)
                 {
                     save_the_rest = (g_sel_rereading ^ (np->to_read > TR_NONE));
                 }

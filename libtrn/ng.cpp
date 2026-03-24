@@ -259,7 +259,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             if (g_data_source->flags & DF_REMOTE)
             {
-                if (g_data_source->act_sf.fp || get_newsgroup_size(g_newsgroup_ptr) > g_last_art)
+                if (g_data_source->act_sf.m_fp || get_newsgroup_size(g_newsgroup_ptr) > g_last_art)
                 {
                     if (nntp_group(g_newsgroup_name.c_str(), g_newsgroup_ptr) <= 0)
                     {

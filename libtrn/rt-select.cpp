@@ -516,16 +516,16 @@ sel_restart:
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
-            if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.hp)
+            if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.m_hp)
             {
                 find_group_desc(rp->data_source, "control");
-                if (rp->data_source->desc_sf.fp)
+                if (rp->data_source->desc_sf.m_fp)
                 {
                     rp->data_source->flags |= DF_NO_XGTITLE; // TODO: ok?
                 }
                 else
                 {
-                    rp->data_source->desc_sf.refetch_secs = 0;
+                    rp->data_source->desc_sf.m_refetch_secs = 0;
                 }
             }
         }
@@ -603,12 +603,12 @@ sel_restart:
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
-            if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.hp)
+            if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.m_hp)
             {
                 find_group_desc(rp->data_source, "control");
-                if (!rp->data_source->desc_sf.fp)
+                if (!rp->data_source->desc_sf.m_fp)
                 {
-                    rp->data_source->desc_sf.refetch_secs = 0;
+                    rp->data_source->desc_sf.m_refetch_secs = 0;
                 }
             }
         }
@@ -2857,7 +2857,7 @@ static DisplayState newsgroup_commands(char_int ch)
 
     case 'L':
         switch_dmode(&g_sel_grp_display_mode);     // sets g_msg
-        if (*g_sel_grp_display_mode != 's' && !g_multirc->first->data_source->desc_sf.hp)
+        if (*g_sel_grp_display_mode != 's' && !g_multirc->first->data_source->desc_sf.m_hp)
         {
             newline();
             return DS_RESTART;
@@ -3323,7 +3323,7 @@ reask_sort:
 
     case 'L':
         switch_dmode(&g_sel_grp_display_mode);     // sets g_msg
-        if (*g_sel_grp_display_mode != 's' && !g_data_source->desc_sf.hp)
+        if (*g_sel_grp_display_mode != 's' && !g_data_source->desc_sf.m_hp)
         {
             newline();
             return DS_RESTART;

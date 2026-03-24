@@ -149,7 +149,7 @@ int do_shell(const char *shell, const char *cmd)
                 std::strcpy(s_nntp_server_export+len, g_buf);
             }
         }
-        if (g_data_source->act_sf.fp)
+        if (g_data_source->act_sf.m_fp)
         {
             re_export(s_newsa_ctive_export, g_data_source->extra_name, 512);
         }

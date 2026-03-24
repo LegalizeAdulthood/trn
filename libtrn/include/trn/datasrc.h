@@ -24,12 +24,17 @@ struct List;
 
 struct SourceFile
 {
-    std::FILE  *fp;           // the file pointer to read the data
-    HashTable  *hp;           // the hash table for the data
-    List       *lp;           // the list used to store the data
-    long        recent_cnt;   // # lines/bytes this file might be
-    std::time_t last_fetch;    // when the data was last fetched
-    std::time_t refetch_secs; // how long before we refetch this file
+    int   open(const char *filename, const char *fetch_cmd, const char *server);
+    char *append(char *bp, int key_len);
+    void  end_append(const char *filename);
+    void  close();
+
+    std::FILE  *m_fp;           // the file pointer to read the data
+    HashTable  *m_hp;           // the hash table for the data
+    List       *m_lp;           // the list used to store the data
+    long        m_recent_cnt;   // # lines/bytes this file might be
+    std::time_t m_last_fetch;    // when the data was last fetched
+    std::time_t m_refetch_secs; // how long before we refetch this file
 };
 
 enum DataSourceFlags : std::uint16_t
@@ -112,10 +117,6 @@ void        close_data_source(DataSource *dp);
 bool        active_file_hash(DataSource *dp);
 bool        find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high);
 const char *find_group_desc(DataSource *dp, const char *group_name);
-int         source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cmd, const char *server);
-char       *source_file_append(SourceFile *sfp, char *bp, int key_len);
-void        source_file_end_append(SourceFile *sfp, const char *filename);
-void        source_file_close(SourceFile *sfp);
 int         find_close_match();
 
 inline NNTPFlags data_source_nntp_flags(const DataSource *dp)

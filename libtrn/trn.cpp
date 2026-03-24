@@ -974,8 +974,8 @@ void check_active_refetch(bool force)
         {
             continue;
         }
-        if (dp->act_sf.fp && dp->act_sf.refetch_secs
-         && (force || now - dp->act_sf.last_fetch > dp->act_sf.refetch_secs))
+        if (dp->act_sf.m_fp && dp->act_sf.m_refetch_secs
+         && (force || now - dp->act_sf.m_last_fetch > dp->act_sf.m_refetch_secs))
         {
             active_file_hash(dp);
         }
@@ -1012,7 +1012,7 @@ void trn_version()
             {
                 std::sprintf(g_msg,"News from server %s.\n",rp->data_source->news_id);
                 print_lines(g_msg, NO_MARKING);
-                if (rp->data_source->act_sf.fp)
+                if (rp->data_source->act_sf.m_fp)
                 {
                     if (rp->data_source->flags & DF_TMP_ACTIVE_FILE)
                     {
@@ -1028,9 +1028,9 @@ void trn_version()
                 {
                     std::strcpy(g_msg,"Dynamic active file");
                 }
-                if (rp->data_source->act_sf.refetch_secs)
+                if (rp->data_source->act_sf.m_refetch_secs)
                 {
-                    char* cp = secs_to_text(rp->data_source->act_sf.refetch_secs);
+                    char* cp = secs_to_text(rp->data_source->act_sf.m_refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),
@@ -1047,7 +1047,7 @@ void trn_version()
             print_lines(g_msg, NO_MARKING);
             if (rp->data_source->group_desc)
             {
-                if (!rp->data_source->desc_sf.fp && rp->data_source->desc_sf.hp)
+                if (!rp->data_source->desc_sf.m_fp && rp->data_source->desc_sf.m_hp)
                 {
                     std::strcpy(g_msg,"Dynamic group desc. file");
                 }
@@ -1059,9 +1059,9 @@ void trn_version()
                 {
                     std::sprintf(g_msg,"Group desc. file: %s",rp->data_source->group_desc);
                 }
-                if (rp->data_source->desc_sf.refetch_secs)
+                if (rp->data_source->desc_sf.m_refetch_secs)
                 {
-                    char* cp = secs_to_text(rp->data_source->desc_sf.refetch_secs);
+                    char* cp = secs_to_text(rp->data_source->desc_sf.m_refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),

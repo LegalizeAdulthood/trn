@@ -196,7 +196,7 @@ static void new_nntp_groups(DataSource *dp)
         {
             len = std::strlen(g_ser_line);
         }
-        if (dp->act_sf.fp)
+        if (dp->act_sf.m_fp)
         {
             if (find_active_group(dp, g_buf, g_ser_line, len, ArticleNum{}))
             {
@@ -217,7 +217,7 @@ static void new_nntp_groups(DataSource *dp)
                     s = g_ser_line + len;
                 }
                 std::sprintf(s, " %010ld %05ld %c\n", high, low, ch);
-                (void) source_file_append(&dp->act_sf, g_ser_line, len);
+                (void) dp->act_sf.append(g_ser_line, len);
             }
         }
         if (s)
@@ -242,7 +242,7 @@ static void new_nntp_groups(DataSource *dp)
     if (found_something)
     {
         hash_walk(new_newsgroups, build_add_group_list, 0);
-        source_file_end_append(&dp->act_sf, dp->extra_name);
+        dp->act_sf.end_append(dp->extra_name);
         dp->last_new_group = server_time;
     }
     hash_destroy(new_newsgroups);
@@ -254,7 +254,7 @@ static void new_local_groups(DataSource *dp)
 
     const long file_size{static_cast<long>(std::filesystem::file_size(dp->extra_name))};
     // did active.times file grow?
-    if (file_size == dp->act_sf.recent_cnt)
+    if (file_size == dp->act_sf.m_recent_cnt)
     {
         return;
     }
@@ -302,7 +302,7 @@ static void new_local_groups(DataSource *dp)
     hash_walk(new_newsgroups, build_add_group_list, 0);
     hash_destroy(new_newsgroups);
     dp->last_new_group = last_one+1;
-    dp->act_sf.recent_cnt = file_size;
+    dp->act_sf.m_recent_cnt = file_size;
 }
 
 static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int ch)
@@ -391,9 +391,9 @@ bool scan_active(bool add_matching)
             continue;
         }
         set_data_source(dp);
-        if (dp->act_sf.fp)
+        if (dp->act_sf.m_fp)
         {
-            hash_walk(dp->act_sf.hp, list_groups, add_matching);
+            hash_walk(dp->act_sf.m_hp, list_groups, add_matching);
         }
         else
         {

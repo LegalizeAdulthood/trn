@@ -792,8 +792,8 @@ static bool open_newsrc(Newsrc *rp)
                 if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
                                 &g_last_new_time, &actnum, &descnum) == 3)
                 {
-                    rp->data_source->act_sf.recent_cnt = actnum;
-                    rp->data_source->desc_sf.recent_cnt = descnum;
+                    rp->data_source->act_sf.m_recent_cnt = actnum;
+                    rp->data_source->desc_sf.m_recent_cnt = descnum;
                 }
             }
             std::fclose(info);
@@ -804,13 +804,13 @@ static bool open_newsrc(Newsrc *rp)
         read_last();
         if (rp->data_source->flags & DF_REMOTE)
         {
-            rp->data_source->act_sf.recent_cnt = g_last_active_size;
-            rp->data_source->desc_sf.recent_cnt = g_last_extra_num;
+            rp->data_source->act_sf.m_recent_cnt = g_last_active_size;
+            rp->data_source->desc_sf.m_recent_cnt = g_last_extra_num;
         }
         else
         {
-            rp->data_source->act_sf.recent_cnt = g_last_extra_num;
-            rp->data_source->desc_sf.recent_cnt = 0;
+            rp->data_source->act_sf.m_recent_cnt = g_last_extra_num;
+            rp->data_source->desc_sf.m_recent_cnt = 0;
         }
     }
     rp->data_source->last_new_group = g_last_new_time;
@@ -1702,8 +1702,8 @@ bool write_newsrcs(Multirc *mptr)
             {
                 std::fprintf(info,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
                         g_newsgroup_name.c_str(),rp->data_source->last_new_group,
-                        rp->data_source->act_sf.recent_cnt,
-                        rp->data_source->desc_sf.recent_cnt);
+                        rp->data_source->act_sf.m_recent_cnt,
+                        rp->data_source->desc_sf.m_recent_cnt);
                 std::fclose(info);
             }
         }
@@ -1712,12 +1712,12 @@ bool write_newsrcs(Multirc *mptr)
             read_last();
             if (rp->data_source->flags & DF_REMOTE)
             {
-                g_last_active_size = rp->data_source->act_sf.recent_cnt;
-                g_last_extra_num = rp->data_source->desc_sf.recent_cnt;
+                g_last_active_size = rp->data_source->act_sf.m_recent_cnt;
+                g_last_extra_num = rp->data_source->desc_sf.m_recent_cnt;
             }
             else
             {
-                g_last_extra_num = rp->data_source->act_sf.recent_cnt;
+                g_last_extra_num = rp->data_source->act_sf.m_recent_cnt;
             }
             g_last_new_time = rp->data_source->last_new_group;
             write_last();
