@@ -114,10 +114,10 @@ static Multirc *rcstuff_init_data()
             if (rp)
             {
                 Multirc *mp = multirc_ptr(i);
-                Newsrc * prev_rp = mp->first;
+                Newsrc * prev_rp = mp->m_first;
                 if (!prev_rp)
                 {
-                    mp->first = rp;
+                    mp->m_first = rp;
                 }
                 else
                 {
@@ -127,7 +127,7 @@ static Multirc *rcstuff_init_data()
                     }
                     prev_rp->next = rp;
                 }
-                mp->num = i;
+                mp->m_num = i;
                 if (!mptr)
                 {
                     mptr = mp;
@@ -150,15 +150,15 @@ bool rcstuff_init()
     }
 
     s_found_any = false;
-    if (mptr && !use_multirc(mptr))
+    if (mptr && !mptr->use_multirc())
     {
-        use_next_multirc(mptr);
+        mptr->use_next_multirc();
     }
     if (!g_multirc)
     {
         mptr = multirc_ptr(0);
-        mptr->first = new_newsrc("default",nullptr,nullptr);
-        if (!use_multirc(mptr))
+        mptr->m_first = new_newsrc("default",nullptr,nullptr);
+        if (!mptr->use_multirc())
         {
             std::printf("Couldn't open any newsrc groups.  Is your access file ok?\n");
             finalize(1);
@@ -240,12 +240,12 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     return rp;
 }
 
-bool use_multirc(Multirc *mp)
+bool Multirc::use_multirc()
 {
     bool had_trouble = false;
     bool had_success = false;
 
-    for (Newsrc *rp = mp->first; rp; rp = rp->next)
+    for (Newsrc *rp = m_first; rp; rp = rp->next)
     {
         if ((rp->data_source->m_flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
             || !rp->data_source->open() || !open_newsrc(rp))
@@ -268,7 +268,7 @@ bool use_multirc(Multirc *mp)
     {
         return false;
     }
-    g_multirc = mp;
+    g_multirc = this;
 #ifdef NO_FILELINKS
     if (!write_newsrcs(g_multirc))
     {
@@ -278,6 +278,8 @@ bool use_multirc(Multirc *mp)
     return true;
 }
 
+// TODO: why does this check mptr for nullptr?
+//
 void unuse_multirc(Multirc *mptr)
 {
     if (!mptr)
@@ -287,7 +289,7 @@ void unuse_multirc(Multirc *mptr)
 
     write_newsrcs(mptr);
 
-    for (Newsrc *rp = mptr->first; rp; rp = rp->next)
+    for (Newsrc *rp = mptr->m_first; rp; rp = rp->next)
     {
         unlock_newsrc(rp);
         rp->flags &= ~RF_ACTIVE;
@@ -314,11 +316,11 @@ void unuse_multirc(Multirc *mptr)
     g_multirc = nullptr;
 }
 
-bool use_next_multirc(Multirc *mptr)
+bool Multirc::use_next_multirc()
 {
-    Multirc* mp = multirc_ptr(mptr->num);
+    Multirc * mp = multirc_ptr(m_num);
 
-    unuse_multirc(mptr);
+    unuse_multirc(this);
 
     while (true)
     {
@@ -327,12 +329,12 @@ bool use_next_multirc(Multirc *mptr)
         {
             mp = multirc_low();
         }
-        if (mp == mptr)
+        if (mp == this)
         {
-            use_multirc(mptr);
+            use_multirc();
             return false;
         }
-        if (use_multirc(mp))
+        if (mp->use_multirc())
         {
             break;
         }
@@ -340,11 +342,11 @@ bool use_next_multirc(Multirc *mptr)
     return true;
 }
 
-bool use_prev_multirc(Multirc *mptr)
+bool Multirc::use_prev_multirc()
 {
-    Multirc *mp = multirc_ptr(mptr->num);
+    Multirc *mp = multirc_ptr(m_num);
 
-    unuse_multirc(mptr);
+    unuse_multirc(this);
 
     while (true)
     {
@@ -353,12 +355,12 @@ bool use_prev_multirc(Multirc *mptr)
         {
             mp = multirc_high();
         }
-        if (mp == mptr)
+        if (mp == this)
         {
-            use_multirc(mptr);
+            use_multirc();
             return false;
         }
-        if (use_multirc(mp))
+        if (mp->use_multirc())
         {
             break;
         }
@@ -366,18 +368,18 @@ bool use_prev_multirc(Multirc *mptr)
     return true;
 }
 
-const char *multirc_name(const Multirc *mp)
+const char *Multirc::multirc_name() const
 {
-    if (mp->first->next)
+    if (m_first->next)
     {
         return "<each-newsrc>";
     }
-    char *cp = std::strrchr(mp->first->name, '/');
+    char *cp = std::strrchr(m_first->name, '/');
     if (cp != nullptr)
     {
         return cp + 1;
     }
-    return mp->first->name;
+    return m_first->name;
 }
 
 static bool clear_newsgroup_item(char *cp, int arg)
@@ -974,7 +976,7 @@ check_fuzzy_match:
     if (g_newsgroup_ptr == nullptr)             // not in .newsrc?
     {
         Newsrc* rp;
-        for (rp = g_multirc->first; rp; rp = rp->next)
+        for (rp = g_multirc->m_first; rp; rp = rp->next)
         {
             if (!all_bits(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
             {
@@ -1671,7 +1673,9 @@ void checkpoint_newsrcs()
 }
 
 // write out the (presumably) revised newsrc(s)
-
+//
+// TODO: why does this check mptr for nullptr?
+//
 bool write_newsrcs(Multirc *mptr)
 {
     SelectionSortMode save_sort = g_sel_sort;
@@ -1689,7 +1693,7 @@ bool write_newsrcs(Multirc *mptr)
         sort_newsgroups();
     }
 
-    for (Newsrc *rp = mptr->first; rp; rp = rp->next)
+    for (Newsrc *rp = mptr->m_first; rp; rp = rp->next)
     {
         if (!(rp->flags & RF_ACTIVE))
         {
@@ -1817,11 +1821,13 @@ write_error:
     return total_success;
 }
 
+// TODO: why does this check mptr for nullptr?
+//
 void get_old_newsrcs(Multirc *mptr)
 {
     if (mptr)
     {
-        for (Newsrc *rp = mptr->first; rp; rp = rp->next)
+        for (Newsrc *rp = mptr->m_first; rp; rp = rp->next)
         {
             if (rp->flags & RF_ACTIVE)
             {

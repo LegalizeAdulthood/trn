@@ -71,9 +71,14 @@ DECLARE_FLAGS_ENUM(MultircFlags, int);
 
 struct Multirc
 {
-    Newsrc      *first;
-    int          num;
-    MultircFlags flags;
+    bool         use_multirc();
+    bool use_next_multirc();
+    bool         use_prev_multirc();
+    const char  *multirc_name() const;
+
+    Newsrc      *m_first;
+    int          m_num;
+    MultircFlags m_flags;
 };
 
 extern HashTable *g_newsrc_hash;
@@ -92,11 +97,7 @@ extern bool       g_append_unsub;       // -I
 bool           rcstuff_init();
 void           rcstuff_final();
 Newsrc        *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
-bool           use_multirc(Multirc *mp);
 void           unuse_multirc(Multirc *mptr);
-bool           use_next_multirc(Multirc *mptr);
-bool           use_prev_multirc(Multirc *mptr);
-const char    *multirc_name(const Multirc *mp);
 bool           get_newsgroup(const char *what, GetNewsgroupFlags flags);
 void           list_newsgroups();
 NewsgroupData *find_newsgroup(const char *ngnam);

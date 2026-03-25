@@ -678,7 +678,7 @@ void DataSource::nntp_server_died()
     close();
     m_flags |= DF_UNAVAILABLE;
     unuse_multirc(mp);
-    if (!use_multirc(mp))
+    if (!mp->use_multirc())
     {
         g_multirc = nullptr;
     }

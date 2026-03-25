@@ -31,11 +31,7 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `int nntp_group(const char *group, NewsgroupData *gp);`
 
 ## rcstuff.h
-- `bool use_multirc(Multirc *mp);`
 - `void unuse_multirc(Multirc *mptr);`
-- `bool use_next_multirc(Multirc *mptr);`
-- `bool use_prev_multirc(Multirc *mptr);`
-- `const char *multirc_name(const Multirc *mp);`
 - `void cleanup_newsrc(Newsrc *rp);`
 - `void set_hash(NewsgroupData *np);`
 - `bool write_newsrcs(Multirc *mptr);`

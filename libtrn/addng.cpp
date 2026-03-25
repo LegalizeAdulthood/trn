@@ -90,7 +90,7 @@ bool find_new_groups()
         return false;
     }
 
-    for (const Newsrc *rp = g_multirc->first; rp; rp = rp->next)
+    for (const Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
     {
         if (all_bits(rp->flags, RF_ADD_NEW_GROUPS | RF_ACTIVE))
         {
@@ -118,7 +118,7 @@ static void process_list(GetNewsgroupFlags flag)
         std::sprintf(g_cmd_buf,
                 "\n"
                 "Unsubscribed but mentioned in your current newsrc%s:\n",
-                g_multirc->first->next ? "s" : "");
+                g_multirc->m_first->next ? "s" : "");
         print_lines(g_cmd_buf, STANDOUT);
     }
     AddGroup *node = g_first_add_group;

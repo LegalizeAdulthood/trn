@@ -475,15 +475,15 @@ sel_restart:
         PUSH_SELECTOR();
         for (Multirc *mp = multirc_low(); mp; mp = multirc_next(mp))
         {
-            if (mp->flags & MF_SEL)
+            if (mp->m_flags & MF_SEL)
             {
-                mp->flags &= ~MF_SEL;
+                mp->m_flags &= ~MF_SEL;
                 save_selected_count--;
-                for (Newsrc *rp = mp->first; rp; rp = rp->next)
+                for (Newsrc *rp = mp->m_first; rp; rp = rp->next)
                 {
                     rp->data_source->m_flags &= ~DF_UNAVAILABLE;
                 }
-                if (use_multirc(mp))
+                if (mp->use_multirc())
                 {
                     find_new_groups();
                     do_multirc();
@@ -491,7 +491,7 @@ sel_restart:
                 }
                 else
                 {
-                    mp->flags &= ~MF_INCLUDED;
+                    mp->m_flags &= ~MF_INCLUDED;
                 }
             }
         }
@@ -514,7 +514,7 @@ char newsgroup_selector()
 sel_restart:
     if (*g_sel_grp_display_mode != 's')
     {
-        for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
+        for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
             if ((rp->flags & RF_ACTIVE) && !rp->data_source->m_desc_sf.m_hp)
             {
@@ -601,7 +601,7 @@ char add_group_selector(GetNewsgroupFlags flags)
 sel_restart:
     if (*g_sel_grp_display_mode != 's')
     {
-        for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
+        for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
             if ((rp->flags & RF_ACTIVE) && !rp->data_source->m_desc_sf.m_hp)
             {
@@ -1645,11 +1645,11 @@ static bool select_item(Selection u)
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
         TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
-        if (!(u.mp->flags & static_cast<MultircFlags>(g_sel_mask)))
+        if (!(u.mp->m_flags & static_cast<MultircFlags>(g_sel_mask)))
         {
             g_selected_count++;
         }
-        u.mp->flags |= static_cast<MultircFlags>(g_sel_mask);
+        u.mp->m_flags |= static_cast<MultircFlags>(g_sel_mask);
         break;
 
     case SM_ADD_GROUP:
@@ -1749,15 +1749,15 @@ static bool deselect_item(Selection u)
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
         TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
-        if (u.mp->flags & static_cast<MultircFlags>(g_sel_mask))
+        if (u.mp->m_flags & static_cast<MultircFlags>(g_sel_mask))
         {
-            u.mp->flags &= ~static_cast<MultircFlags>(g_sel_mask);
+            u.mp->m_flags &= ~static_cast<MultircFlags>(g_sel_mask);
             g_selected_count--;
         }
 #if 0
         if (g_sel_rereading)
         {
-            u.mp->flags |= MF_DEL;
+            u.mp->m_flags |= MF_DEL;
         }
 #endif
         break;
@@ -2857,7 +2857,7 @@ static DisplayState newsgroup_commands(char_int ch)
 
     case 'L':
         switch_dmode(&g_sel_grp_display_mode);     // sets g_msg
-        if (*g_sel_grp_display_mode != 's' && !g_multirc->first->data_source->m_desc_sf.m_hp)
+        if (*g_sel_grp_display_mode != 's' && !g_multirc->m_first->data_source->m_desc_sf.m_hp)
         {
             newline();
             return DS_RESTART;

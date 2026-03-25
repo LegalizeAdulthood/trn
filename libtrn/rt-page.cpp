@@ -398,14 +398,14 @@ try_again:
     {
         for (Multirc *mp = multirc_low(); mp; mp = multirc_next(mp))
         {
-            if (mp->first)
+            if (mp->m_first)
             {
-                mp->flags |= MF_INCLUDED;
+                mp->m_flags |= MF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
             else
             {
-                mp->flags &= ~MF_INCLUDED;
+                mp->m_flags &= ~MF_INCLUDED;
             }
         }
         if (g_sel_page_mp == nullptr)
@@ -931,7 +931,7 @@ bool first_page()
     {
         for (Multirc *mp = multirc_low(); mp; mp = multirc_next(mp))
         {
-            if (mp->flags & MF_INCLUDED)
+            if (mp->m_flags & MF_INCLUDED)
             {
                 if (g_sel_page_mp != mp)
                 {
@@ -1259,11 +1259,11 @@ bool prev_page()
         }
         else
         {
-            mp = multirc_prev(multirc_ptr(mp->num));
+            mp = multirc_prev(multirc_ptr(mp->m_num));
         }
         while (mp)
         {
-            if (mp->flags & MF_INCLUDED)
+            if (mp->m_flags & MF_INCLUDED)
             {
                 page_mp = mp;
                 g_sel_prior_obj_cnt--;
@@ -1503,7 +1503,7 @@ try_again:
         Multirc* mp = g_sel_page_mp;
         if (mp)
         {
-            (void) multirc_ptr(mp->num);
+            (void) multirc_ptr(mp->m_num);
         }
         for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
         {
@@ -1511,7 +1511,7 @@ try_again:
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (mp->flags & MF_INCLUDED)
+            if (mp->m_flags & MF_INCLUDED)
             {
                 g_sel_page_item_cnt++;
             }
@@ -1730,7 +1730,7 @@ void display_page_title(bool home_only)
         Newsrc* rp;
         color_object(COLOR_HEADING, true);
         std::printf("Newsgroups");
-        for (rp = g_multirc->first, len = 0; rp && len < 34; rp = rp->next)
+        for (rp = g_multirc->m_first, len = 0; rp && len < 34; rp = rp->next)
         {
             if (rp->flags & RF_ACTIVE)
             {
@@ -1744,7 +1744,7 @@ void display_page_title(bool home_only)
         }
         if (std::strcmp(g_buf+2,"default") != 0)
         {
-            std::printf(" (group #%d: %s)", g_multirc->num, g_buf + 2);
+            std::printf(" (group #%d: %s)", g_multirc->m_num, g_buf + 2);
         }
         color_pop();    // of COLOR_HEADING
     }
@@ -1815,7 +1815,7 @@ try_again:
         int len;
         if (mp)
         {
-            (void) multirc_ptr(mp->num);
+            (void) multirc_ptr(mp->m_num);
         }
         for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
         {
@@ -1826,21 +1826,21 @@ try_again:
             }
 #endif
 
-            if (!(mp->flags & MF_INCLUDED))
+            if (!(mp->m_flags & MF_INCLUDED))
             {
                 continue;
             }
 
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
             TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
-            sel = !!(mp->flags & static_cast<MultircFlags>(g_sel_mask));
+            sel = !!(mp->m_flags & static_cast<MultircFlags>(g_sel_mask));
             g_sel_items[g_sel_page_item_cnt].u.mp = mp;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
             g_sel_page_obj_cnt++;
 
             maybe_eol();
-            for (rp = mp->first, len = 0; rp && len < 34; rp = rp->next)
+            for (rp = mp->m_first, len = 0; rp && len < 34; rp = rp->next)
             {
                 std::sprintf(g_buf+len, ", %s", rp->data_source->m_name);
                 len += std::strlen(g_buf+len);
@@ -1850,7 +1850,7 @@ try_again:
                 std::strcpy(g_buf + len, ", ...");
             }
             output_sel(g_sel_page_item_cnt, sel, false);
-            std::printf("%5d %s\n", mp->num, g_buf+2);
+            std::printf("%5d %s\n", mp->m_num, g_buf+2);
             term_down(1);
             g_sel_page_item_cnt++;
         }
@@ -2240,7 +2240,7 @@ void update_page()
         case SM_MULTIRC:
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
             TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
-            sel = !!(u.mp->flags & static_cast<MultircFlags>(g_sel_mask));
+            sel = !!(u.mp->m_flags & static_cast<MultircFlags>(g_sel_mask));
             break;
 
         case SM_NEWSGROUP:

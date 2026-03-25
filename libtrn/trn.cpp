@@ -197,12 +197,12 @@ ng_start_sel:
         switch (newsgroup_selector())
         {
         case Ctl('n'):
-            use_next_multirc(g_multirc);
+            g_multirc->use_next_multirc();
             end_only();
             goto ng_start_sel;
 
         case Ctl('p'):
-            use_prev_multirc(g_multirc);
+            g_multirc->use_prev_multirc();
             end_only();
             goto ng_start_sel;
 
@@ -507,7 +507,7 @@ do_command:
             break;
         }
         std::printf("\nThe abandoned changes are in %s.new.\n",
-               multirc_name(g_multirc));
+               g_multirc->multirc_name());
         term_down(2);
         s_restore_old_newsrc = true;
         return ING_QUIT;
@@ -663,18 +663,18 @@ do_command:
     case Ctl('n'):            // next newsrc list
         end_only();
         newline();
-        use_next_multirc(g_multirc);
+        g_multirc->use_next_multirc();
         goto display_multirc;
 
     case Ctl('p'):            // prev newsrc list
         end_only();
         newline();
-        use_next_multirc(g_multirc);
+        g_multirc->use_next_multirc();
 display_multirc:
         {
             Newsrc* rp;
             int len;
-            for (rp = g_multirc->first, len = 0; rp && len < 66; rp = rp->next)
+            for (rp = g_multirc->m_first, len = 0; rp && len < 66; rp = rp->next)
             {
                 if (rp->flags & RF_ACTIVE)
                 {
@@ -686,7 +686,7 @@ display_multirc:
             {
                 std::strcpy(g_buf+len, ", ...");
             }
-            std::printf("\nUsing newsrc group #%d: %s.\n",g_multirc->num,g_buf+2);
+            std::printf("\nUsing newsrc group #%d: %s.\n",g_multirc->m_num,g_buf+2);
             term_down(3);
             return ING_RESTART;
         }
@@ -849,12 +849,12 @@ ng_start_sel:
         {
         case Ctl('n'):
             end_only();
-            use_next_multirc(g_multirc);
+            g_multirc->use_next_multirc();
             goto ng_start_sel;
 
         case Ctl('p'):
             end_only();
-            use_prev_multirc(g_multirc);
+            g_multirc->use_prev_multirc();
             goto ng_start_sel;
 
         case 'q':
@@ -998,9 +998,9 @@ void trn_version()
     if (g_multirc)
     {
         newline();
-        std::sprintf(g_msg,"News source group #%d:\n\n", g_multirc->num);
+        std::sprintf(g_msg,"News source group #%d:\n\n", g_multirc->m_num);
         print_lines(g_msg, NO_MARKING);
-        for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
+        for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
             if (!(rp->flags & RF_ACTIVE))
             {
