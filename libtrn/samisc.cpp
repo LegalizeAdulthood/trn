@@ -118,7 +118,7 @@ void sa_sel_threads()
         {
             for (Article *ap = first_art(sp); ap; ap = ap->next_article())
             {
-                ArticleNum art = article_num(ap);
+                ArticleNum art = ap->article_num();
                 if ((ap->m_flags & AF_SEL) //
                     && (!(ap->m_flags & AF_UNREAD) ^ want_unread))
                 {

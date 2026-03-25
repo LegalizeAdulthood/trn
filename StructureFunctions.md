@@ -4,12 +4,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 
 ---
 
-## addng.h
-- *(none)*
-
-## cache.h
-- `ArticleNum article_num(const Article *ap);`
-
 ## datasrc.h
 - `int source_file_open(SourceFile *sfp, ...)`
 - `char *source_file_append(SourceFile *sfp, ...)`

@@ -1468,7 +1468,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 return;
             }
             g_artp = ap;
-            g_art = article_num(ap);
+            g_art = ap->article_num();
             g_reread = true;
             push_char(Ctl('r'));
         }

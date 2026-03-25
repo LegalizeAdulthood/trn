@@ -140,12 +140,12 @@ void thread_open()
     }
 
     for (ap = article_ptr(article_first(g_first_art));
-         ap && article_num(ap) <= g_last_cached;
+         ap && ap->article_num() <= g_last_cached;
          ap = article_nextp(ap))
     {
         if ((ap->m_flags & (AF_EXISTS|AF_CACHED)) == AF_EXISTS)
         {
-            (void) parse_header(article_num(ap));
+            (void) parse_header(ap->article_num());
         }
     }
 
@@ -159,7 +159,7 @@ void thread_open()
     g_article_list->high = g_last_art.value_of();
 
     for (ap = article_ptr(article_first(g_abs_first));
-         ap && article_num(ap) <= g_last_art;
+         ap && ap->article_num() <= g_last_art;
          ap = article_nextp(ap))
     {
         if (ap->m_flags & AF_CACHED)
@@ -346,7 +346,7 @@ void inc_article(bool sel_flag, bool rereading)
         if (g_art_ptr < limit)
         {
             g_artp = *g_art_ptr;
-            g_art = article_num(g_artp);
+            g_art = g_artp->article_num();
         }
         else
         {
@@ -397,7 +397,7 @@ void inc_article(bool sel_flag, bool rereading)
         g_artp = ap;
         if (g_artp != nullptr)
         {
-            g_art = article_num(ap);
+            g_art = ap->article_num();
         }
         else
         {
@@ -487,7 +487,7 @@ void dec_article(bool sel_flag, bool rereading)
         } while ((!rereading && !(ap->m_flags & AF_UNREAD))
               || (sel_flag && !(ap->m_flags & AF_SEL)));
         g_artp = *g_art_ptr;
-        g_art = article_num(g_artp);
+        g_art = g_artp->article_num();
         return;
     }
 
@@ -531,7 +531,7 @@ void dec_article(bool sel_flag, bool rereading)
         g_artp = ap;
         if (g_artp != nullptr)
         {
-            g_art = article_num(ap);
+            g_art = ap->article_num();
         }
         else
         {
@@ -715,7 +715,7 @@ bool next_article_with_subj()
     } while (!all_bits(ap->m_flags, AF_EXISTS | AF_UNREAD)
           || (g_selected_only && !(ap->m_flags & AF_SEL)));
     g_artp = ap;
-    g_art = article_num(ap);
+    g_art = ap->article_num();
     g_search_ahead = ArticleNum{-1};
     return true;
 }
@@ -758,7 +758,7 @@ bool prev_article_with_subj()
     } while (!(ap->m_flags & AF_EXISTS)
           || (g_selected_only && !(ap->m_flags & AF_SEL)));
     g_artp = ap;
-    g_art = article_num(ap);
+    g_art = ap->article_num();
     return true;
 }
 
@@ -1395,7 +1395,7 @@ void visit_next_thread()
         ap = subj_article(sp);
         if (ap != nullptr)
         {
-            g_art = article_num(ap);
+            g_art = ap->article_num();
             g_artp = ap;
             return;
         }
@@ -1419,7 +1419,7 @@ void visit_prev_thread()
         ap = subj_article(sp);
         if (ap != nullptr)
         {
-            g_art = article_num(ap);
+            g_art = ap->article_num();
             g_artp = ap;
             return;
         }
@@ -1448,7 +1448,7 @@ bool find_parent(bool keep_going)
     } while (keep_going && ap->m_parent);
 
     g_artp = ap;
-    g_art = article_num(ap);
+    g_art = ap->article_num();
     return true;
 }
 
@@ -1470,7 +1470,7 @@ bool find_leaf(bool keep_going)
     } while (keep_going && ap->m_child1);
 
     g_artp = ap;
-    g_art = article_num(ap);
+    g_art = ap->article_num();
     return true;
 }
 
@@ -1491,7 +1491,7 @@ bool find_next_sib()
             if (tb != nullptr)
             {
                 g_artp = tb;
-                g_art = article_num(tb);
+                g_art = tb->article_num();
                 return true;
             }
         }
@@ -1555,7 +1555,7 @@ bool find_prev_sib()
         if (tb != nullptr)
         {
             g_artp = tb;
-            g_art = article_num(tb);
+            g_art = tb->article_num();
             return true;
         }
         if (!(ta = ta->m_parent))
@@ -1676,7 +1676,7 @@ void count_subjects(CountSubjectMode cmode)
                 {
                     subjdate = ap->m_date;
                 }
-                g_first_art = std::min(article_num(ap), g_first_art);
+                g_first_art = std::min(ap->article_num(), g_first_art);
             }
         }
         sp->misc = count;
@@ -1773,7 +1773,7 @@ static int subject_score_high(const Subject *sp)
     {
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
         {
-            int sc = sc_score_art(article_num(ap), false);
+            int sc = sc_score_art(ap->article_num(), false);
             if ((!hiscore_found) || (sc > hiscore))
             {
                 hiscore_found = 1;
@@ -2056,7 +2056,7 @@ static int article_order_author(const Article **art1, const Article **art2)
 
 static int article_order_number(const Article **art1, const Article **art2)
 {
-    const long eq{(article_num(*art1) - article_num(*art2)).value_of()};
+    const long eq{((*art1)->article_num() - (*art2)->article_num()).value_of()};
     return eq > 0 ? g_sel_direction : -g_sel_direction;
 }
 
@@ -2083,8 +2083,8 @@ static int article_order_lines(const Article **art1, const Article **art2)
 
 static int article_order_score(const Article **art1, const Article **art2)
 {
-    int eq = sc_score_art(article_num(*art2),false)
-           - sc_score_art(article_num(*art1),false);
+    int eq = sc_score_art((*art2)->article_num(),false)
+           - sc_score_art((*art1)->article_num(),false);
     return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
 }
 

@@ -2652,7 +2652,7 @@ reask_sort:
             }
             g_artp = sp->articles;
         }
-        g_art = article_num(g_artp);
+        g_art = g_artp->article_num();
         // This call executes the action too
         switch (ask_memorize(ch))
         {
@@ -2708,7 +2708,7 @@ reask_sort:
                 }
                 g_artp = sp->articles;
             }
-            g_art = article_num(g_artp);
+            g_art = g_artp->article_num();
         }
         else
         {

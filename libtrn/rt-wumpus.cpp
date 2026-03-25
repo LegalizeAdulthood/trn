@@ -656,7 +656,7 @@ void entire_tree(Article* ap)
     }
     if (!(ap->m_flags & AF_THREADED))
     {
-        parse_header(article_num(ap));
+        parse_header(ap->article_num());
     }
     if (check_page_line())
     {

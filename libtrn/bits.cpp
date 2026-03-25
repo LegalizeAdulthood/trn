@@ -331,7 +331,7 @@ void find_existing_articles()
         if (nntp_art_nums())
         {
             for (ap = article_ptr(article_first(g_abs_first));
-                 ap && article_num(ap) <= g_last_art;
+                 ap && ap->article_num() <= g_last_art;
                  ap = article_nextp(ap))
             {
                 ap->m_flags &= ~AF_EXISTS;
@@ -363,7 +363,7 @@ void find_existing_articles()
             if (!g_data_source->m_ov_opened || g_data_source->m_over_dir != nullptr)
             {
                 for (ap = article_ptr(article_first(g_first_cached));
-                     ap && article_num(ap) <= g_last_cached;
+                     ap && ap->article_num() <= g_last_cached;
                      ap = article_nextp(ap))
                 {
                     if (ap->m_flags & AF_CACHED)
@@ -418,7 +418,7 @@ void find_existing_articles()
 
         // Scan the directory to find which articles are present.
         for (ap = article_ptr(article_first(g_abs_first));
-             ap && article_num(ap) <= g_last_art;
+             ap && ap->article_num() <= g_last_art;
              ap = article_nextp(ap))
         {
             ap->m_flags &= ~AF_EXISTS;
@@ -478,7 +478,7 @@ void Article::one_more()
 {
     if (!(m_flags & AF_UNREAD))
     {
-        ArticleNum art_num = article_num(this);
+        ArticleNum art_num = m_num;
         check_first(art_num);
         m_flags |= AF_UNREAD;
         m_flags &= ~AF_DEL;
@@ -594,7 +594,7 @@ void Article::mark_as_read()
 void mark_missing_articles()
 {
     for (Article *ap = article_ptr(article_first(g_abs_first));
-         ap && article_num(ap) <= g_last_art;
+         ap && ap->article_num() <= g_last_art;
          ap = article_nextp(ap))
     {
         if (!(ap->m_flags & AF_EXISTS))
@@ -672,7 +672,7 @@ static bool check_chase(char *ptr, int until_key)
 
     if (ap->m_flags & AF_K_CHASE)
     {
-        chase_xref(article_num(ap), true);
+        chase_xref(ap->article_num(), true);
         ap->m_flags &= ~AF_K_CHASE;
         if (!--s_chase_count)
         {
@@ -682,7 +682,7 @@ static bool check_chase(char *ptr, int until_key)
 #ifdef MCHASE
     if (ap->m_flags & AF_MCHASE)
     {
-        chase_xref(article_num(ap), true);
+        chase_xref(ap->article_num(), true);
         ap->m_flags &= ~AF_MCHASE;
         if (!--s_chase_count)
         {

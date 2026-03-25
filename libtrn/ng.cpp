@@ -774,7 +774,7 @@ reask_unread:
             g_artp = first_art(g_artp->m_subj);
             if (g_artp != nullptr)
             {
-                g_art = article_num(g_artp);
+                g_art = g_artp->article_num();
             }
         }
         else if (*g_buf == 's' && *u_help_thread)
@@ -1190,7 +1190,7 @@ check_dec_art:
                 g_artp = g_first_subject->articles;
                 if (g_artp->m_flags & AF_EXISTS)
                 {
-                    g_art = article_num(g_artp);
+                    g_art = g_artp->article_num();
                 }
                 else
                 {
@@ -1785,11 +1785,11 @@ refresh_screen:
             g_artp = first_art(g_artp->m_subj);
             if (g_artp != nullptr)
             {
-                if (g_art == article_num(g_artp))
+                if (g_art == g_artp->article_num())
                 {
                     return AS_ASK;
                 }
-                g_art = article_num(g_artp);
+                g_art = g_artp->article_num();
             }
             return AS_NORM;
 
@@ -2047,7 +2047,7 @@ static bool count_uncached_article(char *ptr, int arg)
 static bool mark_all_read(char *ptr, int leave_unread)
 {
     Article* ap = (Article*)ptr;
-    if (article_num(ap) > g_last_art - ArticleNum{leave_unread})
+    if (ap->article_num() > g_last_art - ArticleNum{leave_unread})
     {
         return true;
     }
@@ -2089,7 +2089,7 @@ bool output_subject(char *ptr, int flag)
     {
         return false;
     }
-    ArticleNum i = article_num(ap);
+    ArticleNum i = ap->article_num();
     char *  s = fetch_subj(i, false);
     if (s != nullptr)
     {
@@ -2124,9 +2124,9 @@ static bool debug_article_output(char *ptr, int arg)
     {
         return true;
     }
-    if (article_num(ap) >= g_first_art && ap->m_subj)
+    if (ap->article_num() >= g_first_art && ap->m_subj)
     {
-        std::printf("%5ld %c %s\n", article_num(ap).value_of(),
+        std::printf("%5ld %c %s\n", ap->article_num().value_of(),
                (ap->m_flags & AF_UNREAD)? 'y' : 'n', ap->m_subj->str);
         term_down(1);
     }

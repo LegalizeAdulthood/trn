@@ -386,7 +386,7 @@ int thread_perform()
             g_artp = first_art(sp);
             if (g_artp)
             {
-                g_art = article_num(g_artp);
+                g_art = g_artp->article_num();
                 if (perform(cmdstr, 0) < 0)
                 {
                     error_msg("Interrupted");
@@ -436,7 +436,7 @@ int thread_perform()
                 if ((!(ap->m_flags & AF_UNREAD) ^ want_unread) //
                     && !(ap->m_flags & g_sel_mask) ^ !!bits)
                 {
-                    g_art = article_num(ap);
+                    g_art = ap->article_num();
                     g_artp = ap;
                     if (perform(cmdstr, output_level && g_page_line == 1) < 0)
                     {
@@ -467,7 +467,7 @@ int thread_perform()
                     if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
                         && !(ap->m_flags & g_sel_mask) ^ !!bits)
                     {
-                        g_art = article_num(ap);
+                        g_art = ap->article_num();
                         g_artp = ap;
                         if (perform(cmdstr, output_level && g_page_line == 1) < 0)
                         {

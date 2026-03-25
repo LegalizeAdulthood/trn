@@ -363,7 +363,7 @@ beginning:
     {
         int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
         for (Article *ap = article_ptr(article_first(real_first));
-             ap && article_num(ap) <= artnum;
+             ap && ap->article_num() <= artnum;
              ap = article_nextp(ap))
         {
             if (!(ap->m_flags & cachemask))

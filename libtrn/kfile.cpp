@@ -339,7 +339,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                 }
                 else
                 {
-                    g_art = article_num(ap);
+                    g_art = ap->article_num();
                     g_artp = ap;
                     perform(cp,false);
                     if (ap->m_auto_flags & AUTO_SEL_MASK)

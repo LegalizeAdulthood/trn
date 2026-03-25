@@ -124,12 +124,12 @@ bool Article::valid_article()
             if (g_curr_artp == fake_ap)
             {
                 g_curr_artp = this;
-                g_curr_art = article_num(this);
+                g_curr_art = m_num;
             }
             if (g_recent_artp == fake_ap)
             {
                 g_recent_artp = this;
-                g_recent_art = article_num(this);
+                g_recent_art = m_num;
             }
             Article *ap = m_parent;
             if (ap != nullptr)
