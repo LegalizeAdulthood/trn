@@ -182,59 +182,8 @@ static bool clear_article_item(char *cp, int arg)
     return false;
 }
 
-// The article has all it's data in place, so add it to the list of articles
-// with the same subject.
+// TODO: decouple this from s_short_subj_hash
 //
-void Article::cache_article()
-{
-    Article* next;
-    Article* ap2;
-
-    if (!(next = m_subj->m_articles) || m_date < next->m_date)
-    {
-        m_subj->m_articles = this;
-    }
-    else
-    {
-        while ((next = (ap2 = next)->m_subj_next) && next->m_date <= m_date)
-        {
-        }
-        ap2->m_subj_next = this;
-    }
-    m_subj_next = next;
-    m_flags |= AF_CACHED;
-
-    if (!!(m_flags & AF_UNREAD) ^ g_sel_rereading)
-    {
-        if (m_subj->m_flags & g_sel_mask)
-        {
-            select_article(AUTO_KILL_NONE);
-        }
-        else
-        {
-            if (m_subj->m_flags & SF_WAS_SELECTED)
-            {
-#if 0
-                if (g_selected_only)
-                {
-                    ap->m_flags |= g_sel_mask;
-                }
-                else
-#endif
-                {
-                    select_article(AUTO_KILL_NONE);
-                }
-            }
-            m_subj->m_flags |= SF_VISIT;
-        }
-    }
-
-    if (g_join_subject_len != 0)
-    {
-        check_for_near_subj();
-    }
-}
-
 void Article::check_for_near_subj()
 {
     Subject* sp;
@@ -288,90 +237,11 @@ void change_join_subject_len(int len)
     }
 }
 
-void Article::check_poster()
-{
-    if (g_auto_select_postings && (m_flags & AF_EXISTS) && m_from)
-    {
-        {
-            char* s = g_cmd_buf;
-            char* u;
-            char* h;
-            std::strcpy(s,m_from);
-            if ((h=std::strchr(s,'<')) != nullptr)   // grab the good part
-            {
-                s = h+1;
-                if ((h=std::strchr(s,'>')) != nullptr)
-                {
-                    *h = '\0';
-                }
-            }
-            else if ((h = std::strchr(s, '(')) != nullptr)
-            {
-                while (h-- != s && *h == ' ')
-                {
-                }
-                h[1] = '\0';            // or strip the comment
-            }
-            if ((h = std::strchr(s, '%')) != nullptr || (h = std::strchr(s, '@')))
-            {
-                *h++ = '\0';
-                u = s;
-            }
-            else if ((u = std::strrchr(s, '!')) != nullptr)
-            {
-                *u++ = '\0';
-                h = s;
-            }
-            else
-            {
-                h = s;
-                u = s;
-            }
-            if (!std::strcmp(u, g_login_name.c_str()))
-            {
-                if (in_string(h, g_host_name, false))
-                {
-                    switch (g_auto_select_postings)
-                    {
-                    case '.':
-                        select_sub_thread(this,AUTO_SEL_FOL);
-                        break;
-
-                    case '+':
-                        select_articles_thread(AUTO_SEL_THD);
-                        break;
-
-                    case 'p':
-                        if (m_parent)
-                        {
-                            select_sub_thread(m_parent,AUTO_SEL_FOL);
-                        }
-                        else
-                        {
-                            select_sub_thread(this,AUTO_SEL_FOL);
-                        }
-                        break;
-                    }
-                }
-                else
-                {
-#ifdef REPLYTO_POSTER_CHECKING
-                    char* reply_buf = fetch_lines(article_num(ap),REPLY_LINE);
-                    if (in_string(reply_buf, g_login_name.c_str(), true))
-                    {
-                        select_sub_thread(ap,AUTO_SEL_FOL);
-                    }
-                    std::free(reply_buf);
-#endif
-                }
-            }
-        }
-    }
-}
-
 // The article turned out to be a duplicate, so remove it from the cached
 // list and possibly destroy the subject (should only happen if the data
 // was corrupt and the duplicate id got a different subject).
+//
+// TODO: decouple this from s_subj_hash
 //
 void Article::uncache_article(bool remove_empties)
 {
@@ -459,62 +329,10 @@ char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache
     return nullptr;
 }
 
-// Return a pointer to a cached header line for the indicated article.
-// Truncated headers (e.g. from a .thread file) are optionally ignored.
-//
-char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
-{
-    char* s;
-
-    switch (which_line)
-    {
-    case SUBJ_LINE:
-        if (!m_subj || (no_truncs && (m_subj->m_flags & SF_SUBJ_TRUNCATED)))
-        {
-            s = nullptr;
-        }
-        else
-        {
-            s = m_subj->m_str + ((m_flags & AF_HAS_RE) ? 0 : 4);
-        }
-        break;
-
-    case FROM_LINE:
-        s = m_from;
-        break;
-
-    case XREF_LINE:
-        s = m_xrefs;
-        break;
-
-    case MSG_ID_LINE:
-        s = m_msg_id;
-        break;
-
-    case LINES_LINE:
-    {
-        static char lines_buf[32];
-        std::sprintf(lines_buf, "%ld", m_lines);
-        s = lines_buf;
-        break;
-    }
-
-    case BYTES_LINE:
-    {
-        static char bytes_buf[32];
-        std::sprintf(bytes_buf, "%ld", m_bytes);
-        s = bytes_buf;
-        break;
-    }
-
-    default:
-        s = nullptr;
-        break;
-    }
-    return s;
-}
-
 // subj not yet allocated, so we can tweak it first
+//
+// TODO: decouple from s_subj_hash
+//
 void Article::set_subj_line(char *subj, int size)
 {
     HashDatum data;
@@ -717,55 +535,6 @@ void dectrl(char *str)
             }
         }
         str += w;
-    }
-}
-
-// s already allocated, ready to save
-void Article::set_cached_line(int which_line, char *s)
-{
-    char* cp;
-    // SUBJ_LINE is handled specially above
-    switch (which_line)
-    {
-    case FROM_LINE:
-        if (m_from)
-        {
-            std::free(m_from);
-        }
-        decode_header(s, s, std::strlen(s));
-        m_from = s;
-        break;
-
-    case XREF_LINE:
-        if (!empty(m_xrefs))
-        {
-            std::free(m_xrefs);
-        }
-        // Exclude an xref for just this group or "(none)".
-        cp = std::strchr(s, ':');
-        if (!cp || !std::strchr(cp + 1, ':'))
-        {
-            std::free(s);
-            s = save_str("");
-        }
-        m_xrefs = s;
-        break;
-
-    case MSG_ID_LINE:
-        if (m_msg_id)
-        {
-            std::free(m_msg_id);
-        }
-        m_msg_id = s;
-        break;
-
-    case LINES_LINE:
-        m_lines = std::atol(s);
-        break;
-
-    case BYTES_LINE:
-        m_bytes = std::atol(s);
-        break;
     }
 }
 
@@ -1213,18 +982,51 @@ bool cache_range(ArticleNum first, ArticleNum last)
     return success;
 }
 
-void Article::clear_article()
+// s already allocated, ready to save
+void Article::set_cached_line(int which_line, char *s)
 {
-    if (m_from)
+    char* cp;
+    // SUBJ_LINE is handled specially above
+    switch (which_line)
     {
-        std::free(m_from);
-    }
-    if (m_msg_id)
-    {
-        std::free(m_msg_id);
-    }
-    if (!empty(m_xrefs))
-    {
-        std::free(m_xrefs);
+    case FROM_LINE:
+        if (m_from)
+        {
+            std::free(m_from);
+        }
+        decode_header(s, s, std::strlen(s));
+        m_from = s;
+        break;
+
+    case XREF_LINE:
+        if (!empty(m_xrefs))
+        {
+            std::free(m_xrefs);
+        }
+        // Exclude an xref for just this group or "(none)".
+        cp = std::strchr(s, ':');
+        if (!cp || !std::strchr(cp + 1, ':'))
+        {
+            std::free(s);
+            s = save_str("");
+        }
+        m_xrefs = s;
+        break;
+
+    case MSG_ID_LINE:
+        if (m_msg_id)
+        {
+            std::free(m_msg_id);
+        }
+        m_msg_id = s;
+        break;
+
+    case LINES_LINE:
+        m_lines = std::atol(s);
+        break;
+
+    case BYTES_LINE:
+        m_bytes = std::atol(s);
+        break;
     }
 }

@@ -472,55 +472,6 @@ void find_existing_articles()
     }
 }
 
-// mark an article unread, keeping track of to_read[]
-//
-void Article::one_more()
-{
-    if (!(m_flags & AF_UNREAD))
-    {
-        ArticleNum art_num = m_num;
-        check_first(art_num);
-        m_flags |= AF_UNREAD;
-        m_flags &= ~AF_DEL;
-        g_newsgroup_ptr->m_to_read++;
-        if (m_subj)
-        {
-            if (g_selected_only)
-            {
-                if (m_subj->m_flags & static_cast<SubjectFlags>(g_sel_mask))
-                {
-                    m_flags |= static_cast<ArticleFlags>(g_sel_mask);
-                    g_selected_count++;
-                }
-            }
-            else
-            {
-                m_subj->m_flags |= SF_VISIT;
-            }
-        }
-    }
-}
-
-// mark an article read, keeping track of to_read[]
-//
-void Article::one_less()
-{
-    if (m_flags & AF_UNREAD)
-    {
-        m_flags &= ~AF_UNREAD;
-        // Keep g_selected_count accurate
-        if (m_flags & static_cast<ArticleFlags>(g_sel_mask))
-        {
-            g_selected_count--;
-            m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
-        }
-        if (g_newsgroup_ptr->m_to_read > TR_NONE)
-        {
-            g_newsgroup_ptr->m_to_read--;
-        }
-    }
-}
-
 void one_less_art_num(ArticleNum art_num)
 {
     Article* ap = article_find(art_num);
@@ -530,30 +481,10 @@ void one_less_art_num(ArticleNum art_num)
     }
 }
 
-void Article::one_missing()
-{
-    g_missing_count += (m_flags & AF_UNREAD) != 0;
-    one_less();
-    m_flags = (m_flags & ~(AF_HAS_RE|AF_YANK_BACK|AF_EXISTS))
-              | AF_CACHED|AF_THREADED;
-}
-
-// mark an article as unread, with possible xref chasing
-//
-void Article::unmark_as_read()
-{
-    one_more();
-#ifdef MCHASE
-    if (!empty(m_xrefs) && !(m_flags & AF_MCHASE))
-    {
-        m_flags |= AF_MCHASE;
-        s_chase_count++;
-    }
-#endif
-}
-
 // Mark an article as read in this newsgroup and possibly chase xrefs.
 // Don't call this on missing articles.
+//
+// TODO: decouple from s_chase_count
 //
 void Article::set_read()
 {
@@ -565,20 +496,10 @@ void Article::set_read()
     }
 }
 
-// temporarily mark article as read.  When newsgroup is exited, articles
-// will be marked as unread.  Called via M command
-//
-void Article::delay_unmark()
-{
-    if (!(m_flags & AF_YANK_BACK))
-    {
-        m_flags |= AF_YANK_BACK;
-        g_dm_count++;
-    }
-}
-
 // mark article as read.  If article is cross-referenced to other
 // newsgroups, mark them read there also.
+//
+// TODO: decouple from s_chase_count
 //
 void Article::mark_as_read()
 {

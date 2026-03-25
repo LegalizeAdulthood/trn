@@ -15,5 +15,7 @@ Article *allocate_article(ArticleNum artnum);
 int      msg_id_cmp(const char *key, int key_len, HashDatum data);
 Article *get_article(char *msgid);
 void     merge_threads(Subject *s1, Subject *s2);
+void     fix_msg_id(char *msgid);
+void     unlink_child(Article *child);
 
 #endif

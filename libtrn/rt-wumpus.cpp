@@ -788,6 +788,7 @@ static void display_tree(Article *article, char *cp)
 // are marked with a ' ', others get a letter in the sequence:
 //      ' ', '1'-'9', 'A'-'Z', 'a'-'z', '+'
 //
+// TODO: decouple from s_letters
 char Article::thread_letter()
 {
     int subj = m_subj->m_misc;

@@ -32,8 +32,8 @@ struct Subject
 {
     Article *first_art();
     Article *last_art();
-    void select_subject(AutoKillFlags auto_flags);
-    void deselect_subject();
+    void     select_subject(AutoKillFlags auto_flags);
+    void     deselect_subject();
     void     kill_subject(AutoKillFlags auto_flags);
     void     unkill_subject();
     void     clear_subject();

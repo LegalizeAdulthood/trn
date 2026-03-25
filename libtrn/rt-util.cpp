@@ -614,21 +614,6 @@ char *compress_from(const char *from, int size)
     return s;
 }
 
-// Fit the date in <max> chars.
-char *Article::compress_date(int size) const
-{
-    char* t;
-
-    std::strncpy(t = g_cmd_buf, std::ctime(&m_date), size);
-    char *s = std::strchr(t, '\n');
-    if (s != nullptr)
-    {
-        *s = '\0';
-    }
-    t[size] = '\0';
-    return t;
-}
-
 inline bool eq_ignore_case(char unknown, char lower)
 {
     return std::tolower(unknown) == lower;
