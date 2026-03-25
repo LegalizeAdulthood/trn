@@ -8,7 +8,7 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - *(none)*
 
 ## cache.h
-- *(none for Subject)*
+- `ArticleNum article_num(const Article *ap);`
 
 ## datasrc.h
 - `int source_file_open(SourceFile *sfp, ...)`
@@ -39,6 +39,13 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `char *prev_list_item(List *list, char *ptr);`
 - `void delete_list(List *list);`
 
+## mime.h
+- `void mime_clear_struct(MimeSection *mp);`
+- `void mime_parse_type(MimeSection *mp, char *s);`
+- `void mime_parse_disposition(MimeSection *mp, char *s);`
+- `void mime_parse_encoding(MimeSection *mp, char *s);`
+- `void mime_description(MimeSection *mp, char *s, int limit);`
+
 ## ngdata.h
 - `void set_newsgroup(NewsgroupData *np);`
 - `ArticleNum get_newsgroup_size(NewsgroupData *gp);`
@@ -58,6 +65,19 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `void set_to_read(NewsgroupData *np, bool lax_high_check);`
 - `void check_expired(NewsgroupData *np, ArticleNum first);`
 - `bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam);`
+
+## rcstuff.h
+- `bool use_multirc(Multirc *mp);`
+- `void unuse_multirc(Multirc *mptr);`
+- `bool use_next_multirc(Multirc *mptr);`
+- `bool use_prev_multirc(Multirc *mptr);`
+- `const char *multirc_name(const Multirc *mp);`
+- `void abandon_newsgroup(NewsgroupData *np);`
+- `bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum new_num);`
+- `void cleanup_newsrc(Newsrc *rp);`
+- `void set_hash(NewsgroupData *np);`
+- `bool write_newsrcs(Multirc *mptr);`
+- `void get_old_newsrcs(Multirc *mptr);`
 
 ## rt-process.h
 - `void merge_threads(Subject *s1, Subject *s2);`
@@ -83,6 +103,20 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `void clear_subject(Subject *subj);`
 - `void clear_sub_thread(Article *ap);`
 - `Article *subj_article(Subject *sp);`
+
+## search.h
+- `void init_compex(CompiledRegex *compex);`
+- `void free_compex(CompiledRegex *compex);`
+- `const char *getbracket(CompiledRegex *compex, int n);`
+- `char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold);`
+- `char *grow_eb(CompiledRegex *compex, char *epp, char **alt);`
+- `const char *execute(CompiledRegex *compex, const char *addr);`
+- `bool advance(CompiledRegex *compex, const char *lp, const char *ep);`
+- `bool backref(CompiledRegex *compex, int i, const char *lp);`
+
+## univ.h
+- `const char *univ_article_desc(const UniversalItem *ui);`
+- `const char *univ_key_help_mode_str(const UniversalItem *ui);`
 
 ---
 
