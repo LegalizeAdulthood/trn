@@ -672,11 +672,11 @@ int nntp_handle_timeout()
     return 1;
 }
 
-void nntp_server_died(DataSource *dp)
+void DataSource::nntp_server_died()
 {
-    Multirc* mp = g_multirc;
-    dp->close();
-    dp->m_flags |= DF_UNAVAILABLE;
+    Multirc * mp = g_multirc;
+    close();
+    m_flags |= DF_UNAVAILABLE;
     unuse_multirc(mp);
     if (!use_multirc(mp))
     {

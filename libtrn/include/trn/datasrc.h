@@ -76,6 +76,7 @@ struct DataSource
     bool             find_active_group(char *outbuf, const char *nam, int len, ArticleNum high);
     const char      *find_group_desc(const char *group_name);
     inline NNTPFlags nntp_flags() const;
+    void             nntp_server_died();
 
     char            *m_name;       // our user-friendly name
     char            *m_news_id;    // the active file name or host name

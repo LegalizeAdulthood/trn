@@ -424,7 +424,7 @@ do_group:
             goto do_group;
 
         case NG_NO_SERVER:
-            nntp_server_died(np->m_rc->data_source);
+            np->m_rc->data_source->nntp_server_died();
             (void) first_page();
             break;
 

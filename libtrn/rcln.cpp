@@ -672,7 +672,7 @@ void NewsgroupData::check_expired(ArticleNum first)
 
 // Returns true if article is marked as read or does not exist
 // could use a better name
-bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
+bool was_read_group(ArticleNum artnum, char *ngnam)
 {
     char*   s;
     char*   t;

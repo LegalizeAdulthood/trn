@@ -31,11 +31,7 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `int add_group_perform(AddGroup *gp, char *cmdlst, int output_level);`
 
 ## nntp.h
-- `void nntp_server_died(DataSource *dp);`
 - `int nntp_group(const char *group, NewsgroupData *gp);`
-
-## rcln.h
-- `bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam);`
 
 ## rcstuff.h
 - `bool use_multirc(Multirc *mp);`

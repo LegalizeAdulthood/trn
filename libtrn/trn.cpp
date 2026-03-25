@@ -927,7 +927,7 @@ redo_newsgroup:
             return ING_SPECIAL;
 
         case NG_NO_SERVER:
-            nntp_server_died(g_newsgroup_ptr->m_rc->data_source);
+            g_newsgroup_ptr->m_rc->data_source->nntp_server_died();
             return ING_NO_SERVER;
 
         // extensions

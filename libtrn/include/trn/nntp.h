@@ -50,7 +50,6 @@ char      *nntp_art_name(ArticleNum art_num, bool allocate);
 char      *nntp_tmp_name(int ndx);
 int        nntp_handle_nested_lists();
 int        nntp_handle_timeout();
-void       nntp_server_died(DataSource *dp);
 #ifdef SUPPORT_XTHREAD
 long nntp_read_check();
 long nntp_read(char *buf, long n);

@@ -24,6 +24,6 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name);
 void sub_art_num(DataSource *dp, ArticleNum art_num, char *ng_name);
 void prange(char *where, ArticleNum min_num, ArticleNum max_num);
 #endif
-bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam);
+bool was_read_group(ArticleNum artnum, char *ngnam);
 
 #endif
