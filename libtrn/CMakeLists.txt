@@ -1,6 +1,7 @@
 add_library(libtrn
     addng.cpp include/trn/addng.h
     art.cpp include/trn/art.h
+    Article.cpp include/trn/Article.h
     artio.cpp include/trn/artio.h
     artsrch.cpp include/trn/artsrch.h
     include/trn/artstate.h
@@ -63,6 +64,7 @@ add_library(libtrn
     sorder.cpp include/trn/sorder.h
     spage.cpp include/trn/spage.h
     include/trn/string-algos.h
+    Subject.cpp include/trn/Subject.h
     sw.cpp include/trn/sw.h
     terminal.cpp include/trn/terminal.h
     trn.cpp include/trn/trn.h
