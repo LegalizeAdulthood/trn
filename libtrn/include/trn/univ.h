@@ -110,14 +110,16 @@ DECLARE_FLAGS_ENUM(UniversalItemFlags, int);
 
 struct UniversalItem
 {
-    UniversalItem     *next;
-    UniversalItem     *prev;
-    int                num;   // natural order (for sort)
-    UniversalItemFlags flags; // for selector
-    UniversalItemType  type;  // what kind of object is it?
-    char              *desc;  // default description
-    int                score;
-    UniversalData      data; // describes the object
+    UniversalItem     *m_next;
+    UniversalItem     *m_prev;
+    int                m_num;   // natural order (for sort)
+    UniversalItemFlags m_flags; // for selector
+    UniversalItemType  m_type;  // what kind of object is it?
+    char              *m_desc;  // default description
+    int                m_score;
+    UniversalData      m_data; // describes the object
+    const char        *univ_article_desc() const;
+    const char        *univ_key_help_mode_str() const;
 };
 
 extern int  g_univ_level;          // How deep are we in the tree?
@@ -145,7 +147,6 @@ void           univ_startup();
 void           univ_open();
 void           univ_close();
 UniversalItem *univ_add(UniversalItemType type, const char *desc);
-char          *univ_desc_line(UniversalItem *ui, int linenum);
 void           univ_add_text(const char *txt);
 void           univ_add_debug(const char *desc, const char *txt);
 void           univ_add_group(const char *desc, const char *grpname);
@@ -165,9 +166,7 @@ void           univ_newsgroup_virtual();
 int            univ_visit_group_main(const char *gname);
 void           univ_virt_pass();
 void           sort_univ();
-const char    *univ_article_desc(const UniversalItem *ui);
 void           univ_help_main(HelpLocation where);
 void           univ_help(HelpLocation where);
-const char    *univ_key_help_mode_str(const UniversalItem *ui);
 
 #endif

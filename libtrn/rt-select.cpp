@@ -746,11 +746,11 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         return exit_code;
     }
     std::printf("\n");                 // prepare for output msgs...
-    switch (ui->type)
+    switch (ui->m_type)
     {
     case UN_DEBUG1:
     {
-        char *s = ui->data.str;
+        char *s = ui->m_data.str;
         if (s && *s)
         {
             std::printf("Not implemented yet (%s)\n",s);
@@ -762,7 +762,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_TEXT_FILE:
     {
-        char *s = ui->data.text_file.fname;
+        char *s = ui->m_data.text_file.fname;
         if (s && *s)
         {
             // later have some way of getting a return code back
@@ -778,16 +778,16 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             // XXX whine: can't recurse at this time
             break;
         }
-        if (!ui->data.virt.ng)
+        if (!ui->m_data.virt.ng)
         {
             break;                      // XXX whine
         }
-        NewsgroupData *np = find_newsgroup(ui->data.virt.ng);
+        NewsgroupData *np = find_newsgroup(ui->m_data.virt.ng);
 
         if (!np)
         {
             std::printf("Universal: newsgroup %s not found!",
-                   ui->data.virt.ng);
+                   ui->m_data.virt.ng);
             sleep(5);
             return exit_code;
         }
@@ -799,7 +799,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
         std::printf("Virtual: Entering %s:\n", g_newsgroup_name.c_str());
-        g_ng_go_art_num = ui->data.virt.num;
+        g_ng_go_art_num = ui->m_data.virt.num;
         g_univ_read_virt_flag = true;
         int ret = do_newsgroup("");
         g_univ_read_virt_flag = false;
@@ -832,7 +832,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_GROUP_MASK:
     {
-        univ_mask_load(ui->data.gmask.mask_list,ui->data.gmask.title);
+        univ_mask_load(ui->m_data.gmask.mask_list,ui->m_data.gmask.title);
         ch = universal_selector();
         switch (ch)
         {
@@ -849,8 +849,8 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_CONFIG_FILE:
     {
-        univ_file_load(ui->data.cfile.fname,ui->data.cfile.title,
-                       ui->data.cfile.label);
+        univ_file_load(ui->m_data.cfile.fname,ui->m_data.cfile.title,
+                       ui->m_data.cfile.label);
         ch = universal_selector();
         switch (ch)
         {
@@ -874,16 +874,16 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             // XXX whine: can't recurse at this time
             break;
         }
-        if (!ui->data.group.ng)
+        if (!ui->m_data.group.ng)
         {
             break;                      // XXX whine
         }
-        NewsgroupData *np = find_newsgroup(ui->data.group.ng);
+        NewsgroupData *np = find_newsgroup(ui->m_data.group.ng);
 
         if (!np)
         {
             std::printf("Universal: newsgroup %s not found!",
-                   ui->data.group.ng);
+                   ui->m_data.group.ng);
             sleep(5);
             return exit_code;
         }
@@ -933,7 +933,7 @@ do_group:
     }
 
     case UN_HELP_KEY:
-        if (another_command(univ_key_help(ui->data.i)))
+        if (another_command(univ_key_help(ui->m_data.i)))
         {
             push_char(s_sel_ret | 0200);
         }
@@ -993,14 +993,14 @@ sel_restart:
     {
         UniversalItem *ui;
         int i;
-        for (ui = g_first_univ, i = 0; ui; ui = ui->next, i++)
+        for (ui = g_first_univ, i = 0; ui; ui = ui->m_next, i++)
         {
-            if (ui->flags & UF_SEL)
+            if (ui->m_flags & UF_SEL)
             {
                 PUSH_SELECTOR();
                 PUSH_UNIV_SELECTOR();
 
-                ui->flags &= ~UF_SEL;
+                ui->m_flags &= ~UF_SEL;
                 save_selected_count--;
                 UniversalReadResult ret = univ_read(ui);
 
@@ -1688,11 +1688,11 @@ static bool select_item(Selection u)
         break;
 
     case SM_UNIVERSAL:
-        if (!(u.un->flags & g_sel_mask))
+        if (!(u.un->m_flags & g_sel_mask))
         {
             g_selected_count++;
         }
-        u.un->flags = (u.un->flags & ~UF_DEL) | static_cast<UniversalItemFlags>(g_sel_mask);
+        u.un->m_flags = (u.un->m_flags & ~UF_DEL) | static_cast<UniversalItemFlags>(g_sel_mask);
         break;
     }
     return true;
@@ -1802,14 +1802,14 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_UNIVERSAL:
-        if (u.un->flags & static_cast<UniversalItemFlags>(g_sel_mask))
+        if (u.un->m_flags & static_cast<UniversalItemFlags>(g_sel_mask))
         {
-            u.un->flags &= ~static_cast<UniversalItemFlags>(g_sel_mask);
+            u.un->m_flags &= ~static_cast<UniversalItemFlags>(g_sel_mask);
             g_selected_count--;
         }
         if (g_sel_rereading)
         {
-            u.un->flags |= UF_DEL;
+            u.un->m_flags |= UF_DEL;
         }
         break;
 

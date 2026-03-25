@@ -581,15 +581,15 @@ try_again:
         g_obj_count = ArticleNum{};
 
         sort_univ();
-        for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
+        for (UniversalItem *ui = g_first_univ; ui; ui = ui->m_next)
         {
             if (sel_page_univ == ui)
             {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
-            ui->flags &= ~UF_INCLUDED;
+            ui->m_flags &= ~UF_INCLUDED;
             bool ui_elig = true;
-            switch (ui->type)
+            switch (ui->m_type)
             {
             case UN_GROUP_DESEL:
             case UN_VGROUP_DESEL:
@@ -601,12 +601,12 @@ try_again:
 
             case UN_NEWSGROUP:
             {
-                if (!ui->data.group.ng)
+                if (!ui->m_data.group.ng)
                 {
                     ui_elig = false;
                     break;
                 }
-                NewsgroupData *np = find_newsgroup(ui->data.group.ng);
+                NewsgroupData *np = find_newsgroup(ui->m_data.group.ng);
                 if (!np)
                 {
                     ui_elig = false;
@@ -627,7 +627,7 @@ try_again:
 
             case UN_ARTICLE:
                 // later: use the datasrc of the newsgroup
-                ui_elig = !was_read_group(ui->data.virt.num, ui->data.virt.ng);
+                ui_elig = !was_read_group(ui->m_data.virt.num, ui->m_data.virt.ng);
                 if (g_sel_rereading)
                 {
                     ui_elig = !ui_elig;
@@ -642,13 +642,13 @@ try_again:
             {
                 continue;
             }
-            if (!g_sel_exclusive || (ui->flags & static_cast<UniversalItemFlags>(g_sel_mask)))
+            if (!g_sel_exclusive || (ui->m_flags & static_cast<UniversalItemFlags>(g_sel_mask)))
             {
-                if (g_sel_rereading && !(ui->flags & static_cast<UniversalItemFlags>(g_sel_mask)))
+                if (g_sel_rereading && !(ui->m_flags & static_cast<UniversalItemFlags>(g_sel_mask)))
                 {
-                    ui->flags |= UF_DEL;
+                    ui->m_flags |= UF_DEL;
                 }
-                ui->flags |= UF_INCLUDED;
+                ui->m_flags |= UF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
             ++g_obj_count;
@@ -980,9 +980,9 @@ bool first_page()
 
     case SM_UNIVERSAL:
     {
-        for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
+        for (UniversalItem *ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if (ui->flags & UF_INCLUDED)
+            if (ui->m_flags & UF_INCLUDED)
             {
                 if (sel_page_univ != ui)
                 {
@@ -1361,11 +1361,11 @@ bool prev_page()
         }
         else
         {
-            ui = ui->prev;
+            ui = ui->m_prev;
         }
         while (ui)
         {
-            if (ui->flags & UF_INCLUDED)
+            if (ui->m_flags & UF_INCLUDED)
             {
                 page_ui = ui;
                 g_sel_prior_obj_cnt--;
@@ -1374,7 +1374,7 @@ bool prev_page()
                     break;
                 }
             }
-            ui = ui->prev;
+            ui = ui->m_prev;
         }
         if (sel_page_univ != page_ui)
         {
@@ -1562,13 +1562,13 @@ try_again:
     case SM_UNIVERSAL:
     {
         UniversalItem* ui = sel_page_univ;
-        for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->next)
+        for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->m_next)
         {
             if (ui == u.un)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (ui->flags & UF_INCLUDED)
+            if (ui->m_flags & UF_INCLUDED)
             {
                 g_sel_page_item_cnt++;
             }
@@ -2019,7 +2019,7 @@ start_of_loop:
     else if (g_sel_mode == SM_UNIVERSAL)
     {
         UniversalItem* ui = sel_page_univ;
-        for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->next)
+        for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->m_next)
         {
 #if 0
             if (ui == xx)
@@ -2028,12 +2028,12 @@ start_of_loop:
             }
 #endif
 
-            if (!(ui->flags & UF_INCLUDED))
+            if (!(ui->m_flags & UF_INCLUDED))
             {
                 continue;
             }
 
-            sel = !!(ui->flags & static_cast<UniversalItemFlags>(g_sel_mask)) + (ui->flags & UF_DEL);
+            sel = !!(ui->m_flags & static_cast<UniversalItemFlags>(g_sel_mask)) + (ui->m_flags & UF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.un = ui;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -2252,7 +2252,7 @@ void update_page()
             break;
 
         case SM_UNIVERSAL:
-            sel = !!(u.un->flags & g_sel_mask) + (u.un->flags & UF_DEL);
+            sel = !!(u.un->m_flags & g_sel_mask) + (u.un->m_flags & UF_DEL);
             break;
 
         case SM_OPTIONS:
@@ -2614,15 +2614,15 @@ static void display_universal(const UniversalItem *ui)
     }
     else
     {
-        switch (ui->type)
+        switch (ui->m_type)
         {
         case UN_NEWSGROUP:
         {
               // later error check the UI?
-            NewsgroupData *np = find_newsgroup(ui->data.group.ng);
+            NewsgroupData *np = find_newsgroup(ui->m_data.group.ng);
             if (!np)
             {
-                std::printf("!!!!! could not find %s", ui->data.group.ng);
+                std::printf("!!!!! could not find %s", ui->m_data.group.ng);
             }
             else
             {
@@ -2644,24 +2644,24 @@ static void display_universal(const UniversalItem *ui)
                 {
                     std::printf("***** ");
                 }
-                std::fputs(ui->data.group.ng,stdout);
+                std::fputs(ui->m_data.group.ng,stdout);
             }
             newline();
             break;
         }
 
         case UN_ARTICLE:
-            std::printf("      %s",ui->desc? ui->desc : univ_article_desc(ui));
+            std::printf("      %s",ui->m_desc? ui->m_desc : ui->univ_article_desc());
             newline();
             break;
 
         case UN_HELP_KEY:
-            std::printf("      Help on the %s",univ_key_help_mode_str(ui));
+            std::printf("      Help on the %s", ui->univ_key_help_mode_str());
             newline();
             break;
 
         default:
-            std::printf("      %s",ui->desc? ui->desc : "[No Description]");
+            std::printf("      %s",ui->m_desc? ui->m_desc : "[No Description]");
             newline();
             break;
         }

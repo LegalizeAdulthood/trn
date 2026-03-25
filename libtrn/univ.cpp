@@ -146,8 +146,8 @@ void univ_close()
     for (UniversalItem *node = g_first_univ; node; node = nextnode)
     {
         univ_free_data(node);
-        safe_free(node->desc);
-        nextnode = node->next;
+        safe_free(node->m_desc);
+        nextnode = node->m_next;
         std::free((char*)node);
     }
     if (!g_univ_tmp_file.empty())
@@ -179,23 +179,23 @@ UniversalItem *univ_add(UniversalItemType type, const char *desc)
 {
     UniversalItem *node = (UniversalItem*)safe_malloc(sizeof(UniversalItem));
 
-    node->flags = UF_NONE;
+    node->m_flags = UF_NONE;
     if (desc)
     {
-        node->desc = save_str(desc);
+        node->m_desc = save_str(desc);
     }
     else
     {
-        node->desc = nullptr;
+        node->m_desc = nullptr;
     }
-    node->type = type;
-    node->num = s_univ_item_counter++;
-    node->score = 0;            // consider other default scores?
-    node->next = nullptr;
-    node->prev = g_last_univ;
+    node->m_type = type;
+    node->m_num = s_univ_item_counter++;
+    node->m_score = 0;            // consider other default scores?
+    node->m_next = nullptr;
+    node->m_prev = g_last_univ;
     if (g_last_univ)
     {
-        g_last_univ->next = node;
+        g_last_univ->m_next = node;
     }
     else
     {
@@ -213,7 +213,7 @@ static void univ_free_data(UniversalItem *ui)
         return;
     }
 
-    switch (ui->type)
+    switch (ui->m_type)
     {
     case UN_NONE:     // cases where nothing is needed.
     case UN_TXT:
@@ -221,38 +221,38 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_DEBUG1:   // methods that use the string
-        safe_free(ui->data.str);
+        safe_free(ui->m_data.str);
         break;
 
     case UN_GROUP_MASK:        // methods that have custom data
-        safe_free(ui->data.gmask.title);
-        safe_free(ui->data.gmask.mask_list);
+        safe_free(ui->m_data.gmask.title);
+        safe_free(ui->m_data.gmask.mask_list);
         break;
 
     case UN_CONFIG_FILE:
-        safe_free(ui->data.cfile.title);
-        safe_free(ui->data.cfile.fname);
-        safe_free(ui->data.cfile.label);
+        safe_free(ui->m_data.cfile.title);
+        safe_free(ui->m_data.cfile.fname);
+        safe_free(ui->m_data.cfile.label);
         break;
 
     case UN_NEWSGROUP:
     case UN_GROUP_DESEL:
-        safe_free(ui->data.group.ng);
+        safe_free(ui->m_data.group.ng);
         break;
 
     case UN_ARTICLE:
-        safe_free(ui->data.virt.ng);
-        safe_free(ui->data.virt.from);
-        safe_free(ui->data.virt.subj);
+        safe_free(ui->m_data.virt.ng);
+        safe_free(ui->m_data.virt.from);
+        safe_free(ui->m_data.virt.subj);
         break;
 
     case UN_VGROUP:
     case UN_VGROUP_DESEL:
-        safe_free(ui->data.vgroup.ng);
+        safe_free(ui->m_data.vgroup.ng);
         break;
 
     case UN_TEXT_FILE:
-        safe_free(ui->data.text_file.fname);
+        safe_free(ui->m_data.text_file.fname);
         break;
 
     case UN_DATA_SOURCE:  // unimplemented methods
@@ -260,14 +260,6 @@ static void univ_free_data(UniversalItem *ui)
     default:
         break;
     }
-}
-
-// not used now, but may be used later...
-//UNIV_ITEM* ui;                                // universal item
-//int linenum;                          // which line to describe (0 base)
-char *univ_desc_line(UniversalItem *ui, int linenum)
-{
-    return ui->desc;
 }
 
 void univ_add_text(const char *txt)
@@ -281,7 +273,7 @@ void univ_add_debug(const char *desc, const char *txt)
 {
     // later check text for bad things
     UniversalItem *ui = univ_add(UN_DEBUG1, desc);
-    ui->data.str = save_str(txt);
+    ui->m_data.str = save_str(txt);
 }
 
 void univ_add_group(const char *desc, const char *grpname)
@@ -306,53 +298,53 @@ void univ_add_group(const char *desc, const char *grpname)
     {
         // group was already added
         // perhaps it is marked as deleted?
-        for (ui = g_first_univ; ui; ui = ui->next)
+        for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if ((ui->type == UN_GROUP_DESEL) && ui->data.group.ng //
-                && !strcmp(ui->data.group.ng, grpname))
+            if ((ui->m_type == UN_GROUP_DESEL) && ui->m_data.group.ng //
+                && !strcmp(ui->m_data.group.ng, grpname))
             {
                 // undelete the newsgroup
-                ui->type = UN_NEWSGROUP;
+                ui->m_type = UN_NEWSGROUP;
             }
         }
         return;
     }
     ui = univ_add(UN_NEWSGROUP,desc);
-    ui->data.group.ng = save_str(grpname);
-    data.dat_ptr = ui->data.group.ng;
+    ui->m_data.group.ng = save_str(grpname);
+    data.dat_ptr = ui->m_data.group.ng;
     hash_store_last(data);
 }
 
 void univ_add_mask(const char *desc, const char *mask)
 {
     UniversalItem *ui = univ_add(UN_GROUP_MASK, desc);
-    ui->data.gmask.mask_list = save_str(mask);
-    ui->data.gmask.title = save_str(desc);
+    ui->m_data.gmask.mask_list = save_str(mask);
+    ui->m_data.gmask.title = save_str(desc);
 }
 
 //char* fname;                          // May be URL
 void univ_add_file(const char *desc, const char *fname, const char *label)
 {
     UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
-    ui->data.cfile.title = save_str(desc);
-    ui->data.cfile.fname = save_str(fname);
+    ui->m_data.cfile.title = save_str(desc);
+    ui->m_data.cfile.fname = save_str(fname);
     if (label && *label)
     {
-        ui->data.cfile.label = save_str(label);
+        ui->m_data.cfile.label = save_str(label);
     }
     else
     {
-        ui->data.cfile.label = nullptr;
+        ui->m_data.cfile.label = nullptr;
     }
 }
 
 UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
 {
     UniversalItem *ui = univ_add(UN_ARTICLE, desc);
-    ui->data.virt.ng = save_str(grp);
-    ui->data.virt.num = art;
-    ui->data.virt.subj = nullptr;
-    ui->data.virt.from = nullptr;
+    ui->m_data.virt.ng = save_str(grp);
+    ui->m_data.virt.num = art;
+    ui->m_data.virt.subj = nullptr;
+    ui->m_data.virt.from = nullptr;
     return ui;
 }
 
@@ -389,7 +381,7 @@ void univ_add_text_file(const char *desc, char *name)
     case '%':
     case '/':
         ui = univ_add(UN_TEXT_FILE,desc);
-        ui->data.text_file.fname = save_str(file_exp(s));
+        ui->m_data.text_file.fname = save_str(file_exp(s));
         break;
     }
 }
@@ -418,26 +410,26 @@ void univ_add_virtual_group(const char *grpname)
     {
         // group was already added
         // perhaps it is marked as deleted?
-        for (ui = g_first_univ; ui; ui = ui->next)
+        for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if ((ui->type == UN_VGROUP_DESEL) && ui->data.vgroup.ng //
-                && !std::strcmp(ui->data.vgroup.ng, grpname))
+            if ((ui->m_type == UN_VGROUP_DESEL) && ui->m_data.vgroup.ng //
+                && !std::strcmp(ui->m_data.vgroup.ng, grpname))
             {
                 // undelete the newsgroup
-                ui->type = UN_VGROUP;
+                ui->m_type = UN_VGROUP;
             }
         }
         return;
     }
     ui = univ_add(UN_VGROUP,nullptr);
-    ui->data.vgroup.flags = UF_VG_NONE;
+    ui->m_data.vgroup.flags = UF_VG_NONE;
     if (s_univ_use_min_score)
     {
-        ui->data.vgroup.flags |= UF_VG_MIN_SCORE;
-        ui->data.vgroup.min_score = s_univ_min_score;
+        ui->m_data.vgroup.flags |= UF_VG_MIN_SCORE;
+        ui->m_data.vgroup.min_score = s_univ_min_score;
     }
-    ui->data.vgroup.ng = save_str(grpname);
-    data.dat_ptr = ui->data.vgroup.ng;
+    ui->m_data.vgroup.ng = save_str(grpname);
+    data.dat_ptr = ui->m_data.vgroup.ng;
     hash_store_last(data);
 }
 
@@ -499,23 +491,23 @@ void univ_use_pattern(const char *pattern, int type)
         switch (type)
         {
         case 0:
-            for (ui = g_first_univ; ui; ui = ui->next)
+            for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->type == UN_NEWSGROUP && ui->data.group.ng //
-                    && univ_do_match(ui->data.group.ng, s))
+                if (ui->m_type == UN_NEWSGROUP && ui->m_data.group.ng //
+                    && univ_do_match(ui->m_data.group.ng, s))
                 {
-                    ui->type = UN_GROUP_DESEL;
+                    ui->m_type = UN_GROUP_DESEL;
                 }
             }
             break;
 
         case 1:
-            for (ui = g_first_univ; ui; ui = ui->next)
+            for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->type == UN_VGROUP && ui->data.vgroup.ng //
-                    && univ_do_match(ui->data.vgroup.ng, s))
+                if (ui->m_type == UN_VGROUP && ui->m_data.vgroup.ng //
+                    && univ_do_match(ui->m_data.vgroup.ng, s))
                 {
-                    ui->type = UN_VGROUP_DESEL;
+                    ui->m_type = UN_VGROUP_DESEL;
                 }
             }
             break;
@@ -1084,7 +1076,7 @@ void univ_page_file(char *fname)
 // called from within newsgroup
 void univ_newsgroup_virtual()
 {
-    switch (s_current_vg_ui->type)
+    switch (s_current_vg_ui->m_type)
     {
     case UN_VGROUP:
         univ_vg_add_group();
@@ -1127,9 +1119,9 @@ static void univ_vg_add_article(ArticleNum a)
 
     // later consider author in description, scoring, etc.
     UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
-    ui->score = score;
-    ui->data.virt.subj = save_str(subj);
-    ui->data.virt.from = save_str(from);
+    ui->m_score = score;
+    ui->m_data.virt.subj = save_str(subj);
+    ui->m_data.virt.from = save_str(from);
 }
 
 
@@ -1188,47 +1180,47 @@ void univ_virt_pass()
     g_univ_ng_virt_flag = true;
     s_univ_virt_pass_needed = false;
 
-    for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
+    for (UniversalItem *ui = g_first_univ; ui; ui = ui->m_next)
     {
         if (input_pending())
         {
             // later consider cleaning up the remains
             break;
         }
-        switch (ui->type)
+        switch (ui->m_type)
         {
         case UN_VGROUP:
-            if (!ui->data.vgroup.ng)
+            if (!ui->m_data.vgroup.ng)
             {
                 break;                  // XXX whine
             }
             s_current_vg_ui = ui;
-            if (ui->data.vgroup.flags & UF_VG_MIN_SCORE)
+            if (ui->m_data.vgroup.flags & UF_VG_MIN_SCORE)
             {
                 s_univ_use_min_score = true;
-                s_univ_min_score = ui->data.vgroup.min_score;
+                s_univ_min_score = ui->m_data.vgroup.min_score;
             }
-            (void)univ_visit_group(ui->data.vgroup.ng);
+            (void)univ_visit_group(ui->m_data.vgroup.ng);
             s_univ_use_min_score = false;
             // later do something with return value
             univ_free_data(ui);
-            safe_free(ui->desc);
-            ui->type = UN_DELETED;
+            safe_free(ui->m_desc);
+            ui->m_type = UN_DELETED;
             break;
 
         case UN_ARTICLE:
             // if article number is not set, visit newsgroup with callback
             // later also check for descriptions
-            if ((ui->data.virt.num) && (ui->desc))
+            if ((ui->m_data.virt.num) && (ui->m_desc))
             {
               break;
             }
-            if (ui->data.virt.subj)
+            if (ui->m_data.virt.subj)
             {
               break;
             }
             s_current_vg_ui = ui;
-            (void)univ_visit_group(ui->data.virt.ng);
+            (void)univ_visit_group(ui->m_data.virt.ng);
             // later do something with return value
             break;
 
@@ -1241,22 +1233,22 @@ void univ_virt_pass()
 
 static int univ_order_number(const UniversalItem** ui1, const UniversalItem** ui2)
 {
-    return (int)((*ui1)->num - (*ui2)->num) * g_sel_direction;
+    return (int)((*ui1)->m_num - (*ui2)->m_num) * g_sel_direction;
 }
 
 static int univ_order_score(const UniversalItem** ui1, const UniversalItem** ui2)
 {
-    if ((*ui1)->score != (*ui2)->score)
+    if ((*ui1)->m_score != (*ui2)->m_score)
     {
-        return (int)((*ui2)->score - (*ui1)->score) * g_sel_direction;
+        return (int)((*ui2)->m_score - (*ui1)->m_score) * g_sel_direction;
     }
-    return (int)((*ui1)->num - (*ui2)->num) * g_sel_direction;
+    return (int)((*ui1)->m_num - (*ui2)->m_num) * g_sel_direction;
 }
 
 void sort_univ()
 {
     int cnt = 0;
-    for (const UniversalItem *i = g_first_univ; i; i = i->next)
+    for (const UniversalItem *i = g_first_univ; i; i = i->m_next)
     {
         cnt++;
     }
@@ -1281,7 +1273,7 @@ void sort_univ()
 
     UniversalItem **univ_sort_list = (UniversalItem**)safe_malloc(cnt * sizeof(UniversalItem*));
     UniversalItem** lp = univ_sort_list;
-    for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
+    for (UniversalItem *ui = g_first_univ; ui; ui = ui->m_next)
     {
         *lp++ = ui;
     }
@@ -1293,25 +1285,25 @@ void sort_univ()
     lp = univ_sort_list;
     for (int i = cnt; --i; lp++)
     {
-        lp[0]->next = lp[1];
-        lp[1]->prev = lp[0];
+        lp[0]->m_next = lp[1];
+        lp[1]->m_prev = lp[0];
     }
     g_last_univ = lp[0];
-    g_last_univ->next = nullptr;
+    g_last_univ->m_next = nullptr;
 
     std::free((char*)univ_sort_list);
 }
 
 // return a description of the article
 // do this better later, like the code in sadesc.c
-const char *univ_article_desc(const UniversalItem *ui)
+const char *UniversalItem::univ_article_desc() const
 {
     static char dbuf[200];
     static char sbuf[200];
     static char fbuf[200];
 
-    char *s = ui->data.virt.subj;
-    const char *f = ui->data.virt.from;
+    char *s = m_data.virt.subj;
+    const char *f = m_data.virt.from;
     if (!f)
     {
         std::strcpy(fbuf,"<No Author> ");
@@ -1341,7 +1333,7 @@ const char *univ_article_desc(const UniversalItem *ui)
     }
     fbuf[16] = '\0';
     sbuf[55] = '\0';
-    std::sprintf(dbuf,"[%3d] %16s %s",ui->score,fbuf,sbuf);
+    std::sprintf(dbuf,"[%3d] %16s %s",m_score,fbuf,sbuf);
     for (char *t = dbuf; *t; t++)
     {
         if ((*t == Ctl('h')) || (*t == '\t') || (*t == '\n') || (*t == '\r'))
@@ -1366,7 +1358,7 @@ void univ_help_main(HelpLocation where)
 
     // first add help on current mode
     UniversalItem *ui = univ_add(UN_HELP_KEY, nullptr);
-    ui->data.i = where;
+    ui->m_data.i = where;
 
     // later, do other mode sensitive stuff
 
@@ -1385,9 +1377,9 @@ void univ_help(HelpLocation where)
     univ_visit_help(where);     // push old selector info to stack
 }
 
-const char *univ_key_help_mode_str(const UniversalItem *ui)
+const char *UniversalItem::univ_key_help_mode_str() const
 {
-    switch (ui->data.i)
+    switch (m_data.i)
     {
     case UHELP_PAGE:
         return "Article Pager Mode";
