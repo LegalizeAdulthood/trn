@@ -67,21 +67,27 @@ DECLARE_FLAGS_ENUM(HtmlFlags, std::uint16_t);
 
 struct MimeSection
 {
-    MimeSection     *prev;
-    char            *filename;
-    char            *type_name;
-    char            *type_params;
-    char            *boundary;
-    int              html_line_start;
-    HtmlBlock       *html_blocks;
-    MimeState        type;
-    MimeEncoding     encoding;
-    short            part;
-    short            total;
-    short            boundary_len;
-    MimeSectionFlags flags;
-    HtmlFlags        html;
-    short            html_block_count;
+    void mime_clear_struct();
+    void mime_parse_type(char *s);
+    void mime_parse_disposition(char *s);
+    void mime_parse_encoding(char *s);
+    void mime_description(char *s, int limit);
+
+    MimeSection     *m_prev;
+    char            *m_filename;
+    char            *m_type_name;
+    char            *m_type_params;
+    char            *m_boundary;
+    int              m_html_line_start;
+    HtmlBlock       *m_html_blocks;
+    MimeState        m_type;
+    MimeEncoding     m_encoding;
+    short            m_part;
+    short            m_total;
+    short            m_boundary_len;
+    MimeSectionFlags m_flags;
+    HtmlFlags        m_html;
+    short            m_html_block_count;
 };
 
 enum
@@ -167,11 +173,7 @@ int           mime_exec(char *cmd);
 void          mime_init_sections();
 void          mime_push_section();
 bool          mime_pop_section();
-void          mime_clear_struct(MimeSection *mp);
 void          mime_set_article();
-void          mime_parse_type(MimeSection *mp, char *s);
-void          mime_parse_disposition(MimeSection *mp, char *s);
-void          mime_parse_encoding(MimeSection *mp, char *s);
 void          mime_parse_sub_header(std::FILE *ifp, char *next_line);
 void          mime_set_state(char *bp);
 int           mime_end_of_section(char *bp);
@@ -179,7 +181,6 @@ char         *mime_parse_params(char *str);
 char         *mime_find_param(char *s, const char *param);
 char         *mime_skip_whitespace(char *s);
 void          mime_decode_article(bool view);
-void          mime_description(MimeSection *mp, char *s, int limit);
 int           qp_decode_string(char *t, const char *f, bool in_header);
 DecodeState   qp_decode(std::FILE *ifp, DecodeState state);
 int           b64_decode_string(char *t, const char *f);

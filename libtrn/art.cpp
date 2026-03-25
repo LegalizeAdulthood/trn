@@ -219,10 +219,10 @@ DoArticleResult do_article()
                 {
                     value_of(i) = g_selected_count - (unseen && selected);
                     std::sprintf(g_art_line+std::strlen(g_art_line)," (%ld + %ld more)",
-                            i.value_of(),(long)g_newsgroup_ptr->to_read - g_selected_count
+                            i.value_of(),(long)g_newsgroup_ptr->m_to_read - g_selected_count
                                         - (!selected && unseen));
                 }
-                else if ((i = ArticleNum{g_newsgroup_ptr->to_read - unseen}) != 0 //
+                else if ((i = ArticleNum{g_newsgroup_ptr->m_to_read - unseen}) != 0 //
                          || (!g_threaded_group && g_dm_count))
                 {
                     std::sprintf(g_art_line+std::strlen(g_art_line),

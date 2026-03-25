@@ -24,19 +24,8 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `char *prev_list_item(List *list, char *ptr);`
 - `void delete_list(List *list);`
 
-## mime.h
-- `void mime_clear_struct(MimeSection *mp);`
-- `void mime_parse_type(MimeSection *mp, char *s);`
-- `void mime_parse_disposition(MimeSection *mp, char *s);`
-- `void mime_parse_encoding(MimeSection *mp, char *s);`
-- `void mime_description(MimeSection *mp, char *s, int limit);`
-
 ## ngdata.h
 - `void set_newsgroup(NewsgroupData *np);`
-- `ArticleNum get_newsgroup_size(NewsgroupData *gp);`
-
-## ngsrch.h
-- `bool newsgroup_wanted(NewsgroupData *np);`
 
 ## ngstuff.h
 - `int add_group_perform(AddGroup *gp, char *cmdlst, int output_level);`
@@ -46,9 +35,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `int nntp_group(const char *group, NewsgroupData *gp);`
 
 ## rcln.h
-- `void catch_up(NewsgroupData *np, int leave_count, int output_level);`
-- `void set_to_read(NewsgroupData *np, bool lax_high_check);`
-- `void check_expired(NewsgroupData *np, ArticleNum first);`
 - `bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam);`
 
 ## rcstuff.h
@@ -57,8 +43,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `bool use_next_multirc(Multirc *mptr);`
 - `bool use_prev_multirc(Multirc *mptr);`
 - `const char *multirc_name(const Multirc *mp);`
-- `void abandon_newsgroup(NewsgroupData *np);`
-- `bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum new_num);`
 - `void cleanup_newsrc(Newsrc *rp);`
 - `void set_hash(NewsgroupData *np);`
 - `bool write_newsrcs(Multirc *mptr);`

@@ -297,12 +297,12 @@ SaveResult save_article()
             case 2:
                 std::printf("Extracting uuencoded file into %s:\n", c);
                 term_down(1);
-                g_mime_section->type = IMAGE_MIME;
-                safe_free(g_mime_section->filename);
-                g_mime_section->filename = filename? save_str(filename) : nullptr;
-                g_mime_section->encoding = MENCODE_UUE;
-                g_mime_section->part = part;
-                g_mime_section->total = total;
+                g_mime_section->m_type = IMAGE_MIME;
+                safe_free(g_mime_section->m_filename);
+                g_mime_section->m_filename = filename? save_str(filename) : nullptr;
+                g_mime_section->m_encoding = MENCODE_UUE;
+                g_mime_section->m_part = part;
+                g_mime_section->m_total = total;
                 if (!decode_piece(nullptr,nullptr) && *g_msg)
                 {
                     newline();
@@ -626,12 +626,12 @@ SaveResult view_article()
                 MimeCapEntry*mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
                 g_save_from = g_art_pos;
                 seek_art(g_save_from);
-                g_mime_section->type = UNHANDLED_MIME;
-                safe_free(g_mime_section->filename);
-                g_mime_section->filename = filename? save_str(filename) : nullptr;
-                g_mime_section->encoding = MENCODE_UUE;
-                g_mime_section->part = part;
-                g_mime_section->total = total;
+                g_mime_section->m_type = UNHANDLED_MIME;
+                safe_free(g_mime_section->m_filename);
+                g_mime_section->m_filename = filename? save_str(filename) : nullptr;
+                g_mime_section->m_encoding = MENCODE_UUE;
+                g_mime_section->m_part = part;
+                g_mime_section->m_total = total;
                 if (mc && !decode_piece(mc, nullptr) && *g_msg)
                 {
                     newline();

@@ -307,8 +307,8 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
 {
     *g_msg = '\0';
 
-    int part = g_mime_section->part;
-    int total = g_mime_section->total;
+    int part = g_mime_section->m_part;
+    int total = g_mime_section->m_total;
     if (!total && g_is_mime)
     {
         total = 1;
@@ -316,7 +316,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     }
 
     char* dir;
-    char *filename = decode_fix_filename(g_mime_section->filename);
+    char *filename = decode_fix_filename(g_mime_section->m_filename);
     if (mcp || total != 1 || part != 1)
     {
         // Create directory to store parts and copy this part there.
@@ -432,14 +432,14 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         total = 1;
     }
 
-    if (g_mime_section->type == MESSAGE_MIME)
+    if (g_mime_section->m_type == MESSAGE_MIME)
     {
         mime_push_section();
         mime_parse_sub_header(fp, first_line);
         first_line = nullptr;
     }
     g_mime_getc_line = first_line;
-    DecodeFunc decoder = decode_function(g_mime_section->encoding);
+    DecodeFunc decoder = decode_function(g_mime_section->m_encoding);
     if (!decoder)
     {
         std::strcpy(g_msg,"Unhandled encoding type -- aborting.");

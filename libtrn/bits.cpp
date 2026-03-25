@@ -58,7 +58,7 @@ void rc_to_bits()
 
     // modify the article flags to reflect what has already been read
 
-    char *s = skip_eq(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset, ' ');
+    char *s = skip_eq(g_newsgroup_ptr->m_rc_line + g_newsgroup_ptr->m_num_offset, ' ');
                                         // find numbers in rc line
     long i = std::strlen(s);
 #ifndef lint
@@ -197,7 +197,7 @@ void rc_to_bits()
     {
         std::free(my_buf);
     }
-    g_newsgroup_ptr->to_read = unread.value_of();
+    g_newsgroup_ptr->m_to_read = unread.value_of();
 }
 
 bool set_first_art(const char *s)
@@ -223,9 +223,9 @@ void bits_to_rc()
     ArticleNum count{};
     int safe_len = LINE_BUF_LEN - 32;
 
-    std::strcpy(g_buf,g_newsgroup_ptr->rc_line);            // start with the newsgroup name
-    char *s = g_buf + g_newsgroup_ptr->num_offset - 1; // use s for buffer pointer
-    *s++ = g_newsgroup_ptr->subscribe_char;            // put the requisite : or !
+    std::strcpy(g_buf,g_newsgroup_ptr->m_rc_line);            // start with the newsgroup name
+    char *s = g_buf + g_newsgroup_ptr->m_num_offset - 1; // use s for buffer pointer
+    *s++ = g_newsgroup_ptr->m_subscribe_char;            // put the requisite : or !
     for (i = article_first(g_abs_first); i <= g_last_art; i = article_next(i))
     {
         if (article_unread(i))
@@ -290,34 +290,34 @@ void bits_to_rc()
 #ifdef DEBUG
     if ((g_debug & DEB_NEWSRC_LINE) && !g_panic)
     {
-        std::printf("%s: %s\n",g_newsgroup_ptr->rc_line,g_newsgroup_ptr->rc_line+g_newsgroup_ptr->num_offset);
+        std::printf("%s: %s\n",g_newsgroup_ptr->m_rc_line,g_newsgroup_ptr->m_rc_line+g_newsgroup_ptr->m_num_offset);
         std::printf("%s\n",mybuf);
         term_down(2);
     }
 #endif
-    std::free(g_newsgroup_ptr->rc_line);              // return old rc line
+    std::free(g_newsgroup_ptr->m_rc_line);              // return old rc line
     if (mybuf == g_buf)
     {
-        g_newsgroup_ptr->rc_line = safe_malloc((MemorySize)(s-g_buf)+1);
+        g_newsgroup_ptr->m_rc_line = safe_malloc((MemorySize)(s-g_buf)+1);
                                         // grab a new rc line
-        std::strcpy(g_newsgroup_ptr->rc_line, g_buf); // and load it
+        std::strcpy(g_newsgroup_ptr->m_rc_line, g_buf); // and load it
     }
     else
     {
         mybuf = safe_realloc(mybuf,(MemorySize)(s-mybuf)+1);
                                         // be nice to the heap
-        g_newsgroup_ptr->rc_line = mybuf;
+        g_newsgroup_ptr->m_rc_line = mybuf;
     }
-    *(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset - 1) = '\0';
-    if (g_newsgroup_ptr->subscribe_char == UNSUBSCRIBED_CHAR)// did they unsubscribe?
+    *(g_newsgroup_ptr->m_rc_line + g_newsgroup_ptr->m_num_offset - 1) = '\0';
+    if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR)// did they unsubscribe?
     {
-        g_newsgroup_ptr->to_read = TR_UNSUB;     // make line invisible
+        g_newsgroup_ptr->m_to_read = TR_UNSUB;     // make line invisible
     }
     else
     {
-        g_newsgroup_ptr->to_read = (ArticleUnread)count.value_of(); // otherwise, remember the count
+        g_newsgroup_ptr->m_to_read = (ArticleUnread)count.value_of(); // otherwise, remember the count
     }
-    g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
+    g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
 }
 
 void find_existing_articles()
@@ -443,12 +443,12 @@ void find_existing_articles()
             }
         }
 
-        g_newsgroup_ptr->abs_first = first;
-        g_newsgroup_ptr->ng_max = last;
+        g_newsgroup_ptr->m_abs_first = first;
+        g_newsgroup_ptr->m_ng_max = last;
 
         if (first > g_abs_first)
         {
-            check_expired(g_newsgroup_ptr,first);
+            g_newsgroup_ptr->check_expired(first);
             for (g_abs_first = article_first(g_abs_first);
                  g_abs_first < first;
                  g_abs_first = article_next(g_abs_first))
@@ -482,7 +482,7 @@ void Article::one_more()
         check_first(art_num);
         m_flags |= AF_UNREAD;
         m_flags &= ~AF_DEL;
-        g_newsgroup_ptr->to_read++;
+        g_newsgroup_ptr->m_to_read++;
         if (m_subj)
         {
             if (g_selected_only)
@@ -514,9 +514,9 @@ void Article::one_less()
             g_selected_count--;
             m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         }
-        if (g_newsgroup_ptr->to_read > TR_NONE)
+        if (g_newsgroup_ptr->m_to_read > TR_NONE)
         {
-            g_newsgroup_ptr->to_read--;
+            g_newsgroup_ptr->m_to_read--;
         }
     }
 }

@@ -323,7 +323,7 @@ int mime_exec(char *cmd)
 
             case 't':
                 *t++ = '\'';
-                safe_copy(t, g_mime_section->type_name, CMD_BUF_LEN-(t-g_cmd_buf)-1);
+                safe_copy(t, g_mime_section->m_type_name, CMD_BUF_LEN-(t-g_cmd_buf)-1);
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
@@ -337,7 +337,7 @@ int mime_exec(char *cmd)
                 }
                 f++;
                 *s = '\0';
-                char *p = mime_find_param(g_mime_section->type_params, f);
+                char *p = mime_find_param(g_mime_section->m_type_params, f);
                 *s = '}'; // restore
                 f = s;
                 *t++ = '\'';
@@ -371,7 +371,7 @@ void mime_init_sections()
     while (mime_pop_section())
     {
     }
-    mime_clear_struct(g_mime_section);
+    g_mime_section->mime_clear_struct();
     g_mime_state = NOT_MIME;
 }
 
@@ -379,42 +379,42 @@ void mime_push_section()
 {
     MimeSection* mp = (MimeSection*)safe_malloc(sizeof (MimeSection));
     std::memset((char*)mp,0,sizeof (MimeSection));
-    mp->prev = g_mime_section;
+    mp->m_prev = g_mime_section;
     g_mime_section = mp;
 }
 
 bool mime_pop_section()
 {
-    MimeSection* mp = g_mime_section->prev;
+    MimeSection* mp = g_mime_section->m_prev;
     if (mp)
     {
-        mime_clear_struct(g_mime_section);
+        g_mime_section->mime_clear_struct();
         std::free((char*)g_mime_section);
-        g_mime_section = mp;
-        g_mime_state = mp->type;
+        g_mime_section = g_mime_section;
+        g_mime_state = g_mime_section->m_type;
         return true;
     }
-    g_mime_state = g_mime_article.type;
+    g_mime_state = g_mime_article.m_type;
     return false;
 }
 
 // Free up this mime structure's resources
-void mime_clear_struct(MimeSection *mp)
+void MimeSection::mime_clear_struct()
 {
-    safe_free0(mp->filename);
-    safe_free0(mp->type_name);
-    safe_free0(mp->type_params);
-    safe_free0(mp->boundary);
-    safe_free0(mp->html_blocks);
-    mp->type = NOT_MIME;
-    mp->encoding = MENCODE_NONE;
-    mp->total = 0;
-    mp->part = 0;
-    mp->boundary_len = 0;
-    mp->html_block_count = 0;
-    mp->flags = MFS_NONE;
-    mp->html = HF_NONE;
-    mp->html_line_start = 0;
+    safe_free0(m_filename);
+    safe_free0(m_type_name);
+    safe_free0(m_type_params);
+    safe_free0(m_boundary);
+    safe_free0(m_html_blocks);
+    m_type = NOT_MIME;
+    m_encoding = MENCODE_NONE;
+    m_total = 0;
+    m_part = 0;
+    m_boundary_len = 0;
+    m_html_block_count = 0;
+    m_flags = MFS_NONE;
+    m_html = HF_NONE;
+    m_html_line_start = 0;
 }
 
 // Setup g_mime_article structure based on article's headers
@@ -428,71 +428,71 @@ void mime_set_article()
 
     {
         char *s = fetch_lines(g_art, CONT_TYPE_LINE);
-        mime_parse_type(g_mime_section,s);
+        g_mime_section->mime_parse_type(s);
         std::free(s);
     }
 
     if (g_is_mime)
     {
         char *s = fetch_lines(g_art, CONT_XFER_LINE);
-        mime_parse_encoding(g_mime_section,s);
+        g_mime_section->mime_parse_encoding(s);
         std::free(s);
 
         s = fetch_lines(g_art,CONT_DISP_LINE);
-        mime_parse_disposition(g_mime_section,s);
+        g_mime_section->mime_parse_disposition(s);
         std::free(s);
 
-        g_mime_state = g_mime_section->type;
+        g_mime_state = g_mime_section->m_type;
         if (g_mime_state == NOT_MIME
-         || (g_mime_state == TEXT_MIME && g_mime_section->encoding == MENCODE_NONE))
+         || (g_mime_state == TEXT_MIME && g_mime_section->m_encoding == MENCODE_NONE))
         {
             g_is_mime = false;
         }
-        else if (!g_mime_section->type_name)
+        else if (!g_mime_section->m_type_name)
         {
-            g_mime_section->type_name = save_str(s_text_plain);
+            g_mime_section->m_type_name = save_str(s_text_plain);
         }
     }
 }
 
 // Use the Content-Type to set values in the mime structure
-void mime_parse_type(MimeSection *mp, char *s)
+void MimeSection::mime_parse_type(char *s)
 {
-    safe_free0(mp->type_name);
-    safe_free0(mp->type_params);
+    safe_free0(m_type_name);
+    safe_free0(m_type_params);
 
-    mp->type_params = mime_parse_params(s);
+    m_type_params = mime_parse_params(s);
     if (!*s)
     {
-        mp->type = NOT_MIME;
+        m_type = NOT_MIME;
         return;
     }
-    mp->type_name = save_str(s);
-    char *t = mime_find_param(mp->type_params, "name");
+    m_type_name = save_str(s);
+    char *t = mime_find_param(m_type_params, "name");
     if (t)
     {
-        safe_free(mp->filename);
-        mp->filename = save_str(t);
+        safe_free(m_filename);
+        m_filename = save_str(t);
     }
 
     if (string_case_equal(s, "text", 4))
     {
-        mp->type = TEXT_MIME;
+        m_type = TEXT_MIME;
         s += 4;
         if (*s++ != '/')
         {
             return;
         }
 #ifdef USE_UTF_HACK
-        utf_init(mime_find_param(mp->type_params,"charset"), CHARSET_NAME_UTF8); // FIXME
+        utf_init(mime_find_param(m_type_params,"charset"), CHARSET_NAME_UTF8); // FIXME
 #endif
         if (string_case_equal(s, "html", 4))
         {
-            mp->type = HTML_TEXT_MIME;
+            m_type = HTML_TEXT_MIME;
         }
         else if (string_case_equal(s, "x-vcard", 7))
         {
-            mp->type = UNHANDLED_MIME;
+            m_type = UNHANDLED_MIME;
         }
         return;
     }
@@ -500,29 +500,29 @@ void mime_parse_type(MimeSection *mp, char *s)
     if (string_case_equal(s, "message/", 8))
     {
         s += 8;
-        mp->type = MESSAGE_MIME;
+        m_type = MESSAGE_MIME;
         if (string_case_equal(s, "partial"))
         {
-            t = mime_find_param(mp->type_params,"id");
+            t = mime_find_param(m_type_params,"id");
             if (!t)
             {
                 return;
             }
-            safe_free(mp->filename);
-            mp->filename = save_str(t);
-            t = mime_find_param(mp->type_params,"number");
+            safe_free(m_filename);
+            m_filename = save_str(t);
+            t = mime_find_param(m_type_params,"number");
             if (t)
             {
-                mp->part = (short) std::atoi(t);
+                m_part = (short) std::atoi(t);
             }
-            t = mime_find_param(mp->type_params,"total");
+            t = mime_find_param(m_type_params,"total");
             if (t)
             {
-                mp->total = (short) std::atoi(t);
+                m_total = (short) std::atoi(t);
             }
-            if (!mp->total)
+            if (!m_total)
             {
-                mp->part = 0;
+                m_part = 0;
                 return;
             }
             return;
@@ -533,63 +533,63 @@ void mime_parse_type(MimeSection *mp, char *s)
     if (string_case_equal(s, "multipart/", 10))
     {
         s += 10;
-        t = mime_find_param(mp->type_params,"boundary");
+        t = mime_find_param(m_type_params,"boundary");
         if (!t)
         {
-            mp->type = UNHANDLED_MIME;
+            m_type = UNHANDLED_MIME;
             return;
         }
         if (string_case_equal(s, "alternative", 11))
         {
-            mp->flags |= MSF_ALTERNATIVE;
+            m_flags |= MSF_ALTERNATIVE;
         }
-        safe_free(mp->boundary);
-        mp->boundary = save_str(t);
-        mp->boundary_len = (short)std::strlen(t);
-        mp->type = MULTIPART_MIME;
+        safe_free(m_boundary);
+        m_boundary = save_str(t);
+        m_boundary_len = (short)std::strlen(t);
+        m_type = MULTIPART_MIME;
         return;
     }
 
     if (string_case_equal(s, "image/", 6))
     {
-        mp->type = IMAGE_MIME;
+        m_type = IMAGE_MIME;
         return;
     }
 
     if (string_case_equal(s, "audio/", 6))
     {
-        mp->type = AUDIO_MIME;
+        m_type = AUDIO_MIME;
         return;
     }
 
-    mp->type = UNHANDLED_MIME;
+    m_type = UNHANDLED_MIME;
 }
 
 // Use the Content-Disposition to set values in the mime structure
-void mime_parse_disposition(MimeSection *mp, char *s)
+void MimeSection::mime_parse_disposition(char *s)
 {
     char *params = mime_parse_params(s);
     if (string_case_equal(s, "inline"))
     {
-        mp->flags |= MSF_INLINE;
+        m_flags |= MSF_INLINE;
     }
 
     s = mime_find_param(params,"filename");
     if (s)
     {
-        safe_free(mp->filename);
-        mp->filename = save_str(s);
+        safe_free(m_filename);
+        m_filename = save_str(s);
     }
     safe_free(params);
 }
 
 // Use the Content-Transfer-Encoding to set values in the mime structure
-void mime_parse_encoding(MimeSection *mp, char *s)
+void MimeSection::mime_parse_encoding(char *s)
 {
     s = mime_skip_whitespace(s);
     if (!*s)
     {
-        mp->encoding = MENCODE_NONE;
+        m_encoding = MENCODE_NONE;
         return;
     }
     if (*s == '7' || *s == '8')
@@ -597,28 +597,28 @@ void mime_parse_encoding(MimeSection *mp, char *s)
         if (string_case_equal(s + 1, "bit", 3))
         {
             s += 4;
-            mp->encoding = MENCODE_NONE;
+            m_encoding = MENCODE_NONE;
         }
     }
     else if (string_case_equal(s, "quoted-printable", 16))
     {
         s += 16;
-        mp->encoding = MENCODE_QPRINT;
+        m_encoding = MENCODE_QPRINT;
     }
     else if (string_case_equal(s, "binary", 6))
     {
         s += 6;
-        mp->encoding = MENCODE_NONE;
+        m_encoding = MENCODE_NONE;
     }
     else if (string_case_equal(s, "base64", 6))
     {
         s += 6;
-        mp->encoding = MENCODE_BASE64;
+        m_encoding = MENCODE_BASE64;
     }
     else if (string_case_equal(s, "x-uue", 5))
     {
         s += 5;
-        mp->encoding = MENCODE_UUE;
+        m_encoding = MENCODE_UUE;
         if (string_case_equal(s, "ncode", 5))
         {
             s += 5;
@@ -626,12 +626,12 @@ void mime_parse_encoding(MimeSection *mp, char *s)
     }
     else
     {
-        mp->encoding = MENCODE_UNHANDLED;
+        m_encoding = MENCODE_UNHANDLED;
         return;
     }
     if (*s != '\0' && !isspace(*s) && *s != ';' && *s != '(')
     {
-        mp->encoding = MENCODE_UNHANDLED;
+        m_encoding = MENCODE_UNHANDLED;
     }
 }
 
@@ -641,8 +641,8 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
 {
     static char* line = nullptr;
     static int line_size = 0;
-    mime_clear_struct(g_mime_section);
-    g_mime_section->type = TEXT_MIME;
+    g_mime_section->mime_clear_struct();
+    g_mime_section->m_type = TEXT_MIME;
     while (true)
     {
         for (int pos = 0;; pos += std::strlen(line + pos))
@@ -690,21 +690,21 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
         switch (linetype)
         {
         case CONT_TYPE_LINE:
-            mime_parse_type(g_mime_section,s+1);
+            g_mime_section->mime_parse_type(s+1);
             break;
 
         case CONT_XFER_LINE:
-            mime_parse_encoding(g_mime_section,s+1);
+            g_mime_section->mime_parse_encoding(s+1);
             break;
 
         case CONT_DISP_LINE:
-            mime_parse_disposition(g_mime_section,s+1);
+            g_mime_section->mime_parse_disposition(s+1);
             break;
 
         case CONT_NAME_LINE:
-            safe_free(g_mime_section->filename);
+            safe_free(g_mime_section->m_filename);
             s = mime_skip_whitespace(s+1);
-            g_mime_section->filename = save_str(s);
+            g_mime_section->m_filename = save_str(s);
             break;
 
 #if 0
@@ -714,10 +714,10 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
 #endif
         }
     }
-    g_mime_state = g_mime_section->type;
-    if (!g_mime_section->type_name)
+    g_mime_state = g_mime_section->m_type;
+    if (!g_mime_section->m_type_name)
     {
-        g_mime_section->type_name = save_str(s_text_plain);
+        g_mime_section->m_type_name = save_str(s_text_plain);
     }
 }
 
@@ -727,13 +727,13 @@ void mime_set_state(char *bp)
     {
         mime_parse_sub_header(nullptr, bp);
         *bp = '\0';
-        if (g_mime_section->prev->flags & MSF_ALTERNADONE)
+        if (g_mime_section->m_prev->m_flags & MSF_ALTERNADONE)
         {
             g_mime_state = ALTERNATE_MIME;
         }
-        else if (g_mime_section->prev->flags & MSF_ALTERNATIVE)
+        else if (g_mime_section->m_prev->m_flags & MSF_ALTERNATIVE)
         {
-            g_mime_section->prev->flags |= MSF_ALTERNADONE;
+            g_mime_section->m_prev->m_flags |= MSF_ALTERNADONE;
         }
     }
 
@@ -757,7 +757,7 @@ void mime_set_state(char *bp)
         break;
 
     case 1:
-        while (!g_mime_section->prev->boundary_len)
+        while (!g_mime_section->m_prev->m_boundary_len)
         {
             mime_pop_section();
         }
@@ -765,7 +765,7 @@ void mime_set_state(char *bp)
         break;
 
     case 2:
-        while (!g_mime_section->prev->boundary_len)
+        while (!g_mime_section->m_prev->m_boundary_len)
         {
             mime_pop_section();
         }
@@ -777,18 +777,18 @@ void mime_set_state(char *bp)
 
 int mime_end_of_section(char *bp)
 {
-    MimeSection* mp = g_mime_section->prev;
-    while (mp && !mp->boundary_len)
+    MimeSection* mp = g_mime_section->m_prev;
+    while (mp && !mp->m_boundary_len)
     {
-        mp = mp->prev;
+        mp = mp->m_prev;
     }
     if (mp)
     {
         // have we read all the data in this part?
         if (bp[0] == '-' && bp[1] == '-' //
-            && !std::strncmp(bp + 2, mp->boundary, mp->boundary_len))
+            && !std::strncmp(bp + 2, mp->m_boundary, mp->m_boundary_len))
         {
-            int len = 2 + mp->boundary_len;
+            int len = 2 + mp->m_boundary_len;
             // have we found the last boundary?
             if (bp[len] == '-' && bp[len+1] == '-'
              && (bp[len+2] == '\n' || bp[len+2] == '\0'))
@@ -924,7 +924,7 @@ void mime_decode_article(bool view)
 
     while (true)
     {
-        if (g_mime_state != MESSAGE_MIME || !g_mime_section->total)
+        if (g_mime_state != MESSAGE_MIME || !g_mime_section->m_total)
         {
             if (!read_art(g_art_line,sizeof g_art_line))
             {
@@ -949,7 +949,7 @@ void mime_decode_article(bool view)
         case SKIP_MIME:
         {
             MimeSection* mp = g_mime_section;
-            while ((mp = mp->prev) != nullptr && !mp->boundary_len)
+            while ((mp = mp->m_prev) != nullptr && !mp->m_boundary_len)
             {
             }
             if (!mp)
@@ -962,11 +962,11 @@ void mime_decode_article(bool view)
         default:
             if (view)
             {
-                mcp = mime_find_mimecap_entry(g_mime_section->type_name, MCF_NONE);
+                mcp = mime_find_mimecap_entry(g_mime_section->m_type_name, MCF_NONE);
                 if (!mcp)
                 {
                     std::printf("No view method for %s -- skipping.\n",
-                           g_mime_section->type_name);
+                           g_mime_section->m_type_name);
                     g_mime_state = SKIP_MIME;
                     break;
                 }
@@ -995,13 +995,13 @@ void mime_decode_article(bool view)
     }
 }
 
-void mime_description(MimeSection *mp, char *s, int limit)
+void MimeSection::mime_description(char *s, int limit)
 {
-    char* fn = decode_fix_filename(mp->filename);
+    char * fn = decode_fix_filename(m_filename);
     int flen = std::strlen(fn);
 
     limit -= 2;  // leave room for the trailing ']' and '\n'
-    std::sprintf(s, "[Attachment type=%s, name=", mp->type_name);
+    std::sprintf(s, "[Attachment type=%s, name=", m_type_name);
     int len = std::strlen(s);
     if (len + flen <= limit)
     {
@@ -1105,7 +1105,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_filename(g_mime_section->filename);
+        char* filename = decode_fix_filename(g_mime_section->m_filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
         {
@@ -1246,7 +1246,7 @@ all_done:
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_filename(g_mime_section->filename);
+        char* filename = decode_fix_filename(g_mime_section->m_filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
         {
@@ -1367,7 +1367,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_filename(g_mime_section->filename);
+        char* filename = decode_fix_filename(g_mime_section->m_filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
         {
@@ -1478,48 +1478,48 @@ int filter_html(char *t, const char *f)
     {
         s_word_wrap_in_pre = 0;
     }
-    s_word_wrap = g_mime_section->html & HF_IN_PRE? s_word_wrap_in_pre
+    s_word_wrap = g_mime_section->m_html & HF_IN_PRE? s_word_wrap_in_pre
                                                 : s_normal_word_wrap;
-    if (!g_mime_section->html_line_start)
+    if (!g_mime_section->m_html_line_start)
     {
-        g_mime_section->html_line_start = t - g_art_buf;
+        g_mime_section->m_html_line_start = t - g_art_buf;
     }
 
-    if (!g_mime_section->html_blocks)
+    if (!g_mime_section->m_html_blocks)
     {
-        g_mime_section->html_blocks = (HtmlBlock*)safe_malloc(HTML_MAX_BLOCKS
+        g_mime_section->m_html_blocks = (HtmlBlock*)safe_malloc(HTML_MAX_BLOCKS
                                                   * sizeof (HtmlBlock));
     }
 
     for (bp = t; *f; f++)
     {
-        if (g_mime_section->html & HF_IN_DQUOTE)
+        if (g_mime_section->m_html & HF_IN_DQUOTE)
         {
             if (*f == '"')
             {
-                g_mime_section->html &= ~HF_IN_DQUOTE;
+                g_mime_section->m_html &= ~HF_IN_DQUOTE;
             }
             else if (tagword_len < sizeof tagword - 1)
             {
                 tagword[tagword_len++] = *f;
             }
         }
-        else if (g_mime_section->html & HF_IN_SQUOTE)
+        else if (g_mime_section->m_html & HF_IN_SQUOTE)
         {
             if (*f == '\'')
             {
-                g_mime_section->html &= ~HF_IN_SQUOTE;
+                g_mime_section->m_html &= ~HF_IN_SQUOTE;
             }
             else if (tagword_len < sizeof tagword - 1)
             {
                 tagword[tagword_len++] = *f;
             }
         }
-        else if (g_mime_section->html & HF_IN_TAG)
+        else if (g_mime_section->m_html & HF_IN_TAG)
         {
             if (*f == '>')
             {
-                g_mime_section->html &= ~(HF_IN_TAG | HF_IN_COMMENT);
+                g_mime_section->m_html &= ~(HF_IN_TAG | HF_IN_COMMENT);
                 tagword[tagword_len] = '\0';
                 if (*tagword == '/')
                 {
@@ -1533,35 +1533,35 @@ int filter_html(char *t, const char *f)
             else if (*f == '-' && f[1] == '-')
             {
                 f++;
-                g_mime_section->html |= HF_IN_COMMENT;
+                g_mime_section->m_html |= HF_IN_COMMENT;
             }
             else if (*f == '"')
             {
-                g_mime_section->html |= HF_IN_DQUOTE;
+                g_mime_section->m_html |= HF_IN_DQUOTE;
             }
             else if (*f == '\'')
             {
-                g_mime_section->html |= HF_IN_SQUOTE;
+                g_mime_section->m_html |= HF_IN_SQUOTE;
             }
             else if (tagword_len < sizeof tagword - 1)
             {
                 tagword[tagword_len++] = at_grey_space(f)? ' ' : *f;
             }
         }
-        else if (g_mime_section->html & HF_IN_COMMENT)
+        else if (g_mime_section->m_html & HF_IN_COMMENT)
         {
             if (*f == '-' && f[1] == '-')
             {
                 f++;
-                g_mime_section->html &= ~HF_IN_COMMENT;
+                g_mime_section->m_html &= ~HF_IN_COMMENT;
             }
         }
         else if (*f == '<')
         {
             tagword_len = 0;
-            g_mime_section->html |= HF_IN_TAG;
+            g_mime_section->m_html |= HF_IN_TAG;
         }
-        else if (g_mime_section->html & HF_IN_HIDING)
+        else if (g_mime_section->m_html & HF_IN_HIDING)
         {
         }
         else if (*f == '&' && f[1] == '#')
@@ -1649,14 +1649,14 @@ int filter_html(char *t, const char *f)
             {
                 *t++ = *f;
             }
-            g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
+            g_mime_section->m_html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
         }
-        else if ((*f == ' ' || at_grey_space(f)) && !(g_mime_section->html & HF_IN_PRE))
+        else if ((*f == ' ' || at_grey_space(f)) && !(g_mime_section->m_html & HF_IN_PRE))
         {
             // We don't want to call output_prep() here.
-            if (*f == ' ' || (g_mime_section->html & HF_SPACE_OK))
+            if (*f == ' ' || (g_mime_section->m_html & HF_SPACE_OK))
             {
-                g_mime_section->html &= ~HF_SPACE_OK;
+                g_mime_section->m_html &= ~HF_SPACE_OK;
                 *t++ = ' ';
             }
             // In non-PRE mode spaces should be collapsed
@@ -1673,7 +1673,7 @@ int filter_html(char *t, const char *f)
         else if (*f == '\n')   // Handle the HF_IN_PRE case
         {
             t = output_prep(t);
-            g_mime_section->html |= HF_NL_OK;
+            g_mime_section->m_html |= HF_NL_OK;
             t = do_newline(t, HF_NL_OK);
         }
         else
@@ -1685,12 +1685,12 @@ int filter_html(char *t, const char *f)
                 *t++ = *f++;
             }
             f--;
-            g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
+            g_mime_section->m_html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
         }
 
-        if (s_word_wrap && t - g_art_buf - g_mime_section->html_line_start > g_tc_COLS)
+        if (s_word_wrap && t - g_art_buf - g_mime_section->m_html_line_start > g_tc_COLS)
         {
-            char* line_start = g_mime_section->html_line_start + g_art_buf;
+            char* line_start = g_mime_section->m_html_line_start + g_art_buf;
             for (cp = line_start + s_word_wrap;
                  cp > line_start && !is_hor_space(*cp);
                  cp--)
@@ -1705,14 +1705,14 @@ int filter_html(char *t, const char *f)
                 }
                 if (cp - line_start > g_tc_COLS)
                 {
-                    g_mime_section->html_line_start += g_tc_COLS;
+                    g_mime_section->m_html_line_start += g_tc_COLS;
                     cp = nullptr;
                 }
             }
             if (cp)
             {
-                const HtmlFlags flag_save = g_mime_section->html;
-                g_mime_section->html |= HF_NL_OK;
+                const HtmlFlags flag_save = g_mime_section->m_html;
+                g_mime_section->m_html |= HF_NL_OK;
                 line_start = do_newline(cp, HF_NL_OK);
                 int fudge = do_indent(nullptr);
                 cp = skip_hor_space(line_start);
@@ -1735,7 +1735,7 @@ int filter_html(char *t, const char *f)
                     (void) do_indent(line_start);
                     t += fudge;
                 }
-                g_mime_section->html = flag_save;
+                g_mime_section->m_html = flag_save;
             }
         }
     }
@@ -1758,7 +1758,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
     int   cnt;
     int   num;
     bool match = false;
-    HtmlBlock* blks = g_mime_section->html_blocks;
+    HtmlBlock* blks = g_mime_section->m_html_blocks;
 
     const char *tmp;
     for (tmp = word; *tmp && *tmp != ' '; tmp++)
@@ -1793,15 +1793,15 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
         return t;
     }
 
-    if (g_mime_section->html & HF_IN_HIDING
-     && (opening_tag || tnum != blks[g_mime_section->html_block_count-1].tag_num))
+    if (g_mime_section->m_html & HF_IN_HIDING
+     && (opening_tag || tnum != blks[g_mime_section->m_html_block_count-1].tag_num))
     {
         return t;
     }
 
     if (s_tag_attr[tnum].flags & TF_BR)
     {
-        g_mime_section->html |= HF_NL_OK;
+        g_mime_section->m_html |= HF_NL_OK;
     }
 
     if (opening_tag)
@@ -1812,53 +1812,53 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             t = do_newline(t, HF_NL_OK);
         }
         if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
-            || (num == (TF_P | TF_LIST) && !(g_mime_section->html & HF_COMPACT)))
+            || (num == (TF_P | TF_LIST) && !(g_mime_section->m_html & HF_COMPACT)))
         {
             t = output_prep(t);
             t = do_newline(t, HF_P_OK);
         }
         if (s_tag_attr[tnum].flags & TF_SPACE)
         {
-            if (g_mime_section->html & HF_SPACE_OK)
+            if (g_mime_section->m_html & HF_SPACE_OK)
             {
-                g_mime_section->html &= ~HF_SPACE_OK;
+                g_mime_section->m_html &= ~HF_SPACE_OK;
                 *t++ = ' ';
             }
         }
         if (s_tag_attr[tnum].flags & TF_TAB)
         {
-            if (g_mime_section->html & HF_NL_OK)
+            if (g_mime_section->m_html & HF_NL_OK)
             {
-                g_mime_section->html &= ~HF_SPACE_OK;
+                g_mime_section->m_html &= ~HF_SPACE_OK;
                 *t++ = '\t';
             }
         }
 
         if (s_tag_attr[tnum].flags & TF_BLOCK //
-            && g_mime_section->html_block_count < HTML_MAX_BLOCKS)
+            && g_mime_section->m_html_block_count < HTML_MAX_BLOCKS)
         {
-            j = g_mime_section->html_block_count++;
+            j = g_mime_section->m_html_block_count++;
             blks[j].tag_num = tnum;
             blks[j].indent = 0;
             blks[j].count = 0;
 
             if (s_tag_attr[tnum].flags & TF_LIST)
             {
-                g_mime_section->html |= HF_COMPACT;
+                g_mime_section->m_html |= HF_COMPACT;
             }
             else
             {
-                g_mime_section->html &= ~HF_COMPACT;
+                g_mime_section->m_html &= ~HF_COMPACT;
             }
         }
         else
         {
-            j = g_mime_section->html_block_count - 1;
+            j = g_mime_section->m_html_block_count - 1;
         }
 
         if ((s_tag_attr[tnum].flags & (TF_BLOCK|TF_HIDE)) == (TF_BLOCK|TF_HIDE))
         {
-            g_mime_section->html |= HF_IN_HIDING;
+            g_mime_section->m_html |= HF_IN_HIDING;
         }
 
         switch (tnum)
@@ -1882,19 +1882,19 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             t = output_prep(t);
               *t++ = '-';
               *t++ = '-';
-            g_mime_section->html |= HF_NL_OK;
+            g_mime_section->m_html |= HF_NL_OK;
             t = do_newline(t, HF_NL_OK);
             break;
 
         case TAG_IMG:
             t = output_prep(t);
-            if (g_mime_section->html & HF_SPACE_OK)
+            if (g_mime_section->m_html & HF_SPACE_OK)
             {
                 *t++ = ' ';
             }
             std::strcpy(t, "[Image] ");
             t += 8;
-            g_mime_section->html &= ~HF_SPACE_OK;
+            g_mime_section->m_html &= ~HF_SPACE_OK;
             break;
 
         case TAG_OL:
@@ -1931,7 +1931,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             }
             else
             {
-                for (int i = 0; i < g_mime_section->html_block_count; i++)
+                for (int i = 0; i < g_mime_section->m_html_block_count; i++)
                 {
                     if (blks[i].indent && blks[i].indent < ' ')
                     {
@@ -2047,11 +2047,11 @@ roman_numerals:
                 *t++ = ' ';
                 break;
             }
-            g_mime_section->html |= HF_NL_OK|HF_P_OK;
+            g_mime_section->m_html |= HF_NL_OK|HF_P_OK;
             break;
 
         case TAG_PRE:
-            g_mime_section->html |= HF_IN_PRE;
+            g_mime_section->m_html |= HF_IN_PRE;
             s_word_wrap = s_word_wrap_in_pre;
             break;
         }
@@ -2060,59 +2060,59 @@ roman_numerals:
     {
         if (s_tag_attr[tnum].flags & TF_BLOCK)
         {
-            for (j = g_mime_section->html_block_count; j--;)
+            for (j = g_mime_section->m_html_block_count; j--;)
             {
                 if (blks[j].tag_num == tnum)
                 {
-                    for (int i = g_mime_section->html_block_count; --i > j;)
+                    for (int i = g_mime_section->m_html_block_count; --i > j;)
                     {
                         t = tag_action(t, s_tag_attr[blks[i].tag_num].name,
                                        CLOSING_TAG);
                     }
-                    g_mime_section->html_block_count = j;
+                    g_mime_section->m_html_block_count = j;
                     break;
                 }
             }
-            g_mime_section->html &= ~HF_IN_HIDING;
+            g_mime_section->m_html &= ~HF_IN_HIDING;
             while (j-- > 0)
             {
                 if (s_tag_attr[blks[j].tag_num].flags & TF_HIDE)
                 {
-                    g_mime_section->html |= HF_IN_HIDING;
+                    g_mime_section->m_html |= HF_IN_HIDING;
                     break;
                 }
             }
         }
 
-        j = g_mime_section->html_block_count - 1;
+        j = g_mime_section->m_html_block_count - 1;
         if (j >= 0 && s_tag_attr[blks[j].tag_num].flags & TF_LIST)
         {
-            g_mime_section->html |= HF_COMPACT;
+            g_mime_section->m_html |= HF_COMPACT;
         }
         else
         {
-            g_mime_section->html &= ~HF_COMPACT;
+            g_mime_section->m_html &= ~HF_COMPACT;
         }
 
-        if (s_tag_attr[tnum].flags & TF_NL && g_mime_section->html & HF_NL_OK)
+        if (s_tag_attr[tnum].flags & TF_NL && g_mime_section->m_html & HF_NL_OK)
         {
-            g_mime_section->html |= HF_QUEUED_NL;
-            g_mime_section->html &= ~HF_SPACE_OK;
+            g_mime_section->m_html |= HF_QUEUED_NL;
+            g_mime_section->m_html &= ~HF_SPACE_OK;
         }
         if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
-            || (num == (TF_P | TF_LIST) && !(g_mime_section->html & HF_COMPACT)))
+            || (num == (TF_P | TF_LIST) && !(g_mime_section->m_html & HF_COMPACT)))
         {
-            if (g_mime_section->html & HF_P_OK)
+            if (g_mime_section->m_html & HF_P_OK)
             {
-                g_mime_section->html |= HF_QUEUED_P;
-                g_mime_section->html &= ~HF_SPACE_OK;
+                g_mime_section->m_html |= HF_QUEUED_P;
+                g_mime_section->m_html &= ~HF_SPACE_OK;
             }
         }
 
         switch (tnum)
         {
         case TAG_PRE:
-            g_mime_section->html &= ~HF_IN_PRE;
+            g_mime_section->m_html &= ~HF_IN_PRE;
             s_word_wrap = s_normal_word_wrap;
             break;
         }
@@ -2120,20 +2120,20 @@ roman_numerals:
 
 #ifdef DEBUGGING
                                                 std::printf("%*s %% -> ", 4 + 25, "");
-    if (g_mime_section->html == 0)              std::printf("0 ");
-    if (g_mime_section->html & HF_IN_TAG)       std::printf("HF_IN_TAG ");
-    if (g_mime_section->html & HF_IN_COMMENT)   std::printf("HF_IN_COMMENT ");
-    if (g_mime_section->html & HF_IN_HIDING)    std::printf("HF_IN_HIDING ");
-    if (g_mime_section->html & HF_IN_PRE)       std::printf("HF_IN_PRE ");
-    if (g_mime_section->html & HF_IN_DQUOTE)    std::printf("HF_IN_DQUOTE ");
-    if (g_mime_section->html & HF_IN_SQUOTE)    std::printf("HF_IN_SQUOTE ");
-    if (g_mime_section->html & HF_QUEUED_P)     std::printf("HF_QUEUED_P ");
-    if (g_mime_section->html & HF_P_OK)         std::printf("HF_P_OK ");
-    if (g_mime_section->html & HF_QUEUED_NL)    std::printf("HF_QUEUED_NL ");
-    if (g_mime_section->html & HF_NL_OK)        std::printf("HF_NL_OK ");
-    if (g_mime_section->html & HF_NEED_INDENT)  std::printf("HF_NEED_INDENT ");
-    if (g_mime_section->html & HF_SPACE_OK)     std::printf("HF_SPACE_OK ");
-    if (g_mime_section->html & HF_COMPACT)      std::printf("HF_COMPACT ");
+    if (g_mime_section->m_html == 0)              std::printf("0 ");
+    if (g_mime_section->m_html & HF_IN_TAG)       std::printf("HF_IN_TAG ");
+    if (g_mime_section->m_html & HF_IN_COMMENT)   std::printf("HF_IN_COMMENT ");
+    if (g_mime_section->m_html & HF_IN_HIDING)    std::printf("HF_IN_HIDING ");
+    if (g_mime_section->m_html & HF_IN_PRE)       std::printf("HF_IN_PRE ");
+    if (g_mime_section->m_html & HF_IN_DQUOTE)    std::printf("HF_IN_DQUOTE ");
+    if (g_mime_section->m_html & HF_IN_SQUOTE)    std::printf("HF_IN_SQUOTE ");
+    if (g_mime_section->m_html & HF_QUEUED_P)     std::printf("HF_QUEUED_P ");
+    if (g_mime_section->m_html & HF_P_OK)         std::printf("HF_P_OK ");
+    if (g_mime_section->m_html & HF_QUEUED_NL)    std::printf("HF_QUEUED_NL ");
+    if (g_mime_section->m_html & HF_NL_OK)        std::printf("HF_NL_OK ");
+    if (g_mime_section->m_html & HF_NEED_INDENT)  std::printf("HF_NEED_INDENT ");
+    if (g_mime_section->m_html & HF_SPACE_OK)     std::printf("HF_SPACE_OK ");
+    if (g_mime_section->m_html & HF_COMPACT)      std::printf("HF_COMPACT ");
     std::printf("\n");
 #endif
     return t;
@@ -2141,14 +2141,14 @@ roman_numerals:
 
 static char *output_prep(char *t)
 {
-    if (g_mime_section->html & HF_QUEUED_P)
+    if (g_mime_section->m_html & HF_QUEUED_P)
     {
-        g_mime_section->html &= ~HF_QUEUED_P;
+        g_mime_section->m_html &= ~HF_QUEUED_P;
         t = do_newline(t, HF_P_OK);
     }
-    if (g_mime_section->html & HF_QUEUED_NL)
+    if (g_mime_section->m_html & HF_QUEUED_NL)
     {
-        g_mime_section->html &= ~HF_QUEUED_NL;
+        g_mime_section->m_html &= ~HF_QUEUED_NL;
         t = do_newline(t, HF_NL_OK);
     }
     return t + do_indent(t);
@@ -2156,13 +2156,13 @@ static char *output_prep(char *t)
 
 static char *do_newline(char *t, HtmlFlags flag)
 {
-    if (g_mime_section->html & flag)
+    if (g_mime_section->m_html & flag)
     {
-        g_mime_section->html &= ~(flag|HF_SPACE_OK);
+        g_mime_section->m_html &= ~(flag|HF_SPACE_OK);
         t += do_indent(t);
         *t++ = '\n';
-        g_mime_section->html_line_start = t - g_art_buf;
-        g_mime_section->html |= HF_NEED_INDENT;
+        g_mime_section->m_html_line_start = t - g_art_buf;
+        g_mime_section->m_html |= HF_NEED_INDENT;
     }
     return t;
 }
@@ -2172,20 +2172,20 @@ static int do_indent(char *t)
     int spaces;
     int len = 0;
 
-    if (!(g_mime_section->html & HF_NEED_INDENT))
+    if (!(g_mime_section->m_html & HF_NEED_INDENT))
     {
         return len;
     }
 
     if (t)
     {
-        g_mime_section->html &= ~HF_NEED_INDENT;
+        g_mime_section->m_html &= ~HF_NEED_INDENT;
     }
 
-    HtmlBlock *blks = g_mime_section->html_blocks;
+    HtmlBlock *blks = g_mime_section->m_html_blocks;
     if (blks != nullptr)
     {
-        for (int j = 0; j < g_mime_section->html_block_count; j++)
+        for (int j = 0; j < g_mime_section->m_html_block_count; j++)
         {
             int ch = blks[j].indent;
             if (ch != 0)

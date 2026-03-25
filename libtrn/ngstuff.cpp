@@ -198,7 +198,7 @@ NumNumResult num_num()
         g_search_ahead = ArticleNum{-1};
     }
 
-    perform_status_init(g_newsgroup_ptr->to_read);
+    perform_status_init(g_newsgroup_ptr->m_to_read);
 
     for (s=g_buf; *s && (std::isdigit(*s) || std::strchr(" ,-.$",*s)); s++)
     {
@@ -304,7 +304,7 @@ NumNumResult num_num()
             }
             if (!output_level)
             {
-                perform_status(g_newsgroup_ptr->to_read, 50);
+                perform_status(g_newsgroup_ptr->m_to_read, 50);
             }
         }
     }
@@ -354,7 +354,7 @@ int thread_perform()
     char *cmdstr = save_str(g_buf + len);
     bool  want_unread = !g_sel_rereading && *cmdstr != 'm';
 
-    perform_status_init(g_newsgroup_ptr->to_read);
+    perform_status_init(g_newsgroup_ptr->m_to_read);
     len = std::strlen(cmdstr);
 
     if (!output_level && !one_thread)
@@ -446,7 +446,7 @@ int thread_perform()
                 }
                 if (!output_level)
                 {
-                    perform_status(g_newsgroup_ptr->to_read, 50);
+                    perform_status(g_newsgroup_ptr->m_to_read, 50);
                 }
             }
         }
@@ -482,7 +482,7 @@ int thread_perform()
                 }
                 if (!output_level)
                 {
-                    perform_status(g_newsgroup_ptr->to_read, 50);
+                    perform_status(g_newsgroup_ptr->m_to_read, 50);
                 }
             }
         }
@@ -805,16 +805,16 @@ int newsgroup_sel_perform()
         goto break_out;
     }
 
-    for (g_newsgroup_ptr = g_first_newsgroup; g_newsgroup_ptr; g_newsgroup_ptr = g_newsgroup_ptr->next)
+    for (g_newsgroup_ptr = g_first_newsgroup; g_newsgroup_ptr; g_newsgroup_ptr = g_newsgroup_ptr->m_next)
     {
-        if (g_sel_rereading? g_newsgroup_ptr->to_read != TR_NONE
-                         : g_newsgroup_ptr->to_read < g_newsgroup_min_to_read)
+        if (g_sel_rereading? g_newsgroup_ptr->m_to_read != TR_NONE
+                         : g_newsgroup_ptr->m_to_read < g_newsgroup_min_to_read)
         {
             continue;
         }
         set_newsgroup(g_newsgroup_ptr);
-        if ((g_newsgroup_ptr->flags & bits) == bits //
-            && (!(g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
+        if ((g_newsgroup_ptr->m_flags & bits) == bits //
+            && (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
         {
             if (newsgroup_perform(cmdstr, 0) < 0)
             {
@@ -849,25 +849,25 @@ int newsgroup_perform(char *cmdlst, int output_level)
         switch (ch)
         {
         case '+':
-            if (!(g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)))
+            if (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)))
             {
-                g_newsgroup_ptr->flags = ((g_newsgroup_ptr->flags | static_cast<NewsgroupFlags>(g_sel_mask)) & ~NF_DEL);
+                g_newsgroup_ptr->m_flags = ((g_newsgroup_ptr->m_flags | static_cast<NewsgroupFlags>(g_sel_mask)) & ~NF_DEL);
                 g_selected_count++;
             }
             break;
 
         case 'c':
-            catch_up(g_newsgroup_ptr, 0, 0);
+            g_newsgroup_ptr->catch_up(0, 0);
             // FALL THROUGH
 
         case '-':
 deselect:
-            if (g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask))
+            if (g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask))
             {
-                g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
+                g_newsgroup_ptr->m_flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
                 if (g_sel_rereading)
                 {
-                    g_newsgroup_ptr->flags |= NF_DEL;
+                    g_newsgroup_ptr->m_flags |= NF_DEL;
                 }
                 g_selected_count--;
             }
@@ -876,13 +876,13 @@ deselect:
         case 'u':
             if (output_level && g_verbose)
             {
-                std::printf(g_unsub_to,g_newsgroup_ptr->rc_line);
+                std::printf(g_unsub_to,g_newsgroup_ptr->m_rc_line);
                 term_down(1);
             }
-            g_newsgroup_ptr->subscribe_char = UNSUBSCRIBED_CHAR;
-            g_newsgroup_ptr->to_read = TR_UNSUB;
-            g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
-            g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
+            g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;
+            g_newsgroup_ptr->m_to_read = TR_UNSUB;
+            g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
+            g_newsgroup_ptr->m_flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
             --g_newsgroup_to_read;
             goto deselect;
 

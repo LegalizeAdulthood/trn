@@ -1066,7 +1066,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 case 'u':
                     if (g_in_ng)
                     {
-                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->to_read);
+                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->m_to_read);
                         s = scrbuf;
                     }
                     else
@@ -1090,7 +1090,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     else
                     {
-                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->to_read - (unseen ? 1 : 0));
+                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->m_to_read - (unseen ? 1 : 0));
                     }
                     s = scrbuf;
                     break;
@@ -1103,7 +1103,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         const bool selected = g_curr_artp && g_curr_artp->m_flags & AF_SEL;
                         const bool unseen = g_art <= g_last_art && !was_read(g_art);
                         std::sprintf(scrbuf, "%ld",
-                                g_newsgroup_ptr->to_read - g_selected_count - (!selected && unseen ? 1 : 0));
+                                g_newsgroup_ptr->m_to_read - g_selected_count - (!selected && unseen ? 1 : 0));
                         s = scrbuf;
                     }
                     else

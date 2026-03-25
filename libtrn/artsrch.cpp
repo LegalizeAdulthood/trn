@@ -432,7 +432,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         g_search_ahead = ArticleNum{-1};
     }
     TRN_ASSERT(!cmd_lst || *cmd_lst);
-    perform_status_init(g_newsgroup_ptr->to_read);
+    perform_status_init(g_newsgroup_ptr->m_to_read);
     while (true)
     {
         // check if we're out of articles
@@ -471,7 +471,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
         if (!output_level && g_page_line == 1)
         {
-            perform_status(g_newsgroup_ptr->to_read, 60 / (how_much + 1));
+            perform_status(g_newsgroup_ptr->m_to_read, 60 / (how_much + 1));
         }
     }
 exit:

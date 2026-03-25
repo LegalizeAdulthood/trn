@@ -297,7 +297,7 @@ mime_switch:
 
     case TEXT_MIME:
     case HTML_TEXT_MIME:
-        if (g_mime_section->encoding == MENCODE_QPRINT)
+        if (g_mime_section->m_encoding == MENCODE_QPRINT)
         {
             o = line_offset + extra_offset;
             len = qp_decode_string(bp+o, bp+o, false) + line_offset;
@@ -312,7 +312,7 @@ mime_switch:
                 std::strcpy(bp + len++ + extra_offset, "\n");
             }
         }
-        else if (g_mime_section->encoding == MENCODE_BASE64)
+        else if (g_mime_section->m_encoding == MENCODE_BASE64)
         {
             o = line_offset + extra_offset;
             len = b64_decode_string(bp+o, bp+o) + line_offset;
@@ -363,7 +363,7 @@ mime_switch:
     case DECODE_MIME:
     {
         MimeCapEntry* mcp;
-        mcp = mime_find_mimecap_entry(g_mime_section->type_name,
+        mcp = mime_find_mimecap_entry(g_mime_section->m_type_name,
                                     MCF_NEEDS_TERMINAL |MCF_COPIOUS_OUTPUT);
         if (mcp)
         {
@@ -401,7 +401,7 @@ mime_switch:
     case SKIP_MIME:
     {
         MimeSection* mp = g_mime_section;
-        while ((mp = mp->prev) != nullptr && !mp->boundary_len)
+        while ((mp = mp->m_prev) != nullptr && !mp->m_boundary_len)
         {
         }
         if (!mp)
@@ -428,7 +428,7 @@ mime_switch:
     }
 
     case END_OF_MIME:
-        if (g_mime_section->prev)
+        if (g_mime_section->m_prev)
         {
             g_mime_state = SKIP_MIME;
         }
@@ -465,7 +465,7 @@ mime_switch:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         ++g_art_buf_pos;
-        mime_description(g_mime_section,bp,g_tc_COLS);
+        g_mime_section->mime_description(bp,g_tc_COLS);
         len = std::strlen(bp);
         break;
 
@@ -473,13 +473,13 @@ mime_switch:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         ++g_art_buf_pos;
-        std::sprintf(bp,"[Alternative: %s]\n", g_mime_section->type_name);
+        std::sprintf(bp,"[Alternative: %s]\n", g_mime_section->m_type_name);
         len = std::strlen(bp);
         break;
 
     case IMAGE_MIME:
     case AUDIO_MIME:
-        if (!g_mime_article.total && !g_multimedia_mime)
+        if (!g_mime_article.m_total && !g_multimedia_mime)
         {
             g_multimedia_mime = true;
         }
@@ -487,7 +487,7 @@ mime_switch:
 
     default:
         if (view_inline && g_first_view < g_art_line_num //
-          && (g_mime_section->flags & MSF_INLINE))
+          && (g_mime_section->m_flags & MSF_INLINE))
         {
             g_mime_state = DECODE_MIME;
         }
@@ -497,7 +497,7 @@ mime_switch:
         }
         *bp++ = '\001';
         ++g_art_buf_pos;
-        mime_description(g_mime_section,bp,g_tc_COLS);
+        g_mime_section->mime_description(bp,g_tc_COLS);
         len = std::strlen(bp);
         break;
     }

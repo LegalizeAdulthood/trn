@@ -28,18 +28,26 @@ DECLARE_FLAGS_ENUM(NewsgroupFlags, std::uint8_t);
 
 struct NewsgroupData
 {
-    NewsgroupData *prev;
-    NewsgroupData *next;
-    Newsrc        *rc;             // which rc is this line from?
-    char          *rc_line;        // pointer to group's .newsrc line
-    ArticleNum     abs_first;      // 1st real article in newsgroup
-    ArticleNum     ng_max;         // high message num for the group
-    ArticleUnread  to_read;        // number of articles to be read in newsgroup
-                                   // < 0 is invalid or unsubscribed newsgroup
-    NewsgroupNum   num;            // a possible sort order for this group
-    int            num_offset;     // offset from rcline to numbers on line
-    char           subscribe_char; // holds the character : or ! while spot is \0
-    NewsgroupFlags flags;          // flags for each group
+    ArticleNum get_newsgroup_size();
+    bool       newsgroup_wanted();
+    void       catch_up(int leave_count, int output_level);
+    void       set_to_read(bool lax_high_check);
+    void       check_expired(ArticleNum first);
+    void       abandon_newsgroup();
+    bool       relocate_newsgroup(NewsgroupNum newnum);
+
+    NewsgroupData *m_prev;
+    NewsgroupData *m_next;
+    Newsrc        *m_rc;             // which rc is this line from?
+    char          *m_rc_line;        // pointer to group's .newsrc line
+    ArticleNum     m_abs_first;      // 1st real article in newsgroup
+    ArticleNum     m_ng_max;         // high message num for the group
+    ArticleUnread  m_to_read;        // number of articles to be read in newsgroup
+                                     // < 0 is invalid or unsubscribed newsgroup
+    NewsgroupNum   m_num;            // a possible sort order for this group
+    int            m_num_offset;     // offset from rcline to numbers on line
+    char           m_subscribe_char; // holds the character : or ! while spot is \0
+    NewsgroupFlags m_flags;          // flags for each group
 };
 
 extern List          *g_newsgroup_data_list;   // a list of NGDATA
@@ -75,6 +83,5 @@ void chdir_news_dir();
 void grow_newsgroup(ArticleNum new_last);
 void sort_newsgroups();
 void newsgroup_skip();
-ArticleNum get_newsgroup_size(NewsgroupData *gp);
 
 #endif

@@ -19,7 +19,6 @@ enum NewsgroupSearchResult
 
 void newsgroup_search_init();
 NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd);
-bool newsgroup_wanted(NewsgroupData *np);
 const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool re, bool fold);
 
 #endif

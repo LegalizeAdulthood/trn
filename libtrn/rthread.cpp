@@ -119,7 +119,7 @@ void thread_open()
         else
         {
             g_spin_todo = (g_last_art - g_first_art).value_of() + 1;
-            g_spin_estimate = g_newsgroup_ptr->to_read;
+            g_spin_estimate = g_newsgroup_ptr->m_to_read;
             if (g_first_art > g_last_art)
             {
                 // If no unread articles, see if ov. exists as fast as possible
@@ -151,9 +151,9 @@ void thread_open()
 
     if (g_last_cached > g_last_art)
     {
-        g_newsgroup_ptr->to_read += (ArticleUnread)(g_last_cached-g_last_art).value_of();
+        g_newsgroup_ptr->m_to_read += (ArticleUnread)(g_last_cached-g_last_art).value_of();
         // ensure getngsize() knows the new maximum
-        g_newsgroup_ptr->ng_max = g_last_cached;
+        g_newsgroup_ptr->m_ng_max = g_last_cached;
         g_last_art = g_last_cached;
     }
     g_article_list->high = g_last_art.value_of();
@@ -1213,7 +1213,7 @@ void unkill_subject(Subject *subj)
             {
                 if (!(ap->m_flags & AF_UNREAD))
                 {
-                    g_newsgroup_ptr->to_read++;
+                    g_newsgroup_ptr->m_to_read++;
                 }
                 if (g_selected_only && !(ap->m_flags & AF_SEL))
                 {

@@ -422,37 +422,37 @@ try_again:
         sort_newsgroups();
         g_selected_count = 0;
         g_obj_count = ArticleNum{};
-        for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
+        for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
         {
             if (g_sel_page_np == np)
             {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
-            np->flags &= ~NF_INCLUDED;
-            if (np->to_read < TR_NONE)
+            np->m_flags &= ~NF_INCLUDED;
+            if (np->m_to_read < TR_NONE)
             {
                 continue;
             }
-            if (!in_list(np->rc_line))
+            if (!in_list(np->m_rc_line))
             {
                 continue;
             }
-            if (np->abs_first)
+            if (np->m_abs_first)
             {
             }
             else if (save_the_rest)
             {
                 s_group_init_done = false;
-                np->to_read = !g_sel_rereading;
+                np->m_to_read = !g_sel_rereading;
             }
             else
             {
                 // g_ngptr = np; ??
                 // set_ngname(np->rcline);
-                set_to_read(np, ST_LAX);
-                if (!np->rc->data_source->m_act_sf.m_fp)
+                np->set_to_read(ST_LAX);
+                if (!np->m_rc->data_source->m_act_sf.m_fp)
                 {
-                    save_the_rest = (g_sel_rereading ^ (np->to_read > TR_NONE));
+                    save_the_rest = (g_sel_rereading ^ (np->m_to_read > TR_NONE));
                 }
             }
             if (g_paranoid)
@@ -460,28 +460,28 @@ try_again:
                 g_current_newsgroup = np;
                 g_newsgroup_ptr = np;
                 // this may move newsgroups around
-                cleanup_newsrc(np->rc);
+                cleanup_newsrc(np->m_rc);
                 goto try_again;
             }
-            if (!(np->flags & g_sel_mask)
-             && (g_sel_rereading? np->to_read != TR_NONE
-                              : np->to_read < g_newsgroup_min_to_read))
+            if (!(np->m_flags & g_sel_mask)
+             && (g_sel_rereading? np->m_to_read != TR_NONE
+                              : np->m_to_read < g_newsgroup_min_to_read))
             {
                 continue;
             }
             ++g_obj_count;
 
-            if (!g_sel_exclusive || (np->flags & g_sel_mask))
+            if (!g_sel_exclusive || (np->m_flags & g_sel_mask))
             {
-                if (np->flags & g_sel_mask)
+                if (np->m_flags & g_sel_mask)
                 {
                     g_selected_count++;
                 }
                 else if (g_sel_rereading)
                 {
-                    np->flags |= NF_DEL;
+                    np->m_flags |= NF_DEL;
                 }
-                np->flags |= NF_INCLUDED;
+                np->m_flags |= NF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
         }
@@ -612,13 +612,13 @@ try_again:
                     ui_elig = false;
                     break;
                 }
-                if (!np->abs_first)
+                if (!np->m_abs_first)
                 {
                     g_to_read_quiet = true;
-                    set_to_read(np, ST_LAX);
+                    np->set_to_read(ST_LAX);
                     g_to_read_quiet = false;
                 }
-                if (!(g_sel_rereading ^ (np->to_read>TR_NONE)))
+                if (!(g_sel_rereading ^ (np->m_to_read>TR_NONE)))
                 {
                     ui_elig = false;
                 }
@@ -947,9 +947,9 @@ bool first_page()
 
     case SM_NEWSGROUP:
     {
-        for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
+        for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
         {
-            if (np->flags & NF_INCLUDED)
+            if (np->m_flags & NF_INCLUDED)
             {
                 if (g_sel_page_np != np)
                 {
@@ -1294,11 +1294,11 @@ bool prev_page()
         }
         else
         {
-            np = np->prev;
+            np = np->m_prev;
         }
         while (np)
         {
-            if (np->flags & NF_INCLUDED)
+            if (np->m_flags & NF_INCLUDED)
             {
                 page_np = np;
                 g_sel_prior_obj_cnt--;
@@ -1307,7 +1307,7 @@ bool prev_page()
                     break;
                 }
             }
-            np = np->prev;
+            np = np->m_prev;
         }
         if (g_sel_page_np != page_np)
         {
@@ -1525,13 +1525,13 @@ try_again:
     case SM_NEWSGROUP:
     {
         NewsgroupData* np = g_sel_page_np;
-        for (; np && g_sel_page_item_cnt < s_sel_max_per_page; np = np->next)
+        for (; np && g_sel_page_item_cnt < s_sel_max_per_page; np = np->m_next)
         {
             if (np == u.np)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (np->flags & NF_INCLUDED)
+            if (np->m_flags & NF_INCLUDED)
             {
                 g_sel_page_item_cnt++;
             }
@@ -1870,36 +1870,36 @@ try_again:
         int max_len = 0;
         int outputting = (*g_sel_grp_display_mode != 'l');
 start_of_loop:
-        for (np = g_sel_page_np; np; np = np->next)
+        for (np = g_sel_page_np; np; np = np->m_next)
         {
             if (np == g_newsgroup_ptr)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
 
-            if (!(np->flags & NF_INCLUDED))
+            if (!(np->m_flags & NF_INCLUDED))
             {
                 continue;
             }
 
-            if (!np->abs_first)
+            if (!np->m_abs_first)
             {
-                set_to_read(np, ST_LAX);
+                np->set_to_read(ST_LAX);
                 if (g_paranoid)
                 {
                     newline();
                     g_current_newsgroup = np;
                     g_newsgroup_ptr = np;
                     // this may move newsgroups around
-                    cleanup_newsrc(np->rc);
+                    cleanup_newsrc(np->m_rc);
                     init_pages(PRESERVE_PAGE);
                     display_page_title(false);
                     goto try_again;
                 }
-                if (g_sel_rereading ? (np->to_read != TR_NONE) //
-                                    : (np->to_read < g_newsgroup_min_to_read))
+                if (g_sel_rereading ? (np->m_to_read != TR_NONE) //
+                                    : (np->m_to_read < g_newsgroup_min_to_read))
                 {
-                    np->flags &= ~NF_INCLUDED;
+                    np->m_flags &= ~NF_INCLUDED;
                     g_sel_total_obj_cnt--;
                     --g_newsgroup_to_read;
                     g_missing_count++;
@@ -1914,7 +1914,7 @@ start_of_loop:
 
             if (outputting)
             {
-                sel = !!(np->flags & g_sel_mask) + (np->flags & NF_DEL);
+                sel = !!(np->m_flags & g_sel_mask) + (np->m_flags & NF_DEL);
                 g_sel_items[g_sel_page_item_cnt].u.np = np;
                 g_sel_items[g_sel_page_item_cnt].line = g_term_line;
                 g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1922,12 +1922,12 @@ start_of_loop:
 
                 maybe_eol();
                 output_sel(g_sel_page_item_cnt, sel, false);
-                std::printf("%5ld ", (long)np->to_read);
-                display_group(np->rc->data_source,np->rc_line,np->num_offset-1,max_len);
+                std::printf("%5ld ", (long)np->m_to_read);
+                display_group(np->m_rc->data_source,np->m_rc_line,np->m_num_offset-1,max_len);
             }
-            else if (np->num_offset >= max_len)
+            else if (np->m_num_offset >= max_len)
             {
-                max_len = np->num_offset + 1;
+                max_len = np->m_num_offset + 1;
             }
             g_sel_page_item_cnt++;
         }
@@ -1947,9 +1947,9 @@ start_of_loop:
         g_sel_next_np = np;
         if (!s_group_init_done)
         {
-            for (; np; np = np->next)
+            for (; np; np = np->m_next)
             {
-                if (!np->abs_first)
+                if (!np->m_abs_first)
                 {
                     break;
                 }
@@ -2245,7 +2245,7 @@ void update_page()
             break;
 
         case SM_NEWSGROUP:
-            sel = !!(u.np->flags & g_sel_mask) + (u.np->flags & NF_DEL);
+            sel = !!(u.np->m_flags & g_sel_mask) + (u.np->m_flags & NF_DEL);
             break;
 
         case SM_ADD_GROUP:
@@ -2628,11 +2628,11 @@ static void display_universal(const UniversalItem *ui)
             else
             {
                 // XXX set_toread() can print sometimes...
-                if (!np->abs_first)
+                if (!np->m_abs_first)
                 {
-                    set_to_read(np, ST_LAX);
+                    np->set_to_read(ST_LAX);
                 }
-                int numarts = np->to_read;
+                int numarts = np->m_to_read;
                 if (numarts >= 0)
                 {
                     std::printf("%5ld ", (long) numarts);

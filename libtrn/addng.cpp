@@ -233,7 +233,7 @@ static void new_nntp_groups(DataSource *dp)
             }
         }
         NewsgroupData *np = find_newsgroup(g_ser_line);
-        if (np != nullptr && np->to_read > TR_UNSUB)
+        if (np != nullptr && np->m_to_read > TR_UNSUB)
         {
             continue;
         }
@@ -434,7 +434,7 @@ bool scan_active(bool add_matching)
 
     if (g_in_ng)
     {
-        set_data_source(g_newsgroup_ptr->rc->data_source);
+        set_data_source(g_newsgroup_ptr->m_rc->data_source);
     }
 
     return old_count != g_newsgroup_count;
@@ -475,7 +475,7 @@ static void scan_active_line(char *active_line, bool add_matching)
         return;
     }
     NewsgroupData *np = find_newsgroup(active_line);
-    if (np != nullptr && np->to_read > TR_UNSUB)
+    if (np != nullptr && np->m_to_read > TR_UNSUB)
     {
         return;
     }

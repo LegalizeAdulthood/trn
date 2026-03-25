@@ -154,7 +154,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             }
             else
             {
-                g_newsgroup_ptr = g_newsgroup_ptr->prev;
+                g_newsgroup_ptr = g_newsgroup_ptr->m_prev;
             }
         }
     }
@@ -173,7 +173,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             }
             else
             {
-                g_newsgroup_ptr = g_newsgroup_ptr->next;
+                g_newsgroup_ptr = g_newsgroup_ptr->m_next;
             }
         }
     }
@@ -192,13 +192,13 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             break;
         }
 
-        if (g_newsgroup_ptr->to_read >= TR_NONE && newsgroup_wanted(g_newsgroup_ptr))
+        if (g_newsgroup_ptr->m_to_read >= TR_NONE && g_newsgroup_ptr->newsgroup_wanted())
         {
-            if (g_newsgroup_ptr->to_read == TR_NONE)
+            if (g_newsgroup_ptr->m_to_read == TR_NONE)
             {
-                set_to_read(g_newsgroup_ptr, ST_LAX);
+                g_newsgroup_ptr->set_to_read(ST_LAX);
             }
-            if (s_newsgroup_do_empty || ((g_newsgroup_ptr->to_read > TR_NONE) ^ g_sel_rereading))
+            if (s_newsgroup_do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel_rereading))
             {
                 if (!cmdlst)
                 {
@@ -213,7 +213,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             }
             if (output_level && !cmdlst)
             {
-                std::printf("\n[0 unread in %s -- skipping]",g_newsgroup_ptr->rc_line);
+                std::printf("\n[0 unread in %s -- skipping]",g_newsgroup_ptr->m_rc_line);
                 std::fflush(stdout);
             }
         }
@@ -221,8 +221,8 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         {
             perform_status(g_newsgroup_to_read.value_of(), 50);
         }
-    } while ((g_newsgroup_ptr = (backward? (g_newsgroup_ptr->prev? g_newsgroup_ptr->prev : g_last_newsgroup)
-                               : (g_newsgroup_ptr->next? g_newsgroup_ptr->next : g_first_newsgroup)))
+    } while ((g_newsgroup_ptr = (backward? (g_newsgroup_ptr->m_prev? g_newsgroup_ptr->m_prev : g_last_newsgroup)
+                               : (g_newsgroup_ptr->m_next? g_newsgroup_ptr->m_next : g_first_newsgroup)))
                 != ng_start);
 
     if (cmdlst)
@@ -232,9 +232,9 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     return ret;
 }
 
-bool newsgroup_wanted(NewsgroupData *np)
+bool NewsgroupData::newsgroup_wanted()
 {
-    return execute(&s_newsgroup_compex,np->rc_line) != nullptr;
+    return execute(&s_newsgroup_compex, m_rc_line) != nullptr;
 }
 
 const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool re, bool fold)

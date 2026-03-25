@@ -526,21 +526,21 @@ void univ_use_pattern(const char *pattern, int type)
         switch (type)
         {
         case 0:
-            for (np = g_first_newsgroup; np; np = np->next)
+            for (np = g_first_newsgroup; np; np = np->m_next)
             {
-                if (univ_do_match(np->rc_line, s))
+                if (univ_do_match(np->m_rc_line, s))
                 {
-                    univ_add_group(np->rc_line,np->rc_line);
+                    univ_add_group(np->m_rc_line,np->m_rc_line);
                 }
             }
             break;
 
         case 1:
-            for (np = g_first_newsgroup; np; np = np->next)
+            for (np = g_first_newsgroup; np; np = np->m_next)
             {
-                if (univ_do_match(np->rc_line, s))
+                if (univ_do_match(np->m_rc_line, s))
                 {
-                    univ_add_virtual_group(np->rc_line);
+                    univ_add_virtual_group(np->m_rc_line);
                 }
             }
             break;
@@ -1162,7 +1162,7 @@ int univ_visit_group_main(const char *gname)
         return NG_ERROR;
     }
     // unsubscribed, bogus, etc. groups are not visited
-    if (np->to_read <= TR_UNSUB)
+    if (np->m_to_read <= TR_UNSUB)
     {
       return NG_ERROR;
     }
@@ -1175,7 +1175,7 @@ int univ_visit_group_main(const char *gname)
         g_current_newsgroup = np;
     }
     bool old_threaded = g_threaded_group;
-    g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
+    g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
     std::printf("\nScanning newsgroup %s\n",gname);
     int ret = do_newsgroup("");
     g_threaded_group = old_threaded;
