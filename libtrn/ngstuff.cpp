@@ -954,11 +954,11 @@ int add_group_sel_perform()
         goto break_out;
     }
 
-    for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
+    for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
     {
-        if (!(gp->flags & g_sel_mask) ^ !!bits)
+        if (!(gp->m_flags & g_sel_mask) ^ !!bits)
         {
-            if (add_group_perform(gp, cmdstr, 0) < 0)
+            if (gp->add_group_perform(cmdstr, 0) < 0)
             {
                 break;
             }
@@ -971,13 +971,13 @@ break_out:
     return 1;
 }
 
-int add_group_perform(AddGroup *gp, char *cmdlst, int output_level)
+int AddGroup::add_group_perform(char *cmdlst, int output_level)
 {
     int ch;
 
     if (output_level == 1)
     {
-        std::printf("%s ",gp->name);
+        std::printf("%s ",m_name);
         std::fflush(stdout);
     }
 
@@ -990,12 +990,12 @@ int add_group_perform(AddGroup *gp, char *cmdlst, int output_level)
         }
         if (ch == '+')
         {
-            gp->flags |= AGF_SEL;
+            m_flags |= AGF_SEL;
             g_selected_count++;
         }
         else if (ch == '-')
         {
-            gp->flags &= ~AGF_SEL;
+            m_flags &= ~AGF_SEL;
             g_selected_count--;
         }
         else

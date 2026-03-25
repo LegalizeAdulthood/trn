@@ -113,13 +113,13 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         AddGroup *gp = g_first_add_group;
         do
         {
-            if (execute(&s_newsgroup_compex, gp->name) != nullptr)
+            if (execute(&s_newsgroup_compex, gp->m_name) != nullptr)
             {
                 if (!cmdlst)
                 {
                     return NGS_FOUND;
                 }
-                if (add_group_perform(gp, cmdlst, output_level && g_page_line == 1) < 0)
+                if (gp->add_group_perform(cmdlst, output_level && g_page_line == 1) < 0)
                 {
                     std::free(cmdlst);
                     return NGS_INTR;
@@ -129,7 +129,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             {
                 perform_status(g_newsgroup_to_read.value_of(), 50);
             }
-        } while ((gp = gp->next) != nullptr);
+        } while ((gp = gp->m_next) != nullptr);
         if (cmdlst)
         {
             std::free(cmdlst);

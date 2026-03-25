@@ -529,24 +529,24 @@ try_again:
     {
         sort_add_groups();
         g_obj_count = ArticleNum{};
-        for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
+        for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
         {
             if (g_sel_page_gp == gp)
             {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
-            gp->flags &= ~AGF_INCLUDED;
-            if (!g_sel_rereading ^ !(gp->flags & AGF_EXCLUDED))
+            gp->m_flags &= ~AGF_INCLUDED;
+            if (!g_sel_rereading ^ !(gp->m_flags & AGF_EXCLUDED))
             {
                 continue;
             }
-            if (!g_sel_exclusive || (gp->flags & g_sel_mask))
+            if (!g_sel_exclusive || (gp->m_flags & g_sel_mask))
             {
-                if (g_sel_rereading && !(gp->flags & g_sel_mask))
+                if (g_sel_rereading && !(gp->m_flags & g_sel_mask))
                 {
-                    gp->flags |= AGF_DEL;
+                    gp->m_flags |= AGF_DEL;
                 }
-                gp->flags |= AGF_INCLUDED;
+                gp->m_flags |= AGF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
             ++g_obj_count;
@@ -963,9 +963,9 @@ bool first_page()
 
     case SM_ADD_GROUP:
     {
-        for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
+        for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
         {
-            if (gp->flags & AGF_INCLUDED)
+            if (gp->m_flags & AGF_INCLUDED)
             {
                 if (g_sel_page_gp != gp)
                 {
@@ -1327,11 +1327,11 @@ bool prev_page()
         }
         else
         {
-            gp = gp->prev;
+            gp = gp->m_prev;
         }
         while (gp)
         {
-            if (gp->flags & AGF_INCLUDED)
+            if (gp->m_flags & AGF_INCLUDED)
             {
                 page_gp = gp;
                 g_sel_prior_obj_cnt--;
@@ -1340,7 +1340,7 @@ bool prev_page()
                     break;
                 }
             }
-            gp = gp->prev;
+            gp = gp->m_prev;
         }
         if (g_sel_page_gp != page_gp)
         {
@@ -1543,13 +1543,13 @@ try_again:
     case SM_ADD_GROUP:
     {
         AddGroup* gp = g_sel_page_gp;
-        for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->next)
+        for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->m_next)
         {
             if (gp == u.gp)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (gp->flags & AGF_INCLUDED)
+            if (gp->m_flags & AGF_INCLUDED)
             {
                 g_sel_page_item_cnt++;
             }
@@ -1969,19 +1969,19 @@ start_of_loop:
         if (*g_sel_grp_display_mode == 'l')
         {
             int i = 0;
-            for (; gp && i < s_sel_max_per_page; gp = gp->next)
+            for (; gp && i < s_sel_max_per_page; gp = gp->m_next)
             {
-                if (!(gp->flags & AGF_INCLUDED))
+                if (!(gp->m_flags & AGF_INCLUDED))
                 {
                     continue;
                 }
-                int len = std::strlen(gp->name) + 2;
+                int len = std::strlen(gp->m_name) + 2;
                 max_len = std::max(len, max_len);
                 i++;
             }
             gp = g_sel_page_gp;
         }
-        for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->next)
+        for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->m_next)
         {
 #if 0
             if (gp == xx)
@@ -1990,12 +1990,12 @@ start_of_loop:
             }
 #endif
 
-            if (!(gp->flags & AGF_INCLUDED))
+            if (!(gp->m_flags & AGF_INCLUDED))
             {
                 continue;
             }
 
-            sel = !!(gp->flags & g_sel_mask) + (gp->flags & AGF_DEL);
+            sel = !!(gp->m_flags & g_sel_mask) + (gp->m_flags & AGF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.gp = gp;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -2003,8 +2003,8 @@ start_of_loop:
 
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
-            std::printf("%5ld ", (long)gp->to_read.value_of());
-            display_group(gp->data_src, gp->name, std::strlen(gp->name), max_len);
+            std::printf("%5ld ", (long)gp->m_to_read.value_of());
+            display_group(gp->m_data_src, gp->m_name, std::strlen(gp->m_name), max_len);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt)
@@ -2248,7 +2248,7 @@ void update_page()
             break;
 
         case SM_ADD_GROUP:
-            sel = !!(u.gp->flags & g_sel_mask) + (u.gp->flags & AGF_DEL);
+            sel = !!(u.gp->m_flags & g_sel_mask) + (u.gp->m_flags & AGF_DEL);
             break;
 
         case SM_UNIVERSAL:

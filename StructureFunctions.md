@@ -27,9 +27,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 ## ngdata.h
 - `void set_newsgroup(NewsgroupData *np);`
 
-## ngstuff.h
-- `int add_group_perform(AddGroup *gp, char *cmdlst, int output_level);`
-
 ## nntp.h
 - `int nntp_group(const char *group, NewsgroupData *gp);`
 

@@ -649,12 +649,12 @@ sel_restart:
         AddGroup *gp;
         int i;
         g_add_new_by_default = ADDNEW_SUB;
-        for (gp = g_first_add_group, i = 0; gp; gp = gp->next, i++)
+        for (gp = g_first_add_group, i = 0; gp; gp = gp->m_next, i++)
         {
-            if (gp->flags & AGF_SEL)
+            if (gp->m_flags & AGF_SEL)
             {
-                gp->flags &= ~AGF_SEL;
-                get_newsgroup(gp->name,flags);
+                gp->m_flags &= ~AGF_SEL;
+                get_newsgroup(gp->m_name,flags);
             }
         }
         g_add_new_by_default = ADDNEW_ASK;
@@ -1653,11 +1653,11 @@ static bool select_item(Selection u)
         break;
 
     case SM_ADD_GROUP:
-        if (!(u.gp->flags & g_sel_mask))
+        if (!(u.gp->m_flags & g_sel_mask))
         {
             g_selected_count++;
         }
-        u.gp->flags = (u.gp->flags & ~AGF_DEL) | g_sel_mask;
+        u.gp->m_flags = (u.gp->m_flags & ~AGF_DEL) | g_sel_mask;
         break;
 
     case SM_NEWSGROUP:
@@ -1763,14 +1763,14 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_ADD_GROUP:
-        if (u.gp->flags & g_sel_mask)
+        if (u.gp->m_flags & g_sel_mask)
         {
-            u.gp->flags &= ~g_sel_mask;
+            u.gp->m_flags &= ~g_sel_mask;
             g_selected_count--;
         }
         if (g_sel_rereading)
         {
-            u.gp->flags |= AGF_DEL;
+            u.gp->m_flags |= AGF_DEL;
         }
         break;
 
@@ -1895,26 +1895,26 @@ static void sel_cleanup()
     case SM_ADD_GROUP:
         if (g_sel_rereading)
         {
-            for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
             {
-                if (gp->flags & AGF_DEL_SEL)
+                if (gp->m_flags & AGF_DEL_SEL)
                 {
-                    if (!(gp->flags & AGF_SEL))
+                    if (!(gp->m_flags & AGF_SEL))
                     {
                         g_selected_count++;
                     }
-                    gp->flags = (gp->flags&~(AGF_DEL_SEL|AGF_EXCLUDED))|AGF_SEL;
+                    gp->m_flags = (gp->m_flags&~(AGF_DEL_SEL|AGF_EXCLUDED))|AGF_SEL;
                 }
-                gp->flags &= ~AGF_DEL;
+                gp->m_flags &= ~AGF_DEL;
             }
         }
         else
         {
-            for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
             {
-                if (gp->flags & AGF_DEL)
+                if (gp->m_flags & AGF_DEL)
                 {
-                    gp->flags = (gp->flags & ~AGF_DEL) | AGF_EXCLUDED;
+                    gp->m_flags = (gp->m_flags & ~AGF_DEL) | AGF_EXCLUDED;
                 }
             }
         }
@@ -3344,16 +3344,16 @@ reask_sort:
             }
             while (gp)
             {
-                if ((!(gp->flags & AGF_SEL) ^ (ch == 'J' ? AGF_SEL : AGF_NONE)) //
-                    || (gp->flags & AGF_DEL))
+                if ((!(gp->m_flags & AGF_SEL) ^ (ch == 'J' ? AGF_SEL : AGF_NONE)) //
+                    || (gp->m_flags & AGF_DEL))
                 {
-                    if (ch == 'J' || (gp->flags & AGF_INCLUDED))
+                    if (ch == 'J' || (gp->m_flags & AGF_INCLUDED))
                     {
-                        gp->flags |= AGF_EXCLUDED;
+                        gp->m_flags |= AGF_EXCLUDED;
                     }
-                    gp->flags &= ~(AGF_DEL|AGF_SEL);
+                    gp->m_flags &= ~(AGF_DEL|AGF_SEL);
                 }
-                gp = gp->next;
+                gp = gp->m_next;
                 if (ch == 'D' && gp == g_sel_next_gp)
                 {
                     break;
@@ -3371,9 +3371,9 @@ reask_sort:
         }
         else if (ch == 'J')
         {
-            for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
             {
-                gp->flags &= ~AGF_DEL_SEL;
+                gp->m_flags &= ~AGF_DEL_SEL;
             }
             g_selected_count = 0;
             return DS_DISPLAY;

@@ -28,6 +28,5 @@ int perform(char *cmdlst, int output_level);
 int newsgroup_sel_perform();
 int newsgroup_perform(char *cmdlst, int output_level);
 int add_group_sel_perform();
-int add_group_perform(AddGroup *gp, char *cmdlst, int output_level);
 
 #endif

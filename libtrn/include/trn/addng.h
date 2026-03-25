@@ -26,13 +26,14 @@ DECLARE_FLAGS_ENUM(AddGroupFlags, std::uint8_t);
 
 struct AddGroup
 {
-    AddGroup     *next;
-    AddGroup     *prev;
-    DataSource   *data_src;
-    ArticleNum    to_read; // number of articles to be read (for sorting)
-    NewsgroupNum  num;     // a possible sort order for this group
-    AddGroupFlags flags;
-    char          name[1];
+    AddGroup     *m_next;
+    AddGroup     *m_prev;
+    DataSource   *m_data_src;
+    ArticleNum    m_to_read; // number of articles to be read (for sorting)
+    NewsgroupNum  m_num;     // a possible sort order for this group
+    AddGroupFlags m_flags;
+    char          m_name[1];
+    int           add_group_perform(char *cmdlst, int output_level);
 };
 
 extern AddGroup *g_first_add_group;
