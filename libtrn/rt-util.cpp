@@ -701,13 +701,13 @@ const char *compress_subj(const Article *ap, int max)
 
     // Put a preceding '>' on subjects that are replies to other articles
     char *   cp = g_buf;
-    Article *first = (g_threaded_group ? ap->m_subj->thread : ap->m_subj->articles);
+    Article *first = (g_threaded_group ? ap->m_subj->m_thread : ap->m_subj->m_articles);
     if (ap != first || (ap->m_flags & AF_HAS_RE)
      || (!(ap->m_flags&AF_UNREAD) ^ g_sel_rereading))
     {
         *cp++ = '>';
     }
-    str_char_subst(cp, ap->m_subj->str + 4, (sizeof g_buf) - (cp-g_buf), *g_char_subst);
+    str_char_subst(cp, ap->m_subj->m_str + 4, (sizeof g_buf) - (cp-g_buf), *g_char_subst);
 
     // Remove "(was: oldsubject)", because we already know the old subjects.
     // Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.

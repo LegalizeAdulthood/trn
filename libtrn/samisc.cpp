@@ -112,11 +112,11 @@ void sa_sel_threads()
     }
 
     // Loop through all (selected) articles.
-    for (Subject *sp = g_first_subject; sp; sp = sp->next)
+    for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
     {
-        if ((sp->flags & subj_mask) == subj_mask)
+        if ((sp->m_flags & subj_mask) == subj_mask)
         {
-            for (Article *ap = first_art(sp); ap; ap = ap->next_article())
+            for (Article *ap = sp->first_art(); ap; ap = ap->next_article())
             {
                 ArticleNum art = ap->article_num();
                 if ((ap->m_flags & AF_SEL) //

@@ -85,7 +85,7 @@ void init_tree()
     {
         return;
     }
-    if (!(thread = s_tree_article->m_subj->thread))
+    if (!(thread = s_tree_article->m_subj->m_thread))
     {
         return;
     }
@@ -94,8 +94,8 @@ void init_tree()
     int      num = 0;
     do
     {
-        sp->misc = num++;
-        sp = sp->thread_link;
+        sp->m_misc = num++;
+        sp = sp->m_thread_link;
     } while (sp != thread->m_subj);
 
     s_max_depth = 0;
@@ -314,7 +314,7 @@ Article *get_tree_artp(int x, int y)
     {
         return nullptr;
     }
-    Article *ap = s_tree_article->m_subj->thread;
+    Article *ap = s_tree_article->m_subj->m_thread;
     x -= g_tc_COLS-1 - s_max_depth;
     if (x < 0 || y > s_max_line || !ap)
     {
@@ -663,7 +663,7 @@ void entire_tree(Article* ap)
         return;
     }
     newline();
-    Article *thread = ap->m_subj->thread;
+    Article *thread = ap->m_subj->m_thread;
     // Enumerate our subjects for display
     Subject *sp = thread->m_subj;
     int      num = 0;
@@ -673,10 +673,10 @@ void entire_tree(Article* ap)
         {
             return;
         }
-        std::printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->str+4);
+        std::printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->m_str+4);
         term_down(1);
-        sp->misc = num++;
-        sp = sp->thread_link;
+        sp->m_misc = num++;
+        sp = sp->m_thread_link;
     } while (sp != thread->m_subj);
     if (check_page_line())
     {
@@ -790,7 +790,7 @@ static void display_tree(Article *article, char *cp)
 //
 char Article::thread_letter()
 {
-    int subj = m_subj->misc;
+    int subj = m_subj->m_misc;
 
     if (!(m_flags & AF_CACHED)
      && (g_abs_first < g_first_cached || g_last_cached < g_last_art

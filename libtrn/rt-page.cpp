@@ -773,9 +773,9 @@ try_again:
             sort_articles();
         }
 
-        while (g_sel_page_sp && g_sel_page_sp->misc == 0)
+        while (g_sel_page_sp && g_sel_page_sp->m_misc == 0)
         {
-            g_sel_page_sp = g_sel_page_sp->next;
+            g_sel_page_sp = g_sel_page_sp->m_next;
         }
         // The g_artptr_list contains only unread or read articles, never both
         limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
@@ -831,9 +831,9 @@ try_again:
     {
         if (g_sel_page_sp)
         {
-            while (g_sel_page_sp && g_sel_page_sp->misc == 0)
+            while (g_sel_page_sp && g_sel_page_sp->m_misc == 0)
             {
-                g_sel_page_sp = g_sel_page_sp->next;
+                g_sel_page_sp = g_sel_page_sp->m_next;
             }
             sort_subjects();
             if (!g_sel_page_sp)
@@ -845,23 +845,23 @@ try_again:
         {
             sort_subjects();
         }
-        for (Subject *sp = g_first_subject; sp; sp = sp->next)
+        for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
         {
-            if (g_sel_rereading && !(sp->flags & g_sel_mask))
+            if (g_sel_rereading && !(sp->m_flags & g_sel_mask))
             {
-                sp->flags |= SF_DEL;
+                sp->m_flags |= SF_DEL;
             }
 
             Subject *group_sp = sp;
-            int      group_arts = sp->misc;
+            int      group_arts = sp->m_misc;
 
-            if (!g_sel_exclusive || (sp->flags & g_sel_mask))
+            if (!g_sel_exclusive || (sp->m_flags & g_sel_mask))
             {
-                sp->flags |= SF_INCLUDED;
+                sp->m_flags |= SF_INCLUDED;
             }
             else
             {
-                sp->flags &= ~SF_INCLUDED;
+                sp->m_flags &= ~SF_INCLUDED;
             }
 
             if (g_sel_page_sp == group_sp)
@@ -870,27 +870,27 @@ try_again:
             }
             if (g_sel_mode == SM_THREAD)
             {
-                while (sp->next && sp->next->thread == sp->thread)
+                while (sp->m_next && sp->m_next->m_thread == sp->m_thread)
                 {
-                    sp = sp->next;
+                    sp = sp->m_next;
                     if (sp == g_sel_page_sp)
                     {
                         g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
                         g_sel_page_sp = group_sp;
                     }
-                    sp->flags &= ~SF_INCLUDED;
-                    if (sp->flags & g_sel_mask)
+                    sp->m_flags &= ~SF_INCLUDED;
+                    if (sp->m_flags & g_sel_mask)
                     {
-                        group_sp->flags |= SF_INCLUDED;
+                        group_sp->m_flags |= SF_INCLUDED;
                     }
                     else if (g_sel_rereading)
                     {
-                        sp->flags |= SF_DEL;
+                        sp->m_flags |= SF_DEL;
                     }
-                    group_arts += sp->misc;
+                    group_arts += sp->m_misc;
                 }
             }
-            if (group_sp->flags & SF_INCLUDED)
+            if (group_sp->m_flags & SF_INCLUDED)
             {
                 g_sel_total_obj_cnt += group_arts;
             }
@@ -1025,9 +1025,9 @@ bool first_page()
 
     default:
     {
-        for (Subject *sp = g_first_subject; sp; sp = sp->next)
+        for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
         {
-            if (sp->flags & SF_INCLUDED)
+            if (sp->m_flags & SF_INCLUDED)
             {
                 if (g_sel_page_sp != sp)
                 {
@@ -1438,15 +1438,15 @@ bool prev_page()
         int       line_cnt;
 
         int line = 2;
-        for (Subject *sp = (!page_sp ? g_last_subject : page_sp->prev); sp; sp = sp->prev)
+        for (Subject *sp = (!page_sp ? g_last_subject : page_sp->m_prev); sp; sp = sp->m_prev)
         {
-            int item_arts = sp->misc;
+            int item_arts = sp->m_misc;
             if (g_sel_mode == SM_THREAD)
             {
-                while (sp->prev && sp->prev->thread == sp->thread)
+                while (sp->m_prev && sp->m_prev->m_thread == sp->m_thread)
                 {
-                    sp = sp->prev;
-                    item_arts += sp->misc;
+                    sp = sp->m_prev;
+                    item_arts += sp->m_misc;
                 }
                 line_cnt = count_thread_lines(sp, (int*)nullptr);
             }
@@ -1454,7 +1454,7 @@ bool prev_page()
             {
                 line_cnt = count_subject_lines(sp, (int *) nullptr);
             }
-            if (!(sp->flags & SF_INCLUDED) || !line_cnt)
+            if (!(sp->m_flags & SF_INCLUDED) || !line_cnt)
             {
                 continue;
             }
@@ -1622,13 +1622,13 @@ try_again:
           Subject *sp = g_sel_page_sp;
           int      line_cnt;
           int      sel;
-          for (; sp && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next)
+          for (; sp && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->m_next)
           {
             if (sp == u.sp)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (sp->flags & SF_INCLUDED)
+            if (sp->m_flags & SF_INCLUDED)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
@@ -1645,7 +1645,7 @@ try_again:
                     {
                         break;
                     }
-                    g_sel_page_obj_cnt += sp->misc;
+                    g_sel_page_obj_cnt += sp->m_misc;
                     g_sel_page_item_cnt++;
                 }
             }
@@ -1655,14 +1655,14 @@ try_again:
             }
             if (g_sel_mode == SM_THREAD)
             {
-                while (sp->next && sp->next->thread == sp->thread)
+                while (sp->m_next && sp->m_next->m_thread == sp->m_thread)
                 {
-                    sp = sp->next;
-                    if (!line_cnt || !sp->misc)
+                    sp = sp->m_next;
+                    if (!line_cnt || !sp->m_misc)
                     {
                         continue;
                     }
-                    g_sel_page_obj_cnt += sp->misc;
+                    g_sel_page_obj_cnt += sp->m_misc;
                 }
             }
         }
@@ -2139,14 +2139,14 @@ start_of_loop:
         int ix = -1;    // item # or -1
 
         Subject *sp = g_sel_page_sp;
-        for (; sp && !etc && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next)
+        for (; sp && !etc && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->m_next)
         {
             if (sp == g_sel_last_sp)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
 
-            if (sp->flags & SF_INCLUDED)
+            if (sp->m_flags & SF_INCLUDED)
             {
                 // Compute how many lines we need to display this group
                 if (g_sel_mode == SM_THREAD)
@@ -2174,12 +2174,12 @@ start_of_loop:
                     g_sel_items[g_sel_page_item_cnt].u.sp = sp;
                     g_sel_items[g_sel_page_item_cnt].line = g_term_line;
                     g_sel_items[g_sel_page_item_cnt].sel = sel;
-                    g_sel_page_obj_cnt += sp->misc;
+                    g_sel_page_obj_cnt += sp->m_misc;
 
                     ix = g_sel_page_item_cnt;
                     sel = g_sel_items[g_sel_page_item_cnt].sel;
                     g_sel_page_item_cnt++;
-                    if (sp->misc)
+                    if (sp->m_misc)
                     {
                         display_subject(sp, ix, sel);
                         ix = -1;
@@ -2192,10 +2192,10 @@ start_of_loop:
             }
             if (g_sel_mode == SM_THREAD)
             {
-                while (sp->next && sp->next->thread == sp->thread)
+                while (sp->m_next && sp->m_next->m_thread == sp->m_thread)
                 {
-                    sp = sp->next;
-                    if (!line_cnt || !sp->misc)
+                    sp = sp->m_next;
+                    if (!line_cnt || !sp->m_misc)
                     {
                         continue;
                     }
@@ -2204,7 +2204,7 @@ start_of_loop:
                         display_subject(sp, ix, sel);
                     }
                     ix = -1;
-                    g_sel_page_obj_cnt += sp->misc;
+                    g_sel_page_obj_cnt += sp->m_misc;
                 }
             }
             if (etc)
@@ -2352,14 +2352,14 @@ static int count_subject_lines(const Subject *subj, int *selptr)
 {
     int sel;
 
-    if (subj->flags & SF_DEL)
+    if (subj->m_flags & SF_DEL)
     {
         sel = 2;
     }
-    else if (subj->flags & g_sel_mask)
+    else if (subj->m_flags & g_sel_mask)
     {
         sel = 1;
-        for (Article *ap = subj->articles; ap; ap = ap->m_subj_next)
+        for (Article *ap = subj->m_articles; ap; ap = ap->m_subj_next)
         {
             if ((!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading) //
                 && !(ap->m_flags & g_sel_mask))
@@ -2379,13 +2379,13 @@ static int count_subject_lines(const Subject *subj, int *selptr)
     }
     if (*g_sel_art_display_mode == 'l')
     {
-        return subj->misc;
+        return subj->m_misc;
     }
     if (*g_sel_art_display_mode == 'm')
     {
-        return (subj->misc <= 4 ? subj->misc : (subj->misc - 4) / 3 + 4);
+        return (subj->m_misc <= 4 ? subj->m_misc : (subj->m_misc - 4) / 3 + 4);
     }
-    return (subj->misc != 0);
+    return (subj->m_misc != 0);
 }
 
 // Counts the number of lines needed to output a thread, including
@@ -2394,13 +2394,13 @@ static int count_subject_lines(const Subject *subj, int *selptr)
 static int count_thread_lines(const Subject *subj, int *selptr)
 {
     int total = 0;
-    const Article *thread = subj->thread;
+    const Article *thread = subj->m_thread;
     int            sel = -1;
     int            subj_sel;
 
     do
     {
-        if (subj->misc)
+        if (subj->m_misc)
         {
             total += count_subject_lines(subj, &subj_sel);
             if (sel < 0)
@@ -2412,7 +2412,7 @@ static int count_thread_lines(const Subject *subj, int *selptr)
                 sel = 3;
             }
         }
-    } while ((subj = subj->next) != nullptr && subj->thread == thread);
+    } while ((subj = subj->m_next) != nullptr && subj->m_thread == thread);
     if (selptr)
     {
         *selptr = (sel < 0 ? 0 : sel);
@@ -2433,7 +2433,7 @@ static void display_article(const Article *ap, int ix, int sel)
     output_sel(ix, sel, false);
     if (*g_sel_art_display_mode == 's' || from_width < 8)
     {
-        std::printf("  %s\n", compress_subj(ap->m_subj->articles, subj_width));
+        std::printf("  %s\n", compress_subj(ap->m_subj->m_articles, subj_width));
     }
     else if (*g_sel_art_display_mode == 'd')
     {
@@ -2464,25 +2464,25 @@ static void display_subject(const Subject *subj, int ix, int sel)
     maybe_eol();
     subj_width = std::max(subj_width, 32);
 
-    int j = subj->misc;
+    int j = subj->m_misc;
 
     output_sel(ix, sel, false);
     if (*g_sel_art_display_mode == 's' || from_width < 8)
     {
-        std::printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width));
+        std::printf("%3d  %s\n",j,compress_subj(subj->m_articles,subj_width));
         term_down(1);
     }
     else
     {
         Article* first_ap;
         // Find the first unread article so we get the author right
-        if ((first_ap = subj->thread) != nullptr                    //
+        if ((first_ap = subj->m_thread) != nullptr                    //
             && (first_ap->m_subj != subj || first_ap->m_from == nullptr //
                 || (!(first_ap->m_flags & AF_UNREAD) ^ g_sel_rereading)))
         {
             first_ap = nullptr;
         }
-        for (ap = subj->articles; ap; ap = ap->m_subj_next)
+        for (ap = subj->m_articles; ap; ap = ap->m_subj_next)
         {
             if (!!(ap->m_flags&AF_UNREAD) ^ g_sel_rereading)
             {

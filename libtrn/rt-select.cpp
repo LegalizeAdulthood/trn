@@ -1362,11 +1362,11 @@ reinp_selector:
             Article *ap = g_sel_items[g_sel_item_index].u.ap;
             if (g_sel_items[g_sel_item_index].sel)
             {
-                deselect_subject(ap->m_subj);
+                ap->m_subj->deselect_subject();
             }
             else
             {
-                select_subject(ap->m_subj, AUTO_KILL_NONE);
+                ap->m_subj->select_subject(AUTO_KILL_NONE);
             }
             update_page();
         }
@@ -1676,11 +1676,11 @@ static bool select_item(Selection u)
         break;
 
     case SM_THREAD:
-        u.sp->thread->select_thread(AUTO_KILL_NONE);
+        u.sp->m_thread->select_thread(AUTO_KILL_NONE);
         break;
 
     case SM_SUBJECT:
-        select_subject(u.sp, AUTO_KILL_NONE);
+        u.sp->select_subject(AUTO_KILL_NONE);
         break;
 
     case SM_ARTICLE:
@@ -1718,7 +1718,7 @@ static bool delay_return_item(Selection u)
         Article* ap;
         if (g_sel_mode == SM_THREAD)
         {
-            for (ap = first_art(u.sp); ap; ap = ap->next_article())
+            for (ap = u.sp->first_art(); ap; ap = ap->next_article())
             {
                 if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
                 {
@@ -1728,7 +1728,7 @@ static bool delay_return_item(Selection u)
         }
         else
         {
-            for (ap = u.sp->articles; ap; ap = ap->m_subj_next)
+            for (ap = u.sp->m_articles; ap; ap = ap->m_subj_next)
             {
                 if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
                 {
@@ -1794,11 +1794,11 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_THREAD:
-        u.sp->thread->deselect_thread();
+        u.sp->m_thread->deselect_thread();
         break;
 
     case SM_SUBJECT:
-        deselect_subject(u.sp);
+        u.sp->deselect_subject();
         break;
 
     case SM_UNIVERSAL:
@@ -1961,9 +1961,9 @@ static void sel_cleanup()
         {
             g_sel_last_ap = nullptr;
             g_sel_last_sp = nullptr;
-            for (Subject *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
             {
-                unkill_subject(sp);
+                sp->unkill_subject();
             }
         }
         else
@@ -1974,18 +1974,18 @@ static void sel_cleanup()
             }
             else
             {
-                for (Subject *sp = g_first_subject; sp; sp = sp->next)
+                for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
                 {
-                    if (sp->flags & SF_DEL)
+                    if (sp->m_flags & SF_DEL)
                     {
-                        sp->flags &= ~SF_DEL;
+                        sp->m_flags &= ~SF_DEL;
                         if (g_sel_mode == SM_THREAD)
                         {
-                            sp->thread->kill_thread(AFFECT_UNSEL);
+                            sp->m_thread->kill_thread(AFFECT_UNSEL);
                         }
                         else
                         {
-                            kill_subject(sp, AFFECT_UNSEL);
+                            sp->kill_subject(AFFECT_UNSEL);
                         }
                     }
                 }
@@ -2317,9 +2317,9 @@ static DisplayState article_commands(char_int ch)
     case '#':
         if (g_sel_page_item_cnt)
         {
-            for (Subject *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
             {
-                sp->flags &= ~SF_SEL;
+                sp->m_flags &= ~SF_SEL;
             }
             g_selected_count = 0;
             deselect_item(g_sel_items[g_sel_item_index].u);
@@ -2580,16 +2580,16 @@ reask_sort:
                 }
                 while (sp)
                 {
-                    if (((!(sp->flags & SF_SEL) ^ (ch == 'J')) && sp->misc) //
-                        || (sp->flags & SF_DEL))
+                    if (((!(sp->m_flags & SF_SEL) ^ (ch == 'J')) && sp->m_misc) //
+                        || (sp->m_flags & SF_DEL))
                     {
                         if (ch == 'J' || !g_sel_exclusive //
-                            || (sp->flags & SF_INCLUDED))
+                            || (sp->m_flags & SF_INCLUDED))
                         {
-                            kill_subject(sp, ch=='J'? AFFECT_ALL:AFFECT_UNSEL);
+                            sp->kill_subject(ch=='J'? AFFECT_ALL:AFFECT_UNSEL);
                         }
                     }
-                    sp = sp->next;
+                    sp = sp->m_next;
                     if (ch == 'D' && sp == g_sel_next_sp)
                     {
                         break;
@@ -2610,9 +2610,9 @@ reask_sort:
         }
         else if (ch == 'J')
         {
-            for (Subject *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
             {
-                deselect_subject(sp);
+                sp->deselect_subject();
             }
             g_selected_subj_cnt = 0;
             g_selected_count = 0;
@@ -2645,12 +2645,12 @@ reask_sort:
             Subject* sp = g_sel_items[g_sel_item_index].u.sp;
             if (g_sel_mode == SM_THREAD)
             {
-                while (!sp->misc)
+                while (!sp->m_misc)
                 {
-                    sp = sp->thread_link;
+                    sp = sp->m_thread_link;
                 }
             }
-            g_artp = sp->articles;
+            g_artp = sp->m_articles;
         }
         g_art = g_artp->article_num();
         // This call executes the action too
@@ -2701,12 +2701,12 @@ reask_sort:
                 Subject* sp = g_sel_items[g_sel_item_index].u.sp;
                 if (g_sel_mode == SM_THREAD)
                 {
-                    while (!sp->misc)
+                    while (!sp->m_misc)
                     {
-                        sp = sp->thread_link;
+                        sp = sp->m_thread_link;
                     }
                 }
-                g_artp = sp->articles;
+                g_artp = sp->m_articles;
             }
             g_art = g_artp->article_num();
         }
@@ -2733,18 +2733,18 @@ reask_sort:
                 thread_perform();
                 if (!g_sel_rereading)
                 {
-                    for (Subject *sp = g_first_subject; sp; sp = sp->next)
+                    for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
                     {
-                        if (sp->flags & SF_DEL)
+                        if (sp->m_flags & SF_DEL)
                         {
-                            sp->flags = SF_NONE;
+                            sp->m_flags = SF_NONE;
                             if (g_sel_mode == SM_THREAD)
                             {
-                                sp->thread->kill_thread(AFFECT_UNSEL);
+                                sp->m_thread->kill_thread(AFFECT_UNSEL);
                             }
                             else
                             {
-                                kill_subject(sp, AFFECT_UNSEL);
+                                sp->kill_subject(AFFECT_UNSEL);
                             }
                         }
                     }

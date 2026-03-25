@@ -763,15 +763,15 @@ reask_unread:
         }
         else if (*g_buf == 't' && *u_help_thread)
         {
-            if (g_artp->m_subj->thread)
+            if (g_artp->m_subj->m_thread)
             {
-                g_artp->m_subj->thread->unkill_thread();
+                g_artp->m_subj->m_thread->unkill_thread();
             }
             else
             {
-                unkill_subject(g_artp->m_subj);
+                g_artp->m_subj->unkill_subject();
             }
-            g_artp = first_art(g_artp->m_subj);
+            g_artp = g_artp->m_subj->first_art();
             if (g_artp != nullptr)
             {
                 g_art = g_artp->article_num();
@@ -932,7 +932,7 @@ not_threaded:
         (void)art_search(g_buf, (sizeof g_buf), true);
         g_art = g_curr_art;
         g_artp = g_curr_artp;
-        kill_subject(g_artp->m_subj,AFFECT_ALL);// take care of any prior subjects
+        g_artp->m_subj->kill_subject(AFFECT_ALL);// take care of any prior subjects
         if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
         {
             return AS_SA;
@@ -965,7 +965,7 @@ not_threaded:
         }
         if (g_threaded_group)
         {
-            g_artp->m_subj->thread->kill_thread(AFFECT_ALL);
+            g_artp->m_subj->m_thread->kill_thread(AFFECT_ALL);
             if (g_sa_in)
             {
                 return AS_SA;
@@ -979,7 +979,7 @@ not_threaded:
         {
             goto not_threaded;
         }
-        kill_subject(g_artp->m_subj,AFFECT_ALL);
+        g_artp->m_subj->kill_subject(AFFECT_ALL);
         if (!g_threaded_group || g_last_cached < g_last_art)
         {
             *g_buf = 'k';
@@ -1136,7 +1136,7 @@ check_dec_art:
                     break;
 
                 case SM_THREAD:
-                    if (old_artp->m_subj->thread != g_artp->m_subj->thread)
+                    if (old_artp->m_subj->m_thread != g_artp->m_subj->m_thread)
                     {
                         return AS_SA;
                     }
@@ -1187,7 +1187,7 @@ check_dec_art:
             }
             else
             {
-                g_artp = g_first_subject->articles;
+                g_artp = g_first_subject->m_articles;
                 if (g_artp->m_flags & AF_EXISTS)
                 {
                     g_art = g_artp->article_num();
@@ -1782,7 +1782,7 @@ refresh_screen:
                 std::printf("\nSelected all articles in this subject.\n");
             }
             term_down(2);
-            g_artp = first_art(g_artp->m_subj);
+            g_artp = g_artp->m_subj->first_art();
             if (g_artp != nullptr)
             {
                 if (g_art == g_artp->article_num())
@@ -2127,7 +2127,7 @@ static bool debug_article_output(char *ptr, int arg)
     if (ap->article_num() >= g_first_art && ap->m_subj)
     {
         std::printf("%5ld %c %s\n", ap->article_num().value_of(),
-               (ap->m_flags & AF_UNREAD)? 'y' : 'n', ap->m_subj->str);
+               (ap->m_flags & AF_UNREAD)? 'y' : 'n', ap->m_subj->m_str);
         term_down(1);
     }
     return false;
@@ -2305,7 +2305,7 @@ reask_memorize:
         }
         else
         {
-            g_artp->m_subj->thread->kill_thread(AFFECT_ALL | AUTO_KILL_THD);
+            g_artp->m_subj->m_thread->kill_thread(AFFECT_ALL | AUTO_KILL_THD);
         }
         if (g_general_mode != GM_SELECTOR)
         {
@@ -2328,7 +2328,7 @@ reask_memorize:
     }
     else if (ch == 'K')
     {
-        kill_subject(g_artp->m_subj,AFFECT_ALL|AUTO_KILL_SBJ);
+        g_artp->m_subj->kill_subject(AFFECT_ALL|AUTO_KILL_SBJ);
         if (g_general_mode != GM_SELECTOR)
         {
             std::printf("\nKill memorized.\n");
@@ -2357,11 +2357,11 @@ reask_memorize:
     {
         if (thread_cmd)
         {
-            g_artp->m_subj->thread->clear_thread();
+            g_artp->m_subj->m_thread->clear_thread();
         }
         else
         {
-            clear_subject(g_artp->m_subj);
+            g_artp->m_subj->clear_subject();
         }
     }
     else if (ch == 'c')

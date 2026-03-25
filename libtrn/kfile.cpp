@@ -806,9 +806,9 @@ void edit_kill_file()
         }
         if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
         {
-            for (Subject *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
             {
-                clear_subject(sp);
+                sp->clear_subject();
             }
         }
         std::strcpy(g_buf,file_exp(get_val_const("KILLLOCAL",s_kill_local)));

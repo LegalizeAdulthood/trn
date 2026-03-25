@@ -139,8 +139,8 @@ void close_cache()
     // Free all the subjects.
     for (Subject *sp = g_first_subject; sp; sp = next)
     {
-        next = sp->next;
-        std::free(sp->str);
+        next = sp->m_next;
+        std::free(sp->m_str);
         std::free(sp);
     }
     g_first_subject = nullptr;
@@ -190,9 +190,9 @@ void Article::cache_article()
     Article* next;
     Article* ap2;
 
-    if (!(next = m_subj->articles) || m_date < next->m_date)
+    if (!(next = m_subj->m_articles) || m_date < next->m_date)
     {
-        m_subj->articles = this;
+        m_subj->m_articles = this;
     }
     else
     {
@@ -206,13 +206,13 @@ void Article::cache_article()
 
     if (!!(m_flags & AF_UNREAD) ^ g_sel_rereading)
     {
-        if (m_subj->flags & g_sel_mask)
+        if (m_subj->m_flags & g_sel_mask)
         {
             select_article(AUTO_KILL_NONE);
         }
         else
         {
-            if (m_subj->flags & SF_WAS_SELECTED)
+            if (m_subj->m_flags & SF_WAS_SELECTED)
             {
 #if 0
                 if (g_selected_only)
@@ -225,7 +225,7 @@ void Article::cache_article()
                     select_article(AUTO_KILL_NONE);
                 }
             }
-            m_subj->flags |= SF_VISIT;
+            m_subj->m_flags |= SF_VISIT;
         }
     }
 
@@ -246,28 +246,28 @@ void Article::check_for_near_subj()
     else
     {
         sp = m_subj;
-        if (sp->next)
+        if (sp->m_next)
         {
             sp = nullptr;
         }
     }
     while (sp)
     {
-        if ((int) std::strlen(sp->str + 4) >= g_join_subject_len && sp->thread)
+        if ((int) std::strlen(sp->m_str + 4) >= g_join_subject_len && sp->m_thread)
         {
             Subject* sp2;
-            HashDatum data = hash_fetch(s_short_subj_hash, sp->str + 4, g_join_subject_len);
+            HashDatum data = hash_fetch(s_short_subj_hash, sp->m_str + 4, g_join_subject_len);
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char*)sp;
                 hash_store_last(data);
             }
-            else if (sp->thread != sp2->thread)
+            else if (sp->m_thread != sp2->m_thread)
             {
                 merge_threads(sp2, sp);
             }
         }
-        sp = sp->next;
+        sp = sp->m_next;
     }
 }
 
@@ -281,9 +281,9 @@ void change_join_subject_len(int len)
             s_short_subj_hash = nullptr;
         }
         g_join_subject_len = len;
-        if (len && g_first_subject && g_first_subject->articles)
+        if (len && g_first_subject && g_first_subject->m_articles)
         {
-            g_first_subject->articles->check_for_near_subj();
+            g_first_subject->m_articles->check_for_near_subj();
         }
     }
 }
@@ -379,10 +379,10 @@ void Article::uncache_article(bool remove_empties)
     {
         if (all_bits(m_flags, AF_CACHED | AF_EXISTS))
         {
-            Article *next = m_subj->articles;
+            Article *next = m_subj->m_articles;
             if (next == this)
             {
-                m_subj->articles = m_subj_next;
+                m_subj->m_articles = m_subj_next;
             }
             else
             {
@@ -398,26 +398,26 @@ void Article::uncache_article(bool remove_empties)
                 }
             }
         }
-        if (remove_empties && !m_subj->articles)
+        if (remove_empties && !m_subj->m_articles)
         {
             Subject* sp = m_subj;
             if (sp == g_first_subject)
             {
-                g_first_subject = sp->next;
+                g_first_subject = sp->m_next;
             }
             else
             {
-                sp->prev->next = sp->next;
+                sp->m_prev->m_next = sp->m_next;
             }
             if (sp == g_last_subject)
             {
-                g_last_subject = sp->prev;
+                g_last_subject = sp->m_prev;
             }
             else
             {
-                sp->next->prev = sp->prev;
+                sp->m_next->m_prev = sp->m_prev;
             }
-            hash_delete(s_subj_hash, sp->str+4, std::strlen(sp->str+4));
+            hash_delete(s_subj_hash, sp->m_str+4, std::strlen(sp->m_str+4));
             std::free((char*)sp);
             m_subj = nullptr;
             g_subject_count--;
@@ -469,13 +469,13 @@ char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
     switch (which_line)
     {
     case SUBJ_LINE:
-        if (!m_subj || (no_truncs && (m_subj->flags & SF_SUBJ_TRUNCATED)))
+        if (!m_subj || (no_truncs && (m_subj->m_flags & SF_SUBJ_TRUNCATED)))
         {
             s = nullptr;
         }
         else
         {
-            s = m_subj->str + ((m_flags & AF_HAS_RE) ? 0 : 4);
+            s = m_subj->m_str + ((m_flags & AF_HAS_RE) ? 0 : 4);
         }
         break;
 
@@ -547,7 +547,7 @@ void Article::set_subj_line(char *subj, int size)
             size = 0;
         }
     }
-    if (m_subj && !std::strncmp(m_subj->str + 4, new_subj + 4, size))
+    if (m_subj && !std::strncmp(m_subj->m_str + 4, new_subj + 4, size))
     {
         std::free(new_subj);
         return;
@@ -556,9 +556,9 @@ void Article::set_subj_line(char *subj, int size)
     if (m_subj)
     {
         // This only happens when we freshen truncated subjects
-        hash_delete(s_subj_hash, m_subj->str+4, std::strlen(m_subj->str+4));
-        std::free(m_subj->str);
-        m_subj->str = new_subj;
+        hash_delete(s_subj_hash, m_subj->m_str+4, std::strlen(m_subj->m_str+4));
+        std::free(m_subj->m_str);
+        m_subj->m_str = new_subj;
         data.dat_ptr = (char*)m_subj;
         hash_store(s_subj_hash, new_subj + 4, size, data);
     }
@@ -570,19 +570,19 @@ void Article::set_subj_line(char *subj, int size)
             sp = (Subject*)safe_malloc(sizeof (Subject));
             std::memset((char*)sp,0,sizeof (Subject));
             g_subject_count++;
-            sp->prev = g_last_subject;
-            if (sp->prev != nullptr)
+            sp->m_prev = g_last_subject;
+            if (sp->m_prev != nullptr)
             {
-                sp->prev->next = sp;
+                sp->m_prev->m_next = sp;
             }
             else
             {
                 g_first_subject = sp;
             }
             g_last_subject = sp;
-            sp->str = new_subj;
-            sp->thread_link = sp;
-            sp->flags = SF_NONE;
+            sp->m_str = new_subj;
+            sp->m_thread_link = sp;
+            sp->m_flags = SF_NONE;
 
             data.dat_ptr = (char*)sp;
             hash_store_last(data);
@@ -772,7 +772,7 @@ void Article::set_cached_line(int which_line, char *s)
 int subject_cmp(const char *key, int key_len, HashDatum data)
 {
     // We already know that the lengths are equal, just compare the strings
-    return std::memcmp(key, ((Subject*)data.dat_ptr)->str+4, key_len);
+    return std::memcmp(key, ((Subject*)data.dat_ptr)->m_str+4, key_len);
 }
 
 // see what we can do while they are reading

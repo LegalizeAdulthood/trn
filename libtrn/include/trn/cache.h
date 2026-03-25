@@ -35,15 +35,24 @@ DECLARE_FLAGS_ENUM(SubjectFlags, std::uint16_t);
 // Subjects get their own structure
 struct Subject
 {
-    Subject     *next;
-    Subject     *prev;
-    Article     *articles;
-    Article     *thread;
-    Subject     *thread_link;
-    char        *str;
-    std::time_t  date;
-    SubjectFlags flags;
-    short        misc; // used for temporary totals and subject numbers
+    Article *first_art();
+    Article *last_art();
+    void select_subject(AutoKillFlags auto_flags);
+    void deselect_subject();
+    void     kill_subject(AutoKillFlags auto_flags);
+    void     unkill_subject();
+    void     clear_subject();
+    Article *subj_article();
+
+    Subject     *m_next;
+    Subject     *m_prev;
+    Article     *m_articles;
+    Article     *m_thread;
+    Subject     *m_thread_link;
+    char        *m_str;
+    std::time_t  m_date;
+    SubjectFlags m_flags;
+    short        m_misc; // used for temporary totals and subject numbers
 };
 
 enum ArticleFlags : std::uint16_t

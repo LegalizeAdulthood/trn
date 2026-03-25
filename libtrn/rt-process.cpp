@@ -157,13 +157,13 @@ bool Article::valid_article()
             else if (s_fake_had_subj)
             {
                 Subject* sp = s_fake_had_subj;
-                ap = sp->thread;
+                ap = sp->m_thread;
                 if (ap == fake_ap)
                 {
                     do
                     {
-                        sp->thread = this;
-                        sp = sp->thread_link;
+                        sp->m_thread = this;
+                        sp = sp->m_thread_link;
                     } while (sp != s_fake_had_subj);
                 }
                 else
@@ -244,7 +244,7 @@ void Article::thread_article(char *references)
     char* cp;
     char* end;
     AutoKillFlags chain_autofl =
-        m_auto_flags | (m_subj->articles ? m_subj->articles->m_auto_flags : AUTO_KILL_NONE);
+        m_auto_flags | (m_subj->m_articles ? m_subj->m_articles->m_auto_flags : AUTO_KILL_NONE);
     AutoKillFlags subj_autofl = AUTO_KILL_NONE;
     const bool rethreading = (m_flags & AF_THREADED) != 0;
 
@@ -255,7 +255,7 @@ void Article::thread_article(char *references)
     // to try to put it in the best possible spot.
     if (s_fake_had_subj)
     {
-        if (s_fake_had_subj->thread != m_subj->thread)
+        if (s_fake_had_subj->m_thread != m_subj->m_thread)
         {
             merge_threads(s_fake_had_subj, m_subj);
         }
@@ -376,7 +376,7 @@ next:
         {
             // See if this article spans the gap between what we thought
             // were two different threads.
-            if (m_subj->thread != ap->m_subj->thread)
+            if (m_subj->m_thread != ap->m_subj->m_thread)
             {
                 merge_threads(ap->m_subj, m_subj);
             }
@@ -429,17 +429,17 @@ no_references:
     AutoKillFlags thread_autofl = chain_autofl;
     if (g_sel_mode == SM_THREAD)
     {
-        Subject* sp = m_subj->thread_link;
+        Subject* sp = m_subj->m_thread_link;
         while (sp != m_subj)
         {
-            if (sp->articles)
+            if (sp->m_articles)
             {
-                thread_autofl |= sp->articles->m_auto_flags;
+                thread_autofl |= sp->m_articles->m_auto_flags;
             }
-            sp = sp->thread_link;
+            sp = sp->m_thread_link;
         }
     }
-    subj_autofl |= m_subj->articles->m_auto_flags;
+    subj_autofl |= m_subj->m_articles->m_auto_flags;
 
     perform_auto_flags(thread_autofl, subj_autofl, chain_autofl);
 }
@@ -487,13 +487,13 @@ static void unlink_child(Article *child)
     if (!(last = child->m_parent))
     {
         Subject* sp = child->m_subj;
-        last = sp->thread;
+        last = sp->m_thread;
         if (last == child)
         {
             do
             {
-                sp->thread = child->m_sibling;
-                sp = sp->thread_link;
+                sp->m_thread = child->m_sibling;
+                sp = sp->m_thread_link;
             } while (sp != child->m_subj);
         }
         else
@@ -532,13 +532,13 @@ void Article::link_child()
     if (!(ap = m_parent))
     {
         Subject* sp = m_subj;
-        ap = sp->thread;
+        ap = sp->m_thread;
         if (!ap || m_date < ap->m_date)
         {
             do
             {
-                sp->thread = this;
-                sp = sp->thread_link;
+                sp->m_thread = this;
+                sp = sp->m_thread_link;
             } while (sp != m_subj);
             m_sibling = ap;
         }
@@ -571,70 +571,70 @@ sibling_search:
 // Merge all of s2's thread into s1's thread.
 void merge_threads(Subject *s1, Subject *s2)
 {
-    Article *t1 = s1->thread;
-    Article *t2 = s2->thread;
+    Article *t1 = s1->m_thread;
+    Article *t2 = s2->m_thread;
     // Change all of t2's thread pointers to a common lead article
     Subject *sp = s2;
     do
     {
-        sp->thread = t1;
-        sp = sp->thread_link;
+        sp->m_thread = t1;
+        sp = sp->m_thread_link;
     } while (sp != s2);
 
     // Join the two circular lists together
-    sp = s2->thread_link;
-    s2->thread_link = s1->thread_link;
-    s1->thread_link = sp;
+    sp = s2->m_thread_link;
+    s2->m_thread_link = s1->m_thread_link;
+    s1->m_thread_link = sp;
 
     // If thread mode is set, ensure the subjects are adjacent in the list.
     // Don't do this if the selector is active, because it gets messed up.
     if (g_sel_mode == SM_THREAD && g_general_mode != GM_SELECTOR)
     {
-        for (sp = s2; sp->prev && sp->prev->thread == t1;)
+        for (sp = s2; sp->m_prev && sp->m_prev->m_thread == t1;)
         {
-            sp = sp->prev;
+            sp = sp->m_prev;
             if (sp == s1)
             {
                 goto artlink;
             }
         }
-        while (s2->next && s2->next->thread == t1)
+        while (s2->m_next && s2->m_next->m_thread == t1)
         {
-            s2 = s2->next;
+            s2 = s2->m_next;
             if (s2 == s1)
             {
                 goto artlink;
             }
         }
         // Unlink the s2 chunk of subjects from the list
-        if (!sp->prev)
+        if (!sp->m_prev)
         {
-            g_first_subject = s2->next;
+            g_first_subject = s2->m_next;
         }
         else
         {
-            sp->prev->next = s2->next;
+            sp->m_prev->m_next = s2->m_next;
         }
-        if (!s2->next)
+        if (!s2->m_next)
         {
-            g_last_subject = sp->prev;
+            g_last_subject = sp->m_prev;
         }
         else
         {
-            s2->next->prev = sp->prev;
+            s2->m_next->m_prev = sp->m_prev;
         }
         // Link the s2 chunk after s1
-        sp->prev = s1;
-        s2->next = s1->next;
-        if (!s1->next)
+        sp->m_prev = s1;
+        s2->m_next = s1->m_next;
+        if (!s1->m_next)
         {
             g_last_subject = s2;
         }
         else
         {
-            s1->next->prev = s2;
+            s1->m_next->m_prev = s2;
         }
-        s1->next = sp;
+        s1->m_next = sp;
     }
 
 artlink:

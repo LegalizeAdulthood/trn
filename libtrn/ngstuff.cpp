@@ -371,7 +371,7 @@ int thread_perform()
         g_performed_article_loop = false;
         if (one_thread)
         {
-            sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->thread->m_subj : g_artp->m_subj);
+            sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
         }
         else
         {
@@ -379,11 +379,11 @@ int thread_perform()
         }
         for (; sp; sp = next_subject(sp, bits))
         {
-            if ((!(sp->flags & g_sel_mask) ^ !bits) || !sp->misc)
+            if ((!(sp->m_flags & g_sel_mask) ^ !bits) || !sp->m_misc)
             {
                 continue;
             }
-            g_artp = first_art(sp);
+            g_artp = sp->first_art();
             if (g_artp)
             {
                 g_art = g_artp->article_num();
@@ -425,11 +425,11 @@ int thread_perform()
         if (g_art_ptr_list)
         {
             Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
-            sp = (g_sel_mode==SM_THREAD? g_artp->m_subj->thread->m_subj : g_artp->m_subj);
+            sp = (g_sel_mode==SM_THREAD? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
             for (Article **app = g_art_ptr_list; app < limit; app++)
             {
                 ap = *app;
-                if (one_thread && ap->m_subj->thread != sp->thread)
+                if (one_thread && ap->m_subj->m_thread != sp->m_thread)
                 {
                     continue;
                 }
@@ -454,7 +454,7 @@ int thread_perform()
         {
             if (one_thread)
             {
-                sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->thread->m_subj : g_artp->m_subj);
+                sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
             }
             else
             {
@@ -462,7 +462,7 @@ int thread_perform()
             }
             for (; sp; sp = next_subject(sp, bits))
             {
-                for (ap = first_art(sp); ap; ap = ap->next_article())
+                for (ap = sp->first_art(); ap; ap = ap->next_article())
                 {
                     if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
                         && !(ap->m_flags & g_sel_mask) ^ !!bits)

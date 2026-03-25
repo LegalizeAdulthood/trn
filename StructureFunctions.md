@@ -51,16 +51,10 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 ## rthread.h
 - `Subject *next_subject(Subject *sp, int subj_mask);`
 - `Subject *prev_subject(Subject *sp, int subj_mask);`
-- `void select_subject(Subject *subj, AutoKillFlags auto_flags);`
 - `void select_sub_thread(Article *ap, AutoKillFlags auto_flags);`
-- `void deselect_subject(Subject *subj);`
-- `void kill_subject(Subject *subj, AutoKillFlags auto_flags);`
 - `void kill_sub_thread(Article *ap, AutoKillFlags auto_flags);`
-- `void unkill_subject(Subject *subj);`
 - `void unkill_sub_thread(Article *ap);`
-- `void clear_subject(Subject *subj);`
 - `void clear_sub_thread(Article *ap);`
-- `Article *subj_article(Subject *sp);`
 
 ## search.h
 - `void init_compex(CompiledRegex *compex);`
