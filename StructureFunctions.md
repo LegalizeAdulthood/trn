@@ -5,10 +5,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 ---
 
 ## datasrc.h
-- `int source_file_open(SourceFile *sfp, ...)`
-- `char *source_file_append(SourceFile *sfp, ...)`
-- `void source_file_end_append(SourceFile *sfp, ...)`
-- `void source_file_close(SourceFile *sfp)`
 - `bool open_data_source(DataSource *dp)`
 - `void set_data_source(DataSource *dp)`
 - `void close_data_source(DataSource *dp)`
