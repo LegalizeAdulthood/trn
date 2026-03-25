@@ -1433,20 +1433,20 @@ static const char* s_named_entities[] = {
     "ccedil",   "c",    // per charsubst.c
     "eacute",   "e",
 #else // USE_UTF_HACK
-    "nbsp",     " ",
-    "ensp",     " ",    // U+2002
-    "lsquo",    "‘",
-    "rsquo",    "’",
-    "ldquo",    "“",
-    "rdquo",    "”",
-    "ndash",    "–",
-    "mdash",    "—",
-    "copy",     "©",
-    "trade",    "™",
-    "zwsp",     "​",
-    "zwnj",     "‌",
-    "ccedil",   "ç",
-    "eacute",   "é",
+    "nbsp",     "\xC2\xA0",
+    "ensp",     "\xE2\x80\x82",    // U+2002
+    "lsquo",    "\xE2\x80\x98",
+    "rsquo",    "\xE2\x80\x99",
+    "ldquo",    "\xE2\x80\x9C",
+    "rdquo",    "\xE2\x80\x9D",
+    "ndash",    "\xE2\x80\x93",
+    "mdash",    "\xE2\x80\x94",
+    "copy",     "\xC2\xA9",
+    "trade",    "\xE2\x84\xA2",
+    "zwsp",     "\xE2\x80\x8B",
+    "zwnj",     "\xE2\x80\x8C",
+    "ccedil",   "\xC3\xA7",
+    "eacute",   "\xC3\xA9",
 #endif
     nullptr,    nullptr,
 };
