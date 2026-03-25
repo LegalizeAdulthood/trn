@@ -4,6 +4,8 @@
 #ifndef TRN_CONFIG2_H
 #define TRN_CONFIG2_H
 
+#include <config/config.h>
+
 #ifdef HAS_GETPWENT
 #   include <pwd.h>
 #endif

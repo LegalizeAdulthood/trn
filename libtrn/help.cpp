@@ -1,12 +1,12 @@
-/* help.c
+/* help.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/help.h"
+#include <trn/help.h>
 
-#include "trn/ngdata.h"
-#include "trn/terminal.h"
+#include <config/common.h>
+#include <trn/ngdata.h>
+#include <trn/terminal.h>
 
 void help_init()
 {

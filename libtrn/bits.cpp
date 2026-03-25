@@ -1,31 +1,30 @@
-/* bits.c
+/* bits.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
+#include <trn/bits.h>
 
-#include "trn/bits.h"
-
-#include "nntp/nntpclient.h"
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/cache.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/head.h"
-#include "trn/kfile.h"
-#include "trn/ng.h"
-#include "trn/nntp.h"
-#include "trn/rcln.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/rthread.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <nntp/nntpclient.h>
+#include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/head.h>
+#include <trn/kfile.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/nntp.h>
+#include <trn/rcln.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/rthread.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cstdio>

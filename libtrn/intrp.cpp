@@ -1,35 +1,34 @@
-/* intrp.c
+/* intrp.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/intrp.h>
+
+#include <config/common.h>
 #include <config/pipe_io.h>
-
-#include "config/common.h"
-#include "trn/intrp.h"
-
-#include "config/user_id.h"
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/artio.h"
-#include "trn/artsrch.h"
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/head.h"
-#include "trn/init.h"
-#include "trn/ng.h"
-#include "trn/nntp.h"
-#include "trn/respond.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/search.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <config/user_id.h>
+#include <trn/artio.h>
+#include <trn/artsrch.h>
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/head.h>
+#include <trn/init.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/nntp.h>
+#include <trn/respond.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/search.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #ifdef HAS_UNAME
 #include <sys/utsname.h>

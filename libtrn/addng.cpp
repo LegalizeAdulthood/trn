@@ -1,26 +1,25 @@
-/* addng.c
+/* addng.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/addng.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/addng.h"
-
-#include "nntp/nntpclient.h"
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/autosub.h"
-#include "trn/datasrc.h"
-#include "trn/hash.h"
-#include "trn/nntp.h"
-#include "trn/only.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <nntp/nntpclient.h>
+#include <trn/autosub.h>
+#include <trn/datasrc.h>
+#include <trn/hash.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/nntp.h>
+#include <trn/only.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

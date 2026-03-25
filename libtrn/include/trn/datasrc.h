@@ -4,10 +4,10 @@
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
-#include "nntp/nntpclient.h"
-#include "trn/list.h"
-#include "trn/enum-flags.h"
-#include "trn/rt-ov.h"
+#include <nntp/nntpclient.h>
+#include <trn/enum-flags.h>
+#include <trn/list.h>
+#include <trn/rt-ov.h>
 
 #include <cstdint>
 #include <cstdio>

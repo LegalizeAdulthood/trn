@@ -1,27 +1,27 @@
-// This file is Copyright 1993 by Clifford A. Adams
-/* scmd.c
+/* scmd.cpp
  *
  * Scan command loop.
  * Does some simple commands, and passes the rest to context-specific routines.
  */
+// This file is Copyright 1993 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/scmd.h"
+#include <trn/scmd.h>
 
-#include "trn/final.h"
-#include "trn/help.h"
-#include "trn/ng.h"
-#include "trn/ngstuff.h"
-#include "trn/sacmd.h" // sa_docmd
-#include "trn/samain.h"
-#include "trn/scan.h"
-#include "trn/sdisp.h"
-#include "trn/smisc.h"
-#include "trn/sorder.h"
-#include "trn/spage.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/univ.h"
+#include <config/common.h>
+#include <trn/final.h>
+#include <trn/help.h>
+#include <trn/ng.h>
+#include <trn/ngstuff.h>
+#include <trn/sacmd.h> // sa_docmd
+#include <trn/samain.h>
+#include <trn/scan.h>
+#include <trn/sdisp.h>
+#include <trn/smisc.h>
+#include <trn/sorder.h>
+#include <trn/spage.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/univ.h>
 
 #include <cctype>
 #include <cstdio>

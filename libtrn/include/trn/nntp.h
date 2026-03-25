@@ -4,9 +4,8 @@
 #ifndef TRN_NNTP_H
 #define TRN_NNTP_H
 
-#include "addng.h"
-
 #include <config/typedef.h>
+#include <trn/addng.h>
 
 #include <ctime>
 

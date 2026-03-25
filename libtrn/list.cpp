@@ -1,11 +1,11 @@
-/* list.c
+/* list.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "trn/list.h"
-#include "config/common.h"
+#include <trn/list.h>
 
-#include "trn/util.h"
+#include <config/common.h>
+#include <trn/util.h>
 
 #include <algorithm>
 #include <cstdlib>

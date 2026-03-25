@@ -1,11 +1,11 @@
-// This file Copyright 1992 by Clifford A. Adams
 /* trn/scorefile.h
  *
  */
+// This file Copyright 1992 by Clifford A. Adams
 #ifndef TRN_SCOREFILE_H
 #define TRN_SCOREFILE_H
 
-#include "trn/head.h"
+#include <trn/head.h>
 
 struct CompiledRegex;
 

@@ -1,26 +1,26 @@
-/* mime.c
+/* mime.cpp
  * vi: set sw=4 ts=8 ai sm noet:
  */
+// This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/mime-internal.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/mime-internal.h"
-
-#include "trn/list.h"
-#include "trn/art.h"
-#include "trn/artio.h"
-#include "trn/artstate.h"
-#include "trn/decode.h"
-#include "trn/head.h"
-#include "trn/ng.h"
-#include "trn/respond.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/utf.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <trn/art.h>
+#include <trn/artio.h>
+#include <trn/artstate.h>
+#include <trn/decode.h>
+#include <trn/head.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/respond.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/utf.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>
@@ -1430,7 +1430,7 @@ static const char* s_named_entities[] = {
     "trade",    "(TM)",
     "zwsp",     "",
     "zwnj",     "",
-    "ccedil",   "c",    // per charsubst.c
+    "ccedil",   "c",    // per charsubst.cpp
     "eacute",   "e",
 #else // USE_UTF_HACK
     "nbsp",     "\xC2\xA0",

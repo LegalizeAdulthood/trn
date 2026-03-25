@@ -1,10 +1,12 @@
-#include <gmock/gmock.h>
-
-#include <config/common.h>
+// This software is copyrighted as detailed in the LICENSE file.
 #include <nntp/nntpclient.h>
 #include <nntp/nntpinit.h>
 
+#include <config/common.h>
+
 #include <boost/asio/error.hpp>
+
+#include <gmock/gmock.h>
 
 #include <utility>
 

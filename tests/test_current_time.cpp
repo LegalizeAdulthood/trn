@@ -1,3 +1,4 @@
+// This software is copyrighted as detailed in the LICENSE file.
 #include <trn/util.h>
 
 #include <chrono>

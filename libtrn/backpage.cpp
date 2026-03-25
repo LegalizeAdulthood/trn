@@ -1,14 +1,13 @@
-/* backpage.c
+/* backpage.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/backpage.h>
+
+#include <config/common.h>
 #include <config/fdio.h>
-
-#include "config/common.h"
-#include "trn/backpage.h"
-
-#include "trn/final.h"
-#include "util/util2.h"
+#include <trn/final.h>
+#include <util/util2.h>
 
 #include <cstdio>
 

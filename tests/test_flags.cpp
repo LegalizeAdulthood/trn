@@ -1,14 +1,14 @@
-#include <gtest/gtest.h>
-
+// This software is copyrighted as detailed in the LICENSE file.
 #include <config/common.h>
-
-#include <trn/ngdata.h>
 #include <trn/addng.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
+#include <trn/ngdata.h>
 #include <trn/rcstuff.h>
 #include <trn/Subject.h>
 #include <trn/univ.h>
+
+#include <gtest/gtest.h>
 
 TEST(DataSrcFlags, bitwiseOr)
 {

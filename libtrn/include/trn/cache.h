@@ -4,6 +4,7 @@
 #ifndef TRN_CACHE_H
 #define TRN_CACHE_H
 
+#include <config/common.h>
 #include <trn/Article.h>
 #include <trn/hash.h>
 #include <trn/head.h>

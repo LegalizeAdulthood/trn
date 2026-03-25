@@ -1,18 +1,18 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* scan.c
+/* scan.cpp
  *
  * Scan initialization/cleanup and context control.
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-// CLEANUP: make a scontext file for the scan context stuff.
+#include <trn/scan.h>
 
-#include "config/common.h"
-#include "trn/scan.h"
-
-#include "trn/sorder.h"
-#include "trn/util.h" // allocation
+#include <config/common.h>
+#include <trn/sorder.h>
+#include <trn/util.h> // allocation
 
 #include <cstdio>
+
+// TODO: make a scontext file for the scan context stuff.
 
 // the current values
 long      *g_s_ent_sort{};       // sorted list of entries in the context

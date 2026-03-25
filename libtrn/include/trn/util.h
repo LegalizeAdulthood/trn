@@ -5,8 +5,8 @@
 #ifndef TRN_UTIL_H
 #define TRN_UTIL_H
 
-#include "config/typedef.h"
-#include "trn/utf.h"
+#include <config/typedef.h>
+#include <trn/utf.h>
 
 #include <cstdio>
 #include <cstdlib>

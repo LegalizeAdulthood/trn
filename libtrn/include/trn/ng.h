@@ -4,6 +4,7 @@
 #ifndef TRN_NG_H
 #define TRN_NG_H
 
+#include <config/common.h>
 #include <config/config2.h>
 #include <config/typedef.h>
 

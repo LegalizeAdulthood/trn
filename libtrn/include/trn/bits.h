@@ -3,7 +3,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 #pragma once
 
-#include "config/typedef.h"
+#include <config/typedef.h>
 
 struct Article;
 

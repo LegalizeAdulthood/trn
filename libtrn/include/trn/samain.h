@@ -1,8 +1,8 @@
-// This file Copyright 1992,1993 by Clifford A. Adams
 /* trn/samain.h
  *
  * Main routines for article-scan mode.
  */
+// This file Copyright 1992,1993 by Clifford A. Adams
 #ifndef TRN_SAMAIN_H
 #define TRN_SAMAIN_H
 

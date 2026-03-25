@@ -1,8 +1,8 @@
-/* util2.c
+/* util2.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "util/util2.h"
+#include <util/util2.h>
 
 #include <config/common.h>
 #include <tool/util3.h>

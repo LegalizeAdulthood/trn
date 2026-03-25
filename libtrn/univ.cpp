@@ -1,34 +1,34 @@
-/* univ.c
+/* univ.cpp
  */
+// This software is copyrighted as detailed in the LICENSE file.
 
 /* Universal selector
  *
  */
 
+#include <trn/univ.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/univ.h"
-
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/cache.h"
-#include "trn/final.h"
-#include "trn/hash.h"
-#include "trn/head.h"
-#include "trn/help.h"
-#include "trn/ng.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/score.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/url.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <trn/cache.h>
+#include <trn/final.h>
+#include <trn/hash.h>
+#include <trn/head.h>
+#include <trn/help.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/score.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/url.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -1021,7 +1021,7 @@ static char *univ_edit_new_user_file()
     return s;
 }
 
-// code adapted from edit_kfile in kfile.c
+// code adapted from edit_kfile in kfile.cpp
 // XXX problem if elements expand to larger than g_cmd_buf
 void univ_edit()
 {
@@ -1295,7 +1295,7 @@ void sort_univ()
 }
 
 // return a description of the article
-// do this better later, like the code in sadesc.c
+// do this better later, like the code in sadesc.cpp
 const char *UniversalItem::univ_article_desc() const
 {
     static char dbuf[200];

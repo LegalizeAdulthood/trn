@@ -1,17 +1,17 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* sathread.c
+/* sathread.cpp
  *
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/sathread.h"
+#include <trn/sathread.h>
 
-#include "trn/cache.h"
-#include "trn/hash.h"
-#include "trn/mempool.h"
-#include "trn/sadesc.h" // sa_desc_subject()
-#include "trn/samisc.h"
-#include "trn/sorder.h"
+#include <config/common.h>
+#include <trn/cache.h>
+#include <trn/hash.h>
+#include <trn/mempool.h>
+#include <trn/sadesc.h> // sa_desc_subject()
+#include <trn/samisc.h>
+#include <trn/sorder.h>
 
 #include <cstring>
 

@@ -1,30 +1,29 @@
-// This file Copyright 1992, 1993 by Clifford A. Adams
-/* scorefile.c
+/* scorefile.cpp
  *
  * A simple "proof of concept" scoring file for headers.
  * (yeah, right. :)
  */
+// This file Copyright 1992, 1993 by Clifford A. Adams
 
+#include <trn/scorefile.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/scorefile.h"
-
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/cache.h"
-#include "trn/head.h"
-#include "trn/mempool.h"
-#include "trn/ng.h"
-#include "trn/rt-util.h"
-#include "trn/score.h"  // shared stuff...
-#include "trn/search.h" // regex matches
-#include "trn/string-algos.h"
-#include "trn/terminal.h" // finish_command()
-#include "trn/url.h"
-#include "trn/util.h"
-#include "util/env.h" // get_val
-#include "util/util2.h"
+#include <trn/cache.h>
+#include <trn/head.h>
+#include <trn/list.h>
+#include <trn/mempool.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/rt-util.h>
+#include <trn/score.h>  // shared stuff...
+#include <trn/search.h> // regex matches
+#include <trn/string-algos.h>
+#include <trn/terminal.h> // finish_command()
+#include <trn/url.h>
+#include <trn/util.h>
+#include <util/env.h> // get_val
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

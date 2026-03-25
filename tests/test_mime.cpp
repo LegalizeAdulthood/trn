@@ -1,13 +1,14 @@
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-#include <config/common.h>
+// This software is copyrighted as detailed in the LICENSE file.
 #include <trn/mime-internal.h>
 
+#include <config/common.h>
 #include <trn/util.h>
 #include <util/util2.h>
 
-#include "test_mime.h"
+#include <test_mime.h>
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <cstring>
 

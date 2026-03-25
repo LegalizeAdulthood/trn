@@ -1,23 +1,23 @@
-// This file is Copyright 1992, 1993 by Clifford A. Adams
-/* scanart.c
+/* scanart.cpp
  *
  * article scan mode: screen oriented article interface
  * based loosely on the older "SubScan" mode.
  * Interface routines to the rest of trn
  */
+// This file is Copyright 1992, 1993 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/scanart.h"
+#include <trn/scanart.h>
 
-#include "trn/ngdata.h"
-#include "trn/artstate.h"  // for g_reread
-#include "trn/ng.h"        // variable g_art, the next article to read.
-#include "trn/rt-select.h" // g_selected_only
-#include "trn/samain.h"
-#include "trn/samisc.h"
-#include "trn/scan.h"
-#include "trn/smisc.h"
-#include "trn/terminal.h" // macro to clear...
+#include <config/common.h>
+#include <trn/artstate.h>  // for g_reread
+#include <trn/ng.h>        // variable g_art, the next article to read.
+#include <trn/ngdata.h>
+#include <trn/rt-select.h> // g_selected_only
+#include <trn/samain.h>
+#include <trn/samisc.h>
+#include <trn/scan.h>
+#include <trn/smisc.h>
+#include <trn/terminal.h> // macro to clear...
 
 ScanArticleEntryData *g_sa_ents{};
 int                   g_sa_num_ents{};

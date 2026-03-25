@@ -1,17 +1,17 @@
-/* only.c
+/* only.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/only.h"
+#include <trn/only.h>
 
-#include "trn/ngdata.h"
-#include "trn/final.h"
-#include "trn/ngsrch.h"
-#include "trn/search.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/final.h>
+#include <trn/ngdata.h>
+#include <trn/ngsrch.h>
+#include <trn/search.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstdlib>

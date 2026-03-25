@@ -1,18 +1,18 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* sdisp.c
+/* sdisp.cpp
  *
  * display stuff
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/sdisp.h"
+#include <trn/sdisp.h>
 
-#include "trn/ng.h" // g_mailcall
-#include "trn/sadisp.h"
-#include "trn/scan.h"
-#include "trn/smisc.h"
-#include "trn/sorder.h"
-#include "trn/terminal.h"
+#include <config/common.h>
+#include <trn/ng.h> // g_mailcall
+#include <trn/sadisp.h>
+#include <trn/scan.h>
+#include <trn/smisc.h>
+#include <trn/sorder.h>
+#include <trn/terminal.h>
 
 #include <cstdio>
 

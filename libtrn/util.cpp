@@ -1,24 +1,23 @@
-/* util.c
+/* util.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/util.h>
+
+#include <config/common.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/util.h"
-
-#include "nntp/nntpclient.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/intrp.h"
-#include "trn/search.h"
-#include "trn/smisc.h" // g_s_default_cmd
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/univ.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <nntp/nntpclient.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/intrp.h>
+#include <trn/search.h>
+#include <trn/smisc.h> // g_s_default_cmd
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/univ.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #ifdef I_SYS_TIMEB
 #include <sys/timeb.h>

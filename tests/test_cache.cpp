@@ -1,10 +1,12 @@
-/* test_cache.c - unit tests for the changed portions of cache.c
+/* test_cache.cpp - unit tests for the changed portions of cache.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
-#include <gtest/gtest.h>
+// This software is copyrighted as detailed in the LICENSE file.
+#include <trn/cache.h>
 
-#include "config/common.h"
-#include "trn/cache.h"
+#include <config/common.h>
+
+#include <gtest/gtest.h>
 
 #include <string.h>
 
@@ -64,7 +66,7 @@ TEST_F(DectrlTest, ascii_some_nonprintable)
 
 TEST_F(DectrlTest, iso_8859_1)
 {
-    configure_unchanged("\302\253\302\240Â La Libert\303\251 guidant le peuple.Â \302\240\302\273");
+    configure_unchanged("\302\253\302\240 La Libert\303\251 guidant le peuple. \302\240\302\273");
 
     dectrl(m_buffer);
 
@@ -73,8 +75,8 @@ TEST_F(DectrlTest, iso_8859_1)
 
 TEST_F(DectrlTest, iso_8859_1_non_printable)
 {
-    configure_before_expected("\302\253\302\240Â La Libert\303\251 guidant\tle peuple.Â \302\240\302\273",
-                              "\302\253\302\240Â La Libert\303\251 guidant le peuple.Â \302\240\302\273");
+    configure_before_expected("\302\253\302\240 La Libert\303\251 guidant\tle peuple. \302\240\302\273",
+                              "\302\253\302\240 La Libert\303\251 guidant le peuple. \302\240\302\273");
 
     dectrl(m_buffer);
 

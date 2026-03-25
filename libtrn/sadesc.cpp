@@ -1,21 +1,21 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* sadesc.c
+/* sadesc.cpp
  *
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/sadesc.h"
+#include <trn/sadesc.h>
 
-#include "trn/list.h"
-#include "trn/cache.h"
-#include "trn/head.h"    // currently used for fast author fetch when group is threaded
-#include "trn/rt-util.h" // compress_from()
-#include "trn/samain.h"
-#include "trn/sathread.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/score.h"
-#include "trn/terminal.h" // for standout
+#include <config/common.h>
+#include <trn/cache.h>
+#include <trn/head.h>    // currently used for fast author fetch when group is threaded
+#include <trn/list.h>
+#include <trn/rt-util.h> // compress_from()
+#include <trn/samain.h>
+#include <trn/sathread.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/score.h>
+#include <trn/terminal.h> // for standout
 
 #include <cstdio>
 #include <cstdlib>

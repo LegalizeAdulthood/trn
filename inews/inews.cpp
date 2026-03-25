@@ -1,4 +1,4 @@
-/* inews.c
+/* inews.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 

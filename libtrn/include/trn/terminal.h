@@ -6,8 +6,7 @@
 
 #include <config/common.h>
 #include <config/config.h>
-
-#include "trn/enum-flags.h"
+#include <trn/enum-flags.h>
 
 // stuff wanted by terminal mode diddling routines
 

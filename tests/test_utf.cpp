@@ -1,11 +1,13 @@
-/* test_utf.c - unit tests for utf.c
+/* test_utf.cpp - unit tests for utf.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
+// This software is copyrighted as detailed in the LICENSE file.
+
+#include <trn/utf.h>
+
+#include <config/common.h>
 
 #include <gtest/gtest.h>
-
-#include "config/common.h"
-#include "trn/utf.h"
 
 #include <cstring>
 

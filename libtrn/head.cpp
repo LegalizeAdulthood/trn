@@ -1,26 +1,25 @@
-/* head.c
+/* head.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/head.h"
+#include <trn/head.h>
 
-#include "nntp/nntpclient.h"
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/artio.h"
-#include "trn/cache.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/mempool.h"
-#include "trn/ng.h"
-#include "trn/nntp.h"
-#include "trn/rt-process.h"
-#include "trn/rt-util.h"
-#include "trn/string-algos.h"
-#include "trn/util.h"
-#include "util/util2.h"
-
+#include <config/common.h>
+#include <nntp/nntpclient.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/artio.h>
+#include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/mempool.h>
+#include <trn/ng.h>
+#include <trn/nntp.h>
+#include <trn/rt-process.h>
+#include <trn/rt-util.h>
+#include <trn/string-algos.h>
+#include <trn/util.h>
+#include <util/util2.h>
 #include <parsedate/parsedate.h>
 
 #include <algorithm>

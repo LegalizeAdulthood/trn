@@ -1,15 +1,15 @@
-// This file is Copyright 1993 by Clifford A. Adams
-/* smisc.c
+/* smisc.cpp
  *
  * Lots of misc. stuff.
  */
+// This file is Copyright 1993 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/smisc.h"
+#include <trn/smisc.h>
 
-#include "trn/sadesc.h"
-#include "trn/samisc.h"
-#include "trn/scan.h"
+#include <config/common.h>
+#include <trn/sadesc.h>
+#include <trn/samisc.h>
+#include <trn/scan.h>
 
 #include <cstdio>
 

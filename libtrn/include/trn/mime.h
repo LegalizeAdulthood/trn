@@ -3,8 +3,8 @@
 #ifndef TRN_MIME_H
 #define TRN_MIME_H
 
-#include "trn/decode.h"
-#include "trn/enum-flags.h"
+#include <trn/decode.h>
+#include <trn/enum-flags.h>
 
 #include <cstdint>
 #include <cstdio>

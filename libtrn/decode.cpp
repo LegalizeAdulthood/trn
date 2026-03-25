@@ -1,4 +1,4 @@
-/* decode.c
+/* decode.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 

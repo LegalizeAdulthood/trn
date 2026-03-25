@@ -1,8 +1,6 @@
 /* trn/utf.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
-
-
 #ifndef UTF_H_INCLUDED
 #define UTF_H_INCLUDED
 

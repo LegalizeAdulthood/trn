@@ -4,7 +4,7 @@
 #ifndef TRN_UUDECODE_H
 #define TRN_UUDECODE_H
 
-#include "trn/decode.h"
+#include <trn/decode.h>
 
 #include <cstdio>
 

@@ -1,11 +1,11 @@
-// This file Copyright 1992,1995 by Clifford A. Adams
 /* trn/sathread.h
  *
  */
+// This file Copyright 1992,1995 by Clifford A. Adams
 #ifndef TRN_SATHREAD_H
 #define TRN_SATHREAD_H
 
-#include "trn/scanart.h"
+#include <trn/scanart.h>
 
 void sa_init_threads();
 long sa_get_subj_thread(long e);

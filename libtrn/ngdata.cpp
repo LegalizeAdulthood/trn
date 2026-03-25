@@ -1,34 +1,33 @@
-/* ngdata.c
+/* ngdata.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/ngdata.h>
+
+#include <config/common.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/ngdata.h"
-
-#include "trn/list.h"
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/change_dir.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/head.h"
-#include "trn/kfile.h"
-#include "trn/ng.h"
-#include "trn/nntp.h"
-#include "trn/rcln.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/rthread.h"
-#include "trn/scanart.h"
-#include "trn/score.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/change_dir.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/head.h>
+#include <trn/kfile.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/nntp.h>
+#include <trn/rcln.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/rthread.h>
+#include <trn/scanart.h>
+#include <trn/score.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cstdio>

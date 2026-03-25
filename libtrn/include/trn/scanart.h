@@ -1,14 +1,13 @@
-// This file Copyright 1992 by Clifford A. Adams
 /* trn/scanart.h
  *
  * Interface to rest of [t]rn
  */
+// This file Copyright 1992 by Clifford A. Adams
 #ifndef TRN_SCANART_H
 #define TRN_SCANART_H
 
 #include <config/typedef.h>
-
-#include "trn/enum-flags.h"
+#include <trn/enum-flags.h>
 
 // return codes for sa_main
 enum SaMainResult

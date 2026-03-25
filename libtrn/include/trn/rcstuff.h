@@ -5,9 +5,8 @@
 #define TRN_RCSTUFF_H
 
 #include <config/typedef.h>
-
-#include "trn/list.h"
-#include "trn/enum-flags.h"
+#include <trn/enum-flags.h>
+#include <trn/list.h>
 
 struct DataSource;
 struct HashTable;

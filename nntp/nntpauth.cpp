@@ -1,12 +1,11 @@
-/* nntpauth.c
+/* nntpauth.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "nntp/nntpauth.h"
-
-#include "nntp/nntpclient.h"
+#include <nntp/nntpauth.h>
 
 #include <config/common.h>
+#include <nntp/nntpclient.h>
 #include <trn/util.h>
 
 #include <cstdio>

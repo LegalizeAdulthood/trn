@@ -1,8 +1,8 @@
-/* env.c
+/* env.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "util/env-internal.h"
+#include <util/env-internal.h>
 
 #include <config/common.h>
 #include <config/pipe_io.h>

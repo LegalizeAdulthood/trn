@@ -1,22 +1,22 @@
-/* ngsrch.c
+/* ngsrch.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/ngsrch.h"
+#include <trn/ngsrch.h>
 
-#include "trn/ngdata.h"
-#include "trn/addng.h"
-#include "trn/final.h"
-#include "trn/ng.h"
-#include "trn/ngstuff.h"
-#include "trn/rcln.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/search.h"
-#include "trn/terminal.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/addng.h>
+#include <trn/final.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/ngstuff.h>
+#include <trn/rcln.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/search.h>
+#include <trn/terminal.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

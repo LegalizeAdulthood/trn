@@ -1,7 +1,7 @@
-// This file Copyright 1993 by Clifford A. Adams
 /* trn/scoresave.h
  *
  */
+// This file Copyright 1993 by Clifford A. Adams
 #ifndef TRN_SCORESAVE_H
 #define TRN_SCORESAVE_H
 

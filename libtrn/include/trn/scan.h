@@ -1,8 +1,8 @@
-// This file Copyright 1992,1993 by Clifford A. Adams
 /* trn/scan.h
  *
  * (Mostly scan context declarations.)
  */
+// This file Copyright 1992,1993 by Clifford A. Adams
 #ifndef TRN_SCAN_H
 #define TRN_SCAN_H
 

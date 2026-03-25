@@ -4,8 +4,8 @@
 #ifndef TRN_NNTPCLIENT_H
 #define TRN_NNTPCLIENT_H
 
-#include "trn/enum-flags.h"
-#include "trn/util.h"
+#include <trn/enum-flags.h>
+#include <trn/util.h>
 
 #include <boost/system/error_code.hpp>
 

@@ -1,8 +1,8 @@
-// This file Copyright 1992 by Clifford A. Adams
 /* trn/sadisp.h
  *
  * article scan specific display functions
  */
+// This file Copyright 1992 by Clifford A. Adams
 #ifndef TRN_SADISP_H
 #define TRN_SADISP_H
 

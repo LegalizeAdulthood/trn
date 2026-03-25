@@ -1,14 +1,15 @@
-/* hash.c
+/* hash.cpp
 */
 /* This file is an altered version of a set of hash routines by
 ** Geoffrey Collyer.  See the end of the file for his copyright.
 */
+// This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/hash.h"
+#include <trn/hash.h>
 
-#include "trn/final.h"
-#include "trn/util.h"
+#include <config/common.h>
+#include <trn/final.h>
+#include <trn/util.h>
 
 #include <algorithm>
 #include <cstdio>

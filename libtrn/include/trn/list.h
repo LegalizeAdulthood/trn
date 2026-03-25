@@ -4,7 +4,7 @@
 #ifndef TRN_LIST_H
 #define TRN_LIST_H
 
-#include "trn/enum-flags.h"
+#include <trn/enum-flags.h>
 
 #include <cstdint>
 

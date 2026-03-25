@@ -1,6 +1,6 @@
-// This file is Copyright 1993 by Clifford A. Adams
 /* trn/smisc.h
  */
+// This file is Copyright 1993 by Clifford A. Adams
 #ifndef TRN_SMISC_H
 #define TRN_SMISC_H
 

@@ -1,3 +1,4 @@
+// This software is copyrighted as detailed in the LICENSE file.
 #include <config/string_case_compare.h>
 
 #include <gtest/gtest.h>

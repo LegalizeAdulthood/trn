@@ -6,8 +6,7 @@
 #define TRN_ADDNG_H
 
 #include <config/typedef.h>
-
-#include "trn/enum-flags.h"
+#include <trn/enum-flags.h>
 
 #include <cstdint>
 

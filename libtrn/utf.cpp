@@ -1,12 +1,13 @@
-// This file written 2020 by Ambrose Li
-/* utf.c - Functions for handling Unicode sort of properly
+/* utf.cpp - Functions for handling Unicode sort of properly
  *
  * vi: set sw=4 ts=8 ai sm noet :
  */
+// This file written 2020 by Ambrose Li
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/utf.h"
+#include <trn/utf.h>
+
+#include <config/common.h>
 
 #include <cctype>
 #include <cstdio>
@@ -79,7 +80,7 @@ struct CharsetDesc
 };
 
 static const CharsetDesc s_charset_descs[] = {
-    // Tags defined in trn/utf.h go first; these are short labels for charsubst.c
+    // Tags defined in trn/utf.h go first; these are short labels for charsubst.cpp
     // clang-format off
     { CHARSET_NAME_ASCII, CHARSET_ASCII, nullptr },
     { "us-ascii", CHARSET_ASCII, nullptr },

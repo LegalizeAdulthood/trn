@@ -4,8 +4,8 @@
 #ifndef TRN_RT_PAGE_H
 #define TRN_RT_PAGE_H
 
-#include "trn/opt.h"
-#include "trn/rt-select.h"
+#include <trn/opt.h>
+#include <trn/rt-select.h>
 
 enum : bool
 {

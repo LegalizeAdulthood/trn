@@ -1,14 +1,14 @@
-/* autosub.c
+/* autosub.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/autosub.h"
+#include <trn/autosub.h>
 
-#include "util/env.h"
-#include "trn/final.h"
-#include "trn/ngsrch.h"
-#include "trn/search.h"
+#include <config/common.h>
+#include <trn/final.h>
+#include <trn/ngsrch.h>
+#include <trn/search.h>
+#include <util/env.h>
 
 #include <cstdio>
 #include <cstring>

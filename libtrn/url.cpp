@@ -1,15 +1,15 @@
-// This file Copyright 1993 by Clifford A. Adams
-/* url.c
+/* url.cpp
  *
  * Routines for handling WWW URL references.
  */
+// This file Copyright 1993 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/url.h"
+#include <trn/url.h>
 
-#include "nntp/nntpinit.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <nntp/nntpinit.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 // Lower-level net routines grabbed from nntpinit.c.
 
@@ -128,7 +128,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     std::sprintf(cmdline,"%s/ftpgrab %s ftp %s@%s %s %s %s",
             file_exp("%X"),host,username,userhost,cdpath,p+1,outname);
 
-    // modified escape_shell_cmd code from NCSA HTTPD util.c
+    // modified escape_shell_cmd code from NCSA HTTPD util.cpp
     // serious security holes could result without this code
     int l = std::strlen(cmdline);
     for (int x = 0; cmdline[x]; x++)

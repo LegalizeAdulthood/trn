@@ -1,8 +1,8 @@
-// This file Copyright 1992 by Clifford A. Adams
 /* trn/sacmd.h
  *
  * main command loop
  */
+// This file Copyright 1992 by Clifford A. Adams
 #ifndef TRN_SACMD_H
 #define TRN_SACMD_H
 

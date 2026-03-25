@@ -1,3 +1,4 @@
+// This software is copyrighted as detailed in the LICENSE file.
 #include <wildmat/wildmat.h>
 
 #include <gtest/gtest.h>

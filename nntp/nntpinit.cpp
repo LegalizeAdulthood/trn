@@ -1,13 +1,12 @@
-/* nntpinit.c
+/* nntpinit.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "nntp/nntpinit.h"
-
-#include "nntp/nntpclient.h"
+#include <nntp/nntpinit.h>
 
 #include <config/common.h>
 #include <config/fdio.h>
+#include <nntp/nntpclient.h>
 
 #include <boost/asio.hpp>
 

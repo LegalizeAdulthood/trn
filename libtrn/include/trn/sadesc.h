@@ -1,7 +1,7 @@
-// This file Copyright 1992,1995 by Clifford A. Adams
 /* trn/sadesc.h
  *
  */
+// This file Copyright 1992,1995 by Clifford A. Adams
 #ifndef TRN_SADESC_H
 #define TRN_SADESC_H
 

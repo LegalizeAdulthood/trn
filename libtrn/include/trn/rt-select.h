@@ -5,10 +5,9 @@
 #define TRN_RT_SELECT_H
 
 #include <config/config2.h>
-
-#include "trn/addng.h"
-#include "trn/help.h"
-#include "trn/rcstuff.h"
+#include <trn/addng.h>
+#include <trn/help.h>
+#include <trn/rcstuff.h>
 
 enum SelectionMode
 {

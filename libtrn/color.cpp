@@ -1,4 +1,4 @@
-/* color.c -  Color handling for trn 4.0.
+/* color.cpp -  Color handling for trn 4.0.
  */
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
@@ -25,15 +25,14 @@
 // are used, otherwise only normal monochrome video attributes.
 //
 
+#include <trn/color.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/color.h"
-
-#include "trn/final.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "util/util2.h"
+#include <trn/final.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstring>

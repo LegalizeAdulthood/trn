@@ -1,14 +1,15 @@
-/* edit_dist.c
+/* edit_dist.cpp
 */
 /* The authors make no claims as to the fitness or correctness of this software
  * for any use whatsoever, and it is provided as is. Any use of this software
  * is at the user's own risk.
  */
+// This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"             // Declare MemorySize
-#include "trn/edit_dist.h"
+#include <trn/edit_dist.h>
 
-#include "trn/util.h"               // Declare safe_malloc()
+#include <config/common.h> // Declare MemorySize
+#include <trn/util.h>      // Declare safe_malloc()
 
 #include <algorithm>
 #include <cstdlib>

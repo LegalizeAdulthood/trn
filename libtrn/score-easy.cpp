@@ -1,14 +1,14 @@
-// This file Copyright 1993 by Clifford A. Adams
-/* score-easy.c
+/* score-easy.cpp
  *
  * Simple interactive menus for scorefile tasks.
  */
+// This file Copyright 1993 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/score-easy.h"
+#include <trn/score-easy.h>
 
-#include "trn/terminal.h"
-#include "trn/util.h"
+#include <config/common.h>
+#include <trn/terminal.h>
+#include <trn/util.h>
 
 #include <cstdio>
 #include <cstring>

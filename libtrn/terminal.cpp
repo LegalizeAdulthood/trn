@@ -1,30 +1,30 @@
-/* term.c
+/* terminal.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/terminal.h"
+#include <trn/terminal.h>
 
-#include "trn/datasrc.h"
-#include "trn/art.h"
-#include "trn/cache.h"
-#include "trn/color.h"
-#include "trn/final.h"
-#include "trn/help.h"
-#include "trn/init.h"
-#include "trn/intrp.h"
-#include "trn/ng.h"
-#include "trn/opt.h"
-#include "trn/rt-select.h"
-#include "trn/sdisp.h"
-#include "trn/string-algos.h"
-#include "trn/trn.h"
-#include "trn/univ.h"
-#include "trn/utf.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/art.h>
+#include <trn/cache.h>
+#include <trn/color.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/help.h>
+#include <trn/init.h>
+#include <trn/intrp.h>
+#include <trn/ng.h>
+#include <trn/opt.h>
+#include <trn/rt-select.h>
+#include <trn/sdisp.h>
+#include <trn/string-algos.h>
+#include <trn/trn.h>
+#include <trn/univ.h>
+#include <trn/utf.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #ifdef MSDOS
 #include <conio.h>

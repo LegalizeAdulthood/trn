@@ -1,24 +1,24 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* samisc.c
+/* samisc.cpp
  *
  * lower-level routines
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/samisc.h"
+#include <trn/samisc.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h" // several
-#include "trn/artio.h"         // g_openart
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/ng.h" // for "g_art"
-#include "trn/rthread.h"
-#include "trn/samain.h"
-#include "trn/sathread.h"
-#include "trn/scanart.h"
-#include "trn/score.h"
-#include "trn/sorder.h"
+#include <config/common.h>
+#include <trn/artio.h> // g_openart
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/list.h>
+#include <trn/ng.h>     // for "g_art"
+#include <trn/ngdata.h> // several
+#include <trn/rthread.h>
+#include <trn/samain.h>
+#include <trn/sathread.h>
+#include <trn/scanart.h>
+#include <trn/score.h>
+#include <trn/sorder.h>
 #include <trn/Subject.h>
 
 inline int check_article(ArticleNum a)

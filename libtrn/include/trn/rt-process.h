@@ -5,8 +5,7 @@
 #define TRN_RT_PROCESS_H
 
 #include <config/typedef.h>
-
-#include "trn/hash.h"
+#include <trn/hash.h>
 
 struct Article;
 struct Subject;

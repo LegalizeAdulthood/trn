@@ -1,34 +1,33 @@
-/* rthread.c
+/* rthread.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/rthread.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/rthread.h"
-
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/artstate.h"
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/datasrc.h"
-#include "trn/hash.h"
-#include "trn/head.h"
-#include "trn/kfile.h"
-#include "trn/ng.h"
-#include "trn/rt-ov.h"
-#include "trn/rt-page.h"
-#include "trn/rt-process.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/rt-wumpus.h"
-#include "trn/score.h"
+#include <trn/artstate.h>
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/hash.h>
+#include <trn/head.h>
+#include <trn/kfile.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/rt-ov.h>
+#include <trn/rt-page.h>
+#include <trn/rt-process.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/rt-wumpus.h>
+#include <trn/score.h>
 #include <trn/Subject.h>
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cstdio>

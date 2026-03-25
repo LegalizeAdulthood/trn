@@ -1,8 +1,8 @@
-// This file Copyright 1993 by Clifford A. Adams
 /* trn/sorder.h
  *
  * scan ordering
  */
+// This file Copyright 1993 by Clifford A. Adams
 #ifndef TRN_SORDER_H
 #define TRN_SORDER_H
 

@@ -1,35 +1,35 @@
-/* ngstuff.c
+/* ngstuff.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/ngstuff.h"
+#include <trn/ngstuff.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/addng.h"
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/change_dir.h"
-#include "trn/final.h"
-#include "trn/intrp.h"
-#include "trn/kfile.h"
-#include "trn/ng.h"
-#include "trn/opt.h"
-#include "trn/rcln.h"
-#include "trn/rcstuff.h"
-#include "trn/respond.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/rt-wumpus.h"
-#include "trn/rthread.h"
-#include "trn/string-algos.h"
+#include <config/common.h>
+#include <trn/addng.h>
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/change_dir.h>
+#include <trn/final.h>
+#include <trn/intrp.h>
+#include <trn/kfile.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/opt.h>
+#include <trn/rcln.h>
+#include <trn/rcstuff.h>
+#include <trn/respond.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/rt-wumpus.h>
+#include <trn/rthread.h>
+#include <trn/string-algos.h>
 #include <trn/Subject.h>
-#include "trn/sw.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <trn/sw.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cstring>

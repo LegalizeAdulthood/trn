@@ -1,8 +1,9 @@
-#include <string>
+// This software is copyrighted as detailed in the LICENSE file.
+#include <parsedate/parsedate.h>
 
 #include <gtest/gtest.h>
 
-#include <parsedate/parsedate.h>
+#include <string>
 
 TEST(ParseDateTest, oldStyleDate)
 {

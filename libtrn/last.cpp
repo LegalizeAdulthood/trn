@@ -1,14 +1,14 @@
-/* last.c
+/* last.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/last.h"
+#include <trn/last.h>
 
-#include "trn/init.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/init.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cstdio>

@@ -1,4 +1,4 @@
-/* search.c
+/* search.cpp
  */
 
 // string search routines
@@ -22,11 +22,11 @@
 //      Correct spurious matching, eg. /: re: .*\bfoo/ matched ": re: bar".
 //
 
-#include "config/common.h"
-#include "trn/search.h"
+#include <trn/search.h>
 
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

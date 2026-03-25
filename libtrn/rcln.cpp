@@ -1,18 +1,18 @@
-/* rcln.c
+/* rcln.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/rcln.h"
+#include <trn/rcln.h>
 
-#include "trn/ngdata.h"
-#include "trn/datasrc.h"
-#include "trn/rcstuff.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/datasrc.h>
+#include <trn/ngdata.h>
+#include <trn/rcstuff.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

@@ -4,8 +4,8 @@
 #ifndef TRN_ARTSRCH_H
 #define TRN_ARTSRCH_H
 
-#include "trn/head.h"
-#include "trn/search.h"
+#include <trn/head.h>
+#include <trn/search.h>
 
 #include <string>
 

@@ -1,26 +1,26 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* samain.c
+/* samain.cpp
  *
  * main working routines  (may change later)
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/samain.h"
+#include <trn/samain.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/cache.h"
-#include "trn/sadisp.h"
-#include "trn/samisc.h"
-#include "trn/sathread.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/scmd.h"
-#include "trn/score.h"
-#include "trn/sdisp.h"
-#include "trn/sorder.h"
-#include "trn/spage.h"
-#include "trn/util.h"
+#include <config/common.h>
+#include <trn/cache.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/sadisp.h>
+#include <trn/samisc.h>
+#include <trn/sathread.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/scmd.h>
+#include <trn/score.h>
+#include <trn/sdisp.h>
+#include <trn/sorder.h>
+#include <trn/spage.h>
+#include <trn/util.h>
 
 #include <cstdlib>
 

@@ -1,22 +1,22 @@
-// This file Copyright 1993 by Clifford A. Adams
-/* scoresave.c
+/* scoresave.cpp
  *
  * Saving/restoring scores from a file.
  */
+// This file Copyright 1993 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/scoresave.h"
+#include <trn/scoresave.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/cache.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/score.h"
-#include "trn/string-algos.h"
-#include "trn/util.h" // several
-#include "util/env.h" // get_val
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/cache.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/score.h>
+#include <trn/string-algos.h>
+#include <trn/util.h> // several
+#include <util/env.h> // get_val
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

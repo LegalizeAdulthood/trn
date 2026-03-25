@@ -1,7 +1,7 @@
 #ifndef TRN_MIME_INTERNAL_H
 #define TRN_MIME_INTERNAL_H
 
-#include "trn/mime.h"
+#include <trn/mime.h>
 
 #include <functional>
 

@@ -1,13 +1,15 @@
-/* test_utf.c - unit tests for rt-util.c
+/* test_rt-util.cpp - unit tests for rt-util.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
+// This software is copyrighted as detailed in the LICENSE file.
+
+#include <trn/rt-util.h>
+
+#include <config/common.h>
+
+#include <test_config.h>
 
 #include <gtest/gtest.h>
-
-#include "config/common.h"
-#include "trn/rt-util.h"
-
-#include "test_config.h"
 
 #include <cstring>
 #include <string.h>

@@ -7,9 +7,8 @@
 #define TRN_UNIV_H
 
 #include <config/typedef.h>
-
-#include "trn/enum-flags.h"
-#include "trn/help.h"
+#include <trn/enum-flags.h>
+#include <trn/help.h>
 
 #include <cstdint>
 #include <string>
@@ -28,7 +27,7 @@ enum UniversalItemType
     UN_VIRTUAL1 = 7,      // Virtual newsgroup file (reserved for compatibility with strn)
     UN_VGROUP = 8,        // virtual newsgroup marker (for pass 2)
     UN_TEXT_FILE = 9,     // text file
-    UN_HELP_KEY = 10,     // keystroke help functions from help.c
+    UN_HELP_KEY = 10,     // keystroke help functions from help.cpp
     UN_DEBUG1 = -1,       // quick debugging: just has data
     UN_GROUP_DESEL = -2,  // group that is deselected (with !group)
     UN_VGROUP_DESEL = -3, // virtual newsgroup deselected (with !group)

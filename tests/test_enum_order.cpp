@@ -1,9 +1,10 @@
-#include <gtest/gtest.h>
+// This software is copyrighted as detailed in the LICENSE file.
+#include <config/common.h>
+#include <trn/color.h>
+#include <trn/opt.h>
+#include <trn/head.h>
 
-#include "config/common.h"
-#include "trn/color.h"
-#include "trn/opt.h"
-#include "trn/head.h"
+#include <gtest/gtest.h>
 
 template <typename Enum>
 struct EnumValues

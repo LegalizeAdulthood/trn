@@ -1,27 +1,27 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* score.c
+/* score.cpp
  *
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/score.h"
+#include <trn/score.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/artio.h" // for g_openart var.
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/ng.h"      // g_art
-#include "trn/rt-util.h" // spinner
-#include "trn/samisc.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/score-easy.h" // interactive menus and such
-#include "trn/scorefile.h"
-#include "trn/scoresave.h"
-#include "trn/sorder.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h" // input_pending()
+#include <config/common.h>
+#include <trn/artio.h> // for g_openart var.
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/list.h>
+#include <trn/ng.h> // g_art
+#include <trn/ngdata.h>
+#include <trn/rt-util.h> // spinner
+#include <trn/samisc.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/score-easy.h> // interactive menus and such
+#include <trn/scorefile.h>
+#include <trn/scoresave.h>
+#include <trn/sorder.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h> // input_pending()
 
 #include <cstdio>
 
@@ -378,7 +378,7 @@ void sc_look_ahead(bool flag, bool nowait)
         }
         (void)sc_score_art(g_sc_fill_max,false);
     }
-    if (oldart)                 // copied from cheat.c
+    if (oldart)                 // copied from cheat.cpp
     {
         art_open(oldart,oldartpos);      // do not screw the pager
     }

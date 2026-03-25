@@ -1,3 +1,5 @@
+// This software is copyrighted as detailed in the LICENSE file.
+
 #include <trn/Article.h>
 
 #include <config/common.h>

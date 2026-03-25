@@ -1,24 +1,23 @@
-/* nntp.c
+/* nntp.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/nntp.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/nntp.h"
-
-#include "nntp/nntpclient.h"
-#include "trn/ngdata.h"
-#include "trn/artio.h"
-#include "trn/cache.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/head.h"
-#include "trn/init.h"
-#include "trn/rcstuff.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "util/util2.h"
+#include <nntp/nntpclient.h>
+#include <trn/artio.h>
+#include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/head.h>
+#include <trn/init.h>
+#include <trn/ngdata.h>
+#include <trn/rcstuff.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstring>

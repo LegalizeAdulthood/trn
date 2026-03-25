@@ -1,23 +1,23 @@
-/* rt-process.c
+/* rt-process.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/rt-process.h"
+#include <trn/rt-process.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/cache.h"
-#include "trn/hash.h"
-#include "trn/kfile.h"
-#include "trn/ng.h"
-#include "trn/rt-select.h"
-#include "trn/rthread.h"
-#include "trn/string-algos.h"
+#include <config/common.h>
+#include <trn/cache.h>
+#include <trn/hash.h>
+#include <trn/kfile.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/rt-select.h>
+#include <trn/rthread.h>
+#include <trn/string-algos.h>
 #include <trn/Subject.h>
-#include "trn/terminal.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <trn/terminal.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdlib>

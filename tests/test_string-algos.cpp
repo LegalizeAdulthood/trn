@@ -1,7 +1,9 @@
-#include <gtest/gtest.h>
+// This software is copyrighted as detailed in the LICENSE file.
+#include <trn/string-algos.h>
 
 #include <config/common.h>
-#include <trn/string-algos.h>
+
+#include <gtest/gtest.h>
 
 #include <cstring>
 

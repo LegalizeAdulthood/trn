@@ -1,4 +1,4 @@
-/* trn-artchk.c
+/* trn-artchk.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
 

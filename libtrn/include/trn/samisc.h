@@ -1,8 +1,8 @@
-// This file Copyright 1992 by Clifford A. Adams
 /* trn/samisc.h
  *
  * smaller functions
  */
+// This file Copyright 1992 by Clifford A. Adams
 #ifndef TRN_SAMISC_H
 #define TRN_SAMISC_H
 

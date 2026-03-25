@@ -1,17 +1,5 @@
-#include <gtest/gtest.h>
-
-#include <array>
-#include <cctype>
-#include <iomanip>
-#include <sstream>
-#include <string>
-
-#include "mock_env.h"
-#include "test_config.h"
-
+// This software is copyrighted as detailed in the LICENSE file.
 #include <config/common.h>
-
-#include <trn/ngdata.h>
 #include <trn/addng.h>
 #include <trn/art.h>
 #include <trn/artio.h>
@@ -27,6 +15,7 @@
 #include <trn/last.h>
 #include <trn/mime.h>
 #include <trn/ng.h>
+#include <trn/ngdata.h>
 #include <trn/ngsrch.h>
 #include <trn/ngstuff.h>
 #include <trn/only.h>
@@ -45,6 +34,17 @@
 #include <trn/util.h>
 #include <util/env-internal.h>
 #include <util/util2.h>
+
+#include <mock_env.h>
+#include <test_config.h>
+
+#include <gtest/gtest.h>
+
+#include <array>
+#include <cctype>
+#include <iomanip>
+#include <sstream>
+#include <string>
 
 constexpr int BUFFER_SIZE{4096};
 

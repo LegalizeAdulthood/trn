@@ -1,47 +1,46 @@
-/* opt.c
+/* opt.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/opt.h>
+
+#include <config/common.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/opt.h"
-
-#include "trn/ngdata.h"
-#include "trn/art.h"
-#include "trn/artio.h"
-#include "trn/artsrch.h"
-#include "trn/cache.h"
-#include "trn/change_dir.h"
-#include "trn/charsubst.h"
-#include "trn/color.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/head.h"
-#include "trn/init.h"
-#include "trn/intrp.h"
-#include "trn/mime.h"
-#include "trn/ng.h"
-#include "trn/ngstuff.h"
-#include "trn/only.h"
-#include "trn/respond.h"
-#include "trn/rt-page.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/rt-wumpus.h"
-#include "trn/rthread.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/scorefile.h"
-#include "trn/string-algos.h"
-#include "trn/sw.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/univ.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <trn/art.h>
+#include <trn/artio.h>
+#include <trn/artsrch.h>
+#include <trn/cache.h>
+#include <trn/change_dir.h>
+#include <trn/charsubst.h>
+#include <trn/color.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/head.h>
+#include <trn/init.h>
+#include <trn/intrp.h>
+#include <trn/mime.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/ngstuff.h>
+#include <trn/only.h>
+#include <trn/respond.h>
+#include <trn/rt-page.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/rt-wumpus.h>
+#include <trn/rthread.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/scorefile.h>
+#include <trn/string-algos.h>
+#include <trn/sw.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/univ.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cctype>

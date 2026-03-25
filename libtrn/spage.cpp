@@ -1,21 +1,21 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* spage.c
+/* spage.cpp
  *
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/spage.h"
+#include <trn/spage.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/cache.h"
-#include "trn/rt-util.h" // spinner
-#include "trn/samain.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/sdisp.h" // for display dimension sizes
-#include "trn/smisc.h"
-#include "trn/sorder.h"
+#include <config/common.h>
+#include <trn/cache.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/rt-util.h> // spinner
+#include <trn/samain.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/sdisp.h> // for display dimension sizes
+#include <trn/smisc.h>
+#include <trn/sorder.h>
 
 #include <algorithm>
 #include <cstdio>

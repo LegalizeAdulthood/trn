@@ -1,44 +1,43 @@
-/* art.c
+/* art.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/art.h>
 
-#include "config/common.h"
-#include "trn/art.h"
-
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/artio.h"
-#include "trn/artstate.h"
-#include "trn/backpage.h"
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/charsubst.h"
-#include "trn/color.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/head.h"
-#include "trn/help.h"
-#include "trn/intrp.h"
-#include "trn/kfile.h"
-#include "trn/mime.h"
-#include "trn/ng.h"
-#include "trn/ngstuff.h"
-#include "trn/nntp.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/rt-wumpus.h"
-#include "trn/rthread.h"
-#include "trn/search.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/utf.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/artio.h>
+#include <trn/artstate.h>
+#include <trn/backpage.h>
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/charsubst.h>
+#include <trn/color.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/head.h>
+#include <trn/help.h>
+#include <trn/intrp.h>
+#include <trn/kfile.h>
+#include <trn/list.h>
+#include <trn/mime.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/ngstuff.h>
+#include <trn/nntp.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/rt-wumpus.h>
+#include <trn/rthread.h>
+#include <trn/search.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/utf.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cctype>

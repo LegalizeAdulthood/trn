@@ -1,6 +1,7 @@
+// This software is copyrighted as detailed in the LICENSE file.
 #include <trn/util.h>
 
-#include "test_makedir.h"
+#include <test_makedir.h>
 
 #include <gtest/gtest.h>
 

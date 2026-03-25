@@ -1,14 +1,15 @@
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
+// This software is copyrighted as detailed in the LICENSE file.
 #include <config/common.h>
-#include <util/env-internal.h>
 #include <trn/init.h>
 #include <trn/util.h>
+#include <util/env-internal.h>
 #include <util/util2.h>
 
-#include "mock_env.h"
-#include "test_config.h"
+#include <mock_env.h>
+#include <test_config.h>
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <array>
 

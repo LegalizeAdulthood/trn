@@ -1,28 +1,27 @@
-/* artsrch.c
+/* artsrch.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/artsrch.h>
 
-#include "config/common.h"
-#include "trn/artsrch.h"
-
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/artio.h"
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/final.h"
-#include "trn/head.h"
-#include "trn/intrp.h"
-#include "trn/kfile.h"
-#include "trn/ng.h"
-#include "trn/ngstuff.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/search.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/artio.h>
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/final.h>
+#include <trn/head.h>
+#include <trn/intrp.h>
+#include <trn/kfile.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/ngstuff.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/search.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

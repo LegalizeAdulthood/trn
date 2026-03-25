@@ -1,13 +1,14 @@
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_MOCK_ENV_H
 #define TRN_MOCK_ENV_H
+
+#include <config/common.h>
+#include <util/env-internal.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <string>
-
-#include <config/common.h>
-#include <util/env-internal.h>
 
 namespace trn
 {

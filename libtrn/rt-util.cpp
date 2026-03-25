@@ -1,24 +1,25 @@
-/* rt-util.c
+/* rt-util.cpp
 *  vi: set sw=4 ts=8 ai sm noet :
 */
 // This software is copyrighted as detailed in the LICENSE file.
-#include "config/common.h"
-#include "trn/rt-util.h"
 
-#include "trn/ngdata.h"
-#include "trn/artio.h"
-#include "trn/cache.h"
-#include "trn/charsubst.h"
-#include "trn/intrp.h"
-#include "trn/ng.h"
-#include "trn/rt-select.h"
-#include "trn/string-algos.h"
+#include <trn/rt-util.h>
+
+#include <config/common.h>
+#include <trn/artio.h>
+#include <trn/cache.h>
+#include <trn/charsubst.h>
+#include <trn/intrp.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/rt-select.h>
+#include <trn/string-algos.h>
 #include <trn/Subject.h>
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/utf.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/utf.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>

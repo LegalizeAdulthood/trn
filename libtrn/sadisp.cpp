@@ -1,21 +1,21 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* sadisp.c
+/* sadisp.cpp
  *
  * display stuff
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/sadisp.h"
+#include <trn/sadisp.h>
 
-#include "trn/color.h"
-#include "trn/samain.h"
-#include "trn/samisc.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/score.h"
-#include "trn/sdisp.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
+#include <config/common.h>
+#include <trn/color.h>
+#include <trn/samain.h>
+#include <trn/samisc.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/score.h>
+#include <trn/sdisp.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
 
 #include <cstdio>
 

@@ -1,17 +1,16 @@
-/* uudecode.c
+/* uudecode.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/uudecode.h>
+
+#include <config/common.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/uudecode.h"
-
-#include "trn/artio.h"
-#include "trn/mime.h"
-#include "trn/terminal.h"
-#include "trn/string-algos.h"
-#include "util/util2.h"
+#include <trn/artio.h>
+#include <trn/mime.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cctype>

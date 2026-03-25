@@ -1,32 +1,32 @@
-/* rt-page.c
+/* rt-page.cpp
  * vi: set sw=4 ts=8 ai sm noet :
 */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/rt-page.h"
+#include <trn/rt-page.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/addng.h"
-#include "trn/cache.h"
-#include "trn/color.h"
-#include "trn/datasrc.h"
-#include "trn/only.h"
-#include "trn/opt.h"
-#include "trn/rcln.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/rt-util.h"
-#include "trn/rthread.h"
-#include "trn/string-algos.h"
+#include <config/common.h>
+#include <trn/addng.h>
+#include <trn/cache.h>
+#include <trn/color.h>
+#include <trn/datasrc.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/only.h>
+#include <trn/opt.h>
+#include <trn/rcln.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/rt-util.h>
+#include <trn/rthread.h>
+#include <trn/string-algos.h>
 #include <trn/Subject.h>
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/univ.h"
-#include "trn/utf.h"
-#include "trn/util.h"
-#include "util/env.h"
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/univ.h>
+#include <trn/utf.h>
+#include <trn/util.h>
+#include <util/env.h>
 
 #include <algorithm>
 #include <cctype>

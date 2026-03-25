@@ -1,32 +1,32 @@
-// This file Copyright 1992 by Clifford A. Adams
-/* sacmd.c
+/* sacmd.cpp
  *
  * main command loop
  */
+// This file Copyright 1992 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/sacmd.h"
+#include <trn/sacmd.h>
 
-#include "trn/list.h"
-#include "trn/ngdata.h" // for g_threaded_group
-#include "trn/bits.h"
-#include "trn/cache.h"
-#include "trn/ng.h"
-#include "trn/respond.h"
-#include "trn/samain.h"
-#include "trn/samisc.h"
-#include "trn/sathread.h"
-#include "trn/scan.h"
-#include "trn/scanart.h"
-#include "trn/scmd.h"
-#include "trn/score.h"
-#include "trn/sdisp.h"
-#include "trn/smisc.h" // needed?
-#include "trn/sorder.h"
-#include "trn/spage.h"
-#include "trn/terminal.h" // for LINES
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/bits.h>
+#include <trn/cache.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h> // for g_threaded_group
+#include <trn/respond.h>
+#include <trn/samain.h>
+#include <trn/samisc.h>
+#include <trn/sathread.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/scmd.h>
+#include <trn/score.h>
+#include <trn/sdisp.h>
+#include <trn/smisc.h> // needed?
+#include <trn/sorder.h>
+#include <trn/spage.h>
+#include <trn/terminal.h> // for LINES
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstring>

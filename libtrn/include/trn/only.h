@@ -6,8 +6,9 @@
 
 #include <config/common.h>
 
+// TODO: why does this need to be here?
 #ifndef NBRA
-#include "trn/search.h"
+#include <trn/search.h>
 #endif
 
 constexpr int MAX_NG_TO_DO{512}; // number of newsgroups allowed on command line

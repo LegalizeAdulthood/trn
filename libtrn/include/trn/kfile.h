@@ -5,8 +5,7 @@
 #define TRN_KFILE_H
 
 #include <config/typedef.h>
-
-#include "trn/enum-flags.h"
+#include <trn/enum-flags.h>
 
 #include <cstdint>
 #include <cstdio>

@@ -1,16 +1,16 @@
-// This file Copyright 1993 by Clifford A. Adams
-/* sorder.c
+/* sorder.cpp
  *
  * scan ordering
  */
+// This file Copyright 1993 by Clifford A. Adams
 
-#include "config/common.h"
-#include "trn/sorder.h"
+#include <trn/sorder.h>
 
-#include "trn/samisc.h"
-#include "trn/scan.h"
-#include "trn/smisc.h"
-#include "trn/util.h"
+#include <config/common.h>
+#include <trn/samisc.h>
+#include <trn/scan.h>
+#include <trn/smisc.h>
+#include <trn/util.h>
 
 #include <cstdlib>
 

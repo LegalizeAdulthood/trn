@@ -4,7 +4,7 @@
 #ifndef TRN_RTHREAD_H
 #define TRN_RTHREAD_H
 
-#include "trn/kfile.h"
+#include <trn/kfile.h>
 
 struct Article;
 struct HashTable;

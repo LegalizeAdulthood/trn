@@ -1,13 +1,14 @@
 /*
- * mempool.c
+ * mempool.cpp
  */
+// This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/mempool.h"
+#include <trn/mempool.h>
 
-#include "trn/final.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <trn/final.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstdlib>

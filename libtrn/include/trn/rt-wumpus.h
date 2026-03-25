@@ -4,9 +4,8 @@
 #ifndef TRN_RT_WUMPUS_H
 #define TRN_RT_WUMPUS_H
 
-#include "addng.h"
-
 #include <config/typedef.h>
+#include <trn/addng.h>
 
 struct Article;
 

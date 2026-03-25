@@ -1,27 +1,27 @@
-/* rt-wumpus.c
+/* rt-wumpus.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/rt-wumpus.h"
+#include <trn/rt-wumpus.h>
 
-#include "trn/ngdata.h"
-#include "trn/artio.h"
-#include "trn/artstate.h"
-#include "trn/backpage.h"
-#include "trn/cache.h"
-#include "trn/charsubst.h"
-#include "trn/color.h"
-#include "trn/head.h"
-#include "trn/ng.h"
-#include "trn/rt-select.h"
-#include "trn/rthread.h"
-#include "trn/string-algos.h"
+#include <config/common.h>
+#include <trn/artio.h>
+#include <trn/artstate.h>
+#include <trn/backpage.h>
+#include <trn/cache.h>
+#include <trn/charsubst.h>
+#include <trn/color.h>
+#include <trn/head.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/rt-select.h>
+#include <trn/rthread.h>
+#include <trn/string-algos.h>
 #include <trn/Subject.h>
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <algorithm>
 #include <cctype>

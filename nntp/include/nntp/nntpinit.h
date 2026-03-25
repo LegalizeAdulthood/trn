@@ -1,5 +1,6 @@
 /* nntptrn/init.h
  */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_NNTPINIT_H
 #define TRN_NNTPINIT_H
 

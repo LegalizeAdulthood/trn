@@ -1,4 +1,3 @@
-// This software is copyrighted as detailed in the LICENSE file.
 // vi: set sw=4 ts=8 ai sm noet :
 
 //  trn -- threaded readnews program based on rn 4.4
@@ -38,37 +37,38 @@
 //      May   96  - strn 1.0 release
 //
 //
+// This software is copyrighted as detailed in the LICENSE file.
 
-#include "config/common.h"
-#include "trn/trn.h"
+#include <trn/trn.h>
 
-#include "nntp/nntpclient.h"
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/addng.h"
-#include "trn/datasrc.h"
-#include "trn/final.h"
-#include "trn/help.h"
-#include "trn/init.h"
-#include "trn/kfile.h"
-#include "trn/last.h"
-#include "trn/ng.h"
-#include "trn/ngsrch.h"
-#include "trn/ngstuff.h"
-#include "trn/nntp.h"
-#include "trn/only.h"
-#include "trn/opt.h"
-#include "trn/patchlevel.h"
-#include "trn/rcln.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-select.h"
-#include "trn/string-algos.h"
-#include "trn/sw.h"
-#include "trn/terminal.h"
-#include "trn/univ.h"
-#include "trn/utf.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <nntp/nntpclient.h>
+#include <trn/addng.h>
+#include <trn/datasrc.h>
+#include <trn/final.h>
+#include <trn/help.h>
+#include <trn/init.h>
+#include <trn/kfile.h>
+#include <trn/last.h>
+#include <trn/list.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/ngsrch.h>
+#include <trn/ngstuff.h>
+#include <trn/nntp.h>
+#include <trn/only.h>
+#include <trn/opt.h>
+#include <trn/patchlevel.h>
+#include <trn/rcln.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-select.h>
+#include <trn/string-algos.h>
+#include <trn/sw.h>
+#include <trn/terminal.h>
+#include <trn/univ.h>
+#include <trn/utf.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #include <cstring>
 #include <string>

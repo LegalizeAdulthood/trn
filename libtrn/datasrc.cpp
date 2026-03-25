@@ -1,29 +1,28 @@
-/* datasrc.c
+/* datasrc.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
 
+#include <trn/datasrc.h>
+
+#include <config/common.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
-
-#include "config/common.h"
-#include "trn/datasrc.h"
-
-#include "nntp/nntpclient.h"
-#include "trn/list.h"
-#include "trn/ngdata.h"
-#include "trn/edit_dist.h"
-#include "trn/hash.h"
-#include "trn/nntp.h"
-#include "trn/rcstuff.h"
-#include "trn/rt-ov.h"
-#include "trn/rt-util.h"
-#include "trn/string-algos.h"
-#include "trn/terminal.h"
-#include "trn/trn.h"
-#include "trn/util.h"
-#include "util/env.h"
-#include "util/util2.h"
+#include <nntp/nntpclient.h>
+#include <trn/edit_dist.h>
+#include <trn/hash.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/nntp.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-ov.h>
+#include <trn/rt-util.h>
+#include <trn/string-algos.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
+#include <trn/util.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #ifdef I_UTIME
 #include <utime.h>

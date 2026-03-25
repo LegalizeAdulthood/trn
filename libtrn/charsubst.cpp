@@ -1,4 +1,4 @@
-/* charsubst.c
+/* charsubst.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
 /*
@@ -12,12 +12,13 @@
  * for any use whatsoever, and it is provided as is. Any use of this software
  * is at the user's own risk.
  */
-#include "trn/charsubst.h"
 
-#include "config/config2.h"
-#include "trn/trn.h"
-#include "config/typedef.h"
-#include "util/util2.h"
+#include <trn/charsubst.h>
+
+#include <config/config2.h>
+#include <config/typedef.h>
+#include <trn/trn.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstring>

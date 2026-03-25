@@ -4,10 +4,10 @@
 #ifndef TRN_OPT_H
 #define TRN_OPT_H
 
-#include "trn/enum-flags.h"
-#include "trn/head.h"
-#include "trn/search.h"
-#include "trn/util.h"
+#include <trn/enum-flags.h>
+#include <trn/head.h>
+#include <trn/search.h>
+#include <trn/util.h>
 
 #include <string>
 
