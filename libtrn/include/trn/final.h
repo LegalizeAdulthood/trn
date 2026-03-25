@@ -6,6 +6,8 @@
 
 #include <config/config.h>
 
+#include <signal.h>
+
 // cleanup status for fast exits
 
 extern bool g_panic;       // we got hung up or something-- so leave tty alone
