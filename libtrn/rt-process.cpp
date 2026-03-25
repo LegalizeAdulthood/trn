@@ -14,6 +14,7 @@
 #include "trn/rt-select.h"
 #include "trn/rthread.h"
 #include "trn/string-algos.h"
+#include <trn/Subject.h>
 #include "trn/terminal.h"
 #include "trn/util.h"
 #include "util/util2.h"

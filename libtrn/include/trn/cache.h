@@ -10,12 +10,12 @@
 #include <trn/kfile.h>
 #include <trn/list.h>
 #include <trn/ngdata.h>
-#include <trn/Subject.h>
 
 #include <cstdint>
 #include <ctime>
 
 struct List;
+struct Subject;
 
 // See trn/kfile.h for the AUTO_* flags
 enum : bool

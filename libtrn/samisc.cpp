@@ -19,6 +19,7 @@
 #include "trn/scanart.h"
 #include "trn/score.h"
 #include "trn/sorder.h"
+#include <trn/Subject.h>
 
 inline int check_article(ArticleNum a)
 {

@@ -13,6 +13,7 @@
 #include "trn/ng.h"
 #include "trn/rt-select.h"
 #include "trn/string-algos.h"
+#include <trn/Subject.h>
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/utf.h"

@@ -7,6 +7,7 @@
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/rcstuff.h>
+#include <trn/Subject.h>
 #include <trn/univ.h>
 
 TEST(DataSrcFlags, bitwiseOr)

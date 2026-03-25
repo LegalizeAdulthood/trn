@@ -24,6 +24,7 @@
 #include "trn/rt-util.h"
 #include "trn/rt-wumpus.h"
 #include "trn/score.h"
+#include <trn/Subject.h>
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/util.h"

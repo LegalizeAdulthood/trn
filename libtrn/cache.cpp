@@ -27,6 +27,7 @@
 #include "trn/score.h"
 #include "trn/search.h"
 #include "trn/string-algos.h"
+#include <trn/Subject.h>
 #include "trn/terminal.h"
 #include "trn/utf.h"
 #include "trn/util.h"
@@ -38,7 +39,7 @@
 #include <cstring>
 #include <ctime>
 
-List      *g_article_list{};         // a list of ARTICLEs
+List      *g_article_list{};         // a list of Articles
 Article  **g_art_ptr_list{};         // the article-selector creates this
 Article  **g_art_ptr{};              // ditto -- used for article order
 ArticleNum g_art_ptr_list_size{};    //

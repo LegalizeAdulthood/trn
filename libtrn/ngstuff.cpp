@@ -24,6 +24,7 @@
 #include "trn/rt-wumpus.h"
 #include "trn/rthread.h"
 #include "trn/string-algos.h"
+#include <trn/Subject.h>
 #include "trn/sw.h"
 #include "trn/terminal.h"
 #include "trn/trn.h"

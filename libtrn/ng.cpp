@@ -38,6 +38,7 @@
 #include "trn/score.h"
 #include "trn/smisc.h"
 #include "trn/string-algos.h"
+#include <trn/Subject.h>
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/univ.h"
