@@ -5,12 +5,7 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 ---
 
 ## datasrc.h
-- `bool open_data_source(DataSource *dp)`
 - `void set_data_source(DataSource *dp)`
-- `void close_data_source(DataSource *dp)`
-- `bool active_file_hash(DataSource *dp)`
-- `bool find_active_group(DataSource *dp, ...)`
-- `const char *find_group_desc(DataSource *dp, ...)`
 
 ## hash.h
 - `void hash_destroy(HashTable *tbl);`
