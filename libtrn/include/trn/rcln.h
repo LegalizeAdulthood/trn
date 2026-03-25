@@ -22,8 +22,8 @@ void rcln_init();
 void catch_up(NewsgroupData *np, int leave_count, int output_level);
 int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name);
 #ifdef MCHASE
-void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam);
-void prange(char *where, ART_NUM min, ART_NUM max);
+void sub_art_num(DataSource *dp, ArticleNum art_num, char *ng_name);
+void prange(char *where, ArticleNum min_num, ArticleNum max_num);
 #endif
 void set_to_read(NewsgroupData *np, bool lax_high_check);
 void check_expired(NewsgroupData *np, ArticleNum first);

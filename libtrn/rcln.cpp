@@ -267,7 +267,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 // delete an article number from a newsgroup, if it is there
 
 #ifdef MCHASE
-void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
+void sub_art_num(DataSource *dp, ArticleNum art_num, char *ng_name)
 {
     NGDATA* np;
     char* s;
@@ -276,11 +276,11 @@ void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
     char* mbuf;
     int curlen;
 
-    if (!artnum)
+    if (!art_num)
     {
         return;
     }
-    np = find_ng(ngnam);
+    np = find_ng(ng_name);
     if (np == nullptr)                  // not found in newsrc?
     {
         return;
