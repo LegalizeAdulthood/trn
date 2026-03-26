@@ -77,7 +77,7 @@ static int     rcline_cmp(const char *key, int keylen, HashDatum data);
 
 inline NewsgroupData *newsgroup_data_ptr(int ngnum)
 {
-    return (NewsgroupData *) list_get_item(g_newsgroup_data_list, ngnum);
+    return (NewsgroupData *) g_newsgroup_data_list->list_get_item(ngnum);
 }
 
 static Multirc *rcstuff_init_data()
@@ -298,7 +298,7 @@ void unuse_multirc(Multirc *mptr)
     {
         close_cache();
         hash_destroy(g_newsrc_hash);
-        walk_list(g_newsgroup_data_list, clear_newsgroup_item, 0);
+        g_newsgroup_data_list->walk_list(clear_newsgroup_item, 0);
         delete_list(g_newsgroup_data_list);
         g_newsgroup_data_list = nullptr;
         g_first_newsgroup = nullptr;
@@ -826,7 +826,7 @@ static bool open_newsrc(Newsrc *rp)
 // Initialize the memory for an entire node's worth of article's
 static void init_newsgroup_node(List *list, ListNode *node)
 {
-    std::memset(node->data,0,list->items_per_node * list->item_size);
+    std::memset(node->data,0,list->m_items_per_node * list->m_item_size);
     NewsgroupData *np = (NewsgroupData*)node->data;
     for (ArticleNum i{node->low}; i.value_of() <= node->high; ++i, np++)
     {

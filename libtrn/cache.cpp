@@ -94,7 +94,7 @@ void build_cache()
             article_ptr(an)->m_flags |= AF_EXISTS;
         }
         rc_to_bits();
-        g_article_list->high = g_last_art.value_of();
+        g_article_list->m_high = g_last_art.value_of();
         thread_grow();
         return;
     }
@@ -159,7 +159,7 @@ void close_cache()
 
     if (g_article_list)
     {
-        walk_list(g_article_list, clear_article_item, 0);
+        g_article_list->walk_list(clear_article_item, 0);
         delete_list(g_article_list);
         g_article_list = nullptr;
     }
@@ -169,7 +169,7 @@ void close_cache()
 // Initialize the memory for an entire node's worth of article's
 static void init_article_node(List *list, ListNode *node)
 {
-    std::memset(node->data, 0, list->items_per_node * list->item_size);
+    std::memset(node->data, 0, list->m_items_per_node * list->m_item_size);
     Article *ap = (Article *) node->data;
     for (ArticleNum i = ArticleNum{node->low}; i <= ArticleNum{node->high}; ++i, ++ap)
     {

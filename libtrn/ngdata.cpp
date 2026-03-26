@@ -186,7 +186,7 @@ void grow_newsgroup(ArticleNum new_last)
             ++g_last_art;
             article_ptr(g_last_art)->m_flags |= AF_EXISTS|AF_UNREAD;
         } while (g_last_art < new_last);
-        g_article_list->high = g_last_art.value_of();
+        g_article_list->m_high = g_last_art.value_of();
         thread_grow();
         // Score all new articles now just in case they weren't done above.
         sc_fill_score_list(tmpfirst,new_last);

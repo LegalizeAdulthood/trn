@@ -108,23 +108,23 @@ void           get_old_newsrcs(Multirc *mptr);
 
 inline Multirc *multirc_ptr(long n)
 {
-    return (Multirc *) list_get_item(g_multirc_list, n);
+    return (Multirc *) g_multirc_list->list_get_item(n);
 }
 inline Multirc *multirc_low()
 {
-    return (Multirc *) list_get_item(g_multirc_list, existing_list_index(g_multirc_list, 0L, 1));
+    return (Multirc *) g_multirc_list->list_get_item(g_multirc_list->existing_list_index(0L, 1));
 }
 inline Multirc *multirc_high()
 {
-    return (Multirc *) list_get_item(g_multirc_list, existing_list_index(g_multirc_list, g_multirc_list->high, -1));
+    return (Multirc *) g_multirc_list->list_get_item(g_multirc_list->existing_list_index(g_multirc_list->m_high, -1));
 }
 inline Multirc *multirc_next(Multirc *p)
 {
-    return (Multirc *) next_list_item(g_multirc_list, (char *) p);
+    return (Multirc *) g_multirc_list->next_list_item((char *) p);
 }
 inline Multirc *multirc_prev(Multirc *p)
 {
-    return (Multirc *) prev_list_item(g_multirc_list, (char *) p);
+    return (Multirc *) g_multirc_list->prev_list_item((char *) p);
 }
 
 #endif

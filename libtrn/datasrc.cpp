@@ -833,7 +833,7 @@ try_xgtitle:
             return group_name+grouplen+1;
         }
         m_flags |= DF_NO_XGTITLE;
-        if (m_desc_sf.m_lp->high == -1)
+        if (m_desc_sf.m_lp->m_high == -1)
         {
             m_desc_sf.close();
             if (m_flags & DF_TMP_GROUP_DESC)
@@ -963,14 +963,14 @@ int SourceFile::open(const char *filename, const char *fetch_cmd, const char *se
 
     if (!filename)
     {
-        (void) list_get_item(m_lp, 0);
-        m_lp->high = -1;
+        (void) m_lp->list_get_item(0);
+        m_lp->m_high = -1;
         set_spin(SPIN_OFF);
         return 1;
     }
 
-    char *lbp = list_get_item(m_lp, 0);
-    data.dat_ptr = (char*)m_lp->first;
+    char *lbp = m_lp->list_get_item(0);
+    data.dat_ptr = (char*)m_lp->m_first;
 
     for (offset = 0, node_low = 0;; offset += linelen, lbp += linelen)
     {
@@ -1030,19 +1030,19 @@ int SourceFile::open(const char *filename, const char *fetch_cmd, const char *se
         }
         if (offset + linelen > SRCFILE_CHUNK_SIZE)
         {
-            ListNode* node = m_lp->recent;
+            ListNode* node = m_lp->m_recent;
             node_low += offset;
             node->high = node_low - 1;
             node->data_high = node->data + offset - 1;
             offset = 0;
-            lbp = list_get_item(m_lp, node_low);
-            data.dat_ptr = (char*)m_lp->recent;
+            lbp = m_lp->list_get_item(node_low);
+            data.dat_ptr = (char*)m_lp->m_recent;
         }
         data.dat_len = offset;
         (void) std::memcpy(lbp,g_buf,linelen);
         hash_store(m_hp, g_buf, keylen, data);
     }
-    m_lp->high = node_low + offset - 1;
+    m_lp->m_high = node_low + offset - 1;
     set_spin(SPIN_OFF);
 
     if (server)
@@ -1066,9 +1066,9 @@ char *SourceFile::append(char *bp, int key_len)
 {
     HashDatum data;
 
-    long pos = m_lp->high + 1;
-    char *lbp = list_get_item(m_lp, pos);
-    ListNode *node = m_lp->recent;
+    long pos = m_lp->m_high + 1;
+    char *lbp = m_lp->list_get_item(pos);
+    ListNode *node = m_lp->m_recent;
     data.dat_len = pos - node->low;
 
     char *s = bp + key_len + 1;
@@ -1097,14 +1097,14 @@ char *SourceFile::append(char *bp, int key_len)
     {
         node->high = pos - 1;
         node->data_high = node->data + data.dat_len - 1;
-        lbp = list_get_item(m_lp, pos);
-        node = m_lp->recent;
+        lbp = m_lp->list_get_item(pos);
+        node = m_lp->m_recent;
         data.dat_len = 0;
     }
     data.dat_ptr = (char*)node;
     (void) std::memcpy(lbp,bp,linelen);
     hash_store(m_hp, bp, key_len, data);
-    m_lp->high = pos + linelen - 1;
+    m_lp->m_high = pos + linelen - 1;
 
     return lbp;
 }

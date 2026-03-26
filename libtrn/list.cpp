@@ -21,14 +21,14 @@ void list_init()
 List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(List *, ListNode *))
 {
     List* list = (List*)safe_malloc(sizeof (List));
-    list->first = nullptr;
-    list->recent = nullptr;
-    list->init_node = init_node? init_node : def_init_node;
-    list->low = low;
-    list->high = high;
-    list->item_size = item_size;
-    list->items_per_node = items_per_node;
-    list->flags = flags;
+    list->m_first = nullptr;
+    list->m_recent = nullptr;
+    list->m_init_node = init_node? init_node : def_init_node;
+    list->m_low = low;
+    list->m_high = high;
+    list->m_item_size = item_size;
+    list->m_items_per_node = items_per_node;
+    list->m_flags = flags;
 
     return list;
 }
@@ -36,9 +36,9 @@ List *new_list(long low, long high, int item_size, int items_per_node, ListFlags
 // The default way to initialize a node
 static void def_init_node(List *list, ListNode *node)
 {
-    if (list->flags & LF_ZERO_MEM)
+    if (list->m_flags & LF_ZERO_MEM)
     {
-        std::memset(node->data, 0, list->items_per_node * list->item_size);
+        std::memset(node->data, 0, list->m_items_per_node * list->m_item_size);
     }
 }
 
@@ -46,33 +46,33 @@ static void def_init_node(List *list, ListNode *node)
 // will allocate new list items as needed, keeping the list->high
 // value up to date.
 //
-char *list_get_item(List *list, long index)
+char *List::list_get_item(long index)
 {
-    ListNode* node = list->recent;
+    ListNode * node = m_recent;
     ListNode* prevnode = nullptr;
 
     if (node && index < node->low)
     {
-        node = list->first;
+        node = m_first;
     }
     while (true)
     {
         if (!node || index < node->low)
         {
-            node = (ListNode*)safe_malloc(list->items_per_node*list->item_size
+            node = (ListNode*)safe_malloc(m_items_per_node*m_item_size
                                         + sizeof (ListNode) - 1);
-            if (list->flags & LF_SPARSE)
+            if (m_flags & LF_SPARSE)
             {
-                node->low = ((index - list->low) / list->items_per_node) * list->items_per_node + list->low;
+                node->low = ((index - m_low) / m_items_per_node) * m_items_per_node + m_low;
             }
             else
             {
                 node->low = index;
             }
-            node->high = node->low + list->items_per_node - 1;
+            node->high = node->low + m_items_per_node - 1;
             node->data_high = node->data
-                            + (list->items_per_node - 1) * list->item_size;
-            list->high = std::max(node->high, list->high);
+                            + (m_items_per_node - 1) * m_item_size;
+            m_high = std::max(node->high, m_high);
             if (prevnode)
             {
                 node->next = prevnode->next;
@@ -80,10 +80,10 @@ char *list_get_item(List *list, long index)
             }
             else
             {
-                node->next = list->first;
-                list->first = node;
+                node->next = m_first;
+                m_first = node;
             }
-            list->init_node(list, node);
+            m_init_node(this, node);
             break;
         }
         if (index <= node->high)
@@ -93,43 +93,17 @@ char *list_get_item(List *list, long index)
         prevnode = node;
         node = node->next;
     }
-    list->recent = node;
-    return node->data + (index - node->low) * list->item_size;
-}
-
-// Take the pointer of a list element and return its number.  The item
-// must already exist or this will infinite loop.
-//
-long list_get_index(List *list, char *item)
-{
-    int item_size = list->item_size;
-
-    for (ListNode *node = list->recent;; node = node->next)
-    {
-        if (!node)
-        {
-            node = list->first;
-        }
-        int i = node->high - node->low + 1;
-        for (char *cp = node->data; i--; cp += item_size)
-        {
-            if (item == cp)
-            {
-                list->recent = node;
-                return (item - node->data) / list->item_size + node->low;
-            }
-        }
-    }
-    return -1;
+    m_recent = node;
+    return node->data + (index - node->low) * m_item_size;
 }
 
 // Execute the indicated callback function on every item in the list.
 //
-bool walk_list(List *list, bool (*callback)(char *, int), int arg)
+bool List::walk_list(ListCallback *callback, int arg)
 {
-    int item_size = list->item_size;
+    int item_size = m_item_size;
 
-    for (ListNode *node = list->first; node; node = node->next)
+    for (ListNode *node = m_first; node; node = node->next)
     {
         int i = node->high - node->low + 1;
         for (char *cp = node->data; i--; cp += item_size)
@@ -147,14 +121,14 @@ bool walk_list(List *list, bool (*callback)(char *, int), int arg)
 // that is already allocated, rounding in the indicated direction from
 // the initial list number.
 //
-long existing_list_index(List *list, long index, int direction)
+long List::existing_list_index(long index, int direction)
 {
-    ListNode* node = list->recent;
+    ListNode * node = m_recent;
     ListNode* prevnode = nullptr;
 
     if (node && index < node->low)
     {
-        node = list->first;
+        node = m_first;
     }
     while (node)
     {
@@ -177,10 +151,10 @@ long existing_list_index(List *list, long index, int direction)
                 {
                     break;
                 }
-                list->recent = prevnode;
+                m_recent = prevnode;
                 return prevnode->high;
             }
-            list->recent = node;
+            m_recent = node;
             return index;
         }
         prevnode = node;
@@ -192,17 +166,17 @@ long existing_list_index(List *list, long index, int direction)
     }
     if (direction > 0)
     {
-        return list->high + 1;
+        return m_high + 1;
     }
-    return list->low - 1;
+    return m_low - 1;
 }
 
 // Increment the item pointer to the next allocated item.
 // Returns nullptr if ptr is the last one.
 //
-char *next_list_item(List *list, char *ptr)
+char *List::next_list_item(char *ptr)
 {
-    ListNode* node = list->recent;
+    ListNode* node = m_recent;
 
     if (ptr == node->data_high)
     {
@@ -211,31 +185,22 @@ char *next_list_item(List *list, char *ptr)
         {
             return nullptr;
         }
-        list->recent = node;
+        m_recent = node;
         return node->data;
     }
-#if 0
-    if (node->high > list->high)
-    {
-        if ((ptr - node->data) / list->item_size + node->low >= list->high)
-        {
-            return nullptr;
-        }
-    }
-#endif
-    return ptr += list->item_size;
+    return ptr += m_item_size;
 }
 
 // Decrement the item pointer to the prev allocated item.
 // Returns nullptr if ptr is the first one.
 //
-char *prev_list_item(List *list, char *ptr)
+char *List::prev_list_item(char *ptr)
 {
-    ListNode* node = list->recent;
+    ListNode * node = m_recent;
 
     if (ptr == node->data)
     {
-        ListNode* prev = list->first;
+        ListNode* prev = m_first;
         if (prev == node)
         {
             return nullptr;
@@ -244,25 +209,24 @@ char *prev_list_item(List *list, char *ptr)
         {
             prev = prev->next;
         }
-        list->recent = prev;
+        m_recent = prev;
         return prev->data_high;
     }
-    return ptr -= list->item_size;
+    return ptr -= m_item_size;
 }
 
 // Delete the list and all its allocated nodes.  If you need to cleanup
 // the individual nodes, call walk_list() with a cleanup function before
 // calling this.
 //
-void delete_list(List *list)
+void List::delete_list()
 {
-    ListNode* node = list->first;
+    ListNode *node = m_first;
 
     while (node)
     {
-        ListNode *prevnode = node;
+        ListNode *prev_node = node;
         node = node->next;
-        std::free((char*)prevnode);
+        std::free((char*)prev_node);
     }
-    std::free((char*)list);
 }

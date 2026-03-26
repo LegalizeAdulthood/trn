@@ -80,7 +80,7 @@ static const char *find_attr(const char *str, const char *attr);
 
 inline MimeCapEntry *mimecap_ptr(long n)
 {
-    return (MimeCapEntry *)list_get_item(s_mimecap_list, n);
+    return (MimeCapEntry *) s_mimecap_list->list_get_item(n);
 }
 
 void mime_set_executor(MimeExecutor executor)
@@ -137,7 +137,7 @@ void mime_read_mimecap(const char *mcname)
         return;
     }
     char *bp = safe_malloc(buflen);
-    for (i = s_mimecap_list->high; !std::feof(fp);)
+    for (i = s_mimecap_list->m_high; !std::feof(fp);)
     {
         *(s = bp) = '\0';
         int linelen = 0;
@@ -231,7 +231,7 @@ void mime_read_mimecap(const char *mcname)
             }
         }
     }
-    s_mimecap_list->high = i;
+    s_mimecap_list->m_high = i;
     std::free(bp);
     std::fclose(fp);
 }
@@ -277,7 +277,7 @@ static char *mime_parse_entry_arg(char **cpp)
 
 MimeCapEntry *mime_find_mimecap_entry(const char *contenttype, MimeCapFlags skip_flags)
 {
-    for (int i = 0; i <= s_mimecap_list->high; i++)
+    for (int i = 0; i <= s_mimecap_list->m_high; i++)
     {
         MimeCapEntry *mcp = mimecap_ptr(i);
         if (!(mcp->flags & skip_flags) //

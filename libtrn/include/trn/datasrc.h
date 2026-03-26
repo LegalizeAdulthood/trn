@@ -129,7 +129,7 @@ inline NNTPFlags DataSource::nntp_flags() const
 
 inline DataSource *data_source_ptr(int n)
 {
-    return (DataSource *) list_get_item(g_data_source_list, n);
+    return (DataSource *) g_data_source_list->list_get_item(n);
 }
 
 inline DataSource *data_source_first()
@@ -139,7 +139,7 @@ inline DataSource *data_source_first()
 
 inline DataSource *data_source_next(DataSource *p)
 {
-    return (DataSource *) next_list_item(g_data_source_list, (char *) p);
+    return (DataSource *) g_data_source_list->next_list_item((char *) p);
 }
 
 #endif

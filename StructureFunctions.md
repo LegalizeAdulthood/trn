@@ -15,15 +15,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 - `void hash_store_last(HashDatum data);`
 - `void hash_walk(HashTable *tbl, ...);`
 
-## list.h
-- `char *list_get_item(List *list, long index);`
-- `long list_get_index(List *list, char *item);`
-- `bool walk_list(List *list, bool (*callback)(char *, int), int arg);`
-- `long existing_list_index(List *list, long index, int direction);`
-- `char *next_list_item(List *list, char *ptr);`
-- `char *prev_list_item(List *list, char *ptr);`
-- `void delete_list(List *list);`
-
 ## ngdata.h
 - `void set_newsgroup(NewsgroupData *np);`
 
