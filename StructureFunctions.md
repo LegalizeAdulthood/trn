@@ -4,23 +4,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 
 ---
 
-## datasrc.h
-- `void set_data_source(DataSource *dp)`
-
-## hash.h
-- `void hash_destroy(HashTable *tbl);`
-- `void hash_store(HashTable *tbl, ...);`
-- `void hash_delete(HashTable *tbl, ...);`
-- `HashDatum hash_fetch(HashTable *tbl, ...);`
-- `void hash_store_last(HashDatum data);`
-- `void hash_walk(HashTable *tbl, ...);`
-
-## ngdata.h
-- `void set_newsgroup(NewsgroupData *np);`
-
-## nntp.h
-- `int nntp_group(const char *group, NewsgroupData *gp);`
-
 ## rcstuff.h
 - `void unuse_multirc(Multirc *mptr);`
 - `void cleanup_newsrc(Newsrc *rp);`
@@ -30,8 +13,6 @@ This document lists all functions found in the `libtrn/include/trn` headers that
 
 ## rt-process.h
 - `void merge_threads(Subject *s1, Subject *s2);`
-- `Article *get_article(char *msgid);`
-- `Article *allocate_article(ArticleNum artnum);`
 
 ## rt-util.h
 - `const char *compress_subj(const Article *ap, int max);`
