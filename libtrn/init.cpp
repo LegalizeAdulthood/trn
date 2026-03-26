@@ -143,7 +143,7 @@ bool initialize(int argc, char *argv[])
 
     // now read in the .newsrc file(s)
 
-    bool foundany = rcstuff_init();
+    bool found_any = rcstuff_init();
 
     // it looks like we will actually read something, so init everything
 
@@ -173,10 +173,10 @@ bool initialize(int argc, char *argv[])
 
     if (g_max_newsgroup_to_do)                    // patterns on command line?
     {
-        foundany |= scan_active(true);
+        found_any = scan_active(true) || found_any;
     }
 
-    return foundany;
+    return found_any;
 }
 
 void news_news_check()
