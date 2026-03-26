@@ -697,6 +697,21 @@ void unprep_ini_words(IniWords words[])
     words[0].help_str = nullptr;
 }
 
+/// @brief Processes an input buffer containing INI-style data to prepare it for parsing.
+///
+/// This function modifies the input buffer in-place by:
+/// - Removing unnecessary whitespace.
+/// - Parsing section headers (e.g., [section]) and terminating them with null characters.
+/// - Parsing key-value pairs, replacing delimiters (e.g., '=') with null characters.
+/// - Skipping comments (lines starting with '#').
+/// - Handling invalid sections by skipping them and printing an error message.
+///
+/// The resulting buffer is transformed into a series of null-terminated strings,
+/// making it suitable for further parsing by other functions.
+///
+/// @param cp       Pointer to the input buffer containing INI-style data.
+/// @param filename Name of the file being processed (used for error messages).
+///
 void prep_ini_data(char *cp, const char *filename)
 {
     char* t = cp;
@@ -808,6 +823,20 @@ void prep_ini_data(char *cp, const char *filename)
     *t = '\0';
 }
 
+/// @brief Parses a string from the input buffer, handling quotes, comments, and escape sequences.
+///
+/// This function processes a string from the input buffer, handling:
+/// - Quoted strings (both single and double quotes).
+/// - Comments (lines starting with '#').
+/// - Escape sequences (e.g., '\n').
+/// - Trimming trailing whitespace.
+///
+/// The parsed string is written to the output buffer, and the input pointer is updated to the next position.
+///
+/// @param to   Pointer to the output buffer where the parsed string will be written.
+/// @param from Pointer to the input buffer to read and parse the string from.
+/// @return True if the string ended with a newline, false otherwise.
+///
 bool parse_string(char **to, char **from)
 {
     char inquote = 0;

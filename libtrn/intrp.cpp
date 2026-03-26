@@ -1452,6 +1452,16 @@ getout:
     return pattern; // where we left off
 }
 
+/// @brief Converts escape sequences in a pattern to their corresponding characters.
+///
+/// This function processes escape sequences in the input pattern and converts them
+/// to their corresponding characters, such as '\n' to newline, '\t' to tab, etc.
+/// It also handles octal and hexadecimal escape sequences.
+///
+/// @param dest Pointer to the destination buffer where the converted character will be stored.
+/// @param pattern Pointer to the input pattern containing escape sequences.
+/// @return Pointer to the next character in the pattern after the processed escape sequence.
+///
 char *interp_backslash(char *dest, char *pattern)
 {
     int i = *pattern;

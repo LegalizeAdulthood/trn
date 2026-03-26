@@ -50,6 +50,20 @@
 
 long g_our_pid{};
 
+/// @brief Initializes the application.
+///
+/// This function performs the initialization of various subsystems required
+/// for the application to function. It sets up the terminal, environment,
+/// configuration, and other components. Additionally, it initializes data
+/// sources, newsgroup data, and other critical modules.
+///
+/// Global variables initialized:
+/// - `g_our_pid`: Stores the process ID of the current application instance.
+///
+/// @param argc The number of command-line arguments.
+/// @param argv The array of command-line arguments.
+/// @return `true` if initialization was successful, `false` otherwise.
+///
 bool initialize(int argc, char *argv[])
 {
     char *tcbuf = safe_malloc(TCBUF_SIZE); // make temp buffer for termcap and

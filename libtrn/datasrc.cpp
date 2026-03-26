@@ -108,6 +108,19 @@ static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int         get_near_miss();
 static DataSource *new_data_source(const char *name, char **vals);
 
+/// @brief Initializes the data sources for the application.
+///
+/// This function sets up the global data source list, reads configuration
+/// values, and creates default data sources based on the environment and
+/// configuration files. It ensures that the data sources are prepared for
+/// use by other parts of the application.
+///
+/// Global variables initialized:
+/// - `g_data_source_list`: The global list of data sources.
+/// - `g_nntp_auth_file`: The NNTP authentication file path.
+/// - `g_trn_access_mem`: Memory for TRN access configuration.
+/// - `g_data_source_cnt`: The count of data sources.
+///
 void data_source_init()
 {
     char** vals = prep_ini_words(s_datasrc_ini);
@@ -187,6 +200,16 @@ void data_source_finalize()
     g_nntp_auth_file.clear();
 }
 
+/// @brief Reads data sources from the specified file.
+///
+/// This function reads and parses data sources from an INI-style file. It
+/// processes each section and conditionally creates new data sources based
+/// on the parsed values.
+///
+/// @param filename The name of the file to read data sources from.
+/// @return A pointer to the allocated file buffer, or nullptr if the file
+///         could not be opened or read.
+///
 char *read_data_sources(const char *filename)
 {
     char* section;
