@@ -70,10 +70,10 @@ DECLARE_FLAGS_ENUM(MultircFlags, int);
 
 struct Multirc
 {
-    bool         use_multirc();
-    bool use_next_multirc();
-    bool         use_prev_multirc();
-    const char  *multirc_name() const;
+    bool        use_multirc();
+    bool        use_next_multirc();
+    bool        use_prev_multirc();
+    const char *multirc_name() const;
 
     Newsrc      *m_first;
     int          m_num;

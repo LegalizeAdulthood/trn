@@ -38,8 +38,8 @@
 HashTable *g_newsrc_hash{};
 Multirc   *g_sel_page_mp{};
 Multirc   *g_sel_next_mp{};
-List      *g_multirc_list{};                 // a list of all MULTIRCs
-Multirc   *g_multirc{};                      // the current MULTIRC
+List      *g_multirc_list{};                 // a list of all Multircs
+Multirc   *g_multirc{};                      // the current Multirc
 bool       g_paranoid{};                     // did we detect some inconsistency in .newsrc?
 AddNewType g_add_new_by_default{ADDNEW_ASK}; //
 bool       g_check_flag{};                   // -c
