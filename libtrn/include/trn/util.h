@@ -37,7 +37,7 @@ enum MakeDirNameType
 
 struct IniWords
 {
-    int         checksum;
+    int         hash; // accelerates locating entries matching the item text
     const char *item;
     char       *help_str;
 };
@@ -81,7 +81,7 @@ int    edit_file(const char *fname);
 
 inline int ini_len(const IniWords *words)
 {
-    return words[0].checksum;
+    return words[0].hash;
 }
 inline char **ini_values(IniWords *words)
 {

@@ -99,7 +99,7 @@ int trn_main(int argc, char *argv[])
 {
 #if !THREAD_INIT
     // Default to threaded operation if our name starts with a 't' or 's'.
-    auto is_threaded_name = [](const char *arg)
+    const auto is_threaded_name = [](const char *arg)
     {
         const std::string name{std::filesystem::path{arg}.filename().string()};
         return name[0] == 't' || name[0] == 's';

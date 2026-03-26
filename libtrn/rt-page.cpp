@@ -683,7 +683,7 @@ try_again:
     {
         int included = 0;
         g_obj_count = ArticleNum{};
-        for (int op = 1; g_options_ini[op].checksum; op++)
+        for (int op = 1; g_options_ini[op].hash; op++)
         {
             if (g_sel_page_op == op)
             {
@@ -2592,7 +2592,7 @@ void display_option(int op, int item_index)
     }
     else
     {
-        len = (g_options_ini[op].checksum & 0xff);
+        len = (g_options_ini[op].hash & 0xff);
         pre = "  ";
         item = g_options_ini[op].item;
         post = "..................................";

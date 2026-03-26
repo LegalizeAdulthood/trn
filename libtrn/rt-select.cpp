@@ -714,7 +714,7 @@ sel_restart:
             save_options(g_ini_file.c_str());
         }
     }
-    for (int i = 1; g_options_ini[i].checksum; i++)
+    for (int i = 1; g_options_ini[i].hash; i++)
     {
         if (vals[i])
         {

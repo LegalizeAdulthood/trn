@@ -210,7 +210,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     const int len = ini_len(g_options_ini);
     g_option_def_vals = (char**)safe_malloc(len*sizeof(char*));
-    std::memset((char*)g_option_def_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
+    std::memset((char*)g_option_def_vals,0,(g_options_ini)[0].hash * sizeof (char*));
     // Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list
     set_header_list(HT_DEF_HIDE,HT_HIDE,"");
     set_header_list(HT_DEF_MAGIC,HT_MAGIC,"");
@@ -248,7 +248,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
         }
     }
     g_option_saved_vals = (char**)safe_malloc(len*sizeof(char*));
-    std::memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
+    std::memset((char*)g_option_saved_vals,0,(g_options_ini)[0].hash * sizeof (char*));
     g_option_flags = new OptionFlags[len];
     std::fill_n(g_option_flags, len, OF_NONE);
 
@@ -1040,7 +1040,7 @@ void save_options(const char *filename)
         std::fprintf(fp_out, "%sRNINIT = ''\n\n", t);
     }
     std::fprintf(fp_out,"[options]\n");
-    for (int i = 1; g_options_ini[i].checksum; i++)
+    for (int i = 1; g_options_ini[i].hash; i++)
     {
         if (*g_options_ini[i].item == '*')
         {

@@ -182,7 +182,7 @@ void rcstuff_final()
         delete_list(g_multirc_list);
         g_multirc_list = nullptr;
     }
-    s_rcgroups_ini[0].checksum = 0;
+    s_rcgroups_ini[0].hash = 0;
     s_rcgroups_ini[0].help_str = nullptr;
 }
 
