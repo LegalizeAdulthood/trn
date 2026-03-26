@@ -1514,12 +1514,10 @@ void cleanup_newsrc(Newsrc *rp)
     NewsgroupData* np;
     for (np = g_first_newsgroup; np; np = np->m_next)
     {
-// #ifdef CHECK_ALL_BOGUS TODO: what is this?
         if (np->m_to_read >= TR_UNSUB)
         {
             np->set_to_read(ST_LAX); // this may reset the group or declare it bogus
         }
-// #endif
         if (np->m_to_read == TR_BOGUS)
         {
             ++bogosity;
