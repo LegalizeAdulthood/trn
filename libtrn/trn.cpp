@@ -71,6 +71,7 @@
 #include <util/util2.h>
 
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <ctime>
 
@@ -96,29 +97,14 @@ void trn_init()
 
 int trn_main(int argc, char *argv[])
 {
-    char* s;
-
-    // Figure out our executable's name.
-#ifdef MSDOS
-    strlwr(argv[0]);
-    s = std::strrchr(argv[0],'\\');
-    if (s != nullptr)
-    {
-        *s = '/';
-    }
-#endif
-    s = std::strrchr(argv[0],'/');
-    if (s == nullptr)
-    {
-        s = argv[0];
-    }
-    else
-    {
-        s++;
-    }
 #if !THREAD_INIT
     // Default to threaded operation if our name starts with a 't' or 's'.
-    if (*s == 't' || *s == 's')
+    auto is_threaded_name = [](const char *arg)
+    {
+        const std::string name{std::filesystem::path{arg}.filename().string()};
+        return name[0] == 't' || name[0] == 's';
+    };
+    if (is_threaded_name(argv[0]))
     {
         g_use_threads = true;
     }
