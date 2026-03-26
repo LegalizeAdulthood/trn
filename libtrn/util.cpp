@@ -701,6 +701,14 @@ char **prep_ini_words(IniWords words[])
     return (char**)cp;
 }
 
+/// @brief Cleans up and deallocates resources for an array of INI words.
+///
+/// This function frees the memory allocated for storing parsed values in the
+/// `IniWords` array and resets the `checksum` and `help_str` fields of the first
+/// element to indicate that the array is no longer prepared for use.
+///
+/// @param words An array of `IniWords` structures to be cleaned up.
+///
 void unprep_ini_words(IniWords words[])
 {
     std::free(ini_values(words));
