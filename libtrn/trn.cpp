@@ -96,7 +96,6 @@ void trn_init()
 
 int trn_main(int argc, char *argv[])
 {
-    bool foundany;
     char* s;
 
     // Figure out our executable's name.
@@ -128,7 +127,7 @@ int trn_main(int argc, char *argv[])
         g_use_news_selector = -1;
     }
 #endif
-    foundany = initialize(argc,argv);
+    bool found_any = initialize(argc,argv);
 
     if (g_use_newsrc_selector)
     {
@@ -138,7 +137,7 @@ int trn_main(int argc, char *argv[])
 
     if (find_new_groups())              // did we add any new groups?
     {
-        foundany = true;
+        found_any = true;
         g_start_here = nullptr;          // start ng scan from the top
     }
 
@@ -146,7 +145,7 @@ int trn_main(int argc, char *argv[])
     {
         g_start_here = nullptr;
     }
-    else if (!foundany)                 // nothing to do?
+    else if (!found_any)                 // nothing to do?
     {
         if (g_verbose)
         {
