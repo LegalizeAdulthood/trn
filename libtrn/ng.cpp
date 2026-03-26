@@ -100,8 +100,8 @@ void ng_init()
     set_default_cmd();
 
     open_kill_file(KF_GLOBAL);
-    init_compex(&g_hide_compex);
-    init_compex(&g_page_compex);
+    g_hide_compex.init_compex();
+    g_page_compex.init_compex();
 }
 
 // do newsgroup pointed to by g_ngptr with name g_ngname
@@ -216,12 +216,12 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     g_hide_line = get_val_const("HIDELINE", nullptr);
     if (g_hide_line != nullptr)
     {
-        compile(&g_hide_compex, g_hide_line, true, true);
+        g_hide_compex.compile(g_hide_line, true, true);
     }
     g_page_stop = get_val_const("PAGESTOP", nullptr);
     if (g_page_stop != nullptr)
     {
-        compile(&g_page_compex, g_page_stop, true, true);
+        g_page_compex.compile(g_page_stop, true, true);
     }
 
     // now read each unread article

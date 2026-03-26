@@ -42,8 +42,8 @@ void set_newsgroup_to_do(const char *pat)
 #ifndef lint
         s_compex_to_do[i] = (CompiledRegex*)safe_malloc(sizeof(CompiledRegex));
 #endif
-        init_compex(s_compex_to_do[i]);
-        compile(s_compex_to_do[i],pat,true,true);
+        s_compex_to_do[i]->init_compex();
+        s_compex_to_do[i]->compile(pat, true, true);
         const char *err = newsgroup_comp(s_compex_to_do[i], pat, true, true);
         if (err != nullptr)
         {
@@ -64,7 +64,7 @@ bool in_list(const char *newsgroup_name)
     }
     for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
     {
-        if (execute(s_compex_to_do[i],newsgroup_name))
+        if (s_compex_to_do[i]->execute(newsgroup_name))
         {
             return true;
         }
@@ -88,7 +88,7 @@ void end_only()
         for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
         {
             std::free(g_newsgroup_to_do[i]);
-            free_compex(s_compex_to_do[i]);
+            s_compex_to_do[i]->free_compex();
 #ifndef lint
             std::free((char*)s_compex_to_do[i]);
 #endif

@@ -74,58 +74,10 @@ static TranslationTable s_trans{};
 static bool             s_folding{};
 static int              s_err{};
 static const char      *s_first_character{};
+static char            *s_gbr_str{};
+static int              s_gbr_siz{};
 
-void search_init()
-{
-    for (int i = 0; i < ASCSIZ; i++)
-    {
-        s_trans[i] = i;
-    }
-}
-
-void init_compex(CompiledRegex *compex)
-{
-    // the following must start off zeroed
-
-    compex->eblen = 0;
-    compex->brastr = nullptr;
-}
-
-void free_compex(CompiledRegex *compex)
-{
-    if (compex->eblen)
-    {
-        std::free(compex->expbuf);
-        compex->eblen = 0;
-    }
-    if (compex->brastr)
-    {
-        std::free(compex->brastr);
-        compex->brastr = nullptr;
-    }
-}
-
-static char *s_gbr_str{};
-static int   s_gbr_siz{};
-
-const char *getbracket(CompiledRegex *compex, int n)
-{
-    int length = compex->braelist[n] - compex->braslist[n];
-
-    if (!compex->nbra)
-    {
-        return nullptr;
-    }
-    if (n > compex->nbra || !compex->braelist[n] || length < 0)
-    {
-        return "";
-    }
-    grow_str(&s_gbr_str, &s_gbr_siz, length+1);
-    safe_copy(s_gbr_str, compex->braslist[n], length+1);
-    return s_gbr_str;
-}
-
-void case_fold(bool which)
+static void case_fold(bool which)
 {
     if (which != s_folding)
     {
@@ -147,21 +99,78 @@ void case_fold(bool which)
     }
 }
 
-// Compile the given regular expression into a [secret] internal format
+static bool cclass(const char *set, int c, int af)
+{
+    c &= 0177;
+    if (set[c >> 3] & 1 << (c & 7))
+    {
+        return af;
+    }
+    return !af;
+}
 
-char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
+void search_init()
+{
+    for (int i = 0; i < ASCSIZ; i++)
+    {
+        s_trans[i] = i;
+    }
+}
+
+void CompiledRegex::init_compex()
+{
+    // the following must start off zeroed
+    m_eb_len = 0;
+    m_bracket_str = nullptr;
+}
+
+void CompiledRegex::free_compex()
+{
+    if (m_eb_len)
+    {
+        std::free(m_exp_buf);
+        m_exp_buf = nullptr;
+        m_eb_len = 0;
+    }
+    if (m_bracket_str)
+    {
+        std::free(m_bracket_str);
+        m_bracket_str = nullptr;
+    }
+}
+
+const char *CompiledRegex::get_bracket(int n)
+{
+    int length = m_bracket_end_list[n] - m_bracket_start_list[n];
+
+    if (!m_num_brackets)
+    {
+        return nullptr;
+    }
+    if (n > m_num_brackets || !m_bracket_end_list[n] || length < 0)
+    {
+        return "";
+    }
+    grow_str(&s_gbr_str, &s_gbr_siz, length+1);
+    safe_copy(s_gbr_str, m_bracket_start_list[n], length+1);
+    return s_gbr_str;
+}
+
+// Compile the given regular expression into a [secret] internal format
+//
+char *CompiledRegex::compile(const char *strp, bool re, bool fold)
 {
     char  bracket[NBRA];
-    char**alt = compex->alternatives;
+    char**alt = m_alternatives;
     char* retmes = "Badly formed search string";
 
-    case_fold(compex->do_folding = fold);
-    if (!compex->eblen)
+    case_fold(m_do_folding = fold);
+    if (!m_eb_len)
     {
-        compex->expbuf = safe_malloc(84);
-        compex->eblen = 80;
+        m_exp_buf = safe_malloc(84);
+        m_eb_len = 80;
     }
-    char *ep = compex->expbuf; // point at expression buffer
+    char *ep = m_exp_buf; // point at expression buffer
     *alt++ = ep;               // first alternative starts here
     char *bracketp = bracket;  // first bracket goes here
     if (*strp == 0)            // nothing to compile?
@@ -172,13 +181,13 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
         }
         return nullptr;                 // just keep old expression
     }
-    compex->nbra = 0;                   // no brackets yet
+    m_num_brackets = 0;                   // no brackets yet
     char *lastep = nullptr;
     while (true)
     {
-        if (ep + 4 - compex->expbuf >= compex->eblen)
+        if (ep + 4 - m_exp_buf >= m_eb_len)
         {
-            ep = grow_eb(compex, ep, alt);
+            ep = grow_eb(ep, alt);
         }
         int c = *strp++;               // fetch next char of pattern
         if (c == 0)                    // end of pattern?
@@ -196,7 +205,7 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
         {
             lastep = ep;
         }
-        if (!RE)                        // just a normal search string?
+        if (!re)                        // just a normal search string?
         {
             *ep++ = CCHR;               // everything is a normal char
             *ep++ = c;
@@ -209,14 +218,14 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                 switch (c = *strp++)
                 {
                 case '(':
-                    if (compex->nbra >= NBRA)
+                    if (m_num_brackets >= NBRA)
                     {
                         retmes = "Too many parens";
                         goto cerror;
                     }
-                    *bracketp++ = ++compex->nbra;
+                    *bracketp++ = ++m_num_brackets;
                     *ep++ = CBRA;
-                    *ep++ = compex->nbra;
+                    *ep++ = m_num_brackets;
                     break;
 
                 case '|':
@@ -227,7 +236,7 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                     }
                     *ep++ = CEND;
                     *alt++ = ep;
-                    if (alt > compex->alternatives + NALTS)
+                    if (alt > m_alternatives + NALTS)
                     {
                             retmes = "Too many alternatives in reg ex";
                             goto cerror;
@@ -292,7 +301,7 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                 continue;
 
             case '^':
-                if (ep != compex->expbuf && ep[-1] != CEND)
+                if (ep != m_exp_buf && ep[-1] != CEND)
                 {
                     goto defchar;
                 }
@@ -309,9 +318,9 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
 
             case '[':               // character class
             {
-                if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
+                if (ep - m_exp_buf >= m_eb_len - BMAPSIZ)
                 {
-                    ep = grow_eb(compex, ep, alt); // reserve bitmap
+                    ep = grow_eb(ep, alt); // reserve bitmap
                 }
 
                 for (int i = BMAPSIZ; i; --i)
@@ -370,60 +379,60 @@ defchar:
         }
     }
 cerror:
-    compex->expbuf[0] = 0;
-    compex->nbra = 0;
+    m_exp_buf[0] = 0;
+    m_num_brackets = 0;
     return retmes;
 }
 
-char *grow_eb(CompiledRegex *compex, char *epp, char **alt)
+char *CompiledRegex::grow_eb(char *epp, char **alt)
 {
-    char* oldbuf = compex->expbuf;
-    char** altlist = compex->alternatives;
+    char  * oldbuf = m_exp_buf;
+    char** altlist = m_alternatives;
 
-    compex->eblen += 80;
-    compex->expbuf = safe_realloc(compex->expbuf, (MemorySize)compex->eblen + 4);
-    if (compex->expbuf != oldbuf)       // realloc can change expbuf!
+    m_eb_len += 80;
+    m_exp_buf = safe_realloc(m_exp_buf, (MemorySize)m_eb_len + 4);
+    if (m_exp_buf != oldbuf)       // realloc can change expbuf!
     {
-        epp += compex->expbuf - oldbuf;
+        epp += m_exp_buf - oldbuf;
         while (altlist != alt)
         {
-            *altlist++ += compex->expbuf - oldbuf;
+            *altlist++ += m_exp_buf - oldbuf;
         }
     }
     return epp;
 }
 
-const char *execute(CompiledRegex *compex, const char *addr)
+const char *CompiledRegex::execute(const char *addr)
 {
     const char* p1 = addr;
     Uchar* trt = s_trans;
 
-    if (addr == nullptr || compex->expbuf == nullptr)
+    if (addr == nullptr || m_exp_buf == nullptr)
     {
         return nullptr;
     }
-    if (compex->nbra)                   // any brackets?
+    if (m_num_brackets)                   // any brackets?
     {
-        for (int i = 0; i <= compex->nbra; i++)
+        for (int i = 0; i <= m_num_brackets; i++)
         {
-            compex->braslist[i] = nullptr;
-            compex->braelist[i] = nullptr;
+            m_bracket_start_list[i] = nullptr;
+            m_bracket_end_list[i] = nullptr;
         }
-        if (compex->brastr)
+        if (m_bracket_str)
         {
-            std::free(compex->brastr);
+            std::free(m_bracket_str);
         }
-        compex->brastr = save_str(p1);   // in case p1 is not static
-        p1 = compex->brastr;            // !
+        m_bracket_str = save_str(p1);   // in case p1 is not static
+        p1 = m_bracket_str;            // !
     }
-    case_fold(compex->do_folding);      // make sure table is correct
+    case_fold(m_do_folding);      // make sure table is correct
     s_first_character = p1;             // for ^ tests
-    if (compex->expbuf[0] == CCHR && !compex->alternatives[1])
+    if (m_exp_buf[0] == CCHR && !m_alternatives[1])
     {
-        int c = trt[*(Uchar*)(compex->expbuf + 1)]; // fast check for first char
+        int c = trt[*(Uchar*)(m_exp_buf + 1)]; // fast check for first char
         do
         {
-            if (trt[*(Uchar*)p1] == c && advance(compex, p1, compex->expbuf))
+            if (trt[*(Uchar*)p1] == c && advance(p1, m_exp_buf))
             {
                 return p1;
             }
@@ -437,10 +446,10 @@ const char *execute(CompiledRegex *compex, const char *addr)
     }
     do                                  // regular algorithm
     {
-        char** alt = compex->alternatives;
+        char** alt = m_alternatives;
         while (*alt)
         {
-            if (advance(compex, p1, *alt++))
+            if (advance(p1, *alt++))
             {
                 return p1;
             }
@@ -456,7 +465,7 @@ const char *execute(CompiledRegex *compex, const char *addr)
 
 // advance the match of the regular expression starting at ep along the
 // string lp, simulates an NDFSA
-bool advance(CompiledRegex *compex, const char *lp, const char *ep)
+bool CompiledRegex::advance(const char *lp, const char *ep)
 {
     const char* curlp;
     Uchar* trt = s_trans;
@@ -550,51 +559,51 @@ bool advance(CompiledRegex *compex, const char *lp, const char *ep)
             return false;
 
         case CBRA:
-            compex->braslist[(unsigned char)*ep++] = lp;
+            m_bracket_start_list[(unsigned char)*ep++] = lp;
             continue;
 
         case CKET:
             i = *ep++;
-            compex->braelist[i] = lp;
-            compex->braelist[0] = lp;
-            compex->braslist[0] = compex->braslist[i];
+            m_bracket_end_list[i] = lp;
+            m_bracket_end_list[0] = lp;
+            m_bracket_start_list[0] = m_bracket_start_list[i];
             continue;
 
         case CBACK:
             i = *ep++;
-            if (compex->braelist[i] == nullptr)
+            if (m_bracket_end_list[i] == nullptr)
             {
                 std::fputs("bad braces\n",stdout);
                 s_err = true;
                 return false;
             }
-            if (backref(compex, i, lp))
+            if (back_ref(i, lp))
             {
-                lp += compex->braelist[i] - compex->braslist[i];
+                lp += m_bracket_end_list[i] - m_bracket_start_list[i];
                 continue;
             }
             return false;
 
         case CBACK | STAR:
             i = *ep++;
-            if (compex->braelist[i] == nullptr)
+            if (m_bracket_end_list[i] == nullptr)
             {
                 std::fputs("bad braces\n",stdout);
                 s_err = true;
                 return false;
             }
             curlp = lp;
-            while (backref(compex, i, lp))
+            while (back_ref(i, lp))
             {
-                lp += compex->braelist[i] - compex->braslist[i];
+                lp += m_bracket_end_list[i] - m_bracket_start_list[i];
             }
             while (lp >= curlp)
             {
-                if (advance(compex, lp, ep))
+                if (advance(lp, ep))
                 {
                     return true;
                 }
-                lp -= compex->braelist[i] - compex->braslist[i];
+                lp -= m_bracket_end_list[i] - m_bracket_start_list[i];
             }
             continue;
 
@@ -640,7 +649,7 @@ star:
             do
             {
                 lp--;
-                if (advance(compex, lp, ep))
+                if (advance(lp, ep))
                 {
                     return true;
                 }
@@ -656,27 +665,17 @@ star:
     return false;
 }
 
-bool backref(CompiledRegex *compex, int i, const char *lp)
+bool CompiledRegex::back_ref(int i, const char *lp)
 {
-    const char *bp = compex->braslist[i];
+    const char *bp = m_bracket_start_list[i];
     while (*lp && *bp == *lp)
     {
         bp++;
         lp++;
-        if (bp >= compex->braelist[i])
+        if (bp >= m_bracket_end_list[i])
         {
             return true;
         }
     }
     return false;
-}
-
-bool cclass(const char *set, int c, int af)
-{
-    c &= 0177;
-    if (set[c >> 3] & 1 << (c & 7))
-    {
-        return af;
-    }
-    return !af;
 }

@@ -63,7 +63,7 @@ static std::string   s_last_input;
 void interp_init(char *tcbuf, int tcbuf_len)
 {
     s_last_input.clear();
-    init_compex(&s_cond_compex);
+    s_cond_compex.init_compex();
 
     // get environmental stuff
 
@@ -473,16 +473,16 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         do_interp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
                         proc_sprintf = false;
                     }
-                    s = compile(&s_cond_compex, scrbuf, true, true);
+                    s = s_cond_compex.compile(scrbuf, true, true);
                     if (s != nullptr)
                     {
                         std::printf("%s: %s\n",scrbuf,s);
                         pattern += std::strlen(pattern);
-                        free_compex(&s_cond_compex);
+                        s_cond_compex.free_compex();
                         goto getout;
                     }
-                    matched = (execute(&s_cond_compex,dest) != nullptr);
-                    if (getbracket(&s_cond_compex, 0)) // were there brackets?
+                    matched = s_cond_compex.execute(dest) != nullptr;
+                    if (s_cond_compex.get_bracket(0)) // were there brackets?
                     {
                         g_bra_compex = &s_cond_compex;
                     }
@@ -505,7 +505,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     s = dest;
                     g_bra_compex = oldbra_compex;
-                    free_compex(&s_cond_compex);
+                    s_cond_compex.free_compex();
                     break;
                 }
 
@@ -599,7 +599,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
 
                 case '0': case '1': case '2': case '3': case '4':
                 case '5': case '6': case '7': case '8': case '9':
-                    std::strcpy(scrbuf, getbracket(g_bra_compex,*pattern - '0'));
+                    std::strcpy(scrbuf, g_bra_compex->get_bracket(*pattern - '0'));
                     s = scrbuf;
                     break;
 

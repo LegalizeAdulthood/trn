@@ -43,8 +43,8 @@ bool           g_kill_thru_kludge{true};    // -k
 
 void art_search_init()
 {
-    init_compex(&s_sub_compex);
-    init_compex(&s_art_compex);
+    s_sub_compex.init_compex();
+    s_art_compex.init_compex();
 }
 
 // search for an article containing some pattern
@@ -303,7 +303,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 #endif
     }
     {
-        const char *s = compile(compex, pattern, true, fold_case);
+        const char *s = compex->compile(pattern, true, fold_case);
         if (s != nullptr)
         {
             // compile regular expression
@@ -531,7 +531,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
                 return false;
             }
             // see if it's in the header
-            if (execute(compex,g_head_buf))      // does it match?
+            if (compex->execute(g_head_buf))      // does it match?
             {
                 return true;                    // say, "Eureka!"
             }
@@ -577,7 +577,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
                 ch = *++nl_ptr;
                 *nl_ptr = '\0';
             }
-            success = success || execute(compex,s) != nullptr;
+            success = success || compex->execute(s) != nullptr;
             if (nl_ptr)
             {
                 *nl_ptr = ch;
@@ -590,5 +590,5 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         return false;                           // out of article, so no match
     }
     }
-    return execute(compex,g_buf) != nullptr;
+    return compex->execute(g_buf) != nullptr;
 }

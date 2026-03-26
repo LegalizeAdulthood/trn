@@ -43,7 +43,7 @@ static bool match_list(const char *pat_list, const char *s)
     bool   tmp_result;
 
     bool result = false;
-    init_compex(&il_compex);
+    il_compex.init_compex();
     while (pat_list && *pat_list)
     {
         if (*pat_list == '!')
@@ -76,12 +76,12 @@ static bool match_list(const char *pat_list, const char *s)
             finalize(1);
         }
 
-        if (execute(&il_compex,s) != nullptr)
+        if (il_compex.execute(s) != nullptr)
         {
             result = tmp_result;
         }
         pat_list = p;
     }
-    free_compex(&il_compex);
+    il_compex.free_compex();
     return result;
 }

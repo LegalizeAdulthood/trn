@@ -69,7 +69,7 @@ static bool clear_article_item(char *cp, int arg);
 void cache_init()
 {
 #ifdef PENDING
-    init_compex(&s_search_compex);
+    s_search_compex.init_compex();
 #endif
 }
 
@@ -602,7 +602,7 @@ void look_ahead()
             term_down(2);
         }
 #endif
-        s = compile(&s_srchcompex, pattern, true, true);
+        s = s_srchcompex.compile(pattern, true, true);
         if (s != nullptr)
         {
                                     // compile regular expression

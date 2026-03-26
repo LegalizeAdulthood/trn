@@ -259,7 +259,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
             decode_switch(argv[i]);
         }
     }
-    init_compex(&g_opt_compex);
+    g_opt_compex.init_compex();
 
     g_priv_dir = file_exp("~/News");
 }

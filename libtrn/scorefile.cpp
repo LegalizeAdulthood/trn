@@ -190,7 +190,7 @@ void sf_clean()
     {
         if (s_sf_entries[i].compex != nullptr)
         {
-            free_compex(s_sf_entries[i].compex);
+            s_sf_entries[i].compex->free_compex();
             std::free(s_sf_entries[i].compex);
         }
     }
@@ -781,19 +781,20 @@ bool sf_do_line(char *line, bool check)
         s_sf_entries[g_sf_num_entries-1].flags |= 1;
         s_sf_entries[g_sf_num_entries-1].str1 = mp_save_str(s,MP_SCORE1);
         s_sf_compex = (CompiledRegex*)safe_malloc(sizeof (CompiledRegex));
-        init_compex(s_sf_compex);
+        s_sf_compex->init_compex();
         // compile arguments:
         // 1st is COMPEX to store compiled regex in
         // 2nd is search string
         // 3rd should be true if the search string is a regex
         // 4th is true for case-insensitivity
-        s2 = compile(s_sf_compex,s,true,true);
+        s2 = s_sf_compex->compile(s, true, true);
         if (s2 != nullptr)
         {
             std::printf("Bad pattern : |%s|\n",s);
             std::printf("Compex returns: |%s|\n",s2);
-            free_compex(s_sf_compex);
+            s_sf_compex->free_compex();
             std::free(s_sf_compex);
+            s_sf_compex = nullptr;
             s_sf_entries[g_sf_num_entries-1].compex = nullptr;
             return false;
         }
@@ -874,7 +875,7 @@ int score_match(char *str, int ind)
         if (s_sf_entries[ind].compex != nullptr)
         {
             // we have a good pattern
-            s2 = execute(s_sf_entries[ind].compex,str);
+            s2 = s_sf_entries[ind].compex->execute(str);
             if (s2 != nullptr)
             {
                 return true;

@@ -932,7 +932,7 @@ void forward()
     char* mime_boundary;
 
 #ifdef REGEX_WORKS_RIGHT
-    init_compex(&mime_compex);
+    mime_compex.init_compex();
 #endif
     art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
@@ -945,10 +945,10 @@ void forward()
     interp(hbuf, sizeof hbuf, get_val("FORWARDHEADER",FORWARD_HEADER));
     std::fputs(hbuf,header);
 #ifdef REGEX_WORKS_RIGHT
-    if (!compile(&mime_compex,"Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
-     && execute(&mime_compex,hbuf) != nullptr)
+    if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
+        && mime_compex.execute(hbuf) != nullptr)
     {
-        mime_boundary = getbracket(&mime_compex,1);
+        mime_boundary = mime_compex.get_bracket(1);
     }
     else
     {
@@ -1057,7 +1057,7 @@ void forward()
 done:
     std::free(maildoer);
 #ifdef REGEX_WORKS_RIGHT
-    free_compex(&mime_compex);
+    mime_compex.free_compex();
 #else
     safe_free(mime_boundary);
 #endif

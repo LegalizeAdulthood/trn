@@ -103,7 +103,7 @@ static PageSwitchResult page_switch();
 
 void art_init()
 {
-    init_compex(&s_gcompex);
+    s_gcompex.init_compex();
 }
 
 DoArticleResult do_article()
@@ -325,7 +325,7 @@ DoArticleResult do_article()
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
-            if (g_hide_line && !s_continuation && execute(&g_hide_compex,buf_ptr))
+            if (g_hide_line && !s_continuation && g_hide_compex.execute(buf_ptr))
             {
                 hide_this_line = true;
             }
@@ -459,7 +459,7 @@ DoArticleResult do_article()
                     }
                 }
                 output_ok = !g_hide_everything;
-                if (g_page_stop && !s_continuation && execute(&g_page_compex,buf_ptr))
+                if (g_page_stop && !s_continuation && g_page_compex.execute(buf_ptr))
                 {
                     line_num = ArticleLine{32700};
                 }
@@ -920,13 +920,13 @@ static PageSwitchResult page_switch()
             }
         }
         std::sprintf(g_cmd_buf,"^[^%c\n]",*s);
-        compile(&s_gcompex,g_cmd_buf,true,true);
+        s_gcompex.compile(g_cmd_buf, true, true);
         goto caseG;
     }
 
     case Ctl('g'):
         g_g_line = 3;
-        compile(&s_gcompex,"^Subject:",true,true);
+        s_gcompex.compile("^Subject:", true, true);
         goto caseG;
 
     case 'g':         // in-article search
@@ -939,7 +939,7 @@ static PageSwitchResult page_switch()
         {
             s++;
         }
-        s = compile(&s_gcompex, s, true, true);
+        s = s_gcompex.compile(s, true, true);
         if (s != nullptr)
         {
                             // compile regular expression
@@ -1000,7 +1000,7 @@ caseG:
                 std::printf("Test %s\n",s);
             }
 #endif
-            success = execute(&s_gcompex,s) != nullptr;
+            success = s_gcompex.execute(s) != nullptr;
             if (nl_ptr)
             {
                 *nl_ptr = ch;
@@ -1330,7 +1330,7 @@ leave_pager:
             s_special_lines = g_tc_LINES;
         }
 go_forward:
-          if (*line_ptr(s_a_line_begin) != '\f' && (!g_page_stop || s_continuation || !execute(&g_page_compex, line_ptr(s_a_line_begin))))
+          if (*line_ptr(s_a_line_begin) != '\f' && (!g_page_stop || s_continuation || !g_page_compex.execute(line_ptr(s_a_line_begin))))
           {
               if (!s_special //
                   || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))

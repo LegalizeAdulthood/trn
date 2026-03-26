@@ -1003,8 +1003,8 @@ bool check_ini_cond(char *cond)
     else if (equal)
     {
         CompiledRegex condcompex;
-        init_compex(&condcompex);
-        s = compile(&condcompex,cond,true,true);
+        condcompex.init_compex();
+        s = condcompex.compile(cond, true, true);
         if (s != nullptr)
         {
             // warning(s)
@@ -1012,9 +1012,9 @@ bool check_ini_cond(char *cond)
         }
         else
         {
-            equal = execute(&condcompex,g_buf) != nullptr;
+            equal = condcompex.execute(g_buf) != nullptr;
         }
-        free_compex(&condcompex);
+        condcompex.free_compex();
         return equal;
     }
     else
