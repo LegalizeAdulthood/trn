@@ -62,6 +62,22 @@ static void display_subject(const Subject *subj, int ix, int sel);
 static void display_universal(const UniversalItem *ui);
 static void display_group(DataSource *dp, char *group, int len, int max_len);
 
+/// @brief Sets the selector mode based on the provided character.
+///
+/// This function changes the selector mode to article, subject, or thread mode
+/// depending on the input character. For thread mode, it may initialize threading
+/// if needed. The default selector mode is updated accordingly. Returns true if
+/// a valid mode was set, false otherwise.
+///
+/// @param ch The character indicating the desired selector mode ('a', 's', 't', or 'T').
+/// @return true if the mode was set successfully, false otherwise.
+///
+/// @globals
+/// - g_sel_default_mode: Set to the selected mode.
+/// - g_threaded_group: May be set to true or false when switching to thread mode.
+/// - g_thread_always: Temporarily set during thread initialization.
+/// - g_first_art: Set to g_abs_first if rereading in thread mode.
+///
 bool set_sel_mode(char_int ch)
 {
     switch (ch)
@@ -107,6 +123,20 @@ bool set_sel_mode(char_int ch)
     return true;
 }
 
+/// @brief Returns a string describing the current sort order.
+///
+/// This function temporarily switches to the specified selector mode,
+/// formats a string describing the current sort order (including
+/// direction), restores the previous mode, and returns the result in
+/// `g_buf`.
+///
+/// @param smode The selector mode to describe.
+/// @return Pointer to the buffer containing the sort order description.
+///
+/// @globals
+/// - g_sel_mode: Temporarily set to switch modes and restored.
+/// - g_buf: Updated with the formatted sort order string.
+///
 char *get_sel_order(SelectionMode smode)
 {
     SelectionMode save_sel_mode = g_sel_mode;
@@ -118,6 +148,16 @@ char *get_sel_order(SelectionMode smode)
     return g_buf;
 }
 
+/// @brief Sets the selection sort order for a given selection mode based on a string input.
+/// 
+/// If the string begins with 'r' or 'R', the sort order is set to reverse. The function
+/// then determines the sort key character and adjusts its case to indicate direction.
+/// The sort order is applied by calling set_sel_sort with the appropriate parameters.
+///
+/// @param smode The selection mode to set the sort order for.
+/// @param str   The string specifying the sort order and direction.
+/// @return      True if the sort order was set successfully, false otherwise.
+///
 bool set_sel_order(SelectionMode smode, const char *str)
 {
     bool reverse = false;
@@ -142,6 +182,19 @@ bool set_sel_order(SelectionMode smode, const char *str)
     return set_sel_sort(smode,ch);
 }
 
+/// @brief Sets the selection sort mode for a given selection mode and sort key character.
+/// 
+/// Determines the sort mode based on the provided character, sets the sort direction
+/// according to the character's case, and applies the sort order by calling set_selector.
+/// If the selection mode is changed during the process, it is restored to its previous value.
+/// 
+/// @param smode The selection mode to set the sort order for.
+/// @param ch    The character specifying the sort key and direction.
+/// @return      True if the sort order was set successfully, false otherwise.
+/// 
+/// @globals
+/// - g_sel_mode: Temporarily set to the provided selection mode and restored if changed.
+///
 bool set_sel_sort(SelectionMode smode, char_int ch)
 {
     SelectionMode save_sel_mode = g_sel_mode;
@@ -203,6 +256,28 @@ bool set_sel_sort(SelectionMode smode, char_int ch)
     return true;
 }
 
+/// @brief Sets the current selection mode and sort order for the selector.
+/// 
+/// Updates the global selection mode and sort order based on the provided mode and sort parameters.
+/// If the sort mode is not specified, it uses the default for the current selection mode.
+/// Also updates the sort direction, mode string, and related global state for the selector.
+/// 
+/// @param smode The selection mode to set.
+/// @param ssort The sort mode to set. If zero, the default for the mode is used.
+/// 
+/// @globals
+/// - g_sel_mode: Set to the current selection mode.
+/// - g_sel_direction: Set to 1 for forward, -1 for reverse sort.
+/// - g_sel_sort: Set to the current sort mode.
+/// - g_sel_mode_string: Set to a string describing the current mode.
+/// - s_sel_add_group_sort: Updated when mode is SM_ADD_GROUP.
+/// - g_sel_newsgroup_sort: Updated when mode is SM_NEWSGROUP.
+/// - s_sel_universal_sort: Updated when mode is SM_UNIVERSAL.
+/// - g_sel_thread_mode: Updated when mode is SM_THREAD or SM_SUBJECT.
+/// - g_sel_thread_sort: Updated when mode is SM_THREAD or SM_SUBJECT.
+/// - g_sel_art_sort: Updated when mode is SM_ARTICLE.
+/// - g_sel_sort_string: Set to a string describing the current sort order.
+///
 void set_selector(SelectionMode smode, SelectionSortMode ssort)
 {
     if (smode == SM_MAGIC_NUMBER)
@@ -362,6 +437,19 @@ thread_subj_sort:
     }
 }
 
+/// @brief Initializes selection page parameters.
+/// 
+/// This function calculates and sets the maximum number of lines (`s_sel_max_line_cnt`) and the maximum
+/// number of selectable items per page (`s_sel_max_per_page`) based on terminal dimensions and selection
+/// mode. It also initializes the selection character set and resets the current page object and item counts.
+/// 
+/// @globals
+/// - s_sel_max_line_cnt
+/// - g_sel_chars
+/// - s_sel_max_per_page
+/// - g_sel_page_obj_cnt
+/// - g_sel_page_item_cnt
+///
 static void sel_page_init()
 {
     s_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50? 6 : 5);
@@ -384,6 +472,32 @@ static void sel_page_init()
     g_sel_page_item_cnt = 0;
 }
 
+/// @brief Initializes and populates the selection pages for the current
+/// selection mode.
+///
+/// This function resets and recalculates the set of selectable objects and
+/// their inclusion flags for the current selection mode (such as
+/// newsgroups, articles, options, etc.). It determines which objects are
+/// included on the current page, updates counters, and manages page
+/// navigation as needed. The function may loop to ensure at least one
+/// selectable object is present, and handles special cases for exclusive
+/// selection and rereading modes.
+///
+/// @globals
+/// - g_sel_prior_obj_cnt: Reset to 0 and updated to count objects before the current page.
+/// - g_sel_total_obj_cnt: Reset to 0 and incremented for each included object.
+/// - g_sel_exclusive: May be set to false if no objects are included in exclusive mode.
+/// - g_sel_page_np: Set to the current newsgroup page pointer or reset to nullptr.
+/// - g_sel_page_mp: Set to the current multirc page pointer or reset to nullptr.
+/// - g_sel_page_gp: Set to the current add group page pointer or reset to nullptr.
+/// - g_sel_page_univ: Set to the current universal item page pointer or reset to nullptr.
+/// - g_sel_page_op: Set to the current option page index.
+/// - g_sel_page_app: Set to the current article page pointer or reset to nullptr.
+/// - g_sel_page_sp: Set to the current subject page pointer or reset to nullptr.
+/// - s_group_init_done: Set to true or false to indicate group initialization state.
+/// - g_selected_count: Reset to 0 and incremented for each selected object (newsgroups).
+/// - g_obj_count: Reset to 0 and incremented for each object considered.
+///
 void init_pages(bool fill_last_page)
 {
     Selection no_search;
@@ -914,6 +1028,24 @@ try_again:
     }
 }
 
+/// @brief Sets the selection to the first included object for the current mode.
+///
+/// This function attempts to set the current selection page pointer to the
+/// first object that is marked as included (e.g., group, article, subject,
+/// etc.) for the current selection mode. If the selection is already at the
+/// first included object, no change is made. Returns true if the selection
+/// was changed, otherwise false.
+///
+/// @globals
+/// - g_sel_prior_obj_cnt: Reset to 0 at the start of the function.
+/// - g_sel_page_mp: Set to the first included Multirc if in SM_MULTIRC mode.
+/// - g_sel_page_np: Set to the first included NewsgroupData if in SM_NEWSGROUP mode.
+/// - g_sel_page_gp: Set to the first included AddGroup if in SM_ADD_GROUP mode.
+/// - g_sel_page_univ: Set to the first included UniversalItem if in SM_UNIVERSAL mode.
+/// - g_sel_page_op: Set to 1 if not already 1 in SM_OPTIONS mode.
+/// - g_sel_page_app: Set to the first included Article** if in SM_ARTICLE mode.
+/// - g_sel_page_sp: Set to the first included Subject if in default/subject/thread mode.
+///
 bool first_page()
 {
     g_sel_prior_obj_cnt = 0;
@@ -1036,6 +1168,32 @@ bool first_page()
     return false;
 }
 
+/// @brief Sets the selection to the last included object for the current mode.
+///
+/// This function attempts to set the current selection page pointer to the
+/// last object that is marked as included (e.g., group, article, subject,
+/// etc.) for the current selection mode. It temporarily clears the current
+/// page pointer, calls prev_page() to move to the last page, and restores
+/// the pointer if no change occurred. Returns true if the selection was
+/// changed, otherwise false.
+///
+/// @globals
+/// - g_sel_prior_obj_cnt: Set to g_sel_total_obj_cnt at the start of the function.
+/// - g_sel_page_mp: Temporarily set to nullptr and possibly updated to the last
+///   included Multirc if in SM_MULTIRC mode.
+/// - g_sel_page_np: Temporarily set to nullptr and possibly updated to the last
+///   included NewsgroupData if in SM_NEWSGROUP mode.
+/// - g_sel_page_gp: Temporarily set to nullptr and possibly updated to the last
+///   included AddGroup if in SM_ADD_GROUP mode.
+/// - g_sel_page_univ: Temporarily set to nullptr and possibly updated to the last
+///   included UniversalItem if in SM_UNIVERSAL mode.
+/// - g_sel_page_op: Temporarily set to g_obj_count.value_of() + 1 and possibly
+///   updated to the last included option index if in SM_OPTIONS mode.
+/// - g_sel_page_app: Temporarily set to the end of the article pointer list and
+///   possibly updated to the last included Article** if in SM_ARTICLE mode.
+/// - g_sel_page_sp: Temporarily set to nullptr and possibly updated to the last
+///   included Subject if in default/subject/thread mode.
+///
 bool last_page()
 {
     g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
@@ -1150,6 +1308,24 @@ bool last_page()
     return false;
 }
 
+/// @brief Advances the selection to the next page of included objects.
+///
+/// This function updates the current selection page pointer to the next set
+/// of included objects for the current selection mode (e.g., group, article,
+/// subject, etc.), if available. It also increments the count of prior
+/// objects by the number of objects on the current page. Returns true if the
+/// selection was advanced, otherwise false.
+///
+/// @globals
+/// - g_sel_page_mp: Set to g_sel_next_mp if in SM_MULTIRC mode.
+/// - g_sel_page_np: Set to g_sel_next_np if in SM_NEWSGROUP mode.
+/// - g_sel_page_gp: Set to g_sel_next_gp if in SM_ADD_GROUP mode.
+/// - g_sel_page_univ: Set to g_sel_next_univ if in SM_UNIVERSAL mode.
+/// - g_sel_page_op: Set to s_sel_next_op if in SM_OPTIONS mode.
+/// - g_sel_page_app: Set to g_sel_next_app if in SM_ARTICLE mode.
+/// - g_sel_page_sp: Set to g_sel_next_sp if in default/subject/thread mode.
+/// - g_sel_prior_obj_cnt: Incremented by g_sel_page_obj_cnt when advancing page.
+///
 bool next_page()
 {
     switch (g_sel_mode)
@@ -1234,6 +1410,24 @@ bool next_page()
     return false;
 }
 
+/// @brief Moves the selection to the previous page of included objects.
+///
+/// This function scans backward through the included objects for the current
+/// selection mode (e.g., group, article, subject, etc.), updating the current
+/// selection page pointer to the start of the previous page if possible. It
+/// decrements the count of prior objects as it moves back. Returns true if the
+/// selection was moved to a previous page, otherwise false.
+///
+/// @globals
+/// - g_sel_page_mp: Set to the previous included Multirc if in SM_MULTIRC mode.
+/// - g_sel_page_np: Set to the previous included NewsgroupData if in SM_NEWSGROUP mode.
+/// - g_sel_page_gp: Set to the previous included AddGroup if in SM_ADD_GROUP mode.
+/// - g_sel_page_univ: Set to the previous included UniversalItem if in SM_UNIVERSAL mode.
+/// - g_sel_page_op: Set to the previous included option index if in SM_OPTIONS mode.
+/// - g_sel_page_app: Set to the previous included Article** if in SM_ARTICLE mode.
+/// - g_sel_page_sp: Set to the previous included Subject if in default/subject/thread mode.
+/// - g_sel_prior_obj_cnt: Decremented for each object moved back during paging.
+///
 bool prev_page()
 {
     int item_cnt = 0;
@@ -1476,7 +1670,33 @@ bool prev_page()
     return false;
 }
 
-// Return true if we had to change pages to find the object
+/// @brief Calculates and sets up the current selection page and item index.
+///
+/// Determines the set of selectable objects and their positions for the
+/// current page, based on the selection mode and the provided target object.
+/// Updates page and item counters, next-page pointers, and selection index.
+/// If the target object is not on the current page, may advance or rewind
+/// pages to locate it. Returns true if a page change was required to find
+/// the object, otherwise false.
+///
+/// @param u The Selection object specifying the target to locate on the page.
+///
+/// @return True if a page change was required to find the object, false
+/// otherwise.
+///
+/// @globals
+/// - g_sel_item_index: Set to the index of the target item or -1 if not found.
+/// - g_sel_page_obj_cnt: Set to the number of objects on the current page.
+/// - g_sel_page_item_cnt: Set to the number of selectable items on the page.
+/// - g_term_line: Reset to 2 at the start of the function.
+/// - g_sel_next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
+/// - g_sel_next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
+/// - g_sel_next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
+/// - g_sel_next_univ: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
+/// - s_sel_next_op: Set to the next option index for paging in SM_OPTIONS mode.
+/// - g_sel_next_app: Set to the next Article** for paging in SM_ARTICLE mode.
+/// - g_sel_next_sp: Set to the next Subject for paging in subject/thread mode.
+///
 bool calc_page(Selection u)
 {
     int ret = false;
@@ -1684,6 +1904,15 @@ try_again:
     return ret;
 }
 
+/// @brief Displays the title and summary information for the current selection page.
+///
+/// Outputs the appropriate page title, group/article counts, and context-specific
+/// information for the current selection mode. Handles screen clearing, cursor
+/// positioning, and displays additional status or restriction messages as needed.
+///
+/// @param home_only If true, only moves the cursor home and erases the line;
+/// otherwise, clears the screen and redraws the title.
+///
 void display_page_title(bool home_only)
 {
     if (home_only || (g_erase_screen && g_erase_each_line))
@@ -1789,6 +2018,30 @@ void display_page_title(bool home_only)
     newline();
 }
 
+/// @brief Displays the current selection page with selectable items and details.
+///
+/// Renders the current selection page, including selectable objects, their
+/// status, and summary information, according to the current selection mode.
+/// Handles paging, item highlighting, and invokes the appropriate display
+/// routines for each item type. If no items are present, attempts to move to
+/// the previous page. Updates navigation and selection state for the page.
+///
+/// @globals
+/// - g_sel_item_index: Set to the index of the last selected item on the page.
+/// - g_sel_page_obj_cnt: Set to the number of objects displayed on the page.
+/// - g_sel_page_item_cnt: Set to the number of selectable items on the page.
+/// - g_sel_next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
+/// - g_sel_next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
+/// - g_sel_next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
+/// - g_sel_next_univ: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
+/// - s_sel_next_op: Set to the next option index for paging in SM_OPTIONS mode.
+/// - g_sel_next_app: Set to the next Article** for paging in SM_ARTICLE mode.
+/// - g_sel_next_sp: Set to the next Subject for paging in subject/thread mode.
+/// - g_sel_last_ap: Reset to nullptr at the end of the function.
+/// - g_sel_last_sp: Reset to nullptr at the end of the function.
+/// - g_sel_at_end: Set to true if at the end of the selectable items.
+/// - g_sel_last_line: Set to the last terminal line used for display.
+///
 void display_page()
 {
     int sel;
@@ -2194,6 +2447,16 @@ start_of_loop:
     g_sel_last_line = g_term_line;
 }
 
+/// @brief Updates the display of selection items on the current page.
+///
+/// Iterates through all selectable items on the current page and updates their
+/// display if their selection state has changed. Also advances the selection
+/// index to the next item, wrapping to zero if at the end.
+///
+/// @globals
+/// - g_sel_item_index: Set to the index of the last updated item, or reset to 0
+///   if the end of the page is reached.
+///
 void update_page()
 {
     int sel;
