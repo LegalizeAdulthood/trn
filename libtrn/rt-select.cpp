@@ -361,6 +361,19 @@ sel_exit:
     return s_sel_ret;
 }
 
+/// @brief Processes selected newsgroups and performs actions based on their flags.
+///
+/// This function iterates through the list of newsgroups, checking their flags to determine
+/// if they should be visited. For each selected newsgroup, it sets the appropriate state,
+/// enters the group, and performs the necessary actions based on the group's status.
+/// The function handles various return codes to manage the flow of newsgroup processing.
+///
+/// @globals
+/// - g_selected_count: Updated to reflect the number of selected newsgroups.
+/// - g_recent_newsgroup: Set to the previously active newsgroup.
+/// - g_current_newsgroup: Updated to the currently active newsgroup.
+/// - g_threaded_group: Set based on whether the current newsgroup is threaded.
+///
 static void sel_do_groups()
 {
     int ret;
@@ -440,6 +453,21 @@ loop_break:
     g_selected_count = save_selected_count;
 }
 
+/// @brief Displays a selector for managing multiple .newsrc files and processes user commands.
+///
+/// This function initializes the selector for multiple .newsrc files, allowing the user to
+/// interact with and manage them. It handles user input, processes commands, and performs
+/// actions such as selecting, deselecting, and processing .newsrc files.
+///
+/// @globals
+/// - g_sel_rereading: Set to false to indicate no rereading mode.
+/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_selected_count: Reset to 0 to track the number of selected items.
+/// - s_end_char: Set to the end character for the selector.
+/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_mask: Set to the selection mask for the selector.
+/// - s_extra_commands: Set to the command handler for multirc commands.
+///
 char multirc_selector()
 {
     PushSelectorModes saver(MM_NEWSRC_SELECTOR);
@@ -502,6 +530,21 @@ sel_restart:
     return s_sel_ret;
 }
 
+/// @brief Displays a selector for managing newsgroups and processes user commands.
+///
+/// This function initializes the selector for newsgroups, allowing the user to
+/// interact with and manage them. It handles user input, processes commands, and
+/// performs actions such as selecting, deselecting, and processing newsgroups.
+///
+/// @globals
+/// - g_sel_rereading: Set to false to indicate no rereading mode.
+/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_selected_count: Reset to 0 to track the number of selected items.
+/// - s_end_char: Set to the end character for the selector.
+/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_mask: Set to the selection mask for the selector.
+/// - s_extra_commands: Set to the command handler for newsgroup commands.
+///
 char newsgroup_selector()
 {
     PushSelectorModes saver(MM_NEWSGROUP_SELECTOR);
@@ -589,6 +632,22 @@ sel_restart:
     return s_sel_ret;
 }
 
+/// @brief Displays a selector for adding newsgroups and processes user commands.
+///
+/// This function initializes the selector for adding newsgroups, allowing the user to
+/// interact with and manage them. It handles user input, processes commands, and
+/// performs actions such as selecting, deselecting, and adding newsgroups.
+///
+/// @globals
+/// - g_sel_rereading: Set to false to indicate no rereading mode.
+/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_selected_count: Reset to 0 to track the number of selected items.
+/// - s_end_char: Set to the end character for the selector.
+/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_mask: Set to the selection mask for the selector.
+/// - g_sel_page_gp: Set to nullptr to initialize the page group pointer.
+/// - s_extra_commands: Set to the command handler for add group commands.
+///
 char add_group_selector(GetNewsgroupFlags flags)
 {
     PushSelectorModes saver(MM_ADD_GROUP_SELECTOR);
@@ -664,6 +723,22 @@ sel_restart:
     return s_sel_ret;
 }
 
+/// @brief Displays a selector for managing configuration options and processes user commands.
+///
+/// This function initializes the selector for configuration options, allowing the user to
+/// interact with and modify them. It handles user input, processes commands, and performs
+/// actions such as selecting, deselecting, and saving options.
+///
+/// @globals
+/// - g_sel_rereading: Set to false to indicate no rereading mode.
+/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_selected_count: Reset to 0 to track the number of selected items.
+/// - s_end_char: Set to the end character for the selector.
+/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_mask: Set to the selection mask for the selector.
+/// - g_sel_page_op: Set to -1 to initialize the page option pointer.
+/// - s_extra_commands: Set to the command handler for option commands.
+///
 char option_selector()
 {
     char** vals = ini_values(g_options_ini);
@@ -733,7 +808,25 @@ sel_restart:
     return s_sel_ret;
 }
 
-// returns a command to do
+/// @brief Processes a universal item and performs actions based on its type.
+///
+/// This function handles various types of universal items, such as debug strings,
+/// text files, articles, group masks, configuration files, and newsgroups. It
+/// performs the appropriate actions for each type, including loading files,
+/// entering newsgroups, and invoking selectors.
+///
+/// @param ui Pointer to the universal item to process.
+/// @return A UniversalReadResult indicating the command to do.
+///
+/// @globals
+/// - g_univ_follow_temp: Set to false to indicate no temporary follow mode.
+/// - g_recent_newsgroup: Updated to the previously active newsgroup.
+/// - g_current_newsgroup: Updated to the currently active newsgroup.
+/// - g_threaded_group: Set based on whether the current newsgroup is threaded.
+/// - g_ng_go_art_num: Set to the article number to go to in virtual mode.
+/// - g_univ_read_virt_flag: Set to true during virtual newsgroup processing.
+/// - s_sel_ret: Used to store the return character from the universal selector.
+///
 static UniversalReadResult univ_read(UniversalItem *ui)
 {
     UniversalReadResult exit_code = UR_NORM;
@@ -946,6 +1039,26 @@ do_group:
     return exit_code;
 }
 
+/// @brief Displays a universal selector and processes user commands.
+///
+/// This function initializes the universal selector, allowing the user to
+/// interact with and manage universal items. It handles user input, processes
+/// commands, and performs actions such as selecting, deselecting, and processing
+/// universal items.
+///
+/// @return The character indicating the user's final action or selection.
+///
+/// @globals
+/// - g_sel_rereading: Set to false to indicate no rereading mode.
+/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_selected_count: Reset to 0 to track the number of selected items.
+/// - s_end_char: Set to the end character for the selector.
+/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_mask: Set to the selection mask for the selector.
+/// - sel_page_univ: Set to nullptr to initialize the universal page pointer.
+/// - s_extra_commands: Set to the command handler for universal commands.
+/// - s_sel_ret: Updated to store the return character from the universal selector.
+///
 char universal_selector()
 {
     PushSelectorModes saver(MM_UNIVERSAL);            // kind of like 'v'irtual...
@@ -1027,6 +1140,17 @@ sel_restart:
     return s_sel_ret;
 }
 
+/// @brief Displays the current page of selectable items and updates the display state.
+///
+/// This function renders the current page of items for the selector, ensuring that
+/// the display is updated appropriately. It handles clearing the screen, resetting
+/// the item index if necessary, and displaying any status messages.
+///
+/// @globals
+/// - g_sel_item_index: Reset to 0 if it exceeds the number of items on the page.
+/// - g_term_col: Updated to the length of the displayed status message.
+/// - s_disp_status_line: Updated to 2 after displaying the status message.
+///
 static void sel_display()
 {
     // Present a page of items to the user
@@ -1067,6 +1191,23 @@ static void sel_status_msg(const char *cp)
     s_disp_status_line = 2;
 }
 
+/// @brief Handles user input for the selector and processes commands or selections.
+///
+/// This function manages the input loop for the selector, allowing the user to
+/// navigate, select, deselect, and perform actions on items. It processes various
+/// commands, updates the display, and handles special cases such as ranges and
+/// goto commands.
+///
+/// @return The character indicating the user's final action or selection.
+///
+/// @globals
+/// - s_force_sel_pos: Set to -1 to reset the forced selection position.
+/// - s_removed_prompt: Updated to manage the state of removed prompts.
+/// - g_spin_char: Updated to display the current spin character.
+/// - s_disp_status_line: Updated to manage the status line display state.
+/// - g_sel_item_index: Updated to track the currently selected item index.
+/// - s_sel_ret: Updated to store the return character from the selector.
+///
 static char sel_input()
 {
     int j;
@@ -1608,6 +1749,18 @@ reinp_selector:
     goto position_selector;
 }
 
+/// @brief Displays the prompt for the selector, including the current selection state and mode.
+///
+/// This function constructs and displays the prompt line for the selector, showing
+/// information such as the current selection mode, sort order, and progress through
+/// the items. It also handles drawing the mouse bar and updating the terminal column.
+///
+/// @globals
+/// - g_cmd_buf: Updated with the constructed prompt string.
+/// - g_msg: Updated with the full prompt message to be displayed.
+/// - g_term_col: Updated to the length of the displayed prompt message.
+/// - s_removed_prompt: Set to RP_NONE to indicate no removed prompt state.
+///
 static void sel_prompt()
 {
     draw_mouse_bar(g_tc_COLS,false);
@@ -1639,6 +1792,20 @@ static void sel_prompt()
     s_removed_prompt = RP_NONE;
 }
 
+/// @brief Selects an item based on the current selection mode and updates its state.
+///
+/// This function processes the given item according to the current selection mode
+/// (`g_sel_mode`) and modifies its flags or state to reflect its selection. It also
+/// increments the global selection count (`g_selected_count`) when an item is newly selected.
+///
+/// @param u The item to be selected, represented as a `Selection` structure.
+/// @return `true` if the item was successfully selected, `false` otherwise.
+///
+/// @globals
+/// - g_sel_mode: Determines the current selection mode.
+/// - g_sel_mask: Used to apply specific flags during selection.
+/// - g_selected_count: Incremented when an item is newly selected.
+///
 static bool select_item(Selection u)
 {
     switch (g_sel_mode)
@@ -1699,6 +1866,19 @@ static bool select_item(Selection u)
     return true;
 }
 
+/// @brief Delays the unmarking of items based on the current selection mode.
+///
+/// This function processes the given item according to the current selection mode
+/// (`g_sel_mode`) and delays the unmarking of articles, threads, or subjects as needed.
+/// It handles different selection modes and applies the delay logic accordingly.
+///
+/// @param u The item to process, represented as a `Selection` structure.
+/// @return `true` if the operation was performed successfully, `false` otherwise.
+///
+/// @globals
+/// - g_sel_mode: Determines the current selection mode.
+/// - g_sel_rereading: Used to decide whether to delay unmarking based on unread status.
+///
 static bool delay_return_item(Selection u)
 {
     switch (g_sel_mode)
@@ -1743,6 +1923,21 @@ static bool delay_return_item(Selection u)
     return true;
 }
 
+/// @brief Deselects an item based on the current selection mode and updates its state.
+///
+/// This function processes the given item according to the current selection mode
+/// (`g_sel_mode`) and modifies its flags or state to reflect its deselection. It also
+/// decrements the global selection count (`g_selected_count`) when an item is deselected.
+///
+/// @param u The item to be deselected, represented as a `Selection` structure.
+/// @return `true` if the item was successfully deselected, `false` otherwise.
+///
+/// @globals
+/// - g_sel_mode: Determines the current selection mode.
+/// - g_sel_mask: Used to apply specific flags during deselection.
+/// - g_selected_count: Decremented when an item is deselected.
+/// - g_sel_rereading: Used to decide whether to mark items for deletion during rereading.
+///
 static bool deselect_item(Selection u)
 {
     switch (g_sel_mode)
@@ -1815,6 +2010,23 @@ static bool deselect_item(Selection u)
     return true;
 }
 
+/// @brief Selects or modifies an option based on the provided index and updates its state.
+///
+/// This function allows the user to select or modify an option identified by the given index.
+/// It handles the display of prompts, user input, and updates the option's value if changed.
+/// The function also updates the global selection count when an option is selected or deselected.
+///
+/// @param i The index of the option to be selected or modified.
+/// @return `true` if the option was successfully selected or modified, `false` otherwise.
+///
+/// @globals
+/// - g_options_ini: Used to retrieve the list of available options and their properties.
+/// - g_option_flags: Updated to reflect the selection state of the option.
+/// - g_selected_count: Incremented or decremented based on the selection state of the option.
+/// - g_buf: Used to store user input during the modification process.
+/// - g_sel_last_line: Used to position the cursor for displaying prompts.
+/// - s_clean_screen: Updated to indicate whether the screen should be cleared after input.
+///
 static bool select_option(OptionIndex i)
 {
     bool  changed = false;
@@ -1880,6 +2092,19 @@ static bool select_option(OptionIndex i)
     return true;
 }
 
+/// @brief Cleans up and finalizes selection state after selector operations.
+///
+/// This function updates selection and deletion flags for items such as add groups,
+/// newsgroups, and subjects, depending on the current selection mode (`g_sel_mode`)
+/// and whether rereading mode (`g_sel_rereading`) is active. It ensures that all
+/// selection-related flags and counts are consistent before exiting the selector or
+/// switching modes.
+///
+/// @globals
+/// - g_selected_count: May be incremented to reflect restored selections.
+/// - g_sel_last_ap: Set to nullptr when un-killing subjects in rereading mode.
+/// - g_sel_last_sp: Set to nullptr when un-killing subjects in rereading mode.
+///
 static void sel_cleanup()
 {
     switch (g_sel_mode)
@@ -2001,6 +2226,31 @@ static bool mark_del_as_read(char *ptr, int arg)
     return false;
 }
 
+/// @brief Process a single selector command and update selector state.
+///
+/// Interprets the provided command character, executes the corresponding
+/// selector action (navigation, inline commands, delegated handlers), and
+/// returns a DisplayState value that tells the caller how to proceed
+/// (redraw, ask, quit, restart, etc.).
+///
+/// @param ch Command character (from user input or synthesized).
+/// @return DisplayState directing the selector loop (DS_DISPLAY, DS_ASK,
+///         DS_QUIT, DS_RESTART, DS_STATUS, DS_DO_COMMAND, DS_ERROR).
+///
+/// @globals
+/// This function directly sets or modifies these global variables:
+/// - `s_clean_screen`
+/// - `g_term_scrolled`
+/// - `g_page_line`
+/// - `g_newsgroup_ptr` (may be set to `nullptr` when no newsgroup selected)
+/// - `g_buf` (first two bytes are written: `g_buf[0] = ch; g_buf[1] = FINISH_CMD`)
+/// - `g_output_chase_phrase`
+/// - `g_sel_item_index`
+/// - `s_removed_prompt`
+/// - `g_one_command`
+/// - `s_sel_ret`
+/// - `g_msg`
+///
 static DisplayState sel_command(char_int ch)
 {
     DisplayState ret;
