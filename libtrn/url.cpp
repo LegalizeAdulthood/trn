@@ -145,19 +145,13 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
         }
     }
 
+// Debug
 #if 0
     std::printf("ftpgrab command:\n|%s|\n",cmdline);
 #endif
 
     *p = '/';
     status = do_shell(nullptr,cmdline);
-#if 0
-    std::printf("\nFTP command status is %d\n",status);
-    while (!input_pending())
-    {
-    }
-    eat_typeahead();
-#endif
     return true;
 #else
     std::printf("\nThis copy of trn does not have URL:ftp support.\n");

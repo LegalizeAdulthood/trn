@@ -99,6 +99,7 @@ void sc_sv_get_file()
     std::FILE *fp = std::fopen(file_exp(s), "r");
     if (!fp)
     {
+// Debug
 #if 0
         std::printf("Could not open score save file for reading.\n");
 #endif
@@ -127,6 +128,7 @@ void sc_sv_save_file()
     std::FILE *tmpfp = std::fopen(s_line_buf, "w");
     if (!tmpfp)
     {
+// Debug
 #if 0
         std::printf("Could not open score save temp file %s for writing.\n",
                s_lbuf);

@@ -294,22 +294,6 @@ int s_do_cmd()
         eat_typeahead();
         break;
 
-#if 0
-    case '&':         // see/set switches...
-        // The new option stuff makes this potentially recursive.
-        // Something similar to the 'H' (extended help) code needs to be done.
-        // It may be necessary for this code to do the context saving.
-        //
-        s_go_bot();
-        g_s_ref_all = true;                     // will need refresh
-        if (!switcheroo())              // XXX same semantics in trn4?
-        {
-            (void)get_anything();
-        }
-        eat_typeahead();
-        break;
-#endif
-
     case '/':
     case '?':
     case 'g':         // goto (search for) group

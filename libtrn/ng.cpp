@@ -1707,19 +1707,6 @@ refresh_screen:
         g_int_count = 0;
         return AS_ASK;
 
-#if 0
-    case 'E':
-        if (decode_fp)
-        {
-            decode_end();
-        }
-        else
-        {
-            newline();
-        }
-        return AS_ASK;
-#endif
-
     case 'a':                 // attachment-view command
         newline();
         if (view_article() == SAVE_ABORT)
@@ -1885,14 +1872,6 @@ void set_default_cmd()
     }
     else
     {
-#if 0
-        if (multimedia_mime == true)
-        {
-            multimedia_mime++;
-            g_dfltcmd = "anpq";
-        }
-        else
-#endif
         if (g_search_ahead)
         {
             g_default_cmd = "^Nnpq";
@@ -2369,16 +2348,6 @@ reask_memorize:
     {
         clear_sub_thread(g_artp);
     }
-#if 0
-    else if (ch == 's')
-    {
-        g_buf[1] = FINISHCMD;
-        finish_command(1);
-        (void)art_search(g_buf, (sizeof g_buf), true);
-        g_art = art_hold;
-        g_artp = artp_hold;
-    }
-#endif
     else
     {
         use_one_line = false;

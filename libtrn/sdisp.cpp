@@ -291,11 +291,4 @@ void s_ref_status_on_page(long ent)
 
 void s_resize_win()
 {
-#if 0
-    int i;
-
-    i = s_initscreen();
-    // later possibly use the return value for an error abort?
-    g_s_resized = true;
-#endif
 }

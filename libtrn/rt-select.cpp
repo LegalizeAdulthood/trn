@@ -1755,12 +1755,6 @@ static bool deselect_item(Selection u)
             u.mp->m_flags &= ~static_cast<MultircFlags>(g_sel_mask);
             g_selected_count--;
         }
-#if 0
-        if (g_sel_rereading)
-        {
-            u.mp->m_flags |= MF_DEL;
-        }
-#endif
         break;
 
     case SM_ADD_GROUP:
@@ -3012,14 +3006,7 @@ reask_sort:
         return DS_DISPLAY;
 
     case ':':
-#if 0
-        if (g_ngptr != g_current_ng)
-        {
-            g_recent_ng = g_current_ng;
-            g_current_ng = g_ngptr;
-        }
         // FALL THROUGH
-#endif
 
     case '/':
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt

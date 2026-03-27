@@ -340,11 +340,6 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     if (bmode == FB_DISCARD)
     {
-#if 0
-        // Implement this if flushing the data becomes possible
-        nntp_artname(g_openart, -1); // Or something...
-        g_openart = 0;  // Since we didn't finish the art, forget its number
-#endif
     }
     else if (bmode == FB_OUTPUT)
     {
@@ -522,26 +517,6 @@ int nntp_art_nums()
     }
     return 1;
 }
-
-#if 0
-int nntp_rover()
-{
-    if (g_datasrc->flags & DF_NOXROVER)
-    {
-        return 0;
-    }
-    if (nntp_command("XROVER 1-") <= 0)
-    {
-        return -2;
-    }
-    if (nntp_check() <= 0)
-    {
-        g_datasrc->flags |= DF_NOXROVER;
-        return 0;
-    }
-    return 1;
-}
-#endif
 
 ArticleNum nntp_find_real_art(ArticleNum after)
 {

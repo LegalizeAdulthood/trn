@@ -975,12 +975,6 @@ void perform_status(int cnt, int spin)
     {
         std::printf("S:%ld ", sels);
     }
-#if 0
-    if (missing > 0)
-    {
-        std::printf("(M: %ld) ", missing);
-    }
-#endif
     erase_eol();
     std::fflush(stdout);
 }

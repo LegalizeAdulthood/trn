@@ -501,14 +501,10 @@ void set_def(char *buffer, const char *dflt)
 #ifndef NO_FILELINKS
 void safe_link(char *old_name, char *new_name)
 {
-#if 0
-    extern int sys_nerr;
-    extern char* sys_errlist[];
-#endif
-
     if (link(old_name, new_name))
     {
         std::printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name);
+// Debug
 #if 0
         if (errno>0 && errno<sys_nerr)
         {
@@ -907,6 +903,7 @@ bool parse_string(char **to, char **from)
             *t++ = *f;
         }
     }
+// Debug
 #if 0
     if (inquote)
     {

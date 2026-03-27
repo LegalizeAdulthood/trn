@@ -41,14 +41,11 @@ char           *nntp_read_art(char *s, int limit);
 std::time_t     nntp_time();
 int             nntp_new_groups(std::time_t t);
 int             nntp_art_nums();
-#if 0
-int nntp_rover();
-#endif
-ArticleNum nntp_find_real_art(ArticleNum after);
-char      *nntp_art_name(ArticleNum art_num, bool allocate);
-char      *nntp_tmp_name(int ndx);
-int        nntp_handle_nested_lists();
-int        nntp_handle_timeout();
+ArticleNum      nntp_find_real_art(ArticleNum after);
+char           *nntp_art_name(ArticleNum art_num, bool allocate);
+char           *nntp_tmp_name(int ndx);
+int             nntp_handle_nested_lists();
+int             nntp_handle_timeout();
 #ifdef SUPPORT_XTHREAD
 long nntp_read_check();
 long nntp_read(char *buf, long n);

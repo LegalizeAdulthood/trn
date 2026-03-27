@@ -45,6 +45,7 @@ void sc_init(bool pend_wait)
 {
     if (g_last_art == 0 || g_last_art < g_abs_first)
     {
+// Debug
 #if 0
         std::printf("No articles exist to be scored.\n");
 #endif
@@ -255,6 +256,7 @@ int sc_score_art(ArticleNum a, bool now)
 {
     if (a < g_abs_first || a > g_last_art)
     {
+// Debug
 #if 0
          std::printf("\nsc_score_art: illegal article# %d\n",a);
 #endif

@@ -98,10 +98,6 @@ long sa_artnum_to_ent(ArticleNum artnum)
 void sa_sel_threads()
 {
     bool want_unread;
-#if 0
-    // this does not work now, but maybe it will help debugging?
-    int subj_mask = (g_sel_mode == SM_THREAD? (SF_THREAD|SF_VISIT) : SF_VISIT);
-#endif
     int subj_mask = SF_VISIT;
 
     want_unread = !g_sa_mode_read_elig;

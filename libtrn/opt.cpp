@@ -107,10 +107,6 @@ IniWords      g_options_ini[] = {
 
     { 0, "*Posting Options", nullptr },
     { 0, "Cited Text String", "<e.g. '>'>" },
-#if 0
-    { 0, "Attribute string", "<e.g. ...>" },
-    { 0, "Reply To", "<e.g. ...>" },
-#endif
 
     { 0, "*Save Options", nullptr },
     { 0, "Save Dir", "<directory path>" },
@@ -913,10 +909,6 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SCAN_ART_DISP_SUBJ:
-#if 0
-        // for now, always on.
-        g_sa_mode_desc_subject = YES(s);
-#endif
         break;
 
     case OI_SCAN_ART_DISP_SUMMARY:

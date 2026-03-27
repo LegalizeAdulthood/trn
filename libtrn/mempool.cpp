@@ -86,19 +86,9 @@ static int mp_alloc_frag()
 // frees a fragment number
 static void mp_free_frag(int f)
 {
-#if 0
-    // old code to actually free the blocks
-    if (s_mpfrags[f].data)
-    {
-        std::free(s_mpfrags[f].data);
-    }
-    s_mpfrags[f].lastfree = nullptr;
-    s_mpfrags[f].bytesfree = 0;
-#else
     // instead of freeing it, reset it for later use
     s_mp_frags[f].last_free = s_mp_frags[f].data;
     s_mp_frags[f].bytes_free = FRAG_SIZE;
-#endif
     s_mp_frags[f].next = s_mp_first_free_frag;
     s_mp_first_free_frag = f;
 }

@@ -706,12 +706,6 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
             s = mime_skip_whitespace(s+1);
             g_mime_section->m_filename = save_str(s);
             break;
-
-#if 0
-        case CONTLEN_LINE:
-            g_mime_section->content_len = atol(s+1);
-            break;
-#endif
         }
     }
     g_mime_state = g_mime_section->m_type;
@@ -1013,12 +1007,8 @@ void MimeSection::mime_description(char *s, int limit)
     }
     else
     {
-#if 0
-        std::sprintf(s+len, "...%s]\n", fn + flen - (limit-(len+3)));
-#else
         safe_copy(s+len, fn, limit - (len+3));
         std::strcat(s, "...]\n");
-#endif
     }
 }
 

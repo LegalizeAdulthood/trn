@@ -194,12 +194,6 @@ DoArticleResult do_article()
             s_restart = ArticlePosition{};
         }
         ArticleLine line_num{1};
-#if 0 // This causes a bug (headers displayed twice sometimes when you press v then ^R)
-        if (!g_do_hiding)
-        {
-            g_is_mime = false;
-        }
-#endif
         if (s_first_page)
         {
             if (g_first_line)

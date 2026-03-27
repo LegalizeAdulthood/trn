@@ -34,35 +34,6 @@ const char *sa_get_stat_chars(long a, int line)
     std::printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line);
 #endif
 
-#if 0
-    // old 5-column status
-    switch (line)
-    {
-    case 1:
-        std::strcpy(char_buf,".....");
-        if (sa_marked(a))
-        {
-            char_buf[4] = 'x';
-        }
-        if (sa_selected1(a))
-        {
-            char_buf[3] = '+';
-        }
-        if (was_read(g_sa_ents[a].artnum))
-        {
-            char_buf[0] = '-';
-        }
-        else
-        {
-            char_buf[0] = '+';
-        }
-        break;
-
-    default:
-        std::strcpy(char_buf,"     ");
-        break;
-    } // switch
-#else
     switch (line)
     {
     case 1:
@@ -89,7 +60,6 @@ const char *sa_get_stat_chars(long a, int line)
         std::strcpy(char_buf,"   ");
         break;
     } // switch
-#endif
     return char_buf;
 }
 
@@ -158,17 +128,6 @@ const char *sa_get_desc(long e, int line, bool trunc)
         }
         if (g_sa_mode_desc_author)
         {
-#if 0
-            if (trunc)
-            {
-                std::sprintf(s_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
-            }
-            else
-            {
-                std::sprintf(s_sa_buf,"%s ",sa_desc_author(e,40));
-            }
-            std::strcat(desc_buf,s_sa_buf);
-#endif
             if (trunc)
             {
                 std::strcat(desc_buf, compress_from(article_ptr(artnum)->m_from, 16));
@@ -193,10 +152,6 @@ const char *sa_get_desc(long e, int line, bool trunc)
             int i;              // number of spaces to indent
             char* s2;   // for indenting
 
-// include the following line to use standout mode
-#if 0
-            use_standout = true;
-#endif
             i = 0;
             // if variable widths used later, use them
             if (g_sa_mode_desc_art_num)
@@ -237,10 +192,6 @@ const char *sa_get_desc(long e, int line, bool trunc)
         {
             int i;              // number of spaces to indent
             char* s2;   // for indenting
-// include the following line to use standout mode
-#if 0
-            use_standout = true;
-#endif
             i = 0;
             // if variable widths used later, use them
             if (g_sa_mode_desc_art_num)

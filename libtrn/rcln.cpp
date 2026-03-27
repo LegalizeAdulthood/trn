@@ -124,16 +124,6 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
         np->set_to_read(ST_LAX);
     }
 #endif
-#if 0
-    if (artnum > np->ngmax + 200)       // allow for incoming articles
-    {
-        std::printf("\nCorrupt Xref line!!!  %ld --> %s(1..%ld)\n",
-            artnum,ngnam,
-            np->ngmax);
-        g_paranoid = true;              // paranoia reigns supreme
-        return -1;                      // hope this was the first newsgroup
-    }
-#endif
 
     if (np->m_to_read == TR_BOGUS)
     {
@@ -692,14 +682,6 @@ bool was_read_group(ArticleNum artnum, char *ngnam)
     {
         return false;
     }
-#if 0
-    // consider this code later
-    if (!np->abs1st)
-    {
-        // Trim down the list due to expires if we haven't done so yet.
-        set_toread(np, ST_LAX);
-    }
-#endif
 
     if (np->m_to_read == TR_BOGUS)
     {

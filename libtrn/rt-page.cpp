@@ -706,14 +706,6 @@ try_again:
             }
             ++g_obj_count;
         }
-#if 0
-        if (!g_sel_total_obj_cnt && g_sel_exclusive)
-        {
-            g_sel_exclusive = false;
-            g_sel_page_op = nullptr;
-            goto try_again;
-        }
-#endif
         if (g_sel_page_op < 1)
         {
             (void) first_page();
@@ -1820,13 +1812,6 @@ try_again:
         }
         for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
         {
-#if 0
-            if (mp == g_multirc)
-            {
-                g_sel_item_index = g_sel_page_item_cnt;
-            }
-#endif
-
             if (!(mp->m_flags & MF_INCLUDED))
             {
                 continue;
@@ -1984,13 +1969,6 @@ start_of_loop:
         }
         for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->m_next)
         {
-#if 0
-            if (gp == xx)
-            {
-                g_sel_item_index = g_sel_page_item_cnt;
-            }
-#endif
-
             if (!(gp->m_flags & AGF_INCLUDED))
             {
                 continue;
@@ -2022,13 +2000,6 @@ start_of_loop:
         UniversalItem* ui = sel_page_univ;
         for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->m_next)
         {
-#if 0
-            if (ui == xx)
-            {
-                g_sel_item_index = g_sel_page_item_cnt;
-            }
-#endif
-
             if (!(ui->m_flags & UF_INCLUDED))
             {
                 continue;
@@ -2060,13 +2031,6 @@ start_of_loop:
         int op = g_sel_page_op;
         for (; op <= g_obj_count.value_of() && g_sel_page_item_cnt < s_sel_max_per_page; op++)
         {
-#if 0
-            if (op == xx)
-            {
-                g_sel_item_index = g_sel_page_item_cnt;
-            }
-#endif
-
             if (!(g_option_flags[op] & OF_INCLUDED))
             {
                 continue;

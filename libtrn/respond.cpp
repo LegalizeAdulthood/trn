@@ -48,9 +48,6 @@ static char       s_empty_article[] = "\nEmpty article.\n";
 static std::FILE *s_tmp_fp{};
 
 static void follow_it_up();
-#if 0
-static bool cut_line(char *str);
-#endif
 
 void respond_init()
 {
@@ -257,16 +254,10 @@ SaveResult save_article()
                 {
                     continue;   // Ignore empty or initially-whitespace lines
                 }
-                if (((*g_art_line == '#' || *g_art_line == ':')            //
-                     && (!std::strncmp(g_art_line + 1, "! /bin/sh", 9)     //
-                         || !std::strncmp(g_art_line + 1, "!/bin/sh", 8)   //
-                         || !std::strncmp(g_art_line + 2, "This is ", 8))) //
-#if 0
-                    || !std::strncmp(g_art_line, "sed ", 4)                //
-                    || !std::strncmp(g_art_line, "cat ", 4)                //
-                    || !std::strncmp(g_art_line, "echo ", 5)               //
-#endif
-                )
+                if ((*g_art_line == '#' || *g_art_line == ':')            //
+                    && (!std::strncmp(g_art_line + 1, "! /bin/sh", 9)     //
+                        || !std::strncmp(g_art_line + 1, "!/bin/sh", 8)   //
+                        || !std::strncmp(g_art_line + 2, "This is ", 8))) //
                 {
                     g_save_from = g_art_pos;
                     decode_type = 1;
@@ -1170,133 +1161,3 @@ int invoke(const char *cmd, const char *dir)
     }
     return ret;
 }
-
-/*
-** cut_line() determines if a line is meant as a "cut here" marker.
-** Some examples that we understand:
-**
-**  BEGIN--cut here--cut here
-**
-**  ------------------ tear at this line ------------------
-**
-**  #----cut here-----cut here-----cut here-----cut here----#
-*/
-#if 0
-static bool cut_line(char *str)
-{
-    char* cp;
-    char got_flag;
-    char word[80];
-    int  dash_cnt, equal_cnt, other_cnt;
-
-    // Disallow any single-/double-quoted, parenthetical or c-commented
-    // string lines.  Make sure it has the cut-phrase and at least six
-    // '-'s or '='s.  If only four '-'s are present, check for a duplicate
-    // of the cut phrase.  If over 20 unknown characters are encountered,
-    // assume it isn't a cut line.  If we succeed, return true.
-    //
-    for (cp = str, dash_cnt = equal_cnt = other_cnt = 0; *cp; cp++)
-    {
-        switch (*cp)
-        {
-        case '-':
-            dash_cnt++;
-            break;
-
-        case '=':
-            equal_cnt++;
-            break;
-
-        case '/':
-            if (*(cp+1) != '*')
-            {
-                break;
-            }
-
-        case '"':
-        case '\'':
-        case '(':
-        case ')':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
-            return false;
-
-        default:
-            other_cnt++;
-            break;
-        }
-    }
-    if (dash_cnt < 4 && equal_cnt < 6)
-    {
-        return false;
-    }
-
-    got_flag = 0;
-
-    for (*(cp = word) = '\0'; *str; str++)
-    {
-        if (std::islower(*str))
-        {
-            *cp++ = *str;
-        }
-        else if (std::isupper(*str))
-        {
-            *cp++ = std::tolower(*str);
-        }
-        else
-        {
-            if (*word)
-            {
-                *cp = '\0';
-                switch (got_flag)
-                {
-                case 2:
-                    if (!std::strcmp(word, "line")     //
-                        || !std::strcmp(word, "here")) //
-                    {
-                        if ((other_cnt -= 4) <= 20)
-                        {
-                            return true;
-                        }
-                    }
-                    break;
-
-                case 1:
-                    if (!std::strcmp(word, "this"))
-                    {
-                        got_flag = 2;
-                        other_cnt -= 4;
-                    }
-                    else if (!std::strcmp(word, "here"))
-                    {
-                        other_cnt -= 4;
-                        if ((dash_cnt >= 6 || equal_cnt >= 6)
-                         && other_cnt <= 20)
-                        {
-                            return true;
-                        }
-                        dash_cnt = 6;
-                        got_flag = 0;
-                    }
-                    break;
-
-                case 0:
-                    if (!std::strcmp(word, "cut")     //
-                        || !std::strcmp(word, "snip") //
-                        || !std::strcmp(word, "tear"))
-                    {
-                        got_flag = 1;
-                        other_cnt -= std::strlen(word);
-                    }
-                    break;
-                }
-                *(cp = word) = '\0';
-            }
-        }
-    } // for *str
-
-    return false;
-}
-#endif

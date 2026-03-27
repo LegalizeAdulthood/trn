@@ -399,16 +399,6 @@ int thread_perform()
                 break;
             }
         }
-#if 0
-    }
-    else if (!std::strcmp(cmdstr, "E"))
-    {
-        // The 'E'nd-decode command doesn't do any looping at all.
-        if (decode_fp)
-        {
-            decode_end();
-        }
-#endif
     }
     else if (*cmdstr == 'p')
     {
