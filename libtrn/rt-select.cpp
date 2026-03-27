@@ -825,7 +825,6 @@ sel_restart:
 /// - g_threaded_group: Set based on whether the current newsgroup is threaded.
 /// - g_ng_go_art_num: Set to the article number to go to in virtual mode.
 /// - g_univ_read_virt_flag: Set to true during virtual newsgroup processing.
-/// - s_sel_ret: Used to store the return character from the universal selector.
 ///
 static UniversalReadResult univ_read(UniversalItem *ui)
 {
@@ -2462,6 +2461,22 @@ the_default:
     return DS_ASK;
 }
 
+/// @brief Updates the display and status after performing a selector change.
+///
+/// This function manages the display state and status line after a change
+/// operation in the selector. It handles error reporting, updates the screen
+/// as needed, and reinitializes pages. The return value indicates whether
+/// the selector should remain on the current page or move up a line.
+///
+/// @param cnt The count of objects affected by the change.
+/// @param obj_type The type of object being changed (for status messages).
+/// @return true if the selector should move up a line, false otherwise.
+///
+/// @globals
+/// - s_disp_status_line: Set to 1 or 0 to control status line display.
+/// - s_clean_screen: Set to false if the screen should not be cleared.
+/// - g_error_occurred: Set to false after handling an error.
+///
 static bool sel_perform_change(long cnt, const char *obj_type)
 {
     carriage_return();
@@ -2509,8 +2524,22 @@ static bool sel_perform_change(long cnt, const char *obj_type)
     return false;
 }
 
-#define SPECIAL_CMD_LETTERS "<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033;"
+static constexpr const char *SPECIAL_CMD_LETTERS{"<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033;"};
 
+/// @brief Handles additional command input for the selector loop.
+///
+/// This function reads a single character from the user (or from the input buffer),
+/// determines if it is a special selector command or a selection character, and
+/// processes it accordingly. If the command is recognized as a special command,
+/// it sets `s_sel_ret` and returns the character; otherwise, it pushes the character
+/// for later processing and returns '\0'.
+///
+/// @param ch The initial command character or indicator for input (may be 0 or 1 to trigger input).
+/// @return The processed command character if handled, or '\0' if deferred.
+///
+/// @globals
+/// - s_sel_ret: Set to the recognized special command character.
+///
 static char another_command(char_int ch)
 {
     bool skip_q = !ch;
@@ -2544,6 +2573,30 @@ static char another_command(char_int ch)
     return '\0';
 }
 
+/// @brief Handles selector commands specific to article selection mode.
+///
+/// This function interprets and executes commands for the article selector,
+/// including navigation, selection, sorting, marking, yanking, and mode changes.
+/// It updates the selector state, display, and selection flags as needed,
+/// and returns a DisplayState value to direct the selector loop.
+///
+/// @param ch The command character to process.
+/// @return DisplayState indicating the next action for the selector loop.
+///
+/// @globals
+/// - g_sel_rereading: Toggled for rereading mode.
+/// - g_sel_page_sp: Set to nullptr for page state changes.
+/// - g_sel_page_app: Set to nullptr for page state changes.
+/// - g_sel_mode: May be changed when switching selector modes.
+/// - g_sel_thread_mode: Used when switching to thread mode.
+/// - g_sel_item_index: Reset to 0 for some commands.
+/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_msg: Updated with status or help messages.
+/// - s_disp_status_line: Set to 1 or 0 for status line control.
+/// - s_clean_screen: Set to false to prevent screen clearing.
+/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
+/// - s_sel_ret: Set to the quit or special command character.
+///
 static DisplayState article_commands(char_int ch)
 {
     switch (ch)
@@ -3086,6 +3139,30 @@ reask_sort:
     return DS_ASK;
 }
 
+/// @brief Handles selector commands specific to newsgroup selection mode.
+///
+/// This function interprets and executes commands for the newsgroup selector,
+/// including navigation, selection, sorting, marking, catchup, and mode changes.
+/// It updates the selector state, display, and selection flags as needed,
+/// and returns a DisplayState value to direct the selector loop.
+///
+/// @param ch The command character to process.
+/// @return DisplayState indicating the next action for the selector loop.
+///
+/// @globals
+/// - g_sel_rereading: Toggled for rereading mode.
+/// - g_sel_page_np: Set to nullptr for page state changes.
+/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel_item_index: Reset to 0 for some commands.
+/// - g_msg: Updated with status or help messages.
+/// - s_disp_status_line: Set to 1 for status line control.
+/// - s_clean_screen: Set to false to prevent screen clearing.
+/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
+/// - s_sel_ret: Set to the quit or special command character.
+/// - g_newsgroup_ptr: Set to nullptr or updated for search/catchup.
+/// - g_recent_newsgroup: Updated when switching newsgroups.
+/// - g_current_newsgroup: Updated when switching newsgroups.
+///
 static DisplayState newsgroup_commands(char_int ch)
 {
     switch (ch)
@@ -3471,6 +3548,28 @@ reask_sort:
     return DS_ASK;
 }
 
+/// @brief Handles selector commands specific to the add group selection mode.
+///
+/// This function interprets and executes commands for the add group selector,
+/// including sorting, navigation, selection, marking, and mode changes. It
+/// updates the selector state, display, and selection flags as needed, and
+/// returns a DisplayState value to direct the selector loop.
+///
+/// @param ch The command character to process.
+/// @return DisplayState indicating the next action for the selector loop.
+///
+/// @globals
+/// - g_sel_rereading: Toggled for rereading mode.
+/// - g_sel_page_gp: Set to nullptr for page state changes.
+/// - g_sel_page_np: Set to nullptr for page state changes.
+/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel_item_index: Reset to 0 for some commands.
+/// - g_msg: Updated with status or help messages.
+/// - s_disp_status_line: Set to 1 for status line control.
+/// - s_clean_screen: Set to false to prevent screen clearing.
+/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
+/// - s_sel_ret: Set to the quit or special command character.
+///
 static DisplayState add_group_commands(char_int ch)
 {
     switch (ch)
@@ -3689,6 +3788,21 @@ reask_sort:
     return DS_ASK;
 }
 
+/// @brief Handles selector commands specific to the multirc selection mode.
+///
+/// This function interprets and executes commands for the multirc selector,
+/// including sorting, exclusive selection, help, and display refresh. It
+/// updates the selector state and display as needed, and returns a DisplayState
+/// value to direct the selector loop.
+///
+/// @param ch The command character to process.
+/// @return DisplayState indicating the next action for the selector loop.
+///
+/// @globals
+/// - g_sel_rereading: Checked to determine if rereading mode is active.
+/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel_page_mp: Set to nullptr for page state changes.
+///
 static DisplayState multirc_commands(char_int ch)
 {
     switch (ch)
@@ -3731,6 +3845,26 @@ static DisplayState multirc_commands(char_int ch)
     return DS_ASK;
 }
 
+/// @brief Handles selector commands specific to the options selection mode.
+///
+/// This function interprets and executes commands for the options selector,
+/// including sorting, exclusive selection, searching, help, and display refresh.
+/// It updates the selector state and display as needed, and returns a DisplayState
+/// value to direct the selector loop.
+///
+/// @param ch The command character to process.
+/// @return DisplayState indicating the next action for the selector loop.
+///
+/// @globals
+/// - g_sel_rereading: Checked to determine if rereading mode is active.
+/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel_page_op: Set to 1 for page state changes.
+/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
+/// - s_disp_status_line: Set to 1 for status line control.
+/// - s_clean_screen: Set to false to prevent screen clearing.
+/// - g_msg: Updated with status or error messages.
+/// - s_sel_ret: Set to the quit or special command character.
+///
 static DisplayState option_commands(char_int ch)
 {
     switch (ch)
@@ -3953,6 +4087,19 @@ reask_sort:
     return DS_ERROR;
 }
 
+/// @brief Cycles through and sets the display mode for selector pages.
+///
+/// This function advances the display mode pointer to the next available mode,
+/// wraps around if necessary, and sets a descriptive status message for the
+/// current display style. The status message is stored in `g_msg` and the
+/// status line indicator is updated.
+///
+/// @param dmode_cpp Pointer to the current display mode string pointer.
+///
+/// @globals
+/// - g_msg: Updated with the current display style description.
+/// - s_disp_status_line: Set to 1 to indicate the status line should be displayed.
+///
 static void switch_dmode(char **dmode_cpp)
 {
     const char* s = "?";
@@ -3986,6 +4133,15 @@ static void switch_dmode(char **dmode_cpp)
     s_disp_status_line = 1;
 }
 
+/// @brief Finds the selector item index corresponding to a given screen line.
+///
+/// This function searches through the current page's selector items to find
+/// the index of the item whose display line is just above or equal to the
+/// specified y-coordinate. If no item is above y, returns 0.
+///
+/// @param y The screen line number to locate.
+/// @return The index of the selector item corresponding to the given line.
+///
 static int find_line(int y)
 {
     int i;
