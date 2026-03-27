@@ -53,7 +53,7 @@ bool g_univ_follow_temp{};
 // items which must be saved in context
 UniversalItem *g_first_univ{};
 UniversalItem *g_last_univ{};
-UniversalItem *sel_page_univ{};
+UniversalItem *g_sel_page_univ{};
 UniversalItem *g_sel_next_univ{};
 char          *g_univ_fname{};  // current filename (may be null)
 std::string    g_univ_label;    // current label (may be null)
@@ -127,7 +127,7 @@ void univ_open()
 {
     g_first_univ = nullptr;
     g_last_univ = nullptr;
-    sel_page_univ = nullptr;
+    g_sel_page_univ = nullptr;
     g_sel_next_univ = nullptr;
     g_univ_fname = nullptr;
     g_univ_title.clear();
@@ -170,7 +170,7 @@ void univ_close()
     }
     g_first_univ = nullptr;
     g_last_univ = nullptr;
-    sel_page_univ = nullptr;
+    g_sel_page_univ = nullptr;
     g_sel_next_univ = nullptr;
     g_univ_level--;
 }

@@ -131,7 +131,7 @@ extern bool g_univ_follow_temp;
 // items which must be saved in context
 extern UniversalItem *g_first_univ;
 extern UniversalItem *g_last_univ;
-extern UniversalItem *sel_page_univ;
+extern UniversalItem *g_sel_page_univ;
 extern UniversalItem *g_sel_next_univ;
 extern char          *g_univ_fname;    // current filename (may be null)
 extern std::string    g_univ_label;    // current label (may be empty)
