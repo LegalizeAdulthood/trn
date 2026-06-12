@@ -2,59 +2,64 @@ name: CMake
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "develop" ]
   pull_request:
     branches: [ "master" ]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest, windows-2022 ]
         # Disabled until <curses.h> can be safely included without conflict in terminal.h
-        # os: [ ubuntu-latest, windows-latest, macos-latest ]
+        # os: [ ubuntu-latest, windows-2022, macos-latest ]
         include:
           - os: ubuntu-latest
             cmake-preset: ci-linux
-            nuget: mono `./vcpkg/vcpkg fetch nuget | tail -n 1`
-          - os: windows-latest
+          - os: windows-2022
             cmake-preset: default
-            nuget: nuget
 
     runs-on: ${{matrix.os}}
-    env: 
-      FEED_URL: https://nuget.pkg.github.com/${{github.repository_owner}}/index.json
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         submodules: true
 
-    - name: Install Prerequisites Linux
-      if: ${{matrix.os == 'ubuntu-latest'}}
-      shell: bash
-      run: |
-        ${{github.workspace}}/vcpkg/bootstrap-vcpkg.sh
-        sudo apt install mono-complete
-
-    - name: Add NuGet sources
-      shell: bash
-      run: |
-        ${{matrix.nuget}} \
-          sources add \
-          -Source "${{env.FEED_URL}}" \
-          -StorePasswordInClearText \
-          -Name GitHubPackages \
-          -UserName "${{github.repository_owner}}" \
-          -Password "${{secrets.GH_PACKAGES_TOKEN}}"
-        ${{matrix.nuget}} \
-          setapikey "${{secrets.GH_PACKAGES_TOKEN}}" \
-          -Source "${{env.FEED_URL}}"
+    - name: Setup vcpkg package cache
+      id: vc
+      uses: LegalizeAdulthood/vcpkg-github-cache@a17a8a7f99558d29430388a87be54182bf8e9dfe # v1.0.0
+      with:
+        token: ${{github.token}}
+        bootstrap: "true"
+        install-nuget: "true"
+        debug: "false"
+        trace: "false"
 
     - name: CMake version
       run: cmake --version
 
     - name: CMake workflow
-      env: 
-        VCPKG_BINARY_SOURCES: "clear;nuget,${{env.FEED_URL}},readwrite"
-      run: cmake --workflow --preset ${{matrix.cmake-preset}}
+      shell: pwsh
+      run: |
+        cmake --workflow --preset ${{matrix.cmake-preset}} 2>&1 |
+          Tee-Object -FilePath build.log
+        if ($LASTEXITCODE -ne 0) {
+          exit $LASTEXITCODE
+        }
+
+    - name: Analyze vcpkg package cache
+      if: always()
+      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@a17a8a7f99558d29430388a87be54182bf8e9dfe # v1.0.0
+      with:
+        token: ${{github.token}}
+        build-log: build.log
+        artifact-name: vcpkg-cache-diagnostics-${{github.job}}-${{matrix.os}}-${{matrix.cmake-preset}}
+        fail-on: "never"
+        debug: "false"
+        trace: "false"

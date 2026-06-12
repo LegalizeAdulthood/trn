@@ -6,3 +6,5 @@
 
 # VS Open Folder project dir
 .vs
+
+CMakeUserPresets.json
