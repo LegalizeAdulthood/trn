@@ -33,7 +33,7 @@ jobs:
 
     - name: Setup vcpkg package cache
       id: vc
-      uses: LegalizeAdulthood/vcpkg-github-cache@a17a8a7f99558d29430388a87be54182bf8e9dfe # v1.0.0
+      uses: LegalizeAdulthood/vcpkg-github-cache@4305d9f202bf0131458407402f0cc7efc3412394 # v1.1.0
       with:
         token: ${{github.token}}
         bootstrap: "true"
@@ -55,7 +55,7 @@ jobs:
 
     - name: Analyze vcpkg package cache
       if: always()
-      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@a17a8a7f99558d29430388a87be54182bf8e9dfe # v1.0.0
+      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@4305d9f202bf0131458407402f0cc7efc3412394 # v1.1.0
       with:
         token: ${{github.token}}
         build-log: build.log
