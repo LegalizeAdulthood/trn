@@ -33,7 +33,7 @@ jobs:
 
     - name: Setup vcpkg package cache
       id: vc
-      uses: LegalizeAdulthood/vcpkg-github-cache@ed02513be6a29eba59f935616137efa877d42f69 # FreeBSD vcpkg tool cache
+      uses: LegalizeAdulthood/vcpkg-github-cache@61ad6626abf2cf9e92ea53078c695dbfb0ad6e8d # v1.3.0
       with:
         token: ${{github.token}}
         bootstrap: "true"
@@ -55,7 +55,7 @@ jobs:
 
     - name: Analyze vcpkg package cache
       if: always()
-      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@ed02513be6a29eba59f935616137efa877d42f69 # FreeBSD vcpkg tool cache
+      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@61ad6626abf2cf9e92ea53078c695dbfb0ad6e8d # v1.3.0
       with:
         token: ${{github.token}}
         build-log: build.log
@@ -74,7 +74,7 @@ jobs:
 
     - name: Generate vcpkg cache setup script
       id: vc
-      uses: LegalizeAdulthood/vcpkg-github-cache@ed02513be6a29eba59f935616137efa877d42f69 # FreeBSD vcpkg tool cache
+      uses: LegalizeAdulthood/vcpkg-github-cache@61ad6626abf2cf9e92ea53078c695dbfb0ad6e8d # v1.3.0
       with:
         token: ${{github.token}}
         execution-mode: emit-script
@@ -120,7 +120,7 @@ jobs:
 
     - name: Analyze vcpkg package cache
       if: always()
-      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@ed02513be6a29eba59f935616137efa877d42f69 # FreeBSD vcpkg tool cache
+      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@61ad6626abf2cf9e92ea53078c695dbfb0ad6e8d # v1.3.0
       with:
         token: ${{github.token}}
         build-log: build.log
@@ -134,6 +134,79 @@ jobs:
       run: |
         if [ ! -f build.status ]; then
           echo "build.status was not copied back from the FreeBSD VM"
+          exit 1
+        fi
+        exit "$(cat build.status)"
+
+  build-openbsd:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        submodules: true
+
+    - name: Generate vcpkg cache setup script
+      id: vc
+      uses: LegalizeAdulthood/vcpkg-github-cache@61ad6626abf2cf9e92ea53078c695dbfb0ad6e8d # v1.3.0
+      with:
+        token: ${{github.token}}
+        execution-mode: emit-script
+        target-os: openbsd
+        bootstrap: "true"
+        install-nuget: "true"
+        install-mono: "true"
+        debug: "false"
+        trace: "false"
+
+    - name: CMake workflow on OpenBSD
+      uses: vmactions/openbsd-vm@18edb32f4e48dae5865d7b8b3a9587bc01218a20 # v1
+      env:
+        VCPKG_GITHUB_CACHE_TOKEN: ${{github.token}}
+        VCPKG_ROOT: vcpkg
+      with:
+        release: "7.9"
+        usesh: true
+        sync: rsync
+        copyback: true
+        envs: VCPKG_GITHUB_CACHE_TOKEN VCPKG_ROOT
+        prepare: |
+          pkg_add -I cmake ninja git gmake bash bison patchelf rsync
+        run: |
+          set +e
+          set -u
+          mkdir -p .openbsd-copyback
+          {
+            sh "${{steps.vc.outputs.setup-script}}" &&
+            . "${{steps.vc.outputs.setup-env}}" &&
+            cmake --version &&
+            cmake --workflow --preset ci-linux
+            status=$?
+            echo "${status}" > build.status
+          } 2>&1 | tee build.log
+          cp build.log build.status .openbsd-copyback/
+          # Copy project build products needed by host steps here.
+          find . -mindepth 1 -maxdepth 1 ! -name .git \
+            ! -name .openbsd-copyback -exec rm -rf {} +
+          mv .openbsd-copyback/* .
+          rmdir .openbsd-copyback
+
+    - name: Analyze vcpkg package cache
+      if: always()
+      uses: LegalizeAdulthood/vcpkg-github-cache/analyze@61ad6626abf2cf9e92ea53078c695dbfb0ad6e8d # v1.3.0
+      with:
+        token: ${{github.token}}
+        build-log: build.log
+        artifact-name: vcpkg-cache-diagnostics-${{github.job}}-openbsd-ci-linux
+        fail-on: "never"
+        debug: "false"
+        trace: "false"
+
+    - name: Check OpenBSD build status
+      if: always()
+      run: |
+        if [ ! -f build.status ]; then
+          echo "build.status was not copied back from the OpenBSD VM"
           exit 1
         fi
         exit "$(cat build.status)"
