@@ -16,8 +16,8 @@ Existing good precedents:
   `std::string` for owned path assembly.
 - `libtrn/terminal.cpp`, `set_macro`: accepts string views and creates
   owned strings only when a null-terminated value is needed.
-- `libtrn/autosub.cpp`, `match_list`: already copies comma-delimited
-  patterns into `std::string` before passing them to the regex compiler.
+- `libtrn/autosub.cpp`, `match_list`: passes comma-delimited pattern
+  views to `newsgroup_comp` without per-token allocation.
 
 ## Findings
 
@@ -74,13 +74,6 @@ Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
-
-2. `libtrn/autosub.cpp`, `match_list`
-
-   Promote `pat_list` to `std::string_view`.  The function already uses
-   a view cursor and comma-delimited pattern views.  After
-   `newsgroup_comp` accepts a view, pass each `pattern_view` directly
-   and remove the per-pattern `std::string`.
 
 3. `libtrn/url.cpp`, `parse_url`
 
