@@ -1,6 +1,7 @@
 /* util.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/util.h>
 
@@ -601,7 +602,7 @@ std::time_t text_to_secs(const char *s, std::time_t defSecs)
     return secs * 60;
 }
 
-char *secs_to_text(std::time_t secs)
+const char *secs_to_text(std::time_t secs)
 {
     char* s = g_buf;
     int items;

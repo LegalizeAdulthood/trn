@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_UTIL_H
 #define TRN_UTIL_H
 
@@ -65,7 +66,7 @@ void safe_link(char *old_name, char *new_name);
 void   verify_sig();
 double current_time();
 std::time_t text_to_secs(const char *s, std::time_t defSecs);
-char * secs_to_text(std::time_t secs);
+const char *secs_to_text(std::time_t secs);
 char * temp_filename();
 char * get_auth_user();
 char * get_auth_pass();

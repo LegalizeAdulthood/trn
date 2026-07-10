@@ -73,25 +73,19 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-1. `libtrn/util.cpp`, `secs_to_text`
-
-    Promote the result to read-only text.  The dynamic case still uses
-    `g_buf`, but the `"never"` and `"missing"` results are literals.
-    Update direct callers to stop storing the result in writable locals.
-
-2. `libtrn/cache.cpp`, `fetch_cache`
+1. `libtrn/cache.cpp`, `fetch_cache`
 
     Promote the return path to read-only cached text, or add a view
     helper if mutable callers remain.  The two empty-string returns are
     read-only "no header text" results, not buffers to edit.
 
-3. `libtrn/head.cpp`, `prefetch_lines`
+2. `libtrn/head.cpp`, `prefetch_lines`
 
     After `fetch_cache` is read-only, split the local `s` variable into
     a read-only source and an owned copy path.  Preserve the existing
     `copy` behavior for callers that request owned storage.
 
-4. `libtrn/intrp.cpp`, `do_interp`
+3. `libtrn/intrp.cpp`, `do_interp`
 
     Split the large substitution variable `s` into read-only source
     text and mutable scratch cursors.  Literal substitutions such as

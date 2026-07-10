@@ -8,6 +8,7 @@
 //  Author/Maintainer of trn: trn@blorf.net (Wayne Davison)
 //  Maintainer of rn: sob@bcm.tmc.edu (Stan Barber)
 //  Original Author: lwall@sdcrdcf.UUCP (Larry Wall)
+//  Copyright (c) 2026, Richard Thomson
 //
 //  History:
 //      01/14/83 - rn begun
@@ -1018,7 +1019,7 @@ void trn_version()
                 }
                 if (rp->data_source->m_act_sf.m_refetch_secs)
                 {
-                    char* cp = secs_to_text(rp->data_source->m_act_sf.m_refetch_secs);
+                    const char *cp = secs_to_text(rp->data_source->m_act_sf.m_refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),
@@ -1049,7 +1050,7 @@ void trn_version()
                 }
                 if (rp->data_source->m_desc_sf.m_refetch_secs)
                 {
-                    char* cp = secs_to_text(rp->data_source->m_desc_sf.m_refetch_secs);
+                    const char *cp = secs_to_text(rp->data_source->m_desc_sf.m_refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),
