@@ -764,26 +764,25 @@ void edit_kill_file()
                 }
                 else if (*bp == '<')
                 {
-                    char* cp = std::strchr(bp,' ');
-                    if (!cp)
+                    char* split = std::strchr(bp,' ');
+                    const char *cmd = ",";
+                    if (split)
                     {
-                        cp = ",";
-                    }
-                    else
-                    {
-                        *cp++ = '\0';
+                        *split++ = '\0';
+                        cmd = split;
                     }
                     Article *ap = get_article(bp);
                     if (ap != nullptr)
                     {
-                        if (*cp == 'T')
+                        const char *thread_cmd = cmd;
+                        if (*thread_cmd == 'T')
                         {
-                            cp++;
+                            thread_cmd++;
                         }
-                        cp = std::strchr(s_thread_cmd_ltr, *cp);
-                        if (cp != nullptr)
+                        thread_cmd = std::strchr(s_thread_cmd_ltr, *thread_cmd);
+                        if (thread_cmd != nullptr)
                         {
-                            ap->m_auto_flags |= s_thread_cmd_flag[cp - s_thread_cmd_ltr];
+                            ap->m_auto_flags |= s_thread_cmd_flag[thread_cmd - s_thread_cmd_ltr];
                         }
                     }
                 }
