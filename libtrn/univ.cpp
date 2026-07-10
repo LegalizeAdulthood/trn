@@ -767,7 +767,8 @@ static bool univ_do_line(char *line)
     safe_free0(s_univ_line_desc);
     if (*s == '"')      // description name
     {
-        p = copy_till(s,s+1,'"');
+        char *desc = s + 1;
+        p = desc + (copy_till(s, desc, '"') - desc);
         if (!*p)
         {
             std::printf("univ: unmatched quote in string:\n\"%s\"\n", s);

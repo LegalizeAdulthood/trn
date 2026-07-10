@@ -47,7 +47,7 @@ char *safe_copy(char *to, const char *from, int len)
 }
 
 // copy a string up to some (non-backslashed) delimiter, if any
-char *copy_till(char *to, char *from, int delim)
+const char *copy_till(char *to, const char *from, int delim)
 {
     while (*from)
     {
@@ -149,7 +149,7 @@ char *file_exp(const char *text)
                     {
                         while (std::fgets(tmpbuf, 512, pfp) != nullptr)
                         {
-                            char *d = copy_till(scrbuf, tmpbuf, ':');
+                            const char *d = copy_till(scrbuf, tmpbuf, ':');
                             if (!std::strcmp(scrbuf, s_tilde_name))
                             {
                                 for (int i = LOGIN_DIR_FIELD - 2; i; i--)

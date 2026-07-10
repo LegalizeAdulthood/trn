@@ -203,7 +203,7 @@ void mime_read_mimecap(const char *mcname)
                 f = skip_space(f);
                 if (*f == '"')
                 {
-                    f = copy_till(arg, f + 1, '"');
+                    copy_till(arg, f + 1, '"');
                 }
                 else
                 {
@@ -829,7 +829,8 @@ char *mime_parse_params(char *str)
             s = mime_skip_whitespace(s+1);
             if (*s == '"')
             {
-                s = copy_till(t,s+1,'"');
+                char *value = s + 1;
+                s = value + (copy_till(t, value, '"') - value);
                 if (*s == '"')
                 {
                     s++;

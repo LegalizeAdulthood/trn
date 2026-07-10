@@ -92,7 +92,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             search_header = g_art_srch_hdr;
             do_read = g_art_do_read;
         }
-        char *s = copy_till(g_buf,pat_buf+1,cmd_chr);// ok to cpy g_buf+1 to g_buf
+        const char *s = copy_till(g_buf, pat_buf + 1, cmd_chr); // ok to cpy g_buf+1 to g_buf
         pattern = g_buf;
         if (*pattern)
         {
@@ -170,11 +170,11 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             {
                 do_read = true;
             }
-            if (*s == 'k')              // grandfather clause
-            {
-                *s = 'j';
-            }
             cmd_lst = save_str(s);
+            if (*cmd_lst == 'k') // grandfather clause
+            {
+                *cmd_lst = 'j';
+            }
             ret = SRCH_DONE;
         }
         g_art_how_much = how_much;

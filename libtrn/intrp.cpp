@@ -374,7 +374,8 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
 
                 case '{':
                 {
-                    pattern = copy_till(scrbuf,pattern+1,'}');
+                    char *pattern_start = pattern + 1;
+                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, '}') - pattern_start);
                     char *m = std::strchr(scrbuf, '-');
                     if (m != nullptr)
                     {
@@ -389,7 +390,9 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 }
 
                 case '<':
-                    pattern = copy_till(scrbuf,pattern+1,'>');
+                {
+                    char *pattern_start = pattern + 1;
+                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, '>') - pattern_start);
                     s = std::strchr(scrbuf, '-');
                     if (s != nullptr)
                     {
@@ -399,12 +402,15 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     {
                         s = s_empty;
                     }
-                    interp(scrbuf, 8192, get_val(scrbuf,s));
+                    interp(scrbuf, 8192, get_val(scrbuf, s));
                     s = scrbuf;
                     break;
+                }
 
                 case '[':
-                    pattern = copy_till(scrbuf, pattern+1, ']');
+                {
+                    char *pattern_start = pattern + 1;
+                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, ']') - pattern_start);
                     if (g_in_ng)
                     {
                         HeaderLineType which_line;
@@ -424,6 +430,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         s = s_empty;
                     }
                     break;
+                }
 
                 case '(':
                 {
@@ -441,7 +448,8 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     {
                         goto getout;
                     }
-                    pattern = copy_till(scrbuf,pattern+1,'?');
+                    char *pattern_start = pattern + 1;
+                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, '?') - pattern_start);
                     if (!*pattern)
                     {
                         goto getout;

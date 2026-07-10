@@ -97,7 +97,7 @@ SaveResult save_article()
     if (cmd == 'e')             // is this an extract command?
     {
         static bool custom_extract = false;
-        char*       cmdstr;
+        const char *cmdstr;
         int         partOpt = 0;
         int         totalOpt = 0;
 
@@ -135,11 +135,11 @@ SaveResult save_article()
             *++s = '\0';
             if (*cmdstr)
             {
-                s = cmdstr+1;                   // skip |
-                s = skip_eq(s, ' ');
-                if (*s)                         // if new command, use it
+                const char *extract_cmd = cmdstr + 1; // skip |
+                extract_cmd = skip_eq(extract_cmd, ' ');
+                if (*extract_cmd) // if new command, use it
                 {
-                    g_extract_prog = s;          // put extractor in %e
+                    g_extract_prog = extract_cmd; // put extractor in %e
                 }
                 else
                 {

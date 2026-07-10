@@ -6,7 +6,7 @@
 
 char *save_str(const char *str);
 char *safe_copy(char *to, const char *from, int len);
-char *copy_till(char *to, char *from, int delim);
+const char *copy_till(char *to, const char *from, int delim);
 char *file_exp(const char *text);
 char *in_string(char *big, const char *little, bool case_matters);
 char *read_auth_file(const char *file, char **pass_ptr);

@@ -685,7 +685,8 @@ int perform(char *cmdlst, int output_level)
             }
             else
             {
-                cmdlst = copy_till(g_buf, cmdlst, ':') - 1;
+                char *cmd_start = cmdlst;
+                cmdlst = cmd_start + (copy_till(g_buf, cmd_start, ':') - cmd_start) - 1;
             }
             // we now have the command in g_buf
             if (ch == '!')

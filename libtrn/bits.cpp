@@ -624,7 +624,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 {
     char* xartnum;
     ArticleNum x;
-    char *cur_xref;
+    const char *cur_xref;
     char tmp_buf[128];
 
     if (g_data_source->m_flags & DF_NO_XREFS)
