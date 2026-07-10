@@ -37,6 +37,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 struct ColorObj
 {
@@ -98,19 +99,21 @@ void color_init()
     if (s_use_colors)
     {
         // Get default capabilities.
-        const char *fg = tc_color_capability("fg default");
-        if (fg == nullptr)
+        const char *fg_capability = tc_color_capability("fg default");
+        if (fg_capability == nullptr)
         {
-            std::fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
+            std::fprintf(stderr, "trn: you need a 'fg default' definition in the [termcap] section.\n");
             finalize(1);
         }
-        const char *bg = tc_color_capability("bg default");
-        if (bg == nullptr)
+        const char *bg_capability = tc_color_capability("bg default");
+        if (bg_capability == nullptr)
         {
-            std::fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
+            std::fprintf(stderr, "trn: you need a 'bg default' definition in the [termcap] section.\n");
             finalize(1);
         }
-        if (!std::strcmp(fg,bg))
+        std::string_view fg{fg_capability};
+        std::string_view bg{bg_capability};
+        if (fg == bg)
         {
             bg = "";
         }
@@ -118,11 +121,11 @@ void color_init()
         {
             if (obj.fg.empty())
             {
-                obj.fg = fg;
+                obj.fg.assign(fg.data(), fg.size());
             }
             if (obj.bg.empty())
             {
-                obj.bg = bg;
+                obj.bg.assign(bg.data(), bg.size());
             }
         }
     }
