@@ -119,7 +119,7 @@ int   g_auto_arrow_macros{2}; // -A
 static const char *s_mouse_bar_btns{};
 static int   s_mouse_bar_start{};
 static bool  s_xmouse_is_on{};
-static char *s_tc_CL{}; // home and clear screen
+static const char *s_tc_CL{}; // home and clear screen
 static char *s_tc_TI{}; // initialize terminal
 static char *s_tc_TE{}; // reset terminal
 static char *s_tc_KS{}; // enter `keypad transmit' mode
