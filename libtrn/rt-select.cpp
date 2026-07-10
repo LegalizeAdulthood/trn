@@ -747,7 +747,6 @@ char option_selector()
     g_sel_rereading = false;
     g_sel_exclusive = false;
     g_selected_count = 0;
-    parse_ini_section("", g_options_ini);
 
     set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
 
