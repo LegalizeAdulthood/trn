@@ -75,14 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-1. `libtrn/ngsrch.cpp`, `newsgroup_comp`
-
-   Promote `pattern` to `std::string_view` in the implementation and
-   `libtrn/include/trn/ngsrch.h`.  Keep the translated regex pattern as
-   a local `std::string` and pass `c_str()` only to
-   `CompiledRegex::compile`.  Do this before changing callers that split
-   or own pattern text.
-
 2. `libtrn/autosub.cpp`, `match_list`
 
    Promote `pat_list` to `std::string_view`.  The function already uses

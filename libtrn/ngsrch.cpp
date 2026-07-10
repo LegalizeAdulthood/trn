@@ -1,6 +1,7 @@
 /* ngsrch.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/ngsrch.h>
 
@@ -22,6 +23,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <string_view>
 
 static bool          s_newsgroup_do_empty{}; // search empty newsgroups?
 static CompiledRegex s_newsgroup_compex;
@@ -238,9 +240,9 @@ bool NewsgroupData::newsgroup_wanted()
     return s_newsgroup_compex.execute(m_rc_line) != nullptr;
 }
 
-const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool re, bool fold)
+const char *newsgroup_comp(CompiledRegex *compex, std::string_view pattern, bool re, bool fold)
 {
-    if (!*pattern)
+    if (pattern.empty())
     {
         if (compex->compile("", re, fold))
         {
@@ -250,25 +252,25 @@ const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool re, 
     }
 
     std::string ng_pattern;
-    for (const char *s = pattern; *s; s++)
+    for (const char ch : pattern)
     {
-        if (*s == '.')
+        if (ch == '.')
         {
             ng_pattern.push_back('\\');
-            ng_pattern.push_back(*s);
+            ng_pattern.push_back(ch);
         }
-        else if (*s == '?')
+        else if (ch == '?')
         {
             ng_pattern.push_back('.');
         }
-        else if (*s == '*')
+        else if (ch == '*')
         {
             ng_pattern.push_back('.');
-            ng_pattern.push_back(*s);
+            ng_pattern.push_back(ch);
         }
         else
         {
-            ng_pattern.push_back(*s);
+            ng_pattern.push_back(ch);
         }
     }
     return compex->compile(ng_pattern.c_str(), re, fold);
