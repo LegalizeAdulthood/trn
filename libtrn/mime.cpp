@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 #include <utility>
 
 MimeSection  g_mime_article{};
@@ -298,12 +299,13 @@ MimeCapEntry *mime_find_mimecap_entry(const char *contenttype, MimeCapFlags skip
 
 bool mime_types_match(const char *ct, const char *pat)
 {
-    const char* s = std::strchr(pat,'/');
-    int len = s? s - pat : std::strlen(pat);
-    bool iswild = !s || !std::strcmp(s+1,"*");
+    const std::string_view pattern{pat};
+    const std::size_t      slash = pattern.find('/');
+    const std::size_t      len = slash == std::string_view::npos ? pattern.size() : slash;
+    const bool             iswild = slash == std::string_view::npos || pattern.substr(slash + 1) == "*";
 
-    return string_case_equal(ct, pat)
-        || (iswild && string_case_equal(ct, pat,len) && ct[len] == '/');
+    return string_case_equal(ct, pat) ||
+           (iswild && string_case_equal(ct, pat, static_cast<int>(len)) && ct[len] == '/');
 }
 
 int mime_exec(char *cmd)
