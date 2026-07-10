@@ -1,7 +1,10 @@
 #ifndef TRN_TEST_CONFIG_H
 #define TRN_TEST_CONFIG_H
 
+#include <string>
+
 // Directory and environment related content.
+#define TRN_TEST_DATA_DIR                       "@TRN_TEST_DATA_DIR@"
 #define TRN_TEST_HOME_DIR                       "@TRN_TEST_HOME_DIR@"
 #define TRN_TEST_HOME_DIR_CAPITALIZED           "@TRN_TEST_HOME_DIR_CAPITALIZED@"
 #define TRN_TEST_TMP_DIR                        "@TRN_TEST_TMP_DIR@"
@@ -69,15 +72,30 @@
 #define TRN_TEST_NNTP_NEWSGROUP                 "@TRN_TEST_NNTP_NEWSGROUP@"
 #define TRN_TEST_NNTP_NEWSGROUP_READ_ARTICLES   "@TRN_TEST_NNTP_NEWSGROUP_READ_ARTICLES@"
 
-namespace trn {
-namespace testing {
+namespace trn
+{
+namespace testing
+{
 
 struct MockEnvironment;
 
-void set_envars(MockEnvironment &env);
-bool set_name(char *);
-bool set_host_name(char *);
-void reset_lib_dirs();
+void        set_test_data_dir(std::string dir);
+void        reset_test_data_dir();
+std::string test_data_dir();
+std::string test_home_dir();
+std::string test_home_dir_capitalized();
+std::string test_tmp_dir();
+std::string test_trn_dir();
+std::string test_dot_dir();
+std::string test_lib_dir();
+std::string test_rn_lib_dir();
+std::string test_orgfile();
+std::string test_newsgroup_dir();
+std::string test_article_file();
+void        set_envars(MockEnvironment &env);
+bool        set_name(char *);
+bool        set_host_name(char *);
+void        reset_lib_dirs();
 
 } // namespace testing
 } // namespace trn

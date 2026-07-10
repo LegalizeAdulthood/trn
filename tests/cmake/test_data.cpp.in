@@ -6,18 +6,106 @@
 #include "mock_env.h"
 #include "test_config.h"
 
+#include <algorithm>
 #include <stdlib.h>
+#include <string>
 
-namespace trn {
-namespace testing {
+namespace trn
+{
+namespace testing
+{
+
+namespace
+{
+
+std::string s_test_data_dir{"@TRN_TEST_DATA_DIR@"};
+
+std::string make_test_data_path(const char *relative)
+{
+    std::string result{s_test_data_dir};
+    if (!result.empty() && result.back() != '/')
+    {
+        result += '/';
+    }
+    result += relative;
+    return result;
+}
+
+} // namespace
+
+void set_test_data_dir(std::string dir)
+{
+    std::replace(dir.begin(), dir.end(), '\\', '/');
+    s_test_data_dir = dir;
+}
+
+void reset_test_data_dir()
+{
+    s_test_data_dir = "@TRN_TEST_DATA_DIR@";
+}
+
+std::string test_data_dir()
+{
+    return s_test_data_dir;
+}
+
+std::string test_home_dir()
+{
+    return make_test_data_path("home");
+}
+
+std::string test_home_dir_capitalized()
+{
+    return make_test_data_path("Home");
+}
+
+std::string test_tmp_dir()
+{
+    return make_test_data_path("tmp");
+}
+
+std::string test_trn_dir()
+{
+    return make_test_data_path("trn");
+}
+
+std::string test_dot_dir()
+{
+    return make_test_data_path("dot");
+}
+
+std::string test_lib_dir()
+{
+    return make_test_data_path("lib");
+}
+
+std::string test_rn_lib_dir()
+{
+    return make_test_data_path("rn_lib");
+}
+
+std::string test_orgfile()
+{
+    return make_test_data_path("organization");
+}
+
+std::string test_newsgroup_dir()
+{
+    return make_test_data_path("spool/@TRN_TEST_NEWSGROUP_SUBDIR@");
+}
+
+std::string test_article_file()
+{
+    return test_newsgroup_dir() + "/@TRN_TEST_ARTICLE_NUM@";
+}
 
 void set_envars(MockEnvironment &env)
 {
-    env.expect_env("HOME", "@TRN_TEST_HOME_DIR@");
-    env.expect_env("TMPDIR", "@TRN_TEST_TMP_DIR@");
+    env.expect_env("HOME", test_home_dir().c_str());
+    env.expect_env("TMPDIR", test_tmp_dir().c_str());
     env.expect_env("USER", "@TRN_TEST_LOGIN_NAME@");
-    env.expect_env("DOTDIR", "@TRN_TEST_DOT_DIR@");
-    env.expect_env("TRNDIR", "@TRN_TEST_TRN_DIR@");
+    env.expect_env("DOTDIR", test_dot_dir().c_str());
+    env.expect_env("TRNDIR", test_trn_dir().c_str());
 }
 
 bool set_name(char *)
@@ -36,8 +124,8 @@ bool set_host_name(char *)
 
 void reset_lib_dirs()
 {
-    g_lib = "@TRN_TEST_LIB_DIR@";
-    g_rn_lib = "@TRN_TEST_RN_LIB_DIR@";
+    g_lib = test_lib_dir();
+    g_rn_lib = test_rn_lib_dir();
 }
 
 } // namespace testing

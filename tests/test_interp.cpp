@@ -40,11 +40,15 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cctype>
+#include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <system_error>
 
 constexpr int BUFFER_SIZE{4096};
 
@@ -54,6 +58,72 @@ namespace
 {
 
 using Environment = StrictMock<trn::testing::MockEnvironment>;
+
+class TestDataSandbox
+{
+public:
+    void SetUp();
+    void TearDown();
+
+    std::string home_dir() const
+    {
+        return path("home").generic_string();
+    }
+
+    std::string home_dir_capitalized() const
+    {
+        return path("Home").generic_string();
+    }
+
+    std::string tmp_dir() const
+    {
+        return path("tmp").generic_string();
+    }
+
+    std::string dot_dir() const
+    {
+        return path("dot").generic_string();
+    }
+
+    std::string lib_dir() const
+    {
+        return path("lib").generic_string();
+    }
+
+    std::string rn_lib_dir() const
+    {
+        return path("rn_lib").generic_string();
+    }
+
+    std::string orgfile() const
+    {
+        return path("organization").generic_string();
+    }
+
+    std::string newsgroup_dir() const
+    {
+        return (path("spool") / TRN_TEST_NEWSGROUP_SUBDIR).generic_string();
+    }
+
+    std::string article_file() const
+    {
+        return (path("spool") / TRN_TEST_NEWSGROUP_SUBDIR / std::to_string(TRN_TEST_ARTICLE_NUM)).generic_string();
+    }
+
+private:
+    static std::string test_name();
+    static std::string sanitize(std::string name);
+    static void        replace_all(std::string &text, const std::string &from, const std::string &to);
+
+    void rewrite_access_file(const std::filesystem::path &file) const;
+
+    std::filesystem::path path(const char *relative) const
+    {
+        return m_root / relative;
+    }
+
+    std::filesystem::path m_root;
+};
 
 struct InterpolatorTest : Test
 {
@@ -84,14 +154,81 @@ protected:
     }
 
     Environment                   m_env;
+    TestDataSandbox               m_data;
     std::array<char, TCBUF_SIZE>  m_tcbuf{};
     std::array<char, BUFFER_SIZE> m_buffer{};
     long                          m_test_pid{6421};
 };
 
+void TestDataSandbox::SetUp()
+{
+    const std::filesystem::path source{TRN_TEST_DATA_DIR};
+    m_root = source.parent_path() / "test_runs" / sanitize(test_name());
+
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    std::filesystem::create_directories(m_root.parent_path());
+    std::filesystem::copy(source, m_root,
+                          std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+
+    rewrite_access_file(path("trn") / "access");
+    rewrite_access_file(path("rn_lib") / "access.def");
+
+    trn::testing::set_test_data_dir(m_root.generic_string());
+}
+
+void TestDataSandbox::TearDown()
+{
+    trn::testing::reset_test_data_dir();
+
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+}
+
+std::string TestDataSandbox::test_name()
+{
+    const TestInfo *info = UnitTest::GetInstance()->current_test_info();
+    if (info == nullptr)
+    {
+        return "unknown";
+    }
+
+    return std::string{info->test_suite_name()} + "_" + info->name();
+}
+
+std::string TestDataSandbox::sanitize(std::string name)
+{
+    std::replace_if(name.begin(), name.end(), [](unsigned char ch) { return !std::isalnum(ch); }, '_');
+    return name;
+}
+
+void TestDataSandbox::replace_all(std::string &text, const std::string &from, const std::string &to)
+{
+    std::string::size_type pos = 0;
+    while ((pos = text.find(from, pos)) != std::string::npos)
+    {
+        text.replace(pos, from.size(), to);
+        pos += to.size();
+    }
+}
+
+void TestDataSandbox::rewrite_access_file(const std::filesystem::path &file) const
+{
+    std::ifstream      in{file};
+    std::ostringstream buffer;
+    buffer << in.rdbuf();
+
+    std::string text = buffer.str();
+    replace_all(text, std::filesystem::path{TRN_TEST_DATA_DIR}.generic_string(), m_root.generic_string());
+
+    std::ofstream out{file, std::ios::trunc};
+    out << text;
+}
+
 void InterpolatorTest::SetUp()
 {
     Test::SetUp();
+    m_data.SetUp();
 
     g_our_pid = m_test_pid;
     term_init();
@@ -159,6 +296,7 @@ void InterpolatorTest::TearDown()
     head_final();
     env_final();
     reset_tty();
+    m_data.TearDown();
 
     Test::TearDown();
 }
@@ -202,7 +340,7 @@ TEST_F(InterpolatorTest, tilde)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_HOME_DIR, buffer());
+    ASSERT_EQ(m_data.home_dir(), buffer());
 }
 
 TEST_F(InterpolatorTest, dotDir)
@@ -212,7 +350,7 @@ TEST_F(InterpolatorTest, dotDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_DOT_DIR, buffer());
+    ASSERT_EQ(m_data.dot_dir(), buffer());
 }
 
 TEST_F(InterpolatorTest, processId)
@@ -290,7 +428,7 @@ TEST_F(InterpolatorTest, articleNameInsideLocalNewsgroupArticleClosed)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_ARTICLE_FILE, buffer());
+    ASSERT_EQ(m_data.article_file(), buffer());
 }
 
 TEST_F(InterpolatorTest, saveDestinationNotSet)
@@ -464,7 +602,7 @@ TEST_F(InterpolatorTest, headerFileName)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{TRN_TEST_DOT_DIR} + "/.rnhead." + std::to_string(m_test_pid), buffer());
+    ASSERT_EQ(m_data.dot_dir() + "/.rnhead." + std::to_string(m_test_pid), buffer());
 }
 
 TEST_F(InterpolatorTest, hostName)
@@ -610,7 +748,7 @@ TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
 TEST_F(InterpolatorTest, newsOrgFromNEWSORGFile)
 {
     char pattern[]{"%o"};
-    m_env.expect_env("NEWSORG", TRN_TEST_ORGFILE);
+    m_env.expect_env("NEWSORG", m_data.orgfile().c_str());
 
     const char *new_pattern = interpolate(pattern);
 
@@ -634,7 +772,7 @@ TEST_F(InterpolatorTest, newsOrgFromORGANIZATIONFile)
 {
     char pattern[]{"%o"};
     m_env.expect_no_envar("NEWSORG");
-    m_env.expect_env("ORGANIZATION", TRN_TEST_ORGFILE);
+    m_env.expect_env("ORGANIZATION", m_data.orgfile().c_str());
 
     const char *new_pattern = interpolate(pattern);
 
@@ -825,7 +963,7 @@ TEST_F(InterpolatorTest, libDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_LIB_DIR, buffer());
+    ASSERT_EQ(m_data.lib_dir(), buffer());
 }
 
 TEST_F(InterpolatorTest, rnLibDir)
@@ -835,7 +973,7 @@ TEST_F(InterpolatorTest, rnLibDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_RN_LIB_DIR, buffer());
+    ASSERT_EQ(m_data.rn_lib_dir(), buffer());
 }
 
 TEST_F(InterpolatorTest, shortenedFromNotInNewsgroupEmpty)
@@ -855,7 +993,7 @@ TEST_F(InterpolatorTest, tmpDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_TMP_DIR, buffer());
+    ASSERT_EQ(m_data.tmp_dir(), buffer());
 }
 
 TEST_F(InterpolatorTest, articleSizeNotInNewsgroupEmpty)
@@ -1080,7 +1218,7 @@ TEST_F(InterpolatorTest, homeDirectoryCapitalized)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_HOME_DIR_CAPITALIZED, buffer());
+    ASSERT_EQ(m_data.home_dir_capitalized(), buffer());
 }
 
 TEST_F(InterpolatorTest, spaceForShortLine)
@@ -1395,15 +1533,26 @@ public:
     }
     ~PushDir()
     {
-        if (m_old_dir[0] != '\0')
-        {
-            chdir(m_old_dir);
-        }
+        pop();
     }
 
     void push(const char *new_dir)
     {
         chdir(new_dir);
+    }
+
+    void push(const std::string &new_dir)
+    {
+        push(new_dir.c_str());
+    }
+
+    void pop()
+    {
+        if (m_old_dir[0] != '\0')
+        {
+            chdir(m_old_dir);
+            m_old_dir[0] = '\0';
+        }
     }
 
 private:
@@ -1426,7 +1575,7 @@ void InterpolatorNewsgroupTest::SetUp()
     g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
     g_last_art = ArticleNum{TRN_TEST_NEWSGROUP_HIGH};
     g_newsgroup_ptr = g_first_newsgroup;
-    m_curdir.push(TRN_TEST_NEWSGROUP_DIR);
+    m_curdir.push(m_data.newsgroup_dir());
     build_cache();
 }
 
@@ -1438,10 +1587,11 @@ void InterpolatorNewsgroupTest::TearDown()
     g_art = ArticleNum{-1};
     g_last_art = ArticleNum{-1};
     g_newsgroup_ptr = nullptr;
+    m_curdir.pop();
     InterpolatorTest::TearDown();
 }
 
-}
+} // namespace
 
 TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
 {
@@ -1451,7 +1601,7 @@ TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_NEWSGROUP_DIR, buffer());
+    ASSERT_EQ(m_data.newsgroup_dir(), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)

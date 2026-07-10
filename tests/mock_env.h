@@ -8,6 +8,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <list>
 #include <string>
 
 namespace trn
@@ -26,12 +27,13 @@ struct MockEnvironment
         set_environment(nullptr);
     }
 
-    ::testing::StrictMock<::testing::MockFunction<char*(const char *)>> getter;
+    ::testing::StrictMock<::testing::MockFunction<char *(const char *)>> getter;
 
     void expect_env(const char *name, const char *value)
     {
         using namespace ::testing;
-        EXPECT_CALL(getter, Call(StrEq(name))).WillOnce(Return(const_cast<char *>(value)));
+        m_values.emplace_back(value);
+        EXPECT_CALL(getter, Call(StrEq(name))).WillOnce(Return(const_cast<char *>(m_values.back().c_str())));
     }
     void expect_no_envar(const char *name)
     {
@@ -48,6 +50,9 @@ struct MockEnvironment
             }
         }
     }
+
+private:
+    std::list<std::string> m_values;
 };
 
 } // namespace testing
