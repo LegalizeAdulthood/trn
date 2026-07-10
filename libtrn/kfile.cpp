@@ -68,17 +68,17 @@ inline long kill_file_day_num(long x)
 
 void kill_file_init()
 {
-    char* cp = get_val("KILLTHREADS");
-    if (!cp)
+    char* kill_threads = get_val("KILLTHREADS");
+    if (!kill_threads)
     {
-        cp = s_kill_threads;
+        kill_threads = s_kill_threads;
     }
-    if (*cp && std::strcmp(cp,"none") != 0)
+    if (*kill_threads && std::strcmp(kill_threads,"none") != 0)
     {
         s_kill_file_day_num = kill_file_day_num(0);
         s_kill_file_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
-        std::FILE *fp = std::fopen(file_exp(cp), "r");
+        std::FILE *fp = std::fopen(file_exp(kill_threads), "r");
         if (fp != nullptr)
         {
             g_msg_id_hash = hash_create(1999, msg_id_cmp);
@@ -86,25 +86,23 @@ void kill_file_init()
             {
                 if (*g_buf == '<')
                 {
-                    cp = std::strchr(g_buf,' ');
-                    if (!cp)
+                    char* split = std::strchr(g_buf,' ');
+                    const char *cmd = ",";
+                    if (split)
                     {
-                        cp = ",";
+                        *split++ = '\0';
+                        cmd = split;
                     }
-                    else
-                    {
-                        *cp++ = '\0';
-                    }
-                    int age = s_kill_file_day_num - std::atol(cp + 1);
+                    int age = s_kill_file_day_num - std::atol(cmd + 1);
                     if (age > KF_MAX_DAYS)
                     {
                         g_kf_change_thread_cnt++;
                         continue;
                     }
-                    cp = std::strchr(s_thread_cmd_ltr, *cp);
-                    if (cp != nullptr)
+                    char* thread_cmd = std::strchr(s_thread_cmd_ltr, *cmd);
+                    if (thread_cmd != nullptr)
                     {
-                        int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
+                        int auto_flag = s_thread_cmd_flag[thread_cmd - s_thread_cmd_ltr];
                         HashDatum data = hash_fetch(g_msg_id_hash, g_buf, std::strlen(g_buf));
                         if (!data.dat_ptr)
                         {
