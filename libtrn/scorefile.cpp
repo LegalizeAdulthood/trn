@@ -1215,7 +1215,7 @@ void sf_print_match(int indx)
     int  i;
     int  level; // level is initialized iff used
     const char*head_name;
-    char*pattern;
+    const char*pattern;
 
     for (i = indx; i >= 0; i--)
     {
