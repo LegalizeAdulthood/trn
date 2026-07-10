@@ -8,6 +8,7 @@
 #include <config/config2.h>
 #include <config/typedef.h>
 
+#include <optional>
 #include <string>
 
 struct Article;
@@ -45,8 +46,8 @@ enum DoNewsgroupResult
     NG_GO_ARTICLE = 7
 };
 
-void ng_init();
-DoNewsgroupResult do_newsgroup(char *start_command);
+void              ng_init();
+DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command);
 #ifdef MAIL_CALL
 void set_mail(bool force);
 #endif

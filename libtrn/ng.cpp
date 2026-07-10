@@ -131,7 +131,7 @@ void ng_init()
 //
 
 // start_command command to fake up first
-DoNewsgroupResult do_newsgroup(char *start_command)
+DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 {
     MinorMode mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
@@ -193,8 +193,8 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         kill_unwanted(g_first_art, "Auto-processing...\n\n", true);
     }
 
-    sc_init((g_sa_never_initialized || g_sa_mode_order == SA_ORDER_DESCENDING)
-            && start_command && *start_command == ';');
+    sc_init((g_sa_never_initialized || g_sa_mode_order == SA_ORDER_DESCENDING) && start_command &&
+            !start_command->empty() && (*start_command)[0] == ';');
 
     if (g_univ_ng_virt_flag)
     {
@@ -283,13 +283,12 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         {
             g_artp = article_find(g_art);
         }
-        if (start_command)              // do we have an initial command?
+        if (start_command) // do we have an initial command?
         {
-            if (empty(start_command))
+            if (start_command->empty())
             {
-                if (g_use_news_selector >= 0
-                 && !ng_virtual
-                 && g_newsgroup_ptr->m_to_read >= (ArticleUnread)g_use_news_selector)
+                if (g_use_news_selector >= 0 && !ng_virtual &&
+                    g_newsgroup_ptr->m_to_read >= (ArticleUnread) g_use_news_selector)
                 {
                     push_char('+');
                 }
@@ -297,10 +296,9 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             else
             {
                 hide_pending();
-                push_string(start_command, 0);
-                std::free(start_command);
+                push_string(start_command->data(), 0);
             }
-            start_command = nullptr;
+            start_command.reset();
             if (input_pending())
             {
                 g_art = article_after(g_last_art);

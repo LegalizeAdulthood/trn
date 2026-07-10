@@ -30,10 +30,11 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cctype>
+#include <string>
 
 // TODO:
 //
@@ -1171,7 +1172,7 @@ int univ_visit_group_main(const char *gname)
     bool old_threaded = g_threaded_group;
     g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
     std::printf("\nScanning newsgroup %s\n",gname);
-    int ret = do_newsgroup("");
+    int ret = do_newsgroup(std::string{});
     g_threaded_group = old_threaded;
     return ret;
 }

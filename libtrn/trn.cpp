@@ -71,9 +71,10 @@
 #include <util/util2.h>
 
 #include <cstring>
-#include <filesystem>
-#include <string>
 #include <ctime>
+#include <filesystem>
+#include <optional>
+#include <string>
 
 std::string g_newsgroup_name;                             // name of current newsgroup
 std::string g_newsgroup_dir;                              // same thing in directory name form
@@ -433,7 +434,8 @@ bug_out:
 
 InputNewsgroupResult input_newsgroup()
 {
-    char* s;
+    char                      *s;
+    std::optional<std::string> start_command;
 
     eat_typeahead();
     get_cmd(g_buf);
@@ -863,32 +865,32 @@ ng_start_sel:
         // (it seemed to miss all the if statements below)
         // Just to be safe, make sure it is legal.
         //
-        s = "";
-        if (*g_buf == '.')              // start command?
+        start_command = std::string{};
+        if (*g_buf == '.') // start command?
         {
             if (!finish_command(false)) // get rest of command
             {
                 return ING_INPUT;
             }
-            s = save_str(g_buf+1);               // do_newsgroup will free it
+            start_command = g_buf + 1;
         }
         else if (*g_buf == '+' || *g_buf == 'U' || *g_buf == '=' || *g_buf == ';')
         {
             *g_buf = g_last_char; // restore 0200 if from a macro
-            save_typeahead(g_buf+1, sizeof g_buf - 1);
-            s = save_str(g_buf);
+            save_typeahead(g_buf + 1, sizeof g_buf - 1);
+            start_command = g_buf;
         }
         else if (*g_buf == ' ' || *g_buf == '\r' || *g_buf == '\n')
         {
-            s = "";
+            start_command = std::string{};
         }
         else
         {
-            s = nullptr;
+            start_command.reset();
         }
 
 redo_newsgroup:
-        switch (do_newsgroup(s))
+        switch (do_newsgroup(start_command))
         {
         case NG_NORM:
         case NG_NEXT:
@@ -908,7 +910,7 @@ redo_newsgroup:
             goto do_command;
 
         case NG_MINUS:
-            g_newsgroup_ptr = g_recent_newsgroup;      // recall previous newsgroup
+            g_newsgroup_ptr = g_recent_newsgroup; // recall previous newsgroup
             return ING_SPECIAL;
 
         case NG_NO_SERVER:
@@ -918,7 +920,7 @@ redo_newsgroup:
         // extensions
         case NG_GO_ARTICLE:
             g_newsgroup_ptr = g_ng_go_newsgroup_ptr;
-            s = save_str("y");           // enter with minimal fuss
+            start_command = "y"; // enter with minimal fuss
             goto redo_newsgroup;
           // later: possible go-to-newsgroup
         }

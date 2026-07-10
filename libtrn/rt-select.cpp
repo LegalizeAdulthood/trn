@@ -401,11 +401,11 @@ do_group:
         std::printf("Entering %s:", g_newsgroup_name.c_str());
         if (s_sel_ret == ';')
         {
-            ret = do_newsgroup(save_str(";"));
+            ret = do_newsgroup(std::string{";"});
         }
         else
         {
-            ret = do_newsgroup("");
+            ret = do_newsgroup(std::string{});
         }
         switch (ret)
         {
@@ -894,7 +894,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         std::printf("Virtual: Entering %s:\n", g_newsgroup_name.c_str());
         g_ng_go_art_num = ui->m_data.virt.num;
         g_univ_read_virt_flag = true;
-        int ret = do_newsgroup("");
+        int ret = do_newsgroup(std::string{});
         g_univ_read_virt_flag = false;
         switch (ret)
         {
@@ -991,11 +991,11 @@ do_group:
         std::printf("Entering %s:", g_newsgroup_name.c_str());
         if (s_sel_ret == ';')
         {
-            ret = do_newsgroup(save_str(";"));
+            ret = do_newsgroup(std::string{";"});
         }
         else
         {
-            ret = do_newsgroup("");
+            ret = do_newsgroup(std::string{});
         }
         switch (ret)
         {
