@@ -26,6 +26,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 void s_go_bot()
 {
@@ -398,8 +399,8 @@ long s_backward_search(long ent)
 // perhaps later have a wraparound search?
 void s_search()
 {
-    int  fill_type; // 0: forward, 1: backward
-    char*error_msg;
+    int         fill_type; // 0: forward, 1: backward
+    std::string error_msg;
 
     if (!s_search_init)
     {
@@ -479,7 +480,7 @@ void s_search()
     if (!ent)
     {
         s_beep();
-        std::printf("\n%s\n",error_msg);
+        std::printf("\n%s\n", error_msg.c_str());
         (void)get_anything();
         g_s_ref_all = true;
         return;

@@ -41,9 +41,8 @@ The useful local targets fall into four groups:
 
 Use `std::string_view` only while no callee needs ownership or a
 guaranteed terminator.  When a sliced token flows to a C API, build a
-local `std::string` and pass `c_str()`.  For `printf` style output, use
-`%.*s` with the view length unless the view is known to cover a whole
-literal.
+local `std::string` and pass `c_str()`.  For `printf` style output,
+prefer owned `std::string` values and pass `c_str()`.
 
 The Ubuntu build log for run `29094736532` adds a current
 `-Wwrite-strings` cleanup track.  It reports 141 unique warning sites.
@@ -63,141 +62,136 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-1. `libtrn/scmd.cpp`, `s_search`
+1. `libtrn/scorefile.cpp`, `sf_print_match`
 
-   Replace `error_msg` with `std::string_view`.  Keep the search
-   direction and fill logic unchanged, and print the view length at the
-   single output site.
+   Replace the local `pattern` prefix pointer with `std::string`.
+   `head_name` is already read-only.  Print the prefix with `c_str()`
+   before `head_name`.
 
-2. `libtrn/scorefile.cpp`, `sf_print_match`
-
-   Replace the local `pattern` prefix pointer with `std::string_view`.
-   `head_name` is already read-only.  Print the prefix with an explicit
-   length before `head_name`.
-
-3. `libtrn/univ.cpp`, `univ_vg_add_article`
+2. `libtrn/univ.cpp`, `univ_vg_add_article`
 
    Make the fallback author read-only.  A local `std::string_view` can
    hold either `fetch_from` text or `"<No Author>"`; convert to an owned
    string only at the `save_str` boundary if needed.
 
-4. `libtrn/url.cpp`, `fetch_ftp`
+3. `libtrn/url.cpp`, `fetch_ftp`
 
-   Replace `cdpath` with `std::string_view`.  It is either a slice of
-   the local path buffer or the root literal.  Use `%.*s` when composing
+   Replace `cdpath` with `std::string`.  It is either a copy of the
+   local path buffer or the root literal.  Use `c_str()` when composing
    the legacy command buffer.
 
-5. `trn-artchk/trn-artchk.cpp`, `main`
+4. `trn-artchk/trn-artchk.cpp`, `main`
 
    Split the mutable newsgroups-file cursor from the read-only
-   description text.  Use a `std::string_view desc` for the normal
-   description and the `"[no description available]\n"` fallback.
+   description text.  Use a `std::string desc` for the normal
+   description and the `"[no description available]\n"` fallback, then
+   print it with `c_str()`.
 
-6. `nntplist/nntplist.cpp`, `main`
+5. `nntplist/nntplist.cpp`, `main`
 
    Use a local `std::string` for the selected local list file.  Assign
    `ACTIVE`, `ACTIVE_TIMES`, `GROUP_DESC`, `SUBSCRIPTIONS`, and
    `OVERVIEW_FMT` into that string, then pass `c_str()` to `file_exp`.
 
-7. `libtrn/datasrc.cpp`, `data_source_init`
+6. `libtrn/datasrc.cpp`, `data_source_init`
 
    Use owned local `std::string` defaults for `ACTIVE`, `NEWS_SPOOL`,
    `OVERVIEW_DIR`, `OVERVIEW_FMT`, `ACTIVE_TIMES`, and `GROUP_DESC`.
    Store their `data()` pointers in the temporary `vals` array only
    until `new_data_source` copies or expands them.
 
-8. `libtrn/util.cpp`, `prep_ini_words`
+7. `libtrn/util.cpp`, `prep_ini_words`
 
    Split `IniWords` help text from parsed value storage.  Make help text
    a `std::string_view` or `const char *` field, and store the allocated
    value vector in a separate field instead of overloading `help_str`.
    This fixes the `g_options_ini` literal table in `opt.cpp`.
 
-9. `libtrn/rt-util.cpp`, `set_spin`
+8. `libtrn/rt-util.cpp`, `set_spin`
 
     Promote the static spinner alphabet to `std::string_view`.  The bar
     spinner literal is indexed only by the spinner helpers, so no
     terminator is required.
 
-10. `libtrn/rt-util.cpp`, `perform_status_init`
+9. `libtrn/rt-util.cpp`, `perform_status_init`
 
     After the spinner alphabet is a view, set the progress spinner to
     `"v>^<"` as a view.  Existing index reads in `perform_status` stay
     unchanged.
 
-11. `libtrn/terminal.cpp`, `arrow_macros`
+10. `libtrn/terminal.cpp`, `arrow_macros`
 
     Make the static arrow macro tables arrays of `std::string_view`.
     `set_macro` already accepts views, so the table entries no longer
     need writable pointer types.
 
-12. `libtrn/terminal.cpp`, `xmouse_check`
+11. `libtrn/terminal.cpp`, `xmouse_check`
 
     Make `s_mouse_bar_btns` read-only storage and update local scanning
     cursors in `xmouse_check`, `draw_mouse_bar`, and `check_mouse_bar`
     to `const char *` or views.  The mouse bar text is read, not edited.
 
-13. `libtrn/terminal.cpp`, `term_set`
+12. `libtrn/terminal.cpp`, `term_set`
 
     Promote read-only termcap capability globals such as `g_tc_BC`,
     `g_tc_UC`, `g_tc_VB`, and `g_tc_CR` to const-qualified pointers.
     Keep any synthesized capability in owned storage before assigning
     the pointer.
 
-14. `libtrn/terminal.cpp`, `line_col_calcs`
+13. `libtrn/terminal.cpp`, `line_col_calcs`
 
     After `s_tc_CL` is read-only, assign the non-CRT fallback `"\n\n"`
     without a writable conversion.  The clear-screen string is only read
     by `tputs`.
 
-15. `libtrn/kfile.cpp`, `kill_file_init`
+14. `libtrn/kfile.cpp`, `kill_file_init`
 
     Split the mutable delimiter pointer from the command-letter text.
     Use a read-only `std::string_view` for the comma fallback and pass
     only its first character to the thread-command lookup.
 
-16. `libtrn/kfile.cpp`, `do_kill_file`
+15. `libtrn/kfile.cpp`, `do_kill_file`
 
     Apply the same split to the kill-file command cursor.  Keep the
     buffer split mutable, but represent the default `"T,"` command text
     as a view.
 
-17. `libtrn/kfile.cpp`, `edit_kill_file`
+16. `libtrn/kfile.cpp`, `edit_kill_file`
 
     Apply the command-cursor split to the edit path.  The message-id
     line remains mutable; the comma fallback becomes read-only text.
 
-18. `libtrn/scorefile.cpp`, `sf_get_extra_header`
+17. `libtrn/scorefile.cpp`, `sf_get_extra_header`
 
     Return a `std::string_view` for the extra header text.  The only
     caller copies the result into its own lowercase buffer, so the empty
     result can be an empty view instead of a writable literal.
 
-19. `libtrn/search.cpp`, `CompiledRegex::compile`
+18. `libtrn/search.cpp`, `CompiledRegex::compile`
 
     Make compile diagnostics read-only.  The null return remains the
     success sentinel, so `const char *` is the smallest safe signature
     change; callers that store the diagnostic should become read-only.
 
-20. `libtrn/util.cpp`, `secs_to_text`
+19. `libtrn/util.cpp`, `secs_to_text`
 
     Promote the result to read-only text.  The dynamic case still uses
     `g_buf`, but the `"never"` and `"missing"` results are literals.
     Update direct callers to stop storing the result in writable locals.
 
-21. `libtrn/cache.cpp`, `fetch_cache`
+20. `libtrn/cache.cpp`, `fetch_cache`
 
     Promote the return path to read-only cached text, or add a view
     helper if mutable callers remain.  The two empty-string returns are
     read-only "no header text" results, not buffers to edit.
 
-22. `libtrn/head.cpp`, `prefetch_lines`
+21. `libtrn/head.cpp`, `prefetch_lines`
 
     After `fetch_cache` is read-only, split the local `s` variable into
     a read-only source and an owned copy path.  Preserve the existing
     `copy` behavior for callers that request owned storage.
 
-23. `libtrn/intrp.cpp`, `do_interp`
+22. `libtrn/intrp.cpp`, `do_interp`
 
     Split the large substitution variable `s` into read-only source
     text and mutable scratch cursors.  Literal substitutions such as
@@ -225,9 +219,9 @@ where a null sentinel or legacy C API makes a view a poor fit.
 3. `libtrn/url.cpp`, `parse_url`
 
    Promote `url` to `std::string_view` in the implementation and
-   `libtrn/include/trn/url.h`.  Keep parsing as views.  Use either a
-   short owned diagnostic string or `%.*s` formatting for error output,
-   then copy validated fields into the legacy URL buffers.
+   `libtrn/include/trn/url.h`.  Keep parsing as views.  Use short owned
+   diagnostic strings for `printf` output, then copy validated fields
+   into the legacy URL buffers.
 
 4. `libtrn/url.cpp`, `url_get`
 
