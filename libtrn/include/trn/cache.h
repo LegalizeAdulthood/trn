@@ -46,7 +46,7 @@ void  build_cache();
 void  close_cache();
 void  change_join_subject_len(int len);
 char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
-int   decode_header(char *to, char *from, int size);
+int   decode_header(char *to, const char *from, int size);
 void  dectrl(char *str);
 int   subject_cmp(const char *key, int key_len, HashDatum data);
 #ifdef PENDING

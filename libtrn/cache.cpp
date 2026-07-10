@@ -38,6 +38,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <string>
 
 List      *g_article_list{};         // a list of Articles
 Article  **g_art_ptr_list{};         // the article-selector creates this
@@ -414,52 +415,50 @@ void Article::set_subj_line(char *subj, int size)
     }
 }
 
-int decode_header(char *to, char *from, int size)
+int decode_header(char *to, const char *from, int size)
 {
     char *s = to; // save for pass 2
-    bool pass2_needed = false;
+    bool  pass2_needed = false;
 
     // Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong)
     for (int i = size; *from && i--;)
     {
         if (*from == '=' && from[1] == '?')
         {
-            char* q = std::strchr(from+2,'?');
-            char ch = (q && q[2] == '?')? q[1] : 0;
-            char* e;
+            const char *q = std::strchr(from + 2, '?');
+            char        ch = (q && q[2] == '?') ? q[1] : 0;
+            const char *e;
 
             if (ch == 'q' || ch == 'Q' || ch == 'b' || ch == 'B')
             {
-                const char* old_ics = input_charset_name();
-                const char* old_ocs = output_charset_name();
+                const char *old_ics = input_charset_name();
+                const char *old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
-                *q = '\0';
-                utf_init(from+2, CHARSET_NAME_UTF8); // FIXME
-                *q = '?';
+                std::string charset{from + 2, q};
+                utf_init(charset.c_str(), CHARSET_NAME_UTF8); // FIXME
 #endif
-                e = q+2;
+                e = q + 2;
                 do
                 {
                     e = std::strchr(e + 1, '?');
                 } while (e && e[1] != '=');
                 if (e)
                 {
-                    int len = e - from + 2;
+                    int         len = e - from + 2;
+                    std::string encoded{q + 3, e};
 #ifdef USE_UTF_HACK
                     char *d;
 #endif
-                    i -= len-1;
+                    i -= len - 1;
                     size -= len;
-                    q += 3;
-                    from = e+2;
-                    *e = '\0';
+                    from = e + 2;
                     if (ch == 'q' || ch == 'Q')
                     {
-                        len = qp_decode_string(to, q, true);
+                        len = qp_decode_string(to, encoded.c_str(), true);
                     }
                     else
                     {
-                        len = b64_decode_string(to, q);
+                        len = b64_decode_string(to, encoded.c_str());
                     }
 #ifdef USE_UTF_HACK
                     d = create_utf8_copy(to);
@@ -473,7 +472,6 @@ int decode_header(char *to, char *from, int size)
                         std::free(d);
                     }
 #endif
-                    *e = '?';
                     to += len;
                     size += len;
                     // If the next character is whitespace we should eat it now
