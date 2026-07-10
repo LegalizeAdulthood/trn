@@ -669,7 +669,8 @@ int perform(char *cmdlst, int output_level)
             }
             else
             {
-                cmdlst = do_interp(tmpbuf, sizeof tmpbuf, cmdlst, ":", nullptr) - 1;
+                char *cmd_start = cmdlst;
+                cmdlst = cmd_start + (do_interp(tmpbuf, sizeof tmpbuf, cmd_start, ":", nullptr) - cmd_start) - 1;
             }
             g_perform_count--;
             if (perform(tmpbuf,output_level?2:0) < 0)

@@ -1014,32 +1014,32 @@ char *parse_ini_section(char *cp, IniWords words[])
 
 bool check_ini_cond(char *cond)
 {
-    cond = do_interp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
-    char *s = g_buf + std::strlen(g_buf);
+    const char *cond_cursor = do_interp(g_buf, sizeof g_buf, cond, "!=<>", nullptr);
+    char       *s = g_buf + std::strlen(g_buf);
     while (s != g_buf && std::isspace(s[-1]))
     {
         s--;
     }
     *s = '\0';
-    const int negate = *cond == '!' ? 1 : 0;
+    const int negate = *cond_cursor == '!' ? 1 : 0;
     if (negate != 0)
     {
-        cond++;
+        cond_cursor++;
     }
-    const int upordown = *cond == '<' ? -1 : (*cond == '>' ? 1 : 0);
+    const int upordown = *cond_cursor == '<' ? -1 : (*cond_cursor == '>' ? 1 : 0);
     if (upordown != 0)
     {
-        cond++;
+        cond_cursor++;
     }
-    bool equal = *cond == '=';
+    bool equal = *cond_cursor == '=';
     if (equal)
     {
-        cond++;
+        cond_cursor++;
     }
-    cond = skip_space(cond);
+    cond_cursor = skip_space(cond_cursor);
     if (upordown)
     {
-        const int num = std::atoi(cond) - std::atoi(g_buf);
+        const int num = std::atoi(cond_cursor) - std::atoi(g_buf);
         if (!((equal && !num) || (upordown * num < 0)) ^ negate)
         {
             return false;
@@ -1049,7 +1049,7 @@ bool check_ini_cond(char *cond)
     {
         CompiledRegex condcompex;
         condcompex.init_compex();
-        s = condcompex.compile(cond, true, true);
+        s = condcompex.compile(cond_cursor, true, true);
         if (s != nullptr)
         {
             // warning(s)

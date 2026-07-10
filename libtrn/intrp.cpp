@@ -253,7 +253,7 @@ getout:
 }
 
 // interpret interpolations
-char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, const char *cmd)
+const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
 {
     char* subj_buf = nullptr;
     char* ngs_buf = nullptr;
@@ -374,7 +374,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
 
                 case '{':
                 {
-                    char *pattern_start = pattern + 1;
+                    const char *pattern_start = pattern + 1;
                     pattern = pattern_start + (copy_till(scrbuf, pattern_start, '}') - pattern_start);
                     char *m = std::strchr(scrbuf, '-');
                     if (m != nullptr)
@@ -391,7 +391,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
 
                 case '<':
                 {
-                    char *pattern_start = pattern + 1;
+                    const char *pattern_start = pattern + 1;
                     pattern = pattern_start + (copy_till(scrbuf, pattern_start, '>') - pattern_start);
                     s = std::strchr(scrbuf, '-');
                     if (s != nullptr)
@@ -409,7 +409,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
 
                 case '[':
                 {
-                    char *pattern_start = pattern + 1;
+                    const char *pattern_start = pattern + 1;
                     pattern = pattern_start + (copy_till(scrbuf, pattern_start, ']') - pattern_start);
                     if (g_in_ng)
                     {
@@ -448,7 +448,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     {
                         goto getout;
                     }
-                    char *pattern_start = pattern + 1;
+                    const char *pattern_start = pattern + 1;
                     pattern = pattern_start + (copy_till(scrbuf, pattern_start, '?') - pattern_start);
                     if (!*pattern)
                     {
@@ -499,19 +499,19 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         pattern = do_interp(dest, dest_size, pattern + 1, ":)", cmd);
                         if (*pattern == ':')
                         {
-                            char *pattern_start = pattern + 1;
+                            const char *pattern_start = pattern + 1;
                             pattern = pattern_start + (skip_interp(pattern_start, ")") - pattern_start);
                         }
                     }
                     else
                     {
-                        char *pattern_start = pattern + 1;
+                        const char *pattern_start = pattern + 1;
                         pattern = pattern_start + (skip_interp(pattern_start, ":)") - pattern_start);
                         if (*pattern == ':')
                         {
                             pattern++;
                         }
-                        pattern = do_interp(dest,dest_size,pattern,")",cmd);
+                        pattern = do_interp(dest, dest_size, pattern, ")", cmd);
                     }
                     s = dest;
                     g_bra_compex = oldbra_compex;
@@ -1472,7 +1472,7 @@ getout:
 /// @param pattern Pointer to the input pattern containing escape sequences.
 /// @return Pointer to the next character in the pattern after the processed escape sequence.
 ///
-char *interp_backslash(char *dest, char *pattern)
+const char *interp_backslash(char *dest, const char *pattern)
 {
     int i = *pattern;
 
@@ -1484,7 +1484,7 @@ char *interp_backslash(char *dest, char *pattern)
             i <<= 3;
             i += *pattern++ - '0';
         }
-        *dest = (char)(i & 0377);
+        *dest = (char) (i & 0377);
         return pattern - 1;
     }
     switch (i)
@@ -1537,22 +1537,27 @@ char *interp_backslash(char *dest, char *pattern)
         return pattern - 1;
 
     default:
-        *dest = (char)i;
+        *dest = (char) i;
         break;
     }
     return pattern;
+}
+
+char *interp_backslash(char *dest, char *pattern)
+{
+    return pattern + (interp_backslash(dest, static_cast<const char *>(pattern)) - pattern);
 }
 
 // helper functions
 
 char *interp(char *dest, int dest_size, char *pattern)
 {
-    return do_interp(dest,dest_size,pattern,nullptr,nullptr);
+    return pattern + (do_interp(dest, dest_size, pattern, nullptr, nullptr) - pattern);
 }
 
 char *interp_search(char *dest, int dest_size, char *pattern, const char *cmd)
 {
-    return do_interp(dest,dest_size,pattern,nullptr,cmd);
+    return pattern + (do_interp(dest, dest_size, pattern, nullptr, cmd) - pattern);
 }
 
 // normalize a references line in place

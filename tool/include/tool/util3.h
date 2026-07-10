@@ -14,7 +14,7 @@ int do_shell(const char *shell, const char *cmd);
 char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);
 #endif
-char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, const char *cmd);
+const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd);
 int   nntp_handle_nested_lists();
 char *get_auth_user();
 char *get_auth_pass();

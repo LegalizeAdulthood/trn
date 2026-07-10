@@ -592,7 +592,7 @@ static void mac_init(char *tcbuf)
 
 void mac_line(char *line, char *tmpbuf, int tbsize)
 {
-    char*       m;
+    const char *m;
     KeyMap*     curmap;
     int         garbage = 0;
     static char override[] = "\nkeymap overrides string\n";

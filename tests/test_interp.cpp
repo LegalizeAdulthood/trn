@@ -133,7 +133,7 @@ protected:
     void SetUp() override;
     void TearDown() override;
 
-    char *interpolate(char *pattern, const char *stoppers = "")
+    const char *interpolate(char *pattern, const char *stoppers = "")
     {
         return do_interp(m_buffer.data(), BUFFER_SIZE, pattern, stoppers, nullptr);
     }
