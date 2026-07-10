@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 namespace asio = boost::asio;
 using resolver_results = asio::ip::tcp::resolver::results_type;
@@ -164,90 +165,98 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 // later: pay more attention to long URLs
 bool parse_url(const char *url)
 {
-    const char* s;
-
     // consider using 0 as default to look up the service?
-    s_url_port = 80;    // the default
+    s_url_port = 80; // the default
     if (!url || !*url)
     {
         std::printf("Empty URL -- ignoring.\n");
         return false;
     }
-    char *p = s_url_type;
-    for (s = url; *s && *s != ':'; *p++ = *s++)
+    const auto copy_view = [](char *dest, std::size_t dest_size, std::string_view source)
     {
-    }
-    *p = '\0';
-    if (!*s)
+        const std::string text{source};
+        safe_copy(dest, text.c_str(), static_cast<int>(dest_size));
+    };
+
+    const std::string_view full_url{url};
+    const std::size_t      scheme_end = full_url.find(':');
+    if (scheme_end == std::string_view::npos)
     {
-        std::printf("Incomplete URL: %s\n",url);
+        std::printf("Incomplete URL: %s\n", url);
         return false;
     }
-    s++;
-    if (!std::strncmp(s, "//", 2))
+    const std::string_view url_type = full_url.substr(0, scheme_end);
+    std::string_view       rest = full_url.substr(scheme_end + 1);
+    std::string_view       url_host;
+    bool                   has_host = false;
+
+    if (rest.substr(0, 2) == "//")
     {
         // normal URL type, will have host (optional portnum)
-        s += 2;
-        p = s_url_host;
+        rest.remove_prefix(2);
+        has_host = true;
+
         // check for address literal: news://[ip:v6:address]:port/
-        if (*s == '[')
+        if (!rest.empty() && rest.front() == '[')
         {
-            while (*s && *s != ']')
+            const std::size_t host_end = rest.find(']');
+            if (host_end == std::string_view::npos)
             {
-                *p++ = *s++;
-            }
-            if (!*s)
-            {
-                std::printf("Bad address literal: %s\n",url);
+                std::printf("Bad address literal: %s\n", url);
                 return false;
             }
-            s++;        // skip ]
+            url_host = rest.substr(0, host_end);
+            rest.remove_prefix(host_end + 1);
         }
         else
         {
-            while (*s && *s != '/' && *s != ':')
-            {
-                *p++ = *s++;
-            }
+            const std::size_t host_end = rest.find_first_of("/:");
+            url_host = rest.substr(0, host_end);
+            rest.remove_prefix(host_end == std::string_view::npos ? rest.size() : host_end);
         }
-        *p = '\0';
-        if (!*s)
+        if (rest.empty())
         {
-            std::printf("Incomplete URL: %s\n",url);
+            std::printf("Incomplete URL: %s\n", url);
             return false;
         }
-        if (*s == ':')
+        if (rest.front() == ':')
         {
-            s++;
-            p = s_url_buf;      // temp space
-            if (!std::isdigit(*s))
+            rest.remove_prefix(1);
+            if (rest.empty() || !std::isdigit(static_cast<unsigned char>(rest.front())))
             {
-                std::printf("Bad URL (non-numeric portnum): %s\n",url);
+                std::printf("Bad URL (non-numeric portnum): %s\n", url);
                 return false;
             }
-            while (std::isdigit(*s))
+            std::size_t port_len = 0;
+            while (port_len < rest.size() && std::isdigit(static_cast<unsigned char>(rest[port_len])))
             {
-                *p++ = *s++;
+                port_len++;
             }
-            *p = '\0';
-            s_url_port = std::atoi(s_url_buf);
+            const std::string port{rest.substr(0, port_len)};
+            s_url_port = std::atoi(port.c_str());
+            rest.remove_prefix(port_len);
         }
     }
     else
     {
-        if (!!std::strcmp(s_url_type, "news"))
+        if (url_type != "news")
         {
-            std::printf("URL needs a hostname: %s\n",url);
+            std::printf("URL needs a hostname: %s\n", url);
             return false;
         }
     }
     // finally, just do the path
-    if (*s != '/')
+    if (rest.empty() || rest.front() != '/')
     {
-        std::printf("Bad URL (path does not start with /): %s\n",url);
+        std::printf("Bad URL (path does not start with /): %s\n", url);
         return false;
     }
-    std::strcpy(s_url_path,s);
+    if (has_host)
+    {
+        copy_view(s_url_host, sizeof s_url_host, url_host);
+    }
+    copy_view(s_url_type, sizeof s_url_type, url_type);
+    copy_view(s_url_path, sizeof s_url_path, rest);
     return true;
 }
 
