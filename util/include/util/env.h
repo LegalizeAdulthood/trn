@@ -5,6 +5,7 @@
 #define TRN_ENV_H
 
 #include <string>
+#include <string_view>
 
 extern char       *g_home_dir;    // login directory
 extern std::string g_dot_dir;     // where . files go
@@ -22,7 +23,7 @@ bool  env_init(char *tcbuf, bool lax);
 void  env_final();
 char *get_val(const char *nam, char *def = nullptr);
 const char *get_val_const(const char *nam, const char *def = nullptr);
-char *export_var(const char *nam, const char *val);
+char *export_var(std::string_view nam, std::string_view val);
 void  un_export(char *export_val);
 void  re_export(char *export_val, const char *new_val, int limit);
 

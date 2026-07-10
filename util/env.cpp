@@ -477,7 +477,7 @@ static bool s_first_export = true;
 extern char **environ;
 #endif
 
-char *export_var(const char *nam, const char *val)
+char *export_var(std::string_view nam, std::string_view val)
 {
 #if 1
     std::string envar{nam};
