@@ -15,7 +15,7 @@ struct CompiledRegex
     void        init_compex();
     void        free_compex();
     const char *get_bracket(int n);
-    char       *compile(const char *strp, bool re, bool fold);
+    const char *compile(const char *strp, bool re, bool fold);
     char       *grow_eb(char *epp, char **alt);
     const char *execute(const char *addr);
     bool        advance(const char *lp, const char *ep);

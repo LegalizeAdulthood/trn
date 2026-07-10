@@ -4,6 +4,7 @@
 // string search routines
 
 // Copyright (c) 1981,1980 James Gosling
+// Copyright (c) 2026, Richard Thomson
 
 // Modified Aug. 12, 1981 by Tom London to include regular expressions
 // as in ed.  RE stuff hacked over by jag to correct a few major problems,
@@ -158,11 +159,11 @@ const char *CompiledRegex::get_bracket(int n)
 
 // Compile the given regular expression into a [secret] internal format
 //
-char *CompiledRegex::compile(const char *strp, bool re, bool fold)
+const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
 {
     char  bracket[NBRA];
     char**alt = m_alternatives;
-    char* retmes = "Badly formed search string";
+    const char *retmes = "Badly formed search string";
 
     case_fold(m_do_folding = fold);
     if (!m_eb_len)

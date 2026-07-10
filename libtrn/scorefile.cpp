@@ -787,11 +787,11 @@ bool sf_do_line(char *line, bool check)
         // 2nd is search string
         // 3rd should be true if the search string is a regex
         // 4th is true for case-insensitivity
-        s2 = s_sf_compex->compile(s, true, true);
-        if (s2 != nullptr)
+        const char *compile_error = s_sf_compex->compile(s, true, true);
+        if (compile_error != nullptr)
         {
             std::printf("Bad pattern : |%s|\n",s);
-            std::printf("Compex returns: |%s|\n",s2);
+            std::printf("Compex returns: |%s|\n",compile_error);
             s_sf_compex->free_compex();
             std::free(s_sf_compex);
             s_sf_compex = nullptr;

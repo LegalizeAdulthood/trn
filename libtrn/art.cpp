@@ -924,6 +924,7 @@ static PageSwitchResult page_switch()
         goto caseG;
 
     case 'g':         // in-article search
+    {
         if (!finish_command(false))// get rest of command
         {
             return PS_ASK;
@@ -933,15 +934,16 @@ static PageSwitchResult page_switch()
         {
             s++;
         }
-        s = s_gcompex.compile(s, true, true);
-        if (s != nullptr)
+        const char *compile_error = s_gcompex.compile(s, true, true);
+        if (compile_error != nullptr)
         {
                             // compile regular expression
-            std::printf("\n%s\n", s);
+            std::printf("\n%s\n", compile_error);
             term_down(2);
             return PS_ASK;
         }
         erase_line(false);      // erase the prompt
+    }
         // FALL THROUGH
 
 caseG:

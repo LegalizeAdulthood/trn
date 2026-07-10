@@ -1051,8 +1051,8 @@ bool check_ini_cond(char *cond)
     {
         CompiledRegex condcompex;
         condcompex.init_compex();
-        s = condcompex.compile(cond_cursor, true, true);
-        if (s != nullptr)
+        const char *compile_error = condcompex.compile(cond_cursor, true, true);
+        if (compile_error != nullptr)
         {
             // warning(s)
             equal = false;

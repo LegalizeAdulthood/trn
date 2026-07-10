@@ -606,11 +606,11 @@ void look_ahead()
             term_down(2);
         }
 #endif
-        s = s_srchcompex.compile(pattern, true, true);
-        if (s != nullptr)
+        const char *compile_error = s_srchcompex.compile(pattern, true, true);
+        if (compile_error != nullptr)
         {
                                     // compile regular expression
-            std::printf("\n%s\n",s);
+            std::printf("\n%s\n",compile_error);
             term_down(2);
             g_srchahead = 0;
         }

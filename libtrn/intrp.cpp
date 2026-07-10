@@ -481,10 +481,10 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         do_interp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
                         proc_sprintf = false;
                     }
-                    s = s_cond_compex.compile(scrbuf, true, true);
-                    if (s != nullptr)
+                    const char *compile_error = s_cond_compex.compile(scrbuf, true, true);
+                    if (compile_error != nullptr)
                     {
-                        std::printf("%s: %s\n",scrbuf,s);
+                        std::printf("%s: %s\n",scrbuf,compile_error);
                         pattern += std::strlen(pattern);
                         s_cond_compex.free_compex();
                         goto getout;

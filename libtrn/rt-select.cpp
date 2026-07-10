@@ -3901,10 +3901,10 @@ static DisplayState option_commands(char_int ch)
         for (pattern = g_buf; *pattern == ' '; pattern++)
         {
         }
-        char *s = g_opt_compex.compile(pattern, true, true);
-        if (s != nullptr)
+        const char *compile_error = g_opt_compex.compile(pattern, true, true);
+        if (compile_error != nullptr)
         {
-            std::strcpy(g_msg,s);
+            std::strcpy(g_msg,compile_error);
             return DS_STATUS;
         }
         int i = g_sel_items[g_sel_item_index].u.op;
