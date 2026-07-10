@@ -75,13 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-3. `libtrn/url.cpp`, `parse_url`
-
-   Promote `url` to `std::string_view` in the implementation and
-   `libtrn/include/trn/url.h`.  Keep parsing as views.  Use short owned
-   diagnostic strings for `printf` output, then copy validated fields
-   into the legacy URL buffers.
-
 4. `libtrn/url.cpp`, `url_get`
 
    Promote only the `url` parameter to `std::string_view`; keep

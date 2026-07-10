@@ -3,6 +3,7 @@
  * Routines for handling WWW URL references.
  */
 // This file Copyright 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/url.h>
 
@@ -163,11 +164,11 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 // right now only full, absolute URLs are allowed.
 // use relative URLs later?
 // later: pay more attention to long URLs
-bool parse_url(const char *url)
+bool parse_url(std::string_view url)
 {
     // consider using 0 as default to look up the service?
     s_url_port = 80; // the default
-    if (!url || !*url)
+    if (url.empty())
     {
         std::printf("Empty URL -- ignoring.\n");
         return false;
@@ -178,11 +179,12 @@ bool parse_url(const char *url)
         safe_copy(dest, text.c_str(), static_cast<int>(dest_size));
     };
 
-    const std::string_view full_url{url};
+    const std::string      url_text{url};
+    const std::string_view full_url = url;
     const std::size_t      scheme_end = full_url.find(':');
     if (scheme_end == std::string_view::npos)
     {
-        std::printf("Incomplete URL: %s\n", url);
+        std::printf("Incomplete URL: %s\n", url_text.c_str());
         return false;
     }
     const std::string_view url_type = full_url.substr(0, scheme_end);
@@ -202,7 +204,7 @@ bool parse_url(const char *url)
             const std::size_t host_end = rest.find(']');
             if (host_end == std::string_view::npos)
             {
-                std::printf("Bad address literal: %s\n", url);
+                std::printf("Bad address literal: %s\n", url_text.c_str());
                 return false;
             }
             url_host = rest.substr(0, host_end);
@@ -216,7 +218,7 @@ bool parse_url(const char *url)
         }
         if (rest.empty())
         {
-            std::printf("Incomplete URL: %s\n", url);
+            std::printf("Incomplete URL: %s\n", url_text.c_str());
             return false;
         }
         if (rest.front() == ':')
@@ -224,7 +226,7 @@ bool parse_url(const char *url)
             rest.remove_prefix(1);
             if (rest.empty() || !std::isdigit(static_cast<unsigned char>(rest.front())))
             {
-                std::printf("Bad URL (non-numeric portnum): %s\n", url);
+                std::printf("Bad URL (non-numeric portnum): %s\n", url_text.c_str());
                 return false;
             }
             std::size_t port_len = 0;
@@ -241,14 +243,14 @@ bool parse_url(const char *url)
     {
         if (url_type != "news")
         {
-            std::printf("URL needs a hostname: %s\n", url);
+            std::printf("URL needs a hostname: %s\n", url_text.c_str());
             return false;
         }
     }
     // finally, just do the path
     if (rest.empty() || rest.front() != '/')
     {
-        std::printf("Bad URL (path does not start with /): %s\n", url);
+        std::printf("Bad URL (path does not start with /): %s\n", url_text.c_str());
         return false;
     }
     if (has_host)
