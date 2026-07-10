@@ -75,13 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-4. `libtrn/url.cpp`, `url_get`
-
-   Promote only the `url` parameter to `std::string_view`; keep
-   `outfile` as `const char *` because it flows to fetch/file helpers.
-   This slice depends on the `parse_url` slice and lets callers pass URL
-   slices without allocating.
-
 5. `libtrn/univ.cpp`, `univ_use_file`
 
    Promote `fname` to `std::string_view`.  Keep the effective open name

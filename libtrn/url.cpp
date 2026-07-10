@@ -262,7 +262,7 @@ bool parse_url(std::string_view url)
     return true;
 }
 
-bool url_get(const char *url, const char *outfile)
+bool url_get(std::string_view url, const char *outfile)
 {
     bool flag;
 

@@ -12,6 +12,6 @@
 bool fetch_http(const char *host, int port, const char *path, const char *outname);
 bool fetch_ftp(const char *host, const char *origpath, const char *outname);
 bool parse_url(std::string_view url);
-bool url_get(const char *url, const char *outfile);
+bool url_get(std::string_view url, const char *outfile);
 
 #endif
