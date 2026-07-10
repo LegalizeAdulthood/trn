@@ -52,7 +52,7 @@ const std::string g_news_admin{NEWS_ADMIN}; // news administrator
 int               g_news_uid{};
 #endif
 
-static char *skip_interp(char *pattern, const char *stoppers);
+static const char *skip_interp(const char *pattern, const char *stoppers);
 static void abort_interp();
 
 static const char   *s_regexp_specials = "^$.*[\\/?%";
@@ -136,7 +136,7 @@ void interp_final()
 
 // skip interpolations
 
-static char *skip_interp(char *pattern, const char *stoppers)
+static const char *skip_interp(const char *pattern, const char *stoppers)
 {
 #ifdef DEBUG
     if (g_debug & DEB_INTRP)
@@ -496,15 +496,17 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     if (matched == (rch == '='))
                     {
-                        pattern = do_interp(dest,dest_size,pattern+1,":)",cmd);
+                        pattern = do_interp(dest, dest_size, pattern + 1, ":)", cmd);
                         if (*pattern == ':')
                         {
-                            pattern = skip_interp(pattern + 1, ")");
+                            char *pattern_start = pattern + 1;
+                            pattern = pattern_start + (skip_interp(pattern_start, ")") - pattern_start);
                         }
                     }
                     else
                     {
-                        pattern = skip_interp(pattern+1,":)");
+                        char *pattern_start = pattern + 1;
+                        pattern = pattern_start + (skip_interp(pattern_start, ":)") - pattern_start);
                         if (*pattern == ':')
                         {
                             pattern++;
