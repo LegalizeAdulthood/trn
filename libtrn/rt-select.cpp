@@ -39,6 +39,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 enum DisplayState
 {
@@ -4101,7 +4102,7 @@ reask_sort:
 ///
 static void switch_dmode(char **dmode_cpp)
 {
-    const char* s = "?";
+    std::string_view s = "?";
 
     if (!*++*dmode_cpp)
     {
@@ -4128,7 +4129,7 @@ static void switch_dmode(char **dmode_cpp)
         s = "long";
         break;
     }
-    std::sprintf(g_msg,"(%s display style)",s);
+    std::sprintf(g_msg, "(%.*s display style)", static_cast<int>(s.size()), s.data());
     s_disp_status_line = 1;
 }
 
