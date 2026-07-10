@@ -297,35 +297,25 @@ a string literal being passed to a modifiable function parameter.
 
 ## Suggested Order
 
-1. Convert the remaining pure read-only `get_val` callers via
-   `get_val_const`.
-2. Make the interpolation family const-correct.  This is broader because
-   the return type points inside the pattern.
-3. Remove literal sentinels from `do_newsgroup` and
+1. Convert the interpolation cursor chain from leaf helper to public
+   wrappers: `copy_till`, `skip_interp`, `do_interp`, `interp`, and
+   `interp_search`.
+2. Convert the remaining pure read-only `get_val` callers after the
+   interpolation callers can pass const pattern text through the chain.
+3. Convert `set_macro`, which owns its stored text and has no return
+   alias.
+4. Remove literal sentinels from `do_newsgroup` and
    `parse_ini_section`.
-4. Decide whether `decode_header` can stop mutating its source.  That
+5. Decide whether `decode_header` can stop mutating its source.  That
    unlocks const cleanup in `Article::set_subj_line` and `tree_puts`.
-5. Replace the `putenv` literals with an owning environment wrapper.
+6. Replace the `putenv` literals with an owning environment wrapper.
 
 ## Implementation Slices
 
 Each slice below changes one function and its direct callers only.  If a
 helper also needs a signature change, it has its own slice.
 
-### Slice 1: `get_val`
-
-Change `get_val(const char *nam, char *def)` and its callers so literal
-defaults use a const result.  Prefer `get_val_const` at call sites that
-only read the selected value; copy into `std::string` or a writable
-buffer before mutation.
-
-Return-alias note: the returned pointer aliases either the environment
-buffer or `def`.  Do not return a mutable pointer when `def` may be a
-literal.
-
-Validation: build with `cmake --build --preset rt-default`.
-
-### Slice 2: `copy_till`
+### Slice 1: `copy_till`
 
 Change `copy_till(char *to, char *from, int delim)` to take a const
 source and return a const cursor into that source.  Update its direct
@@ -337,7 +327,7 @@ mutable buffer.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 3: `skip_interp`
+### Slice 2: `skip_interp`
 
 Change `skip_interp(char *pattern, const char *stoppers)` to take a
 const pattern and return a const cursor.  Update only its callers in
@@ -348,7 +338,7 @@ wrapping temporary `std::string` objects around the call.
 
 Validation: run focused interpolation tests, then build.
 
-### Slice 4: `do_interp`
+### Slice 3: `do_interp`
 
 Change `do_interp` so `pattern` is const and the returned cursor is
 const.  Update only direct callers of `do_interp`; use
@@ -359,7 +349,7 @@ passes `std::string`, that string must outlive the returned cursor.
 
 Validation: run focused interpolation tests, then build.
 
-### Slice 5: `interp`
+### Slice 4: `interp`
 
 Change `interp(char *dest, int dest_size, char *pattern)` to take a
 const pattern and return a const cursor.  Update its direct callers.
@@ -369,7 +359,7 @@ Return-alias note: this wrapper returns the `do_interp` cursor into
 
 Validation: run focused interpolation tests, then build.
 
-### Slice 6: `interp_search`
+### Slice 5: `interp_search`
 
 Change `interp_search` to take a const pattern and return a const
 cursor.  Update its direct callers.
@@ -378,6 +368,19 @@ Return-alias note: this wrapper returns a cursor into its pattern
 argument.  Preserve the caller-owned lifetime.
 
 Validation: run focused interpolation tests, then build.
+
+### Slice 6: `get_val`
+
+Change `get_val(const char *nam, char *def)` and its callers so literal
+defaults use a const result.  Prefer `get_val_const` at call sites that
+only read the selected value; copy into `std::string` or a writable
+buffer before mutation.
+
+Return-alias note: the returned pointer aliases either the environment
+buffer or `def`.  Do not return a mutable pointer when `def` may be a
+literal.
+
+Validation: build with `cmake --build --preset rt-default`.
 
 ### Slice 7: `set_macro`
 
