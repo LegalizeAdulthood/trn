@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 std::string g_charsets{"patm"};
@@ -148,9 +149,9 @@ const char *current_char_subst()
 {
 #ifdef USE_UTF_HACK
     static char show[50];
-    const char* ics = input_charset_name();
-    const char* ocs = output_charset_name();
-    int maxlen = (sizeof show - 5)/2;
+    const char *ics = input_charset_name();
+    const char *ocs = output_charset_name();
+    int         maxlen = (sizeof show - 5) / 2;
     if (std::strcmp(ics, ocs) == 0)
     {
         std::sprintf(show, "[%.*s]", maxlen, ics, maxlen, ocs);
@@ -159,8 +160,9 @@ const char *current_char_subst()
     {
         std::sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
     }
+    return show;
 #else // !USE_UTF_HACK
-    static const char* show;
+    std::string_view show;
 
     switch (*g_char_subst)
     {
@@ -180,8 +182,8 @@ const char *current_char_subst()
         show = "";
         break;
     }
+    return show.data();
 #endif
-    return show;
 }
 
 int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
