@@ -18,6 +18,7 @@
 #include <trn/trn.h>
 
 #include <cstdio>
+#include <string_view>
 
 void sa_refresh_top()
 {
@@ -53,7 +54,7 @@ void sa_refresh_top()
 
 void sa_refresh_bot()
 {
-    char* s;
+    std::string_view order;
 
     color_object(COLOR_SCORE, true);
     s_mail_and_place();
@@ -61,25 +62,25 @@ void sa_refresh_bot()
     switch (g_sa_mode_order)
     {
     case SA_ORDER_ARRIVAL:
-        s = "arrival";
+        order = "arrival";
         break;
 
     case SA_ORDER_DESCENDING:
         if (g_score_new_first)
         {
-            s = "score (new>old)";
+            order = "score (new>old)";
         }
         else
         {
-            s = "score (old>new)";
+            order = "score (old>new)";
         }
         break;
 
     default:
-        s = "unknown";
+        order = "unknown";
         break;
     }
-    std::printf("%s order",s);
+    std::printf("%.*s order", static_cast<int>(order.size()), order.data());
     std::printf(", %d%% scored",sc_percent_scored());
     std::printf(")");
     color_pop();        // of COLOR_SCORE
