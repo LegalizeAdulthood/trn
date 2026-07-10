@@ -88,12 +88,14 @@ void util_init()
 
 void util_final()
 {
-    putenv("NEWSACTIVE=");
-    putenv("NEWSDESCRIPTIONS=");
-    putenv("NNTPSERVER=");
-    putenv("QUOTECHARS=");
-    putenv("NNTP_FORCE_AUTH=");
-    putenv("TRN_VERSION=");
+    const char *names[] = {
+        "NEWSACTIVE", "NEWSDESCRIPTIONS", "NNTPSERVER", "QUOTECHARS", "NNTP_FORCE_AUTH", "TRN_VERSION",
+    };
+
+    for (const char *name : names)
+    {
+        export_var(name, "");
+    }
 }
 
 // fork and exec a shell command

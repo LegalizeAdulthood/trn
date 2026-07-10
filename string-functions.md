@@ -261,20 +261,9 @@ source-const so `set_subj_line` can become const-correct.
 ### `putenv`
 
 On POSIX, `putenv` is declared as taking `char *` and may keep the
-pointer as the environment entry.  `util_final` passes string literals:
-
-- `libtrn/util.cpp:91`
-- `libtrn/util.cpp:92`
-- `libtrn/util.cpp:93`
-- `libtrn/util.cpp:94`
-- `libtrn/util.cpp:95`
-- `libtrn/util.cpp:96`
-
-On the current Windows headers this does not trigger the same const
-diagnostic, but the calls are still portability hazards.
-
-Recommendation: clear these names through `export_var`, `_putenv_s` on
-Windows, or a small cross-platform wrapper that owns mutable storage.
+pointer as the environment entry.  `util_final` used to pass string
+literals when clearing exported names.  It now clears those names through
+`export_var`, which owns the mutable storage passed to `putenv`.
 
 ## Related Non-call Conversions
 
@@ -297,23 +286,11 @@ a string literal being passed to a modifiable function parameter.
 
 ## Suggested Order
 
-1. Replace the `putenv` literals with an owning environment wrapper.
+No direct function-call slices remain.
 
 ## Implementation Slices
 
-Each slice below changes one function and its direct callers only.  If a
-helper also needs a signature change, it has its own slice.
-
-### Slice 1: `util_final`
-
-Change `util_final` so it does not pass literals to `putenv`.  Use a
-small owned environment-clearing helper inside this function or call a
-platform API that does not retain caller storage.
-
-Return-alias note: this is storage aliasing, not return aliasing.  Any
-buffer passed to POSIX `putenv` must remain valid after the call.
-
-Validation: build with `cmake --build --preset rt-default`.
+No direct literal-to-modifiable-function slices remain.
 
 ### Follow-up: Non-call Literal Conversions
 
