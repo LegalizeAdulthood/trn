@@ -1550,9 +1550,9 @@ char *interp_backslash(char *dest, char *pattern)
 
 // helper functions
 
-char *interp(char *dest, int dest_size, char *pattern)
+const char *interp(char *dest, int dest_size, const char *pattern)
 {
-    return pattern + (do_interp(dest, dest_size, pattern, nullptr, nullptr) - pattern);
+    return do_interp(dest, dest_size, pattern, nullptr, nullptr);
 }
 
 char *interp_search(char *dest, int dest_size, char *pattern, const char *cmd)
