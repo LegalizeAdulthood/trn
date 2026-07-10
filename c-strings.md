@@ -75,13 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-5. `libtrn/univ.cpp`, `univ_use_file`
-
-   Promote `fname` to `std::string_view`.  Keep the effective open name
-   as an owned `std::string` for `file_exp` and `std::fopen`.  After
-   `url_get` accepts a view, pass `file_name.substr(4)` directly for
-   URL-backed universal files and remove the temporary URL string.
-
 6. `libtrn/edit_dist.cpp`, `edit_distn`
 
    Promote `from/from_len` and `to/to_len` to two

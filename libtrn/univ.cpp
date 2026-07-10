@@ -1,6 +1,7 @@
 /* univ.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 /* Universal selector
  *
@@ -78,7 +79,7 @@ static bool           s_univ_user_top{};         // if true, the user has loaded
 
 static void  univ_free_data(UniversalItem *ui);
 static bool  univ_do_match(const char *text, const char *p);
-static bool  univ_use_file(const char *fname, const char *label);
+static bool  univ_use_file(std::string_view fname, const char *label);
 static bool  univ_include_file(const char *fname);
 static void  univ_do_line_ext1(const char *desc, char *line);
 static bool  univ_do_line(char *line);
@@ -574,30 +575,24 @@ void univ_use_group_line(char *line, int type)
 }
 
 // returns true on success, false otherwise
-static bool univ_use_file(const char *fname, const char *label)
+static bool univ_use_file(std::string_view fname, const char *label)
 {
     static char lbuf[LINE_BUF_LEN];
 
     bool begin_top = true; // default assumption (might be changed later)
 
-    if (!fname)
-    {
-        return false; // bad argument
-    }
-
-    std::string_view file_name{fname};
+    std::string_view file_name = fname;
     std::string      open_name{file_name};
     bool             have_open_name = true;
     // open URLs and translate them into local temporary filenames
-    if (string_case_equal(fname, "URL:", 4))
+    if (string_case_equal(open_name.c_str(), "URL:", 4))
     {
         char *temp_name = temp_filename();
         open_name = temp_name;
         g_univ_tmp_file = open_name;
         std::free(temp_name);
 
-        const std::string url{file_name.substr(4)};
-        if (!url_get(url.c_str(), open_name.c_str()))
+        if (!url_get(file_name.substr(4), open_name.c_str()))
         {
             have_open_name = false;
         }
@@ -941,7 +936,7 @@ bool univ_file_load(const char *fname, const char *title, const char *label)
     {
         g_univ_label = label;
     }
-    bool flag = univ_use_file(fname, label);
+    bool flag = fname != nullptr && univ_use_file(fname, label);
     if (!flag)
     {
         univ_close();
