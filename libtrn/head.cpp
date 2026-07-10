@@ -1,6 +1,7 @@
 /* head.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/head.h>
 
@@ -497,10 +498,10 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
     if (g_parsed_art != art_num)
     {
         // If the line is not in the cache, this will parse the header
-        s = fetch_cache(art_num,which_line, FILL_CACHE);
-        if (s)
+        const char *cached_line = fetch_cache(art_num,which_line, FILL_CACHE);
+        if (cached_line)
         {
-            return save_str(s);
+            return save_str(cached_line);
         }
     }
     ArticlePosition firstpos = g_header_type[which_line].min_pos;
@@ -542,10 +543,10 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
     if (g_parsed_art != art_num)
     {
         // If the line is not in the cache, this will parse the header
-        s = fetch_cache(art_num,which_line, FILL_CACHE);
-        if (s)
+        const char *cached_line = fetch_cache(art_num,which_line, FILL_CACHE);
+        if (cached_line)
         {
-            return mp_save_str(s, pool);
+            return mp_save_str(cached_line, pool);
         }
     }
     ArticlePosition firstpos = g_header_type[which_line].min_pos;
@@ -606,14 +607,15 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         ArticleNum lastnum;
         bool    hasxhdr = true;
 
-        s = fetch_cache(art_num,which_line, DONT_FILL_CACHE);
-        if (s)
+        const char *cached_line = fetch_cache(art_num,which_line, DONT_FILL_CACHE);
+        if (cached_line)
         {
             if (copy)
             {
-                s = save_str(s);
+                return save_str(cached_line);
             }
-            return s;
+            safe_copy(g_cmd_buf, cached_line, sizeof g_cmd_buf);
+            return g_cmd_buf;
         }
 
         spin(20);
@@ -733,19 +735,25 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     s = nullptr;
     if (g_parsed_art != art_num)
     {
-        s = fetch_cache(art_num, which_line, FILL_CACHE);
+        const char *cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
+        if (cached_line)
+        {
+            if (copy)
+            {
+                return save_str(cached_line);
+            }
+            safe_copy(g_cmd_buf, cached_line, sizeof g_cmd_buf);
+            return g_cmd_buf;
+        }
     }
     if (g_parsed_art == art_num && (firstpos = g_header_type[which_line].min_pos) < 0)
     {
-        s = "";
-    }
-    if (s)
-    {
         if (copy)
         {
-            s = save_str(s);
+            return save_str("");
         }
-        return s;
+        *g_cmd_buf = '\0';
+        return g_cmd_buf;
     }
 
     firstpos += ArticlePosition{g_header_type[which_line].length + 1};

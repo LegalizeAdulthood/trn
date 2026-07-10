@@ -1,6 +1,7 @@
 /* trn/cache.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_CACHE_H
 #define TRN_CACHE_H
 
@@ -45,7 +46,7 @@ void  cache_init();
 void  build_cache();
 void  close_cache();
 void  change_join_subject_len(int len);
-char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
+const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
 int   decode_header(char *to, const char *from, int size);
 void  dectrl(char *str);
 int   subject_cmp(const char *key, int key_len, HashDatum data);

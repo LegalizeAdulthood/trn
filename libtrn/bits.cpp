@@ -1,6 +1,7 @@
 /* bits.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/bits.h>
 
@@ -655,13 +656,13 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         std::fflush(stdout);
     }
 
-    char *xref_buf = fetch_cache(art_num, XREF_LINE, FILL_CACHE);
-    if (!xref_buf || !*xref_buf)
+    const char *xref_text = fetch_cache(art_num, XREF_LINE, FILL_CACHE);
+    if (!xref_text || !*xref_text)
     {
         return 0;
     }
 
-    xref_buf = save_str(xref_buf);
+    char *xref_buf = save_str(xref_text);
 # ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {

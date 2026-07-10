@@ -973,15 +973,20 @@ int sf_score(ArticleNum a)
     if (s_reply_active)
     {
         // should be in cache if a rule above used the subject
-        s = fetch_cache(a, SUBJ_LINE, true);
+        const char *reply_subject = fetch_cache(a, SUBJ_LINE, true);
         // later: consider other possible reply forms (threading?)
-        if (s && subject_has_re(s, nullptr))
+        if (reply_subject != nullptr)
         {
-            sum = sum+s_reply_score;
-            if (g_sf_score_verbose)
+            char reply_subject_buf[LINE_BUF_LEN];
+            safe_copy(reply_subject_buf, reply_subject, sizeof reply_subject_buf);
+            if (subject_has_re(reply_subject_buf, nullptr))
             {
-                std::printf("Reply: %d\n",s_reply_score);
-                // consider: print which file the bonus came from
+                sum = sum+s_reply_score;
+                if (g_sf_score_verbose)
+                {
+                    std::printf("Reply: %d\n",s_reply_score);
+                    // consider: print which file the bonus came from
+                }
             }
         }
     }
@@ -1082,7 +1087,7 @@ void sf_append(char *line)
         case 'S': // current subject
         {
             std::strcpy(lbuf, scoreline);
-            char *s = fetch_cache(g_art, SUBJ_LINE, true);
+            const char *s = fetch_cache(g_art, SUBJ_LINE, true);
             if (!s || !*s)
             {
                 std::printf("No subject: score entry aborted.\n");
@@ -1182,7 +1187,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else if (h == SUBJ_LINE)
     {
-        if (char *s = fetch_cache(a,h,true))       // get compressed copy
+        if (const char *s = fetch_cache(a,h,true))       // get compressed copy
         {
             line = s;
         }

@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/cache.h>
 
@@ -301,9 +302,9 @@ void Article::uncache_article(bool remove_empties)
 
 // get the header line from an article's cache or parse the article trying
 
-char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache)
+const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache)
 {
-    char* s;
+    const char *s;
     Article* ap;
     bool cached = (g_header_type[which_line].flags & HT_CACHED);
 
