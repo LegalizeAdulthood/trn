@@ -193,7 +193,7 @@ void no_so_fire();
 void no_ul_fire();
 #endif
 void get_cmd(char *whatbuf);
-void push_string(char *str, char_int bits);
+void push_string(const char *str, char_int bits);
 int  get_anything();
 int  pause_get_cmd();
 void in_char(const char *prompt, MinorMode newmode, const char *dflt);

@@ -73,73 +73,67 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-1. `libtrn/terminal.cpp`, `xmouse_check`
-
-    Make `s_mouse_bar_btns` read-only storage and update local scanning
-    cursors in `xmouse_check`, `draw_mouse_bar`, and `check_mouse_bar`
-    to `const char *` or views.  The mouse bar text is read, not edited.
-
-2. `libtrn/terminal.cpp`, `term_set`
+1. `libtrn/terminal.cpp`, `term_set`
 
     Promote read-only termcap capability globals such as `g_tc_BC`,
     `g_tc_UC`, `g_tc_VB`, and `g_tc_CR` to const-qualified pointers.
     Keep any synthesized capability in owned storage before assigning
     the pointer.
 
-3. `libtrn/terminal.cpp`, `line_col_calcs`
+2. `libtrn/terminal.cpp`, `line_col_calcs`
 
     After `s_tc_CL` is read-only, assign the non-CRT fallback `"\n\n"`
     without a writable conversion.  The clear-screen string is only read
     by `tputs`.
 
-4. `libtrn/kfile.cpp`, `kill_file_init`
+3. `libtrn/kfile.cpp`, `kill_file_init`
 
     Split the mutable delimiter pointer from the command-letter text.
     Use a read-only `std::string_view` for the comma fallback and pass
     only its first character to the thread-command lookup.
 
-5. `libtrn/kfile.cpp`, `do_kill_file`
+4. `libtrn/kfile.cpp`, `do_kill_file`
 
     Apply the same split to the kill-file command cursor.  Keep the
     buffer split mutable, but represent the default `"T,"` command text
     as a view.
 
-6. `libtrn/kfile.cpp`, `edit_kill_file`
+5. `libtrn/kfile.cpp`, `edit_kill_file`
 
     Apply the command-cursor split to the edit path.  The message-id
     line remains mutable; the comma fallback becomes read-only text.
 
-7. `libtrn/scorefile.cpp`, `sf_get_extra_header`
+6. `libtrn/scorefile.cpp`, `sf_get_extra_header`
 
     Return a `std::string_view` for the extra header text.  The only
     caller copies the result into its own lowercase buffer, so the empty
     result can be an empty view instead of a writable literal.
 
-8. `libtrn/search.cpp`, `CompiledRegex::compile`
+7. `libtrn/search.cpp`, `CompiledRegex::compile`
 
     Make compile diagnostics read-only.  The null return remains the
     success sentinel, so `const char *` is the smallest safe signature
     change; callers that store the diagnostic should become read-only.
 
-9. `libtrn/util.cpp`, `secs_to_text`
+8. `libtrn/util.cpp`, `secs_to_text`
 
     Promote the result to read-only text.  The dynamic case still uses
     `g_buf`, but the `"never"` and `"missing"` results are literals.
     Update direct callers to stop storing the result in writable locals.
 
-10. `libtrn/cache.cpp`, `fetch_cache`
+9. `libtrn/cache.cpp`, `fetch_cache`
 
     Promote the return path to read-only cached text, or add a view
     helper if mutable callers remain.  The two empty-string returns are
     read-only "no header text" results, not buffers to edit.
 
-11. `libtrn/head.cpp`, `prefetch_lines`
+10. `libtrn/head.cpp`, `prefetch_lines`
 
     After `fetch_cache` is read-only, split the local `s` variable into
     a read-only source and an owned copy path.  Preserve the existing
     `copy` behavior for callers that request owned storage.
 
-12. `libtrn/intrp.cpp`, `do_interp`
+11. `libtrn/intrp.cpp`, `do_interp`
 
     Split the large substitution variable `s` into read-only source
     text and mutable scratch cursors.  Literal substitutions such as

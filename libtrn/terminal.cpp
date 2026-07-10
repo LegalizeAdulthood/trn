@@ -116,7 +116,7 @@ int   g_mouse_bar_width{};    //
 bool  g_mouse_is_down{};      //
 int   g_auto_arrow_macros{2}; // -A
 
-static char *s_mouse_bar_btns{};
+static const char *s_mouse_bar_btns{};
 static int   s_mouse_bar_start{};
 static bool  s_xmouse_is_on{};
 static char *s_tc_CL{}; // home and clear screen
@@ -1407,7 +1407,7 @@ got_canonical:
 #endif
 }
 
-void push_string(char *str, char_int bits)
+void push_string(const char *str, char_int bits)
 {
     char tmpbuf[PUSH_SIZE];
     char* s = tmpbuf;
@@ -2392,7 +2392,7 @@ void xmouse_check()
                 // g_mousebar_cnt = 0;
                 break;
             }
-            char *s = s_mouse_bar_btns;
+            const char *s = s_mouse_bar_btns;
             g_mouse_bar_width = 0;
             for (int i = 0; i < g_mouse_bar_cnt; i++)
             {
@@ -2453,7 +2453,7 @@ void draw_mouse_bar(int limit, bool restore_cursor)
         return;
     }
 
-    char *s = s_mouse_bar_btns;
+    const char *s = s_mouse_bar_btns;
     char *t = g_msg;
     for (int i = 0; i < g_mouse_bar_cnt; i++)
     {
@@ -2578,7 +2578,7 @@ static void mouse_input(const char *cp)
 
 bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    char*s = s_mouse_bar_btns;
+    const char *s = s_mouse_bar_btns;
     int  col = g_tc_COLS - g_mouse_bar_width;
 
     if (g_mouse_bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
@@ -2597,7 +2597,7 @@ bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         {
             int j;
             int i = std::strlen(s);
-            char *t = s;
+            const char *t = s;
             if (*s == '[')
             {
                 s += i + 1;
