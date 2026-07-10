@@ -1117,7 +1117,7 @@ static void univ_vg_add_article(ArticleNum a)
     {
         return;
     }
-    char *from = fetch_from(a, false);
+    const char *from = fetch_from(a, false);
     if (!from || !*from)
     {
         from = "<No Author>";
