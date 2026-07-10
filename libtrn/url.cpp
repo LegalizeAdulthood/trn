@@ -100,7 +100,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     static char username[128];
     static char userhost[128];
     int         status;
-    char*       cdpath;
+    const char *cdpath;
 
     safe_copy(path,origpath,510);
     char *p = std::strrchr(path, '/'); // p points to last slash or nullptr

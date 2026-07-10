@@ -63,39 +63,33 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-1. `libtrn/url.cpp`, `fetch_ftp`
-
-   Replace `cdpath` with `const char *`.  It is either the local path
-   buffer or the root literal and flows directly to the legacy command
-   buffer.
-
-2. `trn-artchk/trn-artchk.cpp`, `main`
+1. `trn-artchk/trn-artchk.cpp`, `main`
 
    Split the mutable newsgroups-file cursor from the read-only
    description text.  Use `const char *desc` for the normal description
    and the `"[no description available]\n"` fallback.
 
-3. `nntplist/nntplist.cpp`, `main`
+2. `nntplist/nntplist.cpp`, `main`
 
    Use a local `const char *` for the selected local list file.  Assign
    `ACTIVE`, `ACTIVE_TIMES`, `GROUP_DESC`, `SUBSCRIPTIONS`, and
    `OVERVIEW_FMT` into that pointer, then pass it to `file_exp`.
 
-4. `libtrn/datasrc.cpp`, `data_source_init`
+3. `libtrn/datasrc.cpp`, `data_source_init`
 
    Use owned local `std::string` defaults for `ACTIVE`, `NEWS_SPOOL`,
    `OVERVIEW_DIR`, `OVERVIEW_FMT`, `ACTIVE_TIMES`, and `GROUP_DESC`.
    Store their `data()` pointers in the temporary `vals` array only
    until `new_data_source` copies or expands them.
 
-5. `libtrn/util.cpp`, `prep_ini_words`
+4. `libtrn/util.cpp`, `prep_ini_words`
 
    Split `IniWords` help text from parsed value storage.  Make help text
    a `std::string_view` or `const char *` field, and store the allocated
    value vector in a separate field instead of overloading `help_str`.
    This fixes the `g_options_ini` literal table in `opt.cpp`.
 
-6. `libtrn/rt-util.cpp`, `set_spin`
+5. `libtrn/rt-util.cpp`, `set_spin`
 
     Promote the static spinner alphabet to `std::string_view`.  The bar
     spinner literal is indexed only by the spinner helpers, so no
