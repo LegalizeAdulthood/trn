@@ -54,7 +54,7 @@ extern bool              g_selected_only;
 extern ArticleUnread     g_selected_count;
 extern int               g_selected_subj_cnt;
 extern int               g_added_articles;
-extern char             *g_sel_chars;
+extern const char       *g_sel_chars;
 extern int               g_sel_item_index;
 extern int               g_sel_last_line;
 extern bool              g_sel_at_end;

@@ -60,11 +60,11 @@ Article   *g_curr_artp{};       //
 Article   *g_artp{};            // the article ptr we use when art is 0
 int        g_check_count{};     // how many articles have we read in the current newsgroup since the last checkpoint?
 int        g_do_check_when{20}; // how often to do checkpoint
-char      *g_subj_line{};       // what format to use for '='
+const char *g_subj_line{};       // what format to use for '='
 #ifdef MAIL_CALL
 int        g_mail_count{};      // check for mail when 0 mod 10
 #endif
-char       *g_mail_call{""};
+const char *g_mail_call{""};
 bool        g_force_last{};             // ought we show "End of newsgroup"?
 bool        g_force_grow{};             // do we want to recalculate size of newsgroup, e.g. after posting?
 int         g_scan_on{};                // -S
@@ -209,7 +209,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
     // do they want a special top line?
 
-    g_first_line = get_val("FIRSTLINE",nullptr);
+    g_first_line = get_val_const("FIRSTLINE", nullptr);
 
     // custom line suppression, custom page ending
 
@@ -1857,7 +1857,7 @@ void set_mail(bool force)
         }
         else
         {
-            g_mail_call = get_val("MAILCALL", "(Mail) ");
+            g_mail_call = get_val_const("MAILCALL", "(Mail) ");
         }
     }
     g_mail_count %= 5;                   // check every 5 articles
@@ -2057,7 +2057,7 @@ bool output_subject(char *ptr, int flag)
 
     if (!g_subj_line)
     {
-        g_subj_line = get_val("SUBJLINE",nullptr);
+        g_subj_line = get_val_const("SUBJLINE", nullptr);
         if (!g_subj_line)
         {
             g_subj_line = "";

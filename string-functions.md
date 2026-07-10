@@ -297,8 +297,8 @@ a string literal being passed to a modifiable function parameter.
 
 ## Suggested Order
 
-1. Convert the remaining pure read-only `get_val` callers after the
-   interpolation callers can pass const pattern text through the chain.
+1. Convert `in_string` so read-only callers can keep const input while
+   mutable callers still get mutable return aliases.
 2. Convert `set_macro`, which owns its stored text and has no return
    alias.
 3. Remove literal sentinels from `do_newsgroup` and
@@ -312,16 +312,16 @@ a string literal being passed to a modifiable function parameter.
 Each slice below changes one function and its direct callers only.  If a
 helper also needs a signature change, it has its own slice.
 
-### Slice 1: `get_val`
+### Slice 1: `in_string`
 
-Change `get_val(const char *nam, char *def)` and its callers so literal
-defaults use a const result.  Prefer `get_val_const` at call sites that
-only read the selected value; copy into `std::string` or a writable
-buffer before mutation.
+Change `in_string(char *big, const char *little, bool case_matters)` to
+support const input with a const return alias, and keep a mutable
+overload for callers that need a mutable pointer into mutable input.
+Update direct callers and remove the temporary `std::string savename`
+owner in `save_article`.
 
-Return-alias note: the returned pointer aliases either the environment
-buffer or `def`.  Do not return a mutable pointer when `def` may be a
-literal.
+Return-alias note: the returned pointer aliases `big`.  Const input must
+return `const char *`; mutable input may continue to return `char *`.
 
 Validation: build with `cmake --build --preset rt-default`.
 

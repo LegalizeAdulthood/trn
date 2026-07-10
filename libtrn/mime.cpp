@@ -93,13 +93,13 @@ void mime_init()
     s_executor = do_shell;
     s_mimecap_list = new_list(0,-1,sizeof(MimeCapEntry),40,LF_ZERO_MEM,nullptr);
 
-    char *mcname = get_val("MIMECAPS");
+    const char *mcname = get_val_const("MIMECAPS");
     if (mcname == nullptr)
     {
-        mcname = get_val("MAILCAPS", MIMECAP);
+        mcname = get_val_const("MAILCAPS", MIMECAP);
     }
-    mcname = save_str(mcname);
-    char *s = mcname;
+    char *mcname_copy = save_str(mcname);
+    char *s = mcname_copy;
     do
     {
         char *t = std::strchr(s, ':');
@@ -113,7 +113,7 @@ void mime_init()
         }
         s = t;
     } while (s && *s);
-    std::free(mcname);
+    std::free(mcname_copy);
 }
 
 void mime_final()

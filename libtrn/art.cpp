@@ -64,7 +64,7 @@ bool            g_is_mime{};              // process mime in an article?
 bool            g_multimedia_mime{};      // images/audio to see/hear?
 bool            g_rotate{};               // has rotation been requested?
 std::string     g_prompt;                 // current prompt
-char           *g_first_line{};           // s_special first line?
+const char     *g_first_line{};           // s_special first line?
 const char     *g_hide_line{};            // custom line hiding?
 const char     *g_page_stop{};            // custom page terminator?
 CompiledRegex   g_hide_compex{};          //

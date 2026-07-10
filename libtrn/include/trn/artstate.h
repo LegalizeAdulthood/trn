@@ -19,7 +19,7 @@ extern bool          g_is_mime;         // process mime in an article?
 extern bool          g_multimedia_mime; // images/audio to see/hear?
 extern bool          g_rotate;          // has rotation been requested?
 extern std::string   g_prompt;          // pointer to current prompt
-extern char         *g_first_line;      // special first line?
+extern const char   *g_first_line;      // special first line?
 extern const char   *g_hide_line;       // custom line hiding?
 extern const char   *g_page_stop;       // custom page terminator?
 extern CompiledRegex g_hide_compex;

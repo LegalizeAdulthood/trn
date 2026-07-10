@@ -76,7 +76,7 @@ bool              g_selected_only{};
 ArticleUnread     g_selected_count{};
 int               g_selected_subj_cnt{};
 int               g_added_articles{};
-char             *g_sel_chars{};
+const char       *g_sel_chars{};
 int               g_sel_item_index{};
 int               g_sel_last_line{};
 bool              g_sel_at_end{};
@@ -1347,7 +1347,7 @@ reinp_selector:
     {
         ch = '.';
     }
-    char *in_select = std::strchr(g_sel_chars, ch);
+    const char *in_select = std::strchr(g_sel_chars, ch);
     if (g_use_sel_num && ch >= '0' && ch <= '9')
     {
         int ch_num1 = ch;
