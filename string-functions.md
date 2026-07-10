@@ -297,7 +297,7 @@ a string literal being passed to a modifiable function parameter.
 
 ## Suggested Order
 
-1. Convert `Article::set_subj_line` and `tree_puts`.
+1. Convert `tree_puts`.
 2. Replace the `putenv` literals with an owning environment wrapper.
 
 ## Implementation Slices
@@ -305,18 +305,7 @@ a string literal being passed to a modifiable function parameter.
 Each slice below changes one function and its direct callers only.  If a
 helper also needs a signature change, it has its own slice.
 
-### Slice 1: `Article::set_subj_line`
-
-After `decode_header` is source-const, change
-`Article::set_subj_line(char *subj, int size)` and its direct callers to
-take a const source or `std::string_view`.
-
-Return-alias note: no input pointer is returned.  Subject storage remains
-owned by the article/subject structures.
-
-Validation: build with `cmake --build --preset rt-default`.
-
-### Slice 2: `tree_puts`
+### Slice 1: `tree_puts`
 
 After `decode_header` is source-const, change
 `tree_puts(char *orig_line, ArticleLine header_line, int is_subject)` and
@@ -327,7 +316,7 @@ continue to happen on local copied buffers.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 3: `util_final`
+### Slice 2: `util_final`
 
 Change `util_final` so it does not pass literals to `putenv`.  Use a
 small owned environment-clearing helper inside this function or call a

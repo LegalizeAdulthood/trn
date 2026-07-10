@@ -61,7 +61,7 @@ struct Article
     void       check_poster();
     void       uncache_article(bool remove_empties);
     char      *get_cached_line(HeaderLineType which_line, bool no_truncs);
-    void       set_subj_line(char *subj, int size);
+    void       set_subj_line(const char *subj, int size);
     void       set_cached_line(int which_line, char *s);
     void       clear_article();
     void       one_more();
