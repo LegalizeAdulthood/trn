@@ -297,34 +297,22 @@ a string literal being passed to a modifiable function parameter.
 
 ## Suggested Order
 
-1. Convert the interpolation cursor chain from leaf helper to public
-   wrapper: `interp_search`.
-2. Convert the remaining pure read-only `get_val` callers after the
+1. Convert the remaining pure read-only `get_val` callers after the
    interpolation callers can pass const pattern text through the chain.
-3. Convert `set_macro`, which owns its stored text and has no return
+2. Convert `set_macro`, which owns its stored text and has no return
    alias.
-4. Remove literal sentinels from `do_newsgroup` and
+3. Remove literal sentinels from `do_newsgroup` and
    `parse_ini_section`.
-5. Decide whether `decode_header` can stop mutating its source.  That
+4. Decide whether `decode_header` can stop mutating its source.  That
    unlocks const cleanup in `Article::set_subj_line` and `tree_puts`.
-6. Replace the `putenv` literals with an owning environment wrapper.
+5. Replace the `putenv` literals with an owning environment wrapper.
 
 ## Implementation Slices
 
 Each slice below changes one function and its direct callers only.  If a
 helper also needs a signature change, it has its own slice.
 
-### Slice 1: `interp_search`
-
-Change `interp_search` to take a const pattern and return a const
-cursor.  Update its direct callers.
-
-Return-alias note: this wrapper returns a cursor into its pattern
-argument.  Preserve the caller-owned lifetime.
-
-Validation: run focused interpolation tests, then build.
-
-### Slice 2: `get_val`
+### Slice 1: `get_val`
 
 Change `get_val(const char *nam, char *def)` and its callers so literal
 defaults use a const result.  Prefer `get_val_const` at call sites that
@@ -337,7 +325,7 @@ literal.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 3: `set_macro`
+### Slice 2: `set_macro`
 
 Change `set_macro(char *seq, char *def)` to take
 `std::string_view seq` and `std::string_view def`, and update its direct
@@ -349,7 +337,7 @@ own copied text, not a view into a caller buffer.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 4: `do_newsgroup`
+### Slice 3: `do_newsgroup`
 
 Change `do_newsgroup(char *start_command)` and its direct callers to
 remove the `""` sentinel.  Use an explicit no-command state and owned
@@ -361,7 +349,7 @@ separate states.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 5: `parse_ini_section`
+### Slice 4: `parse_ini_section`
 
 Change `parse_ini_section(char *cp, IniWords words[])` and its direct
 callers so `""` is not passed.  Keep real parser input mutable, because
@@ -373,7 +361,7 @@ string must outlive all stored pointers.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 6: `decode_header`
+### Slice 5: `decode_header`
 
 Change `decode_header(char *to, char *from, int size)` to take a const
 source.  Replace temporary source edits with bounded views or local
@@ -384,7 +372,7 @@ function must not outlive the caller-owned source.
 
 Validation: run focused header tests if present, then build.
 
-### Slice 7: `Article::set_subj_line`
+### Slice 6: `Article::set_subj_line`
 
 After `decode_header` is source-const, change
 `Article::set_subj_line(char *subj, int size)` and its direct callers to
@@ -395,7 +383,7 @@ owned by the article/subject structures.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 8: `tree_puts`
+### Slice 7: `tree_puts`
 
 After `decode_header` is source-const, change
 `tree_puts(char *orig_line, ArticleLine header_line, int is_subject)` and
@@ -406,7 +394,7 @@ continue to happen on local copied buffers.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 9: `util_final`
+### Slice 8: `util_final`
 
 Change `util_final` so it does not pass literals to `putenv`.  Use a
 small owned environment-clearing helper inside this function or call a

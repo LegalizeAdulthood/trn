@@ -1555,9 +1555,9 @@ const char *interp(char *dest, int dest_size, const char *pattern)
     return do_interp(dest, dest_size, pattern, nullptr, nullptr);
 }
 
-char *interp_search(char *dest, int dest_size, char *pattern, const char *cmd)
+const char *interp_search(char *dest, int dest_size, const char *pattern, const char *cmd)
 {
-    return pattern + (do_interp(dest, dest_size, pattern, nullptr, cmd) - pattern);
+    return do_interp(dest, dest_size, pattern, nullptr, cmd);
 }
 
 // normalize a references line in place

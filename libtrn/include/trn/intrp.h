@@ -22,7 +22,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 const char *interp_backslash(char *dest, const char *pattern);
 char       *interp_backslash(char *dest, char *pattern);
 const char *interp(char *dest, int dest_size, const char *pattern);
-char *interp_search(char *dest, int dest_size, char *pattern, const char *cmd);
+const char *interp_search(char *dest, int dest_size, const char *pattern, const char *cmd);
 void  normalize_refs(char *refs);
 
 #endif
