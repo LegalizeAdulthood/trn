@@ -73,14 +73,6 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-1. `libtrn/intrp.cpp`, `do_interp`
-
-    Split the large substitution variable `s` into read-only source
-    text and mutable scratch cursors.  Literal substitutions such as
-    `" "` and `"noname"` should be views; only paths that call
-    `decode_header`, `strchr` for mutation, or `strcpy` need mutable
-    buffers.
-
 ### Local Modernization Slices
 
 1. `libtrn/ngsrch.cpp`, `newsgroup_comp`

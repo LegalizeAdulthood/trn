@@ -1,6 +1,7 @@
 /* intrp.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/intrp.h>
 
@@ -268,6 +269,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
     char* line_split = nullptr;
     char* orig_dest = dest;
     char scrbuf[8192];
+    char space_text[]{" "};
+    char noname_text[]{"noname"};
     int metabit = 0;
 
     while (*pattern && (!stoppers || !std::strchr(stoppers, *pattern)))
@@ -603,7 +606,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case '?':
-                    s = " ";
+                    s = space_text;
                     line_split = dest;
                     break;
 
@@ -1053,7 +1056,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     }
                     else
                     {
-                        s = "noname";
+                        s = noname_text;
                     }
                     if (*pattern == 'T')
                     {
