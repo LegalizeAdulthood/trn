@@ -759,7 +759,7 @@ const char *compress_subj(const Article *ap, int max)
 
 // Modified version of a spinner originally found in Clifford Adams' strn.
 
-static char           *s_spin_chars{};
+static const char     *s_spin_chars{};
 static int             s_spin_level{}; // used to allow non-interfering nested spins
 static SpinMode        s_spin_mode{};
 static int             s_spin_place{}; // represents place in s_spinchars array
