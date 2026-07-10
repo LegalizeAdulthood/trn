@@ -63,111 +63,105 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-1. `nntplist/nntplist.cpp`, `main`
-
-   Use a local `const char *` for the selected local list file.  Assign
-   `ACTIVE`, `ACTIVE_TIMES`, `GROUP_DESC`, `SUBSCRIPTIONS`, and
-   `OVERVIEW_FMT` into that pointer, then pass it to `file_exp`.
-
-2. `libtrn/datasrc.cpp`, `data_source_init`
+1. `libtrn/datasrc.cpp`, `data_source_init`
 
    Use owned local `std::string` defaults for `ACTIVE`, `NEWS_SPOOL`,
    `OVERVIEW_DIR`, `OVERVIEW_FMT`, `ACTIVE_TIMES`, and `GROUP_DESC`.
    Store their `data()` pointers in the temporary `vals` array only
    until `new_data_source` copies or expands them.
 
-3. `libtrn/util.cpp`, `prep_ini_words`
+2. `libtrn/util.cpp`, `prep_ini_words`
 
    Split `IniWords` help text from parsed value storage.  Make help text
    a `std::string_view` or `const char *` field, and store the allocated
    value vector in a separate field instead of overloading `help_str`.
    This fixes the `g_options_ini` literal table in `opt.cpp`.
 
-4. `libtrn/rt-util.cpp`, `set_spin`
+3. `libtrn/rt-util.cpp`, `set_spin`
 
     Promote the static spinner alphabet to `std::string_view`.  The bar
     spinner literal is indexed only by the spinner helpers, so no
     terminator is required.
 
-5. `libtrn/rt-util.cpp`, `perform_status_init`
+4. `libtrn/rt-util.cpp`, `perform_status_init`
 
     After the spinner alphabet is a view, set the progress spinner to
     `"v>^<"` as a view.  Existing index reads in `perform_status` stay
     unchanged.
 
-6. `libtrn/terminal.cpp`, `arrow_macros`
+5. `libtrn/terminal.cpp`, `arrow_macros`
 
     Make the static arrow macro tables arrays of `std::string_view`.
     `set_macro` already accepts views, so the table entries no longer
     need writable pointer types.
 
-7. `libtrn/terminal.cpp`, `xmouse_check`
+6. `libtrn/terminal.cpp`, `xmouse_check`
 
     Make `s_mouse_bar_btns` read-only storage and update local scanning
     cursors in `xmouse_check`, `draw_mouse_bar`, and `check_mouse_bar`
     to `const char *` or views.  The mouse bar text is read, not edited.
 
-8. `libtrn/terminal.cpp`, `term_set`
+7. `libtrn/terminal.cpp`, `term_set`
 
     Promote read-only termcap capability globals such as `g_tc_BC`,
     `g_tc_UC`, `g_tc_VB`, and `g_tc_CR` to const-qualified pointers.
     Keep any synthesized capability in owned storage before assigning
     the pointer.
 
-9. `libtrn/terminal.cpp`, `line_col_calcs`
+8. `libtrn/terminal.cpp`, `line_col_calcs`
 
     After `s_tc_CL` is read-only, assign the non-CRT fallback `"\n\n"`
     without a writable conversion.  The clear-screen string is only read
     by `tputs`.
 
-10. `libtrn/kfile.cpp`, `kill_file_init`
+9. `libtrn/kfile.cpp`, `kill_file_init`
 
     Split the mutable delimiter pointer from the command-letter text.
     Use a read-only `std::string_view` for the comma fallback and pass
     only its first character to the thread-command lookup.
 
-11. `libtrn/kfile.cpp`, `do_kill_file`
+10. `libtrn/kfile.cpp`, `do_kill_file`
 
     Apply the same split to the kill-file command cursor.  Keep the
     buffer split mutable, but represent the default `"T,"` command text
     as a view.
 
-14. `libtrn/kfile.cpp`, `edit_kill_file`
+11. `libtrn/kfile.cpp`, `edit_kill_file`
 
     Apply the command-cursor split to the edit path.  The message-id
     line remains mutable; the comma fallback becomes read-only text.
 
-15. `libtrn/scorefile.cpp`, `sf_get_extra_header`
+12. `libtrn/scorefile.cpp`, `sf_get_extra_header`
 
     Return a `std::string_view` for the extra header text.  The only
     caller copies the result into its own lowercase buffer, so the empty
     result can be an empty view instead of a writable literal.
 
-16. `libtrn/search.cpp`, `CompiledRegex::compile`
+13. `libtrn/search.cpp`, `CompiledRegex::compile`
 
     Make compile diagnostics read-only.  The null return remains the
     success sentinel, so `const char *` is the smallest safe signature
     change; callers that store the diagnostic should become read-only.
 
-17. `libtrn/util.cpp`, `secs_to_text`
+14. `libtrn/util.cpp`, `secs_to_text`
 
     Promote the result to read-only text.  The dynamic case still uses
     `g_buf`, but the `"never"` and `"missing"` results are literals.
     Update direct callers to stop storing the result in writable locals.
 
-18. `libtrn/cache.cpp`, `fetch_cache`
+15. `libtrn/cache.cpp`, `fetch_cache`
 
     Promote the return path to read-only cached text, or add a view
     helper if mutable callers remain.  The two empty-string returns are
     read-only "no header text" results, not buffers to edit.
 
-19. `libtrn/head.cpp`, `prefetch_lines`
+16. `libtrn/head.cpp`, `prefetch_lines`
 
     After `fetch_cache` is read-only, split the local `s` variable into
     a read-only source and an owned copy path.  Preserve the existing
     `copy` behavior for callers that request owned storage.
 
-20. `libtrn/intrp.cpp`, `do_interp`
+17. `libtrn/intrp.cpp`, `do_interp`
 
     Split the large substitution variable `s` into read-only source
     text and mutable scratch cursors.  Literal substitutions such as

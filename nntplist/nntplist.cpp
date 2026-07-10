@@ -163,37 +163,36 @@ int main(int argc, char *argv[])
     }
     else
     {
-        cp = nullptr;
+        const char *local_file = nullptr;
         if (!action)
         {
-            cp = ACTIVE;
+            local_file = ACTIVE;
         }
         else if (string_case_equal(action, "active.times"))
         {
-            cp = ACTIVE_TIMES;
+            local_file = ACTIVE_TIMES;
         }
         else if (string_case_equal(action, "newsgroups"))
         {
-            cp = GROUP_DESC;
+            local_file = GROUP_DESC;
         }
         else if (string_case_equal(action, "subscriptions"))
         {
-            cp = SUBSCRIPTIONS;
+            local_file = SUBSCRIPTIONS;
         }
         else if (string_case_equal(action, "overview.fmt"))
         {
-            cp = OVERVIEW_FMT;
+            local_file = OVERVIEW_FMT;
         }
-        if (!cp || !*cp)
+        if (!local_file || !*local_file)
         {
-            std::fprintf(stderr, "Don't know how to list `%s' from your local system.\n",
-                    action);
+            std::fprintf(stderr, "Don't know how to list `%s' from your local system.\n", action);
             exit(1);
         }
-        std::FILE *in_fp{std::fopen(file_exp(cp), "r")};
+        std::FILE *in_fp{std::fopen(file_exp(local_file), "r")};
         if (in_fp == nullptr)
         {
-            std::fprintf(stderr,"Unable to open `%s'.\n", cp);
+            std::fprintf(stderr, "Unable to open `%s'.\n", local_file);
             std::exit(1);
         }
         while (std::fgets(g_ser_line, sizeof g_ser_line, in_fp))
