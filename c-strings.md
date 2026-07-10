@@ -45,6 +45,15 @@ local `std::string` and pass `c_str()`.  If a string literal assignment
 warning can be fixed by making the target `const char *` instead of
 `char *`, prefer that simpler const-correct fix.
 
+Reject any change that lets the address of local string storage escape
+the function.  This includes:
+
+- Output parameters.
+- Assignment to global variables.
+- Assignment to file-scope static variables.
+- Passing to any function that stores the pointer in static or global
+  storage.
+
 The Ubuntu build log for run `29094736532` adds a current
 `-Wwrite-strings` cleanup track.  It reports 141 unique warning sites.
 The generated `config.h` sites map back to assigning source code.  The
@@ -64,79 +73,73 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-1. `libtrn/terminal.cpp`, `arrow_macros`
-
-    Make the static arrow macro tables arrays of `std::string_view`.
-    `set_macro` already accepts views, so the table entries no longer
-    need writable pointer types.
-
-2. `libtrn/terminal.cpp`, `xmouse_check`
+1. `libtrn/terminal.cpp`, `xmouse_check`
 
     Make `s_mouse_bar_btns` read-only storage and update local scanning
     cursors in `xmouse_check`, `draw_mouse_bar`, and `check_mouse_bar`
     to `const char *` or views.  The mouse bar text is read, not edited.
 
-3. `libtrn/terminal.cpp`, `term_set`
+2. `libtrn/terminal.cpp`, `term_set`
 
     Promote read-only termcap capability globals such as `g_tc_BC`,
     `g_tc_UC`, `g_tc_VB`, and `g_tc_CR` to const-qualified pointers.
     Keep any synthesized capability in owned storage before assigning
     the pointer.
 
-4. `libtrn/terminal.cpp`, `line_col_calcs`
+3. `libtrn/terminal.cpp`, `line_col_calcs`
 
     After `s_tc_CL` is read-only, assign the non-CRT fallback `"\n\n"`
     without a writable conversion.  The clear-screen string is only read
     by `tputs`.
 
-5. `libtrn/kfile.cpp`, `kill_file_init`
+4. `libtrn/kfile.cpp`, `kill_file_init`
 
     Split the mutable delimiter pointer from the command-letter text.
     Use a read-only `std::string_view` for the comma fallback and pass
     only its first character to the thread-command lookup.
 
-6. `libtrn/kfile.cpp`, `do_kill_file`
+5. `libtrn/kfile.cpp`, `do_kill_file`
 
     Apply the same split to the kill-file command cursor.  Keep the
     buffer split mutable, but represent the default `"T,"` command text
     as a view.
 
-7. `libtrn/kfile.cpp`, `edit_kill_file`
+6. `libtrn/kfile.cpp`, `edit_kill_file`
 
     Apply the command-cursor split to the edit path.  The message-id
     line remains mutable; the comma fallback becomes read-only text.
 
-8. `libtrn/scorefile.cpp`, `sf_get_extra_header`
+7. `libtrn/scorefile.cpp`, `sf_get_extra_header`
 
     Return a `std::string_view` for the extra header text.  The only
     caller copies the result into its own lowercase buffer, so the empty
     result can be an empty view instead of a writable literal.
 
-9. `libtrn/search.cpp`, `CompiledRegex::compile`
+8. `libtrn/search.cpp`, `CompiledRegex::compile`
 
     Make compile diagnostics read-only.  The null return remains the
     success sentinel, so `const char *` is the smallest safe signature
     change; callers that store the diagnostic should become read-only.
 
-10. `libtrn/util.cpp`, `secs_to_text`
+9. `libtrn/util.cpp`, `secs_to_text`
 
     Promote the result to read-only text.  The dynamic case still uses
     `g_buf`, but the `"never"` and `"missing"` results are literals.
     Update direct callers to stop storing the result in writable locals.
 
-11. `libtrn/cache.cpp`, `fetch_cache`
+10. `libtrn/cache.cpp`, `fetch_cache`
 
     Promote the return path to read-only cached text, or add a view
     helper if mutable callers remain.  The two empty-string returns are
     read-only "no header text" results, not buffers to edit.
 
-12. `libtrn/head.cpp`, `prefetch_lines`
+11. `libtrn/head.cpp`, `prefetch_lines`
 
     After `fetch_cache` is read-only, split the local `s` variable into
     a read-only source and an owned copy path.  Preserve the existing
     `copy` behavior for callers that request owned storage.
 
-13. `libtrn/intrp.cpp`, `do_interp`
+12. `libtrn/intrp.cpp`, `do_interp`
 
     Split the large substitution variable `s` into read-only source
     text and mutable scratch cursors.  Literal substitutions such as

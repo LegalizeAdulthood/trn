@@ -475,28 +475,28 @@ void set_macro(std::string_view seq, std::string_view def)
     }
 }
 
-static char* s_up[] = {
+static const char *s_up[] = {
     "^@",
     // '(' at article or pager, '[' in thread sel, 'p' otherwise
     "%(%m=[ap]?\\(:%(%m=t?[:p))",
     // '(' at article or pager, '[' in thread sel, 'p' otherwise
     "%(%m=[ap]?\\(:%(%m=t?[:p))"
 };
-static char *s_down[] = {
+static const char *s_down[] = {
     "^@",
     // ')' at article or pager, ']' in thread sel, 'n' otherwise
     "%(%m=[ap]?\\):%(%m=t?]:n))",
     // ')' at article or pager, ']' in thread sel, 'n' otherwise
     "%(%m=[ap]?\\):%(%m=t?]:n))"
 };
-static char *s_left[] = {
+static const char *s_left[] = {
     "^@",
     // '[' at article or pager, 'Q' otherwise
     "%(%m=[ap]?\\[:Q)",
     // '[' at article or pager, '<' otherwise
     "%(%m=[ap]?\\[:<)"
 };
-static char *s_right[] = {
+static const char *s_right[] = {
     "^@",
     // ']' at article or pager, CR otherwise
     "%(%m=[ap]?\\]:^j)",
