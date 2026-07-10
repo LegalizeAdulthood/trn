@@ -32,6 +32,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <string_view>
 
 SelectionItem g_sel_items[MAX_SEL];
 int           g_sel_total_obj_cnt{};
@@ -2804,16 +2805,16 @@ static void display_subject(const Subject *subj, int ix, int sel)
 
 void display_option(int op, int item_index)
 {
-    int len;
-    const char *pre;
-    const char *item;
-    const char *post;
-    const char *val;
+    std::size_t      len;
+    std::string_view pre;
+    std::string_view item;
+    std::string_view post;
+    std::string_view val;
     if (*g_options_ini[op].item == '*')
     {
-        len = std::strlen(g_options_ini[op].item+1);
+        item = g_options_ini[op].item + 1;
+        len = item.size();
         pre = "==";
-        item = g_options_ini[op].item+1;
         post = "==================================";
         val = "";
     }
@@ -2823,14 +2824,18 @@ void display_option(int op, int item_index)
         pre = "  ";
         item = g_options_ini[op].item;
         post = "..................................";
-        val = ini_values(g_options_ini)[op];
-        if (!val)
+        const char *option_val = ini_values(g_options_ini)[op];
+        if (!option_val)
         {
-            val = quote_string(option_value(static_cast<OptionIndex>(op)));
+            option_val = quote_string(option_value(static_cast<OptionIndex>(op)));
         }
+        val = option_val;
     }
+    post = post.substr(len);
     output_sel(item_index, g_sel_items[item_index].sel, false);
-    std::printf(" %s%s%s %.39s\n", pre, item, post + len, val);
+    std::printf(" %.*s%.*s%.*s %.*s\n", static_cast<int>(pre.size()), pre.data(), static_cast<int>(item.size()),
+                item.data(), static_cast<int>(post.size()), post.data(), std::min(39, static_cast<int>(val.size())),
+                val.data());
     term_down(1);
 }
 

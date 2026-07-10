@@ -47,68 +47,61 @@ literal.
 
 Each slice changes one function.  Add local includes as needed.
 
-1. `libtrn/rt-page.cpp`, `display_option`
-
-   Convert `pre`, `item`, `post`, and `val` locals to string views.
-   `item` and `val` still point at existing option storage, while
-   `post.substr(len)` replaces pointer arithmetic.  The only string data
-   flow is the final `std::printf`.
-
-2. `libtrn/mime.cpp`, `mime_types_match`
+1. `libtrn/mime.cpp`, `mime_types_match`
 
    Use `std::string_view` for the MIME pattern and `find('/')` instead
    of `std::strchr`.  Keep calls to `string_case_equal` at the boundary,
    using the existing length overload for wildcard prefixes.
 
-3. `libtrn/mime.cpp`, `find_attr`
+2. `libtrn/mime.cpp`, `find_attr`
 
    Represent `attr` as a string view and use `attr.size()` instead of
    `std::strlen`.  The scanner still returns a pointer into `str`, so
    this is a local-only helper cleanup with no caller impact.
 
-4. `libtrn/color.cpp`, `color_init`
+3. `libtrn/color.cpp`, `color_init`
 
    After null checks, wrap foreground and background capabilities in
    `std::string_view`, compare them as views, and assign into
    `ColorObj::fg` and `ColorObj::bg`.  The legacy
    `tc_color_capability` return pointer does not escape.
 
-5. `libtrn/ng.cpp`, `ask_memorize`
+4. `libtrn/ng.cpp`, `ask_memorize`
 
    Replace `mode_string` and `mode_phrase` with `std::string_view`.
    Use `front()` for the author/subject toggle and `%.*s` for output.
    This is still local, but the labels flow through several prompts and
    help strings, so it is less mechanical than the display helpers.
 
-6. `libtrn/ngsrch.cpp`, `newsgroup_comp`
+5. `libtrn/ngsrch.cpp`, `newsgroup_comp`
 
    Replace the fixed `char ng_pattern[128]` and cursor pair with an
    owned `std::string` built by `push_back`.  Pass `c_str()` only to
    `CompiledRegex::compile`.  This is a bottom helper used by newsgroup
    search, autosubscribe, and restriction logic.
 
-7. `libtrn/autosub.cpp`, `match_list`
+6. `libtrn/autosub.cpp`, `match_list`
 
    Use a `std::string_view` cursor for the remaining pattern list and
    slices split at commas.  Keep the existing local `std::string`
    materialization before `newsgroup_comp`, because that callee needs a
    null-terminated pattern.
 
-8. `libtrn/scorefile.cpp`, `sf_append`
+7. `libtrn/scorefile.cpp`, `sf_append`
 
     Use views for `scoretext` and the one-character shortcut check.
     Use `std::string` for filename assembly before calling `file_exp`,
     `make_dir`, and `std::fopen`.  This touches several legacy file and
     scoring helpers, so keep it after the lower-level pattern work.
 
-9. `libtrn/url.cpp`, `parse_url`
+8. `libtrn/url.cpp`, `parse_url`
 
     Parse `url` with string views for scheme, host, optional port, and
     path.  Copy into the existing global C buffers only at the end of
     each validated field.  Port parsing can use `std::from_chars` or a
     temporary owned string before `std::atoi`.
 
-10. `libtrn/univ.cpp`, `univ_use_file`
+9. `libtrn/univ.cpp`, `univ_use_file`
 
     Use a string view for the input filename and an owned string for the
     effective open name.  Keep `url_get`, `file_exp`, and `std::fopen`
