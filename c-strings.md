@@ -47,42 +47,35 @@ literal.
 
 Each slice changes one function.  Add local includes as needed.
 
-1. `libtrn/ng.cpp`, `ask_memorize`
-
-   Replace `mode_string` and `mode_phrase` with `std::string_view`.
-   Use `front()` for the author/subject toggle and `%.*s` for output.
-   This is still local, but the labels flow through several prompts and
-   help strings, so it is less mechanical than the display helpers.
-
-2. `libtrn/ngsrch.cpp`, `newsgroup_comp`
+1. `libtrn/ngsrch.cpp`, `newsgroup_comp`
 
    Replace the fixed `char ng_pattern[128]` and cursor pair with an
    owned `std::string` built by `push_back`.  Pass `c_str()` only to
    `CompiledRegex::compile`.  This is a bottom helper used by newsgroup
    search, autosubscribe, and restriction logic.
 
-3. `libtrn/autosub.cpp`, `match_list`
+2. `libtrn/autosub.cpp`, `match_list`
 
    Use a `std::string_view` cursor for the remaining pattern list and
    slices split at commas.  Keep the existing local `std::string`
    materialization before `newsgroup_comp`, because that callee needs a
    null-terminated pattern.
 
-4. `libtrn/scorefile.cpp`, `sf_append`
+3. `libtrn/scorefile.cpp`, `sf_append`
 
     Use views for `scoretext` and the one-character shortcut check.
     Use `std::string` for filename assembly before calling `file_exp`,
     `make_dir`, and `std::fopen`.  This touches several legacy file and
     scoring helpers, so keep it after the lower-level pattern work.
 
-5. `libtrn/url.cpp`, `parse_url`
+4. `libtrn/url.cpp`, `parse_url`
 
     Parse `url` with string views for scheme, host, optional port, and
     path.  Copy into the existing global C buffers only at the end of
     each validated field.  Port parsing can use `std::from_chars` or a
     temporary owned string before `std::atoi`.
 
-6. `libtrn/univ.cpp`, `univ_use_file`
+5. `libtrn/univ.cpp`, `univ_use_file`
 
     Use a string view for the input filename and an owned string for the
     effective open name.  Keep `url_get`, `file_exp`, and `std::fopen`

@@ -51,6 +51,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 ArticleNum g_art{};             // current or prospective article #
 ArticleNum g_recent_art{};      // previous article # for '-' command
@@ -2114,28 +2115,27 @@ static bool debug_article_output(char *ptr, int arg)
 
 char ask_memorize(char_int ch)
 {
-    bool thread_cmd = (ch == 'T');
-    bool use_one_line = (g_general_mode == GM_SELECTOR);
-    bool global_save = false;
-    const char* mode_string = (thread_cmd? "thread" : "subject");
-    const char* mode_phrase = (thread_cmd? "replies to this article" :
-                                     "this subject and all replies");
-    ArticleNum art_hold = g_art;
-    Article* artp_hold = g_artp;
+    bool             thread_cmd = (ch == 'T');
+    bool             use_one_line = (g_general_mode == GM_SELECTOR);
+    bool             global_save = false;
+    std::string_view mode_string = thread_cmd ? "thread" : "subject";
+    std::string_view mode_phrase = thread_cmd ? "replies to this article" : "this subject and all replies";
+    ArticleNum       art_hold = g_art;
+    Article         *artp_hold = g_artp;
 
     if (!use_one_line)
     {
         newline();
     }
 reask_memorize:
-    std::sprintf(g_cmd_buf,"%sMemorize %s command:", global_save?"Global-" : "",
-            mode_string);
-    in_char(g_cmd_buf, MM_MEMORIZE_THREAD_PROMPT, thread_cmd? "+S.mJK,jcC" : "+S.mJK,jcCfg");
+    std::sprintf(g_cmd_buf, "%sMemorize %.*s command:", global_save ? "Global-" : "",
+                 static_cast<int>(mode_string.size()), mode_string.data());
+    in_char(g_cmd_buf, MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
     print_cmd();
     ch = *g_buf;
     if (!thread_cmd && ch == 'f')
     {
-        mode_string = *mode_string == 'a'? "subject" : "author";
+        mode_string = mode_string.front() == 'a' ? "subject" : "author";
         erase_line(false);
         goto reask_memorize;
     }
@@ -2151,44 +2151,50 @@ reask_memorize:
         if (g_verbose)
         {
             std::printf("\n"
-                   "Type + or SP to auto-select this %s (i.e. includes future articles).\n"
-                   "Type S to auto-select the current subject.\n"
-                   "Type . to auto-select %s.\n"
-                   "Type m to auto-select the current article.\n"
-                   "Type J to auto-kill (junk) this %s.\n"
-                   "Type K to auto-kill the current subject.\n"
-                   "Type , to auto-kill %s.\n"
-                   "Type j to auto-kill the current article.\n"
-                   "Type C to clear all selection/killing on %s.\n"
-                   "Type c to clear all selection/killing on this %s.\n"
-                   "Type q to abort the operation.\n",
-                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
+                        "Type + or SP to auto-select this %.*s (i.e. includes future articles).\n"
+                        "Type S to auto-select the current subject.\n"
+                        "Type . to auto-select %.*s.\n"
+                        "Type m to auto-select the current article.\n"
+                        "Type J to auto-kill (junk) this %.*s.\n"
+                        "Type K to auto-kill the current subject.\n"
+                        "Type , to auto-kill %.*s.\n"
+                        "Type j to auto-kill the current article.\n"
+                        "Type C to clear all selection/killing on %.*s.\n"
+                        "Type c to clear all selection/killing on this %.*s.\n"
+                        "Type q to abort the operation.\n",
+                        static_cast<int>(mode_string.size()), mode_string.data(), static_cast<int>(mode_phrase.size()),
+                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data(),
+                        static_cast<int>(mode_phrase.size()), mode_phrase.data(), static_cast<int>(mode_phrase.size()),
+                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data());
             if (!thread_cmd)
             {
                 std::printf("Type f to toggle author (from-line) searching.\n"
-                       "Type g to toggle global memorization.\n");
+                            "Type g to toggle global memorization.\n");
                 term_down(2);
             }
         }
         else
         {
             std::printf("\n"
-                   "+ or SP auto-selects this %s.\n"
-                   "S auto-selects the subject.\n"
-                   ". auto-selects %s.\n"
-                   "m auto-selects this article.\n"
-                   "J auto-kills this %s.\n"
-                   "K auto-kills the subject.\n"
-                   ", auto-kills %s.\n"
-                   "j auto-kills the current article.\n"
-                   "C clears auto-commands for %s.\n"
-                   "c clears auto-commands for this %s.\n"
-                   "q aborts.\n",
-                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
+                        "+ or SP auto-selects this %.*s.\n"
+                        "S auto-selects the subject.\n"
+                        ". auto-selects %.*s.\n"
+                        "m auto-selects this article.\n"
+                        "J auto-kills this %.*s.\n"
+                        "K auto-kills the subject.\n"
+                        ", auto-kills %.*s.\n"
+                        "j auto-kills the current article.\n"
+                        "C clears auto-commands for %.*s.\n"
+                        "c clears auto-commands for this %.*s.\n"
+                        "q aborts.\n",
+                        static_cast<int>(mode_string.size()), mode_string.data(), static_cast<int>(mode_phrase.size()),
+                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data(),
+                        static_cast<int>(mode_phrase.size()), mode_phrase.data(), static_cast<int>(mode_phrase.size()),
+                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data());
             if (!thread_cmd)
             {
                 std::printf("f toggles author (from) mode.\n"
-                       "g toggles global memorization.\n");
+                            "g toggles global memorization.\n");
                 term_down(2);
             }
         }
@@ -2207,8 +2213,8 @@ reask_memorize:
     }
     if (!thread_cmd)
     {
-        g_buf[1] = *mode_string == 'a'? 'f' : 's';
-        g_buf[2] = global_save? 'g' : 'l';
+        g_buf[1] = mode_string.front() == 'a' ? 'f' : 's';
+        g_buf[2] = global_save ? 'g' : 'l';
     }
     if (ch == '+')
     {
