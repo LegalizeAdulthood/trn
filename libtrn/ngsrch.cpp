@@ -21,6 +21,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 static bool          s_newsgroup_do_empty{}; // search empty newsgroups?
 static CompiledRegex s_newsgroup_compex;
@@ -239,39 +240,36 @@ bool NewsgroupData::newsgroup_wanted()
 
 const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool re, bool fold)
 {
-    char ng_pattern[128];
-    const char* s = pattern;
-    char* d = ng_pattern;
-
-    if (!*s)
+    if (!*pattern)
     {
         if (compex->compile("", re, fold))
         {
             return "No previous search pattern";
         }
-        return nullptr;                 // reuse old pattern
+        return nullptr; // reuse old pattern
     }
-    for (; *s; s++)
+
+    std::string ng_pattern;
+    for (const char *s = pattern; *s; s++)
     {
         if (*s == '.')
         {
-            *d++ = '\\';
-            *d++ = *s;
+            ng_pattern.push_back('\\');
+            ng_pattern.push_back(*s);
         }
         else if (*s == '?')
         {
-            *d++ = '.';
+            ng_pattern.push_back('.');
         }
         else if (*s == '*')
         {
-            *d++ = '.';
-            *d++ = *s;
+            ng_pattern.push_back('.');
+            ng_pattern.push_back(*s);
         }
         else
         {
-            *d++ = *s;
+            ng_pattern.push_back(*s);
         }
     }
-    *d = '\0';
-    return compex->compile(ng_pattern, re, fold);
+    return compex->compile(ng_pattern.c_str(), re, fold);
 }
