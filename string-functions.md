@@ -297,32 +297,18 @@ a string literal being passed to a modifiable function parameter.
 
 ## Suggested Order
 
-1. Convert `set_macro`, which owns its stored text and has no return
-   alias.
-2. Remove literal sentinels from `do_newsgroup` and
+1. Remove literal sentinels from `do_newsgroup` and
    `parse_ini_section`.
-3. Decide whether `decode_header` can stop mutating its source.  That
+2. Decide whether `decode_header` can stop mutating its source.  That
    unlocks const cleanup in `Article::set_subj_line` and `tree_puts`.
-4. Replace the `putenv` literals with an owning environment wrapper.
+3. Replace the `putenv` literals with an owning environment wrapper.
 
 ## Implementation Slices
 
 Each slice below changes one function and its direct callers only.  If a
 helper also needs a signature change, it has its own slice.
 
-### Slice 1: `set_macro`
-
-Change `set_macro(char *seq, char *def)` to take
-`std::string_view seq` and `std::string_view def`, and update its direct
-callers.  Copy into local storage only when generating alternate escape
-forms or when storing definitions.
-
-Return-alias note: no input pointer is returned.  Key-map storage must
-own copied text, not a view into a caller buffer.
-
-Validation: build with `cmake --build --preset rt-default`.
-
-### Slice 2: `do_newsgroup`
+### Slice 1: `do_newsgroup`
 
 Change `do_newsgroup(char *start_command)` and its direct callers to
 remove the `""` sentinel.  Use an explicit no-command state and owned
@@ -334,7 +320,7 @@ separate states.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 3: `parse_ini_section`
+### Slice 2: `parse_ini_section`
 
 Change `parse_ini_section(char *cp, IniWords words[])` and its direct
 callers so `""` is not passed.  Keep real parser input mutable, because
@@ -346,7 +332,7 @@ string must outlive all stored pointers.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 4: `decode_header`
+### Slice 3: `decode_header`
 
 Change `decode_header(char *to, char *from, int size)` to take a const
 source.  Replace temporary source edits with bounded views or local
@@ -357,7 +343,7 @@ function must not outlive the caller-owned source.
 
 Validation: run focused header tests if present, then build.
 
-### Slice 5: `Article::set_subj_line`
+### Slice 4: `Article::set_subj_line`
 
 After `decode_header` is source-const, change
 `Article::set_subj_line(char *subj, int size)` and its direct callers to
@@ -368,7 +354,7 @@ owned by the article/subject structures.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 6: `tree_puts`
+### Slice 5: `tree_puts`
 
 After `decode_header` is source-const, change
 `tree_puts(char *orig_line, ArticleLine header_line, int is_subject)` and
@@ -379,7 +365,7 @@ continue to happen on local copied buffers.
 
 Validation: build with `cmake --build --preset rt-default`.
 
-### Slice 7: `util_final`
+### Slice 6: `util_final`
 
 Change `util_final` so it does not pass literals to `putenv`.  Use a
 small owned environment-clearing helper inside this function or call a

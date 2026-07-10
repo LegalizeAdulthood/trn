@@ -36,6 +36,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 #ifdef u3b2
 #undef TIOCGWINSZ
@@ -449,29 +450,28 @@ void term_set(char *tcbuf)
     mac_init(tcbuf);
 }
 
-//char* seq;    // input sequence of keys
-//char* def;    // definition
-void set_macro(char *seq, char *def)
+void set_macro(std::string_view seq, std::string_view def)
 {
-    mac_line(def,seq,0);
+    std::string seq_text{seq};
+    std::string def_text{def};
+
+    mac_line(def_text.data(), seq_text.data(), 0);
     // check for common (?) brain damage: ku/kd/etc sequence may be the
     // cursor move sequence instead of the input sequence.
     // (This happens on the local xterm definitions.)
     // Try to recognize and adjust for this case.
     //
-    if (seq[0] == '\033' && seq[1] == '[' && seq[2])
+    if (seq_text.size() > 2 && seq_text[0] == '\033' && seq_text[1] == '[')
     {
-        char lbuf[LINE_BUF_LEN];     // copy of possibly non-writable string
-        std::strcpy(lbuf,seq);
-        lbuf[1] = 'O';
-        mac_line(def,lbuf,0);
+        std::string alt_seq{seq_text};
+        alt_seq[1] = 'O';
+        mac_line(def_text.data(), alt_seq.data(), 0);
     }
-    if (seq[0] == '\033' && seq[1] == 'O' && seq[2])
+    if (seq_text.size() > 2 && seq_text[0] == '\033' && seq_text[1] == 'O')
     {
-        char lbuf[LINE_BUF_LEN];     // copy of possibly non-writable string
-        std::strcpy(lbuf,seq);
-        lbuf[1] = '[';
-        mac_line(def,lbuf,0);
+        std::string alt_seq{seq_text};
+        alt_seq[1] = '[';
+        mac_line(def_text.data(), alt_seq.data(), 0);
     }
 }
 
