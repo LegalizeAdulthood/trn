@@ -122,7 +122,7 @@ void head_final()
 }
 
 #ifdef DEBUG
-static void dump_header(char *where)
+static void dump_header(const char *where)
 {
     std::printf("header: %ld %s", g_parsed_art.value_of(), where);
 
