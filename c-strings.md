@@ -52,21 +52,14 @@ matching declaration as needed.  The list is ordered from simpler local
 helpers toward callers that can pass string views through once lower
 helpers accept them.
 
-1. `libtrn/trn.cpp`, `get_newsgroup_dir`
-
-   Promote the parameter from `const char *` to `std::string_view`.
-   The helper immediately copies the input into `std::string` and only
-   rewrites dots to slashes.  Update the single caller in
-   `set_newsgroup_name` to pass `g_newsgroup_name` directly.
-
-2. `util/env.cpp`, `export_var`
+1. `util/env.cpp`, `export_var`
 
    Promote `nam` and `val` to `std::string_view` in the implementation
    and `util/include/util/env.h`.  The function only builds an owned
    `NAME=value` string before handing it to `save_str` and `putenv`.
    Existing C string callers can convert implicitly.
 
-3. `libtrn/ngsrch.cpp`, `newsgroup_comp`
+2. `libtrn/ngsrch.cpp`, `newsgroup_comp`
 
    Promote `pattern` to `std::string_view` in the implementation and
    `libtrn/include/trn/ngsrch.h`.  Keep the translated regex pattern as
@@ -74,35 +67,35 @@ helpers accept them.
    `CompiledRegex::compile`.  Do this before changing callers that split
    or own pattern text.
 
-4. `libtrn/autosub.cpp`, `match_list`
+3. `libtrn/autosub.cpp`, `match_list`
 
    Promote `pat_list` to `std::string_view`.  The function already uses
    a view cursor and comma-delimited pattern views.  After
    `newsgroup_comp` accepts a view, pass each `pattern_view` directly
    and remove the per-pattern `std::string`.
 
-5. `libtrn/url.cpp`, `parse_url`
+4. `libtrn/url.cpp`, `parse_url`
 
    Promote `url` to `std::string_view` in the implementation and
    `libtrn/include/trn/url.h`.  Keep parsing as views.  Use either a
    short owned diagnostic string or `%.*s` formatting for error output,
    then copy validated fields into the legacy URL buffers.
 
-6. `libtrn/url.cpp`, `url_get`
+5. `libtrn/url.cpp`, `url_get`
 
    Promote only the `url` parameter to `std::string_view`; keep
    `outfile` as `const char *` because it flows to fetch/file helpers.
    This slice depends on the `parse_url` slice and lets callers pass URL
    slices without allocating.
 
-7. `libtrn/univ.cpp`, `univ_use_file`
+6. `libtrn/univ.cpp`, `univ_use_file`
 
    Promote `fname` to `std::string_view`.  Keep the effective open name
    as an owned `std::string` for `file_exp` and `std::fopen`.  After
    `url_get` accepts a view, pass `file_name.substr(4)` directly for
    URL-backed universal files and remove the temporary URL string.
 
-8. `libtrn/edit_dist.cpp`, `edit_distn`
+7. `libtrn/edit_dist.cpp`, `edit_distn`
 
    Promote `from/from_len` and `to/to_len` to two
    `std::string_view` parameters in the implementation and
@@ -110,7 +103,7 @@ helpers accept them.
    indexes read-only text ranges.  Treat null legacy inputs as empty
    views at call sites.
 
-9. `libtrn/cache.cpp`, `decode_header`
+8. `libtrn/cache.cpp`, `decode_header`
 
    Promote only the input pair `from/size` to `std::string_view` in the
    implementation and `libtrn/include/trn/cache.h`.  Keep `to` as a
@@ -118,7 +111,7 @@ helpers accept them.
    parsing because encoded-word handling already creates owned
    `std::string` values for bounded substrings.
 
-10. `libtrn/cache.cpp`, `Article::set_subj_line`
+9. `libtrn/cache.cpp`, `Article::set_subj_line`
 
    Promote the subject input from `const char *` plus `int size` to
    `std::string_view` in the method and `libtrn/include/trn/Article.h`.
@@ -128,7 +121,7 @@ helpers accept them.
    `strlen` or a known buffer length.  This is last because it changes a
    class method contract and several parsing call sites.
 
-11. `libtrn/nntp.cpp`, `nntp_list`
+10. `libtrn/nntp.cpp`, `nntp_list`
 
    Promote the `arg/len` pair to `std::string_view` in the
    implementation and `libtrn/include/trn/nntp.h`.  Keep `type` as a
@@ -136,7 +129,7 @@ helpers accept them.
    formatting.  This is a bottom network helper used by active-file and
    overview loading.
 
-12. `libtrn/datasrc.cpp`, `DataSource::find_active_group`
+11. `libtrn/datasrc.cpp`, `DataSource::find_active_group`
 
    Promote the `nam/len` pair to `std::string_view` in the method and
    `libtrn/include/trn/datasrc.h`.  Keep `outbuf` mutable.  After
@@ -144,32 +137,32 @@ helpers accept them.
    rebuilding pointer/length pairs; keep hash calls at their current
    boundary until the hash API is promoted.
 
-13. `libtrn/hash.cpp`, `hash`
+12. `libtrn/hash.cpp`, `hash`
 
    Promote the private `key/keylen` pair to `std::string_view`.  This is
    the bottom of the hash-key chain and has no callers outside
    `hash.cpp`.
 
-14. `libtrn/hash.cpp`, `hash_find`
+13. `libtrn/hash.cpp`, `hash_find`
 
    Promote the private `key/keylen` pair to `std::string_view`.  Pass
    `key.data()` and `key.size()` only to the existing compare callback.
    This prepares the public hash helpers without changing callback
    ownership yet.
 
-15. `libtrn/hash.cpp`, `hash_fetch`
+14. `libtrn/hash.cpp`, `hash_fetch`
 
    Promote the public key pair to `std::string_view` in the
    implementation and `libtrn/include/trn/hash.h`.  This has many
    callers, but most already hold a pointer plus known length.
 
-16. `libtrn/hash.cpp`, `hash_store`
+15. `libtrn/hash.cpp`, `hash_store`
 
    Promote the public key pair to `std::string_view` in the
    implementation and `libtrn/include/trn/hash.h`.  Keep storing
    `he_key_len` as an integer until the hash entry layout changes.
 
-17. `libtrn/hash.cpp`, `hash_delete`
+16. `libtrn/hash.cpp`, `hash_delete`
 
    Promote the public key pair to `std::string_view` in the
    implementation and `libtrn/include/trn/hash.h`.  Do this after

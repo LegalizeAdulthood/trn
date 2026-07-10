@@ -75,6 +75,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 
 std::string g_newsgroup_name;                             // name of current newsgroup
 std::string g_newsgroup_dir;                              // same thing in directory name form
@@ -89,7 +90,7 @@ int         g_use_news_selector{SELECT_INIT - 1}; //
 static bool s_restore_old_newsrc{};
 static bool s_go_forward{true};
 
-static std::string get_newsgroup_dir(const char *newsgroup_name);
+static std::string get_newsgroup_dir(std::string_view newsgroup_name);
 
 void trn_init()
 {
@@ -1088,10 +1089,10 @@ void set_newsgroup_name(const char *what)
         g_newsgroup_name.clear();
     }
 
-    g_newsgroup_dir = get_newsgroup_dir(g_newsgroup_name.c_str());
+    g_newsgroup_dir = get_newsgroup_dir(g_newsgroup_name);
 }
 
-static std::string get_newsgroup_dir(const char *newsgroup_name)
+static std::string get_newsgroup_dir(std::string_view newsgroup_name)
 {
     std::string dir{newsgroup_name};
     for (char &c : dir)
