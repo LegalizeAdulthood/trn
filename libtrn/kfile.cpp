@@ -304,28 +304,28 @@ int do_kill_file(std::FILE *kfp, int entering)
                 perform_status_init(g_newsgroup_ptr->m_to_read);
                 last_kill_type = '<';
             }
-            cp = std::strchr(bp,' ');
-            if (!cp)
+            char default_cmd[] = "T,";
+            char *cmd = default_cmd;
+            char *split = std::strchr(bp,' ');
+            if (split)
             {
-                cp = "T,";
-            }
-            else
-            {
-                *cp++ = '\0';
+                *split++ = '\0';
+                cmd = split;
             }
             Article *ap = get_article(bp);
             if (ap != nullptr)
             {
                 if ((ap->m_flags & AF_FAKE) && !ap->m_child1)
                 {
-                    if (*cp == 'T')
+                    const char *thread_cmd = cmd;
+                    if (*thread_cmd == 'T')
                     {
-                        cp++;
+                        thread_cmd++;
                     }
-                    cp = std::strchr(s_thread_cmd_ltr, *cp);
-                    if (cp != nullptr)
+                    thread_cmd = std::strchr(s_thread_cmd_ltr, *thread_cmd);
+                    if (thread_cmd != nullptr)
                     {
-                        ap->m_auto_flags = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
+                        ap->m_auto_flags = s_thread_cmd_flag[thread_cmd-s_thread_cmd_ltr];
                         if (ap->m_auto_flags & AUTO_KILL_MASK)
                         {
                             thread_kill_cnt++;
@@ -340,7 +340,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                 {
                     g_art = ap->article_num();
                     g_artp = ap;
-                    perform(cp,false);
+                    perform(cmd,false);
                     if (ap->m_auto_flags & AUTO_SEL_MASK)
                     {
                         thread_select_cnt++;
