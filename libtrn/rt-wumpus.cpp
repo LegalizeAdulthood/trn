@@ -363,22 +363,23 @@ inline bool header_conv()
 
 // Output a header line with possible tree display on the right hand side.
 // Does automatic wrapping of lines that are too long.
-ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
+ArticleLine tree_puts(const char *orig_line, ArticleLine header_line, int is_subject)
 {
-    char*    tmpbuf;
-    char*    line;
-    char*    end;
-    int      wrap_at;
+    char       *tmpbuf;
+    char       *line;
+    char       *end;
+    int         wrap_at;
     ArticleLine start_line = header_line;
-    int      i;
-    int      len;
-    char     ch;
+    int         i;
+    int         len;
+    char        ch;
+    char       *cp;
 
     // Make a modifiable copy of the line
-    char *cp = std::strchr(orig_line, '\n');
-    if (cp != nullptr)
+    const char *line_end = std::strchr(orig_line, '\n');
+    if (line_end != nullptr)
     {
-        len = cp - orig_line;
+        len = line_end - orig_line;
     }
     else
     {

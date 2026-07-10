@@ -297,26 +297,14 @@ a string literal being passed to a modifiable function parameter.
 
 ## Suggested Order
 
-1. Convert `tree_puts`.
-2. Replace the `putenv` literals with an owning environment wrapper.
+1. Replace the `putenv` literals with an owning environment wrapper.
 
 ## Implementation Slices
 
 Each slice below changes one function and its direct callers only.  If a
 helper also needs a signature change, it has its own slice.
 
-### Slice 1: `tree_puts`
-
-After `decode_header` is source-const, change
-`tree_puts(char *orig_line, ArticleLine header_line, int is_subject)` and
-its direct callers to take a const source or `std::string_view`.
-
-Return-alias note: no input pointer is returned.  Display work should
-continue to happen on local copied buffers.
-
-Validation: build with `cmake --build --preset rt-default`.
-
-### Slice 2: `util_final`
+### Slice 1: `util_final`
 
 Change `util_final` so it does not pass literals to `putenv`.  Use a
 small owned environment-clearing helper inside this function or call a

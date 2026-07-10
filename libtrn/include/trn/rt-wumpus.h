@@ -13,7 +13,7 @@ extern int g_max_tree_lines;
 
 void init_tree();
 Article    *get_tree_artp(int x, int y);
-ArticleLine tree_puts(char *orig_line, ArticleLine header_line, int is_subject);
+ArticleLine tree_puts(const char *orig_line, ArticleLine header_line, int is_subject);
 ArticleLine finish_tree(ArticleLine last_line);
 void entire_tree(Article *ap);
 
