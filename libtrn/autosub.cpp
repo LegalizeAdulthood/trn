@@ -11,8 +11,8 @@
 #include <util/env.h>
 
 #include <cstdio>
-#include <cstring>
 #include <string>
+#include <string_view>
 
 static bool match_list(const char *pat_list, const char *s);
 
@@ -40,32 +40,22 @@ AddNewType auto_subscribe(const char *name)
 static bool match_list(const char *pat_list, const char *s)
 {
     CompiledRegex il_compex;
-    bool   tmp_result;
 
-    bool result = false;
+    bool             result = false;
+    std::string_view patterns = pat_list != nullptr ? std::string_view{pat_list} : std::string_view{};
     il_compex.init_compex();
-    while (pat_list && *pat_list)
+    while (!patterns.empty())
     {
-        if (*pat_list == '!')
+        bool tmp_result = true;
+        if (patterns.front() == '!')
         {
-            pat_list++;
+            patterns.remove_prefix(1);
             tmp_result = false;
         }
-        else
-        {
-            tmp_result = true;
-        }
 
-        const char *p = std::strchr(pat_list, ',');
-        std::string pattern;
-        if (p != nullptr)
-        {
-            pattern.assign(pat_list, p);
-        }
-        else
-        {
-            pattern.assign(pat_list);
-        }
+        const std::size_t      comma = patterns.find(',');
+        const std::string_view pattern_view = patterns.substr(0, comma);
+        const std::string      pattern{pattern_view};
 
         // compile regular expression
         const char *err = newsgroup_comp(&il_compex, pattern.c_str(), true, true);
@@ -80,7 +70,11 @@ static bool match_list(const char *pat_list, const char *s)
         {
             result = tmp_result;
         }
-        pat_list = p;
+        if (comma == std::string_view::npos)
+        {
+            break;
+        }
+        patterns.remove_prefix(comma + 1);
     }
     il_compex.free_compex();
     return result;
