@@ -85,10 +85,10 @@ GeneralMode   g_general_mode{GM_INIT};            // general mode of trn
 
 #ifdef HAS_TERMLIB
 bool  g_tc_GT{};              // hardware tabs
-char *g_tc_BC{};              // backspace character
+const char *g_tc_BC{};        // backspace character
 char *g_tc_UP{};              // move cursor up one line
-char *g_tc_CR{};              // get to left margin, somehow
-char *g_tc_VB{};              // visible bell
+const char *g_tc_CR{};        // get to left margin, somehow
+const char *g_tc_VB{};        // visible bell
 char *g_tc_CE{};              // clear to end of line
 char *g_tc_CM{};              // cursor motion
 char *g_tc_HO{};              // home cursor
@@ -98,7 +98,7 @@ char *g_tc_SO{};              // begin standout mode
 char *g_tc_SE{};              // end standout mode
 char *g_tc_US{};              // start underline mode
 char *g_tc_UE{};              // end underline mode
-char *g_tc_UC{};              // underline a character, if that's how it's done
+const char *g_tc_UC{};        // underline a character, if that's how it's done
 bool  g_tc_UG{};              // blanks left by US and UE
 bool  g_tc_AM{};              // does terminal have automatic margins?
 bool  g_tc_XN{};              // does it eat 1st newline after automatic wrap?
@@ -395,8 +395,9 @@ void term_set(char *tcbuf)
     {
         if (tgetflag("nc") && *g_tc_UP)
         {
-            g_tc_CR = safe_malloc((MemorySize)std::strlen(g_tc_UP)+2);
-            std::sprintf(g_tc_CR,"%s\r",g_tc_UP);
+            char *tc_CR = safe_malloc((MemorySize)std::strlen(g_tc_UP)+2);
+            std::sprintf(tc_CR,"%s\r",g_tc_UP);
+            g_tc_CR = tc_CR;
         }
         else
         {
@@ -2718,7 +2719,7 @@ char *tc_color_capability(const char *capability)
 }
 
 #ifdef MSDOS
-int tputs(char *str, int num, int (*func)(int))
+int tputs(const char *str, int num, int (*func)(int))
 {
     std::printf(str,num);
     return 0;

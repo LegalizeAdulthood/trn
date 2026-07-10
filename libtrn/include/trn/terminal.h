@@ -132,10 +132,10 @@ extern MarkingAreas g_marking_areas;
 //
 #ifdef HAS_TERMLIB
 extern bool  g_tc_GT; // hardware tabs
-extern char *g_tc_BC; // backspace character
+extern const char *g_tc_BC; // backspace character
 extern char *g_tc_UP; // move cursor up one line
-extern char *g_tc_CR; // get to left margin, somehow
-extern char *g_tc_VB; // visible bell
+extern const char *g_tc_CR; // get to left margin, somehow
+extern const char *g_tc_VB; // visible bell
 extern char *g_tc_CE; // clear to end of line
 extern char *g_tc_CM; // cursor motion
 extern char *g_tc_HO; // home cursor
@@ -145,7 +145,7 @@ extern char *g_tc_SO; // begin standout mode
 extern char *g_tc_SE; // end standout mode
 extern char *g_tc_US; // start underline mode
 extern char *g_tc_UE; // end underline mode
-extern char *g_tc_UC; // underline a character, if that's how it's done
+extern const char *g_tc_UC; // underline a character, if that's how it's done
 extern bool  g_tc_UG; // blanks left by US and UE
 extern bool  g_tc_AM; // does terminal have automatic margins?
 extern bool  g_tc_XN; // does it eat 1st newline after automatic wrap?
@@ -226,7 +226,7 @@ bool  check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 void  add_tc_string(const char *capability, const char *string);
 char *tc_color_capability(const char *capability);
 #ifdef MSDOS
-int   tputs(char *str, int num, int (*func)(int));
+int   tputs(const char *str, int num, int (*func)(int));
 char *tgoto(char *str, int x, int y);
 #endif
 
