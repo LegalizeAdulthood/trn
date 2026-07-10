@@ -44,7 +44,6 @@ void sf_clean();
 void sf_grow();
 int sf_check_extra_headers(const char *head);
 void sf_add_extra_header(const char *head);
-char *sf_get_extra_header(ArticleNum art, int hnum);
 
 // Returns true if text pointed to by s is a text representation of
 // the number 0.  Used for error checking.

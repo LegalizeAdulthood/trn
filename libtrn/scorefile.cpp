@@ -4,6 +4,7 @@
  * (yeah, right. :)
  */
 // This file Copyright 1992, 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/scorefile.h>
 
@@ -31,6 +32,8 @@
 #include <cstring>
 #include <string>
 #include <string_view>
+
+std::string_view sf_get_extra_header(ArticleNum art, int hnum);
 
 int  g_sf_num_entries{};   // # of entries
 int  g_sf_score_verbose{}; // when true, the scoring routine prints lots of info...
@@ -305,44 +308,39 @@ void sf_add_extra_header(const char *head)
 
 //ART_NUM art;          // article number to check
 //int hnum;             // header number: offset into s_sf_extra_headers
-char *sf_get_extra_header(ArticleNum art, int hnum)
+static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 {
-    static char lbuf[LINE_BUF_LEN];
-
     parse_header(art);   // fast if already parsed
 
-    char *head = s_sf_extra_headers[hnum];
-    int   len = std::strlen(head);
+    const char *head = s_sf_extra_headers[hnum];
+    int         len = std::strlen(head);
 
-    for (char *s = g_head_buf; s && *s && *s != '\n'; s++)
+    for (const char *s = g_head_buf; s && *s && *s != '\n'; s++)
     {
         if (string_case_equal(head, s, len))
         {
             s = std::strchr(s,':');
             if (!s)
             {
-                return "";
+                return {};
             }
             s++;        // skip the colon
             s = skip_hor_space(s);
             if (!*s)
             {
-                return "";
+                return {};
             }
-            head = s;           // now point to start of new text
+            const char *text = s;
             s = std::strchr(s,'\n');
             if (!s)
             {
-                return "";
+                return {};
             }
-            *s = '\0';
-            safe_copy(lbuf,head,sizeof lbuf - 1);
-            *s = '\n';
-            return lbuf;
+            return {text, static_cast<std::size_t>(s - text)};
         }
         s = std::strchr(s,'\n');     // '\n' will be skipped on loop increment
     }
-    return "";
+    return {};
 }
 
 // keep this one outside the functions because it is shared
@@ -1159,7 +1157,7 @@ void sf_append(char *line)
 char *sf_get_line(ArticleNum a, HeaderLineType h)
 {
     static char sf_getline[LINE_BUF_LEN];
-    char* s;
+    std::string_view line;
 
     if (h <= SOME_LINE)
     {
@@ -1172,7 +1170,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
     {
         if (h-HEAD_LAST < s_sf_num_extra_headers)
         {
-            s = sf_get_extra_header(a,h-HEAD_LAST);
+            line = sf_get_extra_header(a,h-HEAD_LAST);
         }
         else
         {
@@ -1184,19 +1182,27 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else if (h == SUBJ_LINE)
     {
-        s = fetch_cache(a,h,true);       // get compressed copy
+        if (char *s = fetch_cache(a,h,true))       // get compressed copy
+        {
+            line = s;
+        }
     }
     else
     {
-        s = prefetch_lines(a,h,false);   // don't make a copy
+        if (char *s = prefetch_lines(a,h,false))   // don't make a copy
+        {
+            line = s;
+        }
     }
-    if (!s)
+    if (line.empty())
     {
         *sf_getline = '\0';
     }
     else
     {
-        safe_copy(sf_getline,s,sizeof sf_getline - 1);
+        const std::size_t len = line.size() < sizeof sf_getline ? line.size() : sizeof sf_getline - 1;
+        line.copy(sf_getline, len);
+        sf_getline[len] = '\0';
     }
 
     for (char *t = sf_getline; *t; t++)
