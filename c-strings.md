@@ -47,21 +47,14 @@ literal.
 
 Each slice changes one function.  Add local includes as needed.
 
-1. `libtrn/scorefile.cpp`, `sf_append`
-
-    Use views for `scoretext` and the one-character shortcut check.
-    Use `std::string` for filename assembly before calling `file_exp`,
-    `make_dir`, and `std::fopen`.  This touches several legacy file and
-    scoring helpers, so keep it after the lower-level pattern work.
-
-2. `libtrn/url.cpp`, `parse_url`
+1. `libtrn/url.cpp`, `parse_url`
 
     Parse `url` with string views for scheme, host, optional port, and
     path.  Copy into the existing global C buffers only at the end of
     each validated field.  Port parsing can use `std::from_chars` or a
     temporary owned string before `std::atoi`.
 
-3. `libtrn/univ.cpp`, `univ_use_file`
+2. `libtrn/univ.cpp`, `univ_use_file`
 
     Use a string view for the input filename and an owned string for the
     effective open name.  Keep `url_get`, `file_exp`, and `std::fopen`

@@ -29,6 +29,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+#include <string_view>
 
 int  g_sf_num_entries{};   // # of entries
 int  g_sf_score_verbose{}; // when true, the scoring routine prints lots of info...
@@ -1020,26 +1022,21 @@ char *sf_missing_score(const char *line)
 // consider using some external buffer rather than the 2 internal ones
 void sf_append(char *line)
 {
-    const char* scoretext; // text after the score#
-    char*       filename;  // expanded filename
-    static char filebuf[LINE_BUF_LEN];
-    char*       s;
-
     if (!line)
     {
-        return;         // do nothing with empty string
+        return; // do nothing with empty string
     }
 
     char filechar = *line; // ch is file abbreviation
 
-    if (filechar == '?')        // list known file abbreviations
+    if (filechar == '?') // list known file abbreviations
     {
-        std::printf("List of abbreviation/file pairs\n") ;
+        std::printf("List of abbreviation/file pairs\n");
         for (int i = 0; i < 256; i++)
         {
             if (s_sf_abbr[i])
             {
-                std::printf("%c %s\n",(char)i,s_sf_abbr[i]);
+                std::printf("%c %s\n", (char) i, s_sf_abbr[i]);
             }
         }
         std::printf("\" [The current newsgroup's score file]\n");
@@ -1055,10 +1052,10 @@ void sf_append(char *line)
     // and is not a valid command, request a score
     if (!std::isdigit(ch) && ch != '+' && ch != '-' && ch != ':' && ch != '!' && ch != '#')
     {
-        if (!sf_do_line(scoreline,true))    // just checking
+        if (!sf_do_line(scoreline, true)) // just checking
         {
             scoreline = sf_missing_score(scoreline);
-            if (!scoreline)     // no score typed
+            if (!scoreline) // no score typed
             {
                 std::printf("Score entry aborted.\n");
                 return;
@@ -1067,27 +1064,27 @@ void sf_append(char *line)
     }
 
     // scoretext = first non-whitespace after score#
-    for (scoretext = scoreline;
-         std::isdigit(*scoretext) || *scoretext == '+' || *scoretext == '-' || is_hor_space(*scoretext);
-         scoretext++)
-    {
-    }
+    std::string_view  scoretext{scoreline};
+    const std::size_t scoretext_start = scoretext.find_first_not_of("0123456789+- \t");
+    scoretext.remove_prefix(scoretext_start == std::string_view::npos ? scoretext.size() : scoretext_start);
+
     // special one-character shortcuts
-    if (*scoretext && scoretext[1] == '\0')
+    if (scoretext.size() == 1)
     {
         static char lbuf[LINE_BUF_LEN];
-        switch (*scoretext)
+        switch (scoretext.front())
         {
-        case 'F':     // domain-shortened FROM line
-            std::strcpy(lbuf,scoreline);
-            lbuf[std::strlen(lbuf)-1] = '\0';
-            std::strcat(lbuf,file_exp("from: %y"));
+        case 'F': // domain-shortened FROM line
+            std::strcpy(lbuf, scoreline);
+            lbuf[std::strlen(lbuf) - 1] = '\0';
+            std::strcat(lbuf, file_exp("from: %y"));
             scoreline = lbuf;
             break;
 
-        case 'S':     // current subject
-            std::strcpy(lbuf,scoreline);
-            s = fetch_cache(g_art, SUBJ_LINE,true);
+        case 'S': // current subject
+        {
+            std::strcpy(lbuf, scoreline);
+            char *s = fetch_cache(g_art, SUBJ_LINE, true);
             if (!s || !*s)
             {
                 std::printf("No subject: score entry aborted.\n");
@@ -1098,15 +1095,16 @@ void sf_append(char *line)
                 s += 4;
             }
             // change this next line if LINE_BUF_LEN changes
-            std::sprintf(lbuf+(std::strlen(lbuf)-1),"subject: %.900s",s);
+            std::sprintf(lbuf + (std::strlen(lbuf) - 1), "subject: %.900s", s);
             scoreline = lbuf;
             break;
+        }
 
         default:
             std::printf("\nBad scorefile line: |%s| (not added)\n", line);
             return;
         }
-        std::printf("%s\n",scoreline);
+        std::printf("%s\n", scoreline);
     }
 
     // test the scoring line unless filechar is '!' (meaning do it now)
@@ -1117,32 +1115,35 @@ void sf_append(char *line)
     }
     if (filechar == '!')
     {
-        return;         // don't actually append to file
+        return; // don't actually append to file
     }
-    if (filechar == '"')        // do local group
+    std::string filename;
+    if (filechar == '"') // do local group
     {
         // Note: should probably be changed to use sf_ file functions
-        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        std::strcat(filebuf,"/%C");
-        filename = filebuf;
+        filename = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
+        filename += "/%C";
     }
-    else if (filechar == '*')   // do global scorefile
+    else if (filechar == '*') // do global scorefile
     {
         // Note: should probably be changed to use sf_ file functions
-        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        std::strcat(filebuf,"/global");
-        filename = filebuf;
+        filename = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
+        filename += "/global";
     }
-    else if (!(filename = s_sf_abbr[(int) filechar]))
+    else if (!s_sf_abbr[(int) filechar])
     {
-        std::printf("\nBad file abbreviation: %c\n",filechar);
+        std::printf("\nBad file abbreviation: %c\n", filechar);
         return;
     }
-    filename = file_exp(sf_cmd_fname(filename));  // allow shortcuts
+    else
+    {
+        filename = s_sf_abbr[(int) filechar];
+    }
+    filename = file_exp(sf_cmd_fname(filename.data())); // allow shortcuts
     // make sure directory exists...
-    make_dir(filename, MD_FILE);
+    make_dir(filename.c_str(), MD_FILE);
     sf_file_clear();
-    std::FILE *fp = std::fopen(filename, "a");
+    std::FILE *fp = std::fopen(filename.c_str(), "a");
     if (fp != nullptr)
     {
         std::fprintf(fp, "%s\n", scoreline); // open (or create) for append
@@ -1150,7 +1151,7 @@ void sf_append(char *line)
     }
     else // unsuccessful in opening file
     {
-        std::printf("\nCould not open (for append) file %s\n",filename);
+        std::printf("\nCould not open (for append) file %s\n", filename.c_str());
     }
 }
 
