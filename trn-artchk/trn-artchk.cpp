@@ -364,12 +364,12 @@ int main(int argc, char *argv[])
                         {
                             cp = &buff[nglens[i]];
                             *cp++ = '\0';
-                            cp = skip_hor_space(cp);
-                            if (cp[0] == '?' && cp[1] == '?')
+                            const char *desc = skip_hor_space(cp);
+                            if (desc[0] == '?' && desc[1] == '?')
                             {
-                                cp = "[no description available]\n";
+                                desc = "[no description available]\n";
                             }
-                            std::printf("%-23s %s", buff, cp);
+                            std::printf("%-23s %s", buff, desc);
                             free(ngptrs[i]);
                             ngptrs[i] = nullptr;
                             ngleft--;
