@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 struct HashTable;
 
@@ -152,7 +153,7 @@ void           univ_add_group(const char *desc, const char *grpname);
 void           univ_add_mask(const char *desc, const char *mask);
 void           univ_add_file(const char *desc, const char *fname, const char *label);
 UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art);
-void           univ_add_text_file(const char *desc, char *name);
+void           univ_add_text_file(const char *desc, std::string_view name);
 void           univ_add_virtual_group(const char *grpname);
 void           univ_use_pattern(const char *pattern, int type);
 void           univ_use_group_line(char *line, int type);

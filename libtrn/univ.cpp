@@ -348,40 +348,41 @@ UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum a
     return ui;
 }
 
-void univ_add_text_file(const char *desc, char *name)
+void univ_add_text_file(const char *desc, std::string_view name)
 {
-    UniversalItem* ui;
-    char* p;
-    static char lbuf[1024];
+    UniversalItem   *ui;
+    std::string      file_name{name};
+    std::string_view s{name};
 
-    char *s = name;
-    switch (*s)
+    switch (s.empty() ? '\0' : s.front())
     {
     // later add URL handling
     case ':':
-        s++;
+        s.remove_prefix(1);
         // FALL THROUGH
 
     default:
+    {
         // XXX later have error checking on length
-        std::strcpy(lbuf,g_univ_fname);
-        for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
+        file_name = g_univ_fname;
+        std::string::size_type slash = file_name.find_last_of('/');
+        if (slash == std::string::npos)
         {
+            file_name = "/";
         }
-        if (p)
+        else
         {
-            *p++ = '/';
-            *p = '\0';
-            std::strcat(lbuf,s);
-            s = lbuf;
+            file_name.resize(slash + 1);
         }
+        file_name.append(s);
+    }
         // FALL THROUGH
 
     case '~': // ...or full file names
     case '%':
     case '/':
-        ui = univ_add(UN_TEXT_FILE,desc);
-        ui->m_data.text_file.fname = save_str(file_exp(s));
+        ui = univ_add(UN_TEXT_FILE, desc);
+        ui->m_data.text_file.fname = save_str(file_exp(file_name.c_str()));
         break;
     }
 }
