@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 // TODO:
 //
@@ -577,32 +578,37 @@ static bool univ_use_file(const char *fname, const char *label)
 {
     static char lbuf[LINE_BUF_LEN];
 
-    bool begin_top = true;      // default assumption (might be changed later)
+    bool begin_top = true; // default assumption (might be changed later)
 
     if (!fname)
     {
-        return false;   // bad argument
+        return false; // bad argument
     }
 
-    const char *s = fname;
-    const char *open_name = fname;
+    std::string_view file_name{fname};
+    std::string      open_name{file_name};
+    bool             have_open_name = true;
     // open URLs and translate them into local temporary filenames
     if (string_case_equal(fname, "URL:", 4))
     {
-        open_name = temp_filename();
+        char *temp_name = temp_filename();
+        open_name = temp_name;
         g_univ_tmp_file = open_name;
-        if (!url_get(fname+4,open_name))
+        std::free(temp_name);
+
+        const std::string url{file_name.substr(4)};
+        if (!url_get(url.c_str(), open_name.c_str()))
         {
-            open_name = nullptr;
+            have_open_name = false;
         }
-        begin_top = false;      // we will need a "begin group"
+        begin_top = false; // we will need a "begin group"
     }
-    else if (*s == ':')         // relative to last file's directory
+    else if (!file_name.empty() && file_name.front() == ':') // relative to last file's directory
     {
-        std::printf("Colon filespec not supported for |%s|\n",s);
-        open_name = nullptr;
+        std::printf("Colon filespec not supported for |%s|\n", open_name.c_str());
+        have_open_name = false;
     }
-    if (!open_name)
+    if (!have_open_name)
     {
         return false;
     }
@@ -612,10 +618,10 @@ static bool univ_use_file(const char *fname, const char *label)
     {
         s_univ_begin_label = save_str(label);
     }
-    std::FILE *fp = std::fopen(file_exp(open_name), "r");
+    std::FILE *fp = std::fopen(file_exp(open_name.c_str()), "r");
     if (!fp)
     {
-        return false;           // unsuccessful (XXX: complain)
+        return false; // unsuccessful (XXX: complain)
     }
     // Later considerations:
     // 1. Long lines

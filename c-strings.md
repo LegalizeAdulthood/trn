@@ -47,12 +47,7 @@ literal.
 
 Each slice changes one function.  Add local includes as needed.
 
-1. `libtrn/univ.cpp`, `univ_use_file`
-
-    Use a string view for the input filename and an owned string for the
-    effective open name.  Keep `url_get`, `file_exp`, and `std::fopen`
-    at the boundary.  This depends on the URL parser slice if URL-backed
-    universal files are handled in the same pass.
+No open implementation slices remain.
 
 ## Defer
 
