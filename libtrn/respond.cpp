@@ -339,7 +339,7 @@ SaveResult save_article()
     {
         bool  there;
         bool  mailbox;
-        std::string savename{get_val_const("SAVENAME", SAVENAME)};
+        const char *savename = get_val_const("SAVENAME", SAVENAME);
 
         s = g_buf+1;            // skip s or S
         if (*s == '-')          // if they are confused, skip - also
@@ -386,8 +386,8 @@ SaveResult save_article()
             c = (s + std::strlen(s));
             *c++ = '/';                 // put a slash before filename
             static char s_news[] = "News";
-            interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename.c_str());
-                                // generate a default name somehow or other
+            interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename);
+            // generate a default name somehow or other
         }
         make_dir(s, MD_FILE);
         if (!FILE_REF(s))       // relative path?
@@ -410,7 +410,7 @@ SaveResult save_article()
             }
             else
             {
-                const char *dflt = (in_string(savename.data(), "%a", true) ? "nyq" : "ynq");
+                const char *dflt = (in_string(savename, "%a", true) ? "nyq" : "ynq");
 
                 std::sprintf(g_cmd_buf,
                 "\nFile %s doesn't exist--\n        use mailbox format?",s);

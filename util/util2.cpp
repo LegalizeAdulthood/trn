@@ -218,9 +218,9 @@ char *file_exp(const char *text)
 
 // return ptr to little string in big string, nullptr if not found
 
-char *in_string(char *big, const char *little, bool case_matters)
+const char *in_string(const char *big, const char *little, bool case_matters)
 {
-    for (char *t = big; *t; t++)
+    for (const char *t = big; *t; t++)
     {
         const char *s = little;
         for (const char *x = t; *s; x++, s++)
@@ -256,11 +256,11 @@ char *in_string(char *big, const char *little, bool case_matters)
                 {
                     d = *x;
                 }
-                if ( c != d )
+                if (c != d)
                 {
                     break;
                 }
-           }
+            }
         }
         if (!*s)
         {
@@ -268,6 +268,11 @@ char *in_string(char *big, const char *little, bool case_matters)
         }
     }
     return nullptr;
+}
+
+char *in_string(char *big, const char *little, bool case_matters)
+{
+    return const_cast<char *>(in_string(static_cast<const char *>(big), little, case_matters));
 }
 
 char *read_auth_file(const char *file, char **pass_ptr)
