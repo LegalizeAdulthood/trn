@@ -2226,9 +2226,10 @@ static int do_indent(char *t)
 
 static const char *find_attr(const char *str, const char *attr)
 {
-    int len = std::strlen(attr);
-    const char* cp = str;
-    const char* s;
+    const std::string_view attr_text{attr};
+    const int              len = static_cast<int>(attr_text.size());
+    const char            *cp = str;
+    const char            *s;
 
     while ((cp = std::strchr(cp + 1, '=')) != nullptr)
     {
@@ -2239,7 +2240,7 @@ static const char *find_attr(const char *str, const char *attr)
         {
             cp++;
         }
-        if (s - str > len && s[-len-1] == ' ' && string_case_equal(s-len, attr,len))
+        if (s - str > len && s[-len - 1] == ' ' && string_case_equal(s - len, attr, len))
         {
             return cp + 1;
         }
