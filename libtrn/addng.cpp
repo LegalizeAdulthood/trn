@@ -46,7 +46,7 @@ static void process_list(GetNewsgroupFlags flag);
 static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
 static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch);
-static void add_to_list(const char *name, int to_read, char_int ch);
+static void add_to_list(std::string_view name, int to_read, char_int ch);
 static int  list_groups(int key_len, HashDatum *data, int add_matching);
 static void scan_active_line(char *active_line, bool add_matching);
 static int  add_group_order_number(const AddGroup **app1, const AddGroup **app2);
@@ -343,20 +343,21 @@ static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_
     hash_store(ng, name, data);
 }
 
-static void add_to_list(const char *name, int to_read, char_int ch)
+static void add_to_list(std::string_view name, int to_read, char_int ch)
 {
     AddGroup* node = g_first_add_group;
 
     while (node)
     {
-        if (!std::strcmp(node->m_name,name))
+        if (std::string_view{node->m_name} == name)
         {
             return;
         }
         node = node->m_next;
     }
 
-    node = (AddGroup*)safe_malloc(std::strlen(name) + sizeof (AddGroup));
+    const std::size_t name_len = name.size();
+    node = (AddGroup *) safe_malloc(static_cast<MemorySize>(name_len + sizeof(AddGroup)));
     switch (ch)
     {
     case ':':
@@ -371,7 +372,11 @@ static void add_to_list(const char *name, int to_read, char_int ch)
     }
     value_of(node->m_to_read) = (to_read < 0) ? 0 : to_read;
     value_of(node->m_num) = s_add_group_count++;
-    std::strcpy(node->m_name, name);
+    if (!name.empty())
+    {
+        std::memcpy(node->m_name, name.data(), name_len);
+    }
+    node->m_name[name_len] = '\0';
     node->m_data_src = g_data_source;
     node->m_next = nullptr;
     node->m_prev = g_last_add_group;

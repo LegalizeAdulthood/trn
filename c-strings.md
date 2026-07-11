@@ -96,11 +96,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-16. `libtrn/addng.cpp`, `add_to_list`: promote `name` to
-    `std::string_view`.  Compare existing list entries with a view,
-    allocate and copy into `node->m_name`, and store only the node-owned
-    copy.
-
 17. `libtrn/color.cpp`, `color_string`: promote `str` to
     `std::string_view`.  Strip a trailing newline by view, use `fwrite`
     for normal color output, and create a local `std::string` only for
