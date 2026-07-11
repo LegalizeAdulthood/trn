@@ -1,6 +1,7 @@
 /* sw.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/sw.h>
 
@@ -28,6 +29,8 @@
 static char **s_init_environment_strings{};
 static int    s_init_environment_cnt{};
 static int    s_init_environment_max{};
+
+static void save_init_environment(char *str);
 
 void sw_file(char **tcbufptr)
 {
@@ -545,7 +548,7 @@ void decode_switch(const char *s)
     }
 }
 
-void save_init_environment(char *str)
+static void save_init_environment(char *str)
 {
     if (s_init_environment_cnt >= s_init_environment_max)
     {

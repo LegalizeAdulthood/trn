@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-33. `libtrn/sw.cpp`: move declarations from
-    `libtrn/include/trn/sw.h`.
-    Functions: `save_init_environment`.
-
 SL-34. `libtrn/terminal.cpp`: move declarations from
     `libtrn/include/trn/terminal.h`.
     Functions: `alarm_catcher`, `circfill`, `edit_buf`, `reprint`,
