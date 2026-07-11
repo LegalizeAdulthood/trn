@@ -89,10 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-8. `libtrn/nntp.cpp`, `nntp_stat_id`: promote `msg_id` to
-   `std::string_view`.  Build a local `std::string` before formatting
-   the `STAT` command.
-
 9. `libtrn/datasrc.cpp`, `DataSource::find_group_desc`: promote
    `group_name` to `std::string_view`.  Use the view for hash lookup
    and length calculations; create a local `std::string` only for

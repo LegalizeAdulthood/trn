@@ -175,10 +175,11 @@ int nntp_stat(ArticleNum art_num)
 
 // check on an article's existence by its message id
 
-ArticleNum nntp_stat_id(const char *msg_id)
+ArticleNum nntp_stat_id(std::string_view msg_id)
 {
-    std::sprintf(g_ser_line, "STAT %s", msg_id);
-    if (nntp_command(g_ser_line) <= 0)
+    std::string command{"STAT "};
+    command.append(msg_id.data(), msg_id.size());
+    if (nntp_command(command) <= 0)
     {
         return ArticleNum{-2};
     }
