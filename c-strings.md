@@ -75,12 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-15. `libtrn/hash.cpp`, `hash_delete`
-
-   Promote the public key pair to `std::string_view` in the
-   implementation and `libtrn/include/trn/hash.h`.  Do this after
-   `hash_find` and after the fetch/store call sites are compiling.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,

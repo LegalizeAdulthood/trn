@@ -132,10 +132,9 @@ void hash_store(HashTable *tbl, std::string_view key, HashDatum data)
     hp->he_data = data;             // supersede any old data for this key
 }
 
-void hash_delete(HashTable *tbl, const char *key, int key_len)
+void hash_delete(HashTable *tbl, std::string_view key)
 {
-    HashEntry **nextp = hash_find(
-            tbl, std::string_view{key, static_cast<std::string_view::size_type>(key_len)});
+    HashEntry **nextp = hash_find(tbl, key);
     HashEntry *hp = *nextp;
     if (hp == nullptr)                  // absent
     {

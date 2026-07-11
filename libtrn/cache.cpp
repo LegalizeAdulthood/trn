@@ -294,7 +294,7 @@ void Article::uncache_article(bool remove_empties)
             {
                 sp->m_next->m_prev = sp->m_prev;
             }
-            hash_delete(s_subj_hash, sp->m_str+4, std::strlen(sp->m_str+4));
+            hash_delete(s_subj_hash, sp->m_str + 4);
             std::free((char*)sp);
             m_subj = nullptr;
             g_subject_count--;
@@ -385,7 +385,7 @@ void Article::set_subj_line(std::string_view subj)
     if (m_subj)
     {
         // This only happens when we freshen truncated subjects
-        hash_delete(s_subj_hash, m_subj->m_str+4, std::strlen(m_subj->m_str+4));
+        hash_delete(s_subj_hash, m_subj->m_str + 4);
         std::free(m_subj->m_str);
         m_subj->m_str = new_subj;
         data.dat_ptr = (char*)m_subj;

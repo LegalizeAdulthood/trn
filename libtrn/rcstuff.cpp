@@ -1587,7 +1587,11 @@ reask_bogus:
         {
             for (np = g_last_newsgroup; np && np->m_to_read == TR_BOGUS; np = np->m_prev)
             {
-                hash_delete(g_newsrc_hash, np->m_rc_line, np->m_num_offset - 1);
+                hash_delete(
+                        g_newsrc_hash,
+                        std::string_view{
+                                np->m_rc_line,
+                                static_cast<std::size_t>(np->m_num_offset - 1)});
                 clear_newsgroup_item((char*)np,0);
                 --g_newsgroup_count;
             }
