@@ -1,6 +1,7 @@
 /* trn/rthread.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RTHREAD_H
 #define TRN_RTHREAD_H
 
@@ -37,7 +38,6 @@ void     dec_article(bool sel_flag, bool rereading);
 bool     next_article_with_subj();
 bool     prev_article_with_subj();
 Subject *next_subject(Subject *sp, int subj_mask);
-Subject *prev_subject(Subject *sp, int subj_mask);
 void     select_sub_thread(Article *ap, AutoKillFlags auto_flags);
 void     deselect_all();
 void     kill_sub_thread(Article *ap, AutoKillFlags auto_flags);

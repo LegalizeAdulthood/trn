@@ -1,6 +1,7 @@
 /* rthread.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rthread.h>
 
@@ -64,6 +65,7 @@ static int      article_order_groups(const Article **art1, const Article **art2)
 static int      article_order_lines(const Article **art1, const Article **art2);
 static int      article_order_score(const Article **art1, const Article **art2);
 static void     build_article_ptrs();
+static Subject *prev_subject(Subject *sp, int subj_mask);
 
 void thread_init()
 {
@@ -616,7 +618,7 @@ Subject *next_subject(Subject *sp, int subj_mask)
 
 // TODO: why is sp tested against nullptr?
 //
-Subject *prev_subject(Subject *sp, int subj_mask)
+static Subject *prev_subject(Subject *sp, int subj_mask)
 {
     if (!sp)
     {

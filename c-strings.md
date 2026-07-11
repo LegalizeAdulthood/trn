@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-21. `libtrn/rthread.cpp`: move declarations from
-    `libtrn/include/trn/rthread.h`.
-    Functions: `prev_subject`.
-
 SL-22. `libtrn/sacmd.cpp`: move declarations from
     `libtrn/include/trn/sacmd.h`.
     Functions: `sa_art_cmd`, `sa_art_cmd_prim`, `sa_extract_start`,
