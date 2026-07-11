@@ -1,6 +1,7 @@
 /* trn/rt-process.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RT_PROCESS_H
 #define TRN_RT_PROCESS_H
 
@@ -10,7 +11,6 @@
 struct Article;
 struct Subject;
 
-Article *allocate_article(ArticleNum artnum);
 int      msg_id_cmp(std::string_view key, HashDatum data);
 Article *get_article(char *msgid);
 void     merge_threads(Subject *s1, Subject *s2);

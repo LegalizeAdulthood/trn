@@ -25,8 +25,10 @@
 #include <cstring>
 #include <string_view>
 
+static Article *allocate_article(ArticleNum artnum);
+
 // This depends on art being set to the current article number.
-Article *allocate_article(ArticleNum artnum)
+static Article *allocate_article(ArticleNum artnum)
 {
     Article* article;
 
