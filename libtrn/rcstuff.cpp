@@ -1648,8 +1648,11 @@ void set_hash(NewsgroupData *np)
 
 static int rcline_cmp(const char *key, int keylen, HashDatum data)
 {
-    // We already know that the lengths are equal, just compare the strings
-    return std::memcmp(key, ((NewsgroupData*)data.dat_ptr)->m_rc_line, keylen);
+    const std::string_view key_view{key, static_cast<std::string_view::size_type>(keylen)};
+    const auto            *newsgroup = (NewsgroupData *) data.dat_ptr;
+    const std::string_view rc_line{newsgroup->m_rc_line, key_view.size()};
+
+    return key_view.compare(rc_line);
 }
 
 // checkpoint the newsrc(s)

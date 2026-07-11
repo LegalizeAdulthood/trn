@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-21. `libtrn/rcstuff.cpp`, `rcline_cmp`
-
-   Locally derive a key view from the callback `key/keylen` pair and
-   compare it against `NewsgroupData::m_rc_line`.  This prepares the
-   newsrc hash comparator while preserving newsrc line storage.
-
 22. `libtrn/hash.cpp`, `hash_find`
 
    After comparator bodies are view-clean, promote `HashCompareFunc` in
