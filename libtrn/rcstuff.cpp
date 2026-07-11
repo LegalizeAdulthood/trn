@@ -983,8 +983,7 @@ check_fuzzy_match:
                 continue;
             }
             // TODO: this may scan a datasrc multiple times...
-            if (rp->data_source->find_active_group(g_buf, g_newsgroup_name.c_str(), g_newsgroup_name.length(),
-                                                   ArticleNum{}))
+            if (rp->data_source->find_active_group(g_buf, g_newsgroup_name, ArticleNum{}))
             {
                 break; // TODO: let them choose which server
             }

@@ -1,6 +1,7 @@
 /* ngdata.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/ngdata.h>
 
@@ -34,6 +35,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 List          *g_newsgroup_data_list{};    // a list of NGDATA
 int            g_newsgroup_data_count{};   //
@@ -358,7 +360,8 @@ ArticleNum NewsgroupData::get_newsgroup_size()
     char *nam = m_rc_line;
     int   len = m_num_offset - 1;
 
-    if (!m_rc->data_source->find_active_group(tmpbuf, nam, len, m_ng_max))
+    if (!m_rc->data_source->find_active_group(
+            tmpbuf, std::string_view{nam, static_cast<std::size_t>(len)}, m_ng_max))
     {
         if (m_subscribe_char == ':')
         {

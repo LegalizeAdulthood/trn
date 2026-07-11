@@ -1,6 +1,7 @@
 /* trn/datasrc.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
@@ -13,6 +14,7 @@
 #include <cstdio>
 #include <ctime>
 #include <string>
+#include <string_view>
 
 enum
 {
@@ -73,7 +75,7 @@ struct DataSource
     bool             open();
     void             close();
     bool             active_file_hash();
-    bool             find_active_group(char *outbuf, const char *nam, int len, ArticleNum high);
+    bool             find_active_group(char *outbuf, std::string_view name, ArticleNum high);
     const char      *find_group_desc(const char *group_name);
     inline NNTPFlags nntp_flags() const;
     void             nntp_server_died();

@@ -28,6 +28,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <ctime>
 
 AddGroup *g_first_add_group{};
@@ -198,7 +199,10 @@ static void new_nntp_groups(DataSource *dp)
         }
         if (dp->m_act_sf.m_fp)
         {
-            if (dp->find_active_group(g_buf, g_ser_line, len, ArticleNum{}))
+            if (dp->find_active_group(
+                    g_buf,
+                    std::string_view{g_ser_line, static_cast<std::size_t>(len)},
+                    ArticleNum{}))
             {
                 if (!s)
                 {
@@ -278,7 +282,10 @@ static void new_local_groups(DataSource *dp)
         }
         *s = '\0';
         char tmp_buf[LINE_BUF_LEN];
-        if (!g_data_source->find_active_group(tmp_buf, g_buf, s - g_buf, ArticleNum{}))
+        if (!g_data_source->find_active_group(
+                tmp_buf,
+                std::string_view{g_buf, static_cast<std::size_t>(s - g_buf)},
+                ArticleNum{}))
         {
             continue;
         }

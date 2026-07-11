@@ -75,14 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-10. `libtrn/datasrc.cpp`, `DataSource::find_active_group`
-
-   Promote the `nam/len` pair to `std::string_view` in the method and
-   `libtrn/include/trn/datasrc.h`.  Keep `outbuf` mutable.  After
-   `nntp_list` accepts a view, pass the group name through without
-   rebuilding pointer/length pairs; keep hash calls at their current
-   boundary until the hash API is promoted.
-
 11. `libtrn/hash.cpp`, `hash`
 
    Promote the private `key/keylen` pair to `std::string_view`.  This is

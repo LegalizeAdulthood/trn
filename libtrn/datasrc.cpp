@@ -657,17 +657,19 @@ bool DataSource::active_file_hash()
     return ret != 0;
 }
 
-bool DataSource::find_active_group(char *outbuf, const char *nam, int len, ArticleNum high)
+bool DataSource::find_active_group(char *outbuf, std::string_view name, ArticleNum high)
 {
     ActivePosition act_pos;
     std::FILE* fp = m_act_sf.m_fp;
     char* lbp;
     int lbp_len;
+    const char* name_data = name.empty() ? "" : name.data();
+    const int name_len = static_cast<int>(name.size());
 
     // Do a quick, hashed lookup
 
     outbuf[0] = '\0';
-    HashDatum data = hash_fetch(m_act_sf.m_hp, nam, len);
+    HashDatum data = hash_fetch(m_act_sf.m_hp, name_data, name_len);
     if (data.dat_ptr)
     {
         ListNode* node = (ListNode*)data.dat_ptr;
@@ -686,10 +688,7 @@ bool DataSource::find_active_group(char *outbuf, const char *nam, int len, Artic
     {
         DataSource* save_datasrc = g_data_source;
         set_data_source(this);
-        const std::string_view name_arg{
-                nam != nullptr ? nam : "",
-                nam != nullptr && len > 0 ? static_cast<std::size_t>(len) : 0};
-        switch (nntp_list("active", name_arg))
+        switch (nntp_list("active", name))
         {
         case 0:
             set_data_source(save_datasrc);
@@ -709,7 +708,7 @@ bool DataSource::find_active_group(char *outbuf, const char *nam, int len, Artic
         {
             if (fp)
             {
-                (void) m_act_sf.append(outbuf, len);
+                (void) m_act_sf.append(outbuf, name_len);
             }
             return true;
         }
@@ -738,7 +737,7 @@ bool DataSource::find_active_group(char *outbuf, const char *nam, int len, Artic
             }
         }
 # endif
-        high = ArticleNum{std::atol(outbuf+len+1)};
+        high = ArticleNum{std::atol(outbuf + name_len + 1)};
     }
 
     if (lbp_len)
@@ -746,7 +745,7 @@ bool DataSource::find_active_group(char *outbuf, const char *nam, int len, Artic
         if ((m_flags & DF_REMOTE) && m_act_sf.m_refetch_secs)
         {
             char* cp;
-            if (high && high != ArticleNum{std::atol(cp = lbp + len + 1)})
+            if (high && high != ArticleNum{std::atol(cp = lbp + name_len + 1)})
             {
                 cp = skip_digits(cp);
                 while (*--cp != ' ')
@@ -768,7 +767,7 @@ bool DataSource::find_active_group(char *outbuf, const char *nam, int len, Artic
         // discard/close the active file, and re-open it.
         if (std::fseek(fp, act_pos.value_of(), 0) >= 0         //
             && std::fgets(outbuf, LINE_BUF_LEN, fp) != nullptr //
-            && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ')
+            && !std::strncmp(outbuf, name_data, name_len) && outbuf[name_len] == ' ')
         {
             // Remember the latest info in our cache.
             (void) std::memcpy(lbp,outbuf,lbp_len);
