@@ -25,7 +25,6 @@ void rcln_init();
 int  add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_name);
 #ifdef MCHASE
 void sub_art_num(DataSource *dp, ArticleNum art_num, char *ng_name);
-void prange(char *where, ArticleNum min_num, ArticleNum max_num);
 #endif
 bool was_read_group(ArticleNum artnum, std::string_view ngnam);
 

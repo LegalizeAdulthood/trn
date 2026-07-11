@@ -28,6 +28,10 @@ enum
 
 bool g_to_read_quiet{};
 
+#ifdef MCHASE
+static void prange(char *where, ART_NUM min, ART_NUM max);
+#endif
+
 void rcln_init()
 {
 }
@@ -419,7 +423,7 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, char *ng_name)
     }
 }
 
-void prange(char *where, ART_NUM min, ART_NUM max)
+static void prange(char *where, ART_NUM min, ART_NUM max)
 {
     if (min == max)
     {

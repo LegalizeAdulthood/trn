@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-14. `libtrn/rcln.cpp`: move declarations from
-    `libtrn/include/trn/rcln.h`.
-    Functions: `prange`.
-
 SL-15. `libtrn/rcstuff.cpp`: move declarations from
     `libtrn/include/trn/rcstuff.h`.
     Functions: `new_newsrc`, `set_hash`.
