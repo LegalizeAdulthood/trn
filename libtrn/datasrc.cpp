@@ -105,7 +105,7 @@ static IniWords s_datasrc_ini[] =
 
 static char       *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
 static char       *file_or_none(char *fn);
-static int         source_file_cmp(const char *key, int key_len, HashDatum data);
+static int         source_file_cmp(std::string_view key, HashDatum data);
 static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int         get_near_miss();
 static DataSource *new_data_source(const char *name, char **vals);
@@ -1180,13 +1180,12 @@ void SourceFile::close()
     }
 }
 
-static int source_file_cmp(const char *key, int key_len, HashDatum data)
+static int source_file_cmp(std::string_view key, HashDatum data)
 {
-    const std::string_view key_view{key, static_cast<std::string_view::size_type>(key_len)};
     const auto            *node = (ListNode *) data.dat_ptr;
-    const std::string_view line_key{node->data + data.dat_len, key_view.size()};
+    const std::string_view line_key{node->data + data.dat_len, key.size()};
 
-    return key_view.compare(line_key);
+    return key.compare(line_key);
 }
 
 // Edit Distance extension to trn

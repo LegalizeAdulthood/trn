@@ -50,7 +50,7 @@ void  change_join_subject_len(int len);
 const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
 int   decode_header(char *to, std::string_view from);
 void  dectrl(char *str);
-int   subject_cmp(const char *key, int key_len, HashDatum data);
+int   subject_cmp(std::string_view key, HashDatum data);
 #ifdef PENDING
 void look_ahead();
 #endif

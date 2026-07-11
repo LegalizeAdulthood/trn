@@ -18,7 +18,7 @@ struct HashDatum
 
 struct HashTable;
 
-using HashCompareFunc = int (*)(const char *key, int key_len, HashDatum data);
+using HashCompareFunc = int (*)(std::string_view key, HashDatum data);
 using HashWalkFunc = int (*)(int key_len, HashDatum *data, int extra);
 
 HashTable *hash_create(unsigned size, HashCompareFunc cmp_func);

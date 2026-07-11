@@ -59,13 +59,12 @@ void fix_msg_id(char *msgid)
     }
 }
 
-int msg_id_cmp(const char *key, int key_len, HashDatum data)
+int msg_id_cmp(std::string_view key, HashDatum data)
 {
-    const std::string_view key_view{key, static_cast<std::string_view::size_type>(key_len)};
     const char            *msg_id = data.dat_len ? data.dat_ptr : ((Article *) data.dat_ptr)->m_msg_id;
-    const std::string_view msg_id_view{msg_id, key_view.size()};
+    const std::string_view msg_id_view{msg_id, key.size()};
 
-    return key_view.compare(msg_id_view);
+    return key.compare(msg_id_view);
 }
 
 // Take a message-id and see if we already know about it.  If so, return

@@ -11,7 +11,7 @@ struct Article;
 struct Subject;
 
 Article *allocate_article(ArticleNum artnum);
-int      msg_id_cmp(const char *key, int key_len, HashDatum data);
+int      msg_id_cmp(std::string_view key, HashDatum data);
 Article *get_article(char *msgid);
 void     merge_threads(Subject *s1, Subject *s2);
 void     fix_msg_id(char *msgid);

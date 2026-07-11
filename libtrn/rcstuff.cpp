@@ -75,7 +75,7 @@ static bool    open_newsrc(Newsrc *rp);
 static void    init_newsgroup_node(List *list, ListNode *node);
 static void    parse_rcline(NewsgroupData *np);
 static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c);
-static int     rcline_cmp(const char *key, int keylen, HashDatum data);
+static int     rcline_cmp(std::string_view key, HashDatum data);
 
 inline NewsgroupData *newsgroup_data_ptr(int ngnum)
 {
@@ -1646,13 +1646,12 @@ void set_hash(NewsgroupData *np)
             data);
 }
 
-static int rcline_cmp(const char *key, int keylen, HashDatum data)
+static int rcline_cmp(std::string_view key, HashDatum data)
 {
-    const std::string_view key_view{key, static_cast<std::string_view::size_type>(keylen)};
     const auto            *newsgroup = (NewsgroupData *) data.dat_ptr;
-    const std::string_view rc_line{newsgroup->m_rc_line, key_view.size()};
+    const std::string_view rc_line{newsgroup->m_rc_line, key.size()};
 
-    return key_view.compare(rc_line);
+    return key.compare(rc_line);
 }
 
 // checkpoint the newsrc(s)

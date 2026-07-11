@@ -52,14 +52,13 @@ int remove_matching_datum(int, HashDatum *data, int extra)
     return data->dat_len == static_cast<unsigned>(extra) ? -1 : 0;
 }
 
-int case_insensitive_cmp(const char *key, int key_len, HashDatum data)
+int case_insensitive_cmp(std::string_view key, HashDatum data)
 {
-    const std::string_view key_view{key, static_cast<std::string_view::size_type>(key_len)};
-    const std::string_view data_view{data.dat_ptr, static_cast<std::string_view::size_type>(key_len)};
+    const std::string_view data_view{data.dat_ptr, key.size()};
 
-    for (std::string_view::size_type idx = 0; idx < key_view.size(); ++idx)
+    for (std::string_view::size_type idx = 0; idx < key.size(); ++idx)
     {
-        const auto key_ch = static_cast<unsigned char>(key_view[idx]);
+        const auto key_ch = static_cast<unsigned char>(key[idx]);
         const auto data_ch = static_cast<unsigned char>(data_view[idx]);
         const int  diff = std::tolower(key_ch) - std::tolower(data_ch);
 

@@ -81,14 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-22. `libtrn/hash.cpp`, `hash_find`
-
-   After comparator bodies are view-clean, promote `HashCompareFunc` in
-   `libtrn/include/trn/hash.h` to take `std::string_view` and pass the
-   existing key view from `hash_find`.  This is a coordinated callback
-   API slice: the typedef and comparator declarations must change
-   together, but the behavioral center is `hash_find`.
-
 23. `libtrn/rcstuff.cpp`, `find_newsgroup`
 
    Promote `ngnam` to `std::string_view` in the function and

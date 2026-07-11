@@ -580,13 +580,12 @@ void dectrl(char *str)
     }
 }
 
-int subject_cmp(const char *key, int key_len, HashDatum data)
+int subject_cmp(std::string_view key, HashDatum data)
 {
-    const std::string_view key_view{key, static_cast<std::string_view::size_type>(key_len)};
     const auto            *subject = (Subject *) data.dat_ptr;
-    const std::string_view subject_text{subject->m_str + 4, key_view.size()};
+    const std::string_view subject_text{subject->m_str + 4, key.size()};
 
-    return key_view.compare(subject_text);
+    return key.compare(subject_text);
 }
 
 // see what we can do while they are reading

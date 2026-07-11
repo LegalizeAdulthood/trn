@@ -39,7 +39,7 @@ struct HashTable
 
 static HashEntry **hash_find(HashTable *tbl, std::string_view key);
 static unsigned    hash(std::string_view key);
-static int         default_cmp(const char *key, int keylen, HashDatum data);
+static int         default_cmp(std::string_view key, HashDatum data);
 static HashEntry  *hash_entry_alloc();
 static void        hash_entry_free(HashEntry *hp);
 
@@ -221,7 +221,6 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 static HashEntry **hash_find(HashTable *tbl, std::string_view key)
 {
     HashEntry* prevhp = nullptr;
-    const char* key_data = key.empty() ? "" : key.data();
     const int key_len = static_cast<int>(key.size());
 
     if (BADTBL(tbl))
@@ -233,7 +232,7 @@ static HashEntry **hash_find(HashTable *tbl, std::string_view key)
     HashEntry **hepp = &tbl->ht_addr[hash(key) % size];
     for (HashEntry *hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next)
     {
-        if (hp->he_key_len == key_len && !(*tbl->ht_cmp)(key_data, key_len, hp->he_data))
+        if (hp->he_key_len == key_len && !(*tbl->ht_cmp)(key, hp->he_data))
         {
             break;
         }
@@ -254,13 +253,10 @@ static unsigned hash(std::string_view key)
     return hash_value;
 }
 
-static int default_cmp(const char *key, int keylen, HashDatum data)
+static int default_cmp(std::string_view key, HashDatum data)
 {
-    const std::string_view key_view{
-            key, static_cast<std::string_view::size_type>(keylen)};
-
     // We already know that the lengths are equal, just compare the strings
-    return std::memcmp(key_view.data(), data.dat_ptr, key_view.size());
+    return std::memcmp(key.data(), data.dat_ptr, key.size());
 }
 
 // allocate a hash entry

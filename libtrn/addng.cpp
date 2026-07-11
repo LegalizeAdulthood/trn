@@ -40,7 +40,7 @@ bool      g_use_add_selector{true}; //
 
 static int s_add_group_count{};
 
-static int  add_newsgroup_cmp(const char *key, int key_len, HashDatum data);
+static int  add_newsgroup_cmp(std::string_view key, HashDatum data);
 static int  build_add_group_list(int key_len, HashDatum *data, int extra);
 static void process_list(GetNewsgroupFlags flag);
 static void new_nntp_groups(DataSource *dp);
@@ -53,13 +53,12 @@ static int  add_group_order_number(const AddGroup **app1, const AddGroup **app2)
 static int  add_group_order_group_name(const AddGroup **app1, const AddGroup **app2);
 static int  add_group_order_count(const AddGroup **app1, const AddGroup **app2);
 
-static int add_newsgroup_cmp(const char *key, int key_len, HashDatum data)
+static int add_newsgroup_cmp(std::string_view key, HashDatum data)
 {
-    const std::string_view key_view{key, static_cast<std::string_view::size_type>(key_len)};
     const auto            *group = (AddGroup *) data.dat_ptr;
-    const std::string_view group_name{group->m_name, key_view.size()};
+    const std::string_view group_name{group->m_name, key.size()};
 
-    return key_view.compare(group_name);
+    return key.compare(group_name);
 }
 
 static int build_add_group_list(int key_len, HashDatum *data, int extra)
