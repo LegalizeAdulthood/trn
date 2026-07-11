@@ -34,8 +34,12 @@ static char s_url_host[256];
 static int  s_url_port;
 static char s_url_path[1024];
 
+static bool fetch_http(const char *host, int port, const char *path, const char *outname);
+static bool fetch_ftp(const char *host, const char *origpath, const char *outname);
+static bool parse_url(std::string_view url);
+
 // returns true if successful
-bool fetch_http(const char *host, int port, const char *path, const char *outname)
+static bool fetch_http(const char *host, int port, const char *path, const char *outname)
 {
     asio::io_context context;
     asio::ip::tcp::resolver s_resolver(context);
@@ -92,7 +96,7 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
 }
 
 // add port support later?
-bool fetch_ftp(const char *host, const char *origpath, const char *outname)
+static bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 {
 #ifdef USE_FTP
     static char cmdline[1024];
@@ -164,7 +168,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 // right now only full, absolute URLs are allowed.
 // use relative URLs later?
 // later: pay more attention to long URLs
-bool parse_url(std::string_view url)
+static bool parse_url(std::string_view url)
 {
     // consider using 0 as default to look up the service?
     s_url_port = 80; // the default

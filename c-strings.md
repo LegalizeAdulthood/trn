@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-36. `libtrn/url.cpp`: move declarations from
-    `libtrn/include/trn/url.h`.
-    Functions: `fetch_ftp`, `fetch_http`, `parse_url`.
-
 SL-37. `nntp/nntpinit.cpp`: move declarations from
     `nntp/include/nntp/nntpinit.h`.
     Functions: `get_tcp_socket`.
