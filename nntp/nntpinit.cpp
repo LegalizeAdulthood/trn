@@ -1,6 +1,7 @@
 /* nntpinit.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <nntp/nntpinit.h>
 
@@ -27,6 +28,8 @@ static ConnectionFactory       s_nntp_connection_factory;
 
 using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code_t = boost::system::error_code;
+
+static int get_tcp_socket(const char *machine, int port, const char *service);
 
 class NNTPConnection : public INNTPConnection
 {
@@ -156,7 +159,7 @@ void cleanup_nntp()
 {
 }
 
-int get_tcp_socket(const char *machine, int port, const char *service)
+static int get_tcp_socket(const char *machine, int port, const char *service)
 {
     int s;
 #if INET6

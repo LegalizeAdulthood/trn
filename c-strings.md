@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-37. `nntp/nntpinit.cpp`: move declarations from
-    `nntp/include/nntp/nntpinit.h`.
-    Functions: `get_tcp_socket`.
-
 ### Local Modernization Slices
 
 17. `libtrn/color.cpp`, `color_string`: promote `str` to
