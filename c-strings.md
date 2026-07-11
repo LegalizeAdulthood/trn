@@ -89,10 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-7. `libtrn/nntp.cpp`, `nntp_group`: promote `group` to
-   `std::string_view`.  Build a local `std::string` for `sprintf` and
-   diagnostics, then pass owned command text to `nntp_command`.
-
 8. `libtrn/nntp.cpp`, `nntp_stat_id`: promote `msg_id` to
    `std::string_view`.  Build a local `std::string` before formatting
    the `STAT` command.

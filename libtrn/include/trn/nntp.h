@@ -29,7 +29,7 @@ enum
 
 int             nntp_list(const char *type, std::string_view arg);
 void            nntp_finish_list();
-int             nntp_group(const char *group, NewsgroupData *gp);
+int             nntp_group(std::string_view group, NewsgroupData *gp);
 int             nntp_stat(ArticleNum art_num);
 ArticleNum      nntp_stat_id(const char *msg_id);
 ArticleNum      nntp_next_art();

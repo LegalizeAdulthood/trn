@@ -108,10 +108,12 @@ void nntp_finish_list()
 
 // try to access the specified group
 
-int nntp_group(const char *group, NewsgroupData *gp)
+int nntp_group(std::string_view group, NewsgroupData *gp)
 {
-    sprintf(g_ser_line, "GROUP %s", group);
-    if (nntp_command(g_ser_line) <= 0)
+    const std::string group_name{group};
+    std::string       command{"GROUP "};
+    command += group_name;
+    if (nntp_command(command) <= 0)
     {
         return -2;
     }
@@ -131,7 +133,7 @@ int nntp_group(const char *group, NewsgroupData *gp)
                   && ser_int != NNTP_AUTH_REJECT_VAL)
               {
                 std::fprintf(stderr, "\nServer's response to GROUP %s:\n%s\n",
-                        group, g_ser_line);
+                        group_name.c_str(), g_ser_line);
                 return -1;
             }
         }
