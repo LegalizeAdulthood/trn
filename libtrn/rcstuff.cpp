@@ -69,12 +69,14 @@ static const char *s_cant_recreate{"Can't recreate %s -- restoring older version
                                    "Perhaps you are near or over quota?\n"};
 
 static bool    clear_newsgroup_item(char *cp, int arg);
+static Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
 static bool    lock_newsrc(Newsrc *rp);
 static void    unlock_newsrc(Newsrc *rp);
 static bool    open_newsrc(Newsrc *rp);
 static void    init_newsgroup_node(List *list, ListNode *node);
 static void    parse_rcline(NewsgroupData *np);
 static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c);
+static void    set_hash(NewsgroupData *np);
 static int     rcline_cmp(std::string_view key, HashDatum data);
 
 inline NewsgroupData *newsgroup_data_ptr(int ngnum)
@@ -188,7 +190,7 @@ void rcstuff_final()
     s_rcgroups_ini[0].help_str = nullptr;
 }
 
-Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
+static Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 {
     if (!name || !*name)
     {
@@ -1635,7 +1637,7 @@ reask_bogus:
 
 // make an entry in the hash table for the current newsgroup
 
-void set_hash(NewsgroupData *np)
+static void set_hash(NewsgroupData *np)
 {
     HashDatum data;
     data.dat_ptr = (char*)np;

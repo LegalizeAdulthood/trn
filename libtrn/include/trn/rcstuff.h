@@ -98,13 +98,11 @@ extern bool       g_append_unsub;       // -I
 
 bool           rcstuff_init();
 void           rcstuff_final();
-Newsrc        *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
 void           unuse_multirc(Multirc *mptr);
 bool           get_newsgroup(const char *what, GetNewsgroupFlags flags);
 void           list_newsgroups();
 NewsgroupData *find_newsgroup(std::string_view ngnam);
 void           cleanup_newsrc(Newsrc *rp);
-void           set_hash(NewsgroupData *np);
 void           checkpoint_newsrcs();
 bool           write_newsrcs(Multirc *mptr);
 void           get_old_newsrcs(Multirc *mptr);
