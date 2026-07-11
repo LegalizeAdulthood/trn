@@ -1,6 +1,7 @@
 /* trn/head.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_HEAD_H
 #define TRN_HEAD_H
 
@@ -105,12 +106,10 @@ void dumpheader(char *where);
 HeaderLineType set_line_type(char *bufptr, const char *colon);
 HeaderLineType get_header_num(char *s);
 void           start_header(ArticleNum artnum);
-void           end_header_line();
 bool           parse_line(char *art_buf, int new_hide, int old_hide);
 void           end_header();
 bool           parse_header(ArticleNum art_num);
 char          *fetch_lines(ArticleNum art_num, HeaderLineType which_line);
-char          *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool);
 char          *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy);
 inline char   *fetch_subj(ArticleNum art_num, bool copy)
 {

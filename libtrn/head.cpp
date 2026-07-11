@@ -100,6 +100,9 @@ static bool           s_first_one; // is this the 1st occurrence of this header 
 static bool           s_reading_nntp_header;
 static HeaderLineType s_htypeix[26]{};
 
+static void  end_header_line();
+static char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool);
+
 void head_init()
 {
     for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
@@ -257,7 +260,7 @@ void start_header(ArticleNum artnum)
     s_parsed_artp = article_ptr(artnum);
 }
 
-void end_header_line()
+static void end_header_line()
 {
     if (s_first_one)            // did we just pass 1st occurrence?
     {
@@ -539,7 +542,7 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
 // ArticleNum art_num           article to get line from
 // HeaderLineType which_line    type of line desired
 // MemoryPool pool              which memory pool to use
-char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool)
+static char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool)
 {
     char* s;
 
