@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-9. `libtrn/kfile.cpp`: move declarations from
-    `libtrn/include/trn/kfile.h`.
-    Functions: `do_kill_file`, `rewrite_kill_file`.
-
 SL-10. `libtrn/list.cpp`: move declarations from
     `libtrn/include/trn/list.h`.
     Functions: `list_init`.

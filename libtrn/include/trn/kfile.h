@@ -1,6 +1,7 @@
 /* trn/kfile.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_KFILE_H
 #define TRN_KFILE_H
 
@@ -69,9 +70,7 @@ extern int                g_kf_change_thread_cnt;  // # entries changed from old
 extern ArticleNum         g_kill_first;            // used as g_first_art when killing
 
 void kill_file_init();
-int  do_kill_file(std::FILE *kfp, int entering);
 void kill_unwanted(ArticleNum starting, const char *message, int entering);
-void rewrite_kill_file(ArticleNum thru);
 void update_thread_kill_file();
 void edit_kill_file();
 void open_kill_file(int local);

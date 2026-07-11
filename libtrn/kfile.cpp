@@ -43,6 +43,8 @@ ArticleNum         g_kill_first{};            // used as g_firstart when killing
 
 static void mention(const char *str);
 static bool kill_file_junk(char *ptr, int killmask);
+static int  do_kill_file(std::FILE *kfp, int entering);
+static void rewrite_kill_file(ArticleNum thru);
 static int  write_local_thread_commands(int keylen, HashDatum *data, int extra);
 static int  write_global_thread_commands(int keylen, HashDatum *data, int appending);
 static int  age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
@@ -146,7 +148,7 @@ static void mention(const char *str)
     std::fflush(stdout);
 }
 
-int do_kill_file(std::FILE *kfp, int entering)
+static int do_kill_file(std::FILE *kfp, int entering)
 {
     bool first_time = (entering && !g_kill_first);
     char last_kill_type = '\0';
@@ -499,7 +501,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
     return 0;
 }
 
-void rewrite_kill_file(ArticleNum thru)
+static void rewrite_kill_file(ArticleNum thru)
 {
     bool has_content = (g_kf_state & (KFS_THREAD_LINES|KFS_GLOBAL_THREAD_FILE))
                                  == KFS_THREAD_LINES;
