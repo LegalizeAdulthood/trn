@@ -74,6 +74,13 @@ The strongest new opportunities are:
 - NNTP command builders that can accept views after making local
   null-terminated strings for `sprintf`, diagnostics, or transport.
 
+The current rerun, after completing slices 10 and 11, found another
+bottom-up batch: leaf copy helpers, bounded token helpers, display
+helpers, and wrappers that already copy into `std::string` or heap
+storage.  The remaining `std::string_view{ptr, len}` hits are still
+mutable source buffers, cache append boundaries, or already-deferred
+ownership changes.
+
 ## Refactoring Slices
 
 Each slice centers on one function.  Add local includes and update the
@@ -89,7 +96,52 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-No remaining slices.
+12. `libtrn/util.cpp`, `not_incl`: promote `feature` to
+    `std::string_view` and print it with a bounded field width.
+
+13. `util/util2.cpp`, `save_str`: promote `str` to
+    `std::string_view`.  Allocate from `str.size()`, copy bytes, append
+    the terminator, and update `util/util2.h`.
+
+14. `libtrn/mime.cpp`, `mime_find_param`: promote `param` to
+    `std::string_view`.  Use `param.size()` for the bounded compare and
+    keep the returned pointer into `s`.
+
+15. `libtrn/scoresave.cpp`, `sc_sv_add`: promote `str` to
+    `std::string_view` after `save_str` accepts views.  Store the saved
+    heap copy in `s_lines`.
+
+16. `libtrn/addng.cpp`, `add_to_list`: promote `name` to
+    `std::string_view`.  Compare existing list entries with a view,
+    allocate and copy into `node->m_name`, and store only the node-owned
+    copy.
+
+17. `libtrn/color.cpp`, `color_string`: promote `str` to
+    `std::string_view`.  Strip a trailing newline by view, use `fwrite`
+    for normal color output, and create a local `std::string` only for
+    `under_print`.
+
+18. `libtrn/autosub.cpp`, `match_list`: promote `s` to
+    `std::string_view`.  Keep pattern slicing as views and create a
+    local `std::string` only for `CompiledRegex::execute`.
+
+19. `libtrn/autosub.cpp`, `auto_subscribe`: promote `name` to
+    `std::string_view`.  Pass the view to `match_list`; environment
+    values remain C strings at the boundary.
+
+20. `libtrn/opt.cpp`, `set_header`: promote `s` to
+    `std::string_view`.  Use view length for header prefix comparisons
+    and copy into `g_user_header_type[i].name` when saving a user
+    header.
+
+21. `libtrn/opt.cpp`, `set_header_list`: promote `str` to
+    `std::string_view`.  Build one mutable `std::string` for comma
+    tokenization and pass tokens to `set_header`.
+
+22. `libtrn/opt.cpp`, `quote_string`: promote `val` to
+    `std::string_view`.  Build the static return buffer from the view in
+    both quoted and unquoted cases so returned text stays
+    null-terminated.
 
 ## Defer
 
@@ -102,6 +154,9 @@ No remaining slices.
   const-friendly first.
 - `util/util2.cpp`, `file_exp`: it returns a static C buffer and feeds
   `do_interp`.  Convert only with a broader filename-expansion slice.
+- `libtrn/mempool.cpp`, `mp_save_str`: it has an explicit `nullptr`
+  diagnostic path.  Promote only with an overload or a broader call-site
+  audit that preserves that behavior.
 - `libtrn/util.cpp`, INI parsing helpers: they update caller `char **`
   cursors and write into caller buffers.
 - `config/string_case_compare.cpp`, length-limited overloads: `len` is
