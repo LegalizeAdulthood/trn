@@ -3,6 +3,7 @@
  * Scan initialization/cleanup and context control.
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/scan.h>
 
@@ -49,7 +50,10 @@ ScanContextType g_s_cur_type{};      // current context type (for fast switching
 int g_s_item_num{true}; // show item numbers by default
 int g_s_mode_vi{};
 
-void s_init_context(int cnum, ScanContextType type)
+static void s_init_context(int cnum, ScanContextType type);
+static void s_clean_contexts();
+
+static void s_init_context(int cnum, ScanContextType type)
 {
     // g_s_num_contexts not incremented until last moment
     if (cnum < 0 || cnum > g_s_num_contexts)
@@ -206,7 +210,7 @@ void s_change_context(int newcontext)
 }
 
 // implement later?
-void s_clean_contexts()
+static void s_clean_contexts()
 {
 }
 

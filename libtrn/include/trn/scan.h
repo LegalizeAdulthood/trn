@@ -3,6 +3,7 @@
  * (Mostly scan context declarations.)
  */
 // This file Copyright 1992,1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_SCAN_H
 #define TRN_SCAN_H
 
@@ -113,11 +114,9 @@ extern ScanContextType g_s_cur_type;    // current context type (for fast switch
 extern int g_s_item_num; // show item numbers by default
 extern int g_s_mode_vi;
 
-void s_init_context(int cnum, ScanContextType type);
 int  s_new_context(ScanContextType type);
 void s_save_context();
 void s_change_context(int newcontext);
-void s_clean_contexts();
 void s_delete_context(int cnum);
 
 #endif
