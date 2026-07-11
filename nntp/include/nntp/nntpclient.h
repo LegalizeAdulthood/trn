@@ -117,7 +117,7 @@ void  set_nntp_connection_factory(ConnectionFactory factory);
 int   nntp_connect(const char *machine, bool verbose);
 char *nntp_server_name(char *name);
 int   nntp_command(std::string_view bp);
-int   nntp_xgtitle(const char *groupname);
+int   nntp_xgtitle(std::string_view groupname);
 int   nntp_check();
 bool  nntp_at_list_end(const char *s);
 enum NNTPGetsResult

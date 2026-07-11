@@ -89,10 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-6. `nntp/nntpclient.cpp`, `nntp_xgtitle`: promote `groupname` to
-   `std::string_view`.  Build a local `std::string` for the
-   `XGTITLE` command text, then pass the command to `nntp_command`.
-
 7. `libtrn/nntp.cpp`, `nntp_group`: promote `group` to
    `std::string_view`.  Build a local `std::string` for `sprintf` and
    diagnostics, then pass owned command text to `nntp_command`.

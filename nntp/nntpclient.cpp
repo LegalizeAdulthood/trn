@@ -200,10 +200,11 @@ int nntp_command(std::string_view bp)
     return 1;
 }
 
-int nntp_xgtitle(const char *groupname)
+int nntp_xgtitle(std::string_view groupname)
 {
-    std::sprintf(g_ser_line, "XGTITLE %s", groupname);
-    const int status = nntp_command(g_ser_line);
+    std::string command{"XGTITLE "};
+    command.append(groupname.data(), groupname.size());
+    const int status = nntp_command(command);
     if (status <= 0)
     {
         return status;
