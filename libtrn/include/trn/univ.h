@@ -3,6 +3,7 @@
 /* Universal selector
  *
  */
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_UNIV_H
 #define TRN_UNIV_H
 
@@ -149,7 +150,7 @@ void           univ_close();
 UniversalItem *univ_add(UniversalItemType type, const char *desc);
 void           univ_add_text(const char *txt);
 void           univ_add_debug(const char *desc, const char *txt);
-void           univ_add_group(const char *desc, const char *grpname);
+void           univ_add_group(const char *desc, std::string_view grpname);
 void           univ_add_mask(const char *desc, const char *mask);
 void           univ_add_file(const char *desc, const char *fname, const char *label);
 UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art);

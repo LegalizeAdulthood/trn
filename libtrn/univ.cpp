@@ -279,12 +279,11 @@ void univ_add_debug(const char *desc, const char *txt)
     ui->m_data.str = save_str(txt);
 }
 
-void univ_add_group(const char *desc, const char *grpname)
+void univ_add_group(const char *desc, std::string_view grpname)
 {
     UniversalItem* ui;
 
-    const char *s = grpname;
-    if (!s)
+    if (grpname.data() == nullptr)
     {
         return;
     }
@@ -295,7 +294,8 @@ void univ_add_group(const char *desc, const char *grpname)
         g_univ_ng_hash = hash_create(701, nullptr);
     }
 
-    HashDatum data = hash_fetch(g_univ_ng_hash, grpname);
+    HashDatum         data = hash_fetch(g_univ_ng_hash, grpname);
+    const std::string group_name{grpname};
 
     if (data.dat_ptr)
     {
@@ -304,7 +304,7 @@ void univ_add_group(const char *desc, const char *grpname)
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
             if ((ui->m_type == UN_GROUP_DESEL) && ui->m_data.group.ng //
-                && !strcmp(ui->m_data.group.ng, grpname))
+                && !strcmp(ui->m_data.group.ng, group_name.c_str()))
             {
                 // undelete the newsgroup
                 ui->m_type = UN_NEWSGROUP;
@@ -313,7 +313,7 @@ void univ_add_group(const char *desc, const char *grpname)
         return;
     }
     ui = univ_add(UN_NEWSGROUP,desc);
-    ui->m_data.group.ng = save_str(grpname);
+    ui->m_data.group.ng = save_str(group_name.c_str());
     data.dat_ptr = ui->m_data.group.ng;
     hash_store_last(data);
 }

@@ -81,13 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-25. `libtrn/univ.cpp`, `univ_add_group`
-
-   Promote `grpname` to `std::string_view` in the function and
-   `libtrn/include/trn/univ.h`.  Hash lookup can use the view directly;
-   build a local `std::string` only at legacy `strcmp` and `save_str`
-   boundaries.  Universal items must keep owning copied group names.
-
 26. `libtrn/univ.cpp`, `univ_add_virtual_group`
 
    Promote `grpname` to `std::string_view` in the function and
