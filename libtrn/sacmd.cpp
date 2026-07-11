@@ -3,6 +3,7 @@
  * main command loop
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/sacmd.h>
 
@@ -33,6 +34,11 @@
 
 static char *s_sa_extract_dest{}; // use this command on an extracted file
 static bool  s_sa_extract_junk{}; // junk articles after extracting them
+
+static bool sa_extract_start();
+static void sa_art_cmd_prim(SaCommand cmd, long a);
+static int  sa_art_cmd(int multiple, SaCommand cmd, long a);
+static long sa_wrap_next_author(long a);
 
 // several basic commands are already done by s_docmd (Scan level)
 // interprets command in g_buf, returning 0 to continue looping,
@@ -607,7 +613,7 @@ int sa_do_cmd()
     return 0;
 }
 
-bool sa_extract_start()
+static bool sa_extract_start()
 {
     if (s_sa_extract_dest == nullptr)
     {
@@ -638,7 +644,7 @@ bool sa_extract_start()
 
 
 // sa_art_cmd primitive: actually does work on an article
-void sa_art_cmd_prim(SaCommand cmd, long a)
+static void sa_art_cmd_prim(SaCommand cmd, long a)
 {
     ArticleNum artnum = g_sa_ents[a].artnum;
 // do more onpage status refreshes when in unread+read mode?
@@ -712,7 +718,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
 // int multiple;                // follow the thread?
 // int cmd;             // what to do
 // long a;              // article # to affect or start with
-int sa_art_cmd(int multiple, SaCommand cmd, long a)
+static int sa_art_cmd(int multiple, SaCommand cmd, long a)
 {
     sa_art_cmd_prim(cmd,a);     // do the first article
     if (!multiple)
@@ -729,7 +735,7 @@ int sa_art_cmd(int multiple, SaCommand cmd, long a)
 }
 
 // XXX this needs a good long thinking session before re-activating
-long sa_wrap_next_author(long a)
+static long sa_wrap_next_author(long a)
 {
 #ifdef UNDEF
     long b;

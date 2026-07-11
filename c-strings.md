@@ -102,11 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-22. `libtrn/sacmd.cpp`: move declarations from
-    `libtrn/include/trn/sacmd.h`.
-    Functions: `sa_art_cmd`, `sa_art_cmd_prim`, `sa_extract_start`,
-    `sa_wrap_next_author`.
-
 SL-23. `libtrn/samain.cpp`: move declarations from
     `libtrn/include/trn/samain.h`.
     Functions: `sa_add_ent`, `sa_clean_ents`, `sa_init_arts`,

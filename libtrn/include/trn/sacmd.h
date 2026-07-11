@@ -3,6 +3,7 @@
  * main command loop
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_SACMD_H
 #define TRN_SACMD_H
 
@@ -17,9 +18,5 @@ enum SaCommand
 };
 
 int sa_do_cmd();
-bool sa_extract_start();
-void sa_art_cmd_prim(SaCommand cmd, long a);
-int sa_art_cmd(int multiple, SaCommand cmd, long a);
-long sa_wrap_next_author(long a);
 
 #endif
