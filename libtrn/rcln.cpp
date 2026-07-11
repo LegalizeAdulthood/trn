@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 enum
 {
@@ -84,7 +85,7 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
 
 // add an article number to a newsgroup, if it isn't already read
 
-int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
+int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_name)
 {
     char*   s;
     char*   t;
@@ -109,7 +110,8 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 #ifdef DEBUG
         if (g_debug & DEB_XREF_MARKER)
         {
-            std::printf("Cross-host xref to group %s ignored.\n",newsgroup_name);
+            const std::string group_name{newsgroup_name};
+            std::printf("Cross-host xref to group %s ignored.\n", group_name.c_str());
         }
 #endif
         return 0;
