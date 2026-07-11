@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-20. `libtrn/rt-util.cpp`: move declarations from
-    `libtrn/include/trn/rt-util.h`.
-    Functions: `compress_address`.
-
 SL-21. `libtrn/rthread.cpp`: move declarations from
     `libtrn/include/trn/rthread.h`.
     Functions: `prev_subject`.

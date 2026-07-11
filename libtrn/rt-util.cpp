@@ -2,6 +2,7 @@
 *  vi: set sw=4 ts=8 ai sm noet :
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rt-util.h>
 
@@ -36,6 +37,7 @@ bool g_unbroken_subjects{};      // -u
 
 static int s_spin_marks{25}; // how many bargraph marks we want
 
+static char *compress_address(char *name, int max);
 static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);
 
 // Name-munging routines written by Ross Ridge.
@@ -458,7 +460,7 @@ try_again:
 // the addresses as possible.  The order of precedence is @ ! %, but
 // @ % ! may be better...
 //
-char *compress_address(char *name, int max)
+static char *compress_address(char *name, int max)
 {
     char*start;
 

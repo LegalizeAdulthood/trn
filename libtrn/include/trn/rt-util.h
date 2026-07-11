@@ -1,6 +1,7 @@
 /* trn/rt-util.h
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RT_UTIL_H
 #define TRN_RT_UTIL_H
 
@@ -25,7 +26,6 @@ enum SpinMode
 
 char *extract_name(char *name);
 char *compress_name(char *name, int max);
-char *compress_address(char *name, int max);
 char *compress_from(const char *from, int size);
 bool strip_one_re(char *str, char **strp);
 bool subject_has_re(char *str, char **strp);
