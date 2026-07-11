@@ -2,6 +2,7 @@
  *
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_SCOREFILE_H
 #define TRN_SCOREFILE_H
 
@@ -41,9 +42,6 @@ extern bool g_sf_verbose;       // if true print more stuff while loading
 
 void sf_init();
 void sf_clean();
-void sf_grow();
-int sf_check_extra_headers(const char *head);
-void sf_add_extra_header(const char *head);
 
 // Returns true if text pointed to by s is a text representation of
 // the number 0.  Used for error checking.
@@ -54,19 +52,8 @@ inline bool is_text_zero(const char *s)
     return *s == '0' || ((*s == '+' || *s == '-') && s[1]=='0');
 }
 
-char *sf_get_filename(int level);
-char *sf_cmd_fname(char *s);
-bool  sf_do_command(char *cmd, bool check);
-char *sf_freeform(char *start1, char *end1);
-bool  sf_do_line(char *line, bool check);
-void  sf_do_file(const char *fname);
-int   score_match(char *str, int ind);
 int   sf_score(ArticleNum a);
-char *sf_missing_score(const char *line);
 void  sf_append(char *line);
-char *sf_get_line(ArticleNum a, HeaderLineType h);
-void  sf_print_match(int indx);
-void  sf_exclude_file(const char *fname);
 void  sf_edit_file(const char *filespec);
 
 #endif

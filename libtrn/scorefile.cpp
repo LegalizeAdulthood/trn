@@ -70,6 +70,20 @@ static CompiledRegex  *s_sf_compex{};
 static int sf_open_file(const char *name);
 static void sf_file_clear();
 static char *sf_file_get_line(int fnum);
+static void  sf_grow();
+static int   sf_check_extra_headers(const char *head);
+static void  sf_add_extra_header(const char *head);
+static char *sf_get_filename(int level);
+static char *sf_cmd_fname(char *s);
+static bool  sf_do_command(char *cmd, bool check);
+static char *sf_freeform(char *start1, char *end1);
+static bool  sf_do_line(char *line, bool check);
+static void  sf_do_file(const char *fname);
+static int   score_match(char *str, int ind);
+static char *sf_missing_score(const char *line);
+static char *sf_get_line(ArticleNum a, HeaderLineType h);
+static void  sf_print_match(int indx);
+static void  sf_exclude_file(const char *fname);
 
 // Must be called before any other sf_ routine (once for each group)
 void sf_init()
@@ -225,7 +239,7 @@ void sf_clean()
     s_sf_extra_headers = nullptr;
 }
 
-void sf_grow()
+static void sf_grow()
 {
     g_sf_num_entries++;
     if (g_sf_num_entries == 1)
@@ -244,7 +258,7 @@ void sf_grow()
 // into the s_sf_extra_headers array.
 //
 //char* head;           // header name, (without ':' character)
-int sf_check_extra_headers(const char *head)
+static int sf_check_extra_headers(const char *head)
 {
     static char lbuf[LINE_BUF_LEN];
 
@@ -271,7 +285,7 @@ int sf_check_extra_headers(const char *head)
 // known.
 //
 //char* head;           // new header name, (without ':' character)
-void sf_add_extra_header(const char *head)
+static void sf_add_extra_header(const char *head)
 {
     static char lbuf[LINE_BUF_LEN]; // ick.
 
@@ -347,7 +361,7 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 static char s_sf_file[LINE_BUF_LEN];
 
 // filenames of type a/b/c/foo.bar.misc for group foo.bar.misc
-char *sf_get_filename(int level)
+static char *sf_get_filename(int level)
 {
     std::strcpy(s_sf_file,file_exp(get_val_const("SCOREDIR",DEFAULT_SCOREDIR)));
     std::strcat(s_sf_file,"/");
@@ -379,7 +393,7 @@ char *sf_get_filename(int level)
 }
 
 // given a string, if no slashes prepends SCOREDIR env. variable
-char *sf_cmd_fname(char *s)
+static char *sf_cmd_fname(char *s)
 {
     static char lbuf[LINE_BUF_LEN];
 
@@ -398,7 +412,7 @@ char *sf_cmd_fname(char *s)
 // returns true if good command, false otherwise
 //char* cmd;            // text of command
 //bool check;           // if true, just check, don't execute
-bool sf_do_command(char *cmd, bool check)
+static bool sf_do_command(char *cmd, bool check)
 {
     char* s;
     int i;
@@ -613,7 +627,7 @@ bool sf_do_command(char *cmd, bool check)
 
 //char* start1;         // points to first character of keyword
 //char* end1;           // points to last  character of keyword
-char *sf_freeform(char *start1, char *end1)
+static char *sf_freeform(char *start1, char *end1)
 {
     char*s;
 
@@ -672,7 +686,7 @@ char *sf_freeform(char *start1, char *end1)
 }
 
 //bool check;           // if true, just check the line, don't act.
-bool sf_do_line(char *line, bool check)
+static bool sf_do_line(char *line, bool check)
 {
     if (!line || !*line)
     {
@@ -819,7 +833,7 @@ bool sf_do_line(char *line, bool check)
     return true;
 }
 
-void sf_do_file(const char *fname)
+static void sf_do_file(const char *fname)
 {
     char*s;
 
@@ -865,7 +879,7 @@ void sf_do_file(const char *fname)
 
 //char* str;            // string to match on
 //int ind;              // index into s_sf_entries
-int score_match(char *str, int ind)
+static int score_match(char *str, int ind)
 {
     const char *s1 = s_sf_entries[ind].str1;
     const char *s2 = s_sf_entries[ind].str2;
@@ -996,7 +1010,7 @@ int sf_score(ArticleNum a)
 }
 
 // returns changed score line or nullptr if no changes
-char *sf_missing_score(const char *line)
+static char *sf_missing_score(const char *line)
 {
     static char lbuf[LINE_BUF_LEN];
 
@@ -1159,7 +1173,7 @@ void sf_append(char *line)
 }
 
 // returns a lowercased copy of the header line type h in private buffer
-char *sf_get_line(ArticleNum a, HeaderLineType h)
+static char *sf_get_line(ArticleNum a, HeaderLineType h)
 {
     static char sf_getline[LINE_BUF_LEN];
     std::string_view line;
@@ -1221,7 +1235,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
 }
 
 // given an index into s_sf_entries, print information about that index
-void sf_print_match(int indx)
+static void sf_print_match(int indx)
 {
     int  i;
     int  level; // level is initialized iff used
@@ -1298,7 +1312,7 @@ void sf_print_match(int indx)
     std::printf("\n");
 }
 
-void sf_exclude_file(const char *fname)
+static void sf_exclude_file(const char *fname)
 {
     int       start;
     int       end;
