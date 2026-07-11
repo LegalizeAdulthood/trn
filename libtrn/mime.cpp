@@ -855,12 +855,12 @@ char *mime_parse_params(char *str)
     return str;
 }
 
-char *mime_find_param(char *s, const char *param)
+char *mime_find_param(char *s, std::string_view param)
 {
-    int param_len = std::strlen(param);
+    const int param_len = static_cast<int>(param.size());
     while (s && *s)
     {
-        if (string_case_equal(s, param, param_len) && s[param_len] == '=')
+        if (string_case_equal(s, param.data(), param_len) && s[param_len] == '=')
         {
             return s + param_len + 1;
         }

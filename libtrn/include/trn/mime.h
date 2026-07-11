@@ -180,7 +180,7 @@ void          mime_parse_sub_header(std::FILE *ifp, char *next_line);
 void          mime_set_state(char *bp);
 int           mime_end_of_section(char *bp);
 char         *mime_parse_params(char *str);
-char         *mime_find_param(char *s, const char *param);
+char         *mime_find_param(char *s, std::string_view param);
 char         *mime_skip_whitespace(char *s);
 void          mime_decode_article(bool view);
 int           qp_decode_string(char *t, const char *f, bool in_header);

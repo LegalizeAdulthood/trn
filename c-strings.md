@@ -96,10 +96,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-14. `libtrn/mime.cpp`, `mime_find_param`: promote `param` to
-    `std::string_view`.  Use `param.size()` for the bounded compare and
-    keep the returned pointer into `s`.
-
 15. `libtrn/scoresave.cpp`, `sc_sv_add`: promote `str` to
     `std::string_view` after `save_str` accepts views.  Store the saved
     heap copy in `s_lines`.
