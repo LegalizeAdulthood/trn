@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-13. `libtrn/opt.cpp`: move declarations from
-    `libtrn/include/trn/opt.h`.
-    Functions: `opt_file`.
-
 SL-14. `libtrn/rcln.cpp`: move declarations from
     `libtrn/include/trn/rcln.h`.
     Functions: `prange`.

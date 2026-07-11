@@ -1,6 +1,7 @@
 /* opt.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/opt.h>
 
@@ -49,6 +50,8 @@
 #include <cstring>
 #include <memory>
 #include <string>
+
+static void opt_file(const char *filename, char **tcbufptr, bool bleat);
 
 CompiledRegex g_opt_compex;
 std::string   g_ini_file;
@@ -281,7 +284,7 @@ void opt_final()
     safe_free0(g_sel_grp_display_mode);
 }
 
-void opt_file(const char *filename, char **tcbufptr, bool bleat)
+static void opt_file(const char *filename, char **tcbufptr, bool bleat)
 {
     char*filebuf = *tcbufptr;
     char*section;

@@ -1,6 +1,7 @@
 /* trn/opt.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_OPT_H
 #define TRN_OPT_H
 
@@ -145,7 +146,6 @@ extern int           g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
-void        opt_file(const char *filename, char **tcbufptr, bool bleat);
 void        set_options(char **vals);
 void        set_option(OptionIndex num, const char *s);
 void        save_options(const char *filename);
