@@ -81,13 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-24. `libtrn/addng.cpp`, `add_to_hash`
-
-   Promote `name` to `std::string_view`.  Use the view size for the
-   flexible `AddGroup` allocation, copy the name with `std::memcpy`, and
-   pass the view to `hash_store`.  The node owns `m_name`, so no local
-   view storage escapes.
-
 25. `libtrn/univ.cpp`, `univ_add_group`
 
    Promote `grpname` to `std::string_view` in the function and
