@@ -782,9 +782,9 @@ use_cache:
     return false;       // no such group
 }
 
-const char *DataSource::find_group_desc(const char *group_name)
+const char *DataSource::find_group_desc(std::string_view group_name)
 {
-    int grouplen;
+    const int grouplen = static_cast<int>(group_name.size());
 
     if (!m_group_desc)
     {
@@ -801,7 +801,6 @@ const char *DataSource::find_group_desc(const char *group_name)
                 && g_net_speed < 5)
             {
                 (void) m_desc_sf.open(nullptr, nullptr, nullptr);
-                grouplen = std::strlen(group_name);
                 goto try_xgtitle;
             }
             g_spin_todo = m_desc_sf.m_recent_cnt;
@@ -832,11 +831,7 @@ const char *DataSource::find_group_desc(const char *group_name)
         }
     }
 
-    grouplen = std::strlen(group_name);
-    if (HashDatum data = hash_fetch(
-                m_desc_sf.m_hp,
-                std::string_view{group_name, static_cast<std::size_t>(grouplen)});
-        data.dat_ptr)
+    if (HashDatum data = hash_fetch(m_desc_sf.m_hp, group_name); data.dat_ptr)
     {
         ListNode*node = (ListNode*)data.dat_ptr;
         // m_act_sf.lp->recent = node;
@@ -852,15 +847,16 @@ try_xgtitle:
             nntp_gets(g_buf, sizeof g_buf - 1); // TODO: check return value?
             if (nntp_at_list_end(g_buf))
             {
-                std::sprintf(g_buf, "%s \n", group_name);
+                const std::string group_name_string{group_name};
+                std::snprintf(g_buf, sizeof g_buf, "%s \n", group_name_string.c_str());
             }
             else
             {
                 nntp_finish_list();
                 std::strcat(g_buf, "\n");
             }
-            group_name = m_desc_sf.append(g_buf, grouplen);
-            return group_name+grouplen+1;
+            const char *stored_group = m_desc_sf.append(g_buf, grouplen);
+            return stored_group + grouplen + 1;
         }
         m_flags |= DF_NO_XGTITLE;
         if (m_desc_sf.m_lp->m_high == -1)

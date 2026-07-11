@@ -89,11 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-9. `libtrn/datasrc.cpp`, `DataSource::find_group_desc`: promote
-   `group_name` to `std::string_view`.  Use the view for hash lookup
-   and length calculations; create a local `std::string` only for
-   `nntp_xgtitle`, `sprintf`, and append paths that need a terminator.
-
 10. `libtrn/mime.cpp`, `mime_types_match`: promote `pat` to
     `std::string_view`.  Keep wildcard parsing on the view and create a
     local `std::string` only while the case-compare helpers still need
