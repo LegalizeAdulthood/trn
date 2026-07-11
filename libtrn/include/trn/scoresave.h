@@ -2,14 +2,17 @@
  *
  */
 // This file Copyright 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_SCORESAVE_H
 #define TRN_SCORESAVE_H
 
 #include <config/typedef.h>
 
+#include <string_view>
+
 extern int g_sc_loaded_count; // how many articles were loaded?
 
-void       sc_sv_add(const char *str);
+void       sc_sv_add(std::string_view str);
 void       sc_sv_del_group(const char *gname);
 void       sc_sv_get_file();
 void       sc_sv_save_file();

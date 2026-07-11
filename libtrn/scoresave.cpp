@@ -3,6 +3,7 @@
  * Saving/restoring scores from a file.
  */
 // This file Copyright 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/scoresave.h>
 
@@ -36,7 +37,7 @@ static int        s_used{};
 static int        s_saved{};
 static ArticleNum s_last{};
 
-void sc_sv_add(const char *str)
+void sc_sv_add(std::string_view str)
 {
     if (s_num_lines == s_lines_alloc)
     {

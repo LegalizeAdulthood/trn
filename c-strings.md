@@ -96,10 +96,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-15. `libtrn/scoresave.cpp`, `sc_sv_add`: promote `str` to
-    `std::string_view` after `save_str` accepts views.  Store the saved
-    heap copy in `s_lines`.
-
 16. `libtrn/addng.cpp`, `add_to_list`: promote `name` to
     `std::string_view`.  Compare existing list entries with a view,
     allocate and copy into `node->m_name`, and store only the node-owned
