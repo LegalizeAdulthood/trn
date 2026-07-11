@@ -94,6 +94,179 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
+### Static-Linkage Slices
+
+These slices move top-level functions that are declared in public headers
+but referenced only inside their implementation file.  For each slice,
+remove the listed declarations from the public header, add file-scope
+forward declarations near the top of the implementation file, and make
+both declarations and definitions `static`.
+
+SL-1. `libtrn/art.cpp`: move declarations from
+    `libtrn/include/trn/art.h`.
+    Functions: `inner_more`, `maybe_set_color`.
+
+SL-2. `libtrn/cache.cpp`: move declarations from
+    `libtrn/include/trn/cache.h`.
+    Functions: `art_data`, `cache_all_arts`, `cache_unread_arts`,
+    `cache_xrefs`, `subject_cmp`.
+    Leave inactive `cache_subjects` alone while `PENDING` is disabled.
+
+SL-3. `libtrn/charsubst.cpp`: move declarations from
+    `libtrn/include/trn/charsubst.h`.
+    Functions: `put_subst_char`.
+
+SL-4. `libtrn/datasrc.cpp`: move declarations from
+    `libtrn/include/trn/datasrc.h`.
+    Functions: `read_data_sources`.
+
+SL-5. `libtrn/decode.cpp`: move declarations from
+    `libtrn/include/trn/decode.h`.
+    Functions: `decode_function`, `decode_mkdir`, `decode_rmdir`.
+
+SL-6. `libtrn/final.cpp`: move declarations from
+    `libtrn/include/trn/final.h`.
+    Functions: `pipe_catcher`.
+
+SL-7. `libtrn/head.cpp`: move declarations from
+    `libtrn/include/trn/head.h`.
+    Functions: `end_header_line`, `mp_fetch_lines`.
+
+SL-8. `libtrn/init.cpp`: move declarations from
+    `libtrn/include/trn/init.h`.
+    Functions: `news_news_check`.
+
+SL-9. `libtrn/kfile.cpp`: move declarations from
+    `libtrn/include/trn/kfile.h`.
+    Functions: `do_kill_file`, `rewrite_kill_file`.
+
+SL-10. `libtrn/list.cpp`: move declarations from
+    `libtrn/include/trn/list.h`.
+    Functions: `list_init`.
+
+SL-11. `libtrn/mime.cpp`: move declarations from
+    `libtrn/include/trn/mime.h`.
+    Functions: `mime_find_param`, `mime_init_sections`,
+    `mime_pop_section`, `mime_skip_whitespace`.
+
+SL-12. `libtrn/nntp.cpp`: move declarations from
+    `libtrn/include/trn/nntp.h`.
+    Functions: `nntp_next_art`, `nntp_read`, `nntp_read_check`.
+
+SL-13. `libtrn/opt.cpp`: move declarations from
+    `libtrn/include/trn/opt.h`.
+    Functions: `opt_file`.
+
+SL-14. `libtrn/rcln.cpp`: move declarations from
+    `libtrn/include/trn/rcln.h`.
+    Functions: `prange`.
+
+SL-15. `libtrn/rcstuff.cpp`: move declarations from
+    `libtrn/include/trn/rcstuff.h`.
+    Functions: `new_newsrc`, `set_hash`.
+
+SL-16. `libtrn/respond.cpp`: move declarations from
+    `libtrn/include/trn/respond.h`.
+    Functions: `invoke`.
+
+SL-17. `libtrn/rt-ov.cpp`: move declarations from
+    `libtrn/include/trn/rt-ov.h`.
+    Functions: `ov_field_name`.
+
+SL-18. `libtrn/rt-page.cpp`: move declarations from
+    `libtrn/include/trn/rt-page.h`.
+    Functions: `display_page_title`.
+
+SL-19. `libtrn/rt-process.cpp`: move declarations from
+    `libtrn/include/trn/rt-process.h`.
+    Functions: `allocate_article`.
+
+SL-20. `libtrn/rt-util.cpp`: move declarations from
+    `libtrn/include/trn/rt-util.h`.
+    Functions: `compress_address`.
+
+SL-21. `libtrn/rthread.cpp`: move declarations from
+    `libtrn/include/trn/rthread.h`.
+    Functions: `prev_subject`.
+
+SL-22. `libtrn/sacmd.cpp`: move declarations from
+    `libtrn/include/trn/sacmd.h`.
+    Functions: `sa_art_cmd`, `sa_art_cmd_prim`, `sa_extract_start`,
+    `sa_wrap_next_author`.
+
+SL-23. `libtrn/samain.cpp`: move declarations from
+    `libtrn/include/trn/samain.h`.
+    Functions: `sa_add_ent`, `sa_clean_ents`, `sa_init_arts`,
+    `sa_init_context`, `sa_init_ents`, `sa_init_mode`.
+
+SL-24. `libtrn/sathread.cpp`: move declarations from
+    `libtrn/include/trn/sathread.h`.
+    Functions: `sa_get_subj_thread`.
+
+SL-25. `libtrn/scan.cpp`: move declarations from
+    `libtrn/include/trn/scan.h`.
+    Functions: `s_clean_contexts`, `s_init_context`.
+
+SL-26. `libtrn/scmd.cpp`: move declarations from
+    `libtrn/include/trn/scmd.h`.
+    Functions: `s_backward_search`, `s_do_cmd`, `s_forward_search`,
+    `s_jump_num`, `s_look_ahead`, `s_match_description`, `s_search`.
+
+SL-27. `libtrn/score.cpp`: move declarations from
+    `libtrn/include/trn/score.h`.
+    Functions: `sc_rescore_arts`, `sc_score_art_basic`.
+
+SL-28. `libtrn/scorefile.cpp`: move declarations from
+    `libtrn/include/trn/scorefile.h`.
+    Functions: `score_match`, `sf_add_extra_header`,
+    `sf_check_extra_headers`, `sf_cmd_fname`, `sf_do_command`,
+    `sf_do_file`, `sf_do_line`, `sf_exclude_file`, `sf_freeform`,
+    `sf_get_filename`, `sf_get_line`, `sf_grow`, `sf_missing_score`,
+    `sf_print_match`.
+
+SL-29. `libtrn/scoresave.cpp`: move declarations from
+    `libtrn/include/trn/scoresave.h`.
+    Functions: `sc_sv_add`, `sc_sv_del_group`, `sc_sv_get_file`,
+    `sc_sv_make_line`, `sc_sv_use_line`.
+
+SL-30. `libtrn/sdisp.cpp`: move declarations from
+    `libtrn/include/trn/sdisp.h`.
+    Functions: `s_ref_entry`, `s_refresh_bot`, `s_refresh_description`,
+    `s_refresh_ent_zone`, `s_refresh_status`, `s_refresh_top`.
+
+SL-31. `libtrn/sorder.cpp`: move declarations from
+    `libtrn/include/trn/sorder.h`.
+    Functions: `s_sort_basic`.
+
+SL-32. `libtrn/spage.cpp`: move declarations from
+    `libtrn/include/trn/spage.h`.
+    Functions: `s_clean_page`.
+
+SL-33. `libtrn/sw.cpp`: move declarations from
+    `libtrn/include/trn/sw.h`.
+    Functions: `save_init_environment`.
+
+SL-34. `libtrn/terminal.cpp`: move declarations from
+    `libtrn/include/trn/terminal.h`.
+    Functions: `alarm_catcher`, `circfill`, `edit_buf`, `reprint`,
+    `xmouse_on`.
+
+SL-35. `libtrn/univ.cpp`: move declarations from
+    `libtrn/include/trn/univ.h`.
+    Functions: `univ_add`, `univ_add_debug`, `univ_add_file`,
+    `univ_add_group`, `univ_add_mask`, `univ_add_text`,
+    `univ_add_text_file`, `univ_add_virt_num`,
+    `univ_add_virtual_group`, `univ_open`, `univ_use_group_line`,
+    `univ_use_pattern`.
+
+SL-36. `libtrn/url.cpp`: move declarations from
+    `libtrn/include/trn/url.h`.
+    Functions: `fetch_ftp`, `fetch_http`, `parse_url`.
+
+SL-37. `nntp/nntpinit.cpp`: move declarations from
+    `nntp/include/nntp/nntpinit.h`.
+    Functions: `get_tcp_socket`.
+
 ### Local Modernization Slices
 
 17. `libtrn/color.cpp`, `color_string`: promote `str` to
