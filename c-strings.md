@@ -89,10 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-2. `libtrn/rcln.cpp`, `was_read_group`: promote `ngnam` to
-   `std::string_view` and pass it directly to `find_newsgroup`.  The
-   argument is not modified and does not need a terminator locally.
-
 3. `libtrn/rcln.cpp`, `add_art_num`: promote `newsgroup_name` to
    `std::string_view` and pass it directly to `find_newsgroup`.  If the
    debug-only diagnostic remains, create a local `std::string` and pass

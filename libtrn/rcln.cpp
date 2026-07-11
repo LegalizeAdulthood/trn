@@ -1,6 +1,7 @@
 /* rcln.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rcln.h>
 
@@ -662,7 +663,7 @@ void NewsgroupData::check_expired(ArticleNum first)
 
 // Returns true if article is marked as read or does not exist
 // could use a better name
-bool was_read_group(ArticleNum artnum, char *ngnam)
+bool was_read_group(ArticleNum artnum, std::string_view ngnam)
 {
     char*   s;
     char*   t;
