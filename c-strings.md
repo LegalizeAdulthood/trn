@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-26. `libtrn/univ.cpp`, `univ_add_virtual_group`
-
-   Promote `grpname` to `std::string_view` in the function and
-   `libtrn/include/trn/univ.h`.  Mirror the owned-string boundary from
-   `univ_add_group` while keeping virtual-group storage unchanged.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,

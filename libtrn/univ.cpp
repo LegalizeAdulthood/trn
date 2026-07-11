@@ -391,11 +391,11 @@ void univ_add_text_file(const char *desc, std::string_view name)
 }
 
 // mostly the same as the newsgroup stuff
-void univ_add_virtual_group(const char *grpname)
+void univ_add_virtual_group(std::string_view grpname)
 {
     UniversalItem* ui;
 
-    if (!grpname)
+    if (grpname.data() == nullptr)
     {
         return;
     }
@@ -409,7 +409,8 @@ void univ_add_virtual_group(const char *grpname)
     }
 
     s_univ_virt_pass_needed = true;
-    HashDatum data = hash_fetch(g_univ_vg_hash, grpname);
+    HashDatum         data = hash_fetch(g_univ_vg_hash, grpname);
+    const std::string group_name{grpname};
     if (data.dat_ptr)
     {
         // group was already added
@@ -417,7 +418,7 @@ void univ_add_virtual_group(const char *grpname)
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
             if ((ui->m_type == UN_VGROUP_DESEL) && ui->m_data.vgroup.ng //
-                && !std::strcmp(ui->m_data.vgroup.ng, grpname))
+                && !std::strcmp(ui->m_data.vgroup.ng, group_name.c_str()))
             {
                 // undelete the newsgroup
                 ui->m_type = UN_VGROUP;
@@ -432,7 +433,7 @@ void univ_add_virtual_group(const char *grpname)
         ui->m_data.vgroup.flags |= UF_VG_MIN_SCORE;
         ui->m_data.vgroup.min_score = s_univ_min_score;
     }
-    ui->m_data.vgroup.ng = save_str(grpname);
+    ui->m_data.vgroup.ng = save_str(group_name.c_str());
     data.dat_ptr = ui->m_data.vgroup.ng;
     hash_store_last(data);
 }
