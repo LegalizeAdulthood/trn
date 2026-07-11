@@ -68,6 +68,13 @@ static HashTable *s_short_subj_hash{};
 
 static void init_article_node(List *list, ListNode *node);
 static bool clear_article_item(char *cp, int arg);
+static int  subject_cmp(std::string_view key, HashDatum data);
+#ifdef PENDING
+static bool cache_xrefs();
+static bool cache_all_arts();
+static bool cache_unread_arts();
+#endif
+static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles);
 
 void cache_init()
 {
@@ -580,7 +587,7 @@ void dectrl(char *str)
     }
 }
 
-int subject_cmp(std::string_view key, HashDatum data)
+static int subject_cmp(std::string_view key, HashDatum data)
 {
     const auto            *subject = (Subject *) data.dat_ptr;
     const std::string_view subject_text{subject->m_str + 4, key.size()};
@@ -798,7 +805,7 @@ bool cache_subjects()
     return s_subj_to_get > g_last_art;
 }
 
-bool cache_xrefs()
+static bool cache_xrefs()
 {
     ArticleNum an;
 
@@ -822,7 +829,7 @@ bool cache_xrefs()
     return s_xref_to_get > g_last_art;
 }
 
-bool cache_all_arts()
+static bool cache_all_arts()
 {
     ArticleNum old_last_cached = g_last_cached;
     if (!g_cached_all_in_range)
@@ -880,7 +887,7 @@ bool cache_all_arts()
     return true;
 }
 
-bool cache_unread_arts()
+static bool cache_unread_arts()
 {
     if (g_last_cached >= g_last_art)
     {
@@ -891,7 +898,7 @@ bool cache_unread_arts()
 }
 #endif
 
-bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles)
+static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles)
 {
     ArticleNum i;
     ArticleNum expected_i = first;

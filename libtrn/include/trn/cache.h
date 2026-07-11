@@ -50,7 +50,6 @@ void  change_join_subject_len(int len);
 const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
 int   decode_header(char *to, std::string_view from);
 void  dectrl(char *str);
-int   subject_cmp(std::string_view key, HashDatum data);
 #ifdef PENDING
 void look_ahead();
 #endif
@@ -58,10 +57,6 @@ void cache_until_key();
 #ifdef PENDING
 bool cache_subjects();
 #endif
-bool cache_xrefs();
-bool cache_all_arts();
-bool cache_unread_arts();
-bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles);
 bool cache_range(ArticleNum first, ArticleNum last);
 
 inline Article *article_ptr(ArticleNum an)

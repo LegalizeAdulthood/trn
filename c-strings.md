@@ -102,12 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-2. `libtrn/cache.cpp`: move declarations from
-    `libtrn/include/trn/cache.h`.
-    Functions: `art_data`, `cache_all_arts`, `cache_unread_arts`,
-    `cache_xrefs`, `subject_cmp`.
-    Leave inactive `cache_subjects` alone while `PENDING` is disabled.
-
 SL-3. `libtrn/charsubst.cpp`: move declarations from
     `libtrn/include/trn/charsubst.h`.
     Functions: `put_subst_char`.
