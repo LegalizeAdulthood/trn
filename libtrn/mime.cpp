@@ -75,6 +75,10 @@ constexpr bool OPENING_TAG = true;
 
 static char *mime_parse_entry_arg(char **cpp);
 static int   mime_getc(std::FILE *fp);
+static void  mime_init_sections();
+static bool  mime_pop_section();
+static char *mime_find_param(char *s, std::string_view param);
+static char *mime_skip_whitespace(char *s);
 static char *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, HtmlFlags flag);
@@ -370,7 +374,7 @@ int mime_exec(char *cmd)
     return s_executor(SH, g_cmd_buf);
 }
 
-void mime_init_sections()
+static void mime_init_sections()
 {
     while (mime_pop_section())
     {
@@ -387,7 +391,7 @@ void mime_push_section()
     g_mime_section = mp;
 }
 
-bool mime_pop_section()
+static bool mime_pop_section()
 {
     MimeSection* mp = g_mime_section->m_prev;
     if (mp)
@@ -855,7 +859,7 @@ char *mime_parse_params(char *str)
     return str;
 }
 
-char *mime_find_param(char *s, std::string_view param)
+static char *mime_find_param(char *s, std::string_view param)
 {
     const int param_len = static_cast<int>(param.size());
     while (s && *s)
@@ -871,7 +875,7 @@ char *mime_find_param(char *s, std::string_view param)
 
 // Skip whitespace and RFC-822 comments.
 
-char *mime_skip_whitespace(char *s)
+static char *mime_skip_whitespace(char *s)
 {
     int comment_level = 0;
 

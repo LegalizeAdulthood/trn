@@ -102,11 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-11. `libtrn/mime.cpp`: move declarations from
-    `libtrn/include/trn/mime.h`.
-    Functions: `mime_find_param`, `mime_init_sections`,
-    `mime_pop_section`, `mime_skip_whitespace`.
-
 SL-12. `libtrn/nntp.cpp`: move declarations from
     `libtrn/include/trn/nntp.h`.
     Functions: `nntp_next_art`, `nntp_read`, `nntp_read_check`.
