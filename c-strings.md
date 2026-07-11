@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-19. `libtrn/datasrc.cpp`, `source_file_cmp`
-
-   Locally derive a key view from the callback `key/key_len` pair and
-   compare it with the cached source-file line slice.  This keeps the
-   `ListNode` storage model unchanged.
-
 20. `libtrn/rt-process.cpp`, `msg_id_cmp`
 
    Locally derive a key view from the callback `key/key_len` pair.  Use

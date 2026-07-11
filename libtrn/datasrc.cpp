@@ -1182,8 +1182,11 @@ void SourceFile::close()
 
 static int source_file_cmp(const char *key, int key_len, HashDatum data)
 {
-    // We already know that the lengths are equal, just compare the strings
-    return std::memcmp(key, ((ListNode*)data.dat_ptr)->data + data.dat_len, key_len);
+    const std::string_view key_view{key, static_cast<std::string_view::size_type>(key_len)};
+    const auto            *node = (ListNode *) data.dat_ptr;
+    const std::string_view line_key{node->data + data.dat_len, key_view.size()};
+
+    return key_view.compare(line_key);
 }
 
 // Edit Distance extension to trn
