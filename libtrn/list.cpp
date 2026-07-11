@@ -1,6 +1,7 @@
 /* list.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/list.h>
 
@@ -12,10 +13,6 @@
 #include <cstring>
 
 static void def_init_node(List *list, ListNode *node);
-
-void list_init()
-{
-}
 
 // Create the header for a dynamic list of items.
 List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(List *, ListNode *))

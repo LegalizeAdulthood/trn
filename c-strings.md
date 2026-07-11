@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-10. `libtrn/list.cpp`: move declarations from
-    `libtrn/include/trn/list.h`.
-    Functions: `list_init`.
-
 SL-11. `libtrn/mime.cpp`: move declarations from
     `libtrn/include/trn/mime.h`.
     Functions: `mime_find_param`, `mime_init_sections`,

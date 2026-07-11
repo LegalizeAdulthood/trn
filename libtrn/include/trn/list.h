@@ -1,6 +1,7 @@
 /* trn/list.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_LIST_H
 #define TRN_LIST_H
 
@@ -50,7 +51,6 @@ struct List
     ListFlags     m_flags;
 };
 
-void list_init();
 List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, ListNodeInit *init_node);
 inline void delete_list(List *list)
 {
