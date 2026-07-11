@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-24. `libtrn/sathread.cpp`: move declarations from
-    `libtrn/include/trn/sathread.h`.
-    Functions: `sa_get_subj_thread`.
-
 SL-25. `libtrn/scan.cpp`: move declarations from
     `libtrn/include/trn/scan.h`.
     Functions: `s_clean_contexts`, `s_init_context`.

@@ -19,6 +19,8 @@
 static long       s_sa_num_threads{};
 static HashTable *s_sa_thread_hash{};
 
+static long sa_get_subj_thread(long e);
+
 void sa_init_threads()
 {
     mp_free(MP_SATHREAD);
@@ -30,13 +32,18 @@ void sa_init_threads()
     }
 }
 
+long sa_subj_thread(long e)
+{
+    return g_sa_ents[e].subj_thread_num ? g_sa_ents[e].subj_thread_num : sa_get_subj_thread(e);
+}
+
 // called only if the macro didn't find a value
 // XXX: dependent on hash feature that data.dat_len is not used in
 // the default comparison function, so it can be used for a number.
 // later: write a custom comparison function.
 //
 //long e;                       // entry number
-long sa_get_subj_thread(long e)
+static long sa_get_subj_thread(long e)
 {
     bool old_untrim = g_untrim_cache;
     g_untrim_cache = true;
