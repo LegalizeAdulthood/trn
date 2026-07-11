@@ -23,6 +23,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 // This depends on art being set to the current article number.
 Article *allocate_article(ArticleNum artnum)
@@ -60,12 +61,11 @@ void fix_msg_id(char *msgid)
 
 int msg_id_cmp(const char *key, int key_len, HashDatum data)
 {
-    // We already know that the lengths are equal, just compare the strings
-    if (data.dat_len)
-    {
-        return std::memcmp(key, data.dat_ptr, key_len);
-    }
-    return std::memcmp(key, ((Article*)data.dat_ptr)->m_msg_id, key_len);
+    const std::string_view key_view{key, static_cast<std::string_view::size_type>(key_len)};
+    const char            *msg_id = data.dat_len ? data.dat_ptr : ((Article *) data.dat_ptr)->m_msg_id;
+    const std::string_view msg_id_view{msg_id, key_view.size()};
+
+    return key_view.compare(msg_id_view);
 }
 
 // Take a message-id and see if we already know about it.  If so, return

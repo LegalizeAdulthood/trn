@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-20. `libtrn/rt-process.cpp`, `msg_id_cmp`
-
-   Locally derive a key view from the callback `key/key_len` pair.  Use
-   the view for both kill-file message IDs and `Article::m_msg_id`
-   comparisons, without changing message-ID ownership.
-
 21. `libtrn/rcstuff.cpp`, `rcline_cmp`
 
    Locally derive a key view from the callback `key/keylen` pair and
