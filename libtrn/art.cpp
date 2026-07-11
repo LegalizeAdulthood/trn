@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/art.h>
 
@@ -100,6 +101,8 @@ static bool            s_first_page{};      // is this the 1st page of article?
 static bool            s_continuation{};    // this line/header is being continued
 
 static PageSwitchResult page_switch();
+static bool             maybe_set_color(const char *cp, bool back_search);
+static bool             inner_more();
 
 void art_init()
 {
@@ -839,7 +842,7 @@ reask_pager:
     } // end of page loop
 }
 
-bool maybe_set_color(const char *cp, bool back_search)
+static bool maybe_set_color(const char *cp, bool back_search)
 {
     const char ch = (cp == g_art_buf || cp == g_art_line? 0 : cp[-1]);
     if (ch == '\001')
@@ -1376,7 +1379,7 @@ go_forward:
     return PS_ASK;
 }
 
-bool inner_more()
+static bool inner_more()
 {
     if (g_art_pos < g_inner_search)               // not even on page yet?
     {

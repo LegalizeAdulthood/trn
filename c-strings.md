@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-1. `libtrn/art.cpp`: move declarations from
-    `libtrn/include/trn/art.h`.
-    Functions: `inner_more`, `maybe_set_color`.
-
 SL-2. `libtrn/cache.cpp`: move declarations from
     `libtrn/include/trn/cache.h`.
     Functions: `art_data`, `cache_all_arts`, `cache_unread_arts`,

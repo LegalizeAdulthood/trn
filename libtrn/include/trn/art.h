@@ -1,6 +1,7 @@
 /* trn/art.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_ART_H
 #define TRN_ART_H
 
@@ -32,8 +33,6 @@ extern bool g_dont_filter_control; // -j
 
 void art_init();
 DoArticleResult do_article();
-bool maybe_set_color(const char *cp, bool back_search);
-bool inner_more();
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 
 #endif
