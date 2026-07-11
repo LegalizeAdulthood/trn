@@ -77,6 +77,18 @@ static char          *s_univ_line_desc{};        // if non-nullptr, the descript
 static UniversalItem *s_current_vg_ui{};         //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
+static void           univ_open();
+static UniversalItem *univ_add(UniversalItemType type, const char *desc);
+static void           univ_add_text(const char *txt);
+static void           univ_add_debug(const char *desc, const char *txt);
+static void           univ_add_group(const char *desc, std::string_view grpname);
+static void           univ_add_mask(const char *desc, const char *mask);
+static void           univ_add_file(const char *desc, const char *fname, const char *label);
+static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art);
+static void           univ_add_text_file(const char *desc, std::string_view name);
+static void           univ_add_virtual_group(std::string_view grpname);
+static void           univ_use_pattern(const char *pattern, int type);
+static void           univ_use_group_line(char *line, int type);
 static void  univ_free_data(UniversalItem *ui);
 static bool  univ_do_match(const char *text, const char *p);
 static bool  univ_use_file(std::string_view fname, const char *label);
@@ -126,7 +138,7 @@ void univ_startup()
     s_univ_done_startup = true;
 }
 
-void univ_open()
+static void univ_open()
 {
     g_first_univ = nullptr;
     g_last_univ = nullptr;
@@ -178,7 +190,7 @@ void univ_close()
     g_univ_level--;
 }
 
-UniversalItem *univ_add(UniversalItemType type, const char *desc)
+static UniversalItem *univ_add(UniversalItemType type, const char *desc)
 {
     UniversalItem *node = (UniversalItem*)safe_malloc(sizeof(UniversalItem));
 
@@ -265,21 +277,21 @@ static void univ_free_data(UniversalItem *ui)
     }
 }
 
-void univ_add_text(const char *txt)
+static void univ_add_text(const char *txt)
 {
     // later check text for bad things
     (void)univ_add(UN_TXT,txt);
 }
 
 // temp for testing
-void univ_add_debug(const char *desc, const char *txt)
+static void univ_add_debug(const char *desc, const char *txt)
 {
     // later check text for bad things
     UniversalItem *ui = univ_add(UN_DEBUG1, desc);
     ui->m_data.str = save_str(txt);
 }
 
-void univ_add_group(const char *desc, std::string_view grpname)
+static void univ_add_group(const char *desc, std::string_view grpname)
 {
     UniversalItem* ui;
 
@@ -318,7 +330,7 @@ void univ_add_group(const char *desc, std::string_view grpname)
     hash_store_last(data);
 }
 
-void univ_add_mask(const char *desc, const char *mask)
+static void univ_add_mask(const char *desc, const char *mask)
 {
     UniversalItem *ui = univ_add(UN_GROUP_MASK, desc);
     ui->m_data.gmask.mask_list = save_str(mask);
@@ -326,7 +338,7 @@ void univ_add_mask(const char *desc, const char *mask)
 }
 
 //char* fname;                          // May be URL
-void univ_add_file(const char *desc, const char *fname, const char *label)
+static void univ_add_file(const char *desc, const char *fname, const char *label)
 {
     UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
     ui->m_data.cfile.title = save_str(desc);
@@ -341,7 +353,7 @@ void univ_add_file(const char *desc, const char *fname, const char *label)
     }
 }
 
-UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
+static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
 {
     UniversalItem *ui = univ_add(UN_ARTICLE, desc);
     ui->m_data.virt.ng = save_str(grp);
@@ -351,7 +363,7 @@ UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum a
     return ui;
 }
 
-void univ_add_text_file(const char *desc, std::string_view name)
+static void univ_add_text_file(const char *desc, std::string_view name)
 {
     UniversalItem   *ui;
     std::string      file_name{name};
@@ -391,7 +403,7 @@ void univ_add_text_file(const char *desc, std::string_view name)
 }
 
 // mostly the same as the newsgroup stuff
-void univ_add_virtual_group(std::string_view grpname)
+static void univ_add_virtual_group(std::string_view grpname)
 {
     UniversalItem* ui;
 
@@ -476,7 +488,7 @@ static bool univ_do_match(const char *text, const char *p)
 }
 
 // type: 0=newsgroup, 1=virtual (more in future?)
-void univ_use_pattern(const char *pattern, int type)
+static void univ_use_pattern(const char *pattern, int type)
 {
     const char* s = pattern;
     NewsgroupData* np;
@@ -547,7 +559,7 @@ void univ_use_pattern(const char *pattern, int type)
 
 // interprets a line of newsgroups, adding or subtracting each pattern
 // Newsgroup patterns are separated by spaces and/or commas
-void univ_use_group_line(char *line, int type)
+static void univ_use_group_line(char *line, int type)
 {
     char* p;
 

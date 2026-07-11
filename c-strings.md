@@ -102,14 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-35. `libtrn/univ.cpp`: move declarations from
-    `libtrn/include/trn/univ.h`.
-    Functions: `univ_add`, `univ_add_debug`, `univ_add_file`,
-    `univ_add_group`, `univ_add_mask`, `univ_add_text`,
-    `univ_add_text_file`, `univ_add_virt_num`,
-    `univ_add_virtual_group`, `univ_open`, `univ_use_group_line`,
-    `univ_use_pattern`.
-
 SL-36. `libtrn/url.cpp`: move declarations from
     `libtrn/include/trn/url.h`.
     Functions: `fetch_ftp`, `fetch_http`, `parse_url`.
