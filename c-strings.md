@@ -89,55 +89,51 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-1. `libtrn/datasrc.cpp`, `get_data_source`: promote `name` to
-   `std::string_view` and compare it with each data source name without
-   constructing a temporary `std::string`.
-
-2. `libtrn/mime.cpp`, `find_attr`: promote `attr` to
+1. `libtrn/mime.cpp`, `find_attr`: promote `attr` to
    `std::string_view`.  Use the view size for the bounded
    `string_case_equal` call; no returned pointer should refer to the
    attribute view.
 
-3. `libtrn/rcln.cpp`, `was_read_group`: promote `ngnam` to
+2. `libtrn/rcln.cpp`, `was_read_group`: promote `ngnam` to
    `std::string_view` and pass it directly to `find_newsgroup`.  The
    argument is not modified and does not need a terminator locally.
 
-4. `libtrn/rcln.cpp`, `add_art_num`: promote `newsgroup_name` to
+3. `libtrn/rcln.cpp`, `add_art_num`: promote `newsgroup_name` to
    `std::string_view` and pass it directly to `find_newsgroup`.  If the
    debug-only diagnostic remains, create a local `std::string` and pass
    `c_str()` to `printf`.
 
-5. `libtrn/univ.cpp`, `univ_visit_group_main`: promote `gname` to
+4. `libtrn/univ.cpp`, `univ_visit_group_main`: promote `gname` to
    `std::string_view`, pass the view to `find_newsgroup`, and create a
    local `std::string` only for `printf`.
 
-6. `nntp/nntpclient.cpp`, `nntp_command`: promote `bp` to
+5. `nntp/nntpclient.cpp`, `nntp_command`: promote `bp` to
    `std::string_view`.  Copy it into owned local or global buffers
    before writing `g_last_command` or calling `write_line`.
 
-7. `nntp/nntpclient.cpp`, `nntp_xgtitle`: promote `groupname` to
+6. `nntp/nntpclient.cpp`, `nntp_xgtitle`: promote `groupname` to
    `std::string_view`.  Build a local `std::string` for the
    `XGTITLE` command text, then pass the command to `nntp_command`.
 
-8. `libtrn/nntp.cpp`, `nntp_group`: promote `group` to
+7. `libtrn/nntp.cpp`, `nntp_group`: promote `group` to
    `std::string_view`.  Build a local `std::string` for `sprintf` and
    diagnostics, then pass owned command text to `nntp_command`.
 
-9. `libtrn/nntp.cpp`, `nntp_stat_id`: promote `msg_id` to
+8. `libtrn/nntp.cpp`, `nntp_stat_id`: promote `msg_id` to
    `std::string_view`.  Build a local `std::string` before formatting
    the `STAT` command.
 
-10. `libtrn/datasrc.cpp`, `DataSource::find_group_desc`: promote
-    `group_name` to `std::string_view`.  Use the view for hash lookup
-    and length calculations; create a local `std::string` only for
-    `nntp_xgtitle`, `sprintf`, and append paths that need a terminator.
+9. `libtrn/datasrc.cpp`, `DataSource::find_group_desc`: promote
+   `group_name` to `std::string_view`.  Use the view for hash lookup
+   and length calculations; create a local `std::string` only for
+   `nntp_xgtitle`, `sprintf`, and append paths that need a terminator.
 
-11. `libtrn/mime.cpp`, `mime_types_match`: promote `pat` to
+10. `libtrn/mime.cpp`, `mime_types_match`: promote `pat` to
     `std::string_view`.  Keep wildcard parsing on the view and create a
     local `std::string` only while the case-compare helpers still need
     null-terminated strings.
 
-12. `libtrn/rt-wumpus.cpp`, `tree_puts`: promote `orig_line` to
+11. `libtrn/rt-wumpus.cpp`, `tree_puts`: promote `orig_line` to
     `std::string_view`.  Derive the newline-bounded view once, pass it
     to `decode_header`, and copy from the view into the mutable display
     buffer.

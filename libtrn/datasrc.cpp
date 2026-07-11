@@ -254,11 +254,11 @@ char *read_data_sources(const char *filename)
     return filebuf;
 }
 
-DataSource *get_data_source(const char *name)
+DataSource *get_data_source(std::string_view name)
 {
     for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
     {
-        if (dp->m_name == std::string{name})
+        if (std::string_view{dp->m_name} == name)
         {
             return dp;
         }
