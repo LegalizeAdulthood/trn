@@ -1,6 +1,7 @@
 /* decode.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <config/string_case_compare.h>
 
@@ -36,6 +37,9 @@
 char *g_decode_filename{};
 
 static bool bad_filename(const char *filename);
+static DecodeFunc decode_function(MimeEncoding encoding);
+static char      *decode_mkdir(const char *filename);
+static void       decode_rmdir(char *dir);
 
 void decode_init()
 {
@@ -517,7 +521,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     return true;
 }
 
-DecodeFunc decode_function(MimeEncoding encoding)
+static DecodeFunc decode_function(MimeEncoding encoding)
 {
     switch (encoding)
     {
@@ -539,7 +543,7 @@ DecodeFunc decode_function(MimeEncoding encoding)
 }
 
 // return a directory to use for unpacking the pieces of a given filename
-char *decode_mkdir(const char *filename)
+static char *decode_mkdir(const char *filename)
 {
     static char dir[LINE_BUF_LEN];
 
@@ -563,7 +567,7 @@ char *decode_mkdir(const char *filename)
     return dir;
 }
 
-void decode_rmdir(char *dir)
+static void decode_rmdir(char *dir)
 {
     // Remove trailing slash
     char *s = dir + std::strlen(dir) - 1;

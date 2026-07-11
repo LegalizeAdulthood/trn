@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-5. `libtrn/decode.cpp`: move declarations from
-    `libtrn/include/trn/decode.h`.
-    Functions: `decode_function`, `decode_mkdir`, `decode_rmdir`.
-
 SL-6. `libtrn/final.cpp`: move declarations from
     `libtrn/include/trn/final.h`.
     Functions: `pipe_catcher`.

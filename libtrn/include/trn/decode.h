@@ -1,6 +1,7 @@
 /* trn/decode.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_DECODE_H
 #define TRN_DECODE_H
 
@@ -40,8 +41,5 @@ void decode_init();
 char *decode_fix_filename(const char *s);
 char *decode_subject(ArticleNum art_num, int *partp, int *totalp);
 bool decode_piece(MimeCapEntry *mcp, char *first_line);
-DecodeFunc decode_function(MimeEncoding encoding);
-char *decode_mkdir(const char *filename);
-void decode_rmdir(char *dir);
 
 #endif
