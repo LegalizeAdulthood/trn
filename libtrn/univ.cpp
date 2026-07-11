@@ -1145,17 +1145,18 @@ static void univ_vg_add_group()
 }
 
 // returns do_newsgroup() value
-int univ_visit_group_main(const char *gname)
+int univ_visit_group_main(std::string_view gname)
 {
-    if (!gname || !*gname)
+    if (gname.empty())
     {
         return NG_ERROR;
     }
+    const std::string group_name{gname};
 
     NewsgroupData *np = find_newsgroup(gname);
     if (!np)
     {
-        std::printf("Univ/Virt: newsgroup %s not found!", gname);
+        std::printf("Univ/Virt: newsgroup %s not found!", group_name.c_str());
         return NG_ERROR;
     }
     // unsubscribed, bogus, etc. groups are not visited
@@ -1173,7 +1174,7 @@ int univ_visit_group_main(const char *gname)
     }
     bool old_threaded = g_threaded_group;
     g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
-    std::printf("\nScanning newsgroup %s\n",gname);
+    std::printf("\nScanning newsgroup %s\n", group_name.c_str());
     int ret = do_newsgroup(std::string{});
     g_threaded_group = old_threaded;
     return ret;

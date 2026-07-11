@@ -89,10 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-4. `libtrn/univ.cpp`, `univ_visit_group_main`: promote `gname` to
-   `std::string_view`, pass the view to `find_newsgroup`, and create a
-   local `std::string` only for `printf`.
-
 5. `nntp/nntpclient.cpp`, `nntp_command`: promote `bp` to
    `std::string_view`.  Copy it into owned local or global buffers
    before writing `g_last_command` or calling `write_line`.

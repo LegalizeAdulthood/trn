@@ -1,6 +1,7 @@
 /* rt-select.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rt-select.h>
 
@@ -4279,7 +4280,7 @@ int univ_visit_group(const char *group_name)
 {
     PUSH_SELECTOR();
 
-    univ_visit_group_main(group_name);
+    univ_visit_group_main(group_name ? group_name : "");
 
     POP_SELECTOR();
     return 0;           // later may have some error return values

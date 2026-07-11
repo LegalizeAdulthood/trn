@@ -164,7 +164,7 @@ void           univ_redo_file();
 void           univ_edit();
 void           univ_page_file(char *fname);
 void           univ_newsgroup_virtual();
-int            univ_visit_group_main(const char *gname);
+int            univ_visit_group_main(std::string_view gname);
 void           univ_virt_pass();
 void           sort_univ();
 void           univ_help_main(HelpLocation where);
