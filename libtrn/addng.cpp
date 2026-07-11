@@ -1,6 +1,7 @@
 /* addng.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/addng.h>
 
@@ -415,7 +416,7 @@ bool scan_active(bool add_matching)
                     g_buf[std::strlen(g_buf) - 2] = '\0';
                 }
             }
-            if (nntp_list("active", g_buf, std::strlen(g_buf)) == 1)
+            if (nntp_list("active", g_buf) == 1)
             {
                 while (!nntp_at_list_end(g_ser_line))
                 {

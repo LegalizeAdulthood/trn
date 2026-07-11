@@ -477,7 +477,7 @@ bool DataSource::open()
         m_nntp_link = g_nntp_link;
         if (m_act_sf.m_refetch_secs)
         {
-            switch (nntp_list("active", "control", 7))
+            switch (nntp_list("active", "control"))
             {
             case 1:
                 if (std::strncmp(g_ser_line, "control ", 8) != 0)
@@ -686,7 +686,10 @@ bool DataSource::find_active_group(char *outbuf, const char *nam, int len, Artic
     {
         DataSource* save_datasrc = g_data_source;
         set_data_source(this);
-        switch (nntp_list("active", nam, len))
+        const std::string_view name_arg{
+                nam != nullptr ? nam : "",
+                nam != nullptr && len > 0 ? static_cast<std::size_t>(len) : 0};
+        switch (nntp_list("active", name_arg))
         {
         case 0:
             set_data_source(save_datasrc);
@@ -934,7 +937,7 @@ int SourceFile::open(const char *filename, const char *fetch_cmd, const char *se
                 {
                     use_buffered_nntp_gets = true;
                 }
-                else if (nntp_list(fetch_cmd, "", 0) < 0)
+                else if (nntp_list(fetch_cmd, "") < 0)
                 {
                     std::printf("\nCan't get %s file from server: \n%s\n",
                            fetch_cmd, g_ser_line);

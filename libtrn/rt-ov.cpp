@@ -76,7 +76,7 @@ bool ov_init()
         {
             nntp_finish_list();
         }
-        int ret = nntp_list("overview.fmt", "", 0);
+        int ret = nntp_list("overview.fmt", "");
         if (ret < -1)
         {
             return false;

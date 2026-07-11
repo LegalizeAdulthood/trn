@@ -1,6 +1,7 @@
 /* nntp.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/nntp.h>
 
@@ -22,6 +23,8 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <string>
+#include <string_view>
 
 static int nntp_copy_body(char *s, int limit, ArticlePosition pos);
 
@@ -31,18 +34,19 @@ static ArticlePosition s_body_end{};
 static long s_raw_bytes{-1}; // bytes remaining to be transferred
 #endif
 
-int nntp_list(const char *type, const char *arg, int len)
+int nntp_list(const char *type, std::string_view arg)
 {
     int ret;
 #ifdef DEBUG
-    if (len && (g_debug & 1) && string_case_equal(type, "active"))
+    if (!arg.empty() && (g_debug & 1) && string_case_equal(type, "active"))
     {
         return -1;
     }
 #endif
-    if (len)
+    if (!arg.empty())
     {
-        std::sprintf(g_ser_line, "LIST %s %.*s", type, len, arg);
+        const std::string argument{arg};
+        std::sprintf(g_ser_line, "LIST %s %s", type, argument.c_str());
     }
     else if (string_case_equal(type, "active"))
     {
@@ -61,7 +65,7 @@ int nntp_list(const char *type, const char *arg, int len)
     {
         return ret ? ret : -1;
     }
-    if (!len)
+    if (arg.empty())
     {
         return 1;
     }

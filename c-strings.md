@@ -75,14 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-9. `libtrn/nntp.cpp`, `nntp_list`
-
-   Promote the `arg/len` pair to `std::string_view` in the
-   implementation and `libtrn/include/trn/nntp.h`.  Keep `type` as a
-   C string for now because it flows to legacy case comparison and
-   formatting.  This is a bottom network helper used by active-file and
-   overview loading.
-
 10. `libtrn/datasrc.cpp`, `DataSource::find_active_group`
 
    Promote the `nam/len` pair to `std::string_view` in the method and

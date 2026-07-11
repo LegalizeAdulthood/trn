@@ -1,6 +1,7 @@
 /* trn/nntp.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_NNTP_H
 #define TRN_NNTP_H
 
@@ -8,6 +9,7 @@
 #include <trn/addng.h>
 
 #include <ctime>
+#include <string_view>
 
 struct DataSource;
 struct NewsgroupData;
@@ -25,7 +27,7 @@ enum
     MAX_NNTP_ARTICLES = 10
 };
 
-int             nntp_list(const char *type, const char *arg, int len);
+int             nntp_list(const char *type, std::string_view arg);
 void            nntp_finish_list();
 int             nntp_group(const char *group, NewsgroupData *gp);
 int             nntp_stat(ArticleNum art_num);

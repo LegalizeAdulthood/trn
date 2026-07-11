@@ -1,6 +1,7 @@
 /* rcstuff.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rcstuff.h>
 
@@ -577,7 +578,7 @@ static bool open_newsrc(Newsrc *rp)
         }
         const char *some_buf = SUBSCRIPTIONS;
         if ((rp->data_source->m_flags & DF_REMOTE) //
-            && nntp_list("SUBSCRIPTIONS", "", 0) == 1)
+            && nntp_list("SUBSCRIPTIONS", "") == 1)
         {
             do
             {
