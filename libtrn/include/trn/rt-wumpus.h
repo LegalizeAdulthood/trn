@@ -1,11 +1,14 @@
 /* trn/rt-wumpus.h
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RT_WUMPUS_H
 #define TRN_RT_WUMPUS_H
 
 #include <config/typedef.h>
 #include <trn/addng.h>
+
+#include <string_view>
 
 struct Article;
 
@@ -13,7 +16,7 @@ extern int g_max_tree_lines;
 
 void init_tree();
 Article    *get_tree_artp(int x, int y);
-ArticleLine tree_puts(const char *orig_line, ArticleLine header_line, int is_subject);
+ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int is_subject);
 ArticleLine finish_tree(ArticleLine last_line);
 void entire_tree(Article *ap);
 

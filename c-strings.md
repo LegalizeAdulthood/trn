@@ -89,10 +89,7 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-11. `libtrn/rt-wumpus.cpp`, `tree_puts`: promote `orig_line` to
-    `std::string_view`.  Derive the newline-bounded view once, pass it
-    to `decode_header`, and copy from the view into the mutable display
-    buffer.
+No remaining slices.
 
 ## Defer
 

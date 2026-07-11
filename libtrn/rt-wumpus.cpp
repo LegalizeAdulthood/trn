@@ -22,7 +22,6 @@
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/util.h>
-#include <util/util2.h>
 
 #include <algorithm>
 #include <cctype>
@@ -365,7 +364,7 @@ inline bool header_conv()
 
 // Output a header line with possible tree display on the right hand side.
 // Does automatic wrapping of lines that are too long.
-ArticleLine tree_puts(const char *orig_line, ArticleLine header_line, int is_subject)
+ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int is_subject)
 {
     char       *tmpbuf;
     char       *line;
@@ -373,21 +372,12 @@ ArticleLine tree_puts(const char *orig_line, ArticleLine header_line, int is_sub
     int         wrap_at;
     ArticleLine start_line = header_line;
     int         i;
-    int         len;
     char        ch;
     char       *cp;
+    const std::string_view line_text = orig_line.substr(0, orig_line.find('\n'));
+    const int              len = static_cast<int>(line_text.size());
 
     // Make a modifiable copy of the line
-    const char *line_end = std::strchr(orig_line, '\n');
-    if (line_end != nullptr)
-    {
-        len = line_end - orig_line;
-    }
-    else
-    {
-        len = std::strlen(orig_line);
-    }
-
     // Copy line, filtering encoded and control characters.
     if (header_conv())
     {
@@ -401,12 +391,15 @@ ArticleLine tree_puts(const char *orig_line, ArticleLine header_line, int is_sub
     }
     if (g_do_hiding)
     {
-        end = line + decode_header(line,
-                             std::string_view{orig_line, static_cast<std::size_t>(len)});
+        end = line + decode_header(line, line_text);
     }
     else
     {
-        safe_copy(line, orig_line, len+1);
+        if (!line_text.empty())
+        {
+            std::memcpy(line, line_text.data(), line_text.size());
+        }
+        line[line_text.size()] = '\0';
         dectrl(line);
         end = line + len;
     }
