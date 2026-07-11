@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-18. `libtrn/cache.cpp`, `subject_cmp`
-
-   Locally derive a key view from the callback `key/key_len` pair and
-   compare it against the stored subject text after the `"Re: "` prefix.
-   Keep the callback signature until all hash comparators are prepared.
-
 19. `libtrn/datasrc.cpp`, `source_file_cmp`
 
    Locally derive a key view from the callback `key/key_len` pair and
