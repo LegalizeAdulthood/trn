@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-17. `libtrn/addng.cpp`, `add_newsgroup_cmp`
-
-   Locally derive a key view from the callback `key/key_len` pair and
-   compare it against `AddGroup::m_name`.  The payload owns the compared
-   string, so no view storage escapes the callback.
-
 18. `libtrn/cache.cpp`, `subject_cmp`
 
    Locally derive a key view from the callback `key/key_len` pair and
