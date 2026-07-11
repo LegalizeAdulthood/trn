@@ -2,8 +2,11 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_COLOR_H
 #define TRN_COLOR_H
+
+#include <string_view>
 
 //
 // Object numbers.
@@ -38,7 +41,7 @@ void color_init();
 void color_rc_attribute(const char *object, char *value);
 void color_object(int object, bool push);
 void color_pop();
-void color_string(int object, const char *str);
+void color_string(int object, std::string_view str);
 void color_default();
 
 #endif

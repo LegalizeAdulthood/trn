@@ -104,11 +104,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-17. `libtrn/color.cpp`, `color_string`: promote `str` to
-    `std::string_view`.  Strip a trailing newline by view, use `fwrite`
-    for normal color output, and create a local `std::string` only for
-    `under_print`.
-
 18. `libtrn/autosub.cpp`, `match_list`: promote `s` to
     `std::string_view`.  Keep pattern slicing as views and create a
     local `std::string` only for `CompiledRegex::execute`.

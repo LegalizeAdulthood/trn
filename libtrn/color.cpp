@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
+// Copyright (c) 2026, Richard Thomson
 
 //
 // The color handling is implemented as an attribute stack containing
@@ -35,7 +36,6 @@
 #include <util/util2.h>
 
 #include <cstdio>
-#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -313,27 +313,28 @@ void color_pop()
 }
 
 // Color a string with the given object's color/attribute.
-void color_string(int object, const char *str)
+void color_string(int object, std::string_view str)
 {
-    int len = std::strlen(str);
-    if (str[len - 1] == '\n')
+    const bool had_newline = !str.empty() && str.back() == '\n';
+    if (had_newline)
     {
-        std::strcpy(g_msg, str);
-        g_msg[len-1] = '\0';
-        str = g_msg;
-        len = 0;
+        str.remove_suffix(1);
     }
     if (!s_use_colors && *g_tc_UC && s_objects[object].attr == UNDERLINE)
     {
-        under_print(str);        // hack for stupid terminals
+        const std::string text{str};
+        under_print(text.c_str()); // hack for stupid terminals
     }
     else
     {
         color_object(object, true);
-        std::fputs(str, stdout);
+        if (!str.empty())
+        {
+            std::fwrite(str.data(), 1, str.size(), stdout);
+        }
         color_pop();
     }
-    if (!len)
+    if (had_newline)
     {
         std::putchar('\n');
     }
