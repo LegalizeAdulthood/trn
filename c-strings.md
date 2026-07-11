@@ -75,14 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-6. `libtrn/edit_dist.cpp`, `edit_distn`
-
-   Promote `from/from_len` and `to/to_len` to two
-   `std::string_view` parameters in the implementation and
-   `libtrn/include/trn/edit_dist.h`.  The dynamic-programming body only
-   indexes read-only text ranges.  Treat null legacy inputs as empty
-   views at call sites.
-
 7. `libtrn/cache.cpp`, `decode_header`
 
    Promote only the input pair `from/size` to `std::string_view` in the

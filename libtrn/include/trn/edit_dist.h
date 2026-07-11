@@ -4,9 +4,12 @@
  * for any use whatsoever, and it is provided as is. Any use of this software
  * is at the user's own risk.
  */
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_EDIT_DIST_H
 #define TRN_EDIT_DIST_H
 
-int edit_distn(const char *from, int from_len, const char *to, int to_len);
+#include <string_view>
+
+int edit_distn(std::string_view from, std::string_view to);
 
 #endif

@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/datasrc.h>
 
@@ -45,6 +46,7 @@ struct utimbuf
 #include <cstring>
 #include <ctime>
 #include <string>
+#include <string_view>
 
 List       *g_data_source_list{};                     // a list of all data sources
 DataSource *g_data_source{};                          // the current data source
@@ -1304,7 +1306,12 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
         }
     }
 
-    int value = edit_distn(g_newsgroup_name.c_str(), ngname_len, name, len);
+    const std::string_view newsgroup_name{
+            g_newsgroup_name.data(), g_newsgroup_name.size()};
+    const std::string_view candidate_name{
+            name != nullptr ? name : "",
+            name != nullptr && len > 0 ? static_cast<std::size_t>(len) : 0};
+    int value = edit_distn(newsgroup_name, candidate_name);
     if (value > MIN_DIST)
     {
         return 0;

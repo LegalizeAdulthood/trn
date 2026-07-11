@@ -5,6 +5,7 @@
  * is at the user's own risk.
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/edit_dist.h>
 
@@ -13,6 +14,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <string_view>
 
 // edit_dist -- returns the minimum edit distance between two strings
 //
@@ -51,9 +53,9 @@ void swap_int(int &x, int &y)
     y = tmp;
 }
 
-void swap_char(const char *&x, const char *&y)
+void swap_view(std::string_view &x, std::string_view &y)
 {
-    const char *tmp = x;
+    std::string_view tmp = x;
     x = y;
     y = tmp;
 }
@@ -71,7 +73,7 @@ static int s_delete_cost = 1;
 
 // edit_distn -- returns the edit distance between two strings, or -1 on failure
 
-int edit_distn(const char *from, int from_len, const char *to, int to_len)
+int edit_distn(std::string_view from, std::string_view to)
 {
 #ifndef TRN_SPEEDUP
     int ins;
@@ -91,18 +93,20 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
                                         // a small amount of static
                                         // storage, to be used when the
                                         // input strings are small enough
+    int from_len = static_cast<int>(from.size());
+    int to_len = static_cast<int>(to.size());
 
 // Handle trivial cases when one string is empty
 
-    if (from == nullptr || !from_len)
+    if (!from_len)
     {
-        if (to == nullptr || !to_len)
+        if (!to_len)
         {
             return 0;
         }
         return to_len * s_insert_cost;
     }
-    if (to == nullptr || !to_len)
+    if (!to_len)
     {
         return from_len * s_delete_cost;
     }
@@ -126,7 +130,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
     if (from_len > to_len && from_len > STRLENTHRESHOLD)
     {
         swap_int(from_len, to_len);
-        swap_char(from, to);
+        swap_view(from, to);
 #ifndef TRN_SPEEDUP
         swap_int(ins, del);
 #endif
