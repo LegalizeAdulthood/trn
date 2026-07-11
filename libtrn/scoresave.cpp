@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 int g_sc_loaded_count{}; // how many articles were loaded?
 
@@ -37,7 +38,13 @@ static int        s_used{};
 static int        s_saved{};
 static ArticleNum s_last{};
 
-void sc_sv_add(std::string_view str)
+static void       sc_sv_add(std::string_view str);
+static void       sc_sv_del_group(const char *gname);
+static void       sc_sv_get_file();
+static ArticleNum sc_sv_use_line(char *line, ArticleNum a);
+static ArticleNum sc_sv_make_line(ArticleNum a);
+
+static void sc_sv_add(std::string_view str)
 {
     if (s_num_lines == s_lines_alloc)
     {
@@ -48,7 +55,7 @@ void sc_sv_add(std::string_view str)
     s_num_lines++;
 }
 
-void sc_sv_del_group(const char *gname)
+static void sc_sv_del_group(const char *gname)
 {
     char* s;
     int i;
@@ -90,7 +97,7 @@ void sc_sv_del_group(const char *gname)
 }
 
 // get the file containing scores into memory
-void sc_sv_get_file()
+static void sc_sv_get_file()
 {
     s_num_lines = 0;
     s_lines_alloc = 0;
@@ -163,7 +170,7 @@ void sc_sv_save_file()
 
 // returns the next article number (after the last one used)
 //ART_NUM a;    // art number to start with
-ArticleNum sc_sv_use_line(char *line, ArticleNum a)
+static ArticleNum sc_sv_use_line(char *line, ArticleNum a)
 {
     char *p;
     char  c1;
@@ -277,7 +284,7 @@ ArticleNum sc_sv_use_line(char *line, ArticleNum a)
     return a;
 }
 
-ArticleNum sc_sv_make_line(ArticleNum a)
+static ArticleNum sc_sv_make_line(ArticleNum a)
 {
     bool lastscore_valid = false;
     int  num_output = 0;

@@ -102,11 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-29. `libtrn/scoresave.cpp`: move declarations from
-    `libtrn/include/trn/scoresave.h`.
-    Functions: `sc_sv_add`, `sc_sv_del_group`, `sc_sv_get_file`,
-    `sc_sv_make_line`, `sc_sv_use_line`.
-
 SL-30. `libtrn/sdisp.cpp`: move declarations from
     `libtrn/include/trn/sdisp.h`.
     Functions: `s_ref_entry`, `s_refresh_bot`, `s_refresh_description`,
