@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-23. `libtrn/rcstuff.cpp`, `find_newsgroup`
-
-   Promote `ngnam` to `std::string_view` in the function and
-   `libtrn/include/trn/rcstuff.h`.  It now only forwards the key to
-   `hash_fetch`, so callers with `std::string` can stop using `c_str()`.
-
 24. `libtrn/addng.cpp`, `add_to_hash`
 
    Promote `name` to `std::string_view`.  Use the view size for the

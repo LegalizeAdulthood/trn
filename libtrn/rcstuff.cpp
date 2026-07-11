@@ -976,7 +976,7 @@ check_fuzzy_match:
         }
     }
     set_newsgroup_name(what);
-    g_newsgroup_ptr = find_newsgroup(g_newsgroup_name.c_str());
+    g_newsgroup_ptr = find_newsgroup(g_newsgroup_name);
     if (g_newsgroup_ptr == nullptr)             // not in .newsrc?
     {
         Newsrc* rp;
@@ -1496,7 +1496,7 @@ void list_newsgroups()
 
 // find a newsgroup in any newsrc
 
-NewsgroupData *find_newsgroup(const char *ngnam)
+NewsgroupData *find_newsgroup(std::string_view ngnam)
 {
     HashDatum data = hash_fetch(g_newsrc_hash, ngnam);
     return (NewsgroupData*)data.dat_ptr;

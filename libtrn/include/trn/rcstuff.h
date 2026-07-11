@@ -1,12 +1,15 @@
 /* trn/rcstuff.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RCSTUFF_H
 #define TRN_RCSTUFF_H
 
 #include <config/typedef.h>
 #include <trn/enum-flags.h>
 #include <trn/list.h>
+
+#include <string_view>
 
 struct DataSource;
 struct HashTable;
@@ -99,7 +102,7 @@ Newsrc        *new_newsrc(const char *name, const char *newsrc, const char *add_
 void           unuse_multirc(Multirc *mptr);
 bool           get_newsgroup(const char *what, GetNewsgroupFlags flags);
 void           list_newsgroups();
-NewsgroupData *find_newsgroup(const char *ngnam);
+NewsgroupData *find_newsgroup(std::string_view ngnam);
 void           cleanup_newsrc(Newsrc *rp);
 void           set_hash(NewsgroupData *np);
 void           checkpoint_newsrcs();

@@ -213,7 +213,7 @@ ng_start_sel:
             g_start_here = nullptr;
             if (!g_last_newsgroup_name.empty())
             {
-                g_newsgroup_ptr = find_newsgroup(g_last_newsgroup_name.c_str());
+                g_newsgroup_ptr = find_newsgroup(g_last_newsgroup_name);
                 if (g_newsgroup_ptr == nullptr)
                 {
                     g_newsgroup_ptr = g_first_newsgroup;
