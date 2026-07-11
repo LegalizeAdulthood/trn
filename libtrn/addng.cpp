@@ -336,7 +336,10 @@ static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int c
     node->m_data_src = g_data_source;
     node->m_next = nullptr;
     node->m_prev = nullptr;
-    hash_store(ng, name, name_len, data);
+    hash_store(
+            ng,
+            std::string_view{name, static_cast<std::size_t>(name_len)},
+            data);
 }
 
 static void add_to_list(const char *name, int to_read, char_int ch)

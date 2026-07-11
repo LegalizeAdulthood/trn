@@ -1070,7 +1070,10 @@ int SourceFile::open(const char *filename, const char *fetch_cmd, const char *se
         }
         data.dat_len = offset;
         (void) std::memcpy(lbp,g_buf,linelen);
-        hash_store(m_hp, g_buf, keylen, data);
+        hash_store(
+                m_hp,
+                std::string_view{g_buf, static_cast<std::size_t>(keylen)},
+                data);
     }
     m_lp->m_high = node_low + offset - 1;
     set_spin(SPIN_OFF);
@@ -1133,7 +1136,10 @@ char *SourceFile::append(char *bp, int key_len)
     }
     data.dat_ptr = (char*)node;
     (void) std::memcpy(lbp,bp,linelen);
-    hash_store(m_hp, bp, key_len, data);
+    hash_store(
+            m_hp,
+            std::string_view{bp, static_cast<std::size_t>(key_len)},
+            data);
     m_lp->m_high = pos + linelen - 1;
 
     return lbp;

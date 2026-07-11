@@ -1636,7 +1636,10 @@ void set_hash(NewsgroupData *np)
     HashDatum data;
     data.dat_ptr = (char*)np;
     data.dat_len = np->m_num_offset - 1;
-    hash_store(g_newsrc_hash, np->m_rc_line, data.dat_len, data);
+    hash_store(
+            g_newsrc_hash,
+            std::string_view{np->m_rc_line, static_cast<std::size_t>(data.dat_len)},
+            data);
 }
 
 static int rcline_cmp(const char *key, int keylen, HashDatum data)

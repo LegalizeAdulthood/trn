@@ -23,7 +23,7 @@ using HashWalkFunc = int (*)(int key_len, HashDatum *data, int extra);
 
 HashTable *hash_create(unsigned size, HashCompareFunc cmp_func);
 void hash_destroy(HashTable *tbl);
-void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data);
+void hash_store(HashTable *tbl, std::string_view key, HashDatum data);
 void hash_delete(HashTable *tbl, const char *key, int key_len);
 HashDatum  hash_fetch(HashTable *tbl, std::string_view key);
 void hash_store_last(HashDatum data);

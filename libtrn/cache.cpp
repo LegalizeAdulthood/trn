@@ -389,7 +389,10 @@ void Article::set_subj_line(std::string_view subj)
         std::free(m_subj->m_str);
         m_subj->m_str = new_subj;
         data.dat_ptr = (char*)m_subj;
-        hash_store(s_subj_hash, new_subj + 4, size, data);
+        hash_store(
+                s_subj_hash,
+                std::string_view{new_subj + 4, static_cast<std::size_t>(size)},
+                data);
     }
     else
     {

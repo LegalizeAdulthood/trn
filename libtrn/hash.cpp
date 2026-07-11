@@ -117,10 +117,10 @@ void hash_destroy(HashTable *tbl)
     std::free((char*)tbl);
 }
 
-void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data)
+void hash_store(HashTable *tbl, std::string_view key, HashDatum data)
 {
-    HashEntry **nextp = hash_find(
-            tbl, std::string_view{key, static_cast<std::string_view::size_type>(key_len)});
+    const int key_len = static_cast<int>(key.size());
+    HashEntry **nextp = hash_find(tbl, key);
     HashEntry *hp = *nextp;
     if (hp == nullptr)              // absent; allocate an entry
     {
