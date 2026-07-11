@@ -3,6 +3,7 @@
  * display stuff
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/sdisp.h>
 
@@ -19,6 +20,13 @@
 int  g_scr_height{}; // height of screen in characters
 int  g_scr_width{};  // width of screen in characters
 bool g_s_resized{};  // has the window been resized?
+
+static void s_ref_entry(int line, int jump);
+static void s_refresh_bot();
+static void s_refresh_description(int line);
+static void s_refresh_ent_zone();
+static void s_refresh_status(int line);
+static void s_refresh_top();
 
 void s_goxy(int x, int y)
 {
@@ -59,7 +67,7 @@ void s_mail_and_place()
     }
 }
 
-void s_refresh_top()
+static void s_refresh_top()
 {
     home_cursor();
     switch (g_s_cur_type)
@@ -71,7 +79,7 @@ void s_refresh_top()
     g_s_ref_top = false;
 }
 
-void s_refresh_bot()
+static void s_refresh_bot()
 {
     // if bottom bar exists, then it is at least one character high...
     s_goxy(0,g_tc_LINES-g_s_bot_lines);
@@ -85,7 +93,7 @@ void s_refresh_bot()
 }
 
 // refresh both status and description
-void s_refresh_ent_zone()
+static void s_refresh_ent_zone()
 {
     int start;          // starting page_arts index to refresh...
 
@@ -128,7 +136,7 @@ void s_place_ptr()
 
 // refresh the status line for an article on screen page
 // note: descriptions will not (for now) be individually refreshable
-void s_refresh_status(int line)
+static void s_refresh_status(int line)
 {
     long ent = g_page_ents[line].ent_num;
     TRN_ASSERT(line <= g_s_bot_ent);    // better be refreshing on-page
@@ -141,7 +149,7 @@ void s_refresh_status(int line)
     std::fflush(stdout);
 }
 
-void s_refresh_description(int line)
+static void s_refresh_description(int line)
 {
     long ent = g_page_ents[line].ent_num;
     TRN_ASSERT(line <= g_s_bot_ent);    // better be refreshing on-page
@@ -177,7 +185,7 @@ void s_refresh_description(int line)
 }
 
 //int jump;     // true means that the cursor should be positioned
-void s_ref_entry(int line, int jump)
+static void s_ref_entry(int line, int jump)
 {
     long ent = g_page_ents[line].ent_num;
     TRN_ASSERT(line <= g_s_bot_ent);    // better be refreshing on-page

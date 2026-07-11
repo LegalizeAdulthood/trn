@@ -102,11 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-30. `libtrn/sdisp.cpp`: move declarations from
-    `libtrn/include/trn/sdisp.h`.
-    Functions: `s_ref_entry`, `s_refresh_bot`, `s_refresh_description`,
-    `s_refresh_ent_zone`, `s_refresh_status`, `s_refresh_top`.
-
 SL-31. `libtrn/sorder.cpp`: move declarations from
     `libtrn/include/trn/sorder.h`.
     Functions: `s_sort_basic`.
