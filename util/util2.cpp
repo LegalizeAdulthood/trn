@@ -1,6 +1,7 @@
 /* util2.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <util/util2.h>
 
@@ -21,11 +22,15 @@ static char *s_tilde_dir{};
 
 // copy a string to a safe spot
 
-char *save_str(const char *str)
+char *save_str(std::string_view str)
 {
-    char* newaddr = safe_malloc((MemorySize)(std::strlen(str)+1));
+    char *newaddr = safe_malloc(static_cast<MemorySize>(str.size() + 1));
 
-    std::strcpy(newaddr,str);
+    if (!str.empty())
+    {
+        std::memcpy(newaddr, str.data(), str.size());
+    }
+    newaddr[str.size()] = '\0';
     return newaddr;
 }
 
