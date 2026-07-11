@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-32. `libtrn/spage.cpp`: move declarations from
-    `libtrn/include/trn/spage.h`.
-    Functions: `s_clean_page`.
-
 SL-33. `libtrn/sw.cpp`: move declarations from
     `libtrn/include/trn/sw.h`.
     Functions: `save_init_environment`.

@@ -2,6 +2,7 @@
  *
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/spage.h>
 
@@ -19,6 +20,8 @@
 
 #include <algorithm>
 #include <cstdio>
+
+static void s_clean_page();
 
 // returns true if successful
 //long end;             // entry number to be last on page
@@ -409,7 +412,7 @@ int s_fill_page()
     return 1;   // I guess everything worked :-)
 }
 
-void s_clean_page()
+static void s_clean_page()
 {
 }
 
