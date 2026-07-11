@@ -60,11 +60,19 @@ The generated `config.h` sites map back to assigning source code.  The
 `nntplist.cpp::main` cases are local fixes; `data_source_init` belongs
 to the deferred INI value-storage overhaul.
 
-After the hash key API promotion, the remaining hash key pointer/length
-boundary is the compare callback contract.  The comparator callbacks
-only compare bounded keys against strings owned by hash payloads, so
-they can be staged toward `std::string_view` without changing hash
-entry storage.
+After the hash key and comparator API promotions, the hash table itself
+is no longer the limiting boundary.  The rerun found callers that still
+accept C strings only to create bounded views, call promoted lookup
+helpers, or build temporary command strings for legacy formatting.
+
+The strongest new opportunities are:
+
+- Local pointer-plus-length pairs where the pair already denotes a
+  string extent.
+- Function parameters that flow only to `std::string_view` callees,
+  hash lookups, or owned `std::string` assignments.
+- NNTP command builders that can accept views after making local
+  null-terminated strings for `sprintf`, diagnostics, or transport.
 
 ## Refactoring Slices
 
@@ -80,6 +88,65 @@ Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
+
+1. `libtrn/ngdata.cpp`, `NewsgroupData::get_newsgroup_size`:
+   replace the local `char *nam` plus `len` pair with a
+   `std::string_view group_name`.  Pass the view to
+   `find_active_group`; keep an integer length only for offsets into
+   `tmpbuf`.
+
+2. `libtrn/datasrc.cpp`, `get_data_source`: promote `name` to
+   `std::string_view` and compare it with each data source name without
+   constructing a temporary `std::string`.
+
+3. `libtrn/mime.cpp`, `find_attr`: promote `attr` to
+   `std::string_view`.  Use the view size for the bounded
+   `string_case_equal` call; no returned pointer should refer to the
+   attribute view.
+
+4. `libtrn/rcln.cpp`, `was_read_group`: promote `ngnam` to
+   `std::string_view` and pass it directly to `find_newsgroup`.  The
+   argument is not modified and does not need a terminator locally.
+
+5. `libtrn/rcln.cpp`, `add_art_num`: promote `newsgroup_name` to
+   `std::string_view` and pass it directly to `find_newsgroup`.  If the
+   debug-only diagnostic remains, create a local `std::string` and pass
+   `c_str()` to `printf`.
+
+6. `libtrn/univ.cpp`, `univ_visit_group_main`: promote `gname` to
+   `std::string_view`, pass the view to `find_newsgroup`, and create a
+   local `std::string` only for `printf`.
+
+7. `nntp/nntpclient.cpp`, `nntp_command`: promote `bp` to
+   `std::string_view`.  Copy it into owned local or global buffers
+   before writing `g_last_command` or calling `write_line`.
+
+8. `nntp/nntpclient.cpp`, `nntp_xgtitle`: promote `groupname` to
+   `std::string_view`.  Build a local `std::string` for the
+   `XGTITLE` command text, then pass the command to `nntp_command`.
+
+9. `libtrn/nntp.cpp`, `nntp_group`: promote `group` to
+   `std::string_view`.  Build a local `std::string` for `sprintf` and
+   diagnostics, then pass owned command text to `nntp_command`.
+
+10. `libtrn/nntp.cpp`, `nntp_stat_id`: promote `msg_id` to
+    `std::string_view`.  Build a local `std::string` before formatting
+    the `STAT` command.
+
+11. `libtrn/datasrc.cpp`, `DataSource::find_group_desc`: promote
+    `group_name` to `std::string_view`.  Use the view for hash lookup
+    and length calculations; create a local `std::string` only for
+    `nntp_xgtitle`, `sprintf`, and append paths that need a terminator.
+
+12. `libtrn/mime.cpp`, `mime_types_match`: promote `pat` to
+    `std::string_view`.  Keep wildcard parsing on the view and create a
+    local `std::string` only while the case-compare helpers still need
+    null-terminated strings.
+
+13. `libtrn/rt-wumpus.cpp`, `tree_puts`: promote `orig_line` to
+    `std::string_view`.  Derive the newline-bounded view once, pass it
+    to `decode_header`, and copy from the view into the mutable display
+    buffer.
 
 ## Defer
 
@@ -98,6 +165,13 @@ where a null sentinel or legacy C API makes a view a poor fit.
   a comparison limit, not a guaranteed extent for both inputs.  Add
   separate string-view overloads rather than blindly wrapping
   `const char *` plus `len`.
+- `nntp/nntpinit.cpp`, `ConnectionFactory`, `server_init`,
+  `get_tcp_socket`, and `nntp_connect`: the machine and service strings
+  cross the resolver and connection-factory boundary.  Refactor them as
+  a coordinated API slice, not as isolated temporary strings.
+- `nntp/nntpclient.cpp`, `nntp_at_list_end`: the null pointer sentinel
+  is part of the current API and the function updates NNTP command
+  state as a side effect.
 - `nntp/include/nntp/nntpclient.h`, `INNTPConnection::write`: the pair
   is a byte-buffer transport boundary.  Prefer `std::span` if this
   interface is modernized.
