@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-27. `libtrn/score.cpp`: move declarations from
-    `libtrn/include/trn/score.h`.
-    Functions: `sc_rescore_arts`, `sc_score_art_basic`.
-
 SL-28. `libtrn/scorefile.cpp`: move declarations from
     `libtrn/include/trn/scorefile.h`.
     Functions: `score_match`, `sf_add_extra_header`,

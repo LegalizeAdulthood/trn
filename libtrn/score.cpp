@@ -2,6 +2,7 @@
  *
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/score.h>
 
@@ -39,6 +40,9 @@ static bool s_sc_sf_force_init{}; // If true, always sf_init()
 static bool s_sc_sf_delay{};      // if true, delay loading rule files
 static bool s_sc_do_spin{};       // actually do the score spinner
 static bool s_sc_rescoring{};     // are we rescoring now?
+
+static void sc_score_art_basic(ArticleNum a);
+static void sc_rescore_arts();
 
 //bool pend_wait;       // if true, enter pending mode when scoring...
 void sc_init(bool pend_wait)
@@ -238,7 +242,7 @@ void sc_set_score(ArticleNum a, int score)
 
 // Hopefully people will write more scoring routines later
 // This is where you should add hooks for new scoring methods.
-void sc_score_art_basic(ArticleNum a)
+static void sc_score_art_basic(ArticleNum a)
 {
     int score = 0;
     score += sf_score(a);       // get a score
@@ -426,7 +430,7 @@ int sc_percent_scored()
     return (scored*100) / total;
 }
 
-void sc_rescore_arts()
+static void sc_rescore_arts()
 {
     if (!g_sc_initialized)
     {

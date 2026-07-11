@@ -1,4 +1,5 @@
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 /* trn/score.h
  *
  */
@@ -27,12 +28,10 @@ extern bool       g_sc_delay;        // If true, delay initialization of scoring
 void sc_init(bool pend_wait);
 void sc_cleanup();
 void sc_set_score(ArticleNum a, int score);
-void sc_score_art_basic(ArticleNum a);
 int  sc_score_art(ArticleNum a, bool now);
 void sc_fill_score_list(ArticleNum first, ArticleNum last);
 void sc_look_ahead(bool flag, bool nowait);
 int  sc_percent_scored();
-void sc_rescore_arts();
 void sc_append(char *line);
 void sc_rescore();
 void sc_score_cmd(const char *line);
