@@ -89,11 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-1. `libtrn/mime.cpp`, `find_attr`: promote `attr` to
-   `std::string_view`.  Use the view size for the bounded
-   `string_case_equal` call; no returned pointer should refer to the
-   attribute view.
-
 2. `libtrn/rcln.cpp`, `was_read_group`: promote `ngnam` to
    `std::string_view` and pass it directly to `find_newsgroup`.  The
    argument is not modified and does not need a terminator locally.

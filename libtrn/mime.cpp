@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet:
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/mime-internal.h>
 
@@ -77,7 +78,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, HtmlFlags flag);
 static int   do_indent(char *t);
-static const char *find_attr(const char *str, const char *attr);
+static const char *find_attr(const char *str, std::string_view attr);
 
 inline MimeCapEntry *mimecap_ptr(long n)
 {
@@ -2224,12 +2225,11 @@ static int do_indent(char *t)
     return len;
 }
 
-static const char *find_attr(const char *str, const char *attr)
+static const char *find_attr(const char *str, std::string_view attr)
 {
-    const std::string_view attr_text{attr};
-    const int              len = static_cast<int>(attr_text.size());
-    const char            *cp = str;
-    const char            *s;
+    const int   len = static_cast<int>(attr.size());
+    const char *cp = str;
+    const char *s;
 
     while ((cp = std::strchr(cp + 1, '=')) != nullptr)
     {
@@ -2240,7 +2240,7 @@ static const char *find_attr(const char *str, const char *attr)
         {
             cp++;
         }
-        if (s - str > len && s[-len - 1] == ' ' && string_case_equal(s - len, attr, len))
+        if (s - str > len && s[-len - 1] == ' ' && string_case_equal(s - len, attr.data(), len))
         {
             return cp + 1;
         }
