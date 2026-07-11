@@ -4,6 +4,7 @@
  * Does some simple commands, and passes the rest to context-specific routines.
  */
 // This file is Copyright 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/scmd.h>
 
@@ -26,6 +27,14 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+
+static void s_look_ahead();
+static int  s_do_cmd();
+static bool s_match_description(long ent);
+static long s_forward_search(long ent);
+static long s_backward_search(long ent);
+static void s_search();
+static void s_jump_num(char_int firstchar);
 
 void s_go_bot()
 {
@@ -111,7 +120,7 @@ int s_cmd_loop()
     }
 }
 
-void s_look_ahead()
+static void s_look_ahead()
 {
     switch (g_s_cur_type)
     {
@@ -129,7 +138,7 @@ void s_look_ahead()
 // a condition code (negative #s).  Responsible for setting refresh flags
 // if necessary.
 //
-int s_do_cmd()
+static int s_do_cmd()
 {
     bool flag; // misc
 
@@ -332,7 +341,7 @@ int s_do_cmd()
 static char s_search_text[LINE_BUF_LEN]{};
 static char s_search_init{};
 
-bool s_match_description(long ent)
+static bool s_match_description(long ent)
 {
     static char lbuf[LINE_BUF_LEN];
 
@@ -355,7 +364,7 @@ bool s_match_description(long ent)
     return false;
 }
 
-long s_forward_search(long ent)
+static long s_forward_search(long ent)
 {
     if (ent)
     {
@@ -375,7 +384,7 @@ long s_forward_search(long ent)
     return ent;
 }
 
-long s_backward_search(long ent)
+static long s_backward_search(long ent)
 {
     if (ent)
     {
@@ -396,7 +405,7 @@ long s_backward_search(long ent)
 }
 
 // perhaps later have a wraparound search?
-void s_search()
+static void s_search()
 {
     int         fill_type; // 0: forward, 1: backward
     const char *error_msg;
@@ -508,7 +517,7 @@ void s_search()
     }
 }
 
-void s_jump_num(char_int firstchar)
+static void s_jump_num(char_int firstchar)
 {
     bool jump_verbose = true;
     int  value = firstchar - '0';

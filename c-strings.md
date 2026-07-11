@@ -102,11 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-26. `libtrn/scmd.cpp`: move declarations from
-    `libtrn/include/trn/scmd.h`.
-    Functions: `s_backward_search`, `s_do_cmd`, `s_forward_search`,
-    `s_jump_num`, `s_look_ahead`, `s_match_description`, `s_search`.
-
 SL-27. `libtrn/score.cpp`: move declarations from
     `libtrn/include/trn/score.h`.
     Functions: `sc_rescore_arts`, `sc_score_art_basic`.
