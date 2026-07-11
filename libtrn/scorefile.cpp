@@ -33,7 +33,7 @@
 #include <string>
 #include <string_view>
 
-std::string_view sf_get_extra_header(ArticleNum art, int hnum);
+static std::string_view sf_get_extra_header(ArticleNum art, int hnum);
 
 int  g_sf_num_entries{};   // # of entries
 int  g_sf_score_verbose{}; // when true, the scoring routine prints lots of info...
