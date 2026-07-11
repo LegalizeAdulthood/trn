@@ -4,6 +4,7 @@
 ** Geoffrey Collyer.  See the end of the file for his copyright.
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/hash.h>
 
@@ -15,6 +16,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 #define BADTBL(tbl)     ((tbl) == nullptr || (tbl)->ht_magic != HASHMAG)
 
@@ -36,7 +38,7 @@ struct HashTable
 };
 
 static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen);
-static unsigned    hash(const char *key, int keylen);
+static unsigned    hash(std::string_view key);
 static int         default_cmp(const char *key, int keylen, HashDatum data);
 static HashEntry  *hash_entry_alloc();
 static void        hash_entry_free(HashEntry *hp);
@@ -224,7 +226,8 @@ static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen)
         finalize(1);
     }
     unsigned size = tbl->ht_size;
-    HashEntry **hepp = &tbl->ht_addr[hash(key, keylen) % size];
+    const std::string_view key_view{key, static_cast<std::string_view::size_type>(keylen)};
+    HashEntry            **hepp = &tbl->ht_addr[hash(key_view) % size];
     for (HashEntry *hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next)
     {
         if (hp->he_key_len == keylen && !(*tbl->ht_cmp)(key, keylen, hp->he_data))
@@ -237,15 +240,15 @@ static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen)
 }
 
 // not yet taken modulus table size
-static unsigned hash(const char *key, int keylen)
+static unsigned hash(std::string_view key)
 {
-    unsigned hash = 0;
+    unsigned hash_value = 0;
 
-    while (keylen--)
+    for (char ch : key)
     {
-        hash += *key++;
+        hash_value += ch;
     }
-    return hash;
+    return hash_value;
 }
 
 static int default_cmp(const char *key, int keylen, HashDatum data)

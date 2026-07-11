@@ -75,12 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-11. `libtrn/hash.cpp`, `hash`
-
-   Promote the private `key/keylen` pair to `std::string_view`.  This is
-   the bottom of the hash-key chain and has no callers outside
-   `hash.cpp`.
-
 12. `libtrn/hash.cpp`, `hash_find`
 
    Promote the private `key/keylen` pair to `std::string_view`.  Pass
