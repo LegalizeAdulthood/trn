@@ -3,6 +3,7 @@
  * main working routines  (may change later)
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/samain.h>
 
@@ -29,6 +30,13 @@ int  g_sa_scan_context{-1}; // contains the scan-context number for the current 
 
 static int  s_sa_ents_alloc{};
 static bool s_sa_context_init{}; // has context been initialized?
+
+static void sa_init_ents();
+static void sa_clean_ents();
+static long sa_add_ent(ArticleNum artnum);
+static void sa_init_context();
+static bool sa_init_arts();
+static void sa_init_mode();
 
 void sa_init()
 {
@@ -63,21 +71,21 @@ void sa_init()
     g_sa_initialized = true;            // all went well...
 }
 
-void sa_init_ents()
+static void sa_init_ents()
 {
     g_sa_num_ents = 0;
     s_sa_ents_alloc = 0;
     g_sa_ents = (ScanArticleEntryData*)nullptr;
 }
 
-void sa_clean_ents()
+static void sa_clean_ents()
 {
     std::free(g_sa_ents);
 }
 
 // returns entry number that was added
 //ART_NUM artnum;               // article number to be added
-long sa_add_ent(ArticleNum artnum)
+static long sa_add_ent(ArticleNum artnum)
 {
     g_sa_num_ents++;
     if (g_sa_num_ents > s_sa_ents_alloc)
@@ -127,7 +135,7 @@ void sa_grow_arts(ArticleNum oldlast, ArticleNum last)
 }
 
 // Initialize the scan-context to enter article scan mode.
-void sa_init_context()
+static void sa_init_context()
 {
     if (s_sa_context_init)
     {
@@ -142,7 +150,7 @@ void sa_init_context()
     s_sa_context_init = true;
 }
 
-bool sa_init_arts()
+static bool sa_init_arts()
 {
     sa_init_ents();
     // add all available articles to entry list
@@ -157,7 +165,7 @@ bool sa_init_arts()
 }
 
 // note: initscreen must be called before (for g_scr_width)
-void sa_init_mode()
+static void sa_init_mode()
 {
     // set up screen sizes
     sa_set_screen();
