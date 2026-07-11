@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-3. `libtrn/charsubst.cpp`: move declarations from
-    `libtrn/include/trn/charsubst.h`.
-    Functions: `put_subst_char`.
-
 SL-4. `libtrn/datasrc.cpp`: move declarations from
     `libtrn/include/trn/datasrc.h`.
     Functions: `read_data_sources`.

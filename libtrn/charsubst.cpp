@@ -1,6 +1,7 @@
 /* charsubst.cpp
  * vi: set sw=4 ts=8 ai sm noet :
  */
+// Copyright (c) 2026, Richard Thomson
 /*
  * Permission is hereby granted to copy, reproduce, redistribute or otherwise
  * use this software as long as: there is no monetary profit gained
@@ -43,9 +44,10 @@ static Uchar s_tex_tbl[96] =
 // clang-format on
 static char s_tex_char{};
 
+static int put_subst_char(int c, int limit, bool output_ok);
 static int latin1_to_ascii(Uchar *asc, const Uchar *iso, int limit, int t);
 
-int put_subst_char(int c, int limit, bool output_ok)
+static int put_subst_char(int c, int limit, bool output_ok)
 {
     Uchar oc[2];
     Uchar nc[5];

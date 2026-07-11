@@ -1,5 +1,6 @@
 /* trn/charsubst.h
  */
+// Copyright (c) 2026, Richard Thomson
 /*
  * Permission is hereby granted to copy, reproduce, redistribute or otherwise
  * use this software as long as: there is no monetary profit gained
@@ -22,7 +23,6 @@
 extern std::string g_charsets;
 extern const char* g_char_subst;
 
-int put_subst_char(int c, int limit, bool output_ok);
 const char *current_char_subst();
 int str_char_subst(char *outb, const char *inb, int limit, char_int subst);
 
