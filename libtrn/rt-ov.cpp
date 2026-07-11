@@ -1,6 +1,7 @@
 /* rt-ov.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rt-ov.h>
 
@@ -506,7 +507,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 
     if (!article->m_subj)
     {
-        article->set_subj_line(fields[OV_SUBJ], std::strlen(fields[OV_SUBJ]));
+        article->set_subj_line(fields[OV_SUBJ]);
     }
     if (!article->m_msg_id)
     {

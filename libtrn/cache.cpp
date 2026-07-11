@@ -337,17 +337,14 @@ const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill
 //
 // TODO: decouple from s_subj_hash
 //
-void Article::set_subj_line(const char *subj, int size)
+void Article::set_subj_line(std::string_view subj)
 {
     HashDatum data;
     Subject  *sp;
     char     *subj_start;
 
-    if (size < 0)
-    {
-        size = 0;
-    }
-    std::string subj_text{subj, static_cast<std::size_t>(size)};
+    std::string subj_text{subj};
+    int         size = static_cast<int>(subj_text.size());
 
     if (subject_has_re(subj_text.data(), &subj_start))
     {

@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 #include <vector>
 
 #define HIDDEN    (HT_HIDE|HT_DEF_HIDE)
@@ -276,7 +277,10 @@ void end_header_line()
                 MemorySize size = g_art_pos.value_of() - start + 1 - 1;   // pre-strip newline
                 if (g_in_header == SUBJ_LINE)
                 {
-                    s_parsed_artp->set_subj_line(g_head_buf + start, size - 1);
+                    const std::size_t subj_size =
+                            size > 0 ? static_cast<std::size_t>(size - 1) : 0;
+                    s_parsed_artp->set_subj_line(
+                            std::string_view{g_head_buf + start, subj_size});
                 }
                 else
                 {
@@ -346,7 +350,7 @@ void end_header()
 
     if (!ap->m_subj)
     {
-        ap->set_subj_line("<NONE>", 6);
+        ap->set_subj_line("<NONE>");
     }
 
     if (s_reading_nntp_header)
@@ -690,7 +694,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                 ap = article_find(num);
                 if (which_line == SUBJ_LINE)
                 {
-                    ap->set_subj_line(t, std::strlen(t));
+                    ap->set_subj_line(t);
                 }
                 else if (cached)
                 {

@@ -75,16 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-8. `libtrn/cache.cpp`, `Article::set_subj_line`
-
-   Promote the subject input from `const char *` plus `int size` to
-   `std::string_view` in the method and `libtrn/include/trn/Article.h`.
-   Keep the local owned `std::string` because the body needs a
-   null-terminated, mutable buffer for `subject_has_re` and
-   `decode_header`.  Update the handful of callers that currently pass
-   `strlen` or a known buffer length.  This is last because it changes a
-   class method contract and several parsing call sites.
-
 9. `libtrn/nntp.cpp`, `nntp_list`
 
    Promote the `arg/len` pair to `std::string_view` in the
