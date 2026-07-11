@@ -104,10 +104,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-19. `libtrn/autosub.cpp`, `auto_subscribe`: promote `name` to
-    `std::string_view`.  Pass the view to `match_list`; environment
-    values remain C strings at the boundary.
-
 20. `libtrn/opt.cpp`, `set_header`: promote `s` to
     `std::string_view`.  Use view length for header prefix comparisons
     and copy into `g_user_header_type[i].name` when saving a user

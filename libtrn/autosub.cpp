@@ -21,7 +21,7 @@ static bool match_list(std::string_view pat_list, std::string_view s);
 // : if we should autosubscribe to it
 // ! if we should autounsubscribe to it
 // \0 if we should ask the user.
-AddNewType auto_subscribe(const char *name)
+AddNewType auto_subscribe(std::string_view name)
 {
     const char *s = get_val_const("AUTOSUBSCRIBE", nullptr);
     if (s && match_list(s, name))
