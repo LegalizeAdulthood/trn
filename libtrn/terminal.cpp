@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/terminal.h>
 
@@ -173,12 +174,23 @@ static int     s_left_cost{};
 static int     s_up_cost{};
 static bool    s_got_a_char{}; // true if we got a char since eating
 
+#ifdef SIGALRM
+static Signal_t alarm_catcher(int signo);
+#endif
+#ifdef PENDING
+#if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
+static int circfill();
+#endif
+#endif
+static char   *edit_buf(char *s, const char *cmd);
 static void    mac_init(char *tcbuf);
 static KeyMap *new_key_map();
+static void    reprint();
 static void    show_key_map(KeyMap *curmap, char *prefix);
 static int     echo_char(char_int ch);
 static void    line_col_calcs();
 static void    mouse_input(const char *cp);
+static void    xmouse_on();
 
 // terminal initialization
 
@@ -918,7 +930,7 @@ static bool s_screen_is_dirty{}; // TODO: remove this?
 
 // Process the character *s in the buffer g_buf returning the new 's'
 
-char *edit_buf(char *s, const char *cmd)
+static char *edit_buf(char *s, const char *cmd)
 {
     static bool quoteone = false;
     if (quoteone)
@@ -1158,7 +1170,7 @@ void settle_down()
 static bool s_ignore_eintr = false;
 
 #ifdef SIGALRM
-Signal_t alarm_catcher(int signo)
+static Signal_t alarm_catcher(int signo)
 {
     s_ignore_eintr = true;
     check_data_sources();
@@ -1196,7 +1208,7 @@ int read_tty(char *addr, int size)
 
 #ifdef PENDING
 # if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
-int circfill()
+static int circfill()
 {
     int Howmany;
 
@@ -2028,7 +2040,7 @@ void rubout()
     backspace();                        // backspace trick
 }
 
-void reprint()
+static void reprint()
 {
     std::fputs("^R\n",stdout);
     term_down(1);
@@ -2421,7 +2433,7 @@ void xmouse_check()
     }
 }
 
-void xmouse_on()
+static void xmouse_on()
 {
     if (!s_xmouse_is_on)
     {

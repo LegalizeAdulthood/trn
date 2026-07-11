@@ -1,6 +1,7 @@
 /* trn/terminal.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_TERMINAL_H
 #define TRN_TERMINAL_H
 
@@ -174,18 +175,11 @@ int   put_char(char_int ch);
 void  hide_pending();
 bool  finput_pending(bool check_term);
 bool  finish_command(int donewline);
-char *edit_buf(char *s, const char *cmd);
 bool  finish_dbl_char();
 void  eat_typeahead();
 void  save_typeahead(char *buf, int len);
 void  settle_down();
-#ifdef SIGALRM
-Signal_t alarm_catcher(int signo);
-#endif
 int read_tty(char *addr, int size);
-#if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
-int circfill();
-#endif
 void push_char(char_int c);
 void under_print(const char *s);
 #ifdef NO_FIREWORKS
@@ -207,7 +201,6 @@ void warn_msg(const char *str);
 void pad(int num);
 void print_cmd();
 void rubout();
-void reprint();
 void erase_line(bool to_eos);
 void clear();
 void home_cursor();
@@ -219,7 +212,6 @@ void  termlib_init();
 void  termlib_reset();
 void  xmouse_init(const char *progname);
 void  xmouse_check();
-void  xmouse_on();
 void  xmouse_off();
 void  draw_mouse_bar(int limit, bool restore_cursor);
 bool  check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
