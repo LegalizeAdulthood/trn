@@ -40,6 +40,7 @@
 #include <cstring>
 #include <ctime>
 #include <string>
+#include <string_view>
 
 List      *g_article_list{};         // a list of Articles
 Article  **g_art_ptr_list{};         // the article-selector creates this
@@ -359,7 +360,8 @@ void Article::set_subj_line(const char *subj, int size)
 
     char *new_subj = safe_malloc(size + 4 + 1);
     std::strcpy(new_subj, "Re: ");
-    size = decode_header(new_subj + 4, subj_start, size);
+    size = decode_header(new_subj + 4,
+            std::string_view{subj_start, static_cast<std::size_t>(size)});
 
     // Do the Re:-stripping over again, just in case it was encoded.
     if (subject_has_re(new_subj + 4, &subj_start))
@@ -422,18 +424,48 @@ void Article::set_subj_line(const char *subj, int size)
     }
 }
 
-int decode_header(char *to, const char *from, int size)
+int decode_header(char *to, std::string_view from)
 {
-    char *s = to; // save for pass 2
-    bool  pass2_needed = false;
+    char      *s = to; // save for pass 2
+    bool       pass2_needed = false;
+    int        size = static_cast<int>(from.size());
+    const char *cursor = from.data();
+
+    if (from.empty())
+    {
+        *to = '\0';
+        return 0;
+    }
+
+    const char *const end = cursor + from.size();
+    const auto        find_char = [end](const char *start, char ch)
+    {
+        while (start < end)
+        {
+            if (*start == ch)
+            {
+                return start;
+            }
+            ++start;
+        }
+        return static_cast<const char *>(nullptr);
+    };
+    const auto skip_hor_space_in_view = [end](const char *start)
+    {
+        while (start < end && is_hor_space(*start))
+        {
+            ++start;
+        }
+        return start;
+    };
 
     // Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong)
-    for (int i = size; *from && i--;)
+    while (cursor < end && *cursor)
     {
-        if (*from == '=' && from[1] == '?')
+        if (*cursor == '=' && cursor + 1 < end && cursor[1] == '?')
         {
-            const char *q = std::strchr(from + 2, '?');
-            char        ch = (q && q[2] == '?') ? q[1] : 0;
+            const char *q = find_char(cursor + 2, '?');
+            char        ch = (q && q + 2 < end && q[2] == '?') ? q[1] : 0;
             const char *e;
 
             if (ch == 'q' || ch == 'Q' || ch == 'b' || ch == 'B')
@@ -441,24 +473,23 @@ int decode_header(char *to, const char *from, int size)
                 const char *old_ics = input_charset_name();
                 const char *old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
-                std::string charset{from + 2, q};
+                std::string charset{cursor + 2, q};
                 utf_init(charset.c_str(), CHARSET_NAME_UTF8); // FIXME
 #endif
                 e = q + 2;
                 do
                 {
-                    e = std::strchr(e + 1, '?');
-                } while (e && e[1] != '=');
-                if (e)
+                    e = find_char(e + 1, '?');
+                } while (e && e + 1 < end && e[1] != '=');
+                if (e && e + 1 < end)
                 {
-                    int         len = e - from + 2;
+                    int         len = static_cast<int>(e - cursor + 2);
                     std::string encoded{q + 3, e};
 #ifdef USE_UTF_HACK
                     char *d;
 #endif
-                    i -= len - 1;
                     size -= len;
-                    from = e + 2;
+                    cursor = e + 2;
                     if (ch == 'q' || ch == 'Q')
                     {
                         len = qp_decode_string(to, encoded.c_str(), true);
@@ -482,11 +513,11 @@ int decode_header(char *to, const char *from, int size)
                     to += len;
                     size += len;
                     // If the next character is whitespace we should eat it now
-                    from = skip_hor_space(from);
+                    cursor = skip_hor_space_in_view(cursor);
                 }
                 else
                 {
-                    *to++ = *from++;
+                    *to++ = *cursor++;
                 }
 #ifdef USE_UTF_HACK
                 utf_init(old_ics, old_ocs);
@@ -494,16 +525,16 @@ int decode_header(char *to, const char *from, int size)
             }
             else
             {
-                *to++ = *from++;
+                *to++ = *cursor++;
             }
         }
-        else if (*from != '\n')
+        else if (*cursor != '\n')
         {
-            *to++ = *from++;
+            *to++ = *cursor++;
         }
         else
         {
-            from++;
+            cursor++;
             size--;
         }
         pass2_needed = true;
@@ -1000,7 +1031,7 @@ void Article::set_cached_line(int which_line, char *s)
         {
             std::free(m_from);
         }
-        decode_header(s, s, std::strlen(s));
+        decode_header(s, s);
         m_from = s;
         break;
 

@@ -75,14 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-7. `libtrn/cache.cpp`, `decode_header`
-
-   Promote only the input pair `from/size` to `std::string_view` in the
-   implementation and `libtrn/include/trn/cache.h`.  Keep `to` as a
-   mutable output buffer.  This is a good bottom slice for subject
-   parsing because encoded-word handling already creates owned
-   `std::string` values for bounded substrings.
-
 8. `libtrn/cache.cpp`, `Article::set_subj_line`
 
    Promote the subject input from `const char *` plus `int size` to

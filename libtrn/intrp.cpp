@@ -1290,7 +1290,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     safe_copy(scrbuf,s,sizeof scrbuf);
                     s = scrbuf;
                 }
-                decode_header(s, s, std::strlen(s));
+                decode_header(s, s);
                 if (address_parse)
                 {
                     char *h = std::strchr(s, '<');

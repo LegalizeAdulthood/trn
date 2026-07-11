@@ -1,6 +1,7 @@
 /* rt-wumpus.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rt-wumpus.h>
 
@@ -28,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 int g_max_tree_lines{6};
 
@@ -399,7 +401,8 @@ ArticleLine tree_puts(const char *orig_line, ArticleLine header_line, int is_sub
     }
     if (g_do_hiding)
     {
-        end = line + decode_header(line, orig_line, len);
+        end = line + decode_header(line,
+                             std::string_view{orig_line, static_cast<std::size_t>(len)});
     }
     else
     {
