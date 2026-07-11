@@ -26,7 +26,12 @@
 #include <string>
 #include <string_view>
 
+static ArticleNum nntp_next_art();
 static int nntp_copy_body(char *s, int limit, ArticlePosition pos);
+#ifdef SUPPORT_XTHREAD
+static long nntp_read_check();
+static long nntp_read(char *buf, long n);
+#endif
 
 static ArticlePosition s_body_pos{-1};
 static ArticlePosition s_body_end{};
@@ -191,7 +196,7 @@ ArticleNum nntp_stat_id(std::string_view msg_id)
     return ArticleNum{art_num};
 }
 
-ArticleNum nntp_next_art()
+static ArticleNum nntp_next_art()
 {
     long artnum;
 
@@ -672,7 +677,7 @@ void DataSource::nntp_server_died()
 // before calling nntp_read() for the actual data transfer.
 //
 #ifdef SUPPORT_XTHREAD
-long nntp_read_check()
+static long nntp_read_check()
 {
     // try to get the status line and the status code
     switch (nntp_check())
@@ -698,7 +703,7 @@ long nntp_read_check()
 // be preceded by an appropriate binary command and an nntp_read_check call.
 //
 #ifdef SUPPORT_XTHREAD
-long nntp_read(char *buf, long n)
+static long nntp_read(char *buf, long n)
 {
     // if no bytes to read, then just return EOF
     if (s_raw_bytes < 0)

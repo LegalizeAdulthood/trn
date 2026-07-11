@@ -32,7 +32,6 @@ void            nntp_finish_list();
 int             nntp_group(std::string_view group, NewsgroupData *gp);
 int             nntp_stat(ArticleNum art_num);
 ArticleNum      nntp_stat_id(std::string_view msg_id);
-ArticleNum      nntp_next_art();
 int             nntp_header(ArticleNum art_num);
 void            nntp_body(ArticleNum art_num);
 ArticlePosition nntp_art_size();
@@ -48,9 +47,5 @@ char           *nntp_art_name(ArticleNum art_num, bool allocate);
 char           *nntp_tmp_name(int ndx);
 int             nntp_handle_nested_lists();
 int             nntp_handle_timeout();
-#ifdef SUPPORT_XTHREAD
-long nntp_read_check();
-long nntp_read(char *buf, long n);
-#endif
 
 #endif
