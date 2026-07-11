@@ -3,6 +3,7 @@
  * scan ordering
  */
 // This file Copyright 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/sorder.h>
 
@@ -15,6 +16,8 @@
 #include <cstdlib>
 
 bool g_s_order_changed{}; // If true, resort next time order is considered
+
+static void s_sort_basic();
 
 #ifdef UNDEF
 // pointers to the two entries to be compared
@@ -50,7 +53,7 @@ int s_compare(long a, long b)
 #define SOFF(a) ((a)-1)
 
 // Uses a heapsort algorithm with the heap readjustment inlined.
-void s_sort_basic()
+static void s_sort_basic()
 {
     int t1;
     int j;
