@@ -1,6 +1,7 @@
 /* init.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/init.h>
 
@@ -49,6 +50,8 @@
 #include <cstdlib>
 
 long g_our_pid{};
+
+static void news_news_check();
 
 /// @brief Initializes the application.
 ///
@@ -179,7 +182,7 @@ bool initialize(int argc, char *argv[])
     return found_any;
 }
 
-void news_news_check()
+static void news_news_check()
 {
     const char *newsnewsname = file_exp(NEWSNEWSNAME);
     if (std::FILE *fp = std::fopen(newsnewsname, "r"))
