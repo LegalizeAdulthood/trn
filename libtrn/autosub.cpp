@@ -12,9 +12,10 @@
 #include <util/env.h>
 
 #include <cstdio>
+#include <string>
 #include <string_view>
 
-static bool match_list(std::string_view pat_list, const char *s);
+static bool match_list(std::string_view pat_list, std::string_view s);
 
 // Consider the newsgroup specified, and return:
 // : if we should autosubscribe to it
@@ -37,10 +38,11 @@ AddNewType auto_subscribe(const char *name)
     return ADDNEW_ASK;
 }
 
-static bool match_list(std::string_view pat_list, const char *s)
+static bool match_list(std::string_view pat_list, std::string_view s)
 {
     CompiledRegex il_compex;
 
+    const std::string candidate{s};
     bool             result = false;
     std::string_view patterns = pat_list;
     il_compex.init_compex();
@@ -65,7 +67,7 @@ static bool match_list(std::string_view pat_list, const char *s)
             finalize(1);
         }
 
-        if (il_compex.execute(s) != nullptr)
+        if (il_compex.execute(candidate.c_str()) != nullptr)
         {
             result = tmp_result;
         }

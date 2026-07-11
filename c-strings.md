@@ -104,10 +104,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-18. `libtrn/autosub.cpp`, `match_list`: promote `s` to
-    `std::string_view`.  Keep pattern slicing as views and create a
-    local `std::string` only for `CompiledRegex::execute`.
-
 19. `libtrn/autosub.cpp`, `auto_subscribe`: promote `name` to
     `std::string_view`.  Pass the view to `match_list`; environment
     values remain C strings at the boundary.
