@@ -256,8 +256,11 @@ static unsigned hash(std::string_view key)
 
 static int default_cmp(const char *key, int keylen, HashDatum data)
 {
+    const std::string_view key_view{
+            key, static_cast<std::string_view::size_type>(keylen)};
+
     // We already know that the lengths are equal, just compare the strings
-    return std::memcmp(key, data.dat_ptr, keylen);
+    return std::memcmp(key_view.data(), data.dat_ptr, key_view.size());
 }
 
 // allocate a hash entry

@@ -81,12 +81,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-16. `libtrn/hash.cpp`, `default_cmp`
-
-   Locally derive a key view from the callback `key/keylen` pair.  This
-   is the bottom comparator and prepares the default hash table compare
-   path before the shared callback typedef changes.
-
 17. `libtrn/addng.cpp`, `add_newsgroup_cmp`
 
    Locally derive a key view from the callback `key/key_len` pair and
