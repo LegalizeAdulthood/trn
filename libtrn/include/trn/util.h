@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <string_view>
 
 extern bool g_waiting; // waiting for subprocess (in doshell)?
 extern bool g_no_wait_fork;
@@ -57,7 +58,7 @@ int eaccess(char *, int);
 char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp);
 bool make_dir(const char *dirname, MakeDirNameType nametype);
-void not_incl(const char *feature);
+void  not_incl(std::string_view feature);
 void grow_str(char **strptr, int *curlen, int newlen);
 void set_def(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS

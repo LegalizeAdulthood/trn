@@ -96,9 +96,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-12. `libtrn/util.cpp`, `not_incl`: promote `feature` to
-    `std::string_view` and print it with a bounded field width.
-
 13. `util/util2.cpp`, `save_str`: promote `str` to
     `std::string_view`.  Allocate from `str.size()`, copy bytes, append
     the terminator, and update `util/util2.h`.

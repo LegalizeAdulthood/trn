@@ -454,9 +454,10 @@ bool make_dir(const char *dirname, MakeDirNameType nametype)
     return static_cast<bool>(ec);
 }
 
-void not_incl(const char *feature)
+void not_incl(std::string_view feature)
 {
-    std::printf("\nNo room for feature \"%s\" on this machine.\n",feature);
+    std::printf("\nNo room for feature \"%.*s\" on this machine.\n", static_cast<int>(feature.size()),
+                feature.empty() ? "" : feature.data());
 }
 
 // grow a static string to at least a certain length
