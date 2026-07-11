@@ -1,6 +1,7 @@
 /* trn/rt-ov.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RT_OV_H
 #define TRN_RT_OV_H
 
@@ -26,6 +27,5 @@ enum OverviewFieldNum
 bool        ov_init();
 bool        ov_data(ArticleNum first, ArticleNum last, bool cheating);
 void        ov_close();
-const char *ov_field_name(int num);
 
 #endif

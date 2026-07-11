@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-17. `libtrn/rt-ov.cpp`: move declarations from
-    `libtrn/include/trn/rt-ov.h`.
-    Functions: `ov_field_name`.
-
 SL-18. `libtrn/rt-page.cpp`: move declarations from
     `libtrn/include/trn/rt-page.h`.
     Functions: `display_page_title`.

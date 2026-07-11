@@ -48,6 +48,7 @@ static HeaderLineType s_header_num[] = {
 static void             ov_parse(char *line, ArticleNum artnum, bool remote);
 static const char      *ov_name(const char *group);
 static OverviewFieldNum ov_num(char *hdr, char *end);
+static const char      *ov_field_name(int num);
 
 bool ov_init()
 {
@@ -618,7 +619,7 @@ void ov_close()
     }
 }
 
-const char *ov_field_name(int num)
+static const char *ov_field_name(int num)
 {
     return g_header_type[s_header_num[num]].name.c_str();
 }
