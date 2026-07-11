@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-18. `libtrn/rt-page.cpp`: move declarations from
-    `libtrn/include/trn/rt-page.h`.
-    Functions: `display_page_title`.
-
 SL-19. `libtrn/rt-process.cpp`: move declarations from
     `libtrn/include/trn/rt-process.h`.
     Functions: `allocate_article`.

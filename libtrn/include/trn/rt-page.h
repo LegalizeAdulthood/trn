@@ -1,6 +1,7 @@
 /* trn/rt-page.h
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RT_PAGE_H
 #define TRN_RT_PAGE_H
 
@@ -68,7 +69,6 @@ bool last_page();
 bool next_page();
 bool prev_page();
 bool calc_page(Selection u);
-void display_page_title(bool home_only);
 void display_page();
 void update_page();
 void output_sel(int ix, int sel, bool update);

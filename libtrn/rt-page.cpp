@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rt-page.h>
 
@@ -58,6 +59,7 @@ static int               s_sel_next_op{};
 static void sel_page_init();
 static int  count_subject_lines(const Subject *subj, int *selptr);
 static int  count_thread_lines(const Subject *subj, int *selptr);
+static void display_page_title(bool home_only);
 static void display_article(const Article *ap, int ix, int sel);
 static void display_subject(const Subject *subj, int ix, int sel);
 static void display_universal(const UniversalItem *ui);
@@ -1914,7 +1916,7 @@ try_again:
 /// @param home_only If true, only moves the cursor home and erases the line;
 /// otherwise, clears the screen and redraws the title.
 ///
-void display_page_title(bool home_only)
+static void display_page_title(bool home_only)
 {
     if (home_only || (g_erase_screen && g_erase_each_line))
     {
