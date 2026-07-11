@@ -357,11 +357,10 @@ ArticleNum NewsgroupData::get_newsgroup_size()
     long first;
     char ch;
 
-    char *nam = m_rc_line;
-    int   len = m_num_offset - 1;
+    const std::string_view group_name{m_rc_line, static_cast<std::size_t>(m_num_offset - 1)};
+    int                    len = static_cast<int>(group_name.size());
 
-    if (!m_rc->data_source->find_active_group(
-            tmpbuf, std::string_view{nam, static_cast<std::size_t>(len)}, m_ng_max))
+    if (!m_rc->data_source->find_active_group(tmpbuf, group_name, m_ng_max))
     {
         if (m_subscribe_char == ':')
         {
