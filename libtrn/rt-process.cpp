@@ -1,6 +1,7 @@
 /* rt-process.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rt-process.h>
 
@@ -76,7 +77,7 @@ Article *get_article(char *msgid)
 
     fix_msg_id(msgid);
 
-    HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
+    HashDatum data = hash_fetch(g_msg_id_hash, msgid);
     if (data.dat_len)
     {
         article = allocate_article(ArticleNum{});

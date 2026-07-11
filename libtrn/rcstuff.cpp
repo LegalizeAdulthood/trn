@@ -35,6 +35,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 HashTable *g_newsrc_hash{};
 Multirc   *g_sel_page_mp{};
@@ -693,7 +694,10 @@ static bool open_newsrc(Newsrc *rp)
             continue;
         }
         parse_rcline(np);
-        HashDatum data = hash_fetch(g_newsrc_hash, np->m_rc_line, np->m_num_offset - 1);
+        HashDatum data = hash_fetch(
+                g_newsrc_hash,
+                std::string_view{
+                        np->m_rc_line, static_cast<std::size_t>(np->m_num_offset - 1)});
         if (data.dat_ptr)
         {
             np->m_to_read = TR_IGNORE;
@@ -1494,7 +1498,7 @@ void list_newsgroups()
 
 NewsgroupData *find_newsgroup(const char *ngnam)
 {
-    HashDatum data = hash_fetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
+    HashDatum data = hash_fetch(g_newsrc_hash, ngnam);
     return (NewsgroupData*)data.dat_ptr;
 }
 

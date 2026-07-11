@@ -151,12 +151,12 @@ static HashEntry **s_slast_nextp{};
 static int       s_slast_keylen{};
 
 // data corresponding to key
-HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len)
+HashDatum hash_fetch(HashTable *tbl, std::string_view key)
 {
     static HashDatum errdatum{nullptr, 0};
+    const int key_len = static_cast<int>(key.size());
 
-    HashEntry **nextp = hash_find(
-            tbl, std::string_view{key, static_cast<std::string_view::size_type>(key_len)});
+    HashEntry **nextp = hash_find(tbl, key);
     s_slast_nextp = nextp;
     s_slast_keylen = key_len;
     HashEntry *hp = *nextp;
@@ -222,6 +222,7 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 static HashEntry **hash_find(HashTable *tbl, std::string_view key)
 {
     HashEntry* prevhp = nullptr;
+    const char* key_data = key.empty() ? "" : key.data();
     const int key_len = static_cast<int>(key.size());
 
     if (BADTBL(tbl))
@@ -233,7 +234,7 @@ static HashEntry **hash_find(HashTable *tbl, std::string_view key)
     HashEntry **hepp = &tbl->ht_addr[hash(key) % size];
     for (HashEntry *hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next)
     {
-        if (hp->he_key_len == key_len && !(*tbl->ht_cmp)(key.data(), key_len, hp->he_data))
+        if (hp->he_key_len == key_len && !(*tbl->ht_cmp)(key_data, key_len, hp->he_data))
         {
             break;
         }

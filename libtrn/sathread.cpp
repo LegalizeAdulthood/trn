@@ -2,6 +2,7 @@
  *
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/sathread.h>
 
@@ -55,13 +56,13 @@ long sa_get_subj_thread(long e)
     {
         s_sa_thread_hash = hash_create(401, nullptr);
     }
-    HashDatum data = hash_fetch(s_sa_thread_hash, s, std::strlen(s));
+    HashDatum data = hash_fetch(s_sa_thread_hash, s);
     if (data.dat_ptr)
     {
         return (long)(data.dat_len);
     }
     char *p = mp_save_str(s, MP_SATHREAD);
-    data = hash_fetch(s_sa_thread_hash,p,std::strlen(s));
+    data = hash_fetch(s_sa_thread_hash, p);
     data.dat_ptr = p;
     data.dat_len = (unsigned)(s_sa_num_threads+1);
     hash_store_last(data);

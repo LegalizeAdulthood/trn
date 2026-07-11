@@ -4,8 +4,11 @@
 /* This file is an altered version of a set of hash routines by
  * Geoffrey Collyer.  See hash.c for his copyright.
  */
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_HASH_H
 #define TRN_HASH_H
+
+#include <string_view>
 
 struct HashDatum
 {
@@ -22,7 +25,7 @@ HashTable *hash_create(unsigned size, HashCompareFunc cmp_func);
 void hash_destroy(HashTable *tbl);
 void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data);
 void hash_delete(HashTable *tbl, const char *key, int key_len);
-HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len);
+HashDatum  hash_fetch(HashTable *tbl, std::string_view key);
 void hash_store_last(HashDatum data);
 void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra);
 

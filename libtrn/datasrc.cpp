@@ -669,7 +669,7 @@ bool DataSource::find_active_group(char *outbuf, std::string_view name, ArticleN
     // Do a quick, hashed lookup
 
     outbuf[0] = '\0';
-    HashDatum data = hash_fetch(m_act_sf.m_hp, name_data, name_len);
+    HashDatum data = hash_fetch(m_act_sf.m_hp, name);
     if (data.dat_ptr)
     {
         ListNode* node = (ListNode*)data.dat_ptr;
@@ -833,7 +833,10 @@ const char *DataSource::find_group_desc(const char *group_name)
     }
 
     grouplen = std::strlen(group_name);
-    if (HashDatum data = hash_fetch(m_desc_sf.m_hp, group_name, grouplen); data.dat_ptr)
+    if (HashDatum data = hash_fetch(
+                m_desc_sf.m_hp,
+                std::string_view{group_name, static_cast<std::size_t>(grouplen)});
+        data.dat_ptr)
     {
         ListNode*node = (ListNode*)data.dat_ptr;
         // m_act_sf.lp->recent = node;

@@ -209,7 +209,10 @@ void Article::check_for_near_subj()
         if ((int) std::strlen(sp->m_str + 4) >= g_join_subject_len && sp->m_thread)
         {
             Subject* sp2;
-            HashDatum data = hash_fetch(s_short_subj_hash, sp->m_str + 4, g_join_subject_len);
+            HashDatum data = hash_fetch(
+                    s_short_subj_hash,
+                    std::string_view{
+                            sp->m_str + 4, static_cast<std::size_t>(g_join_subject_len)});
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char*)sp;
@@ -390,7 +393,9 @@ void Article::set_subj_line(std::string_view subj)
     }
     else
     {
-        data = hash_fetch(s_subj_hash, new_subj + 4, size);
+        data = hash_fetch(
+                s_subj_hash,
+                std::string_view{new_subj + 4, static_cast<std::size_t>(size)});
         if (!(sp = (Subject *) data.dat_ptr))
         {
             sp = (Subject*)safe_malloc(sizeof (Subject));

@@ -75,12 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-13. `libtrn/hash.cpp`, `hash_fetch`
-
-   Promote the public key pair to `std::string_view` in the
-   implementation and `libtrn/include/trn/hash.h`.  This has many
-   callers, but most already hold a pointer plus known length.
-
 14. `libtrn/hash.cpp`, `hash_store`
 
    Promote the public key pair to `std::string_view` in the

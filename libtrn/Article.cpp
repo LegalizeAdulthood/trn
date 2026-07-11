@@ -1,4 +1,5 @@
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/Article.h>
 
@@ -758,7 +759,7 @@ bool Article::valid_article()
     if (msgid)
     {
         fix_msg_id(msgid);
-        HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
+        HashDatum data = hash_fetch(g_msg_id_hash, msgid);
         if (data.dat_len)
         {
             safe_free0(data.dat_ptr);
