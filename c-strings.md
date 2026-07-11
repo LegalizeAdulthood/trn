@@ -89,10 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-5. `nntp/nntpclient.cpp`, `nntp_command`: promote `bp` to
-   `std::string_view`.  Copy it into owned local or global buffers
-   before writing `g_last_command` or calling `write_line`.
-
 6. `nntp/nntpclient.cpp`, `nntp_xgtitle`: promote `groupname` to
    `std::string_view`.  Build a local `std::string` for the
    `XGTITLE` command text, then pass the command to `nntp_command`.

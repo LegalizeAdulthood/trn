@@ -1,6 +1,7 @@
 /* nntpclient.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <nntp/nntpclient.h>
 
@@ -8,10 +9,12 @@
 #include <nntp/nntpauth.h>
 #include <nntp/nntpinit.h>
 #include <trn/nntp.h>
+#include <util/util2.h>
 
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <string>
 
 NNTPLink g_nntp_link{}; // the current server's file handles
 bool     g_nntp_allow_timeout{};
@@ -157,16 +160,17 @@ char *nntp_server_name(char *name)
     return name;
 }
 
-int nntp_command(const char *bp)
+int nntp_command(std::string_view bp)
 {
-    std::time_t now;
+    const std::string command{bp};
+    std::time_t       now;
 #if defined(DEBUG) && defined(FLUSH)
     if (g_debug & DEB_NNTP)
     {
-        std::printf(">%s\n", bp);
+        std::printf(">%s\n", command.c_str());
     }
 #endif
-    std::strcpy(g_last_command, bp);
+    safe_copy(g_last_command, command.c_str(), sizeof g_last_command);
     if (!g_nntp_link.connection)
     {
         return nntp_handle_timeout();
@@ -185,7 +189,7 @@ int nntp_command(const char *bp)
         }
     }
     error_code_t ec;
-    g_nntp_link.connection->write_line(bp, ec);
+    g_nntp_link.connection->write_line(command, ec);
     if (ec)
     {
         return nntp_handle_timeout();

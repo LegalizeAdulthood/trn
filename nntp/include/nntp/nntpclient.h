@@ -1,6 +1,7 @@
 /* nntpclient.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_NNTPCLIENT_H
 #define TRN_NNTPCLIENT_H
 
@@ -16,6 +17,7 @@
 #include <stdexcept>
 #include <stdlib.h> // size_t
 #include <string>
+#include <string_view>
 
 enum NNTPFlags
 {
@@ -114,7 +116,7 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
 void  set_nntp_connection_factory(ConnectionFactory factory);
 int   nntp_connect(const char *machine, bool verbose);
 char *nntp_server_name(char *name);
-int   nntp_command(const char *bp);
+int   nntp_command(std::string_view bp);
 int   nntp_xgtitle(const char *groupname);
 int   nntp_check();
 bool  nntp_at_list_end(const char *s);
