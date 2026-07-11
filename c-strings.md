@@ -89,11 +89,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-10. `libtrn/mime.cpp`, `mime_types_match`: promote `pat` to
-    `std::string_view`.  Keep wildcard parsing on the view and create a
-    local `std::string` only while the case-compare helpers still need
-    null-terminated strings.
-
 11. `libtrn/rt-wumpus.cpp`, `tree_puts`: promote `orig_line` to
     `std::string_view`.  Derive the newline-bounded view once, pass it
     to `decode_header`, and copy from the view into the mutable display

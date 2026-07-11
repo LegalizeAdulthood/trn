@@ -1,5 +1,6 @@
 /* trn/mime.h
  */
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_MIME_H
 #define TRN_MIME_H
 
@@ -9,6 +10,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <string>
+#include <string_view>
 
 struct HtmlBlock
 {
@@ -168,7 +170,7 @@ void          mime_init();
 void          mime_final();
 void          mime_read_mimecap(const char *mcname);
 MimeCapEntry *mime_find_mimecap_entry(const char *contenttype, MimeCapFlags skip_flags);
-bool          mime_types_match(const char *ct, const char *pat);
+bool          mime_types_match(const char *ct, std::string_view pat);
 int           mime_exec(char *cmd);
 void          mime_init_sections();
 void          mime_push_section();

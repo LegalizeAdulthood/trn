@@ -27,6 +27,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -298,15 +299,15 @@ MimeCapEntry *mime_find_mimecap_entry(const char *contenttype, MimeCapFlags skip
     return nullptr;
 }
 
-bool mime_types_match(const char *ct, const char *pat)
+bool mime_types_match(const char *ct, std::string_view pat)
 {
-    const std::string_view pattern{pat};
-    const std::size_t      slash = pattern.find('/');
-    const std::size_t      len = slash == std::string_view::npos ? pattern.size() : slash;
-    const bool             iswild = slash == std::string_view::npos || pattern.substr(slash + 1) == "*";
+    const std::size_t slash = pat.find('/');
+    const std::size_t len = slash == std::string_view::npos ? pat.size() : slash;
+    const bool        iswild = slash == std::string_view::npos || pat.substr(slash + 1) == "*";
+    const std::string pattern{pat};
 
-    return string_case_equal(ct, pat) ||
-           (iswild && string_case_equal(ct, pat, static_cast<int>(len)) && ct[len] == '/');
+    return string_case_equal(ct, pattern.c_str()) ||
+           (iswild && string_case_equal(ct, pattern.c_str(), static_cast<int>(len)) && ct[len] == '/');
 }
 
 int mime_exec(char *cmd)
