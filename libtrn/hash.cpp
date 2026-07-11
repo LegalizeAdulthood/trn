@@ -37,7 +37,7 @@ struct HashTable
     HashCompareFunc ht_cmp;
 };
 
-static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen);
+static HashEntry **hash_find(HashTable *tbl, std::string_view key);
 static unsigned    hash(std::string_view key);
 static int         default_cmp(const char *key, int keylen, HashDatum data);
 static HashEntry  *hash_entry_alloc();
@@ -119,7 +119,8 @@ void hash_destroy(HashTable *tbl)
 
 void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data)
 {
-    HashEntry **nextp = hash_find(tbl, key, key_len);
+    HashEntry **nextp = hash_find(
+            tbl, std::string_view{key, static_cast<std::string_view::size_type>(key_len)});
     HashEntry *hp = *nextp;
     if (hp == nullptr)              // absent; allocate an entry
     {
@@ -133,7 +134,8 @@ void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data)
 
 void hash_delete(HashTable *tbl, const char *key, int key_len)
 {
-    HashEntry **nextp = hash_find(tbl, key, key_len);
+    HashEntry **nextp = hash_find(
+            tbl, std::string_view{key, static_cast<std::string_view::size_type>(key_len)});
     HashEntry *hp = *nextp;
     if (hp == nullptr)                  // absent
     {
@@ -153,7 +155,8 @@ HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len)
 {
     static HashDatum errdatum{nullptr, 0};
 
-    HashEntry **nextp = hash_find(tbl, key, key_len);
+    HashEntry **nextp = hash_find(
+            tbl, std::string_view{key, static_cast<std::string_view::size_type>(key_len)});
     s_slast_nextp = nextp;
     s_slast_keylen = key_len;
     HashEntry *hp = *nextp;
@@ -216,9 +219,10 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 // if so, this pointer should be updated with the address of the object
 // to be inserted, if insertion is desired.
 //
-static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen)
+static HashEntry **hash_find(HashTable *tbl, std::string_view key)
 {
     HashEntry* prevhp = nullptr;
+    const int key_len = static_cast<int>(key.size());
 
     if (BADTBL(tbl))
     {
@@ -226,11 +230,10 @@ static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen)
         finalize(1);
     }
     unsigned size = tbl->ht_size;
-    const std::string_view key_view{key, static_cast<std::string_view::size_type>(keylen)};
-    HashEntry            **hepp = &tbl->ht_addr[hash(key_view) % size];
+    HashEntry **hepp = &tbl->ht_addr[hash(key) % size];
     for (HashEntry *hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next)
     {
-        if (hp->he_key_len == keylen && !(*tbl->ht_cmp)(key, keylen, hp->he_data))
+        if (hp->he_key_len == key_len && !(*tbl->ht_cmp)(key.data(), key_len, hp->he_data))
         {
             break;
         }

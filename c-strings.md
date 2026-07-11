@@ -75,13 +75,6 @@ where a null sentinel or legacy C API makes a view a poor fit.
 
 ### Local Modernization Slices
 
-12. `libtrn/hash.cpp`, `hash_find`
-
-   Promote the private `key/keylen` pair to `std::string_view`.  Pass
-   `key.data()` and `key.size()` only to the existing compare callback.
-   This prepares the public hash helpers without changing callback
-   ownership yet.
-
 13. `libtrn/hash.cpp`, `hash_fetch`
 
    Promote the public key pair to `std::string_view` in the
