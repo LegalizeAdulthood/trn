@@ -1,6 +1,7 @@
 /* final.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/final.h>
 
@@ -38,6 +39,8 @@ bool g_panic{};       // we got hung up or something-- so leave tty alone
 bool g_doing_ng{};    // do we need to reconstitute current rc line?
 char g_int_count{};   // how many interrupts we've had
 bool g_bos_on_stop{}; // set when handling the stop signal would leave the screen a mess
+
+static Signal_t pipe_catcher(int signo);
 
 void final_init()
 {
@@ -254,7 +257,7 @@ Signal_t sig_catcher(int signo)
     finalize(1);                                // and blow up
 }
 
-Signal_t pipe_catcher(int signo)
+static Signal_t pipe_catcher(int signo)
 {
 #ifdef SIGPIPE
     ;// TODO: we lost the current nntp connection

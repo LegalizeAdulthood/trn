@@ -1,6 +1,7 @@
 /* trn/final.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_FINAL_H
 #define TRN_FINAL_H
 
@@ -19,7 +20,6 @@ void final_init();
 [[noreturn]] void finalize(int status);
 Signal_t int_catcher(int dummy);
 Signal_t sig_catcher(int signo);
-Signal_t pipe_catcher(int signo);
 #ifdef SIGTSTP
 Signal_t stop_catcher(int signo);
 #endif

@@ -102,10 +102,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-SL-6. `libtrn/final.cpp`: move declarations from
-    `libtrn/include/trn/final.h`.
-    Functions: `pipe_catcher`.
-
 SL-7. `libtrn/head.cpp`: move declarations from
     `libtrn/include/trn/head.h`.
     Functions: `end_header_line`, `mp_fetch_lines`.
