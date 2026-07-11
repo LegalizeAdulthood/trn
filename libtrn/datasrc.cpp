@@ -109,6 +109,7 @@ static int         source_file_cmp(std::string_view key, HashDatum data);
 static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int         get_near_miss();
 static DataSource *new_data_source(const char *name, char **vals);
+static char       *read_data_sources(const char *filename);
 
 /// @brief Initializes the data sources for the application.
 ///
@@ -212,7 +213,7 @@ void data_source_finalize()
 /// @return A pointer to the allocated file buffer, or nullptr if the file
 ///         could not be opened or read.
 ///
-char *read_data_sources(const char *filename)
+static char *read_data_sources(const char *filename)
 {
     char* section;
     char* cond;

@@ -118,7 +118,6 @@ extern std::time_t g_def_refetch_secs; // -z
 
 void        data_source_init();
 void        data_source_finalize();
-char       *read_data_sources(const char *filename);
 DataSource *get_data_source(std::string_view name);
 void        set_data_source(DataSource *dp);
 void        check_data_sources();
