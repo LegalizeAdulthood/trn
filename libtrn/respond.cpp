@@ -1,6 +1,7 @@
 /* respond.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/respond.h>
 
@@ -48,6 +49,7 @@ static char       s_empty_article[] = "\nEmpty article.\n";
 static std::FILE *s_tmp_fp{};
 
 static void follow_it_up();
+static int  invoke(const char *cmd, const char *dir);
 
 void respond_init()
 {
@@ -1124,7 +1126,7 @@ void followup()
     g_art = oldart;
 }
 
-int invoke(const char *cmd, const char *dir)
+static int invoke(const char *cmd, const char *dir)
 {
     MinorMode oldmode = g_mode;
     int ret = -1;

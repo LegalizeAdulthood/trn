@@ -1,6 +1,7 @@
 /* trn/respond.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RESPOND_H
 #define TRN_RESPOND_H
 
@@ -31,6 +32,5 @@ int        supersede_article();
 void       reply();
 void       forward();
 void       followup();
-int        invoke(const char *cmd, const char *dir);
 
 #endif
