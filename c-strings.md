@@ -101,13 +101,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-32. `libtrn/only.cpp`, `in_list`, `newsgroup_name`.
-    Promote `newsgroup_name` to `std::string_view`.  Keep the early
-    return allocation-free when no restrictions exist.  Otherwise, build
-    one local `std::string group_name{newsgroup_name}` and pass
-    `group_name.c_str()` to `CompiledRegex::execute`.  No pointer
-    escapes; bracket captures already save their own copy.
-
 33. `libtrn/color.cpp`, `color_rc_attribute`, `object`.
     Promote only `object` to `std::string_view`; keep `value` as
     `char *` because the function parses it in place.  Build a local

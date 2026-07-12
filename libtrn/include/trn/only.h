@@ -23,7 +23,7 @@ extern char g_empty_only_char;
 
 void only_init();
 void set_newsgroup_to_do(std::string_view pat);
-bool in_list(const char *newsgroup_name);
+bool in_list(std::string_view newsgroup_name);
 void end_only();
 void push_only();
 void pop_only();

@@ -60,15 +60,16 @@ void set_newsgroup_to_do(std::string_view pat)
 
 // if command line list is non-null, is this newsgroup wanted?
 
-bool in_list(const char *newsgroup_name)
+bool in_list(std::string_view newsgroup_name)
 {
     if (g_max_newsgroup_to_do == 0)
     {
         return true;
     }
+    const std::string group_name{newsgroup_name};
     for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
     {
-        if (s_compex_to_do[i]->execute(newsgroup_name))
+        if (s_compex_to_do[i]->execute(group_name.c_str()))
         {
             return true;
         }
