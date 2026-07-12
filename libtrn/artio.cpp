@@ -1,6 +1,7 @@
 /* artio.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/artio.h>
 
@@ -24,6 +25,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 ArticlePosition g_art_pos{};              // byte position in article file
 ArticleLine     g_art_line_num{};         // current line number in article file
@@ -76,9 +78,8 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
         }
         else
         {
-            char art_name[MAX_FILENAME]; // filename of current article
-            std::sprintf(art_name, "%ld", art_num.value_of());
-            g_art_fp = std::fopen(art_name, "r");
+            const std::string art_name{std::to_string(art_num.value_of())};
+            g_art_fp = std::fopen(art_name.c_str(), "r");
         }
         if (!g_art_fp)
         {

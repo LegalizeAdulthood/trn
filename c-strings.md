@@ -130,11 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-47. `libtrn/artio.cpp`, `art_open`, `art_name`.
-    Replace the local article-number filename buffer with
-    `std::to_string`.  Pass `art_name.c_str()` to `std::fopen`;
-    the pointer is consumed immediately.
-
 48. `libtrn/nntp.cpp`, `nntp_handle_timeout`, `last_command_save`.
     Replace the local `char[NNTP_STRLEN]` snapshot with
     `std::string`.  Pass it to `nntp_command` and copy it back into
