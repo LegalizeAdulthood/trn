@@ -1710,7 +1710,7 @@ static char *expand_mouse_buttons(char *cp, int cnt)
     return g_buf;
 }
 
-const char *quote_string(const char *val)
+const char *quote_string(std::string_view val)
 {
     static std::string buff;
 
@@ -1720,17 +1720,17 @@ const char *quote_string(const char *val)
     int  backslashes = 0;
     buff.clear();
 
-    if (std::isspace(*val))
+    if (!val.empty() && std::isspace(val.front()))
     {
         needs_quotes = true;
     }
-    for (const char *cp = val; *cp; cp++)
+    for (std::size_t i = 0; i < val.size(); i++)
     {
-        switch (*cp)
+        switch (val[i])
         {
         case ' ':
         case '\t':
-            if (!cp[1] || isspace(cp[1]))
+            if (i + 1 == val.size() || isspace(val[i + 1]))
             {
                 needs_quotes = true;
             }
@@ -1759,18 +1759,21 @@ const char *quote_string(const char *val)
     {
         const char usequote = quotes > ticks? '\'' : '"';
         buff = usequote;
-        while (*val)
+        for (const char ch : val)
         {
-            if (*val == usequote || *val == '\\')
+            if (ch == usequote || ch == '\\')
             {
                 buff += '\\';
             }
-            buff += *val++;
+            buff += ch;
         }
         buff += usequote;
-        return buff.c_str();
     }
-    return val;
+    else
+    {
+        buff.assign(val.data(), val.size());
+    }
+    return buff.c_str();
 }
 
 void cwd_check()

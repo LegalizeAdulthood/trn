@@ -152,7 +152,7 @@ void        set_option(OptionIndex num, const char *s);
 void        save_options(const char *filename);
 const char *option_value(OptionIndex num);
 void        set_header(std::string_view s, HeaderTypeFlags flag, bool setit);
-const char *quote_string(const char *val);
+const char *quote_string(std::string_view val);
 void        cwd_check();
 
 inline const char *yes_or_no(bool v)

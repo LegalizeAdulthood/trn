@@ -104,11 +104,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-22. `libtrn/opt.cpp`, `quote_string`: promote `val` to
-    `std::string_view`.  Build the static return buffer from the view in
-    both quoted and unquoted cases so returned text stays
-    null-terminated.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,
