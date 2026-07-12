@@ -152,10 +152,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-57. In `libtrn/last.cpp`, change only `write_last` so the `.pid` temporary
-    filename is derived from a local path and the remove/rename
-    operations use `std::filesystem`.  Leave the file-scope
-    `s_last_file` storage unchanged.
 58. In `libtrn/opt.cpp`, change only `opt_init` so the `%+`
     directory and configured option filename are local paths for
     directory and existence checks.  Keep `g_ini_file` as a string and

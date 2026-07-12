@@ -1,6 +1,7 @@
 /* last.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/last.h>
 
@@ -14,7 +15,11 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <string>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 std::string g_last_newsgroup_name; // last newsgroup read
 long        g_last_time{};         // time last we ran
@@ -67,20 +72,22 @@ void read_last()
 
 void write_last()
 {
-    std::sprintf(g_buf,"%s.%ld", s_last_file, g_our_pid);
-    if (std::FILE *fp = std::fopen(g_buf, "w"))
+    fs::path temp_file{s_last_file};
+    temp_file += "." + std::to_string(g_our_pid);
+    if (std::FILE *fp = std::fopen(temp_file.string().c_str(), "w"))
     {
         g_last_time = std::max(g_last_time, s_start_time);
         std::fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
                 g_newsgroup_name.c_str(),g_last_time,
                 g_last_active_size,g_last_new_time,g_last_extra_num);
         std::fclose(fp);
-        remove(s_last_file);
-        rename(g_buf,s_last_file);
+        std::error_code error;
+        fs::remove(s_last_file, error);
+        fs::rename(temp_file, s_last_file, error);
     }
     else
     {
-        std::printf(g_cant_create,g_buf);
+        std::printf(g_cant_create, temp_file.string().c_str());
         // term_down(1);
     }
 }
