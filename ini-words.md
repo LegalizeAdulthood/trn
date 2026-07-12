@@ -134,18 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 2: Fix Data Source Schema Alignment
-
-Make data-source key positions explicit and correct.
-
-- Add the missing `Thread Dir` index or remove the dead field from the
-  schema after confirming intended behavior.
-- Add a small assertion or test that each data-source id maps to the
-  expected text.
-- Keep `Thread Dir` behavior unchanged if the field is currently unused.
-
-This is a narrow correctness slice before broader refactoring.
-
 ### Slice 3: Introduce `IniField` And `IniSchema`
 
 Add the new schema classes beside the old API.

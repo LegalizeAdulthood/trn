@@ -66,6 +66,7 @@ enum DataSourceIniIndex
     DI_ACTIVE_FILE,
     DI_ACT_REFETCH,
     DI_SPOOL_DIR,
+    DI_THREAD_DIR,
     DI_OVERVIEW_DIR,
     DI_ACTIVE_TIMES,
     DI_GROUP_DESC,
@@ -76,7 +77,8 @@ enum DataSourceIniIndex
     DI_XHDR_BROKEN,
     DI_XREFS,
     DI_OVERVIEW_FMT,
-    DI_FORCE_AUTH
+    DI_FORCE_AUTH,
+    DI_LAST
 };
 
 static IniWords s_datasrc_ini[] =
@@ -103,8 +105,38 @@ static IniWords s_datasrc_ini[] =
     // clang-format on
 };
 
+struct DataSourceIniExpectation
+{
+    DataSourceIniIndex index;
+    const char        *item;
+};
+
+static const DataSourceIniExpectation s_datasrc_ini_expectations[] = {
+    // clang-format off
+    { DI_NNTP_SERVER,  "NNTP Server" },
+    { DI_ACTIVE_FILE,  "Active File" },
+    { DI_ACT_REFETCH,  "Active File Refetch" },
+    { DI_SPOOL_DIR,    "Spool Dir" },
+    { DI_THREAD_DIR,   "Thread Dir" },
+    { DI_OVERVIEW_DIR, "Overview Dir" },
+    { DI_ACTIVE_TIMES, "Active Times" },
+    { DI_GROUP_DESC,   "Group Desc" },
+    { DI_DESC_REFETCH, "Group Desc Refetch" },
+    { DI_AUTH_USER,    "Auth User" },
+    { DI_AUTH_PASS,    "Auth Password" },
+    { DI_AUTH_COMMAND, "Auth Command" },
+    { DI_XHDR_BROKEN,  "XHDR Broken" },
+    { DI_XREFS,        "Xrefs" },
+    { DI_OVERVIEW_FMT, "Overview Format File" },
+    { DI_FORCE_AUTH,   "Force Auth" }
+    // clang-format on
+};
+
+static_assert(DI_LAST + 1 == sizeof s_datasrc_ini / sizeof s_datasrc_ini[0]);
+
 static char       *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
 static char       *file_or_none(char *fn);
+static void        check_data_source_ini_schema();
 static int         source_file_cmp(std::string_view key, HashDatum data);
 static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int         get_near_miss();
@@ -126,6 +158,8 @@ static char       *read_data_sources(const char *filename);
 ///
 void data_source_init()
 {
+    check_data_source_ini_schema();
+
     char** vals = prep_ini_words(s_datasrc_ini);
     char* actname = nullptr;
 
@@ -201,6 +235,19 @@ void data_source_finalize()
     }
     g_data_source_cnt = 0;
     g_nntp_auth_file.clear();
+}
+
+static void check_data_source_ini_schema()
+{
+    for (const DataSourceIniExpectation &expect : s_datasrc_ini_expectations)
+    {
+        if (std::strcmp(s_datasrc_ini[expect.index].item, expect.item) != 0)
+        {
+            std::printf("*** Internal error: data-source INI index %d is `%s', expected `%s'.\n",
+                        static_cast<int>(expect.index), s_datasrc_ini[expect.index].item, expect.item);
+            std::abort();
+        }
+    }
 }
 
 /// @brief Reads data sources from the specified file.
