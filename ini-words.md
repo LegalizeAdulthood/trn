@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 7: Migrate Rcgroup Parsing
-
-Move `s_rcgroups_ini` to `IniSchema` plus `RcGroupConfig`.
-
-- Parse `Group N` sections into `IniSectionValues`.
-- Build `Newsrc` entries from `RcGroupConfig`.
-- Remove the direct `std::free(vals)` cleanup path.
-- Keep access-file ordering behavior unchanged.
-
-Run focused rc/access initialization tests.
-
 ### Slice 8: Split Option Parse State From Edit State
 
 Add `OptionDraft` and make the option selector use it.

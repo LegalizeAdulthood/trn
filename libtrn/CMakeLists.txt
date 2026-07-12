@@ -39,6 +39,7 @@ add_library(libtrn
     opt.cpp include/trn/opt.h
     include/trn/patchlevel.h
     rcln.cpp include/trn/rcln.h
+    RcGroupConfig.cpp include/trn/RcGroupConfig.h
     rcstuff.cpp include/trn/rcstuff.h
     respond.cpp include/trn/respond.h
     rt-ov.cpp include/trn/rt-ov.h

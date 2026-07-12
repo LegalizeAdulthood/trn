@@ -39,6 +39,7 @@ add_executable(trn-headers-test
     test_opt.cpp
     test_patchlevel.cpp
     test_rcln.cpp
+    test_RcGroupConfig.cpp
     test_rcstuff.cpp
     test_respond.cpp
     test_rt-ov.cpp

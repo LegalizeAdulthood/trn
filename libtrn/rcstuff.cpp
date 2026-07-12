@@ -14,12 +14,14 @@
 #include <trn/datasrc.h>
 #include <trn/final.h>
 #include <trn/hash.h>
+#include <trn/IniSectionValues.h>
 #include <trn/init.h>
 #include <trn/last.h>
 #include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/only.h>
+#include <trn/RcGroupConfig.h>
 #include <trn/rcln.h>
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
@@ -50,26 +52,12 @@ int        g_countdown{5};                   // how many lines to list before in
 bool       g_fuzzy_get{};                    // -G
 bool       g_append_unsub{};                 // -I
 
-enum
-{
-    RI_ID = 1,
-    RI_NEWSRC = 2,
-    RI_ADD_GROUPS = 3
-};
-
-static IniWords s_rcgroups_ini[] = {
-    { 0, "RCGROUPS", nullptr },
-    { 0, "ID", nullptr },
-    { 0, "Newsrc", nullptr },
-    { 0, "Add Groups", nullptr },
-    { 0, nullptr, nullptr }
-};
 static bool        s_found_any{};
 static const char *s_cant_recreate{"Can't recreate %s -- restoring older version.\n"
                                    "Perhaps you are near or over quota?\n"};
 
 static bool    clear_newsgroup_item(char *cp, int arg);
-static Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
+static Newsrc *new_newsrc(const RcGroupConfig &config);
 static bool    lock_newsrc(Newsrc *rp);
 static void    unlock_newsrc(Newsrc *rp);
 static bool    open_newsrc(Newsrc *rp);
@@ -94,7 +82,7 @@ static Multirc *rcstuff_init_data()
     {
         char* section;
         char* cond;
-        char**vals = prep_ini_words(s_rcgroups_ini);
+        IniSectionValues values;
         char *s = g_trn_access_mem;
         while ((s = next_ini_section(s, &section, &cond)) != nullptr)
         {
@@ -108,12 +96,12 @@ static Multirc *rcstuff_init_data()
             }
             int i = std::atoi(section + 6);
             i = std::max(i, 0);
-            s = parse_ini_section(s, s_rcgroups_ini);
+            s = parse_ini_section(s, RcGroupConfig::schema(), values);
             if (!s)
             {
                 break;
             }
-            Newsrc *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADD_GROUPS]);
+            Newsrc *rp = new_newsrc(RcGroupConfig::from(values));
             if (rp)
             {
                 Multirc *mp = multirc_ptr(i);
@@ -137,7 +125,6 @@ static Multirc *rcstuff_init_data()
                 }
             }
         }
-        std::free(vals);
         safe_free0(g_trn_access_mem);
     }
     return mptr;
@@ -160,7 +147,9 @@ bool rcstuff_init()
     if (!g_multirc)
     {
         mptr = multirc_ptr(0);
-        mptr->m_first = new_newsrc("default",nullptr,nullptr);
+        RcGroupConfig config;
+        config.set_id("default");
+        mptr->m_first = new_newsrc(config);
         if (!mptr->use_multirc())
         {
             std::printf("Couldn't open any newsrc groups.  Is your access file ok?\n");
@@ -186,17 +175,17 @@ void rcstuff_final()
         delete_list(g_multirc_list);
         g_multirc_list = nullptr;
     }
-    s_rcgroups_ini[0].hash = 0;
-    s_rcgroups_ini[0].help_str = nullptr;
 }
 
-static Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
+static Newsrc *new_newsrc(const RcGroupConfig &config)
 {
+    const char *name = config.id();
     if (!name || !*name)
     {
         return nullptr;
     }
 
+    const char *newsrc = config.newsrc();
     if (!newsrc || !*newsrc)
     {
         newsrc = get_val_const("NEWSRC");
@@ -206,6 +195,7 @@ static Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_
         }
     }
 
+    const char *add_ok = config.add_groups();
     DataSource *dp = get_data_source(name);
     if (!dp)
     {
