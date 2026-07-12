@@ -169,9 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-07: `util/env.cpp`, `g_local_host`: replace the exported owned host
-  name with `std::string`, update header declarations and tests, and use
-  direct assignment instead of `save_str`.
 - GS-08: `util/env.cpp`, `g_home_dir`: replace the exported owned home
   directory with `std::string`, map null checks to `empty()`, update the
   tool header mirror, and assign environment values directly.

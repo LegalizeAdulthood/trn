@@ -44,7 +44,7 @@ std::string g_tmp_dir;       // where tmp files go
 std::string g_login_name;    // login name of user
 std::string g_real_name;     // real name of user
 std::string g_p_host_name;   // host name in a posting
-char       *g_local_host{};  // local host name
+std::string g_local_host;    // local host name
 int         g_net_speed{20}; // how fast our net-connection is
 
 static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
@@ -146,10 +146,6 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     // set g_p_host_name to the hostname of our local machine
     if (!set_host_name_fn(tcbuf))
     {
-        if (!g_local_host)
-        {
-            g_local_host = save_str("");
-        }
         fully_successful = false;
     }
 
@@ -181,7 +177,7 @@ bool env_init(char *tcbuf, bool lax)
 void env_final()
 {
     g_p_host_name.clear();
-    safe_free0(g_local_host);
+    g_local_host.clear();
     g_real_name.clear();
     g_login_name.clear();
     safe_free0(g_home_dir);
@@ -381,7 +377,7 @@ static bool set_p_host_name(char *tmpbuf)
 #  endif // PIPE_HOST_CMD
 # endif // HAS_UNAME
 #endif // HAS_GETHOSTNAME
-    g_local_host = save_str(tmpbuf);
+    g_local_host = tmpbuf;
 
     // Build the host name that goes in postings
 
@@ -419,7 +415,7 @@ static bool set_p_host_name(char *tmpbuf)
         {
             g_buf[0] = '\0';
         }
-        std::strcpy(tmpbuf,g_local_host);
+        std::strcpy(tmpbuf,g_local_host.c_str());
         std::strcat(tmpbuf,g_buf);
     }
 

@@ -442,7 +442,7 @@ static bool lock_newsrc(Newsrc *rp)
             std::printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost);
         }
         term_down(2);
-        if (std::strcmp(runninghost, g_local_host))
+        if (g_local_host != runninghost)
         {
             if (g_verbose)
             {
@@ -450,12 +450,12 @@ static bool lock_newsrc(Newsrc *rp)
                        "Since that's not the same host as this one (%s), we must\n"
                        "assume that process still exists.  To override this check, remove\n"
                        "the lock file: %s\n",
-                       g_local_host, rp->lock_name);
+                       g_local_host.c_str(), rp->lock_name);
             }
             else
             {
                 std::printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
-                       g_local_host, rp->lock_name);
+                       g_local_host.c_str(), rp->lock_name);
             }
             term_down(2);
             if (g_bizarre)
@@ -539,7 +539,7 @@ static bool lock_newsrc(Newsrc *rp)
         std::printf(g_cant_create,rp->lock_name);
         sig_catcher(0);
     }
-    std::fprintf(fp,"%ld\n%s\n",g_our_pid,g_local_host);
+    std::fprintf(fp,"%ld\n%s\n",g_our_pid,g_local_host.c_str());
     std::fclose(fp);
     return true;
 }

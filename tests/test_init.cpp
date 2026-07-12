@@ -29,7 +29,7 @@ protected:
         g_tmp_dir.clear();
         g_login_name.clear();
         g_real_name.clear();
-        safe_free0(g_local_host);
+        g_local_host.clear();
         g_p_host_name.clear();
         g_dot_dir.clear();
         g_trn_dir.clear();
@@ -205,7 +205,7 @@ TEST_F(InitTest, emptyHostNamesFromFailedHostFn)
     const bool fully_successful = env_init(m_tcbuf.data(), true, m_set_name_fn, m_failed_fn);
 
     ASSERT_FALSE(fully_successful);
-    ASSERT_TRUE(std::string{g_local_host}.empty()) << "g_local_host = '" << g_local_host << '\'';
+    ASSERT_TRUE(g_local_host.empty()) << "g_local_host = '" << g_local_host << '\'';
     ASSERT_TRUE(g_p_host_name.empty()) << "g_p_host_name = '" << g_p_host_name << '\'';
 }
 
@@ -215,7 +215,7 @@ TEST_F(InitTest, hostNamesFromSuccessfulHostFn)
     const char *p_host_name{"news.gmane.io"};
     auto        host_name_fn = [&](char *)
     {
-        g_local_host = save_str(local_host);
+        g_local_host = local_host;
         g_p_host_name = p_host_name;
         return true;
     };
@@ -225,7 +225,7 @@ TEST_F(InitTest, hostNamesFromSuccessfulHostFn)
     const bool fully_successful = env_init(m_tcbuf.data(), true, m_set_name_fn, host_name_fn);
 
     ASSERT_TRUE(fully_successful);
-    ASSERT_EQ(local_host, std::string{g_local_host});
+    ASSERT_EQ(local_host, g_local_host);
     ASSERT_EQ(p_host_name, g_p_host_name);
 }
 
