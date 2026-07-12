@@ -39,7 +39,7 @@ static int        s_saved{};
 static ArticleNum s_last{};
 
 static void       sc_sv_add(std::string_view str);
-static void       sc_sv_del_group(const char *gname);
+static void       sc_sv_del_group(std::string_view gname);
 static void       sc_sv_get_file();
 static ArticleNum sc_sv_use_line(char *line, ArticleNum a);
 static ArticleNum sc_sv_make_line(ArticleNum a);
@@ -55,7 +55,7 @@ static void sc_sv_add(std::string_view str)
     s_num_lines++;
 }
 
-static void sc_sv_del_group(const char *gname)
+static void sc_sv_del_group(std::string_view gname)
 {
     char* s;
     int i;
@@ -63,7 +63,7 @@ static void sc_sv_del_group(const char *gname)
     for (i = 0; i < s_num_lines; i++)
     {
         s = s_lines[i];
-        if (s && *s == '!' && !std::strcmp(gname,s+1))
+        if (s && *s == '!' && std::string_view{s + 1} == gname)
         {
             break;
         }

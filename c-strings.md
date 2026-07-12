@@ -61,17 +61,17 @@ The generated `config.h` sites map back to assigning source code.  The
 to the deferred INI value-storage overhaul.
 
 After the hash key, comparator, color, autosubscribe, option-header,
-quote, NNTP list, MIME, selection-order, and `SourceFile::open`
-`fetch_cmd` helpers were promoted, a rerun finds one new safe
-bottom-up slice in the newsgroup restriction path.  The lower
-`newsgroup_comp` helper already accepts a `std::string_view`, and
-`set_newsgroup_to_do` stores only a saved copy of its input pattern.
+quote, NNTP list, MIME, selection-order, `SourceFile::open`
+`fetch_cmd`, and `set_newsgroup_to_do` helpers were promoted, a rerun
+finds a small safe bottom-up batch.  The new targets are leaf helpers
+that compare or print text locally, plus callers that need only local
+owned strings before invoking legacy regex or diagnostic APIs.
 
-The MIME cap, color, autosubscribe, option, NNTP command, and universal
-selector call-site checks did not expose more one-function slices.
-Callers pass literals, global buffers, mutable cursors, nullable
-sentinels, or values that cross factory, static, or global storage
-boundaries.
+The MIME cap, autosubscribe, option, NNTP command, universal selector,
+and command-line switch call-site checks did not expose more
+one-function slices.  Callers pass literals, global buffers, mutable
+cursors, nullable sentinels, or values that cross factory, static, or
+global storage boundaries.
 
 The remaining broad hits were rejected because the pointer is a mutable
 cursor, a nullable sentinel, an output buffer, a byte transport buffer,
@@ -101,6 +101,24 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
+31. `libtrn/rt-select.cpp`, `sel_status_msg`, `cp`.
+    Promote `cp` to `std::string_view`.  Replace `fputs` and `strlen`
+    with `fwrite(cp.data(), 1, cp.size(), stdout)` and a size-based
+    `g_term_col` assignment.  The message is displayed only.
+
+32. `libtrn/only.cpp`, `in_list`, `newsgroup_name`.
+    Promote `newsgroup_name` to `std::string_view`.  Keep the early
+    return allocation-free when no restrictions exist.  Otherwise, build
+    one local `std::string group_name{newsgroup_name}` and pass
+    `group_name.c_str()` to `CompiledRegex::execute`.  No pointer
+    escapes; bracket captures already save their own copy.
+
+33. `libtrn/color.cpp`, `color_rc_attribute`, `object`.
+    Promote only `object` to `std::string_view`; keep `value` as
+    `char *` because the function parses it in place.  Build a local
+    `std::string object_name{object}` for `string_case_equal` and
+    diagnostic `fprintf` calls.  Do not store the local string data.
+
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,
@@ -117,6 +135,10 @@ both declarations and definitions `static`.
   audit that preserves that behavior.
 - `libtrn/util.cpp`, INI parsing helpers: they update caller `char **`
   cursors and write into caller buffers.
+- `libtrn/sw.cpp`, `decode_switch`: now passes newsgroup patterns to
+  view-ready `set_newsgroup_to_do`, but the function is still a command
+  cursor parser.  Many switch arms pass interior C strings to option,
+  environment, and header parsers.
 - `config/string_case_compare.cpp`, length-limited overloads: `len` is
   a comparison limit, not a guaranteed extent for both inputs.  Add
   separate string-view overloads rather than blindly wrapping
