@@ -38,8 +38,6 @@ void rcln_init()
 
 void NewsgroupData::catch_up(int leave_count, int output_level)
 {
-    char tmpbuf[128];
-
     if (leave_count)
     {
         if (output_level)
@@ -70,9 +68,11 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
                 std::fputs("\nMarked read\n", stdout);
             }
         }
-        std::sprintf(tmpbuf,"%s: 1-%ld", m_rc_line,(long) get_newsgroup_size().value_of());
+        std::string rc_line{m_rc_line};
+        rc_line += ": 1-";
+        rc_line += std::to_string(get_newsgroup_size().value_of());
         std::free(m_rc_line);
-        m_rc_line = save_str(tmpbuf);
+        m_rc_line = save_str(rc_line);
         *(m_rc_line + m_num_offset - 1) = '\0';
         if (g_newsgroup_min_to_read > TR_NONE && m_to_read > TR_NONE)
         {

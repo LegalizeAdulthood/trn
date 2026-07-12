@@ -130,11 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-51. `libtrn/rcln.cpp`, `NewsgroupData::catch_up`, `tmpbuf`.
-    Replace the local newrc-line formatting buffer with `std::string`
-    assembly before calling `save_str`.  Keep `m_rc_line` ownership
-    unchanged.
-
 52. `libtrn/ng.cpp`, `do_newsgroup`, `tmpbuf`.
     Replace the local unavailable-article message buffer with
     `std::string`.  Pass the string view directly to `tree_puts`.
