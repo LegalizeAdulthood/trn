@@ -1,7 +1,7 @@
 /* trn-artchk.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
-
+// Copyright (c) 2026, Richard Thomson
 
 // A program to check an article's validity and print warnings if problems
 // are found.
@@ -20,7 +20,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <string>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 enum
 {
@@ -66,6 +70,9 @@ int main(int argc, char *argv[])
         std::fprintf(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
         std::exit(1);
     }
+    const fs::path newsgroups_file{argv[3]};
+    const fs::path active_file{argv[4]};
+    std::error_code file_error;
 
     std::FILE *fp = std::fopen(argv[1], "r");
     if (fp == nullptr)
@@ -218,20 +225,20 @@ int main(int argc, char *argv[])
     }
     if (ngcnt)
     {
-        struct stat st;
-        if (stat(argv[3], &st) != -1)
+        if (fs::file_size(newsgroups_file, file_error) > 0 && !file_error)
         {
-            check_ng = st.st_size > 0 && (fp_ng = std::fopen(argv[3], "r")) != nullptr;
+            check_ng = (fp_ng = std::fopen(newsgroups_file.string().c_str(), "r")) != nullptr;
         }
-        else if (g_server_name && server_connection())
+        else if (file_error && g_server_name && server_connection())
         {
             check_ng = true;
         }
-        if (stat(argv[4], &st) != -1)
+        file_error.clear();
+        if (fs::file_size(active_file, file_error) > 0 && !file_error)
         {
-            check_active = st.st_size > 0 && (fp_active = std::fopen(argv[4], "r")) != nullptr;
+            check_active = (fp_active = std::fopen(active_file.string().c_str(), "r")) != nullptr;
         }
-        else if (g_server_name && server_connection())
+        else if (file_error && g_server_name && server_connection())
         {
             check_active = true;
         }
@@ -317,8 +324,9 @@ int main(int argc, char *argv[])
         }
         if (check_ng && fp_ng == nullptr)
         {
-            fp_ng = fopen(argv[3], "w+");
-            unlink(argv[3]);
+            fp_ng = std::fopen(newsgroups_file.string().c_str(), "w+");
+            file_error.clear();
+            fs::remove(newsgroups_file, file_error);
             if (fp_ng != nullptr)
             {
                 for (int i = 0; i < ngcnt; i++)

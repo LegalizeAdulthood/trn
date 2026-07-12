@@ -152,11 +152,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-55. In `trn-artchk/trn-artchk.cpp`, change only `main` so the article,
-    newsgroups, and active filenames from `argv` become local paths.
-    Replace the local `stat` and `unlink` calls with filesystem
-    queries/removal, while converting to strings only for `fopen` and
-    diagnostics.
 56. In `libtrn/util.cpp`, change only `temp_filename` so it builds
     the temporary filename with `std::filesystem::path` from
     `g_tmp_dir` and the generated basename.  Keep the return type and
