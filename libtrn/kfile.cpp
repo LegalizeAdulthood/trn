@@ -35,6 +35,7 @@
 #include <ctime>
 #include <filesystem>
 #include <string_view>
+#include <system_error>
 
 namespace fs = std::filesystem;
 
@@ -510,7 +511,8 @@ static void rewrite_kill_file(ArticleNum thru)
                                  == KFS_THREAD_LINES;
     bool has_star_commands = false;
     bool needs_newline = false;
-    char* killname = file_exp(get_val_const("KILLLOCAL",s_kill_local));
+    const fs::path killname{file_exp(get_val_const("KILLLOCAL",s_kill_local))};
+    std::error_code error;
     char* bp;
 
     if (g_local_kfp)
@@ -519,11 +521,11 @@ static void rewrite_kill_file(ArticleNum thru)
     }
     else
     {
-        make_dir(killname, MD_FILE);
+        fs::create_directories(killname.parent_path(), error);
     }
-    remove(killname);                   // to prevent file reuse
+    fs::remove(killname, error);        // to prevent file reuse
     g_kf_state &= ~(s_kill_file_state_local_change_clear | KFS_NORMAL_LINES);
-    s_new_kill_file_fp = std::fopen(killname, "w");
+    s_new_kill_file_fp = std::fopen(killname.string().c_str(), "w");
     if (s_new_kill_file_fp != nullptr)
     {
         std::fprintf(s_new_kill_file_fp,"THRU %s %ld\n",g_newsgroup_ptr->m_rc->name, thru.value_of());
@@ -592,13 +594,13 @@ static void rewrite_kill_file(ArticleNum thru)
         std::fclose(s_new_kill_file_fp);
         if (!has_content)
         {
-            remove(killname);
+            fs::remove(killname, error);
         }
         open_kill_file(KF_LOCAL);           // and reopen local file
     }
     else
     {
-        std::printf(g_cant_create, g_buf);
+        std::printf(g_cant_create, killname.string().c_str());
     }
 }
 

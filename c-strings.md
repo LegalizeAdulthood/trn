@@ -155,10 +155,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-60. In `libtrn/kfile.cpp`, change only `rewrite_kill_file` so the expanded
-    kill-file name is a local path for parent directory creation,
-    removal, and file creation.  Keep existing command formatting and
-    output text as strings.
 61. In `libtrn/kfile.cpp`, change only `write_global_thread_commands`
     so the global thread kill-file path is a local path for directory
     creation, removal, and append/rewrite open logic.  Do not change
