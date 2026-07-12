@@ -21,6 +21,7 @@ add_library(libtrn
     hash.cpp include/trn/hash.h
     head.cpp include/trn/head.h
     help.cpp include/trn/help.h
+    IniDocument.cpp include/trn/IniDocument.h
     IniSchema.cpp include/trn/IniSchema.h
     IniSectionValues.cpp include/trn/IniSectionValues.h
     init.cpp include/trn/init.h

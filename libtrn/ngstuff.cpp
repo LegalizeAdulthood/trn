@@ -1,6 +1,7 @@
 /* ngstuff.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/ngstuff.h>
 
@@ -10,6 +11,7 @@
 #include <trn/cache.h>
 #include <trn/change_dir.h>
 #include <trn/final.h>
+#include <trn/IniDocument.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
 #include <trn/list.h>
@@ -153,11 +155,15 @@ bool switcheroo()
         }
         else
         {
-            std::sprintf(tmp_buf,"[options]\n%s\n",g_buf+1);
-            prep_ini_data(tmp_buf,"'&' input");
-            parse_ini_section(tmp_buf+10,g_options_ini);
-            set_options(ini_values(g_options_ini));
-            prep_ini_words(g_options_ini);
+            std::sprintf(tmp_buf, "[options]\n%s\n", g_buf + 1);
+            IniDocument          document{tmp_buf, "'&' input", IniDocument::BufferState::Raw};
+            IniDocument::Section section;
+            if (document.next_section(section))
+            {
+                parse_ini_section(section.body, g_options_ini);
+                set_options(ini_values(g_options_ini));
+                prep_ini_words(g_options_ini);
+            }
         }
         if (do_cd)
         {

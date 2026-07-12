@@ -11,6 +11,7 @@
 #include <nntp/nntpclient.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
+#include <trn/IniDocument.h>
 #include <trn/IniSectionValues.h>
 #include <trn/intrp.h>
 #include <trn/search.h>
@@ -734,113 +735,7 @@ void unprep_ini_words(IniWords words[])
 ///
 void prep_ini_data(char *cp, const char *filename)
 {
-    char* t = cp;
-
-#ifdef DEBUG
-    if (g_debug & DEB_RCFILES)
-    {
-        std::printf("Read %d bytes from %s\n", static_cast<int>(std::strlen(cp)),filename);
-    }
-#endif
-
-    while (*cp)
-    {
-        cp = skip_space(cp);
-
-        if (*cp == '[')
-        {
-            char* s = t;
-            do
-            {
-                *t++ = *cp++;
-            } while (*cp && *cp != ']' && *cp != '\n');
-            if (*cp == ']' && t != s)
-            {
-                *t++ = '\0';
-                cp++;
-                if (parse_string(&t, &cp))
-                {
-                    cp++;
-                }
-
-                while (*cp)
-                {
-                    cp = skip_space(cp);
-                    if (*cp == '[')
-                    {
-                        break;
-                    }
-                    if (*cp == '#')
-                    {
-                        s = cp;
-                    }
-                    else
-                    {
-                        s = t;
-                        while (*cp && *cp != '\n')
-                        {
-                            if (*cp == '=')
-                            {
-                                break;
-                            }
-                            if (std::isspace(*cp))
-                            {
-                                if (s == t || t[-1] != ' ')
-                                {
-                                    *t++ = ' ';
-                                }
-                                cp++;
-                            }
-                            else
-                            {
-                                *t++ = *cp++;
-                            }
-                        }
-                        if (*cp == '=' && t != s)
-                        {
-                            while (t != s && std::isspace(t[-1]))
-                            {
-                                t--;
-                            }
-                            *t++ = '\0';
-                            cp++;
-                            if (parse_string(&t, &cp))
-                            {
-                                s = nullptr;
-                            }
-                            else
-                            {
-                                s = cp;
-                            }
-                        }
-                        else
-                        {
-                            s = cp;
-                        }
-                    }
-                    cp++;
-                    if (s)
-                    {
-                        for (cp = s; *cp && *cp++ != '\n'; )
-                        {
-                        }
-                    }
-                }
-            }
-            else
-            {
-                *t = '\0';
-                std::printf("Invalid section in %s: %s\n", filename, s);
-                t = s;
-                cp = skip_ne(cp, '\n');
-            }
-        }
-        else
-        {
-            cp = skip_ne(cp, '\n');
-        }
-    }
-    *t = '\0';
+    IniDocument::prepare(cp, filename);
 }
 
 /// @brief Parses a string from the input buffer, handling quotes, comments, and escape sequences.
@@ -931,27 +826,7 @@ bool parse_string(char **to, char **from)
 
 char *next_ini_section(char *cp, char **section, char **cond)
 {
-    while (*cp != '[')
-    {
-        if (!*cp)
-        {
-            return nullptr;
-        }
-        cp += std::strlen(cp) + 1;
-        cp += std::strlen(cp) + 1;
-    }
-    *section = cp+1;
-    cp += std::strlen(cp) + 1;
-    *cond = cp;
-    cp += std::strlen(cp) + 1;
-#ifdef DEBUG
-    if (g_debug & DEB_RCFILES)
-    {
-        std::printf("Section [%s] (condition: %s)\n",*section,
-               **cond? *cond : "<none>");
-    }
-#endif
-    return cp;
+    return IniDocument::find_next_section(cp, section, cond);
 }
 
 namespace

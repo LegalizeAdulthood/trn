@@ -14,6 +14,7 @@
 #include <trn/datasrc.h>
 #include <trn/final.h>
 #include <trn/hash.h>
+#include <trn/IniDocument.h>
 #include <trn/IniSectionValues.h>
 #include <trn/init.h>
 #include <trn/last.h>
@@ -76,28 +77,26 @@ static Multirc *rcstuff_init_data()
 {
     Multirc* mptr = nullptr;
 
-    g_multirc_list = new_list(0,0,sizeof(Multirc),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
+    g_multirc_list = new_list(0, 0, sizeof(Multirc), 20, LF_ZERO_MEM | LF_SPARSE, nullptr);
 
     if (g_trn_access_mem)
     {
-        char* section;
-        char* cond;
-        IniSectionValues values;
-        char *s = g_trn_access_mem;
-        while ((s = next_ini_section(s, &section, &cond)) != nullptr)
+        IniDocument          document{g_trn_access_mem, TRNACCESS, IniDocument::BufferState::Prepared};
+        IniSectionValues     values;
+        IniDocument::Section section;
+        while (document.next_section(section))
         {
-            if (*cond && !check_ini_cond(cond))
+            if (section.has_condition() && !check_ini_cond(section.condition))
             {
                 continue;
             }
-            if (string_case_compare(section, "group ", 6))
+            if (string_case_compare(section.name, "group ", 6))
             {
                 continue;
             }
-            int i = std::atoi(section + 6);
+            int i = std::atoi(section.name + 6);
             i = std::max(i, 0);
-            s = parse_ini_section(s, RcGroupConfig::schema(), values);
-            if (!s)
+            if (parse_ini_section(section.body, RcGroupConfig::schema(), values) == nullptr)
             {
                 break;
             }

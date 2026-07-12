@@ -13,6 +13,7 @@
 #include <trn/DataSourceConfig.h>
 #include <trn/edit_dist.h>
 #include <trn/hash.h>
+#include <trn/IniDocument.h>
 #include <trn/IniSectionValues.h>
 #include <trn/list.h>
 #include <trn/ngdata.h>
@@ -174,44 +175,32 @@ void data_source_finalize()
 ///
 static char *read_data_sources(const char *filename)
 {
-    char* section;
-    char* cond;
-    char* filebuf = nullptr;
     IniSectionValues values;
+    IniDocument      document = IniDocument::read_file(file_exp(filename), filename);
 
-    int fd = open(file_exp(filename), 0);
-    if (fd >= 0)
+    if (document.data() == nullptr)
     {
-        stat_t datasrc_stat{};
-        fstat(fd,&datasrc_stat);
-        if (datasrc_stat.st_size)
-        {
-            filebuf = safe_malloc((MemorySize)datasrc_stat.st_size+2);
-            int len = read(fd, filebuf, (int)datasrc_stat.st_size);
-            (filebuf)[len] = '\0';
-            prep_ini_data(filebuf,filename);
-            char *s = filebuf;
-            while ((s = next_ini_section(s, &section, &cond)) != nullptr)
-            {
-                if (*cond && !check_ini_cond(cond))
-                {
-                    continue;
-                }
-                if (string_case_equal(section, "group ", 6))
-                {
-                    continue;
-                }
-                s = parse_ini_section(s, DataSourceConfig::schema(), values);
-                if (!s)
-                {
-                    break;
-                }
-                new_data_source(section, DataSourceConfig::from(values));
-            }
-        }
-        close(fd);
+        return nullptr;
     }
-    return filebuf;
+
+    IniDocument::Section section;
+    while (document.next_section(section))
+    {
+        if (section.has_condition() && !check_ini_cond(section.condition))
+        {
+            continue;
+        }
+        if (string_case_equal(section.name, "group ", 6))
+        {
+            continue;
+        }
+        if (parse_ini_section(section.body, DataSourceConfig::schema(), values) == nullptr)
+        {
+            break;
+        }
+        new_data_source(section.name, DataSourceConfig::from(values));
+    }
+    return document.release_buffer();
 }
 
 DataSource *get_data_source(std::string_view name)

@@ -2,13 +2,12 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/RcGroupConfig.h>
 
+#include <trn/IniDocument.h>
 #include <trn/IniSchema.h>
 #include <trn/IniSectionValues.h>
 #include <trn/util.h>
 
 #include <gtest/gtest.h>
-
-#include <cstring>
 
 namespace
 {
@@ -18,25 +17,19 @@ class RcGroupConfigTest : public testing::Test
 protected:
     RcGroupConfig parse(const char *text)
     {
-        std::strncpy(m_buffer, text, sizeof m_buffer);
-        m_buffer[sizeof m_buffer - 1] = '\0';
+        IniDocument document{text, "test input"};
 
-        prep_ini_data(m_buffer, "test input");
+        IniDocument::Section section;
+        EXPECT_TRUE(document.next_section(section));
+        EXPECT_STREQ("Group 1", section.name);
+        EXPECT_STREQ("", section.condition);
 
-        char *section{};
-        char *condition{};
-        char *section_body = next_ini_section(m_buffer, &section, &condition);
-        EXPECT_STREQ("Group 1", section);
-        EXPECT_STREQ("", condition);
-        EXPECT_NE(nullptr, section_body);
-
-        parse_ini_section(section_body, RcGroupConfig::schema(), m_values);
+        parse_ini_section(section.body, RcGroupConfig::schema(), m_values);
         return RcGroupConfig::from(m_values);
     }
 
 private:
     IniSectionValues m_values;
-    char             m_buffer[256]{};
 };
 
 } // namespace

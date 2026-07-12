@@ -1,5 +1,6 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
+#include <trn/IniDocument.h>
 #include <trn/IniSchema.h>
 #include <trn/IniSectionValues.h>
 #include <trn/util.h>
@@ -31,51 +32,45 @@ struct IniWordsTest : testing::Test
 
     char **parse(const char *text)
     {
-        std::strncpy(m_buffer, text, sizeof m_buffer);
-        m_buffer[sizeof m_buffer - 1] = '\0';
+        m_document = IniDocument{text, "test input"};
+        m_buffer_size = std::strlen(text) + 2;
 
-        prep_ini_data(m_buffer, "test input");
+        IniDocument::Section section;
+        EXPECT_TRUE(m_document.next_section(section));
+        EXPECT_STREQ("test", section.name);
+        EXPECT_STREQ("", section.condition);
+        EXPECT_NE(nullptr, section.body);
 
-        char *section{};
-        char *condition{};
-        char *section_body = next_ini_section(m_buffer, &section, &condition);
-        EXPECT_STREQ("test", section);
-        EXPECT_STREQ("", condition);
-        EXPECT_NE(nullptr, section_body);
-
-        parse_ini_section(section_body, m_words);
+        parse_ini_section(section.body, m_words);
         return ini_values(m_words);
     }
 
     const IniSectionValues &parse_section_values(const char *text)
     {
-        std::strncpy(m_section_values_buffer, text, sizeof m_section_values_buffer);
-        m_section_values_buffer[sizeof m_section_values_buffer - 1] = '\0';
+        m_section_values_document = IniDocument{text, "test input"};
 
-        prep_ini_data(m_section_values_buffer, "test input");
+        IniDocument::Section section;
+        EXPECT_TRUE(m_section_values_document.next_section(section));
+        EXPECT_STREQ("test", section.name);
+        EXPECT_STREQ("", section.condition);
+        EXPECT_NE(nullptr, section.body);
 
-        char *section{};
-        char *condition{};
-        char *section_body = next_ini_section(m_section_values_buffer, &section, &condition);
-        EXPECT_STREQ("test", section);
-        EXPECT_STREQ("", condition);
-        EXPECT_NE(nullptr, section_body);
-
-        parse_ini_section(section_body, m_schema, m_section_values);
+        parse_ini_section(section.body, m_schema, m_section_values);
         return m_section_values;
     }
 
     bool is_buffer_pointer(const char *ptr) const
     {
-        return ptr >= m_buffer && ptr < m_buffer + sizeof m_buffer;
+        return ptr >= m_document.data() && ptr < m_document.data() + m_buffer_size;
     }
 
     IniWords m_words[4]{
         {0, "TEST", nullptr}, {0, "Alpha Key", nullptr}, {0, "Beta Key", nullptr}, {0, nullptr, nullptr}};
     IniSchema        m_schema{"test", {IniField::value(IW_ALPHA, "Alpha Key"), IniField::value(IW_BETA, "Beta Key")}};
     IniSectionValues m_section_values;
-    char             m_buffer[512]{};
-    char             m_section_values_buffer[512]{};
+    IniDocument      m_document;
+    IniDocument      m_section_values_document;
+    std::size_t      m_buffer_size{};
 };
 
 } // namespace

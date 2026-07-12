@@ -18,6 +18,7 @@
 #include <trn/datasrc.h>
 #include <trn/final.h>
 #include <trn/head.h>
+#include <trn/IniDocument.h>
 #include <trn/init.h>
 #include <trn/intrp.h>
 #include <trn/mime.h>
@@ -179,68 +180,68 @@ void opt_final()
 static void opt_file(const char *filename, char **tcbufptr, bool bleat)
 {
     char*filebuf = *tcbufptr;
-    char*section;
-    char*cond;
     int  fd = open(filename,0);
 
     if (fd >= 0)
     {
         stat_t opt_stat{};
-        fstat(fd,&opt_stat);
+        fstat(fd, &opt_stat);
         if (opt_stat.st_size >= TCBUF_SIZE - 1)
         {
-            filebuf = safe_realloc(filebuf,(MemorySize)opt_stat.st_size+2);
+            filebuf = safe_realloc(filebuf, (MemorySize) opt_stat.st_size + 2);
             *tcbufptr = filebuf;
         }
         if (opt_stat.st_size)
         {
-            int len = read(fd,filebuf,(int)opt_stat.st_size);
+            int len = read(fd, filebuf, (int) opt_stat.st_size);
             filebuf[len] = '\0';
-            prep_ini_data(filebuf,filename);
-            char *s = filebuf;
-            while ((s = next_ini_section(s, &section, &cond)) != nullptr)
+            IniDocument          document{filebuf, filename, IniDocument::BufferState::Raw};
+            IniDocument::Section section;
+            while (document.next_section(section))
             {
-                if (*cond && !check_ini_cond(cond))
+                if (section.has_condition() && !check_ini_cond(section.condition))
                 {
                     continue;
                 }
-                if (!std::strcmp(section, "options"))
+                if (!std::strcmp(section.name, "options"))
                 {
-                    s = parse_ini_section(s, g_options_ini);
-                    if (!s)
+                    if (parse_ini_section(section.body, g_options_ini) == nullptr)
                     {
                         break;
                     }
                     set_options(ini_values(g_options_ini));
                     prep_ini_words(g_options_ini);
                 }
-                else if (!std::strcmp(section, "environment"))
+                else if (!std::strcmp(section.name, "environment"))
                 {
+                    char *s = section.body;
                     while (*s && *s != '[')
                     {
-                        section = s;
+                        char *name = s;
                         s += std::strlen(s) + 1;
-                        export_var(section,s);
+                        export_var(name, s);
                         s += std::strlen(s) + 1;
                     }
                 }
-                else if (!std::strcmp(section, "termcap"))
+                else if (!std::strcmp(section.name, "termcap"))
                 {
+                    char *s = section.body;
                     while (*s && *s != '[')
                     {
-                        section = s;
+                        char *name = s;
                         s += std::strlen(s) + 1;
-                        add_tc_string(section, s);
+                        add_tc_string(name, s);
                         s += std::strlen(s) + 1;
                     }
                 }
-                else if (!std::strcmp(section, "attribute"))
+                else if (!std::strcmp(section.name, "attribute"))
                 {
+                    char *s = section.body;
                     while (*s && *s != '[')
                     {
-                        section = s;
+                        char *name = s;
                         s += std::strlen(s) + 1;
-                        color_rc_attribute(section, s);
+                        color_rc_attribute(name, s);
                         s += std::strlen(s) + 1;
                     }
                 }

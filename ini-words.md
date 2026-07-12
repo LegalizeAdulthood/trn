@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 11: Add `IniDocument`
-
-Move tokenized buffer ownership into a class.
-
-- Read file text into `IniDocument`.
-- Move `prep_ini_data` behavior into the class.
-- Expose section iteration without caller-owned cursor plumbing.
-- Keep `next_ini_section` as a compatibility wrapper during migration.
-
-Run parser, options-file, and access-file tests.
-
 ### Slice 12: Remove `IniWords`
 
 Delete the compatibility layer once callers are migrated.
