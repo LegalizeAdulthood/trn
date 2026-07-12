@@ -262,11 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-01. `nntplist/nntplist.cpp`, `main`: replace the local
-`command[32]` NNTP command buffer with `std::string`.  Build `"LIST"`,
-append `action` and `wildarg` when present, and pass the string directly
-to `nntp_command`, which already accepts `std::string_view`.
-
 BUF-02. `nntp/nntpinit.cpp`, `get_tcp_socket`: replace the INET6-only
 `portstr[8]` formatting buffer with string conversion for the service
 name passed to `getaddrinfo`.  Keep the `inet_ntop` output buffer and

@@ -27,7 +27,6 @@ std::string g_nntp_auth_file;
 
 int main(int argc, char *argv[])
 {
-    char command[32];
     char*action = nullptr;
     char*wildarg = nullptr;
     std::FILE *out_fp{};
@@ -128,17 +127,16 @@ int main(int argc, char *argv[])
         {
             std::exit(1);
         }
+        std::string command{"LIST"};
         if (action)
         {
-            std::sprintf(command,"LIST %s",action);
-        }
-        else
-        {
-            std::strcpy(command,"LIST");
+            command += ' ';
+            command += action;
         }
         if (wildarg)
         {
-            std::sprintf(command+std::strlen(command)," %s",wildarg);
+            command += ' ';
+            command += wildarg;
         }
         if (nntp_command(command) <= 0)
         {
