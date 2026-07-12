@@ -203,9 +203,7 @@ int nntp_command(std::string_view bp)
 
 int nntp_xgtitle(std::string_view groupname)
 {
-    std::string command{"XGTITLE "};
-    command.append(groupname.data(), groupname.size());
-    const int status = nntp_command(command);
+    const int status = nntp_command(fmt::format("XGTITLE {}", groupname));
     if (status <= 0)
     {
         return status;

@@ -238,10 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-03. `nntp/nntpclient.cpp`, `nntp_xgtitle`: replace the existing
-`std::string` command append with fmt.  The command is passed to
-`nntp_command`, which already accepts `std::string_view`.
-
 FMT-04. `libtrn/nntp.cpp`, `nntp_list`: replace command construction
 with `fmt::format` or `fmt::format_to`.  The resulting string is passed
 to `nntp_command`, which already accepts `std::string_view`.
