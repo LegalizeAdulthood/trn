@@ -11,6 +11,8 @@
 #include <trn/nntp.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -56,11 +58,8 @@ try_to_connect:
             }
             else
             {
-                std::string message{"News server \""};
-                message += machine;
-                message += "\" is unavailable: ";
-                message += &g_ser_line[4];
-                message += '\n';
+                const std::string message{
+                    fmt::format("News server \"{}\" is unavailable: {}\n", machine, &g_ser_line[4])};
                 nntp_init_error(message.c_str());
             }
             response = 0;
