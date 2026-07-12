@@ -154,6 +154,12 @@ Use `c_str()` for legacy read-only C APIs.  Use `data()` only for local
 mutable parsing while the `std::string` object remains alive and no
 pointer escapes.
 
+Before refactoring a slice, check whether tests cover the behavior being
+changed.  If coverage is missing, first add tests for the current
+behavior and run those newly added tests before changing the production
+code.  Then refactor and rerun the tests to verify the behavior is
+unchanged.
+
 ## Refactoring Slices
 
 Most slices center on one function.  Add local includes and update the
@@ -168,11 +174,6 @@ These slices replace owned global or file-scope `char *` storage with
 declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
-
-- GS-10: `libtrn/univ.cpp`, `g_univ_fname`: replace the nullable current
-  filename pointer with owned string state or an accessor, remove the
-  current `save_str` leaks in temporary overrides, and update the
-  save/restore path in selector code.
 
 ### Ubuntu `-Wwrite-strings` Slices
 

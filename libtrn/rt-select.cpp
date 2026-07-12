@@ -165,7 +165,7 @@ private:
     UniversalItem *const save_last_univ = g_last_univ;         \
     UniversalItem *const save_page_univ = g_sel_page_univ;     \
     UniversalItem *const save_next_univ = g_sel_next_univ;     \
-    char *const          save_univ_fname = g_univ_fname;       \
+    std::string const    save_univ_fname = g_univ_fname;       \
     std::string const    save_univ_label = g_univ_label;       \
     std::string const    save_univ_title = g_univ_title;       \
     std::string const    save_univ_tmp_file = g_univ_tmp_file; \

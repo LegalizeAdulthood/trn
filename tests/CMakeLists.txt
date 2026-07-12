@@ -31,6 +31,7 @@ add_executable(trn-test
     test_RcGroupConfig.cpp
     test_rt-util.cpp
     test_string-algos.cpp
+    test_univ.cpp
     test_utf.cpp
     test_wildmat.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/test_config.h

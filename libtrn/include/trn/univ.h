@@ -135,7 +135,7 @@ extern UniversalItem *g_first_univ;
 extern UniversalItem *g_last_univ;
 extern UniversalItem *g_sel_page_univ;
 extern UniversalItem *g_sel_next_univ;
-extern char          *g_univ_fname;    // current filename (may be null)
+extern std::string    g_univ_fname;    // current filename (may be empty)
 extern std::string    g_univ_label;    // current label (may be empty)
 extern std::string    g_univ_title;    // title of current level
 extern std::string    g_univ_tmp_file; // temp. file (may be empty)

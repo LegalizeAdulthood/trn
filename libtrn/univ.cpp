@@ -62,7 +62,7 @@ UniversalItem *g_first_univ{};
 UniversalItem *g_last_univ{};
 UniversalItem *g_sel_page_univ{};
 UniversalItem *g_sel_next_univ{};
-char          *g_univ_fname{};  // current filename (may be null)
+std::string    g_univ_fname;    // current filename (may be empty)
 std::string    g_univ_label;    // current label (may be null)
 std::string    g_univ_title;    // title of current level
 std::string    g_univ_tmp_file; // temp. file (may be null)
@@ -99,7 +99,7 @@ static bool  univ_use_file(std::string_view fname, const char *label);
 static bool  univ_include_file(const char *fname);
 static void  univ_do_line_ext1(const char *desc, char *line);
 static bool  univ_do_line(char *line);
-static char *univ_edit_new_user_file();
+static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
 static void  univ_vg_add_group();
 static int   univ_order_number(const UniversalItem **ui1, const UniversalItem **ui2);
@@ -117,7 +117,7 @@ void univ_startup()
     {
         univ_open();
         g_univ_title = "Top Level";
-        g_univ_fname = save_str("%+/univ/usertop");
+        g_univ_fname = "%+/univ/usertop";
 
         // read in trn default top file
         (void)univ_include_file("%X/sitetop");          // pure local
@@ -148,7 +148,7 @@ static void univ_open()
     g_last_univ = nullptr;
     g_sel_page_univ = nullptr;
     g_sel_next_univ = nullptr;
-    g_univ_fname = nullptr;
+    g_univ_fname.clear();
     g_univ_title.clear();
     g_univ_label.clear();
     g_univ_tmp_file.clear();
@@ -174,7 +174,7 @@ void univ_close()
         remove(g_univ_tmp_file.c_str());
         g_univ_tmp_file.clear();
     }
-    safe_free(g_univ_fname);
+    g_univ_fname.clear();
     g_univ_title.clear();
     g_univ_label.clear();
     if (g_univ_ng_hash)
@@ -661,8 +661,8 @@ static bool univ_use_file(std::string_view fname, const char *label)
 
 static bool univ_include_file(const char *fname)
 {
-    char *old_univ_fname = g_univ_fname;
-    g_univ_fname = save_str(fname);      // LEAK
+    const std::string old_univ_fname = g_univ_fname;
+    g_univ_fname = fname;
     bool retval = univ_use_file(g_univ_fname, nullptr);
     g_univ_fname = old_univ_fname;
     return retval;
@@ -750,6 +750,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
 static bool univ_do_line(char *line)
 {
     char* p;
+    std::string relative_file;
 
     char *s = line + std::strlen(line) - 1;
     if (*s == '\n')
@@ -826,21 +827,16 @@ static bool univ_do_line(char *line)
 
         case ':':     // relative to g_univ_fname
             // XXX hack the variable and fall through
-            if (g_univ_fname && std::strlen(g_univ_fname)+std::strlen(s) < 1020)
+            if (!g_univ_fname.empty())
             {
-                static char lbuf[1024];
-                std::strcpy(lbuf,g_univ_fname);
-                for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
+                const fs::path current_file{g_univ_fname};
+                relative_file = current_file.has_parent_path() ? current_file.parent_path().string() : "/";
+                if (relative_file.back() != '/')
                 {
+                    relative_file += '/';
                 }
-                if (p)
-                {
-                    *p++ = '/';
-                    *p = '\0';
-                    s++;
-                    std::strcat(lbuf,s);
-                    s = lbuf;
-                }
+                relative_file.append(s + 1);
+                s = relative_file.data();
             } // XXX later have else which will complain
             // FALL THROUGH
 
@@ -881,17 +877,7 @@ static bool univ_do_line(char *line)
                 // XXX give an error message later
                 break;
             }
-            if (!g_univ_tmp_file.empty())
-            {
-                static char buff[1024];
-                std::strcpy(buff, g_univ_tmp_file.c_str());
-                p = buff;
-            }
-            else
-            {
-                p = g_univ_fname;
-            }
-            univ_add_file(s_univ_line_desc? s_univ_line_desc : s, g_univ_fname, s);
+            univ_add_file(s_univ_line_desc? s_univ_line_desc : s, g_univ_fname.c_str(), s);
             break;
 
         case '>':
@@ -939,7 +925,7 @@ bool univ_file_load(const char *fname, const char *title, const char *label)
 
     if (fname)
     {
-        g_univ_fname = save_str(fname);
+        g_univ_fname = fname;
     }
     if (title)
     {
@@ -983,25 +969,23 @@ void univ_mask_load(char *mask, const char *title)
 
 void univ_redo_file()
 {
-    char *tmp_fname = (g_univ_fname ? save_str(g_univ_fname) : nullptr);
+    const std::string tmp_fname = g_univ_fname;
     const std::string tmp_title = g_univ_title;
     const std::string tmp_label = g_univ_label;
 
     univ_close();
     if (g_univ_level)
     {
-        (void)univ_file_load(tmp_fname,tmp_title.c_str(),tmp_label.c_str());
+        (void)univ_file_load(tmp_fname.empty() ? nullptr : tmp_fname.c_str(),
+            tmp_title.c_str(),tmp_label.c_str());
     }
     else
     {
         univ_startup();
     }
-
-    safe_free(tmp_fname);
 }
 
-
-static char *univ_edit_new_user_file()
+static std::string univ_edit_new_user_file()
 {
     const fs::path user_top{file_exp("%+/univ/usertop")};
 
@@ -1036,33 +1020,33 @@ static char *univ_edit_new_user_file()
     std::printf("After editing this file, exit and restart trn to use it.\n");
     (void)get_anything();
     s_univ_user_top = true;               // do not overwrite this file
-    return save_str(user_top.string());   // LEAK
+    return user_top.string();
 }
 
 // code adapted from edit_kfile in kfile.cpp
 // XXX problem if elements expand to larger than g_cmd_buf
 void univ_edit()
 {
-    const char* s;
+    std::string filename;
 
     if (s_univ_user_top || !(s_univ_done_startup))
     {
         if (!g_univ_tmp_file.empty())
         {
-            s = g_univ_tmp_file.c_str();
+            filename = g_univ_tmp_file;
         }
         else
         {
-            s = g_univ_fname;
+            filename = g_univ_fname;
         }
     }
     else
     {
-        s = univ_edit_new_user_file();
+        filename = univ_edit_new_user_file();
     }
 
     // later consider directory push/pop pair around editing
-    (void)edit_file(s);
+    (void)edit_file(filename.c_str());
 }
 
 // later use some internal pager
@@ -1384,7 +1368,7 @@ void univ_help_main(HelpLocation where)
     univ_include_file("%X/sitehelp/top");
 
     // read in main help file
-    g_univ_fname = save_str("%X/HelpFiles/top");
+    g_univ_fname = "%X/HelpFiles/top";
     bool flag = univ_use_file(g_univ_fname, g_univ_label.c_str());
 
     // later: if flag is not true, then add message?
