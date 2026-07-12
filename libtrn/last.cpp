@@ -27,12 +27,12 @@ long        g_last_active_size{};  // last known size of active file
 long        g_last_new_time{};     // time of last newgroup request
 long        g_last_extra_num{};
 
-static char *s_last_file{}; // path name of .rnlast file
+static std::string s_last_file; // path name of .rnlast file
 static long  s_start_time{};
 
 void last_init()
 {
-    s_last_file = save_str(file_exp(LASTNAME));
+    s_last_file = file_exp(LASTNAME);
 
     s_start_time = (long)std::time(nullptr);
     read_last();
@@ -40,13 +40,13 @@ void last_init()
 
 void last_final()
 {
-    safe_free0(s_last_file);
+    s_last_file.clear();
     g_last_newsgroup_name.clear();
 }
 
 void read_last()
 {
-    if (std::FILE *fp = std::fopen(s_last_file, "r"))
+    if (std::FILE *fp = std::fopen(s_last_file.c_str(), "r"))
     {
         if (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
         {

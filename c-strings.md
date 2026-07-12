@@ -169,9 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-01: `libtrn/last.cpp`, `s_last_file`: replace the file-scope
-  pointer with `std::string`, assign `file_exp(LASTNAME)` directly, clear
-  it in finalization, and pass `c_str()` only to `fopen`.
 - GS-02: `libtrn/search.cpp`, `CompiledRegex::get_bracket`: replace
   `s_gbr_str` and `s_gbr_siz` with one static `std::string`, assign the
   bracket text by length, and return `c_str()`.
