@@ -264,18 +264,15 @@ int main(int argc, char *argv[])
     }
     if (!has_fromline)
     {
-        char buff[80];
-        std::strcpy(buff, g_real_name.c_str());
-        std::sprintf(g_buf, "From: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val_const("NAME", buff),
-                line_end);
+        const char *real_name = get_val_const("NAME", g_real_name.c_str());
+        std::sprintf(g_buf, "From: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), real_name, line_end);
         inews_fputs(g_buf);
     }
     if (!std::getenv("NO_ORIGINATOR"))
     {
-        char buff[80];
-        std::strcpy(buff, g_real_name.c_str());
-        std::sprintf(g_buf, "Originator: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val_const("NAME", buff),
-                line_end);
+        const char *real_name = get_val_const("NAME", g_real_name.c_str());
+        std::sprintf(g_buf, "Originator: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), real_name,
+                     line_end);
         inews_fputs(g_buf);
     }
     std::sprintf(g_buf, "%s", line_end);

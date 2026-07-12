@@ -130,12 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-49. `inews/inews.cpp`, `main`, `buff`.
-    Remove the two fixed-size real-name default buffers.  Use
-    `g_real_name.c_str()` as the default for `get_val_const("NAME",
-    ...)` before formatting the generated `From` and `Originator`
-    headers.
-
 50. `nntp/nntpclient.cpp`, `nntp_connect`, `tmpbuf`.
     Replace the local unavailable-server message buffer with
     `std::string` assembly and pass `message.c_str()` to
