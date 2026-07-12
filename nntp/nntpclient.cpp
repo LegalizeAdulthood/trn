@@ -50,16 +50,18 @@ try_to_connect:
     case NNTP_GOODBYE_VAL:
         if (atoi(g_ser_line) == response)
         {
-            char tmpbuf[LINE_BUF_LEN];
             if (verbose)
             {
                 std::printf("failed: %s\n",&g_ser_line[4]);
             }
             else
             {
-                std::sprintf(tmpbuf,"News server \"%s\" is unavailable: %s\n",
-                        machine,&g_ser_line[4]);
-                nntp_init_error(tmpbuf);
+                std::string message{"News server \""};
+                message += machine;
+                message += "\" is unavailable: ";
+                message += &g_ser_line[4];
+                message += '\n';
+                nntp_init_error(message.c_str());
             }
             response = 0;
             break;

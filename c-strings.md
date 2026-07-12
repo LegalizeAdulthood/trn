@@ -130,12 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-50. `nntp/nntpclient.cpp`, `nntp_connect`, `tmpbuf`.
-    Replace the local unavailable-server message buffer with
-    `std::string` assembly and pass `message.c_str()` to
-    `nntp_init_error`.  Leave the global `g_ser_line` formatting in
-    place for the other branches.
-
 51. `libtrn/rcln.cpp`, `NewsgroupData::catch_up`, `tmpbuf`.
     Replace the local newrc-line formatting buffer with `std::string`
     assembly before calling `save_str`.  Keep `m_rc_line` ownership
