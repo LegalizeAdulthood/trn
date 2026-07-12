@@ -14,6 +14,8 @@ include(GNUInstallDirs)
 
 set_cxx_standard(17)
 
+find_package(fmt CONFIG REQUIRED)
+
 if(WIN32)
     find_package(pdcurses REQUIRED)
     add_library(curses ALIAS pdcurses)

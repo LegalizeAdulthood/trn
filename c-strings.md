@@ -235,11 +235,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-00. Build support: add `fmt` to `vcpkg.json`, call
-`find_package(fmt CONFIG REQUIRED)` from the top-level build, and keep
-the first slice otherwise dependency-only.  Later slices link `fmt::fmt`
-privately to each target when that target first uses fmt.
-
 FMT-01. `util/env.cpp`, `export_var`: link `util` to `fmt::fmt` and
 replace the owned `name=value` string assembly with `fmt::format`.
 This is a leaf string-building change; the returned environment pointer

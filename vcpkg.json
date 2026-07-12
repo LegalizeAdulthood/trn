@@ -4,6 +4,7 @@
   "version": "5.0.0",
   "dependencies": [
     "boost-asio",
+    "fmt",
     "gtest",
     {
       "name": "ncurses",
