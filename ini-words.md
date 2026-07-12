@@ -133,15 +133,3 @@ This keeps rcgroup parsing independent of data-source parsing.
 - `OptionIndex` values depend on invisible table rows and section headers.
 
 ## Slices
-
-### Slice 12: Remove `IniWords`
-
-Delete the compatibility layer once callers are migrated.
-
-- Remove `IniWords`, `prep_ini_words`, `unprep_ini_words`,
-  `ini_values`, `ini_value`, and old `parse_ini_section` overloads.
-- Remove hidden `char **vals` allocation.
-- Remove positional metadata stored in row zero.
-- Clean up tests that only existed for compatibility.
-
-Run the normal build and test workflow.

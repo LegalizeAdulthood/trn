@@ -28,6 +28,7 @@ TEST(OptionCatalogTest, displayRowsPreserveGroups)
     const OptionCatalog &catalog = OptionCatalog::instance();
 
     EXPECT_EQ(95, catalog.row_count());
+    EXPECT_EQ(96, catalog.option_limit());
     EXPECT_TRUE(catalog.is_group(1));
     EXPECT_EQ(std::string_view{"Display Options"}, catalog.name(1));
     EXPECT_TRUE(catalog.is_group(10));

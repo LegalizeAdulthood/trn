@@ -7,7 +7,6 @@
 
 #include <config/common.h>
 #include <config/fdio.h>
-#include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
@@ -663,61 +662,6 @@ char *get_auth_pass()
     return g_data_source->m_auth_pass;
 }
 
-/// @brief Prepares an array of INI words for parsing.
-///
-/// This function initializes the `hash` and `help_str` fields of the provided
-/// `IniWords` array. It calculates a hash for each item based on its characters,
-/// converts uppercase letters to lowercase, and allocates memory for storing the
-/// parsed values. The function ensures that the `IniWords` array is ready for use
-/// in INI file parsing.
-///
-/// @param words An array of `IniWords` structures to be prepared.
-/// @return A pointer to the allocated memory for storing parsed values.
-///
-char **prep_ini_words(IniWords words[])
-{
-    char* cp = (char*)ini_values(words);
-    if (!cp)
-    {
-        int i;
-        for (i = 1; words[i].item != nullptr; i++)
-        {
-            if (*words[i].item == '*')
-            {
-                words[i].hash = -1;
-                continue;
-            }
-            int hash = 0;
-            const char *item;
-            for (item = words[i].item; *item; item++)
-            {
-                hash += (std::isupper(*item)? std::tolower(*item) : *item);
-            }
-            words[i].hash = (hash << 8) + (item - words[i].item);
-        }
-        words[0].hash = i;
-        cp = safe_malloc(i * sizeof(char *));
-        words[0].help_str = cp;
-    }
-    std::memset(cp,0,(words)[0].hash * sizeof (char*));
-    return (char**)cp;
-}
-
-/// @brief Cleans up and deallocates resources for an array of INI words.
-///
-/// This function frees the memory allocated for storing parsed values in the
-/// `IniWords` array and resets the `checksum` and `help_str` fields of the first
-/// element to indicate that the array is no longer prepared for use.
-///
-/// @param words An array of `IniWords` structures to be cleaned up.
-///
-void unprep_ini_words(IniWords words[])
-{
-    std::free(ini_values(words));
-    words[0].hash = 0;
-    words[0].help_str = nullptr;
-}
-
 /// @brief Processes an input buffer containing INI-style data to prepare it for parsing.
 ///
 /// This function modifies the input buffer in-place by:
@@ -837,7 +781,6 @@ char *parse_ini_section_into(char *cp, Sink sink)
 {
     while (*cp && *cp != '[')
     {
-        int   checksum = 0;
         char *s;
         for (s = cp; *s; s++)
         {
@@ -845,14 +788,13 @@ char *parse_ini_section_into(char *cp, Sink sink)
             {
                 *s = std::tolower(*s);
             }
-            checksum += *s;
         }
-        checksum = (checksum << 8) + (s++ - cp);
+        s++;
         if (*s)
         {
-            if (!sink(checksum, cp, s))
+            if (!sink(cp, s))
             {
-                std::printf("Unknown option: `%s'.\n",cp);
+                std::printf("Unknown option: `%s'.\n", cp);
             }
             cp = s + std::strlen(s) + 1;
         }
@@ -867,48 +809,6 @@ char *parse_ini_section_into(char *cp, Sink sink)
 
 } // namespace
 
-char *parse_ini_section(char *cp, IniWords words[])
-{
-    if (!*cp)
-    {
-        return nullptr;
-    }
-
-    char **values = prep_ini_words(words);
-
-    cp = parse_ini_section_into(cp,
-                                [words, values](const int checksum, const char *name, char *value)
-                                {
-                                    int i;
-                                    for (i = 1; words[i].hash; i++)
-                                    {
-                                        if (words[i].hash == checksum //
-                                            && string_case_equal(name, words[i].item))
-                                        {
-                                            values[i] = value;
-                                            return true;
-                                        }
-                                    }
-                                    return false;
-                                });
-
-#ifdef DEBUG
-    if (g_debug & DEB_RCFILES)
-    {
-        std::printf("Ini_words: %s\n", words[0].item);
-        for (int i = 1; words[i].hash; i++)
-        {
-            if (values[i])
-            {
-                std::printf("%s=%s\n",words[i].item,values[i]);
-            }
-        }
-    }
-#endif
-
-    return cp;
-}
-
 char *parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &values)
 {
     if (!*cp)
@@ -918,7 +818,7 @@ char *parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &val
 
     values.reset();
     return parse_ini_section_into(cp,
-                                  [&schema, &values](int, const char *name, char *value)
+                                  [&schema, &values](const char *name, char *value)
                                   {
                                       const IniField *field = schema.find(name);
                                       if (!field)

@@ -19,6 +19,7 @@
 #include <trn/final.h>
 #include <trn/head.h>
 #include <trn/IniDocument.h>
+#include <trn/IniSectionValues.h>
 #include <trn/init.h>
 #include <trn/intrp.h>
 #include <trn/mime.h>
@@ -86,30 +87,28 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
                                           "[Find]/ [FindNext]/^j [Top]^ [Bot]$ [PgUp]< [PgDn]> [Use]^i [Save]S [Abandon]q [Help]?");
     g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,
                                              "[Top]^ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
-    g_news_sel_btn_cnt = parse_mouse_buttons(&g_news_sel_btns,
-                                        "[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
-    g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns,
-                                         "[Next]n [Sel]+ [Quit]q [Help]h");
+    g_news_sel_btn_cnt =
+        parse_mouse_buttons(&g_news_sel_btns, "[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
+    g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns, "[Next]n [Sel]+ [Quit]q [Help]h");
 
-    init_option_ini_words();
-    prep_ini_words(g_options_ini);
-    if (argc >= 2 && !strcmp(argv[1],"-c"))
+    if (argc >= 2 && !strcmp(argv[1], "-c"))
     {
-        g_check_flag=true;                       // so we can optimize for -c
+        g_check_flag = true; // so we can optimize for -c
     }
-    interp(*tcbufptr,TCBUF_SIZE,GLOBAL_INIT);
-    opt_file(*tcbufptr,tcbufptr,false);
+    interp(*tcbufptr, TCBUF_SIZE, GLOBAL_INIT);
+    opt_file(*tcbufptr, tcbufptr, false);
 
-    const int len = ini_len(g_options_ini);
-    g_option_def_vals = (char**)safe_malloc(len*sizeof(char*));
-    std::memset((char*)g_option_def_vals,0,(g_options_ini)[0].hash * sizeof (char*));
+    const OptionCatalog &catalog = OptionCatalog::instance();
+    const int            len = catalog.option_limit();
+    g_option_def_vals = (char **) safe_malloc(len * sizeof(char *));
+    std::memset((char *) g_option_def_vals, 0, len * sizeof(char *));
     // Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list
-    set_header_list(HT_DEF_HIDE,HT_HIDE,"");
-    set_header_list(HT_DEF_MAGIC,HT_MAGIC,"");
+    set_header_list(HT_DEF_HIDE, HT_HIDE, "");
+    set_header_list(HT_DEF_MAGIC, HT_MAGIC, "");
 
     g_ini_file = file_exp(g_use_threads ? get_val_const("TRNRC", "%+/trnrc") : get_val_const("RNRC", "%+/rnrc"));
 
-    char *s = file_exp("%+");
+    char  *s = file_exp("%+");
     stat_t ini_stat{};
     if (stat(s, &ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode))
     {
@@ -139,8 +138,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
             sw_file(tcbufptr);
         }
     }
-    g_option_saved_vals = (char**)safe_malloc(len*sizeof(char*));
-    std::memset((char*)g_option_saved_vals,0,(g_options_ini)[0].hash * sizeof (char*));
+    g_option_saved_vals = (char **) safe_malloc(len * sizeof(char *));
+    std::memset((char *) g_option_saved_vals, 0, len * sizeof(char *));
     g_option_flags = new OptionFlags[len];
     std::fill_n(g_option_flags, len, OF_NONE);
 
@@ -205,12 +204,12 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat)
                 }
                 if (!std::strcmp(section.name, "options"))
                 {
-                    if (parse_ini_section(section.body, g_options_ini) == nullptr)
+                    IniSectionValues values;
+                    if (parse_ini_section(section.body, OptionCatalog::instance().schema(), values) == nullptr)
                     {
                         break;
                     }
-                    set_options(ini_values(g_options_ini));
-                    prep_ini_words(g_options_ini);
+                    OptionApplier{}.apply(values);
                 }
                 else if (!std::strcmp(section.name, "environment"))
                 {
@@ -265,11 +264,6 @@ inline bool is_yes(const char *s)
 inline bool is_no(const char *s)
 {
     return *s == 'n' || *s == 'N';
-}
-
-void set_options(char **vals)
-{
-    OptionApplier{}.apply(vals);
 }
 
 void set_options(const OptionDraft &draft)

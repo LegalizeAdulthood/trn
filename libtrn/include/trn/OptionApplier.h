@@ -7,6 +7,7 @@
 
 #include <trn/opt.h>
 
+class IniSectionValues;
 class OptionDraft;
 
 class OptionApplier
@@ -17,7 +18,7 @@ public:
     OptionApplier();
     explicit OptionApplier(ApplyOne apply_one);
 
-    void apply(char **values) const;
+    void apply(const IniSectionValues &values) const;
     void apply(const OptionDraft &draft) const;
     void apply(OptionIndex option, const char *value) const;
 

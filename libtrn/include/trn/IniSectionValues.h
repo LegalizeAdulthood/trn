@@ -18,6 +18,7 @@ public:
     void                            reset();
     bool                            set(const IniField &field, std::string_view value);
     bool                            contains(int field_id) const;
+    const char                     *c_str(int field_id) const;
     std::optional<std::string_view> value(int field_id) const;
     std::size_t                     size() const;
 

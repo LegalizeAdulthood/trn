@@ -12,12 +12,15 @@
 #include <trn/change_dir.h>
 #include <trn/final.h>
 #include <trn/IniDocument.h>
+#include <trn/IniSectionValues.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
 #include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/opt.h>
+#include <trn/OptionApplier.h>
+#include <trn/OptionCatalog.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
 #include <trn/respond.h>
@@ -150,7 +153,7 @@ bool switcheroo()
         }
         if (g_buf[1] == '-' || g_buf[1] == '+')
         {
-            std::strcpy(tmp_buf,g_buf+1);
+            std::strcpy(tmp_buf, g_buf + 1);
             sw_list(tmp_buf);
         }
         else
@@ -160,9 +163,9 @@ bool switcheroo()
             IniDocument::Section section;
             if (document.next_section(section))
             {
-                parse_ini_section(section.body, g_options_ini);
-                set_options(ini_values(g_options_ini));
-                prep_ini_words(g_options_ini);
+                IniSectionValues values;
+                parse_ini_section(section.body, OptionCatalog::instance().schema(), values);
+                OptionApplier{}.apply(values);
             }
         }
         if (do_cd)

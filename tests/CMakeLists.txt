@@ -19,7 +19,6 @@ add_executable(trn-test
     test_IniDocument.cpp
     test_IniSchema.cpp
     test_IniSectionValues.cpp
-    test_ini_words.cpp
     test_init.cpp
     test_interp.cpp
     test_makedir.cpp

@@ -4,8 +4,6 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/OptionCatalog.h>
 
-#include <trn/util.h>
-
 namespace
 {
 
@@ -15,8 +13,6 @@ IniField option_field(OptionIndex index, std::string_view name, std::string_view
 }
 
 } // namespace
-
-IniWords g_options_ini[static_cast<int>(OI_SCORE_LAST) + 2]{};
 
 OptionCatalog::OptionCatalog() :
     m_schema{"OPTIONS",
@@ -174,28 +170,4 @@ int OptionCatalog::previous_group_row(int row) const
         }
     }
     return 0;
-}
-
-void init_option_ini_words()
-{
-    if (g_options_ini[0].item != nullptr)
-    {
-        return;
-    }
-
-    const OptionCatalog &catalog = OptionCatalog::instance();
-    g_options_ini[0] = {0, catalog.schema().section_name().data(), nullptr};
-    for (int row = catalog.first_row(); row <= catalog.row_count(); ++row)
-    {
-        const IniField &field = catalog.display_row(row);
-        if (field.is_group())
-        {
-            g_options_ini[row] = {0, "*", nullptr};
-        }
-        else
-        {
-            g_options_ini[row] = {0, field.name().data(), const_cast<char *>(field.help().data())};
-        }
-    }
-    g_options_ini[catalog.row_count() + 1] = {0, nullptr, nullptr};
 }

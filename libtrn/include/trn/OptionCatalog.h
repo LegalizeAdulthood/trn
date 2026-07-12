@@ -19,6 +19,7 @@ public:
     const IniSchema &schema() const;
     int              first_row() const;
     int              row_count() const;
+    int              option_limit() const;
     bool             contains_row(int row) const;
     const IniField  &display_row(int row) const;
     bool             is_group(int row) const;
@@ -36,8 +37,6 @@ private:
     std::vector<int> m_rows_by_option;
 };
 
-void init_option_ini_words();
-
 inline const IniSchema &OptionCatalog::schema() const
 {
     return m_schema;
@@ -51,6 +50,11 @@ inline int OptionCatalog::first_row() const
 inline int OptionCatalog::row_count() const
 {
     return static_cast<int>(m_schema.size());
+}
+
+inline int OptionCatalog::option_limit() const
+{
+    return static_cast<int>(m_rows_by_option.size());
 }
 
 inline bool OptionCatalog::contains_row(int row) const

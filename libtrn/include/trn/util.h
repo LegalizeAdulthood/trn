@@ -35,21 +35,12 @@ enum MakeDirNameType
     MD_FILE = 1
 };
 
-// a template for parsing an ini file
-
-struct IniWords
-{
-    int         hash; // accelerates locating entries matching the item text
-    const char *item;
-    char       *help_str;
-};
-
 class IniSchema;
 class IniSectionValues;
 
 void util_init();
 void util_final();
-int do_shell(const char *shell, const char *cmd);
+int  do_shell(const char *shell, const char *cmd);
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);
@@ -60,43 +51,27 @@ int eaccess(char *, int);
 #endif
 char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp);
-bool make_dir(const char *dirname, MakeDirNameType nametype);
+bool  make_dir(const char *dirname, MakeDirNameType nametype);
 void  not_incl(std::string_view feature);
-void grow_str(char **strptr, int *curlen, int newlen);
-void set_def(char *buffer, const char *dflt);
+void  grow_str(char **strptr, int *curlen, int newlen);
+void  set_def(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
 void safe_link(char *old_name, char *new_name);
 #endif
-void   verify_sig();
-double current_time();
+void        verify_sig();
+double      current_time();
 std::time_t text_to_secs(const char *s, std::time_t defSecs);
 const char *secs_to_text(std::time_t secs);
-char * temp_filename();
-char * get_auth_user();
-char * get_auth_pass();
-char **prep_ini_words(IniWords words[]);
-void   unprep_ini_words(IniWords words[]);
-void   prep_ini_data(char *cp, const char *filename);
-bool   parse_string(char **to, char **from);
-char * next_ini_section(char *cp, char **section, char **cond);
-char * parse_ini_section(char *cp, IniWords words[]);
-char * parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &values);
-bool   check_ini_cond(char *cond);
-char   menu_get_char();
-int    edit_file(const char *fname);
-
-inline int ini_len(const IniWords *words)
-{
-    return words[0].hash;
-}
-inline char **ini_values(IniWords *words)
-{
-    return (char **) words[0].help_str;
-}
-inline char *ini_value(IniWords *words, int num)
-{
-    return ini_values(words)[num];
-}
+char       *temp_filename();
+char       *get_auth_user();
+char       *get_auth_pass();
+void        prep_ini_data(char *cp, const char *filename);
+bool        parse_string(char **to, char **from);
+char       *next_ini_section(char *cp, char **section, char **cond);
+char       *parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &values);
+bool        check_ini_cond(char *cond);
+char        menu_get_char();
+int         edit_file(const char *fname);
 
 inline void safe_free(void *ptr)
 {

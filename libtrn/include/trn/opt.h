@@ -8,7 +8,6 @@
 #include <trn/enum-flags.h>
 #include <trn/head.h>
 #include <trn/search.h>
-#include <trn/util.h>
 
 #include <string>
 #include <string_view>
@@ -141,7 +140,6 @@ class OptionDraft;
 
 extern CompiledRegex g_opt_compex;
 extern std::string   g_ini_file;
-extern IniWords      g_options_ini[];
 extern char        **g_option_def_vals;
 extern char        **g_option_saved_vals;
 extern OptionFlags  *g_option_flags;
@@ -150,7 +148,6 @@ extern int           g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
-void        set_options(char **vals);
 void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, const char *s);
 void        save_options(const char *filename);

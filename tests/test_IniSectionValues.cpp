@@ -42,8 +42,10 @@ TEST(IniSectionValuesTest, storesBorrowedValuesByFieldId)
     ASSERT_TRUE(value.has_value());
     EXPECT_EQ(std::string_view{"alpha"}, *value);
     EXPECT_EQ(alpha, value->data());
+    EXPECT_EQ(alpha, values.c_str(TF_ALPHA));
     EXPECT_TRUE(values.contains(TF_ALPHA));
     EXPECT_FALSE(values.contains(TF_BETA));
+    EXPECT_EQ(nullptr, values.c_str(TF_BETA));
 }
 
 TEST(IniSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
@@ -62,6 +64,7 @@ TEST(IniSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
 
     EXPECT_EQ(std::string_view{"alpha"}, std::string_view{alpha});
     EXPECT_FALSE(values.value(TF_ALPHA).has_value());
+    EXPECT_EQ(nullptr, values.c_str(TF_ALPHA));
     EXPECT_EQ(0U, values.size());
 
     ASSERT_TRUE(values.set(*beta_field, beta));

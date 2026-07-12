@@ -2,6 +2,7 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/OptionApplier.h>
 
+#include <trn/IniSectionValues.h>
 #include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 
@@ -53,17 +54,19 @@ TEST_F(OptionApplierTest, appliesOneOptionThroughSink)
     EXPECT_EQ(std::string_view{"yes"}, s_applied_options[0].value);
 }
 
-TEST_F(OptionApplierTest, appliesIniValuesByOptionIndex)
+TEST_F(OptionApplierTest, appliesSectionValuesByOptionIndex)
 {
-    init_option_ini_words();
-    char **values = prep_ini_words(g_options_ini);
-    values[OI_TERSE_OUTPUT] = const_cast<char *>("no");
-    values[OI_USE_THREADS] = const_cast<char *>("yes");
+    const OptionCatalog &catalog = OptionCatalog::instance();
+    IniSectionValues     values;
+    const IniField      *terse = catalog.schema().find("Terse Output");
+    const IniField      *threads = catalog.schema().find("Use Threads");
+    ASSERT_NE(nullptr, terse);
+    ASSERT_NE(nullptr, threads);
+    ASSERT_TRUE(values.set(*terse, "no"));
+    ASSERT_TRUE(values.set(*threads, "yes"));
 
     OptionApplier applier{record_option};
     applier.apply(values);
-
-    unprep_ini_words(g_options_ini);
 
     ASSERT_EQ(2U, s_applied_options.size());
     EXPECT_EQ(OI_TERSE_OUTPUT, s_applied_options[0].option);
@@ -74,16 +77,12 @@ TEST_F(OptionApplierTest, appliesIniValuesByOptionIndex)
 
 TEST_F(OptionApplierTest, appliesDraftEditsByOptionIndex)
 {
-    init_option_ini_words();
-    prep_ini_words(g_options_ini);
-    OptionDraft draft{static_cast<std::size_t>(ini_len(g_options_ini))};
+    OptionDraft draft{static_cast<std::size_t>(OptionCatalog::instance().option_limit())};
     draft.set(OI_ERASE_SCREEN, "yes");
     draft.set(OI_USE_THREADS, "no");
 
     OptionApplier applier{record_option};
     applier.apply(draft);
-
-    unprep_ini_words(g_options_ini);
 
     ASSERT_EQ(2U, s_applied_options.size());
     EXPECT_EQ(OI_ERASE_SCREEN, s_applied_options[0].option);

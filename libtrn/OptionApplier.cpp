@@ -4,9 +4,10 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/OptionApplier.h>
 
+#include <trn/IniSectionValues.h>
+#include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 
@@ -22,22 +23,25 @@ OptionApplier::OptionApplier(ApplyOne apply_one) :
 {
 }
 
-void OptionApplier::apply(char **values) const
+void OptionApplier::apply(const IniSectionValues &values) const
 {
-    char    **cursor = values;
-    const int limit = ini_len(g_options_ini);
-    for (int i = 1; i < limit; i++)
+    const OptionCatalog &catalog = OptionCatalog::instance();
+    for (int row = catalog.first_row(); row <= catalog.row_count(); ++row)
     {
-        if (*++cursor)
+        if (catalog.is_option(row))
         {
-            apply(static_cast<OptionIndex>(i), *cursor);
+            const OptionIndex option = catalog.option(row);
+            if (const char *value = values.c_str(option); value != nullptr)
+            {
+                apply(option, value);
+            }
         }
     }
 }
 
 void OptionApplier::apply(const OptionDraft &draft) const
 {
-    const int limit = std::min(static_cast<int>(draft.limit()), ini_len(g_options_ini));
+    const int limit = static_cast<int>(draft.limit());
     for (int i = 1; i < limit; i++)
     {
         if (const char *value = draft.value(i); value != nullptr)
