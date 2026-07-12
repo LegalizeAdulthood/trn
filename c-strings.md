@@ -110,12 +110,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-37. `inews/inews.cpp`, `valid_header`, `h`.
-    Promote `h` to `std::string_view`.  Replace `strchr` checks with
-    `find`, use view slicing for the continuation-header branch, and
-    preserve the `0`, `1`, and `2` return meanings.  The line is only
-    inspected, not stored or modified.
-
 43. `libtrn/terminal.cpp`, `xmouse_init`, `progname`.
     Promote `progname` to `std::string_view`.  Replace the
     `strlen`-based suffix test with a non-empty view check on the last

@@ -1,6 +1,7 @@
 /* inews.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <config/common.h>
 #include <config/pipe_io.h>
@@ -17,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 enum
 {
@@ -28,7 +30,7 @@ char *g_server_name{};
 std::string g_nntp_auth_file;
 char g_buf[LINE_BUF_LEN + 1]{}; // general purpose line buffer
 
-int valid_header(char *h);
+int  valid_header(std::string_view h);
 void append_signature();
 
 static std::FILE *inews_wr_fp{};
@@ -358,20 +360,22 @@ int main(int argc, char *argv[])
 }
 
 // valid_header -- determine if a line is a valid header line
-int valid_header(char *h)
+int valid_header(std::string_view h)
 {
     // Blank or tab in first position implies this is a continuation header
-    if (is_hor_space(h[0]))
+    if (!h.empty() && is_hor_space(h.front()))
     {
-        h = skip_hor_space(h);
-        return *h && *h != '\n'? 1 : 2;
+        const std::size_t text = h.find_first_not_of(" \t");
+        return text != std::string_view::npos && h[text] != '\n' ? 1 : 2;
     }
 
     // Just check for initial letter, colon, and space to make
     // sure we discard only invalid headers.
-    char *colon = std::strchr(h, ':');
-    char *space = std::strchr(h, ' ');
-    if (std::isalpha(h[0]) && colon && space == colon + 1)
+    const std::size_t colon = h.find(':');
+    const std::size_t space = h.find(' ');
+    if (!h.empty()                                             //
+        && std::isalpha(static_cast<unsigned char>(h.front())) //
+        && colon != std::string_view::npos && space == colon + 1)
     {
         return 1;
     }
