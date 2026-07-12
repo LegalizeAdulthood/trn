@@ -139,8 +139,7 @@ int server_init(const char *machine)
 
     if (*g_ser_line == NNTP_CLASS_OK)
     {
-        char save_line[NNTP_STRLEN];
-        std::strcpy(save_line, g_ser_line);
+        const std::string save_line{g_ser_line};
         // Try MODE READER just in case we're talking to innd.
         // If it is not an invalid command, use the new reply.
         if (nntp_command("MODE READER") <= 0)
@@ -149,7 +148,7 @@ int server_init(const char *machine)
         }
         else if (nntp_check() <= 0 && atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
         {
-            std::strcpy(g_ser_line, save_line);
+            std::strcpy(g_ser_line, save_line.c_str());
         }
     }
     return std::atoi(g_ser_line);

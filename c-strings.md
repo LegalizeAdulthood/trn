@@ -130,11 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-46. `nntp/nntpinit.cpp`, `server_init`, `save_line`.
-    Replace the saved signon reply buffer with `std::string`.
-    Restore `g_ser_line` from `save_line.c_str()` only when the MODE
-    READER probe should be ignored.
-
 47. `libtrn/artio.cpp`, `art_open`, `art_name`.
     Replace the local article-number filename buffer with
     `std::to_string`.  Pass `art_name.c_str()` to `std::fopen`;
