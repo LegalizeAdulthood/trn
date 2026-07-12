@@ -155,10 +155,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-61. In `libtrn/kfile.cpp`, change only `write_global_thread_commands`
-    so the global thread kill-file path is a local path for directory
-    creation, removal, and append/rewrite open logic.  Do not change
-    hash walking or the command strings written to the file.
 62. In `libtrn/opt.cpp`, change only `save_options` so the primary, `.new`,
     and `.old` option filenames are local paths.  Use filesystem
     remove/rename for the final replacement sequence, while converting

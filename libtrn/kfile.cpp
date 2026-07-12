@@ -694,12 +694,13 @@ void update_thread_kill_file()
         return;
     }
 
-    char *cp = file_exp(get_val_const("KILLTHREADS", s_kill_threads));
-    make_dir(cp, MD_FILE);
+    const fs::path kname{file_exp(get_val_const("KILLTHREADS", s_kill_threads))};
+    std::error_code error;
+    fs::create_directories(kname.parent_path(), error);
     if (g_kf_change_thread_cnt * 5 > s_kill_file_thread_cnt)
     {
-        remove(cp);                     // to prevent file reuse
-        s_new_kill_file_fp = std::fopen(cp, "w");
+        fs::remove(kname, error);       // to prevent file reuse
+        s_new_kill_file_fp = std::fopen(kname.string().c_str(), "w");
         if (s_new_kill_file_fp == nullptr)
         {
             return; // Yikes!
@@ -710,7 +711,7 @@ void update_thread_kill_file()
     }
     else
     {
-        s_new_kill_file_fp = std::fopen(cp, "a");
+        s_new_kill_file_fp = std::fopen(kname.string().c_str(), "a");
         if (s_new_kill_file_fp == nullptr)
         {
             return; // Yikes!
