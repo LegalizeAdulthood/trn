@@ -327,7 +327,7 @@ int mime_exec(char *cmd)
             switch (*++f)
             {
             case 's':
-                safe_copy(t, g_decode_filename, CMD_BUF_LEN-(t-g_cmd_buf));
+                safe_copy(t, g_decode_filename.c_str(), CMD_BUF_LEN-(t-g_cmd_buf));
                 t += std::strlen(t);
                 break;
 
@@ -1002,15 +1002,15 @@ void mime_decode_article(bool view)
 
 void MimeSection::mime_description(char *s, int limit)
 {
-    char * fn = decode_fix_filename(m_filename);
-    int flen = std::strlen(fn);
+    const std::string fn = decode_fix_filename(m_filename ? m_filename : "unknown");
+    int flen = static_cast<int>(fn.size());
 
     limit -= 2;  // leave room for the trailing ']' and '\n'
     std::sprintf(s, "[Attachment type=%s, name=", m_type_name);
     int len = std::strlen(s);
     if (len + flen <= limit)
     {
-        std::sprintf(s + len, "%s]\n", fn);
+        std::sprintf(s + len, "%s]\n", fn.c_str());
     }
     else if (len+3 >= limit)
     {
@@ -1018,7 +1018,7 @@ void MimeSection::mime_description(char *s, int limit)
     }
     else
     {
-        safe_copy(s+len, fn, limit - (len+3));
+        safe_copy(s+len, fn.c_str(), limit - (len+3));
         std::strcat(s, "...]\n");
     }
 }
@@ -1106,14 +1106,16 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_filename(g_mime_section->m_filename);
-        ofp = std::fopen(filename, "wb");
+        const std::string filename =
+            decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+        g_decode_filename = filename;
+        ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
         {
             return DECODE_ERROR;
         }
         erase_line(false);
-        std::printf("Decoding %s", filename);
+        std::printf("Decoding %s", filename.c_str());
         if (g_no_wait_fork)
         {
             std::fflush(stdout);
@@ -1247,13 +1249,15 @@ all_done:
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_filename(g_mime_section->m_filename);
-        ofp = std::fopen(filename, "wb");
+        const std::string filename =
+            decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+        g_decode_filename = filename;
+        ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
         {
             return DECODE_ERROR;
         }
-        std::printf("Decoding %s", filename);
+        std::printf("Decoding %s", filename.c_str());
         if (g_no_wait_fork)
         {
             std::fflush(stdout);
@@ -1368,13 +1372,15 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_filename(g_mime_section->m_filename);
-        ofp = std::fopen(filename, "wb");
+        const std::string filename =
+            decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+        g_decode_filename = filename;
+        ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
         {
             return DECODE_ERROR;
         }
-        std::printf("Decoding %s", filename);
+        std::printf("Decoding %s", filename.c_str());
         if (g_no_wait_fork)
         {
             std::fflush(stdout);

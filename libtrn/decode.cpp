@@ -24,6 +24,9 @@
 
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 #ifdef MSDOS
 #define GOODCHARS                \
@@ -34,7 +37,7 @@
 #define BADCHARS "!$&*()|\'\";<>[]{}?/`\\ \t"
 #endif
 
-char *g_decode_filename{};
+std::string g_decode_filename;
 
 static bool bad_filename(const char *filename);
 static DecodeFunc decode_function(MimeEncoding encoding);
@@ -45,56 +48,34 @@ void decode_init()
 {
 }
 
-char *decode_fix_filename(const char *s)
+std::string decode_fix_filename(std::string_view text)
 {
-    char* t;
-#ifdef MSDOS
-    int dotcount = 0;
-#endif
+    std::string path{text};
+    std::replace(path.begin(), path.end(), '\\', '/');
 
-    if (!s)
+    std::string filename;
+    filename.reserve(path.size());
+    for (const char ch : fs::path{path}.filename().string())
     {
-        s = "unknown";
-    }
-
-    safe_free(g_decode_filename);
-    g_decode_filename = safe_malloc(std::strlen(s) + 2);
-
-    // TODO: we need to eliminate any "../"s from the string
-    while (*s == '/' || *s == '~')
-    {
-        s++;
-    }
-    for (t = g_decode_filename; *s; s++)
-    {
-#ifdef MSDOS
-        // TODO: we should also handle backslashes here
-        if (*s == '.' && (t == g_decode_filename || dotcount++))
-        {
-            continue;
-        }
-#endif
-        if (std::isprint(*s)
+        if (std::isprint(static_cast<unsigned char>(ch))
 #ifdef GOODCHARS
-         && std::strchr(GOODCHARS, *s)
+            && std::strchr(GOODCHARS, ch) != nullptr
 #else
-         && !std::strchr(BADCHARS, *s)
+            && std::strchr(BADCHARS, ch) == nullptr
 #endif
         )
         {
-            *t++ = *s;
+            filename.push_back(ch);
         }
     }
-    *t = '\0';
-    if (t == g_decode_filename || bad_filename(g_decode_filename))
+    if (filename.empty() || bad_filename(filename.c_str()))
     {
-        *t++ = 'x';
-        *t = '\0';
+        filename = "x";
     }
-    return g_decode_filename;
+    return filename;
 }
 
-// Returns nonzero if "filename" is a bad choice
+// Returns true if "filename" is a bad choice
 static bool bad_filename(const char *filename)
 {
     int len = std::strlen(filename);
@@ -320,11 +301,12 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     }
 
     char* dir;
-    char *filename = decode_fix_filename(g_mime_section->m_filename);
+    g_decode_filename = decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+    const std::string filename = g_decode_filename;
     if (mcp || total != 1 || part != 1)
     {
         // Create directory to store parts and copy this part there.
-        dir = decode_mkdir(filename);
+        dir = decode_mkdir(filename.c_str());
         if (!dir)
         {
             std::strcpy(g_msg, "Failed.");
@@ -353,7 +335,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         {
             std::sprintf(g_buf + std::strlen(g_buf), "of %d ", total);
         }
-        std::strcat(g_buf, filename);
+        std::strcat(g_buf, filename.c_str());
         std::fputs(g_buf,stdout);
         if (g_no_wait_fork)
         {
@@ -509,7 +491,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     if (mcp)
     {
         mime_exec(mcp->command);
-        remove(g_decode_filename);
+        remove(g_decode_filename.c_str());
         change_dir("..");
     }
 
@@ -574,5 +556,5 @@ static void decode_rmdir(char *dir)
     *s = '\0';
 
     // TODO: conditional-ize this
-    std::filesystem::remove(dir);
+    fs::remove(dir);
 }

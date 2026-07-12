@@ -8,10 +8,12 @@
 #include <config/typedef.h>
 
 #include <cstdio>
+#include <string>
+#include <string_view>
 
 struct MimeCapEntry;
 
-extern char *g_decode_filename;
+extern std::string g_decode_filename;
 
 enum MimeEncoding
 {
@@ -38,7 +40,7 @@ enum DecodeState
 using DecodeFunc = DecodeState (*)(std::FILE *ifp, DecodeState state);
 
 void decode_init();
-char *decode_fix_filename(const char *s);
+std::string decode_fix_filename(std::string_view text);
 char *decode_subject(ArticleNum art_num, int *partp, int *totalp);
 bool decode_piece(MimeCapEntry *mcp, char *first_line);
 

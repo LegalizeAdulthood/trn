@@ -267,15 +267,16 @@ all_done:
             {
                 return DECODE_ERROR;
             }
-            filename = decode_fix_filename(filename);
+            const std::string decode_filename = decode_fix_filename(filename);
+            g_decode_filename = decode_filename;
 
             // Create output file and start decoding
-            ofp = std::fopen(filename, "wb");
+            ofp = std::fopen(decode_filename.c_str(), "wb");
             if (!ofp)
             {
                 return DECODE_ERROR;
             }
-            std::printf("Decoding %s\n", filename);
+            std::printf("Decoding %s\n", decode_filename.c_str());
             term_down(1);
             state = DECODE_SET_LEN;
             break;

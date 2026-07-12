@@ -12,6 +12,7 @@ add_executable(trn-test
     test_cache.cpp
     test_current_time.cpp
     test_DataSourceConfig.cpp
+    test_decode.cpp
     test_enum_order.cpp
     test_flags.cpp
     test_getwd.cpp

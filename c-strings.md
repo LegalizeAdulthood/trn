@@ -169,10 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-09: `libtrn/decode.cpp`, `g_decode_filename`: replace the global
-  decode filename with `std::string`, build the sanitized filename in
-  owned storage, update the declaration and tests, and pass `c_str()` to
-  filesystem and MIME helpers.
 - GS-10: `libtrn/univ.cpp`, `g_univ_fname`: replace the nullable current
   filename pointer with owned string state or an accessor, remove the
   current `save_str` leaks in temporary overrides, and update the
