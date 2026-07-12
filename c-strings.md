@@ -107,6 +107,18 @@ cursor, a nullable sentinel, an output buffer, a byte transport buffer,
 global or static storage, or part of an already-deferred ownership
 mechanism.
 
+The filesystem-path pass found candidates where a filename is composed,
+suffixed, checked, removed, renamed, or used to create parent directories
+inside one function.  The project already builds as C++17 and already uses
+`std::filesystem`, so these can be local cleanups when the path does not
+escape.
+
+Do not convert a filename to `std::filesystem::path` when the only
+result is calling `path.string().c_str()` for a single C API.  Keep
+protocol strings, shell commands, macro templates, URL text, NNTP names,
+and environment interpolation text as strings until a function has
+separated out a real filesystem path.
+
 ## Refactoring Slices
 
 Each slice centers on one function.  Add local includes and update the
@@ -130,8 +142,72 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
+### Filesystem Path Slices
+
+54. In `libtrn/kfile.cpp`, change only `open_kill_file` so the
+    expanded kill-file name is a local `std::filesystem::path`.  This
+    function already calls `std::filesystem::exists`, `file_size`, and
+    `remove`; keep the C API boundary at `fopen` by converting the path
+    to a local string there.
+55. In `trn-artchk/trn-artchk.cpp`, change only `main` so the article,
+    newsgroups, and active filenames from `argv` become local paths.
+    Replace the local `stat` and `unlink` calls with filesystem
+    queries/removal, while converting to strings only for `fopen` and
+    diagnostics.
+56. In `libtrn/util.cpp`, change only `temp_filename` so it builds
+    the temporary filename with `std::filesystem::path` from
+    `g_tmp_dir` and the generated basename.  Keep the return type and
+    ownership unchanged by saving the final path string.
+57. In `libtrn/last.cpp`, change only `write_last` so the `.pid` temporary
+    filename is derived from a local path and the remove/rename
+    operations use `std::filesystem`.  Leave the file-scope
+    `s_last_file` storage unchanged.
+58. In `libtrn/opt.cpp`, change only `opt_init` so the `%+`
+    directory and configured option filename are local paths for
+    directory and existence checks.  Keep `g_ini_file` as a string and
+    pass a string only to `opt_file`.
+59. In `libtrn/scorefile.cpp`, change only `sf_append` so the
+    expanded score filename is held as a local path after `file_exp`.
+    Use filesystem parent creation for the containing directory, then
+    convert to a string for `fopen`.
+60. In `libtrn/kfile.cpp`, change only `rewrite_kill_file` so the expanded
+    kill-file name is a local path for parent directory creation,
+    removal, and file creation.  Keep existing command formatting and
+    output text as strings.
+61. In `libtrn/kfile.cpp`, change only `write_global_thread_commands`
+    so the global thread kill-file path is a local path for directory
+    creation, removal, and append/rewrite open logic.  Do not change
+    hash walking or the command strings written to the file.
+62. In `libtrn/opt.cpp`, change only `save_options` so the primary, `.new`,
+    and `.old` option filenames are local paths.  Use filesystem
+    remove/rename for the final replacement sequence, while converting
+    to strings for the existing low-level `open`, `read`, and `write`
+    calls.
+63. In `libtrn/univ.cpp`, change only `univ_edit_new_user_file` so the
+    `%+/univ/usertop` filename is a local path.  Use filesystem parent
+    creation and convert to a string for the existing `fopen` calls; do not
+    change the returned universal-file name.
+64. In `libtrn/univ.cpp`, change only `univ_add_text_file` so relative text
+    file names are appended with `std::filesystem::path` instead of manual
+    slash search and string concatenation.  Preserve the current
+    behavior for filenames with no directory component.
+
 ## Defer
 
+- Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`
+  calls are not useful path slices unless the same function also composes,
+  normalizes, queries, removes, or renames the file.
+- `file_exp` remains a template and interpolation boundary with static
+  internal storage.  Wrap its result in a path only when the expanded
+  value is consumed locally and no pointer to the local string can
+  escape.
+- `DataSource` filename members, `Newsrc` filename members, response-file
+  globals, decode part-file state, and score-file table storage need
+  coordinated storage changes before `std::filesystem::path` is an
+  improvement.
+- URL, NNTP, MIME, shell-command, and macro-template strings should stay
+  as strings unless the code has first separated the filename part from
+  protocol or command text.
 - The `IniWords` / `vals` mechanism, including `data_source_init`,
   `prep_ini_words`, `ini_values`, `set_options`, and `g_options_ini`.
   The storage and ownership model needs an overhaul; do not patch it
