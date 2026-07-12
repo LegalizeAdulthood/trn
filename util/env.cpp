@@ -11,6 +11,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #ifdef HAS_RES_INIT
 #include <arpa/nameser.h>
 #include <netinet/in.h>
@@ -477,10 +479,7 @@ extern char **environ;
 char *export_var(std::string_view nam, std::string_view val)
 {
 #if 1
-    std::string envar{nam};
-    envar += '=';
-    envar += val;
-    char *buff = save_str(envar.c_str());
+    char *buff = save_str(fmt::format("{}={}", nam, val));
     putenv(buff);
     return buff;
 #else

@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 37b5f3d3..e1477da7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -369,7 +369,8 @@ elseif (FMT_UNICODE)
+   target_compile_options(fmt PUBLIC $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/utf-8>)
+   target_compile_options(fmt-header-only INTERFACE $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/utf-8>)
+ else ()
+   target_compile_definitions(fmt PUBLIC FMT_UNICODE=0)
++  target_compile_definitions(fmt-header-only INTERFACE FMT_UNICODE=0)
+ endif ()
+ 
+ target_compile_definitions(fmt-header-only INTERFACE FMT_HEADER_ONLY=1)

@@ -211,13 +211,16 @@ When fmt is available, use `fmt::format` for owned formatted strings,
 `fmt::format_to` for appending formatted text to an existing string, and
 `fmt::print` for formatted output to `stdout` or `stderr`.  Link
 `fmt::fmt` privately to the target whose source file uses it.  Do not
-use fmt for simple path joining, plain string append, parser cursor
-work, or caller-owned output buffers.  Leave runtime printf-style format
-strings alone until the format string itself is audited; use
-`fmt::runtime` only when keeping runtime formatting is intentional.  Do
-not create fmt string-building slices for C-buffer `sprintf`,
-`strcpy`, or `strcat` sites; convert those when the C-style string
-buffer itself is refactored.
+add `/utf-8` just to satisfy fmt; the fmt overlay port exports
+`FMT_UNICODE=0` and omits fmt's `/utf-8` interface option when the
+manifest disables fmt's default `utf8` feature.  Do not use fmt for
+simple path joining, plain string append, parser cursor work, or
+caller-owned output buffers.  Leave runtime printf-style format strings
+alone until the format string itself is audited; use `fmt::runtime` only
+when keeping runtime formatting is intentional.  Do not create fmt
+string-building slices for C-buffer `sprintf`, `strcpy`, or `strcat`
+sites; convert those when the C-style string buffer itself is
+refactored.
 
 ## Refactoring Slices
 
@@ -234,11 +237,6 @@ text.  For string building, include only sites that already build an
 owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
-
-FMT-01. `util/env.cpp`, `export_var`: link `util` to `fmt::fmt` and
-replace the owned `name=value` string assembly with `fmt::format`.
-This is a leaf string-building change; the returned environment pointer
-ownership stays unchanged.
 
 FMT-02. `nntp/nntpclient.cpp`, `nntp_connect`: link `nntp` to
 `fmt::fmt` and replace the multi-step NNTP server error message

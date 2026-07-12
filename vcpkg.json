@@ -4,7 +4,10 @@
   "version": "5.0.0",
   "dependencies": [
     "boost-asio",
-    "fmt",
+    {
+      "name": "fmt",
+      "default-features": false
+    },
     "gtest",
     {
       "name": "ncurses",
