@@ -96,12 +96,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-25. `libtrn/nntp.cpp`, `nntp_list`.
-    Promote `type` to `std::string_view`.  Build a local
-    `std::string` for `string_case_equal` and the `sprintf` calls, then
-    pass the assembled command to view-based `nntp_command`.  No storage
-    escapes the function.
-
 26. `libtrn/mime.cpp`, `mime_types_match`.
     Promote `ct` to `std::string_view`.  Keep `pat` as a view, create
     local owned strings only for existing `string_case_equal` calls, and

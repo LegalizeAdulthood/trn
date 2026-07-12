@@ -39,29 +39,31 @@ static ArticlePosition s_body_end{};
 static long s_raw_bytes{-1}; // bytes remaining to be transferred
 #endif
 
-int nntp_list(const char *type, std::string_view arg)
+int nntp_list(std::string_view type, std::string_view arg)
 {
-    int ret;
+    int               ret;
+    const std::string type_name{type};
+    const bool        is_active = string_case_equal(type_name.c_str(), "active");
 #ifdef DEBUG
-    if (!arg.empty() && (g_debug & 1) && string_case_equal(type, "active"))
+    if (!arg.empty() && (g_debug & 1) && is_active)
     {
         return -1;
     }
 #endif
+    std::string command{"LIST"};
     if (!arg.empty())
     {
-        const std::string argument{arg};
-        std::sprintf(g_ser_line, "LIST %s %s", type, argument.c_str());
+        command += ' ';
+        command += type_name;
+        command += ' ';
+        command.append(arg.data(), arg.size());
     }
-    else if (string_case_equal(type, "active"))
+    else if (!is_active)
     {
-        std::strcpy(g_ser_line, "LIST");
+        command += ' ';
+        command += type_name;
     }
-    else
-    {
-        std::sprintf(g_ser_line, "LIST %s", type);
-    }
-    if (nntp_command(g_ser_line) <= 0)
+    if (nntp_command(command) <= 0)
     {
         return -2;
     }
