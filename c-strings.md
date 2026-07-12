@@ -238,10 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-06. `libtrn/nntp.cpp`, `nntp_stat_id`: replace the `STAT` command
-string construction with fmt.  Keep the message-id view data owned by
-the local command string.
-
 FMT-07. `libtrn/last.cpp`, `write_last`: use fmt for the existing
 temporary filename suffix construction and for the direct file output
 record.  Keep the filesystem path and rename behavior unchanged.

@@ -182,9 +182,7 @@ int nntp_stat(ArticleNum art_num)
 
 ArticleNum nntp_stat_id(std::string_view msg_id)
 {
-    std::string command{"STAT "};
-    command.append(msg_id.data(), msg_id.size());
-    if (nntp_command(command) <= 0)
+    if (nntp_command(fmt::format("STAT {}", msg_id)) <= 0)
     {
         return ArticleNum{-2};
     }
