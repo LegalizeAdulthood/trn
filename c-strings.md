@@ -169,10 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-06: `trn-artchk/trn-artchk.cpp`, `g_server_name`: replace the tool
-  global with `std::string`, assign from the selected configuration
-  value, split the port locally, clear it on initialization failure, and
-  pass `c_str()` to `nntp_connect`.
 - GS-07: `util/env.cpp`, `g_local_host`: replace the exported owned host
   name with `std::string`, update header declarations and tests, and use
   direct assignment instead of `save_str`.

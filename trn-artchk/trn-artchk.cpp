@@ -34,7 +34,7 @@ enum
 int server_connection();
 int nntp_handle_timeout();
 
-char       *g_server_name{};
+std::string g_server_name;
 std::string g_nntp_auth_file;
 char        g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
 
@@ -206,16 +206,13 @@ int main(int argc, char *argv[])
     }
     if (cp != nullptr && std::strcmp(cp, "local") != 0)
     {
-        g_server_name = save_str(cp);
-        cp = std::strchr(g_server_name, ';');
-        if (!cp)
+        g_server_name = cp;
+        if (const auto separator = g_server_name.find_first_of(";:");
+            separator != std::string::npos)
         {
-            cp = std::strchr(g_server_name, ':');
-        }
-        if (cp)
-        {
-            *cp = '\0';
-            g_nntp_link.port_number = std::atoi(cp+1);
+            g_nntp_link.port_number =
+                std::atoi(g_server_name.c_str() + separator + 1);
+            g_server_name.resize(separator);
         }
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         cp = std::getenv("NNTP_FORCE_AUTH");
@@ -225,7 +222,7 @@ int main(int argc, char *argv[])
         }
         if (init_nntp() < 0)
         {
-            g_server_name = nullptr;
+            g_server_name.clear();
         }
     }
     if (ngcnt)
@@ -234,7 +231,7 @@ int main(int argc, char *argv[])
         {
             check_ng = (fp_ng = std::fopen(newsgroups_file.string().c_str(), "r")) != nullptr;
         }
-        else if (file_error && g_server_name && server_connection())
+        else if (file_error && !g_server_name.empty() && server_connection())
         {
             check_ng = true;
         }
@@ -243,7 +240,7 @@ int main(int argc, char *argv[])
         {
             check_active = (fp_active = std::fopen(active_file.string().c_str(), "r")) != nullptr;
         }
-        else if (file_error && g_server_name && server_connection())
+        else if (file_error && !g_server_name.empty() && server_connection())
         {
             check_active = true;
         }
@@ -284,7 +281,7 @@ int main(int argc, char *argv[])
             }
             std::fclose(fp_active);
         }
-        else if (g_server_name)
+        else if (!g_server_name.empty())
         {
             int listactive_works = 1;
             for (int i = 0; i < ngcnt; i++)
@@ -409,7 +406,7 @@ int main(int argc, char *argv[])
     }
 
     nntp_close(true);
-    if (g_server_name)
+    if (!g_server_name.empty())
     {
         cleanup_nntp();
     }
@@ -422,7 +419,7 @@ int server_connection()
     static int server_stat = 0;
     if (!server_stat)
     {
-        if (nntp_connect(g_server_name,false) > 0)
+        if (nntp_connect(g_server_name.c_str(),false) > 0)
         {
             server_stat = 1;
         }
