@@ -104,7 +104,7 @@ static void sc_sv_get_file()
     s_lines = nullptr;
 
     const char *s = get_val_const("SAVESCOREFILE", "%+/savedscores");
-    std::FILE *fp = std::fopen(file_exp(s), "r");
+    std::FILE  *fp = std::fopen(file_exp(s).c_str(), "r");
     if (!fp)
     {
 // Debug

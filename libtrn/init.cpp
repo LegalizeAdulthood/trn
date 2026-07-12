@@ -184,8 +184,8 @@ bool initialize(int argc, char *argv[])
 
 static void news_news_check()
 {
-    const char *newsnewsname = file_exp(NEWSNEWSNAME);
-    if (std::FILE *fp = std::fopen(newsnewsname, "r"))
+    const std::string newsnewsname = file_exp(NEWSNEWSNAME);
+    if (std::FILE *fp = std::fopen(newsnewsname.c_str(), "r"))
     {
         stat_t news_news_stat{};
         fstat(fileno(fp),&news_news_stat);

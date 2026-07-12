@@ -1,6 +1,7 @@
 /* env.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <util/env-internal.h>
 
@@ -288,7 +289,7 @@ static bool set_user_name(char *tmpbuf)
 #ifndef PASS_NAMES
     {
         env_init2(); // Make sure g_home_dir/g_dot_dir/etc. are set.
-        std::FILE *fp = std::fopen(file_exp(FULLNAMEFILE), "r");
+        std::FILE *fp = std::fopen(file_exp(FULLNAMEFILE).c_str(), "r");
         if (fp != nullptr)
         {
             std::fgets(g_buf,sizeof g_buf,fp);
@@ -387,7 +388,7 @@ static bool set_p_host_name(char *tmpbuf)
     const char *filename{POSTING_HOSTNAME};
     if (FILE_REF(filename) || filename[0] == '~')
     {
-        fp = std::fopen(file_exp(filename), "r");
+        fp = std::fopen(file_exp(filename).c_str(), "r");
         if (fp == nullptr)
         {
             std::strcpy(tmpbuf, ".");

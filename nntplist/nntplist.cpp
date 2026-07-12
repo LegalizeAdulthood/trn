@@ -1,6 +1,7 @@
 /* nntplist.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <config/common.h>
 #include <config/string_case_compare.h>
@@ -84,15 +85,20 @@ int main(int argc, char *argv[])
     env_init(tcbuf, true);
 
     char *cp = std::getenv("NNTPSERVER");
+    std::string server_name;
     if (!cp)
     {
-        cp = file_exp(SERVER_NAME);
-        if (*cp == '/')
+        server_name = file_exp(SERVER_NAME);
+        if (!server_name.empty())
         {
-            cp = nntp_server_name(cp);
+            cp = server_name.data();
+            if (*cp == '/')
+            {
+                cp = nntp_server_name(cp);
+            }
         }
     }
-    if (std::strcmp(cp,"local") != 0)
+    if (cp != nullptr && std::strcmp(cp, "local") != 0)
     {
         s_server_name = save_str(cp);
         cp = std::strchr(s_server_name, ';');
@@ -189,7 +195,7 @@ int main(int argc, char *argv[])
             std::fprintf(stderr, "Don't know how to list `%s' from your local system.\n", action);
             exit(1);
         }
-        std::FILE *in_fp{std::fopen(file_exp(local_file), "r")};
+        std::FILE *in_fp{std::fopen(file_exp(local_file).c_str(), "r")};
         if (in_fp == nullptr)
         {
             std::fprintf(stderr, "Unable to open `%s'.\n", local_file);

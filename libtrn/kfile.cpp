@@ -34,6 +34,7 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <string>
 #include <string_view>
 #include <system_error>
 
@@ -85,7 +86,7 @@ void kill_file_init()
         s_kill_file_day_num = kill_file_day_num(0);
         s_kill_file_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
-        std::FILE *fp = std::fopen(file_exp(kill_threads), "r");
+        std::FILE *fp = std::fopen(file_exp(kill_threads).c_str(), "r");
         if (fp != nullptr)
         {
             g_msg_id_hash = hash_create(1999, msg_id_cmp);
@@ -195,14 +196,18 @@ static int do_kill_file(std::FILE *kfp, int entering)
             {
                 continue;
             }
-            cp = file_exp(cp);
-            if (!std::strchr(cp, '/'))
+            std::string include_name = file_exp(cp);
+            if (include_name.empty())
             {
-                set_newsgroup_name(cp);
-                cp = file_exp(get_val_const("KILLLOCAL",s_kill_local));
+                continue;
+            }
+            if (!std::strchr(include_name.c_str(), '/'))
+            {
+                set_newsgroup_name(include_name.c_str());
+                include_name = file_exp(get_val_const("KILLLOCAL", s_kill_local));
                 set_newsgroup_name(g_newsgroup_ptr->m_rc_line);
             }
-            std::FILE *incfile = std::fopen(cp, "r");
+            std::FILE *incfile = std::fopen(include_name.c_str(), "r");
             if (incfile != nullptr)
             {
                 int ret = do_kill_file(incfile, entering);
@@ -742,16 +747,16 @@ void edit_kill_file()
                 sp->clear_subject();
             }
         }
-        std::strcpy(g_buf,file_exp(get_val_const("KILLLOCAL",s_kill_local)));
+        std::strcpy(g_buf, file_exp(get_val_const("KILLLOCAL", s_kill_local)).c_str());
     }
     else
     {
-        std::strcpy(g_buf, file_exp(get_val_const("KILLGLOBAL", s_kill_global)));
+        std::strcpy(g_buf, file_exp(get_val_const("KILLGLOBAL", s_kill_global)).c_str());
     }
     if (!make_dir(g_buf, MD_FILE))
     {
-        std::sprintf(g_cmd_buf,"%s %s",
-            file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFAULT_EDITOR))),g_buf);
+        std::sprintf(g_cmd_buf, "%s %s",
+                     file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))).c_str(), g_buf);
         std::printf("\nEditing %s KILL file:\n%s\n",
             (g_in_ng?"local":"global"),g_cmd_buf);
         term_down(3);
@@ -835,7 +840,9 @@ void open_kill_file(int local)
 
 void kill_file_append(const char *cmd, bool local)
 {
-    std::strcpy(g_cmd_buf, file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global)));
+    std::strcpy(g_cmd_buf,
+                file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global))
+                    .c_str());
     if (!make_dir(g_cmd_buf, MD_FILE))
     {
         if (g_verbose)

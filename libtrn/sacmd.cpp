@@ -618,7 +618,7 @@ static bool sa_extract_start()
     if (s_sa_extract_dest == nullptr)
     {
         s_sa_extract_dest = (char*)safe_malloc(LINE_BUF_LEN);
-        safe_copy(s_sa_extract_dest,file_exp("%p"),LINE_BUF_LEN);
+        safe_copy(s_sa_extract_dest, file_exp("%p").c_str(), LINE_BUF_LEN);
     }
     s_go_bot();
     std::printf("To directory (default %s)\n",s_sa_extract_dest);
@@ -631,7 +631,7 @@ static bool sa_extract_start()
     // if the user typed something, copy it to the destination
     if (g_buf[1] != '\0')
     {
-        safe_copy(s_sa_extract_dest,file_exp(g_buf+1),LINE_BUF_LEN);
+        safe_copy(s_sa_extract_dest, file_exp(g_buf + 1).c_str(), LINE_BUF_LEN);
     }
     // set a mode for this later?
     std::printf("\nMark extracted articles as read? [yn]");

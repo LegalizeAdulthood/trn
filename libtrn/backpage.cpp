@@ -1,6 +1,7 @@
 /* backpage.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/backpage.h>
 
@@ -10,6 +11,7 @@
 #include <util/util2.h>
 
 #include <cstdio>
+#include <string>
 
 static int             s_vary_fd{0};         // virtual array file for storing  file offsets
 static ArticlePosition s_vary_buf[VARY_SIZE]; // current window onto virtual array
@@ -20,16 +22,15 @@ static int             s_max_index{-1};
 
 void back_page_init()
 {
-    const char *vary_name = file_exp(VARYNAME);
-    close(creat(vary_name,0600));
-    s_vary_fd = open(vary_name,2);
-    remove(vary_name);
+    const std::string vary_name = file_exp(VARYNAME);
+    close(creat(vary_name.c_str(), 0600));
+    s_vary_fd = open(vary_name.c_str(), 2);
+    remove(vary_name.c_str());
     if (s_vary_fd < 0)
     {
-        std::printf(g_cant_open,vary_name);
+        std::printf(g_cant_open, vary_name.c_str());
         sig_catcher(0);
     }
-
 }
 
 // virtual array read

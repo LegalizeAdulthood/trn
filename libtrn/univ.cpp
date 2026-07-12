@@ -626,7 +626,7 @@ static bool univ_use_file(std::string_view fname, const char *label)
     {
         s_univ_begin_label = save_str(label);
     }
-    std::FILE *fp = std::fopen(file_exp(open_name.c_str()), "r");
+    std::FILE *fp = std::fopen(file_exp(open_name.c_str()).c_str(), "r");
     if (!fp)
     {
         return false; // unsuccessful (XXX: complain)
@@ -871,7 +871,7 @@ static bool univ_do_line(char *line)
                 p = nullptr;
             }
             // description defaults to name
-            univ_add_file(s_univ_line_desc? s_univ_line_desc : s, file_exp(s), p);
+            univ_add_file(s_univ_line_desc ? s_univ_line_desc : s, file_exp(s).c_str(), p);
             break;
 
         case '-':     // label within same file
@@ -1073,9 +1073,8 @@ void univ_page_file(char *fname)
         return;
     }
 
-    std::sprintf(g_cmd_buf,"%s ",
-            file_exp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
-    std::strcat(g_cmd_buf, file_exp(fname));
+    std::sprintf(g_cmd_buf, "%s ", file_exp(get_val_const("HELPPAGER", get_val_const("PAGER", "more"))).c_str());
+    std::strcat(g_cmd_buf, file_exp(fname).c_str());
     term_down(3);
     reset_tty();                  // make sure tty is friendly
     do_shell(SH,g_cmd_buf);      // invoke the shell

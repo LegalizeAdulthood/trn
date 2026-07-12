@@ -79,10 +79,7 @@ void interp_init(char *tcbuf, int tcbuf_len)
         }
 #else
 #ifdef TILDENAME
-        char tilde_news[2+sizeof NEWS_ADMIN];
-        std::strcpy(tilde_news, "~");
-        std::strcat(tilde_news, NEWS_ADMIN);
-        (void) file_exp(tilde_news);
+        (void) file_exp(std::string{"~"} + NEWS_ADMIN);
 #else
         ... "Define either HAS_GETPWENT or TILDENAME to get NEWS_ADMIN"
 #endif  // TILDENAME
@@ -861,30 +858,31 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     s = get_val("NAME", scrbuf);
                     break;
 
-                case 'o':                       // organization
+                case 'o': // organization
+                {
 #ifdef IGNORE_ORG
-                    s = get_val("NEWSORG",s_orgname);
+                    s = get_val("NEWSORG", s_orgname);
 #else
-                    s = get_val("NEWSORG",nullptr);
+                    s = get_val("NEWSORG", nullptr);
                     if (s == nullptr)
                     {
                         std::strcpy(scrbuf, ORG_NAME);
                         s = get_val("ORGANIZATION", scrbuf);
                     }
 #endif
-                    s = file_exp(s);
-                    if (FILE_REF(s))
+                    const std::string org_file = file_exp(s);
+                    if (FILE_REF(org_file.c_str()))
                     {
-                        std::FILE* ofp = std::fopen(s,"r");
+                        std::FILE *ofp = std::fopen(org_file.c_str(), "r");
 
                         if (ofp)
                         {
-                            if (std::fgets(scrbuf,sizeof scrbuf,ofp) == nullptr)
+                            if (std::fgets(scrbuf, sizeof scrbuf, ofp) == nullptr)
                             {
                                 *scrbuf = '\0';
                             }
                             std::fclose(ofp);
-                            s = scrbuf+std::strlen(scrbuf)-1;
+                            s = scrbuf + std::strlen(scrbuf) - 1;
                             if (*scrbuf && *s == '\n')
                             {
                                 *s = '\0';
@@ -897,6 +895,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         }
                     }
                     break;
+                }
 
                 case 'O':
                     std::strcpy(scrbuf, g_orig_dir.c_str());

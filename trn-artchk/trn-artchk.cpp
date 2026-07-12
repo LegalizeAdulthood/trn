@@ -191,15 +191,20 @@ int main(int argc, char *argv[])
         }
     }
     cp = std::getenv("NNTPSERVER");
+    std::string server_name;
     if (!cp)
     {
-        cp = file_exp(SERVER_NAME);
-        if (FILE_REF(cp))
+        server_name = file_exp(SERVER_NAME);
+        if (!server_name.empty())
         {
-            cp = nntp_server_name(cp);
+            cp = server_name.data();
+            if (FILE_REF(cp))
+            {
+                cp = nntp_server_name(cp);
+            }
         }
     }
-    if (std::strcmp(cp,"local") != 0)
+    if (cp != nullptr && std::strcmp(cp, "local") != 0)
     {
         g_server_name = save_str(cp);
         cp = std::strchr(g_server_name, ';');

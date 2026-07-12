@@ -101,7 +101,6 @@ static bool fetch_ftp(const char *host, const char *origpath, const char *outnam
 #ifdef USE_FTP
     static char cmdline[1024];
     static char path[512];      // use to make writable copy
-    // buffers used because because file_exp overwrites previous call results
     static char username[128];
     static char userhost[128];
     int         status;
@@ -119,9 +118,9 @@ static bool fetch_ftp(const char *host, const char *origpath, const char *outnam
         std::printf("Error: URL:ftp path has no final filename.\n");
         return false;
     }
-    safe_copy(username,file_exp("%L"),120);
-    safe_copy(userhost,file_exp("%H"),120);
-    if (p != path)      // not of form /foo
+    safe_copy(username, file_exp("%L").c_str(), 120);
+    safe_copy(userhost, file_exp("%H").c_str(), 120);
+    if (p != path) // not of form /foo
     {
         *p = '\0';
         cdpath = path;
@@ -131,8 +130,8 @@ static bool fetch_ftp(const char *host, const char *origpath, const char *outnam
         cdpath = "/";
     }
 
-    std::sprintf(cmdline,"%s/ftpgrab %s ftp %s@%s %s %s %s",
-            file_exp("%X"),host,username,userhost,cdpath,p+1,outname);
+    std::sprintf(cmdline, "%s/ftpgrab %s ftp %s@%s %s %s %s", file_exp("%X").c_str(), host, username, userhost, cdpath,
+                 p + 1, outname);
 
     // modified escape_shell_cmd code from NCSA HTTPD util.cpp
     // serious security holes could result without this code

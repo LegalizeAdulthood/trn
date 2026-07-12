@@ -18,6 +18,8 @@ Existing good precedents:
 - `libtrn/univ.cpp`, `univ_add_text_file`: accepts a legacy C string at
   the boundary, then uses `std::string_view` for slicing and
   `std::string` for owned path assembly.
+- `util/util2.cpp`, `file_exp`: accepts a `std::string_view`, keeps
+  mutable scratch storage local, and returns an owned `std::string`.
 - `libtrn/terminal.cpp`, `set_macro`: accepts string views and creates
   owned strings only when a null-terminated value is needed.
 - `libtrn/autosub.cpp`, `match_list`: passes comma-delimited pattern
@@ -30,7 +32,7 @@ owned buffers, caller-owned mutable buffers, struct fields, termcap and
 NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
 `g_buf`, `g_cmd_buf`, `g_ser_line`, `Article` and `Subject` fields,
 `UniversalItem` unions, `HashDatum` payloads, `parse_string`,
-`get_a_line`, `file_exp`, and `push_string`.
+`get_a_line` and `push_string`.
 
 The useful local targets fall into four groups:
 
@@ -130,6 +132,12 @@ Do not introduce a local `std::string` only to hold `path.string()`.
 Use `path.string().c_str()` at the call site and let the compiler handle
 common subexpression elimination.
 
+When replacing a nullable C-string result with an owned `std::string`,
+map `nullptr` failure to an empty string.  Callers that need to branch on
+failure must check `empty()` instead of comparing to `nullptr`.  Pass
+`c_str()` to legacy C APIs only when the pointer is consumed during the
+same full expression; otherwise keep an owned `std::string` in scope.
+
 ## Refactoring Slices
 
 Each slice centers on one function.  Add local includes and update the
@@ -160,10 +168,6 @@ both declarations and definitions `static`.
 - Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`
   calls are not useful path slices unless the same function also composes,
   normalizes, queries, removes, or renames the file.
-- `file_exp` remains a template and interpolation boundary with static
-  internal storage.  Wrap its result in a path only when the expanded
-  value is consumed locally and no pointer to the local string can
-  escape.
 - `DataSource` filename members, `Newsrc` filename members, response-file
   globals, decode part-file state, and score-file table storage need
   coordinated storage changes before `std::filesystem::path` is an
@@ -178,8 +182,6 @@ both declarations and definitions `static`.
 - `libtrn/terminal.cpp`, `print_lines`: the cursor is logically const,
   but it flows through `put_char_adv(char **)`.  Make `put_char_adv`
   const-friendly first.
-- `util/util2.cpp`, `file_exp`: it returns a static C buffer and feeds
-  `do_interp`.  Convert only with a broader filename-expansion slice.
 - `libtrn/mempool.cpp`, `mp_save_str`: it has an explicit `nullptr`
   diagnostic path.  Promote only with an overload or a broader call-site
   audit that preserves that behavior.

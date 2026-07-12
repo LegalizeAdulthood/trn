@@ -138,7 +138,7 @@ void mime_read_mimecap(const char *mcname)
     int  buflen = 2048;
     int  i;
 
-    std::FILE *fp = std::fopen(file_exp(mcname), "r");
+    std::FILE *fp = std::fopen(file_exp(mcname).c_str(), "r");
     if (fp == nullptr)
     {
         return;

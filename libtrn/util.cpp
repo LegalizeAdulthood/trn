@@ -528,18 +528,18 @@ void verify_sig()
 {
     std::printf("\n");
     // RIPEM
-    int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
+    int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A").c_str());
     if (!i)     // found RIPEM
     {
-        i = do_shell(SH,file_exp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
+        i = do_shell(SH, file_exp(get_val_const("VERIFY_RIPEM", VERIFY_RIPEM)).c_str());
         std::printf("\nReturned value: %d\n",i);
         return;
     }
     // PGP
-    i = do_shell(SH,file_exp("grep -s \"BEGIN PGP\" %A"));
+    i = do_shell(SH, file_exp("grep -s \"BEGIN PGP\" %A").c_str());
     if (!i)     // found PGP
     {
-        i = do_shell(SH,file_exp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
+        i = do_shell(SH, file_exp(get_val_const("VERIFY_PGP", VERIFY_PGP)).c_str());
         std::printf("\nReturned value: %d\n",i);
         return;
     }
@@ -912,9 +912,8 @@ int edit_file(const char *fname)
     }
 
     // XXX paranoia check on length
-    std::sprintf(g_cmd_buf,"%s ",
-            file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFAULT_EDITOR))));
-    std::strcat(g_cmd_buf, file_exp(fname));
+    std::sprintf(g_cmd_buf, "%s ", file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))).c_str());
+    std::strcat(g_cmd_buf, file_exp(fname).c_str());
     term_down(3);
     reset_tty();                  // make sure tty is friendly
     r = do_shell(SH,g_cmd_buf);  // invoke the shell

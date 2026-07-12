@@ -115,12 +115,17 @@ int main(int argc, char *argv[])
     }
 
     cp = get_val("NNTPSERVER");
+    std::string server_name;
     if (!cp)
     {
-        cp = file_exp(SERVER_NAME);
-        if (FILE_REF(cp))
+        server_name = file_exp(SERVER_NAME);
+        if (!server_name.empty())
         {
-            cp = nntp_server_name(cp);
+            cp = server_name.data();
+            if (FILE_REF(cp))
+            {
+                cp = nntp_server_name(cp);
+            }
         }
     }
     const char *line_end;
@@ -399,7 +404,7 @@ void append_signature()
         return;
     }
 
-    fp = std::fopen(file_exp(SIGNATURE_FILE), "r");
+    fp = std::fopen(file_exp(SIGNATURE_FILE).c_str(), "r");
     if (fp == nullptr)
     {
         return;

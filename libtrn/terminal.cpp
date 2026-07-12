@@ -588,10 +588,9 @@ static void mac_init(char *tcbuf)
         arrow_macros(tmpbuf);
     }
     std::FILE *macros;
-    if (!g_use_threads
-     || (macros = std::fopen(file_exp(get_val_const("TRNMACRO",TRNMACRO)),"r")) == nullptr)
+    if (!g_use_threads || (macros = std::fopen(file_exp(get_val_const("TRNMACRO", TRNMACRO)).c_str(), "r")) == nullptr)
     {
-        macros = std::fopen(file_exp(get_val_const("RNMACRO",RNMACRO)),"r");
+        macros = std::fopen(file_exp(get_val_const("RNMACRO", RNMACRO)).c_str(), "r");
     }
     if (macros)
     {

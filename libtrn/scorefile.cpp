@@ -106,7 +106,7 @@ void sf_init()
     }
     s_sf_file_level = 0;
     // find # of levels
-    std::strcpy(s_sf_buf,file_exp("%C"));
+    std::strcpy(s_sf_buf, file_exp("%C").c_str());
     int level = 0;
     for (char *s = s_sf_buf; *s; s++)
     {
@@ -367,7 +367,7 @@ static char s_sf_file[LINE_BUF_LEN];
 // filenames of type a/b/c/foo.bar.misc for group foo.bar.misc
 static char *sf_get_filename(int level)
 {
-    std::strcpy(s_sf_file,file_exp(get_val_const("SCOREDIR",DEFAULT_SCOREDIR)));
+    std::strcpy(s_sf_file, file_exp(get_val_const("SCOREDIR", DEFAULT_SCOREDIR)).c_str());
     std::strcat(s_sf_file,"/");
     if (!level)
     {
@@ -376,7 +376,7 @@ static char *sf_get_filename(int level)
     }
     else
     {
-        std::strcat(s_sf_file,file_exp("%C"));
+        std::strcat(s_sf_file, file_exp("%C").c_str());
         char *s = std::strrchr(s_sf_file, '/');
         // maybe redo this logic later...
         while (level--)
@@ -511,7 +511,7 @@ static bool sf_do_command(char *cmd, bool check)
             std::printf("Bad include command (missing filename)\n");
             return false;
         }
-        sf_do_file(file_exp(sf_cmd_fname(s)));
+        sf_do_file(file_exp(sf_cmd_fname(s)).c_str());
         return true;
     }
     if (!std::strncmp(cmd, "exclude", 7))
@@ -526,7 +526,7 @@ static bool sf_do_command(char *cmd, bool check)
             std::printf("Bad exclude command (missing filename)\n");
             return false;
         }
-        sf_exclude_file(file_exp(sf_cmd_fname(s)));
+        sf_exclude_file(file_exp(sf_cmd_fname(s)).c_str());
         return true;
     }
     if (!std::strncmp(cmd, "header", 6))
@@ -1098,7 +1098,7 @@ void sf_append(char *line)
         case 'F': // domain-shortened FROM line
             std::strcpy(lbuf, scoreline);
             lbuf[std::strlen(lbuf) - 1] = '\0';
-            std::strcat(lbuf, file_exp("from: %y"));
+            std::strcat(lbuf, file_exp("from: %y").c_str());
             scoreline = lbuf;
             break;
 
@@ -1421,7 +1421,7 @@ void sf_edit_file(const char *filespec)
         std::strcpy(filebuf,s_sf_abbr[(int)filechar]);
     }
     char *fname_noexpand = sf_cmd_fname(filebuf);
-    std::strcpy(filebuf,file_exp(fname_noexpand));
+    std::strcpy(filebuf, file_exp(fname_noexpand).c_str());
     // make sure directory exists...
     if (!make_dir(filebuf, MD_FILE))
     {

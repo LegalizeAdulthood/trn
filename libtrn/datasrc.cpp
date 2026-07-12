@@ -93,7 +93,8 @@ void data_source_init()
     g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
 
     char *machine = get_val("NNTPSERVER");
-    if (machine && std::strcmp(machine,"local") != 0)
+    std::string expanded_machine;
+    if (machine && std::strcmp(machine, "local") != 0)
     {
         DataSourceConfig config;
         char            *auth_pass = nullptr;
@@ -101,7 +102,7 @@ void data_source_init()
         config.set_auth_user(read_auth_file(g_nntp_auth_file.c_str(), &auth_pass));
         config.set_auth_password(auth_pass);
         config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
-        new_data_source("default",config);
+        new_data_source("default", config);
     }
 
     g_trn_access_mem = read_data_sources(TRNACCESS);
@@ -117,12 +118,16 @@ void data_source_init()
 
     if (!machine)
     {
-        machine = file_exp(SERVER_NAME);
-        if (FILE_REF(machine))
+        expanded_machine = file_exp(SERVER_NAME);
+        if (!expanded_machine.empty())
         {
-            machine = nntp_server_name(machine);
+            machine = expanded_machine.data();
+            if (FILE_REF(machine))
+            {
+                machine = nntp_server_name(machine);
+            }
         }
-        if (!std::strcmp(machine, "local"))
+        if (machine && !std::strcmp(machine, "local"))
         {
             machine = nullptr;
             actname = ACTIVE;
@@ -176,7 +181,7 @@ void data_source_finalize()
 static char *read_data_sources(const char *filename)
 {
     IniSectionValues values;
-    IniDocument      document = IniDocument::read_file(file_exp(filename), filename);
+    IniDocument      document = IniDocument::read_file(file_exp(filename).c_str(), filename);
 
     if (document.data() == nullptr)
     {
@@ -385,12 +390,12 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
     }
 
     dp->m_flags |= flag;
-    dir = file_exp(dir);
-    if (!std::strcmp(dir,dp->m_spool_dir))
+    const std::string expanded_dir = file_exp(dir);
+    if (!std::strcmp(expanded_dir.c_str(), dp->m_spool_dir))
     {
         return dp->m_spool_dir;
     }
-    return save_str(dir);
+    return save_str(expanded_dir);
 }
 
 static char *file_or_none(const char *fn)

@@ -400,8 +400,8 @@ static bool lock_newsrc(Newsrc *rp)
         return true;
     }
 
-    char *s = file_exp(RCNAME);
-    if (!std::strcmp(rp->name,s))
+    const std::string rcname = file_exp(RCNAME);
+    if (!std::strcmp(rp->name, rcname.c_str()))
     {
         rp->lock_name = save_str(file_exp(LOCKNAME));
     }
@@ -413,6 +413,7 @@ static bool lock_newsrc(Newsrc *rp)
         rp->lock_name = save_str(g_buf);
     }
 
+    char *s;
     char *runninghost;
     if (std::FILE *fp = std::fopen(rp->lock_name, "r"))
     {
@@ -584,7 +585,7 @@ static bool open_newsrc(Newsrc *rp)
         }
         else if (*some_buf)
         {
-            if (std::FILE *fp = std::fopen(file_exp(some_buf), "r"))
+            if (std::FILE *fp = std::fopen(file_exp(some_buf).c_str(), "r"))
             {
                 while (std::fgets(g_buf, sizeof g_buf, fp))
                 {

@@ -35,6 +35,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 std::string     g_save_dest;          // value of %b
 std::string     g_extract_dest;       // value of %E
@@ -124,7 +125,7 @@ SaveResult save_article()
                 totalOpt = partOpt;
             }
         }
-        safe_copy(altbuf,file_exp(s),sizeof altbuf);
+        safe_copy(altbuf, file_exp(s).c_str(), sizeof altbuf);
         s = altbuf;
         if (*s)
         {
@@ -314,7 +315,7 @@ SaveResult save_article()
     {
         s++;                    // skip the |
         s = skip_eq(s, ' ');
-        safe_copy(altbuf,file_exp(s),sizeof altbuf);
+        safe_copy(altbuf, file_exp(s).c_str(), sizeof altbuf);
         g_save_dest = altbuf;
         if (g_data_source->m_flags & DF_REMOTE)
         {
@@ -361,7 +362,7 @@ SaveResult save_article()
         {
             // skip spaces
         }
-        safe_copy(altbuf,file_exp(s),sizeof altbuf);
+        safe_copy(altbuf, file_exp(s).c_str(), sizeof altbuf);
         s = altbuf;
         if (!FILE_REF(s))
         {
@@ -499,7 +500,7 @@ reask_save:
             {
                 std::fclose(s_tmp_fp);
             }
-            safe_copy(g_cmd_buf, file_exp(s), sizeof g_cmd_buf);
+            safe_copy(g_cmd_buf, file_exp(s).c_str(), sizeof g_cmd_buf);
             if (g_data_source->m_flags & DF_REMOTE)
             {
                 nntp_finish_body(FB_SILENT);
@@ -710,7 +711,7 @@ int cancel_article()
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
         term_down(2);
-        r = do_shell(SH,file_exp(get_val_const("CANCEL",CALL_INEWS)));
+        r = do_shell(SH, file_exp(get_val_const("CANCEL", CALL_INEWS)).c_str());
     }
 done:
     std::free(ngs_buf);
@@ -807,7 +808,7 @@ static int nntp_date()
 
 static void follow_it_up()
 {
-    safe_copy(g_cmd_buf,file_exp(get_val_const("NEWSPOSTER",NEWS_POSTER)), sizeof g_cmd_buf);
+    safe_copy(g_cmd_buf, file_exp(get_val_const("NEWSPOSTER", NEWS_POSTER)).c_str(), sizeof g_cmd_buf);
     if (invoke(g_cmd_buf, g_orig_dir.c_str()) == 42)
     {
         int ret;
@@ -818,13 +819,13 @@ static void follow_it_up()
         }
         else
         {
-            ret = invoke(file_exp(CALL_INEWS),g_orig_dir.c_str());
+            ret = invoke(file_exp(CALL_INEWS).c_str(), g_orig_dir.c_str());
         }
         if (ret)
         {
             int   appended = 0;
-            char* deadart = file_exp("%./dead.article");
-            std::FILE *fp_out = std::fopen(deadart, "a");
+            const std::string deadart = file_exp("%./dead.article");
+            std::FILE        *fp_out = std::fopen(deadart.c_str(), "a");
             if (fp_out != nullptr)
             {
                 std::FILE *fp_in = std::fopen(g_head_name.c_str(), "r");
@@ -841,11 +842,11 @@ static void follow_it_up()
             }
             if (appended)
             {
-                std::printf("Article appended to %s\n", deadart);
+                std::printf("Article appended to %s\n", deadart.c_str());
             }
             else
             {
-                std::printf("Unable to append article to %s\n", deadart);
+                std::printf("Unable to append article to %s\n", deadart.c_str());
             }
         }
     }
@@ -907,7 +908,7 @@ void reply()
         g_wrapped_nl = WRAPPED_NL;
     }
     std::fclose(header);
-    safe_copy(g_cmd_buf,file_exp(maildoer),sizeof g_cmd_buf);
+    safe_copy(g_cmd_buf, file_exp(maildoer).c_str(), sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_orig_dir.c_str());
 done:
     std::free(maildoer);
@@ -1045,7 +1046,7 @@ void forward()
         }
     }
     std::fclose(header);
-    safe_copy(g_cmd_buf,file_exp(maildoer),sizeof g_cmd_buf);
+    safe_copy(g_cmd_buf, file_exp(maildoer).c_str(), sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_orig_dir.c_str());
 done:
     std::free(maildoer);
