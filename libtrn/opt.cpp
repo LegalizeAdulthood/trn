@@ -852,15 +852,19 @@ void save_options(const char *filename)
     char* filebuf = nullptr;
     char* line = nullptr;
     static bool first_time = true;
+    const fs::path filename_path{filename};
+    fs::path new_filename{filename_path};
+    new_filename += ".new";
+    fs::path old_filename{filename_path};
+    old_filename += ".old";
 
-    std::sprintf(g_buf,"%s.new",filename);
-    std::FILE *fp_out = std::fopen(g_buf, "w");
+    std::FILE *fp_out = std::fopen(new_filename.string().c_str(), "w");
     if (!fp_out)
     {
-        std::printf(g_cant_create,g_buf);
+        std::printf(g_cant_create,new_filename.string().c_str());
         return;
     }
-    int fd_in = open(filename, 0);
+    int fd_in = open(filename_path.string().c_str(), 0);
     if (fd_in >= 0)
     {
         char* cp;
@@ -979,23 +983,22 @@ void save_options(const char *filename)
 
     safe_free(filebuf);
 
+    std::error_code error;
     if (first_time)
     {
         if (fd_in >= 0)
         {
-            std::sprintf(g_buf,"%s.old",filename);
-            remove(g_buf);
-            rename(filename,g_buf);
+            fs::remove(old_filename, error);
+            fs::rename(filename_path, old_filename, error);
         }
         first_time = false;
     }
     else
     {
-        remove(filename);
+        fs::remove(filename_path, error);
     }
 
-    std::sprintf(g_buf,"%s.new",filename);
-    rename(g_buf,filename);
+    fs::rename(new_filename, filename_path, error);
 }
 
 const char *option_value(OptionIndex num)

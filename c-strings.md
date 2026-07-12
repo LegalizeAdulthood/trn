@@ -155,11 +155,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-62. In `libtrn/opt.cpp`, change only `save_options` so the primary, `.new`,
-    and `.old` option filenames are local paths.  Use filesystem
-    remove/rename for the final replacement sequence, while converting
-    to strings for the existing low-level `open`, `read`, and `write`
-    calls.
 63. In `libtrn/univ.cpp`, change only `univ_edit_new_user_file` so the
     `%+/univ/usertop` filename is a local path.  Use filesystem parent
     creation and convert to a string for the existing `fopen` calls; do not
