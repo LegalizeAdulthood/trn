@@ -137,20 +137,26 @@ enum OptionFlags : char
 };
 DECLARE_FLAGS_ENUM(OptionFlags, char);
 
+class OptionDraft;
+
 extern CompiledRegex g_opt_compex;
 extern std::string   g_ini_file;
 extern IniWords      g_options_ini[];
 extern char        **g_option_def_vals;
 extern char        **g_option_saved_vals;
 extern OptionFlags  *g_option_flags;
+extern OptionDraft  *g_option_draft;
 extern int           g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
 void        set_options(char **vals);
+void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, const char *s);
 void        save_options(const char *filename);
 const char *option_value(OptionIndex num);
+bool        option_draft_contains(OptionIndex num);
+const char *option_draft_value(OptionIndex num);
 void        set_header(std::string_view s, HeaderTypeFlags flag, bool setit);
 const char *quote_string(std::string_view val);
 void        cwd_check();

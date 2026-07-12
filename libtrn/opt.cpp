@@ -25,6 +25,7 @@
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
 #include <trn/only.h>
+#include <trn/OptionDraft.h>
 #include <trn/respond.h>
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
@@ -169,6 +170,7 @@ IniWords      g_options_ini[] = {
 char       **g_option_def_vals{};
 char       **g_option_saved_vals{};
 OptionFlags *g_option_flags{};
+OptionDraft *g_option_draft{};
 int          g_sel_page_op{};
 
 static char s_univ_sel_cmds[3]{"Z>"};
@@ -319,6 +321,7 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat)
                         break;
                     }
                     set_options(ini_values(g_options_ini));
+                    prep_ini_words(g_options_ini);
                 }
                 else if (!std::strcmp(section, "environment"))
                 {
@@ -382,6 +385,41 @@ void set_options(char **vals)
             set_option(static_cast<OptionIndex>(i), *vals);
         }
     }
+}
+
+void set_options(const OptionDraft &draft)
+{
+    const int limit = ini_len(g_options_ini);
+    for (int i = 1; i < limit; i++)
+    {
+        if (const char *value = draft.value(i); value != nullptr)
+        {
+            set_option(static_cast<OptionIndex>(i), value);
+        }
+    }
+    for (int i = 1; i < limit; i++)
+    {
+        const char *value = draft.value(i);
+        if (value != nullptr && g_option_saved_vals && g_option_saved_vals[i] //
+            && !std::strcmp(value, g_option_saved_vals[i]))
+        {
+            if (g_option_saved_vals[i] != g_option_def_vals[i])
+            {
+                std::free(g_option_saved_vals[i]);
+            }
+            g_option_saved_vals[i] = nullptr;
+        }
+    }
+}
+
+bool option_draft_contains(OptionIndex num)
+{
+    return g_option_draft != nullptr && g_option_draft->contains(num);
+}
+
+const char *option_draft_value(OptionIndex num)
+{
+    return g_option_draft != nullptr ? g_option_draft->value(num) : nullptr;
 }
 
 void set_option(OptionIndex num, const char *s)

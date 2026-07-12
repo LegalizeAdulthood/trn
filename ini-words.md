@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 8: Split Option Parse State From Edit State
-
-Add `OptionDraft` and make the option selector use it.
-
-- Store selector edits as owned strings in `OptionDraft`.
-- Keep parsed option-file values borrowed and short-lived.
-- Apply accepted edits through existing `set_options` behavior.
-- Ensure cancelled edits free only draft-owned strings.
-
-This retires the most dangerous global `vals` aliasing.
-
 ### Slice 9: Introduce `OptionCatalog`
 
 Move option schema rows out of `g_options_ini`.

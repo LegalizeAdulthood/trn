@@ -23,6 +23,7 @@
 #include <trn/nntp.h>
 #include <trn/only.h>
 #include <trn/opt.h>
+#include <trn/OptionDraft.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-page.h>
@@ -743,9 +744,11 @@ sel_restart:
 ///
 char option_selector()
 {
-    char** vals = ini_values(g_options_ini);
+    OptionDraft       draft{static_cast<std::size_t>(ini_len(g_options_ini))};
+    OptionDraft      *saved_draft = g_option_draft;
     PushSelectorModes saver(MM_OPTION_SELECTOR);
 
+    g_option_draft = &draft;
     g_sel_rereading = false;
     g_sel_exclusive = false;
     g_selected_count = 0;
@@ -784,28 +787,13 @@ sel_restart:
 
     if (s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == 'S')
     {
-        set_options(vals);
+        set_options(draft);
         if (s_sel_ret == 'S')
         {
             save_options(g_ini_file.c_str());
         }
     }
-    for (int i = 1; g_options_ini[i].hash; i++)
-    {
-        if (vals[i])
-        {
-            if (g_option_saved_vals[i] && !strcmp(vals[i], g_option_saved_vals[i]))
-            {
-                if (g_option_saved_vals[i] != g_option_def_vals[i])
-                {
-                    std::free(g_option_saved_vals[i]);
-                }
-                g_option_saved_vals[i] = nullptr;
-            }
-            std::free(vals[i]);
-            vals[i] = nullptr;
-        }
-    }
+    g_option_draft = saved_draft;
     return s_sel_ret;
 }
 
@@ -1840,7 +1828,7 @@ static bool select_item(Selection u)
         break;
 
     case SM_OPTIONS:
-        if (!select_option(u.op) || !ini_value(g_options_ini, u.op))
+        if (!select_option(u.op) || !option_draft_contains(u.op))
         {
             return false;
         }
@@ -1980,7 +1968,7 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_OPTIONS:
-        if (!select_option(u.op) || ini_value(g_options_ini, u.op))
+        if (!select_option(u.op) || option_draft_contains(u.op))
         {
             return false;
         }
@@ -2032,8 +2020,11 @@ static bool deselect_item(Selection u)
 ///
 static bool select_option(OptionIndex i)
 {
-    bool  changed = false;
-    char**vals = ini_values(g_options_ini);
+    bool changed = false;
+    if (g_option_draft == nullptr)
+    {
+        return false;
+    }
 
     if (*g_options_ini[i].item == '*')
     {
@@ -2051,26 +2042,26 @@ static bool select_option(OptionIndex i)
     newline();
     *g_buf = '\0';
     char *oldval = save_str(quote_string(option_value(i)));
-    char *val = vals[i] ? vals[i] : oldval;
-    s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, MM_OPTION_EDIT_PROMPT);
-    if (std::strcmp(g_buf,val) != 0)
+    const bool had_draft = g_option_draft->contains(i);
+    std::string val{had_draft ? g_option_draft->value(i) : oldval};
+    s_clean_screen = in_choice("> ", val.data(), g_options_ini[i].help_str, MM_OPTION_EDIT_PROMPT);
+    if (std::strcmp(g_buf, val.c_str()) != 0)
     {
         char * to = g_buf;
         char* from = g_buf;
         parse_string(&to, &from);
         changed = true;
-        if (vals[i])
+        if (had_draft)
         {
-            std::free(vals[i]);
+            g_option_draft->erase(i);
             g_selected_count--;
         }
-        if (val != oldval && !std::strcmp(g_buf,oldval))
+        if (had_draft && !std::strcmp(g_buf, oldval))
         {
-            vals[i] = nullptr;
         }
         else
         {
-            vals[i] = save_str(g_buf);
+            g_option_draft->set(i, g_buf);
             g_selected_count++;
         }
     }

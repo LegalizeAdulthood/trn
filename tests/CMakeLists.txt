@@ -24,6 +24,7 @@ add_executable(trn-test
     test_makedir.cpp
     test_mime.cpp
     test_nntp.cpp
+    test_OptionDraft.cpp
     test_RcGroupConfig.cpp
     test_rt-util.cpp
     test_string-algos.cpp

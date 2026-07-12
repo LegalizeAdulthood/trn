@@ -157,6 +157,7 @@ bool switcheroo()
             prep_ini_data(tmp_buf,"'&' input");
             parse_ini_section(tmp_buf+10,g_options_ini);
             set_options(ini_values(g_options_ini));
+            prep_ini_words(g_options_ini);
         }
         if (do_cd)
         {

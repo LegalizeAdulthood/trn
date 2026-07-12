@@ -2303,7 +2303,7 @@ start_of_loop:
             }
             else
             {
-                sel = ini_values(g_options_ini)[op]? 1 :
+                sel = option_draft_contains(static_cast<OptionIndex>(op))? 1 :
                           (g_option_saved_vals[op]? 3 :
                                (g_option_def_vals[op]? 0 : 2));
             }
@@ -2498,7 +2498,7 @@ void update_page()
             }
             else
             {
-                sel = ini_value(g_options_ini, u.op)? 1 :
+                sel = option_draft_contains(u.op)? 1 :
                           (g_option_saved_vals[u.op]? 3 :
                                (g_option_def_vals[u.op]? 0 : 2));
             }
@@ -2831,7 +2831,7 @@ void display_option(int op, int item_index)
         pre = "  ";
         item = g_options_ini[op].item;
         post = "..................................";
-        const char *option_val = ini_values(g_options_ini)[op];
+        const char *option_val = option_draft_value(static_cast<OptionIndex>(op));
         if (!option_val)
         {
             option_val = quote_string(option_value(static_cast<OptionIndex>(op)));
