@@ -36,6 +36,8 @@
 #include <filesystem>
 #include <string_view>
 
+namespace fs = std::filesystem;
+
 std::FILE         *g_local_kfp{};             // local (for this newsgroup) file
 KillFileStateFlags g_kf_state{};              // the state of our kill files
 KillFileStateFlags g_kfs_thread_change_set{}; // bits to set for thread changes
@@ -802,12 +804,13 @@ void edit_kill_file()
 
 void open_kill_file(int local)
 {
-    const char *kname = file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global));
+    const fs::path kname{
+        file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global))};
 
     // delete the file if it is empty
-    if (std::filesystem::exists(kname) && std::filesystem::file_size(kname) == 0)
+    if (fs::exists(kname) && fs::file_size(kname) == 0)
     {
-        std::filesystem::remove(kname);
+        fs::remove(kname);
     }
     if (local)
     {
@@ -815,7 +818,7 @@ void open_kill_file(int local)
         {
             std::fclose(g_local_kfp);
         }
-        g_local_kfp = std::fopen(kname,"r");
+        g_local_kfp = std::fopen(kname.string().c_str(), "r");
     }
     else
     {
@@ -823,7 +826,7 @@ void open_kill_file(int local)
         {
             std::fclose(s_global_kill_file_fp);
         }
-        s_global_kill_file_fp = std::fopen(kname,"r");
+        s_global_kill_file_fp = std::fopen(kname.string().c_str(), "r");
     }
 }
 

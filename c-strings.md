@@ -119,6 +119,14 @@ protocol strings, shell commands, macro templates, URL text, NNTP names,
 and environment interpolation text as strings until a function has
 separated out a real filesystem path.
 
+When a source file uses `std::filesystem`, add a file-scope namespace
+alias `namespace fs = std::filesystem;` and qualify filesystem types and
+functions with `fs::`, for example `fs::path` and `fs::remove`.
+
+Do not introduce a local variable for a value used only once.  Do not
+hoist a conversion into a local variable only because it appears in
+mutually exclusive branches; each execution path still uses it once.
+
 ## Refactoring Slices
 
 Each slice centers on one function.  Add local includes and update the
@@ -144,11 +152,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-54. In `libtrn/kfile.cpp`, change only `open_kill_file` so the
-    expanded kill-file name is a local `std::filesystem::path`.  This
-    function already calls `std::filesystem::exists`, `file_size`, and
-    `remove`; keep the C API boundary at `fopen` by converting the path
-    to a local string there.
 55. In `trn-artchk/trn-artchk.cpp`, change only `main` so the article,
     newsgroups, and active filenames from `argv` become local paths.
     Replace the local `stat` and `unlink` calls with filesystem
