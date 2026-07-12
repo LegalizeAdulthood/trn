@@ -96,12 +96,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-24. `libtrn/rt-page.cpp`, `set_sel_order`.
-    Promote `str` to `std::string_view` in the implementation and public
-    header.  Replace the `skip_ne` / `skip_eq` cursor walk with view
-    prefix removal, then pass only the final sort-key character to
-    `set_sel_sort`.
-
 25. `libtrn/nntp.cpp`, `nntp_list`.
     Promote `type` to `std::string_view`.  Build a local
     `std::string` for `string_case_equal` and the `sprintf` calls, then

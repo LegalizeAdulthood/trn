@@ -8,6 +8,8 @@
 #include <trn/opt.h>
 #include <trn/rt-select.h>
 
+#include <string_view>
+
 enum : bool
 {
     PRESERVE_PAGE = false,
@@ -60,7 +62,7 @@ extern char         *g_sel_art_display_mode;
 
 bool set_sel_mode(char_int ch);
 char *get_sel_order(SelectionMode smode);
-bool set_sel_order(SelectionMode smode, const char *str);
+bool  set_sel_order(SelectionMode smode, std::string_view str);
 bool set_sel_sort(SelectionMode smode, char_int ch);
 void set_selector(SelectionMode smode, SelectionSortMode ssort);
 void init_pages(bool fill_last_page);

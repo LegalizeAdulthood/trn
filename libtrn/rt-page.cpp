@@ -161,18 +161,22 @@ char *get_sel_order(SelectionMode smode)
 /// @param str   The string specifying the sort order and direction.
 /// @return      True if the sort order was set successfully, false otherwise.
 ///
-bool set_sel_order(SelectionMode smode, const char *str)
+bool set_sel_order(SelectionMode smode, std::string_view str)
 {
     bool reverse = false;
 
-    if (*str == 'r' || *str == 'R')
+    if (!str.empty() && (str.front() == 'r' || str.front() == 'R'))
     {
-        str = skip_ne(str, ' ');
-        str = skip_eq(str, ' ');
+        const std::size_t first_space = str.find(' ');
+        str = first_space == std::string_view::npos ? std::string_view{} : str.substr(first_space);
+        while (!str.empty() && str.front() == ' ')
+        {
+            str.remove_prefix(1);
+        }
         reverse = true;
     }
 
-    char ch = *str;
+    char ch = str.empty() ? '\0' : str.front();
     if (reverse)
     {
         ch = std::islower(ch) ? std::toupper(ch) : ch;
@@ -182,7 +186,7 @@ bool set_sel_order(SelectionMode smode, const char *str)
         ch = std::isupper(ch) ? std::tolower(ch) : ch;
     }
 
-    return set_sel_sort(smode,ch);
+    return set_sel_sort(smode, ch);
 }
 
 /// @brief Sets the selection sort mode for a given selection mode and sort key character.
