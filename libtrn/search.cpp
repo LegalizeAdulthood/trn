@@ -32,6 +32,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 enum
 {
@@ -75,8 +76,7 @@ static TranslationTable s_trans{};
 static bool             s_folding{};
 static int              s_err{};
 static const char      *s_first_character{};
-static char            *s_gbr_str{};
-static int              s_gbr_siz{};
+static std::string      s_gbr_str;
 
 static void case_fold(bool which)
 {
@@ -152,9 +152,8 @@ const char *CompiledRegex::get_bracket(int n)
     {
         return "";
     }
-    grow_str(&s_gbr_str, &s_gbr_siz, length+1);
-    safe_copy(s_gbr_str, m_bracket_start_list[n], length+1);
-    return s_gbr_str;
+    s_gbr_str.assign(m_bracket_start_list[n], length);
+    return s_gbr_str.c_str();
 }
 
 // Compile the given regular expression into a [secret] internal format
