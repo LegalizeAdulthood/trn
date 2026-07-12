@@ -92,6 +92,48 @@ that are consumed before the function returns.  Arrays passed to callees
 that fill them, static buffers whose address is returned, protocol
 scratch buffers, and global display buffers remain out of scope.
 
+A fresh buffer pass, ignoring the old defer list, found more local
+buffers that now have safe string-shaped replacements.  The strongest
+new candidates build NNTP command text, prompt/default text, lower-case
+comparison keys, or a universal-file label split inside one function.
+Most remaining buffers are still output buffers, mutable command
+cursors, returned static storage, protocol byte buffers, or global
+display buffers.  Returned static buffers are better handled as
+API-return slices, not as local `std::string` temporaries.
+
+The pass also distinguished meaningful truncation from arbitrary
+fixed-buffer truncation.  Meaningful truncation encodes a protocol
+extent, screen/display width, file-format field, or caller output-buffer
+contract; preserve and test it.  Arbitrary truncation exists only
+because the current code used a fixed-size scratch array; when replacing
+that array with owned string storage, prefer removing the accidental
+limit after tests cover normal current behavior.  Do not add boundary
+tests solely to preserve a fixed-buffer artifact.
+
+A formatting pass checked how much construction and output would be
+simplified by adding `libfmt`.  The tree does not currently depend on or
+use fmt.  Current C-style formatting and output usage is large: about
+223 `std::sprintf`/`std::snprintf` sites, 637 `std::printf`/
+`std::fprintf` sites, 223 `std::strcpy`/`std::strcat` sites, and 77
+`std::strncpy`/`safe_copy` sites in the source directories.
+
+That first count did not include owned string construction already using
+`std::string`.  A follow-up scan found 29 `.append()` sites, 9
+`std::to_string` sites, and many `+=` hits.  The `+=` count is noisy
+because it includes numeric and pointer increments, but real
+string-construction examples include NNTP command strings, NNTP error
+messages, environment assignments, temp filename suffixes, score
+filenames, and universal selector filenames.
+
+`libfmt` would help most where code mixes literals, values, widths, and
+numbers into messages or command strings.  It would turn many
+`sprintf`/`strlen` append chains into `fmt::format`,
+`fmt::format_to`, or `fmt::print`.  It would help less with simple path
+append, view append, mutable parser buffers, caller-owned output
+buffers, protocol byte buffers, global display buffers, and returned
+static storage.  Treat fmt adoption as a separate formatted-output and
+formatted-string track, not as a substitute for ownership refactors.
+
 The global-storage pass found owned `char *` variables that can become
 `std::string` when callers only need null-terminated read access or
 temporary mutable access.  Good candidates store filenames, extracted
@@ -160,6 +202,11 @@ behavior and run those newly added tests before changing the production
 code.  Then refactor and rerun the tests to verify the behavior is
 unchanged.
 
+When a candidate buffer currently truncates text, classify the
+truncation before editing.  Meaningful truncation must remain part of
+the slice.  Arbitrary fixed-buffer truncation can be removed as part of
+the string refactor when the ordinary behavior remains covered.
+
 ## Refactoring Slices
 
 Most slices center on one function.  Add local includes and update the
@@ -190,6 +237,66 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Local Modernization Slices
+
+BUF-01. `nntplist/nntplist.cpp`, `main`: replace the local
+`command[32]` NNTP command buffer with `std::string`.  Build `"LIST"`,
+append `action` and `wildarg` when present, and pass the string directly
+to `nntp_command`, which already accepts `std::string_view`.
+
+BUF-02. `nntp/nntpinit.cpp`, `get_tcp_socket`: replace the INET6-only
+`portstr[8]` formatting buffer with string conversion for the service
+name passed to `getaddrinfo`.  Keep the `inet_ntop` output buffer and
+the legacy non-INET6 hostent storage unchanged.
+
+BUF-03. `libtrn/datasrc.cpp`, `get_near_miss`: replace `promptbuf`
+and `options` with local string storage.  `in_char` consumes both
+strings synchronously through `set_def`, so no local string address
+escapes after the call.
+
+BUF-04. `libtrn/rcstuff.cpp`, `get_newsgroup`: replace the resubscribe
+`prompt_buf` formatting buffer with `std::string` before calling
+`in_char`.  Keep `what` as a C-string input because it still flows
+through global group selection state.
+
+BUF-05. `libtrn/univ.cpp`, `univ_do_line`: replace the static
+`lbuf[1024]` used for `file>label` splitting with local owned string
+storage.  Split the filename and label as views or owned strings, then
+call `univ_add_file`; that helper copies all three strings into the
+universal item.  The current 1020-character cutoff is arbitrary fixed
+scratch-buffer protection, not a meaningful universal-file limit.
+
+BUF-06. `libtrn/terminal.cpp`, `arrow_macros`: remove the `lbuf[256]`
+copy of each terminal arrow capability.  Pass the literal MSDOS escape
+strings or the `Tgetstr` result directly to `set_macro`, which accepts
+views and copies the macro definition.
+
+BUF-07. `libtrn/scorefile.cpp`, `sf_check_extra_headers`: replace the
+static lower-case `lbuf` with a local `std::string` comparison key.
+The truncation is arbitrary: the helper only lowercases a score header
+name for lookup, and score-file input is already line-buffer bounded.
+Compare the full available header text.
+
+BUF-08. `libtrn/scorefile.cpp`, `sf_add_extra_header`: replace the
+static `lbuf` used to append `:` for `set_line_type` with local
+`std::string` storage.  Keep the lower-case saved header behavior and
+compare against known header names using the full available header
+text.  The truncation is arbitrary scratch-buffer space for the appended
+colon, not a semantic score-header limit.
+
+BUF-09. `libtrn/scmd.cpp`, `s_match_description`: replace the static
+`lbuf` description copy with local string storage, lowercase that
+string, and search it with string APIs.  The copied-description
+truncation is arbitrary; `trunc=false` means the caller is not asking
+for display-width truncation.  The separate `s_search_text` command
+buffer limit remains out of this slice.
+
+BUF-10. `libtrn/scorefile.cpp`, `sf_open_file`: replace the URL
+scratch `lbuf[1024]` with local owned string storage before calling
+`url_get`.  The temporary URL string is consumed in the same function;
+the stored score-file name and temporary downloaded filename remain
+owned by the existing score-file state.  The URL truncation is
+arbitrary fixed scratch space, not a meaningful URL or score-file
+limit.
 
 ### Filesystem Path Slices
 
