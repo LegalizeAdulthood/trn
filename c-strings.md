@@ -207,12 +207,85 @@ truncation before editing.  Meaningful truncation must remain part of
 the slice.  Arbitrary fixed-buffer truncation can be removed as part of
 the string refactor when the ordinary behavior remains covered.
 
+When fmt is available, use `fmt::format` for owned formatted strings,
+`fmt::format_to` for appending formatted text to an existing string, and
+`fmt::print` for formatted output to `stdout` or `stderr`.  Link
+`fmt::fmt` privately to the target whose source file uses it.  Do not
+use fmt for simple path joining, plain string append, parser cursor
+work, or caller-owned output buffers.  Leave runtime printf-style format
+strings alone until the format string itself is audited; use
+`fmt::runtime` only when keeping runtime formatting is intentional.  Do
+not create fmt string-building slices for C-buffer `sprintf`,
+`strcpy`, or `strcat` sites; convert those when the C-style string
+buffer itself is refactored.
+
 ## Refactoring Slices
 
 Most slices center on one function.  Add local includes and update the
 matching declaration as needed.  The list is ordered from simpler local
 helpers toward callers that can pass string views through once lower
 helpers accept them.
+
+### Libfmt Formatting Slices
+
+These slices are prepended before more string-building work.  Start with
+dependency support, then use fmt only in functions that are formatting
+text.  For string building, include only sites that already build an
+owned `std::string`.  Direct `printf`/`fprintf` output can move to
+`fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
+with their C-string buffer slices.
+
+FMT-00. Build support: add `fmt` to `vcpkg.json`, call
+`find_package(fmt CONFIG REQUIRED)` from the top-level build, and keep
+the first slice otherwise dependency-only.  Later slices link `fmt::fmt`
+privately to each target when that target first uses fmt.
+
+FMT-01. `util/env.cpp`, `export_var`: link `util` to `fmt::fmt` and
+replace the owned `name=value` string assembly with `fmt::format`.
+This is a leaf string-building change; the returned environment pointer
+ownership stays unchanged.
+
+FMT-02. `nntp/nntpclient.cpp`, `nntp_connect`: link `nntp` to
+`fmt::fmt` and replace the multi-step NNTP server error message
+construction with `fmt::format`.  Keep the message local until it is
+passed to `nntp_init_error`.
+
+FMT-03. `nntp/nntpclient.cpp`, `nntp_xgtitle`: replace the existing
+`std::string` command append with fmt.  The command is passed to
+`nntp_command`, which already accepts `std::string_view`.
+
+FMT-04. `libtrn/nntp.cpp`, `nntp_list`: replace command construction
+with `fmt::format` or `fmt::format_to`.  The resulting string is passed
+to `nntp_command`, which already accepts `std::string_view`.
+
+FMT-05. `libtrn/nntp.cpp`, `nntp_group`: replace the `GROUP` command
+string construction with fmt.  Keep the command string local and pass it
+to `nntp_command`.
+
+FMT-06. `libtrn/nntp.cpp`, `nntp_stat_id`: replace the `STAT` command
+string construction with fmt.  Keep the message-id view data owned by
+the local command string.
+
+FMT-07. `libtrn/last.cpp`, `write_last`: use fmt for the existing
+temporary filename suffix construction and for the direct file output
+record.  Keep the filesystem path and rename behavior unchanged.
+
+FMT-08. `libtrn/util.cpp`, `temp_filename`: replace the existing
+`std::to_string` filename stem construction with `fmt::format`, then
+join it with `g_tmp_dir` using `fs::path` as today.  Keep the returned
+`save_str` ownership unchanged.
+
+FMT-09. `nntplist/nntplist.cpp`, `main`: use `fmt::print` for formatted
+diagnostics only.  Leave the `LIST` command buffer to `BUF-01`, where
+the C-style command buffer is converted.
+
+FMT-10. `libtrn/datasrc.cpp`, `get_near_miss`: use `fmt::print` for the
+numbered close-match output only.  Leave `promptbuf` and `options` to
+`BUF-03`, where the C-style buffers are converted.
+
+FMT-11. `libtrn/rcstuff.cpp`, `get_newsgroup`: use `fmt::print` for
+direct subscribe, ignore, and resubscribe status output only.  Leave the
+prompt buffers to `BUF-04`, where the C-style buffers are converted.
 
 ### Global String Storage Slices
 
