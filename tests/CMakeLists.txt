@@ -15,6 +15,7 @@ add_executable(trn-test
     test_flags.cpp
     test_getwd.cpp
     test_hash.cpp
+    test_ini_words.cpp
     test_init.cpp
     test_interp.cpp
     test_makedir.cpp

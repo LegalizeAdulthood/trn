@@ -134,18 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 1: Characterize Existing Contracts
-
-Add focused tests for the current INI parser behavior.
-
-- Key lookup is case-insensitive.
-- Unknown keys are ignored after reporting.
-- Duplicate keys leave the last value visible.
-- `prep_ini_words` clears prior values without freeing pointed-to text.
-- Parsed values are borrowed from the tokenized input buffer.
-
-No production behavior changes.
-
 ### Slice 2: Fix Data Source Schema Alignment
 
 Make data-source key positions explicit and correct.
