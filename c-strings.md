@@ -96,12 +96,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-27. `libtrn/mime.cpp`, `mime_find_mimecap_entry`.
-    After slice 26, promote `contenttype` to `std::string_view` in the
-    public header and implementation.  It only passes the value to
-    `mime_types_match`; the returned `MimeCapEntry *` still points to
-    existing mimecap storage.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,

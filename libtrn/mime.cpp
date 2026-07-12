@@ -282,7 +282,7 @@ static char *mime_parse_entry_arg(char **cpp)
     return s;
 }
 
-MimeCapEntry *mime_find_mimecap_entry(const char *contenttype, MimeCapFlags skip_flags)
+MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags skip_flags)
 {
     for (int i = 0; i <= s_mimecap_list->m_high; i++)
     {
