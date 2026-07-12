@@ -61,17 +61,17 @@ The generated `config.h` sites map back to assigning source code.  The
 to the deferred INI value-storage overhaul.
 
 After the hash key, comparator, color, autosubscribe, option-header,
-quote, NNTP list, MIME, and selection-order helpers were promoted, a
-rerun finds one safe next-layer slice at the NNTP list caller boundary.
-`SourceFile::open` uses its `fetch_cmd` parameter only for diagnostics
-and `nntp_list`; the value is not stored.  Its nullable call sites must
-pass an empty view explicitly before the parameter becomes
-`std::string_view`.
+quote, NNTP list, MIME, selection-order, and `SourceFile::open`
+`fetch_cmd` helpers were promoted, a rerun finds one new safe
+bottom-up slice in the newsgroup restriction path.  The lower
+`newsgroup_comp` helper already accepts a `std::string_view`, and
+`set_newsgroup_to_do` stores only a saved copy of its input pattern.
 
-The MIME cap, color, autosubscribe, option, and NNTP command call-site
-checks did not expose more one-function slices.  Callers pass literals,
-global buffers, mutable cursors, or values that cross factory, static, or
-global storage boundaries.
+The MIME cap, color, autosubscribe, option, NNTP command, and universal
+selector call-site checks did not expose more one-function slices.
+Callers pass literals, global buffers, mutable cursors, nullable
+sentinels, or values that cross factory, static, or global storage
+boundaries.
 
 The remaining broad hits were rejected because the pointer is a mutable
 cursor, a nullable sentinel, an output buffer, a byte transport buffer,
@@ -132,11 +132,15 @@ both declarations and definitions `static`.
   is a byte-buffer transport boundary.  Prefer `std::span` if this
   interface is modernized.
 - `libtrn/datasrc.cpp`, `SourceFile::open`, `filename` and `server`:
-  both are nullable file/server sentinels.  Slice 28 covers only the
-  non-stored `fetch_cmd` text.
+  both are nullable file/server sentinels.  The completed slice covers
+  only the non-stored `fetch_cmd` text.
 - `libtrn/datasrc.cpp`, `SourceFile::append`: `bp` is mutable line
   storage and the key length is an interior slice used before the line is
   compacted and stored.
+- `libtrn/rt-select.cpp`, `univ_visit_group`: the implementation only
+  forwards to the view-ready `univ_visit_group_main`, but the wrapper
+  currently maps `nullptr` to an empty group name.  Promote only with an
+  intentional removal of that nullable sentinel.
 - `libtrn/rt-page.cpp`, `display_group`: `len` is used for display
   padding while `group` still flows to C string description and output
   helpers.

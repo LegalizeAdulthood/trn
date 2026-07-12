@@ -1,6 +1,7 @@
 /* only.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/only.h>
 
@@ -15,6 +16,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <string>
+#include <string_view>
 
 char *g_newsgroup_to_do[MAX_NG_TO_DO]; // restrictions in effect
 int   g_max_newsgroup_to_do{};         // 0 => no restrictions
@@ -28,11 +31,11 @@ void only_init()
 {
 }
 
-void set_newsgroup_to_do(const char *pat)
+void set_newsgroup_to_do(std::string_view pat)
 {
     int i = g_max_newsgroup_to_do + s_save_max_newsgroup_to_do;
 
-    if (!*pat)
+    if (pat.empty())
     {
         return;
     }
@@ -43,7 +46,8 @@ void set_newsgroup_to_do(const char *pat)
         s_compex_to_do[i] = (CompiledRegex*)safe_malloc(sizeof(CompiledRegex));
 #endif
         s_compex_to_do[i]->init_compex();
-        s_compex_to_do[i]->compile(pat, true, true);
+        const std::string pattern{pat};
+        s_compex_to_do[i]->compile(pattern.c_str(), true, true);
         const char *err = newsgroup_comp(s_compex_to_do[i], pat, true, true);
         if (err != nullptr)
         {
