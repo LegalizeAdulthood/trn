@@ -20,9 +20,12 @@
 #include <trn/trn.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <iterator>
 #include <string>
 #include <string_view>
 
@@ -53,15 +56,11 @@ int nntp_list(std::string_view type, std::string_view arg)
     std::string command{"LIST"};
     if (!arg.empty())
     {
-        command += ' ';
-        command += type_name;
-        command += ' ';
-        command.append(arg.data(), arg.size());
+        fmt::format_to(std::back_inserter(command), " {} {}", type_name, arg);
     }
     else if (!is_active)
     {
-        command += ' ';
-        command += type_name;
+        fmt::format_to(std::back_inserter(command), " {}", type_name);
     }
     if (nntp_command(command) <= 0)
     {

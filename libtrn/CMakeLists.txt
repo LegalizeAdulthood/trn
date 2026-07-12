@@ -86,5 +86,5 @@ add_library(libtrn
 target_compile_features(libtrn PUBLIC cxx_std_17)
 source_group("Header Files" REGULAR_EXPRESSION "^.*\\.h$")
 target_include_directories(libtrn PUBLIC include)
-target_link_libraries(libtrn PUBLIC parsedate curses nntp)
+target_link_libraries(libtrn PUBLIC parsedate curses nntp PRIVATE fmt::fmt)
 target_folder(libtrn "Libraries")
