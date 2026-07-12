@@ -11,6 +11,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -72,14 +74,12 @@ void read_last()
 
 void write_last()
 {
-    fs::path temp_file{s_last_file};
-    temp_file += "." + std::to_string(g_our_pid);
+    fs::path temp_file{fmt::format("{}.{}", s_last_file, g_our_pid)};
     if (std::FILE *fp = std::fopen(temp_file.string().c_str(), "w"))
     {
         g_last_time = std::max(g_last_time, s_start_time);
-        std::fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
-                g_newsgroup_name.c_str(),g_last_time,
-                g_last_active_size,g_last_new_time,g_last_extra_num);
+        fmt::print(fp, "{}\n{}\n{}\n{}\n{}\n", g_newsgroup_name, g_last_time, g_last_active_size, g_last_new_time,
+                   g_last_extra_num);
         std::fclose(fp);
         std::error_code error;
         fs::remove(s_last_file, error);

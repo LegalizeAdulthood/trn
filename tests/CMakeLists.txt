@@ -22,6 +22,7 @@ add_executable(trn-test
     test_IniSectionValues.cpp
     test_init.cpp
     test_interp.cpp
+    test_last.cpp
     test_makedir.cpp
     test_mime.cpp
     test_nntp.cpp

@@ -238,10 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-07. `libtrn/last.cpp`, `write_last`: use fmt for the existing
-temporary filename suffix construction and for the direct file output
-record.  Keep the filesystem path and rename behavior unchanged.
-
 FMT-08. `libtrn/util.cpp`, `temp_filename`: replace the existing
 `std::to_string` filename stem construction with `fmt::format`, then
 join it with `g_tmp_dir` using `fs::path` as today.  Keep the returned
