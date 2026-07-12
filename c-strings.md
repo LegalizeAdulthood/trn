@@ -60,26 +60,18 @@ The generated `config.h` sites map back to assigning source code.  The
 `nntplist.cpp::main` cases are local fixes; `data_source_init` belongs
 to the deferred INI value-storage overhaul.
 
-After the hash key and comparator API promotions, the hash table itself
-is no longer the limiting boundary.  The rerun found callers that still
-accept C strings only to create bounded views, call promoted lookup
-helpers, or build temporary command strings for legacy formatting.
+After the hash key, comparator, color, autosubscribe, option-header, and
+quote helpers were promoted, the hash table and color output paths are
+no longer limiting boundaries.  The current rerun found a small new
+bottom-up batch: leaf helpers that pass text only to view-based callees,
+a selection-order parser that only needs cursor movement, and wrappers
+that can make local owned strings before calling legacy C formatting or
+comparison helpers.
 
-The strongest new opportunities are:
-
-- Local pointer-plus-length pairs where the pair already denotes a
-  string extent.
-- Function parameters that flow only to `std::string_view` callees,
-  hash lookups, or owned `std::string` assignments.
-- NNTP command builders that can accept views after making local
-  null-terminated strings for `sprintf`, diagnostics, or transport.
-
-The current rerun, after completing slices 10 and 11, found another
-bottom-up batch: leaf copy helpers, bounded token helpers, display
-helpers, and wrappers that already copy into `std::string` or heap
-storage.  The remaining `std::string_view{ptr, len}` hits are still
-mutable source buffers, cache append boundaries, or already-deferred
-ownership changes.
+The remaining broad hits were rejected because the pointer is a mutable
+cursor, a nullable sentinel, an output buffer, a byte transport buffer,
+global or static storage, or part of an already-deferred ownership
+mechanism.
 
 ## Refactoring Slices
 
@@ -103,6 +95,37 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Local Modernization Slices
+
+23. `libtrn/kfile.cpp`, `mention`.
+    Change the forward declaration and definition to take
+    `std::string_view`.  The function only passes text to
+    `color_string`, emits punctuation, and flushes.  Callers pass local
+    buffers, but no pointer escapes.
+
+24. `libtrn/rt-page.cpp`, `set_sel_order`.
+    Promote `str` to `std::string_view` in the implementation and public
+    header.  Replace the `skip_ne` / `skip_eq` cursor walk with view
+    prefix removal, then pass only the final sort-key character to
+    `set_sel_sort`.
+
+25. `libtrn/nntp.cpp`, `nntp_list`.
+    Promote `type` to `std::string_view`.  Build a local
+    `std::string` for `string_case_equal` and the `sprintf` calls, then
+    pass the assembled command to view-based `nntp_command`.  No storage
+    escapes the function.
+
+26. `libtrn/mime.cpp`, `mime_types_match`.
+    Promote `ct` to `std::string_view`.  Keep `pat` as a view, create
+    local owned strings only for existing `string_case_equal` calls, and
+    guard the wildcard slash check with the content-type view length.
+    This is the leaf matcher needed before callers can drop C-string
+    signatures.
+
+27. `libtrn/mime.cpp`, `mime_find_mimecap_entry`.
+    After slice 26, promote `contenttype` to `std::string_view` in the
+    public header and implementation.  It only passes the value to
+    `mime_types_match`; the returned `MimeCapEntry *` still points to
+    existing mimecap storage.
 
 ## Defer
 
@@ -140,6 +163,13 @@ both declarations and definitions `static`.
 - `libtrn/rt-page.cpp`, `display_group`: `len` is used for display
   padding while `group` still flows to C string description and output
   helpers.
+- `libtrn/scmd.cpp`, `s_finish_cmd`: `nullptr` is an intentional command
+  sentinel.  Promote only with a broader command-input API cleanup.
+- `libtrn/univ.cpp`, universal file and label loaders: several inputs are
+  copied into or assigned through global state.  Keep these out of local
+  view-only slices until that ownership model is cleaned up.
+- `libtrn/utf.cpp`, byte and visual-width helpers: the `const char *`
+  parameters are cursors into encoded text, not whole string extents.
 - `libtrn/rt-util.cpp`, `compress_from`: `size` is a display width, not
   the length of `from`.
 - Struct fields in `Article`, `Subject`, `UniversalItem`, score files,
