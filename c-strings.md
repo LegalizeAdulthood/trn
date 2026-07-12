@@ -126,6 +126,9 @@ functions with `fs::`, for example `fs::path` and `fs::remove`.
 Do not introduce a local variable for a value used only once.  Do not
 hoist a conversion into a local variable only because it appears in
 mutually exclusive branches; each execution path still uses it once.
+Do not introduce a local `std::string` only to hold `path.string()`.
+Use `path.string().c_str()` at the call site and let the compiler handle
+common subexpression elimination.
 
 ## Refactoring Slices
 
