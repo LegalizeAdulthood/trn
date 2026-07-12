@@ -101,14 +101,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-28. `libtrn/datasrc.cpp`, `SourceFile::open`, `fetch_cmd`.
-    Promote only `fetch_cmd` to `std::string_view`.  Keep `filename` and
-    `server` as C strings because they are nullable file/server sentinels.
-    Convert call sites that pass `nullptr` for `fetch_cmd` to `{}` or
-    `""`.  Pass the view to `nntp_list`; for diagnostics, make a local
-    `std::string fetch_command{fetch_cmd}` and use
-    `fetch_command.c_str()` with `printf`.  No pointer escapes.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,

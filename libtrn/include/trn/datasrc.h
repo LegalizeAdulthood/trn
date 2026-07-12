@@ -26,7 +26,7 @@ struct List;
 
 struct SourceFile
 {
-    int   open(const char *filename, const char *fetch_cmd, const char *server);
+    int   open(const char *filename, std::string_view fetch_cmd, const char *server);
     char *append(char *bp, int key_len);
     void  end_append(const char *filename);
     void  close();
