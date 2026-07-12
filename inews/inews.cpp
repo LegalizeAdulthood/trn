@@ -438,7 +438,7 @@ int nntp_handle_timeout()
     if (!new_connection)
     {
         static bool handling_timeout = false;
-        char last_command_save[NNTP_STRLEN];
+        const std::string last_command_save{g_last_command};
 
         if (string_case_equal(g_last_command, "quit"))
         {
@@ -449,7 +449,6 @@ int nntp_handle_timeout()
             return -1;
         }
         handling_timeout = true;
-        std::strcpy(last_command_save, g_last_command);
         nntp_close(false);
         if (init_nntp() < 0 || nntp_connect(g_server_name,false) <= 0)
         {

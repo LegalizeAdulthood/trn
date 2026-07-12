@@ -130,11 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-45. `inews/inews.cpp`, `nntp_handle_timeout`, `last_command_save`.
-    Replace the local `char[NNTP_STRLEN]` snapshot with
-    `std::string`.  Pass the string directly to `nntp_command`.
-    The saved command is not stored after the call.
-
 46. `nntp/nntpinit.cpp`, `server_init`, `save_line`.
     Replace the saved signon reply buffer with `std::string`.
     Restore `g_ser_line` from `save_line.c_str()` only when the MODE
