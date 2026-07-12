@@ -238,10 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-09. `nntplist/nntplist.cpp`, `main`: use `fmt::print` for formatted
-diagnostics only.  Leave the `LIST` command buffer to `BUF-01`, where
-the C-style command buffer is converted.
-
 FMT-10. `libtrn/datasrc.cpp`, `get_near_miss`: use `fmt::print` for the
 numbered close-match output only.  Leave `promptbuf` and `options` to
 `BUF-03`, where the C-style buffers are converted.

@@ -13,6 +13,8 @@
 #include <util/util2.h>
 #include <wildmat/wildmat.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -147,8 +149,8 @@ int main(int argc, char *argv[])
 #endif
         if (nntp_check() <= 0)
         {
-            std::fprintf(stderr,"nntplist: Can't get %s file from server.\n",action? action : "active");
-            std::fprintf(stderr, "Server said: %s\n", g_ser_line);
+            fmt::print(stderr, "nntplist: Can't get {} file from server.\n", action ? action : "active");
+            fmt::print(stderr, "Server said: {}\n", g_ser_line);
             finalize(1);
         }
         while (nntp_gets(g_ser_line, sizeof g_ser_line) == 1)
@@ -192,13 +194,13 @@ int main(int argc, char *argv[])
         }
         if (!local_file || !*local_file)
         {
-            std::fprintf(stderr, "Don't know how to list `%s' from your local system.\n", action);
+            fmt::print(stderr, "Don't know how to list `{}' from your local system.\n", action);
             exit(1);
         }
         std::FILE *in_fp{std::fopen(file_exp(local_file).c_str(), "r")};
         if (in_fp == nullptr)
         {
-            std::fprintf(stderr, "Unable to open `%s'.\n", local_file);
+            fmt::print(stderr, "Unable to open `{}'.\n", local_file);
             std::exit(1);
         }
         while (std::fgets(g_ser_line, sizeof g_ser_line, in_fp))
