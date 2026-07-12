@@ -238,11 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-08. `libtrn/util.cpp`, `temp_filename`: replace the existing
-`std::to_string` filename stem construction with `fmt::format`, then
-join it with `g_tmp_dir` using `fs::path` as today.  Keep the returned
-`save_str` ownership unchanged.
-
 FMT-09. `nntplist/nntplist.cpp`, `main`: use `fmt::print` for formatted
 diagnostics only.  Leave the `LIST` command buffer to `BUF-01`, where
 the C-style command buffer is converted.

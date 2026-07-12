@@ -21,6 +21,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #ifdef I_SYS_TIMEB
 #include <sys/timeb.h>
 #endif
@@ -649,8 +651,7 @@ char *temp_filename()
 {
     static int  tmpfile_num = 0;
     extern long g_our_pid;
-    return save_str(
-        (fs::path{g_tmp_dir} / ("trn" + std::to_string(tmpfile_num++) + "." + std::to_string(g_our_pid))).string());
+    return save_str((fs::path{g_tmp_dir} / fmt::format("trn{}.{}", tmpfile_num++, g_our_pid)).string());
 }
 
 char *get_auth_user()
