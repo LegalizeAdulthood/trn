@@ -130,11 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-48. `libtrn/nntp.cpp`, `nntp_handle_timeout`, `last_command_save`.
-    Replace the local `char[NNTP_STRLEN]` snapshot with
-    `std::string`.  Pass it to `nntp_command` and copy it back into
-    `g_last_command` with `c_str()` if that restore is still needed.
-
 49. `inews/inews.cpp`, `main`, `buff`.
     Remove the two fixed-size real-name default buffers.  Use
     `g_real_name.c_str()` as the default for `get_val_const("NAME",

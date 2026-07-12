@@ -628,7 +628,6 @@ int nntp_handle_nested_lists()
 int nntp_handle_timeout()
 {
     static bool handling_timeout = false;
-    char last_command_save[NNTP_STRLEN];
 
     if (string_case_equal(g_last_command, "quit"))
     {
@@ -639,7 +638,7 @@ int nntp_handle_timeout()
         return -1;
     }
     handling_timeout = true;
-    std::strcpy(last_command_save, g_last_command);
+    const std::string last_command_save{g_last_command};
     nntp_close(false);
     g_data_source->m_nntp_link = g_nntp_link;
     if (nntp_connect(g_data_source->m_news_id, false) <= 0)
@@ -655,7 +654,7 @@ int nntp_handle_timeout()
     {
         return -1;
     }
-    std::strcpy(g_last_command, last_command_save); // TODO: Is this really needed?
+    std::strcpy(g_last_command, last_command_save.c_str()); // TODO: Is this really needed?
     handling_timeout = false;
     return 1;
 }
