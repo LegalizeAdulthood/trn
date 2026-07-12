@@ -96,12 +96,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-23. `libtrn/kfile.cpp`, `mention`.
-    Change the forward declaration and definition to take
-    `std::string_view`.  The function only passes text to
-    `color_string`, emits punctuation, and flushes.  Callers pass local
-    buffers, but no pointer escapes.
-
 24. `libtrn/rt-page.cpp`, `set_sel_order`.
     Promote `str` to `std::string_view` in the implementation and public
     header.  Replace the `skip_ne` / `skip_eq` cursor walk with view

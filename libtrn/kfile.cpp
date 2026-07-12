@@ -34,6 +34,7 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <string_view>
 
 std::FILE         *g_local_kfp{};             // local (for this newsgroup) file
 KillFileStateFlags g_kf_state{};              // the state of our kill files
@@ -41,7 +42,7 @@ KillFileStateFlags g_kfs_thread_change_set{}; // bits to set for thread changes
 int                g_kf_change_thread_cnt{};  // # entries changed from old to new
 ArticleNum         g_kill_first{};            // used as g_firstart when killing
 
-static void mention(const char *str);
+static void mention(std::string_view str);
 static bool kill_file_junk(char *ptr, int killmask);
 static int  do_kill_file(std::FILE *kfp, int entering);
 static void rewrite_kill_file(ArticleNum thru);
@@ -134,7 +135,7 @@ void kill_file_init()
     }
 }
 
-static void mention(const char *str)
+static void mention(std::string_view str)
 {
     if (g_verbose)
     {
