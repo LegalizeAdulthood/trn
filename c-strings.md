@@ -155,11 +155,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-64. In `libtrn/univ.cpp`, change only `univ_add_text_file` so relative text
-    file names are appended with `std::filesystem::path` instead of manual
-    slash search and string concatenation.  Preserve the current
-    behavior for filenames with no directory component.
-
 ## Defer
 
 - Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`

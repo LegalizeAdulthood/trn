@@ -383,15 +383,11 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     default:
     {
         // XXX later have error checking on length
-        file_name = g_univ_fname;
-        std::string::size_type slash = file_name.find_last_of('/');
-        if (slash == std::string::npos)
+        const fs::path current_file{g_univ_fname};
+        file_name = current_file.has_parent_path() ? current_file.parent_path().string() : "/";
+        if (file_name.back() != '/')
         {
-            file_name = "/";
-        }
-        else
-        {
-            file_name.resize(slash + 1);
+            file_name += '/';
         }
         file_name.append(s);
     }
