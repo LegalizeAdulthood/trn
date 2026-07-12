@@ -262,11 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-02. `nntp/nntpinit.cpp`, `get_tcp_socket`: replace the INET6-only
-`portstr[8]` formatting buffer with string conversion for the service
-name passed to `getaddrinfo`.  Keep the `inet_ntop` output buffer and
-the legacy non-INET6 hostent storage unchanged.
-
 BUF-03. `libtrn/datasrc.cpp`, `get_near_miss`: replace `promptbuf`
 and `options` with local string storage.  `in_char` consumes both
 strings synchronously through `set_def`, so no local string address

@@ -165,7 +165,7 @@ static int get_tcp_socket(const char *machine, int port, const char *service)
     struct addrinfo hints;
     struct addrinfo* res;
     struct addrinfo* res0;
-    char portstr[8];
+    std::string port_service;
     char* cause = nullptr;
     int error;
 
@@ -175,7 +175,8 @@ static int get_tcp_socket(const char *machine, int port, const char *service)
     hints.ai_flags = 0;
     if (port)
     {
-        std::sprintf(service = portstr, "%d", port);
+        port_service = std::to_string(port);
+        service = port_service.c_str();
     }
     error = getaddrinfo(machine, service, &hints, &res0);
     if (error)
