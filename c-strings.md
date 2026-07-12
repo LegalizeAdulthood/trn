@@ -92,6 +92,14 @@ that are consumed before the function returns.  Arrays passed to callees
 that fill them, static buffers whose address is returned, protocol
 scratch buffers, and global display buffers remain out of scope.
 
+The global-storage pass found owned `char *` variables that can become
+`std::string` when callers only need null-terminated read access or
+temporary mutable access.  Good candidates store filenames, extracted
+paths, server names, or cached return strings.  Rejected globals are
+mutable protocol buffers, borrowed cursors, termcap storage, pointer
+offset tricks, arrays with parallel ownership state, and output
+parameters whose callees allocate through `char **`.
+
 The main future opportunity is the case-insensitive comparison helper
 family.  View-ready overloads could remove temporary strings in
 `mime_types_match`, `color_rc_attribute`, `nntp_list`, and `set_header`,
@@ -138,12 +146,68 @@ failure must check `empty()` instead of comparing to `nullptr`.  Pass
 `c_str()` to legacy C APIs only when the pointer is consumed during the
 same full expression; otherwise keep an owned `std::string` in scope.
 
+When converting an owned global or file-scope `char *` to `std::string`,
+replace `save_str`, `safe_malloc`, and `safe_copy` storage updates with
+direct string assignment.  Do not keep a `safe_copy` call that writes to
+string storage, and do not allocate first and then assign to a string.
+Use `c_str()` for legacy read-only C APIs.  Use `data()` only for local
+mutable parsing while the `std::string` object remains alive and no
+pointer escapes.
+
 ## Refactoring Slices
 
-Each slice centers on one function.  Add local includes and update the
+Most slices center on one function.  Add local includes and update the
 matching declaration as needed.  The list is ordered from simpler local
 helpers toward callers that can pass string views through once lower
 helpers accept them.
+
+### Global String Storage Slices
+
+These slices replace owned global or file-scope `char *` storage with
+`std::string`.  They are ordered from local storage with no public
+declaration toward globals that cross headers or preserve nullable
+state.  These slices are storage-centered because the declaration and
+all direct assignments must change together.
+
+- GS-01: `libtrn/last.cpp`, `s_last_file`: replace the file-scope
+  pointer with `std::string`, assign `file_exp(LASTNAME)` directly, clear
+  it in finalization, and pass `c_str()` only to `fopen`.
+- GS-02: `libtrn/search.cpp`, `CompiledRegex::get_bracket`: replace
+  `s_gbr_str` and `s_gbr_siz` with one static `std::string`, assign the
+  bracket text by length, and return `c_str()`.
+- GS-03: `libtrn/sacmd.cpp`, `s_sa_extract_dest`: replace the static
+  pointer and fixed heap buffer with `std::string`.  Store `file_exp`
+  results by direct assignment, test `empty()`, pass `c_str()` to legacy
+  consumers, and keep `safe_copy` only when copying back into `g_buf`.
+- GS-03A: `util/util2.cpp`, `s_tilde_name` and `s_tilde_dir`: replace
+  the tilde-expansion cache pointers with `std::string`, compare and
+  assign the cached user and directory directly, and pass `c_str()` to
+  password-file and diagnostic C APIs.
+- GS-04: `nntplist/nntplist.cpp`, `s_server_name`: replace the static
+  pointer with `std::string`, assign the configured server directly,
+  split the optional port in the string buffer, and pass `c_str()` to
+  NNTP connection setup.
+- GS-05: `inews/inews.cpp`, `g_server_name`: replace the tool global with
+  `std::string`, assign from the selected configuration value, split the
+  port locally, test `empty()`, and pass `c_str()` to `nntp_connect`.
+- GS-06: `trn-artchk/trn-artchk.cpp`, `g_server_name`: replace the tool
+  global with `std::string`, assign from the selected configuration
+  value, split the port locally, clear it on initialization failure, and
+  pass `c_str()` to `nntp_connect`.
+- GS-07: `util/env.cpp`, `g_local_host`: replace the exported owned host
+  name with `std::string`, update header declarations and tests, and use
+  direct assignment instead of `save_str`.
+- GS-08: `util/env.cpp`, `g_home_dir`: replace the exported owned home
+  directory with `std::string`, map null checks to `empty()`, update the
+  tool header mirror, and assign environment values directly.
+- GS-09: `libtrn/decode.cpp`, `g_decode_filename`: replace the global
+  decode filename with `std::string`, build the sanitized filename in
+  owned storage, update the declaration and tests, and pass `c_str()` to
+  filesystem and MIME helpers.
+- GS-10: `libtrn/univ.cpp`, `g_univ_fname`: replace the nullable current
+  filename pointer with owned string state or an accessor, remove the
+  current `save_str` leaks in temporary overrides, and update the
+  save/restore path in selector code.
 
 ### Ubuntu `-Wwrite-strings` Slices
 
@@ -165,6 +229,23 @@ both declarations and definitions `static`.
 
 ## Defer
 
+- Global mutable buffers and cursors such as `g_art_buf`, `g_head_buf`,
+  `g_trn_access_mem`, `g_mime_getc_line`, `g_host_name`, and `s_str` in
+  `rt-wumpus.cpp` are not string candidates.  Code writes through them
+  or treats them as interior pointers.
+- Global pointer arrays and pointer-offset storage such as
+  `g_newsgroup_to_do`, `s_tree_lines`, `g_sel_grp_display_mode`, and
+  `g_sel_art_display_mode` need ownership-model slices before they can
+  become strings.
+- `libtrn/univ.cpp`, `s_univ_begin_label` and `s_univ_line_desc`: null
+  versus empty string is parse state.  Promote only with
+  `std::optional<std::string>` or a separate presence flag.
+- `libtrn/terminal.cpp`, termcap strings, mouse-button strings, color
+  capability strings, and exported size variables: these are borrowed,
+  allocated, or rewritten through terminal, option, or environment
+  helpers.
+- `tool/util3.cpp`, `s_nntp_password`: `read_auth_file` allocates
+  through a `char **` output parameter.  Change that helper first.
 - Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`
   calls are not useful path slices unless the same function also composes,
   normalizes, queries, removes, or renames the file.
