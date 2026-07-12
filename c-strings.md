@@ -262,11 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-04. `libtrn/rcstuff.cpp`, `get_newsgroup`: replace the resubscribe
-`prompt_buf` formatting buffer with `std::string` before calling
-`in_char`.  Keep `what` as a C-string input because it still flows
-through global group selection state.
-
 BUF-05. `libtrn/univ.cpp`, `univ_do_line`: replace the static
 `lbuf[1024]` used for `file>label` splitting with local owned string
 storage.  Split the filename and label as views or owned strings, then

@@ -40,6 +40,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <string_view>
 
 HashTable *g_newsrc_hash{};
@@ -1129,16 +1130,11 @@ reask_add:
     }
     else if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR)  // unsubscribed?
     {
-        if (g_verbose)
-        {
-            std::sprintf(prompt_buf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_newsgroup_name.c_str());
-        }
-        else
-        {
-            std::sprintf(prompt_buf, "\nResubscribe %s?", g_newsgroup_name.c_str());
-        }
+        const std::string resubscribe_prompt{
+            g_verbose ? fmt::format("\nNewsgroup {} is unsubscribed -- resubscribe?", g_newsgroup_name)
+                      : fmt::format("\nResubscribe {}?", g_newsgroup_name)};
 reask_unsub:
-        in_char(prompt_buf,MM_RESUBSCRIBE_PROMPT,"yn");
+        in_char(resubscribe_prompt.c_str(), MM_RESUBSCRIBE_PROMPT, "yn");
         print_cmd();
         newline();
         if (*g_buf == 'h')
