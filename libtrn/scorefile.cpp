@@ -30,8 +30,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <string_view>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 static std::string_view sf_get_extra_header(ArticleNum art, int hnum);
 
@@ -1156,11 +1160,12 @@ void sf_append(char *line)
     {
         filename = s_sf_abbr[(int) filechar];
     }
-    filename = file_exp(sf_cmd_fname(filename.data())); // allow shortcuts
+    const fs::path score_file{file_exp(sf_cmd_fname(filename.data()))}; // allow shortcuts
     // make sure directory exists...
-    make_dir(filename.c_str(), MD_FILE);
+    std::error_code error;
+    fs::create_directories(score_file.parent_path(), error);
     sf_file_clear();
-    std::FILE *fp = std::fopen(filename.c_str(), "a");
+    std::FILE *fp = std::fopen(score_file.string().c_str(), "a");
     if (fp != nullptr)
     {
         std::fprintf(fp, "%s\n", scoreline); // open (or create) for append
@@ -1168,7 +1173,7 @@ void sf_append(char *line)
     }
     else // unsuccessful in opening file
     {
-        std::printf("\nCould not open (for append) file %s\n", filename.c_str());
+        std::printf("\nCould not open (for append) file %s\n", score_file.string().c_str());
     }
 }
 

@@ -155,10 +155,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-59. In `libtrn/scorefile.cpp`, change only `sf_append` so the
-    expanded score filename is held as a local path after `file_exp`.
-    Use filesystem parent creation for the containing directory, then
-    convert to a string for `fopen`.
 60. In `libtrn/kfile.cpp`, change only `rewrite_kill_file` so the expanded
     kill-file name is a local path for parent directory creation,
     removal, and file creation.  Keep existing command formatting and
