@@ -33,6 +33,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -1011,8 +1013,8 @@ check_fuzzy_match:
         {
             if (g_append_unsub)
             {
-                std::printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
-                       g_newsgroup_name.c_str(), (autosub == ADDNEW_SUB)? "" : "un");
+                fmt::print("(Adding {} to end of your .newsrc {}subscribed)\n", g_newsgroup_name,
+                           autosub == ADDNEW_SUB ? "" : "un");
                 term_down(1);
                 g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), autosub);
             }
@@ -1020,13 +1022,13 @@ check_fuzzy_match:
             {
                 if (autosub == ADDNEW_SUB)
                 {
-                    std::printf("(Subscribing to %s)\n", g_newsgroup_name.c_str());
+                    fmt::print("(Subscribing to {})\n", g_newsgroup_name);
                     term_down(1);
                     g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), autosub);
                 }
                 else
                 {
-                    std::printf("(Ignoring %s)\n", g_newsgroup_name.c_str());
+                    fmt::print("(Ignoring {})\n", g_newsgroup_name);
                     term_down(1);
                     return false;
                 }
@@ -1085,12 +1087,11 @@ reask_add:
                 g_add_new_by_default = ADDNEW_SUB;
                 if (g_append_unsub)
                 {
-                    std::printf("(Adding %s to end of your .newsrc subscribed)\n",
-                           g_newsgroup_name.c_str());
+                    fmt::print("(Adding {} to end of your .newsrc subscribed)\n", g_newsgroup_name);
                 }
                 else
                 {
-                    std::printf("(Subscribing to %s)\n", g_newsgroup_name.c_str());
+                    fmt::print("(Subscribing to {})\n", g_newsgroup_name);
                 }
                 term_down(1);
                 g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), ':');
@@ -1101,15 +1102,14 @@ reask_add:
                 g_add_new_by_default = ADDNEW_UNSUB;
                 if (g_append_unsub)
                 {
-                    std::printf("(Adding %s to end of your .newsrc unsubscribed)\n",
-                           g_newsgroup_name.c_str());
+                    fmt::print("(Adding {} to end of your .newsrc unsubscribed)\n", g_newsgroup_name);
                     term_down(1);
                     g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), UNSUBSCRIBED_CHAR);
                     flags &= ~GNG_RELOC;
                 }
                 else
                 {
-                    std::printf("(Ignoring %s)\n", g_newsgroup_name.c_str());
+                    fmt::print("(Ignoring {})\n", g_newsgroup_name);
                     term_down(1);
                     return false;
                 }
@@ -1145,7 +1145,7 @@ reask_unsub:
         {
             if (g_verbose)
             {
-                std::printf("Type y or SP to resubscribe to %s.\n", g_newsgroup_name.c_str());
+                fmt::print("Type y or SP to resubscribe to {}.\n", g_newsgroup_name);
             }
             else
             {

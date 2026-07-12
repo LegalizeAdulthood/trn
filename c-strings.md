@@ -238,10 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-11. `libtrn/rcstuff.cpp`, `get_newsgroup`: use `fmt::print` for
-direct subscribe, ignore, and resubscribe status output only.  Leave the
-prompt buffers to `BUF-04`, where the C-style buffers are converted.
-
 ### Global String Storage Slices
 
 These slices replace owned global or file-scope `char *` storage with
