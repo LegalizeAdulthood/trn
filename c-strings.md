@@ -169,10 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-04: `nntplist/nntplist.cpp`, `s_server_name`: replace the static
-  pointer with `std::string`, assign the configured server directly,
-  split the optional port in the string buffer, and pass `c_str()` to
-  NNTP connection setup.
 - GS-05: `inews/inews.cpp`, `g_server_name`: replace the tool global with
   `std::string`, assign from the selected configuration value, split the
   port locally, test `empty()`, and pass `c_str()` to `nntp_connect`.

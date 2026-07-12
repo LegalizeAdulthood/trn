@@ -20,7 +20,7 @@
 
 static void usage();
 
-static char *s_server_name{};
+static std::string s_server_name;
 std::string g_nntp_auth_file;
 
 int main(int argc, char *argv[])
@@ -100,11 +100,11 @@ int main(int argc, char *argv[])
     }
     if (cp != nullptr && std::strcmp(cp, "local") != 0)
     {
-        s_server_name = save_str(cp);
-        cp = std::strchr(s_server_name, ';');
+        s_server_name = cp;
+        cp = std::strchr(s_server_name.data(), ';');
         if (!cp)
         {
-            cp = std::strchr(s_server_name, ':');
+            cp = std::strchr(s_server_name.data(), ':');
         }
         if (cp)
         {
@@ -119,10 +119,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (s_server_name)
+    if (!s_server_name.empty())
     {
         if (init_nntp() < 0 //
-            || nntp_connect(s_server_name, false) <= 0)
+            || nntp_connect(s_server_name.c_str(), false) <= 0)
         {
             std::exit(1);
         }
