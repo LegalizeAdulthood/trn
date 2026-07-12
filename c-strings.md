@@ -262,11 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-03. `libtrn/datasrc.cpp`, `get_near_miss`: replace `promptbuf`
-and `options` with local string storage.  `in_char` consumes both
-strings synchronously through `set_def`, so no local string address
-escapes after the call.
-
 BUF-04. `libtrn/rcstuff.cpp`, `get_newsgroup`: replace the resubscribe
 `prompt_buf` formatting buffer with `std::string` before calling
 `in_char`.  Keep `what` as a C-string input because it still flows

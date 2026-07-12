@@ -1310,9 +1310,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
 //
 static int get_near_miss()
 {
-    char promptbuf[256];
-    char options[MAX_NG+10];
-    char* op = options;
+    std::string options;
 
     if (g_verbose)
     {
@@ -1327,25 +1325,17 @@ static int get_near_miss()
             *cp = '\0';
         }
         fmt::print("  {}.  {}\n", i + 1, s_newsgroup_ptrs[i]);
-        std::sprintf(op++, "%d", i+1);       // Expensive, but avoids ASCII deps
+        options += std::to_string(i + 1);
         if (cp)
         {
             *cp = ' ';
         }
     }
-    *op++ = 'n';
-    *op = '\0';
+    options += 'n';
 
-    if (g_verbose)
-    {
-        std::sprintf(promptbuf, "Which of these would you like?");
-    }
-    else
-    {
-        std::sprintf(promptbuf, "Which?");
-    }
+    const std::string prompt{g_verbose ? "Which of these would you like?" : "Which?"};
 reask:
-    in_char(promptbuf, MM_ADD_NEWSGROUP_PROMPT, options);
+    in_char(prompt.c_str(), MM_ADD_NEWSGROUP_PROMPT, options.c_str());
     print_cmd();
     std::putchar('\n');
     switch (*g_buf)
@@ -1376,9 +1366,9 @@ reask:
     default:
         if (std::isdigit(*g_buf))
         {
-            char* s = std::strchr(options, *g_buf);
+            const std::size_t pos = options.find(*g_buf);
 
-            int i = s ? (s - options) : s_newsgroup_num;
+            int i = pos != std::string::npos ? static_cast<int>(pos) : s_newsgroup_num;
             if (i >= 0 && i < s_newsgroup_num)
             {
                 char* cp = std::strchr(s_newsgroup_ptrs[i], ' ');
