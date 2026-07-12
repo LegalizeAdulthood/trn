@@ -25,6 +25,7 @@
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
 #include <trn/only.h>
+#include <trn/OptionApplier.h>
 #include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 #include <trn/respond.h>
@@ -267,39 +268,12 @@ inline bool is_no(const char *s)
 
 void set_options(char **vals)
 {
-    int limit = ini_len(g_options_ini);
-    for (int i = 1; i < limit; i++)
-    {
-        if (*++vals)
-        {
-            set_option(static_cast<OptionIndex>(i), *vals);
-        }
-    }
+    OptionApplier{}.apply(vals);
 }
 
 void set_options(const OptionDraft &draft)
 {
-    const int limit = ini_len(g_options_ini);
-    for (int i = 1; i < limit; i++)
-    {
-        if (const char *value = draft.value(i); value != nullptr)
-        {
-            set_option(static_cast<OptionIndex>(i), value);
-        }
-    }
-    for (int i = 1; i < limit; i++)
-    {
-        const char *value = draft.value(i);
-        if (value != nullptr && g_option_saved_vals && g_option_saved_vals[i] //
-            && !std::strcmp(value, g_option_saved_vals[i]))
-        {
-            if (g_option_saved_vals[i] != g_option_def_vals[i])
-            {
-                std::free(g_option_saved_vals[i]);
-            }
-            g_option_saved_vals[i] = nullptr;
-        }
-    }
+    OptionApplier{}.apply(draft);
 }
 
 bool option_draft_contains(OptionIndex num)
@@ -313,6 +287,11 @@ const char *option_draft_value(OptionIndex num)
 }
 
 void set_option(OptionIndex num, const char *s)
+{
+    OptionApplier{}.apply(num, s);
+}
+
+void apply_global_option(OptionIndex num, const char *s)
 {
     if (g_option_saved_vals)
     {

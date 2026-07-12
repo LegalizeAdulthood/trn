@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 10: Introduce `OptionApplier`
-
-Move option interpretation behind a class boundary.
-
-- Move `set_options` loop into `OptionApplier`.
-- Move `set_option` switch behind `apply`.
-- Keep global option state as the initial storage target.
-- Leave `option_value` as the renderer until a later option-state pass.
-
-This makes parsing independent from option semantics.
-
 ### Slice 11: Add `IniDocument`
 
 Move tokenized buffer ownership into a class.
