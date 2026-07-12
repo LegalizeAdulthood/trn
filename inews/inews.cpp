@@ -26,7 +26,7 @@ enum
 };
 
 int new_connection{};
-char *g_server_name{};
+std::string g_server_name;
 std::string g_nntp_auth_file;
 char g_buf[LINE_BUF_LEN + 1]{}; // general purpose line buffer
 
@@ -131,24 +131,23 @@ int main(int argc, char *argv[])
     const char *line_end;
     if (cp && *cp && std::strcmp(cp,"local") != 0)
     {
-        g_server_name = save_str(cp);
-        cp = std::strchr(g_server_name, ';');
-        if (cp)
+        g_server_name = cp;
+        if (const auto separator = g_server_name.find(';'); separator != std::string::npos)
         {
-            *cp = '\0';
-            g_nntp_link.port_number = std::atoi(cp+1);
+            g_nntp_link.port_number = std::atoi(g_server_name.c_str() + separator + 1);
+            g_server_name.resize(separator);
         }
         line_end = "\r\n";
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
-        if ((cp = std::getenv("NNTP_FORCE_AUTH")) != nullptr
-         && (*cp == 'y' || *cp == 'Y'))
+        cp = std::getenv("NNTP_FORCE_AUTH");
+        if (cp != nullptr && (*cp == 'y' || *cp == 'Y'))
         {
             g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
     }
     else
     {
-        g_server_name = nullptr;
+        g_server_name.clear();
         line_end = "\n";
     }
 
@@ -169,7 +168,7 @@ int main(int argc, char *argv[])
             cp = headbuf + len;
         }
         i = std::getc(stdin);
-        if (g_server_name && had_nl && i == '.')
+        if (!g_server_name.empty() && had_nl && i == '.')
         {
             *cp++ = '.';
         }
@@ -220,7 +219,7 @@ int main(int argc, char *argv[])
         artpos += len;
         cp += len;
         had_nl = found_nl;
-        if (had_nl != 0 && g_server_name)
+        if (had_nl != 0 && !g_server_name.empty())
         {
             cp[-1] = '\r';
             *cp++ = '\n';
@@ -230,11 +229,11 @@ int main(int argc, char *argv[])
 
     // Well, the header looks ok, so let's get on with it.
 
-    if (g_server_name)
+    if (!g_server_name.empty())
     {
         if (!g_nntp_link.connection)
         {
-            if (init_nntp() < 0 || !nntp_connect(g_server_name,false))
+            if (init_nntp() < 0 || !nntp_connect(g_server_name.c_str(),false))
             {
                 std::exit(1);
             }
@@ -287,7 +286,7 @@ int main(int argc, char *argv[])
     while (std::fgets(headbuf, headbuf_size, stdin))
     {
         // Single . is eof, so put in extra one
-        if (g_server_name && had_nl && *headbuf == '.')
+        if (!g_server_name.empty() && had_nl && *headbuf == '.')
         {
             inews_fputc('.');
         }
@@ -452,7 +451,7 @@ int nntp_handle_timeout()
         }
         handling_timeout = true;
         nntp_close(false);
-        if (init_nntp() < 0 || nntp_connect(g_server_name,false) <= 0)
+        if (init_nntp() < 0 || nntp_connect(g_server_name.c_str(),false) <= 0)
         {
             std::exit(1);
         }
