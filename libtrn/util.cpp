@@ -11,6 +11,7 @@
 #include <nntp/nntpclient.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
+#include <trn/IniSectionValues.h>
 #include <trn/intrp.h>
 #include <trn/search.h>
 #include <trn/smisc.h> // g_s_default_cmd
@@ -953,19 +954,16 @@ char *next_ini_section(char *cp, char **section, char **cond)
     return cp;
 }
 
-char *parse_ini_section(char *cp, IniWords words[])
+namespace
 {
-    if (!*cp)
-    {
-        return nullptr;
-    }
 
-    char* s;
-    char** values = prep_ini_words(words);
-
+template <typename Sink>
+char *parse_ini_section_into(char *cp, Sink sink)
+{
     while (*cp && *cp != '[')
     {
-        int checksum = 0;
+        int   checksum = 0;
+        char *s;
         for (s = cp; *s; s++)
         {
             if (std::isupper(*s))
@@ -977,17 +975,7 @@ char *parse_ini_section(char *cp, IniWords words[])
         checksum = (checksum << 8) + (s++ - cp);
         if (*s)
         {
-            int i;
-            for (i = 1; words[i].hash; i++)
-            {
-                if (words[i].hash == checksum //
-                    && string_case_equal(cp, words[i].item))
-                {
-                    values[i] = s;
-                    break;
-                }
-            }
-            if (!words[i].hash)
+            if (!sink(checksum, cp, s))
             {
                 std::printf("Unknown option: `%s'.\n",cp);
             }
@@ -998,6 +986,36 @@ char *parse_ini_section(char *cp, IniWords words[])
             cp = s + 1;
         }
     }
+
+    return cp;
+}
+
+} // namespace
+
+char *parse_ini_section(char *cp, IniWords words[])
+{
+    if (!*cp)
+    {
+        return nullptr;
+    }
+
+    char **values = prep_ini_words(words);
+
+    cp = parse_ini_section_into(cp,
+                                [words, values](const int checksum, const char *name, char *value)
+                                {
+                                    int i;
+                                    for (i = 1; words[i].hash; i++)
+                                    {
+                                        if (words[i].hash == checksum //
+                                            && string_case_equal(name, words[i].item))
+                                        {
+                                            values[i] = value;
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                });
 
 #ifdef DEBUG
     if (g_debug & DEB_RCFILES)
@@ -1014,6 +1032,27 @@ char *parse_ini_section(char *cp, IniWords words[])
 #endif
 
     return cp;
+}
+
+char *parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &values)
+{
+    if (!*cp)
+    {
+        return nullptr;
+    }
+
+    values.reset();
+    return parse_ini_section_into(cp,
+                                  [&schema, &values](int, const char *name, char *value)
+                                  {
+                                      const IniField *field = schema.find(name);
+                                      if (!field)
+                                      {
+                                          return false;
+                                      }
+                                      values.set(*field, std::string_view{value});
+                                      return true;
+                                  });
 }
 
 bool check_ini_cond(char *cond)

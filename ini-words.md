@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 5: Wrap Existing Parser Output
-
-Teach `parse_ini_section` to fill `IniSectionValues` through an adapter.
-
-- Keep the destructive input format.
-- Preserve existing unknown-key diagnostics.
-- Keep the old `IniWords` entry point as a compatibility wrapper.
-- Add tests comparing old `vals` output to new values.
-
-This slice proves the new result model without moving all callers.
-
 ### Slice 6: Migrate Data Source Parsing
 
 Move `s_datasrc_ini` to `IniSchema` plus `DataSourceConfig`.

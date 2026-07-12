@@ -1,11 +1,14 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
+#include <trn/IniSchema.h>
+#include <trn/IniSectionValues.h>
 #include <trn/util.h>
 
 #include <gtest/gtest.h>
 
 #include <cstring>
 #include <string>
+#include <string_view>
 
 namespace
 {
@@ -44,6 +47,24 @@ struct IniWordsTest : testing::Test
         return ini_values(m_words);
     }
 
+    const IniSectionValues &parse_section_values(const char *text)
+    {
+        std::strncpy(m_section_values_buffer, text, sizeof m_section_values_buffer);
+        m_section_values_buffer[sizeof m_section_values_buffer - 1] = '\0';
+
+        prep_ini_data(m_section_values_buffer, "test input");
+
+        char *section{};
+        char *condition{};
+        char *section_body = next_ini_section(m_section_values_buffer, &section, &condition);
+        EXPECT_STREQ("test", section);
+        EXPECT_STREQ("", condition);
+        EXPECT_NE(nullptr, section_body);
+
+        parse_ini_section(section_body, m_schema, m_section_values);
+        return m_section_values;
+    }
+
     bool is_buffer_pointer(const char *ptr) const
     {
         return ptr >= m_buffer && ptr < m_buffer + sizeof m_buffer;
@@ -51,7 +72,10 @@ struct IniWordsTest : testing::Test
 
     IniWords m_words[4]{
         {0, "TEST", nullptr}, {0, "Alpha Key", nullptr}, {0, "Beta Key", nullptr}, {0, nullptr, nullptr}};
-    char m_buffer[512]{};
+    IniSchema        m_schema{"test", {IniField::value(IW_ALPHA, "Alpha Key"), IniField::value(IW_BETA, "Beta Key")}};
+    IniSectionValues m_section_values;
+    char             m_buffer[512]{};
+    char             m_section_values_buffer[512]{};
 };
 
 } // namespace
@@ -106,4 +130,34 @@ TEST_F(IniWordsTest, parsedValuesAreBorrowedFromInputBuffer)
     ASSERT_NE(nullptr, values[IW_ALPHA]);
     EXPECT_TRUE(is_buffer_pointer(values[IW_ALPHA]));
     EXPECT_STREQ("borrowed", values[IW_ALPHA]);
+}
+
+TEST_F(IniWordsTest, sectionValuesMatchLegacyVals)
+{
+    constexpr char text[] = "[test]\nAlpha Key = first\nbeta key = second\n";
+
+    char                  **values = parse(text);
+    const IniSectionValues &section_values = parse_section_values(text);
+
+    const auto alpha = section_values.value(IW_ALPHA);
+    const auto beta = section_values.value(IW_BETA);
+
+    ASSERT_TRUE(alpha.has_value());
+    ASSERT_TRUE(beta.has_value());
+    EXPECT_EQ(std::string_view{values[IW_ALPHA]}, *alpha);
+    EXPECT_EQ(std::string_view{values[IW_BETA]}, *beta);
+}
+
+TEST_F(IniWordsTest, sectionValuesReportUnknownKeys)
+{
+    testing::internal::CaptureStdout();
+
+    const IniSectionValues &values = parse_section_values("[test]\nUnknown Key = ignored\nAlpha Key = kept\n");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    const auto        alpha = values.value(IW_ALPHA);
+    EXPECT_NE(std::string::npos, output.find("Unknown option: `unknown key'."));
+    ASSERT_TRUE(alpha.has_value());
+    EXPECT_EQ(std::string_view{"kept"}, *alpha);
+    EXPECT_FALSE(values.contains(IW_BETA));
 }

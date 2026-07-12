@@ -44,6 +44,9 @@ struct IniWords
     char       *help_str;
 };
 
+class IniSchema;
+class IniSectionValues;
+
 void util_init();
 void util_final();
 int do_shell(const char *shell, const char *cmd);
@@ -77,6 +80,7 @@ void   prep_ini_data(char *cp, const char *filename);
 bool   parse_string(char **to, char **from);
 char * next_ini_section(char *cp, char **section, char **cond);
 char * parse_ini_section(char *cp, IniWords words[]);
+char * parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &values);
 bool   check_ini_cond(char *cond);
 char   menu_get_char();
 int    edit_file(const char *fname);
