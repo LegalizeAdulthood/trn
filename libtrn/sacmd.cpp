@@ -31,8 +31,9 @@
 
 #include <cstdio>
 #include <cstring>
+#include <string>
 
-static char *s_sa_extract_dest{}; // use this command on an extracted file
+static std::string s_sa_extract_dest; // use this command on an extracted file
 static bool  s_sa_extract_junk{}; // junk articles after extracting them
 
 static bool sa_extract_start();
@@ -615,13 +616,12 @@ int sa_do_cmd()
 
 static bool sa_extract_start()
 {
-    if (s_sa_extract_dest == nullptr)
+    if (s_sa_extract_dest.empty())
     {
-        s_sa_extract_dest = (char*)safe_malloc(LINE_BUF_LEN);
-        safe_copy(s_sa_extract_dest, file_exp("%p").c_str(), LINE_BUF_LEN);
+        s_sa_extract_dest = file_exp("%p");
     }
     s_go_bot();
-    std::printf("To directory (default %s)\n",s_sa_extract_dest);
+    std::printf("To directory (default %s)\n",s_sa_extract_dest.c_str());
     *g_buf = ':';                       // cosmetic
     if (!s_finish_cmd(nullptr))
     {
@@ -631,7 +631,7 @@ static bool sa_extract_start()
     // if the user typed something, copy it to the destination
     if (g_buf[1] != '\0')
     {
-        safe_copy(s_sa_extract_dest, file_exp(g_buf + 1).c_str(), LINE_BUF_LEN);
+        s_sa_extract_dest = file_exp(g_buf + 1);
     }
     // set a mode for this later?
     std::printf("\nMark extracted articles as read? [yn]");
@@ -703,7 +703,7 @@ static void sa_art_cmd_prim(SaCommand cmd, long a)
         sa_clear_mark(a);
         g_art = artnum;
         *g_buf = 'e';           // fake up the extract command
-        safe_copy(g_buf+1,s_sa_extract_dest,LINE_BUF_LEN);
+        safe_copy(g_buf+1,s_sa_extract_dest.c_str(),LINE_BUF_LEN);
         (void)save_article();
         if (s_sa_extract_junk)
         {

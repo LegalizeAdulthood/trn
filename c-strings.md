@@ -169,10 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-03: `libtrn/sacmd.cpp`, `s_sa_extract_dest`: replace the static
-  pointer and fixed heap buffer with `std::string`.  Store `file_exp`
-  results by direct assignment, test `empty()`, pass `c_str()` to legacy
-  consumers, and keep `safe_copy` only when copying back into `g_buf`.
 - GS-03A: `util/util2.cpp`, `s_tilde_name` and `s_tilde_dir`: replace
   the tilde-expansion cache pointers with `std::string`, compare and
   assign the cached user and directory directly, and pass `c_str()` to
