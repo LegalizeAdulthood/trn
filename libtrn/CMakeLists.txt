@@ -37,6 +37,7 @@ add_library(libtrn
     nntp.cpp include/trn/nntp.h
     only.cpp include/trn/only.h
     opt.cpp include/trn/opt.h
+    OptionCatalog.cpp include/trn/OptionCatalog.h
     OptionDraft.cpp include/trn/OptionDraft.h
     include/trn/patchlevel.h
     rcln.cpp include/trn/rcln.h

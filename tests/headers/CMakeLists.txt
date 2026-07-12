@@ -37,6 +37,7 @@ add_executable(trn-headers-test
     test_nntp.cpp
     test_only.cpp
     test_opt.cpp
+    test_OptionCatalog.cpp
     test_OptionDraft.cpp
     test_patchlevel.cpp
     test_rcln.cpp

@@ -15,6 +15,7 @@
 #include <trn/ngdata.h>
 #include <trn/only.h>
 #include <trn/opt.h>
+#include <trn/OptionCatalog.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-select.h>
@@ -804,14 +805,15 @@ try_again:
     case SM_OPTIONS:
     {
         int included = 0;
+        const OptionCatalog &catalog = OptionCatalog::instance();
         g_obj_count = ArticleNum{};
-        for (int op = 1; g_options_ini[op].hash; op++)
+        for (int op = catalog.first_row(); op <= catalog.row_count(); op++)
         {
             if (g_sel_page_op == op)
             {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
-            if (*g_options_ini[op].item == '*')
+            if (catalog.is_group(op))
             {
                 included = (g_option_flags[op] & OF_SEL);
                 g_sel_total_obj_cnt++;
@@ -2289,7 +2291,8 @@ start_of_loop:
     }
     else if (g_sel_mode == SM_OPTIONS)
     {
-        int op = g_sel_page_op;
+        int                  op = g_sel_page_op;
+        const OptionCatalog &catalog = OptionCatalog::instance();
         for (; op <= g_obj_count.value_of() && g_sel_page_item_cnt < s_sel_max_per_page; op++)
         {
             if (!(g_option_flags[op] & OF_INCLUDED))
@@ -2297,15 +2300,16 @@ start_of_loop:
                 continue;
             }
 
-            if (*g_options_ini[op].item == '*')
+            if (catalog.is_group(op))
             {
                 sel = !!(g_option_flags[op] & OF_SEL);
             }
             else
             {
-                sel = option_draft_contains(static_cast<OptionIndex>(op))? 1 :
-                          (g_option_saved_vals[op]? 3 :
-                               (g_option_def_vals[op]? 0 : 2));
+                const OptionIndex option = catalog.option(op);
+                sel = option_draft_contains(option)? 1 :
+                          (g_option_saved_vals[option]? 3 :
+                               (g_option_def_vals[option]? 0 : 2));
             }
             g_sel_items[g_sel_page_item_cnt].u.op = static_cast<OptionIndex>(op);
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
@@ -2492,17 +2496,22 @@ void update_page()
             break;
 
         case SM_OPTIONS:
-            if (*g_options_ini[u.op].item == '*')
+        {
+            const OptionCatalog &catalog = OptionCatalog::instance();
+            const int row = static_cast<int>(u.op);
+            if (catalog.is_group(row))
             {
                 sel = !!(g_option_flags[u.op] & OF_SEL);
             }
             else
             {
-                sel = option_draft_contains(u.op)? 1 :
-                          (g_option_saved_vals[u.op]? 3 :
-                               (g_option_def_vals[u.op]? 0 : 2));
+                const OptionIndex option = catalog.option(row);
+                sel = option_draft_contains(option)? 1 :
+                          (g_option_saved_vals[option]? 3 :
+                               (g_option_def_vals[option]? 0 : 2));
             }
             break;
+        }
 
         case SM_ARTICLE:
             sel = !!(u.ap->m_flags & g_sel_mask) + (u.ap->m_flags & AF_DEL);
@@ -2812,14 +2821,15 @@ static void display_subject(const Subject *subj, int ix, int sel)
 
 void display_option(int op, int item_index)
 {
+    const OptionCatalog &catalog = OptionCatalog::instance();
     std::size_t      len;
     std::string_view pre;
     std::string_view item;
     std::string_view post;
     std::string_view val;
-    if (*g_options_ini[op].item == '*')
+    if (catalog.is_group(op))
     {
-        item = g_options_ini[op].item + 1;
+        item = catalog.name(op);
         len = item.size();
         pre = "==";
         post = "==================================";
@@ -2827,14 +2837,15 @@ void display_option(int op, int item_index)
     }
     else
     {
-        len = (g_options_ini[op].hash & 0xff);
         pre = "  ";
-        item = g_options_ini[op].item;
+        item = catalog.name(op);
+        len = item.size();
         post = "..................................";
-        const char *option_val = option_draft_value(static_cast<OptionIndex>(op));
+        const OptionIndex option = catalog.option(op);
+        const char *option_val = option_draft_value(option);
         if (!option_val)
         {
-            option_val = quote_string(option_value(static_cast<OptionIndex>(op)));
+            option_val = quote_string(option_value(option));
         }
         val = option_val;
     }

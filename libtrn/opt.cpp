@@ -25,6 +25,7 @@
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
 #include <trn/only.h>
+#include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 #include <trn/respond.h>
 #include <trn/rt-page.h>
@@ -55,118 +56,6 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat);
 
 CompiledRegex g_opt_compex;
 std::string   g_ini_file;
-IniWords      g_options_ini[] = {
-    // clang-format off
-    { 0, "OPTIONS", nullptr },
-
-    { 0, "*Display Options", nullptr },
-    { 0, "Terse Output", "yes/no" },
-    { 0, "Pager Line-Marking", "standout/underline/no" },
-    { 0, "Erase Screen", "yes/no" },
-    { 0, "Erase Each Line", "yes/no" },
-    { 0, "Muck Up Clear", "yes/no" },
-    { 0, "Background Spinner", "yes/no" },
-    { 0, "Charset", "<e.g. patm>" },
-    { 0, "Filter Control Characters", "yes/no" },
-
-    { 0, "*Selector Options", nullptr },
-    { 0, "Use Universal Selector", "yes/no" },
-    { 0, "Universal Selector Order", "natural/points" },
-    { 0, "Universal Selector article follow", "yes/no" },
-    { 0, "Universal Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
-    { 0, "Use Newsrc Selector", "yes/no" },
-    { 0, "Newsrc Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
-    { 0, "Use Addgroup Selector", "yes/no" },
-    { 0, "Addgroup Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
-    { 0, "Use Newsgroup Selector", "yes/no" },
-    { 0, "Newsgroup Selector Order", "natural/group/count" },
-    { 0, "Newsgroup Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
-    { 0, "Newsgroup Selector Display Styles", "<e.g. slm=short/long/med>" },
-    { 0, "Use News Selector", "yes/no/<# articles>" },
-    { 0, "News Selector Mode", "threads/subjects/articles" },
-    { 0, "News Selector Order", "[reverse] date/subject/author/groups/cnt/points" },
-    { 0, "News Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
-    { 0, "News Selector Display Styles", "<e.g. lms=long/medium/short>" },
-    { 0, "Option Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
-    { 0, "Use Selector Numbers", "yes/no" },
-    { 0, "Selector Number Auto-Goto", "yes/no" },
-
-    { 0, "*Newsreading Options", nullptr },
-    { 0, "Use Threads", "yes/no" },
-    { 0, "Select My Postings", "subthread/parent/thread/no" },
-    { 0, "Initial Article Lines", "no/<# lines>" },
-    { 0, "Article Tree Lines", "no/<# lines>" },
-    { 0, "Word-Wrap Margin", "no/<# chars in margin>" },
-    { 0, "Auto-Grow Groups", "yes/no" },
-    { 0, "Compress Subjects", "yes/no" },
-    { 0, "Join Subject Lines", "no/<# chars>" },
-    { 0, "Line Num for Goto", "<# line (1-n)>" },
-    { 0, "Ignore THRU on Select", "yes/no" },
-    { 0, "Read Breadth First", "yes/no" },
-    { 0, "Background Threading", "yes/no" },
-    { 0, "Scan Mode Count", "no/<# articles>" },
-    { 0, "Header Magic", "<[!]header,...>" },
-    { 0, "Header Hiding", "<[!]header,...>" },
-
-    { 0, "*Posting Options", nullptr },
-    { 0, "Cited Text String", "<e.g. '>'>" },
-
-    { 0, "*Save Options", nullptr },
-    { 0, "Save Dir", "<directory path>" },
-    { 0, "Auto Savename", "yes/no" },
-    { 0, "Default Savefile Type", "norm/mail/ask" },
-
-    { 0, "*Mouse Options", nullptr },
-    { 0, "Use XTerm Mouse", "yes/no" },
-    { 0, "Mouse Modes", "<e.g. acjlptwK>" },
-    { 0, "Universal Selector Mousebar", "<e.g. [PgUp]< [PgDn]> Z [Quit]q>" },
-    { 0, "Newsrc Selector Mousebar", "<e.g. [PgUp]< [PgDn]> Z [Quit]q>" },
-    { 0, "Addgroup Selector Mousebar", "<e.g. [Top]^ [Bot]$ [ OK ]Z>" },
-    { 0, "Newsgroup Selector Mousebar", "<e.g. [ OK ]Z [Quit]q [Help]?>" },
-    { 0, "News Selector Mousebar", "<e.g. [KillPg]D [Read]^j [Quit]Q>" },
-    { 0, "Option Selector Mousebar", "<e.g. [Save]S [Use]^I [Abandon]q>" },
-    { 0, "Article Pager Mousebar", "<e.g. [Next]n J [Sel]+ [Quit]q>" },
-
-    { 0, "*MIME Options", nullptr },
-    { 0, "Multipart Separator", "<string>" },
-    { 0, "Auto-View Inline", "yes/no" },
-
-    { 0, "*Misc Options", nullptr },
-    { 0, "Check for New Groups", "yes/no" },
-    { 0, "Restriction Includes Empty Groups", "yes/no" },
-    { 0, "Append Unsubscribed Groups", "yes/no" },
-    { 0, "Initial Group List", "no/<# groups>" },
-    { 0, "Restart At Last Group", "yes/no" },
-    { 0, "Eat Type-Ahead", "yes/no" },
-    { 0, "Verify Input", "yes/no" },
-    { 0, "Fuzzy Newsgroup Names", "yes/no" },
-    { 0, "Auto Arrow Macros", "regular/alternate/no" },
-    { 0, "Checkpoint Newsrc Frequency", "<# articles>" },
-    { 0, "Default Refetch Time", "never/<1 day 5 hours 8 mins>" },
-    { 0, "Novice Delays", "yes/no" },
-    { 0, "Old Mthreads Database", "yes/no" },
-
-    { 0, "*Article Scan Mode Options", nullptr },
-    { 0, "Follow Threads", "yes/no" },
-    { 0, "Fold Subjects", "yes/no" },
-    { 0, "Re-fold Subjects", "yes/no" },
-    { 0, "Mark Without Moving", "yes/no" },
-    { 0, "VI Key Movement Allowed", "yes/no" },
-    { 0, "Display Item Numbers", "yes/no" },
-    { 0, "Display Article Number", "yes/no" },
-    { 0, "Display Author", "yes/no" },
-    { 0, "Display Score", "yes/no" },
-    { 0, "Display Subject Count", "yes/no" },
-    { 0, "Display Subject", "yes/no" },
-    { 0, "Display Summary", "yes/no" },
-    { 0, "Display Keywords", "yes/no" },
-
-    { 0, "*Scoring Options", nullptr },
-    { 0, "Verbose scoring", "yes/no" },
-
-    { 0, nullptr, nullptr }
-};
-// clang-format on
 char       **g_option_def_vals{};
 char       **g_option_saved_vals{};
 OptionFlags *g_option_flags{};
@@ -200,6 +89,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns,
                                          "[Next]n [Sel]+ [Quit]q [Help]h");
 
+    init_option_ini_words();
     prep_ini_words(g_options_ini);
     if (argc >= 2 && !strcmp(argv[1],"-c"))
     {
@@ -1072,27 +962,31 @@ void save_options(const char *filename)
         std::fprintf(fp_out, "%sRNINIT = ''\n\n", t);
     }
     std::fprintf(fp_out,"[options]\n");
-    for (int i = 1; g_options_ini[i].hash; i++)
+    const OptionCatalog &catalog = OptionCatalog::instance();
+    for (int row = catalog.first_row(); row <= catalog.row_count(); row++)
     {
-        if (*g_options_ini[i].item == '*')
+        if (catalog.is_group(row))
         {
-            std::fprintf(fp_out, "# ==%s========\n", g_options_ini[i].item + 1);
+            const std::string_view name = catalog.name(row);
+            std::fprintf(fp_out, "# ==%.*s========\n", static_cast<int>(name.size()), name.data());
         }
         else
         {
-            std::fprintf(fp_out,"%s = ",g_options_ini[i].item);
-            if (!g_option_def_vals[i])
+            const OptionIndex      option = catalog.option(row);
+            const std::string_view name = catalog.name(row);
+            std::fprintf(fp_out, "%.*s = ", static_cast<int>(name.size()), name.data());
+            if (!g_option_def_vals[option])
             {
                 std::fputs("#default of ", fp_out);
             }
-            std::fprintf(fp_out,"%s\n",quote_string(option_value(static_cast<OptionIndex>(i))));
-            if (g_option_saved_vals[i])
+            std::fprintf(fp_out, "%s\n", quote_string(option_value(option)));
+            if (g_option_saved_vals[option])
             {
-                if (g_option_saved_vals[i] != g_option_def_vals[i])
+                if (g_option_saved_vals[option] != g_option_def_vals[option])
                 {
-                    std::free(g_option_saved_vals[i]);
+                    std::free(g_option_saved_vals[option]);
                 }
-                g_option_saved_vals[i] = nullptr;
+                g_option_saved_vals[option] = nullptr;
             }
         }
     }

@@ -23,6 +23,7 @@
 #include <trn/nntp.h>
 #include <trn/only.h>
 #include <trn/opt.h>
+#include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
@@ -744,7 +745,8 @@ sel_restart:
 ///
 char option_selector()
 {
-    OptionDraft       draft{static_cast<std::size_t>(ini_len(g_options_ini))};
+    const OptionCatalog &catalog = OptionCatalog::instance();
+    OptionDraft       draft{static_cast<std::size_t>(catalog.row_count() + 1)};
     OptionDraft      *saved_draft = g_option_draft;
     PushSelectorModes saver(MM_OPTION_SELECTOR);
 
@@ -1828,7 +1830,8 @@ static bool select_item(Selection u)
         break;
 
     case SM_OPTIONS:
-        if (!select_option(u.op) || !option_draft_contains(u.op))
+        if (!select_option(u.op) //
+            || !option_draft_contains(OptionCatalog::instance().option(static_cast<int>(u.op))))
         {
             return false;
         }
@@ -1968,7 +1971,8 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_OPTIONS:
-        if (!select_option(u.op) || option_draft_contains(u.op))
+        if (!select_option(u.op) //
+            || option_draft_contains(OptionCatalog::instance().option(static_cast<int>(u.op))))
         {
             return false;
         }
@@ -2011,7 +2015,7 @@ static bool deselect_item(Selection u)
 /// @return `true` if the option was successfully selected or modified, `false` otherwise.
 ///
 /// @globals
-/// - g_options_ini: Used to retrieve the list of available options and their properties.
+/// - OptionCatalog: Used to retrieve the available options and their properties.
 /// - g_option_flags: Updated to reflect the selection state of the option.
 /// - g_selected_count: Incremented or decremented based on the selection state of the option.
 /// - g_buf: Used to store user input during the modification process.
@@ -2021,30 +2025,40 @@ static bool deselect_item(Selection u)
 static bool select_option(OptionIndex i)
 {
     bool changed = false;
+    const int row = static_cast<int>(i);
+    const OptionCatalog &catalog = OptionCatalog::instance();
     if (g_option_draft == nullptr)
     {
         return false;
     }
 
-    if (*g_options_ini[i].item == '*')
+    if (catalog.is_group(row))
     {
-        g_option_flags[i] ^= OF_SEL;
+        g_option_flags[row] ^= OF_SEL;
         init_pages(FILL_LAST_PAGE);
         g_term_line = g_sel_last_line;
+        return false;
+    }
+    if (!catalog.is_option(row))
+    {
         return false;
     }
 
     goto_xy(0,g_sel_last_line);
     erase_line(g_mouse_bar_cnt > 0);     // erase the prompt
     color_object(COLOR_CMD, true);
-    std::printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
+    const OptionIndex      option = catalog.option(row);
+    const std::string_view name = catalog.name(row);
+    const std::string_view help = catalog.help(option);
+    std::printf("Change `%.*s' (%.*s)", static_cast<int>(name.size()), name.data(), static_cast<int>(help.size()),
+                help.data());
     color_pop();        // of COLOR_CMD
     newline();
     *g_buf = '\0';
-    char *oldval = save_str(quote_string(option_value(i)));
-    const bool had_draft = g_option_draft->contains(i);
-    std::string val{had_draft ? g_option_draft->value(i) : oldval};
-    s_clean_screen = in_choice("> ", val.data(), g_options_ini[i].help_str, MM_OPTION_EDIT_PROMPT);
+    char *oldval = save_str(quote_string(option_value(option)));
+    const bool had_draft = g_option_draft->contains(option);
+    std::string val{had_draft ? g_option_draft->value(option) : oldval};
+    s_clean_screen = in_choice("> ", val.data(), const_cast<char *>(help.data()), MM_OPTION_EDIT_PROMPT);
     if (std::strcmp(g_buf, val.c_str()) != 0)
     {
         char * to = g_buf;
@@ -2053,7 +2067,7 @@ static bool select_option(OptionIndex i)
         changed = true;
         if (had_draft)
         {
-            g_option_draft->erase(i);
+            g_option_draft->erase(option);
             g_selected_count--;
         }
         if (had_draft && !std::strcmp(g_buf, oldval))
@@ -2061,7 +2075,7 @@ static bool select_option(OptionIndex i)
         }
         else
         {
-            g_option_draft->set(i, g_buf);
+            g_option_draft->set(option, g_buf);
             g_selected_count++;
         }
     }
@@ -2075,7 +2089,7 @@ static bool select_option(OptionIndex i)
         if (changed)
         {
             erase_line(false);
-            display_option(i,g_sel_item_index);
+            display_option(row,g_sel_item_index);
             up_line();
         }
     }
@@ -3902,19 +3916,20 @@ static DisplayState option_commands(char_int ch)
             std::strcpy(g_msg,compile_error);
             return DS_STATUS;
         }
+        const OptionCatalog &catalog = OptionCatalog::instance();
         int i = g_sel_items[g_sel_item_index].u.op;
         int j = g_sel_items[g_sel_item_index].u.op;
         do
         {
             if (++i > g_obj_count.value_of())
             {
-                i = 1;
+                i = catalog.first_row();
             }
-            if (*g_options_ini[i].item == '*')
+            if (catalog.is_group(i))
             {
                 continue;
             }
-            if (g_opt_compex.execute(g_options_ini[i].item))
+            if (g_opt_compex.execute(catalog.name(i).data()))
             {
                 break;
             }
@@ -3922,10 +3937,8 @@ static DisplayState option_commands(char_int ch)
         u.op = static_cast<OptionIndex>(i);
         if (!(g_option_flags[i] & OF_INCLUDED))
         {
-            for (j = i-1; *g_options_ini[j].item != '*'; j--)
-            {
-            }
-            g_option_flags[j] |= OF_SEL;
+            const int group_row = catalog.previous_group_row(i);
+            g_option_flags[group_row] |= OF_SEL;
             init_pages(FILL_LAST_PAGE);
             calc_page(u);
             return DS_DISPLAY;

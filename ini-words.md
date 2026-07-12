@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 9: Introduce `OptionCatalog`
-
-Move option schema rows out of `g_options_ini`.
-
-- Define explicit `OptionIndex` to field-id mapping.
-- Preserve display groups and help text.
-- Update selector display to iterate the catalog.
-- Keep `set_option` and `option_value` unchanged.
-
-Run option selector and enum-order tests.
-
 ### Slice 10: Introduce `OptionApplier`
 
 Move option interpretation behind a class boundary.
