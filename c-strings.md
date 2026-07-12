@@ -169,10 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-03A: `util/util2.cpp`, `s_tilde_name` and `s_tilde_dir`: replace
-  the tilde-expansion cache pointers with `std::string`, compare and
-  assign the cached user and directory directly, and pass `c_str()` to
-  password-file and diagnostic C APIs.
 - GS-04: `nntplist/nntplist.cpp`, `s_server_name`: replace the static
   pointer with `std::string`, assign the configured server directly,
   split the optional port in the string buffer, and pass `c_str()` to

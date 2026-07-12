@@ -16,8 +16,8 @@
 #include <cstring>
 
 #ifdef TILDE_NAME
-static char *s_tilde_name{};
-static char *s_tilde_dir{};
+static std::string s_tilde_name;
+static std::string s_tilde_dir;
 #endif
 
 // copy a string to a safe spot
@@ -111,34 +111,26 @@ std::string file_exp(std::string_view text)
                 }
                 *d = '\0';
             }
-            if (s_tilde_dir && !strcmp(s_tilde_name, scrbuf.c_str()))
+            if (!s_tilde_dir.empty() && s_tilde_name == scrbuf.c_str())
             {
-                std::strcpy(scrbuf.data(), s_tilde_dir);
+                std::strcpy(scrbuf.data(), s_tilde_dir.c_str());
                 std::strcat(scrbuf.data(), s);
                 std::strcpy(filename.data(), scrbuf.c_str());
             }
             else
             {
-                if (s_tilde_name)
-                {
-                    std::free(s_tilde_name);
-                }
-                if (s_tilde_dir)
-                {
-                    std::free(s_tilde_dir);
-                }
-                s_tilde_dir = nullptr;
-                s_tilde_name = save_str(scrbuf.c_str());
+                s_tilde_dir.clear();
+                s_tilde_name = scrbuf.c_str();
 #ifdef HAS_GETPWENT     // getpwnam() is not the paragon of efficiency
                 {
-                    struct passwd *pwd = getpwnam(s_tilde_name);
+                    struct passwd *pwd = getpwnam(s_tilde_name.c_str());
                     if (pwd == nullptr)
                     {
-                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name);
+                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name.c_str());
                         return {};
                     }
                     std::sprintf(scrbuf.data(), "%s%s", pwd->pw_dir, s);
-                    s_tilde_dir = save_str(pwd->pw_dir);
+                    s_tilde_dir = pwd->pw_dir;
                     std::strcpy(filename.data(), scrbuf.c_str());
                     endpwent();
                 }
@@ -152,7 +144,7 @@ std::string file_exp(std::string_view text)
                         while (std::fgets(tmpbuf, 512, pfp) != nullptr)
                         {
                             const char *d = copy_till(scrbuf.data(), tmpbuf, ':');
-                            if (!std::strcmp(scrbuf.c_str(), s_tilde_name))
+                            if (!std::strcmp(scrbuf.c_str(), s_tilde_name.c_str()))
                             {
                                 for (int i = LOGIN_DIR_FIELD - 2; i; i--)
                                 {
@@ -164,7 +156,7 @@ std::string file_exp(std::string_view text)
                                 if (d)
                                 {
                                     copy_till(scrbuf.data(), d + 1, ':');
-                                    s_tilde_dir = save_str(scrbuf.c_str());
+                                    s_tilde_dir = scrbuf.c_str();
                                     std::strcat(scrbuf.data(), s);
                                     std::strcpy(filename.data(), scrbuf.c_str());
                                 }
@@ -173,9 +165,9 @@ std::string file_exp(std::string_view text)
                         }
                         std::fclose(pfp);
                     }
-                    if (!s_tilde_dir)
+                    if (s_tilde_dir.empty())
                     {
-                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name);
+                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name.c_str());
                         return {};
                     }
                 }
