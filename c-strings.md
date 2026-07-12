@@ -155,10 +155,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-63. In `libtrn/univ.cpp`, change only `univ_edit_new_user_file` so the
-    `%+/univ/usertop` filename is a local path.  Use filesystem parent
-    creation and convert to a string for the existing `fopen` calls; do not
-    change the returned universal-file name.
 64. In `libtrn/univ.cpp`, change only `univ_add_text_file` so relative text
     file names are appended with `std::filesystem::path` instead of manual
     slash search and string concatenation.  Preserve the current

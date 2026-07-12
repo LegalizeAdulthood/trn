@@ -35,8 +35,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <string_view>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 // TODO:
 //
@@ -1003,7 +1007,7 @@ void univ_redo_file()
 
 static char *univ_edit_new_user_file()
 {
-    char *s = save_str(file_exp("%+/univ/usertop"));       // LEAK
+    const fs::path user_top{file_exp("%+/univ/usertop")};
 
     // later, create a new user top file, and return its filename.
     // later perhaps ask whether to create or edit current file.
@@ -1012,16 +1016,17 @@ static char *univ_edit_new_user_file()
     //
 
     // if the file exists, do not create a new one
-    std::FILE *fp = std::fopen(s, "r");
+    std::FILE *fp = std::fopen(user_top.string().c_str(), "r");
     if (fp)
     {
         std::fclose(fp);
         return g_univ_fname;    // as if this function was not called
     }
 
-    make_dir(s, MD_FILE);
+    std::error_code error;
+    fs::create_directories(user_top.parent_path(), error);
 
-    fp = std::fopen(s,"w");
+    fp = std::fopen(user_top.string().c_str(),"w");
     if (!fp)
     {
         std::printf("Could not create new user file.\n");
@@ -1035,7 +1040,7 @@ static char *univ_edit_new_user_file()
     std::printf("After editing this file, exit and restart trn to use it.\n");
     (void)get_anything();
     s_univ_user_top = true;               // do not overwrite this file
-    return s;
+    return save_str(user_top.string());   // LEAK
 }
 
 // code adapted from edit_kfile in kfile.cpp
