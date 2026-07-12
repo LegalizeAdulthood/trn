@@ -190,7 +190,7 @@ private:
 static void                sel_do_groups();
 static UniversalReadResult univ_read(UniversalItem *ui);
 static void                sel_display();
-static void                sel_status_msg(const char *cp);
+static void                sel_status_msg(std::string_view cp);
 static char                sel_input();
 static void                sel_prompt();
 static bool                select_item(Selection u);
@@ -1174,7 +1174,7 @@ static void sel_display()
     }
 }
 
-static void sel_status_msg(const char *cp)
+static void sel_status_msg(std::string_view cp)
 {
     if (g_can_home)
     {
@@ -1184,8 +1184,11 @@ static void sel_status_msg(const char *cp)
     {
         newline();
     }
-    std::fputs(cp, stdout);
-    g_term_col = std::strlen(cp);
+    if (!cp.empty())
+    {
+        std::fwrite(cp.data(), 1, cp.size(), stdout);
+    }
+    g_term_col = static_cast<int>(cp.size());
     goto_xy(0,g_sel_items[g_sel_item_index].line);
     std::fflush(stdout);     // otherwise may not be visible
     s_disp_status_line = 2;

@@ -101,11 +101,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-31. `libtrn/rt-select.cpp`, `sel_status_msg`, `cp`.
-    Promote `cp` to `std::string_view`.  Replace `fputs` and `strlen`
-    with `fwrite(cp.data(), 1, cp.size(), stdout)` and a size-based
-    `g_term_col` assignment.  The message is displayed only.
-
 32. `libtrn/only.cpp`, `in_list`, `newsgroup_name`.
     Promote `newsgroup_name` to `std::string_view`.  Keep the early
     return allocation-free when no restrictions exist.  Otherwise, build
