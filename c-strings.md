@@ -96,13 +96,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-26. `libtrn/mime.cpp`, `mime_types_match`.
-    Promote `ct` to `std::string_view`.  Keep `pat` as a view, create
-    local owned strings only for existing `string_case_equal` calls, and
-    guard the wildcard slash check with the content-type view length.
-    This is the leaf matcher needed before callers can drop C-string
-    signatures.
-
 27. `libtrn/mime.cpp`, `mime_find_mimecap_entry`.
     After slice 26, promote `contenttype` to `std::string_view` in the
     public header and implementation.  It only passes the value to

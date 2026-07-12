@@ -170,7 +170,7 @@ void          mime_init();
 void          mime_final();
 void          mime_read_mimecap(const char *mcname);
 MimeCapEntry *mime_find_mimecap_entry(const char *contenttype, MimeCapFlags skip_flags);
-bool          mime_types_match(const char *ct, std::string_view pat);
+bool          mime_types_match(std::string_view ct, std::string_view pat);
 int           mime_exec(char *cmd);
 void          mime_push_section();
 void          mime_set_article();

@@ -303,15 +303,17 @@ MimeCapEntry *mime_find_mimecap_entry(const char *contenttype, MimeCapFlags skip
     return nullptr;
 }
 
-bool mime_types_match(const char *ct, std::string_view pat)
+bool mime_types_match(std::string_view ct, std::string_view pat)
 {
     const std::size_t slash = pat.find('/');
     const std::size_t len = slash == std::string_view::npos ? pat.size() : slash;
     const bool        iswild = slash == std::string_view::npos || pat.substr(slash + 1) == "*";
+    const std::string content_type{ct};
     const std::string pattern{pat};
 
-    return string_case_equal(ct, pattern.c_str()) ||
-           (iswild && string_case_equal(ct, pattern.c_str(), static_cast<int>(len)) && ct[len] == '/');
+    return string_case_equal(content_type.c_str(), pattern.c_str()) ||
+           (iswild && ct.size() > len &&
+            string_case_equal(content_type.c_str(), pattern.c_str(), static_cast<int>(len)) && ct[len] == '/');
 }
 
 int mime_exec(char *cmd)
