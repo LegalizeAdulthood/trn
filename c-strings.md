@@ -73,6 +73,11 @@ one-function slices.  Callers pass literals, global buffers, mutable
 cursors, nullable sentinels, or values that cross factory, static, or
 global storage boundaries.
 
+After completing the last local modernization batch, another rerun finds
+a small bottom-up set.  The new targets are leaf output helpers,
+read-only header validation, terminal status messages, kill-file
+diagnostics, and the perform-status label path.
+
 The remaining broad hits were rejected because the pointer is a mutable
 cursor, a nullable sentinel, an output buffer, a byte transport buffer,
 global or static storage, or part of an already-deferred ownership
@@ -100,6 +105,75 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Local Modernization Slices
+
+34. `nntp/include/nntp/nntpclient.h`, `nntp_init_error`, `str`.
+    Promote `str` to `std::string_view`.  Replace `fputs` with a
+    guarded `fwrite(str.data(), 1, str.size(), stdout)`.  No pointer
+    escapes; the helper only writes to standard output.
+
+35. `nntp/include/nntp/nntpclient.h`, `nntp_error`, `str`.
+    Promote `str` to `std::string_view`.  Replace `fputs` with a
+    guarded `fwrite(str.data(), 1, str.size(), stderr)`.  No pointer
+    escapes; the helper only writes to standard error.
+
+36. `nntp/include/nntp/nntpclient.h`, `nntp_advise`, `str`.
+    Promote `str` to `std::string_view`.  Replace `fputs` with a
+    guarded `fwrite(str.data(), 1, str.size(), stdout)`.  Keep this
+    separate from the other NNTP output helpers.
+
+37. `inews/inews.cpp`, `valid_header`, `h`.
+    Promote `h` to `std::string_view`.  Replace `strchr` checks with
+    `find`, use view slicing for the continuation-header branch, and
+    preserve the `0`, `1`, and `2` return meanings.  The line is only
+    inspected, not stored or modified.
+
+38. `libtrn/terminal.cpp`, `in_answer`, `prompt`.
+    Promote `prompt` to `std::string_view`.  Replace `fputs` with a
+    guarded `fwrite(prompt.data(), 1, prompt.size(), stdout)`.  The
+    prompt is displayed only; command input remains in `g_buf`.
+
+39. `libtrn/terminal.cpp`, `warn_msg`, `str`.
+    Promote `str` to `std::string_view`.  Build one local
+    `std::string message{str}` for the `printf` call and keep the
+    padding behavior unchanged.  No address escapes.
+
+40. `libtrn/terminal.cpp`, `error_msg`, `str`.
+    Promote `str` to `std::string_view`.  In selector mode, copy text
+    into `g_msg` rather than storing a pointer; preserve the self-copy
+    avoidance for `g_msg`.  Outside selector mode, build one local
+    `std::string` for `printf`.
+
+41. `libtrn/kfile.cpp`, `kill_file_append`, `cmd`.
+    Promote `cmd` to `std::string_view`.  Build one local
+    `std::string command{cmd}` before the `fprintf` call that appends
+    to the kill file.  The command text is copied to the file only.
+
+42. `libtrn/head.cpp`, `dump_header`, `where`.
+    Promote `where` to `std::string_view` in the debug-only helper.
+    Build one local `std::string` for the `printf` call or write the
+    view directly before the existing header table output.
+
+43. `libtrn/terminal.cpp`, `xmouse_init`, `progname`.
+    Promote `progname` to `std::string_view`.  Replace the
+    `strlen`-based suffix test with a non-empty view check on the last
+    character.  The program name is only inspected locally.
+
+44. `libtrn/rt-util.cpp`, `output_change`, `obj_type`.
+    Promote only `obj_type` to `std::string_view`; keep `modifier` and
+    `action` as C strings because they are pipe-delimited mini formats.
+    Use an empty view instead of a null sentinel and copy the object
+    text into `g_msg` without exposing local storage.
+
+45. `libtrn/rt-util.cpp`, `perform_status_end`, `obj_type`.
+    Promote `obj_type` to `std::string_view` after `output_change` is
+    view-ready.  Replace nulling with an empty view, build a local
+    string only for the `sprintf` no-change diagnostic, and pass views
+    to `output_change`.
+
+46. `libtrn/rt-select.cpp`, `sel_perform_change`, `obj_type`.
+    Promote `obj_type` to `std::string_view` after
+    `perform_status_end` is view-ready.  The selector wrapper only
+    forwards the object label and never stores it.
 
 ## Defer
 
@@ -157,6 +231,21 @@ both declarations and definitions `static`.
   parameters are cursors into encoded text, not whole string extents.
 - `libtrn/rt-util.cpp`, `compress_from`: `size` is a display width, not
   the length of `from`.
+- `inews/inews.cpp`, `inews_fputs`: this is an output helper, but its
+  NNTP branch currently calls `INNTPConnection::write(buff, 0, ec)`.
+  Fix and test the intended transport behavior before changing the
+  signature.
+- `libtrn/trn.cpp`, `set_newsgroup_name`: `nullptr` currently means
+  clear the current group.  Promote only with an explicit overload or
+  optional-style API that preserves the clearing behavior.
+- `libtrn/terminal.cpp`, `save_typeahead`: the buffer plus size are an
+  output cursor into caller storage, not a string extent.
+- `libtrn/terminal.cpp`, `in_char`: only `prompt` is a view candidate;
+  `dflt` still flows into `set_def(char *, const char *)`.  Split this
+  only after the default-value path is made view-friendly.
+- `config/cmake/string_case_compare.*.h.in`: adding string-view
+  overloads would remove some local temporary strings, but both
+  generated-header templates must change together.
 - Struct fields in `Article`, `Subject`, `UniversalItem`, score files,
   and termcap storage: those are ownership model changes, not local
   function cleanups.
