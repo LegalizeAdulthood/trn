@@ -9,6 +9,10 @@ vendored `vcpkg` tree.  The audit looked for local raw C string pointers
 and function parameters that can become `std::string_view` or
 `std::string` without changing ownership boundaries.
 
+A follow-up pass also looked for local `char name[N]` buffers whose only
+job is to hold an owned snapshot or locally formatted text before a
+read-only, non-storing API call.
+
 Existing good precedents:
 
 - `libtrn/univ.cpp`, `univ_add_text_file`: accepts a legacy C string at
@@ -73,9 +77,25 @@ one-function slices.  Callers pass literals, global buffers, mutable
 cursors, nullable sentinels, or values that cross factory, static, or
 global storage boundaries.
 
-After completing the last local modernization batch, another rerun finds
-a small bottom-up set.  The new targets are read-only header validation
-and a local suffix check.
+After completing the header-validation and X mouse suffix slices, another
+pointer-oriented rerun did not find a new one-function modernization
+slice that meets the current rules.  The remaining pointer candidates
+either make the code noisier than the C-string form, require a
+coordinated helper/API change, or cross storage, cursor,
+nullable-sentinel, output-buffer, or transport boundaries.
+
+The local-buffer pass found a small safe batch.  The useful targets are
+owned snapshots of NNTP command/reply text and short formatted strings
+that are consumed before the function returns.  Arrays passed to callees
+that fill them, static buffers whose address is returned, protocol
+scratch buffers, and global display buffers remain out of scope.
+
+The main future opportunity is the case-insensitive comparison helper
+family.  View-ready overloads could remove temporary strings in
+`mime_types_match`, `color_rc_attribute`, `nntp_list`, and `set_header`,
+but the generated header templates and the manual implementation must be
+changed together.  Treat that as a helper-family slice, not isolated
+call-site churn.
 
 Do not promote simple output-only helper parameters when the only local
 effect is replacing `fputs` or `printf` with `fwrite` or a temporary
@@ -109,6 +129,52 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Local Modernization Slices
+
+45. `inews/inews.cpp`, `nntp_handle_timeout`, `last_command_save`.
+    Replace the local `char[NNTP_STRLEN]` snapshot with
+    `std::string`.  Pass the string directly to `nntp_command`.
+    The saved command is not stored after the call.
+
+46. `nntp/nntpinit.cpp`, `server_init`, `save_line`.
+    Replace the saved signon reply buffer with `std::string`.
+    Restore `g_ser_line` from `save_line.c_str()` only when the MODE
+    READER probe should be ignored.
+
+47. `libtrn/artio.cpp`, `art_open`, `art_name`.
+    Replace the local article-number filename buffer with
+    `std::to_string`.  Pass `art_name.c_str()` to `std::fopen`;
+    the pointer is consumed immediately.
+
+48. `libtrn/nntp.cpp`, `nntp_handle_timeout`, `last_command_save`.
+    Replace the local `char[NNTP_STRLEN]` snapshot with
+    `std::string`.  Pass it to `nntp_command` and copy it back into
+    `g_last_command` with `c_str()` if that restore is still needed.
+
+49. `inews/inews.cpp`, `main`, `buff`.
+    Remove the two fixed-size real-name default buffers.  Use
+    `g_real_name.c_str()` as the default for `get_val_const("NAME",
+    ...)` before formatting the generated `From` and `Originator`
+    headers.
+
+50. `nntp/nntpclient.cpp`, `nntp_connect`, `tmpbuf`.
+    Replace the local unavailable-server message buffer with
+    `std::string` assembly and pass `message.c_str()` to
+    `nntp_init_error`.  Leave the global `g_ser_line` formatting in
+    place for the other branches.
+
+51. `libtrn/rcln.cpp`, `NewsgroupData::catch_up`, `tmpbuf`.
+    Replace the local newrc-line formatting buffer with `std::string`
+    assembly before calling `save_str`.  Keep `m_rc_line` ownership
+    unchanged.
+
+52. `libtrn/ng.cpp`, `do_newsgroup`, `tmpbuf`.
+    Replace the local unavailable-article message buffer with
+    `std::string`.  Pass the string view directly to `tree_puts`.
+
+53. `libtrn/rt-page.cpp`, `display_group`, `buff`.
+    Replace the local description copy buffer with `std::string`.
+    Trim at newline and display width using string operations, then pass
+    `c_str()` only to immediate output calls.
 
 ## Defer
 
@@ -178,9 +244,11 @@ both declarations and definitions `static`.
 - `libtrn/terminal.cpp`, `in_char`: only `prompt` is a view candidate;
   `dflt` still flows into `set_def(char *, const char *)`.  Split this
   only after the default-value path is made view-friendly.
-- `config/cmake/string_case_compare.*.h.in`: adding string-view
-  overloads would remove some local temporary strings, but both
-  generated-header templates must change together.
+- `config/string_case_compare.cpp` and
+  `config/cmake/string_case_compare.*.h.in`: adding string-view overloads
+  would remove some local temporary strings, but the manual
+  implementation and both generated-header templates must change
+  together.
 - Struct fields in `Article`, `Subject`, `UniversalItem`, score files,
   and termcap storage: those are ownership model changes, not local
   function cleanups.

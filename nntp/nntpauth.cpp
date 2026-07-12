@@ -1,6 +1,7 @@
 /* nntpauth.cpp
 */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <nntp/nntpauth.h>
 
@@ -9,14 +10,12 @@
 #include <trn/util.h>
 
 #include <cstdio>
-#include <cstring>
+#include <string>
 
 int nntp_handle_auth_err()
 {
-    char last_command_save[NNTP_STRLEN];
-
     // save previous command
-    std::strcpy(last_command_save, g_last_command);
+    const std::string last_command_save{g_last_command};
 
     {
         char* auth_user = get_auth_user();
