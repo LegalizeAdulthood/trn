@@ -33,6 +33,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <string_view>
 
 SelectionItem g_sel_items[MAX_SEL];
@@ -2915,22 +2916,25 @@ static void display_group(DataSource *dp, char *group, int len, int max_len)
     }
     else
     {
-        char* end;
-        char buff[256];
-        std::strcpy(buff, dp->find_group_desc(group));
-        char* cp = buff;
-        if (*cp != '?' && (end = std::strchr(cp, '\n')) != nullptr //
-            && end != cp)
+        std::string                  description{dp->find_group_desc(group)};
+        const std::string::size_type newline = description.find('\n');
+        if (!description.empty() && description.front() != '?' && newline != std::string::npos //
+            && newline != 0)
         {
-            if (end - cp > g_tc_COLS - max_len - 8 - 1 - g_use_sel_num)
+            const int              display_width = g_tc_COLS - max_len - 8 - 1 - g_use_sel_num;
+            std::string::size_type end = newline;
+            if (display_width <= 0)
             {
-                end = cp + g_tc_COLS - max_len - 8 - 1 - g_use_sel_num;
+                end = 0;
             }
-            char ch = *end;
-            *end = '\0';
+            else
+            {
+                end = std::min(end, static_cast<std::string::size_type>(display_width));
+            }
+            description.resize(end);
             if (*g_sel_grp_display_mode == 'm')
             {
-                std::fputs(cp, stdout);
+                std::fputs(description.c_str(), stdout);
             }
             else
             {
@@ -2940,9 +2944,8 @@ static void display_group(DataSource *dp, char *group, int len, int max_len)
                 {
                     std::putchar(' ');
                 } while (--i > 0);
-                std::fputs(cp, stdout);
+                std::fputs(description.c_str(), stdout);
             }
-            *end = ch;
         }
         else
         {

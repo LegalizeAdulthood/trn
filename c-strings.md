@@ -130,11 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-53. `libtrn/rt-page.cpp`, `display_group`, `buff`.
-    Replace the local description copy buffer with `std::string`.
-    Trim at newline and display width using string operations, then pass
-    `c_str()` only to immediate output calls.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,
