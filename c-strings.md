@@ -101,12 +101,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-33. `libtrn/color.cpp`, `color_rc_attribute`, `object`.
-    Promote only `object` to `std::string_view`; keep `value` as
-    `char *` because the function parses it in place.  Build a local
-    `std::string object_name{object}` for `string_case_equal` and
-    diagnostic `fprintf` calls.  Do not store the local string data.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,

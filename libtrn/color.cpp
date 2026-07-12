@@ -140,13 +140,14 @@ void color_init()
 }
 
 // Parse a line from the [attribute] section of trnrc.
-void color_rc_attribute(const char *object, char *value)
+void color_rc_attribute(std::string_view object, char *value)
 {
     // Find the specified object.
+    const std::string object_name{object};
     int i;
     for (i = 0; i < MAX_COLORS; i++)
     {
-        if (string_case_equal(object, s_objects[i].name))
+        if (string_case_equal(object_name.c_str(), s_objects[i].name))
         {
             break;
         }
@@ -154,7 +155,7 @@ void color_rc_attribute(const char *object, char *value)
     if (i >= MAX_COLORS)
     {
         std::fprintf(stderr,"trn: unknown object '%s' in [attribute] section.\n",
-                object);
+                object_name.c_str());
         finalize(1);
     }
 
@@ -178,7 +179,7 @@ void color_rc_attribute(const char *object, char *value)
     else
     {
         std::fprintf(stderr,"trn: bad attribute '%s' for %s in [attribute] section.\n",
-                value, object);
+                value, object_name.c_str());
         finalize(1);
     }
 
@@ -215,7 +216,7 @@ void color_rc_attribute(const char *object, char *value)
         if (s_objects[i].fg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-                    g_buf, object);
+                    g_buf, object_name.c_str());
             finalize(1);
         }
     }
@@ -237,7 +238,7 @@ void color_rc_attribute(const char *object, char *value)
     if (!*s || *t)
     {
         std::fprintf(stderr,"trn: wrong number of parameters for %s in [attribute] section.\n",
-                object);
+                object_name.c_str());
         finalize(1);
     }
 
@@ -253,7 +254,7 @@ void color_rc_attribute(const char *object, char *value)
         if (s_objects[i].bg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-                    g_buf, object);
+                    g_buf, object_name.c_str());
             finalize(1);
         }
     }
