@@ -104,11 +104,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-20. `libtrn/opt.cpp`, `set_header`: promote `s` to
-    `std::string_view`.  Use view length for header prefix comparisons
-    and copy into `g_user_header_type[i].name` when saving a user
-    header.
-
 21. `libtrn/opt.cpp`, `set_header_list`: promote `str` to
     `std::string_view`.  Build one mutable `std::string` for comma
     tokenization and pass tokens to `set_header`.

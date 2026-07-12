@@ -1537,12 +1537,12 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const
     }
 }
 
-void set_header(const char *s, HeaderTypeFlags flag, bool setit)
+void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
 {
-    int len = std::strlen(s);
+    const int len = static_cast<int>(s.size());
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!len || string_case_equal(s, g_header_type[i].name.c_str(), len))
+        if (!len || string_case_equal(s.data(), g_header_type[i].name.c_str(), len))
         {
             if (setit && (flag != HT_MAGIC || (g_header_type[i].flags & HT_MAGIC_OK)))
             {
@@ -1554,22 +1554,22 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
             }
         }
     }
-    if (flag == HT_HIDE && *s && isalpha(*s))
+    if (flag == HT_HIDE && !s.empty() && isalpha(s.front()))
     {
-        char ch = std::isupper(*s)? std::tolower(*s) : *s;
+        char ch = std::isupper(s.front()) ? std::tolower(s.front()) : s.front();
         int  add_at = 0;
         int  killed = 0;
         bool save_it = true;
         for (int i = g_user_header_type_index[ch - 'a']; g_user_header_type[i].name[0] == ch; i--)
         {
             if (len <= g_user_header_type[i].length //
-                && string_case_equal(s, g_user_header_type[i].name.c_str(), len))
+                && string_case_equal(s.data(), g_user_header_type[i].name.c_str(), len))
             {
                 g_user_header_type[i].name.clear();
                 killed = i;
             }
             else if (len > g_user_header_type[i].length //
-                     && string_case_equal(s, g_user_header_type[i].name.c_str(), g_user_header_type[i].length))
+                     && string_case_equal(s.data(), g_user_header_type[i].name.c_str(), g_user_header_type[i].length))
             {
                 if (!add_at)
                 {
@@ -1610,7 +1610,7 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
             }
             g_user_header_type[add_at].length = len;
             g_user_header_type[add_at].flags = setit? flag : 0;
-            g_user_header_type[add_at].name = s;
+            g_user_header_type[add_at].name.assign(s.data(), s.size());
             for (char &c : g_user_header_type[add_at].name)
             {
                 if (std::isupper(c))

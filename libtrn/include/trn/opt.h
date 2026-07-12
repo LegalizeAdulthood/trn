@@ -11,6 +11,7 @@
 #include <trn/util.h>
 
 #include <string>
+#include <string_view>
 
 // Display Options
 enum OptionIndex
@@ -150,7 +151,7 @@ void        set_options(char **vals);
 void        set_option(OptionIndex num, const char *s);
 void        save_options(const char *filename);
 const char *option_value(OptionIndex num);
-void        set_header(const char *s, HeaderTypeFlags flag, bool setit);
+void        set_header(std::string_view s, HeaderTypeFlags flag, bool setit);
 const char *quote_string(const char *val);
 void        cwd_check();
 
