@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-extern char       *g_home_dir;    // login directory
+extern std::string g_home_dir;    // login directory
 extern std::string g_dot_dir;     // where . files go
 extern std::string g_trn_dir;     // usually %./.trn
 extern std::string g_lib;         // news library

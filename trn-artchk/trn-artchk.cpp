@@ -54,10 +54,14 @@ int main(int argc, char *argv[])
     int  ngcnt = 0;
     int  found_newsgroups = 0;
 
-    g_home_dir = std::getenv("HOME");
-    if (g_home_dir == nullptr)
+    const char *home_dir = std::getenv("HOME");
+    if (home_dir == nullptr)
     {
-        g_home_dir = std::getenv("LOGDIR");
+        home_dir = std::getenv("LOGDIR");
+    }
+    if (home_dir != nullptr)
+    {
+        g_home_dir = home_dir;
     }
     g_dot_dir = std::getenv("DOTDIR");
     if (g_dot_dir.empty())

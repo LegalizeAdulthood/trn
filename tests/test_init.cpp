@@ -25,7 +25,7 @@ struct InitTest : Test
 protected:
     void TearDown() override
     {
-        safe_free0(g_home_dir);
+        g_home_dir.clear();
         g_tmp_dir.clear();
         g_login_name.clear();
         g_real_name.clear();
@@ -68,7 +68,7 @@ TEST_F(InitTest, homeDirFromHOME)
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_STREQ(home, g_home_dir);
+    ASSERT_EQ(home, g_home_dir);
 }
 
 TEST_F(InitTest, homeDirFromLOGDIR)
@@ -79,7 +79,7 @@ TEST_F(InitTest, homeDirFromLOGDIR)
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_STREQ(log_dir, g_home_dir);
+    ASSERT_EQ(log_dir, g_home_dir);
 }
 
 TEST_F(InitTest, tempDirFromTMPDIR)

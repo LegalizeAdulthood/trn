@@ -87,7 +87,7 @@ std::string file_exp(std::string_view text)
     {
         if (!*(++s) || *s == '/')
         {
-            std::sprintf(scrbuf.data(), "%s%s", g_home_dir, s);
+            std::sprintf(scrbuf.data(), "%s%s", g_home_dir.c_str(), s);
             // swap $HOME for it
             std::strcpy(filename.data(), scrbuf.c_str());
         }

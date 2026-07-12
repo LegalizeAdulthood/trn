@@ -169,9 +169,6 @@ declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
 all direct assignments must change together.
 
-- GS-08: `util/env.cpp`, `g_home_dir`: replace the exported owned home
-  directory with `std::string`, map null checks to `empty()`, update the
-  tool header mirror, and assign environment values directly.
 - GS-09: `libtrn/decode.cpp`, `g_decode_filename`: replace the global
   decode filename with `std::string`, build the sanitized filename in
   owned storage, update the declaration and tests, and pass `c_str()` to

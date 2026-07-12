@@ -1708,7 +1708,7 @@ void cwd_check()
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
             if (make_dir(g_cmd_buf, MD_DIR))
             {
-                std::strcpy(tmpbuf, g_home_dir);
+                std::strcpy(tmpbuf, g_home_dir.c_str());
             }
             else
             {
@@ -1745,7 +1745,7 @@ void cwd_check()
         {
             std::printf("%s not writeable--using ~\n\n", tmpbuf);
         }
-        std::strcpy(tmpbuf,g_home_dir);
+        std::strcpy(tmpbuf, g_home_dir.c_str());
     }
     g_priv_dir = tmpbuf;
 }

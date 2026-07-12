@@ -6,7 +6,9 @@
 
 #include <config/typedef.h>
 
-extern char *g_home_dir;
+#include <string>
+
+extern std::string g_home_dir;
 
 int do_shell(const char *shell, const char *cmd);
 [[noreturn]] void finalize(int num);

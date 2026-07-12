@@ -571,7 +571,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
 
                 case '~':
-                    s = g_home_dir;
+                    std::strcpy(scrbuf, g_home_dir.c_str());
+                    s = scrbuf;
                     break;
 
                 case '.':

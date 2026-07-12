@@ -35,7 +35,7 @@
 #include <functional>
 #include <memory>
 
-char       *g_home_dir{};    // login directory
+std::string g_home_dir;      // login directory
 std::string g_dot_dir;       // where . files go
 std::string g_trn_dir;       // usually %./.trn
 std::string g_lib;           // news library
@@ -78,7 +78,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
     if (home_dir)
     {
-        g_home_dir = save_str(home_dir);
+        g_home_dir = home_dir;
     }
 
     const char *val = s_getenv_fn("TMPDIR");
@@ -121,7 +121,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
             g_login_name = user_name;
         }
     }
-    if (!g_home_dir)
+    if (g_home_dir.empty())
     {
         char *home_drive = s_getenv_fn("HOMEDRIVE");
         char *home_path = s_getenv_fn("HOMEPATH");
@@ -129,12 +129,12 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
         {
             std::strcpy(tcbuf, home_drive);
             std::strcat(tcbuf, home_path);
-            g_home_dir = save_str(tcbuf);
+            g_home_dir = tcbuf;
         }
     }
 #endif
 
-    // Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr).
+    // Set g_real_name, and maybe set g_login_name and g_home_dir.
     if (!set_user_name_fn(tcbuf))
     {
         g_login_name.clear();
@@ -180,7 +180,7 @@ void env_final()
     g_local_host.clear();
     g_real_name.clear();
     g_login_name.clear();
-    safe_free0(g_home_dir);
+    g_home_dir.clear();
     g_tmp_dir.clear();
     g_dot_dir.clear();
     g_trn_dir.clear();
@@ -195,11 +195,11 @@ static void env_init2()
         return;
     }
 
-    if (!g_home_dir)
+    if (g_home_dir.empty())
     {
-        g_home_dir = save_str("/");
+        g_home_dir = "/";
     }
-    g_dot_dir = get_val_const("DOTDIR",g_home_dir);
+    g_dot_dir = get_val_const("DOTDIR", g_home_dir.c_str());
     g_trn_dir = file_exp(get_val_const("TRNDIR",TRNDIR));
     g_lib = file_exp(NEWS_LIB);
     g_rn_lib = file_exp(PRIVATE_LIB);
@@ -232,9 +232,9 @@ static bool set_user_name(char *tmpbuf)
     {
         g_login_name = pwd->pw_name;
     }
-    if (!g_home_dir)
+    if (g_home_dir.empty())
     {
-        g_home_dir = save_str(pwd->pw_dir);
+        g_home_dir = pwd->pw_dir;
     }
     s = pwd->pw_gecos;
 #endif
