@@ -104,10 +104,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-21. `libtrn/opt.cpp`, `set_header_list`: promote `str` to
-    `std::string_view`.  Build one mutable `std::string` for comma
-    tokenization and pass tokens to `set_header`.
-
 22. `libtrn/opt.cpp`, `quote_string`: promote `val` to
     `std::string_view`.  Build the static return buffer from the view in
     both quoted and unquoted cases so returned text stays

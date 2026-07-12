@@ -48,7 +48,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <memory>
 #include <string>
 
 static void opt_file(const char *filename, char **tcbufptr, bool bleat);
@@ -176,7 +175,7 @@ static char s_univ_sel_cmds[3]{"Z>"};
 
 static char* hidden_list();
 static char* magic_list();
-static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const char *str);
+static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str);
 static int   parse_mouse_buttons(char **cpp, const char *btns);
 static char *expand_mouse_buttons(char *cp, int cnt);
 
@@ -1484,7 +1483,7 @@ static char *magic_list()
     return g_buf+1;
 }
 
-static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const char *str)
+static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str)
 {
     bool setit;
 
@@ -1498,19 +1497,18 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const
         std::memset((char*)g_user_header_type_index,0,sizeof g_user_header_type_index);
     }
 
-    if (!*str)
-    {
-        str = " ";
-    }
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
         g_header_type[i].flags = ((g_header_type[i].flags & defflag)
                        ? (g_header_type[i].flags | flag)
                        : (g_header_type[i].flags & ~flag));
     }
-    std::unique_ptr<char[]> buffer(new char[std::strlen(str) + 1]);
-    char *buff = buffer.get();
-    std::strcpy(buff, str);
+    std::string buffer{str};
+    if (buffer.empty())
+    {
+        buffer = " ";
+    }
+    char *buff = buffer.data();
     while (true)
     {
         char *cp = std::strchr(buff, ',');
