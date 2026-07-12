@@ -152,10 +152,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-56. In `libtrn/util.cpp`, change only `temp_filename` so it builds
-    the temporary filename with `std::filesystem::path` from
-    `g_tmp_dir` and the generated basename.  Keep the return type and
-    ownership unchanged by saving the final path string.
 57. In `libtrn/last.cpp`, change only `write_last` so the `.pid` temporary
     filename is derived from a local path and the remove/rename
     operations use `std::filesystem`.  Leave the file-scope

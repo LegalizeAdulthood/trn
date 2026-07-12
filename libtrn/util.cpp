@@ -44,6 +44,8 @@
 #include <string>
 #include <system_error>
 
+namespace fs = std::filesystem;
+
 #ifdef UNION_WAIT
 using WaitStatus = union wait;
 #else
@@ -645,11 +647,10 @@ const char *secs_to_text(std::time_t secs)
 // returns a saved string representing a unique temporary filename
 char *temp_filename()
 {
-    static int tmpfile_num = 0;
-    char tmpbuf[CMD_BUF_LEN];
+    static int  tmpfile_num = 0;
     extern long g_our_pid;
-    std::sprintf(tmpbuf,"%s/trn%d.%ld",g_tmp_dir.c_str(),tmpfile_num++,g_our_pid);
-    return save_str(tmpbuf);
+    return save_str(
+        (fs::path{g_tmp_dir} / ("trn" + std::to_string(tmpfile_num++) + "." + std::to_string(g_our_pid))).string());
 }
 
 char *get_auth_user()
