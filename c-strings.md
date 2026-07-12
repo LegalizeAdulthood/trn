@@ -110,11 +110,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-43. `libtrn/terminal.cpp`, `xmouse_init`, `progname`.
-    Promote `progname` to `std::string_view`.  Replace the
-    `strlen`-based suffix test with a non-empty view check on the last
-    character.  The program name is only inspected locally.
-
 ## Defer
 
 - The `IniWords` / `vals` mechanism, including `data_source_init`,

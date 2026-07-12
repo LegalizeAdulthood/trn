@@ -210,7 +210,7 @@ Signal_t winch_catcher(int);
 #endif
 void  termlib_init();
 void  termlib_reset();
-void  xmouse_init(const char *progname);
+void  xmouse_init(std::string_view progname);
 void  xmouse_check();
 void  xmouse_off();
 void  draw_mouse_bar(int limit, bool restore_cursor);

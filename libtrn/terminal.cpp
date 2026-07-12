@@ -2320,7 +2320,7 @@ void termlib_reset()
 #endif
 }
 
-void xmouse_init(const char *progname)
+void xmouse_init(std::string_view progname)
 {
     if (!g_can_home || !g_use_threads)
     {
@@ -2332,7 +2332,7 @@ void xmouse_init(const char *progname)
         interp(g_msg, sizeof g_msg, s);
         set_option(OI_USE_MOUSE, g_msg);
     }
-    else if (progname[std::strlen(progname) - 1] == 'x')
+    else if (!progname.empty() && progname.back() == 'x')
     {
         // an 'x' at the end means enable Xterm mouse tracking
         set_option(OI_USE_MOUSE, "y");
