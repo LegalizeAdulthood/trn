@@ -238,10 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-10. `libtrn/datasrc.cpp`, `get_near_miss`: use `fmt::print` for the
-numbered close-match output only.  Leave `promptbuf` and `options` to
-`BUF-03`, where the C-style buffers are converted.
-
 FMT-11. `libtrn/rcstuff.cpp`, `get_newsgroup`: use `fmt::print` for
 direct subscribe, ignore, and resubscribe status output only.  Leave the
 prompt buffers to `BUF-04`, where the C-style buffers are converted.

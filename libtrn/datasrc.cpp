@@ -28,6 +28,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #ifdef I_UTIME
 #include <utime.h>
 #endif
@@ -1324,7 +1326,7 @@ static int get_near_miss()
         {
             *cp = '\0';
         }
-        std::printf("  %d.  %s\n", i+1, s_newsgroup_ptrs[i]);
+        fmt::print("  {}.  {}\n", i + 1, s_newsgroup_ptrs[i]);
         std::sprintf(op++, "%d", i+1);       // Expensive, but avoids ASCII deps
         if (cp)
         {
