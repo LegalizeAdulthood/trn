@@ -11,6 +11,7 @@ add_executable(trn-headers-test
     test_change_dir.cpp
     test_charsubst.cpp
     test_color.cpp
+    test_DataSourceConfig.cpp
     test_datasrc.cpp
     test_decode.cpp
     test_edit_dist.cpp

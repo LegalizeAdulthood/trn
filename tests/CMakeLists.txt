@@ -11,6 +11,7 @@ add_executable(trn-test
     mock_env.h
     test_cache.cpp
     test_current_time.cpp
+    test_DataSourceConfig.cpp
     test_enum_order.cpp
     test_flags.cpp
     test_getwd.cpp

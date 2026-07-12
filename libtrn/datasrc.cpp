@@ -10,8 +10,10 @@
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
+#include <trn/DataSourceConfig.h>
 #include <trn/edit_dist.h>
 #include <trn/hash.h>
+#include <trn/IniSectionValues.h>
 #include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
@@ -60,87 +62,12 @@ enum
     SRCFILE_CHUNK_SIZE = (32 * 1024),
 };
 
-enum DataSourceIniIndex
-{
-    DI_NNTP_SERVER = 1,
-    DI_ACTIVE_FILE,
-    DI_ACT_REFETCH,
-    DI_SPOOL_DIR,
-    DI_THREAD_DIR,
-    DI_OVERVIEW_DIR,
-    DI_ACTIVE_TIMES,
-    DI_GROUP_DESC,
-    DI_DESC_REFETCH,
-    DI_AUTH_USER,
-    DI_AUTH_PASS,
-    DI_AUTH_COMMAND,
-    DI_XHDR_BROKEN,
-    DI_XREFS,
-    DI_OVERVIEW_FMT,
-    DI_FORCE_AUTH,
-    DI_LAST
-};
-
-static IniWords s_datasrc_ini[] =
-{
-    // clang-format off
-    { 0, "DATASRC", nullptr },
-    { 0, "NNTP Server", nullptr },
-    { 0, "Active File", nullptr },
-    { 0, "Active File Refetch", nullptr },
-    { 0, "Spool Dir", nullptr },
-    { 0, "Thread Dir", nullptr },
-    { 0, "Overview Dir", nullptr },
-    { 0, "Active Times", nullptr },
-    { 0, "Group Desc", nullptr },
-    { 0, "Group Desc Refetch", nullptr },
-    { 0, "Auth User", nullptr },
-    { 0, "Auth Password", nullptr },
-    { 0, "Auth Command", nullptr },
-    { 0, "XHDR Broken", nullptr },
-    { 0, "Xrefs", nullptr },
-    { 0, "Overview Format File", nullptr },
-    { 0, "Force Auth", nullptr },
-    { 0, nullptr, nullptr }
-    // clang-format on
-};
-
-struct DataSourceIniExpectation
-{
-    DataSourceIniIndex index;
-    const char        *item;
-};
-
-static const DataSourceIniExpectation s_datasrc_ini_expectations[] = {
-    // clang-format off
-    { DI_NNTP_SERVER,  "NNTP Server" },
-    { DI_ACTIVE_FILE,  "Active File" },
-    { DI_ACT_REFETCH,  "Active File Refetch" },
-    { DI_SPOOL_DIR,    "Spool Dir" },
-    { DI_THREAD_DIR,   "Thread Dir" },
-    { DI_OVERVIEW_DIR, "Overview Dir" },
-    { DI_ACTIVE_TIMES, "Active Times" },
-    { DI_GROUP_DESC,   "Group Desc" },
-    { DI_DESC_REFETCH, "Group Desc Refetch" },
-    { DI_AUTH_USER,    "Auth User" },
-    { DI_AUTH_PASS,    "Auth Password" },
-    { DI_AUTH_COMMAND, "Auth Command" },
-    { DI_XHDR_BROKEN,  "XHDR Broken" },
-    { DI_XREFS,        "Xrefs" },
-    { DI_OVERVIEW_FMT, "Overview Format File" },
-    { DI_FORCE_AUTH,   "Force Auth" }
-    // clang-format on
-};
-
-static_assert(DI_LAST + 1 == sizeof s_datasrc_ini / sizeof s_datasrc_ini[0]);
-
 static char       *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
-static char       *file_or_none(char *fn);
-static void        check_data_source_ini_schema();
+static char       *file_or_none(const char *fn);
 static int         source_file_cmp(std::string_view key, HashDatum data);
 static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int         get_near_miss();
-static DataSource *new_data_source(const char *name, char **vals);
+static DataSource *new_data_source(const char *name, const DataSourceConfig &config);
 static char       *read_data_sources(const char *filename);
 
 /// @brief Initializes the data sources for the application.
@@ -158,9 +85,6 @@ static char       *read_data_sources(const char *filename);
 ///
 void data_source_init()
 {
-    check_data_source_ini_schema();
-
-    char** vals = prep_ini_words(s_datasrc_ini);
     char* actname = nullptr;
 
     g_data_source_list = new_list(0,0,sizeof(DataSource),20,LF_ZERO_MEM,nullptr);
@@ -170,11 +94,13 @@ void data_source_init()
     char *machine = get_val("NNTPSERVER");
     if (machine && std::strcmp(machine,"local") != 0)
     {
-        vals[DI_NNTP_SERVER] = machine;
-        vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
-                                            &vals[DI_AUTH_PASS]);
-        vals[DI_FORCE_AUTH] = get_val("NNTP_FORCE_AUTH");
-        new_data_source("default",vals);
+        DataSourceConfig config;
+        char            *auth_pass = nullptr;
+        config.set_nntp_server(machine);
+        config.set_auth_user(read_auth_file(g_nntp_auth_file.c_str(), &auth_pass));
+        config.set_auth_password(auth_pass);
+        config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
+        new_data_source("default",config);
     }
 
     g_trn_access_mem = read_data_sources(TRNACCESS);
@@ -200,24 +126,23 @@ void data_source_init()
             machine = nullptr;
             actname = ACTIVE;
         }
-        prep_ini_words(s_datasrc_ini);  // re-zero the values
-
-        vals[DI_NNTP_SERVER] = machine;
-        vals[DI_ACTIVE_FILE] = actname;
-        vals[DI_SPOOL_DIR] = NEWS_SPOOL;
-        vals[DI_OVERVIEW_DIR] = OVERVIEW_DIR;
-        vals[DI_OVERVIEW_FMT] = OVERVIEW_FMT;
-        vals[DI_ACTIVE_TIMES] = ACTIVE_TIMES;
-        vals[DI_GROUP_DESC] = GROUP_DESC;
+        DataSourceConfig config;
+        config.set_nntp_server(machine);
+        config.set_active_file(actname);
+        config.set_spool_dir(NEWS_SPOOL);
+        config.set_overview_dir(OVERVIEW_DIR);
+        config.set_overview_format_file(OVERVIEW_FMT);
+        config.set_active_times(ACTIVE_TIMES);
+        config.set_group_desc(GROUP_DESC);
         if (machine)
         {
-            vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
-                                                &vals[DI_AUTH_PASS]);
-            vals[DI_FORCE_AUTH] = get_val("NNTP_FORCE_AUTH");
+            char *auth_pass = nullptr;
+            config.set_auth_user(read_auth_file(g_nntp_auth_file.c_str(), &auth_pass));
+            config.set_auth_password(auth_pass);
+            config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
         }
-        new_data_source("default",vals);
+        new_data_source("default",config);
     }
-    unprep_ini_words(s_datasrc_ini);
 }
 
 
@@ -237,19 +162,6 @@ void data_source_finalize()
     g_nntp_auth_file.clear();
 }
 
-static void check_data_source_ini_schema()
-{
-    for (const DataSourceIniExpectation &expect : s_datasrc_ini_expectations)
-    {
-        if (std::strcmp(s_datasrc_ini[expect.index].item, expect.item) != 0)
-        {
-            std::printf("*** Internal error: data-source INI index %d is `%s', expected `%s'.\n",
-                        static_cast<int>(expect.index), s_datasrc_ini[expect.index].item, expect.item);
-            std::abort();
-        }
-    }
-}
-
 /// @brief Reads data sources from the specified file.
 ///
 /// This function reads and parses data sources from an INI-style file. It
@@ -265,7 +177,7 @@ static char *read_data_sources(const char *filename)
     char* section;
     char* cond;
     char* filebuf = nullptr;
-    char** vals = ini_values(s_datasrc_ini);
+    IniSectionValues values;
 
     int fd = open(file_exp(filename), 0);
     if (fd >= 0)
@@ -289,12 +201,12 @@ static char *read_data_sources(const char *filename)
                 {
                     continue;
                 }
-                s = parse_ini_section(s, s_datasrc_ini);
+                s = parse_ini_section(s, DataSourceConfig::schema(), values);
                 if (!s)
                 {
                     break;
                 }
-                new_data_source(section,vals);
+                new_data_source(section, DataSourceConfig::from(values));
             }
         }
         close(fd);
@@ -314,15 +226,15 @@ DataSource *get_data_source(std::string_view name)
     return nullptr;
 }
 
-static DataSource *new_data_source(const char *name, char **vals)
+static DataSource *new_data_source(const char *name, const DataSourceConfig &config)
 {
     DataSource* dp = data_source_ptr(g_data_source_cnt++);
 
-    if (vals[DI_NNTP_SERVER])
+    if (config.nntp_server())
     {
         dp->m_flags |= DF_REMOTE;
     }
-    else if (!vals[DI_ACTIVE_FILE])
+    else if (!config.active_file())
     {
         return nullptr;
     }
@@ -333,7 +245,7 @@ static DataSource *new_data_source(const char *name, char **vals)
         dp->m_flags |= DF_DEFAULT;
     }
 
-    const char *v = vals[DI_NNTP_SERVER];
+    const char *v = config.nntp_server();
     if (v != nullptr)
     {
         dp->m_news_id = save_str(v);
@@ -344,37 +256,37 @@ static DataSource *new_data_source(const char *name, char **vals)
             dp->m_nntp_link.port_number = std::atoi(cp+1);
         }
 
-        v = vals[DI_ACT_REFETCH];
+        v = config.active_file_refetch();
         if (v != nullptr && *v)
         {
             dp->m_act_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
-        else if (!vals[DI_ACTIVE_FILE])
+        else if (!config.active_file())
         {
             dp->m_act_sf.m_refetch_secs = g_def_refetch_secs;
         }
     }
     else
     {
-        dp->m_news_id = save_str(file_exp(vals[DI_ACTIVE_FILE]));
+        dp->m_news_id = save_str(file_exp(config.active_file()));
     }
 
-    dp->m_spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
+    dp->m_spool_dir = file_or_none(config.spool_dir());
     if (!dp->m_spool_dir)
     {
         dp->m_spool_dir = save_str(g_tmp_dir.c_str());
     }
 
-    dp->m_over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
-    dp->m_over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
-    dp->m_group_desc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
-    dp->m_extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
+    dp->m_over_dir = dir_or_none(dp,config.overview_dir(),DF_TRY_OVERVIEW);
+    dp->m_over_fmt = file_or_none(config.overview_format_file());
+    dp->m_group_desc = dir_or_none(dp,config.group_desc(),DF_NONE);
+    dp->m_extra_name = dir_or_none(dp,config.active_times(),DF_ADD_OK);
     if (dp->m_flags & DF_REMOTE)
     {
         // FYI, we know extra_name to be nullptr in this case.
-        if (vals[DI_ACTIVE_FILE])
+        if (config.active_file())
         {
-            dp->m_extra_name = save_str(file_exp(vals[DI_ACTIVE_FILE]));
+            dp->m_extra_name = save_str(file_exp(config.active_file()));
             stat_t extra_stat{};
             if (stat(dp->m_extra_name,&extra_stat) >= 0)
             {
@@ -391,7 +303,7 @@ static DataSource *new_data_source(const char *name, char **vals)
             }
         }
 
-        v = vals[DI_DESC_REFETCH];
+        v = config.group_desc_refetch();
         if (v != nullptr && *v)
         {
             dp->m_desc_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
@@ -418,27 +330,27 @@ static DataSource *new_data_source(const char *name, char **vals)
             }
         }
     }
-    v = vals[DI_FORCE_AUTH];
+    v = config.force_auth();
     if (v != nullptr && (*v == 'y' || *v == 'Y'))
     {
         dp->m_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
     }
-    v = vals[DI_AUTH_USER];
+    v = config.auth_user();
     if (v != nullptr)
     {
         dp->m_auth_user = save_str(v);
     }
-    v = vals[DI_AUTH_PASS];
+    v = config.auth_password();
     if (v != nullptr)
     {
         dp->m_auth_pass = save_str(v);
     }
-    v = vals[DI_XHDR_BROKEN];
+    v = config.xhdr_broken();
     if (v != nullptr && (*v == 'y' || *v == 'Y'))
     {
         dp->m_flags |= DF_XHDR_BROKEN;
     }
-    v = vals[DI_XREFS];
+    v = config.xrefs();
     if (v != nullptr && (*v == 'n' || *v == 'N'))
     {
         dp->m_flags |= DF_NO_XREFS;
@@ -492,7 +404,7 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
     return save_str(dir);
 }
 
-static char *file_or_none(char *fn)
+static char *file_or_none(const char *fn)
 {
     if (!fn || !*fn || !std::strcmp(fn,"none") || !std::strcmp(fn,"remote"))
     {

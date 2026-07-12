@@ -12,6 +12,7 @@ add_library(libtrn
     include/trn/change_dir.h
     charsubst.cpp include/trn/charsubst.h
     color.cpp include/trn/color.h
+    DataSourceConfig.cpp include/trn/DataSourceConfig.h
     datasrc.cpp include/trn/datasrc.h
     decode.cpp include/trn/decode.h
     edit_dist.cpp include/trn/edit_dist.h

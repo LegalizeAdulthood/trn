@@ -134,18 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 6: Migrate Data Source Parsing
-
-Move `s_datasrc_ini` to `IniSchema` plus `DataSourceConfig`.
-
-- Parse access sections into `IniSectionValues`.
-- Convert values into a typed `DataSourceConfig`.
-- Preserve current default and environment behavior.
-- Remove data-source use of `prep_ini_words`, `ini_values`, and
-  `unprep_ini_words`.
-
-Run focused data-source/access-file tests.
-
 ### Slice 7: Migrate Rcgroup Parsing
 
 Move `s_rcgroups_ini` to `IniSchema` plus `RcGroupConfig`.

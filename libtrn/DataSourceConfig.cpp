@@ -1,0 +1,76 @@
+/* DataSourceConfig.cpp
+ */
+// This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
+#include <trn/DataSourceConfig.h>
+
+#include <trn/IniSchema.h>
+#include <trn/IniSectionValues.h>
+
+namespace
+{
+
+constexpr int field_id(DataSourceConfigField field)
+{
+    return static_cast<int>(field);
+}
+
+const char *value_or_null(const IniSectionValues &values, DataSourceConfigField field)
+{
+    const auto value = values.value(field_id(field));
+    if (!value.has_value())
+    {
+        return nullptr;
+    }
+    return value->data();
+}
+
+const IniSchema s_schema{
+    "DATASRC",
+    {
+        IniField::value(field_id(DataSourceConfigField::NntpServer), "NNTP Server"),
+        IniField::value(field_id(DataSourceConfigField::ActiveFile), "Active File"),
+        IniField::value(field_id(DataSourceConfigField::ActiveFileRefetch), "Active File Refetch"),
+        IniField::value(field_id(DataSourceConfigField::SpoolDir), "Spool Dir"),
+        IniField::value(field_id(DataSourceConfigField::ThreadDir), "Thread Dir"),
+        IniField::value(field_id(DataSourceConfigField::OverviewDir), "Overview Dir"),
+        IniField::value(field_id(DataSourceConfigField::ActiveTimes), "Active Times"),
+        IniField::value(field_id(DataSourceConfigField::GroupDesc), "Group Desc"),
+        IniField::value(field_id(DataSourceConfigField::GroupDescRefetch), "Group Desc Refetch"),
+        IniField::value(field_id(DataSourceConfigField::AuthUser), "Auth User"),
+        IniField::value(field_id(DataSourceConfigField::AuthPassword), "Auth Password"),
+        IniField::value(field_id(DataSourceConfigField::AuthCommand), "Auth Command"),
+        IniField::value(field_id(DataSourceConfigField::XhdrBroken), "XHDR Broken"),
+        IniField::value(field_id(DataSourceConfigField::Xrefs), "Xrefs"),
+        IniField::value(field_id(DataSourceConfigField::OverviewFormatFile), "Overview Format File"),
+        IniField::value(field_id(DataSourceConfigField::ForceAuth), "Force Auth"),
+    }};
+
+} // namespace
+
+const IniSchema &DataSourceConfig::schema()
+{
+    return s_schema;
+}
+
+DataSourceConfig DataSourceConfig::from(const IniSectionValues &values)
+{
+    DataSourceConfig config;
+    config.set_nntp_server(value_or_null(values, DataSourceConfigField::NntpServer));
+    config.set_active_file(value_or_null(values, DataSourceConfigField::ActiveFile));
+    config.set_active_file_refetch(value_or_null(values, DataSourceConfigField::ActiveFileRefetch));
+    config.set_spool_dir(value_or_null(values, DataSourceConfigField::SpoolDir));
+    config.set_thread_dir(value_or_null(values, DataSourceConfigField::ThreadDir));
+    config.set_overview_dir(value_or_null(values, DataSourceConfigField::OverviewDir));
+    config.set_active_times(value_or_null(values, DataSourceConfigField::ActiveTimes));
+    config.set_group_desc(value_or_null(values, DataSourceConfigField::GroupDesc));
+    config.set_group_desc_refetch(value_or_null(values, DataSourceConfigField::GroupDescRefetch));
+    config.set_auth_user(value_or_null(values, DataSourceConfigField::AuthUser));
+    config.set_auth_password(value_or_null(values, DataSourceConfigField::AuthPassword));
+    config.set_auth_command(value_or_null(values, DataSourceConfigField::AuthCommand));
+    config.set_xhdr_broken(value_or_null(values, DataSourceConfigField::XhdrBroken));
+    config.set_xrefs(value_or_null(values, DataSourceConfigField::Xrefs));
+    config.set_overview_format_file(value_or_null(values, DataSourceConfigField::OverviewFormatFile));
+    config.set_force_auth(value_or_null(values, DataSourceConfigField::ForceAuth));
+    return config;
+}
