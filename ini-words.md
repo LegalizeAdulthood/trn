@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 4: Introduce `IniSectionValues`
-
-Add a result object separate from the schema.
-
-- Store borrowed values by field id.
-- Support reset between sections.
-- Make ownership impossible at the type level.
-- Add tests that resetting values does not free input text.
-
-No production callers migrate yet.
-
 ### Slice 5: Wrap Existing Parser Output
 
 Teach `parse_ini_section` to fill `IniSectionValues` through an adapter.
