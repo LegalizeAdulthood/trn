@@ -152,10 +152,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-58. In `libtrn/opt.cpp`, change only `opt_init` so the `%+`
-    directory and configured option filename are local paths for
-    directory and existence checks.  Keep `g_ini_file` as a string and
-    pass a string only to `opt_file`.
 59. In `libtrn/scorefile.cpp`, change only `sf_append` so the
     expanded score filename is held as a local path after `file_exp`.
     Use filesystem parent creation for the containing directory, then

@@ -53,7 +53,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <string>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 static void opt_file(const char *filename, char **tcbufptr, bool bleat);
 
@@ -108,21 +112,23 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     g_ini_file = file_exp(g_use_threads ? get_val_const("TRNRC", "%+/trnrc") : get_val_const("RNRC", "%+/rnrc"));
 
-    char  *s = file_exp("%+");
-    stat_t ini_stat{};
-    if (stat(s, &ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode))
+    const fs::path trn_dir{file_exp("%+")};
+    std::error_code error;
+    if (!fs::is_directory(trn_dir, error))
     {
-        std::printf("Creating the directory %s.\n",s);
-        if (make_dir(s, MD_DIR))
+        std::printf("Creating the directory %s.\n", trn_dir.string().c_str());
+        if (make_dir(trn_dir.string().c_str(), MD_DIR))
         {
-            std::printf("Unable to create `%s'.\n",s);
+            std::printf("Unable to create `%s'.\n", trn_dir.string().c_str());
             finalize(1);
         }
     }
-    if (stat(g_ini_file.c_str(),&ini_stat) == 0)
+    error.clear();
+    if (fs::exists(g_ini_file, error))
     {
         opt_file(g_ini_file.c_str(), tcbufptr, true);
     }
+    char *s;
     if (!g_use_threads || (s = get_val("TRNINIT")) == nullptr)
     {
         s = get_val("RNINIT");
