@@ -6,8 +6,8 @@
 
 Audited project C and C++ sources under the source root, excluding the
 vendored `vcpkg` tree.  The audit looked for local raw C string pointers
-that can become `std::string_view` or `std::string` without changing
-function boundaries.
+and function parameters that can become `std::string_view` or
+`std::string` without changing ownership boundaries.
 
 Existing good precedents:
 
@@ -60,13 +60,18 @@ The generated `config.h` sites map back to assigning source code.  The
 `nntplist.cpp::main` cases are local fixes; `data_source_init` belongs
 to the deferred INI value-storage overhaul.
 
-After the hash key, comparator, color, autosubscribe, option-header, and
-quote helpers were promoted, the hash table and color output paths are
-no longer limiting boundaries.  The current rerun found a small new
-bottom-up batch: leaf helpers that pass text only to view-based callees,
-a selection-order parser that only needs cursor movement, and wrappers
-that can make local owned strings before calling legacy C formatting or
-comparison helpers.
+After the hash key, comparator, color, autosubscribe, option-header,
+quote, NNTP list, MIME, and selection-order helpers were promoted, a
+rerun finds one safe next-layer slice at the NNTP list caller boundary.
+`SourceFile::open` uses its `fetch_cmd` parameter only for diagnostics
+and `nntp_list`; the value is not stored.  Its nullable call sites must
+pass an empty view explicitly before the parameter becomes
+`std::string_view`.
+
+The MIME cap, color, autosubscribe, option, and NNTP command call-site
+checks did not expose more one-function slices.  Callers pass literals,
+global buffers, mutable cursors, or values that cross factory, static, or
+global storage boundaries.
 
 The remaining broad hits were rejected because the pointer is a mutable
 cursor, a nullable sentinel, an output buffer, a byte transport buffer,
@@ -95,6 +100,14 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Local Modernization Slices
+
+28. `libtrn/datasrc.cpp`, `SourceFile::open`, `fetch_cmd`.
+    Promote only `fetch_cmd` to `std::string_view`.  Keep `filename` and
+    `server` as C strings because they are nullable file/server sentinels.
+    Convert call sites that pass `nullptr` for `fetch_cmd` to `{}` or
+    `""`.  Pass the view to `nntp_list`; for diagnostics, make a local
+    `std::string fetch_command{fetch_cmd}` and use
+    `fetch_command.c_str()` with `printf`.  No pointer escapes.
 
 ## Defer
 
@@ -126,6 +139,9 @@ both declarations and definitions `static`.
 - `nntp/include/nntp/nntpclient.h`, `INNTPConnection::write`: the pair
   is a byte-buffer transport boundary.  Prefer `std::span` if this
   interface is modernized.
+- `libtrn/datasrc.cpp`, `SourceFile::open`, `filename` and `server`:
+  both are nullable file/server sentinels.  Slice 28 covers only the
+  non-stored `fetch_cmd` text.
 - `libtrn/datasrc.cpp`, `SourceFile::append`: `bp` is mutable line
   storage and the key length is an interior slice used before the line is
   compacted and stored.
