@@ -20,6 +20,7 @@ add_library(libtrn
     hash.cpp include/trn/hash.h
     head.cpp include/trn/head.h
     help.cpp include/trn/help.h
+    IniSchema.cpp include/trn/IniSchema.h
     init.cpp include/trn/init.h
     intrp.cpp include/trn/intrp.h
     kfile.cpp include/trn/kfile.h

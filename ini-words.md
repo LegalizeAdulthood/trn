@@ -134,17 +134,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 
 ## Slices
 
-### Slice 3: Introduce `IniField` And `IniSchema`
-
-Add the new schema classes beside the old API.
-
-- Define immutable field rows.
-- Build prepared lookup data inside `IniSchema`.
-- Support section display rows without lookup entries.
-- Add tests for lookup, display order, and case-insensitive matching.
-
-No callers migrate yet.
-
 ### Slice 4: Introduce `IniSectionValues`
 
 Add a result object separate from the schema.

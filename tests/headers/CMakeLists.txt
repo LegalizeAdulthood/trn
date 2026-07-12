@@ -19,6 +19,7 @@ add_executable(trn-headers-test
     test_hash.cpp
     test_head.cpp
     test_help.cpp
+    test_IniSchema.cpp
     test_init.cpp
     test_intrp.cpp
     test_kfile.cpp
