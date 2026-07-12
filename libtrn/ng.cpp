@@ -438,19 +438,20 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             // make sure article is found & open
             if (!art_open(g_art, (ArticlePosition) 0))
             {
-                char tmpbuf[256];
                 // see if we have tree data for this article anyway
                 init_tree();
-                std::sprintf(tmpbuf,"%s: article is not available.",g_newsgroup_name.c_str());
+                std::string message{g_newsgroup_name};
+                message += ": article is not available.";
                 if (g_artp && !(g_artp->m_flags & AF_CACHED))
                 {
                     if (g_abs_first < g_first_cached || g_last_cached < g_last_art
                      || !g_cached_all_in_range)
                     {
-                        std::sprintf(tmpbuf, "%s: article may show up in a moment.", g_newsgroup_name.c_str());
+                        message = g_newsgroup_name;
+                        message += ": article may show up in a moment.";
                     }
                 }
-                ArticleLine linenum = tree_puts(tmpbuf, ArticleLine{}, 0);
+                ArticleLine linenum = tree_puts(message, ArticleLine{}, 0);
                 virtual_write(g_art_line_num, ArticlePosition{});
                 finish_tree(linenum);
                 g_prompt = whatnext;

@@ -130,10 +130,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-52. `libtrn/ng.cpp`, `do_newsgroup`, `tmpbuf`.
-    Replace the local unavailable-article message buffer with
-    `std::string`.  Pass the string view directly to `tree_puts`.
-
 53. `libtrn/rt-page.cpp`, `display_group`, `buff`.
     Replace the local description copy buffer with `std::string`.
     Trim at newline and display width using string operations, then pass
