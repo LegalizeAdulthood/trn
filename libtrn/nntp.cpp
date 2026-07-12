@@ -117,8 +117,7 @@ void nntp_finish_list()
 int nntp_group(std::string_view group, NewsgroupData *gp)
 {
     const std::string group_name{group};
-    std::string       command{"GROUP "};
-    command += group_name;
+    const std::string command{fmt::format("GROUP {}", group_name)};
     if (nntp_command(command) <= 0)
     {
         return -2;

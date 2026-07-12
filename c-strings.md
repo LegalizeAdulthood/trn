@@ -238,10 +238,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
 with their C-string buffer slices.
 
-FMT-05. `libtrn/nntp.cpp`, `nntp_group`: replace the `GROUP` command
-string construction with fmt.  Keep the command string local and pass it
-to `nntp_command`.
-
 FMT-06. `libtrn/nntp.cpp`, `nntp_stat_id`: replace the `STAT` command
 string construction with fmt.  Keep the message-id view data owned by
 the local command string.
