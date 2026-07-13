@@ -348,13 +348,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Terminal Edit Buffer Scratch
-
-In `libtrn/terminal.cpp`, `edit_buf` copies `g_buf` with `save_str`
-only so `interp_search` can rewrite `g_buf` while reading the old
-contents.  Replace the owned C copy with `std::string` and pass
-`c_str()` to `interp_search`.
-
 #### MIME Cap Path List
 
 In `libtrn/mime.cpp`, `mime_init` copies the `MIMECAPS`/`MAILCAPS`

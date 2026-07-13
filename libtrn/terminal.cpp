@@ -939,7 +939,6 @@ static char *edit_buf(char *s, const char *cmd)
     if (*s == '\033')           // substitution desired?
     {
         char  tmpbuf[4];
-        char *cpybuf;
 
         tmpbuf[0] = '%';
         read_tty(&tmpbuf[1],1);
@@ -956,9 +955,8 @@ static char *edit_buf(char *s, const char *cmd)
         else if (tmpbuf[1] == '\033')
         {
             *s = '\0';
-            cpybuf = save_str(g_buf);
-            interp_search(g_buf, sizeof g_buf, cpybuf, cmd);
-            std::free(cpybuf);
+            const std::string cpybuf{g_buf};
+            interp_search(g_buf, sizeof g_buf, cpybuf.c_str(), cmd);
             s = g_buf + std::strlen(g_buf);
             reprint();
         }
