@@ -288,13 +288,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Compiled Regex Bracket Text
-
-Promote `CompiledRegex::m_bracket_str` in `libtrn/search.cpp` to
-`std::string`.  The value is assigned from `save_str(p1)`, owned by the
-compiled regex object, and freed by the same object.  This is the
-smallest private storage conversion found in the pass.
-
 #### Score Save Lines
 
 Replace `s_lines` storage in `libtrn/scoresave.cpp` with

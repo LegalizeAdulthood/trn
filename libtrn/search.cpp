@@ -27,7 +27,6 @@
 
 #include <config/common.h>
 #include <trn/util.h>
-#include <util/util2.h>
 
 #include <cctype>
 #include <cstdio>
@@ -122,7 +121,7 @@ void CompiledRegex::init_compex()
 {
     // the following must start off zeroed
     m_eb_len = 0;
-    m_bracket_str = nullptr;
+    m_bracket_str.clear();
 }
 
 void CompiledRegex::free_compex()
@@ -133,11 +132,7 @@ void CompiledRegex::free_compex()
         m_exp_buf = nullptr;
         m_eb_len = 0;
     }
-    if (m_bracket_str)
-    {
-        std::free(m_bracket_str);
-        m_bracket_str = nullptr;
-    }
+    m_bracket_str.clear();
 }
 
 const char *CompiledRegex::get_bracket(int n)
@@ -418,12 +413,8 @@ const char *CompiledRegex::execute(const char *addr)
             m_bracket_start_list[i] = nullptr;
             m_bracket_end_list[i] = nullptr;
         }
-        if (m_bracket_str)
-        {
-            std::free(m_bracket_str);
-        }
-        m_bracket_str = save_str(p1);   // in case p1 is not static
-        p1 = m_bracket_str;            // !
+        m_bracket_str = p1;             // in case p1 is not static
+        p1 = m_bracket_str.c_str();     // !
     }
     case_fold(m_do_folding);      // make sure table is correct
     s_first_character = p1;             // for ^ tests

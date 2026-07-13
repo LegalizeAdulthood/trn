@@ -231,7 +231,7 @@ void sf_clean()
         if (s_sf_entries[i].compex != nullptr)
         {
             s_sf_entries[i].compex->free_compex();
-            std::free(s_sf_entries[i].compex);
+            delete s_sf_entries[i].compex;
         }
     }
     mp_free(MP_SCORE1);         // free memory pool
@@ -810,7 +810,7 @@ static bool sf_do_line(char *line, bool check)
     {
         s_sf_entries[g_sf_num_entries-1].flags |= 1;
         s_sf_entries[g_sf_num_entries-1].str1 = mp_save_str(s,MP_SCORE1);
-        s_sf_compex = (CompiledRegex*)safe_malloc(sizeof (CompiledRegex));
+        s_sf_compex = new CompiledRegex;
         s_sf_compex->init_compex();
         // compile arguments:
         // 1st is COMPEX to store compiled regex in
@@ -823,7 +823,7 @@ static bool sf_do_line(char *line, bool check)
             std::printf("Bad pattern : |%s|\n",s);
             std::printf("Compex returns: |%s|\n",compile_error);
             s_sf_compex->free_compex();
-            std::free(s_sf_compex);
+            delete s_sf_compex;
             s_sf_compex = nullptr;
             s_sf_entries[g_sf_num_entries-1].compex = nullptr;
             return false;

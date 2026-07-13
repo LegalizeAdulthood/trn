@@ -42,9 +42,7 @@ void set_newsgroup_to_do(std::string_view pat)
     if (i < MAX_NG_TO_DO)
     {
         g_newsgroup_to_do[i] = save_str(pat);
-#ifndef lint
-        s_compex_to_do[i] = (CompiledRegex*)safe_malloc(sizeof(CompiledRegex));
-#endif
+        s_compex_to_do[i] = new CompiledRegex;
         s_compex_to_do[i]->init_compex();
         const std::string pattern{pat};
         s_compex_to_do[i]->compile(pattern.c_str(), true, true);
@@ -94,9 +92,8 @@ void end_only()
         {
             std::free(g_newsgroup_to_do[i]);
             s_compex_to_do[i]->free_compex();
-#ifndef lint
-            std::free((char*)s_compex_to_do[i]);
-#endif
+            delete s_compex_to_do[i];
+            s_compex_to_do[i] = nullptr;
         }
         g_max_newsgroup_to_do = 0;
         g_newsgroup_min_to_read = 1;

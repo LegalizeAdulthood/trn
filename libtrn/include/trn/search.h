@@ -1,8 +1,11 @@
 /* trn/search.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_SEARCH_H
 #define TRN_SEARCH_H
+
+#include <string>
 
 #ifndef NBRA
 #define NBRA    10              // the maximum number of meta-brackets in an
@@ -26,7 +29,7 @@ struct CompiledRegex
     char       *m_alternatives[NALTS + 1];  // The list of \| separated alternatives
     const char *m_bracket_start_list[NBRA]; // RE meta-bracket start list
     const char *m_bracket_end_list[NBRA];   // RE meta-bracket end list
-    char       *m_bracket_str;              // saved match string after execute()
+    std::string m_bracket_str;              // saved match string after execute()
     char        m_num_brackets;             // The number of meta-brackets int the most
                                             // recently compiled RE
     bool m_do_folding;                      // fold upper and lower case?
