@@ -264,11 +264,6 @@ buffer slices.
 
 ### Copy/Concat Slices
 
-CC-02. `libtrn/scoresave.cpp`, `sc_sv_save_file`: replace the saved
-score filename and `.tmp` filename construction with owned
-`std::string` values.  Pass `c_str()` only to file APIs that consume the
-pointer immediately.
-
 CC-03. `libtrn/util.cpp`, `edit_file`: replace the editor command
 buffer copy/concat with an owned formatted command string and pass it to
 `do_shell`.  This is local command construction; the command text is not

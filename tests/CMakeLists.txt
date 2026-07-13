@@ -32,6 +32,7 @@ add_executable(trn-test
     test_RcGroupConfig.cpp
     test_rt-util.cpp
     test_scorefile.cpp
+    test_scoresave.cpp
     test_scmd.cpp
     test_string-algos.cpp
     test_util.cpp

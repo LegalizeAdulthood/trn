@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <string_view>
 
 int g_sc_loaded_count{}; // how many articles were loaded?
@@ -130,10 +131,9 @@ void sc_sv_save_file()
     }
 
     g_waiting = true;   // don't interrupt
-    char *savename = save_str(file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
-    std::strcpy(s_line_buf,savename);
-    std::strcat(s_line_buf,".tmp");
-    std::FILE *tmpfp = std::fopen(s_line_buf, "w");
+    const std::string savename = file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores"));
+    const std::string temp_name = savename + ".tmp";
+    std::FILE        *tmpfp = std::fopen(temp_name.c_str(), "w");
     if (!tmpfp)
     {
 // Debug
@@ -141,7 +141,6 @@ void sc_sv_save_file()
         std::printf("Could not open score save temp file %s for writing.\n",
                s_lbuf);
 #endif
-        std::free(savename);
         g_waiting = false;
         return;
     }
@@ -154,17 +153,16 @@ void sc_sv_save_file()
         if (std::ferror(tmpfp))
         {
             std::fclose(tmpfp);
-            std::free(savename);
-            std::printf("\nWrite error in temporary save file %s\n",s_line_buf);
+            std::printf("\nWrite error in temporary save file %s\n", temp_name.c_str());
             std::printf("(keeping old saved scores)\n");
-            remove(s_line_buf);
+            remove(temp_name.c_str());
             g_waiting = false;
             return;
         }
     }
     std::fclose(tmpfp);
-    remove(savename);
-    rename(s_line_buf,savename);
+    remove(savename.c_str());
+    rename(temp_name.c_str(), savename.c_str());
     g_waiting = false;
 }
 
