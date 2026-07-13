@@ -301,7 +301,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     }
 
     char* dir;
-    g_decode_filename = decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+    g_decode_filename = decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
     const std::string filename = g_decode_filename;
     if (mcp || total != 1 || part != 1)
     {

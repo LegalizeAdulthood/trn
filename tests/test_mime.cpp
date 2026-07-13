@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <string>
 
 using namespace testing;
 
@@ -96,20 +97,20 @@ protected:
     {
         MimeTest::SetUp();
         g_decode_filename = TRN_TEST_MIME_PDF_DECODE_FILE;
-        m_mime_section.m_type_name = save_str(TRN_TEST_MIME_PDF_CONTENT_TYPE);
-        m_mime_section.m_type_params = mime_parse_params(save_str(TRN_TEST_MIME_PDF_SECTION_PARAMS));
+        m_mime_section.m_type_name = TRN_TEST_MIME_PDF_CONTENT_TYPE;
+        m_type_params = TRN_TEST_MIME_PDF_SECTION_PARAMS;
+        m_mime_section.m_type_params = mime_parse_params(m_type_params.data());
         g_mime_section = &m_mime_section;
     }
     void TearDown() override
     {
-        free(m_mime_section.m_type_params);
-        free(m_mime_section.m_type_name);
         g_mime_section = nullptr;
         g_decode_filename.clear();
         MimeTest::TearDown();
     }
 
     MimeSection m_mime_section{};
+    std::string m_type_params;
 };
 
 }

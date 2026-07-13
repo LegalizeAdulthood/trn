@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -76,10 +77,10 @@ struct MimeSection
     void mime_description(char *s, int limit);
 
     MimeSection     *m_prev;
-    char            *m_filename;
-    char            *m_type_name;
-    char            *m_type_params;
-    char            *m_boundary;
+    std::optional<std::string> m_filename;
+    std::optional<std::string> m_type_name;
+    std::optional<std::string> m_type_params;
+    std::optional<std::string> m_boundary;
     int              m_html_line_start;
     HtmlBlock       *m_html_blocks;
     MimeState        m_type;
@@ -177,7 +178,7 @@ void          mime_set_article();
 void          mime_parse_sub_header(std::FILE *ifp, char *next_line);
 void          mime_set_state(char *bp);
 int           mime_end_of_section(char *bp);
-char         *mime_parse_params(char *str);
+std::string   mime_parse_params(char *str);
 void          mime_decode_article(bool view);
 int           qp_decode_string(char *t, const char *f, bool in_header);
 DecodeState   qp_decode(std::FILE *ifp, DecodeState state);

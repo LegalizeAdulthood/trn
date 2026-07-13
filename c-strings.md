@@ -288,14 +288,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### MIME Section Fields
-
-Promote `MimeSection::{m_filename,m_type_name,m_type_params,m_boundary}`
-in `libtrn/include/trn/mime.h` to owned string storage.  The fields are
-assigned through `save_str` during MIME parsing and cleared in
-`mime_clear_struct`.  Use optional storage if existing null checks carry
-meaning.
-
 #### MIME Cap Entries
 
 Promote `MimeCapEntry::{content_type,command,test_command,description}`

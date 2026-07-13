@@ -291,8 +291,14 @@ SaveResult save_article()
                 std::printf("Extracting uuencoded file into %s:\n", c);
                 term_down(1);
                 g_mime_section->m_type = IMAGE_MIME;
-                safe_free(g_mime_section->m_filename);
-                g_mime_section->m_filename = filename? save_str(filename) : nullptr;
+                if (filename)
+                {
+                    g_mime_section->m_filename = filename;
+                }
+                else
+                {
+                    g_mime_section->m_filename.reset();
+                }
                 g_mime_section->m_encoding = MENCODE_UUE;
                 g_mime_section->m_part = part;
                 g_mime_section->m_total = total;
@@ -620,8 +626,14 @@ SaveResult view_article()
                 g_save_from = g_art_pos;
                 seek_art(g_save_from);
                 g_mime_section->m_type = UNHANDLED_MIME;
-                safe_free(g_mime_section->m_filename);
-                g_mime_section->m_filename = filename? save_str(filename) : nullptr;
+                if (filename)
+                {
+                    g_mime_section->m_filename = filename;
+                }
+                else
+                {
+                    g_mime_section->m_filename.reset();
+                }
                 g_mime_section->m_encoding = MENCODE_UUE;
                 g_mime_section->m_part = part;
                 g_mime_section->m_total = total;

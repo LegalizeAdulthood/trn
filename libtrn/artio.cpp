@@ -22,6 +22,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -364,7 +366,7 @@ mime_switch:
     case DECODE_MIME:
     {
         MimeCapEntry* mcp;
-        mcp = mime_find_mimecap_entry(g_mime_section->m_type_name,
+        mcp = mime_find_mimecap_entry(*g_mime_section->m_type_name,
                                     MCF_NEEDS_TERMINAL |MCF_COPIOUS_OUTPUT);
         if (mcp)
         {
@@ -474,7 +476,7 @@ mime_switch:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         ++g_art_buf_pos;
-        std::sprintf(bp,"[Alternative: %s]\n", g_mime_section->m_type_name);
+        *fmt::format_to(bp, "[Alternative: {}]\n", *g_mime_section->m_type_name) = '\0';
         len = std::strlen(bp);
         break;
 

@@ -23,6 +23,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -333,7 +335,7 @@ int mime_exec(char *cmd)
 
             case 't':
                 *t++ = '\'';
-                safe_copy(t, g_mime_section->m_type_name, CMD_BUF_LEN-(t-g_cmd_buf)-1);
+                safe_copy(t, g_mime_section->m_type_name->c_str(), CMD_BUF_LEN-(t-g_cmd_buf)-1);
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
@@ -347,7 +349,9 @@ int mime_exec(char *cmd)
                 }
                 f++;
                 *s = '\0';
-                char *p = mime_find_param(g_mime_section->m_type_params, f);
+                char *p = mime_find_param(
+                        g_mime_section->m_type_params ? g_mime_section->m_type_params->data() : nullptr,
+                        f);
                 *s = '}'; // restore
                 f = s;
                 *t++ = '\'';
@@ -387,8 +391,7 @@ static void mime_init_sections()
 
 void mime_push_section()
 {
-    MimeSection* mp = (MimeSection*)safe_malloc(sizeof (MimeSection));
-    std::memset((char*)mp,0,sizeof (MimeSection));
+    MimeSection* mp = new MimeSection{};
     mp->m_prev = g_mime_section;
     g_mime_section = mp;
 }
@@ -399,8 +402,8 @@ static bool mime_pop_section()
     if (mp)
     {
         g_mime_section->mime_clear_struct();
-        std::free((char*)g_mime_section);
-        g_mime_section = g_mime_section;
+        delete g_mime_section;
+        g_mime_section = mp;
         g_mime_state = g_mime_section->m_type;
         return true;
     }
@@ -411,10 +414,10 @@ static bool mime_pop_section()
 // Free up this mime structure's resources
 void MimeSection::mime_clear_struct()
 {
-    safe_free0(m_filename);
-    safe_free0(m_type_name);
-    safe_free0(m_type_params);
-    safe_free0(m_boundary);
+    m_filename.reset();
+    m_type_name.reset();
+    m_type_params.reset();
+    m_boundary.reset();
     safe_free0(m_html_blocks);
     m_type = NOT_MIME;
     m_encoding = MENCODE_NONE;
@@ -460,7 +463,7 @@ void mime_set_article()
         }
         else if (!g_mime_section->m_type_name)
         {
-            g_mime_section->m_type_name = save_str(s_text_plain);
+            g_mime_section->m_type_name = s_text_plain;
         }
     }
 }
@@ -468,8 +471,8 @@ void mime_set_article()
 // Use the Content-Type to set values in the mime structure
 void MimeSection::mime_parse_type(char *s)
 {
-    safe_free0(m_type_name);
-    safe_free0(m_type_params);
+    m_type_name.reset();
+    m_type_params.reset();
 
     m_type_params = mime_parse_params(s);
     if (!*s)
@@ -477,12 +480,11 @@ void MimeSection::mime_parse_type(char *s)
         m_type = NOT_MIME;
         return;
     }
-    m_type_name = save_str(s);
-    char *t = mime_find_param(m_type_params, "name");
+    m_type_name = s;
+    char *t = mime_find_param(m_type_params->data(), "name");
     if (t)
     {
-        safe_free(m_filename);
-        m_filename = save_str(t);
+        m_filename = t;
     }
 
     if (string_case_equal(s, "text", 4))
@@ -494,7 +496,7 @@ void MimeSection::mime_parse_type(char *s)
             return;
         }
 #ifdef USE_UTF_HACK
-        utf_init(mime_find_param(m_type_params,"charset"), CHARSET_NAME_UTF8); // FIXME
+        utf_init(mime_find_param(m_type_params->data(),"charset"), CHARSET_NAME_UTF8); // FIXME
 #endif
         if (string_case_equal(s, "html", 4))
         {
@@ -513,19 +515,18 @@ void MimeSection::mime_parse_type(char *s)
         m_type = MESSAGE_MIME;
         if (string_case_equal(s, "partial"))
         {
-            t = mime_find_param(m_type_params,"id");
+            t = mime_find_param(m_type_params->data(),"id");
             if (!t)
             {
                 return;
             }
-            safe_free(m_filename);
-            m_filename = save_str(t);
-            t = mime_find_param(m_type_params,"number");
+            m_filename = t;
+            t = mime_find_param(m_type_params->data(),"number");
             if (t)
             {
                 m_part = (short) std::atoi(t);
             }
-            t = mime_find_param(m_type_params,"total");
+            t = mime_find_param(m_type_params->data(),"total");
             if (t)
             {
                 m_total = (short) std::atoi(t);
@@ -543,7 +544,7 @@ void MimeSection::mime_parse_type(char *s)
     if (string_case_equal(s, "multipart/", 10))
     {
         s += 10;
-        t = mime_find_param(m_type_params,"boundary");
+        t = mime_find_param(m_type_params->data(),"boundary");
         if (!t)
         {
             m_type = UNHANDLED_MIME;
@@ -553,8 +554,7 @@ void MimeSection::mime_parse_type(char *s)
         {
             m_flags |= MSF_ALTERNATIVE;
         }
-        safe_free(m_boundary);
-        m_boundary = save_str(t);
+        m_boundary = t;
         m_boundary_len = (short)std::strlen(t);
         m_type = MULTIPART_MIME;
         return;
@@ -578,19 +578,17 @@ void MimeSection::mime_parse_type(char *s)
 // Use the Content-Disposition to set values in the mime structure
 void MimeSection::mime_parse_disposition(char *s)
 {
-    char *params = mime_parse_params(s);
+    std::string params = mime_parse_params(s);
     if (string_case_equal(s, "inline"))
     {
         m_flags |= MSF_INLINE;
     }
 
-    s = mime_find_param(params,"filename");
+    s = mime_find_param(params.data(),"filename");
     if (s)
     {
-        safe_free(m_filename);
-        m_filename = save_str(s);
+        m_filename = s;
     }
-    safe_free(params);
 }
 
 // Use the Content-Transfer-Encoding to set values in the mime structure
@@ -712,16 +710,15 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
             break;
 
         case CONT_NAME_LINE:
-            safe_free(g_mime_section->m_filename);
             s = mime_skip_whitespace(s+1);
-            g_mime_section->m_filename = save_str(s);
+            g_mime_section->m_filename = s;
             break;
         }
     }
     g_mime_state = g_mime_section->m_type;
     if (!g_mime_section->m_type_name)
     {
-        g_mime_section->m_type_name = save_str(s_text_plain);
+        g_mime_section->m_type_name = s_text_plain;
     }
 }
 
@@ -790,7 +787,7 @@ int mime_end_of_section(char *bp)
     {
         // have we read all the data in this part?
         if (bp[0] == '-' && bp[1] == '-' //
-            && !std::strncmp(bp + 2, mp->m_boundary, mp->m_boundary_len))
+            && !std::strncmp(bp + 2, mp->m_boundary->c_str(), mp->m_boundary_len))
         {
             int len = 2 + mp->m_boundary_len;
             // have we found the last boundary?
@@ -809,7 +806,7 @@ int mime_end_of_section(char *bp)
 // header line.  The passed-in string is transformed into just the
 // first word on the line.
 //
-char *mime_parse_params(char *str)
+std::string mime_parse_params(char *str)
 {
     char *e = mime_skip_whitespace(str);
     char *s = e;
@@ -817,14 +814,16 @@ char *mime_parse_params(char *str)
     {
         e++;
     }
-    char *t = save_str(mime_skip_whitespace(e));
+    std::string params = mime_skip_whitespace(e);
+    params.push_back('\0');
     *e = '\0';
     if (s != str)
     {
         safe_copy(str, s, e - s + 1);
     }
-    str = t;
-    s = t;
+    char *str_data = params.data();
+    char *t = str_data;
+    s = str_data;
     while (*s == ';')
     {
         s = mime_skip_whitespace(s+1);
@@ -858,7 +857,8 @@ char *mime_parse_params(char *str)
         *t++ = '\0';
     }
     *t = '\0';
-    return str;
+    params.resize(t - str_data + 1);
+    return params;
 }
 
 static char *mime_find_param(char *s, std::string_view param)
@@ -967,11 +967,10 @@ void mime_decode_article(bool view)
         default:
             if (view)
             {
-                mcp = mime_find_mimecap_entry(g_mime_section->m_type_name, MCF_NONE);
+                mcp = mime_find_mimecap_entry(*g_mime_section->m_type_name, MCF_NONE);
                 if (!mcp)
                 {
-                    std::printf("No view method for %s -- skipping.\n",
-                           g_mime_section->m_type_name);
+                    fmt::print("No view method for {} -- skipping.\n", *g_mime_section->m_type_name);
                     g_mime_state = SKIP_MIME;
                     break;
                 }
@@ -1002,15 +1001,16 @@ void mime_decode_article(bool view)
 
 void MimeSection::mime_description(char *s, int limit)
 {
-    const std::string fn = decode_fix_filename(m_filename ? m_filename : "unknown");
+    const std::string fn = decode_fix_filename(m_filename ? *m_filename : "unknown");
     int flen = static_cast<int>(fn.size());
 
     limit -= 2;  // leave room for the trailing ']' and '\n'
-    std::sprintf(s, "[Attachment type=%s, name=", m_type_name);
-    int len = std::strlen(s);
+    char *out = fmt::format_to(s, "[Attachment type={}, name=", *m_type_name);
+    *out = '\0';
+    int len = static_cast<int>(out - s);
     if (len + flen <= limit)
     {
-        std::sprintf(s + len, "%s]\n", fn.c_str());
+        *fmt::format_to(s + len, "{}]\n", fn) = '\0';
     }
     else if (len+3 >= limit)
     {
@@ -1107,7 +1107,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
     if (state == DECODE_START)
     {
         const std::string filename =
-            decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+            decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
         g_decode_filename = filename;
         ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
@@ -1250,7 +1250,7 @@ all_done:
     if (state == DECODE_START)
     {
         const std::string filename =
-            decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+            decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
         g_decode_filename = filename;
         ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
@@ -1373,7 +1373,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
     if (state == DECODE_START)
     {
         const std::string filename =
-            decode_fix_filename(g_mime_section->m_filename ? g_mime_section->m_filename : "unknown");
+            decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
         g_decode_filename = filename;
         ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
