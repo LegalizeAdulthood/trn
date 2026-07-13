@@ -34,7 +34,7 @@ NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
 `UniversalItem` unions, `HashDatum` payloads, `parse_string`,
 `get_a_line` and `push_string`.
 
-The useful local targets fall into four groups:
+The useful local targets fall into five groups:
 
 - Read-only labels selected from string literals, then printed.
 - Bounded tokens cut out of a larger C string.
@@ -146,6 +146,18 @@ paths, server names, or cached return strings.  Rejected globals are
 mutable protocol buffers, borrowed cursors, termcap storage, pointer
 offset tricks, arrays with parallel ownership state, and output
 parameters whose callees allocate through `char **`.
+
+A follow-up ownership pass over `save_str`, `mp_save_str`, and
+`safe_copy` found 127 `save_str` or `mp_save_str` occurrences and 62
+`safe_copy` occurrences.  The useful retained-storage candidates share a
+simple shape: a raw pointer is assigned from `save_str`, later freed by
+the same owner, and exposed mostly through read-only C-string use.
+
+Most `safe_copy` sites are not ownership candidates.  They write scratch
+buffers, command buffers, parser cursors, caller-owned output storage, or
+`putenv` strings whose lifetime must remain controlled by an environment
+table.  `mp_save_str` pool-owned strings should also stay with the pool
+until that lifetime model is intentionally replaced.
 
 The main future opportunity is the case-insensitive comparison helper
 family.  View-ready overloads could remove temporary strings in
@@ -270,7 +282,70 @@ These slices replace owned global or file-scope `char *` storage with
 `std::string`.  They are ordered from local storage with no public
 declaration toward globals that cross headers or preserve nullable
 state.  These slices are storage-centered because the declaration and
-all direct assignments must change together.
+all direct assignments must change together.  For `save_str` and
+`safe_copy` ownership slices, replace owned `char *` storage, direct
+`save_str` assignments, and matching `free` paths with `std::string`
+storage.  Use `std::optional<std::string>` or a separate presence flag
+when null and empty are distinct states.
+
+#### Compiled Regex Bracket Text
+
+Promote `CompiledRegex::m_bracket_str` in `libtrn/search.cpp` to
+`std::string`.  The value is assigned from `save_str(p1)`, owned by the
+compiled regex object, and freed by the same object.  This is the
+smallest private storage conversion found in the pass.
+
+#### Score Save Lines
+
+Replace `s_lines` storage in `libtrn/scoresave.cpp` with
+`std::vector<std::string>`.  `score_save_line` appends owned text, and
+cleanup becomes vector cleanup.  Keep the existing file-writing behavior
+unchanged.
+
+#### Newsgroup-To-Do List
+
+Replace `g_newsgroup_to_do` in `libtrn/only.cpp` with owned string
+storage.  The current code assigns each pattern with `save_str(pat)` and
+frees the list in `end_only`.  A vector or fixed array of strings can own
+the same values without manual allocation.
+
+#### Terminal Color Capabilities
+
+Promote `ColorCapability::capability` and `ColorCapability::string` in
+`libtrn/terminal.cpp` to owned string storage.  The table entries are
+loaded with `save_str` and used as retained terminal strings.  Keep the
+public terminal behavior and option parsing unchanged.
+
+#### Newsrc Filenames
+
+Promote `Newsrc::{name,old_name,new_name,info_name,lock_name}` in
+`libtrn/include/trn/rcstuff.h` to owned string storage.  Assignments in
+`libtrn/rcstuff.cpp` copy expanded filenames with `save_str`.  Remove
+the paired frees and pass `c_str()` to legacy file APIs.
+
+#### MIME Section Fields
+
+Promote `MimeSection::{m_filename,m_type_name,m_type_params,m_boundary}`
+in `libtrn/include/trn/mime.h` to owned string storage.  The fields are
+assigned through `save_str` during MIME parsing and cleared in
+`mime_clear_struct`.  Use optional storage if existing null checks carry
+meaning.
+
+#### MIME Cap Entries
+
+Promote `MimeCapEntry::{content_type,command,test_command,description}`
+in `libtrn/include/trn/mime.h` to owned string storage.  The parser
+stores copied capability text with `save_str`; destruction can become
+ordinary object cleanup once the list nodes own strings.
+
+#### Data Source Strings
+
+Promote `DataSource` string members in `libtrn/include/trn/datasrc.h` to
+owned strings.  The strongest fields are `m_name`, `m_news_id`,
+`m_group_desc`, `m_extra_name`, `m_spool_dir`, `m_over_dir`,
+`m_over_fmt`, `m_auth_user`, and `m_auth_pass`.  Assignments in
+`libtrn/datasrc.cpp` already copy into retained storage with `save_str`.
+Preserve nullable semantics where callers distinguish missing values.
 
 ### Ubuntu `-Wwrite-strings` Slices
 
@@ -294,19 +369,36 @@ both declarations and definitions `static`.
   `g_trn_access_mem`, `g_mime_getc_line`, `g_host_name`, and `s_str` in
   `rt-wumpus.cpp` are not string candidates.  Code writes through them
   or treats them as interior pointers.
-- Global pointer arrays and pointer-offset storage such as
-  `g_newsgroup_to_do`, `s_tree_lines`, `g_sel_grp_display_mode`, and
-  `g_sel_art_display_mode` need ownership-model slices before they can
-  become strings.
+- `safe_copy` into `g_cmd_buf`, `g_msg`, `g_art_line`, stack arrays, and
+  similar buffers is scratch-buffer work, not owned storage.
+- Remaining global pointer arrays and pointer-offset storage such as
+  `s_tree_lines`, `g_sel_grp_display_mode`, and `g_sel_art_display_mode`
+  need ownership-model slices before they can become strings.
+- `Article::{m_from,m_msg_id,m_xrefs}` and cached header lines in
+  `libtrn/include/trn/Article.h` need `set_cached_line` and
+  mutable-header access changes.
+- `Subject::m_str` in `libtrn/include/trn/Subject.h` stores hash keys at
+  `m_str + 4`, so key lifetime and lookup behavior must change with the
+  storage.
+- Option saved/default values and selected display mode strings in
+  `libtrn/opt.cpp` use arrays of raw pointers and pointer arithmetic
+  before freeing display mode strings.
 - `libtrn/univ.cpp`, `s_univ_begin_label` and `s_univ_line_desc`: null
   versus empty string is parse state.  Promote only with
   `std::optional<std::string>` or a separate presence flag.
-- `libtrn/terminal.cpp`, termcap strings, mouse-button strings, color
-  capability strings, and exported size variables: these are borrowed,
-  allocated, or rewritten through terminal, option, or environment
-  helpers.
+- `nntp/nntpclient.cpp`, `g_last_command`: it is an owned command
+  snapshot, but the extern array API crosses NNTP files.
+- `libtrn/terminal.cpp`, borrowed termcap strings, mouse-button strings,
+  terminal keymap strings, `g_mouse_modes`, and exported size variables:
+  these are allocated, union-backed, or rewritten through terminal,
+  option, or environment helpers.
 - `tool/util3.cpp`, `s_nntp_password`: `read_auth_file` allocates
   through a `char **` output parameter.  Change that helper first.
+- `util/env.cpp` stores strings for `putenv`; changing that safely needs
+  an owned environment table, not isolated `std::string` locals.
+- Short-lived command-list copies in `artsrch.cpp`, `ngsrch.cpp`, and
+  `ngstuff.cpp` are local cleanup opportunities, but they do not drive a
+  retained-storage migration.
 - Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`
   calls are not useful path slices unless the same function also composes,
   normalizes, queries, removes, or renames the file.
@@ -325,8 +417,17 @@ both declarations and definitions `static`.
   but it flows through `put_char_adv(char **)`.  Make `put_char_adv`
   const-friendly first.
 - `libtrn/mempool.cpp`, `mp_save_str`: it has an explicit `nullptr`
-  diagnostic path.  Promote only with an overload or a broader call-site
-  audit that preserves that behavior.
+  diagnostic path, and pool-owned strings should stay with the pool until
+  that lifetime model is intentionally replaced.  Promote only with an
+  overload or a broader call-site audit that preserves that behavior.
+- `libtrn/include/trn/univ.h`, universal selector strings: the data is
+  stored in a union, so `std::string` requires a variant or manual
+  lifetime redesign.
+- `libtrn/include/trn/scorefile.h`, scorefile table strings: these mix
+  `save_str`, `mp_save_str`, memory pools, reallocating arrays, and
+  copied entries.
+- `libtrn/include/trn/ngdata.h`, `NewsgroupData::m_rc_line`: the line is
+  mutated in place and code stores offsets into it.
 - `libtrn/util.cpp`, INI parsing helpers: they update caller `char **`
   cursors and write into caller buffers.
 - `libtrn/sw.cpp`, `decode_switch`: now passes newsgroup patterns to
@@ -386,6 +487,5 @@ both declarations and definitions `static`.
   would remove some local temporary strings, but the manual
   implementation and both generated-header templates must change
   together.
-- Struct fields in `Article`, `Subject`, `UniversalItem`, score files,
-  and termcap storage: those are ownership model changes, not local
-  function cleanups.
+- Remaining struct fields with retained raw string storage are ownership
+  model changes, not local function cleanups.
