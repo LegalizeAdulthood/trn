@@ -1,0 +1,70 @@
+// This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
+
+#include <trn/scmd-internal.h>
+
+#include <trn/Article.h>
+#include <trn/cache.h>
+#include <trn/charsubst.h>
+#include <trn/list.h>
+#include <trn/ngdata.h>
+#include <trn/scan.h>
+#include <trn/scanart.h>
+#include <trn/score.h>
+
+#include <gtest/gtest.h>
+
+namespace
+{
+
+class ScanCommandTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        g_article_list = new_list(1, 1, sizeof(Article), 1, LF_ZERO_MEM, nullptr);
+        g_char_subst = g_charsets.c_str();
+        g_last_art = ArticleNum{1};
+        g_s_cur_type = S_ART;
+        g_sa_ents = m_entries;
+        g_sa_num_ents = 2;
+
+        m_entries[1].artnum = ArticleNum{1};
+        Article *article = article_ptr(ArticleNum{1});
+        article->m_num = ArticleNum{1};
+        article->m_from = m_author;
+        article->m_flags = AF_EXISTS | AF_UNREAD;
+
+        g_sc_initialized = false;
+        g_sa_mode_desc_art_num = false;
+        g_sa_mode_desc_author = true;
+        g_sa_mode_desc_score = false;
+        g_sa_mode_desc_thread_count = false;
+        g_sa_mode_desc_subject = false;
+        g_sa_mode_desc_summary = false;
+        g_sa_mode_desc_keyw = false;
+    }
+
+    void TearDown() override
+    {
+        delete_list(g_article_list);
+        g_article_list = nullptr;
+        g_sa_ents = nullptr;
+        g_sa_num_ents = 0;
+        g_char_subst = nullptr;
+        g_last_art = ArticleNum{};
+        g_s_cur_type = S_NONE;
+    }
+
+    char                 m_author[64]{"Casey Mixed <case@example.com>"};
+    ScanArticleEntryData m_entries[2]{};
+};
+
+} // namespace
+
+TEST_F(ScanCommandTest, descriptionSearchMatchesIgnoringCase)
+{
+    EXPECT_TRUE(scmd_match_description_for_test(1, "mixed"));
+    EXPECT_TRUE(scmd_match_description_for_test(1, "CASEY"));
+    EXPECT_FALSE(scmd_match_description_for_test(1, "missing"));
+}

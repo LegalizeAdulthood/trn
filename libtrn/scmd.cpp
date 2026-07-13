@@ -6,7 +6,7 @@
 // This file is Copyright 1993 by Clifford A. Adams
 // Copyright (c) 2026, Richard Thomson
 
-#include <trn/scmd.h>
+#include <trn/scmd-internal.h>
 
 #include <config/common.h>
 #include <trn/final.h>
@@ -27,6 +27,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 static void s_look_ahead();
 static int  s_do_cmd();
@@ -341,22 +342,34 @@ static int s_do_cmd()
 static char s_search_text[LINE_BUF_LEN]{};
 static char s_search_init{};
 
+bool scmd_match_description_for_test(long ent, std::string_view search_text)
+{
+    const std::size_t len = search_text.copy(s_search_text, sizeof s_search_text - 1);
+    s_search_text[len] = '\0';
+    for (char *t = s_search_text; *t != '\0'; t++)
+    {
+        if (std::isupper(*t))
+        {
+            *t = std::tolower(*t); // convert to lower case
+        }
+    }
+    return s_match_description(ent);
+}
+
 static bool s_match_description(long ent)
 {
-    static char lbuf[LINE_BUF_LEN];
-
     int lines = s_ent_lines(ent);
     for (int i = 1; i <= lines; i++)
     {
-        std::strncpy(lbuf,s_get_desc(ent,i,false),LINE_BUF_LEN);
-        for (char *s = lbuf; *s; s++)
+        std::string description{s_get_desc(ent, i, false)};
+        for (char &ch : description)
         {
-            if (std::isupper(*s))
+            if (std::isupper(ch))
             {
-                *s = std::tolower(*s);               // convert to lower case
+                ch = static_cast<char>(std::tolower(ch)); // convert to lower case
             }
         }
-        if (std::strstr(lbuf,s_search_text))
+        if (description.find(s_search_text) != std::string::npos)
         {
             return true;
         }

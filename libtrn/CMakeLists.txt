@@ -61,7 +61,7 @@ add_library(libtrn
     sathread.cpp include/trn/sathread.h
     scan.cpp include/trn/scan.h
     scanart.cpp include/trn/scanart.h
-    scmd.cpp include/trn/scmd.h
+    scmd.cpp include/trn/scmd.h include/trn/scmd-internal.h
     score-easy.cpp include/trn/score-easy.h
     score.cpp include/trn/score.h
     scorefile.cpp include/trn/scorefile.h

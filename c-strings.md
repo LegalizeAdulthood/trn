@@ -262,13 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-09. `libtrn/scmd.cpp`, `s_match_description`: replace the static
-`lbuf` description copy with local string storage, lowercase that
-string, and search it with string APIs.  The copied-description
-truncation is arbitrary; `trunc=false` means the caller is not asking
-for display-width truncation.  The separate `s_search_text` command
-buffer limit remains out of this slice.
-
 BUF-10. `libtrn/scorefile.cpp`, `sf_open_file`: replace the URL
 scratch `lbuf[1024]` with local owned string storage before calling
 `url_get`.  The temporary URL string is consumed in the same function;

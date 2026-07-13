@@ -61,6 +61,7 @@ add_executable(trn-headers-test
     test_sathread.cpp
     test_scan.cpp
     test_scanart.cpp
+    test_scmd-internal.cpp
     test_scmd.cpp
     test_score-easy.cpp
     test_score.cpp
