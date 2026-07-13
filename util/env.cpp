@@ -341,7 +341,6 @@ static bool set_user_name(char *tmpbuf)
 
 static bool set_p_host_name(char *tmpbuf)
 {
-    std::FILE* fp;
     bool hostname_ok = true;
 
     // Find the local hostname
@@ -381,49 +380,45 @@ static bool set_p_host_name(char *tmpbuf)
 
     // Build the host name that goes in postings
 
+    std::string posting_host_name;
     const char *filename{POSTING_HOSTNAME};
     if (FILE_REF(filename) || filename[0] == '~')
     {
-        fp = std::fopen(file_exp(filename).c_str(), "r");
+        std::FILE *fp = std::fopen(file_exp(filename).c_str(), "r");
         if (fp == nullptr)
         {
-            std::strcpy(tmpbuf, ".");
+            posting_host_name = ".";
         }
         else
         {
-            std::fgets(tmpbuf, TCBUF_SIZE, fp);
-            std::fclose(fp);
-            char *end = tmpbuf + std::strlen(tmpbuf) - 1;
-            if (*end == '\n')
+            posting_host_name = g_local_host;
+            char posting_host_buffer[TCBUF_SIZE]{};
+            if (std::fgets(posting_host_buffer, sizeof posting_host_buffer, fp) != nullptr)
             {
-                *end = '\0';
+                posting_host_name = posting_host_buffer;
+            }
+            std::fclose(fp);
+            if (!posting_host_name.empty() && posting_host_name.back() == '\n')
+            {
+                posting_host_name.pop_back();
             }
         }
     }
     else
     {
-        std::strcpy(tmpbuf, POSTING_HOSTNAME);
+        posting_host_name = POSTING_HOSTNAME;
     }
 
-    if (tmpbuf[0] == '.')
+    if (!posting_host_name.empty() && posting_host_name.front() == '.')
     {
-        if (tmpbuf[1] != '\0')
-        {
-            std::strcpy(g_buf,tmpbuf);
-        }
-        else
-        {
-            g_buf[0] = '\0';
-        }
-        std::strcpy(tmpbuf,g_local_host.c_str());
-        std::strcat(tmpbuf,g_buf);
+        posting_host_name = g_local_host + (posting_host_name.size() > 1 ? posting_host_name : "");
     }
 
-    if (!std::strchr(tmpbuf, '.'))
+    if (posting_host_name.find('.') == std::string::npos)
     {
-        if (tmpbuf[0])
+        if (!posting_host_name.empty())
         {
-            std::strcat(tmpbuf, ".");
+            posting_host_name += ".";
         }
 #ifdef HAS_RES_INIT
         if (!(_res.options & RES_INIT))
@@ -432,23 +427,23 @@ static bool set_p_host_name(char *tmpbuf)
         }
         if (_res.defdname != nullptr)
         {
-            std::strcat(tmpbuf,_res.defdname);
+            posting_host_name += _res.defdname;
         }
         else
 #endif
 #ifdef HAS_GETDOMAINNAME
         if (getdomainname(g_buf,LINE_BUF_LEN) == 0)
         {
-            std::strcat(tmpbuf,g_buf);
+            posting_host_name += g_buf;
         }
         else
 #endif
         {
-            std::strcat(tmpbuf,"UNKNOWN.HOST");
+            posting_host_name += "UNKNOWN.HOST";
             hostname_ok = false;
         }
     }
-    g_p_host_name = tmpbuf;
+    g_p_host_name = posting_host_name;
     return hostname_ok;
 }
 

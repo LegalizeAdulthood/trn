@@ -264,11 +264,6 @@ buffer slices.
 
 ### Copy/Concat Slices
 
-CC-07. `util/env.cpp`, `set_p_host_name`: replace local hostname
-copy/concat assembly with owned string storage after the platform APIs
-populate the initial C buffer.  Preserve the caller buffer for
-platform-output calls only.
-
 CC-08. `libtrn/rt-ov.cpp`, `ov_name`: return an owned path string
 instead of building the overview filename in `g_buf`.  The only caller
 passes the value to `fopen`, so the returned storage can stay local to
