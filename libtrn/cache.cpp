@@ -14,7 +14,6 @@
 #include <trn/head.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
-#include <trn/list.h>
 #include <trn/mime.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
@@ -39,24 +38,25 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <map>
 #include <string>
 #include <string_view>
 
-List      *g_article_list{};         // a list of Articles
-Article  **g_art_ptr_list{};         // the article-selector creates this
-Article  **g_art_ptr{};              // ditto -- used for article order
-ArticleNum g_art_ptr_list_size{};    //
-ArticleNum g_search_ahead{};         // are we in subject scan mode? (if so, contains art # found or -1)
-ArticleNum g_first_cached{};         //
-ArticleNum g_last_cached{};          //
-bool       g_cached_all_in_range{};  //
-Article   *g_sentinel_art_ptr{};     //
-Subject   *g_first_subject{};        //
-Subject   *g_last_subject{};         //
-bool       g_untrim_cache{};         //
-int        g_join_subject_len{};     // -J
-int        g_olden_days{};           // -o
-char       g_auto_select_postings{}; // -p
+std::map<ArticleNum, Article> g_article_list;
+Article                     **g_art_ptr_list{};      // the article-selector creates this
+Article                     **g_art_ptr{};           // ditto -- used for article order
+ArticleNum                    g_art_ptr_list_size{}; //
+ArticleNum                    g_search_ahead{};      // are we in subject scan mode? (if so, contains art # found or -1)
+ArticleNum                    g_first_cached{};      //
+ArticleNum                    g_last_cached{};       //
+bool                          g_cached_all_in_range{};  //
+Article                      *g_sentinel_art_ptr{};     //
+Subject                      *g_first_subject{};        //
+Subject                      *g_last_subject{};         //
+bool                          g_untrim_cache{};         //
+int                           g_join_subject_len{};     // -J
+int                           g_olden_days{};           // -o
+char                          g_auto_select_postings{}; // -p
 
 #ifdef PENDING
 static ArticleNum    s_subj_to_get{};
@@ -66,15 +66,94 @@ static CompiledRegex s_search_compex; // compiled regex for search ahead
 static HashTable *s_subj_hash{};
 static HashTable *s_short_subj_hash{};
 
-static void init_article_node(List *list, ListNode *node);
-static bool clear_article_item(char *cp, int arg);
-static int  subject_cmp(std::string_view key, HashDatum data);
+static int subject_cmp(std::string_view key, HashDatum data);
 #ifdef PENDING
 static bool cache_xrefs();
 static bool cache_all_arts();
 static bool cache_unread_arts();
 #endif
 static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles);
+
+Article *article_ptr(ArticleNum an)
+{
+    auto [it, inserted] = g_article_list.try_emplace(an, Article{});
+    if (inserted)
+    {
+        it->second.m_num = an;
+    }
+    return &it->second;
+}
+
+bool article_hasdata(ArticleNum an)
+{
+    return g_article_list.find(an) != g_article_list.end();
+}
+
+Article *article_find(ArticleNum an)
+{
+    if (an > g_last_art)
+    {
+        return nullptr;
+    }
+    const auto it = g_article_list.find(an);
+    return it == g_article_list.end() ? nullptr : &it->second;
+}
+
+bool article_walk(bool (*callback)(char *, int), int arg)
+{
+    for (auto &[num, article] : g_article_list)
+    {
+        if (callback(reinterpret_cast<char *>(&article), arg))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+ArticleNum article_first(ArticleNum an)
+{
+    const auto it = g_article_list.lower_bound(an);
+    return it == g_article_list.end() ? article_after(g_last_art) : it->first;
+}
+
+ArticleNum article_next(ArticleNum an)
+{
+    const auto it = g_article_list.upper_bound(an);
+    return it == g_article_list.end() ? article_after(g_last_art) : it->first;
+}
+
+ArticleNum article_last(ArticleNum an)
+{
+    auto it = g_article_list.upper_bound(an);
+    if (it == g_article_list.begin())
+    {
+        return article_before(g_abs_first);
+    }
+    --it;
+    return it->first;
+}
+
+ArticleNum article_prev(ArticleNum an)
+{
+    auto it = g_article_list.lower_bound(an);
+    if (it == g_article_list.begin())
+    {
+        return article_before(g_abs_first);
+    }
+    --it;
+    return it->first;
+}
+
+Article *article_nextp(Article *ap)
+{
+    if (ap == nullptr)
+    {
+        return nullptr;
+    }
+    const auto it = g_article_list.upper_bound(ap->article_num());
+    return it == g_article_list.end() ? nullptr : &it->second;
+}
 
 void cache_init()
 {
@@ -83,8 +162,8 @@ void cache_init()
 #endif
 }
 
-static NewsgroupData* s_cached_ng{};
-static std::time_t s_cached_time{};
+static NewsgroupData *s_cached_ng{};
+static std::time_t    s_cached_time{};
 
 void build_cache()
 {
@@ -104,7 +183,6 @@ void build_cache()
             article_ptr(an)->m_flags |= AF_EXISTS;
         }
         rc_to_bits();
-        g_article_list->m_high = g_last_art.value_of();
         thread_grow();
         return;
     }
@@ -113,12 +191,11 @@ void build_cache()
 
     s_cached_ng = g_newsgroup_ptr;
     s_cached_time = std::time(nullptr);
-    g_article_list = new_list(g_abs_first.value_of(), g_last_art.value_of(), sizeof (Article), 371,
-                              LF_SPARSE, init_article_node);
+    g_article_list.clear();
     s_subj_hash = hash_create(991, subject_cmp); // TODO: pick a better size
 
     set_first_art(g_newsgroup_ptr->m_rc_line + g_newsgroup_ptr->m_num_offset);
-    g_first_cached = g_thread_always? g_abs_first : g_first_art;
+    g_first_cached = g_thread_always ? g_abs_first : g_first_art;
     g_last_cached = article_before(g_first_cached);
     g_cached_all_in_range = false;
 #ifdef PENDING
@@ -133,9 +210,9 @@ void build_cache()
 
 void close_cache()
 {
-    Subject* next;
+    Subject *next;
 
-    nntp_art_name(ArticleNum{}, false);             // clear the tmp file cache
+    nntp_art_name(ArticleNum{}, false); // clear the tmp file cache
 
     if (s_subj_hash)
     {
@@ -156,7 +233,7 @@ void close_cache()
     }
     g_first_subject = nullptr;
     g_last_subject = nullptr;
-    g_subject_count = 0;                // just to be sure
+    g_subject_count = 0; // just to be sure
     g_parsed_art = ArticleNum{};
 
     if (g_art_ptr_list)
@@ -167,30 +244,15 @@ void close_cache()
     g_art_ptr = nullptr;
     thread_close();
 
-    if (g_article_list)
-    {
-        g_article_list->walk_list(clear_article_item, 0);
-        delete_list(g_article_list);
-        g_article_list = nullptr;
-    }
+    article_walk(
+        [](char *cp, int)
+        {
+            reinterpret_cast<Article *>(cp)->clear_article();
+            return false;
+        },
+        0);
+    g_article_list.clear();
     s_cached_ng = nullptr;
-}
-
-// Initialize the memory for an entire node's worth of article's
-static void init_article_node(List *list, ListNode *node)
-{
-    std::memset(node->data, 0, list->m_items_per_node * list->m_item_size);
-    Article *ap = (Article *) node->data;
-    for (ArticleNum i = ArticleNum{node->low}; i <= ArticleNum{node->high}; ++i, ++ap)
-    {
-        ap->m_num = i;
-    }
-}
-
-static bool clear_article_item(char *cp, int arg)
-{
-    ((Article*)cp)->clear_article();
-    return false;
 }
 
 // TODO: decouple this from s_short_subj_hash

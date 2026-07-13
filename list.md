@@ -95,19 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 8: Article Map
-
-Replace `g_article_list` with `std::map<ArticleNum, Article>`.
-
-- Implement `article_ptr` as create-or-return for the article number.
-- Implement `article_find` as lookup without insertion.
-- Implement `article_first`, `article_next`, `article_last`, and
-  `article_prev` with `lower_bound`, `upper_bound`, and reverse
-  iterators.
-- Replace `article_walk` with map iteration.
-- Initialize `Article::m_num` when inserting the record.
-- Update tests that construct `g_article_list` directly.
-
 ### Slice 9: Source File Line Store
 
 Replace `SourceFile::m_lp` with owned line storage.

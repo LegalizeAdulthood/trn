@@ -158,8 +158,6 @@ void thread_open()
         g_newsgroup_ptr->m_ng_max = g_last_cached;
         g_last_art = g_last_cached;
     }
-    g_article_list->m_high = g_last_art.value_of();
-
     for (ap = article_ptr(article_first(g_abs_first));
          ap && ap->article_num() <= g_last_art;
          ap = article_nextp(ap))

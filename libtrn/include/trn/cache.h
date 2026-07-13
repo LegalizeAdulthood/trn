@@ -10,14 +10,13 @@
 #include <trn/hash.h>
 #include <trn/head.h>
 #include <trn/kfile.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 
 #include <cstdint>
 #include <ctime>
+#include <map>
 #include <string_view>
 
-struct List;
 struct Subject;
 
 // See trn/kfile.h for the AUTO_* flags
@@ -27,29 +26,29 @@ enum : bool
     FILL_CACHE = true
 };
 
-extern List      *g_article_list; // a list of Articles
-extern Article  **g_art_ptr_list; // the article-selector creates this
-extern Article  **g_art_ptr;      // ditto -- used for article order
-extern ArticleNum g_art_ptr_list_size;
-extern ArticleNum g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
-extern ArticleNum g_first_cached;
-extern ArticleNum g_last_cached;
-extern bool       g_cached_all_in_range;
-extern Article   *g_sentinel_art_ptr;
-extern Subject   *g_first_subject;
-extern Subject   *g_last_subject;
-extern bool       g_untrim_cache;
-extern int        g_join_subject_len;     // -J
-extern int        g_olden_days;           // -o
-extern char       g_auto_select_postings; // -p
+extern std::map<ArticleNum, Article> g_article_list;
+extern Article                     **g_art_ptr_list; // the article-selector creates this
+extern Article                     **g_art_ptr;      // ditto -- used for article order
+extern ArticleNum                    g_art_ptr_list_size;
+extern ArticleNum                    g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
+extern ArticleNum                    g_first_cached;
+extern ArticleNum                    g_last_cached;
+extern bool                          g_cached_all_in_range;
+extern Article                      *g_sentinel_art_ptr;
+extern Subject                      *g_first_subject;
+extern Subject                      *g_last_subject;
+extern bool                          g_untrim_cache;
+extern int                           g_join_subject_len;     // -J
+extern int                           g_olden_days;           // -o
+extern char                          g_auto_select_postings; // -p
 
-void  cache_init();
-void  build_cache();
-void  close_cache();
-void  change_join_subject_len(int len);
+void        cache_init();
+void        build_cache();
+void        close_cache();
+void        change_join_subject_len(int len);
 const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
-int   decode_header(char *to, std::string_view from);
-void  dectrl(char *str);
+int         decode_header(char *to, std::string_view from);
+void        dectrl(char *str);
 #ifdef PENDING
 void look_ahead();
 #endif
@@ -59,42 +58,16 @@ bool cache_subjects();
 #endif
 bool cache_range(ArticleNum first, ArticleNum last);
 
-inline Article *article_ptr(ArticleNum an)
-{
-    return (Article *) g_article_list->list_get_item(an.value_of());
-}
-inline bool article_hasdata(ArticleNum an)
-{
-    return g_article_list->existing_list_index(an.value_of(), 0) != 0;
-}
-inline Article *article_find(ArticleNum an)
-{
-    return an <= g_last_art && article_hasdata(an) ? article_ptr(an) : nullptr;
-}
-inline bool article_walk(bool (*callback)(char *, int), int arg)
-{
-    return g_article_list->walk_list(callback, arg);
-}
-inline ArticleNum article_first(ArticleNum an)
-{
-    return ArticleNum{g_article_list->existing_list_index(an.value_of(), 1)};
-}
-inline ArticleNum article_next(ArticleNum an)
-{
-    return ArticleNum{g_article_list->existing_list_index(an.value_of() + 1, 1)};
-}
-inline ArticleNum article_last(ArticleNum an)
-{
-    return ArticleNum{g_article_list->existing_list_index(an.value_of(), -1)};
-}
-inline ArticleNum article_prev(ArticleNum an)
-{
-    return ArticleNum{g_article_list->existing_list_index(an.value_of() - 1, -1)};
-}
-inline Article *article_nextp(Article *ap)
-{
-    return (Article *) g_article_list->next_list_item((char *) ap);
-}
+Article   *article_ptr(ArticleNum an);
+bool       article_hasdata(ArticleNum an);
+Article   *article_find(ArticleNum an);
+bool       article_walk(bool (*callback)(char *, int), int arg);
+ArticleNum article_first(ArticleNum an);
+ArticleNum article_next(ArticleNum an);
+ArticleNum article_last(ArticleNum an);
+ArticleNum article_prev(ArticleNum an);
+Article   *article_nextp(Article *ap);
+
 inline bool article_exists(ArticleNum an)
 {
     return article_ptr(an)->m_flags & AF_EXISTS;

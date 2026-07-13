@@ -6,7 +6,6 @@
 #include <trn/Article.h>
 #include <trn/cache.h>
 #include <trn/charsubst.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/scan.h>
 #include <trn/scanart.h>
@@ -22,7 +21,7 @@ class ScanCommandTest : public testing::Test
 protected:
     void SetUp() override
     {
-        g_article_list = new_list(1, 1, sizeof(Article), 1, LF_ZERO_MEM, nullptr);
+        g_article_list.clear();
         g_char_subst = g_charsets.c_str();
         g_last_art = ArticleNum{1};
         g_s_cur_type = S_ART;
@@ -31,7 +30,6 @@ protected:
 
         m_entries[1].artnum = ArticleNum{1};
         Article *article = article_ptr(ArticleNum{1});
-        article->m_num = ArticleNum{1};
         article->m_from = m_author;
         article->m_flags = AF_EXISTS | AF_UNREAD;
 
@@ -47,8 +45,7 @@ protected:
 
     void TearDown() override
     {
-        delete_list(g_article_list);
-        g_article_list = nullptr;
+        g_article_list.clear();
         g_sa_ents = nullptr;
         g_sa_num_ents = 0;
         g_char_subst = nullptr;

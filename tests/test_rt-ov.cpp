@@ -9,7 +9,6 @@
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
-#include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rt-util.h>
@@ -21,6 +20,7 @@
 #include <fstream>
 #include <string>
 #include <system_error>
+#include <utility>
 
 namespace
 {
@@ -35,7 +35,7 @@ protected:
     void SetUp() override
     {
         m_old_data_source = g_data_source;
-        m_old_article_list = g_article_list;
+        m_old_article_list = std::move(g_article_list);
         m_old_newsgroup_name = g_newsgroup_name;
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
@@ -62,10 +62,8 @@ protected:
             m_data_source.m_field_flags[i] = FF_HAS_FIELD;
         }
 
-        g_article_list = new_list(TEST_ARTICLE_NUM.value_of(), TEST_ARTICLE_NUM.value_of(), sizeof(Article), 1,
-                                  LF_ZERO_MEM, nullptr);
+        g_article_list.clear();
         Article *article = article_ptr(TEST_ARTICLE_NUM);
-        article->m_num = TEST_ARTICLE_NUM;
         article->m_flags = AF_EXISTS;
 
         g_newsgroup_name = "comp.lang.apl";
@@ -86,9 +84,10 @@ protected:
     void TearDown() override
     {
         ov_close();
-        delete_list(g_article_list);
+        article_ptr(TEST_ARTICLE_NUM)->clear_article();
+        g_article_list.clear();
         g_data_source = m_old_data_source;
-        g_article_list = m_old_article_list;
+        g_article_list = std::move(m_old_article_list);
         g_newsgroup_name = m_old_newsgroup_name;
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
@@ -116,12 +115,12 @@ protected:
     fs::path    m_overview_dir{TRN_TEST_TMP_DIR "/overview-local"};
     std::string m_overview_dir_text;
 
-    DataSource *m_old_data_source{};
-    List       *m_old_article_list{};
-    std::string m_old_newsgroup_name;
-    ArticleNum  m_old_abs_first{};
-    ArticleNum  m_old_first_art{};
-    ArticleNum  m_old_last_art{};
+    DataSource                   *m_old_data_source{};
+    std::map<ArticleNum, Article> m_old_article_list;
+    std::string                   m_old_newsgroup_name;
+    ArticleNum                    m_old_abs_first{};
+    ArticleNum                    m_old_first_art{};
+    ArticleNum                    m_old_last_art{};
     ArticleNum  m_old_first_cached{};
     ArticleNum  m_old_last_cached{};
     bool        m_old_cached_all_in_range{};
