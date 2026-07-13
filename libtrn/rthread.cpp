@@ -227,12 +227,11 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
         {
             return 0;
         }
-        if ((g_kf_state & KFS_GLOBAL_THREAD_FILE) && ap->m_auto_flags)
+        if ((g_kf_state & KFS_GLOBAL_THREAD_FILE) && ap->m_auto_flags && ap->m_msg_id)
         {
-            data->dat_ptr = ap->m_msg_id;
-            data->dat_len = ap->m_auto_flags;
+            *data = make_pending_msg_id(*ap->m_msg_id, ap->m_auto_flags);
             ret = 0;
-            ap->m_msg_id = nullptr;
+            ap->m_msg_id.reset();
         }
         if (ap->m_flags & AF_TMP_MEM)
         {

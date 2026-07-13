@@ -8,13 +8,19 @@
 #include <config/typedef.h>
 #include <trn/hash.h>
 
+#include <string>
+
 struct Article;
 struct Subject;
 
-int      msg_id_cmp(std::string_view key, HashDatum data);
-Article *get_article(char *msgid);
-void     merge_threads(Subject *s1, Subject *s2);
-void     fix_msg_id(char *msgid);
-void     unlink_child(Article *child);
+HashDatum   make_pending_msg_id(std::string_view msg_id, unsigned flags);
+const char *hash_msg_id_c_str(HashDatum data);
+std::string take_pending_msg_id(HashDatum *data);
+void        free_pending_msg_id(HashDatum *data);
+int         msg_id_cmp(std::string_view key, HashDatum data);
+Article    *get_article(char *msgid);
+void        merge_threads(Subject *s1, Subject *s2);
+void        fix_msg_id(char *msgid);
+void        unlink_child(Article *child);
 
 #endif

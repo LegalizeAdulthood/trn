@@ -1123,11 +1123,15 @@ void Article::set_cached_line(int which_line, char *s)
         break;
 
     case MSG_ID_LINE:
-        if (m_msg_id)
+        if (s)
         {
-            std::free(m_msg_id);
+            m_msg_id = s;
         }
-        m_msg_id = s;
+        else
+        {
+            m_msg_id.reset();
+        }
+        std::free(s);
         break;
 
     case LINES_LINE:

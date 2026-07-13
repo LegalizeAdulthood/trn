@@ -115,13 +115,13 @@ void kill_file_init()
                         HashDatum data = hash_fetch(g_msg_id_hash, g_buf);
                         if (!data.dat_ptr)
                         {
-                            data.dat_ptr = save_str(g_buf);
+                            data = make_pending_msg_id(g_buf, auto_flag | age);
                         }
                         else
                         {
                             g_kf_change_thread_cnt++;
+                            data.dat_len = auto_flag | age;
                         }
-                        data.dat_len = auto_flag | age;
                         hash_store_last(data);
                     }
                     s_kill_file_thread_cnt++;
@@ -507,7 +507,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
                 break;
             }
         }
-        std::fprintf(s_new_kill_file_fp,"%s T%c\n", ap->m_msg_id, ch);
+        fmt::print(s_new_kill_file_fp, "{} T{}\n", ap->msg_id_c_str(), ch);
     }
     return 0;
 }
@@ -616,8 +616,8 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
 {
     int autofl;
     int age;
-    char* msgid;
-    char ch;
+    const char *msgid;
+    char        ch;
 
     if (data->dat_len)
     {
@@ -627,11 +627,11 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
         }
         autofl = data->dat_len;
         age = autofl & KF_AGE_MASK;
-        msgid = data->dat_ptr;
+        msgid = hash_msg_id_c_str(*data);
     }
     else
     {
-        Article* ap = (Article*)data->dat_ptr;
+        Article *ap = (Article *) data->dat_ptr;
         autofl = ap->m_auto_flags;
         if (!autofl || (appending && (autofl & AUTO_OLD)))
         {
@@ -639,7 +639,7 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
         }
         ap->m_auto_flags |= AUTO_OLD;
         age = 0;
-        msgid = ap->m_msg_id;
+        msgid = ap->msg_id_c_str();
     }
 
     // The arrays are in priority order, so find highest priority bit.
@@ -651,7 +651,7 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
             break;
         }
     }
-    std::fprintf(s_new_kill_file_fp,"%s %c %ld\n", msgid, ch, s_kill_file_day_num - age);
+    fmt::print(s_new_kill_file_fp, "{} {} {}\n", msgid, ch, s_kill_file_day_num - age);
     s_kill_file_thread_cnt++;
 
     return 0;
@@ -664,7 +664,7 @@ static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
         int age = (data->dat_len & KF_AGE_MASK) + elapsed_days;
         if (age > KF_MAX_DAYS)
         {
-            std::free(data->dat_ptr);
+            free_pending_msg_id(data);
             g_kf_change_thread_cnt++;
             return -1;
         }

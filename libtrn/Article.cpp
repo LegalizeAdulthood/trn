@@ -215,7 +215,7 @@ const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
         break;
 
     case MSG_ID_LINE:
-        s = m_msg_id;
+        s = msg_id_c_str();
         break;
 
     case LINES_LINE:
@@ -244,10 +244,7 @@ const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
 void Article::clear_article()
 {
     m_from.reset();
-    if (m_msg_id)
-    {
-        std::free(m_msg_id);
-    }
+    m_msg_id.reset();
     m_xrefs.reset();
 }
 
@@ -748,17 +745,16 @@ void Article::perform_auto_flags(AutoKillFlags thread_flags, AutoKillFlags subj_
 
 bool Article::valid_article()
 {
-    char* msgid = m_msg_id;
-
-    if (msgid)
+    if (m_msg_id)
     {
-        fix_msg_id(msgid);
-        HashDatum data = hash_fetch(g_msg_id_hash, msgid);
+        fix_msg_id(m_msg_id->data());
+        HashDatum data = hash_fetch(g_msg_id_hash, *m_msg_id);
         if (data.dat_len)
         {
-            safe_free0(data.dat_ptr);
-            m_auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
-            if ((data.dat_len & KF_AGE_MASK) == 0)
+            const unsigned hash_flags = data.dat_len;
+            free_pending_msg_id(&data);
+            m_auto_flags = static_cast<AutoKillFlags>(hash_flags) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+            if ((hash_flags & KF_AGE_MASK) == 0)
             {
                 m_auto_flags |= AUTO_OLD;
             }

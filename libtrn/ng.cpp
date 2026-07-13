@@ -424,7 +424,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             if (g_art == 0 && g_artp && g_artp->m_msg_id && (g_data_source->m_flags & DF_REMOTE) //
                 && !(g_artp->m_flags & AF_CACHED))
             {
-                g_art = nntp_stat_id(g_artp->m_msg_id);
+                g_art = nntp_stat_id(*g_artp->m_msg_id);
                 if (g_art < 0)
                 {
                     s_exit_code = NG_NO_SERVER;

@@ -22,9 +22,26 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <string_view>
+#include <utility>
 
 static Article *allocate_article(ArticleNum artnum);
+
+namespace
+{
+
+struct PendingMessageId
+{
+    std::string msg_id;
+};
+
+PendingMessageId *pending_msg_id(HashDatum data)
+{
+    return reinterpret_cast<PendingMessageId *>(data.dat_ptr);
+}
+
+} // namespace
 
 // This depends on art being set to the current article number.
 static Article *allocate_article(ArticleNum artnum)
@@ -44,6 +61,33 @@ static Article *allocate_article(ArticleNum artnum)
     return article;
 }
 
+HashDatum make_pending_msg_id(std::string_view msg_id, unsigned flags)
+{
+    return {reinterpret_cast<char *>(new PendingMessageId{std::string{msg_id}}), flags};
+}
+
+const char *hash_msg_id_c_str(HashDatum data)
+{
+    return data.dat_len ? pending_msg_id(data)->msg_id.c_str()
+                        : reinterpret_cast<Article *>(data.dat_ptr)->msg_id_c_str();
+}
+
+std::string take_pending_msg_id(HashDatum *data)
+{
+    PendingMessageId *pending = pending_msg_id(*data);
+    std::string       msg_id = std::move(pending->msg_id);
+
+    delete pending;
+    data->dat_ptr = nullptr;
+    return msg_id;
+}
+
+void free_pending_msg_id(HashDatum *data)
+{
+    delete pending_msg_id(*data);
+    data->dat_ptr = nullptr;
+}
+
 void fix_msg_id(char *msgid)
 {
     char *cp = std::strchr(msgid, '@');
@@ -61,7 +105,7 @@ void fix_msg_id(char *msgid)
 
 int msg_id_cmp(std::string_view key, HashDatum data)
 {
-    const char            *msg_id = data.dat_len ? data.dat_ptr : ((Article *) data.dat_ptr)->m_msg_id;
+    const char            *msg_id = hash_msg_id_c_str(data);
     const std::string_view msg_id_view{msg_id, key.size()};
 
     return key.compare(msg_id_view);
@@ -79,9 +123,10 @@ Article *get_article(char *msgid)
     HashDatum data = hash_fetch(g_msg_id_hash, msgid);
     if (data.dat_len)
     {
+        const unsigned hash_flags = data.dat_len;
         article = allocate_article(ArticleNum{});
-        article->m_auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
-        if ((data.dat_len & KF_AGE_MASK) == 0)
+        article->m_auto_flags = static_cast<AutoKillFlags>(hash_flags) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+        if ((hash_flags & KF_AGE_MASK) == 0)
         {
             article->m_auto_flags |= AUTO_OLD;
         }
@@ -89,16 +134,16 @@ Article *get_article(char *msgid)
         {
             g_kf_change_thread_cnt++;
         }
-        article->m_msg_id = data.dat_ptr;
-        data.dat_ptr = (char*)article;
+        article->m_msg_id = take_pending_msg_id(&data);
+        data.dat_ptr = (char *) article;
         data.dat_len = 0;
         hash_store_last(data);
     }
     else if (!(article = (Article *) data.dat_ptr))
     {
         article = allocate_article(ArticleNum{});
-        data.dat_ptr = (char*)article;
-        article->m_msg_id = save_str(msgid);
+        data.dat_ptr = (char *) article;
+        article->m_msg_id = msgid;
         hash_store_last(data);
     }
     return article;

@@ -107,6 +107,10 @@ struct Article
     {
         return m_from ? m_from->c_str() : nullptr;
     }
+    const char *msg_id_c_str() const
+    {
+        return m_msg_id ? m_msg_id->c_str() : nullptr;
+    }
     const char *xrefs_c_str() const
     {
         return m_xrefs ? m_xrefs->c_str() : nullptr;
@@ -120,7 +124,7 @@ struct Article
     std::time_t   m_date;
     Subject      *m_subj;
     std::optional<std::string> m_from;
-    char         *m_msg_id;
+    std::optional<std::string> m_msg_id;
     std::optional<std::string> m_xrefs;
     Article      *m_parent;    // parent article
     Article      *m_child1;    // first child of a chain
