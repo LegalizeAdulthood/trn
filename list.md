@@ -95,17 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 2: MIME Cap Strings
-
-Promote `MimeCapEntry` string fields to owned strings after slice 1.
-
-- Change `content_type`, `command`, `test_command`, and `description` to
-  `std::string`.
-- Drop `save_str` storage in `mime_read_mimecap`.
-- Pass `c_str()` only at legacy command execution boundaries.
-- Preserve missing `test_command` and `description` semantics, using
-  empty strings or optionals as appropriate.
-
 ### Slice 3: Data Source Vector
 
 Replace `g_data_source_list` with `std::vector<DataSource>`.

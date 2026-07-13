@@ -76,13 +76,12 @@ constexpr bool CLOSING_TAG = false;
 constexpr bool OPENING_TAG = true;
 
 static char       *mime_parse_entry_arg(char **cpp);
-static void        mime_clear_mimecap_entries();
-static int   mime_getc(std::FILE *fp);
-static void  mime_init_sections();
-static bool  mime_pop_section();
+static int         mime_getc(std::FILE *fp);
+static void        mime_init_sections();
+static bool        mime_pop_section();
 static const char *mime_find_param(const std::string &params, std::string_view param);
-static char *mime_skip_whitespace(char *s);
-static char *tag_action(char *t, const char *word, bool opening_tag);
+static char       *mime_skip_whitespace(char *s);
+static char       *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, HtmlFlags flag);
 static int         do_indent(char *t);
@@ -96,7 +95,7 @@ void mime_set_executor(MimeExecutor executor)
 void mime_init()
 {
     s_executor = do_shell;
-    mime_clear_mimecap_entries();
+    s_mimecap_entries.clear();
 
     const char *mcname = get_val_const("MIMECAPS");
     if (mcname == nullptr)
@@ -123,7 +122,7 @@ void mime_init()
 
 void mime_final()
 {
-    mime_clear_mimecap_entries();
+    s_mimecap_entries.clear();
 }
 
 void mime_read_mimecap(const char *mcname)
@@ -186,8 +185,8 @@ void mime_read_mimecap(const char *mcname)
             continue;
         }
         MimeCapEntry &mcp = s_mimecap_entries.emplace_back();
-        mcp.content_type = save_str(t);
-        mcp.command = save_str(mime_parse_entry_arg(&s));
+        mcp.content_type = t;
+        mcp.command = mime_parse_entry_arg(&s);
         while (s)
         {
             t = mime_parse_entry_arg(&s);
@@ -222,29 +221,17 @@ void mime_read_mimecap(const char *mcname)
                 }
                 else if (arg && string_case_equal(t, "test"))
                 {
-                    mcp.test_command = save_str(arg);
+                    mcp.test_command = arg;
                 }
                 else if (arg && (string_case_equal(t, "description") || string_case_equal(t, "label")))
                 {
-                    mcp.description = save_str(arg); // 'label' is the legacy name for description
+                    mcp.description = arg; // 'label' is the legacy name for description
                 }
             }
         }
     }
     std::free(bp);
     std::fclose(fp);
-}
-
-static void mime_clear_mimecap_entries()
-{
-    for (MimeCapEntry &mcp : s_mimecap_entries)
-    {
-        safe_free(mcp.content_type);
-        safe_free(mcp.command);
-        safe_free(mcp.test_command);
-        safe_free(mcp.description);
-    }
-    s_mimecap_entries.clear();
 }
 
 static char *mime_parse_entry_arg(char **cpp)
@@ -293,11 +280,11 @@ MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags
         if (!(mcp.flags & skip_flags) //
             && mime_types_match(contenttype, mcp.content_type))
         {
-            if (!mcp.test_command)
+            if (mcp.test_command.empty())
             {
                 return &mcp;
             }
-            if (mime_exec(mcp.test_command) == 0)
+            if (mime_exec(mcp.test_command.c_str()) == 0)
             {
                 return &mcp;
             }
@@ -319,11 +306,11 @@ bool mime_types_match(std::string_view ct, std::string_view pat)
             string_case_equal(content_type.c_str(), pattern.c_str(), static_cast<int>(len)) && ct[len] == '/');
 }
 
-int mime_exec(char *cmd)
+int mime_exec(const char *cmd)
 {
-    char* t = g_cmd_buf;
+    char *t = g_cmd_buf;
 
-    for (char *f = cmd; *f && t - g_cmd_buf < CMD_BUF_LEN - 2; f++)
+    for (const char *f = cmd; *f && t - g_cmd_buf < CMD_BUF_LEN - 2; f++)
     {
         if (*f == '%')
         {
@@ -343,17 +330,16 @@ int mime_exec(char *cmd)
 
             case '{':
             {
-                char* s = std::strchr(f, '}');
+                const char *s = std::strchr(f, '}');
                 if (!s)
                 {
                     return -1;
                 }
                 f++;
-                *s = '\0';
-                const char *p = g_mime_section->m_type_params
-                    ? mime_find_param(*g_mime_section->m_type_params, f)
-                    : nullptr;
-                *s = '}'; // restore
+                const char *p = g_mime_section->m_type_params //
+                                    ? mime_find_param(*g_mime_section->m_type_params,
+                                                      std::string_view{f, static_cast<std::size_t>(s - f)})
+                                    : nullptr;
                 f = s;
                 *t++ = '\'';
                 safe_copy(t, p, CMD_BUF_LEN-(t-g_cmd_buf)-1);

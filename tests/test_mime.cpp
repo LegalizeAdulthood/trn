@@ -44,10 +44,10 @@ TEST_F(MimeTest, imageGif)
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, cap->content_type);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->test_command);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_DESCRIPTION, cap->description);
+    ASSERT_EQ(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, cap->content_type);
+    ASSERT_EQ(TRN_TEST_MIME_IMAGE_GIF_COMMAND, cap->command);
+    ASSERT_TRUE(cap->test_command.empty());
+    ASSERT_EQ(TRN_TEST_MIME_IMAGE_GIF_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
@@ -56,10 +56,10 @@ TEST_F(MimeTest, imageWildcardWithLabel)
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, cap->content_type);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->test_command);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_DESCRIPTION, cap->description);
+    ASSERT_EQ(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, cap->content_type);
+    ASSERT_EQ(TRN_TEST_MIME_IMAGE_ANY_COMMAND, cap->command);
+    ASSERT_TRUE(cap->test_command.empty());
+    ASSERT_EQ(TRN_TEST_MIME_IMAGE_ANY_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
@@ -68,10 +68,10 @@ TEST_F(MimeTest, appleFileIgnoredParams)
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, cap->content_type);
-    ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->test_command);
-    ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_DESCRIPTION, cap->description);
+    ASSERT_EQ(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, cap->content_type);
+    ASSERT_EQ(TRN_TEST_MIME_APPLEFILE_COMMAND, cap->command);
+    ASSERT_TRUE(cap->test_command.empty());
+    ASSERT_EQ(TRN_TEST_MIME_APPLEFILE_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
@@ -80,10 +80,10 @@ TEST_F(MimeTest, textPlainHasFlags)
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, cap->content_type);
-    ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->test_command);
-    ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_DESCRIPTION, cap->description);
+    ASSERT_EQ(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, cap->content_type);
+    ASSERT_EQ(TRN_TEST_MIME_TEXT_PLAIN_COMMAND, cap->command);
+    ASSERT_TRUE(cap->test_command.empty());
+    ASSERT_EQ(TRN_TEST_MIME_TEXT_PLAIN_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NEEDS_TERMINAL | MCF_COPIOUS_OUTPUT, cap->flags);
 }
 
@@ -122,10 +122,10 @@ TEST_F(MimeExecTest, applicationPdfSuccessfulTestCommand)
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_PDF_CONTENT_TYPE, cap->content_type);
-    ASSERT_STREQ(TRN_TEST_MIME_PDF_COMMAND, cap->command);
-    ASSERT_STREQ(TRN_TEST_MIME_PDF_TEST_COMMAND, cap->test_command);
-    ASSERT_STREQ(TRN_TEST_MIME_PDF_DESCRIPTION, cap->description);
+    ASSERT_EQ(TRN_TEST_MIME_PDF_CONTENT_TYPE, cap->content_type);
+    ASSERT_EQ(TRN_TEST_MIME_PDF_COMMAND, cap->command);
+    ASSERT_EQ(TRN_TEST_MIME_PDF_TEST_COMMAND, cap->test_command);
+    ASSERT_EQ(TRN_TEST_MIME_PDF_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
