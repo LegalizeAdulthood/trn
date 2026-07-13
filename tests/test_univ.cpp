@@ -76,3 +76,26 @@ TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
     EXPECT_EQ(file_exp(child_name), g_first_univ->m_data.cfile.fname);
     EXPECT_EQ(nullptr, g_first_univ->m_data.cfile.label);
 }
+
+TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
+{
+    const std::filesystem::path parent = m_root / "parent";
+    const std::filesystem::path top = parent / "top.univ";
+    const std::filesystem::path child = parent / "child.univ";
+    std::filesystem::create_directories(parent);
+
+    std::ofstream output{top, std::ios::binary};
+    ASSERT_TRUE(output.good());
+    output << "\"Child\" :child.univ>chapter\n";
+    output.close();
+
+    const std::string top_name = top.generic_string();
+    const std::string child_name = child.generic_string();
+
+    ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
+    ASSERT_NE(nullptr, g_first_univ);
+    EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->m_type);
+    EXPECT_STREQ("Child", g_first_univ->m_desc);
+    EXPECT_EQ(file_exp(child_name), g_first_univ->m_data.cfile.fname);
+    EXPECT_STREQ("chapter", g_first_univ->m_data.cfile.label);
+}

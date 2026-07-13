@@ -843,32 +843,22 @@ static bool univ_do_line(char *line)
         case '~':     // ...or full file names
         case '%':
         case '/':
-            p = skip_ne(s, '>');
-            if (*p)
+        {
+            std::string       file_name{s};
+            std::string       label;
+            const std::size_t label_pos = file_name.find('>');
+            if (label_pos != std::string::npos)
             {
-                if (std::strlen(s) < 1020)
-                {
-                    static char lbuf[1024];
-                    std::strcpy(lbuf,s);
-                    s = lbuf;
-
-                    p = skip_ne(s, '>'); // XXX Ick!
-                    *p++ = '\0';        // separate label
-
-                    if (!*p)            // empty label
-                    {
-                        p = nullptr;
-                    }
-                    // XXX later do more error checking
-                }
+                label = file_name.substr(label_pos + 1);
+                file_name.erase(label_pos);
             }
-            else
-            {
-                p = nullptr;
-            }
+            const char *label_ptr = label.empty() ? nullptr : label.c_str();
+
             // description defaults to name
-            univ_add_file(s_univ_line_desc ? s_univ_line_desc : s, file_exp(s).c_str(), p);
+            univ_add_file(s_univ_line_desc ? s_univ_line_desc : file_name.c_str(), file_exp(file_name.c_str()).c_str(),
+                          label_ptr);
             break;
+        }
 
         case '-':     // label within same file
             s++;

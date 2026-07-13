@@ -262,13 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-05. `libtrn/univ.cpp`, `univ_do_line`: replace the static
-`lbuf[1024]` used for `file>label` splitting with local owned string
-storage.  Split the filename and label as views or owned strings, then
-call `univ_add_file`; that helper copies all three strings into the
-universal item.  The current 1020-character cutoff is arbitrary fixed
-scratch-buffer protection, not a meaningful universal-file limit.
-
 BUF-06. `libtrn/terminal.cpp`, `arrow_macros`: remove the `lbuf[256]`
 copy of each terminal arrow capability.  Pass the literal MSDOS escape
 strings or the `Tgetstr` result directly to `set_macro`, which accepts
