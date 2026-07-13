@@ -348,13 +348,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### MIME Cap Path List
-
-In `libtrn/mime.cpp`, `mime_init` copies the `MIMECAPS`/`MAILCAPS`
-value with `save_str` only to split it on colon characters.  Iterate the
-list with `std::string_view`; create a local `std::string` only for the
-non-empty item being passed to `mime_read_mimecap`.
-
 #### Chase Xref Scratch Line
 
 In `libtrn/bits.cpp`, `chase_xref` copies the fetched Xref line with

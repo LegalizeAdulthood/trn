@@ -102,22 +102,22 @@ void mime_init()
     {
         mcname = get_val_const("MAILCAPS", MIMECAP);
     }
-    char *mcname_copy = save_str(mcname);
-    char *s = mcname_copy;
-    do
+    std::string_view mcname_list{mcname};
+    while (!mcname_list.empty())
     {
-        char *t = std::strchr(s, ':');
-        if (t != nullptr)
+        const std::size_t      next = mcname_list.find(':');
+        const std::string_view item = mcname_list.substr(0, next);
+        if (!item.empty())
         {
-            *t++ = '\0';
+            const std::string item_text{item};
+            mime_read_mimecap(item_text.c_str());
         }
-        if (*s)
+        if (next == std::string_view::npos)
         {
-            mime_read_mimecap(s);
+            break;
         }
-        s = t;
-    } while (s && *s);
-    std::free(mcname_copy);
+        mcname_list.remove_prefix(next + 1);
+    }
 }
 
 void mime_final()
