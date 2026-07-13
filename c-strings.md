@@ -111,11 +111,16 @@ limit after tests cover normal current behavior.  Do not add boundary
 tests solely to preserve a fixed-buffer artifact.
 
 A formatting pass checked how much construction and output would be
-simplified by adding `libfmt`.  The tree does not currently depend on or
-use fmt.  Current C-style formatting and output usage is large: about
-223 `std::sprintf`/`std::snprintf` sites, 637 `std::printf`/
-`std::fprintf` sites, 223 `std::strcpy`/`std::strcat` sites, and 77
-`std::strncpy`/`safe_copy` sites in the source directories.
+simplified by adding `libfmt`; fmt is now available to the core targets.
+Current C-style formatting and output usage remains large: this pass
+found 213 `std::sprintf` sites, 2 `std::snprintf` sites, and 622
+`std::printf`/`std::fprintf` sites in the source directories.
+
+A corrected copy/concat pass over absolute source paths found 286
+non-test source hits: 167 `std::strcpy`, 46 `std::strcat`, 12
+`std::strncpy`, and 61 `safe_copy` hits.  There were no `std::strncat`
+hits.  Tests add 7 more direct setup-buffer hits.  The previous
+zero-hit result was wrong.
 
 That first count did not include owned string construction already using
 `std::string`.  A follow-up scan found 29 `.append()` sites, 9
@@ -153,6 +158,26 @@ Do not promote simple output-only helper parameters when the only local
 effect is replacing `fputs` or `printf` with `fwrite` or a temporary
 `std::string`.  Keep the C-string signature when it is simpler and no
 string slicing or ownership improvement results.
+
+The copy/concat audit classifies hits by destination.  Owned local
+construction can become `std::string` or `fmt::format`.  Caller output
+buffers, parser compaction, global display buffers, protocol buffers,
+static returned storage, and struct-owned C buffers are not local
+string/fmt slices.
+
+`libtrn/addng.cpp:418`, `std::strcpy(g_buf, "*")`, is a real hit, but
+it writes the global NNTP query buffer used immediately by `nntp_list`.
+Converting that one assignment to string/fmt would only add churn; this
+belongs with the global-buffer ownership work.
+
+The best copy/concat candidates are local owned construction sites:
+`util/util2.cpp::file_exp`, `util/env.cpp::set_p_host_name`,
+`libtrn/scoresave.cpp::sc_sv_save_file`, `libtrn/util.cpp::edit_file`,
+`libtrn/scorefile.cpp::sf_edit_file`, and the shortcut line construction
+in `libtrn/scorefile.cpp::sf_append`.
+`libtrn/rt-ov.cpp::ov_name`, `libtrn/decode.cpp::decode_mkdir`, and
+`libtrn/sadesc.cpp::sa_get_desc` are possible only as return-storage API
+slices, because they currently return global or static C-string storage.
 
 The remaining broad hits were rejected because the pointer is a mutable
 cursor, a nullable sentinel, an output buffer, a byte transport buffer,
@@ -218,9 +243,8 @@ simple path joining, plain string append, parser cursor work, or
 caller-owned output buffers.  Leave runtime printf-style format strings
 alone until the format string itself is audited; use `fmt::runtime` only
 when keeping runtime formatting is intentional.  Do not create fmt
-string-building slices for C-buffer `sprintf`, `strcpy`, or `strcat`
-sites; convert those when the C-style string buffer itself is
-refactored.
+string-building slices for C-buffer `sprintf` sites; convert those when
+the C-style string buffer itself is refactored.
 
 ## Refactoring Slices
 
@@ -235,8 +259,44 @@ These slices are prepended before more string-building work.  Start with
 dependency support, then use fmt only in functions that are formatting
 text.  For string building, include only sites that already build an
 owned `std::string`.  Direct `printf`/`fprintf` output can move to
-`fmt::print`, but C-buffer `sprintf`, `strcpy`, and `strcat` sites stay
-with their C-string buffer slices.
+`fmt::print`, but C-buffer `sprintf` sites stay with their C-string
+buffer slices.
+
+### Copy/Concat Slices
+
+CC-02. `libtrn/scoresave.cpp`, `sc_sv_save_file`: replace the saved
+score filename and `.tmp` filename construction with owned
+`std::string` values.  Pass `c_str()` only to file APIs that consume the
+pointer immediately.
+
+CC-03. `libtrn/util.cpp`, `edit_file`: replace the editor command
+buffer copy/concat with an owned formatted command string and pass it to
+`do_shell`.  This is local command construction; the command text is not
+stored by the callee.
+
+CC-04. `libtrn/scorefile.cpp`, `sf_edit_file`: replace local
+`filebuf` copy/concat with owned string construction before expansion
+and directory creation.  Keep `sf_cmd_fname` storage behavior unchanged
+unless that helper is refactored in its own slice.
+
+CC-05. `libtrn/scorefile.cpp`, `sf_append`: replace the shortcut
+scoreline `lbuf` construction for `F` and `S` with owned local string
+storage whose lifetime covers the later `sf_do_line` call.
+
+CC-06. `util/util2.cpp`, `file_exp`: remove the remaining local
+`strcpy`/`strcat` construction by assigning and appending
+`std::string`s directly while preserving `do_interp`'s output-size
+contract and the `~user` cache behavior.
+
+CC-07. `util/env.cpp`, `set_p_host_name`: replace local hostname
+copy/concat assembly with owned string storage after the platform APIs
+populate the initial C buffer.  Preserve the caller buffer for
+platform-output calls only.
+
+CC-08. `libtrn/rt-ov.cpp`, `ov_name`: return an owned path string
+instead of building the overview filename in `g_buf`.  The only caller
+passes the value to `fopen`, so the returned storage can stay local to
+the call expression.
 
 ### Global String Storage Slices
 

@@ -125,13 +125,11 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
     if (g_home_dir.empty())
     {
-        char *home_drive = s_getenv_fn("HOMEDRIVE");
-        char *home_path = s_getenv_fn("HOMEPATH");
+        const char *home_drive = s_getenv_fn("HOMEDRIVE");
+        const char *home_path = s_getenv_fn("HOMEPATH");
         if (home_drive != nullptr && home_path != nullptr)
         {
-            std::strcpy(tcbuf, home_drive);
-            std::strcat(tcbuf, home_path);
-            g_home_dir = tcbuf;
+            g_home_dir = std::string{home_drive} + home_path;
         }
     }
 #endif
