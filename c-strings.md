@@ -261,8 +261,8 @@ After the home-grown `List` storage was removed, the old object-lifetime
 blocker disappeared.  `MimeCapEntry` and `DataSource` retained strings
 are already owned by `std::string` or `std::optional<std::string>`, so
 they are no longer audit targets.  `SourceFile` now owns metadata lines
-in `std::vector<std::string>`, but `SourceFile::append` still accepts
-and mutates a caller C buffer before storing a copy.
+in `std::vector<std::string>` and appends new lines through
+`std::string_view`.
 
 The newly unblocked retained-storage targets are `Article` cached header
 strings and `NewsgroupData::m_rc_line`.  `Article` is now stored in a
@@ -291,14 +291,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 buffer slices.
 
 ### Copy/Concat Slices
-
-#### SourceFile Append Line
-
-Change `SourceFile::append` to build the normalized stored line in a
-local `std::string`, store it in `m_lines`, and hash a view of the
-stored key.  The active-list caller ignores the return value; the
-group-desc caller only needs the description text immediately, so prefer
-returning a view or string result over exposing writable buffer storage.
 
 ### Global String Storage Slices
 
@@ -444,9 +436,6 @@ both declarations and definitions `static`.
 - `libtrn/datasrc.cpp`, `SourceFile::open`, `filename` and `server`:
   both are nullable file/server sentinels.  The completed slice covers
   only the non-stored `fetch_cmd` text.
-- `libtrn/datasrc.cpp`, `SourceFile::append`: `bp` is mutable line
-  storage and the key length is an interior slice used before the line is
-  compacted and stored.
 - `libtrn/rt-select.cpp`, `univ_visit_group`: the implementation only
   forwards to the view-ready `univ_visit_group_main`, but the wrapper
   currently maps `nullptr` to an empty group name.  Promote only with an

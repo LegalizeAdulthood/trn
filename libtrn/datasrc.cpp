@@ -807,8 +807,8 @@ try_xgtitle:
                 nntp_finish_list();
                 std::strcat(g_buf, "\n");
             }
-            const char *stored_group = m_desc_sf.append(g_buf, grouplen);
-            return stored_group + grouplen + 1;
+            const std::string_view stored_group = m_desc_sf.append(g_buf, grouplen);
+            return stored_group.data() + grouplen + 1;
         }
         m_flags |= DF_NO_XGTITLE;
         if (m_desc_sf.m_lines.empty())
@@ -1022,15 +1022,17 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
     return server? 2 : 1;
 }
 
-char *SourceFile::append(char *bp, int key_len)
+std::string_view SourceFile::append(std::string_view line, int key_len)
 {
     const long pos = m_lines.empty() ? 0 : m_line_positions.back() + static_cast<long>(m_lines.back().size());
 
-    char *s = bp + key_len + 1;
+    std::string stored_line{line};
+    char       *line_start = stored_line.data();
+    char       *s = line_start + key_len + 1;
     if (m_fp && m_refetch_secs && *s != '\n')
     {
         std::fseek(m_fp, 0, 2);
-        std::fputs(bp, m_fp);
+        std::fwrite(line.data(), 1, line.size(), m_fp);
     }
 
     if (*s != '\n' && std::isspace(*s))
@@ -1038,22 +1040,30 @@ char *SourceFile::append(char *bp, int key_len)
         while (*++s != '\n' && std::isspace(*s))
         {
         }
-        std::strcpy(bp+key_len+1, s);
-        s = bp+key_len+1;
+        const std::size_t content_pos = static_cast<std::size_t>(key_len + 1);
+        stored_line.erase(content_pos, static_cast<std::size_t>(s - (line_start + content_pos)));
+        line_start = stored_line.data();
+        s = line_start + content_pos;
     }
     s = adv_then_find_next_nl_and_dectrl(s);
-    const int linelen = s - bp + 1;
+    const std::size_t linelen = static_cast<std::size_t>(s - line_start + 1);
     if (*s != '\n')
     {
-        *s++ = '\n';
-        *s = '\0';
+        stored_line.resize(linelen - 1);
+        stored_line.push_back('\n');
+    }
+    else
+    {
+        stored_line.resize(linelen);
     }
     const std::size_t index = m_lines.size();
     m_line_positions.push_back(pos);
-    m_lines.emplace_back(bp, static_cast<std::size_t>(linelen));
-    hash_store(m_hp, std::string_view{bp, static_cast<std::size_t>(key_len)}, source_file_hash_datum(this, index));
+    m_lines.push_back(std::move(stored_line));
+    const std::string &stored = m_lines.back();
+    hash_store(m_hp, std::string_view{stored.data(), static_cast<std::size_t>(key_len)},
+               source_file_hash_datum(this, index));
 
-    return m_lines.back().data();
+    return stored;
 }
 
 void SourceFile::end_append(const char *filename)

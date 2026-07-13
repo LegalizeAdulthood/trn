@@ -27,10 +27,10 @@ struct HashTable;
 
 struct SourceFile
 {
-    int   open(const char *filename, std::string_view fetch_cmd, const char *server);
-    char *append(char *bp, int key_len);
-    void  end_append(const char *filename);
-    void  close();
+    int              open(const char *filename, std::string_view fetch_cmd, const char *server);
+    std::string_view append(std::string_view line, int key_len);
+    void             end_append(const char *filename);
+    void             close();
 
     std::FILE               *m_fp; // the file pointer to read the data
     HashTable               *m_hp; // the hash table for the data
