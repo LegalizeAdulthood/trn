@@ -250,7 +250,7 @@ ng_start_sel:
                         if (g_verbose)
                         {
                             std::printf("\nRestriction %s%s still in effect.\n",
-                                   g_newsgroup_to_do[0], g_max_newsgroup_to_do > 1 ? ", etc." : "");
+                                   g_newsgroup_to_do[0].c_str(), g_max_newsgroup_to_do > 1 ? ", etc." : "");
                         }
                         else
                         {

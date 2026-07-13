@@ -288,13 +288,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Newsgroup-To-Do List
-
-Replace `g_newsgroup_to_do` in `libtrn/only.cpp` with owned string
-storage.  The current code assigns each pattern with `save_str(pat)` and
-frees the list in `end_only`.  A vector or fixed array of strings can own
-the same values without manual allocation.
-
 #### Terminal Color Capabilities
 
 Promote `ColorCapability::capability` and `ColorCapability::string` in

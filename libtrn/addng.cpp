@@ -421,11 +421,11 @@ bool scan_active(bool add_matching)
             {
                 if (g_newsgroup_to_do[0][0] == '^')
                 {
-                    std::sprintf(g_buf, "%s*", &g_newsgroup_to_do[0][1]);
+                    std::sprintf(g_buf, "%s*", g_newsgroup_to_do[0].c_str() + 1);
                 }
                 else
                 {
-                    std::sprintf(g_buf, "*%s*", g_newsgroup_to_do[0]);
+                    std::sprintf(g_buf, "*%s*", g_newsgroup_to_do[0].c_str());
                 }
                 if (g_buf[std::strlen(g_buf)-2] == '$')
                 {

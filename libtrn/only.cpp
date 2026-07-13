@@ -12,16 +12,14 @@
 #include <trn/search.h>
 #include <trn/trn.h>
 #include <trn/util.h>
-#include <util/util2.h>
 
 #include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <string_view>
 
-char *g_newsgroup_to_do[MAX_NG_TO_DO]; // restrictions in effect
-int   g_max_newsgroup_to_do{};         // 0 => no restrictions
-                                       // >0 => # of entries in g_ngtodo
+std::array<std::string, MAX_NG_TO_DO> g_newsgroup_to_do;       // restrictions in effect
+int                                   g_max_newsgroup_to_do{}; // 0 => no restrictions
+                                                               // >0 => # of entries in g_ngtodo
 char g_empty_only_char{'o'};
 
 static int            s_save_max_newsgroup_to_do{};
@@ -41,11 +39,10 @@ void set_newsgroup_to_do(std::string_view pat)
     }
     if (i < MAX_NG_TO_DO)
     {
-        g_newsgroup_to_do[i] = save_str(pat);
+        g_newsgroup_to_do[i].assign(pat);
         s_compex_to_do[i] = new CompiledRegex;
         s_compex_to_do[i]->init_compex();
-        const std::string pattern{pat};
-        s_compex_to_do[i]->compile(pattern.c_str(), true, true);
+        s_compex_to_do[i]->compile(g_newsgroup_to_do[i].c_str(), true, true);
         const char *err = newsgroup_comp(s_compex_to_do[i], pat, true, true);
         if (err != nullptr)
         {
@@ -81,7 +78,7 @@ void end_only()
     {
         if (g_verbose)
         {
-            std::sprintf(g_msg, "Restriction %s%s removed.",g_newsgroup_to_do[0],
+            std::sprintf(g_msg, "Restriction %s%s removed.",g_newsgroup_to_do[0].c_str(),
                    g_max_newsgroup_to_do > 1 ? ", etc." : "");
         }
         else
@@ -90,7 +87,7 @@ void end_only()
         }
         for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
         {
-            std::free(g_newsgroup_to_do[i]);
+            g_newsgroup_to_do[i].clear();
             s_compex_to_do[i]->free_compex();
             delete s_compex_to_do[i];
             s_compex_to_do[i] = nullptr;
