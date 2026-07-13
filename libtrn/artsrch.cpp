@@ -455,7 +455,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                 {
                     return SRCH_FOUND;
                 }
-                if (perform(cmd_lst.data(), output_level && g_page_line == 1) < 0)
+                if (perform(cmd_lst, output_level && g_page_line == 1) < 0)
                 {
                     return SRCH_INTR;
                 }

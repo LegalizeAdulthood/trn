@@ -295,7 +295,7 @@ NumNumResult num_num()
         for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art))
         {
             g_artp = article_ptr(g_art);
-            if (perform(cmdlst.data(), output_level && g_page_line == 1) < 0)
+            if (perform(cmdlst, output_level && g_page_line == 1) < 0)
             {
                 if (g_verbose)
                 {
@@ -389,7 +389,7 @@ int thread_perform()
             if (g_artp)
             {
                 g_art = g_artp->article_num();
-                if (perform(cmdstr.data(), 0) < 0)
+                if (perform(cmdstr, 0) < 0)
                 {
                     error_msg("Interrupted");
                     goto break_out;
@@ -430,7 +430,7 @@ int thread_perform()
                 {
                     g_art = ap->article_num();
                     g_artp = ap;
-                    if (perform(cmdstr.data(), output_level && g_page_line == 1) < 0)
+                    if (perform(cmdstr, output_level && g_page_line == 1) < 0)
                     {
                         error_msg("Interrupted");
                         goto break_out;
@@ -461,7 +461,7 @@ int thread_perform()
                     {
                         g_art = ap->article_num();
                         g_artp = ap;
-                        if (perform(cmdstr.data(), output_level && g_page_line == 1) < 0)
+                        if (perform(cmdstr, output_level && g_page_line == 1) < 0)
                         {
                             error_msg("Interrupted");
                             goto break_out;
@@ -483,14 +483,14 @@ break_out:
     return 1;
 }
 
-int perform(char *cmdlst, int output_level)
+int perform(std::string_view cmdlst_view, int output_level)
 {
     int ch;
     int savemode = 0;
 
     // A quick fix to avoid reuse of g_buf and cmdlst by shell commands.
-    std::string cmdlst_copy{cmdlst != nullptr ? cmdlst : ""};
-    cmdlst = cmdlst_copy.data();
+    std::string cmdlst_copy{cmdlst_view};
+    char       *cmdlst = cmdlst_copy.data();
 
     if (output_level == 1)
     {
@@ -729,7 +729,7 @@ int perform(char *cmdlst, int output_level)
         }
         else
         {
-            std::snprintf(g_msg, CMD_BUF_LEN, "Unknown command: %s", cmdlst);
+            *fmt::format_to_n(g_msg, sizeof g_msg - 1, "Unknown command: {}", cmdlst).out = '\0';
             error_msg(g_msg);
             return -1;
         }

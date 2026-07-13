@@ -25,7 +25,7 @@ bool         escapade();
 bool         switcheroo();
 NumNumResult num_num();
 int thread_perform();
-int perform(char *cmdlst, int output_level);
+int perform(std::string_view cmdlst, int output_level);
 int newsgroup_sel_perform();
 int newsgroup_perform(std::string_view cmdlst, int output_level);
 int add_group_sel_perform();
