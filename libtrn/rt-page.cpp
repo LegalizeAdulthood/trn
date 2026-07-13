@@ -1723,11 +1723,7 @@ try_again:
     {
     case SM_MULTIRC:
     {
-        Multirc* mp = g_sel_page_mp;
-        if (mp)
-        {
-            (void) multirc_ptr(mp->m_num);
-        }
+        Multirc *mp = g_sel_page_mp;
         for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
         {
             if (mp == u.mp)
@@ -2066,13 +2062,9 @@ try_again:
     }
     else if (g_sel_mode == SM_MULTIRC)
     {
-        Multirc* mp = g_sel_page_mp;
-        Newsrc* rp;
-        int len;
-        if (mp)
-        {
-            (void) multirc_ptr(mp->m_num);
-        }
+        Multirc *mp = g_sel_page_mp;
+        Newsrc  *rp;
+        int      len;
         for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
         {
             if (!(mp->m_flags & MF_INCLUDED))

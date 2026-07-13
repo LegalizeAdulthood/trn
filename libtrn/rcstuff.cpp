@@ -43,24 +43,26 @@
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <vector>
 
-HashTable *g_newsrc_hash{};
-Multirc   *g_sel_page_mp{};
-Multirc   *g_sel_next_mp{};
-List      *g_multirc_list{};                 // a list of all Multircs
-Multirc   *g_multirc{};                      // the current Multirc
-bool       g_paranoid{};                     // did we detect some inconsistency in .newsrc?
-AddNewType g_add_new_by_default{ADDNEW_ASK}; //
-bool       g_check_flag{};                   // -c
-bool       g_suppress_cn{};                  // -s
-int        g_countdown{5};                   // how many lines to list before invoking -s
-bool       g_fuzzy_get{};                    // -G
-bool       g_append_unsub{};                 // -I
+HashTable           *g_newsrc_hash{};
+Multirc             *g_sel_page_mp{};
+Multirc             *g_sel_next_mp{};
+std::vector<Multirc> g_multircs;                       // all Multircs
+Multirc             *g_multirc{};                      // the current Multirc
+bool                 g_paranoid{};                     // did we detect some inconsistency in .newsrc?
+AddNewType           g_add_new_by_default{ADDNEW_ASK}; //
+bool                 g_check_flag{};                   // -c
+bool                 g_suppress_cn{};                  // -s
+int                  g_countdown{5};                   // how many lines to list before invoking -s
+bool                 g_fuzzy_get{};                    // -G
+bool                 g_append_unsub{};                 // -I
 
-static bool        s_found_any{};
+static bool s_found_any{};
 
-static bool    clear_newsgroup_item(char *cp, int arg);
-static Newsrc *new_newsrc(const RcGroupConfig &config);
+static bool           clear_newsgroup_item(char *cp, int arg);
+static Multirc       *ensure_multirc(int num);
+static Newsrc        *new_newsrc(const RcGroupConfig &config);
 static bool    lock_newsrc(Newsrc *rp);
 static void    unlock_newsrc(Newsrc *rp);
 static bool    open_newsrc(Newsrc *rp);
@@ -82,11 +84,25 @@ inline NewsgroupData *newsgroup_data_ptr(int ngnum)
     return (NewsgroupData *) g_newsgroup_data_list->list_get_item(ngnum);
 }
 
+static Multirc *ensure_multirc(int num)
+{
+    auto it = std::lower_bound(g_multircs.begin(), g_multircs.end(), num,
+                               [](const Multirc &mp, int mp_num) { return mp.m_num < mp_num; });
+    if (it == g_multircs.end() || it->m_num != num)
+    {
+        it = g_multircs.insert(it, Multirc{});
+        it->m_num = num;
+    }
+    return &*it;
+}
+
 static Multirc *rcstuff_init_data()
 {
-    Multirc* mptr = nullptr;
+    bool first_group_found = false;
+    int  first_group_num = 0;
 
-    g_multirc_list = new_list(0, 0, sizeof(Multirc), 20, LF_ZERO_MEM | LF_SPARSE, nullptr);
+    g_multircs.clear();
+    g_multircs.reserve(20);
 
     if (g_trn_access_mem)
     {
@@ -112,8 +128,8 @@ static Multirc *rcstuff_init_data()
             Newsrc *rp = new_newsrc(RcGroupConfig::from(values));
             if (rp)
             {
-                Multirc *mp = multirc_ptr(i);
-                Newsrc * prev_rp = mp->m_first;
+                Multirc *mp = ensure_multirc(i);
+                Newsrc  *prev_rp = mp->m_first;
                 if (!prev_rp)
                 {
                     mp->m_first = rp;
@@ -126,16 +142,16 @@ static Multirc *rcstuff_init_data()
                     }
                     prev_rp->next = rp;
                 }
-                mp->m_num = i;
-                if (!mptr)
+                if (!first_group_found)
                 {
-                    mptr = mp;
+                    first_group_found = true;
+                    first_group_num = i;
                 }
             }
         }
         safe_free0(g_trn_access_mem);
     }
-    return mptr;
+    return first_group_found ? multirc_ptr(first_group_num) : nullptr;
 }
 
 bool rcstuff_init()
@@ -154,7 +170,7 @@ bool rcstuff_init()
     }
     if (!g_multirc)
     {
-        mptr = multirc_ptr(0);
+        mptr = ensure_multirc(0);
         RcGroupConfig config;
         config.set_id("default");
         mptr->m_first = new_newsrc(config);
@@ -178,11 +194,7 @@ void rcstuff_final()
         unuse_multirc(g_multirc);
         g_multirc = nullptr;
     }
-    if (g_multirc_list)
-    {
-        delete_list(g_multirc_list);
-        g_multirc_list = nullptr;
-    }
+    g_multircs.clear();
 }
 
 static Newsrc *new_newsrc(const RcGroupConfig &config)

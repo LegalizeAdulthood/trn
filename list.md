@@ -95,15 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 5: Multirc Vector
-
-Replace `g_multirc_list` with `std::vector<Multirc>`.
-
-- Store only configured `Multirc` records instead of sparse empty slots.
-- Keep the vector sorted by `m_num`.
-- Implement low/high/next/prev helpers over vector positions.
-- Replace `multirc_ptr(n)` with lookup by `m_num`.
-
 ### Slice 6: Newsgroup Data Vector
 
 Replace `g_newsgroup_data_list` with `std::vector<NewsgroupData>`.

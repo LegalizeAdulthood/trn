@@ -7,10 +7,11 @@
 
 #include <config/typedef.h>
 #include <trn/enum-flags.h>
-#include <trn/list.h>
 
+#include <algorithm>
 #include <string>
 #include <string_view>
+#include <vector>
 
 struct DataSource;
 struct HashTable;
@@ -84,18 +85,18 @@ struct Multirc
     MultircFlags m_flags;
 };
 
-extern HashTable *g_newsrc_hash;
-extern Multirc   *g_sel_page_mp;
-extern Multirc   *g_sel_next_mp;
-extern List      *g_multirc_list;       // a list of all MULTIRCs
-extern Multirc   *g_multirc;            // the current MULTIRC
-extern bool       g_paranoid;           // did we detect some inconsistency in .newsrc?
-extern AddNewType g_add_new_by_default; //
-extern bool       g_check_flag;         // -c
-extern bool       g_suppress_cn;        // -s
-extern int        g_countdown;          // how many lines to list before invoking -s
-extern bool       g_fuzzy_get;          // -G
-extern bool       g_append_unsub;       // -I
+extern HashTable           *g_newsrc_hash;
+extern Multirc             *g_sel_page_mp;
+extern Multirc             *g_sel_next_mp;
+extern std::vector<Multirc> g_multircs;           // all MULTIRCs
+extern Multirc             *g_multirc;            // the current MULTIRC
+extern bool                 g_paranoid;           // did we detect some inconsistency in .newsrc?
+extern AddNewType           g_add_new_by_default; //
+extern bool                 g_check_flag;         // -c
+extern bool                 g_suppress_cn;        // -s
+extern int                  g_countdown;          // how many lines to list before invoking -s
+extern bool                 g_fuzzy_get;          // -G
+extern bool                 g_append_unsub;       // -I
 
 bool           rcstuff_init();
 void           rcstuff_final();
@@ -110,23 +111,42 @@ void           get_old_newsrcs(Multirc *mptr);
 
 inline Multirc *multirc_ptr(long n)
 {
-    return (Multirc *) g_multirc_list->list_get_item(n);
+    auto it = std::lower_bound(g_multircs.begin(), g_multircs.end(), n,
+                               [](const Multirc &mp, long num) { return mp.m_num < num; });
+    return it != g_multircs.end() && it->m_num == n ? &*it : nullptr;
 }
 inline Multirc *multirc_low()
 {
-    return (Multirc *) g_multirc_list->list_get_item(g_multirc_list->existing_list_index(0L, 1));
+    return g_multircs.empty() ? nullptr : &g_multircs.front();
 }
 inline Multirc *multirc_high()
 {
-    return (Multirc *) g_multirc_list->list_get_item(g_multirc_list->existing_list_index(g_multirc_list->m_high, -1));
+    return g_multircs.empty() ? nullptr : &g_multircs.back();
 }
 inline Multirc *multirc_next(Multirc *p)
 {
-    return (Multirc *) g_multirc_list->next_list_item((char *) p);
+    if (!p)
+    {
+        return nullptr;
+    }
+    auto it = std::upper_bound(g_multircs.begin(), g_multircs.end(), p->m_num,
+                               [](long num, const Multirc &mp) { return num < mp.m_num; });
+    return it == g_multircs.end() ? nullptr : &*it;
 }
 inline Multirc *multirc_prev(Multirc *p)
 {
-    return (Multirc *) g_multirc_list->prev_list_item((char *) p);
+    if (!p)
+    {
+        return nullptr;
+    }
+    auto it = std::lower_bound(g_multircs.begin(), g_multircs.end(), p->m_num,
+                               [](const Multirc &mp, long num) { return mp.m_num < num; });
+    if (it == g_multircs.begin())
+    {
+        return nullptr;
+    }
+    --it;
+    return &*it;
 }
 
 #endif
