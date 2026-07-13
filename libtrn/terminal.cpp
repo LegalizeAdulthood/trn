@@ -2679,21 +2679,20 @@ static int s_tc_string_cnt{};
 
 struct ColorCapability
 {
-    char *capability; // name of capability, e.g. "foreground red"
-    char *string;     // escape sequence, e.g. "\033[31m"
+    std::string capability; // name of capability, e.g. "foreground red"
+    std::string string;     // escape sequence, e.g. "\033[31m"
 };
 static ColorCapability s_tc_strings[TC_STRINGS];
 
 // Parse a line from the [termcap] section of trnrc.
-void add_tc_string(const char *capability, const char *string)
+void add_tc_string(const char *capability, const char *value)
 {
     int i;
 
     for (i = 0; i < s_tc_string_cnt; i++)
     {
-        if (!std::strcmp(capability, s_tc_strings[i].capability))
+        if (s_tc_strings[i].capability == capability)
         {
-            std::free(s_tc_strings[i].string);
             break;
         }
     }
@@ -2706,20 +2705,20 @@ void add_tc_string(const char *capability, const char *string)
             finalize(1);
         }
         s_tc_string_cnt++;
-        s_tc_strings[i].capability = save_str(capability);
+        s_tc_strings[i].capability = capability;
     }
 
-    s_tc_strings[i].string = save_str(string);
+    s_tc_strings[i].string = value;
 }
 
 // Return the named termcap color capability's string.
-char *tc_color_capability(const char *capability)
+const char *tc_color_capability(const char *capability)
 {
     for (int c = 0; c < s_tc_string_cnt; c++)
     {
-        if (!std::strcmp(s_tc_strings[c].capability,capability))
+        if (s_tc_strings[c].capability == capability)
         {
-            return s_tc_strings[c].string;
+            return s_tc_strings[c].string.c_str();
         }
     }
     return nullptr;

@@ -288,13 +288,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Terminal Color Capabilities
-
-Promote `ColorCapability::capability` and `ColorCapability::string` in
-`libtrn/terminal.cpp` to owned string storage.  The table entries are
-loaded with `save_str` and used as retained terminal strings.  Keep the
-public terminal behavior and option parsing unchanged.
-
 #### Newsrc Filenames
 
 Promote `Newsrc::{name,old_name,new_name,info_name,lock_name}` in
