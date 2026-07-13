@@ -38,10 +38,11 @@
 #include <string_view>
 #include <vector>
 
-std::vector<NewsgroupData> g_newsgroup_data;           // all newsgroup data
-NewsgroupNum               g_newsgroup_count{};        // all newsgroups in our current newsrc(s)
-NewsgroupNum   g_newsgroup_to_read{};      //
-ArticleUnread  g_newsgroup_min_to_read{1}; // == TR_ONE or TR_NONE
+std::vector<NewsgroupData>   g_newsgroup_data;           // all newsgroup data
+std::vector<NewsgroupData *> g_newsgroup_order;          // current newsgroup order
+NewsgroupNum                 g_newsgroup_count{};        // all newsgroups in our current newsrc(s)
+NewsgroupNum                 g_newsgroup_to_read{};      //
+ArticleUnread                g_newsgroup_min_to_read{1}; // == TR_ONE or TR_NONE
 NewsgroupData *g_first_newsgroup{};        //
 NewsgroupData *g_last_newsgroup{};         //
 NewsgroupData *g_newsgroup_ptr{};          // current newsgroup data ptr
@@ -63,12 +64,116 @@ ArticleNum     g_ng_go_art_num{};          //
 bool           g_novice_delays{true};      // +f
 bool           g_in_ng{};                  // true if in a newsgroup
 
-static int newsgroup_order_number(const NewsgroupData **npp1, const NewsgroupData **npp2);
-static int newsgroup_order_group_name(const NewsgroupData **npp1, const NewsgroupData **npp2);
-static int newsgroup_order_count(const NewsgroupData **npp1, const NewsgroupData **npp2);
+static int  newsgroup_order_number(const NewsgroupData *np1, const NewsgroupData *np2);
+static int  newsgroup_order_group_name(const NewsgroupData *np1, const NewsgroupData *np2);
+static int  newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *np2);
+static void renumber_newsgroup_order();
 
 void newsgroup_data_init()
 {
+    g_newsgroup_order.clear();
+}
+
+NewsgroupData *newsgroup_first()
+{
+    return g_newsgroup_order.empty() ? nullptr : g_newsgroup_order.front();
+}
+
+NewsgroupData *newsgroup_last()
+{
+    return g_newsgroup_order.empty() ? nullptr : g_newsgroup_order.back();
+}
+
+NewsgroupData *newsgroup_next(NewsgroupData *np)
+{
+    return np == nullptr ? nullptr : np->m_next;
+}
+
+NewsgroupData *newsgroup_prev(NewsgroupData *np)
+{
+    return np == nullptr ? nullptr : np->m_prev;
+}
+
+void append_newsgroup_order(NewsgroupData *np)
+{
+    np->m_prev = g_last_newsgroup;
+    np->m_next = nullptr;
+    np->m_num = NewsgroupNum{static_cast<long>(g_newsgroup_order.size())};
+    if (g_last_newsgroup)
+    {
+        g_last_newsgroup->m_next = np;
+    }
+    else
+    {
+        g_first_newsgroup = np;
+    }
+    g_newsgroup_order.push_back(np);
+    g_last_newsgroup = np;
+}
+
+void pop_newsgroup_order()
+{
+    if (g_newsgroup_order.empty())
+    {
+        return;
+    }
+    NewsgroupData *np = g_newsgroup_order.back();
+    g_newsgroup_order.pop_back();
+    np->m_prev = nullptr;
+    np->m_next = nullptr;
+    sync_newsgroup_order_links();
+}
+
+bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)
+{
+    auto it = std::find(g_newsgroup_order.begin(), g_newsgroup_order.end(), np);
+    if (it == g_newsgroup_order.end())
+    {
+        return false;
+    }
+    g_newsgroup_order.erase(it);
+
+    long target = newnum.value_of();
+    if (target < 0)
+    {
+        target = 0;
+    }
+    const auto target_pos = static_cast<std::size_t>(target);
+    const auto pos = std::min(target_pos, g_newsgroup_order.size());
+    g_newsgroup_order.insert(g_newsgroup_order.begin() + pos, np);
+    sync_newsgroup_order_links();
+    renumber_newsgroup_order();
+    return true;
+}
+
+static void renumber_newsgroup_order()
+{
+    long num = 0;
+    for (NewsgroupData *np : g_newsgroup_order)
+    {
+        np->m_num = NewsgroupNum{num++};
+    }
+}
+
+void sync_newsgroup_order_links()
+{
+    g_first_newsgroup = newsgroup_first();
+    g_last_newsgroup = newsgroup_last();
+
+    NewsgroupData *prev = nullptr;
+    for (NewsgroupData *np : g_newsgroup_order)
+    {
+        np->m_prev = prev;
+        if (prev != nullptr)
+        {
+            prev->m_next = np;
+        }
+        prev = np;
+    }
+    if (prev != nullptr)
+    {
+        prev->m_next = nullptr;
+    }
 }
 
 // set current newsgroup
@@ -216,34 +321,33 @@ void grow_newsgroup(ArticleNum new_last)
     }
 }
 
-static int newsgroup_order_number(const NewsgroupData **npp1, const NewsgroupData **npp2)
+static int newsgroup_order_number(const NewsgroupData *np1, const NewsgroupData *np2)
 {
-    return (int)((*npp1)->m_num.value_of() - (*npp2)->m_num.value_of()) * g_sel_direction;
+    return (int) (np1->m_num.value_of() - np2->m_num.value_of()) * g_sel_direction;
 }
 
-static int newsgroup_order_group_name(const NewsgroupData **npp1, const NewsgroupData **npp2)
+static int newsgroup_order_group_name(const NewsgroupData *np1, const NewsgroupData *np2)
 {
-    return string_case_compare((*npp1)->m_rc_line, (*npp2)->m_rc_line) * g_sel_direction;
+    return string_case_compare(np1->m_rc_line, np2->m_rc_line) * g_sel_direction;
 }
 
-static int newsgroup_order_count(const NewsgroupData **npp1, const NewsgroupData **npp2)
+static int newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *np2)
 {
-    int eq = (int)((*npp1)->m_to_read - (*npp2)->m_to_read);
+    int eq = (int) (np1->m_to_read - np2->m_to_read);
     if (eq != 0)
     {
         return eq * g_sel_direction;
     }
-    return (int)((*npp1)->m_num.value_of() - (*npp2)->m_num.value_of());
+    return (int) (np1->m_num.value_of() - np2->m_num.value_of());
 }
 
 // Sort the newsgroups into the chosen order.
 void sort_newsgroups()
 {
-    NewsgroupData**lp;
-    int (*  sort_procedure)(const NewsgroupData **npp1,const NewsgroupData **npp2);
+    int (*sort_procedure)(const NewsgroupData *np1, const NewsgroupData *np2);
 
     // If we don't have at least two newsgroups, we're done!
-    if (!g_first_newsgroup || !g_first_newsgroup->m_next)
+    if (g_newsgroup_order.size() < 2)
     {
         return;
     }
@@ -264,27 +368,10 @@ void sort_newsgroups()
         break;
     }
 
-    NewsgroupData **ng_list = (NewsgroupData**)safe_malloc(g_newsgroup_count.value_of() * sizeof(NewsgroupData*));
-    lp = ng_list;
-    for (NewsgroupData* np = g_first_newsgroup; np; np = np->m_next)
-    {
-        *lp++ = np;
-    }
-    TRN_ASSERT(lp - ng_list == g_newsgroup_count.value_of());
-
-    std::qsort(ng_list, g_newsgroup_count.value_of(), sizeof (NewsgroupData*), (int(*)(const void *, const void *))sort_procedure);
-
-    g_first_newsgroup = ng_list[0];
-    g_first_newsgroup->m_prev = nullptr;
-    lp = ng_list;
-    for (NewsgroupNum i = g_newsgroup_count; --i; lp++)
-    {
-        lp[0]->m_next = lp[1];
-        lp[1]->m_prev = lp[0];
-    }
-    g_last_newsgroup = lp[0];
-    g_last_newsgroup->m_next = nullptr;
-    std::free((char*)ng_list);
+    std::sort(g_newsgroup_order.begin(), g_newsgroup_order.end(),
+              [sort_procedure](const NewsgroupData *np1, const NewsgroupData *np2)
+              { return sort_procedure(np1, np2) < 0; });
+    sync_newsgroup_order_links();
 }
 
 void newsgroup_skip()

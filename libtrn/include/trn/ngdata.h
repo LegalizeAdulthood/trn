@@ -49,10 +49,11 @@ struct NewsgroupData
     NewsgroupFlags m_flags;          // flags for each group
 };
 
-extern std::vector<NewsgroupData> g_newsgroup_data; // all newsgroup data
-extern NewsgroupNum   g_newsgroup_count;       // all newsgroups in our current newsrc(s)
-extern NewsgroupNum   g_newsgroup_to_read;     //
-extern ArticleUnread  g_newsgroup_min_to_read; // == TR_ONE or TR_NONE
+extern std::vector<NewsgroupData>   g_newsgroup_data;        // all newsgroup data
+extern std::vector<NewsgroupData *> g_newsgroup_order;       // current newsgroup order
+extern NewsgroupNum                 g_newsgroup_count;       // all newsgroups in our current newsrc(s)
+extern NewsgroupNum                 g_newsgroup_to_read;     //
+extern ArticleUnread                g_newsgroup_min_to_read; // == TR_ONE or TR_NONE
 extern NewsgroupData *g_first_newsgroup;       //
 extern NewsgroupData *g_last_newsgroup;        //
 extern NewsgroupData *g_newsgroup_ptr;         // current newsgroup data ptr
@@ -76,8 +77,16 @@ extern bool           g_in_ng;                 // true if in a newsgroup
 
 void newsgroup_data_init();
 void set_newsgroup(NewsgroupData *np);
-int access_newsgroup();
-void chdir_news_dir();
+NewsgroupData *newsgroup_first();
+NewsgroupData *newsgroup_last();
+NewsgroupData *newsgroup_next(NewsgroupData *np);
+NewsgroupData *newsgroup_prev(NewsgroupData *np);
+void           append_newsgroup_order(NewsgroupData *np);
+void           pop_newsgroup_order();
+bool           move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum);
+void           sync_newsgroup_order_links();
+int            access_newsgroup();
+void           chdir_news_dir();
 void grow_newsgroup(ArticleNum new_last);
 void sort_newsgroups();
 void newsgroup_skip();

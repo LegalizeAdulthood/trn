@@ -141,11 +141,11 @@ int trn_main(int argc, char *argv[])
         if (g_verbose)
         {
             std::fputs("No unread news in subscribed-to newsgroups.  To subscribe to a new\n"
-                  "newsgroup use the g<newsgroup> command.\n",
-                  stdout);
+                       "newsgroup use the g<newsgroup> command.\n",
+                       stdout);
             term_down(2);
         }
-        g_start_here = g_last_newsgroup;
+        g_start_here = newsgroup_last();
     }
 
     do_multirc();
@@ -204,8 +204,8 @@ ng_start_sel:
     }
 
     // loop through all unread news
-  restart:
-    g_current_newsgroup = g_first_newsgroup;
+restart:
+    g_current_newsgroup = newsgroup_first();
     while (true)
     {
         bool retry = false;
@@ -218,7 +218,7 @@ ng_start_sel:
                 g_newsgroup_ptr = find_newsgroup(g_last_newsgroup_name);
                 if (g_newsgroup_ptr == nullptr)
                 {
-                    g_newsgroup_ptr = g_first_newsgroup;
+                    g_newsgroup_ptr = newsgroup_first();
                 }
                 else
                 {
@@ -226,7 +226,7 @@ ng_start_sel:
                     g_newsgroup_ptr->set_to_read(ST_LAX);
                     if (g_newsgroup_ptr->m_to_read <= TR_NONE)
                     {
-                        g_newsgroup_ptr = g_first_newsgroup;
+                        g_newsgroup_ptr = newsgroup_first();
                     }
                 }
             }
@@ -238,11 +238,11 @@ ng_start_sel:
         }
         else
         {
-            g_newsgroup_ptr = g_first_newsgroup;
+            g_newsgroup_ptr = newsgroup_first();
         }
-        while (true)                        // for each newsgroup
+        while (true) // for each newsgroup
         {
-            if (g_newsgroup_ptr == nullptr)     // after the last newsgroup?
+            if (g_newsgroup_ptr == nullptr) // after the last newsgroup?
             {
                 set_mode(GM_READ,MM_FINISH_NEWSGROUP_LIST);
                 if (g_max_newsgroup_to_do)
@@ -304,18 +304,18 @@ ng_start_sel:
                     shoe_fits = true;
                 }
                 if (g_newsgroup_ptr->m_to_read < (special ? TR_NONE : g_newsgroup_min_to_read) //
-                    || !shoe_fits)                                          // unwanted newsgroup?
+                    || !shoe_fits)                                                             // unwanted newsgroup?
                 {
                     if (s_go_forward)
                     {
-                        g_newsgroup_ptr = g_newsgroup_ptr->m_next;
+                        g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr);
                     }
                     else
                     {
-                        g_newsgroup_ptr = g_newsgroup_ptr->m_prev;
+                        g_newsgroup_ptr = newsgroup_prev(g_newsgroup_ptr);
                         if (g_newsgroup_ptr == nullptr)
                         {
-                            g_newsgroup_ptr = g_first_newsgroup->m_next;
+                            g_newsgroup_ptr = newsgroup_next(newsgroup_first());
                             s_go_forward = true;
                         }
                     }
@@ -420,7 +420,7 @@ reinp_newsgroup:
         }
     loop_break:;
         check_active_refetch(false);
-    }
+        }
 
 bug_out:
     // now write the newsrc(s) back out
@@ -464,11 +464,11 @@ do_command:
     case 'p':                           // find previous unread newsgroup
         if (!g_newsgroup_ptr)
         {
-            g_newsgroup_ptr = g_last_newsgroup;
+            g_newsgroup_ptr = newsgroup_last();
         }
-        else if (g_newsgroup_ptr != g_first_newsgroup)
+        else if (g_newsgroup_ptr != newsgroup_first())
         {
-            g_newsgroup_ptr = g_newsgroup_ptr->m_prev;
+            g_newsgroup_ptr = newsgroup_prev(g_newsgroup_ptr);
         }
         s_go_forward = false;           // go backward in the newsrc
         if (*g_buf == 'P')
@@ -512,25 +512,25 @@ do_command:
         {
             newline();
         }
-        g_newsgroup_ptr = g_first_newsgroup;
+        g_newsgroup_ptr = newsgroup_first();
         break;
 
-    case 'N':                 // goto next newsgroup
-    case 'n':                 // find next unread newsgroup
+    case 'N': // goto next newsgroup
+    case 'n': // find next unread newsgroup
         if (g_newsgroup_ptr == nullptr)
         {
             newline();
             return ING_BREAK;
         }
-        g_newsgroup_ptr = g_newsgroup_ptr->m_next;
+        g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr);
         if (*g_buf == 'N')
         {
             return ING_SPECIAL;
         }
         break;
 
-    case '1':                 // goto 1st newsgroup
-        g_newsgroup_ptr = g_first_newsgroup;
+    case '1': // goto 1st newsgroup
+        g_newsgroup_ptr = newsgroup_first();
         return ING_SPECIAL;
 
     case '$':
@@ -610,7 +610,8 @@ do_command:
             else
             {
                 int rcnum = std::atoi(s);
-                for (g_newsgroup_ptr = g_first_newsgroup; g_newsgroup_ptr; g_newsgroup_ptr = g_newsgroup_ptr->m_next)
+                for (g_newsgroup_ptr = newsgroup_first(); g_newsgroup_ptr;
+                     g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
                 {
                     if (g_newsgroup_ptr->m_num.value_of() == rcnum)
                     {
@@ -688,7 +689,7 @@ display_multirc:
             ask_catchup();
             if (g_newsgroup_ptr->m_to_read == TR_NONE)
             {
-                g_newsgroup_ptr = g_newsgroup_ptr->m_next;
+                g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr);
             }
         }
         break;
@@ -700,25 +701,24 @@ display_multirc:
         }
         else if (g_newsgroup_ptr && g_newsgroup_ptr->m_to_read >= TR_NONE)
         {
-            bool read_unthreaded = !(g_newsgroup_ptr->m_flags&NF_UNTHREADED);
+            bool read_unthreaded = !(g_newsgroup_ptr->m_flags & NF_UNTHREADED);
             g_newsgroup_ptr->m_flags ^= NF_UNTHREADED;
-            std::printf("\n\n%s will be read %sthreaded.\n",
-                   g_newsgroup_ptr->m_rc_line, read_unthreaded? "un" : "");
+            std::printf("\n\n%s will be read %sthreaded.\n", g_newsgroup_ptr->m_rc_line, read_unthreaded ? "un" : "");
             g_newsgroup_ptr->set_to_read(ST_LAX);
         }
         term_down(3);
         return ING_SPECIAL;
 
-    case 'u':                 // unsubscribe
-        if (g_newsgroup_ptr && g_newsgroup_ptr->m_to_read >= TR_NONE)  // unsubscribable?
+    case 'u':                                                         // unsubscribe
+        if (g_newsgroup_ptr && g_newsgroup_ptr->m_to_read >= TR_NONE) // unsubscribable?
         {
             newline();
-            std::printf(g_unsub_to,g_newsgroup_ptr->m_rc_line);
+            std::printf(g_unsub_to, g_newsgroup_ptr->m_rc_line);
             term_down(1);
-            g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;   // unsubscribe it
-            g_newsgroup_ptr->m_to_read = TR_UNSUB;         // and make line invisible
+            g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR; // unsubscribe it
+            g_newsgroup_ptr->m_to_read = TR_UNSUB;                 // and make line invisible
             g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
-            g_newsgroup_ptr = g_newsgroup_ptr->m_next;            // do an automatic 'n'
+            g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr); // do an automatic 'n'
             --g_newsgroup_to_read;
         }
         break;
@@ -792,10 +792,9 @@ reask_abandon:
             {
                 scan_active(true);
             }
-            g_newsgroup_min_to_read = *g_buf == g_empty_only_char && g_max_newsgroup_to_do
-                          ? TR_NONE : TR_ONE;
+            g_newsgroup_min_to_read = *g_buf == g_empty_only_char && g_max_newsgroup_to_do ? TR_NONE : TR_ONE;
         }
-        g_newsgroup_ptr = g_first_newsgroup;   // simulate ^
+        g_newsgroup_ptr = newsgroup_first(); // simulate ^
         if (*g_msg && !g_max_newsgroup_to_do)
         {
             return ING_MESSAGE;
@@ -899,7 +898,7 @@ redo_newsgroup:
         case NG_NORM:
         case NG_NEXT:
         case NG_ERROR:
-            g_newsgroup_ptr = g_newsgroup_ptr->m_next;
+            g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr);
             break;
 
         case NG_ASK:

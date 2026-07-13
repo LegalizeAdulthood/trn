@@ -146,18 +146,18 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     {
         if (!g_newsgroup_ptr)
         {
-            g_newsgroup_ptr = g_last_newsgroup;
-            ng_start = g_last_newsgroup;
+            g_newsgroup_ptr = newsgroup_last();
+            ng_start = newsgroup_last();
         }
         else if (!cmdlst)
         {
-            if (g_newsgroup_ptr == g_first_newsgroup)  // skip current newsgroup
+            if (g_newsgroup_ptr == newsgroup_first()) // skip current newsgroup
             {
-                g_newsgroup_ptr = g_last_newsgroup;
+                g_newsgroup_ptr = newsgroup_last();
             }
             else
             {
-                g_newsgroup_ptr = g_newsgroup_ptr->m_prev;
+                g_newsgroup_ptr = newsgroup_prev(g_newsgroup_ptr);
             }
         }
     }
@@ -165,18 +165,18 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     {
         if (!g_newsgroup_ptr)
         {
-            g_newsgroup_ptr = g_first_newsgroup;
-            ng_start = g_first_newsgroup;
+            g_newsgroup_ptr = newsgroup_first();
+            ng_start = newsgroup_first();
         }
         else if (!cmdlst)
         {
-            if (g_newsgroup_ptr == g_last_newsgroup)   // skip current newsgroup
+            if (g_newsgroup_ptr == newsgroup_last()) // skip current newsgroup
             {
-                g_newsgroup_ptr = g_first_newsgroup;
+                g_newsgroup_ptr = newsgroup_first();
             }
             else
             {
-                g_newsgroup_ptr = g_newsgroup_ptr->m_next;
+                g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr);
             }
         }
     }
@@ -224,9 +224,10 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         {
             perform_status(g_newsgroup_to_read.value_of(), 50);
         }
-    } while ((g_newsgroup_ptr = (backward? (g_newsgroup_ptr->m_prev? g_newsgroup_ptr->m_prev : g_last_newsgroup)
-                               : (g_newsgroup_ptr->m_next? g_newsgroup_ptr->m_next : g_first_newsgroup)))
-                != ng_start);
+    } while ((g_newsgroup_ptr =
+                  (backward ? (newsgroup_prev(g_newsgroup_ptr) ? newsgroup_prev(g_newsgroup_ptr) : newsgroup_last())
+                            : (newsgroup_next(g_newsgroup_ptr) ? newsgroup_next(g_newsgroup_ptr)
+                                                               : newsgroup_first()))) != ng_start);
 
     if (cmdlst)
     {

@@ -383,7 +383,7 @@ static void sel_do_groups()
     int ret;
     int save_selected_count = g_selected_count;
 
-    for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
+    for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
     {
         if (!(np->m_flags & NF_VISIT))
         {
@@ -415,11 +415,11 @@ do_group:
         {
         case NG_NORM:
         case NG_SEL_NEXT:
-            set_newsgroup(np->m_next);
+            set_newsgroup(newsgroup_next(np));
             break;
 
         case NG_NEXT:
-            set_newsgroup(np->m_next);
+            set_newsgroup(newsgroup_next(np));
             goto loop_break;
 
         case NG_ERROR:
@@ -427,7 +427,7 @@ do_group:
             goto loop_break;
 
         case NG_SEL_PRIOR:
-            while ((np = np->m_prev) != nullptr)
+            while ((np = newsgroup_prev(np)) != nullptr)
             {
                 if (np->m_flags & NF_VISIT)
                 {
@@ -610,10 +610,9 @@ sel_restart:
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == ';')
     {
         PUSH_SELECTOR();
-        for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
+        for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
         {
-            if ((np->m_flags & NF_INCLUDED)
-             && (!g_selected_count || (np->m_flags & g_sel_mask)))
+            if ((np->m_flags & NF_INCLUDED) && (!g_selected_count || (np->m_flags & g_sel_mask)))
             {
                 np->m_flags |= NF_VISIT;
             }
@@ -2151,7 +2150,7 @@ static void sel_cleanup()
     case SM_NEWSGROUP:
         if (g_sel_rereading)
         {
-            for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
+            for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
             {
                 if (np->m_flags & NF_DEL_SEL)
                 {
@@ -2166,7 +2165,7 @@ static void sel_cleanup()
         }
         else
         {
-            for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
+            for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
             {
                 if (np->m_flags & NF_DEL)
                 {
@@ -3198,14 +3197,14 @@ static DisplayState newsgroup_commands(char_int ch)
     case 'X':  case 'D':  case 'J':
         if (!g_sel_rereading)
         {
-            NewsgroupData* np;
+            NewsgroupData *np;
             if (ch == 'D')
             {
                 np = g_sel_page_np;
             }
             else
             {
-                np = g_first_newsgroup;
+                np = newsgroup_first();
             }
             while (np)
             {
@@ -3216,9 +3215,9 @@ static DisplayState newsgroup_commands(char_int ch)
                     {
                         np->catch_up(0, 0);
                     }
-                    np->m_flags &= ~(NF_DEL|NF_SEL);
+                    np->m_flags &= ~(NF_DEL | NF_SEL);
                 }
-                np = np->m_next;
+                np = newsgroup_next(np);
                 if (ch == 'D' && np == g_sel_next_np)
                 {
                     break;
@@ -3236,7 +3235,7 @@ static DisplayState newsgroup_commands(char_int ch)
         }
         else if (ch == 'J')
         {
-            for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
+            for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
             {
                 np->m_flags &= ~NF_DEL_SEL;
             }
@@ -3249,7 +3248,7 @@ static DisplayState newsgroup_commands(char_int ch)
     {
         sel_cleanup();
         g_missing_count = 0;
-        for (NewsgroupData *np = g_first_newsgroup; np; np = np->m_next)
+        for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
         {
             if (np->m_to_read > TR_UNSUB && np->m_to_read < g_newsgroup_min_to_read)
             {

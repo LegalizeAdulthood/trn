@@ -95,16 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 7: Newsgroup Order Storage
-
-After slice 6, replace intrusive newsgroup ordering with an explicit
-order container.
-
-- Use `std::vector<NewsgroupData *>` or indices for selector order.
-- Replace sorting by rebuilding the order vector.
-- Remove or reduce `m_prev`/`m_next` only when all selector traversal has
-  moved to the order container.
-
 ### Slice 8: Article Map
 
 Replace `g_article_list` with `std::map<ArticleNum, Article>`.

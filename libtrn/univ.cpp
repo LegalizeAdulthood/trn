@@ -535,17 +535,17 @@ static void univ_use_pattern(const char *pattern, int type)
         switch (type)
         {
         case 0:
-            for (np = g_first_newsgroup; np; np = np->m_next)
+            for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
                 if (univ_do_match(np->m_rc_line, s))
                 {
-                    univ_add_group(np->m_rc_line,np->m_rc_line);
+                    univ_add_group(np->m_rc_line, np->m_rc_line);
                 }
             }
             break;
 
         case 1:
-            for (np = g_first_newsgroup; np; np = np->m_next)
+            for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
                 if (univ_do_match(np->m_rc_line, s))
                 {

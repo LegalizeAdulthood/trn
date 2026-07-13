@@ -808,7 +808,7 @@ int newsgroup_sel_perform()
         goto break_out;
     }
 
-    for (g_newsgroup_ptr = g_first_newsgroup; g_newsgroup_ptr; g_newsgroup_ptr = g_newsgroup_ptr->m_next)
+    for (g_newsgroup_ptr = newsgroup_first(); g_newsgroup_ptr; g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
     {
         if (g_sel_rereading? g_newsgroup_ptr->m_to_read != TR_NONE
                          : g_newsgroup_ptr->m_to_read < g_newsgroup_min_to_read)
