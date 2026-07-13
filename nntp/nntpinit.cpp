@@ -166,7 +166,7 @@ static int get_tcp_socket(const char *machine, int port, const char *service)
     struct addrinfo* res;
     struct addrinfo* res0;
     std::string port_service;
-    char* cause = nullptr;
+    const char      *cause = nullptr;
     int error;
 
     std::memset(&hints, 0, sizeof hints);

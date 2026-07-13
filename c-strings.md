@@ -346,15 +346,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
-### Const-Correct C String Slices
-
-#### NNTP Connect Failure Cause
-
-In `nntp/nntpinit.cpp`, the `INET6` branch of `get_tcp_socket` assigns
-the string literals `socket` and `connect` to `cause` only so it can
-pass the text to `perror`.  Make the local `cause` pointer
-`const char *`.
-
 ### Local Save-String Slices
 
 #### Terminal Edit Buffer Scratch
