@@ -264,10 +264,10 @@ they are no longer audit targets.  `SourceFile` now owns metadata lines
 in `std::vector<std::string>` and appends new lines through
 `std::string_view`.
 
-The newly unblocked retained-storage targets are `Article` cached header
-strings and `NewsgroupData::m_rc_line`.  `Article` is now stored in a
-`std::map<ArticleNum, Article>`, so `Article` objects have ordinary
-construction and destruction.  Its `m_from`, `m_msg_id`, and `m_xrefs`
+The newly unblocked retained-storage targets are remaining `Article`
+cached header strings and `NewsgroupData::m_rc_line`.  `Article` is now
+stored in a `std::map<ArticleNum, Article>`, so `Article` objects have
+ordinary construction and destruction.  Its `m_msg_id` and `m_xrefs`
 fields still use `save_str`/`free` ownership.  `m_msg_id` is coupled to
 the message-id hash, which currently stores either a pending allocated
 message-id string or an `Article *` in `HashDatum`, so migrate that field
@@ -303,14 +303,6 @@ all direct assignments must change together.  For `save_str` and
 `save_str` assignments, and matching `free` paths with `std::string`
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
-
-#### Article From Header
-
-Promote `Article::m_from` to `std::optional<std::string>`.  Update
-`Article::set_cached_line`, `Article::get_cached_line`,
-`Article::clear_article`, `Article::check_poster`, `rt-ov.cpp`, and the
-display/comparison callers to use `c_str()` only at read-only C
-boundaries.  Keep missing distinct from an empty decoded From header.
 
 #### Article Xref Header
 

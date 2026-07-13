@@ -11,6 +11,8 @@
 
 #include <cstdint>
 #include <ctime>
+#include <optional>
+#include <string>
 #include <string_view>
 
 struct Subject;
@@ -62,7 +64,7 @@ struct Article
     void       check_for_near_subj();
     void       check_poster();
     void       uncache_article(bool remove_empties);
-    char      *get_cached_line(HeaderLineType which_line, bool no_truncs);
+    const char *get_cached_line(HeaderLineType which_line, bool no_truncs);
     void       set_subj_line(std::string_view subj);
     void       set_cached_line(int which_line, char *s);
     void       clear_article();
@@ -101,11 +103,15 @@ struct Article
     {
         return m_num;
     }
+    const char *from_c_str() const
+    {
+        return m_from ? m_from->c_str() : nullptr;
+    }
 
     ArticleNum    m_num;
     std::time_t   m_date;
     Subject      *m_subj;
-    char         *m_from;
+    std::optional<std::string> m_from;
     char         *m_msg_id;
     char         *m_xrefs;
     Article      *m_parent;    // parent article

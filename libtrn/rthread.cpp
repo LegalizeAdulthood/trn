@@ -237,7 +237,7 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
         if (ap->m_flags & AF_TMP_MEM)
         {
             ap->clear_article();
-            std::free(ap);
+            delete ap;
         }
     }
     return ret;
@@ -1483,7 +1483,7 @@ static int article_order_subject(const Article **art1, const Article **art2)
 
 static int article_order_author(const Article **art1, const Article **art2)
 {
-    int eq = string_case_compare((*art1)->m_from, (*art2)->m_from);
+    int eq = string_case_compare((*art1)->from_c_str(), (*art2)->from_c_str());
     return eq? eq * g_sel_direction : article_order_date(art1, art2);
 }
 

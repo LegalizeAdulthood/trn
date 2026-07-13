@@ -2680,7 +2680,7 @@ static void display_article(const Article *ap, int ix, int sel)
     else
     {
         std::printf("%s  %s\n",
-               compress_from(ap->m_from, from_width),
+               compress_from(ap->from_c_str(), from_width),
                compress_subj(ap, subj_width - from_width));
     }
     term_down(1);
@@ -2712,8 +2712,8 @@ static void display_subject(const Subject *subj, int ix, int sel)
     {
         Article* first_ap;
         // Find the first unread article so we get the author right
-        if ((first_ap = subj->m_thread) != nullptr                    //
-            && (first_ap->m_subj != subj || first_ap->m_from == nullptr //
+        if ((first_ap = subj->m_thread) != nullptr            //
+            && (first_ap->m_subj != subj || !first_ap->m_from  //
                 || (!(first_ap->m_flags & AF_UNREAD) ^ g_sel_rereading)))
         {
             first_ap = nullptr;
@@ -2738,7 +2738,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
         else
         {
             std::printf("%s%3d  %s\n",
-                   compress_from(first_ap? first_ap->m_from : nullptr, from_width), j,
+                   compress_from(first_ap? first_ap->from_c_str() : nullptr, from_width), j,
                    compress_subj(first_ap, subj_width - from_width));
         }
         term_down(1);
@@ -2790,7 +2790,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                             std::putchar(' ');
                         }
                         std::printf("  %s      ",
-                               compress_from(ap? ap->m_from : nullptr, from_width));
+                               compress_from(ap? ap->from_c_str() : nullptr, from_width));
                         continue;
                     }
                 }
@@ -2803,7 +2803,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                 {
                     std::putchar(' ');
                 }
-                std::printf("  %s\n", compress_from(ap? ap->m_from : nullptr, from_width));
+                std::printf("  %s\n", compress_from(ap? ap->from_c_str() : nullptr, from_width));
                 term_down(1);
             }
         }

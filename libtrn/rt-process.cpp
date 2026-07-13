@@ -38,8 +38,7 @@ static Article *allocate_article(ArticleNum artnum)
     }
     else
     {
-        article = (Article*)safe_malloc(sizeof (Article));
-        std::memset((char*)article,0,sizeof (Article));
+        article = new Article{};
         article->m_flags |= AF_FAKE|AF_TMP_MEM;
     }
     return article;

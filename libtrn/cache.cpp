@@ -1103,12 +1103,9 @@ void Article::set_cached_line(int which_line, char *s)
     switch (which_line)
     {
     case FROM_LINE:
-        if (m_from)
-        {
-            std::free(m_from);
-        }
         decode_header(s, s);
         m_from = s;
+        std::free(s);
         break;
 
     case XREF_LINE:

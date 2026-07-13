@@ -113,7 +113,7 @@ void Article::check_poster()
             char* s = g_cmd_buf;
             char* u;
             char* h;
-            std::strcpy(s,m_from);
+            std::strcpy(s,m_from->c_str());
             if ((h=std::strchr(s,'<')) != nullptr)   // grab the good part
             {
                 s = h+1;
@@ -189,9 +189,9 @@ void Article::check_poster()
 // Return a pointer to a cached header line for the indicated article.
 // Truncated headers (e.g. from a .thread file) are optionally ignored.
 //
-char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
+const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
 {
-    char* s;
+    const char *s;
 
     switch (which_line)
     {
@@ -207,7 +207,7 @@ char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
         break;
 
     case FROM_LINE:
-        s = m_from;
+        s = from_c_str();
         break;
 
     case XREF_LINE:
@@ -243,10 +243,7 @@ char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
 
 void Article::clear_article()
 {
-    if (m_from)
-    {
-        std::free(m_from);
-    }
+    m_from.reset();
     if (m_msg_id)
     {
         std::free(m_msg_id);
@@ -866,7 +863,7 @@ bool Article::valid_article()
                 ap->m_parent = this;
             }
             fake_ap->clear_article();
-            std::free(fake_ap);
+            delete fake_ap;
             data.dat_ptr = (char*)this;
             hash_store_last(data);
             return true;
