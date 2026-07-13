@@ -30,6 +30,10 @@ When `next` finds no remaining slices, rerun the audit against the
 current source and look for new opportunities before treating the plan
 as empty.
 
+On every audit rerun, re-evaluate deferred items against the current
+source.  Do not assume older deferrals remain ineligible after code
+changes.
+
 Existing good precedents:
 
 - `libtrn/univ.cpp`, `univ_add_text_file`: accepts a legacy C string at
