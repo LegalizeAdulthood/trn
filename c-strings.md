@@ -288,13 +288,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Score Save Lines
-
-Replace `s_lines` storage in `libtrn/scoresave.cpp` with
-`std::vector<std::string>`.  `score_save_line` appends owned text, and
-cleanup becomes vector cleanup.  Keep the existing file-writing behavior
-unchanged.
-
 #### Newsgroup-To-Do List
 
 Replace `g_newsgroup_to_do` in `libtrn/only.cpp` with owned string

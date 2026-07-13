@@ -19,21 +19,21 @@
 #include <util/env.h> // get_val
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <vector>
 
 int g_sc_loaded_count{}; // how many articles were loaded?
 
 static long       s_sc_save_new{}; // new articles (unloaded)
-static int        s_num_lines{};
-static int        s_lines_alloc{};
-static char     **s_lines{};
+static std::vector<std::string> s_lines;
 static char       s_line_buf[LINE_BUF_LEN]{};
-static char       s_line_buf2[LINE_BUF_LEN]{}; // what's another buffer between...
 static int        s_loaded{};
 static int        s_used{};
 static int        s_saved{};
@@ -47,62 +47,41 @@ static ArticleNum sc_sv_make_line(ArticleNum a);
 
 static void sc_sv_add(std::string_view str)
 {
-    if (s_num_lines == s_lines_alloc)
-    {
-        s_lines_alloc += 100;
-        s_lines = (char**)safe_realloc((char*)s_lines,s_lines_alloc * sizeof (char*));
-    }
-    s_lines[s_num_lines] = save_str(str);
-    s_num_lines++;
+    s_lines.emplace_back(str);
 }
 
 static void sc_sv_del_group(std::string_view gname)
 {
-    char* s;
-    int i;
-
-    for (i = 0; i < s_num_lines; i++)
+    auto group = s_lines.begin();
+    while (group != s_lines.end())
     {
-        s = s_lines[i];
-        if (s && *s == '!' && std::string_view{s + 1} == gname)
+        if (!group->empty() && group->front() == '!'
+            && std::string_view{*group}.substr(1) == gname)
         {
             break;
         }
+        ++group;
     }
-    if (i == s_num_lines)
+    if (group == s_lines.end())
     {
         return;         // group not found
     }
-    int start = i;
-    std::free(s_lines[i]);
-    s_lines[i] = nullptr;
-    for (i++; i < s_num_lines; i++)
+    auto next_group = group + 1;
+    while (next_group != s_lines.end())
     {
-        s = s_lines[i];
-        if (s && *s == '!')
+        if (!next_group->empty() && next_group->front() == '!')
         {
             break;
         }
-        if (s)
-        {
-            std::free(s);
-            s_lines[i] = nullptr;
-        }
+        ++next_group;
     }
-    // copy into the hole (if any)
-    for ( ; i < s_num_lines; i++)
-    {
-        s_lines[start++] = s_lines[i];
-    }
-    s_num_lines -= (i-start);
+    s_lines.erase(group, next_group);
 }
 
 // get the file containing scores into memory
 static void sc_sv_get_file()
 {
-    s_num_lines = 0;
-    s_lines_alloc = 0;
-    s_lines = nullptr;
+    s_lines.clear();
 
     const char *s = get_val_const("SAVESCOREFILE", "%+/savedscores");
     std::FILE  *fp = std::fopen(file_exp(s).c_str(), "r");
@@ -125,7 +104,7 @@ static void sc_sv_get_file()
 // save the memory into the score file
 void sc_sv_save_file()
 {
-    if (s_num_lines == 0)
+    if (s_lines.empty())
     {
         return;
     }
@@ -144,12 +123,9 @@ void sc_sv_save_file()
         g_waiting = false;
         return;
     }
-    for (int i = 0; i < s_num_lines; i++)
+    for (const std::string &line : s_lines)
     {
-        if (s_lines[i])
-        {
-            std::fprintf(tmpfp,"%s\n",s_lines[i]);
-        }
+        std::fprintf(tmpfp,"%s\n",line.c_str());
         if (std::ferror(tmpfp))
         {
             std::fclose(tmpfp);
@@ -376,7 +352,6 @@ void sc_load_scores()
 {
     // lots of cleanup needed here
     ArticleNum a{};
-    char*   s;
 
     s_sc_save_new = -1;         // just in case we exit early
     s_loaded = 0;
@@ -386,23 +361,24 @@ void sc_load_scores()
     // verbosity is only really useful for debugging...
     bool verbose = false;
 
-    if (s_num_lines == 0)
+    if (s_lines.empty())
     {
         sc_sv_get_file();
     }
 
-    char *gname = save_str(file_exp("%C"));
+    const std::string gname = file_exp("%C");
 
-    int i;
-    for (i = 0; i < s_num_lines; i++)
+    std::size_t i;
+    for (i = 0; i < s_lines.size(); i++)
     {
-        s = s_lines[i];
-        if (s && *s == '!' && !std::strcmp(s+1,gname))
+        const std::string &line = s_lines[i];
+        if (!line.empty() && line.front() == '!'
+            && std::string_view{line}.substr(1) == gname)
         {
             break;
         }
     }
-    if (i == s_num_lines)
+    if (i == s_lines.size())
     {
         return;         // no scores loaded
     }
@@ -413,25 +389,25 @@ void sc_load_scores()
         std::printf("\nLoading scores...");
         std::fflush(stdout);
     }
-    while (i < s_num_lines)
+    while (i < s_lines.size())
     {
-        s = s_lines[i++];
-        if (!s)
+        std::string &line = s_lines[i++];
+        if (line.empty())
         {
             continue;
         }
-        switch (*s)
+        switch (line.front())
         {
         case ':':
-            a = ArticleNum{std::atoi(s+1)};         // set the article #
+            a = ArticleNum{std::atoi(line.c_str()+1)};         // set the article #
             break;
 
         case '.':                       // longer score line
-            a = sc_sv_use_line(s+1,a);
+            a = sc_sv_use_line(line.data()+1,a);
             break;
 
         case '!':                       // group of shared file
-            i = s_num_lines;
+            i = s_lines.size();
             break;
 
         case 'v':                       // version number
@@ -492,9 +468,9 @@ void sc_save_scores()
     s_last = ArticleNum{};
 
     g_waiting = true;   // DON'T interrupt
-    char *gname = save_str(file_exp("%C"));
+    const std::string gname = file_exp("%C");
     // not being able to open is OK
-    if (s_num_lines > 0)
+    if (!s_lines.empty())
     {
         sc_sv_del_group(gname);  // delete old group
     }
@@ -503,12 +479,10 @@ void sc_save_scores()
         sc_sv_add("#STRN saved score file.");
         sc_sv_add("v1.0");
     }
-    std::sprintf(s_line_buf2,"!%s",gname);       // add the header
-    sc_sv_add(s_line_buf2);
+    sc_sv_add(fmt::format("!{}", gname));  // add the header
 
     ArticleNum a = g_first_art;
-    std::sprintf(s_line_buf2, ":%ld", a.value_of());
-    sc_sv_add(s_line_buf2);
+    sc_sv_add(fmt::format(":{}", a.value_of()));
     s_last = article_before(a);
     while (a <= g_last_art)
     {
