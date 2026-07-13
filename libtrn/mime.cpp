@@ -13,7 +13,6 @@
 #include <trn/artstate.h>
 #include <trn/decode.h>
 #include <trn/head.h>
-#include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/respond.h>
 #include <trn/string-algos.h>
@@ -32,6 +31,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 MimeSection  g_mime_article{};
 MimeSection *g_mime_section{&g_mime_article};
@@ -68,14 +68,15 @@ static HtmlTag s_tag_attr[LAST_TAG] = {
     {"xml",              3,     TF_BLOCK | TF_HIDE                      }, // non-standard but seen in the wild
 };
 // clang-format on
-static List        *s_mimecap_list{};
-static char         s_text_plain[] = "text/plain";
-static MimeExecutor s_executor;
+static std::vector<MimeCapEntry> s_mimecap_entries;
+static char                      s_text_plain[] = "text/plain";
+static MimeExecutor              s_executor;
 
 constexpr bool CLOSING_TAG = false;
 constexpr bool OPENING_TAG = true;
 
-static char *mime_parse_entry_arg(char **cpp);
+static char       *mime_parse_entry_arg(char **cpp);
+static void        mime_clear_mimecap_entries();
 static int   mime_getc(std::FILE *fp);
 static void  mime_init_sections();
 static bool  mime_pop_section();
@@ -84,13 +85,8 @@ static char *mime_skip_whitespace(char *s);
 static char *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, HtmlFlags flag);
-static int   do_indent(char *t);
+static int         do_indent(char *t);
 static const char *find_attr(const char *str, std::string_view attr);
-
-inline MimeCapEntry *mimecap_ptr(long n)
-{
-    return (MimeCapEntry *) s_mimecap_list->list_get_item(n);
-}
 
 void mime_set_executor(MimeExecutor executor)
 {
@@ -100,7 +96,7 @@ void mime_set_executor(MimeExecutor executor)
 void mime_init()
 {
     s_executor = do_shell;
-    s_mimecap_list = new_list(0,-1,sizeof(MimeCapEntry),40,LF_ZERO_MEM,nullptr);
+    mime_clear_mimecap_entries();
 
     const char *mcname = get_val_const("MIMECAPS");
     if (mcname == nullptr)
@@ -127,18 +123,13 @@ void mime_init()
 
 void mime_final()
 {
-    if (s_mimecap_list)
-    {
-        delete_list(s_mimecap_list);
-        s_mimecap_list = nullptr;
-    }
+    mime_clear_mimecap_entries();
 }
 
 void mime_read_mimecap(const char *mcname)
 {
-    char*s;
-    int  buflen = 2048;
-    int  i;
+    char *s;
+    int   buflen = 2048;
 
     std::FILE *fp = std::fopen(file_exp(mcname).c_str(), "r");
     if (fp == nullptr)
@@ -146,7 +137,7 @@ void mime_read_mimecap(const char *mcname)
         return;
     }
     char *bp = safe_malloc(buflen);
-    for (i = s_mimecap_list->m_high; !std::feof(fp);)
+    for (; !std::feof(fp);)
     {
         *(s = bp) = '\0';
         int linelen = 0;
@@ -194,16 +185,16 @@ void mime_read_mimecap(const char *mcname)
             std::fprintf(stderr, "trn: Ignoring invalid mimecap entry: %s\n", bp);
             continue;
         }
-        MimeCapEntry *mcp = mimecap_ptr(++i);
-        mcp->content_type = save_str(t);
-        mcp->command = save_str(mime_parse_entry_arg(&s));
+        MimeCapEntry &mcp = s_mimecap_entries.emplace_back();
+        mcp.content_type = save_str(t);
+        mcp.command = save_str(mime_parse_entry_arg(&s));
         while (s)
         {
             t = mime_parse_entry_arg(&s);
             char *arg = std::strchr(t, '=');
             if (arg != nullptr)
             {
-                char* f = arg+1;
+                char *f = arg + 1;
                 while (arg != t && std::isspace(arg[-1]))
                 {
                     arg--;
@@ -223,26 +214,37 @@ void mime_read_mimecap(const char *mcname)
             {
                 if (string_case_equal(t, "needsterminal"))
                 {
-                    mcp->flags |= MCF_NEEDS_TERMINAL;
+                    mcp.flags |= MCF_NEEDS_TERMINAL;
                 }
                 else if (string_case_equal(t, "copiousoutput"))
                 {
-                    mcp->flags |= MCF_COPIOUS_OUTPUT;
+                    mcp.flags |= MCF_COPIOUS_OUTPUT;
                 }
                 else if (arg && string_case_equal(t, "test"))
                 {
-                    mcp->test_command = save_str(arg);
+                    mcp.test_command = save_str(arg);
                 }
                 else if (arg && (string_case_equal(t, "description") || string_case_equal(t, "label")))
                 {
-                    mcp->description = save_str(arg); // 'label' is the legacy name for description
+                    mcp.description = save_str(arg); // 'label' is the legacy name for description
                 }
             }
         }
     }
-    s_mimecap_list->m_high = i;
     std::free(bp);
     std::fclose(fp);
+}
+
+static void mime_clear_mimecap_entries()
+{
+    for (MimeCapEntry &mcp : s_mimecap_entries)
+    {
+        safe_free(mcp.content_type);
+        safe_free(mcp.command);
+        safe_free(mcp.test_command);
+        safe_free(mcp.description);
+    }
+    s_mimecap_entries.clear();
 }
 
 static char *mime_parse_entry_arg(char **cpp)
@@ -286,19 +288,18 @@ static char *mime_parse_entry_arg(char **cpp)
 
 MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags skip_flags)
 {
-    for (int i = 0; i <= s_mimecap_list->m_high; i++)
+    for (MimeCapEntry &mcp : s_mimecap_entries)
     {
-        MimeCapEntry *mcp = mimecap_ptr(i);
-        if (!(mcp->flags & skip_flags) //
-            && mime_types_match(contenttype, mcp->content_type))
+        if (!(mcp.flags & skip_flags) //
+            && mime_types_match(contenttype, mcp.content_type))
         {
-            if (!mcp->test_command)
+            if (!mcp.test_command)
             {
-                return mcp;
+                return &mcp;
             }
-            if (mime_exec(mcp->test_command) == 0)
+            if (mime_exec(mcp.test_command) == 0)
             {
-                return mcp;
+                return &mcp;
             }
         }
     }

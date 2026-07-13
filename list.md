@@ -95,18 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 1: MIME Cap Vector
-
-Replace `s_mimecap_list` in `libtrn/mime.cpp` with
-`std::vector<MimeCapEntry>`.
-
-- Replace `mimecap_ptr` with vector indexing or direct iteration.
-- Replace `new_list` and `delete_list` in `mime_init`/`mime_final`.
-- Append entries with `emplace_back`.
-- Keep raw `char *` fields for this slice unless the string-field change
-  is trivial after vector construction is in place.
-- Verify `tests/test_mime.cpp`.
-
 ### Slice 2: MIME Cap Strings
 
 Promote `MimeCapEntry` string fields to owned strings after slice 1.
