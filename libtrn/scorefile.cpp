@@ -264,20 +264,19 @@ static void sf_grow()
 //char* head;           // header name, (without ':' character)
 static int sf_check_extra_headers(const char *head)
 {
-    static char lbuf[LINE_BUF_LEN];
+    std::string lower_head{head};
 
     // convert to lower case
-    safe_copy(lbuf,head,sizeof lbuf - 1);
-    for (char *s = lbuf; *s; s++)
+    for (char &ch : lower_head)
     {
-        if (std::isalpha(*s) && std::isupper(*s))
+        if (std::isalpha(ch) && std::isupper(ch))
         {
-            *s = std::tolower(*s);           // convert to lower case
+            ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
     for (int i = 0; i < s_sf_num_extra_headers; i++)
     {
-        if (!std::strcmp(s_sf_extra_headers[i],lbuf))
+        if (lower_head == s_sf_extra_headers[i])
         {
             return i;
         }

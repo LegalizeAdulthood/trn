@@ -262,12 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-07. `libtrn/scorefile.cpp`, `sf_check_extra_headers`: replace the
-static lower-case `lbuf` with a local `std::string` comparison key.
-The truncation is arbitrary: the helper only lowercases a score header
-name for lookup, and score-file input is already line-buffer bounded.
-Compare the full available header text.
-
 BUF-08. `libtrn/scorefile.cpp`, `sf_add_extra_header`: replace the
 static `lbuf` used to append `:` for `set_line_type` with local
 `std::string` storage.  Keep the lower-case saved header behavior and

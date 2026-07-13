@@ -31,6 +31,7 @@ add_executable(trn-test
     test_OptionDraft.cpp
     test_RcGroupConfig.cpp
     test_rt-util.cpp
+    test_scorefile.cpp
     test_string-algos.cpp
     test_util.cpp
     test_univ.cpp
