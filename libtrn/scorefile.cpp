@@ -866,14 +866,14 @@ static void sf_do_file(const char *fname)
         }
         std::printf("Score file: %s\n",fname);
     }
-    char *safefilename = save_str(fname);
+    std::string safefilename{fname};
     // add end marker to scoring array
     sf_grow();
     s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_START);
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
-    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename);
+    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename.c_str());
 
     while ((s = sf_file_get_line(sf_fp)) != nullptr)
     {
@@ -887,8 +887,7 @@ static void sf_do_file(const char *fname)
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
-    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename);
-    std::free(safefilename);
+    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename.c_str());
     s_sf_file_level--;
 }
 

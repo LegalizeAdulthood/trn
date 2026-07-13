@@ -313,6 +313,12 @@ owned command strings passed to legacy command performers.  They do not
 escape the caller, but the performers still take mutable `char *`
 parameters, so use local `std::string` storage and pass `data()`.
 
+After the command-list scratch family was completed, another explicit
+criteria rerun found one additional local `save_str` scratch copy in
+`scorefile.cpp::sf_do_file`.  It protects the file name while nested
+score-file processing runs, but the local owner can be `std::string`
+before the retained score entries take their own copies.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -326,10 +332,11 @@ the `.newsrc` line-storage and home-grown `List` removals.
   was found.  Remaining candidates are null sentinels, C API boundaries,
   encoded-text cursors, output-only helpers, command parsers, or helper
   families that must change with their callers.
-- `save_str` and `safe_copy` ownership: the only new safe local scratch
-  family remains the six `save_str` copies listed below.  Other hits
-  write caller buffers, globals, static storage, parser buffers, command
-  buffers, score/universal storage, keymaps, or memory-pool storage.
+- `save_str` and `safe_copy` ownership: after the command-list copies,
+  one new safe local owner was found in `scorefile.cpp::sf_do_file`.
+  Other hits write caller buffers, globals, static storage, parser
+  buffers, command buffers, score/universal storage, keymaps, or
+  memory-pool storage.
 - Filename variables to `std::filesystem::path`: no new one-function
   path slice was found.  Remaining candidates are stored filename
   fields, backup/rollback rename sequences, protocol or shell text,
