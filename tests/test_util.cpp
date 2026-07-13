@@ -5,6 +5,7 @@
 #include <trn/terminal.h>
 #include <trn/util.h>
 #include <util/env.h>
+#include <util/util2.h>
 
 #include <config/common.h>
 #include <test_config.h>
@@ -75,6 +76,22 @@ protected:
     int                           m_old_term_scrolled{};
 };
 
+class FileExpansionTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_home_dir = g_home_dir;
+    }
+
+    void TearDown() override
+    {
+        g_home_dir = m_old_home_dir;
+    }
+
+    std::string m_old_home_dir;
+};
+
 bool ends_with(std::string_view text, std::string_view suffix)
 {
     return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
@@ -104,4 +121,19 @@ TEST_F(EditFileTest, buildsEditorCommandFromExpandedEditorAndFile)
 
     EXPECT_EQ(0, edit_file(filename.c_str()));
     EXPECT_STREQ((": " + filename).c_str(), g_cmd_buf);
+}
+
+TEST_F(FileExpansionTest, expandsHomeDirectory)
+{
+    g_home_dir = "C:/Users/tester";
+
+    EXPECT_EQ("C:/Users/tester/News", file_exp("~/News"));
+}
+
+TEST_F(FileExpansionTest, expandsEnvironmentVariable)
+{
+    trn::testing::MockEnvironment env;
+    env.expect_env("ARTICLE", "C:/articles");
+
+    EXPECT_EQ("C:/articles/current", file_exp("$ARTICLE/current"));
 }

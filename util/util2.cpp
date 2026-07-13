@@ -78,50 +78,42 @@ std::string file_exp(std::string_view text)
     std::string sbuf{text};
     char       *s = sbuf.data();
     std::string filename(CMD_BUF_LEN, '\0');
-    std::string scrbuf(CMD_BUF_LEN, '\0');
 
     // interpret any % escapes
     do_interp(filename.data(), static_cast<int>(filename.size()), s, nullptr, nullptr);
     s = filename.data();
-    if (*s == '~')      // does destination start with ~?
+    if (*s == '~') // does destination start with ~?
     {
         if (!*(++s) || *s == '/')
         {
-            std::sprintf(scrbuf.data(), "%s%s", g_home_dir.c_str(), s);
-            // swap $HOME for it
-            std::strcpy(filename.data(), scrbuf.c_str());
+            const std::string suffix{s};
+            filename = g_home_dir;
+            filename += suffix;
         }
         else if (*s == '~' && (!s[1] || s[1] == '/'))
         {
-            const char *prefix = get_val_const("TRNPREFIX");
-            if (!prefix)
-            {
-                prefix = INSTALL_PREFIX;
-            }
-            std::sprintf(scrbuf.data(), "%s%s", prefix, s + 1);
+            (void) get_val_const("TRNPREFIX", INSTALL_PREFIX);
         }
         else
         {
 #ifdef TILDE_NAME
+            const char *login_start = s;
+            while (std::isalnum(*s))
             {
-                char *d = scrbuf.data();
-                while (isalnum(*s))
-                {
-                    *d++ = *s++;
-                }
-                *d = '\0';
+                ++s;
             }
-            if (!s_tilde_dir.empty() && s_tilde_name == scrbuf.c_str())
+            std::string login_name{login_start, static_cast<std::size_t>(s - login_start)};
+            std::string suffix{s};
+            if (!s_tilde_dir.empty() && s_tilde_name == login_name)
             {
-                std::strcpy(scrbuf.data(), s_tilde_dir.c_str());
-                std::strcat(scrbuf.data(), s);
-                std::strcpy(filename.data(), scrbuf.c_str());
+                filename = s_tilde_dir;
+                filename += suffix;
             }
             else
             {
                 s_tilde_dir.clear();
-                s_tilde_name = scrbuf.c_str();
-#ifdef HAS_GETPWENT     // getpwnam() is not the paragon of efficiency
+                s_tilde_name = login_name;
+#ifdef HAS_GETPWENT // getpwnam() is not the paragon of efficiency
                 {
                     struct passwd *pwd = getpwnam(s_tilde_name.c_str());
                     if (pwd == nullptr)
@@ -129,36 +121,40 @@ std::string file_exp(std::string_view text)
                         std::printf("%s is an unknown user. Using default.\n", s_tilde_name.c_str());
                         return {};
                     }
-                    std::sprintf(scrbuf.data(), "%s%s", pwd->pw_dir, s);
                     s_tilde_dir = pwd->pw_dir;
-                    std::strcpy(filename.data(), scrbuf.c_str());
+                    filename = s_tilde_dir;
+                    filename += suffix;
                     endpwent();
                 }
-#else                   // this will run faster, and is less D space
+#else // this will run faster, and is less D space
                 { // just be sure LOGIN_DIR_FIELD is correct
                     std::FILE *pfp = std::fopen(file_exp(PASSWORD_FILE).c_str(), "r");
-                    char tmpbuf[512];
+                    char       tmpbuf[512];
 
                     if (pfp)
                     {
                         while (std::fgets(tmpbuf, 512, pfp) != nullptr)
                         {
-                            const char *d = copy_till(scrbuf.data(), tmpbuf, ':');
-                            if (!std::strcmp(scrbuf.c_str(), s_tilde_name.c_str()))
+                            std::string_view  passwd_line{tmpbuf};
+                            const std::size_t login_end = passwd_line.find(':');
+                            if (login_end != std::string_view::npos && passwd_line.substr(0, login_end) == s_tilde_name)
                             {
+                                std::size_t field_start = login_end + 1;
+                                std::size_t field_end = std::string_view::npos;
                                 for (int i = LOGIN_DIR_FIELD - 2; i; i--)
                                 {
-                                    if (d)
+                                    field_end = passwd_line.find(':', field_start);
+                                    if (field_end != std::string_view::npos)
                                     {
-                                        d = std::strchr(d + 1, ':');
+                                        field_start = field_end + 1;
                                     }
                                 }
-                                if (d)
+                                if (field_end != std::string_view::npos)
                                 {
-                                    copy_till(scrbuf.data(), d + 1, ':');
-                                    s_tilde_dir = scrbuf.c_str();
-                                    std::strcat(scrbuf.data(), s);
-                                    std::strcpy(filename.data(), scrbuf.c_str());
+                                    field_end = passwd_line.find(':', field_start);
+                                    s_tilde_dir = passwd_line.substr(field_start, field_end - field_start);
+                                    filename = s_tilde_dir;
+                                    filename += suffix;
                                 }
                                 break;
                             }
@@ -187,24 +183,24 @@ std::string file_exp(std::string_view text)
     }
     else if (*s == '$')
     { // starts with some env variable?
-        char *d = scrbuf.data();
-        *d++ = '%';
+        std::string scrbuf{"%"};
         if (s[1] == '{')
         {
-            std::strcpy(d, s + 2);
+            scrbuf += s + 2;
         }
         else
         {
-            *d++ = '{';
+            scrbuf += '{';
             for (s++; std::isalnum(*s); s++)
             {
-                *d++ = *s;
+                scrbuf += *s;
             }
             // skip over token
-            *d++ = '}';
-            std::strcpy(d, s);
+            scrbuf += '}';
+            scrbuf += s;
         }
         // this might do some extra '%'s, but that's how the Mercedes Benz
+        filename.assign(CMD_BUF_LEN, '\0');
         do_interp(filename.data(), static_cast<int>(filename.size()), scrbuf.c_str(), nullptr, nullptr);
     }
     return filename.c_str();

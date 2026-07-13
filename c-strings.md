@@ -264,11 +264,6 @@ buffer slices.
 
 ### Copy/Concat Slices
 
-CC-06. `util/util2.cpp`, `file_exp`: remove the remaining local
-`strcpy`/`strcat` construction by assigning and appending
-`std::string`s directly while preserving `do_interp`'s output-size
-contract and the `~user` cache behavior.
-
 CC-07. `util/env.cpp`, `set_p_host_name`: replace local hostname
 copy/concat assembly with owned string storage after the platform APIs
 populate the initial C buffer.  Preserve the caller buffer for
