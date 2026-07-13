@@ -348,14 +348,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Chase Xref Scratch Line
-
-In `libtrn/bits.cpp`, `chase_xref` copies the fetched Xref line with
-`save_str` only for local tokenization.  Replace it with a local
-`std::string` and use `data()` for the mutable parsing cursor.  The
-buffer must stay local because `copy_till` and `strchr` edit it in
-place.
-
 #### Selector Option Old Value
 
 In `libtrn/rt-select.cpp`, `select_option` saves the quoted current

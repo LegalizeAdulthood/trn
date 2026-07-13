@@ -657,15 +657,15 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         return 0;
     }
 
-    char *xref_buf = save_str(xref_text);
+    std::string xref_buf{xref_text};
 # ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("Xref: %s\n",xref_buf);
+        std::printf("Xref: %s\n",xref_buf.c_str());
         term_down(1);
     }
 # endif
-    cur_xref = copy_till(tmp_buf,xref_buf,' ') + 1;
+    cur_xref = copy_till(tmp_buf,xref_buf.data(),' ') + 1;
 # ifdef VALIDATE_XREF_SITE
     if (valid_xref_site(artnum,tmpbuf))
 # endif
@@ -719,7 +719,6 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
             cur_xref = skip_space(cur_xref);
         }
     }
-    std::free(xref_buf);
     return 0;
 }
 
