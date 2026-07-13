@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <string>
 
 bool        g_one_command{}; // no ':' processing in perform()
 std::string g_save_dir;      // -d
@@ -483,11 +484,10 @@ int perform(char *cmdlst, int output_level)
 {
     int ch;
     int savemode = 0;
-    char tbuf[LINE_BUF_LEN+1];
 
     // A quick fix to avoid reuse of g_buf and cmdlst by shell commands.
-    safe_copy(tbuf, cmdlst, sizeof tbuf);
-    cmdlst = tbuf;
+    std::string cmdlst_copy{cmdlst != nullptr ? cmdlst : ""};
+    cmdlst = cmdlst_copy.data();
 
     if (output_level == 1)
     {

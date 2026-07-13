@@ -337,6 +337,11 @@ function already owns the Xref header line in `std::string`, but still
 copied each token through a fixed 128-byte scratch buffer.  Tokenizing
 the owned string in place removes the arbitrary limit.
 
+After that slice, another rerun found `ngstuff.cpp::perform`.  The
+function made a fixed-size command copy only to survive command handlers
+that reuse `g_buf` or the caller command list.  A local `std::string`
+keeps the same ownership boundary without the arbitrary local limit.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -360,9 +365,11 @@ the `.newsrc` line-storage and home-grown `List` removals.
 - Local C-string buffers: `bits.cpp::chase_xref` still used a fixed
   token buffer after the Xref line was promoted to `std::string`.
   Tokenizing the owned string in place removes that arbitrary
-  truncation point.  Remaining buffers are caller outputs, globals,
-  static returned storage, protocol buffers, parser compaction, or
-  fixed-width display fields.
+  truncation point.  `ngstuff.cpp::perform` used a fixed local command
+  copy only to protect against command-handler reuse; local
+  `std::string` now owns that copy.  Remaining buffers are caller
+  outputs, globals, static returned storage, protocol buffers, parser
+  compaction, or fixed-width display fields.
 - Filename variables to `std::filesystem::path`: no new one-function
   path slice was found.  Remaining candidates are stored filename
   fields, backup/rollback rename sequences, protocol or shell text,
