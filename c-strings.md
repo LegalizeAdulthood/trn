@@ -328,6 +328,11 @@ It lowercased a retained `save_str` result before storing the pointer.
 The lowercasing can use the existing local `std::string` and then store
 one retained copy.
 
+After that slice, another rerun found `bits.cpp::chase_xref`.  The
+function already owns the Xref header line in `std::string`, but still
+copied each token through a fixed 128-byte scratch buffer.  Tokenizing
+the owned string in place removes the arbitrary limit.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -348,6 +353,12 @@ the `.newsrc` line-storage and home-grown `List` removals.
   write caller buffers, globals, static storage, parser buffers,
   command buffers, score/universal storage, keymaps, or memory-pool
   storage.
+- Local C-string buffers: `bits.cpp::chase_xref` still used a fixed
+  token buffer after the Xref line was promoted to `std::string`.
+  Tokenizing the owned string in place removes that arbitrary
+  truncation point.  Remaining buffers are caller outputs, globals,
+  static returned storage, protocol buffers, parser compaction, or
+  fixed-width display fields.
 - Filename variables to `std::filesystem::path`: no new one-function
   path slice was found.  Remaining candidates are stored filename
   fields, backup/rollback rename sequences, protocol or shell text,

@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <string>
 
 int g_dm_count{};
 
@@ -40,7 +41,7 @@ static bool yank_article(char *ptr, int arg);
 static bool check_chase(char *ptr, int until_key);
 static int chase_xref(ArticleNum art_num, bool mark_read);
 #ifdef VALIDATE_XREF_SITE
-static bool valid_xref_site(ART_NUM artnum, char *site);
+static bool valid_xref_site(ArticleNum art_num, char *site);
 #endif
 
 void bits_init()
@@ -618,10 +619,7 @@ static bool check_chase(char *ptr, int until_key)
 // The Xref-line-using version
 static int chase_xref(ArticleNum art_num, bool mark_read)
 {
-    char* xartnum;
     ArticleNum x;
-    const char *cur_xref;
-    char tmp_buf[128];
 
     if (g_data_source->m_flags & DF_NO_XREFS)
     {
@@ -665,15 +663,30 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         term_down(1);
     }
 # endif
-    cur_xref = copy_till(tmp_buf,xref_buf.data(),' ') + 1;
+    char *cur_xref = std::strchr(xref_buf.data(), ' ');
+    if (cur_xref == nullptr)
+    {
+        return 0;
+    }
+    *cur_xref++ = '\0';
 # ifdef VALIDATE_XREF_SITE
-    if (valid_xref_site(artnum,tmpbuf))
+    if (valid_xref_site(art_num, xref_buf.data()))
 # endif
     {
         while (*cur_xref)            // for each newsgroup
         {
-            cur_xref = copy_till(tmp_buf,cur_xref,' ');
-            xartnum = std::strchr(tmp_buf,':');
+            char *next_xref = std::strchr(cur_xref, ' ');
+            if (next_xref != nullptr)
+            {
+                *next_xref++ = '\0';
+            }
+            else
+            {
+                next_xref = cur_xref + std::strlen(cur_xref);
+            }
+            char *group_name = cur_xref;
+            cur_xref = skip_space(next_xref);
+            char *xartnum = std::strchr(group_name, ':');
             if (!xartnum)
             {
                 break;
@@ -683,7 +696,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
             {
                 continue;
             }
-            if (!std::strcmp(tmp_buf,g_newsgroup_name.c_str()))  // is this the current newsgroup?
+            if (!std::strcmp(group_name,g_newsgroup_name.c_str()))  // is this the current newsgroup?
             {
                 if (x < g_abs_first || x > g_last_art)
                 {
@@ -704,7 +717,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
             {
                 if (mark_read)
                 {
-                    if (add_art_num(g_data_source,x,tmp_buf))
+                    if (add_art_num(g_data_source,x,group_name))
                     {
                         break;
                     }
@@ -712,11 +725,10 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 # ifdef MCHASE
                 else
                 {
-                    sub_art_num(g_datasrc,x,tmpbuf);
+                    sub_art_num(g_data_source,x,group_name);
                 }
 # endif
             }
-            cur_xref = skip_space(cur_xref);
         }
     }
     return 0;
@@ -730,7 +742,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 // Xrefs correctly--each article need only match itself to be valid.
 //
 # ifdef VALIDATE_XREF_SITE
-static bool valid_xref_site(ART_NUM artnum, char *site)
+static bool valid_xref_site(ArticleNum art_num, char *site)
 {
     static char* inews_site = nullptr;
     char* sitebuf;
@@ -743,7 +755,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
         std::free(inews_site);
 #ifndef ANCIENT_NEWS
     // Grab the site from the first component of the Path line
-    sitebuf = fetchlines(artnum,PATH_LINE);
+    sitebuf = fetch_lines(art_num,PATH_LINE);
     s = std::strchr(sitebuf, '!');
     if (s != nullptr)
     {
@@ -752,7 +764,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     }
 #else // ANCIENT_NEWS
     // Grab the site from the Posting-Version line
-    sitebuf = fetchlines(artnum,RVER_LINE);
+    sitebuf = fetch_lines(art_num,RVER_LINE);
     s = instr(sitebuf, "; site ", true);
     if (s != nullptr)
     {
@@ -770,7 +782,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     }
     std::free(sitebuf);
 
-    if (std::!strcmp(site,inews_site))
+    if (!std::strcmp(site,inews_site))
     {
         return true;
     }
