@@ -354,13 +354,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Add-Group Selector Command String
-
-In `libtrn/ngstuff.cpp`, `add_group_sel_perform` saves the selector
-command suffix only while walking add-group entries.  Replace the saved
-pointer with local `std::string` storage and pass `data()` to
-`AddGroup::add_group_perform`.
-
 #### Article Search Command List
 
 In `libtrn/artsrch.cpp`, `art_search` builds a local command list with

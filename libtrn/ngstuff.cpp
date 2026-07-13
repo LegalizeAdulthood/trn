@@ -931,10 +931,9 @@ int add_group_sel_perform()
         one_group = true;
         len++;
     }
-    char *cmdstr = save_str(g_buf + len);
+    std::string cmdstr{g_buf + len};
 
     perform_status_init(g_newsgroup_to_read.value_of());
-    len = std::strlen(cmdstr);
 
     if (one_group)
     {
@@ -945,7 +944,7 @@ int add_group_sel_perform()
     {
         if (!(gp->m_flags & g_sel_mask) ^ !!bits)
         {
-            if (gp->add_group_perform(cmdstr, 0) < 0)
+            if (gp->add_group_perform(cmdstr.data(), 0) < 0)
             {
                 break;
             }
@@ -954,7 +953,6 @@ int add_group_sel_perform()
     }
 
 break_out:
-    free(cmdstr);
     return 1;
 }
 
