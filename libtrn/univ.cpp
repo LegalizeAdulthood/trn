@@ -536,9 +536,9 @@ static void univ_use_pattern(const char *pattern, int type)
         case 0:
             for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
-                if (univ_do_match(np->m_rc_line, s))
+                if (univ_do_match(np->rc_line_c_str(), s))
                 {
-                    univ_add_group(np->m_rc_line, np->m_rc_line);
+                    univ_add_group(np->rc_line_c_str(), np->rc_line_c_str());
                 }
             }
             break;
@@ -546,9 +546,9 @@ static void univ_use_pattern(const char *pattern, int type)
         case 1:
             for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
-                if (univ_do_match(np->m_rc_line, s))
+                if (univ_do_match(np->rc_line_c_str(), s))
                 {
-                    univ_add_virtual_group(np->m_rc_line);
+                    univ_add_virtual_group(np->rc_line_c_str());
                 }
             }
             break;

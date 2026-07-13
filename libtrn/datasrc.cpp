@@ -1239,7 +1239,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
 
     if (newsrc_ptr)
     {
-        name = ((NewsgroupData *) data->dat_ptr)->m_rc_line;
+        name = ((NewsgroupData *) data->dat_ptr)->rc_line_data();
     }
     else
     {

@@ -64,7 +64,7 @@ static void display_page_title(bool home_only);
 static void display_article(const Article *ap, int ix, int sel);
 static void display_subject(const Subject *subj, int ix, int sel);
 static void display_universal(const UniversalItem *ui);
-static void display_group(DataSource *dp, char *group, int len, int max_len);
+static void display_group(DataSource *dp, const char *group, int len, int max_len);
 
 /// @brief Sets the selector mode based on the provided character.
 ///
@@ -556,7 +556,7 @@ try_again:
             {
                 continue;
             }
-            if (!in_list(np->m_rc_line))
+            if (!in_list(np->rc_line_c_str()))
             {
                 continue;
             }
@@ -2162,7 +2162,7 @@ start_of_loop:
                 maybe_eol();
                 output_sel(g_sel_page_item_cnt, sel, false);
                 std::printf("%5ld ", (long) np->m_to_read);
-                display_group(np->m_rc->data_source, np->m_rc_line, np->m_num_offset - 1, max_len);
+                display_group(np->m_rc->data_source, np->rc_line_c_str(), np->m_num_offset - 1, max_len);
             }
             else if (np->m_num_offset >= max_len)
             {
@@ -2910,7 +2910,7 @@ static void display_universal(const UniversalItem *ui)
     }
 }
 
-static void display_group(DataSource *dp, char *group, int len, int max_len)
+static void display_group(DataSource *dp, const char *group, int len, int max_len)
 {
     if (*g_sel_grp_display_mode == 's')
     {

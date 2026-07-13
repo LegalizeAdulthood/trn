@@ -284,7 +284,7 @@ restart:
                 set_mode(GM_READ,MM_NEWSGROUP_LIST);
                 if (g_newsgroup_ptr->m_to_read >= TR_NONE)         // recalc toread?
                 {
-                    set_newsgroup_name(g_newsgroup_ptr->m_rc_line);
+                    set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
                     shoe_fits = in_list(g_newsgroup_name.c_str());
                     if (shoe_fits)
                     {
@@ -480,7 +480,7 @@ do_command:
         g_newsgroup_ptr = g_recent_newsgroup;          // recall previous newsgroup
         if (g_newsgroup_ptr)
         {
-            if (!get_newsgroup(g_newsgroup_ptr->m_rc_line,GNG_NONE))
+            if (!get_newsgroup(g_newsgroup_ptr->rc_line_c_str(),GNG_NONE))
             {
                 set_newsgroup(g_current_newsgroup);
             }
@@ -624,7 +624,7 @@ do_command:
                     term_down(2);
                     return ING_ASK;
                 }
-                set_newsgroup_name(g_newsgroup_ptr->m_rc_line);
+                set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
             }
         }
         // try to find newsgroup
@@ -702,7 +702,7 @@ display_multirc:
         {
             bool read_unthreaded = !(g_newsgroup_ptr->m_flags & NF_UNTHREADED);
             g_newsgroup_ptr->m_flags ^= NF_UNTHREADED;
-            std::printf("\n\n%s will be read %sthreaded.\n", g_newsgroup_ptr->m_rc_line, read_unthreaded ? "un" : "");
+            std::printf("\n\n%s will be read %sthreaded.\n", g_newsgroup_ptr->rc_line_c_str(), read_unthreaded ? "un" : "");
             g_newsgroup_ptr->set_to_read(ST_LAX);
         }
         term_down(3);
@@ -712,7 +712,7 @@ display_multirc:
         if (g_newsgroup_ptr && g_newsgroup_ptr->m_to_read >= TR_NONE) // unsubscribable?
         {
             newline();
-            std::printf(g_unsub_to, g_newsgroup_ptr->m_rc_line);
+            std::printf(g_unsub_to, g_newsgroup_ptr->rc_line_c_str());
             term_down(1);
             g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR; // unsubscribe it
             g_newsgroup_ptr->m_to_read = TR_UNSUB;                 // and make line invisible

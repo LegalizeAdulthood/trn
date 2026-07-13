@@ -1,6 +1,7 @@
 /* trn/ngdata.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_NGDATA_H
 #define TRN_NGDATA_H
 
@@ -9,6 +10,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 struct Newsrc;
@@ -34,11 +36,18 @@ struct NewsgroupData
     void       check_expired(ArticleNum first);
     void       abandon_newsgroup();
     bool       relocate_newsgroup(NewsgroupNum newnum);
+    const char *rc_line_c_str() const;
+    char       *rc_line_data();
+    const char *rc_numbers_c_str() const;
+    char       *rc_numbers_data();
+    std::string_view rc_name() const;
+    void hide_subscribe_char();
+    void show_subscribe_char();
 
     NewsgroupData *m_prev;
     NewsgroupData *m_next;
     Newsrc        *m_rc;             // which rc is this line from?
-    char          *m_rc_line;        // pointer to group's .newsrc line
+    std::string    m_rc_line;        // group's .newsrc line
     ArticleNum     m_abs_first;      // 1st real article in newsgroup
     ArticleNum     m_ng_max;         // high message num for the group
     ArticleUnread  m_to_read;        // number of articles to be read in newsgroup

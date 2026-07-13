@@ -269,9 +269,9 @@ cached header strings and `NewsgroupData::m_rc_line`.  `Article` is now
 stored in a `std::map<ArticleNum, Article>`, so `Article` objects have
 ordinary construction and destruction.  Cached `Article` header strings
 now use optional owned string storage, and the message-id hash has an
-explicit pending-id wrapper for global thread commands.  The remaining
-target in this group is `NewsgroupData::m_rc_line`, which is still
-mutated in place and indexed by offsets.
+explicit pending-id wrapper for global thread commands.
+`NewsgroupData::m_rc_line` now owns its `.newsrc` line as `std::string`
+while preserving the existing hidden-delimiter and offset model.
 
 ## Refactoring Slices
 
@@ -302,15 +302,6 @@ all direct assignments must change together.  For `save_str` and
 `save_str` assignments, and matching `free` paths with `std::string`
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
-
-#### Newsgroup RC Line
-
-Promote `NewsgroupData::m_rc_line` to owned string storage.  Keep the
-existing `m_num_offset` and `m_subscribe_char` behavior while removing
-manual `free`, `safe_malloc`, `safe_realloc`, and `save_str` ownership.
-This is broader than a local helper because `bits.cpp`, `rcln.cpp`,
-`rcstuff.cpp`, hashing, and `.newsrc` writing all mutate or slice the
-same line.
 
 ### Ubuntu `-Wwrite-strings` Slices
 

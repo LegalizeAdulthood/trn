@@ -878,7 +878,7 @@ deselect:
         case 'u':
             if (output_level && g_verbose)
             {
-                std::printf(g_unsub_to,g_newsgroup_ptr->m_rc_line);
+                std::printf(g_unsub_to, g_newsgroup_ptr->rc_line_c_str());
                 term_down(1);
             }
             g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;

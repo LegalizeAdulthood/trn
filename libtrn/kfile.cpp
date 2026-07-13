@@ -207,7 +207,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             {
                 set_newsgroup_name(include_name.c_str());
                 include_name = file_exp(get_val_const("KILLLOCAL", s_kill_local));
-                set_newsgroup_name(g_newsgroup_ptr->m_rc_line);
+                set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
             }
             std::FILE *incfile = std::fopen(include_name.c_str(), "r");
             if (incfile != nullptr)

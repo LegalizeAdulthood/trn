@@ -57,22 +57,22 @@ void rc_to_bits()
 
     // modify the article flags to reflect what has already been read
 
-    char *s = skip_eq(g_newsgroup_ptr->m_rc_line + g_newsgroup_ptr->m_num_offset, ' ');
+    const char *numbers = skip_eq(g_newsgroup_ptr->rc_numbers_c_str(), ' ');
                                         // find numbers in rc line
-    long i = std::strlen(s);
+    long i = std::strlen(numbers);
 #ifndef lint
     if (i >= LINE_BUF_LEN-2)                 // bigger than g_buf?
     {
         my_buf = safe_malloc((MemorySize) (i + 2));
     }
 #endif
-    std::strcpy(my_buf,s);                    // make scratch copy of line
+    std::strcpy(my_buf,numbers);                    // make scratch copy of line
     if (my_buf[0])
     {
         my_buf[i++] = ',';               // put extra comma on the end
     }
     my_buf[i] = '\0';
-    s = my_buf;                          // initialize the for loop below
+    char *s = my_buf;                    // initialize the for loop below
     if (set_first_art(s))
     {
         s = std::strchr(s,',') + 1;
@@ -222,7 +222,7 @@ void bits_to_rc()
     ArticleNum count{};
     int safe_len = LINE_BUF_LEN - 32;
 
-    std::strcpy(g_buf,g_newsgroup_ptr->m_rc_line);            // start with the newsgroup name
+    std::strcpy(g_buf,g_newsgroup_ptr->rc_line_c_str()); // start with the newsgroup name
     char *s = g_buf + g_newsgroup_ptr->m_num_offset - 1; // use s for buffer pointer
     *s++ = g_newsgroup_ptr->m_subscribe_char;            // put the requisite : or !
     for (i = article_first(g_abs_first); i <= g_last_art; i = article_next(i))
@@ -289,25 +289,21 @@ void bits_to_rc()
 #ifdef DEBUG
     if ((g_debug & DEB_NEWSRC_LINE) && !g_panic)
     {
-        std::printf("%s: %s\n",g_newsgroup_ptr->m_rc_line,g_newsgroup_ptr->m_rc_line+g_newsgroup_ptr->m_num_offset);
+        std::printf("%s: %s\n",g_newsgroup_ptr->rc_line_c_str(),g_newsgroup_ptr->rc_numbers_c_str());
         std::printf("%s\n",mybuf);
         term_down(2);
     }
 #endif
-    std::free(g_newsgroup_ptr->m_rc_line);              // return old rc line
     if (mybuf == g_buf)
     {
-        g_newsgroup_ptr->m_rc_line = safe_malloc((MemorySize)(s-g_buf)+1);
-                                        // grab a new rc line
-        std::strcpy(g_newsgroup_ptr->m_rc_line, g_buf); // and load it
+        g_newsgroup_ptr->m_rc_line.assign(g_buf, static_cast<std::size_t>(s - g_buf - 1));
     }
     else
     {
-        mybuf = safe_realloc(mybuf,(MemorySize)(s-mybuf)+1);
-                                        // be nice to the heap
-        g_newsgroup_ptr->m_rc_line = mybuf;
+        g_newsgroup_ptr->m_rc_line.assign(mybuf, static_cast<std::size_t>(s - mybuf - 1));
+        std::free(mybuf);
     }
-    *(g_newsgroup_ptr->m_rc_line + g_newsgroup_ptr->m_num_offset - 1) = '\0';
+    g_newsgroup_ptr->hide_subscribe_char();
     if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR)// did they unsubscribe?
     {
         g_newsgroup_ptr->m_to_read = TR_UNSUB;     // make line invisible

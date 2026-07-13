@@ -194,7 +194,7 @@ void build_cache()
     g_article_list.clear();
     s_subj_hash = hash_create(991, subject_cmp); // TODO: pick a better size
 
-    set_first_art(g_newsgroup_ptr->m_rc_line + g_newsgroup_ptr->m_num_offset);
+    set_first_art(g_newsgroup_ptr->rc_numbers_c_str());
     g_first_cached = g_thread_always ? g_abs_first : g_first_art;
     g_last_cached = article_before(g_first_cached);
     g_cached_all_in_range = false;

@@ -73,6 +73,47 @@ void newsgroup_data_init()
     g_newsgroup_order.clear();
 }
 
+const char *NewsgroupData::rc_line_c_str() const
+{
+    return m_rc_line.c_str();
+}
+
+char *NewsgroupData::rc_line_data()
+{
+    return m_rc_line.data();
+}
+
+const char *NewsgroupData::rc_numbers_c_str() const
+{
+    return m_rc_line.c_str() + m_num_offset;
+}
+
+char *NewsgroupData::rc_numbers_data()
+{
+    return m_rc_line.data() + m_num_offset;
+}
+
+std::string_view NewsgroupData::rc_name() const
+{
+    return {m_rc_line.data(), static_cast<std::size_t>(m_num_offset ? m_num_offset - 1 : m_rc_line.size())};
+}
+
+void NewsgroupData::hide_subscribe_char()
+{
+    if (m_num_offset)
+    {
+        m_rc_line[m_num_offset - 1] = '\0';
+    }
+}
+
+void NewsgroupData::show_subscribe_char()
+{
+    if (m_num_offset)
+    {
+        m_rc_line[m_num_offset - 1] = m_subscribe_char;
+    }
+}
+
 NewsgroupData *newsgroup_first()
 {
     return g_newsgroup_order.empty() ? nullptr : g_newsgroup_order.front();
@@ -182,7 +223,7 @@ void set_newsgroup(NewsgroupData *np)
     g_newsgroup_ptr = np;
     if (g_newsgroup_ptr)
     {
-        set_newsgroup_name(g_newsgroup_ptr->m_rc_line);
+        set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
     }
 }
 
@@ -326,7 +367,7 @@ static int newsgroup_order_number(const NewsgroupData *np1, const NewsgroupData 
 
 static int newsgroup_order_group_name(const NewsgroupData *np1, const NewsgroupData *np2)
 {
-    return string_case_compare(np1->m_rc_line, np2->m_rc_line) * g_sel_direction;
+    return string_case_compare(np1->rc_line_c_str(), np2->rc_line_c_str()) * g_sel_direction;
 }
 
 static int newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *np2)
@@ -443,7 +484,7 @@ ArticleNum NewsgroupData::get_newsgroup_size()
     long first;
     char ch;
 
-    const std::string_view group_name{m_rc_line, static_cast<std::size_t>(m_num_offset - 1)};
+    const std::string_view group_name{rc_name()};
     int                    len = static_cast<int>(group_name.size());
 
     if (!m_rc->data_source->find_active_group(tmpbuf, group_name, m_ng_max))
