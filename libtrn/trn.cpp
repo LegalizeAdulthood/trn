@@ -71,6 +71,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstring>
 #include <ctime>
 #include <filesystem>
@@ -995,7 +997,13 @@ void trn_version()
             {
                 continue;
             }
-            std::sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->data_source->m_name,rp->name);
+            auto result = fmt::format_to_n(
+                    g_msg,
+                    sizeof g_msg - 1,
+                    "ID {}:\nNewsrc {}.\n",
+                    rp->data_source->m_name,
+                    rp->name);
+            *result.out = '\0';
             print_lines(g_msg, NO_MARKING);
             if (rp->data_source->m_flags & DF_REMOTE)
             {

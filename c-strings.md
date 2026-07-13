@@ -288,13 +288,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Newsrc Filenames
-
-Promote `Newsrc::{name,old_name,new_name,info_name,lock_name}` in
-`libtrn/include/trn/rcstuff.h` to owned string storage.  Assignments in
-`libtrn/rcstuff.cpp` copy expanded filenames with `save_str`.  Remove
-the paired frees and pass `c_str()` to legacy file APIs.
-
 #### MIME Section Fields
 
 Promote `MimeSection::{m_filename,m_type_name,m_type_params,m_boundary}`

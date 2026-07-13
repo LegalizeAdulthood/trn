@@ -56,7 +56,7 @@ void  not_incl(std::string_view feature);
 void  grow_str(char **strptr, int *curlen, int newlen);
 void  set_def(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
-void safe_link(char *old_name, char *new_name);
+void safe_link(const char *old_name, const char *new_name);
 #endif
 void        verify_sig();
 double      current_time();

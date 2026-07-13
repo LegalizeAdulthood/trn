@@ -9,6 +9,7 @@
 #include <trn/enum-flags.h>
 #include <trn/list.h>
 
+#include <string>
 #include <string_view>
 
 struct DataSource;
@@ -55,11 +56,11 @@ struct Newsrc
 {
     Newsrc     *next;
     DataSource *data_source;
-    char       *name;      // the name of the associated newsrc
-    char       *old_name;  // the backup of the newsrc
-    char       *new_name;  // our working newsrc file
-    char       *info_name; // the time/size info file
-    char       *lock_name; // the lock file we created
+    std::string name;      // the name of the associated newsrc
+    std::string old_name;  // the backup of the newsrc
+    std::string new_name;  // our working newsrc file
+    std::string info_name; // the time/size info file
+    std::string lock_name; // the lock file we created
     NewsrcFlags flags;
 };
 

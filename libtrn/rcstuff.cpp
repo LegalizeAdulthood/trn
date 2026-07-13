@@ -34,6 +34,7 @@
 #include <util/util2.h>
 
 #include <fmt/format.h>
+#include <fmt/printf.h>
 
 #include <algorithm>
 #include <cctype>
@@ -57,8 +58,6 @@ bool       g_fuzzy_get{};                    // -G
 bool       g_append_unsub{};                 // -I
 
 static bool        s_found_any{};
-static const char *s_cant_recreate{"Can't recreate %s -- restoring older version.\n"
-                                   "Perhaps you are near or over quota?\n"};
 
 static bool    clear_newsgroup_item(char *cp, int arg);
 static Newsrc *new_newsrc(const RcGroupConfig &config);
@@ -70,6 +69,13 @@ static void    parse_rcline(NewsgroupData *np);
 static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c);
 static void    set_hash(NewsgroupData *np);
 static int     rcline_cmp(std::string_view key, HashDatum data);
+
+static void print_cant_recreate(std::string_view name)
+{
+    fmt::print("Can't recreate {} -- restoring older version.\n"
+               "Perhaps you are near or over quota?\n",
+               name);
+}
 
 inline NewsgroupData *newsgroup_data_ptr(int ngnum)
 {
@@ -204,15 +210,11 @@ static Newsrc *new_newsrc(const RcGroupConfig &config)
         return nullptr;
     }
 
-    Newsrc *rp = (Newsrc*)safe_malloc(sizeof(Newsrc));
-    std::memset((char*)rp,0,sizeof (Newsrc));
+    Newsrc *rp = new Newsrc{};
     rp->data_source = dp;
-    rp->name = save_str(file_exp(newsrc));
-    char tmpbuf[CMD_BUF_LEN];
-    std::sprintf(tmpbuf, RCNAME_OLD, rp->name);
-    rp->old_name = save_str(tmpbuf);
-    std::sprintf(tmpbuf, RCNAME_NEW, rp->name);
-    rp->new_name = save_str(tmpbuf);
+    rp->name = file_exp(newsrc);
+    rp->old_name = fmt::sprintf(RCNAME_OLD, rp->name.c_str());
+    rp->new_name = fmt::sprintf(RCNAME_NEW, rp->name.c_str());
 
     switch (add_ok ? *add_ok : 'y')
     {
@@ -369,12 +371,13 @@ const char *Multirc::multirc_name() const
     {
         return "<each-newsrc>";
     }
-    char *cp = std::strrchr(m_first->name, '/');
-    if (cp != nullptr)
+    const std::string &name = m_first->name;
+    const std::size_t  pos = name.find_last_of('/');
+    if (pos != std::string::npos)
     {
-        return cp + 1;
+        return name.c_str() + pos + 1;
     }
-    return m_first->name;
+    return name.c_str();
 }
 
 static bool clear_newsgroup_item(char *cp, int arg)
@@ -404,21 +407,19 @@ static bool lock_newsrc(Newsrc *rp)
     }
 
     const std::string rcname = file_exp(RCNAME);
-    if (!std::strcmp(rp->name, rcname.c_str()))
+    if (rp->name == rcname)
     {
-        rp->lock_name = save_str(file_exp(LOCKNAME));
+        rp->lock_name = file_exp(LOCKNAME);
     }
     else
     {
-        std::sprintf(g_buf, RCNAME_INFO, rp->name);
-        rp->info_name = save_str(g_buf);
-        std::sprintf(g_buf, RCNAME_LOCK, rp->name);
-        rp->lock_name = save_str(g_buf);
+        rp->info_name = fmt::sprintf(RCNAME_INFO, rp->name.c_str());
+        rp->lock_name = fmt::sprintf(RCNAME_LOCK, rp->name.c_str());
     }
 
     char *s;
     char *runninghost;
-    if (std::FILE *fp = std::fopen(rp->lock_name, "r"))
+    if (std::FILE *fp = std::fopen(rp->lock_name.c_str(), "r"))
     {
         if (std::fgets(g_buf, LINE_BUF_LEN, fp))
         {
@@ -449,16 +450,16 @@ static bool lock_newsrc(Newsrc *rp)
         {
             if (g_verbose)
             {
-                std::printf("\n"
-                       "Since that's not the same host as this one (%s), we must\n"
-                       "assume that process still exists.  To override this check, remove\n"
-                       "the lock file: %s\n",
-                       g_local_host.c_str(), rp->lock_name);
+                fmt::print("\n"
+                           "Since that's not the same host as this one ({}), we must\n"
+                           "assume that process still exists.  To override this check, remove\n"
+                           "the lock file: {}\n",
+                           g_local_host, rp->lock_name);
             }
             else
             {
-                std::printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
-                       g_local_host.c_str(), rp->lock_name);
+                fmt::print("\nThis host ({}) doesn't match.\nCan't unlock {}.\n",
+                       g_local_host, rp->lock_name);
             }
             term_down(2);
             if (g_bizarre)
@@ -518,14 +519,14 @@ static bool lock_newsrc(Newsrc *rp)
         {
             if (g_verbose)
             {
-                std::printf("\n"
-                       "It looks like that process still exists.  To override this, remove\n"
-                       "the lock file: %s\n",
-                       rp->lock_name);
+                fmt::print("\n"
+                           "It looks like that process still exists.  To override this, remove\n"
+                           "the lock file: {}\n",
+                           rp->lock_name);
             }
             else
             {
-                std::printf("\nCan't unlock %s.\n", rp->lock_name);
+                fmt::print("\nCan't unlock {}.\n", rp->lock_name);
             }
             term_down(2);
             if (g_bizarre)
@@ -536,25 +537,24 @@ static bool lock_newsrc(Newsrc *rp)
         }
 #endif
     }
-    std::FILE *fp = std::fopen(rp->lock_name, "w");
+    std::FILE *fp = std::fopen(rp->lock_name.c_str(), "w");
     if (fp == nullptr)
     {
-        std::printf(g_cant_create,rp->lock_name);
+        fmt::print("Can't create {}\n", rp->lock_name);
         sig_catcher(0);
     }
-    std::fprintf(fp,"%ld\n%s\n",g_our_pid,g_local_host.c_str());
+    fmt::print(fp, "{}\n{}\n", g_our_pid, g_local_host);
     std::fclose(fp);
     return true;
 }
 
 static void unlock_newsrc(Newsrc *rp)
 {
-    safe_free0(rp->info_name);
-    if (rp->lock_name)
+    rp->info_name.clear();
+    if (!rp->lock_name.empty())
     {
-        remove(rp->lock_name);
-        std::free(rp->lock_name);
-        rp->lock_name = nullptr;
+        remove(rp->lock_name.c_str());
+        rp->lock_name.clear();
     }
 }
 
@@ -562,13 +562,13 @@ static bool open_newsrc(Newsrc *rp)
 {
     // make sure the .newsrc file exists
 
-    std::FILE *rcfp = std::fopen(rp->name, "r");
+    std::FILE *rcfp = std::fopen(rp->name.c_str(), "r");
     if (rcfp == nullptr)
     {
-        rcfp = std::fopen(rp->name,"w+");
+        rcfp = std::fopen(rp->name.c_str(),"w+");
         if (rcfp == nullptr)
         {
-            std::printf("\nCan't create %s.\n", rp->name);
+            fmt::print("\nCan't create {}.\n", rp->name);
             term_down(2);
             return false;
         }
@@ -605,22 +605,22 @@ static bool open_newsrc(Newsrc *rp)
         stat_t newsrc_stat{};
         if (fstat(fileno(rcfp), &newsrc_stat) < 0)
         {
-            std::perror(rp->name);
+            std::perror(rp->name.c_str());
             return false;
         }
         if (newsrc_stat.st_size == 0 //
-            && stat(rp->old_name, &newsrc_stat) >= 0 && newsrc_stat.st_size > 0)
+            && stat(rp->old_name.c_str(), &newsrc_stat) >= 0 && newsrc_stat.st_size > 0)
         {
-            std::printf("Warning: %s is zero length but %s is not.\n",
+            fmt::print("Warning: {} is zero length but {} is not.\n",
                    rp->name,rp->old_name);
-            std::printf("Either recover your newsrc or else remove the backup copy.\n");
+            fmt::print("Either recover your newsrc or else remove the backup copy.\n");
             term_down(2);
             return false;
         }
         // unlink backup file name and backup current name
-        remove(rp->old_name);
+        remove(rp->old_name.c_str());
 #ifndef NO_FILELINKS
-        safe_link(rp->name,rp->old_name);
+        safe_link(rp->name.c_str(),rp->old_name.c_str());
 #endif
     }
 
@@ -771,13 +771,13 @@ static bool open_newsrc(Newsrc *rp)
     }
     std::fclose(rcfp);                       // close .newsrc
 #ifdef NO_FILELINKS
-    remove(rp->old_name);
-    rename(rp->name,rp->old_name);
+    remove(rp->old_name.c_str());
+    rename(rp->name.c_str(),rp->old_name.c_str());
     rp->flags |= RF_RC_CHANGED;
 #endif
-    if (rp->info_name)
+    if (!rp->info_name.empty())
     {
-        std::FILE *info = std::fopen(rp->info_name, "r");
+        std::FILE *info = std::fopen(rp->info_name.c_str(), "r");
         if (info != nullptr)
         {
             if (std::fgets(g_buf, sizeof g_buf, info) != nullptr)
@@ -865,7 +865,7 @@ void NewsgroupData::abandon_newsgroup()
     char * some_buf = nullptr;
 
     // open newsrc backup copy and try to find the prior value for the group.
-    std::FILE *rcfp = std::fopen(m_rc->old_name, "r");
+    std::FILE *rcfp = std::fopen(m_rc->old_name.c_str(), "r");
     if (rcfp != nullptr)
     {
         int length = m_num_offset - 1;
@@ -891,7 +891,7 @@ void NewsgroupData::abandon_newsgroup()
     }
     else if (errno != ENOENT)
     {
-        std::printf("Unable to open %s.\n", m_rc->old_name);
+        fmt::print("Unable to open {}.\n", m_rc->old_name);
         term_down(1);
         return;
     }
@@ -1496,11 +1496,11 @@ void cleanup_newsrc(Newsrc *rp)
 
     if (g_verbose)
     {
-        std::printf("Checking out '%s' -- hang on a second...\n", rp->name);
+        fmt::print("Checking out '{}' -- hang on a second...\n", rp->name);
     }
     else
     {
-        std::printf("Checking '%s' -- hang on...\n", rp->name);
+        fmt::print("Checking '{}' -- hang on...\n", rp->name);
     }
     term_down(1);
     NewsgroupData* np;
@@ -1531,7 +1531,7 @@ void cleanup_newsrc(Newsrc *rp)
     {
         if (g_verbose)
         {
-            std::printf("Moving bogus newsgroups to the end of '%s'.\n", rp->name);
+            fmt::print("Moving bogus newsgroups to the end of '{}'.\n", rp->name);
         }
         else
         {
@@ -1698,13 +1698,13 @@ bool write_newsrcs(Multirc *mptr)
             continue;
         }
 
-        if (rp->info_name)
+        if (!rp->info_name.empty())
         {
-            std::FILE *info = std::fopen(rp->info_name, "w");
+            std::FILE *info = std::fopen(rp->info_name.c_str(), "w");
             if (info != nullptr)
             {
-                std::fprintf(info,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-                        g_newsgroup_name.c_str(),rp->data_source->m_last_new_group,
+                fmt::print(info,"Last-Group: {}\nNew-Group-State: {},{},{}\n",
+                        g_newsgroup_name,rp->data_source->m_last_new_group,
                         rp->data_source->m_act_sf.m_recent_cnt,
                         rp->data_source->m_desc_sf.m_recent_cnt);
                 std::fclose(info);
@@ -1731,19 +1731,19 @@ bool write_newsrcs(Multirc *mptr)
             continue;
         }
 
-        std::FILE *rcfp = std::fopen(rp->new_name, "w");
+        std::FILE *rcfp = std::fopen(rp->new_name.c_str(), "w");
         if (rcfp == nullptr)
         {
-            std::printf(s_cant_recreate,rp->name);
+            print_cant_recreate(rp->name);
             total_success = false;
             continue;
         }
 #ifndef MSDOS
         stat_t perms;
-        if (stat(rp->name,&perms)>=0)   // preserve permissions
+        if (stat(rp->name.c_str(),&perms)>=0)   // preserve permissions
         {
-            chmod(rp->new_name,perms.st_mode&0666);
-            chown(rp->new_name,perms.st_uid,perms.st_gid);
+            chmod(rp->new_name.c_str(),perms.st_mode&0666);
+            chown(rp->new_name.c_str(),perms.st_uid,perms.st_gid);
         }
 #endif
         // write out each line
@@ -1771,11 +1771,12 @@ bool write_newsrcs(Multirc *mptr)
 #ifdef DEBUG
             if (g_debug & DEB_NEWSRC_LINE)
             {
-                std::printf("%s\n",np->m_rc_line);
+                fmt::print("{}\n", np->m_rc_line);
                 term_down(1);
             }
 #endif
-            if (std::fprintf(rcfp, "%s\n", np->m_rc_line) < 0)
+            fmt::print(rcfp, "{}\n", np->m_rc_line);
+            if (std::ferror(rcfp))
             {
                 std::fclose(rcfp);           // close new newsrc
                 goto write_error;
@@ -1799,15 +1800,15 @@ bool write_newsrcs(Multirc *mptr)
         if (std::fclose(rcfp) == EOF)
         {
 write_error:
-            std::printf(s_cant_recreate,rp->name);
-            remove(rp->new_name);
+            print_cant_recreate(rp->name);
+            remove(rp->new_name.c_str());
             total_success = false;
             continue;
         }
         rp->flags &= ~RF_RC_CHANGED;
 
-        remove(rp->name);
-        rename(rp->new_name,rp->name);
+        remove(rp->name.c_str());
+        rename(rp->new_name.c_str(),rp->name.c_str());
     }
 
     if (g_sel_newsgroup_sort != SS_NATURAL)
@@ -1829,9 +1830,9 @@ void get_old_newsrcs(Multirc *mptr)
         {
             if (rp->flags & RF_ACTIVE)
             {
-                remove(rp->new_name);
-                rename(rp->name,rp->new_name);
-                rename(rp->old_name,rp->name);
+                remove(rp->new_name.c_str());
+                rename(rp->name.c_str(),rp->new_name.c_str());
+                rename(rp->old_name.c_str(),rp->name.c_str());
             }
         }
     }
