@@ -354,12 +354,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Article Range Command List
-
-In `libtrn/ngstuff.cpp`, `num_num` builds a local command list with
-`save_str` while processing article ranges.  Replace it with local
-`std::string` storage and pass `data()` to `perform`.
-
 #### Thread Command String
 
 In `libtrn/ngstuff.cpp`, `thread_perform` saves the command suffix from

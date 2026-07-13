@@ -186,7 +186,7 @@ NumNumResult num_num()
 {
     ArticleNum min;
     ArticleNum max;
-    char   * cmdlst = nullptr;
+    std::string cmdlst;
     char* s;
     char* c;
     ArticleNum oldart = g_art;
@@ -219,12 +219,12 @@ NumNumResult num_num()
     }
     if (*s)
     {
-        cmdlst = save_str(s);
+        cmdlst = s;
         justone = false;
     }
     else if (!justone)
     {
-        cmdlst = save_str("m");
+        cmdlst = "m";
     }
     *s++ = ',';
     *s = '\0';
@@ -281,10 +281,6 @@ NumNumResult num_num()
         if (max < min)
         {
             error_msg("Bad range");
-            if (cmdlst)
-            {
-                std::free(cmdlst);
-            }
             return NN_ASK;
         }
         if (justone)
@@ -295,7 +291,7 @@ NumNumResult num_num()
         for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art))
         {
             g_artp = article_ptr(g_art);
-            if (perform(cmdlst, output_level && g_page_line == 1) < 0)
+            if (perform(cmdlst.data(), output_level && g_page_line == 1) < 0)
             {
                 if (g_verbose)
                 {
@@ -306,10 +302,6 @@ NumNumResult num_num()
                     std::sprintf(g_msg, "(Intr at %ld)", (long) g_art.value_of());
                 }
                 error_msg(g_msg);
-                if (cmdlst)
-                {
-                    std::free(cmdlst);
-                }
                 return NN_ASK;
             }
             if (!output_level)
@@ -319,10 +311,6 @@ NumNumResult num_num()
         }
     }
     g_art = oldart;
-    if (cmdlst)
-    {
-        free(cmdlst);
-    }
     return NN_NORM;
 }
 
