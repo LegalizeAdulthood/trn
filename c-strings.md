@@ -262,13 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-08. `libtrn/scorefile.cpp`, `sf_add_extra_header`: replace the
-static `lbuf` used to append `:` for `set_line_type` with local
-`std::string` storage.  Keep the lower-case saved header behavior and
-compare against known header names using the full available header
-text.  The truncation is arbitrary scratch-buffer space for the appended
-colon, not a semantic score-header limit.
-
 BUF-09. `libtrn/scmd.cpp`, `s_match_description`: replace the static
 `lbuf` description copy with local string storage, lowercase that
 string, and search it with string APIs.  The copied-description

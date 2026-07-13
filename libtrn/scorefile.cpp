@@ -290,18 +290,14 @@ static int sf_check_extra_headers(const char *head)
 //char* head;           // new header name, (without ':' character)
 static void sf_add_extra_header(const char *head)
 {
-    static char lbuf[LINE_BUF_LEN]; // ick.
+    std::string header_name{head};
+    header_name += ':';
 
     // check to see if it's already known
     // first see if it is a known system header
-    safe_copy(lbuf,head,sizeof lbuf - 2);
-    int len = std::strlen(lbuf);
-    lbuf[len] = ':';
-    lbuf[len+1] = '\0';
-    char *colonptr = lbuf + len;
-    if (set_line_type(lbuf,colonptr) != SOME_LINE)
+    if (set_line_type(header_name.data(), header_name.data() + header_name.size() - 1) != SOME_LINE)
     {
-        return;         // known types should be interpreted in normal way
+        return; // known types should be interpreted in normal way
     }
     // then check to see if it's a known extra header
     if (sf_check_extra_headers(head) >= 0)
