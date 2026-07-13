@@ -113,14 +113,13 @@ tests solely to preserve a fixed-buffer artifact.
 A formatting pass checked how much construction and output would be
 simplified by adding `libfmt`; fmt is now available to the core targets.
 Current C-style formatting and output usage remains large: this pass
-found 213 `std::sprintf` sites, 2 `std::snprintf` sites, and 622
+found 197 `std::sprintf` sites, 2 `std::snprintf` sites, and 602
 `std::printf`/`std::fprintf` sites in the source directories.
 
-A corrected copy/concat pass over absolute source paths found 286
-non-test source hits: 167 `std::strcpy`, 46 `std::strcat`, 12
-`std::strncpy`, and 61 `safe_copy` hits.  There were no `std::strncat`
-hits.  Tests add 7 more direct setup-buffer hits.  The previous
-zero-hit result was wrong.
+A current copy/concat pass after removing home-grown `List` storage
+found 247 non-test source hits: 144 `std::strcpy`, 32 `std::strcat`, 12
+`std::strncpy`, and 59 `safe_copy` hits.  There were no `std::strncat`
+hits in the source directories.
 
 That first count did not include owned string construction already using
 `std::string`.  A follow-up scan found 29 `.append()` sites, 9
@@ -148,7 +147,7 @@ offset tricks, arrays with parallel ownership state, and output
 parameters whose callees allocate through `char **`.
 
 A follow-up ownership pass over `save_str`, `mp_save_str`, and
-`safe_copy` found 127 `save_str` or `mp_save_str` occurrences and 62
+`safe_copy` found 96 `save_str` or `mp_save_str` occurrences and 59
 `safe_copy` occurrences.  The useful retained-storage candidates share a
 simple shape: a raw pointer is assigned from `save_str`, later freed by
 the same owner, and exposed mostly through read-only C-string use.
@@ -258,10 +257,22 @@ when keeping runtime formatting is intentional.  Do not create fmt
 string-building slices for C-buffer `sprintf` sites; convert those when
 the C-style string buffer itself is refactored.
 
-Do not promote fields inside records stored by the raw `List` allocator
-to C++ owning types unless the storage path first constructs and
-destroys the objects.  `List` currently zeroes bytes for `LF_ZERO_MEM`
-records and frees nodes without running destructors.
+After the home-grown `List` storage was removed, the old object-lifetime
+blocker disappeared.  `MimeCapEntry` and `DataSource` retained strings
+are already owned by `std::string` or `std::optional<std::string>`, so
+they are no longer audit targets.  `SourceFile` now owns metadata lines
+in `std::vector<std::string>`, but `SourceFile::append` still accepts
+and mutates a caller C buffer before storing a copy.
+
+The newly unblocked retained-storage targets are `Article` cached header
+strings and `NewsgroupData::m_rc_line`.  `Article` is now stored in a
+`std::map<ArticleNum, Article>`, so `Article` objects have ordinary
+construction and destruction.  Its `m_from`, `m_msg_id`, and `m_xrefs`
+fields still use `save_str`/`free` ownership.  `m_msg_id` is coupled to
+the message-id hash, which currently stores either a pending allocated
+message-id string or an `Article *` in `HashDatum`, so migrate that field
+with the hash handoff path.  `NewsgroupData` is now stored in a vector,
+but its newsrc line is still mutated in place and indexed by offsets.
 
 ## Refactoring Slices
 
@@ -281,6 +292,14 @@ buffer slices.
 
 ### Copy/Concat Slices
 
+#### SourceFile Append Line
+
+Change `SourceFile::append` to build the normalized stored line in a
+local `std::string`, store it in `m_lines`, and hash a view of the
+stored key.  The active-list caller ignores the return value; the
+group-desc caller only needs the description text immediately, so prefer
+returning a view or string result over exposing writable buffer storage.
+
 ### Global String Storage Slices
 
 These slices replace owned global or file-scope `char *` storage with
@@ -292,6 +311,40 @@ all direct assignments must change together.  For `save_str` and
 `save_str` assignments, and matching `free` paths with `std::string`
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
+
+#### Article From Header
+
+Promote `Article::m_from` to `std::optional<std::string>`.  Update
+`Article::set_cached_line`, `Article::get_cached_line`,
+`Article::clear_article`, `Article::check_poster`, `rt-ov.cpp`, and the
+display/comparison callers to use `c_str()` only at read-only C
+boundaries.  Keep missing distinct from an empty decoded From header.
+
+#### Article Xref Header
+
+Promote `Article::m_xrefs` to `std::optional<std::string>`.  Preserve
+the current three states: not fetched, fetched but no useful Xref, and
+useful Xref text.  Update `set_cached_line`, `get_cached_line`,
+overview loading, and `bits.cpp` chase logic together.
+
+#### Article Message-Id Hash Handoff
+
+Refactor the message-id hash handoff before changing
+`Article::m_msg_id`.  `HashDatum` currently alternates between a pending
+allocated message-id string and an `Article *`; `get_article`,
+`msg_id_cmp`, and `cleanup_msg_id_hash` transfer ownership through that
+union-like payload.  Once the pending-id path owns a `std::string`,
+promote `m_msg_id` and update NNTP stat, kill-file, and threading
+callers.
+
+#### Newsgroup RC Line
+
+Promote `NewsgroupData::m_rc_line` to owned string storage.  Keep the
+existing `m_num_offset` and `m_subscribe_char` behavior while removing
+manual `free`, `safe_malloc`, `safe_realloc`, and `save_str` ownership.
+This is broader than a local helper because `bits.cpp`, `rcln.cpp`,
+`rcstuff.cpp`, hashing, and `.newsrc` writing all mutate or slice the
+same line.
 
 ### Ubuntu `-Wwrite-strings` Slices
 
@@ -320,9 +373,6 @@ both declarations and definitions `static`.
 - Remaining global pointer arrays and pointer-offset storage such as
   `s_tree_lines`, `g_sel_grp_display_mode`, and `g_sel_art_display_mode`
   need ownership-model slices before they can become strings.
-- `Article::{m_from,m_msg_id,m_xrefs}` and cached header lines in
-  `libtrn/include/trn/Article.h` need `set_cached_line` and
-  mutable-header access changes.
 - `Subject::m_str` in `libtrn/include/trn/Subject.h` stores hash keys at
   `m_str + 4`, so key lifetime and lookup behavior must change with the
   storage.
@@ -348,10 +398,9 @@ both declarations and definitions `static`.
 - Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`
   calls are not useful path slices unless the same function also composes,
   normalizes, queries, removes, or renames the file.
-- `DataSource` filename members, `Newsrc` filename members, response-file
-  globals, decode part-file state, and score-file table storage need
-  coordinated storage changes before `std::filesystem::path` is an
-  improvement.
+- Response-file globals, decode part-file state, score-file table
+  storage, and remaining filename buffers need coordinated storage
+  changes before `std::filesystem::path` is an improvement.
 - URL, NNTP, MIME, shell-command, and macro-template strings should stay
   as strings unless the code has first separated the filename part from
   protocol or command text.
@@ -372,8 +421,6 @@ both declarations and definitions `static`.
 - `libtrn/include/trn/scorefile.h`, scorefile table strings: these mix
   `save_str`, `mp_save_str`, memory pools, reallocating arrays, and
   copied entries.
-- `libtrn/include/trn/ngdata.h`, `NewsgroupData::m_rc_line`: the line is
-  mutated in place and code stores offsets into it.
 - `libtrn/util.cpp`, INI parsing helpers: they update caller `char **`
   cursors and write into caller buffers.
 - `libtrn/sw.cpp`, `decode_switch`: now passes newsgroup patterns to
@@ -435,11 +482,3 @@ both declarations and definitions `static`.
   together.
 - Remaining struct fields with retained raw string storage are ownership
   model changes, not local function cleanups.
-- `MimeCapEntry::{content_type,command,test_command,description}` live
-  in `List` raw storage allocated with `LF_ZERO_MEM`.  Promote only after
-  MIME cap entries are stored in a container that constructs and
-  destroys owned string fields.
-- `DataSource` retained string fields live in `List` raw storage
-  allocated with `LF_ZERO_MEM`.  Promote only after data sources are
-  stored in a container that constructs and destroys owned string fields
-  and preserves the existing nullable states.
