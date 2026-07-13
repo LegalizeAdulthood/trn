@@ -5,6 +5,7 @@
 #define TRN_NGSTUFF_H
 
 #include <string>
+#include <string_view>
 
 struct AddGroup;
 
@@ -26,7 +27,7 @@ NumNumResult num_num();
 int thread_perform();
 int perform(char *cmdlst, int output_level);
 int newsgroup_sel_perform();
-int newsgroup_perform(char *cmdlst, int output_level);
+int newsgroup_perform(std::string_view cmdlst, int output_level);
 int add_group_sel_perform();
 
 #endif

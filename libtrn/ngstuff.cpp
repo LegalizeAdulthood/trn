@@ -792,7 +792,7 @@ int newsgroup_sel_perform()
 
     if (one_group)
     {
-        newsgroup_perform(cmdstr.data(), 0);
+        newsgroup_perform(cmdstr, 0);
         goto break_out;
     }
 
@@ -807,7 +807,7 @@ int newsgroup_sel_perform()
         if ((g_newsgroup_ptr->m_flags & bits) == bits //
             && (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
         {
-            if (newsgroup_perform(cmdstr.data(), 0) < 0)
+            if (newsgroup_perform(cmdstr, 0) < 0)
             {
                 break;
             }
@@ -819,10 +819,8 @@ break_out:
     return 1;
 }
 
-int newsgroup_perform(char *cmdlst, int output_level)
+int newsgroup_perform(std::string_view cmdlst, int output_level)
 {
-    int ch;
-
     if (output_level == 1)
     {
         std::printf("%s ",g_newsgroup_name.c_str());
@@ -830,8 +828,9 @@ int newsgroup_perform(char *cmdlst, int output_level)
     }
 
     g_perform_count++;
-    for (; (ch = *cmdlst) != 0; cmdlst++)
+    for (; !cmdlst.empty(); cmdlst.remove_prefix(1))
     {
+        const int ch = cmdlst.front();
         if (std::isspace(ch) || ch == ':')
         {
             continue;
@@ -877,7 +876,7 @@ deselect:
             goto deselect;
 
         default:
-            std::sprintf(g_msg,"Unknown command: %s",cmdlst);
+            *fmt::format_to_n(g_msg, sizeof g_msg - 1, "Unknown command: {}", cmdlst).out = '\0';
             error_msg(g_msg);
             return -1;
         }

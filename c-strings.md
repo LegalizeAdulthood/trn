@@ -348,6 +348,12 @@ only scans, skips, and reports the remaining command.  Promoting the
 parameter to `std::string_view` removes one mutable command pointer
 without changing ownership.
 
+After that slice, another rerun found `ngstuff.cpp::newsgroup_perform`.
+The callers also pass owned command strings, and the function only
+scans command characters and reports the remaining suffix on error.
+Promoting the parameter to `std::string_view` removes the mutable
+pointer contract from the newsgroup command performer.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -359,9 +365,11 @@ the `.newsrc` line-storage and home-grown `List` removals.
 - `const char *` or read-only `char *` to `std::string_view`:
   `AddGroup::add_group_perform` was still taking a mutable command
   pointer even though its callers already owned `std::string` command
-  text.  Remaining candidates are null sentinels, C API boundaries,
-  encoded-text cursors, output-only helpers, command parsers, or helper
-  families that must change with their callers.
+  text.  `ngstuff.cpp::newsgroup_perform` had the same read-only command
+  shape and can also take `std::string_view`.  Remaining candidates are
+  null sentinels, C API boundaries, encoded-text cursors, output-only
+  helpers, command parsers, or helper families that must change with
+  their callers.
 - `save_str` and `safe_copy` ownership: after the command-list copies,
   safe local owners were found in `scorefile.cpp::sf_do_file` and
   `scorefile.cpp::sf_missing_score`; `sf_add_extra_header` now builds

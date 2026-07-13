@@ -198,7 +198,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
                     return NGS_FOUND;
                 }
                 set_newsgroup(g_newsgroup_ptr);
-                if (newsgroup_perform(cmdlst.data(), output_level && g_page_line == 1) < 0)
+                if (newsgroup_perform(cmdlst, output_level && g_page_line == 1) < 0)
                 {
                     return NGS_INTR;
                 }
