@@ -2054,11 +2054,15 @@ static bool select_option(OptionIndex i)
     color_pop();        // of COLOR_CMD
     newline();
     *g_buf = '\0';
-    char *oldval = save_str(quote_string(option_value(option)));
+    const std::string oldval{quote_string(option_value(option))};
     const bool had_draft = g_option_draft->contains(option);
-    std::string val{had_draft ? g_option_draft->value(option) : oldval};
+    std::string val{oldval};
+    if (had_draft)
+    {
+        val = g_option_draft->value(option);
+    }
     s_clean_screen = in_choice("> ", val.data(), const_cast<char *>(help.data()), MM_OPTION_EDIT_PROMPT);
-    if (std::strcmp(g_buf, val.c_str()) != 0)
+    if (val != g_buf)
     {
         char * to = g_buf;
         char* from = g_buf;
@@ -2069,7 +2073,7 @@ static bool select_option(OptionIndex i)
             g_option_draft->erase(option);
             g_selected_count--;
         }
-        if (had_draft && !std::strcmp(g_buf, oldval))
+        if (had_draft && oldval == g_buf)
         {
         }
         else
@@ -2078,7 +2082,6 @@ static bool select_option(OptionIndex i)
             g_selected_count++;
         }
     }
-    std::free(oldval);
     if (s_clean_screen)
     {
         up_line();

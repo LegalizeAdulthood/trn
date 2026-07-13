@@ -348,13 +348,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Selector Option Old Value
-
-In `libtrn/rt-select.cpp`, `select_option` saves the quoted current
-option value only for local comparison after editing.  Replace
-`save_str`/`free` with an owned `std::string` and compare through
-`c_str()`.
-
 #### Reply Mailer Command
 
 In `libtrn/respond.cpp`, `reply` copies the `MAILPOSTER` command with
