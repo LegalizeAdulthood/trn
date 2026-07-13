@@ -307,6 +307,12 @@ the inactive `MCHASE` block.  That block does not compile today and
 should be removed or overhauled with the old chase mechanism, not patched
 as a local string modernization slice.
 
+After the local `save_str` scratch slices were completed, another rerun
+found a command-list scratch family.  These copies are short-lived
+owned command strings passed to legacy command performers.  They do not
+escape the caller, but the performers still take mutable `char *`
+parameters, so use local `std::string` storage and pass `data()`.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -347,6 +353,40 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 buffer slices.
 
 ### Local Save-String Slices
+
+#### Article Range Command List
+
+In `libtrn/ngstuff.cpp`, `num_num` builds a local command list with
+`save_str` while processing article ranges.  Replace it with local
+`std::string` storage and pass `data()` to `perform`.
+
+#### Thread Command String
+
+In `libtrn/ngstuff.cpp`, `thread_perform` saves the command suffix from
+`g_buf` only while visiting matching articles.  Replace the saved
+pointer with local `std::string` storage and pass `data()` to
+`perform`.
+
+#### Newsgroup Selector Command String
+
+In `libtrn/ngstuff.cpp`, `newsgroup_sel_perform` saves the selector
+command suffix only while walking selected newsgroups.  Replace the
+saved pointer with local `std::string` storage and pass `data()` to
+`newsgroup_perform`.
+
+#### Add-Group Selector Command String
+
+In `libtrn/ngstuff.cpp`, `add_group_sel_perform` saves the selector
+command suffix only while walking add-group entries.  Replace the saved
+pointer with local `std::string` storage and pass `data()` to
+`AddGroup::add_group_perform`.
+
+#### Article Search Command List
+
+In `libtrn/artsrch.cpp`, `art_search` builds a local command list with
+several `save_str` assignments.  Replace it with local `std::string`
+storage, preserve the `k` to `j` grandfather clause, and pass `data()`
+only to legacy performers.
 
 ### Copy/Concat Slices
 

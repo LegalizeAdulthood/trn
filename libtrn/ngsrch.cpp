@@ -21,7 +21,6 @@
 
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <string_view>
 
@@ -79,17 +78,17 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     {
         s++;
     }
-    char *cmdlst = nullptr; // list of commands to do
+    std::string cmdlst; // list of commands to do
     if (*s)
     {
-        cmdlst = save_str(s);
+        cmdlst = s;
     }
     else if (g_general_mode == GM_SELECTOR)
     {
-        cmdlst = save_str("+");
+        cmdlst = "+";
     }
     NewsgroupSearchResult ret = NGS_NOT_FOUND; // assume no commands
-    if (cmdlst)
+    if (!cmdlst.empty())
     {
         ret = NGS_DONE;
     }
@@ -98,13 +97,9 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     {
                                         // compile regular expression
         error_msg(err);
-        if (cmdlst)
-        {
-            std::free(cmdlst);
-        }
         return NGS_ERROR;
     }
-    if (!cmdlst)
+    if (cmdlst.empty())
     {
         std::fputs("\nSearching...", stdout); // give them something to read
         std::fflush(stdout);
@@ -118,13 +113,12 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         {
             if (s_newsgroup_compex.execute(gp->m_name) != nullptr)
             {
-                if (!cmdlst)
+                if (cmdlst.empty())
                 {
                     return NGS_FOUND;
                 }
-                if (gp->add_group_perform(cmdlst, output_level && g_page_line == 1) < 0)
+                if (gp->add_group_perform(cmdlst.data(), output_level && g_page_line == 1) < 0)
                 {
-                    std::free(cmdlst);
                     return NGS_INTR;
                 }
             }
@@ -133,10 +127,6 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
                 perform_status(g_newsgroup_to_read.value_of(), 50);
             }
         } while ((gp = gp->m_next) != nullptr);
-        if (cmdlst)
-        {
-            std::free(cmdlst);
-        }
         return ret;
     }
 
@@ -149,7 +139,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             g_newsgroup_ptr = newsgroup_last();
             ng_start = newsgroup_last();
         }
-        else if (!cmdlst)
+        else if (cmdlst.empty())
         {
             if (g_newsgroup_ptr == newsgroup_first()) // skip current newsgroup
             {
@@ -168,7 +158,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             g_newsgroup_ptr = newsgroup_first();
             ng_start = newsgroup_first();
         }
-        else if (!cmdlst)
+        else if (cmdlst.empty())
         {
             if (g_newsgroup_ptr == newsgroup_last()) // skip current newsgroup
             {
@@ -203,18 +193,17 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             }
             if (s_newsgroup_do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel_rereading))
             {
-                if (!cmdlst)
+                if (cmdlst.empty())
                 {
                     return NGS_FOUND;
                 }
                 set_newsgroup(g_newsgroup_ptr);
-                if (newsgroup_perform(cmdlst, output_level && g_page_line == 1) < 0)
+                if (newsgroup_perform(cmdlst.data(), output_level && g_page_line == 1) < 0)
                 {
-                    std::free(cmdlst);
                     return NGS_INTR;
                 }
             }
-            if (output_level && !cmdlst)
+            if (output_level && cmdlst.empty())
             {
                 std::printf("\n[0 unread in %s -- skipping]",g_newsgroup_ptr->rc_line_c_str());
                 std::fflush(stdout);
@@ -229,10 +218,6 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
                             : (newsgroup_next(g_newsgroup_ptr) ? newsgroup_next(g_newsgroup_ptr)
                                                                : newsgroup_first()))) != ng_start);
 
-    if (cmdlst)
-    {
-        std::free(cmdlst);
-    }
     return ret;
 }
 
