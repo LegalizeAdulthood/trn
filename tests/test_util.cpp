@@ -2,10 +2,14 @@
 // Copyright (c) 2026, Richard Thomson
 
 #include <trn/init.h>
+#include <trn/terminal.h>
 #include <trn/util.h>
 #include <util/env.h>
 
+#include <config/common.h>
 #include <test_config.h>
+
+#include "mock_env.h"
 
 #include <gtest/gtest.h>
 
@@ -48,6 +52,29 @@ protected:
     long        m_old_pid{};
 };
 
+class EditFileTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_term_line = g_term_line;
+        m_old_term_col = g_term_col;
+        m_old_term_scrolled = g_term_scrolled;
+    }
+
+    void TearDown() override
+    {
+        g_term_line = m_old_term_line;
+        g_term_col = m_old_term_col;
+        g_term_scrolled = m_old_term_scrolled;
+    }
+
+    trn::testing::MockEnvironment m_env;
+    int                           m_old_term_line{};
+    int                           m_old_term_col{};
+    int                           m_old_term_scrolled{};
+};
+
 bool ends_with(std::string_view text, std::string_view suffix)
 {
     return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
@@ -66,4 +93,15 @@ TEST_F(TempFilenameTest, returnsUniqueNameInTempDirectory)
     const std::string filename{fs::path{first}.filename().string()};
     EXPECT_EQ(0U, filename.find("trn"));
     EXPECT_TRUE(ends_with(filename, ".2468"));
+}
+
+TEST_F(EditFileTest, buildsEditorCommandFromExpandedEditorAndFile)
+{
+    const std::string filename{TRN_TEST_TMP_DIR "/edit-target"};
+
+    m_env.expect_no_envar("EDITOR");
+    m_env.expect_env("VISUAL", ":");
+
+    EXPECT_EQ(0, edit_file(filename.c_str()));
+    EXPECT_STREQ((": " + filename).c_str(), g_cmd_buf);
 }

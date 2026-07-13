@@ -912,12 +912,12 @@ int edit_file(const char *fname)
         return r;
     }
 
-    // XXX paranoia check on length
-    std::sprintf(g_cmd_buf, "%s ", file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))).c_str());
-    std::strcat(g_cmd_buf, file_exp(fname).c_str());
+    const std::string command = fmt::format(
+        "{} {}", file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))), file_exp(fname));
+    safe_copy(g_cmd_buf, command.c_str(), sizeof g_cmd_buf);
     term_down(3);
     reset_tty();                  // make sure tty is friendly
-    r = do_shell(SH,g_cmd_buf);  // invoke the shell
+    r = do_shell(SH, command.c_str());  // invoke the shell
     no_echo();                   // and make terminal
     cr_mode();                   // unfriendly again
     return r;
