@@ -319,6 +319,10 @@ criteria rerun found one additional local `save_str` scratch copy in
 score-file processing runs, but the local owner can be `std::string`
 before the retained score entries take their own copies.
 
+After that slice, another rerun found `scorefile.cpp::sf_missing_score`.
+It saves a line across `finish_command` because the line may point into
+`g_buf`; local `std::string` preserves the text without a raw heap copy.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -333,10 +337,10 @@ the `.newsrc` line-storage and home-grown `List` removals.
   encoded-text cursors, output-only helpers, command parsers, or helper
   families that must change with their callers.
 - `save_str` and `safe_copy` ownership: after the command-list copies,
-  one new safe local owner was found in `scorefile.cpp::sf_do_file`.
-  Other hits write caller buffers, globals, static storage, parser
-  buffers, command buffers, score/universal storage, keymaps, or
-  memory-pool storage.
+  safe local owners were found in `scorefile.cpp::sf_do_file` and
+  `scorefile.cpp::sf_missing_score`.  Other hits write caller buffers,
+  globals, static storage, parser buffers, command buffers,
+  score/universal storage, keymaps, or memory-pool storage.
 - Filename variables to `std::filesystem::path`: no new one-function
   path slice was found.  Remaining candidates are stored filename
   fields, backup/rollback rename sequences, protocol or shell text,

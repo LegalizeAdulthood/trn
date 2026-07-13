@@ -1029,7 +1029,7 @@ static char *sf_missing_score(const char *line)
     static char lbuf[LINE_BUF_LEN];
 
     // save line since it is probably pointing at (the TRN-global) g_buf
-    char *s = save_str(line);
+    std::string saved_line{line};
     std::printf("Possibly missing score.\n"
            "Type a score now or delete the colon to abort this entry:\n");
     g_buf[0] = ':';
@@ -1037,15 +1037,13 @@ static char *sf_missing_score(const char *line)
     int i = finish_command(true); // print the CR
     if (!i)                       // there was no score
     {
-        std::free(s);
         return nullptr;
     }
     std::strcpy(lbuf,g_buf+1);
     i = std::strlen(lbuf);
     lbuf[i] = ' ';
     lbuf[i+1] = '\0';
-    std::strcat(lbuf,s);
-    std::free(s);
+    std::strcat(lbuf, saved_line.c_str());
     return lbuf;
 }
 
