@@ -9,20 +9,39 @@ vendored `vcpkg` tree.  The audit looked for local raw C string pointers
 and function parameters that can become `std::string_view` or
 `std::string` without changing ownership boundaries.
 
-A follow-up pass also looked for local `char name[N]` buffers whose only
-job is to hold an owned snapshot or locally formatted text before a
-read-only, non-storing API call.
+Follow-up passes also look for fixed-length `char name[N]` buffers in
+all storage classes and for functions that hide owned string allocation
+behind a raw `char *` return.
 
 ## Audit Criteria
 
 Each rerun should check these scenarios:
 
+Run every scan from the innermost lexical scope outward:
+
+1. Local variables.
+2. Function parameters.
+3. Function return values.
+4. Struct/class/union members.
+5. Static file-scope variables.
+6. Global variables.
+
 - `char *` values that can become `const char *` because the local code
   never writes through the pointer.
+- `char *` and `const char *` struct/class/union members.  Classify the
+  member as owned, borrowed, interior, output, pooled, or static/global
+  storage before deciding whether it is a string candidate.
 - `const char *` values that can become `std::string_view` because the
   local code only reads, slices, compares, or forwards text by extent.
 - `char *` storage populated from `save_str` or `safe_copy` that can
   become owned `std::string` storage without pointer escape.
+- `char *` results from functions that return owned raw strings from
+  `save_str`, `safe_malloc`, `safe_realloc`, or another owning helper.
+  Summarize the return ownership, then trace callers that store, use, and
+  free the result locally.
+- Fixed-length `char name[N]` buffers in local, static local,
+  file-scope, global, and struct/class storage.  Do not limit the scan to
+  local automatic variables.
 - Filename variables that compose, normalize, query, remove, rename, or
   create paths and can become `std::filesystem::path`.
 
@@ -70,6 +89,8 @@ The useful local targets fall into five groups:
   regex, hash, file, or shell helpers.
 - Pointers returned by legacy helpers that are immediately copied into
   `std::string` globals or fields.
+- Owned raw-string results that callers store in local `char *`
+  variables and later free.
 
 Use `std::string_view` only while no callee needs ownership or a
 guaranteed terminator.  When a sliced token flows to a C API, build a
@@ -92,12 +113,14 @@ the function.  This includes:
 
 Select when a pointer is assigned string literals or borrowed read-only
 storage, the local code never writes through it, and no callee requires a
-mutable pointer.
+mutable pointer.  Include struct/class members when every use treats the
+member as borrowed read-only storage.
 
 Refactor by changing the local declaration, parameter, or return type to
 `const char *`.  Prefer this over `std::string_view` when the value is a
 literal-only selection, a null sentinel, or a legacy C API input such as
-`perror`.
+`perror`.  For struct/class members, treat the change as a
+storage-centered slice and update all direct readers and writers.
 
 ### `const char *` to `std::string_view`
 
@@ -115,7 +138,9 @@ needs a null terminator, and pass `c_str()` for `std::string` values.
 Select when a raw pointer owns retained text, the same owner frees or
 overwrites it, and callers only need read-only C-string access or local
 mutable parsing.  Reject memory-pool strings and `char **` output
-allocation APIs until that lifetime model changes.
+allocation APIs until that lifetime model changes.  Include struct/class
+members that are assigned from `save_str`, `safe_malloc`, or an owning
+raw-string return and destroyed by the same owner.
 
 Refactor by replacing the owning `char *` with `std::string` or
 `std::optional<std::string>` when null and empty are distinct.  Replace
@@ -123,18 +148,39 @@ Refactor by replacing the owning `char *` with `std::string` or
 direct string assignment.  Use `c_str()` for legacy read-only APIs and
 `data()` only for local mutable parsing with no pointer escape.
 
-### Local C Buffers
+### Owning Raw-string Returns
 
-Select when a local `char name[N]` is only an owned snapshot, local
-formatted string, local token buffer, or command text consumed before the
-function returns.  Reject caller output buffers, parser compaction,
-global display buffers, protocol byte buffers, returned static storage,
-and fixed-width display or file-format fields.
+Select when a function returns a `char *` that is owned by the caller.
+Examples include direct returns from `save_str`, `safe_malloc`,
+`safe_realloc`, or a helper already classified as returning owned raw
+string storage.  Record whether the function always returns owned
+storage, conditionally returns owned storage, returns pooled storage,
+returns borrowed/static storage, or mixes ownership modes.
+
+Refactor bottom-up.  For callers with local acquire/use/free flow,
+replace the local `char *` with `std::string` and remove the `free`.
+When a function always returns owned text, add or migrate to an owning
+`std::string` return.  For mixed APIs such as copy/no-copy flags, split
+the API or add a clearly named owning-string helper before changing
+callers.  Reject slices where the returned pointer escapes, is stored in
+global/static storage, or is passed to a function that stores it.
+
+### Fixed-length C Buffers
+
+Select when a `char name[N]` buffer is only owned string storage,
+formatted text, token storage, command text, or a cache that can be
+represented by `std::string`.  Scan automatic locals, static locals,
+file-scope statics, globals, extern arrays, and struct/class fields.
+Reject caller output buffers, parser compaction, protocol byte buffers,
+returned static storage, and fixed-width display or file-format fields.
 
 Refactor owned text to `std::string` and formatted text to
-`fmt::format`.  Before editing, classify truncation.  Preserve meaningful
-truncation; remove arbitrary fixed-buffer truncation when ordinary
-behavior remains covered.
+`fmt::format`.  Local automatic buffers can often be one-function
+slices.  Static, file-scope, global, and struct buffers are
+storage-centered slices and must update all direct readers and writers.
+Before editing, classify truncation.  Preserve meaningful truncation;
+remove arbitrary fixed-buffer truncation when ordinary behavior remains
+covered.
 
 ### Buffer Plus Size
 
@@ -180,18 +226,39 @@ port controls that behavior.
 
 ## Current Audit State
 
-- `char *` to `const char *`: no current const-only one-function slice
-  is open.
+- `char *` to `const char *`: current simple candidates are
+  `set_line_type`, `get_header_num`, and `score_match`.  Other hits,
+  such as `valid_xref_site` and `sf_cmd_fname`, are better handled with
+  the owning-string or path slices that already touch their data flow.
 - `const char *` or read-only `char *` to `std::string_view`:
   remaining candidates are null sentinels, C API boundaries,
   encoded-text cursors, output-only helpers, command parsers, or helper
   families that must change with their callers.
-- `save_str` and `safe_copy` ownership: remaining hits write caller
-  buffers, globals, static storage, parser buffers, command buffers,
-  score/universal storage, keymaps, or memory-pool storage.
-- Local C-string buffers: remaining buffers are caller outputs,
-  globals, static returned storage, protocol buffers, parser
-  compaction, or fixed-width display fields.
+- `save_str`, `safe_copy`, and owning raw-string returns: remaining
+  direct hits write caller buffers, globals, static storage, parser
+  buffers, command buffers, score/universal storage, keymaps, or
+  memory-pool storage.  The audit now treats helpers such as
+  `fetch_lines` as ownership sources and traces caller-local
+  acquire/use/free flows.
+- `fetch_lines` always returns owned storage.  `prefetch_lines(copy =
+  true)` returns owned storage, while `copy = false` returns borrowed
+  global buffer storage.  `fetch_subj`, `fetch_from`, and `fetch_xref`
+  inherit that mixed ownership from `prefetch_lines`.
+- Current `fetch_lines` caller candidates are `Article::check_poster`,
+  `mime_set_article`, `cancel_article`, `supersede_article`,
+  `sa_ent_lines`, `sa_desc_subject`, `sa_get_desc`, `end_header`, and
+  `valid_xref_site`.
+- Struct/class `char *` members must be scanned and classified by
+  ownership.  Owned member fields are storage-centered string candidates;
+  borrowed, interior, pooled, output, or union-backed members usually
+  need a broader ownership-model slice.
+- Fixed-length C buffers: remaining buffers are caller outputs, globals,
+  static returned storage, protocol buffers, parser compaction, or
+  fixed-width display fields.  Reruns must include local, static local,
+  file-scope, global, and struct/class `char name[N]` declarations.
+  File-scope hits include `scorefile.cpp` `s_sf_buf` and `s_sf_file`,
+  `score-easy.cpp` `s_sc_e_newline`, `sadesc.cpp` `s_sa_buf`, and
+  `scoresave.cpp` `s_line_buf`.
 - Filename variables to `std::filesystem::path`: remaining candidates
   are stored filename fields, backup/rollback rename sequences, protocol
   or shell text, global temp-file state, nullable source-file APIs, or
@@ -302,7 +369,99 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
+### Const/View Signature Slices
+
+CV-01. `libtrn/head.cpp`, `set_line_type`: change `bufptr` to
+`const char *` and make the local source cursor const.  The function
+only reads the header text while writing the lowercase copy to `g_msg`.
+
+CV-02. `libtrn/head.cpp`, `get_header_num`: change the parameter to
+`const char *` after CV-01.  The function reads the header name and
+updates header metadata, but it does not write through the caller
+string.
+
+CV-03. `libtrn/scorefile.cpp`, `score_match`: change the `str`
+parameter to `const char *`.  The function only passes the text to the
+regex engine and substring checks.
+
+### Owning Raw-string Return Slices
+
+OR-01. `libtrn/head.cpp`: add an owning `std::string` wrapper for
+`fetch_lines`.  The wrapper should call `fetch_lines`, copy the owned
+text into a `std::string`, free the raw pointer, and return the string.
+This is the bottom helper for the caller-local slices below.
+
+OR-02. `libtrn/Article.cpp`, `Article::check_poster`: inside the
+inactive `REPLYTO_POSTER_CHECKING` block, replace the local
+`fetch_lines`/`free` pair with the owning string wrapper and pass
+`c_str()` to `in_string`.
+
+OR-03. `libtrn/mime.cpp`, `mime_set_article`: replace the three local
+`fetch_lines`/`free` pairs with owned `std::string` buffers.  The MIME
+parse helpers mutate their input but copy retained results into
+`std::string` fields, so pass `data()` only for the immediate parse
+call.
+
+OR-04. `libtrn/respond.cpp`, `cancel_article`: replace the local
+`reply_buf`, `from_buf`, and `ngs_buf` owned raw pointers with
+`std::string` values.  Preserve the current control flow and use
+`c_str()` for the string comparison and debug-output calls.
+
+OR-05. `libtrn/respond.cpp`, `supersede_article`: mirror OR-04 for the
+supersede path, keeping the existing `goto done` control flow but
+removing the owned raw-string cleanup.
+
+OR-06. `libtrn/sadesc.cpp`, `sa_ent_lines`: replace the summary and
+keyword `fetch_lines` probes with owned `std::string` values and check
+`empty()` instead of null or first character tests.
+
+OR-07. `libtrn/sadesc.cpp`, `sa_desc_subject`: replace the subject
+`fetch_lines`/`free` flow with an owned `std::string`.  Preserve the
+current fixed display truncation before changing the returned static
+buffer contract.
+
+OR-08. `libtrn/sadesc.cpp`, `sa_get_desc`: replace the summary and
+keyword `fetch_lines`/`free` flows with owned strings.  This function
+still returns static description storage, so keep the change local to
+owned header text first.
+
+OR-09. `libtrn/head.cpp`, `end_header`: replace `references` and
+`inreply` ownership with `std::string` construction and append.  Pass a
+mutable `data()` pointer to `Article::thread_article` only for the
+immediate call; the pointer must not escape.
+
+OR-10. `libtrn/bits.cpp`, `valid_xref_site`: replace `sitebuf` with an
+owned string and replace the static owned `inews_site` pointer with
+string storage.  Keep the `VALIDATE_XREF_SITE` behavior and the
+`ANCIENT_NEWS` split unchanged.
+
 ### Copy/Concat Slices
+
+### Fixed-buffer Storage Slices
+
+FB-01. `libtrn/scorefile.cpp`, `sf_get_filename`: replace the
+file-scope `s_sf_file` return buffer with an owned path or string
+result.  This is real filename construction.  The truncation is
+arbitrary fixed-buffer storage, not an external file-format limit.
+
+FB-02. `libtrn/scorefile.cpp`, `sf_cmd_fname`: replace the returned
+static `lbuf` with an owned string result and build the scorefile path
+with `fs::path`.  Keep the "already contains slash" behavior.
+
+FB-03. `libtrn/scorefile.cpp`, `sf_missing_score`: replace the returned
+static `lbuf` with an owned string result.  Preserve the explicit abort
+sentinel by returning an empty optional-style result, not a pointer to
+local storage.
+
+FB-04. `libtrn/scorefile.cpp`, `sf_get_line`: replace the returned
+static `sf_getline` buffer with owned lowercase text.  The current
+truncation to `LINE_BUF_LEN - 1` is arbitrary scoring scratch storage;
+preserve behavior with tests first if callers depend on the cap.
+
+FB-05. `libtrn/scorefile.cpp`, `s_sf_buf` users: split the shared
+file-scope scratch buffer into local owned strings in `sf_init`,
+`sf_do_file`, and `sf_open_file`.  Scorefile input line truncation comes
+from the fixed buffer and should be classified before removing the cap.
 
 ### Global String Storage Slices
 
