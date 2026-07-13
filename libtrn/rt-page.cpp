@@ -11,7 +11,6 @@
 #include <trn/cache.h>
 #include <trn/color.h>
 #include <trn/datasrc.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/only.h>
 #include <trn/opt.h>

@@ -23,7 +23,6 @@
 #include <trn/help.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
-#include <trn/list.h>
 #include <trn/mime.h>
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>

@@ -11,7 +11,6 @@
 #include <trn/cache.h>
 #include <trn/color.h>
 #include <trn/hash.h>
-#include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>

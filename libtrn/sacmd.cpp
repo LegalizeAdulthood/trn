@@ -10,7 +10,6 @@
 #include <config/common.h>
 #include <trn/bits.h>
 #include <trn/cache.h>
-#include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h> // for g_threaded_group
 #include <trn/respond.h>

@@ -12,7 +12,6 @@
 #include <trn/final.h>
 #include <trn/head.h>
 #include <trn/kfile.h>
-#include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>

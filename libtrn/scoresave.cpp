@@ -9,7 +9,6 @@
 
 #include <config/common.h>
 #include <trn/cache.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/scan.h>
 #include <trn/scanart.h>

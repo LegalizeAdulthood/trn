@@ -92,14 +92,3 @@ The current `SourceFile` uses `List` as a byte arena and stores
 `ListNode *` plus an offset in the hash table.  Replace that with owned
 line strings.  Keep the cache file handle and refetch metadata as
 ordinary `SourceFile` state.
-
-## Implementation Slices
-
-### Slice 10: Remove Home-Grown List
-
-After all callers are migrated, delete `libtrn/list.cpp` and
-`libtrn/include/trn/list.h`.
-
-- Remove `List` from build files and includes.
-- Remove tests that only exist to allocate old `List` state.
-- Verify the full workflow.

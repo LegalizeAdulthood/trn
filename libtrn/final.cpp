@@ -15,7 +15,6 @@
 #include <trn/datasrc.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
-#include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/nntp.h>
 #include <trn/rcstuff.h>

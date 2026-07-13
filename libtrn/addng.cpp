@@ -11,7 +11,6 @@
 #include <trn/autosub.h>
 #include <trn/datasrc.h>
 #include <trn/hash.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/only.h>
@@ -458,11 +457,12 @@ bool scan_active(bool add_matching)
 
 static int list_groups(int key_len, HashDatum *data, int add_matching)
 {
-    char     *bp = ((ListNode *) data->dat_ptr)->data + data->dat_len;
-    const int line_len = std::strchr(bp, '\n') - bp + 1;
-    (void) std::memcpy(g_buf,bp,line_len);
+    SourceFile  *source_file = reinterpret_cast<SourceFile *>(data->dat_ptr);
+    std::string &line = source_file->m_lines[data->dat_len];
+    const int    line_len = static_cast<int>(line.size());
+    (void) std::memcpy(g_buf, line.data(), line_len);
     g_buf[line_len] = '\0';
-    scan_active_line(g_buf,add_matching);
+    scan_active_line(g_buf, add_matching);
     return 0;
 }
 

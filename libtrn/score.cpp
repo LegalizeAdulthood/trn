@@ -10,7 +10,6 @@
 #include <trn/artio.h> // for g_openart var.
 #include <trn/bits.h>
 #include <trn/cache.h>
-#include <trn/list.h>
 #include <trn/ng.h> // g_art
 #include <trn/ngdata.h>
 #include <trn/rt-util.h> // spinner

@@ -13,7 +13,6 @@
 #include <trn/datasrc.h>
 #include <trn/decode.h>
 #include <trn/head.h>
-#include <trn/list.h>
 #include <trn/mime.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>

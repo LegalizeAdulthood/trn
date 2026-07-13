@@ -27,7 +27,6 @@ add_executable(trn-headers-test
     test_intrp.cpp
     test_kfile.cpp
     test_last.cpp
-    test_list.cpp
     test_mempool.cpp
     test_mime-internal.cpp
     test_mime.cpp

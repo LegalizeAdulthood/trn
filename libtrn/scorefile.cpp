@@ -12,7 +12,6 @@
 #include <config/string_case_compare.h>
 #include <trn/cache.h>
 #include <trn/head.h>
-#include <trn/list.h>
 #include <trn/mempool.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>

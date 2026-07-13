@@ -51,7 +51,6 @@
 #include <trn/init.h>
 #include <trn/kfile.h>
 #include <trn/last.h>
-#include <trn/list.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/ngsrch.h>

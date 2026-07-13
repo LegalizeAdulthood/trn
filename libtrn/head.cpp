@@ -7,7 +7,6 @@
 
 #include <config/common.h>
 #include <nntp/nntpclient.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/artio.h>
 #include <trn/cache.h>
