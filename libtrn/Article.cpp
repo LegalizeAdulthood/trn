@@ -211,7 +211,7 @@ const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
         break;
 
     case XREF_LINE:
-        s = m_xrefs;
+        s = xrefs_c_str();
         break;
 
     case MSG_ID_LINE:
@@ -248,10 +248,7 @@ void Article::clear_article()
     {
         std::free(m_msg_id);
     }
-    if (!empty(m_xrefs))
-    {
-        std::free(m_xrefs);
-    }
+    m_xrefs.reset();
 }
 
 // mark an article unread, keeping track of to_read[]
@@ -317,7 +314,7 @@ void Article::unmark_as_read()
 {
     one_more();
 #ifdef MCHASE
-    if (!empty(m_xrefs) && !(m_flags & AF_MCHASE))
+    if (has_xrefs() && !(m_flags & AF_MCHASE))
     {
         m_flags |= AF_MCHASE;
         s_chase_count++;

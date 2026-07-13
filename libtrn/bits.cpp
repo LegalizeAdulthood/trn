@@ -488,7 +488,7 @@ void one_less_art_num(ArticleNum art_num)
 void Article::set_read()
 {
     one_less();
-    if (!g_olden_days && !empty(m_xrefs) && !(m_flags & AF_K_CHASE))
+    if (!g_olden_days && has_xrefs() && !(m_flags & AF_K_CHASE))
     {
         m_flags |= AF_K_CHASE;
         s_chase_count++;
@@ -503,7 +503,7 @@ void Article::set_read()
 void Article::mark_as_read()
 {
     one_less();
-    if (!empty(m_xrefs) && !(m_flags & AF_K_CHASE))
+    if (has_xrefs() && !(m_flags & AF_K_CHASE))
     {
         m_flags |= AF_K_CHASE;
         s_chase_count++;

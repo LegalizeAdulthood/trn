@@ -540,7 +540,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
             cp = std::strchr(fields[OV_XREF], ':');
             if (cp && std::strchr(cp+1, ':'))
             {
-                article->m_xrefs = save_str(fields[OV_XREF]);
+                article->m_xrefs = fields[OV_XREF];
             }
         }
 
@@ -548,7 +548,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
         {
             if (!article->m_xrefs)
             {
-                article->m_xrefs = save_str("");
+                article->m_xrefs = "";
             }
         }
         else if (fields[OV_XREF])
@@ -558,7 +558,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
                 Article *ap = article_ptr(an);
                 if (!ap->m_xrefs)
                 {
-                    ap->m_xrefs = save_str("");
+                    ap->m_xrefs = "";
                 }
             }
             fieldflags[OV_XREF] |= FF_HAS_FIELD;

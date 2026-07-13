@@ -267,12 +267,12 @@ in `std::vector<std::string>` and appends new lines through
 The newly unblocked retained-storage targets are remaining `Article`
 cached header strings and `NewsgroupData::m_rc_line`.  `Article` is now
 stored in a `std::map<ArticleNum, Article>`, so `Article` objects have
-ordinary construction and destruction.  Its `m_msg_id` and `m_xrefs`
-fields still use `save_str`/`free` ownership.  `m_msg_id` is coupled to
-the message-id hash, which currently stores either a pending allocated
-message-id string or an `Article *` in `HashDatum`, so migrate that field
-with the hash handoff path.  `NewsgroupData` is now stored in a vector,
-but its newsrc line is still mutated in place and indexed by offsets.
+ordinary construction and destruction.  Its `m_msg_id` field still uses
+`save_str`/`free` ownership.  `m_msg_id` is coupled to the message-id
+hash, which currently stores either a pending allocated message-id
+string or an `Article *` in `HashDatum`, so migrate that field with the
+hash handoff path.  `NewsgroupData` is now stored in a vector, but its
+newsrc line is still mutated in place and indexed by offsets.
 
 ## Refactoring Slices
 
@@ -303,13 +303,6 @@ all direct assignments must change together.  For `save_str` and
 `save_str` assignments, and matching `free` paths with `std::string`
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
-
-#### Article Xref Header
-
-Promote `Article::m_xrefs` to `std::optional<std::string>`.  Preserve
-the current three states: not fetched, fetched but no useful Xref, and
-useful Xref text.  Update `set_cached_line`, `get_cached_line`,
-overview loading, and `bits.cpp` chase logic together.
 
 #### Article Message-Id Hash Handoff
 

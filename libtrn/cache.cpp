@@ -1109,18 +1109,17 @@ void Article::set_cached_line(int which_line, char *s)
         break;
 
     case XREF_LINE:
-        if (!empty(m_xrefs))
-        {
-            std::free(m_xrefs);
-        }
         // Exclude an xref for just this group or "(none)".
         cp = std::strchr(s, ':');
         if (!cp || !std::strchr(cp + 1, ':'))
         {
-            std::free(s);
-            s = save_str("");
+            m_xrefs = "";
         }
-        m_xrefs = s;
+        else
+        {
+            m_xrefs = s;
+        }
+        std::free(s);
         break;
 
     case MSG_ID_LINE:
