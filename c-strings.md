@@ -34,6 +34,11 @@ On every audit rerun, re-evaluate deferred items against the current
 source.  Do not assume older deferrals remain ineligible after code
 changes.
 
+Do not keep a chronological history of audit reruns in this document.
+Record durable rules, current findings, open slices, and deferrals.
+When a slice is completed, remove it from the slice list instead of
+moving it into `Findings`.
+
 Existing good precedents:
 
 - `libtrn/univ.cpp`, `univ_add_text_file`: accepts a legacy C string at
@@ -81,103 +86,120 @@ the function.  This includes:
 - Passing to any function that stores the pointer in static or global
   storage.
 
-The Ubuntu build log for run `29094736532` adds a current
-`-Wwrite-strings` cleanup track.  It reports 141 unique warning sites.
-The generated `config.h` sites map back to assigning source code.  The
-`nntplist.cpp::main` cases are local fixes; `data_source_init` belongs
-to the deferred INI value-storage overhaul.
+## Finding Types
 
-After the hash key, comparator, color, autosubscribe, option-header,
-quote, NNTP list, MIME, selection-order, `SourceFile::open`
-`fetch_cmd`, and `set_newsgroup_to_do` helpers were promoted, a rerun
-finds a small safe bottom-up batch.  The new targets are leaf helpers
-that compare or print text locally, plus callers that need only local
-owned strings before invoking legacy regex or diagnostic APIs.
+### `char *` to `const char *`
 
-The MIME cap, autosubscribe, option, NNTP command, universal selector,
-and command-line switch call-site checks did not expose more
-one-function slices.  Callers pass literals, global buffers, mutable
-cursors, nullable sentinels, or values that cross factory, static, or
-global storage boundaries.
+Select when a pointer is assigned string literals or borrowed read-only
+storage, the local code never writes through it, and no callee requires a
+mutable pointer.
 
-After completing the header-validation and X mouse suffix slices, another
-pointer-oriented rerun did not find a new one-function modernization
-slice that meets the current rules.  The remaining pointer candidates
-either make the code noisier than the C-string form, require a
-coordinated helper/API change, or cross storage, cursor,
-nullable-sentinel, output-buffer, or transport boundaries.
+Refactor by changing the local declaration, parameter, or return type to
+`const char *`.  Prefer this over `std::string_view` when the value is a
+literal-only selection, a null sentinel, or a legacy C API input such as
+`perror`.
 
-The local-buffer pass found a small safe batch.  The useful targets are
-owned snapshots of NNTP command/reply text and short formatted strings
-that are consumed before the function returns.  Arrays passed to callees
-that fill them, static buffers whose address is returned, protocol
-scratch buffers, and global display buffers remain out of scope.
+### `const char *` to `std::string_view`
 
-A fresh buffer pass, ignoring the old defer list, found more local
-buffers that now have safe string-shaped replacements.  The strongest
-new candidates build NNTP command text, prompt/default text, lower-case
-comparison keys, or a universal-file label split inside one function.
-Most remaining buffers are still output buffers, mutable command
-cursors, returned static storage, protocol byte buffers, or global
-display buffers.  Returned static buffers are better handled as
-API-return slices, not as local `std::string` temporaries.
+Select when code only reads, slices, compares, scans, or forwards text by
+extent.  Reject null-sentinel APIs unless the slice also removes or
+replaces the sentinel intentionally.
 
-The pass also distinguished meaningful truncation from arbitrary
-fixed-buffer truncation.  Meaningful truncation encodes a protocol
-extent, screen/display width, file-format field, or caller output-buffer
-contract; preserve and test it.  Arbitrary truncation exists only
-because the current code used a fixed-size scratch array; when replacing
-that array with owned string storage, prefer removing the accidental
-limit after tests cover normal current behavior.  Do not add boundary
-tests solely to preserve a fixed-buffer artifact.
+Refactor by changing the function signature or local variable to
+`std::string_view`, then use `empty`, `front`, `remove_prefix`, `substr`,
+and direct comparison.  Build a local `std::string` only when a callee
+needs a null terminator, and pass `c_str()` for `std::string` values.
 
-A formatting pass checked how much construction and output would be
-simplified by adding `libfmt`; fmt is now available to the core targets.
-Current C-style formatting and output usage remains large: this rerun
-found 196 `std::sprintf` sites, 2 `std::snprintf` sites, and 597
-`std::printf`/`std::fprintf` sites in the source directories.
+### `save_str` or `safe_copy` to `std::string`
 
-A current copy/concat pass after removing home-grown `List` storage
-found 238 non-test source hits: 137 `std::strcpy`, 30 `std::strcat`, 12
-`std::strncpy`, and 59 `safe_copy` hits.  There were no `std::strncat`
-hits in the source directories.
+Select when a raw pointer owns retained text, the same owner frees or
+overwrites it, and callers only need read-only C-string access or local
+mutable parsing.  Reject memory-pool strings and `char **` output
+allocation APIs until that lifetime model changes.
 
-That first count did not include owned string construction already using
-`std::string`.  A follow-up scan found 29 `.append()` sites, 9
-`std::to_string` sites, and many `+=` hits.  The `+=` count is noisy
-because it includes numeric and pointer increments, but real
-string-construction examples include NNTP command strings, NNTP error
-messages, environment assignments, temp filename suffixes, score
-filenames, and universal selector filenames.
+Refactor by replacing the owning `char *` with `std::string` or
+`std::optional<std::string>` when null and empty are distinct.  Replace
+`save_str`, `safe_malloc`, `safe_copy`, and matching `free` paths with
+direct string assignment.  Use `c_str()` for legacy read-only APIs and
+`data()` only for local mutable parsing with no pointer escape.
 
-`libfmt` would help most where code mixes literals, values, widths, and
-numbers into messages or command strings.  It would turn many
-`sprintf`/`strlen` append chains into `fmt::format`,
-`fmt::format_to`, or `fmt::print`.  It would help less with simple path
-append, view append, mutable parser buffers, caller-owned output
-buffers, protocol byte buffers, global display buffers, and returned
-static storage.  Treat fmt adoption as a separate formatted-output and
-formatted-string track, not as a substitute for ownership refactors.
+### Local C Buffers
 
-The global-storage pass found owned `char *` variables that can become
-`std::string` when callers only need null-terminated read access or
-temporary mutable access.  Good candidates store filenames, extracted
-paths, server names, or cached return strings.  Rejected globals are
-mutable protocol buffers, borrowed cursors, termcap storage, pointer
-offset tricks, arrays with parallel ownership state, and output
-parameters whose callees allocate through `char **`.
+Select when a local `char name[N]` is only an owned snapshot, local
+formatted string, local token buffer, or command text consumed before the
+function returns.  Reject caller output buffers, parser compaction,
+global display buffers, protocol byte buffers, returned static storage,
+and fixed-width display or file-format fields.
 
-A follow-up ownership pass over `save_str`, `mp_save_str`, and
-`safe_copy` found 74 `save_str` or `mp_save_str` occurrences and 59
-`safe_copy` occurrences.  The useful retained-storage candidates share a
-simple shape: a raw pointer is assigned from `save_str`, later freed by
-the same owner, and exposed mostly through read-only C-string use.
+Refactor owned text to `std::string` and formatted text to
+`fmt::format`.  Before editing, classify truncation.  Preserve meaningful
+truncation; remove arbitrary fixed-buffer truncation when ordinary
+behavior remains covered.
 
-Most `safe_copy` sites are not ownership candidates.  They write scratch
-buffers, command buffers, parser cursors, caller-owned output storage, or
-`putenv` strings whose lifetime must remain controlled by an environment
-table.  `mp_save_str` pool-owned strings should also stay with the pool
-until that lifetime model is intentionally replaced.
+### Buffer Plus Size
+
+Select `std::string_view` when a pointer plus size is a read-only text
+extent.  Select a byte container or span-shaped interface instead for
+mutable buffers, transport bytes, or output capacity.
+
+Refactor by passing the view through the call chain and using
+`data()`/`size()` only for callees that consume the data immediately.
+Do not treat an output limit as a string extent.
+
+### Copy and Concat
+
+Select owned local construction chains such as `strcpy` plus `strcat`,
+`sprintf` append chains, or `std::string` append chains that are already
+building one owned string.  Reject writes into caller buffers, globals,
+static return buffers, parser workspaces, and protocol buffers.
+
+Refactor plain ownership changes to `std::string`; refactor formatted
+construction to `fmt::format` or `fmt::format_to`.  Defer C-buffer
+`sprintf` sites until the target buffer itself is converted.
+
+### Filename Variables
+
+Select `std::filesystem::path` when a function composes, normalizes,
+queries, creates, removes, renames, or creates parents for a real
+filesystem path and the path object does not escape.
+
+Refactor by adding `namespace fs = std::filesystem;` in that source file
+and using `fs::path` and `fs::` operations.  Do not convert one-shot
+`fopen` or `freopen` filenames if the result is only
+`path.string().c_str()`.
+
+### Formatted Output
+
+Select `fmt` when a function formats owned text or writes formatted
+output directly to `stdout` or `stderr`.  Reject runtime printf-style
+format strings until the format string source is audited.
+
+Refactor to `fmt::format`, `fmt::format_to`, or `fmt::print`, and link
+`fmt::fmt` privately to the target.  Do not add `/utf-8`; the fmt overlay
+port controls that behavior.
+
+## Current Audit State
+
+- `char *` to `const char *`: no current const-only one-function slice
+  is open.
+- `const char *` or read-only `char *` to `std::string_view`:
+  remaining candidates are null sentinels, C API boundaries,
+  encoded-text cursors, output-only helpers, command parsers, or helper
+  families that must change with their callers.
+- `save_str` and `safe_copy` ownership: remaining hits write caller
+  buffers, globals, static storage, parser buffers, command buffers,
+  score/universal storage, keymaps, or memory-pool storage.
+- Local C-string buffers: remaining buffers are caller outputs,
+  globals, static returned storage, protocol buffers, parser
+  compaction, or fixed-width display fields.
+- Filename variables to `std::filesystem::path`: remaining candidates
+  are stored filename fields, backup/rollback rename sequences, protocol
+  or shell text, global temp-file state, nullable source-file APIs, or
+  one-shot C API filenames.
+- Remaining direct retained raw pointers are score-file storage,
+  universal-selector union storage, terminal capability/keymap storage,
+  search-regex internals, option value arrays, NNTP protocol globals,
+  and the `Subject::m_str` hash-key layout.
 
 The main future opportunity is the case-insensitive comparison helper
 family.  View-ready overloads could remove temporary strings in
@@ -186,41 +208,22 @@ but the generated header templates and the manual implementation must be
 changed together.  Treat that as a helper-family slice, not isolated
 call-site churn.
 
-Do not promote simple output-only helper parameters when the only local
-effect is replacing `fputs` or `printf` with `fwrite` or a temporary
-`std::string`.  Keep the C-string signature when it is simpler and no
-string slicing or ownership improvement results.
-
-The copy/concat audit classifies hits by destination.  Owned local
-construction can become `std::string` or `fmt::format`.  Caller output
-buffers, parser compaction, global display buffers, protocol buffers,
-static returned storage, and struct-owned C buffers are not local
-string/fmt slices.
-
 `libtrn/addng.cpp:418`, `std::strcpy(g_buf, "*")`, is a real hit, but
 it writes the global NNTP query buffer used immediately by `nntp_list`.
 Converting that one assignment to string/fmt would only add churn; this
 belongs with the global-buffer ownership work.
 
-The best copy/concat candidates are local owned construction sites:
-`util/util2.cpp::file_exp`, `util/env.cpp::set_p_host_name`,
-`libtrn/scoresave.cpp::sc_sv_save_file`, `libtrn/util.cpp::edit_file`,
-`libtrn/scorefile.cpp::sf_edit_file`, and the shortcut line construction
-in `libtrn/scorefile.cpp::sf_append`.
-`libtrn/decode.cpp::decode_mkdir` and
-`libtrn/sadesc.cpp::sa_get_desc` are possible only as return-storage API
-slices, because they currently return global or static C-string storage.
+## General Refactoring Rules
 
-The remaining broad hits were rejected because the pointer is a mutable
-cursor, a nullable sentinel, an output buffer, a byte transport buffer,
-global or static storage, or part of an already-deferred ownership
-mechanism.
+Do not promote simple output-only helper parameters when the only local
+effect is replacing `fputs` or `printf` with `fwrite` or a temporary
+`std::string`.  Keep the C-string signature when it is simpler and no
+string slicing or ownership improvement results.
 
-The filesystem-path pass found candidates where a filename is composed,
-suffixed, checked, removed, renamed, or used to create parent directories
-inside one function.  The project already builds as C++17 and already uses
-`std::filesystem`, so these can be local cleanups when the path does not
-escape.
+Classify copy/concat hits by destination.  Owned local construction can
+become `std::string` or `fmt::format`.  Caller output buffers, parser
+compaction, global display buffers, protocol buffers, static returned
+storage, and struct-owned C buffers are not local string/fmt slices.
 
 Do not convert a filename to `std::filesystem::path` when the only
 result is calling `path.string().c_str()` for a single C API.  Keep
@@ -278,132 +281,10 @@ when keeping runtime formatting is intentional.  Do not create fmt
 string-building slices for C-buffer `sprintf` sites; convert those when
 the C-style string buffer itself is refactored.
 
-After the home-grown `List` storage was removed, the old object-lifetime
-blocker disappeared.  `MimeCapEntry` and `DataSource` retained strings
-are already owned by `std::string` or `std::optional<std::string>`, so
-they are no longer audit targets.  `SourceFile` now owns metadata lines
-in `std::vector<std::string>` and appends new lines through
-`std::string_view`.
-
-The newly unblocked retained-storage targets were remaining `Article`
-cached header strings and `NewsgroupData::m_rc_line`.  `Article` is now
-stored in a `std::map<ArticleNum, Article>`, so `Article` objects have
-ordinary construction and destruction.  Cached `Article` header strings
-now use optional owned string storage, and the message-id hash has an
-explicit pending-id wrapper for global thread commands.
-`NewsgroupData::m_rc_line` now owns its `.newsrc` line as `std::string`
-while preserving the existing hidden-delimiter and offset model.
-
-A rerun after the `.newsrc` line storage slice found no new broad
-retained-storage family.  The remaining direct retained raw pointers are
-still score-file storage, universal-selector union storage, terminal
-capability/keymap storage, search-regex internals, option value arrays,
-NNTP protocol globals, and the `Subject::m_str` hash-key layout.
-
-The rerun did find a small bottom-up batch of local `save_str` scratch
-copies whose pointers do not escape.  These are good one-function
-slices: `terminal.cpp::edit_buf`, `mime.cpp::mime_init`,
-`bits.cpp::chase_xref`, `rt-select.cpp::select_option`,
-`respond.cpp::reply`, and `respond.cpp::forward`.
-
 `libtrn/rcln.cpp` still contains obsolete C-string field names inside
 the inactive `MCHASE` block.  That block does not compile today and
 should be removed or overhauled with the old chase mechanism, not patched
 as a local string modernization slice.
-
-After the local `save_str` scratch slices were completed, another rerun
-found a command-list scratch family.  These copies are short-lived
-owned command strings passed to legacy command performers.  They do not
-escape the caller, but the performers still take mutable `char *`
-parameters, so use local `std::string` storage and pass `data()`.
-
-After the command-list scratch family was completed, another explicit
-criteria rerun found one additional local `save_str` scratch copy in
-`scorefile.cpp::sf_do_file`.  It protects the file name while nested
-score-file processing runs, but the local owner can be `std::string`
-before the retained score entries take their own copies.
-
-After that slice, another rerun found `scorefile.cpp::sf_missing_score`.
-It saves a line across `finish_command` because the line may point into
-`g_buf`; local `std::string` preserves the text without a raw heap copy.
-
-After that slice, another rerun found `scorefile.cpp::sf_add_extra_header`.
-It lowercased a retained `save_str` result before storing the pointer.
-The lowercasing can use the existing local `std::string` and then store
-one retained copy.
-
-After that slice, another rerun found `bits.cpp::chase_xref`.  The
-function already owns the Xref header line in `std::string`, but still
-copied each token through a fixed 128-byte scratch buffer.  Tokenizing
-the owned string in place removes the arbitrary limit.
-
-After that slice, another rerun found `ngstuff.cpp::perform`.  The
-function made a fixed-size command copy only to survive command handlers
-that reuse `g_buf` or the caller command list.  A local `std::string`
-keeps the same ownership boundary without the arbitrary local limit.
-
-After that slice, another rerun found `AddGroup::add_group_perform`.
-The callers already own command text as `std::string`, and the method
-only scans, skips, and reports the remaining command.  Promoting the
-parameter to `std::string_view` removes one mutable command pointer
-without changing ownership.
-
-After that slice, another rerun found `ngstuff.cpp::newsgroup_perform`.
-The callers also pass owned command strings, and the function only
-scans command characters and reports the remaining suffix on error.
-Promoting the parameter to `std::string_view` removes the mutable
-pointer contract from the newsgroup command performer.
-
-After that slice, another rerun found `ngstuff.cpp::perform`.  The
-function already copies command text into local `std::string` storage
-before parsing, so the input boundary can become `std::string_view`
-while the legacy mutable cursor remains local.
-
-After that slice, another rerun found `nntp_handle_auth_err`.  The
-function formatted AUTHINFO commands into `g_ser_line` only to pass them
-to `nntp_command`, which now accepts `std::string_view`.  Building the
-owned command with `fmt::format` removes that temporary global C-buffer
-use.
-
-### Explicit Criteria Rerun
-
-The explicit criteria pass was rerun against the current source after
-the `.newsrc` line-storage and home-grown `List` removals.
-
-- `char *` to `const char *`: the earlier `nntp_handle_auth_err` and
-  `get_tcp_socket` findings are already const-correct in the source.
-  No new const-only one-function slice was found.
-- `const char *` or read-only `char *` to `std::string_view`:
-  `AddGroup::add_group_perform` was still taking a mutable command
-  pointer even though its callers already owned `std::string` command
-  text.  `ngstuff.cpp::newsgroup_perform` had the same read-only command
-  shape and can also take `std::string_view`.  `ngstuff.cpp::perform`
-  now accepts a view and keeps its mutable parser cursor inside the
-  existing local copy.  `nntp_handle_auth_err` now builds owned
-  AUTHINFO command strings instead of routing them through `g_ser_line`.
-  Remaining candidates are null sentinels, C API boundaries,
-  encoded-text cursors, output-only helpers, command parsers, or helper
-  families that must change with their callers.
-- `save_str` and `safe_copy` ownership: after the command-list copies,
-  safe local owners were found in `scorefile.cpp::sf_do_file` and
-  `scorefile.cpp::sf_missing_score`; `sf_add_extra_header` now builds
-  the retained lower-case copy from local string storage.  Other hits
-  write caller buffers, globals, static storage, parser buffers,
-  command buffers, score/universal storage, keymaps, or memory-pool
-  storage.
-- Local C-string buffers: `bits.cpp::chase_xref` still used a fixed
-  token buffer after the Xref line was promoted to `std::string`.
-  Tokenizing the owned string in place removes that arbitrary
-  truncation point.  `ngstuff.cpp::perform` used a fixed local command
-  copy only to protect against command-handler reuse; local
-  `std::string` now owns that copy.  Remaining buffers are caller
-  outputs, globals, static returned storage, protocol buffers, parser
-  compaction, or fixed-width display fields.
-- Filename variables to `std::filesystem::path`: no new one-function
-  path slice was found.  Remaining candidates are stored filename
-  fields, backup/rollback rename sequences, protocol or shell text,
-  global temp-file state, nullable source-file APIs, or one-shot C API
-  filenames where `path.string().c_str()` would add noise.
 
 ## Refactoring Slices
 
