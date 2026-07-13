@@ -13,6 +13,23 @@ A follow-up pass also looked for local `char name[N]` buffers whose only
 job is to hold an owned snapshot or locally formatted text before a
 read-only, non-storing API call.
 
+## Audit Criteria
+
+Each rerun should check these scenarios:
+
+- `char *` values that can become `const char *` because the local code
+  never writes through the pointer.
+- `const char *` values that can become `std::string_view` because the
+  local code only reads, slices, compares, or forwards text by extent.
+- `char *` storage populated from `save_str` or `safe_copy` that can
+  become owned `std::string` storage without pointer escape.
+- Filename variables that compose, normalize, query, remove, rename, or
+  create paths and can become `std::filesystem::path`.
+
+When `next` finds no remaining slices, rerun the audit against the
+current source and look for new opportunities before treating the plan
+as empty.
+
 Existing good precedents:
 
 - `libtrn/univ.cpp`, `univ_add_text_file`: accepts a legacy C string at
@@ -112,12 +129,12 @@ tests solely to preserve a fixed-buffer artifact.
 
 A formatting pass checked how much construction and output would be
 simplified by adding `libfmt`; fmt is now available to the core targets.
-Current C-style formatting and output usage remains large: this pass
-found 197 `std::sprintf` sites, 2 `std::snprintf` sites, and 602
+Current C-style formatting and output usage remains large: this rerun
+found 196 `std::sprintf` sites, 2 `std::snprintf` sites, and 597
 `std::printf`/`std::fprintf` sites in the source directories.
 
 A current copy/concat pass after removing home-grown `List` storage
-found 247 non-test source hits: 144 `std::strcpy`, 32 `std::strcat`, 12
+found 238 non-test source hits: 137 `std::strcpy`, 30 `std::strcat`, 12
 `std::strncpy`, and 59 `safe_copy` hits.  There were no `std::strncat`
 hits in the source directories.
 
@@ -147,7 +164,7 @@ offset tricks, arrays with parallel ownership state, and output
 parameters whose callees allocate through `char **`.
 
 A follow-up ownership pass over `save_str`, `mp_save_str`, and
-`safe_copy` found 96 `save_str` or `mp_save_str` occurrences and 59
+`safe_copy` found 74 `save_str` or `mp_save_str` occurrences and 59
 `safe_copy` occurrences.  The useful retained-storage candidates share a
 simple shape: a raw pointer is assigned from `save_str`, later freed by
 the same owner, and exposed mostly through read-only C-string use.
@@ -273,6 +290,46 @@ explicit pending-id wrapper for global thread commands.
 `NewsgroupData::m_rc_line` now owns its `.newsrc` line as `std::string`
 while preserving the existing hidden-delimiter and offset model.
 
+A rerun after the `.newsrc` line storage slice found no new broad
+retained-storage family.  The remaining direct retained raw pointers are
+still score-file storage, universal-selector union storage, terminal
+capability/keymap storage, search-regex internals, option value arrays,
+NNTP protocol globals, and the `Subject::m_str` hash-key layout.
+
+The rerun did find a small bottom-up batch of local `save_str` scratch
+copies whose pointers do not escape.  These are good one-function
+slices: `terminal.cpp::edit_buf`, `mime.cpp::mime_init`,
+`bits.cpp::chase_xref`, `rt-select.cpp::select_option`,
+`respond.cpp::reply`, and `respond.cpp::forward`.
+
+`libtrn/rcln.cpp` still contains obsolete C-string field names inside
+the inactive `MCHASE` block.  That block does not compile today and
+should be removed or overhauled with the old chase mechanism, not patched
+as a local string modernization slice.
+
+### Explicit Criteria Rerun
+
+The explicit criteria pass was rerun against the current source after
+the `.newsrc` line-storage and home-grown `List` removals.
+
+- `char *` to `const char *`: two new one-function leaf slices were
+  found.  `nntp_handle_auth_err` stores authentication strings in local
+  variables that are only null-checked and formatted.  `get_tcp_socket`
+  stores string-literal failure causes only for `perror`.
+- `const char *` to `std::string_view`: no new simple one-function slice
+  was found.  Remaining candidates are null sentinels, C API boundaries,
+  encoded-text cursors, output-only helpers, command parsers, or helper
+  families that must change with their callers.
+- `save_str` and `safe_copy` ownership: the only new safe local scratch
+  family remains the six `save_str` copies listed below.  Other hits
+  write caller buffers, globals, static storage, parser buffers, command
+  buffers, score/universal storage, keymaps, or memory-pool storage.
+- Filename variables to `std::filesystem::path`: no new one-function
+  path slice was found.  Remaining candidates are stored filename
+  fields, backup/rollback rename sequences, protocol or shell text,
+  global temp-file state, nullable source-file APIs, or one-shot C API
+  filenames where `path.string().c_str()` would add noise.
+
 ## Refactoring Slices
 
 Most slices center on one function.  Add local includes and update the
@@ -288,6 +345,66 @@ text.  For string building, include only sites that already build an
 owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
+
+### Const-Correct C String Slices
+
+#### NNTP Auth Credential Locals
+
+In `nntp/nntpauth.cpp`, `nntp_handle_auth_err` assigns
+`get_auth_user()` and `get_auth_pass()` to local `char *` variables.
+They are only checked for null and formatted into `g_ser_line`.  Make
+the locals `const char *`; do not change the helper signatures.
+
+#### NNTP Connect Failure Cause
+
+In `nntp/nntpinit.cpp`, the `INET6` branch of `get_tcp_socket` assigns
+the string literals `socket` and `connect` to `cause` only so it can
+pass the text to `perror`.  Make the local `cause` pointer
+`const char *`.
+
+### Local Save-String Slices
+
+#### Terminal Edit Buffer Scratch
+
+In `libtrn/terminal.cpp`, `edit_buf` copies `g_buf` with `save_str`
+only so `interp_search` can rewrite `g_buf` while reading the old
+contents.  Replace the owned C copy with `std::string` and pass
+`c_str()` to `interp_search`.
+
+#### MIME Cap Path List
+
+In `libtrn/mime.cpp`, `mime_init` copies the `MIMECAPS`/`MAILCAPS`
+value with `save_str` only to split it on colon characters.  Iterate the
+list with `std::string_view`; create a local `std::string` only for the
+non-empty item being passed to `mime_read_mimecap`.
+
+#### Chase Xref Scratch Line
+
+In `libtrn/bits.cpp`, `chase_xref` copies the fetched Xref line with
+`save_str` only for local tokenization.  Replace it with a local
+`std::string` and use `data()` for the mutable parsing cursor.  The
+buffer must stay local because `copy_till` and `strchr` edit it in
+place.
+
+#### Selector Option Old Value
+
+In `libtrn/rt-select.cpp`, `select_option` saves the quoted current
+option value only for local comparison after editing.  Replace
+`save_str`/`free` with an owned `std::string` and compare through
+`c_str()`.
+
+#### Reply Mailer Command
+
+In `libtrn/respond.cpp`, `reply` copies the `MAILPOSTER` command with
+`save_str` only for local `%h` inspection and `file_exp`.  Use an owned
+`std::string` through the function and remove the manual cleanup path.
+
+#### Forward Mailer Command And Boundary
+
+In `libtrn/respond.cpp`, `forward` has the same local `FORWARDPOSTER`
+copy as `reply`.  It also uses a local saved MIME boundary in the
+non-regex branch.  Replace both with owned strings while preserving the
+`REGEX_WORKS_RIGHT` branch and the empty/no-boundary distinction.
 
 ### Copy/Concat Slices
 
@@ -355,6 +472,15 @@ both declarations and definitions `static`.
 - Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`
   calls are not useful path slices unless the same function also composes,
   normalizes, queries, removes, or renames the file.
+- `libtrn/rcstuff.cpp`, newsrc filename fields and backup/rollback
+  operations: the fields are already `std::string`, but the remove,
+  rename, and `safe_link` calls are a coordinated file-state sequence,
+  not isolated one-function path cleanup.
+- `libtrn/datasrc.cpp`, `data_source_init`, and
+  `nntp/nntpclient.cpp`, `nntp_server_name`: the server name is mostly
+  read-only, but it crosses file-reference expansion, nullable server
+  state, and `g_ser_line` return storage.  Refactor the API as a
+  coordinated const-correct slice.
 - Response-file globals, decode part-file state, score-file table
   storage, and remaining filename buffers need coordinated storage
   changes before `std::filesystem::path` is an improvement.
