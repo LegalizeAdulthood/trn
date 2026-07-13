@@ -33,6 +33,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <string>
+#include <string_view>
 
 // How many overview lines to read with one NNTP call
 enum
@@ -46,7 +48,7 @@ static HeaderLineType s_header_num[] = {
 };
 
 static void             ov_parse(char *line, ArticleNum artnum, bool remote);
-static const char      *ov_name(const char *group);
+static std::string      ov_name(std::string_view group);
 static OverviewFieldNum ov_num(char *hdr, char *end);
 static const char      *ov_field_name(int num);
 
@@ -265,7 +267,7 @@ beginning:
     else if (g_data_source->m_ov_opened < started_request - 60 * 60)
     {
         ov_close();
-        g_data_source->m_ov_in = std::fopen(ov_name(g_newsgroup_name.c_str()), "r");
+        g_data_source->m_ov_in = std::fopen(ov_name(g_newsgroup_name).c_str(), "r");
         if (g_data_source->m_ov_in == nullptr)
         {
             return false;
@@ -592,18 +594,21 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 // substitute any '.'s in the group name into '/'s, prepend the path, and
 // append the '/.overview' or '.ov') on to the end.
 //
-static const char *ov_name(const char *group)
+static std::string ov_name(std::string_view group)
 {
-    std::strcpy(g_buf, g_data_source->m_over_dir);
-    char *cp = g_buf + std::strlen(g_buf);
-    *cp++ = '/';
-    std::strcpy(cp, group);
-    while ((cp = std::strchr(cp, '.')))
+    std::string filename{g_data_source->m_over_dir};
+    filename += '/';
+    const std::string::size_type group_start = filename.size();
+    filename += group;
+    for (std::string::size_type i = group_start; i < filename.size(); ++i)
     {
-        *cp = '/';
+        if (filename[i] == '.')
+        {
+            filename[i] = '/';
+        }
     }
-    std::strcat(g_buf, OV_FILE_NAME);
-    return g_buf;
+    filename += OV_FILE_NAME;
+    return filename;
 }
 
 void ov_close()

@@ -30,6 +30,7 @@ add_executable(trn-test
     test_OptionCatalog.cpp
     test_OptionDraft.cpp
     test_RcGroupConfig.cpp
+    test_rt-ov.cpp
     test_rt-util.cpp
     test_scorefile.cpp
     test_scoresave.cpp

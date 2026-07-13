@@ -175,7 +175,7 @@ The best copy/concat candidates are local owned construction sites:
 `libtrn/scoresave.cpp::sc_sv_save_file`, `libtrn/util.cpp::edit_file`,
 `libtrn/scorefile.cpp::sf_edit_file`, and the shortcut line construction
 in `libtrn/scorefile.cpp::sf_append`.
-`libtrn/rt-ov.cpp::ov_name`, `libtrn/decode.cpp::decode_mkdir`, and
+`libtrn/decode.cpp::decode_mkdir` and
 `libtrn/sadesc.cpp::sa_get_desc` are possible only as return-storage API
 slices, because they currently return global or static C-string storage.
 
@@ -263,11 +263,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 buffer slices.
 
 ### Copy/Concat Slices
-
-CC-08. `libtrn/rt-ov.cpp`, `ov_name`: return an owned path string
-instead of building the overview filename in `g_buf`.  The only caller
-passes the value to `fopen`, so the returned storage can stay local to
-the call expression.
 
 ### Global String Storage Slices
 
