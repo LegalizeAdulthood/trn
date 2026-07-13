@@ -55,7 +55,7 @@ protected:
         m_overview_dir_text = m_overview_dir.generic_string();
 
         g_data_source = &m_data_source;
-        m_data_source.m_over_dir = m_overview_dir_text.data();
+        m_data_source.m_over_dir = m_overview_dir_text;
         for (int i = 0; i < OV_MAX_FIELDS; ++i)
         {
             m_data_source.m_field_num[i] = static_cast<OverviewFieldNum>(i);

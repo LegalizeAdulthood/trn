@@ -634,8 +634,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             if (art_open(g_art, (ArticlePosition) 0))
                             {
                                 nntp_finish_body(FB_SILENT);
-                                std::sprintf(s = scrbuf,"%s/%s",g_data_source->m_spool_dir,
-                                        nntp_art_name(g_art, false));
+                                std::sprintf(s = scrbuf, "%s/%s", g_data_source->m_spool_dir.c_str(),
+                                             nntp_art_name(g_art, false));
                             }
                             else
                             {
@@ -644,7 +644,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         }
                         else
                         {
-                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->m_spool_dir, g_newsgroup_dir.c_str(), g_art.value_of());
+                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->m_spool_dir.c_str(),
+                                         g_newsgroup_dir.c_str(), g_art.value_of());
                         }
                     }
                     else
@@ -676,7 +677,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'd':
                     if (!g_newsgroup_dir.empty())
                     {
-                        std::sprintf(scrbuf, "%s/%s", g_data_source->m_spool_dir, g_newsgroup_dir.c_str());
+                        std::sprintf(scrbuf, "%s/%s", g_data_source->m_spool_dir.c_str(), g_newsgroup_dir.c_str());
                         s = scrbuf;
                     }
                     else
@@ -909,7 +910,15 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'P':
-                    s = g_data_source ? g_data_source->m_spool_dir : s_empty;
+                    if (g_data_source)
+                    {
+                        std::strcpy(scrbuf, g_data_source->m_spool_dir.c_str());
+                        s = scrbuf;
+                    }
+                    else
+                    {
+                        s = s_empty;
+                    }
                     break;
 
                 case 'q':

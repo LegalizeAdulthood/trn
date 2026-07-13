@@ -88,8 +88,8 @@ bool ov_init()
     }
     else
     {
-        has_overview_fmt = g_data_source->m_over_fmt != nullptr
-                        && (overview = std::fopen(g_data_source->m_over_fmt, "r")) != nullptr;
+        has_overview_fmt =
+            g_data_source->m_over_fmt && (overview = std::fopen(g_data_source->m_over_fmt->c_str(), "r")) != nullptr;
     }
 
     if (has_overview_fmt)
@@ -596,7 +596,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 //
 static std::string ov_name(std::string_view group)
 {
-    std::string filename{g_data_source->m_over_dir};
+    std::string filename{*g_data_source->m_over_dir};
     filename += '/';
     const std::string::size_type group_start = filename.size();
     filename += group;

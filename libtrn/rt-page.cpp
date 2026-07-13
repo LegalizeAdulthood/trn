@@ -1966,8 +1966,8 @@ static void display_page_title(bool home_only)
         {
             if (rp->flags & RF_ACTIVE)
             {
-                std::sprintf(g_buf+len, ", %s", rp->data_source->m_name);
-                len += std::strlen(g_buf+len);
+                std::sprintf(g_buf + len, ", %s", rp->data_source->m_name.c_str());
+                len += std::strlen(g_buf + len);
             }
         }
         if (rp)
@@ -2091,8 +2091,8 @@ try_again:
             maybe_eol();
             for (rp = mp->m_first, len = 0; rp && len < 34; rp = rp->next)
             {
-                std::sprintf(g_buf+len, ", %s", rp->data_source->m_name);
-                len += std::strlen(g_buf+len);
+                std::sprintf(g_buf + len, ", %s", rp->data_source->m_name.c_str());
+                len += std::strlen(g_buf + len);
             }
             if (rp)
             {

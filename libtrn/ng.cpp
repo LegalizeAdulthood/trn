@@ -142,9 +142,9 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     set_data_source(g_newsgroup_ptr->m_rc->data_source);
 
-    if (change_dir(g_data_source->m_spool_dir))
+    if (change_dir(g_data_source->m_spool_dir.c_str()))
     {
-        std::printf(g_no_cd,g_data_source->m_spool_dir);
+        std::printf(g_no_cd, g_data_source->m_spool_dir.c_str());
         return NG_ERROR;
     }
 

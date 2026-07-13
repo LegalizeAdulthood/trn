@@ -65,13 +65,14 @@ enum
     SRCFILE_CHUNK_SIZE = (32 * 1024),
 };
 
-static char       *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
-static char       *file_or_none(const char *fn);
-static int         source_file_cmp(std::string_view key, HashDatum data);
-static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
-static int         get_near_miss();
-static DataSource *new_data_source(const char *name, const DataSourceConfig &config);
-static char       *read_data_sources(const char *filename);
+static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
+static std::optional<std::string> file_or_none(const char *fn);
+static const char                *opt_c_str(const std::optional<std::string> &text);
+static int                        source_file_cmp(std::string_view key, HashDatum data);
+static int                        check_distance(int len, HashDatum *data, int newsrc_ptr);
+static int                        get_near_miss();
+static DataSource                *new_data_source(const char *name, const DataSourceConfig &config);
+static char                      *read_data_sources(const char *filename);
 
 /// @brief Initializes the data sources for the application.
 ///
@@ -94,7 +95,7 @@ void data_source_init()
 
     g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
 
-    char *machine = get_val("NNTPSERVER");
+    char       *machine = get_val("NNTPSERVER");
     std::string expanded_machine;
     if (machine && std::strcmp(machine, "local") != 0)
     {
@@ -149,7 +150,7 @@ void data_source_init()
             config.set_auth_password(auth_pass);
             config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
         }
-        new_data_source("default",config);
+        new_data_source("default", config);
     }
 }
 
@@ -212,7 +213,7 @@ DataSource *get_data_source(std::string_view name)
 {
     for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {
-        if (std::string_view{dp->m_name} == name)
+        if (dp->m_name == name)
         {
             return dp;
         }
@@ -234,7 +235,7 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
         dp->m_flags |= DF_REMOTE;
     }
 
-    dp->m_name = save_str(name);
+    dp->m_name = name;
     if (!std::strcmp(name, "default"))
     {
         dp->m_flags |= DF_DEFAULT;
@@ -243,12 +244,12 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
     const char *v = config.nntp_server();
     if (v != nullptr)
     {
-        dp->m_news_id = save_str(v);
-        char *cp = std::strchr(dp->m_news_id, ';');
+        dp->m_news_id = v;
+        char *cp = std::strchr(dp->m_news_id.data(), ';');
         if (cp != nullptr)
         {
             *cp = '\0';
-            dp->m_nntp_link.port_number = std::atoi(cp+1);
+            dp->m_nntp_link.port_number = std::atoi(cp + 1);
         }
 
         v = config.active_file_refetch();
@@ -263,27 +264,30 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
     }
     else
     {
-        dp->m_news_id = save_str(file_exp(config.active_file()));
+        dp->m_news_id = file_exp(config.active_file());
     }
 
-    dp->m_spool_dir = file_or_none(config.spool_dir());
-    if (!dp->m_spool_dir)
+    if (std::optional<std::string> spool_dir = file_or_none(config.spool_dir()))
     {
-        dp->m_spool_dir = save_str(g_tmp_dir.c_str());
+        dp->m_spool_dir = *spool_dir;
+    }
+    else
+    {
+        dp->m_spool_dir = g_tmp_dir;
     }
 
-    dp->m_over_dir = dir_or_none(dp,config.overview_dir(),DF_TRY_OVERVIEW);
+    dp->m_over_dir = dir_or_none(dp, config.overview_dir(), DF_TRY_OVERVIEW);
     dp->m_over_fmt = file_or_none(config.overview_format_file());
-    dp->m_group_desc = dir_or_none(dp,config.group_desc(),DF_NONE);
-    dp->m_extra_name = dir_or_none(dp,config.active_times(),DF_ADD_OK);
+    dp->m_group_desc = dir_or_none(dp, config.group_desc(), DF_NONE);
+    dp->m_extra_name = dir_or_none(dp, config.active_times(), DF_ADD_OK);
     if (dp->m_flags & DF_REMOTE)
     {
         // FYI, we know extra_name to be nullptr in this case.
         if (config.active_file())
         {
-            dp->m_extra_name = save_str(file_exp(config.active_file()));
+            dp->m_extra_name = file_exp(config.active_file());
             stat_t extra_stat{};
-            if (stat(dp->m_extra_name,&extra_stat) >= 0)
+            if (stat(dp->m_extra_name->c_str(), &extra_stat) >= 0)
             {
                 dp->m_act_sf.m_last_fetch = extra_stat.st_mtime;
             }
@@ -310,7 +314,7 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
         if (dp->m_group_desc)
         {
             stat_t desc_stat{};
-            if (stat(dp->m_group_desc,&desc_stat) >= 0)
+            if (stat(dp->m_group_desc->c_str(), &desc_stat) >= 0)
             {
                 dp->m_desc_sf.m_last_fetch = desc_stat.st_mtime;
             }
@@ -333,12 +337,12 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
     v = config.auth_user();
     if (v != nullptr)
     {
-        dp->m_auth_user = save_str(v);
+        dp->m_auth_user = v;
     }
     v = config.auth_password();
     if (v != nullptr)
     {
-        dp->m_auth_pass = save_str(v);
+        dp->m_auth_pass = v;
     }
     v = config.xhdr_broken();
     if (v != nullptr && (*v == 'y' || *v == 'Y'))
@@ -354,58 +358,58 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
     return dp;
 }
 
-static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
+static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
 {
     if (!dir || !*dir || !std::strcmp(dir, "remote"))
     {
         dp->m_flags |= flag;
         if (dp->m_flags & DF_REMOTE)
         {
-            return nullptr;
+            return std::nullopt;
         }
         if (flag == DF_ADD_OK)
         {
-            char* cp = safe_malloc(std::strlen(dp->m_news_id)+6+1);
-            std::sprintf(cp,"%s.times",dp->m_news_id);
-            return cp;
+            return dp->m_news_id + ".times";
         }
         if (flag == DF_NONE)
         {
-            char* cp = std::strrchr(dp->m_news_id,'/');
+            const char *cp = std::strrchr(dp->m_news_id.c_str(), '/');
             if (!cp)
             {
-                return nullptr;
+                return std::nullopt;
             }
-            int len = cp - dp->m_news_id + 1;
-            cp = safe_malloc(len+10+1);
-            std::strcpy(cp,dp->m_news_id);
-            std::strcpy(cp+len,"newsgroups");
-            return cp;
+            const std::size_t len = static_cast<std::size_t>(cp - dp->m_news_id.c_str() + 1);
+            return dp->m_news_id.substr(0, len) + "newsgroups";
         }
         return dp->m_spool_dir;
     }
 
-    if (!std::strcmp(dir,"none"))
+    if (!std::strcmp(dir, "none"))
     {
-        return nullptr;
+        return std::nullopt;
     }
 
     dp->m_flags |= flag;
     const std::string expanded_dir = file_exp(dir);
-    if (!std::strcmp(expanded_dir.c_str(), dp->m_spool_dir))
+    if (expanded_dir == dp->m_spool_dir)
     {
         return dp->m_spool_dir;
     }
-    return save_str(expanded_dir);
+    return expanded_dir;
 }
 
-static char *file_or_none(const char *fn)
+static std::optional<std::string> file_or_none(const char *fn)
 {
-    if (!fn || !*fn || !std::strcmp(fn,"none") || !std::strcmp(fn,"remote"))
+    if (!fn || !*fn || !std::strcmp(fn, "none") || !std::strcmp(fn, "remote"))
     {
-        return nullptr;
+        return std::nullopt;
     }
-    return save_str(file_exp(fn));
+    return file_exp(fn);
+}
+
+static const char *opt_c_str(const std::optional<std::string> &text)
+{
+    return text ? text->c_str() : nullptr;
 }
 
 bool DataSource::open()
@@ -423,7 +427,7 @@ bool DataSource::open()
     }
     if (m_flags & DF_REMOTE)
     {
-        if (nntp_connect(m_news_id, true) <= 0)
+        if (nntp_connect(m_news_id.c_str(), true) <= 0)
         {
             m_flags |= DF_UNAVAILABLE;
             return false;
@@ -456,8 +460,7 @@ bool DataSource::open()
                 if (m_flags & DF_TMP_ACTIVE_FILE)
                 {
                     m_flags &= ~DF_TMP_ACTIVE_FILE;
-                    std::free(m_extra_name);
-                    m_extra_name = nullptr;
+                    m_extra_name.reset();
                     m_act_sf.m_refetch_secs = 0;
                     success = m_act_sf.open(nullptr, "", nullptr);
                 }
@@ -468,7 +471,7 @@ bool DataSource::open()
                 break;
 
             case -2:
-                std::printf("Failed to open news server %s:\n%s\n", m_news_id, g_ser_line);
+                std::printf("Failed to open news server %s:\n%s\n", m_news_id.c_str(), g_ser_line);
                 term_down(2);
                 success = false;
                 break;
@@ -549,21 +552,21 @@ void DataSource ::close()
     {
         if (m_flags & DF_TMP_ACTIVE_FILE)
         {
-            remove(m_extra_name);
+            remove(m_extra_name->c_str());
         }
         else
         {
-            m_act_sf.end_append(m_extra_name);
+            m_act_sf.end_append(opt_c_str(m_extra_name));
         }
         if (m_group_desc)
         {
             if (m_flags & DF_TMP_GROUP_DESC)
             {
-                remove(m_group_desc);
+                remove(m_group_desc->c_str());
             }
             else
             {
-                m_desc_sf.end_append(m_group_desc);
+                m_desc_sf.end_append(m_group_desc->c_str());
             }
         }
     }
@@ -575,7 +578,7 @@ void DataSource ::close()
 
     if (m_flags & DF_REMOTE)
     {
-        DataSource* save_datasrc = g_data_source;
+        DataSource *save_datasrc = g_data_source;
         set_data_source(this);
         nntp_close(true);
         m_nntp_link = g_nntp_link;
@@ -595,10 +598,10 @@ bool DataSource::active_file_hash()
     int ret;
     if (m_flags & DF_REMOTE)
     {
-        DataSource* save_datasrc = g_data_source;
+        DataSource *save_datasrc = g_data_source;
         set_data_source(this);
         g_spin_todo = m_act_sf.m_recent_cnt;
-        ret = m_act_sf.open(m_extra_name, "active", m_news_id);
+        ret = m_act_sf.open(opt_c_str(m_extra_name), "active", m_news_id.c_str());
         if (g_spin_count > 0)
         {
             m_act_sf.m_recent_cnt = g_spin_count;
@@ -607,7 +610,7 @@ bool DataSource::active_file_hash()
     }
     else
     {
-        ret = m_act_sf.open(m_news_id, "", nullptr);
+        ret = m_act_sf.open(m_news_id.c_str(), "", nullptr);
     }
     return ret != 0;
 }
@@ -759,7 +762,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
                 goto try_xgtitle;
             }
             g_spin_todo = m_desc_sf.m_recent_cnt;
-            ret = m_desc_sf.open(m_group_desc, "newsgroups", m_news_id);
+            ret = m_desc_sf.open(m_group_desc->c_str(), "newsgroups", m_news_id.c_str());
             if (g_spin_count > 0)
             {
                 m_desc_sf.m_recent_cnt = g_spin_count;
@@ -767,17 +770,16 @@ const char *DataSource::find_group_desc(std::string_view group_name)
         }
         else
         {
-            ret = m_desc_sf.open(m_group_desc, "", nullptr);
+            ret = m_desc_sf.open(m_group_desc->c_str(), "", nullptr);
         }
         if (!ret)
         {
             if (m_flags & DF_TMP_GROUP_DESC)
             {
                 m_flags &= ~DF_TMP_GROUP_DESC;
-                remove(m_group_desc);
+                remove(m_group_desc->c_str());
             }
-            std::free(m_group_desc);
-            m_group_desc = nullptr;
+            m_group_desc.reset();
             return "";
         }
         if (ret == 2 || !m_desc_sf.m_refetch_secs)
@@ -788,7 +790,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
 
     if (HashDatum data = hash_fetch(m_desc_sf.m_hp, group_name); data.dat_ptr)
     {
-        ListNode*node = (ListNode*)data.dat_ptr;
+        ListNode *node = (ListNode *) data.dat_ptr;
         // m_act_sf.lp->recent = node;
         return node->data + data.dat_len + grouplen + 1;
     }
@@ -821,8 +823,7 @@ try_xgtitle:
             {
                 return find_group_desc(group_name);
             }
-            std::free(m_group_desc);
-            m_group_desc = nullptr;
+            m_group_desc.reset();
         }
     }
     return "";

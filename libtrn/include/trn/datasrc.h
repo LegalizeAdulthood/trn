@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -36,7 +37,7 @@ struct SourceFile
     HashTable  *m_hp;           // the hash table for the data
     List       *m_lp;           // the list used to store the data
     long        m_recent_cnt;   // # lines/bytes this file might be
-    std::time_t m_last_fetch;    // when the data was last fetched
+    std::time_t m_last_fetch;   // when the data was last fetched
     std::time_t m_refetch_secs; // how long before we refetch this file
 };
 
@@ -81,18 +82,18 @@ struct DataSource
     inline NNTPFlags nntp_flags() const;
     void             nntp_server_died();
 
-    char            *m_name;       // our user-friendly name
-    char            *m_news_id;    // the active file name or host name
-    SourceFile       m_act_sf;     // the active file's hashed contents
-    char            *m_group_desc; // the newsgroup description file or tmp
-    SourceFile       m_desc_sf;    // the group description's hashed contents
-    char            *m_extra_name; // local active.times or server's active file
-    NNTPLink         m_nntp_link;
-    char            *m_spool_dir;
-    char            *m_over_dir;
-    char            *m_over_fmt;
-    char            *m_auth_user;
-    char            *m_auth_pass;
+    std::string                m_name;       // our user-friendly name
+    std::string                m_news_id;    // the active file name or host name
+    SourceFile                 m_act_sf;     // the active file's hashed contents
+    std::optional<std::string> m_group_desc; // the newsgroup description file or tmp
+    SourceFile                 m_desc_sf;    // the group description's hashed contents
+    std::optional<std::string> m_extra_name; // local active.times or server's active file
+    NNTPLink                   m_nntp_link;
+    std::string                m_spool_dir;
+    std::optional<std::string> m_over_dir;
+    std::optional<std::string> m_over_fmt;
+    std::optional<std::string> m_auth_user;
+    std::optional<std::string> m_auth_pass;
     long             m_last_new_group; // time of last newgroup check
     std::FILE       *m_ov_in;          // the overview's file handle
     std::time_t      m_ov_opened;      // time overview file was opened

@@ -95,16 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 4: Data Source Strings
-
-Promote retained `DataSource` string members after slice 3.
-
-- Convert source names, filenames, server names, and auth strings to
-  `std::string` or `std::optional<std::string>`.
-- Preserve null versus empty where current callers distinguish missing
-  values.
-- Drop `save_str`, `safe_copy`, and matching frees for converted fields.
-
 ### Slice 5: Multirc Vector
 
 Replace `g_multirc_list` with `std::vector<Multirc>`.

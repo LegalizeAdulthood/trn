@@ -669,8 +669,8 @@ display_multirc:
             {
                 if (rp->flags & RF_ACTIVE)
                 {
-                    std::sprintf(g_buf+len, ", %s", rp->data_source->m_name);
-                    len += std::strlen(g_buf+len);
+                    std::sprintf(g_buf + len, ", %s", rp->data_source->m_name.c_str());
+                    len += std::strlen(g_buf + len);
                 }
             }
             if (rp)
@@ -997,82 +997,74 @@ void trn_version()
             {
                 continue;
             }
-            auto result = fmt::format_to_n(
-                    g_msg,
-                    sizeof g_msg - 1,
-                    "ID {}:\nNewsrc {}.\n",
-                    rp->data_source->m_name,
-                    rp->name);
+            auto result =
+                fmt::format_to_n(g_msg, sizeof g_msg - 1, "ID {}:\nNewsrc {}.\n", rp->data_source->m_name, rp->name);
             *result.out = '\0';
             print_lines(g_msg, NO_MARKING);
             if (rp->data_source->m_flags & DF_REMOTE)
             {
-                std::sprintf(g_msg,"News from server %s.\n",rp->data_source->m_news_id);
+                std::sprintf(g_msg, "News from server %s.\n", rp->data_source->m_news_id.c_str());
                 print_lines(g_msg, NO_MARKING);
                 if (rp->data_source->m_act_sf.m_fp)
                 {
                     if (rp->data_source->m_flags & DF_TMP_ACTIVE_FILE)
                     {
-                        std::strcpy(g_msg,"Copy of remote active file");
+                        std::strcpy(g_msg, "Copy of remote active file");
                     }
                     else
                     {
-                        std::sprintf(g_msg,"Local active file: %s",
-                                rp->data_source->m_extra_name);
+                        std::sprintf(g_msg, "Local active file: %s", rp->data_source->m_extra_name->c_str());
                     }
                 }
                 else
                 {
-                    std::strcpy(g_msg,"Dynamic active file");
+                    std::strcpy(g_msg, "Dynamic active file");
                 }
                 if (rp->data_source->m_act_sf.m_refetch_secs)
                 {
                     const char *cp = secs_to_text(rp->data_source->m_act_sf.m_refetch_secs);
                     if (*cp != 'n')
                     {
-                        std::sprintf(g_msg+std::strlen(g_msg),
-                                " (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
+                        std::sprintf(g_msg + std::strlen(g_msg), " (refetch%s %s)", *cp == 'm' ? " if" : ":", cp);
                     }
                 }
-                std::strcat(g_msg,".\n");
+                std::strcat(g_msg, ".\n");
             }
             else
             {
-                std::sprintf(g_msg,"News from %s.\nLocal active file %s.\n",
-                        rp->data_source->m_spool_dir, rp->data_source->m_news_id);
+                std::sprintf(g_msg, "News from %s.\nLocal active file %s.\n", rp->data_source->m_spool_dir.c_str(),
+                             rp->data_source->m_news_id.c_str());
             }
             print_lines(g_msg, NO_MARKING);
             if (rp->data_source->m_group_desc)
             {
                 if (!rp->data_source->m_desc_sf.m_fp && rp->data_source->m_desc_sf.m_hp)
                 {
-                    std::strcpy(g_msg,"Dynamic group desc. file");
+                    std::strcpy(g_msg, "Dynamic group desc. file");
                 }
                 else if (rp->data_source->m_flags & DF_TMP_GROUP_DESC)
                 {
-                    std::strcpy(g_msg,"Copy of remote group desc. file");
+                    std::strcpy(g_msg, "Copy of remote group desc. file");
                 }
                 else
                 {
-                    std::sprintf(g_msg,"Group desc. file: %s",rp->data_source->m_group_desc);
+                    std::sprintf(g_msg, "Group desc. file: %s", rp->data_source->m_group_desc->c_str());
                 }
                 if (rp->data_source->m_desc_sf.m_refetch_secs)
                 {
                     const char *cp = secs_to_text(rp->data_source->m_desc_sf.m_refetch_secs);
                     if (*cp != 'n')
                     {
-                        std::sprintf(g_msg+std::strlen(g_msg),
-                                " (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
+                        std::sprintf(g_msg + std::strlen(g_msg), " (refetch%s %s)", *cp == 'm' ? " if" : ":", cp);
                     }
                 }
-                std::strcat(g_msg,".\n");
+                std::strcat(g_msg, ".\n");
                 print_lines(g_msg, NO_MARKING);
             }
             if (rp->data_source->m_flags & DF_TRY_OVERVIEW)
             {
-                std::sprintf(g_msg,"Overview files from %s.\n",
-                        rp->data_source->m_over_dir? rp->data_source->m_over_dir
-                                             : "the server");
+                std::sprintf(g_msg, "Overview files from %s.\n",
+                             rp->data_source->m_over_dir ? rp->data_source->m_over_dir->c_str() : "the server");
                 print_lines(g_msg, NO_MARKING);
             }
             print_lines("\n", NO_MARKING);

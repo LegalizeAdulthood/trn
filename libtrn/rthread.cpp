@@ -111,7 +111,7 @@ void thread_open()
             g_spin_todo = (g_last_art - g_abs_first).value_of() + 1;
             g_spin_estimate = (g_last_art - g_abs_first).value_of() + 1;
             (void) ov_data(g_abs_first, g_last_art, false);
-            if (g_data_source->m_ov_opened && find_existing && g_data_source->m_over_dir == nullptr)
+            if (g_data_source->m_ov_opened && find_existing && !g_data_source->m_over_dir)
             {
                 mark_missing_articles();
                 rc_to_bits();

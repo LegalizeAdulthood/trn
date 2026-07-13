@@ -123,10 +123,10 @@ int do_shell(const char *shell, const char *cmd)
 #endif
     if (g_data_source && (g_data_source->m_flags & DF_REMOTE))
     {
-        re_export(s_nntp_server_export,g_data_source->m_news_id,512);
+        re_export(s_nntp_server_export, g_data_source->m_news_id.c_str(), 512);
         if (g_data_source->m_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED)
         {
-            re_export(s_nntp_force_export,"yes",3);
+            re_export(s_nntp_force_export, "yes", 3);
         }
         else
         {
@@ -134,14 +134,14 @@ int do_shell(const char *shell, const char *cmd)
         }
         if (g_data_source->m_auth_user)
         {
-            int fd = open(g_nntp_auth_file.c_str(), O_WRONLY|O_CREAT, 0600);
+            int fd = open(g_nntp_auth_file.c_str(), O_WRONLY | O_CREAT, 0600);
             if (fd >= 0)
             {
-                write(fd, g_data_source->m_auth_user, std::strlen(g_data_source->m_auth_user));
+                write(fd, g_data_source->m_auth_user->c_str(), g_data_source->m_auth_user->size());
                 write(fd, "\n", 1);
                 if (g_data_source->m_auth_pass)
                 {
-                    write(fd, g_data_source->m_auth_pass, std::strlen(g_data_source->m_auth_pass));
+                    write(fd, g_data_source->m_auth_pass->c_str(), g_data_source->m_auth_pass->size());
                     write(fd, "\n", 1);
                 }
                 close(fd);
@@ -150,15 +150,15 @@ int do_shell(const char *shell, const char *cmd)
         if (g_nntp_link.port_number)
         {
             int len = std::strlen(s_nntp_server_export);
-            std::sprintf(g_buf,";%d",g_nntp_link.port_number);
-            if (len + (int)std::strlen(g_buf) < 511)
+            std::sprintf(g_buf, ";%d", g_nntp_link.port_number);
+            if (len + (int) std::strlen(g_buf) < 511)
             {
-                std::strcpy(s_nntp_server_export+len, g_buf);
+                std::strcpy(s_nntp_server_export + len, g_buf);
             }
         }
         if (g_data_source->m_act_sf.m_fp)
         {
-            re_export(s_newsa_ctive_export, g_data_source->m_extra_name, 512);
+            re_export(s_newsa_ctive_export, g_data_source->m_extra_name->c_str(), 512);
         }
         else
         {
@@ -171,7 +171,7 @@ int do_shell(const char *shell, const char *cmd)
         un_export(s_nntp_force_export);
         if (g_data_source)
         {
-            re_export(s_newsa_ctive_export, g_data_source->m_news_id, 512);
+            re_export(s_newsa_ctive_export, g_data_source->m_news_id.c_str(), 512);
         }
         else
         {
@@ -180,7 +180,8 @@ int do_shell(const char *shell, const char *cmd)
     }
     if (g_data_source)
     {
-        re_export(s_group_desc_export, g_data_source->m_group_desc, 512);
+        re_export(s_group_desc_export, g_data_source->m_group_desc ? g_data_source->m_group_desc->c_str() : nullptr,
+                  512);
     }
     else
     {
@@ -656,12 +657,12 @@ char *temp_filename()
 
 char *get_auth_user()
 {
-    return g_data_source->m_auth_user;
+    return g_data_source->m_auth_user ? g_data_source->m_auth_user->data() : nullptr;
 }
 
 char *get_auth_pass()
 {
-    return g_data_source->m_auth_pass;
+    return g_data_source->m_auth_pass ? g_data_source->m_auth_pass->data() : nullptr;
 }
 
 /// @brief Processes an input buffer containing INI-style data to prepare it for parsing.

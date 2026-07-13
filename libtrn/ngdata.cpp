@@ -166,9 +166,10 @@ int access_newsgroup()
 
 void chdir_news_dir()
 {
-    if (change_dir(g_data_source->m_spool_dir) || (!(g_data_source->m_flags & DF_REMOTE) && change_dir(g_newsgroup_dir)))
+    if (change_dir(g_data_source->m_spool_dir.c_str()) ||
+        (!(g_data_source->m_flags & DF_REMOTE) && change_dir(g_newsgroup_dir)))
     {
-        std::printf(g_no_cd,g_newsgroup_dir.c_str());
+        std::printf(g_no_cd, g_newsgroup_dir.c_str());
         sig_catcher(0);
     }
 }
