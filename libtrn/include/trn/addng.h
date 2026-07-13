@@ -9,6 +9,7 @@
 #include <trn/enum-flags.h>
 
 #include <cstdint>
+#include <string_view>
 
 struct DataSource;
 
@@ -32,7 +33,7 @@ struct AddGroup
     NewsgroupNum  m_num;     // a possible sort order for this group
     AddGroupFlags m_flags;
     char          m_name[1];
-    int           add_group_perform(char *cmdlst, int output_level);
+    int           add_group_perform(std::string_view cmdlst, int output_level);
 };
 
 extern AddGroup *g_first_add_group;

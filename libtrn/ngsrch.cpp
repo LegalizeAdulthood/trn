@@ -117,7 +117,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
                 {
                     return NGS_FOUND;
                 }
-                if (gp->add_group_perform(cmdlst.data(), output_level && g_page_line == 1) < 0)
+                if (gp->add_group_perform(cmdlst, output_level && g_page_line == 1) < 0)
                 {
                     return NGS_INTR;
                 }

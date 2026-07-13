@@ -342,17 +342,24 @@ function made a fixed-size command copy only to survive command handlers
 that reuse `g_buf` or the caller command list.  A local `std::string`
 keeps the same ownership boundary without the arbitrary local limit.
 
+After that slice, another rerun found `AddGroup::add_group_perform`.
+The callers already own command text as `std::string`, and the method
+only scans, skips, and reports the remaining command.  Promoting the
+parameter to `std::string_view` removes one mutable command pointer
+without changing ownership.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
 the `.newsrc` line-storage and home-grown `List` removals.
 
-- `char *` to `const char *`: two new one-function leaf slices were
-  found.  `nntp_handle_auth_err` stores authentication strings in local
-  variables that are only null-checked and formatted.  `get_tcp_socket`
-  stores string-literal failure causes only for `perror`.
-- `const char *` to `std::string_view`: no new simple one-function slice
-  was found.  Remaining candidates are null sentinels, C API boundaries,
+- `char *` to `const char *`: the earlier `nntp_handle_auth_err` and
+  `get_tcp_socket` findings are already const-correct in the source.
+  No new const-only one-function slice was found.
+- `const char *` or read-only `char *` to `std::string_view`:
+  `AddGroup::add_group_perform` was still taking a mutable command
+  pointer even though its callers already owned `std::string` command
+  text.  Remaining candidates are null sentinels, C API boundaries,
   encoded-text cursors, output-only helpers, command parsers, or helper
   families that must change with their callers.
 - `save_str` and `safe_copy` ownership: after the command-list copies,

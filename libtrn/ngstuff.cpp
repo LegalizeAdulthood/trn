@@ -35,9 +35,12 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 bool        g_one_command{}; // no ':' processing in perform()
 std::string g_save_dir;      // -d
@@ -944,7 +947,7 @@ int add_group_sel_perform()
     {
         if (!(gp->m_flags & g_sel_mask) ^ !!bits)
         {
-            if (gp->add_group_perform(cmdstr.data(), 0) < 0)
+            if (gp->add_group_perform(cmdstr, 0) < 0)
             {
                 break;
             }
@@ -956,10 +959,8 @@ break_out:
     return 1;
 }
 
-int AddGroup::add_group_perform(char *cmdlst, int output_level)
+int AddGroup::add_group_perform(std::string_view cmdlst, int output_level)
 {
-    int ch;
-
     if (output_level == 1)
     {
         std::printf("%s ",m_name);
@@ -967,8 +968,9 @@ int AddGroup::add_group_perform(char *cmdlst, int output_level)
     }
 
     g_perform_count++;
-    for (; (ch = *cmdlst) != 0; cmdlst++)
+    for (; !cmdlst.empty(); cmdlst.remove_prefix(1))
     {
+        const int ch = cmdlst.front();
         if (std::isspace(ch) || ch == ':')
         {
             continue;
@@ -985,7 +987,7 @@ int AddGroup::add_group_perform(char *cmdlst, int output_level)
         }
         else
         {
-            std::sprintf(g_msg,"Unknown command: %s",cmdlst);
+            *fmt::format_to_n(g_msg, sizeof g_msg - 1, "Unknown command: {}", cmdlst).out = '\0';
             error_msg(g_msg);
             return -1;
         }
