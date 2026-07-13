@@ -359,6 +359,12 @@ function already copies command text into local `std::string` storage
 before parsing, so the input boundary can become `std::string_view`
 while the legacy mutable cursor remains local.
 
+After that slice, another rerun found `nntp_handle_auth_err`.  The
+function formatted AUTHINFO commands into `g_ser_line` only to pass them
+to `nntp_command`, which now accepts `std::string_view`.  Building the
+owned command with `fmt::format` removes that temporary global C-buffer
+use.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -373,9 +379,11 @@ the `.newsrc` line-storage and home-grown `List` removals.
   text.  `ngstuff.cpp::newsgroup_perform` had the same read-only command
   shape and can also take `std::string_view`.  `ngstuff.cpp::perform`
   now accepts a view and keeps its mutable parser cursor inside the
-  existing local copy.  Remaining candidates are null sentinels, C API
-  boundaries, encoded-text cursors, output-only helpers, command
-  parsers, or helper families that must change with their callers.
+  existing local copy.  `nntp_handle_auth_err` now builds owned
+  AUTHINFO command strings instead of routing them through `g_ser_line`.
+  Remaining candidates are null sentinels, C API boundaries,
+  encoded-text cursors, output-only helpers, command parsers, or helper
+  families that must change with their callers.
 - `save_str` and `safe_copy` ownership: after the command-list copies,
   safe local owners were found in `scorefile.cpp::sf_do_file` and
   `scorefile.cpp::sf_missing_score`; `sf_add_extra_header` now builds

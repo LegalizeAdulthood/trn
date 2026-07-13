@@ -9,7 +9,8 @@
 #include <nntp/nntpclient.h>
 #include <trn/util.h>
 
-#include <cstdio>
+#include <fmt/format.h>
+
 #include <string>
 
 int nntp_handle_auth_err()
@@ -24,13 +25,11 @@ int nntp_handle_auth_err()
         {
             return -2;
         }
-        std::sprintf(g_ser_line, "AUTHINFO USER %s", auth_user);
-        if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
+        if (nntp_command(fmt::format("AUTHINFO USER {}", auth_user)) <= 0 || nntp_check() <= 0)
         {
             return -2;
         }
-        std::sprintf(g_ser_line, "AUTHINFO PASS %s", auth_pass);
-        if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
+        if (nntp_command(fmt::format("AUTHINFO PASS {}", auth_pass)) <= 0 || nntp_check() <= 0)
         {
             return -2;
         }
