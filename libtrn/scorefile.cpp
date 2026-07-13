@@ -1100,23 +1100,22 @@ void sf_append(char *line)
     std::string_view  scoretext{scoreline};
     const std::size_t scoretext_start = scoretext.find_first_not_of("0123456789+- \t");
     scoretext.remove_prefix(scoretext_start == std::string_view::npos ? scoretext.size() : scoretext_start);
+    std::string shortcut_scoreline;
 
     // special one-character shortcuts
     if (scoretext.size() == 1)
     {
-        static char lbuf[LINE_BUF_LEN];
+        const std::size_t prefix_size = scoretext.data() - scoreline;
         switch (scoretext.front())
         {
         case 'F': // domain-shortened FROM line
-            std::strcpy(lbuf, scoreline);
-            lbuf[std::strlen(lbuf) - 1] = '\0';
-            std::strcat(lbuf, file_exp("from: %y").c_str());
-            scoreline = lbuf;
+            shortcut_scoreline.assign(scoreline, prefix_size);
+            shortcut_scoreline += file_exp("from: %y");
+            scoreline = shortcut_scoreline.data();
             break;
 
         case 'S': // current subject
         {
-            std::strcpy(lbuf, scoreline);
             const char *s = fetch_cache(g_art, SUBJ_LINE, true);
             if (!s || !*s)
             {
@@ -1127,9 +1126,11 @@ void sf_append(char *line)
             {
                 s += 4;
             }
-            // change this next line if LINE_BUF_LEN changes
-            std::sprintf(lbuf + (std::strlen(lbuf) - 1), "subject: %.900s", s);
-            scoreline = lbuf;
+            shortcut_scoreline.assign(scoreline, prefix_size);
+            shortcut_scoreline += "subject: ";
+            // Preserve the historical LINE_BUF_LEN-derived subject limit.
+            shortcut_scoreline.append(std::string_view{s}.substr(0, 900));
+            scoreline = shortcut_scoreline.data();
             break;
         }
 

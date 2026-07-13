@@ -264,10 +264,6 @@ buffer slices.
 
 ### Copy/Concat Slices
 
-CC-05. `libtrn/scorefile.cpp`, `sf_append`: replace the shortcut
-scoreline `lbuf` construction for `F` and `S` with owned local string
-storage whose lifetime covers the later `sf_do_line` call.
-
 CC-06. `util/util2.cpp`, `file_exp`: remove the remaining local
 `strcpy`/`strcat` construction by assigning and appending
 `std::string`s directly while preserving `do_interp`'s output-size

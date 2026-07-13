@@ -3,12 +3,19 @@
 
 #include <trn/scorefile-internal.h>
 
+#include <trn/Article.h>
+#include <trn/cache.h>
 #include <trn/head.h>
 #include <trn/init.h>
+#include <trn/list.h>
 #include <trn/mempool.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
+#include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <util/env.h>
+#include <util/util2.h>
 
 #include <config/common.h>
 #include <test_config.h>
@@ -21,6 +28,7 @@
 #include <fstream>
 #include <string>
 #include <system_error>
+#include <vector>
 
 namespace
 {
@@ -28,6 +36,8 @@ namespace
 std::string g_fetched_url;
 
 namespace fs = std::filesystem;
+
+constexpr ArticleNum TEST_ARTICLE_NUM{1};
 
 bool fetch_score_url(std::string_view url, const char *outfile)
 {
@@ -46,6 +56,11 @@ protected:
         m_old_tmp_dir = g_tmp_dir;
         m_old_pid = g_our_pid;
         m_old_newsgroup_name = g_newsgroup_name;
+        m_old_article_list = g_article_list;
+        m_old_art = g_art;
+        m_old_last_art = g_last_art;
+        m_old_in_ng = g_in_ng;
+        m_old_parsed_art = g_parsed_art;
         m_old_term_line = g_term_line;
         m_old_term_col = g_term_col;
         m_old_term_scrolled = g_term_scrolled;
@@ -57,6 +72,18 @@ protected:
         g_sf_num_entries = 0;
         g_sf_verbose = false;
         g_sf_score_verbose = 0;
+        g_article_list = new_list(TEST_ARTICLE_NUM.value_of(), TEST_ARTICLE_NUM.value_of(), sizeof(Article), 1,
+                                  LF_ZERO_MEM, nullptr);
+        Article *article = article_ptr(TEST_ARTICLE_NUM);
+        article->m_num = TEST_ARTICLE_NUM;
+        article->m_flags = AF_EXISTS;
+        article->m_subj = &m_subject;
+        article->set_cached_line(FROM_LINE, save_str("casey@news.example.test"));
+        m_subject.m_str = m_subject_text;
+        g_art = TEST_ARTICLE_NUM;
+        g_last_art = TEST_ARTICLE_NUM;
+        g_in_ng = true;
+        g_parsed_art = ArticleNum{};
     }
 
     void TearDown() override
@@ -64,22 +91,48 @@ protected:
         sf_set_url_getter_for_test(nullptr);
         sf_clear_file_cache_for_test();
         sf_clean();
+        article_ptr(TEST_ARTICLE_NUM)->clear_article();
+        delete_list(g_article_list);
+        g_article_list = m_old_article_list;
         head_final();
         g_sf_num_entries = 0;
         g_tmp_dir = m_old_tmp_dir;
         g_our_pid = m_old_pid;
         g_newsgroup_name = m_old_newsgroup_name;
+        g_art = m_old_art;
+        g_last_art = m_old_last_art;
+        g_in_ng = m_old_in_ng;
+        g_parsed_art = m_old_parsed_art;
         g_term_line = m_old_term_line;
         g_term_col = m_old_term_col;
         g_term_scrolled = m_old_term_scrolled;
     }
 
+    std::vector<std::string> read_lines(const fs::path &path)
+    {
+        std::ifstream            input{path};
+        std::vector<std::string> lines;
+        std::string              line;
+        while (std::getline(input, line))
+        {
+            lines.push_back(line);
+        }
+        return lines;
+    }
+
     std::string m_old_tmp_dir;
     std::string m_old_newsgroup_name;
+    List       *m_old_article_list{};
+    ArticleNum  m_old_art{};
+    ArticleNum  m_old_last_art{};
+    bool        m_old_in_ng{};
+    ArticleNum  m_old_parsed_art{};
     long        m_old_pid{};
     int         m_old_term_line{};
     int         m_old_term_col{};
     int         m_old_term_scrolled{};
+    Subject     m_subject{};
+    char        m_subject_text[64]{"Re: Compact Subject"};
 };
 
 } // namespace
@@ -107,6 +160,42 @@ TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)
 
     EXPECT_EQ("http://example.test/scores", g_fetched_url);
     EXPECT_EQ(3, g_sf_num_entries);
+}
+
+TEST_F(ScoreFileTest, appendFromShortcutWritesShortenedFromRule)
+{
+    const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-append-from"};
+    const fs::path    score_file{score_dir + "/comp.lang.apl"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+    g_newsgroup_name = "comp.lang.apl";
+
+    trn::testing::MockEnvironment env;
+    env.expect_env("SCOREDIR", score_dir.c_str());
+
+    char line[]{"\" 10 F"};
+    sf_append(line);
+
+    EXPECT_EQ((std::vector<std::string>{"10 from: casey@*.example.test"}), read_lines(score_file));
+}
+
+TEST_F(ScoreFileTest, appendSubjectShortcutWritesSubjectRule)
+{
+    const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-append-subject"};
+    const fs::path    score_file{score_dir + "/comp.lang.apl"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+    g_newsgroup_name = "comp.lang.apl";
+
+    trn::testing::MockEnvironment env;
+    env.expect_env("SCOREDIR", score_dir.c_str());
+
+    char line[]{"\" 10 S"};
+    sf_append(line);
+
+    EXPECT_EQ((std::vector<std::string>{"10 subject: compact subject"}), read_lines(score_file));
 }
 
 TEST_F(ScoreFileTest, editLocalFileBuildsExpandedEditorCommand)
