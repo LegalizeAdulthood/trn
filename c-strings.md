@@ -260,16 +260,6 @@ remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
-### Local Modernization Slices
-
-BUF-10. `libtrn/scorefile.cpp`, `sf_open_file`: replace the URL
-scratch `lbuf[1024]` with local owned string storage before calling
-`url_get`.  The temporary URL string is consumed in the same function;
-the stored score-file name and temporary downloaded filename remain
-owned by the existing score-file state.  The URL truncation is
-arbitrary fixed scratch space, not a meaningful URL or score-file
-limit.
-
 ### Filesystem Path Slices
 
 ## Defer

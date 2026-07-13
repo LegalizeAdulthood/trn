@@ -65,6 +65,7 @@ add_executable(trn-headers-test
     test_scmd.cpp
     test_score-easy.cpp
     test_score.cpp
+    test_scorefile-internal.cpp
     test_scorefile.cpp
     test_scoresave.cpp
     test_sdisp.cpp

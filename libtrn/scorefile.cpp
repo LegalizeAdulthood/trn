@@ -6,7 +6,7 @@
 // This file Copyright 1992, 1993 by Clifford A. Adams
 // Copyright (c) 2026, Richard Thomson
 
-#include <trn/scorefile.h>
+#include <trn/scorefile-internal.h>
 
 #include <config/common.h>
 #include <config/string_case_compare.h>
@@ -38,6 +38,7 @@
 namespace fs = std::filesystem;
 
 static std::string_view sf_get_extra_header(ArticleNum art, int hnum);
+static bool             sf_default_url_get(std::string_view url, const char *outfile);
 
 int  g_sf_num_entries{};   // # of entries
 int  g_sf_score_verbose{}; // when true, the scoring routine prints lots of info...
@@ -69,6 +70,7 @@ static char            s_sf_buf[LINE_BUF_LEN]{};
 static char          **s_sf_extra_headers{};
 static int             s_sf_num_extra_headers{};
 static bool            s_sf_has_extra_headers{};
+static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(const char *name);
@@ -88,6 +90,21 @@ static char *sf_missing_score(const char *line);
 static char *sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
 static void  sf_exclude_file(const char *fname);
+
+static bool sf_default_url_get(std::string_view url, const char *outfile)
+{
+    return url_get(url, outfile);
+}
+
+void sf_set_url_getter_for_test(ScoreFileUrlGetter getter)
+{
+    s_url_getter = getter != nullptr ? getter : sf_default_url_get;
+}
+
+void sf_clear_file_cache_for_test()
+{
+    sf_file_clear();
+}
 
 // Must be called before any other sf_ routine (once for each group)
 void sf_init()
@@ -1464,11 +1481,8 @@ static int sf_open_file(const char *name)
     char *temp_name = nullptr;
     if (string_case_equal(name, "URL:", 4))
     {
-        char lbuf[1024];
-        safe_copy(lbuf,name,sizeof lbuf - 4);
-        name = lbuf;
         temp_name = temp_filename();
-        if (!url_get(name+4,temp_name))
+        if (!s_url_getter(std::string_view{name}.substr(4), temp_name))
         {
             name = nullptr;
         }

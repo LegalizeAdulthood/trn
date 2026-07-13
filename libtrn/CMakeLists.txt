@@ -64,7 +64,7 @@ add_library(libtrn
     scmd.cpp include/trn/scmd.h include/trn/scmd-internal.h
     score-easy.cpp include/trn/score-easy.h
     score.cpp include/trn/score.h
-    scorefile.cpp include/trn/scorefile.h
+    scorefile.cpp include/trn/scorefile.h include/trn/scorefile-internal.h
     scoresave.cpp include/trn/scoresave.h
     sdisp.cpp include/trn/sdisp.h
     search.cpp include/trn/search.h
