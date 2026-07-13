@@ -959,14 +959,14 @@ void check_active_refetch(bool force)
 {
     std::time_t now = std::time(nullptr);
 
-    for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
+    for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {
         if (!all_bits(dp->m_flags, DF_OPEN | DF_ACTIVE))
         {
             continue;
         }
-        if (dp->m_act_sf.m_fp && dp->m_act_sf.m_refetch_secs
-         && (force || now - dp->m_act_sf.m_last_fetch > dp->m_act_sf.m_refetch_secs))
+        if (dp->m_act_sf.m_fp && dp->m_act_sf.m_refetch_secs &&
+            (force || now - dp->m_act_sf.m_last_fetch > dp->m_act_sf.m_refetch_secs))
         {
             dp->active_file_hash();
         }

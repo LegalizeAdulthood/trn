@@ -52,13 +52,13 @@ struct utimbuf
 #include <ctime>
 #include <string>
 #include <string_view>
+#include <vector>
 
-List       *g_data_source_list{};                     // a list of all data sources
-DataSource *g_data_source{};                          // the current data source
-int         g_data_source_cnt{};                      //
-char       *g_trn_access_mem{};                       //
-std::string g_nntp_auth_file;                         //
-time_t      g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
+std::vector<DataSource> g_data_sources;                           // all data sources
+DataSource             *g_data_source{};                          // the current data source
+char                   *g_trn_access_mem{};                       //
+std::string             g_nntp_auth_file;                         //
+time_t                  g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
 
 enum
 {
@@ -81,16 +81,16 @@ static char       *read_data_sources(const char *filename);
 /// use by other parts of the application.
 ///
 /// Global variables initialized:
-/// - `g_data_source_list`: The global list of data sources.
+/// - `g_data_sources`: The global list of data sources.
 /// - `g_nntp_auth_file`: The NNTP authentication file path.
 /// - `g_trn_access_mem`: Memory for TRN access configuration.
-/// - `g_data_source_cnt`: The count of data sources.
 ///
 void data_source_init()
 {
-    char* actname = nullptr;
+    char *actname = nullptr;
 
-    g_data_source_list = new_list(0,0,sizeof(DataSource),20,LF_ZERO_MEM,nullptr);
+    g_data_sources.clear();
+    g_data_sources.reserve(20);
 
     g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
 
@@ -153,20 +153,18 @@ void data_source_init()
     }
 }
 
-
 void data_source_finalize()
 {
-    if (g_data_source_list)
+    if (!g_data_sources.empty())
     {
-        for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
+        for (DataSource &data_source : g_data_sources)
         {
-            dp->close();
+            data_source.close();
         }
 
-        delete_list(g_data_source_list);
-        g_data_source_list = nullptr;
+        g_data_sources.clear();
     }
-    g_data_source_cnt = 0;
+    g_data_source = nullptr;
     g_nntp_auth_file.clear();
 }
 
@@ -212,7 +210,7 @@ static char *read_data_sources(const char *filename)
 
 DataSource *get_data_source(std::string_view name)
 {
-    for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
+    for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {
         if (std::string_view{dp->m_name} == name)
         {
@@ -224,19 +222,20 @@ DataSource *get_data_source(std::string_view name)
 
 static DataSource *new_data_source(const char *name, const DataSourceConfig &config)
 {
-    DataSource* dp = data_source_ptr(g_data_source_cnt++);
+    if (config.nntp_server() == nullptr && config.active_file() == nullptr)
+    {
+        return nullptr;
+    }
+
+    DataSource *dp = &g_data_sources.emplace_back();
 
     if (config.nntp_server())
     {
         dp->m_flags |= DF_REMOTE;
     }
-    else if (!config.active_file())
-    {
-        return nullptr;
-    }
 
     dp->m_name = save_str(name);
-    if (!std::strcmp(name,"default"))
+    if (!std::strcmp(name, "default"))
     {
         dp->m_flags |= DF_DEFAULT;
     }
@@ -524,16 +523,16 @@ void check_data_sources()
 {
     std::time_t now = std::time(nullptr);
 
-    if (g_data_source_list)
+    if (!g_data_sources.empty())
     {
-        for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
+        for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
         {
             if ((dp->m_flags & DF_OPEN) && dp->m_nntp_link.connection)
             {
                 std::time_t limit = ((dp->m_flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
                 if (now - dp->m_nntp_link.last_command > limit)
                 {
-                    DataSource* save_datasrc = g_data_source;
+                    DataSource *save_datasrc = g_data_source;
                     set_data_source(dp);
                     nntp_close(true);
                     dp->m_nntp_link = g_nntp_link;
@@ -1183,7 +1182,7 @@ int find_close_match()
     s_newsgroup_num = 0;
 
     // Iterate over all legal newsgroups
-    for (DataSource *dp = data_source_first(); dp && !empty(dp->m_name); dp = data_source_next(dp))
+    for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {
         if (dp->m_flags & DF_OPEN)
         {

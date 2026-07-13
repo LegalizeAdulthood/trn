@@ -7,14 +7,15 @@
 
 #include <nntp/nntpclient.h>
 #include <trn/enum-flags.h>
-#include <trn/list.h>
 #include <trn/rt-ov.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
 #include <string>
 #include <string_view>
+#include <vector>
 
 enum
 {
@@ -109,12 +110,11 @@ enum
     DATASRC_ALARM_SECS = (5 * 60)
 };
 
-extern List       *g_data_source_list; // a list of all data sources
-extern DataSource *g_data_source;      // the current data source
-extern int         g_data_source_cnt;  //
-extern char       *g_trn_access_mem;   //
-extern std::string g_nntp_auth_file;   //
-extern std::time_t g_def_refetch_secs; // -z
+extern std::vector<DataSource> g_data_sources;     // all data sources
+extern DataSource             *g_data_source;      // the current data source
+extern char                   *g_trn_access_mem;   //
+extern std::string             g_nntp_auth_file;   //
+extern std::time_t             g_def_refetch_secs; // -z
 
 void        data_source_init();
 void        data_source_finalize();
@@ -128,9 +128,9 @@ inline NNTPFlags DataSource::nntp_flags() const
     return this == g_data_source ? g_nntp_link.flags : m_nntp_link.flags;
 }
 
-inline DataSource *data_source_ptr(int n)
+inline DataSource *data_source_ptr(std::size_t n)
 {
-    return (DataSource *) g_data_source_list->list_get_item(n);
+    return n < g_data_sources.size() ? &g_data_sources[n] : nullptr;
 }
 
 inline DataSource *data_source_first()
@@ -140,7 +140,8 @@ inline DataSource *data_source_first()
 
 inline DataSource *data_source_next(DataSource *p)
 {
-    return (DataSource *) g_data_source_list->next_list_item((char *) p);
+    const std::size_t n = static_cast<std::size_t>(p - g_data_sources.data()) + 1;
+    return data_source_ptr(n);
 }
 
 #endif

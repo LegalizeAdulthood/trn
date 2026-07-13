@@ -95,17 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 3: Data Source Vector
-
-Replace `g_data_source_list` with `std::vector<DataSource>`.
-
-- Replace `data_source_ptr`, `data_source_first`, and
-  `data_source_next` with vector-backed helpers.
-- Replace `new_list` and `delete_list` in data source init/finalize.
-- Build all data sources before `Newsrc::data_source` pointers are
-  assigned.
-- Preserve the current default-source path.
-
 ### Slice 4: Data Source Strings
 
 Promote retained `DataSource` string members after slice 3.
