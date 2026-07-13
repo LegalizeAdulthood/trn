@@ -258,6 +258,11 @@ when keeping runtime formatting is intentional.  Do not create fmt
 string-building slices for C-buffer `sprintf` sites; convert those when
 the C-style string buffer itself is refactored.
 
+Do not promote fields inside records stored by the raw `List` allocator
+to C++ owning types unless the storage path first constructs and
+destroys the objects.  `List` currently zeroes bytes for `LF_ZERO_MEM`
+records and frees nodes without running destructors.
+
 ## Refactoring Slices
 
 Most slices center on one function.  Add local includes and update the
@@ -287,22 +292,6 @@ all direct assignments must change together.  For `save_str` and
 `save_str` assignments, and matching `free` paths with `std::string`
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
-
-#### MIME Cap Entries
-
-Promote `MimeCapEntry::{content_type,command,test_command,description}`
-in `libtrn/include/trn/mime.h` to owned string storage.  The parser
-stores copied capability text with `save_str`; destruction can become
-ordinary object cleanup once the list nodes own strings.
-
-#### Data Source Strings
-
-Promote `DataSource` string members in `libtrn/include/trn/datasrc.h` to
-owned strings.  The strongest fields are `m_name`, `m_news_id`,
-`m_group_desc`, `m_extra_name`, `m_spool_dir`, `m_over_dir`,
-`m_over_fmt`, `m_auth_user`, and `m_auth_pass`.  Assignments in
-`libtrn/datasrc.cpp` already copy into retained storage with `save_str`.
-Preserve nullable semantics where callers distinguish missing values.
 
 ### Ubuntu `-Wwrite-strings` Slices
 
@@ -446,3 +435,11 @@ both declarations and definitions `static`.
   together.
 - Remaining struct fields with retained raw string storage are ownership
   model changes, not local function cleanups.
+- `MimeCapEntry::{content_type,command,test_command,description}` live
+  in `List` raw storage allocated with `LF_ZERO_MEM`.  Promote only after
+  MIME cap entries are stored in a container that constructs and
+  destroys owned string fields.
+- `DataSource` retained string fields live in `List` raw storage
+  allocated with `LF_ZERO_MEM`.  Promote only after data sources are
+  stored in a container that constructs and destroys owned string fields
+  and preserves the existing nullable states.
