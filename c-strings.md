@@ -264,11 +264,6 @@ buffer slices.
 
 ### Copy/Concat Slices
 
-CC-04. `libtrn/scorefile.cpp`, `sf_edit_file`: replace local
-`filebuf` copy/concat with owned string construction before expansion
-and directory creation.  Keep `sf_cmd_fname` storage behavior unchanged
-unless that helper is refactored in its own slice.
-
 CC-05. `libtrn/scorefile.cpp`, `sf_append`: replace the shortcut
 scoreline `lbuf` construction for `F` and `S` with owned local string
 storage whose lifetime covers the later `sf_do_line` call.

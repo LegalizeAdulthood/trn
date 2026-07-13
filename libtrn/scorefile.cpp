@@ -1399,29 +1399,28 @@ static void sf_exclude_file(const char *fname)
 //char* filespec;               // file abbrev. or name
 void sf_edit_file(const char *filespec)
 {
-    char filebuf[LINE_BUF_LEN];      // clean up buffers
-
     if (!filespec || !*filespec)
     {
         return;         // empty, do nothing (error later?)
     }
     char filechar = *filespec;
+    std::string file_name;
     // if more than one character use as filename
     if (filespec[1])
     {
-        std::strcpy(filebuf,filespec);
+        file_name = filespec;
     }
     else if (filechar == '"')   // edit local group
     {
         // Note: should probably be changed to use sf_ file functions
-        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        std::strcat(filebuf,"/%C");
+        file_name = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
+        file_name += "/%C";
     }
     else if (filechar == '*')   // edit global scorefile
     {
         // Note: should probably be changed to use sf_ file functions
-        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        std::strcat(filebuf,"/global");
+        file_name = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
+        file_name += "/global";
     }
     else        // abbreviation
     {
@@ -1430,19 +1429,19 @@ void sf_edit_file(const char *filespec)
             std::printf("\nBad file abbreviation: %c\n",filechar);
             return;
         }
-        std::strcpy(filebuf,s_sf_abbr[(int)filechar]);
+        file_name = s_sf_abbr[(int) filechar];
     }
-    char *fname_noexpand = sf_cmd_fname(filebuf);
-    std::strcpy(filebuf, file_exp(fname_noexpand).c_str());
+    const std::string fname_noexpand{sf_cmd_fname(file_name.data())};
+    const std::string expanded_file{file_exp(fname_noexpand)};
     // make sure directory exists...
-    if (!make_dir(filebuf, MD_FILE))
+    if (!make_dir(expanded_file.c_str(), MD_FILE))
     {
-        (void)edit_file(fname_noexpand);
+        (void)edit_file(fname_noexpand.c_str());
         sf_file_clear();
     }
     else
     {
-        std::printf("Can't make %s\n",filebuf);
+        std::printf("Can't make %s\n", expanded_file.c_str());
     }
 }
 
