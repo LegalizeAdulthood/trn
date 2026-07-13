@@ -8,6 +8,9 @@
 class IniSchema;
 class IniSectionValues;
 
+#include <optional>
+#include <string>
+
 enum class RcGroupConfigField
 {
     Id = 1,
@@ -30,39 +33,42 @@ public:
     void set_add_groups(const char *value);
 
 private:
-    const char *m_id{};
-    const char *m_newsrc{};
-    const char *m_add_groups{};
+    static const char *c_str(const std::optional<std::string> &value);
+    static void        set_value(std::optional<std::string> &target, const char *value);
+
+    std::optional<std::string> m_id;
+    std::optional<std::string> m_newsrc;
+    std::optional<std::string> m_add_groups;
 };
 
 inline const char *RcGroupConfig::id() const
 {
-    return m_id;
+    return c_str(m_id);
 }
 
 inline const char *RcGroupConfig::newsrc() const
 {
-    return m_newsrc;
+    return c_str(m_newsrc);
 }
 
 inline const char *RcGroupConfig::add_groups() const
 {
-    return m_add_groups;
+    return c_str(m_add_groups);
 }
 
 inline void RcGroupConfig::set_id(const char *value)
 {
-    m_id = value;
+    set_value(m_id, value);
 }
 
 inline void RcGroupConfig::set_newsrc(const char *value)
 {
-    m_newsrc = value;
+    set_value(m_newsrc, value);
 }
 
 inline void RcGroupConfig::set_add_groups(const char *value)
 {
-    m_add_groups = value;
+    set_value(m_add_groups, value);
 }
 
 #endif

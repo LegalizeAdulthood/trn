@@ -15,14 +15,14 @@ constexpr int field_id(DataSourceConfigField field)
     return static_cast<int>(field);
 }
 
-const char *value_or_null(const IniSectionValues &values, DataSourceConfigField field)
+std::optional<std::string> value_or_null(const IniSectionValues &values, DataSourceConfigField field)
 {
     const auto value = values.value(field_id(field));
     if (!value.has_value())
     {
-        return nullptr;
+        return std::nullopt;
     }
-    return value->data();
+    return std::string{*value};
 }
 
 const IniSchema s_schema{
@@ -53,24 +53,41 @@ const IniSchema &DataSourceConfig::schema()
     return s_schema;
 }
 
+const char *DataSourceConfig::c_str(const std::optional<std::string> &value)
+{
+    return value.has_value() ? value->c_str() : nullptr;
+}
+
+void DataSourceConfig::set_value(std::optional<std::string> &target, const char *value)
+{
+    if (value == nullptr)
+    {
+        target.reset();
+    }
+    else
+    {
+        target = value;
+    }
+}
+
 DataSourceConfig DataSourceConfig::from(const IniSectionValues &values)
 {
     DataSourceConfig config;
-    config.set_nntp_server(value_or_null(values, DataSourceConfigField::NntpServer));
-    config.set_active_file(value_or_null(values, DataSourceConfigField::ActiveFile));
-    config.set_active_file_refetch(value_or_null(values, DataSourceConfigField::ActiveFileRefetch));
-    config.set_spool_dir(value_or_null(values, DataSourceConfigField::SpoolDir));
-    config.set_thread_dir(value_or_null(values, DataSourceConfigField::ThreadDir));
-    config.set_overview_dir(value_or_null(values, DataSourceConfigField::OverviewDir));
-    config.set_active_times(value_or_null(values, DataSourceConfigField::ActiveTimes));
-    config.set_group_desc(value_or_null(values, DataSourceConfigField::GroupDesc));
-    config.set_group_desc_refetch(value_or_null(values, DataSourceConfigField::GroupDescRefetch));
-    config.set_auth_user(value_or_null(values, DataSourceConfigField::AuthUser));
-    config.set_auth_password(value_or_null(values, DataSourceConfigField::AuthPassword));
-    config.set_auth_command(value_or_null(values, DataSourceConfigField::AuthCommand));
-    config.set_xhdr_broken(value_or_null(values, DataSourceConfigField::XhdrBroken));
-    config.set_xrefs(value_or_null(values, DataSourceConfigField::Xrefs));
-    config.set_overview_format_file(value_or_null(values, DataSourceConfigField::OverviewFormatFile));
-    config.set_force_auth(value_or_null(values, DataSourceConfigField::ForceAuth));
+    config.m_nntp_server = value_or_null(values, DataSourceConfigField::NntpServer);
+    config.m_active_file = value_or_null(values, DataSourceConfigField::ActiveFile);
+    config.m_active_file_refetch = value_or_null(values, DataSourceConfigField::ActiveFileRefetch);
+    config.m_spool_dir = value_or_null(values, DataSourceConfigField::SpoolDir);
+    config.m_thread_dir = value_or_null(values, DataSourceConfigField::ThreadDir);
+    config.m_overview_dir = value_or_null(values, DataSourceConfigField::OverviewDir);
+    config.m_active_times = value_or_null(values, DataSourceConfigField::ActiveTimes);
+    config.m_group_desc = value_or_null(values, DataSourceConfigField::GroupDesc);
+    config.m_group_desc_refetch = value_or_null(values, DataSourceConfigField::GroupDescRefetch);
+    config.m_auth_user = value_or_null(values, DataSourceConfigField::AuthUser);
+    config.m_auth_password = value_or_null(values, DataSourceConfigField::AuthPassword);
+    config.m_auth_command = value_or_null(values, DataSourceConfigField::AuthCommand);
+    config.m_xhdr_broken = value_or_null(values, DataSourceConfigField::XhdrBroken);
+    config.m_xrefs = value_or_null(values, DataSourceConfigField::Xrefs);
+    config.m_overview_format_file = value_or_null(values, DataSourceConfigField::OverviewFormatFile);
+    config.m_force_auth = value_or_null(values, DataSourceConfigField::ForceAuth);
     return config;
 }

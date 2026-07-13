@@ -8,6 +8,9 @@
 class IniSchema;
 class IniSectionValues;
 
+#include <optional>
+#include <string>
+
 enum class DataSourceConfigField
 {
     NntpServer = 1,
@@ -69,182 +72,185 @@ public:
     void set_force_auth(const char *value);
 
 private:
-    const char *m_nntp_server{};
-    const char *m_active_file{};
-    const char *m_active_file_refetch{};
-    const char *m_spool_dir{};
-    const char *m_thread_dir{};
-    const char *m_overview_dir{};
-    const char *m_active_times{};
-    const char *m_group_desc{};
-    const char *m_group_desc_refetch{};
-    const char *m_auth_user{};
-    const char *m_auth_password{};
-    const char *m_auth_command{};
-    const char *m_xhdr_broken{};
-    const char *m_xrefs{};
-    const char *m_overview_format_file{};
-    const char *m_force_auth{};
+    static const char *c_str(const std::optional<std::string> &value);
+    static void        set_value(std::optional<std::string> &target, const char *value);
+
+    std::optional<std::string> m_nntp_server;
+    std::optional<std::string> m_active_file;
+    std::optional<std::string> m_active_file_refetch;
+    std::optional<std::string> m_spool_dir;
+    std::optional<std::string> m_thread_dir;
+    std::optional<std::string> m_overview_dir;
+    std::optional<std::string> m_active_times;
+    std::optional<std::string> m_group_desc;
+    std::optional<std::string> m_group_desc_refetch;
+    std::optional<std::string> m_auth_user;
+    std::optional<std::string> m_auth_password;
+    std::optional<std::string> m_auth_command;
+    std::optional<std::string> m_xhdr_broken;
+    std::optional<std::string> m_xrefs;
+    std::optional<std::string> m_overview_format_file;
+    std::optional<std::string> m_force_auth;
 };
 
 inline const char *DataSourceConfig::nntp_server() const
 {
-    return m_nntp_server;
+    return c_str(m_nntp_server);
 }
 
 inline const char *DataSourceConfig::active_file() const
 {
-    return m_active_file;
+    return c_str(m_active_file);
 }
 
 inline const char *DataSourceConfig::active_file_refetch() const
 {
-    return m_active_file_refetch;
+    return c_str(m_active_file_refetch);
 }
 
 inline const char *DataSourceConfig::spool_dir() const
 {
-    return m_spool_dir;
+    return c_str(m_spool_dir);
 }
 
 inline const char *DataSourceConfig::thread_dir() const
 {
-    return m_thread_dir;
+    return c_str(m_thread_dir);
 }
 
 inline const char *DataSourceConfig::overview_dir() const
 {
-    return m_overview_dir;
+    return c_str(m_overview_dir);
 }
 
 inline const char *DataSourceConfig::active_times() const
 {
-    return m_active_times;
+    return c_str(m_active_times);
 }
 
 inline const char *DataSourceConfig::group_desc() const
 {
-    return m_group_desc;
+    return c_str(m_group_desc);
 }
 
 inline const char *DataSourceConfig::group_desc_refetch() const
 {
-    return m_group_desc_refetch;
+    return c_str(m_group_desc_refetch);
 }
 
 inline const char *DataSourceConfig::auth_user() const
 {
-    return m_auth_user;
+    return c_str(m_auth_user);
 }
 
 inline const char *DataSourceConfig::auth_password() const
 {
-    return m_auth_password;
+    return c_str(m_auth_password);
 }
 
 inline const char *DataSourceConfig::auth_command() const
 {
-    return m_auth_command;
+    return c_str(m_auth_command);
 }
 
 inline const char *DataSourceConfig::xhdr_broken() const
 {
-    return m_xhdr_broken;
+    return c_str(m_xhdr_broken);
 }
 
 inline const char *DataSourceConfig::xrefs() const
 {
-    return m_xrefs;
+    return c_str(m_xrefs);
 }
 
 inline const char *DataSourceConfig::overview_format_file() const
 {
-    return m_overview_format_file;
+    return c_str(m_overview_format_file);
 }
 
 inline const char *DataSourceConfig::force_auth() const
 {
-    return m_force_auth;
+    return c_str(m_force_auth);
 }
 
 inline void DataSourceConfig::set_nntp_server(const char *value)
 {
-    m_nntp_server = value;
+    set_value(m_nntp_server, value);
 }
 
 inline void DataSourceConfig::set_active_file(const char *value)
 {
-    m_active_file = value;
+    set_value(m_active_file, value);
 }
 
 inline void DataSourceConfig::set_active_file_refetch(const char *value)
 {
-    m_active_file_refetch = value;
+    set_value(m_active_file_refetch, value);
 }
 
 inline void DataSourceConfig::set_spool_dir(const char *value)
 {
-    m_spool_dir = value;
+    set_value(m_spool_dir, value);
 }
 
 inline void DataSourceConfig::set_thread_dir(const char *value)
 {
-    m_thread_dir = value;
+    set_value(m_thread_dir, value);
 }
 
 inline void DataSourceConfig::set_overview_dir(const char *value)
 {
-    m_overview_dir = value;
+    set_value(m_overview_dir, value);
 }
 
 inline void DataSourceConfig::set_active_times(const char *value)
 {
-    m_active_times = value;
+    set_value(m_active_times, value);
 }
 
 inline void DataSourceConfig::set_group_desc(const char *value)
 {
-    m_group_desc = value;
+    set_value(m_group_desc, value);
 }
 
 inline void DataSourceConfig::set_group_desc_refetch(const char *value)
 {
-    m_group_desc_refetch = value;
+    set_value(m_group_desc_refetch, value);
 }
 
 inline void DataSourceConfig::set_auth_user(const char *value)
 {
-    m_auth_user = value;
+    set_value(m_auth_user, value);
 }
 
 inline void DataSourceConfig::set_auth_password(const char *value)
 {
-    m_auth_password = value;
+    set_value(m_auth_password, value);
 }
 
 inline void DataSourceConfig::set_auth_command(const char *value)
 {
-    m_auth_command = value;
+    set_value(m_auth_command, value);
 }
 
 inline void DataSourceConfig::set_xhdr_broken(const char *value)
 {
-    m_xhdr_broken = value;
+    set_value(m_xhdr_broken, value);
 }
 
 inline void DataSourceConfig::set_xrefs(const char *value)
 {
-    m_xrefs = value;
+    set_value(m_xrefs, value);
 }
 
 inline void DataSourceConfig::set_overview_format_file(const char *value)
 {
-    m_overview_format_file = value;
+    set_value(m_overview_format_file, value);
 }
 
 inline void DataSourceConfig::set_force_auth(const char *value)
 {
-    m_force_auth = value;
+    set_value(m_force_auth, value);
 }
 
 #endif

@@ -15,14 +15,14 @@ constexpr int field_id(RcGroupConfigField field)
     return static_cast<int>(field);
 }
 
-const char *value_or_null(const IniSectionValues &values, RcGroupConfigField field)
+std::optional<std::string> value_or_null(const IniSectionValues &values, RcGroupConfigField field)
 {
     const auto value = values.value(field_id(field));
     if (!value.has_value())
     {
-        return nullptr;
+        return std::nullopt;
     }
-    return value->data();
+    return std::string{*value};
 }
 
 const IniSchema s_schema{"RCGROUPS",
@@ -39,11 +39,28 @@ const IniSchema &RcGroupConfig::schema()
     return s_schema;
 }
 
+const char *RcGroupConfig::c_str(const std::optional<std::string> &value)
+{
+    return value.has_value() ? value->c_str() : nullptr;
+}
+
+void RcGroupConfig::set_value(std::optional<std::string> &target, const char *value)
+{
+    if (value == nullptr)
+    {
+        target.reset();
+    }
+    else
+    {
+        target = value;
+    }
+}
+
 RcGroupConfig RcGroupConfig::from(const IniSectionValues &values)
 {
     RcGroupConfig config;
-    config.set_id(value_or_null(values, RcGroupConfigField::Id));
-    config.set_newsrc(value_or_null(values, RcGroupConfigField::Newsrc));
-    config.set_add_groups(value_or_null(values, RcGroupConfigField::AddGroups));
+    config.m_id = value_or_null(values, RcGroupConfigField::Id);
+    config.m_newsrc = value_or_null(values, RcGroupConfigField::Newsrc);
+    config.m_add_groups = value_or_null(values, RcGroupConfigField::AddGroups);
     return config;
 }
