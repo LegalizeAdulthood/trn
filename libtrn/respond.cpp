@@ -929,13 +929,14 @@ done:
 void forward()
 {
     char hbuf[5*LINE_BUF_LEN];
-    char* maildoer = save_str(get_val_const("FORWARDPOSTER",FORWARD_POSTER));
+    const std::string maildoer{get_val_const("FORWARDPOSTER", FORWARD_POSTER)};
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
     char* eol;
+    std::string mime_boundary_storage;
 #endif
-    char* mime_boundary;
+    const char *mime_boundary;
 
 #ifdef REGEX_WORKS_RIGHT
     mime_compex.init_compex();
@@ -988,13 +989,14 @@ void forward()
                 s = skip_eq(++s, ' ');
                 if (*s == 'b' && string_case_equal(s, "boundary=\"", 10))
                 {
-                    mime_boundary = s+10;
-                    s = std::strchr(mime_boundary, '"');
+                    char *boundary = s + 10;
+                    s = std::strchr(boundary, '"');
                     if (s != nullptr)
                     {
                         *s = '\0';
                     }
-                    mime_boundary = save_str(mime_boundary);
+                    mime_boundary_storage = boundary;
+                    mime_boundary = mime_boundary_storage.c_str();
                     if (s)
                     {
                         *s = '"';
@@ -1005,7 +1007,7 @@ void forward()
         }
     }
 #endif
-    if (!in_string(maildoer, "%h", true))
+    if (!in_string(maildoer.c_str(), "%h", true))
     {
         if (g_verbose)
         {
@@ -1061,12 +1063,10 @@ void forward()
     safe_copy(g_cmd_buf, file_exp(maildoer).c_str(), sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_orig_dir.c_str());
 done:
-    std::free(maildoer);
 #ifdef REGEX_WORKS_RIGHT
     mime_compex.free_compex();
-#else
-    safe_free(mime_boundary);
 #endif
+    return;
 }
 
 void followup()

@@ -348,13 +348,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Forward Mailer Command And Boundary
-
-In `libtrn/respond.cpp`, `forward` has the same local `FORWARDPOSTER`
-copy as `reply`.  It also uses a local saved MIME boundary in the
-non-regex branch.  Replace both with owned strings while preserving the
-`REGEX_WORKS_RIGHT` branch and the empty/no-boundary distinction.
-
 ### Copy/Concat Slices
 
 ### Global String Storage Slices
