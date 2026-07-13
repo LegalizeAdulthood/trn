@@ -323,6 +323,11 @@ After that slice, another rerun found `scorefile.cpp::sf_missing_score`.
 It saves a line across `finish_command` because the line may point into
 `g_buf`; local `std::string` preserves the text without a raw heap copy.
 
+After that slice, another rerun found `scorefile.cpp::sf_add_extra_header`.
+It lowercased a retained `save_str` result before storing the pointer.
+The lowercasing can use the existing local `std::string` and then store
+one retained copy.
+
 ### Explicit Criteria Rerun
 
 The explicit criteria pass was rerun against the current source after
@@ -338,9 +343,11 @@ the `.newsrc` line-storage and home-grown `List` removals.
   families that must change with their callers.
 - `save_str` and `safe_copy` ownership: after the command-list copies,
   safe local owners were found in `scorefile.cpp::sf_do_file` and
-  `scorefile.cpp::sf_missing_score`.  Other hits write caller buffers,
-  globals, static storage, parser buffers, command buffers,
-  score/universal storage, keymaps, or memory-pool storage.
+  `scorefile.cpp::sf_missing_score`; `sf_add_extra_header` now builds
+  the retained lower-case copy from local string storage.  Other hits
+  write caller buffers, globals, static storage, parser buffers,
+  command buffers, score/universal storage, keymaps, or memory-pool
+  storage.
 - Filename variables to `std::filesystem::path`: no new one-function
   path slice was found.  Remaining candidates are stored filename
   fields, backup/rollback rename sequences, protocol or shell text,

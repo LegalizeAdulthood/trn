@@ -324,15 +324,15 @@ static void sf_add_extra_header(const char *head)
     s_sf_num_extra_headers++;
     s_sf_extra_headers = (char**)safe_realloc((char*)s_sf_extra_headers,
         s_sf_num_extra_headers * sizeof (char*));
-    char *s = save_str(head);
-    for (char *s2 = s; *s2; s2++)
+    header_name.pop_back();
+    for (char &ch : header_name)
     {
-        if (std::isalpha(*s2) && std::isupper(*s2))
+        if (std::isalpha(ch) && std::isupper(ch))
         {
-            *s2 = std::tolower(*s2);         // convert to lower case
+            ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
-    s_sf_extra_headers[s_sf_num_extra_headers-1] = s;
+    s_sf_extra_headers[s_sf_num_extra_headers-1] = save_str(header_name.c_str());
 }
 
 //ART_NUM art;          // article number to check
