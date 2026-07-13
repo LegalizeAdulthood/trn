@@ -56,7 +56,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     bool backward = cmd_chr == '?' || cmd_chr == Ctl('p');
                                         // direction of search
     CompiledRegex* compex;                     // which compiled expression
-    char* cmd_lst = nullptr;             // list of commands to do
+    std::string     cmd_lst;                    // list of commands to do
     ArtSearchResult ret = SRCH_NOT_FOUND; // assume no commands
     int salt_away = 0;                   // store in KILL file?
     ArtScope how_much;                  // search scope: subj/from/Hdr/head/art
@@ -169,10 +169,10 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             {
                 do_read = true;
             }
-            cmd_lst = save_str(s);
-            if (*cmd_lst == 'k') // grandfather clause
+            cmd_lst = s;
+            if (cmd_lst[0] == 'k') // grandfather clause
             {
-                *cmd_lst = 'j';
+                cmd_lst[0] = 'j';
             }
             ret = SRCH_DONE;
         }
@@ -221,7 +221,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             ret = SRCH_DONE;
             if (cmd_chr == '+')
             {
-                cmd_lst = save_str("+");
+                cmd_lst = "+";
                 if (!ignore_thru && g_kill_thru_kludge)
                 {
                     ignore_thru = 1;
@@ -229,7 +229,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             }
             else if (cmd_chr == '.')
             {
-                cmd_lst = save_str(".");
+                cmd_lst = ".";
                 if (!ignore_thru && g_kill_thru_kludge)
                 {
                     ignore_thru = 1;
@@ -237,17 +237,17 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             }
             else if (cmd_chr == 's')
             {
-                cmd_lst = save_str(pat_buf);
+                cmd_lst = pat_buf;
             }
             else
             {
                 if (cmd_chr == ',')
                 {
-                    cmd_lst = save_str(",");
+                    cmd_lst = ",";
                 }
                 else
                 {
-                    cmd_lst = save_str("j");
+                    cmd_lst = "j";
                 }
                 article_ptr(g_art)->mark_as_read();       // this article needs to die
             }
@@ -311,21 +311,21 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             goto exit;
         }
     }
-    if (cmd_lst && std::strchr(cmd_lst,'='))
+    if (!cmd_lst.empty() && cmd_lst.find('=') != std::string::npos)
     {
         ret = SRCH_ERROR;               // listing subjects is an error?
     }
     if (g_general_mode == GM_SELECTOR)
     {
-        if (!cmd_lst)
+        if (cmd_lst.empty())
         {
             if (g_sel_mode == SM_ARTICLE)// set the selector's default command
             {
-                cmd_lst = save_str("+");
+                cmd_lst = "+";
             }
             else
             {
-                cmd_lst = save_str("++");
+                cmd_lst = "++";
             }
         }
         ret = SRCH_DONE;
@@ -371,11 +371,11 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             }
         }
         *s++ = ':';
-        if (!cmd_lst)
+        if (cmd_lst.empty())
         {
-            cmd_lst = save_str("j");
+            cmd_lst = "j";
         }
-        safe_copy(s,cmd_lst,LINE_BUF_LEN-(s-salt_buf));
+        safe_copy(s, cmd_lst.c_str(), LINE_BUF_LEN - (s - salt_buf));
         kill_file_append(salt_buf, salt_away == 2? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd)
@@ -391,8 +391,8 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
                                         // give them something to read
     }
-    if (ignore_thru == 0 && g_kill_thru_kludge && cmd_lst //
-        && (*cmd_lst == '+' || *cmd_lst == '.'))
+    if (ignore_thru == 0 && g_kill_thru_kludge && !cmd_lst.empty() //
+        && (cmd_lst[0] == '+' || cmd_lst[0] == '.'))
     {
         ignore_thru = 1;
     }
@@ -405,7 +405,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
     if (backward)
     {
-        if (cmd_lst && g_art <= g_last_art)
+        if (!cmd_lst.empty() && g_art <= g_last_art)
         {
             ++g_art;                // include current article
         }
@@ -416,7 +416,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         {
             g_art = article_before(search_first);
         }
-        else if (cmd_lst && g_art >= g_abs_first)
+        else if (!cmd_lst.empty() && g_art >= g_abs_first)
         {
             --g_art;                // include current article
         }
@@ -429,7 +429,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
         g_search_ahead = ArticleNum{-1};
     }
-    TRN_ASSERT(!cmd_lst || *cmd_lst);
+    TRN_ASSERT(cmd_lst.empty() || cmd_lst[0] != '\0');
     perform_status_init(g_newsgroup_ptr->m_to_read);
     while (true)
     {
@@ -451,17 +451,16 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             if (wanted(compex, g_art, how_much))
             {
                                     // does the shoe fit?
-                if (!cmd_lst)
+                if (cmd_lst.empty())
                 {
                     return SRCH_FOUND;
                 }
-                if (perform(cmd_lst, output_level && g_page_line == 1) < 0)
+                if (perform(cmd_lst.data(), output_level && g_page_line == 1) < 0)
                 {
-                    std::free(cmd_lst);
                     return SRCH_INTR;
                 }
             }
-            else if (output_level && !cmd_lst && !(g_art % ArticleNum{50}))
+            else if (output_level && cmd_lst.empty() && !(g_art % ArticleNum{50}))
             {
                 std::printf("...%ld", g_art.value_of());
                 std::fflush(stdout);
@@ -473,10 +472,6 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
     }
 exit:
-    if (cmd_lst)
-    {
-        std::free(cmd_lst);
-    }
     return ret;
 }
 

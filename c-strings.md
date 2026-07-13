@@ -352,15 +352,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
-### Local Save-String Slices
-
-#### Article Search Command List
-
-In `libtrn/artsrch.cpp`, `art_search` builds a local command list with
-several `save_str` assignments.  Replace it with local `std::string`
-storage, preserve the `k` to `j` grandfather clause, and pass `data()`
-only to legacy performers.
-
 ### Copy/Concat Slices
 
 ### Global String Storage Slices
