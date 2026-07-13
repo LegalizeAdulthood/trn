@@ -9,8 +9,8 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
-struct List;
 struct Newsrc;
 
 enum NewsgroupFlags : std::uint8_t
@@ -49,8 +49,7 @@ struct NewsgroupData
     NewsgroupFlags m_flags;          // flags for each group
 };
 
-extern List          *g_newsgroup_data_list;   // a list of NGDATA
-extern int            g_newsgroup_data_count;  //
+extern std::vector<NewsgroupData> g_newsgroup_data; // all newsgroup data
 extern NewsgroupNum   g_newsgroup_count;       // all newsgroups in our current newsrc(s)
 extern NewsgroupNum   g_newsgroup_to_read;     //
 extern ArticleUnread  g_newsgroup_min_to_read; // == TR_ONE or TR_NONE

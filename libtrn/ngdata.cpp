@@ -36,10 +36,10 @@
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <vector>
 
-List          *g_newsgroup_data_list{};    // a list of NGDATA
-int            g_newsgroup_data_count{};   //
-NewsgroupNum   g_newsgroup_count{};        // all newsgroups in our current newsrc(s)
+std::vector<NewsgroupData> g_newsgroup_data;           // all newsgroup data
+NewsgroupNum               g_newsgroup_count{};        // all newsgroups in our current newsrc(s)
 NewsgroupNum   g_newsgroup_to_read{};      //
 ArticleUnread  g_newsgroup_min_to_read{1}; // == TR_ONE or TR_NONE
 NewsgroupData *g_first_newsgroup{};        //

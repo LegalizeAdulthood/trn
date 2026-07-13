@@ -18,7 +18,6 @@
 #include <trn/IniSectionValues.h>
 #include <trn/init.h>
 #include <trn/last.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/only.h>
@@ -38,6 +37,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -60,17 +60,32 @@ bool                 g_append_unsub{};                 // -I
 
 static bool s_found_any{};
 
-static bool           clear_newsgroup_item(char *cp, int arg);
+static constexpr std::ptrdiff_t NO_NEWSGROUP_INDEX = -1;
+static constexpr std::size_t    NEWSGROUP_DATA_RESERVE_SLACK = 4096;
+
+struct NewsgroupLinkIndexes
+{
+    std::ptrdiff_t prev;
+    std::ptrdiff_t next;
+};
+
+static void           clear_newsgroup_item(NewsgroupData *np);
+static void           ensure_newsgroup_data_capacity(std::size_t count);
+static NewsgroupData *append_newsgroup_data();
+static std::size_t    count_newsrc_lines(const std::string &path);
 static Multirc       *ensure_multirc(int num);
 static Newsrc        *new_newsrc(const RcGroupConfig &config);
-static bool    lock_newsrc(Newsrc *rp);
-static void    unlock_newsrc(Newsrc *rp);
-static bool    open_newsrc(Newsrc *rp);
-static void    init_newsgroup_node(List *list, ListNode *node);
-static void    parse_rcline(NewsgroupData *np);
+static bool           lock_newsrc(Newsrc *rp);
+static void           unlock_newsrc(Newsrc *rp);
+static bool           open_newsrc(Newsrc *rp);
+static void           parse_rcline(NewsgroupData *np);
+static void           reserve_newsgroup_data(Multirc *mptr);
 static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c);
-static void    set_hash(NewsgroupData *np);
-static int     rcline_cmp(std::string_view key, HashDatum data);
+static void           set_hash(NewsgroupData *np);
+static void           rebuild_newsgroup_hash();
+static std::ptrdiff_t newsgroup_pointer_index(NewsgroupData *base, std::size_t count, NewsgroupData *np);
+static NewsgroupData *newsgroup_pointer_from_index(NewsgroupData *base, std::ptrdiff_t index);
+static int            rcline_cmp(std::string_view key, HashDatum data);
 
 static void print_cant_recreate(std::string_view name)
 {
@@ -79,9 +94,153 @@ static void print_cant_recreate(std::string_view name)
                name);
 }
 
-inline NewsgroupData *newsgroup_data_ptr(int ngnum)
+static void ensure_newsgroup_data_capacity(std::size_t count)
 {
-    return (NewsgroupData *) g_newsgroup_data_list->list_get_item(ngnum);
+    if (count <= g_newsgroup_data.capacity())
+    {
+        return;
+    }
+
+    const std::size_t old_count = g_newsgroup_data.size();
+    if (old_count == 0)
+    {
+        g_newsgroup_data.reserve(count);
+        return;
+    }
+
+    NewsgroupData                    *old_base = g_newsgroup_data.data();
+    std::vector<NewsgroupLinkIndexes> links;
+    links.reserve(old_count);
+    for (NewsgroupData &np : g_newsgroup_data)
+    {
+        links.push_back({newsgroup_pointer_index(old_base, old_count, np.m_prev),
+                         newsgroup_pointer_index(old_base, old_count, np.m_next)});
+    }
+
+    const std::ptrdiff_t        first_index = newsgroup_pointer_index(old_base, old_count, g_first_newsgroup);
+    const std::ptrdiff_t        last_index = newsgroup_pointer_index(old_base, old_count, g_last_newsgroup);
+    const std::ptrdiff_t        ptr_index = newsgroup_pointer_index(old_base, old_count, g_newsgroup_ptr);
+    const std::ptrdiff_t        current_index = newsgroup_pointer_index(old_base, old_count, g_current_newsgroup);
+    const std::ptrdiff_t        recent_index = newsgroup_pointer_index(old_base, old_count, g_recent_newsgroup);
+    const std::ptrdiff_t        start_index = newsgroup_pointer_index(old_base, old_count, g_start_here);
+    const std::ptrdiff_t        sel_page_index = newsgroup_pointer_index(old_base, old_count, g_sel_page_np);
+    const std::ptrdiff_t        sel_next_index = newsgroup_pointer_index(old_base, old_count, g_sel_next_np);
+    const std::ptrdiff_t        go_index = newsgroup_pointer_index(old_base, old_count, g_ng_go_newsgroup_ptr);
+    std::vector<std::ptrdiff_t> selection_indexes;
+    if (g_sel_mode == SM_NEWSGROUP)
+    {
+        for (int i = 0; i != g_sel_page_item_cnt; ++i)
+        {
+            selection_indexes.push_back(newsgroup_pointer_index(old_base, old_count, g_sel_items[i].u.np));
+        }
+    }
+
+    const std::size_t capacity = g_newsgroup_data.capacity();
+    g_newsgroup_data.reserve(std::max(count, capacity + std::max(capacity, NEWSGROUP_DATA_RESERVE_SLACK)));
+
+    NewsgroupData *new_base = g_newsgroup_data.data();
+    for (std::size_t i = 0; i != old_count; ++i)
+    {
+        g_newsgroup_data[i].m_prev = newsgroup_pointer_from_index(new_base, links[i].prev);
+        g_newsgroup_data[i].m_next = newsgroup_pointer_from_index(new_base, links[i].next);
+    }
+
+    g_first_newsgroup = newsgroup_pointer_from_index(new_base, first_index);
+    g_last_newsgroup = newsgroup_pointer_from_index(new_base, last_index);
+    g_newsgroup_ptr = newsgroup_pointer_from_index(new_base, ptr_index);
+    g_current_newsgroup = newsgroup_pointer_from_index(new_base, current_index);
+    g_recent_newsgroup = newsgroup_pointer_from_index(new_base, recent_index);
+    g_start_here = newsgroup_pointer_from_index(new_base, start_index);
+    g_sel_page_np = newsgroup_pointer_from_index(new_base, sel_page_index);
+    g_sel_next_np = newsgroup_pointer_from_index(new_base, sel_next_index);
+    g_ng_go_newsgroup_ptr = newsgroup_pointer_from_index(new_base, go_index);
+    if (g_sel_mode == SM_NEWSGROUP)
+    {
+        for (int i = 0; i != g_sel_page_item_cnt; ++i)
+        {
+            g_sel_items[i].u.np = newsgroup_pointer_from_index(new_base, selection_indexes[i]);
+        }
+    }
+    rebuild_newsgroup_hash();
+}
+
+static NewsgroupData *append_newsgroup_data()
+{
+    ensure_newsgroup_data_capacity(g_newsgroup_data.size() + 1);
+    g_newsgroup_data.emplace_back();
+    NewsgroupData *np = &g_newsgroup_data.back();
+    np->m_num = NewsgroupNum{static_cast<long>(g_newsgroup_data.size() - 1)};
+    return np;
+}
+
+static std::size_t count_newsrc_lines(const std::string &path)
+{
+    std::FILE *fp = std::fopen(path.c_str(), "r");
+    if (fp == nullptr)
+    {
+        return 200;
+    }
+
+    std::size_t count = 0;
+    int         ch;
+    bool        saw_any = false;
+    bool        last_was_newline = true;
+    while ((ch = std::fgetc(fp)) != EOF)
+    {
+        saw_any = true;
+        last_was_newline = ch == '\n';
+        if (last_was_newline)
+        {
+            ++count;
+        }
+    }
+    if (saw_any && !last_was_newline)
+    {
+        ++count;
+    }
+    std::fclose(fp);
+    return count;
+}
+
+static void reserve_newsgroup_data(Multirc *mptr)
+{
+    if (!g_newsgroup_data.empty())
+    {
+        return;
+    }
+
+    std::size_t count = NEWSGROUP_DATA_RESERVE_SLACK;
+    for (Newsrc *rp = mptr->m_first; rp; rp = rp->next)
+    {
+        count += count_newsrc_lines(rp->name);
+    }
+    ensure_newsgroup_data_capacity(count);
+}
+
+static std::ptrdiff_t newsgroup_pointer_index(NewsgroupData *base, std::size_t count, NewsgroupData *np)
+{
+    if (np == nullptr)
+    {
+        return NO_NEWSGROUP_INDEX;
+    }
+    if (base == nullptr || count == 0)
+    {
+        std::fputs("Newsgroup pointer outside data storage.\n", stdout);
+        finalize(1);
+    }
+
+    std::ptrdiff_t index = np - base;
+    if (index < 0 || static_cast<std::size_t>(index) >= count)
+    {
+        std::fputs("Newsgroup pointer outside data storage.\n", stdout);
+        finalize(1);
+    }
+    return index;
+}
+
+static NewsgroupData *newsgroup_pointer_from_index(NewsgroupData *base, std::ptrdiff_t index)
+{
+    return index == NO_NEWSGROUP_INDEX ? nullptr : base + index;
 }
 
 static Multirc *ensure_multirc(int num)
@@ -254,6 +413,7 @@ bool Multirc::use_multirc()
     bool had_trouble = false;
     bool had_success = false;
 
+    reserve_newsgroup_data(this);
     for (Newsrc *rp = m_first; rp; rp = rp->next)
     {
         if ((rp->data_source->m_flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
@@ -304,13 +464,16 @@ void unuse_multirc(Multirc *mptr)
         rp->flags &= ~RF_ACTIVE;
         rp->data_source->m_flags &= ~DF_ACTIVE;
     }
-    if (g_newsgroup_data_list)
+    if (g_newsrc_hash)
     {
         close_cache();
         hash_destroy(g_newsrc_hash);
-        g_newsgroup_data_list->walk_list(clear_newsgroup_item, 0);
-        delete_list(g_newsgroup_data_list);
-        g_newsgroup_data_list = nullptr;
+        g_newsrc_hash = nullptr;
+        for (NewsgroupData &np : g_newsgroup_data)
+        {
+            clear_newsgroup_item(&np);
+        }
+        g_newsgroup_data.clear();
         g_first_newsgroup = nullptr;
         g_last_newsgroup = nullptr;
         g_newsgroup_ptr = nullptr;
@@ -318,8 +481,9 @@ void unuse_multirc(Multirc *mptr)
         g_recent_newsgroup = nullptr;
         g_start_here = nullptr;
         g_sel_page_np = nullptr;
+        g_sel_next_np = nullptr;
+        g_ng_go_newsgroup_ptr = nullptr;
     }
-    g_newsgroup_data_count = 0;
     g_newsgroup_count = NewsgroupNum{};
     g_newsgroup_to_read = NewsgroupNum{};
     g_multirc = nullptr;
@@ -392,19 +556,16 @@ const char *Multirc::multirc_name() const
     return name.c_str();
 }
 
-static bool clear_newsgroup_item(char *cp, int arg)
+static void clear_newsgroup_item(NewsgroupData *np)
 {
-    NewsgroupData* ncp = (NewsgroupData*)cp;
-
-    if (ncp->m_rc_line != nullptr)
+    if (np->m_rc_line != nullptr)
     {
         if (!g_check_flag)
         {
-            std::free(ncp->m_rc_line);
+            std::free(np->m_rc_line);
         }
-        ncp->m_rc_line = nullptr;
+        np->m_rc_line = nullptr;
     }
-    return false;
 }
 
 // make sure there is no trn out there reading this newsrc
@@ -632,30 +793,20 @@ static bool open_newsrc(Newsrc *rp)
         // unlink backup file name and backup current name
         remove(rp->old_name.c_str());
 #ifndef NO_FILELINKS
-        safe_link(rp->name.c_str(),rp->old_name.c_str());
+        safe_link(rp->name.c_str(), rp->old_name.c_str());
 #endif
     }
 
-    if (!g_newsgroup_data_list)
+    if (g_newsrc_hash == nullptr)
     {
-        // allocate memory for rc file globals
-        g_newsgroup_data_list = new_list(0, 0, sizeof (NewsgroupData), 200, LF_NONE, init_newsgroup_node);
         g_newsrc_hash = hash_create(3001, rcline_cmp);
     }
 
-    NewsgroupData*   prev_np;
-    if (g_newsgroup_data_count)
-    {
-        prev_np = newsgroup_data_ptr(g_newsgroup_data_count - 1);
-    }
-    else
-    {
-        prev_np = nullptr;
-    }
+    NewsgroupData *prev_np = g_last_newsgroup;
 
     // read in the .newsrc file
 
-    char* some_buf;
+    char *some_buf;
     while ((some_buf = get_a_line(g_buf, LINE_BUF_LEN, false, rcfp)) != nullptr)
     {
         long length = g_len_last_line_got; // side effect of get_a_line
@@ -663,7 +814,10 @@ static bool open_newsrc(Newsrc *rp)
         {
             continue;
         }
-        NewsgroupData *np = newsgroup_data_ptr(g_newsgroup_data_count++);
+        const std::ptrdiff_t prev_index =
+            newsgroup_pointer_index(g_newsgroup_data.data(), g_newsgroup_data.size(), prev_np);
+        NewsgroupData *np = append_newsgroup_data();
+        prev_np = newsgroup_pointer_from_index(g_newsgroup_data.data(), prev_index);
         if (prev_np)
         {
             prev_np->m_next = np;
@@ -676,9 +830,9 @@ static bool open_newsrc(Newsrc *rp)
         prev_np = np;
         np->m_rc = rp;
         ++g_newsgroup_count;
-        if (some_buf[length-1] == '\n')
+        if (some_buf[length - 1] == '\n')
         {
-            some_buf[--length] = '\0';  // wipe out newline
+            some_buf[--length] = '\0'; // wipe out newline
         }
         if (some_buf == g_buf)
         {
@@ -833,17 +987,6 @@ static bool open_newsrc(Newsrc *rp)
         cleanup_newsrc(rp);
     }
     return true;
-}
-
-// Initialize the memory for an entire node's worth of article's
-static void init_newsgroup_node(List *list, ListNode *node)
-{
-    std::memset(node->data,0,list->m_items_per_node * list->m_item_size);
-    NewsgroupData *np = (NewsgroupData*)node->data;
-    for (ArticleNum i{node->low}; i.value_of() <= node->high; ++i, np++)
-    {
-        np->m_num = NewsgroupNum{i.value_of()};
-    }
 }
 
 static void parse_rcline(NewsgroupData *np)
@@ -1201,7 +1344,7 @@ reask_unsub:
 
 static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
 {
-    NewsgroupData *np = newsgroup_data_ptr(g_newsgroup_data_count++);
+    NewsgroupData *np = append_newsgroup_data();
     np->m_prev = g_last_newsgroup;
     if (g_last_newsgroup)
     {
@@ -1217,16 +1360,16 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
 
     np->m_rc = rp;
     np->m_num_offset = std::strlen(ngn) + 1;
-    np->m_rc_line = safe_malloc((MemorySize)(np->m_num_offset + 2));
-    std::strcpy(np->m_rc_line,ngn);             // and copy over the name
+    np->m_rc_line = safe_malloc((MemorySize) (np->m_num_offset + 2));
+    std::strcpy(np->m_rc_line, ngn); // and copy over the name
     std::strcpy(np->m_rc_line + np->m_num_offset, " ");
-    np->m_subscribe_char = c;              // subscribe or unsubscribe
+    np->m_subscribe_char = c; // subscribe or unsubscribe
     if (c != UNSUBSCRIBED_CHAR)
     {
         ++g_newsgroup_to_read;
     }
-    np->m_to_read = TR_NONE;               // just for prettiness
-    set_hash(np);                        // so we can find it again
+    np->m_to_read = TR_NONE; // just for prettiness
+    set_hash(np);            // so we can find it again
     rp->flags |= RF_RC_CHANGED;
     return np;
 }
@@ -1587,12 +1730,9 @@ reask_bogus:
         {
             for (np = g_last_newsgroup; np && np->m_to_read == TR_BOGUS; np = np->m_prev)
             {
-                hash_delete(
-                        g_newsrc_hash,
-                        std::string_view{
-                                np->m_rc_line,
-                                static_cast<std::size_t>(np->m_num_offset - 1)});
-                clear_newsgroup_item((char*)np,0);
+                hash_delete(g_newsrc_hash,
+                            std::string_view{np->m_rc_line, static_cast<std::size_t>(np->m_num_offset - 1)});
+                clear_newsgroup_item(np);
                 --g_newsgroup_count;
             }
             rp->flags |= RF_RC_CHANGED; // TODO: needed?
@@ -1638,12 +1778,27 @@ reask_bogus:
 static void set_hash(NewsgroupData *np)
 {
     HashDatum data;
-    data.dat_ptr = (char*)np;
+    data.dat_ptr = (char *) np;
     data.dat_len = np->m_num_offset - 1;
-    hash_store(
-            g_newsrc_hash,
-            std::string_view{np->m_rc_line, static_cast<std::size_t>(data.dat_len)},
-            data);
+    hash_store(g_newsrc_hash, std::string_view{np->m_rc_line, static_cast<std::size_t>(data.dat_len)}, data);
+}
+
+static void rebuild_newsgroup_hash()
+{
+    if (g_newsrc_hash == nullptr)
+    {
+        return;
+    }
+
+    hash_destroy(g_newsrc_hash);
+    g_newsrc_hash = hash_create(3001, rcline_cmp);
+    for (NewsgroupData &np : g_newsgroup_data)
+    {
+        if (np.m_rc_line != nullptr)
+        {
+            set_hash(&np);
+        }
+    }
 }
 
 static int rcline_cmp(std::string_view key, HashDatum data)

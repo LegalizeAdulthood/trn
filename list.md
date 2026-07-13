@@ -95,17 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 6: Newsgroup Data Vector
-
-Replace `g_newsgroup_data_list` with `std::vector<NewsgroupData>`.
-
-- Replace `newsgroup_data_ptr` with vector indexing.
-- Use `emplace_back` when reading or adding newsrc lines.
-- Initialize `m_num` explicitly when the record is created.
-- Keep `m_prev`/`m_next` for this slice to avoid mixing storage and
-  selector-order changes.
-- Replace cleanup walk with ordinary iteration.
-
 ### Slice 7: Newsgroup Order Storage
 
 After slice 6, replace intrusive newsgroup ordering with an explicit
