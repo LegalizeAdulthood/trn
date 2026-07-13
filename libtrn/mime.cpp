@@ -79,7 +79,7 @@ static char *mime_parse_entry_arg(char **cpp);
 static int   mime_getc(std::FILE *fp);
 static void  mime_init_sections();
 static bool  mime_pop_section();
-static char *mime_find_param(char *s, std::string_view param);
+static const char *mime_find_param(const std::string &params, std::string_view param);
 static char *mime_skip_whitespace(char *s);
 static char *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
@@ -349,9 +349,9 @@ int mime_exec(char *cmd)
                 }
                 f++;
                 *s = '\0';
-                char *p = mime_find_param(
-                        g_mime_section->m_type_params ? g_mime_section->m_type_params->data() : nullptr,
-                        f);
+                const char *p = g_mime_section->m_type_params
+                    ? mime_find_param(*g_mime_section->m_type_params, f)
+                    : nullptr;
                 *s = '}'; // restore
                 f = s;
                 *t++ = '\'';
@@ -481,7 +481,7 @@ void MimeSection::mime_parse_type(char *s)
         return;
     }
     m_type_name = s;
-    char *t = mime_find_param(m_type_params->data(), "name");
+    const char *t = mime_find_param(*m_type_params, "name");
     if (t)
     {
         m_filename = t;
@@ -496,7 +496,7 @@ void MimeSection::mime_parse_type(char *s)
             return;
         }
 #ifdef USE_UTF_HACK
-        utf_init(mime_find_param(m_type_params->data(),"charset"), CHARSET_NAME_UTF8); // FIXME
+        utf_init(mime_find_param(*m_type_params, "charset"), CHARSET_NAME_UTF8); // FIXME
 #endif
         if (string_case_equal(s, "html", 4))
         {
@@ -515,18 +515,18 @@ void MimeSection::mime_parse_type(char *s)
         m_type = MESSAGE_MIME;
         if (string_case_equal(s, "partial"))
         {
-            t = mime_find_param(m_type_params->data(),"id");
+            t = mime_find_param(*m_type_params, "id");
             if (!t)
             {
                 return;
             }
             m_filename = t;
-            t = mime_find_param(m_type_params->data(),"number");
+            t = mime_find_param(*m_type_params, "number");
             if (t)
             {
                 m_part = (short) std::atoi(t);
             }
-            t = mime_find_param(m_type_params->data(),"total");
+            t = mime_find_param(*m_type_params, "total");
             if (t)
             {
                 m_total = (short) std::atoi(t);
@@ -544,7 +544,7 @@ void MimeSection::mime_parse_type(char *s)
     if (string_case_equal(s, "multipart/", 10))
     {
         s += 10;
-        t = mime_find_param(m_type_params->data(),"boundary");
+        t = mime_find_param(*m_type_params, "boundary");
         if (!t)
         {
             m_type = UNHANDLED_MIME;
@@ -584,10 +584,10 @@ void MimeSection::mime_parse_disposition(char *s)
         m_flags |= MSF_INLINE;
     }
 
-    s = mime_find_param(params.data(),"filename");
-    if (s)
+    const char *filename = mime_find_param(params, "filename");
+    if (filename)
     {
-        m_filename = s;
+        m_filename = filename;
     }
 }
 
@@ -861,10 +861,11 @@ std::string mime_parse_params(char *str)
     return params;
 }
 
-static char *mime_find_param(char *s, std::string_view param)
+static const char *mime_find_param(const std::string &params, std::string_view param)
 {
-    const int param_len = static_cast<int>(param.size());
-    while (s && *s)
+    const int   param_len = static_cast<int>(param.size());
+    const char *s = params.c_str();
+    while (*s)
     {
         if (string_case_equal(s, param.data(), param_len) && s[param_len] == '=')
         {
