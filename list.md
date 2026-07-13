@@ -95,17 +95,6 @@ ordinary `SourceFile` state.
 
 ## Implementation Slices
 
-### Slice 9: Source File Line Store
-
-Replace `SourceFile::m_lp` with owned line storage.
-
-- Store normalized lines in `std::vector<std::string>`.
-- Replace hash values that hold `ListNode *` plus offset with a line
-  index or iterator-safe handle.
-- Make `find_active_group` and `find_group_desc` read from owned lines.
-- Keep append behavior that updates the backing cache file.
-- Only then remove the `SourceFile` dependency on `ListNode`.
-
 ### Slice 10: Remove Home-Grown List
 
 After all callers are migrated, delete `libtrn/list.cpp` and

@@ -24,7 +24,6 @@ enum
 };
 
 struct HashTable;
-struct List;
 
 struct SourceFile
 {
@@ -33,12 +32,13 @@ struct SourceFile
     void  end_append(const char *filename);
     void  close();
 
-    std::FILE  *m_fp;           // the file pointer to read the data
-    HashTable  *m_hp;           // the hash table for the data
-    List       *m_lp;           // the list used to store the data
-    long        m_recent_cnt;   // # lines/bytes this file might be
-    std::time_t m_last_fetch;   // when the data was last fetched
-    std::time_t m_refetch_secs; // how long before we refetch this file
+    std::FILE               *m_fp; // the file pointer to read the data
+    HashTable               *m_hp; // the hash table for the data
+    std::vector<std::string> m_lines;
+    std::vector<long>        m_line_positions;
+    long                     m_recent_cnt;   // # lines/bytes this file might be
+    std::time_t              m_last_fetch;   // when the data was last fetched
+    std::time_t              m_refetch_secs; // how long before we refetch this file
 };
 
 enum DataSourceFlags : std::uint16_t

@@ -15,7 +15,6 @@
 #include <trn/hash.h>
 #include <trn/IniDocument.h>
 #include <trn/IniSectionValues.h>
-#include <trn/list.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/rcstuff.h>
@@ -60,14 +59,13 @@ char                   *g_trn_access_mem{};                       //
 std::string             g_nntp_auth_file;                         //
 time_t                  g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
 
-enum
-{
-    SRCFILE_CHUNK_SIZE = (32 * 1024),
-};
-
 static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
 static std::optional<std::string> file_or_none(const char *fn);
 static const char                *opt_c_str(const std::optional<std::string> &text);
+static HashDatum                  source_file_hash_datum(SourceFile *source_file, std::size_t index);
+static SourceFile                *source_file_from_hash(HashDatum data);
+static std::string               *source_file_line(HashDatum data);
+static long                       source_file_position(HashDatum data);
 static int                        source_file_cmp(std::string_view key, HashDatum data);
 static int                        check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int                        get_near_miss();
@@ -630,11 +628,10 @@ bool DataSource::find_active_group(char *outbuf, std::string_view name, ArticleN
     HashDatum data = hash_fetch(m_act_sf.m_hp, name);
     if (data.dat_ptr)
     {
-        ListNode* node = (ListNode*)data.dat_ptr;
-        // m_act_sf.lp->recent = node;
-        act_pos = ActivePosition{node->low + data.dat_len};
-        lbp = node->data + data.dat_len;
-        lbp_len = std::strchr(lbp, '\n') - lbp + 1;
+        std::string *line = source_file_line(data);
+        act_pos = ActivePosition{source_file_position(data)};
+        lbp = line->data();
+        lbp_len = static_cast<int>(line->size());
     }
     else
     {
@@ -790,9 +787,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
 
     if (HashDatum data = hash_fetch(m_desc_sf.m_hp, group_name); data.dat_ptr)
     {
-        ListNode *node = (ListNode *) data.dat_ptr;
-        // m_act_sf.lp->recent = node;
-        return node->data + data.dat_len + grouplen + 1;
+        return source_file_line(data)->c_str() + grouplen + 1;
     }
 
 try_xgtitle:
@@ -816,7 +811,7 @@ try_xgtitle:
             return stored_group + grouplen + 1;
         }
         m_flags |= DF_NO_XGTITLE;
-        if (m_desc_sf.m_lp->m_high == -1)
+        if (m_desc_sf.m_lines.empty())
         {
             m_desc_sf.close();
             if (m_flags & DF_TMP_GROUP_DESC)
@@ -858,14 +853,12 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
 
 int SourceFile::open(const char *filename, std::string_view fetch_cmd, const char *server)
 {
-    unsigned offset;
-    char* s;
-    HashDatum data;
-    long node_low;
-    int linelen;
-    std::FILE* fp;
-    std::time_t now = std::time(nullptr);
-    bool use_buffered_nntp_gets = false;
+    char             *s;
+    long              pos = 0;
+    int               linelen;
+    std::FILE        *fp;
+    std::time_t       now = std::time(nullptr);
+    bool              use_buffered_nntp_gets = false;
     const std::string fetch_command{fetch_cmd};
 
     if (!filename)
@@ -939,23 +932,16 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
 
     close();
 
-    // Create a list with one character per item using a large chunk size.
-    m_lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
     m_hp = hash_create(3001, source_file_cmp);
     m_fp = fp;
 
     if (!filename)
     {
-        (void) m_lp->list_get_item(0);
-        m_lp->m_high = -1;
         set_spin(SPIN_OFF);
         return 1;
     }
 
-    char *lbp = m_lp->list_get_item(0);
-    data.dat_ptr = (char*)m_lp->m_first;
-
-    for (offset = 0, node_low = 0;; offset += linelen, lbp += linelen)
+    for (;; pos += linelen)
     {
         if (server)
         {
@@ -1011,24 +997,12 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
             *s++ = '\n';
             *s = '\0';
         }
-        if (offset + linelen > SRCFILE_CHUNK_SIZE)
-        {
-            ListNode* node = m_lp->m_recent;
-            node_low += offset;
-            node->high = node_low - 1;
-            node->data_high = node->data + offset - 1;
-            offset = 0;
-            lbp = m_lp->list_get_item(node_low);
-            data.dat_ptr = (char*)m_lp->m_recent;
-        }
-        data.dat_len = offset;
-        (void) std::memcpy(lbp,g_buf,linelen);
-        hash_store(
-                m_hp,
-                std::string_view{g_buf, static_cast<std::size_t>(keylen)},
-                data);
+        const std::size_t index = m_lines.size();
+        m_line_positions.push_back(pos);
+        m_lines.emplace_back(g_buf, static_cast<std::size_t>(linelen));
+        hash_store(m_hp, std::string_view{g_buf, static_cast<std::size_t>(keylen)},
+                   source_file_hash_datum(this, index));
     }
-    m_lp->m_high = node_low + offset - 1;
     set_spin(SPIN_OFF);
 
     if (server)
@@ -1050,12 +1024,7 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
 
 char *SourceFile::append(char *bp, int key_len)
 {
-    HashDatum data;
-
-    long pos = m_lp->m_high + 1;
-    char *lbp = m_lp->list_get_item(pos);
-    ListNode *node = m_lp->m_recent;
-    data.dat_len = pos - node->low;
+    const long pos = m_lines.empty() ? 0 : m_line_positions.back() + static_cast<long>(m_lines.back().size());
 
     char *s = bp + key_len + 1;
     if (m_fp && m_refetch_secs && *s != '\n')
@@ -1079,23 +1048,12 @@ char *SourceFile::append(char *bp, int key_len)
         *s++ = '\n';
         *s = '\0';
     }
-    if (data.dat_len + linelen > SRCFILE_CHUNK_SIZE)
-    {
-        node->high = pos - 1;
-        node->data_high = node->data + data.dat_len - 1;
-        lbp = m_lp->list_get_item(pos);
-        node = m_lp->m_recent;
-        data.dat_len = 0;
-    }
-    data.dat_ptr = (char*)node;
-    (void) std::memcpy(lbp,bp,linelen);
-    hash_store(
-            m_hp,
-            std::string_view{bp, static_cast<std::size_t>(key_len)},
-            data);
-    m_lp->m_high = pos + linelen - 1;
+    const std::size_t index = m_lines.size();
+    m_line_positions.push_back(pos);
+    m_lines.emplace_back(bp, static_cast<std::size_t>(linelen));
+    hash_store(m_hp, std::string_view{bp, static_cast<std::size_t>(key_len)}, source_file_hash_datum(this, index));
 
-    return lbp;
+    return m_lines.back().data();
 }
 
 void SourceFile::end_append(const char *filename)
@@ -1121,22 +1079,45 @@ void SourceFile::close()
         std::fclose(m_fp);
         m_fp = nullptr;
     }
-    if (m_lp)
-    {
-        delete_list(m_lp);
-        m_lp = nullptr;
-    }
     if (m_hp)
     {
         hash_destroy(m_hp);
         m_hp = nullptr;
     }
+    m_lines.clear();
+    m_line_positions.clear();
+}
+
+static HashDatum source_file_hash_datum(SourceFile *source_file, std::size_t index)
+{
+    return {reinterpret_cast<char *>(source_file), static_cast<unsigned>(index)};
+}
+
+static SourceFile *source_file_from_hash(HashDatum data)
+{
+    return reinterpret_cast<SourceFile *>(data.dat_ptr);
+}
+
+static std::string *source_file_line(HashDatum data)
+{
+    SourceFile *source_file = source_file_from_hash(data);
+    return &source_file->m_lines[data.dat_len];
+}
+
+static long source_file_position(HashDatum data)
+{
+    SourceFile *source_file = source_file_from_hash(data);
+    return source_file->m_line_positions[data.dat_len];
 }
 
 static int source_file_cmp(std::string_view key, HashDatum data)
 {
-    const auto            *node = (ListNode *) data.dat_ptr;
-    const std::string_view line_key{node->data + data.dat_len, key.size()};
+    const std::string *line = source_file_line(data);
+    if (line->size() < key.size())
+    {
+        return 1;
+    }
+    const std::string_view line_key{line->data(), key.size()};
 
     return key.compare(line_key);
 }
@@ -1252,7 +1233,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
     }
     else
     {
-        name = ((ListNode *) data->dat_ptr)->data + data->dat_len;
+        name = source_file_line(*data)->data();
     }
 
     // Efficiency: don't call edit_dist when the lengths are too different.
