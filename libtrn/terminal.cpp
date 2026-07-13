@@ -522,57 +522,53 @@ static const char *s_right[] = {
 //
 void arrow_macros(char *tmpbuf)
 {
+    (void) tmpbuf;
 #ifdef HAS_TERMLIB
-    char lbuf[256];                     // should be long enough
-#ifndef MSDOS
-    char* tmpaddr = tmpbuf;
-#endif
-    char* tmpstr;
 
     // If arrows are defined as single keys, we probably don't
     // want to redefine them.  (The tvi912c defines kl as ^H)
     //
 #ifdef MSDOS
-    std::strcpy(lbuf,"\035\110");
+    const char *seq = "\035\110";
 #else
-    std::strcpy(lbuf,Tgetstr("ku"));         // up
+    const char *seq = Tgetstr("ku"); // up
 #endif
-    if ((int)std::strlen(lbuf) > 1)
+    if ((int) std::strlen(seq) > 1)
     {
-        set_macro(lbuf,s_up[g_auto_arrow_macros]);
+        set_macro(seq, s_up[g_auto_arrow_macros]);
     }
 
 #ifdef MSDOS
-    std::strcpy(lbuf,"\035\120");
+    seq = "\035\120";
 #else
-    std::strcpy(lbuf,Tgetstr("kd"));         // down
+    seq = Tgetstr("kd"); // down
 #endif
-    if ((int)std::strlen(lbuf) > 1)
+    if ((int) std::strlen(seq) > 1)
     {
-        set_macro(lbuf,s_down[g_auto_arrow_macros]);
+        set_macro(seq, s_down[g_auto_arrow_macros]);
     }
 
 #ifdef MSDOS
-    std::strcpy(lbuf,"\035\113");
+    seq = "\035\113";
 #else
-    std::strcpy(lbuf,Tgetstr("kl"));         // left
+    seq = Tgetstr("kl"); // left
 #endif
-    if ((int)std::strlen(lbuf) > 1)
+    if ((int) std::strlen(seq) > 1)
     {
-        set_macro(lbuf,s_left[g_auto_arrow_macros]);
+        set_macro(seq, s_left[g_auto_arrow_macros]);
     }
 
 #ifdef MSDOS
-    std::strcpy(lbuf,"\035\115");
+    seq = "\035\115";
 #else
-    std::strcpy(lbuf,Tgetstr("kr"));         // right
+    seq = Tgetstr("kr"); // right
 #endif
-    if ((int)std::strlen(lbuf) > 1)
+    if ((int) std::strlen(seq) > 1)
     {
-        set_macro(lbuf,s_right[g_auto_arrow_macros]);
+        set_macro(seq, s_right[g_auto_arrow_macros]);
     }
 
-    if (*lbuf == '\033')
+    if (*seq == '\033')
     {
         set_macro("\033\033", "\033");
     }

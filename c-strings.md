@@ -262,11 +262,6 @@ both declarations and definitions `static`.
 
 ### Local Modernization Slices
 
-BUF-06. `libtrn/terminal.cpp`, `arrow_macros`: remove the `lbuf[256]`
-copy of each terminal arrow capability.  Pass the literal MSDOS escape
-strings or the `Tgetstr` result directly to `set_macro`, which accepts
-views and copies the macro definition.
-
 BUF-07. `libtrn/scorefile.cpp`, `sf_check_extra_headers`: replace the
 static lower-case `lbuf` with a local `std::string` comparison key.
 The truncation is arbitrary: the helper only lowercases a score header
