@@ -783,14 +783,13 @@ int newsgroup_sel_perform()
         one_group = true;
         len++;
     }
-    char *cmdstr = save_str(g_buf + len);
+    std::string cmdstr{g_buf + len};
 
     perform_status_init(g_newsgroup_to_read.value_of());
-    len = std::strlen(cmdstr);
 
     if (one_group)
     {
-        newsgroup_perform(cmdstr, 0);
+        newsgroup_perform(cmdstr.data(), 0);
         goto break_out;
     }
 
@@ -805,7 +804,7 @@ int newsgroup_sel_perform()
         if ((g_newsgroup_ptr->m_flags & bits) == bits //
             && (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
         {
-            if (newsgroup_perform(cmdstr, 0) < 0)
+            if (newsgroup_perform(cmdstr.data(), 0) < 0)
             {
                 break;
             }
@@ -814,7 +813,6 @@ int newsgroup_sel_perform()
     }
 
 break_out:
-    std::free(cmdstr);
     return 1;
 }
 

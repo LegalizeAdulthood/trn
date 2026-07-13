@@ -354,13 +354,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Newsgroup Selector Command String
-
-In `libtrn/ngstuff.cpp`, `newsgroup_sel_perform` saves the selector
-command suffix only while walking selected newsgroups.  Replace the
-saved pointer with local `std::string` storage and pass `data()` to
-`newsgroup_perform`.
-
 #### Add-Group Selector Command String
 
 In `libtrn/ngstuff.cpp`, `add_group_sel_perform` saves the selector
