@@ -349,11 +349,11 @@ int thread_perform()
         one_thread = true;
         len++;
     }
-    char *cmdstr = save_str(g_buf + len);
-    bool  want_unread = !g_sel_rereading && *cmdstr != 'm';
+    std::string cmdstr{g_buf + len};
+    bool        want_unread = !g_sel_rereading && (cmdstr.empty() || cmdstr[0] != 'm');
 
     perform_status_init(g_newsgroup_ptr->m_to_read);
-    len = std::strlen(cmdstr);
+    len = static_cast<int>(cmdstr.size());
 
     if (!output_level && !one_thread)
     {
@@ -361,10 +361,10 @@ int thread_perform()
         std::fflush(stdout);
     }
     // A few commands can just loop through the subjects.
-    if ((len == 1 && (*cmdstr == 't' || *cmdstr == 'J'))                       //
-        || (len == 2                                                           //
-            && (((*cmdstr == '+' || *cmdstr == '-') && cmdstr[0] == cmdstr[1]) //
-                || *cmdstr == 'T' || *cmdstr == 'A')))
+    if ((len == 1 && (cmdstr[0] == 't' || cmdstr[0] == 'J'))                       //
+        || (len == 2                                                               //
+            && (((cmdstr[0] == '+' || cmdstr[0] == '-') && cmdstr[0] == cmdstr[1]) //
+                || cmdstr[0] == 'T' || cmdstr[0] == 'A')))
     {
         g_performed_article_loop = false;
         if (one_thread)
@@ -385,7 +385,7 @@ int thread_perform()
             if (g_artp)
             {
                 g_art = g_artp->article_num();
-                if (perform(cmdstr, 0) < 0)
+                if (perform(cmdstr.data(), 0) < 0)
                 {
                     error_msg("Interrupted");
                     goto break_out;
@@ -397,7 +397,7 @@ int thread_perform()
             }
         }
     }
-    else if (*cmdstr == 'p')
+    else if (!cmdstr.empty() && cmdstr[0] == 'p')
     {
         ArticleNum oldart = g_art;
         g_art = article_after(g_last_art);
@@ -426,7 +426,7 @@ int thread_perform()
                 {
                     g_art = ap->article_num();
                     g_artp = ap;
-                    if (perform(cmdstr, output_level && g_page_line == 1) < 0)
+                    if (perform(cmdstr.data(), output_level && g_page_line == 1) < 0)
                     {
                         error_msg("Interrupted");
                         goto break_out;
@@ -457,7 +457,7 @@ int thread_perform()
                     {
                         g_art = ap->article_num();
                         g_artp = ap;
-                        if (perform(cmdstr, output_level && g_page_line == 1) < 0)
+                        if (perform(cmdstr.data(), output_level && g_page_line == 1) < 0)
                         {
                             error_msg("Interrupted");
                             goto break_out;
@@ -476,7 +476,6 @@ int thread_perform()
         }
     }
 break_out:
-    std::free(cmdstr);
     return 1;
 }
 

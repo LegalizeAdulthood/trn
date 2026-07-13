@@ -354,13 +354,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Thread Command String
-
-In `libtrn/ngstuff.cpp`, `thread_perform` saves the command suffix from
-`g_buf` only while visiting matching articles.  Replace the saved
-pointer with local `std::string` storage and pass `data()` to
-`perform`.
-
 #### Newsgroup Selector Command String
 
 In `libtrn/ngstuff.cpp`, `newsgroup_sel_perform` saves the selector
