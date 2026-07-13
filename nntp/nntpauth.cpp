@@ -18,8 +18,8 @@ int nntp_handle_auth_err()
     const std::string last_command_save{g_last_command};
 
     {
-        char* auth_user = get_auth_user();
-        char* auth_pass = get_auth_pass();
+        const char *auth_user = get_auth_user();
+        const char *auth_pass = get_auth_pass();
         if (!auth_user || !auth_pass)
         {
             return -2;

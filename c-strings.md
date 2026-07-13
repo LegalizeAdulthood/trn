@@ -348,13 +348,6 @@ buffer slices.
 
 ### Const-Correct C String Slices
 
-#### NNTP Auth Credential Locals
-
-In `nntp/nntpauth.cpp`, `nntp_handle_auth_err` assigns
-`get_auth_user()` and `get_auth_pass()` to local `char *` variables.
-They are only checked for null and formatted into `g_ser_line`.  Make
-the locals `const char *`; do not change the helper signatures.
-
 #### NNTP Connect Failure Cause
 
 In `nntp/nntpinit.cpp`, the `INET6` branch of `get_tcp_socket` assigns
