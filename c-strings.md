@@ -348,12 +348,6 @@ buffer slices.
 
 ### Local Save-String Slices
 
-#### Reply Mailer Command
-
-In `libtrn/respond.cpp`, `reply` copies the `MAILPOSTER` command with
-`save_str` only for local `%h` inspection and `file_exp`.  Use an owned
-`std::string` through the function and remove the manual cleanup path.
-
 #### Forward Mailer Command And Boundary
 
 In `libtrn/respond.cpp`, `forward` has the same local `FORWARDPOSTER`

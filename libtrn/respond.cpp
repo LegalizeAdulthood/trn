@@ -868,7 +868,7 @@ void reply()
 {
     char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'R' && g_art);
-    char* maildoer = save_str(get_val_const("MAILPOSTER",MAIL_POSTER));
+    const std::string maildoer{get_val_const("MAILPOSTER", MAIL_POSTER)};
 
     art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
@@ -880,7 +880,7 @@ void reply()
     }
     interp(hbuf, sizeof hbuf, get_val_const("MAILHEADER", MAIL_HEADER));
     std::fputs(hbuf,header);
-    if (!in_string(maildoer, "%h", true))
+    if (!in_string(maildoer.c_str(), "%h", true))
     {
         if (g_verbose)
         {
@@ -923,7 +923,7 @@ void reply()
     safe_copy(g_cmd_buf, file_exp(maildoer).c_str(), sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_orig_dir.c_str());
 done:
-    std::free(maildoer);
+    return;
 }
 
 void forward()
