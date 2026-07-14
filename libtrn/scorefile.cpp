@@ -79,7 +79,7 @@ static void  sf_grow();
 static int   sf_check_extra_headers(const char *head);
 static void  sf_add_extra_header(const char *head);
 static std::string sf_get_filename(int level);
-static char *sf_cmd_fname(char *s);
+static std::string sf_cmd_fname(std::string_view s);
 static bool  sf_do_command(char *cmd, bool check);
 static char *sf_freeform(char *start1, char *end1);
 static bool  sf_do_line(char *line, bool check);
@@ -409,20 +409,14 @@ static std::string sf_get_filename(int level)
 }
 
 // given a string, if no slashes prepends SCOREDIR env. variable
-static char *sf_cmd_fname(char *s)
+static std::string sf_cmd_fname(std::string_view s)
 {
-    static char lbuf[LINE_BUF_LEN];
-
-    char *s1 = std::strchr(s, '/');
-    if (s1)
+    if (s.find('/') != std::string_view::npos)
     {
-        return s;
+        return std::string{s};
     }
     // no slashes in this filename
-    std::strcpy(lbuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-    std::strcat(lbuf,"/");
-    std::strcat(lbuf,s);
-    return lbuf;
+    return (fs::path{get_val_const("SCOREDIR", DEFAULT_SCOREDIR)} / std::string{s}).generic_string();
 }
 
 // returns true if good command, false otherwise
@@ -1170,7 +1164,7 @@ void sf_append(char *line)
     {
         filename = s_sf_abbr[(int) filechar];
     }
-    const fs::path score_file{file_exp(sf_cmd_fname(filename.data()))}; // allow shortcuts
+    const fs::path score_file{file_exp(sf_cmd_fname(filename))}; // allow shortcuts
     // make sure directory exists...
     std::error_code error;
     fs::create_directories(score_file.parent_path(), error);
@@ -1429,7 +1423,7 @@ void sf_edit_file(const char *filespec)
         }
         file_name = s_sf_abbr[(int) filechar];
     }
-    const std::string fname_noexpand{sf_cmd_fname(file_name.data())};
+    const std::string fname_noexpand{sf_cmd_fname(file_name)};
     const std::string expanded_file{file_exp(fname_noexpand)};
     // make sure directory exists...
     if (!make_dir(expanded_file.c_str(), MD_FILE))

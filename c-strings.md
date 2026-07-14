@@ -333,10 +333,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-FB-02. `libtrn/scorefile.cpp`, `sf_cmd_fname`: replace the returned
-static `lbuf` with an owned string result and build the scorefile path
-with `fs::path`.  Keep the "already contains slash" behavior.
-
 FB-03. `libtrn/scorefile.cpp`, `sf_missing_score`: replace the returned
 static `lbuf` with an owned string result.  Preserve the explicit abort
 sentinel by returning an empty optional-style result, not a pointer to
