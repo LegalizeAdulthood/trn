@@ -10,18 +10,6 @@ the behavior provided by the old type sentinels.
 
 ## Plan
 
-### 4. Add behavior tests before the state refactor
-
-- Group exclusion: `group !group` leaves one deselected group item.
-- Group restoration: `group !group group` restores the existing item.
-- Virtual group pass: fake visitor is called, the expanded virtual group is
-  marked deleted, and non-expanded article/group payload behavior is
-  unchanged.
-- Existing colon path tests keep passing against shared read-only CMake
-  staged fixture files.
-- Tests that can update `newsrc` or other output files isolate only those
-  mutable files per test case.
-
 ### 5. Refactor universal item state in one slice
 
 - Add:

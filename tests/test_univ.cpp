@@ -4,6 +4,7 @@
 #include <trn/univ.h>
 
 #include <trn/ng.h>
+#include <trn/ngdata.h>
 #include <trn/util.h>
 #include <util/util2.h>
 
@@ -22,6 +23,33 @@ namespace fs = std::filesystem;
 std::string g_visited_group;
 int         g_visit_count{};
 
+void reset_test_newsgroups()
+{
+    g_newsgroup_data.clear();
+    g_newsgroup_order.clear();
+    g_newsgroup_count = NewsgroupNum{};
+    g_newsgroup_to_read = NewsgroupNum{};
+    g_first_newsgroup = nullptr;
+    g_last_newsgroup = nullptr;
+    g_newsgroup_ptr = nullptr;
+    g_current_newsgroup = nullptr;
+    g_recent_newsgroup = nullptr;
+    g_start_here = nullptr;
+    g_sel_page_np = nullptr;
+    g_sel_next_np = nullptr;
+}
+
+NewsgroupData *add_test_newsgroup(std::string_view group_name)
+{
+    NewsgroupData &group = g_newsgroup_data.emplace_back();
+    group.m_rc_line = group_name;
+    group.m_to_read = 1;
+    append_newsgroup_order(&group);
+    g_newsgroup_count = NewsgroupNum{static_cast<int>(g_newsgroup_data.size())};
+    g_newsgroup_to_read = g_newsgroup_count;
+    return &group;
+}
+
 int fake_visit_group(const char *group_name)
 {
     ++g_visit_count;
@@ -35,21 +63,60 @@ void reset_fake_visit_group()
     g_visit_count = 0;
 }
 
-UniversalItem *make_virtual_group(std::string_view group_name)
+UniversalItem *make_universal_item(UniversalItemType type)
 {
     UniversalItem *item = reinterpret_cast<UniversalItem *>(safe_malloc(sizeof(UniversalItem)));
     item->m_next = nullptr;
     item->m_prev = nullptr;
     item->m_num = 1;
     item->m_flags = UF_NONE;
-    item->m_type = UN_VGROUP;
+    item->m_type = type;
     item->m_desc = nullptr;
     item->m_score = 0;
+    return item;
+}
+
+UniversalItem *make_newsgroup_item(std::string_view group_name)
+{
+    UniversalItem *item = make_universal_item(UN_NEWSGROUP);
+    item->m_data.group.ng = save_str(group_name);
+    return item;
+}
+
+UniversalItem *make_virtual_group(std::string_view group_name)
+{
+    UniversalItem *item = make_universal_item(UN_VGROUP);
     item->m_data.vgroup.ng = save_str(group_name);
     item->m_data.vgroup.min_score = 0;
     item->m_data.vgroup.max_score = 0;
     item->m_data.vgroup.flags = UF_VG_NONE;
     return item;
+}
+
+UniversalItem *make_numbered_article(std::string_view group_name)
+{
+    UniversalItem *item = make_universal_item(UN_ARTICLE);
+    item->m_desc = save_str("Article");
+    item->m_data.virt.ng = save_str(group_name);
+    item->m_data.virt.id = nullptr;
+    item->m_data.virt.from = nullptr;
+    item->m_data.virt.subj = nullptr;
+    item->m_data.virt.num = ArticleNum{1};
+    return item;
+}
+
+void append_universal_item(UniversalItem *item)
+{
+    item->m_prev = g_last_univ;
+    if (g_last_univ)
+    {
+        g_last_univ->m_next = item;
+    }
+    else
+    {
+        g_first_univ = item;
+    }
+    g_last_univ = item;
 }
 
 class UnivTest : public testing::Test
@@ -65,6 +132,8 @@ void UnivTest::SetUp()
     {
         univ_close();
     }
+    reset_fake_visit_group();
+    reset_test_newsgroups();
 }
 
 void UnivTest::TearDown()
@@ -73,6 +142,8 @@ void UnivTest::TearDown()
     {
         univ_close();
     }
+    reset_fake_visit_group();
+    reset_test_newsgroups();
 }
 
 } // namespace
@@ -85,19 +156,51 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
     EXPECT_EQ("Empty", g_univ_title);
 }
 
+TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
+{
+    add_test_newsgroup("alt.test");
+
+    univ_mask_load("alt.test !alt.test", "Groups");
+
+    ASSERT_NE(nullptr, g_first_univ);
+    EXPECT_EQ(UN_GROUP_DESEL, g_first_univ->m_type);
+    EXPECT_STREQ("alt.test", g_first_univ->m_data.group.ng);
+    EXPECT_EQ(nullptr, g_first_univ->m_next);
+}
+
+TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
+{
+    add_test_newsgroup("alt.test");
+
+    univ_mask_load("alt.test !alt.test alt.test", "Groups");
+
+    ASSERT_NE(nullptr, g_first_univ);
+    EXPECT_EQ(UN_NEWSGROUP, g_first_univ->m_type);
+    EXPECT_STREQ("alt.test", g_first_univ->m_data.group.ng);
+    EXPECT_EQ(nullptr, g_first_univ->m_next);
+}
+
 TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
 {
-    reset_fake_visit_group();
     univ_mask_load("", "Virtual");
-    g_first_univ = make_virtual_group("alt.test");
-    g_last_univ = g_first_univ;
+    UniversalItem *expanded_group = make_virtual_group("alt.test");
+    UniversalItem *kept_group = make_newsgroup_item("alt.keep");
+    UniversalItem *kept_article = make_numbered_article("alt.article");
+    append_universal_item(expanded_group);
+    append_universal_item(kept_group);
+    append_universal_item(kept_article);
 
     univ_virt_pass(fake_visit_group);
 
     EXPECT_EQ(1, g_visit_count);
     EXPECT_EQ("alt.test", g_visited_group);
-    ASSERT_NE(nullptr, g_first_univ);
-    EXPECT_EQ(UN_DELETED, g_first_univ->m_type);
+    EXPECT_EQ(UN_DELETED, expanded_group->m_type);
+    EXPECT_EQ(UN_NEWSGROUP, kept_group->m_type);
+    EXPECT_STREQ("alt.keep", kept_group->m_data.group.ng);
+    EXPECT_EQ(UN_ARTICLE, kept_article->m_type);
+    EXPECT_STREQ("Article", kept_article->m_desc);
+    EXPECT_STREQ("alt.article", kept_article->m_data.virt.ng);
+    EXPECT_EQ(ArticleNum{1}, kept_article->m_data.virt.num);
     EXPECT_FALSE(g_univ_ng_virt_flag);
 }
 
