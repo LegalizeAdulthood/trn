@@ -126,6 +126,8 @@ struct UniversalItem
     char              *m_desc;  // default description
     int                m_score;
     UniversalData      m_data; // describes the object
+    UniversalNewsgroup &group();
+    const UniversalNewsgroup &group() const;
     const char        *univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };

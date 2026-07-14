@@ -80,7 +80,7 @@ UniversalItem *make_universal_item(UniversalItemType type)
 UniversalItem *make_newsgroup_item(std::string_view group_name)
 {
     UniversalItem *item = make_universal_item(UN_NEWSGROUP);
-    item->m_data.group.ng = save_str(group_name);
+    item->group().ng = save_str(group_name);
     return item;
 }
 
@@ -166,7 +166,7 @@ TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
     ASSERT_NE(nullptr, g_first_univ);
     EXPECT_EQ(UN_NEWSGROUP, g_first_univ->m_type);
     EXPECT_EQ(UIS_DESELECTED, g_first_univ->m_state);
-    EXPECT_STREQ("alt.test", g_first_univ->m_data.group.ng);
+    EXPECT_STREQ("alt.test", g_first_univ->group().ng);
     EXPECT_EQ(nullptr, g_first_univ->m_next);
 }
 
@@ -179,7 +179,7 @@ TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
     ASSERT_NE(nullptr, g_first_univ);
     EXPECT_EQ(UN_NEWSGROUP, g_first_univ->m_type);
     EXPECT_EQ(UIS_NORMAL, g_first_univ->m_state);
-    EXPECT_STREQ("alt.test", g_first_univ->m_data.group.ng);
+    EXPECT_STREQ("alt.test", g_first_univ->group().ng);
     EXPECT_EQ(nullptr, g_first_univ->m_next);
 }
 
@@ -201,7 +201,7 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     EXPECT_EQ(UIS_DELETED, expanded_group->m_state);
     EXPECT_EQ(UN_NEWSGROUP, kept_group->m_type);
     EXPECT_EQ(UIS_NORMAL, kept_group->m_state);
-    EXPECT_STREQ("alt.keep", kept_group->m_data.group.ng);
+    EXPECT_STREQ("alt.keep", kept_group->group().ng);
     EXPECT_EQ(UN_ARTICLE, kept_article->m_type);
     EXPECT_EQ(UIS_NORMAL, kept_article->m_state);
     EXPECT_STREQ("Article", kept_article->m_desc);

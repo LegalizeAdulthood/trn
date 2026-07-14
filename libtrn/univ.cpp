@@ -30,6 +30,7 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -255,7 +256,7 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_NEWSGROUP:
-        safe_free(ui->m_data.group.ng);
+        safe_free(ui->group().ng);
         break;
 
     case UN_ARTICLE:
@@ -317,8 +318,13 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if (ui->m_type == UN_NEWSGROUP && ui->m_state == UIS_DESELECTED && ui->m_data.group.ng //
-                && !strcmp(ui->m_data.group.ng, group_name.c_str()))
+            if (ui->m_type != UN_NEWSGROUP)
+            {
+                continue;
+            }
+            char *group_name_ptr = ui->group().ng;
+            if (ui->m_state == UIS_DESELECTED && group_name_ptr //
+                && !strcmp(group_name_ptr, group_name.c_str()))
             {
                 // undelete the newsgroup
                 ui->m_state = UIS_NORMAL;
@@ -327,8 +333,8 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         return;
     }
     ui = univ_add(UN_NEWSGROUP,desc);
-    ui->m_data.group.ng = save_str(group_name.c_str());
-    data.dat_ptr = ui->m_data.group.ng;
+    ui->group().ng = save_str(group_name.c_str());
+    data.dat_ptr = ui->group().ng;
     hash_store_last(data);
 }
 
@@ -508,8 +514,13 @@ static void univ_use_pattern(const char *pattern, int type)
         case 0:
             for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->m_type == UN_NEWSGROUP && ui->m_state == UIS_NORMAL && ui->m_data.group.ng //
-                    && univ_do_match(ui->m_data.group.ng, s))
+                if (ui->m_type != UN_NEWSGROUP)
+                {
+                    continue;
+                }
+                char *group_name = ui->group().ng;
+                if (ui->m_state == UIS_NORMAL && group_name //
+                    && univ_do_match(group_name, s))
                 {
                     ui->m_state = UIS_DESELECTED;
                 }
@@ -1340,6 +1351,18 @@ const char *UniversalItem::univ_article_desc() const
     }
     dbuf[70] = '\0';
     return dbuf;
+}
+
+UniversalNewsgroup &UniversalItem::group()
+{
+    assert(m_type == UN_NEWSGROUP);
+    return m_data.group;
+}
+
+const UniversalNewsgroup &UniversalItem::group() const
+{
+    assert(m_type == UN_NEWSGROUP);
+    return m_data.group;
 }
 
 // Help start

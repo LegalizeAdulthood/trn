@@ -40,139 +40,69 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 1. Add News Group Payload Accessors
-
-- Target: `UN_NEWSGROUP` payload use.
-- Change: add typed accessors for `UniversalNewsgroup`.
-- Data flow: callers read and write only `m_data.group.ng`.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 2. Use News Group Payload Accessors
-
-- Target: direct `m_data.group` access sites.
-- Change: replace direct news group payload access with the new accessors.
-- Data flow: `univ_add_group`, group-mask restore, selector display, and
-  paging feed the group name into newsgroup lookup and matching code.
-- Risk: medium; group names flow into matching, paging, and display.
-- Verification: focused universal tests and normal workflow.
-
-### 3. Add Virtual Group Payload Accessors
+### 3. Add And Use Virtual Group Payload Accessors
 
 - Target: `UN_VGROUP` payload use.
-- Change: add typed accessors for `UniversalVirtualGroup`.
-- Data flow: callers read and write `ng`, score limits, and virtual group
-  flags.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 4. Use Virtual Group Payload Accessors
-
-- Target: direct `m_data.vgroup` access sites.
-- Change: replace direct virtual group payload access with the new
-  accessors.
+- Change: add typed accessors for `UniversalVirtualGroup` and replace
+  direct `m_data.vgroup` access sites in the same slice.
 - Data flow: virtual group masks, virtual pass expansion, and minimum score
   handling pass names and score flags into article discovery.
 - Risk: medium; virtual pass expansion depends on these fields.
 - Verification: focused universal tests and normal workflow.
 
-### 5. Add Article Payload Accessors
+### 5. Add And Use Article Payload Accessors
 
 - Target: `UN_ARTICLE` payload use.
-- Change: add typed accessors for `UniversalVirtualData`.
-- Data flow: callers read and write article newsgroup, message id, author,
-  subject, and article number.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 6. Use Article Payload Accessors
-
-- Target: direct `m_data.virt` access sites.
-- Change: replace direct article payload access with the new accessors.
+- Change: add typed accessors for `UniversalVirtualData` and replace direct
+  `m_data.virt` access sites in the same slice.
 - Data flow: article payload values flow into read-status checks, display,
   virtual pass fill-in, and article description generation.
 - Risk: medium; article display and read-state checks are user visible.
 - Verification: focused universal tests and normal workflow.
 
-### 7. Add Config File Payload Accessors
+### 7. Add And Use Config File Payload Accessors
 
 - Target: `UN_CONFIG_FILE` payload use.
-- Change: add typed accessors for `UniversalConfigFileData`.
-- Data flow: callers read and write title, file name, and label.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 8. Use Config File Payload Accessors
-
-- Target: direct `m_data.cfile` access sites.
-- Change: replace direct config-file payload access with the new accessors.
+- Change: add typed accessors for `UniversalConfigFileData` and replace
+  direct `m_data.cfile` access sites in the same slice.
 - Data flow: colon-path expansion and file loading pass the file name and
   label into recursive universal file reads.
 - Risk: medium; path and label behavior must stay unchanged.
 - Verification: focused universal tests and normal workflow.
 
-### 9. Add Group Mask Payload Accessors
+### 9. Add And Use Group Mask Payload Accessors
 
 - Target: `UN_GROUP_MASK` payload use.
-- Change: add typed accessors for `UniversalGroupMaskData`.
-- Data flow: callers read and write mask title and mask list.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 10. Use Group Mask Payload Accessors
-
-- Target: direct `m_data.gmask` access sites.
-- Change: replace direct group-mask payload access with the new accessors.
+- Change: add typed accessors for `UniversalGroupMaskData` and replace
+  direct `m_data.gmask` access sites in the same slice.
 - Data flow: mask strings flow into `univ_use_pattern` and group inclusion
   or exclusion.
 - Risk: medium; mask behavior drives which items are visible.
 - Verification: focused universal tests and normal workflow.
 
-### 11. Add Text File Payload Accessors
+### 11. Add And Use Text File Payload Accessors
 
 - Target: `UN_TEXT_FILE` payload use.
-- Change: add typed accessors for `UniversalTextFile`.
-- Data flow: callers read and write the text file name.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 12. Use Text File Payload Accessors
-
-- Target: direct `m_data.text_file` access sites.
-- Change: replace direct text-file payload access with the new accessors.
+- Change: add typed accessors for `UniversalTextFile` and replace direct
+  `m_data.text_file` access sites in the same slice.
 - Data flow: file names flow into text file paging.
 - Risk: medium; file name expansion and paging must stay unchanged.
 - Verification: focused universal tests and normal workflow.
 
-### 13. Add Debug Payload Accessors
+### 13. Add And Use Debug Payload Accessors
 
 - Target: `UN_DEBUG1` payload use.
-- Change: add typed accessors for the debug string payload.
-- Data flow: callers read and write only `m_data.str`.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 14. Use Debug Payload Accessors
-
-- Target: direct `m_data.str` access sites.
-- Change: replace direct debug string payload access with the new
-  accessors.
+- Change: add typed accessors for the debug string payload and replace
+  direct `m_data.str` access sites in the same slice.
 - Data flow: debug text flows only to display and cleanup.
 - Risk: low; debug payload behavior is isolated.
 - Verification: focused universal tests and normal workflow.
 
-### 15. Add Help Key Payload Accessors
+### 15. Add And Use Help Key Payload Accessors
 
 - Target: `UN_HELP_KEY` payload use.
-- Change: add typed accessors for the help location payload.
-- Data flow: callers read and write `m_data.i`.
-- Risk: low; this is a narrow access indirection.
-- Verification: focused universal tests and normal workflow.
-
-### 16. Use Help Key Payload Accessors
-
-- Target: direct `m_data.i` access sites.
-- Change: replace direct help-key payload access with the new accessors.
+- Change: add typed accessors for the help location payload and replace
+  direct `m_data.i` access sites in the same slice.
 - Data flow: help location flows into help mode display.
 - Risk: low; behavior is localized to help-key entries.
 - Verification: focused universal tests and normal workflow.
