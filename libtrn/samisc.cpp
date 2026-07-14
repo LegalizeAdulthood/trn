@@ -82,7 +82,7 @@ bool sa_eligible(long a)
 // (There is no easy mapping between entry numbers and article numbers.)
 long sa_artnum_to_ent(ArticleNum artnum)
 {
-    for (long i = 1; i < g_sa_num_ents; i++)
+    for (long i = 1; i < static_cast<long>(g_sa_ents.size()); i++)
     {
         if (g_sa_ents[i].artnum == artnum)
         {
@@ -102,7 +102,7 @@ void sa_sel_threads()
     want_unread = !g_sa_mode_read_elig;
 
     // clear any old selections
-    for (long i = 1; i < g_sa_num_ents; i++)
+    for (int i = 1; i < static_cast<int>(g_sa_ents.size()); i++)
     {
         sa_clear_select1(i);
     }
@@ -135,7 +135,7 @@ void sa_sel_threads()
 int sa_number_arts()
 {
     int total = 0;
-    for (int i = 1; i < g_sa_num_ents; i++)
+    for (int i = 1; i < static_cast<int>(g_sa_ents.size()); i++)
     {
         ArticleNum a = g_sa_ents[i].artnum;
         if (is_unavailable(a))

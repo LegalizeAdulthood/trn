@@ -25,10 +25,9 @@ protected:
         g_char_subst = g_charsets.c_str();
         g_last_art = ArticleNum{1};
         g_s_cur_type = S_ART;
-        g_sa_ents = m_entries;
-        g_sa_num_ents = 2;
+        g_sa_ents.assign(2, ScanArticleEntryData{});
 
-        m_entries[1].artnum = ArticleNum{1};
+        g_sa_ents[1].artnum = ArticleNum{1};
         Article *article = article_ptr(ArticleNum{1});
         article->m_from = m_author;
         article->m_flags = AF_EXISTS | AF_UNREAD;
@@ -46,15 +45,13 @@ protected:
     void TearDown() override
     {
         g_article_list.clear();
-        g_sa_ents = nullptr;
-        g_sa_num_ents = 0;
+        g_sa_ents.clear();
         g_char_subst = nullptr;
         g_last_art = ArticleNum{};
         g_s_cur_type = S_NONE;
     }
 
     char                 m_author[64]{"Casey Mixed <case@example.com>"};
-    ScanArticleEntryData m_entries[2]{};
 };
 
 } // namespace

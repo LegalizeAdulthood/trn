@@ -3,11 +3,14 @@
  * Interface to rest of [t]rn
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_SCANART_H
 #define TRN_SCANART_H
 
 #include <config/typedef.h>
 #include <trn/enum-flags.h>
+
+#include <vector>
 
 // return codes for sa_main
 enum SaMainResult
@@ -46,8 +49,7 @@ struct ScanArticleEntryData
     ScanArticleFlags sa_flags; // status bitmap (marked, select, etc...)
 };
 
-extern ScanArticleEntryData *g_sa_ents;
-extern int g_sa_num_ents;
+extern std::vector<ScanArticleEntryData> g_sa_ents;
 
 extern bool g_sa_initialized;       // Have we initialized?
 extern bool g_sa_never_initialized; // Have we ever initialized?

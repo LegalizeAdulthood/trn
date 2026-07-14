@@ -354,12 +354,6 @@ buffer slices.
 
 ### Safe-realloc Array Slices
 
-RA-03. `libtrn/samain.cpp` and scan-article readers: replace
-`g_sa_ents` plus `s_sa_ents_alloc` with
-`std::vector<ScanArticleEntryData>`.  The slice must update the public
-declaration and all direct indexed readers while preserving the
-one-based entry numbering.
-
 RA-04. `libtrn/scan.cpp` and `libtrn/sorder.cpp`, scan context order
 arrays: replace `g_s_contexts`, `ScanContext::ent_sort`,
 `ScanContext::ent_index`, `g_s_ent_sort`, and `g_s_ent_index` raw arrays

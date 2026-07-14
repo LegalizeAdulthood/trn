@@ -20,14 +20,10 @@
 #include <trn/sdisp.h>
 #include <trn/sorder.h>
 #include <trn/spage.h>
-#include <trn/util.h>
-
-#include <cstdlib>
 
 bool g_sa_mode_zoom{};      // true if in "zoom" (display only selected) mode
 int  g_sa_scan_context{-1}; // contains the scan-context number for the current article scan
 
-static int  s_sa_ents_alloc{};
 static bool s_sa_context_init{}; // has context been initialized?
 
 static void sa_init_ents();
@@ -72,41 +68,24 @@ void sa_init()
 
 static void sa_init_ents()
 {
-    g_sa_num_ents = 0;
-    s_sa_ents_alloc = 0;
-    g_sa_ents = (ScanArticleEntryData*)nullptr;
+    g_sa_ents.clear();
 }
 
 static void sa_clean_ents()
 {
-    std::free(g_sa_ents);
+    g_sa_ents.clear();
 }
 
 // returns entry number that was added
 //ART_NUM artnum;               // article number to be added
 static long sa_add_ent(ArticleNum artnum)
 {
-    g_sa_num_ents++;
-    if (g_sa_num_ents > s_sa_ents_alloc)
+    if (g_sa_ents.empty())
     {
-        s_sa_ents_alloc += 100;
-        if (s_sa_ents_alloc == 100)     // newly allocated
-        {
-            // don't use number 0, just allocate it and skip it
-            g_sa_num_ents = 2;
-            g_sa_ents = (ScanArticleEntryData*)safe_malloc(s_sa_ents_alloc
-                                        * sizeof (ScanArticleEntryData));
-        }
-        else
-        {
-            g_sa_ents = (ScanArticleEntryData*)safe_realloc((char*)g_sa_ents,
-                        s_sa_ents_alloc * sizeof (ScanArticleEntryData));
-        }
+        g_sa_ents.push_back(ScanArticleEntryData{});
     }
-    long cur = g_sa_num_ents - 1;
-    g_sa_ents[cur].artnum = artnum;
-    g_sa_ents[cur].subj_thread_num = 0;
-    g_sa_ents[cur].sa_flags = SAF_NONE;
+    g_sa_ents.push_back(ScanArticleEntryData{artnum, 0, SAF_NONE});
+    const long cur = static_cast<long>(g_sa_ents.size()) - 1;
     s_order_add(cur);
     return cur;
 }

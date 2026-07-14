@@ -5,6 +5,7 @@
  * Interface routines to the rest of trn
  */
 // This file is Copyright 1992, 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/scanart.h>
 
@@ -19,8 +20,7 @@
 #include <trn/smisc.h>
 #include <trn/terminal.h> // macro to clear...
 
-ScanArticleEntryData *g_sa_ents{};
-int                   g_sa_num_ents{};
+std::vector<ScanArticleEntryData> g_sa_ents{};
 bool                  g_sa_initialized{};           // Have we initialized?
 bool                  g_sa_never_initialized{true}; // Have we ever initialized?
 // note: g_sa_in should be checked for returning to SA
