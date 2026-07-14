@@ -1468,6 +1468,18 @@ const char *UniversalItem::debug_string() const
     return m_data.str;
 }
 
+HelpLocation &UniversalItem::help_location()
+{
+    assert(m_type == UN_HELP_KEY);
+    return m_data.i;
+}
+
+HelpLocation UniversalItem::help_location() const
+{
+    assert(m_type == UN_HELP_KEY);
+    return m_data.i;
+}
+
 // Help start
 
 // later: add online help as a new item type, add appropriate item
@@ -1481,7 +1493,7 @@ void univ_help_main(HelpLocation where)
 
     // first add help on current mode
     UniversalItem *ui = univ_add(UN_HELP_KEY, nullptr);
-    ui->m_data.i = where;
+    ui->help_location() = where;
 
     // later, do other mode sensitive stuff
 
@@ -1502,7 +1514,7 @@ void univ_help(HelpLocation where)
 
 const char *UniversalItem::univ_key_help_mode_str() const
 {
-    switch (m_data.i)
+    switch (help_location())
     {
     case UHELP_PAGE:
         return "Article Pager Mode";

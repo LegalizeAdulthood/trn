@@ -1016,7 +1016,7 @@ do_group:
     }
 
     case UN_HELP_KEY:
-        if (another_command(univ_key_help(ui->m_data.i)))
+        if (another_command(univ_key_help(ui->help_location())))
         {
             push_char(s_sel_ret | 0200);
         }

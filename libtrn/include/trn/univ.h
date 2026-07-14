@@ -140,6 +140,8 @@ struct UniversalItem
     const UniversalTextFile &text_file() const;
     char *&debug_string();
     const char *debug_string() const;
+    HelpLocation &help_location();
+    HelpLocation help_location() const;
     const char        *univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };

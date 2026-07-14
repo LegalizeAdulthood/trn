@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 15. Add And Use Help Key Payload Accessors
-
-- Target: `UN_HELP_KEY` payload use.
-- Change: add typed accessors for the help location payload and replace
-  direct `m_data.i` access sites in the same slice.
-- Data flow: help location flows into help mode display.
-- Risk: low; behavior is localized to help-key entries.
-- Verification: focused universal tests and normal workflow.
-
 ### 17. Convert News Group Payload Strings
 
 - Target: `UniversalNewsgroup`.
