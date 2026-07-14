@@ -1,6 +1,7 @@
 /* util3.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <tool/util3.h>
 
@@ -13,7 +14,7 @@
 #include <string>
 
 static char *s_nntp_password{};
-static char s_no_memory[] = "trn: out of memory!\n";
+static constexpr char s_no_memory[] = "trn: out of memory!\n";
 
 int do_shell(const char *shell, const char *cmd)
 {
