@@ -136,6 +136,8 @@ struct UniversalItem
     const UniversalConfigFileData &config_file() const;
     UniversalGroupMaskData &group_mask();
     const UniversalGroupMaskData &group_mask() const;
+    UniversalTextFile &text_file();
+    const UniversalTextFile &text_file() const;
     const char        *univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };

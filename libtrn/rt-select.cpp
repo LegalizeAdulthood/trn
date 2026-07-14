@@ -845,7 +845,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_TEXT_FILE:
     {
-        char *s = ui->m_data.text_file.fname;
+        char *s = ui->text_file().fname;
         if (s && *s)
         {
             // later have some way of getting a return code back

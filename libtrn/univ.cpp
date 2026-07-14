@@ -279,7 +279,7 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_TEXT_FILE:
-        safe_free(ui->m_data.text_file.fname);
+        safe_free(ui->text_file().fname);
         break;
 
     case UN_DATA_SOURCE:  // unimplemented methods
@@ -413,7 +413,7 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     case '%':
     case '/':
         ui = univ_add(UN_TEXT_FILE, desc);
-        ui->m_data.text_file.fname = save_str(file_exp(file_name.c_str()));
+        ui->text_file().fname = save_str(file_exp(file_name.c_str()));
         break;
     }
 }
@@ -1442,6 +1442,18 @@ const UniversalGroupMaskData &UniversalItem::group_mask() const
 {
     assert(m_type == UN_GROUP_MASK);
     return m_data.gmask;
+}
+
+UniversalTextFile &UniversalItem::text_file()
+{
+    assert(m_type == UN_TEXT_FILE);
+    return m_data.text_file;
+}
+
+const UniversalTextFile &UniversalItem::text_file() const
+{
+    assert(m_type == UN_TEXT_FILE);
+    return m_data.text_file;
 }
 
 // Help start

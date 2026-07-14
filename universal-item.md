@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 11. Add And Use Text File Payload Accessors
-
-- Target: `UN_TEXT_FILE` payload use.
-- Change: add typed accessors for `UniversalTextFile` and replace direct
-  `m_data.text_file` access sites in the same slice.
-- Data flow: file names flow into text file paging.
-- Risk: medium; file name expansion and paging must stay unchanged.
-- Verification: focused universal tests and normal workflow.
-
 ### 13. Add And Use Debug Payload Accessors
 
 - Target: `UN_DEBUG1` payload use.
