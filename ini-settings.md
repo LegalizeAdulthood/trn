@@ -97,13 +97,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-1. Add `IniDocument` behavior tests for immutable parsing targets.
-
-   Cover section names, section conditions, multiple sections, comments,
-   quoted values, escaped values, line continuations, trailing whitespace,
-   empty values, unknown fields, and case-insensitive schema lookup.  Run
-   these tests before changing parser behavior.
-
 2. Add `IniSetting`.
 
    Add a small view type that stores name and raw value ranges.  Implement
