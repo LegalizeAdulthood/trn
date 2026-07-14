@@ -750,64 +750,7 @@ bool parse_string(char **to, char **from)
     *to = t;
     *from = f;
 
-    return inquote;     // return true if the string ended with a newline
-}
-
-namespace
-{
-
-template <typename Sink>
-char *parse_ini_section_into(char *cp, Sink sink)
-{
-    while (*cp && *cp != '[')
-    {
-        char *s;
-        for (s = cp; *s; s++)
-        {
-            if (std::isupper(*s))
-            {
-                *s = std::tolower(*s);
-            }
-        }
-        s++;
-        if (*s)
-        {
-            if (!sink(cp, s))
-            {
-                std::printf("Unknown option: `%s'.\n", cp);
-            }
-            cp = s + std::strlen(s) + 1;
-        }
-        else
-        {
-            cp = s + 1;
-        }
-    }
-
-    return cp;
-}
-
-} // namespace
-
-char *parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &values)
-{
-    if (!*cp)
-    {
-        return nullptr;
-    }
-
-    values.reset();
-    return parse_ini_section_into(cp,
-                                  [&schema, &values](const char *name, char *value)
-                                  {
-                                      const IniField *field = schema.find(name);
-                                      if (!field)
-                                      {
-                                          return false;
-                                      }
-                                      values.set(*field, std::string_view{value});
-                                      return true;
-                                  });
+    return inquote; // return true if the string ended with a newline
 }
 
 bool parse_ini_section(const IniSection &section, const IniSchema &schema, IniSectionValues &values)

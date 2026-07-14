@@ -9,6 +9,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string_view>
+
 namespace
 {
 
@@ -19,12 +21,17 @@ protected:
     {
         IniDocument document{text, "test input"};
 
-        IniDocument::Section section;
-        EXPECT_TRUE(document.next_section(section));
-        EXPECT_STREQ("source", section.name);
-        EXPECT_STREQ("", section.condition);
+        IniDocument::Iterator iterator = document.begin();
+        if (iterator == document.end())
+        {
+            ADD_FAILURE() << "missing section";
+            return {};
+        }
+        const IniSection &section = *iterator;
+        EXPECT_EQ(std::string_view{"source"}, section.name());
+        EXPECT_TRUE(section.condition().empty());
 
-        parse_ini_section(section.body, DataSourceConfig::schema(), m_values);
+        parse_ini_section(section, DataSourceConfig::schema(), m_values);
         return DataSourceConfig::from(m_values);
     }
 

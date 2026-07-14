@@ -10,7 +10,6 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -47,35 +46,6 @@ void expect_value(const IniSectionValues &values, int field_id, std::string_view
 }
 
 } // namespace
-
-TEST(IniDocumentTest, iteratesTokenizedSections)
-{
-    IniDocument document{"# ignored\n"
-                         "[first] enabled\n"
-                         "Alpha Key = one\n"
-                         "Beta Key = two\n"
-                         "\n"
-                         "[second]\n"
-                         "Gamma = three\n",
-                         "test input"};
-
-    IniDocument::Section section;
-    ASSERT_TRUE(document.next_section(section));
-    EXPECT_STREQ("first", section.name);
-    EXPECT_STREQ("enabled", section.condition);
-    EXPECT_TRUE(section.has_condition());
-    EXPECT_STREQ("Alpha Key", section.body);
-    EXPECT_STREQ("one", section.body + std::strlen(section.body) + 1);
-
-    ASSERT_TRUE(document.next_section(section));
-    EXPECT_STREQ("second", section.name);
-    EXPECT_STREQ("", section.condition);
-    EXPECT_FALSE(section.has_condition());
-    EXPECT_STREQ("Gamma", section.body);
-    EXPECT_STREQ("three", section.body + std::strlen(section.body) + 1);
-
-    EXPECT_FALSE(document.next_section(section));
-}
 
 TEST(IniDocumentTest, iteratesSectionsWithRangeFor)
 {
@@ -118,16 +88,15 @@ TEST(IniDocumentTest, iteratesSectionsWithRangeFor)
     EXPECT_EQ("three", setting_values[2]);
 }
 
-TEST(IniDocumentTest, parsesSectionValuesFromSectionBody)
+TEST(IniDocumentTest, parsesSectionValues)
 {
     IniDocument     document{"[test]\nAlpha Key = one\nBeta Key = two\n", "test input"};
     const IniSchema schema{
         "test", {IniField::value(TEST_FIELD_ALPHA, "Alpha Key"), IniField::value(TEST_FIELD_BETA, "Beta Key")}};
     IniSectionValues values;
 
-    IniDocument::Section section;
-    ASSERT_TRUE(document.next_section(section));
-    parse_ini_section(section.body, schema, values);
+    const IniSection section = *document.begin();
+    parse_ini_section(section, schema, values);
 
     const auto alpha = values.value(TEST_FIELD_ALPHA);
     const auto beta = values.value(TEST_FIELD_BETA);
@@ -198,9 +167,8 @@ TEST(IniDocumentTest, normalizesParsedValues)
          IniField::value(TEST_FIELD_TRAILING, "Trailing Key")}};
     IniSectionValues values;
 
-    IniDocument::Section section;
-    ASSERT_TRUE(document.next_section(section));
-    parse_ini_section(section.body, schema, values);
+    const IniSection section = *document.begin();
+    parse_ini_section(section, schema, values);
 
     EXPECT_EQ(6, values.size());
     expect_value(values, TEST_FIELD_ALPHA, "one");
@@ -221,16 +189,15 @@ TEST(IniDocumentTest, matchesSchemaNamesCaseInsensitivelyAndReportsUnknownFields
     const IniSchema  schema{"test", {IniField::value(TEST_FIELD_MIXED_CASE, "Mixed Case Key")}};
     IniSectionValues values;
 
-    IniDocument::Section section;
-    ASSERT_TRUE(document.next_section(section));
+    const IniSection section = *document.begin();
 
     testing::internal::CaptureStdout();
-    parse_ini_section(section.body, schema, values);
+    parse_ini_section(section, schema, values);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(1, values.size());
     expect_value(values, TEST_FIELD_MIXED_CASE, "yes");
-    EXPECT_NE(std::string::npos, output.find("Unknown option: `unknown key'."));
+    EXPECT_NE(std::string::npos, output.find("Unknown option: `Unknown Key'."));
 }
 
 TEST(IniDocumentTest, parsesFileContents)
@@ -246,10 +213,13 @@ TEST(IniDocumentTest, parsesFileContents)
 
     IniDocument document{file_contents(path), "test file"};
 
-    IniDocument::Section section;
-    ASSERT_TRUE(document.next_section(section));
-    EXPECT_STREQ("file", section.name);
-    EXPECT_STREQ("Value", section.body);
+    const IniSection section = *document.begin();
+    EXPECT_EQ(std::string_view{"file"}, section.name());
+
+    IniSection::Iterator setting = section.begin();
+    ASSERT_NE(section.end(), setting);
+    EXPECT_EQ(std::string_view{"Value"}, (*setting).name());
+    EXPECT_EQ("text", (*setting).value());
 
     std::filesystem::remove(path, error);
 }

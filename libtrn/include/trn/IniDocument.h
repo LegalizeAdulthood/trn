@@ -34,43 +34,19 @@ public:
         IniSection       m_section;
     };
 
-    struct Section
-    {
-        char *name{};
-        char *condition{};
-        char *body{};
-
-        bool has_condition() const;
-    };
-
     IniDocument() = default;
     explicit IniDocument(std::string contents, std::string_view source_name = "input");
 
     IniDocument(const IniDocument &) = delete;
     IniDocument &operator=(const IniDocument &) = delete;
-    IniDocument(IniDocument &&other) noexcept;
-    IniDocument &operator=(IniDocument &&other) noexcept;
+    IniDocument(IniDocument &&other) noexcept = default;
+    IniDocument &operator=(IniDocument &&other) noexcept = default;
 
-    bool     next_section(Section &section);
-    void     rewind();
     Iterator begin() const;
     Iterator end() const;
 
 private:
-    static char *find_next_section(char *cursor, char **section, char **condition);
-    static char *skip_section_body(char *cursor);
-    void         prepare(std::string_view source_name);
-    std::size_t  cursor_offset() const;
-    void         restore_cursor(std::size_t offset);
-
     std::string m_contents;
-    std::string m_compat_contents;
-    char       *m_cursor{};
 };
-
-inline bool IniDocument::Section::has_condition() const
-{
-    return condition != nullptr && *condition != '\0';
-}
 
 #endif
