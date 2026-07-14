@@ -84,7 +84,7 @@ static bool  sf_do_command(char *cmd, bool check);
 static char *sf_freeform(char *start1, char *end1);
 static bool  sf_do_line(char *line, bool check);
 static void  sf_do_file(const char *fname);
-static int   score_match(char *str, int ind);
+static int   score_match(const char *str, int ind);
 static char *sf_missing_score(const char *line);
 static char *sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
@@ -891,9 +891,9 @@ static void sf_do_file(const char *fname)
     s_sf_file_level--;
 }
 
-//char* str;            // string to match on
+//const char* str;      // string to match on
 //int ind;              // index into s_sf_entries
-static int score_match(char *str, int ind)
+static int score_match(const char *str, int ind)
 {
     const char *s1 = s_sf_entries[ind].str1;
     const char *s2 = s_sf_entries[ind].str2;

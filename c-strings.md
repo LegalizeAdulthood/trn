@@ -313,12 +313,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
-### Const/View Signature Slices
-
-CV-03. `libtrn/scorefile.cpp`, `score_match`: change the `str`
-parameter to `const char *`.  The function only passes the text to the
-regex engine and substring checks.
-
 ### Owning Raw-string Return Slices
 
 OR-01. `libtrn/head.cpp`: add an owning `std::string` wrapper for
