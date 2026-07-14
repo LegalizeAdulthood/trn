@@ -333,11 +333,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-FB-01. `libtrn/scorefile.cpp`, `sf_get_filename`: replace the
-file-scope `s_sf_file` return buffer with an owned path or string
-result.  This is real filename construction.  The truncation is
-arbitrary fixed-buffer storage, not an external file-format limit.
-
 FB-02. `libtrn/scorefile.cpp`, `sf_cmd_fname`: replace the returned
 static `lbuf` with an owned string result and build the scorefile path
 with `fs::path`.  Keep the "already contains slash" behavior.

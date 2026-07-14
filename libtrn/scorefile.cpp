@@ -78,7 +78,7 @@ static char *sf_file_get_line(int fnum);
 static void  sf_grow();
 static int   sf_check_extra_headers(const char *head);
 static void  sf_add_extra_header(const char *head);
-static char *sf_get_filename(int level);
+static std::string sf_get_filename(int level);
 static char *sf_cmd_fname(char *s);
 static bool  sf_do_command(char *cmd, bool check);
 static char *sf_freeform(char *start1, char *end1);
@@ -136,10 +136,10 @@ void sf_init()
     // the main read-in loop
     for (int i = 0; i <= level; i++)
     {
-        char *s = sf_get_filename(i);
-        if (s != nullptr)
+        std::string s = sf_get_filename(i);
+        if (!s.empty())
         {
-            sf_do_file(s);
+            sf_do_file(s.c_str());
         }
     }
 
@@ -372,39 +372,40 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
     return {};
 }
 
-// keep this one outside the functions because it is shared
-static char s_sf_file[LINE_BUF_LEN];
-
 // filenames of type a/b/c/foo.bar.misc for group foo.bar.misc
-static char *sf_get_filename(int level)
+static std::string sf_get_filename(int level)
 {
-    std::strcpy(s_sf_file, file_exp(get_val_const("SCOREDIR", DEFAULT_SCOREDIR)).c_str());
-    std::strcat(s_sf_file,"/");
+    std::string filename = file_exp(get_val_const("SCOREDIR", DEFAULT_SCOREDIR));
+    filename += "/";
     if (!level)
     {
         // allow environment variable later...
-        std::strcat(s_sf_file,"global");
+        filename += "global";
     }
     else
     {
-        std::strcat(s_sf_file, file_exp("%C").c_str());
-        char *s = std::strrchr(s_sf_file, '/');
+        filename += file_exp("%C");
+        std::string::size_type pos = filename.rfind('/');
         // maybe redo this logic later...
         while (level--)
         {
-            if (*s == '\0')     // no more name to match
+            if (pos == filename.size()) // no more name to match
             {
-                return nullptr;
+                return {};
             }
-            s = skip_ne(s, '.');
-            if (*s && level)
+            pos = filename.find('.', pos);
+            if (pos == std::string::npos)
             {
-                s++;
+                pos = filename.size();
+            }
+            if (pos < filename.size() && level)
+            {
+                pos++;
             }
         }
-        *s = '\0';      // cut end of score file
+        filename.resize(pos); // cut end of score file
     }
-    return s_sf_file;
+    return filename;
 }
 
 // given a string, if no slashes prepends SCOREDIR env. variable
