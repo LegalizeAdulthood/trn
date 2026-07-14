@@ -315,10 +315,6 @@ buffer slices.
 
 ### Const/View Signature Slices
 
-CV-02. `libtrn/head.cpp`, `get_header_num`: change the parameter to
-`const char *`.  The function reads the header name and updates header
-metadata, but it does not write through the caller string.
-
 CV-03. `libtrn/scorefile.cpp`, `score_match`: change the `str`
 parameter to `const char *`.  The function only passes the text to the
 regex engine and substring checks.

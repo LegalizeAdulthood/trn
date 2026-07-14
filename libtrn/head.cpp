@@ -195,11 +195,11 @@ HeaderLineType set_line_type(const char *bufptr, const char *colon)
     return SOME_LINE;
 }
 
-HeaderLineType get_header_num(char *s)
+HeaderLineType get_header_num(const char *s)
 {
-    char* end = s + std::strlen(s);
+    const char *end = s + std::strlen(s);
 
-    HeaderLineType i = set_line_type(s, end);     // Sets g_msg to lower-cased header name
+    HeaderLineType i = set_line_type(s, end); // Sets g_msg to lower-cased header name
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
@@ -208,31 +208,31 @@ HeaderLineType get_header_num(char *s)
         g_header_type[CUSTOM_LINE].flags = g_header_type[i].flags;
         g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{-1};
         g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{};
-        for (char *bp = g_head_buf; *bp; bp = end)
+        for (char *bp = g_head_buf, *line_end = nullptr; *bp; bp = line_end)
         {
-            if (!(end = std::strchr(bp,'\n')) || end == bp)
+            if (!(line_end = std::strchr(bp, '\n')) || line_end == bp)
             {
                 break;
             }
-            char ch = *++end;
-            *end = '\0';
-            s = std::strchr(bp,':');
-            *end = ch;
-            if (!s || (i = set_line_type(bp,s)) != CUSTOM_LINE)
+            char ch = *++line_end;
+            *line_end = '\0';
+            char *colon = std::strchr(bp, ':');
+            *line_end = ch;
+            if (!colon || (i = set_line_type(bp, colon)) != CUSTOM_LINE)
             {
                 continue;
             }
             g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{bp - g_head_buf};
-            while (is_hor_space(*end))
+            while (is_hor_space(*line_end))
             {
-                if (!(end = std::strchr(end, '\n')))
+                if (!(line_end = std::strchr(line_end, '\n')))
                 {
-                    end = bp + std::strlen(bp);
+                    line_end = bp + std::strlen(bp);
                     break;
                 }
-                end++;
+                line_end++;
             }
-            g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{end - g_head_buf};
+            g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{line_end - g_head_buf};
             break;
         }
         i = CUSTOM_LINE;

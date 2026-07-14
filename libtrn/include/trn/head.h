@@ -104,7 +104,7 @@ void head_final();
 void dumpheader(char *where);
 #endif
 HeaderLineType set_line_type(const char *bufptr, const char *colon);
-HeaderLineType get_header_num(char *s);
+HeaderLineType get_header_num(const char *s);
 void           start_header(ArticleNum artnum);
 bool           parse_line(char *art_buf, int new_hide, int old_hide);
 void           end_header();
