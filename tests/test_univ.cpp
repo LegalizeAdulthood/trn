@@ -87,10 +87,11 @@ UniversalItem *make_newsgroup_item(std::string_view group_name)
 UniversalItem *make_virtual_group(std::string_view group_name)
 {
     UniversalItem *item = make_universal_item(UN_VGROUP);
-    item->m_data.vgroup.ng = save_str(group_name);
-    item->m_data.vgroup.min_score = 0;
-    item->m_data.vgroup.max_score = 0;
-    item->m_data.vgroup.flags = UF_VG_NONE;
+    UniversalVirtualGroup &vgroup = item->vgroup();
+    vgroup.ng = save_str(group_name);
+    vgroup.min_score = 0;
+    vgroup.max_score = 0;
+    vgroup.flags = UF_VG_NONE;
     return item;
 }
 

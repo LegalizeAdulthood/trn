@@ -128,6 +128,8 @@ struct UniversalItem
     UniversalData      m_data; // describes the object
     UniversalNewsgroup &group();
     const UniversalNewsgroup &group() const;
+    UniversalVirtualGroup &vgroup();
+    const UniversalVirtualGroup &vgroup() const;
     const char        *univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };

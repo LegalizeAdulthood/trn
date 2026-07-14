@@ -40,16 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 3. Add And Use Virtual Group Payload Accessors
-
-- Target: `UN_VGROUP` payload use.
-- Change: add typed accessors for `UniversalVirtualGroup` and replace
-  direct `m_data.vgroup` access sites in the same slice.
-- Data flow: virtual group masks, virtual pass expansion, and minimum score
-  handling pass names and score flags into article discovery.
-- Risk: medium; virtual pass expansion depends on these fields.
-- Verification: focused universal tests and normal workflow.
-
 ### 5. Add And Use Article Payload Accessors
 
 - Target: `UN_ARTICLE` payload use.

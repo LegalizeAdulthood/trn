@@ -266,7 +266,7 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_VGROUP:
-        safe_free(ui->m_data.vgroup.ng);
+        safe_free(ui->vgroup().ng);
         break;
 
     case UN_TEXT_FILE:
@@ -433,8 +433,13 @@ static void univ_add_virtual_group(std::string_view grpname)
         // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if (ui->m_type == UN_VGROUP && ui->m_state == UIS_DESELECTED && ui->m_data.vgroup.ng //
-                && !std::strcmp(ui->m_data.vgroup.ng, group_name.c_str()))
+            if (ui->m_type != UN_VGROUP)
+            {
+                continue;
+            }
+            char *group_name_ptr = ui->vgroup().ng;
+            if (ui->m_state == UIS_DESELECTED && group_name_ptr //
+                && !std::strcmp(group_name_ptr, group_name.c_str()))
             {
                 // undelete the newsgroup
                 ui->m_state = UIS_NORMAL;
@@ -443,14 +448,15 @@ static void univ_add_virtual_group(std::string_view grpname)
         return;
     }
     ui = univ_add(UN_VGROUP,nullptr);
-    ui->m_data.vgroup.flags = UF_VG_NONE;
+    UniversalVirtualGroup &vgroup = ui->vgroup();
+    vgroup.flags = UF_VG_NONE;
     if (s_univ_use_min_score)
     {
-        ui->m_data.vgroup.flags |= UF_VG_MIN_SCORE;
-        ui->m_data.vgroup.min_score = s_univ_min_score;
+        vgroup.flags |= UF_VG_MIN_SCORE;
+        vgroup.min_score = s_univ_min_score;
     }
-    ui->m_data.vgroup.ng = save_str(group_name.c_str());
-    data.dat_ptr = ui->m_data.vgroup.ng;
+    vgroup.ng = save_str(group_name.c_str());
+    data.dat_ptr = vgroup.ng;
     hash_store_last(data);
 }
 
@@ -530,8 +536,13 @@ static void univ_use_pattern(const char *pattern, int type)
         case 1:
             for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->m_type == UN_VGROUP && ui->m_state == UIS_NORMAL && ui->m_data.vgroup.ng //
-                    && univ_do_match(ui->m_data.vgroup.ng, s))
+                if (ui->m_type != UN_VGROUP)
+                {
+                    continue;
+                }
+                char *group_name = ui->vgroup().ng;
+                if (ui->m_state == UIS_NORMAL && group_name //
+                    && univ_do_match(group_name, s))
                 {
                     ui->m_state = UIS_DESELECTED;
                 }
@@ -1200,21 +1211,24 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
         switch (ui->m_type)
         {
         case UN_VGROUP:
-            if (!ui->m_data.vgroup.ng)
+        {
+            UniversalVirtualGroup &vgroup = ui->vgroup();
+            if (!vgroup.ng)
             {
                 break;                  // XXX whine
             }
             s_current_vg_ui = ui;
-            if (ui->m_data.vgroup.flags & UF_VG_MIN_SCORE)
+            if (vgroup.flags & UF_VG_MIN_SCORE)
             {
                 s_univ_use_min_score = true;
-                s_univ_min_score = ui->m_data.vgroup.min_score;
+                s_univ_min_score = vgroup.min_score;
             }
-            (void)visit_group(ui->m_data.vgroup.ng);
+            (void)visit_group(vgroup.ng);
             s_univ_use_min_score = false;
             // later do something with return value
             ui->m_state = UIS_DELETED;
             break;
+        }
 
         case UN_ARTICLE:
             // if article number is not set, visit newsgroup with callback
@@ -1363,6 +1377,18 @@ const UniversalNewsgroup &UniversalItem::group() const
 {
     assert(m_type == UN_NEWSGROUP);
     return m_data.group;
+}
+
+UniversalVirtualGroup &UniversalItem::vgroup()
+{
+    assert(m_type == UN_VGROUP);
+    return m_data.vgroup;
+}
+
+const UniversalVirtualGroup &UniversalItem::vgroup() const
+{
+    assert(m_type == UN_VGROUP);
+    return m_data.vgroup;
 }
 
 // Help start
