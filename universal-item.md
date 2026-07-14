@@ -40,16 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 9. Add And Use Group Mask Payload Accessors
-
-- Target: `UN_GROUP_MASK` payload use.
-- Change: add typed accessors for `UniversalGroupMaskData` and replace
-  direct `m_data.gmask` access sites in the same slice.
-- Data flow: mask strings flow into `univ_use_pattern` and group inclusion
-  or exclusion.
-- Risk: medium; mask behavior drives which items are visible.
-- Verification: focused universal tests and normal workflow.
-
 ### 11. Add And Use Text File Payload Accessors
 
 - Target: `UN_TEXT_FILE` payload use.

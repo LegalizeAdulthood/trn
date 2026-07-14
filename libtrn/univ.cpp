@@ -245,9 +245,12 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_GROUP_MASK:        // methods that have custom data
-        safe_free(ui->m_data.gmask.title);
-        safe_free(ui->m_data.gmask.mask_list);
+    {
+        UniversalGroupMaskData &group_mask = ui->group_mask();
+        safe_free(group_mask.title);
+        safe_free(group_mask.mask_list);
         break;
+    }
 
     case UN_CONFIG_FILE:
     {
@@ -347,8 +350,9 @@ static void univ_add_group(const char *desc, std::string_view grpname)
 static void univ_add_mask(const char *desc, const char *mask)
 {
     UniversalItem *ui = univ_add(UN_GROUP_MASK, desc);
-    ui->m_data.gmask.mask_list = save_str(mask);
-    ui->m_data.gmask.title = save_str(desc);
+    UniversalGroupMaskData &group_mask = ui->group_mask();
+    group_mask.mask_list = save_str(mask);
+    group_mask.title = save_str(desc);
 }
 
 //char* fname;                          // May be URL
@@ -1426,6 +1430,18 @@ const UniversalConfigFileData &UniversalItem::config_file() const
 {
     assert(m_type == UN_CONFIG_FILE);
     return m_data.cfile;
+}
+
+UniversalGroupMaskData &UniversalItem::group_mask()
+{
+    assert(m_type == UN_GROUP_MASK);
+    return m_data.gmask;
+}
+
+const UniversalGroupMaskData &UniversalItem::group_mask() const
+{
+    assert(m_type == UN_GROUP_MASK);
+    return m_data.gmask;
 }
 
 // Help start
