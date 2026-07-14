@@ -17,6 +17,8 @@
 
 struct HashTable;
 
+using UniversalGroupVisitor = int (*)(const char *);
+
 enum UniversalItemType
 {
     UN_NONE = 0,          //
@@ -153,6 +155,7 @@ void           univ_edit();
 void           univ_page_file(char *fname);
 void           univ_newsgroup_virtual();
 int            univ_visit_group_main(std::string_view gname);
+void           univ_virt_pass(UniversalGroupVisitor visit_group);
 void           univ_virt_pass();
 void           sort_univ();
 void           univ_help_main(HelpLocation where);

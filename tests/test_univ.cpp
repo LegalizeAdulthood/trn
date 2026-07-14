@@ -3,6 +3,8 @@
 
 #include <trn/univ.h>
 
+#include <trn/ng.h>
+#include <trn/util.h>
 #include <util/util2.h>
 
 #include <test_config.h>
@@ -16,6 +18,39 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+std::string g_visited_group;
+int         g_visit_count{};
+
+int fake_visit_group(const char *group_name)
+{
+    ++g_visit_count;
+    g_visited_group = group_name ? group_name : "";
+    return NG_NORM;
+}
+
+void reset_fake_visit_group()
+{
+    g_visited_group.clear();
+    g_visit_count = 0;
+}
+
+UniversalItem *make_virtual_group(std::string_view group_name)
+{
+    UniversalItem *item = reinterpret_cast<UniversalItem *>(safe_malloc(sizeof(UniversalItem)));
+    item->m_next = nullptr;
+    item->m_prev = nullptr;
+    item->m_num = 1;
+    item->m_flags = UF_NONE;
+    item->m_type = UN_VGROUP;
+    item->m_desc = nullptr;
+    item->m_score = 0;
+    item->m_data.vgroup.ng = save_str(group_name);
+    item->m_data.vgroup.min_score = 0;
+    item->m_data.vgroup.max_score = 0;
+    item->m_data.vgroup.flags = UF_VG_NONE;
+    return item;
+}
 
 class UnivTest : public testing::Test
 {
@@ -48,6 +83,22 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
 
     EXPECT_EQ(nullptr, g_first_univ);
     EXPECT_EQ("Empty", g_univ_title);
+}
+
+TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
+{
+    reset_fake_visit_group();
+    univ_mask_load("", "Virtual");
+    g_first_univ = make_virtual_group("alt.test");
+    g_last_univ = g_first_univ;
+
+    univ_virt_pass(fake_visit_group);
+
+    EXPECT_EQ(1, g_visit_count);
+    EXPECT_EQ("alt.test", g_visited_group);
+    ASSERT_NE(nullptr, g_first_univ);
+    EXPECT_EQ(UN_DELETED, g_first_univ->m_type);
+    EXPECT_FALSE(g_univ_ng_virt_flag);
 }
 
 TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)

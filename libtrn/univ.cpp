@@ -1167,6 +1167,12 @@ int univ_visit_group_main(std::string_view gname)
 // LATER: allow the loop to be interrupted
 void univ_virt_pass()
 {
+    univ_virt_pass(univ_visit_group);
+}
+
+// LATER: allow the loop to be interrupted
+void univ_virt_pass(UniversalGroupVisitor visit_group)
+{
     g_univ_ng_virt_flag = true;
     s_univ_virt_pass_needed = false;
 
@@ -1190,7 +1196,7 @@ void univ_virt_pass()
                 s_univ_use_min_score = true;
                 s_univ_min_score = ui->m_data.vgroup.min_score;
             }
-            (void)univ_visit_group(ui->m_data.vgroup.ng);
+            (void)visit_group(ui->m_data.vgroup.ng);
             s_univ_use_min_score = false;
             // later do something with return value
             univ_free_data(ui);
@@ -1210,7 +1216,7 @@ void univ_virt_pass()
               break;
             }
             s_current_vg_ui = ui;
-            (void)univ_visit_group(ui->m_data.virt.ng);
+            (void)visit_group(ui->m_data.virt.ng);
             // later do something with return value
             break;
 

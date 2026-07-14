@@ -10,19 +10,6 @@ the behavior provided by the old type sentinels.
 
 ## Plan
 
-### 3. Add an injectable virtual-group visitor seam
-
-- Add an overload or internal helper:
-
-  ```cpp
-  using UniversalGroupVisitor = int (*)(const char *);
-  void univ_virt_pass(UniversalGroupVisitor visit_group);
-  ```
-
-- Keep existing `univ_virt_pass()` as the production wrapper using
-  `univ_visit_group`.
-- Let tests pass a fake visitor and avoid `do_newsgroup()`.
-
 ### 4. Add behavior tests before the state refactor
 
 - Group exclusion: `group !group` leaves one deselected group item.
