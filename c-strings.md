@@ -354,11 +354,6 @@ buffer slices.
 
 ### Safe-realloc Array Slices
 
-RA-05. `libtrn/rthread.cpp` and article selector readers: replace
-`g_art_ptr_list` plus `g_art_ptr_list_size` with `std::vector<Article *>`.
-The slice must preserve existing pointer-iteration behavior or update
-the selector cursors at the same time.
-
 ### Copy/Concat Slices
 
 ### Fixed-buffer Storage Slices

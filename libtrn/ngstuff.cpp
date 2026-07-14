@@ -414,11 +414,11 @@ int thread_perform()
     {
         // The rest loop through the articles.
         // Use the explicit article-order if it exists
-        if (g_art_ptr_list)
+        if (!g_art_ptr_list.empty())
         {
-            Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
+            Article **limit = article_ptr_list_end();
             sp = (g_sel_mode==SM_THREAD? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
-            for (Article **app = g_art_ptr_list; app < limit; app++)
+            for (Article **app = article_ptr_list_begin(); app < limit; app++)
             {
                 ap = *app;
                 if (one_thread && ap->m_subj->m_thread != sp->m_thread)

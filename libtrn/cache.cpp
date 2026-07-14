@@ -41,11 +41,11 @@
 #include <map>
 #include <string>
 #include <string_view>
+#include <vector>
 
 std::map<ArticleNum, Article> g_article_list;
-Article                     **g_art_ptr_list{};      // the article-selector creates this
+std::vector<Article *>        g_art_ptr_list;        // the article-selector creates this
 Article                     **g_art_ptr{};           // ditto -- used for article order
-ArticleNum                    g_art_ptr_list_size{}; //
 ArticleNum                    g_search_ahead{};      // are we in subject scan mode? (if so, contains art # found or -1)
 ArticleNum                    g_first_cached{};      //
 ArticleNum                    g_last_cached{};       //
@@ -236,12 +236,10 @@ void close_cache()
     g_subject_count = 0; // just to be sure
     g_parsed_art = ArticleNum{};
 
-    if (g_art_ptr_list)
-    {
-        std::free(g_art_ptr_list);
-        g_art_ptr_list = nullptr;
-    }
+    g_art_ptr_list.clear();
     g_art_ptr = nullptr;
+    g_sel_page_app = nullptr;
+    g_sel_next_app = nullptr;
     thread_close();
 
     article_walk(

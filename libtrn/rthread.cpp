@@ -30,6 +30,7 @@
 #include <util/util2.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -186,7 +187,7 @@ void thread_grow()
         cache_range(article_after(g_last_cached), g_last_art);
     }
     count_subjects(CS_NORM);
-    if (g_art_ptr_list)
+    if (!g_art_ptr_list.empty())
     {
         sort_articles();
     }
@@ -263,16 +264,16 @@ void inc_article(bool sel_flag, bool rereading)
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
-    if (g_art_ptr_list)
+    if (!g_art_ptr_list.empty())
     {
-        Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
+        Article** limit = article_ptr_list_end();
         if (!ap)
         {
-            g_art_ptr = g_art_ptr_list - 1;
+            g_art_ptr = article_ptr_list_begin() - 1;
         }
         else if (!g_art_ptr || *g_art_ptr != ap)
         {
-            for (g_art_ptr = g_art_ptr_list; g_art_ptr < limit; g_art_ptr++)
+            for (g_art_ptr = article_ptr_list_begin(); g_art_ptr < limit; g_art_ptr++)
             {
                 if (*g_art_ptr == ap)
                 {
@@ -298,7 +299,7 @@ void inc_article(bool sel_flag, bool rereading)
         {
             g_artp = nullptr;
             g_art = article_after(g_last_art);
-            g_art_ptr = g_art_ptr_list;
+            g_art_ptr = article_ptr_list_begin();
         }
         return;
     }
@@ -406,16 +407,16 @@ void dec_article(bool sel_flag, bool rereading)
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
-    if (g_art_ptr_list)
+    if (!g_art_ptr_list.empty())
     {
-        Article** limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
+        Article** limit = article_ptr_list_end();
         if (!ap)
         {
             g_art_ptr = limit;
         }
         else if (!g_art_ptr || *g_art_ptr != ap)
         {
-            for (g_art_ptr = g_art_ptr_list; g_art_ptr < limit; g_art_ptr++)
+            for (g_art_ptr = article_ptr_list_begin(); g_art_ptr < limit; g_art_ptr++)
             {
                 if (*g_art_ptr == ap)
                 {
@@ -425,7 +426,7 @@ void dec_article(bool sel_flag, bool rereading)
         }
         do
         {
-            if (g_art_ptr == g_art_ptr_list)
+            if (g_art_ptr == article_ptr_list_begin())
             {
                 break;
             }
@@ -1529,7 +1530,7 @@ void sort_articles()
     build_article_ptrs();
 
     // If we don't have at least two articles, we're done!
-    if (g_art_ptr_list_size.value_of() < 2)
+    if (g_art_ptr_list.size() < 2)
     {
         return;
     }
@@ -1566,7 +1567,8 @@ void sort_articles()
         break;
     }
     g_sel_page_app = nullptr;
-    std::qsort(g_art_ptr_list, g_art_ptr_list_size.value_of(), sizeof (Article*), ((int(*)(const void *, const void *))sort_procedure));
+    std::qsort(g_art_ptr_list.data(), g_art_ptr_list.size(), sizeof(Article *),
+               reinterpret_cast<int (*)(const void *, const void *)>(sort_procedure));
 }
 
 static void build_article_ptrs()
@@ -1574,19 +1576,17 @@ static void build_article_ptrs()
     ArticleNum count = g_obj_count;
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
 
-    if (!g_art_ptr_list || g_art_ptr_list_size != count)
-    {
-        g_art_ptr_list =
-            (Article **) safe_realloc((char *) g_art_ptr_list, (MemorySize) count.value_of() * sizeof(Article *));
-        g_art_ptr_list_size = count;
-    }
-    Article **app = g_art_ptr_list;
+    g_art_ptr = nullptr;
+    g_sel_page_app = nullptr;
+    g_sel_next_app = nullptr;
+    g_art_ptr_list.clear();
+    g_art_ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
     for (ArticleNum an = article_first(g_abs_first); count; an = article_next(an))
     {
         Article *ap = article_ptr(an);
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
         {
-            *app++ = ap;
+            g_art_ptr_list.push_back(ap);
             --count;
         }
     }

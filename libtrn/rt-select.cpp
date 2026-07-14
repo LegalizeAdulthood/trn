@@ -326,11 +326,11 @@ sel_exit:
     }
     if (g_sel_mode != SM_ARTICLE || g_sel_sort == SS_GROUPS || g_sel_sort == SS_STRING)
     {
-        if (g_art_ptr_list)
+        if (!g_art_ptr_list.empty())
         {
-            std::free((char*)g_art_ptr_list);
-            g_art_ptr_list = nullptr;
+            g_art_ptr_list.clear();
             g_sel_page_app = nullptr;
+            g_sel_next_app = nullptr;
             sort_subjects();
         }
         g_art_ptr = nullptr;
@@ -2850,14 +2850,14 @@ reask_sort:
             if (g_sel_mode == SM_ARTICLE)
             {
                 Article** app;
-                Article **limit = g_art_ptr_list + g_art_ptr_list_size.value_of();
+                Article **limit = article_ptr_list_end();
                 if (ch == 'D')
                 {
                     app = g_sel_page_app;
                 }
                 else
                 {
-                    app = g_art_ptr_list;
+                    app = article_ptr_list_begin();
                 }
                 while (app < limit)
                 {
@@ -2912,7 +2912,7 @@ reask_sort:
                 g_sel_item_index = 0;
                 return DS_DISPLAY;
             }
-            if (g_art_ptr_list && g_obj_count)
+            if (!g_art_ptr_list.empty() && g_obj_count)
             {
                 sort_articles();
             }

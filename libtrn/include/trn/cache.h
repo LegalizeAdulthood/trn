@@ -16,6 +16,7 @@
 #include <ctime>
 #include <map>
 #include <string_view>
+#include <vector>
 
 struct Subject;
 
@@ -27,9 +28,8 @@ enum : bool
 };
 
 extern std::map<ArticleNum, Article> g_article_list;
-extern Article                     **g_art_ptr_list; // the article-selector creates this
+extern std::vector<Article *>        g_art_ptr_list; // the article-selector creates this
 extern Article                     **g_art_ptr;      // ditto -- used for article order
-extern ArticleNum                    g_art_ptr_list_size;
 extern ArticleNum                    g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
 extern ArticleNum                    g_first_cached;
 extern ArticleNum                    g_last_cached;
@@ -57,6 +57,16 @@ void cache_until_key();
 bool cache_subjects();
 #endif
 bool cache_range(ArticleNum first, ArticleNum last);
+
+inline Article **article_ptr_list_begin()
+{
+    return g_art_ptr_list.data();
+}
+
+inline Article **article_ptr_list_end()
+{
+    return g_art_ptr_list.data() + g_art_ptr_list.size();
+}
 
 Article   *article_ptr(ArticleNum an);
 bool       article_hasdata(ArticleNum an);
