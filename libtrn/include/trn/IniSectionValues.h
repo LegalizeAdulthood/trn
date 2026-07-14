@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 
@@ -23,7 +24,7 @@ public:
     std::size_t                     size() const;
 
 private:
-    std::unordered_map<int, std::string_view> m_values;
+    std::unordered_map<int, std::string> m_values;
 };
 
 inline std::size_t IniSectionValues::size() const

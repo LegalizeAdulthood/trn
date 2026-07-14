@@ -31,7 +31,7 @@ const char *IniSectionValues::c_str(int field_id) const
     {
         return nullptr;
     }
-    return it->second.data();
+    return it->second.c_str();
 }
 
 std::optional<std::string_view> IniSectionValues::value(int field_id) const

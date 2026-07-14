@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <optional>
+#include <string>
 #include <string_view>
 
 namespace
@@ -28,7 +29,7 @@ IniSchema make_schema()
 
 } // namespace
 
-TEST(IniSectionValuesTest, storesBorrowedValuesByFieldId)
+TEST(IniSectionValuesTest, storesOwnedValuesByFieldId)
 {
     const IniSchema  schema = make_schema();
     char             alpha[]{"alpha"};
@@ -37,12 +38,13 @@ TEST(IniSectionValuesTest, storesBorrowedValuesByFieldId)
 
     ASSERT_NE(nullptr, alpha_field);
     ASSERT_TRUE(values.set(*alpha_field, alpha));
+    alpha[0] = 'z';
 
     const std::optional<std::string_view> value = values.value(TF_ALPHA);
     ASSERT_TRUE(value.has_value());
     EXPECT_EQ(std::string_view{"alpha"}, *value);
-    EXPECT_EQ(alpha, value->data());
-    EXPECT_EQ(alpha, values.c_str(TF_ALPHA));
+    EXPECT_NE(alpha, value->data());
+    EXPECT_NE(alpha, values.c_str(TF_ALPHA));
     EXPECT_TRUE(values.contains(TF_ALPHA));
     EXPECT_FALSE(values.contains(TF_BETA));
     EXPECT_EQ(nullptr, values.c_str(TF_BETA));
@@ -71,7 +73,7 @@ TEST(IniSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
     const std::optional<std::string_view> value = values.value(TF_BETA);
     ASSERT_TRUE(value.has_value());
     EXPECT_EQ(std::string_view{"beta"}, *value);
-    EXPECT_EQ(beta, value->data());
+    EXPECT_NE(beta, value->data());
 }
 
 TEST(IniSectionValuesTest, displayGroupsAreNotValues)

@@ -101,11 +101,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-5. Change `IniSectionValues` to own strings.
-
-   Store `std::string` values internally.  Keep the existing lookup API.
-   Domain code can still ask for views or C strings while callers migrate.
-
 6. Add a range-based `parse_ini_section` overload.
 
    Accept `const IniSection &`, iterate settings with range-for, look up
