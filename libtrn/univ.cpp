@@ -1091,12 +1091,12 @@ static void univ_vg_add_article(ArticleNum a)
     {
         return;
     }
-    char *subj = fetch_subj(a, false);
+    char *subj = fetch_subj(a);
     if (!subj || !*subj)
     {
         return;
     }
-    const char *from = fetch_from(a, false);
+    const char *from = fetch_from(a);
     if (!from || !*from)
     {
         from = "<No Author>";

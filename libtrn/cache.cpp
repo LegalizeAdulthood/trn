@@ -858,7 +858,7 @@ bool cache_subjects()
 
         if (article_unread(an))
         {
-            fetch_subj(an, false);
+            fetch_subj(an);
         }
     }
     s_subj_to_get = an;
@@ -882,7 +882,7 @@ static bool cache_xrefs()
         }
         if (article_unread(an))
         {
-            fetch_xref(an, false);
+            fetch_xref(an);
         }
     }
     s_xref_to_get = an;

@@ -1017,7 +1017,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     char *str = subj_buf;
                     if (str == nullptr)
                     {
-                        subj_buf = fetch_subj(g_art, true);
+                        subj_buf = fetch_subj_copy(g_art);
                         str = subj_buf;
                     }
                     if (*pattern == 's')

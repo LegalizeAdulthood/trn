@@ -491,7 +491,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
     {
     case ARTSCOPE_SUBJECT:
         std::strcpy(g_buf,"Subject: ");
-        std::strncpy(g_buf+9,fetch_subj(art_num,false),256);
+        std::strncpy(g_buf+9,fetch_subj(art_num),256);
 #ifdef DEBUG
         if (g_debug & DEB_SEARCH_AHEAD)
         {
@@ -502,13 +502,13 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
 
     case ARTSCOPE_FROM:
         std::strcpy(g_buf, "From: ");
-        std::strncpy(g_buf+6,fetch_from(art_num,false),256);
+        std::strncpy(g_buf+6,fetch_from(art_num),256);
         break;
 
     case ARTSCOPE_ONE_HDR:
         g_untrim_cache = true;
         std::sprintf(g_buf, "%s: %s", g_header_type[g_art_srch_hdr].name.c_str(),
-                prefetch_lines(art_num,g_art_srch_hdr,false));
+                prefetch_lines(art_num,g_art_srch_hdr));
         g_untrim_cache = false;
         break;
 

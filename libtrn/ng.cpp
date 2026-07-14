@@ -2070,7 +2070,7 @@ bool output_subject(char *ptr, int flag)
         return false;
     }
     ArticleNum i = ap->article_num();
-    char *  s = fetch_subj(i, false);
+    char *  s = fetch_subj(i);
     if (s != nullptr)
     {
         std::sprintf(tmpbuf,"%-5ld ", i.value_of());

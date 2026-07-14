@@ -123,7 +123,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
     *partp = part;
     *totalp = total;
     safe_free(subject);
-    subject = fetch_subj(art_num,true);
+    subject = fetch_subj_copy(art_num);
     if (!*subject)
     {
         return nullptr;

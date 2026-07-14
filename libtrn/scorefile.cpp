@@ -1184,7 +1184,7 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else
     {
-        if (char *s = prefetch_lines(a,h,false))   // don't make a copy
+        if (char *s = prefetch_lines(a,h))
         {
             line = s;
         }
