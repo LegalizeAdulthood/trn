@@ -89,7 +89,7 @@ static std::string                read_data_sources(std::string_view filename);
 ///
 void data_source_init()
 {
-    char *actname = nullptr;
+    const char *actname = nullptr;
 
     g_data_sources.clear();
     g_data_sources.reserve(20);

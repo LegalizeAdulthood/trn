@@ -370,12 +370,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-### Ubuntu `-Wwrite-strings` Slices
-
-These slices are prepended to remove the current Ubuntu build warnings.
-Prefer `std::string_view` or `std::string`.  Use `const char *` only
-where a null sentinel or legacy C API makes a view a poor fit.
-
 ### Static-Linkage Slices
 
 These slices move top-level functions that are declared in public headers
