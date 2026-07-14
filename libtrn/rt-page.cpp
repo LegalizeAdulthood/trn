@@ -751,13 +751,16 @@ try_again:
             }
 
             case UN_ARTICLE:
+            {
                 // later: use the datasrc of the newsgroup
-                ui_elig = !was_read_group(ui->m_data.virt.num, ui->m_data.virt.ng);
+                const UniversalVirtualData &article = ui->article();
+                ui_elig = !was_read_group(article.num, article.ng);
                 if (g_sel_rereading)
                 {
                     ui_elig = !ui_elig;
                 }
                 break;
+            }
 
             default:
                 ui_elig = !g_sel_rereading;

@@ -260,10 +260,13 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_ARTICLE:
-        safe_free(ui->m_data.virt.ng);
-        safe_free(ui->m_data.virt.from);
-        safe_free(ui->m_data.virt.subj);
+    {
+        UniversalVirtualData &article = ui->article();
+        safe_free(article.ng);
+        safe_free(article.from);
+        safe_free(article.subj);
         break;
+    }
 
     case UN_VGROUP:
         safe_free(ui->vgroup().ng);
@@ -364,10 +367,11 @@ static void univ_add_file(const char *desc, const char *fname, const char *label
 static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
 {
     UniversalItem *ui = univ_add(UN_ARTICLE, desc);
-    ui->m_data.virt.ng = save_str(grp);
-    ui->m_data.virt.num = art;
-    ui->m_data.virt.subj = nullptr;
-    ui->m_data.virt.from = nullptr;
+    UniversalVirtualData &article = ui->article();
+    article.ng = save_str(grp);
+    article.num = art;
+    article.subj = nullptr;
+    article.from = nullptr;
     return ui;
 }
 
@@ -1130,8 +1134,9 @@ static void univ_vg_add_article(ArticleNum a)
     // later consider author in description, scoring, etc.
     UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
     ui->m_score = score;
-    ui->m_data.virt.subj = save_str(subj);
-    ui->m_data.virt.from = save_str(from);
+    UniversalVirtualData &article = ui->article();
+    article.subj = save_str(subj);
+    article.from = save_str(from);
 }
 
 
@@ -1231,20 +1236,23 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
         }
 
         case UN_ARTICLE:
+        {
+            const UniversalVirtualData &article = ui->article();
             // if article number is not set, visit newsgroup with callback
             // later also check for descriptions
-            if ((ui->m_data.virt.num) && (ui->m_desc))
+            if ((article.num) && (ui->m_desc))
             {
               break;
             }
-            if (ui->m_data.virt.subj)
+            if (article.subj)
             {
               break;
             }
             s_current_vg_ui = ui;
-            (void)visit_group(ui->m_data.virt.ng);
+            (void)visit_group(article.ng);
             // later do something with return value
             break;
+        }
 
         default:
             break;
@@ -1324,8 +1332,9 @@ const char *UniversalItem::univ_article_desc() const
     static char sbuf[200];
     static char fbuf[200];
 
-    char *s = m_data.virt.subj;
-    const char *f = m_data.virt.from;
+    const UniversalVirtualData &article = this->article();
+    char *s = article.subj;
+    const char *f = article.from;
     if (!f)
     {
         std::strcpy(fbuf,"<No Author> ");
@@ -1389,6 +1398,18 @@ const UniversalVirtualGroup &UniversalItem::vgroup() const
 {
     assert(m_type == UN_VGROUP);
     return m_data.vgroup;
+}
+
+UniversalVirtualData &UniversalItem::article()
+{
+    assert(m_type == UN_ARTICLE);
+    return m_data.virt;
+}
+
+const UniversalVirtualData &UniversalItem::article() const
+{
+    assert(m_type == UN_ARTICLE);
+    return m_data.virt;
 }
 
 // Help start

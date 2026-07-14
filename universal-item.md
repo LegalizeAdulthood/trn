@@ -40,16 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 5. Add And Use Article Payload Accessors
-
-- Target: `UN_ARTICLE` payload use.
-- Change: add typed accessors for `UniversalVirtualData` and replace direct
-  `m_data.virt` access sites in the same slice.
-- Data flow: article payload values flow into read-status checks, display,
-  virtual pass fill-in, and article description generation.
-- Risk: medium; article display and read-state checks are user visible.
-- Verification: focused universal tests and normal workflow.
-
 ### 7. Add And Use Config File Payload Accessors
 
 - Target: `UN_CONFIG_FILE` payload use.

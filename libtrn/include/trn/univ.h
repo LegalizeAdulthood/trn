@@ -130,6 +130,8 @@ struct UniversalItem
     const UniversalNewsgroup &group() const;
     UniversalVirtualGroup &vgroup();
     const UniversalVirtualGroup &vgroup() const;
+    UniversalVirtualData &article();
+    const UniversalVirtualData &article() const;
     const char        *univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };
