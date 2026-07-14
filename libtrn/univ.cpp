@@ -250,10 +250,13 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_CONFIG_FILE:
-        safe_free(ui->m_data.cfile.title);
-        safe_free(ui->m_data.cfile.fname);
-        safe_free(ui->m_data.cfile.label);
+    {
+        UniversalConfigFileData &config_file = ui->config_file();
+        safe_free(config_file.title);
+        safe_free(config_file.fname);
+        safe_free(config_file.label);
         break;
+    }
 
     case UN_NEWSGROUP:
         safe_free(ui->group().ng);
@@ -352,15 +355,16 @@ static void univ_add_mask(const char *desc, const char *mask)
 static void univ_add_file(const char *desc, const char *fname, const char *label)
 {
     UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
-    ui->m_data.cfile.title = save_str(desc);
-    ui->m_data.cfile.fname = save_str(fname);
+    UniversalConfigFileData &config_file = ui->config_file();
+    config_file.title = save_str(desc);
+    config_file.fname = save_str(fname);
     if (label && *label)
     {
-        ui->m_data.cfile.label = save_str(label);
+        config_file.label = save_str(label);
     }
     else
     {
-        ui->m_data.cfile.label = nullptr;
+        config_file.label = nullptr;
     }
 }
 
@@ -1410,6 +1414,18 @@ const UniversalVirtualData &UniversalItem::article() const
 {
     assert(m_type == UN_ARTICLE);
     return m_data.virt;
+}
+
+UniversalConfigFileData &UniversalItem::config_file()
+{
+    assert(m_type == UN_CONFIG_FILE);
+    return m_data.cfile;
+}
+
+const UniversalConfigFileData &UniversalItem::config_file() const
+{
+    assert(m_type == UN_CONFIG_FILE);
+    return m_data.cfile;
 }
 
 // Help start

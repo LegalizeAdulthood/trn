@@ -132,6 +132,8 @@ struct UniversalItem
     const UniversalVirtualGroup &vgroup() const;
     UniversalVirtualData &article();
     const UniversalVirtualData &article() const;
+    UniversalConfigFileData &config_file();
+    const UniversalConfigFileData &config_file() const;
     const char        *univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };

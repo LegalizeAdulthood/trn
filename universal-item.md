@@ -40,16 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 7. Add And Use Config File Payload Accessors
-
-- Target: `UN_CONFIG_FILE` payload use.
-- Change: add typed accessors for `UniversalConfigFileData` and replace
-  direct `m_data.cfile` access sites in the same slice.
-- Data flow: colon-path expansion and file loading pass the file name and
-  label into recursive universal file reads.
-- Risk: medium; path and label behavior must stay unchanged.
-- Verification: focused universal tests and normal workflow.
-
 ### 9. Add And Use Group Mask Payload Accessors
 
 - Target: `UN_GROUP_MASK` payload use.
