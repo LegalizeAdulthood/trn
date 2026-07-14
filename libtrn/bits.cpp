@@ -745,7 +745,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 static bool valid_xref_site(ArticleNum art_num, char *site)
 {
     static char* inews_site = nullptr;
-    char* sitebuf;
+    std::string sitebuf;
     char* s;
 
     if (inews_site && !strcmp(site,inews_site))
@@ -756,7 +756,7 @@ static bool valid_xref_site(ArticleNum art_num, char *site)
 #ifndef ANCIENT_NEWS
     // Grab the site from the first component of the Path line
     sitebuf = fetch_lines(art_num,PATH_LINE);
-    s = std::strchr(sitebuf, '!');
+    s = std::strchr(sitebuf.data(), '!');
     if (s != nullptr)
     {
         *s = '\0';
@@ -765,7 +765,7 @@ static bool valid_xref_site(ArticleNum art_num, char *site)
 #else // ANCIENT_NEWS
     // Grab the site from the Posting-Version line
     sitebuf = fetch_lines(art_num,RVER_LINE);
-    s = instr(sitebuf, "; site ", true);
+    s = in_string(sitebuf.data(), "; site ", true);
     if (s != nullptr)
     {
         char* t = std::strchr(s+7, '.');
@@ -780,7 +780,6 @@ static bool valid_xref_site(ArticleNum art_num, char *site)
     {
         inews_site = save_str("");
     }
-    std::free(sitebuf);
 
     if (!std::strcmp(site,inews_site))
     {

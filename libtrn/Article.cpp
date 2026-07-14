@@ -6,6 +6,7 @@
 #include <config/common.h>
 #include <trn/bits.h>
 #include <trn/cache.h>
+#include <trn/head.h>
 #include <trn/intrp.h>
 #include <trn/ng.h>
 #include <trn/rt-process.h>
@@ -23,6 +24,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <string>
 
 static Subject *s_fake_had_subj{}; // the fake-turned-real article had this subject
 
@@ -173,12 +175,11 @@ void Article::check_poster()
                 else
                 {
 #ifdef REPLYTO_POSTER_CHECKING
-                    char* reply_buf = fetch_lines(article_num(ap),REPLY_LINE);
-                    if (in_string(reply_buf, g_login_name.c_str(), true))
+                    std::string reply_buf = fetch_lines(article_num(ap), REPLY_LINE);
+                    if (in_string(reply_buf.c_str(), g_login_name.c_str(), true))
                     {
-                        select_sub_thread(ap,AUTO_SEL_FOL);
+                        select_sub_thread(ap, AUTO_SEL_FOL);
                     }
-                    std::free(reply_buf);
 #endif
                 }
             }

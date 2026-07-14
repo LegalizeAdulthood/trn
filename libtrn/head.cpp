@@ -27,6 +27,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -100,6 +101,8 @@ static bool           s_reading_nntp_header;
 static HeaderLineType s_htypeix[26]{};
 
 static void  end_header_line();
+static bool  header_line_span(HeaderLineType which_line, char *&line, int &size);
+static char *save_current_header_line(HeaderLineType which_line);
 static char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool);
 
 void head_init()
@@ -374,14 +377,9 @@ void end_header()
         if (ap->valid_article())
         {
             Article* artp_hold = g_artp;
-            char* references = fetch_lines(g_parsed_art, REFS_LINE);
-            char* inreply = fetch_lines(g_parsed_art, IN_REPLY_LINE);
-            int reflen = std::strlen(references) + 1;
-            grow_str(&references, &reflen, reflen + std::strlen(inreply) + 1);
-            safe_cat(references, inreply, reflen);
-            ap->thread_article(references);
-            std::free(inreply);
-            std::free(references);
+            std::string references = fetch_lines(g_parsed_art, REFS_LINE);
+            references += fetch_lines(g_parsed_art, IN_REPLY_LINE);
+            ap->thread_article(references.data());
             g_artp = artp_hold;
             ap->check_poster();
         }
@@ -492,49 +490,84 @@ bool parse_header(ArticleNum art_num)
     return true;
 }
 
-// get a header line from an article
-
-// article to get line from
-// type of line desired
-char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
+static std::string header_line_text(char *line, int size)
 {
-    char* s;
-
-    // Only return a cached line if it isn't the current article
-    if (g_parsed_art != art_num)
+    if (size <= 1)
     {
-        // If the line is not in the cache, this will parse the header
-        const char *cached_line = fetch_cache(art_num,which_line, FILL_CACHE);
-        if (cached_line)
-        {
-            return save_str(cached_line);
-        }
+        return {};
     }
+    const char *line_end = std::find(line, line + size - 1, '\0');
+    return std::string(line, static_cast<std::string::size_type>(line_end - line));
+}
+
+static bool header_line_span(HeaderLineType which_line, char *&line, int &size)
+{
     ArticlePosition firstpos = g_header_type[which_line].min_pos;
     if (firstpos < 0)
     {
-        return save_str("");
+        line = nullptr;
+        size = 0;
+        return false;
     }
 
     firstpos += ArticlePosition{g_header_type[which_line].length + 1};
     ArticlePosition lastpos = g_header_type[which_line].max_pos;
-    int             size = (lastpos - firstpos).value_of();
-    char *t = g_head_buf + firstpos.value_of();
-    while (is_hor_space(*t))
+    size = (lastpos - firstpos).value_of();
+    line = g_head_buf + firstpos.value_of();
+    while (is_hor_space(*line))
     {
-        t++;
+        line++;
         size--;
     }
 #ifdef DEBUG
     if (g_debug && (size < 1 || size > 1000))
     {
-        std::printf("Firstpos = %ld, lastpos = %ld\n",firstpos.value_of(),lastpos.value_of());
+        std::printf("Firstpos = %ld, lastpos = %ld\n", firstpos.value_of(), lastpos.value_of());
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
-    s = safe_malloc((MemorySize)size);
-    safe_copy(s,t,size);
+    return true;
+}
+
+static char *save_current_header_line(HeaderLineType which_line)
+{
+    char *line;
+    int   size;
+
+    if (!header_line_span(which_line, line, size))
+    {
+        return save_str("");
+    }
+
+    char *s = safe_malloc((MemorySize) size);
+    safe_copy(s, line, size);
     return s;
+}
+
+// get a header line from an article
+
+// article to get line from
+// type of line desired
+std::string fetch_lines(ArticleNum art_num, HeaderLineType which_line)
+{
+    // Only return a cached line if it isn't the current article
+    if (g_parsed_art != art_num)
+    {
+        // If the line is not in the cache, this will parse the header
+        const char *cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
+        if (cached_line)
+        {
+            return cached_line;
+        }
+    }
+
+    char *line;
+    int   size;
+    if (!header_line_span(which_line, line, size))
+    {
+        return {};
+    }
+    return header_line_text(line, size);
 }
 
 // (strn) like fetch_lines, but for memory pools
@@ -555,28 +588,12 @@ static char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, Memor
             return mp_save_str(cached_line, pool);
         }
     }
-    ArticlePosition firstpos = g_header_type[which_line].min_pos;
-    if (firstpos < 0)
+    char *t;
+    int   size;
+    if (!header_line_span(which_line, t, size))
     {
         return mp_save_str("", pool);
     }
-
-    firstpos += ArticlePosition{g_header_type[which_line].length + 1};
-    ArticlePosition lastpos = g_header_type[which_line].max_pos;
-    int             size = (lastpos - firstpos).value_of();
-    char *t = g_head_buf + firstpos.value_of();
-    while (is_hor_space(*t))
-    {
-        t++;
-        size--;
-    }
-#ifdef DEBUG
-    if (g_debug && (size < 1 || size > 1000))
-    {
-        std::printf("Firstpos = %ld, lastpos = %ld\n",firstpos.value_of(),lastpos.value_of());
-        std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
-    }
-#endif
     s = mp_malloc(size,pool);
     safe_copy(s,t,size);
     return s;
@@ -721,7 +738,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                 std::fprintf(stderr,"\nBad NNTP response.\n");
                 finalize(1);
             }
-            s = fetch_lines(art_num,which_line);
+            s = save_current_header_line(which_line);
         }
         if (hasxhdr && !(g_data_source->m_flags & DF_XHDR_BROKEN))
         {

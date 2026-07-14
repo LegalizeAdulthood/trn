@@ -259,6 +259,20 @@ failure must check `empty()` instead of comparing to `nullptr`.  Pass
 `c_str()` to legacy C APIs only when the pointer is consumed during the
 same full expression; otherwise keep an owned `std::string` in scope.
 
+Do not add an unused wrapper or bridge function.  Convert at least one
+caller in the same slice, or keep the raw acquire/copy/free flow local
+to the function being refactored.
+
+Do not replace a `fetch_lines` local with `std::string` by copying the
+owned raw result and then freeing it; that turns one heap allocation into
+two.  Either change the producer to build the `std::string` directly in
+the same slice, or leave the local raw ownership alone.
+
+For owned raw-return helpers, prefer changing the producer to return
+`std::string` and updating all direct callers in the same slice.  Do not
+add caller-only copies or wrapper APIs when the producer can construct
+the owned string directly.
+
 When converting an owned global or file-scope `char *` to `std::string`,
 replace `save_str`, `safe_malloc`, and `safe_copy` storage updates with
 direct string assignment.  Do not keep a `safe_copy` call that writes to
@@ -315,53 +329,9 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
-OR-01. `libtrn/head.cpp`: add an owning `std::string` wrapper for
-`fetch_lines`.  The wrapper should call `fetch_lines`, copy the owned
-text into a `std::string`, free the raw pointer, and return the string.
-This is the bottom helper for the caller-local slices below.
-
-OR-02. `libtrn/Article.cpp`, `Article::check_poster`: inside the
-inactive `REPLYTO_POSTER_CHECKING` block, replace the local
-`fetch_lines`/`free` pair with the owning string wrapper and pass
-`c_str()` to `in_string`.
-
-OR-03. `libtrn/mime.cpp`, `mime_set_article`: replace the three local
-`fetch_lines`/`free` pairs with owned `std::string` buffers.  The MIME
-parse helpers mutate their input but copy retained results into
-`std::string` fields, so pass `data()` only for the immediate parse
-call.
-
-OR-04. `libtrn/respond.cpp`, `cancel_article`: replace the local
-`reply_buf`, `from_buf`, and `ngs_buf` owned raw pointers with
-`std::string` values.  Preserve the current control flow and use
-`c_str()` for the string comparison and debug-output calls.
-
-OR-05. `libtrn/respond.cpp`, `supersede_article`: mirror OR-04 for the
-supersede path, keeping the existing `goto done` control flow but
-removing the owned raw-string cleanup.
-
-OR-06. `libtrn/sadesc.cpp`, `sa_ent_lines`: replace the summary and
-keyword `fetch_lines` probes with owned `std::string` values and check
-`empty()` instead of null or first character tests.
-
-OR-07. `libtrn/sadesc.cpp`, `sa_desc_subject`: replace the subject
-`fetch_lines`/`free` flow with an owned `std::string`.  Preserve the
-current fixed display truncation before changing the returned static
-buffer contract.
-
-OR-08. `libtrn/sadesc.cpp`, `sa_get_desc`: replace the summary and
-keyword `fetch_lines`/`free` flows with owned strings.  This function
-still returns static description storage, so keep the change local to
-owned header text first.
-
-OR-09. `libtrn/head.cpp`, `end_header`: replace `references` and
-`inreply` ownership with `std::string` construction and append.  Pass a
-mutable `data()` pointer to `Article::thread_article` only for the
-immediate call; the pointer must not escape.
-
-OR-10. `libtrn/bits.cpp`, `valid_xref_site`: replace `sitebuf` with an
-owned string and replace the static owned `inews_site` pointer with
-string storage.  Keep the `VALIDATE_XREF_SITE` behavior and the
+OR-10. `libtrn/bits.cpp`, `valid_xref_site`: after `fetch_lines`
+returns `std::string`, replace the static owned `inews_site` pointer
+with string storage.  Keep the `VALIDATE_XREF_SITE` behavior and the
 `ANCIENT_NEWS` split unchanged.
 
 ### Copy/Concat Slices

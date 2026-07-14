@@ -109,7 +109,7 @@ void           start_header(ArticleNum artnum);
 bool           parse_line(char *art_buf, int new_hide, int old_hide);
 void           end_header();
 bool           parse_header(ArticleNum art_num);
-char          *fetch_lines(ArticleNum art_num, HeaderLineType which_line);
+std::string    fetch_lines(ArticleNum art_num, HeaderLineType which_line);
 char          *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy);
 inline char   *fetch_subj(ArticleNum art_num, bool copy)
 {

@@ -427,20 +427,17 @@ void mime_set_article()
             && g_header_type[MIME_VER_LINE].min_pos >= 0;
 
     {
-        char *s = fetch_lines(g_art, CONT_TYPE_LINE);
-        g_mime_section->mime_parse_type(s);
-        std::free(s);
+        std::string s = fetch_lines(g_art, CONT_TYPE_LINE);
+        g_mime_section->mime_parse_type(s.data());
     }
 
     if (g_is_mime)
     {
-        char *s = fetch_lines(g_art, CONT_XFER_LINE);
-        g_mime_section->mime_parse_encoding(s);
-        std::free(s);
+        std::string s = fetch_lines(g_art, CONT_XFER_LINE);
+        g_mime_section->mime_parse_encoding(s.data());
 
-        s = fetch_lines(g_art,CONT_DISP_LINE);
-        g_mime_section->mime_parse_disposition(s);
-        std::free(s);
+        s = fetch_lines(g_art, CONT_DISP_LINE);
+        g_mime_section->mime_parse_disposition(s.data());
 
         g_mime_state = g_mime_section->m_type;
         if (g_mime_state == NOT_MIME

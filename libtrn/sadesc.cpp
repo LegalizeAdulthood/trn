@@ -2,6 +2,7 @@
  *
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/sadesc.h>
 
@@ -19,6 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 static char s_sa_buf[LINE_BUF_LEN];    // misc. buffer
 
@@ -66,20 +68,14 @@ const char *sa_desc_subject(long e)
 {
     static char sa_subj_buf[256];
 
-    // fetchlines saves its arguments
-    char *s = fetch_lines(g_sa_ents[e].artnum, SUBJ_LINE);
+    std::string s = fetch_lines(g_sa_ents[e].artnum, SUBJ_LINE);
 
-    if (!s || !*s)
+    if (s.empty())
     {
-        if (s)
-        {
-            std::free(s);
-        }
         std::sprintf(sa_subj_buf,"(no subject)");
         return sa_subj_buf;
     }
-    std::strncpy(sa_subj_buf,s,250);
-    std::free(s);
+    std::strncpy(sa_subj_buf,s.c_str(),250);
     char *s1 = sa_subj_buf;
     if (*s1 == 'r' || *s1 == 'R')
     {
@@ -101,7 +97,7 @@ const char *sa_desc_subject(long e)
 const char *sa_get_desc(long e, int line, bool trunc)
 {
     static char desc_buf[1024];
-    char*       s;
+    std::string s;
 
     ArticleNum artnum = g_sa_ents[e].artnum;
     bool    use_standout = false;
@@ -146,7 +142,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 
     case 2:   // summary line (test)
         s = fetch_lines(artnum,SUMMARY_LINE);
-        if (s && *s)   // we really have one
+        if (!s.empty())   // we really have one
         {
             int i;              // number of spaces to indent
             char* s2;   // for indenting
@@ -173,12 +169,12 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                std::sprintf(s2, "Summary: %s%s", g_tc_SO, s);
+                std::sprintf(s2, "Summary: %s%s", g_tc_SO, s.c_str());
             }
             else
 #endif
             {
-                std::sprintf(s2,"Summary: %s",s);
+                std::sprintf(s2,"Summary: %s",s.c_str());
             }
             break;
         }
@@ -187,7 +183,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 
     case 3:   // Keywords (test)
         s = fetch_lines(artnum,KEYW_LINE);
-        if (s && *s)   // we really have one
+        if (!s.empty())   // we really have one
         {
             int i;              // number of spaces to indent
             char* s2;   // for indenting
@@ -213,12 +209,12 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                std::sprintf(s2, "Keys: %s%s", g_tc_SO, s);
+                std::sprintf(s2, "Keys: %s%s", g_tc_SO, s.c_str());
             }
             else
 #endif
             {
-                std::sprintf(s2,"Keys: %s",s);
+                std::sprintf(s2,"Keys: %s",s.c_str());
             }
             break;
         }
@@ -258,32 +254,24 @@ const char *sa_get_desc(long e, int line, bool trunc)
 // long e;                      // the entry number
 int sa_ent_lines(long e)
 {
-    char*s;
+    std::string s;
     int  num = 1;
 
     ArticleNum artnum = g_sa_ents[e].artnum;
     if (g_sa_mode_desc_summary)
     {
         s = fetch_lines(artnum,SUMMARY_LINE);
-        if (s && *s)
+        if (!s.empty())
         {
             num++;      // just a test
-        }
-        if (s)
-        {
-            std::free(s);
         }
     }
     if (g_sa_mode_desc_keyw)
     {
         s = fetch_lines(artnum,KEYW_LINE);
-        if (s && *s)
+        if (!s.empty())
         {
             num++;      // just a test
-        }
-        if (s)
-        {
-            std::free(s);
         }
     }
     return num;

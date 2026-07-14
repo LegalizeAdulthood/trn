@@ -679,13 +679,12 @@ int cancel_article()
         term_down(2);
         return r;
     }
-    char *reply_buf = fetch_lines(g_art, REPLY_LINE);
-    char *from_buf = fetch_lines(g_art, FROM_LINE);
-    char *ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-    if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
-        && (!in_string(from_buf, g_host_name, false)                  //
-            || (!in_string(from_buf, g_login_name.c_str(), true)     //
-                && !in_string(reply_buf, g_login_name.c_str(), true) //
+    std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
+    std::string from_buf = fetch_lines(g_art, FROM_LINE);
+    if (!string_case_equal(get_val_const("FROM", ""), from_buf.c_str())      //
+        && (!in_string(from_buf.c_str(), g_host_name, false)                 //
+            || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
+                && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
 #ifdef HAS_NEWS_ADMIN
                 && myuid != g_news_uid //
 #endif
@@ -694,8 +693,8 @@ int cancel_article()
 #ifdef DEBUG
         if (g_debug)
         {
-            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf);
-            std::printf("%s != %s\n", get_val_const("FROM", ""), from_buf);
+            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf.c_str());
+            std::printf("%s != %s\n", get_val_const("FROM", ""), from_buf.c_str());
             term_down(3);
         }
 #endif
@@ -726,9 +725,6 @@ int cancel_article()
         r = do_shell(SH, file_exp(get_val_const("CANCEL", CALL_INEWS)).c_str());
     }
 done:
-    std::free(ngs_buf);
-    std::free(from_buf);
-    std::free(reply_buf);
     return r;
 }
 
@@ -752,13 +748,12 @@ int supersede_article()         // Supersedes:
         term_down(2);
         return r;
     }
-    char *reply_buf = fetch_lines(g_art, REPLY_LINE);
-    char *from_buf = fetch_lines(g_art, FROM_LINE);
-    char *ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-    if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
-        && (!in_string(from_buf, g_host_name, false)                  //
-            || (!in_string(from_buf, g_login_name.c_str(), true)     //
-                && !in_string(reply_buf, g_login_name.c_str(), true) //
+    std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
+    std::string from_buf = fetch_lines(g_art, FROM_LINE);
+    if (!string_case_equal(get_val_const("FROM", ""), from_buf.c_str())      //
+        && (!in_string(from_buf.c_str(), g_host_name, false)                 //
+            || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
+                && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
 #ifdef HAS_NEWS_ADMIN                                                //
                 && myuid != g_news_uid                                //
 #endif
@@ -767,8 +762,8 @@ int supersede_article()         // Supersedes:
 #ifdef DEBUG
         if (g_debug)
         {
-            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf);
-            std::printf("%s != %s\n", get_val_const("FROM", ""), from_buf);
+            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf.c_str());
+            std::printf("%s != %s\n", get_val_const("FROM", ""), from_buf.c_str());
             term_down(3);
         }
 #endif
@@ -807,9 +802,6 @@ int supersede_article()         // Supersedes:
         r = 0;
     }
 done:
-    std::free(ngs_buf);
-    std::free(from_buf);
-    std::free(reply_buf);
     return r;
 }
 

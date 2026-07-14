@@ -40,6 +40,7 @@ struct utsname utsn;
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 std::string g_orig_dir;    // cwd when rn invoked
@@ -253,15 +254,15 @@ getout:
 const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
 {
     char* subj_buf = nullptr;
-    char* ngs_buf = nullptr;
-    char* refs_buf = nullptr;
-    char* artid_buf = nullptr;
-    char* reply_buf = nullptr;
-    char* from_buf = nullptr;
-    char* path_buf = nullptr;
-    char* follow_buf = nullptr;
-    char* dist_buf = nullptr;
-    char* line_buf = nullptr;
+    std::optional<std::string> ngs_buf;
+    std::optional<std::string> refs_buf;
+    std::optional<std::string> artid_buf;
+    std::optional<std::string> reply_buf;
+    std::optional<std::string> from_buf;
+    std::optional<std::string> path_buf;
+    std::optional<std::string> follow_buf;
+    std::optional<std::string> dist_buf;
+    std::optional<std::string> line_buf;
     char* line_split = nullptr;
     char* orig_dest = dest;
     char scrbuf[8192];
@@ -415,9 +416,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         HeaderLineType which_line;
                         if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
                         {
-                            safe_free(line_buf);
                             line_buf = fetch_lines(g_art, which_line);
-                            s = line_buf;
+                            s = line_buf->data();
                         }
                         else
                         {
@@ -689,7 +689,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_in_ng)
                     {
                         dist_buf = fetch_lines(g_art, DIST_LINE);
-                        s = dist_buf;
+                        s = dist_buf->data();
                     }
                     else
                     {
@@ -731,16 +731,19 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         if (g_header_type[REPLY_LINE].min_pos >= 0 && !comment_parse)
                         {
                                                 // was there a reply line?
-                            if (!(s=reply_buf))
+                            if (!reply_buf)
                             {
                                 reply_buf = fetch_lines(g_art, REPLY_LINE);
-                                s = reply_buf;
                             }
+                            s = reply_buf->data();
                         }
-                        else if (!(s = from_buf))
+                        else
                         {
-                            from_buf = fetch_lines(g_art, FROM_LINE);
-                            s = from_buf;
+                            if (!from_buf)
+                            {
+                                from_buf = fetch_lines(g_art, FROM_LINE);
+                            }
+                            s = from_buf->data();
                         }
                     }
                     else
@@ -757,12 +760,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                                         // is there a Followup-To line?
                         {
                             follow_buf = fetch_lines(g_art, FOLLOW_LINE);
-                            s = follow_buf;
+                            s = follow_buf->data();
                         }
                         else
                         {
                             ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-                            s = ngs_buf;
+                            s = ngs_buf->data();
                         }
                     }
                     else
@@ -790,14 +793,14 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'i':
                     if (g_in_ng)
                     {
-                        if (!(s=artid_buf))
+                        if (!artid_buf)
                         {
                             artid_buf = fetch_lines(g_art, MSG_ID_LINE);
-                            s = artid_buf;
                         }
+                        s = artid_buf->data();
                         if (*s && *s != '<')
                         {
-                            std::sprintf(scrbuf,"<%s>",artid_buf);
+                            std::sprintf(scrbuf,"<%s>",artid_buf->c_str());
                             s = scrbuf;
                         }
                     }
@@ -846,7 +849,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_in_ng)
                     {
                         ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-                        s = ngs_buf;
+                        s = ngs_buf->data();
                     }
                     else
                     {
@@ -929,12 +932,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_in_ng)
                     {
                         parse_header(g_art);
-                        safe_free0(refs_buf);
+                        refs_buf.reset();
                         if (g_header_type[REFS_LINE].min_pos >= 0)
                         {
                             refs_buf = fetch_lines(g_art,REFS_LINE);
-                            normalize_refs(refs_buf);
-                            s = std::strrchr(refs_buf, '<');
+                            normalize_refs(refs_buf->data());
+                            s = std::strrchr(refs_buf->data(), '<');
                             if (s != nullptr)
                             {
                                 break;
@@ -952,64 +955,54 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         break;
                     }
                     parse_header(g_art);
-                    safe_free0(refs_buf);
-                    int len;
+                    refs_buf.reset();
                     if (g_header_type[REFS_LINE].min_pos >= 0)
                     {
                         refs_buf = fetch_lines(g_art,REFS_LINE);
-                        len = std::strlen(refs_buf)+1;
-                        normalize_refs(refs_buf);
+                        normalize_refs(refs_buf->data());
                         // no more than 3 prior references PLUS the
                         // root article allowed, including the one
                         // concatenated below
-                        s = std::strrchr(refs_buf, '<');
-                        if (s != nullptr && s > refs_buf)
+                        s = std::strrchr(refs_buf->data(), '<');
+                        if (s != nullptr && s > refs_buf->data())
                         {
                             *s = '\0';
-                            char *h = std::strrchr(refs_buf,'<');
+                            char *h = std::strrchr(refs_buf->data(),'<');
                             *s = '<';
-                            if (h && h > refs_buf)
+                            if (h && h > refs_buf->data())
                             {
-                                s = std::strchr(refs_buf+1,'<');
+                                s = std::strchr(refs_buf->data()+1,'<');
                                 if (s < h)
                                 {
-                                    safe_copy(s, h, len);
+                                    safe_copy(s, h, static_cast<int>(refs_buf->size() + 1));
                                 }
                             }
                         }
-                    }
-                    else
-                    {
-                        len = 0;
+                        refs_buf->resize(std::strlen(refs_buf->c_str()));
                     }
                     if (!artid_buf)
                     {
                         artid_buf = fetch_lines(g_art, MSG_ID_LINE);
                     }
-                    int i = refs_buf? std::strlen(refs_buf) : 0;
-                    int j = std::strlen(artid_buf) + (i? 1 : 0)
-                      + (artid_buf[0] == '<'? 0 : 2) + 1;
-                    if (len < i + j)
+                    if (!refs_buf)
                     {
-                        refs_buf = safe_realloc(refs_buf, i + j);
+                        refs_buf.emplace();
                     }
-                    if (i)
+                    if (!refs_buf->empty())
                     {
-                        refs_buf[i++] = ' ';
+                        refs_buf->push_back(' ');
                     }
-                    if (artid_buf[0] == '<')
+                    if (!artid_buf->empty() && (*artid_buf)[0] == '<')
                     {
-                        std::strcpy(refs_buf + i, artid_buf);
+                        refs_buf->append(*artid_buf);
                     }
-                    else if (artid_buf[0])
+                    else if (!artid_buf->empty())
                     {
-                        std::sprintf(refs_buf + i, "<%s>", artid_buf);
+                        refs_buf->push_back('<');
+                        refs_buf->append(*artid_buf);
+                        refs_buf->push_back('>');
                     }
-                    else
-                    {
-                        refs_buf[i] = '\0';
-                    }
-                    s = refs_buf;
+                    s = refs_buf->data();
                     break;
                 }
 
@@ -1051,16 +1044,16 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_header_type[REPLY_LINE].min_pos >= 0)
                     {
                                         // was there a reply line?
-                        if (!(s=reply_buf))
+                        if (!reply_buf)
                         {
                             reply_buf = fetch_lines(g_art, REPLY_LINE);
-                            s = reply_buf;
                         }
+                        s = reply_buf->data();
                     }
-                    else if (!(s = from_buf))
+                    else if (!from_buf)
                     {
                         from_buf = fetch_lines(g_art, FROM_LINE);
-                        s = from_buf;
+                        s = from_buf->data();
                     }
                     else
                     {
@@ -1072,7 +1065,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         {
                                         // should we substitute path?
                             path_buf = fetch_lines(g_art, PATH_LINE);
-                            s = path_buf;
+                            s = path_buf->data();
                         }
                         int i = std::strlen(g_p_host_name.c_str());
                         if (!std::strncmp(g_p_host_name.c_str(),s,i) && s[i] == '!')
@@ -1157,19 +1150,19 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     // XXX Rewrite this!
                     {   // sick, but I don't want to hunt down a buf...
                         static char tmpbuf[1024];
-                        char* s2;
+                        std::string s2;
                         char* s3;
                         int i = 0;
 
                         s2 = fetch_lines(g_art,FROM_LINE);
-                        std::strcpy(tmpbuf,s2);
-                        std::free(s2);
-                        for (s2 = tmpbuf; (*s2 && (*s2 != '@') && (*s2 != ' ')); s2++)
+                        std::strcpy(tmpbuf,s2.c_str());
+                        char *at = tmpbuf;
+                        for (; (*at && (*at != '@') && (*at != ' ')); at++)
                         {
                         }
-                        if (*s2 == '@')         // we have normal form...
+                        if (*at == '@')         // we have normal form...
                         {
-                            for (s3 = s2 + 1; (*s3 && (*s3 != ' ')); s3++)
+                            for (s3 = at + 1; (*s3 && (*s3 != ' ')); s3++)
                             {
                                 if (*s3 == '.')
                                 {
@@ -1179,7 +1172,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         }
                         if (i>1)   // more than one dot
                         {
-                            s3 = s2;    // will be incremented before use
+                            s3 = at;    // will be incremented before use
                             while (i >= 2)
                             {
                                 s3++;
@@ -1188,20 +1181,17 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                                     i--;
                                 }
                             }
-                            s2++;
-                            *s2 = '*';
-                            s2++;
-                            *s2 = '\0';
-                            from_buf = (char*)safe_malloc(
-                                (std::strlen(tmpbuf)+std::strlen(s3)+1)*sizeof(char));
-                            std::strcpy(from_buf,tmpbuf);
-                            std::strcat(from_buf,s3);
+                            at++;
+                            *at = '*';
+                            at++;
+                            *at = '\0';
+                            from_buf = std::string{tmpbuf} + s3;
                         }
                         else
                         {
-                            from_buf = save_str(tmpbuf);
+                            from_buf = tmpbuf;
                         }
-                        s = from_buf;
+                        s = from_buf->data();
                     }
                     break;
 
@@ -1460,15 +1450,6 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
     }
 getout:
     safe_free(subj_buf);         // return any checked out storage
-    safe_free(ngs_buf);
-    safe_free(refs_buf);
-    safe_free(artid_buf);
-    safe_free(reply_buf);
-    safe_free(from_buf);
-    safe_free(path_buf);
-    safe_free(follow_buf);
-    safe_free(dist_buf);
-    safe_free(line_buf);
 
     return pattern; // where we left off
 }
