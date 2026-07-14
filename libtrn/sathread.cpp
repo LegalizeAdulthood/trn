@@ -8,28 +8,22 @@
 
 #include <config/common.h>
 #include <trn/cache.h>
-#include <trn/hash.h>
-#include <trn/mempool.h>
 #include <trn/sadesc.h> // sa_desc_subject()
 #include <trn/samisc.h>
 #include <trn/sorder.h>
 
-#include <cstring>
+#include <string>
+#include <unordered_map>
 
-static long       s_sa_num_threads{};
-static HashTable *s_sa_thread_hash{};
+static long                                  s_sa_num_threads{};
+static std::unordered_map<std::string, long> s_sa_thread_nums;
 
 static long sa_get_subj_thread(long e);
 
 void sa_init_threads()
 {
-    mp_free(MP_SATHREAD);
     s_sa_num_threads = 0;
-    if (s_sa_thread_hash)
-    {
-        hash_destroy(s_sa_thread_hash);
-        s_sa_thread_hash = nullptr;
-    }
+    s_sa_thread_nums.clear();
 }
 
 long sa_subj_thread(long e)
@@ -52,28 +46,21 @@ static long sa_get_subj_thread(long e)
 
     if (!s || !*s)
     {
-      return -2;
+        return -2;
     }
-    if ((*s == '>') && (s[1] == ' '))
+    std::string subject{s};
+    if (subject.size() >= 2 && subject[0] == '>' && subject[1] == ' ')
     {
-        s += 2;
+        subject.erase(0, 2);
     }
 
-    if (!s_sa_thread_hash)
+    const std::unordered_map<std::string, long>::const_iterator existing = s_sa_thread_nums.find(subject);
+    if (existing != s_sa_thread_nums.end())
     {
-        s_sa_thread_hash = hash_create(401, nullptr);
+        return existing->second;
     }
-    HashDatum data = hash_fetch(s_sa_thread_hash, s);
-    if (data.dat_ptr)
-    {
-        return (long)(data.dat_len);
-    }
-    char *p = mp_save_str(s, MP_SATHREAD);
-    data = hash_fetch(s_sa_thread_hash, p);
-    data.dat_ptr = p;
-    data.dat_len = (unsigned)(s_sa_num_threads+1);
-    hash_store_last(data);
     s_sa_num_threads++;
+    s_sa_thread_nums.emplace(subject, s_sa_num_threads);
     g_sa_ents[e].subj_thread_num = s_sa_num_threads;
     return s_sa_num_threads;
 }

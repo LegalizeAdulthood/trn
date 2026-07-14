@@ -357,18 +357,6 @@ currently provides bulk reset and stable `char *` addresses, but it no
 longer buys useful memory savings.  Replace each pool with normal owner
 containers, then delete the pool implementation.
 
-#### Sathread Subject Keys
-
-- Files: `libtrn/sathread.cpp`.
-- Pool: `MP_SATHREAD`.
-- Finding: subject-thread keys are pool-owned strings stored in the
-  home-grown hash table.
-- Change: replace the hash plus pooled key storage with
-  `std::unordered_map<std::string, long>`.
-- Data flow: `sa_init_threads` clears the map; `sa_get_subj_thread`
-  finds or inserts by subject text and stores the generated thread
-  number.
-
 #### Delete Memory Pool Library
 
 - Files: `libtrn/mempool.cpp`, `libtrn/include/trn/mempool.h`,
