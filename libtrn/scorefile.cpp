@@ -85,7 +85,7 @@ static char *sf_freeform(char *start1, char *end1);
 static bool  sf_do_line(char *line, bool check);
 static void  sf_do_file(const char *fname);
 static int   score_match(const char *str, int ind);
-static char *sf_missing_score(const char *line);
+static std::string sf_missing_score(const char *line);
 static char *sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
 static void  sf_exclude_file(const char *fname);
@@ -1018,28 +1018,23 @@ int sf_score(ArticleNum a)
     return sum;
 }
 
-// returns changed score line or nullptr if no changes
-static char *sf_missing_score(const char *line)
+// returns changed score line or empty if no changes
+static std::string sf_missing_score(const char *line)
 {
-    static char lbuf[LINE_BUF_LEN];
-
     // save line since it is probably pointing at (the TRN-global) g_buf
     std::string saved_line{line};
     std::printf("Possibly missing score.\n"
            "Type a score now or delete the colon to abort this entry:\n");
     g_buf[0] = ':';
     g_buf[1] = FINISH_CMD;
-    int i = finish_command(true); // print the CR
-    if (!i)                       // there was no score
+    if (!finish_command(true)) // print the CR
     {
-        return nullptr;
+        return {}; // there was no score
     }
-    std::strcpy(lbuf,g_buf+1);
-    i = std::strlen(lbuf);
-    lbuf[i] = ' ';
-    lbuf[i+1] = '\0';
-    std::strcat(lbuf, saved_line.c_str());
-    return lbuf;
+    std::string result{g_buf + 1};
+    result += ' ';
+    result += saved_line;
+    return result;
 }
 
 // Interprets the '\"' command for creating new score entries online
@@ -1070,6 +1065,7 @@ void sf_append(char *line)
 
     // skip whitespace after filechar
     char *scoreline = skip_hor_space(line + 1);
+    std::string missing_scoreline;
 
     char ch = *scoreline; // first non-whitespace after filechar
     // If the scorefile line does not begin with a number,
@@ -1078,12 +1074,13 @@ void sf_append(char *line)
     {
         if (!sf_do_line(scoreline, true)) // just checking
         {
-            scoreline = sf_missing_score(scoreline);
-            if (!scoreline) // no score typed
+            missing_scoreline = sf_missing_score(scoreline);
+            if (missing_scoreline.empty()) // no score typed
             {
                 std::printf("Score entry aborted.\n");
                 return;
             }
+            scoreline = missing_scoreline.data();
         }
     }
 

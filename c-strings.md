@@ -148,6 +148,11 @@ Refactor by replacing the owning `char *` with `std::string` or
 direct string assignment.  Use `c_str()` for legacy read-only APIs and
 `data()` only for local mutable parsing with no pointer escape.
 
+Favor an empty `std::string` sentinel over `std::optional<std::string>`
+when an empty string has no valid meaning for the result.  Use
+`std::optional<std::string>` only when empty string is valid payload that
+must be distinguished from absence.
+
 ### Owning Raw-string Returns
 
 Select when a function returns a `char *` that is owned by the caller.
@@ -332,11 +337,6 @@ buffer slices.
 ### Copy/Concat Slices
 
 ### Fixed-buffer Storage Slices
-
-FB-03. `libtrn/scorefile.cpp`, `sf_missing_score`: replace the returned
-static `lbuf` with an owned string result.  Preserve the explicit abort
-sentinel by returning an empty optional-style result, not a pointer to
-local storage.
 
 FB-04. `libtrn/scorefile.cpp`, `sf_get_line`: replace the returned
 static `sf_getline` buffer with owned lowercase text.  The current
