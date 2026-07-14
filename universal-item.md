@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 13. Add And Use Debug Payload Accessors
-
-- Target: `UN_DEBUG1` payload use.
-- Change: add typed accessors for the debug string payload and replace
-  direct `m_data.str` access sites in the same slice.
-- Data flow: debug text flows only to display and cleanup.
-- Risk: low; debug payload behavior is isolated.
-- Verification: focused universal tests and normal workflow.
-
 ### 15. Add And Use Help Key Payload Accessors
 
 - Target: `UN_HELP_KEY` payload use.

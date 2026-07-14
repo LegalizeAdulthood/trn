@@ -241,7 +241,7 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_DEBUG1:   // methods that use the string
-        safe_free(ui->m_data.str);
+        safe_free(ui->debug_string());
         break;
 
     case UN_GROUP_MASK:        // methods that have custom data
@@ -300,7 +300,7 @@ static void univ_add_debug(const char *desc, const char *txt)
 {
     // later check text for bad things
     UniversalItem *ui = univ_add(UN_DEBUG1, desc);
-    ui->m_data.str = save_str(txt);
+    ui->debug_string() = save_str(txt);
 }
 
 static void univ_add_group(const char *desc, std::string_view grpname)
@@ -1454,6 +1454,18 @@ const UniversalTextFile &UniversalItem::text_file() const
 {
     assert(m_type == UN_TEXT_FILE);
     return m_data.text_file;
+}
+
+char *&UniversalItem::debug_string()
+{
+    assert(m_type == UN_DEBUG1);
+    return m_data.str;
+}
+
+const char *UniversalItem::debug_string() const
+{
+    assert(m_type == UN_DEBUG1);
+    return m_data.str;
 }
 
 // Help start

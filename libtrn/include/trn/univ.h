@@ -138,6 +138,8 @@ struct UniversalItem
     const UniversalGroupMaskData &group_mask() const;
     UniversalTextFile &text_file();
     const UniversalTextFile &text_file() const;
+    char *&debug_string();
+    const char *debug_string() const;
     const char        *univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };
