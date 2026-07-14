@@ -96,15 +96,9 @@ an owned normalized string.
 - `IniDocument::Section` exposes mutable `char *` fields.
 - `parse_ini_section` consumes a tokenized `char *` section body.
 - `IniSectionValues` borrows value views from the tokenized document.
-- `check_ini_cond` takes mutable `char *` condition text.
 - Callers use `next_section` instead of range-for loops.
 
 ## Implementation Slices
-
-11. Change `check_ini_cond`.
-
-    Accept `std::string_view` condition text.  Use local owned storage only
-    where interpolation still requires a NUL-terminated C string.
 
 12. Remove the legacy token stream.
 

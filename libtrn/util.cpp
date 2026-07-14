@@ -45,6 +45,7 @@
 #include <ctime>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <system_error>
 
 namespace fs = std::filesystem;
@@ -832,10 +833,11 @@ bool parse_ini_section(const IniSection &section, const IniSchema &schema, IniSe
     return saw_value;
 }
 
-bool check_ini_cond(const char *cond)
+bool check_ini_cond(std::string_view cond)
 {
-    const char *cond_cursor = do_interp(g_buf, sizeof g_buf, cond, "!=<>", nullptr);
-    char       *s = g_buf + std::strlen(g_buf);
+    const std::string condition{cond};
+    const char       *cond_cursor = do_interp(g_buf, sizeof g_buf, condition.c_str(), "!=<>", nullptr);
+    char             *s = g_buf + std::strlen(g_buf);
     while (s != g_buf && std::isspace(s[-1]))
     {
         s--;

@@ -197,7 +197,7 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat)
         {
             if (section.has_condition())
             {
-                if (const std::string condition{section.condition()}; !check_ini_cond(condition.c_str()))
+                if (!check_ini_cond(section.condition()))
                 {
                     continue;
                 }

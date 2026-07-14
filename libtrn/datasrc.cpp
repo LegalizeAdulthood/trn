@@ -192,7 +192,7 @@ static std::string read_data_sources(std::string_view filename)
     {
         if (section.has_condition())
         {
-            if (const std::string condition{section.condition()}; !check_ini_cond(condition.c_str()))
+            if (!check_ini_cond(section.condition()))
             {
                 continue;
             }

@@ -259,8 +259,7 @@ static Multirc *rcstuff_init_data()
         {
             if (section.has_condition())
             {
-                const std::string condition{section.condition()};
-                if (!check_ini_cond(condition.c_str()))
+                if (!check_ini_cond(section.condition()))
                 {
                     continue;
                 }
