@@ -8,6 +8,8 @@
 
 #include <trn/head.h>
 
+#include <string>
+
 struct CompiledRegex;
 
 #define DEFAULT_SCOREDIR "%+/scores"
@@ -29,7 +31,7 @@ struct ScoreFileEntry
 // for cached score rules
 struct ScoreFile
 {
-    char  *fname;
+    std::string fname;
     int    num_lines;
     int    num_alloc;
     long   line_on;

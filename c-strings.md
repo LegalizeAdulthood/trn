@@ -39,6 +39,10 @@ Run every scan from the innermost lexical scope outward:
   `save_str`, `safe_malloc`, `safe_realloc`, or another owning helper.
   Summarize the return ownership, then trace callers that store, use, and
   free the result locally.
+- Arrays of `T` where `T` is not `char` and the array is resized with
+  `safe_realloc`.  Classify element ownership, then convert the owning
+  array storage to `std::vector<T>` when the array is local to one
+  owner.
 - Fixed-length `char name[N]` buffers in local, static local,
   file-scope, global, and struct/class storage.  Do not limit the scan to
   local automatic variables.
@@ -169,6 +173,20 @@ When a function always returns owned text, add or migrate to an owning
 the API or add a clearly named owning-string helper before changing
 callers.  Reject slices where the returned pointer escapes, is stored in
 global/static storage, or is passed to a function that stores it.
+
+### `safe_realloc` Arrays
+
+Select when code owns a growable array of `T` where `T` is not `char`,
+the array storage is resized with `safe_realloc`, and the array lifetime
+has a clear owner.  Include `char **` arrays because the element type is
+`char *`, not `char`.  Reject byte buffers, caller output storage, and
+arrays whose ownership or element lifetime is split across unrelated
+owners.
+
+Refactor by replacing the owning `T *` plus count and capacity fields
+with `std::vector<T>`.  When a slice promotes a member of a
+`safe_realloc`-grown struct array to a non-trivial C++ type, migrate the
+owning array to `std::vector` in the same slice.
 
 ### Fixed-length C Buffers
 
@@ -431,9 +449,9 @@ both declarations and definitions `static`.
 - `libtrn/include/trn/univ.h`, universal selector strings: the data is
   stored in a union, so `std::string` requires a variant or manual
   lifetime redesign.
-- `libtrn/include/trn/scorefile.h`, scorefile table strings: these mix
-  `save_str`, `mp_save_str`, memory pools, reallocating arrays, and
-  copied entries.
+- `libtrn/include/trn/scorefile.h`, remaining scorefile table strings:
+  `ScoreFileEntry` strings and `ScoreFile::lines` mix `save_str`,
+  `mp_save_str`, memory pools, reallocating arrays, and copied entries.
 - `libtrn/util.cpp`, INI parsing helpers: they update caller `char **`
   cursors and write into caller buffers.
 - `libtrn/sw.cpp`, `decode_switch`: now passes newsgroup patterns to

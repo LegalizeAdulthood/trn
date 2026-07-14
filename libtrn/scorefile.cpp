@@ -33,6 +33,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -56,8 +57,7 @@ enum
 };
 
 static ScoreFileEntry *s_sf_entries{};        // array of entries
-static ScoreFile      *s_sf_files{};          //
-static int             s_sf_num_files{};      //
+static std::vector<ScoreFile> s_sf_files;
 static char          **s_sf_abbr{};           // abbreviations
 static bool            s_new_author_active{}; // if true, s_newauthor is active
 static int             s_new_author{};        // bonus score given to a new (unscored) author
@@ -1418,32 +1418,32 @@ void sf_edit_file(const char *filespec)
 // if file number is negative, the file does not exist or cannot be opened
 static int sf_open_file(const char *name)
 {
-    int i;
+    std::size_t i;
 
     if (!name || !*name)
     {
         return 0;       // unable to open
     }
-    for (i = 0; i < s_sf_num_files; i++)
+    for (i = 0; i < s_sf_files.size(); i++)
     {
-        if (!std::strcmp(s_sf_files[i].fname, name))
+        if (s_sf_files[i].fname == name)
         {
             if (s_sf_files[i].num_lines < 0)    // nonexistent
             {
                 return -1;      // no such file
             }
             s_sf_files[i].line_on = 0;
-            return i;
+            return static_cast<int>(i);
         }
     }
-    s_sf_num_files++;
-    s_sf_files = (ScoreFile*)safe_realloc((char*)s_sf_files,
-        s_sf_num_files * sizeof (ScoreFile));
-    s_sf_files[i].fname = save_str(name);
-    s_sf_files[i].num_lines = 0;
-    s_sf_files[i].num_alloc = 0;
-    s_sf_files[i].line_on = 0;
-    s_sf_files[i].lines = nullptr;
+    s_sf_files.push_back(ScoreFile{});
+    i = s_sf_files.size() - 1;
+    ScoreFile &file = s_sf_files[i];
+    file.fname = name;
+    file.num_lines = 0;
+    file.num_alloc = 0;
+    file.line_on = 0;
+    file.lines = nullptr;
 
     char *temp_name = nullptr;
     if (string_case_equal(name, "URL:", 4))
@@ -1460,68 +1460,65 @@ static int sf_open_file(const char *name)
     }
     if (!name)
     {
-        s_sf_files[i].num_lines = -1;
+        file.num_lines = -1;
         return -1;
     }
     std::FILE *fp = std::fopen(name, "r");
     if (!fp)
     {
-        s_sf_files[i].num_lines = -1;
+        file.num_lines = -1;
         return -1;
     }
     std::string line(LINE_BUF_LEN, '\0');
     while (std::fgets(line.data(), LINE_BUF_LEN - 4, fp) != nullptr)
     {
-        if (s_sf_files[i].num_lines >= s_sf_files[i].num_alloc)
+        if (file.num_lines >= file.num_alloc)
         {
-            s_sf_files[i].num_alloc += 100;
-            s_sf_files[i].lines = (char**)safe_realloc((char*)s_sf_files[i].lines,
-                s_sf_files[i].num_alloc*sizeof(char**));
+            file.num_alloc += 100;
+            file.lines = (char**)safe_realloc((char*)file.lines,
+                file.num_alloc*sizeof(char**));
         }
         // I kind of like the next line in a twisted sort of way.
-        s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_save_str(line.c_str(),MP_SCORE2);
+        file.lines[file.num_lines++] = mp_save_str(line.c_str(),MP_SCORE2);
     }
     std::fclose(fp);
     if (temp_name)
     {
         remove(temp_name);
     }
-    return i;
+    return static_cast<int>(i);
 }
 
 static void sf_file_clear()
 {
-    for (int i = 0; i < s_sf_num_files; i++)
+    for (ScoreFile &file : s_sf_files)
     {
-        if (s_sf_files[i].fname)
-        {
-            std::free(s_sf_files[i].fname);
-        }
-        if (s_sf_files[i].num_lines > 0)
+        if (file.num_lines > 0)
         {
             // memory pool takes care of freeing line contents
-            std::free(s_sf_files[i].lines);
+            std::free(file.lines);
         }
     }
     mp_free(MP_SCORE2);
-    if (s_sf_files)
-    {
-        std::free(s_sf_files);
-    }
-    s_sf_files = (ScoreFile*)nullptr;
-    s_sf_num_files = 0;
+    s_sf_files.clear();
 }
 
 static char *sf_file_get_line(int fnum)
 {
-    if (fnum < 0 || fnum >= s_sf_num_files)
+    if (fnum < 0)
     {
         return nullptr;
     }
-    if (s_sf_files[fnum].line_on >= s_sf_files[fnum].num_lines)
+    const std::size_t i = static_cast<std::size_t>(fnum);
+    if (i >= s_sf_files.size())
+    {
+        return nullptr;
+    }
+    ScoreFile &file = s_sf_files[i];
+    if (file.line_on >= file.num_lines)
     {
         return nullptr;         // past end of file, or empty file
     }
     // below: one of the more twisted lines of my career  (:-)
-    return s_sf_files[fnum].lines[s_sf_files[fnum].line_on++];
+    return file.lines[file.line_on++];
 }
