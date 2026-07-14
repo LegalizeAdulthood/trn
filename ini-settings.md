@@ -80,6 +80,10 @@ an owned normalized string.
 - Run newly added tests before the refactor slice.
 - Preserve section conditions.
 - Preserve current value normalization behavior.
+- Use user documentation as the first guide for file syntax.
+- If documented behavior is sketchy or unclear, ask for the intended
+  behavior instead of preserving incidental tokenizer side effects by
+  default.
 - Prefer range-for loops over explicit `next_section` style iteration.
 - Do not add mutable document or setting APIs without a real caller.
 - Do not introduce new raw C string ownership.
@@ -96,13 +100,6 @@ an owned normalized string.
 - Callers use `next_section` instead of range-for loops.
 
 ## Implementation Slices
-
-3. Add `IniSection`.
-
-   Add a section view that stores name, condition, and body ranges.
-   Implement `name()`, `condition()`, `has_condition()`, `begin()`, and
-   `end()`.  The setting iterator should scan assignments in the raw body
-   text without modifying the document.
 
 4. Add range-for section iteration to `IniDocument`.
 

@@ -20,6 +20,7 @@ add_executable(trn-test
     test_hash.cpp
     test_IniDocument.cpp
     test_IniSchema.cpp
+    test_IniSection.cpp
     test_IniSetting.cpp
     test_IniSectionValues.cpp
     test_init.cpp
