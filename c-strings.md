@@ -352,11 +352,20 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
+OR-01. `libtrn/util.cpp`, `temp_filename`: change the owned
+`save_str` return to `std::string`.  Update callers in `datasrc.cpp`,
+`scorefile.cpp`, and `univ.cpp` to keep the result as owned string
+storage and pass `c_str()` only to immediate C APIs.
+
 ### Safe-realloc Array Slices
 
 ### Copy/Concat Slices
 
 ### Fixed-buffer Storage Slices
+
+FB-01. `libtrn/sw.cpp`, `decode_switch`: replace the four-byte
+`tmpbuf2` formatting buffer used for `OI_NEWS_SEL_ORDER` with an owned
+`std::string` or `fmt::format` result passed by `c_str()`.
 
 ### Global String Storage Slices
 

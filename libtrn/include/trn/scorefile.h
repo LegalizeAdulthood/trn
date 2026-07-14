@@ -8,7 +8,9 @@
 
 #include <trn/head.h>
 
+#include <cstddef>
 #include <string>
+#include <vector>
 
 struct CompiledRegex;
 
@@ -31,11 +33,10 @@ struct ScoreFileEntry
 // for cached score rules
 struct ScoreFile
 {
-    std::string fname;
-    int    num_lines;
-    int    num_alloc;
-    long   line_on;
-    char **lines;
+    std::string         fname;
+    std::vector<char *> lines;
+    std::size_t         line_on{};
+    bool                exists{};
 };
 
 extern int  g_sf_num_entries;   // # of entries

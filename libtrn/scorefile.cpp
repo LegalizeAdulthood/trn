@@ -1395,7 +1395,7 @@ static int sf_open_file(const char *name)
     {
         if (s_sf_files[i].fname == name)
         {
-            if (s_sf_files[i].num_lines < 0)    // nonexistent
+            if (!s_sf_files[i].exists)          // nonexistent
             {
                 return -1;      // no such file
             }
@@ -1407,10 +1407,6 @@ static int sf_open_file(const char *name)
     i = s_sf_files.size() - 1;
     ScoreFile &file = s_sf_files[i];
     file.fname = name;
-    file.num_lines = 0;
-    file.num_alloc = 0;
-    file.line_on = 0;
-    file.lines = nullptr;
 
     char *temp_name = nullptr;
     if (string_case_equal(name, "URL:", 4))
@@ -1427,26 +1423,19 @@ static int sf_open_file(const char *name)
     }
     if (!name)
     {
-        file.num_lines = -1;
         return -1;
     }
     std::FILE *fp = std::fopen(name, "r");
     if (!fp)
     {
-        file.num_lines = -1;
         return -1;
     }
+    file.exists = true;
     std::string line(LINE_BUF_LEN, '\0');
     while (std::fgets(line.data(), LINE_BUF_LEN - 4, fp) != nullptr)
     {
-        if (file.num_lines >= file.num_alloc)
-        {
-            file.num_alloc += 100;
-            file.lines = (char**)safe_realloc((char*)file.lines,
-                file.num_alloc*sizeof(char**));
-        }
         // I kind of like the next line in a twisted sort of way.
-        file.lines[file.num_lines++] = mp_save_str(line.c_str(),MP_SCORE2);
+        file.lines.push_back(mp_save_str(line.c_str(), MP_SCORE2));
     }
     std::fclose(fp);
     if (temp_name)
@@ -1458,14 +1447,6 @@ static int sf_open_file(const char *name)
 
 static void sf_file_clear()
 {
-    for (ScoreFile &file : s_sf_files)
-    {
-        if (file.num_lines > 0)
-        {
-            // memory pool takes care of freeing line contents
-            std::free(file.lines);
-        }
-    }
     mp_free(MP_SCORE2);
     s_sf_files.clear();
 }
@@ -1482,7 +1463,7 @@ static char *sf_file_get_line(int fnum)
         return nullptr;
     }
     ScoreFile &file = s_sf_files[i];
-    if (file.line_on >= file.num_lines)
+    if (file.line_on >= file.lines.size())
     {
         return nullptr;         // past end of file, or empty file
     }
