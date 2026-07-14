@@ -5,6 +5,8 @@
 #ifndef TRN_INI_DOCUMENT_H
 #define TRN_INI_DOCUMENT_H
 
+#include <trn/IniSection.h>
+
 #include <cstddef>
 #include <string>
 #include <string_view>
@@ -12,6 +14,26 @@
 class IniDocument
 {
 public:
+    class Iterator
+    {
+    public:
+        Iterator() = default;
+        Iterator(std::string_view text, std::size_t position);
+
+        const IniSection &operator*() const;
+        Iterator         &operator++();
+        bool              operator==(const Iterator &other) const;
+        bool              operator!=(const Iterator &other) const;
+
+    private:
+        void advance();
+
+        std::string_view m_text;
+        std::size_t      m_position{};
+        bool             m_at_end{true};
+        IniSection       m_section;
+    };
+
     struct Section
     {
         char *name{};
@@ -29,8 +51,10 @@ public:
     IniDocument(IniDocument &&other) noexcept;
     IniDocument &operator=(IniDocument &&other) noexcept;
 
-    bool next_section(Section &section);
-    void rewind();
+    bool     next_section(Section &section);
+    void     rewind();
+    Iterator begin() const;
+    Iterator end() const;
 
 private:
     static char *find_next_section(char *cursor, char **section, char **condition);
@@ -40,6 +64,7 @@ private:
     void         restore_cursor(std::size_t offset);
 
     std::string m_contents;
+    std::string m_compat_contents;
     char       *m_cursor{};
 };
 

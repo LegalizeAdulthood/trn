@@ -17,6 +17,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace
 {
@@ -74,6 +75,47 @@ TEST(IniDocumentTest, iteratesTokenizedSections)
     EXPECT_STREQ("three", section.body + std::strlen(section.body) + 1);
 
     EXPECT_FALSE(document.next_section(section));
+}
+
+TEST(IniDocumentTest, iteratesSectionsWithRangeFor)
+{
+    IniDocument document{"# ignored\n"
+                         "[first] enabled # trailing comment\n"
+                         "Alpha Key = one\n"
+                         "Wide   Key = spaced\n"
+                         "\n"
+                         "[second]\n"
+                         "Gamma = three\n",
+                         "test input"};
+
+    std::vector<std::string> names;
+    std::vector<std::string> conditions;
+    std::vector<std::string> setting_names;
+    std::vector<std::string> setting_values;
+    for (const IniSection section : document)
+    {
+        names.emplace_back(section.name());
+        conditions.emplace_back(section.condition());
+        for (const IniSetting setting : section)
+        {
+            setting_names.emplace_back(setting.name());
+            setting_values.emplace_back(setting.value());
+        }
+    }
+
+    ASSERT_EQ(2, names.size());
+    EXPECT_EQ("first", names[0]);
+    EXPECT_EQ("enabled", conditions[0]);
+    EXPECT_EQ("second", names[1]);
+    EXPECT_EQ("", conditions[1]);
+
+    ASSERT_EQ(3, setting_names.size());
+    EXPECT_EQ("Alpha Key", setting_names[0]);
+    EXPECT_EQ("Wide   Key", setting_names[1]);
+    EXPECT_EQ("Gamma", setting_names[2]);
+    EXPECT_EQ("one", setting_values[0]);
+    EXPECT_EQ("spaced", setting_values[1]);
+    EXPECT_EQ("three", setting_values[2]);
 }
 
 TEST(IniDocumentTest, parsesSectionValuesFromSectionBody)

@@ -101,12 +101,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-4. Add range-for section iteration to `IniDocument`.
-
-   Implement `begin()` and `end()` using a scanner over the owned text.
-   Keep the old `next_section` path only as a temporary compatibility path
-   until callers are migrated.
-
 5. Change `IniSectionValues` to own strings.
 
    Store `std::string` values internally.  Keep the existing lookup API.
