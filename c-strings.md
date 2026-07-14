@@ -352,6 +352,35 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
+### Safe-realloc Array Slices
+
+RA-01. `libtrn/sw.cpp`, init-environment list: replace the static
+`char **` plus count/capacity storage with `std::vector<char *>` in
+`save_init_environment` and `write_init_environment`.  Keep the elements
+borrowed and mutable because they point into the switch buffer.
+
+RA-02. `libtrn/scorefile.cpp`, score entry table: replace
+`s_sf_entries` grow/copy/free storage with `std::vector<ScoreFileEntry>`.
+Keep `g_sf_num_entries` as the public count until callers no longer need
+it, and keep `ScoreFileEntry` string members unchanged.
+
+RA-03. `libtrn/samain.cpp` and scan-article readers: replace
+`g_sa_ents` plus `s_sa_ents_alloc` with
+`std::vector<ScanArticleEntryData>`.  The slice must update the public
+declaration and all direct indexed readers while preserving the
+one-based entry numbering.
+
+RA-04. `libtrn/scan.cpp` and `libtrn/sorder.cpp`, scan context order
+arrays: replace `g_s_contexts`, `ScanContext::ent_sort`,
+`ScanContext::ent_index`, `g_s_ent_sort`, and `g_s_ent_index` raw arrays
+with vectors.  This is a coordinated storage slice because the current
+context stores and restores the same array ownership.
+
+RA-05. `libtrn/rthread.cpp` and article selector readers: replace
+`g_art_ptr_list` plus `g_art_ptr_list_size` with `std::vector<Article *>`.
+The slice must preserve existing pointer-iteration behavior or update
+the selector cursors at the same time.
+
 ### Copy/Concat Slices
 
 ### Fixed-buffer Storage Slices

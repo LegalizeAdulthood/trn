@@ -65,8 +65,7 @@ static bool            s_sf_pattern_status{}; // should we match by pattern?
 static bool            s_reply_active{};      // if true, s_reply_score is active
 static int             s_reply_score{};       // score amount added to an article reply
 static int             s_sf_file_level{};     // how deep are we?
-static char          **s_sf_extra_headers{};
-static int             s_sf_num_extra_headers{};
+static std::vector<std::string> s_sf_extra_headers;
 static bool            s_sf_has_extra_headers{};
 static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
@@ -108,8 +107,7 @@ void sf_clear_file_cache_for_test()
 void sf_init()
 {
     g_sf_num_entries = 0;
-    s_sf_extra_headers = nullptr;
-    s_sf_num_extra_headers = 0;
+    s_sf_extra_headers.clear();
 
     // initialize abbreviation list
     s_sf_abbr = (char**)safe_malloc(256 * sizeof (char*));
@@ -250,12 +248,7 @@ void sf_clean()
         std::free(s_sf_entries);
     }
     s_sf_entries = nullptr;
-    for (int i = 0; i < s_sf_num_extra_headers; i++)
-    {
-        std::free(s_sf_extra_headers[i]);
-    }
-    s_sf_num_extra_headers = 0;
-    s_sf_extra_headers = nullptr;
+    s_sf_extra_headers.clear();
 }
 
 static void sf_grow()
@@ -289,11 +282,11 @@ static int sf_check_extra_headers(const char *head)
             ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
-    for (int i = 0; i < s_sf_num_extra_headers; i++)
+    for (std::size_t i = 0; i < s_sf_extra_headers.size(); i++)
     {
         if (lower_head == s_sf_extra_headers[i])
         {
-            return i;
+            return static_cast<int>(i);
         }
     }
     return -1;
@@ -320,9 +313,6 @@ static void sf_add_extra_header(const char *head)
         return;
     }
 
-    s_sf_num_extra_headers++;
-    s_sf_extra_headers = (char**)safe_realloc((char*)s_sf_extra_headers,
-        s_sf_num_extra_headers * sizeof (char*));
     header_name.pop_back();
     for (char &ch : header_name)
     {
@@ -331,7 +321,7 @@ static void sf_add_extra_header(const char *head)
             ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
-    s_sf_extra_headers[s_sf_num_extra_headers-1] = save_str(header_name.c_str());
+    s_sf_extra_headers.push_back(header_name);
 }
 
 //ART_NUM art;          // article number to check
@@ -340,12 +330,12 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 {
     parse_header(art);   // fast if already parsed
 
-    const char *head = s_sf_extra_headers[hnum];
-    int         len = std::strlen(head);
+    const std::string &head = s_sf_extra_headers[hnum];
+    int                len = static_cast<int>(head.size());
 
     for (const char *s = g_head_buf; s && *s && *s != '\n'; s++)
     {
-        if (string_case_equal(head, s, len))
+        if (string_case_equal(head.c_str(), s, len))
         {
             s = std::strchr(s,':');
             if (!s)
@@ -1184,7 +1174,7 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
     }
     if (h >= HEAD_LAST)
     {
-        if (h-HEAD_LAST < s_sf_num_extra_headers)
+        if (h - HEAD_LAST < static_cast<int>(s_sf_extra_headers.size()))
         {
             line = sf_get_extra_header(a,h-HEAD_LAST);
         }
@@ -1283,7 +1273,7 @@ static void sf_print_match(int indx)
 
     if (s_sf_entries[indx].head_type >= HEAD_LAST)
     {
-        head_name = s_sf_extra_headers[s_sf_entries[indx].head_type-HEAD_LAST];
+        head_name = s_sf_extra_headers[s_sf_entries[indx].head_type - HEAD_LAST].c_str();
     }
     else
     {
