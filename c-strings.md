@@ -361,62 +361,157 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
-- `libtrn/head.cpp`, `prefetch_lines`: split the mixed copy/no-copy API.
-  Add an owning `std::string` producer for callers that pass
-  `copy=true`, and keep the borrowed `g_cmd_buf`/NNTP-buffer path
-  separate.  Update the direct `fetch_subj`, `fetch_from`, and
-  `fetch_xref` callers that consume the owned result.
-- `libtrn/head.cpp`, `mp_fetch_lines`: keep the memory-pool interface,
-  but build header text through the same span/string helper used by
-  `fetch_lines`.  This removes the duplicated `safe_malloc`/`safe_copy`
-  header slicing.
-- `util/util2.cpp`, `read_auth_file`: return the password contents as
-  `std::string`, use empty string for "not found", and update callers
-  that currently receive and free the allocated password.
-- `libtrn/decode.cpp`, `decode_subject`: replace the static owned
-  subject pointer result with owned string storage or a string-returning
-  helper.  Update callers that check null before parsing part and total
-  values.
+#### `prefetch_lines` Ownership Split
+
+- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`.
+- Finding: copy and no-copy call sites are split, but the implementation
+  still uses a runtime `copy` flag.
+- Change: add an owning `std::string` helper for the copy path and make
+  the no-copy helper always return borrowed storage.
+- Data flow: no-copy remote fallback currently calls
+  `save_current_header_line`; remove that ownership ambiguity here.
+- Callers: no-copy wrappers feed `fetch_subj`, `fetch_from`,
+  `fetch_xref`, article search, and scorefile matching.
+
+#### `fetch_subj_copy` String Return
+
+- Files: `libtrn/include/trn/head.h`, `libtrn/head.cpp`.
+- Finding: the copy wrappers still return caller-owned `char *`.
+- Change: convert `fetch_subj_copy` and `prefetch_lines_copy` to
+  `std::string` after the owning helper exists.
+- Data flow: direct owned-copy consumers are `decode_subject` and the
+  `%s`/`%S` interpolation path in `do_interp`.
+
+#### `mp_fetch_lines` Pool Path
+
+- Files: `libtrn/head.cpp`.
+- Finding: pool-owned header text duplicates the header span extraction
+  used by `fetch_lines`.
+- Change: keep the memory-pool interface, but build header text through
+  the shared span/string helper.
+- Data flow: returned storage remains pool-owned.
+
+#### `do_interp` Subject Copy
+
+- Files: `libtrn/intrp.cpp`.
+- Finding: `%s` and `%S` hold a `fetch_subj_copy` raw result and free it
+  at function exit.
+- Change: use local `std::string` storage for the copied subject.
+- Data flow: use mutable `data()` only while applying `subject_has_re`
+  and the local `- (nf` trimming hack.
+
+#### `read_auth_file` Password
+
+- Files: `util/util2.cpp`, `util/include/util/util2.h`.
+- Finding: password contents are returned through allocated `char *`
+  storage and freed by callers.
+- Change: return `std::string` and use empty string for "not found".
+- Data flow: update callers that receive and free the password.
+
+#### `decode_subject` Filename
+
+- Files: `libtrn/decode.cpp`, `libtrn/include/trn/decode.h`,
+  `libtrn/respond.cpp`.
+- Finding: `decode_subject` keeps a static owned subject buffer and
+  returns an interior filename pointer.
+- Change: use local `std::string` subject storage and return an owned
+  filename string.
+- Data flow: empty string means "no filename"; update the two
+  `respond.cpp` callers that currently check for `nullptr`.
 
 ### Safe-realloc Array Slices
 
-- `util/env.cpp`, inactive `export_var` branch: delete or modernize the
-  `char **environ` resizing path.  If the branch is kept, replace the
-  raw reallocating table with stable owned string storage for `putenv`.
+#### Inactive `export_var` Environment Table
+
+- Files: `util/env.cpp`.
+- Finding: the inactive branch resizes `char **environ` with
+  `safe_realloc`.
+- Change: delete the branch or replace it with modern storage.
+- Data flow: if kept, use stable owned strings for `putenv`.
 
 ### Copy/Concat Slices
 
-- `libtrn/univ.cpp`, `univ_page_file`: change `fname` to
-  `std::string_view`, build the pager command with `fmt::format`, and
-  remove the `sprintf`/`strcat` writes into `g_cmd_buf`.
-- `libtrn/univ.cpp`, `UniversalItem::univ_article_desc`: return an owned
-  `std::string`, use ordinary string truncation plus `fmt::format`, and
-  remove the static `dbuf`, `sbuf`, and `fbuf` buffers.
-- `libtrn/head.cpp`, `nntp_xhdr`: replace the `sprintf` writes into
-  `g_ser_line` with `fmt::format` or an owned command string sent to
+#### `univ_page_file` Pager Command
+
+- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.
+- Finding: pager command construction writes through `sprintf` and
+  `strcat` into `g_cmd_buf`.
+- Change: accept `std::string_view` for `fname` and build the command
+  with `fmt::format`.
+- Data flow: pass the formatted command to `do_shell` while owned
+  storage is still alive.
+
+#### `UniversalItem::univ_article_desc`
+
+- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.
+- Finding: article descriptions are returned through static buffers.
+- Change: return `std::string`, use ordinary string truncation, and
+  build the result with `fmt::format`.
+- Data flow: remove static `dbuf`, `sbuf`, and `fbuf` storage.
+
+#### `nntp_xhdr` Commands
+
+- Files: `libtrn/head.cpp`.
+- Finding: `XHDR` commands are built with `sprintf` into `g_ser_line`.
+- Change: use `fmt::format` or an owned command string sent to
   `nntp_command`.
+- Data flow: keep NNTP command storage alive only for the call.
 
 ### Fixed-buffer Storage Slices
 
-- `libtrn/univ.cpp`, `univ_use_file`: replace static
-  `lbuf[LINE_BUF_LEN]` with owned line storage while reading universal
-  selector files.  The current fixed-size buffer imposes arbitrary line
-  truncation.
-- `libtrn/Article.cpp`, `Article::get_cached_line`: remove static
-  numeric buffers for `LINES_LINE` and `BYTES_LINE` by splitting the
-  cached-line API from formatted numeric article fields.
-- `libtrn/sadesc.cpp`, subject/article description helpers: replace the
-  file-scope static description buffers with owned string returns.
-- `libtrn/score-easy.cpp`, `s_sc_e_newline`: convert the easy-score
-  command assembly buffer to `std::string`.
-- `libtrn/scoresave.cpp`, `s_line_buf`: convert the saved-score line
-  buffer to owned string construction if the line does not escape as an
-  output buffer.
-- `libtrn/terminal.cpp`, `g_mouse_modes`: replace the fixed global
-  character array with `std::string` storage and direct string
-  assignment in option handling.
-- `nntp/nntpclient.cpp`, `g_last_command`: replace the fixed global
-  command snapshot buffer with `std::string` storage.
+#### `univ_use_file` Line Buffer
+
+- Files: `libtrn/univ.cpp`.
+- Finding: universal selector input uses static `lbuf[LINE_BUF_LEN]`.
+- Change: read into owned line storage before calling `univ_do_line`.
+- Truncation: current fixed-size truncation appears arbitrary.
+
+#### `Article::get_cached_line` Numeric Buffers
+
+- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`.
+- Finding: `LINES_LINE` and `BYTES_LINE` use static numeric buffers.
+- Change: split cached header lines from formatted numeric article
+  fields.
+- Data flow: callers that need numeric text should receive owned or
+  caller-local formatting.
+
+#### Subject Description Buffers
+
+- Files: `libtrn/sadesc.cpp`, `libtrn/include/trn/sadesc.h`.
+- Finding: subject and article description helpers use file-scope static
+  buffers.
+- Change: return owned `std::string` values.
+- Data flow: update display callers to consume string results locally.
+
+#### Easy-score Command Buffer
+
+- Files: `libtrn/score-easy.cpp`, `libtrn/include/trn/score-easy.h`.
+- Finding: `s_sc_e_newline` is fixed-size command assembly storage.
+- Change: use `std::string` for command construction.
+- Data flow: preserve callers that read the current easy-score command.
+
+#### Saved-score Line Buffer
+
+- Files: `libtrn/scoresave.cpp`.
+- Finding: `s_line_buf` stores saved-score line construction.
+- Change: use owned string construction if the line does not escape as
+  an output buffer.
+- Data flow: classify output ownership before editing.
+
+#### Mouse Modes Storage
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `libtrn/opt.cpp`.
+- Finding: `g_mouse_modes` is a fixed global character array.
+- Change: use `std::string` storage and direct assignment.
+- Data flow: update option handling and terminal readers together.
+
+#### NNTP Last Command Snapshot
+
+- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`.
+- Finding: `g_last_command` is fixed global command snapshot storage.
+- Change: replace with `std::string`.
+- Data flow: update extern users and command logging together.
 
 ### Global String Storage Slices
 
@@ -430,49 +525,102 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-- `libtrn/opt.cpp`, display-mode globals: replace
-  `g_sel_grp_display_mode` and `g_sel_art_display_mode` with owned string
-  storage that does not depend on `save_str("*...") + 1` or decrementing
-  the pointer before free.
-- `libtrn/opt.cpp`, option saved/default values: replace
-  `g_option_saved_vals` and `g_option_def_vals` with vectors of owned
-  optional strings.  Update `apply_global_option`, `option_value`, and
+#### Selection Display Modes
+
+- Files: `libtrn/opt.cpp`, `libtrn/include/trn/rt-page.h`.
+- Finding: display modes depend on `save_str("*...") + 1` and pointer
+  decrement before free.
+- Change: replace `g_sel_grp_display_mode` and
+  `g_sel_art_display_mode` with owned string storage.
+- Data flow: update all mode readers and cleanup together.
+
+#### Option Saved and Default Values
+
+- Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`.
+- Finding: `g_option_saved_vals` and `g_option_def_vals` are owning raw
+  string arrays.
+- Change: replace them with vectors of owned optional strings.
+- Data flow: update `apply_global_option`, `option_value`, and cleanup
+  paths together.
+
+#### Scorefile Abbreviations
+
+- Files: `libtrn/scorefile.cpp`.
+- Finding: `s_sf_abbr` owns file abbreviation strings with
+  `save_str`/`free`.
+- Change: replace the table with an array of optional strings.
+- Data flow: update the `file` command path and abbreviation readers.
+
+#### `ScoreFileEntry` Text Fields
+
+- Files: `libtrn/include/trn/scorefile.h`, `libtrn/scorefile.cpp`.
+- Finding: `ScoreFileEntry::str1` and `str2` retain rule text as raw
+  pointers.
+- Change: replace retained rule text with owned string storage.
+- Data flow: update score matching, printing, include/exclude, and
   cleanup paths together.
-- `libtrn/scorefile.cpp`, score-file abbreviations: replace
-  `s_sf_abbr` with an array of optional strings and remove direct
-  `save_str`/`free` management in the `file` command path.
-- `libtrn/include/trn/scorefile.h`, `ScoreFileEntry::str1` and `str2`:
-  replace retained rule text with owned string storage and update the
-  score matching, printing, include/exclude, and cleanup paths.
-- `libtrn/include/trn/scorefile.h`, `ScoreFile::lines`: replace the
-  vector of owned raw line pointers with `std::vector<std::string>`.
-- `libtrn/terminal.cpp`, `KeyMap::km_str`: replace macro string entries
-  with owned `std::string` storage and remove per-entry `save_str`/`free`
-  management.
-- `util/env.cpp`, `export_var`: add a stable owned environment-string
-  table for `putenv` values and replace the leaked `save_str` buffer.
-  Preserve the existing `un_export` and `re_export` semantics in the new
-  owner.
+
+#### `ScoreFile::lines`
+
+- Files: `libtrn/include/trn/scorefile.h`, `libtrn/scorefile.cpp`.
+- Finding: score-file cache lines are `std::vector<char *>`.
+- Change: replace with `std::vector<std::string>`.
+- Data flow: update cache fill, read, and cleanup paths.
+
+#### Keymap Macro Strings
+
+- Files: `libtrn/terminal.cpp`.
+- Finding: `KeyMap::km_str` owns macro strings with `save_str`/`free`.
+- Change: replace macro string entries with owned `std::string` storage.
+- Data flow: update keymap union ownership and macro display together.
+
+#### Exported Environment Values
+
+- Files: `util/env.cpp`.
+- Finding: `export_var` leaks a `save_str` buffer to keep `putenv`
+  storage alive.
+- Change: add a stable owned environment-string table.
+- Data flow: preserve existing `un_export` and `re_export` semantics.
 
 ### Universal Selector Storage Slices
 
-- `libtrn/include/trn/univ.h`, `UniversalItem::m_desc`: convert the
-  default description field from owned `char *` to nullable owned string
-  storage.  Update `univ_add`, `univ_close`, sites that test `m_desc`
-  for null, and `UniversalItem::univ_article_desc`.
-- `libtrn/univ.cpp`, `s_univ_begin_label` and `s_univ_line_desc`:
-  replace parse-state raw pointers with owned optional strings or an
-  explicit presence flag.  Update label matching and description
-  defaults in `univ_use_file` and `univ_do_line`.
-- `libtrn/univ.cpp`, `univ_mask_load` and `univ_use_group_line`: change
-  the mask input to `std::string_view` and tokenize without mutating the
-  caller's buffer.  This removes the startup `save_str("*")` allocation.
-- `libtrn/include/trn/univ.h`, `UniversalData`: replace the raw string
-  fields used by universal selector item payloads with owned C++ string
-  storage.  Cover `UN_DEBUG1`, group masks, config files, newsgroups,
-  virtual articles, virtual groups, and text files in storage-centered
-  slices that update `univ_add_*`, `univ_free_data`, selector readers,
-  and hash-key lifetime together.
+#### Universal Item Description
+
+- Files: `libtrn/include/trn/univ.h`, `libtrn/univ.cpp`.
+- Finding: `UniversalItem::m_desc` is owned nullable `char *` storage.
+- Change: convert the default description field to nullable owned string
+  storage.
+- Data flow: update `univ_add`, `univ_close`, null tests, and
+  `UniversalItem::univ_article_desc`.
+
+#### Universal Parse Labels
+
+- Files: `libtrn/univ.cpp`.
+- Finding: `s_univ_begin_label` and `s_univ_line_desc` are parse-state
+  raw pointers.
+- Change: use owned optional strings or an explicit presence flag.
+- Data flow: update label matching and description defaults in
+  `univ_use_file` and `univ_do_line`.
+
+#### Universal Mask Loading
+
+- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.
+- Finding: `univ_mask_load` receives a mutable mask only because
+  `univ_use_group_line` tokenizes by writing terminators.
+- Change: accept `std::string_view` and tokenize without mutating the
+  caller's buffer.
+- Data flow: removes the startup `save_str("*")` allocation.
+
+#### Universal Payload Strings
+
+- Files: `libtrn/include/trn/univ.h`, `libtrn/univ.cpp`,
+  `libtrn/rt-select.cpp`.
+- Finding: `UniversalData` payload fields retain owned raw strings.
+- Change: replace payload string fields with owned C++ string storage.
+- Data flow: update `UN_DEBUG1`, group masks, config files, newsgroups,
+  virtual articles, virtual groups, and text files together.
+- Ownership: update `univ_add_*`, `univ_free_data`, selector readers,
+  and hash-key lifetime in the same storage-centered work.
 
 ### Static-Linkage Slices
 
