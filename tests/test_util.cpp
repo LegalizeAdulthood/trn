@@ -43,10 +43,7 @@ protected:
 
     std::string take_temp_filename()
     {
-        char       *name = temp_filename();
-        std::string result{name};
-        safe_free(name);
-        return result;
+        return temp_filename();
     }
 
     std::string m_old_tmp_dir;

@@ -1408,17 +1408,17 @@ static int sf_open_file(const char *name)
     ScoreFile &file = s_sf_files[i];
     file.fname = name;
 
-    char *temp_name = nullptr;
+    std::string temp_name;
     if (string_case_equal(name, "URL:", 4))
     {
         temp_name = temp_filename();
-        if (!s_url_getter(std::string_view{name}.substr(4), temp_name))
+        if (!s_url_getter(std::string_view{name}.substr(4), temp_name.c_str()))
         {
             name = nullptr;
         }
         else
         {
-            name = temp_name;
+            name = temp_name.c_str();
         }
     }
     if (!name)
@@ -1438,9 +1438,9 @@ static int sf_open_file(const char *name)
         file.lines.push_back(mp_save_str(line.c_str(), MP_SCORE2));
     }
     std::fclose(fp);
-    if (temp_name)
+    if (!temp_name.empty())
     {
-        remove(temp_name);
+        remove(temp_name.c_str());
     }
     return static_cast<int>(i);
 }

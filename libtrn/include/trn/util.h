@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 #include <string_view>
 
 extern bool g_waiting; // waiting for subprocess (in doshell)?
@@ -62,7 +63,7 @@ void        verify_sig();
 double      current_time();
 std::time_t text_to_secs(const char *s, std::time_t defSecs);
 const char *secs_to_text(std::time_t secs);
-char       *temp_filename();
+std::string temp_filename();
 char       *get_auth_user();
 char       *get_auth_pass();
 void        prep_ini_data(char *cp, const char *filename);

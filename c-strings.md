@@ -352,11 +352,6 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
-OR-01. `libtrn/util.cpp`, `temp_filename`: change the owned
-`save_str` return to `std::string`.  Update callers in `datasrc.cpp`,
-`scorefile.cpp`, and `univ.cpp` to keep the result as owned string
-storage and pass `c_str()` only to immediate C APIs.
-
 ### Safe-realloc Array Slices
 
 ### Copy/Concat Slices

@@ -599,10 +599,8 @@ static bool univ_use_file(std::string_view fname, const char *label)
     // open URLs and translate them into local temporary filenames
     if (string_case_equal(open_name.c_str(), "URL:", 4))
     {
-        char *temp_name = temp_filename();
-        open_name = temp_name;
+        open_name = temp_filename();
         g_univ_tmp_file = open_name;
-        std::free(temp_name);
 
         if (!url_get(file_name.substr(4), open_name.c_str()))
         {

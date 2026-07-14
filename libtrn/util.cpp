@@ -647,12 +647,12 @@ const char *secs_to_text(std::time_t secs)
     return g_buf;
 }
 
-// returns a saved string representing a unique temporary filename
-char *temp_filename()
+// returns an owned string representing a unique temporary filename
+std::string temp_filename()
 {
     static int  tmpfile_num = 0;
     extern long g_our_pid;
-    return save_str((fs::path{g_tmp_dir} / fmt::format("trn{}.{}", tmpfile_num++, g_our_pid)).string());
+    return (fs::path{g_tmp_dir} / fmt::format("trn{}.{}", tmpfile_num++, g_our_pid)).string();
 }
 
 char *get_auth_user()
