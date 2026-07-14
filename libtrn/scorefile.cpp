@@ -12,7 +12,6 @@
 #include <config/string_case_compare.h>
 #include <trn/cache.h>
 #include <trn/head.h>
-#include <trn/mempool.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rt-util.h>
@@ -231,7 +230,6 @@ void sf_clean()
             delete s_sf_entries[i].compex;
         }
     }
-    mp_free(MP_SCORE1);         // free memory pool
     if (s_sf_abbr)
     {
         for (int i = 0; i < 256; i++)
@@ -781,7 +779,7 @@ static bool sf_do_line(char *line, bool check)
     if (s_sf_pattern_status)    // in pattern matching mode
     {
         s_sf_entries[g_sf_num_entries-1].flags |= 1;
-        s_sf_entries[g_sf_num_entries-1].str1 = mp_save_str(s,MP_SCORE1);
+        s_sf_entries[g_sf_num_entries-1].str1 = s;
         s_sf_compex = new CompiledRegex;
         s_sf_compex->init_compex();
         // compile arguments:
@@ -805,18 +803,18 @@ static bool sf_do_line(char *line, bool check)
     else
     {
         s_sf_entries[g_sf_num_entries-1].flags &= 0xfe;
-        s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
+        s_sf_entries[g_sf_num_entries-1].str2.clear();
         // Note: consider allowing * wildcard on other header filenames
         if (j == FROM_LINE)     // may have * wildcard
         {
             s2 = std::strchr(s, '*');
             if (s2 != nullptr)
             {
-                s_sf_entries[g_sf_num_entries - 1].str2 = mp_save_str(s2 + 1, MP_SCORE1);
+                s_sf_entries[g_sf_num_entries - 1].str2 = s2 + 1;
                 *s2 = '\0';
             }
         }
-        s_sf_entries[g_sf_num_entries-1].str1 = mp_save_str(s,MP_SCORE1);
+        s_sf_entries[g_sf_num_entries-1].str1 = s;
     }
     return true;
 }
@@ -843,8 +841,8 @@ static void sf_do_file(const char *fname)
     s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_START);
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
-    s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
-    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename.c_str());
+    s_sf_entries[g_sf_num_entries-1].str2.clear();
+    s_sf_entries[g_sf_num_entries-1].str1 = safefilename;
 
     const ScoreFile &file = s_sf_files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
@@ -857,8 +855,8 @@ static void sf_do_file(const char *fname)
     s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_END);
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
-    s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
-    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename.c_str());
+    s_sf_entries[g_sf_num_entries-1].str2.clear();
+    s_sf_entries[g_sf_num_entries-1].str1 = safefilename;
     s_sf_file_level--;
 }
 
@@ -866,15 +864,12 @@ static void sf_do_file(const char *fname)
 //int ind;              // index into s_sf_entries
 static int score_match(const char *str, int ind)
 {
-    const char *s1 = s_sf_entries[ind].str1;
-    const char *s2 = s_sf_entries[ind].str2;
-
     if (s_sf_entries[ind].flags & 1)    // pattern style match
     {
         if (s_sf_entries[ind].compex != nullptr)
         {
             // we have a good pattern
-            s2 = s_sf_entries[ind].compex->execute(str);
+            const char *s2 = s_sf_entries[ind].compex->execute(str);
             if (s2 != nullptr)
             {
                 return true;
@@ -883,8 +878,10 @@ static int score_match(const char *str, int ind)
         return false;
     }
     // default case
-    const char *s3 = std::strstr(str, s1);
-    return s3 != nullptr && (!s2 || std::strstr(s3 + std::strlen(s1), s2));
+    const std::string &s1 = s_sf_entries[ind].str1;
+    const std::string &s2 = s_sf_entries[ind].str2;
+    const char        *s3 = std::strstr(str, s1.c_str());
+    return s3 != nullptr && (s2.empty() || std::strstr(s3 + s1.size(), s2.c_str()));
 }
 
 int sf_score(ArticleNum a)
@@ -1245,7 +1242,7 @@ static void sf_print_match(int indx)
             {
                 std::printf(".");            // make putchar later?
             }
-            std::printf("From file: %s\n",s_sf_entries[i].str1);
+            std::printf("From file: %s\n",s_sf_entries[i].str1.c_str());
             if (level == 0)             // top level
             {
                 break;          // out of the big for loop
@@ -1270,10 +1267,10 @@ static void sf_print_match(int indx)
         head_name = g_header_type[s_sf_entries[indx].head_type].name.c_str();
     }
     std::printf("%d %s%s: %s", s_sf_entries[indx].score,pattern,head_name,
-           s_sf_entries[indx].str1);
-    if (s_sf_entries[indx].str2)
+           s_sf_entries[indx].str1.c_str());
+    if (!s_sf_entries[indx].str2.empty())
     {
-        std::printf("*%s",s_sf_entries[indx].str2);
+        std::printf("*%s",s_sf_entries[indx].str2.c_str());
     }
     std::printf("\n");
 }
@@ -1286,7 +1283,7 @@ static void sf_exclude_file(const char *fname)
     for (start = 0; start < g_sf_num_entries; start++)
     {
         if (s_sf_entries[start].head_type == static_cast<HeaderLineType>(SF_FILE_MARK_START)
-         && !std::strcmp(s_sf_entries[start].str1,fname))
+         && s_sf_entries[start].str1 == fname)
         {
             break;
         }
@@ -1299,7 +1296,7 @@ static void sf_exclude_file(const char *fname)
     for (end = start+1; end < g_sf_num_entries; end++)
     {
         if (s_sf_entries[end].head_type==SF_FILE_MARK_END
-         && !std::strcmp(s_sf_entries[end].str1,fname))
+         && s_sf_entries[end].str1 == fname)
         {
             break;
         }

@@ -357,18 +357,6 @@ currently provides bulk reset and stable `char *` addresses, but it no
 longer buys useful memory savings.  Replace each pool with normal owner
 containers, then delete the pool implementation.
 
-#### Scorefile Rule Text
-
-- Files: `libtrn/include/trn/scorefile.h`, `libtrn/scorefile.cpp`.
-- Pool: `MP_SCORE1`.
-- Finding: `ScoreFileEntry::str1` and `str2` retain rule text as pooled
-  raw pointers.
-- Change: store rule text as owned strings, using empty string or
-  optional string when absence matters.
-- Data flow: update rule parsing, wildcard split storage, regex compile
-  calls, score matching, score printing, include/exclude lookup, and
-  `sf_clean`; drop the `mp_free(MP_SCORE1)` cleanup.
-
 #### Sathread Subject Keys
 
 - Files: `libtrn/sathread.cpp`.

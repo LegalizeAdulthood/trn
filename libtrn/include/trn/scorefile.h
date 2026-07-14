@@ -20,8 +20,8 @@ struct ScoreFileEntry
 {
     HeaderLineType head_type; // header # (see trn/head.h)
     int            score;     // score change
-    char          *str1;      // first string part
-    char          *str2;      // second string part
+    std::string    str1;      // first string part
+    std::string    str2;      // second string part
     CompiledRegex *compex;    // regular expression ptr
     char           flags;     // 1: regex is valid
                               // 2: rule has been applied to the current article.
