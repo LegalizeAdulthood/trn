@@ -53,14 +53,19 @@ When `next` finds no remaining slices, rerun the audit against the
 current source and look for new opportunities before treating the plan
 as empty.
 
-On every audit rerun, re-evaluate deferred items against the current
-source.  Do not assume older deferrals remain ineligible after code
-changes.
+On every audit rerun, start from the current source and re-evaluate every
+prior concern that still exists in the tree.  Do not assume older
+judgments remain valid after code changes.
 
 Do not keep a chronological history of audit reruns in this document.
-Record durable rules, current findings, open slices, and deferrals.
-When a slice is completed, remove it from the slice list instead of
-moving it into `Findings`.
+Record durable rules, current findings, and open slices.  When a slice is
+completed, remove it from the slice list instead of moving it into
+`Findings`.
+
+Do not self-defer findings.  If source still contains matching raw
+string ownership, a fixed buffer, a raw return, or path storage, keep the
+candidate visible as a slice until it is completed or the user explicitly
+says to defer or remove it.
 
 Existing good precedents:
 
@@ -80,7 +85,7 @@ Most raw string pointers are not local cleanup targets yet.  They are
 owned buffers, caller-owned mutable buffers, struct fields, termcap and
 NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
 `g_buf`, `g_cmd_buf`, `g_ser_line`, `Article` and `Subject` fields,
-`UniversalItem` unions, `HashDatum` payloads, `parse_string`,
+`UniversalData` union fields, `HashDatum` payloads, `parse_string`,
 `get_a_line` and `push_string`.
 
 The useful local targets fall into five groups:
@@ -286,6 +291,10 @@ Do not add an unused wrapper or bridge function.  Convert at least one
 caller in the same slice, or keep the raw acquire/copy/free flow local
 to the function being refactored.
 
+Do not hide work in a self-chosen deferral list.  Record candidates as
+slices even when they need owner judgment.  Add a deferred item only when
+the user explicitly says that exact item should be deferred.
+
 Do not replace a `fetch_lines` local with `std::string` by copying the
 owned raw result and then freeing it; that turns one heap allocation into
 two.  Either change the producer to build the `std::string` directly in
@@ -352,11 +361,62 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
+- `libtrn/head.cpp`, `prefetch_lines`: split the mixed copy/no-copy API.
+  Add an owning `std::string` producer for callers that pass
+  `copy=true`, and keep the borrowed `g_cmd_buf`/NNTP-buffer path
+  separate.  Update the direct `fetch_subj`, `fetch_from`, and
+  `fetch_xref` callers that consume the owned result.
+- `libtrn/head.cpp`, `mp_fetch_lines`: keep the memory-pool interface,
+  but build header text through the same span/string helper used by
+  `fetch_lines`.  This removes the duplicated `safe_malloc`/`safe_copy`
+  header slicing.
+- `util/util2.cpp`, `read_auth_file`: return the password contents as
+  `std::string`, use empty string for "not found", and update callers
+  that currently receive and free the allocated password.
+- `libtrn/decode.cpp`, `decode_subject`: replace the static owned
+  subject pointer result with owned string storage or a string-returning
+  helper.  Update callers that check null before parsing part and total
+  values.
+
 ### Safe-realloc Array Slices
+
+- `util/env.cpp`, inactive `export_var` branch: delete or modernize the
+  `char **environ` resizing path.  If the branch is kept, replace the
+  raw reallocating table with stable owned string storage for `putenv`.
 
 ### Copy/Concat Slices
 
+- `libtrn/univ.cpp`, `univ_page_file`: change `fname` to
+  `std::string_view`, build the pager command with `fmt::format`, and
+  remove the `sprintf`/`strcat` writes into `g_cmd_buf`.
+- `libtrn/univ.cpp`, `UniversalItem::univ_article_desc`: return an owned
+  `std::string`, use ordinary string truncation plus `fmt::format`, and
+  remove the static `dbuf`, `sbuf`, and `fbuf` buffers.
+- `libtrn/head.cpp`, `nntp_xhdr`: replace the `sprintf` writes into
+  `g_ser_line` with `fmt::format` or an owned command string sent to
+  `nntp_command`.
+
 ### Fixed-buffer Storage Slices
+
+- `libtrn/univ.cpp`, `univ_use_file`: replace static
+  `lbuf[LINE_BUF_LEN]` with owned line storage while reading universal
+  selector files.  The current fixed-size buffer imposes arbitrary line
+  truncation.
+- `libtrn/Article.cpp`, `Article::get_cached_line`: remove static
+  numeric buffers for `LINES_LINE` and `BYTES_LINE` by splitting the
+  cached-line API from formatted numeric article fields.
+- `libtrn/sadesc.cpp`, subject/article description helpers: replace the
+  file-scope static description buffers with owned string returns.
+- `libtrn/score-easy.cpp`, `s_sc_e_newline`: convert the easy-score
+  command assembly buffer to `std::string`.
+- `libtrn/scoresave.cpp`, `s_line_buf`: convert the saved-score line
+  buffer to owned string construction if the line does not escape as an
+  output buffer.
+- `libtrn/terminal.cpp`, `g_mouse_modes`: replace the fixed global
+  character array with `std::string` storage and direct string
+  assignment in option handling.
+- `nntp/nntpclient.cpp`, `g_last_command`: replace the fixed global
+  command snapshot buffer with `std::string` storage.
 
 ### Global String Storage Slices
 
@@ -370,6 +430,50 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
+- `libtrn/opt.cpp`, display-mode globals: replace
+  `g_sel_grp_display_mode` and `g_sel_art_display_mode` with owned string
+  storage that does not depend on `save_str("*...") + 1` or decrementing
+  the pointer before free.
+- `libtrn/opt.cpp`, option saved/default values: replace
+  `g_option_saved_vals` and `g_option_def_vals` with vectors of owned
+  optional strings.  Update `apply_global_option`, `option_value`, and
+  cleanup paths together.
+- `libtrn/scorefile.cpp`, score-file abbreviations: replace
+  `s_sf_abbr` with an array of optional strings and remove direct
+  `save_str`/`free` management in the `file` command path.
+- `libtrn/include/trn/scorefile.h`, `ScoreFileEntry::str1` and `str2`:
+  replace retained rule text with owned string storage and update the
+  score matching, printing, include/exclude, and cleanup paths.
+- `libtrn/include/trn/scorefile.h`, `ScoreFile::lines`: replace the
+  vector of owned raw line pointers with `std::vector<std::string>`.
+- `libtrn/terminal.cpp`, `KeyMap::km_str`: replace macro string entries
+  with owned `std::string` storage and remove per-entry `save_str`/`free`
+  management.
+- `util/env.cpp`, `export_var`: add a stable owned environment-string
+  table for `putenv` values and replace the leaked `save_str` buffer.
+  Preserve the existing `un_export` and `re_export` semantics in the new
+  owner.
+
+### Universal Selector Storage Slices
+
+- `libtrn/include/trn/univ.h`, `UniversalItem::m_desc`: convert the
+  default description field from owned `char *` to nullable owned string
+  storage.  Update `univ_add`, `univ_close`, sites that test `m_desc`
+  for null, and `UniversalItem::univ_article_desc`.
+- `libtrn/univ.cpp`, `s_univ_begin_label` and `s_univ_line_desc`:
+  replace parse-state raw pointers with owned optional strings or an
+  explicit presence flag.  Update label matching and description
+  defaults in `univ_use_file` and `univ_do_line`.
+- `libtrn/univ.cpp`, `univ_mask_load` and `univ_use_group_line`: change
+  the mask input to `std::string_view` and tokenize without mutating the
+  caller's buffer.  This removes the startup `save_str("*")` allocation.
+- `libtrn/include/trn/univ.h`, `UniversalData`: replace the raw string
+  fields used by universal selector item payloads with owned C++ string
+  storage.  Cover `UN_DEBUG1`, group masks, config files, newsgroups,
+  virtual articles, virtual groups, and text files in storage-centered
+  slices that update `univ_add_*`, `univ_free_data`, selector readers,
+  and hash-key lifetime together.
+
 ### Static-Linkage Slices
 
 These slices move top-level functions that are declared in public headers
@@ -379,130 +483,3 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Filesystem Path Slices
-
-## Defer
-
-- Global mutable buffers and cursors such as `g_art_buf`, `g_head_buf`,
-  `g_trn_access_mem`, `g_mime_getc_line`, `g_host_name`, and `s_str` in
-  `rt-wumpus.cpp` are not string candidates.  Code writes through them
-  or treats them as interior pointers.
-- `safe_copy` into `g_cmd_buf`, `g_msg`, `g_art_line`, stack arrays, and
-  similar buffers is scratch-buffer work, not owned storage.
-- Remaining global pointer arrays and pointer-offset storage such as
-  `s_tree_lines`, `g_sel_grp_display_mode`, and `g_sel_art_display_mode`
-  need ownership-model slices before they can become strings.
-- `Subject::m_str` in `libtrn/include/trn/Subject.h` stores hash keys at
-  `m_str + 4`, so key lifetime and lookup behavior must change with the
-  storage.
-- Option saved/default values and selected display mode strings in
-  `libtrn/opt.cpp` use arrays of raw pointers and pointer arithmetic
-  before freeing display mode strings.
-- `libtrn/univ.cpp`, `s_univ_begin_label` and `s_univ_line_desc`: null
-  versus empty string is parse state.  Promote only with
-  `std::optional<std::string>` or a separate presence flag.
-- `nntp/nntpclient.cpp`, `g_last_command`: it is an owned command
-  snapshot, but the extern array API crosses NNTP files.
-- `libtrn/terminal.cpp`, borrowed termcap strings, mouse-button strings,
-  terminal keymap strings, `g_mouse_modes`, and exported size variables:
-  these are allocated, union-backed, or rewritten through terminal,
-  option, or environment helpers.
-- `tool/util3.cpp`, `s_nntp_password`: `read_auth_file` allocates
-  through a `char **` output parameter.  Change that helper first.
-- `util/env.cpp` stores strings for `putenv`; changing that safely needs
-  an owned environment table, not isolated `std::string` locals.
-- Short-lived command-list copies in `artsrch.cpp`, `ngsrch.cpp`, and
-  `ngstuff.cpp` are local cleanup opportunities, but they do not drive a
-  retained-storage migration.
-- Pure C-API pass-through filenames such as one-shot `fopen` or `freopen`
-  calls are not useful path slices unless the same function also composes,
-  normalizes, queries, removes, or renames the file.
-- `libtrn/rcstuff.cpp`, newsrc filename fields and backup/rollback
-  operations: the fields are already `std::string`, but the remove,
-  rename, and `safe_link` calls are a coordinated file-state sequence,
-  not isolated one-function path cleanup.
-- `libtrn/datasrc.cpp`, `data_source_init`, and
-  `nntp/nntpclient.cpp`, `nntp_server_name`: the server name is mostly
-  read-only, but it crosses file-reference expansion, nullable server
-  state, and `g_ser_line` return storage.  Refactor the API as a
-  coordinated const-correct slice.
-- Response-file globals, decode part-file state, score-file table
-  storage, and remaining filename buffers need coordinated storage
-  changes before `std::filesystem::path` is an improvement.
-- URL, NNTP, MIME, shell-command, and macro-template strings should stay
-  as strings unless the code has first separated the filename part from
-  protocol or command text.
-- The `IniWords` / `vals` mechanism, including `data_source_init`,
-  `prep_ini_words`, `ini_values`, `set_options`, and `g_options_ini`.
-  The storage and ownership model needs an overhaul; do not patch it
-  with local string buffers or one-function string-literal slices.
-- `libtrn/terminal.cpp`, `print_lines`: the cursor is logically const,
-  but it flows through `put_char_adv(char **)`.  Make `put_char_adv`
-  const-friendly first.
-- `libtrn/mempool.cpp`, `mp_save_str`: it has an explicit `nullptr`
-  diagnostic path, and pool-owned strings should stay with the pool until
-  that lifetime model is intentionally replaced.  Promote only with an
-  overload or a broader call-site audit that preserves that behavior.
-- `libtrn/include/trn/univ.h`, universal selector strings: the data is
-  stored in a union, so `std::string` requires a variant or manual
-  lifetime redesign.
-- `libtrn/include/trn/scorefile.h`, remaining scorefile table strings:
-  `ScoreFileEntry` strings and `ScoreFile::lines` mix `save_str`,
-  `mp_save_str`, memory pools, reallocating arrays, and copied entries.
-- `libtrn/util.cpp`, INI parsing helpers: they update caller `char **`
-  cursors and write into caller buffers.
-- `libtrn/sw.cpp`, `decode_switch`: now passes newsgroup patterns to
-  view-ready `set_newsgroup_to_do`, but the function is still a command
-  cursor parser.  Many switch arms pass interior C strings to option,
-  environment, and header parsers.
-- `config/string_case_compare.cpp`, length-limited overloads: `len` is
-  a comparison limit, not a guaranteed extent for both inputs.  Add
-  separate string-view overloads rather than blindly wrapping
-  `const char *` plus `len`.
-- `nntp/nntpinit.cpp`, `ConnectionFactory`, `server_init`,
-  `get_tcp_socket`, and `nntp_connect`: the machine and service strings
-  cross the resolver and connection-factory boundary.  Refactor them as
-  a coordinated API slice, not as isolated temporary strings.
-- `nntp/nntpclient.cpp`, `nntp_at_list_end`: the null pointer sentinel
-  is part of the current API and the function updates NNTP command
-  state as a side effect.
-- `nntp/include/nntp/nntpclient.h`, `INNTPConnection::write`: the pair
-  is a byte-buffer transport boundary.  Prefer `std::span` if this
-  interface is modernized.
-- `libtrn/datasrc.cpp`, `SourceFile::open`, `filename` and `server`:
-  both are nullable file/server sentinels.  The completed slice covers
-  only the non-stored `fetch_cmd` text.
-- `libtrn/rt-select.cpp`, `univ_visit_group`: the implementation only
-  forwards to the view-ready `univ_visit_group_main`, but the wrapper
-  currently maps `nullptr` to an empty group name.  Promote only with an
-  intentional removal of that nullable sentinel.
-- `libtrn/rt-page.cpp`, `display_group`: `len` is used for display
-  padding while `group` still flows to C string description and output
-  helpers.
-- `libtrn/scmd.cpp`, `s_finish_cmd`: `nullptr` is an intentional command
-  sentinel.  Promote only with a broader command-input API cleanup.
-- `libtrn/univ.cpp`, universal file and label loaders: several inputs are
-  copied into or assigned through global state.  Keep these out of local
-  view-only slices until that ownership model is cleaned up.
-- `libtrn/utf.cpp`, byte and visual-width helpers: the `const char *`
-  parameters are cursors into encoded text, not whole string extents.
-- `libtrn/rt-util.cpp`, `compress_from`: `size` is a display width, not
-  the length of `from`.
-- `inews/inews.cpp`, `inews_fputs`: this is an output helper, but its
-  NNTP branch currently calls `INNTPConnection::write(buff, 0, ec)`.
-  Fix and test the intended transport behavior before changing the
-  signature.
-- `libtrn/trn.cpp`, `set_newsgroup_name`: `nullptr` currently means
-  clear the current group.  Promote only with an explicit overload or
-  optional-style API that preserves the clearing behavior.
-- `libtrn/terminal.cpp`, `save_typeahead`: the buffer plus size are an
-  output cursor into caller storage, not a string extent.
-- `libtrn/terminal.cpp`, `in_char`: only `prompt` is a view candidate;
-  `dflt` still flows into `set_def(char *, const char *)`.  Split this
-  only after the default-value path is made view-friendly.
-- `config/string_case_compare.cpp` and
-  `config/cmake/string_case_compare.*.h.in`: adding string-view overloads
-  would remove some local temporary strings, but the manual
-  implementation and both generated-header templates must change
-  together.
-- Remaining struct fields with retained raw string storage are ownership
-  model changes, not local function cleanups.
