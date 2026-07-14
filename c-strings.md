@@ -389,10 +389,6 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-UW-02. `libtrn/util.cpp`: make the file-scope `s_no_memory` literal
-storage const.  Leave `s_null_export` mutable because other file-scope
-exports point into it.
-
 UW-03. `libtrn/respond.cpp`: make the file-scope `s_empty_article`
 literal storage const.  It is only passed to `fputs`.
 

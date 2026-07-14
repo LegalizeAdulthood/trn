@@ -62,7 +62,7 @@ int        g_len_last_line_got{};
 MemorySize g_buf_len_last_line_got{};
 
 #ifndef USE_DEBUGGING_MALLOC
-static char s_no_memory[] = "trn: out of memory!\n";
+static constexpr char s_no_memory[] = "trn: out of memory!\n";
 #endif
 
 static char  s_null_export[] = "_=X"; // Just in case doshell precedes util_init
