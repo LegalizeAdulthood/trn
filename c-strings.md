@@ -389,9 +389,6 @@ These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
 
-UW-03. `libtrn/respond.cpp`: make the file-scope `s_empty_article`
-literal storage const.  It is only passed to `fputs`.
-
 ### Static-Linkage Slices
 
 These slices move top-level functions that are declared in public headers

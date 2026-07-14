@@ -46,7 +46,7 @@ bool            g_norm_always{};      // -N
 std::string     g_priv_dir;           // private news directory
 std::string     g_indent_string{">"}; // indent for old article embedded in followup
 
-static char       s_empty_article[] = "\nEmpty article.\n";
+static constexpr char s_empty_article[] = "\nEmpty article.\n";
 static std::FILE *s_tmp_fp{};
 
 static void follow_it_up();
