@@ -338,11 +338,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-FB-05. `libtrn/scorefile.cpp`, `s_sf_buf` users: split the shared
-file-scope scratch buffer into local owned strings in `sf_init`,
-`sf_do_file`, and `sf_open_file`.  Scorefile input line truncation comes
-from the fixed buffer and should be classified before removing the cap.
-
 ### Global String Storage Slices
 
 These slices replace owned global or file-scope `char *` storage with

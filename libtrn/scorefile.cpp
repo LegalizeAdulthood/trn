@@ -65,7 +65,6 @@ static bool            s_sf_pattern_status{}; // should we match by pattern?
 static bool            s_reply_active{};      // if true, s_reply_score is active
 static int             s_reply_score{};       // score amount added to an article reply
 static int             s_sf_file_level{};     // how deep are we?
-static char            s_sf_buf[LINE_BUF_LEN]{};
 static char          **s_sf_extra_headers{};
 static int             s_sf_num_extra_headers{};
 static bool            s_sf_has_extra_headers{};
@@ -122,11 +121,11 @@ void sf_init()
     }
     s_sf_file_level = 0;
     // find # of levels
-    std::strcpy(s_sf_buf, file_exp("%C").c_str());
+    const std::string group_name = file_exp("%C");
     int level = 0;
-    for (char *s = s_sf_buf; *s; s++)
+    for (char ch : group_name)
     {
-        if (*s == '.')
+        if (ch == '.')
         {
             level++;            // count dots in group name
         }
@@ -845,8 +844,6 @@ static bool sf_do_line(char *line, bool check)
 
 static void sf_do_file(const char *fname)
 {
-    char*s;
-
     int sf_fp = sf_open_file(fname);
     if (sf_fp < 0)
     {
@@ -870,11 +867,10 @@ static void sf_do_file(const char *fname)
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
     s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename.c_str());
 
-    while ((s = sf_file_get_line(sf_fp)) != nullptr)
+    while (char *s = sf_file_get_line(sf_fp))
     {
-        std::strcpy(s_sf_buf,s);
-        s = s_sf_buf;
-        (void)sf_do_line(s,false);
+        std::string line{s};
+        (void)sf_do_line(line.data(),false);
     }
     // add end marker to scoring array
     sf_grow();
@@ -1422,7 +1418,6 @@ void sf_edit_file(const char *filespec)
 // if file number is negative, the file does not exist or cannot be opened
 static int sf_open_file(const char *name)
 {
-    char* s;
     int i;
 
     if (!name || !*name)
@@ -1474,7 +1469,8 @@ static int sf_open_file(const char *name)
         s_sf_files[i].num_lines = -1;
         return -1;
     }
-    while ((s = std::fgets(s_sf_buf, LINE_BUF_LEN - 4, fp)) != nullptr)
+    std::string line(LINE_BUF_LEN, '\0');
+    while (std::fgets(line.data(), LINE_BUF_LEN - 4, fp) != nullptr)
     {
         if (s_sf_files[i].num_lines >= s_sf_files[i].num_alloc)
         {
@@ -1483,7 +1479,7 @@ static int sf_open_file(const char *name)
                 s_sf_files[i].num_alloc*sizeof(char**));
         }
         // I kind of like the next line in a twisted sort of way.
-        s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_save_str(s,MP_SCORE2);
+        s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_save_str(line.c_str(),MP_SCORE2);
     }
     std::fclose(fp);
     if (temp_name)
