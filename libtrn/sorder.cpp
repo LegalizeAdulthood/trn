@@ -10,14 +10,40 @@
 #include <config/common.h>
 #include <trn/samisc.h>
 #include <trn/scan.h>
+#include <trn/size_cast.h>
 #include <trn/smisc.h>
-#include <trn/util.h>
-
-#include <cstdlib>
 
 bool g_s_order_changed{}; // If true, resort next time order is considered
 
-static void s_sort_basic();
+static ScanContext       &s_current_context();
+static std::vector<long> &s_ent_sort();
+static std::vector<long> &s_ent_index();
+static void               s_save_order_bounds();
+static void               s_sort_basic();
+
+static ScanContext &s_current_context()
+{
+    return g_s_contexts[g_s_cur_context];
+}
+
+static std::vector<long> &s_ent_sort()
+{
+    return s_current_context().ent_sort;
+}
+
+static std::vector<long> &s_ent_index()
+{
+    return s_current_context().ent_index;
+}
+
+static void s_save_order_bounds()
+{
+    ScanContext &context = s_current_context();
+
+    context.ent_sort_max = g_s_ent_sort_max;
+    context.ent_sorted_max = g_s_ent_sorted_max;
+    context.ent_index_max = g_s_ent_index_max;
+}
 
 #ifdef UNDEF
 // pointers to the two entries to be compared
@@ -55,6 +81,7 @@ int s_compare(long a, long b)
 // Uses a heapsort algorithm with the heap readjustment inlined.
 static void s_sort_basic()
 {
+    std::vector<long> &ent_sort = s_ent_sort();
     int t1;
     int j;
 
@@ -67,48 +94,48 @@ static void s_sort_basic()
     for (int i = n / 2; i >= 1; i--)
     {
         // begin heap readjust
-        t1 = g_s_ent_sort[SOFF(i)];
+        t1 = ent_sort[SOFF(i)];
         j = 2*i;
         while (j <= n)
         {
             if (j < n //
-                && s_compare(g_s_ent_sort[SOFF(j)], g_s_ent_sort[SOFF(j + 1)]) < 0)
+                && s_compare(ent_sort[SOFF(j)], ent_sort[SOFF(j + 1)]) < 0)
             {
                 j++;
             }
-            if (s_compare(t1,g_s_ent_sort[SOFF(j)]) > 0)
+            if (s_compare(t1,ent_sort[SOFF(j)]) > 0)
             {
                 break;          // out of while loop
             }
-            g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
+            ent_sort[SOFF(j/2)] = ent_sort[SOFF(j)];
             j = j*2;
         } // while
-        g_s_ent_sort[SOFF(j/2)] = t1;
+        ent_sort[SOFF(j/2)] = t1;
         // end heap readjust
     } // for
 
     for (int i = n - 1; i >= 1; i--)
     {
-        t1 = g_s_ent_sort[SOFF(i+1)];
-        g_s_ent_sort[SOFF(i+1)] = g_s_ent_sort[SOFF(1)];
-        g_s_ent_sort[SOFF(1)] = t1;
+        t1 = ent_sort[SOFF(i+1)];
+        ent_sort[SOFF(i+1)] = ent_sort[SOFF(1)];
+        ent_sort[SOFF(1)] = t1;
         // begin heap readjust
         j = 2;
         while (j <= i)
         {
             if (j < i //
-                && s_compare(g_s_ent_sort[SOFF(j)], g_s_ent_sort[SOFF(j + 1)]) < 0)
+                && s_compare(ent_sort[SOFF(j)], ent_sort[SOFF(j + 1)]) < 0)
             {
                 j++;
             }
-            if (s_compare(t1,g_s_ent_sort[SOFF(j)]) > 0)
+            if (s_compare(t1,ent_sort[SOFF(j)]) > 0)
             {
                 break;  // out of while
             }
-            g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
+            ent_sort[SOFF(j/2)] = ent_sort[SOFF(j)];
             j = j*2;
         } // while
-        g_s_ent_sort[SOFF(j/2)] = t1;
+        ent_sort[SOFF(j/2)] = t1;
         // end heap readjust
     } // for
     // end of heapsort
@@ -116,8 +143,11 @@ static void s_sort_basic()
 
 void s_sort()
 {
+    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_index = s_ent_index();
+
 #ifdef UNDEF
-    std::qsort((void*)g_s_ent_sort,(g_s_ent_sort_max)+1,sizeof(long),s_compare);
+    std::qsort((void*)ent_sort.data(),(g_s_ent_sort_max)+1,sizeof(long),s_compare);
 #endif
     s_sort_basic();
     g_s_ent_sorted_max = g_s_ent_sort_max;  // whole array is now sorted
@@ -125,78 +155,54 @@ void s_sort()
     // rebuild the indexes
     for (long i = 0; i <= g_s_ent_sort_max; i++)
     {
-        g_s_ent_index[g_s_ent_sort[i]] = i;
+        ent_index[ent_sort[i]] = i;
     }
+    s_save_order_bounds();
 }
 
 void s_order_clean()
 {
-    if (g_s_ent_sort)
-    {
-        std::free(g_s_ent_sort);
-    }
-    if (g_s_ent_index)
-    {
-        std::free(g_s_ent_index);
-    }
-
-    g_s_ent_sort = nullptr;
-    g_s_contexts[g_s_cur_context].ent_sort = g_s_ent_sort;
-
-    g_s_ent_index = nullptr;
-    g_s_contexts[g_s_cur_context].ent_index = g_s_ent_index;
+    s_ent_sort().clear();
+    s_ent_index().clear();
 
     g_s_ent_sort_max = -1;
     g_s_ent_sorted_max = -1;
     g_s_ent_index_max = -1;
+    s_save_order_bounds();
 }
 
 // adds the entry number to the current context
 void s_order_add(long ent)
 {
-    long size;
+    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_index = s_ent_index();
 
-    if (ent < g_s_ent_index_max && g_s_ent_index[ent] >= 0)
+    if (ent >= 0 && ent < size_cast<long>(ent_index) && ent_index[ent] >= 0)
     {
         return;         // entry is already in the list
     }
 
     // add entry to end of sorted list
-    g_s_ent_sort_max += 1;
-    if (g_s_ent_sort_max % 100 == 0)    // be nice to realloc
-    {
-        size = (g_s_ent_sort_max+100) * sizeof (long);
-        g_s_ent_sort = (long*)safe_realloc((char*)g_s_ent_sort,size);
-        // change the context too
-        g_s_contexts[g_s_cur_context].ent_sort = g_s_ent_sort;
-    }
-    g_s_ent_sort[g_s_ent_sort_max] = ent;
+    ent_sort.push_back(ent);
+    g_s_ent_sort_max = size_cast<long>(ent_sort) - 1;
 
     // grow index list if needed
-    if (ent > g_s_ent_index_max)
+    if (ent >= size_cast<long>(ent_index))
     {
-        long old = g_s_ent_index_max;
-        if (g_s_ent_index_max == -1)
-        {
-            g_s_ent_index_max += 1;
-        }
-        g_s_ent_index_max = (ent/100+1) * 100;  // round up
-        size = (g_s_ent_index_max + 1) * sizeof (long);
-        g_s_ent_index = (long*)safe_realloc((char*)g_s_ent_index,size);
-        // change the context too
-        g_s_contexts[g_s_cur_context].ent_index = g_s_ent_index;
-        // initialize new indexes
-        for (long i = old + 1; i < g_s_ent_index_max; i++)
-        {
-            g_s_ent_index[i] = -1;      // -1 == not a legal entry
-        }
+        const long new_size = (ent/100+1) * 100 + 1; // round up
+        ent_index.resize(new_size, -1);              // -1 == not a legal entry
+        g_s_ent_index_max = size_cast<long>(ent_index) - 1;
     }
-    g_s_ent_index[ent] = g_s_ent_sort_max;
+    ent_index[ent] = g_s_ent_sort_max;
     g_s_order_changed = true;
+    s_save_order_bounds();
 }
 
 long s_prev(long ent)
 {
+    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_index = s_ent_index();
+
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
     {
         return 0;
@@ -205,16 +211,19 @@ long s_prev(long ent)
     {
         s_sort();
     }
-    long tmp = g_s_ent_index[ent];
+    long tmp = ent_index[ent];
     if (tmp <= 0)
     {
         return 0;
     }
-    return g_s_ent_sort[tmp-1];
+    return ent_sort[tmp-1];
 }
 
 long s_next(long ent)
 {
+    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_index = s_ent_index();
+
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
     {
         return 0;
@@ -223,12 +232,12 @@ long s_next(long ent)
     {
         s_sort();
     }
-    long tmp = g_s_ent_index[ent];
+    long tmp = ent_index[ent];
     if (tmp < 0 || tmp == g_s_ent_sorted_max)
     {
         return 0;
     }
-    return g_s_ent_sort[tmp+1];
+    return ent_sort[tmp+1];
 }
 
 // given an entry, returns previous eligible entry
@@ -261,6 +270,8 @@ long s_next_elig(long a)
 
 long s_first()
 {
+    std::vector<long> &ent_sort = s_ent_sort();
+
     if (g_s_order_changed)
     {
         s_sort();
@@ -269,11 +280,13 @@ long s_first()
     {
         return 0;
     }
-    return g_s_ent_sort[0];
+    return ent_sort[0];
 }
 
 long s_last()
 {
+    std::vector<long> &ent_sort = s_ent_sort();
+
     if (g_s_order_changed)
     {
         s_sort();
@@ -282,5 +295,5 @@ long s_last()
     {
         return 0;
     }
-    return g_s_ent_sort[g_s_ent_sorted_max];
+    return ent_sort[g_s_ent_sorted_max];
 }

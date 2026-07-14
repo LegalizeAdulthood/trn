@@ -7,6 +7,8 @@
 #ifndef TRN_SCAN_H
 #define TRN_SCAN_H
 
+#include <vector>
+
 // return codes.  First two should be the same as article scan codes
 enum
 {
@@ -44,11 +46,11 @@ struct ScanContext
     ScanContextType type; // context type
 
     // ordering information
-    long *ent_sort;       // sorted list of entries in the context
-    long  ent_sort_max;   // maximum index of sorted array
-    long  ent_sorted_max; // maximum index *that is sorted*
-    long *ent_index;      // indexes into ent_sorted
-    long  ent_index_max;  // maximum entry number added
+    std::vector<long> ent_sort;       // sorted list of entries in the context
+    long              ent_sort_max;   // maximum index of sorted array
+    long              ent_sorted_max; // maximum index *that is sorted*
+    std::vector<long> ent_index;      // indexes into ent_sorted
+    long              ent_index_max;  // maximum entry number added
 
     int page_size;        // number of entries allocated for page
                           // (usually fixed, > max screen lines)
@@ -77,10 +79,8 @@ struct ScanContext
 };
 
 // the current values
-extern long *g_s_ent_sort;       // sorted list of entries in the context
 extern long  g_s_ent_sort_max;   // maximum index of sorted array
 extern long  g_s_ent_sorted_max; // maximum index *that is sorted*
-extern long *g_s_ent_index;      // indexes into ent_sorted
 extern long  g_s_ent_index_max;  // maximum entry number added
 extern int   g_s_page_size;      // number of entries allocated for page
 // (usually fixed, > max screen lines)
@@ -106,8 +106,7 @@ extern short g_s_desc_cols;     // characters for description column
 // pointer info
 extern short           g_s_ptr_page_line; // page_ent index
 extern long            g_s_flags;         // misc. flags
-extern int             g_s_num_contexts;
-extern ScanContext    *g_s_contexts;    // array of context structures
+extern std::vector<ScanContext> g_s_contexts;    // context structures
 extern int             g_s_cur_context; // current context number
 extern ScanContextType g_s_cur_type;    // current context type (for fast switching)
 // options

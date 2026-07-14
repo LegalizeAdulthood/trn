@@ -8,6 +8,7 @@
 #include <trn/scan.h>
 
 #include <config/common.h>
+#include <trn/size_cast.h>
 #include <trn/sorder.h>
 #include <trn/util.h> // allocation
 
@@ -16,10 +17,8 @@
 // TODO: make a scontext file for the scan context stuff.
 
 // the current values
-long      *g_s_ent_sort{};       // sorted list of entries in the context
 long       g_s_ent_sort_max{};   // maximum index of sorted array
 long       g_s_ent_sorted_max{}; // maximum index *that is sorted*
-long      *g_s_ent_index{};      // indexes into ent_sorted
 long       g_s_ent_index_max{};  // maximum entry number added
 int        g_s_page_size{};      // number of entries allocated for page (usually fixed, > max screen lines)
 PageEntry *g_page_ents{};        // array of entries on page; -1 means not initialized for top and bottom entry
@@ -42,8 +41,7 @@ short g_s_desc_cols{};     // characters for description column
 // pointer info
 short           g_s_ptr_page_line{}; // page_ent index
 long            g_s_flags{};         // misc. flags
-int             g_s_num_contexts{};  //
-ScanContext    *g_s_contexts{};      // array of context structures
+std::vector<ScanContext> g_s_contexts{};      // context structures
 int             g_s_cur_context{};   // current context number
 ScanContextType g_s_cur_type{};      // current context type (for fast switching)
 // options
@@ -55,20 +53,23 @@ static void s_clean_contexts();
 
 static void s_init_context(int cnum, ScanContextType type)
 {
-    // g_s_num_contexts not incremented until last moment
-    if (cnum < 0 || cnum > g_s_num_contexts)
+    if (cnum < 0 || cnum >= size_cast<int>(g_s_contexts))
     {
         std::printf("s_init_context: illegal context number %d!\n",cnum);
         TRN_ASSERT(false);
     }
-    ScanContext *p = g_s_contexts + cnum;
+    ScanContext *p = &g_s_contexts[cnum];
     p->type = type;
-    p->ent_sort = (long*)nullptr;
+    p->ent_sort.clear();
     p->ent_sort_max = -1;
     p->ent_sorted_max = -1;
-    p->ent_index = (long*)nullptr;
+    p->ent_index.clear();
     p->ent_index_max = -1;
     p->page_size = MAX_PAGE_SIZE;
+    if (p->page_ents == nullptr)
+    {
+        p->page_ents = (PageEntry*)safe_malloc(MAX_PAGE_SIZE*sizeof(PageEntry));
+    }
     p->top_ent = -1;
     p->bot_ent = -1;
     p->refill = true;
@@ -104,49 +105,36 @@ int s_new_context(ScanContextType type)
     int i;
 
     // check for deleted contexts
-    for (i = 0; i < g_s_num_contexts; i++)
+    for (i = 0; i < size_cast<int>(g_s_contexts); i++)
     {
         if (g_s_contexts[i].type == S_NONE)     // deleted context
         {
             break;
         }
     }
-    if (i < g_s_num_contexts)   // a deleted one was found
+    if (i < size_cast<int>(g_s_contexts))   // a deleted one was found
     {
         s_init_context(i,type);
         return i;
     }
     // none deleted, so allocate a new one
-    i = g_s_num_contexts;
-    i++;
-    if (i == 1)         // none allocated before
-    {
-        g_s_contexts = (ScanContext*)safe_malloc(sizeof (ScanContext));
-    }
-    else
-    {
-        g_s_contexts = (ScanContext*)safe_realloc((char*)g_s_contexts,
-                                        i * sizeof (ScanContext));
-    }
-    g_s_contexts[i-1].page_ents =
-                        (PageEntry*)safe_malloc(MAX_PAGE_SIZE*sizeof(PageEntry));
-    s_init_context(i-1,type);
-    g_s_num_contexts++;                 // now safe to increment
-    return g_s_num_contexts-1;
+    g_s_contexts.emplace_back();
+    i = size_cast<int>(g_s_contexts) - 1;
+    g_s_contexts[i].page_ents = (PageEntry*)safe_malloc(MAX_PAGE_SIZE*sizeof(PageEntry));
+    s_init_context(i,type);
+    return i;
 }
 
 // saves the current context
 void s_save_context()
 {
-    ScanContext *p = g_s_contexts + g_s_cur_context;
+    ScanContext *p = &g_s_contexts[g_s_cur_context];
 
     p->type = g_s_cur_type;
     p->page_ents = g_page_ents;
 
-    p->ent_sort = g_s_ent_sort;
     p->ent_sort_max = g_s_ent_sort_max;
     p->ent_sorted_max = g_s_ent_sorted_max;
-    p->ent_index = g_s_ent_index;
     p->ent_index_max = g_s_ent_index_max;
 
     p->page_size = g_s_page_size;
@@ -173,20 +161,18 @@ void s_save_context()
 // int newcontext;                      // context number to activate
 void s_change_context(int newcontext)
 {
-    if (newcontext < 0 || newcontext >= g_s_num_contexts)
+    if (newcontext < 0 || newcontext >= size_cast<int>(g_s_contexts))
     {
         std::printf("s_change_context: bad context number %d!\n",newcontext);
         TRN_ASSERT(false);
     }
     g_s_cur_context = newcontext;
-    ScanContext *p = g_s_contexts + newcontext;
+    ScanContext *p = &g_s_contexts[newcontext];
     g_s_cur_type = p->type;
     g_page_ents = p->page_ents;
 
-    g_s_ent_sort = p->ent_sort;
     g_s_ent_sort_max = p->ent_sort_max;
     g_s_ent_sorted_max = p->ent_sorted_max;
-    g_s_ent_index = p->ent_index;
     g_s_ent_index_max = p->ent_index_max;
 
     g_s_page_size = p->page_size;
@@ -217,12 +203,23 @@ static void s_clean_contexts()
 //int cnum;             // context number to delete
 void s_delete_context(int cnum)
 {
-    if (cnum < 0 || cnum >= g_s_num_contexts)
+    if (cnum < 0 || cnum >= size_cast<int>(g_s_contexts))
     {
         std::printf("s_delete_context: illegal context number %d!\n",cnum);
         TRN_ASSERT(false);
     }
-    s_order_clean();
+    if (cnum == g_s_cur_context)
+    {
+        s_order_clean();
+    }
+    else
+    {
+        g_s_contexts[cnum].ent_sort.clear();
+        g_s_contexts[cnum].ent_sort_max = -1;
+        g_s_contexts[cnum].ent_sorted_max = -1;
+        g_s_contexts[cnum].ent_index.clear();
+        g_s_contexts[cnum].ent_index_max = -1;
+    }
     // mark the context as empty
     g_s_contexts[cnum].type = S_NONE;
 }

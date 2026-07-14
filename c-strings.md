@@ -354,12 +354,6 @@ buffer slices.
 
 ### Safe-realloc Array Slices
 
-RA-04. `libtrn/scan.cpp` and `libtrn/sorder.cpp`, scan context order
-arrays: replace `g_s_contexts`, `ScanContext::ent_sort`,
-`ScanContext::ent_index`, `g_s_ent_sort`, and `g_s_ent_index` raw arrays
-with vectors.  This is a coordinated storage slice because the current
-context stores and restores the same array ownership.
-
 RA-05. `libtrn/rthread.cpp` and article selector readers: replace
 `g_art_ptr_list` plus `g_art_ptr_list_size` with `std::vector<Article *>`.
 The slice must preserve existing pointer-iteration behavior or update

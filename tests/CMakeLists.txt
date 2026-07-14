@@ -37,6 +37,7 @@ add_executable(trn-test
     test_scorefile.cpp
     test_scoresave.cpp
     test_scmd.cpp
+    test_sorder.cpp
     test_string-algos.cpp
     test_sw.cpp
     test_util.cpp
