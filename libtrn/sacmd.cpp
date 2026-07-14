@@ -21,6 +21,7 @@
 #include <trn/scmd.h>
 #include <trn/score.h>
 #include <trn/sdisp.h>
+#include <trn/size_cast.h>
 #include <trn/smisc.h> // needed?
 #include <trn/sorder.h>
 #include <trn/spage.h>
@@ -288,7 +289,7 @@ int sa_do_cmd()
     case 'U': // toggle unread/unread+read mode
         g_sa_mode_read_elig = !g_sa_mode_read_elig;
 // maybe later use the flag to not do this more than once per newsgroup
-        for (int j = 1; j < static_cast<int>(g_sa_ents.size()); j++)
+        for (int j = 1; j < size_cast<int>(g_sa_ents); j++)
         {
             s_order_add(j);             // duplicates ignored
         }
@@ -328,7 +329,7 @@ int sa_do_cmd()
         break;
 
     case 'Z': // Zero (wipe) selections...
-        for (int j = 1; j < static_cast<int>(g_sa_ents.size()); j++)
+        for (int j = 1; j < size_cast<int>(g_sa_ents); j++)
         {
             sa_clear_select1(j);
         }

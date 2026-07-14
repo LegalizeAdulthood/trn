@@ -3,6 +3,7 @@
  * lower-level routines
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/samisc.h>
 
@@ -17,6 +18,7 @@
 #include <trn/sathread.h>
 #include <trn/scanart.h>
 #include <trn/score.h>
+#include <trn/size_cast.h>
 #include <trn/sorder.h>
 #include <trn/Subject.h>
 
@@ -82,7 +84,7 @@ bool sa_eligible(long a)
 // (There is no easy mapping between entry numbers and article numbers.)
 long sa_artnum_to_ent(ArticleNum artnum)
 {
-    for (long i = 1; i < static_cast<long>(g_sa_ents.size()); i++)
+    for (long i = 1; i < size_cast<long>(g_sa_ents); i++)
     {
         if (g_sa_ents[i].artnum == artnum)
         {
@@ -102,7 +104,7 @@ void sa_sel_threads()
     want_unread = !g_sa_mode_read_elig;
 
     // clear any old selections
-    for (int i = 1; i < static_cast<int>(g_sa_ents.size()); i++)
+    for (int i = 1; i < size_cast<int>(g_sa_ents); i++)
     {
         sa_clear_select1(i);
     }
@@ -135,7 +137,7 @@ void sa_sel_threads()
 int sa_number_arts()
 {
     int total = 0;
-    for (int i = 1; i < static_cast<int>(g_sa_ents.size()); i++)
+    for (int i = 1; i < size_cast<int>(g_sa_ents); i++)
     {
         ArticleNum a = g_sa_ents[i].artnum;
         if (is_unavailable(a))

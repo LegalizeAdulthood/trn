@@ -18,6 +18,7 @@
 #include <trn/scmd.h>
 #include <trn/score.h>
 #include <trn/sdisp.h>
+#include <trn/size_cast.h>
 #include <trn/sorder.h>
 #include <trn/spage.h>
 
@@ -85,7 +86,7 @@ static long sa_add_ent(ArticleNum artnum)
         g_sa_ents.push_back(ScanArticleEntryData{});
     }
     g_sa_ents.push_back(ScanArticleEntryData{artnum, 0, SAF_NONE});
-    const long cur = static_cast<long>(g_sa_ents.size()) - 1;
+    const long cur = size_cast<long>(g_sa_ents) - 1;
     s_order_add(cur);
     return cur;
 }

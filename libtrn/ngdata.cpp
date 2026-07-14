@@ -23,6 +23,7 @@
 #include <trn/rthread.h>
 #include <trn/scanart.h>
 #include <trn/score.h>
+#include <trn/size_cast.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/util.h>
@@ -138,7 +139,7 @@ void append_newsgroup_order(NewsgroupData *np)
 {
     np->m_prev = g_last_newsgroup;
     np->m_next = nullptr;
-    np->m_num = NewsgroupNum{static_cast<long>(g_newsgroup_order.size())};
+    np->m_num = NewsgroupNum{size_cast<long>(g_newsgroup_order)};
     if (g_last_newsgroup)
     {
         g_last_newsgroup->m_next = np;

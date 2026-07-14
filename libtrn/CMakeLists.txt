@@ -67,6 +67,7 @@ add_library(libtrn
     scoresave.cpp include/trn/scoresave.h
     sdisp.cpp include/trn/sdisp.h
     search.cpp include/trn/search.h
+    include/trn/size_cast.h
     smisc.cpp include/trn/smisc.h
     sorder.cpp include/trn/sorder.h
     spage.cpp include/trn/spage.h

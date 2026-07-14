@@ -25,6 +25,7 @@
 #include <trn/rcln.h>
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
+#include <trn/size_cast.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -156,7 +157,7 @@ static NewsgroupData *append_newsgroup_data()
     ensure_newsgroup_data_capacity(g_newsgroup_data.size() + 1);
     g_newsgroup_data.emplace_back();
     NewsgroupData *np = &g_newsgroup_data.back();
-    np->m_num = NewsgroupNum{static_cast<long>(g_newsgroup_data.size() - 1)};
+    np->m_num = NewsgroupNum{size_cast<long>(g_newsgroup_data) - 1};
     return np;
 }
 

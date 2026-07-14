@@ -18,6 +18,7 @@
 #include <trn/rt-util.h>
 #include <trn/score.h>  // shared stuff...
 #include <trn/search.h> // regex matches
+#include <trn/size_cast.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h> // finish_command()
 #include <trn/url.h>
@@ -252,7 +253,7 @@ void sf_clean()
 static void sf_grow()
 {
     s_sf_entries.push_back(ScoreFileEntry{});
-    g_sf_num_entries = static_cast<int>(s_sf_entries.size());
+    g_sf_num_entries = size_cast<int>(s_sf_entries);
 }
 
 // Returns -1 if no matching extra header found, otherwise returns offset
@@ -1163,7 +1164,7 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
     }
     if (h >= HEAD_LAST)
     {
-        if (h - HEAD_LAST < static_cast<int>(s_sf_extra_headers.size()))
+        if (h - HEAD_LAST < size_cast<int>(s_sf_extra_headers))
         {
             line = sf_get_extra_header(a,h-HEAD_LAST);
         }
@@ -1324,7 +1325,7 @@ static void sf_exclude_file(const char *fname)
     }
 #endif
     s_sf_entries.erase(s_sf_entries.begin() + start, s_sf_entries.begin() + end + 1);
-    g_sf_num_entries = static_cast<int>(s_sf_entries.size());
+    g_sf_num_entries = size_cast<int>(s_sf_entries);
     if (g_sf_verbose)
     {
         std::printf("Excluded file: %s\n",fname);

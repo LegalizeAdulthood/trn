@@ -153,7 +153,7 @@ std::string_view OptionCatalog::help(OptionIndex option) const
 int OptionCatalog::row_for(OptionIndex option) const
 {
     const int index = static_cast<int>(option);
-    if (index < 0 || index >= static_cast<int>(m_rows_by_option.size()))
+    if (index < 0 || index >= size_cast<int>(m_rows_by_option))
     {
         return 0;
     }

@@ -7,6 +7,7 @@
 
 #include <trn/IniSchema.h>
 #include <trn/opt.h>
+#include <trn/size_cast.h>
 
 #include <string_view>
 #include <vector>
@@ -54,7 +55,7 @@ inline int OptionCatalog::row_count() const
 
 inline int OptionCatalog::option_limit() const
 {
-    return static_cast<int>(m_rows_by_option.size());
+    return size_cast<int>(m_rows_by_option);
 }
 
 inline bool OptionCatalog::contains_row(int row) const
