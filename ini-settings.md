@@ -101,12 +101,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-10. Convert `ngstuff_init`.
-
-    Use range-for over `IniDocument`.  Parse the first section with the
-    range-based `parse_ini_section` and remove local use of legacy section
-    fields.
-
 11. Change `check_ini_cond`.
 
     Accept `std::string_view` condition text.  Use local owned storage only

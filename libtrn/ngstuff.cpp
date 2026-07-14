@@ -161,13 +161,13 @@ bool switcheroo()
         }
         else
         {
-            IniDocument          document{fmt::format("[options]\n{}\n", g_buf + 1), "'&' input"};
-            IniDocument::Section section;
-            if (document.next_section(section))
+            IniDocument document{fmt::format("[options]\n{}\n", g_buf + 1), "'&' input"};
+            for (const IniSection section : document)
             {
                 IniSectionValues values;
-                parse_ini_section(section.body, OptionCatalog::instance().schema(), values);
+                parse_ini_section(section, OptionCatalog::instance().schema(), values);
                 OptionApplier{}.apply(values);
+                break;
             }
         }
         if (do_cd)
