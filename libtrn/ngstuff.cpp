@@ -148,7 +148,6 @@ bool switcheroo()
     {
         bool do_cd = in_string(g_buf, "-d", true) != nullptr;
         char where_am_i[1024];
-        char tmp_buf[LINE_BUF_LEN+16];
 
         if (do_cd)
         {
@@ -156,13 +155,13 @@ bool switcheroo()
         }
         if (g_buf[1] == '-' || g_buf[1] == '+')
         {
-            std::strcpy(tmp_buf, g_buf + 1);
-            sw_list(tmp_buf);
+            std::string switches{g_buf + 1};
+            switches.resize(switches.size() + 2);
+            sw_list(switches.data());
         }
         else
         {
-            std::sprintf(tmp_buf, "[options]\n%s\n", g_buf + 1);
-            IniDocument          document{tmp_buf, "'&' input", IniDocument::BufferState::Raw};
+            IniDocument          document{fmt::format("[options]\n{}\n", g_buf + 1), "'&' input"};
             IniDocument::Section section;
             if (document.next_section(section))
             {

@@ -358,13 +358,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-FB-02. `libtrn/ngstuff.cpp`, `switcheroo`: replace the
-`tmp_buf[LINE_BUF_LEN + 16]` buffer used for `&` option parsing with
-owned `std::string` storage.  Use mutable string storage only while
-calling `sw_list` or constructing the raw `IniDocument`.  The fixed
-buffer size is arbitrary because the input is already bounded by
-`g_buf`.
-
 ### Global String Storage Slices
 
 These slices replace owned global or file-scope `char *` storage with
