@@ -338,11 +338,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-FB-04. `libtrn/scorefile.cpp`, `sf_get_line`: replace the returned
-static `sf_getline` buffer with owned lowercase text.  The current
-truncation to `LINE_BUF_LEN - 1` is arbitrary scoring scratch storage;
-preserve behavior with tests first if callers depend on the cap.
-
 FB-05. `libtrn/scorefile.cpp`, `s_sf_buf` users: split the shared
 file-scope scratch buffer into local owned strings in `sf_init`,
 `sf_do_file`, and `sf_open_file`.  Scorefile input line truncation comes

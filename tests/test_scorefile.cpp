@@ -129,6 +129,7 @@ protected:
     int         m_old_term_line{};
     int         m_old_term_col{};
     int         m_old_term_scrolled{};
+    std::string m_long_subject;
     Subject     m_subject{};
     char        m_subject_text[64]{"Re: Compact Subject"};
 };
@@ -158,6 +159,22 @@ TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)
 
     EXPECT_EQ("http://example.test/scores", g_fetched_url);
     EXPECT_EQ(3, g_sf_num_entries);
+}
+
+TEST_F(ScoreFileTest, subjectScoringKeepsLineBufferCap)
+{
+    std::string subject_text(LINE_BUF_LEN + 80, 'a');
+    subject_text.replace(LINE_BUF_LEN - 20, 6, "inside");
+    subject_text.replace(LINE_BUF_LEN + 20, 7, "outside");
+    m_long_subject = "Re: " + subject_text;
+    m_subject.m_str = m_long_subject.data();
+
+    char inside_rule[]{"!10 subject: inside"};
+    sf_append(inside_rule);
+    char outside_rule[]{"!20 subject: outside"};
+    sf_append(outside_rule);
+
+    EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 }
 
 TEST_F(ScoreFileTest, appendFromShortcutWritesShortenedFromRule)

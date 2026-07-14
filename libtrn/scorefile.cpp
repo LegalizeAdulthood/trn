@@ -86,7 +86,7 @@ static bool  sf_do_line(char *line, bool check);
 static void  sf_do_file(const char *fname);
 static int   score_match(const char *str, int ind);
 static std::string sf_missing_score(const char *line);
-static char *sf_get_line(ArticleNum a, HeaderLineType h);
+static std::string sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
 static void  sf_exclude_file(const char *fname);
 
@@ -935,8 +935,6 @@ int sf_score(ArticleNum a)
         parse_header(a);
     }
 
-    char *s;            // misc
-
     for (int i = 0; i < g_sf_num_entries; i++)
     {
         HeaderLineType h = s_sf_entries[i].head_type;
@@ -952,9 +950,8 @@ int sf_score(ArticleNum a)
             continue;                   // ...with the next rule
         }
 
-        // sf_get_line will return ptr to buffer (already lowercased string)
-        s = sf_get_line(a,h);
-        if (!s || !*s)  // no such line for the article
+        const std::string s = sf_get_line(a,h);
+        if (s.empty())  // no such line for the article
         {
             continue;   // with the s_sf_entries.
         }
@@ -969,7 +966,7 @@ int sf_score(ArticleNum a)
                 {
                     s_sf_entries[j].flags |= 2; // rule has been applied.
                 }
-                if (score_match(s, j))
+                if (score_match(s.c_str(), j))
                 {
                     sum = sum + s_sf_entries[j].score;
                     if (h == FROM_LINE)
@@ -1178,18 +1175,16 @@ void sf_append(char *line)
     }
 }
 
-// returns a lowercased copy of the header line type h in private buffer
-static char *sf_get_line(ArticleNum a, HeaderLineType h)
+// returns a lowercased copy of the header line type h
+static std::string sf_get_line(ArticleNum a, HeaderLineType h)
 {
-    static char sf_getline[LINE_BUF_LEN];
     std::string_view line;
 
     if (h <= SOME_LINE)
     {
         std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.value_of(),h);
         std::printf("(Internal error: header number too low)\n");
-        *sf_getline = '\0';
-        return sf_getline;
+        return {};
     }
     if (h >= HEAD_LAST)
     {
@@ -1201,8 +1196,7 @@ static char *sf_get_line(ArticleNum a, HeaderLineType h)
         {
             std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.value_of(),h);
             std::printf("(Internal error: header number too high)\n");
-            *sf_getline = '\0';
-            return sf_getline;
+            return {};
         }
     }
     else if (h == SUBJ_LINE)
@@ -1219,25 +1213,15 @@ static char *sf_get_line(ArticleNum a, HeaderLineType h)
             line = s;
         }
     }
-    if (line.empty())
+    std::string result{line.substr(0, LINE_BUF_LEN - 1)};
+    for (char &ch : result)
     {
-        *sf_getline = '\0';
-    }
-    else
-    {
-        const std::size_t len = line.size() < sizeof sf_getline ? line.size() : sizeof sf_getline - 1;
-        line.copy(sf_getline, len);
-        sf_getline[len] = '\0';
-    }
-
-    for (char *t = sf_getline; *t; t++)
-    {
-        if (std::isupper(*t))
+        if (std::isupper(ch))
         {
-            *t = std::tolower(*t);
+            ch = static_cast<char>(std::tolower(ch));
         }
     }
-    return sf_getline;
+    return result;
 }
 
 // given an index into s_sf_entries, print information about that index
