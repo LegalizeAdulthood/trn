@@ -665,26 +665,6 @@ char *get_auth_pass()
     return g_data_source->m_auth_pass ? g_data_source->m_auth_pass->data() : nullptr;
 }
 
-/// @brief Processes an input buffer containing INI-style data to prepare it for parsing.
-///
-/// This function modifies the input buffer in-place by:
-/// - Removing unnecessary whitespace.
-/// - Parsing section headers (e.g., [section]) and terminating them with null characters.
-/// - Parsing key-value pairs, replacing delimiters (e.g., '=') with null characters.
-/// - Skipping comments (lines starting with '#').
-/// - Handling invalid sections by skipping them and printing an error message.
-///
-/// The resulting buffer is transformed into a series of null-terminated strings,
-/// making it suitable for further parsing by other functions.
-///
-/// @param cp       Pointer to the input buffer containing INI-style data.
-/// @param filename Name of the file being processed (used for error messages).
-///
-void prep_ini_data(char *cp, const char *filename)
-{
-    IniDocument::prepare(cp, filename);
-}
-
 /// @brief Parses a string from the input buffer, handling quotes, comments, and escape sequences.
 ///
 /// This function processes a string from the input buffer, handling:
@@ -769,11 +749,6 @@ bool parse_string(char **to, char **from)
     *from = f;
 
     return inquote;     // return true if the string ended with a newline
-}
-
-char *next_ini_section(char *cp, char **section, char **cond)
-{
-    return IniDocument::find_next_section(cp, section, cond);
 }
 
 namespace

@@ -251,9 +251,9 @@ static Multirc *rcstuff_init_data()
     g_multircs.clear();
     g_multircs.reserve(20);
 
-    if (g_trn_access_mem)
+    if (!g_trn_access_text.empty())
     {
-        IniDocument          document{g_trn_access_mem, TRNACCESS, IniDocument::BufferState::Prepared};
+        IniDocument          document{g_trn_access_text, TRNACCESS};
         IniSectionValues     values;
         IniDocument::Section section;
         while (document.next_section(section))
@@ -296,7 +296,7 @@ static Multirc *rcstuff_init_data()
                 }
             }
         }
-        safe_free0(g_trn_access_mem);
+        g_trn_access_text.clear();
     }
     return first_group_found ? multirc_ptr(first_group_num) : nullptr;
 }

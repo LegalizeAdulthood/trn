@@ -5,6 +5,8 @@
 
 #include <trn/opt.h>
 
+#include <file_contents.h>
+
 #include <config/common.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
@@ -56,6 +58,7 @@
 #include <filesystem>
 #include <string>
 #include <system_error>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -184,83 +187,69 @@ void opt_final()
 
 static void opt_file(const char *filename, char **tcbufptr, bool bleat)
 {
-    char*filebuf = *tcbufptr;
-    int  fd = open(filename,0);
+    std::string filebuf = file_contents(filename);
 
-    if (fd >= 0)
+    if (!filebuf.empty())
     {
-        stat_t opt_stat{};
-        fstat(fd, &opt_stat);
-        if (opt_stat.st_size >= TCBUF_SIZE - 1)
+        IniDocument          document{std::move(filebuf), filename};
+        IniDocument::Section section;
+        while (document.next_section(section))
         {
-            filebuf = safe_realloc(filebuf, (MemorySize) opt_stat.st_size + 2);
-            *tcbufptr = filebuf;
-        }
-        if (opt_stat.st_size)
-        {
-            int len = read(fd, filebuf, (int) opt_stat.st_size);
-            filebuf[len] = '\0';
-            IniDocument          document{filebuf, filename, IniDocument::BufferState::Raw};
-            IniDocument::Section section;
-            while (document.next_section(section))
+            if (section.has_condition() && !check_ini_cond(section.condition))
             {
-                if (section.has_condition() && !check_ini_cond(section.condition))
+                continue;
+            }
+            if (!std::strcmp(section.name, "options"))
+            {
+                IniSectionValues values;
+                if (parse_ini_section(section.body, OptionCatalog::instance().schema(), values) == nullptr)
                 {
-                    continue;
+                    break;
                 }
-                if (!std::strcmp(section.name, "options"))
+                OptionApplier{}.apply(values);
+            }
+            else if (!std::strcmp(section.name, "environment"))
+            {
+                char *s = section.body;
+                while (*s && *s != '[')
                 {
-                    IniSectionValues values;
-                    if (parse_ini_section(section.body, OptionCatalog::instance().schema(), values) == nullptr)
-                    {
-                        break;
-                    }
-                    OptionApplier{}.apply(values);
+                    char *name = s;
+                    s += std::strlen(s) + 1;
+                    export_var(name, s);
+                    s += std::strlen(s) + 1;
                 }
-                else if (!std::strcmp(section.name, "environment"))
+            }
+            else if (!std::strcmp(section.name, "termcap"))
+            {
+                char *s = section.body;
+                while (*s && *s != '[')
                 {
-                    char *s = section.body;
-                    while (*s && *s != '[')
-                    {
-                        char *name = s;
-                        s += std::strlen(s) + 1;
-                        export_var(name, s);
-                        s += std::strlen(s) + 1;
-                    }
+                    char *name = s;
+                    s += std::strlen(s) + 1;
+                    add_tc_string(name, s);
+                    s += std::strlen(s) + 1;
                 }
-                else if (!std::strcmp(section.name, "termcap"))
+            }
+            else if (!std::strcmp(section.name, "attribute"))
+            {
+                char *s = section.body;
+                while (*s && *s != '[')
                 {
-                    char *s = section.body;
-                    while (*s && *s != '[')
-                    {
-                        char *name = s;
-                        s += std::strlen(s) + 1;
-                        add_tc_string(name, s);
-                        s += std::strlen(s) + 1;
-                    }
-                }
-                else if (!std::strcmp(section.name, "attribute"))
-                {
-                    char *s = section.body;
-                    while (*s && *s != '[')
-                    {
-                        char *name = s;
-                        s += std::strlen(s) + 1;
-                        color_rc_attribute(name, s);
-                        s += std::strlen(s) + 1;
-                    }
+                    char *name = s;
+                    s += std::strlen(s) + 1;
+                    color_rc_attribute(name, s);
+                    s += std::strlen(s) + 1;
                 }
             }
         }
-        close(fd);
     }
-    else if (bleat)
+    else if (bleat && !fs::exists(filename))
     {
-        std::printf(g_cant_open,filename);
+        std::printf(g_cant_open, filename);
         // term_down(1);
     }
 
-    *filebuf = '\0';
+    **tcbufptr = '\0';
 }
 
 inline bool is_yes(const char *s)

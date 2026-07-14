@@ -113,7 +113,7 @@ enum
 
 extern std::vector<DataSource> g_data_sources;     // all data sources
 extern DataSource             *g_data_source;      // the current data source
-extern char                   *g_trn_access_mem;   //
+extern std::string             g_trn_access_text;  //
 extern std::string             g_nntp_auth_file;   //
 extern std::time_t             g_def_refetch_secs; // -z
 

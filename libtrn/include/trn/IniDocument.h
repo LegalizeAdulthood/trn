@@ -5,19 +5,13 @@
 #ifndef TRN_INI_DOCUMENT_H
 #define TRN_INI_DOCUMENT_H
 
-#include <cstdlib>
-#include <memory>
+#include <cstddef>
+#include <string>
 #include <string_view>
 
 class IniDocument
 {
 public:
-    enum class BufferState
-    {
-        Raw,
-        Prepared
-    };
-
     struct Section
     {
         char *name{};
@@ -28,51 +22,30 @@ public:
     };
 
     IniDocument() = default;
-    IniDocument(char *buffer, const char *filename, BufferState state);
-    explicit IniDocument(std::string_view text, const char *filename = "input");
+    explicit IniDocument(std::string contents, std::string_view source_name = "input");
 
     IniDocument(const IniDocument &) = delete;
     IniDocument &operator=(const IniDocument &) = delete;
-    IniDocument(IniDocument &&) noexcept = default;
-    IniDocument &operator=(IniDocument &&) noexcept = default;
+    IniDocument(IniDocument &&other) noexcept;
+    IniDocument &operator=(IniDocument &&other) noexcept;
 
-    static IniDocument read_file(const char *path, const char *filename);
-    static void        prepare(char *buffer, const char *filename);
-    static char       *find_next_section(char *cursor, char **section, char **condition);
-
-    bool  next_section(Section &section);
-    void  rewind();
-    char *data() const;
-    char *release_buffer();
+    bool next_section(Section &section);
+    void rewind();
 
 private:
-    struct FreeBuffer
-    {
-        void operator()(char *buffer) const
-        {
-            std::free(buffer);
-        }
-    };
-
-    using BufferPtr = std::unique_ptr<char, FreeBuffer>;
-
+    static char *find_next_section(char *cursor, char **section, char **condition);
     static char *skip_section_body(char *cursor);
-    void         own_raw_text(std::string_view text, const char *filename);
-    void         own_buffer(char *buffer, const char *filename);
+    void         prepare(std::string_view source_name);
+    std::size_t  cursor_offset() const;
+    void         restore_cursor(std::size_t offset);
 
-    BufferPtr m_owned_buffer;
-    char     *m_buffer{};
-    char     *m_cursor{};
+    std::string m_contents;
+    char       *m_cursor{};
 };
 
 inline bool IniDocument::Section::has_condition() const
 {
     return condition != nullptr && *condition != '\0';
-}
-
-inline char *IniDocument::data() const
-{
-    return m_buffer;
 }
 
 #endif

@@ -5,68 +5,62 @@
 #include <trn/IniDocument.h>
 
 #include <config/common.h>
-#include <config/fdio.h>
 #include <trn/string-algos.h>
 #include <trn/util.h>
 
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
+#include <utility>
 
-IniDocument::IniDocument(char *buffer, const char *filename, BufferState state) :
-    m_buffer{buffer},
-    m_cursor{buffer}
+namespace
 {
-    if (m_buffer != nullptr && state == BufferState::Raw)
+
+constexpr std::size_t NO_CURSOR = static_cast<std::size_t>(-1);
+
+} // namespace
+
+IniDocument::IniDocument(std::string contents, std::string_view source_name) :
+    m_contents{std::move(contents)}
+{
+    if (!m_contents.empty())
     {
-        prepare(m_buffer, filename);
+        m_contents.push_back('\0');
+        m_contents.push_back('\0');
+        prepare(source_name);
     }
 }
 
-IniDocument::IniDocument(std::string_view text, const char *filename)
+IniDocument::IniDocument(IniDocument &&other) noexcept
 {
-    own_raw_text(text, filename);
+    const std::size_t offset = other.cursor_offset();
+    m_contents = std::move(other.m_contents);
+    restore_cursor(offset);
+    other.m_cursor = nullptr;
 }
 
-IniDocument IniDocument::read_file(const char *path, const char *filename)
+IniDocument &IniDocument::operator=(IniDocument &&other) noexcept
 {
-    IniDocument document;
-    const int   fd = open(path, 0);
-    if (fd < 0)
+    if (this != &other)
     {
-        return document;
+        const std::size_t offset = other.cursor_offset();
+        m_contents = std::move(other.m_contents);
+        restore_cursor(offset);
+        other.m_cursor = nullptr;
     }
-
-    stat_t file_stat{};
-    fstat(fd, &file_stat);
-    if (file_stat.st_size > 0)
-    {
-        char     *buffer = safe_malloc(static_cast<MemorySize>(file_stat.st_size) + 2);
-        const int length = read(fd, buffer, static_cast<int>(file_stat.st_size));
-        if (length > 0)
-        {
-            buffer[length] = '\0';
-            buffer[length + 1] = '\0';
-            document.own_buffer(buffer, filename);
-            buffer = nullptr;
-        }
-        std::free(buffer);
-    }
-    close(fd);
-    return document;
+    return *this;
 }
 
-void IniDocument::prepare(char *buffer, const char *filename)
+void IniDocument::prepare(std::string_view source_name)
 {
-    const char *source_name = filename != nullptr ? filename : "<input>";
-    char       *cp = buffer;
-    char       *t = cp;
+    const std::string source_name_text{source_name.empty() ? std::string_view{"<input>"} : source_name};
+    char             *cp = m_contents.data();
+    char             *t = cp;
 
 #ifdef DEBUG
     if (g_debug & DEB_RCFILES)
     {
-        std::printf("Read %d bytes from %s\n", static_cast<int>(std::strlen(cp)), source_name);
+        std::printf("Read %d bytes from %s\n", static_cast<int>(std::strlen(cp)), source_name_text.c_str());
     }
 #endif
 
@@ -157,7 +151,7 @@ void IniDocument::prepare(char *buffer, const char *filename)
             else
             {
                 *t = '\0';
-                std::printf("Invalid section in %s: %s\n", source_name, s);
+                std::printf("Invalid section in %s: %s\n", source_name_text.c_str(), s);
                 t = s;
                 cp = skip_ne(cp, '\n');
             }
@@ -168,6 +162,7 @@ void IniDocument::prepare(char *buffer, const char *filename)
         }
     }
     *t = '\0';
+    rewind();
 }
 
 char *IniDocument::find_next_section(char *cursor, char **section, char **condition)
@@ -218,18 +213,7 @@ bool IniDocument::next_section(Section &section)
 
 void IniDocument::rewind()
 {
-    m_cursor = m_buffer;
-}
-
-char *IniDocument::release_buffer()
-{
-    char *buffer = m_owned_buffer.release();
-    if (buffer == m_buffer)
-    {
-        m_buffer = nullptr;
-        m_cursor = nullptr;
-    }
-    return buffer;
+    m_cursor = m_contents.empty() ? nullptr : m_contents.data();
 }
 
 char *IniDocument::skip_section_body(char *cursor)
@@ -249,19 +233,12 @@ char *IniDocument::skip_section_body(char *cursor)
     return cursor;
 }
 
-void IniDocument::own_raw_text(std::string_view text, const char *filename)
+std::size_t IniDocument::cursor_offset() const
 {
-    char *buffer = safe_malloc(static_cast<MemorySize>(text.size()) + 2);
-    std::memcpy(buffer, text.data(), text.size());
-    buffer[text.size()] = '\0';
-    buffer[text.size() + 1] = '\0';
-    own_buffer(buffer, filename);
+    return m_cursor == nullptr ? NO_CURSOR : static_cast<std::size_t>(m_cursor - m_contents.data());
 }
 
-void IniDocument::own_buffer(char *buffer, const char *filename)
+void IniDocument::restore_cursor(std::size_t offset)
 {
-    m_owned_buffer.reset(buffer);
-    m_buffer = buffer;
-    m_cursor = buffer;
-    prepare(buffer, filename);
+    m_cursor = offset == NO_CURSOR || m_contents.empty() ? nullptr : m_contents.data() + offset;
 }

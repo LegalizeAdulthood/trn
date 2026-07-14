@@ -6,6 +6,8 @@
 
 #include <trn/datasrc.h>
 
+#include <file_contents.h>
+
 #include <config/common.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
@@ -51,11 +53,12 @@ struct utimbuf
 #include <ctime>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 std::vector<DataSource> g_data_sources;                           // all data sources
 DataSource             *g_data_source{};                          // the current data source
-char                   *g_trn_access_mem{};                       //
+std::string             g_trn_access_text;                        //
 std::string             g_nntp_auth_file;                         //
 time_t                  g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
 
@@ -70,7 +73,7 @@ static int                        source_file_cmp(std::string_view key, HashDatu
 static int                        check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int                        get_near_miss();
 static DataSource                *new_data_source(const char *name, const DataSourceConfig &config);
-static char                      *read_data_sources(const char *filename);
+static std::string                read_data_sources(const char *filename);
 
 /// @brief Initializes the data sources for the application.
 ///
@@ -82,7 +85,7 @@ static char                      *read_data_sources(const char *filename);
 /// Global variables initialized:
 /// - `g_data_sources`: The global list of data sources.
 /// - `g_nntp_auth_file`: The NNTP authentication file path.
-/// - `g_trn_access_mem`: Memory for TRN access configuration.
+/// - `g_trn_access_text`: TRN access configuration text.
 ///
 void data_source_init()
 {
@@ -106,15 +109,11 @@ void data_source_init()
         new_data_source("default", config);
     }
 
-    g_trn_access_mem = read_data_sources(TRNACCESS);
-    char *s = read_data_sources(DEFACCESS);
-    if (!g_trn_access_mem)
+    g_trn_access_text = read_data_sources(TRNACCESS);
+    std::string default_access_text = read_data_sources(DEFACCESS);
+    if (g_trn_access_text.empty())
     {
-        g_trn_access_mem = s;
-    }
-    else if (s)
-    {
-        std::free(s);
+        g_trn_access_text = std::move(default_access_text);
     }
 
     if (!machine)
@@ -164,6 +163,7 @@ void data_source_finalize()
         g_data_sources.clear();
     }
     g_data_source = nullptr;
+    g_trn_access_text.clear();
     g_nntp_auth_file.clear();
 }
 
@@ -174,19 +174,20 @@ void data_source_finalize()
 /// on the parsed values.
 ///
 /// @param filename The name of the file to read data sources from.
-/// @return A pointer to the allocated file buffer, or nullptr if the file
-///         could not be opened or read.
+/// @return The file contents, or an empty string if the file could not be
+///         opened or read.
 ///
-static char *read_data_sources(const char *filename)
+static std::string read_data_sources(const char *filename)
 {
     IniSectionValues values;
-    IniDocument      document = IniDocument::read_file(file_exp(filename).c_str(), filename);
+    std::string      contents = file_contents(file_exp(filename));
 
-    if (document.data() == nullptr)
+    if (contents.empty())
     {
-        return nullptr;
+        return {};
     }
 
+    IniDocument          document{contents, filename};
     IniDocument::Section section;
     while (document.next_section(section))
     {
@@ -204,7 +205,7 @@ static char *read_data_sources(const char *filename)
         }
         new_data_source(section.name, DataSourceConfig::from(values));
     }
-    return document.release_buffer();
+    return contents;
 }
 
 DataSource *get_data_source(std::string_view name)

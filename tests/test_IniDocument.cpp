@@ -2,13 +2,14 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/IniDocument.h>
 
+#include <file_contents.h>
+
 #include <trn/IniSchema.h>
 #include <trn/IniSectionValues.h>
 #include <trn/util.h>
 
 #include <gtest/gtest.h>
 
-#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -80,29 +81,23 @@ TEST(IniDocumentTest, parsesSectionValuesFromSectionBody)
     EXPECT_EQ(std::string_view{"two"}, *beta);
 }
 
-TEST(IniDocumentTest, readsFileAndReleasesTokenizedBuffer)
+TEST(IniDocumentTest, parsesFileContents)
 {
     const std::filesystem::path path = test_file_path();
     std::error_code             error;
     std::filesystem::remove(path, error);
 
-    std::ofstream output{path, std::ios::binary};
+    std::ofstream output{path};
     ASSERT_TRUE(output.good());
     output << "[file]\nValue = text\n";
     output.close();
 
-    IniDocument document = IniDocument::read_file(path.string().c_str(), "test file");
+    IniDocument document{file_contents(path), "test file"};
 
-    ASSERT_NE(nullptr, document.data());
     IniDocument::Section section;
     ASSERT_TRUE(document.next_section(section));
     EXPECT_STREQ("file", section.name);
     EXPECT_STREQ("Value", section.body);
-
-    char *buffer = document.release_buffer();
-    EXPECT_EQ(nullptr, document.data());
-    ASSERT_NE(nullptr, buffer);
-    std::free(buffer);
 
     std::filesystem::remove(path, error);
 }
