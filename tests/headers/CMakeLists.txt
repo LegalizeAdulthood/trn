@@ -16,6 +16,7 @@ add_executable(trn-headers-test
     test_decode.cpp
     test_edit_dist.cpp
     test_enum-flags.cpp
+    test_file_contents.cpp
     test_final.cpp
     test_hash.cpp
     test_head.cpp
