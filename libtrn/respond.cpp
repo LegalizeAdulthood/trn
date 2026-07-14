@@ -233,14 +233,14 @@ SaveResult save_article()
         }
         else
         {
-            char *filename;
-            int   part;
-            int   total;
+            int part;
+            int total;
             int decode_type = 0;
             int cnt = 0;
 
             // Scan subject for filename and part number information
-            filename = decode_subject(g_art, &part, &total);
+            std::string filename = decode_subject(g_art, &part, &total);
+            char       *filename_ptr = filename.empty() ? nullptr : filename.data();
             if (partOpt)
             {
                 part = partOpt;
@@ -249,13 +249,11 @@ SaveResult save_article()
             {
                 total = totalOpt;
             }
-            for (g_art_pos = g_save_from;
-                 read_art(g_art_line,sizeof g_art_line) != nullptr;
-                 g_art_pos = tell_art())
+            for (g_art_pos = g_save_from; read_art(g_art_line, sizeof g_art_line) != nullptr; g_art_pos = tell_art())
             {
                 if (*g_art_line <= ' ')
                 {
-                    continue;   // Ignore empty or initially-whitespace lines
+                    continue; // Ignore empty or initially-whitespace lines
                 }
                 if ((*g_art_line == '#' || *g_art_line == ':')            //
                     && (!std::strncmp(g_art_line + 1, "! /bin/sh", 9)     //
@@ -266,7 +264,7 @@ SaveResult save_article()
                     decode_type = 1;
                     break;
                 }
-                if (uue_prescan(g_art_line, &filename, &part, &total))
+                if (uue_prescan(g_art_line, &filename_ptr, &part, &total))
                 {
                     g_save_from = g_art_pos;
                     seek_art(g_save_from);
@@ -277,7 +275,7 @@ SaveResult save_article()
                 {
                     break;
                 }
-            }// for
+            } // for
             switch (decode_type)
             {
             case 1:
@@ -291,9 +289,9 @@ SaveResult save_article()
                 std::printf("Extracting uuencoded file into %s:\n", c);
                 term_down(1);
                 g_mime_section->m_type = IMAGE_MIME;
-                if (filename)
+                if (filename_ptr)
                 {
-                    g_mime_section->m_filename = filename;
+                    g_mime_section->m_filename = filename_ptr;
                 }
                 else
                 {
@@ -315,7 +313,7 @@ SaveResult save_article()
                 term_down(1);
                 break;
             }
-        }// if
+        } // if
     }
     else if ((s = std::strchr(g_buf,'|')) != nullptr)   // is it a pipe command?
     {
@@ -605,30 +603,28 @@ SaveResult view_article()
     }
     else
     {
-        char *filename;
         int   part;
         int   total;
-        int cnt = 0;
+        int   cnt = 0;
 
         // Scan subject for filename and part number information
-        filename = decode_subject(g_art, &part, &total);
-        for (g_art_pos = g_save_from;
-             read_art(g_art_line,sizeof g_art_line) != nullptr;
-             g_art_pos = tell_art())
+        std::string filename = decode_subject(g_art, &part, &total);
+        char       *filename_ptr = filename.empty() ? nullptr : filename.data();
+        for (g_art_pos = g_save_from; read_art(g_art_line, sizeof g_art_line) != nullptr; g_art_pos = tell_art())
         {
             if (*g_art_line <= ' ')
             {
-                continue;       // Ignore empty or initially-whitespace lines
+                continue; // Ignore empty or initially-whitespace lines
             }
-            if (uue_prescan(g_art_line, &filename, &part, &total))
+            if (uue_prescan(g_art_line, &filename_ptr, &part, &total))
             {
-                MimeCapEntry*mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
+                MimeCapEntry *mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
                 g_save_from = g_art_pos;
                 seek_art(g_save_from);
                 g_mime_section->m_type = UNHANDLED_MIME;
-                if (filename)
+                if (filename_ptr)
                 {
-                    g_mime_section->m_filename = filename;
+                    g_mime_section->m_filename = filename_ptr;
                 }
                 else
                 {
@@ -640,7 +636,7 @@ SaveResult view_article()
                 if (mc && !decode_piece(mc, nullptr) && *g_msg)
                 {
                     newline();
-                    std::fputs(g_msg,stdout);
+                    std::fputs(g_msg, stdout);
                 }
                 newline();
                 cnt = 0;
@@ -649,7 +645,7 @@ SaveResult view_article()
             {
                 break;
             }
-        }// for
+        } // for
         if (cnt)
         {
             std::printf("Unable to determine type of file.\n");

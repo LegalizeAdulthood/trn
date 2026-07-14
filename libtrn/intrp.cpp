@@ -253,7 +253,7 @@ getout:
 // interpret interpolations
 const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
 {
-    char* subj_buf = nullptr;
+    std::optional<std::string> subj_buf;
     std::optional<std::string> ngs_buf;
     std::optional<std::string> refs_buf;
     std::optional<std::string> artid_buf;
@@ -263,11 +263,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
     std::optional<std::string> follow_buf;
     std::optional<std::string> dist_buf;
     std::optional<std::string> line_buf;
-    char* line_split = nullptr;
-    char* orig_dest = dest;
-    char scrbuf[8192];
-    char space_text[]{" "};
-    char noname_text[]{"noname"};
+    char                      *line_split = nullptr;
+    char                      *orig_dest = dest;
+    char                       scrbuf[8192];
+    char                       space_text[]{" "};
+    char                       noname_text[]{"noname"};
     int metabit = 0;
 
     while (*pattern && (!stoppers || !std::strchr(stoppers, *pattern)))
@@ -1014,12 +1014,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         s = s_empty;
                         break;
                     }
-                    char *str = subj_buf;
-                    if (str == nullptr)
+                    if (!subj_buf)
                     {
                         subj_buf = fetch_subj_copy(g_art);
-                        str = subj_buf;
                     }
+                    char *str = subj_buf->data();
                     if (*pattern == 's')
                     {
                         subject_has_re(str, &str);
@@ -1449,8 +1448,6 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
         }
     }
 getout:
-    safe_free(subj_buf);         // return any checked out storage
-
     return pattern; // where we left off
 }
 

@@ -361,27 +361,6 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
-#### `prefetch_lines` Ownership Split
-
-- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`.
-- Finding: copy and no-copy call sites are split, but the implementation
-  still uses a runtime `copy` flag.
-- Change: add an owning `std::string` helper for the copy path and make
-  the no-copy helper always return borrowed storage.
-- Data flow: no-copy remote fallback currently calls
-  `save_current_header_line`; remove that ownership ambiguity here.
-- Callers: no-copy wrappers feed `fetch_subj`, `fetch_from`,
-  `fetch_xref`, article search, and scorefile matching.
-
-#### `fetch_subj_copy` String Return
-
-- Files: `libtrn/include/trn/head.h`, `libtrn/head.cpp`.
-- Finding: the copy wrappers still return caller-owned `char *`.
-- Change: convert `fetch_subj_copy` and `prefetch_lines_copy` to
-  `std::string` after the owning helper exists.
-- Data flow: direct owned-copy consumers are `decode_subject` and the
-  `%s`/`%S` interpolation path in `do_interp`.
-
 #### `mp_fetch_lines` Pool Path
 
 - Files: `libtrn/head.cpp`.
@@ -391,15 +370,6 @@ buffer slices.
   the shared span/string helper.
 - Data flow: returned storage remains pool-owned.
 
-#### `do_interp` Subject Copy
-
-- Files: `libtrn/intrp.cpp`.
-- Finding: `%s` and `%S` hold a `fetch_subj_copy` raw result and free it
-  at function exit.
-- Change: use local `std::string` storage for the copied subject.
-- Data flow: use mutable `data()` only while applying `subject_has_re`
-  and the local `- (nf` trimming hack.
-
 #### `read_auth_file` Password
 
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
@@ -407,17 +377,6 @@ buffer slices.
   storage and freed by callers.
 - Change: return `std::string` and use empty string for "not found".
 - Data flow: update callers that receive and free the password.
-
-#### `decode_subject` Filename
-
-- Files: `libtrn/decode.cpp`, `libtrn/include/trn/decode.h`,
-  `libtrn/respond.cpp`.
-- Finding: `decode_subject` keeps a static owned subject buffer and
-  returns an interior filename pointer.
-- Change: use local `std::string` subject storage and return an owned
-  filename string.
-- Data flow: empty string means "no filename"; update the two
-  `respond.cpp` callers that currently check for `nullptr`.
 
 ### Safe-realloc Array Slices
 

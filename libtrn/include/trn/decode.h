@@ -41,7 +41,7 @@ using DecodeFunc = DecodeState (*)(std::FILE *ifp, DecodeState state);
 
 void decode_init();
 std::string decode_fix_filename(std::string_view text);
-char *decode_subject(ArticleNum art_num, int *partp, int *totalp);
+std::string decode_subject(ArticleNum art_num, int *partp, int *totalp);
 bool decode_piece(MimeCapEntry *mcp, char *first_line);
 
 #endif

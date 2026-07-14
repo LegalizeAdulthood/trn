@@ -110,30 +110,23 @@ bool           parse_line(char *art_buf, int new_hide, int old_hide);
 void           end_header();
 bool           parse_header(ArticleNum art_num);
 std::string    fetch_lines(ArticleNum art_num, HeaderLineType which_line);
-char          *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy);
-inline char   *prefetch_lines(ArticleNum art_num, HeaderLineType which_line)
+char          *prefetch_lines(ArticleNum art_num, HeaderLineType which_line);
+std::string    prefetch_lines_copy(ArticleNum art_num, HeaderLineType which_line);
+inline char   *fetch_subj(ArticleNum art_num)
 {
-    return prefetch_lines(art_num, which_line, false);
+    return prefetch_lines(art_num, SUBJ_LINE);
 }
-inline char *prefetch_lines_copy(ArticleNum art_num, HeaderLineType which_line)
-{
-    return prefetch_lines(art_num, which_line, true);
-}
-inline char *fetch_subj(ArticleNum art_num)
-{
-    return prefetch_lines(art_num, SUBJ_LINE, false);
-}
-inline char *fetch_subj_copy(ArticleNum art_num)
+inline std::string fetch_subj_copy(ArticleNum art_num)
 {
     return prefetch_lines_copy(art_num, SUBJ_LINE);
 }
 inline char *fetch_from(ArticleNum art_num)
 {
-    return prefetch_lines(art_num, FROM_LINE, false);
+    return prefetch_lines(art_num, FROM_LINE);
 }
 inline char *fetch_xref(ArticleNum art_num)
 {
-    return prefetch_lines(art_num, XREF_LINE, false);
+    return prefetch_lines(art_num, XREF_LINE);
 }
 
 #endif

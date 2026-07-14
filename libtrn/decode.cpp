@@ -111,26 +111,25 @@ static bool bad_filename(const char *filename)
 }
 
 // Parse the subject looking for filename and part number information.
-char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
+std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
 {
-    static char* subject = nullptr;
-    char* filename;
-    char* t;
-    int part = -1;
-    int total = 0;
-    int hasdot = 0;
+    char *filename;
+    char *t;
+    int   part = -1;
+    int   total = 0;
+    int   hasdot = 0;
 
     *partp = part;
     *totalp = total;
-    safe_free(subject);
-    subject = fetch_subj_copy(art_num);
-    if (!*subject)
+    std::string subject = fetch_subj_copy(art_num);
+    if (subject.empty())
     {
-        return nullptr;
+        return {};
     }
 
     // Skip leading whitespace and other garbage
-    char *s = subject;
+    char *subject_text = subject.data();
+    char *s = subject_text;
     while (is_hor_space(*s) || *s == '-')
     {
         s++;
@@ -172,7 +171,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
         }
         if (!*s || *s == '\n')
         {
-            return nullptr;
+            return {};
         }
     } while (t == s || (t[0] == 'v' && std::isdigit(t[1]) && *s == ':'));
     *s++ = '\0';
@@ -208,7 +207,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
 
     if (s >= end)
     {
-        return nullptr;
+        return {};
     }
 
     // Get part number
@@ -235,7 +234,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
             while (*++s != '\0' && *s != '\n' && !std::isdigit(*s))
             {
             }
-            total = std::isdigit(*s)? std::atoi(s) : 0;
+            total = std::isdigit(*s) ? std::atoi(s) : 0;
             s = skip_digits(s);
             // We don't break here because we want the last item on the line
         }
@@ -245,12 +244,12 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
         {
             if (s[4] == 's')
             {
-                for (t = s; t >= subject && !std::isdigit(*t); t--)
+                for (t = s; t >= subject_text && !std::isdigit(*t); t--)
                 {
                 }
-                if (t > subject)
+                if (t > subject_text)
                 {
-                    while (t > subject && std::isdigit(t[-1]))
+                    while (t > subject_text && std::isdigit(t[-1]))
                     {
                         t--;
                     }
@@ -278,7 +277,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
 
     if (total == 0 || part == -1 || part > total)
     {
-        return nullptr;
+        return {};
     }
     *partp = part;
     *totalp = total;
