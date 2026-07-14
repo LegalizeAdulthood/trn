@@ -139,10 +139,10 @@ static void dump_header(const char *where)
 }
 #endif
 
-HeaderLineType set_line_type(char *bufptr, const char *colon)
+HeaderLineType set_line_type(const char *bufptr, const char *colon)
 {
     char* t;
-    char* f;
+    const char* f;
 
     if (colon-bufptr > sizeof g_msg)
     {

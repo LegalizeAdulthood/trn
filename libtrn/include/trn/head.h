@@ -103,7 +103,7 @@ void head_final();
 #ifdef DEBUG
 void dumpheader(char *where);
 #endif
-HeaderLineType set_line_type(char *bufptr, const char *colon);
+HeaderLineType set_line_type(const char *bufptr, const char *colon);
 HeaderLineType get_header_num(char *s);
 void           start_header(ArticleNum artnum);
 bool           parse_line(char *art_buf, int new_hide, int old_hide);

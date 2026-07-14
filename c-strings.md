@@ -224,62 +224,6 @@ Refactor to `fmt::format`, `fmt::format_to`, or `fmt::print`, and link
 `fmt::fmt` privately to the target.  Do not add `/utf-8`; the fmt overlay
 port controls that behavior.
 
-## Current Audit State
-
-- `char *` to `const char *`: current simple candidates are
-  `set_line_type`, `get_header_num`, and `score_match`.  Other hits,
-  such as `valid_xref_site` and `sf_cmd_fname`, are better handled with
-  the owning-string or path slices that already touch their data flow.
-- `const char *` or read-only `char *` to `std::string_view`:
-  remaining candidates are null sentinels, C API boundaries,
-  encoded-text cursors, output-only helpers, command parsers, or helper
-  families that must change with their callers.
-- `save_str`, `safe_copy`, and owning raw-string returns: remaining
-  direct hits write caller buffers, globals, static storage, parser
-  buffers, command buffers, score/universal storage, keymaps, or
-  memory-pool storage.  The audit now treats helpers such as
-  `fetch_lines` as ownership sources and traces caller-local
-  acquire/use/free flows.
-- `fetch_lines` always returns owned storage.  `prefetch_lines(copy =
-  true)` returns owned storage, while `copy = false` returns borrowed
-  global buffer storage.  `fetch_subj`, `fetch_from`, and `fetch_xref`
-  inherit that mixed ownership from `prefetch_lines`.
-- Current `fetch_lines` caller candidates are `Article::check_poster`,
-  `mime_set_article`, `cancel_article`, `supersede_article`,
-  `sa_ent_lines`, `sa_desc_subject`, `sa_get_desc`, `end_header`, and
-  `valid_xref_site`.
-- Struct/class `char *` members must be scanned and classified by
-  ownership.  Owned member fields are storage-centered string candidates;
-  borrowed, interior, pooled, output, or union-backed members usually
-  need a broader ownership-model slice.
-- Fixed-length C buffers: remaining buffers are caller outputs, globals,
-  static returned storage, protocol buffers, parser compaction, or
-  fixed-width display fields.  Reruns must include local, static local,
-  file-scope, global, and struct/class `char name[N]` declarations.
-  File-scope hits include `scorefile.cpp` `s_sf_buf` and `s_sf_file`,
-  `score-easy.cpp` `s_sc_e_newline`, `sadesc.cpp` `s_sa_buf`, and
-  `scoresave.cpp` `s_line_buf`.
-- Filename variables to `std::filesystem::path`: remaining candidates
-  are stored filename fields, backup/rollback rename sequences, protocol
-  or shell text, global temp-file state, nullable source-file APIs, or
-  one-shot C API filenames.
-- Remaining direct retained raw pointers are score-file storage,
-  universal-selector union storage, terminal capability/keymap storage,
-  search-regex internals, option value arrays, NNTP protocol globals,
-  and the `Subject::m_str` hash-key layout.
-
-The main future opportunity is the case-insensitive comparison helper
-family.  View-ready overloads could remove temporary strings in
-`mime_types_match`, `color_rc_attribute`, `nntp_list`, and `set_header`,
-but the generated header templates and the manual implementation must be
-changed together.  Treat that as a helper-family slice, not isolated
-call-site churn.
-
-`libtrn/addng.cpp:418`, `std::strcpy(g_buf, "*")`, is a real hit, but
-it writes the global NNTP query buffer used immediately by `nntp_list`.
-Converting that one assignment to string/fmt would only add churn; this
-belongs with the global-buffer ownership work.
-
 ## General Refactoring Rules
 
 Do not promote simple output-only helper parameters when the only local
@@ -371,14 +315,9 @@ buffer slices.
 
 ### Const/View Signature Slices
 
-CV-01. `libtrn/head.cpp`, `set_line_type`: change `bufptr` to
-`const char *` and make the local source cursor const.  The function
-only reads the header text while writing the lowercase copy to `g_msg`.
-
 CV-02. `libtrn/head.cpp`, `get_header_num`: change the parameter to
-`const char *` after CV-01.  The function reads the header name and
-updates header metadata, but it does not write through the caller
-string.
+`const char *`.  The function reads the header name and updates header
+metadata, but it does not write through the caller string.
 
 CV-03. `libtrn/scorefile.cpp`, `score_match`: change the `str`
 parameter to `const char *`.  The function only passes the text to the
