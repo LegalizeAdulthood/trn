@@ -10,13 +10,6 @@ the behavior provided by the old type sentinels.
 
 ## Plan
 
-### 2. Decouple `univ_mask_load` from mutable caller buffers
-
-- Change the public entry point to accept `std::string_view`.
-- Copy internally before calling the current tokenizer.
-- Keep callers and tests from manufacturing writable `char[]` values just
-  to parse.
-
 ### 3. Add an injectable virtual-group visitor seam
 
 - Add an overload or internal helper:

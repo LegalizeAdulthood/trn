@@ -42,6 +42,14 @@ void UnivTest::TearDown()
 
 } // namespace
 
+TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
+{
+    univ_mask_load("", "Empty");
+
+    EXPECT_EQ(nullptr, g_first_univ);
+    EXPECT_EQ("Empty", g_univ_title);
+}
+
 TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
 {
     const std::string top_name = fs::path{TRN_TEST_UNIV_COLON_PATH_FILE}.generic_string();

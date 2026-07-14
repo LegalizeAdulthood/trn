@@ -536,15 +536,6 @@ when null and empty are distinct states.
 - Data flow: update label matching and description defaults in
   `univ_use_file` and `univ_do_line`.
 
-#### Universal Mask Loading
-
-- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.
-- Finding: `univ_mask_load` receives a mutable mask only because
-  `univ_use_group_line` tokenizes by writing terminators.
-- Change: accept `std::string_view` and tokenize without mutating the
-  caller's buffer.
-- Data flow: removes the startup `save_str("*")` allocation.
-
 #### Universal Payload Strings
 
 - Files: `libtrn/include/trn/univ.h`, `libtrn/univ.cpp`,

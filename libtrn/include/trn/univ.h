@@ -147,7 +147,7 @@ void           univ_init();
 void           univ_startup();
 void           univ_close();
 bool           univ_file_load(const char *fname, const char *title, const char *label);
-void           univ_mask_load(char *mask, const char *title);
+void           univ_mask_load(std::string_view mask, const char *title);
 void           univ_redo_file();
 void           univ_edit();
 void           univ_page_file(char *fname);

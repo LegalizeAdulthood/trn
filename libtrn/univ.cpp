@@ -127,7 +127,7 @@ void univ_startup()
         {
             // last resort--all newsgroups
             univ_close();
-            univ_mask_load(save_str("*"),"All Newsgroups");
+            univ_mask_load("*", "All Newsgroups");
         }
         if (user_top_load)
         {
@@ -939,11 +939,12 @@ bool univ_file_load(const char *fname, const char *title, const char *label)
 }
 
 // level generator
-void univ_mask_load(char *mask, const char *title)
+void univ_mask_load(std::string_view mask, const char *title)
 {
     univ_open();
 
-    univ_use_group_line(mask,0);
+    std::string mask_buffer{mask};
+    univ_use_group_line(mask_buffer.data(), 0);
     if (title)
     {
         g_univ_title = title;
