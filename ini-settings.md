@@ -101,12 +101,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-8. Convert `opt_file`.
-
-   Use range-for over `IniDocument`.  Check section conditions, dispatch by
-   `section.name()`, parse options with the range-based
-   `parse_ini_section`, and remove local use of legacy section fields.
-
 9. Convert `rcstuff_init_data`.
 
    Use range-for over `IniDocument`.  Check section conditions, select

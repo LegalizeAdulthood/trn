@@ -57,6 +57,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 
@@ -191,54 +192,46 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat)
 
     if (!filebuf.empty())
     {
-        IniDocument          document{std::move(filebuf), filename};
-        IniDocument::Section section;
-        while (document.next_section(section))
+        IniDocument document{std::move(filebuf), filename};
+        for (const IniSection section : document)
         {
-            if (section.has_condition() && !check_ini_cond(section.condition))
+            if (section.has_condition())
             {
-                continue;
+                if (const std::string condition{section.condition()}; !check_ini_cond(condition.c_str()))
+                {
+                    continue;
+                }
             }
-            if (!std::strcmp(section.name, "options"))
+
+            const std::string_view section_name = section.name();
+            if (section_name == "options")
             {
                 IniSectionValues values;
-                if (parse_ini_section(section.body, OptionCatalog::instance().schema(), values) == nullptr)
-                {
-                    break;
-                }
+                parse_ini_section(section, OptionCatalog::instance().schema(), values);
                 OptionApplier{}.apply(values);
             }
-            else if (!std::strcmp(section.name, "environment"))
+            else if (section_name == "environment")
             {
-                char *s = section.body;
-                while (*s && *s != '[')
+                for (const IniSetting setting : section)
                 {
-                    char *name = s;
-                    s += std::strlen(s) + 1;
-                    export_var(name, s);
-                    s += std::strlen(s) + 1;
+                    export_var(setting.name(), setting.value());
                 }
             }
-            else if (!std::strcmp(section.name, "termcap"))
+            else if (section_name == "termcap")
             {
-                char *s = section.body;
-                while (*s && *s != '[')
+                for (const IniSetting setting : section)
                 {
-                    char *name = s;
-                    s += std::strlen(s) + 1;
-                    add_tc_string(name, s);
-                    s += std::strlen(s) + 1;
+                    const std::string capability{setting.name()};
+                    const std::string value = setting.value();
+                    add_tc_string(capability.c_str(), value.c_str());
                 }
             }
-            else if (!std::strcmp(section.name, "attribute"))
+            else if (section_name == "attribute")
             {
-                char *s = section.body;
-                while (*s && *s != '[')
+                for (const IniSetting setting : section)
                 {
-                    char *name = s;
-                    s += std::strlen(s) + 1;
-                    color_rc_attribute(name, s);
-                    s += std::strlen(s) + 1;
+                    std::string value = setting.value();
+                    color_rc_attribute(setting.name(), value.data());
                 }
             }
         }
