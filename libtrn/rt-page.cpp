@@ -712,11 +712,12 @@ try_again:
             }
             ui->m_flags &= ~UF_INCLUDED;
             bool ui_elig = true;
+            if (ui->m_state != UIS_NORMAL)
+            {
+                continue;
+            }
             switch (ui->m_type)
             {
-            case UN_GROUP_DESEL:
-            case UN_VGROUP_DESEL:
-            case UN_DELETED:
             case UN_VGROUP:               // first-pass item
                 // always ineligible items
                 ui_elig = false;

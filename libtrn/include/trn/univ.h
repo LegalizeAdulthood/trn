@@ -32,10 +32,14 @@ enum UniversalItemType
     UN_VGROUP = 8,        // virtual newsgroup marker (for pass 2)
     UN_TEXT_FILE = 9,     // text file
     UN_HELP_KEY = 10,     // keystroke help functions from help.cpp
-    UN_DEBUG1 = -1,       // quick debugging: just has data
-    UN_GROUP_DESEL = -2,  // group that is deselected (with !group)
-    UN_VGROUP_DESEL = -3, // virtual newsgroup deselected (with !group)
-    UN_DELETED = -4       // generic deleted item -- no per-item memory
+    UN_DEBUG1 = -1        // quick debugging: just has data
+};
+
+enum UniversalItemState
+{
+    UIS_NORMAL,
+    UIS_DESELECTED,
+    UIS_DELETED
 };
 
 struct UniversalGroupMaskData
@@ -118,6 +122,7 @@ struct UniversalItem
     int                m_num;   // natural order (for sort)
     UniversalItemFlags m_flags; // for selector
     UniversalItemType  m_type;  // what kind of object is it?
+    UniversalItemState m_state; // current selector state
     char              *m_desc;  // default description
     int                m_score;
     UniversalData      m_data; // describes the object

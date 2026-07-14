@@ -207,6 +207,7 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
         node->m_desc = nullptr;
     }
     node->m_type = type;
+    node->m_state = UIS_NORMAL;
     node->m_num = s_univ_item_counter++;
     node->m_score = 0;            // consider other default scores?
     node->m_next = nullptr;
@@ -254,7 +255,6 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_NEWSGROUP:
-    case UN_GROUP_DESEL:
         safe_free(ui->m_data.group.ng);
         break;
 
@@ -265,7 +265,6 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_VGROUP:
-    case UN_VGROUP_DESEL:
         safe_free(ui->m_data.vgroup.ng);
         break;
 
@@ -318,11 +317,11 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if ((ui->m_type == UN_GROUP_DESEL) && ui->m_data.group.ng //
+            if (ui->m_type == UN_NEWSGROUP && ui->m_state == UIS_DESELECTED && ui->m_data.group.ng //
                 && !strcmp(ui->m_data.group.ng, group_name.c_str()))
             {
                 // undelete the newsgroup
-                ui->m_type = UN_NEWSGROUP;
+                ui->m_state = UIS_NORMAL;
             }
         }
         return;
@@ -428,11 +427,11 @@ static void univ_add_virtual_group(std::string_view grpname)
         // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if ((ui->m_type == UN_VGROUP_DESEL) && ui->m_data.vgroup.ng //
+            if (ui->m_type == UN_VGROUP && ui->m_state == UIS_DESELECTED && ui->m_data.vgroup.ng //
                 && !std::strcmp(ui->m_data.vgroup.ng, group_name.c_str()))
             {
                 // undelete the newsgroup
-                ui->m_type = UN_VGROUP;
+                ui->m_state = UIS_NORMAL;
             }
         }
         return;
@@ -509,10 +508,10 @@ static void univ_use_pattern(const char *pattern, int type)
         case 0:
             for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->m_type == UN_NEWSGROUP && ui->m_data.group.ng //
+                if (ui->m_type == UN_NEWSGROUP && ui->m_state == UIS_NORMAL && ui->m_data.group.ng //
                     && univ_do_match(ui->m_data.group.ng, s))
                 {
-                    ui->m_type = UN_GROUP_DESEL;
+                    ui->m_state = UIS_DESELECTED;
                 }
             }
             break;
@@ -520,10 +519,10 @@ static void univ_use_pattern(const char *pattern, int type)
         case 1:
             for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->m_type == UN_VGROUP && ui->m_data.vgroup.ng //
+                if (ui->m_type == UN_VGROUP && ui->m_state == UIS_NORMAL && ui->m_data.vgroup.ng //
                     && univ_do_match(ui->m_data.vgroup.ng, s))
                 {
-                    ui->m_type = UN_VGROUP_DESEL;
+                    ui->m_state = UIS_DESELECTED;
                 }
             }
             break;
@@ -1183,6 +1182,10 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             // later consider cleaning up the remains
             break;
         }
+        if (ui->m_state != UIS_NORMAL)
+        {
+            continue;
+        }
         switch (ui->m_type)
         {
         case UN_VGROUP:
@@ -1199,9 +1202,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             (void)visit_group(ui->m_data.vgroup.ng);
             s_univ_use_min_score = false;
             // later do something with return value
-            univ_free_data(ui);
-            safe_free(ui->m_desc);
-            ui->m_type = UN_DELETED;
+            ui->m_state = UIS_DELETED;
             break;
 
         case UN_ARTICLE:
