@@ -350,24 +350,6 @@ matching declaration as needed.  The list is ordered from simpler local
 helpers toward callers that can pass string views through once lower
 helpers accept them.
 
-### Memory Pool Removal Slices
-
-These slices remove the remaining DOS-era memory-pool storage.  The pool
-currently provides bulk reset and stable `char *` addresses, but it no
-longer buys useful memory savings.  Replace each pool with normal owner
-containers, then delete the pool implementation.
-
-#### Delete Memory Pool Library
-
-- Files: `libtrn/mempool.cpp`, `libtrn/include/trn/mempool.h`,
-  `libtrn/CMakeLists.txt`, tests that call `mp_init`.
-- Finding: after the scorefile and sathread pools are gone, no useful
-  memory-pool callers remain.
-- Change: remove `mempool.cpp`, `mempool.h`, `MemoryPool`, `mp_init`,
-  `mp_save_str`, `mp_malloc`, and `mp_free`.
-- Data flow: remove startup and test initialization calls that only
-  existed to initialize the pool.
-
 ### Libfmt Formatting Slices
 
 These slices are prepended before more string-building work.  Start with

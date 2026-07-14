@@ -232,7 +232,6 @@ void InterpolatorTest::SetUp()
 
     g_our_pid = m_test_pid;
     term_init();
-    mp_init();
     search_init();
     set_envars(m_env);
     m_env.expect_no_envars({"KILLGLOBAL", "KILLTHREADS", "MAILCAPS", "MIMECAPS", "NETSPEED", "NNTP_FORCE_AUTH",

@@ -7,7 +7,6 @@
 #include <trn/cache.h>
 #include <trn/head.h>
 #include <trn/init.h>
-#include <trn/mempool.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/Subject.h>
@@ -65,7 +64,6 @@ protected:
         m_old_term_col = g_term_col;
         m_old_term_scrolled = g_term_scrolled;
 
-        mp_init();
         head_init();
         g_tmp_dir = TRN_TEST_TMP_DIR;
         g_our_pid = 1357;

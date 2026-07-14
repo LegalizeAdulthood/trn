@@ -12,7 +12,6 @@
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
-#include <trn/mempool.h>
 #include <trn/ng.h>
 #include <trn/nntp.h>
 #include <trn/rt-process.h>

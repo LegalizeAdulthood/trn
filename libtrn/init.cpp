@@ -23,7 +23,6 @@
 #include <trn/intrp.h>
 #include <trn/kfile.h>
 #include <trn/last.h>
-#include <trn/mempool.h>
 #include <trn/mime.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
@@ -80,8 +79,6 @@ bool initialize(int argc, char *argv[])
                                         // ospeed is set for baud-rate
                                         // switches.  Actually terminal
                                         // mode setting is in term_set()
-    mp_init();
-
     // init syntax etc. for searching (must also precede opt_init())
 
     search_init();

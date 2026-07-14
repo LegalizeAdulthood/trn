@@ -7,7 +7,6 @@
 
 #include <config/typedef.h>
 #include <trn/enum-flags.h>
-#include <trn/mempool.h>
 
 #include <cstdint>
 #include <string>

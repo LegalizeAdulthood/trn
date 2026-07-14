@@ -31,7 +31,6 @@ add_library(libtrn
     intrp.cpp include/trn/intrp.h
     kfile.cpp include/trn/kfile.h
     last.cpp include/trn/last.h
-    mempool.cpp include/trn/mempool.h
     mime.cpp include/trn/mime.h include/trn/mime-internal.h
     ng.cpp include/trn/ng.h
     ngdata.cpp include/trn/ngdata.h
