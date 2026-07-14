@@ -60,13 +60,13 @@ static KillFileStateFlags s_kill_file_state_local_change_clear{}; // bits to cle
 static int                s_kill_file_thread_cnt{};               // # entries in the thread kfile
 static long               s_kill_file_day_num{};                  // day number for thread killfile
 static bool               s_exit_cmds{};
-static char               s_thread_cmd_ltr[] = "JK,j+S.m";
+static constexpr char     s_thread_cmd_ltr[] = "JK,j+S.m";
 static AutoKillFlags      s_thread_cmd_flag[]{
     AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
 };
-static char       s_kill_global[] = KILL_GLOBAL;
-static char       s_kill_local[] = KILL_LOCAL;
-static char       s_kill_threads[] = KILL_THREADS;
+static constexpr char s_kill_global[] = KILL_GLOBAL;
+static constexpr char s_kill_local[] = KILL_LOCAL;
+static constexpr char s_kill_threads[] = KILL_THREADS;
 static bool       s_kill_mentioned;
 static std::FILE *s_new_kill_file_fp{};
 
@@ -77,7 +77,7 @@ inline long kill_file_day_num(long x)
 
 void kill_file_init()
 {
-    char* kill_threads = get_val("KILLTHREADS");
+    const char *kill_threads = get_val("KILLTHREADS");
     if (!kill_threads)
     {
         kill_threads = s_kill_threads;
@@ -108,7 +108,7 @@ void kill_file_init()
                         g_kf_change_thread_cnt++;
                         continue;
                     }
-                    char* thread_cmd = std::strchr(s_thread_cmd_ltr, *cmd);
+                    const char *thread_cmd = std::strchr(s_thread_cmd_ltr, *cmd);
                     if (thread_cmd != nullptr)
                     {
                         int auto_flag = s_thread_cmd_flag[thread_cmd - s_thread_cmd_ltr];

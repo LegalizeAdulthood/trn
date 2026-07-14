@@ -358,6 +358,19 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
+FB-01. `util/util2.cpp`, `file_exp`: replace the
+`PASSWORD_FILE` fallback `tmpbuf[512]` and `fgets` loop with owned
+`std::string` line reading.  The 512-byte truncation is arbitrary passwd
+line truncation, not meaningful behavior.  Add host-independent
+coverage for the `~user` passwd-file fallback before refactoring.
+
+FB-02. `libtrn/ngstuff.cpp`, `switcheroo`: replace the
+`tmp_buf[LINE_BUF_LEN + 16]` buffer used for `&` option parsing with
+owned `std::string` storage.  Use mutable string storage only while
+calling `sw_list` or constructing the raw `IniDocument`.  The fixed
+buffer size is arbitrary because the input is already bounded by
+`g_buf`.
+
 ### Global String Storage Slices
 
 These slices replace owned global or file-scope `char *` storage with
@@ -375,6 +388,16 @@ when null and empty are distinct states.
 These slices are prepended to remove the current Ubuntu build warnings.
 Prefer `std::string_view` or `std::string`.  Use `const char *` only
 where a null sentinel or legacy C API makes a view a poor fit.
+
+UW-01. `tool/util3.cpp`: make the file-scope `s_no_memory` literal
+storage const.  It is only passed to `fputs`.
+
+UW-02. `libtrn/util.cpp`: make the file-scope `s_no_memory` literal
+storage const.  Leave `s_null_export` mutable because other file-scope
+exports point into it.
+
+UW-03. `libtrn/respond.cpp`: make the file-scope `s_empty_article`
+literal storage const.  It is only passed to `fputs`.
 
 ### Static-Linkage Slices
 
