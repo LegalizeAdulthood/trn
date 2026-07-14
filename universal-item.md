@@ -1,0 +1,325 @@
+<!-- Copyright (c) 2026, Richard Thomson -->
+
+# Universal Item Refactor Plan
+
+## Goal
+
+Modernize `UniversalItem` now that selector state is no longer encoded in
+`UniversalItemType`.  Keep each change small, reviewable, and behavior
+preserving.  Remove each slice from this plan when it is complete.
+
+## Current Shape
+
+`UniversalItem` still stores payloads in the `UniversalData` union and owns
+most payload strings through raw `char *` fields.  Items are stored as an
+intrusive global doubly linked list rooted at `g_first_univ` and
+`g_last_univ`.
+
+`UniversalItemType` now describes the payload kind only.
+`UniversalItemState` tracks normal, deselected, and deleted selector state.
+
+## Target Shape
+
+`UniversalItem` should own modern C++ payload storage.  Payload
+alternatives should be type-safe, string ownership should be explicit, and
+normal traversal should use a standard container instead of list links
+embedded in the item.
+
+Selector flags remain flags.  They are independent bookkeeping, not a
+replacement for item state.
+
+## Refactoring Rules
+
+- Add tests before refactoring behavior that is not already covered.
+- Prefer explicit types instead of `auto` unless the type is repeated.
+- Do not add wrappers unless the same slice converts callers to use them.
+- Do not introduce hidden global state or function-local static state.
+- Preserve behavior before simplifying ownership or traversal.
+- Use empty strings instead of optional values when empty has no meaning.
+- Avoid changing formatting outside touched lines.
+
+## Implementation Slices
+
+### 1. Add News Group Payload Accessors
+
+- Target: `UN_NEWSGROUP` payload use.
+- Change: add typed accessors for `UniversalNewsgroup`.
+- Data flow: callers read and write only `m_data.group.ng`.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 2. Use News Group Payload Accessors
+
+- Target: direct `m_data.group` access sites.
+- Change: replace direct news group payload access with the new accessors.
+- Data flow: `univ_add_group`, group-mask restore, selector display, and
+  paging feed the group name into newsgroup lookup and matching code.
+- Risk: medium; group names flow into matching, paging, and display.
+- Verification: focused universal tests and normal workflow.
+
+### 3. Add Virtual Group Payload Accessors
+
+- Target: `UN_VGROUP` payload use.
+- Change: add typed accessors for `UniversalVirtualGroup`.
+- Data flow: callers read and write `ng`, score limits, and virtual group
+  flags.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 4. Use Virtual Group Payload Accessors
+
+- Target: direct `m_data.vgroup` access sites.
+- Change: replace direct virtual group payload access with the new
+  accessors.
+- Data flow: virtual group masks, virtual pass expansion, and minimum score
+  handling pass names and score flags into article discovery.
+- Risk: medium; virtual pass expansion depends on these fields.
+- Verification: focused universal tests and normal workflow.
+
+### 5. Add Article Payload Accessors
+
+- Target: `UN_ARTICLE` payload use.
+- Change: add typed accessors for `UniversalVirtualData`.
+- Data flow: callers read and write article newsgroup, message id, author,
+  subject, and article number.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 6. Use Article Payload Accessors
+
+- Target: direct `m_data.virt` access sites.
+- Change: replace direct article payload access with the new accessors.
+- Data flow: article payload values flow into read-status checks, display,
+  virtual pass fill-in, and article description generation.
+- Risk: medium; article display and read-state checks are user visible.
+- Verification: focused universal tests and normal workflow.
+
+### 7. Add Config File Payload Accessors
+
+- Target: `UN_CONFIG_FILE` payload use.
+- Change: add typed accessors for `UniversalConfigFileData`.
+- Data flow: callers read and write title, file name, and label.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 8. Use Config File Payload Accessors
+
+- Target: direct `m_data.cfile` access sites.
+- Change: replace direct config-file payload access with the new accessors.
+- Data flow: colon-path expansion and file loading pass the file name and
+  label into recursive universal file reads.
+- Risk: medium; path and label behavior must stay unchanged.
+- Verification: focused universal tests and normal workflow.
+
+### 9. Add Group Mask Payload Accessors
+
+- Target: `UN_GROUP_MASK` payload use.
+- Change: add typed accessors for `UniversalGroupMaskData`.
+- Data flow: callers read and write mask title and mask list.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 10. Use Group Mask Payload Accessors
+
+- Target: direct `m_data.gmask` access sites.
+- Change: replace direct group-mask payload access with the new accessors.
+- Data flow: mask strings flow into `univ_use_pattern` and group inclusion
+  or exclusion.
+- Risk: medium; mask behavior drives which items are visible.
+- Verification: focused universal tests and normal workflow.
+
+### 11. Add Text File Payload Accessors
+
+- Target: `UN_TEXT_FILE` payload use.
+- Change: add typed accessors for `UniversalTextFile`.
+- Data flow: callers read and write the text file name.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 12. Use Text File Payload Accessors
+
+- Target: direct `m_data.text_file` access sites.
+- Change: replace direct text-file payload access with the new accessors.
+- Data flow: file names flow into text file paging.
+- Risk: medium; file name expansion and paging must stay unchanged.
+- Verification: focused universal tests and normal workflow.
+
+### 13. Add Debug Payload Accessors
+
+- Target: `UN_DEBUG1` payload use.
+- Change: add typed accessors for the debug string payload.
+- Data flow: callers read and write only `m_data.str`.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 14. Use Debug Payload Accessors
+
+- Target: direct `m_data.str` access sites.
+- Change: replace direct debug string payload access with the new
+  accessors.
+- Data flow: debug text flows only to display and cleanup.
+- Risk: low; debug payload behavior is isolated.
+- Verification: focused universal tests and normal workflow.
+
+### 15. Add Help Key Payload Accessors
+
+- Target: `UN_HELP_KEY` payload use.
+- Change: add typed accessors for the help location payload.
+- Data flow: callers read and write `m_data.i`.
+- Risk: low; this is a narrow access indirection.
+- Verification: focused universal tests and normal workflow.
+
+### 16. Use Help Key Payload Accessors
+
+- Target: direct `m_data.i` access sites.
+- Change: replace direct help-key payload access with the new accessors.
+- Data flow: help location flows into help mode display.
+- Risk: low; behavior is localized to help-key entries.
+- Verification: focused universal tests and normal workflow.
+
+### 17. Convert News Group Payload Strings
+
+- Target: `UniversalNewsgroup`.
+- Change: replace `char *ng` with `std::string ng`.
+- Data flow: group names are consumed by matching, lookup, display, and
+  paging.
+- Risk: medium; do not let local string storage escape.
+- Verification: focused universal tests and normal workflow.
+
+### 18. Convert Virtual Group Payload Strings
+
+- Target: `UniversalVirtualGroup`.
+- Change: replace `char *ng` with `std::string ng`.
+- Data flow: virtual group names are consumed by matching and virtual pass
+  expansion.
+- Risk: medium; virtual pass must not store pointers into temporary
+  strings.
+- Verification: focused universal tests and normal workflow.
+
+### 19. Convert Article Payload Strings
+
+- Target: `UniversalVirtualData`.
+- Change: replace `char *` fields with `std::string` fields.
+- Data flow: article newsgroup, message id, author, and subject feed
+  display, read-state checks, and virtual article expansion.
+- Risk: high; several fields have old null-versus-empty behavior.
+- Verification: focused universal tests and normal workflow.
+
+### 20. Convert Config File Payload Strings
+
+- Target: `UniversalConfigFileData`.
+- Change: replace `char *` fields with `std::string` fields.
+- Data flow: title, file name, and label feed recursive universal file
+  loading.
+- Risk: medium; empty label and missing label semantics must be preserved.
+- Verification: focused universal tests and normal workflow.
+
+### 21. Convert Group Mask Payload Strings
+
+- Target: `UniversalGroupMaskData`.
+- Change: replace `char *` fields with `std::string` fields.
+- Data flow: mask title and mask list feed group mask expansion.
+- Risk: medium; empty masks must keep current behavior.
+- Verification: focused universal tests and normal workflow.
+
+### 22. Convert Text File Payload String
+
+- Target: `UniversalTextFile`.
+- Change: replace `char *fname` with `std::string fname`.
+- Data flow: text file name flows into file expansion and pager invocation.
+- Risk: medium; file name lifetime and expansion behavior are user visible.
+- Verification: focused universal tests and normal workflow.
+
+### 23. Convert Debug Payload String
+
+- Target: debug string payload.
+- Change: replace the union debug `char *` with an owned `std::string` in
+  its eventual payload alternative.
+- Data flow: debug string flows only to display and cleanup.
+- Risk: low; behavior is isolated.
+- Verification: focused universal tests and normal workflow.
+
+### 24. Convert Universal Item Description
+
+- Target: `UniversalItem::m_desc`.
+- Change: replace `char *m_desc` with `std::string m_desc`.
+- Data flow: descriptions are used by display, article descriptions, and
+  several universal item constructors.
+- Risk: high; many call sites distinguish missing description from text.
+- Verification: focused universal tests and normal workflow.
+
+### 25. Convert Universal Data To Variant
+
+- Target: `UniversalData`.
+- Change: replace the union with `std::variant` alternatives.
+- Data flow: payload accessors become the only read and write path.
+- Risk: high; the temporary invariant is that `m_type` and the active
+  variant alternative agree.
+- Verification: focused universal tests and normal workflow.
+
+### 26. Derive Type From Variant
+
+- Target: `UniversalItem::m_type`.
+- Change: replace direct type storage with a `type()` helper or variant
+  predicate.
+- Data flow: type checks drive cleanup, paging, display, and virtual pass
+  expansion.
+- Risk: high; all type switches must keep the same behavior.
+- Verification: focused universal tests and normal workflow.
+
+### 27. Convert Universal Iteration Helpers
+
+- Target: traversal in `univ.cpp`.
+- Change: add range-style helpers over the current list and convert one
+  traversal cluster in `univ.cpp`.
+- Data flow: add, close, mask, sort, and virtual pass code all traverse the
+  global item collection.
+- Risk: medium; traversal order must stay unchanged.
+- Verification: focused universal tests and normal workflow.
+
+### 28. Convert Selector Iteration Helpers
+
+- Target: traversal in `rt-page.cpp`.
+- Change: convert universal selector traversal clusters to the range
+  helpers.
+- Data flow: paging, display, selection counts, and navigation consume the
+  item collection.
+- Risk: high; selector navigation is user visible.
+- Verification: focused universal tests and normal workflow.
+
+### 29. Replace Selector Pointer Positions
+
+- Target: `g_sel_page_univ` and `g_sel_next_univ`.
+- Change: replace global item pointers with stable indices or handles.
+- Data flow: selector paging stores positions across traversal and display.
+- Risk: high; invalid handles can break navigation after sorting.
+- Verification: focused universal tests and normal workflow.
+
+### 30. Replace Intrusive Item List Storage
+
+- Target: `g_first_univ`, `g_last_univ`, `m_next`, and `m_prev`.
+- Change: store universal items in `std::vector<UniversalItem>`.
+- Data flow: all universal item creation, traversal, sorting, display, and
+  paging use the same collection.
+- Risk: high; pointer stability, sorting, and selector position tracking
+  must already be solved.
+- Verification: focused universal tests and normal workflow.
+
+### 31. Simplify Universal Item Cleanup
+
+- Target: manual payload cleanup.
+- Change: remove cleanup paths made obsolete by strings and variant
+  payloads.
+- Data flow: `univ_close`, deleted virtual groups, and normal teardown all
+  rely on automatic storage cleanup.
+- Risk: medium; avoid changing lifetime of still-active selected items.
+- Verification: focused universal tests and normal workflow.
+
+### 32. Remove Transitional Helpers
+
+- Target: temporary payload/type compatibility helpers.
+- Change: delete assertions, bridges, and compatibility helpers no longer
+  needed after variant and vector storage are complete.
+- Data flow: no runtime data flow should remain through transitional APIs.
+- Risk: low; this should be mechanical after prior slices.
+- Verification: focused universal tests and normal workflow.
