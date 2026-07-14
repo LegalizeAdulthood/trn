@@ -361,15 +361,6 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
-#### `mp_fetch_lines` Pool Path
-
-- Files: `libtrn/head.cpp`.
-- Finding: pool-owned header text duplicates the header span extraction
-  used by `fetch_lines`.
-- Change: keep the memory-pool interface, but build header text through
-  the shared span/string helper.
-- Data flow: returned storage remains pool-owned.
-
 #### `read_auth_file` Password
 
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.

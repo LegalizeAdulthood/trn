@@ -104,7 +104,6 @@ static void        end_header_line();
 static bool        header_line_span(HeaderLineType which_line, char *&line, int &size);
 static std::string current_header_line_text(HeaderLineType which_line);
 static void        copy_current_header_line(HeaderLineType which_line, char *dest, int dest_size);
-static char       *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool);
 
 void head_init()
 {
@@ -601,35 +600,6 @@ std::string fetch_lines(ArticleNum art_num, HeaderLineType which_line)
         return {};
     }
     return header_line_text(line, size);
-}
-
-// (strn) like fetch_lines, but for memory pools
-// ArticleNum art_num           article to get line from
-// HeaderLineType which_line    type of line desired
-// MemoryPool pool              which memory pool to use
-static char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool)
-{
-    char *s;
-
-    // Only return a cached line if it isn't the current article
-    if (g_parsed_art != art_num)
-    {
-        // If the line is not in the cache, this will parse the header
-        const char *cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
-        if (cached_line)
-        {
-            return mp_save_str(cached_line, pool);
-        }
-    }
-    char *t;
-    int   size;
-    if (!header_line_span(which_line, t, size))
-    {
-        return mp_save_str("", pool);
-    }
-    s = mp_malloc(size, pool);
-    safe_copy(s, t, size);
-    return s;
 }
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
