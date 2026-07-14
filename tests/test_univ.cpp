@@ -87,6 +87,10 @@ UniversalItem *make_universal_item(UniversalItemType type)
     {
         new (&item->m_data.virt) UniversalVirtualData{};
     }
+    else if (type == UN_CONFIG_FILE)
+    {
+        new (&item->m_data.cfile) UniversalConfigFileData{};
+    }
     return item;
 }
 
@@ -237,7 +241,7 @@ TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
     EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->m_type);
     EXPECT_STREQ("Child", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(child_name), g_first_univ->config_file().fname);
-    EXPECT_EQ(nullptr, g_first_univ->config_file().label);
+    EXPECT_TRUE(g_first_univ->config_file().label.empty());
 }
 
 TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
@@ -250,5 +254,5 @@ TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
     EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->m_type);
     EXPECT_STREQ("Child", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(child_name), g_first_univ->config_file().fname);
-    EXPECT_STREQ("chapter", g_first_univ->config_file().label);
+    EXPECT_EQ("chapter", g_first_univ->config_file().label);
 }

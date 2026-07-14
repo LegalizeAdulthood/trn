@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 20. Convert Config File Payload Strings
-
-- Target: `UniversalConfigFileData`.
-- Change: replace `char *` fields with `std::string` fields.
-- Data flow: title, file name, and label feed recursive universal file
-  loading.
-- Risk: medium; empty label and missing label semantics must be preserved.
-- Verification: focused universal tests and normal workflow.
-
 ### 21. Convert Group Mask Payload Strings
 
 - Target: `UniversalGroupMaskData`.

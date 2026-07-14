@@ -933,8 +933,9 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_CONFIG_FILE:
     {
-        univ_file_load(ui->m_data.cfile.fname,ui->m_data.cfile.title,
-                       ui->m_data.cfile.label);
+        const UniversalConfigFileData &config_file = ui->config_file();
+        univ_file_load(config_file.fname.c_str(), config_file.title.c_str(),
+                       config_file.label.empty() ? nullptr : config_file.label.c_str());
         ch = universal_selector();
         switch (ch)
         {

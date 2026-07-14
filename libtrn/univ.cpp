@@ -224,6 +224,10 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     {
         new (&node->m_data.virt) UniversalVirtualData{};
     }
+    else if (type == UN_CONFIG_FILE)
+    {
+        new (&node->m_data.cfile) UniversalConfigFileData{};
+    }
     node->m_next = nullptr;
     node->m_prev = g_last_univ;
     if (g_last_univ)
@@ -266,13 +270,8 @@ static void univ_free_data(UniversalItem *ui)
     }
 
     case UN_CONFIG_FILE:
-    {
-        UniversalConfigFileData &config_file = ui->config_file();
-        safe_free(config_file.title);
-        safe_free(config_file.fname);
-        safe_free(config_file.label);
+        ui->config_file().~UniversalConfigFileData();
         break;
-    }
 
     case UN_NEWSGROUP:
         ui->group().~UniversalNewsgroup();
@@ -367,15 +366,11 @@ static void univ_add_file(const char *desc, const char *fname, const char *label
 {
     UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
     UniversalConfigFileData &config_file = ui->config_file();
-    config_file.title = save_str(desc);
-    config_file.fname = save_str(fname);
+    config_file.title = desc;
+    config_file.fname = fname;
     if (label && *label)
     {
-        config_file.label = save_str(label);
-    }
-    else
-    {
-        config_file.label = nullptr;
+        config_file.label = label;
     }
 }
 

@@ -50,9 +50,9 @@ struct UniversalGroupMaskData
 
 struct UniversalConfigFileData
 {
-    char *title;
-    char *fname;
-    char *label;
+    std::string title;
+    std::string fname;
+    std::string label;
 };
 
 struct UniversalVirtualData
