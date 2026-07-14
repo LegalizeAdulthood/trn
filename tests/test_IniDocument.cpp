@@ -137,6 +137,47 @@ TEST(IniDocumentTest, parsesSectionValuesFromSectionBody)
     EXPECT_EQ(std::string_view{"two"}, *beta);
 }
 
+TEST(IniDocumentTest, parsesRangeSectionValues)
+{
+    IniDocument     document{"[test]\n"
+                             "Alpha Key = one\n"
+                             "Empty Key = # comment\n"
+                             "Unknown Key = ignored\n",
+                             "test input"};
+    const IniSchema schema{
+        "test", {IniField::value(TEST_FIELD_ALPHA, "Alpha Key"), IniField::value(TEST_FIELD_EMPTY, "Empty Key")}};
+    IniSectionValues values;
+
+    const IniSection section = *document.begin();
+
+    testing::internal::CaptureStdout();
+    const bool        parsed = parse_ini_section(section, schema, values);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(parsed);
+    expect_value(values, TEST_FIELD_ALPHA, "one");
+    EXPECT_FALSE(values.contains(TEST_FIELD_EMPTY));
+    EXPECT_NE(std::string::npos, output.find("Unknown option: `Unknown Key'."));
+}
+
+TEST(IniDocumentTest, rangeSectionWithoutValuesClearsValues)
+{
+    IniDocument     document{"[first]\nAlpha Key = one\n[second]\nEmpty Key = # comment\n", "test input"};
+    const IniSchema schema{
+        "test", {IniField::value(TEST_FIELD_ALPHA, "Alpha Key"), IniField::value(TEST_FIELD_EMPTY, "Empty Key")}};
+    IniSectionValues values;
+
+    IniDocument::Iterator iterator = document.begin();
+    ASSERT_NE(document.end(), iterator);
+    ASSERT_TRUE(parse_ini_section(*iterator, schema, values));
+    EXPECT_TRUE(values.contains(TEST_FIELD_ALPHA));
+
+    ++iterator;
+    ASSERT_NE(document.end(), iterator);
+    EXPECT_FALSE(parse_ini_section(*iterator, schema, values));
+    EXPECT_EQ(0U, values.size());
+}
+
 TEST(IniDocumentTest, normalizesParsedValues)
 {
     IniDocument     document{"[test]\n"

@@ -11,6 +11,7 @@
 #include <trn/datasrc.h>
 #include <trn/final.h>
 #include <trn/IniDocument.h>
+#include <trn/IniSection.h>
 #include <trn/IniSectionValues.h>
 #include <trn/intrp.h>
 #include <trn/search.h>
@@ -806,6 +807,29 @@ char *parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &val
                                       values.set(*field, std::string_view{value});
                                       return true;
                                   });
+}
+
+bool parse_ini_section(const IniSection &section, const IniSchema &schema, IniSectionValues &values)
+{
+    values.reset();
+    bool saw_value = false;
+    for (const IniSetting setting : section)
+    {
+        const std::string value = setting.value();
+        if (value.empty())
+        {
+            continue;
+        }
+        saw_value = true;
+        const IniField *field = schema.find(setting.name());
+        if (field == nullptr)
+        {
+            fmt::print("Unknown option: `{}'.\n", setting.name());
+            continue;
+        }
+        values.set(*field, value);
+    }
+    return saw_value;
 }
 
 bool check_ini_cond(char *cond)

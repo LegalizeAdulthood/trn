@@ -101,12 +101,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-6. Add a range-based `parse_ini_section` overload.
-
-   Accept `const IniSection &`, iterate settings with range-for, look up
-   each setting name through `IniSchema`, and store `setting.value()` in
-   `IniSectionValues`.
-
 7. Convert `read_data_sources`.
 
    Use range-for over `IniDocument`.  Check `section.condition()`, skip
