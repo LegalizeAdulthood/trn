@@ -15,7 +15,7 @@
 class OptionCatalog
 {
 public:
-    static const OptionCatalog &instance();
+    OptionCatalog();
 
     const IniSchema &schema() const;
     int              first_row() const;
@@ -32,8 +32,6 @@ public:
     int              previous_group_row(int row) const;
 
 private:
-    OptionCatalog();
-
     IniSchema        m_schema;
     std::vector<int> m_rows_by_option;
 };

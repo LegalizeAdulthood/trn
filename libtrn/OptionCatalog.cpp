@@ -133,13 +133,6 @@ OptionCatalog::OptionCatalog() :
     }
 }
 
-const OptionCatalog &OptionCatalog::instance()
-{
-    static const OptionCatalog catalog;
-
-    return catalog;
-}
-
 std::string_view OptionCatalog::help(OptionIndex option) const
 {
     const int row = row_for(option);

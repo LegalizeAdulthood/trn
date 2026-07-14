@@ -10,7 +10,7 @@
 
 TEST(OptionCatalogTest, schemaRecognizesOptionsByName)
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    const OptionCatalog catalog;
     const IniSchema     &schema = catalog.schema();
 
     const IniField *terse = schema.find("terse output");
@@ -25,7 +25,7 @@ TEST(OptionCatalogTest, schemaRecognizesOptionsByName)
 
 TEST(OptionCatalogTest, displayRowsPreserveGroups)
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    const OptionCatalog catalog;
 
     EXPECT_EQ(95, catalog.row_count());
     EXPECT_EQ(96, catalog.option_limit());
@@ -39,7 +39,7 @@ TEST(OptionCatalogTest, displayRowsPreserveGroups)
 
 TEST(OptionCatalogTest, mapsOptionIndexesToDisplayRows)
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    const OptionCatalog catalog;
 
     EXPECT_EQ(2, catalog.row_for(OI_TERSE_OUTPUT));
     EXPECT_EQ(32, catalog.row_for(OI_USE_THREADS));
@@ -50,7 +50,7 @@ TEST(OptionCatalogTest, mapsOptionIndexesToDisplayRows)
 
 TEST(OptionCatalogTest, findsPreviousGroupForOptionRows)
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    const OptionCatalog catalog;
 
     EXPECT_EQ(1, catalog.previous_group_row(2));
     EXPECT_EQ(31, catalog.previous_group_row(44));

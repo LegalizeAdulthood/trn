@@ -804,7 +804,7 @@ try_again:
     case SM_OPTIONS:
     {
         int included = 0;
-        const OptionCatalog &catalog = OptionCatalog::instance();
+        const OptionCatalog catalog;
         g_obj_count = ArticleNum{};
         for (int op = catalog.first_row(); op <= catalog.row_count(); op++)
         {
@@ -2283,8 +2283,8 @@ start_of_loop:
     }
     else if (g_sel_mode == SM_OPTIONS)
     {
-        int                  op = g_sel_page_op;
-        const OptionCatalog &catalog = OptionCatalog::instance();
+        int                 op = g_sel_page_op;
+        const OptionCatalog catalog;
         for (; op <= g_obj_count.value_of() && g_sel_page_item_cnt < s_sel_max_per_page; op++)
         {
             if (!(g_option_flags[op] & OF_INCLUDED))
@@ -2489,7 +2489,7 @@ void update_page()
 
         case SM_OPTIONS:
         {
-            const OptionCatalog &catalog = OptionCatalog::instance();
+            const OptionCatalog catalog;
             const int row = static_cast<int>(u.op);
             if (catalog.is_group(row))
             {
@@ -2813,12 +2813,12 @@ static void display_subject(const Subject *subj, int ix, int sel)
 
 void display_option(int op, int item_index)
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
-    std::size_t      len;
-    std::string_view pre;
-    std::string_view item;
-    std::string_view post;
-    std::string_view val;
+    const OptionCatalog catalog;
+    std::size_t         len;
+    std::string_view    pre;
+    std::string_view    item;
+    std::string_view    post;
+    std::string_view    val;
     if (catalog.is_group(op))
     {
         item = catalog.name(op);

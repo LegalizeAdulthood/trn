@@ -106,7 +106,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     interp(*tcbufptr, TCBUF_SIZE, GLOBAL_INIT);
     opt_file(*tcbufptr, tcbufptr, false);
 
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    const OptionCatalog catalog;
     const int            len = catalog.option_limit();
     g_option_def_vals = (char **) safe_malloc(len * sizeof(char *));
     std::memset((char *) g_option_def_vals, 0, len * sizeof(char *));
@@ -207,7 +207,7 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat)
             if (section_name == "options")
             {
                 IniSectionValues values;
-                parse_ini_section(section, OptionCatalog::instance().schema(), values);
+                parse_ini_section(section, OptionCatalog().schema(), values);
                 OptionApplier{}.apply(values);
             }
             else if (section_name == "environment")
@@ -928,7 +928,7 @@ void save_options(const char *filename)
         std::fprintf(fp_out, "%sRNINIT = ''\n\n", t);
     }
     std::fprintf(fp_out,"[options]\n");
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    const OptionCatalog catalog;
     for (int row = catalog.first_row(); row <= catalog.row_count(); row++)
     {
         if (catalog.is_group(row))

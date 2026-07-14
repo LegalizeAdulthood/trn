@@ -25,7 +25,7 @@ OptionApplier::OptionApplier(ApplyOne apply_one) :
 
 void OptionApplier::apply(const IniSectionValues &values) const
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    const OptionCatalog catalog;
     for (int row = catalog.first_row(); row <= catalog.row_count(); ++row)
     {
         if (catalog.is_option(row))

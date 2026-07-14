@@ -744,10 +744,10 @@ sel_restart:
 ///
 char option_selector()
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
-    OptionDraft       draft{static_cast<std::size_t>(catalog.row_count() + 1)};
-    OptionDraft      *saved_draft = g_option_draft;
-    PushSelectorModes saver(MM_OPTION_SELECTOR);
+    const OptionCatalog catalog;
+    OptionDraft         draft{static_cast<std::size_t>(catalog.row_count() + 1)};
+    OptionDraft        *saved_draft = g_option_draft;
+    PushSelectorModes   saver(MM_OPTION_SELECTOR);
 
     g_option_draft = &draft;
     g_sel_rereading = false;
@@ -1830,7 +1830,7 @@ static bool select_item(Selection u)
 
     case SM_OPTIONS:
         if (!select_option(u.op) //
-            || !option_draft_contains(OptionCatalog::instance().option(static_cast<int>(u.op))))
+            || !option_draft_contains(OptionCatalog().option(static_cast<int>(u.op))))
         {
             return false;
         }
@@ -1971,7 +1971,7 @@ static bool deselect_item(Selection u)
 
     case SM_OPTIONS:
         if (!select_option(u.op) //
-            || option_draft_contains(OptionCatalog::instance().option(static_cast<int>(u.op))))
+            || option_draft_contains(OptionCatalog().option(static_cast<int>(u.op))))
         {
             return false;
         }
@@ -2023,9 +2023,9 @@ static bool deselect_item(Selection u)
 ///
 static bool select_option(OptionIndex i)
 {
-    bool changed = false;
-    const int row = static_cast<int>(i);
-    const OptionCatalog &catalog = OptionCatalog::instance();
+    bool                changed = false;
+    const int           row = static_cast<int>(i);
+    const OptionCatalog catalog;
     if (g_option_draft == nullptr)
     {
         return false;
@@ -3918,7 +3918,7 @@ static DisplayState option_commands(char_int ch)
             std::strcpy(g_msg,compile_error);
             return DS_STATUS;
         }
-        const OptionCatalog &catalog = OptionCatalog::instance();
+        const OptionCatalog catalog;
         int i = g_sel_items[g_sel_item_index].u.op;
         int j = g_sel_items[g_sel_item_index].u.op;
         do

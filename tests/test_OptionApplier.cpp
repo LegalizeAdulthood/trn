@@ -56,10 +56,10 @@ TEST_F(OptionApplierTest, appliesOneOptionThroughSink)
 
 TEST_F(OptionApplierTest, appliesSectionValuesByOptionIndex)
 {
-    const OptionCatalog &catalog = OptionCatalog::instance();
-    IniSectionValues     values;
-    const IniField      *terse = catalog.schema().find("Terse Output");
-    const IniField      *threads = catalog.schema().find("Use Threads");
+    const OptionCatalog catalog;
+    IniSectionValues    values;
+    const IniField     *terse = catalog.schema().find("Terse Output");
+    const IniField     *threads = catalog.schema().find("Use Threads");
     ASSERT_NE(nullptr, terse);
     ASSERT_NE(nullptr, threads);
     ASSERT_TRUE(values.set(*terse, "no"));
@@ -77,7 +77,7 @@ TEST_F(OptionApplierTest, appliesSectionValuesByOptionIndex)
 
 TEST_F(OptionApplierTest, appliesDraftEditsByOptionIndex)
 {
-    OptionDraft draft{static_cast<std::size_t>(OptionCatalog::instance().option_limit())};
+    OptionDraft draft{static_cast<std::size_t>(OptionCatalog().option_limit())};
     draft.set(OI_ERASE_SCREEN, "yes");
     draft.set(OI_USE_THREADS, "no");
 

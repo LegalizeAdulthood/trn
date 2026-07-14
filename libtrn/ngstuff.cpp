@@ -165,7 +165,7 @@ bool switcheroo()
             for (const IniSection section : document)
             {
                 IniSectionValues values;
-                parse_ini_section(section, OptionCatalog::instance().schema(), values);
+                parse_ini_section(section, OptionCatalog().schema(), values);
                 OptionApplier{}.apply(values);
                 break;
             }
