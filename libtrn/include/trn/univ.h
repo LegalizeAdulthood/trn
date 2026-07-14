@@ -75,7 +75,7 @@ DECLARE_FLAGS_ENUM(VirtualGroupFlags, std::uint8_t);
 
 struct UniversalVirtualGroup
 {
-    char             *ng;
+    std::string       ng;
     int               min_score;
     int               max_score;
     VirtualGroupFlags flags;

@@ -79,6 +79,10 @@ UniversalItem *make_universal_item(UniversalItemType type)
     {
         new (&item->m_data.group) UniversalNewsgroup{};
     }
+    else if (type == UN_VGROUP)
+    {
+        new (&item->m_data.vgroup) UniversalVirtualGroup{};
+    }
     return item;
 }
 
@@ -93,7 +97,7 @@ UniversalItem *make_virtual_group(std::string_view group_name)
 {
     UniversalItem *item = make_universal_item(UN_VGROUP);
     UniversalVirtualGroup &vgroup = item->vgroup();
-    vgroup.ng = save_str(group_name);
+    vgroup.ng = group_name;
     vgroup.min_score = 0;
     vgroup.max_score = 0;
     vgroup.flags = UF_VG_NONE;

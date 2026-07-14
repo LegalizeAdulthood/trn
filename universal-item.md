@@ -40,16 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 18. Convert Virtual Group Payload Strings
-
-- Target: `UniversalVirtualGroup`.
-- Change: replace `char *ng` with `std::string ng`.
-- Data flow: virtual group names are consumed by matching and virtual pass
-  expansion.
-- Risk: medium; virtual pass must not store pointers into temporary
-  strings.
-- Verification: focused universal tests and normal workflow.
-
 ### 19. Convert Article Payload Strings
 
 - Target: `UniversalVirtualData`.
