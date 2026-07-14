@@ -70,7 +70,7 @@ char       *get_auth_pass();
 bool        parse_string(char **to, char **from);
 char       *parse_ini_section(char *cp, const IniSchema &schema, IniSectionValues &values);
 bool        parse_ini_section(const IniSection &section, const IniSchema &schema, IniSectionValues &values);
-bool        check_ini_cond(char *cond);
+bool        check_ini_cond(const char *cond);
 char        menu_get_char();
 int         edit_file(const char *fname);
 

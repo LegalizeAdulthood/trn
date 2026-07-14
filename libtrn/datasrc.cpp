@@ -73,7 +73,7 @@ static int                        source_file_cmp(std::string_view key, HashDatu
 static int                        check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int                        get_near_miss();
 static DataSource                *new_data_source(const char *name, const DataSourceConfig &config);
-static std::string                read_data_sources(const char *filename);
+static std::string                read_data_sources(std::string_view filename);
 
 /// @brief Initializes the data sources for the application.
 ///
@@ -177,7 +177,7 @@ void data_source_finalize()
 /// @return The file contents, or an empty string if the file could not be
 ///         opened or read.
 ///
-static std::string read_data_sources(const char *filename)
+static std::string read_data_sources(std::string_view filename)
 {
     IniSectionValues values;
     std::string      contents = file_contents(file_exp(filename));
@@ -187,23 +187,25 @@ static std::string read_data_sources(const char *filename)
         return {};
     }
 
-    IniDocument          document{contents, filename};
-    IniDocument::Section section;
-    while (document.next_section(section))
+    IniDocument document{contents, filename};
+    for (const IniSection section : document)
     {
-        if (section.has_condition() && !check_ini_cond(section.condition))
+        if (section.has_condition())
+        {
+            if (const std::string condition{section.condition()}; !check_ini_cond(condition.c_str()))
+            {
+                continue;
+            }
+        }
+
+        const std::string_view section_name = section.name();
+        if (section_name.size() >= 6 && string_case_equal(section_name.data(), "group ", 6))
         {
             continue;
         }
-        if (string_case_equal(section.name, "group ", 6))
-        {
-            continue;
-        }
-        if (parse_ini_section(section.body, DataSourceConfig::schema(), values) == nullptr)
-        {
-            break;
-        }
-        new_data_source(section.name, DataSourceConfig::from(values));
+        parse_ini_section(section, DataSourceConfig::schema(), values);
+        const std::string name{section_name};
+        new_data_source(name.c_str(), DataSourceConfig::from(values));
     }
     return contents;
 }

@@ -832,7 +832,7 @@ bool parse_ini_section(const IniSection &section, const IniSchema &schema, IniSe
     return saw_value;
 }
 
-bool check_ini_cond(char *cond)
+bool check_ini_cond(const char *cond)
 {
     const char *cond_cursor = do_interp(g_buf, sizeof g_buf, cond, "!=<>", nullptr);
     char       *s = g_buf + std::strlen(g_buf);

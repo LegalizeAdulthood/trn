@@ -101,12 +101,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-7. Convert `read_data_sources`.
-
-   Use range-for over `IniDocument`.  Check `section.condition()`, skip
-   group sections, parse data-source settings with the range-based
-   `parse_ini_section`, and remove local use of legacy section fields.
-
 8. Convert `opt_file`.
 
    Use range-for over `IniDocument`.  Check section conditions, dispatch by
