@@ -97,13 +97,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-2. Add `IniSetting`.
-
-   Add a small view type that stores name and raw value ranges.  Implement
-   `name()` and `value()`.  Move the value normalization rules out of the
-   destructive `parse_string` path into a non-destructive helper used by
-   `IniSetting::value()`.
-
 3. Add `IniSection`.
 
    Add a section view that stores name, condition, and body ranges.
