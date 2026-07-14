@@ -354,11 +354,6 @@ buffer slices.
 
 ### Safe-realloc Array Slices
 
-RA-02. `libtrn/scorefile.cpp`, score entry table: replace
-`s_sf_entries` grow/copy/free storage with `std::vector<ScoreFileEntry>`.
-Keep `g_sf_num_entries` as the public count until callers no longer need
-it, and keep `ScoreFileEntry` string members unchanged.
-
 RA-03. `libtrn/samain.cpp` and scan-article readers: replace
 `g_sa_ents` plus `s_sa_ents_alloc` with
 `std::vector<ScanArticleEntryData>`.  The slice must update the public

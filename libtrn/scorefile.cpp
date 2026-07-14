@@ -56,7 +56,7 @@ enum
     SF_REPLY = -5
 };
 
-static ScoreFileEntry *s_sf_entries{};        // array of entries
+static std::vector<ScoreFileEntry> s_sf_entries; // array of entries
 static std::vector<ScoreFile> s_sf_files;
 static char          **s_sf_abbr{};           // abbreviations
 static bool            s_new_author_active{}; // if true, s_newauthor is active
@@ -107,6 +107,7 @@ void sf_clear_file_cache_for_test()
 void sf_init()
 {
     g_sf_num_entries = 0;
+    s_sf_entries.clear();
     s_sf_extra_headers.clear();
 
     // initialize abbreviation list
@@ -243,27 +244,15 @@ void sf_clean()
         }
         std::free(s_sf_abbr);
     }
-    if (s_sf_entries)
-    {
-        std::free(s_sf_entries);
-    }
-    s_sf_entries = nullptr;
+    s_sf_entries.clear();
+    g_sf_num_entries = 0;
     s_sf_extra_headers.clear();
 }
 
 static void sf_grow()
 {
-    g_sf_num_entries++;
-    if (g_sf_num_entries == 1)
-    {
-        s_sf_entries = (ScoreFileEntry*)safe_malloc(sizeof (ScoreFileEntry));
-    }
-    else
-    {
-        s_sf_entries = (ScoreFileEntry*)safe_realloc((char*)s_sf_entries,
-                        g_sf_num_entries * sizeof (ScoreFileEntry));
-    }
-    s_sf_entries[g_sf_num_entries - 1] = ScoreFileEntry{}; // init
+    s_sf_entries.push_back(ScoreFileEntry{});
+    g_sf_num_entries = static_cast<int>(s_sf_entries.size());
 }
 
 // Returns -1 if no matching extra header found, otherwise returns offset
@@ -1292,7 +1281,6 @@ static void sf_exclude_file(const char *fname)
 {
     int       start;
     int       end;
-    ScoreFileEntry *tmp_entries;
 
     for (start = 0; start < g_sf_num_entries; start++)
     {
@@ -1323,32 +1311,20 @@ static void sf_exclude_file(const char *fname)
         return;
     }
 
-    int newnum = g_sf_num_entries - (end - start) - 1;
 #ifdef UNDEF
+    int newnum = g_sf_num_entries - (end - start) - 1;
     // Deal with exclusion of all scorefile entries.
     // This cannot happen since the exclusion command has to be within a
     // file.  Code kept in case online exclusions allowed later.
     if (newnum==0)
     {
         g_sf_num_entries = 0;
-        std::free(s_sf_entries);
-        s_sf_entries = nullptr;
+        s_sf_entries.clear();
         return;
     }
 #endif
-    tmp_entries = (ScoreFileEntry*)safe_malloc(newnum*sizeof(ScoreFileEntry));
-    // copy the parts into tmp_entries
-    if (start > 0)
-    {
-        std::memcpy((char*)tmp_entries,(char*)s_sf_entries,start * sizeof (ScoreFileEntry));
-    }
-    if (end < g_sf_num_entries-1)
-    {
-        std::memcpy((char*)(tmp_entries+start),(char*)(s_sf_entries+end+1),(g_sf_num_entries-end-1) * sizeof (ScoreFileEntry));
-    }
-    std::free(s_sf_entries);
-    s_sf_entries = tmp_entries;
-    g_sf_num_entries = newnum;
+    s_sf_entries.erase(s_sf_entries.begin() + start, s_sf_entries.begin() + end + 1);
+    g_sf_num_entries = static_cast<int>(s_sf_entries.size());
     if (g_sf_verbose)
     {
         std::printf("Excluded file: %s\n",fname);
