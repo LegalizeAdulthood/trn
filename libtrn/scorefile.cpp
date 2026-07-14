@@ -73,7 +73,6 @@ static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(const char *name);
 static void sf_file_clear();
-static char *sf_file_get_line(int fnum);
 static void  sf_grow();
 static int   sf_check_extra_headers(const char *head);
 static void  sf_add_extra_header(const char *head);
@@ -847,7 +846,8 @@ static void sf_do_file(const char *fname)
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
     s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename.c_str());
 
-    while (char *s = sf_file_get_line(sf_fp))
+    const ScoreFile &file = s_sf_files[static_cast<std::size_t>(sf_fp)];
+    for (const std::string &s : file.lines)
     {
         std::string line{s};
         (void)sf_do_line(line.data(),false);
@@ -1399,7 +1399,6 @@ static int sf_open_file(const char *name)
             {
                 return -1;      // no such file
             }
-            s_sf_files[i].line_on = 0;
             return static_cast<int>(i);
         }
     }
@@ -1434,8 +1433,7 @@ static int sf_open_file(const char *name)
     std::string line(LINE_BUF_LEN, '\0');
     while (std::fgets(line.data(), LINE_BUF_LEN - 4, fp) != nullptr)
     {
-        // I kind of like the next line in a twisted sort of way.
-        file.lines.push_back(mp_save_str(line.c_str(), MP_SCORE2));
+        file.lines.emplace_back(line.c_str());
     }
     std::fclose(fp);
     if (!temp_name.empty())
@@ -1447,26 +1445,5 @@ static int sf_open_file(const char *name)
 
 static void sf_file_clear()
 {
-    mp_free(MP_SCORE2);
     s_sf_files.clear();
-}
-
-static char *sf_file_get_line(int fnum)
-{
-    if (fnum < 0)
-    {
-        return nullptr;
-    }
-    const std::size_t i = static_cast<std::size_t>(fnum);
-    if (i >= s_sf_files.size())
-    {
-        return nullptr;
-    }
-    ScoreFile &file = s_sf_files[i];
-    if (file.line_on >= file.lines.size())
-    {
-        return nullptr;         // past end of file, or empty file
-    }
-    // below: one of the more twisted lines of my career  (:-)
-    return file.lines[file.line_on++];
 }

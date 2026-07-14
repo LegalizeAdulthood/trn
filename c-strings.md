@@ -350,6 +350,48 @@ matching declaration as needed.  The list is ordered from simpler local
 helpers toward callers that can pass string views through once lower
 helpers accept them.
 
+### Memory Pool Removal Slices
+
+These slices remove the remaining DOS-era memory-pool storage.  The pool
+currently provides bulk reset and stable `char *` addresses, but it no
+longer buys useful memory savings.  Replace each pool with normal owner
+containers, then delete the pool implementation.
+
+#### Scorefile Rule Text
+
+- Files: `libtrn/include/trn/scorefile.h`, `libtrn/scorefile.cpp`.
+- Pool: `MP_SCORE1`.
+- Finding: `ScoreFileEntry::str1` and `str2` retain rule text as pooled
+  raw pointers.
+- Change: store rule text as owned strings, using empty string or
+  optional string when absence matters.
+- Data flow: update rule parsing, wildcard split storage, regex compile
+  calls, score matching, score printing, include/exclude lookup, and
+  `sf_clean`; drop the `mp_free(MP_SCORE1)` cleanup.
+
+#### Sathread Subject Keys
+
+- Files: `libtrn/sathread.cpp`.
+- Pool: `MP_SATHREAD`.
+- Finding: subject-thread keys are pool-owned strings stored in the
+  home-grown hash table.
+- Change: replace the hash plus pooled key storage with
+  `std::unordered_map<std::string, long>`.
+- Data flow: `sa_init_threads` clears the map; `sa_get_subj_thread`
+  finds or inserts by subject text and stores the generated thread
+  number.
+
+#### Delete Memory Pool Library
+
+- Files: `libtrn/mempool.cpp`, `libtrn/include/trn/mempool.h`,
+  `libtrn/CMakeLists.txt`, tests that call `mp_init`.
+- Finding: after the scorefile and sathread pools are gone, no useful
+  memory-pool callers remain.
+- Change: remove `mempool.cpp`, `mempool.h`, `MemoryPool`, `mp_init`,
+  `mp_save_str`, `mp_malloc`, and `mp_free`.
+- Data flow: remove startup and test initialization calls that only
+  existed to initialize the pool.
+
 ### Libfmt Formatting Slices
 
 These slices are prepended before more string-building work.  Start with
@@ -500,22 +542,6 @@ when null and empty are distinct states.
   `save_str`/`free`.
 - Change: replace the table with an array of optional strings.
 - Data flow: update the `file` command path and abbreviation readers.
-
-#### `ScoreFileEntry` Text Fields
-
-- Files: `libtrn/include/trn/scorefile.h`, `libtrn/scorefile.cpp`.
-- Finding: `ScoreFileEntry::str1` and `str2` retain rule text as raw
-  pointers.
-- Change: replace retained rule text with owned string storage.
-- Data flow: update score matching, printing, include/exclude, and
-  cleanup paths together.
-
-#### `ScoreFile::lines`
-
-- Files: `libtrn/include/trn/scorefile.h`, `libtrn/scorefile.cpp`.
-- Finding: score-file cache lines are `std::vector<char *>`.
-- Change: replace with `std::vector<std::string>`.
-- Data flow: update cache fill, read, and cleanup paths.
 
 #### Keymap Macro Strings
 

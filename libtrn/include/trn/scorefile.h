@@ -33,10 +33,9 @@ struct ScoreFileEntry
 // for cached score rules
 struct ScoreFile
 {
-    std::string         fname;
-    std::vector<char *> lines;
-    std::size_t         line_on{};
-    bool                exists{};
+    std::string              fname;
+    std::vector<std::string> lines;
+    bool                     exists{};
 };
 
 extern int  g_sf_num_entries;   // # of entries
