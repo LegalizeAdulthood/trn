@@ -1,0 +1,74 @@
+<!-- Copyright (c) 2026, Richard Thomson -->
+
+# Universal Selector Plan
+
+## Goal
+
+Separate universal item state from universal item type while preserving
+current selector behavior. Add focused tests first so the refactor checks
+the behavior provided by the old type sentinels.
+
+## Plan
+
+### 1. Add per-test sandbox support
+
+- Create isolated roots from the test suite and test name.
+- Clean only that test root.
+- Allow copying generated fixture data when a test needs article or newsrc
+  files.
+- Move `test_univ.cpp` off the shared `trn-univ-test` directory.
+
+### 2. Decouple `univ_mask_load` from mutable caller buffers
+
+- Change the public entry point to accept `std::string_view`.
+- Copy internally before calling the current tokenizer.
+- Keep callers and tests from manufacturing writable `char[]` values just
+  to parse.
+
+### 3. Add an injectable virtual-group visitor seam
+
+- Add an overload or internal helper:
+
+  ```cpp
+  using UniversalGroupVisitor = int (*)(const char *);
+  void univ_virt_pass(UniversalGroupVisitor visit_group);
+  ```
+
+- Keep existing `univ_virt_pass()` as the production wrapper using
+  `univ_visit_group`.
+- Let tests pass a fake visitor and avoid `do_newsgroup()`.
+
+### 4. Add behavior tests before the state refactor
+
+- Group exclusion: `group !group` leaves one deselected group item.
+- Group restoration: `group !group group` restores the existing item.
+- Virtual group pass: fake visitor is called, the expanded virtual group is
+  marked deleted, and non-expanded article/group payload behavior is
+  unchanged.
+- Existing colon path tests keep passing in isolated sandboxes.
+
+### 5. Refactor universal item state in one slice
+
+- Add:
+
+  ```cpp
+  enum UniversalItemState
+  {
+      UIS_NORMAL,
+      UIS_DESELECTED,
+      UIS_DELETED
+  };
+  ```
+
+- Add `UniversalItemState m_state` to `UniversalItem`.
+- Remove `UN_GROUP_DESEL`, `UN_VGROUP_DESEL`, and `UN_DELETED`.
+- Replace type mutations with state mutations.
+- Keep `UniversalItemFlags` as bit flags for selector bookkeeping.
+- Avoid early payload free on deleted virtual groups; let normal cleanup
+  own the payload.
+
+### 6. Verify
+
+- Run the new focused universal tests before the refactor.
+- Run them again after the refactor.
+- Run the normal workflow.
