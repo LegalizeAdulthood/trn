@@ -329,11 +329,6 @@ buffer slices.
 
 ### Owning Raw-string Return Slices
 
-OR-10. `libtrn/bits.cpp`, `valid_xref_site`: after `fetch_lines`
-returns `std::string`, replace the static owned `inews_site` pointer
-with string storage.  Keep the `VALIDATE_XREF_SITE` behavior and the
-`ANCIENT_NEWS` split unchanged.
-
 ### Copy/Concat Slices
 
 ### Fixed-buffer Storage Slices

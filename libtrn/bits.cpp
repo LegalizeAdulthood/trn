@@ -31,17 +31,21 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 int g_dm_count{};
 
 static long s_chase_count{};
+#ifdef VALIDATE_XREF_SITE
+static std::optional<std::string> s_inews_site;
+#endif
 
 static bool yank_article(char *ptr, int arg);
 static bool check_chase(char *ptr, int until_key);
 static int chase_xref(ArticleNum art_num, bool mark_read);
 #ifdef VALIDATE_XREF_SITE
-static bool valid_xref_site(ArticleNum art_num, char *site);
+static bool valid_xref_site(ArticleNum art_num, const char *site);
 #endif
 
 void bits_init()
@@ -742,17 +746,14 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 // Xrefs correctly--each article need only match itself to be valid.
 //
 # ifdef VALIDATE_XREF_SITE
-static bool valid_xref_site(ArticleNum art_num, char *site)
+static bool valid_xref_site(ArticleNum art_num, const char *site)
 {
-    static char* inews_site = nullptr;
     std::string sitebuf;
     char* s;
 
-    if (inews_site && !strcmp(site,inews_site))
+    if (s_inews_site && *s_inews_site == site)
         return true;
 
-    if (inews_site)
-        std::free(inews_site);
 #ifndef ANCIENT_NEWS
     // Grab the site from the first component of the Path line
     sitebuf = fetch_lines(art_num,PATH_LINE);
@@ -760,7 +761,7 @@ static bool valid_xref_site(ArticleNum art_num, char *site)
     if (s != nullptr)
     {
         *s = '\0';
-        inews_site = save_str(sitebuf);
+        s_inews_site = sitebuf;
     }
 #else // ANCIENT_NEWS
     // Grab the site from the Posting-Version line
@@ -773,15 +774,15 @@ static bool valid_xref_site(ArticleNum art_num, char *site)
         {
             *t = '\0';
         }
-        inews_site = save_str(s+7);
+        s_inews_site = s+7;
     }
 #endif // ANCIENT_NEWS
     else
     {
-        inews_site = save_str("");
+        s_inews_site = "";
     }
 
-    if (!std::strcmp(site,inews_site))
+    if (*s_inews_site == site)
     {
         return true;
     }
@@ -789,7 +790,7 @@ static bool valid_xref_site(ArticleNum art_num, char *site)
 #ifdef DEBUG
     if (g_debug)
     {
-        std::printf("Xref not from %s -- ignoring\n",inews_site);
+        std::printf("Xref not from %s -- ignoring\n",s_inews_site->c_str());
         term_down(1);
     }
 #endif
