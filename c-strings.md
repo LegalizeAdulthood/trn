@@ -354,11 +354,6 @@ buffer slices.
 
 ### Safe-realloc Array Slices
 
-RA-01. `libtrn/sw.cpp`, init-environment list: replace the static
-`char **` plus count/capacity storage with `std::vector<char *>` in
-`save_init_environment` and `write_init_environment`.  Keep the elements
-borrowed and mutable because they point into the switch buffer.
-
 RA-02. `libtrn/scorefile.cpp`, score entry table: replace
 `s_sf_entries` grow/copy/free storage with `std::vector<ScoreFileEntry>`.
 Keep `g_sf_num_entries` as the public count until callers no longer need

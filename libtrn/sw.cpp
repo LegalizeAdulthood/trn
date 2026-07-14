@@ -25,10 +25,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
-static char **s_init_environment_strings{};
-static int    s_init_environment_cnt{};
-static int    s_init_environment_max{};
+static std::vector<char *> s_init_environment_strings;
 
 static void save_init_environment(char *str);
 
@@ -257,7 +256,7 @@ void decode_switch(const char *s)
             if (tmp)
             {
                 *tmp++ = '\0';
-                tmp = export_var(tmpbuf,tmp) - (tmp-tmpbuf);
+                tmp = export_var(tmpbuf,tmp);
                 if (g_mode == MM_INITIALIZING)
                 {
                     save_init_environment(tmp);
@@ -265,7 +264,7 @@ void decode_switch(const char *s)
             }
             else
             {
-                tmp = export_var(tmpbuf,"") - std::strlen(tmpbuf) - 1;
+                tmp = export_var(tmpbuf,"");
                 if (g_mode == MM_INITIALIZING)
                 {
                     save_init_environment(tmp);
@@ -550,31 +549,21 @@ void decode_switch(const char *s)
 
 static void save_init_environment(char *str)
 {
-    if (s_init_environment_cnt >= s_init_environment_max)
-    {
-        s_init_environment_max += 32;
-        s_init_environment_strings = (char**)
-          safe_realloc((char*)s_init_environment_strings,
-                      s_init_environment_max * sizeof (char*));
-    }
-    s_init_environment_strings[s_init_environment_cnt++] = str;
+    s_init_environment_strings.push_back(str);
 }
 
 void write_init_environment(std::FILE *fp)
 {
-    for (int i = 0; i < s_init_environment_cnt; i++)
+    for (char *entry : s_init_environment_strings)
     {
-        char *s = std::strchr(s_init_environment_strings[i], '=');
+        char *s = std::strchr(entry, '=');
         if (!s)
         {
             continue;
         }
         *s = '\0';
-        std::fprintf(fp, "%s=%s\n", s_init_environment_strings[i],quote_string(s+1));
+        std::fprintf(fp, "%s=%s\n", entry,quote_string(s+1));
         *s = '=';
     }
-    s_init_environment_cnt = 0;
-    s_init_environment_max = 0;
-    std::free(s_init_environment_strings);
-    s_init_environment_strings = nullptr;
+    s_init_environment_strings.clear();
 }
