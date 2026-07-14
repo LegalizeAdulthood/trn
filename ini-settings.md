@@ -101,13 +101,6 @@ an owned normalized string.
 
 ## Implementation Slices
 
-9. Convert `rcstuff_init_data`.
-
-   Use range-for over `IniDocument`.  Check section conditions, select
-   group sections by `section.name()`, parse group settings with the
-   range-based `parse_ini_section`, and remove local use of legacy section
-   fields.
-
 10. Convert `ngstuff_init`.
 
     Use range-for over `IniDocument`.  Parse the first section with the

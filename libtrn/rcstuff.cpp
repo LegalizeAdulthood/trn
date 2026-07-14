@@ -253,25 +253,27 @@ static Multirc *rcstuff_init_data()
 
     if (!g_trn_access_text.empty())
     {
-        IniDocument          document{g_trn_access_text, TRNACCESS};
-        IniSectionValues     values;
-        IniDocument::Section section;
-        while (document.next_section(section))
+        IniDocument      document{g_trn_access_text, TRNACCESS};
+        IniSectionValues values;
+        for (const IniSection section : document)
         {
-            if (section.has_condition() && !check_ini_cond(section.condition))
+            if (section.has_condition())
+            {
+                const std::string condition{section.condition()};
+                if (!check_ini_cond(condition.c_str()))
+                {
+                    continue;
+                }
+            }
+
+            const std::string_view section_name = section.name();
+            if (section_name.size() < 6 || !string_case_equal(section_name.data(), "group ", 6))
             {
                 continue;
             }
-            if (string_case_compare(section.name, "group ", 6))
-            {
-                continue;
-            }
-            int i = std::atoi(section.name + 6);
+            int i = std::atoi(std::string{section_name.substr(6)}.c_str());
             i = std::max(i, 0);
-            if (parse_ini_section(section.body, RcGroupConfig::schema(), values) == nullptr)
-            {
-                break;
-            }
+            parse_ini_section(section, RcGroupConfig::schema(), values);
             Newsrc *rp = new_newsrc(RcGroupConfig::from(values));
             if (rp)
             {
