@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 
 #ifdef TILDE_NAME
 static std::string s_tilde_name;
@@ -128,38 +129,35 @@ std::string file_exp(std::string_view text)
                 }
 #else // this will run faster, and is less D space
                 { // just be sure LOGIN_DIR_FIELD is correct
-                    std::FILE *pfp = std::fopen(file_exp(PASSWORD_FILE).c_str(), "r");
-                    char       tmpbuf[512];
-
-                    if (pfp)
+                    if (std::ifstream pfp{file_exp(PASSWORD_FILE)})
                     {
-                        while (std::fgets(tmpbuf, 512, pfp) != nullptr)
+                        std::string buff;
+                        while (std::getline(pfp, buff))
                         {
-                            std::string_view  passwd_line{tmpbuf};
-                            const std::size_t login_end = passwd_line.find(':');
-                            if (login_end != std::string_view::npos && passwd_line.substr(0, login_end) == s_tilde_name)
+                            const std::string_view line{buff};
+                            if (const std::size_t sep = line.find(':');
+                                sep != std::string_view::npos && line.substr(0, sep) == s_tilde_name)
                             {
-                                std::size_t field_start = login_end + 1;
-                                std::size_t field_end = std::string_view::npos;
+                                std::size_t begin = sep + 1;
+                                std::size_t end = std::string_view::npos;
                                 for (int i = LOGIN_DIR_FIELD - 2; i; i--)
                                 {
-                                    field_end = passwd_line.find(':', field_start);
-                                    if (field_end != std::string_view::npos)
+                                    end = line.find(':', begin);
+                                    if (end != std::string_view::npos)
                                     {
-                                        field_start = field_end + 1;
+                                        begin = end + 1;
                                     }
                                 }
-                                if (field_end != std::string_view::npos)
+                                if (end != std::string_view::npos)
                                 {
-                                    field_end = passwd_line.find(':', field_start);
-                                    s_tilde_dir = passwd_line.substr(field_start, field_end - field_start);
+                                    end = line.find(':', begin);
+                                    s_tilde_dir = line.substr(begin, end - begin);
                                     filename = s_tilde_dir;
                                     filename += suffix;
                                 }
                                 break;
                             }
                         }
-                        std::fclose(pfp);
                     }
                     if (s_tilde_dir.empty())
                     {

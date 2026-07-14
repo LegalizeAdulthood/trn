@@ -358,12 +358,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-FB-01. `util/util2.cpp`, `file_exp`: replace the
-`PASSWORD_FILE` fallback `tmpbuf[512]` and `fgets` loop with owned
-`std::string` line reading.  The 512-byte truncation is arbitrary passwd
-line truncation, not meaningful behavior.  Add host-independent
-coverage for the `~user` passwd-file fallback before refactoring.
-
 FB-02. `libtrn/ngstuff.cpp`, `switcheroo`: replace the
 `tmp_buf[LINE_BUF_LEN + 16]` buffer used for `&` option parsing with
 owned `std::string` storage.  Use mutable string storage only while
