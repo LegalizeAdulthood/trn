@@ -21,10 +21,13 @@
 #include <trn/util.h>
 #include <util/env.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <vector>
 
 static std::vector<char *> s_init_environment_strings;
@@ -384,9 +387,8 @@ void decode_switch(const char *s)
             set_option(OI_NEWS_SEL_MODE, s);
             if (*++s)
             {
-                char tmpbuf2[4];
-                std::sprintf(tmpbuf2, "%s%c", std::isupper(*s)? "r " : "", *s);
-                set_option(OI_NEWS_SEL_ORDER, tmpbuf2);
+                const std::string order = fmt::format("{}{}", std::isupper(*s) ? "r " : "", *s);
+                set_option(OI_NEWS_SEL_ORDER, order.c_str());
             }
             break;
 

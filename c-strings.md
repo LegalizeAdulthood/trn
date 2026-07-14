@@ -358,10 +358,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-FB-01. `libtrn/sw.cpp`, `decode_switch`: replace the four-byte
-`tmpbuf2` formatting buffer used for `OI_NEWS_SEL_ORDER` with an owned
-`std::string` or `fmt::format` result passed by `c_str()`.
-
 ### Global String Storage Slices
 
 These slices replace owned global or file-scope `char *` storage with

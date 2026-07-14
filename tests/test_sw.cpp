@@ -3,6 +3,8 @@
 
 #include <trn/sw.h>
 
+#include <trn/opt.h>
+#include <trn/rt-select.h>
 #include <trn/terminal.h>
 
 #include <test_config.h>
@@ -28,6 +30,34 @@ struct ModeRestorer
     ~ModeRestorer()
     {
         g_mode = mode;
+    }
+};
+
+struct SelectorRestorer
+{
+    SelectionMode     mode;
+    SelectionMode     default_mode;
+    SelectionMode     thread_mode;
+    SelectionSortMode sort;
+    SelectionSortMode article_sort;
+    SelectionSortMode thread_sort;
+    SelectionSortMode newsgroup_sort;
+    const char       *mode_string;
+    const char       *sort_string;
+    int               direction;
+
+    ~SelectorRestorer()
+    {
+        g_sel_mode = mode;
+        g_sel_default_mode = default_mode;
+        g_sel_thread_mode = thread_mode;
+        g_sel_sort = sort;
+        g_sel_art_sort = article_sort;
+        g_sel_thread_sort = thread_sort;
+        g_sel_newsgroup_sort = newsgroup_sort;
+        g_sel_mode_string = mode_string;
+        g_sel_sort_string = sort_string;
+        g_sel_direction = direction;
     }
 };
 
@@ -71,4 +101,16 @@ TEST(SwitchTest, writeInitEnvironmentWritesSavedExports)
     {
         EXPECT_EQ("TRN_SW_INIT_ENV_" + std::to_string(i) + "=value" + std::to_string(i), lines[i]);
     }
+}
+
+TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)
+{
+    SelectorRestorer restore{g_sel_mode,        g_sel_default_mode, g_sel_thread_mode,    g_sel_sort,
+                             g_sel_art_sort,    g_sel_thread_sort,  g_sel_newsgroup_sort, g_sel_mode_string,
+                             g_sel_sort_string, g_sel_direction};
+
+    decode_switch("-OaD");
+
+    EXPECT_EQ(SM_ARTICLE, g_sel_default_mode);
+    EXPECT_STREQ("reverse date", option_value(OI_NEWS_SEL_ORDER));
 }
