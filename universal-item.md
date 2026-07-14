@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 17. Convert News Group Payload Strings
-
-- Target: `UniversalNewsgroup`.
-- Change: replace `char *ng` with `std::string ng`.
-- Data flow: group names are consumed by matching, lookup, display, and
-  paging.
-- Risk: medium; do not let local string storage escape.
-- Verification: focused universal tests and normal workflow.
-
 ### 18. Convert Virtual Group Payload Strings
 
 - Target: `UniversalVirtualGroup`.

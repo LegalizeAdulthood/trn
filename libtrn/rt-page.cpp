@@ -725,13 +725,13 @@ try_again:
 
             case UN_NEWSGROUP:
             {
-                const char *group_name = ui->group().ng;
-                if (!group_name)
+                const std::string &group_name = ui->group().ng;
+                if (group_name.empty())
                 {
                     ui_elig = false;
                     break;
                 }
-                NewsgroupData *np = find_newsgroup(group_name);
+                NewsgroupData *np = find_newsgroup(group_name.c_str());
                 if (!np)
                 {
                     ui_elig = false;
@@ -2867,11 +2867,11 @@ static void display_universal(const UniversalItem *ui)
         case UN_NEWSGROUP:
         {
               // later error check the UI?
-            const char *group_name = ui->group().ng;
-            NewsgroupData *np = find_newsgroup(group_name);
+            const std::string &group_name = ui->group().ng;
+            NewsgroupData *np = find_newsgroup(group_name.c_str());
             if (!np)
             {
-                std::printf("!!!!! could not find %s", group_name);
+                std::printf("!!!!! could not find %s", group_name.c_str());
             }
             else
             {
@@ -2893,7 +2893,7 @@ static void display_universal(const UniversalItem *ui)
                 {
                     std::printf("***** ");
                 }
-                std::fputs(group_name,stdout);
+                std::fputs(group_name.c_str(),stdout);
             }
             newline();
             break;

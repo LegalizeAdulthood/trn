@@ -957,16 +957,17 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             // XXX whine: can't recurse at this time
             break;
         }
-        if (!ui->m_data.group.ng)
+        const std::string &group_name = ui->group().ng;
+        if (group_name.empty())
         {
             break;                      // XXX whine
         }
-        NewsgroupData *np = find_newsgroup(ui->m_data.group.ng);
+        NewsgroupData *np = find_newsgroup(group_name.c_str());
 
         if (!np)
         {
             std::printf("Universal: newsgroup %s not found!",
-                   ui->m_data.group.ng);
+                   group_name.c_str());
             sleep(5);
             return exit_code;
         }

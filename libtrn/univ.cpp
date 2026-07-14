@@ -36,6 +36,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <new>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -211,6 +212,10 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     node->m_state = UIS_NORMAL;
     node->m_num = s_univ_item_counter++;
     node->m_score = 0;            // consider other default scores?
+    if (type == UN_NEWSGROUP)
+    {
+        new (&node->m_data.group) UniversalNewsgroup{};
+    }
     node->m_next = nullptr;
     node->m_prev = g_last_univ;
     if (g_last_univ)
@@ -262,7 +267,7 @@ static void univ_free_data(UniversalItem *ui)
     }
 
     case UN_NEWSGROUP:
-        safe_free(ui->group().ng);
+        ui->group().~UniversalNewsgroup();
         break;
 
     case UN_ARTICLE:
@@ -331,9 +336,8 @@ static void univ_add_group(const char *desc, std::string_view grpname)
             {
                 continue;
             }
-            char *group_name_ptr = ui->group().ng;
-            if (ui->m_state == UIS_DESELECTED && group_name_ptr //
-                && !strcmp(group_name_ptr, group_name.c_str()))
+            const std::string &group_name_ptr = ui->group().ng;
+            if (ui->m_state == UIS_DESELECTED && group_name_ptr == group_name)
             {
                 // undelete the newsgroup
                 ui->m_state = UIS_NORMAL;
@@ -342,8 +346,8 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         return;
     }
     ui = univ_add(UN_NEWSGROUP,desc);
-    ui->group().ng = save_str(group_name.c_str());
-    data.dat_ptr = ui->group().ng;
+    ui->group().ng = group_name;
+    data.dat_ptr = const_cast<char *>(ui->group().ng.c_str());
     hash_store_last(data);
 }
 
@@ -536,9 +540,8 @@ static void univ_use_pattern(const char *pattern, int type)
                 {
                     continue;
                 }
-                char *group_name = ui->group().ng;
-                if (ui->m_state == UIS_NORMAL && group_name //
-                    && univ_do_match(group_name, s))
+                const std::string &group_name = ui->group().ng;
+                if (ui->m_state == UIS_NORMAL && univ_do_match(group_name.c_str(), s))
                 {
                     ui->m_state = UIS_DESELECTED;
                 }

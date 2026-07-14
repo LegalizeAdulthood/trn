@@ -83,7 +83,7 @@ struct UniversalVirtualGroup
 
 struct UniversalNewsgroup
 {
-    char *ng;
+    std::string ng;
 };
 
 struct UniversalTextFile
@@ -93,6 +93,9 @@ struct UniversalTextFile
 
 union UniversalData
 {
+    UniversalData() {}
+    ~UniversalData() {}
+
     char                   *str;
     HelpLocation            i;
     UniversalGroupMaskData  gmask;
