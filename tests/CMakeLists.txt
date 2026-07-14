@@ -64,6 +64,9 @@ add_executable(trn-test
     cmake/test_nntp_auth_file.in
     cmake/test_nntp_newsrc.in
     cmake/test_organization_file.in
+    cmake/test_univ_child.in
+    cmake/test_univ_colon_path.in
+    cmake/test_univ_colon_path_label.in
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")

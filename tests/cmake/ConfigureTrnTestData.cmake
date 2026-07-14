@@ -29,6 +29,13 @@ function(configure_trn_test_data)
     set(TRN_TEST_LOCAL_SPOOL_DIR "${TRN_TEST_DATA_DIR}/spool")
     make_dir("${TRN_TEST_LOCAL_SPOOL_DIR}")
 
+    # Universal selector related content.
+    set(TRN_TEST_UNIV_DIR "${TRN_TEST_DATA_DIR}/univ")
+    make_dir("${TRN_TEST_UNIV_DIR}")
+    set(TRN_TEST_UNIV_CHILD_FILE "${TRN_TEST_UNIV_DIR}/child.univ")
+    set(TRN_TEST_UNIV_COLON_PATH_FILE "${TRN_TEST_UNIV_DIR}/colon-path.univ")
+    set(TRN_TEST_UNIV_COLON_PATH_LABEL_FILE "${TRN_TEST_UNIV_DIR}/colon-path-label.univ")
+
     # Newsgroup related content.
     set(TRN_TEST_SPOOL_DIR "${TRN_TEST_DATA_DIR}/spool")
     set(TRN_TEST_NEWSGROUP "alt.binaries.fractals")
@@ -126,6 +133,9 @@ function(configure_trn_test_data)
     configure_file(cmake/test_nntp_auth_file.in         "${TRN_TEST_DOT_DIR}/.nntpauth")
     configure_file(cmake/test_nntp_newsrc.in            "${TRN_TEST_ACCESS_NNTP_NEWSRC}")
     configure_file(cmake/test_organization_file.in      "${TRN_TEST_ORGFILE}")
+    configure_file(cmake/test_univ_child.in             "${TRN_TEST_UNIV_CHILD_FILE}")
+    configure_file(cmake/test_univ_colon_path.in        "${TRN_TEST_UNIV_COLON_PATH_FILE}")
+    configure_file(cmake/test_univ_colon_path_label.in  "${TRN_TEST_UNIV_COLON_PATH_LABEL_FILE}")
 
     # Generate test source files.
     # test_config.h needs the size of the generated article.

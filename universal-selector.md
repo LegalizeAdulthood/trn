@@ -10,14 +10,6 @@ the behavior provided by the old type sentinels.
 
 ## Plan
 
-### 1. Add per-test sandbox support
-
-- Create isolated roots from the test suite and test name.
-- Clean only that test root.
-- Allow copying generated fixture data when a test needs article or newsrc
-  files.
-- Move `test_univ.cpp` off the shared `trn-univ-test` directory.
-
 ### 2. Decouple `univ_mask_load` from mutable caller buffers
 
 - Change the public entry point to accept `std::string_view`.
@@ -45,7 +37,10 @@ the behavior provided by the old type sentinels.
 - Virtual group pass: fake visitor is called, the expanded virtual group is
   marked deleted, and non-expanded article/group payload behavior is
   unchanged.
-- Existing colon path tests keep passing in isolated sandboxes.
+- Existing colon path tests keep passing against shared read-only CMake
+  staged fixture files.
+- Tests that can update `newsrc` or other output files isolate only those
+  mutable files per test case.
 
 ### 5. Refactor universal item state in one slice
 

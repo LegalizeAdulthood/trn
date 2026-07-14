@@ -18,6 +18,9 @@
 #define TRN_TEST_ORGANIZATION                   "@TRN_TEST_ORGANIZATION@"
 #define TRN_TEST_ORGFILE                        "@TRN_TEST_ORGFILE@"
 #define TRN_TEST_LOCAL_SPOOL_DIR                "@TRN_TEST_LOCAL_SPOOL_DIR@"
+#define TRN_TEST_UNIV_CHILD_FILE                "@TRN_TEST_UNIV_CHILD_FILE@"
+#define TRN_TEST_UNIV_COLON_PATH_FILE           "@TRN_TEST_UNIV_COLON_PATH_FILE@"
+#define TRN_TEST_UNIV_COLON_PATH_LABEL_FILE     "@TRN_TEST_UNIV_COLON_PATH_LABEL_FILE@"
 
 // Newsgroup related content.
 #define TRN_TEST_NEWSGROUP                      "@TRN_TEST_NEWSGROUP@"
