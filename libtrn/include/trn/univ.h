@@ -57,10 +57,10 @@ struct UniversalConfigFileData
 
 struct UniversalVirtualData
 {
-    char      *ng;
-    char      *id;
-    char      *from;
-    char      *subj;
+    std::string ng;
+    std::string id;
+    std::string from;
+    std::string subj;
     ArticleNum num;
 };
 

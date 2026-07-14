@@ -83,6 +83,10 @@ UniversalItem *make_universal_item(UniversalItemType type)
     {
         new (&item->m_data.vgroup) UniversalVirtualGroup{};
     }
+    else if (type == UN_ARTICLE)
+    {
+        new (&item->m_data.virt) UniversalVirtualData{};
+    }
     return item;
 }
 
@@ -109,10 +113,7 @@ UniversalItem *make_numbered_article(std::string_view group_name)
     UniversalItem *item = make_universal_item(UN_ARTICLE);
     item->m_desc = save_str("Article");
     UniversalVirtualData &article = item->article();
-    article.ng = save_str(group_name);
-    article.id = nullptr;
-    article.from = nullptr;
-    article.subj = nullptr;
+    article.ng = group_name;
     article.num = ArticleNum{1};
     return item;
 }
@@ -216,7 +217,7 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     EXPECT_EQ(UN_ARTICLE, kept_article->m_type);
     EXPECT_EQ(UIS_NORMAL, kept_article->m_state);
     EXPECT_STREQ("Article", kept_article->m_desc);
-    EXPECT_STREQ("alt.article", kept_article->article().ng);
+    EXPECT_EQ("alt.article", kept_article->article().ng);
     EXPECT_EQ(ArticleNum{1}, kept_article->article().num);
     EXPECT_FALSE(g_univ_ng_virt_flag);
 

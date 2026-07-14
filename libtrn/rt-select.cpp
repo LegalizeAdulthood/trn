@@ -856,21 +856,22 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_ARTICLE:
     {
+        const UniversalVirtualData &article = ui->article();
         if (g_in_ng)
         {
             // XXX whine: can't recurse at this time
             break;
         }
-        if (!ui->m_data.virt.ng)
+        if (article.ng.empty())
         {
             break;                      // XXX whine
         }
-        NewsgroupData *np = find_newsgroup(ui->m_data.virt.ng);
+        NewsgroupData *np = find_newsgroup(article.ng.c_str());
 
         if (!np)
         {
             std::printf("Universal: newsgroup %s not found!",
-                   ui->m_data.virt.ng);
+                   article.ng.c_str());
             sleep(5);
             return exit_code;
         }
@@ -882,7 +883,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
         std::printf("Virtual: Entering %s:\n", g_newsgroup_name.c_str());
-        g_ng_go_art_num = ui->m_data.virt.num;
+        g_ng_go_art_num = article.num;
         g_univ_read_virt_flag = true;
         int ret = do_newsgroup(std::string{});
         g_univ_read_virt_flag = false;

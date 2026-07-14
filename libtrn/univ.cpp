@@ -220,6 +220,10 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     {
         new (&node->m_data.vgroup) UniversalVirtualGroup{};
     }
+    else if (type == UN_ARTICLE)
+    {
+        new (&node->m_data.virt) UniversalVirtualData{};
+    }
     node->m_next = nullptr;
     node->m_prev = g_last_univ;
     if (g_last_univ)
@@ -275,13 +279,8 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_ARTICLE:
-    {
-        UniversalVirtualData &article = ui->article();
-        safe_free(article.ng);
-        safe_free(article.from);
-        safe_free(article.subj);
+        ui->article().~UniversalVirtualData();
         break;
-    }
 
     case UN_VGROUP:
         ui->vgroup().~UniversalVirtualGroup();
@@ -384,10 +383,8 @@ static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, Artic
 {
     UniversalItem *ui = univ_add(UN_ARTICLE, desc);
     UniversalVirtualData &article = ui->article();
-    article.ng = save_str(grp);
+    article.ng = grp ? grp : "";
     article.num = art;
-    article.subj = nullptr;
-    article.from = nullptr;
     return ui;
 }
 
@@ -1150,8 +1147,8 @@ static void univ_vg_add_article(ArticleNum a)
     UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
     ui->m_score = score;
     UniversalVirtualData &article = ui->article();
-    article.subj = save_str(subj);
-    article.from = save_str(from);
+    article.subj = subj;
+    article.from = from;
 }
 
 
@@ -1259,12 +1256,12 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             {
               break;
             }
-            if (article.subj)
+            if (!article.subj.empty())
             {
               break;
             }
             s_current_vg_ui = ui;
-            (void)visit_group(article.ng);
+            (void)visit_group(article.ng.c_str());
             // later do something with return value
             break;
         }
@@ -1348,22 +1345,23 @@ const char *UniversalItem::univ_article_desc() const
     static char fbuf[200];
 
     const UniversalVirtualData &article = this->article();
-    char *s = article.subj;
-    const char *f = article.from;
-    if (!f)
+    const std::string &subject = article.subj;
+    const std::string &from = article.from;
+    if (from.empty())
     {
         std::strcpy(fbuf,"<No Author> ");
     }
     else
     {
-        safe_copy(fbuf,compress_from(f,16),17);
+        safe_copy(fbuf,compress_from(from.c_str(),16),17);
     }
-    if (!s)
+    if (subject.empty())
     {
         std::strcpy(sbuf,"<No Subject>");
     }
     else
     {
+        const char *s = subject.c_str();
         if ((s[0] == 'R') && //
             (s[1] == 'e') && //
             (s[2] == ':') && //

@@ -754,7 +754,7 @@ try_again:
             {
                 // later: use the datasrc of the newsgroup
                 const UniversalVirtualData &article = ui->article();
-                ui_elig = !was_read_group(article.num, article.ng);
+                ui_elig = !was_read_group(article.num, article.ng.c_str());
                 if (g_sel_rereading)
                 {
                     ui_elig = !ui_elig;

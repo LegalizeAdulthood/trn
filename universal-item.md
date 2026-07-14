@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 19. Convert Article Payload Strings
-
-- Target: `UniversalVirtualData`.
-- Change: replace `char *` fields with `std::string` fields.
-- Data flow: article newsgroup, message id, author, and subject feed
-  display, read-state checks, and virtual article expansion.
-- Risk: high; several fields have old null-versus-empty behavior.
-- Verification: focused universal tests and normal workflow.
-
 ### 20. Convert Config File Payload Strings
 
 - Target: `UniversalConfigFileData`.
