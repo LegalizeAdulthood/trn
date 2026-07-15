@@ -175,6 +175,29 @@ TEST_F(ScoreFileTest, subjectScoringKeepsLineBufferCap)
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 }
 
+TEST_F(ScoreFileTest, initReadsGlobalAndHierarchicalGroupScoreFiles)
+{
+    const fs::path score_dir{TRN_TEST_TMP_DIR "/scorefile-hierarchy"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+    fs::create_directories(score_dir);
+    std::ofstream{score_dir / "global"} << "1 subject: global\n";
+    std::ofstream{score_dir / "comp"} << "2 subject: comp\n";
+    std::ofstream{score_dir / "comp.lang"} << "3 subject: lang\n";
+    std::ofstream{score_dir / "comp.lang.apl"} << "4 subject: apl\n";
+    g_newsgroup_name = "comp.lang.apl";
+
+    trn::testing::MockEnvironment env;
+    std::string                   score_dir_name{score_dir.string()};
+    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
+        .WillRepeatedly(::testing::Return(score_dir_name.data()));
+
+    sf_init();
+
+    EXPECT_EQ(12, g_sf_num_entries);
+}
+
 TEST_F(ScoreFileTest, appendFromShortcutWritesShortenedFromRule)
 {
     const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-append-from"};

@@ -468,16 +468,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### `sf_get_filename` Scorefile Hierarchy Path
-
-- Files: `libtrn/scorefile.cpp`.
-- Finding: scorefile paths are assembled with string append and then
-  trimmed by searching for `/` and `.`.
-- Change: use `fs::path` for the score directory join and keep group
-  name slicing separate from path assembly.
-- Data flow: return the existing string form only at the boundary used
-  by scorefile readers.
-
 #### `sf_edit_file` Scorefile Edit Path
 
 - Files: `libtrn/scorefile.cpp`.

@@ -351,37 +351,34 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 // filenames of type a/b/c/foo.bar.misc for group foo.bar.misc
 static std::string sf_get_filename(int level)
 {
-    std::string filename = file_exp(get_val_const("SCOREDIR", DEFAULT_SCOREDIR));
-    filename += "/";
+    const fs::path score_dir{file_exp(get_val_const("SCOREDIR", DEFAULT_SCOREDIR))};
     if (!level)
     {
         // allow environment variable later...
-        filename += "global";
+        return (score_dir / "global").generic_string();
     }
-    else
+
+    std::string            group_name = file_exp("%C");
+    std::string::size_type pos = 0;
+    // maybe redo this logic later...
+    while (level--)
     {
-        filename += file_exp("%C");
-        std::string::size_type pos = filename.rfind('/');
-        // maybe redo this logic later...
-        while (level--)
+        if (pos == group_name.size()) // no more name to match
         {
-            if (pos == filename.size()) // no more name to match
-            {
-                return {};
-            }
-            pos = filename.find('.', pos);
-            if (pos == std::string::npos)
-            {
-                pos = filename.size();
-            }
-            if (pos < filename.size() && level)
-            {
-                pos++;
-            }
+            return {};
         }
-        filename.resize(pos); // cut end of score file
+        pos = group_name.find('.', pos);
+        if (pos == std::string::npos)
+        {
+            pos = group_name.size();
+        }
+        if (pos < group_name.size() && level)
+        {
+            pos++;
+        }
     }
-    return filename;
+    group_name.resize(pos); // cut end of score file
+    return (score_dir / group_name).generic_string();
 }
 
 // given a string, if no slashes prepends SCOREDIR env. variable
