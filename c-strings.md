@@ -415,17 +415,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-### Universal Selector Storage Slices
-
-#### Universal Parse Labels
-
-- Files: `libtrn/univ.cpp`.
-- Finding: `s_univ_begin_label` and `s_univ_line_desc` are parse-state
-  raw pointers.
-- Change: use owned optional strings or an explicit presence flag.
-- Data flow: update label matching and description defaults in
-  `univ_use_file` and `univ_do_line`.
-
 ### Static-Linkage Slices
 
 These slices move top-level functions that are declared in public headers

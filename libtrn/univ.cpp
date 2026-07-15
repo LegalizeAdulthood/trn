@@ -79,8 +79,8 @@ static bool           s_univ_done_startup{};     //
 static int            s_univ_min_score{};        // this score is part of the line format, so it is not ifdefed
 static bool           s_univ_use_min_score{};    //
 static bool           s_univ_begin_found{};      //
-static char          *s_univ_begin_label{};      // label to start working with
-static char          *s_univ_line_desc{};        // if non-nullptr, the description (printing name) of the entry
+static std::string    s_univ_begin_label;        // label to start working with
+static std::string    s_univ_line_desc;          // description (printing name) of the entry
 static UniversalItemIndex s_current_vg_ui_index{};   //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
@@ -667,10 +667,10 @@ static bool univ_use_file(std::string_view fname, const char *label)
         return false;
     }
     s_univ_begin_found = begin_top;
-    safe_free0(s_univ_begin_label);
+    s_univ_begin_label.clear();
     if (label)
     {
-        s_univ_begin_label = save_str(label);
+        s_univ_begin_label = label;
     }
     std::ifstream input{file_exp(open_name)};
     if (!input)
@@ -694,9 +694,9 @@ static bool univ_use_file(std::string_view fname, const char *label)
     {
         std::printf("\"begin group\" not found.\n");
     }
-    if (s_univ_begin_label)
+    if (!s_univ_begin_label.empty())
     {
-        std::printf("label not found: %s\n",s_univ_begin_label);
+        std::printf("label not found: %s\n",s_univ_begin_label.c_str());
     }
     if (s_univ_virt_pass_needed)
     {
@@ -819,15 +819,15 @@ static bool univ_do_line(char *line)
         }
         s_univ_begin_found = true;
     }
-    if (s_univ_begin_label)
+    if (!s_univ_begin_label.empty())
     {
-        if (*s == '>' && s[1] == ':' && !std::strcmp(s + 2, s_univ_begin_label))
+        if (*s == '>' && s[1] == ':' && !std::strcmp(s + 2, s_univ_begin_label.c_str()))
         {
-            safe_free0(s_univ_begin_label); // interpret starting at next line
+            s_univ_begin_label.clear(); // interpret starting at next line
         }
         return true;
     }
-    safe_free0(s_univ_line_desc);
+    s_univ_line_desc.clear();
     if (*s == '"')      // description name
     {
         char *desc = s + 1;
@@ -838,10 +838,11 @@ static bool univ_do_line(char *line)
             return true;
         }
         *p = '\0';
-        s_univ_line_desc = save_str(s);
+        s_univ_line_desc = s;
         s = p+1;
     }
     s = skip_space(s);
+    const char *line_desc = s_univ_line_desc.empty() ? nullptr : s_univ_line_desc.c_str();
     if (string_case_equal(s, "end group",9))
     {
         return false;
@@ -863,7 +864,7 @@ static bool univ_do_line(char *line)
             p = nullptr;
         }
         // description defaults to name
-        univ_add_file(s_univ_line_desc? s_univ_line_desc : s, s, p);
+        univ_add_file(line_desc ? line_desc : s, s, p);
     }
     else
     {
@@ -902,7 +903,7 @@ static bool univ_do_line(char *line)
             const char *label_ptr = label.empty() ? nullptr : label.c_str();
 
             // description defaults to name
-            univ_add_file(s_univ_line_desc ? s_univ_line_desc : file_name.c_str(), file_exp(file_name).c_str(),
+            univ_add_file(line_desc ? line_desc : file_name.c_str(), file_exp(file_name).c_str(),
                           label_ptr);
             break;
         }
@@ -914,7 +915,7 @@ static bool univ_do_line(char *line)
                 // XXX give an error message later
               break;
             }
-            univ_add_file(s_univ_line_desc? s_univ_line_desc : s, g_univ_fname.c_str(), s);
+            univ_add_file(line_desc ? line_desc : s, g_univ_fname.c_str(), s);
             break;
 
         case '>':
@@ -929,18 +930,18 @@ static bool univ_do_line(char *line)
 
         case '&':       // text file shortcut (for help files)
             s++;
-            univ_add_text_file(s_univ_line_desc? s_univ_line_desc : s, s);
+            univ_add_text_file(line_desc ? line_desc : s, s);
             break;
 
         case '$':       // extension 1
-            univ_do_line_ext1(s_univ_line_desc,s);
+            univ_do_line_ext1(line_desc,s);
             break;
 
         default:
             // if there is a description, this must be a restriction list
-            if (s_univ_line_desc)
+            if (line_desc)
             {
-                univ_add_mask(s_univ_line_desc,s);
+                univ_add_mask(line_desc,s);
               break;
             }
             // one or more newsgroups instead
