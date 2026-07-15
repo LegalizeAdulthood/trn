@@ -228,6 +228,10 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     {
         new (&node->m_data.cfile) UniversalConfigFileData{};
     }
+    else if (type == UN_GROUP_MASK)
+    {
+        new (&node->m_data.gmask) UniversalGroupMaskData{};
+    }
     node->m_next = nullptr;
     node->m_prev = g_last_univ;
     if (g_last_univ)
@@ -262,12 +266,8 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_GROUP_MASK:        // methods that have custom data
-    {
-        UniversalGroupMaskData &group_mask = ui->group_mask();
-        safe_free(group_mask.title);
-        safe_free(group_mask.mask_list);
+        ui->group_mask().~UniversalGroupMaskData();
         break;
-    }
 
     case UN_CONFIG_FILE:
         ui->config_file().~UniversalConfigFileData();
@@ -357,8 +357,8 @@ static void univ_add_mask(const char *desc, const char *mask)
 {
     UniversalItem *ui = univ_add(UN_GROUP_MASK, desc);
     UniversalGroupMaskData &group_mask = ui->group_mask();
-    group_mask.mask_list = save_str(mask);
-    group_mask.title = save_str(desc);
+    group_mask.mask_list = mask;
+    group_mask.title = desc;
 }
 
 //char* fname;                          // May be URL

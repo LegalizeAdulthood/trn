@@ -91,6 +91,10 @@ UniversalItem *make_universal_item(UniversalItemType type)
     {
         new (&item->m_data.cfile) UniversalConfigFileData{};
     }
+    else if (type == UN_GROUP_MASK)
+    {
+        new (&item->m_data.gmask) UniversalGroupMaskData{};
+    }
     return item;
 }
 
@@ -197,6 +201,18 @@ TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
     EXPECT_EQ(UIS_NORMAL, g_first_univ->m_state);
     EXPECT_EQ("alt.test", g_first_univ->group().ng);
     EXPECT_EQ(nullptr, g_first_univ->m_next);
+}
+
+TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
+{
+    const std::string file_name = fs::path{TRN_TEST_UNIV_GROUP_MASK_FILE}.generic_string();
+
+    ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
+    ASSERT_NE(nullptr, g_first_univ);
+    EXPECT_EQ(UN_GROUP_MASK, g_first_univ->m_type);
+    EXPECT_STREQ("Filter", g_first_univ->m_desc);
+    EXPECT_EQ("Filter", g_first_univ->group_mask().title);
+    EXPECT_EQ("alt.test !alt.noise", g_first_univ->group_mask().mask_list);
 }
 
 TEST_F(UnivTest, virtualPassUsesInjectedVisitor)

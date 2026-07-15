@@ -44,8 +44,8 @@ enum UniversalItemState
 
 struct UniversalGroupMaskData
 {
-    char *title;
-    char *mask_list;
+    std::string title;
+    std::string mask_list;
 };
 
 struct UniversalConfigFileData

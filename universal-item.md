@@ -40,14 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 21. Convert Group Mask Payload Strings
-
-- Target: `UniversalGroupMaskData`.
-- Change: replace `char *` fields with `std::string` fields.
-- Data flow: mask title and mask list feed group mask expansion.
-- Risk: medium; empty masks must keep current behavior.
-- Verification: focused universal tests and normal workflow.
-
 ### 22. Convert Text File Payload String
 
 - Target: `UniversalTextFile`.

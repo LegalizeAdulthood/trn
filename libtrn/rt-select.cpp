@@ -916,7 +916,8 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_GROUP_MASK:
     {
-        univ_mask_load(ui->m_data.gmask.mask_list,ui->m_data.gmask.title);
+        const UniversalGroupMaskData &group_mask = ui->group_mask();
+        univ_mask_load(group_mask.mask_list, group_mask.title.c_str());
         ch = universal_selector();
         switch (ch)
         {
