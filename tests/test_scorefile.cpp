@@ -33,6 +33,7 @@ namespace
 {
 
 std::string g_fetched_url;
+std::string g_fetched_outfile;
 
 namespace fs = std::filesystem;
 
@@ -41,6 +42,7 @@ constexpr ArticleNum TEST_ARTICLE_NUM{1};
 bool fetch_score_url(std::string_view url, const char *outfile)
 {
     g_fetched_url = std::string{url};
+    g_fetched_outfile = outfile;
 
     std::ofstream output{outfile, std::ios::binary};
     output << "10 subject: remote\n";
@@ -150,12 +152,15 @@ TEST_F(ScoreFileTest, extraHeaderLookupIsCaseInsensitive)
 TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)
 {
     g_fetched_url.clear();
+    g_fetched_outfile.clear();
     sf_set_url_getter_for_test(fetch_score_url);
 
     char include[]{"!include URL:http://example.test/scores"};
     sf_append(include);
 
     EXPECT_EQ("http://example.test/scores", g_fetched_url);
+    EXPECT_FALSE(g_fetched_outfile.empty());
+    EXPECT_FALSE(fs::exists(g_fetched_outfile));
     EXPECT_EQ(3, g_sf_num_entries);
 }
 

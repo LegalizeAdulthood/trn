@@ -472,14 +472,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### Scorefile URL Temporary File Cleanup
-
-- Files: `libtrn/scorefile.cpp`.
-- Finding: scorefile URL loading removes the downloaded temporary file
-  with POSIX `remove`.
-- Change: use `fs::remove` with `std::error_code`.
-- Data flow: keep the local temporary filename string.
-
 #### Final Temporary File Cleanup
 
 - Files: `libtrn/final.cpp`.

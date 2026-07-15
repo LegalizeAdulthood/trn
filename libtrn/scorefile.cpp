@@ -1435,7 +1435,8 @@ static int sf_open_file(const char *name)
     std::fclose(fp);
     if (!temp_name.empty())
     {
-        remove(temp_name.c_str());
+        std::error_code error;
+        fs::remove(temp_name, error);
     }
     return static_cast<int>(i);
 }
