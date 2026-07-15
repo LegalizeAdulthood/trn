@@ -1094,17 +1094,17 @@ void univ_page_file(std::string_view fname)
         return;
     }
 
-    std::sprintf(g_cmd_buf, "%s ", file_exp(get_val_const("HELPPAGER", get_val_const("PAGER", "more"))).c_str());
-    std::strcat(g_cmd_buf, file_exp(fname).c_str());
+    const std::string command =
+        fmt::format("{} {}", file_exp(get_val_const("HELPPAGER", get_val_const("PAGER", "more"))), file_exp(fname));
     term_down(3);
     reset_tty();                  // make sure tty is friendly
-    do_shell(SH,g_cmd_buf);      // invoke the shell
+    do_shell(SH, command.c_str()); // invoke the shell
     no_echo();                   // and make terminal
     cr_mode();                   // unfriendly again
     // later: consider something else that will return the key, and
     //        returning different codes based on the key.
     //
-    if (!std::strncmp(g_cmd_buf,"more ",5))
+    if (command.rfind("more ", 0) == 0)
     {
         get_anything();
     }

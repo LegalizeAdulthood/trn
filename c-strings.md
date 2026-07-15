@@ -397,16 +397,6 @@ buffer slices.
 
 ### Copy/Concat Slices
 
-#### `univ_page_file` Pager Command
-
-- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.
-- Finding: pager command construction writes through `sprintf` and
-  `strcat` into `g_cmd_buf`.
-- Change: accept `std::string_view` for `fname` and build the command
-  with `fmt::format`.
-- Data flow: pass the formatted command to `do_shell` while owned
-  storage is still alive.
-
 #### `nntp_xhdr` Commands
 
 - Files: `libtrn/head.cpp`.
