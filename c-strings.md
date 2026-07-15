@@ -415,13 +415,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Keymap Macro Strings
-
-- Files: `libtrn/terminal.cpp`.
-- Finding: `KeyMap::km_str` owns macro strings with `save_str`/`free`.
-- Change: replace macro string entries with owned `std::string` storage.
-- Data flow: update keymap union ownership and macro display together.
-
 #### Subject Text Storage
 
 - Files: `libtrn/cache.cpp`, `libtrn/include/trn/Subject.h`,

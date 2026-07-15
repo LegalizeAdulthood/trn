@@ -135,12 +135,9 @@ static long s_out_speed{}; // for use by tputs()
 
 struct KeyMap
 {
-    char km_type[128];
-    union KeyMapUnion
-    {
-        KeyMap *km_km;
-        char *km_str;
-    } km_ptr[128];
+    char        km_type[128]{};
+    KeyMap    *km_km[128]{};
+    std::string km_str[128];
 };
 
 enum
@@ -655,15 +652,14 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
                     std::fputs(override,stdout);
                     term_down(2);
                 }
-                std::free(curmap->km_ptr[ch].km_str);
-                curmap->km_ptr[ch].km_str = nullptr;
+                curmap->km_str[ch].clear();
             }
             curmap->km_type[ch] = KM_KEYMAP + garbage;
-            if (curmap->km_ptr[ch].km_km == nullptr)
+            if (curmap->km_km[ch] == nullptr)
             {
-                curmap->km_ptr[ch].km_km = new_key_map();
+                curmap->km_km[ch] = new_key_map();
             }
-            curmap = curmap->km_ptr[ch].km_km;
+            curmap = curmap->km_km[ch];
         }
         else
         {
@@ -674,8 +670,12 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
             }
             else
             {
+                if ((curmap->km_type[ch] & KM_TMASK) == KM_KEYMAP)
+                {
+                    curmap->km_km[ch] = nullptr;
+                }
                 curmap->km_type[ch] = KM_STRING + garbage;
-                curmap->km_ptr[ch].km_str = save_str(m);
+                curmap->km_str[ch] = m;
             }
         }
     }
@@ -683,19 +683,11 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
 
 static KeyMap *new_key_map()
 {
-    KeyMap* map;
-
 #ifndef lint
-    map = (KeyMap*)safe_malloc(sizeof(KeyMap));
+    return new KeyMap{};
 #else
-    map = nullptr;
+    return nullptr;
 #endif // lint
-    for (int i = 127; i >= 0; i--)
-    {
-        map->km_ptr[i].km_km = nullptr;
-        map->km_type[i] = KM_NOTHING;
-    }
-    return map;
 }
 
 void show_macros()
@@ -752,11 +744,11 @@ static void show_key_map(KeyMap *curmap, char *prefix)
                 break;
 
             case KM_KEYMAP:
-                show_key_map(curmap->km_ptr[i].km_km, prefix);
+                show_key_map(curmap->km_km[i], prefix);
                 break;
 
             case KM_STRING:
-                std::sprintf(g_cmd_buf,"%s   %s\n",prefix,curmap->km_ptr[i].km_str);
+                std::sprintf(g_cmd_buf, "%s   %s\n", prefix, curmap->km_str[i].c_str());
                 print_lines(g_cmd_buf, NO_MARKING);
                 break;
 
@@ -1117,7 +1109,7 @@ void eat_typeahead()
                 continue;
 
             case KM_KEYMAP:           // another keymap?
-                curmap = curmap->km_ptr[lc].km_km;
+                curmap = curmap->km_km[lc];
                 break;
             }
         }
@@ -1373,12 +1365,12 @@ tryagain:
             goto tryagain;
 
         case KM_KEYMAP:               // another keymap?
-            curmap = curmap->km_ptr[g_last_char].km_km;
+            curmap = curmap->km_km[g_last_char];
             TRN_ASSERT(curmap != nullptr);
             break;
 
         case KM_STRING:               // a string?
-            push_string(curmap->km_ptr[g_last_char].km_str,0200);
+            push_string(curmap->km_str[g_last_char].c_str(),0200);
             if (++times > 20)           // loop?
             {
                 std::fputs("\nmacro loop?\n",stdout);

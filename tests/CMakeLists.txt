@@ -45,6 +45,7 @@ add_executable(trn-test
     test_sorder.cpp
     test_string-algos.cpp
     test_sw.cpp
+    test_terminal.cpp
     test_util.cpp
     test_univ.cpp
     test_utf.cpp
