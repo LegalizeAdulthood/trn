@@ -966,12 +966,12 @@ int sf_score(ArticleNum a)
     if (s_reply_active)
     {
         // should be in cache if a rule above used the subject
-        const char *reply_subject = fetch_cache(a, SUBJ_LINE, true);
+        const std::string reply_subject = fetch_cache(a, SUBJ_LINE, true);
         // later: consider other possible reply forms (threading?)
-        if (reply_subject != nullptr)
+        if (!reply_subject.empty())
         {
             char reply_subject_buf[LINE_BUF_LEN];
-            safe_copy(reply_subject_buf, reply_subject, sizeof reply_subject_buf);
+            safe_copy(reply_subject_buf, reply_subject.c_str(), sizeof reply_subject_buf);
             if (subject_has_re(reply_subject_buf, nullptr))
             {
                 sum = sum+s_reply_score;
@@ -1074,20 +1074,22 @@ void sf_append(char *line)
 
         case 'S': // current subject
         {
-            const char *s = fetch_cache(g_art, SUBJ_LINE, true);
-            if (!s || !*s)
+            const std::string subject = fetch_cache(g_art, SUBJ_LINE, true);
+            if (subject.empty())
             {
                 std::printf("No subject: score entry aborted.\n");
                 return;
             }
-            if (s[0] == 'R' && s[1] == 'e' && s[2] == ':' && s[3] == ' ')
+            std::string_view subject_text{subject};
+            if (subject_text.size() >= 4 && subject_text[0] == 'R' && subject_text[1] == 'e' //
+                && subject_text[2] == ':' && subject_text[3] == ' ')
             {
-                s += 4;
+                subject_text.remove_prefix(4);
             }
             shortcut_scoreline.assign(scoreline, prefix_size);
             shortcut_scoreline += "subject: ";
             // Preserve the historical LINE_BUF_LEN-derived subject limit.
-            shortcut_scoreline.append(std::string_view{s}.substr(0, 900));
+            shortcut_scoreline.append(subject_text.substr(0, 900));
             scoreline = shortcut_scoreline.data();
             break;
         }
@@ -1151,6 +1153,7 @@ void sf_append(char *line)
 // returns a lowercased copy of the header line type h
 static std::string sf_get_line(ArticleNum a, HeaderLineType h)
 {
+    std::string      cached_line;
     std::string_view line;
 
     if (h <= SOME_LINE)
@@ -1174,9 +1177,11 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else if (h == SUBJ_LINE)
     {
-        if (const char *s = fetch_cache(a,h,true))       // get compressed copy
+        const std::string subject = fetch_cache(a, h, true); // get compressed copy
+        if (!subject.empty())
         {
-            line = s;
+            cached_line = subject;
+            line = cached_line;
         }
     }
     else

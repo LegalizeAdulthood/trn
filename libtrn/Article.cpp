@@ -190,7 +190,7 @@ void Article::check_poster()
 // Return a pointer to a cached header line for the indicated article.
 // Truncated headers (e.g. from a .thread file) are optionally ignored.
 //
-const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
+const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs) const
 {
     const char *s;
 
@@ -219,27 +219,33 @@ const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs)
         s = msg_id_c_str();
         break;
 
-    case LINES_LINE:
-    {
-        static char lines_buf[32];
-        std::sprintf(lines_buf, "%ld", m_lines);
-        s = lines_buf;
-        break;
-    }
-
-    case BYTES_LINE:
-    {
-        static char bytes_buf[32];
-        std::sprintf(bytes_buf, "%ld", m_bytes);
-        s = bytes_buf;
-        break;
-    }
-
     default:
         s = nullptr;
         break;
     }
     return s;
+}
+
+std::string Article::get_cached_line_text(HeaderLineType which_line, bool no_truncs) const
+{
+    switch (which_line)
+    {
+    case LINES_LINE:
+        return std::to_string(m_lines);
+
+    case BYTES_LINE:
+        return std::to_string(m_bytes);
+
+    default:
+    {
+        const char *line = get_cached_line(which_line, no_truncs);
+        if (line == nullptr)
+        {
+            return {};
+        }
+        return std::string{line};
+    }
+    }
 }
 
 void Article::clear_article()

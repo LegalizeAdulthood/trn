@@ -373,34 +373,37 @@ void Article::uncache_article(bool remove_empties)
 
 // get the header line from an article's cache or parse the article trying
 
-const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache)
+std::string fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache)
 {
-    const char *s;
-    Article* ap;
-    bool cached = (g_header_type[which_line].flags & HT_CACHED);
+    Article *ap;
+    bool     cached = (g_header_type[which_line].flags & HT_CACHED);
 
     // article_find() returns a nullptr if the article number value is invalid
     if (!(ap = article_find(art_num)) || !(ap->m_flags & AF_EXISTS))
     {
-        return "";
-    }
-    if (cached && (s=ap->get_cached_line(which_line, g_untrim_cache)) != nullptr)
-    {
-        return s;
-    }
-    if (!fill_cache)
-    {
-        return nullptr;
-    }
-    if (!parse_header(art_num))
-    {
-        return "";
+        return {};
     }
     if (cached)
     {
-        return ap->get_cached_line(which_line, g_untrim_cache);
+        std::string line = ap->get_cached_line_text(which_line, g_untrim_cache);
+        if (!line.empty())
+        {
+            return line;
+        }
     }
-    return nullptr;
+    if (!fill_cache)
+    {
+        return {};
+    }
+    if (!parse_header(art_num))
+    {
+        return {};
+    }
+    if (cached)
+    {
+        return ap->get_cached_line_text(which_line, g_untrim_cache);
+    }
+    return {};
 }
 
 // subj not yet allocated, so we can tweak it first

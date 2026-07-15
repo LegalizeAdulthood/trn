@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <ctime>
 #include <map>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -46,7 +47,7 @@ void        cache_init();
 void        build_cache();
 void        close_cache();
 void        change_join_subject_len(int len);
-const char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
+std::string fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
 int         decode_header(char *to, std::string_view from);
 void        dectrl(char *str);
 #ifdef PENDING

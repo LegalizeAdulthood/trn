@@ -399,15 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `Article::get_cached_line` Numeric Buffers
-
-- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`.
-- Finding: `LINES_LINE` and `BYTES_LINE` use static numeric buffers.
-- Change: split cached header lines from formatted numeric article
-  fields.
-- Data flow: callers that need numeric text should receive owned or
-  caller-local formatting.
-
 #### `Article::check_poster` Sender Parse
 
 - Files: `libtrn/Article.cpp`.

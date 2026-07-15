@@ -653,8 +653,8 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         std::fflush(stdout);
     }
 
-    const char *xref_text = fetch_cache(art_num, XREF_LINE, FILL_CACHE);
-    if (!xref_text || !*xref_text)
+    const std::string xref_text = fetch_cache(art_num, XREF_LINE, FILL_CACHE);
+    if (xref_text.empty())
     {
         return 0;
     }

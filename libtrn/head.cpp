@@ -586,10 +586,14 @@ std::string fetch_lines(ArticleNum art_num, HeaderLineType which_line)
     if (g_parsed_art != art_num)
     {
         // If the line is not in the cache, this will parse the header
-        const char *cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
-        if (cached_line)
+        const std::string cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
+        if (!cached_line.empty())
         {
             return cached_line;
+        }
+        if (g_parsed_art != art_num)
+        {
+            return {};
         }
     }
 
@@ -751,10 +755,15 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line)
 {
     if ((g_data_source->m_flags & DF_REMOTE) && g_parsed_art != art_num)
     {
-        const char *cached_line = fetch_cache(art_num, which_line, DONT_FILL_CACHE);
-        if (cached_line)
+        const std::string cached_line = fetch_cache(art_num, which_line, DONT_FILL_CACHE);
+        if (!cached_line.empty())
         {
-            safe_copy(g_cmd_buf, cached_line, sizeof g_cmd_buf);
+            safe_copy(g_cmd_buf, cached_line.c_str(), sizeof g_cmd_buf);
+            return g_cmd_buf;
+        }
+        if (Article *ap = article_find(art_num); ap == nullptr || !(ap->m_flags & AF_EXISTS))
+        {
+            *g_cmd_buf = '\0';
             return g_cmd_buf;
         }
 
@@ -765,10 +774,15 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line)
     // Only return a cached line if it isn't the current article
     if (g_parsed_art != art_num)
     {
-        const char *cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
-        if (cached_line)
+        const std::string cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
+        if (!cached_line.empty())
         {
-            safe_copy(g_cmd_buf, cached_line, sizeof g_cmd_buf);
+            safe_copy(g_cmd_buf, cached_line.c_str(), sizeof g_cmd_buf);
+            return g_cmd_buf;
+        }
+        if (g_parsed_art != art_num)
+        {
+            *g_cmd_buf = '\0';
             return g_cmd_buf;
         }
     }
@@ -781,10 +795,14 @@ std::string prefetch_lines_copy(ArticleNum art_num, HeaderLineType which_line)
 {
     if ((g_data_source->m_flags & DF_REMOTE) && g_parsed_art != art_num)
     {
-        const char *cached_line = fetch_cache(art_num, which_line, DONT_FILL_CACHE);
-        if (cached_line)
+        const std::string cached_line = fetch_cache(art_num, which_line, DONT_FILL_CACHE);
+        if (!cached_line.empty())
         {
             return cached_line;
+        }
+        if (Article *ap = article_find(art_num); ap == nullptr || !(ap->m_flags & AF_EXISTS))
+        {
+            return {};
         }
 
         std::string result;
