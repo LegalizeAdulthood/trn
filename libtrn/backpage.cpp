@@ -11,7 +11,11 @@
 #include <util/util2.h>
 
 #include <cstdio>
+#include <filesystem>
 #include <string>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 static int             s_vary_fd{0};         // virtual array file for storing  file offsets
 static ArticlePosition s_vary_buf[VARY_SIZE]; // current window onto virtual array
@@ -25,7 +29,8 @@ void back_page_init()
     const std::string vary_name = file_exp(VARYNAME);
     close(creat(vary_name.c_str(), 0600));
     s_vary_fd = open(vary_name.c_str(), 2);
-    remove(vary_name.c_str());
+    std::error_code error;
+    fs::remove(vary_name, error);
     if (s_vary_fd < 0)
     {
         std::printf(g_cant_open, vary_name.c_str());

@@ -472,14 +472,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### Backpage Vary File Cleanup
-
-- Files: `libtrn/backpage.cpp`.
-- Finding: `back_page_init` removes the temporary vary file with POSIX
-  `remove` after opening it.
-- Change: use `fs::remove` with `std::error_code`.
-- Data flow: keep the existing temporary filename string.
-
 #### Universal Temporary File Cleanup
 
 - Files: `libtrn/univ.cpp`.
