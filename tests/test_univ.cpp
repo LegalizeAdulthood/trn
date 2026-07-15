@@ -95,9 +95,9 @@ UniversalItem make_virtual_group(std::string_view group_name)
 
 UniversalItem make_numbered_article(std::string_view group_name)
 {
-    UniversalItem item = make_universal_item(UniversalVirtualData{});
+    UniversalItem item = make_universal_item(UniversalVirtualArticle{});
     item.m_desc = "Article";
-    UniversalVirtualData &article = item.article();
+    UniversalVirtualArticle &article = item.article();
     article.ng = group_name;
     article.num = ArticleNum{1};
     return item;
@@ -105,8 +105,8 @@ UniversalItem make_numbered_article(std::string_view group_name)
 
 UniversalItem make_undescribed_numbered_article(std::string_view group_name)
 {
-    UniversalItem         item = make_universal_item(UniversalVirtualData{});
-    UniversalVirtualData &article = item.article();
+    UniversalItem         item = make_universal_item(UniversalVirtualArticle{});
+    UniversalVirtualArticle &article = item.article();
     article.ng = group_name;
     article.num = ArticleNum{1};
     return item;
@@ -269,7 +269,7 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(kept_group->m_data));
     EXPECT_EQ(UIS_NORMAL, kept_group->m_state);
     EXPECT_EQ("alt.keep", kept_group->group().ng);
-    EXPECT_TRUE(std::holds_alternative<UniversalVirtualData>(kept_article->m_data));
+    EXPECT_TRUE(std::holds_alternative<UniversalVirtualArticle>(kept_article->m_data));
     EXPECT_EQ(UIS_NORMAL, kept_article->m_state);
     EXPECT_EQ("Article", kept_article->m_desc);
     EXPECT_EQ("alt.article", kept_article->article().ng);

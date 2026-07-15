@@ -849,7 +849,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             univ_page_file(file_name);
         }
     }
-    else if (const UniversalVirtualData *article = std::get_if<UniversalVirtualData>(&ui->m_data))
+    else if (const UniversalVirtualArticle *article = std::get_if<UniversalVirtualArticle>(&ui->m_data))
     {
         if (g_in_ng)
         {

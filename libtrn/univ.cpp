@@ -399,8 +399,8 @@ static void univ_add_file(const char *desc, const char *fname, const char *label
 
 static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
 {
-    UniversalItem        *ui = univ_add(UniversalVirtualData{}, desc);
-    UniversalVirtualData &article = ui->article();
+    UniversalItem        *ui = univ_add(UniversalVirtualArticle{}, desc);
+    UniversalVirtualArticle &article = ui->article();
     article.ng = grp ? grp : "";
     article.num = art;
     return ui;
@@ -1122,7 +1122,7 @@ void univ_newsgroup_virtual()
     {
         univ_vg_add_group();
     }
-    else if (std::holds_alternative<UniversalVirtualData>(current_vg_ui->m_data))
+    else if (std::holds_alternative<UniversalVirtualArticle>(current_vg_ui->m_data))
     {
         // get article number from message-id
     }
@@ -1157,7 +1157,7 @@ static void univ_vg_add_article(ArticleNum a)
     // later consider author in description, scoring, etc.
     UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
     ui->m_score = score;
-    UniversalVirtualData &article = ui->article();
+    UniversalVirtualArticle &article = ui->article();
     article.subj = subj;
     article.from = from;
 }
@@ -1270,7 +1270,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             continue;
         }
 
-        const UniversalVirtualData *article = std::get_if<UniversalVirtualData>(&ui->m_data);
+        const UniversalVirtualArticle *article = std::get_if<UniversalVirtualArticle>(&ui->m_data);
         if (article != nullptr)
         {
             // if article number is not set, visit newsgroup with callback
@@ -1334,7 +1334,7 @@ const char *UniversalItem::univ_article_desc() const
     static char sbuf[200];
     static char fbuf[200];
 
-    const UniversalVirtualData &article = this->article();
+    const UniversalVirtualArticle &article = this->article();
     const std::string &subject = article.subj;
     const std::string &from = article.from;
     if (from.empty())
@@ -1403,16 +1403,16 @@ const UniversalVirtualGroup &UniversalItem::vgroup() const
     return std::get<UniversalVirtualGroup>(m_data);
 }
 
-UniversalVirtualData &UniversalItem::article()
+UniversalVirtualArticle &UniversalItem::article()
 {
-    assert(std::holds_alternative<UniversalVirtualData>(m_data));
-    return std::get<UniversalVirtualData>(m_data);
+    assert(std::holds_alternative<UniversalVirtualArticle>(m_data));
+    return std::get<UniversalVirtualArticle>(m_data);
 }
 
-const UniversalVirtualData &UniversalItem::article() const
+const UniversalVirtualArticle &UniversalItem::article() const
 {
-    assert(std::holds_alternative<UniversalVirtualData>(m_data));
-    return std::get<UniversalVirtualData>(m_data);
+    assert(std::holds_alternative<UniversalVirtualArticle>(m_data));
+    return std::get<UniversalVirtualArticle>(m_data);
 }
 
 UniversalConfigFileData &UniversalItem::config_file()

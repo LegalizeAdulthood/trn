@@ -753,7 +753,7 @@ try_again:
                     }
                 }
             }
-            else if (const UniversalVirtualData *article = std::get_if<UniversalVirtualData>(&item.m_data))
+            else if (const UniversalVirtualArticle *article = std::get_if<UniversalVirtualArticle>(&item.m_data))
             {
                 // later: use the datasrc of the newsgroup
                 ui_elig = !was_read_group(article->num, article->ng.c_str());
@@ -2912,7 +2912,7 @@ static void display_universal(const UniversalItem *ui)
             }
             newline();
         }
-        else if (std::holds_alternative<UniversalVirtualData>(ui->m_data))
+        else if (std::holds_alternative<UniversalVirtualArticle>(ui->m_data))
         {
             std::printf("      %s",ui->m_desc.empty() ? ui->univ_article_desc() : ui->m_desc.c_str());
             newline();

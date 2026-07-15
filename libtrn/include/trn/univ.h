@@ -41,7 +41,7 @@ struct UniversalConfigFileData
     std::string label;
 };
 
-struct UniversalVirtualData
+struct UniversalVirtualArticle
 {
     std::string ng;
     std::string id;
@@ -94,7 +94,7 @@ using UniversalData = std::variant<UniversalNoData,
     UniversalTextPlaceholder,
     UniversalNewsgroup,
     UniversalGroupMaskData,
-    UniversalVirtualData,
+    UniversalVirtualArticle,
     UniversalConfigFileData,
     UniversalVirtualGroup,
     UniversalTextFile,
@@ -125,8 +125,8 @@ struct UniversalItem
     const UniversalNewsgroup &group() const;
     UniversalVirtualGroup &vgroup();
     const UniversalVirtualGroup &vgroup() const;
-    UniversalVirtualData &article();
-    const UniversalVirtualData &article() const;
+    UniversalVirtualArticle &article();
+    const UniversalVirtualArticle &article() const;
     UniversalConfigFileData &config_file();
     const UniversalConfigFileData &config_file() const;
     UniversalGroupMaskData &group_mask();
