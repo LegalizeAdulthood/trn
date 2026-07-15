@@ -780,7 +780,7 @@ static bool open_newsrc(Newsrc *rp)
         }
         // unlink backup file name and backup current name
         std::error_code error;
-        fs::remove(fs::path{rp->old_name}, error);
+        fs::remove(rp->old_name, error);
 #ifndef NO_FILELINKS
         safe_link(rp->name.c_str(), rp->old_name.c_str());
 #endif
@@ -1858,7 +1858,7 @@ bool write_newsrcs(Multirc *mptr)
 write_error:
             print_cant_recreate(rp->name);
             std::error_code error;
-            fs::remove(fs::path{rp->new_name}, error);
+            fs::remove(rp->new_name, error);
             total_success = false;
             continue;
         }
@@ -1898,7 +1898,7 @@ void get_old_newsrcs(Multirc *mptr)
                 error.clear();
                 fs::rename(newsrc_path, new_newsrc_path, error);
                 error.clear();
-                fs::rename(fs::path{rp->old_name}, newsrc_path, error);
+                fs::rename(rp->old_name, newsrc_path, error);
             }
         }
     }

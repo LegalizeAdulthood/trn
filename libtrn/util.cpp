@@ -268,7 +268,8 @@ int do_shell(const char *shell, const char *cmd)
 #endif
     if (g_data_source && !g_data_source->m_auth_user.empty())
     {
-        remove(g_nntp_auth_file.c_str());
+        std::error_code error;
+        fs::remove(g_nntp_auth_file, error);
     }
     return ret;
 }

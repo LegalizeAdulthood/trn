@@ -472,9 +472,35 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### Authentication File Cleanup
+#### Backpage Vary File Cleanup
 
-- Files: `libtrn/util.cpp`.
-- Finding: `set_auth` removes the NNTP auth file with POSIX `remove`.
+- Files: `libtrn/backpage.cpp`.
+- Finding: `back_page_init` removes the temporary vary file with POSIX
+  `remove` after opening it.
 - Change: use `fs::remove` with `std::error_code`.
-- Data flow: keep `g_nntp_auth_file` as string storage for now.
+- Data flow: keep the existing temporary filename string.
+
+#### Universal Temporary File Cleanup
+
+- Files: `libtrn/univ.cpp`.
+- Finding: `univ_close` removes `g_univ_tmp_file` with POSIX
+  `remove`.
+- Change: use `fs::remove` with `std::error_code`.
+- Data flow: keep `g_univ_tmp_file` as string storage for now.
+
+#### Scorefile URL Temporary File Cleanup
+
+- Files: `libtrn/scorefile.cpp`.
+- Finding: scorefile URL loading removes the downloaded temporary file
+  with POSIX `remove`.
+- Change: use `fs::remove` with `std::error_code`.
+- Data flow: keep the local temporary filename string.
+
+#### Final Temporary File Cleanup
+
+- Files: `libtrn/final.cpp`.
+- Finding: `finalize` removes NNTP temporary article files and the
+  header file with POSIX `remove`.
+- Change: use `fs::remove` with `std::error_code`.
+- Data flow: keep existing global filename strings and NNTP temporary
+  name helpers.
