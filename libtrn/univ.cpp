@@ -1135,32 +1135,29 @@ void univ_newsgroup_virtual()
 
 static void univ_vg_add_article(ArticleNum a)
 {
-    char lbuf[70];
-
     int score = sc_score_art(a, false);
     if (s_univ_use_min_score && (score<s_univ_min_score))
     {
         return;
     }
-    char *subj = fetch_subj(a);
-    if (!subj || !*subj)
+    std::string subject = fetch_subj_copy(a);
+    if (subject.empty())
     {
         return;
     }
-    const char *from = fetch_from(a);
-    if (!from || !*from)
+    std::string from = prefetch_lines_copy(a, FROM_LINE);
+    if (from.empty())
     {
         from = "<No Author>";
     }
 
-    safe_copy(lbuf,subj,sizeof lbuf - 4);
     // later scan/replace bad characters
 
     // later consider author in description, scoring, etc.
     UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
     ui->m_score = score;
     UniversalVirtualArticle &article = ui->article();
-    article.subj = subj;
+    article.subj = subject;
     article.from = from;
 }
 

@@ -399,17 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `univ_vg_add_article` Subject and Author Storage
-
-- Files: `libtrn/univ.cpp`.
-- Finding: the function fetches borrowed subject and author pointers, then
-  stores both values into owned `std::string` fields.  It also copies the
-  subject into an unused local `char lbuf[70]`.
-- Change: use owned strings from `fetch_subj_copy` and
-  `prefetch_lines_copy`, remove the dead local buffer copy, and store the
-  owned values directly.
-- Data flow: preserve the `<No Author>` fallback.
-
 #### `prefetch_lines` Static Header Buffer
 
 - Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`, remaining

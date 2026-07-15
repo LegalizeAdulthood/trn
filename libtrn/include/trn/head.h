@@ -119,10 +119,6 @@ inline std::string fetch_subj_copy(ArticleNum art_num)
 {
     return prefetch_lines_copy(art_num, SUBJ_LINE);
 }
-inline char *fetch_from(ArticleNum art_num)
-{
-    return prefetch_lines(art_num, FROM_LINE);
-}
 inline char *fetch_xref(ArticleNum art_num)
 {
     return prefetch_lines(art_num, XREF_LINE);
