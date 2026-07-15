@@ -5,6 +5,8 @@
 #ifndef TRN_RT_UTIL_H
 #define TRN_RT_UTIL_H
 
+#include <string>
+
 struct Article;
 
 extern char g_spin_char;              // char to put back when we're done spinning
@@ -26,7 +28,7 @@ enum SpinMode
 
 char *extract_name(char *name);
 char *compress_name(char *name, int max);
-char *compress_from(const char *from, int size);
+std::string compress_from(const char *from, int size);
 bool strip_one_re(char *str, char **strp);
 bool subject_has_re(char *str, char **strp);
 const char *compress_subj(const Article *ap, int max);

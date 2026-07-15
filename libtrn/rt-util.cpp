@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <string>
 
 char g_spin_char{' '};           // char to put back when we're done spinning
 long g_spin_estimate{};          // best guess of how much work there is
@@ -582,40 +583,46 @@ static char *compress_address(char *name, int max)
 // Fit the author name in <max> chars.  Uses the comment portion if present
 // and pads with spaces.
 //
-char *compress_from(const char *from, int size)
+std::string compress_from(const char *from, int size)
 {
-    static char lbuf[LINE_BUF_LEN];
+    if (size <= 0)
+    {
+        return {};
+    }
 
-    str_char_subst(lbuf, from ? from : "", sizeof lbuf, *g_char_subst);
-    char *s = extract_name(lbuf);
+    std::string buffer(LINE_BUF_LEN, '\0');
+    str_char_subst(buffer.data(), from ? from : "", static_cast<int>(buffer.size()), *g_char_subst);
+    char *s = extract_name(buffer.data());
     if (s != nullptr)
     {
         s = compress_name(s, size);
     }
     else
     {
-        s = compress_address(lbuf, size);
+        s = compress_address(buffer.data(), size);
     }
 
-    int len = std::strlen(s);
-    int vis_len;
+    std::size_t len = std::strlen(s);
+    int         vis_len;
 #ifdef USE_UTF_HACK
     vis_len = visual_length_of(s);
 #else
-    vis_len = len;
+    vis_len = static_cast<int>(len);
 #endif
-    if (!len)
+    if (len == 0)
     {
-        std::strcpy(s,"NO NAME");
+        std::strcpy(s, "NO NAME");
         len = 7;
     }
-    while (vis_len < size && len < sizeof lbuf - 1)
+    const std::size_t offset = static_cast<std::size_t>(s - buffer.data());
+    const std::size_t capacity = buffer.size() - offset;
+    while (vis_len < size && len + 1 < capacity)
     {
         s[len++] = ' ';
         vis_len++;
     }
     s[len] = '\0';
-    return s;
+    return std::string{s};
 }
 
 inline bool eq_ignore_case(char unknown, char lower)

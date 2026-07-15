@@ -123,15 +123,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
         }
         if (g_sa_mode_desc_author)
         {
-            if (trunc)
-            {
-                std::strcat(desc_buf, compress_from(article_ptr(artnum)->from_c_str(), 16));
-            }
-            else
-            {
-                std::strcat(desc_buf, compress_from(article_ptr(artnum)->from_c_str(), 200));
-            }
-            std::strcat(desc_buf," ");
+            std::strcat(desc_buf, compress_from(article_ptr(artnum)->from_c_str(), trunc ? 16 : 200).c_str());
+            std::strcat(desc_buf, " ");
         }
         if (g_sa_mode_desc_subject)
         {

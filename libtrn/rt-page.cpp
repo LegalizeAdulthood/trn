@@ -2702,9 +2702,7 @@ static void display_article(const Article *ap, int ix, int sel)
     }
     else
     {
-        std::printf("%s  %s\n",
-               compress_from(ap->from_c_str(), from_width),
-               compress_subj(ap, subj_width - from_width));
+        fmt::print("{}  {}\n", compress_from(ap->from_c_str(), from_width), compress_subj(ap, subj_width - from_width));
     }
     term_down(1);
 }
@@ -2759,9 +2757,8 @@ static void display_subject(const Subject *subj, int ix, int sel)
         }
         else
         {
-            std::printf("%s%3d  %s\n",
-                   compress_from(first_ap? first_ap->from_c_str() : nullptr, from_width), j,
-                   compress_subj(first_ap, subj_width - from_width));
+            fmt::print("{}{:3}  {}\n", compress_from(first_ap ? first_ap->from_c_str() : nullptr, from_width), j,
+                       compress_subj(first_ap, subj_width - from_width));
         }
         term_down(1);
         int i = -1;
@@ -2811,8 +2808,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                         {
                             std::putchar(' ');
                         }
-                        std::printf("  %s      ",
-                               compress_from(ap? ap->from_c_str() : nullptr, from_width));
+                        fmt::print("  {}      ", compress_from(ap ? ap->from_c_str() : nullptr, from_width));
                         continue;
                     }
                 }
@@ -2825,7 +2821,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                 {
                     std::putchar(' ');
                 }
-                std::printf("  %s\n", compress_from(ap? ap->from_c_str() : nullptr, from_width));
+                fmt::print("  {}\n", compress_from(ap ? ap->from_c_str() : nullptr, from_width));
                 term_down(1);
             }
         }

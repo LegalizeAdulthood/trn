@@ -399,17 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `compress_from` Display Text
-
-- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
-  `libtrn/rt-page.cpp`, `libtrn/sadesc.cpp`, `libtrn/univ.cpp`.
-- Finding: author display text is built in static `lbuf` and returned as
-  a mutable pointer.
-- Change: return `std::string` while preserving display-width padding
-  and truncation.
-- Data flow: update display callers to consume the owned result
-  immediately.
-
 #### `prefetch_lines` Static Header Buffer
 
 - Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`, callers of

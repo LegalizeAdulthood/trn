@@ -2,10 +2,12 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/rt-util.h>
 
 #include <config/common.h>
+#include <trn/charsubst.h>
 
 #include <test_config.h>
 
@@ -13,6 +15,7 @@
 
 #include <cstring>
 #include <string.h>
+#include <string>
 
 using namespace testing;
 
@@ -211,6 +214,67 @@ TEST_F(CompressNameTest, PCS)
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
+}
+
+class CompressFromTest : public Test
+{
+protected:
+    void SetUp() override
+    {
+        m_previous_char_subst = g_char_subst;
+        g_char_subst = g_charsets.c_str();
+    }
+
+    void TearDown() override
+    {
+        g_char_subst = m_previous_char_subst;
+    }
+
+    const char *m_previous_char_subst{};
+};
+
+static std::string padded(std::string text, std::size_t width)
+{
+    if (text.size() < width)
+    {
+        text.append(width - text.size(), ' ');
+    }
+    return text;
+}
+
+TEST_F(CompressFromTest, usesAngleAddressDisplayName)
+{
+    EXPECT_EQ(padded("Ross Ridge", 16), compress_from("Ross Ridge <ross@example.com>", 16));
+}
+
+TEST_F(CompressFromTest, usesCommentDisplayName)
+{
+    EXPECT_EQ(padded("Ross Ridge", 16), compress_from("ross@example.com (Ross Ridge)", 16));
+}
+
+TEST_F(CompressFromTest, stripsAngleBracketsFromAddress)
+{
+    EXPECT_EQ("ross@example.com", compress_from("<ross@example.com>", 16));
+}
+
+TEST_F(CompressFromTest, padsShortAddress)
+{
+    EXPECT_EQ(padded("r@example.com", 16), compress_from("r@example.com", 16));
+}
+
+TEST_F(CompressFromTest, truncatesPlainAddressFromStart)
+{
+    EXPECT_EQ("really.lon", compress_from("really.long.local@example.com", 10));
+}
+
+TEST_F(CompressFromTest, keepsBangPathUserWhenItFits)
+{
+    EXPECT_EQ("username", compress_from("host!username@example.com", 8));
+}
+
+TEST_F(CompressFromTest, returnsEmptyForNonPositiveWidth)
+{
+    EXPECT_EQ("", compress_from("Ross Ridge <ross@example.com>", 0));
 }
 
 TEST(SubjectHasReTest, one)
