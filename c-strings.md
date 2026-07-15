@@ -468,16 +468,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### `sc_sv_save_file` Saved-score Replacement
-
-- Files: `libtrn/scoresave.cpp`.
-- Finding: saved-score temp filenames are string-concatenated and then
-  passed to POSIX `remove` and `rename`.
-- Change: use `fs::path`, `fs::remove`, and `fs::rename` for the save
-  and replace operation.
-- Data flow: preserve the existing temporary file name beside the target
-  save file.
-
 #### `SourceFile::open` and `SourceFile::end_append`
 
 - Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.

@@ -23,10 +23,14 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
+
+namespace fs = std::filesystem;
 
 int g_sc_loaded_count{}; // how many articles were loaded?
 
@@ -106,9 +110,10 @@ void sc_sv_save_file()
     }
 
     g_waiting = true;   // don't interrupt
-    const std::string savename = file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores"));
-    const std::string temp_name = savename + ".tmp";
-    std::FILE        *tmpfp = std::fopen(temp_name.c_str(), "w");
+    const fs::path savename{file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores"))};
+    fs::path       temp_name{savename};
+    temp_name += ".tmp";
+    std::FILE *tmpfp = std::fopen(temp_name.string().c_str(), "w");
     if (!tmpfp)
     {
 // Debug
@@ -125,16 +130,19 @@ void sc_sv_save_file()
         if (std::ferror(tmpfp))
         {
             std::fclose(tmpfp);
-            std::printf("\nWrite error in temporary save file %s\n", temp_name.c_str());
+            std::printf("\nWrite error in temporary save file %s\n", temp_name.string().c_str());
             std::printf("(keeping old saved scores)\n");
-            remove(temp_name.c_str());
+            std::error_code error;
+            fs::remove(temp_name, error);
             g_waiting = false;
             return;
         }
     }
     std::fclose(tmpfp);
-    remove(savename.c_str());
-    rename(temp_name.c_str(), savename.c_str());
+    std::error_code error;
+    fs::remove(savename, error);
+    error.clear();
+    fs::rename(temp_name, savename, error);
     g_waiting = false;
 }
 
