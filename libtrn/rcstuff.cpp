@@ -713,7 +713,8 @@ static void unlock_newsrc(Newsrc *rp)
     rp->info_name.clear();
     if (!rp->lock_name.empty())
     {
-        remove(rp->lock_name.c_str());
+        std::error_code error;
+        fs::remove(rp->lock_name, error);
         rp->lock_name.clear();
     }
 }

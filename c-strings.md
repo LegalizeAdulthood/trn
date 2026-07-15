@@ -317,6 +317,10 @@ Do not introduce a local `std::string` only to hold `path.string()`.
 Use `path.string().c_str()` at the call site and let the compiler handle
 common subexpression elimination.
 
+Keep call sites simple.  If a function argument can be implicitly
+converted to the parameter type, pass the argument directly instead of
+explicitly constructing a temporary of that parameter type.
+
 When replacing a nullable C-string result with an owned `std::string`,
 map `nullptr` failure to an empty string.  Callers that need to branch on
 failure must check `empty()` instead of comparing to `nullptr`.  Pass
@@ -467,14 +471,6 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Filesystem Path Slices
-
-#### Newsrc Lock Cleanup
-
-- Files: `libtrn/rcstuff.cpp`.
-- Finding: `unlock_newsrc` removes the lock file with POSIX `remove`
-  from a `Newsrc` string path.
-- Change: use `fs::remove` with `std::error_code`.
-- Data flow: keep the existing `Newsrc` string path members.
 
 #### DataSource Temporary File Cleanup
 

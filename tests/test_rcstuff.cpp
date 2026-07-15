@@ -210,7 +210,10 @@ TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)
     std::ofstream{newsrc.old_name} << "stale backup\n";
 
     ASSERT_TRUE(multirc.use_multirc());
+    const fs::path lock_path{newsrc.lock_name};
 
+    EXPECT_TRUE(fs::exists(lock_path));
     EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1"}), read_lines(newsrc.old_name));
     unuse_multirc(&multirc);
+    EXPECT_FALSE(fs::exists(lock_path));
 }
