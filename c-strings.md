@@ -399,13 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### NNTP Last Command Snapshot
-
-- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`.
-- Finding: `g_last_command` is fixed global command snapshot storage.
-- Change: replace with `std::string`.
-- Data flow: update extern users and command logging together.
-
 ### Global String Storage Slices
 
 These slices replace owned global or file-scope `char *` storage with

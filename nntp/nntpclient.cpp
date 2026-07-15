@@ -9,7 +9,6 @@
 #include <nntp/nntpauth.h>
 #include <nntp/nntpinit.h>
 #include <trn/nntp.h>
-#include <util/util2.h>
 
 #include <fmt/format.h>
 
@@ -21,7 +20,7 @@
 NNTPLink g_nntp_link{}; // the current server's file handles
 bool     g_nntp_allow_timeout{};
 char     g_ser_line[NNTP_STRLEN]{};
-char     g_last_command[NNTP_STRLEN]{};
+std::string g_last_command;
 
 static std::time_t s_last_command_diff{};
 
@@ -171,7 +170,7 @@ int nntp_command(std::string_view bp)
         std::printf(">%s\n", command.c_str());
     }
 #endif
-    safe_copy(g_last_command, command.c_str(), sizeof g_last_command);
+    g_last_command = command;
     if (!g_nntp_link.connection)
     {
         return nntp_handle_timeout();

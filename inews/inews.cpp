@@ -441,7 +441,7 @@ int nntp_handle_timeout()
         static bool handling_timeout = false;
         const std::string last_command_save{g_last_command};
 
-        if (string_case_equal(g_last_command, "quit"))
+        if (string_case_equal(g_last_command.c_str(), "quit"))
         {
             return 0;
         }

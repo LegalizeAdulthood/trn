@@ -91,7 +91,7 @@ enum
 extern NNTPLink g_nntp_link; // the current server's file handles
 extern bool     g_nntp_allow_timeout;
 extern char     g_ser_line[NNTP_STRLEN];
-extern char     g_last_command[NNTP_STRLEN];
+extern std::string g_last_command;
 
 inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
 {

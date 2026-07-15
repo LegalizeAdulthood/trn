@@ -609,7 +609,7 @@ char *nntp_tmp_name(int ndx)
 
 int nntp_handle_nested_lists()
 {
-    if (string_case_equal(g_last_command, "quit"))
+    if (string_case_equal(g_last_command.c_str(), "quit"))
     {
         return 0; // TODO: flush data needed?
     }
@@ -625,7 +625,7 @@ int nntp_handle_timeout()
 {
     static bool handling_timeout = false;
 
-    if (string_case_equal(g_last_command, "quit"))
+    if (string_case_equal(g_last_command.c_str(), "quit"))
     {
         return 0;
     }
@@ -650,7 +650,7 @@ int nntp_handle_timeout()
     {
         return -1;
     }
-    std::strcpy(g_last_command, last_command_save.c_str()); // TODO: Is this really needed?
+    g_last_command = last_command_save; // TODO: Is this really needed?
     handling_timeout = false;
     return 1;
 }
