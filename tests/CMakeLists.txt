@@ -15,6 +15,7 @@ add_executable(trn-test
     test_datasrc.cpp
     test_decode.cpp
     test_enum_order.cpp
+    test_final.cpp
     test_flags.cpp
     test_getwd.cpp
     test_hash.cpp

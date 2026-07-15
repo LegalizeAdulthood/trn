@@ -27,6 +27,10 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 #ifdef HAS_SIGBLOCK
 #ifndef sigmask
@@ -112,15 +116,16 @@ void finalize(int status)
         unuse_multirc(g_multirc);
     }
     data_source_finalize();
+    std::error_code error;
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
     {
         char *s = nntp_tmp_name(i);
-        remove(s);
+        fs::remove(s, error);
     }
     cleanup_nntp();
     if (!g_head_name.empty())
     {
-        remove(g_head_name.c_str());
+        fs::remove(g_head_name, error);
     }
     if (status < 0)
     {

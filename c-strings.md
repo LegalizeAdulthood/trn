@@ -469,14 +469,3 @@ but referenced only inside their implementation file.  For each slice,
 remove the listed declarations from the public header, add file-scope
 forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
-
-### Filesystem Path Slices
-
-#### Final Temporary File Cleanup
-
-- Files: `libtrn/final.cpp`.
-- Finding: `finalize` removes NNTP temporary article files and the
-  header file with POSIX `remove`.
-- Change: use `fs::remove` with `std::error_code`.
-- Data flow: keep existing global filename strings and NNTP temporary
-  name helpers.
