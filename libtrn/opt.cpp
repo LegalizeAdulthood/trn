@@ -67,8 +67,8 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat);
 
 CompiledRegex g_opt_compex;
 std::string   g_ini_file;
-char       **g_option_def_vals{};
-char       **g_option_saved_vals{};
+OptionValueList g_option_def_vals;
+OptionValueList g_option_saved_vals;
 OptionFlags *g_option_flags{};
 OptionDraft *g_option_draft{};
 int          g_sel_page_op{};
@@ -110,8 +110,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     const OptionCatalog catalog;
     const int            len = catalog.option_limit();
-    g_option_def_vals = (char **) safe_malloc(len * sizeof(char *));
-    std::memset((char *) g_option_def_vals, 0, len * sizeof(char *));
+    g_option_def_vals = OptionValueList(static_cast<std::size_t>(len));
     // Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list
     set_header_list(HT_DEF_HIDE, HT_HIDE, "");
     set_header_list(HT_DEF_MAGIC, HT_MAGIC, "");
@@ -150,8 +149,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
             sw_file(tcbufptr);
         }
     }
-    g_option_saved_vals = (char **) safe_malloc(len * sizeof(char *));
-    std::memset((char *) g_option_saved_vals, 0, len * sizeof(char *));
+    g_option_saved_vals = OptionValueList(static_cast<std::size_t>(len));
     g_option_flags = new OptionFlags[len];
     std::fill_n(g_option_flags, len, OF_NONE);
 
@@ -172,9 +170,9 @@ void opt_final()
     g_priv_dir.clear();
     delete[] g_option_flags;
     g_option_flags = nullptr;
-    safe_free0(g_option_saved_vals);
+    g_option_saved_vals.clear();
     g_ini_file.clear();
-    safe_free0(g_option_def_vals);
+    g_option_def_vals.clear();
     safe_free0(g_art_pager_btns);
     safe_free0(g_news_sel_btns);
     safe_free0(g_newsgroup_sel_btns);
@@ -278,22 +276,22 @@ void set_option(OptionIndex num, const char *s)
 
 void apply_global_option(OptionIndex num, const char *s)
 {
-    if (g_option_saved_vals)
+    if (!g_option_saved_vals.empty())
     {
         if (!g_option_saved_vals[num])
         {
-            g_option_saved_vals[num] = save_str(option_value(num));
+            g_option_saved_vals[num] = option_value(num);
             if (!g_option_def_vals[num])
             {
                 g_option_def_vals[num] = g_option_saved_vals[num];
             }
         }
     }
-    else if (g_option_def_vals)
+    else if (!g_option_def_vals.empty())
     {
         if (!g_option_def_vals[num])
         {
-            g_option_def_vals[num] = save_str(option_value(num));
+            g_option_def_vals[num] = option_value(num);
         }
     }
     switch (num)
@@ -944,11 +942,7 @@ void save_options(const char *filename)
             std::fprintf(fp_out, "%s\n", quote_string(option_value(option)));
             if (g_option_saved_vals[option])
             {
-                if (g_option_saved_vals[option] != g_option_def_vals[option])
-                {
-                    std::free(g_option_saved_vals[option]);
-                }
-                g_option_saved_vals[option] = nullptr;
+                g_option_saved_vals[option].reset();
             }
         }
     }

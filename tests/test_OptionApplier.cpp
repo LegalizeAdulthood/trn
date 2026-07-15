@@ -3,6 +3,8 @@
 #include <trn/OptionApplier.h>
 
 #include <trn/IniSectionValues.h>
+#include <trn/ng.h>
+#include <trn/opt.h>
 #include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 
@@ -21,6 +23,20 @@ struct AppliedOption
 };
 
 std::vector<AppliedOption> s_applied_options;
+
+struct OptionValueRestorer
+{
+    OptionValueList def_vals;
+    OptionValueList saved_vals;
+    bool            use_threads;
+
+    ~OptionValueRestorer()
+    {
+        g_option_def_vals = def_vals;
+        g_option_saved_vals = saved_vals;
+        g_use_threads = use_threads;
+    }
+};
 
 void record_option(OptionIndex option, const char *value)
 {
@@ -89,4 +105,24 @@ TEST_F(OptionApplierTest, appliesDraftEditsByOptionIndex)
     EXPECT_EQ(std::string_view{"yes"}, s_applied_options[0].value);
     EXPECT_EQ(OI_USE_THREADS, s_applied_options[1].option);
     EXPECT_EQ(std::string_view{"no"}, s_applied_options[1].value);
+}
+
+TEST_F(OptionApplierTest, clearsSavedValueWhenDraftRestoresSavedValue)
+{
+    const OptionCatalog catalog;
+    OptionValueRestorer restore{g_option_def_vals, g_option_saved_vals, g_use_threads};
+
+    g_option_def_vals = OptionValueList(static_cast<std::size_t>(catalog.option_limit()));
+    g_option_saved_vals = OptionValueList(static_cast<std::size_t>(catalog.option_limit()));
+    g_option_saved_vals[OI_USE_THREADS] = "yes";
+    g_option_def_vals[OI_USE_THREADS] = "yes";
+    g_use_threads = false;
+
+    OptionDraft draft{static_cast<std::size_t>(catalog.option_limit())};
+    draft.set(OI_USE_THREADS, "yes");
+
+    OptionApplier{}.apply(draft);
+
+    EXPECT_FALSE(g_option_saved_vals[OI_USE_THREADS]);
+    EXPECT_TRUE(g_use_threads);
 }

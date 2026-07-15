@@ -411,15 +411,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Option Saved and Default Values
-
-- Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`.
-- Finding: `g_option_saved_vals` and `g_option_def_vals` are owning raw
-  string arrays.
-- Change: replace them with vectors of owned optional strings.
-- Data flow: update `apply_global_option`, `option_value`, and cleanup
-  paths together.
-
 #### Scorefile Abbreviations
 
 - Files: `libtrn/scorefile.cpp`.

@@ -9,8 +9,10 @@
 #include <trn/head.h>
 #include <trn/search.h>
 
+#include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 // Display Options
 enum OptionIndex
@@ -137,11 +139,12 @@ enum OptionFlags : char
 DECLARE_FLAGS_ENUM(OptionFlags, char);
 
 class OptionDraft;
+using OptionValueList = std::vector<std::optional<std::string>>;
 
 extern CompiledRegex g_opt_compex;
 extern std::string   g_ini_file;
-extern char        **g_option_def_vals;
-extern char        **g_option_saved_vals;
+extern OptionValueList g_option_def_vals;
+extern OptionValueList g_option_saved_vals;
 extern OptionFlags  *g_option_flags;
 extern OptionDraft  *g_option_draft;
 extern int           g_sel_page_op;

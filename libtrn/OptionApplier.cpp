@@ -8,9 +8,6 @@
 #include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 
-#include <cstdlib>
-#include <cstring>
-
 void apply_global_option(OptionIndex option, const char *value);
 
 OptionApplier::OptionApplier() :
@@ -52,14 +49,10 @@ void OptionApplier::apply(const OptionDraft &draft) const
     for (int i = 1; i < limit; i++)
     {
         const char *value = draft.value(i);
-        if (value != nullptr && g_option_saved_vals && g_option_saved_vals[i] //
-            && !std::strcmp(value, g_option_saved_vals[i]))
+        if (value != nullptr && !g_option_saved_vals.empty() && g_option_saved_vals[i] //
+            && *g_option_saved_vals[i] == value)
         {
-            if (g_option_saved_vals[i] != g_option_def_vals[i])
-            {
-                std::free(g_option_saved_vals[i]);
-            }
-            g_option_saved_vals[i] = nullptr;
+            g_option_saved_vals[i].reset();
         }
     }
 }
