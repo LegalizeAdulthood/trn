@@ -395,16 +395,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
-### Safe-realloc Array Slices
-
-#### Inactive `export_var` Environment Table
-
-- Files: `util/env.cpp`.
-- Finding: the inactive branch resizes `char **environ` with
-  `safe_realloc`.
-- Change: delete the branch or replace it with modern storage.
-- Data flow: if kept, use stable owned strings for `putenv`.
-
 ### Copy/Concat Slices
 
 #### `univ_page_file` Pager Command

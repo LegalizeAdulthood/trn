@@ -52,7 +52,6 @@ int         g_net_speed{20}; // how fast our net-connection is
 static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
 
 static void env_init2();
-static int  envix(const char *nam, int len);
 static bool set_user_name(char *tmpbuf);
 static bool set_p_host_name(char *tmpbuf);
 
@@ -463,56 +462,11 @@ const char *get_val_const(const char *nam, const char *def)
     return val == nullptr || !*val ? def : val;
 }
 
-static bool s_first_export = true;
-
-#ifndef WIN32
-extern char **environ;
-#endif
-
 char *export_var(std::string_view nam, std::string_view val)
 {
-#if 1
     char *buff = save_str(fmt::format("{}={}", nam, val));
     putenv(buff);
     return buff;
-#else
-    int namlen = std::strlen(nam);
-    int i=envix(nam,namlen);    // where does it go?
-
-    if (!environ[i])                    // does not exist yet
-    {
-        if (s_first_export)              // need we copy environment?
-        {
-#ifndef lint
-            char** tmpenv = (char**)    // point our wand at memory
-                safe_malloc((MemorySize) (i+2) * sizeof(char*));
-#else
-            char** tmpenv = nullptr;
-#endif // lint
-
-            s_first_export = false;
-            for (int j = 0; j < i; j++) // copy environment
-            {
-                tmpenv[j] = environ[j];
-            }
-            environ = tmpenv;           // tell exec where it is now
-        }
-#ifndef lint
-        else
-        {
-            environ = (char**) safe_realloc((char*) environ,
-                (MemorySize) (i+2) * sizeof(char*));
-                                        // just expand it a bit
-        }
-#endif // lint
-        environ[i+1] = nullptr; // make sure it's null terminated
-    }
-    environ[i] = safe_malloc((MemorySize)(namlen + std::strlen(val) + 2));
-                                        // this may or may not be in
-                                        // the old environ structure
-    std::sprintf(environ[i],"%s=%s",nam,val);// all that work just for this
-    return environ[i] + namlen + 1;
-#endif
 }
 
 void un_export(char *export_val)
@@ -532,18 +486,4 @@ void re_export(char *export_val, const char *new_val, int limit)
         export_val[-2] = export_val[0];
     }
     safe_copy(export_val, new_val, limit+1);
-}
-
-static int envix(const char *nam, int len)
-{
-    int i;
-
-    for (i = 0; environ[i]; i++)
-    {
-        if (!std::strncmp(environ[i], nam, len) && environ[i][len] == '=')
-        {
-            break;                      // strncmp must come first to avoid
-        }
-    }                                   // potential SEGV's
-    return i;
 }
