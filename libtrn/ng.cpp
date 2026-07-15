@@ -500,7 +500,7 @@ reask_article:
         // print prompt, whatever it is
         interp(g_cmd_buf, sizeof g_cmd_buf, g_mail_call);
         std::sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
-                current_char_subst(),
+                current_char_subst().c_str(),
                 g_default_cmd.c_str());
         draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES-1? std::strlen(g_buf)+5 : 0), true);
         color_string(COLOR_CMD,g_buf);

@@ -6,6 +6,8 @@
 #include <trn/utf.h>
 
 #include <config/common.h>
+#include <trn/charsubst.h>
+#include <trn/trn.h>
 
 #include <gtest/gtest.h>
 
@@ -99,6 +101,41 @@ TEST_P(TestOutputCharsetName, tag_from_name)
 }
 
 INSTANTIATE_TEST_SUITE_P(UTFCharsetNames, TestOutputCharsetName, ValuesIn(charsets));
+
+class CurrentCharSubstTest : public Test
+{
+protected:
+    void SetUp() override
+    {
+        m_previous_char_subst = g_char_subst;
+        m_previous_verbose = g_verbose;
+    }
+
+    void TearDown() override
+    {
+        g_char_subst = m_previous_char_subst;
+        g_verbose = m_previous_verbose;
+    }
+
+    const char *m_previous_char_subst{};
+    bool        m_previous_verbose{};
+};
+
+TEST_F(CurrentCharSubstTest, showsVerboseMonoSubstitutionStatus)
+{
+    g_char_subst = "m";
+    g_verbose = true;
+
+    EXPECT_EQ("[ISO->USmono] ", current_char_subst());
+}
+
+TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
+{
+    g_char_subst = "t";
+    g_verbose = false;
+
+    EXPECT_EQ("[T] ", current_char_subst());
+}
 
 constexpr const char *const ARBITRARY_ASCII{"a"};
 constexpr const char *const ARBITRARY_ISO8859D1_1{"\303\241"};

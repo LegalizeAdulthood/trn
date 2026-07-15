@@ -767,7 +767,7 @@ reask_pager:
         {
             std::sprintf(g_cmd_buf, "%ld", (long) (g_art_pos.value_of() * 100 / g_art_size.value_of()));
         }
-        std::sprintf(g_buf,"%s--MORE--(%s%%)",current_char_subst(),g_cmd_buf);
+        std::sprintf(g_buf,"%s--MORE--(%s%%)",current_char_subst().c_str(),g_cmd_buf);
         out_pos = g_term_col + std::strlen(g_buf);
         draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES-1? out_pos+5 : 0), true);
         color_string(COLOR_MORE,g_buf);
@@ -1288,7 +1288,7 @@ leave_pager:
             color_object(COLOR_CMD, true);
             interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mail_call, g_buf);
             std::printf(g_prompt.c_str(),g_cmd_buf,
-                   current_char_subst(),
+                   current_char_subst().c_str(),
                    g_default_cmd.c_str());  // print prompt, whatever it is
             color_pop();        // of COLOR_CMD
             std::putchar(' ');

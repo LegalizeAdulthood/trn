@@ -21,6 +21,8 @@
 #include <trn/trn.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -147,22 +149,19 @@ static int put_subst_char(int c, int limit, bool output_ok)
     return i;
 }
 
-const char *current_char_subst()
+std::string current_char_subst()
 {
 #ifdef USE_UTF_HACK
-    static char show[50];
-    const char *ics = input_charset_name();
-    const char *ocs = output_charset_name();
-    int         maxlen = (sizeof show - 5) / 2;
-    if (std::strcmp(ics, ocs) == 0)
+    std::string_view input = input_charset_name();
+    std::string_view output = output_charset_name();
+    constexpr int    maxlen = (50 - 5) / 2;
+    input = input.substr(0, maxlen);
+    output = output.substr(0, maxlen);
+    if (input == output)
     {
-        std::sprintf(show, "[%.*s]", maxlen, ics, maxlen, ocs);
+        return fmt::format("[{}]", input);
     }
-    else
-    {
-        std::sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
-    }
-    return show;
+    return fmt::format("[{}->{}]", input, output);
 #else // !USE_UTF_HACK
     std::string_view show;
 
@@ -184,7 +183,7 @@ const char *current_char_subst()
         show = "";
         break;
     }
-    return show.data();
+    return std::string{show};
 #endif
 }
 

@@ -399,15 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### Character Substitution Status
-
-- Files: `libtrn/charsubst.cpp`, `libtrn/include/trn/charsubst.h`.
-- Finding: under `USE_UTF_HACK`, `current_char_subst` formats status
-  text into static `show[50]`.
-- Change: return `std::string` and use owned formatted text.
-- Truncation: preserve the current bounded display text unless tests or
-  user guidance say the limit is arbitrary.
-
 #### Easy-score Command Buffer
 
 - Files: `libtrn/score-easy.cpp`, `libtrn/include/trn/score-easy.h`.
