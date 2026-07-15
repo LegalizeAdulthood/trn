@@ -166,7 +166,7 @@ void univ_close()
     for (UniversalItem *node = g_first_univ; node; node = nextnode)
     {
         univ_free_data(node);
-        safe_free(node->m_desc);
+        node->m_desc.~basic_string();
         nextnode = node->m_next;
         std::free((char*)node);
     }
@@ -200,14 +200,7 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     UniversalItem *node = (UniversalItem*)safe_malloc(sizeof(UniversalItem));
 
     node->m_flags = UF_NONE;
-    if (desc)
-    {
-        node->m_desc = save_str(desc);
-    }
-    else
-    {
-        node->m_desc = nullptr;
-    }
+    new (&node->m_desc) std::string{desc ? desc : ""};
     node->m_type = type;
     node->m_state = UIS_NORMAL;
     node->m_num = s_univ_item_counter++;
@@ -1255,7 +1248,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             const UniversalVirtualData &article = ui->article();
             // if article number is not set, visit newsgroup with callback
             // later also check for descriptions
-            if ((article.num) && (ui->m_desc))
+            if ((article.num) && (!ui->m_desc.empty()))
             {
               break;
             }

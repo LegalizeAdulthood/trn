@@ -131,7 +131,7 @@ struct UniversalItem
     UniversalItemFlags m_flags; // for selector
     UniversalItemType  m_type;  // what kind of object is it?
     UniversalItemState m_state; // current selector state
-    char              *m_desc;  // default description
+    std::string        m_desc;  // default description
     int                m_score;
     UniversalData      m_data; // describes the object
     UniversalNewsgroup &group();

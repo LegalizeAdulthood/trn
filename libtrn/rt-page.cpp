@@ -2900,7 +2900,7 @@ static void display_universal(const UniversalItem *ui)
         }
 
         case UN_ARTICLE:
-            std::printf("      %s",ui->m_desc? ui->m_desc : ui->univ_article_desc());
+            std::printf("      %s",ui->m_desc.empty() ? ui->univ_article_desc() : ui->m_desc.c_str());
             newline();
             break;
 
@@ -2910,7 +2910,7 @@ static void display_universal(const UniversalItem *ui)
             break;
 
         default:
-            std::printf("      %s",ui->m_desc? ui->m_desc : "[No Description]");
+            std::printf("      %s",ui->m_desc.empty() ? "[No Description]" : ui->m_desc.c_str());
             newline();
             break;
         }

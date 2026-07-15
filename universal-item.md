@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 24. Convert Universal Item Description
-
-- Target: `UniversalItem::m_desc`.
-- Change: replace `char *m_desc` with `std::string m_desc`.
-- Data flow: descriptions are used by display, article descriptions, and
-  several universal item constructors.
-- Risk: high; many call sites distinguish missing description from text.
-- Verification: focused universal tests and normal workflow.
-
 ### 25. Convert Universal Data To Variant
 
 - Target: `UniversalData`.

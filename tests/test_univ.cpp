@@ -73,7 +73,7 @@ UniversalItem *make_universal_item(UniversalItemType type)
     item->m_flags = UF_NONE;
     item->m_type = type;
     item->m_state = UIS_NORMAL;
-    item->m_desc = nullptr;
+    new (&item->m_desc) std::string{};
     item->m_score = 0;
     if (type == UN_DEBUG1)
     {
@@ -127,7 +127,16 @@ UniversalItem *make_virtual_group(std::string_view group_name)
 UniversalItem *make_numbered_article(std::string_view group_name)
 {
     UniversalItem *item = make_universal_item(UN_ARTICLE);
-    item->m_desc = save_str("Article");
+    item->m_desc = "Article";
+    UniversalVirtualData &article = item->article();
+    article.ng = group_name;
+    article.num = ArticleNum{1};
+    return item;
+}
+
+UniversalItem *make_undescribed_numbered_article(std::string_view group_name)
+{
+    UniversalItem *item = make_universal_item(UN_ARTICLE);
     UniversalVirtualData &article = item->article();
     article.ng = group_name;
     article.num = ArticleNum{1};
@@ -218,7 +227,7 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
     ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
     EXPECT_EQ(UN_GROUP_MASK, g_first_univ->m_type);
-    EXPECT_STREQ("Filter", g_first_univ->m_desc);
+    EXPECT_EQ("Filter", g_first_univ->m_desc);
     EXPECT_EQ("Filter", g_first_univ->group_mask().title);
     EXPECT_EQ("alt.test !alt.noise", g_first_univ->group_mask().mask_list);
 }
@@ -232,7 +241,7 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
     ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
     EXPECT_EQ(UN_TEXT_FILE, g_first_univ->m_type);
-    EXPECT_STREQ("Help", g_first_univ->m_desc);
+    EXPECT_EQ("Help", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(help_name), g_first_univ->text_file().fname);
 }
 
@@ -266,7 +275,7 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     EXPECT_EQ("alt.keep", kept_group->group().ng);
     EXPECT_EQ(UN_ARTICLE, kept_article->m_type);
     EXPECT_EQ(UIS_NORMAL, kept_article->m_state);
-    EXPECT_STREQ("Article", kept_article->m_desc);
+    EXPECT_EQ("Article", kept_article->m_desc);
     EXPECT_EQ("alt.article", kept_article->article().ng);
     EXPECT_EQ(ArticleNum{1}, kept_article->article().num);
     EXPECT_FALSE(g_univ_ng_virt_flag);
@@ -277,6 +286,18 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     EXPECT_FALSE(g_univ_ng_virt_flag);
 }
 
+TEST_F(UnivTest, virtualPassExpandsNumberedArticleWithoutDescription)
+{
+    univ_mask_load("", "Virtual");
+    UniversalItem *article = make_undescribed_numbered_article("alt.article");
+    append_universal_item(article);
+
+    univ_virt_pass(fake_visit_group);
+
+    EXPECT_EQ(1, g_visit_count);
+    EXPECT_EQ("alt.article", g_visited_group);
+}
+
 TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
 {
     const std::string top_name = fs::path{TRN_TEST_UNIV_COLON_PATH_FILE}.generic_string();
@@ -285,7 +306,7 @@ TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
     ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
     EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->m_type);
-    EXPECT_STREQ("Child", g_first_univ->m_desc);
+    EXPECT_EQ("Child", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(child_name), g_first_univ->config_file().fname);
     EXPECT_TRUE(g_first_univ->config_file().label.empty());
 }
@@ -298,7 +319,7 @@ TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
     ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
     EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->m_type);
-    EXPECT_STREQ("Child", g_first_univ->m_desc);
+    EXPECT_EQ("Child", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(child_name), g_first_univ->config_file().fname);
     EXPECT_EQ("chapter", g_first_univ->config_file().label);
 }
