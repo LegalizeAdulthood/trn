@@ -69,11 +69,11 @@ static constexpr char s_no_memory[] = "trn: out of memory!\n";
 #endif
 
 static char  s_null_export[] = "_=X"; // Just in case doshell precedes util_init
-static char *s_newsa_ctive_export = s_null_export + 2;
-static char *s_group_desc_export = s_null_export + 2;
-static char *s_quote_chars_export = s_null_export + 2;
-static char *s_nntp_server_export = s_null_export + 2;
-static char *s_nntp_force_export = s_null_export + 2;
+static char *s_newsa_ctive_export = s_null_export;
+static char *s_group_desc_export = s_null_export;
+static char *s_quote_chars_export = s_null_export;
+static char *s_nntp_server_export = s_null_export;
+static char *s_nntp_force_export = s_null_export;
 
 void util_init()
 {
@@ -152,11 +152,10 @@ int do_shell(const char *shell, const char *cmd)
         }
         if (g_nntp_link.port_number)
         {
-            int len = std::strlen(s_nntp_server_export);
-            std::sprintf(g_buf, ";%d", g_nntp_link.port_number);
-            if (len + (int) std::strlen(g_buf) < 511)
+            const std::string nntp_server = fmt::format("{};{}", g_data_source->m_news_id, g_nntp_link.port_number);
+            if (nntp_server.size() < 511)
             {
-                std::strcpy(s_nntp_server_export + len, g_buf);
+                re_export(s_nntp_server_export, nntp_server.c_str(), 512);
             }
         }
         if (g_data_source->m_act_sf.m_fp)

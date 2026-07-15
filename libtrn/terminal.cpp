@@ -2247,8 +2247,8 @@ Signal_t winch_catcher(int dummy)
                 g_tc_LINES = ws.ws_row;
                 g_tc_COLS = ws.ws_col;
                 line_col_calcs();
-                std::sprintf(s_lines_export, "%d", g_tc_LINES);
-                std::sprintf(s_cols_export, "%d", g_tc_COLS);
+                s_lines_export = export_var("LINES", std::to_string(g_tc_LINES));
+                s_cols_export = export_var("COLUMNS", std::to_string(g_tc_COLS));
                 if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p')
                 {
                     force_me("\f");      // cause a refresh

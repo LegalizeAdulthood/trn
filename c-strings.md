@@ -415,14 +415,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Exported Environment Values
-
-- Files: `util/env.cpp`.
-- Finding: `export_var` leaks a `save_str` buffer to keep `putenv`
-  storage alive.
-- Change: add a stable owned environment-string table.
-- Data flow: preserve existing `un_export` and `re_export` semantics.
-
 ### Universal Selector Storage Slices
 
 #### Universal Parse Labels

@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <functional>
+#include <list>
 #include <memory>
 
 std::string g_home_dir;      // login directory
@@ -50,10 +51,12 @@ std::string g_local_host;    // local host name
 int         g_net_speed{20}; // how fast our net-connection is
 
 static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
+static std::list<std::string>                  s_exported_environment_strings;
 
 static void env_init2();
 static bool set_user_name(char *tmpbuf);
 static bool set_p_host_name(char *tmpbuf);
+static char *export_value(char *export_val);
 
 void set_environment(std::function<char *(const char *)> getenv_fn)
 {
@@ -464,26 +467,38 @@ const char *get_val_const(const char *nam, const char *def)
 
 char *export_var(std::string_view nam, std::string_view val)
 {
-    char *buff = save_str(fmt::format("{}={}", nam, val));
-    putenv(buff);
-    return buff;
+    std::string &entry = s_exported_environment_strings.emplace_back(fmt::format("{}={}", nam, val));
+    putenv(entry.data());
+    return entry.data();
 }
 
 void un_export(char *export_val)
 {
-    if (export_val[-1] == '=' && export_val[-2] != '_')
+    char *value = export_value(export_val);
+    if (value != nullptr && value - export_val >= 2 && value[-2] != '_')
     {
-        export_val[0] = export_val[-2];
-        export_val[1] = '\0';
-        export_val[-2] = '_';
+        value[0] = value[-2];
+        value[1] = '\0';
+        value[-2] = '_';
     }
 }
 
 void re_export(char *export_val, const char *new_val, int limit)
 {
-    if (export_val[-1] == '=' && export_val[-2] == '_' && !export_val[1])
+    char *value = export_value(export_val);
+    if (value == nullptr)
     {
-        export_val[-2] = export_val[0];
+        return;
     }
-    safe_copy(export_val, new_val, limit+1);
+    if (value - export_val >= 2 && value[-2] == '_' && !value[1])
+    {
+        value[-2] = value[0];
+    }
+    safe_copy(value, new_val, limit + 1);
+}
+
+static char *export_value(char *export_val)
+{
+    char *equals = std::strchr(export_val, '=');
+    return equals == nullptr ? nullptr : equals + 1;
 }
