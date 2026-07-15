@@ -1224,12 +1224,18 @@ void univ_virt_pass()
 // LATER: allow the loop to be interrupted
 void univ_virt_pass(UniversalGroupVisitor visit_group)
 {
+    univ_virt_pass(visit_group, input_pending);
+}
+
+// LATER: allow the loop to be interrupted
+void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending)
+{
     g_univ_ng_virt_flag = true;
     s_univ_virt_pass_needed = false;
 
     for (std::size_t position = 0; position < g_univ_items.size();)
     {
-        if (input_pending())
+        if (input_is_pending != nullptr && input_is_pending())
         {
             // later consider cleaning up the remains
             break;

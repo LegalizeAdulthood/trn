@@ -20,6 +20,7 @@
 #include <vector>
 
 using UniversalGroupVisitor = int (*)(const char *);
+using UniversalInputPending = bool (*)();
 using UniversalItemIndex = int;
 
 enum UniversalItemState
@@ -198,6 +199,7 @@ void           univ_edit();
 void           univ_page_file(std::string_view fname);
 void           univ_newsgroup_virtual();
 int            univ_visit_group_main(std::string_view gname);
+void           univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending);
 void           univ_virt_pass(UniversalGroupVisitor visit_group);
 void           univ_virt_pass();
 void           sort_univ();
