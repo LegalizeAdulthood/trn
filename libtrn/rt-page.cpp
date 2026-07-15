@@ -704,19 +704,19 @@ try_again:
         g_obj_count = ArticleNum{};
 
         sort_univ();
-        for (UniversalItem *ui = g_first_univ; ui; ui = ui->m_next)
+        for (UniversalItem &item : univ_items())
         {
-            if (g_sel_page_univ == ui)
+            if (g_sel_page_univ == &item)
             {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
-            ui->m_flags &= ~UF_INCLUDED;
+            item.m_flags &= ~UF_INCLUDED;
             bool ui_elig = true;
-            if (ui->m_state != UIS_NORMAL)
+            if (item.m_state != UIS_NORMAL)
             {
                 continue;
             }
-            switch (ui->type())
+            switch (item.type())
             {
             case UN_VGROUP:               // first-pass item
                 // always ineligible items
@@ -725,7 +725,7 @@ try_again:
 
             case UN_NEWSGROUP:
             {
-                const std::string &group_name = ui->group().ng;
+                const std::string &group_name = item.group().ng;
                 if (group_name.empty())
                 {
                     ui_elig = false;
@@ -753,7 +753,7 @@ try_again:
             case UN_ARTICLE:
             {
                 // later: use the datasrc of the newsgroup
-                const UniversalVirtualData &article = ui->article();
+                const UniversalVirtualData &article = item.article();
                 ui_elig = !was_read_group(article.num, article.ng.c_str());
                 if (g_sel_rereading)
                 {
@@ -770,13 +770,13 @@ try_again:
             {
                 continue;
             }
-            if (!g_sel_exclusive || (ui->m_flags & static_cast<UniversalItemFlags>(g_sel_mask)))
+            if (!g_sel_exclusive || (item.m_flags & static_cast<UniversalItemFlags>(g_sel_mask)))
             {
-                if (g_sel_rereading && !(ui->m_flags & static_cast<UniversalItemFlags>(g_sel_mask)))
+                if (g_sel_rereading && !(item.m_flags & static_cast<UniversalItemFlags>(g_sel_mask)))
                 {
-                    ui->m_flags |= UF_DEL;
+                    item.m_flags |= UF_DEL;
                 }
-                ui->m_flags |= UF_INCLUDED;
+                item.m_flags |= UF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
             ++g_obj_count;
@@ -1120,13 +1120,13 @@ bool first_page()
 
     case SM_UNIVERSAL:
     {
-        for (UniversalItem *ui = g_first_univ; ui; ui = ui->m_next)
+        for (UniversalItem &item : univ_items())
         {
-            if (ui->m_flags & UF_INCLUDED)
+            if (item.m_flags & UF_INCLUDED)
             {
-                if (g_sel_page_univ != ui)
+                if (g_sel_page_univ != &item)
                 {
-                    g_sel_page_univ = ui;
+                    g_sel_page_univ = &item;
                     return true;
                 }
                 break;
@@ -1785,20 +1785,26 @@ try_again:
 
     case SM_UNIVERSAL:
     {
-        UniversalItem* ui = g_sel_page_univ;
-        for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->m_next)
+        UniversalItem *next_univ = nullptr;
+        for (UniversalItem &item : univ_items(g_sel_page_univ))
         {
-            if (ui == u.un)
+            if (g_sel_page_item_cnt >= s_sel_max_per_page)
+            {
+                next_univ = &item;
+                break;
+            }
+            if (&item == u.un)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (ui->m_flags & UF_INCLUDED)
+            if (item.m_flags & UF_INCLUDED)
             {
                 g_sel_page_item_cnt++;
             }
+            next_univ = item.m_next;
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        g_sel_next_univ = ui;
+        g_sel_next_univ = next_univ;
         break;
     }
 
@@ -2257,16 +2263,22 @@ start_of_loop:
     }
     else if (g_sel_mode == SM_UNIVERSAL)
     {
-        UniversalItem* ui = g_sel_page_univ;
-        for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->m_next)
+        UniversalItem *next_univ = nullptr;
+        for (UniversalItem &item : univ_items(g_sel_page_univ))
         {
-            if (!(ui->m_flags & UF_INCLUDED))
+            if (g_sel_page_item_cnt >= s_sel_max_per_page)
             {
+                next_univ = &item;
+                break;
+            }
+            if (!(item.m_flags & UF_INCLUDED))
+            {
+                next_univ = item.m_next;
                 continue;
             }
 
-            sel = !!(ui->m_flags & static_cast<UniversalItemFlags>(g_sel_mask)) + (ui->m_flags & UF_DEL);
-            g_sel_items[g_sel_page_item_cnt].u.un = ui;
+            sel = !!(item.m_flags & static_cast<UniversalItemFlags>(g_sel_mask)) + (item.m_flags & UF_DEL);
+            g_sel_items[g_sel_page_item_cnt].u.un = &item;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
             g_sel_page_obj_cnt++;
@@ -2274,8 +2286,9 @@ start_of_loop:
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
             std::putchar(' ');
-            display_universal(ui);
+            display_universal(&item);
             g_sel_page_item_cnt++;
+            next_univ = item.m_next;
         }
         if (!g_sel_page_obj_cnt)
         {
@@ -2284,7 +2297,7 @@ start_of_loop:
                 goto try_again;
             }
         }
-        g_sel_next_univ = ui;
+        g_sel_next_univ = next_univ;
     }
     else if (g_sel_mode == SM_OPTIONS)
     {

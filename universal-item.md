@@ -40,16 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 28. Convert Selector Iteration Helpers
-
-- Target: traversal in `rt-page.cpp`.
-- Change: convert universal selector traversal clusters to the range
-  helpers.
-- Data flow: paging, display, selection counts, and navigation consume the
-  item collection.
-- Risk: high; selector navigation is user visible.
-- Verification: focused universal tests and normal workflow.
-
 ### 29. Replace Selector Pointer Positions
 
 - Target: `g_sel_page_univ` and `g_sel_next_univ`.

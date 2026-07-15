@@ -146,9 +146,14 @@ bool UniversalItemIterator::operator!=(const UniversalItemIterator &other) const
     return !(*this == other);
 }
 
+UniversalItems::UniversalItems(UniversalItem *first) :
+    m_first{first}
+{
+}
+
 UniversalItemIterator UniversalItems::begin() const
 {
-    return UniversalItemIterator{g_first_univ};
+    return UniversalItemIterator{m_first};
 }
 
 UniversalItemIterator UniversalItems::end() const
@@ -158,7 +163,12 @@ UniversalItemIterator UniversalItems::end() const
 
 UniversalItems univ_items()
 {
-    return UniversalItems{};
+    return UniversalItems{g_first_univ};
+}
+
+UniversalItems univ_items(UniversalItem *first)
+{
+    return UniversalItems{first};
 }
 
 void univ_startup()

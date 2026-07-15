@@ -174,8 +174,12 @@ private:
 class UniversalItems
 {
 public:
+    explicit UniversalItems(UniversalItem *first);
     UniversalItemIterator begin() const;
     UniversalItemIterator end() const;
+
+private:
+    UniversalItem *m_first;
 };
 
 extern int  g_univ_level;          // How deep are we in the tree?
@@ -212,6 +216,7 @@ void           univ_virt_pass(UniversalGroupVisitor visit_group);
 void           univ_virt_pass();
 void           sort_univ();
 UniversalItems univ_items();
+UniversalItems univ_items(UniversalItem *first);
 void           univ_help_main(HelpLocation where);
 void           univ_help(HelpLocation where);
 
