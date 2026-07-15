@@ -4,6 +4,7 @@
 #include <trn/sw.h>
 
 #include <trn/opt.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
 
@@ -61,6 +62,22 @@ struct SelectorRestorer
     }
 };
 
+struct DisplayModeRestorer
+{
+    std::string group_mode;
+    std::string article_mode;
+    std::size_t group_mode_index;
+    std::size_t article_mode_index;
+
+    ~DisplayModeRestorer()
+    {
+        g_sel_grp_display_mode = group_mode;
+        g_sel_art_display_mode = article_mode;
+        g_sel_grp_display_mode_index = group_mode_index;
+        g_sel_art_display_mode_index = article_mode_index;
+    }
+};
+
 std::vector<std::string> read_lines(const fs::path &path)
 {
     std::ifstream            input{path};
@@ -113,4 +130,18 @@ TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)
 
     EXPECT_EQ(SM_ARTICLE, g_sel_default_mode);
     EXPECT_STREQ("reverse date", option_value(OI_NEWS_SEL_ORDER));
+}
+
+TEST(SwitchTest, selectorDisplayStyleOptionsReturnConfiguredOrder)
+{
+    DisplayModeRestorer restore{g_sel_grp_display_mode, g_sel_art_display_mode, g_sel_grp_display_mode_index,
+                                g_sel_art_display_mode_index};
+
+    set_option(OI_NEWSGROUP_SEL_STYLES, "mls");
+    set_option(OI_NEWS_SEL_STYLES, "dslm");
+
+    EXPECT_EQ('m', current_group_display_mode());
+    EXPECT_EQ('d', current_article_display_mode());
+    EXPECT_STREQ("mls", option_value(OI_NEWSGROUP_SEL_STYLES));
+    EXPECT_STREQ("dslm", option_value(OI_NEWS_SEL_STYLES));
 }

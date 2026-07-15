@@ -211,7 +211,7 @@ static DisplayState        add_group_commands(char_int ch);
 static DisplayState        multirc_commands(char_int ch);
 static DisplayState        option_commands(char_int ch);
 static DisplayState        universal_commands(char_int ch);
-static void                switch_dmode(char **dmode_cpp);
+static void                switch_dmode(std::string &dmode, std::size_t &dmode_index);
 static int                 find_line(int y);
 
 // Display a menu of threads/subjects/articles for the user to choose from.
@@ -561,7 +561,7 @@ char newsgroup_selector()
     set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
 
 sel_restart:
-    if (*g_sel_grp_display_mode != 's')
+    if (current_group_display_mode() != 's')
     {
         for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
@@ -663,7 +663,7 @@ char add_group_selector(GetNewsgroupFlags flags)
     set_selector(SM_ADD_GROUP, SS_MAGIC_NUMBER);
 
 sel_restart:
-    if (*g_sel_grp_display_mode != 's')
+    if (current_group_display_mode() != 's')
     {
         for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
@@ -2630,7 +2630,7 @@ static DisplayState article_commands(char_int ch)
         return DS_QUIT;
 
     case 'L':
-        switch_dmode(&g_sel_art_display_mode);     // sets g_msg
+        switch_dmode(g_sel_art_display_mode, g_sel_art_display_mode_index); // sets g_msg
         return DS_DISPLAY;
 
     case 'Y':
@@ -3175,8 +3175,8 @@ static DisplayState newsgroup_commands(char_int ch)
         return DS_RESTART;
 
     case 'L':
-        switch_dmode(&g_sel_grp_display_mode);     // sets g_msg
-        if (*g_sel_grp_display_mode != 's' && !g_multirc->m_first->data_source->m_desc_sf.m_hp)
+        switch_dmode(g_sel_grp_display_mode, g_sel_grp_display_mode_index); // sets g_msg
+        if (current_group_display_mode() != 's' && !g_multirc->m_first->data_source->m_desc_sf.m_hp)
         {
             newline();
             return DS_RESTART;
@@ -3656,8 +3656,8 @@ reask_sort:
         return DS_DISPLAY;
 
     case 'L':
-        switch_dmode(&g_sel_grp_display_mode);     // sets g_msg
-        if (*g_sel_grp_display_mode != 's' && !g_data_source->m_desc_sf.m_hp)
+        switch_dmode(g_sel_grp_display_mode, g_sel_grp_display_mode_index); // sets g_msg
+        if (current_group_display_mode() != 's' && !g_data_source->m_desc_sf.m_hp)
         {
             newline();
             return DS_RESTART;
@@ -4096,18 +4096,20 @@ reask_sort:
 /// - g_msg: Updated with the current display style description.
 /// - s_disp_status_line: Set to 1 to indicate the status line should be displayed.
 ///
-static void switch_dmode(char **dmode_cpp)
+static void switch_dmode(std::string &dmode, std::size_t &dmode_index)
 {
     std::string_view s = "?";
 
-    if (!*++*dmode_cpp)
+    if (!dmode.empty())
     {
-        do
+        dmode_index++;
+        if (dmode_index == dmode.size())
         {
-            --*dmode_cpp;
-        } while ((*dmode_cpp)[-1] != '*');
+            dmode_index = 0;
+        }
     }
-    switch (**dmode_cpp)
+    const char current_mode = dmode.empty() ? '\0' : dmode[dmode_index];
+    switch (current_mode)
     {
     case 's':
         s = "short";

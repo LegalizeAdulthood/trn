@@ -83,8 +83,10 @@ static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
-    g_sel_grp_display_mode = save_str("*slm") + 1;
-    g_sel_art_display_mode = save_str("*lmds") + 1;
+    g_sel_grp_display_mode = "slm";
+    g_sel_art_display_mode = "lmds";
+    g_sel_grp_display_mode_index = 0;
+    g_sel_art_display_mode_index = 0;
     g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,
                                         "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
     g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,
@@ -180,10 +182,10 @@ void opt_final()
     safe_free0(g_add_sel_btns);
     safe_free0(g_newsrc_sel_btns);
     safe_free0(g_univ_sel_btns);
-    g_sel_art_display_mode--;
-    safe_free0(g_sel_art_display_mode);
-    g_sel_grp_display_mode--;
-    safe_free0(g_sel_grp_display_mode);
+    g_sel_art_display_mode.clear();
+    g_sel_grp_display_mode.clear();
+    g_sel_art_display_mode_index = 0;
+    g_sel_grp_display_mode_index = 0;
 }
 
 static void opt_file(const char *filename, char **tcbufptr, bool bleat)
@@ -390,11 +392,8 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWSGROUP_SEL_STYLES:
-        g_sel_grp_display_mode--;
-        safe_free0(g_sel_grp_display_mode);
-        g_sel_grp_display_mode = safe_malloc(std::strlen(s)+2);
-        *g_sel_grp_display_mode++ = '*';
-        std::strcpy(g_sel_grp_display_mode, s);
+        g_sel_grp_display_mode = s;
+        g_sel_grp_display_mode_index = 0;
         break;
 
     case OI_USE_NEWS_SEL:
@@ -438,11 +437,8 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWS_SEL_STYLES:
-        g_sel_art_display_mode--;
-        safe_free0(g_sel_art_display_mode);
-        g_sel_art_display_mode = safe_malloc(std::strlen(s)+2);
-        *g_sel_art_display_mode++ = '*';
-        std::strcpy(g_sel_art_display_mode, s);
+        g_sel_art_display_mode = s;
+        g_sel_art_display_mode_index = 0;
         break;
 
     case OI_OPTION_SEL_CMDS:
@@ -1043,14 +1039,7 @@ const char *option_value(OptionIndex num)
         return expand_mouse_buttons(g_newsgroup_sel_btns,g_newsgroup_sel_btn_cnt);
 
     case OI_NEWSGROUP_SEL_STYLES:
-    {
-        char* s = g_sel_grp_display_mode;
-        while (s[-1] != '*')
-        {
-            s--;
-        }
-        return s;
-    }
+        return g_sel_grp_display_mode.c_str();
 
     case OI_USE_NEWS_SEL:
         if (g_use_news_selector < 1)
@@ -1083,14 +1072,7 @@ const char *option_value(OptionIndex num)
         return expand_mouse_buttons(g_news_sel_btns,g_news_sel_btn_cnt);
 
     case OI_NEWS_SEL_STYLES:
-    {
-        char* s = g_sel_art_display_mode;
-        while (s[-1] != '*')
-        {
-            s--;
-        }
-        return s;
-    }
+        return g_sel_art_display_mode.c_str();
 
     case OI_OPTION_SEL_CMDS:
         return g_option_sel_cmds;

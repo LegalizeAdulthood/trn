@@ -50,8 +50,10 @@ Article      *g_sel_last_ap{};
 Subject      *g_sel_page_sp{};
 Subject      *g_sel_next_sp{};
 Subject      *g_sel_last_sp{};
-char         *g_sel_grp_display_mode{};
-char         *g_sel_art_display_mode{};
+std::string   g_sel_grp_display_mode{"slm"};
+std::string   g_sel_art_display_mode{"lmds"};
+std::size_t   g_sel_grp_display_mode_index{};
+std::size_t   g_sel_art_display_mode_index{};
 
 static bool              s_group_init_done{true};
 static int               s_sel_max_line_cnt{};
@@ -59,6 +61,16 @@ static int               s_sel_max_per_page{};
 static SelectionSortMode s_sel_add_group_sort{SS_NATURAL};
 static SelectionSortMode s_sel_universal_sort{SS_NATURAL};
 static int               s_sel_next_op{};
+
+char current_group_display_mode()
+{
+    return g_sel_grp_display_mode.empty() ? '\0' : g_sel_grp_display_mode[g_sel_grp_display_mode_index];
+}
+
+char current_article_display_mode()
+{
+    return g_sel_art_display_mode.empty() ? '\0' : g_sel_art_display_mode[g_sel_art_display_mode_index];
+}
 
 static void sel_page_init();
 static int  count_subject_lines(const Subject *subj, int *selptr);
@@ -2125,7 +2137,7 @@ try_again:
     {
         NewsgroupData* np;
         int            max_len = 0;
-        int            outputting = (*g_sel_grp_display_mode != 'l');
+        int            outputting = (current_group_display_mode() != 'l');
 start_of_loop:
         for (np = g_sel_page_np; np; np = newsgroup_next(np))
         {
@@ -2224,7 +2236,7 @@ start_of_loop:
     {
         AddGroup* gp = g_sel_page_gp;
         int max_len = 0;
-        if (*g_sel_grp_display_mode == 'l')
+        if (current_group_display_mode() == 'l')
         {
             int i = 0;
             for (; gp && i < s_sel_max_per_page; gp = gp->m_next)
@@ -2638,11 +2650,11 @@ static int count_subject_lines(const Subject *subj, int *selptr)
     {
         *selptr = sel;
     }
-    if (*g_sel_art_display_mode == 'l')
+    if (current_article_display_mode() == 'l')
     {
         return subj->m_misc;
     }
-    if (*g_sel_art_display_mode == 'm')
+    if (current_article_display_mode() == 'm')
     {
         return (subj->m_misc <= 4 ? subj->m_misc : (subj->m_misc - 4) / 3 + 4);
     }
@@ -2692,11 +2704,11 @@ static void display_article(const Article *ap, int ix, int sel)
     subj_width = std::max(subj_width, 32);
 
     output_sel(ix, sel, false);
-    if (*g_sel_art_display_mode == 's' || from_width < 8)
+    if (current_article_display_mode() == 's' || from_width < 8)
     {
         std::printf("  %s\n", compress_subj(ap->m_subj->m_articles, subj_width));
     }
-    else if (*g_sel_art_display_mode == 'd')
+    else if (current_article_display_mode() == 'd')
     {
         fmt::print("{}  {}\n", ap->compress_date(date_width), compress_subj(ap, subj_width - date_width));
     }
@@ -2724,7 +2736,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
     int j = subj->m_misc;
 
     output_sel(ix, sel, false);
-    if (*g_sel_art_display_mode == 's' || from_width < 8)
+    if (current_article_display_mode() == 's' || from_width < 8)
     {
         std::printf("%3d  %s\n",j,compress_subj(subj->m_articles,subj_width));
         term_down(1);
@@ -2750,7 +2762,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
         {
             first_ap = ap;
         }
-        if (*g_sel_art_display_mode == 'd')
+        if (current_article_display_mode() == 'd')
         {
             fmt::print("{}{:3}  {}\n", first_ap->compress_date(date_width), j,
                        compress_subj(first_ap, subj_width - date_width));
@@ -2762,7 +2774,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
         }
         term_down(1);
         int i = -1;
-        if (*g_sel_art_display_mode != 'd' && --j && ap)
+        if (current_article_display_mode() != 'd' && --j && ap)
         {
             for (; ap && j; ap = ap->m_subj_next)
             {
@@ -2776,7 +2788,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                 {
                     i = 0;
                 }
-                else if (*g_sel_art_display_mode == 'm')
+                else if (current_article_display_mode() == 'm')
                 {
                     if (!j)
                     {
@@ -2927,7 +2939,7 @@ static void display_universal(const UniversalItem *ui)
 
 static void display_group(DataSource *dp, const char *group, int len, int max_len)
 {
-    if (*g_sel_grp_display_mode == 's')
+    if (current_group_display_mode() == 's')
     {
         std::fputs(group, stdout);
     }
@@ -2949,7 +2961,7 @@ static void display_group(DataSource *dp, const char *group, int len, int max_le
                 end = std::min(end, static_cast<std::string::size_type>(display_width));
             }
             description.resize(end);
-            if (*g_sel_grp_display_mode == 'm')
+            if (current_group_display_mode() == 'm')
             {
                 std::fputs(description.c_str(), stdout);
             }

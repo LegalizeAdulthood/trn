@@ -411,15 +411,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Selection Display Modes
-
-- Files: `libtrn/opt.cpp`, `libtrn/include/trn/rt-page.h`.
-- Finding: display modes depend on `save_str("*...") + 1` and pointer
-  decrement before free.
-- Change: replace `g_sel_grp_display_mode` and
-  `g_sel_art_display_mode` with owned string storage.
-- Data flow: update all mode readers and cleanup together.
-
 #### Option Saved and Default Values
 
 - Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`.

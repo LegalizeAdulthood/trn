@@ -8,6 +8,8 @@
 #include <trn/opt.h>
 #include <trn/rt-select.h>
 
+#include <cstddef>
+#include <string>
 #include <string_view>
 
 enum : bool
@@ -57,12 +59,16 @@ extern Article      *g_sel_last_ap;
 extern Subject      *g_sel_page_sp;
 extern Subject      *g_sel_next_sp;
 extern Subject      *g_sel_last_sp;
-extern char         *g_sel_grp_display_mode;
-extern char         *g_sel_art_display_mode;
+extern std::string   g_sel_grp_display_mode;
+extern std::string   g_sel_art_display_mode;
+extern std::size_t   g_sel_grp_display_mode_index;
+extern std::size_t   g_sel_art_display_mode_index;
 
 bool set_sel_mode(char_int ch);
 char *get_sel_order(SelectionMode smode);
 bool  set_sel_order(SelectionMode smode, std::string_view str);
+char  current_group_display_mode();
+char  current_article_display_mode();
 bool set_sel_sort(SelectionMode smode, char_int ch);
 void set_selector(SelectionMode smode, SelectionSortMode ssort);
 void init_pages(bool fill_last_page);
