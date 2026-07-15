@@ -9,14 +9,13 @@
 #include <trn/nntp.h>
 #include <trn/rcstuff.h>
 #include <trn/terminal.h>
-#include <util/env.h>
+#include <util/env-internal.h>
 
 #include <test_config.h>
 
-#include "mock_env.h"
-
 #include <gtest/gtest.h>
 
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -100,9 +99,12 @@ TEST_F(FinalizeTest, removesTemporaryFiles)
     const std::string saved_score_file = m_saved_score_file.generic_string();
     EXPECT_EXIT(
         {
-            trn::testing::MockEnvironment env;
-            EXPECT_CALL(env.getter, Call(::testing::StrEq("SAVESCOREFILE")))
-                .WillRepeatedly(::testing::Return(const_cast<char *>(saved_score_file.c_str())));
+            set_environment(
+                [saved_score_file](const char *name) -> char *
+                {
+                    return std::strcmp(name, "SAVESCOREFILE") == 0 ? const_cast<char *>(saved_score_file.c_str())
+                                                                   : nullptr;
+                });
             finalize(0);
         },
         ::testing::ExitedWithCode(0), ".*");
