@@ -399,16 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `output_subject` Subject Copy
-
-- Files: `libtrn/ng.cpp`.
-- Finding: `output_subject` fetches a borrowed subject pointer and copies
-  it into the local display buffer when `SUBJLINE` is not configured.
-- Change: use `fetch_subj_copy` and keep the final display buffer copy at
-  the legacy output boundary.
-- Data flow: preserve the `SUBJLINE` interpolation path, which does not
-  consume the fetched subject text directly.
-
 #### `univ_vg_add_article` Subject and Author Storage
 
 - Files: `libtrn/univ.cpp`.

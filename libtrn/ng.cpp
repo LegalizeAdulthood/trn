@@ -2070,8 +2070,8 @@ bool output_subject(char *ptr, int flag)
         return false;
     }
     ArticleNum i = ap->article_num();
-    char *  s = fetch_subj(i);
-    if (s != nullptr)
+    const std::string subject = fetch_subj_copy(i);
+    if (!subject.empty())
     {
         std::sprintf(tmpbuf,"%-5ld ", i.value_of());
         int len = std::strlen(tmpbuf);
@@ -2082,7 +2082,7 @@ bool output_subject(char *ptr, int flag)
         }
         else
         {
-            safe_copy(tmpbuf + len, s, sizeof tmpbuf - len);
+            safe_copy(tmpbuf + len, subject.c_str(), sizeof tmpbuf - len);
         }
         if (g_mode == MM_PROCESSING_KILL)
         {
