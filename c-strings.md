@@ -78,6 +78,8 @@ Existing good precedents:
   owned strings only when a null-terminated value is needed.
 - `libtrn/autosub.cpp`, `match_list`: passes comma-delimited pattern
   views to `newsgroup_comp` without per-token allocation.
+- `libtrn/datasrc.h`, `DataSource`: runtime text fields use
+  `std::string` with empty string as the missing-value sentinel.
 
 ## Findings
 
@@ -161,9 +163,16 @@ direct string assignment.  Use `c_str()` for legacy read-only APIs and
 `data()` only for local mutable parsing with no pointer escape.
 
 Favor an empty `std::string` sentinel over `std::optional<std::string>`
-when an empty string has no valid meaning for the result.  Use
+when an empty string has no valid meaning for the result.  This is the
+preferred shape for runtime storage.  Use
 `std::optional<std::string>` only when empty string is valid payload that
-must be distinguished from absence.
+must be distinguished from absence, or at parse/config boundaries where
+the code needs to preserve whether a field was present.
+
+Do not introduce `std::optional<std::string>` merely because the current
+C-string code compares a pointer to `nullptr`.  First decide whether the
+empty string has a valid meaning.  If it does not, use plain
+`std::string` and replace `nullptr` checks with `empty()` checks.
 
 ### Owning Raw-string Returns
 
@@ -398,8 +407,9 @@ buffer slices.
 - Change: return a small value type or pair of `std::string` values and
   use empty strings for absent fields.
 - Data flow: assign directly into `DataSourceConfig`, runtime
-  `DataSource` strings, and tool auth storage; remove the temporary raw
-  read/free wrapper once the producer returns strings.
+  `DataSource` strings, and tool auth storage; remove the raw
+  acquire/copy leaks in `datasrc.cpp` and the temporary raw read/free
+  wrapper in `tool/util3.cpp` once the producer returns strings.
 - Truncation: the current `char buf[1024]` line buffer imposes arbitrary
   credential truncation; use line-oriented string input.
 
