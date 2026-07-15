@@ -399,16 +399,47 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
+#### `sf_get_line` Header Copy
+
+- Files: `libtrn/scorefile.cpp`.
+- Finding: `sf_get_line` reads non-subject headers through
+  `prefetch_lines`, then immediately copies the borrowed text into an
+  owned `std::string`.
+- Change: use `prefetch_lines_copy` for the non-subject header path.
+- Data flow: preserve the lower-case normalization done before return.
+
+#### `output_subject` Subject Copy
+
+- Files: `libtrn/ng.cpp`.
+- Finding: `output_subject` fetches a borrowed subject pointer and copies
+  it into the local display buffer when `SUBJLINE` is not configured.
+- Change: use `fetch_subj_copy` and keep the final display buffer copy at
+  the legacy output boundary.
+- Data flow: preserve the `SUBJLINE` interpolation path, which does not
+  consume the fetched subject text directly.
+
+#### `univ_vg_add_article` Subject and Author Storage
+
+- Files: `libtrn/univ.cpp`.
+- Finding: the function fetches borrowed subject and author pointers, then
+  stores both values into owned `std::string` fields.  It also copies the
+  subject into an unused local `char lbuf[70]`.
+- Change: use owned strings from `fetch_subj_copy` and
+  `prefetch_lines_copy`, remove the dead local buffer copy, and store the
+  owned values directly.
+- Data flow: preserve the `<No Author>` fallback.
+
 #### `prefetch_lines` Static Header Buffer
 
-- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`, callers of
-  `fetch_subj`, `fetch_from`, and `fetch_xref`.
-- Finding: `prefetch_lines` and the inline fetch helpers return borrowed
-  `g_cmd_buf` storage.
-- Change: move copy-oriented callers to `fetch_lines` or
-  `prefetch_lines_copy`, then shrink or remove the static-buffer API.
-- Data flow: preserve callers that still need immediate mutable parsing
-  until each is reviewed.
+- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`, remaining
+  callers of `fetch_subj`, `fetch_from`, and `fetch_xref`.
+- Finding: after copy-oriented callers are migrated, `prefetch_lines` and
+  the inline fetch helpers should only serve cache-prefetch side effects
+  or reviewed borrowed-buffer uses.
+- Change: shrink or remove the borrowed-buffer API once those remaining
+  uses are classified.
+- Data flow: preserve callers that intentionally prefetch headers for
+  cache population.
 
 #### `secs_to_text` Interval Text
 
@@ -452,16 +483,6 @@ buffer slices.
 - Change: use owned string construction if the line does not escape as
   an output buffer.
 - Data flow: classify output ownership before editing.
-
-#### `univ_vg_add_article` Subject Scratch
-
-- Files: `libtrn/univ.cpp`.
-- Finding: the local `char lbuf[70]` receives a truncated subject copy
-  but the copied buffer is not used afterward.
-- Change: delete the dead buffer and copy, or replace it with owned
-  string processing if the subject-cleanup TODO is implemented.
-- Truncation: current truncation has no observable effect because the
-  buffer is unused.
 
 #### Mouse Modes Storage
 

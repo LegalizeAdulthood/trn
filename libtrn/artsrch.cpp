@@ -1,6 +1,7 @@
 /* artsrch.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/artsrch.h>
 
@@ -21,6 +22,8 @@
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <util/util2.h>
+
+#include <fmt/format.h>
 
 #include <cctype>
 #include <cstdio>
@@ -487,30 +490,35 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         return false;
     }
 
+    std::string search_text;
     switch (scope)
     {
     case ARTSCOPE_SUBJECT:
-        std::strcpy(g_buf,"Subject: ");
-        std::strncpy(g_buf+9,fetch_subj(art_num),256);
+    {
+        search_text = "Subject: " + fetch_subj_copy(art_num);
 #ifdef DEBUG
         if (g_debug & DEB_SEARCH_AHEAD)
         {
-            std::printf("%s\n",g_buf);
+            fmt::print("{}\n", search_text);
         }
 #endif
         break;
+    }
 
     case ARTSCOPE_FROM:
-        std::strcpy(g_buf, "From: ");
-        std::strncpy(g_buf+6,fetch_from(art_num),256);
+    {
+        search_text = "From: " + prefetch_lines_copy(art_num, FROM_LINE);
         break;
+    }
 
     case ARTSCOPE_ONE_HDR:
+    {
         g_untrim_cache = true;
-        std::sprintf(g_buf, "%s: %s", g_header_type[g_art_srch_hdr].name.c_str(),
-                prefetch_lines(art_num,g_art_srch_hdr));
+        const std::string header = prefetch_lines_copy(art_num, g_art_srch_hdr);
         g_untrim_cache = false;
+        search_text = g_header_type[g_art_srch_hdr].name + ": " + header;
         break;
+    }
 
     default:
     {
@@ -584,5 +592,5 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         return false;                           // out of article, so no match
     }
     }
-    return compex->execute(g_buf) != nullptr;
+    return compex->execute(search_text.c_str()) != nullptr;
 }
