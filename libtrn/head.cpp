@@ -21,6 +21,8 @@
 #include <util/util2.h>
 #include <parsedate/parsedate.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -602,15 +604,15 @@ std::string fetch_lines(ArticleNum art_num, HeaderLineType which_line)
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
 {
-    std::sprintf(g_ser_line, "XHDR %s %ld", g_header_type[which_line].name.c_str(), artnum.value_of());
-    return nntp_command(g_ser_line);
+    const std::string command = fmt::format("XHDR {} {}", g_header_type[which_line].name, artnum.value_of());
+    return nntp_command(command);
 }
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum lastnum)
 {
-    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name.c_str(), artnum.value_of(),
-                 lastnum.value_of());
-    return nntp_command(g_ser_line);
+    const std::string command =
+        fmt::format("XHDR {} {}-{}", g_header_type[which_line].name, artnum.value_of(), lastnum.value_of());
+    return nntp_command(command);
 }
 
 static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line, std::string *owned_result,

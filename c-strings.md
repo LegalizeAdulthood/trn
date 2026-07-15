@@ -397,14 +397,6 @@ buffer slices.
 
 ### Copy/Concat Slices
 
-#### `nntp_xhdr` Commands
-
-- Files: `libtrn/head.cpp`.
-- Finding: `XHDR` commands are built with `sprintf` into `g_ser_line`.
-- Change: use `fmt::format` or an owned command string sent to
-  `nntp_command`.
-- Data flow: keep NNTP command storage alive only for the call.
-
 ### Fixed-buffer Storage Slices
 
 #### `univ_use_file` Line Buffer
