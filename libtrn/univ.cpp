@@ -301,7 +301,8 @@ void univ_close()
     g_univ_items.clear();
     if (!g_univ_tmp_file.empty())
     {
-        remove(g_univ_tmp_file.c_str());
+        std::error_code error;
+        fs::remove(g_univ_tmp_file, error);
         g_univ_tmp_file.clear();
     }
     g_univ_fname.clear();

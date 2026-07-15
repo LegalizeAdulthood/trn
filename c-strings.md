@@ -472,14 +472,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### Universal Temporary File Cleanup
-
-- Files: `libtrn/univ.cpp`.
-- Finding: `univ_close` removes `g_univ_tmp_file` with POSIX
-  `remove`.
-- Change: use `fs::remove` with `std::error_code`.
-- Data flow: keep `g_univ_tmp_file` as string storage for now.
-
 #### Scorefile URL Temporary File Cleanup
 
 - Files: `libtrn/scorefile.cpp`.

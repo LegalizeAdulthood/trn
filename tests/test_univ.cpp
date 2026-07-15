@@ -13,7 +13,9 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <fstream>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <variant>
 
@@ -162,6 +164,26 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
 
     EXPECT_EQ(nullptr, univ_first_item());
     EXPECT_EQ("Empty", g_univ_title);
+}
+
+TEST_F(UnivTest, closeRemovesTemporaryFile)
+{
+    const fs::path  temp_dir = fs::path{TRN_TEST_TMP_DIR} / "UnivTest" / "closeRemovesTemporaryFile";
+    std::error_code error;
+    fs::remove_all(temp_dir, error);
+    fs::create_directories(temp_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    const fs::path temp_file = temp_dir / "univ.tmp";
+    std::ofstream{temp_file} << "temporary\n";
+
+    univ_mask_load("", "Temp");
+    g_univ_tmp_file = temp_file.generic_string();
+
+    univ_close();
+
+    EXPECT_TRUE(g_univ_tmp_file.empty());
+    EXPECT_FALSE(fs::exists(temp_file));
+    fs::remove_all(temp_dir, error);
 }
 
 TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
