@@ -29,6 +29,8 @@
 #include <trn/util.h>
 #include <util/env.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -2875,18 +2877,18 @@ static void display_universal(const UniversalItem *ui)
 {
     if (!ui)
     {
-        std::fputs("****EMPTY****",stdout);
+        fmt::print("****EMPTY****");
     }
     else
     {
         if (const UniversalNewsgroup *newsgroup = std::get_if<UniversalNewsgroup>(&ui->m_data))
         {
-              // later error check the UI?
+            // later error check the UI?
             const std::string &group_name = newsgroup->ng;
-            NewsgroupData *np = find_newsgroup(group_name.c_str());
+            NewsgroupData     *np = find_newsgroup(group_name.c_str());
             if (!np)
             {
-                std::printf("!!!!! could not find %s", group_name.c_str());
+                fmt::print("!!!!! could not find {}", group_name);
             }
             else
             {
@@ -2898,33 +2900,33 @@ static void display_universal(const UniversalItem *ui)
                 int numarts = np->m_to_read;
                 if (numarts >= 0)
                 {
-                    std::printf("%5ld ", (long) numarts);
+                    fmt::print("{:5} ", numarts);
                 }
                 else if (numarts == TR_UNSUB)
                 {
-                    std::printf("UNSUB ");
+                    fmt::print("UNSUB ");
                 }
                 else
                 {
-                    std::printf("***** ");
+                    fmt::print("***** ");
                 }
-                std::fputs(group_name.c_str(),stdout);
+                fmt::print("{}", group_name);
             }
             newline();
         }
         else if (std::holds_alternative<UniversalVirtualArticle>(ui->m_data))
         {
-            std::printf("      %s",ui->m_desc.empty() ? ui->univ_article_desc() : ui->m_desc.c_str());
+            fmt::print("      {}", ui->m_desc.empty() ? ui->univ_article_desc() : ui->m_desc);
             newline();
         }
         else if (std::holds_alternative<HelpLocation>(ui->m_data))
         {
-            std::printf("      Help on the %s", ui->univ_key_help_mode_str());
+            fmt::print("      Help on the {}", ui->univ_key_help_mode_str());
             newline();
         }
         else
         {
-            std::printf("      %s",ui->m_desc.empty() ? "[No Description]" : ui->m_desc.c_str());
+            fmt::print("      {}", ui->m_desc.empty() ? "[No Description]" : ui->m_desc);
             newline();
         }
     }

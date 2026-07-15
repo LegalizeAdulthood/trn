@@ -29,6 +29,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cctype>
@@ -1328,55 +1330,48 @@ void sort_univ()
 
 // return a description of the article
 // do this better later, like the code in sadesc.cpp
-const char *UniversalItem::univ_article_desc() const
+std::string UniversalItem::univ_article_desc() const
 {
-    static char dbuf[200];
-    static char sbuf[200];
-    static char fbuf[200];
+    const UniversalVirtualArticle &art = article();
+    std::string from = art.from.empty() ? "<No Author> " : compress_from(art.from.c_str(), 16);
+    if (from.size() > 16)
+    {
+        from.resize(16);
+    }
 
-    const UniversalVirtualArticle &article = this->article();
-    const std::string &subject = article.subj;
-    const std::string &from = article.from;
-    if (from.empty())
+    std::string subject;
+    if (art.subj.empty())
     {
-        std::strcpy(fbuf,"<No Author> ");
+        subject = "<No Subject>";
+    }
+    else if (art.subj.size() >= 4 && art.subj[0] == 'R' && art.subj[1] == 'e' //
+             && art.subj[2] == ':' && art.subj[3] == ' ')
+    {
+        subject = ">";
+        subject += art.subj.substr(4, 54);
     }
     else
     {
-        safe_copy(fbuf,compress_from(from.c_str(),16),17);
+        subject = art.subj.substr(0, 55);
     }
-    if (subject.empty())
+    if (subject.size() > 55)
     {
-        std::strcpy(sbuf,"<No Subject>");
+        subject.resize(55);
     }
-    else
+
+    std::string description = fmt::format("[{:3}] {:>16} {}", m_score, from, subject);
+    for (char &ch : description)
     {
-        const char *s = subject.c_str();
-        if ((s[0] == 'R') && //
-            (s[1] == 'e') && //
-            (s[2] == ':') && //
-            (s[3] == ' '))
+        if (ch == Ctl('h') || ch == '\t' || ch == '\n' || ch == '\r')
         {
-            sbuf[0] = '>';
-            safe_copy(sbuf+1,s+4,79);
-        }
-        else
-        {
-            safe_copy(sbuf,s,80);
+            ch = ' ';
         }
     }
-    fbuf[16] = '\0';
-    sbuf[55] = '\0';
-    std::sprintf(dbuf,"[%3d] %16s %s",m_score,fbuf,sbuf);
-    for (char *t = dbuf; *t; t++)
+    if (description.size() > 70)
     {
-        if ((*t == Ctl('h')) || (*t == '\t') || (*t == '\n') || (*t == '\r'))
-        {
-            *t = ' ';
-        }
+        description.resize(70);
     }
-    dbuf[70] = '\0';
-    return dbuf;
+    return description;
 }
 
 UniversalNewsgroup &UniversalItem::group()

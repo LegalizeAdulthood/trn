@@ -137,7 +137,7 @@ struct UniversalItem
     const std::string &debug_string() const;
     HelpLocation &help_location();
     HelpLocation help_location() const;
-    const char        *univ_article_desc() const;
+    std::string       univ_article_desc() const;
     const char        *univ_key_help_mode_str() const;
 };
 

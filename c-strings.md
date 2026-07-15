@@ -391,14 +391,6 @@ buffer slices.
 - Data flow: pass the formatted command to `do_shell` while owned
   storage is still alive.
 
-#### `UniversalItem::univ_article_desc`
-
-- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.
-- Finding: article descriptions are returned through static buffers.
-- Change: return `std::string`, use ordinary string truncation, and
-  build the result with `fmt::format`.
-- Data flow: remove static `dbuf`, `sbuf`, and `fbuf` storage.
-
 #### `nntp_xhdr` Commands
 
 - Files: `libtrn/head.cpp`.
@@ -518,15 +510,6 @@ when null and empty are distinct states.
 
 ### Universal Selector Storage Slices
 
-#### Universal Item Description
-
-- Files: `libtrn/include/trn/univ.h`, `libtrn/univ.cpp`.
-- Finding: `UniversalItem::m_desc` is owned nullable `char *` storage.
-- Change: convert the default description field to nullable owned string
-  storage.
-- Data flow: update `univ_add`, `univ_close`, null tests, and
-  `UniversalItem::univ_article_desc`.
-
 #### Universal Parse Labels
 
 - Files: `libtrn/univ.cpp`.
@@ -535,17 +518,6 @@ when null and empty are distinct states.
 - Change: use owned optional strings or an explicit presence flag.
 - Data flow: update label matching and description defaults in
   `univ_use_file` and `univ_do_line`.
-
-#### Universal Payload Strings
-
-- Files: `libtrn/include/trn/univ.h`, `libtrn/univ.cpp`,
-  `libtrn/rt-select.cpp`.
-- Finding: `UniversalData` payload fields retain owned raw strings.
-- Change: replace payload string fields with owned C++ string storage.
-- Data flow: update `UN_DEBUG1`, group masks, config files, newsgroups,
-  virtual articles, virtual groups, and text files together.
-- Ownership: update `univ_add_*`, `univ_free_data`, selector readers,
-  and hash-key lifetime in the same storage-centered work.
 
 ### Static-Linkage Slices
 

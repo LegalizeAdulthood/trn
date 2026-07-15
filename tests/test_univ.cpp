@@ -293,6 +293,18 @@ TEST_F(UnivTest, virtualPassExpandsNumberedArticleWithoutDescription)
     EXPECT_EQ("alt.article", g_visited_group);
 }
 
+TEST_F(UnivTest, articleDescriptionFormatsScoreAuthorAndSubject)
+{
+    UniversalItem item = make_undescribed_numbered_article("alt.article");
+    item.m_score = 7;
+
+    EXPECT_EQ("[  7]     <No Author>  <No Subject>", std::string{item.univ_article_desc()});
+
+    item.article().subj = "Re: abc\tdef";
+
+    EXPECT_EQ("[  7]     <No Author>  >abc def", std::string{item.univ_article_desc()});
+}
+
 TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
 {
     const std::string top_name = fs::path{TRN_TEST_UNIV_COLON_PATH_FILE}.generic_string();
