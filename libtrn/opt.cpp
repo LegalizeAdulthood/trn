@@ -310,7 +310,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_MOUSE_MODES:
-        safe_copy(g_mouse_modes, s, sizeof g_mouse_modes);
+        g_mouse_modes = s;
         break;
 
     case OI_USE_UNIV_SEL:
@@ -994,7 +994,7 @@ const char *option_value(OptionIndex num)
         return yes_or_no(g_use_mouse);
 
     case OI_MOUSE_MODES:
-        return g_mouse_modes;
+        return g_mouse_modes.c_str();
 
     case OI_USE_UNIV_SEL:
         return yes_or_no(g_use_univ_selector);

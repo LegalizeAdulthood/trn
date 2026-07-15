@@ -80,7 +80,7 @@ MarkingMode   g_marking{NO_MARKING};              // -m
 MarkingAreas  g_marking_areas{HALF_PAGE_MARKING}; //
 ArticleLine   g_init_lines{};                     // -i
 bool          g_use_mouse{};                      //
-char          g_mouse_modes[32]{"acjlptwvK"};     //
+std::string   g_mouse_modes{"acjlptwvK"};         //
 MinorMode     g_mode{MM_INITIALIZING};            // current state of trn
 GeneralMode   g_general_mode{GM_INIT};            // general mode of trn
 
@@ -2351,7 +2351,7 @@ void xmouse_check()
         }
         else
         {
-            interp(g_msg, sizeof g_msg, g_mouse_modes);
+            interp(g_msg, sizeof g_msg, g_mouse_modes.c_str());
             turn_it_on = (std::strchr(g_msg, static_cast<char>(g_mode)) != nullptr);
         }
         if (turn_it_on)

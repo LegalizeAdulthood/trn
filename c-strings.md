@@ -399,14 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### Mouse Modes Storage
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  `libtrn/opt.cpp`.
-- Finding: `g_mouse_modes` is a fixed global character array.
-- Change: use `std::string` storage and direct assignment.
-- Data flow: update option handling and terminal readers together.
-
 #### NNTP Last Command Snapshot
 
 - Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`.

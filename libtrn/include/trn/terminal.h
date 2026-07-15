@@ -9,6 +9,7 @@
 #include <config/config.h>
 #include <trn/enum-flags.h>
 
+#include <string>
 #include <string_view>
 
 // stuff wanted by terminal mode diddling routines
@@ -55,7 +56,7 @@ extern bool        g_allow_typeahead; // -T
 extern bool        g_verify;          // -v
 extern ArticleLine g_init_lines;      // -i
 extern bool        g_use_mouse;       //
-extern char        g_mouse_modes[32]; //
+extern std::string g_mouse_modes;     //
 
 // These identifiers are a best guess based on usage in the code.
 enum GeneralMode : char
