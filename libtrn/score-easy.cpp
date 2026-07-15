@@ -11,18 +11,16 @@
 #include <trn/util.h>
 
 #include <cstdio>
-#include <cstring>
+#include <cstdlib>
+#include <string>
 
-// new line to return to the caller.
-static char s_sc_e_newline[LINE_BUF_LEN];
-
-// returns new string or nullptr to abort.
-char *sc_easy_append()
+// returns new string or empty string to abort.
+std::string sc_easy_append()
 {
     char ch;
 
     char  filechar = '\0'; // GCC warning avoidance
-    char *s = s_sc_e_newline;
+    std::string line;
     std::printf("\nScorefile easy append mode.\n");
     bool q_done = false;
     while (!q_done)
@@ -38,11 +36,10 @@ char *sc_easy_append()
         switch (ch)
         {
         case '0':
-            return nullptr;
+            return {};
 
         case '1':
-            std::strcpy(s_sc_e_newline,"?");
-            return s_sc_e_newline;
+            return "?";
 
         case '2':
             filechar = '*';
@@ -81,8 +78,8 @@ char *sc_easy_append()
         // If error checking is done later, then an error should set
         // filechar to '\0' and continue the while loop.
     }
-    *s++ = filechar;
-    *s++ = ' ';
+    line += filechar;
+    line += ' ';
     q_done = false;
     while (!q_done)
     {
@@ -98,7 +95,7 @@ char *sc_easy_append()
         switch (ch)
         {
         case '0':
-            return nullptr;
+            return {};
 
         case '1':
             break;
@@ -110,8 +107,8 @@ char *sc_easy_append()
             g_buf[1] = FINISH_CMD;
             if (finish_command(true))
             {
-                std::sprintf(s,"%s",g_buf+1);
-                return s_sc_e_newline;
+                line += g_buf + 1;
+                return line;
             }
             std::printf("\n");
             q_done = false;
@@ -136,7 +133,7 @@ char *sc_easy_append()
         g_buf[1] = FINISH_CMD;
         if (finish_command(true))
         {
-            long score = atoi(g_buf + 1);
+            long score = std::atoi(g_buf + 1);
             if (score == 0)
             {
                 if (g_buf[1] != '0')
@@ -144,9 +141,8 @@ char *sc_easy_append()
                     continue;   // the while loop
                 }
             }
-            std::sprintf(s,"%ld",score);
-            s = s_sc_e_newline+std::strlen(s_sc_e_newline); // point at terminator
-            *s++ = ' ';
+            line += std::to_string(score);
+            line += ' ';
             q_done = true;
         }
         else
@@ -168,17 +164,15 @@ char *sc_easy_append()
         switch (ch)
         {
         case '0':
-            return nullptr;
+            return {};
 
         case '1':
-            *s++ = 'S';
-            *s++ = '\0';
-            return s_sc_e_newline;
+            line += 'S';
+            return line;
 
         case '2':
-            *s++ = 'F';
-            *s++ = '\0';
-            return s_sc_e_newline;
+            line += 'F';
+            return line;
 
         case 'h':
             std::printf("No help available (yet).\n");
@@ -191,7 +185,7 @@ char *sc_easy_append()
         }
     }
     // later ask for headers, pattern-matching, etc...
-    return nullptr;
+    return {};
 }
 
 // returns new string or nullptr to abort.

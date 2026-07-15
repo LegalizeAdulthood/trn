@@ -399,13 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### Easy-score Command Buffer
-
-- Files: `libtrn/score-easy.cpp`, `libtrn/include/trn/score-easy.h`.
-- Finding: `s_sc_e_newline` is fixed-size command assembly storage.
-- Change: use `std::string` for command construction.
-- Data flow: preserve callers that read the current easy-score command.
-
 #### Saved-score Line Buffer
 
 - Files: `libtrn/scoresave.cpp`.

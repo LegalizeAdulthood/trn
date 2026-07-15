@@ -24,6 +24,7 @@
 #include <trn/terminal.h> // input_pending()
 
 #include <cstdio>
+#include <string>
 
 bool       g_kill_thresh_active{};   //
 int        g_kill_thresh{LOW_SCORE}; // KILL articles at or below this score
@@ -501,13 +502,15 @@ void sc_append(char *line)
         std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
+    std::string easy_line;
     if (!*line)
     {
-        line = sc_easy_append();
-        if (!line)
+        easy_line = sc_easy_append();
+        if (easy_line.empty())
         {
             return;             // do nothing with empty string
         }
+        line = easy_line.data();
     }
     char filechar = *line; // first char
     sf_append(line);
