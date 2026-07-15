@@ -415,14 +415,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Scorefile Abbreviations
-
-- Files: `libtrn/scorefile.cpp`.
-- Finding: `s_sf_abbr` owns file abbreviation strings with
-  `save_str`/`free`.
-- Change: replace the table with an array of optional strings.
-- Data flow: update the `file` command path and abbreviation readers.
-
 #### Keymap Macro Strings
 
 - Files: `libtrn/terminal.cpp`.

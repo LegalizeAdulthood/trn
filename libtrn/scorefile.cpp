@@ -25,6 +25,7 @@
 #include <util/env.h> // get_val
 #include <util/util2.h>
 
+#include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -58,7 +59,7 @@ enum
 
 static std::vector<ScoreFileEntry> s_sf_entries; // array of entries
 static std::vector<ScoreFile> s_sf_files;
-static char          **s_sf_abbr{};           // abbreviations
+static std::array<std::string, 256> s_sf_abbr; // abbreviations
 static bool            s_new_author_active{}; // if true, s_newauthor is active
 static int             s_new_author{};        // bonus score given to a new (unscored) author
 static bool            s_sf_pattern_status{}; // should we match by pattern?
@@ -110,8 +111,7 @@ void sf_init()
     s_sf_extra_headers.clear();
 
     // initialize abbreviation list
-    s_sf_abbr = (char**)safe_malloc(256 * sizeof (char*));
-    std::memset((char*)s_sf_abbr,0,256 * sizeof (char*));
+    s_sf_abbr = {};
 
     if (g_sf_verbose)
     {
@@ -230,18 +230,7 @@ void sf_clean()
             delete s_sf_entries[i].compex;
         }
     }
-    if (s_sf_abbr)
-    {
-        for (int i = 0; i < 256; i++)
-        {
-            if (s_sf_abbr[i])
-            {
-                std::free(s_sf_abbr[i]);
-                s_sf_abbr[i] = nullptr;
-            }
-        }
-        std::free(s_sf_abbr);
-    }
+    s_sf_abbr = {};
     s_sf_entries.clear();
     g_sf_num_entries = 0;
     s_sf_extra_headers.clear();
@@ -581,11 +570,7 @@ static bool sf_do_command(char *cmd, bool check)
             std::printf("Bad file command (missing parameters)\n");
             return false;
         }
-        if (s_sf_abbr[(int)ch])
-        {
-            std::free(s_sf_abbr[(int)ch]);
-        }
-        s_sf_abbr[(int)ch] = save_str(sf_cmd_fname(s));
+        s_sf_abbr[static_cast<unsigned char>(ch)] = sf_cmd_fname(s);
         return true;
     }
     if (!std::strncmp(cmd, "end", 3))
@@ -1020,9 +1005,9 @@ void sf_append(char *line)
         std::printf("List of abbreviation/file pairs\n");
         for (int i = 0; i < 256; i++)
         {
-            if (s_sf_abbr[i])
+            if (!s_sf_abbr[i].empty())
             {
-                std::printf("%c %s\n", (char) i, s_sf_abbr[i]);
+                std::printf("%c %s\n", (char) i, s_sf_abbr[i].c_str());
             }
         }
         std::printf("\" [The current newsgroup's score file]\n");
@@ -1121,14 +1106,15 @@ void sf_append(char *line)
         filename = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
         filename += "/global";
     }
-    else if (!s_sf_abbr[(int) filechar])
-    {
-        std::printf("\nBad file abbreviation: %c\n", filechar);
-        return;
-    }
     else
     {
-        filename = s_sf_abbr[(int) filechar];
+        const std::string &abbreviation = s_sf_abbr[static_cast<unsigned char>(filechar)];
+        if (abbreviation.empty())
+        {
+            std::printf("\nBad file abbreviation: %c\n", filechar);
+            return;
+        }
+        filename = abbreviation;
     }
     const fs::path score_file{file_exp(sf_cmd_fname(filename))}; // allow shortcuts
     // make sure directory exists...
@@ -1355,12 +1341,13 @@ void sf_edit_file(const char *filespec)
     }
     else        // abbreviation
     {
-        if (!s_sf_abbr[(int) filechar])
+        const std::string &abbreviation = s_sf_abbr[static_cast<unsigned char>(filechar)];
+        if (abbreviation.empty())
         {
             std::printf("\nBad file abbreviation: %c\n",filechar);
             return;
         }
-        file_name = s_sf_abbr[(int) filechar];
+        file_name = abbreviation;
     }
     const std::string fname_noexpand{sf_cmd_fname(file_name)};
     const fs::path    expanded_file{file_exp(fname_noexpand)};
