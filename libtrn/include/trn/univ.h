@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <variant>
 
 struct HashTable;
 
@@ -96,20 +97,15 @@ struct UniversalDebugData
     std::string text;
 };
 
-union UniversalData
-{
-    UniversalData() {}
-    ~UniversalData() {}
-
-    HelpLocation            i;
-    UniversalDebugData      debug;
-    UniversalGroupMaskData  gmask;
-    UniversalConfigFileData cfile;
-    UniversalNewsgroup      group;
-    UniversalVirtualData    virt;
-    UniversalVirtualGroup   vgroup;
-    UniversalTextFile       text_file;
-};
+using UniversalData = std::variant<std::monostate,
+    HelpLocation,
+    UniversalDebugData,
+    UniversalGroupMaskData,
+    UniversalConfigFileData,
+    UniversalNewsgroup,
+    UniversalVirtualData,
+    UniversalVirtualGroup,
+    UniversalTextFile>;
 
 // selector flags
 enum UniversalItemFlags

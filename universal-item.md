@@ -10,8 +10,8 @@ preserving.  Remove each slice from this plan when it is complete.
 
 ## Current Shape
 
-`UniversalItem` still stores payloads in the `UniversalData` union and owns
-most payload strings through raw `char *` fields.  Items are stored as an
+`UniversalItem` stores payloads in the `UniversalData` variant.  `m_type`
+still duplicates the active payload alternative.  Items are stored as an
 intrusive global doubly linked list rooted at `g_first_univ` and
 `g_last_univ`.
 
@@ -39,15 +39,6 @@ replacement for item state.
 - Avoid changing formatting outside touched lines.
 
 ## Implementation Slices
-
-### 25. Convert Universal Data To Variant
-
-- Target: `UniversalData`.
-- Change: replace the union with `std::variant` alternatives.
-- Data flow: payload accessors become the only read and write path.
-- Risk: high; the temporary invariant is that `m_type` and the active
-  variant alternative agree.
-- Verification: focused universal tests and normal workflow.
 
 ### 26. Derive Type From Variant
 

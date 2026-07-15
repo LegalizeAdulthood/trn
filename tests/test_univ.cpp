@@ -64,6 +64,43 @@ void reset_fake_visit_group()
     g_visit_count = 0;
 }
 
+UniversalData make_universal_data(UniversalItemType type)
+{
+    switch (type)
+    {
+    case UN_DEBUG1:
+        return UniversalDebugData{};
+
+    case UN_GROUP_MASK:
+        return UniversalGroupMaskData{};
+
+    case UN_CONFIG_FILE:
+        return UniversalConfigFileData{};
+
+    case UN_NEWSGROUP:
+        return UniversalNewsgroup{};
+
+    case UN_ARTICLE:
+        return UniversalVirtualData{};
+
+    case UN_VGROUP:
+        return UniversalVirtualGroup{};
+
+    case UN_TEXT_FILE:
+        return UniversalTextFile{};
+
+    case UN_HELP_KEY:
+        return HelpLocation{};
+
+    case UN_NONE:
+    case UN_TXT:
+    case UN_DATA_SOURCE:
+    case UN_VIRTUAL1:
+    default:
+        return std::monostate{};
+    }
+}
+
 UniversalItem *make_universal_item(UniversalItemType type)
 {
     UniversalItem *item = reinterpret_cast<UniversalItem *>(safe_malloc(sizeof(UniversalItem)));
@@ -75,34 +112,7 @@ UniversalItem *make_universal_item(UniversalItemType type)
     item->m_state = UIS_NORMAL;
     new (&item->m_desc) std::string{};
     item->m_score = 0;
-    if (type == UN_DEBUG1)
-    {
-        new (&item->m_data.debug) UniversalDebugData{};
-    }
-    else if (type == UN_NEWSGROUP)
-    {
-        new (&item->m_data.group) UniversalNewsgroup{};
-    }
-    else if (type == UN_VGROUP)
-    {
-        new (&item->m_data.vgroup) UniversalVirtualGroup{};
-    }
-    else if (type == UN_ARTICLE)
-    {
-        new (&item->m_data.virt) UniversalVirtualData{};
-    }
-    else if (type == UN_CONFIG_FILE)
-    {
-        new (&item->m_data.cfile) UniversalConfigFileData{};
-    }
-    else if (type == UN_GROUP_MASK)
-    {
-        new (&item->m_data.gmask) UniversalGroupMaskData{};
-    }
-    else if (type == UN_TEXT_FILE)
-    {
-        new (&item->m_data.text_file) UniversalTextFile{};
-    }
+    new (&item->m_data) UniversalData{make_universal_data(type)};
     return item;
 }
 
