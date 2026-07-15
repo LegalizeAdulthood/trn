@@ -101,10 +101,10 @@ void data_source_init()
     if (machine && std::strcmp(machine, "local") != 0)
     {
         DataSourceConfig config;
-        char            *auth_pass = nullptr;
+        const AuthCredentials  credentials = read_auth_file(g_nntp_auth_file.c_str());
         config.set_nntp_server(machine);
-        config.set_auth_user(read_auth_file(g_nntp_auth_file.c_str(), &auth_pass));
-        config.set_auth_password(auth_pass);
+        config.set_auth_user(credentials.user.c_str());
+        config.set_auth_password(credentials.password.c_str());
         config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
         new_data_source("default", config);
     }
@@ -142,9 +142,9 @@ void data_source_init()
         config.set_group_desc(GROUP_DESC);
         if (machine)
         {
-            char *auth_pass = nullptr;
-            config.set_auth_user(read_auth_file(g_nntp_auth_file.c_str(), &auth_pass));
-            config.set_auth_password(auth_pass);
+            const AuthCredentials credentials = read_auth_file(g_nntp_auth_file.c_str());
+            config.set_auth_user(credentials.user.c_str());
+            config.set_auth_password(credentials.password.c_str());
             config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
         }
         new_data_source("default", config);

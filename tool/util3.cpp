@@ -84,15 +84,11 @@ int nntp_handle_nested_lists()
 
 std::string get_auth_user()
 {
-    extern std::string g_nntp_auth_file;
-    char              *password{};
-    char              *user = read_auth_file(g_nntp_auth_file.c_str(), &password);
+    extern std::string    g_nntp_auth_file;
+    const AuthCredentials credentials = read_auth_file(g_nntp_auth_file.c_str());
 
-    std::string result{user ? user : ""};
-    s_nntp_password = password ? password : "";
-    std::free(user);
-    std::free(password);
-    return result;
+    s_nntp_password = credentials.password;
+    return credentials.user;
 }
 
 std::string get_auth_pass()

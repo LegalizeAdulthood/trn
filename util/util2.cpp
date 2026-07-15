@@ -263,29 +263,19 @@ char *in_string(char *big, const char *little, bool case_matters)
     return const_cast<char *>(in_string(static_cast<const char *>(big), little, case_matters));
 }
 
-char *read_auth_file(const char *file, char **pass_ptr)
+AuthCredentials read_auth_file(const char *file)
 {
-    char* strptr[2];
-    char buf[1024];
-    strptr[1] = nullptr;
-    strptr[0] = nullptr;
-    std::FILE *fp = std::fopen(file, "r");
-    if (fp != nullptr)
+    if (file == nullptr || *file == '\0')
     {
-        for (int i = 0; i < 2; i++)
-        {
-            if (std::fgets(buf, sizeof buf, fp) != nullptr)
-            {
-                char* cp = buf + std::strlen(buf) - 1;
-                if (*cp == '\n')
-                {
-                    *cp = '\0';
-                }
-                strptr[i] = save_str(buf);
-            }
-        }
-        std::fclose(fp);
+        return {};
     }
-    *pass_ptr = strptr[1];
-    return strptr[0];
+
+    AuthCredentials result;
+    std::ifstream fp{file};
+    if (fp)
+    {
+        std::getline(fp, result.user);
+        std::getline(fp, result.password);
+    }
+    return result;
 }

@@ -395,24 +395,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
-### Owning Raw-string Return Slices
-
-#### `read_auth_file` Credentials
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`,
-  `libtrn/datasrc.cpp`, `tool/util3.cpp`.
-- Finding: the username is returned as an owned `char *`, the password
-  is returned through a `char **` output parameter, and both are
-  populated with `save_str`.
-- Change: return a small value type or pair of `std::string` values and
-  use empty strings for absent fields.
-- Data flow: assign directly into `DataSourceConfig`, runtime
-  `DataSource` strings, and tool auth storage; remove the raw
-  acquire/copy leaks in `datasrc.cpp` and the temporary raw read/free
-  wrapper in `tool/util3.cpp` once the producer returns strings.
-- Truncation: the current `char buf[1024]` line buffer imposes arbitrary
-  credential truncation; use line-oriented string input.
-
 ### Owning Raw-string Parameter Slices
 
 #### `Article::set_cached_line` Cached Header Setter
