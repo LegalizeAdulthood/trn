@@ -392,8 +392,7 @@ SaveResult save_article()
         {
             c = (s + std::strlen(s));
             *c++ = '/';                 // put a slash before filename
-            static char s_news[] = "News";
-            interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename);
+            interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? "News" : savename);
             // generate a default name somehow or other
         }
         make_dir(s, MD_FILE);
