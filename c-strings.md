@@ -468,16 +468,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### `sf_edit_file` Scorefile Edit Path
-
-- Files: `libtrn/scorefile.cpp`.
-- Finding: scorefile edit paths are built as strings, expanded, passed
-  to `make_dir`, and then edited.
-- Change: use `fs::path` for local/global scorefile selection and parent
-  creation where possible.
-- Data flow: keep `edit_file` and `file_exp` boundaries explicit and use
-  `string().c_str()` only at those legacy calls.
-
 #### `sc_sv_save_file` Saved-score Replacement
 
 - Files: `libtrn/scoresave.cpp`.

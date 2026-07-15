@@ -253,3 +253,22 @@ TEST_F(ScoreFileTest, editLocalFileBuildsExpandedEditorCommand)
     EXPECT_STREQ((": " + score_file).c_str(), g_cmd_buf);
     EXPECT_TRUE(fs::exists(score_dir));
 }
+
+TEST_F(ScoreFileTest, editGlobalFileBuildsExpandedEditorCommand)
+{
+    const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-edit-global"};
+    const std::string score_file{score_dir + "/global"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+
+    trn::testing::MockEnvironment env;
+    env.expect_env("SCOREDIR", score_dir.c_str());
+    env.expect_no_envar("EDITOR");
+    env.expect_env("VISUAL", ":");
+
+    sf_edit_file("*");
+
+    EXPECT_STREQ((": " + score_file).c_str(), g_cmd_buf);
+    EXPECT_TRUE(fs::exists(score_dir));
+}

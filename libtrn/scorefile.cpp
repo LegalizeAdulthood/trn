@@ -1346,14 +1346,12 @@ void sf_edit_file(const char *filespec)
     else if (filechar == '"')   // edit local group
     {
         // Note: should probably be changed to use sf_ file functions
-        file_name = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
-        file_name += "/%C";
+        file_name = (fs::path{get_val_const("SCOREDIR", DEFAULT_SCOREDIR)} / "%C").generic_string();
     }
     else if (filechar == '*')   // edit global scorefile
     {
         // Note: should probably be changed to use sf_ file functions
-        file_name = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
-        file_name += "/global";
+        file_name = (fs::path{get_val_const("SCOREDIR", DEFAULT_SCOREDIR)} / "global").generic_string();
     }
     else        // abbreviation
     {
@@ -1365,16 +1363,18 @@ void sf_edit_file(const char *filespec)
         file_name = s_sf_abbr[(int) filechar];
     }
     const std::string fname_noexpand{sf_cmd_fname(file_name)};
-    const std::string expanded_file{file_exp(fname_noexpand)};
+    const fs::path    expanded_file{file_exp(fname_noexpand)};
     // make sure directory exists...
-    if (!make_dir(expanded_file.c_str(), MD_FILE))
+    std::error_code error;
+    fs::create_directories(expanded_file.parent_path(), error);
+    if (!error)
     {
         (void)edit_file(fname_noexpand.c_str());
         sf_file_clear();
     }
     else
     {
-        std::printf("Can't make %s\n", expanded_file.c_str());
+        std::printf("Can't make %s\n", expanded_file.generic_string().c_str());
     }
 }
 
