@@ -467,3 +467,27 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Filesystem Path Slices
+
+#### Newsrc Lock Cleanup
+
+- Files: `libtrn/rcstuff.cpp`.
+- Finding: `unlock_newsrc` removes the lock file with POSIX `remove`
+  from a `Newsrc` string path.
+- Change: use `fs::remove` with `std::error_code`.
+- Data flow: keep the existing `Newsrc` string path members.
+
+#### DataSource Temporary File Cleanup
+
+- Files: `libtrn/datasrc.cpp`.
+- Finding: `DataSource::close` and the temporary group-description
+  fallback remove cached files with POSIX `remove`.
+- Change: use `fs::remove` with `std::error_code`.
+- Data flow: keep `DataSource` filename members as strings until the
+  whole structure is ready for path storage.
+
+#### Authentication File Cleanup
+
+- Files: `libtrn/util.cpp`.
+- Finding: `set_auth` removes the NNTP auth file with POSIX `remove`.
+- Change: use `fs::remove` with `std::error_code`.
+- Data flow: keep `g_nntp_auth_file` as string storage for now.

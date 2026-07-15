@@ -41,11 +41,22 @@ protected:
         m_old_newsgroup_data = std::move(g_newsgroup_data);
         m_old_newsgroup_order = std::move(g_newsgroup_order);
         m_old_newsgroup_count = g_newsgroup_count;
+        m_old_newsgroup_to_read = g_newsgroup_to_read;
         m_old_first_newsgroup = g_first_newsgroup;
         m_old_last_newsgroup = g_last_newsgroup;
+        m_old_newsgroup_ptr = g_newsgroup_ptr;
+        m_old_current_newsgroup = g_current_newsgroup;
+        m_old_recent_newsgroup = g_recent_newsgroup;
+        m_old_start_here = g_start_here;
+        m_old_sel_page_np = g_sel_page_np;
+        m_old_sel_next_np = g_sel_next_np;
+        m_old_ng_go_newsgroup_ptr = g_ng_go_newsgroup_ptr;
+        m_old_multirc = g_multirc;
+        m_old_data_source = g_data_source;
         m_old_sel_sort = g_sel_sort;
         m_old_sel_newsgroup_sort = g_sel_newsgroup_sort;
         m_old_sel_direction = g_sel_direction;
+        m_old_check_flag = g_check_flag;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -62,23 +73,51 @@ protected:
         g_newsgroup_data.clear();
         g_newsgroup_order.clear();
         g_newsgroup_count = NewsgroupNum{};
+        g_newsgroup_to_read = NewsgroupNum{};
         g_first_newsgroup = nullptr;
         g_last_newsgroup = nullptr;
+        g_newsgroup_ptr = nullptr;
+        g_current_newsgroup = nullptr;
+        g_recent_newsgroup = nullptr;
+        g_start_here = nullptr;
+        g_sel_page_np = nullptr;
+        g_sel_next_np = nullptr;
+        g_ng_go_newsgroup_ptr = nullptr;
+        g_multirc = nullptr;
+        g_data_source = nullptr;
+        g_check_flag = false;
     }
 
     void TearDown() override
     {
+        if (g_multirc != nullptr && g_multirc != m_old_multirc)
+        {
+            unuse_multirc(g_multirc);
+        }
+        m_data_source.close();
+
         std::error_code error;
         fs::remove_all(m_output_dir, error);
 
         g_newsgroup_data = std::move(m_old_newsgroup_data);
         g_newsgroup_order = std::move(m_old_newsgroup_order);
         g_newsgroup_count = m_old_newsgroup_count;
+        g_newsgroup_to_read = m_old_newsgroup_to_read;
         g_first_newsgroup = m_old_first_newsgroup;
         g_last_newsgroup = m_old_last_newsgroup;
+        g_newsgroup_ptr = m_old_newsgroup_ptr;
+        g_current_newsgroup = m_old_current_newsgroup;
+        g_recent_newsgroup = m_old_recent_newsgroup;
+        g_start_here = m_old_start_here;
+        g_sel_page_np = m_old_sel_page_np;
+        g_sel_next_np = m_old_sel_next_np;
+        g_ng_go_newsgroup_ptr = m_old_ng_go_newsgroup_ptr;
+        g_multirc = m_old_multirc;
+        g_data_source = m_old_data_source;
         g_sel_sort = m_old_sel_sort;
         g_sel_newsgroup_sort = m_old_sel_newsgroup_sort;
         g_sel_direction = m_old_sel_direction;
+        g_check_flag = m_old_check_flag;
     }
 
     Newsrc make_newsrc()
@@ -107,11 +146,22 @@ protected:
     std::vector<NewsgroupData>   m_old_newsgroup_data;
     std::vector<NewsgroupData *> m_old_newsgroup_order;
     NewsgroupNum                 m_old_newsgroup_count{};
+    NewsgroupNum                 m_old_newsgroup_to_read{};
     NewsgroupData               *m_old_first_newsgroup{};
     NewsgroupData               *m_old_last_newsgroup{};
+    NewsgroupData               *m_old_newsgroup_ptr{};
+    NewsgroupData               *m_old_current_newsgroup{};
+    NewsgroupData               *m_old_recent_newsgroup{};
+    NewsgroupData               *m_old_start_here{};
+    NewsgroupData               *m_old_sel_page_np{};
+    NewsgroupData               *m_old_sel_next_np{};
+    NewsgroupData               *m_old_ng_go_newsgroup_ptr{};
+    Multirc                     *m_old_multirc{};
+    DataSource                  *m_old_data_source{};
     SelectionSortMode            m_old_sel_sort{};
     SelectionSortMode            m_old_sel_newsgroup_sort{};
     int                          m_old_sel_direction{};
+    bool                         m_old_check_flag{};
 };
 
 } // namespace
@@ -144,4 +194,23 @@ TEST_F(NewsrcRotationTest, getOldNewsrcsRestoresBackupFile)
     EXPECT_EQ((std::vector<std::string>{"old contents"}), read_lines(newsrc.name));
     EXPECT_EQ((std::vector<std::string>{"current contents"}), read_lines(newsrc.new_name));
     EXPECT_FALSE(fs::exists(newsrc.old_name));
+}
+
+TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl: 1\n";
+    std::ofstream{newsrc.old_name} << "stale backup\n";
+
+    ASSERT_TRUE(multirc.use_multirc());
+
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1"}), read_lines(newsrc.old_name));
+    unuse_multirc(&multirc);
 }

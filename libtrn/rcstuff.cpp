@@ -778,7 +778,8 @@ static bool open_newsrc(Newsrc *rp)
             return false;
         }
         // unlink backup file name and backup current name
-        remove(rp->old_name.c_str());
+        std::error_code error;
+        fs::remove(fs::path{rp->old_name}, error);
 #ifndef NO_FILELINKS
         safe_link(rp->name.c_str(), rp->old_name.c_str());
 #endif
@@ -895,8 +896,12 @@ static bool open_newsrc(Newsrc *rp)
     }
     std::fclose(rcfp);                       // close .newsrc
 #ifdef NO_FILELINKS
-    remove(rp->old_name.c_str());
-    rename(rp->name.c_str(),rp->old_name.c_str());
+    const fs::path  newsrc_path{rp->name};
+    const fs::path  old_newsrc_path{rp->old_name};
+    std::error_code error;
+    fs::remove(old_newsrc_path, error);
+    error.clear();
+    fs::rename(newsrc_path, old_newsrc_path, error);
     rp->flags |= RF_RC_CHANGED;
 #endif
     if (!rp->info_name.empty())
