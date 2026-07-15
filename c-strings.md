@@ -399,14 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### Saved-score Line Buffer
-
-- Files: `libtrn/scoresave.cpp`.
-- Finding: `s_line_buf` stores saved-score line construction.
-- Change: use owned string construction if the line does not escape as
-  an output buffer.
-- Data flow: classify output ownership before editing.
-
 #### Mouse Modes Storage
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,

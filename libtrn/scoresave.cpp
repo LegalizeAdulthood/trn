@@ -23,7 +23,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <fstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -32,7 +32,6 @@ int g_sc_loaded_count{}; // how many articles were loaded?
 
 static long       s_sc_save_new{}; // new articles (unloaded)
 static std::vector<std::string> s_lines;
-static char       s_line_buf[LINE_BUF_LEN]{};
 static int        s_loaded{};
 static int        s_used{};
 static int        s_saved{};
@@ -82,9 +81,8 @@ static void sc_sv_get_file()
 {
     s_lines.clear();
 
-    const char *s = get_val_const("SAVESCOREFILE", "%+/savedscores");
-    std::FILE  *fp = std::fopen(file_exp(s).c_str(), "r");
-    if (!fp)
+    std::ifstream input{file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores"))};
+    if (!input)
     {
 // Debug
 #if 0
@@ -92,12 +90,11 @@ static void sc_sv_get_file()
 #endif
         return;
     }
-    while (std::fgets(s_line_buf, LINE_BUF_LEN - 2, fp))
+    std::string line;
+    while (std::getline(input, line))
     {
-        s_line_buf[std::strlen(s_line_buf)-1] = '\0';        // strip \n
-        sc_sv_add(s_line_buf);
+        sc_sv_add(line);
     }
-    std::fclose(fp);
 }
 
 // save the memory into the score file
@@ -259,30 +256,27 @@ static ArticleNum sc_sv_use_line(char *line, ArticleNum a)
 
 static ArticleNum sc_sv_make_line(ArticleNum a)
 {
-    bool lastscore_valid = false;
-    int  num_output = 0;
-    int  i;
-    bool neg_flag;
-
-    char *s = s_line_buf;
-    *s++ = '.';
-    int lastscore = 0;
+    bool        lastscore_valid = false;
+    int         num_output = 0;
+    ArticleNum  next_start = article_after(g_last_art);
+    std::string line{"."};
+    int         lastscore = 0;
 
     for (ArticleNum art = article_first(a); art <= g_last_art && num_output < 50; art = article_next(art))
     {
+        next_start = article_next(art);
         if (article_unread(art) && article_scored(art))
         {
             if (s_last != article_before(art))
             {
                 if (s_last == article_before(art, 2))
                 {
-                    *s++ = 's';
+                    line += 's';
                     num_output++;
                 }
                 else
                 {
-                    std::sprintf(s, "s%ld", (art.value_of() - s_last.value_of()) - 1);
-                    s = s_line_buf + std::strlen(s_line_buf);
+                    line += fmt::format("s{}", (art.value_of() - s_last.value_of()) - 1);
                     num_output++;
                 }
             }
@@ -291,60 +285,60 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
             // check for repeating scores
             if (score == lastscore && lastscore_valid)
             {
-                art = article_next(art);
-                for (i = 1; art <= g_last_art && article_unread(art) && article_scored(art)
-                         && article_ptr(art)->m_score == score; i++)
+                int        repeat_count = 1;
+                ArticleNum repeat_art = article_next(art);
+                for (; repeat_art <= g_last_art && article_unread(repeat_art) && article_scored(repeat_art) &&
+                       article_ptr(repeat_art)->m_score == score;
+                     repeat_count++)
                 {
-                    art = article_next(art);
+                    repeat_art = article_next(repeat_art);
                 }
-                art = article_prev(art);        // prepare for the for loop increment
-                if (i == 1)
+                art = article_prev(repeat_art); // prepare for the for loop increment
+                if (repeat_count == 1)
                 {
-                    *s++ = 'r';         // repeat one
+                    line += 'r'; // repeat one
                     num_output++;
                 }
                 else
                 {
-                    std::sprintf(s,"r%d",i); // repeat >one
-                    s = s_line_buf + std::strlen(s_line_buf);
+                    line += fmt::format("r{}", repeat_count); // repeat >one
                     num_output++;
                 }
-                s_saved += i-1;
+                s_saved += repeat_count - 1;
             }
-            else      // not a repeat
+            else // not a repeat
             {
-                i = score;
-                if (i < 0)
-                {
-                    neg_flag = true;
-                    i = 0 - i;
-                }
-                else
-                {
-                    neg_flag = false;
-                }
-                std::sprintf(s,"%d",i);
-                i = (*s - '0');
+                int  score_value = score;
+                bool neg_flag = score_value < 0;
                 if (neg_flag)
                 {
-                    *s++ = 'J' - i;
+                    score_value = 0 - score_value;
+                }
+                std::string score_text = std::to_string(score_value);
+                int         first_digit = score_text.front() - '0';
+                if (neg_flag)
+                {
+                    score_text.front() = static_cast<char>('J' - first_digit);
                 }
                 else
                 {
-                    *s++ = 'J' + i;
+                    score_text.front() = static_cast<char>('J' + first_digit);
                 }
-                s = s_line_buf + std::strlen(s_line_buf);
+                line += score_text;
                 num_output++;
                 lastscore_valid = true;
             }
             lastscore = score;
             s_last = art;
+            next_start = article_next(art);
             s_saved++;
         } // if
     } // for
-    *s = '\0';
-    sc_sv_add(s_line_buf);
-    return a;
+    if (num_output != 0)
+    {
+        sc_sv_add(line);
+    }
+    return next_start;
 }
 
 void sc_load_scores()
