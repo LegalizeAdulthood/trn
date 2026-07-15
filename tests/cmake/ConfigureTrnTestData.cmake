@@ -36,6 +36,7 @@ function(configure_trn_test_data)
     set(TRN_TEST_UNIV_COLON_PATH_FILE "${TRN_TEST_UNIV_DIR}/colon-path.univ")
     set(TRN_TEST_UNIV_COLON_PATH_LABEL_FILE "${TRN_TEST_UNIV_DIR}/colon-path-label.univ")
     set(TRN_TEST_UNIV_GROUP_MASK_FILE "${TRN_TEST_UNIV_DIR}/group-mask.univ")
+    set(TRN_TEST_UNIV_TEXT_FILE "${TRN_TEST_UNIV_DIR}/text-file.univ")
 
     # Newsgroup related content.
     set(TRN_TEST_SPOOL_DIR "${TRN_TEST_DATA_DIR}/spool")
@@ -138,6 +139,7 @@ function(configure_trn_test_data)
     configure_file(cmake/test_univ_colon_path.in        "${TRN_TEST_UNIV_COLON_PATH_FILE}")
     configure_file(cmake/test_univ_colon_path_label.in  "${TRN_TEST_UNIV_COLON_PATH_LABEL_FILE}")
     configure_file(cmake/test_univ_group_mask.in        "${TRN_TEST_UNIV_GROUP_MASK_FILE}")
+    configure_file(cmake/test_univ_text_file.in         "${TRN_TEST_UNIV_TEXT_FILE}")
 
     # Generate test source files.
     # test_config.h needs the size of the generated article.

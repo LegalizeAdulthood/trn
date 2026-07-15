@@ -845,11 +845,11 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
     case UN_TEXT_FILE:
     {
-        char *s = ui->text_file().fname;
-        if (s && *s)
+        const std::string &file_name = ui->text_file().fname;
+        if (!file_name.empty())
         {
             // later have some way of getting a return code back
-            univ_page_file(s);
+            univ_page_file(file_name);
         }
         break;
     }

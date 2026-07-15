@@ -95,6 +95,10 @@ UniversalItem *make_universal_item(UniversalItemType type)
     {
         new (&item->m_data.gmask) UniversalGroupMaskData{};
     }
+    else if (type == UN_TEXT_FILE)
+    {
+        new (&item->m_data.text_file) UniversalTextFile{};
+    }
     return item;
 }
 
@@ -213,6 +217,19 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
     EXPECT_STREQ("Filter", g_first_univ->m_desc);
     EXPECT_EQ("Filter", g_first_univ->group_mask().title);
     EXPECT_EQ("alt.test !alt.noise", g_first_univ->group_mask().mask_list);
+}
+
+TEST_F(UnivTest, fileLoadCreatesTextFileItem)
+{
+    const fs::path selector_path{TRN_TEST_UNIV_TEXT_FILE};
+    const std::string file_name = selector_path.generic_string();
+    const std::string help_name = (selector_path.parent_path() / "help.txt").generic_string();
+
+    ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
+    ASSERT_NE(nullptr, g_first_univ);
+    EXPECT_EQ(UN_TEXT_FILE, g_first_univ->m_type);
+    EXPECT_STREQ("Help", g_first_univ->m_desc);
+    EXPECT_EQ(file_exp(help_name), g_first_univ->text_file().fname);
 }
 
 TEST_F(UnivTest, virtualPassUsesInjectedVisitor)

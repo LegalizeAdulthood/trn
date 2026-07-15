@@ -232,6 +232,10 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     {
         new (&node->m_data.gmask) UniversalGroupMaskData{};
     }
+    else if (type == UN_TEXT_FILE)
+    {
+        new (&node->m_data.text_file) UniversalTextFile{};
+    }
     node->m_next = nullptr;
     node->m_prev = g_last_univ;
     if (g_last_univ)
@@ -286,7 +290,7 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_TEXT_FILE:
-        safe_free(ui->text_file().fname);
+        ui->text_file().~UniversalTextFile();
         break;
 
     case UN_DATA_SOURCE:  // unimplemented methods
@@ -413,7 +417,7 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     case '%':
     case '/':
         ui = univ_add(UN_TEXT_FILE, desc);
-        ui->text_file().fname = save_str(file_exp(file_name.c_str()));
+        ui->text_file().fname = file_exp(file_name.c_str());
         break;
     }
 }
@@ -1070,9 +1074,9 @@ void univ_edit()
 }
 
 // later use some internal pager
-void univ_page_file(char *fname)
+void univ_page_file(std::string_view fname)
 {
-    if (!fname || !*fname)
+    if (fname.empty())
     {
         return;
     }

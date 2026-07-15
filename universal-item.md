@@ -40,14 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 22. Convert Text File Payload String
-
-- Target: `UniversalTextFile`.
-- Change: replace `char *fname` with `std::string fname`.
-- Data flow: text file name flows into file expansion and pager invocation.
-- Risk: medium; file name lifetime and expansion behavior are user visible.
-- Verification: focused universal tests and normal workflow.
-
 ### 23. Convert Debug Payload String
 
 - Target: debug string payload.

@@ -88,7 +88,7 @@ struct UniversalNewsgroup
 
 struct UniversalTextFile
 {
-    char *fname;
+    std::string fname;
 };
 
 union UniversalData
@@ -176,7 +176,7 @@ bool           univ_file_load(const char *fname, const char *title, const char *
 void           univ_mask_load(std::string_view mask, const char *title);
 void           univ_redo_file();
 void           univ_edit();
-void           univ_page_file(char *fname);
+void           univ_page_file(std::string_view fname);
 void           univ_newsgroup_virtual();
 int            univ_visit_group_main(std::string_view gname);
 void           univ_virt_pass(UniversalGroupVisitor visit_group);
