@@ -399,18 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `prefetch_lines` Static Header Buffer
-
-- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`, remaining
-  callers of `fetch_subj`, `fetch_from`, and `fetch_xref`.
-- Finding: after copy-oriented callers are migrated, `prefetch_lines` and
-  the inline fetch helpers should only serve cache-prefetch side effects
-  or reviewed borrowed-buffer uses.
-- Change: shrink or remove the borrowed-buffer API once those remaining
-  uses are classified.
-- Data flow: preserve callers that intentionally prefetch headers for
-  cache population.
-
 #### `secs_to_text` Interval Text
 
 - Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,

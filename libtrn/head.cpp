@@ -104,7 +104,6 @@ static HeaderLineType s_htypeix[26]{};
 static void        end_header_line();
 static bool        header_line_span(HeaderLineType which_line, char *&line, int &size);
 static std::string current_header_line_text(HeaderLineType which_line);
-static void        copy_current_header_line(HeaderLineType which_line, char *dest, int dest_size);
 
 void head_init()
 {
@@ -542,23 +541,6 @@ static std::string current_header_line_text(HeaderLineType which_line)
     return header_line_text(line, size);
 }
 
-static void copy_current_header_line(HeaderLineType which_line, char *dest, int dest_size)
-{
-    char *line;
-    int   size;
-
-    if (dest_size <= 0)
-    {
-        return;
-    }
-    if (!header_line_span(which_line, line, size) || size <= 1)
-    {
-        *dest = '\0';
-        return;
-    }
-    safe_copy(dest, line, std::min(size, dest_size));
-}
-
 static void append_header_line(std::string &text, const char *line)
 {
     if (line == nullptr)
@@ -619,8 +601,7 @@ static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum la
     return nntp_command(command);
 }
 
-static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line, std::string *owned_result,
-                                  char *borrowed_result, int borrowed_size)
+static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line, std::string *owned_result)
 {
     Article   *ap;
     ArticleNum num;
@@ -630,10 +611,6 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
     if (owned_result != nullptr)
     {
         owned_result->clear();
-    }
-    else
-    {
-        *borrowed_result = '\0';
     }
 
     spin(20);
@@ -709,10 +686,6 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
                 {
                     append_header_line(*owned_result, t);
                 }
-                else
-                {
-                    safe_cat(borrowed_result, t, borrowed_size);
-                }
             }
         }
         if (last_buf != g_ser_line)
@@ -733,10 +706,6 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
         {
             *owned_result = current_header_line_text(which_line);
         }
-        else
-        {
-            copy_current_header_line(which_line, borrowed_result, borrowed_size);
-        }
     }
     if (hasxhdr && !(g_data_source->m_flags & DF_XHDR_BROKEN))
     {
@@ -751,44 +720,28 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
 
 // ArticleNum art_num           article to get line from
 // HeaderLineType which_line    type of line desired
-char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line)
+void prefetch_lines(ArticleNum art_num, HeaderLineType which_line)
 {
     if ((g_data_source->m_flags & DF_REMOTE) && g_parsed_art != art_num)
     {
-        const std::string cached_line = fetch_cache(art_num, which_line, DONT_FILL_CACHE);
-        if (!cached_line.empty())
+        if (!fetch_cache(art_num, which_line, DONT_FILL_CACHE).empty())
         {
-            safe_copy(g_cmd_buf, cached_line.c_str(), sizeof g_cmd_buf);
-            return g_cmd_buf;
+            return;
         }
         if (Article *ap = article_find(art_num); ap == nullptr || !(ap->m_flags & AF_EXISTS))
         {
-            *g_cmd_buf = '\0';
-            return g_cmd_buf;
+            return;
         }
 
-        prefetch_remote_lines(art_num, which_line, nullptr, g_cmd_buf, sizeof g_cmd_buf);
-        return g_cmd_buf;
+        prefetch_remote_lines(art_num, which_line, nullptr);
+        return;
     }
 
     // Only return a cached line if it isn't the current article
     if (g_parsed_art != art_num)
     {
-        const std::string cached_line = fetch_cache(art_num, which_line, FILL_CACHE);
-        if (!cached_line.empty())
-        {
-            safe_copy(g_cmd_buf, cached_line.c_str(), sizeof g_cmd_buf);
-            return g_cmd_buf;
-        }
-        if (g_parsed_art != art_num)
-        {
-            *g_cmd_buf = '\0';
-            return g_cmd_buf;
-        }
+        (void) fetch_cache(art_num, which_line, FILL_CACHE);
     }
-
-    copy_current_header_line(which_line, g_cmd_buf, sizeof g_cmd_buf);
-    return g_cmd_buf;
 }
 
 std::string prefetch_lines_copy(ArticleNum art_num, HeaderLineType which_line)
@@ -806,7 +759,7 @@ std::string prefetch_lines_copy(ArticleNum art_num, HeaderLineType which_line)
         }
 
         std::string result;
-        prefetch_remote_lines(art_num, which_line, &result, nullptr, 0);
+        prefetch_remote_lines(art_num, which_line, &result);
         return result;
     }
 

@@ -438,7 +438,7 @@ void newsgroup_skip()
         do
         {
             // tries to grab PREFETCH_SIZE XHDRS, flagging missing articles
-            (void) fetch_subj(g_art);
+            prefetch_subj(g_art);
             ArticleNum artnum = g_art + ArticleNum{PREFETCH_SIZE - 1};
             artnum = std::min(artnum, g_last_art);
             while (g_art <= artnum)
