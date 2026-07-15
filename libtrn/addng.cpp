@@ -30,6 +30,8 @@
 #include <string_view>
 #include <ctime>
 
+namespace fs = std::filesystem;
+
 AddGroup *g_first_add_group{};
 AddGroup *g_last_add_group{};
 AddGroup *g_sel_page_gp{};
@@ -248,7 +250,7 @@ static void new_nntp_groups(DataSource *dp)
     if (found_something)
     {
         hash_walk(new_newsgroups, build_add_group_list, 0);
-        dp->m_act_sf.end_append(dp->m_extra_name.c_str());
+        dp->m_act_sf.end_append(dp->m_extra_name);
         dp->m_last_new_group = server_time;
     }
     hash_destroy(new_newsgroups);
@@ -258,7 +260,7 @@ static void new_local_groups(DataSource *dp)
 {
     g_data_source = dp;
 
-    const long file_size{static_cast<long>(std::filesystem::file_size(dp->m_extra_name))};
+    const long file_size{static_cast<long>(fs::file_size(dp->m_extra_name))};
     // did active.times file grow?
     if (file_size == dp->m_act_sf.m_recent_cnt)
     {

@@ -51,10 +51,13 @@ struct utimbuf
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
+
+namespace fs = std::filesystem;
 
 std::vector<DataSource> g_data_sources;                           // all data sources
 DataSource             *g_data_source{};                          // the current data source
@@ -64,7 +67,6 @@ time_t                  g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
 
 static std::string                dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags flag);
 static std::string                file_or_empty(const char *fn);
-static const char                *empty_as_null(const std::string &text);
 static HashDatum                  source_file_hash_datum(SourceFile *source_file, std::size_t index);
 static SourceFile                *source_file_from_hash(HashDatum data);
 static std::string               *source_file_line(HashDatum data);
@@ -408,11 +410,6 @@ static std::string file_or_empty(const char *fn)
     return file_exp(fn);
 }
 
-static const char *empty_as_null(const std::string &text)
-{
-    return text.empty() ? nullptr : text.c_str();
-}
-
 bool DataSource::open()
 {
     bool success;
@@ -463,7 +460,7 @@ bool DataSource::open()
                     m_flags &= ~DF_TMP_ACTIVE_FILE;
                     m_extra_name.clear();
                     m_act_sf.m_refetch_secs = 0;
-                    success = m_act_sf.open(nullptr, "", nullptr);
+                    success = m_act_sf.open({}, "", nullptr);
                 }
                 else
                 {
@@ -557,7 +554,7 @@ void DataSource ::close()
         }
         else
         {
-            m_act_sf.end_append(empty_as_null(m_extra_name));
+            m_act_sf.end_append(m_extra_name);
         }
         if (!m_group_desc.empty())
         {
@@ -567,7 +564,7 @@ void DataSource ::close()
             }
             else
             {
-                m_desc_sf.end_append(m_group_desc.c_str());
+                m_desc_sf.end_append(m_group_desc);
             }
         }
     }
@@ -602,7 +599,7 @@ bool DataSource::active_file_hash()
         DataSource *save_datasrc = g_data_source;
         set_data_source(this);
         g_spin_todo = m_act_sf.m_recent_cnt;
-        ret = m_act_sf.open(empty_as_null(m_extra_name), "active", m_news_id.c_str());
+        ret = m_act_sf.open(m_extra_name, "active", m_news_id.c_str());
         if (g_spin_count > 0)
         {
             m_act_sf.m_recent_cnt = g_spin_count;
@@ -611,7 +608,7 @@ bool DataSource::active_file_hash()
     }
     else
     {
-        ret = m_act_sf.open(m_news_id.c_str(), "", nullptr);
+        ret = m_act_sf.open(m_news_id, "", nullptr);
     }
     return ret != 0;
 }
@@ -758,11 +755,11 @@ const char *DataSource::find_group_desc(std::string_view group_name)
             if ((m_flags & (DF_TMP_GROUP_DESC | DF_NO_XGTITLE)) == DF_TMP_GROUP_DESC //
                 && g_net_speed < 5)
             {
-                (void) m_desc_sf.open(nullptr, "", nullptr);
+                (void) m_desc_sf.open({}, "", nullptr);
                 goto try_xgtitle;
             }
             g_spin_todo = m_desc_sf.m_recent_cnt;
-            ret = m_desc_sf.open(m_group_desc.c_str(), "newsgroups", m_news_id.c_str());
+            ret = m_desc_sf.open(m_group_desc, "newsgroups", m_news_id.c_str());
             if (g_spin_count > 0)
             {
                 m_desc_sf.m_recent_cnt = g_spin_count;
@@ -770,7 +767,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
         }
         else
         {
-            ret = m_desc_sf.open(m_group_desc.c_str(), "", nullptr);
+            ret = m_desc_sf.open(m_group_desc, "", nullptr);
         }
         if (!ret)
         {
@@ -854,7 +851,7 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
     return s;
 }
 
-int SourceFile::open(const char *filename, std::string_view fetch_cmd, const char *server)
+int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const char *server)
 {
     char             *s;
     long              pos = 0;
@@ -863,8 +860,9 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
     std::time_t       now = std::time(nullptr);
     bool              use_buffered_nntp_gets = false;
     const std::string fetch_command{fetch_cmd};
+    const bool        has_filename = !filename.empty();
 
-    if (!filename)
+    if (!has_filename)
     {
         fp = nullptr;
     }
@@ -873,12 +871,12 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
         if (!m_refetch_secs)
         {
             server = nullptr;
-            fp = std::fopen(filename, "r");
+            fp = std::fopen(filename.string().c_str(), "r");
             g_spin_todo = 0;
         }
         else if (now - m_last_fetch > m_refetch_secs && (m_refetch_secs != 2 || !m_last_fetch))
         {
-            fp = std::fopen(filename, "w+");
+            fp = std::fopen(filename.string().c_str(), "w+");
             if (fp)
             {
                 std::printf("Getting %s file from %s.", fetch_command.c_str(), server);
@@ -906,11 +904,11 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
         else
         {
             server = nullptr;
-            fp = std::fopen(filename, "r+");
+            fp = std::fopen(filename.string().c_str(), "r+");
             if (!fp)
             {
                 m_refetch_secs = 0;
-                fp = std::fopen(filename, "r");
+                fp = std::fopen(filename.string().c_str(), "r");
             }
             g_spin_todo = 0;
         }
@@ -921,13 +919,13 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
     }
     else
     {
-        fp = std::fopen(filename, "r");
+        fp = std::fopen(filename.string().c_str(), "r");
         g_spin_todo = 0;
     }
 
-    if (filename && fp == nullptr)
+    if (has_filename && fp == nullptr)
     {
-        std::printf(g_cant_open, filename);
+        std::printf(g_cant_open, filename.string().c_str());
         term_down(1);
         return 0;
     }
@@ -938,7 +936,7 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
     m_hp = hash_create(3001, source_file_cmp);
     m_fp = fp;
 
-    if (!filename)
+    if (!has_filename)
     {
         set_spin(SPIN_OFF);
         return 1;
@@ -1013,7 +1011,7 @@ int SourceFile::open(const char *filename, std::string_view fetch_cmd, const cha
         std::fflush(fp);
         if (std::ferror(fp))
         {
-            std::printf("\nError writing the %s file %s.\n",fetch_command.c_str(),filename);
+            std::printf("\nError writing the %s file %s.\n",fetch_command.c_str(),filename.string().c_str());
             term_down(2);
             close();
             return 0;
@@ -1069,18 +1067,18 @@ std::string_view SourceFile::append(std::string_view line, int key_len)
     return stored;
 }
 
-void SourceFile::end_append(const char *filename)
+void SourceFile::end_append(const fs::path &filename)
 {
     if (m_fp && m_refetch_secs)
     {
         std::fflush(m_fp);
 
-        if (m_last_fetch)
+        if (m_last_fetch && !filename.empty())
         {
             struct utimbuf ut;
             std::time(&ut.actime);
             ut.modtime = m_last_fetch;
-            (void) utime(filename, &ut);
+            (void) utime(filename.string().c_str(), &ut);
         }
     }
 }

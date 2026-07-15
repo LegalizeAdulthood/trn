@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -26,9 +27,9 @@ struct HashTable;
 
 struct SourceFile
 {
-    int              open(const char *filename, std::string_view fetch_cmd, const char *server);
+    int              open(const std::filesystem::path &filename, std::string_view fetch_cmd, const char *server);
     std::string_view append(std::string_view line, int key_len);
-    void             end_append(const char *filename);
+    void             end_append(const std::filesystem::path &filename);
     void             close();
 
     std::FILE               *m_fp; // the file pointer to read the data

@@ -468,16 +468,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### `SourceFile::open` and `SourceFile::end_append`
-
-- Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.
-- Finding: source-file paths are passed as `const char *` through open,
-  refetch, and timestamp update paths.
-- Change: accept `const fs::path &` or `std::filesystem::path` where the
-  path is used for filesystem operations.
-- Data flow: keep NNTP fetch command text as `std::string_view`; do not
-  mix protocol text with filesystem path storage.
-
 #### Newsrc File Rotation
 
 - Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`.

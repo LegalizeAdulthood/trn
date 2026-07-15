@@ -2,15 +2,25 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/datasrc.h>
 
+#include <config/common.h>
 #include <trn/hash.h>
+
+#include <test_config.h>
 
 #include <gtest/gtest.h>
 
+#include <cstdio>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <string>
 #include <string_view>
+#include <system_error>
 
 namespace
 {
+
+namespace fs = std::filesystem;
 
 class SourceFileOwner
 {
@@ -37,6 +47,30 @@ private:
     SourceFile m_source{};
 };
 
+class SourceFileTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+    }
+
+    void TearDown() override
+    {
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+    }
+
+    fs::path m_output_dir;
+};
+
 } // namespace
 
 TEST(SourceFileAppendTest, storesNormalizedLineAndReturnsStoredStorage)
@@ -53,4 +87,39 @@ TEST(SourceFileAppendTest, storesNormalizedLineAndReturnsStoredStorage)
     EXPECT_EQ("comp.lang.c++ C++ language discussion\n", stored_line);
     EXPECT_EQ("comp.lang.c++ C++ language discussion\n", source_file.m_lines.back());
     EXPECT_EQ("C++ language discussion\n", std::string_view{stored_line.data() + key_len + 1});
+}
+
+TEST_F(SourceFileTest, openReadsLinesFromLocalFile)
+{
+    const fs::path source_path = m_output_dir / "active";
+    std::ofstream{source_path} << "comp.lang.apl 0000000001 0000000001 y\n"
+                               << "comp.lang.c++ 0000000002 0000000001 y\n";
+    SourceFileOwner source_file_owner;
+    SourceFile     &source_file = source_file_owner.get();
+
+    const int result = source_file.open(source_path, "", nullptr);
+
+    ASSERT_EQ(1, result);
+    ASSERT_EQ(2U, source_file.m_lines.size());
+    EXPECT_EQ("comp.lang.apl 0000000001 0000000001 y\n", source_file.m_lines[0]);
+    EXPECT_EQ("comp.lang.c++ 0000000002 0000000001 y\n", source_file.m_lines[1]);
+    EXPECT_EQ(0L, source_file.m_line_positions[0]);
+}
+
+TEST_F(SourceFileTest, endAppendUpdatesCachedFileTimestamp)
+{
+    const fs::path source_path = m_output_dir / "active";
+    std::ofstream{source_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+    SourceFileOwner source_file_owner;
+    SourceFile     &source_file = source_file_owner.get();
+    source_file.m_fp = std::fopen(source_path.string().c_str(), "r+");
+    ASSERT_NE(nullptr, source_file.m_fp);
+    source_file.m_refetch_secs = DEFAULT_REFETCH_SECS;
+    source_file.m_last_fetch = 946684800;
+
+    source_file.end_append(source_path);
+
+    struct stat file_stat;
+    ASSERT_EQ(0, stat(source_path.string().c_str(), &file_stat));
+    EXPECT_EQ(source_file.m_last_fetch, file_stat.st_mtime);
 }
