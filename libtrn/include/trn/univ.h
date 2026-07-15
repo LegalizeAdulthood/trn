@@ -24,12 +24,10 @@ enum UniversalItemType
 {
     UN_NONE = 0,          //
     UN_TXT = 1,           // textual placeholder
-    UN_DATA_SOURCE = 2,   //
     UN_NEWSGROUP = 3,     //
     UN_GROUP_MASK = 4,    //
     UN_ARTICLE = 5,       // an individual article
     UN_CONFIG_FILE = 6,   // filename for a configuration file
-    UN_VIRTUAL1 = 7,      // Virtual newsgroup file (reserved for compatibility with strn)
     UN_VGROUP = 8,        // virtual newsgroup marker (for pass 2)
     UN_TEXT_FILE = 9,     // text file
     UN_HELP_KEY = 10,     // keystroke help functions from help.cpp
@@ -97,15 +95,24 @@ struct UniversalDebugData
     std::string text;
 };
 
-using UniversalData = std::variant<std::monostate,
-    HelpLocation,
-    UniversalDebugData,
-    UniversalGroupMaskData,
-    UniversalConfigFileData,
+struct UniversalNoData
+{
+};
+
+struct UniversalTextPlaceholder
+{
+};
+
+using UniversalData = std::variant<UniversalNoData,
+    UniversalTextPlaceholder,
     UniversalNewsgroup,
+    UniversalGroupMaskData,
     UniversalVirtualData,
+    UniversalConfigFileData,
     UniversalVirtualGroup,
-    UniversalTextFile>;
+    UniversalTextFile,
+    HelpLocation,
+    UniversalDebugData>;
 
 // selector flags
 enum UniversalItemFlags
@@ -125,11 +132,11 @@ struct UniversalItem
     UniversalItem     *m_prev;
     int                m_num;   // natural order (for sort)
     UniversalItemFlags m_flags; // for selector
-    UniversalItemType  m_type;  // what kind of object is it?
     UniversalItemState m_state; // current selector state
     std::string        m_desc;  // default description
     int                m_score;
     UniversalData      m_data; // describes the object
+    UniversalItemType  type() const;
     UniversalNewsgroup &group();
     const UniversalNewsgroup &group() const;
     UniversalVirtualGroup &vgroup();

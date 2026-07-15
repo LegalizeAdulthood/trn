@@ -202,7 +202,6 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
 
     node->m_flags = UF_NONE;
     new (&node->m_desc) std::string{desc ? desc : ""};
-    node->m_type = type;
     node->m_state = UIS_NORMAL;
     node->m_num = s_univ_item_counter++;
     node->m_score = 0;            // consider other default scores?
@@ -229,6 +228,12 @@ static UniversalData univ_make_data(UniversalItemType type)
     case UN_DEBUG1:
         return UniversalDebugData{};
 
+    case UN_NONE:
+        return UniversalNoData{};
+
+    case UN_TXT:
+        return UniversalTextPlaceholder{};
+
     case UN_GROUP_MASK:
         return UniversalGroupMaskData{};
 
@@ -250,12 +255,8 @@ static UniversalData univ_make_data(UniversalItemType type)
     case UN_HELP_KEY:
         return HelpLocation{};
 
-    case UN_NONE:
-    case UN_TXT:
-    case UN_DATA_SOURCE:  // unimplemented methods
-    case UN_VIRTUAL1:
     default:
-        return std::monostate{};
+        return UniversalNoData{};
     }
 }
 
@@ -307,7 +308,7 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if (ui->m_type != UN_NEWSGROUP)
+            if (ui->type() != UN_NEWSGROUP)
             {
                 continue;
             }
@@ -418,7 +419,7 @@ static void univ_add_virtual_group(std::string_view grpname)
         // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->m_next)
         {
-            if (ui->m_type != UN_VGROUP)
+            if (ui->type() != UN_VGROUP)
             {
                 continue;
             }
@@ -506,7 +507,7 @@ static void univ_use_pattern(const char *pattern, int type)
         case 0:
             for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->m_type != UN_NEWSGROUP)
+                if (ui->type() != UN_NEWSGROUP)
                 {
                     continue;
                 }
@@ -521,7 +522,7 @@ static void univ_use_pattern(const char *pattern, int type)
         case 1:
             for (ui = g_first_univ; ui; ui = ui->m_next)
             {
-                if (ui->m_type != UN_VGROUP)
+                if (ui->type() != UN_VGROUP)
                 {
                     continue;
                 }
@@ -1070,7 +1071,7 @@ void univ_page_file(std::string_view fname)
 // called from within newsgroup
 void univ_newsgroup_virtual()
 {
-    switch (s_current_vg_ui->m_type)
+    switch (s_current_vg_ui->type())
     {
     case UN_VGROUP:
         univ_vg_add_group();
@@ -1193,7 +1194,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
         {
             continue;
         }
-        switch (ui->m_type)
+        switch (ui->type())
         {
         case UN_VGROUP:
         {
@@ -1357,99 +1358,141 @@ const char *UniversalItem::univ_article_desc() const
     return dbuf;
 }
 
+UniversalItemType UniversalItem::type() const
+{
+    if (std::holds_alternative<UniversalNoData>(m_data))
+    {
+        return UN_NONE;
+    }
+    if (std::holds_alternative<UniversalTextPlaceholder>(m_data))
+    {
+        return UN_TXT;
+    }
+    if (std::holds_alternative<UniversalNewsgroup>(m_data))
+    {
+        return UN_NEWSGROUP;
+    }
+    if (std::holds_alternative<UniversalGroupMaskData>(m_data))
+    {
+        return UN_GROUP_MASK;
+    }
+    if (std::holds_alternative<UniversalVirtualData>(m_data))
+    {
+        return UN_ARTICLE;
+    }
+    if (std::holds_alternative<UniversalConfigFileData>(m_data))
+    {
+        return UN_CONFIG_FILE;
+    }
+    if (std::holds_alternative<UniversalVirtualGroup>(m_data))
+    {
+        return UN_VGROUP;
+    }
+    if (std::holds_alternative<UniversalTextFile>(m_data))
+    {
+        return UN_TEXT_FILE;
+    }
+    if (std::holds_alternative<HelpLocation>(m_data))
+    {
+        return UN_HELP_KEY;
+    }
+    assert(std::holds_alternative<UniversalDebugData>(m_data));
+    return UN_DEBUG1;
+}
+
 UniversalNewsgroup &UniversalItem::group()
 {
-    assert(m_type == UN_NEWSGROUP);
+    assert(type() == UN_NEWSGROUP);
     return std::get<UniversalNewsgroup>(m_data);
 }
 
 const UniversalNewsgroup &UniversalItem::group() const
 {
-    assert(m_type == UN_NEWSGROUP);
+    assert(type() == UN_NEWSGROUP);
     return std::get<UniversalNewsgroup>(m_data);
 }
 
 UniversalVirtualGroup &UniversalItem::vgroup()
 {
-    assert(m_type == UN_VGROUP);
+    assert(type() == UN_VGROUP);
     return std::get<UniversalVirtualGroup>(m_data);
 }
 
 const UniversalVirtualGroup &UniversalItem::vgroup() const
 {
-    assert(m_type == UN_VGROUP);
+    assert(type() == UN_VGROUP);
     return std::get<UniversalVirtualGroup>(m_data);
 }
 
 UniversalVirtualData &UniversalItem::article()
 {
-    assert(m_type == UN_ARTICLE);
+    assert(type() == UN_ARTICLE);
     return std::get<UniversalVirtualData>(m_data);
 }
 
 const UniversalVirtualData &UniversalItem::article() const
 {
-    assert(m_type == UN_ARTICLE);
+    assert(type() == UN_ARTICLE);
     return std::get<UniversalVirtualData>(m_data);
 }
 
 UniversalConfigFileData &UniversalItem::config_file()
 {
-    assert(m_type == UN_CONFIG_FILE);
+    assert(type() == UN_CONFIG_FILE);
     return std::get<UniversalConfigFileData>(m_data);
 }
 
 const UniversalConfigFileData &UniversalItem::config_file() const
 {
-    assert(m_type == UN_CONFIG_FILE);
+    assert(type() == UN_CONFIG_FILE);
     return std::get<UniversalConfigFileData>(m_data);
 }
 
 UniversalGroupMaskData &UniversalItem::group_mask()
 {
-    assert(m_type == UN_GROUP_MASK);
+    assert(type() == UN_GROUP_MASK);
     return std::get<UniversalGroupMaskData>(m_data);
 }
 
 const UniversalGroupMaskData &UniversalItem::group_mask() const
 {
-    assert(m_type == UN_GROUP_MASK);
+    assert(type() == UN_GROUP_MASK);
     return std::get<UniversalGroupMaskData>(m_data);
 }
 
 UniversalTextFile &UniversalItem::text_file()
 {
-    assert(m_type == UN_TEXT_FILE);
+    assert(type() == UN_TEXT_FILE);
     return std::get<UniversalTextFile>(m_data);
 }
 
 const UniversalTextFile &UniversalItem::text_file() const
 {
-    assert(m_type == UN_TEXT_FILE);
+    assert(type() == UN_TEXT_FILE);
     return std::get<UniversalTextFile>(m_data);
 }
 
 std::string &UniversalItem::debug_string()
 {
-    assert(m_type == UN_DEBUG1);
+    assert(type() == UN_DEBUG1);
     return std::get<UniversalDebugData>(m_data).text;
 }
 
 const std::string &UniversalItem::debug_string() const
 {
-    assert(m_type == UN_DEBUG1);
+    assert(type() == UN_DEBUG1);
     return std::get<UniversalDebugData>(m_data).text;
 }
 
 HelpLocation &UniversalItem::help_location()
 {
-    assert(m_type == UN_HELP_KEY);
+    assert(type() == UN_HELP_KEY);
     return std::get<HelpLocation>(m_data);
 }
 
 HelpLocation UniversalItem::help_location() const
 {
-    assert(m_type == UN_HELP_KEY);
+    assert(type() == UN_HELP_KEY);
     return std::get<HelpLocation>(m_data);
 }
 

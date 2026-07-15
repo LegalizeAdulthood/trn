@@ -829,7 +829,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         return exit_code;
     }
     std::printf("\n");                 // prepare for output msgs...
-    switch (ui->m_type)
+    switch (ui->type())
     {
     case UN_DEBUG1:
     {

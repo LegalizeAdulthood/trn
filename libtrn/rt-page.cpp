@@ -716,7 +716,7 @@ try_again:
             {
                 continue;
             }
-            switch (ui->m_type)
+            switch (ui->type())
             {
             case UN_VGROUP:               // first-pass item
                 // always ineligible items
@@ -2862,7 +2862,7 @@ static void display_universal(const UniversalItem *ui)
     }
     else
     {
-        switch (ui->m_type)
+        switch (ui->type())
         {
         case UN_NEWSGROUP:
         {

@@ -71,6 +71,12 @@ UniversalData make_universal_data(UniversalItemType type)
     case UN_DEBUG1:
         return UniversalDebugData{};
 
+    case UN_NONE:
+        return UniversalNoData{};
+
+    case UN_TXT:
+        return UniversalTextPlaceholder{};
+
     case UN_GROUP_MASK:
         return UniversalGroupMaskData{};
 
@@ -92,12 +98,8 @@ UniversalData make_universal_data(UniversalItemType type)
     case UN_HELP_KEY:
         return HelpLocation{};
 
-    case UN_NONE:
-    case UN_TXT:
-    case UN_DATA_SOURCE:
-    case UN_VIRTUAL1:
     default:
-        return std::monostate{};
+        return UniversalNoData{};
     }
 }
 
@@ -108,7 +110,6 @@ UniversalItem *make_universal_item(UniversalItemType type)
     item->m_prev = nullptr;
     item->m_num = 1;
     item->m_flags = UF_NONE;
-    item->m_type = type;
     item->m_state = UIS_NORMAL;
     new (&item->m_desc) std::string{};
     item->m_score = 0;
@@ -204,6 +205,28 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
     EXPECT_EQ("Empty", g_univ_title);
 }
 
+TEST_F(UnivTest, itemTypeReportsStoredType)
+{
+    const UniversalItemType item_types[] = {
+        UN_NONE,
+        UN_TXT,
+        UN_NEWSGROUP,
+        UN_GROUP_MASK,
+        UN_ARTICLE,
+        UN_CONFIG_FILE,
+        UN_VGROUP,
+        UN_TEXT_FILE,
+        UN_HELP_KEY,
+        UN_DEBUG1};
+
+    for (const UniversalItemType item_type : item_types)
+    {
+        UniversalItem *item = make_universal_item(item_type);
+
+        EXPECT_EQ(item_type, item->type());
+    }
+}
+
 TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
 {
     add_test_newsgroup("alt.test");
@@ -211,7 +234,7 @@ TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
     univ_mask_load("alt.test !alt.test", "Groups");
 
     ASSERT_NE(nullptr, g_first_univ);
-    EXPECT_EQ(UN_NEWSGROUP, g_first_univ->m_type);
+    EXPECT_EQ(UN_NEWSGROUP, g_first_univ->type());
     EXPECT_EQ(UIS_DESELECTED, g_first_univ->m_state);
     EXPECT_EQ("alt.test", g_first_univ->group().ng);
     EXPECT_EQ(nullptr, g_first_univ->m_next);
@@ -224,7 +247,7 @@ TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
     univ_mask_load("alt.test !alt.test alt.test", "Groups");
 
     ASSERT_NE(nullptr, g_first_univ);
-    EXPECT_EQ(UN_NEWSGROUP, g_first_univ->m_type);
+    EXPECT_EQ(UN_NEWSGROUP, g_first_univ->type());
     EXPECT_EQ(UIS_NORMAL, g_first_univ->m_state);
     EXPECT_EQ("alt.test", g_first_univ->group().ng);
     EXPECT_EQ(nullptr, g_first_univ->m_next);
@@ -236,7 +259,7 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
 
     ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
-    EXPECT_EQ(UN_GROUP_MASK, g_first_univ->m_type);
+    EXPECT_EQ(UN_GROUP_MASK, g_first_univ->type());
     EXPECT_EQ("Filter", g_first_univ->m_desc);
     EXPECT_EQ("Filter", g_first_univ->group_mask().title);
     EXPECT_EQ("alt.test !alt.noise", g_first_univ->group_mask().mask_list);
@@ -250,7 +273,7 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
 
     ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
-    EXPECT_EQ(UN_TEXT_FILE, g_first_univ->m_type);
+    EXPECT_EQ(UN_TEXT_FILE, g_first_univ->type());
     EXPECT_EQ("Help", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(help_name), g_first_univ->text_file().fname);
 }
@@ -278,12 +301,12 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
 
     EXPECT_EQ(1, g_visit_count);
     EXPECT_EQ("alt.test", g_visited_group);
-    EXPECT_EQ(UN_VGROUP, expanded_group->m_type);
+    EXPECT_EQ(UN_VGROUP, expanded_group->type());
     EXPECT_EQ(UIS_DELETED, expanded_group->m_state);
-    EXPECT_EQ(UN_NEWSGROUP, kept_group->m_type);
+    EXPECT_EQ(UN_NEWSGROUP, kept_group->type());
     EXPECT_EQ(UIS_NORMAL, kept_group->m_state);
     EXPECT_EQ("alt.keep", kept_group->group().ng);
-    EXPECT_EQ(UN_ARTICLE, kept_article->m_type);
+    EXPECT_EQ(UN_ARTICLE, kept_article->type());
     EXPECT_EQ(UIS_NORMAL, kept_article->m_state);
     EXPECT_EQ("Article", kept_article->m_desc);
     EXPECT_EQ("alt.article", kept_article->article().ng);
@@ -315,7 +338,7 @@ TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
 
     ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
-    EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->m_type);
+    EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->type());
     EXPECT_EQ("Child", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(child_name), g_first_univ->config_file().fname);
     EXPECT_TRUE(g_first_univ->config_file().label.empty());
@@ -328,7 +351,7 @@ TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
 
     ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
     ASSERT_NE(nullptr, g_first_univ);
-    EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->m_type);
+    EXPECT_EQ(UN_CONFIG_FILE, g_first_univ->type());
     EXPECT_EQ("Child", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(child_name), g_first_univ->config_file().fname);
     EXPECT_EQ("chapter", g_first_univ->config_file().label);

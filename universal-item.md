@@ -10,8 +10,8 @@ preserving.  Remove each slice from this plan when it is complete.
 
 ## Current Shape
 
-`UniversalItem` stores payloads in the `UniversalData` variant.  `m_type`
-still duplicates the active payload alternative.  Items are stored as an
+`UniversalItem` stores payloads in the `UniversalData` variant and derives
+its item type from the active payload alternative.  Items are stored as an
 intrusive global doubly linked list rooted at `g_first_univ` and
 `g_last_univ`.
 
@@ -39,16 +39,6 @@ replacement for item state.
 - Avoid changing formatting outside touched lines.
 
 ## Implementation Slices
-
-### 26. Derive Type From Variant
-
-- Target: `UniversalItem::m_type`.
-- Change: replace direct type storage with a `type()` helper or variant
-  predicate.
-- Data flow: type checks drive cleanup, paging, display, and virtual pass
-  expansion.
-- Risk: high; all type switches must keep the same behavior.
-- Verification: focused universal tests and normal workflow.
 
 ### 27. Convert Universal Iteration Helpers
 
