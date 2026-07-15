@@ -512,6 +512,13 @@ void Article::mark_as_read()
     g_check_count++;             // get more worried about crashes
 }
 
+#ifdef MCHASE
+void note_chase_xref()
+{
+    s_chase_count++;
+}
+#endif
+
 void mark_missing_articles()
 {
     for (Article *ap = article_ptr(article_first(g_abs_first));
@@ -601,13 +608,13 @@ static bool check_chase(char *ptr, int until_key)
         }
     }
 #ifdef MCHASE
-    if (ap->m_flags & AF_MCHASE)
+    if (ap->m_flags & AF_M_CHASE)
     {
         chase_xref(ap->article_num(), true);
-        ap->m_flags &= ~AF_MCHASE;
+        ap->m_flags &= ~AF_M_CHASE;
         if (!--s_chase_count)
         {
-            return 1;
+            return true;
         }
     }
 #endif

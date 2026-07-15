@@ -20,13 +20,31 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <string>
+#include <string_view>
 
 static Subject *s_fake_had_subj{}; // the fake-turned-real article had this subject
+
+static bool char_equal_ignore_case(char left, char right)
+{
+    return std::tolower(static_cast<unsigned char>(left)) == std::tolower(static_cast<unsigned char>(right));
+}
+
+static bool contains_ignore_case(std::string_view text, std::string_view pattern)
+{
+    if (pattern.empty())
+    {
+        return true;
+    }
+    const auto match = std::search(text.begin(), text.end(), pattern.begin(), pattern.end(), char_equal_ignore_case);
+    return match != text.end();
+}
 
 // Check if the string we've found looks like a valid message-id reference.
 static char *valid_message_id(char *start, char *end)
@@ -112,43 +130,45 @@ void Article::check_poster()
     if (g_auto_select_postings && (m_flags & AF_EXISTS) && m_from)
     {
         {
-            char* s = g_cmd_buf;
-            char* u;
-            char* h;
-            std::strcpy(s,m_from->c_str());
-            if ((h=std::strchr(s,'<')) != nullptr)   // grab the good part
+            std::string_view from_text{*m_from};
+            if (const std::size_t open = from_text.find('<'); open != std::string_view::npos) // grab the good part
             {
-                s = h+1;
-                if ((h=std::strchr(s,'>')) != nullptr)
+                from_text.remove_prefix(open + 1);
+                if (const std::size_t close = from_text.find('>'); close != std::string_view::npos)
                 {
-                    *h = '\0';
+                    from_text = from_text.substr(0, close);
                 }
             }
-            else if ((h = std::strchr(s, '(')) != nullptr)
+            else if (const std::size_t comment = from_text.find('('); comment != std::string_view::npos)
             {
-                while (h-- != s && *h == ' ')
+                from_text = from_text.substr(0, comment);
+                while (!from_text.empty() && from_text.back() == ' ')
                 {
+                    from_text.remove_suffix(1);
                 }
-                h[1] = '\0';            // or strip the comment
             }
-            if ((h = std::strchr(s, '%')) != nullptr || (h = std::strchr(s, '@')))
+
+            std::string_view user = from_text;
+            std::string_view host = from_text;
+            if (const std::size_t percent = from_text.find('%'); percent != std::string_view::npos)
             {
-                *h++ = '\0';
-                u = s;
+                user = from_text.substr(0, percent);
+                host = from_text.substr(percent + 1);
             }
-            else if ((u = std::strrchr(s, '!')) != nullptr)
+            else if (const std::size_t at = from_text.find('@'); at != std::string_view::npos)
             {
-                *u++ = '\0';
-                h = s;
+                user = from_text.substr(0, at);
+                host = from_text.substr(at + 1);
             }
-            else
+            else if (const std::size_t bang = from_text.rfind('!'); bang != std::string_view::npos)
             {
-                h = s;
-                u = s;
+                host = from_text.substr(0, bang);
+                user = from_text.substr(bang + 1);
             }
-            if (!std::strcmp(u, g_login_name.c_str()))
+
+            if (user == std::string_view{g_login_name.data(), g_login_name.size()})
             {
-                if (in_string(h, g_host_name, false))
+                if (contains_ignore_case(host, g_host_name))
                 {
                     switch (g_auto_select_postings)
                     {
@@ -175,10 +195,10 @@ void Article::check_poster()
                 else
                 {
 #ifdef REPLYTO_POSTER_CHECKING
-                    std::string reply_buf = fetch_lines(article_num(ap), REPLY_LINE);
+                    std::string reply_buf = fetch_lines(article_num(), REPLY_LINE);
                     if (in_string(reply_buf.c_str(), g_login_name.c_str(), true))
                     {
-                        select_sub_thread(ap, AUTO_SEL_FOL);
+                        select_sub_thread(this, AUTO_SEL_FOL);
                     }
 #endif
                 }
@@ -318,10 +338,10 @@ void Article::unmark_as_read()
 {
     one_more();
 #ifdef MCHASE
-    if (has_xrefs() && !(m_flags & AF_MCHASE))
+    if (has_xrefs() && !(m_flags & AF_M_CHASE))
     {
-        m_flags |= AF_MCHASE;
-        s_chase_count++;
+        m_flags |= AF_M_CHASE;
+        note_chase_xref();
     }
 #endif
 }

@@ -1,6 +1,7 @@
 /* trn/bits.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #pragma once
 
 #include <config/typedef.h>
@@ -15,6 +16,9 @@ bool set_first_art(const char *s);
 void bits_to_rc();
 void find_existing_articles();
 void one_less_art_num(ArticleNum art_num);
+#ifdef MCHASE
+void note_chase_xref();
+#endif
 void mark_missing_articles();
 void check_first(ArticleNum min);
 void yank_back();

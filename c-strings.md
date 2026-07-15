@@ -399,15 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `Article::check_poster` Sender Parse
-
-- Files: `libtrn/Article.cpp`.
-- Finding: the function copies `m_from` into `g_cmd_buf` only to do
-  local mutable parsing of user and host text.
-- Change: parse a local `std::string` copy instead of writing through
-  the global command buffer.
-- Data flow: parsed pointers must remain local and must not escape.
-
 #### `Article::compress_date` Display Text
 
 - Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`,
