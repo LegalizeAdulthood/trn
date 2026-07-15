@@ -123,3 +123,33 @@ TEST_F(SourceFileTest, endAppendUpdatesCachedFileTimestamp)
     ASSERT_EQ(0, stat(source_path.string().c_str(), &file_stat));
     EXPECT_EQ(source_file.m_last_fetch, file_stat.st_mtime);
 }
+
+TEST_F(SourceFileTest, closeRemovesTemporaryRemoteFiles)
+{
+    const fs::path active_path = m_output_dir / "active";
+    const fs::path group_desc_path = m_output_dir / "newsgroups";
+    std::ofstream{active_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+    std::ofstream{group_desc_path} << "comp.lang.apl APL discussion\n";
+    DataSource data_source{};
+    data_source.m_flags = DF_REMOTE | DF_TMP_ACTIVE_FILE | DF_TMP_GROUP_DESC;
+    data_source.m_extra_name = active_path.generic_string();
+    data_source.m_group_desc = group_desc_path.generic_string();
+
+    data_source.close();
+
+    EXPECT_FALSE(fs::exists(active_path));
+    EXPECT_FALSE(fs::exists(group_desc_path));
+}
+
+TEST_F(SourceFileTest, findGroupDescClearsMissingTemporaryGroupDescription)
+{
+    const fs::path group_desc_path = m_output_dir / "missing-newsgroups";
+    DataSource     data_source{};
+    data_source.m_flags = DF_TMP_GROUP_DESC;
+    data_source.m_group_desc = group_desc_path.generic_string();
+
+    EXPECT_STREQ("", data_source.find_group_desc("comp.lang.apl"));
+
+    EXPECT_TRUE(data_source.m_group_desc.empty());
+    EXPECT_FALSE(data_source.m_flags & DF_TMP_GROUP_DESC);
+}

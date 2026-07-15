@@ -54,6 +54,7 @@ struct utimbuf
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -550,7 +551,8 @@ void DataSource ::close()
     {
         if (m_flags & DF_TMP_ACTIVE_FILE)
         {
-            remove(m_extra_name.c_str());
+            std::error_code error;
+            fs::remove(m_extra_name, error);
         }
         else
         {
@@ -560,7 +562,8 @@ void DataSource ::close()
         {
             if (m_flags & DF_TMP_GROUP_DESC)
             {
-                remove(m_group_desc.c_str());
+                std::error_code error;
+                fs::remove(m_group_desc, error);
             }
             else
             {
@@ -774,7 +777,8 @@ const char *DataSource::find_group_desc(std::string_view group_name)
             if (m_flags & DF_TMP_GROUP_DESC)
             {
                 m_flags &= ~DF_TMP_GROUP_DESC;
-                remove(m_group_desc.c_str());
+                std::error_code error;
+                fs::remove(m_group_desc, error);
             }
             m_group_desc.clear();
             return "";

@@ -472,15 +472,6 @@ both declarations and definitions `static`.
 
 ### Filesystem Path Slices
 
-#### DataSource Temporary File Cleanup
-
-- Files: `libtrn/datasrc.cpp`.
-- Finding: `DataSource::close` and the temporary group-description
-  fallback remove cached files with POSIX `remove`.
-- Change: use `fs::remove` with `std::error_code`.
-- Data flow: keep `DataSource` filename members as strings until the
-  whole structure is ready for path storage.
-
 #### Authentication File Cleanup
 
 - Files: `libtrn/util.cpp`.
