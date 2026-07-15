@@ -18,7 +18,7 @@ char *safe_realloc(char *where, MemorySize size);
 #endif
 const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd);
 int   nntp_handle_nested_lists();
-char *get_auth_user();
-char *get_auth_pass();
+std::string get_auth_user();
+std::string get_auth_pass();
 
 #endif

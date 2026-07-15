@@ -134,16 +134,16 @@ int do_shell(const char *shell, const char *cmd)
         {
             un_export(s_nntp_force_export);
         }
-        if (g_data_source->m_auth_user)
+        if (!g_data_source->m_auth_user.empty())
         {
             int fd = open(g_nntp_auth_file.c_str(), O_WRONLY | O_CREAT, 0600);
             if (fd >= 0)
             {
-                write(fd, g_data_source->m_auth_user->c_str(), g_data_source->m_auth_user->size());
+                write(fd, g_data_source->m_auth_user.c_str(), g_data_source->m_auth_user.size());
                 write(fd, "\n", 1);
-                if (g_data_source->m_auth_pass)
+                if (!g_data_source->m_auth_pass.empty())
                 {
-                    write(fd, g_data_source->m_auth_pass->c_str(), g_data_source->m_auth_pass->size());
+                    write(fd, g_data_source->m_auth_pass.c_str(), g_data_source->m_auth_pass.size());
                     write(fd, "\n", 1);
                 }
                 close(fd);
@@ -265,7 +265,7 @@ int do_shell(const char *shell, const char *cmd)
     sigset(SIGTTOU,stop_catcher);
     sigset(SIGTTIN,stop_catcher);
 #endif
-    if (g_data_source && g_data_source->m_auth_user)
+    if (g_data_source && !g_data_source->m_auth_user.empty())
     {
         remove(g_nntp_auth_file.c_str());
     }
@@ -657,14 +657,14 @@ std::string temp_filename()
     return (fs::path{g_tmp_dir} / fmt::format("trn{}.{}", tmpfile_num++, g_our_pid)).string();
 }
 
-char *get_auth_user()
+std::string get_auth_user()
 {
-    return g_data_source->m_auth_user ? g_data_source->m_auth_user->data() : nullptr;
+    return g_data_source->m_auth_user;
 }
 
-char *get_auth_pass()
+std::string get_auth_pass()
 {
-    return g_data_source->m_auth_pass ? g_data_source->m_auth_pass->data() : nullptr;
+    return g_data_source->m_auth_pass;
 }
 
 /// @brief Parses a string from the input buffer, handling quotes, comments, and escape sequences.

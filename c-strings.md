@@ -386,19 +386,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
-### Const-correct Signature Slices
-
-#### Auth Accessors
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `tool/util3.cpp`, `tool/include/tool/util3.h`, `nntp/nntpauth.cpp`.
-- Finding: `get_auth_user` and `get_auth_pass` return mutable `char *`
-  pointers, but the NNTP authentication caller only reads them.
-- Change: return `const char *` and use `c_str()` when exposing
-  `std::string` storage.
-- Data flow: keep the pointer consumed immediately by NNTP auth code;
-  do not expose mutable string storage.
-
 ### Owning Raw-string Return Slices
 
 #### `read_auth_file` Credentials
@@ -410,8 +397,9 @@ buffer slices.
   populated with `save_str`.
 - Change: return a small value type or pair of `std::string` values and
   use empty strings for absent fields.
-- Data flow: assign directly into `DataSourceConfig` and tool auth
-  storage; remove caller-side raw ownership and frees.
+- Data flow: assign directly into `DataSourceConfig`, runtime
+  `DataSource` strings, and tool auth storage; remove the temporary raw
+  read/free wrapper once the producer returns strings.
 - Truncation: the current `char buf[1024]` line buffer imposes arbitrary
   credential truncation; use line-oriented string input.
 

@@ -336,12 +336,12 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
         dp->m_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
     }
     v = config.auth_user();
-    if (v != nullptr)
+    if (v != nullptr && *v)
     {
         dp->m_auth_user = v;
     }
     v = config.auth_password();
-    if (v != nullptr)
+    if (v != nullptr && *v)
     {
         dp->m_auth_pass = v;
     }

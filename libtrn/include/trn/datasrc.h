@@ -92,8 +92,8 @@ struct DataSource
     std::string                m_spool_dir;
     std::optional<std::string> m_over_dir;
     std::optional<std::string> m_over_fmt;
-    std::optional<std::string> m_auth_user;
-    std::optional<std::string> m_auth_pass;
+    std::string                m_auth_user;
+    std::string                m_auth_pass;
     long             m_last_new_group; // time of last newgroup check
     std::FILE       *m_ov_in;          // the overview's file handle
     std::time_t      m_ov_opened;      // time overview file was opened

@@ -13,7 +13,7 @@
 #include <cstring>
 #include <string>
 
-static char *s_nntp_password{};
+static std::string    s_nntp_password;
 static constexpr char s_no_memory[] = "trn: out of memory!\n";
 
 int do_shell(const char *shell, const char *cmd)
@@ -82,13 +82,20 @@ int nntp_handle_nested_lists()
     return -1;
 }
 
-char *get_auth_user()
+std::string get_auth_user()
 {
     extern std::string g_nntp_auth_file;
-    return read_auth_file(g_nntp_auth_file.c_str(), &s_nntp_password);
+    char              *password{};
+    char              *user = read_auth_file(g_nntp_auth_file.c_str(), &password);
+
+    std::string result{user ? user : ""};
+    s_nntp_password = password ? password : "";
+    std::free(user);
+    std::free(password);
+    return result;
 }
 
-char *get_auth_pass()
+std::string get_auth_pass()
 {
     return s_nntp_password;
 }
