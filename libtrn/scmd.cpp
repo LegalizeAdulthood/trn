@@ -361,7 +361,7 @@ static bool s_match_description(long ent)
     int lines = s_ent_lines(ent);
     for (int i = 1; i <= lines; i++)
     {
-        std::string description{s_get_desc(ent, i, false)};
+        std::string description = s_get_desc(ent, i, false);
         for (char &ch : description)
         {
             if (std::isupper(ch))

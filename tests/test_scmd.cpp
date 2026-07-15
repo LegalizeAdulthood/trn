@@ -7,9 +7,11 @@
 #include <trn/cache.h>
 #include <trn/charsubst.h>
 #include <trn/ngdata.h>
+#include <trn/sadesc.h>
 #include <trn/scan.h>
 #include <trn/scanart.h>
 #include <trn/score.h>
+#include <trn/Subject.h>
 
 #include <gtest/gtest.h>
 
@@ -52,6 +54,8 @@ protected:
     }
 
     char                 m_author[64]{"Casey Mixed <case@example.com>"};
+    Subject              m_subject{};
+    char                 m_subject_text[64]{"Re: Replied Subject"};
 };
 
 } // namespace
@@ -61,4 +65,14 @@ TEST_F(ScanCommandTest, descriptionSearchMatchesIgnoringCase)
     EXPECT_TRUE(scmd_match_description_for_test(1, "mixed"));
     EXPECT_TRUE(scmd_match_description_for_test(1, "CASEY"));
     EXPECT_FALSE(scmd_match_description_for_test(1, "missing"));
+}
+
+TEST_F(ScanCommandTest, subjectDescriptionShortensReplyPrefix)
+{
+    Article *article = article_ptr(ArticleNum{1});
+    article->m_subj = &m_subject;
+    article->m_flags |= AF_HAS_RE;
+    m_subject.m_str = m_subject_text;
+
+    EXPECT_EQ("> Replied Subject", std::string{sa_desc_subject(1)});
 }

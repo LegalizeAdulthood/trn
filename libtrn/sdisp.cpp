@@ -15,6 +15,8 @@
 #include <trn/sorder.h>
 #include <trn/terminal.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 
 int  g_scr_height{}; // height of screen in characters
@@ -177,7 +179,7 @@ static void s_refresh_description(int line)
                 std::printf("   ");
             }
         }
-        std::printf("%s",s_get_desc(ent,i,true));
+        fmt::print("{}", s_get_desc(ent, i, true));
         erase_eol();
         std::putchar('\n');
     }
@@ -216,7 +218,7 @@ static void s_ref_entry(int line, int jump)
                 std::printf("   ");
             }
         }
-        std::printf("%s",s_get_desc(ent,i,true));
+        fmt::print("{}", s_get_desc(ent, i, true));
         erase_eol();
         std::putchar('\n');
     }

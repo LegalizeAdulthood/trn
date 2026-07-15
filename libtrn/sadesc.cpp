@@ -17,12 +17,12 @@
 #include <trn/score.h>
 #include <trn/terminal.h> // for standout
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <string>
+#include <fmt/format.h>
 
-static char s_sa_buf[LINE_BUF_LEN];    // misc. buffer
+#include <cstdio>
+#include <cstring>
+#include <iterator>
+#include <string>
 
 // returns statchars in temp space...
 // int line;            // which status line (1 = first)
@@ -64,72 +64,58 @@ const char *sa_get_stat_chars(long a, int line)
     return char_buf;
 }
 
-const char *sa_desc_subject(long e)
+std::string sa_desc_subject(long e)
 {
-    static char sa_subj_buf[256];
+    std::string subject = fetch_lines(g_sa_ents[e].artnum, SUBJ_LINE);
 
-    std::string s = fetch_lines(g_sa_ents[e].artnum, SUBJ_LINE);
-
-    if (s.empty())
+    if (subject.empty())
     {
-        std::sprintf(sa_subj_buf,"(no subject)");
-        return sa_subj_buf;
+        return "(no subject)";
     }
-    std::strncpy(sa_subj_buf,s.c_str(),250);
-    char *s1 = sa_subj_buf;
-    if (*s1 == 'r' || *s1 == 'R')
+    if ((subject[0] == 'r' || subject[0] == 'R') && subject.size() >= 3)
     {
-        if (*++s1 == 'e' || *s1 == 'E')
+        if ((subject[1] == 'e' || subject[1] == 'E') && subject[2] == ':')
         {
-            if (*++s1 == ':')
-            {
-                *s1 = '>';              // more cosmetic "Re:"
-                return s1;
-            }
+            subject[2] = '>'; // more cosmetic "Re:"
+            subject.erase(0, 2);
         }
     }
-    return sa_subj_buf;
+    return subject;
 }
 
 // NOTE: should redesign later for the "menu" style...
 // long e;              // entry number
 // bool trunc;          // should it be truncated?
-const char *sa_get_desc(long e, int line, bool trunc)
+std::string sa_get_desc(long e, int line, bool trunc)
 {
-    static char desc_buf[1024];
-    std::string s;
-
     ArticleNum artnum = g_sa_ents[e].artnum;
-    bool    use_standout = false;
+    bool       use_standout = false;
+    std::string desc;
+    std::string s;
     switch (line)
     {
     case 1:
-        desc_buf[0] = '\0';     // initialize the buffer
         if (g_sa_mode_desc_art_num)
         {
-            std::sprintf(s_sa_buf,"%6d ",(int)artnum.value_of());
-            std::strcat(desc_buf,s_sa_buf);
+            fmt::format_to(std::back_inserter(desc), "{:6d} ", static_cast<int>(artnum.value_of()));
         }
         if (g_sc_initialized && g_sa_mode_desc_score)
         {
             // we'd like the score now
-            std::sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
-            std::strcat(desc_buf,s_sa_buf);
+            fmt::format_to(std::back_inserter(desc), "[{:4d}] ", sc_score_art(artnum, true));
         }
         if (g_sa_mode_desc_thread_count)
         {
-            std::sprintf(s_sa_buf,"(%3d) ",sa_subj_thread_count(e));
-            std::strcat(desc_buf,s_sa_buf);
+            fmt::format_to(std::back_inserter(desc), "({:3d}) ", sa_subj_thread_count(e));
         }
         if (g_sa_mode_desc_author)
         {
-            std::strcat(desc_buf, compress_from(article_ptr(artnum)->from_c_str(), trunc ? 16 : 200).c_str());
-            std::strcat(desc_buf, " ");
+            desc += compress_from(article_ptr(artnum)->from_c_str(), trunc ? 16 : 200);
+            desc += ' ';
         }
         if (g_sa_mode_desc_subject)
         {
-            std::sprintf(s_sa_buf,"%s",sa_desc_subject(e));
-            std::strcat(desc_buf,s_sa_buf);
+            desc += sa_desc_subject(e);
         }
         break;
 
@@ -138,7 +124,6 @@ const char *sa_get_desc(long e, int line, bool trunc)
         if (!s.empty())   // we really have one
         {
             int i;              // number of spaces to indent
-            char* s2;   // for indenting
 
             i = 0;
             // if variable widths used later, use them
@@ -154,20 +139,16 @@ const char *sa_get_desc(long e, int line, bool trunc)
             {
                 i += 6;
             }
-            s2 = desc_buf;
-            while (i--)
-            {
-                *s2++ = ' ';
-            }
+            desc.assign(static_cast<std::size_t>(i), ' ');
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                std::sprintf(s2, "Summary: %s%s", g_tc_SO, s.c_str());
+                fmt::format_to(std::back_inserter(desc), "Summary: {}{}", g_tc_SO, s);
             }
             else
 #endif
             {
-                std::sprintf(s2,"Summary: %s",s.c_str());
+                fmt::format_to(std::back_inserter(desc), "Summary: {}", s);
             }
             break;
         }
@@ -179,7 +160,6 @@ const char *sa_get_desc(long e, int line, bool trunc)
         if (!s.empty())   // we really have one
         {
             int i;              // number of spaces to indent
-            char* s2;   // for indenting
             i = 0;
             // if variable widths used later, use them
             if (g_sa_mode_desc_art_num)
@@ -194,20 +174,16 @@ const char *sa_get_desc(long e, int line, bool trunc)
             {
                 i += 6;
             }
-            s2 = desc_buf;
-            while (i--)
-            {
-                *s2++ = ' ';
-            }
+            desc.assign(static_cast<std::size_t>(i), ' ');
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                std::sprintf(s2, "Keys: %s%s", g_tc_SO, s.c_str());
+                fmt::format_to(std::back_inserter(desc), "Keys: {}{}", g_tc_SO, s);
             }
             else
 #endif
             {
-                std::sprintf(s2,"Keys: %s",s.c_str());
+                fmt::format_to(std::back_inserter(desc), "Keys: {}", s);
             }
             break;
         }
@@ -215,32 +191,32 @@ const char *sa_get_desc(long e, int line, bool trunc)
 
     default:  // no line I know of
         // later return nullptr
-        std::sprintf(desc_buf,"Entry %ld: Nonimplemented Description LINE",e);
+        desc = fmt::format("Entry {}: Nonimplemented Description LINE", e);
         break;
     } // switch (line)
-    if (trunc)
+    if (trunc && desc.size() > static_cast<std::size_t>(g_s_desc_cols))
     {
-        desc_buf[g_s_desc_cols] = '\0'; // make sure it's not too long
+        desc.resize(static_cast<std::size_t>(g_s_desc_cols)); // make sure it's not too long
     }
 #ifdef HAS_TERMLIB
     if (use_standout)
     {
-        std::strcat(desc_buf,g_tc_SE);       // end standout mode
+        desc += g_tc_SE; // end standout mode
     }
 #endif
     // take out bad characters (replace with one space)
-    for (char *t = desc_buf; *t; t++)
+    for (char &ch : desc)
     {
-        switch (*t)
+        switch (ch)
         {
         case Ctl('h'):
         case '\t':
         case '\n':
         case '\r':
-            *t = ' ';
+            ch = ' ';
         }
     }
-    return desc_buf;
+    return desc;
 }
 
 // returns # of lines the article occupies in total...

@@ -41,14 +41,13 @@ static long sa_get_subj_thread(long e)
 {
     bool old_untrim = g_untrim_cache;
     g_untrim_cache = true;
-    const char *s = sa_desc_subject(e);
+    std::string subject = sa_desc_subject(e);
     g_untrim_cache = old_untrim;
 
-    if (!s || !*s)
+    if (subject.empty())
     {
         return -2;
     }
-    std::string subject{s};
     if (subject.size() >= 2 && subject[0] == '>' && subject[1] == ' ')
     {
         subject.erase(0, 2);

@@ -399,14 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### Subject Description Buffers
-
-- Files: `libtrn/sadesc.cpp`, `libtrn/include/trn/sadesc.h`.
-- Finding: subject and article description helpers use file-scope static
-  buffers.
-- Change: return owned `std::string` values.
-- Data flow: update display callers to consume string results locally.
-
 #### Character Substitution Status
 
 - Files: `libtrn/charsubst.cpp`, `libtrn/include/trn/charsubst.h`.

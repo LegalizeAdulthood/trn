@@ -51,15 +51,15 @@ const char *s_get_statchars(long ent, int line)
     }
 }
 
-const char *s_get_desc(long ent, int line, bool trunc)
+std::string s_get_desc(long ent, int line, bool trunc)
 {
     switch (g_s_cur_type)
     {
     case S_ART:
-        return sa_get_desc(ent,line,trunc);
+        return sa_get_desc(ent, line, trunc);
 
     default:
-        return nullptr;
+        return {};
     }
 }
 
