@@ -1684,7 +1684,7 @@ void cwd_check()
     std::strcpy(tmpbuf,g_priv_dir.c_str());
     if (change_dir(g_priv_dir))
     {
-        safe_copy(tmpbuf, file_exp(g_priv_dir.c_str()).c_str(), sizeof tmpbuf);
+        safe_copy(tmpbuf, file_exp(g_priv_dir).c_str(), sizeof tmpbuf);
         if (make_dir(tmpbuf, MD_DIR) || change_dir(tmpbuf))
         {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");

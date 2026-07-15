@@ -399,13 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `univ_use_file` Line Buffer
-
-- Files: `libtrn/univ.cpp`.
-- Finding: universal selector input uses static `lbuf[LINE_BUF_LEN]`.
-- Change: read into owned line storage before calling `univ_do_line`.
-- Truncation: current fixed-size truncation appears arbitrary.
-
 #### `Article::get_cached_line` Numeric Buffers
 
 - Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`.

@@ -38,6 +38,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -438,7 +439,7 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     case '%':
     case '/':
         ui = univ_add(UniversalTextFile{}, desc);
-        ui->text_file().fname = file_exp(file_name.c_str());
+        ui->text_file().fname = file_exp(file_name);
         break;
     }
 }
@@ -638,8 +639,6 @@ static void univ_use_group_line(char *line, int type)
 // returns true on success, false otherwise
 static bool univ_use_file(std::string_view fname, const char *label)
 {
-    static char lbuf[LINE_BUF_LEN];
-
     bool begin_top = true; // default assumption (might be changed later)
 
     std::string_view file_name = fname;
@@ -672,8 +671,8 @@ static bool univ_use_file(std::string_view fname, const char *label)
     {
         s_univ_begin_label = save_str(label);
     }
-    std::FILE *fp = std::fopen(file_exp(open_name.c_str()).c_str(), "r");
-    if (!fp)
+    std::ifstream input{file_exp(open_name)};
+    if (!input)
     {
         return false; // unsuccessful (XXX: complain)
     }
@@ -681,14 +680,15 @@ static bool univ_use_file(std::string_view fname, const char *label)
     // 1. Long lines
     // 2. Backslash continuations
     //
-    while (std::fgets(lbuf, sizeof lbuf, fp) != nullptr)
+    std::string line;
+    while (std::getline(input, line))
     {
-        if (!univ_do_line(lbuf))
+        line += '\n';
+        if (!univ_do_line(line.data()))
         {
-            break;      // end of useful file
+            break; // end of useful file
         }
     }
-    std::fclose(fp);
     if (!s_univ_begin_found)
     {
         std::printf("\"begin group\" not found.\n");
@@ -901,7 +901,7 @@ static bool univ_do_line(char *line)
             const char *label_ptr = label.empty() ? nullptr : label.c_str();
 
             // description defaults to name
-            univ_add_file(s_univ_line_desc ? s_univ_line_desc : file_name.c_str(), file_exp(file_name.c_str()).c_str(),
+            univ_add_file(s_univ_line_desc ? s_univ_line_desc : file_name.c_str(), file_exp(file_name).c_str(),
                           label_ptr);
             break;
         }
