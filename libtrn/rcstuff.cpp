@@ -42,9 +42,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
+
+namespace fs = std::filesystem;
 
 HashTable           *g_newsrc_hash{};
 Multirc             *g_sel_page_mp{};
@@ -1847,14 +1851,19 @@ bool write_newsrcs(Multirc *mptr)
         {
 write_error:
             print_cant_recreate(rp->name);
-            remove(rp->new_name.c_str());
+            std::error_code error;
+            fs::remove(fs::path{rp->new_name}, error);
             total_success = false;
             continue;
         }
         rp->flags &= ~RF_RC_CHANGED;
 
-        remove(rp->name.c_str());
-        rename(rp->new_name.c_str(),rp->name.c_str());
+        const fs::path  newsrc_path{rp->name};
+        const fs::path  new_newsrc_path{rp->new_name};
+        std::error_code error;
+        fs::remove(newsrc_path, error);
+        error.clear();
+        fs::rename(new_newsrc_path, newsrc_path, error);
     }
 
     if (g_sel_newsgroup_sort != SS_NATURAL)
@@ -1876,9 +1885,14 @@ void get_old_newsrcs(Multirc *mptr)
         {
             if (rp->flags & RF_ACTIVE)
             {
-                remove(rp->new_name.c_str());
-                rename(rp->name.c_str(),rp->new_name.c_str());
-                rename(rp->old_name.c_str(),rp->name.c_str());
+                const fs::path  newsrc_path{rp->name};
+                const fs::path  new_newsrc_path{rp->new_name};
+                std::error_code error;
+                fs::remove(new_newsrc_path, error);
+                error.clear();
+                fs::rename(newsrc_path, new_newsrc_path, error);
+                error.clear();
+                fs::rename(fs::path{rp->old_name}, newsrc_path, error);
             }
         }
     }

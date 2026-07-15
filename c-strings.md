@@ -467,13 +467,3 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Filesystem Path Slices
-
-#### Newsrc File Rotation
-
-- Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`.
-- Finding: newsrc path strings are passed to POSIX `remove` and
-  `rename` during save and rollback.
-- Change: use `fs::path`, `fs::remove`, and `fs::rename` for the file
-  rotation operations.
-- Data flow: retain existing `Newsrc` stored path strings until the
-  whole structure is ready for path member storage.
