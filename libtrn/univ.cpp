@@ -1269,7 +1269,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
     g_univ_ng_virt_flag = true;
     s_univ_virt_pass_needed = false;
 
-    for (std::size_t position = 0; position < g_univ_items.size(); ++position)
+    for (std::size_t position = 0; position < g_univ_items.size();)
     {
         if (input_pending())
         {
@@ -1279,6 +1279,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
         UniversalItem *ui = &g_univ_items[position];
         if (ui->m_state != UIS_NORMAL)
         {
+            ++position;
             continue;
         }
         switch (ui->type())
@@ -1300,11 +1301,15 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             }
             (void)visit_group(group_name.c_str());
             s_univ_use_min_score = false;
+            s_current_vg_ui_index = {};
             // later do something with return value
-            ui = univ_item(current_index);
-            if (ui != nullptr)
+            const std::size_t expanded_position = univ_position(current_index);
+            if (expanded_position < g_univ_items.size())
             {
-                ui->m_state = UIS_DELETED;
+                g_univ_items.erase(g_univ_items.begin() +
+                                   static_cast<UniversalItemList::difference_type>(expanded_position));
+                position = expanded_position;
+                continue;
             }
             break;
         }
@@ -1325,6 +1330,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             const std::string group_name = article.ng;
             s_current_vg_ui_index = univ_index(ui);
             (void)visit_group(group_name.c_str());
+            s_current_vg_ui_index = {};
             // later do something with return value
             break;
         }
@@ -1332,7 +1338,9 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
         default:
             break;
         }
+        ++position;
     }
+    s_current_vg_ui_index = {};
     g_univ_ng_virt_flag = false;
 }
 

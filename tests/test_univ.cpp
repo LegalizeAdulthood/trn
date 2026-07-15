@@ -319,16 +319,13 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
 
     univ_virt_pass(fake_visit_group);
 
-    expanded_group = univ_item(expanded_group_index);
     kept_group = univ_item(kept_group_index);
     kept_article = univ_item(kept_article_index);
-    ASSERT_NE(nullptr, expanded_group);
     ASSERT_NE(nullptr, kept_group);
     ASSERT_NE(nullptr, kept_article);
     EXPECT_EQ(1, g_visit_count);
     EXPECT_EQ("alt.test", g_visited_group);
-    EXPECT_EQ(UN_VGROUP, expanded_group->type());
-    EXPECT_EQ(UIS_DELETED, expanded_group->m_state);
+    EXPECT_EQ(nullptr, univ_item(expanded_group_index));
     EXPECT_EQ(UN_NEWSGROUP, kept_group->type());
     EXPECT_EQ(UIS_NORMAL, kept_group->m_state);
     EXPECT_EQ("alt.keep", kept_group->group().ng);

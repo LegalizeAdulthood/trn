@@ -39,8 +39,7 @@ enum UniversalItemType
 enum UniversalItemState
 {
     UIS_NORMAL,
-    UIS_DESELECTED,
-    UIS_DELETED
+    UIS_DESELECTED
 };
 
 struct UniversalGroupMaskData

@@ -11,12 +11,11 @@ preserving.  Remove each slice from this plan when it is complete.
 ## Current Shape
 
 `UniversalItem` stores payloads in the `UniversalData` variant and derives
-its item type from the active payload alternative.  Items are still stored
-as an intrusive global doubly linked list rooted at `g_first_univ` and
-`g_last_univ`, with new code starting to traverse through `univ_items()`.
+its item type from the active payload alternative.  Items are stored in
+`g_univ_items`, and traversal uses `univ_items()` and index helpers.
 
 `UniversalItemType` now describes the payload kind only.
-`UniversalItemState` tracks normal, deselected, and deleted selector state.
+`UniversalItemState` tracks normal and deselected selector state.
 
 ## Target Shape
 
@@ -39,16 +38,6 @@ replacement for item state.
 - Avoid changing formatting outside touched lines.
 
 ## Implementation Slices
-
-### 31. Simplify Universal Item Cleanup
-
-- Target: manual payload cleanup.
-- Change: remove cleanup paths made obsolete by strings and variant
-  payloads.
-- Data flow: `univ_close`, deleted virtual groups, and normal teardown all
-  rely on automatic storage cleanup.
-- Risk: medium; avoid changing lifetime of still-active selected items.
-- Verification: focused universal tests and normal workflow.
 
 ### 32. Remove Transitional Helpers
 
