@@ -85,8 +85,9 @@ Most raw string pointers are not local cleanup targets yet.  They are
 owned buffers, caller-owned mutable buffers, struct fields, termcap and
 NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
 `g_buf`, `g_cmd_buf`, `g_ser_line`, `Article` and `Subject` fields,
-`UniversalData` union fields, `HashDatum` payloads, `parse_string`,
-`get_a_line` and `push_string`.
+`HashDatum` payloads, `parse_string`, `get_a_line` and `push_string`.
+`CompiledRegex::m_exp_buf` and `m_alternatives` are regex bytecode and
+internal cursors, not ordinary string storage.
 
 The useful local targets fall into five groups:
 
@@ -100,6 +101,8 @@ The useful local targets fall into five groups:
   `std::string` globals or fields.
 - Owned raw-string results that callers store in local `char *`
   variables and later free.
+- Borrowed static-buffer return helpers that format text into shared
+  storage and return a pointer to that storage.
 
 Use `std::string_view` only while no callee needs ownership or a
 guaranteed terminator.  When a sliced token flows to a C API, build a
@@ -178,6 +181,30 @@ When a function always returns owned text, add or migrate to an owning
 the API or add a clearly named owning-string helper before changing
 callers.  Reject slices where the returned pointer escapes, is stored in
 global/static storage, or is passed to a function that stores it.
+
+### Owning Raw-string Parameters
+
+Select when a function parameter is documented or implemented as
+caller-allocated owned text, especially when the callee frees it after
+copying or parsing.  Treat mixed APIs as higher-risk: if some cases
+borrow and some cases consume ownership, make the signature explicit
+rather than preserving the hidden ownership branch.
+
+Refactor by changing the parameter to `std::string_view` when the callee
+only reads or copies the text.  If the callee needs ownership, take
+`std::string`.  Update callers in the same slice so `save_str` is not
+used just to satisfy the old parameter contract.
+
+### Borrowed Static-buffer Returns
+
+Select when a function formats text into a static, file-scope, or global
+buffer and returns a pointer to that buffer.  These are not owning raw
+returns, but they still hide string data behind shared storage.
+
+Refactor by returning `std::string` for formatted text or by writing to a
+caller-provided output abstraction when the caller truly controls
+storage.  Convert immediate display callers to consume the string in the
+same expression or same local scope.
 
 ### `safe_realloc` Arrays
 
@@ -359,15 +386,48 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
+### Const-correct Signature Slices
+
+#### Auth Accessors
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `tool/util3.cpp`, `tool/include/tool/util3.h`, `nntp/nntpauth.cpp`.
+- Finding: `get_auth_user` and `get_auth_pass` return mutable `char *`
+  pointers, but the NNTP authentication caller only reads them.
+- Change: return `const char *` and use `c_str()` when exposing
+  `std::string` storage.
+- Data flow: keep the pointer consumed immediately by NNTP auth code;
+  do not expose mutable string storage.
+
 ### Owning Raw-string Return Slices
 
-#### `read_auth_file` Password
+#### `read_auth_file` Credentials
 
-- Files: `util/util2.cpp`, `util/include/util/util2.h`.
-- Finding: password contents are returned through allocated `char *`
-  storage and freed by callers.
-- Change: return `std::string` and use empty string for "not found".
-- Data flow: update callers that receive and free the password.
+- Files: `util/util2.cpp`, `util/include/util/util2.h`,
+  `libtrn/datasrc.cpp`, `tool/util3.cpp`.
+- Finding: the username is returned as an owned `char *`, the password
+  is returned through a `char **` output parameter, and both are
+  populated with `save_str`.
+- Change: return a small value type or pair of `std::string` values and
+  use empty strings for absent fields.
+- Data flow: assign directly into `DataSourceConfig` and tool auth
+  storage; remove caller-side raw ownership and frees.
+- Truncation: the current `char buf[1024]` line buffer imposes arbitrary
+  credential truncation; use line-oriented string input.
+
+### Owning Raw-string Parameter Slices
+
+#### `Article::set_cached_line` Cached Header Setter
+
+- Files: `libtrn/cache.cpp`, `libtrn/include/trn/Article.h`,
+  `libtrn/head.cpp`, `libtrn/rt-ov.cpp`, `tests/test_scorefile.cpp`.
+- Finding: `set_cached_line` takes `char *`; stored header cases consume
+  and free `save_str` ownership, while numeric cases borrow caller
+  storage.
+- Change: take `std::string_view`, decode or copy into article-owned
+  strings inside the setter, and parse numeric fields directly.
+- Data flow: remove `save_str` at parse, XHDR, overview, and test
+  callers.
 
 ### Safe-realloc Array Slices
 
@@ -417,6 +477,58 @@ buffer slices.
 - Data flow: callers that need numeric text should receive owned or
   caller-local formatting.
 
+#### `Article::check_poster` Sender Parse
+
+- Files: `libtrn/Article.cpp`.
+- Finding: the function copies `m_from` into `g_cmd_buf` only to do
+  local mutable parsing of user and host text.
+- Change: parse a local `std::string` copy instead of writing through
+  the global command buffer.
+- Data flow: parsed pointers must remain local and must not escape.
+
+#### `Article::compress_date` Display Text
+
+- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`,
+  `libtrn/rt-page.cpp`.
+- Finding: the function truncates `ctime` output into `g_cmd_buf` and
+  returns a mutable pointer to shared storage.
+- Change: return `std::string` and format the bounded date text into
+  owned local storage.
+- Truncation: meaningful display-width truncation must be preserved.
+
+#### `compress_from` Display Text
+
+- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
+  `libtrn/rt-page.cpp`, `libtrn/sadesc.cpp`, `libtrn/univ.cpp`.
+- Finding: author display text is built in static `lbuf` and returned as
+  a mutable pointer.
+- Change: return `std::string` while preserving display-width padding
+  and truncation.
+- Data flow: update display callers to consume the owned result
+  immediately.
+
+#### `prefetch_lines` Static Header Buffer
+
+- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`, callers of
+  `fetch_subj`, `fetch_from`, and `fetch_xref`.
+- Finding: `prefetch_lines` and the inline fetch helpers return borrowed
+  `g_cmd_buf` storage.
+- Change: move copy-oriented callers to `fetch_lines` or
+  `prefetch_lines_copy`, then shrink or remove the static-buffer API.
+- Data flow: preserve callers that still need immediate mutable parsing
+  until each is reviewed.
+
+#### `secs_to_text` Interval Text
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `libtrn/opt.cpp`, `libtrn/trn.cpp`.
+- Finding: interval display text is formatted into `g_buf` and returned
+  as `const char *`.
+- Change: return `std::string` and use `fmt::format` for the composed
+  text.
+- Data flow: literal results such as `never` and `missing` become normal
+  string return values.
+
 #### Subject Description Buffers
 
 - Files: `libtrn/sadesc.cpp`, `libtrn/include/trn/sadesc.h`.
@@ -424,6 +536,15 @@ buffer slices.
   buffers.
 - Change: return owned `std::string` values.
 - Data flow: update display callers to consume string results locally.
+
+#### Character Substitution Status
+
+- Files: `libtrn/charsubst.cpp`, `libtrn/include/trn/charsubst.h`.
+- Finding: under `USE_UTF_HACK`, `current_char_subst` formats status
+  text into static `show[50]`.
+- Change: return `std::string` and use owned formatted text.
+- Truncation: preserve the current bounded display text unless tests or
+  user guidance say the limit is arbitrary.
 
 #### Easy-score Command Buffer
 
@@ -439,6 +560,16 @@ buffer slices.
 - Change: use owned string construction if the line does not escape as
   an output buffer.
 - Data flow: classify output ownership before editing.
+
+#### `univ_vg_add_article` Subject Scratch
+
+- Files: `libtrn/univ.cpp`.
+- Finding: the local `char lbuf[70]` receives a truncated subject copy
+  but the copied buffer is not used afterward.
+- Change: delete the dead buffer and copy, or replace it with owned
+  string processing if the subject-cleanup TODO is implemented.
+- Truncation: current truncation has no observable effect because the
+  buffer is unused.
 
 #### Mouse Modes Storage
 
@@ -500,6 +631,19 @@ when null and empty are distinct states.
 - Change: replace macro string entries with owned `std::string` storage.
 - Data flow: update keymap union ownership and macro display together.
 
+#### Subject Text Storage
+
+- Files: `libtrn/cache.cpp`, `libtrn/include/trn/Subject.h`,
+  subject readers in `libtrn`.
+- Finding: `Subject::m_str` owns decoded subject text in heap memory
+  allocated by `safe_malloc`; the hash key uses the `m_str + 4`
+  interior string.
+- Change: replace `m_str` with `std::string` after replacing
+  `safe_malloc`/`memset` subject construction with normal C++ object
+  construction.
+- Data flow: update hash keys and all `m_str + 4` readers in the same
+  storage slice.
+
 #### Exported Environment Values
 
 - Files: `util/env.cpp`.
@@ -528,3 +672,53 @@ forward declarations near the top of the implementation file, and make
 both declarations and definitions `static`.
 
 ### Filesystem Path Slices
+
+#### `sf_get_filename` Scorefile Hierarchy Path
+
+- Files: `libtrn/scorefile.cpp`.
+- Finding: scorefile paths are assembled with string append and then
+  trimmed by searching for `/` and `.`.
+- Change: use `fs::path` for the score directory join and keep group
+  name slicing separate from path assembly.
+- Data flow: return the existing string form only at the boundary used
+  by scorefile readers.
+
+#### `sf_edit_file` Scorefile Edit Path
+
+- Files: `libtrn/scorefile.cpp`.
+- Finding: scorefile edit paths are built as strings, expanded, passed
+  to `make_dir`, and then edited.
+- Change: use `fs::path` for local/global scorefile selection and parent
+  creation where possible.
+- Data flow: keep `edit_file` and `file_exp` boundaries explicit and use
+  `string().c_str()` only at those legacy calls.
+
+#### `sc_sv_save_file` Saved-score Replacement
+
+- Files: `libtrn/scoresave.cpp`.
+- Finding: saved-score temp filenames are string-concatenated and then
+  passed to POSIX `remove` and `rename`.
+- Change: use `fs::path`, `fs::remove`, and `fs::rename` for the save
+  and replace operation.
+- Data flow: preserve the existing temporary file name beside the target
+  save file.
+
+#### `SourceFile::open` and `SourceFile::end_append`
+
+- Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.
+- Finding: source-file paths are passed as `const char *` through open,
+  refetch, and timestamp update paths.
+- Change: accept `const fs::path &` or `std::filesystem::path` where the
+  path is used for filesystem operations.
+- Data flow: keep NNTP fetch command text as `std::string_view`; do not
+  mix protocol text with filesystem path storage.
+
+#### Newsrc File Rotation
+
+- Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`.
+- Finding: newsrc path strings are passed to POSIX `remove` and
+  `rename` during save and rollback.
+- Change: use `fs::path`, `fs::remove`, and `fs::rename` for the file
+  rotation operations.
+- Data flow: retain existing `Newsrc` stored path strings until the
+  whole structure is ready for path member storage.
