@@ -39,6 +39,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -81,8 +82,7 @@ static UniversalItemIndex s_current_vg_ui_index{};   //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
 static void           univ_open();
-static UniversalItem *univ_add(UniversalItemType type, const char *desc);
-static UniversalData  univ_make_data(UniversalItemType type);
+static UniversalItem *univ_add(UniversalData data, const char *desc);
 static void           univ_add_text(const char *txt);
 static void           univ_add_debug(const char *desc, const char *txt);
 static void           univ_add_group(const char *desc, std::string_view grpname);
@@ -312,7 +312,7 @@ void univ_close()
     g_univ_level--;
 }
 
-static UniversalItem *univ_add(UniversalItemType type, const char *desc)
+static UniversalItem *univ_add(UniversalData data, const char *desc)
 {
     UniversalItem &node = g_univ_items.emplace_back();
 
@@ -321,61 +321,22 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     node.m_state = UIS_NORMAL;
     node.m_num = s_univ_item_counter++;
     node.m_score = 0; // consider other default scores?
-    node.m_data = univ_make_data(type);
+    node.m_data = std::move(data);
 
     return &node;
-}
-
-static UniversalData univ_make_data(UniversalItemType type)
-{
-    switch (type)
-    {
-    case UN_DEBUG1:
-        return UniversalDebugData{};
-
-    case UN_NONE:
-        return UniversalNoData{};
-
-    case UN_TXT:
-        return UniversalTextPlaceholder{};
-
-    case UN_GROUP_MASK:
-        return UniversalGroupMaskData{};
-
-    case UN_CONFIG_FILE:
-        return UniversalConfigFileData{};
-
-    case UN_NEWSGROUP:
-        return UniversalNewsgroup{};
-
-    case UN_ARTICLE:
-        return UniversalVirtualData{};
-
-    case UN_VGROUP:
-        return UniversalVirtualGroup{};
-
-    case UN_TEXT_FILE:
-        return UniversalTextFile{};
-
-    case UN_HELP_KEY:
-        return HelpLocation{};
-
-    default:
-        return UniversalNoData{};
-    }
 }
 
 static void univ_add_text(const char *txt)
 {
     // later check text for bad things
-    (void)univ_add(UN_TXT,txt);
+    (void)univ_add(UniversalTextPlaceholder{}, txt);
 }
 
 // temp for testing
 static void univ_add_debug(const char *desc, const char *txt)
 {
     // later check text for bad things
-    UniversalItem *ui = univ_add(UN_DEBUG1, desc);
+    UniversalItem *ui = univ_add(UniversalDebugData{}, desc);
     ui->debug_string() = txt ? txt : "";
 }
 
@@ -397,12 +358,12 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         // perhaps it is marked as deleted?
         for (UniversalItem &item : univ_items())
         {
-            if (item.type() != UN_NEWSGROUP)
+            const UniversalNewsgroup *newsgroup = std::get_if<UniversalNewsgroup>(&item.m_data);
+            if (newsgroup == nullptr)
             {
                 continue;
             }
-            const std::string &group_name_ptr = item.group().ng;
-            if (item.m_state == UIS_DESELECTED && group_name_ptr == group_name)
+            if (item.m_state == UIS_DESELECTED && newsgroup->ng == group_name)
             {
                 // undelete the newsgroup
                 item.m_state = UIS_NORMAL;
@@ -411,13 +372,13 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         return;
     }
     g_univ_ng_names.insert(group_name);
-    ui = univ_add(UN_NEWSGROUP, desc);
+    ui = univ_add(UniversalNewsgroup{}, desc);
     ui->group().ng = group_name;
 }
 
 static void univ_add_mask(const char *desc, const char *mask)
 {
-    UniversalItem *ui = univ_add(UN_GROUP_MASK, desc);
+    UniversalItem          *ui = univ_add(UniversalGroupMaskData{}, desc);
     UniversalGroupMaskData &group_mask = ui->group_mask();
     group_mask.mask_list = mask;
     group_mask.title = desc;
@@ -426,7 +387,7 @@ static void univ_add_mask(const char *desc, const char *mask)
 //char* fname;                          // May be URL
 static void univ_add_file(const char *desc, const char *fname, const char *label)
 {
-    UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
+    UniversalItem           *ui = univ_add(UniversalConfigFileData{}, desc);
     UniversalConfigFileData &config_file = ui->config_file();
     config_file.title = desc;
     config_file.fname = fname;
@@ -438,7 +399,7 @@ static void univ_add_file(const char *desc, const char *fname, const char *label
 
 static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
 {
-    UniversalItem *ui = univ_add(UN_ARTICLE, desc);
+    UniversalItem        *ui = univ_add(UniversalVirtualData{}, desc);
     UniversalVirtualData &article = ui->article();
     article.ng = grp ? grp : "";
     article.num = art;
@@ -474,7 +435,7 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     case '~': // ...or full file names
     case '%':
     case '/':
-        ui = univ_add(UN_TEXT_FILE, desc);
+        ui = univ_add(UniversalTextFile{}, desc);
         ui->text_file().fname = file_exp(file_name.c_str());
         break;
     }
@@ -483,7 +444,7 @@ static void univ_add_text_file(const char *desc, std::string_view name)
 // mostly the same as the newsgroup stuff
 static void univ_add_virtual_group(std::string_view grpname)
 {
-    UniversalItem* ui;
+    UniversalItem *ui;
 
     if (grpname.data() == nullptr)
     {
@@ -501,12 +462,12 @@ static void univ_add_virtual_group(std::string_view grpname)
         // perhaps it is marked as deleted?
         for (UniversalItem &item : univ_items())
         {
-            if (item.type() != UN_VGROUP)
+            const UniversalVirtualGroup *vgroup = std::get_if<UniversalVirtualGroup>(&item.m_data);
+            if (vgroup == nullptr)
             {
                 continue;
             }
-            const std::string &group_name_ptr = item.vgroup().ng;
-            if (item.m_state == UIS_DESELECTED && group_name_ptr == group_name)
+            if (item.m_state == UIS_DESELECTED && vgroup->ng == group_name)
             {
                 // undelete the newsgroup
                 item.m_state = UIS_NORMAL;
@@ -515,7 +476,7 @@ static void univ_add_virtual_group(std::string_view grpname)
         return;
     }
     g_univ_vg_names.insert(group_name);
-    ui = univ_add(UN_VGROUP, nullptr);
+    ui = univ_add(UniversalVirtualGroup{}, nullptr);
     UniversalVirtualGroup &vgroup = ui->vgroup();
     vgroup.flags = UF_VG_NONE;
     vgroup.min_score = 0;
@@ -587,12 +548,12 @@ static void univ_use_pattern(const char *pattern, int type)
         case 0:
             for (UniversalItem &item : univ_items())
             {
-                if (item.type() != UN_NEWSGROUP)
+                const UniversalNewsgroup *newsgroup = std::get_if<UniversalNewsgroup>(&item.m_data);
+                if (newsgroup == nullptr)
                 {
                     continue;
                 }
-                const std::string &group_name = item.group().ng;
-                if (item.m_state == UIS_NORMAL && univ_do_match(group_name.c_str(), s))
+                if (item.m_state == UIS_NORMAL && univ_do_match(newsgroup->ng.c_str(), s))
                 {
                     item.m_state = UIS_DESELECTED;
                 }
@@ -602,12 +563,12 @@ static void univ_use_pattern(const char *pattern, int type)
         case 1:
             for (UniversalItem &item : univ_items())
             {
-                if (item.type() != UN_VGROUP)
+                const UniversalVirtualGroup *vgroup = std::get_if<UniversalVirtualGroup>(&item.m_data);
+                if (vgroup == nullptr)
                 {
                     continue;
                 }
-                const std::string &group_name = item.vgroup().ng;
-                if (item.m_state == UIS_NORMAL && univ_do_match(group_name.c_str(), s))
+                if (item.m_state == UIS_NORMAL && univ_do_match(vgroup->ng.c_str(), s))
                 {
                     item.m_state = UIS_DESELECTED;
                 }
@@ -1157,18 +1118,13 @@ void univ_newsgroup_virtual()
         return;
     }
 
-    switch (current_vg_ui->type())
+    if (std::holds_alternative<UniversalVirtualGroup>(current_vg_ui->m_data))
     {
-    case UN_VGROUP:
         univ_vg_add_group();
-        break;
-
-    case UN_ARTICLE:
+    }
+    else if (std::holds_alternative<UniversalVirtualData>(current_vg_ui->m_data))
+    {
         // get article number from message-id
-        break;
-
-    default:
-        break;
     }
 
     // later, get subjects and article numbers when needed
@@ -1282,22 +1238,21 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
             ++position;
             continue;
         }
-        switch (ui->type())
+        UniversalVirtualGroup *vgroup = std::get_if<UniversalVirtualGroup>(&ui->m_data);
+        if (vgroup != nullptr)
         {
-        case UN_VGROUP:
-        {
-            UniversalVirtualGroup &vgroup = ui->vgroup();
-            if (vgroup.ng.empty())
+            if (vgroup->ng.empty())
             {
-                break;                  // XXX whine
+                ++position;             // XXX whine
+                continue;
             }
             const UniversalItemIndex current_index = univ_index(ui);
-            const std::string        group_name = vgroup.ng;
+            const std::string        group_name = vgroup->ng;
             s_current_vg_ui_index = current_index;
-            if (vgroup.flags & UF_VG_MIN_SCORE)
+            if (vgroup->flags & UF_VG_MIN_SCORE)
             {
                 s_univ_use_min_score = true;
-                s_univ_min_score = vgroup.min_score;
+                s_univ_min_score = vgroup->min_score;
             }
             (void)visit_group(group_name.c_str());
             s_univ_use_min_score = false;
@@ -1311,32 +1266,30 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
                 position = expanded_position;
                 continue;
             }
-            break;
+            ++position;
+            continue;
         }
 
-        case UN_ARTICLE:
+        const UniversalVirtualData *article = std::get_if<UniversalVirtualData>(&ui->m_data);
+        if (article != nullptr)
         {
-            const UniversalVirtualData &article = ui->article();
             // if article number is not set, visit newsgroup with callback
             // later also check for descriptions
-            if ((article.num) && (!ui->m_desc.empty()))
+            if ((article->num) && (!ui->m_desc.empty()))
             {
-                break;
+                ++position;
+                continue;
             }
-            if (!article.subj.empty())
+            if (!article->subj.empty())
             {
-                break;
+                ++position;
+                continue;
             }
-            const std::string group_name = article.ng;
+            const std::string group_name = article->ng;
             s_current_vg_ui_index = univ_index(ui);
             (void)visit_group(group_name.c_str());
             s_current_vg_ui_index = {};
             // later do something with return value
-            break;
-        }
-
-        default:
-            break;
         }
         ++position;
     }
@@ -1426,141 +1379,99 @@ const char *UniversalItem::univ_article_desc() const
     return dbuf;
 }
 
-UniversalItemType UniversalItem::type() const
-{
-    if (std::holds_alternative<UniversalNoData>(m_data))
-    {
-        return UN_NONE;
-    }
-    if (std::holds_alternative<UniversalTextPlaceholder>(m_data))
-    {
-        return UN_TXT;
-    }
-    if (std::holds_alternative<UniversalNewsgroup>(m_data))
-    {
-        return UN_NEWSGROUP;
-    }
-    if (std::holds_alternative<UniversalGroupMaskData>(m_data))
-    {
-        return UN_GROUP_MASK;
-    }
-    if (std::holds_alternative<UniversalVirtualData>(m_data))
-    {
-        return UN_ARTICLE;
-    }
-    if (std::holds_alternative<UniversalConfigFileData>(m_data))
-    {
-        return UN_CONFIG_FILE;
-    }
-    if (std::holds_alternative<UniversalVirtualGroup>(m_data))
-    {
-        return UN_VGROUP;
-    }
-    if (std::holds_alternative<UniversalTextFile>(m_data))
-    {
-        return UN_TEXT_FILE;
-    }
-    if (std::holds_alternative<HelpLocation>(m_data))
-    {
-        return UN_HELP_KEY;
-    }
-    assert(std::holds_alternative<UniversalDebugData>(m_data));
-    return UN_DEBUG1;
-}
-
 UniversalNewsgroup &UniversalItem::group()
 {
-    assert(type() == UN_NEWSGROUP);
+    assert(std::holds_alternative<UniversalNewsgroup>(m_data));
     return std::get<UniversalNewsgroup>(m_data);
 }
 
 const UniversalNewsgroup &UniversalItem::group() const
 {
-    assert(type() == UN_NEWSGROUP);
+    assert(std::holds_alternative<UniversalNewsgroup>(m_data));
     return std::get<UniversalNewsgroup>(m_data);
 }
 
 UniversalVirtualGroup &UniversalItem::vgroup()
 {
-    assert(type() == UN_VGROUP);
+    assert(std::holds_alternative<UniversalVirtualGroup>(m_data));
     return std::get<UniversalVirtualGroup>(m_data);
 }
 
 const UniversalVirtualGroup &UniversalItem::vgroup() const
 {
-    assert(type() == UN_VGROUP);
+    assert(std::holds_alternative<UniversalVirtualGroup>(m_data));
     return std::get<UniversalVirtualGroup>(m_data);
 }
 
 UniversalVirtualData &UniversalItem::article()
 {
-    assert(type() == UN_ARTICLE);
+    assert(std::holds_alternative<UniversalVirtualData>(m_data));
     return std::get<UniversalVirtualData>(m_data);
 }
 
 const UniversalVirtualData &UniversalItem::article() const
 {
-    assert(type() == UN_ARTICLE);
+    assert(std::holds_alternative<UniversalVirtualData>(m_data));
     return std::get<UniversalVirtualData>(m_data);
 }
 
 UniversalConfigFileData &UniversalItem::config_file()
 {
-    assert(type() == UN_CONFIG_FILE);
+    assert(std::holds_alternative<UniversalConfigFileData>(m_data));
     return std::get<UniversalConfigFileData>(m_data);
 }
 
 const UniversalConfigFileData &UniversalItem::config_file() const
 {
-    assert(type() == UN_CONFIG_FILE);
+    assert(std::holds_alternative<UniversalConfigFileData>(m_data));
     return std::get<UniversalConfigFileData>(m_data);
 }
 
 UniversalGroupMaskData &UniversalItem::group_mask()
 {
-    assert(type() == UN_GROUP_MASK);
+    assert(std::holds_alternative<UniversalGroupMaskData>(m_data));
     return std::get<UniversalGroupMaskData>(m_data);
 }
 
 const UniversalGroupMaskData &UniversalItem::group_mask() const
 {
-    assert(type() == UN_GROUP_MASK);
+    assert(std::holds_alternative<UniversalGroupMaskData>(m_data));
     return std::get<UniversalGroupMaskData>(m_data);
 }
 
 UniversalTextFile &UniversalItem::text_file()
 {
-    assert(type() == UN_TEXT_FILE);
+    assert(std::holds_alternative<UniversalTextFile>(m_data));
     return std::get<UniversalTextFile>(m_data);
 }
 
 const UniversalTextFile &UniversalItem::text_file() const
 {
-    assert(type() == UN_TEXT_FILE);
+    assert(std::holds_alternative<UniversalTextFile>(m_data));
     return std::get<UniversalTextFile>(m_data);
 }
 
 std::string &UniversalItem::debug_string()
 {
-    assert(type() == UN_DEBUG1);
+    assert(std::holds_alternative<UniversalDebugData>(m_data));
     return std::get<UniversalDebugData>(m_data).text;
 }
 
 const std::string &UniversalItem::debug_string() const
 {
-    assert(type() == UN_DEBUG1);
+    assert(std::holds_alternative<UniversalDebugData>(m_data));
     return std::get<UniversalDebugData>(m_data).text;
 }
 
 HelpLocation &UniversalItem::help_location()
 {
-    assert(type() == UN_HELP_KEY);
+    assert(std::holds_alternative<HelpLocation>(m_data));
     return std::get<HelpLocation>(m_data);
 }
 
 HelpLocation UniversalItem::help_location() const
 {
-    assert(type() == UN_HELP_KEY);
+    assert(std::holds_alternative<HelpLocation>(m_data));
     return std::get<HelpLocation>(m_data);
 }
 
@@ -1576,8 +1487,7 @@ void univ_help_main(HelpLocation where)
     g_univ_title = "Extended Help";
 
     // first add help on current mode
-    UniversalItem *ui = univ_add(UN_HELP_KEY, nullptr);
-    ui->help_location() = where;
+    (void)univ_add(where, nullptr);
 
     // later, do other mode sensitive stuff
 

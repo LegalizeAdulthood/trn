@@ -22,20 +22,6 @@
 using UniversalGroupVisitor = int (*)(const char *);
 using UniversalItemIndex = int;
 
-enum UniversalItemType
-{
-    UN_NONE = 0,          //
-    UN_TXT = 1,           // textual placeholder
-    UN_NEWSGROUP = 3,     //
-    UN_GROUP_MASK = 4,    //
-    UN_ARTICLE = 5,       // an individual article
-    UN_CONFIG_FILE = 6,   // filename for a configuration file
-    UN_VGROUP = 8,        // virtual newsgroup marker (for pass 2)
-    UN_TEXT_FILE = 9,     // text file
-    UN_HELP_KEY = 10,     // keystroke help functions from help.cpp
-    UN_DEBUG1 = -1        // quick debugging: just has data
-};
-
 enum UniversalItemState
 {
     UIS_NORMAL,
@@ -135,7 +121,6 @@ struct UniversalItem
     std::string        m_desc;              // default description
     int                m_score{};
     UniversalData      m_data{UniversalNoData{}}; // describes the object
-    UniversalItemType  type() const;
     UniversalNewsgroup &group();
     const UniversalNewsgroup &group() const;
     UniversalVirtualGroup &vgroup();

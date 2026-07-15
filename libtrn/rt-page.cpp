@@ -35,6 +35,7 @@
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <variant>
 
 SelectionItem g_sel_items[MAX_SEL];
 int           g_sel_total_obj_cnt{};
@@ -718,55 +719,52 @@ try_again:
             {
                 continue;
             }
-            switch (item.type())
+            if (std::holds_alternative<UniversalVirtualGroup>(item.m_data))
             {
-            case UN_VGROUP:               // first-pass item
                 // always ineligible items
                 ui_elig = false;
-                break;
-
-            case UN_NEWSGROUP:
+            }
+            else if (const UniversalNewsgroup *newsgroup = std::get_if<UniversalNewsgroup>(&item.m_data))
             {
-                const std::string &group_name = item.group().ng;
+                const std::string &group_name = newsgroup->ng;
                 if (group_name.empty())
                 {
                     ui_elig = false;
-                    break;
                 }
-                NewsgroupData *np = find_newsgroup(group_name.c_str());
-                if (!np)
+                else
                 {
-                    ui_elig = false;
-                    break;
+                    NewsgroupData *np = find_newsgroup(group_name.c_str());
+                    if (!np)
+                    {
+                        ui_elig = false;
+                    }
+                    else
+                    {
+                        if (!np->m_abs_first)
+                        {
+                            g_to_read_quiet = true;
+                            np->set_to_read(ST_LAX);
+                            g_to_read_quiet = false;
+                        }
+                        if (!(g_sel_rereading ^ (np->m_to_read > TR_NONE)))
+                        {
+                            ui_elig = false;
+                        }
+                    }
                 }
-                if (!np->m_abs_first)
-                {
-                    g_to_read_quiet = true;
-                    np->set_to_read(ST_LAX);
-                    g_to_read_quiet = false;
-                }
-                if (!(g_sel_rereading ^ (np->m_to_read>TR_NONE)))
-                {
-                    ui_elig = false;
-                }
-                break;
             }
-
-            case UN_ARTICLE:
+            else if (const UniversalVirtualData *article = std::get_if<UniversalVirtualData>(&item.m_data))
             {
                 // later: use the datasrc of the newsgroup
-                const UniversalVirtualData &article = item.article();
-                ui_elig = !was_read_group(article.num, article.ng.c_str());
+                ui_elig = !was_read_group(article->num, article->ng.c_str());
                 if (g_sel_rereading)
                 {
                     ui_elig = !ui_elig;
                 }
-                break;
             }
-
-            default:
+            else
+            {
                 ui_elig = !g_sel_rereading;
-                break;
             }
             if (!ui_elig)
             {
@@ -2881,12 +2879,10 @@ static void display_universal(const UniversalItem *ui)
     }
     else
     {
-        switch (ui->type())
-        {
-        case UN_NEWSGROUP:
+        if (const UniversalNewsgroup *newsgroup = std::get_if<UniversalNewsgroup>(&ui->m_data))
         {
               // later error check the UI?
-            const std::string &group_name = ui->group().ng;
+            const std::string &group_name = newsgroup->ng;
             NewsgroupData *np = find_newsgroup(group_name.c_str());
             if (!np)
             {
@@ -2915,23 +2911,21 @@ static void display_universal(const UniversalItem *ui)
                 std::fputs(group_name.c_str(),stdout);
             }
             newline();
-            break;
         }
-
-        case UN_ARTICLE:
+        else if (std::holds_alternative<UniversalVirtualData>(ui->m_data))
+        {
             std::printf("      %s",ui->m_desc.empty() ? ui->univ_article_desc() : ui->m_desc.c_str());
             newline();
-            break;
-
-        case UN_HELP_KEY:
+        }
+        else if (std::holds_alternative<HelpLocation>(ui->m_data))
+        {
             std::printf("      Help on the %s", ui->univ_key_help_mode_str());
             newline();
-            break;
-
-        default:
+        }
+        else
+        {
             std::printf("      %s",ui->m_desc.empty() ? "[No Description]" : ui->m_desc.c_str());
             newline();
-            break;
         }
     }
 }

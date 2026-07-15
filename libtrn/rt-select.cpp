@@ -45,6 +45,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 
 enum DisplayState
 {
@@ -829,49 +830,42 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         return exit_code;
     }
     std::printf("\n");                 // prepare for output msgs...
-    switch (ui->type())
+    if (const UniversalDebugData *debug_data = std::get_if<UniversalDebugData>(&ui->m_data))
     {
-    case UN_DEBUG1:
-    {
-        const std::string &s = ui->debug_string();
+        const std::string &s = debug_data->text;
         if (!s.empty())
         {
             std::printf("Not implemented yet (%s)\n",s.c_str());
             sleep(5);
             return exit_code;
         }
-        break;
     }
-
-    case UN_TEXT_FILE:
+    else if (const UniversalTextFile *text_file = std::get_if<UniversalTextFile>(&ui->m_data))
     {
-        const std::string &file_name = ui->text_file().fname;
+        const std::string &file_name = text_file->fname;
         if (!file_name.empty())
         {
             // later have some way of getting a return code back
             univ_page_file(file_name);
         }
-        break;
     }
-
-    case UN_ARTICLE:
+    else if (const UniversalVirtualData *article = std::get_if<UniversalVirtualData>(&ui->m_data))
     {
-        const UniversalVirtualData &article = ui->article();
         if (g_in_ng)
         {
             // XXX whine: can't recurse at this time
-            break;
+            return exit_code;
         }
-        if (article.ng.empty())
+        if (article->ng.empty())
         {
-            break;                      // XXX whine
+            return exit_code;           // XXX whine
         }
-        NewsgroupData *np = find_newsgroup(article.ng.c_str());
+        NewsgroupData *np = find_newsgroup(article->ng.c_str());
 
         if (!np)
         {
             std::printf("Universal: newsgroup %s not found!",
-                   article.ng.c_str());
+                   article->ng.c_str());
             sleep(5);
             return exit_code;
         }
@@ -883,7 +877,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
         std::printf("Virtual: Entering %s:\n", g_newsgroup_name.c_str());
-        g_ng_go_art_num = article.num;
+        g_ng_go_art_num = article->num;
         g_univ_read_virt_flag = true;
         int ret = do_newsgroup(std::string{});
         g_univ_read_virt_flag = false;
@@ -911,13 +905,10 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         default:
             break;
         }
-        break;
     }
-
-    case UN_GROUP_MASK:
+    else if (const UniversalGroupMaskData *group_mask = std::get_if<UniversalGroupMaskData>(&ui->m_data))
     {
-        const UniversalGroupMaskData &group_mask = ui->group_mask();
-        univ_mask_load(group_mask.mask_list, group_mask.title.c_str());
+        univ_mask_load(group_mask->mask_list, group_mask->title.c_str());
         ch = universal_selector();
         switch (ch)
         {
@@ -931,12 +922,10 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         }
         return exit_code;
     }
-
-    case UN_CONFIG_FILE:
+    else if (const UniversalConfigFileData *config_file = std::get_if<UniversalConfigFileData>(&ui->m_data))
     {
-        const UniversalConfigFileData &config_file = ui->config_file();
-        univ_file_load(config_file.fname.c_str(), config_file.title.c_str(),
-                       config_file.label.empty() ? nullptr : config_file.label.c_str());
+        univ_file_load(config_file->fname.c_str(), config_file->title.c_str(),
+                       config_file->label.empty() ? nullptr : config_file->label.c_str());
         ch = universal_selector();
         switch (ch)
         {
@@ -950,20 +939,19 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         }
         return exit_code;
     }
-
-    case UN_NEWSGROUP:
+    else if (const UniversalNewsgroup *newsgroup = std::get_if<UniversalNewsgroup>(&ui->m_data))
     {
         int ret;
 
         if (g_in_ng)
         {
             // XXX whine: can't recurse at this time
-            break;
+            return exit_code;
         }
-        const std::string &group_name = ui->group().ng;
+        const std::string &group_name = newsgroup->ng;
         if (group_name.empty())
         {
-            break;                      // XXX whine
+            return exit_code;           // XXX whine
         }
         NewsgroupData *np = find_newsgroup(group_name.c_str());
 
@@ -1016,18 +1004,13 @@ do_group:
             // Eeep!
             break;
         }
-        break;
     }
-
-    case UN_HELP_KEY:
+    else if (std::holds_alternative<HelpLocation>(ui->m_data))
+    {
         if (another_command(univ_key_help(ui->help_location())))
         {
             push_char(s_sel_ret | 0200);
         }
-        break;
-
-    default:
-        break;
     }
     return exit_code;
 }

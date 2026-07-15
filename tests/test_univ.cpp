@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <string>
 #include <utility>
+#include <variant>
 
 namespace
 {
@@ -64,65 +65,26 @@ void reset_fake_visit_group()
     g_visit_count = 0;
 }
 
-UniversalData make_universal_data(UniversalItemType type)
-{
-    switch (type)
-    {
-    case UN_DEBUG1:
-        return UniversalDebugData{};
-
-    case UN_NONE:
-        return UniversalNoData{};
-
-    case UN_TXT:
-        return UniversalTextPlaceholder{};
-
-    case UN_GROUP_MASK:
-        return UniversalGroupMaskData{};
-
-    case UN_CONFIG_FILE:
-        return UniversalConfigFileData{};
-
-    case UN_NEWSGROUP:
-        return UniversalNewsgroup{};
-
-    case UN_ARTICLE:
-        return UniversalVirtualData{};
-
-    case UN_VGROUP:
-        return UniversalVirtualGroup{};
-
-    case UN_TEXT_FILE:
-        return UniversalTextFile{};
-
-    case UN_HELP_KEY:
-        return HelpLocation{};
-
-    default:
-        return UniversalNoData{};
-    }
-}
-
-UniversalItem make_universal_item(UniversalItemType type)
+UniversalItem make_universal_item(UniversalData data)
 {
     UniversalItem item;
     item.m_flags = UF_NONE;
     item.m_state = UIS_NORMAL;
     item.m_score = 0;
-    item.m_data = make_universal_data(type);
+    item.m_data = std::move(data);
     return item;
 }
 
 UniversalItem make_newsgroup_item(std::string_view group_name)
 {
-    UniversalItem item = make_universal_item(UN_NEWSGROUP);
+    UniversalItem item = make_universal_item(UniversalNewsgroup{});
     item.group().ng = group_name;
     return item;
 }
 
 UniversalItem make_virtual_group(std::string_view group_name)
 {
-    UniversalItem          item = make_universal_item(UN_VGROUP);
+    UniversalItem          item = make_universal_item(UniversalVirtualGroup{});
     UniversalVirtualGroup &vgroup = item.vgroup();
     vgroup.ng = group_name;
     vgroup.min_score = 0;
@@ -133,7 +95,7 @@ UniversalItem make_virtual_group(std::string_view group_name)
 
 UniversalItem make_numbered_article(std::string_view group_name)
 {
-    UniversalItem item = make_universal_item(UN_ARTICLE);
+    UniversalItem item = make_universal_item(UniversalVirtualData{});
     item.m_desc = "Article";
     UniversalVirtualData &article = item.article();
     article.ng = group_name;
@@ -143,7 +105,7 @@ UniversalItem make_numbered_article(std::string_view group_name)
 
 UniversalItem make_undescribed_numbered_article(std::string_view group_name)
 {
-    UniversalItem         item = make_universal_item(UN_ARTICLE);
+    UniversalItem         item = make_universal_item(UniversalVirtualData{});
     UniversalVirtualData &article = item.article();
     article.ng = group_name;
     article.num = ArticleNum{1};
@@ -197,28 +159,6 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
     EXPECT_EQ("Empty", g_univ_title);
 }
 
-TEST_F(UnivTest, itemTypeReportsStoredType)
-{
-    const UniversalItemType item_types[] = {
-        UN_NONE,
-        UN_TXT,
-        UN_NEWSGROUP,
-        UN_GROUP_MASK,
-        UN_ARTICLE,
-        UN_CONFIG_FILE,
-        UN_VGROUP,
-        UN_TEXT_FILE,
-        UN_HELP_KEY,
-        UN_DEBUG1};
-
-    for (const UniversalItemType item_type : item_types)
-    {
-        UniversalItem item = make_universal_item(item_type);
-
-        EXPECT_EQ(item_type, item.type());
-    }
-}
-
 TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
 {
     add_test_newsgroup("alt.test");
@@ -227,7 +167,7 @@ TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
 
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
-    EXPECT_EQ(UN_NEWSGROUP, item->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(item->m_data));
     EXPECT_EQ(UIS_DESELECTED, item->m_state);
     EXPECT_EQ("alt.test", item->group().ng);
     EXPECT_EQ(nullptr, univ_next_item(item));
@@ -241,7 +181,7 @@ TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
 
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
-    EXPECT_EQ(UN_NEWSGROUP, item->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(item->m_data));
     EXPECT_EQ(UIS_NORMAL, item->m_state);
     EXPECT_EQ("alt.test", item->group().ng);
     EXPECT_EQ(nullptr, univ_next_item(item));
@@ -254,7 +194,7 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
     ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
-    EXPECT_EQ(UN_GROUP_MASK, item->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalGroupMaskData>(item->m_data));
     EXPECT_EQ("Filter", item->m_desc);
     EXPECT_EQ("Filter", item->group_mask().title);
     EXPECT_EQ("alt.test !alt.noise", item->group_mask().mask_list);
@@ -269,14 +209,14 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
     ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
-    EXPECT_EQ(UN_TEXT_FILE, item->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalTextFile>(item->m_data));
     EXPECT_EQ("Help", item->m_desc);
     EXPECT_EQ(file_exp(help_name), item->text_file().fname);
 }
 
 TEST_F(UnivTest, debugItemStoresStringPayload)
 {
-    UniversalItem item = make_universal_item(UN_DEBUG1);
+    UniversalItem item = make_universal_item(UniversalDebugData{});
     item.debug_string() = "debug item";
     UniversalItem *stored_item = append_universal_item(std::move(item));
 
@@ -286,8 +226,8 @@ TEST_F(UnivTest, debugItemStoresStringPayload)
 TEST_F(UnivTest, itemIndexFindsStableListPosition)
 {
     univ_mask_load("", "Index");
-    UniversalItem first = make_universal_item(UN_TXT);
-    UniversalItem second = make_universal_item(UN_DEBUG1);
+    UniversalItem first = make_universal_item(UniversalTextPlaceholder{});
+    UniversalItem second = make_universal_item(UniversalDebugData{});
     first.m_num = 41;
     second.m_num = 42;
     append_universal_item(std::move(first));
@@ -326,10 +266,10 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     EXPECT_EQ(1, g_visit_count);
     EXPECT_EQ("alt.test", g_visited_group);
     EXPECT_EQ(nullptr, univ_item(expanded_group_index));
-    EXPECT_EQ(UN_NEWSGROUP, kept_group->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(kept_group->m_data));
     EXPECT_EQ(UIS_NORMAL, kept_group->m_state);
     EXPECT_EQ("alt.keep", kept_group->group().ng);
-    EXPECT_EQ(UN_ARTICLE, kept_article->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalVirtualData>(kept_article->m_data));
     EXPECT_EQ(UIS_NORMAL, kept_article->m_state);
     EXPECT_EQ("Article", kept_article->m_desc);
     EXPECT_EQ("alt.article", kept_article->article().ng);
@@ -361,7 +301,7 @@ TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
     ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
-    EXPECT_EQ(UN_CONFIG_FILE, item->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalConfigFileData>(item->m_data));
     EXPECT_EQ("Child", item->m_desc);
     EXPECT_EQ(file_exp(child_name), item->config_file().fname);
     EXPECT_TRUE(item->config_file().label.empty());
@@ -375,7 +315,7 @@ TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
     ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
-    EXPECT_EQ(UN_CONFIG_FILE, item->type());
+    EXPECT_TRUE(std::holds_alternative<UniversalConfigFileData>(item->m_data));
     EXPECT_EQ("Child", item->m_desc);
     EXPECT_EQ(file_exp(child_name), item->config_file().fname);
     EXPECT_EQ("chapter", item->config_file().label);
