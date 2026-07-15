@@ -1020,10 +1020,14 @@ void trn_version()
                 }
                 if (rp->data_source->m_act_sf.m_refetch_secs)
                 {
-                    const char *cp = secs_to_text(rp->data_source->m_act_sf.m_refetch_secs);
-                    if (*cp != 'n')
+                    const std::string refetch_text = secs_to_text(rp->data_source->m_act_sf.m_refetch_secs);
+                    if (refetch_text != "never")
                     {
-                        std::sprintf(g_msg + std::strlen(g_msg), " (refetch%s %s)", *cp == 'm' ? " if" : ":", cp);
+                        const std::size_t               len = std::strlen(g_msg);
+                        fmt::format_to_n_result<char *> result =
+                            fmt::format_to_n(g_msg + len, sizeof g_msg - len - 1, " (refetch{} {})",
+                                             refetch_text == "missing" ? " if" : ":", refetch_text);
+                        *result.out = '\0';
                     }
                 }
                 std::strcat(g_msg, ".\n");
@@ -1050,10 +1054,14 @@ void trn_version()
                 }
                 if (rp->data_source->m_desc_sf.m_refetch_secs)
                 {
-                    const char *cp = secs_to_text(rp->data_source->m_desc_sf.m_refetch_secs);
-                    if (*cp != 'n')
+                    const std::string refetch_text = secs_to_text(rp->data_source->m_desc_sf.m_refetch_secs);
+                    if (refetch_text != "never")
                     {
-                        std::sprintf(g_msg + std::strlen(g_msg), " (refetch%s %s)", *cp == 'm' ? " if" : ":", cp);
+                        const std::size_t               len = std::strlen(g_msg);
+                        fmt::format_to_n_result<char *> result =
+                            fmt::format_to_n(g_msg + len, sizeof g_msg - len - 1, " (refetch{} {})",
+                                             refetch_text == "missing" ? " if" : ":", refetch_text);
+                        *result.out = '\0';
                     }
                 }
                 std::strcat(g_msg, ".\n");

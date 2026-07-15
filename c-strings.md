@@ -399,17 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `secs_to_text` Interval Text
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `libtrn/opt.cpp`, `libtrn/trn.cpp`.
-- Finding: interval display text is formatted into `g_buf` and returned
-  as `const char *`.
-- Change: return `std::string` and use `fmt::format` for the composed
-  text.
-- Data flow: literal results such as `never` and `missing` become normal
-  string return values.
-
 #### Subject Description Buffers
 
 - Files: `libtrn/sadesc.cpp`, `libtrn/include/trn/sadesc.h`.

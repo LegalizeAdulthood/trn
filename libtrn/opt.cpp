@@ -1292,7 +1292,7 @@ const char *option_value(OptionIndex num)
         return yes_or_no(false);
 
     case OI_DEFAULT_REFETCH_TIME:
-        return secs_to_text(g_def_refetch_secs);
+        return safe_copy(g_buf, secs_to_text(g_def_refetch_secs).c_str(), sizeof g_buf);
 
     case OI_ART_PAGER_BTNS:
         return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);

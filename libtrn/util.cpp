@@ -44,6 +44,7 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <iterator>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -611,11 +612,8 @@ std::time_t text_to_secs(const char *s, std::time_t defSecs)
     return secs * 60;
 }
 
-const char *secs_to_text(std::time_t secs)
+std::string secs_to_text(std::time_t secs)
 {
-    char* s = g_buf;
-    int items;
-
     if (!secs || (secs & 1))
     {
         return "never";
@@ -626,27 +624,33 @@ const char *secs_to_text(std::time_t secs)
     }
 
     secs /= 60;
+    std::string text;
     if (secs >= 24L * 60)
     {
-        items = (int)(secs / (24*60));
-        secs = secs % (24*60);
-        std::sprintf(s, "%d day%s, ", items, plural(items));
-        s += std::strlen(s);
+        const int items = static_cast<int>(secs / (24 * 60));
+        secs = secs % (24 * 60);
+        fmt::format_to(std::back_inserter(text), "{} day{}", items, plural(items));
     }
     if (secs >= 60L)
     {
-        items = (int)(secs / 60);
+        const int items = static_cast<int>(secs / 60);
         secs = secs % 60;
-        std::sprintf(s, "%d hour%s, ", items, plural(items));
-        s += std::strlen(s);
+        if (!text.empty())
+        {
+            text += ", ";
+        }
+        fmt::format_to(std::back_inserter(text), "{} hour{}", items, plural(items));
     }
     if (secs)
     {
-        std::sprintf(s, "%d minute%s, ", (int)secs, plural(items));
-        s += std::strlen(s);
+        const int items = static_cast<int>(secs);
+        if (!text.empty())
+        {
+            text += ", ";
+        }
+        fmt::format_to(std::back_inserter(text), "{} minute{}", items, plural(items));
     }
-    s[-2] = '\0';
-    return g_buf;
+    return text;
 }
 
 // returns an owned string representing a unique temporary filename

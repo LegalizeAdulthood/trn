@@ -63,7 +63,7 @@ void safe_link(const char *old_name, const char *new_name);
 void        verify_sig();
 double      current_time();
 std::time_t text_to_secs(const char *s, std::time_t defSecs);
-const char *secs_to_text(std::time_t secs);
+std::string secs_to_text(std::time_t secs);
 std::string temp_filename();
 std::string get_auth_user();
 std::string get_auth_pass();

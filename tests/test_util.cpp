@@ -134,3 +134,16 @@ TEST_F(FileExpansionTest, expandsEnvironmentVariable)
 
     EXPECT_EQ("C:/articles/current", file_exp("$ARTICLE/current"));
 }
+
+TEST(SecsToTextTest, returnsSentinelText)
+{
+    EXPECT_EQ(std::string{"never"}, secs_to_text(0));
+    EXPECT_EQ(std::string{"never"}, secs_to_text(1));
+    EXPECT_EQ(std::string{"missing"}, secs_to_text(2));
+}
+
+TEST(SecsToTextTest, formatsCompositeIntervals)
+{
+    EXPECT_EQ(std::string{"1 day, 2 hours, 3 minutes"}, secs_to_text(93780));
+    EXPECT_EQ(std::string{"2 days, 1 hour"}, secs_to_text(176400));
+}
