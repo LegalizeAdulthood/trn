@@ -98,7 +98,7 @@ struct Article
     bool       valid_article();
     void       thread_article(char *references);
     void       link_child();
-    char      *compress_date(int size) const;
+    std::string compress_date(int size) const;
     char       thread_letter();
     ArticleNum article_num() const
     {

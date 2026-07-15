@@ -1150,16 +1150,24 @@ sibling_search:
 }
 
 // Fit the date in <max> chars.
-char *Article::compress_date(int size) const
+std::string Article::compress_date(int size) const
 {
-    char* t;
-
-    std::strncpy(t = g_cmd_buf, std::ctime(&m_date), size);
-    char *s = std::strchr(t, '\n');
-    if (s != nullptr)
+    if (size <= 0)
     {
-        *s = '\0';
+        return {};
     }
-    t[size] = '\0';
-    return t;
+
+    const char *date = std::ctime(&m_date);
+    if (date == nullptr)
+    {
+        return {};
+    }
+
+    std::string_view date_text{date};
+    date_text = date_text.substr(0, std::min(date_text.size(), static_cast<std::size_t>(size)));
+    if (const std::size_t newline = date_text.find('\n'); newline != std::string_view::npos)
+    {
+        date_text = date_text.substr(0, newline);
+    }
+    return std::string{date_text};
 }

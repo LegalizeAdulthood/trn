@@ -399,16 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `Article::compress_date` Display Text
-
-- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`,
-  `libtrn/rt-page.cpp`.
-- Finding: the function truncates `ctime` output into `g_cmd_buf` and
-  returns a mutable pointer to shared storage.
-- Change: return `std::string` and format the bounded date text into
-  owned local storage.
-- Truncation: meaningful display-width truncation must be preserved.
-
 #### `compress_from` Display Text
 
 - Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
