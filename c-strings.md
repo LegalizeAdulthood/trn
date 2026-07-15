@@ -399,15 +399,6 @@ buffer slices.
 
 ### Fixed-buffer Storage Slices
 
-#### `sf_get_line` Header Copy
-
-- Files: `libtrn/scorefile.cpp`.
-- Finding: `sf_get_line` reads non-subject headers through
-  `prefetch_lines`, then immediately copies the borrowed text into an
-  owned `std::string`.
-- Change: use `prefetch_lines_copy` for the non-subject header path.
-- Data flow: preserve the lower-case normalization done before return.
-
 #### `output_subject` Subject Copy
 
 - Files: `libtrn/ng.cpp`.

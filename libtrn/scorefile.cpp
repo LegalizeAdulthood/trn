@@ -1186,10 +1186,8 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else
     {
-        if (char *s = prefetch_lines(a,h))
-        {
-            line = s;
-        }
+        cached_line = prefetch_lines_copy(a,h);
+        line = cached_line;
     }
     std::string result{line.substr(0, LINE_BUF_LEN - 1)};
     for (char &ch : result)
