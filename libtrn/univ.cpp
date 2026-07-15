@@ -112,6 +112,55 @@ void univ_init()
     g_univ_level = 0;
 }
 
+UniversalItemIterator::UniversalItemIterator(UniversalItem *item) :
+    m_item{item}
+{
+}
+
+UniversalItem &UniversalItemIterator::operator*() const
+{
+    assert(m_item != nullptr);
+    return *m_item;
+}
+
+UniversalItem *UniversalItemIterator::operator->() const
+{
+    assert(m_item != nullptr);
+    return m_item;
+}
+
+UniversalItemIterator &UniversalItemIterator::operator++()
+{
+    assert(m_item != nullptr);
+    m_item = m_item->m_next;
+    return *this;
+}
+
+bool UniversalItemIterator::operator==(const UniversalItemIterator &other) const
+{
+    return m_item == other.m_item;
+}
+
+bool UniversalItemIterator::operator!=(const UniversalItemIterator &other) const
+{
+    return !(*this == other);
+}
+
+UniversalItemIterator UniversalItems::begin() const
+{
+    return UniversalItemIterator{g_first_univ};
+}
+
+UniversalItemIterator UniversalItems::end() const
+{
+    return UniversalItemIterator{nullptr};
+}
+
+UniversalItems univ_items()
+{
+    return UniversalItems{};
+}
+
 void univ_startup()
 {
     // later: make user top file an option or environment variable?
@@ -306,17 +355,17 @@ static void univ_add_group(const char *desc, std::string_view grpname)
     {
         // group was already added
         // perhaps it is marked as deleted?
-        for (ui = g_first_univ; ui; ui = ui->m_next)
+        for (UniversalItem &item : univ_items())
         {
-            if (ui->type() != UN_NEWSGROUP)
+            if (item.type() != UN_NEWSGROUP)
             {
                 continue;
             }
-            const std::string &group_name_ptr = ui->group().ng;
-            if (ui->m_state == UIS_DESELECTED && group_name_ptr == group_name)
+            const std::string &group_name_ptr = item.group().ng;
+            if (item.m_state == UIS_DESELECTED && group_name_ptr == group_name)
             {
                 // undelete the newsgroup
-                ui->m_state = UIS_NORMAL;
+                item.m_state = UIS_NORMAL;
             }
         }
         return;
@@ -417,17 +466,17 @@ static void univ_add_virtual_group(std::string_view grpname)
     {
         // group was already added
         // perhaps it is marked as deleted?
-        for (ui = g_first_univ; ui; ui = ui->m_next)
+        for (UniversalItem &item : univ_items())
         {
-            if (ui->type() != UN_VGROUP)
+            if (item.type() != UN_VGROUP)
             {
                 continue;
             }
-            const std::string &group_name_ptr = ui->vgroup().ng;
-            if (ui->m_state == UIS_DESELECTED && group_name_ptr == group_name)
+            const std::string &group_name_ptr = item.vgroup().ng;
+            if (item.m_state == UIS_DESELECTED && group_name_ptr == group_name)
             {
                 // undelete the newsgroup
-                ui->m_state = UIS_NORMAL;
+                item.m_state = UIS_NORMAL;
             }
         }
         return;
@@ -489,7 +538,6 @@ static void univ_use_pattern(const char *pattern, int type)
 {
     const char* s = pattern;
     NewsgroupData* np;
-    UniversalItem* ui;
 
     if (!s || !*s)
     {
@@ -505,31 +553,31 @@ static void univ_use_pattern(const char *pattern, int type)
         switch (type)
         {
         case 0:
-            for (ui = g_first_univ; ui; ui = ui->m_next)
+            for (UniversalItem &item : univ_items())
             {
-                if (ui->type() != UN_NEWSGROUP)
+                if (item.type() != UN_NEWSGROUP)
                 {
                     continue;
                 }
-                const std::string &group_name = ui->group().ng;
-                if (ui->m_state == UIS_NORMAL && univ_do_match(group_name.c_str(), s))
+                const std::string &group_name = item.group().ng;
+                if (item.m_state == UIS_NORMAL && univ_do_match(group_name.c_str(), s))
                 {
-                    ui->m_state = UIS_DESELECTED;
+                    item.m_state = UIS_DESELECTED;
                 }
             }
             break;
 
         case 1:
-            for (ui = g_first_univ; ui; ui = ui->m_next)
+            for (UniversalItem &item : univ_items())
             {
-                if (ui->type() != UN_VGROUP)
+                if (item.type() != UN_VGROUP)
                 {
                     continue;
                 }
-                const std::string &group_name = ui->vgroup().ng;
-                if (ui->m_state == UIS_NORMAL && univ_do_match(group_name.c_str(), s))
+                const std::string &group_name = item.vgroup().ng;
+                if (item.m_state == UIS_NORMAL && univ_do_match(group_name.c_str(), s))
                 {
-                    ui->m_state = UIS_DESELECTED;
+                    item.m_state = UIS_DESELECTED;
                 }
             }
             break;

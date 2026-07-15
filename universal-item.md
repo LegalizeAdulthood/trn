@@ -11,9 +11,9 @@ preserving.  Remove each slice from this plan when it is complete.
 ## Current Shape
 
 `UniversalItem` stores payloads in the `UniversalData` variant and derives
-its item type from the active payload alternative.  Items are stored as an
-intrusive global doubly linked list rooted at `g_first_univ` and
-`g_last_univ`.
+its item type from the active payload alternative.  Items are still stored
+as an intrusive global doubly linked list rooted at `g_first_univ` and
+`g_last_univ`, with new code starting to traverse through `univ_items()`.
 
 `UniversalItemType` now describes the payload kind only.
 `UniversalItemState` tracks normal, deselected, and deleted selector state.
@@ -39,16 +39,6 @@ replacement for item state.
 - Avoid changing formatting outside touched lines.
 
 ## Implementation Slices
-
-### 27. Convert Universal Iteration Helpers
-
-- Target: traversal in `univ.cpp`.
-- Change: add range-style helpers over the current list and convert one
-  traversal cluster in `univ.cpp`.
-- Data flow: add, close, mask, sort, and virtual pass code all traverse the
-  global item collection.
-- Risk: medium; traversal order must stay unchanged.
-- Verification: focused universal tests and normal workflow.
 
 ### 28. Convert Selector Iteration Helpers
 

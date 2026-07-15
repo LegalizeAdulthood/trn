@@ -157,6 +157,27 @@ struct UniversalItem
     const char        *univ_key_help_mode_str() const;
 };
 
+class UniversalItemIterator
+{
+public:
+    explicit UniversalItemIterator(UniversalItem *item);
+    UniversalItem         &operator*() const;
+    UniversalItem         *operator->() const;
+    UniversalItemIterator &operator++();
+    bool                   operator==(const UniversalItemIterator &other) const;
+    bool                   operator!=(const UniversalItemIterator &other) const;
+
+private:
+    UniversalItem *m_item;
+};
+
+class UniversalItems
+{
+public:
+    UniversalItemIterator begin() const;
+    UniversalItemIterator end() const;
+};
+
 extern int  g_univ_level;          // How deep are we in the tree?
 extern bool g_univ_ng_virt_flag;   // if true, we are in the "virtual group" second pass
 extern bool g_univ_read_virt_flag; // if true, we are reading an article from a "virtual group"
@@ -190,6 +211,7 @@ int            univ_visit_group_main(std::string_view gname);
 void           univ_virt_pass(UniversalGroupVisitor visit_group);
 void           univ_virt_pass();
 void           sort_univ();
+UniversalItems univ_items();
 void           univ_help_main(HelpLocation where);
 void           univ_help(HelpLocation where);
 
