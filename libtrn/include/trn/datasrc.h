@@ -13,7 +13,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -82,18 +81,18 @@ struct DataSource
     inline NNTPFlags nntp_flags() const;
     void             nntp_server_died();
 
-    std::string                m_name;       // our user-friendly name
-    std::string                m_news_id;    // the active file name or host name
-    SourceFile                 m_act_sf;     // the active file's hashed contents
-    std::optional<std::string> m_group_desc; // the newsgroup description file or tmp
-    SourceFile                 m_desc_sf;    // the group description's hashed contents
-    std::optional<std::string> m_extra_name; // local active.times or server's active file
-    NNTPLink                   m_nntp_link;
-    std::string                m_spool_dir;
-    std::optional<std::string> m_over_dir;
-    std::optional<std::string> m_over_fmt;
-    std::string                m_auth_user;
-    std::string                m_auth_pass;
+    std::string      m_name;       // our user-friendly name
+    std::string      m_news_id;    // the active file name or host name
+    SourceFile       m_act_sf;     // the active file's hashed contents
+    std::string      m_group_desc; // the newsgroup description file or tmp
+    SourceFile       m_desc_sf;    // the group description's hashed contents
+    std::string      m_extra_name; // local active.times or server's active file
+    NNTPLink         m_nntp_link;
+    std::string      m_spool_dir;
+    std::string      m_over_dir;
+    std::string      m_over_fmt;
+    std::string      m_auth_user;
+    std::string      m_auth_pass;
     long             m_last_new_group; // time of last newgroup check
     std::FILE       *m_ov_in;          // the overview's file handle
     std::time_t      m_ov_opened;      // time overview file was opened

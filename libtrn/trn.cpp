@@ -1011,7 +1011,7 @@ void trn_version()
                     }
                     else
                     {
-                        std::sprintf(g_msg, "Local active file: %s", rp->data_source->m_extra_name->c_str());
+                        std::sprintf(g_msg, "Local active file: %s", rp->data_source->m_extra_name.c_str());
                     }
                 }
                 else
@@ -1034,7 +1034,7 @@ void trn_version()
                              rp->data_source->m_news_id.c_str());
             }
             print_lines(g_msg, NO_MARKING);
-            if (rp->data_source->m_group_desc)
+            if (!rp->data_source->m_group_desc.empty())
             {
                 if (!rp->data_source->m_desc_sf.m_fp && rp->data_source->m_desc_sf.m_hp)
                 {
@@ -1046,7 +1046,7 @@ void trn_version()
                 }
                 else
                 {
-                    std::sprintf(g_msg, "Group desc. file: %s", rp->data_source->m_group_desc->c_str());
+                    std::sprintf(g_msg, "Group desc. file: %s", rp->data_source->m_group_desc.c_str());
                 }
                 if (rp->data_source->m_desc_sf.m_refetch_secs)
                 {
@@ -1062,7 +1062,7 @@ void trn_version()
             if (rp->data_source->m_flags & DF_TRY_OVERVIEW)
             {
                 std::sprintf(g_msg, "Overview files from %s.\n",
-                             rp->data_source->m_over_dir ? rp->data_source->m_over_dir->c_str() : "the server");
+                             rp->data_source->m_over_dir.empty() ? "the server" : rp->data_source->m_over_dir.c_str());
                 print_lines(g_msg, NO_MARKING);
             }
             print_lines("\n", NO_MARKING);

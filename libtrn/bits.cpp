@@ -360,7 +360,7 @@ void find_existing_articles()
         }
         else if (g_first_subject && g_cached_all_in_range)
         {
-            if (!g_data_source->m_ov_opened || g_data_source->m_over_dir)
+            if (!g_data_source->m_ov_opened || !g_data_source->m_over_dir.empty())
             {
                 for (ap = article_ptr(article_first(g_first_cached));
                      ap && ap->article_num() <= g_last_cached;

@@ -58,7 +58,7 @@ bool ov_init()
     FieldFlags  *fieldflags = g_data_source->m_field_flags;
     g_data_source->m_flags &= ~DF_TRY_OVERVIEW;
     std::FILE *overview;
-    if (!g_data_source->m_over_dir)
+    if (g_data_source->m_over_dir.empty())
     {
         // Check if the server is XOVER compliant
         if (nntp_command("XOVER") <= 0)
@@ -87,8 +87,8 @@ bool ov_init()
     }
     else
     {
-        has_overview_fmt =
-            g_data_source->m_over_fmt && (overview = std::fopen(g_data_source->m_over_fmt->c_str(), "r")) != nullptr;
+        has_overview_fmt = !g_data_source->m_over_fmt.empty() &&
+                           (overview = std::fopen(g_data_source->m_over_fmt.c_str(), "r")) != nullptr;
     }
 
     if (has_overview_fmt)
@@ -98,7 +98,7 @@ bool ov_init()
         fieldflags[OV_NUM] = FF_HAS_FIELD;
         for (i = 1;;)
         {
-            if (!g_data_source->m_over_dir)
+            if (g_data_source->m_over_dir.empty())
             {
                 if (nntp_gets(g_buf, sizeof g_buf) == NGSR_ERROR)
                 {
@@ -212,7 +212,7 @@ bool ov_data(ArticleNum first, ArticleNum last, bool cheating)
     int line_cnt;
     int ov_chunk_size = cheating? OV_CHUNK_SIZE : OV_CHUNK_SIZE * 8;
     std::time_t started_request;
-    bool remote = !g_data_source->m_over_dir;
+    bool        remote = g_data_source->m_over_dir.empty();
 
 beginning:
     while (true)
@@ -595,7 +595,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 //
 static std::string ov_name(std::string_view group)
 {
-    std::string filename{*g_data_source->m_over_dir};
+    std::string filename{g_data_source->m_over_dir};
     filename += '/';
     const std::string::size_type group_start = filename.size();
     filename += group;

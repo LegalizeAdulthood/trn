@@ -62,9 +62,9 @@ std::string             g_trn_access_text;                        //
 std::string             g_nntp_auth_file;                         //
 time_t                  g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
 
-static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
-static std::optional<std::string> file_or_none(const char *fn);
-static const char                *opt_c_str(const std::optional<std::string> &text);
+static std::string                dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags flag);
+static std::string                file_or_empty(const char *fn);
+static const char                *empty_as_null(const std::string &text);
 static HashDatum                  source_file_hash_datum(SourceFile *source_file, std::size_t index);
 static SourceFile                *source_file_from_hash(HashDatum data);
 static std::string               *source_file_line(HashDatum data);
@@ -268,27 +268,27 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
         dp->m_news_id = file_exp(config.active_file());
     }
 
-    if (std::optional<std::string> spool_dir = file_or_none(config.spool_dir()))
+    if (std::string spool_dir = file_or_empty(config.spool_dir()); !spool_dir.empty())
     {
-        dp->m_spool_dir = *spool_dir;
+        dp->m_spool_dir = spool_dir;
     }
     else
     {
         dp->m_spool_dir = g_tmp_dir;
     }
 
-    dp->m_over_dir = dir_or_none(dp, config.overview_dir(), DF_TRY_OVERVIEW);
-    dp->m_over_fmt = file_or_none(config.overview_format_file());
-    dp->m_group_desc = dir_or_none(dp, config.group_desc(), DF_NONE);
-    dp->m_extra_name = dir_or_none(dp, config.active_times(), DF_ADD_OK);
+    dp->m_over_dir = dir_or_empty(dp, config.overview_dir(), DF_TRY_OVERVIEW);
+    dp->m_over_fmt = file_or_empty(config.overview_format_file());
+    dp->m_group_desc = dir_or_empty(dp, config.group_desc(), DF_NONE);
+    dp->m_extra_name = dir_or_empty(dp, config.active_times(), DF_ADD_OK);
     if (dp->m_flags & DF_REMOTE)
     {
-        // FYI, we know extra_name to be nullptr in this case.
+        // FYI, we know extra_name is empty in this case.
         if (config.active_file())
         {
             dp->m_extra_name = file_exp(config.active_file());
             stat_t extra_stat{};
-            if (stat(dp->m_extra_name->c_str(), &extra_stat) >= 0)
+            if (stat(dp->m_extra_name.c_str(), &extra_stat) >= 0)
             {
                 dp->m_act_sf.m_last_fetch = extra_stat.st_mtime;
             }
@@ -308,14 +308,14 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
         {
             dp->m_desc_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
-        else if (!dp->m_group_desc)
+        else if (dp->m_group_desc.empty())
         {
             dp->m_desc_sf.m_refetch_secs = g_def_refetch_secs;
         }
-        if (dp->m_group_desc)
+        if (!dp->m_group_desc.empty())
         {
             stat_t desc_stat{};
-            if (stat(dp->m_group_desc->c_str(), &desc_stat) >= 0)
+            if (stat(dp->m_group_desc.c_str(), &desc_stat) >= 0)
             {
                 dp->m_desc_sf.m_last_fetch = desc_stat.st_mtime;
             }
@@ -359,14 +359,14 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
     return dp;
 }
 
-static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
+static std::string dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags flag)
 {
     if (!dir || !*dir || !std::strcmp(dir, "remote"))
     {
         dp->m_flags |= flag;
         if (dp->m_flags & DF_REMOTE)
         {
-            return std::nullopt;
+            return {};
         }
         if (flag == DF_ADD_OK)
         {
@@ -377,7 +377,7 @@ static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, D
             const char *cp = std::strrchr(dp->m_news_id.c_str(), '/');
             if (!cp)
             {
-                return std::nullopt;
+                return {};
             }
             const std::size_t len = static_cast<std::size_t>(cp - dp->m_news_id.c_str() + 1);
             return dp->m_news_id.substr(0, len) + "newsgroups";
@@ -387,7 +387,7 @@ static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, D
 
     if (!std::strcmp(dir, "none"))
     {
-        return std::nullopt;
+        return {};
     }
 
     dp->m_flags |= flag;
@@ -399,18 +399,18 @@ static std::optional<std::string> dir_or_none(DataSource *dp, const char *dir, D
     return expanded_dir;
 }
 
-static std::optional<std::string> file_or_none(const char *fn)
+static std::string file_or_empty(const char *fn)
 {
     if (!fn || !*fn || !std::strcmp(fn, "none") || !std::strcmp(fn, "remote"))
     {
-        return std::nullopt;
+        return {};
     }
     return file_exp(fn);
 }
 
-static const char *opt_c_str(const std::optional<std::string> &text)
+static const char *empty_as_null(const std::string &text)
 {
-    return text ? text->c_str() : nullptr;
+    return text.empty() ? nullptr : text.c_str();
 }
 
 bool DataSource::open()
@@ -461,7 +461,7 @@ bool DataSource::open()
                 if (m_flags & DF_TMP_ACTIVE_FILE)
                 {
                     m_flags &= ~DF_TMP_ACTIVE_FILE;
-                    m_extra_name.reset();
+                    m_extra_name.clear();
                     m_act_sf.m_refetch_secs = 0;
                     success = m_act_sf.open(nullptr, "", nullptr);
                 }
@@ -553,21 +553,21 @@ void DataSource ::close()
     {
         if (m_flags & DF_TMP_ACTIVE_FILE)
         {
-            remove(m_extra_name->c_str());
+            remove(m_extra_name.c_str());
         }
         else
         {
-            m_act_sf.end_append(opt_c_str(m_extra_name));
+            m_act_sf.end_append(empty_as_null(m_extra_name));
         }
-        if (m_group_desc)
+        if (!m_group_desc.empty())
         {
             if (m_flags & DF_TMP_GROUP_DESC)
             {
-                remove(m_group_desc->c_str());
+                remove(m_group_desc.c_str());
             }
             else
             {
-                m_desc_sf.end_append(m_group_desc->c_str());
+                m_desc_sf.end_append(m_group_desc.c_str());
             }
         }
     }
@@ -602,7 +602,7 @@ bool DataSource::active_file_hash()
         DataSource *save_datasrc = g_data_source;
         set_data_source(this);
         g_spin_todo = m_act_sf.m_recent_cnt;
-        ret = m_act_sf.open(opt_c_str(m_extra_name), "active", m_news_id.c_str());
+        ret = m_act_sf.open(empty_as_null(m_extra_name), "active", m_news_id.c_str());
         if (g_spin_count > 0)
         {
             m_act_sf.m_recent_cnt = g_spin_count;
@@ -744,7 +744,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
 {
     const int grouplen = static_cast<int>(group_name.size());
 
-    if (!m_group_desc)
+    if (m_group_desc.empty())
     {
         return "";
     }
@@ -762,7 +762,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
                 goto try_xgtitle;
             }
             g_spin_todo = m_desc_sf.m_recent_cnt;
-            ret = m_desc_sf.open(m_group_desc->c_str(), "newsgroups", m_news_id.c_str());
+            ret = m_desc_sf.open(m_group_desc.c_str(), "newsgroups", m_news_id.c_str());
             if (g_spin_count > 0)
             {
                 m_desc_sf.m_recent_cnt = g_spin_count;
@@ -770,16 +770,16 @@ const char *DataSource::find_group_desc(std::string_view group_name)
         }
         else
         {
-            ret = m_desc_sf.open(m_group_desc->c_str(), "", nullptr);
+            ret = m_desc_sf.open(m_group_desc.c_str(), "", nullptr);
         }
         if (!ret)
         {
             if (m_flags & DF_TMP_GROUP_DESC)
             {
                 m_flags &= ~DF_TMP_GROUP_DESC;
-                remove(m_group_desc->c_str());
+                remove(m_group_desc.c_str());
             }
-            m_group_desc.reset();
+            m_group_desc.clear();
             return "";
         }
         if (ret == 2 || !m_desc_sf.m_refetch_secs)
@@ -821,7 +821,7 @@ try_xgtitle:
             {
                 return find_group_desc(group_name);
             }
-            m_group_desc.reset();
+            m_group_desc.clear();
         }
     }
     return "";

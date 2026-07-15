@@ -160,7 +160,7 @@ int do_shell(const char *shell, const char *cmd)
         }
         if (g_data_source->m_act_sf.m_fp)
         {
-            re_export(s_newsa_ctive_export, g_data_source->m_extra_name->c_str(), 512);
+            re_export(s_newsa_ctive_export, g_data_source->m_extra_name.c_str(), 512);
         }
         else
         {
@@ -182,8 +182,8 @@ int do_shell(const char *shell, const char *cmd)
     }
     if (g_data_source)
     {
-        re_export(s_group_desc_export, g_data_source->m_group_desc ? g_data_source->m_group_desc->c_str() : nullptr,
-                  512);
+        re_export(s_group_desc_export,
+                  g_data_source->m_group_desc.empty() ? nullptr : g_data_source->m_group_desc.c_str(), 512);
     }
     else
     {
