@@ -61,8 +61,8 @@ bool g_univ_follow_temp{};
 // items which must be saved in context
 UniversalItem *g_first_univ{};
 UniversalItem *g_last_univ{};
-UniversalItem *g_sel_page_univ{};
-UniversalItem *g_sel_next_univ{};
+UniversalItemIndex g_sel_page_univ_index{};
+UniversalItemIndex g_sel_next_univ_index{};
 std::string    g_univ_fname;    // current filename (may be empty)
 std::string    g_univ_label;    // current label (may be null)
 std::string    g_univ_title;    // title of current level
@@ -166,9 +166,35 @@ UniversalItems univ_items()
     return UniversalItems{g_first_univ};
 }
 
+UniversalItems univ_items(UniversalItemIndex first)
+{
+    return UniversalItems{univ_item(first)};
+}
+
 UniversalItems univ_items(UniversalItem *first)
 {
     return UniversalItems{first};
+}
+
+UniversalItem *univ_item(UniversalItemIndex item_index)
+{
+    if (!item_index)
+    {
+        return nullptr;
+    }
+    for (UniversalItem &item : univ_items())
+    {
+        if (item.m_num == item_index)
+        {
+            return &item;
+        }
+    }
+    return nullptr;
+}
+
+UniversalItemIndex univ_index(const UniversalItem *item)
+{
+    return item ? item->m_num : UniversalItemIndex{};
 }
 
 void univ_startup()
@@ -207,8 +233,8 @@ static void univ_open()
 {
     g_first_univ = nullptr;
     g_last_univ = nullptr;
-    g_sel_page_univ = nullptr;
-    g_sel_next_univ = nullptr;
+    g_sel_page_univ_index = {};
+    g_sel_next_univ_index = {};
     g_univ_fname.clear();
     g_univ_title.clear();
     g_univ_label.clear();
@@ -250,8 +276,8 @@ void univ_close()
     }
     g_first_univ = nullptr;
     g_last_univ = nullptr;
-    g_sel_page_univ = nullptr;
-    g_sel_next_univ = nullptr;
+    g_sel_page_univ_index = {};
+    g_sel_next_univ_index = {};
     g_univ_level--;
 }
 

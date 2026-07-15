@@ -498,7 +498,7 @@ static void sel_page_init()
 /// - g_sel_page_np: Set to the current newsgroup page pointer or reset to nullptr.
 /// - g_sel_page_mp: Set to the current multirc page pointer or reset to nullptr.
 /// - g_sel_page_gp: Set to the current add group page pointer or reset to nullptr.
-/// - g_sel_page_univ: Set to the current universal item page pointer or reset to nullptr.
+/// - g_sel_page_univ_index: Set to the current universal item page index or reset to 0.
 /// - g_sel_page_op: Set to the current option page index.
 /// - g_sel_page_app: Set to the current article page pointer or reset to nullptr.
 /// - g_sel_page_sp: Set to the current subject page pointer or reset to nullptr.
@@ -702,12 +702,14 @@ try_again:
     case SM_UNIVERSAL:
     {
         g_obj_count = ArticleNum{};
+        bool found_page_univ = !g_sel_page_univ_index;
 
         sort_univ();
         for (UniversalItem &item : univ_items())
         {
-            if (g_sel_page_univ == &item)
+            if (g_sel_page_univ_index == univ_index(&item))
             {
+                found_page_univ = true;
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
             item.m_flags &= ~UF_INCLUDED;
@@ -784,14 +786,18 @@ try_again:
         if (!g_sel_total_obj_cnt && g_sel_exclusive)
         {
             g_sel_exclusive = false;
-            g_sel_page_univ = nullptr;
+            g_sel_page_univ_index = {};
             goto try_again;
         }
-        if (g_sel_page_univ == nullptr)
+        if (!found_page_univ)
+        {
+            g_sel_page_univ_index = {};
+        }
+        if (!g_sel_page_univ_index)
         {
             (void) first_page();
         }
-        else if (g_sel_page_univ == g_last_univ)
+        else if (g_sel_page_univ_index == univ_index(g_last_univ))
         {
             (void) last_page();
         }
@@ -1056,7 +1062,7 @@ try_again:
 /// - g_sel_page_mp: Set to the first included Multirc if in SM_MULTIRC mode.
 /// - g_sel_page_np: Set to the first included NewsgroupData if in SM_NEWSGROUP mode.
 /// - g_sel_page_gp: Set to the first included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ: Set to the first included UniversalItem if in SM_UNIVERSAL mode.
+/// - g_sel_page_univ_index: Set to the first included UniversalItem if in SM_UNIVERSAL mode.
 /// - g_sel_page_op: Set to 1 if not already 1 in SM_OPTIONS mode.
 /// - g_sel_page_app: Set to the first included Article** if in SM_ARTICLE mode.
 /// - g_sel_page_sp: Set to the first included Subject if in default/subject/thread mode.
@@ -1124,9 +1130,9 @@ bool first_page()
         {
             if (item.m_flags & UF_INCLUDED)
             {
-                if (g_sel_page_univ != &item)
+                if (g_sel_page_univ_index != univ_index(&item))
                 {
-                    g_sel_page_univ = &item;
+                    g_sel_page_univ_index = univ_index(&item);
                     return true;
                 }
                 break;
@@ -1200,7 +1206,7 @@ bool first_page()
 ///   included NewsgroupData if in SM_NEWSGROUP mode.
 /// - g_sel_page_gp: Temporarily set to nullptr and possibly updated to the last
 ///   included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ: Temporarily set to nullptr and possibly updated to the last
+/// - g_sel_page_univ_index: Temporarily set to 0 and possibly updated to the last
 ///   included UniversalItem if in SM_UNIVERSAL mode.
 /// - g_sel_page_op: Temporarily set to g_obj_count.value_of() + 1 and possibly
 ///   updated to the last included option index if in SM_OPTIONS mode.
@@ -1262,13 +1268,13 @@ bool last_page()
 
     case SM_UNIVERSAL:
     {
-        UniversalItem* ui = g_sel_page_univ;
-        g_sel_page_univ = nullptr;
+        const UniversalItemIndex ui = g_sel_page_univ_index;
+        g_sel_page_univ_index = {};
         if (!prev_page())
         {
-            g_sel_page_univ = ui;
+            g_sel_page_univ_index = ui;
         }
-        else if (ui != g_sel_page_univ)
+        else if (ui != g_sel_page_univ_index)
         {
             return true;
         }
@@ -1335,7 +1341,7 @@ bool last_page()
 /// - g_sel_page_mp: Set to g_sel_next_mp if in SM_MULTIRC mode.
 /// - g_sel_page_np: Set to g_sel_next_np if in SM_NEWSGROUP mode.
 /// - g_sel_page_gp: Set to g_sel_next_gp if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ: Set to g_sel_next_univ if in SM_UNIVERSAL mode.
+/// - g_sel_page_univ_index: Set to g_sel_next_univ_index if in SM_UNIVERSAL mode.
 /// - g_sel_page_op: Set to s_sel_next_op if in SM_OPTIONS mode.
 /// - g_sel_page_app: Set to g_sel_next_app if in SM_ARTICLE mode.
 /// - g_sel_page_sp: Set to g_sel_next_sp if in default/subject/thread mode.
@@ -1380,9 +1386,9 @@ bool next_page()
 
     case SM_UNIVERSAL:
     {
-        if (g_sel_next_univ)
+        if (g_sel_next_univ_index)
         {
-            g_sel_page_univ = g_sel_next_univ;
+            g_sel_page_univ_index = g_sel_next_univ_index;
             g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
             return true;
         }
@@ -1437,7 +1443,7 @@ bool next_page()
 /// - g_sel_page_mp: Set to the previous included Multirc if in SM_MULTIRC mode.
 /// - g_sel_page_np: Set to the previous included NewsgroupData if in SM_NEWSGROUP mode.
 /// - g_sel_page_gp: Set to the previous included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ: Set to the previous included UniversalItem if in SM_UNIVERSAL mode.
+/// - g_sel_page_univ_index: Set to the previous included UniversalItem if in SM_UNIVERSAL mode.
 /// - g_sel_page_op: Set to the previous included option index if in SM_OPTIONS mode.
 /// - g_sel_page_app: Set to the previous included Article** if in SM_ARTICLE mode.
 /// - g_sel_page_sp: Set to the previous included Subject if in default/subject/thread mode.
@@ -1554,8 +1560,8 @@ bool prev_page()
 
     case SM_UNIVERSAL:
     {
-        UniversalItem* ui = g_sel_page_univ;
-        UniversalItem* page_ui = g_sel_page_univ;
+        UniversalItem     *ui = univ_item(g_sel_page_univ_index);
+        UniversalItemIndex page_ui = g_sel_page_univ_index;
 
         if (!ui)
         {
@@ -1569,7 +1575,7 @@ bool prev_page()
         {
             if (ui->m_flags & UF_INCLUDED)
             {
-                page_ui = ui;
+                page_ui = univ_index(ui);
                 g_sel_prior_obj_cnt--;
                 if (++item_cnt >= s_sel_max_per_page)
                 {
@@ -1578,9 +1584,9 @@ bool prev_page()
             }
             ui = ui->m_prev;
         }
-        if (g_sel_page_univ != page_ui)
+        if (g_sel_page_univ_index != page_ui)
         {
-            g_sel_page_univ = page_ui;
+            g_sel_page_univ_index = page_ui;
             return true;
         }
         break;
@@ -1707,7 +1713,7 @@ bool prev_page()
 /// - g_sel_next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
 /// - g_sel_next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
 /// - g_sel_next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
-/// - g_sel_next_univ: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
+/// - g_sel_next_univ_index: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
 /// - s_sel_next_op: Set to the next option index for paging in SM_OPTIONS mode.
 /// - g_sel_next_app: Set to the next Article** for paging in SM_ARTICLE mode.
 /// - g_sel_next_sp: Set to the next Subject for paging in subject/thread mode.
@@ -1785,12 +1791,12 @@ try_again:
 
     case SM_UNIVERSAL:
     {
-        UniversalItem *next_univ = nullptr;
-        for (UniversalItem &item : univ_items(g_sel_page_univ))
+        UniversalItemIndex next_univ = {};
+        for (UniversalItem &item : univ_items(g_sel_page_univ_index))
         {
             if (g_sel_page_item_cnt >= s_sel_max_per_page)
             {
-                next_univ = &item;
+                next_univ = univ_index(&item);
                 break;
             }
             if (&item == u.un)
@@ -1801,10 +1807,10 @@ try_again:
             {
                 g_sel_page_item_cnt++;
             }
-            next_univ = item.m_next;
+            next_univ = univ_index(item.m_next);
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        g_sel_next_univ = next_univ;
+        g_sel_next_univ_index = next_univ;
         break;
     }
 
@@ -2050,7 +2056,7 @@ static void display_page_title(bool home_only)
 /// - g_sel_next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
 /// - g_sel_next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
 /// - g_sel_next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
-/// - g_sel_next_univ: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
+/// - g_sel_next_univ_index: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
 /// - s_sel_next_op: Set to the next option index for paging in SM_OPTIONS mode.
 /// - g_sel_next_app: Set to the next Article** for paging in SM_ARTICLE mode.
 /// - g_sel_next_sp: Set to the next Subject for paging in subject/thread mode.
@@ -2263,17 +2269,17 @@ start_of_loop:
     }
     else if (g_sel_mode == SM_UNIVERSAL)
     {
-        UniversalItem *next_univ = nullptr;
-        for (UniversalItem &item : univ_items(g_sel_page_univ))
+        UniversalItemIndex next_univ = {};
+        for (UniversalItem &item : univ_items(g_sel_page_univ_index))
         {
             if (g_sel_page_item_cnt >= s_sel_max_per_page)
             {
-                next_univ = &item;
+                next_univ = univ_index(&item);
                 break;
             }
             if (!(item.m_flags & UF_INCLUDED))
             {
-                next_univ = item.m_next;
+                next_univ = univ_index(item.m_next);
                 continue;
             }
 
@@ -2288,7 +2294,7 @@ start_of_loop:
             std::putchar(' ');
             display_universal(&item);
             g_sel_page_item_cnt++;
-            next_univ = item.m_next;
+            next_univ = univ_index(item.m_next);
         }
         if (!g_sel_page_obj_cnt)
         {
@@ -2297,7 +2303,7 @@ start_of_loop:
                 goto try_again;
             }
         }
-        g_sel_next_univ = next_univ;
+        g_sel_next_univ_index = next_univ;
     }
     else if (g_sel_mode == SM_OPTIONS)
     {

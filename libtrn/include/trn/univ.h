@@ -19,6 +19,7 @@
 struct HashTable;
 
 using UniversalGroupVisitor = int (*)(const char *);
+using UniversalItemIndex = int;
 
 enum UniversalItemType
 {
@@ -192,8 +193,8 @@ extern bool g_univ_follow_temp;
 // items which must be saved in context
 extern UniversalItem *g_first_univ;
 extern UniversalItem *g_last_univ;
-extern UniversalItem *g_sel_page_univ;
-extern UniversalItem *g_sel_next_univ;
+extern UniversalItemIndex g_sel_page_univ_index;
+extern UniversalItemIndex g_sel_next_univ_index;
 extern std::string    g_univ_fname;    // current filename (may be empty)
 extern std::string    g_univ_label;    // current label (may be empty)
 extern std::string    g_univ_title;    // title of current level
@@ -216,7 +217,10 @@ void           univ_virt_pass(UniversalGroupVisitor visit_group);
 void           univ_virt_pass();
 void           sort_univ();
 UniversalItems univ_items();
-UniversalItems univ_items(UniversalItem *first);
+UniversalItems     univ_items(UniversalItemIndex first);
+UniversalItems     univ_items(UniversalItem *first);
+UniversalItem     *univ_item(UniversalItemIndex item_index);
+UniversalItemIndex univ_index(const UniversalItem *item);
 void           univ_help_main(HelpLocation where);
 void           univ_help(HelpLocation where);
 

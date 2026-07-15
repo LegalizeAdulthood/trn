@@ -40,14 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 29. Replace Selector Pointer Positions
-
-- Target: `g_sel_page_univ` and `g_sel_next_univ`.
-- Change: replace global item pointers with stable indices or handles.
-- Data flow: selector paging stores positions across traversal and display.
-- Risk: high; invalid handles can break navigation after sorting.
-- Verification: focused universal tests and normal workflow.
-
 ### 30. Replace Intrusive Item List Storage
 
 - Target: `g_first_univ`, `g_last_univ`, `m_next`, and `m_prev`.

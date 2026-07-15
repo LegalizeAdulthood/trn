@@ -163,8 +163,8 @@ private:
 #define PUSH_UNIV_SELECTOR()                                   \
     UniversalItem *const save_first_univ = g_first_univ;       \
     UniversalItem *const save_last_univ = g_last_univ;         \
-    UniversalItem *const save_page_univ = g_sel_page_univ;     \
-    UniversalItem *const save_next_univ = g_sel_next_univ;     \
+    const UniversalItemIndex save_page_univ = g_sel_page_univ_index; \
+    const UniversalItemIndex save_next_univ = g_sel_next_univ_index; \
     std::string const    save_univ_fname = g_univ_fname;       \
     std::string const    save_univ_label = g_univ_label;       \
     std::string const    save_univ_title = g_univ_title;       \
@@ -178,8 +178,8 @@ private:
     {                                         \
         g_first_univ = save_first_univ;       \
         g_last_univ = save_last_univ;         \
-        g_sel_page_univ = save_page_univ;     \
-        g_sel_next_univ = save_next_univ;     \
+        g_sel_page_univ_index = save_page_univ; \
+        g_sel_next_univ_index = save_next_univ; \
         g_univ_fname = save_univ_fname;       \
         g_univ_label = save_univ_label;       \
         g_univ_title = save_univ_title;       \
@@ -1048,7 +1048,7 @@ do_group:
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
 /// - g_sel_mask: Set to the selection mask for the selector.
-/// - g_sel_page_univ: Set to nullptr to initialize the universal page pointer.
+/// - g_sel_page_univ_index: Set to 0 to initialize the universal page position.
 /// - s_extra_commands: Set to the command handler for universal commands.
 /// - s_sel_ret: Updated to store the return character from the universal selector.
 ///
@@ -1078,7 +1078,7 @@ sel_restart:
     {
         g_sel_mask = AGF_SEL;
     }
-    g_sel_page_univ = nullptr;
+    g_sel_page_univ_index = {};
     s_extra_commands = universal_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -3988,7 +3988,7 @@ static DisplayState option_commands(char_int ch)
 /// @globals
 /// - g_sel_rereading: Checked to determine if rereading mode is active.
 /// - g_sel_exclusive: Toggled for exclusive selection mode.
-/// - sel_page_univ: Set to nullptr for page state changes.
+/// - g_sel_page_univ_index: Set to 0 for page state changes.
 /// - s_removed_prompt: Set to RP_ALL for prompt erasure.
 /// - s_clean_screen: Set to false to prevent screen clearing.
 /// - s_sel_ret: Set to the quit or special command character.
@@ -3999,7 +3999,7 @@ static DisplayState universal_commands(char_int ch)
     {
     case 'R':
         set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
-        g_sel_page_univ = nullptr;
+        g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4009,7 +4009,7 @@ static DisplayState universal_commands(char_int ch)
             sel_cleanup();
         }
         g_sel_exclusive = !g_sel_exclusive;
-        g_sel_page_univ = nullptr;
+        g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4020,14 +4020,14 @@ static DisplayState universal_commands(char_int ch)
     case 'U':
         sel_cleanup();
         g_sel_rereading = !g_sel_rereading;
-        g_sel_page_univ = nullptr;
+        g_sel_page_univ_index = {};
         return DS_RESTART;
 
     case Ctl('e'):
         univ_edit();
         univ_redo_file();
         sel_cleanup();
-        g_sel_page_univ = nullptr;
+        g_sel_page_univ_index = {};
         return DS_RESTART;
 
     case 'h':
@@ -4085,14 +4085,14 @@ reask_sort:
             return DS_ASK;
         }
         set_sel_sort(g_sel_mode,*g_buf);
-        g_sel_page_univ = nullptr;
+        g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
     case '~':
         univ_virt_pass();
         sel_cleanup();
-        g_sel_page_univ = nullptr;
+        g_sel_page_univ_index = {};
         return DS_RESTART;
 
     default:

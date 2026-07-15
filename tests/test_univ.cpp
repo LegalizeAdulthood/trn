@@ -287,6 +287,29 @@ TEST_F(UnivTest, debugItemStoresStringPayload)
     EXPECT_EQ("debug item", item->debug_string());
 }
 
+TEST_F(UnivTest, itemIndexFindsStableListPosition)
+{
+    univ_mask_load("", "Index");
+    UniversalItem *first = make_universal_item(UN_TXT);
+    UniversalItem *second = make_universal_item(UN_DEBUG1);
+    first->m_num = 41;
+    second->m_num = 42;
+    append_universal_item(first);
+    append_universal_item(second);
+
+    EXPECT_EQ(UniversalItemIndex{}, univ_index(nullptr));
+    EXPECT_EQ(41, univ_index(first));
+    EXPECT_EQ(second, univ_item(42));
+    EXPECT_EQ(nullptr, univ_item(99));
+
+    UniversalItems        items = univ_items(42);
+    UniversalItemIterator iter = items.begin();
+    ASSERT_NE(items.end(), iter);
+    EXPECT_EQ(second, &*iter);
+    ++iter;
+    EXPECT_EQ(items.end(), iter);
+}
+
 TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
 {
     univ_mask_load("", "Virtual");
