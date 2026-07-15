@@ -55,7 +55,6 @@ protected:
 
     char                 m_author[64]{"Casey Mixed <case@example.com>"};
     Subject              m_subject{};
-    char                 m_subject_text[64]{"Re: Replied Subject"};
 };
 
 } // namespace
@@ -72,7 +71,7 @@ TEST_F(ScanCommandTest, subjectDescriptionShortensReplyPrefix)
     Article *article = article_ptr(ArticleNum{1});
     article->m_subj = &m_subject;
     article->m_flags |= AF_HAS_RE;
-    m_subject.m_str = m_subject_text;
+    m_subject.m_str = "Re: Replied Subject";
 
     EXPECT_EQ("> Replied Subject", std::string{sa_desc_subject(1)});
 }

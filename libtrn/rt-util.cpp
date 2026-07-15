@@ -703,7 +703,7 @@ const char *compress_subj(const Article *ap, int max)
     {
         *cp++ = '>';
     }
-    str_char_subst(cp, ap->m_subj->m_str + 4, (sizeof g_buf) - (cp-g_buf), *g_char_subst);
+    str_char_subst(cp, ap->m_subj->stripped_text(), (sizeof g_buf) - (cp-g_buf), *g_char_subst);
 
     // Remove "(was: oldsubject)", because we already know the old subjects.
     // Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.

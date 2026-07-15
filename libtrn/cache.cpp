@@ -41,6 +41,7 @@
 #include <map>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 std::map<ArticleNum, Article> g_article_list;
@@ -228,8 +229,7 @@ void close_cache()
     for (Subject *sp = g_first_subject; sp; sp = next)
     {
         next = sp->m_next;
-        std::free(sp->m_str);
-        std::free(sp);
+        delete sp;
     }
     g_first_subject = nullptr;
     g_last_subject = nullptr;
@@ -273,13 +273,13 @@ void Article::check_for_near_subj()
     }
     while (sp)
     {
-        if ((int) std::strlen(sp->m_str + 4) >= g_join_subject_len && sp->m_thread)
+        const std::string_view subject_text = sp->stripped_view();
+        if ((int) subject_text.size() >= g_join_subject_len && sp->m_thread)
         {
             Subject* sp2;
             HashDatum data = hash_fetch(
                     s_short_subj_hash,
-                    std::string_view{
-                            sp->m_str + 4, static_cast<std::size_t>(g_join_subject_len)});
+                    subject_text.substr(0, static_cast<std::size_t>(g_join_subject_len)));
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char*)sp;
@@ -361,8 +361,8 @@ void Article::uncache_article(bool remove_empties)
             {
                 sp->m_next->m_prev = sp->m_prev;
             }
-            hash_delete(s_subj_hash, sp->m_str + 4);
-            std::free((char*)sp);
+            hash_delete(s_subj_hash, sp->stripped_view());
+            delete sp;
             m_subj = nullptr;
             g_subject_count--;
         }
@@ -428,51 +428,46 @@ void Article::set_subj_line(std::string_view subj)
         size = 0;
     }
 
-    char *new_subj = safe_malloc(size + 4 + 1);
-    std::strcpy(new_subj, "Re: ");
-    size = decode_header(new_subj + 4,
-            std::string_view{subj_start, static_cast<std::size_t>(size)});
+    std::string new_subj(static_cast<std::size_t>(size) + 4 + 1, '\0');
+    std::copy_n("Re: ", 4, new_subj.data());
+    size = decode_header(new_subj.data() + 4, std::string_view{subj_start, static_cast<std::size_t>(size)});
 
     // Do the Re:-stripping over again, just in case it was encoded.
-    if (subject_has_re(new_subj + 4, &subj_start))
+    if (subject_has_re(new_subj.data() + 4, &subj_start))
     {
         m_flags |= AF_HAS_RE;
     }
-    if (subj_start != new_subj + 4)
+    if (subj_start != new_subj.data() + 4)
     {
-        safe_copy(new_subj + 4, subj_start, size);
-        if ((size -= subj_start - new_subj - 4) < 0)
+        const std::size_t prefix_size = subj_start - (new_subj.data() + 4);
+        new_subj.erase(4, prefix_size);
+        if ((size -= static_cast<int>(prefix_size)) < 0)
         {
             size = 0;
         }
     }
-    if (m_subj && !std::strncmp(m_subj->m_str + 4, new_subj + 4, size))
+    new_subj.resize(static_cast<std::size_t>(size) + 4);
+
+    if (m_subj && !std::strncmp(m_subj->stripped_text(), new_subj.c_str() + 4, size))
     {
-        std::free(new_subj);
         return;
     }
 
     if (m_subj)
     {
         // This only happens when we freshen truncated subjects
-        hash_delete(s_subj_hash, m_subj->m_str + 4);
-        std::free(m_subj->m_str);
-        m_subj->m_str = new_subj;
+        hash_delete(s_subj_hash, m_subj->stripped_view());
+        m_subj->m_str = std::move(new_subj);
         data.dat_ptr = (char*)m_subj;
-        hash_store(
-                s_subj_hash,
-                std::string_view{new_subj + 4, static_cast<std::size_t>(size)},
-                data);
+        hash_store(s_subj_hash, m_subj->stripped_view(), data);
     }
     else
     {
-        data = hash_fetch(
-                s_subj_hash,
-                std::string_view{new_subj + 4, static_cast<std::size_t>(size)});
+        const std::string_view new_key{new_subj.c_str() + 4, static_cast<std::size_t>(size)};
+        data = hash_fetch(s_subj_hash, new_key);
         if (!(sp = (Subject *) data.dat_ptr))
         {
-            sp = (Subject*)safe_malloc(sizeof (Subject));
-            std::memset((char*)sp,0,sizeof (Subject));
+            sp = new Subject{};
             g_subject_count++;
             sp->m_prev = g_last_subject;
             if (sp->m_prev != nullptr)
@@ -484,16 +479,12 @@ void Article::set_subj_line(std::string_view subj)
                 g_first_subject = sp;
             }
             g_last_subject = sp;
-            sp->m_str = new_subj;
+            sp->m_str = std::move(new_subj);
             sp->m_thread_link = sp;
             sp->m_flags = SF_NONE;
 
             data.dat_ptr = (char*)sp;
             hash_store_last(data);
-        }
-        else
-        {
-            std::free(new_subj);
         }
         m_subj = sp;
     }
@@ -653,7 +644,7 @@ void dectrl(char *str)
 static int subject_cmp(std::string_view key, HashDatum data)
 {
     const auto            *subject = (Subject *) data.dat_ptr;
-    const std::string_view subject_text{subject->m_str + 4, key.size()};
+    const std::string_view subject_text = subject->stripped_view().substr(0, key.size());
 
     return key.compare(subject_text);
 }

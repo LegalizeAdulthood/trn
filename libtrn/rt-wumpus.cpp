@@ -671,7 +671,7 @@ void entire_tree(Article* ap)
         {
             return;
         }
-        std::printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->m_str+4);
+        std::printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->stripped_text());
         term_down(1);
         sp->m_misc = num++;
         sp = sp->m_thread_link;

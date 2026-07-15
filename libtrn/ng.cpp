@@ -2107,7 +2107,7 @@ static bool debug_article_output(char *ptr, int arg)
     if (ap->article_num() >= g_first_art && ap->m_subj)
     {
         std::printf("%5ld %c %s\n", ap->article_num().value_of(),
-               (ap->m_flags & AF_UNREAD)? 'y' : 'n', ap->m_subj->m_str);
+               (ap->m_flags & AF_UNREAD)? 'y' : 'n', ap->m_subj->text());
         term_down(1);
     }
     return false;

@@ -223,7 +223,7 @@ const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs) 
         }
         else
         {
-            s = m_subj->m_str + ((m_flags & AF_HAS_RE) ? 0 : 4);
+            s = (m_flags & AF_HAS_RE) ? m_subj->text() : m_subj->stripped_text();
         }
         break;
 

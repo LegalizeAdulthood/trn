@@ -415,19 +415,6 @@ all direct assignments must change together.  For `save_str` and
 storage.  Use `std::optional<std::string>` or a separate presence flag
 when null and empty are distinct states.
 
-#### Subject Text Storage
-
-- Files: `libtrn/cache.cpp`, `libtrn/include/trn/Subject.h`,
-  subject readers in `libtrn`.
-- Finding: `Subject::m_str` owns decoded subject text in heap memory
-  allocated by `safe_malloc`; the hash key uses the `m_str + 4`
-  interior string.
-- Change: replace `m_str` with `std::string` after replacing
-  `safe_malloc`/`memset` subject construction with normal C++ object
-  construction.
-- Data flow: update hash keys and all `m_str + 4` readers in the same
-  storage slice.
-
 #### Exported Environment Values
 
 - Files: `util/env.cpp`.

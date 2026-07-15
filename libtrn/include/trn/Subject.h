@@ -1,14 +1,18 @@
 /* trn/Subject.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_SUBJECT_H
 #define TRN_SUBJECT_H
 
 #include <trn/enum-flags.h>
 #include <trn/kfile.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <ctime>
+#include <string>
+#include <string_view>
 
 enum SubjectFlags : std::uint16_t
 {
@@ -38,13 +42,17 @@ struct Subject
     void     unkill_subject();
     void     clear_subject();
     Article *subj_article();
+    std::size_t stripped_offset() const { return m_str.size() < 4 ? m_str.size() : 4; }
+    const char *text() const { return m_str.c_str(); }
+    const char *stripped_text() const { return m_str.c_str() + stripped_offset(); }
+    std::string_view stripped_view() const { return std::string_view{m_str}.substr(stripped_offset()); }
 
     Subject     *m_next;
     Subject     *m_prev;
     Article     *m_articles;
     Article     *m_thread;
     Subject     *m_thread_link;
-    char        *m_str;
+    std::string  m_str;
     std::time_t  m_date;
     SubjectFlags m_flags;
     short        m_misc; // used for temporary totals and subject numbers

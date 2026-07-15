@@ -77,7 +77,7 @@ protected:
         article->m_flags = AF_EXISTS;
         article->m_subj = &m_subject;
         article->set_cached_line(FROM_LINE, "casey@news.example.test");
-        m_subject.m_str = m_subject_text;
+        m_subject.m_str = "Re: Compact Subject";
         g_art = TEST_ARTICLE_NUM;
         g_last_art = TEST_ARTICLE_NUM;
         g_in_ng = true;
@@ -131,7 +131,6 @@ protected:
     int         m_old_term_scrolled{};
     std::string m_long_subject;
     Subject     m_subject{};
-    char        m_subject_text[64]{"Re: Compact Subject"};
 };
 
 } // namespace
@@ -170,7 +169,7 @@ TEST_F(ScoreFileTest, subjectScoringKeepsLineBufferCap)
     subject_text.replace(LINE_BUF_LEN - 20, 6, "inside");
     subject_text.replace(LINE_BUF_LEN + 20, 7, "outside");
     m_long_subject = "Re: " + subject_text;
-    m_subject.m_str = m_long_subject.data();
+    m_subject.m_str = m_long_subject;
 
     char inside_rule[]{"!10 subject: inside"};
     sf_append(inside_rule);
