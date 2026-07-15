@@ -146,7 +146,7 @@ static void s_refresh_status(int line)
     int j = g_page_ents[line].lines;
     for (int i = 1; i <= j; i++)
     {
-        std::printf("%s\n",s_get_statchars(ent,i));
+        fmt::print("{}\n", s_get_statchars(ent, i));
     }
     std::fflush(stdout);
 }
@@ -199,7 +199,7 @@ static void s_ref_entry(int line, int jump)
     for (int i = 1; i <= j; i++)
     {
         // later replace middle with variable #spaces routine
-        std::printf("%s%s",s_get_statchars(ent,i),"  ");
+        fmt::print("{}  ", s_get_statchars(ent, i));
         if (g_s_item_num_cols)
         {
             if (i == 1)         // first description line

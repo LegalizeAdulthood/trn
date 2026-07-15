@@ -20,16 +20,13 @@
 #include <fmt/format.h>
 
 #include <cstdio>
-#include <cstring>
 #include <iterator>
 #include <string>
 
-// returns statchars in temp space...
+// returns statchars...
 // int line;            // which status line (1 = first)
-const char *sa_get_stat_chars(long a, int line)
+std::string sa_get_stat_chars(long a, int line)
 {
-    static char char_buf[16];
-
 // Debug
 #if 0
     std::printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line);
@@ -38,30 +35,30 @@ const char *sa_get_stat_chars(long a, int line)
     switch (line)
     {
     case 1:
-        std::strcpy(char_buf,"...");
+    {
+        std::string status{"..."};
         if (sa_marked(a))
         {
-            char_buf[2] = 'x';
+            status[2] = 'x';
         }
         if (sa_selected1(a))
         {
-            char_buf[1] = '*';
+            status[1] = '*';
         }
         if (was_read(g_sa_ents[a].artnum))
         {
-            char_buf[0] = '-';
+            status[0] = '-';
         }
         else
         {
-            char_buf[0] = '+';
+            status[0] = '+';
         }
-        break;
+        return status;
+    }
 
     default:
-        std::strcpy(char_buf,"   ");
-        break;
+        return "   ";
     } // switch
-    return char_buf;
 }
 
 std::string sa_desc_subject(long e)

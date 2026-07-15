@@ -35,19 +35,19 @@ void s_beep()
     std::fflush(stdout);
 }
 
-const char *s_get_statchars(long ent, int line)
+std::string s_get_statchars(long ent, int line)
 {
     if (g_s_status_cols == 0)
     {
-        return "";
+        return {};
     }
     switch (g_s_cur_type)
     {
     case S_ART:
-        return sa_get_stat_chars(ent,line);
+        return sa_get_stat_chars(ent, line);
 
     default:
-        return nullptr;
+        return {};
     }
 }
 

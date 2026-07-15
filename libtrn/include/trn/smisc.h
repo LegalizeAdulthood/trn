@@ -11,7 +11,7 @@ extern bool g_s_follow_temp; // explicitly follow until end of thread
 
 bool s_eligible(long ent);
 void s_beep();
-const char *s_get_statchars(long ent, int line);
+std::string s_get_statchars(long ent, int line);
 std::string s_get_desc(long ent, int line, bool trunc);
 int s_ent_lines(long ent);
 
