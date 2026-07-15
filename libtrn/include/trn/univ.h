@@ -11,12 +11,13 @@
 #include <trn/enum-flags.h>
 #include <trn/help.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <variant>
-
-struct HashTable;
+#include <vector>
 
 using UniversalGroupVisitor = int (*)(const char *);
 using UniversalItemIndex = int;
@@ -129,14 +130,12 @@ DECLARE_FLAGS_ENUM(UniversalItemFlags, int);
 
 struct UniversalItem
 {
-    UniversalItem     *m_next;
-    UniversalItem     *m_prev;
-    int                m_num;   // natural order (for sort)
-    UniversalItemFlags m_flags; // for selector
-    UniversalItemState m_state; // current selector state
-    std::string        m_desc;  // default description
-    int                m_score;
-    UniversalData      m_data; // describes the object
+    int                m_num{};             // natural order (for sort)
+    UniversalItemFlags m_flags{UF_NONE};    // for selector
+    UniversalItemState m_state{UIS_NORMAL}; // current selector state
+    std::string        m_desc;              // default description
+    int                m_score{};
+    UniversalData      m_data{UniversalNoData{}}; // describes the object
     UniversalItemType  type() const;
     UniversalNewsgroup &group();
     const UniversalNewsgroup &group() const;
@@ -169,7 +168,7 @@ public:
     bool                   operator!=(const UniversalItemIterator &other) const;
 
 private:
-    UniversalItem *m_item;
+    std::size_t m_index;
 };
 
 class UniversalItems
@@ -180,8 +179,11 @@ public:
     UniversalItemIterator end() const;
 
 private:
-    UniversalItem *m_first;
+    std::size_t m_first;
 };
+
+using UniversalItemList = std::vector<UniversalItem>;
+using UniversalNameSet = std::unordered_set<std::string>;
 
 extern int  g_univ_level;          // How deep are we in the tree?
 extern bool g_univ_ng_virt_flag;   // if true, we are in the "virtual group" second pass
@@ -191,16 +193,15 @@ extern bool g_univ_follow;
 extern bool g_univ_follow_temp;
 
 // items which must be saved in context
-extern UniversalItem *g_first_univ;
-extern UniversalItem *g_last_univ;
+extern UniversalItemList  g_univ_items;
+extern UniversalNameSet   g_univ_ng_names;
+extern UniversalNameSet   g_univ_vg_names;
 extern UniversalItemIndex g_sel_page_univ_index;
 extern UniversalItemIndex g_sel_next_univ_index;
 extern std::string    g_univ_fname;    // current filename (may be empty)
 extern std::string    g_univ_label;    // current label (may be empty)
 extern std::string    g_univ_title;    // title of current level
 extern std::string    g_univ_tmp_file; // temp. file (may be empty)
-extern HashTable     *g_univ_ng_hash;
-extern HashTable     *g_univ_vg_hash;
 // end of items that must be saved
 
 void           univ_init();
@@ -219,6 +220,10 @@ void           sort_univ();
 UniversalItems univ_items();
 UniversalItems     univ_items(UniversalItemIndex first);
 UniversalItems     univ_items(UniversalItem *first);
+UniversalItem     *univ_first_item();
+UniversalItem     *univ_last_item();
+UniversalItem     *univ_next_item(const UniversalItem *item);
+UniversalItem     *univ_prev_item(const UniversalItem *item);
 UniversalItem     *univ_item(UniversalItemIndex item_index);
 UniversalItemIndex univ_index(const UniversalItem *item);
 void           univ_help_main(HelpLocation where);

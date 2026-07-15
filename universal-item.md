@@ -40,16 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 30. Replace Intrusive Item List Storage
-
-- Target: `g_first_univ`, `g_last_univ`, `m_next`, and `m_prev`.
-- Change: store universal items in `std::vector<UniversalItem>`.
-- Data flow: all universal item creation, traversal, sorting, display, and
-  paging use the same collection.
-- Risk: high; pointer stability, sorting, and selector position tracking
-  must already be solved.
-- Verification: focused universal tests and normal workflow.
-
 ### 31. Simplify Universal Item Cleanup
 
 - Target: manual payload cleanup.

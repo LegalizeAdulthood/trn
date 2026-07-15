@@ -797,7 +797,7 @@ try_again:
         {
             (void) first_page();
         }
-        else if (g_sel_page_univ_index == univ_index(g_last_univ))
+        else if (g_sel_page_univ_index == univ_index(univ_last_item()))
         {
             (void) last_page();
         }
@@ -1565,11 +1565,11 @@ bool prev_page()
 
         if (!ui)
         {
-            ui = g_last_univ;
+            ui = univ_last_item();
         }
         else
         {
-            ui = ui->m_prev;
+            ui = univ_prev_item(ui);
         }
         while (ui)
         {
@@ -1582,7 +1582,7 @@ bool prev_page()
                     break;
                 }
             }
-            ui = ui->m_prev;
+            ui = univ_prev_item(ui);
         }
         if (g_sel_page_univ_index != page_ui)
         {
@@ -1807,7 +1807,7 @@ try_again:
             {
                 g_sel_page_item_cnt++;
             }
-            next_univ = univ_index(item.m_next);
+            next_univ = univ_index(univ_next_item(&item));
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_univ_index = next_univ;
@@ -2279,7 +2279,7 @@ start_of_loop:
             }
             if (!(item.m_flags & UF_INCLUDED))
             {
-                next_univ = univ_index(item.m_next);
+                next_univ = univ_index(univ_next_item(&item));
                 continue;
             }
 
@@ -2294,7 +2294,7 @@ start_of_loop:
             std::putchar(' ');
             display_universal(&item);
             g_sel_page_item_cnt++;
-            next_univ = univ_index(item.m_next);
+            next_univ = univ_index(univ_next_item(&item));
         }
         if (!g_sel_page_obj_cnt)
         {

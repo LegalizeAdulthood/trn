@@ -38,11 +38,13 @@
 #include <util/util2.h>
 
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <utility>
 
 enum DisplayState
 {
@@ -160,33 +162,31 @@ private:
         }                                                   \
     } while (false)
 
-#define PUSH_UNIV_SELECTOR()                                   \
-    UniversalItem *const save_first_univ = g_first_univ;       \
-    UniversalItem *const save_last_univ = g_last_univ;         \
-    const UniversalItemIndex save_page_univ = g_sel_page_univ_index; \
-    const UniversalItemIndex save_next_univ = g_sel_next_univ_index; \
-    std::string const    save_univ_fname = g_univ_fname;       \
-    std::string const    save_univ_label = g_univ_label;       \
-    std::string const    save_univ_title = g_univ_title;       \
-    std::string const    save_univ_tmp_file = g_univ_tmp_file; \
-    const char           save_sel_ret = s_sel_ret;             \
-    HashTable *const     save_univ_ng_hash = g_univ_ng_hash;   \
-    HashTable *const     save_univ_vg_hash = g_univ_vg_hash
+#define PUSH_UNIV_SELECTOR()                                                  \
+    UniversalItemList        save_univ_items = std::move(g_univ_items);       \
+    UniversalNameSet         save_univ_ng_names = std::move(g_univ_ng_names); \
+    UniversalNameSet         save_univ_vg_names = std::move(g_univ_vg_names); \
+    const UniversalItemIndex save_page_univ = g_sel_page_univ_index;          \
+    const UniversalItemIndex save_next_univ = g_sel_next_univ_index;          \
+    std::string const        save_univ_fname = g_univ_fname;                  \
+    std::string const        save_univ_label = g_univ_label;                  \
+    std::string const        save_univ_title = g_univ_title;                  \
+    std::string const        save_univ_tmp_file = g_univ_tmp_file;            \
+    const char               save_sel_ret = s_sel_ret
 
-#define POP_UNIV_SELECTOR()                   \
-    do                                        \
-    {                                         \
-        g_first_univ = save_first_univ;       \
-        g_last_univ = save_last_univ;         \
-        g_sel_page_univ_index = save_page_univ; \
-        g_sel_next_univ_index = save_next_univ; \
-        g_univ_fname = save_univ_fname;       \
-        g_univ_label = save_univ_label;       \
-        g_univ_title = save_univ_title;       \
-        g_univ_tmp_file = save_univ_tmp_file; \
-        s_sel_ret = save_sel_ret;             \
-        g_univ_ng_hash = save_univ_ng_hash;   \
-        g_univ_vg_hash = save_univ_vg_hash;   \
+#define POP_UNIV_SELECTOR()                              \
+    do                                                   \
+    {                                                    \
+        g_univ_items = std::move(save_univ_items);       \
+        g_univ_ng_names = std::move(save_univ_ng_names); \
+        g_univ_vg_names = std::move(save_univ_vg_names); \
+        g_sel_page_univ_index = save_page_univ;          \
+        g_sel_next_univ_index = save_next_univ;          \
+        g_univ_fname = save_univ_fname;                  \
+        g_univ_label = save_univ_label;                  \
+        g_univ_title = save_univ_title;                  \
+        g_univ_tmp_file = save_univ_tmp_file;            \
+        s_sel_ret = save_sel_ret;                        \
     } while (false)
 
 static void                sel_do_groups();
@@ -1098,10 +1098,9 @@ sel_restart:
 
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == '\t' || s_sel_ret == ';' || s_sel_ret == 'Z')
     {
-        UniversalItem *ui;
-        int i;
-        for (ui = g_first_univ, i = 0; ui; ui = ui->m_next, i++)
+        for (std::size_t i = 0; i < g_univ_items.size(); ++i)
         {
+            UniversalItem *ui = &g_univ_items[i];
             if (ui->m_flags & UF_SEL)
             {
                 PUSH_SELECTOR();
