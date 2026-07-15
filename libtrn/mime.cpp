@@ -69,7 +69,6 @@ static HtmlTag s_tag_attr[LAST_TAG] = {
 };
 // clang-format on
 static std::vector<MimeCapEntry> s_mimecap_entries;
-static char                      s_text_plain[] = "text/plain";
 static MimeExecutor              s_executor;
 
 constexpr bool CLOSING_TAG = false;
@@ -447,7 +446,7 @@ void mime_set_article()
         }
         else if (!g_mime_section->m_type_name)
         {
-            g_mime_section->m_type_name = s_text_plain;
+            g_mime_section->m_type_name = "text/plain";
         }
     }
 }
@@ -702,7 +701,7 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
     g_mime_state = g_mime_section->m_type;
     if (!g_mime_section->m_type_name)
     {
-        g_mime_section->m_type_name = s_text_plain;
+        g_mime_section->m_type_name = "text/plain";
     }
 }
 
