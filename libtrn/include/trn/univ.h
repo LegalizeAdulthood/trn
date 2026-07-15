@@ -91,13 +91,18 @@ struct UniversalTextFile
     std::string fname;
 };
 
+struct UniversalDebugData
+{
+    std::string text;
+};
+
 union UniversalData
 {
     UniversalData() {}
     ~UniversalData() {}
 
-    char                   *str;
     HelpLocation            i;
+    UniversalDebugData      debug;
     UniversalGroupMaskData  gmask;
     UniversalConfigFileData cfile;
     UniversalNewsgroup      group;
@@ -141,8 +146,8 @@ struct UniversalItem
     const UniversalGroupMaskData &group_mask() const;
     UniversalTextFile &text_file();
     const UniversalTextFile &text_file() const;
-    char *&debug_string();
-    const char *debug_string() const;
+    std::string &debug_string();
+    const std::string &debug_string() const;
     HelpLocation &help_location();
     HelpLocation help_location() const;
     const char        *univ_article_desc() const;

@@ -75,7 +75,11 @@ UniversalItem *make_universal_item(UniversalItemType type)
     item->m_state = UIS_NORMAL;
     item->m_desc = nullptr;
     item->m_score = 0;
-    if (type == UN_NEWSGROUP)
+    if (type == UN_DEBUG1)
+    {
+        new (&item->m_data.debug) UniversalDebugData{};
+    }
+    else if (type == UN_NEWSGROUP)
     {
         new (&item->m_data.group) UniversalNewsgroup{};
     }
@@ -230,6 +234,15 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
     EXPECT_EQ(UN_TEXT_FILE, g_first_univ->m_type);
     EXPECT_STREQ("Help", g_first_univ->m_desc);
     EXPECT_EQ(file_exp(help_name), g_first_univ->text_file().fname);
+}
+
+TEST_F(UnivTest, debugItemStoresStringPayload)
+{
+    UniversalItem *item = make_universal_item(UN_DEBUG1);
+    item->debug_string() = "debug item";
+    append_universal_item(item);
+
+    EXPECT_EQ("debug item", item->debug_string());
 }
 
 TEST_F(UnivTest, virtualPassUsesInjectedVisitor)

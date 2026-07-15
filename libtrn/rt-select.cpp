@@ -833,10 +833,10 @@ static UniversalReadResult univ_read(UniversalItem *ui)
     {
     case UN_DEBUG1:
     {
-        const char *s = ui->debug_string();
-        if (s && *s)
+        const std::string &s = ui->debug_string();
+        if (!s.empty())
         {
-            std::printf("Not implemented yet (%s)\n",s);
+            std::printf("Not implemented yet (%s)\n",s.c_str());
             sleep(5);
             return exit_code;
         }

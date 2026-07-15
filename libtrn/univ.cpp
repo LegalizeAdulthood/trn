@@ -212,7 +212,11 @@ static UniversalItem *univ_add(UniversalItemType type, const char *desc)
     node->m_state = UIS_NORMAL;
     node->m_num = s_univ_item_counter++;
     node->m_score = 0;            // consider other default scores?
-    if (type == UN_NEWSGROUP)
+    if (type == UN_DEBUG1)
+    {
+        new (&node->m_data.debug) UniversalDebugData{};
+    }
+    else if (type == UN_NEWSGROUP)
     {
         new (&node->m_data.group) UniversalNewsgroup{};
     }
@@ -266,7 +270,7 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_DEBUG1:   // methods that use the string
-        safe_free(ui->debug_string());
+        ui->m_data.debug.~UniversalDebugData();
         break;
 
     case UN_GROUP_MASK:        // methods that have custom data
@@ -311,7 +315,7 @@ static void univ_add_debug(const char *desc, const char *txt)
 {
     // later check text for bad things
     UniversalItem *ui = univ_add(UN_DEBUG1, desc);
-    ui->debug_string() = save_str(txt);
+    ui->debug_string() = txt ? txt : "";
 }
 
 static void univ_add_group(const char *desc, std::string_view grpname)
@@ -1460,16 +1464,16 @@ const UniversalTextFile &UniversalItem::text_file() const
     return m_data.text_file;
 }
 
-char *&UniversalItem::debug_string()
+std::string &UniversalItem::debug_string()
 {
     assert(m_type == UN_DEBUG1);
-    return m_data.str;
+    return m_data.debug.text;
 }
 
-const char *UniversalItem::debug_string() const
+const std::string &UniversalItem::debug_string() const
 {
     assert(m_type == UN_DEBUG1);
-    return m_data.str;
+    return m_data.debug.text;
 }
 
 HelpLocation &UniversalItem::help_location()

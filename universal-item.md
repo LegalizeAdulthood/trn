@@ -40,15 +40,6 @@ replacement for item state.
 
 ## Implementation Slices
 
-### 23. Convert Debug Payload String
-
-- Target: debug string payload.
-- Change: replace the union debug `char *` with an owned `std::string` in
-  its eventual payload alternative.
-- Data flow: debug string flows only to display and cleanup.
-- Risk: low; behavior is isolated.
-- Verification: focused universal tests and normal workflow.
-
 ### 24. Convert Universal Item Description
 
 - Target: `UniversalItem::m_desc`.
