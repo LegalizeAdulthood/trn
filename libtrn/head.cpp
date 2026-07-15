@@ -288,9 +288,8 @@ static void end_header_line()
                 }
                 else
                 {
-                    char* s = safe_malloc(size);
-                    safe_copy(s,g_head_buf+start,size);
-                    s_parsed_artp->set_cached_line(g_in_header,s);
+                    const std::size_t line_size = size > 0 ? static_cast<std::size_t>(size - 1) : 0;
+                    s_parsed_artp->set_cached_line(g_in_header, std::string_view{g_head_buf + start, line_size});
                 }
             }
         }
@@ -696,7 +695,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             }
             else if (cached)
             {
-                ap->set_cached_line(which_line, save_str(t));
+                ap->set_cached_line(which_line, t);
             }
             if (num == art_num)
             {

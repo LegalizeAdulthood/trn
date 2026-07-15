@@ -395,20 +395,6 @@ owned `std::string`.  Direct `printf`/`fprintf` output can move to
 `fmt::print`, but C-buffer `sprintf` sites stay with their C-string
 buffer slices.
 
-### Owning Raw-string Parameter Slices
-
-#### `Article::set_cached_line` Cached Header Setter
-
-- Files: `libtrn/cache.cpp`, `libtrn/include/trn/Article.h`,
-  `libtrn/head.cpp`, `libtrn/rt-ov.cpp`, `tests/test_scorefile.cpp`.
-- Finding: `set_cached_line` takes `char *`; stored header cases consume
-  and free `save_str` ownership, while numeric cases borrow caller
-  storage.
-- Change: take `std::string_view`, decode or copy into article-owned
-  strings inside the setter, and parse numeric fields directly.
-- Data flow: remove `save_str` at parse, XHDR, overview, and test
-  callers.
-
 ### Safe-realloc Array Slices
 
 #### Inactive `export_var` Environment Table

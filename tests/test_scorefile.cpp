@@ -74,7 +74,7 @@ protected:
         Article *article = article_ptr(TEST_ARTICLE_NUM);
         article->m_flags = AF_EXISTS;
         article->m_subj = &m_subject;
-        article->set_cached_line(FROM_LINE, save_str("casey@news.example.test"));
+        article->set_cached_line(FROM_LINE, "casey@news.example.test");
         m_subject.m_str = m_subject_text;
         g_art = TEST_ARTICLE_NUM;
         g_last_art = TEST_ARTICLE_NUM;

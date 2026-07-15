@@ -513,11 +513,11 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     }
     if (!article->m_msg_id)
     {
-        article->set_cached_line(MSG_ID_LINE, save_str(fields[OV_MSG_ID]));
+        article->set_cached_line(MSG_ID_LINE, fields[OV_MSG_ID]);
     }
     if (!article->m_from)
     {
-        article->set_cached_line(FROM_LINE, save_str(fields[OV_FROM]));
+        article->set_cached_line(FROM_LINE, fields[OV_FROM]);
     }
     if (!article->m_date)
     {

@@ -1093,51 +1093,45 @@ bool cache_range(ArticleNum first, ArticleNum last)
     return success;
 }
 
-// s already allocated, ready to save
-void Article::set_cached_line(int which_line, char *s)
+void Article::set_cached_line(int which_line, std::string_view line)
 {
-    char* cp;
     // SUBJ_LINE is handled specially above
     switch (which_line)
     {
     case FROM_LINE:
-        decode_header(s, s);
-        m_from = s;
-        std::free(s);
+    {
+        std::string decoded(line.size() + 1, '\0');
+        const int   size = decode_header(decoded.data(), line);
+        decoded.resize(static_cast<std::size_t>(size));
+        m_from = decoded;
         break;
+    }
 
     case XREF_LINE:
+    {
         // Exclude an xref for just this group or "(none)".
-        cp = std::strchr(s, ':');
-        if (!cp || !std::strchr(cp + 1, ':'))
+        const std::size_t first_colon = line.find(':');
+        if (first_colon == std::string_view::npos || line.find(':', first_colon + 1) == std::string_view::npos)
         {
             m_xrefs = "";
         }
         else
         {
-            m_xrefs = s;
+            m_xrefs = std::string{line};
         }
-        std::free(s);
         break;
+    }
 
     case MSG_ID_LINE:
-        if (s)
-        {
-            m_msg_id = s;
-        }
-        else
-        {
-            m_msg_id.reset();
-        }
-        std::free(s);
+        m_msg_id = std::string{line};
         break;
 
     case LINES_LINE:
-        m_lines = std::atol(s);
+        m_lines = std::atol(std::string{line}.c_str());
         break;
 
     case BYTES_LINE:
-        m_bytes = std::atol(s);
+        m_bytes = std::atol(std::string{line}.c_str());
         break;
     }
 }

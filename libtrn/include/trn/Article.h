@@ -66,7 +66,7 @@ struct Article
     void       uncache_article(bool remove_empties);
     const char *get_cached_line(HeaderLineType which_line, bool no_truncs);
     void       set_subj_line(std::string_view subj);
-    void       set_cached_line(int which_line, char *s);
+    void       set_cached_line(int which_line, std::string_view line);
     void       clear_article();
     void       one_more();
     void       one_less();
