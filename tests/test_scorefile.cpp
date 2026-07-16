@@ -261,10 +261,9 @@ TEST_F(ScoreFileTest, appendAbbreviationWritesConfiguredFile)
     EXPECT_EQ((std::vector<std::string>{"10 subject: abbreviated"}), read_lines(score_file));
 }
 
-TEST_F(ScoreFileTest, editLocalFileBuildsExpandedEditorCommand)
+TEST_F(ScoreFileTest, editLocalFileCreatesScoreDirectory)
 {
     const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-edit"};
-    const std::string score_file{score_dir + "/comp.lang.apl"};
 
     std::error_code error;
     fs::remove_all(score_dir, error);
@@ -277,39 +276,12 @@ TEST_F(ScoreFileTest, editLocalFileBuildsExpandedEditorCommand)
 
     sf_edit_file("\"");
 
-    EXPECT_STREQ((": " + score_file).c_str(), g_cmd_buf);
     EXPECT_TRUE(fs::exists(score_dir));
 }
 
-TEST_F(ScoreFileTest, editAbbreviationBuildsExpandedEditorCommand)
-{
-    const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-edit-abbreviation"};
-    const std::string score_file{score_dir + "/abbr-score"};
-
-    std::error_code error;
-    fs::remove_all(score_dir, error);
-    fs::create_directories(score_dir, error);
-    g_newsgroup_name = "comp.lang.apl";
-
-    trn::testing::MockEnvironment env;
-    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
-        .WillRepeatedly(::testing::Return(const_cast<char *>(score_dir.c_str())));
-    env.expect_no_envar("EDITOR");
-    env.expect_env("VISUAL", ":");
-    sf_init();
-
-    char abbreviation[]{"!file @ abbr-score"};
-    sf_append(abbreviation);
-    sf_edit_file("@");
-
-    EXPECT_STREQ((": " + score_file).c_str(), g_cmd_buf);
-    EXPECT_TRUE(fs::exists(score_dir));
-}
-
-TEST_F(ScoreFileTest, editGlobalFileBuildsExpandedEditorCommand)
+TEST_F(ScoreFileTest, editGlobalFileCreatesScoreDirectory)
 {
     const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-edit-global"};
-    const std::string score_file{score_dir + "/global"};
 
     std::error_code error;
     fs::remove_all(score_dir, error);
@@ -321,6 +293,5 @@ TEST_F(ScoreFileTest, editGlobalFileBuildsExpandedEditorCommand)
 
     sf_edit_file("*");
 
-    EXPECT_STREQ((": " + score_file).c_str(), g_cmd_buf);
     EXPECT_TRUE(fs::exists(score_dir));
 }

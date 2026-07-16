@@ -553,15 +553,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-002 - `edit_file` Command Storage
-
-- Files: `libtrn/util.cpp`.
-- Kind: redundant `safe_copy` into `g_cmd_buf`.
-- Function: `edit_file`.
-- Change: remove the `safe_copy`; keep the owned `std::string command`
-  and pass `command.c_str()` to `do_shell`.
-- Tests: run `test_util`.
-
 ### CSTR-004 - MIME Roman Marker Storage
 
 - Files: `libtrn/mime.cpp`.

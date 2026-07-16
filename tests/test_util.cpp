@@ -109,15 +109,17 @@ TEST_F(TempFilenameTest, returnsUniqueNameInTempDirectory)
     EXPECT_TRUE(ends_with(filename, ".2468"));
 }
 
-TEST_F(EditFileTest, buildsEditorCommandFromExpandedEditorAndFile)
+TEST_F(EditFileTest, doesNotCopyEditorCommandToGlobalScratchBuffer)
 {
     const std::string filename{TRN_TEST_TMP_DIR "/edit-target"};
 
     m_env.expect_no_envar("EDITOR");
     m_env.expect_env("VISUAL", ":");
+    g_cmd_buf[0] = '#';
+    g_cmd_buf[1] = '\0';
 
     EXPECT_EQ(0, edit_file(filename.c_str()));
-    EXPECT_STREQ((": " + filename).c_str(), g_cmd_buf);
+    EXPECT_STREQ("#", g_cmd_buf);
 }
 
 TEST_F(FileExpansionTest, expandsHomeDirectory)

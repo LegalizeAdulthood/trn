@@ -863,7 +863,6 @@ int edit_file(const char *fname)
 
     const std::string command = fmt::format(
         "{} {}", file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))), file_exp(fname));
-    safe_copy(g_cmd_buf, command.c_str(), sizeof g_cmd_buf);
     term_down(3);
     reset_tty();                  // make sure tty is friendly
     r = do_shell(SH, command.c_str());  // invoke the shell
