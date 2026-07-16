@@ -489,12 +489,12 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 14.
-- Comparison: `strcmp` 12, `strncmp` 55.
+- Copy and concatenation: `strcpy` 105, `strncpy` 5, `strcat` 13.
+- Comparison: `strcmp` 12, `strncmp` 54.
 - Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
-  `strlen` 129.
+  `strlen` 128.
 - Formatting into C buffers: `sprintf` 128, `snprintf` 1.
-- C text I/O roots: `fgets` 34, `fputs` 199, `printf` 505,
+- C text I/O roots: `fgets` 33, `fputs` 198, `printf` 505,
   `fprintf` 37.
 - Character byte operations: `memcpy` 7, `memset` 6, `memcmp` 1.
 
@@ -525,16 +525,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-045 - SourceFile Line Input
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: fixed line input and string-like line storage.
-- Function: `SourceFile::open`.
-- Change: read lines into `std::string` storage rather than `g_buf`
-  where truncation is arbitrary.  Keep protocol-sized reads only if a
-  fixed size is meaningful.
-- Tests: run `test_datasrc` before and after.
 
 ### CSTR-047 - Scorefile Command Parser Views
 

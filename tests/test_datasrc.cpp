@@ -106,6 +106,37 @@ TEST_F(SourceFileTest, openReadsLinesFromLocalFile)
     EXPECT_EQ(0L, source_file.m_line_positions[0]);
 }
 
+TEST_F(SourceFileTest, openNormalizesUnterminatedLocalLine)
+{
+    const fs::path source_path = m_output_dir / "newsgroups";
+    std::ofstream{source_path} << "comp.lang.apl     APL discussion";
+    SourceFileOwner source_file_owner;
+    SourceFile     &source_file = source_file_owner.get();
+
+    const int result = source_file.open(source_path, "", nullptr);
+
+    ASSERT_EQ(1, result);
+    ASSERT_EQ(1U, source_file.m_lines.size());
+    EXPECT_EQ("comp.lang.apl APL discussion\n", source_file.m_lines[0]);
+    EXPECT_EQ(0L, source_file.m_line_positions[0]);
+}
+
+TEST_F(SourceFileTest, openPreservesLongLocalLine)
+{
+    const fs::path    source_path = m_output_dir / "newsgroups";
+    const std::string description(LINE_BUF_LEN, 'x');
+    std::ofstream{source_path} << "comp.lang.apl " << description << '\n';
+    SourceFileOwner source_file_owner;
+    SourceFile     &source_file = source_file_owner.get();
+
+    const int result = source_file.open(source_path, "", nullptr);
+
+    ASSERT_EQ(1, result);
+    ASSERT_EQ(1U, source_file.m_lines.size());
+    EXPECT_EQ("comp.lang.apl " + description + '\n', source_file.m_lines[0]);
+    EXPECT_EQ(0L, source_file.m_line_positions[0]);
+}
+
 TEST_F(SourceFileTest, endAppendUpdatesCachedFileTimestamp)
 {
     const fs::path source_path = m_output_dir / "active";

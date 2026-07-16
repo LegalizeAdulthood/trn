@@ -858,9 +858,7 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
 
 int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const char *server)
 {
-    char             *s;
     long              pos = 0;
-    int               linelen;
     std::FILE        *fp;
     std::time_t       now = std::time(nullptr);
     bool              use_buffered_nntp_gets = false;
@@ -947,8 +945,11 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
         return 1;
     }
 
-    for (;; pos += linelen)
+    std::string line;
+    line.reserve(LINE_BUF_LEN);
+    for (;;)
     {
+        line.clear();
         if (server)
         {
             if (use_buffered_nntp_gets)
@@ -967,47 +968,68 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
             {
                 break;
             }
-            std::strcat(g_buf,"\n");
-            std::fputs(g_buf, fp);
+            line = g_buf;
+            line += '\n';
+            fmt::print(fp, "{}", line);
             spin(200 * g_net_speed);
         }
-        else if (!std::fgets(g_buf, sizeof g_buf, fp))
+        else
         {
-            break;
+            for (int ch = std::fgetc(fp); ch != EOF; ch = std::fgetc(fp))
+            {
+                line += static_cast<char>(ch);
+                if (ch == '\n')
+                {
+                    break;
+                }
+            }
+            if (line.empty())
+            {
+                break;
+            }
         }
 
-        s = skip_non_space(g_buf);
-        if (!*s)
+        const std::string::iterator key_end = std::find_if(line.begin(), line.end(), [](char ch)
+                                                           { return std::isspace(static_cast<unsigned char>(ch)); });
+        if (key_end == line.end())
         {
-            linelen = 0;
             continue;
         }
-        int keylen = s - g_buf;
-        if (*++s != '\n' && std::isspace(*s))
+        const std::size_t key_len = static_cast<std::size_t>(key_end - line.begin());
+        const std::size_t value_offset = key_len + 1;
+        if (value_offset < line.size() && line[value_offset] != '\n' &&
+            std::isspace(static_cast<unsigned char>(line[value_offset])))
         {
-            while (*++s != '\n' && std::isspace(*s))
-            {
-            }
-            std::strcpy(g_buf+keylen+1, s);
-            s = g_buf+keylen+1;
+            const std::string::iterator value_start =
+                std::find_if(line.begin() + value_offset, line.end(),
+                             [](char ch) { return ch == '\n' || !std::isspace(static_cast<unsigned char>(ch)); });
+            line.erase(value_offset, static_cast<std::size_t>(value_start - line.begin()) - value_offset);
         }
-        s = adv_then_find_next_nl_and_dectrl(s);
-        linelen = s - g_buf + 1;
-        if (*s != '\n')
+        std::size_t line_end = line.find('\n', value_offset);
+        if (line_end == std::string::npos)
         {
-            if (linelen == sizeof g_buf)
+            line_end = line.size();
+        }
+        for (std::size_t offset = std::min(value_offset + 1, line_end); offset < line_end;)
+        {
+            const std::size_t width = static_cast<std::size_t>(byte_length_at(line.data() + offset));
+            if (at_grey_space(line.data() + offset))
             {
-                linelen = 0;
-                continue;
+                std::fill_n(line.begin() + offset, width, ' ');
             }
-            *s++ = '\n';
-            *s = '\0';
+            offset += width;
+        }
+        const bool has_newline = line_end < line.size();
+        line.resize(line_end + (has_newline ? 1 : 0));
+        if (!has_newline)
+        {
+            line += '\n';
         }
         const std::size_t index = m_lines.size();
         m_line_positions.push_back(pos);
-        m_lines.emplace_back(g_buf, static_cast<std::size_t>(linelen));
-        hash_store(m_hp, std::string_view{g_buf, static_cast<std::size_t>(keylen)},
-                   source_file_hash_datum(this, index));
+        m_lines.push_back(line);
+        hash_store(m_hp, std::string_view{m_lines.back()}.substr(0, key_len), source_file_hash_datum(this, index));
+        pos += static_cast<long>(line.size());
     }
     set_spin(SPIN_OFF);
 
