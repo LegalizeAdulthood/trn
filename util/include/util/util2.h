@@ -8,7 +8,6 @@
 #include <string>
 #include <string_view>
 
-char       *save_str(std::string_view str);
 char       *safe_copy(char *to, const char *from, int len);
 const char *copy_till(char *to, const char *from, int delim);
 std::string file_exp(std::string_view text);

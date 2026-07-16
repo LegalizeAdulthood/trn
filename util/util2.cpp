@@ -21,20 +21,6 @@ static std::string s_tilde_name;
 static std::string s_tilde_dir;
 #endif
 
-// copy a string to a safe spot
-
-char *save_str(std::string_view str)
-{
-    char *newaddr = safe_malloc(static_cast<MemorySize>(str.size() + 1));
-
-    if (!str.empty())
-    {
-        std::memcpy(newaddr, str.data(), str.size());
-    }
-    newaddr[str.size()] = '\0';
-    return newaddr;
-}
-
 // safe version of string copy
 char *safe_copy(char *to, const char *from, int len)
 {
