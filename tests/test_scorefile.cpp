@@ -5,6 +5,7 @@
 
 #include <trn/Article.h>
 #include <trn/cache.h>
+#include <trn/datasrc.h>
 #include <trn/head.h>
 #include <trn/init.h>
 #include <trn/ng.h>
@@ -146,6 +147,22 @@ TEST_F(ScoreFileTest, extraHeaderLookupIsCaseInsensitive)
     sf_append(rule);
 
     EXPECT_EQ(1, g_sf_num_entries);
+}
+
+TEST_F(ScoreFileTest, fromWildcardMatchesBothPiecesInOrder)
+{
+    DataSource        data_source{};
+    DataSource *const old_data_source = g_data_source;
+    g_data_source = &data_source;
+
+    char matching_rule[]{"!10 from: casey@*.example.test"};
+    sf_append(matching_rule);
+    char nonmatching_rule[]{"!20 from: example*casey@"};
+    sf_append(nonmatching_rule);
+
+    EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
+
+    g_data_source = old_data_source;
 }
 
 TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)

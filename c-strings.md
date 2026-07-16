@@ -507,7 +507,7 @@ calls in production code.
 
 - Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 16.
 - Comparison: `strcmp` 20, `strncmp` 55.
-- Search and length: `strchr` 117, `strrchr` 15, `strstr` 4,
+- Search and length: `strchr` 117, `strrchr` 15, `strstr` 3,
   `strlen` 136.
 - Formatting into C buffers: `sprintf` 140, `snprintf` 1.
 - C text I/O roots: `fgets` 35, `fputs` 199, `printf` 522,
@@ -536,15 +536,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-049 - Scorefile Wildcard Match
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: substring search with `strstr`.
-- Function: `score_match`.
-- Change: use `std::string_view::find` for the first and optional second
-  pattern pieces.
-- Tests: run `test_scorefile` before and after.
 
 ### CSTR-055 - Data Source String Comparisons
 

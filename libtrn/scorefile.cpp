@@ -860,10 +860,12 @@ static int score_match(const char *str, int ind)
         return false;
     }
     // default case
-    const std::string &s1 = s_sf_entries[ind].str1;
-    const std::string &s2 = s_sf_entries[ind].str2;
-    const char        *s3 = std::strstr(str, s1.c_str());
-    return s3 != nullptr && (s2.empty() || std::strstr(s3 + s1.size(), s2.c_str()));
+    const std::string     &s1 = s_sf_entries[ind].str1;
+    const std::string     &s2 = s_sf_entries[ind].str2;
+    const std::string_view text{str};
+    const std::size_t      first = text.find(s1);
+    return first != std::string_view::npos &&
+           (s2.empty() || text.find(s2, first + s1.size()) != std::string_view::npos);
 }
 
 int sf_score(ArticleNum a)
