@@ -1736,8 +1736,7 @@ int filter_html(char *t, const char *f)
 }
 #undef XX
 
-static char s_bullets[3] = {'*', 'o', '+'};
-static char s_letters[2] = {'a', 'A'};
+static constexpr char s_letters[2] = {'a', 'A'};
 static char s_roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
 static int  s_roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 
@@ -1943,7 +1942,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             switch (ch)
             {
             case 1: case 2: case 3:
-                t[-2] = s_bullets[ch-1];
+                t[-2] = "*o+"[ch-1];
                 break;
 
             case 4:
