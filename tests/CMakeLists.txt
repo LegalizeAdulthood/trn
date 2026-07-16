@@ -9,6 +9,7 @@ configure_trn_test_data()
 
 add_executable(trn-test
     mock_env.h
+    test_artsrch.cpp
     test_cache.cpp
     test_current_time.cpp
     test_DataSourceConfig.cpp

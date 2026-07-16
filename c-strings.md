@@ -251,6 +251,8 @@ Refactor owned text to `std::string` and formatted text to
 `fmt::format`.  Local automatic buffers can often be one-function
 slices.  Static, file-scope, global, and struct buffers are
 storage-centered slices and must update all direct readers and writers.
+When a fixed-size buffer is replaced by a string built with appends,
+reserve the previous fixed buffer size before appending.
 Before editing, classify truncation.  Preserve meaningful truncation;
 remove arbitrary fixed-buffer truncation when ordinary behavior remains
 covered.
@@ -552,16 +554,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-006 - Article Search Salt Command
-
-- Files: `libtrn/artsrch.cpp`.
-- Kind: local fixed buffer and `safe_copy` string construction.
-- Function: `article_search`.
-- Change: build the salt-away command in `std::string`; use append and
-  direct header-name text instead of `salt_buf`.
-- Tests: add article-search command serialization coverage first if no
-  focused test exists.
 
 ### CSTR-007 - Newsgroup List Display Line
 
