@@ -600,7 +600,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     const char *m;
     KeyMap*     curmap;
     int         garbage = 0;
-    static char override[] = "\nkeymap overrides string\n";
+    static constexpr char OVERRIDE[] = "\nkeymap overrides string\n";
 
     if (s_top_map == nullptr)
     {
@@ -649,7 +649,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
             {
                 if (tbsize)
                 {
-                    std::fputs(override,stdout);
+                    std::fputs(OVERRIDE,stdout);
                     term_down(2);
                 }
                 curmap->km_str[ch].clear();
@@ -665,7 +665,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
         {
             if (tbsize && (curmap->km_type[ch] & KM_TMASK) == KM_KEYMAP)
             {
-                std::fputs(override,stdout);
+                std::fputs(OVERRIDE,stdout);
                 term_down(2);
             }
             else
