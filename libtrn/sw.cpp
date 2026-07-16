@@ -5,11 +5,11 @@
 
 #include <trn/sw.h>
 
+#include <file_contents.h>
+
 #include <config/common.h>
 #include <config/env.h>
-#include <config/fdio.h>
 #include <trn/head.h>
-#include <trn/init.h>
 #include <trn/intrp.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
@@ -41,36 +41,24 @@ static std::vector<InitEnvironmentString> s_init_environment_strings;
 
 static void save_init_environment(std::string_view name, std::string_view value);
 
-void sw_file(char **tcbufptr)
+void sw_file(std::string_view filename)
 {
-    int initfd = open(*tcbufptr,0);
-
-    if (initfd >= 0)
+    const std::string switches = file_contents(filename);
+    if (!switches.empty())
     {
-        stat_t switch_file_stat{};
-        fstat(initfd,&switch_file_stat);
-        if (switch_file_stat.st_size >= TCBUF_SIZE-1)
-        {
-            *tcbufptr = safe_realloc(*tcbufptr,(MemorySize)switch_file_stat.st_size+1);
-        }
-        if (switch_file_stat.st_size)
-        {
-            int len = read(initfd,*tcbufptr,(int)switch_file_stat.st_size);
-            (*tcbufptr)[len] = '\0';
-            sw_list(*tcbufptr);
-        }
-        else
-        {
-            **tcbufptr = '\0';
-        }
-        close(initfd);
+        sw_list(switches);
     }
 }
 
 // decode a list of space separated switches
 
-void sw_list(char *swlist)
+void sw_list(std::string_view switches)
 {
+    std::string storage;
+    storage.reserve(switches.size() + 2);
+    storage.assign(switches);
+    storage.resize(storage.size() + 2);
+    char *swlist = storage.data();
     char* p;
     char inquote = 0;
 

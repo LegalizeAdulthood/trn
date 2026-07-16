@@ -149,7 +149,7 @@ extern OptionFlags  *g_option_flags;
 extern OptionDraft  *g_option_draft;
 extern int           g_sel_page_op;
 
-void        opt_init(int argc, char *argv[], char **tcbufptr);
+void        opt_init(int argc, char *argv[], char *tcbuf);
 void        opt_final();
 void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, const char *s);

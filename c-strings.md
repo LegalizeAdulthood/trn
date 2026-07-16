@@ -428,12 +428,12 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 30 hits remain, including the helper declaration and
-  definition.  The 28 call sites are inventoried below.
+- `safe_copy`: 28 hits remain, including the helper declaration and
+  definition.  The 26 call sites are inventoried below.
 - `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
   `CSTR-039`.
-- `safe_realloc`: string-like storage remains in `sw_file`,
-  `get_a_line`, and `grow_str`.
+- `safe_realloc`: string-like storage remains in `get_a_line` and
+  `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
   one-line changes.
 - C string library calls: the current scan finds active `str*`,
@@ -451,8 +451,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 30 `safe_copy` hits: the helper definition, the
-helper declaration, and 28 call sites.  The call sites are still audit
+The current tree has 28 `safe_copy` hits: the helper definition, the
+helper declaration, and 26 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -474,8 +474,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-036`.
 - `libtrn/opt.cpp`, `option_value`: returns default refetch text through
   `g_buf`.  See `CSTR-008`.
-- `libtrn/opt.cpp`, `set_options`: writes option switch storage through
-  `tcbufptr`.  See `CSTR-037`.
 - `libtrn/rcln.cpp`, `NewsgroupData::check_expired`: patches
   `m_rc_line` through raw mutable storage.  See `CSTR-011`.
 - `libtrn/respond.cpp`, `save_article`: four save, pipe, and command
@@ -536,16 +534,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-037 - Switch File Buffer Ownership
-
-- Files: `libtrn/opt.cpp`, `libtrn/sw.cpp`,
-  `libtrn/include/trn/opt.h`, `libtrn/include/trn/sw.h`.
-- Kind: caller-owned `tcbufptr` grown and copied through raw storage.
-- Function: `set_options` and `sw_file`.
-- Change: move switch-file contents to `std::string` storage and pass
-  views to option parsing.
-- Tests: add switch-file parsing coverage first.
 
 ### CSTR-039 - Mouse Button Expansion Storage
 

@@ -3,7 +3,10 @@
 
 #include <trn/sw.h>
 
+#include <trn/init.h>
+#include <trn/ng.h>
 #include <trn/opt.h>
+#include <trn/rcstuff.h>
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
@@ -78,6 +81,18 @@ struct DisplayModeRestorer
     }
 };
 
+struct SwitchFlagRestorer
+{
+    bool check_flag;
+    bool unsafe_rc_saves;
+
+    ~SwitchFlagRestorer()
+    {
+        g_check_flag = check_flag;
+        g_unsafe_rc_saves = unsafe_rc_saves;
+    }
+};
+
 std::vector<std::string> read_lines(const fs::path &path)
 {
     std::ifstream            input{path};
@@ -91,6 +106,31 @@ std::vector<std::string> read_lines(const fs::path &path)
 }
 
 } // namespace
+
+TEST(SwitchFileTest, readsSwitchesBeyondOldBufferCapacity)
+{
+    SwitchFlagRestorer restore{g_check_flag, g_unsafe_rc_saves};
+    g_check_flag = false;
+    g_unsafe_rc_saves = false;
+
+    const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+    const fs::path           output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+    std::error_code          error;
+    fs::remove_all(output_dir, error);
+    fs::create_directories(output_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    const fs::path switch_file = output_dir / "switches";
+    std::ofstream  output{switch_file};
+    ASSERT_TRUE(output);
+    output << std::string(TCBUF_SIZE, ' ') << "# comment\n\"-c\"\n-U\n";
+    output.close();
+
+    sw_file(switch_file.string());
+
+    EXPECT_TRUE(g_check_flag);
+    EXPECT_TRUE(g_unsafe_rc_saves);
+    fs::remove_all(output_dir, error);
+}
 
 TEST(SwitchTest, writeInitEnvironmentWritesSavedExports)
 {

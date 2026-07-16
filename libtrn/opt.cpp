@@ -64,7 +64,7 @@
 
 namespace fs = std::filesystem;
 
-static void opt_file(const char *filename, char **tcbufptr, bool bleat);
+static void opt_file(const char *filename, bool bleat);
 
 CompiledRegex g_opt_compex;
 std::string   g_ini_file;
@@ -82,7 +82,7 @@ static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std:
 static int   parse_mouse_buttons(char **cpp, const char *btns);
 static char *expand_mouse_buttons(char *cp, int cnt);
 
-void opt_init(int argc, char *argv[], char **tcbufptr)
+void opt_init(int argc, char *argv[], char *tcbuf)
 {
     g_sel_grp_display_mode = "slm";
     g_sel_art_display_mode = "lmds";
@@ -106,8 +106,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     {
         g_check_flag = true; // so we can optimize for -c
     }
-    interp(*tcbufptr, TCBUF_SIZE, GLOBAL_INIT);
-    opt_file(*tcbufptr, tcbufptr, false);
+    interp(tcbuf, TCBUF_SIZE, GLOBAL_INIT);
+    opt_file(tcbuf, false);
+    *tcbuf = '\0';
 
     const OptionCatalog catalog;
     const int            len = catalog.option_limit();
@@ -132,22 +133,24 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     error.clear();
     if (fs::exists(g_ini_file, error))
     {
-        opt_file(g_ini_file.c_str(), tcbufptr, true);
+        opt_file(g_ini_file.c_str(), true);
     }
     char *s;
     if (!g_use_threads || (s = get_val("TRNINIT")) == nullptr)
     {
         s = get_val("RNINIT");
     }
-    if (*safe_copy(*tcbufptr, s, TCBUF_SIZE))
+    const std::string_view switches{s != nullptr ? s : ""};
+    if (!switches.empty())
     {
-        if (*s == '-' || *s == '+' || isspace(*s))
+        if (switches.front() == '-' || switches.front() == '+' ||
+            std::isspace(static_cast<unsigned char>(switches.front())))
         {
-            sw_list(*tcbufptr);
+            sw_list(switches);
         }
         else
         {
-            sw_file(tcbufptr);
+            sw_file(switches);
         }
     }
     g_option_saved_vals = OptionValueList(static_cast<std::size_t>(len));
@@ -187,7 +190,7 @@ void opt_final()
     g_sel_grp_display_mode_index = 0;
 }
 
-static void opt_file(const char *filename, char **tcbufptr, bool bleat)
+static void opt_file(const char *filename, bool bleat)
 {
     std::string filebuf = file_contents(filename);
 
@@ -242,8 +245,6 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat)
         std::printf(g_cant_open, filename);
         // term_down(1);
     }
-
-    **tcbufptr = '\0';
 }
 
 inline bool is_yes(const char *s)

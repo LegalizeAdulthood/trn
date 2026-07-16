@@ -170,9 +170,7 @@ bool switcheroo()
         }
         if (g_buf[1] == '-' || g_buf[1] == '+')
         {
-            std::string switches{g_buf + 1};
-            switches.resize(switches.size() + 2);
-            sw_list(switches.data());
+            sw_list(g_buf + 1);
         }
         else
         {

@@ -6,9 +6,10 @@
 #define TRN_SW_H
 
 #include <cstdio>
+#include <string_view>
 
-void sw_file(char **tcbufptr);
-void sw_list(char *swlist);
+void sw_file(std::string_view filename);
+void sw_list(std::string_view switches);
 void decode_switch(const char *s);
 void write_init_environment(std::FILE *fp);
 
