@@ -505,11 +505,11 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 107, `strncpy` 5, `strcat` 16.
+- Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 16.
 - Comparison: `strcmp` 20, `strncmp` 55.
 - Search and length: `strchr` 117, `strrchr` 15, `strstr` 4,
-  `strlen` 138.
-- Formatting into C buffers: `sprintf` 142, `snprintf` 1.
+  `strlen` 136.
+- Formatting into C buffers: `sprintf` 140, `snprintf` 1.
 - C text I/O roots: `fgets` 35, `fputs` 199, `printf` 522,
   `fprintf` 41.
 - Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
@@ -536,16 +536,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-041 - Active Scan Wildcard Pattern
-
-- Files: `libtrn/addng.cpp`.
-- Kind: `g_buf` construction with `strcpy`, `sprintf`, and `strlen`.
-- Function: `scan_active`.
-- Change: build the active-list wildcard pattern in `std::string` and
-  pass `c_str()` to `nntp_list`.  Preserve the trailing `$` stripping
-  behavior.
-- Tests: add coverage for the active-list pattern selection first.
 
 ### CSTR-049 - Scorefile Wildcard Match
 

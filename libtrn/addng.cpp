@@ -3,7 +3,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
-#include <trn/addng.h>
+#include <trn/addng-internal.h>
 
 #include <config/common.h>
 #include <config/string_case_compare.h>
@@ -392,6 +392,34 @@ static void add_to_list(std::string_view name, int to_read, char_int ch)
     g_last_add_group = node;
 }
 
+std::string active_list_pattern()
+{
+    if (g_max_newsgroup_to_do != 1)
+    {
+        return "*";
+    }
+
+    const std::string_view restriction{g_newsgroup_to_do[0]};
+    std::string            pattern;
+    pattern.reserve(LINE_BUF_LEN);
+    if (!restriction.empty() && restriction.front() == '^')
+    {
+        pattern = restriction.substr(1);
+        pattern += '*';
+    }
+    else
+    {
+        pattern = '*';
+        pattern += restriction;
+        pattern += '*';
+    }
+    if (pattern.size() >= 2 && pattern[pattern.size() - 2] == '$')
+    {
+        pattern.resize(pattern.size() - 2);
+    }
+    return pattern;
+}
+
 bool scan_active(bool add_matching)
 {
     const NewsgroupNum old_count = g_newsgroup_count;      // remember # of newsgroups
@@ -412,36 +440,14 @@ bool scan_active(bool add_matching)
         {
             hash_walk(dp->m_act_sf.m_hp, list_groups, add_matching);
         }
-        else
+        else if (nntp_list("active", active_list_pattern()) == 1)
         {
-            if (g_max_newsgroup_to_do != 1)
+            while (!nntp_at_list_end(g_ser_line))
             {
-                std::strcpy(g_buf, "*");
-            }
-            else
-            {
-                if (g_newsgroup_to_do[0][0] == '^')
+                scan_active_line(g_ser_line, add_matching);
+                if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
                 {
-                    std::sprintf(g_buf, "%s*", g_newsgroup_to_do[0].c_str() + 1);
-                }
-                else
-                {
-                    std::sprintf(g_buf, "*%s*", g_newsgroup_to_do[0].c_str());
-                }
-                if (g_buf[std::strlen(g_buf)-2] == '$')
-                {
-                    g_buf[std::strlen(g_buf) - 2] = '\0';
-                }
-            }
-            if (nntp_list("active", g_buf) == 1)
-            {
-                while (!nntp_at_list_end(g_ser_line))
-                {
-                    scan_active_line(g_ser_line,add_matching);
-                    if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
         }
