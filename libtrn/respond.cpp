@@ -913,8 +913,7 @@ void reply()
 void forward()
 {
     char hbuf[5*LINE_BUF_LEN];
-    const std::string maildoer{get_val_const("FORWARDPOSTER", FORWARD_POSTER)};
-    std::string mail_command;
+    const std::string mail_doer{get_val_const("FORWARDPOSTER", FORWARD_POSTER)};
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
@@ -992,7 +991,7 @@ void forward()
         }
     }
 #endif
-    if (!in_string(maildoer.c_str(), "%h", true))
+    if (!in_string(mail_doer.c_str(), "%h", true))
     {
         if (g_verbose)
         {
@@ -1045,8 +1044,7 @@ void forward()
         }
     }
     std::fclose(header);
-    mail_command = file_exp(maildoer);
-    invoke(mail_command.c_str(), g_orig_dir.c_str());
+    invoke(file_exp(mail_doer).c_str(), g_orig_dir.c_str());
 done:
 #ifdef REGEX_WORKS_RIGHT
     mime_compex.free_compex();
