@@ -25,8 +25,11 @@
 #include <util/env.h> // get_val
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <array>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -78,7 +81,7 @@ static int   sf_check_extra_headers(const char *head);
 static void  sf_add_extra_header(const char *head);
 static std::string sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
-static bool  sf_do_command(char *cmd, bool check);
+static bool        sf_do_command(std::string_view cmd, bool check);
 static char *sf_freeform(char *start1, char *end1);
 static bool  sf_do_line(char *line, bool check);
 static void  sf_do_file(const char *fname);
@@ -382,46 +385,64 @@ static std::string sf_cmd_fname(std::string_view s)
 }
 
 // returns true if good command, false otherwise
-//char* cmd;            // text of command
-//bool check;           // if true, just check, don't execute
-static bool sf_do_command(char *cmd, bool check)
+static bool sf_do_command(std::string_view cmd, bool check)
 {
-    char* s;
-    int i;
+    const std::size_t      command_end = cmd.find_first_of(" \t=");
+    const std::string_view command = cmd.substr(0, command_end);
+    const std::string_view arguments =
+        command_end == std::string_view::npos ? std::string_view{} : cmd.substr(command_end);
 
-    if (!std::strncmp(cmd, "killthreshold", 13))
+    if (command == "killthreshold" || command == "newauthor" || command == "reply")
     {
-        // skip whitespace and = sign
-        for (s = cmd+13; *s && (is_hor_space(*s) || *s == '='); s++)
+        std::string_view argument{arguments};
+        argument.remove_prefix(std::min(argument.find_first_not_of(" \t="), argument.size()));
+        std::string_view number{argument};
+        if (!number.empty() && number.front() == '+')
         {
+            number.remove_prefix(1);
         }
-
-        // make **sure** that there is a number here
-        i = std::atoi(s);
-        if (i == 0)             // it might not be a number
+        int                          score{};
+        const std::from_chars_result result = std::from_chars(number.data(), number.data() + number.size(), score);
+        if (result.ec != std::errc{})
         {
-            if (!is_text_zero(s))
+            if (command == "reply")
             {
-                std::printf("\nBad killthreshold: %s",cmd);
-                return false;   // continue looping
+                fmt::print("\nBad reply command: {}\n", cmd);
             }
+            else
+            {
+                fmt::print("\nBad {}: {}", command, cmd);
+            }
+            return false;
         }
         if (check)
         {
             return true;
         }
+        HeaderLineType head_type;
+        if (command == "killthreshold")
+        {
+            head_type = static_cast<HeaderLineType>(SF_KILL_THRESHOLD);
+        }
+        else if (command == "newauthor")
+        {
+            head_type = static_cast<HeaderLineType>(SF_NEW_AUTHOR);
+        }
+        else
+        {
+            head_type = static_cast<HeaderLineType>(SF_REPLY);
+        }
         sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_KILL_THRESHOLD);
-        s_sf_entries[g_sf_num_entries-1].score = i;
+        s_sf_entries[g_sf_num_entries - 1].head_type = head_type;
+        s_sf_entries[g_sf_num_entries - 1].score = score;
         return true;
     }
-    if (!std::strncmp(cmd, "savescores", 10))
+    if (command == "savescores")
     {
-        // skip whitespace and = sign
-        for (s = cmd+10; *s && (is_hor_space(*s) || *s == '='); s++)
-        {
-        }
-        if (!std::strncmp(s, "off", 3))
+        std::string_view argument{arguments};
+        argument.remove_prefix(std::min(argument.find_first_not_of(" \t="), argument.size()));
+        const std::string_view value = argument.substr(0, argument.find_first_of(" \t"));
+        if (value == "off")
         {
             if (!check)
             {
@@ -429,172 +450,98 @@ static bool sf_do_command(char *cmd, bool check)
             }
             return true;
         }
-        if (*s)         // there is some argument
+        if (!argument.empty())
         {
-            if (check)
+            if (!check)
             {
-                return true;
+                g_sc_saves_cores = true;
             }
-            g_sc_saves_cores = true;
             return true;
         }
-        std::printf("Bad savescores command: |%s|\n",cmd);
+        fmt::print("Bad savescores command: |{}|\n", cmd);
         return false;
     }
-    if (!std::strncmp(cmd, "newauthor", 9))
-    {
-        // skip whitespace and = sign
-        for (s = cmd+9; *s && (is_hor_space(*s) || *s == '='); s++)
-        {
-        }
-
-        // make **sure** that there is a number here
-        i = std::atoi(s);
-        if (i == 0)             // it might not be a number
-        {
-            if (!is_text_zero(s))
-            {
-                std::printf("\nBad newauthor: %s",cmd);
-                return false;   // continue looping
-            }
-        }
-        if (check)
-        {
-            return true;
-        }
-        sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_NEW_AUTHOR);
-        s_sf_entries[g_sf_num_entries-1].score = i;
-        return true;
-    }
-    if (!std::strncmp(cmd, "include", 7))
+    if (command == "include" || command == "exclude")
     {
         if (check)
         {
             return true;
         }
-        s = skip_hor_space(cmd + 7); // skip whitespace
-        if (!*s)
+        std::string_view argument{arguments};
+        argument.remove_prefix(std::min(argument.find_first_not_of(" \t"), argument.size()));
+        if (argument.empty())
         {
-            std::printf("Bad include command (missing filename)\n");
+            fmt::print("Bad {} command (missing filename)\n", command);
             return false;
         }
-        sf_do_file(file_exp(sf_cmd_fname(s)).c_str());
+        if (command == "include")
+        {
+            sf_do_file(file_exp(sf_cmd_fname(argument)).c_str());
+        }
+        else
+        {
+            sf_exclude_file(file_exp(sf_cmd_fname(argument)).c_str());
+        }
         return true;
     }
-    if (!std::strncmp(cmd, "exclude", 7))
+    if (command == "header")
     {
-        if (check)
+        std::string_view argument{arguments};
+        argument.remove_prefix(std::min(argument.find_first_not_of(" \t="), argument.size()));
+        const std::size_t colon = argument.find(':');
+        if (colon == std::string_view::npos)
         {
-            return true;
-        }
-        s = skip_hor_space(cmd + 7); // skip whitespace
-        if (!*s)
-        {
-            std::printf("Bad exclude command (missing filename)\n");
-            return false;
-        }
-        sf_exclude_file(file_exp(sf_cmd_fname(s)).c_str());
-        return true;
-    }
-    if (!std::strncmp(cmd, "header", 6))
-    {
-        s = skip_hor_space(cmd + 7); // skip whitespace
-        char *s2 = skip_ne(s, ':');
-        if (!s2)
-        {
-            std::printf("\nBad header command (missing :)\n%s\n",cmd);
+            fmt::print("\nBad header command (missing :)\n{}\n", cmd);
             return false;
         }
         if (check)
         {
             return true;
         }
-        *s2 = '\0';
-        sf_add_extra_header(s);
-        *s2 = ':';
+        const std::string header{argument.substr(0, colon)};
+        sf_add_extra_header(header.c_str());
         return true;
     }
-    if (!std::strncmp(cmd, "begin", 5))
+    if (command == "begin" || command == "end")
     {
-        s = skip_hor_space(cmd + 6); // skip whitespace
-        if (!std::strncmp(s, "score", 5))
-        {
-            // do something useful later
-            return true;
-        }
         return true;
     }
-    if (!std::strncmp(cmd, "reply", 5))
-    {
-        // skip whitespace and = sign
-        for (s = cmd+5; *s && (is_hor_space(*s) || *s == '='); s++)
-        {
-        }
-
-        // make **sure** that there is a number here
-        i = std::atoi(s);
-        if (i == 0)             // it might not be a number
-        {
-            if (!is_text_zero(s))
-            {
-                std::printf("\nBad reply command: %s\n",cmd);
-                return false;   // continue looping
-            }
-        }
-        if (check)
-        {
-            return true;
-        }
-        sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_REPLY);
-        s_sf_entries[g_sf_num_entries-1].score = i;
-        return true;
-    }
-    if (!std::strncmp(cmd, "file", 4))
+    if (command == "file")
     {
         if (check)
         {
             return true;
         }
-        s = skip_hor_space(cmd + 4); // skip whitespace
-        if (!*s)
+        std::string_view argument{arguments};
+        argument.remove_prefix(std::min(argument.find_first_not_of(" \t"), argument.size()));
+        if (argument.empty())
         {
-            std::printf("Bad file command (missing parameters)\n");
+            fmt::print("Bad file command (missing parameters)\n");
             return false;
         }
-        char ch = *s++;
-        s = skip_hor_space(s); // skip whitespace
-        if (!*s)
+        const char abbreviation = argument.front();
+        argument.remove_prefix(1);
+        argument.remove_prefix(std::min(argument.find_first_not_of(" \t"), argument.size()));
+        if (argument.empty())
         {
-            std::printf("Bad file command (missing parameters)\n");
+            fmt::print("Bad file command (missing parameters)\n");
             return false;
         }
-        s_sf_abbr[static_cast<unsigned char>(ch)] = sf_cmd_fname(s);
+        s_sf_abbr[static_cast<unsigned char>(abbreviation)] = sf_cmd_fname(argument);
         return true;
     }
-    if (!std::strncmp(cmd, "end", 3))
+    if (command == "newsclip")
     {
-        s = skip_hor_space(cmd + 4); // skip whitespace
-        if (!std::strncmp(s, "score", 5))
-        {
-            // do something useful later
-            return true;
-        }
-        return true;
-    }
-    if (!std::strncmp(cmd, "newsclip", 8))
-    {
-        std::printf("Newsclip is no longer supported.\n");
+        fmt::print("Newsclip is no longer supported.\n");
         return false;
     }
     // no command matched
-    std::printf("Unknown command: |%s|\n",cmd);
+    fmt::print("Unknown command: |{}|\n", cmd);
     return false;
 }
 
-//char* start1;         // points to first character of keyword
-//char* end1;           // points to last  character of keyword
+// char* start1;         // points to first character of keyword
+// char* end1;           // points to last  character of keyword
 static char *sf_freeform(char *start1, char *end1)
 {
     char*s;

@@ -10,6 +10,7 @@
 #include <trn/init.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
+#include <trn/score.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -163,6 +164,44 @@ TEST_F(ScoreFileTest, fromWildcardMatchesBothPiecesInOrder)
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 
     g_data_source = old_data_source;
+}
+
+TEST_F(ScoreFileTest, killThresholdCommandAcceptsSpaceSeparator)
+{
+    char kill_threshold[]{"!killthreshold -11"};
+    sf_append(kill_threshold);
+
+    EXPECT_EQ(1, g_sf_num_entries);
+}
+
+TEST_F(ScoreFileTest, newAuthorCommandAcceptsAssignmentSeparator)
+{
+    char new_author[]{"!newauthor=7"};
+    sf_append(new_author);
+
+    EXPECT_EQ(1, g_sf_num_entries);
+}
+
+TEST_F(ScoreFileTest, saveScoresOffDisablesScoreSaving)
+{
+    const bool old_save_scores = g_sc_saves_cores;
+    g_sc_saves_cores = true;
+    char off[]{"!savescores off"};
+    sf_append(off);
+
+    EXPECT_FALSE(g_sc_saves_cores);
+    g_sc_saves_cores = old_save_scores;
+}
+
+TEST_F(ScoreFileTest, saveScoresOtherArgumentEnablesScoreSaving)
+{
+    const bool old_save_scores = g_sc_saves_cores;
+    g_sc_saves_cores = false;
+    char on[]{"!savescores on"};
+    sf_append(on);
+
+    EXPECT_TRUE(g_sc_saves_cores);
+    g_sc_saves_cores = old_save_scores;
 }
 
 TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)

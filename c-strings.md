@@ -490,11 +490,11 @@ headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
 - Copy and concatenation: `strcpy` 105, `strncpy` 5, `strcat` 13.
-- Comparison: `strcmp` 12, `strncmp` 54.
+- Comparison: `strcmp` 12, `strncmp` 40.
 - Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
   `strlen` 128.
 - Formatting into C buffers: `sprintf` 128, `snprintf` 1.
-- C text I/O roots: `fgets` 33, `fputs` 198, `printf` 505,
+- C text I/O roots: `fgets` 33, `fputs` 198, `printf` 494,
   `fprintf` 37.
 - Character byte operations: `memcpy` 7, `memset` 6, `memcmp` 1.
 
@@ -525,16 +525,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-047 - Scorefile Command Parser Views
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: command parsing with repeated `strncmp` and cursor walking.
-- Function: `sf_do_command`.
-- Change: parse the command as `std::string_view` tokens and compare
-  with direct view equality.  Keep mutable behavior only for branches
-  that intentionally edit the input.
-- Tests: run `test_scorefile` before and after.
 
 ### CSTR-050 - UUDecode Prescan Parser Views
 
