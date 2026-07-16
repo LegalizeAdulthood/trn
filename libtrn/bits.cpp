@@ -26,13 +26,17 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <iterator>
 #include <optional>
 #include <string>
+#include <utility>
 
 int g_dm_count{};
 
@@ -222,14 +226,13 @@ bool set_first_art(const char *s)
 
 void bits_to_rc()
 {
-    char* mybuf = g_buf;
-    ArticleNum i;
-    ArticleNum count{};
-    int safe_len = LINE_BUF_LEN - 32;
+    ArticleNum  i;
+    ArticleNum  count{};
+    std::string rc_line;
+    rc_line.reserve(LINE_BUF_LEN);
+    rc_line = g_newsgroup_ptr->rc_name();         // start with the newsgroup name
+    rc_line += g_newsgroup_ptr->m_subscribe_char; // put the requisite : or !
 
-    std::strcpy(g_buf,g_newsgroup_ptr->rc_line_c_str()); // start with the newsgroup name
-    char *s = g_buf + g_newsgroup_ptr->m_num_offset - 1; // use s for buffer pointer
-    *s++ = g_newsgroup_ptr->m_subscribe_char;            // put the requisite : or !
     for (i = article_first(g_abs_first); i <= g_last_art; i = article_next(i))
     {
         if (article_unread(i))
@@ -237,85 +240,54 @@ void bits_to_rc()
             break;
         }
     }
-    std::sprintf(s," 1-%ld,", i.value_of() -1);
-    s += std::strlen(s);
-    for (; i<=g_last_art; ++i)   // for each article in newsgroup
+    fmt::format_to(std::back_inserter(rc_line), " 1-{},", i.value_of() - 1);
+    for (; i <= g_last_art; ++i) // for each article in newsgroup
     {
-        if (s-mybuf > safe_len)          // running out of room?
+        if (!was_read(i)) // still unread?
         {
-            safe_len *= 2;
-            if (mybuf == g_buf)         // currently static?
-            {
-                *s = '\0';
-                mybuf = safe_malloc((MemorySize)safe_len + 32);
-                std::strcpy(mybuf,g_buf);    // so we must copy it
-                s = mybuf + (s-g_buf);
-                                        // fix the pointer, too
-            }
-            else                        // just grow in place, if possible
-            {
-                int old_len = s - mybuf;
-                mybuf = safe_realloc(mybuf,(MemorySize)safe_len + 32);
-                s = mybuf + old_len;
-            }
+            ++count; // then count it
         }
-        if (!was_read(i))               // still unread?
+        else // article was read
         {
-            ++count;                    // then count it
-        }
-        else                            // article was read
-        {
-            std::sprintf(s,"%ld",i.value_of()); // put out the min of the range
-            s += std::strlen(s);           // keeping house
-            ArticleNum old_i = i;         // remember this spot
+            fmt::format_to(std::back_inserter(rc_line), "{}", i.value_of());
+            ArticleNum old_i = i; // remember this spot
             do
             {
                 ++i;
             } while (i <= g_last_art && was_read(i));
-                                        // find 1st unread article or end
-            --i;                        // backup to last read article
-            if (i > old_i)              // range of more than 1?
+            // find 1st unread article or end
+            --i;           // backup to last read article
+            if (i > old_i) // range of more than 1?
             {
-                std::sprintf(s,"-%ld,", i.value_of());
-                                        // then it out as a range
-                s += std::strlen(s);         // and house keep
+                fmt::format_to(std::back_inserter(rc_line), "-{},", i.value_of());
             }
             else
             {
-                *s++ = ',';             // otherwise, just a comma will do
+                rc_line.push_back(','); // otherwise, just a comma will do
             }
         }
     }
-    if (*(s-1) == ',')                  // is there a final ','?
+    if (rc_line.back() == ',') // is there a final ','?
     {
-        s--;                            // take it back
+        rc_line.pop_back(); // take it back
     }
-    *s++ = '\0';                        // and terminate string
 #ifdef DEBUG
     if ((g_debug & DEB_NEWSRC_LINE) && !g_panic)
     {
-        std::printf("%s: %s\n",g_newsgroup_ptr->rc_line_c_str(),g_newsgroup_ptr->rc_numbers_c_str());
-        std::printf("%s\n",mybuf);
+        fmt::print("{}: {}\n", g_newsgroup_ptr->rc_line_c_str(), g_newsgroup_ptr->rc_numbers_c_str());
+        fmt::print("{}\n", rc_line);
         term_down(2);
     }
 #endif
-    if (mybuf == g_buf)
-    {
-        g_newsgroup_ptr->m_rc_line.assign(g_buf, static_cast<std::size_t>(s - g_buf - 1));
-    }
-    else
-    {
-        g_newsgroup_ptr->m_rc_line.assign(mybuf, static_cast<std::size_t>(s - mybuf - 1));
-        std::free(mybuf);
-    }
+    g_newsgroup_ptr->m_rc_line = std::move(rc_line);
     g_newsgroup_ptr->hide_subscribe_char();
-    if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR)// did they unsubscribe?
+    if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR) // did they unsubscribe?
     {
-        g_newsgroup_ptr->m_to_read = TR_UNSUB;     // make line invisible
+        g_newsgroup_ptr->m_to_read = TR_UNSUB; // make line invisible
     }
     else
     {
-        g_newsgroup_ptr->m_to_read = (ArticleUnread)count.value_of(); // otherwise, remember the count
+        g_newsgroup_ptr->m_to_read = (ArticleUnread) count.value_of(); // otherwise, remember the count
     }
     g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
 }

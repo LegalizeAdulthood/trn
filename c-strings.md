@@ -432,10 +432,10 @@ as a local string modernization slice.
   definition.  The 31 call sites are inventoried below.
 - `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
   `CSTR-039`.
-- `safe_realloc`: string-like storage remains in `bits_to_rc`,
-  `mime_read_mimecap`, `mime_parse_sub_header`, `sw_file`,
-  `get_a_line`, and `grow_str`.  Article, header, and regex buffers are
-  storage/API slices, not local one-line changes.
+- `safe_realloc`: string-like storage remains in `mime_read_mimecap`,
+  `mime_parse_sub_header`, `sw_file`, `get_a_line`, and `grow_str`.
+  Article, header, and regex buffers are storage/API slices, not local
+  one-line changes.
 - C string library calls: the current scan finds active `str*`,
   `sprintf`/`snprintf`, `fgets`/`fputs`, `printf`/`fprintf`, and
   character `mem*` roots.  These calls are counted below and mapped to
@@ -505,12 +505,12 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 110, `strncpy` 5, `strcat` 16.
-- Comparison: `strcmp` 19, `strncmp` 54.
+- Copy and concatenation: `strcpy` 107, `strncpy` 5, `strcat` 16.
+- Comparison: `strcmp` 20, `strncmp` 55.
 - Search and length: `strchr` 117, `strrchr` 15, `strstr` 4,
-  `strlen` 141.
-- Formatting into C buffers: `sprintf` 145, `snprintf` 1.
-- C text I/O roots: `fgets` 35, `fputs` 199, `printf` 524,
+  `strlen` 138.
+- Formatting into C buffers: `sprintf` 142, `snprintf` 1.
+- C text I/O roots: `fgets` 35, `fputs` 199, `printf` 522,
   `fprintf` 41.
 - Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
 
@@ -536,17 +536,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-040 - Newsrc Line Reconstruction
-
-- Files: `libtrn/bits.cpp`.
-- Kind: growable C string construction with `strcpy`, `sprintf`,
-  `strlen`, and `safe_realloc`.
-- Function: `bits_to_rc`.
-- Change: build the reconstructed `.newsrc` line directly in a
-  `std::string`, using `fmt` for formatted article numbers.  Assign the
-  result to `m_rc_line` without a raw intermediate buffer.
-- Tests: add or run newsrc line serialization coverage before and after.
 
 ### CSTR-041 - Active Scan Wildcard Pattern
 

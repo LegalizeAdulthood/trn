@@ -1,0 +1,121 @@
+// This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
+
+#include <trn/bits.h>
+
+#include <config/common.h>
+#include <trn/Article.h>
+#include <trn/cache.h>
+#include <trn/ngdata.h>
+#include <trn/rcstuff.h>
+
+#include <gtest/gtest.h>
+
+#include <cstddef>
+#include <map>
+#include <string>
+#include <utility>
+
+namespace
+{
+
+class BitsToRcTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_article_list = std::move(g_article_list);
+        m_old_newsgroup_ptr = g_newsgroup_ptr;
+        m_old_abs_first = g_abs_first;
+        m_old_first_art = g_first_art;
+        m_old_last_art = g_last_art;
+
+        g_article_list.clear();
+        g_newsgroup_ptr = &m_group;
+        g_abs_first = ArticleNum{1};
+        g_first_art = ArticleNum{1};
+        g_last_art = ArticleNum{7};
+
+        m_newsrc.flags = RF_NONE;
+        m_group.m_rc = &m_newsrc;
+        m_group.m_rc_line = "comp.lang.apl: old";
+        m_group.m_num_offset = static_cast<int>(std::string{"comp.lang.apl"}.size()) + 1;
+        m_group.m_subscribe_char = ':';
+        m_group.m_to_read = ArticleUnread{};
+        m_group.hide_subscribe_char();
+    }
+
+    void TearDown() override
+    {
+        g_article_list = std::move(m_old_article_list);
+        g_newsgroup_ptr = m_old_newsgroup_ptr;
+        g_abs_first = m_old_abs_first;
+        g_first_art = m_old_first_art;
+        g_last_art = m_old_last_art;
+    }
+
+    void add_article(long num, bool unread)
+    {
+        Article *article = article_ptr(ArticleNum{num});
+        article->m_flags = AF_EXISTS;
+        if (unread)
+        {
+            article->m_flags |= AF_UNREAD;
+        }
+    }
+
+    std::string visible_rc_line() const
+    {
+        std::string line = m_group.m_rc_line;
+        line[static_cast<std::size_t>(m_group.m_num_offset - 1)] = m_group.m_subscribe_char;
+        return line;
+    }
+
+    Newsrc                        m_newsrc{};
+    NewsgroupData                 m_group{};
+    std::map<ArticleNum, Article> m_old_article_list;
+    NewsgroupData                *m_old_newsgroup_ptr{};
+    ArticleNum                    m_old_abs_first{};
+    ArticleNum                    m_old_first_art{};
+    ArticleNum                    m_old_last_art{};
+};
+
+} // namespace
+
+TEST_F(BitsToRcTest, reconstructsSubscribedLineFromReadRanges)
+{
+    add_article(1, false);
+    add_article(2, false);
+    add_article(3, true);
+    add_article(4, false);
+    add_article(5, false);
+    add_article(6, true);
+    add_article(7, true);
+
+    bits_to_rc();
+
+    EXPECT_EQ("comp.lang.apl: 1-2,4-5", visible_rc_line());
+    EXPECT_EQ('\0', m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)]);
+    EXPECT_EQ(ArticleUnread{3}, m_group.m_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_F(BitsToRcTest, reconstructsUnsubscribedLineAndKeepsItInvisible)
+{
+    m_group.m_subscribe_char = UNSUBSCRIBED_CHAR;
+
+    add_article(1, false);
+    add_article(2, false);
+    add_article(3, true);
+    add_article(4, false);
+    add_article(5, false);
+    add_article(6, true);
+    add_article(7, true);
+
+    bits_to_rc();
+
+    EXPECT_EQ("comp.lang.apl! 1-2,4-5", visible_rc_line());
+    EXPECT_EQ('\0', m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)]);
+    EXPECT_EQ(TR_UNSUB, m_group.m_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
