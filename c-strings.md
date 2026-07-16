@@ -553,15 +553,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-027 - Newsgroup Shell Current Directory
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: fixed current-directory buffer.
-- Function: `escapade`.
-- Change: use `std::filesystem::current_path` storage for the saved
-  directory.  Keep shell and `change_dir` behavior unchanged.
-- Tests: add shell escape directory restoration coverage first.
-
 ### CSTR-030 - Exported Environment Storage
 
 - Files: `util/env.cpp`, `util/include/util/env.h`.

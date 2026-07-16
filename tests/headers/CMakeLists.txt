@@ -35,6 +35,7 @@ add_executable(trn-headers-test
     test_ng.cpp
     test_ngdata.cpp
     test_ngsrch.cpp
+    test_ngstuff-internal.cpp
     test_ngstuff.cpp
     test_nntp.cpp
     test_only.cpp

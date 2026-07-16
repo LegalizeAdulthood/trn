@@ -3,7 +3,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
-#include <trn/ngstuff.h>
+#include <trn/ngstuff-internal.h>
 
 #include <config/common.h>
 #include <trn/addng.h>
@@ -39,8 +39,12 @@
 
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <string_view>
+#include <system_error>
+
+namespace fs = std::filesystem;
 
 bool        g_one_command{}; // no ':' processing in perform()
 std::string g_save_dir;      // -d
@@ -58,10 +62,10 @@ void newsgroup_stuff_init()
 
 // do a shell escape
 
-bool escapade()
+bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
 {
     bool interactive = (g_buf[1] == FINISH_CMD);
-    char where_i_am[1024];
+    fs::path where_i_am;
 
     if (!finish_command(interactive))   // get remainder of command
     {
@@ -75,7 +79,13 @@ bool escapade()
     }
     else
     {
-        trn_getwd(where_i_am, sizeof(where_i_am));
+        std::error_code error;
+        where_i_am = fs::current_path(error);
+        if (error)
+        {
+            std::printf("Cannot determine current working directory!\n");
+            finalize(1);
+        }
         if (change_dir(g_priv_dir))
         {
             std::printf(g_no_cd,g_priv_dir.c_str());
@@ -85,14 +95,14 @@ bool escapade()
     s = skip_eq(s, ' ');                // skip leading spaces
     interp(g_cmd_buf, (sizeof g_cmd_buf), s);// interpret any % escapes
     reset_tty();                          // make sure tty is friendly
-    do_shell(nullptr,g_cmd_buf); // invoke the shell
+    shell_runner(nullptr,g_cmd_buf); // invoke the shell
     no_echo();                           // and make terminal
     cr_mode();                           // unfriendly again
     if (do_cd)
     {
         if (change_dir(where_i_am))
         {
-            std::printf(g_no_cd,where_i_am);
+            std::printf(g_no_cd,where_i_am.generic_string().c_str());
             sig_catcher(0);
         }
     }
@@ -100,6 +110,11 @@ bool escapade()
     g_mail_count = 0;                    // force recheck
 #endif
     return false;
+}
+
+bool escapade()
+{
+    return escapade_with_shell_runner(do_shell);
 }
 
 // process & command
