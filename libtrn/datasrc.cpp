@@ -101,7 +101,7 @@ void data_source_init()
 
     char       *machine = get_val("NNTPSERVER");
     std::string expanded_machine;
-    if (machine && std::strcmp(machine, "local") != 0)
+    if (machine != nullptr && std::string_view{machine} != "local")
     {
         DataSourceConfig config;
         const AuthCredentials  credentials = read_auth_file(g_nntp_auth_file.c_str());
@@ -130,7 +130,7 @@ void data_source_init()
                 machine = nntp_server_name(machine);
             }
         }
-        if (machine && !std::strcmp(machine, "local"))
+        if (machine != nullptr && std::string_view{machine} == "local")
         {
             machine = nullptr;
             actname = ACTIVE;
@@ -364,7 +364,8 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
 
 static std::string dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags flag)
 {
-    if (!dir || !*dir || !std::strcmp(dir, "remote"))
+    const std::string_view dir_view{dir != nullptr ? dir : ""};
+    if (dir_view.empty() || dir_view == "remote")
     {
         dp->m_flags |= flag;
         if (dp->m_flags & DF_REMOTE)
@@ -377,24 +378,23 @@ static std::string dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags
         }
         if (flag == DF_NONE)
         {
-            const char *cp = std::strrchr(dp->m_news_id.c_str(), '/');
-            if (!cp)
+            const std::size_t slash = dp->m_news_id.rfind('/');
+            if (slash == std::string::npos)
             {
                 return {};
             }
-            const std::size_t len = static_cast<std::size_t>(cp - dp->m_news_id.c_str() + 1);
-            return dp->m_news_id.substr(0, len) + "newsgroups";
+            return dp->m_news_id.substr(0, slash + 1) + "newsgroups";
         }
         return dp->m_spool_dir;
     }
 
-    if (!std::strcmp(dir, "none"))
+    if (dir_view == "none")
     {
         return {};
     }
 
     dp->m_flags |= flag;
-    const std::string expanded_dir = file_exp(dir);
+    const std::string expanded_dir = file_exp(dir_view);
     if (expanded_dir == dp->m_spool_dir)
     {
         return dp->m_spool_dir;
@@ -404,11 +404,12 @@ static std::string dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags
 
 static std::string file_or_empty(const char *fn)
 {
-    if (!fn || !*fn || !std::strcmp(fn, "none") || !std::strcmp(fn, "remote"))
+    const std::string_view file{fn != nullptr ? fn : ""};
+    if (file.empty() || file == "none" || file == "remote")
     {
         return {};
     }
-    return file_exp(fn);
+    return file_exp(file);
 }
 
 bool DataSource::open()

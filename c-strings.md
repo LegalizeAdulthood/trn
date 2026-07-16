@@ -506,8 +506,8 @@ headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
 - Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 16.
-- Comparison: `strcmp` 20, `strncmp` 55.
-- Search and length: `strchr` 117, `strrchr` 15, `strstr` 3,
+- Comparison: `strcmp` 14, `strncmp` 55.
+- Search and length: `strchr` 117, `strrchr` 14, `strstr` 3,
   `strlen` 136.
 - Formatting into C buffers: `sprintf` 140, `snprintf` 1.
 - C text I/O roots: `fgets` 35, `fputs` 199, `printf` 522,
@@ -536,16 +536,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-055 - Data Source String Comparisons
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: sentinel and path option checks with `strcmp` and `strrchr`.
-- Functions: `data_source_init`, `dir_or_empty`, and `file_or_empty`.
-- Change: change local parameters to `std::string_view` where null is
-  not a meaningful value, and use direct comparisons.  Preserve empty
-  string as the missing-value sentinel where that is already sufficient.
-- Tests: run `test_datasrc` and `test_DataSourceConfig`.
 
 ### Tier 1 - Helper And Parser Foundations
 
