@@ -555,15 +555,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-007 - Newsgroup List Display Line
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: local display buffer and `safe_copy`.
-- Function: `list_newsgroups`.
-- Change: build the display line with `fmt::format` and string append,
-  then call `print_lines(line.c_str(), NO_MARKING)`.
-- Tests: add list-output coverage first if none exists.
-
 ### CSTR-009 - Save Directory Path Scratch
 
 - Files: `libtrn/opt.cpp`.

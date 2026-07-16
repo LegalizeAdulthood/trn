@@ -3,8 +3,10 @@
 #include <trn/rcstuff.h>
 
 #include <trn/datasrc.h>
+#include <trn/final.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
+#include <trn/terminal.h>
 
 #include <test_config.h>
 
@@ -57,6 +59,13 @@ protected:
         m_old_sel_newsgroup_sort = g_sel_newsgroup_sort;
         m_old_sel_direction = g_sel_direction;
         m_old_check_flag = g_check_flag;
+        m_old_int_count = g_int_count;
+        m_old_erase_screen = g_erase_screen;
+        m_old_tc_lines = g_tc_LINES;
+        m_old_tc_cols = g_tc_COLS;
+        m_old_tc_so = g_tc_SO;
+        m_old_tc_se = g_tc_SE;
+        m_old_tc_am = g_tc_AM;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -86,6 +95,13 @@ protected:
         g_multirc = nullptr;
         g_data_source = nullptr;
         g_check_flag = false;
+        g_int_count = 0;
+        g_erase_screen = false;
+        g_tc_LINES = 200;
+        g_tc_COLS = 200;
+        g_tc_SO = m_empty_tc_so;
+        g_tc_SE = m_empty_tc_se;
+        g_tc_AM = false;
     }
 
     void TearDown() override
@@ -118,6 +134,13 @@ protected:
         g_sel_newsgroup_sort = m_old_sel_newsgroup_sort;
         g_sel_direction = m_old_sel_direction;
         g_check_flag = m_old_check_flag;
+        g_int_count = m_old_int_count;
+        g_erase_screen = m_old_erase_screen;
+        g_tc_LINES = m_old_tc_lines;
+        g_tc_COLS = m_old_tc_cols;
+        g_tc_SO = m_old_tc_so;
+        g_tc_SE = m_old_tc_se;
+        g_tc_AM = m_old_tc_am;
     }
 
     Newsrc make_newsrc()
@@ -162,6 +185,15 @@ protected:
     SelectionSortMode            m_old_sel_newsgroup_sort{};
     int                          m_old_sel_direction{};
     bool                         m_old_check_flag{};
+    char                         m_old_int_count{};
+    bool                         m_old_erase_screen{};
+    int                          m_old_tc_lines{};
+    int                          m_old_tc_cols{};
+    char                        *m_old_tc_so{};
+    char                        *m_old_tc_se{};
+    bool                         m_old_tc_am{};
+    char                         m_empty_tc_so[1]{};
+    char                         m_empty_tc_se[1]{};
 };
 
 } // namespace
@@ -216,4 +248,23 @@ TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)
     EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1"}), read_lines(newsrc.old_name));
     unuse_multirc(&multirc);
     EXPECT_FALSE(fs::exists(lock_path));
+}
+
+TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)
+{
+    Newsrc newsrc = make_newsrc();
+    g_newsgroup_data.reserve(2);
+    g_newsgroup_order.reserve(2);
+    add_newsgroup(newsrc, "comp.lang.apl: 1-3");
+    add_newsgroup(newsrc, "comp.lang.c++! 1-2");
+    g_newsgroup_order[0]->m_to_read = ArticleUnread{-1};
+    g_newsgroup_order[1]->m_to_read = ArticleUnread{-2};
+
+    testing::internal::CaptureStdout();
+    list_newsgroups();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("\n  #  Status  Newsgroup\n  0 (UNSUB)  comp.lang.apl: 1-3\n"
+              "  1   (DUP)  comp.lang.c++! 1-2\n",
+              output);
 }

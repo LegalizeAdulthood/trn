@@ -43,6 +43,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <iterator>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -1501,9 +1502,10 @@ void list_newsgroups()
 {
     NewsgroupData     *np;
     NewsgroupNum       i;
-    char               tmpbuf[2048];
+    std::string        line;
     static const char *status[] = {"(READ)", "(UNSUB)", "(DUP)", "(BOGUS)", "(JUNK)"};
 
+    line.reserve(2048);
     page_start();
     print_lines("  #  Status  Newsgroup\n", STANDOUT);
     for (np = newsgroup_first(), i = NewsgroupNum{}; np && !g_int_count; np = newsgroup_next(np), ++i)
@@ -1513,17 +1515,19 @@ void list_newsgroups()
             np->set_to_read(ST_LAX);
         }
         np->show_subscribe_char();
+        line.clear();
         if (np->m_to_read > 0)
         {
-            std::sprintf(tmpbuf, "%3d %6ld   ", i.value_of(), (long) np->m_to_read);
+            fmt::format_to(std::back_inserter(line), "{:3} {:6}   {}", i.value_of(), np->m_to_read,
+                           np->rc_line_c_str());
         }
         else
         {
-            std::sprintf(tmpbuf, "%3d %7s  ", i.value_of(), status[-np->m_to_read]);
+            fmt::format_to(std::back_inserter(line), "{:3} {:>7}  {}", i.value_of(), status[-np->m_to_read],
+                           np->rc_line_c_str());
         }
-        safe_copy(tmpbuf + 13, np->rc_line_c_str(), sizeof tmpbuf - 13);
         np->hide_subscribe_char();
-        if (print_lines(tmpbuf, NO_MARKING) != 0)
+        if (print_lines(line.c_str(), NO_MARKING) != 0)
         {
             break;
         }
