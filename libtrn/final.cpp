@@ -119,8 +119,7 @@ void finalize(int status)
     std::error_code error;
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
     {
-        char *s = nntp_tmp_name(i);
-        fs::remove(s, error);
+        fs::remove(nntp_tmp_name(i), error);
     }
     cleanup_nntp();
     if (!g_head_name.empty())

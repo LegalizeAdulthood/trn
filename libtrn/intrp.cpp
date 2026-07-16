@@ -634,7 +634,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             {
                                 nntp_finish_body(FB_SILENT);
                                 std::sprintf(s = scrbuf, "%s/%s", g_data_source->m_spool_dir.c_str(),
-                                             nntp_art_name(g_art, false));
+                                             nntp_art_name(g_art, false).c_str());
                             }
                             else
                             {

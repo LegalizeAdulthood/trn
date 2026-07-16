@@ -226,14 +226,14 @@ int nntp_header(ArticleNum art_num)
 
 void nntp_body(ArticleNum art_num)
 {
-    char *artname = nntp_art_name(art_num, false); // Is it already in a tmp file?
-    if (artname)
+    std::string artname = nntp_art_name(art_num, false); // Is it already in a tmp file?
+    if (!artname.empty())
     {
         if (s_body_pos >= 0)
         {
             nntp_finish_body(FB_DISCARD);
         }
-        g_art_fp = std::fopen(artname, "r");
+        g_art_fp = std::fopen(artname.c_str(), "r");
         stat_t art_stat{};
         if (g_art_fp && fstat(fileno(g_art_fp), &art_stat) == 0)
         {
@@ -243,13 +243,13 @@ void nntp_body(ArticleNum art_num)
     }
 
     artname = nntp_art_name(art_num, true); // Allocate a tmp file
-    if (!(g_art_fp = std::fopen(artname, "w+")))
+    if (!(g_art_fp = std::fopen(artname.c_str(), "w+")))
     {
-        std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n", artname);
+        fmt::print(stderr, "\nUnable to write temporary file: '{}'.\n", artname);
         finalize(1);
     }
 #ifndef MSDOS
-    chmod(artname, 0600);
+    chmod(artname.c_str(), 0600);
 #endif
     if (g_parsed_art == art_num)
     {
@@ -556,7 +556,7 @@ ArticleNum nntp_find_real_art(ArticleNum after)
     return {};
 }
 
-char *nntp_art_name(ArticleNum art_num, bool allocate)
+std::string nntp_art_name(ArticleNum art_num, bool allocate)
 {
     static ArticleNum artnums[MAX_NNTP_ARTICLES];
     static std::time_t  artages[MAX_NNTP_ARTICLES];
@@ -569,7 +569,7 @@ char *nntp_art_name(ArticleNum art_num, bool allocate)
             artnums[i] = ArticleNum{};
             artages[i] = 0;
         }
-        return nullptr;
+        return {};
     }
 
     std::time_t now = std::time(nullptr);
@@ -597,14 +597,12 @@ char *nntp_art_name(ArticleNum art_num, bool allocate)
         return nntp_tmp_name(j);
     }
 
-    return nullptr;
+    return {};
 }
 
-char *nntp_tmp_name(int ndx)
+std::string nntp_tmp_name(int ndx)
 {
-    static char artname[20];
-    std::sprintf(artname,"rrn.%ld.%d",g_our_pid,ndx);
-    return artname;
+    return fmt::format("rrn.{}.{}", g_our_pid, ndx);
 }
 
 int nntp_handle_nested_lists()

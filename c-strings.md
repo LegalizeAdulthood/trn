@@ -509,9 +509,9 @@ calls in production code.
 - Comparison: `strcmp` 14, `strncmp` 55.
 - Search and length: `strchr` 117, `strrchr` 14, `strstr` 3,
   `strlen` 136.
-- Formatting into C buffers: `sprintf` 140, `snprintf` 1.
+- Formatting into C buffers: `sprintf` 139, `snprintf` 1.
 - C text I/O roots: `fgets` 35, `fputs` 199, `printf` 522,
-  `fprintf` 41.
+  `fprintf` 40.
 - Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -541,16 +541,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-003 - NNTP Temporary Article Names
-
-- Files: `libtrn/nntp.cpp`, `libtrn/final.cpp`, `libtrn/head.cpp`,
-  `libtrn/intrp.cpp`, `libtrn/include/trn/nntp.h`.
-- Kind: borrowed static-buffer return.
-- Functions: `nntp_tmp_name`, then direct callers.
-- Change: make `nntp_tmp_name` return `std::string`.  Update callers to
-  keep the string alive locally and pass `c_str()` only to C APIs.
-- Tests: run `test_final` and `test_nntp`.
 
 ### CSTR-005 - Reply-prefix Subject Helpers
 

@@ -409,8 +409,7 @@ bool parse_header(ArticleNum art_num)
     spin(20);
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        char *s = nntp_art_name(art_num, false);
-        if (s)
+        if (!nntp_art_name(art_num, false).empty())
         {
             if (!art_open(art_num,(ArticlePosition)0))
             {

@@ -9,6 +9,7 @@
 #include <trn/addng.h>
 
 #include <ctime>
+#include <string>
 #include <string_view>
 
 struct DataSource;
@@ -43,8 +44,8 @@ std::time_t     nntp_time();
 int             nntp_new_groups(std::time_t t);
 int             nntp_art_nums();
 ArticleNum      nntp_find_real_art(ArticleNum after);
-char           *nntp_art_name(ArticleNum art_num, bool allocate);
-char           *nntp_tmp_name(int ndx);
+std::string     nntp_art_name(ArticleNum art_num, bool allocate);
+std::string     nntp_tmp_name(int ndx);
 int             nntp_handle_nested_lists();
 int             nntp_handle_timeout();
 
