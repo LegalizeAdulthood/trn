@@ -483,8 +483,8 @@ roots.  Keep each one visible until the owning storage or API changes.
   `m_rc_line` through raw mutable storage.  See `CSTR-011`.
 - `libtrn/respond.cpp`, `save_article`: four save, pipe, and command
   copies remain.  See `CSTR-020` and `CSTR-021`.
-- `libtrn/rt-util.cpp`, `compress_name`: writes a caller output buffer.
-  See `CSTR-038`.
+- `libtrn/rt-util.cpp`, `compress_subj`: compresses subject display text
+  in `g_buf`.  See `CSTR-031`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
   See `CSTR-025`.
 - `libtrn/scorefile.cpp`, `sf_score`: copies a subject only to call
@@ -536,15 +536,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-038 - Compressed Name Output API
-
-- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`.
-- Kind: caller output buffer and `safe_copy`.
-- Function: `compress_name`.
-- Change: return `std::string` instead of writing into the caller buffer.
-  Update direct callers in the same slice.
-- Tests: run `test_rt-util`.
 
 ### CSTR-040 - Newsrc Line Reconstruction
 

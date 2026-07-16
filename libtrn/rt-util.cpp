@@ -39,6 +39,7 @@ bool g_unbroken_subjects{};      // -u
 static int s_spin_marks{25}; // how many bargraph marks we want
 
 static char *compress_address(char *name, int max);
+static char *compress_name_in_place(char *name, int max);
 static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);
 
 // Name-munging routines written by Ross Ridge.
@@ -111,7 +112,18 @@ char *extract_name(char *name)
 // into "Douglas Ridge" and "Ross Ridge D.D.S." into "Ross Ridge" as a
 // first step of the compaction, if needed.
 //
-char *compress_name(char *name, int max)
+std::string compress_name(std::string_view name, int max)
+{
+    if (max <= 0)
+    {
+        return {};
+    }
+
+    std::string buffer{name};
+    return compress_name_in_place(buffer.data(), max);
+}
+
+static char *compress_name_in_place(char *name, int max)
 {
     char *d;
     int   midlen;
@@ -592,37 +604,35 @@ std::string compress_from(const char *from, int size)
 
     std::string buffer(LINE_BUF_LEN, '\0');
     str_char_subst(buffer.data(), from ? from : "", static_cast<int>(buffer.size()), *g_char_subst);
-    char *s = extract_name(buffer.data());
+    char       *s = extract_name(buffer.data());
+    std::string text;
     if (s != nullptr)
     {
-        s = compress_name(s, size);
+        text = compress_name(s, size);
     }
     else
     {
-        s = compress_address(buffer.data(), size);
+        text = compress_address(buffer.data(), size);
     }
 
-    std::size_t len = std::strlen(s);
+    std::size_t len = text.size();
     int         vis_len;
 #ifdef USE_UTF_HACK
-    vis_len = visual_length_of(s);
+    vis_len = visual_length_of(text.c_str());
 #else
     vis_len = static_cast<int>(len);
 #endif
     if (len == 0)
     {
-        std::strcpy(s, "NO NAME");
+        text = "NO NAME";
         len = 7;
     }
-    const std::size_t offset = static_cast<std::size_t>(s - buffer.data());
-    const std::size_t capacity = buffer.size() - offset;
-    while (vis_len < size && len + 1 < capacity)
+    while (vis_len < size)
     {
-        s[len++] = ' ';
+        text.push_back(' ');
         vis_len++;
     }
-    s[len] = '\0';
-    return std::string{s};
+    return text;
 }
 
 inline bool eq_ignore_case(char unknown, char lower)

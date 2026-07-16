@@ -27,22 +27,15 @@ protected:
     void configure_before_expected(const char *before, const char *expected)
     {
         m_before = before;
-        m_buffer = strdup(m_before);
         m_expected = expected;
     }
 
-    void TearDown() override
+    std::string run_compress_name()
     {
-        free(m_buffer);
-    }
-
-    char *run_compress_name()
-    {
-        return compress_name(m_buffer, std::strlen(m_expected) + 1);
+        return compress_name(m_before, std::strlen(m_expected) + 1);
     }
 
     const char *m_before{};
-    char       *m_buffer{};
     const char *m_expected{};
 };
 
@@ -50,170 +43,153 @@ TEST_F(CompressNameTest, dropTrailingJunkComma)
 {
     configure_before_expected("Ross Douglas Ridge, The Great HTMU", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, dropTrailingJunkSemi)
 {
     configure_before_expected("Ross Douglas Ridge; The Great HTMU", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, dropTrailingJunkAt)
 {
     configure_before_expected("Ross Douglas Ridge @ The Great HTMU", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, dropTrailingJunkDashDash)
 {
     configure_before_expected("Ross Douglas Ridge--The Great HTMU", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, dropTrailingJunkDashSpace)
 {
     configure_before_expected("Ross Douglas Ridge- The Great HTMU", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, dropTrailingJunkOpenParen)
 {
     configure_before_expected("Ross Douglas Ridge (The Great HTMU)", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, keepTrailingJunkDollaDolla)
 {
     configure_before_expected("Ross Douglas Ridge $$ The Great HTMU", "Ross D R T G HTMU");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, middleInitial)
 {
     configure_before_expected("Ross Douglas Ridge", "Ross D Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, dropMiddleName)
 {
     configure_before_expected("Ross Douglas Ridge", "Ross Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, DISABLED_firstMiddleInitials)
 {
     configure_before_expected("Ross Douglas Ridge", "R D Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, firstInitial)
 {
     configure_before_expected("Ross Douglas Ridge", "R Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, DISABLED_truncated)
 {
     configure_before_expected("Ross Douglas Ridge", "R Ridg");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, DISABLED_firstInitialDropped)
 {
     configure_before_expected("R. Douglas Ridge", "Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, ddsDropped)
 {
     configure_before_expected("Ross Douglas Ridge D.D.S.", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, DISABLED_quotedMiddleDropsQuotes)
 {
     configure_before_expected(R"(Ross "Douglas" Ridge)", "Ross Douglas Ridge");
 
-    char *result = run_compress_name();
+    const std::string result = run_compress_name();
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, SAIC)
 {
     configure_before_expected("School of the Art Institute of Chicago", "School o t A I o Chicago");
 
-    char *result = compress_name(m_buffer, COMPRESSED_NAME_MAX);
+    const std::string result = compress_name(m_before, COMPRESSED_NAME_MAX);
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 TEST_F(CompressNameTest, PCS)
 {
     configure_before_expected("IEEE Professional Communication Society", "IEEE P C Society");
 
-    char *result = compress_name(m_buffer, COMPRESSED_NAME_MAX);
+    const std::string result = compress_name(m_before, COMPRESSED_NAME_MAX);
 
-    EXPECT_EQ(result, m_buffer);
-    EXPECT_STREQ(m_expected, m_buffer);
+    EXPECT_EQ(m_expected, result);
 }
 
 class CompressFromTest : public Test

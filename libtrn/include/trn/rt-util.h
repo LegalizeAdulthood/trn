@@ -6,6 +6,7 @@
 #define TRN_RT_UTIL_H
 
 #include <string>
+#include <string_view>
 
 struct Article;
 
@@ -27,7 +28,7 @@ enum SpinMode
 };
 
 char *extract_name(char *name);
-char *compress_name(char *name, int max);
+std::string compress_name(std::string_view name, int max);
 std::string compress_from(const char *from, int size);
 bool strip_one_re(char *str, char **strp);
 bool subject_has_re(char *str, char **strp);
