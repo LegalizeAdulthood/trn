@@ -48,6 +48,15 @@ Run every scan from the innermost lexical scope outward:
   local automatic variables.
 - Filename variables that compose, normalize, query, remove, rename, or
   create paths and can become `std::filesystem::path`.
+- C string library calls.  Treat `strcpy`, `strncpy`, `strcat`,
+  `strncat`, `strcmp`, `strncmp`, `strchr`, `strrchr`, `strstr`,
+  `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`, `sprintf`,
+  `snprintf`, `vsprintf`, `vsnprintf`, `fgets`, `fputs`, `puts`,
+  `printf`, and `fprintf` as audit roots.
+- C byte library calls on character storage.  Treat `memcpy`, `memmove`,
+  `memset`, `memcmp`, and `memchr` as audit roots when the destination
+  or compared data is string-like `char` storage.  Non-string table
+  clearing or raw byte protocol work is a non-string buffer finding.
 
 When `next` finds no remaining slices, rerun the audit against the
 current source and look for new opportunities before treating the plan
@@ -288,6 +297,37 @@ Refactor to `fmt::format`, `fmt::format_to`, or `fmt::print`, and link
 `fmt::fmt` privately to the target.  Do not add `/utf-8`; the fmt overlay
 port controls that behavior.
 
+### C String Library Calls
+
+Select every C string function call as an audit root, even when no raw
+`char *` declaration is nearby.  Classify by what the call proves about
+the storage:
+
+- `strcpy`, `strncpy`, `strcat`, `strncat`, `safe_copy`, `safe_cat`,
+  `sprintf`, `snprintf`, `vsprintf`, and `vsnprintf`: construction into
+  a C string buffer.  Prefer `std::string` or `fmt` when the destination
+  is owned local storage.  Move with the owning storage when the
+  destination is global, static, struct storage, or caller output.
+- `strcmp` and `strncmp`: comparison of null-terminated text.  Prefer
+  direct `std::string` or `std::string_view` comparison when the inputs
+  are already strings or can be viewed by extent.
+- `strchr`, `strrchr`, `strstr`, `strlen`, `strspn`, `strcspn`,
+  `strpbrk`, and `strtok`: parsing, slicing, or length discovery.
+  Prefer `std::string_view` operations when the code does not need to
+  mutate the source.  Preserve mutable parsing only when the function
+  intentionally edits a caller buffer.
+- `fgets`: fixed-size line input.  Prefer `std::string` line input when
+  truncation is arbitrary.  Keep fixed protocol buffers only when the
+  size is meaningful.
+- `fputs`, `puts`, `printf`, and `fprintf`: C string output or
+  printf-format output.  Prefer `fmt::print` for formatted output and
+  keep `fputs` only when plain C-string output is simpler and does not
+  hide string construction.
+- `memcpy`, `memmove`, `memset`, `memcmp`, and `memchr`: classify only
+  when applied to character storage.  Convert string-like character
+  storage with its owner; ignore non-string table initialization and
+  binary buffers.
+
 ## General Refactoring Rules
 
 Do not promote simple output-only helper parameters when the only local
@@ -383,42 +423,687 @@ the inactive `MCHASE` block.  That block does not compile today and
 should be removed or overhauled with the old chase mechanism, not patched
 as a local string modernization slice.
 
+## Current Audit Summary
+
+- `save_str`: no production hits remain in the current tree.
+- `safe_copy`: 45 hits remain, including the helper declaration and
+  definition.  The 43 call sites are inventoried below.
+- `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
+  `CSTR-039`.
+- `safe_realloc`: string-like storage remains in `bits_to_rc`,
+  `mime_read_mimecap`, `mime_parse_sub_header`, `sw_file`,
+  `get_a_line`, and `grow_str`.  Article, header, and regex buffers are
+  storage/API slices, not local one-line changes.
+- C string library calls: the current scan finds active `str*`,
+  `sprintf`/`snprintf`, `fgets`/`fputs`, `printf`/`fprintf`, and
+  character `mem*` roots.  These calls are counted below and mapped to
+  slices by owner.
+- Fixed buffers: remaining candidates include display lines, command
+  text, directory/path storage, static return buffers, and global
+  scratch buffers.  Protocol byte buffers, lookup tables, and caller
+  output buffers stay with their owning API slices.
+- Filename storage: current path candidates are concentrated in
+  `decode.cpp`, `ngstuff.cpp`, `opt.cpp`, `respond.cpp`, `url.cpp`, and
+  call sites that still round-trip through `file_exp` and mutable
+  buffers.
+
+## Current `safe_copy` Inventory
+
+The current tree has 45 `safe_copy` hits: the helper definition, the
+helper declaration, and 43 call sites.  The call sites are still audit
+roots.  Keep each one visible until the owning storage or API changes.
+
+- `util/env.cpp`, `re_export`: rewrites the value part of exported
+  environment storage in place.  See `CSTR-030`.
+- `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
+  `extract_name` mutates the display copy.  See `CSTR-026`.
+- `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
+  during word wrapping.  See `CSTR-033`.
+- `libtrn/artsrch.cpp`, `article_search`: builds a kill-file search
+  command in `salt_buf`.  See `CSTR-006`.
+- `libtrn/charsubst.cpp`, `str_char_subst`: writes caller output text.
+  See `CSTR-034`.
+- `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
+  See `CSTR-029`.
+- `libtrn/mime.cpp`, `mime_exec`: builds `g_cmd_buf`.  See `CSTR-014`.
+- `libtrn/mime.cpp`, `mime_parse_sub_header`: grows and copies a shared
+  header buffer.  See `CSTR-013`.
+- `libtrn/mime.cpp`, `mime_parse_params`: compacts caller-owned mutable
+  MIME type text.  See `CSTR-035`.
+- `libtrn/mime.cpp`, `MimeSection::mime_description`: truncates an
+  attachment display line.  See `CSTR-015`.
+- `libtrn/ng.cpp`, `output_subject`: truncates subject output through
+  `tmpbuf`.  See `CSTR-010`.
+- `libtrn/ngstuff.cpp`, `switcheroo`: copies `g_buf` into a macro
+  scratch buffer.  See `CSTR-028`.
+- `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
+  See `CSTR-036`.
+- `libtrn/opt.cpp`, `option_value`: returns default refetch text through
+  `g_buf`.  See `CSTR-008`.
+- `libtrn/opt.cpp`, `cwd_check`: copies expanded save directory text
+  through `tmpbuf`.  See `CSTR-009`.
+- `libtrn/opt.cpp`, `set_options`: writes option switch storage through
+  `tcbufptr`.  See `CSTR-037`.
+- `libtrn/rcln.cpp`, `NewsgroupData::check_expired`: patches
+  `m_rc_line` through raw mutable storage.  See `CSTR-011`.
+- `libtrn/rcstuff.cpp`, `list_newsgroups`: builds one display line in
+  `tmpbuf`.  See `CSTR-007`.
+- `libtrn/respond.cpp`, `save_article`: seven save, pipe, and command
+  copies remain.  See `CSTR-020` and `CSTR-021`.
+- `libtrn/respond.cpp`, `follow_it_up`: copies poster command text into
+  `g_cmd_buf`.  See `CSTR-022`.
+- `libtrn/respond.cpp`, `reply`: copies mailer command text into
+  `g_cmd_buf`.  See `CSTR-023`.
+- `libtrn/respond.cpp`, `forward`: copies forwarder command text into
+  `g_cmd_buf`.  See `CSTR-024`.
+- `libtrn/rt-util.cpp`, `compress_name`: writes a caller output buffer.
+  See `CSTR-038`.
+- `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
+  See `CSTR-025`.
+- `libtrn/scorefile.cpp`, `sf_score`: copies a subject only to call
+  `subject_has_re`.  See `CSTR-005`.
+- `libtrn/url.cpp`, `parse_url` and `fetch_ftp`: four static URL and
+  command copies remain.  See `CSTR-016` and `CSTR-018`.
+- `libtrn/util.cpp`, `edit_file`: copies an already-owned command into
+  `g_cmd_buf` even though `do_shell` receives the string.  See
+  `CSTR-002`.
+- `libtrn/uudecode.cpp`, `uue_prescan`: copies part metadata into
+  `g_msg`.  See `CSTR-032`.
+
+## Current `safe_cat` Inventory
+
+- `libtrn/opt.cpp`, `expand_mouse_buttons`: appends mouse button
+  sequences into `g_buf`.  See `CSTR-039`.
+
+## Current C String Function Inventory
+
+The current scan covers `libtrn`, `util`, and `config` source and public
+headers.  Counts below include direct `std::` calls and unqualified C
+calls in production code.
+
+- Copy and concatenation: `strcpy` 114, `strncpy` 5, `strcat` 16.
+- Comparison: `strcmp` 19, `strncmp` 54.
+- Search and length: `strchr` 116, `strrchr` 15, `strstr` 4,
+  `strlen` 144.
+- Formatting into C buffers: `sprintf` 149, `snprintf` 1.
+- C text I/O roots: `fgets` 35, `fputs` 199, `printf` 513,
+  `fprintf` 41.
+- Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
+
+The scan found no current production hits for `strncat`, `strspn`,
+`strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `memmove`,
+or `memchr`.
+
+High-count functions are not self-deferred.  They are grouped into
+owner slices below because most calls sit on shared buffers such as
+`g_buf`, `g_msg`, `g_cmd_buf`, article storage, terminal storage, and
+parser workspaces.
+
 ## Refactoring Slices
 
-Most slices center on one function.  Add local includes and update the
-matching declaration as needed.  The list is ordered from simpler local
-helpers toward callers that can pass string views through once lower
-helpers accept them.
+Slices are stable.  Do not renumber remaining slices when one is
+completed; remove the completed slice.  The physical order is grouped
+by dependency tier: finish earlier tiers first so later caller and
+shared-buffer slices have cleaner helper and ownership contracts to
+build on.
 
-### Libfmt Formatting Slices
+### Tier 0 - Leaf Cleanup
 
-These slices are prepended before more string-building work.  Start with
-dependency support, then use fmt only in functions that are formatting
-text.  For string building, include only sites that already build an
-owned `std::string`.  Direct `printf`/`fprintf` output can move to
-`fmt::print`, but C-buffer `sprintf` sites stay with their C-string
-buffer slices.
+These slices have no slice dependency.  They remove local C string
+construction, comparison, or display roots without changing a larger
+owner.
 
-### Copy/Concat Slices
+### CSTR-001 - Const Global `g_bad_cr`
 
-### Fixed-buffer Storage Slices
+- Files: `config/common.cpp`, `config/include/config/common.h`.
+- Kind: `char[]` assigned from a literal.
+- Function: none; this is storage only.
+- Change: make `g_bad_cr` `const char[]` in the definition and extern
+  declaration.
+- Tests: build only.
 
-### Global String Storage Slices
+### CSTR-002 - `edit_file` Command Storage
 
-These slices replace owned global or file-scope `char *` storage with
-`std::string`.  They are ordered from local storage with no public
-declaration toward globals that cross headers or preserve nullable
-state.  These slices are storage-centered because the declaration and
-all direct assignments must change together.  For `save_str` and
-`safe_copy` ownership slices, replace owned `char *` storage, direct
-`save_str` assignments, and matching `free` paths with `std::string`
-storage.  Use `std::optional<std::string>` or a separate presence flag
-when null and empty are distinct states.
+- Files: `libtrn/util.cpp`.
+- Kind: redundant `safe_copy` into `g_cmd_buf`.
+- Function: `edit_file`.
+- Change: remove the `safe_copy`; keep the owned `std::string command`
+  and pass `command.c_str()` to `do_shell`.
+- Tests: run `test_util`.
 
-### Static-Linkage Slices
+### CSTR-004 - MIME Roman Marker Storage
 
-These slices move top-level functions that are declared in public headers
-but referenced only inside their implementation file.  For each slice,
-remove the listed declarations from the public header, add file-scope
-forward declarations near the top of the implementation file, and make
-both declarations and definitions `static`.
+- Files: `libtrn/mime.cpp`.
+- Kind: mutable static table with literal contents.
+- Function: `tag_action`.
+- Change: replace `s_roman_letters` mutation with immutable upper and
+  lower tables selected by the active tag action.
+- Tests: add or extend MIME HTML list-marker coverage first if it is not
+  already present.
+
+### CSTR-006 - Article Search Salt Command
+
+- Files: `libtrn/artsrch.cpp`.
+- Kind: local fixed buffer and `safe_copy` string construction.
+- Function: `article_search`.
+- Change: build the salt-away command in `std::string`; use append and
+  direct header-name text instead of `salt_buf`.
+- Tests: add article-search command serialization coverage first if no
+  focused test exists.
+
+### CSTR-007 - Newsgroup List Display Line
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: local display buffer and `safe_copy`.
+- Function: `list_newsgroups`.
+- Change: build the display line with `fmt::format` and string append,
+  then call `print_lines(line.c_str(), NO_MARKING)`.
+- Tests: add list-output coverage first if none exists.
+
+### CSTR-009 - Save Directory Path Scratch
+
+- Files: `libtrn/opt.cpp`.
+- Kind: local filename buffer and `safe_copy`.
+- Function: `cwd_check`.
+- Change: use `std::filesystem::path` or `std::string` for the chosen
+  directory.  Keep the existing fallback order.
+- Tests: add focused coverage for the directory fallback behavior first.
+
+### CSTR-014 - MIME Exec Command Builder
+
+- Files: `libtrn/mime.cpp`.
+- Kind: command construction in `g_cmd_buf`.
+- Function: `mime_exec`.
+- Change: build the command in `std::string` and pass `c_str()` to
+  `s_executor`.  Preserve rejection of unsupported `%` escapes.
+- Tests: run `test_mime` before and after.
+
+### CSTR-022 - Follow-up Poster Command
+
+- Files: `libtrn/respond.cpp`.
+- Kind: redundant command copy into `g_cmd_buf`.
+- Function: `follow_it_up`.
+- Change: keep the expanded poster command in `std::string` and pass it
+  directly to `invoke`.
+- Tests: add or run follow-up command coverage.
+
+### CSTR-023 - Reply Mailer Command
+
+- Files: `libtrn/respond.cpp`.
+- Kind: command copy into `g_cmd_buf`.
+- Function: `reply`.
+- Change: keep `file_exp(maildoer)` in a `std::string` and pass it to
+  `invoke` without a global scratch copy.
+- Tests: add or run reply command coverage.
+
+### CSTR-024 - Forward Mailer Command
+
+- Files: `libtrn/respond.cpp`.
+- Kind: command copy into `g_cmd_buf`.
+- Function: `forward`.
+- Change: keep `file_exp(maildoer)` in a `std::string` and pass it to
+  `invoke` without a global scratch copy.
+- Tests: add or run forward command coverage.
+
+### CSTR-027 - Newsgroup Shell Current Directory
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: fixed current-directory buffer.
+- Function: `escapade`.
+- Change: use `std::filesystem::current_path` storage for the saved
+  directory.  Keep shell and `change_dir` behavior unchanged.
+- Tests: add shell escape directory restoration coverage first.
+
+### CSTR-030 - Exported Environment Storage
+
+- Files: `util/env.cpp`, `util/include/util/env.h`.
+- Kind: mutable pointer into `std::string` environment storage.
+- Function: `re_export`.
+- Change: replace in-place value rewriting with owned string update
+  logic that keeps `putenv` storage stable.  Preserve `un_export`
+  semantics.
+- Tests: run `test_init` environment tests before and after.
+
+### CSTR-038 - Compressed Name Output API
+
+- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`.
+- Kind: caller output buffer and `safe_copy`.
+- Function: `compress_name`.
+- Change: return `std::string` instead of writing into the caller buffer.
+  Update direct callers in the same slice.
+- Tests: run `test_rt-util`.
+
+### CSTR-040 - Newsrc Line Reconstruction
+
+- Files: `libtrn/bits.cpp`.
+- Kind: growable C string construction with `strcpy`, `sprintf`,
+  `strlen`, and `safe_realloc`.
+- Function: `bits_to_rc`.
+- Change: build the reconstructed `.newsrc` line directly in a
+  `std::string`, using `fmt` for formatted article numbers.  Assign the
+  result to `m_rc_line` without a raw intermediate buffer.
+- Tests: add or run newsrc line serialization coverage before and after.
+
+### CSTR-041 - Active Scan Wildcard Pattern
+
+- Files: `libtrn/addng.cpp`.
+- Kind: `g_buf` construction with `strcpy`, `sprintf`, and `strlen`.
+- Function: `scan_active`.
+- Change: build the active-list wildcard pattern in `std::string` and
+  pass `c_str()` to `nntp_list`.  Preserve the trailing `$` stripping
+  behavior.
+- Tests: add coverage for the active-list pattern selection first.
+
+### CSTR-049 - Scorefile Wildcard Match
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: substring search with `strstr`.
+- Function: `score_match`.
+- Change: use `std::string_view::find` for the first and optional second
+  pattern pieces.
+- Tests: run `test_scorefile` before and after.
+
+### CSTR-055 - Data Source String Comparisons
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: sentinel and path option checks with `strcmp` and `strrchr`.
+- Functions: `data_source_init`, `dir_or_empty`, and `file_or_empty`.
+- Change: change local parameters to `std::string_view` where null is
+  not a meaningful value, and use direct comparisons.  Preserve empty
+  string as the missing-value sentinel where that is already sufficient.
+- Tests: run `test_datasrc` and `test_DataSourceConfig`.
+
+### Tier 1 - Helper And Parser Foundations
+
+These slices change lower-level helper, parser, or storage contracts
+that later caller slices can consume directly.
+
+### CSTR-003 - NNTP Temporary Article Names
+
+- Files: `libtrn/nntp.cpp`, `libtrn/final.cpp`, `libtrn/head.cpp`,
+  `libtrn/intrp.cpp`, `libtrn/include/trn/nntp.h`.
+- Kind: borrowed static-buffer return.
+- Functions: `nntp_tmp_name`, then direct callers.
+- Change: make `nntp_tmp_name` return `std::string`.  Update callers to
+  keep the string alive locally and pass `c_str()` only to C APIs.
+- Tests: run `test_final` and `test_nntp`.
+
+### CSTR-005 - Reply-prefix Subject Helpers
+
+- Files: `libtrn/rt-util.cpp`, `libtrn/scorefile.cpp`,
+  `libtrn/cache.cpp`, `libtrn/intrp.cpp`,
+  `libtrn/include/trn/rt-util.h`.
+- Kind: mutable parameter used as read-only subject text.
+- Functions: `strip_one_re`, `subject_has_re`, and direct callers.
+- Change: change the helpers to work from string views or offsets, not
+  mutable `char *`.  Remove `reply_subject_buf` from `sf_score`.
+- Tests: run `test_rt-util` before and after; add scorefile coverage if
+  the scoring branch is not covered.
+
+### CSTR-012 - MIME Cap Line Reader
+
+- Files: `libtrn/mime.cpp`.
+- Kind: growable owned `char *` line buffer.
+- Function: `mime_read_mimecap`.
+- Change: use `std::string` for continued mimecap lines.  Preserve
+  documented comment and continuation behavior.
+- Tests: run `test_mime` before and after.
+
+### CSTR-013 - MIME Sub-header Buffer
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
+- Kind: static growable `char *` buffer.
+- Function: `mime_parse_sub_header`.
+- Change: make the header accumulation buffer local `std::string`
+  storage.  Do not keep hidden static mutable state.
+- Tests: run MIME sub-header coverage before and after; add it if
+  missing.
+
+### CSTR-016 - URL Parse Result Storage
+
+- Files: `libtrn/url.cpp`.
+- Kind: file-scope static URL buffers and `safe_copy`.
+- Functions: `parse_url`, `url_get`.
+- Change: return a `UrlParts` value from `parse_url` with string fields
+  and port.  Remove `s_url_type`, `s_url_host`, and `s_url_path`.
+- Tests: add URL parse tests before refactoring.
+
+### CSTR-034 - Character Substitution Output API
+
+- Files: `libtrn/charsubst.cpp`, `libtrn/include/trn/charsubst.h`.
+- Kind: caller output buffer.
+- Function: `str_char_subst`.
+- Change: add a string-returning substitution path or update callers to
+  pass owned output storage.  Do not merely copy through a temporary.
+- Tests: add substitution coverage first.
+
+### CSTR-035 - MIME Parameter Split API
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
+- Kind: caller-owned mutable input compacted in place.
+- Function: `mime_parse_params`.
+- Change: return the normalized type token and parameters as owned
+  values instead of modifying caller input.
+- Tests: run `test_mime`; add parameter normalization coverage if
+  missing.
+
+### CSTR-037 - Switch File Buffer Ownership
+
+- Files: `libtrn/opt.cpp`, `libtrn/sw.cpp`,
+  `libtrn/include/trn/opt.h`, `libtrn/include/trn/sw.h`.
+- Kind: caller-owned `tcbufptr` grown and copied through raw storage.
+- Function: `set_options` and `sw_file`.
+- Change: move switch-file contents to `std::string` storage and pass
+  views to option parsing.
+- Tests: add switch-file parsing coverage first.
+
+### CSTR-039 - Mouse Button Expansion Storage
+
+- Files: `libtrn/opt.cpp`.
+- Kind: global buffer return and `safe_cat`.
+- Function: `expand_mouse_buttons`.
+- Change: return `std::string` for expanded button text, or store the
+  expansion in owned option text storage before returning a C-string
+  view to legacy callers.
+- Tests: run option tests before and after.
+
+### CSTR-042 - AddGroup Name Storage
+
+- Files: `libtrn/addng.cpp`, `libtrn/include/trn/addng.h`.
+- Kind: flexible `char m_name[1]` member populated with `memcpy`.
+- Functions: `add_to_hash`, `add_to_list`, and direct readers.
+- Change: replace the flexible array member with owned string storage.
+  Update allocation and hash storage so the address of local string data
+  never escapes.
+- Tests: run add-newsgroup coverage before and after; add coverage if
+  the selector list is not tested.
+
+### CSTR-045 - SourceFile Line Input
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: fixed line input and string-like line storage.
+- Function: `SourceFile::open`.
+- Change: read lines into `std::string` storage rather than `g_buf`
+  where truncation is arbitrary.  Keep protocol-sized reads only if a
+  fixed size is meaningful.
+- Tests: run `test_datasrc` before and after.
+
+### CSTR-047 - Scorefile Command Parser Views
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: command parsing with repeated `strncmp` and cursor walking.
+- Function: `sf_do_command`.
+- Change: parse the command as `std::string_view` tokens and compare
+  with direct view equality.  Keep mutable behavior only for branches
+  that intentionally edit the input.
+- Tests: run `test_scorefile` before and after.
+
+### CSTR-050 - UUDecode Prescan Parser Views
+
+- Files: `libtrn/uudecode.cpp`, `libtrn/include/trn/uudecode.h`.
+- Kind: prefix parsing with `strncmp`, `strchr`, and `strlen`.
+- Function: `uue_prescan`.
+- Change: parse candidate subject/header lines with string views while
+  preserving output parameters for filename, part, and total until the
+  caller API is modernized.
+- Tests: add or run UUE prescan tests before and after.
+
+### Tier 2 - Owned Storage And Local Callers
+
+These slices use Tier 1 results or replace one owner of string storage.
+Finish these before broad global-buffer work.
+
+### CSTR-008 - Default Refetch Option Text
+
+- Files: `libtrn/opt.cpp`.
+- Kind: borrowed global-buffer return.
+- Function: `option_value`.
+- Change: stop returning default refetch text through `g_buf`.  Either
+  add stable owned option text storage or move `option_value` to a
+  string-returning shape if callers can be changed together.
+- Tests: run option tests before and after.
+
+### CSTR-010 - Subject Output Line
+
+- Files: `libtrn/ng.cpp`.
+- Kind: arbitrary fixed display buffer and `safe_copy`.
+- Function: `output_subject`.
+- Change: use `fmt::format` plus `std::string` for the default subject
+  path.  Keep the `g_subj_line` interpolation branch unchanged until
+  `interp` can write to owned string storage.
+- Tests: add output coverage first; preserve the order of subject lookup
+  and interpolation.
+
+### CSTR-011 - Expired Article Newsrc Rewrite
+
+- Files: `libtrn/rcln.cpp`.
+- Kind: `std::string` storage patched through raw pointers.
+- Function: `NewsgroupData::check_expired`.
+- Change: construct the replacement `m_rc_line` with string operations
+  instead of `safe_malloc`, `strcpy`, and `safe_copy`.
+- Tests: add newsrc rewrite coverage first if not already present.
+
+### CSTR-015 - MIME Description Output
+
+- Files: `libtrn/mime.cpp`, `libtrn/artio.cpp`,
+  `libtrn/include/trn/mime.h`.
+- Kind: caller output buffer with arbitrary truncation.
+- Function: `MimeSection::mime_description`.
+- Change: return `std::string` for the description and apply display
+  truncation explicitly at the call site if it is meaningful.
+- Tests: add attachment-description coverage first if missing.
+
+### CSTR-017 - HTTP Fetch Buffers
+
+- Files: `libtrn/url.cpp`.
+- Kind: shared static request and read buffer.
+- Function: `fetch_http`.
+- Change: use an owned request string for `GET`, and a local byte/string
+  buffer for socket reads.  Do not use shared `s_url_buf`.
+- Tests: add or run URL fetch tests with a fake connection if available.
+
+### CSTR-018 - FTP Fetch Command Storage
+
+- Files: `libtrn/url.cpp`.
+- Kind: static path, user, host, and command buffers.
+- Function: `fetch_ftp`.
+- Change: use `std::string` for `path`, `username`, `userhost`, and the
+  escaped shell command.  Preserve the slash split and validation.
+- Tests: build with `USE_FTP` coverage if available.
+
+### CSTR-019 - Decode Piece Directory Storage
+
+- Files: `libtrn/decode.cpp`.
+- Kind: static returned path buffer and mutable directory parameter.
+- Functions: `decode_mkdir`, `decode_rmdir`, and `decode_piece`.
+- Change: make `decode_mkdir` return `std::string` with empty string as
+  failure.  Make `decode_rmdir` accept owned or view path text.  Keep the
+  string alive in `decode_piece`.
+- Tests: add decode-piece directory behavior coverage first if missing.
+
+### CSTR-026 - Article FROM Display Buffer
+
+- Files: `libtrn/art.cpp`, `libtrn/include/trn/art.h`.
+- Kind: global display buffer `g_art_line`.
+- Function: article display path handling FROM headers.
+- Change: use local owned display text for the FROM transformation
+  before printing.  Do not mutate shared article text.
+- Tests: add article header display coverage first.
+
+### CSTR-028 - Switcheroo Macro Scratch
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: fixed macro and current-directory buffers.
+- Function: `switcheroo`.
+- Change: replace the saved current directory with filesystem path
+  storage.  Leave `mac_line` output buffer until that API is changed.
+- Tests: add switch command directory coverage first.
+
+### CSTR-032 - UUDecode Prescan Message
+
+- Files: `libtrn/uudecode.cpp`.
+- Kind: writes part metadata into global `g_msg`.
+- Function: `uue_prescan`.
+- Change: return the message text or write it to owned status storage
+  instead of copying into `g_msg`.
+- Tests: add UUE prescan coverage first.
+
+### CSTR-043 - Active Group Lookup Buffer
+
+- Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.
+- Kind: caller output buffer using `sprintf`, `fgets`, `strncmp`,
+  `strrchr`, and `memcpy`.
+- Function: `DataSource::find_active_group`.
+- Change: return owned active-line text or fill caller-owned
+  `std::string` storage instead of copying through `outbuf`.
+- Tests: run `test_datasrc` before and after; add refetch/cache coverage
+  for active-line updates if missing.
+
+### CSTR-044 - Group Description Lookup Buffer
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: `g_buf` line construction with `snprintf`, `strcat`, and
+  `fputs`.
+- Function: `DataSource::find_group_desc`.
+- Change: construct the group-description line in `std::string` and
+  append/store that string without routing through `g_buf`.
+- Tests: run `test_datasrc` before and after.
+
+### CSTR-046 - Close Match Newsgroup Storage
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: `char **` array and C string parsing with `strchr` and
+  `strcmp`.
+- Functions: `find_close_match`, `check_distance`, and `get_near_miss`.
+- Change: replace `s_newsgroup_ptrs` with vector-backed string or
+  string-view storage owned by the close-match scan.
+- Tests: add close-match coverage first if missing.
+
+### CSTR-048 - Scorefile Line Parser Views
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: line parsing with `strchr`, `strlen`, and in-place terminators.
+- Function: `sf_do_line`.
+- Change: use views for the score, header, and pattern fields where the
+  parser only slices text.  Keep owned strings for values retained in
+  `ScoreFileEntry`.
+- Tests: run `test_scorefile` before and after.
+
+### CSTR-053 - Article Tree Line Storage
+
+- Files: `libtrn/rt-wumpus.cpp`.
+- Kind: static tree buffers and copied line storage.
+- Functions: `cache_tree` and `tree_puts`.
+- Change: replace `s_tree_buff` and `s_tree_lines` raw allocations with
+  owned strings.  Preserve the current visual tree output exactly.
+- Tests: add tree rendering coverage first if missing.
+
+### CSTR-054 - Terminal Key And Choice Formatting
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: prompt/key formatting through `g_buf`, `g_cmd_buf`, `strcpy`,
+  `strcat`, `sprintf`, `strlen`, and `strncmp`.
+- Functions: keymap display and choice input helpers.
+- Change: refactor one helper at a time to local `std::string` or `fmt`
+  output while leaving termcap storage and typeahead buffers alone.
+- Tests: add terminal helper coverage first if practical; otherwise run
+  the focused terminal tests that exist.
+
+### Tier 3 - Workflow Callers
+
+These slices clean up workflows after their helper/storage dependencies
+are available.  Keep the listed order inside dependent families.
+
+### CSTR-020 - Save Article Extract Branch
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local, static, and global command buffers.
+- Function: `save_article`.
+- Change: refactor only the `cmd == 'e'` branch to use strings for the
+  expanded destination, custom extractor command, and directory text.
+  Do not store pointers into temporary strings.
+- Tests: add save/extract coverage first, with isolated output files.
+
+### CSTR-021 - Save Article Pipe And Normal Save Branches
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local destination buffer and `g_cmd_buf` command construction.
+- Function: `save_article`.
+- Change: refactor the pipe and normal-save branches after `CSTR-020`.
+  Keep destination ownership in `std::string` and use `fmt` for command
+  construction where formatting remains.
+- Tests: add pipe and normal-save coverage first.
+
+### CSTR-025 - Selector Extract Command Handoff
+
+- Files: `libtrn/sacmd.cpp`, `libtrn/respond.cpp`.
+- Kind: command text faked in global `g_buf`.
+- Function: `s_art_cmd`.
+- Change: after `save_article` has a string command entry point, pass
+  the extract command text without copying into `g_buf`.
+- Tests: add selector extract coverage first.
+
+### CSTR-051 - Selector Status Message Storage
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: `g_msg` and `g_cmd_buf` construction with `strcpy`, `sprintf`,
+  `strcat`, and `strlen`.
+- Functions: selector status and prompt display helpers.
+- Change: replace one selector status helper at a time with
+  `std::string` or `fmt::format`, then pass owned text to display
+  helpers.  Do not store pointers to temporary string data.
+- Tests: add selector status coverage first if missing.
+
+### CSTR-052 - Top-level News Source Display
+
+- Files: `libtrn/trn.cpp`.
+- Kind: `g_msg` and `g_buf` construction with `strcpy`, `sprintf`,
+  `strcat`, and `strlen`.
+- Function: news source information display path.
+- Change: build each display paragraph as `std::string` with `fmt`, then
+  print it without global scratch buffers.
+- Tests: add display-output coverage first if missing.
+
+### Tier 4 - Broad Shared Buffers
+
+These slices should wait until earlier tiers have reduced direct callers
+and clarified ownership at the edges.
+
+### CSTR-029 - Interpolation Scratch Copies
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: local and static scratch buffers in one large function.
+- Function: `do_interp`.
+- Change: split small helper operations out first, then replace the
+  five remaining `safe_copy` scratch paths with owned strings or
+  string views where no pointer escapes.
+- Tests: run `test_interp` before and after each helper extraction.
+
+### CSTR-031 - Global Command And Message Buffers
+
+- Files: `config/common.cpp`, `config/include/config/common.h`, many
+  users.
+- Kind: global fixed buffers `g_msg`, `g_buf`, and `g_cmd_buf`.
+- Function: storage-centered; no single function owns it.
+- Change: replace one global buffer at a time with owned string or
+  scoped command/message objects.  Start only after local slices above
+  have reduced direct writers.
+- Tests: broad workflow required.
+
+### CSTR-033 - Article Body Wrap Buffer
+
+- Files: `libtrn/artio.cpp`.
+- Kind: mutable article-body buffer compaction.
+- Function: `read_art_buf`.
+- Change: convert article body storage to owned string storage before
+  removing the in-place `safe_copy`.
+- Tests: add wrapped article body coverage first.
+
+### CSTR-036 - NNTP Protocol Line Compaction
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: protocol read buffer compaction.
+- Function: `nntp_read_art`.
+- Change: keep the protocol line in owned string storage once the NNTP
+  read API no longer exposes a caller mutable buffer.
+- Tests: run `test_nntp`.
