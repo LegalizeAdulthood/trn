@@ -555,15 +555,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-014 - MIME Exec Command Builder
-
-- Files: `libtrn/mime.cpp`.
-- Kind: command construction in `g_cmd_buf`.
-- Function: `mime_exec`.
-- Change: build the command in `std::string` and pass `c_str()` to
-  `s_executor`.  Preserve rejection of unsupported `%` escapes.
-- Tests: run `test_mime` before and after.
-
 ### CSTR-022 - Follow-up Poster Command
 
 - Files: `libtrn/respond.cpp`.

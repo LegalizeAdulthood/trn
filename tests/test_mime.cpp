@@ -142,6 +142,27 @@ TEST_F(MimeExecTest, applicationPdfFailedTestCommand)
     ASSERT_EQ(nullptr, cap);
 }
 
+TEST_F(MimeExecTest, rejectsUnsupportedNameEscape)
+{
+    EXPECT_CALL(m_exec, Call(_, _)).Times(0);
+
+    EXPECT_EQ(-1, mime_exec("viewer %n"));
+}
+
+TEST_F(MimeExecTest, rejectsUnsupportedFileEscape)
+{
+    EXPECT_CALL(m_exec, Call(_, _)).Times(0);
+
+    EXPECT_EQ(-1, mime_exec("viewer %F"));
+}
+
+TEST_F(MimeExecTest, rejectsUnterminatedParameterEscape)
+{
+    EXPECT_CALL(m_exec, Call(_, _)).Times(0);
+
+    EXPECT_EQ(-1, mime_exec("viewer %{name"));
+}
+
 namespace
 {
 

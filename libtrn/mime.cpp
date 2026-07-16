@@ -307,24 +307,23 @@ bool mime_types_match(std::string_view ct, std::string_view pat)
 
 int mime_exec(const char *cmd)
 {
-    char *t = g_cmd_buf;
+    std::string command;
+    command.reserve(CMD_BUF_LEN);
 
-    for (const char *f = cmd; *f && t - g_cmd_buf < CMD_BUF_LEN - 2; f++)
+    for (const char *f = cmd; *f; f++)
     {
         if (*f == '%')
         {
             switch (*++f)
             {
             case 's':
-                safe_copy(t, g_decode_filename.c_str(), CMD_BUF_LEN-(t-g_cmd_buf));
-                t += std::strlen(t);
+                command += g_decode_filename;
                 break;
 
             case 't':
-                *t++ = '\'';
-                safe_copy(t, g_mime_section->m_type_name->c_str(), CMD_BUF_LEN-(t-g_cmd_buf)-1);
-                t += std::strlen(t);
-                *t++ = '\'';
+                command += '\'';
+                command += *g_mime_section->m_type_name;
+                command += '\'';
                 break;
 
             case '{':
@@ -340,15 +339,17 @@ int mime_exec(const char *cmd)
                                                       std::string_view{f, static_cast<std::size_t>(s - f)})
                                     : nullptr;
                 f = s;
-                *t++ = '\'';
-                safe_copy(t, p, CMD_BUF_LEN-(t-g_cmd_buf)-1);
-                t += std::strlen(t);
-                *t++ = '\'';
+                command += '\'';
+                if (p)
+                {
+                    command += p;
+                }
+                command += '\'';
                 break;
             }
 
             case '%':
-                *t++ = '%';
+                command += '%';
                 break;
 
             case 'n':
@@ -358,12 +359,11 @@ int mime_exec(const char *cmd)
         }
         else
         {
-            *t++ = *f;
+            command += *f;
         }
     }
-    *t = '\0';
 
-    return s_executor(SH, g_cmd_buf);
+    return s_executor(SH, command.c_str());
 }
 
 static void mime_init_sections()
