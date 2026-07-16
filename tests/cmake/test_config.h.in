@@ -1,3 +1,6 @@
+// This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
+
 #ifndef TRN_TEST_CONFIG_H
 #define TRN_TEST_CONFIG_H
 
@@ -84,20 +87,7 @@ namespace testing
 
 struct MockEnvironment;
 
-void        set_test_data_dir(std::string dir);
-void        reset_test_data_dir();
-std::string test_data_dir();
-std::string test_home_dir();
-std::string test_home_dir_capitalized();
-std::string test_tmp_dir();
-std::string test_trn_dir();
-std::string test_dot_dir();
-std::string test_lib_dir();
-std::string test_rn_lib_dir();
-std::string test_orgfile();
-std::string test_newsgroup_dir();
-std::string test_article_file();
-void        set_envars(MockEnvironment &env);
+void        set_envars(MockEnvironment &env, const std::string &tmp_dir);
 bool        set_name(char *);
 bool        set_host_name(char *);
 void        reset_lib_dirs();

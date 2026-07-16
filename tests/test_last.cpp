@@ -30,6 +30,8 @@ class LastTest : public testing::Test
 protected:
     void SetUp() override
     {
+        m_dot_dir = fs::path{TRN_TEST_DATA_DIR}.parent_path() / "test_runs" /
+                    (std::string{"LastTest_"} + testing::UnitTest::GetInstance()->current_test_info()->name());
         m_old_dot_dir = g_dot_dir;
         m_old_newsgroup_name = g_newsgroup_name;
         m_old_pid = g_our_pid;
@@ -73,7 +75,7 @@ protected:
         return path;
     }
 
-    fs::path    m_dot_dir{fs::path{TRN_TEST_DATA_DIR} / "last"};
+    fs::path    m_dot_dir;
     std::string m_old_dot_dir;
     std::string m_old_newsgroup_name;
     long        m_old_pid{};
