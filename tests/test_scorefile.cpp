@@ -196,6 +196,27 @@ TEST_F(ScoreFileTest, subjectScoringKeepsLineBufferCap)
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 }
 
+TEST_F(ScoreFileTest, replyScoreRecognizesReplyPrefix)
+{
+    const fs::path score_dir{TRN_TEST_TMP_DIR "/scorefile-reply"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+    fs::create_directories(score_dir);
+    std::ofstream{score_dir / "global"} << "reply 17\n";
+    g_newsgroup_name = "comp.lang.apl";
+    article_ptr(TEST_ARTICLE_NUM)->m_flags |= AF_HAS_RE;
+
+    trn::testing::MockEnvironment env;
+    std::string                   score_dir_name{score_dir.string()};
+    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
+        .WillRepeatedly(::testing::Return(score_dir_name.data()));
+
+    sf_init();
+
+    EXPECT_EQ(17, sf_score(TEST_ARTICLE_NUM));
+}
+
 TEST_F(ScoreFileTest, initReadsGlobalAndHierarchicalGroupScoreFiles)
 {
     const fs::path score_dir{TRN_TEST_TMP_DIR "/scorefile-hierarchy"};

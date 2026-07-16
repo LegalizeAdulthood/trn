@@ -14,8 +14,8 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
-#include <string.h>
 #include <string>
+#include <string_view>
 
 using namespace testing;
 
@@ -255,58 +255,66 @@ TEST_F(CompressFromTest, returnsEmptyForNonPositiveWidth)
 
 TEST(SubjectHasReTest, one)
 {
-    char *before = strdup("Re: followup");
-    char *after{};
-    const char *expected = "followup";
+    constexpr std::string_view before{"Re: followup"};
+    std::string_view           after;
 
-    const bool hasRe = subject_has_re(before, &after);
+    const bool hasRe = subject_has_re(before, after);
 
     EXPECT_TRUE(hasRe);
-    EXPECT_STREQ(expected, after);
-
-    free(before);
+    EXPECT_EQ("followup", after);
 }
 
 TEST(SubjectHasReTest, noRePresent)
 {
-    char buffer[]{TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
+    constexpr std::string_view subject{TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    std::string_view           interesting;
 
-    const bool hasRe = subject_has_re(buffer, &interesting);
+    const bool hasRe = subject_has_re(subject, interesting);
 
     ASSERT_FALSE(hasRe);
-    ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+}
+
+TEST(SubjectHasReTest, skipsLeadingWhitespaceWithoutReplyPrefix)
+{
+    constexpr std::string_view subject{" \t" TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    std::string_view           interesting;
+
+    const bool hasRe = subject_has_re(subject, interesting);
+
+    EXPECT_FALSE(hasRe);
+    EXPECT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
 }
 
 TEST(SubjectHasReTest, stripAllRe)
 {
-    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
+    constexpr std::string_view subject{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    std::string_view           interesting;
 
-    const bool hasRe = subject_has_re(buffer, &interesting);
+    const bool hasRe = subject_has_re(subject, interesting);
 
     ASSERT_TRUE(hasRe);
-    ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
 }
 
 TEST(SubjectHasReTest, stripRe3)
 {
-    char buffer[]{"Re^3: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
+    constexpr std::string_view subject{"Re^3: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    std::string_view           interesting;
 
-    const bool hasRe = subject_has_re(buffer, &interesting);
+    const bool hasRe = subject_has_re(subject, interesting);
 
     ASSERT_TRUE(hasRe);
-    ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
 }
 
 TEST(SubjectHasReTest, stripOneRe)
 {
-    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
+    constexpr std::string_view subject{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    std::string_view           interesting;
 
-    const bool hasRe = strip_one_re(buffer, &interesting);
+    const bool hasRe = strip_one_re(subject, interesting);
 
     ASSERT_TRUE(hasRe);
-    ASSERT_STREQ("Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+    ASSERT_EQ("Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
 }

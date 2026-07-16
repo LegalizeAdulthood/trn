@@ -42,6 +42,7 @@ struct utsname utsn;
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 
 std::string g_orig_dir;    // cwd when rn invoked
 char       *g_host_name{}; // host name to match local postings
@@ -1018,11 +1019,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     {
                         subj_buf = fetch_subj_copy(g_art);
                     }
-                    char *str = subj_buf->data();
+                    std::string_view subject{*subj_buf};
                     if (*pattern == 's')
                     {
-                        subject_has_re(str, &str);
+                        subject_has_re(subject, subject);
                     }
+                    char *str = subj_buf->data() + (subj_buf->size() - subject.size());
                     char *h;
                     if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)
                     {

@@ -954,9 +954,7 @@ int sf_score(ArticleNum a)
         // later: consider other possible reply forms (threading?)
         if (!reply_subject.empty())
         {
-            char reply_subject_buf[LINE_BUF_LEN];
-            safe_copy(reply_subject_buf, reply_subject.c_str(), sizeof reply_subject_buf);
-            if (subject_has_re(reply_subject_buf, nullptr))
+            if (subject_has_re(reply_subject))
             {
                 sum = sum+s_reply_score;
                 if (g_sf_score_verbose)

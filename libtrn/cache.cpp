@@ -412,39 +412,31 @@ std::string fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill
 //
 void Article::set_subj_line(std::string_view subj)
 {
-    HashDatum data;
-    Subject  *sp;
-    char     *subj_start;
+    HashDatum        data;
+    Subject         *sp;
+    std::string_view subj_start;
 
-    std::string subj_text{subj};
-    int         size = static_cast<int>(subj_text.size());
-
-    if (subject_has_re(subj_text.data(), &subj_start))
+    if (subject_has_re(subj, subj_start))
     {
         m_flags |= AF_HAS_RE;
     }
-    if ((size -= subj_start - subj_text.data()) < 0)
-    {
-        size = 0;
-    }
+    int size = static_cast<int>(subj_start.size());
 
     std::string new_subj(static_cast<std::size_t>(size) + 4 + 1, '\0');
     std::copy_n("Re: ", 4, new_subj.data());
-    size = decode_header(new_subj.data() + 4, std::string_view{subj_start, static_cast<std::size_t>(size)});
+    size = decode_header(new_subj.data() + 4, subj_start);
 
     // Do the Re:-stripping over again, just in case it was encoded.
-    if (subject_has_re(new_subj.data() + 4, &subj_start))
+    const std::string_view decoded_subject{new_subj.data() + 4, static_cast<std::size_t>(size)};
+    if (subject_has_re(decoded_subject, subj_start))
     {
         m_flags |= AF_HAS_RE;
     }
-    if (subj_start != new_subj.data() + 4)
+    const std::size_t prefix_size = decoded_subject.size() - subj_start.size();
+    size = static_cast<int>(subj_start.size());
+    if (prefix_size != 0)
     {
-        const std::size_t prefix_size = subj_start - (new_subj.data() + 4);
         new_subj.erase(4, prefix_size);
-        if ((size -= static_cast<int>(prefix_size)) < 0)
-        {
-            size = 0;
-        }
     }
     new_subj.resize(static_cast<std::size_t>(size) + 4);
 

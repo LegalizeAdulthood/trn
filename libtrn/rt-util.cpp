@@ -640,57 +640,61 @@ inline bool eq_ignore_case(char unknown, char lower)
     return std::tolower(unknown) == lower;
 }
 
-bool strip_one_re(char *str, char **strp)
+bool strip_one_re(std::string_view subject, std::string_view &remaining)
 {
-    bool has_Re = false;
-    while (*str && at_grey_space(str))
+    bool        has_re = false;
+    std::size_t pos = 0;
+    while (pos < subject.size() && at_grey_space(subject.data() + pos))
     {
-        str++;
+        pos++;
     }
-    if (eq_ignore_case(str[0], 'r') && eq_ignore_case(str[1], 'e')) // check for Re:
+    if (subject.size() - pos >= 2 && eq_ignore_case(subject[pos], 'r') &&
+        eq_ignore_case(subject[pos + 1], 'e')) // check for Re:
     {
-        char *cp = str + 2;
-        if (*cp == '^') // allow Re^2:
+        std::size_t end = pos + 2;
+        if (end < subject.size() && subject[end] == '^') // allow Re^2:
         {
-            do
+            end++;
+            while (end < subject.size() && subject[end] <= '9' && subject[end] >= '0')
             {
-                ++cp;
-            } while (*cp <= '9' && *cp >= '0');
+                end++;
+            }
         }
-        if (*cp == ':')
+        if (end < subject.size() && subject[end] == ':')
         {
-            do
+            end++;
+            while (end < subject.size() && at_grey_space(subject.data() + end))
             {
-                ++cp;
-            } while (*cp && at_grey_space(cp));
-            str = cp;
-            has_Re = true;
+                end++;
+            }
+            pos = end;
+            has_re = true;
         }
     }
-    if (strp)
-    {
-        *strp = str;
-    }
+    remaining = subject.substr(pos);
 
-    return has_Re;
+    return has_re;
 }
 
 // Parse the subject to look for any "Re[:^]"s at the start.
-// Returns true if a Re was found.  If strp is non-nullptr, it
-// will be set to the start of the interesting characters.
+// Returns true if a Re was found and sets remaining to the interesting
+// characters.
 //
-bool subject_has_re(char *str, char **strp)
+bool subject_has_re(std::string_view subject, std::string_view &remaining)
 {
-    bool has_Re = false;
-    while (strip_one_re(str, &str))
+    bool has_re = false;
+    while (strip_one_re(subject, subject))
     {
-        has_Re = true;
+        has_re = true;
     }
-    if (strp)
-    {
-        *strp = str;
-    }
-    return has_Re;
+    remaining = subject;
+    return has_re;
+}
+
+bool subject_has_re(std::string_view subject)
+{
+    std::string_view remaining;
+    return subject_has_re(subject, remaining);
 }
 
 // Output a subject in <max> chars.  Does intelligent trimming that tries to

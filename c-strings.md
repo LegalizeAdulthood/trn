@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 33 hits remain, including the helper declaration and
-  definition.  The 31 call sites are inventoried below.
+- `safe_copy`: 32 hits remain, including the helper declaration and
+  definition.  The 30 call sites are inventoried below.
 - `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
   `CSTR-039`.
 - `safe_realloc`: string-like storage remains in `mime_read_mimecap`,
@@ -451,8 +451,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 33 `safe_copy` hits: the helper definition, the
-helper declaration, and 31 call sites.  The call sites are still audit
+The current tree has 32 `safe_copy` hits: the helper definition, the
+helper declaration, and 30 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -487,8 +487,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   in `g_buf`.  See `CSTR-031`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
   See `CSTR-025`.
-- `libtrn/scorefile.cpp`, `sf_score`: copies a subject only to call
-  `subject_has_re`.  See `CSTR-005`.
 - `libtrn/url.cpp`, `parse_url` and `fetch_ftp`: four static URL and
   command copies remain.  See `CSTR-016` and `CSTR-018`.
 - `libtrn/uudecode.cpp`, `uue_prescan`: copies part metadata into
@@ -541,18 +539,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-005 - Reply-prefix Subject Helpers
-
-- Files: `libtrn/rt-util.cpp`, `libtrn/scorefile.cpp`,
-  `libtrn/cache.cpp`, `libtrn/intrp.cpp`,
-  `libtrn/include/trn/rt-util.h`.
-- Kind: mutable parameter used as read-only subject text.
-- Functions: `strip_one_re`, `subject_has_re`, and direct callers.
-- Change: change the helpers to work from string views or offsets, not
-  mutable `char *`.  Remove `reply_subject_buf` from `sf_score`.
-- Tests: run `test_rt-util` before and after; add scorefile coverage if
-  the scoring branch is not covered.
 
 ### CSTR-012 - MIME Cap Line Reader
 
