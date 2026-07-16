@@ -464,8 +464,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   `CSTR-031`.
 - `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
   See `CSTR-029`.
-- `libtrn/mime.cpp`, `mime_parse_params`: compacts caller-owned mutable
-  MIME type text.  See `CSTR-035`.
 - `libtrn/mime.cpp`, `MimeSection::mime_description`: truncates an
   attachment display line.  See `CSTR-015`.
 - `libtrn/ng.cpp`, `output_subject`: truncates subject output through
@@ -538,16 +536,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-035 - MIME Parameter Split API
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
-- Kind: caller-owned mutable input compacted in place.
-- Function: `mime_parse_params`.
-- Change: return the normalized type token and parameters as owned
-  values instead of modifying caller input.
-- Tests: run `test_mime`; add parameter normalization coverage if
-  missing.
 
 ### CSTR-037 - Switch File Buffer Ownership
 

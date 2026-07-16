@@ -94,6 +94,29 @@ TEST_F(MimeTest, textPlainHasFlags)
     ASSERT_EQ(MCF_NEEDS_TERMINAL | MCF_COPIOUS_OUTPUT, cap->flags);
 }
 
+TEST(MimeParseParamsTest, returnsViewsWithoutModifyingInput)
+{
+    const std::string input{" (leading) multipart/mixed (type); "
+                            "boundary = \"part\\\"-boundary\"; charset = utf-8"};
+
+    const MimeParamViews parsed = mime_parse_params(input);
+
+    EXPECT_EQ("multipart/mixed", parsed.value);
+    EXPECT_THAT(parsed.params, ElementsAre("boundary = \"part\\\"-boundary\"", "charset = utf-8"));
+}
+
+TEST(MimeParseParamsTest, decodesEscapedQuotedValueWhenConsumed)
+{
+    const std::string input{"multipart/mixed; boundary = \"part\\\"-boundary\""};
+    MimeSection       section{};
+
+    section.mime_parse_type(input);
+
+    ASSERT_TRUE(section.m_boundary);
+    EXPECT_EQ("part\"-boundary", *section.m_boundary);
+    section.mime_clear_struct();
+}
+
 namespace
 {
 
@@ -164,9 +187,7 @@ protected:
     {
         MimeTest::SetUp();
         g_decode_filename = TRN_TEST_MIME_PDF_DECODE_FILE;
-        m_mime_section.m_type_name = TRN_TEST_MIME_PDF_CONTENT_TYPE;
-        m_type_params = TRN_TEST_MIME_PDF_SECTION_PARAMS;
-        m_mime_section.m_type_params = mime_parse_params(m_type_params.data());
+        m_mime_section.mime_parse_type(TRN_TEST_MIME_PDF_CONTENT_TYPE "; " TRN_TEST_MIME_PDF_SECTION_PARAMS);
         g_mime_section = &m_mime_section;
     }
     void TearDown() override
@@ -177,7 +198,6 @@ protected:
     }
 
     MimeSection m_mime_section{};
-    std::string m_type_params;
 };
 
 }

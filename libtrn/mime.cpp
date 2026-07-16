@@ -79,8 +79,8 @@ static char       *mime_parse_entry_arg(char **cpp);
 static int         mime_getc(std::FILE *fp);
 static void        mime_init_sections();
 static bool        mime_pop_section();
-static const char *mime_find_param(const std::string &params, std::string_view param);
 static char       *mime_skip_whitespace(char *s);
+static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
 static char       *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, HtmlFlags flag);
@@ -288,6 +288,98 @@ bool mime_types_match(std::string_view ct, std::string_view pat)
             string_case_equal(content_type.c_str(), pattern.c_str(), static_cast<int>(len)) && ct[len] == '/');
 }
 
+static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos)
+{
+    while (pos < text.size())
+    {
+        if (text[pos] == '(')
+        {
+            int comment_level = 1;
+            pos++;
+            while (comment_level != 0 && pos < text.size())
+            {
+                switch (text[pos++])
+                {
+                case '\\':
+                    if (pos < text.size())
+                    {
+                        pos++;
+                    }
+                    break;
+
+                case '(':
+                    comment_level++;
+                    break;
+
+                case ')':
+                    comment_level--;
+                    break;
+                }
+            }
+        }
+        else if (!std::isspace(static_cast<unsigned char>(text[pos])))
+        {
+            break;
+        }
+        else
+        {
+            pos++;
+        }
+    }
+    return pos;
+}
+
+template <typename Params>
+static std::string mime_find_param(const Params &params, std::string_view param)
+{
+    for (const auto &raw_param : params)
+    {
+        const std::string_view text{raw_param};
+        std::size_t            pos = mime_skip_whitespace(text, 0);
+        const std::size_t      name_begin = pos;
+        while (pos < text.size() && text[pos] != ';' && text[pos] != '(' && text[pos] != '=' &&
+               !std::isspace(static_cast<unsigned char>(text[pos])))
+        {
+            pos++;
+        }
+        const std::string_view name = text.substr(name_begin, pos - name_begin);
+        pos = mime_skip_whitespace(text, pos);
+        if (name.size() != param.size() || pos == text.size() || text[pos] != '=' ||
+            !string_case_equal(name.data(), param.data(), static_cast<int>(param.size())))
+        {
+            continue;
+        }
+
+        pos = mime_skip_whitespace(text, pos + 1);
+        std::string value;
+        if (pos < text.size() && text[pos] == '"')
+        {
+            pos++;
+            value.reserve(text.size() - pos);
+            while (pos < text.size() && text[pos] != '"')
+            {
+                if (text[pos] == '\\' && pos + 1 < text.size() && text[pos + 1] == '"')
+                {
+                    pos++;
+                }
+                value.push_back(text[pos++]);
+            }
+        }
+        else
+        {
+            const std::size_t value_begin = pos;
+            while (pos < text.size() && text[pos] != ';' && text[pos] != '(' &&
+                   !std::isspace(static_cast<unsigned char>(text[pos])))
+            {
+                pos++;
+            }
+            value.assign(text.substr(value_begin, pos - value_begin));
+        }
+        return value;
+    }
+    return {};
+}
+
 int mime_exec(const char *cmd)
 {
     std::string command;
@@ -317,16 +409,10 @@ int mime_exec(const char *cmd)
                     return -1;
                 }
                 f++;
-                const char *p = g_mime_section->m_type_params //
-                                    ? mime_find_param(*g_mime_section->m_type_params,
-                                                      std::string_view{f, static_cast<std::size_t>(s - f)})
-                                    : nullptr;
-                f = s;
                 command += '\'';
-                if (p)
-                {
-                    command += p;
-                }
+                command += mime_find_param(g_mime_section->m_type_params,
+                                           std::string_view{f, static_cast<std::size_t>(s - f)});
+                f = s;
                 command += '\'';
                 break;
             }
@@ -385,7 +471,7 @@ void MimeSection::mime_clear_struct()
 {
     m_filename.reset();
     m_type_name.reset();
-    m_type_params.reset();
+    m_type_params.clear();
     m_boundary.reset();
     safe_free0(m_html_blocks);
     m_type = NOT_MIME;
@@ -410,7 +496,7 @@ void mime_set_article()
 
     {
         std::string s = fetch_lines(g_art, CONT_TYPE_LINE);
-        g_mime_section->mime_parse_type(s.data());
+        g_mime_section->mime_parse_type(s);
     }
 
     if (g_is_mime)
@@ -419,7 +505,7 @@ void mime_set_article()
         g_mime_section->mime_parse_encoding(s.data());
 
         s = fetch_lines(g_art, CONT_DISP_LINE);
-        g_mime_section->mime_parse_disposition(s.data());
+        g_mime_section->mime_parse_disposition(s);
 
         g_mime_state = g_mime_section->m_type;
         if (g_mime_state == NOT_MIME
@@ -435,20 +521,26 @@ void mime_set_article()
 }
 
 // Use the Content-Type to set values in the mime structure
-void MimeSection::mime_parse_type(char *s)
+void MimeSection::mime_parse_type(std::string_view text)
 {
     m_type_name.reset();
-    m_type_params.reset();
+    m_type_params.clear();
 
-    m_type_params = mime_parse_params(s);
-    if (!*s)
+    const MimeParamViews parsed = mime_parse_params(text);
+    m_type_params.reserve(parsed.params.size());
+    for (const std::string_view param : parsed.params)
+    {
+        m_type_params.emplace_back(param);
+    }
+    if (parsed.value.empty())
     {
         m_type = NOT_MIME;
         return;
     }
-    m_type_name = s;
-    const char *t = mime_find_param(*m_type_params, "name");
-    if (t)
+    m_type_name = parsed.value;
+    const char *s = m_type_name->c_str();
+    std::string t = mime_find_param(m_type_params, "name");
+    if (!t.empty())
     {
         m_filename = t;
     }
@@ -462,7 +554,8 @@ void MimeSection::mime_parse_type(char *s)
             return;
         }
 #ifdef USE_UTF_HACK
-        utf_init(mime_find_param(*m_type_params, "charset"), CHARSET_NAME_UTF8); // FIXME
+        t = mime_find_param(m_type_params, "charset");
+        utf_init(t.c_str(), CHARSET_NAME_UTF8); // FIXME
 #endif
         if (string_case_equal(s, "html", 4))
         {
@@ -481,21 +574,21 @@ void MimeSection::mime_parse_type(char *s)
         m_type = MESSAGE_MIME;
         if (string_case_equal(s, "partial"))
         {
-            t = mime_find_param(*m_type_params, "id");
-            if (!t)
+            t = mime_find_param(m_type_params, "id");
+            if (t.empty())
             {
                 return;
             }
             m_filename = t;
-            t = mime_find_param(*m_type_params, "number");
-            if (t)
+            t = mime_find_param(m_type_params, "number");
+            if (!t.empty())
             {
-                m_part = (short) std::atoi(t);
+                m_part = (short) std::atoi(t.c_str());
             }
-            t = mime_find_param(*m_type_params, "total");
-            if (t)
+            t = mime_find_param(m_type_params, "total");
+            if (!t.empty())
             {
-                m_total = (short) std::atoi(t);
+                m_total = (short) std::atoi(t.c_str());
             }
             if (!m_total)
             {
@@ -510,8 +603,8 @@ void MimeSection::mime_parse_type(char *s)
     if (string_case_equal(s, "multipart/", 10))
     {
         s += 10;
-        t = mime_find_param(*m_type_params, "boundary");
-        if (!t)
+        t = mime_find_param(m_type_params, "boundary");
+        if (t.empty())
         {
             m_type = UNHANDLED_MIME;
             return;
@@ -521,7 +614,7 @@ void MimeSection::mime_parse_type(char *s)
             m_flags |= MSF_ALTERNATIVE;
         }
         m_boundary = t;
-        m_boundary_len = (short)std::strlen(t);
+        m_boundary_len = static_cast<short>(t.size());
         m_type = MULTIPART_MIME;
         return;
     }
@@ -542,16 +635,16 @@ void MimeSection::mime_parse_type(char *s)
 }
 
 // Use the Content-Disposition to set values in the mime structure
-void MimeSection::mime_parse_disposition(char *s)
+void MimeSection::mime_parse_disposition(std::string_view text)
 {
-    std::string params = mime_parse_params(s);
-    if (string_case_equal(s, "inline"))
+    const MimeParamViews parsed = mime_parse_params(text);
+    if (parsed.value.size() == 6 && string_case_equal(parsed.value.data(), "inline", 6))
     {
         m_flags |= MSF_INLINE;
     }
 
-    const char *filename = mime_find_param(params, "filename");
-    if (filename)
+    const std::string filename = mime_find_param(parsed.params, "filename");
+    if (!filename.empty())
     {
         m_filename = filename;
     }
@@ -769,78 +862,67 @@ int mime_end_of_section(char *bp)
     return 0;
 }
 
-// Return a saved string of all the extra parameters on this mime
-// header line.  The passed-in string is transformed into just the
-// first word on the line.
-//
-std::string mime_parse_params(char *str)
+MimeParamViews mime_parse_params(std::string_view text)
 {
-    char *e = mime_skip_whitespace(str);
-    char *s = e;
-    while (*e && *e != ';' && !std::isspace(*e) && *e != '(')
+    MimeParamViews    result;
+    std::size_t       pos = mime_skip_whitespace(text, 0);
+    const std::size_t value_begin = pos;
+    while (pos < text.size() && text[pos] != ';' && text[pos] != '(' &&
+           !std::isspace(static_cast<unsigned char>(text[pos])))
     {
-        e++;
+        pos++;
     }
-    std::string params = mime_skip_whitespace(e);
-    params.push_back('\0');
-    *e = '\0';
-    if (s != str)
-    {
-        safe_copy(str, s, e - s + 1);
-    }
-    char *str_data = params.data();
-    char *t = str_data;
-    s = str_data;
-    while (*s == ';')
-    {
-        s = mime_skip_whitespace(s+1);
-        while (*s && *s != ';' && *s != '(' && *s != '=' && !std::isspace(*s))
-        {
-            *t++ = *s++;
-        }
-        s = mime_skip_whitespace(s);
-        if (*s == '=')
-        {
-            *t++ = *s;
-            s = mime_skip_whitespace(s+1);
-            if (*s == '"')
-            {
-                char *value = s + 1;
-                s = value + (copy_till(t, value, '"') - value);
-                if (*s == '"')
-                {
-                    s++;
-                }
-                t += std::strlen(t);
-            }
-            else
-            {
-                while (*s && *s != ';' && !std::isspace(*s) && *s != '(')
-                {
-                    *t++ = *s++;
-                }
-            }
-        }
-        *t++ = '\0';
-    }
-    *t = '\0';
-    params.resize(t - str_data + 1);
-    return params;
-}
+    result.value = text.substr(value_begin, pos - value_begin);
+    pos = mime_skip_whitespace(text, pos);
 
-static const char *mime_find_param(const std::string &params, std::string_view param)
-{
-    const int   param_len = static_cast<int>(param.size());
-    const char *s = params.c_str();
-    while (*s)
+    while (pos < text.size() && text[pos] == ';')
     {
-        if (string_case_equal(s, param.data(), param_len) && s[param_len] == '=')
+        pos = mime_skip_whitespace(text, pos + 1);
+        const std::size_t param_begin = pos;
+        bool              quoted = false;
+        int               comment_level = 0;
+        while (pos < text.size())
         {
-            return s + param_len + 1;
+            if ((quoted || comment_level != 0) && text[pos] == '\\' && pos + 1 < text.size())
+            {
+                pos += 2;
+                continue;
+            }
+            if (comment_level != 0)
+            {
+                if (text[pos] == '(')
+                {
+                    comment_level++;
+                }
+                else if (text[pos] == ')')
+                {
+                    comment_level--;
+                }
+                pos++;
+                continue;
+            }
+            if (text[pos] == '"')
+            {
+                quoted = !quoted;
+            }
+            else if (!quoted && text[pos] == '(')
+            {
+                comment_level = 1;
+            }
+            else if (!quoted && text[pos] == ';')
+            {
+                break;
+            }
+            pos++;
         }
-        s += std::strlen(s) + 1;
+        std::size_t param_end = pos;
+        while (param_end > param_begin && std::isspace(static_cast<unsigned char>(text[param_end - 1])))
+        {
+            param_end--;
+        }
+        result.params.emplace_back(text.substr(param_begin, param_end - param_begin));
     }
-    return nullptr;
+    return result;
 }
 
 // Skip whitespace and RFC-822 comments.

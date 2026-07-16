@@ -12,6 +12,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 struct HtmlBlock
 {
@@ -68,18 +69,24 @@ enum HtmlFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(HtmlFlags, std::uint16_t);
 
+struct MimeParamViews
+{
+    std::string_view              value;
+    std::vector<std::string_view> params;
+};
+
 struct MimeSection
 {
     void mime_clear_struct();
-    void mime_parse_type(char *s);
-    void mime_parse_disposition(char *s);
+    void mime_parse_type(std::string_view text);
+    void mime_parse_disposition(std::string_view text);
     void mime_parse_encoding(char *s);
     void mime_description(char *s, int limit);
 
     MimeSection     *m_prev;
     std::optional<std::string> m_filename;
     std::optional<std::string> m_type_name;
-    std::optional<std::string> m_type_params;
+    std::vector<std::string>   m_type_params;
     std::optional<std::string> m_boundary;
     int              m_html_line_start;
     HtmlBlock       *m_html_blocks;
@@ -178,7 +185,7 @@ void          mime_set_article();
 void          mime_parse_sub_header(std::FILE *ifp, const char *next_line);
 void          mime_set_state(char *bp);
 int           mime_end_of_section(char *bp);
-std::string   mime_parse_params(char *str);
+MimeParamViews mime_parse_params(std::string_view text);
 void          mime_decode_article(bool view);
 int           qp_decode_string(char *t, const char *f, bool in_header);
 DecodeState   qp_decode(std::FILE *ifp, DecodeState state);
