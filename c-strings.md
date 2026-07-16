@@ -555,15 +555,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-009 - Save Directory Path Scratch
-
-- Files: `libtrn/opt.cpp`.
-- Kind: local filename buffer and `safe_copy`.
-- Function: `cwd_check`.
-- Change: use `std::filesystem::path` or `std::string` for the chosen
-  directory.  Keep the existing fallback order.
-- Tests: add focused coverage for the directory fallback behavior first.
-
 ### CSTR-014 - MIME Exec Command Builder
 
 - Files: `libtrn/mime.cpp`.

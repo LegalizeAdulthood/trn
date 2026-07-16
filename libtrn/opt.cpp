@@ -1651,59 +1651,67 @@ const char *quote_string(std::string_view val)
 
 void cwd_check()
 {
-    char tmpbuf[LINE_BUF_LEN];
+    std::string save_dir;
+    save_dir.reserve(LINE_BUF_LEN);
 
     if (g_priv_dir.empty())
     {
         g_priv_dir = file_exp("~/News");
     }
-    std::strcpy(tmpbuf,g_priv_dir.c_str());
+    save_dir = g_priv_dir;
     if (change_dir(g_priv_dir))
     {
-        safe_copy(tmpbuf, file_exp(g_priv_dir).c_str(), sizeof tmpbuf);
-        if (make_dir(tmpbuf, MD_DIR) || change_dir(tmpbuf))
+        save_dir = file_exp(g_priv_dir);
+        if (make_dir(save_dir.c_str(), MD_DIR) || change_dir(save_dir))
         {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
             if (make_dir(g_cmd_buf, MD_DIR))
             {
-                std::strcpy(tmpbuf, g_home_dir.c_str());
+                save_dir = g_home_dir;
             }
             else
             {
-                std::strcpy(tmpbuf, g_cmd_buf);
+                save_dir = g_cmd_buf;
             }
-            change_dir(tmpbuf);
+            change_dir(save_dir);
             if (g_verbose)
             {
                 std::printf("Cannot make directory %s--\n"
-                      "        articles will be saved to %s\n"
-                      "\n",
-                      g_priv_dir.c_str(), tmpbuf);
+                            "        articles will be saved to %s\n"
+                            "\n",
+                            g_priv_dir.c_str(), save_dir.c_str());
             }
             else
             {
                 std::printf("Can't make %s--\n"
-                      "        using %s\n"
-                      "\n",
-                      g_priv_dir.c_str(), tmpbuf);
+                            "        using %s\n"
+                            "\n",
+                            g_priv_dir.c_str(), save_dir.c_str());
             }
         }
     }
-    trn_getwd(tmpbuf, sizeof(tmpbuf));
-    if (eaccess(tmpbuf, 2))
+
+    std::error_code error;
+    save_dir = fs::current_path(error).generic_string();
+    if (error)
+    {
+        std::printf("Cannot determine current working directory!\n");
+        finalize(1);
+    }
+    if (eaccess(save_dir.c_str(), 2))
     {
         if (g_verbose)
         {
             std::printf("Current directory %s is not writeable--\n"
-                  "        articles will be saved to home directory\n"
-                  "\n",
-                  tmpbuf);
+                        "        articles will be saved to home directory\n"
+                        "\n",
+                        save_dir.c_str());
         }
         else
         {
-            std::printf("%s not writeable--using ~\n\n", tmpbuf);
+            std::printf("%s not writeable--using ~\n\n", save_dir.c_str());
         }
-        std::strcpy(tmpbuf, g_home_dir.c_str());
+        save_dir = g_home_dir;
     }
-    g_priv_dir = tmpbuf;
+    g_priv_dir = save_dir;
 }

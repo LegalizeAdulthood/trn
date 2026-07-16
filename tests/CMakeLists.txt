@@ -31,6 +31,7 @@ add_executable(trn-test
     test_makedir.cpp
     test_mime.cpp
     test_nntp.cpp
+    test_opt.cpp
     test_OptionApplier.cpp
     test_OptionCatalog.cpp
     test_OptionDraft.cpp
