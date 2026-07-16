@@ -974,7 +974,7 @@ int AddGroup::add_group_perform(std::string_view cmdlst, int output_level)
 {
     if (output_level == 1)
     {
-        std::printf("%s ",m_name);
+        std::printf("%s ", m_name.c_str());
         std::fflush(stdout);
     }
 

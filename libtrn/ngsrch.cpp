@@ -111,7 +111,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         AddGroup *gp = g_first_add_group;
         do
         {
-            if (s_newsgroup_compex.execute(gp->m_name) != nullptr)
+            if (s_newsgroup_compex.execute(gp->m_name.c_str()) != nullptr)
             {
                 if (cmdlst.empty())
                 {

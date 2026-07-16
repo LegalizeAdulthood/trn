@@ -47,7 +47,6 @@ static void process_list(GetNewsgroupFlags flag);
 static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
 static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch);
-static void add_to_list(std::string_view name, int to_read, char_int ch);
 static int  list_groups(int key_len, HashDatum *data, int add_matching);
 static void scan_active_line(char *active_line, bool add_matching);
 static int  add_group_order_number(const AddGroup **app1, const AddGroup **app2);
@@ -56,10 +55,9 @@ static int  add_group_order_count(const AddGroup **app1, const AddGroup **app2);
 
 static int add_newsgroup_cmp(std::string_view key, HashDatum data)
 {
-    const auto            *group = (AddGroup *) data.dat_ptr;
-    const std::string_view group_name{group->m_name, key.size()};
+    const auto *group = (AddGroup *) data.dat_ptr;
 
-    return key.compare(group_name);
+    return key.compare(group->m_name);
 }
 
 static int build_add_group_list(int key_len, HashDatum *data, int extra)
@@ -126,7 +124,7 @@ static void process_list(GetNewsgroupFlags flag)
                 g_multirc->m_first->next ? "s" : "");
         print_lines(g_cmd_buf, STANDOUT);
     }
-    AddGroup *node = g_first_add_group;
+    AddGroup* node = g_first_add_group;
     if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
     {
         add_group_selector(flag);
@@ -135,16 +133,16 @@ static void process_list(GetNewsgroupFlags flag)
     {
         if (flag == GNG_NONE)
         {
-            std::sprintf(g_cmd_buf, "%s\n", node->m_name);
+            std::sprintf(g_cmd_buf, "%s\n", node->m_name.c_str());
             print_lines(g_cmd_buf, NO_MARKING);
         }
         else if (!g_use_add_selector)
         {
-            get_newsgroup(node->m_name, flag); // add newsgroup -- maybe
+            get_newsgroup(node->m_name.c_str(), flag); // add newsgroup -- maybe
         }
         AddGroup *prev_node = node;
         node = node->m_next;
-        std::free((char*)prev_node);
+        delete prev_node;
     }
     g_first_add_group = nullptr;
     g_last_add_group = nullptr;
@@ -318,11 +316,8 @@ static void new_local_groups(DataSource *dp)
 
 static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch)
 {
-    HashDatum      data;
-    const unsigned name_len = static_cast<unsigned>(name.size());
-    data.dat_len = name_len + static_cast<unsigned>(sizeof (AddGroup));
-    AddGroup *node = (AddGroup*)safe_malloc(data.dat_len);
-    data.dat_ptr = (char *)node;
+    AddGroup *node = new AddGroup{};
+    HashDatum data{reinterpret_cast<char *>(node), static_cast<unsigned>(sizeof *node)};
     switch (ch)
     {
     case ':':
@@ -336,17 +331,16 @@ static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_
         break;
     }
     value_of(node->m_to_read) = (to_read < 0) ? 0 : to_read;
-    std::memcpy(node->m_name, name.data(), name_len);
-    node->m_name[name_len] = '\0';
+    node->m_name.assign(name);
     node->m_data_src = g_data_source;
     node->m_next = nullptr;
     node->m_prev = nullptr;
     hash_store(ng, name, data);
 }
 
-static void add_to_list(std::string_view name, int to_read, char_int ch)
+void add_to_list(std::string_view name, int to_read, char_int ch)
 {
-    AddGroup* node = g_first_add_group;
+    AddGroup *node = g_first_add_group;
 
     while (node)
     {
@@ -357,8 +351,7 @@ static void add_to_list(std::string_view name, int to_read, char_int ch)
         node = node->m_next;
     }
 
-    const std::size_t name_len = name.size();
-    node = (AddGroup *) safe_malloc(static_cast<MemorySize>(name_len + sizeof(AddGroup)));
+    node = new AddGroup{};
     switch (ch)
     {
     case ':':
@@ -373,11 +366,7 @@ static void add_to_list(std::string_view name, int to_read, char_int ch)
     }
     value_of(node->m_to_read) = (to_read < 0) ? 0 : to_read;
     value_of(node->m_num) = s_add_group_count++;
-    if (!name.empty())
-    {
-        std::memcpy(node->m_name, name.data(), name_len);
-    }
-    node->m_name[name_len] = '\0';
+    node->m_name.assign(name);
     node->m_data_src = g_data_source;
     node->m_next = nullptr;
     node->m_prev = g_last_add_group;
@@ -523,7 +512,7 @@ static int add_group_order_number(const AddGroup **app1, const AddGroup **app2)
 
 static int add_group_order_group_name(const AddGroup **app1, const AddGroup **app2)
 {
-    return string_case_compare((*app1)->m_name, (*app2)->m_name) * g_sel_direction;
+    return string_case_compare((*app1)->m_name.c_str(), (*app2)->m_name.c_str()) * g_sel_direction;
 }
 
 static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)

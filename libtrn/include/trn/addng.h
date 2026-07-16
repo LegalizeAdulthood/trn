@@ -1,6 +1,7 @@
 /* trn/addng.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #ifndef TRN_ADDNG_H
 #define TRN_ADDNG_H
@@ -9,6 +10,7 @@
 #include <trn/enum-flags.h>
 
 #include <cstdint>
+#include <string>
 #include <string_view>
 
 struct DataSource;
@@ -32,7 +34,7 @@ struct AddGroup
     ArticleNum    m_to_read; // number of articles to be read (for sorting)
     NewsgroupNum  m_num;     // a possible sort order for this group
     AddGroupFlags m_flags;
-    char          m_name[1];
+    std::string   m_name;
     int           add_group_perform(std::string_view cmdlst, int output_level);
 };
 

@@ -492,11 +492,11 @@ calls in production code.
 - Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 14.
 - Comparison: `strcmp` 12, `strncmp` 55.
 - Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
-  `strlen` 131.
+  `strlen` 129.
 - Formatting into C buffers: `sprintf` 128, `snprintf` 1.
 - C text I/O roots: `fgets` 34, `fputs` 199, `printf` 505,
   `fprintf` 37.
-- Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
+- Character byte operations: `memcpy` 7, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `memmove`,
@@ -525,17 +525,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-042 - AddGroup Name Storage
-
-- Files: `libtrn/addng.cpp`, `libtrn/include/trn/addng.h`.
-- Kind: flexible `char m_name[1]` member populated with `memcpy`.
-- Functions: `add_to_hash`, `add_to_list`, and direct readers.
-- Change: replace the flexible array member with owned string storage.
-  Update allocation and hash storage so the address of local string data
-  never escapes.
-- Tests: run add-newsgroup coverage before and after; add coverage if
-  the selector list is not tested.
 
 ### CSTR-045 - SourceFile Line Input
 

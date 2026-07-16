@@ -2245,7 +2245,7 @@ start_of_loop:
                 {
                     continue;
                 }
-                int len = std::strlen(gp->m_name) + 2;
+                int len = static_cast<int>(gp->m_name.size()) + 2;
                 max_len = std::max(len, max_len);
                 i++;
             }
@@ -2267,7 +2267,7 @@ start_of_loop:
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
             std::printf("%5ld ", (long)gp->m_to_read.value_of());
-            display_group(gp->m_data_src, gp->m_name, std::strlen(gp->m_name), max_len);
+            display_group(gp->m_data_src, gp->m_name.c_str(), static_cast<int>(gp->m_name.size()), max_len);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt)
