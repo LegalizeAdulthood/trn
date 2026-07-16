@@ -8,6 +8,7 @@
 #include <file_contents.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
 #include <trn/art.h>
@@ -214,7 +215,7 @@ static void opt_file(const char *filename, char **tcbufptr, bool bleat)
             {
                 for (const IniSetting setting : section)
                 {
-                    export_var(setting.name(), setting.value());
+                    set_env_var(setting.name(), setting.value());
                 }
             }
             else if (section_name == "termcap")
@@ -456,14 +457,14 @@ void apply_global_option(OptionIndex num, const char *s)
         {
             if (is_yes(s))
             {
-                export_var("SAVEDIR",  "%p/%c");
-                export_var("SAVENAME", "%a");
+                set_env_var("SAVEDIR", "%p/%c");
+                set_env_var("SAVENAME", "%a");
             }
             else if (!std::strcmp(get_val_const("SAVEDIR", ""), "%p/%c") //
                      && !std::strcmp(get_val_const("SAVENAME", ""), "%a"))
             {
-                export_var("SAVEDIR", "%p");
-                export_var("SAVENAME", "%^C");
+                set_env_var("SAVEDIR", "%p");
+                set_env_var("SAVENAME", "%^C");
             }
         }
         break;

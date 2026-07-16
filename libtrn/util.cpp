@@ -6,6 +6,7 @@
 #include <trn/util.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/fdio.h>
 #include <nntp/nntpclient.h>
 #include <trn/datasrc.h>
@@ -68,42 +69,30 @@ MemorySize g_buf_len_last_line_got{};
 static constexpr char s_no_memory[] = "trn: out of memory!\n";
 #endif
 
-static char  s_null_export[] = "_=X"; // Just in case doshell precedes util_init
-static char *s_newsa_ctive_export = s_null_export;
-static char *s_group_desc_export = s_null_export;
-static char *s_quote_chars_export = s_null_export;
-static char *s_nntp_server_export = s_null_export;
-static char *s_nntp_force_export = s_null_export;
+static constexpr std::string_view s_newsactive_env{"NEWSACTIVE"};
+static constexpr std::string_view s_newsdescriptions_env{"NEWSDESCRIPTIONS"};
+static constexpr std::string_view s_nntp_server_env{"NNTPSERVER"};
+static constexpr std::string_view s_nntp_force_auth_env{"NNTP_FORCE_AUTH"};
+static constexpr std::string_view s_quotechars_env{"QUOTECHARS"};
+static constexpr std::string_view s_trn_version_env{"TRN_VERSION"};
 
 void util_init()
 {
     extern std::string g_patch_level;
 
-    char *cp = g_buf;
-    for (int i = 0; i < 512; i++)
-    {
-        *cp++ = 'X';
-    }
-    *cp = '\0';
-    s_newsa_ctive_export = export_var("NEWSACTIVE", g_buf);
-    s_group_desc_export = export_var("NEWSDESCRIPTIONS", g_buf);
-    s_nntp_server_export = export_var("NNTPSERVER", g_buf);
-    g_buf[64] = '\0';
-    s_quote_chars_export = export_var("QUOTECHARS",g_buf);
-    g_buf[3] = '\0';
-    s_nntp_force_export = export_var("NNTP_FORCE_AUTH", g_buf);
-    export_var("TRN_VERSION", g_patch_level.c_str());
+    set_env_var(s_trn_version_env, g_patch_level);
 }
 
 void util_final()
 {
-    const char *names[] = {
-        "NEWSACTIVE", "NEWSDESCRIPTIONS", "NNTPSERVER", "QUOTECHARS", "NNTP_FORCE_AUTH", "TRN_VERSION",
+    const std::string_view names[] = {
+        s_newsactive_env, s_newsdescriptions_env, s_nntp_server_env,
+        s_quotechars_env, s_nntp_force_auth_env,  s_trn_version_env,
     };
 
-    for (const char *name : names)
+    for (const std::string_view name : names)
     {
-        export_var(name, "");
+        unset_env_var(name);
     }
 }
 
@@ -126,14 +115,14 @@ int do_shell(const char *shell, const char *cmd)
 #endif
     if (g_data_source && (g_data_source->m_flags & DF_REMOTE))
     {
-        re_export(s_nntp_server_export, g_data_source->m_news_id.c_str(), 512);
+        set_env_var(s_nntp_server_env, g_data_source->m_news_id);
         if (g_data_source->m_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED)
         {
-            re_export(s_nntp_force_export, "yes", 3);
+            set_env_var(s_nntp_force_auth_env, "yes");
         }
         else
         {
-            un_export(s_nntp_force_export);
+            unset_env_var(s_nntp_force_auth_env);
         }
         if (!g_data_source->m_auth_user.empty())
         {
@@ -153,45 +142,41 @@ int do_shell(const char *shell, const char *cmd)
         if (g_nntp_link.port_number)
         {
             const std::string nntp_server = fmt::format("{};{}", g_data_source->m_news_id, g_nntp_link.port_number);
-            if (nntp_server.size() < 511)
-            {
-                re_export(s_nntp_server_export, nntp_server.c_str(), 512);
-            }
+            set_env_var(s_nntp_server_env, nntp_server);
         }
         if (g_data_source->m_act_sf.m_fp)
         {
-            re_export(s_newsa_ctive_export, g_data_source->m_extra_name.c_str(), 512);
+            set_env_var(s_newsactive_env, g_data_source->m_extra_name);
         }
         else
         {
-            re_export(s_newsa_ctive_export, "none", 512);
+            set_env_var(s_newsactive_env, "none");
         }
     }
     else
     {
-        un_export(s_nntp_server_export);
-        un_export(s_nntp_force_export);
+        unset_env_var(s_nntp_server_env);
+        unset_env_var(s_nntp_force_auth_env);
         if (g_data_source)
         {
-            re_export(s_newsa_ctive_export, g_data_source->m_news_id.c_str(), 512);
+            set_env_var(s_newsactive_env, g_data_source->m_news_id);
         }
         else
         {
-            un_export(s_newsa_ctive_export);
+            unset_env_var(s_newsactive_env);
         }
     }
     if (g_data_source)
     {
-        re_export(s_group_desc_export,
-                  g_data_source->m_group_desc.empty() ? nullptr : g_data_source->m_group_desc.c_str(), 512);
+        set_env_var(s_newsdescriptions_env, g_data_source->m_group_desc);
     }
     else
     {
-        un_export(s_group_desc_export);
+        unset_env_var(s_newsdescriptions_env);
     }
     interp(g_buf,64-1+2,"%I");
     g_buf[std::strlen(g_buf)-1] = '\0';
-    re_export(s_quote_chars_export, g_buf+1, 64);
+    set_env_var(s_quotechars_env, g_buf + 1);
     if (shell == nullptr)
     {
         shell = get_val_const("SHELL", nullptr);

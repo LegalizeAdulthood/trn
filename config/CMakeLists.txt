@@ -12,6 +12,8 @@ add_library(config
     include/config/user_id.h
     cmake/config.h.in
     cmake/configure_trn.cmake
+    cmake/env.putenv_s.h.in
+    cmake/env.setenv.h.in
     cmake/fdio.fcntl.h.in
     cmake/fdio.io.h.in
     cmake/pipe_io.standard.h.in
@@ -19,6 +21,7 @@ add_library(config
     cmake/string_case_compare.strings.h.in
     cmake/string_case_compare.manual.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/config.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/config/env.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/fdio.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/pipe_io.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/string_case_compare.h" ${STRING_CASE_COMPARE_SOURCES}

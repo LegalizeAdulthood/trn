@@ -7,6 +7,7 @@
 #include <trn/terminal.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <trn/art.h>
 #include <trn/cache.h>
 #include <trn/color.h>
@@ -165,8 +166,6 @@ static const char *s_read_err{"rn read error"};
 static char s_termcap_area[TC_SIZE]; // area for "compiled" termcap strings
 #endif
 static KeyMap *s_top_map{};
-static char   *s_lines_export{};
-static char   *s_cols_export{};
 static int     s_left_cost{};
 static int     s_up_cost{};
 static bool    s_got_a_char{}; // true if we got a char since eating
@@ -452,10 +451,8 @@ void term_set(char *tcbuf)
     line_col_calcs();
     no_echo();                           // turn off echo
     cr_mode();                           // enter cbreak mode
-    std::sprintf(g_buf, "%d", g_tc_LINES);
-    s_lines_export = export_var("LINES",g_buf);
-    std::sprintf(g_buf, "%d", g_tc_COLS);
-    s_cols_export = export_var("COLUMNS",g_buf);
+    set_env_var("LINES", std::to_string(g_tc_LINES));
+    set_env_var("COLUMNS", std::to_string(g_tc_COLS));
 
     mac_init(tcbuf);
 }
@@ -2247,8 +2244,8 @@ Signal_t winch_catcher(int dummy)
                 g_tc_LINES = ws.ws_row;
                 g_tc_COLS = ws.ws_col;
                 line_col_calcs();
-                s_lines_export = export_var("LINES", std::to_string(g_tc_LINES));
-                s_cols_export = export_var("COLUMNS", std::to_string(g_tc_COLS));
+                set_env_var("LINES", std::to_string(g_tc_LINES));
+                set_env_var("COLUMNS", std::to_string(g_tc_COLS));
                 if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p')
                 {
                     force_me("\f");      // cause a refresh

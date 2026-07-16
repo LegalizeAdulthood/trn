@@ -13,7 +13,6 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <cstdlib>
 
 using namespace testing;
 
@@ -21,15 +20,6 @@ namespace
 {
 
 using Environment = StrictMock<trn::testing::MockEnvironment>;
-
-void clear_test_export_var()
-{
-#ifdef WIN32
-    _putenv("TRN_TEST_EXPORT_VAR=");
-#else
-    unsetenv("TRN_TEST_EXPORT_VAR");
-#endif
-}
 
 struct InitTest : Test
 {
@@ -70,18 +60,6 @@ protected:
 };
 
 } // namespace
-
-TEST(ExportVarTest, addsNameValueToProcessEnvironment)
-{
-    clear_test_export_var();
-
-    char *const exported = export_var("TRN_TEST_EXPORT_VAR", "fractal");
-
-    EXPECT_STREQ("TRN_TEST_EXPORT_VAR=fractal", exported);
-    EXPECT_STREQ("fractal", std::getenv("TRN_TEST_EXPORT_VAR"));
-
-    clear_test_export_var();
-}
 
 TEST_F(InitTest, homeDirFromHOME)
 {

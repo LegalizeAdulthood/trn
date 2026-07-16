@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 45 hits remain, including the helper declaration and
-  definition.  The 43 call sites are inventoried below.
+- `safe_copy`: 33 hits remain, including the helper declaration and
+  definition.  The 31 call sites are inventoried below.
 - `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
   `CSTR-039`.
 - `safe_realloc`: string-like storage remains in `bits_to_rc`,
@@ -451,23 +451,18 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 45 `safe_copy` hits: the helper definition, the
-helper declaration, and 43 call sites.  The call sites are still audit
+The current tree has 33 `safe_copy` hits: the helper definition, the
+helper declaration, and 31 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
-- `util/env.cpp`, `re_export`: rewrites the value part of exported
-  environment storage in place.  See `CSTR-030`.
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
   `extract_name` mutates the display copy.  See `CSTR-026`.
 - `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
   during word wrapping.  See `CSTR-033`.
-- `libtrn/artsrch.cpp`, `article_search`: builds a kill-file search
-  command in `salt_buf`.  See `CSTR-006`.
 - `libtrn/charsubst.cpp`, `str_char_subst`: writes caller output text.
   See `CSTR-034`.
 - `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
   See `CSTR-029`.
-- `libtrn/mime.cpp`, `mime_exec`: builds `g_cmd_buf`.  See `CSTR-014`.
 - `libtrn/mime.cpp`, `mime_parse_sub_header`: grows and copies a shared
   header buffer.  See `CSTR-013`.
 - `libtrn/mime.cpp`, `mime_parse_params`: compacts caller-owned mutable
@@ -482,20 +477,12 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-036`.
 - `libtrn/opt.cpp`, `option_value`: returns default refetch text through
   `g_buf`.  See `CSTR-008`.
-- `libtrn/opt.cpp`, `cwd_check`: copies expanded save directory text
-  through `tmpbuf`.  See `CSTR-009`.
 - `libtrn/opt.cpp`, `set_options`: writes option switch storage through
   `tcbufptr`.  See `CSTR-037`.
 - `libtrn/rcln.cpp`, `NewsgroupData::check_expired`: patches
   `m_rc_line` through raw mutable storage.  See `CSTR-011`.
-- `libtrn/rcstuff.cpp`, `list_newsgroups`: builds one display line in
-  `tmpbuf`.  See `CSTR-007`.
-- `libtrn/respond.cpp`, `save_article`: seven save, pipe, and command
+- `libtrn/respond.cpp`, `save_article`: four save, pipe, and command
   copies remain.  See `CSTR-020` and `CSTR-021`.
-- `libtrn/respond.cpp`, `follow_it_up`: copies poster command text into
-  `g_cmd_buf`.  See `CSTR-022`.
-- `libtrn/respond.cpp`, `reply`: copies mailer command text into
-  `g_cmd_buf`.  See `CSTR-023`.
 - `libtrn/rt-util.cpp`, `compress_name`: writes a caller output buffer.
   See `CSTR-038`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
@@ -504,9 +491,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   `subject_has_re`.  See `CSTR-005`.
 - `libtrn/url.cpp`, `parse_url` and `fetch_ftp`: four static URL and
   command copies remain.  See `CSTR-016` and `CSTR-018`.
-- `libtrn/util.cpp`, `edit_file`: copies an already-owned command into
-  `g_cmd_buf` even though `do_shell` receives the string.  See
-  `CSTR-002`.
 - `libtrn/uudecode.cpp`, `uue_prescan`: copies part metadata into
   `g_msg`.  See `CSTR-032`.
 
@@ -521,12 +505,12 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 114, `strncpy` 5, `strcat` 16.
+- Copy and concatenation: `strcpy` 110, `strncpy` 5, `strcat` 16.
 - Comparison: `strcmp` 19, `strncmp` 54.
-- Search and length: `strchr` 116, `strrchr` 15, `strstr` 4,
-  `strlen` 144.
-- Formatting into C buffers: `sprintf` 149, `snprintf` 1.
-- C text I/O roots: `fgets` 35, `fputs` 199, `printf` 513,
+- Search and length: `strchr` 117, `strrchr` 15, `strstr` 4,
+  `strlen` 141.
+- Formatting into C buffers: `sprintf` 145, `snprintf` 1.
+- C text I/O roots: `fgets` 35, `fputs` 199, `printf` 524,
   `fprintf` 41.
 - Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
 
@@ -552,16 +536,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-030 - Exported Environment Storage
-
-- Files: `util/env.cpp`, `util/include/util/env.h`.
-- Kind: mutable pointer into `std::string` environment storage.
-- Function: `re_export`.
-- Change: replace in-place value rewriting with owned string update
-  logic that keeps `putenv` storage stable.  Preserve `un_export`
-  semantics.
-- Tests: run `test_init` environment tests before and after.
 
 ### CSTR-038 - Compressed Name Output API
 

@@ -6,6 +6,7 @@
 #include <trn/sw.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/fdio.h>
 #include <trn/head.h>
 #include <trn/init.h>
@@ -19,7 +20,6 @@
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/util.h>
-#include <util/env.h>
 
 #include <fmt/format.h>
 
@@ -28,11 +28,18 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 #include <vector>
 
-static std::vector<char *> s_init_environment_strings;
+struct InitEnvironmentString
+{
+    std::string name;
+    std::string value;
+};
 
-static void save_init_environment(char *str);
+static std::vector<InitEnvironmentString> s_init_environment_strings;
+
+static void save_init_environment(std::string_view name, std::string_view value);
 
 void sw_file(char **tcbufptr)
 {
@@ -255,22 +262,22 @@ void decode_switch(const char *s)
                 s++;
             }
             std::strcpy(tmpbuf,s);
-            char *tmp = std::strchr(tmpbuf,'=');
-            if (tmp)
+            char *value = std::strchr(tmpbuf, '=');
+            if (value)
             {
-                *tmp++ = '\0';
-                tmp = export_var(tmpbuf,tmp);
+                *value++ = '\0';
+                set_env_var(tmpbuf, value);
                 if (g_mode == MM_INITIALIZING)
                 {
-                    save_init_environment(tmp);
+                    save_init_environment(tmpbuf, value);
                 }
             }
             else
             {
-                tmp = export_var(tmpbuf,"");
+                set_env_var(tmpbuf, "");
                 if (g_mode == MM_INITIALIZING)
                 {
-                    save_init_environment(tmp);
+                    save_init_environment(tmpbuf, "");
                 }
             }
             break;
@@ -549,23 +556,16 @@ void decode_switch(const char *s)
     }
 }
 
-static void save_init_environment(char *str)
+static void save_init_environment(std::string_view name, std::string_view value)
 {
-    s_init_environment_strings.push_back(str);
+    s_init_environment_strings.push_back({std::string{name}, std::string{value}});
 }
 
 void write_init_environment(std::FILE *fp)
 {
-    for (char *entry : s_init_environment_strings)
+    for (const InitEnvironmentString &entry : s_init_environment_strings)
     {
-        char *s = std::strchr(entry, '=');
-        if (!s)
-        {
-            continue;
-        }
-        *s = '\0';
-        std::fprintf(fp, "%s=%s\n", entry,quote_string(s+1));
-        *s = '=';
+        std::fprintf(fp, "%s=%s\n", entry.name.c_str(), quote_string(entry.value.c_str()));
     }
     s_init_environment_strings.clear();
 }
