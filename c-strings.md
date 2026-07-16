@@ -496,8 +496,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   `g_cmd_buf`.  See `CSTR-022`.
 - `libtrn/respond.cpp`, `reply`: copies mailer command text into
   `g_cmd_buf`.  See `CSTR-023`.
-- `libtrn/respond.cpp`, `forward`: copies forwarder command text into
-  `g_cmd_buf`.  See `CSTR-024`.
 - `libtrn/rt-util.cpp`, `compress_name`: writes a caller output buffer.
   See `CSTR-038`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
@@ -554,15 +552,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-### CSTR-024 - Forward Mailer Command
-
-- Files: `libtrn/respond.cpp`.
-- Kind: command copy into `g_cmd_buf`.
-- Function: `forward`.
-- Change: keep `file_exp(maildoer)` in a `std::string` and pass it to
-  `invoke` without a global scratch copy.
-- Tests: add or run forward command coverage.
 
 ### CSTR-027 - Newsgroup Shell Current Directory
 

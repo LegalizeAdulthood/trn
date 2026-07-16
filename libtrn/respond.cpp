@@ -855,8 +855,7 @@ void reply()
 {
     char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'R' && g_art);
-    const std::string maildoer{get_val_const("MAILPOSTER", MAIL_POSTER)};
-    std::string mail_command;
+    const std::string mail_doer{get_val_const("MAILPOSTER", MAIL_POSTER)};
 
     art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
@@ -864,11 +863,11 @@ void reply()
     {
         std::printf(g_cant_create,g_head_name.c_str());
         term_down(1);
-        goto done;
+        return;
     }
     interp(hbuf, sizeof hbuf, get_val_const("MAILHEADER", MAIL_HEADER));
     std::fputs(hbuf,header);
-    if (!in_string(maildoer.c_str(), "%h", true))
+    if (!in_string(mail_doer.c_str(), "%h", true))
     {
         if (g_verbose)
         {
@@ -908,16 +907,14 @@ void reply()
         g_wrapped_nl = WRAPPED_NL;
     }
     std::fclose(header);
-    mail_command = file_exp(maildoer);
-    invoke(mail_command.c_str(), g_orig_dir.c_str());
-done:
-    return;
+    invoke(file_exp(mail_doer).c_str(), g_orig_dir.c_str());
 }
 
 void forward()
 {
     char hbuf[5*LINE_BUF_LEN];
     const std::string maildoer{get_val_const("FORWARDPOSTER", FORWARD_POSTER)};
+    std::string mail_command;
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
@@ -1048,8 +1045,8 @@ void forward()
         }
     }
     std::fclose(header);
-    safe_copy(g_cmd_buf, file_exp(maildoer).c_str(), sizeof g_cmd_buf);
-    invoke(g_cmd_buf,g_orig_dir.c_str());
+    mail_command = file_exp(maildoer);
+    invoke(mail_command.c_str(), g_orig_dir.c_str());
 done:
 #ifdef REGEX_WORKS_RIGHT
     mime_compex.free_compex();
