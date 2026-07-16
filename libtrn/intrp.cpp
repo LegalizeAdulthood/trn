@@ -1512,7 +1512,7 @@ const char *interp_backslash(char *dest, const char *pattern)
             i = 0;
             while (i < 01000 && std::isxdigit(*++pattern))
             {
-                static char hex_digits[17]{"0123456789ABCDEF"};
+                static constexpr char hex_digits[]{"0123456789ABCDEF"};
                 i <<= 4;
                 i += std::strchr(hex_digits, std::toupper(*pattern)) - hex_digits;
             }
