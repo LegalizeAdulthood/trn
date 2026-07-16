@@ -555,15 +555,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-023 - Reply Mailer Command
-
-- Files: `libtrn/respond.cpp`.
-- Kind: command copy into `g_cmd_buf`.
-- Function: `reply`.
-- Change: keep `file_exp(maildoer)` in a `std::string` and pass it to
-  `invoke` without a global scratch copy.
-- Tests: add or run reply command coverage.
-
 ### CSTR-024 - Forward Mailer Command
 
 - Files: `libtrn/respond.cpp`.

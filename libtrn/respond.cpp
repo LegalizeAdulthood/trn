@@ -856,6 +856,7 @@ void reply()
     char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'R' && g_art);
     const std::string maildoer{get_val_const("MAILPOSTER", MAIL_POSTER)};
+    std::string mail_command;
 
     art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
@@ -907,8 +908,8 @@ void reply()
         g_wrapped_nl = WRAPPED_NL;
     }
     std::fclose(header);
-    safe_copy(g_cmd_buf, file_exp(maildoer).c_str(), sizeof g_cmd_buf);
-    invoke(g_cmd_buf,g_orig_dir.c_str());
+    mail_command = file_exp(maildoer);
+    invoke(mail_command.c_str(), g_orig_dir.c_str());
 done:
     return;
 }
