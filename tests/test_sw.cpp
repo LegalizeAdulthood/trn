@@ -3,6 +3,7 @@
 
 #include <trn/sw.h>
 
+#include <trn/datasrc.h>
 #include <trn/init.h>
 #include <trn/ng.h>
 #include <trn/opt.h>
@@ -10,6 +11,7 @@
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
+#include <trn/util.h>
 
 #include <test_config.h>
 
@@ -93,6 +95,29 @@ struct SwitchFlagRestorer
     }
 };
 
+struct MouseButtonsRestorer
+{
+    char *buttons;
+    int   count;
+
+    ~MouseButtonsRestorer()
+    {
+        safe_free(g_univ_sel_btns);
+        g_univ_sel_btns = buttons;
+        g_univ_sel_btn_cnt = count;
+    }
+};
+
+struct RefetchRestorer
+{
+    std::time_t refetch_secs;
+
+    ~RefetchRestorer()
+    {
+        g_def_refetch_secs = refetch_secs;
+    }
+};
+
 std::vector<std::string> read_lines(const fs::path &path)
 {
     std::ifstream            input{path};
@@ -169,7 +194,7 @@ TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)
     decode_switch("-OaD");
 
     EXPECT_EQ(SM_ARTICLE, g_sel_default_mode);
-    EXPECT_STREQ("reverse date", option_value(OI_NEWS_SEL_ORDER));
+    EXPECT_EQ("reverse date", option_value(OI_NEWS_SEL_ORDER));
 }
 
 TEST(SwitchTest, selectorDisplayStyleOptionsReturnConfiguredOrder)
@@ -182,6 +207,25 @@ TEST(SwitchTest, selectorDisplayStyleOptionsReturnConfiguredOrder)
 
     EXPECT_EQ('m', current_group_display_mode());
     EXPECT_EQ('d', current_article_display_mode());
-    EXPECT_STREQ("mls", option_value(OI_NEWSGROUP_SEL_STYLES));
-    EXPECT_STREQ("dslm", option_value(OI_NEWS_SEL_STYLES));
+    EXPECT_EQ("mls", option_value(OI_NEWSGROUP_SEL_STYLES));
+    EXPECT_EQ("dslm", option_value(OI_NEWS_SEL_STYLES));
+}
+
+TEST(OptionValueTest, expandsMouseButtonsWithoutChangingParsedStorage)
+{
+    MouseButtonsRestorer restore{g_univ_sel_btns, g_univ_sel_btn_cnt};
+    g_univ_sel_btns = nullptr;
+    g_univ_sel_btn_cnt = 0;
+    set_option(OI_UNIV_SEL_BTNS, "[Top]^ [Quit]q x");
+
+    EXPECT_EQ("[Top]^ [Quit]q x", option_value(OI_UNIV_SEL_BTNS));
+    EXPECT_EQ("[Top]^ [Quit]q x", option_value(OI_UNIV_SEL_BTNS));
+}
+
+TEST(OptionValueTest, formatsDefaultRefetchTime)
+{
+    RefetchRestorer restore{g_def_refetch_secs};
+    g_def_refetch_secs = 93780;
+
+    EXPECT_EQ("1 day, 2 hours, 3 minutes", option_value(OI_DEFAULT_REFETCH_TIME));
 }

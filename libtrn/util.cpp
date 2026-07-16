@@ -297,44 +297,6 @@ char *safe_realloc(char *where, MemorySize size)
 }
 #endif // !USE_DEBUGGING_MALLOC
 
-// safe version of string concatenate, with \n deletion and space padding
-
-char *safe_cat(char *to, const char *from, int len)
-{
-    char* dest = to;
-
-    len--;                              // leave room for null
-    if (*dest)
-    {
-        while (len && *dest++)
-        {
-            len--;
-        }
-        if (len)
-        {
-            len--;
-            *(dest-1) = ' ';
-        }
-    }
-    if (from)
-    {
-        while (len && (*dest++ = *from++))
-        {
-            len--;
-        }
-    }
-    if (len)
-    {
-        dest--;
-    }
-    if (*(dest-1) == '\n')
-    {
-        dest--;
-    }
-    *dest = '\0';
-    return to;
-}
-
 // effective access
 
 #ifdef SETUIDGID

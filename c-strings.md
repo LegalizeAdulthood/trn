@@ -428,10 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 28 hits remain, including the helper declaration and
-  definition.  The 26 call sites are inventoried below.
-- `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
-  `CSTR-039`.
+- `safe_copy`: 27 hits remain, including the helper declaration and
+  definition.  The 25 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -451,8 +449,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 28 `safe_copy` hits: the helper definition, the
-helper declaration, and 26 call sites.  The call sites are still audit
+The current tree has 27 `safe_copy` hits: the helper definition, the
+helper declaration, and 25 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -472,8 +470,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   scratch buffer.  See `CSTR-028`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
-- `libtrn/opt.cpp`, `option_value`: returns default refetch text through
-  `g_buf`.  See `CSTR-008`.
 - `libtrn/rcln.cpp`, `NewsgroupData::check_expired`: patches
   `m_rc_line` through raw mutable storage.  See `CSTR-011`.
 - `libtrn/respond.cpp`, `save_article`: four save, pipe, and command
@@ -487,24 +483,19 @@ roots.  Keep each one visible until the owning storage or API changes.
 - `libtrn/uudecode.cpp`, `uue_prescan`: copies part metadata into
   `g_msg`.  See `CSTR-032`.
 
-## Current `safe_cat` Inventory
-
-- `libtrn/opt.cpp`, `expand_mouse_buttons`: appends mouse button
-  sequences into `g_buf`.  See `CSTR-039`.
-
 ## Current C String Function Inventory
 
 The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 16.
-- Comparison: `strcmp` 12, `strncmp` 54.
+- Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 14.
+- Comparison: `strcmp` 12, `strncmp` 55.
 - Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
-  `strlen` 133.
-- Formatting into C buffers: `sprintf` 139, `snprintf` 1.
+  `strlen` 131.
+- Formatting into C buffers: `sprintf` 128, `snprintf` 1.
 - C text I/O roots: `fgets` 34, `fputs` 199, `printf` 505,
-  `fprintf` 39.
+  `fprintf` 37.
 - Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -534,16 +525,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-039 - Mouse Button Expansion Storage
-
-- Files: `libtrn/opt.cpp`.
-- Kind: global buffer return and `safe_cat`.
-- Function: `expand_mouse_buttons`.
-- Change: return `std::string` for expanded button text, or store the
-  expansion in owned option text storage before returning a C-string
-  view to legacy callers.
-- Tests: run option tests before and after.
 
 ### CSTR-042 - AddGroup Name Storage
 
@@ -590,16 +571,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-008 - Default Refetch Option Text
-
-- Files: `libtrn/opt.cpp`.
-- Kind: borrowed global-buffer return.
-- Function: `option_value`.
-- Change: stop returning default refetch text through `g_buf`.  Either
-  add stable owned option text storage or move `option_value` to a
-  string-returning shape if callers can be changed together.
-- Tests: run option tests before and after.
 
 ### CSTR-010 - Subject Output Line
 

@@ -51,6 +51,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -80,7 +82,7 @@ static char* hidden_list();
 static char* magic_list();
 static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str);
 static int   parse_mouse_buttons(char **cpp, const char *btns);
-static char *expand_mouse_buttons(char *cp, int cnt);
+static std::string expand_mouse_buttons(const char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char *tcbuf)
 {
@@ -975,7 +977,7 @@ void save_options(const char *filename)
     fs::rename(new_filename, filename_path, error);
 }
 
-const char *option_value(OptionIndex num)
+std::string option_value(OptionIndex num)
 {
     switch (num)
     {
@@ -1042,8 +1044,7 @@ const char *option_value(OptionIndex num)
         {
             return yes_or_no(g_use_news_selector+1);
         }
-        std::sprintf(g_buf,"%d",g_use_news_selector);
-        return g_buf;
+        return fmt::format("{}", g_use_news_selector);
 
     case OI_NEWS_SEL_MODE:
     {
@@ -1051,7 +1052,7 @@ const char *option_value(OptionIndex num)
         const int save_Threaded = g_threaded_group;
         g_threaded_group = true;
         set_selector(g_sel_default_mode, SS_MAGIC_NUMBER);
-        const char *s = g_sel_mode_string;
+        const std::string s{g_sel_mode_string};
         g_sel_mode = save_sel_mode;
         g_threaded_group = save_Threaded;
         set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
@@ -1102,8 +1103,7 @@ const char *option_value(OptionIndex num)
         return yes_or_no(g_bkgnd_spinner);
 
     case OI_CHECKPOINT_NEWSRC_FREQUENCY:
-        std::sprintf(g_buf,"%d",g_do_check_when);
-        return g_buf;
+        return fmt::format("{}", g_do_check_when);
 
     case OI_SAVE_DIR:
         return g_save_dir.empty() ? "%./News" : g_save_dir.c_str();
@@ -1118,8 +1118,7 @@ const char *option_value(OptionIndex num)
         return g_indent_string.c_str();
 
     case OI_GOTO_LINE_NUM:
-        std::sprintf(g_buf,"%d",g_g_line+1);
-        return g_buf;
+        return fmt::format("{}", g_g_line + 1);
 
     case OI_FUZZY_NEWSGROUP_NAMES:
         return yes_or_no(g_fuzzy_get);
@@ -1135,8 +1134,7 @@ const char *option_value(OptionIndex num)
         {
             return "$LINES";
         }
-        std::sprintf(g_buf, "%d", g_init_lines.value_of());
-        return g_buf;
+        return fmt::format("{}", g_init_lines.value_of());
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:
         return yes_or_no(g_append_unsub);
@@ -1147,8 +1145,7 @@ const char *option_value(OptionIndex num)
     case OI_JOIN_SUBJECT_LINES:
         if (g_join_subject_len)
         {
-            std::sprintf(g_buf,"%d",g_join_subject_len);
-            return g_buf;
+            return fmt::format("{}", g_join_subject_len);
         }
         return yes_or_no(false);
 
@@ -1174,29 +1171,17 @@ const char *option_value(OptionIndex num)
         }
         if (g_marking_areas != HALF_PAGE_MARKING)
         {
-            std::sprintf(g_buf,"%d", static_cast<int>(g_marking_areas));
+            return fmt::format("{}{}", static_cast<int>(g_marking_areas),
+                               g_marking == UNDERLINE ? "underline" : "standout");
         }
-        else
-        {
-            *g_buf = '\0';
-        }
-        if (g_marking == UNDERLINE)
-        {
-            std::strcat(g_buf,"underline");
-        }
-        else
-        {
-            std::strcat(g_buf,"standout");
-        }
-        return g_buf;
+        return g_marking == UNDERLINE ? "underline" : "standout";
 
     case OI_OLD_MTHREADS_DATABASE:
         if (g_olden_days <= 1)
         {
             return yes_or_no(g_olden_days);
         }
-        std::sprintf(g_buf,"%d",g_olden_days);
-        return g_buf;
+        return fmt::format("{}", g_olden_days);
 
     case OI_SELECT_MY_POSTS:
         switch (g_auto_select_postings)
@@ -1235,15 +1220,13 @@ const char *option_value(OptionIndex num)
         {
             return yes_or_no(false);
         }
-        std::sprintf(g_buf,"%d",g_countdown);
-        return g_buf;
+        return fmt::format("{}", g_countdown);
 
     case OI_RESTART_AT_LAST_GROUP:
         return yes_or_no(g_find_last != 0);
 
     case OI_SCAN_MODE_COUNT:
-        std::sprintf(g_buf,"%d",g_scan_on);
-        return g_buf;
+        return fmt::format("{}", g_scan_on);
 
     case OI_TERSE_OUTPUT:
         return yes_or_no(!g_verbose);
@@ -1258,19 +1241,17 @@ const char *option_value(OptionIndex num)
         return yes_or_no(g_verify);
 
     case OI_ARTICLE_TREE_LINES:
-        std::sprintf(g_buf,"%d",g_max_tree_lines);
-        return g_buf;
+        return fmt::format("{}", g_max_tree_lines);
 
     case OI_WORD_WRAP_MARGIN:
         if (g_word_wrap_offset >= 0)
         {
-            std::sprintf(g_buf,"%d",g_word_wrap_offset);
-            return g_buf;
+            return fmt::format("{}", g_word_wrap_offset);
         }
         return yes_or_no(false);
 
     case OI_DEFAULT_REFETCH_TIME:
-        return safe_copy(g_buf, secs_to_text(g_def_refetch_secs).c_str(), sizeof g_buf);
+        return secs_to_text(g_def_refetch_secs);
 
     case OI_ART_PAGER_BTNS:
         return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);
@@ -1563,26 +1544,35 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
     return cnt;
 }
 
-static char *expand_mouse_buttons(char *cp, int cnt)
+static std::string expand_mouse_buttons(const char *cp, int cnt)
 {
-    *g_buf = '\0';
+    std::string result;
+    result.reserve(sizeof g_buf);
     while (cnt--)
     {
+        if (!result.empty())
+        {
+            result += ' ';
+        }
         if (*cp == '[')
         {
-            int len = std::strlen(cp);
-            cp[len] = ']';
-            safe_cat(g_buf,cp,sizeof g_buf);
-            cp += len;
-            *cp++ = '\0';
+            const std::size_t len = std::strlen(cp);
+            result.append(cp, len);
+            result += ']';
+            cp += len + 1;
+            result += cp;
         }
         else
         {
-            safe_cat(g_buf, cp, sizeof g_buf);
+            result += cp;
         }
-        cp += std::strlen(cp)+1;
+        if (!result.empty() && result.back() == '\n')
+        {
+            result.pop_back();
+        }
+        cp += std::strlen(cp) + 1;
     }
-    return g_buf;
+    return result;
 }
 
 const char *quote_string(std::string_view val)

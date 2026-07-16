@@ -47,7 +47,6 @@ int  do_shell(const char *shell, const char *cmd);
 char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);
 #endif
-char *safe_cat(char *to, const char *from, int len);
 #ifdef SETUIDGID
 int eaccess(char *, int);
 #endif

@@ -154,7 +154,7 @@ void        opt_final();
 void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, const char *s);
 void        save_options(const char *filename);
-const char *option_value(OptionIndex num);
+std::string option_value(OptionIndex num);
 bool        option_draft_contains(OptionIndex num);
 const char *option_draft_value(OptionIndex num);
 void        set_header(std::string_view s, HeaderTypeFlags flag, bool setit);
