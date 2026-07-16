@@ -428,12 +428,12 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 32 hits remain, including the helper declaration and
-  definition.  The 30 call sites are inventoried below.
+- `safe_copy`: 31 hits remain, including the helper declaration and
+  definition.  The 29 call sites are inventoried below.
 - `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
   `CSTR-039`.
-- `safe_realloc`: string-like storage remains in
-  `mime_parse_sub_header`, `sw_file`, `get_a_line`, and `grow_str`.
+- `safe_realloc`: string-like storage remains in `sw_file`,
+  `get_a_line`, and `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
   one-line changes.
 - C string library calls: the current scan finds active `str*`,
@@ -451,8 +451,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 32 `safe_copy` hits: the helper definition, the
-helper declaration, and 30 call sites.  The call sites are still audit
+The current tree has 31 `safe_copy` hits: the helper definition, the
+helper declaration, and 29 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -463,8 +463,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-034`.
 - `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
   See `CSTR-029`.
-- `libtrn/mime.cpp`, `mime_parse_sub_header`: grows and copies a shared
-  header buffer.  See `CSTR-013`.
 - `libtrn/mime.cpp`, `mime_parse_params`: compacts caller-owned mutable
   MIME type text.  See `CSTR-035`.
 - `libtrn/mime.cpp`, `MimeSection::mime_description`: truncates an
@@ -506,7 +504,7 @@ calls in production code.
 - Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 16.
 - Comparison: `strcmp` 14, `strncmp` 54.
 - Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
-  `strlen` 134.
+  `strlen` 133.
 - Formatting into C buffers: `sprintf` 139, `snprintf` 1.
 - C text I/O roots: `fgets` 34, `fputs` 199, `printf` 513,
   `fprintf` 39.
@@ -539,16 +537,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-013 - MIME Sub-header Buffer
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
-- Kind: static growable `char *` buffer.
-- Function: `mime_parse_sub_header`.
-- Change: make the header accumulation buffer local `std::string`
-  storage.  Do not keep hidden static mutable state.
-- Tests: run MIME sub-header coverage before and after; add it if
-  missing.
 
 ### CSTR-016 - URL Parse Result Storage
 

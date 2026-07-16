@@ -611,37 +611,38 @@ void MimeSection::mime_parse_encoding(char *s)
 
 // Parse a multipart mime header and affect the *g_mime_section structure
 
-void mime_parse_sub_header(std::FILE *ifp, char *next_line)
+void mime_parse_sub_header(std::FILE *ifp, const char *next_line)
 {
-    static char* line = nullptr;
-    static int line_size = 0;
+    std::string line;
+    line.reserve(2 * LINE_BUF_LEN);
+    if (next_line != nullptr)
+    {
+        line = next_line;
+    }
+    std::size_t next_pos = 0;
+
     g_mime_section->mime_clear_struct();
     g_mime_section->m_type = TEXT_MIME;
     while (true)
     {
-        for (int pos = 0;; pos += std::strlen(line + pos))
+        line.erase(0, next_pos);
+        next_pos = std::string::npos;
+        for (std::size_t pos = 0;; pos = line.size())
         {
-            int len = pos + (next_line ? std::strlen(next_line) : 0) + LINE_BUF_LEN;
-            if (line_size < len)
+            if (pos == line.size())
             {
-                line_size = len + LINE_BUF_LEN;
-                line = safe_realloc(line, line_size);
-            }
-            if (next_line)
-            {
-                safe_copy(line+pos, next_line, line_size - pos);
-                next_line = nullptr;
-            }
-            else if (ifp)
-            {
-                if (!std::fgets(line + pos, LINE_BUF_LEN, ifp))
+                line.resize(pos + LINE_BUF_LEN);
+                char *const input = line.data() + pos;
+                if ((ifp != nullptr ? std::fgets(input, LINE_BUF_LEN, ifp) : read_art(input, LINE_BUF_LEN)) == nullptr)
                 {
+                    line.resize(pos);
                     break;
                 }
-            }
-            else if (!read_art(line + pos, LINE_BUF_LEN))
-            {
-                break;
+                line.resize(pos + std::strlen(input));
+                if (line.size() == pos)
+                {
+                    continue;
+                }
             }
             if (line[0] == '\n')
             {
@@ -649,18 +650,18 @@ void mime_parse_sub_header(std::FILE *ifp, char *next_line)
             }
             if (pos && !is_hor_space(line[pos]))
             {
-                next_line = line + pos;
-                line[pos-1] = '\0';
+                next_pos = pos;
+                line[pos - 1] = '\0';
                 break;
             }
         }
-        char *s = std::strchr(line, ':');
+        char *s = std::strchr(line.data(), ':');
         if (s == nullptr)
         {
             break;
         }
 
-        int linetype = set_line_type(line, s);
+        int linetype = set_line_type(line.c_str(), s);
         switch (linetype)
         {
         case CONT_TYPE_LINE:

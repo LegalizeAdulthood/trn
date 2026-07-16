@@ -1,8 +1,10 @@
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #include <trn/mime-internal.h>
 
 #include <config/common.h>
 #include <trn/artio.h>
+#include <trn/head.h>
 #include <trn/terminal.h>
 #include <trn/util.h>
 #include <util/util2.h>
@@ -13,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cstdio>
 #include <cstring>
 #include <string>
 #include <string_view>
@@ -89,6 +92,66 @@ TEST_F(MimeTest, textPlainHasFlags)
     ASSERT_TRUE(cap->test_command.empty());
     ASSERT_EQ(TRN_TEST_MIME_TEXT_PLAIN_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NEEDS_TERMINAL | MCF_COPIOUS_OUTPUT, cap->flags);
+}
+
+namespace
+{
+
+struct MimeSubHeaderTest : Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_mime_section = g_mime_section;
+        m_old_mime_state = g_mime_state;
+        head_init();
+        g_mime_section = &m_mime_section;
+        m_input = std::tmpfile();
+        ASSERT_NE(nullptr, m_input);
+    }
+
+    void TearDown() override
+    {
+        if (m_input != nullptr)
+        {
+            std::fclose(m_input);
+        }
+        m_mime_section.mime_clear_struct();
+        g_mime_section = m_old_mime_section;
+        g_mime_state = m_old_mime_state;
+        head_final();
+    }
+
+    MimeSection  m_mime_section{};
+    MimeSection *m_old_mime_section{};
+    MimeState    m_old_mime_state{};
+    std::FILE   *m_input{};
+};
+
+} // namespace
+
+TEST_F(MimeSubHeaderTest, parsesFoldedHeaders)
+{
+    constexpr std::string_view header{"Content-Type: multipart/mixed;\n"
+                                      " boundary=\"part-boundary\"\n"
+                                      "Content-Transfer-Encoding: base64\n"
+                                      "Content-Disposition: inline;\n"
+                                      " filename=\"part.bin\"\n"
+                                      "\n"};
+    ASSERT_EQ(header.size(), std::fwrite(header.data(), sizeof(char), header.size(), m_input));
+    std::rewind(m_input);
+
+    mime_parse_sub_header(m_input, nullptr);
+
+    EXPECT_EQ(MULTIPART_MIME, m_mime_section.m_type);
+    EXPECT_EQ(MENCODE_BASE64, m_mime_section.m_encoding);
+    EXPECT_EQ(MSF_INLINE, m_mime_section.m_flags);
+    ASSERT_TRUE(m_mime_section.m_type_name);
+    EXPECT_EQ("multipart/mixed", *m_mime_section.m_type_name);
+    ASSERT_TRUE(m_mime_section.m_boundary);
+    EXPECT_EQ("part-boundary", *m_mime_section.m_boundary);
+    ASSERT_TRUE(m_mime_section.m_filename);
+    EXPECT_EQ("part.bin", *m_mime_section.m_filename);
 }
 
 namespace
