@@ -23,6 +23,8 @@
 #include <trn/trn.h>
 #include <trn/util.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -32,7 +34,9 @@
 
 int g_max_tree_lines{6};
 
-static char s_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
+static constexpr std::string_view s_letters{"123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+"};
+static constexpr int              LAST_ALPHANUM{9 + 26 + 26};
+static_assert(LAST_ALPHANUM == static_cast<int>(s_letters.size() - 1));
 
 // clang-format off
 static char s_tree_indent[] = {
@@ -671,7 +675,7 @@ void entire_tree(Article* ap)
         {
             return;
         }
-        std::printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->stripped_text());
+        fmt::print("[{}] {}\n", s_letters[std::min(num, LAST_ALPHANUM)], sp->stripped_text());
         term_down(1);
         sp->m_misc = num++;
         sp = sp->m_thread_link;
