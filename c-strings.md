@@ -553,16 +553,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-004 - MIME Roman Marker Storage
-
-- Files: `libtrn/mime.cpp`.
-- Kind: mutable static table with literal contents.
-- Function: `tag_action`.
-- Change: replace `s_roman_letters` mutation with immutable upper and
-  lower tables selected by the active tag action.
-- Tests: add or extend MIME HTML list-marker coverage first if it is not
-  already present.
-
 ### CSTR-006 - Article Search Salt Command
 
 - Files: `libtrn/artsrch.cpp`.

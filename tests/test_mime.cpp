@@ -2,6 +2,8 @@
 #include <trn/mime-internal.h>
 
 #include <config/common.h>
+#include <trn/artio.h>
+#include <trn/terminal.h>
 #include <trn/util.h>
 #include <util/util2.h>
 
@@ -10,8 +12,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 using namespace testing;
 
@@ -136,4 +140,61 @@ TEST_F(MimeExecTest, applicationPdfFailedTestCommand)
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_EQ(nullptr, cap);
+}
+
+namespace
+{
+
+struct HtmlFilterTest : Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_mime_section = g_mime_section;
+        m_old_art_buf = g_art_buf;
+        m_old_cols = g_tc_COLS;
+        m_old_word_wrap_offset = g_word_wrap_offset;
+
+        g_mime_section = &m_mime_section;
+        g_art_buf = m_output.data();
+        g_tc_COLS = 200;
+        g_word_wrap_offset = 0;
+    }
+
+    void TearDown() override
+    {
+        m_mime_section.mime_clear_struct();
+        g_mime_section = m_old_mime_section;
+        g_art_buf = m_old_art_buf;
+        g_tc_COLS = m_old_cols;
+        g_word_wrap_offset = m_old_word_wrap_offset;
+    }
+
+    std::string filter(std::string_view text)
+    {
+        const std::string input{text};
+        const int         length = filter_html(m_output.data(), input.c_str());
+        return {m_output.data(), static_cast<std::size_t>(length)};
+    }
+
+    MimeSection                    m_mime_section{};
+    MimeSection                   *m_old_mime_section{};
+    char                          *m_old_art_buf{};
+    int                            m_old_cols{};
+    int                            m_old_word_wrap_offset{};
+    std::array<char, LINE_BUF_LEN> m_output{};
+};
+
+} // namespace
+
+TEST_F(HtmlFilterTest, rendersLowerRomanListMarkers)
+{
+    EXPECT_EQ("List:\n\n   i. one\n  ii. two\n iii. three", //
+              filter("List:<ol type=i><li>one<li>two<li>three</ol>"));
+}
+
+TEST_F(HtmlFilterTest, rendersUpperRomanListMarkers)
+{
+    EXPECT_EQ("List:\n\n   I. one\n  II. two\n III. three", //
+              filter("List:<ol type=I><li>one<li>two<li>three</ol>"));
 }

@@ -1737,8 +1737,7 @@ int filter_html(char *t, const char *f)
 #undef XX
 
 static constexpr char s_letters[2] = {'a', 'A'};
-static char s_roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
-static int  s_roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
+static constexpr int  s_roman_values[] = {1000, 500, 100, 50, 10, 5, 1};
 
 static char *tag_action(char *t, const char *word, bool opening_tag)
 {
@@ -1748,6 +1747,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
     int   cnt;
     int   num;
     bool match = false;
+    const char *roman_letters;
     HtmlBlock* blks = g_mime_section->m_html_blocks;
 
     const char *tmp;
@@ -1969,23 +1969,11 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
                 break;
 
             case 7:
-                for (int i = 0; i < 7; i++)
-                {
-                    if (std::isupper(s_roman_letters[i]))
-                    {
-                        s_roman_letters[i] = std::tolower(s_roman_letters[i]);
-                    }
-                }
+                roman_letters = "mdclxvi";
                 goto roman_numerals;
 
             case 8:
-                for (int i = 0; i < 7; i++)
-                {
-                    if (std::islower(s_roman_letters[i]))
-                    {
-                        s_roman_letters[i] = std::toupper(s_roman_letters[i]);
-                    }
-                }
+                roman_letters = "MDCLXVI";
 
 roman_numerals:
             {
@@ -1996,7 +1984,7 @@ roman_numerals:
                     num = s_roman_values[i];
                     while (cnt >= num)
                     {
-                        *tcp++ = s_roman_letters[i];
+                        *tcp++ = roman_letters[i];
                         cnt -= num;
                     }
                     j = (i | 1) + 1;
@@ -2005,8 +1993,8 @@ roman_numerals:
                         num -= s_roman_values[j];
                         if (cnt >= num)
                         {
-                            *tcp++ = s_roman_letters[j];
-                            *tcp++ = s_roman_letters[i];
+                            *tcp++ = roman_letters[j];
+                            *tcp++ = roman_letters[i];
                             cnt -= num;
                         }
                     }
