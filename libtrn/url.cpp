@@ -15,6 +15,7 @@
 // Lower-level net routines grabbed from nntpinit.c.
 
 #include <boost/asio.hpp>
+#include <fmt/format.h>
 
 #include <cctype>
 #include <cstdio>
@@ -28,15 +29,18 @@ using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code_t = boost::system::error_code;
 
 static char s_url_buf[1030];
-// XXX just a little bit larger than necessary...
-static char s_url_type[256];
-static char s_url_host[256];
-static int  s_url_port;
-static char s_url_path[1024];
+
+struct UrlParts
+{
+    std::string type;
+    std::string host;
+    std::string path;
+    int         port{80};
+};
 
 static bool fetch_http(const char *host, int port, const char *path, const char *outname);
 static bool fetch_ftp(const char *host, const char *origpath, const char *outname);
-static bool parse_url(std::string_view url);
+static UrlParts parse_url(std::string_view url);
 
 // returns true if successful
 static bool fetch_http(const char *host, int port, const char *path, const char *outname)
@@ -167,39 +171,30 @@ static bool fetch_ftp(const char *host, const char *origpath, const char *outnam
 // right now only full, absolute URLs are allowed.
 // use relative URLs later?
 // later: pay more attention to long URLs
-static bool parse_url(std::string_view url)
+static UrlParts parse_url(std::string_view url)
 {
-    // consider using 0 as default to look up the service?
-    s_url_port = 80; // the default
     if (url.empty())
     {
-        std::printf("Empty URL -- ignoring.\n");
-        return false;
+        fmt::print("Empty URL -- ignoring.\n");
+        return {};
     }
-    const auto copy_view = [](char *dest, std::size_t dest_size, std::string_view source)
-    {
-        const std::string text{source};
-        safe_copy(dest, text.c_str(), static_cast<int>(dest_size));
-    };
 
-    const std::string      url_text{url};
     const std::string_view full_url = url;
     const std::size_t      scheme_end = full_url.find(':');
     if (scheme_end == std::string_view::npos)
     {
-        std::printf("Incomplete URL: %s\n", url_text.c_str());
-        return false;
+        fmt::print("Incomplete URL: {}\n", url);
+        return {};
     }
     const std::string_view url_type = full_url.substr(0, scheme_end);
     std::string_view       rest = full_url.substr(scheme_end + 1);
     std::string_view       url_host;
-    bool                   has_host = false;
+    UrlParts               parts;
 
     if (rest.substr(0, 2) == "//")
     {
         // normal URL type, will have host (optional portnum)
         rest.remove_prefix(2);
-        has_host = true;
 
         // check for address literal: news://[ip:v6:address]:port/
         if (!rest.empty() && rest.front() == '[')
@@ -207,8 +202,8 @@ static bool parse_url(std::string_view url)
             const std::size_t host_end = rest.find(']');
             if (host_end == std::string_view::npos)
             {
-                std::printf("Bad address literal: %s\n", url_text.c_str());
-                return false;
+                fmt::print("Bad address literal: {}\n", url);
+                return {};
             }
             url_host = rest.substr(0, host_end);
             rest.remove_prefix(host_end + 1);
@@ -221,16 +216,16 @@ static bool parse_url(std::string_view url)
         }
         if (rest.empty())
         {
-            std::printf("Incomplete URL: %s\n", url_text.c_str());
-            return false;
+            fmt::print("Incomplete URL: {}\n", url);
+            return {};
         }
         if (rest.front() == ':')
         {
             rest.remove_prefix(1);
             if (rest.empty() || !std::isdigit(static_cast<unsigned char>(rest.front())))
             {
-                std::printf("Bad URL (non-numeric portnum): %s\n", url_text.c_str());
-                return false;
+                fmt::print("Bad URL (non-numeric portnum): {}\n", url);
+                return {};
             }
             std::size_t port_len = 0;
             while (port_len < rest.size() && std::isdigit(static_cast<unsigned char>(rest[port_len])))
@@ -238,7 +233,7 @@ static bool parse_url(std::string_view url)
                 port_len++;
             }
             const std::string port{rest.substr(0, port_len)};
-            s_url_port = std::atoi(port.c_str());
+            parts.port = std::atoi(port.c_str());
             rest.remove_prefix(port_len);
         }
     }
@@ -246,49 +241,38 @@ static bool parse_url(std::string_view url)
     {
         if (url_type != "news")
         {
-            std::printf("URL needs a hostname: %s\n", url_text.c_str());
-            return false;
+            fmt::print("URL needs a hostname: {}\n", url);
+            return {};
         }
     }
     // finally, just do the path
     if (rest.empty() || rest.front() != '/')
     {
-        std::printf("Bad URL (path does not start with /): %s\n", url_text.c_str());
-        return false;
+        fmt::print("Bad URL (path does not start with /): {}\n", url);
+        return {};
     }
-    if (has_host)
-    {
-        copy_view(s_url_host, sizeof s_url_host, url_host);
-    }
-    copy_view(s_url_type, sizeof s_url_type, url_type);
-    copy_view(s_url_path, sizeof s_url_path, rest);
-    return true;
+    parts.type = url_type;
+    parts.host = url_host;
+    parts.path = rest;
+    return parts;
 }
 
 bool url_get(std::string_view url, const char *outfile)
 {
-    bool flag;
-
-    if (!parse_url(url))
+    const UrlParts parts = parse_url(url);
+    if (parts.path.empty())
     {
         return false;
     }
 
-    if (!std::strcmp(s_url_type,"http"))
+    if (parts.type == "http")
     {
-        flag = fetch_http(s_url_host,s_url_port,s_url_path,outfile);
+        return fetch_http(parts.host.c_str(), parts.port, parts.path.c_str(), outfile);
     }
-    else if (!std::strcmp(s_url_type,"ftp"))
+    if (parts.type == "ftp")
     {
-        flag = fetch_ftp(s_url_host,s_url_path,outfile);
+        return fetch_ftp(parts.host.c_str(), parts.path.c_str(), outfile);
     }
-    else
-    {
-        if (s_url_type)
-        {
-            std::printf("\nURL type %s not supported (yet?)\n",s_url_type);
-        }
-        flag = false;
-    }
-    return flag;
+    fmt::print("\nURL type {} not supported (yet?)\n", parts.type);
+    return false;
 }

@@ -52,6 +52,7 @@ add_executable(trn-test
     test_subject.cpp
     test_sw.cpp
     test_terminal.cpp
+    test_url.cpp
     test_util.cpp
     test_univ.cpp
     test_utf.cpp

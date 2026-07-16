@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 31 hits remain, including the helper declaration and
-  definition.  The 29 call sites are inventoried below.
+- `safe_copy`: 30 hits remain, including the helper declaration and
+  definition.  The 28 call sites are inventoried below.
 - `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
   `CSTR-039`.
 - `safe_realloc`: string-like storage remains in `sw_file`,
@@ -451,8 +451,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 31 `safe_copy` hits: the helper definition, the
-helper declaration, and 29 call sites.  The call sites are still audit
+The current tree has 30 `safe_copy` hits: the helper definition, the
+helper declaration, and 28 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -485,8 +485,8 @@ roots.  Keep each one visible until the owning storage or API changes.
   in `g_buf`.  See `CSTR-031`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
   See `CSTR-025`.
-- `libtrn/url.cpp`, `parse_url` and `fetch_ftp`: four static URL and
-  command copies remain.  See `CSTR-016` and `CSTR-018`.
+- `libtrn/url.cpp`, `fetch_ftp`: three static path and identity copies
+  remain.  See `CSTR-018`.
 - `libtrn/uudecode.cpp`, `uue_prescan`: copies part metadata into
   `g_msg`.  See `CSTR-032`.
 
@@ -502,11 +502,11 @@ headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
 - Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 16.
-- Comparison: `strcmp` 14, `strncmp` 54.
+- Comparison: `strcmp` 12, `strncmp` 54.
 - Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
   `strlen` 133.
 - Formatting into C buffers: `sprintf` 139, `snprintf` 1.
-- C text I/O roots: `fgets` 34, `fputs` 199, `printf` 513,
+- C text I/O roots: `fgets` 34, `fputs` 199, `printf` 505,
   `fprintf` 39.
 - Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
 
@@ -537,15 +537,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-016 - URL Parse Result Storage
-
-- Files: `libtrn/url.cpp`.
-- Kind: file-scope static URL buffers and `safe_copy`.
-- Functions: `parse_url`, `url_get`.
-- Change: return a `UrlParts` value from `parse_url` with string fields
-  and port.  Remove `s_url_type`, `s_url_host`, and `s_url_path`.
-- Tests: add URL parse tests before refactoring.
 
 ### CSTR-034 - Character Substitution Output API
 
