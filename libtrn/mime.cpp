@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -126,53 +127,37 @@ void mime_final()
 
 void mime_read_mimecap(const char *mcname)
 {
-    char *s;
-    int   buflen = 2048;
-
-    std::FILE *fp = std::fopen(file_exp(mcname).c_str(), "r");
-    if (fp == nullptr)
+    std::ifstream input{file_exp(mcname)};
+    if (!input)
     {
         return;
     }
-    char *bp = safe_malloc(buflen);
-    for (; !std::feof(fp);)
+
+    std::string entry;
+    entry.reserve(2048);
+    std::string line;
+    while (input)
     {
-        *(s = bp) = '\0';
-        int linelen = 0;
-        while (std::fgets(s, buflen - linelen, fp))
+        entry.clear();
+        while (std::getline(input, line))
         {
-            if (*s == '#')
+            if (!line.empty() && line.front() == '#')
             {
                 continue;
             }
-            linelen += std::strlen(s);
-            if (linelen == 0)
+            const bool continued = !input.eof() && !line.empty() && line.back() == '\\';
+            if (continued)
             {
-                continue;
+                line.pop_back();
             }
-            if (bp[linelen - 1] == '\n')
+            entry += line;
+            if (!continued)
             {
-                if (--linelen == 0)
-                {
-                    continue;
-                }
-                if (bp[linelen - 1] != '\\')
-                {
-                    bp[linelen] = '\0';
-                    break;
-                }
-                bp[--linelen] = '\0';
+                break;
             }
-
-            if (linelen + 1024 > buflen)
-            {
-                buflen *= 2;
-                bp = safe_realloc(bp, buflen);
-            }
-
-            s = bp + linelen;
         }
-        s = skip_space(bp);
+
+        char *s = skip_space(entry.data());
         if (!*s)
         {
             continue;
@@ -180,7 +165,7 @@ void mime_read_mimecap(const char *mcname)
         char *t = mime_parse_entry_arg(&s);
         if (!s)
         {
-            std::fprintf(stderr, "trn: Ignoring invalid mimecap entry: %s\n", bp);
+            fmt::print(stderr, "trn: Ignoring invalid mimecap entry: {}\n", entry.c_str());
             continue;
         }
         MimeCapEntry &mcp = s_mimecap_entries.emplace_back();
@@ -229,8 +214,6 @@ void mime_read_mimecap(const char *mcname)
             }
         }
     }
-    std::free(bp);
-    std::fclose(fp);
 }
 
 static char *mime_parse_entry_arg(char **cpp)

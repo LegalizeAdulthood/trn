@@ -432,7 +432,7 @@ as a local string modernization slice.
   definition.  The 30 call sites are inventoried below.
 - `safe_cat`: two call sites remain in `expand_mouse_buttons`.  See
   `CSTR-039`.
-- `safe_realloc`: string-like storage remains in `mime_read_mimecap`,
+- `safe_realloc`: string-like storage remains in
   `mime_parse_sub_header`, `sw_file`, `get_a_line`, and `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
   one-line changes.
@@ -504,12 +504,12 @@ headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
 - Copy and concatenation: `strcpy` 106, `strncpy` 5, `strcat` 16.
-- Comparison: `strcmp` 14, `strncmp` 55.
-- Search and length: `strchr` 117, `strrchr` 14, `strstr` 3,
-  `strlen` 136.
+- Comparison: `strcmp` 14, `strncmp` 54.
+- Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
+  `strlen` 134.
 - Formatting into C buffers: `sprintf` 139, `snprintf` 1.
-- C text I/O roots: `fgets` 35, `fputs` 199, `printf` 522,
-  `fprintf` 40.
+- C text I/O roots: `fgets` 34, `fputs` 199, `printf` 513,
+  `fprintf` 39.
 - Character byte operations: `memcpy` 9, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -539,15 +539,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-012 - MIME Cap Line Reader
-
-- Files: `libtrn/mime.cpp`.
-- Kind: growable owned `char *` line buffer.
-- Function: `mime_read_mimecap`.
-- Change: use `std::string` for continued mimecap lines.  Preserve
-  documented comment and continuation behavior.
-- Tests: run `test_mime` before and after.
 
 ### CSTR-013 - MIME Sub-header Buffer
 
