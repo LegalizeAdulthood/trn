@@ -555,15 +555,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-022 - Follow-up Poster Command
-
-- Files: `libtrn/respond.cpp`.
-- Kind: redundant command copy into `g_cmd_buf`.
-- Function: `follow_it_up`.
-- Change: keep the expanded poster command in `std::string` and pass it
-  directly to `invoke`.
-- Tests: add or run follow-up command coverage.
-
 ### CSTR-023 - Reply Mailer Command
 
 - Files: `libtrn/respond.cpp`.

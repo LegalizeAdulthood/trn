@@ -807,8 +807,8 @@ static int nntp_date()
 
 static void follow_it_up()
 {
-    safe_copy(g_cmd_buf, file_exp(get_val_const("NEWSPOSTER", NEWS_POSTER)).c_str(), sizeof g_cmd_buf);
-    if (invoke(g_cmd_buf, g_orig_dir.c_str()) == 42)
+    if (invoke(file_exp(get_val_const("NEWSPOSTER", NEWS_POSTER)).c_str(), //
+               g_orig_dir.c_str()) == 42)
     {
         int ret;
         if ((g_data_source->m_flags & DF_REMOTE) &&
@@ -1128,7 +1128,7 @@ void followup()
 
 static int invoke(const char *cmd, const char *dir)
 {
-    MinorMode oldmode = g_mode;
+    const MinorMode old_mode = g_mode;
     int ret = -1;
 
     if (g_data_source->m_flags & DF_REMOTE)
@@ -1156,7 +1156,7 @@ static int invoke(const char *cmd, const char *dir)
     no_echo();                   // set no echo
     cr_mode();                   // and cbreak mode
     termlib_init();
-    set_mode(g_general_mode,oldmode);
+    set_mode(g_general_mode,old_mode);
     if (dir)
     {
         chdir_news_dir();
