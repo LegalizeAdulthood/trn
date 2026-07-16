@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/utf.h>
 
@@ -135,6 +136,25 @@ TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
     g_verbose = false;
 
     EXPECT_EQ("[T] ", current_char_subst());
+}
+
+TEST(CharSubstTest, copiesThroughFirstNewline)
+{
+    EXPECT_EQ("first\n", str_char_subst("first\nsecond", 'p'));
+}
+
+TEST(CharSubstTest, transliteratesLatin1ToAscii)
+{
+    const char input[]{"\304\326\334\337"};
+
+    EXPECT_EQ("AeOeUess", str_char_subst(input, 'a'));
+}
+
+TEST(CharSubstTest, transliteratesLatin1ToMonospacedAscii)
+{
+    const char input[]{"\304\326\334\337"};
+
+    EXPECT_EQ("AOUs", str_char_subst(input, 'm'));
 }
 
 constexpr const char *const ARBITRARY_ASCII{"a"};

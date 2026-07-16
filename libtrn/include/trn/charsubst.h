@@ -18,12 +18,14 @@
 #include <config/config2.h>
 
 #include <string>
+#include <string_view>
 
 // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 extern std::string g_charsets;
 extern const char* g_char_subst;
 
 std::string current_char_subst();
+std::string str_char_subst(std::string_view input, char_int subst);
 int str_char_subst(char *outb, const char *inb, int limit, char_int subst);
 
 #endif

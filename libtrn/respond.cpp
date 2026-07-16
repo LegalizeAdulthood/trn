@@ -31,6 +31,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -896,8 +898,7 @@ void reply()
             {
                 *t = '\0';
             }
-            str_char_subst(hbuf,s,sizeof hbuf,*g_char_subst);
-            std::fprintf(header,"%s%s\n",g_indent_string.c_str(),hbuf);
+            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(s, *g_char_subst));
             if (t)
             {
                 *t = '\0';
@@ -1107,8 +1108,7 @@ void followup()
             {
                 *t = '\0';
             }
-            str_char_subst(hbuf,s,sizeof hbuf,*g_char_subst);
-            std::fprintf(header,"%s%s\n",g_indent_string.c_str(),hbuf);
+            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(s, *g_char_subst));
             if (t)
             {
                 *t = '\0';

@@ -602,8 +602,7 @@ std::string compress_from(const char *from, int size)
         return {};
     }
 
-    std::string buffer(LINE_BUF_LEN, '\0');
-    str_char_subst(buffer.data(), from ? from : "", static_cast<int>(buffer.size()), *g_char_subst);
+    std::string buffer = str_char_subst(from ? from : "", *g_char_subst);
     char       *s = extract_name(buffer.data());
     std::string text;
     if (s != nullptr)

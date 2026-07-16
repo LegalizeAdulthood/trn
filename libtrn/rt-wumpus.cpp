@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <string_view>
 
 int g_max_tree_lines{6};
@@ -378,21 +379,14 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     int         i;
     char        ch;
     char       *cp;
+    std::string substituted_line;
     const std::string_view line_text = orig_line.substr(0, orig_line.find('\n'));
     const int              len = static_cast<int>(line_text.size());
 
     // Make a modifiable copy of the line
     // Copy line, filtering encoded and control characters.
-    if (header_conv())
-    {
-        tmpbuf = safe_malloc(len * 2 + 2);
-        line = tmpbuf + len + 1;
-    }
-    else
-    {
-        tmpbuf = safe_malloc(len + 2); // yes, I mean "2"
-        line = tmpbuf;
-    }
+    tmpbuf = safe_malloc(len + 2); // yes, I mean "2"
+    line = tmpbuf;
     if (g_do_hiding)
     {
         end = line + decode_header(line, line_text);
@@ -409,14 +403,23 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     }
     if (header_conv())
     {
-        end = tmpbuf + str_char_subst(tmpbuf, line, len*2+2, *g_char_subst);
-        line = tmpbuf;
+        substituted_line = str_char_subst(line, *g_char_subst);
+        line = substituted_line.data();
+        end = line + substituted_line.size();
     }
 
     if (!*line)
     {
-        std::strcpy(line, " ");
-        end = line+1;
+        if (header_conv())
+        {
+            substituted_line = " ";
+            line = substituted_line.data();
+        }
+        else
+        {
+            std::strcpy(line, " ");
+        }
+        end = line + 1;
     }
 
     color_object(COLOR_HEADER, true);

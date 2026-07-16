@@ -262,6 +262,40 @@ static const char* s_iso_to_ascii[ISO_TABLES][96] =
 };
 // clang-format on
 
+std::string str_char_subst(std::string_view input, char_int subst)
+{
+    if (subst != 'a' && subst != 'm')
+    {
+        const std::size_t newline = input.find('\n');
+        if (newline != std::string_view::npos)
+        {
+            input = input.substr(0, newline + 1);
+        }
+        return std::string{input};
+    }
+
+    const char *const *table = s_iso_to_ascii[subst == 'm' ? 0 : 1];
+    std::string        result;
+    result.reserve(input.size() * 4);
+    for (const char value : input)
+    {
+        const Uchar ch = static_cast<Uchar>(value);
+        if (ch > 0x9f)
+        {
+            const char *const replacement = table[ch - 0xa0];
+            if (replacement != nullptr)
+            {
+                result += replacement;
+            }
+        }
+        else
+        {
+            result.push_back(ch < 0x80 ? static_cast<char>(ch) : ' ');
+        }
+    }
+    return result;
+}
+
 //
 //  Transform an 8-bit ISO Latin 1 string iso into a 7-bit ASCII string asc
 //  readable on old terminals using conversion table t.

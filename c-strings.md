@@ -459,8 +459,9 @@ roots.  Keep each one visible until the owning storage or API changes.
   `extract_name` mutates the display copy.  See `CSTR-026`.
 - `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
   during word wrapping.  See `CSTR-033`.
-- `libtrn/charsubst.cpp`, `str_char_subst`: writes caller output text.
-  See `CSTR-034`.
+- `libtrn/charsubst.cpp`, `str_char_subst`: the buffer overload remains
+  for `compress_subj` while it builds its result in `g_buf`.  See
+  `CSTR-031`.
 - `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
   See `CSTR-029`.
 - `libtrn/mime.cpp`, `mime_parse_params`: compacts caller-owned mutable
@@ -537,15 +538,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-034 - Character Substitution Output API
-
-- Files: `libtrn/charsubst.cpp`, `libtrn/include/trn/charsubst.h`.
-- Kind: caller output buffer.
-- Function: `str_char_subst`.
-- Change: add a string-returning substitution path or update callers to
-  pass owned output storage.  Do not merely copy through a temporary.
-- Tests: add substitution coverage first.
 
 ### CSTR-035 - MIME Parameter Split API
 
