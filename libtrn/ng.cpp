@@ -1723,7 +1723,7 @@ refresh_screen:
 
 #ifdef STRICT_CR
     case '\n':   case '\r':
-        std::fputs(g_bad_cr,stdout);
+        std::fputs("\nUnnecessary CR ignored.\n",stdout);
         return AS_ASK;
 #endif
 

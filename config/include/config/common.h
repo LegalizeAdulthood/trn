@@ -1,6 +1,7 @@
 /* common.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_COMMON_H
 #define TRN_COMMON_H
 
@@ -692,9 +693,6 @@ bool all_bits(T val, U bits)
 // Factored strings
 
 extern const char *g_h_for_help;
-#ifdef STRICT_CR
-extern char g_bad_cr[];
-#endif
 extern const char *g_unsub_to;
 extern const char *g_cant_open;
 extern const char *g_cant_create;

@@ -553,15 +553,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### CSTR-001 - Const Global `g_bad_cr`
-
-- Files: `config/common.cpp`, `config/include/config/common.h`.
-- Kind: `char[]` assigned from a literal.
-- Function: none; this is storage only.
-- Change: make `g_bad_cr` `const char[]` in the definition and extern
-  declaration.
-- Tests: build only.
-
 ### CSTR-002 - `edit_file` Command Storage
 
 - Files: `libtrn/util.cpp`.
