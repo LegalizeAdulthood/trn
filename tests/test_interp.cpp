@@ -61,6 +61,7 @@ namespace
 {
 
 using Environment = StrictMock<trn::testing::MockEnvironment>;
+namespace fs = std::filesystem;
 
 class TestOutputDirectory
 {
@@ -1525,6 +1526,52 @@ TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(TRN_TEST_NEWSGROUP_DIR, buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, extractCreatesRelativeDestinationDirectory)
+{
+    ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_no_envar("SAVEDIR");
+    const std::string command{"e extracted"};
+    ASSERT_LE(command.size(), LINE_BUF_LEN);
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    testing::internal::CaptureStdout();
+    const SaveResult  result = save_article();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    const fs::path expected = fs::path{m_output.path()} / "extracted";
+    EXPECT_EQ(SAVE_DONE, result);
+    EXPECT_EQ(expected.generic_string(), g_extract_dest);
+    EXPECT_TRUE(fs::is_directory(expected));
+    EXPECT_EQ("Unable to determine type of file.\n", output);
+}
+
+TEST_F(InterpolatorNewsgroupTest, extractUsesCustomCommand)
+{
+    ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_no_envar("SAVEDIR");
+    m_env.expect_env("CUSTOMSAVER", ":");
+    const std::string command{"e custom-extract | custom extractor --flag"};
+    ASSERT_LE(command.size(), LINE_BUF_LEN);
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    testing::internal::CaptureStdout();
+    const SaveResult  result = save_article();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    const fs::path    expected = fs::path{m_output.path()} / "custom-extract";
+    const std::string expected_output =
+        "Extracting article into " + expected.generic_string() + " using custom extractor --flag\n";
+    EXPECT_EQ(SAVE_DONE, result);
+    EXPECT_EQ(expected.generic_string(), g_extract_dest);
+    EXPECT_EQ("custom extractor --flag", g_extract_prog);
+    EXPECT_TRUE(fs::is_directory(expected));
+    EXPECT_EQ(expected_output, output);
 }
 
 TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)

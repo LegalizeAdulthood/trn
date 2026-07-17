@@ -37,7 +37,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <string>
+
+namespace fs = std::filesystem;
 
 std::string     g_save_dest;          // value of %b
 std::string     g_extract_dest;       // value of %E
@@ -102,7 +105,6 @@ SaveResult save_article()
     if (cmd == 'e')             // is this an extract command?
     {
         static bool custom_extract = false;
-        const char *cmdstr;
         int         partOpt = 0;
         int         totalOpt = 0;
 
@@ -127,109 +129,85 @@ SaveResult save_article()
                 totalOpt = partOpt;
             }
         }
-        safe_copy(altbuf, file_exp(s).c_str(), sizeof altbuf);
-        s = altbuf;
-        if (*s)
+        std::string destination = file_exp(s);
+        destination.reserve(CMD_BUF_LEN);
+        bool has_extract_command = custom_extract;
+        if (!destination.empty())
         {
-            cmdstr = copy_till(g_buf,s,'|');      // check for |
-            s = g_buf + std::strlen(g_buf)-1;
-            while (*s == ' ')
+            std::size_t command_separator = destination.find('|');
+            while (command_separator != std::string::npos && command_separator > 0 &&
+                   destination[command_separator - 1] == '\\')
             {
-                s--;                            // trim trailing spaces
+                destination.erase(command_separator - 1, 1);
+                command_separator = destination.find('|', command_separator);
             }
-            *++s = '\0';
-            if (*cmdstr)
+            if (command_separator != std::string::npos)
             {
-                const char *extract_cmd = cmdstr + 1; // skip |
-                extract_cmd = skip_eq(extract_cmd, ' ');
-                if (*extract_cmd) // if new command, use it
+                std::size_t command_start = command_separator + 1;
+                while (command_start < destination.size() && destination[command_start] == ' ')
                 {
-                    g_extract_prog = extract_cmd; // put extractor in %e
+                    ++command_start;
                 }
-                else
+                if (command_start < destination.size())
                 {
-                    static char cmdbuff[1024];
-                    std::strcpy(cmdbuff, g_extract_prog.c_str());
-                    cmdstr = cmdbuff;
+                    g_extract_prog.assign(destination, command_start, std::string::npos);
                 }
+                destination.erase(command_separator);
             }
-            else
+            while (!destination.empty() && destination.back() == ' ')
             {
-                cmdstr = nullptr;
+                destination.pop_back();
             }
-            s = g_buf;
+            has_extract_command = command_separator != std::string::npos;
         }
         else
         {
-            if (!g_extract_dest.empty())
+            destination = g_extract_dest;
+        }
+        custom_extract = has_extract_command;
+
+        if (!FILE_REF(destination.c_str())) // relative path?
+        {
+            std::string save_directory = file_exp(get_val_const("SAVEDIR", SAVEDIR));
+            save_directory.reserve(LINE_BUF_LEN);
+            if (make_dir(save_directory.c_str(), MD_DIR)) // ensure directory exists
             {
-                std::strcpy(s, g_extract_dest.c_str());
+                save_directory = g_priv_dir;
             }
-            if (custom_extract)
+            if (!destination.empty())
             {
-                static char cmdbuff[1024];
-                std::strcpy(cmdbuff, g_extract_prog.c_str());
-                cmdstr = cmdbuff;
+                destination = (fs::path{save_directory} / destination).generic_string();
             }
             else
             {
-                cmdstr = nullptr;
+                destination = save_directory;
             }
         }
-        custom_extract = (cmdstr != nullptr);
-
-        if (!FILE_REF(s))       // relative path?
+        if (!FILE_REF(destination.c_str())) // path still relative?
         {
-            c = (s==g_buf ? altbuf : g_buf);
-            interp(c, (sizeof g_buf), get_val_const("SAVEDIR", SAVEDIR));
-            if (make_dir(c, MD_DIR))      // ensure directory exists
-            {
-                std::strcpy(c,g_priv_dir.c_str());
-            }
-            if (*s)
-            {
-                while (*c)
-                {
-                    c++;
-                }
-                *c++ = '/';
-                std::strcpy(c,s);            // add filename
-            }
-            s = (s==g_buf ? altbuf : g_buf);
+            destination = (fs::path{g_priv_dir} / destination).generic_string();
         }
-        if (!FILE_REF(s))       // path still relative?
-        {
-            c = (s==g_buf ? altbuf : g_buf);
-            std::sprintf(c, "%s/%s", g_priv_dir.c_str(), s);
-            s = c;                      // absolutize it
-        }
-        g_extract_dest = s; // make it handy for %E
-        {
-            static char buff[512];
-            std::strcpy(buff, g_extract_dest.c_str());
-            s = buff;
-        }
-        if (make_dir(s, MD_DIR))         // ensure directory exists
+        g_extract_dest = destination;                 // make it handy for %E
+        if (make_dir(g_extract_dest.c_str(), MD_DIR)) // ensure directory exists
         {
             g_int_count++;
             return SAVE_DONE;
         }
-        if (change_dir(s))
+        if (change_dir(g_extract_dest))
         {
-            std::printf(g_no_cd,s);
+            fmt::print("Can't chdir to directory {}\n", g_extract_dest);
             sig_catcher(0);
         }
-        c = trn_getwd(g_buf, sizeof(g_buf));    // simplify path for output
         if (custom_extract)
         {
-            std::printf("Extracting article into %s using %s\n",c,g_extract_prog.c_str());
+            fmt::print("Extracting article into {} using {}\n", fs::current_path().generic_string(), g_extract_prog);
             term_down(1);
             interp(g_cmd_buf, sizeof g_cmd_buf, get_val_const("CUSTOMSAVER", CUSTOM_SAVER));
             invoke(g_cmd_buf, nullptr);
         }
         else if (g_is_mime)
         {
-            std::printf("Extracting MIME article into %s:\n", c);
+            fmt::print("Extracting MIME article into {}:\n", fs::current_path().generic_string());
             term_down(1);
             mime_decode_article(false);
         }
@@ -280,14 +258,14 @@ SaveResult save_article()
             switch (decode_type)
             {
             case 1:
-                std::printf("Extracting shar into %s:\n", c);
+                fmt::print("Extracting shar into {}:\n", fs::current_path().generic_string());
                 term_down(1);
                 interp(g_cmd_buf, (sizeof g_cmd_buf), get_val_const("SHARSAVER", SHAR_SAVER));
                 invoke(g_cmd_buf, nullptr);
                 break;
 
             case 2:
-                std::printf("Extracting uuencoded file into %s:\n", c);
+                fmt::print("Extracting uuencoded file into {}:\n", fs::current_path().generic_string());
                 term_down(1);
                 g_mime_section->m_type = IMAGE_MIME;
                 if (!filename.empty())
@@ -310,7 +288,7 @@ SaveResult save_article()
                 break;
 
             default:
-                std::printf("Unable to determine type of file.\n");
+                fmt::print("Unable to determine type of file.\n");
                 term_down(1);
                 break;
             }

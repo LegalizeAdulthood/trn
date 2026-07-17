@@ -448,8 +448,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 16 `safe_copy` hits: the helper definition, the
-helper declaration, and 14 call sites.  The call sites are still audit
+The current tree has 15 `safe_copy` hits: the helper definition, the
+helper declaration, and 13 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
@@ -461,8 +461,8 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-029`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
-- `libtrn/respond.cpp`, `save_article`: four save, pipe, and command
-  copies remain.  See `CSTR-020` and `CSTR-021`.
+- `libtrn/respond.cpp`, `save_article`: three save, pipe, and command
+  copies remain.  See `CSTR-021`.
 - `libtrn/rt-util.cpp`, `compress_subj`: compresses subject display text
   in `g_buf`.  See `CSTR-031`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
@@ -474,18 +474,18 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 100, `strncpy` 5, `strcat` 11.
-- Comparison: `strcmp` 12, `strncmp` 26.
-- Search and length: `strchr` 106, `strrchr` 13, `strstr` 2,
-  `strlen` 120.
-- Formatting into C buffers: `sprintf` 125, `snprintf` 1.
-- C text I/O roots: `fgets` 33, `fputs` 198, `printf` 490,
+- Copy and concatenation: `strcpy` 88, `strncpy` 5, `strcat` 8.
+- Comparison: `strcmp` 11, `strncmp` 24.
+- Search and length: `strchr` 100, `strrchr` 11, `strstr` 2,
+  `strlen` 110.
+- Formatting into C buffers: `sprintf` 114.
+- C text I/O roots: `fgets` 32, `fputs` 194, `printf` 474,
   `fprintf` 37.
-- Character byte operations: `memcpy` 7, `memset` 6, `memcmp` 1.
+- Character byte operations: `memcpy` 5, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
-`strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `memmove`,
-or `memchr`.
+`strcspn`, `strpbrk`, `strtok`, `snprintf`, `vsprintf`, `vsnprintf`,
+`memmove`, or `memchr`.
 
 High-count functions are not self-deferred.  They are grouped into
 owner slices below because most calls sit on shared buffers such as
@@ -521,24 +521,14 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-### CSTR-020 - Save Article Extract Branch
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local, static, and global command buffers.
-- Function: `save_article`.
-- Change: refactor only the `cmd == 'e'` branch to use strings for the
-  expanded destination, custom extractor command, and directory text.
-  Do not store pointers into temporary strings.
-- Tests: add save/extract coverage first, with isolated output files.
-
 ### CSTR-021 - Save Article Pipe And Normal Save Branches
 
 - Files: `libtrn/respond.cpp`.
 - Kind: local destination buffer and `g_cmd_buf` command construction.
 - Function: `save_article`.
-- Change: refactor the pipe and normal-save branches after `CSTR-020`.
-  Keep destination ownership in `std::string` and use `fmt` for command
-  construction where formatting remains.
+- Change: refactor the pipe and normal-save branches.  Keep destination
+  ownership in `std::string` and use `fmt` for command construction
+  where formatting remains.
 - Tests: add pipe and normal-save coverage first.
 
 ### CSTR-025 - Selector Extract Command Handoff
