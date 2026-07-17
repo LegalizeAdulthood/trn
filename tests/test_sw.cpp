@@ -17,7 +17,9 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -115,6 +117,39 @@ struct RefetchRestorer
     ~RefetchRestorer()
     {
         g_def_refetch_secs = refetch_secs;
+    }
+};
+
+struct HeaderListRestorer
+{
+    std::array<HeaderTypeFlags, HEAD_LAST> flags;
+    std::vector<UserHeaderType>            user_header_type;
+    short                                  user_header_type_index[26];
+    int                                    user_header_type_count;
+    int                                    user_header_type_max;
+
+    HeaderListRestorer()
+    {
+        for (int i = 0; i < HEAD_LAST; i++)
+        {
+            flags[static_cast<std::size_t>(i)] = g_header_type[i].flags;
+        }
+        user_header_type = g_user_header_type;
+        std::memcpy(user_header_type_index, g_user_header_type_index, sizeof user_header_type_index);
+        user_header_type_count = g_user_header_type_count;
+        user_header_type_max = g_user_header_type_max;
+    }
+
+    ~HeaderListRestorer()
+    {
+        for (int i = 0; i < HEAD_LAST; i++)
+        {
+            g_header_type[i].flags = flags[static_cast<std::size_t>(i)];
+        }
+        g_user_header_type = user_header_type;
+        std::memcpy(g_user_header_type_index, user_header_type_index, sizeof user_header_type_index);
+        g_user_header_type_count = user_header_type_count;
+        g_user_header_type_max = user_header_type_max;
     }
 };
 
@@ -228,4 +263,27 @@ TEST(OptionValueTest, formatsDefaultRefetchTime)
     g_def_refetch_secs = 93780;
 
     EXPECT_EQ("1 day, 2 hours, 3 minutes", option_value(OI_DEFAULT_REFETCH_TIME));
+}
+
+TEST(OptionValueTest, formatsHeaderHidingList)
+{
+    HeaderListRestorer restore;
+    g_user_header_type_max = 3;
+    g_user_header_type.assign(static_cast<std::size_t>(g_user_header_type_max), UserHeaderType{});
+    g_user_header_type[0].name = "*";
+    g_user_header_type[1].name = "x-hidden";
+    g_user_header_type[1].flags = HT_HIDE;
+    g_user_header_type[2].name = "x-visible";
+    g_user_header_type_count = 3;
+
+    EXPECT_EQ("x-hidden,!x-visible", option_value(OI_HEADER_HIDING));
+}
+
+TEST(OptionValueTest, formatsHeaderMagicList)
+{
+    HeaderListRestorer restore;
+    g_header_type[DATE_LINE].flags &= ~HT_MAGIC;
+    g_header_type[FROM_LINE].flags |= HT_MAGIC;
+
+    EXPECT_EQ("!date,from", option_value(OI_HEADER_MAGIC));
 }

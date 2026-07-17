@@ -509,15 +509,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-044 - Option Header Lists
-
-- Files: `libtrn/opt.cpp`.
-- Kind: borrowed static-buffer return through `g_buf`.
-- Functions: `hidden_list`, `magic_list`.
-- Change: return `std::string` and append directly to owned storage
-  instead of formatting into `g_buf + strlen(g_buf)`.
-- Tests: option value tests.
-
 ### Tier 1 - Helper And Parser Foundations
 
 These slices change lower-level helper, parser, or storage contracts

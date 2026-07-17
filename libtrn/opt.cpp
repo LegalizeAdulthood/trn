@@ -78,8 +78,8 @@ int          g_sel_page_op{};
 
 static char s_univ_sel_cmds[3]{"Z>"};
 
-static char* hidden_list();
-static char* magic_list();
+static std::string hidden_list();
+static std::string magic_list();
 static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str);
 static int   parse_mouse_buttons(char **cpp, const char *btns);
 static std::string expand_mouse_buttons(const char *cp, int cnt);
@@ -1311,32 +1311,45 @@ std::string option_value(OptionIndex num)
     return "<UNKNOWN>";
 }
 
-static char *hidden_list()
+static std::string hidden_list()
 {
-    g_buf[0] = '\0';
-    g_buf[1] = '\0';
+    std::string headers;
+    headers.reserve(LINE_BUF_LEN);
     for (int i = 1; i < g_user_header_type_count; i++)
     {
-        std::sprintf(g_buf+std::strlen(g_buf),",%s%s", g_user_header_type[i].flags? "" : "!",
-                g_user_header_type[i].name.c_str());
+        if (!headers.empty())
+        {
+            headers += ',';
+        }
+        if (!g_user_header_type[i].flags)
+        {
+            headers += '!';
+        }
+        headers += g_user_header_type[i].name;
     }
-    return g_buf+1;
+    return headers;
 }
 
-static char *magic_list()
+static std::string magic_list()
 {
-    g_buf[0] = '\0';
-    g_buf[1] = '\0';
+    std::string headers;
+    headers.reserve(LINE_BUF_LEN);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
         if (!(g_header_type[i].flags & HT_MAGIC) != !(g_header_type[i].flags & HT_DEF_MAGIC))
         {
-            std::sprintf(g_buf+std::strlen(g_buf),",%s%s",
-                    (g_header_type[i].flags & HT_DEF_MAGIC)? "!" : "",
-                    g_header_type[i].name.c_str());
+            if (!headers.empty())
+            {
+                headers += ',';
+            }
+            if (g_header_type[i].flags & HT_DEF_MAGIC)
+            {
+                headers += '!';
+            }
+            headers += g_header_type[i].name;
         }
     }
-    return g_buf+1;
+    return headers;
 }
 
 static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str)
