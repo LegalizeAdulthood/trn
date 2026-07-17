@@ -510,17 +510,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-063 - Environment Real Name View Parsing
-
-- Files: `util/env.cpp`.
-- Kind: read-only GECOS parsing.
-- Function: `set_user_name`.
-- Change: with the env-init scratch parameter gone, convert the local
-  `const char *` length and delimiter parsing to `std::string_view`
-  operations where the platform branch only reads the text.  Preserve
-  documented name substitution behavior.
-- Tests: env/init real-name tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices use Tier 1 results or replace one owner of string storage.

@@ -38,6 +38,7 @@
 #include <fstream>
 #include <functional>
 #include <string>
+#include <string_view>
 
 std::string g_home_dir;      // login directory
 std::string g_dot_dir;       // where . files go
@@ -240,49 +241,55 @@ static bool set_user_name()
 #ifdef PASS_NAMES
 #ifdef BERKELEY_NAMES
 #ifdef BERKJUNK
-    while (*s && !isalnum(*s) && *s != '&')
+    std::string_view gecos{s};
+    while (!gecos.empty() && !isalnum(gecos.front()) && gecos.front() != '&')
     {
-        s++;
+        gecos.remove_prefix(1);
     }
+#else
+    std::string_view gecos{s};
 #endif
-    const char *end = s + std::strcspn(s, ",;");
-    const char *cp = s;
-    g_real_name.clear();
-    while (cp < end)
+    const std::string_view::size_type delimiter = gecos.find_first_of(",;");
+    if (delimiter != std::string_view::npos)
     {
-        if (*cp == '\\' && cp + 1 < end && cp[1] == '&')
+        gecos = gecos.substr(0, delimiter);
+    }
+    g_real_name.clear();
+    std::string_view::size_type index = 0;
+    while (index < gecos.size())
+    {
+        if (gecos[index] == '\\' && index + 1 < gecos.size() && gecos[index + 1] == '&')
         {
-            cp++;
+            index++;
         }
-        else if (*cp == '&')
+        else if (gecos[index] == '&')
         {
             break;
         }
-        g_real_name += *cp++;
+        g_real_name += gecos[index++];
     }
-    if (cp < end && *cp == '&') // whoever thought this one up was
+    if (index < gecos.size() && gecos[index] == '&') // whoever thought this one up was
     {
         const std::size_t login_pos = g_real_name.size(); // in the middle of the night
         g_real_name += g_login_name;                      // before the morning after
-        g_real_name.append(cp + 1, static_cast<std::size_t>(end - cp - 1));
-        if (login_pos < g_real_name.size() &&
-            std::islower(static_cast<unsigned char>(g_real_name[login_pos])))
+        g_real_name.append(gecos.substr(index + 1));
+        if (login_pos < g_real_name.size() && std::islower(static_cast<unsigned char>(g_real_name[login_pos])))
         {
             g_real_name[login_pos] = static_cast<char>(
                 std::toupper(static_cast<unsigned char>(g_real_name[login_pos]))); // gack and double gack
         }
     }
 #else // !BERKELEY_NAMES
-    const char *end = s + std::strlen(s);
-    if (const char *paren = std::strchr(s, '('))
+    std::string_view gecos{s};
+    if (const std::string_view::size_type paren = gecos.find('('); paren != std::string_view::npos)
     {
-        end = paren;
+        gecos = gecos.substr(0, paren);
     }
-    if (const char *hyphen = std::strchr(s, '-'); hyphen != nullptr && hyphen < end)
+    if (const std::string_view::size_type hyphen = gecos.find('-'); hyphen != std::string_view::npos)
     {
-        s = hyphen;
+        gecos.remove_prefix(hyphen);
     }
-    g_real_name.assign(s, static_cast<std::size_t>(end - s));
+    g_real_name = std::string{gecos};
 #endif // !BERKELEY_NAMES
 #endif
 #ifndef PASS_NAMES
