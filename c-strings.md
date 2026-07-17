@@ -508,16 +508,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-084 - KILL Thread Option Comparison
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: C-string comparison cleanup.
-- Function: `kill_file_init`.
-- Change: compare the `KILLTHREADS` value with `"none"` using
-  `std::string_view` instead of `std::strcmp`, while preserving the
-  current fallback to `s_kill_threads`.
-- Tests: KILL file tests.
-
 #### CSTR-085 - Check-mode Argument Comparison
 
 - Files: `libtrn/opt.cpp`.

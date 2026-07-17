@@ -77,12 +77,8 @@ inline long kill_file_day_num(long x)
 
 void kill_file_init()
 {
-    const char *kill_threads = get_val("KILLTHREADS");
-    if (!kill_threads)
-    {
-        kill_threads = s_kill_threads;
-    }
-    if (*kill_threads && std::strcmp(kill_threads,"none") != 0)
+    std::string_view kill_threads = get_val_const("KILLTHREADS", s_kill_threads);
+    if (!kill_threads.empty() && kill_threads != "none")
     {
         s_kill_file_day_num = kill_file_day_num(0);
         s_kill_file_thread_cnt = 0;
