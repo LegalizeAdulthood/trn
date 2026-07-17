@@ -436,18 +436,21 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   definition, and five call sites in three owner clusters.  The call
   sites are inventoried below.
 - `safe_malloc`: remaining string-shaped owners are `inews` header
-  input, `trn-artchk` newsgroup names, mouse button storage,
-  `NewsgroupData` newsrc editing scratch text, terminal CR fallback
-  storage, `g_head_buf`, and `g_art_buf`.  Non-string owners include
-  hash tables, selector page storage, regex bytecode, HTML block arrays,
-  article subject pointer arrays, and generic allocation helpers.
+  input, `trn-artchk` newsgroup names, mouse button storage, newsrc line
+  builders, `NewsgroupData` newsrc editing scratch text, terminal CR
+  fallback storage, `g_head_buf`, and `g_art_buf`.  Non-string owners
+  include hash tables, selector page storage, regex bytecode, HTML block
+  arrays, article subject pointer arrays, and generic allocation
+  helpers.
 - `safe_realloc`: string-shaped owners are `inews` header input,
   `g_head_buf`, and `g_art_buf`.  Regex bytecode remains a non-string
   owner.
 - Fixed buffers: current candidates include `inews` and `trn-artchk`
   tool buffers, `g_ser_line`, `g_art_line`, interpolation scratch
   storage, `g_head_buf`, `g_art_buf`, mouse/terminal storage, newsrc
-  scratch buffers, and global command/message buffers.
+  scratch buffers, response header buffers, command-switch scratch
+  buffers, `uudecode` pending-line storage, selector command key
+  storage, and global command/message buffers.
 - Filename storage: current path candidates remain in decode, KILL-file
   editing/appending, score-file loading/editing, newsrc file fields, and
   some universal-selector file fields.  Mixed URL/path/host fields need
@@ -475,16 +478,16 @@ production code.
 
 - Copy and concatenation: `strcpy` 80, `strncpy` 5, `strcat` 4.
 - Comparison: `strcmp` 14, `strncmp` 27.
-- Search and length: `strchr` 100, `strrchr` 7, `strstr` 2,
-  `strlen` 107, `strcspn` 1.
+- Search and length: `strchr` 97, `strrchr` 7, `strstr` 2,
+  `strlen` 105.
 - Formatting into C buffers: `sprintf` 108.
-- C text I/O roots: `fgets` 38, `fputs` 206, `printf` 484,
+- C text I/O roots: `fgets` 37, `fputs` 206, `printf` 482,
   `fprintf` 58.
-- Character byte operations: `memcpy` 6, `memset` 8, `memcmp` 1.
+- Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
-`strpbrk`, `strtok`, `snprintf`, `vsprintf`, `vsnprintf`, `puts`,
-`memmove`, or `memchr`.
+`strcspn`, `strpbrk`, `strtok`, `snprintf`, `vsprintf`, `vsnprintf`,
+`puts`, `memmove`, or `memchr`.
 
 High-count functions are not self-deferred.  They are grouped into
 owner slices below because most calls sit on shared buffers such as
@@ -505,6 +508,73 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-079 - Nntplist Argument Pointer Constness
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: `char *` to `const char *`.
+- Function: `main`.
+- Change: change `action` and `wildarg` to `const char *` because they
+  only borrow `argv` strings and are never modified.
+- Tests: nntplist command-line tests if present; otherwise build.
+
+#### CSTR-080 - Inews Server Name Local Check
+
+- Files: `inews/inews.cpp`.
+- Kind: C-string comparison cleanup.
+- Function: `main`.
+- Change: compare the resolved server name with `"local"` using string
+  comparison instead of `std::strcmp`.  Keep the existing empty-server
+  behavior and do not change posting setup order.
+- Tests: inews startup/posting tests if present; otherwise build.
+
+#### CSTR-081 - Trn-artchk Server Name Local Check
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: C-string comparison cleanup.
+- Function: `main`.
+- Change: compare the resolved server name with `"local"` using string
+  comparison instead of `std::strcmp`.  Keep the existing `init_nntp`
+  order and failure cleanup.
+- Tests: trn-artchk tool tests if present; otherwise build.
+
+#### CSTR-084 - KILL Thread Option Comparison
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: C-string comparison cleanup.
+- Function: `kill_file_init`.
+- Change: compare the `KILLTHREADS` value with `"none"` using
+  `std::string_view` instead of `std::strcmp`, while preserving the
+  current fallback to `s_kill_threads`.
+- Tests: KILL file tests.
+
+#### CSTR-085 - Check-mode Argument Comparison
+
+- Files: `libtrn/opt.cpp`.
+- Kind: C-string comparison cleanup.
+- Function: `opt_init`.
+- Change: compare `argv[1]` with `"-c"` using `std::string_view`
+  instead of `strcmp`.
+- Tests: option initialization tests.
+
+#### CSTR-086 - Auto-save Option Environment Comparison
+
+- Files: `libtrn/opt.cpp`.
+- Kind: C-string comparison cleanup.
+- Function: `set_option`.
+- Change: compare `SAVEDIR` and `SAVENAME` environment values with
+  direct string comparison instead of `std::strcmp` in the
+  `OI_AUTO_SAVE_NAME` branch.
+- Tests: option tests for auto save name.
+
+#### CSTR-087 - Auto-save Draft Value Comparison
+
+- Files: `libtrn/opt.cpp`.
+- Kind: C-string comparison cleanup.
+- Function: `option_draft_value`.
+- Change: compare the current `SAVEDIR` value with `"%p/%c"` using
+  direct string comparison instead of `std::strcmp`.
+- Tests: option draft tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
@@ -514,6 +584,28 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
+
+#### CSTR-082 - Nntplist Server Name Port Parsing
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: owned string parsing.
+- Function: `main`.
+- Change: after the server name is copied into `s_server_name`, parse
+  optional `;` or `:` port text with `std::string::find_first_of`
+  instead of `std::strchr` and in-place NUL insertion.  Compare the
+  resolved server text with `"local"` using string comparison.
+- Tests: nntplist startup tests if present; otherwise build.
+
+#### CSTR-083 - DataSource Server Id Parsing
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: owned string parsing and C-string comparison cleanup.
+- Function: `new_data_source`.
+- Change: compare the source name with `"default"` using string
+  comparison, and split `dp->m_news_id` port text with
+  `std::string::find` instead of `std::strchr` and in-place NUL
+  insertion.
+- Tests: datasource tests.
 
 #### CSTR-053 - Newsgroup Display Subject Line
 
@@ -620,6 +712,26 @@ Finish these before broad global-buffer work.
   local string pointer escape.
 - Tests: terminal capability tests.
 
+#### CSTR-089 - Switch Decode Scratch Buffer
+
+- Files: `libtrn/sw.cpp`.
+- Kind: local fixed buffer.
+- Function: `decode_switch`.
+- Change: replace `tmpbuf[LINE_BUF_LEN]` with reserved `std::string`
+  scratch storage for switch option expansion.  Preserve the current
+  option parsing order and any meaningful length checks.
+- Tests: switch decoding tests.
+
+#### CSTR-090 - Rcstuff Newsgroup Prompt Buffer
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: local fixed formatted prompt buffer.
+- Function: `get_newsgroup`.
+- Change: replace `prompt_buf[128]` with owned `std::string` or
+  `fmt::format` construction for the fuzzy-match prompt text.  Preserve
+  prompt wording and retry flow.
+- Tests: newsgroup selection/addition tests.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
@@ -666,6 +778,17 @@ are available.  Keep the listed order inside dependent families.
   pointers escape.
 - Tests: interpolation tests.
 
+#### CSTR-088 - Ngstuff Command Expansion Buffers
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: local fixed interpolation buffers.
+- Function: `ngstuff`.
+- Change: replace `tmp_buf[LINE_BUF_LEN]` and `tmpbuf[512]` command
+  expansion storage with owned `std::string` storage after interpolation
+  helpers can return strings.  Preserve macro expansion and `perform`
+  command execution order.
+- Tests: newsgroup command tests.
+
 #### CSTR-073 - Score File Filename Paths
 
 - Files: `libtrn/scorefile.cpp`, `libtrn/include/trn/scorefile.h`.
@@ -709,6 +832,55 @@ are available.  Keep the listed order inside dependent families.
   rewrite it against current `NewsgroupData` storage before doing string
   modernization.  Do not patch stale field names as isolated cleanup.
 - Tests: build with the relevant feature setting if the block remains.
+
+#### CSTR-091 - Cancel Article Header Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local fixed header buffer.
+- Function: `cancel_article`.
+- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
+  header storage.  Preserve the current authorization checks and cancel
+  message construction.
+- Tests: response/cancel tests.
+
+#### CSTR-092 - Supersede Article Header Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local fixed header buffer.
+- Function: `supersede_article`.
+- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
+  header storage.  Preserve generated header text and edit/post flow.
+- Tests: response/supersede tests.
+
+#### CSTR-093 - Reply Header Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local fixed header buffer.
+- Function: `reply`.
+- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
+  header storage.  Preserve reply header generation and mailer
+  invocation order.
+- Tests: response/reply tests.
+
+#### CSTR-094 - Forward Header Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local fixed header buffer.
+- Function: `forward`.
+- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
+  header storage.  Preserve forwarded header construction and mailer
+  invocation order.
+- Tests: response/forward tests.
+
+#### CSTR-095 - Followup Header Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local fixed header buffer.
+- Function: `followup`.
+- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
+  header storage.  Preserve followup header generation and posting
+  flow.
+- Tests: response/followup tests.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -763,9 +935,9 @@ and clarified ownership at the edges.
   `trn-artchk/trn-artchk.cpp`.
 - Kind: global fixed protocol/status buffer.
 - Function: storage-centered `g_ser_line`.
-- Change: after `CSTR-062`, separate NNTP status text from protocol
-  line input/output so callers do not format commands or cache responses
-  through one shared `char[NNTP_STRLEN]` buffer.
+- Change: separate NNTP status text from protocol line input/output so
+  callers do not format commands or cache responses through one shared
+  `char[NNTP_STRLEN]` buffer.
 - Tests: NNTP, inews, nntplist, and trn-artchk tests.
 
 #### CSTR-077 - Article Display Line Buffer
@@ -778,6 +950,26 @@ and clarified ownership at the edges.
   based data flow after local decode/respond/uudecode buffer slices have
   reduced direct mutation.
 - Tests: article display, MIME decode, response, and uudecode tests.
+
+#### CSTR-096 - Uudecode Pending Line Buffer
+
+- Files: `libtrn/uudecode.cpp`.
+- Kind: local fixed pending-line buffer plus global input buffer use.
+- Function: `uudecode`.
+- Change: replace `lastline[UU_LENGTH+1]` with owned string storage
+  when the pending decoded line is text.  Keep meaningful uuencoded line
+  length validation and defer `g_buf` input ownership to `CSTR-077`.
+- Tests: uudecode tests.
+
+#### CSTR-097 - Selector Command Key Storage
+
+- Files: `libtrn/rt-select.cpp`, `libtrn/include/trn/rt-select.h`.
+- Kind: global fixed selector command buffers.
+- Function: storage-centered selector command keys.
+- Change: replace the five `char[3]` selector command globals with a
+  small owned text type or `std::string` storage.  Preserve the
+  two-character command limit if it is a documented selector behavior.
+- Tests: selector command tests.
 
 ### Tier 5 - Helper Removal
 
