@@ -3,7 +3,11 @@
 
 #include <trn/terminal.h>
 
+#include <trn/final.h>
+
 #include <gtest/gtest.h>
+
+#include <string>
 
 namespace
 {
@@ -31,6 +35,66 @@ protected:
     }
 };
 
+class MacroDisplayTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_int_count = g_int_count;
+        m_old_erase_screen = g_erase_screen;
+        m_old_tc_so = g_tc_SO;
+        m_old_tc_se = g_tc_SE;
+        m_old_tc_am = g_tc_AM;
+        m_old_fire_is_out = g_fire_is_out;
+        m_old_tc_lines = g_tc_LINES;
+        m_old_tc_cols = g_tc_COLS;
+        m_old_page_line = g_page_line;
+        m_old_term_line = g_term_line;
+        m_old_term_col = g_term_col;
+
+        g_int_count = 0;
+        g_erase_screen = false;
+        g_tc_SO = m_standout_start;
+        g_tc_SE = m_standout_end;
+        g_tc_AM = false;
+        g_tc_LINES = 100;
+        g_tc_COLS = 80;
+        g_page_line = 1;
+        g_term_line = 0;
+        g_term_col = 0;
+    }
+
+    void TearDown() override
+    {
+        g_int_count = m_old_int_count;
+        g_erase_screen = m_old_erase_screen;
+        g_tc_SO = m_old_tc_so;
+        g_tc_SE = m_old_tc_se;
+        g_tc_AM = m_old_tc_am;
+        g_fire_is_out = m_old_fire_is_out;
+        g_tc_LINES = m_old_tc_lines;
+        g_tc_COLS = m_old_tc_cols;
+        g_page_line = m_old_page_line;
+        g_term_line = m_old_term_line;
+        g_term_col = m_old_term_col;
+    }
+
+    char m_standout_start[5]{"<so>"};
+    char m_standout_end[5]{"<se>"};
+
+    char  m_old_int_count{};
+    bool  m_old_erase_screen{};
+    char *m_old_tc_so{};
+    char *m_old_tc_se{};
+    bool  m_old_tc_am{};
+    int   m_old_fire_is_out{};
+    int   m_old_tc_lines{};
+    int   m_old_tc_cols{};
+    int   m_old_page_line{};
+    int   m_old_term_line{};
+    int   m_old_term_col{};
+};
+
 } // namespace
 
 TEST_F(TerminalTest, getCommandExpandsMacroString)
@@ -42,4 +106,15 @@ TEST_F(TerminalTest, getCommandExpandsMacroString)
 
     EXPECT_EQ('z', g_buf[0]);
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
+}
+
+TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)
+{
+    set_macro("\001A", "result");
+
+    testing::internal::CaptureStdout();
+    show_macros();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("<so>Macros:<se>\n^AA   result\n", output);
 }

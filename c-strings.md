@@ -516,16 +516,16 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-### CSTR-054 - Terminal Key And Choice Formatting
+### CSTR-055 - Terminal Choice Formatting
 
 - Files: `libtrn/terminal.cpp`.
-- Kind: prompt/key formatting through `g_buf`, `g_cmd_buf`, `strcpy`,
-  `strcat`, `sprintf`, `strlen`, and `strncmp`.
-- Functions: keymap display and choice input helpers.
-- Change: refactor one helper at a time to local `std::string` or `fmt`
-  output while leaving termcap storage and typeahead buffers alone.
-- Tests: add terminal helper coverage first if practical; otherwise run
-  the focused terminal tests that exist.
+- Kind: choice input formatting through `g_buf`, `strcpy`, `strcat`,
+  `sprintf`, `strlen`, and `strncmp`.
+- Function: `in_choice`.
+- Change: replace fixed local parsing buffers and formatting through
+  `g_buf` with owned strings while leaving the interactive input buffer
+  and typeahead storage alone.
+- Tests: add focused choice cycling and prefix coverage first.
 
 ### Tier 3 - Workflow Callers
 

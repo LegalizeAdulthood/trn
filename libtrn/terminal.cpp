@@ -28,6 +28,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #ifdef MSDOS
 #include <conio.h>
 #endif
@@ -182,7 +184,7 @@ static char   *edit_buf(char *s, const char *cmd);
 static void    mac_init(char *tcbuf);
 static KeyMap *new_key_map();
 static void    reprint();
-static void    show_key_map(KeyMap *curmap, char *prefix);
+static void    show_key_map(KeyMap *curmap, std::string &prefix);
 static int     echo_char(char_int ch);
 static void    line_col_calcs();
 static void    mouse_input(const char *cp);
@@ -689,13 +691,12 @@ static KeyMap *new_key_map()
 
 void show_macros()
 {
-    char prebuf[64];
-
     if (s_top_map != nullptr)
     {
         print_lines("Macros:\n", STANDOUT);
-        *prebuf = '\0';
-        show_key_map(s_top_map,prebuf);
+        std::string prefix;
+        prefix.reserve(64);
+        show_key_map(s_top_map, prefix);
     }
     else
     {
@@ -703,56 +704,63 @@ void show_macros()
     }
 }
 
-static void show_key_map(KeyMap *curmap, char *prefix)
+static void show_key_map(KeyMap *curmap, std::string &prefix)
 {
-    char* next = prefix + std::strlen(prefix);
+    const std::size_t prefix_size = prefix.size();
 
     for (int i = 0; i < 128; i++)
     {
         int kt = curmap->km_type[i];
         if (kt != 0)
         {
+            prefix.resize(prefix_size);
             if (i < ' ')
             {
-                std::sprintf(next,"^%c",i+64);
+                prefix += '^';
+                prefix += static_cast<char>(i + 64);
             }
             else if (i == ' ')
             {
-                std::strcpy(next,"\\040");
+                prefix += "\\040";
             }
             else if (i == 127)
             {
-                std::strcpy(next,"^?");
+                prefix += "^?";
             }
             else
             {
-                std::sprintf(next,"%c",i);
+                prefix += static_cast<char>(i);
             }
             if ((kt >> KM_GSHIFT) & KM_GMASK)
             {
-                std::sprintf(g_cmd_buf,"+%d", (kt >> KM_GSHIFT) & KM_GMASK);
-                std::strcat(next,g_cmd_buf);
+                prefix += fmt::format("+{}", (kt >> KM_GSHIFT) & KM_GMASK);
             }
             switch (kt & KM_TMASK)
             {
             case KM_NOTHING:
-                std::sprintf(g_cmd_buf,"%s   %c\n",prefix,i);
-                print_lines(g_cmd_buf, NO_MARKING);
+            {
+                const std::string line{fmt::format("{}   {}\n", prefix, static_cast<char>(i))};
+                print_lines(line.c_str(), NO_MARKING);
                 break;
+            }
 
             case KM_KEYMAP:
                 show_key_map(curmap->km_km[i], prefix);
                 break;
 
             case KM_STRING:
-                std::sprintf(g_cmd_buf, "%s   %s\n", prefix, curmap->km_str[i].c_str());
-                print_lines(g_cmd_buf, NO_MARKING);
+            {
+                const std::string line{fmt::format("{}   {}\n", prefix, curmap->km_str[i])};
+                print_lines(line.c_str(), NO_MARKING);
                 break;
+            }
 
             case KM_BOGUS:
-                std::sprintf(g_cmd_buf,"%s   BOGUS\n",prefix);
-                print_lines(g_cmd_buf, STANDOUT);
+            {
+                const std::string line{fmt::format("{}   BOGUS\n", prefix)};
+                print_lines(line.c_str(), STANDOUT);
                 break;
+            }
             }
         }
     }
