@@ -279,6 +279,26 @@ TEST_F(ScoreFileTest, initReadsGlobalAndHierarchicalGroupScoreFiles)
     EXPECT_EQ(12, g_sf_num_entries);
 }
 
+TEST_F(ScoreFileTest, initReadsScorefileLinePastLegacyBufferLimit)
+{
+    const fs::path score_dir{TRN_TEST_TMP_DIR "/scorefile-long-line"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+    fs::create_directories(score_dir);
+    std::ofstream{score_dir / "global"} << "10 subject:" << std::string(LINE_BUF_LEN, ' ') << "compact subject\n";
+    g_newsgroup_name = "comp.lang.apl";
+
+    trn::testing::MockEnvironment env;
+    std::string                   score_dir_name{score_dir.string()};
+    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
+        .WillRepeatedly(::testing::Return(score_dir_name.data()));
+
+    sf_init();
+
+    EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
+}
+
 TEST_F(ScoreFileTest, appendFromShortcutWritesShortenedFromRule)
 {
     const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-append-from"};

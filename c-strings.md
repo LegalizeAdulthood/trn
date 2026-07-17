@@ -528,17 +528,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-052 - Score File Line Input
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: fixed-size line input already wrapped in `std::string`.
-- Function: `sf_open_file`.
-- Change: replace the `std::string(LINE_BUF_LEN, '\0')` plus
-  `fgets(line.data(), ...)` pattern with normal text-line input.  First
-  classify whether the `LINE_BUF_LEN - 4` truncation is meaningful for
-  score-file contents.
-- Tests: `test_scorefile`.
-
 #### CSTR-053 - Newsgroup Display Subject Line
 
 - Files: `libtrn/ng.cpp`.

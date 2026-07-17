@@ -34,6 +34,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -1354,34 +1355,32 @@ static int sf_open_file(const char *name)
     file.fname = name;
 
     std::string temp_name;
+    std::string input_name{name};
     if (string_case_equal(name, "URL:", 4))
     {
         temp_name = temp_filename();
         if (!s_url_getter(std::string_view{name}.substr(4), temp_name.c_str()))
         {
-            name = nullptr;
+            return -1;
         }
         else
         {
-            name = temp_name.c_str();
+            input_name = temp_name;
         }
     }
-    if (!name)
-    {
-        return -1;
-    }
-    std::FILE *fp = std::fopen(name, "r");
-    if (!fp)
+    std::ifstream input{input_name};
+    if (!input)
     {
         return -1;
     }
     file.exists = true;
-    std::string line(LINE_BUF_LEN, '\0');
-    while (std::fgets(line.data(), LINE_BUF_LEN - 4, fp) != nullptr)
+    std::string line;
+    line.reserve(LINE_BUF_LEN);
+    while (std::getline(input, line))
     {
-        file.lines.emplace_back(line.c_str());
+        file.lines.push_back(line);
     }
-    std::fclose(fp);
+    input.close();
     if (!temp_name.empty())
     {
         std::error_code error;
