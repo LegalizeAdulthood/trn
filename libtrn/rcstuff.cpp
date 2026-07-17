@@ -1091,7 +1091,7 @@ check_fuzzy_match:
                 continue;
             }
             // TODO: this may scan a datasrc multiple times...
-            if (rp->data_source->find_active_group(g_buf, g_newsgroup_name, ArticleNum{}))
+            if (!rp->data_source->find_active_group(g_newsgroup_name, ArticleNum{}).empty())
             {
                 break; // TODO: let them choose which server
             }

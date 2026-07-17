@@ -47,6 +47,7 @@ struct utimbuf
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -580,7 +581,7 @@ void DataSource ::close()
 
     if (m_flags & DF_REMOTE)
     {
-        DataSource *save_datasrc = g_data_source;
+        DataSource* save_datasrc = g_data_source;
         set_data_source(this);
         nntp_close(true);
         m_nntp_link = g_nntp_link;
@@ -617,44 +618,36 @@ bool DataSource::active_file_hash()
     return ret != 0;
 }
 
-bool DataSource::find_active_group(char *outbuf, std::string_view name, ArticleNum high)
+std::string DataSource::find_active_group(std::string_view name, ArticleNum high)
 {
-    ActivePosition act_pos;
-    std::FILE* fp = m_act_sf.m_fp;
-    char* lbp;
-    int lbp_len;
-    const char* name_data = name.empty() ? "" : name.data();
-    const int name_len = static_cast<int>(name.size());
+    ActivePosition    act_pos{};
+    std::FILE        *fp = m_act_sf.m_fp;
+    std::string      *cached_line{};
+    const std::size_t name_len = name.size();
 
     // Do a quick, hashed lookup
 
-    outbuf[0] = '\0';
     HashDatum data = hash_fetch(m_act_sf.m_hp, name);
     if (data.dat_ptr)
     {
-        std::string *line = source_file_line(data);
+        cached_line = source_file_line(data);
         act_pos = ActivePosition{source_file_position(data)};
-        lbp = line->data();
-        lbp_len = static_cast<int>(line->size());
     }
-    else
-    {
-        lbp = nullptr;
-        lbp_len = 0;
-    }
+    std::string active_line;
     if (m_flags & DF_USE_LIST_ACTIVE //
         && nntp_flags() & NNTP_NEW_CMD_OK)
     {
-        DataSource* save_datasrc = g_data_source;
+        DataSource *save_datasrc = g_data_source;
         set_data_source(this);
         switch (nntp_list("active", name))
         {
         case 0:
             set_data_source(save_datasrc);
-            return false;
+            return {};
 
         case 1:
-            std::sprintf(outbuf, "%s\n", g_ser_line);
+            active_line = g_ser_line;
+            active_line += '\n';
             nntp_finish_list();
             break;
 
@@ -663,60 +656,70 @@ bool DataSource::find_active_group(char *outbuf, std::string_view name, ArticleN
             break;
         }
         set_data_source(save_datasrc);
-        if (!lbp_len)
+        if (cached_line == nullptr)
         {
-            if (fp)
+            if (fp && !active_line.empty())
             {
-                (void) m_act_sf.append(outbuf, name_len);
+                (void) m_act_sf.append(active_line, static_cast<int>(name_len));
             }
-            return true;
+            return active_line;
         }
+
+        if (!active_line.empty())
+        {
 # ifndef ANCIENT_NEWS
-        // Safely update the low-water mark
-        {
-            char* f = std::strrchr(outbuf, ' ');
-            char* t = lbp + lbp_len;
-            while (*--t != ' ')
+            // Safely update the low-water mark
+            const std::size_t active_flag_separator = active_line.rfind(' ');
+            const std::size_t cached_flag_separator = cached_line->rfind(' ');
+            if (active_flag_separator != std::string::npos && active_flag_separator > 0 &&
+                cached_flag_separator != std::string::npos && cached_flag_separator > 0)
             {
-            }
-            while (t > lbp)
-            {
-                if (*--t == ' ')
+                const std::size_t active_low_separator = active_line.rfind(' ', active_flag_separator - 1);
+                const std::size_t cached_low_separator = cached_line->rfind(' ', cached_flag_separator - 1);
+                if (active_low_separator != std::string::npos && cached_low_separator != std::string::npos)
                 {
-                    break;
-                }
-                if (f[-1] == ' ')
-                {
-                    *t = '0';
-                }
-                else
-                {
-                    *t = *--f;
+                    const std::string_view active_low{active_line.data() + active_low_separator + 1,
+                                                      active_flag_separator - active_low_separator - 1};
+                    const std::size_t      field_width = cached_flag_separator - cached_low_separator - 1;
+                    const std::string_view low_digits =
+                        active_low.substr(active_low.size() > field_width ? active_low.size() - field_width : 0);
+                    cached_line->replace(cached_low_separator + 1, field_width,
+                                         fmt::format("{:0>{}}", low_digits, field_width));
                 }
             }
-        }
 # endif
-        high = ArticleNum{std::atol(outbuf + name_len + 1)};
+            const std::string_view active_fields =
+                std::string_view{active_line}.substr(std::min(name_len + 1, active_line.size()));
+            long active_high{};
+            std::from_chars(active_fields.data(), active_fields.data() + active_fields.size(), active_high);
+            high = ArticleNum{active_high};
+        }
     }
 
-    if (lbp_len)
+    if (cached_line != nullptr)
     {
         if ((m_flags & DF_REMOTE) && m_act_sf.m_refetch_secs)
         {
-            char* cp;
-            if (high && high != ArticleNum{std::atol(cp = lbp + name_len + 1)})
+            const std::string_view cached_fields =
+                std::string_view{*cached_line}.substr(std::min(name_len + 1, cached_line->size()));
+            long cached_high{};
+            std::from_chars(cached_fields.data(), cached_fields.data() + cached_fields.size(), cached_high);
+            if (high && high != ArticleNum{cached_high})
             {
-                cp = skip_digits(cp);
-                while (*--cp != ' ')
+                const std::size_t high_start = name_len + 1;
+                const std::size_t high_end = cached_line->find(' ', high_start);
+                if (high_end != std::string::npos)
                 {
-                    long num = value_of(high) % 10;
-                    high /= ArticleNum{10};
-                    *cp = '0' + (char)num;
+                    const std::size_t      field_width = high_end - high_start;
+                    const std::string      high_text = std::to_string(value_of(high));
+                    const std::string_view high_digits = std::string_view{high_text}.substr(
+                        high_text.size() > field_width ? high_text.size() - field_width : 0);
+                    cached_line->replace(high_start, field_width, fmt::format("{:0>{}}", high_digits, field_width));
                 }
                 std::fseek(fp, act_pos.value_of(), 0);
-                std::fwrite(lbp, 1, lbp_len, fp);
+                fmt::print(fp, "{}", *cached_line);
             }
-            goto use_cache;
+            return *cached_line;
         }
 
         // hopefully this forces a reread
@@ -724,21 +727,29 @@ bool DataSource::find_active_group(char *outbuf, std::string_view name, ArticleN
 
         // if line has changed length or is not there, we should
         // discard/close the active file, and re-open it.
-        if (std::fseek(fp, act_pos.value_of(), 0) >= 0         //
-            && std::fgets(outbuf, LINE_BUF_LEN, fp) != nullptr //
-            && !std::strncmp(outbuf, name_data, name_len) && outbuf[name_len] == ' ')
+        if (std::fseek(fp, act_pos.value_of(), 0) >= 0)
         {
-            // Remember the latest info in our cache.
-            (void) std::memcpy(lbp,outbuf,lbp_len);
-            return true;
+            std::string file_line;
+            file_line.reserve(LINE_BUF_LEN);
+            for (int ch = std::fgetc(fp); ch != EOF; ch = std::fgetc(fp))
+            {
+                file_line += static_cast<char>(ch);
+                if (ch == '\n')
+                {
+                    break;
+                }
+            }
+            if (file_line.size() > name_len && std::string_view{file_line}.substr(0, name_len) == name &&
+                file_line[name_len] == ' ')
+            {
+                // Remember the latest info in our cache.
+                *cached_line = file_line;
+                return file_line;
+            }
         }
-use_cache:
-        // Return our cached version
-        (void) std::memcpy(outbuf,lbp,lbp_len);
-        outbuf[lbp_len] = '\0';
-        return true;
+        return *cached_line;
     }
-    return false;       // no such group
+    return {}; // no such group
 }
 
 const char *DataSource::find_group_desc(std::string_view group_name)

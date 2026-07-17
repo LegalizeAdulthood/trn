@@ -201,14 +201,17 @@ static void new_nntp_groups(DataSource *dp)
         }
         if (dp->m_act_sf.m_fp)
         {
-            if (dp->find_active_group(
-                    g_buf,
-                    std::string_view{g_ser_line, static_cast<std::size_t>(len)},
-                    ArticleNum{}))
+            const std::string active_line =
+                dp->find_active_group(std::string_view{g_ser_line, static_cast<std::size_t>(len)}, ArticleNum{});
+            if (!active_line.empty())
             {
                 if (!s)
                 {
-                    s = g_buf + len + 1;
+                    const std::size_t status = active_line.find_first_not_of("0123456789 \f\n\r\t\v", len + 1);
+                    if (status != std::string::npos && (active_line[status] == 'x' || active_line[status] == '='))
+                    {
+                        continue;
+                    }
                 }
             }
             else
@@ -283,18 +286,16 @@ static void new_local_groups(DataSource *dp)
             continue;
         }
         *s = '\0';
-        char tmp_buf[LINE_BUF_LEN];
-        if (!g_data_source->find_active_group(
-                tmp_buf,
-                std::string_view{g_buf, static_cast<std::size_t>(s - g_buf)},
-                ArticleNum{}))
+        const std::string active_line = g_data_source->find_active_group(
+            std::string_view{g_buf, static_cast<std::size_t>(s - g_buf)}, ArticleNum{});
+        if (active_line.empty())
         {
             continue;
         }
         long high;
         long low;
         char ch;
-        std::sscanf(tmp_buf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
+        std::sscanf(active_line.c_str() + (s - g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
         if (ch == 'x' || ch == '=')
         {
             continue;

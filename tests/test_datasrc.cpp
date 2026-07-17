@@ -71,6 +71,27 @@ protected:
     fs::path m_output_dir;
 };
 
+class DataSourceFindActiveGroupTest : public SourceFileTest
+{
+protected:
+    void SetUp() override
+    {
+        SourceFileTest::SetUp();
+        m_source_path = m_output_dir / "active";
+        std::ofstream{m_source_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+        ASSERT_EQ(1, m_data_source.m_act_sf.open(m_source_path, "", nullptr));
+    }
+
+    void TearDown() override
+    {
+        m_data_source.m_act_sf.close();
+        SourceFileTest::TearDown();
+    }
+
+    fs::path   m_source_path;
+    DataSource m_data_source{};
+};
+
 } // namespace
 
 TEST(SourceFileAppendTest, storesNormalizedLineAndReturnsStoredStorage)
@@ -183,4 +204,35 @@ TEST_F(SourceFileTest, findGroupDescClearsMissingTemporaryGroupDescription)
 
     EXPECT_TRUE(data_source.m_group_desc.empty());
     EXPECT_FALSE(data_source.m_flags & DF_TMP_GROUP_DESC);
+}
+
+TEST_F(DataSourceFindActiveGroupTest, returnsCachedActiveLine)
+{
+    m_data_source.m_flags = DF_REMOTE;
+    m_data_source.m_act_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
+
+    const std::string active_line = m_data_source.find_active_group("comp.lang.apl", ArticleNum{});
+
+    EXPECT_EQ("comp.lang.apl 0000000001 0000000001 y\n", active_line);
+}
+
+TEST_F(DataSourceFindActiveGroupTest, returnsEmptyForMissingGroup)
+{
+    const std::string active_line = m_data_source.find_active_group("comp.lang.c++", ArticleNum{});
+
+    EXPECT_TRUE(active_line.empty());
+}
+
+TEST_F(DataSourceFindActiveGroupTest, updatesCachedHighWaterMark)
+{
+    std::fclose(m_data_source.m_act_sf.m_fp);
+    m_data_source.m_act_sf.m_fp = std::fopen(m_source_path.string().c_str(), "r+");
+    ASSERT_NE(nullptr, m_data_source.m_act_sf.m_fp);
+    m_data_source.m_flags = DF_REMOTE;
+    m_data_source.m_act_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
+
+    const std::string active_line = m_data_source.find_active_group("comp.lang.apl", ArticleNum{42});
+
+    EXPECT_EQ("comp.lang.apl 0000000042 0000000001 y\n", active_line);
+    EXPECT_EQ("comp.lang.apl 0000000042 0000000001 y\n", m_data_source.m_act_sf.m_lines[0]);
 }

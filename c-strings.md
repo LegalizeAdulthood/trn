@@ -516,17 +516,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-### CSTR-043 - Active Group Lookup Buffer
-
-- Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.
-- Kind: caller output buffer using `sprintf`, `fgets`, `strncmp`,
-  `strrchr`, and `memcpy`.
-- Function: `DataSource::find_active_group`.
-- Change: return owned active-line text or fill caller-owned
-  `std::string` storage instead of copying through `outbuf`.
-- Tests: run `test_datasrc` before and after; add refetch/cache coverage
-  for active-line updates if missing.
-
 ### CSTR-044 - Group Description Lookup Buffer
 
 - Files: `libtrn/datasrc.cpp`.

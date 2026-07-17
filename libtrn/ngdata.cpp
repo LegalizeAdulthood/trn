@@ -480,7 +480,6 @@ void newsgroup_skip()
 //
 ArticleNum NewsgroupData::get_newsgroup_size()
 {
-    char tmpbuf[LINE_BUF_LEN];
     long last;
     long first;
     char ch;
@@ -488,7 +487,8 @@ ArticleNum NewsgroupData::get_newsgroup_size()
     const std::string_view group_name{rc_name()};
     int                    len = static_cast<int>(group_name.size());
 
-    if (!m_rc->data_source->find_active_group(tmpbuf, group_name, m_ng_max))
+    const std::string active_line = m_rc->data_source->find_active_group(group_name, m_ng_max);
+    if (active_line.empty())
     {
         if (m_subscribe_char == ':')
         {
@@ -500,10 +500,10 @@ ArticleNum NewsgroupData::get_newsgroup_size()
     }
 
 #ifdef ANCIENT_NEWS
-    std::sscanf(tmpbuf+len+1, "%ld %c", &last, &ch);
+    std::sscanf(active_line.c_str() + len + 1, "%ld %c", &last, &ch);
     first = 1;
 #else
-    std::sscanf(tmpbuf+len+1, "%ld %ld %c", &last, &first, &ch);
+    std::sscanf(active_line.c_str() + len + 1, "%ld %ld %c", &last, &first, &ch);
 #endif
     if (!m_abs_first)
     {
@@ -533,15 +533,17 @@ ArticleNum NewsgroupData::get_newsgroup_size()
             break;
 
         case '=':
-            len = std::strlen(tmpbuf);
-            if (tmpbuf[len-1] == '\n')
+        {
+            std::string_view redirect = active_line;
+            if (!redirect.empty() && redirect.back() == '\n')
             {
-                tmpbuf[len - 1] = '\0';
+                redirect.remove_suffix(1);
             }
             g_redirected = true;
-            g_redirected_to = std::strrchr(tmpbuf, '=') + 1;
+            g_redirected_to.assign(redirect.substr(redirect.rfind('=') + 1));
             g_moderated = " (REDIRECTED)";
             break;
+        }
 
         default:
             g_moderated.clear();
