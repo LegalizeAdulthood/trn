@@ -21,7 +21,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <iterator>
 #include <string>
 #include <string_view>
 
@@ -102,67 +102,43 @@ static bool fetch_http(const char *host, int port, const char *path, const char 
 static bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 {
 #ifdef USE_FTP
-    static char cmdline[1024];
-    static char path[512];      // use to make writable copy
-    static char username[128];
-    static char userhost[128];
-    int         status;
-    const char *cdpath;
-
-    safe_copy(path,origpath,510);
-    char *p = std::strrchr(path, '/'); // p points to last slash or nullptr
-    if (p == nullptr)
+    const std::string_view path{origpath};
+    const std::size_t      slash = path.rfind('/');
+    if (slash == std::string_view::npos)
     {
-        std::printf("Error: URL:ftp path has no '/' character.\n");
+        fmt::print("Error: URL:ftp path has no '/' character.\n");
         return false;
     }
-    if (p[1] == '\0')
+    if (slash + 1 == path.size())
     {
-        std::printf("Error: URL:ftp path has no final filename.\n");
+        fmt::print("Error: URL:ftp path has no final filename.\n");
         return false;
     }
-    safe_copy(username, file_exp("%L").c_str(), 120);
-    safe_copy(userhost, file_exp("%H").c_str(), 120);
-    if (p != path) // not of form /foo
-    {
-        *p = '\0';
-        cdpath = path;
-    }
-    else
-    {
-        cdpath = "/";
-    }
 
-    std::sprintf(cmdline, "%s/ftpgrab %s ftp %s@%s %s %s %s", file_exp("%X").c_str(), host, username, userhost, cdpath,
-                 p + 1, outname);
+    std::string command;
+    command.reserve(1024);
+    fmt::format_to(std::back_inserter(command), "{}/ftpgrab {} ftp {}@{} {} {} {}", file_exp("%X"), host,
+                   file_exp("%L"), file_exp("%H"), path.substr(0, slash == 0 ? 1 : slash), path.substr(slash + 1),
+                   outname);
 
     // modified escape_shell_cmd code from NCSA HTTPD util.cpp
     // serious security holes could result without this code
-    int l = std::strlen(cmdline);
-    for (int x = 0; cmdline[x]; x++)
+    constexpr std::string_view shell_metacharacters{"&;`'\"|*?~<>^()[]{}$\\"};
+    for (std::size_t pos = command.find_first_of(shell_metacharacters); pos != std::string::npos;
+         pos = command.find_first_of(shell_metacharacters, pos + 2))
     {
-        if (std::strchr("&;`'\"|*?~<>^()[]{}$\\", cmdline[x]))
-        {
-            for (int y = l + 1; y > x; y--)
-            {
-                cmdline[y] = cmdline[y-1];
-            }
-            l++; // length has been increased
-            cmdline[x] = '\\';
-            x++; // skip the character
-        }
+        command.insert(pos, 1, '\\');
     }
 
 // Debug
 #if 0
-    std::printf("ftpgrab command:\n|%s|\n",cmdline);
+    fmt::print("ftpgrab command:\n|{}|\n", command);
 #endif
 
-    *p = '/';
-    status = do_shell(nullptr,cmdline);
+    do_shell(nullptr, command.c_str());
     return true;
 #else
-    std::printf("\nThis copy of trn does not have URL:ftp support.\n");
+    fmt::print("\nThis copy of trn does not have URL:ftp support.\n");
     return false;
 #endif
 }

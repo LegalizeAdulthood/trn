@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 22 hits remain, including the helper declaration and
-  definition.  The 20 call sites are inventoried below.
+- `safe_copy`: 19 hits remain, including the helper declaration and
+  definition.  The 17 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -443,14 +443,13 @@ as a local string modernization slice.
   scratch buffers.  Protocol byte buffers, lookup tables, and caller
   output buffers stay with their owning API slices.
 - Filename storage: current path candidates are concentrated in
-  `decode.cpp`, `ngstuff.cpp`, `opt.cpp`, `respond.cpp`, `url.cpp`, and
-  call sites that still round-trip through `file_exp` and mutable
-  buffers.
+  `decode.cpp`, `ngstuff.cpp`, `opt.cpp`, `respond.cpp`, and call sites
+  that still round-trip through `file_exp` and mutable buffers.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 22 `safe_copy` hits: the helper definition, the
-helper declaration, and 20 call sites.  The call sites are still audit
+The current tree has 19 `safe_copy` hits: the helper definition, the
+helper declaration, and 17 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -472,8 +471,7 @@ roots.  Keep each one visible until the owning storage or API changes.
   in `g_buf`.  See `CSTR-031`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
   See `CSTR-025`.
-- `libtrn/url.cpp`, `fetch_ftp`: three static path and identity copies
-  remain.  See `CSTR-018`.
+
 ## Current C String Function Inventory
 
 The current scan covers `libtrn`, `util`, and `config` source and public
@@ -482,10 +480,10 @@ calls in production code.
 
 - Copy and concatenation: `strcpy` 101, `strncpy` 5, `strcat` 12.
 - Comparison: `strcmp` 12, `strncmp` 26.
-- Search and length: `strchr` 108, `strrchr` 14, `strstr` 2,
-  `strlen` 123.
-- Formatting into C buffers: `sprintf` 126, `snprintf` 1.
-- C text I/O roots: `fgets` 33, `fputs` 198, `printf` 494,
+- Search and length: `strchr` 107, `strrchr` 13, `strstr` 2,
+  `strlen` 122.
+- Formatting into C buffers: `sprintf` 125, `snprintf` 1.
+- C text I/O roots: `fgets` 33, `fputs` 198, `printf` 490,
   `fprintf` 37.
 - Character byte operations: `memcpy` 7, `memset` 6, `memcmp` 1.
 
@@ -521,15 +519,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-018 - FTP Fetch Command Storage
-
-- Files: `libtrn/url.cpp`.
-- Kind: static path, user, host, and command buffers.
-- Function: `fetch_ftp`.
-- Change: use `std::string` for `path`, `username`, `userhost`, and the
-  escaped shell command.  Preserve the slash split and validation.
-- Tests: build with `USE_FTP` coverage if available.
 
 ### CSTR-019 - Decode Piece Directory Storage
 

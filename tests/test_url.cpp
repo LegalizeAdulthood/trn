@@ -137,6 +137,16 @@ TEST(UrlTest, rejectsMissingPath)
     EXPECT_EQ("Bad URL (path does not start with /): gopher://example.com:70\n", output);
 }
 
+TEST(UrlTest, rejectsFtpPathWithoutFilename)
+{
+    testing::internal::CaptureStdout();
+    const bool        result = url_get("ftp://example.com/", "unused");
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(result);
+    EXPECT_EQ("Error: URL:ftp path has no final filename.\n", output);
+}
+
 TEST(UrlTest, parsesUnsupportedScheme)
 {
     testing::internal::CaptureStdout();
