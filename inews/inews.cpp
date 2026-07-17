@@ -85,9 +85,9 @@ int main(int argc, char *argv[])
     char *headbuf = safe_malloc(headbuf_size);
 
 #ifdef LAX_INEWS
-    env_init(headbuf, true);
+    env_init(true);
 #else
-    if (!env_init(headbuf, false))
+    if (!env_init(false))
     {
         fprintf(stderr,"Can't get %s information. Please contact your system adminstrator.\n",
                 (!g_login_name.empty() || g_real_name.empty())? "user" : "host");

@@ -164,7 +164,7 @@ void InterpolatorTest::SetUp()
     set_envars(m_env, m_output.path());
     m_env.expect_no_envars({"KILLGLOBAL", "KILLTHREADS", "MAILCAPS", "MIMECAPS", "NETSPEED", "NNTP_FORCE_AUTH",
                             "NNTPSERVER", "RNINIT", "RNMACRO", "RNRC"});
-    env_init(m_tcbuf.data(), true, trn::testing::set_name, trn::testing::set_host_name);
+    env_init(true, trn::testing::set_name, trn::testing::set_host_name);
     trn::testing::reset_lib_dirs();
     head_init();
     char trn[]{"trn"};

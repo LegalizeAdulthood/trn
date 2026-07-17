@@ -88,8 +88,8 @@ namespace testing
 struct MockEnvironment;
 
 void        set_envars(MockEnvironment &env, const std::string &tmp_dir);
-bool        set_name(char *);
-bool        set_host_name(char *);
+bool        set_name();
+bool        set_host_name();
 void        reset_lib_dirs();
 
 } // namespace testing

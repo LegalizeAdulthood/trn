@@ -26,14 +26,14 @@ void set_envars(MockEnvironment &env, const std::string &tmp_dir)
     env.expect_env("TRNDIR", "@TRN_TEST_TRN_DIR@");
 }
 
-bool set_name(char *)
+bool set_name()
 {
     g_login_name = "@TRN_TEST_LOGIN_NAME@";
     g_real_name = "@TRN_TEST_REAL_NAME@";
     return true;
 };
 
-bool set_host_name(char *)
+bool set_host_name()
 {
     g_local_host = "@TRN_TEST_LOCAL_HOST@";
     g_p_host_name = "@TRN_TEST_P_HOST_NAME@";

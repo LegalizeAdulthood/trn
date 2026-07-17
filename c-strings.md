@@ -510,18 +510,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-060 - Env Init Scratch Parameter Removal
-
-- Files: `util/env.cpp`, `util/include/util/env.h`,
-  `util/include/util/env-internal.h`, tests, and direct callers.
-- Kind: obsolete caller scratch buffer parameter.
-- Function: `env_init`, `set_user_name`, `set_p_host_name`.
-- Change: remove the `char *tcbuf` argument from `env_init` and the
-  injected test callbacks.  The default setters no longer use caller
-  scratch storage, so callers such as `inews` and `nntplist` should stop
-  allocating a buffer only for environment initialization.
-- Tests: env/init tests.
-
 #### CSTR-061 - UTF Copy Owned Return
 
 - Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
@@ -550,10 +538,10 @@ that later caller slices can consume directly.
 - Files: `util/env.cpp`.
 - Kind: read-only GECOS parsing.
 - Function: `set_user_name`.
-- Change: after `CSTR-060`, convert the local `const char *` length and
-  delimiter parsing to `std::string_view` operations where the platform
-  branch only reads the text.  Preserve documented name substitution
-  behavior.
+- Change: with the env-init scratch parameter gone, convert the local
+  `const char *` length and delimiter parsing to `std::string_view`
+  operations where the platform branch only reads the text.  Preserve
+  documented name substitution behavior.
 - Tests: env/init real-name tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage

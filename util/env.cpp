@@ -54,8 +54,8 @@ int         g_net_speed{20}; // how fast our net-connection is
 static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
 
 static void env_init2();
-static bool set_user_name(char *tmpbuf);
-static bool set_p_host_name(char *);
+static bool set_user_name();
+static bool set_p_host_name();
 
 void set_environment(std::function<char *(const char *)> getenv_fn)
 {
@@ -69,8 +69,7 @@ void set_environment(std::function<char *(const char *)> getenv_fn)
     }
 }
 
-bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &set_user_name_fn,
-              const std::function<bool(char *tmpbuf)> &set_host_name_fn)
+bool env_init(bool lax, const std::function<bool()> &set_user_name_fn, const std::function<bool()> &set_host_name_fn)
 {
     bool fully_successful = true;
 
@@ -136,7 +135,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 #endif
 
     // Set g_real_name, and maybe set g_login_name and g_home_dir.
-    if (!set_user_name_fn(tcbuf))
+    if (!set_user_name_fn())
     {
         g_login_name.clear();
         g_real_name.clear();
@@ -145,7 +144,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     env_init2();
 
     // set g_p_host_name to the hostname of our local machine
-    if (!set_host_name_fn(tcbuf))
+    if (!set_host_name_fn())
     {
         fully_successful = false;
     }
@@ -170,9 +169,9 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     return fully_successful;
 }
 
-bool env_init(char *tcbuf, bool lax)
+bool env_init(bool lax)
 {
-    return env_init(tcbuf, lax, set_user_name, set_p_host_name);
+    return env_init(lax, set_user_name, set_p_host_name);
 }
 
 void env_final()
@@ -209,7 +208,7 @@ static void env_init2()
 // Set g_login_name to the user's login name and g_real_name to the user's
 // real name.
 //
-static bool set_user_name(char *tmpbuf)
+static bool set_user_name()
 {
     const char *s{};
 
@@ -344,7 +343,7 @@ static bool set_user_name(char *tmpbuf)
     return true;
 }
 
-static bool set_p_host_name(char *)
+static bool set_p_host_name()
 {
     bool        hostname_ok = true;
     std::string local_host_name;

@@ -8,8 +8,7 @@
 
 #include <functional>
 
-bool  env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &set_user_name_fn,
-               const std::function<bool(char *tmpbuf)> &set_host_name_fn);
+bool env_init(bool lax, const std::function<bool()> &set_user_name_fn, const std::function<bool()> &set_host_name_fn);
 
 void set_environment(std::function<char *(const char *)> getenv_fn);
 

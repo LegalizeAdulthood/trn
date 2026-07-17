@@ -85,7 +85,7 @@ bool initialize(int argc, char *argv[])
 
     // we have to know g_rn_lib to look up global switches in %X/INIT
 
-    env_init(tcbuf.data(), true);
+    env_init(true);
     head_init();
 
     // decode switches

@@ -245,9 +245,7 @@ TEST_F(EnvInitTest, readsRealNameFromFullnameFile)
     m_env.expect_env("TRNDIR", trn.c_str());
     m_env.expect_env("NETSPEED", "5");
 
-    std::string tcbuf(TCBUF_SIZE, '\0');
-
-    (void) env_init(tcbuf.data(), true);
+    (void) env_init(true);
 
     EXPECT_EQ("Casey Writer", g_real_name);
 }
@@ -267,9 +265,7 @@ TEST_F(EnvInitTest, usesConfiguredPostingHostNameDefault)
     m_env.expect_env("TRNDIR", trn.c_str());
     m_env.expect_env("NETSPEED", "5");
 
-    std::string tcbuf(TCBUF_SIZE, '\0');
-
-    (void) env_init(tcbuf.data(), true);
+    (void) env_init(true);
 
     EXPECT_EQ(std::string{POSTING_HOSTNAME} + ".UNKNOWN.HOST", g_p_host_name);
 }

@@ -81,9 +81,7 @@ int main(int argc, char *argv[])
         out_fp = stdout;
     }
 
-    char tcbuf[1024];
-    tcbuf[0] = 0;
-    env_init(tcbuf, true);
+    env_init(true);
 
     char *cp = std::getenv("NNTPSERVER");
     std::string server_name;
