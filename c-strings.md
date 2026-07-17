@@ -516,16 +516,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-### CSTR-048 - Scorefile Line Parser Views
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: line parsing with `strchr`, `strlen`, and in-place terminators.
-- Function: `sf_do_line`.
-- Change: use views for the score, header, and pattern fields where the
-  parser only slices text.  Keep owned strings for values retained in
-  `ScoreFileEntry`.
-- Tests: run `test_scorefile` before and after.
-
 ### CSTR-053 - Article Tree Line Storage
 
 - Files: `libtrn/rt-wumpus.cpp`.

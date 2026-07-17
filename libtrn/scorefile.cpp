@@ -603,18 +603,23 @@ static char *sf_freeform(char *start1, char *end1)
 //bool check;           // if true, just check the line, don't act.
 static bool sf_do_line(char *line, bool check)
 {
-    if (!line || !*line)
+    if (line == nullptr || *line == '\0')
     {
-        return true;            // very empty line
+        return true; // very empty line
     }
-    char *s = line + std::strlen(line) - 1;
-    if (*s == '\n')
+    std::string_view line_text{line};
+    if (line_text.back() == '\n')
     {
-        *s = '\0';              // kill the newline
+        line[line_text.size() - 1] = '\0';
+        line_text.remove_suffix(1);
+    }
+    if (line_text.empty())
+    {
+        return true;
     }
 
-    char ch = line[0];
-    if (ch == '#')              // comment
+    const char ch = line_text.front();
+    if (ch == '#') // comment
     {
         return true;
     }
@@ -622,39 +627,46 @@ static bool sf_do_line(char *line, bool check)
     // reset any per-line bitflags
     s_sf_pattern_status = false;
 
-    if (std::isalpha(ch))            // command line
+    if (std::isalpha(static_cast<unsigned char>(ch))) // command line
     {
-        return sf_do_command(line,check);
+        return sf_do_command(line_text, check);
     }
 
     // skip whitespace
-    s = skip_hor_space(line);
-    if (!*s || *s == '#')
+    line_text.remove_prefix(std::min(line_text.find_first_not_of(" \t"), line_text.size()));
+    if (line_text.empty() || line_text.front() == '#')
     {
-        return true;    // line was whitespace or comment after whitespace
+        return true; // line was whitespace or comment after whitespace
     }
     // convert line to lowercase (make optional later?)
-    for (char *s2 = s; *s2 != '\0'; s2++)
+    const std::size_t line_offset = static_cast<std::size_t>(line_text.data() - line);
+    for (std::size_t offset = 0; offset < line_text.size(); ++offset)
     {
-        if (std::isupper(*s2))
+        char &value = line[line_offset + offset];
+        if (std::isupper(static_cast<unsigned char>(value)))
         {
-            *s2 = std::tolower(*s2);         // convert to lower case
+            value = static_cast<char>(std::tolower(static_cast<unsigned char>(value)));
         }
     }
-    int i = std::atoi(s);
-    if (i == 0)         // it might not be a number
+    const std::string_view normalized_text{line_text};
+    const std::size_t      header_start = normalized_text.find_first_not_of("0123456789+- \t");
+    const std::string_view score_text = normalized_text.substr(0, std::min(header_start, normalized_text.size()));
+    const int              score = std::atoi(score_text.data());
+    if (score == 0) // it might not be a number
     {
-        if (!is_text_zero(s))
+        if (!is_text_zero(score_text.data()))
         {
-            std::printf("\nBad scorefile line:\n|%s|\n",s);
+            fmt::print("\nBad scorefile line:\n|{}|\n", normalized_text);
             return false;
         }
     }
-    // add the line as a scoring entry
-    while (std::isdigit(*s) || *s == '+' || *s == '-' || is_hor_space(*s))
+    if (header_start == std::string_view::npos)
     {
-        s++;    // skip score
+        fmt::print("Scorefile entry error error (freeform parse).  Line was:\n|{}|\n", normalized_text);
+        return false;
     }
+    // add the line as a scoring entry
+    char *s = line + line_offset + header_start;
     char *s2;
     while (true)
     {
@@ -664,51 +676,53 @@ static bool sf_do_line(char *line, bool check)
         s2--;
         if (*s2 == ':') // did header
         {
-            break;      // go to set header routine
+            break; // go to set header routine
         }
-        s = sf_freeform(s,s2);
-        if (!s || !*s)          // used up all the line's text, or error
+        s = sf_freeform(s, s2);
+        if (!s || !*s) // used up all the line's text, or error
         {
-            std::printf("Scorefile entry error error (freeform parse).  ");
-            std::printf("Line was:\n|%s|\n",line);
-            return false;       // error
+            fmt::print("Scorefile entry error error (freeform parse).  Line was:\n|{}|\n", normalized_text);
+            return false; // error
         }
     } // while
     // s is start of header name, s2 points to the ':' character
-    int j = set_line_type(s, s2);
+    const std::string_view header{s, static_cast<std::size_t>(s2 - s)};
+    int                    j = set_line_type(s, s2);
     if (j == SOME_LINE)
     {
-        *s2 = '\0';
-        j = sf_check_extra_headers(s);
-        *s2 = ':';
+        const std::string header_name{header};
+        j = sf_check_extra_headers(header_name.c_str());
         if (j >= 0)
         {
             j += HEAD_LAST;
         }
         else
         {
-            std::printf("Unknown score header type.  Line follows:\n|%s|\n",line);
+            fmt::print("Unknown score header type.  Line follows:\n|{}|\n", normalized_text);
             return false;
         }
     }
     // skip whitespace
-    s = skip_hor_space(++s2);
-    if (!*s)    // no pattern
+    const char *const line_end = normalized_text.data() + normalized_text.size();
+    std::string_view  pattern{s2 + 1, static_cast<std::size_t>(line_end - (s2 + 1))};
+    pattern.remove_prefix(std::min(pattern.find_first_not_of(" \t"), pattern.size()));
+    if (pattern.empty()) // no pattern
     {
-        std::printf("Empty score pattern.  Line follows:\n|%s|\n",line);
+        fmt::print("Empty score pattern.  Line follows:\n|{}|\n", normalized_text);
         return false;
     }
     if (check)
     {
-        return true;            // limits of check
+        return true; // limits of check
     }
-    sf_grow();          // acutally make an entry
-    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(j);
-    s_sf_entries[g_sf_num_entries-1].score = i;
-    if (s_sf_pattern_status)    // in pattern matching mode
+    sf_grow(); // acutally make an entry
+    ScoreFileEntry &entry = s_sf_entries[g_sf_num_entries - 1];
+    entry.head_type = static_cast<HeaderLineType>(j);
+    entry.score = score;
+    if (s_sf_pattern_status) // in pattern matching mode
     {
-        s_sf_entries[g_sf_num_entries-1].flags |= 1;
-        s_sf_entries[g_sf_num_entries-1].str1 = s;
+        entry.flags |= 1;
+        entry.str1.assign(pattern);
         s_sf_compex = new CompiledRegex;
         s_sf_compex->init_compex();
         // compile arguments:
@@ -716,34 +730,34 @@ static bool sf_do_line(char *line, bool check)
         // 2nd is search string
         // 3rd should be true if the search string is a regex
         // 4th is true for case-insensitivity
-        const char *compile_error = s_sf_compex->compile(s, true, true);
+        const char *compile_error = s_sf_compex->compile(entry.str1.c_str(), true, true);
         if (compile_error != nullptr)
         {
-            std::printf("Bad pattern : |%s|\n",s);
-            std::printf("Compex returns: |%s|\n",compile_error);
+            fmt::print("Bad pattern : |{}|\n", pattern);
+            fmt::print("Compex returns: |{}|\n", compile_error);
             s_sf_compex->free_compex();
             delete s_sf_compex;
             s_sf_compex = nullptr;
-            s_sf_entries[g_sf_num_entries-1].compex = nullptr;
+            entry.compex = nullptr;
             return false;
         }
-        s_sf_entries[g_sf_num_entries-1].compex = s_sf_compex;
+        entry.compex = s_sf_compex;
     }
     else
     {
-        s_sf_entries[g_sf_num_entries-1].flags &= 0xfe;
-        s_sf_entries[g_sf_num_entries-1].str2.clear();
+        entry.flags &= 0xfe;
+        entry.str2.clear();
         // Note: consider allowing * wildcard on other header filenames
-        if (j == FROM_LINE)     // may have * wildcard
+        if (j == FROM_LINE) // may have * wildcard
         {
-            s2 = std::strchr(s, '*');
-            if (s2 != nullptr)
+            const std::size_t separator = pattern.find('*');
+            if (separator != std::string_view::npos)
             {
-                s_sf_entries[g_sf_num_entries - 1].str2 = s2 + 1;
-                *s2 = '\0';
+                entry.str2.assign(pattern.substr(separator + 1));
+                pattern = pattern.substr(0, separator);
             }
         }
-        s_sf_entries[g_sf_num_entries-1].str1 = s;
+        entry.str1.assign(pattern);
     }
     return true;
 }
