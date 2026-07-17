@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 12 hits remain, including the helper declaration and
-  definition.  The 10 call sites are inventoried below.
+- `safe_copy`: six hits remain, including the helper declaration and
+  definition.  The four call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -448,8 +448,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 12 `safe_copy` hits: the helper definition, the
-helper declaration, and 10 call sites.  The call sites are still audit
+The current tree has six `safe_copy` hits: the helper definition, the
+helper declaration, and four call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
@@ -457,8 +457,6 @@ roots.  Keep each one visible until the owning storage or API changes.
 - `libtrn/charsubst.cpp`, `str_char_subst`: the buffer overload remains
   for `compress_subj` while it builds its result in `g_buf`.  See
   `CSTR-031`.
-- `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
-  See `CSTR-029`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
 - `libtrn/rt-util.cpp`, `compress_subj`: compresses subject display text
@@ -470,13 +468,13 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 88, `strncpy` 5, `strcat` 8.
+- Copy and concatenation: `strcpy` 80, `strncpy` 5, `strcat` 6.
 - Comparison: `strcmp` 11, `strncmp` 24.
-- Search and length: `strchr` 100, `strrchr` 11, `strstr` 2,
-  `strlen` 110.
-- Formatting into C buffers: `sprintf` 114.
-- C text I/O roots: `fgets` 32, `fputs` 194, `printf` 474,
-  `fprintf` 37.
+- Search and length: `strchr` 101, `strrchr` 9, `strstr` 2,
+  `strlen` 105.
+- Formatting into C buffers: `sprintf` 97.
+- C text I/O roots: `fgets` 32, `fputs` 194, `printf` 478,
+  `fprintf` 36.
 - Character byte operations: `memcpy` 5, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -521,16 +519,6 @@ are available.  Keep the listed order inside dependent families.
 
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
-
-### CSTR-029 - Interpolation Scratch Copies
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: local and static scratch buffers in one large function.
-- Function: `do_interp`.
-- Change: split small helper operations out first, then replace the
-  five remaining `safe_copy` scratch paths with owned strings or
-  string views where no pointer escapes.
-- Tests: run `test_interp` before and after each helper extraction.
 
 ### CSTR-031 - Global Command And Message Buffers
 

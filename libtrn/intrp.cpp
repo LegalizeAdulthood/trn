@@ -276,6 +276,9 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
         if (*pattern == '%' && pattern[1])
         {
             char spfbuf[512];
+            std::string search_command;
+            std::string transform_text;
+            std::string format_input;
             bool upper = false;
             bool lastcomp = false;
             bool re_quote = false;
@@ -330,48 +333,42 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
 
                 case '/':
-                    s = scrbuf;
-                    if (!cmd || !std::strchr("/?g",*cmd))
+                {
+                    search_command.reserve(sizeof scrbuf);
+                    if (!cmd || !std::strchr("/?g", *cmd))
                     {
-                        *s++ = '/';
+                        search_command += '/';
                     }
-                    std::strcpy(s,g_last_pat.c_str());
-                    s += std::strlen(s);
+                    search_command += g_last_pat;
                     if (!cmd || *cmd != 'g')
                     {
-                        if (cmd && std::strchr("/?",*cmd))
+                        if (cmd && std::strchr("/?", *cmd))
                         {
-                            *s++ = *cmd;
+                            search_command += *cmd;
                         }
                         else
                         {
-                            *s++ = '/';
+                            search_command += '/';
                         }
                         if (g_art_do_read)
                         {
-                            *s++ = 'r';
+                            search_command += 'r';
                         }
                         if (g_art_how_much != ARTSCOPE_SUBJECT)
                         {
-                            *s++ = g_scope_str[g_art_how_much];
+                            search_command += g_scope_str[g_art_how_much];
                             if (g_art_how_much == ARTSCOPE_ONE_HDR)
                             {
-                                safe_copy(s,g_header_type[g_art_srch_hdr].name.c_str(),
-                                        (sizeof scrbuf) - (s-scrbuf));
-                                if (!(s = std::strchr(s,':')))
-                                {
-                                    s = scrbuf + (sizeof scrbuf) - 1;
-                                }
-                                else
-                                {
-                                    s++;
-                                }
+                                const std::string_view header_name{g_header_type[g_art_srch_hdr].name};
+                                const std::size_t      colon = header_name.find(':');
+                                search_command +=
+                                    header_name.substr(0, colon == std::string_view::npos ? colon : colon + 1);
                             }
                         }
                     }
-                    *s = '\0';
-                    s = scrbuf;
+                    s = search_command.data();
                     break;
+                }
 
                 case '{':
                 {
@@ -961,25 +958,27 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     {
                         refs_buf = fetch_lines(g_art,REFS_LINE);
                         normalize_refs(refs_buf->data());
+                        const std::size_t normalized_size = refs_buf->find('\0');
+                        if (normalized_size != std::string::npos)
+                        {
+                            refs_buf->resize(normalized_size);
+                        }
                         // no more than 3 prior references PLUS the
                         // root article allowed, including the one
                         // concatenated below
-                        s = std::strrchr(refs_buf->data(), '<');
-                        if (s != nullptr && s > refs_buf->data())
+                        const std::size_t last_ref = refs_buf->rfind('<');
+                        if (last_ref != std::string::npos && last_ref > 0)
                         {
-                            *s = '\0';
-                            char *h = std::strrchr(refs_buf->data(),'<');
-                            *s = '<';
-                            if (h && h > refs_buf->data())
+                            const std::size_t prior_ref = refs_buf->rfind('<', last_ref - 1);
+                            if (prior_ref != std::string::npos && prior_ref > 0)
                             {
-                                s = std::strchr(refs_buf->data()+1,'<');
-                                if (s < h)
+                                const std::size_t second_ref = refs_buf->find('<', 1);
+                                if (second_ref < prior_ref)
                                 {
-                                    safe_copy(s, h, static_cast<int>(refs_buf->size() + 1));
+                                    refs_buf->erase(second_ref, prior_ref - second_ref);
                                 }
                             }
                         }
-                        refs_buf->resize(std::strlen(refs_buf->c_str()));
                     }
                     if (!artid_buf)
                     {
@@ -1241,9 +1240,9 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             {
                 if (s == scrbuf)
                 {
-                    static char scratch[sizeof(scrbuf)];
-                    std::strcpy(scratch, scrbuf);
-                    s = scratch;
+                    format_input.reserve(sizeof scrbuf);
+                    format_input = scrbuf;
+                    s = format_input.data();
                 }
                 std::sprintf(scrbuf, spfbuf, s);
                 s = scrbuf;
@@ -1254,10 +1253,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             }
             if (upper || lastcomp)
             {
-                if (s != scrbuf)
+                if (s != scrbuf && s != transform_text.data())
                 {
-                    safe_copy(scrbuf,s,sizeof scrbuf);
-                    s = scrbuf;
+                    transform_text.reserve(sizeof scrbuf);
+                    transform_text = s;
+                    s = transform_text.data();
                 }
                 char* t;
                 if (upper || !(t = std::strrchr(s,'/')))
@@ -1284,10 +1284,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             // A maze of twisty little conditions, all alike...
             if (address_parse || comment_parse)
             {
-                if (s != scrbuf)
+                if (s != scrbuf && s != transform_text.data())
                 {
-                    safe_copy(scrbuf,s,sizeof scrbuf);
-                    s = scrbuf;
+                    transform_text.reserve(sizeof scrbuf);
+                    transform_text = s;
+                    s = transform_text.data();
                 }
                 decode_header(s, s);
                 if (address_parse)
@@ -1342,12 +1343,9 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 if (s == dest)
                 {
                     // copy out so we can copy in.
-                    safe_copy(scrbuf, s, sizeof scrbuf);
-                    s = scrbuf;
-                    if (i > sizeof scrbuf)      // we truncated, ack!
-                    {
-                        abort_interp();
-                    }
+                    transform_text.reserve(sizeof scrbuf);
+                    transform_text = s;
+                    s = transform_text.data();
                 }
                 while (*s)
                 {

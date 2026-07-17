@@ -239,6 +239,31 @@ TEST_F(InterpolatorTest, noEscapes)
     ASSERT_EQ(pattern, buffer());
 }
 
+TEST_F(InterpolatorTest, articleSearchPattern)
+{
+    g_last_pat = "needle";
+    g_art_do_read = false;
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    char pattern[]{"%/"};
+
+    interpolate(pattern);
+
+    EXPECT_EQ("/needle/", buffer());
+}
+
+TEST_F(InterpolatorTest, articleSearchPatternForOneHeader)
+{
+    g_last_pat = "needle";
+    g_art_do_read = true;
+    g_art_how_much = ARTSCOPE_ONE_HDR;
+    g_art_srch_hdr = SUBJ_LINE;
+    char pattern[]{"%/"};
+
+    interpolate(pattern);
+
+    EXPECT_EQ("/needle/rHsubject", buffer());
+}
+
 TEST_F(InterpolatorTest, firstStopCharacter)
 {
     char pattern[]{"this string contains no escapes [but contains stop characters]"};
