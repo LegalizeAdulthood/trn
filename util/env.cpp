@@ -11,6 +11,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #ifdef HAS_RES_INIT
 #include <arpa/nameser.h>
 #include <netinet/in.h>
@@ -28,12 +30,14 @@
 #endif
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <functional>
+#include <string>
 
 std::string g_home_dir;      // login directory
 std::string g_dot_dir;       // where . files go
@@ -51,7 +55,7 @@ static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
 
 static void env_init2();
 static bool set_user_name(char *tmpbuf);
-static bool set_p_host_name(char *tmpbuf);
+static bool set_p_host_name(char *);
 
 void set_environment(std::function<char *(const char *)> getenv_fn)
 {
@@ -340,44 +344,52 @@ static bool set_user_name(char *tmpbuf)
     return true;
 }
 
-static bool set_p_host_name(char *tmpbuf)
+static bool set_p_host_name(char *)
 {
-    bool hostname_ok = true;
+    bool        hostname_ok = true;
+    std::string local_host_name;
 
     // Find the local hostname
 
 #ifdef HAS_GETHOSTNAME
 #ifdef WIN32
     const WORD version = MAKEWORD(2, 2);
-    WSADATA data;
+    WSADATA    data;
     WSAStartup(version, &data);
 #endif
-    gethostname(tmpbuf,TCBUF_SIZE);
+    std::array<char, TCBUF_SIZE + 1> host_buffer{};
+    gethostname(host_buffer.data(), TCBUF_SIZE);
+    local_host_name = host_buffer.data();
 #else
 # ifdef HAS_UNAME
     // get sysname
     uname(&utsn);
-    std::strcpy(tmpbuf,utsn.nodename);
+    local_host_name = utsn.nodename;
 # else
 #  ifdef PIPE_HOST_CMD
     {
-        std::FILE* pipefp = popen(PIPE_HOST_CMD,"r");
+        std::FILE *pipefp = popen(PIPE_HOST_CMD, "r");
 
         if (pipefp == nullptr)
         {
-            std::printf("Can't find hostname\n");
+            fmt::print("Can't find hostname\n");
             finalize(1);
         }
-        std::fgets(tmpbuf,TCBUF_SIZE,pipefp);
-        tmpbuf[std::strlen(tmpbuf)-1] = '\0';        // wipe out newline
+        std::array<char, TCBUF_SIZE + 1> host_buffer{};
+        std::fgets(host_buffer.data(), TCBUF_SIZE, pipefp);
+        local_host_name = host_buffer.data();
+        if (!local_host_name.empty() && local_host_name.back() == '\n')
+        {
+            local_host_name.pop_back();
+        }
         pclose(pipefp);
     }
 #  else
-    std::strcpy(tmpbuf, "!INVALID!");
+    local_host_name = "!INVALID!";
 #  endif // PIPE_HOST_CMD
 # endif // HAS_UNAME
 #endif // HAS_GETHOSTNAME
-    g_local_host = tmpbuf;
+    g_local_host = local_host_name;
 
     // Build the host name that goes in postings
 
@@ -385,23 +397,19 @@ static bool set_p_host_name(char *tmpbuf)
     const char *filename{POSTING_HOSTNAME};
     if (FILE_REF(filename) || filename[0] == '~')
     {
-        std::FILE *fp = std::fopen(file_exp(filename).c_str(), "r");
-        if (fp == nullptr)
+        std::ifstream input{file_exp(filename)};
+        if (!input)
         {
             posting_host_name = ".";
         }
         else
         {
             posting_host_name = g_local_host;
-            char posting_host_buffer[TCBUF_SIZE]{};
-            if (std::fgets(posting_host_buffer, sizeof posting_host_buffer, fp) != nullptr)
+            std::string posting_host_buffer;
+            posting_host_buffer.reserve(TCBUF_SIZE);
+            if (std::getline(input, posting_host_buffer))
             {
                 posting_host_name = posting_host_buffer;
-            }
-            std::fclose(fp);
-            if (!posting_host_name.empty() && posting_host_name.back() == '\n')
-            {
-                posting_host_name.pop_back();
             }
         }
     }
@@ -433,16 +441,21 @@ static bool set_p_host_name(char *tmpbuf)
         else
 #endif
 #ifdef HAS_GETDOMAINNAME
-        if (getdomainname(g_buf,LINE_BUF_LEN) == 0)
         {
-            posting_host_name += g_buf;
-        }
-        else
+            std::array<char, LINE_BUF_LEN + 1> domain_name{};
+            if (getdomainname(domain_name.data(), LINE_BUF_LEN) == 0)
+            {
+                posting_host_name += domain_name.data();
+            }
+            else
 #endif
-        {
-            posting_host_name += "UNKNOWN.HOST";
-            hostname_ok = false;
+            {
+                posting_host_name += "UNKNOWN.HOST";
+                hostname_ok = false;
+            }
+#ifdef HAS_GETDOMAINNAME
         }
+#endif
     }
     g_p_host_name = posting_host_name;
     return hostname_ok;

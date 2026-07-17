@@ -528,16 +528,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-051 - Posting Host Scratch
-
-- Files: `util/env.cpp`.
-- Kind: caller-provided mutable scratch buffer.
-- Function: `set_p_host_name`.
-- Change: build the local host and posting host in owned strings.  Keep
-  platform APIs that require mutable output buffers local to the call and
-  remove use of `g_buf` for domain-name composition where possible.
-- Tests: environment tests.
-
 #### CSTR-052 - Score File Line Input
 
 - Files: `libtrn/scorefile.cpp`.

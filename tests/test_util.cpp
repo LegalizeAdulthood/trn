@@ -132,6 +132,8 @@ protected:
         ASSERT_FALSE(error) << error.message();
         fs::create_directories(m_tmp, error);
         ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_trn, error);
+        ASSERT_FALSE(error) << error.message();
     }
 
     void TearDown() override
@@ -248,6 +250,28 @@ TEST_F(EnvInitTest, readsRealNameFromFullnameFile)
     (void) env_init(tcbuf.data(), true);
 
     EXPECT_EQ("Casey Writer", g_real_name);
+}
+
+TEST_F(EnvInitTest, usesConfiguredPostingHostNameDefault)
+{
+    std::ofstream{m_home / ".fullname"} << "Casey Writer\n";
+    std::ofstream{m_home / "fullname"} << "Casey Writer\n";
+
+    const std::string home = m_home.generic_string();
+    const std::string tmp = m_tmp.generic_string();
+    const std::string trn = m_trn.generic_string();
+    m_env.expect_env("HOME", home.c_str());
+    m_env.expect_env("TMPDIR", tmp.c_str());
+    expect_login_environment();
+    m_env.expect_env("DOTDIR", home.c_str());
+    m_env.expect_env("TRNDIR", trn.c_str());
+    m_env.expect_env("NETSPEED", "5");
+
+    std::string tcbuf(TCBUF_SIZE, '\0');
+
+    (void) env_init(tcbuf.data(), true);
+
+    EXPECT_EQ(std::string{POSTING_HOSTNAME} + ".UNKNOWN.HOST", g_p_host_name);
 }
 
 TEST(SecsToTextTest, returnsSentinelText)
