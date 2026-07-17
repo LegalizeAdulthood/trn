@@ -45,6 +45,7 @@
 #include <cstring>
 #include <ctime>
 #include <string>
+#include <string_view>
 
 ArticleLine     g_highlight{-1};          // next line to be highlighted
 ArticleLine     g_first_view{};           //
@@ -114,6 +115,7 @@ DoArticleResult do_article()
     bool hide_this_line = false; // hidden header line?
     bool under_lining = false;   // are we underlining a word?
     char* buf_ptr = g_art_line;   // pointer to input buffer
+    std::string from_line;
     int out_pos;                  // column position of output
     static char prompt_buf[64];  // place to hold prompt
     bool notes_files = false;     // might there be notes files junk?
@@ -352,22 +354,18 @@ DoArticleResult do_article()
                     break;
 
                 case FROM_LINE:
-                    if ((s = std::strchr(buf_ptr,'\n')) != nullptr
-                     && s-buf_ptr < sizeof g_art_line)
-                    {
-                        safe_copy(g_art_line,buf_ptr,s-buf_ptr+1);
-                    }
-                    else
-                    {
-                        safe_copy(g_art_line,buf_ptr,sizeof g_art_line);
-                    }
-                    s = extract_name(g_art_line + 6);
+                {
+                    from_line.reserve(LINE_BUF_LEN);
+                    const std::string_view from_text{buf_ptr};
+                    from_line = from_text.substr(0, from_text.find('\n'));
+                    s = extract_name(from_line.data() + 6);
                     if (s != nullptr)
                     {
-                        std::strcpy(g_art_line+6,s);
-                        buf_ptr = g_art_line;
+                        from_line = from_line.substr(0, 6) + s;
+                        buf_ptr = from_line.data();
                     }
                     break;
+                }
 
                 case DATE_LINE:
                     if (g_curr_artp->m_date != -1)

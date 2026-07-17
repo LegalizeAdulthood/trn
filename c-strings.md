@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 19 hits remain, including the helper declaration and
-  definition.  The 17 call sites are inventoried below.
+- `safe_copy`: 18 hits remain, including the helper declaration and
+  definition.  The 16 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -448,12 +448,10 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 19 `safe_copy` hits: the helper definition, the
-helper declaration, and 17 call sites.  The call sites are still audit
+The current tree has 18 `safe_copy` hits: the helper definition, the
+helper declaration, and 16 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
-- `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
-  `extract_name` mutates the display copy.  See `CSTR-026`.
 - `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
   during word wrapping.  See `CSTR-033`.
 - `libtrn/charsubst.cpp`, `str_char_subst`: the buffer overload remains
@@ -478,9 +476,9 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 101, `strncpy` 5, `strcat` 11.
+- Copy and concatenation: `strcpy` 100, `strncpy` 5, `strcat` 11.
 - Comparison: `strcmp` 12, `strncmp` 26.
-- Search and length: `strchr` 107, `strrchr` 13, `strstr` 2,
+- Search and length: `strchr` 106, `strrchr` 13, `strstr` 2,
   `strlen` 120.
 - Formatting into C buffers: `sprintf` 125, `snprintf` 1.
 - C text I/O roots: `fgets` 33, `fputs` 198, `printf` 490,
@@ -519,15 +517,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-026 - Article FROM Display Buffer
-
-- Files: `libtrn/art.cpp`, `libtrn/include/trn/art.h`.
-- Kind: global display buffer `g_art_line`.
-- Function: article display path handling FROM headers.
-- Change: use local owned display text for the FROM transformation
-  before printing.  Do not mutate shared article text.
-- Tests: add article header display coverage first.
 
 ### CSTR-028 - Switcheroo Macro Scratch
 

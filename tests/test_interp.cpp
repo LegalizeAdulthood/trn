@@ -5,11 +5,14 @@
 #include <trn/art.h>
 #include <trn/artio.h>
 #include <trn/artsrch.h>
+#include <trn/artstate.h>
 #include <trn/backpage.h>
 #include <trn/bits.h>
 #include <trn/cache.h>
+#include <trn/charsubst.h>
 #include <trn/color.h>
 #include <trn/datasrc.h>
+#include <trn/head.h>
 #include <trn/init.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
@@ -1522,6 +1525,29 @@ TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(TRN_TEST_NEWSGROUP_DIR, buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
+{
+    g_header_type[FROM_LINE].flags |= HT_MAGIC;
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    g_char_subst = g_charsets.c_str();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_no_envar("LOCALTIMEFMT");
+    ASSERT_TRUE(parse_header(g_art));
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_NORM, result);
+    EXPECT_NE(std::string::npos, output.find("From: " TRN_TEST_HEADER_FROM_NAME));
+    EXPECT_EQ(std::string::npos, output.find("From: " TRN_TEST_HEADER_FROM));
+    EXPECT_EQ(TRN_TEST_HEADER_FROM, fetch_lines(g_art, FROM_LINE));
 }
 
 TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
