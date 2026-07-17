@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 26 hits remain, including the helper declaration and
-  definition.  The 24 call sites are inventoried below.
+- `safe_copy`: 25 hits remain, including the helper declaration and
+  definition.  The 23 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -449,8 +449,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 26 `safe_copy` hits: the helper definition, the
-helper declaration, and 24 call sites.  The call sites are still audit
+The current tree has 25 `safe_copy` hits: the helper definition, the
+helper declaration, and 23 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -464,8 +464,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-029`.
 - `libtrn/mime.cpp`, `MimeSection::mime_description`: truncates an
   attachment display line.  See `CSTR-015`.
-- `libtrn/ng.cpp`, `output_subject`: truncates subject output through
-  `tmpbuf`.  See `CSTR-010`.
 - `libtrn/ngstuff.cpp`, `switcheroo`: copies `g_buf` into a macro
   scratch buffer.  See `CSTR-028`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
@@ -527,17 +525,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-010 - Subject Output Line
-
-- Files: `libtrn/ng.cpp`.
-- Kind: arbitrary fixed display buffer and `safe_copy`.
-- Function: `output_subject`.
-- Change: use `fmt::format` plus `std::string` for the default subject
-  path.  Keep the `g_subj_line` interpolation branch unchanged until
-  `interp` can write to owned string storage.
-- Tests: add output coverage first; preserve the order of subject lookup
-  and interpolation.
 
 ### CSTR-011 - Expired Article Newsrc Rewrite
 

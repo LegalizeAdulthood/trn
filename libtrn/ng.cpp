@@ -46,6 +46,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -2073,22 +2075,24 @@ bool output_subject(char *ptr, int flag)
     const std::string subject = fetch_subj_copy(i);
     if (!subject.empty())
     {
-        std::sprintf(tmpbuf,"%-5ld ", i.value_of());
-        int len = std::strlen(tmpbuf);
-        if (!empty(g_subj_line))
+        const bool  custom_subject_line = !empty(g_subj_line);
+        std::string subject_line;
+        if (custom_subject_line)
         {
+            std::sprintf(tmpbuf,"%-5ld ", i.value_of());
+            int len = std::strlen(tmpbuf);
             g_art = i;
             interp(tmpbuf + len, sizeof tmpbuf - len, g_subj_line);
         }
         else
         {
-            safe_copy(tmpbuf + len, subject.c_str(), sizeof tmpbuf - len);
+            subject_line = fmt::format("{:<5} {}", i.value_of(), subject);
         }
         if (g_mode == MM_PROCESSING_KILL)
         {
             g_page_line = 1;
         }
-        if (print_lines(tmpbuf, NO_MARKING) != 0)
+        if (print_lines(custom_subject_line ? tmpbuf : subject_line.c_str(), NO_MARKING) != 0)
         {
             return true;
         }

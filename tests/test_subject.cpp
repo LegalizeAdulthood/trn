@@ -4,10 +4,13 @@
 #include <trn/Article.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
+#include <trn/final.h>
 #include <trn/kfile.h>
+#include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rthread.h>
 #include <trn/Subject.h>
+#include <trn/terminal.h>
 
 #include <test_config.h>
 
@@ -39,6 +42,14 @@ protected:
         m_old_kf_state = g_kf_state;
         m_old_threaded_group = g_threaded_group;
         m_old_thread_always = g_thread_always;
+        m_old_int_count = g_int_count;
+        m_old_subj_line = g_subj_line;
+        m_old_page_line = g_page_line;
+        m_old_tc_lines = g_tc_LINES;
+        m_old_tc_cols = g_tc_COLS;
+        m_old_tc_am = g_tc_AM;
+        m_old_term_line = g_term_line;
+        m_old_term_col = g_term_col;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -62,6 +73,12 @@ protected:
         g_kf_state = KFS_NONE;
         g_threaded_group = false;
         g_thread_always = false;
+        g_int_count = 0;
+        g_subj_line = "";
+        g_page_line = 1;
+        g_tc_LINES = 200;
+        g_tc_COLS = 200;
+        g_tc_AM = false;
 
         m_data_source.m_flags = DF_NONE;
         m_group.m_rc_line = "comp.lang.apl: ";
@@ -90,6 +107,14 @@ protected:
         g_kf_state = m_old_kf_state;
         g_threaded_group = m_old_threaded_group;
         g_thread_always = m_old_thread_always;
+        g_int_count = m_old_int_count;
+        g_subj_line = m_old_subj_line;
+        g_page_line = m_old_page_line;
+        g_tc_LINES = m_old_tc_lines;
+        g_tc_COLS = m_old_tc_cols;
+        g_tc_AM = m_old_tc_am;
+        g_term_line = m_old_term_line;
+        g_term_col = m_old_term_col;
     }
 
     DataSource                    m_data_source{};
@@ -105,6 +130,14 @@ protected:
     KillFileStateFlags            m_old_kf_state{KFS_NONE};
     bool                          m_old_threaded_group{};
     bool                          m_old_thread_always{};
+    int                           m_old_int_count{};
+    const char                   *m_old_subj_line{};
+    int                           m_old_page_line{};
+    int                           m_old_tc_lines{};
+    int                           m_old_tc_cols{};
+    bool                          m_old_tc_am{};
+    int                           m_old_term_line{};
+    int                           m_old_term_col{};
 };
 
 } // namespace
@@ -143,4 +176,17 @@ TEST_F(SubjectStorageTest, replacingSubjectUpdatesHashKey)
     EXPECT_STREQ("Replacement Topic", first->get_cached_line(SUBJ_LINE, false));
     EXPECT_STREQ("Original Topic", second->get_cached_line(SUBJ_LINE, false));
     EXPECT_EQ(2, g_subject_count);
+}
+
+TEST_F(SubjectStorageTest, outputSubjectPrintsArticleNumberAndSubject)
+{
+    Article *article = article_ptr(ArticleNum{1});
+    article->set_subj_line("A Subject");
+
+    testing::internal::CaptureStdout();
+    const bool        stopped = output_subject(reinterpret_cast<char *>(article), 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(stopped);
+    EXPECT_EQ("1     A Subject\n", output);
 }
