@@ -209,12 +209,13 @@ NumNumResult num_num()
     ArticleNum min;
     ArticleNum max;
     std::string cmdlst;
+    std::string ranges;
     char* s;
     char* c;
     ArticleNum oldart = g_art;
-    char tmpbuf[LINE_BUF_LEN];
     bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool justone = true;                // assume only one article
+    ranges.reserve(LINE_BUF_LEN);
 
     if (!finish_command(true))  // get rest of command
     {
@@ -250,13 +251,13 @@ NumNumResult num_num()
     }
     *s++ = ',';
     *s = '\0';
-    safe_copy(tmpbuf,g_buf,LINE_BUF_LEN);
+    ranges = g_buf;
     if (!output_level && !justone)
     {
         std::printf("Processing...");
         std::fflush(stdout);
     }
-    for (char *t = tmpbuf; (c = std::strchr(t, ',')) != nullptr; t = ++c)
+    for (char *t = ranges.data(); (c = std::strchr(t, ',')) != nullptr; t = ++c)
     {
         *c = '\0';
         if (*t == '.')

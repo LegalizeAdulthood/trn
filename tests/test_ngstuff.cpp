@@ -4,6 +4,9 @@
 #include <trn/ngstuff-internal.h>
 
 #include <config/common.h>
+#include <trn/cache.h>
+#include <trn/ng.h>
+#include <trn/ngdata.h>
 #include <trn/rcstuff.h>
 #include <trn/respond.h>
 #include <trn/terminal.h>
@@ -93,6 +96,45 @@ protected:
     bool                               m_old_check_flag{};
 };
 
+class NumNumTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_abs_first = g_abs_first;
+        m_old_last_art = g_last_art;
+        m_old_art = g_art;
+        m_old_search_ahead = g_search_ahead;
+        m_old_newsgroup_ptr = g_newsgroup_ptr;
+        std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
+
+        g_abs_first = ArticleNum{1};
+        g_last_art = ArticleNum{10};
+        g_art = ArticleNum{1};
+        g_search_ahead = ArticleNum{};
+        m_newsgroup.m_to_read = 10;
+        g_newsgroup_ptr = &m_newsgroup;
+    }
+
+    void TearDown() override
+    {
+        g_abs_first = m_old_abs_first;
+        g_last_art = m_old_last_art;
+        g_art = m_old_art;
+        g_search_ahead = m_old_search_ahead;
+        g_newsgroup_ptr = m_old_newsgroup_ptr;
+        std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
+    }
+
+    ArticleNum                         m_old_abs_first;
+    ArticleNum                         m_old_last_art;
+    ArticleNum                         m_old_art;
+    ArticleNum                         m_old_search_ahead;
+    NewsgroupData                     *m_old_newsgroup_ptr{};
+    NewsgroupData                      m_newsgroup{};
+    std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
+};
+
 } // namespace
 
 TEST_F(EscapadeTest, restoresCurrentDirectoryAfterShellCommand)
@@ -133,4 +175,16 @@ TEST_F(EscapadeTest, restoresCurrentDirectoryAfterSaveDirectorySwitch)
     EXPECT_EQ(m_save.generic_string(), g_save_dir);
     expect_equivalent(m_save, g_priv_dir);
     expect_equivalent(m_start, fs::current_path());
+}
+
+TEST_F(NumNumTest, selectsSingleArticle)
+{
+    const std::string command{"5"};
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    const NumNumResult result = num_num();
+
+    EXPECT_EQ(NN_REREAD, result);
+    EXPECT_EQ(ArticleNum{5}, g_art);
 }
