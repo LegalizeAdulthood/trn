@@ -510,18 +510,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-062 - NNTP Server Name Owned Return
-
-- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
-  `libtrn/datasrc.cpp`, `inews/inews.cpp`, `nntplist/nntplist.cpp`,
-  `trn-artchk/trn-artchk.cpp`.
-- Kind: borrowed static-buffer return.
-- Function: `nntp_server_name`.
-- Change: take `std::string_view` and return `std::string`.  Read a
-  referenced server-name file into local owned storage instead of
-  returning either the input pointer or a pointer into `g_ser_line`.
-- Tests: NNTP server-name and datasource/tool startup tests.
-
 #### CSTR-063 - Environment Real Name View Parsing
 
 - Files: `util/env.cpp`.

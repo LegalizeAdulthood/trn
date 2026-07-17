@@ -9,12 +9,19 @@
 #include <trn/head.h>
 #include <trn/ngdata.h>
 
+#include <test_config.h>
+
 #include <boost/asio/error.hpp>
 
 #include <gmock/gmock.h>
 
+#include <filesystem>
+#include <fstream>
 #include <map>
+#include <string>
 #include <utility>
+
+namespace fs = std::filesystem;
 
 using namespace testing;
 
@@ -119,6 +126,61 @@ TEST_F(NNTPConnectedTest, server_init_permanently_unavailable)
     const int result = server_init(m_machine);
 
     EXPECT_EQ(NNTP_ACCESS_VAL, result);
+}
+
+class NntpServerNameTest : public Test
+{
+protected:
+    void SetUp() override
+    {
+        const TestInfo *test_info = UnitTest::GetInstance()->current_test_info();
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        fs::create_directories(m_output_dir, error);
+    }
+
+    void TearDown() override
+    {
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+    }
+
+    std::string file_ref_name(const fs::path &path) const
+    {
+        std::string name = path.generic_string();
+        if (name.size() > 1 && name[1] == ':')
+        {
+            name.erase(0, 2);
+        }
+        return name;
+    }
+
+    fs::path m_output_dir;
+};
+
+TEST_F(NntpServerNameTest, returnsServerName)
+{
+    EXPECT_EQ("news.example.test", nntp_server_name("news.example.test"));
+}
+
+TEST_F(NntpServerNameTest, readsFirstNonCommentServerNameFromFile)
+{
+    const fs::path server_file = m_output_dir / "server-name";
+    std::ofstream{server_file} << "# comment\n"
+                               << "\n"
+                               << "news.example.test\n"
+                               << "ignored.example.test\n";
+    const std::string name = file_ref_name(server_file);
+
+    EXPECT_EQ("news.example.test", nntp_server_name(name));
+}
+
+TEST_F(NntpServerNameTest, returnsReferenceNameWhenFileIsMissing)
+{
+    const std::string name = file_ref_name(m_output_dir / "missing-server-name");
+
+    EXPECT_EQ(name, nntp_server_name(name));
 }
 
 class NNTPGetStringTest : public Test

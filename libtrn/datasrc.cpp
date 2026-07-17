@@ -101,7 +101,7 @@ void data_source_init()
 
     g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
 
-    char       *machine = get_val("NNTPSERVER");
+    const char *machine = get_val("NNTPSERVER");
     std::string expanded_machine;
     if (machine != nullptr && std::string_view{machine} != "local")
     {
@@ -126,11 +126,11 @@ void data_source_init()
         expanded_machine = file_exp(SERVER_NAME);
         if (!expanded_machine.empty())
         {
-            machine = expanded_machine.data();
-            if (FILE_REF(machine))
+            if (FILE_REF(expanded_machine.c_str()))
             {
-                machine = nntp_server_name(machine);
+                expanded_machine = nntp_server_name(expanded_machine);
             }
+            machine = expanded_machine.c_str();
         }
         if (machine != nullptr && std::string_view{machine} == "local")
         {

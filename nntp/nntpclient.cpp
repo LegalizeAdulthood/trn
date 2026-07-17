@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <fstream>
 #include <string>
 
 NNTPLink g_nntp_link{}; // the current server's file handles
@@ -135,29 +136,30 @@ try_to_connect:
     return response;
 }
 
-char *nntp_server_name(char *name)
+std::string nntp_server_name(std::string_view name)
 {
-    std::FILE* fp;
-
-    if (FILE_REF(name) && (fp = std::fopen(name, "r")) != nullptr)
+    std::string result{name};
+    if (!FILE_REF(result.c_str()))
     {
-        while (std::fgets(g_ser_line, sizeof g_ser_line, fp) != nullptr)
-        {
-            if (*g_ser_line == '\n' || *g_ser_line == '#')
-            {
-                continue;
-            }
-            name = std::strchr(g_ser_line, '\n');
-            if (name != nullptr)
-            {
-                *name = '\0';
-            }
-            name = g_ser_line;
-            break;
-        }
-        std::fclose(fp);
+        return result;
     }
-    return name;
+
+    std::ifstream input{result};
+    if (!input)
+    {
+        return result;
+    }
+
+    std::string line;
+    while (std::getline(input, line))
+    {
+        if (line.empty() || line[0] == '#')
+        {
+            continue;
+        }
+        return line;
+    }
+    return result;
 }
 
 int nntp_command(std::string_view bp)

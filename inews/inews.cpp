@@ -114,24 +114,24 @@ int main(int argc, char *argv[])
         }
     }
 
-    cp = get_val("NNTPSERVER");
+    const char *server = get_val("NNTPSERVER");
     std::string server_name;
-    if (!cp)
+    if (server == nullptr)
     {
         server_name = file_exp(SERVER_NAME);
         if (!server_name.empty())
         {
-            cp = server_name.data();
-            if (FILE_REF(cp))
+            if (FILE_REF(server_name.c_str()))
             {
-                cp = nntp_server_name(cp);
+                server_name = nntp_server_name(server_name);
             }
+            server = server_name.c_str();
         }
     }
     const char *line_end;
-    if (cp && *cp && std::strcmp(cp,"local") != 0)
+    if (server && *server && std::strcmp(server,"local") != 0)
     {
-        g_server_name = cp;
+        g_server_name = server;
         if (const auto separator = g_server_name.find(';'); separator != std::string::npos)
         {
             g_nntp_link.port_number = std::atoi(g_server_name.c_str() + separator + 1);
@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
         }
         line_end = "\r\n";
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
-        cp = std::getenv("NNTP_FORCE_AUTH");
-        if (cp != nullptr && (*cp == 'y' || *cp == 'Y'))
+        const char *force_auth = std::getenv("NNTP_FORCE_AUTH");
+        if (force_auth != nullptr && (*force_auth == 'y' || *force_auth == 'Y'))
         {
             g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
