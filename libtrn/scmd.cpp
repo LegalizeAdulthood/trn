@@ -26,11 +26,12 @@
 
 #include <cctype>
 #include <cstdio>
-#include <cstring>
 #include <string>
+#include <string_view>
 
 static void s_look_ahead();
 static int  s_do_cmd();
+static void s_set_search_text(std::string_view search_text);
 static bool s_match_description(long ent);
 static long s_forward_search(long ent);
 static long s_backward_search(long ent);
@@ -339,21 +340,26 @@ static int s_do_cmd()
     return 0;           // keep on looping!
 }
 
-static char s_search_text[LINE_BUF_LEN]{};
-static char s_search_init{};
+static std::string s_search_text;
+static bool        s_search_init{};
 
 bool scmd_match_description_for_test(long ent, std::string_view search_text)
 {
-    const std::size_t len = search_text.copy(s_search_text, sizeof s_search_text - 1);
-    s_search_text[len] = '\0';
-    for (char *t = s_search_text; *t != '\0'; t++)
+    s_set_search_text(search_text);
+    return s_match_description(ent);
+}
+
+static void s_set_search_text(std::string_view search_text)
+{
+    s_search_text = search_text;
+    for (char &ch : s_search_text)
     {
-        if (std::isupper(*t))
+        const unsigned char text_ch = static_cast<unsigned char>(ch);
+        if (std::isupper(text_ch))
         {
-            *t = std::tolower(*t); // convert to lower case
+            ch = static_cast<char>(std::tolower(text_ch)); // convert to lower case
         }
     }
-    return s_match_description(ent);
 }
 
 static bool s_match_description(long ent)
@@ -426,7 +432,7 @@ static void s_search()
     if (!s_search_init)
     {
         s_search_init = true;
-        s_search_text[0] = '\0';
+        s_search_text.clear();
     }
     s_rub_ptr();
     g_buf[1] = '\0';
@@ -439,16 +445,9 @@ static void s_search()
         // make leading space skip an option later?
         // (it isn't too important because substring matching is used)
         char *s = skip_eq(g_buf + 1, ' '); // skip leading spaces
-        std::strncpy(s_search_text,s,LINE_BUF_LEN);
-        for (char *t = s_search_text; *t != '\0'; t++)
-        {
-            if (std::isupper(*t))
-            {
-                *t = std::tolower(*t);               // convert to lower case
-            }
-        }
+        s_set_search_text(s);
     }
-    if (!*s_search_text)
+    if (s_search_text.empty())
     {
         s_beep();
         std::printf("\nNo previous search string.\n");
@@ -457,7 +456,7 @@ static void s_search()
         return;
     }
     s_go_bot();
-    std::printf("Searching for %s",s_search_text);
+    std::printf("Searching for %s",s_search_text.c_str());
     std::fflush(stdout);
     long ent = g_page_ents[g_s_ptr_page_line].ent_num;
     switch (*g_buf)

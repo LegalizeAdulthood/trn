@@ -509,17 +509,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-042 - Selector Search Text
-
-- Files: `libtrn/scmd.cpp`.
-- Kind: file-scope fixed string buffer.
-- Functions: `scmd_match_description_for_test`, `s_match_description`,
-  and `s_search`.
-- Change: replace `s_search_text[LINE_BUF_LEN]` with `std::string`.
-  Preserve lower-casing and remove the arbitrary truncation unless tests
-  prove the limit is meaningful.
-- Tests: `test_scmd`.
-
 #### CSTR-043 - Selector Order String
 
 - Files: `libtrn/rt-page.cpp`, `libtrn/include/trn/rt-page.h`,
