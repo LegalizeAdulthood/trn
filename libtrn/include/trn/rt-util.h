@@ -33,7 +33,7 @@ std::string compress_from(const char *from, int size);
 bool        strip_one_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject);
-const char *compress_subj(const Article *ap, int max);
+std::string compress_subj(const Article *ap, int max);
 void set_spin(SpinMode mode);
 void spin(int count);
 bool in_background();

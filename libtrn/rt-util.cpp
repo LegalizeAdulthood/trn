@@ -701,82 +701,81 @@ bool subject_has_re(std::string_view subject)
 //
 // TODO: why does this check ap for nullptr?
 //
-const char *compress_subj(const Article *ap, int max)
+std::string compress_subj(const Article *ap, int max)
 {
     if (!ap)
     {
         return "<MISSING>";
     }
+    if (max <= 0)
+    {
+        return {};
+    }
 
     // Put a preceding '>' on subjects that are replies to other articles
-    char *   cp = g_buf;
+    std::string subject;
+    subject.reserve(LINE_BUF_LEN);
     Article *first = (g_threaded_group ? ap->m_subj->m_thread : ap->m_subj->m_articles);
-    if (ap != first || (ap->m_flags & AF_HAS_RE)
-     || (!(ap->m_flags&AF_UNREAD) ^ g_sel_rereading))
+    if (ap != first || (ap->m_flags & AF_HAS_RE) || (!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading))
     {
-        *cp++ = '>';
+        subject += '>';
     }
-    str_char_subst(cp, ap->m_subj->stripped_text(), (sizeof g_buf) - (cp-g_buf), *g_char_subst);
+    subject += str_char_subst(ap->m_subj->stripped_view(), *g_char_subst);
 
     // Remove "(was: oldsubject)", because we already know the old subjects.
     // Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
-    for (cp = g_buf; (cp = std::strchr(cp + 1, '(')) != nullptr;)
+    for (std::size_t open = subject.find('(', 1); open != std::string::npos; open = subject.find('(', open + 1))
     {
-        cp = skip_eq(++cp, ' ');
-        if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's') //
-            && (cp[3] == ':' || cp[3] == ' '))
+        std::size_t text = open + 1;
+        while (text < subject.size() && subject[text] == ' ')
         {
-            *--cp = '\0';
+            text++;
+        }
+        if (text + 3 < subject.size() && eq_ignore_case(subject[text], 'w') && eq_ignore_case(subject[text + 1], 'a') &&
+            eq_ignore_case(subject[text + 2], 's') && (subject[text + 3] == ':' || subject[text + 3] == ' '))
+        {
+            subject.erase(text == open + 1 ? open : text - 1);
             break;
         }
-        if (eq_ignore_case(cp[0], 'r') && eq_ignore_case(cp[1], 'e') //
-            && ((cp[2] == ':' && cp[3] == ' ') || (cp[2] == '^' && cp[4] == ':')))
+        const bool re_colon = text + 3 < subject.size() && subject[text + 2] == ':' && subject[text + 3] == ' ';
+        const bool re_power = text + 4 < subject.size() && subject[text + 2] == '^' && subject[text + 4] == ':';
+        if (text + 1 < subject.size() && eq_ignore_case(subject[text], 'r') && eq_ignore_case(subject[text + 1], 'e') &&
+            (re_colon || re_power))
         {
-            *--cp = '\0';
+            subject.erase(text == open + 1 ? open : text - 1);
             break;
         }
     }
-    int len = std::strlen(g_buf);
+    int len = static_cast<int>(subject.size());
     if (!g_unbroken_subjects && len > max)
     {
         // Try to include the last two words on the line while trimming
-        char *last_word = std::strrchr(g_buf, ' ');
-        if (last_word != nullptr)
+        const std::size_t last_word = subject.rfind(' ');
+        if (last_word != std::string::npos)
         {
-            *last_word = '\0';
-            char *next_to_last = std::strrchr(g_buf, ' ');
-            if (next_to_last != nullptr)
+            const std::size_t next_to_last = last_word == 0 ? std::string::npos : subject.rfind(' ', last_word - 1);
+            std::size_t       keep_from = last_word;
+            const int         keep_threshold = len - max + 3 + 10 - 1;
+            if (next_to_last != std::string::npos)
             {
-                if (next_to_last-g_buf >= len - max + 3 + 10-1)
+                if (static_cast<int>(next_to_last) >= keep_threshold)
                 {
-                    cp = next_to_last;
-                }
-                else
-                {
-                    cp = last_word;
+                    keep_from = next_to_last;
                 }
             }
-            else
+            if (static_cast<int>(keep_from) >= keep_threshold)
             {
-                cp = last_word;
-            }
-            *last_word = ' ';
-            if (cp - g_buf >= len - max + 3 + 10 - 1)
-            {
-                char* s = g_buf + max - (len-(cp-g_buf)+3);
-                *s++ = '.';
-                *s++ = '.';
-                *s++ = '.';
-                safe_copy(s, cp + 1, max);
+                const std::size_t prefix_len = static_cast<std::size_t>(max - (len - static_cast<int>(keep_from) + 3));
+                subject = subject.substr(0, prefix_len) + "..." + subject.substr(keep_from + 1);
                 len = max;
             }
         }
     }
     if (len > max)
     {
-        g_buf[max] = '\0';
+        subject.resize(static_cast<std::size_t>(max));
     }
-    return g_buf;
+    return subject;
 }
 
 // Modified version of a spinner originally found in Clifford Adams' strn.

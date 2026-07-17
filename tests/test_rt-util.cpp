@@ -7,7 +7,11 @@
 #include <trn/rt-util.h>
 
 #include <config/common.h>
+#include <trn/Article.h>
 #include <trn/charsubst.h>
+#include <trn/ngdata.h>
+#include <trn/rt-select.h>
+#include <trn/Subject.h>
 
 #include <test_config.h>
 
@@ -251,6 +255,82 @@ TEST_F(CompressFromTest, keepsBangPathUserWhenItFits)
 TEST_F(CompressFromTest, returnsEmptyForNonPositiveWidth)
 {
     EXPECT_EQ("", compress_from("Ross Ridge <ross@example.com>", 0));
+}
+
+class CompressSubjectTest : public Test
+{
+protected:
+    void SetUp() override
+    {
+        m_previous_char_subst = g_char_subst;
+        m_previous_threaded_group = g_threaded_group;
+        m_previous_sel_rereading = g_sel_rereading;
+        m_previous_unbroken_subjects = g_unbroken_subjects;
+
+        g_char_subst = g_charsets.c_str();
+        g_threaded_group = false;
+        g_sel_rereading = false;
+        g_unbroken_subjects = false;
+
+        m_subject.m_str = "    Plain subject";
+        m_subject.m_articles = &m_article;
+        m_subject.m_thread = &m_article;
+        m_article.m_subj = &m_subject;
+        m_article.m_flags = AF_UNREAD;
+    }
+
+    void TearDown() override
+    {
+        g_char_subst = m_previous_char_subst;
+        g_threaded_group = m_previous_threaded_group;
+        g_sel_rereading = m_previous_sel_rereading;
+        g_unbroken_subjects = m_previous_unbroken_subjects;
+    }
+
+    std::string compress(const Article *article, int width)
+    {
+        return compress_subj(article, width);
+    }
+
+    Subject     m_subject{};
+    Article     m_article{};
+    const char *m_previous_char_subst{};
+    bool        m_previous_threaded_group{};
+    bool        m_previous_sel_rereading{};
+    bool        m_previous_unbroken_subjects{};
+};
+
+TEST_F(CompressSubjectTest, returnsMissingForNullArticle)
+{
+    EXPECT_EQ("<MISSING>", compress(nullptr, 80));
+}
+
+TEST_F(CompressSubjectTest, returnsStrippedSubject)
+{
+    EXPECT_EQ("Plain subject", compress(&m_article, 80));
+}
+
+TEST_F(CompressSubjectTest, marksNonFirstArticle)
+{
+    Article reply{};
+    reply.m_subj = &m_subject;
+    reply.m_flags = AF_UNREAD;
+
+    EXPECT_EQ(">Plain subject", compress(&reply, 80));
+}
+
+TEST_F(CompressSubjectTest, removesWasSubject)
+{
+    m_subject.m_str = "    Plain subject (was: old subject)";
+
+    EXPECT_EQ("Plain subject ", compress(&m_article, 80));
+}
+
+TEST_F(CompressSubjectTest, truncatesLongSubject)
+{
+    m_subject.m_str = "    LongSubjectValue";
+
+    EXPECT_EQ("LongSubj", compress(&m_article, 8));
 }
 
 TEST(SubjectHasReTest, one)

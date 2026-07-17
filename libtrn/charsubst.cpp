@@ -19,12 +19,10 @@
 #include <config/config2.h>
 #include <config/typedef.h>
 #include <trn/trn.h>
-#include <util/util2.h>
 
 #include <fmt/format.h>
 
 #include <cstdio>
-#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -185,34 +183,6 @@ std::string current_char_subst()
     }
     return std::string{show};
 #endif
-}
-
-int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
-{
-    switch (subst)
-    {
-    case 'm':
-        return latin1_to_ascii((Uchar *) outb, (const Uchar *) inb, limit, 1);
-
-    case 'a':
-        return latin1_to_ascii((Uchar *) outb, (const Uchar *) inb, limit, 2);
-
-    default:
-        break;
-    }
-    const char *s = std::strchr(inb, '\n');
-    int len;
-    if (s != nullptr && s - inb + 1 < limit)
-    {
-        len = s - inb + 1;
-        limit = len + 1;
-    }
-    else
-    {
-        len = std::strlen(inb);
-    }
-    safe_copy(outb, inb, limit);
-    return len;
 }
 
 // The following is an adapted version of iso2asc by Markus Kuhn,

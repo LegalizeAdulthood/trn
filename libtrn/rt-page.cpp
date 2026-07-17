@@ -2704,7 +2704,7 @@ static void display_article(const Article *ap, int ix, int sel)
     output_sel(ix, sel, false);
     if (current_article_display_mode() == 's' || from_width < 8)
     {
-        std::printf("  %s\n", compress_subj(ap->m_subj->m_articles, subj_width));
+        fmt::print("  {}\n", compress_subj(ap->m_subj->m_articles, subj_width));
     }
     else if (current_article_display_mode() == 'd')
     {
@@ -2736,7 +2736,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
     output_sel(ix, sel, false);
     if (current_article_display_mode() == 's' || from_width < 8)
     {
-        std::printf("%3d  %s\n",j,compress_subj(subj->m_articles,subj_width));
+        fmt::print("{:3}  {}\n", j, compress_subj(subj->m_articles, subj_width));
         term_down(1);
     }
     else

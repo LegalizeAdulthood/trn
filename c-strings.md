@@ -514,20 +514,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-046 - Character Substitution Buffer Overload
-
-- Files: `libtrn/charsubst.cpp`, `libtrn/include/trn/charsubst.h`,
-  `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
-  `libtrn/rt-page.cpp`.
-- Kind: buffer-output API and global display buffer.
-- Function: `compress_subj`.
-- Change: make `compress_subj` return `std::string`, use the existing
-  `str_char_subst(std::string_view, char_int)` overload, and remove the
-  buffer-output `str_char_subst` overload.  Preserve meaningful subject
-  truncation to the requested display width.
-- Tests: add `compress_subj` coverage before the refactor, then run
-  `test_rt-util` and selector display tests.
-
 #### CSTR-047 - Read-Line Ownership Contract
 
 - Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
