@@ -419,18 +419,18 @@ static bool sf_do_command(std::string_view cmd, bool check)
         {
             return true;
         }
-        HeaderLineType head_type;
+        int head_type;
         if (command == "killthreshold")
         {
-            head_type = static_cast<HeaderLineType>(SF_KILL_THRESHOLD);
+            head_type = SF_KILL_THRESHOLD;
         }
         else if (command == "newauthor")
         {
-            head_type = static_cast<HeaderLineType>(SF_NEW_AUTHOR);
+            head_type = SF_NEW_AUTHOR;
         }
         else
         {
-            head_type = static_cast<HeaderLineType>(SF_REPLY);
+            head_type = SF_REPLY;
         }
         sf_grow();
         s_sf_entries[g_sf_num_entries - 1].head_type = head_type;
@@ -717,7 +717,7 @@ static bool sf_do_line(char *line, bool check)
     }
     sf_grow(); // acutally make an entry
     ScoreFileEntry &entry = s_sf_entries[g_sf_num_entries - 1];
-    entry.head_type = static_cast<HeaderLineType>(j);
+    entry.head_type = j;
     entry.score = score;
     if (s_sf_pattern_status) // in pattern matching mode
     {
@@ -781,7 +781,7 @@ static void sf_do_file(const char *fname)
     std::string safefilename{fname};
     // add end marker to scoring array
     sf_grow();
-    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_START);
+    s_sf_entries[g_sf_num_entries-1].head_type = SF_FILE_MARK_START;
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2.clear();
@@ -795,7 +795,7 @@ static void sf_do_file(const char *fname)
     }
     // add end marker to scoring array
     sf_grow();
-    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_END);
+    s_sf_entries[g_sf_num_entries-1].head_type = SF_FILE_MARK_END;
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2.clear();
@@ -855,11 +855,12 @@ int sf_score(ArticleNum a)
 
     for (int i = 0; i < g_sf_num_entries; i++)
     {
-        HeaderLineType h = s_sf_entries[i].head_type;
-        if (h <= 0)     // don't use command headers for scoring
+        const int head_type = s_sf_entries[i].head_type;
+        if (head_type <= 0) // don't use command headers for scoring
         {
             continue;   // the outer for loop
         }
+        const HeaderLineType h = static_cast<HeaderLineType>(head_type);
         // if this head_type has been done before, this entry
         // has already been done
         if (s_sf_entries[i].flags & 2)          // rule has been applied
@@ -1165,7 +1166,7 @@ static void sf_print_match(int indx)
             int k;
             for (k = i; k >= 0; k--)
             {
-                if (s_sf_entries[k].head_type == static_cast<HeaderLineType>(SF_FILE_MARK_START) //
+                if (s_sf_entries[k].head_type == SF_FILE_MARK_START //
                     && s_sf_entries[k].score == tmplevel)
                 {
                     break;      // inner for loop
@@ -1181,7 +1182,7 @@ static void sf_print_match(int indx)
     // print the file markers.
     for (; i >= 0; i--)
     {
-        if (s_sf_entries[i].head_type == static_cast<HeaderLineType>(SF_FILE_MARK_START) //
+        if (s_sf_entries[i].head_type == SF_FILE_MARK_START //
             && s_sf_entries[i].score <= level)
         {
             level--;    // go out...
@@ -1229,7 +1230,7 @@ static void sf_exclude_file(const char *fname)
 
     for (start = 0; start < g_sf_num_entries; start++)
     {
-        if (s_sf_entries[start].head_type == static_cast<HeaderLineType>(SF_FILE_MARK_START)
+        if (s_sf_entries[start].head_type == SF_FILE_MARK_START
          && s_sf_entries[start].str1 == fname)
         {
             break;

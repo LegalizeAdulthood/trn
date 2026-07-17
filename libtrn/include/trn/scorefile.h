@@ -18,7 +18,7 @@ struct CompiledRegex;
 
 struct ScoreFileEntry
 {
-    HeaderLineType head_type; // header # (see trn/head.h)
+    int            head_type; // header # (see trn/head.h)
     int            score;     // score change
     std::string    str1;      // first string part
     std::string    str2;      // second string part
