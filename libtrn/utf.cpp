@@ -4,6 +4,7 @@
  */
 // This file written 2020 by Ambrose Li
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/utf.h>
 
@@ -13,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 // OK - valid second and subsequent bytes in UTF-8
 #define OK(s) ((*(s) & 0xC0) == 0x80)
@@ -539,39 +541,37 @@ int put_char_adv(char **strptr, bool outputok)
     return it;
 }
 
-char *create_utf8_copy(char *s)
+std::string create_utf8_copy(const char *s)
 {
-    char *it = s;
-    if (s != nullptr)
+    std::string result;
+    if (s == nullptr)
     {
-        int  slen;
-        int  tlen;
-        char buf[7];
-
-        // Precalculate size of required space
-        for (slen = tlen = 0; s[slen];)
-        {
-            int sw = byte_length_at(s+slen);
-            int tw = insert_utf8_at(buf, code_point_at(s+slen));
-            slen += sw;
-            tlen += tw;
-        }
-
-        // Create the actual copy
-        it = (char*) std::malloc(tlen + 1);
-        if (it)
-        {
-            char *bufptr = it;
-            for (int i = 0; s[i];)
-            {
-                int sw = byte_length_at(s+i);
-                bufptr += insert_utf8_at(bufptr, code_point_at(s+i));
-                i += sw;
-            }
-            *bufptr = '\0';
-        }
+        return result;
     }
-    return it;
+
+    int  slen;
+    int  tlen;
+    char buf[7];
+
+    // Precalculate size of required space
+    for (slen = tlen = 0; s[slen];)
+    {
+        int sw = byte_length_at(s + slen);
+        int tw = insert_utf8_at(buf, code_point_at(s + slen));
+        slen += sw;
+        tlen += tw;
+    }
+
+    result.reserve(tlen);
+
+    // Create the actual copy
+    for (int i = 0; s[i];)
+    {
+        int tw = insert_utf8_at(buf, code_point_at(s + i));
+        result.append(buf, tw);
+        i += byte_length_at(s + i);
+    }
+    return result;
 }
 
 void terminate_string_at_visual_index(char *s, int i)

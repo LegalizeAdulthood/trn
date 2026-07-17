@@ -510,17 +510,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-061 - UTF Copy Owned Return
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `libtrn/cache.cpp`, `tests/test_utf.cpp`.
-- Kind: owning raw-string return.
-- Function: `create_utf8_copy`.
-- Change: return `std::string` built directly by the producer.  Map a
-  null input to an empty string unless a caller proves that null and
-  empty need distinct behavior.  Remove caller `free` paths.
-- Tests: UTF tests.
-
 #### CSTR-062 - NNTP Server Name Owned Return
 
 - Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,

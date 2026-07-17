@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <string>
 
 using namespace testing;
 
@@ -379,22 +380,18 @@ class CreateUTF8CopyTest : public Test
 protected:
     void TearDown() override
     {
-        if (m_after)
-        {
-            free(m_after);
-        }
         utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
 
         Test::TearDown();
     }
 
-    char  m_before[80]{};
-    char *m_after{};
+    char        m_before[80]{};
+    std::string m_after;
 };
 
 TEST_F(CreateUTF8CopyTest, nullptr)
 {
-    ASSERT_EQ(nullptr, create_utf8_copy(nullptr));
+    ASSERT_TRUE(create_utf8_copy(nullptr).empty());
 }
 
 TEST_F(CreateUTF8CopyTest, ascii)
@@ -403,9 +400,7 @@ TEST_F(CreateUTF8CopyTest, ascii)
 
     m_after = create_utf8_copy(m_before);
 
-    ASSERT_NE(nullptr, m_after) << "create_utf8_copy of ASCII string returned nullptr";
-    ASSERT_NE(m_before, m_after) << "create_utf8_copy of ASCII string did not alloc a new string";
-    ASSERT_STREQ(m_before, m_after) << "create_utf8_copy of ASCII string did not create an identical copy";
+    ASSERT_EQ(m_before, m_after) << "create_utf8_copy of ASCII string did not create an identical copy";
 }
 
 TEST_F(CreateUTF8CopyTest, iso8859_1)
@@ -416,10 +411,7 @@ TEST_F(CreateUTF8CopyTest, iso8859_1)
 
     m_after = create_utf8_copy(m_before);
 
-    ASSERT_NE(nullptr, m_after) << "create_utf8_copy of ISO-8859-1 string returned nullptr";
-    ASSERT_NE(m_before, m_after) << "create_utf8_copy of ISO-8859-1 string did not alloc a new string";
-    ASSERT_STREQ(expected, m_after)
-        << "create_utf8_copy of ISO-8859-1 string did not create a corresponding UTF-8 copy";
+    ASSERT_EQ(expected, m_after) << "create_utf8_copy of ISO-8859-1 string did not create a corresponding UTF-8 copy";
 }
 
 // terminate string at nth visual column instead of at the nth byte

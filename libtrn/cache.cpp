@@ -543,9 +543,6 @@ int decode_header(char *to, std::string_view from)
                 {
                     int         len = static_cast<int>(e - cursor + 2);
                     std::string encoded{q + 3, e};
-#ifdef USE_UTF_HACK
-                    char *d;
-#endif
                     size -= len;
                     cursor = e + 2;
                     if (ch == 'q' || ch == 'Q')
@@ -557,16 +554,9 @@ int decode_header(char *to, std::string_view from)
                         len = b64_decode_string(to, encoded.c_str());
                     }
 #ifdef USE_UTF_HACK
-                    d = create_utf8_copy(to);
-                    if (d)
-                    {
-                        for (len = 0; d[len];)
-                        {
-                            to[len] = d[len];
-                            len++;
-                        }
-                        std::free(d);
-                    }
+                    std::string utf8_copy = create_utf8_copy(to);
+                    len = static_cast<int>(utf8_copy.size());
+                    std::memcpy(to, utf8_copy.c_str(), utf8_copy.size());
 #endif
                     to += len;
                     size += len;

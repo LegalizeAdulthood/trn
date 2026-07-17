@@ -1,8 +1,11 @@
 /* trn/utf.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef UTF_H_INCLUDED
 #define UTF_H_INCLUDED
+
+#include <string>
 
 #define USE_UTF_HACK
 
@@ -44,7 +47,7 @@ CodePoint code_point_at(const char *s);
 
 int put_char_adv(char **strptr, bool outputok);
 
-char *create_utf8_copy(char *s);
+std::string create_utf8_copy(const char *s);
 
 void terminate_string_at_visual_index(char *s, int i);
 
