@@ -45,8 +45,8 @@
 #include <process.h>
 #endif
 
+#include <array>
 #include <cstdio>
-#include <cstdlib>
 
 long g_our_pid{};
 
@@ -68,8 +68,8 @@ static void news_news_check();
 ///
 bool initialize(int argc, char *argv[])
 {
-    char *tcbuf = safe_malloc(TCBUF_SIZE); // make temp buffer for termcap and
-                                          // other initialization stuff
+    // Temp buffer for termcap and other initialization stuff.
+    std::array<char, TCBUF_SIZE> tcbuf{};
 
     g_our_pid = (long)getpid();
 
@@ -85,12 +85,12 @@ bool initialize(int argc, char *argv[])
 
     // we have to know g_rn_lib to look up global switches in %X/INIT
 
-    env_init(tcbuf, true);
+    env_init(tcbuf.data(), true);
     head_init();
 
     // decode switches
 
-    opt_init(argc,argv,tcbuf);          // must not do % interps!
+    opt_init(argc,argv,tcbuf.data());   // must not do % interps!
                                         // (but may mung environment)
     color_init();
 
@@ -100,7 +100,7 @@ bool initialize(int argc, char *argv[])
 
     // start up file expansion and the % interpreter
 
-    interp_init(tcbuf, TCBUF_SIZE);
+    interp_init(tcbuf.data(), TCBUF_SIZE);
 
     // now make sure we have a current working directory
 
@@ -118,14 +118,12 @@ bool initialize(int argc, char *argv[])
 
     if (!g_check_flag)
     {
-        term_set(tcbuf);
+        term_set(tcbuf.data());
     }
 
     // get info on last trn run, if any
 
     last_init();
-
-    std::free(tcbuf);                        // recover 1024 bytes
 
     univ_init();
 

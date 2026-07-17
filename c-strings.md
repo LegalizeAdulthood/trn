@@ -434,12 +434,11 @@ tests, generated files, or the vendored `vcpkg` tree.
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: six hits remain, including the helper declaration and
   definition.  The four call sites are inventoried below.
-- `safe_malloc`: twenty-six production hits remain in the current
-  library scan.  String-like local owners are `initialize`, `rc_to_bits`,
-  `tree_puts`, `save_options`, `parse_mouse_buttons`, `get_a_line`,
-  `g_head_buf`, and `g_art_buf`.  Non-string owners include hash tables,
-  selector page storage, regex bytecode, HTML block arrays, and pointer
-  arrays.
+- `safe_malloc`: twenty-five production hits remain in the current
+  library scan.  String-like local owners are `rc_to_bits`, `tree_puts`,
+  `save_options`, `parse_mouse_buttons`, `get_a_line`, `g_head_buf`, and
+  `g_art_buf`.  Non-string owners include hash tables, selector page
+  storage, regex bytecode, HTML block arrays, and pointer arrays.
 - `safe_realloc`: seven production hits remain.  String-like owners are
   `get_a_line`, the NNTP inline line reader, `g_head_buf`, and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
@@ -509,16 +508,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-038 - Initialization Scratch Buffer
-
-- Files: `libtrn/init.cpp`.
-- Kind: local fixed scratch buffer allocated with `safe_malloc`.
-- Function: `initialize`.
-- Change: replace the heap-allocated `tcbuf` with local fixed storage
-  such as `std::array<char, TCBUF_SIZE>`, then pass `.data()` to the
-  existing initialization APIs.  Remove the matching `std::free`.
-- Tests: build and startup-oriented tests.
 
 #### CSTR-039 - Newsrc Bitmap Scratch Line
 
