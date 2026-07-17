@@ -508,16 +508,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-081 - Trn-artchk Server Name Local Check
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: C-string comparison cleanup.
-- Function: `main`.
-- Change: compare the resolved server name with `"local"` using string
-  comparison instead of `std::strcmp`.  Keep the existing `init_nntp`
-  order and failure cleanup.
-- Tests: trn-artchk tool tests if present; otherwise build.
-
 #### CSTR-084 - KILL Thread Option Comparison
 
 - Files: `libtrn/kfile.cpp`.
