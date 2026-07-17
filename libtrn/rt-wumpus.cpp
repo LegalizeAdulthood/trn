@@ -26,6 +26,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -69,9 +70,8 @@ static bool     s_node_on_line{};
 static int      s_node_line_cnt{};
 static int      s_line_num{};
 static int      s_header_indent{};
-static char    *s_tree_lines[11]{};
-static char     s_tree_buff[128]{};
-static char    *s_str{};
+static std::array<std::string, 11> s_tree_lines{};
+static std::string                 s_tree_buff;
 
 static void     find_depth(Article *article, int depth);
 static void     cache_tree(Article *ap, int depth, char *cp);
@@ -83,9 +83,9 @@ void init_tree()
 {
     Article*thread;
 
-    while (s_max_line >= 0)             // free any previous tree data
+    while (s_max_line >= 0)
     {
-        std::free(s_tree_lines[s_max_line--]);
+        s_tree_lines[s_max_line--].clear();
     }
 
     if (!(s_tree_article = g_curr_artp) || !s_tree_article->m_subj)
@@ -147,8 +147,9 @@ void init_tree()
         s_max_line = s_first_line + g_max_tree_lines-1;
     }
 
-    s_str = s_tree_buff;                // initialize first line's data
-    *s_str++ = ' ';
+    s_tree_buff.clear();
+    s_tree_buff.reserve(128);
+    s_tree_buff += ' ';
     s_node_on_line = false;
     s_line_num = 0;
     // cache our portion of the tree
@@ -217,35 +218,35 @@ static void cache_tree(Article *ap, int depth, char *cp)
         {
             char ch;
 
-            *s_str++ = ((ap->m_flags & AF_HAS_RE) || ap->m_parent) ? '-' : ' ';
+            s_tree_buff += ((ap->m_flags & AF_HAS_RE) || ap->m_parent) ? '-' : ' ';
             if (ap == s_tree_article)
             {
-                *s_str++ = '*';
+                s_tree_buff += '*';
             }
             if (!(ap->m_flags & AF_UNREAD))
             {
-                *s_str++ = '(';
+                s_tree_buff += '(';
                 ch = ')';
             }
             else if (!g_selected_only || (ap->m_flags & AF_SEL))
             {
-                *s_str++ = '[';
+                s_tree_buff += '[';
                 ch = ']';
             }
             else
             {
-                *s_str++ = '<';
+                s_tree_buff += '<';
                 ch = '>';
             }
             if (ap == g_recent_artp && ap != s_tree_article)
             {
-                *s_str++ = '@';
+                s_tree_buff += '@';
             }
-            *s_str++ = ap->thread_letter();
-            *s_str++ = ch;
+            s_tree_buff += ap->thread_letter();
+            s_tree_buff += ch;
             if (ap->m_child1)
             {
-                *s_str++ = (ap->m_child1->m_sibling ? '+' : '-');
+                s_tree_buff += ap->m_child1->m_sibling ? '+' : '-';
             }
             if (ap->m_sibling)
             {
@@ -260,8 +261,7 @@ static void cache_tree(Article *ap, int depth, char *cp)
         }
 
         case 2:
-            *s_tree_buff = (!ap->m_child1)? ' ' :
-                (ap->m_child1->m_sibling)? '+' : '-';
+            s_tree_buff.front() = (!ap->m_child1) ? ' ' : (ap->m_child1->m_sibling) ? '+' : '-';
             break;
 
         default:
@@ -280,14 +280,11 @@ static void cache_tree(Article *ap, int depth, char *cp)
             }
             if (s_line_num >= s_first_line)
             {
-                if (s_str[-1] == ' ')
+                if (s_tree_buff.back() == ' ')
                 {
-                    s_str--;
+                    s_tree_buff.pop_back();
                 }
-                *s_str = '\0';
-                s_tree_lines[s_line_num-s_first_line]
-                        = safe_malloc(s_str-s_tree_buff + 1);
-                std::strcpy(s_tree_lines[s_line_num - s_first_line], s_tree_buff);
+                s_tree_lines[s_line_num - s_first_line] = s_tree_buff;
                 if (s_node_on_line)
                 {
                     s_node_line_cnt = s_line_num - s_first_line;
@@ -308,8 +305,7 @@ static void cache_tree(Article *ap, int depth, char *cp)
         {
             s_tree_indent[5] = ' ';
         }
-        std::strcpy(s_tree_buff, s_tree_indent+5);
-        s_str = s_tree_buff + std::strlen(s_tree_buff);
+        s_tree_buff = s_tree_indent + 5;
     }
 }
 
@@ -555,46 +551,23 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             g_term_col = wrap_at;
             // Check string for the '*' flagging our current node
             // and the '@' flagging our prior node.
-            cp = s_tree_lines[header_line.value_of()];
-            char *cp1 = std::strchr(cp, '*');
-            char *cp2 = std::strchr(cp, '@');
-            if (cp1 != nullptr)
-            {
-                *cp1 = '\0';
-            }
-            if (cp2 != nullptr)
-            {
-                *cp2 = '\0';
-            }
+            std::string_view tree_line{s_tree_lines[header_line.value_of()]};
             color_object(COLOR_TREE, true);
-            std::fputs(cp, stdout);
             // Handle standout output for '*' and '@' marked nodes, then
             // continue with the rest of the line.
-            while (cp1 || cp2)
+            for (std::size_t marker = tree_line.find_first_of("*@"); marker != std::string_view::npos;
+                 marker = tree_line.find_first_of("*@"))
             {
+                fmt::print("{}", tree_line.substr(0, marker));
+                const std::size_t marked_size = tree_line[marker] == '*' ? 3 : 1;
+                tree_line.remove_prefix(marker + 1);
                 color_object(COLOR_TREE_MARK, true);
-                if (cp1 && (!cp2 || cp1 < cp2))
-                {
-                    cp = cp1;
-                    cp1 = nullptr;
-                    *cp++ = '*';
-                    std::putchar(*cp++);
-                    std::putchar(*cp++);
-                }
-                else
-                {
-                    cp = cp2;
-                    cp2 = nullptr;
-                    *cp++ = '@';
-                }
-                std::putchar(*cp++);
-                color_pop();    // of COLOR_TREE_MARK
-                if (*cp)
-                {
-                    std::fputs(cp, stdout);
-                }
-            }// while
-            color_pop();        // of COLOR_TREE
+                fmt::print("{}", tree_line.substr(0, marked_size));
+                color_pop(); // of COLOR_TREE_MARK
+                tree_line.remove_prefix(marked_size);
+            }
+            fmt::print("{}", tree_line);
+            color_pop(); // of COLOR_TREE
         }// if
         newline();
         ++header_line;

@@ -516,15 +516,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-### CSTR-053 - Article Tree Line Storage
-
-- Files: `libtrn/rt-wumpus.cpp`.
-- Kind: static tree buffers and copied line storage.
-- Functions: `cache_tree` and `tree_puts`.
-- Change: replace `s_tree_buff` and `s_tree_lines` raw allocations with
-  owned strings.  Preserve the current visual tree output exactly.
-- Tests: add tree rendering coverage first if missing.
-
 ### CSTR-054 - Terminal Key And Choice Formatting
 
 - Files: `libtrn/terminal.cpp`.
