@@ -516,16 +516,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-### CSTR-044 - Group Description Lookup Buffer
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: `g_buf` line construction with `snprintf`, `strcat`, and
-  `fputs`.
-- Function: `DataSource::find_group_desc`.
-- Change: construct the group-description line in `std::string` and
-  append/store that string without routing through `g_buf`.
-- Tests: run `test_datasrc` before and after.
-
 ### CSTR-046 - Close Match Newsgroup Storage
 
 - Files: `libtrn/datasrc.cpp`.

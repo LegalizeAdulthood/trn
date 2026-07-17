@@ -78,7 +78,7 @@ struct DataSource
     void             close();
     bool             active_file_hash();
     std::string      find_active_group(std::string_view name, ArticleNum high);
-    const char      *find_group_desc(std::string_view group_name);
+    std::string_view find_group_desc(std::string_view group_name);
     inline NNTPFlags nntp_flags() const;
     void             nntp_server_died();
 

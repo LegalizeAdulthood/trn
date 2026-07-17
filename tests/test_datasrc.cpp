@@ -4,15 +4,18 @@
 
 #include <config/common.h>
 #include <trn/hash.h>
+#include <util/env.h>
 
 #include <test_config.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -21,6 +24,17 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+class MockNNTPConnection : public INNTPConnection
+{
+public:
+    ~MockNNTPConnection() override = default;
+
+    MOCK_METHOD(std::string, read_line, (error_code_t &), (override));
+    MOCK_METHOD(void, write_line, (const std::string &, error_code_t &), (override));
+    MOCK_METHOD(void, write, (const char *, std::size_t, error_code_t &), (override));
+    MOCK_METHOD(std::size_t, read, (char *, std::size_t, error_code_t &), (override));
+};
 
 class SourceFileOwner
 {
@@ -90,6 +104,44 @@ protected:
 
     fs::path   m_source_path;
     DataSource m_data_source{};
+};
+
+class DataSourceFindGroupDescTest : public SourceFileTest
+{
+protected:
+    void SetUp() override
+    {
+        SourceFileTest::SetUp();
+        m_old_data_source = g_data_source;
+        m_old_nntp_link = g_nntp_link;
+        m_old_net_speed = g_net_speed;
+        g_data_source = nullptr;
+        nntp_gets_clear_buffer();
+
+        m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+        m_data_source.m_flags = DF_REMOTE | DF_TMP_GROUP_DESC;
+        m_data_source.m_group_desc = (m_output_dir / "newsgroups").generic_string();
+        m_data_source.m_desc_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
+        m_data_source.m_nntp_link.connection = m_connection;
+        m_data_source.m_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_net_speed = 1;
+    }
+
+    void TearDown() override
+    {
+        m_data_source.m_desc_sf.close();
+        g_data_source = m_old_data_source;
+        g_nntp_link = m_old_nntp_link;
+        g_net_speed = m_old_net_speed;
+        nntp_gets_clear_buffer();
+        SourceFileTest::TearDown();
+    }
+
+    DataSource                                               m_data_source{};
+    DataSource                                              *m_old_data_source{};
+    NNTPLink                                                 m_old_nntp_link{};
+    int                                                      m_old_net_speed{};
+    std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
 };
 
 } // namespace
@@ -200,7 +252,7 @@ TEST_F(SourceFileTest, findGroupDescClearsMissingTemporaryGroupDescription)
     data_source.m_flags = DF_TMP_GROUP_DESC;
     data_source.m_group_desc = group_desc_path.generic_string();
 
-    EXPECT_STREQ("", data_source.find_group_desc("comp.lang.apl"));
+    EXPECT_TRUE(data_source.find_group_desc("comp.lang.apl").empty());
 
     EXPECT_TRUE(data_source.m_group_desc.empty());
     EXPECT_FALSE(data_source.m_flags & DF_TMP_GROUP_DESC);
@@ -235,4 +287,40 @@ TEST_F(DataSourceFindActiveGroupTest, updatesCachedHighWaterMark)
 
     EXPECT_EQ("comp.lang.apl 0000000042 0000000001 y\n", active_line);
     EXPECT_EQ("comp.lang.apl 0000000042 0000000001 y\n", m_data_source.m_act_sf.m_lines[0]);
+}
+
+TEST_F(DataSourceFindGroupDescTest, fetchesDescriptionFromServer)
+{
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("XGTITLE comp.lang.apl"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("282 list follows"))
+        .WillOnce(testing::Return("comp.lang.apl APL discussion"))
+        .WillOnce(testing::Return("."));
+
+    const std::string_view description = m_data_source.find_group_desc("comp.lang.apl");
+
+    EXPECT_EQ("APL discussion\n", description);
+}
+
+TEST_F(DataSourceFindGroupDescTest, returnsCachedDescription)
+{
+    const std::string_view group_name{"comp.lang.apl"};
+    ASSERT_EQ(1, m_data_source.m_desc_sf.open({}, "", nullptr));
+    (void) m_data_source.m_desc_sf.append("comp.lang.apl APL discussion\n", static_cast<int>(group_name.size()));
+
+    const std::string_view description = m_data_source.find_group_desc(group_name);
+
+    EXPECT_EQ("APL discussion\n", description);
+}
+
+TEST_F(DataSourceFindGroupDescTest, storesEmptyDescriptionForEmptyServerList)
+{
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("XGTITLE comp.lang.apl"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("282 list follows"))
+        .WillOnce(testing::Return("."));
+
+    const std::string_view description = m_data_source.find_group_desc("comp.lang.apl");
+
+    EXPECT_EQ("\n\n", description);
 }

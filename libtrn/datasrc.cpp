@@ -752,13 +752,13 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
     return {}; // no such group
 }
 
-const char *DataSource::find_group_desc(std::string_view group_name)
+std::string_view DataSource::find_group_desc(std::string_view group_name)
 {
     const int grouplen = static_cast<int>(group_name.size());
 
     if (m_group_desc.empty())
     {
-        return "";
+        return {};
     }
 
     if (!m_desc_sf.m_hp)
@@ -793,7 +793,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
                 fs::remove(m_group_desc, error);
             }
             m_group_desc.clear();
-            return "";
+            return {};
         }
         if (ret == 2 || !m_desc_sf.m_refetch_secs)
         {
@@ -803,7 +803,7 @@ const char *DataSource::find_group_desc(std::string_view group_name)
 
     if (HashDatum data = hash_fetch(m_desc_sf.m_hp, group_name); data.dat_ptr)
     {
-        return source_file_line(data)->c_str() + grouplen + 1;
+        return std::string_view{*source_file_line(data)}.substr(grouplen + 1);
     }
 
 try_xgtitle:
@@ -812,19 +812,14 @@ try_xgtitle:
         set_data_source(this);
         if (nntp_xgtitle(group_name) > 0)
         {
-            nntp_gets(g_buf, sizeof g_buf - 1); // TODO: check return value?
-            if (nntp_at_list_end(g_buf))
+            nntp_gets(g_ser_line, sizeof g_ser_line - 1); // TODO: check return value?
+            if (nntp_at_list_end(g_ser_line))
             {
-                const std::string group_name_string{group_name};
-                std::snprintf(g_buf, sizeof g_buf, "%s \n", group_name_string.c_str());
+                return m_desc_sf.append(fmt::format("{} \n", group_name), grouplen).substr(grouplen + 1);
             }
-            else
-            {
-                nntp_finish_list();
-                std::strcat(g_buf, "\n");
-            }
-            const std::string_view stored_group = m_desc_sf.append(g_buf, grouplen);
-            return stored_group.data() + grouplen + 1;
+            const std::string description_line{fmt::format("{}\n", g_ser_line)};
+            nntp_finish_list();
+            return m_desc_sf.append(description_line, grouplen).substr(grouplen + 1);
         }
         m_flags |= DF_NO_XGTITLE;
         if (m_desc_sf.m_lines.empty())
@@ -837,7 +832,7 @@ try_xgtitle:
             m_group_desc.clear();
         }
     }
-    return "";
+    return {};
 }
 
 // NOTE: This was factored from srcfile_open and srcfile_append and is
