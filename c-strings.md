@@ -517,17 +517,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-### CSTR-051 - Selector Status Message Storage
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: `g_msg` and `g_cmd_buf` construction with `strcpy`, `sprintf`,
-  `strcat`, and `strlen`.
-- Functions: selector status and prompt display helpers.
-- Change: replace one selector status helper at a time with
-  `std::string` or `fmt::format`, then pass owned text to display
-  helpers.  Do not store pointers to temporary string data.
-- Tests: add selector status coverage first if missing.
-
 ### CSTR-052 - Top-level News Source Display
 
 - Files: `libtrn/trn.cpp`.

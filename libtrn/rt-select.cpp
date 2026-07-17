@@ -37,6 +37,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
@@ -1267,13 +1269,12 @@ reinp_selector:
                 j = (g_sel_item_index > 0? g_sel_item_index : g_sel_page_item_cnt);
                 if (g_use_sel_num)
                 {
-                    std::sprintf(g_msg, "Range: %d-", j);
+                    sel_status_msg(fmt::format("Range: {}-", j));
                 }
                 else
                 {
-                    std::sprintf(g_msg, "Range: %c-", g_sel_chars[j - 1]);
+                    sel_status_msg(fmt::format("Range: {}-", g_sel_chars[j - 1]));
                 }
-                sel_status_msg(g_msg);
             }
         }
         else
@@ -1343,20 +1344,19 @@ reinp_selector:
                 {
                     j = g_sel_page_item_cnt;
                 }
-                std::sprintf(g_msg,"Range: %d-%c", j, ch);
+                sel_status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
             }
             else
             {
                 if (got_goto)
                 {
-                    std::sprintf(g_msg,"Go to number: %c", ch);
+                    sel_status_msg(fmt::format("Go to number: {}", static_cast<char>(ch)));
                 }
                 else
                 {
-                    std::sprintf(g_msg,"%c", ch);
+                    sel_status_msg(fmt::format("{}", static_cast<char>(ch)));
                 }
             }
-            sel_status_msg(g_msg);
         }
         // Consider cache_until_key() here.  The middle of typing a
         // number is a lousy time to delay, however.
@@ -1398,8 +1398,7 @@ reinp_selector:
                 {
                     j = g_sel_page_item_cnt;
                 }
-                std::sprintf(g_msg,"Range: %d- ", j);
-                sel_status_msg(g_msg);
+                sel_status_msg(fmt::format("Range: {}- ", j));
                 goto reinp_selector;
             }
             if (got_goto)
@@ -1422,8 +1421,8 @@ reinp_selector:
         if ((j < 0) || (j >= g_sel_page_item_cnt))
         {
             dingaling();
-            std::sprintf(g_msg, "No item %c%c on this page.", ch_num1, ch);
-            sel_status_msg(g_msg);
+            sel_status_msg(
+                fmt::format("No item {}{} on this page.", static_cast<char>(ch_num1), static_cast<char>(ch)));
             goto position_selector;
         }
         else if (got_goto || (g_sel_num_goto && !got_dash))
@@ -1450,8 +1449,7 @@ reinp_selector:
         if (j >= g_sel_page_item_cnt)
         {
             dingaling();
-            std::sprintf(g_msg, "No item '%c' on this page.", ch);
-            sel_status_msg(g_msg);
+            sel_status_msg(fmt::format("No item '{}' on this page.", static_cast<char>(ch)));
             goto position_selector;
         }
         else if (got_goto)
