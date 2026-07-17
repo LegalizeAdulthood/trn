@@ -12,7 +12,6 @@
 #include <trn/cache.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h> // for g_threaded_group
-#include <trn/respond.h>
 #include <trn/samain.h>
 #include <trn/samisc.h>
 #include <trn/sathread.h>
@@ -31,12 +30,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <string>
-
-static std::string s_sa_extract_dest; // use this command on an extracted file
-static bool  s_sa_extract_junk{}; // junk articles after extracting them
-
-static bool sa_extract_start();
 static void sa_art_cmd_prim(SaCommand cmd, long a);
 static int  sa_art_cmd(int multiple, SaCommand cmd, long a);
 static long sa_wrap_next_author(long a);
@@ -614,35 +607,6 @@ int sa_do_cmd()
     return 0;
 }
 
-static bool sa_extract_start()
-{
-    if (s_sa_extract_dest.empty())
-    {
-        s_sa_extract_dest = file_exp("%p");
-    }
-    s_go_bot();
-    std::printf("To directory (default %s)\n",s_sa_extract_dest.c_str());
-    *g_buf = ':';                       // cosmetic
-    if (!s_finish_cmd(nullptr))
-    {
-        return false;           // command rubbed out
-    }
-    g_s_ref_all = true;
-    // if the user typed something, copy it to the destination
-    if (g_buf[1] != '\0')
-    {
-        s_sa_extract_dest = file_exp(g_buf + 1);
-    }
-    // set a mode for this later?
-    std::printf("\nMark extracted articles as read? [yn]");
-    std::fflush(stdout);
-    get_cmd(g_buf);
-    std::printf("\n");
-    s_sa_extract_junk = *g_buf == 'y' || *g_buf == ' ' || *g_buf == '\n';
-    return true;
-}
-
-
 // sa_art_cmd primitive: actually does work on an article
 static void sa_art_cmd_prim(SaCommand cmd, long a)
 {
@@ -699,17 +663,6 @@ static void sa_art_cmd_prim(SaCommand cmd, long a)
         s_ref_status_on_page(a);
         break;
 
-    case SA_EXTRACT:
-        sa_clear_mark(a);
-        g_art = artnum;
-        *g_buf = 'e';           // fake up the extract command
-        safe_copy(g_buf+1,s_sa_extract_dest.c_str(),LINE_BUF_LEN);
-        (void)save_article();
-        if (s_sa_extract_junk)
-        {
-            one_less_art_num(artnum);
-        }
-        break;
     } // switch
 }
 

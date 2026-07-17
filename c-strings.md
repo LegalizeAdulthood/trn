@@ -463,8 +463,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-036`.
 - `libtrn/rt-util.cpp`, `compress_subj`: compresses subject display text
   in `g_buf`.  See `CSTR-031`.
-- `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
-  See `CSTR-025`.
 
 ## Current C String Function Inventory
 
@@ -518,15 +516,6 @@ Finish these before broad global-buffer work.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-### CSTR-025 - Selector Extract Command Handoff
-
-- Files: `libtrn/sacmd.cpp`, `libtrn/respond.cpp`.
-- Kind: command text faked in global `g_buf`.
-- Function: `s_art_cmd`.
-- Change: after `save_article` has a string command entry point, pass
-  the extract command text without copying into `g_buf`.
-- Tests: add selector extract coverage first.
 
 ### CSTR-051 - Selector Status Message Storage
 

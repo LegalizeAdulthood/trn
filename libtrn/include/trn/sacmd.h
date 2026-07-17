@@ -13,8 +13,7 @@ enum SaCommand
     SA_MARK = 2,
     SA_SELECT = 3,
     SA_KILL_UNMARKED = 4,
-    SA_KILL_MARKED = 5,
-    SA_EXTRACT = 6
+    SA_KILL_MARKED = 5
 };
 
 int sa_do_cmd();
