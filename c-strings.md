@@ -517,16 +517,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-### CSTR-052 - Top-level News Source Display
-
-- Files: `libtrn/trn.cpp`.
-- Kind: `g_msg` and `g_buf` construction with `strcpy`, `sprintf`,
-  `strcat`, and `strlen`.
-- Function: news source information display path.
-- Change: build each display paragraph as `std::string` with `fmt`, then
-  print it without global scratch buffers.
-- Tests: add display-output coverage first if missing.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers

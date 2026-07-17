@@ -75,6 +75,7 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <iterator>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -974,104 +975,102 @@ void check_active_refetch(bool force)
 void trn_version()
 {
     page_start();
-    std::sprintf(g_msg,
-            "Trn version: %s.\nConfigured for "
+    print_lines(fmt::format("Trn version: {}.\nConfigured for "
 #ifdef HAS_LOCAL_SPOOL
-            "both NNTP and local news access.\n",
+                            "both NNTP and local news access.\n",
 #else
-            "NNTP (plus individual local access).\n",
+                            "NNTP (plus individual local access).\n",
 #endif
-            g_patch_level.c_str());
-    print_lines(g_msg, NO_MARKING);
+                            g_patch_level)
+                    .c_str(),
+                NO_MARKING);
 
     if (g_multirc)
     {
         newline();
-        std::sprintf(g_msg,"News source group #%d:\n\n", g_multirc->m_num);
-        print_lines(g_msg, NO_MARKING);
+        print_lines(fmt::format("News source group #{}:\n\n", g_multirc->m_num).c_str(), NO_MARKING);
         for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
             if (!(rp->flags & RF_ACTIVE))
             {
                 continue;
             }
-            auto result =
-                fmt::format_to_n(g_msg, sizeof g_msg - 1, "ID {}:\nNewsrc {}.\n", rp->data_source->m_name, rp->name);
-            *result.out = '\0';
-            print_lines(g_msg, NO_MARKING);
-            if (rp->data_source->m_flags & DF_REMOTE)
+            const DataSource &data_source = *rp->data_source;
+            print_lines(fmt::format("ID {}:\nNewsrc {}.\n", data_source.m_name, rp->name).c_str(), NO_MARKING);
+            if (data_source.m_flags & DF_REMOTE)
             {
-                std::sprintf(g_msg, "News from server %s.\n", rp->data_source->m_news_id.c_str());
-                print_lines(g_msg, NO_MARKING);
-                if (rp->data_source->m_act_sf.m_fp)
+                print_lines(fmt::format("News from server {}.\n", data_source.m_news_id).c_str(), NO_MARKING);
+                std::string active_file;
+                active_file.reserve(CMD_BUF_LEN);
+                if (data_source.m_act_sf.m_fp)
                 {
-                    if (rp->data_source->m_flags & DF_TMP_ACTIVE_FILE)
+                    if (data_source.m_flags & DF_TMP_ACTIVE_FILE)
                     {
-                        std::strcpy(g_msg, "Copy of remote active file");
+                        active_file = "Copy of remote active file";
                     }
                     else
                     {
-                        std::sprintf(g_msg, "Local active file: %s", rp->data_source->m_extra_name.c_str());
+                        fmt::format_to(std::back_inserter(active_file), "Local active file: {}",
+                                       data_source.m_extra_name);
                     }
                 }
                 else
                 {
-                    std::strcpy(g_msg, "Dynamic active file");
+                    active_file = "Dynamic active file";
                 }
-                if (rp->data_source->m_act_sf.m_refetch_secs)
+                if (data_source.m_act_sf.m_refetch_secs)
                 {
-                    const std::string refetch_text = secs_to_text(rp->data_source->m_act_sf.m_refetch_secs);
+                    const std::string refetch_text = secs_to_text(data_source.m_act_sf.m_refetch_secs);
                     if (refetch_text != "never")
                     {
-                        const std::size_t               len = std::strlen(g_msg);
-                        fmt::format_to_n_result<char *> result =
-                            fmt::format_to_n(g_msg + len, sizeof g_msg - len - 1, " (refetch{} {})",
-                                             refetch_text == "missing" ? " if" : ":", refetch_text);
-                        *result.out = '\0';
+                        fmt::format_to(std::back_inserter(active_file), " (refetch{} {})",
+                                       refetch_text == "missing" ? " if" : ":", refetch_text);
                     }
                 }
-                std::strcat(g_msg, ".\n");
+                active_file += ".\n";
+                print_lines(active_file.c_str(), NO_MARKING);
             }
             else
             {
-                std::sprintf(g_msg, "News from %s.\nLocal active file %s.\n", rp->data_source->m_spool_dir.c_str(),
-                             rp->data_source->m_news_id.c_str());
+                print_lines(fmt::format("News from {}.\nLocal active file {}.\n", data_source.m_spool_dir,
+                                        data_source.m_news_id)
+                                .c_str(),
+                            NO_MARKING);
             }
-            print_lines(g_msg, NO_MARKING);
-            if (!rp->data_source->m_group_desc.empty())
+            if (!data_source.m_group_desc.empty())
             {
-                if (!rp->data_source->m_desc_sf.m_fp && rp->data_source->m_desc_sf.m_hp)
+                std::string group_desc;
+                group_desc.reserve(CMD_BUF_LEN);
+                if (!data_source.m_desc_sf.m_fp && data_source.m_desc_sf.m_hp)
                 {
-                    std::strcpy(g_msg, "Dynamic group desc. file");
+                    group_desc = "Dynamic group desc. file";
                 }
-                else if (rp->data_source->m_flags & DF_TMP_GROUP_DESC)
+                else if (data_source.m_flags & DF_TMP_GROUP_DESC)
                 {
-                    std::strcpy(g_msg, "Copy of remote group desc. file");
+                    group_desc = "Copy of remote group desc. file";
                 }
                 else
                 {
-                    std::sprintf(g_msg, "Group desc. file: %s", rp->data_source->m_group_desc.c_str());
+                    fmt::format_to(std::back_inserter(group_desc), "Group desc. file: {}", data_source.m_group_desc);
                 }
-                if (rp->data_source->m_desc_sf.m_refetch_secs)
+                if (data_source.m_desc_sf.m_refetch_secs)
                 {
-                    const std::string refetch_text = secs_to_text(rp->data_source->m_desc_sf.m_refetch_secs);
+                    const std::string refetch_text = secs_to_text(data_source.m_desc_sf.m_refetch_secs);
                     if (refetch_text != "never")
                     {
-                        const std::size_t               len = std::strlen(g_msg);
-                        fmt::format_to_n_result<char *> result =
-                            fmt::format_to_n(g_msg + len, sizeof g_msg - len - 1, " (refetch{} {})",
-                                             refetch_text == "missing" ? " if" : ":", refetch_text);
-                        *result.out = '\0';
+                        fmt::format_to(std::back_inserter(group_desc), " (refetch{} {})",
+                                       refetch_text == "missing" ? " if" : ":", refetch_text);
                     }
                 }
-                std::strcat(g_msg, ".\n");
-                print_lines(g_msg, NO_MARKING);
+                group_desc += ".\n";
+                print_lines(group_desc.c_str(), NO_MARKING);
             }
-            if (rp->data_source->m_flags & DF_TRY_OVERVIEW)
+            if (data_source.m_flags & DF_TRY_OVERVIEW)
             {
-                std::sprintf(g_msg, "Overview files from %s.\n",
-                             rp->data_source->m_over_dir.empty() ? "the server" : rp->data_source->m_over_dir.c_str());
-                print_lines(g_msg, NO_MARKING);
+                print_lines(fmt::format("Overview files from {}.\n",
+                                        data_source.m_over_dir.empty() ? "the server" : data_source.m_over_dir)
+                                .c_str(),
+                            NO_MARKING);
             }
             print_lines("\n", NO_MARKING);
         }
