@@ -434,11 +434,11 @@ tests, generated files, or the vendored `vcpkg` tree.
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: six hits remain, including the helper declaration and
   definition.  The four call sites are inventoried below.
-- `safe_malloc`: twenty-one production hits remain in the current
+- `safe_malloc`: twenty production hits remain in the current
   library scan.  String-like local owners are `parse_mouse_buttons`,
-  user-name scratch storage, `g_head_buf`, and `g_art_buf`.  Non-string
-  owners include hash tables, selector page storage, regex bytecode,
-  HTML block arrays, and pointer arrays.
+  `g_head_buf`, and `g_art_buf`.  Non-string owners include hash
+  tables, selector page storage, regex bytecode, HTML block arrays, and
+  pointer arrays.
 - `safe_realloc`: five production hits remain.  String-like owners are
   `g_head_buf` and `g_art_buf`.  Regex bytecode remains a non-string
   owner.
@@ -527,16 +527,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-050 - User Real Name Scratch
-
-- Files: `util/env.cpp`.
-- Kind: global scratch buffer and local heap buffer.
-- Function: `set_user_name`.
-- Change: build `g_real_name` with `std::string` instead of `g_buf`,
-  `strcat`, `fgets(g_buf, ...)`, and the Windows `safe_malloc` display
-  name path.  Preserve platform feature-guarded behavior.
-- Tests: environment tests.
 
 #### CSTR-051 - Posting Host Scratch
 

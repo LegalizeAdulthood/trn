@@ -32,8 +32,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <functional>
-#include <memory>
 
 std::string g_home_dir;      // login directory
 std::string g_dot_dir;       // where . files go
@@ -207,8 +207,7 @@ static void env_init2()
 //
 static bool set_user_name(char *tmpbuf)
 {
-    char* s;
-    char* c;
+    const char *s{};
 
 #ifdef HAS_GETPWENT
     passwd* pwd;
@@ -243,68 +242,72 @@ static bool set_user_name(char *tmpbuf)
         s++;
     }
 #endif
-    c = std::strchr(s, ',');
-    if (c != nullptr)
+    const char *end = s + std::strcspn(s, ",;");
+    const char *cp = s;
+    g_real_name.clear();
+    while (cp < end)
     {
-        *c = '\0';
-    }
-    c = std::strchr(s, ';');
-    if (c != nullptr)
-    {
-        *c = '\0';
-    }
-    s = cpytill(g_buf,s,'&');
-    if (*s == '&')                      // whoever thought this one up was
-    {
-        c = g_buf + std::strlen(g_buf);      // in the middle of the night
-        std::strcat(c, g_login_name.c_str()); // before the morning after
-        std::strcat(c,s+1);
-        if (std::islower(*c))
+        if (*cp == '\\' && cp + 1 < end && cp[1] == '&')
         {
-            *c = std::toupper(*c);           // gack and double gack
+            cp++;
+        }
+        else if (*cp == '&')
+        {
+            break;
+        }
+        g_real_name += *cp++;
+    }
+    if (cp < end && *cp == '&') // whoever thought this one up was
+    {
+        const std::size_t login_pos = g_real_name.size(); // in the middle of the night
+        g_real_name += g_login_name;                      // before the morning after
+        g_real_name.append(cp + 1, static_cast<std::size_t>(end - cp - 1));
+        if (login_pos < g_real_name.size() &&
+            std::islower(static_cast<unsigned char>(g_real_name[login_pos])))
+        {
+            g_real_name[login_pos] = static_cast<char>(
+                std::toupper(static_cast<unsigned char>(g_real_name[login_pos]))); // gack and double gack
         }
     }
-    g_real_name = g_buf;
 #else // !BERKELEY_NAMES
-    c = std::strchr(s, '(');
-    if (c != nullptr)
+    const char *end = s + std::strlen(s);
+    if (const char *paren = std::strchr(s, '('))
     {
-        *c = '\0';
+        end = paren;
     }
-    c = std::strchr(s, '-');
-    if (c != nullptr)
+    if (const char *hyphen = std::strchr(s, '-'); hyphen != nullptr && hyphen < end)
     {
-        s = c;
+        s = hyphen;
     }
-    g_real_name = s;
+    g_real_name.assign(s, static_cast<std::size_t>(end - s));
 #endif // !BERKELEY_NAMES
 #endif
 #ifndef PASS_NAMES
     {
         env_init2(); // Make sure g_home_dir/g_dot_dir/etc. are set.
-        std::FILE *fp = std::fopen(file_exp(FULLNAMEFILE).c_str(), "r");
-        if (fp != nullptr)
+        std::ifstream input{file_exp(FULLNAMEFILE)};
+        if (input)
         {
-            std::fgets(g_buf,sizeof g_buf,fp);
-            std::fclose(fp);
-            g_buf[std::strlen(g_buf)-1] = '\0';
-            g_real_name = g_buf;
+            std::getline(input, g_real_name);
         }
     }
 #ifdef WIN32
     if (g_login_name.empty())
     {
         DWORD size = 0;
-        GetUserNameExA(NameSamCompatible, nullptr, &size);
-        std::unique_ptr<char[]> buffer{new char[size]};
-        GetUserNameExA(NameSamCompatible, buffer.get(), &size);
-        std::string            value{buffer.get()};
-        std::string::size_type backslash = value.find_last_of('\\');
-        if (backslash != std::string::npos)
+        if (!GetUserNameExA(NameSamCompatible, nullptr, &size) && GetLastError() == ERROR_MORE_DATA)
         {
-            value = value.substr(backslash + 1);
+            std::string value(size, '\0');
+            if (GetUserNameExA(NameSamCompatible, value.data(), &size))
+            {
+                const std::string::size_type backslash = value.find_last_of('\\');
+                if (backslash != std::string::npos)
+                {
+                    value = value.substr(backslash + 1);
+                }
+                g_login_name = value.c_str();
+            }
         }
-        g_login_name = value;
     }
     if (g_real_name.empty())
     {
@@ -313,10 +316,11 @@ static bool set_user_name(char *tmpbuf)
         {
             if (GetLastError() == ERROR_MORE_DATA)
             {
-                char *buffer = safe_malloc(size);
-                GetUserNameExA(NameDisplay, buffer, &size);
-                g_real_name = buffer;
-                safe_free(buffer);
+                std::string buffer(size, '\0');
+                if (GetUserNameExA(NameDisplay, buffer.data(), &size))
+                {
+                    g_real_name = buffer.c_str();
+                }
             }
         }
     }

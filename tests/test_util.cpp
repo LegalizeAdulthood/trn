@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
 
@@ -89,6 +90,96 @@ protected:
     std::string m_old_home_dir;
 };
 
+class EnvInitTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_home_dir = g_home_dir;
+        m_old_dot_dir = g_dot_dir;
+        m_old_trn_dir = g_trn_dir;
+        m_old_lib = g_lib;
+        m_old_rn_lib = g_rn_lib;
+        m_old_tmp_dir = g_tmp_dir;
+        m_old_login_name = g_login_name;
+        m_old_real_name = g_real_name;
+        m_old_p_host_name = g_p_host_name;
+        m_old_local_host = g_local_host;
+        m_old_net_speed = g_net_speed;
+
+        g_home_dir.clear();
+        g_dot_dir.clear();
+        g_trn_dir.clear();
+        g_lib.clear();
+        g_rn_lib.clear();
+        g_tmp_dir.clear();
+        g_login_name.clear();
+        g_real_name.clear();
+        g_p_host_name.clear();
+        g_local_host.clear();
+        g_net_speed = 20;
+
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+        m_root = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+        m_home = m_root / "home";
+        m_tmp = m_root / "tmp";
+        m_trn = m_root / "trn";
+
+        std::error_code error;
+        fs::remove_all(m_root, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_home, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_tmp, error);
+        ASSERT_FALSE(error) << error.message();
+    }
+
+    void TearDown() override
+    {
+        std::error_code error;
+        fs::remove_all(m_root, error);
+
+        g_home_dir = m_old_home_dir;
+        g_dot_dir = m_old_dot_dir;
+        g_trn_dir = m_old_trn_dir;
+        g_lib = m_old_lib;
+        g_rn_lib = m_old_rn_lib;
+        g_tmp_dir = m_old_tmp_dir;
+        g_login_name = m_old_login_name;
+        g_real_name = m_old_real_name;
+        g_p_host_name = m_old_p_host_name;
+        g_local_host = m_old_local_host;
+        g_net_speed = m_old_net_speed;
+    }
+
+    void expect_login_environment()
+    {
+        m_env.expect_no_envar("USER");
+        m_env.expect_no_envar("LOGNAME");
+
+#ifdef MSDOS
+        m_env.expect_env("USERNAME", "casey");
+#endif
+    }
+
+    trn::testing::MockEnvironment m_env;
+    fs::path                      m_root;
+    fs::path                      m_home;
+    fs::path                      m_tmp;
+    fs::path                      m_trn;
+    std::string                   m_old_home_dir;
+    std::string                   m_old_dot_dir;
+    std::string                   m_old_trn_dir;
+    std::string                   m_old_lib;
+    std::string                   m_old_rn_lib;
+    std::string                   m_old_tmp_dir;
+    std::string                   m_old_login_name;
+    std::string                   m_old_real_name;
+    std::string                   m_old_p_host_name;
+    std::string                   m_old_local_host;
+    int                           m_old_net_speed{};
+};
+
 bool ends_with(std::string_view text, std::string_view suffix)
 {
     return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
@@ -135,6 +226,28 @@ TEST_F(FileExpansionTest, expandsEnvironmentVariable)
     env.expect_env("ARTICLE", "C:/articles");
 
     EXPECT_EQ("C:/articles/current", file_exp("$ARTICLE/current"));
+}
+
+TEST_F(EnvInitTest, readsRealNameFromFullnameFile)
+{
+    std::ofstream{m_home / ".fullname"} << "Casey Writer\n";
+    std::ofstream{m_home / "fullname"} << "Casey Writer\n";
+
+    const std::string home = m_home.generic_string();
+    const std::string tmp = m_tmp.generic_string();
+    const std::string trn = m_trn.generic_string();
+    m_env.expect_env("HOME", home.c_str());
+    m_env.expect_env("TMPDIR", tmp.c_str());
+    expect_login_environment();
+    m_env.expect_env("DOTDIR", home.c_str());
+    m_env.expect_env("TRNDIR", trn.c_str());
+    m_env.expect_env("NETSPEED", "5");
+
+    std::string tcbuf(TCBUF_SIZE, '\0');
+
+    (void) env_init(tcbuf.data(), true);
+
+    EXPECT_EQ("Casey Writer", g_real_name);
 }
 
 TEST(SecsToTextTest, returnsSentinelText)
