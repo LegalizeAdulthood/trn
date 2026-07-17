@@ -242,7 +242,6 @@ SaveResult save_article()
 
             // Scan subject for filename and part number information
             std::string filename = decode_subject(g_art, &part, &total);
-            char       *filename_ptr = filename.empty() ? nullptr : filename.data();
             if (partOpt)
             {
                 part = partOpt;
@@ -266,7 +265,7 @@ SaveResult save_article()
                     decode_type = 1;
                     break;
                 }
-                if (uue_prescan(g_art_line, &filename_ptr, &part, &total))
+                if (uue_prescan(g_art_line, filename, &part, &total))
                 {
                     g_save_from = g_art_pos;
                     seek_art(g_save_from);
@@ -291,9 +290,9 @@ SaveResult save_article()
                 std::printf("Extracting uuencoded file into %s:\n", c);
                 term_down(1);
                 g_mime_section->m_type = IMAGE_MIME;
-                if (filename_ptr)
+                if (!filename.empty())
                 {
-                    g_mime_section->m_filename = filename_ptr;
+                    g_mime_section->m_filename = filename;
                 }
                 else
                 {
@@ -610,22 +609,21 @@ SaveResult view_article()
 
         // Scan subject for filename and part number information
         std::string filename = decode_subject(g_art, &part, &total);
-        char       *filename_ptr = filename.empty() ? nullptr : filename.data();
         for (g_art_pos = g_save_from; read_art(g_art_line, sizeof g_art_line) != nullptr; g_art_pos = tell_art())
         {
             if (*g_art_line <= ' ')
             {
                 continue; // Ignore empty or initially-whitespace lines
             }
-            if (uue_prescan(g_art_line, &filename_ptr, &part, &total))
+            if (uue_prescan(g_art_line, filename, &part, &total))
             {
                 MimeCapEntry *mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
                 g_save_from = g_art_pos;
                 seek_art(g_save_from);
                 g_mime_section->m_type = UNHANDLED_MIME;
-                if (filename_ptr)
+                if (!filename.empty())
                 {
-                    g_mime_section->m_filename = filename_ptr;
+                    g_mime_section->m_filename = filename;
                 }
                 else
                 {

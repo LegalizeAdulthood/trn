@@ -8,6 +8,7 @@
 #include <trn/decode.h>
 
 #include <cstdio>
+#include <string>
 #include <string_view>
 
 // Length of a normal uuencoded line, including newline
@@ -16,7 +17,7 @@ enum
     UU_LENGTH = 62
 };
 
-int         uue_prescan(std::string_view text, char **filenamep, int *partp, int *totalp);
+int         uue_prescan(std::string_view text, std::string &filename, int *partp, int *totalp);
 DecodeState uudecode(std::FILE *ifp, DecodeState state);
 
 #endif

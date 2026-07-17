@@ -516,16 +516,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-### CSTR-032 - UUDecode Prescan Message
-
-- Files: `libtrn/uudecode.cpp`, `libtrn/respond.cpp`, and
-  `libtrn/include/trn/uudecode.h`.
-- Kind: filename output through a `char **` backed by global `g_msg`.
-- Functions: `uue_prescan` and its two direct callers.
-- Change: write filename metadata to caller-owned `std::string` storage
-  instead of copying it into `g_msg`.
-- Tests: run UUE prescan coverage before and after.
-
 ### CSTR-043 - Active Group Lookup Buffer
 
 - Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.

@@ -11,8 +11,6 @@
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 
-#include <fmt/format.h>
-
 #include <algorithm>
 #include <cctype>
 #include <charconv>
@@ -22,7 +20,7 @@
 
 static void uudecode_line(char *line, std::FILE *ofp);
 
-int uue_prescan(std::string_view text, char **filenamep, int *partp, int *totalp)
+int uue_prescan(std::string_view text, std::string &filename, int *partp, int *totalp)
 {
     const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)) != 0; };
     const auto starts_with = [](std::string_view value, std::string_view prefix)
@@ -46,19 +44,14 @@ int uue_prescan(std::string_view text, char **filenamep, int *partp, int *totalp
             std::from_chars(value.data() + offset, value.data() + value.size(), number)};
         return result.ec == std::errc{} ? static_cast<std::size_t>(result.ptr - value.data()) : std::string_view::npos;
     };
-    const auto store_filename = [filenamep](std::string_view filename)
-    {
-        char *end = fmt::format_to_n(g_msg, CMD_BUF_LEN - 1, "{}", filename).out;
-        *end = '\0';
-        *filenamep = g_msg;
-    };
+    const auto store_filename = [&filename](std::string_view value) { filename.assign(value); };
 
     if (starts_with(text, "begin ") && text.size() > 9 && is_digit(text[6]) && is_digit(text[7]) && is_digit(text[8]) &&
         (text[9] == ' ' || (text.size() > 10 && text[6] == '0' && is_digit(text[9]) && text[10] == ' ')))
     {
         if (*partp == -1)
         {
-            *filenamep = nullptr;
+            filename.clear();
             *partp = 1;
             *totalp = 0;
         }
@@ -204,7 +197,7 @@ int uue_prescan(std::string_view text, char **filenamep, int *partp, int *totalp
         *totalp = tmptotal;
         return 1;
     }
-    if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp &&
+    if (!filename.empty() && *partp > 0 && *totalp > 0 && *partp <= *totalp &&
         (starts_with(text, "BEGIN") || starts_with(text, "--- BEGIN ---") ||
          (!text.empty() && text[0] == 'M' && text.size() == UU_LENGTH)))
     {
