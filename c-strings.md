@@ -505,16 +505,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-059 - Decode Bad Filename View
-
-- Files: `libtrn/decode.cpp`.
-- Kind: read-only filename validation.
-- Function: `bad_filename`.
-- Change: take `std::string_view`, use view length and direct
-  comparisons, and keep the existing `x` fallback in
-  `decode_fix_filename`.
-- Tests: decode filename tests.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts

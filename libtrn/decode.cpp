@@ -39,7 +39,7 @@ namespace fs = std::filesystem;
 
 std::string g_decode_filename;
 
-static bool bad_filename(const char *filename);
+static bool bad_filename(std::string_view filename);
 static DecodeFunc decode_function(MimeEncoding encoding);
 static std::string decode_mkdir(std::string_view filename);
 static void        decode_rmdir(std::string_view dir);
@@ -68,7 +68,7 @@ std::string decode_fix_filename(std::string_view text)
             filename.push_back(ch);
         }
     }
-    if (filename.empty() || bad_filename(filename.c_str()))
+    if (filename.empty() || bad_filename(filename))
     {
         filename = "x";
     }
@@ -76,32 +76,31 @@ std::string decode_fix_filename(std::string_view text)
 }
 
 // Returns true if "filename" is a bad choice
-static bool bad_filename(const char *filename)
+static bool bad_filename(std::string_view filename)
 {
-    int len = std::strlen(filename);
 #ifdef MSDOS
-    if (len == 3)
+    if (filename.size() == 3)
     {
-        if (string_case_equal(filename, "aux") || string_case_equal(filename, "con") //
-            || string_case_equal(filename, "nul") || string_case_equal(filename, "prn"))
+        if (string_case_equal(filename.data(), "aux", 3) || string_case_equal(filename.data(), "con", 3) //
+            || string_case_equal(filename.data(), "nul", 3) || string_case_equal(filename.data(), "prn", 3))
         {
             return true;
         }
     }
-    else if (len == 4)
+    else if (filename.size() == 4)
     {
-        if (string_case_equal(filename, "com1") || string_case_equal(filename, "com2")    //
-            || string_case_equal(filename, "com3") || string_case_equal(filename, "com4") //
-            || string_case_equal(filename, "lpt1") || string_case_equal(filename, "lpt2") //
-            || string_case_equal(filename, "lpt3"))
+        if (string_case_equal(filename.data(), "com1", 4) || string_case_equal(filename.data(), "com2", 4)    //
+            || string_case_equal(filename.data(), "com3", 4) || string_case_equal(filename.data(), "com4", 4) //
+            || string_case_equal(filename.data(), "lpt1", 4) || string_case_equal(filename.data(), "lpt2", 4) //
+            || string_case_equal(filename.data(), "lpt3", 4))
         {
             return true;
         }
     }
 #else
-    if (len <= 2)
+    if (filename.size() <= 2 && !filename.empty())
     {
-        if (*filename == '.' && (*filename == '\0' || *filename == '.'))
+        if (filename.front() == '.')
         {
             return true;
         }
