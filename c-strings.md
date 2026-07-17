@@ -483,8 +483,8 @@ calls in production code.
 - Copy and concatenation: `strcpy` 101, `strncpy` 5, `strcat` 12.
 - Comparison: `strcmp` 12, `strncmp` 26.
 - Search and length: `strchr` 108, `strrchr` 14, `strstr` 2,
-  `strlen` 124.
-- Formatting into C buffers: `sprintf` 127, `snprintf` 1.
+  `strlen` 123.
+- Formatting into C buffers: `sprintf` 126, `snprintf` 1.
 - C text I/O roots: `fgets` 33, `fputs` 198, `printf` 494,
   `fprintf` 37.
 - Character byte operations: `memcpy` 7, `memset` 6, `memcmp` 1.
@@ -521,15 +521,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-017 - HTTP Fetch Buffers
-
-- Files: `libtrn/url.cpp`.
-- Kind: shared static request and read buffer.
-- Function: `fetch_http`.
-- Change: use an owned request string for `GET`, and a local byte/string
-  buffer for socket reads.  Do not use shared `s_url_buf`.
-- Tests: add or run URL fetch tests with a fake connection if available.
 
 ### CSTR-018 - FTP Fetch Command Storage
 

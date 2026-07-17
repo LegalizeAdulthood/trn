@@ -17,6 +17,7 @@
 #include <boost/asio.hpp>
 #include <fmt/format.h>
 
+#include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -27,8 +28,6 @@
 namespace asio = boost::asio;
 using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code_t = boost::system::error_code;
-
-static char s_url_buf[1030];
 
 struct UrlParts
 {
@@ -66,10 +65,9 @@ static bool fetch_http(const char *host, int port, const char *path, const char 
         return false;
     }
 
-    // XXX length check
     // XXX later consider using HTTP/1.0 format (and user-agent)
-    std::sprintf(s_url_buf, "GET %s\r\n", path);
-    asio::write(socket, asio::buffer(s_url_buf, std::strlen(s_url_buf)), ec);
+    const std::string request = fmt::format("GET {}\r\n", path);
+    asio::write(socket, asio::buffer(request), ec);
     if (ec)
     {
         return false;
@@ -81,9 +79,10 @@ static bool fetch_http(const char *host, int port, const char *path, const char 
         std::printf("\nURL output file could not be opened.\n");
         return false;
     }
+    std::array<char, 1030> read_buffer;
     while (true)
     {
-        size_t len = read(socket, asio::buffer(s_url_buf, sizeof(s_url_buf)), ec);
+        size_t len = read(socket, asio::buffer(read_buffer), ec);
         if (ec != asio::error::eof)
         {
             std::printf("\nError: reading URL reply\n");
@@ -93,7 +92,7 @@ static bool fetch_http(const char *host, int port, const char *path, const char 
         {
             break;      // no data, end connection
         }
-        std::fwrite(s_url_buf,1,len,fp_out);
+        std::fwrite(read_buffer.data(), 1, len, fp_out);
     }
     std::fclose(fp_out);
     return true;
