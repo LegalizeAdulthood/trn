@@ -434,11 +434,11 @@ tests, generated files, or the vendored `vcpkg` tree.
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: six hits remain, including the helper declaration and
   definition.  The four call sites are inventoried below.
-- `safe_malloc`: twenty-two production hits remain in the current
-  library scan.  String-like local owners are `save_options`,
-  `parse_mouse_buttons`, user-name scratch storage, `g_head_buf`, and
-  `g_art_buf`.  Non-string owners include hash tables, selector page
-  storage, regex bytecode, HTML block arrays, and pointer arrays.
+- `safe_malloc`: twenty-one production hits remain in the current
+  library scan.  String-like local owners are `parse_mouse_buttons`,
+  user-name scratch storage, `g_head_buf`, and `g_art_buf`.  Non-string
+  owners include hash tables, selector page storage, regex bytecode,
+  HTML block arrays, and pointer arrays.
 - `safe_realloc`: five production hits remain.  String-like owners are
   `g_head_buf` and `g_art_buf`.  Regex bytecode remains a non-string
   owner.
@@ -527,16 +527,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-049 - Option File Contents Buffer
-
-- Files: `libtrn/opt.cpp`.
-- Kind: owned raw file buffer.
-- Function: `save_options`.
-- Change: replace `safe_malloc`/`safe_free` with owned `std::string`
-  file contents, using `data()` only for local parsing.  Consider the
-  existing `file_contents` helper if the current text behavior matches.
-- Tests: option save tests.
 
 #### CSTR-050 - User Real Name Scratch
 

@@ -59,6 +59,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -829,7 +831,7 @@ void apply_global_option(OptionIndex num, const char *s)
 
 void save_options(const char *filename)
 {
-    char* filebuf = nullptr;
+    std::string filebuf;
     char* line = nullptr;
     static bool first_time = true;
     const fs::path filename_path{filename};
@@ -844,23 +846,17 @@ void save_options(const char *filename)
         std::printf(g_cant_create,new_filename.string().c_str());
         return;
     }
-    int fd_in = open(filename_path.string().c_str(), 0);
-    if (fd_in >= 0)
+    std::ifstream input{filename_path};
+    const bool had_existing_file = input.good();
+    if (had_existing_file)
     {
+        filebuf.assign(std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{});
+        input.close();
         char* cp;
         char* nlp = nullptr;
         char* comments = nullptr;
-        stat_t opt_stat{};
-        fstat(fd_in,&opt_stat);
-        if (opt_stat.st_size)
-        {
-            filebuf = safe_malloc((MemorySize)opt_stat.st_size+2);
-            int len = read(fd_in, filebuf, (int)opt_stat.st_size);
-            filebuf[len] = '\0';
-        }
-        close(fd_in);
 
-        for (line = filebuf; line && *line; line = nlp)
+        for (line = filebuf.empty() ? nullptr : filebuf.data(); line && *line; line = nlp)
         {
             cp = line;
             nlp = std::strchr(cp, '\n');
@@ -957,12 +953,10 @@ void save_options(const char *filename)
     }
     std::fclose(fp_out);
 
-    safe_free(filebuf);
-
     std::error_code error;
     if (first_time)
     {
-        if (fd_in >= 0)
+        if (had_existing_file)
         {
             fs::remove(old_filename, error);
             fs::rename(filename_path, old_filename, error);

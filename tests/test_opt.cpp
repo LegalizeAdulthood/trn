@@ -3,6 +3,9 @@
 
 #include <trn/opt.h>
 
+#include <file_contents.h>
+
+#include <trn/OptionCatalog.h>
 #include <trn/respond.h>
 #include <trn/trn.h>
 #include <util/env.h>
@@ -12,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <system_error>
 
@@ -73,6 +77,42 @@ protected:
     bool        m_old_verbose{};
 };
 
+class SaveOptionsTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_def_vals = g_option_def_vals;
+        m_old_saved_vals = g_option_saved_vals;
+
+        const OptionCatalog catalog;
+        g_option_def_vals = OptionValueList(static_cast<std::size_t>(catalog.option_limit()));
+        g_option_saved_vals = OptionValueList(static_cast<std::size_t>(catalog.option_limit()));
+
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+        m_root = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+
+        std::error_code error;
+        fs::remove_all(m_root, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_root, error);
+        ASSERT_FALSE(error) << error.message();
+    }
+
+    void TearDown() override
+    {
+        std::error_code error;
+        fs::remove_all(m_root, error);
+
+        g_option_def_vals = m_old_def_vals;
+        g_option_saved_vals = m_old_saved_vals;
+    }
+
+    fs::path        m_root;
+    OptionValueList m_old_def_vals;
+    OptionValueList m_old_saved_vals;
+};
+
 } // namespace
 
 TEST_F(CwdCheckTest, defaultsEmptySaveDirectoryToHomeNews)
@@ -95,4 +135,29 @@ TEST_F(CwdCheckTest, expandsConfiguredSaveDirectoryBeforeCreatingIt)
 
     EXPECT_TRUE(fs::is_directory(save_dir));
     expect_current_save_dir(save_dir);
+}
+
+TEST_F(SaveOptionsTest, preservesNonOptionTextWhenReplacingOptionsSection)
+{
+    const fs::path path = m_root / "trnrc";
+    std::ofstream{path} << "# before\n"
+                        << "[environment]\n"
+                        << "TERM = xterm\n"
+                        << "\n"
+                        << "[options]\n"
+                        << "# old option comment\n"
+                        << "Bogus Option = old\n"
+                        << "# keep this note\n"
+                        << "\n"
+                        << "[extra]\n"
+                        << "value = yes\n";
+
+    save_options(path.string().c_str());
+
+    const std::string output = file_contents(path);
+
+    EXPECT_NE(std::string::npos, output.find("# before\n[environment]\nTERM = xterm\n\n[options]\n"));
+    EXPECT_EQ(std::string::npos, output.find("# old option comment"));
+    EXPECT_EQ(std::string::npos, output.find("Bogus Option = old"));
+    EXPECT_NE(std::string::npos, output.find("# keep this note\n\n[extra]\nvalue = yes\n"));
 }
