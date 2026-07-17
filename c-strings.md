@@ -459,8 +459,8 @@ roots.  Keep each one visible until the owning storage or API changes.
   `CSTR-031`.
 - `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
   See `CSTR-029`.
-- `libtrn/ngstuff.cpp`, `switcheroo`: copies `g_buf` into a macro
-  scratch buffer.  See `CSTR-028`.
+- `libtrn/ngstuff.cpp`, `num_num`: copies `g_buf` into mutable numeric
+  range parsing storage.  See `CSTR-055`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
 - `libtrn/respond.cpp`, `save_article`: four save, pipe, and command
@@ -508,6 +508,16 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+### CSTR-055 - Numeric Range Parsing Storage
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: local fixed mutable parsing copy.
+- Function: `num_num`.
+- Change: replace `tmpbuf` with owned string storage reserved to the
+  prior fixed capacity.  Keep the parser mutable until its logic is
+  modernized.
+- Tests: add numeric range command coverage first.
+
 ### Tier 1 - Helper And Parser Foundations
 
 These slices change lower-level helper, parser, or storage contracts
@@ -517,15 +527,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-028 - Switcheroo Macro Scratch
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: fixed macro and current-directory buffers.
-- Function: `switcheroo`.
-- Change: replace the saved current directory with filesystem path
-  storage.  Leave `mac_line` output buffer until that API is changed.
-- Tests: add switch command directory coverage first.
 
 ### CSTR-032 - UUDecode Prescan Message
 

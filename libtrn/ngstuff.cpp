@@ -162,11 +162,17 @@ bool switcheroo()
     else
     {
         bool do_cd = in_string(g_buf, "-d", true) != nullptr;
-        char where_am_i[1024];
+        fs::path where_am_i;
 
         if (do_cd)
         {
-            trn_getwd(where_am_i, sizeof(where_am_i));
+            std::error_code error;
+            where_am_i = fs::current_path(error);
+            if (error)
+            {
+                fmt::print("Cannot determine current working directory!\n");
+                finalize(1);
+            }
         }
         if (g_buf[1] == '-' || g_buf[1] == '+')
         {
@@ -188,7 +194,7 @@ bool switcheroo()
             cwd_check();
             if (change_dir(where_am_i))                // -d does chdirs
             {
-                std::printf(g_no_cd,where_am_i);
+                std::printf(g_no_cd,where_am_i.generic_string().c_str());
                 sig_catcher(0);
             }
         }
