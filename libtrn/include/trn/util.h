@@ -54,7 +54,6 @@ char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp);
 bool  make_dir(const char *dirname, MakeDirNameType nametype);
 void  not_incl(std::string_view feature);
-void  grow_str(char **strptr, int *curlen, int newlen);
 void  set_def(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
 void safe_link(const char *old_name, const char *new_name);

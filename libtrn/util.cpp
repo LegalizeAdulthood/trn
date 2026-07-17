@@ -416,24 +416,6 @@ void not_incl(std::string_view feature)
                 feature.empty() ? "" : feature.data());
 }
 
-// grow a static string to at least a certain length
-
-void grow_str(char **strptr, int *curlen, int newlen)
-{
-    if (newlen > *curlen)               // need more room?
-    {
-        if (*curlen)
-        {
-            *strptr = safe_realloc(*strptr,(MemorySize)newlen);
-        }
-        else
-        {
-            *strptr = safe_malloc((MemorySize)newlen);
-        }
-        *curlen = newlen;
-    }
-}
-
 void set_def(char *buffer, const char *dflt)
 {
     g_s_default_cmd = false;
