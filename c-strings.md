@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 25 hits remain, including the helper declaration and
-  definition.  The 23 call sites are inventoried below.
+- `safe_copy`: 23 hits remain, including the helper declaration and
+  definition.  The 21 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -449,8 +449,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 25 `safe_copy` hits: the helper definition, the
-helper declaration, and 23 call sites.  The call sites are still audit
+The current tree has 23 `safe_copy` hits: the helper definition, the
+helper declaration, and 21 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -468,8 +468,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   scratch buffer.  See `CSTR-028`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
-- `libtrn/rcln.cpp`, `NewsgroupData::check_expired`: patches
-  `m_rc_line` through raw mutable storage.  See `CSTR-011`.
 - `libtrn/respond.cpp`, `save_article`: four save, pipe, and command
   copies remain.  See `CSTR-020` and `CSTR-021`.
 - `libtrn/rt-util.cpp`, `compress_subj`: compresses subject display text
@@ -484,11 +482,11 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 105, `strncpy` 5, `strcat` 13.
+- Copy and concatenation: `strcpy` 102, `strncpy` 5, `strcat` 13.
 - Comparison: `strcmp` 12, `strncmp` 26.
 - Search and length: `strchr` 108, `strrchr` 14, `strstr` 2,
-  `strlen` 128.
-- Formatting into C buffers: `sprintf` 128, `snprintf` 1.
+  `strlen` 126.
+- Formatting into C buffers: `sprintf` 127, `snprintf` 1.
 - C text I/O roots: `fgets` 33, `fputs` 198, `printf` 494,
   `fprintf` 37.
 - Character byte operations: `memcpy` 7, `memset` 6, `memcmp` 1.
@@ -525,15 +523,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-011 - Expired Article Newsrc Rewrite
-
-- Files: `libtrn/rcln.cpp`.
-- Kind: `std::string` storage patched through raw pointers.
-- Function: `NewsgroupData::check_expired`.
-- Change: construct the replacement `m_rc_line` with string operations
-  instead of `safe_malloc`, `strcpy`, and `safe_copy`.
-- Tests: add newsrc rewrite coverage first if not already present.
 
 ### CSTR-015 - MIME Description Output
 

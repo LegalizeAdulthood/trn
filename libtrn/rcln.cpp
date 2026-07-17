@@ -15,6 +15,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -560,9 +562,6 @@ void NewsgroupData::check_expired(ArticleNum first)
     char   *s;
     ArticleNum num;
     ArticleNum lastnum{};
-    char   * mbuf;
-    char* cp;
-    int len;
 
     if (first <= 1)
     {
@@ -585,80 +584,23 @@ void NewsgroupData::check_expired(ArticleNum first)
         }
         lastnum = num;
     }
-    len = std::strlen(s);
+    const std::size_t len = std::strlen(s);
     if (len && s[-1] == '-')                    // landed in a range?
     {
         if (lastnum != 1)
         {
-            if (3+len <= (int)std::strlen(rc_numbers_c_str()))
-            {
-                mbuf = rc_line_data();
-            }
-            else
-            {
-                mbuf = safe_malloc((MemorySize)(m_num_offset+3+len+1));
-                std::strcpy(mbuf, rc_line_c_str());
-            }
-            cp = mbuf + m_num_offset;
-            *cp++ = ' ';
-            *cp++ = '1';
-            *cp++ = '-';
-            safe_copy(cp, s, len+1);
-            const auto rc_line_len = static_cast<std::size_t>(m_num_offset + 3 + len);
-            if (rc_line_data() == mbuf)
-            {
-                m_rc_line.resize(rc_line_len);
-            }
-            else
-            {
-                m_rc_line.assign(mbuf, rc_line_len);
-                std::free(mbuf);
-            }
+            m_rc_line =
+                fmt::format("{} 1-{}", std::string_view{m_rc_line.data(), static_cast<std::size_t>(m_num_offset)},
+                            std::string_view{s, len});
             m_rc->flags |= RF_RC_CHANGED;
         }
     }
     else
     {
         // s now points to what should follow the first range
-        char numbuf[32];
-
-        std::sprintf(numbuf," 1-%ld",(long)(first.value_of() - (lastnum != first)));
-        int nlen = std::strlen(numbuf) + (len != 0);
-
-        char *rc_line = rc_line_data();
-        if (s - rc_line >= m_num_offset + nlen)
-        {
-            mbuf = rc_line;
-        }
-        else
-        {
-            mbuf = safe_malloc((MemorySize)(m_num_offset+nlen+len+1));
-            std::strcpy(mbuf,rc_line_c_str());
-        }
-
-        cp = mbuf + m_num_offset;
-        std::strcpy(cp, numbuf);
-        cp += nlen;
-
-        if (len)
-        {
-            cp[-1] = ',';
-            if (cp != s)
-            {
-                safe_copy(cp, s, len + 1);
-            }
-        }
-
-        const auto rc_line_len = static_cast<std::size_t>(cp - mbuf + len);
-        if (rc_line_data() == mbuf)
-        {
-            m_rc_line.resize(rc_line_len);
-        }
-        else
-        {
-            m_rc_line.assign(mbuf, rc_line_len);
-            std::free(mbuf);
-        }
+        m_rc_line =
+            fmt::format("{} 1-{}{}{}", std::string_view{m_rc_line.data(), static_cast<std::size_t>(m_num_offset)},
+                        first.value_of() - (lastnum != first), len ? "," : "", std::string_view{s, len});
         m_rc->flags |= RF_RC_CHANGED;
     }
 

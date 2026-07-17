@@ -39,6 +39,7 @@ add_executable(trn-test
     test_OptionCatalog.cpp
     test_OptionDraft.cpp
     test_RcGroupConfig.cpp
+    test_rcln.cpp
     test_rcstuff.cpp
     test_rthread.cpp
     test_rt-ov.cpp
