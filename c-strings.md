@@ -478,10 +478,10 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 101, `strncpy` 5, `strcat` 12.
+- Copy and concatenation: `strcpy` 101, `strncpy` 5, `strcat` 11.
 - Comparison: `strcmp` 12, `strncmp` 26.
 - Search and length: `strchr` 107, `strrchr` 13, `strstr` 2,
-  `strlen` 122.
+  `strlen` 120.
 - Formatting into C buffers: `sprintf` 125, `snprintf` 1.
 - C text I/O roots: `fgets` 33, `fputs` 198, `printf` 490,
   `fprintf` 37.
@@ -519,16 +519,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-019 - Decode Piece Directory Storage
-
-- Files: `libtrn/decode.cpp`.
-- Kind: static returned path buffer and mutable directory parameter.
-- Functions: `decode_mkdir`, `decode_rmdir`, and `decode_piece`.
-- Change: make `decode_mkdir` return `std::string` with empty string as
-  failure.  Make `decode_rmdir` accept owned or view path text.  Keep the
-  string alive in `decode_piece`.
-- Tests: add decode-piece directory behavior coverage first if missing.
 
 ### CSTR-026 - Article FROM Display Buffer
 
