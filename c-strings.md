@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 27 hits remain, including the helper declaration and
-  definition.  The 25 call sites are inventoried below.
+- `safe_copy`: 26 hits remain, including the helper declaration and
+  definition.  The 24 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -449,8 +449,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 27 `safe_copy` hits: the helper definition, the
-helper declaration, and 25 call sites.  The call sites are still audit
+The current tree has 26 `safe_copy` hits: the helper definition, the
+helper declaration, and 24 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -480,9 +480,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-025`.
 - `libtrn/url.cpp`, `fetch_ftp`: three static path and identity copies
   remain.  See `CSTR-018`.
-- `libtrn/uudecode.cpp`, `uue_prescan`: copies part metadata into
-  `g_msg`.  See `CSTR-032`.
-
 ## Current C String Function Inventory
 
 The current scan covers `libtrn`, `util`, and `config` source and public
@@ -490,8 +487,8 @@ headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
 - Copy and concatenation: `strcpy` 105, `strncpy` 5, `strcat` 13.
-- Comparison: `strcmp` 12, `strncmp` 40.
-- Search and length: `strchr` 114, `strrchr` 14, `strstr` 2,
+- Comparison: `strcmp` 12, `strncmp` 26.
+- Search and length: `strchr` 108, `strrchr` 14, `strstr` 2,
   `strlen` 128.
 - Formatting into C buffers: `sprintf` 128, `snprintf` 1.
 - C text I/O roots: `fgets` 33, `fputs` 198, `printf` 494,
@@ -525,16 +522,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-### CSTR-050 - UUDecode Prescan Parser Views
-
-- Files: `libtrn/uudecode.cpp`, `libtrn/include/trn/uudecode.h`.
-- Kind: prefix parsing with `strncmp`, `strchr`, and `strlen`.
-- Function: `uue_prescan`.
-- Change: parse candidate subject/header lines with string views while
-  preserving output parameters for filename, part, and total until the
-  caller API is modernized.
-- Tests: add or run UUE prescan tests before and after.
 
 ### Tier 2 - Owned Storage And Local Callers
 
@@ -619,12 +606,13 @@ Finish these before broad global-buffer work.
 
 ### CSTR-032 - UUDecode Prescan Message
 
-- Files: `libtrn/uudecode.cpp`.
-- Kind: writes part metadata into global `g_msg`.
-- Function: `uue_prescan`.
-- Change: return the message text or write it to owned status storage
-  instead of copying into `g_msg`.
-- Tests: add UUE prescan coverage first.
+- Files: `libtrn/uudecode.cpp`, `libtrn/respond.cpp`, and
+  `libtrn/include/trn/uudecode.h`.
+- Kind: filename output through a `char **` backed by global `g_msg`.
+- Functions: `uue_prescan` and its two direct callers.
+- Change: write filename metadata to caller-owned `std::string` storage
+  instead of copying it into `g_msg`.
+- Tests: run UUE prescan coverage before and after.
 
 ### CSTR-043 - Active Group Lookup Buffer
 

@@ -1,32 +1,60 @@
 /* uudecode.cpp
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/uudecode.h>
 
 #include <config/common.h>
-#include <config/string_case_compare.h>
 #include <trn/artio.h>
 #include <trn/mime.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
-#include <util/util2.h>
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 static void uudecode_line(char *line, std::FILE *ofp);
 
-int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
+int uue_prescan(std::string_view text, char **filenamep, int *partp, int *totalp)
 {
-    if (!std::strncmp(bp, "begin ", 6)                //
-        && std::isdigit(bp[6]) && std::isdigit(bp[7]) //
-        && std::isdigit(bp[8]) &&                     //
-        (bp[9] == ' ' ||                              //
-         (bp[6] == '0' && std::isdigit(bp[9]) && bp[10] == ' ')))
+    const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)) != 0; };
+    const auto starts_with = [](std::string_view value, std::string_view prefix)
+    { return value.substr(0, prefix.size()) == prefix; };
+    const auto starts_with_ignore_case = [](std::string_view value, std::string_view prefix)
+    {
+        return value.size() >= prefix.size() && std::equal(prefix.begin(), prefix.end(), value.begin(),
+                                                           [](char left, char right)
+                                                           {
+                                                               return std::tolower(static_cast<unsigned char>(left)) ==
+                                                                      std::tolower(static_cast<unsigned char>(right));
+                                                           });
+    };
+    const auto parse_number = [is_digit](std::string_view value, std::size_t offset, int &number)
+    {
+        if (offset >= value.size() || !is_digit(value[offset]))
+        {
+            return std::string_view::npos;
+        }
+        const std::from_chars_result result{
+            std::from_chars(value.data() + offset, value.data() + value.size(), number)};
+        return result.ec == std::errc{} ? static_cast<std::size_t>(result.ptr - value.data()) : std::string_view::npos;
+    };
+    const auto store_filename = [filenamep](std::string_view filename)
+    {
+        char *end = fmt::format_to_n(g_msg, CMD_BUF_LEN - 1, "{}", filename).out;
+        *end = '\0';
+        *filenamep = g_msg;
+    };
+
+    if (starts_with(text, "begin ") && text.size() > 9 && is_digit(text[6]) && is_digit(text[7]) && is_digit(text[8]) &&
+        (text[9] == ' ' || (text.size() > 10 && text[6] == '0' && is_digit(text[9]) && text[10] == ' ')))
     {
         if (*partp == -1)
         {
@@ -36,178 +64,174 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         }
         return 1;
     }
-    if (!std::strncmp(bp, "section ", 8) && std::isdigit(bp[8]))
+    if (starts_with(text, "section ") && text.size() > 8 && is_digit(text[8]))
     {
-        char *s = bp + 8;
-        int   tmppart = std::atoi(s);
-        if (tmppart == 0)
+        int         tmppart{};
+        std::size_t position = parse_number(text, 8, tmppart);
+        if (tmppart == 0 || position == std::string_view::npos)
         {
             return 0;
         }
-        s = skip_digits(s);
-        if (!std::strncmp(s, " of ", 4))
+        if (starts_with(text.substr(position), " of "))
         {
             // "section N of ... of file F ..."
-            for (s += 4; *s && std::strncmp(s," of file ",9) != 0; s++)
-            {
-            }
-            if (!*s)
+            const std::size_t marker = text.find(" of file ", position + 4);
+            if (marker == std::string_view::npos)
             {
                 return 0;
             }
-            s += 9;
-            char *tmpfilename = s;
-            s = std::strchr(s, ' ');
-            if (!s)
+            const std::size_t filename_start = marker + 9;
+            const std::size_t filename_end = text.find(' ', filename_start);
+            if (filename_end == std::string_view::npos)
             {
                 return 0;
             }
-            *s = '\0';
-            *filenamep = tmpfilename;
+            store_filename(text.substr(filename_start, filename_end - filename_start));
             *partp = tmppart;
             *totalp = 0;
             return 1;
         }
-        if (*s == '/' && std::isdigit(s[1]))
+        if (position + 1 < text.size() && text[position] == '/' && is_digit(text[position + 1]))
         {
-            int tmptotal = std::atoi(s);
-            s = skip_digits(s);
-            s = skip_space(s);
-            if (tmppart > tmptotal || std::strncmp(s,"file ",5) != 0)
+            int               tmptotal{};
+            const std::size_t total_end = parse_number(text, position, tmptotal);
+            if (total_end == std::string_view::npos)
             {
                 return 0;
             }
-            char *tmpfilename = s + 5;
-            s = std::strchr(tmpfilename, ' ');
-            if (!s)
+            position = text.find_first_not_of(" \f\n\r\t\v", total_end);
+            if (tmppart > tmptotal || position == std::string_view::npos ||
+                !starts_with(text.substr(position), "file "))
             {
                 return 0;
             }
-            *s = '\0';
-            *filenamep = tmpfilename;
+            const std::size_t filename_start = position + 5;
+            const std::size_t filename_end = text.find(' ', filename_start);
+            if (filename_end == std::string_view::npos)
+            {
+                return 0;
+            }
+            store_filename(text.substr(filename_start, filename_end - filename_start));
             *partp = tmppart;
             *totalp = tmptotal;
             return 1;
         }
     }
-    if (!std::strncmp(bp, "POST V", 6))
+    if (starts_with(text, "POST V"))
     {
-        char *s = std::strchr(bp + 6, ' ');
-        if (!s)
+        const std::size_t version_end = text.find(' ', 6);
+        if (version_end == std::string_view::npos)
         {
             return 0;
         }
-        char *tmpfilename = s + 1;
-        s = std::strchr(tmpfilename, ' ');
-        if (!s || std::strncmp(s, " (Part ", 7) != 0)
+        const std::size_t filename_start = version_end + 1;
+        const std::size_t filename_end = text.find(' ', filename_start);
+        if (filename_end == std::string_view::npos || !starts_with(text.substr(filename_end), " (Part "))
         {
             return 0;
         }
-        *s = '\0';
-        s += 7;
-        int tmppart = std::atoi(s);
-        s = skip_digits(s);
-        if (tmppart == 0 || *s++ != '/')
+        int               tmppart{};
+        const std::size_t part_end = parse_number(text, filename_end + 7, tmppart);
+        if (tmppart == 0 || part_end == std::string_view::npos || part_end >= text.size() || text[part_end] != '/')
         {
             return 0;
         }
-        int tmptotal = std::atoi(s);
-        s = skip_digits(s);
-        if (tmppart > tmptotal || *s != ')')
+        int               tmptotal{};
+        const std::size_t total_end = parse_number(text, part_end + 1, tmptotal);
+        if (total_end == std::string_view::npos || tmppart > tmptotal || total_end >= text.size() ||
+            text[total_end] != ')')
         {
             return 0;
         }
-        *filenamep = tmpfilename;
+        store_filename(text.substr(filename_start, filename_end - filename_start));
         *partp = tmppart;
         *totalp = tmptotal;
         return 1;
     }
-    if (!std::strncmp(bp, "File: ", 6))
+    if (starts_with(text, "File: "))
     {
-        char *tmpfilename = bp + 6;
-        char *s = std::strchr(tmpfilename, ' ');
-        if (!s || std::strncmp(s, " -- part ", 9) != 0)
+        const std::size_t filename_start = 6;
+        const std::size_t filename_end = text.find(' ', filename_start);
+        if (filename_end == std::string_view::npos || !starts_with(text.substr(filename_end), " -- part "))
         {
             return 0;
         }
-        *s = '\0';
-        s += 9;
-        int tmppart = std::atoi(s);
-        s = skip_digits(s);
-        if (tmppart == 0 || std::strncmp(s, " of ", 4) != 0)
+        int               tmppart{};
+        const std::size_t part_end = parse_number(text, filename_end + 9, tmppart);
+        if (tmppart == 0 || part_end == std::string_view::npos || !starts_with(text.substr(part_end), " of "))
         {
             return 0;
         }
-        s += 4;
-        int tmptotal = std::atoi(s);
-        s = skip_digits(s);
-        if (tmppart > tmptotal || std::strncmp(s, " -- ", 4) != 0)
+        int               tmptotal{};
+        const std::size_t total_end = parse_number(text, part_end + 4, tmptotal);
+        if (total_end == std::string_view::npos || tmppart > tmptotal || !starts_with(text.substr(total_end), " -- "))
         {
             return 0;
         }
-        *filenamep = tmpfilename;
+        store_filename(text.substr(filename_start, filename_end - filename_start));
         *partp = tmppart;
         *totalp = tmptotal;
         return 1;
     }
-    if (!std::strncmp(bp, "[Section: ", 10))
+    if (starts_with(text, "[Section: "))
     {
-        char *s = bp + 10;
-        int   tmppart = std::atoi(s);
-        if (tmppart == 0)
+        int               tmppart{};
+        const std::size_t part_end = parse_number(text, 10, tmppart);
+        if (tmppart == 0 || part_end == std::string_view::npos || part_end >= text.size())
         {
             return 0;
         }
-        s = skip_digits(s);
-        int tmptotal = std::atoi(++s);
-        s = skip_digits(s);
-        s = skip_space(s);
-        if (tmppart > tmptotal || std::strncmp(s, "File: ", 6) != 0)
+        int               tmptotal{};
+        const std::size_t total_end = parse_number(text, part_end + 1, tmptotal);
+        if (total_end == std::string_view::npos)
         {
             return 0;
         }
-        char *tmpfilename = s + 6;
-        s = std::strchr(tmpfilename, ' ');
-        if (!s)
+        const std::size_t file_label = text.find_first_not_of(" \f\n\r\t\v", total_end);
+        if (tmppart > tmptotal || file_label == std::string_view::npos ||
+            !starts_with(text.substr(file_label), "File: "))
         {
             return 0;
         }
-        *s = '\0';
-        *filenamep = tmpfilename;
+        const std::size_t filename_start = file_label + 6;
+        const std::size_t filename_end = text.find(' ', filename_start);
+        if (filename_end == std::string_view::npos)
+        {
+            return 0;
+        }
+        store_filename(text.substr(filename_start, filename_end - filename_start));
         *partp = tmppart;
         *totalp = tmptotal;
         return 1;
     }
-    if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp                //
-        && (!std::strncmp(bp, "BEGIN", 5) || !std::strncmp(bp, "--- BEGIN ---", 12) //
-            || (bp[0] == 'M' && std::strlen(bp) == UU_LENGTH)))
+    if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp &&
+        (starts_with(text, "BEGIN") || starts_with(text, "--- BEGIN ---") ||
+         (!text.empty() && text[0] == 'M' && text.size() == UU_LENGTH)))
     {
         // Found the start of a section of uuencoded data
         // and have the part N of M information.
         //
         return 1;
     }
-    if (string_case_equal(bp, "x-file-name: ", 13))
+    if (starts_with_ignore_case(text, "x-file-name: "))
     {
-        char *s = skip_non_space(bp + 13);
-        *s = '\0';
-        safe_copy(g_msg, bp+13, sizeof g_msg);
-        *filenamep = g_msg;
+        const std::size_t filename_end = text.find_first_of(" \f\n\r\t\v", 13);
+        store_filename(text.substr(13, filename_end - 13));
         return 0;
     }
-    if (string_case_equal(bp, "x-part: ", 8))
+    if (starts_with_ignore_case(text, "x-part: "))
     {
-        int tmppart = std::atoi(bp + 8);
-        if (tmppart > 0)
+        int tmppart{};
+        if (parse_number(text, 8, tmppart) != std::string_view::npos && tmppart > 0)
         {
             *partp = tmppart;
         }
         return 0;
     }
-    if (string_case_equal(bp, "x-part-total: ", 14))
+    if (starts_with_ignore_case(text, "x-part-total: "))
     {
-        int tmptotal = std::atoi(bp + 14);
-        if (tmptotal > 0)
+        int tmptotal{};
+        if (parse_number(text, 14, tmptotal) != std::string_view::npos && tmptotal > 0)
         {
             *totalp = tmptotal;
         }
