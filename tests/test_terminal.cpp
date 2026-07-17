@@ -95,6 +95,35 @@ protected:
     int   m_old_term_col{};
 };
 
+class ChoiceInputTest : public MacroDisplayTest
+{
+protected:
+    void SetUp() override
+    {
+        MacroDisplayTest::SetUp();
+        drain_macro_buffer();
+
+        m_old_tc_cr = g_tc_CR;
+        m_old_tc_ce = g_tc_CE;
+        g_tc_CR = m_carriage_return;
+        g_tc_CE = m_erase_line;
+    }
+
+    void TearDown() override
+    {
+        drain_macro_buffer();
+        g_tc_CR = m_old_tc_cr;
+        g_tc_CE = m_old_tc_ce;
+        MacroDisplayTest::TearDown();
+    }
+
+    char m_carriage_return[5]{"<cr>"};
+    char m_erase_line[5]{"<ce>"};
+
+    const char *m_old_tc_cr{};
+    char       *m_old_tc_ce{};
+};
+
 } // namespace
 
 TEST_F(TerminalTest, getCommandExpandsMacroString)
@@ -117,4 +146,59 @@ TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("<so>Macros:<se>\n^AA   result\n", output);
+}
+
+TEST_F(ChoiceInputTest, inChoiceCyclesToNextValue)
+{
+    push_char('\n');
+    push_char(' ');
+
+    testing::internal::CaptureStdout();
+    const bool        clean_screen = in_choice("> ", "yes", "yes/no", MM_OPTION_EDIT_PROMPT);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(clean_screen);
+    EXPECT_STREQ("no", g_buf);
+    EXPECT_EQ("<cr><cr><ce><cr>> yes<cr><cr><ce><cr>> no", output);
+}
+
+TEST_F(ChoiceInputTest, inChoiceCyclesValueWithinPrefix)
+{
+    push_char('\n');
+    push_char(' ');
+
+    testing::internal::CaptureStdout();
+    const bool clean_screen =
+        in_choice("> ", "reverse date", "[reverse] date/subject/author/groups/cnt/points", MM_OPTION_EDIT_PROMPT);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(clean_screen);
+    EXPECT_STREQ("reverse subject", g_buf);
+    EXPECT_EQ("<cr><cr><ce><cr>> reverse date<cr><cr><ce><cr>> reverse subject", output);
+}
+
+TEST_F(ChoiceInputTest, inChoicePreservesNumericValue)
+{
+    push_char('\n');
+
+    testing::internal::CaptureStdout();
+    const bool        clean_screen = in_choice("> ", "12", "no/<# lines>", MM_OPTION_EDIT_PROMPT);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(clean_screen);
+    EXPECT_STREQ("12", g_buf);
+    EXPECT_EQ("<cr><cr><ce><cr>> 12", output);
+}
+
+TEST_F(ChoiceInputTest, inChoiceDoesNotSplitSlashInsideFreeFormValue)
+{
+    push_char('\n');
+
+    testing::internal::CaptureStdout();
+    const bool        clean_screen = in_choice("> ", "a/b", "<e.g. a/b>", MM_OPTION_EDIT_PROMPT);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(clean_screen);
+    EXPECT_STREQ("a/b", g_buf);
+    EXPECT_EQ("<cr><cr><ce><cr>> a/b", output);
 }

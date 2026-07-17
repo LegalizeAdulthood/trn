@@ -37,10 +37,13 @@
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <charconv>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #ifdef u3b2
 #undef TIOCGWINSZ
@@ -1601,128 +1604,125 @@ reinp_in_answer:
 
 // If this takes more than one line, return false
 
-bool in_choice(const char *prompt, char *value, char *choices, MinorMode newmode)
+bool in_choice(std::string_view prompt, std::string_view value, std::string_view choices, MinorMode newmode)
 {
-    MinorMode mode_save = g_mode;
+    MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
 
-    unflush_output();                   // disable any ^O in effect
+    const auto set_buffer = [](std::string_view text)
+    {
+        TRN_ASSERT(text.size() <= LINE_BUF_LEN);
+        std::copy(text.begin(), text.end(), g_buf);
+        g_buf[text.size()] = '\0';
+    };
+
+    unflush_output(); // disable any ^O in effect
     eat_typeahead();
-    set_mode(GM_CHOICE,newmode);
+    set_mode(GM_CHOICE, newmode);
     s_screen_is_dirty = false;
 
-    char prefixes[80];
-    char *cp = choices;
-    if (*cp == '[')
+    std::vector<std::string_view> prefixes;
+    if (!choices.empty() && choices.front() == '[')
     {
-        char *dest = prefixes;
-        ++cp;
-        while (*cp != ']')
+        const std::size_t prefix_end = choices.find(']');
+        TRN_ASSERT(prefix_end != std::string_view::npos);
+        std::string_view prefix_text = choices.substr(1, prefix_end - 1);
+        while (true)
         {
-            if (*cp == '/')
-            {
-                *dest++ = '\0';
-                cp++;
-            }
-            else
-            {
-                *dest++ = *cp++;
-            }
-        }
-        *dest++ = '\0';
-        *dest = '\0';
-        if (*++cp == ' ')
-        {
-            cp++;
-        }
-    }
-    else
-    {
-        prefixes[0] = '\0';
-    }
-
-    bool any_val_OK{};
-    char tmpbuf[80];
-    {
-        char *dest = tmpbuf;
-        while (*cp)
-        {
-            if (*cp == '/')
-            {
-                *dest++ = '\0';
-                cp++;
-            }
-            else if (*cp == '<')
-            {
-                do
-                {
-                    *dest++ = *cp;
-                } while (*cp++ != '>');
-                any_val_OK = true; // flag that '<' was found
-            }
-            else
-            {
-                *dest++ = *cp++;
-            }
-        }
-        cp = dest;
-        *dest++ = '\0';
-        *dest = '\0';
-        std::strcpy(g_buf,value);
-    }
-
-    bool  value_changed;
-    int   number_was = -1;
-    char *prefix = nullptr;
-reask_in_choice:
-    int len = std::strlen(g_buf);
-    char *bp = g_buf;
-    if (*prefixes != '\0')
-    {
-        const char *start = prefix;
-        for (prefix = prefixes; *prefix; prefix += std::strlen(prefix))
-        {
-            if (*prefix == *g_buf)
+            const std::size_t separator = prefix_text.find('/');
+            prefixes.push_back(prefix_text.substr(0, separator));
+            if (separator == std::string_view::npos)
             {
                 break;
             }
+            prefix_text.remove_prefix(separator + 1);
         }
-        if (*prefix)
+        choices.remove_prefix(prefix_end + 1);
+        if (!choices.empty() && choices.front() == ' ')
         {
-            bp = skip_ne(g_buf, ' ');
-            bp = skip_eq(bp, ' ');
+            choices.remove_prefix(1);
         }
-        else
+    }
+
+    bool                          any_value_allowed{};
+    std::vector<std::string_view> choice_values;
+    std::size_t                   choice_start{};
+    for (std::size_t i = 0; i < choices.size(); ++i)
+    {
+        if (choices[i] == '<')
         {
-            prefix = nullptr;
+            any_value_allowed = true;
+            const std::size_t value_end = choices.find('>', i + 1);
+            TRN_ASSERT(value_end != std::string_view::npos);
+            i = value_end;
         }
-        value_changed = prefix != start;
+        else if (choices[i] == '/')
+        {
+            choice_values.push_back(choices.substr(choice_start, i - choice_start));
+            choice_start = i + 1;
+        }
+    }
+    choice_values.push_back(choices.substr(choice_start));
+    set_buffer(value);
+
+    bool        value_changed;
+    int         number_was = -1;
+    std::size_t prefix_index = prefixes.size();
+    std::size_t choice_index = choice_values.size();
+reask_in_choice:
+    const std::string_view buffer{g_buf};
+    std::string_view       match = buffer;
+    if (!prefixes.empty())
+    {
+        const std::size_t previous_prefix = prefix_index;
+        prefix_index = prefixes.size();
+        for (std::size_t i = 0; i < prefixes.size(); ++i)
+        {
+            if (!prefixes[i].empty() && !buffer.empty() && prefixes[i].front() == buffer.front())
+            {
+                prefix_index = i;
+                break;
+            }
+        }
+        if (prefix_index != prefixes.size())
+        {
+            const std::size_t separator = buffer.find(' ');
+            match = separator == std::string_view::npos ? std::string_view{} : buffer.substr(separator + 1);
+            while (!match.empty() && match.front() == ' ')
+            {
+                match.remove_prefix(1);
+            }
+        }
+        value_changed = prefix_index != previous_prefix;
     }
     else
     {
-        prefix = nullptr;
+        prefix_index = prefixes.size();
         value_changed = false;
     }
-    char *s = cp;
+    const std::size_t previous_choice = choice_index;
     while (true)
     {
-        cp += std::strlen(cp) + 1;
-        if (!*cp)
+        if (++choice_index >= choice_values.size())
         {
-            cp = tmpbuf;
+            choice_index = 0;
         }
-        if (*cp == '<' && (*g_buf == '<' || cp[1] != '#' || std::isdigit(*g_buf) || !*s))
+        const std::string_view choice = choice_values[choice_index];
+        if (!choice.empty() && choice.front() == '<' &&
+            ((!buffer.empty() && buffer.front() == '<') || choice.size() < 2 || choice[1] != '#' ||
+             (!buffer.empty() && std::isdigit(static_cast<unsigned char>(buffer.front()))) ||
+             previous_choice == choice_values.size()))
         {
-            prefix = nullptr;
+            prefix_index = prefixes.size();
             break;
         }
-        if (s == cp)
+        if (previous_choice == choice_index)
         {
             if (!value_changed)
             {
-                if (prefix)
+                if (prefix_index != prefixes.size())
                 {
-                    prefix = nullptr;
+                    prefix_index = prefixes.size();
                 }
                 else
                 {
@@ -1731,95 +1731,99 @@ reask_in_choice:
             }
             break;
         }
-        if (!*bp || !std::strncmp(cp,bp,any_val_OK ? len : 1))
+        const std::size_t compare_size = any_value_allowed ? buffer.size() : 1;
+        if (match.empty() || choice.substr(0, compare_size) == match.substr(0, compare_size))
         {
             break;
         }
     }
 
-    if (*cp == '<')
+    const std::string_view choice = choice_values[choice_index];
+    if (!choice.empty() && choice.front() == '<')
     {
-        if (*g_buf == '<' || cp[1] == '#')
+        if ((!buffer.empty() && buffer.front() == '<') || (choice.size() > 1 && choice[1] == '#'))
         {
             if (number_was >= 0)
             {
-                std::sprintf(g_buf, "%d", number_was);
+                set_buffer(fmt::format("{}", number_was));
             }
             else
             {
-                s = skip_digits(g_buf);
-                *s = '\0';
+                const std::size_t digit_count = buffer.find_first_not_of("0123456789");
+                g_buf[digit_count == std::string_view::npos ? buffer.size() : digit_count] = '\0';
             }
         }
     }
     else
     {
-        if (prefix)
+        if (prefix_index != prefixes.size())
         {
-            std::sprintf(g_buf, "%s ", prefix);
-            std::strcat(g_buf,cp);
+            set_buffer(fmt::format("{} {}", prefixes[prefix_index], choice));
         }
         else
         {
-            std::strcpy(g_buf,cp);
+            set_buffer(choice);
         }
     }
-    s = g_buf + std::strlen(g_buf);
+    char *input = g_buf + std::string_view{g_buf}.size();
     carriage_return();
     erase_line(false);
-    std::fputs(prompt,stdout);
-    std::fputs(g_buf,stdout);
-    len = std::strlen(prompt);
+    fmt::print("{}{}", prompt, std::string_view{g_buf});
     number_was = -1;
 
 reinp_in_choice:
-    if ((s-g_buf) + len >= g_tc_COLS)
+    if ((input - g_buf) + prompt.size() >= g_tc_COLS)
     {
         s_screen_is_dirty = true;
     }
     std::fflush(stdout);
-    get_cmd(s);
-    if (errno || *s == '\f')            // if return from stop signal
+    get_cmd(input);
+    if (errno || *input == '\f') // if return from stop signal
     {
-        *s = '\n';
+        *input = '\n';
     }
-    if (*s != '\n')
+    if (*input != '\n')
     {
-        char ch = *s;
-        if (*cp == '<' && ch != '\t' && (ch != ' ' || g_buf != s))
+        char ch = *input;
+        if (!choice.empty() && choice.front() == '<' && ch != '\t' && (ch != ' ' || g_buf != input))
         {
-            if (cp[1] == '#')
+            if (choice.size() > 1 && choice[1] == '#')
             {
-                s = edit_buf(s, nullptr);
-                if (s != g_buf)
+                input = edit_buf(input, nullptr);
+                if (input != g_buf)
                 {
-                    if (std::isdigit(s[-1]))
+                    if (std::isdigit(static_cast<unsigned char>(input[-1])))
                     {
                         goto reinp_in_choice;
                     }
                     else
                     {
-                        number_was = std::atoi(g_buf);
+                        std::from_chars(g_buf, input, number_was);
                     }
                 }
             }
             else
             {
-                s = edit_buf(s, nullptr);
+                input = edit_buf(input, nullptr);
                 goto reinp_in_choice;
             }
         }
-        *s = '\0';
-        s = skip_ne(g_buf, ' ');
-        if (*s == ' ')
+        *input = '\0';
+        const std::string_view edited_buffer{g_buf};
+        const std::size_t      separator = edited_buffer.find(' ');
+        char *value_start = separator == std::string_view::npos ? g_buf + edited_buffer.size() : g_buf + separator + 1;
+        if (separator != std::string_view::npos)
         {
-            s++;
+            while (*value_start == ' ')
+            {
+                ++value_start;
+            }
         }
         if (is_hor_space(ch))
         {
-            if (prefix)
+            if (prefix_index != prefixes.size())
             {
-                *s = '\0';
+                *value_start = '\0';
             }
             else
             {
@@ -1829,11 +1833,11 @@ reinp_in_choice:
         else
         {
             char ch1 = g_buf[0];
-            if (prefix)
+            if (prefix_index != prefixes.size())
             {
                 if (ch == ch1)
                 {
-                    ch = *s;
+                    ch = *value_start;
                 }
                 else
                 {
@@ -1841,13 +1845,13 @@ reinp_in_choice:
                     ch = g_buf[0];
                 }
             }
-            std::sprintf(g_buf,"%c %c",ch == g_erase_char || ch == g_kill_char? '<' : ch, ch1);
+            set_buffer(fmt::format("{} {}", ch == g_erase_char || ch == g_kill_char ? '<' : ch, ch1));
         }
         goto reask_in_choice;
     }
-    *s = '\0';
+    *input = '\0';
 
-    set_mode(gmode_save,mode_save);
+    set_mode(gmode_save, mode_save);
     return !s_screen_is_dirty;
 }
 

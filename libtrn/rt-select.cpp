@@ -2047,7 +2047,7 @@ static bool select_option(OptionIndex i)
     {
         val = g_option_draft->value(option);
     }
-    s_clean_screen = in_choice("> ", val.data(), const_cast<char *>(help.data()), MM_OPTION_EDIT_PROMPT);
+    s_clean_screen = in_choice("> ", val, help, MM_OPTION_EDIT_PROMPT);
     if (val != g_buf)
     {
         char * to = g_buf;
