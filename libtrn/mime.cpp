@@ -1049,28 +1049,10 @@ void mime_decode_article(bool view)
     }
 }
 
-void MimeSection::mime_description(char *s, int limit)
+std::string MimeSection::mime_description() const
 {
-    const std::string fn = decode_fix_filename(m_filename ? *m_filename : "unknown");
-    int flen = static_cast<int>(fn.size());
-
-    limit -= 2;  // leave room for the trailing ']' and '\n'
-    char *out = fmt::format_to(s, "[Attachment type={}, name=", *m_type_name);
-    *out = '\0';
-    int len = static_cast<int>(out - s);
-    if (len + flen <= limit)
-    {
-        *fmt::format_to(s + len, "{}]\n", fn) = '\0';
-    }
-    else if (len+3 >= limit)
-    {
-        std::strcpy(s + limit - 3, "...]\n");
-    }
-    else
-    {
-        safe_copy(s+len, fn.c_str(), limit - (len+3));
-        std::strcat(s, "...]\n");
-    }
+    return fmt::format("[Attachment type={}, name={}]\n", *m_type_name,
+                       decode_fix_filename(m_filename ? *m_filename : "unknown"));
 }
 
 #define XX 255

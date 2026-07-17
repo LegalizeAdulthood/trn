@@ -197,6 +197,7 @@ char *read_art_buf(bool view_inline)
     int   word_wrap;
     int   extra_chars = 0;
     int read_something = 0;
+    std::string description;
 
     if (!g_do_hiding)
     {
@@ -467,8 +468,7 @@ mime_switch:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         ++g_art_buf_pos;
-        g_mime_section->mime_description(bp,g_tc_COLS);
-        len = std::strlen(bp);
+        description = g_mime_section->mime_description();
         break;
 
     case ALTERNATE_MIME:
@@ -499,9 +499,27 @@ mime_switch:
         }
         *bp++ = '\001';
         ++g_art_buf_pos;
-        g_mime_section->mime_description(bp,g_tc_COLS);
-        len = std::strlen(bp);
+        description = g_mime_section->mime_description();
         break;
+    }
+
+    if (!description.empty())
+    {
+        const std::size_t limit = g_tc_COLS > 0 ? static_cast<std::size_t>(g_tc_COLS) : 0;
+        if (description.size() > limit)
+        {
+            if (limit >= 5)
+            {
+                description.replace(limit - 5, std::string::npos, "...]\n");
+            }
+            else
+            {
+                description.resize(limit);
+            }
+        }
+        description.copy(bp, description.size());
+        len = static_cast<int>(description.size());
+        bp[len] = '\0';
     }
 
 done:

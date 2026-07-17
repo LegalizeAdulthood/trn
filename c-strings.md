@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 23 hits remain, including the helper declaration and
-  definition.  The 21 call sites are inventoried below.
+- `safe_copy`: 22 hits remain, including the helper declaration and
+  definition.  The 20 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -449,8 +449,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 23 `safe_copy` hits: the helper definition, the
-helper declaration, and 21 call sites.  The call sites are still audit
+The current tree has 22 `safe_copy` hits: the helper definition, the
+helper declaration, and 20 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/art.cpp`, FROM header display: copies to `g_art_line` before
@@ -462,8 +462,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   `CSTR-031`.
 - `libtrn/intrp.cpp`, `do_interp`: five scratch-buffer copies remain.
   See `CSTR-029`.
-- `libtrn/mime.cpp`, `MimeSection::mime_description`: truncates an
-  attachment display line.  See `CSTR-015`.
 - `libtrn/ngstuff.cpp`, `switcheroo`: copies `g_buf` into a macro
   scratch buffer.  See `CSTR-028`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
@@ -482,10 +480,10 @@ The current scan covers `libtrn`, `util`, and `config` source and public
 headers.  Counts below include direct `std::` calls and unqualified C
 calls in production code.
 
-- Copy and concatenation: `strcpy` 102, `strncpy` 5, `strcat` 13.
+- Copy and concatenation: `strcpy` 101, `strncpy` 5, `strcat` 12.
 - Comparison: `strcmp` 12, `strncmp` 26.
 - Search and length: `strchr` 108, `strrchr` 14, `strstr` 2,
-  `strlen` 126.
+  `strlen` 124.
 - Formatting into C buffers: `sprintf` 127, `snprintf` 1.
 - C text I/O roots: `fgets` 33, `fputs` 198, `printf` 494,
   `fprintf` 37.
@@ -523,16 +521,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-### CSTR-015 - MIME Description Output
-
-- Files: `libtrn/mime.cpp`, `libtrn/artio.cpp`,
-  `libtrn/include/trn/mime.h`.
-- Kind: caller output buffer with arbitrary truncation.
-- Function: `MimeSection::mime_description`.
-- Change: return `std::string` for the description and apply display
-  truncation explicitly at the call site if it is meaningful.
-- Tests: add attachment-description coverage first if missing.
 
 ### CSTR-017 - HTTP Fetch Buffers
 

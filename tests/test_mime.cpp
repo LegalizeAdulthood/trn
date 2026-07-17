@@ -117,6 +117,17 @@ TEST(MimeParseParamsTest, decodesEscapedQuotedValueWhenConsumed)
     section.mime_clear_struct();
 }
 
+TEST(MimeDescriptionTest, describesTypeAndNormalizedFilename)
+{
+    MimeSection section{};
+    section.m_type_name = "application/pdf";
+    section.m_filename = "/tmp/report_pdf";
+
+    const std::string description = section.mime_description();
+
+    EXPECT_EQ("[Attachment type=application/pdf, name=report_pdf]\n", description);
+}
+
 namespace
 {
 
