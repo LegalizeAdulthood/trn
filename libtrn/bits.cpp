@@ -29,6 +29,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -58,7 +59,6 @@ void bits_init()
 
 void rc_to_bits()
 {
-    char*   my_buf = g_buf; // place to decode rc line
     char*   c;
     char*   h;
     ArticleNum unread;
@@ -68,20 +68,15 @@ void rc_to_bits()
 
     const char *numbers = skip_eq(g_newsgroup_ptr->rc_numbers_c_str(), ' ');
                                         // find numbers in rc line
-    long i = std::strlen(numbers);
-#ifndef lint
-    if (i >= LINE_BUF_LEN-2)                 // bigger than g_buf?
+    std::string numbers_buf;
+    numbers_buf.reserve(
+        std::max<std::size_t>(LINE_BUF_LEN, std::strlen(numbers) + 1));
+    numbers_buf = numbers;
+    if (!numbers_buf.empty())
     {
-        my_buf = safe_malloc((MemorySize) (i + 2));
+        numbers_buf.push_back(',');      // put extra comma on the end
     }
-#endif
-    std::strcpy(my_buf,numbers);                    // make scratch copy of line
-    if (my_buf[0])
-    {
-        my_buf[i++] = ',';               // put extra comma on the end
-    }
-    my_buf[i] = '\0';
-    char *s = my_buf;                    // initialize the for loop below
+    char *s = numbers_buf.data();        // initialize the for loop below
     if (set_first_art(s))
     {
         s = std::strchr(s,',') + 1;
@@ -100,7 +95,7 @@ void rc_to_bits()
 #ifdef DEBUG
     if (g_debug & DEB_CTLAREA_BITMAP)
     {
-        std::printf("\n%s\n",my_buf);
+        std::printf("\n%s\n",numbers_buf.c_str());
         term_down(2);
         for (ArticleNum i = article_first(g_abs_first); i < g_first_art; i = article_next(i))
         {
@@ -201,10 +196,6 @@ void rc_to_bits()
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
-    if (my_buf != g_buf)
-    {
-        std::free(my_buf);
-    }
     g_newsgroup_ptr->m_to_read = unread.value_of();
 }
 

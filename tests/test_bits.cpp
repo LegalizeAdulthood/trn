@@ -38,11 +38,8 @@ protected:
 
         m_newsrc.flags = RF_NONE;
         m_group.m_rc = &m_newsrc;
-        m_group.m_rc_line = "comp.lang.apl: old";
-        m_group.m_num_offset = static_cast<int>(std::string{"comp.lang.apl"}.size()) + 1;
-        m_group.m_subscribe_char = ':';
+        set_rc_line("comp.lang.apl: old");
         m_group.m_to_read = ArticleUnread{};
-        m_group.hide_subscribe_char();
     }
 
     void TearDown() override
@@ -64,6 +61,28 @@ protected:
         }
     }
 
+    void add_existing_articles(long first, long last)
+    {
+        for (long num = first; num <= last; ++num)
+        {
+            add_article(num, false);
+        }
+    }
+
+    void expect_unread(long num, bool unread)
+    {
+        SCOPED_TRACE(num);
+        EXPECT_EQ(unread, article_unread(ArticleNum{num}));
+    }
+
+    void set_rc_line(std::string line)
+    {
+        m_group.m_rc_line = std::move(line);
+        m_group.m_num_offset = static_cast<int>(std::string{"comp.lang.apl"}.size()) + 1;
+        m_group.m_subscribe_char = m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)];
+        m_group.hide_subscribe_char();
+    }
+
     std::string visible_rc_line() const
     {
         std::string line = m_group.m_rc_line;
@@ -81,6 +100,42 @@ protected:
 };
 
 } // namespace
+
+TEST_F(BitsToRcTest, decodesReadRangesIntoUnreadArticleFlags)
+{
+    set_rc_line("comp.lang.apl: 2,4-5");
+    add_existing_articles(1, 7);
+
+    rc_to_bits();
+
+    expect_unread(1, true);
+    expect_unread(2, false);
+    expect_unread(3, true);
+    expect_unread(4, false);
+    expect_unread(5, false);
+    expect_unread(6, true);
+    expect_unread(7, true);
+    EXPECT_EQ(ArticleNum{1}, g_first_art);
+    EXPECT_EQ(ArticleUnread{4}, m_group.m_to_read);
+}
+
+TEST_F(BitsToRcTest, decodesLeadingReadRangeIntoFirstUnreadArticle)
+{
+    set_rc_line("comp.lang.apl: 1-2,4");
+    add_existing_articles(1, 7);
+
+    rc_to_bits();
+
+    expect_unread(1, false);
+    expect_unread(2, false);
+    expect_unread(3, true);
+    expect_unread(4, false);
+    expect_unread(5, true);
+    expect_unread(6, true);
+    expect_unread(7, true);
+    EXPECT_EQ(ArticleNum{3}, g_first_art);
+    EXPECT_EQ(ArticleUnread{4}, m_group.m_to_read);
+}
 
 TEST_F(BitsToRcTest, reconstructsSubscribedLineFromReadRanges)
 {
