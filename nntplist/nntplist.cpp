@@ -27,8 +27,8 @@ std::string g_nntp_auth_file;
 
 int main(int argc, char *argv[])
 {
-    char*action = nullptr;
-    char*wildarg = nullptr;
+    const char *action = nullptr;
+    const char *wildarg = nullptr;
     std::FILE *out_fp{};
 
     while (--argc)

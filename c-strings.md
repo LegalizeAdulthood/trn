@@ -508,15 +508,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-079 - Nntplist Argument Pointer Constness
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: `char *` to `const char *`.
-- Function: `main`.
-- Change: change `action` and `wildarg` to `const char *` because they
-  only borrow `argv` strings and are never modified.
-- Tests: nntplist command-line tests if present; otherwise build.
-
 #### CSTR-080 - Inews Server Name Local Check
 
 - Files: `inews/inews.cpp`.
