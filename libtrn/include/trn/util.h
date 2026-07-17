@@ -18,11 +18,6 @@
 extern bool g_waiting; // waiting for subprocess (in doshell)?
 extern bool g_no_wait_fork;
 
-// the strlen and the buffer length of "some_buf" after a call to:
-//     some_buf = get_a_line(bufptr,bufsize,realloc,fp);
-extern int g_len_last_line_got;
-extern MemorySize g_buf_len_last_line_got;
-
 inline bool at_grey_space(const char *s)
 {
     return ((s) && ((!at_norm_char(s)) || ((*s) && (*s) == ' ')));
@@ -51,7 +46,7 @@ char *safe_realloc(char *where, MemorySize size);
 int eaccess(char *, int);
 #endif
 char *trn_getwd(char *buf, int buflen);
-char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp);
+std::string get_a_line(std::FILE *fp);
 bool  make_dir(const char *dirname, MakeDirNameType nametype);
 void  not_incl(std::string_view feature);
 void  set_def(char *buffer, const char *dflt);

@@ -250,6 +250,27 @@ TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)
     EXPECT_FALSE(fs::exists(lock_path));
 }
 
+TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path};
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    const std::string options_line = "options " + std::string(LINE_BUF_LEN * 2, 'x');
+    std::ofstream{newsrc.name} << options_line << '\n';
+
+    ASSERT_TRUE(multirc.use_multirc());
+
+    ASSERT_EQ(1, g_newsgroup_order.size());
+    EXPECT_EQ(options_line, g_newsgroup_order[0]->m_rc_line);
+    EXPECT_EQ(TR_JUNK, g_newsgroup_order[0]->m_to_read);
+    unuse_multirc(&multirc);
+}
+
 TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)
 {
     Newsrc newsrc = make_newsrc();

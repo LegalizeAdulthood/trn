@@ -3,11 +3,17 @@
 #include <nntp/nntpinit.h>
 
 #include <config/common.h>
+#include <trn/Article.h>
+#include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/head.h>
+#include <trn/ngdata.h>
 
 #include <boost/asio/error.hpp>
 
 #include <gmock/gmock.h>
 
+#include <map>
 #include <utility>
 
 using namespace testing;
@@ -150,6 +156,15 @@ TEST_F(NNTPGetStringTest, line_fits)
     EXPECT_EQ("this fits", std::string(buffer));
 }
 
+TEST_F(NNTPGetStringTest, getALineReturnsServerLine)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("server line")));
+
+    const std::string line = nntp_get_a_line();
+
+    EXPECT_EQ("server line", line);
+}
+
 TEST_F(NNTPGetStringTest, partial_line)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
@@ -171,4 +186,60 @@ TEST_F(NNTPGetStringTest, error)
 
     EXPECT_EQ(NGSR_ERROR, result);
     EXPECT_EQ("junk", std::string(buffer));
+}
+
+class RemoteHeaderPrefetchTest : public NNTPGetStringTest
+{
+protected:
+    void SetUp() override
+    {
+        NNTPGetStringTest::SetUp();
+
+        m_old_data_source = g_data_source;
+        m_old_article_list = std::move(g_article_list);
+        m_old_parsed_art = g_parsed_art;
+        m_old_last_art = g_last_art;
+        m_old_nntp_flags = g_nntp_link.flags;
+
+        g_data_source = &m_data_source;
+        m_data_source.m_flags = DF_REMOTE;
+        g_article_list.clear();
+        article_ptr(ArticleNum{1})->m_flags = AF_EXISTS;
+        g_parsed_art = ArticleNum{};
+        g_last_art = ArticleNum{1};
+        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    }
+
+    void TearDown() override
+    {
+        g_nntp_link.flags = m_old_nntp_flags;
+        g_last_art = m_old_last_art;
+        g_parsed_art = m_old_parsed_art;
+        g_article_list.clear();
+        g_article_list = std::move(m_old_article_list);
+        g_data_source = m_old_data_source;
+
+        NNTPGetStringTest::TearDown();
+    }
+
+    DataSource                    m_data_source{};
+    DataSource                   *m_old_data_source{};
+    std::map<ArticleNum, Article> m_old_article_list;
+    ArticleNum                    m_old_parsed_art{};
+    ArticleNum                    m_old_last_art{};
+    NNTPFlags                     m_old_nntp_flags{};
+};
+
+TEST_F(RemoteHeaderPrefetchTest, readsHeaderLineFromXhdr)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("XHDR from 1-1"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("221 Header follows"))
+        .WillOnce(Return("1 Casey <casey@example.test>\r"))
+        .WillOnce(Return("."));
+
+    const std::string from = prefetch_lines_copy(ArticleNum{1}, FROM_LINE);
+
+    EXPECT_EQ("Casey <casey@example.test>", from);
+    EXPECT_EQ("Casey <casey@example.test>", article_ptr(ArticleNum{1})->get_cached_line_text(FROM_LINE, false));
 }

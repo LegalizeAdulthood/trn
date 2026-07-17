@@ -96,7 +96,7 @@ Most raw string pointers are not local cleanup targets yet.  They are
 owned buffers, caller-owned mutable buffers, struct fields, termcap and
 NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
 `g_buf`, `g_cmd_buf`, `g_ser_line`, `Article` and `Subject` fields,
-`HashDatum` payloads, `parse_string`, `get_a_line` and `push_string`.
+`HashDatum` payloads, `parse_string`, and `push_string`.
 `CompiledRegex::m_exp_buf` and `m_alternatives` are regex bytecode and
 internal cursors, not ordinary string storage.
 
@@ -434,22 +434,22 @@ tests, generated files, or the vendored `vcpkg` tree.
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: six hits remain, including the helper declaration and
   definition.  The four call sites are inventoried below.
-- `safe_malloc`: twenty-three production hits remain in the current
+- `safe_malloc`: twenty-two production hits remain in the current
   library scan.  String-like local owners are `save_options`,
-  `parse_mouse_buttons`, `get_a_line`, `g_head_buf`, and `g_art_buf`.
-  Non-string owners include hash tables, selector page storage, regex
-  bytecode, HTML block arrays, and pointer arrays.
-- `safe_realloc`: seven production hits remain.  String-like owners are
-  `get_a_line`, the NNTP inline line reader, `g_head_buf`, and
-  `g_art_buf`.  Regex bytecode remains a non-string owner.
+  `parse_mouse_buttons`, user-name scratch storage, `g_head_buf`, and
+  `g_art_buf`.  Non-string owners include hash tables, selector page
+  storage, regex bytecode, HTML block arrays, and pointer arrays.
+- `safe_realloc`: five production hits remain.  String-like owners are
+  `g_head_buf` and `g_art_buf`.  Regex bytecode remains a non-string
+  owner.
 - C string library calls: the current scan finds active `str*`,
   `sprintf`, `fgets`/`fputs`, `printf`/`fprintf`, and character `mem*`
   roots.  These calls are counted below and mapped to slices by owner.
 - Fixed buffers: remaining candidates include local display strings,
   interpolation scratch storage, selector search text, message and
-  command globals, header/body caches, and line readers.  Protocol byte
-  buffers, lookup tables, termcap storage, and caller output buffers stay
-  with their owning API slices.
+  command globals, and header/body caches.  Protocol byte buffers,
+  lookup tables, termcap storage, and caller output buffers stay with
+  their owning API slices.
 - Filename storage: current path candidates are concentrated in
   `decode_piece`, KILL-file editing/appending, option saving, score-file
   loading, and functions that still compose filenames through `g_buf` or
@@ -513,18 +513,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-047 - Read-Line Ownership Contract
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `nntp/include/nntp/nntpclient.h`, `libtrn/rcstuff.cpp`,
-  `libtrn/rt-ov.cpp`, `libtrn/head.cpp`.
-- Kind: owning raw-string return and side-effect length globals.
-- Functions: `get_a_line` and `nntp_get_a_line`.
-- Change: replace the caller-allocated growable buffer contract with an
-  owned string result and explicit length from the returned string.
-  Update direct callers in the same slice so no wrapper is left unused.
-- Tests: newsrc read tests, overview tests, and header prefetch tests.
 
 #### CSTR-048 - Safe Copy Helper Removal
 

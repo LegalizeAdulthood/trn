@@ -633,32 +633,29 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
     }
     if (nntp_check() > 0)
     {
-        char      *last_buf = g_ser_line;
-        MemorySize last_buflen = sizeof g_ser_line;
         while (true)
         {
-            char *line = nntp_get_a_line(last_buf, last_buflen, last_buf != g_ser_line);
+            std::string line = nntp_get_a_line();
 #ifdef DEBUG
             if (g_debug & DEB_NNTP)
-                std::printf("<%s", line ? line : "<EOF>");
+                std::printf("<%s", line.empty() ? "<EOF>" : line.c_str());
 #endif
-            if (nntp_at_list_end(line))
+            if (nntp_at_list_end(line.c_str()))
             {
                 break;
             }
-            last_buf = line;
-            last_buflen = g_buf_len_last_line_got;
-            char *t = std::strchr(line, '\r');
+            char *line_data = line.data();
+            char *t = std::strchr(line_data, '\r');
             if (t != nullptr)
             {
                 *t = '\0';
             }
-            if (!(t = std::strchr(line, ' ')))
+            if (!(t = std::strchr(line_data, ' ')))
             {
                 continue;
             }
             t++;
-            num = ArticleNum{std::atol(line)};
+            num = ArticleNum{std::atol(line_data)};
             if (num < art_num || num > lastnum)
             {
                 continue;
@@ -686,10 +683,6 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
                     append_header_line(*owned_result, t);
                 }
             }
-        }
-        if (last_buf != g_ser_line)
-        {
-            std::free(last_buf);
         }
     }
     else

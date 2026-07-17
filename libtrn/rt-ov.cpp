@@ -46,7 +46,7 @@ static HeaderLineType s_header_num[] = {
     REFS_LINE, BYTES_LINE, LINES_LINE, XREF_LINE
 };
 
-static void             ov_parse(char *line, ArticleNum artnum, bool remote);
+static void             ov_parse(char *line, std::size_t line_length, ArticleNum artnum, bool remote);
 static std::string      ov_name(std::string_view group);
 static OverviewFieldNum ov_num(char *hdr, char *end);
 static const char      *ov_field_name(int num);
@@ -203,9 +203,7 @@ bool ov_data(ArticleNum first, ArticleNum last, bool cheating)
 {
     ArticleNum  artnum;
     ArticleNum  an;
-    char    * line;
-    char* last_buf = g_buf;
-    MemorySize last_buflen = LINE_BUF_LEN;
+    std::string line;
     bool success = true;
     ArticleNum real_first = first;
     ArticleNum real_last = last;
@@ -297,21 +295,19 @@ beginning:
     {
         if (remote)
         {
-            line = nntp_get_a_line(last_buf,last_buflen,last_buf!=g_buf);
-            if (nntp_at_list_end(line))
+            line = nntp_get_a_line();
+            if (nntp_at_list_end(line.c_str()))
             {
                 break;
             }
             line_cnt++;
         }
-        else if (!(line = get_a_line(last_buf, last_buflen, last_buf != g_buf, g_data_source->m_ov_in)))
+        else if ((line = get_a_line(g_data_source->m_ov_in)).empty())
         {
             break;
         }
 
-        last_buf = line;
-        last_buflen = g_buf_len_last_line_got;
-        an = ArticleNum{std::atol(line)};
+        an = ArticleNum{std::atol(line.c_str())};
         if (an < first)
         {
             continue;
@@ -326,7 +322,7 @@ beginning:
             break;
         }
         g_spin_todo -= (an - artnum).value_of() - 1;
-        ov_parse(line, artnum = an, remote);
+        ov_parse(line.data(), line.size(), artnum = an, remote);
         if (g_int_count)
         {
             g_int_count = 0;
@@ -425,14 +421,10 @@ exit:
         g_cached_all_in_range = true;
     }
     set_spin(SPIN_POP);
-    if (last_buf != g_buf)
-    {
-        std::free(last_buf);
-    }
     return success;
 }
 
-static void ov_parse(char *line, ArticleNum artnum, bool remote)
+static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, bool remote)
 {
     OverviewFieldNum *fieldnum = g_data_source->m_field_num;
     FieldFlags  *fieldflags = g_data_source->m_field_flags;
@@ -446,15 +438,15 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
         return;
     }
 
-    if (g_len_last_line_got > 0 && line[g_len_last_line_got - 1] == '\n')
+    if (line_length > 0 && line[line_length - 1] == '\n')
     {
-        if (g_len_last_line_got > 1 && line[g_len_last_line_got-2] == '\r')
+        if (line_length > 1 && line[line_length - 2] == '\r')
         {
-            line[g_len_last_line_got - 2] = '\0';
+            line[line_length - 2] = '\0';
         }
         else
         {
-            line[g_len_last_line_got - 1] = '\0';
+            line[line_length - 1] = '\0';
         }
     }
     char *cp = line;

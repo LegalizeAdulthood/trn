@@ -794,11 +794,14 @@ static bool open_newsrc(Newsrc *rp)
 
     // read in the .newsrc file
 
-    char *some_buf;
-    while ((some_buf = get_a_line(g_buf, LINE_BUF_LEN, false, rcfp)) != nullptr)
+    while (true)
     {
-        long length = g_len_last_line_got; // side effect of get_a_line
-        if (length <= 1)                   // only a newline???
+        std::string line = get_a_line(rcfp);
+        if (line.empty())
+        {
+            break;
+        }
+        if (line.size() <= 1) // only a newline???
         {
             continue;
         }
@@ -806,15 +809,11 @@ static bool open_newsrc(Newsrc *rp)
         append_newsgroup_order(np);
         np->m_rc = rp;
         ++g_newsgroup_count;
-        if (some_buf[length - 1] == '\n')
+        if (line.back() == '\n')
         {
-            some_buf[--length] = '\0'; // wipe out newline
+            line.pop_back(); // wipe out newline
         }
-        np->m_rc_line.assign(some_buf, static_cast<std::size_t>(length));
-        if (some_buf != g_buf)
-        {
-            std::free(some_buf);
-        }
+        np->m_rc_line = std::move(line);
         if (is_hor_space(*np->rc_line_c_str())               //
             || !std::strncmp(np->rc_line_c_str(), "options", 7)) // non-useful line?
         {
@@ -840,7 +839,7 @@ static bool open_newsrc(Newsrc *rp)
 
         // now find out how much there is to read
 
-        if (!in_list(g_buf) || (g_suppress_cn && s_found_any && !g_paranoid))
+        if (!in_list(np->rc_line_c_str()) || (g_suppress_cn && s_found_any && !g_paranoid))
         {
             np->m_to_read = TR_NONE;       // no need to calculate now
         }
@@ -984,7 +983,7 @@ static void parse_rcline(NewsgroupData *np)
 
 void NewsgroupData::abandon_newsgroup()
 {
-    char * some_buf = nullptr;
+    std::string some_buf;
 
     // open newsrc backup copy and try to find the prior value for the group.
     std::FILE *rcfp = std::fopen(m_rc->old_name.c_str(), "r");
@@ -992,22 +991,20 @@ void NewsgroupData::abandon_newsgroup()
     {
         int length = m_num_offset - 1;
 
-        while ((some_buf = get_a_line(g_buf, LINE_BUF_LEN, false, rcfp)) != nullptr)
+        while (!(some_buf = get_a_line(rcfp)).empty())
         {
-            if (g_len_last_line_got <= 0)
+            if (some_buf.back() == '\n')
             {
-                continue;
+                some_buf.pop_back(); // wipe out newline
             }
-            some_buf[g_len_last_line_got-1] = '\0'; // wipe out newline
-            if ((some_buf[length] == ':' || some_buf[length] == UNSUBSCRIBED_CHAR) //
-                && !std::strncmp(rc_line_c_str(), some_buf, length))
+            if (some_buf.size() > static_cast<std::size_t>(length) &&
+                (some_buf[static_cast<std::size_t>(length)] == ':' ||
+                 some_buf[static_cast<std::size_t>(length)] == UNSUBSCRIBED_CHAR) &&
+                !std::strncmp(rc_line_c_str(), some_buf.c_str(), length))
             {
                 break;
             }
-            if (some_buf != g_buf)
-            {
-                std::free(some_buf);
-            }
+            some_buf.clear();
         }
         std::fclose(rcfp);
     }
@@ -1017,18 +1014,14 @@ void NewsgroupData::abandon_newsgroup()
         term_down(1);
         return;
     }
-    if (some_buf == nullptr)
+    if (some_buf.empty())
     {
         m_rc_line.resize(static_cast<std::size_t>(m_num_offset - 1));
         m_abs_first = ArticleNum{};         // force group to be re-calculated
     }
     else
     {
-        m_rc_line = some_buf;
-        if (some_buf != g_buf)
-        {
-            std::free(some_buf);
-        }
+        m_rc_line = std::move(some_buf);
     }
     parse_rcline(this);
     if (m_subscribe_char == UNSUBSCRIBED_CHAR)

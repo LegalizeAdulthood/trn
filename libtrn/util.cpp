@@ -60,10 +60,6 @@ using WaitStatus = int;
 
 bool g_waiting{}; // waiting for subprocess (in doshell)?
 bool g_no_wait_fork{};
-// the strlen and the buffer length of "some_buf" after a call to:
-//     some_buf = get_a_line(bufptr,bufsize,realloc,fp);
-int        g_len_last_line_got{};
-MemorySize g_buf_len_last_line_got{};
 
 #ifndef USE_DEBUGGING_MALLOC
 static constexpr char s_no_memory[] = "trn: out of memory!\n";
@@ -357,45 +353,24 @@ char *trn_getwd(char *buf, int buflen)
     return buf;
 }
 
-// just like fgets but will make bigger buffer as necessary
-
-char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp)
+std::string get_a_line(std::FILE *fp)
 {
-    int bufix = 0;
-    int nextch;
-
-    do
+    std::string line;
+    line.reserve(LINE_BUF_LEN);
+    while (true)
     {
-        if (bufix >= buffer_length)
+        const int nextch = std::getc(fp);
+        if (nextch == EOF)
         {
-            buffer_length *= 2;
-            if (realloc_ok)             // just grow in place, if possible
-            {
-                buffer = safe_realloc(buffer,(MemorySize)buffer_length+1);
-            }
-            else
-            {
-                char* tmp = safe_malloc((MemorySize)buffer_length+1);
-                std::strncpy(tmp,buffer,buffer_length/2);
-                buffer = tmp;
-                realloc_ok = true;
-            }
-        }
-        nextch = std::getc(fp);
-        if ((nextch) == EOF)
-        {
-            if (!bufix)
-            {
-                return nullptr;
-            }
             break;
         }
-        buffer[bufix++] = (char)nextch;
-    } while (nextch && nextch != '\n');
-    buffer[bufix] = '\0';
-    g_len_last_line_got = bufix;
-    g_buf_len_last_line_got = buffer_length;
-    return buffer;
+        line.push_back(static_cast<char>(nextch));
+        if (nextch == '\0' || nextch == '\n')
+        {
+            break;
+        }
+    }
+    return line;
 }
 
 bool make_dir(const char *dirname, MakeDirNameType nametype)
