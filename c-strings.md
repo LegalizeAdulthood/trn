@@ -428,8 +428,8 @@ as a local string modernization slice.
 ## Current Audit Summary
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: 16 hits remain, including the helper declaration and
-  definition.  The 14 call sites are inventoried below.
+- `safe_copy`: 12 hits remain, including the helper declaration and
+  definition.  The 10 call sites are inventoried below.
 - `safe_realloc`: string-like storage remains in `get_a_line` and
   `grow_str`.
   Article, header, and regex buffers are storage/API slices, not local
@@ -448,8 +448,8 @@ as a local string modernization slice.
 
 ## Current `safe_copy` Inventory
 
-The current tree has 15 `safe_copy` hits: the helper definition, the
-helper declaration, and 13 call sites.  The call sites are still audit
+The current tree has 12 `safe_copy` hits: the helper definition, the
+helper declaration, and 10 call sites.  The call sites are still audit
 roots.  Keep each one visible until the owning storage or API changes.
 
 - `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
@@ -461,8 +461,6 @@ roots.  Keep each one visible until the owning storage or API changes.
   See `CSTR-029`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
-- `libtrn/respond.cpp`, `save_article`: three save, pipe, and command
-  copies remain.  See `CSTR-021`.
 - `libtrn/rt-util.cpp`, `compress_subj`: compresses subject display text
   in `g_buf`.  See `CSTR-031`.
 - `libtrn/sacmd.cpp`, `s_art_cmd`: fakes a save command in `g_buf`.
@@ -520,16 +518,6 @@ Finish these before broad global-buffer work.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-### CSTR-021 - Save Article Pipe And Normal Save Branches
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local destination buffer and `g_cmd_buf` command construction.
-- Function: `save_article`.
-- Change: refactor the pipe and normal-save branches.  Keep destination
-  ownership in `std::string` and use `fmt` for command construction
-  where formatting remains.
-- Tests: add pipe and normal-save coverage first.
 
 ### CSTR-025 - Selector Extract Command Handoff
 

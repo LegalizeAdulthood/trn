@@ -1,5 +1,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
+#include <file_contents.h>
+
 #include <config/common.h>
 #include <trn/addng.h>
 #include <trn/art.h>
@@ -1526,6 +1528,46 @@ TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(TRN_TEST_NEWSGROUP_DIR, buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, pipeSaveRetainsExpandedDestination)
+{
+    ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_env("PIPESAVER", "");
+    const std::string command{"s | pipe destination"};
+    ASSERT_LE(command.size(), LINE_BUF_LEN);
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    const SaveResult result = save_article();
+
+    EXPECT_EQ(SAVE_DONE, result);
+    EXPECT_EQ("pipe destination", g_save_dest);
+}
+
+TEST_F(InterpolatorNewsgroupTest, normalSaveWritesArticleToRelativeDestination)
+{
+    ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    ValueSaver<bool>        normal_always(g_norm_always, true);
+    m_env.expect_no_envar("SAVENAME");
+    m_env.expect_env("SAVEDIR", m_output.path().c_str());
+    m_env.expect_no_envar("NORMSAVER");
+    const std::string command{"s saved-article"};
+    ASSERT_LE(command.size(), LINE_BUF_LEN);
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    testing::internal::CaptureStdout();
+    const SaveResult  result = save_article();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    const fs::path saved_article = fs::path{m_output.path()} / "saved-article";
+    EXPECT_EQ(SAVE_DONE, result);
+    EXPECT_EQ(saved_article.generic_string(), g_save_dest);
+    EXPECT_EQ("Saved to file " + saved_article.generic_string(), output);
+    EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
 }
 
 TEST_F(InterpolatorNewsgroupTest, extractCreatesRelativeDestinationDirectory)

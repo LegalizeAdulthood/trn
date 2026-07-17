@@ -66,8 +66,6 @@ void respond_init()
 SaveResult save_article()
 {
     char* s;
-    char* c;
-    char altbuf[CMD_BUF_LEN];
     bool interactive = (g_buf[1] == FINISH_CMD);
     char cmd = *g_buf;
 
@@ -298,8 +296,7 @@ SaveResult save_article()
     {
         s++;                    // skip the |
         s = skip_eq(s, ' ');
-        safe_copy(altbuf, file_exp(s).c_str(), sizeof altbuf);
-        g_save_dest = altbuf;
+        g_save_dest = file_exp(s);
         if (g_data_source->m_flags & DF_REMOTE)
         {
             nntp_finish_body(FB_SILENT);
@@ -345,43 +342,35 @@ SaveResult save_article()
         {
             // skip spaces
         }
-        safe_copy(altbuf, file_exp(s).c_str(), sizeof altbuf);
-        s = altbuf;
-        if (!FILE_REF(s))
+        std::string destination = file_exp(s);
+        if (!FILE_REF(destination.c_str()))
         {
-            interp(g_buf, (sizeof g_buf), get_val_const("SAVEDIR", SAVEDIR));
-            if (make_dir(g_buf, MD_DIR))  // ensure directory exists
+            std::string save_directory = file_exp(get_val_const("SAVEDIR", SAVEDIR));
+            if (make_dir(save_directory.c_str(), MD_DIR)) // ensure directory exists
             {
-                std::strcpy(g_buf, g_priv_dir.c_str());
+                save_directory = g_priv_dir;
             }
-            if (*s)
+            if (!destination.empty())
             {
-                for (c = g_buf; *c; c++)
-                {
-                }
-                *c++ = '/';
-                std::strcpy(c,s);            // add filename
+                destination = (fs::path{save_directory} / destination).generic_string();
             }
-            s = g_buf;
+            else
+            {
+                destination = save_directory;
+            }
         }
         stat_t save_dir_stat{};
-        for (int i = 0;
-            (there = stat(s,&save_dir_stat) >= 0) && S_ISDIR(save_dir_stat.st_mode);
-            i++)                        // is it a directory?
+        for (int i = 0; (there = stat(destination.c_str(), &save_dir_stat) >= 0) && S_ISDIR(save_dir_stat.st_mode);
+             i++) // is it a directory?
         {
-            c = (s + std::strlen(s));
-            *c++ = '/';                 // put a slash before filename
-            interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? "News" : savename);
-            // generate a default name somehow or other
+            destination = (fs::path{destination} / file_exp(i ? "News" : savename)).generic_string();
         }
-        make_dir(s, MD_FILE);
-        if (!FILE_REF(s))       // relative path?
+        make_dir(destination.c_str(), MD_FILE);
+        if (!FILE_REF(destination.c_str())) // relative path?
         {
-            c = (s==g_buf ? altbuf : g_buf);
-            std::sprintf(c, "%s/%s", g_priv_dir.c_str(), s);
-            s = c;                      // absolutize it
+            destination = (fs::path{g_priv_dir} / destination).generic_string();
         }
-        g_save_dest = s; // make it handy for %b
+        g_save_dest = destination; // make it handy for %b
         s_tmp_fp = nullptr;
         if (!there)
         {
@@ -397,21 +386,20 @@ SaveResult save_article()
             {
                 const char *dflt = (in_string(savename, "%a", true) ? "nyq" : "ynq");
 
-                std::sprintf(g_cmd_buf,
-                "\nFile %s doesn't exist--\n        use mailbox format?",s);
 reask_save:
-                in_char(g_cmd_buf, MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
+                in_char(fmt::format("\nFile {} doesn't exist--\n        use mailbox format?", destination).c_str(),
+                        MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
                 newline();
                 print_cmd();
                 if (*g_buf == 'h')
                 {
                     if (g_verbose)
                     {
-                        std::printf("\n"
-                               "Type y to create %s as a mailbox.\n"
-                               "Type n to create it as a normal file.\n"
-                               "Type q to abort the save.\n",
-                               s);
+                        fmt::print("\n"
+                                   "Type y to create {} as a mailbox.\n"
+                                   "Type n to create it as a normal file.\n"
+                                   "Type q to abort the save.\n",
+                                   destination);
                     }
                     else
                     {
@@ -451,7 +439,7 @@ reask_save:
         }
         else
         {
-            s_tmp_fp = std::fopen(s,"r+");
+            s_tmp_fp = std::fopen(destination.c_str(), "r+");
             if (!s_tmp_fp)
             {
                 mailbox = false;
@@ -460,12 +448,12 @@ reask_save:
             {
                 if (std::fread(g_buf, 1, LINE_BUF_LEN, s_tmp_fp))
                 {
-                    c = g_buf;
+                    char *first = g_buf;
                     if (!std::isspace(MBOX_CHAR))   // if non-zero,
                     {
-                        c = skip_space(c);   // check the first character
+                        first = skip_space(first); // check the first character
                     }
-                    mailbox = (*c == MBOX_CHAR);
+                    mailbox = (*first == MBOX_CHAR);
                 }
                 else
                 {
@@ -474,22 +462,21 @@ reask_save:
             }
         }
 
-        s = get_val(mailbox ? "MBOXSAVER" : "NORMSAVER");
+        const char *saver = get_val(mailbox ? "MBOXSAVER" : "NORMSAVER");
         int i;
-        if (s)
+        if (saver != nullptr)
         {
             if (s_tmp_fp)
             {
                 std::fclose(s_tmp_fp);
             }
-            safe_copy(g_cmd_buf, file_exp(s).c_str(), sizeof g_cmd_buf);
             if (g_data_source->m_flags & DF_REMOTE)
             {
                 nntp_finish_body(FB_SILENT);
             }
             termlib_reset();
             reset_tty();          // make terminal behave
-            i = do_shell(use_pref?nullptr:SH,g_cmd_buf);
+            i = do_shell(use_pref ? nullptr : SH, file_exp(saver).c_str());
             termlib_init();
             no_echo();           // make terminal do what we want
             cr_mode();
@@ -510,7 +497,7 @@ reask_save:
             }
             if (g_save_from == 0 && g_art != 0)
             {
-                std::fprintf(s_tmp_fp, "Article: %ld of %s\n", g_art.value_of(), g_newsgroup_name.c_str());
+                fmt::print(s_tmp_fp, "Article: {} of {}\n", g_art.value_of(), g_newsgroup_name);
             }
             seek_art(g_save_from);
             while (read_art(g_buf, LINE_BUF_LEN) != nullptr)
@@ -541,8 +528,7 @@ reask_save:
         }
         else
         {
-            std::printf("%s to %s %s", there? "Appended" : "Saved",
-                   mailbox? "mailbox" : "file", g_save_dest.c_str());
+            fmt::print("{} to {} {}", there ? "Appended" : "Saved", mailbox ? "mailbox" : "file", g_save_dest);
         }
         if (interactive)
         {
