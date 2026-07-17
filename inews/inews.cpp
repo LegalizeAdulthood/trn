@@ -4,6 +4,7 @@
 // Copyright (c) 2026, Richard Thomson
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/pipe_io.h>
 #include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
@@ -114,24 +115,19 @@ int main(int argc, char *argv[])
         }
     }
 
-    const char *server = get_val("NNTPSERVER");
-    std::string server_name;
-    if (server == nullptr)
+    std::string server_name = get_env_var("NNTPSERVER");
+    if (server_name.empty())
     {
         server_name = file_exp(SERVER_NAME);
-        if (!server_name.empty())
+        if (!server_name.empty() && FILE_REF(server_name.c_str()))
         {
-            if (FILE_REF(server_name.c_str()))
-            {
-                server_name = nntp_server_name(server_name);
-            }
-            server = server_name.c_str();
+            server_name = nntp_server_name(server_name);
         }
     }
     const char *line_end;
-    if (server && *server && std::strcmp(server,"local") != 0)
+    if (!server_name.empty() && server_name != "local")
     {
-        g_server_name = server;
+        g_server_name = server_name;
         if (const auto separator = g_server_name.find(';'); separator != std::string::npos)
         {
             g_nntp_link.port_number = std::atoi(g_server_name.c_str() + separator + 1);

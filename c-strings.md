@@ -508,16 +508,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-080 - Inews Server Name Local Check
-
-- Files: `inews/inews.cpp`.
-- Kind: C-string comparison cleanup.
-- Function: `main`.
-- Change: compare the resolved server name with `"local"` using string
-  comparison instead of `std::strcmp`.  Keep the existing empty-server
-  behavior and do not change posting setup order.
-- Tests: inews startup/posting tests if present; otherwise build.
-
 #### CSTR-081 - Trn-artchk Server Name Local Check
 
 - Files: `trn-artchk/trn-artchk.cpp`.
