@@ -123,3 +123,16 @@ TEST_F(TreeRenderingTest, currentAndRecentArticlesAreMarked)
     EXPECT_EQ(expected, output);
     EXPECT_EQ(ArticleLine{1}, lines);
 }
+
+TEST_F(TreeRenderingTest, normalHeaderKeywordIsSplitFromValue)
+{
+    g_curr_artp = nullptr;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts("From: Tester\nignored", ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: Tester\n", output);
+    EXPECT_EQ(ArticleLine{1}, lines);
+}

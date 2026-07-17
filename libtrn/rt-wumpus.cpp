@@ -28,8 +28,8 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <string_view>
@@ -367,7 +367,6 @@ inline bool header_conv()
 // Does automatic wrapping of lines that are too long.
 ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int is_subject)
 {
-    char       *tmpbuf;
     char       *line;
     char       *end;
     int         wrap_at;
@@ -381,8 +380,10 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
 
     // Make a modifiable copy of the line
     // Copy line, filtering encoded and control characters.
-    tmpbuf = safe_malloc(len + 2); // yes, I mean "2"
-    line = tmpbuf;
+    std::string line_buffer;
+    line_buffer.reserve(static_cast<std::size_t>(len) + 2);
+    line_buffer.resize(static_cast<std::size_t>(len) + 2);
+    line = line_buffer.data();
     if (g_do_hiding)
     {
         end = line + decode_header(line, line_text);
@@ -413,7 +414,8 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
         }
         else
         {
-            std::strcpy(line, " ");
+            line[0] = ' ';
+            line[1] = '\0';
         }
         end = line + 1;
     }
@@ -572,9 +574,6 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
         newline();
         ++header_line;
     }// for remainder of line
-
-    // free allocated copy of line
-    std::free(tmpbuf);
 
     color_pop();        // of COLOR_HEADER
     // return number of lines displayed
