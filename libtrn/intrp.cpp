@@ -45,7 +45,7 @@ struct utsname utsn;
 #include <string_view>
 
 std::string g_orig_dir;    // cwd when rn invoked
-char       *g_host_name{}; // host name to match local postings
+std::string g_host_name;   // host name to match local postings
 std::string g_head_name;
 int         g_perform_count{};
 
@@ -106,30 +106,31 @@ void interp_init(char *tcbuf, int tcbuf_len)
 
     // the hostname to use in local-article comparisons
 #if HOST_BITS != 0
-    int i = (HOST_BITS < 2? 2 : HOST_BITS);
-    static char buff[128];
-    std::strcpy(buff, g_p_host_name.c_str());
-    g_host_name = buff+std::strlen(buff)-1;
-    while (i && g_host_name != buff)
+    int i = (HOST_BITS < 2 ? 2 : HOST_BITS);
+    g_host_name = g_p_host_name;
+    std::size_t suffix_start = g_host_name.size();
+    while (i && suffix_start != 0U)
     {
-        if (*--g_host_name == '.')
+        suffix_start--;
+        if (g_host_name[suffix_start] == '.')
         {
             i--;
         }
     }
-    if (*g_host_name == '.')
+    if (suffix_start < g_host_name.size() && g_host_name[suffix_start] == '.')
     {
-        g_host_name++;
+        suffix_start++;
     }
+    g_host_name.erase(0, suffix_start);
 #else
-    g_hostname = g_p_host_name.c_str();
+    g_host_name = g_p_host_name;
 #endif
 }
 
 void interp_final()
 {
     g_head_name.clear();
-    g_host_name = nullptr;
+    g_host_name.clear();
     g_orig_dir.clear();
 }
 

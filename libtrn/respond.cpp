@@ -641,7 +641,7 @@ int cancel_article()
     std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
     std::string from_buf = fetch_lines(g_art, FROM_LINE);
     if (!string_case_equal(get_val_const("FROM", ""), from_buf.c_str())      //
-        && (!in_string(from_buf.c_str(), g_host_name, false)                 //
+        && (!in_string(from_buf.c_str(), g_host_name.c_str(), false)         //
             || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
                 && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
 #ifdef HAS_NEWS_ADMIN
@@ -652,8 +652,8 @@ int cancel_article()
 #ifdef DEBUG
         if (g_debug)
         {
-            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf.c_str());
-            std::printf("%s != %s\n", get_val_const("FROM", ""), from_buf.c_str());
+            fmt::print("\n{}@{} != {}\n", g_login_name, g_host_name, from_buf);
+            fmt::print("{} != {}\n", get_val_const("FROM", ""), from_buf);
             term_down(3);
         }
 #endif
@@ -710,7 +710,7 @@ int supersede_article()         // Supersedes:
     std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
     std::string from_buf = fetch_lines(g_art, FROM_LINE);
     if (!string_case_equal(get_val_const("FROM", ""), from_buf.c_str())      //
-        && (!in_string(from_buf.c_str(), g_host_name, false)                 //
+        && (!in_string(from_buf.c_str(), g_host_name.c_str(), false)         //
             || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
                 && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
 #ifdef HAS_NEWS_ADMIN                                                //
@@ -721,8 +721,8 @@ int supersede_article()         // Supersedes:
 #ifdef DEBUG
         if (g_debug)
         {
-            std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_host_name,from_buf.c_str());
-            std::printf("%s != %s\n", get_val_const("FROM", ""), from_buf.c_str());
+            fmt::print("\n{}@{} != {}\n", g_login_name, g_host_name, from_buf);
+            fmt::print("{} != {}\n", get_val_const("FROM", ""), from_buf);
             term_down(3);
         }
 #endif

@@ -566,6 +566,15 @@ TEST_F(InterpolatorTest, hostName)
     ASSERT_EQ(TRN_TEST_P_HOST_NAME, buffer());
 }
 
+TEST_F(InterpolatorTest, hostMatchName)
+{
+#if HOST_BITS != 0
+    ASSERT_EQ("example.org", g_host_name);
+#else
+    ASSERT_EQ(TRN_TEST_P_HOST_NAME, g_host_name);
+#endif
+}
+
 TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
 {
     char pattern[]{"%i"};

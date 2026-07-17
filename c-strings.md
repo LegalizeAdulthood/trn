@@ -514,17 +514,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-045 - Host Name Match Storage
-
-- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`,
-  `libtrn/Article.cpp`, `libtrn/respond.cpp`.
-- Kind: global interior pointer into a function-local static buffer.
-- Function: `interp_init`.
-- Change: replace `g_host_name` with owned `std::string` containing the
-  suffix used for local-post matching.  Replace null checks with
-  `empty()` where needed and pass `c_str()` to legacy helpers.
-- Tests: article local-author and response tests.
-
 #### CSTR-046 - Character Substitution Buffer Overload
 
 - Files: `libtrn/charsubst.cpp`, `libtrn/include/trn/charsubst.h`,
