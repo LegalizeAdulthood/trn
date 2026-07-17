@@ -5,3 +5,5 @@
 * Validate that all conditional compilation blocks correspond to a CMake
   option
 * Eliminate the push/pop macro garbage in the universal selector
+* Inline Macro FILE_REF
+* Eliminate all MSDOS conditional branches
