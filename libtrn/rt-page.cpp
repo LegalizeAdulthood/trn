@@ -146,25 +146,23 @@ bool set_sel_mode(char_int ch)
 ///
 /// This function temporarily switches to the specified selector mode,
 /// formats a string describing the current sort order (including
-/// direction), restores the previous mode, and returns the result in
-/// `g_buf`.
+/// direction), restores the previous mode, and returns the result.
 ///
 /// @param smode The selector mode to describe.
-/// @return Pointer to the buffer containing the sort order description.
+/// @return String containing the sort order description.
 ///
 /// @globals
 /// - g_sel_mode: Temporarily set to switch modes and restored.
-/// - g_buf: Updated with the formatted sort order string.
 ///
-char *get_sel_order(SelectionMode smode)
+std::string get_sel_order(SelectionMode smode)
 {
     SelectionMode save_sel_mode = g_sel_mode;
     set_selector(smode, SS_MAGIC_NUMBER);
-    std::sprintf(g_buf,"%s%s", g_sel_direction < 0? "reverse " : "",
-            g_sel_sort_string);
+    std::string order = g_sel_direction < 0 ? "reverse " : "";
+    order += g_sel_sort_string;
     g_sel_mode = save_sel_mode;
     set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
-    return g_buf;
+    return order;
 }
 
 /// @brief Sets the selection sort order for a given selection mode based on a string input.

@@ -509,17 +509,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-043 - Selector Order String
-
-- Files: `libtrn/rt-page.cpp`, `libtrn/include/trn/rt-page.h`,
-  `libtrn/opt.cpp`.
-- Kind: borrowed static-buffer return through `g_buf`.
-- Function: `get_sel_order`.
-- Change: return `std::string` from `get_sel_order` and build the value
-  with `fmt::format` or simple string append.  Callers already return
-  owned `std::string` from `option_value`.
-- Tests: `test_sw`.
-
 #### CSTR-044 - Option Header Lists
 
 - Files: `libtrn/opt.cpp`.

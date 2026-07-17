@@ -65,8 +65,8 @@ extern std::size_t   g_sel_grp_display_mode_index;
 extern std::size_t   g_sel_art_display_mode_index;
 
 bool set_sel_mode(char_int ch);
-char *get_sel_order(SelectionMode smode);
-bool  set_sel_order(SelectionMode smode, std::string_view str);
+std::string get_sel_order(SelectionMode smode);
+bool        set_sel_order(SelectionMode smode, std::string_view str);
 char  current_group_display_mode();
 char  current_article_display_mode();
 bool set_sel_sort(SelectionMode smode, char_int ch);
