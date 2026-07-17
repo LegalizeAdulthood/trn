@@ -4,6 +4,7 @@
 
 #include <config/common.h>
 #include <trn/hash.h>
+#include <trn/trn.h>
 #include <util/env.h>
 
 #include <test_config.h>
@@ -142,6 +143,54 @@ protected:
     NNTPLink                                                 m_old_nntp_link{};
     int                                                      m_old_net_speed{};
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
+};
+
+class FindCloseMatchTest : public SourceFileTest
+{
+protected:
+    void SetUp() override
+    {
+        SourceFileTest::SetUp();
+        m_saved_data_sources.swap(g_data_sources);
+        m_old_data_source = g_data_source;
+        m_old_newsgroup_name = g_newsgroup_name;
+        m_old_newsgroup_dir = g_newsgroup_dir;
+        m_old_verbose = g_verbose;
+        g_data_source = nullptr;
+        g_verbose = false;
+        g_data_sources.reserve(2);
+    }
+
+    void TearDown() override
+    {
+        for (DataSource &source : g_data_sources)
+        {
+            source.m_act_sf.close();
+        }
+        g_data_sources.clear();
+        m_saved_data_sources.swap(g_data_sources);
+        g_data_source = m_old_data_source;
+        g_newsgroup_name = m_old_newsgroup_name;
+        g_newsgroup_dir = m_old_newsgroup_dir;
+        g_verbose = m_old_verbose;
+        SourceFileTest::TearDown();
+    }
+
+    void add_active_source(std::string_view active_line)
+    {
+        const fs::path source_path = m_output_dir / ("active-" + std::to_string(g_data_sources.size()));
+        std::ofstream{source_path} << active_line;
+        g_data_sources.emplace_back();
+        DataSource &source = g_data_sources.back();
+        source.m_flags = DF_OPEN;
+        ASSERT_EQ(1, source.m_act_sf.open(source_path, "", nullptr));
+    }
+
+    std::vector<DataSource> m_saved_data_sources;
+    DataSource             *m_old_data_source{};
+    std::string             m_old_newsgroup_name;
+    std::string             m_old_newsgroup_dir;
+    bool                    m_old_verbose{};
 };
 
 } // namespace
@@ -323,4 +372,49 @@ TEST_F(DataSourceFindGroupDescTest, storesEmptyDescriptionForEmptyServerList)
     const std::string_view description = m_data_source.find_group_desc("comp.lang.apl");
 
     EXPECT_EQ("\n\n", description);
+}
+
+TEST_F(FindCloseMatchTest, usesSingleCloseMatch)
+{
+    add_active_source("comp.lang.apl 10 1 y\n");
+    set_newsgroup_name("comp.lang.apx");
+    testing::internal::CaptureStdout();
+
+    const int         result = find_close_match();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(1, result);
+    EXPECT_EQ("comp.lang.apl", g_newsgroup_name);
+    EXPECT_EQ("comp/lang/apl", g_newsgroup_dir);
+    EXPECT_EQ("(Using comp.lang.apl)\n", output);
+    EXPECT_EQ("comp.lang.apl 10 1 y\n", g_data_sources.front().m_act_sf.m_lines.front());
+}
+
+TEST_F(FindCloseMatchTest, deduplicatesMatchesFromMultipleSources)
+{
+    add_active_source("comp.lang.apl 10 1 y\n");
+    add_active_source("comp.lang.apl 10 1 y\n");
+    set_newsgroup_name("comp.lang.apx");
+    testing::internal::CaptureStdout();
+
+    const int         result = find_close_match();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(1, result);
+    EXPECT_EQ("comp.lang.apl", g_newsgroup_name);
+    EXPECT_EQ("(Using comp.lang.apl)\n", output);
+}
+
+TEST_F(FindCloseMatchTest, leavesNameUnchangedWhenNoMatchExists)
+{
+    add_active_source("comp.lang.apl 10 1 y\n");
+    set_newsgroup_name("alt.binaries.example");
+    testing::internal::CaptureStdout();
+
+    const int         result = find_close_match();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(0, result);
+    EXPECT_EQ("alt.binaries.example", g_newsgroup_name);
+    EXPECT_TRUE(output.empty());
 }

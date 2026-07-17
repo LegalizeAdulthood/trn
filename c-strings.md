@@ -516,16 +516,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-### CSTR-046 - Close Match Newsgroup Storage
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: `char **` array and C string parsing with `strchr` and
-  `strcmp`.
-- Functions: `find_close_match`, `check_distance`, and `get_near_miss`.
-- Change: replace `s_newsgroup_ptrs` with vector-backed string or
-  string-view storage owned by the close-match scan.
-- Tests: add close-match coverage first if missing.
-
 ### CSTR-048 - Scorefile Line Parser Views
 
 - Files: `libtrn/scorefile.cpp`.

@@ -74,8 +74,9 @@ static SourceFile                *source_file_from_hash(HashDatum data);
 static std::string               *source_file_line(HashDatum data);
 static long                       source_file_position(HashDatum data);
 static int                        source_file_cmp(std::string_view key, HashDatum data);
-static int                        check_distance(int len, HashDatum *data, int newsrc_ptr);
-static int                        get_near_miss();
+static void                       check_distance(std::string_view candidate_name,
+                                                 std::vector<std::string> &newsgroup_matches, int &best_match);
+static int                        get_near_miss(const std::vector<std::string> &newsgroup_matches);
 static DataSource                *new_data_source(const char *name, const DataSourceConfig &config);
 static std::string                read_data_sources(std::string_view filename);
 
@@ -1190,22 +1191,17 @@ static int source_file_cmp(std::string_view key, HashDatum data)
 //
 // You might want to present all of the closest matches, and let the user
 // choose among them.  But because I'm lazy I chose to only keep track of
-// all with newsgroups with the//single* smallest error, in array s_newsgroup_ptrs[].
+// all newsgroups with the single smallest error.
 // A more flexible approach would keep around the 10 best matches, whether
 // or not they had precisely the same edit distance, but oh well.
 //
 
-static char **s_newsgroup_ptrs{}; // List of potential matches
-static int    s_newsgroup_num{};  // Length of list in s_newsgroup_ptrs[]
-static int    s_best_match{};     // Value of best match
-
 int find_close_match()
 {
-    int ret = 0;
-
-    s_best_match = -1;
-    s_newsgroup_ptrs = (char**)safe_malloc(MAX_NG * sizeof (char*));
-    s_newsgroup_num = 0;
+    int                      ret = 0;
+    int                      best_match = -1;
+    std::vector<std::string> newsgroup_matches;
+    newsgroup_matches.reserve(MAX_NG);
 
     // Iterate over all legal newsgroups
     for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
@@ -1214,7 +1210,13 @@ int find_close_match()
         {
             if (dp->m_act_sf.m_hp)
             {
-                hash_walk(dp->m_act_sf.m_hp, check_distance, 0);
+                for (const std::string &line : dp->m_act_sf.m_lines)
+                {
+                    const std::string::const_iterator key_end = std::find_if(
+                        line.begin(), line.end(), [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+                    check_distance(std::string_view{line}.substr(0, static_cast<std::size_t>(key_end - line.begin())),
+                                   newsgroup_matches, best_match);
+                }
             }
             else
             {
@@ -1225,136 +1227,107 @@ int find_close_match()
 
     if (ret < 0)
     {
-        hash_walk(g_newsrc_hash, check_distance, 1);
+        for (const NewsgroupData *newsgroup : g_newsgroup_order)
+        {
+            if (newsgroup->m_num_offset != 0 && newsgroup->m_to_read != TR_IGNORE)
+            {
+                check_distance(newsgroup->rc_name(), newsgroup_matches, best_match);
+            }
+        }
         ret = 0;
     }
 
-    // s_ngn is the number of possibilities.  If there's just one, go with it.
+    // If there's just one possibility, go with it.
 
-    switch (s_newsgroup_num)
+    switch (newsgroup_matches.size())
     {
     case 0:
         break;
     case 1:
     {
-        char* cp = std::strchr(s_newsgroup_ptrs[0], ' ');
-        if (cp)
-        {
-            *cp = '\0';
-        }
+        const std::string &match = newsgroup_matches.front();
         if (g_verbose)
         {
-            std::printf("(I assume you meant %s)\n", s_newsgroup_ptrs[0]);
+            fmt::print("(I assume you meant {})\n", match);
         }
         else
         {
-            std::printf("(Using %s)\n", s_newsgroup_ptrs[0]);
+            fmt::print("(Using {})\n", match);
         }
-        set_newsgroup_name(s_newsgroup_ptrs[0]);
-        if (cp)
-        {
-            *cp = ' ';
-        }
+        set_newsgroup_name(match.c_str());
         ret = 1;
         break;
     }
 
     default:
-        ret = get_near_miss();
+        ret = get_near_miss(newsgroup_matches);
         break;
     }
-    std::free((char*)s_newsgroup_ptrs);
     return ret;
 }
 
-static int check_distance(int len, HashDatum *data, int newsrc_ptr)
+static void check_distance(std::string_view candidate_name, std::vector<std::string> &newsgroup_matches,
+                           int &best_match)
 {
-    char* name;
-
-    if (newsrc_ptr)
-    {
-        name = ((NewsgroupData *) data->dat_ptr)->rc_line_data();
-    }
-    else
-    {
-        name = source_file_line(*data)->data();
-    }
-
     // Efficiency: don't call edit_dist when the lengths are too different.
     const int ngname_len = static_cast<int>(g_newsgroup_name.length());
-    if (len < ngname_len)
+    const int candidate_len = static_cast<int>(candidate_name.size());
+    if (candidate_len < ngname_len)
     {
-        if (ngname_len - len > LENGTH_HACK)
+        if (ngname_len - candidate_len > LENGTH_HACK)
         {
-            return 0;
+            return;
         }
     }
     else
     {
-        if (len - ngname_len > LENGTH_HACK)
+        if (candidate_len - ngname_len > LENGTH_HACK)
         {
-            return 0;
+            return;
         }
     }
 
-    const std::string_view newsgroup_name{
-            g_newsgroup_name.data(), g_newsgroup_name.size()};
-    const std::string_view candidate_name{
-            name != nullptr ? name : "",
-            name != nullptr && len > 0 ? static_cast<std::size_t>(len) : 0};
-    int value = edit_distn(newsgroup_name, candidate_name);
+    const std::string_view newsgroup_name{g_newsgroup_name};
+    int                    value = edit_distn(newsgroup_name, candidate_name);
     if (value > MIN_DIST)
     {
-        return 0;
+        return;
     }
 
-    if (value < s_best_match)
+    if (value < best_match)
     {
-        s_newsgroup_num = 0;
+        newsgroup_matches.clear();
     }
-    if (s_best_match < 0 || value <= s_best_match)
+    if (best_match < 0 || value <= best_match)
     {
-        for (int i = 0; i < s_newsgroup_num; i++)
+        if (std::find_if(newsgroup_matches.begin(), newsgroup_matches.end(), [candidate_name](const std::string &match)
+                         { return std::string_view{match} == candidate_name; }) != newsgroup_matches.end())
         {
-            if (!std::strcmp(name,s_newsgroup_ptrs[i]))
-            {
-                return 0;
-            }
+            return;
         }
-        s_best_match = value;
-        if (s_newsgroup_num < MAX_NG)
+        best_match = value;
+        if (newsgroup_matches.size() < static_cast<std::size_t>(MAX_NG))
         {
-            s_newsgroup_ptrs[s_newsgroup_num++] = name;
+            newsgroup_matches.emplace_back(candidate_name);
         }
     }
-    return 0;
 }
 
 // Now we've got several potential matches, and have to choose between them
 // somehow.  Again, results will be returned in global g_newsgroup_name.
 //
-static int get_near_miss()
+static int get_near_miss(const std::vector<std::string> &newsgroup_matches)
 {
     std::string options;
 
     if (g_verbose)
     {
-        std::printf("However, here are some close matches:\n");
+        fmt::print("However, here are some close matches:\n");
     }
-    s_newsgroup_num = std::min(s_newsgroup_num, 9);         // Since we're using single digits....
-    for (int i = 0; i < s_newsgroup_num; i++)
+    for (std::size_t i = 0; i < newsgroup_matches.size(); i++)
     {
-        char* cp = std::strchr(s_newsgroup_ptrs[i], ' ');
-        if (cp)
-        {
-            *cp = '\0';
-        }
-        fmt::print("  {}.  {}\n", i + 1, s_newsgroup_ptrs[i]);
+        fmt::print("  {}.  {}\n", i + 1, newsgroup_matches[i]);
         options += std::to_string(i + 1);
-        if (cp)
-        {
-            *cp = ' ';
-        }
     }
     options += 'n';
 
@@ -1392,20 +1365,9 @@ reask:
         if (std::isdigit(*g_buf))
         {
             const std::size_t pos = options.find(*g_buf);
-
-            int i = pos != std::string::npos ? static_cast<int>(pos) : s_newsgroup_num;
-            if (i >= 0 && i < s_newsgroup_num)
+            if (pos < newsgroup_matches.size())
             {
-                char* cp = std::strchr(s_newsgroup_ptrs[i], ' ');
-                if (cp)
-                {
-                    *cp = '\0';
-                }
-                set_newsgroup_name(s_newsgroup_ptrs[i]);
-                if (cp)
-                {
-                    *cp = ' ';
-                }
+                set_newsgroup_name(newsgroup_matches[pos].c_str());
                 return 1;
             }
         }
