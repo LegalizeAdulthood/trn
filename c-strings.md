@@ -509,15 +509,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-041 - Article End Prompt Text
-
-- Files: `libtrn/art.cpp`.
-- Kind: function-local static fixed buffer.
-- Function: `do_article`.
-- Change: assign `g_prompt` from `fmt::format` instead of formatting into
-  static `prompt_buf[64]`.
-- Tests: article display/interpolator tests.
-
 #### CSTR-042 - Selector Search Text
 
 - Files: `libtrn/scmd.cpp`.

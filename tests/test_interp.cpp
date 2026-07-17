@@ -1643,6 +1643,7 @@ TEST_F(InterpolatorNewsgroupTest, extractUsesCustomCommand)
 
 TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
 {
+    ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
     g_header_type[FROM_LINE].flags |= HT_MAGIC;
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
@@ -1662,6 +1663,9 @@ TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
     EXPECT_NE(std::string::npos, output.find("From: " TRN_TEST_HEADER_FROM_NAME));
     EXPECT_EQ(std::string::npos, output.find("From: " TRN_TEST_HEADER_FROM));
     EXPECT_EQ(TRN_TEST_HEADER_FROM, fetch_lines(g_art, FROM_LINE));
+    EXPECT_EQ("%sEnd of article " + std::to_string(TRN_TEST_ARTICLE_NUM) + " (of " +
+                  std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
+              g_prompt);
 }
 
 TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)

@@ -39,6 +39,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -117,7 +119,6 @@ DoArticleResult do_article()
     char* buf_ptr = g_art_line;   // pointer to input buffer
     std::string from_line;
     int out_pos;                  // column position of output
-    static char prompt_buf[64];  // place to hold prompt
     bool notes_files = false;     // might there be notes files junk?
     MinorMode old_mode = g_mode;
     bool output_ok = true;
@@ -143,10 +144,15 @@ DoArticleResult do_article()
         g_raw_art_size = art_size;
         g_art_size = art_size;
     }
-    std::sprintf(prompt_buf, g_mouse_bar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
-        : "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
-        g_art.value_of(), g_last_art.value_of());   // format prompt string
-    g_prompt = prompt_buf;
+    if (g_mouse_bar_cnt > 3)
+    {
+        g_prompt = fmt::format("%sEnd of art {} (of {}) %s[%s]", g_art.value_of(), g_last_art.value_of());
+    }
+    else
+    {
+        g_prompt =
+            fmt::format("%sEnd of article {} (of {}) %s-- what next? [%s]", g_art.value_of(), g_last_art.value_of());
+    }
     g_int_count = 0;            // interrupt count is 0
     s_first_page = g_top_line < 0;
     if (s_first_page != 0)
