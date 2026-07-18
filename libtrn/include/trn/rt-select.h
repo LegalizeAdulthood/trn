@@ -9,6 +9,8 @@
 #include <trn/help.h>
 #include <trn/rcstuff.h>
 
+#include <string_view>
+
 enum SelectionMode
 {
     SM_MAGIC_NUMBER = 0, // Not sure what this mode value means?
@@ -41,12 +43,12 @@ extern bool              g_sel_rereading;
 extern SelectionMode     g_sel_mode;
 extern SelectionMode     g_sel_default_mode;
 extern SelectionMode     g_sel_thread_mode;
-extern const char       *g_sel_mode_string;
+extern std::string_view  g_sel_mode_string;
 extern SelectionSortMode g_sel_sort;
 extern SelectionSortMode g_sel_art_sort;
 extern SelectionSortMode g_sel_thread_sort;
 extern SelectionSortMode g_sel_newsgroup_sort;
-extern const char       *g_sel_sort_string;
+extern std::string_view  g_sel_sort_string;
 extern int               g_sel_direction;
 extern bool              g_sel_exclusive;
 extern AddGroupFlags     g_sel_mask;

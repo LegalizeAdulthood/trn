@@ -56,8 +56,8 @@ struct SelectorRestorer
     SelectionSortMode article_sort;
     SelectionSortMode thread_sort;
     SelectionSortMode newsgroup_sort;
-    const char       *mode_string;
-    const char       *sort_string;
+    std::string_view  mode_string;
+    std::string_view  sort_string;
     int               direction;
 
     ~SelectorRestorer()
@@ -282,6 +282,7 @@ TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)
     decode_switch("-OaD");
 
     EXPECT_EQ(SM_ARTICLE, g_sel_default_mode);
+    EXPECT_EQ("articles", option_value(OI_NEWS_SEL_MODE));
     EXPECT_EQ("reverse date", option_value(OI_NEWS_SEL_ORDER));
 }
 

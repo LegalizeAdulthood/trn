@@ -520,19 +520,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-118 - Selector Mode Label Views
-
-- Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,
-  `libtrn/include/trn/rt-select.h`, `libtrn/opt.cpp`.
-- Kind: literal-only global selector labels.
-- Function: storage-centered `g_sel_mode_string` and
-  `g_sel_sort_string`.
-- Change: replace the raw global label pointers with
-  `std::string_view` and use view-aware formatting/appending at display
-  sites.  Keep `g_sel_chars` out of this slice because that value comes
-  from configuration.
-- Tests: selector page and option display tests.
-
 #### CSTR-119 - Selector Character Set Storage
 
 - Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,

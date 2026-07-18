@@ -72,12 +72,12 @@ bool              g_sel_rereading{};
 SelectionMode     g_sel_mode{};
 SelectionMode     g_sel_default_mode{SM_THREAD};
 SelectionMode     g_sel_thread_mode{SM_THREAD};
-const char       *g_sel_mode_string{};
+std::string_view  g_sel_mode_string{};
 SelectionSortMode g_sel_sort{};
 SelectionSortMode g_sel_art_sort{SS_GROUPS};
 SelectionSortMode g_sel_thread_sort{SS_DATE};
 SelectionSortMode g_sel_newsgroup_sort{SS_NATURAL};
-const char       *g_sel_sort_string{};
+std::string_view  g_sel_sort_string{};
 int               g_sel_direction{1};
 bool              g_sel_exclusive{};
 AddGroupFlags     g_sel_mask{AGF_SEL};
@@ -1733,7 +1733,6 @@ reinp_selector:
 ///
 /// @globals
 /// - g_cmd_buf: Updated with the constructed prompt string.
-/// - g_msg: Updated with the full prompt message to be displayed.
 /// - g_term_col: Updated to the length of the displayed prompt message.
 /// - s_removed_prompt: Set to RP_NONE to indicate no removed prompt state.
 ///
@@ -1760,11 +1759,12 @@ static void sel_prompt()
                 s_page_char, s_end_char);
     }
     interp(g_buf, sizeof g_buf, g_mail_call);
-    std::sprintf(g_msg, "%s-- %s %s (%s%s order) -- %s", g_buf,
-            g_sel_exclusive && g_in_ng? "SELECTED" : "Select", g_sel_mode_string,
-            g_sel_direction<0? "reverse " : "", g_sel_sort_string, g_cmd_buf);
-    color_string(COLOR_CMD,g_msg);
-    g_term_col = std::strlen(g_msg);
+    const std::string prompt = fmt::format("{}-- {} {} ({}{} order) -- {}",
+            g_buf, g_sel_exclusive && g_in_ng? "SELECTED" : "Select",
+            g_sel_mode_string, g_sel_direction<0? "reverse " : "",
+            g_sel_sort_string, g_cmd_buf);
+    color_string(COLOR_CMD, prompt);
+    g_term_col = static_cast<int>(prompt.size());
     s_removed_prompt = RP_NONE;
 }
 
