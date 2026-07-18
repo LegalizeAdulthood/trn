@@ -520,18 +520,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-115 - Nntplist Argument Views
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: borrowed command-line text and local file label selection.
-- Function: `main`.
-- Depends on: `CSTR-109`.
-- Change: replace `action`, `wildarg`, and `local_file` null-sentinel
-  pointers with `std::string_view` values using empty string as the
-  missing sentinel.  Use view comparisons and keep an original `argv`
-  pointer only where a callee immediately consumes null-terminated text.
-- Tests: nntplist smoke tests, or add focused coverage first.
-
 #### CSTR-116 - Color Attribute Parser Views
 
 - Files: `libtrn/color.cpp`.

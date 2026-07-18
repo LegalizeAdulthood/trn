@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <string_view>
 
 static void usage();
 
@@ -27,31 +28,35 @@ std::string g_nntp_auth_file;
 
 int main(int argc, char *argv[])
 {
-    const char *action = nullptr;
-    const char *wildarg = nullptr;
+    std::string_view action;
+    std::string_view wildarg;
     std::FILE *out_fp{};
 
     while (--argc)
     {
-        if (**++argv == '-')
+        std::string_view arg{*++argv};
+        if (!arg.empty() && arg.front() == '-')
         {
-            switch (*++*argv)
+            switch (arg.size() > 1 ? arg[1] : '\0')
             {
             case 'o':
+            {
                 if (out_fp || !--argc)
                 {
                     usage();
                 }
-                out_fp = std::fopen(*++argv, "w");
+                const char *output_file = *++argv;
+                out_fp = std::fopen(output_file, "w");
                 if (out_fp == nullptr)
                 {
-                    std::perror(*argv);
+                    std::perror(output_file);
                     std::exit(1);
                 }
                 break;
+            }
 
             case 'x':
-                if (wildarg || !--argc)
+                if (!wildarg.empty() || !--argc)
                 {
                     usage();
                 }
@@ -63,18 +68,18 @@ int main(int argc, char *argv[])
                 // NO RETURN
             }
         }
-        else if (!action)
+        else if (action.empty())
         {
-            action = *argv;
+            action = arg;
         }
         else
         {
             usage();
         }
     }
-    if (action && string_case_equal(action, "active"))
+    if (string_case_equal(action, "active"))
     {
-        action = nullptr;
+        action = {};
     }
     if (!out_fp)
     {
@@ -118,12 +123,12 @@ int main(int argc, char *argv[])
             std::exit(1);
         }
         std::string command{"LIST"};
-        if (action)
+        if (!action.empty())
         {
             command += ' ';
             command += action;
         }
-        if (wildarg)
+        if (!wildarg.empty())
         {
             command += ' ';
             command += wildarg;
@@ -137,7 +142,8 @@ int main(int argc, char *argv[])
 #endif
         if (nntp_check() <= 0)
         {
-            fmt::print(stderr, "nntplist: Can't get {} file from server.\n", action ? action : "active");
+            fmt::print(stderr, "nntplist: Can't get {} file from server.\n",
+                       action.empty() ? std::string_view{"active"} : action);
             fmt::print(stderr, "Server said: {}\n", g_ser_line);
             finalize(1);
         }
@@ -159,8 +165,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        const char *local_file = nullptr;
-        if (!action)
+        std::string_view local_file;
+        if (action.empty())
         {
             local_file = ACTIVE;
         }
@@ -180,7 +186,7 @@ int main(int argc, char *argv[])
         {
             local_file = OVERVIEW_FMT;
         }
-        if (!local_file || !*local_file)
+        if (local_file.empty())
         {
             fmt::print(stderr, "Don't know how to list `{}' from your local system.\n", action);
             exit(1);
@@ -193,7 +199,7 @@ int main(int argc, char *argv[])
         }
         while (std::fgets(g_ser_line, sizeof g_ser_line, in_fp))
         {
-            if (wildarg)
+            if (!wildarg.empty())
             {
                 cp = skip_non_space(g_ser_line);
                 if (!cp)
@@ -201,7 +207,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 *cp = '\0';
-                if (!wildcard_match(g_ser_line, wildarg))
+                if (!wildcard_match(g_ser_line, wildarg.data()))
                 {
                     continue;
                 }
