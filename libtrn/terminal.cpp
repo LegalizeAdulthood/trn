@@ -126,6 +126,9 @@ static char *s_tc_TE{}; // reset terminal
 static char *s_tc_KS{}; // enter `keypad transmit' mode
 static char *s_tc_KE{}; // exit `keypad transmit' mode
 static char  s_tc_PC{}; // pad character for use by tputs()
+#ifndef MSDOS
+static std::string s_tc_CR_fallback;
+#endif
 #ifdef _POSIX_SOURCE
 static speed_t s_out_speed{}; // terminal output speed,
 #else
@@ -397,14 +400,14 @@ void term_set(char *tcbuf)
     {
         g_tc_VB = "\007";
     }
+    s_tc_CR_fallback.clear();
     g_tc_CR = Tgetstr("cr");
     if (!*g_tc_CR)
     {
         if (tgetflag("nc") && *g_tc_UP)
         {
-            char *tc_CR = safe_malloc((MemorySize)std::strlen(g_tc_UP)+2);
-            std::sprintf(tc_CR,"%s\r",g_tc_UP);
-            g_tc_CR = tc_CR;
+            s_tc_CR_fallback = fmt::format("{}\r", g_tc_UP);
+            g_tc_CR = s_tc_CR_fallback.c_str();
         }
         else
         {

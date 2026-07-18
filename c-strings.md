@@ -436,8 +436,7 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   definition, and five call sites in three owner clusters.  The call
   sites are inventoried below.
 - `safe_malloc`: remaining string-shaped owners are inactive `MCHASE`
-  newsrc editing code, terminal CR fallback storage, `g_head_buf`, and
-  `g_art_buf`.
+  newsrc editing code, `g_head_buf`, and `g_art_buf`.
   Non-string owners include hash tables, selector page storage, regex
   bytecode, HTML block arrays, article subject pointer arrays, and
   generic allocation helpers.
@@ -477,8 +476,8 @@ production code.
 - Copy and concatenation: `strcpy` 77, `strncpy` 4, `strcat` 3.
 - Comparison: `strcmp` 4, `strncmp` 24.
 - Search and length: `strchr` 92, `strrchr` 7, `strstr` 2,
-  `strlen` 84.
-- Formatting into C buffers: `sprintf` 97.
+  `strlen` 83.
+- Formatting into C buffers: `sprintf` 96.
 - C text I/O roots: `fgets` 31, `fputs` 206, `printf` 490,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
@@ -515,16 +514,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-072 - Terminal CR Fallback Storage
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
-- Kind: heap string assigned to global terminal capability pointer.
-- Function: `term_set`.
-- Change: replace the `safe_malloc` fallback for `g_tc_CR` with owned
-  terminal capability storage that has stable lifetime.  Do not let a
-  local string pointer escape.
-- Tests: terminal capability tests.
 
 #### CSTR-089 - Switch Decode Scratch Buffer
 
