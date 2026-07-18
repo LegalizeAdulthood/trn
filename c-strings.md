@@ -448,7 +448,7 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   terminal storage, response header buffers, `ngstuff` command
   expansion buffers, `uudecode` pending-line storage, selector command
   key storage, and global command/message buffers.
-- Filename storage: current path candidates remain in decode, KILL-file
+- Filename storage: current path candidates remain in KILL-file
   editing/appending, score-file loading/editing, newsrc file fields, and
   some universal-selector file fields.  Mixed URL/path/host fields need
   ownership and identity splits before they can honestly become
@@ -473,12 +473,12 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 76, `strncpy` 4, `strcat` 3.
+- Copy and concatenation: `strcpy` 76, `strncpy` 4, `strcat` 2.
 - Comparison: `strcmp` 4, `strncmp` 24.
 - Search and length: `strchr` 88, `strrchr` 7, `strstr` 2,
-  `strlen` 83.
-- Formatting into C buffers: `sprintf` 94.
-- C text I/O roots: `fgets` 31, `fputs` 206, `printf` 483,
+  `strlen` 82.
+- Formatting into C buffers: `sprintf` 85.
+- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 483,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
 
@@ -519,16 +519,6 @@ Finish these before broad global-buffer work.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-054 - Decode Piece Paths And Messages
-
-- Files: `libtrn/decode.cpp`.
-- Kind: path/message construction through `g_buf` and `g_msg`.
-- Function: `decode_piece`.
-- Change: use `fs::path` for part files and the `CT` side file, and use
-  `std::string`/`fmt` for status messages.  Remove arbitrary path text
-  assembly in `g_buf` and prefer `fs::remove`.
-- Tests: MIME decode tests.
 
 #### CSTR-055 - KILL File Editing Paths
 

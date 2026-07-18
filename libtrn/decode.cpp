@@ -22,9 +22,12 @@
 #include "util/util2.h"
 #include "trn/uudecode.h"
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
+#include <system_error>
 
 namespace fs = std::filesystem;
 
@@ -41,8 +44,8 @@ std::string g_decode_filename;
 
 static bool bad_filename(std::string_view filename);
 static DecodeFunc decode_function(MimeEncoding encoding);
-static std::string decode_mkdir(std::string_view filename);
-static void        decode_rmdir(std::string_view dir);
+static fs::path decode_mkdir(std::string_view filename);
+static void     decode_rmdir(const fs::path &dir);
 
 void decode_init()
 {
@@ -289,6 +292,13 @@ std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
 bool decode_piece(MimeCapEntry *mcp, char *first_line)
 {
     *g_msg = '\0';
+    const auto open_path = [](const fs::path &path, const char *mode)
+    { return std::fopen(path.string().c_str(), mode); };
+    const auto remove_path = [](const fs::path &path)
+    {
+        std::error_code error;
+        fs::remove(path, error);
+    };
 
     int part = g_mime_section->m_part;
     int total = g_mime_section->m_total;
@@ -298,7 +308,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         part = 1;
     }
 
-    std::string dir;
+    fs::path dir;
     g_decode_filename = decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
     const std::string filename = g_decode_filename;
     if (mcp || total != 1 || part != 1)
@@ -315,7 +325,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     {
         if (change_dir(dir))
         {
-            std::printf(g_no_cd, dir.c_str());
+            std::printf(g_no_cd, dir.string().c_str());
             sig_catcher(0);
         }
     }
@@ -323,13 +333,14 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     std::FILE* fp;
     if (total != 1 || part != 1)
     {
-        std::sprintf(g_buf, "Saving part %d ", part);
         if (total)
         {
-            std::sprintf(g_buf + std::strlen(g_buf), "of %d ", total);
+            fmt::print("Saving part {} of {} {}", part, total, filename);
         }
-        std::strcat(g_buf, filename.c_str());
-        std::fputs(g_buf,stdout);
+        else
+        {
+            fmt::print("Saving part {} {}", part, filename);
+        }
         if (g_no_wait_fork)
         {
             std::fflush(stdout);
@@ -339,8 +350,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
             newline();
         }
 
-        std::sprintf(g_buf, "%s%d", dir.c_str(), part);
-        fp = std::fopen(g_buf, "w");
+        fp = open_path(dir / std::to_string(part), "w");
         if (!fp)
         {
             std::strcpy(g_msg,"Failed.");
@@ -358,8 +368,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
             {
                 // This is the last part. Remember the fact
                 total = part;
-                std::sprintf(g_buf, "%sCT", dir.c_str());
-                if (std::FILE *total_fp = std::fopen(g_buf, "w"))
+                if (std::FILE *total_fp = open_path(dir / "CT", "w"))
                 {
                     std::fprintf(total_fp, "%d\n", total);
                     std::fclose(total_fp);
@@ -371,13 +380,13 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         // Retrieve any previously saved number of the last part
         if (total == 0)
         {
-            std::sprintf(g_buf, "%sCT", dir.c_str());
-            fp = std::fopen(g_buf, "r");
+            fp = open_path(dir / "CT", "r");
             if (fp != nullptr)
             {
-                if (std::fgets(g_buf, sizeof g_buf, fp))
+                const std::string total_line = get_a_line(fp);
+                if (!total_line.empty())
                 {
-                    total = std::atoi(g_buf);
+                    total = std::atoi(total_line.c_str());
                     total = std::max(total, 0);
                 }
                 std::fclose(fp);
@@ -393,8 +402,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         //
         for (part = total; part; part--)
         {
-            std::sprintf(g_buf, "%s%d", dir.c_str(), part);
-            fp = std::fopen(g_buf, "r");
+            fp = open_path(dir / std::to_string(part), "r");
             if (!fp)
             {
                 return true;
@@ -439,8 +447,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     {
         if (part != 1)
         {
-            std::sprintf(g_buf, "%s%d", dir.c_str(), part);
-            fp = std::fopen(g_buf, "r");
+            fp = open_path(dir / std::to_string(part), "r");
             if (!fp)
             {
                 return true;
@@ -474,17 +481,15 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         // Cleanup all the pieces
         for (part = 0; part <= total; part++)
         {
-            std::sprintf(g_buf, "%s%d", dir.c_str(), part);
-            remove(g_buf);
+            remove_path(dir / std::to_string(part));
         }
-        std::sprintf(g_buf, "%sCT", dir.c_str());
-        remove(g_buf);
+        remove_path(dir / "CT");
     }
 
     if (mcp)
     {
         mime_exec(mcp->command.c_str());
-        remove(g_decode_filename.c_str());
+        remove_path(g_decode_filename);
         change_dir("..");
     }
 
@@ -518,31 +523,36 @@ static DecodeFunc decode_function(MimeEncoding encoding)
 }
 
 // return a directory to use for unpacking the pieces of a given filename
-static std::string decode_mkdir(std::string_view filename)
+static fs::path decode_mkdir(std::string_view filename)
 {
-    std::string dir;
-    dir.reserve(LINE_BUF_LEN);
+    fs::path dir;
 
 #ifdef MSDOS
-    dir += file_exp("%Y/parts/");
+    dir = file_exp("%Y/parts/");
 #else
-    dir += file_exp("%Y/m-prts-%L/");
+    dir = file_exp("%Y/m-prts-%L/");
 #endif
-    dir.append(filename.data(), filename.size());
-    if (dir.empty() || dir.back() == '/')
+    if (filename.empty())
     {
         return {};
     }
-    dir += '/';
-    if (make_dir(dir.c_str(), MD_FILE))
+    dir /= std::string{filename};
+    if (dir.empty())
+    {
+        return {};
+    }
+    std::error_code error;
+    fs::create_directories(dir, error);
+    if (error)
     {
         return {};
     }
     return dir;
 }
 
-static void decode_rmdir(std::string_view dir)
+static void decode_rmdir(const fs::path &dir)
 {
     // TODO: conditional-ize this
-    fs::remove(fs::path{dir}.parent_path());
+    std::error_code error;
+    fs::remove(dir, error);
 }

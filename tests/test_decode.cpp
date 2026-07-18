@@ -3,6 +3,8 @@
 
 #include <trn/decode.h>
 
+#include <file_contents.h>
+
 #include <trn/artio.h>
 #include <trn/artstate.h>
 #include <trn/datasrc.h>
@@ -99,6 +101,18 @@ protected:
         fs::remove_all(m_output_dir, error);
     }
 
+    fs::path find_file_named(const char *name) const
+    {
+        for (const fs::directory_entry &entry : fs::recursive_directory_iterator(m_output_dir))
+        {
+            if (entry.is_regular_file() && entry.path().filename() == name)
+            {
+                return entry.path();
+            }
+        }
+        return {};
+    }
+
     DataSource  m_data_source{};
     MimeSection m_section{};
     std::FILE  *m_input{};
@@ -136,6 +150,24 @@ TEST_F(DecodePieceDirectoryTest, createsUsesAndRemovesPieceDirectory)
     EXPECT_EQ("payload_bin", m_piece_dir.filename().generic_string());
     EXPECT_TRUE(m_output_existed);
     EXPECT_FALSE(fs::exists(m_piece_dir));
+}
+
+TEST_F(DecodePieceDirectoryTest, savesMultipartPieceInPieceDirectory)
+{
+    m_section.m_part = 1;
+    m_section.m_total = 2;
+    std::fputs("line one\nline two\n", m_input);
+    std::rewind(m_input);
+
+    testing::internal::CaptureStdout();
+    const bool        result = decode_piece(nullptr, nullptr);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(result);
+    EXPECT_EQ("Saving part 1 of 2 payload_bin", output);
+    const fs::path piece = find_file_named("1");
+    ASSERT_FALSE(piece.empty());
+    EXPECT_EQ("line one\nline two\n", file_contents(piece));
 }
 
 TEST(DecodeFixFilenameTest, usesUnixBasename)
