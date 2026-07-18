@@ -21,9 +21,10 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -50,16 +51,17 @@ char        g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
 
 int main(int argc, char *argv[])
 {
-    std::FILE *fp_active{};
-    std::FILE *fp_ng{};
-    bool check_active = false;
-    bool check_ng = false;
-    char buff[LINE_BUF_LEN];
-    char*cp;
+    std::ifstream                 active_input;
+    std::fstream                  generated_newsgroups;
+    std::ifstream                 newsgroups_input;
+    std::istream                 *newsgroups_input_stream{};
+    bool                          check_active = false;
+    bool                          check_ng = false;
     std::vector<ArticleNewsgroup> newsgroups;
-    int  max_col_len;
-    int  line_num = 0;
-    int  found_newsgroups = 0;
+    std::string                   line;
+    int                           max_col_len;
+    int                           line_num = 0;
+    int                           found_newsgroups = 0;
 
     const char *home_dir = std::getenv("HOME");
     if (home_dir == nullptr)
@@ -82,73 +84,71 @@ int main(int argc, char *argv[])
         std::exit(1);
     }
     const fs::path newsgroups_file{argv[3]};
-    const fs::path active_file{argv[4]};
+    const fs::path  active_file{argv[4]};
     std::error_code file_error;
 
-    std::FILE *fp = std::fopen(argv[1], "r");
-    if (fp == nullptr)
+    std::ifstream article{argv[1]};
+    if (!article)
     {
         std::fprintf(stderr, "trn-artchk: unable to open article `%s'.\n", argv[1]);
         std::exit(1);
     }
 
     // Check the header for proper format and report on the newsgroups
-    while (std::fgets(buff, LINE_BUF_LEN, fp))
+    while (std::getline(article, line))
     {
         line_num++;
-        buff[std::strlen(buff)-1] = '\0';
-        if (!*buff)
+        if (line.empty())
         {
             break;
         }
-        if (is_hor_space(*buff))
+        if (is_hor_space(line.front()))
         {
             continue;
         }
-        cp = std::strchr(buff, ':');
-        if (!cp)
+        const std::size_t colon = line.find(':');
+        if (colon == std::string::npos)
         {
-            std::printf("\nERROR: line %d is an invalid header line:\n%s\n",
-                   line_num, buff);
+            std::printf("\nERROR: line %d is an invalid header line:\n%s\n", line_num, line.c_str());
             break;
         }
-        if (cp[1] != ' ' && cp[1] != '\0')
+        if (colon + 1 < line.size() && line[colon + 1] != ' ')
         {
             std::printf("\n"
-                   "ERROR: header on line %d does not have a space after the colon:\n%s\n",
-                   line_num, buff);
+                        "ERROR: header on line %d does not have a space after the colon:\n%s\n",
+                        line_num, line.c_str());
         }
-        if (cp - buff == 10 && !std::strncmp(buff, "Newsgroups", 10))
+        if (colon == 10 && line.compare(0, 10, "Newsgroups") == 0)
         {
             found_newsgroups = 1;
-            for (cp = buff + 11; *cp == ' '; cp++)
+            std::string_view group_names{line.data() + colon + 1, line.size() - colon - 1};
+            while (!group_names.empty() && group_names.front() == ' ')
             {
+                group_names.remove_prefix(1);
             }
-            if (std::strchr(cp, ' '))
+            if (group_names.find(' ') != std::string_view::npos)
             {
                 std::printf("\n"
-                       "ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n"
-                       "only allowable space is the one separating the colon (:) from the contents.\n"
-                       "Use a comma (,) to separate multiple newsgroup names.\n");
+                            "ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n"
+                            "only allowable space is the one separating the colon (:) from the contents.\n"
+                            "Use a comma (,) to separate multiple newsgroup names.\n");
                 continue;
             }
-            while (*cp)
+            while (!group_names.empty())
             {
-                char *cp2 = std::strchr(cp, ',');
-                if (!cp2)
-                {
-                    cp2 = cp + std::strlen(cp);
-                }
-                else
-                {
-                    *cp2++ = '\0';
-                }
+                const std::size_t      comma = group_names.find(',');
+                const std::string_view group_name =
+                    comma == std::string_view::npos ? group_names : group_names.substr(0, comma);
                 if (newsgroups.size() < static_cast<std::size_t>(MAX_NGS))
                 {
                     ArticleNewsgroup &newsgroup = newsgroups.emplace_back();
-                    newsgroup.name = cp;
+                    newsgroup.name.assign(group_name.data(), group_name.size());
                 }
-                cp = cp2;
+                if (comma == std::string_view::npos)
+                {
+                    break;
+                }
+                group_names.remove_prefix(comma + 1);
             }
             if (newsgroups.empty())
             {
@@ -164,26 +164,21 @@ int main(int argc, char *argv[])
     }
 
     // Check the body of the article for long lines
-    while (std::fgets(buff, LINE_BUF_LEN, fp))
+    while (std::getline(article, line))
     {
         line_num++;
-        int col = std::strlen(buff) - 1;
-        if (buff[col] != '\n')
+        if (article.eof())
         {
             std::printf("\n"
-                   "Warning: line %d has no trailing newline character and may get lost.\n",
-                   line_num);
+                        "Warning: line %d has no trailing newline character and may get lost.\n",
+                        line_num);
         }
-        else
+        int col = 0;
+        for (const char ch : line)
         {
-            buff[col] = '\0';
-        }
-        col = 0;
-        for (cp = buff; *cp; cp++)
-        {
-            if (*cp == '\t')
+            if (ch == '\t')
             {
-                col += 8 - (col%8);
+                col += 8 - (col % 8);
             }
             else
             {
@@ -193,8 +188,8 @@ int main(int argc, char *argv[])
         if (col > max_col_len)
         {
             std::printf("\n"
-                   "Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
-                   max_col_len, line_num, buff);
+                        "Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
+                        max_col_len, line_num, line.c_str());
             break;
         }
     }
@@ -230,7 +225,12 @@ int main(int argc, char *argv[])
     {
         if (fs::file_size(newsgroups_file, file_error) > 0 && !file_error)
         {
-            check_ng = (fp_ng = std::fopen(newsgroups_file.string().c_str(), "r")) != nullptr;
+            newsgroups_input.open(newsgroups_file);
+            check_ng = newsgroups_input.is_open();
+            if (check_ng)
+            {
+                newsgroups_input_stream = &newsgroups_input;
+            }
         }
         else if (file_error && !g_server_name.empty() && server_connection())
         {
@@ -239,7 +239,8 @@ int main(int argc, char *argv[])
         file_error.clear();
         if (fs::file_size(active_file, file_error) > 0 && !file_error)
         {
-            check_active = (fp_active = std::fopen(active_file.string().c_str(), "r")) != nullptr;
+            active_input.open(active_file);
+            check_active = active_input.is_open();
         }
         else if (file_error && !g_server_name.empty() && server_connection())
         {
@@ -258,10 +259,10 @@ int main(int argc, char *argv[])
                 newsgroup.found_active = true;
             }
         }
-        else if (fp_active != nullptr)
+        else if (active_input.is_open())
         {
             ngleft = static_cast<int>(newsgroups.size());
-            while (std::fgets(buff, LINE_BUF_LEN, fp_active))
+            while (std::getline(active_input, line))
             {
                 if (!ngleft)
                 {
@@ -272,8 +273,8 @@ int main(int argc, char *argv[])
                     if (!newsgroup.found_active)
                     {
                         const std::size_t name_length = newsgroup.name.size();
-                        if (is_hor_space(buff[name_length]) //
-                            && !std::strncmp(newsgroup.name.c_str(), buff, name_length))
+                        if (line.size() > name_length //
+                            && is_hor_space(line[name_length]) && line.compare(0, name_length, newsgroup.name) == 0)
                         {
                             newsgroup.found_active = true;
                             ngleft--;
@@ -281,7 +282,6 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            std::fclose(fp_active);
         }
         else if (!g_server_name.empty())
         {
@@ -327,12 +327,12 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        if (check_ng && fp_ng == nullptr)
+        if (check_ng && newsgroups_input_stream == nullptr)
         {
-            fp_ng = std::fopen(newsgroups_file.string().c_str(), "w+");
+            generated_newsgroups.open(newsgroups_file, std::ios::in | std::ios::out | std::ios::trunc);
             file_error.clear();
             fs::remove(newsgroups_file, file_error);
-            if (fp_ng != nullptr)
+            if (generated_newsgroups.is_open())
             {
                 for (const ArticleNewsgroup &newsgroup : newsgroups)
                 {
@@ -345,24 +345,25 @@ int main(int argc, char *argv[])
                     // TODO: use list newsgroups if this fails...?
                     if (nntp_check() > 0)
                     {
-                        // write results to fp_ng
                         while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0)
                         {
                             if (nntp_at_list_end(g_ser_line))
                             {
                                 break;
                             }
-                            std::fprintf(fp_ng, "%s\n", g_ser_line);
+                            generated_newsgroups << g_ser_line << '\n';
                         }
                     }
                 }
-                std::fseek(fp_ng, 0L, 0);
+                generated_newsgroups.clear();
+                generated_newsgroups.seekg(0L);
+                newsgroups_input_stream = &generated_newsgroups;
             }
         }
-        if (fp_ng != nullptr)
+        if (newsgroups_input_stream != nullptr)
         {
             ngleft = static_cast<int>(newsgroups.size());
-            while (std::fgets(buff, LINE_BUF_LEN, fp_ng))
+            while (std::getline(*newsgroups_input_stream, line))
             {
                 if (!ngleft)
                 {
@@ -373,24 +374,27 @@ int main(int argc, char *argv[])
                     if (newsgroup.found_active && !newsgroup.found_description)
                     {
                         const std::size_t name_length = newsgroup.name.size();
-                        if (is_hor_space(buff[name_length]) //
-                            && !std::strncmp(newsgroup.name.c_str(), buff, name_length))
+                        if (line.size() > name_length //
+                            && is_hor_space(line[name_length]) && line.compare(0, name_length, newsgroup.name) == 0)
                         {
-                            cp = &buff[name_length];
-                            *cp++ = '\0';
-                            const char *desc = skip_hor_space(cp);
-                            if (desc[0] == '?' && desc[1] == '?')
+                            std::size_t description_start = name_length;
+                            while (description_start < line.size() && is_hor_space(line[description_start]))
                             {
-                                desc = "[no description available]\n";
+                                description_start++;
                             }
-                            std::printf("%-23s %s", buff, desc);
+                            std::string description = line.substr(description_start);
+                            if (description.size() >= 2 //
+                                && description[0] == '?' && description[1] == '?')
+                            {
+                                description = "[no description available]";
+                            }
+                            std::printf("%-23s %s\n", newsgroup.name.c_str(), description.c_str());
                             newsgroup.found_description = true;
                             ngleft--;
                         }
                     }
                 }
             }
-            std::fclose(fp_ng);
         }
         for (const ArticleNewsgroup &newsgroup : newsgroups)
         {

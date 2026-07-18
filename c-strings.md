@@ -518,16 +518,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-066 - Trn-artchk Line Input Buffer
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: fixed line input buffer.
-- Function: `main`.
-- Change: classify the `LINE_BUF_LEN` truncation for article, active,
-  and newsgroups input.  Preserve meaningful posting line checks, but
-  use `std::string` line input where the fixed buffer is arbitrary.
-- Tests: trn-artchk tool tests.
-
 #### CSTR-067 - Inews Header Input Buffer
 
 - Files: `inews/inews.cpp`.
