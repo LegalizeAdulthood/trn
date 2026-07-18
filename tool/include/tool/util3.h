@@ -18,7 +18,6 @@ int do_shell(const char *shell, const char *cmd);
 char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);
 #endif
-const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd);
 std::string do_interp(std::string_view pattern);
 int   nntp_handle_nested_lists();
 std::string get_auth_user();

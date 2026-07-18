@@ -432,8 +432,8 @@ The current scan covers production code under `config`, `libtrn`,
 does not include tests, generated files, or the vendored `vcpkg` tree.
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: seven hits remain: the helper declaration, the helper
-  definition, and five call sites in three owner clusters.  The call
+- `safe_copy`: four hits remain: the helper declaration, the helper
+  definition, and two call sites in two owner clusters.  The call
   sites are inventoried below.
 - `safe_malloc`: remaining string-shaped owners are inactive `MCHASE`
   newsrc editing code, `g_head_buf`, and `g_art_buf`.
@@ -457,12 +457,10 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 
 ## Current `safe_copy` Inventory
 
-The current tree has seven `safe_copy` hits: the helper definition, the
-helper declaration, and five call sites.  Keep each call site visible
+The current tree has four `safe_copy` hits: the helper definition, the
+helper declaration, and two call sites.  Keep each call site visible
 until the owning storage or API changes.
 
-- `tool/util3.cpp`, `do_interp`: writes into a caller output buffer for
-  tool-side file expansion.  See `CSTR-064`.
 - `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
   during word wrapping.  See `CSTR-033`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
@@ -505,17 +503,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-064 - Dead Tool Interpolation Buffer Overload
-
-- Files: `tool/util3.cpp`, `tool/include/tool/util3.h`.
-- Kind: unused caller output buffer plus `safe_copy`.
-- Function: `do_interp` legacy buffer overload.
-- Change: remove the unused overload that writes an interpolated string
-  into a caller buffer.  Keep the `std::string do_interp` overload as
-  the tool-side API and do not replace the dead overload with another
-  wrapper.
-- Tests: build.
 
 #### CSTR-098 - Trn Artchk Unused Global Buffer
 
@@ -852,6 +839,6 @@ owned strings or owner-specific storage.
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
 - Kind: obsolete bounded C-string copy helper.
 - Function: `safe_copy`.
-- Change: remove `safe_copy` only after `CSTR-064`, `CSTR-033`, and
-  `CSTR-036` have removed every production call site.
+- Change: remove `safe_copy` only after `CSTR-033` and `CSTR-036` have
+  removed every production call site.
 - Tests: build.

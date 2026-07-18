@@ -69,13 +69,6 @@ std::string do_interp(std::string_view pattern)
     return std::string{pattern};
 }
 
-const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
-{
-    const std::string result = do_interp(std::string_view{pattern});
-    safe_copy(dest, result.c_str(), dest_size);
-    return nullptr; // This is wrong on purpose
-}
-
 int nntp_handle_nested_lists()
 {
     std::fputs("Programming error! Nested NNTP calls detected.\n",stderr);
