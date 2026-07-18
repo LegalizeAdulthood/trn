@@ -444,15 +444,22 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
   interpolation scratch storage, `g_head_buf`, `g_art_buf`, MIME HTML
-  tag parser state, terminal storage, response header buffers,
-  `ngstuff` command expansion buffers, `uudecode` pending-line storage,
-  selector command key storage, tree-indent storage, and global
-  command/message buffers.
+  tag parser state, terminal storage, terminal command-input scratch,
+  response header buffers, `ngstuff` command expansion buffers,
+  `uudecode` pending-line storage, selector command key storage,
+  tree-indent storage, and global command/message buffers.
 - Filename storage: current path candidates remain in KILL-file
   appending, score-file loading/editing, newsrc file fields, and some
   universal-selector file fields.  Mixed URL/path/host fields need
   ownership and identity splits before they can honestly become
   `fs::path`.
+- Case-insensitive comparison helpers still expose only C-string
+  interfaces, so callers with `std::string_view` inputs sometimes build
+  temporary strings or pass pointer/length pairs manually.
+- Remaining literal tables include color object names, signal names,
+  status labels, MIME entity mappings, charset names, and transliteration
+  tables.  The useful current targets are the tables whose users already
+  operate on views or compute lengths manually.
 
 ## Current `safe_copy` Inventory
 
@@ -473,10 +480,10 @@ production code.
 
 - Copy and concatenation: `strcpy` 74, `strncpy` 3, `strcat` 2.
 - Comparison: `strcmp` 4, `strncmp` 24.
-- Search and length: `strchr` 91, `strrchr` 7, `strstr` 2,
-  `strlen` 82.
+- Search and length: `strchr` 88, `strrchr` 7, `strstr` 2,
+  `strlen` 81.
 - Formatting into C buffers: `sprintf` 82.
-- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 488,
+- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 479,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
 
@@ -503,20 +510,188 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-106 - Terminal Escape Substitution Scratch
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: local fixed interpolation scratch buffer.
+- Function: `edit_buf`.
+- Change: replace the local `tmpbuf[4]` used for ESC substitutions with
+  a tiny owned string, then pass `c_str()` to `interp_search`.  Preserve
+  the read-before-dispatch order and the help/reprint branches.
+- Tests: terminal input/edit tests, or add focused coverage first.
+
+#### CSTR-107 - Score Easy Append Output
+
+- Files: `libtrn/score-easy.cpp`.
+- Kind: C formatted output.
+- Function: `sc_easy_append`.
+- Change: replace menu and prompt `printf` calls with `fmt::print`.
+  Keep the existing `g_buf` command-input flow unchanged in this slice.
+- Tests: score command tests, or add focused coverage first.
+
+#### CSTR-108 - Score Easy Command String Return
+
+- Files: `libtrn/score-easy.cpp`, `libtrn/include/trn/score-easy.h`,
+  `libtrn/score.cpp`.
+- Kind: raw literal-or-null return.
+- Function: `sc_easy_command`.
+- Change: return `std::string`; map the abort case to empty string and
+  update `sc_score_cmd` to check `empty()`.  Use `fmt::print` for the
+  function's menu output while touching the function.
+- Tests: score command tests, or add focused coverage first.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-109 - String Case View Overloads
+
+- Files: `config/string_case_compare.cpp`,
+  `config/cmake/string_case_compare.manual.h.in`,
+  `config/cmake/string_case_compare.strings.h.in`,
+  `config/tests/test_string_case_compare.cpp`.
+- Kind: C-string comparison helper API.
+- Function: `string_case_compare` and `string_case_equal`.
+- Change: add `std::string_view` overloads that compare by view extent
+  without forcing callers to build temporary `std::string` objects.
+  Preserve the existing C-string and pointer-plus-length overloads.
+- Tests: run `TestStringCaseCompare*`.
+
+#### CSTR-110 - Environment Value String Callers
+
+- Files: `util/env.cpp`, `util/include/util/env.h`, and remaining
+  `get_val`/`get_val_const` callers.
+- Kind: raw environment value access.
+- Function: storage-centered environment accessor cleanup.
+- Change: replace callers that need value-or-default text with
+  `get_env_var(name, default_value)` and plain `std::string` locals.
+  Leave null-sentinel callers until the callee logic can be changed to
+  use `empty()` or another explicit state.  Remove `get_val` and
+  `get_val_const` only after no raw-pointer callers remain.
+- Tests: config env tests and affected caller tests.
+
+#### CSTR-111 - Message-id Normalization Without Mutation
+
+- Files: `libtrn/rt-process.cpp`, `libtrn/include/trn/rt-process.h`,
+  `libtrn/Article.cpp`.
+- Kind: mutable C-string normalization.
+- Function: `fix_msg_id`.
+- Change: replace the mutating `char *` helper with normalization over
+  `std::string_view` that returns an owned `std::string`.  Update the
+  direct callers so no caller passes local string storage only to have
+  the helper edit it in place.
+- Tests: thread/message-id tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
+#### CSTR-112 - Get Article Message-id View
+
+- Files: `libtrn/rt-process.cpp`, `libtrn/include/trn/rt-process.h`,
+  `libtrn/Article.cpp`, `libtrn/kfile.cpp`.
+- Kind: mutable C-string lookup key.
+- Function: `get_article`.
+- Depends on: `CSTR-111`.
+- Change: accept `std::string_view` and use the normalized owned
+  message-id string for hash lookup/storage.  Update direct callers that
+  currently split a mutable line only to pass a null-terminated token.
+- Tests: thread/message-id and KILL-file tests.
+
+#### CSTR-115 - Nntplist Argument Views
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: borrowed command-line text and local file label selection.
+- Function: `main`.
+- Depends on: `CSTR-109`.
+- Change: replace `action`, `wildarg`, and `local_file` null-sentinel
+  pointers with `std::string_view` values using empty string as the
+  missing sentinel.  Use view comparisons and keep an original `argv`
+  pointer only where a callee immediately consumes null-terminated text.
+- Tests: nntplist smoke tests, or add focused coverage first.
+
+#### CSTR-116 - Color Attribute Parser Views
+
+- Files: `libtrn/color.cpp`.
+- Kind: literal table names and local formatted capability names.
+- Function: `color_rc_attribute`.
+- Depends on: `CSTR-109`.
+- Change: make `ColorObj::name` a `std::string_view`, compare the input
+  object view directly, and replace `sprintf(g_buf, "fg %s", s)` /
+  `sprintf(g_buf, "bg %s", s)` with local `fmt::format` strings.
+  Preserve the temporary mutation of the caller's `value` buffer until
+  that parser is refactored separately.
+- Tests: color attribute tests, or add focused coverage first.
+
+#### CSTR-117 - Article Search Scope Characters View
+
+- Files: `libtrn/artsrch.cpp`, `libtrn/include/trn/artsrch.h`,
+  `libtrn/intrp.cpp`.
+- Kind: literal-only global character sequence.
+- Function: storage-centered `g_scope_str`.
+- Change: replace the mutable global pointer with a `std::string_view`
+  or `constexpr std::string_view` and update indexing callers to use the
+  view directly.  Do not introduce a `std::string` because the value is a
+  fixed literal.
+- Tests: article search and interpolation tests.
+
+#### CSTR-118 - Selector Mode Label Views
+
+- Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,
+  `libtrn/include/trn/rt-select.h`, `libtrn/opt.cpp`.
+- Kind: literal-only global selector labels.
+- Function: storage-centered `g_sel_mode_string` and
+  `g_sel_sort_string`.
+- Change: replace the raw global label pointers with
+  `std::string_view` and use view-aware formatting/appending at display
+  sites.  Keep `g_sel_chars` out of this slice because that value comes
+  from configuration.
+- Tests: selector page and option display tests.
+
+#### CSTR-119 - Selector Character Set Storage
+
+- Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,
+  `libtrn/include/trn/rt-select.h`.
+- Kind: environment-derived global string storage.
+- Function: storage-centered `g_sel_chars`.
+- Change: replace the raw pointer from `get_val_const("SELECTCHARS",
+  ...)` with owned `std::string` storage.  Replace `strlen` and
+  `strchr` uses with string operations while preserving the current
+  selection character order and empty-value behavior.
+- Tests: selector input tests.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-113 - Article References View Parser
+
+- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`,
+  `libtrn/head.cpp`, `libtrn/rt-ov.cpp`.
+- Kind: mutable C-string reference parsing.
+- Function: `Article::thread_article`.
+- Depends on: `CSTR-112`.
+- Change: accept `std::string_view` references and parse message-id
+  ranges without writing null terminators into the input.  Call
+  `get_article` with message-id views and preserve the current
+  right-to-left threading order.
+- Tests: thread/message-id tests and overview tests.
+
+#### CSTR-114 - Overview Field Views
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: local array of C-string field tokens.
+- Function: `ov_parse`.
+- Depends on: `CSTR-109`, `CSTR-113`.
+- Change: replace `char *fields[OV_MAX_FIELDS]` with
+  `std::array<std::string_view, OV_MAX_FIELDS>`.  Parse tabs by view
+  extent instead of overwriting delimiters, pass views to `Article`
+  setters, and keep only the source line storage mutable when another
+  callee still requires it.
+- Tests: overview parser tests.
 
 #### CSTR-056 - KILL File Append Paths
 
@@ -648,6 +823,33 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
+#### CSTR-120 - Article Display Option String Globals
+
+- Files: `libtrn/art.cpp`, `libtrn/include/trn/artstate.h`,
+  `libtrn/ng.cpp`, `libtrn/include/trn/ng.h`, `libtrn/rt-select.cpp`,
+  `libtrn/rt-util.cpp`, `libtrn/sdisp.cpp`.
+- Kind: environment-derived global C-string option storage.
+- Function: storage-centered `g_first_line`, `g_hide_line`,
+  `g_page_stop`, `g_subj_line`, and `g_mail_call`.
+- Change: replace nullable raw pointers with owned `std::string`
+  storage using empty string as the missing sentinel where empty has no
+  distinct meaning.  Compile regexes only when the stored string is not
+  empty and pass `c_str()` to interpolation helpers.
+- Tests: article display, newsgroup display, and interpolation tests.
+
+#### CSTR-121 - Common Message Format Globals
+
+- Files: `config/common.cpp`, `config/include/config/common.h`, many
+  users.
+- Kind: global literal message and printf-format pointers.
+- Function: storage-centered `g_h_for_help`, `g_unsub_to`,
+  `g_cant_open`, `g_cant_create`, and `g_no_cd`.
+- Change: first make literal-only storage immutable, then convert call
+  sites to `fmt::print` or direct string output before considering
+  `std::string_view` storage.  Keep runtime printf-style formatting out
+  of the conversion until each format use is audited.
+- Tests: broad workflow required.
+
 #### CSTR-031 - Global Command And Message Buffers
 
 - Files: `config/common.cpp`, `config/include/config/common.h`, many
@@ -699,9 +901,10 @@ and clarified ownership at the edges.
 - Function: storage-centered `g_ser_line`.
 - Change: separate NNTP status text from protocol line input/output so
   callers do not format commands or cache responses through one shared
-  `char[NNTP_STRLEN]` buffer.  Include legacy non-`INET6`
-  raw-address name storage in `get_tcp_socket` in the same protocol
-  owner review.
+  `char[NNTP_STRLEN]` buffer.  Include the local `b[NNTP_STRLEN]`
+  buffers in `libtrn/nntp.cpp`, the `inet_ntop` logging scratch buffer,
+  and legacy non-`INET6` raw-address name storage in `get_tcp_socket` in
+  the same protocol owner review.
 - Tests: NNTP, inews, nntplist, and trn-artchk tests.
 
 #### CSTR-077 - Article Display Line Buffer
@@ -727,23 +930,26 @@ and clarified ownership at the edges.
 
 #### CSTR-097 - Selector Command Key Storage
 
-- Files: `libtrn/rt-select.cpp`, `libtrn/include/trn/rt-select.h`.
+- Files: `libtrn/rt-select.cpp`, `libtrn/include/trn/rt-select.h`,
+  `libtrn/opt.cpp`.
 - Kind: global fixed selector command buffers.
 - Function: storage-centered selector command keys.
-- Change: replace the five `char[3]` selector command globals with a
-  small owned text type or `std::string` storage.  Preserve the
-  two-character command limit if it is a documented selector behavior.
+- Change: replace the five `char[3]` selector command globals and
+  `s_univ_sel_cmds[3]` with a small owned text type or `std::string`
+  storage.  Preserve the two-character command limit if it is a
+  documented selector behavior.
 - Tests: selector command tests.
 
 #### CSTR-100 - MIME HTML Tag Parser State
 
 - Files: `libtrn/mime.cpp`.
-- Kind: static fixed parser token buffer.
+- Kind: static fixed parser token buffer and literal entity table.
 - Function: `filter_html`.
 - Change: replace `tagword[32]` and `tagword_len` with parser-owned
-  `std::string` state.  Preserve cross-call tag parsing if the current
-  static state is intentionally carrying a partial tag across input
-  chunks.
+  `std::string` state.  Convert the named-entity lookup table to a
+  view-friendly mapping so the entity loop no longer calls `strlen` on
+  table keys.  Preserve cross-call tag parsing if the current static
+  state is intentionally carrying a partial tag across input chunks.
 - Tests: MIME HTML filtering tests before refactor.
 
 #### CSTR-101 - Terminal Arrow Macro Scratch Parameter
