@@ -935,21 +935,19 @@ static char *edit_buf(char *s, const char *cmd)
     }
     if (*s == '\033')           // substitution desired?
     {
-        char  tmpbuf[4];
+        std::string substitution{"% "};
 
-        tmpbuf[0] = '%';
-        read_tty(&tmpbuf[1],1);
+        read_tty(substitution.data() + 1,1);
 #ifdef RAWONLY
-        tmpbuf[1] &= 0177;
+        substitution[1] &= 0177;
 #endif
-        tmpbuf[2] = '\0';
-        if (tmpbuf[1] == 'h')
+        if (substitution[1] == 'h')
         {
             (void) help_subs();
             *s = '\0';
             reprint();
         }
-        else if (tmpbuf[1] == '\033')
+        else if (substitution[1] == '\033')
         {
             *s = '\0';
             const std::string cpybuf{g_buf};
@@ -959,7 +957,7 @@ static char *edit_buf(char *s, const char *cmd)
         }
         else
         {
-            interp_search(s, sizeof g_buf - (s-g_buf), tmpbuf, cmd);
+            interp_search(s, sizeof g_buf - (s-g_buf), substitution.c_str(), cmd);
             std::fputs(s,stdout);
             s += std::strlen(s);
         }

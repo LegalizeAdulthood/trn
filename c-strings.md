@@ -510,16 +510,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-106 - Terminal Escape Substitution Scratch
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: local fixed interpolation scratch buffer.
-- Function: `edit_buf`.
-- Change: replace the local `tmpbuf[4]` used for ESC substitutions with
-  a tiny owned string, then pass `c_str()` to `interp_search`.  Preserve
-  the read-before-dispatch order and the help/reprint branches.
-- Tests: terminal input/edit tests, or add focused coverage first.
-
 #### CSTR-107 - Score Easy Append Output
 
 - Files: `libtrn/score-easy.cpp`.
