@@ -465,8 +465,8 @@ void apply_global_option(OptionIndex num, const char *s)
                 set_env_var("SAVEDIR", "%p/%c");
                 set_env_var("SAVENAME", "%a");
             }
-            else if (!std::strcmp(get_val_const("SAVEDIR", ""), "%p/%c") //
-                     && !std::strcmp(get_val_const("SAVENAME", ""), "%a"))
+            else if (get_env_var("SAVEDIR") == "%p/%c" //
+                     && get_env_var("SAVENAME") == "%a")
             {
                 set_env_var("SAVEDIR", "%p");
                 set_env_var("SAVENAME", "%^C");

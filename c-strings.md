@@ -508,16 +508,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-086 - Auto-save Option Environment Comparison
-
-- Files: `libtrn/opt.cpp`.
-- Kind: C-string comparison cleanup.
-- Function: `set_option`.
-- Change: compare `SAVEDIR` and `SAVENAME` environment values with
-  direct string comparison instead of `std::strcmp` in the
-  `OI_AUTO_SAVE_NAME` branch.
-- Tests: option tests for auto save name.
-
 #### CSTR-087 - Auto-save Draft Value Comparison
 
 - Files: `libtrn/opt.cpp`.

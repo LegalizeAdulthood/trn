@@ -5,7 +5,9 @@
 
 #include <file_contents.h>
 
+#include <config/env.h>
 #include <trn/OptionCatalog.h>
+#include <trn/rcstuff.h>
 #include <trn/respond.h>
 #include <trn/trn.h>
 #include <util/env.h>
@@ -113,6 +115,45 @@ protected:
     OptionValueList m_old_saved_vals;
 };
 
+class AutoSaveNameOptionTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_check_flag = g_check_flag;
+        m_old_save_dir = get_env_var("SAVEDIR");
+        m_old_save_name = get_env_var("SAVENAME");
+
+        g_check_flag = false;
+        unset_env_var("SAVEDIR");
+        unset_env_var("SAVENAME");
+    }
+
+    void TearDown() override
+    {
+        restore_env("SAVEDIR", m_old_save_dir);
+        restore_env("SAVENAME", m_old_save_name);
+        g_check_flag = m_old_check_flag;
+    }
+
+private:
+    static void restore_env(std::string_view name, const std::string &value)
+    {
+        if (value.empty())
+        {
+            unset_env_var(name);
+        }
+        else
+        {
+            set_env_var(name, value);
+        }
+    }
+
+    bool        m_old_check_flag{};
+    std::string m_old_save_dir;
+    std::string m_old_save_name;
+};
+
 } // namespace
 
 TEST_F(CwdCheckTest, defaultsEmptySaveDirectoryToHomeNews)
@@ -160,4 +201,35 @@ TEST_F(SaveOptionsTest, preservesNonOptionTextWhenReplacingOptionsSection)
     EXPECT_EQ(std::string::npos, output.find("# old option comment"));
     EXPECT_EQ(std::string::npos, output.find("Bogus Option = old"));
     EXPECT_NE(std::string::npos, output.find("# keep this note\n\n[extra]\nvalue = yes\n"));
+}
+
+TEST_F(AutoSaveNameOptionTest, yesUsesArticleNameInNewsgroupDirectory)
+{
+    set_option(OI_AUTO_SAVE_NAME, "yes");
+
+    EXPECT_EQ("%p/%c", get_env_var("SAVEDIR"));
+    EXPECT_EQ("%a", get_env_var("SAVENAME"));
+}
+
+TEST_F(AutoSaveNameOptionTest, noRestoresClassicSaveDefaultsWhenAutoDefaultsActive)
+{
+    set_env_var("SAVEDIR", "%p/%c");
+    set_env_var("SAVENAME", "%a");
+
+    set_option(OI_AUTO_SAVE_NAME, "no");
+
+    EXPECT_EQ("%p", get_env_var("SAVEDIR"));
+    EXPECT_EQ("%^C", get_env_var("SAVENAME"));
+}
+
+TEST_F(AutoSaveNameOptionTest, checkModeDoesNotChangeSaveDefaults)
+{
+    set_env_var("SAVEDIR", "%p/%c");
+    set_env_var("SAVENAME", "%a");
+    g_check_flag = true;
+
+    set_option(OI_AUTO_SAVE_NAME, "no");
+
+    EXPECT_EQ("%p/%c", get_env_var("SAVEDIR"));
+    EXPECT_EQ("%a", get_env_var("SAVENAME"));
 }
