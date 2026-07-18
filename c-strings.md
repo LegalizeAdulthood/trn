@@ -518,17 +518,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-082 - Nntplist Server Name Port Parsing
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: owned string parsing.
-- Function: `main`.
-- Change: after the server name is copied into `s_server_name`, parse
-  optional `;` or `:` port text with `std::string::find_first_of`
-  instead of `std::strchr` and in-place NUL insertion.  Compare the
-  resolved server text with `"local"` using string comparison.
-- Tests: nntplist startup tests if present; otherwise build.
-
 #### CSTR-083 - DataSource Server Id Parsing
 
 - Files: `libtrn/datasrc.cpp`.

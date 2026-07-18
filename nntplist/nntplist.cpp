@@ -4,6 +4,7 @@
 // Copyright (c) 2026, Richard Thomson
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
 #include <nntp/nntpinit.h>
@@ -17,7 +18,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <string>
 
 static void usage();
@@ -83,33 +83,24 @@ int main(int argc, char *argv[])
 
     env_init(true);
 
-    const char *server = std::getenv("NNTPSERVER");
     char       *cp;
-    std::string server_name;
-    if (server == nullptr)
+    std::string server_name = get_env_var("NNTPSERVER");
+    if (server_name.empty())
     {
         server_name = file_exp(SERVER_NAME);
-        if (!server_name.empty())
+        if (!server_name.empty() && FILE_REF(server_name.c_str()))
         {
-            if (FILE_REF(server_name.c_str()))
-            {
-                server_name = nntp_server_name(server_name);
-            }
-            server = server_name.c_str();
+            server_name = nntp_server_name(server_name);
         }
     }
-    if (server != nullptr && std::strcmp(server, "local") != 0)
+    if (!server_name.empty() && server_name != "local")
     {
-        s_server_name = server;
-        cp = std::strchr(s_server_name.data(), ';');
-        if (!cp)
+        s_server_name = server_name;
+        const std::string::size_type separator = s_server_name.find_first_of(";:");
+        if (separator != std::string::npos)
         {
-            cp = std::strchr(s_server_name.data(), ':');
-        }
-        if (cp)
-        {
-            *cp = '\0';
-            g_nntp_link.port_number = std::atoi(cp+1);
+            g_nntp_link.port_number = std::atoi(s_server_name.c_str() + separator + 1);
+            s_server_name.resize(separator);
         }
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         const char *force_auth = getenv("NNTP_FORCE_AUTH");
