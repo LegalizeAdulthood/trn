@@ -47,6 +47,7 @@ add_executable(trn-test
     test_rt-process.cpp
     test_rt-util.cpp
     test_rt-wumpus.cpp
+    test_score-easy.cpp
     test_scorefile.cpp
     test_scoresave.cpp
     test_scmd.cpp

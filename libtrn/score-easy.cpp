@@ -3,12 +3,15 @@
  * Simple interactive menus for scorefile tasks.
  */
 // This file Copyright 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/score-easy.h>
 
 #include <config/common.h>
 #include <trn/terminal.h>
 #include <trn/util.h>
+
+#include <fmt/format.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -21,16 +24,16 @@ std::string sc_easy_append()
 
     char  filechar = '\0'; // GCC warning avoidance
     std::string line;
-    std::printf("\nScorefile easy append mode.\n");
+    fmt::print("\nScorefile easy append mode.\n");
     bool q_done = false;
     while (!q_done)
     {
-        std::printf("0) Exit.\n");
-        std::printf("1) List the current scorefile abbreviations.\n");
-        std::printf("2) Add an entry to the global scorefile.\n");
-        std::printf("3) Add an entry to this newsgroup's scorefile.\n");
-        std::printf("4) Add an entry to another scorefile.\n");
-        std::printf("5) Use a temporary scoring rule.\n");
+        fmt::print("0) Exit.\n");
+        fmt::print("1) List the current scorefile abbreviations.\n");
+        fmt::print("2) Add an entry to the global scorefile.\n");
+        fmt::print("3) Add an entry to this newsgroup's scorefile.\n");
+        fmt::print("4) Add an entry to another scorefile.\n");
+        fmt::print("5) Use a temporary scoring rule.\n");
         ch = menu_get_char();
         q_done = true;
         switch (ch)
@@ -58,7 +61,7 @@ std::string sc_easy_append()
             break;
 
         case 'h':
-            std::printf("No help available (yet).\n");
+            fmt::print("No help available (yet).\n");
             q_done = false;
             break;
 
@@ -69,11 +72,11 @@ std::string sc_easy_append()
     }
     while (filechar == '\0')    // choose one
     {
-        std::printf("Type the (single character) abbreviation of the scorefile:");
+        fmt::print("Type the (single character) abbreviation of the scorefile:");
         std::fflush(stdout);
         eat_typeahead();
         get_cmd(g_buf);
-        std::printf("%c\n",*g_buf);
+        fmt::print("{}\n", *g_buf);
         filechar = *g_buf;
         // If error checking is done later, then an error should set
         // filechar to '\0' and continue the while loop.
@@ -83,13 +86,13 @@ std::string sc_easy_append()
     q_done = false;
     while (!q_done)
     {
-        std::printf("What type of line do you want to add?\n");
-        std::printf("0) Exit.\n");
-        std::printf("1) A scoring rule line.\n");
-        std::printf("   (for the current article's author/subject)\n");
-        std::printf("2) A command, comment, or other kind of line.\n");
-        std::printf("   (use this for any other kind of line)\n");
-        std::printf("\n[Other line formats will be supported later.]\n");
+        fmt::print("What type of line do you want to add?\n");
+        fmt::print("0) Exit.\n");
+        fmt::print("1) A scoring rule line.\n");
+        fmt::print("   (for the current article's author/subject)\n");
+        fmt::print("2) A command, comment, or other kind of line.\n");
+        fmt::print("   (use this for any other kind of line)\n");
+        fmt::print("\n[Other line formats will be supported later.]\n");
         ch = menu_get_char();
         q_done = true;
         switch (ch)
@@ -101,7 +104,7 @@ std::string sc_easy_append()
             break;
 
         case '2':
-            std::printf("Enter the line below:\n");
+            fmt::print("Enter the line below:\n");
             std::fflush(stdout);
             g_buf[0] = '>';
             g_buf[1] = FINISH_CMD;
@@ -110,12 +113,12 @@ std::string sc_easy_append()
                 line += g_buf + 1;
                 return line;
             }
-            std::printf("\n");
+            fmt::print("\n");
             q_done = false;
             break;
 
         case 'h':
-            std::printf("No help available (yet).\n");
+            fmt::print("No help available (yet).\n");
             q_done = false;
             break;
 
@@ -127,7 +130,7 @@ std::string sc_easy_append()
     q_done = false;
     while (!q_done)
     {
-        std::printf("Enter a score amount (like 10 or -6):");
+        fmt::print("Enter a score amount (like 10 or -6):");
         std::fflush(stdout);
         g_buf[0] = ' ';
         g_buf[1] = FINISH_CMD;
@@ -147,16 +150,16 @@ std::string sc_easy_append()
         }
         else
         {
-            std::printf("\n");
+            fmt::print("\n");
         }
     }
     q_done = false;
     while (!q_done)
     {
-        std::printf("Do you want to:\n");
-        std::printf("0) Exit.\n");
-        std::printf("1) Give the score to the current subject.\n");
-        std::printf("2) Give the score to the current author.\n");
+        fmt::print("Do you want to:\n");
+        fmt::print("0) Exit.\n");
+        fmt::print("1) Give the score to the current subject.\n");
+        fmt::print("2) Give the score to the current author.\n");
 // add some more options here later
 // perhaps fold regular-expression question here?
         ch = menu_get_char();
@@ -175,7 +178,7 @@ std::string sc_easy_append()
             return line;
 
         case 'h':
-            std::printf("No help available (yet).\n");
+            fmt::print("No help available (yet).\n");
             q_done = false;
             break;
 

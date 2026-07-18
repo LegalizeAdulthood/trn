@@ -510,15 +510,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-107 - Score Easy Append Output
-
-- Files: `libtrn/score-easy.cpp`.
-- Kind: C formatted output.
-- Function: `sc_easy_append`.
-- Change: replace menu and prompt `printf` calls with `fmt::print`.
-  Keep the existing `g_buf` command-input flow unchanged in this slice.
-- Tests: score command tests, or add focused coverage first.
-
 #### CSTR-108 - Score Easy Command String Return
 
 - Files: `libtrn/score-easy.cpp`, `libtrn/include/trn/score-easy.h`,
