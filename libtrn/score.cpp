@@ -546,6 +546,7 @@ void sc_score_cmd(const char *line)
     long        i;
     long        j;
     const char* s;
+    std::string easy_command;
 
     if (!g_sc_initialized)
     {
@@ -569,17 +570,18 @@ void sc_score_cmd(const char *line)
     }
     if (!*line)
     {
-        line = sc_easy_command();
-        if (!line)
+        easy_command = sc_easy_command();
+        if (easy_command.empty())
         {
             return;             // do nothing with empty string
         }
-        if (*line == '\"')
+        if (easy_command == "\"")
         {
             g_buf[0] = '\0';
             sc_append(g_buf);
             return;
         }
+        line = easy_command.c_str();
     }
     switch (*line)
     {

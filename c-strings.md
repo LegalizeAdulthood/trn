@@ -510,17 +510,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-108 - Score Easy Command String Return
-
-- Files: `libtrn/score-easy.cpp`, `libtrn/include/trn/score-easy.h`,
-  `libtrn/score.cpp`.
-- Kind: raw literal-or-null return.
-- Function: `sc_easy_command`.
-- Change: return `std::string`; map the abort case to empty string and
-  update `sc_score_cmd` to check `empty()`.  Use `fmt::print` for the
-  function's menu output while touching the function.
-- Tests: score command tests, or add focused coverage first.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts

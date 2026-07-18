@@ -191,27 +191,27 @@ std::string sc_easy_append()
     return {};
 }
 
-// returns new string or nullptr to abort.
-const char *sc_easy_command()
+// returns new string or empty string to abort.
+std::string sc_easy_command()
 {
-    std::printf("\nScoring easy command mode.\n");
+    fmt::print("\nScoring easy command mode.\n");
     bool q_done = false;
     while (!q_done)
     {
-        std::printf("0) Exit.\n");
-        std::printf("1) Add something to a scorefile.\n");
-        std::printf("2) Rescore the articles in the current newsgroup.\n");
-        std::printf("3) Explain the current article's score.\n");
-        std::printf("   (show the rules that matched this article)\n");
-        std::printf("4) Edit this newsgroup's scoring rule file.\n");
+        fmt::print("0) Exit.\n");
+        fmt::print("1) Add something to a scorefile.\n");
+        fmt::print("2) Rescore the articles in the current newsgroup.\n");
+        fmt::print("3) Explain the current article's score.\n");
+        fmt::print("   (show the rules that matched this article)\n");
+        fmt::print("4) Edit this newsgroup's scoring rule file.\n");
         // later add an option to edit an arbitrary file
-        std::printf("5) Continue scoring unscored articles.\n");
+        fmt::print("5) Continue scoring unscored articles.\n");
         char ch = menu_get_char();
         q_done = true;
         switch (ch)
         {
         case '0':
-            return nullptr;
+            return {};
 
         case '1':
             return "\"";        // do an append command
@@ -230,7 +230,7 @@ const char *sc_easy_command()
             return "f";
 
         case 'h':
-            std::printf("No help available (yet).\n");
+            fmt::print("No help available (yet).\n");
             q_done = false;
             break;
 
@@ -239,5 +239,5 @@ const char *sc_easy_command()
             break;
         }
     }
-    return nullptr;
+    return {};
 }

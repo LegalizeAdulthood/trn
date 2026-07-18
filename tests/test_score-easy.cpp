@@ -57,3 +57,47 @@ TEST_F(ScoreEasyTest, appendExitReturnsEmptyString)
               "Enter your choice: 0\n",
               output);
 }
+
+TEST_F(ScoreEasyTest, commandExitReturnsEmptyString)
+{
+    push_char('0');
+
+    testing::internal::CaptureStdout();
+    const std::string line = sc_easy_command();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(line.empty());
+    EXPECT_EQ("\n"
+              "Scoring easy command mode.\n"
+              "0) Exit.\n"
+              "1) Add something to a scorefile.\n"
+              "2) Rescore the articles in the current newsgroup.\n"
+              "3) Explain the current article's score.\n"
+              "   (show the rules that matched this article)\n"
+              "4) Edit this newsgroup's scoring rule file.\n"
+              "5) Continue scoring unscored articles.\n"
+              "Enter your choice: 0\n",
+              output);
+}
+
+TEST_F(ScoreEasyTest, commandAppendReturnsAppendMarker)
+{
+    push_char('1');
+
+    testing::internal::CaptureStdout();
+    const std::string line = sc_easy_command();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("\"", line);
+    EXPECT_EQ("\n"
+              "Scoring easy command mode.\n"
+              "0) Exit.\n"
+              "1) Add something to a scorefile.\n"
+              "2) Rescore the articles in the current newsgroup.\n"
+              "3) Explain the current article's score.\n"
+              "   (show the rules that matched this article)\n"
+              "4) Edit this newsgroup's scoring rule file.\n"
+              "5) Continue scoring unscored articles.\n"
+              "Enter your choice: 1\n",
+              output);
+}
