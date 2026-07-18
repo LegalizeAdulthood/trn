@@ -442,13 +442,13 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   generic allocation helpers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
-- Fixed buffers: current candidates include `inews` and `trn-artchk`
-  tool output/global buffers, `g_ser_line`, `g_art_line`,
-  interpolation scratch storage, `trn_getwd` output storage,
-  `g_head_buf`, `g_art_buf`, MIME HTML tag parser state, terminal
-  storage, response header buffers, `ngstuff` command expansion
-  buffers, `uudecode` pending-line storage, selector command key
-  storage, tree-indent storage, and global command/message buffers.
+- Fixed buffers: current candidates include `inews` tool output/global
+  buffers, `g_ser_line`, `g_art_line`, interpolation scratch storage,
+  `trn_getwd` output storage, `g_head_buf`, `g_art_buf`, MIME HTML tag
+  parser state, terminal storage, response header buffers, `ngstuff`
+  command expansion buffers, `uudecode` pending-line storage, selector
+  command key storage, tree-indent storage, and global command/message
+  buffers.
 - Filename storage: current path candidates remain in KILL-file
   appending, score-file loading/editing, newsrc file fields, and some
   universal-selector file fields.  Mixed URL/path/host fields need
@@ -503,15 +503,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-098 - Trn Artchk Unused Global Buffer
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: unused global fixed buffer.
-- Function: storage-centered `g_buf`.
-- Change: remove the unused `g_buf[LINE_BUF_LEN + 1]` definition from
-  `trn-artchk`.
-- Tests: build `trn-artchk`.
 
 ### Tier 1 - Helper And API Foundations
 
