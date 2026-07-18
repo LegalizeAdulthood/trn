@@ -14,6 +14,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -82,10 +84,12 @@ int main(int argc, char *argv[])
     std::string article_header;
     std::string input_line;
     std::string body_line;
+    std::string output_line;
 
     article_header.reserve(LINE_BUF_LEN * 8);
     input_line.reserve(LINE_BUF_LEN);
     body_line.reserve(LINE_BUF_LEN * 8);
+    output_line.reserve(LINE_BUF_LEN);
 
 #ifdef LAX_INEWS
     env_init(true);
@@ -246,8 +250,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        std::sprintf(g_buf, "%s -h", EXTRA_INEWS);
-        inews_wr_fp = popen(g_buf,"w");
+        output_line = fmt::format("{} -h", EXTRA_INEWS);
+        inews_wr_fp = popen(output_line.c_str(),"w");
         if (!inews_wr_fp)
         {
             std::fprintf(stderr,"Unable to execute inews for local posting.\n");
@@ -258,24 +262,22 @@ int main(int argc, char *argv[])
     inews_fputs(article_header.c_str());
     if (!has_pathline)
     {
-        std::sprintf(g_buf,"Path: not-for-mail%s",line_end);
-        inews_fputs(g_buf);
+        output_line = fmt::format("Path: not-for-mail{}", line_end);
+        inews_fputs(output_line.c_str());
     }
     if (!has_fromline)
     {
         const char *real_name = get_val_const("NAME", g_real_name.c_str());
-        std::sprintf(g_buf, "From: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), real_name, line_end);
-        inews_fputs(g_buf);
+        output_line = fmt::format("From: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);
+        inews_fputs(output_line.c_str());
     }
     if (!std::getenv("NO_ORIGINATOR"))
     {
         const char *real_name = get_val_const("NAME", g_real_name.c_str());
-        std::sprintf(g_buf, "Originator: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), real_name,
-                     line_end);
-        inews_fputs(g_buf);
+        output_line = fmt::format("Originator: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);
+        inews_fputs(output_line.c_str());
     }
-    std::sprintf(g_buf, "%s", line_end);
-    inews_fputs(g_buf);
+    inews_fputs(line_end);
 
     had_nl = true;
     while (true)

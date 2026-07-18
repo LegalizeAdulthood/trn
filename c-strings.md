@@ -517,16 +517,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-068 - Inews Posting Output Strings
-
-- Files: `inews/inews.cpp`.
-- Kind: tool-local global output buffer and formatted lines.
-- Function: `main`.
-- Change: replace `g_buf` posting command and header line construction
-  with `std::string` and `fmt`.  Keep data alive for `inews_fputs` and
-  `popen` calls only as long as needed.
-- Tests: inews posting tests.
-
 #### CSTR-069 - Newsrc Add Article Line Builder
 
 - Files: `libtrn/rcln.cpp`.
