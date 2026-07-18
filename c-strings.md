@@ -477,7 +477,7 @@ production code.
 - Comparison: `strcmp` 4, `strncmp` 24.
 - Search and length: `strchr` 88, `strrchr` 7, `strstr` 2,
   `strlen` 83.
-- Formatting into C buffers: `sprintf` 96.
+- Formatting into C buffers: `sprintf` 94.
 - C text I/O roots: `fgets` 31, `fputs` 206, `printf` 483,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
@@ -514,16 +514,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-090 - Rcstuff Newsgroup Prompt Buffer
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: local fixed formatted prompt buffer.
-- Function: `get_newsgroup`.
-- Change: replace `prompt_buf[128]` with owned `std::string` or
-  `fmt::format` construction for the fuzzy-match prompt text.  Preserve
-  prompt wording and retry flow.
-- Tests: newsgroup selection/addition tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 

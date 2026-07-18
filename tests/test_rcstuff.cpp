@@ -4,9 +4,11 @@
 
 #include <trn/datasrc.h>
 #include <trn/final.h>
+#include <trn/hash.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
+#include <trn/trn.h>
 
 #include <test_config.h>
 
@@ -22,6 +24,15 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+void drain_macro_buffer()
+{
+    while (macro_pending())
+    {
+        char discarded{};
+        read_tty(&discarded, 1);
+    }
+}
 
 std::vector<std::string> read_lines(const fs::path &path)
 {
@@ -55,9 +66,18 @@ protected:
         m_old_ng_go_newsgroup_ptr = g_ng_go_newsgroup_ptr;
         m_old_multirc = g_multirc;
         m_old_data_source = g_data_source;
+        m_old_newsrc_hash = g_newsrc_hash;
         m_old_sel_sort = g_sel_sort;
         m_old_sel_newsgroup_sort = g_sel_newsgroup_sort;
         m_old_sel_direction = g_sel_direction;
+        m_old_add_new_by_default = g_add_new_by_default;
+        m_old_append_unsub = g_append_unsub;
+        m_old_fuzzy_get = g_fuzzy_get;
+        m_old_novice_delays = g_novice_delays;
+        m_old_verbose = g_verbose;
+        m_old_verify = g_verify;
+        m_old_general_mode = g_general_mode;
+        m_old_mode = g_mode;
         m_old_check_flag = g_check_flag;
         m_old_int_count = g_int_count;
         m_old_erase_screen = g_erase_screen;
@@ -94,7 +114,16 @@ protected:
         g_ng_go_newsgroup_ptr = nullptr;
         g_multirc = nullptr;
         g_data_source = nullptr;
+        g_newsrc_hash = nullptr;
         g_check_flag = false;
+        g_add_new_by_default = ADDNEW_ASK;
+        g_append_unsub = false;
+        g_fuzzy_get = false;
+        g_novice_delays = false;
+        g_verbose = true;
+        g_verify = false;
+        g_general_mode = GM_READ;
+        g_mode = MM_NONE;
         g_int_count = 0;
         g_erase_screen = false;
         g_tc_LINES = 200;
@@ -111,6 +140,12 @@ protected:
             unuse_multirc(g_multirc);
         }
         m_data_source.close();
+        if (g_newsrc_hash != nullptr && g_newsrc_hash != m_old_newsrc_hash)
+        {
+            hash_destroy(g_newsrc_hash);
+            g_newsrc_hash = nullptr;
+        }
+        drain_macro_buffer();
 
         std::error_code error;
         fs::remove_all(m_output_dir, error);
@@ -130,9 +165,18 @@ protected:
         g_ng_go_newsgroup_ptr = m_old_ng_go_newsgroup_ptr;
         g_multirc = m_old_multirc;
         g_data_source = m_old_data_source;
+        g_newsrc_hash = m_old_newsrc_hash;
         g_sel_sort = m_old_sel_sort;
         g_sel_newsgroup_sort = m_old_sel_newsgroup_sort;
         g_sel_direction = m_old_sel_direction;
+        g_add_new_by_default = m_old_add_new_by_default;
+        g_append_unsub = m_old_append_unsub;
+        g_fuzzy_get = m_old_fuzzy_get;
+        g_novice_delays = m_old_novice_delays;
+        g_verbose = m_old_verbose;
+        g_verify = m_old_verify;
+        g_general_mode = m_old_general_mode;
+        g_mode = m_old_mode;
         g_check_flag = m_old_check_flag;
         g_int_count = m_old_int_count;
         g_erase_screen = m_old_erase_screen;
@@ -181,9 +225,18 @@ protected:
     NewsgroupData               *m_old_ng_go_newsgroup_ptr{};
     Multirc                     *m_old_multirc{};
     DataSource                  *m_old_data_source{};
+    HashTable                   *m_old_newsrc_hash{};
     SelectionSortMode            m_old_sel_sort{};
     SelectionSortMode            m_old_sel_newsgroup_sort{};
     int                          m_old_sel_direction{};
+    AddNewType                   m_old_add_new_by_default{};
+    bool                         m_old_append_unsub{};
+    bool                         m_old_fuzzy_get{};
+    bool                         m_old_novice_delays{};
+    bool                         m_old_verbose{};
+    bool                         m_old_verify{};
+    GeneralMode                  m_old_general_mode{};
+    MinorMode                    m_old_mode{};
     bool                         m_old_check_flag{};
     char                         m_old_int_count{};
     bool                         m_old_erase_screen{};
@@ -269,6 +322,29 @@ TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
     EXPECT_EQ(options_line, g_newsgroup_order[0]->m_rc_line);
     EXPECT_EQ(TR_JUNK, g_newsgroup_order[0]->m_to_read);
     unuse_multirc(&multirc);
+}
+
+TEST_F(NewsrcRotationTest, getNewsgroupPromptsForMissingNewsrcGroup)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_path, "", nullptr));
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    newsrc.flags = RF_ADD_GROUPS | RF_ACTIVE;
+    multirc.m_first = &newsrc;
+    g_multirc = &multirc;
+    g_newsrc_hash = hash_create(3001, nullptr);
+
+    push_char('n');
+    testing::internal::CaptureStdout();
+    const bool        found = get_newsgroup("comp.lang.apl", GNG_NONE);
+    const std::string output = testing::internal::GetCapturedStdout();
+    g_multirc = nullptr;
+
+    EXPECT_FALSE(found);
+    EXPECT_EQ("\nNewsgroup comp.lang.apl not in .newsrc -- subscribe? [ynYN] \n", output);
 }
 
 TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)

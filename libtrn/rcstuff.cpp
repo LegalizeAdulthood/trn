@@ -1039,7 +1039,6 @@ void NewsgroupData::abandon_newsgroup()
 bool get_newsgroup(const char *what, GetNewsgroupFlags flags)
 {
     const char *n_to_forget;
-    char prompt_buf[128];
 
     if (g_verbose)
     {
@@ -1140,16 +1139,11 @@ check_fuzzy_match:
         }
         else
         {
-            if (g_verbose)
-            {
-                std::sprintf(prompt_buf, "\nNewsgroup %s not in .newsrc -- subscribe?", g_newsgroup_name.c_str());
-            }
-            else
-            {
-                std::sprintf(prompt_buf,"\nSubscribe %s?",g_newsgroup_name.c_str());
-            }
+            const std::string add_prompt{
+                g_verbose ? fmt::format("\nNewsgroup {} not in .newsrc -- subscribe?", g_newsgroup_name)
+                          : fmt::format("\nSubscribe {}?", g_newsgroup_name)};
 reask_add:
-            in_char(prompt_buf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
+            in_char(add_prompt.c_str(), MM_ADD_NEWSGROUP_PROMPT, "ynYN");
             print_cmd();
             newline();
             if (*g_buf == 'h')
