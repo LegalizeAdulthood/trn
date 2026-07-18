@@ -732,6 +732,7 @@ void update_thread_kill_file()
 void edit_kill_file()
 {
     char* bp;
+    std::string kill_file;
 
     if (g_in_ng)
     {
@@ -746,21 +747,20 @@ void edit_kill_file()
                 sp->clear_subject();
             }
         }
-        std::strcpy(g_buf, file_exp(get_val_const("KILLLOCAL", s_kill_local)).c_str());
+        kill_file = file_exp(get_val_const("KILLLOCAL", s_kill_local));
     }
     else
     {
-        std::strcpy(g_buf, file_exp(get_val_const("KILLGLOBAL", s_kill_global)).c_str());
+        kill_file = file_exp(get_val_const("KILLGLOBAL", s_kill_global));
     }
-    if (!make_dir(g_buf, MD_FILE))
+    if (!make_dir(kill_file.c_str(), MD_FILE))
     {
-        std::sprintf(g_cmd_buf, "%s %s",
-                     file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))).c_str(), g_buf);
-        std::printf("\nEditing %s KILL file:\n%s\n",
-            (g_in_ng?"local":"global"),g_cmd_buf);
+        const std::string command =
+            fmt::format("{} {}", file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))), kill_file);
+        fmt::print("\nEditing {} KILL file:\n{}\n", g_in_ng ? "local" : "global", command);
         term_down(3);
         reset_tty();                      // make sure tty is friendly
-        do_shell(SH, g_cmd_buf);         // invoke the shell
+        do_shell(SH, command.c_str());   // invoke the shell
         no_echo();                       // and make terminal
         cr_mode();                       // unfriendly again
         open_kill_file(g_in_ng);
@@ -804,7 +804,7 @@ void edit_kill_file()
     }
     else
     {
-        std::printf("Can't make %s\n",g_buf);
+        fmt::print("Can't make {}\n", kill_file);
         term_down(1);
     }
 }

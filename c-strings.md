@@ -449,8 +449,8 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   expansion buffers, `uudecode` pending-line storage, selector command
   key storage, and global command/message buffers.
 - Filename storage: current path candidates remain in KILL-file
-  editing/appending, score-file loading/editing, newsrc file fields, and
-  some universal-selector file fields.  Mixed URL/path/host fields need
+  appending, score-file loading/editing, newsrc file fields, and some
+  universal-selector file fields.  Mixed URL/path/host fields need
   ownership and identity splits before they can honestly become
   `fs::path`.
 
@@ -473,12 +473,12 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 76, `strncpy` 4, `strcat` 2.
+- Copy and concatenation: `strcpy` 74, `strncpy` 4, `strcat` 2.
 - Comparison: `strcmp` 4, `strncmp` 24.
 - Search and length: `strchr` 88, `strrchr` 7, `strstr` 2,
   `strlen` 82.
-- Formatting into C buffers: `sprintf` 85.
-- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 483,
+- Formatting into C buffers: `sprintf` 84.
+- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 481,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
 
@@ -519,17 +519,6 @@ Finish these before broad global-buffer work.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-055 - KILL File Editing Paths
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: path and shell command construction through `g_buf` and
-  `g_cmd_buf`.
-- Function: `edit_kill_file`.
-- Change: keep the selected KILL filename in `fs::path` or
-  `std::string`, use `make_dir` through the path/string value, and build
-  the editor command with `fmt::format`.
-- Tests: KILL file tests.
 
 #### CSTR-056 - KILL File Append Paths
 
