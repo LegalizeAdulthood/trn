@@ -518,17 +518,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-053 - Newsgroup Display Subject Line
-
-- Files: `libtrn/ng.cpp`.
-- Kind: local fixed buffer and interpolation output.
-- Function: `output_subject`.
-- Change: replace `tmpbuf[256]` with owned string storage for the
-  generated subject line.  If `interp` still requires caller output
-  storage, keep a local string buffer alive for the full print call and
-  avoid changing operation order.
-- Tests: `test_subject`.
-
 #### CSTR-064 - Tool Interpolation Output Buffer
 
 - Files: `tool/util3.cpp`, `tool/include/tool/util3.h`,

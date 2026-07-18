@@ -39,6 +39,10 @@ protected:
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
+        m_old_art = g_art;
+        m_old_curr_artp = g_curr_artp;
+        m_old_artp = g_artp;
+        m_old_in_ng = g_in_ng;
         m_old_kf_state = g_kf_state;
         m_old_threaded_group = g_threaded_group;
         m_old_thread_always = g_thread_always;
@@ -70,6 +74,10 @@ protected:
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{2};
+        g_art = ArticleNum{};
+        g_curr_artp = nullptr;
+        g_artp = nullptr;
+        g_in_ng = false;
         g_kf_state = KFS_NONE;
         g_threaded_group = false;
         g_thread_always = false;
@@ -104,6 +112,10 @@ protected:
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
+        g_art = m_old_art;
+        g_curr_artp = m_old_curr_artp;
+        g_artp = m_old_artp;
+        g_in_ng = m_old_in_ng;
         g_kf_state = m_old_kf_state;
         g_threaded_group = m_old_threaded_group;
         g_thread_always = m_old_thread_always;
@@ -127,6 +139,10 @@ protected:
     ArticleNum                    m_old_abs_first{};
     ArticleNum                    m_old_first_art{};
     ArticleNum                    m_old_last_art{};
+    ArticleNum                    m_old_art{};
+    Article                      *m_old_curr_artp{};
+    Article                      *m_old_artp{};
+    bool                          m_old_in_ng{};
     KillFileStateFlags            m_old_kf_state{KFS_NONE};
     bool                          m_old_threaded_group{};
     bool                          m_old_thread_always{};
@@ -189,4 +205,20 @@ TEST_F(SubjectStorageTest, outputSubjectPrintsArticleNumberAndSubject)
 
     EXPECT_FALSE(stopped);
     EXPECT_EQ("1     A Subject\n", output);
+}
+
+TEST_F(SubjectStorageTest, outputSubjectPrintsCustomSubjectLine)
+{
+    Article *article = article_ptr(ArticleNum{1});
+    article->set_subj_line("A Subject");
+    g_subj_line = "[%s]";
+    g_in_ng = true;
+    g_artp = article;
+
+    testing::internal::CaptureStdout();
+    const bool        stopped = output_subject(reinterpret_cast<char *>(article), 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(stopped);
+    EXPECT_EQ("1     [A Subject]\n", output);
 }

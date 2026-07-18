@@ -52,6 +52,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
 #include <string>
 #include <string_view>
 
@@ -2050,8 +2051,6 @@ static bool mark_all_unread(char *ptr, int arg)
 
 bool output_subject(char *ptr, int flag)
 {
-    char tmpbuf[256];
-
     if (g_int_count)
     {
         return true;
@@ -2079,10 +2078,13 @@ bool output_subject(char *ptr, int flag)
         std::string subject_line;
         if (custom_subject_line)
         {
-            std::sprintf(tmpbuf,"%-5ld ", i.value_of());
-            int len = std::strlen(tmpbuf);
+            subject_line.reserve(256);
+            fmt::format_to(std::back_inserter(subject_line), "{:<5} ", i.value_of());
+            const std::size_t len = subject_line.size();
+            subject_line.resize(256);
             g_art = i;
-            interp(tmpbuf + len, sizeof tmpbuf - len, g_subj_line);
+            interp(subject_line.data() + len, static_cast<int>(subject_line.size() - len), g_subj_line);
+            subject_line.resize(std::strlen(subject_line.c_str()));
         }
         else
         {
@@ -2092,7 +2094,7 @@ bool output_subject(char *ptr, int flag)
         {
             g_page_line = 1;
         }
-        if (print_lines(custom_subject_line ? tmpbuf : subject_line.c_str(), NO_MARKING) != 0)
+        if (print_lines(subject_line.c_str(), NO_MARKING) != 0)
         {
             return true;
         }
