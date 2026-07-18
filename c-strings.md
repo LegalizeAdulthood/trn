@@ -436,8 +436,9 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   definition, and five call sites in three owner clusters.  The call
   sites are inventoried below.
 - `safe_malloc`: remaining string-shaped owners are mouse button
-  storage, newsrc line builders, `NewsgroupData` newsrc editing scratch
-  text, terminal CR fallback storage, `g_head_buf`, and `g_art_buf`.
+  storage, inactive `MCHASE` newsrc editing code, `NewsgroupData`
+  newsrc editing scratch text, terminal CR fallback storage,
+  `g_head_buf`, and `g_art_buf`.
   Non-string owners include hash tables, selector page storage, regex
   bytecode, HTML block arrays, article subject pointer arrays, and
   generic allocation helpers.
@@ -516,16 +517,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-069 - Newsrc Add Article Line Builder
-
-- Files: `libtrn/rcln.cpp`.
-- Kind: local owned newsrc line construction.
-- Function: `add_art_num`.
-- Change: replace the `safe_malloc`/`strcpy`/`sprintf`/`strcat` builder
-  with `std::string` and `fmt` while preserving range merge behavior and
-  operation order.
-- Tests: newsrc read/write and article marking tests.
 
 #### CSTR-070 - Newsrc To-read Scratch Buffer
 

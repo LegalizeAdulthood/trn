@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <utility>
 
 enum
 {
@@ -98,7 +99,6 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
     ArticleNum min{};
     ArticleNum max{-1};
     ArticleNum lastnum{};
-    char*   mbuf;
     bool    morenum;
 
     if (!art_num)
@@ -188,74 +188,85 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
 
     // we have not read it, so insert the article number before s
 
-    morenum = std::isdigit(*s);              // will it need a comma after?
+    morenum = std::isdigit(*s); // will it need a comma after?
     np->show_subscribe_char();
-    char *rc_line = np->rc_line_data();
-    mbuf = safe_malloc((MemorySize)(std::strlen(s)+(s - rc_line)+MAX_DIGITS+2+1));
-    std::strcpy(mbuf,rc_line);            // make new rc line
-    if (maxt && lastnum && art_num == article_after(lastnum))
-                                        // can we just extend last range?
+    char       *rc_line = np->rc_line_data();
+    std::string new_rc_line;
+    new_rc_line.reserve(std::strlen(rc_line) + MAX_DIGITS + 2);
+    new_rc_line = rc_line; // make new rc line
+    std::size_t write_offset{};
+    std::string insert_text;
+    if (maxt && lastnum && art_num == article_after(lastnum)) // can we just extend last range?
     {
-        t = mbuf + (maxt - rc_line); // then overwrite previous max
+        // then overwrite previous max
+        write_offset = static_cast<std::size_t>(maxt - rc_line);
     }
     else
     {
-        t = mbuf + (t - rc_line);    // point t into new line instead
-        if (lastnum)                    // have we parsed any line?
+        // point t into new line instead
+        write_offset = static_cast<std::size_t>(t - rc_line);
+        if (lastnum) // have we parsed any line?
         {
-            if (!morenum)               // are we adding to the tail?
+            if (!morenum) // are we adding to the tail?
             {
-                *t++ = ',';             // supply comma before
+                insert_text = ","; // supply comma before
             }
-            if (!maxt && art_num == article_after(lastnum) && *(t - 1) == ',')
-                                        // adjacent singletons?
+            if (!maxt && art_num == article_after(lastnum)) // adjacent singletons?
             {
-                *(t-1) = '-';           // turn them into a range
+                if (morenum && write_offset > 0 && new_rc_line[write_offset - 1] == ',')
+                {
+                    new_rc_line[write_offset - 1] = '-';
+                }
+                else if (!morenum)
+                {
+                    insert_text = "-";
+                }
             }
         }
     }
-    if (morenum)                        // is there more to life?
+    if (morenum) // is there more to life?
     {
         if (min == article_after(art_num)) // can we consolidate further?
         {
-            bool range_before = (*(t-1) == '-');
+            bool  range_before = (write_offset > 0 && new_rc_line[write_offset - 1] == '-');
             char *nextmax = skip_digits(s);
             bool  range_after = *nextmax++ == '-';
 
-            if (range_before)
+            if (!range_before)
             {
-                *t = '\0';              // artnum is redundant
-            }
-            else
-            {
-                std::sprintf(t,"%ld-",(long)art_num.value_of());// artnum will be new min
+                insert_text += fmt::format("{}-", art_num.value_of());
+                // artnum will be new min
             }
 
             if (range_after)
             {
-                s = nextmax;            // *s is redundant
+                s = nextmax; // *s is redundant
             }
         }
         else
         {
-            std::sprintf(t,"%ld,",(long)art_num.value_of());     // put the number and comma
+            insert_text += fmt::format("{},", art_num.value_of());
+            // put the number and comma
         }
     }
     else
     {
-        std::sprintf(t,"%ld",(long)art_num.value_of());  // put the number there (wherever)
+        insert_text += fmt::format("{}", art_num.value_of());
+        // put the number there (wherever)
     }
-    std::strcat(t,s);                        // copy remainder of line
+    new_rc_line.erase(write_offset);
+    new_rc_line += insert_text;
+    new_rc_line += s; // copy remainder of line
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("%s\n",mbuf);
+        fmt::print("{}\n", new_rc_line);
     }
 #endif
-    np->m_rc_line = mbuf;          // pull the switcheroo
-    std::free(mbuf);
+    np->m_rc_line = std::move(new_rc_line);
+    // pull the switcheroo
     np->hide_subscribe_char();
-                                        // wipe out : or !
+    // wipe out : or !
     if (np->m_to_read > TR_NONE)   // lest we turn unsub into bogus
     {
         np->m_to_read--;
