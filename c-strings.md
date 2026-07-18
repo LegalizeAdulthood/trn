@@ -525,17 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-088 - Ngstuff Command Expansion Buffers
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: local fixed interpolation buffers.
-- Function: `ngstuff`.
-- Change: replace `tmp_buf[LINE_BUF_LEN]` and `tmpbuf[512]` command
-  expansion storage with owned `std::string` storage after interpolation
-  helpers can return strings.  Preserve macro expansion and `perform`
-  command execution order.
-- Tests: newsgroup command tests.
-
 #### CSTR-073 - Score File Filename Paths
 
 - Files: `libtrn/scorefile.cpp`, `libtrn/include/trn/scorefile.h`.

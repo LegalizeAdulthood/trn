@@ -5,6 +5,7 @@
 
 #include <config/common.h>
 #include <trn/cache.h>
+#include <trn/intrp.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rcstuff.h>
@@ -26,6 +27,15 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+void drain_macro_buffer()
+{
+    while (macro_pending())
+    {
+        char discarded{};
+        read_tty(&discarded, 1);
+    }
+}
 
 class EscapadeTest : public testing::Test
 {
@@ -135,6 +145,49 @@ protected:
     std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
 };
 
+class SwitcherooMacroTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        drain_macro_buffer();
+        std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
+    }
+
+    void TearDown() override
+    {
+        drain_macro_buffer();
+        std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
+    }
+
+    std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
+};
+
+class PerformExpansionTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_one_command = g_one_command;
+        m_old_perform_count = g_perform_count;
+        std::copy_n(g_msg, m_old_msg.size(), m_old_msg.begin());
+
+        g_one_command = false;
+        g_perform_count = 0;
+    }
+
+    void TearDown() override
+    {
+        g_one_command = m_old_one_command;
+        g_perform_count = m_old_perform_count;
+        std::copy(m_old_msg.begin(), m_old_msg.end(), g_msg);
+    }
+
+    std::array<char, CMD_BUF_LEN> m_old_msg{};
+    bool                         m_old_one_command{};
+    int                          m_old_perform_count{};
+};
+
 } // namespace
 
 TEST_F(EscapadeTest, restoresCurrentDirectoryAfterShellCommand)
@@ -187,4 +240,28 @@ TEST_F(NumNumTest, selectsSingleArticle)
 
     EXPECT_EQ(NN_REREAD, result);
     EXPECT_EQ(ArticleNum{5}, g_art);
+}
+
+TEST_F(SwitcherooMacroTest, definesMacroFromCommandText)
+{
+    const std::string command{"&&~ z"};
+    ASSERT_LT(command.size(), m_old_buf.size());
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    const bool result = switcheroo();
+
+    EXPECT_FALSE(result);
+    push_char('~');
+    get_cmd(g_buf);
+    EXPECT_EQ('z', g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+}
+
+TEST_F(PerformExpansionTest, expandsCommandBeforeContinuingAfterColon)
+{
+    const int result = perform("%Z:Z", 0);
+
+    EXPECT_EQ(-1, result);
+    EXPECT_STREQ("Unknown command: Z", g_msg);
 }

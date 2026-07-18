@@ -154,9 +154,9 @@ bool switcheroo()
         }
         else
         {
-            char tmp_buf[LINE_BUF_LEN];
-            char *s = skip_space(g_buf + 2);
-            mac_line(s,tmp_buf,(sizeof tmp_buf));
+            std::string tmp_buf(LINE_BUF_LEN, '\0');
+            char       *s = skip_space(g_buf + 2);
+            mac_line(s, tmp_buf.data(), static_cast<int>(tmp_buf.size()));
         }
     }
     else
@@ -679,19 +679,23 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else if (ch == '%')
         {
-            char tmpbuf[512];
+            std::string expanded_command(512, '\0');
+            char       *expanded_buffer = expanded_command.data();
+            const int   expanded_size = static_cast<int>(expanded_command.size());
 
             if (g_one_command)
             {
-                interp(tmpbuf, (sizeof tmpbuf), cmdlst);
+                interp(expanded_buffer, expanded_size, cmdlst);
             }
             else
             {
                 char *cmd_start = cmdlst;
-                cmdlst = cmd_start + (do_interp(tmpbuf, sizeof tmpbuf, cmd_start, ":", nullptr) - cmd_start) - 1;
+                cmdlst =
+                    cmd_start + (do_interp(expanded_buffer, expanded_size, cmd_start, ":", nullptr) - cmd_start) - 1;
             }
+            expanded_command.resize(std::strlen(expanded_command.c_str()));
             g_perform_count--;
-            if (perform(tmpbuf,output_level?2:0) < 0)
+            if (perform(expanded_command, output_level ? 2 : 0) < 0)
             {
                 return -1;
             }
