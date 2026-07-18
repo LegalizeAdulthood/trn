@@ -508,15 +508,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-085 - Check-mode Argument Comparison
-
-- Files: `libtrn/opt.cpp`.
-- Kind: C-string comparison cleanup.
-- Function: `opt_init`.
-- Change: compare `argv[1]` with `"-c"` using `std::string_view`
-  instead of `strcmp`.
-- Tests: option initialization tests.
-
 #### CSTR-086 - Auto-save Option Environment Comparison
 
 - Files: `libtrn/opt.cpp`.

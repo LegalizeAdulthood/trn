@@ -106,7 +106,7 @@ void opt_init(int argc, char *argv[], char *tcbuf)
         parse_mouse_buttons(&g_news_sel_btns, "[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
     g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns, "[Next]n [Sel]+ [Quit]q [Help]h");
 
-    if (argc >= 2 && !strcmp(argv[1], "-c"))
+    if (argc >= 2 && std::string_view{argv[1]} == "-c")
     {
         g_check_flag = true; // so we can optimize for -c
     }
