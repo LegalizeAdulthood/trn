@@ -515,19 +515,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-109 - String Case View Overloads
-
-- Files: `config/string_case_compare.cpp`,
-  `config/cmake/string_case_compare.manual.h.in`,
-  `config/cmake/string_case_compare.strings.h.in`,
-  `config/tests/test_string_case_compare.cpp`.
-- Kind: C-string comparison helper API.
-- Function: `string_case_compare` and `string_case_equal`.
-- Change: add `std::string_view` overloads that compare by view extent
-  without forcing callers to build temporary `std::string` objects.
-  Preserve the existing C-string and pointer-plus-length overloads.
-- Tests: run `TestStringCaseCompare*`.
-
 #### CSTR-110 - Environment Value String Callers
 
 - Files: `util/env.cpp`, `util/include/util/env.h`, and remaining

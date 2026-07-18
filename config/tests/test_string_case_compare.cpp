@@ -3,6 +3,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string_view>
+
 TEST(TestStringCaseCompareCount, firstStringEmpty)
 {
     char buffer[80]{"foo"};
@@ -111,6 +113,28 @@ TEST(TestStringCaseCompare, prefixIsLess)
     EXPECT_GT(0, string_case_compare("frac", "fractint"));
 }
 
+TEST(TestStringCaseCompareView, extentLimitsComparison)
+{
+    const std::string_view prefix{"foobar", 3};
+
+    EXPECT_EQ(0, string_case_compare(prefix, "FOO"));
+}
+
+TEST(TestStringCaseCompareView, prefixIsLess)
+{
+    EXPECT_GT(0, string_case_compare(std::string_view{"frac"}, std::string_view{"fractint"}));
+}
+
+TEST(TestStringCaseCompareView, longerPrefixIsGreater)
+{
+    EXPECT_LT(0, string_case_compare(std::string_view{"fractint"}, std::string_view{"frac"}));
+}
+
+TEST(TestStringCaseCompareView, differsWithinExtent)
+{
+    EXPECT_LT(0, string_case_compare(std::string_view{"foo"}, std::string_view{"bar"}));
+}
+
 TEST(TestStringCaseEqualCount, firstStringEmpty)
 {
     char buffer[80]{"foo"};
@@ -217,4 +241,21 @@ TEST(TestStringCaseEqual, greaterPositive)
 TEST(TestStringCaseEqual, prefixIsLess)
 {
     EXPECT_FALSE(string_case_equal("frac", "fractint"));
+}
+
+TEST(TestStringCaseEqualView, extentLimitsComparison)
+{
+    const std::string_view prefix{"foobar", 3};
+
+    EXPECT_TRUE(string_case_equal(prefix, "FOO"));
+}
+
+TEST(TestStringCaseEqualView, prefixIsNotEqual)
+{
+    EXPECT_FALSE(string_case_equal(std::string_view{"frac"}, std::string_view{"fractint"}));
+}
+
+TEST(TestStringCaseEqualView, differOnlyByCaseEqual)
+{
+    EXPECT_TRUE(string_case_equal(std::string_view{"foo"}, std::string_view{"FoO"}));
 }
