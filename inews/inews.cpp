@@ -31,7 +31,6 @@ enum
 int new_connection{};
 std::string g_server_name;
 std::string g_nntp_auth_file;
-char g_buf[LINE_BUF_LEN + 1]{}; // general purpose line buffer
 
 int  valid_header(std::string_view h);
 void append_signature();
@@ -404,6 +403,7 @@ void append_signature()
     char* cp;
     std::FILE* fp;
     int count = 0;
+    std::string output_line;
 
 #ifdef NO_INEWS_DOTDIR
     g_dot_dir = g_home_dir;
@@ -419,8 +419,8 @@ void append_signature()
         return;
     }
 
-    std::sprintf(g_buf, "-- \r\n");
-    inews_fputs(g_buf);
+    output_line.reserve(LINE_BUF_LEN + 1);
+    inews_fputs("-- \r\n");
     while (std::fgets(g_ser_line, sizeof g_ser_line, fp))
     {
         count++;
@@ -438,8 +438,8 @@ void append_signature()
         {
             *cp = '\0';
         }
-        std::sprintf(g_buf, "%s\r\n", g_ser_line);
-        inews_fputs(g_buf);
+        output_line = fmt::format("{}\r\n", g_ser_line);
+        inews_fputs(output_line.c_str());
     }
     (void) std::fclose(fp);
 }

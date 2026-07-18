@@ -442,12 +442,12 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   generic allocation helpers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
-- Fixed buffers: current candidates include `inews` tool output/global
-  buffers, `g_ser_line`, `g_art_line`, interpolation scratch storage,
-  `g_head_buf`, `g_art_buf`, MIME HTML tag parser state, terminal
-  storage, response header buffers, `ngstuff` command expansion
-  buffers, `uudecode` pending-line storage, selector command key
-  storage, tree-indent storage, and global command/message buffers.
+- Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
+  interpolation scratch storage, `g_head_buf`, `g_art_buf`, MIME HTML
+  tag parser state, terminal storage, response header buffers,
+  `ngstuff` command expansion buffers, `uudecode` pending-line storage,
+  selector command key storage, tree-indent storage, and global
+  command/message buffers.
 - Filename storage: current path candidates remain in KILL-file
   appending, score-file loading/editing, newsrc file fields, and some
   universal-selector file fields.  Mixed URL/path/host fields need
@@ -475,7 +475,7 @@ production code.
 - Comparison: `strcmp` 4, `strncmp` 24.
 - Search and length: `strchr` 91, `strrchr` 7, `strstr` 2,
   `strlen` 82.
-- Formatting into C buffers: `sprintf` 84.
+- Formatting into C buffers: `sprintf` 82.
 - C text I/O roots: `fgets` 30, `fputs` 205, `printf` 488,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
@@ -512,17 +512,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-099 - Inews Signature Output Buffer
-
-- Files: `inews/inews.cpp`.
-- Kind: global fixed output buffer used by one function.
-- Function: `append_signature`.
-- Change: replace `g_buf` signature output formatting with local
-  `std::string` or `fmt` output.  Preserve CRLF line endings in the
-  article stream and leave `g_ser_line` cleanup to the NNTP buffer
-  owner slice.
-- Tests: inews signature tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
