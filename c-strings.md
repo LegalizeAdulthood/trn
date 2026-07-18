@@ -444,10 +444,11 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Fixed buffers: current candidates include `inews` and `trn-artchk`
   tool output/global buffers, `g_ser_line`, `g_art_line`,
-  interpolation scratch storage, `g_head_buf`, `g_art_buf`,
-  terminal storage, response header buffers, `ngstuff` command
-  expansion buffers, `uudecode` pending-line storage, selector command
-  key storage, and global command/message buffers.
+  interpolation scratch storage, `trn_getwd` output storage,
+  `g_head_buf`, `g_art_buf`, MIME HTML tag parser state, terminal
+  storage, response header buffers, `ngstuff` command expansion
+  buffers, `uudecode` pending-line storage, selector command key
+  storage, tree-indent storage, and global command/message buffers.
 - Filename storage: current path candidates remain in KILL-file
   appending, score-file loading/editing, newsrc file fields, and some
   universal-selector file fields.  Mixed URL/path/host fields need
@@ -475,10 +476,10 @@ production code.
 
 - Copy and concatenation: `strcpy` 74, `strncpy` 4, `strcat` 2.
 - Comparison: `strcmp` 4, `strncmp` 24.
-- Search and length: `strchr` 88, `strrchr` 7, `strstr` 2,
+- Search and length: `strchr` 91, `strrchr` 7, `strstr` 2,
   `strlen` 82.
 - Formatting into C buffers: `sprintf` 84.
-- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 481,
+- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 488,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
 
@@ -505,15 +506,58 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-064 - Dead Tool Interpolation Buffer Overload
+
+- Files: `tool/util3.cpp`, `tool/include/tool/util3.h`.
+- Kind: unused caller output buffer plus `safe_copy`.
+- Function: `do_interp` legacy buffer overload.
+- Change: remove the unused overload that writes an interpolated string
+  into a caller buffer.  Keep the `std::string do_interp` overload as
+  the tool-side API and do not replace the dead overload with another
+  wrapper.
+- Tests: build.
+
+#### CSTR-098 - Trn Artchk Unused Global Buffer
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: unused global fixed buffer.
+- Function: storage-centered `g_buf`.
+- Change: remove the unused `g_buf[LINE_BUF_LEN + 1]` definition from
+  `trn-artchk`.
+- Tests: build `trn-artchk`.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-065 - Current Directory Helper Return
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `libtrn/intrp.cpp`, `tests/test_getwd.cpp`.
+- Kind: caller output buffer plus filesystem path text.
+- Function: `trn_getwd`.
+- Change: return an owned `std::string` from `trn_getwd` instead of
+  writing into a caller-supplied buffer.  Preserve Windows drive-case
+  and slash normalization.  Use empty string only if callers can treat
+  failure as absence; otherwise keep the existing fatal error behavior.
+- Tests: current working directory tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
+
+#### CSTR-099 - Inews Signature Output Buffer
+
+- Files: `inews/inews.cpp`.
+- Kind: global fixed output buffer used by one function.
+- Function: `append_signature`.
+- Change: replace `g_buf` signature output formatting with local
+  `std::string` or `fmt` output.  Preserve CRLF line endings in the
+  article stream and leave `g_ser_line` cleanup to the NNTP buffer
+  owner slice.
+- Tests: inews signature tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -535,9 +579,10 @@ are available.  Keep the listed order inside dependent families.
 - Kind: local fixed interpolation scratch buffers.
 - Function: `do_interp`.
 - Change: replace residual `scrbuf[8192]`, `spfbuf[512]`, and the
-  static `%y` `tmpbuf[1024]` with owned `std::string` storage.  Keep
-  runtime printf-style formatting isolated and do not let local string
-  pointers escape.
+  static `%y` `tmpbuf[1024]` with owned `std::string` storage.  Replace
+  mutable literal arrays such as `space_text`, `noname_text`, and `dash`
+  with const text.  Keep runtime printf-style formatting isolated and
+  do not let local string pointers escape.
 - Tests: interpolation tests.
 
 #### CSTR-088 - Ngstuff Command Expansion Buffers
@@ -692,14 +737,17 @@ and clarified ownership at the edges.
 
 #### CSTR-076 - NNTP Server Line Buffer
 
-- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
-  `libtrn/nntp.cpp`, `inews/inews.cpp`, `nntplist/nntplist.cpp`,
+- Files: `nntp/nntpclient.cpp`, `nntp/nntpinit.cpp`,
+  `nntp/include/nntp/nntpclient.h`, `libtrn/nntp.cpp`,
+  `inews/inews.cpp`, `nntplist/nntplist.cpp`,
   `trn-artchk/trn-artchk.cpp`.
 - Kind: global fixed protocol/status buffer.
 - Function: storage-centered `g_ser_line`.
 - Change: separate NNTP status text from protocol line input/output so
   callers do not format commands or cache responses through one shared
-  `char[NNTP_STRLEN]` buffer.
+  `char[NNTP_STRLEN]` buffer.  Include legacy non-`INET6`
+  raw-address name storage in `get_tcp_socket` in the same protocol
+  owner review.
 - Tests: NNTP, inews, nntplist, and trn-artchk tests.
 
 #### CSTR-077 - Article Display Line Buffer
@@ -732,6 +780,67 @@ and clarified ownership at the edges.
   small owned text type or `std::string` storage.  Preserve the
   two-character command limit if it is a documented selector behavior.
 - Tests: selector command tests.
+
+#### CSTR-100 - MIME HTML Tag Parser State
+
+- Files: `libtrn/mime.cpp`.
+- Kind: static fixed parser token buffer.
+- Function: `filter_html`.
+- Change: replace `tagword[32]` and `tagword_len` with parser-owned
+  `std::string` state.  Preserve cross-call tag parsing if the current
+  static state is intentionally carrying a partial tag across input
+  chunks.
+- Tests: MIME HTML filtering tests before refactor.
+
+#### CSTR-101 - Terminal Arrow Macro Scratch Parameter
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `libtrn/opt.cpp`.
+- Kind: unused caller scratch buffer.
+- Function: `arrow_macros`.
+- Change: remove the unused `tmpbuf` parameter and the caller's
+  `tmpbuf[1024]` storage.  Keep arrow macro behavior unchanged.
+- Tests: terminal macro tests.
+
+#### CSTR-102 - Terminal Macro Line Expansion Buffer
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: caller-provided fixed expansion buffer.
+- Function: `mac_line`.
+- Change: replace the `tmpbuf` plus `tbsize` output contract with owned
+  `std::string` expansion storage inside `mac_line`.  Do not let string
+  data pointers escape into keymap storage; copy into the existing owned
+  macro storage when needed.
+- Tests: terminal macro tests.
+
+#### CSTR-103 - Terminal Pushed String Expansion Buffer
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: local fixed interpolation buffer.
+- Function: `push_string`.
+- Change: replace `tmpbuf[PUSH_SIZE]` with owned `std::string`
+  expansion.  Preserve the reverse push order and macro bit handling.
+- Tests: terminal input macro tests.
+
+#### CSTR-104 - MSDOS Tgoto Format Buffer
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: static returned formatting buffer.
+- Function: `tgoto` under `MSDOS`.
+- Change: replace the static `gbuf[32]` returned buffer with a modern
+  owner contract or remove the compatibility shim with the old DOS
+  holdover cleanup.  Do not return a pointer into local string storage.
+- Tests: build with the relevant feature setting if the shim remains.
+
+#### CSTR-105 - Thread Tree Indent Storage
+
+- Files: `libtrn/rt-wumpus.cpp`.
+- Kind: mutable file-scope C-string layout buffer.
+- Function: storage-centered `s_tree_indent`.
+- Change: replace the mutable `char[]` indentation buffer with owned
+  string or indexed layout storage.  Preserve the tree display layout
+  and avoid copying the whole indent table per display operation.
+- Tests: thread tree display tests.
 
 ### Tier 5 - Helper Removal
 
