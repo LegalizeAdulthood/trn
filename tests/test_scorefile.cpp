@@ -296,6 +296,28 @@ TEST_F(ScoreFileTest, initReadsScorefileLinePastLegacyBufferLimit)
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 }
 
+TEST_F(ScoreFileTest, excludeRemovesIncludedLocalScoreFile)
+{
+    const fs::path score_dir{TRN_TEST_TMP_DIR "/scorefile-include-exclude"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+    fs::create_directories(score_dir, error);
+    std::ofstream{score_dir / "global"} << "!include child\n"
+                                        << "!exclude child\n"
+                                        << "10 subject: compact subject\n";
+    std::ofstream{score_dir / "child"} << "20 subject: compact subject\n";
+    g_newsgroup_name = "comp.lang.apl";
+
+    trn::testing::MockEnvironment env;
+    const std::string             score_dir_name{score_dir.string()};
+    env.expect_env("SCOREDIR", score_dir_name.c_str());
+
+    sf_init();
+
+    EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
+}
+
 TEST_F(ScoreFileTest, appendFromShortcutWritesShortenedFromRule)
 {
     const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-append-from"};

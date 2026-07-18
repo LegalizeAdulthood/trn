@@ -76,22 +76,27 @@ static bool            s_sf_has_extra_headers{};
 static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
-static int sf_open_file(const char *name);
+static int sf_open_file(std::string_view name);
 static void sf_file_clear();
 static void  sf_grow();
 static int   sf_check_extra_headers(const char *head);
 static void  sf_add_extra_header(const char *head);
-static std::string sf_get_filename(int level);
+static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
 static bool        sf_do_command(std::string_view cmd, bool check);
 static char *sf_freeform(char *start1, char *end1);
 static bool  sf_do_line(char *line, bool check);
-static void  sf_do_file(const char *fname);
+static void  sf_do_file(std::string_view fname);
 static int   score_match(const char *str, int ind);
 static std::string sf_missing_score(const char *line);
 static std::string sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
-static void  sf_exclude_file(const char *fname);
+static void  sf_exclude_file(std::string_view fname);
+
+static bool sf_is_url(std::string_view name)
+{
+    return name.size() >= 4 && string_case_equal(name.data(), "URL:", 4);
+}
 
 static bool sf_default_url_get(std::string_view url, const char *outfile)
 {
@@ -138,10 +143,10 @@ void sf_init()
     // the main read-in loop
     for (int i = 0; i <= level; i++)
     {
-        std::string s = sf_get_filename(i);
-        if (!s.empty())
+        const fs::path score_file = sf_get_filename(i);
+        if (!score_file.empty())
         {
-            sf_do_file(s.c_str());
+            sf_do_file(score_file.generic_string());
         }
     }
 
@@ -343,13 +348,13 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 }
 
 // filenames of type a/b/c/foo.bar.misc for group foo.bar.misc
-static std::string sf_get_filename(int level)
+static fs::path sf_get_filename(int level)
 {
     const fs::path score_dir{file_exp(get_env_var("SCOREDIR", DEFAULT_SCOREDIR))};
     if (!level)
     {
         // allow environment variable later...
-        return (score_dir / "global").generic_string();
+        return score_dir / "global";
     }
 
     std::string            group_name = file_exp("%C");
@@ -372,7 +377,7 @@ static std::string sf_get_filename(int level)
         }
     }
     group_name.resize(pos); // cut end of score file
-    return (score_dir / group_name).generic_string();
+    return score_dir / group_name;
 }
 
 // given a string, if no slashes prepends SCOREDIR env. variable
@@ -478,11 +483,11 @@ static bool sf_do_command(std::string_view cmd, bool check)
         }
         if (command == "include")
         {
-            sf_do_file(file_exp(sf_cmd_fname(argument)).c_str());
+            sf_do_file(file_exp(sf_cmd_fname(argument)));
         }
         else
         {
-            sf_exclude_file(file_exp(sf_cmd_fname(argument)).c_str());
+            sf_exclude_file(file_exp(sf_cmd_fname(argument)));
         }
         return true;
     }
@@ -764,9 +769,10 @@ static bool sf_do_line(char *line, bool check)
     return true;
 }
 
-static void sf_do_file(const char *fname)
+static void sf_do_file(std::string_view fname)
 {
-    int sf_fp = sf_open_file(fname);
+    const std::string filename{fname};
+    int               sf_fp = sf_open_file(filename);
     if (sf_fp < 0)
     {
         return;
@@ -778,16 +784,15 @@ static void sf_do_file(const char *fname)
         {
             std::printf(".");                // maybe later putchar...
         }
-        std::printf("Score file: %s\n",fname);
+        fmt::print("Score file: {}\n", filename);
     }
-    std::string safefilename{fname};
     // add end marker to scoring array
     sf_grow();
     s_sf_entries[g_sf_num_entries-1].head_type = SF_FILE_MARK_START;
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2.clear();
-    s_sf_entries[g_sf_num_entries-1].str1 = safefilename;
+    s_sf_entries[g_sf_num_entries-1].str1 = filename;
 
     const ScoreFile &file = s_sf_files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
@@ -801,7 +806,7 @@ static void sf_do_file(const char *fname)
     // file_level is 1 to n
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2.clear();
-    s_sf_entries[g_sf_num_entries-1].str1 = safefilename;
+    s_sf_entries[g_sf_num_entries-1].str1 = filename;
     s_sf_file_level--;
 }
 
@@ -1085,15 +1090,14 @@ void sf_append(char *line)
     std::error_code error;
     fs::create_directories(score_file.parent_path(), error);
     sf_file_clear();
-    std::FILE *fp = std::fopen(score_file.string().c_str(), "a");
-    if (fp != nullptr)
+    std::ofstream output{score_file, std::ios::app};
+    if (output)
     {
-        std::fprintf(fp, "%s\n", scoreline); // open (or create) for append
-        std::fclose(fp);
+        output << scoreline << '\n'; // open (or create) for append
     }
     else // unsuccessful in opening file
     {
-        std::printf("\nCould not open (for append) file %s\n", score_file.string().c_str());
+        fmt::print("\nCould not open (for append) file {}\n", score_file.generic_string());
     }
 }
 
@@ -1225,7 +1229,7 @@ static void sf_print_match(int indx)
     std::printf("\n");
 }
 
-static void sf_exclude_file(const char *fname)
+static void sf_exclude_file(std::string_view fname)
 {
     int       start;
     int       end;
@@ -1233,28 +1237,27 @@ static void sf_exclude_file(const char *fname)
     for (start = 0; start < g_sf_num_entries; start++)
     {
         if (s_sf_entries[start].head_type == SF_FILE_MARK_START
-         && s_sf_entries[start].str1 == fname)
+         && std::string_view{s_sf_entries[start].str1} == fname)
         {
             break;
         }
     }
     if (start == g_sf_num_entries)
     {
-        std::printf("Exclude: file |%s| was not included\n",fname);
+        fmt::print("Exclude: file |{}| was not included\n", fname);
         return;
     }
     for (end = start+1; end < g_sf_num_entries; end++)
     {
         if (s_sf_entries[end].head_type==SF_FILE_MARK_END
-         && s_sf_entries[end].str1 == fname)
+         && std::string_view{s_sf_entries[end].str1} == fname)
         {
             break;
         }
     }
     if (end == g_sf_num_entries)
     {
-        std::printf("Exclude: file |%s| is incomplete at exclusion command\n",
-                fname);
+        fmt::print("Exclude: file |{}| is incomplete at exclusion command\n", fname);
         // insert more explanation later?
         return;
     }
@@ -1275,23 +1278,22 @@ static void sf_exclude_file(const char *fname)
     g_sf_num_entries = size_cast<int>(s_sf_entries);
     if (g_sf_verbose)
     {
-        std::printf("Excluded file: %s\n",fname);
+        fmt::print("Excluded file: {}\n", fname);
     }
 }
 
-//char* filespec;               // file abbrev. or name
-void sf_edit_file(const char *filespec)
+void sf_edit_file(std::string_view filespec)
 {
-    if (!filespec || !*filespec)
+    if (filespec.empty())
     {
         return;         // empty, do nothing (error later?)
     }
-    char filechar = *filespec;
+    char filechar = filespec.front();
     std::string file_name;
     // if more than one character use as filename
-    if (filespec[1])
+    if (filespec.size() > 1)
     {
-        file_name = filespec;
+        file_name.assign(filespec);
     }
     else if (filechar == '"')   // edit local group
     {
@@ -1325,23 +1327,24 @@ void sf_edit_file(const char *filespec)
     }
     else
     {
-        std::printf("Can't make %s\n", expanded_file.generic_string().c_str());
+        fmt::print("Can't make {}\n", expanded_file.generic_string());
     }
 }
 
 // returns file number
 // if file number is negative, the file does not exist or cannot be opened
-static int sf_open_file(const char *name)
+static int sf_open_file(std::string_view name)
 {
     std::size_t i;
 
-    if (!name || !*name)
+    if (name.empty())
     {
         return 0;       // unable to open
     }
+    const std::string name_text{name};
     for (i = 0; i < s_sf_files.size(); i++)
     {
-        if (s_sf_files[i].fname == name)
+        if (s_sf_files[i].fname == name_text)
         {
             if (!s_sf_files[i].exists)          // nonexistent
             {
@@ -1353,23 +1356,23 @@ static int sf_open_file(const char *name)
     s_sf_files.push_back(ScoreFile{});
     i = s_sf_files.size() - 1;
     ScoreFile &file = s_sf_files[i];
-    file.fname = name;
+    file.fname = name_text;
 
     std::string temp_name;
-    std::string input_name{name};
-    if (string_case_equal(name, "URL:", 4))
+    std::ifstream input;
+    if (sf_is_url(name_text))
     {
         temp_name = temp_filename();
-        if (!s_url_getter(std::string_view{name}.substr(4), temp_name.c_str()))
+        if (!s_url_getter(std::string_view{name_text}.substr(4), temp_name.c_str()))
         {
             return -1;
         }
-        else
-        {
-            input_name = temp_name;
-        }
+        input.open(temp_name);
     }
-    std::ifstream input{input_name};
+    else
+    {
+        input.open(fs::path{name_text});
+    }
     if (!input)
     {
         return -1;

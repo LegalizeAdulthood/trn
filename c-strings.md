@@ -525,17 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-073 - Score File Filename Paths
-
-- Files: `libtrn/scorefile.cpp`, `libtrn/include/trn/scorefile.h`.
-- Kind: filename strings and mixed URL/path score-file storage.
-- Function: `sf_get_filename`, `sf_cmd_fname`, `sf_do_file`,
-  `sf_edit_file`, score-file cache storage.
-- Change: convert local filesystem path construction and file operations
-  to `fs::path`.  Keep URL values as strings or split URL and local-path
-  storage before promoting `ScoreFile::fname`.
-- Tests: score-file tests.
-
 #### CSTR-074 - Newsrc Path Fields
 
 - Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`.

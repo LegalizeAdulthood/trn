@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
 
 struct CompiledRegex;
@@ -56,6 +57,6 @@ inline bool is_text_zero(const char *s)
 
 int   sf_score(ArticleNum a);
 void  sf_append(char *line);
-void  sf_edit_file(const char *filespec);
+void  sf_edit_file(std::string_view filespec);
 
 #endif
