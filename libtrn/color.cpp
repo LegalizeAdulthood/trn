@@ -35,13 +35,15 @@
 #include <trn/terminal.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <string>
 #include <string_view>
 
 struct ColorObj
 {
-    const char* name;
+    std::string_view name;
     std::string fg;
     std::string bg;
     int attr;
@@ -147,7 +149,7 @@ void color_rc_attribute(std::string_view object, char *value)
     int i;
     for (i = 0; i < MAX_COLORS; i++)
     {
-        if (string_case_equal(object_name.c_str(), s_objects[i].name))
+        if (string_case_equal(object, s_objects[i].name))
         {
             break;
         }
@@ -211,12 +213,12 @@ void color_rc_attribute(std::string_view object, char *value)
     }
     else
     {
-        std::sprintf(g_buf, "fg %s", s);
-        s_objects[i].fg = tc_color_capability(g_buf);
+        const std::string capability = fmt::format("fg {}", s);
+        s_objects[i].fg = tc_color_capability(capability.c_str());
         if (s_objects[i].fg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-                    g_buf, object_name.c_str());
+                    capability.c_str(), object_name.c_str());
             finalize(1);
         }
     }
@@ -249,12 +251,12 @@ void color_rc_attribute(std::string_view object, char *value)
     }
     else
     {
-        std::sprintf(g_buf, "bg %s", s);
-        s_objects[i].bg = tc_color_capability(g_buf);
+        const std::string capability = fmt::format("bg {}", s);
+        s_objects[i].bg = tc_color_capability(capability.c_str());
         if (s_objects[i].bg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-                    g_buf, object_name.c_str());
+                    capability.c_str(), object_name.c_str());
             finalize(1);
         }
     }

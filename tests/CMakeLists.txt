@@ -13,6 +13,7 @@ add_executable(trn-test
     test_artsrch.cpp
     test_bits.cpp
     test_cache.cpp
+    test_color.cpp
     test_current_time.cpp
     test_DataSourceConfig.cpp
     test_datasrc.cpp

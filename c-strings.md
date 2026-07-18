@@ -520,19 +520,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-116 - Color Attribute Parser Views
-
-- Files: `libtrn/color.cpp`.
-- Kind: literal table names and local formatted capability names.
-- Function: `color_rc_attribute`.
-- Depends on: `CSTR-109`.
-- Change: make `ColorObj::name` a `std::string_view`, compare the input
-  object view directly, and replace `sprintf(g_buf, "fg %s", s)` /
-  `sprintf(g_buf, "bg %s", s)` with local `fmt::format` strings.
-  Preserve the temporary mutation of the caller's `value` buffer until
-  that parser is refactored separately.
-- Tests: color attribute tests, or add focused coverage first.
-
 #### CSTR-117 - Article Search Scope Characters View
 
 - Files: `libtrn/artsrch.cpp`, `libtrn/include/trn/artsrch.h`,
