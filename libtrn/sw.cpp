@@ -146,7 +146,6 @@ void decode_switch(const char *s)
     else                                // normal switch
     {
         bool upordown = *s == '-';
-        char tmpbuf[LINE_BUF_LEN];
 
         switch (*++s)
         {
@@ -249,23 +248,24 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            std::strcpy(tmpbuf,s);
-            char *value = std::strchr(tmpbuf, '=');
-            if (value)
+            const std::string_view            assignment{s};
+            const std::string_view::size_type separator = assignment.find('=');
+            if (separator != std::string_view::npos)
             {
-                *value++ = '\0';
-                set_env_var(tmpbuf, value);
+                const std::string_view name = assignment.substr(0, separator);
+                const std::string_view value = assignment.substr(separator + 1);
+                set_env_var(name, value);
                 if (g_mode == MM_INITIALIZING)
                 {
-                    save_init_environment(tmpbuf, value);
+                    save_init_environment(name, value);
                 }
             }
             else
             {
-                set_env_var(tmpbuf, "");
+                set_env_var(assignment, "");
                 if (g_mode == MM_INITIALIZING)
                 {
-                    save_init_environment(tmpbuf, "");
+                    save_init_environment(assignment, "");
                 }
             }
             break;

@@ -3,6 +3,7 @@
 
 #include <trn/sw.h>
 
+#include <config/env.h>
 #include <trn/datasrc.h>
 #include <trn/init.h>
 #include <trn/ng.h>
@@ -23,6 +24,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -30,6 +32,10 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+constexpr std::string_view VALUE_ENV_VAR{"TRN_TEST_SW_VALUE_ENV"};
+constexpr std::string_view EMPTY_ENV_VAR{"TRN_TEST_SW_EMPTY_ENV"};
+constexpr std::string_view EQUALS_ENV_VAR{"TRN_TEST_SW_EQUALS_ENV"};
 
 struct ModeRestorer
 {
@@ -94,6 +100,24 @@ struct SwitchFlagRestorer
     {
         g_check_flag = check_flag;
         g_unsafe_rc_saves = unsafe_rc_saves;
+    }
+};
+
+class EnvironmentSwitchTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        unset_env_var(VALUE_ENV_VAR);
+        unset_env_var(EMPTY_ENV_VAR);
+        unset_env_var(EQUALS_ENV_VAR);
+    }
+
+    void TearDown() override
+    {
+        unset_env_var(VALUE_ENV_VAR);
+        unset_env_var(EMPTY_ENV_VAR);
+        unset_env_var(EQUALS_ENV_VAR);
     }
 };
 
@@ -215,6 +239,38 @@ TEST(SwitchTest, writeInitEnvironmentWritesSavedExports)
     {
         EXPECT_EQ("TRN_SW_INIT_ENV_" + std::to_string(i) + "=value" + std::to_string(i), lines[i]);
     }
+}
+
+TEST_F(EnvironmentSwitchTest, decodeEnvironmentSwitchSetsValue)
+{
+    std::string command{"-E="};
+    command.append(VALUE_ENV_VAR);
+    command += "=value";
+
+    decode_switch(command.c_str());
+
+    EXPECT_EQ("value", get_env_var(VALUE_ENV_VAR));
+}
+
+TEST_F(EnvironmentSwitchTest, decodeEnvironmentSwitchSetsEmptyValue)
+{
+    std::string command{"-E="};
+    command.append(EMPTY_ENV_VAR);
+
+    decode_switch(command.c_str());
+
+    EXPECT_TRUE(get_env_var(EMPTY_ENV_VAR).empty());
+}
+
+TEST_F(EnvironmentSwitchTest, decodeEnvironmentSwitchPreservesEqualsInValue)
+{
+    std::string command{"-E="};
+    command.append(EQUALS_ENV_VAR);
+    command += "=left=right";
+
+    decode_switch(command.c_str());
+
+    EXPECT_EQ("left=right", get_env_var(EQUALS_ENV_VAR));
 }
 
 TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)

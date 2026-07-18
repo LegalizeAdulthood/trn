@@ -445,9 +445,9 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - Fixed buffers: current candidates include `inews` and `trn-artchk`
   tool output/global buffers, `g_ser_line`, `g_art_line`,
   interpolation scratch storage, `g_head_buf`, `g_art_buf`,
-  terminal storage, response header buffers, command-switch scratch
-  buffers, `uudecode` pending-line storage, selector command key storage,
-  and global command/message buffers.
+  terminal storage, response header buffers, `ngstuff` command
+  expansion buffers, `uudecode` pending-line storage, selector command
+  key storage, and global command/message buffers.
 - Filename storage: current path candidates remain in decode, KILL-file
   editing/appending, score-file loading/editing, newsrc file fields, and
   some universal-selector file fields.  Mixed URL/path/host fields need
@@ -473,12 +473,12 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 77, `strncpy` 4, `strcat` 3.
+- Copy and concatenation: `strcpy` 76, `strncpy` 4, `strcat` 3.
 - Comparison: `strcmp` 4, `strncmp` 24.
-- Search and length: `strchr` 92, `strrchr` 7, `strstr` 2,
+- Search and length: `strchr` 88, `strrchr` 7, `strstr` 2,
   `strlen` 83.
 - Formatting into C buffers: `sprintf` 96.
-- C text I/O roots: `fgets` 31, `fputs` 206, `printf` 490,
+- C text I/O roots: `fgets` 31, `fputs` 206, `printf` 483,
   `fprintf` 57.
 - Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
 
@@ -514,16 +514,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-089 - Switch Decode Scratch Buffer
-
-- Files: `libtrn/sw.cpp`.
-- Kind: local fixed buffer.
-- Function: `decode_switch`.
-- Change: replace `tmpbuf[LINE_BUF_LEN]` with reserved `std::string`
-  scratch storage for switch option expansion.  Preserve the current
-  option parsing order and any meaningful length checks.
-- Tests: switch decoding tests.
 
 #### CSTR-090 - Rcstuff Newsgroup Prompt Buffer
 
