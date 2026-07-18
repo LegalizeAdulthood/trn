@@ -38,11 +38,30 @@ TEST_F(TestEnv, missingVariableReturnsEmptyString)
     EXPECT_TRUE(get_env_var(TEST_ENV_VAR).empty());
 }
 
+TEST_F(TestEnv, missingVariableReturnsDefault)
+{
+    EXPECT_EQ("default", get_env_var(TEST_ENV_VAR, "default"));
+}
+
+TEST_F(TestEnv, emptyVariableReturnsDefault)
+{
+    set_env_var(TEST_ENV_VAR, "");
+
+    EXPECT_EQ("default", get_env_var(TEST_ENV_VAR, "default"));
+}
+
 TEST_F(TestEnv, setVariableStoresValue)
 {
     set_env_var(TEST_ENV_VAR, "fractal");
 
     EXPECT_EQ("fractal", get_env_var(TEST_ENV_VAR));
+}
+
+TEST_F(TestEnv, setVariableOverridesDefault)
+{
+    set_env_var(TEST_ENV_VAR, "fractal");
+
+    EXPECT_EQ("fractal", get_env_var(TEST_ENV_VAR, "default"));
 }
 
 TEST_F(TestEnv, setVariableReplacesValue)

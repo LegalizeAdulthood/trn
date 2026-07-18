@@ -508,15 +508,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-087 - Auto-save Draft Value Comparison
-
-- Files: `libtrn/opt.cpp`.
-- Kind: C-string comparison cleanup.
-- Function: `option_draft_value`.
-- Change: compare the current `SAVEDIR` value with `"%p/%c"` using
-  direct string comparison instead of `std::strcmp`.
-- Tests: option draft tests.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts

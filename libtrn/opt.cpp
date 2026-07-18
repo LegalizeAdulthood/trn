@@ -1072,7 +1072,7 @@ std::string option_value(OptionIndex num)
         return expand_mouse_buttons(g_option_sel_btns,g_option_sel_btn_cnt);
 
     case OI_AUTO_SAVE_NAME:
-        return yes_or_no(!std::strcmp(get_val_const("SAVEDIR",SAVEDIR),"%p/%c"));
+        return yes_or_no(get_env_var("SAVEDIR", SAVEDIR) == "%p/%c");
 
     case OI_BACKGROUND_THREADING:
         return yes_or_no(!g_thread_always);

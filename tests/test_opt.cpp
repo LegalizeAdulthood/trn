@@ -5,6 +5,7 @@
 
 #include <file_contents.h>
 
+#include <config/common.h>
 #include <config/env.h>
 #include <trn/OptionCatalog.h>
 #include <trn/rcstuff.h>
@@ -19,6 +20,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <system_error>
 
 namespace
@@ -232,4 +234,25 @@ TEST_F(AutoSaveNameOptionTest, checkModeDoesNotChangeSaveDefaults)
 
     EXPECT_EQ("%p/%c", get_env_var("SAVEDIR"));
     EXPECT_EQ("%a", get_env_var("SAVENAME"));
+}
+
+TEST_F(AutoSaveNameOptionTest, optionValueReportsYesForCategorySaveDirectory)
+{
+    set_env_var("SAVEDIR", "%p/%c");
+
+    EXPECT_EQ("yes", option_value(OI_AUTO_SAVE_NAME));
+}
+
+TEST_F(AutoSaveNameOptionTest, optionValueReportsNoForPrivateSaveDirectory)
+{
+    set_env_var("SAVEDIR", "%p");
+
+    EXPECT_EQ("no", option_value(OI_AUTO_SAVE_NAME));
+}
+
+TEST_F(AutoSaveNameOptionTest, optionValueFallsBackToCompiledSaveDirectory)
+{
+    const bool uses_category_save_directory = std::string_view{SAVEDIR} == "%p/%c";
+
+    EXPECT_EQ(yes_or_no(uses_category_save_directory), option_value(OI_AUTO_SAVE_NAME));
 }
