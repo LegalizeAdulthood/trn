@@ -566,7 +566,7 @@ static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, boo
     {
         if (article->valid_article())
         {
-            article->thread_article(fields[OV_REFS]);
+            article->thread_article(fields[OV_REFS] ? fields[OV_REFS] : "");
         }
     }
     else if (!(article->m_flags & AF_CACHED))

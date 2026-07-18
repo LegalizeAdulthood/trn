@@ -96,7 +96,7 @@ struct Article
     void       clear_auto_flags();
     void       perform_auto_flags(AutoKillFlags thread_flags, AutoKillFlags subj_flags, AutoKillFlags chain_flags);
     bool       valid_article();
-    void       thread_article(char *references);
+    void       thread_article(std::string_view references);
     void       link_child();
     std::string compress_date(int size) const;
     char       thread_letter();

@@ -378,7 +378,7 @@ void end_header()
             Article* artp_hold = g_artp;
             std::string references = fetch_lines(g_parsed_art, REFS_LINE);
             references += fetch_lines(g_parsed_art, IN_REPLY_LINE);
-            ap->thread_article(references.data());
+            ap->thread_article(references);
             g_artp = artp_hold;
             ap->check_poster();
         }

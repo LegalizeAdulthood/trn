@@ -525,19 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-113 - Article References View Parser
-
-- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`,
-  `libtrn/head.cpp`, `libtrn/rt-ov.cpp`.
-- Kind: mutable C-string reference parsing.
-- Function: `Article::thread_article`.
-- Depends on: `CSTR-112`.
-- Change: accept `std::string_view` references and parse message-id
-  ranges without writing null terminators into the input.  Call
-  `get_article` with message-id views and preserve the current
-  right-to-left threading order.
-- Tests: thread/message-id tests and overview tests.
-
 #### CSTR-114 - Overview Field Views
 
 - Files: `libtrn/rt-ov.cpp`.

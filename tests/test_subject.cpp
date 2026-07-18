@@ -222,3 +222,33 @@ TEST_F(SubjectStorageTest, outputSubjectPrintsCustomSubjectLine)
     EXPECT_FALSE(stopped);
     EXPECT_EQ("1     [A Subject]\n", output);
 }
+
+TEST_F(SubjectStorageTest, threadArticleBuildsParentChainFromReferences)
+{
+    Article *article = article_ptr(ArticleNum{1});
+    article->m_date = 100;
+    article->m_msg_id = "<child@example.com>";
+    article->set_subj_line("A Subject");
+
+    ASSERT_TRUE(article->valid_article());
+
+    const std::string original_references{"<grand@example.com> <parent@example.com>"};
+    std::string       references{original_references};
+
+    article->thread_article(references);
+
+    EXPECT_EQ(original_references, references);
+
+    Article *parent = article->m_parent;
+    ASSERT_NE(nullptr, parent);
+    Article *grandparent = parent->m_parent;
+    ASSERT_NE(nullptr, grandparent);
+
+    EXPECT_EQ(parent, grandparent->m_child1);
+    EXPECT_EQ(article, parent->m_child1);
+    EXPECT_EQ(grandparent, article->m_subj->m_thread);
+    ASSERT_TRUE(parent->m_msg_id);
+    ASSERT_TRUE(grandparent->m_msg_id);
+    EXPECT_EQ("<parent@example.com>", *parent->m_msg_id);
+    EXPECT_EQ("<grand@example.com>", *grandparent->m_msg_id);
+}

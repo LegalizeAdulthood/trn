@@ -46,39 +46,52 @@ static bool contains_ignore_case(std::string_view text, std::string_view pattern
     return match != text.end();
 }
 
-// Check if the string we've found looks like a valid message-id reference.
-static char *valid_message_id(char *start, char *end)
+static bool is_message_id_close_substitute(char ch)
 {
-    char* mid;
-
-    if (start == end)
+    switch (ch)
     {
-        return nullptr;
+    case '<':
+    case '-':
+    case '!':
+    case '%':
+    case ')':
+    case '|':
+    case ':':
+    case '}':
+    case '*':
+    case '+':
+    case '#':
+    case ']':
+    case '@':
+    case '$':
+        return true;
     }
+    return false;
+}
 
-    if (*end != '>')
+// Check if the string we've found looks like a valid message-id reference.
+static std::string_view valid_message_id(std::string_view reference)
+{
+    if (reference.size() < 2)
     {
-        // Compensate for space cadets who include the header in their
-        // substitution of all '>'s into another citation character.
-        if (*end == '<' || *end == '-' || *end == '!' || *end == '%'    //
-            || *end == ')' || *end == '|' || *end == ':' || *end == '}' //
-            || *end == '*' || *end == '+' || *end == '#' || *end == ']' //
-            || *end == '@' || *end == '$')
-        {
-            *end = '>';
-        }
+        return {};
     }
-    else if (end[-1] == '>')
+    if (reference.back() == '>' && reference[reference.size() - 2] == '>')
     {
-        *(end--) = '\0';
+        reference.remove_suffix(1);
     }
     // Id must be "<...@...>"
-    if (*start != '<' || *end != '>' || (mid = std::strchr(start, '@')) == nullptr //
-        || mid == start + 1 || mid + 1 == end)
+    const bool has_close = reference.back() == '>';
+    if (reference.front() != '<' || (!has_close && !is_message_id_close_substitute(reference.back())))
     {
-        return nullptr;
+        return {};
     }
-    return end;
+    const std::size_t mid = reference.find('@');
+    if (mid == std::string_view::npos || mid == 1 || mid + 1 == reference.size() - 1)
+    {
+        return {};
+    }
+    return reference;
 }
 
 // The article has all it's data in place, so add it to the list of articles
@@ -897,12 +910,10 @@ bool Article::valid_article()
 // Take all the data we've accumulated about the article and shove it into
 // the article tree at the best place we can deduce.
 //
-void Article::thread_article(char *references)
+void Article::thread_article(std::string_view references)
 {
     Article* ap;
     Article* prev;
-    char* cp;
-    char* end;
     AutoKillFlags chain_autofl =
         m_auto_flags | (m_subj->m_articles ? m_subj->m_articles->m_auto_flags : AUTO_KILL_NONE);
     AutoKillFlags subj_autofl = AUTO_KILL_NONE;
@@ -946,19 +957,21 @@ void Article::thread_article(char *references)
 
     // If we have references, process them from the right end one at a time
     // until we either run into somebody, or we run out of references.
-    if (references && *references)
+    if (!references.empty())
     {
         prev = this;
         ap = nullptr;
-        if ((cp = std::strrchr(references, '<')) == nullptr //
-            || (end = std::strchr(cp + 1, ' ')) == nullptr)
+        std::size_t cp = references.rfind('<');
+        std::size_t end = 0;
+        if (cp != std::string_view::npos)
         {
-            end = references + std::strlen(references) - 1;
+            const std::size_t space = references.find(' ', cp + 1);
+            end = (space == std::string_view::npos ? references.size() : space) - 1;
         }
-        while (cp)
+        while (cp != std::string_view::npos)
         {
-            while (end >= cp && end > references //
-                   && (*(unsigned char *) end <= ' ' || *end == ','))
+            while (end >= cp && end > 0 &&
+                   (static_cast<unsigned char>(references[end]) <= ' ' || references[end] == ','))
             {
                 end--;
             }
@@ -966,19 +979,27 @@ void Article::thread_article(char *references)
             {
                 break;
             }
-            end[1] = '\0';
             // Quit parsing references if this one is garbage.
-            if (!(end = valid_message_id(cp, end)))
+            std::string_view msg_id = valid_message_id(references.substr(cp, end - cp + 1));
+            if (msg_id.empty())
             {
                 break;
             }
             // Dump all domains that end in '.', such as "..." & "1@DEL."
-            if (end[-1] == '.')
+            if (msg_id[msg_id.size() - 2] == '.')
             {
                 break;
             }
-            ap = get_article({cp, static_cast<std::size_t>(end - cp + 1)});
-            *cp = '\0';
+            if (msg_id.back() == '>')
+            {
+                ap = get_article(msg_id);
+            }
+            else
+            {
+                std::string fixed_msg_id{msg_id};
+                fixed_msg_id.back() = '>';
+                ap = get_article(fixed_msg_id);
+            }
             chain_autofl |= ap->m_auto_flags;
             if (ap->m_subj == m_subj)
             {
@@ -1015,15 +1036,15 @@ void Article::thread_article(char *references)
             ap->m_date = m_date;
             prev = ap;
 next:
-            if (cp > references)
+            if (cp > 0)
             {
-                end = cp-1;
+                end = cp - 1;
+                cp = references.rfind('<', end);
             }
             else
             {
-                end = cp;
+                cp = std::string_view::npos;
             }
-            cp = std::strrchr(references, '<');
         }
         if (!ap)
         {
