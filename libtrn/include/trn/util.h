@@ -45,7 +45,7 @@ char *safe_realloc(char *where, MemorySize size);
 #ifdef SETUIDGID
 int eaccess(char *, int);
 #endif
-char *trn_getwd(char *buf, int buflen);
+std::string trn_getwd();
 std::string get_a_line(std::FILE *fp);
 bool  make_dir(const char *dirname, MakeDirNameType nametype);
 void  not_incl(std::string_view feature);

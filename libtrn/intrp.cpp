@@ -97,8 +97,9 @@ void interp_init(char *tcbuf, int tcbuf_len)
     {
         return;                  // and we do not need it for -c
     }
-    trn_getwd(tcbuf, tcbuf_len); // find working directory name
-    g_orig_dir = tcbuf;           // and remember it
+    (void) tcbuf;
+    (void) tcbuf_len;
+    g_orig_dir = trn_getwd();     // find working directory name
 
     // name of header file (%h)
 

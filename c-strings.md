@@ -444,11 +444,10 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Fixed buffers: current candidates include `inews` tool output/global
   buffers, `g_ser_line`, `g_art_line`, interpolation scratch storage,
-  `trn_getwd` output storage, `g_head_buf`, `g_art_buf`, MIME HTML tag
-  parser state, terminal storage, response header buffers, `ngstuff`
-  command expansion buffers, `uudecode` pending-line storage, selector
-  command key storage, tree-indent storage, and global command/message
-  buffers.
+  `g_head_buf`, `g_art_buf`, MIME HTML tag parser state, terminal
+  storage, response header buffers, `ngstuff` command expansion
+  buffers, `uudecode` pending-line storage, selector command key
+  storage, tree-indent storage, and global command/message buffers.
 - Filename storage: current path candidates remain in KILL-file
   appending, score-file loading/editing, newsrc file fields, and some
   universal-selector file fields.  Mixed URL/path/host fields need
@@ -472,7 +471,7 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 74, `strncpy` 4, `strcat` 2.
+- Copy and concatenation: `strcpy` 74, `strncpy` 3, `strcat` 2.
 - Comparison: `strcmp` 4, `strncmp` 24.
 - Search and length: `strchr` 91, `strrchr` 7, `strstr` 2,
   `strlen` 82.
@@ -508,18 +507,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-065 - Current Directory Helper Return
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `libtrn/intrp.cpp`, `tests/test_getwd.cpp`.
-- Kind: caller output buffer plus filesystem path text.
-- Function: `trn_getwd`.
-- Change: return an owned `std::string` from `trn_getwd` instead of
-  writing into a caller-supplied buffer.  Preserve Windows drive-case
-  and slash normalization.  Use empty string only if callers can treat
-  failure as absence; otherwise keep the existing fatal error behavior.
-- Tests: current working directory tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

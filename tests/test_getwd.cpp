@@ -5,17 +5,16 @@
 
 #include <gtest/gtest.h>
 
-#include <cctype>
 #include <filesystem>
+#include <string>
 
-TEST(TestGetWorkingDirectory, foo)
+TEST(TestGetWorkingDirectory, returnsCurrentDirectory)
 {
+    const std::filesystem::path previous_dir = std::filesystem::current_path();
     std::filesystem::current_path(TRN_TEST_HOME_DIR);
 
-    char buf[512];
-    const char *result = trn_getwd(buf, sizeof buf);
+    const std::string result = trn_getwd();
 
-    EXPECT_NE(nullptr, result);
-    EXPECT_EQ(buf, result);
-    EXPECT_STREQ(TRN_TEST_HOME_DIR, result);
+    EXPECT_EQ(TRN_TEST_HOME_DIR, result);
+    std::filesystem::current_path(previous_dir);
 }

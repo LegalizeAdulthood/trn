@@ -327,30 +327,29 @@ int mod;
 //
 // Get working directory
 //
-char *trn_getwd(char *buf, int buflen)
+std::string trn_getwd()
 {
-    std::error_code       ec;
-    std::filesystem::path cwd{std::filesystem::current_path(ec)};
+    std::error_code ec;
+    std::string     cwd = fs::current_path(ec).string();
     if (ec)
     {
         std::printf("Cannot determine current working directory!\n");
         finalize(1);
     }
-    std::strncpy(buf, cwd.string().c_str(), buflen);
 #ifdef _WIN32
-    if (buf[1] == ':')
+    if (cwd.size() > 1 && cwd[1] == ':')
     {
-        buf[0] = std::toupper(buf[0]);
+        cwd[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(cwd[0])));
     }
-    for (int i = 0; i < buflen; ++i)
+    for (char &ch : cwd)
     {
-        if (buf[i] == '\\')
+        if (ch == '\\')
         {
-            buf[i] = '/';
+            ch = '/';
         }
     }
 #endif
-    return buf;
+    return cwd;
 }
 
 std::string get_a_line(std::FILE *fp)
