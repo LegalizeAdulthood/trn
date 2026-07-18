@@ -518,17 +518,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-083 - DataSource Server Id Parsing
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: owned string parsing and C-string comparison cleanup.
-- Function: `new_data_source`.
-- Change: compare the source name with `"default"` using string
-  comparison, and split `dp->m_news_id` port text with
-  `std::string::find` instead of `std::strchr` and in-place NUL
-  insertion.
-- Tests: datasource tests.
-
 #### CSTR-053 - Newsgroup Display Subject Line
 
 - Files: `libtrn/ng.cpp`.

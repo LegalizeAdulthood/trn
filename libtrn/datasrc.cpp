@@ -49,7 +49,6 @@ struct utimbuf
 #include <cctype>
 #include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <filesystem>
@@ -77,7 +76,7 @@ static int                        source_file_cmp(std::string_view key, HashDatu
 static void                       check_distance(std::string_view candidate_name,
                                                  std::vector<std::string> &newsgroup_matches, int &best_match);
 static int                        get_near_miss(const std::vector<std::string> &newsgroup_matches);
-static DataSource                *new_data_source(const char *name, const DataSourceConfig &config);
+static DataSource                *new_data_source(std::string_view name, const DataSourceConfig &config);
 static std::string                read_data_sources(std::string_view filename);
 
 /// @brief Initializes the data sources for the application.
@@ -209,8 +208,7 @@ static std::string read_data_sources(std::string_view filename)
             continue;
         }
         parse_ini_section(section, DataSourceConfig::schema(), values);
-        const std::string name{section_name};
-        new_data_source(name.c_str(), DataSourceConfig::from(values));
+        new_data_source(section_name, DataSourceConfig::from(values));
     }
     return contents;
 }
@@ -227,7 +225,7 @@ DataSource *get_data_source(std::string_view name)
     return nullptr;
 }
 
-static DataSource *new_data_source(const char *name, const DataSourceConfig &config)
+static DataSource *new_data_source(std::string_view name, const DataSourceConfig &config)
 {
     if (config.nntp_server() == nullptr && config.active_file() == nullptr)
     {
@@ -241,8 +239,8 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
         dp->m_flags |= DF_REMOTE;
     }
 
-    dp->m_name = name;
-    if (!std::strcmp(name, "default"))
+    dp->m_name.assign(name);
+    if (dp->m_name == "default")
     {
         dp->m_flags |= DF_DEFAULT;
     }
@@ -251,11 +249,13 @@ static DataSource *new_data_source(const char *name, const DataSourceConfig &con
     if (v != nullptr)
     {
         dp->m_news_id = v;
-        char *cp = std::strchr(dp->m_news_id.data(), ';');
-        if (cp != nullptr)
+        const std::string::size_type port_separator = dp->m_news_id.find(';');
+        if (port_separator != std::string::npos)
         {
-            *cp = '\0';
-            dp->m_nntp_link.port_number = std::atoi(cp + 1);
+            const std::string_view port_text{dp->m_news_id.data() + port_separator + 1,
+                                             dp->m_news_id.size() - port_separator - 1};
+            (void) std::from_chars(port_text.data(), port_text.data() + port_text.size(), dp->m_nntp_link.port_number);
+            dp->m_news_id.resize(port_separator);
         }
 
         v = config.active_file_refetch();

@@ -9,6 +9,8 @@
 
 #include <test_config.h>
 
+#include "mock_env.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -193,6 +195,59 @@ protected:
     bool                    m_old_verbose{};
 };
 
+class DataSourceInitTest : public SourceFileTest
+{
+protected:
+    void SetUp() override
+    {
+        SourceFileTest::SetUp();
+        m_saved_data_sources.swap(g_data_sources);
+        m_old_data_source = g_data_source;
+        m_old_dot_dir = g_dot_dir;
+        m_old_trn_dir = g_trn_dir;
+        m_old_rn_lib = g_rn_lib;
+        m_old_tmp_dir = g_tmp_dir;
+        m_old_trn_access_text = g_trn_access_text;
+        m_old_nntp_auth_file = g_nntp_auth_file;
+        m_old_def_refetch_secs = g_def_refetch_secs;
+        g_data_source = nullptr;
+        g_dot_dir = m_output_dir.generic_string();
+        g_trn_dir = m_output_dir.generic_string();
+        g_rn_lib = m_output_dir.generic_string();
+        g_tmp_dir = m_output_dir.generic_string();
+        g_trn_access_text.clear();
+        g_nntp_auth_file.clear();
+        g_def_refetch_secs = DEFAULT_REFETCH_SECS;
+    }
+
+    void TearDown() override
+    {
+        data_source_finalize();
+        g_data_sources.clear();
+        m_saved_data_sources.swap(g_data_sources);
+        g_data_source = m_old_data_source;
+        g_dot_dir = m_old_dot_dir;
+        g_trn_dir = m_old_trn_dir;
+        g_rn_lib = m_old_rn_lib;
+        g_tmp_dir = m_old_tmp_dir;
+        g_trn_access_text = m_old_trn_access_text;
+        g_nntp_auth_file = m_old_nntp_auth_file;
+        g_def_refetch_secs = m_old_def_refetch_secs;
+        SourceFileTest::TearDown();
+    }
+
+    trn::testing::MockEnvironment m_env;
+    std::vector<DataSource>       m_saved_data_sources;
+    DataSource                   *m_old_data_source{};
+    std::string                   m_old_dot_dir;
+    std::string                   m_old_trn_dir;
+    std::string                   m_old_rn_lib;
+    std::string                   m_old_tmp_dir;
+    std::string                   m_old_trn_access_text;
+    std::string                   m_old_nntp_auth_file;
+    std::time_t                   m_old_def_refetch_secs{};
+};
+
 } // namespace
 
 TEST(SourceFileAppendTest, storesNormalizedLineAndReturnsStoredStorage)
@@ -372,6 +427,34 @@ TEST_F(DataSourceFindGroupDescTest, storesEmptyDescriptionForEmptyServerList)
     const std::string_view description = m_data_source.find_group_desc("comp.lang.apl");
 
     EXPECT_EQ("\n\n", description);
+}
+
+TEST_F(DataSourceInitTest, createsDefaultRemoteSourceFromNntpServer)
+{
+    m_env.expect_env("NNTPSERVER", "news.example");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    ASSERT_EQ(1U, g_data_sources.size());
+    const DataSource &source = g_data_sources.front();
+    EXPECT_EQ("default", source.m_name);
+    EXPECT_EQ("news.example", source.m_news_id);
+    EXPECT_TRUE(source.m_flags & DF_DEFAULT);
+    EXPECT_TRUE(source.m_flags & DF_REMOTE);
+}
+
+TEST_F(DataSourceInitTest, parsesNntpServerPort)
+{
+    m_env.expect_env("NNTPSERVER", "news.example;119");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    ASSERT_EQ(1U, g_data_sources.size());
+    const DataSource &source = g_data_sources.front();
+    EXPECT_EQ("news.example", source.m_news_id);
+    EXPECT_EQ(119, source.m_nntp_link.port_number);
 }
 
 TEST_F(FindCloseMatchTest, usesSingleCloseMatch)
