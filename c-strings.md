@@ -525,15 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-056 - KILL File Append Paths
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: path construction through `g_cmd_buf`.
-- Function: `kill_file_append`.
-- Change: keep the target KILL filename in `fs::path` or `std::string`
-  and stop using `g_cmd_buf` as the path owner.
-- Tests: KILL file append tests.
-
 #### CSTR-057 - Interpolation Scratch Formatting
 
 - Files: `libtrn/intrp.cpp`.

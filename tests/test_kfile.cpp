@@ -6,15 +6,19 @@
 #include <trn/cache.h>
 #include <trn/ngdata.h>
 #include <trn/terminal.h>
+#include <trn/trn.h>
 
 #include <test_config.h>
 
 #include "mock_env.h"
 
+#include <file_contents.h>
+
 #include <gtest/gtest.h>
 
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <system_error>
 
@@ -32,6 +36,8 @@ protected:
         m_old_kf_state = g_kf_state;
         m_old_local_kfp = g_local_kfp;
         m_old_first_subject = g_first_subject;
+        m_old_verbose = g_verbose;
+        m_old_novice_delays = g_novice_delays;
         m_old_term_line = g_term_line;
         m_old_term_col = g_term_col;
         m_old_term_scrolled = g_term_scrolled;
@@ -46,6 +52,8 @@ protected:
         g_kf_state = KFS_NONE;
         g_local_kfp = nullptr;
         g_first_subject = nullptr;
+        g_verbose = false;
+        g_novice_delays = false;
     }
 
     void TearDown() override
@@ -59,6 +67,8 @@ protected:
         g_kf_state = m_old_kf_state;
         g_local_kfp = m_old_local_kfp;
         g_first_subject = m_old_first_subject;
+        g_verbose = m_old_verbose;
+        g_novice_delays = m_old_novice_delays;
         g_term_line = m_old_term_line;
         g_term_col = m_old_term_col;
         g_term_scrolled = m_old_term_scrolled;
@@ -79,6 +89,8 @@ protected:
     KillFileStateFlags            m_old_kf_state{};
     std::FILE                    *m_old_local_kfp{};
     Subject                      *m_old_first_subject{};
+    bool                          m_old_verbose{};
+    bool                          m_old_novice_delays{};
     int                           m_old_term_line{};
     int                           m_old_term_col{};
     int                           m_old_term_scrolled{};
@@ -112,4 +124,22 @@ TEST_F(KillFileEditTest, createsGlobalKillFileDirectory)
     edit_kill_file();
 
     EXPECT_TRUE(fs::exists(kill_file.parent_path()));
+}
+
+TEST_F(KillFileEditTest, appendLocalKillFileWritesConfiguredPath)
+{
+    const fs::path    kill_file = m_output_dir / "local-append" / "KILL";
+    const std::string kill_file_name = kill_file.generic_string();
+    fs::create_directories(kill_file.parent_path());
+    std::ofstream{kill_file} << "/old/j";
+
+    m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
+
+    testing::internal::CaptureStdout();
+    kill_file_append("/new/j", KF_LOCAL);
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("/old/j\n/new/j\n", file_contents(kill_file));
+    EXPECT_NE(nullptr, g_local_kfp);
+    EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
 }

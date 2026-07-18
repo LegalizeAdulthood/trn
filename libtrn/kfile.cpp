@@ -843,25 +843,24 @@ void open_kill_file(int local)
 
 void kill_file_append(const char *cmd, bool local)
 {
-    std::strcpy(g_cmd_buf,
-                file_exp(local ? get_env_var("KILLLOCAL", s_kill_local) : get_env_var("KILLGLOBAL", s_kill_global))
-                    .c_str());
-    if (!make_dir(g_cmd_buf, MD_FILE))
+    const fs::path kill_file{
+        file_exp(local ? get_env_var("KILLLOCAL", s_kill_local) : get_env_var("KILLGLOBAL", s_kill_global))};
+    if (!make_dir(kill_file.string().c_str(), MD_FILE))
     {
         if (g_verbose)
         {
-            std::printf("\nDepositing command in %s...", g_cmd_buf);
+            fmt::print("\nDepositing command in {}...", kill_file.string());
         }
         else
         {
-            std::printf("\n--> %s...", g_cmd_buf);
+            fmt::print("\n--> {}...", kill_file.string());
         }
         std::fflush(stdout);
         if (g_novice_delays)
         {
             sleep(2);
         }
-        if (std::FILE *fp = std::fopen(g_cmd_buf, "a+"))
+        if (std::FILE *fp = std::fopen(kill_file.string().c_str(), "a+"))
         {
             char ch;
             if (std::fseek(fp,-1L,2) < 0)
@@ -877,17 +876,17 @@ void kill_file_append(const char *cmd, bool local)
             {
                 std::putc('\n', fp);
             }
-            std::fprintf(fp,"%s\n",cmd);
+            fmt::print(fp, "{}\n", cmd);
             std::fclose(fp);
             if (local && !g_local_kfp)
             {
                 open_kill_file(KF_LOCAL);
             }
-            std::fputs("done\n",stdout);
+            fmt::print("done\n");
         }
         else
         {
-            std::printf(g_cant_open, g_cmd_buf);
+            std::printf(g_cant_open, kill_file.string().c_str());
         }
         term_down(2);
     }
