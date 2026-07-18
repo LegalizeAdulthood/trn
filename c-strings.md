@@ -515,18 +515,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-111 - Message-id Normalization Without Mutation
-
-- Files: `libtrn/rt-process.cpp`, `libtrn/include/trn/rt-process.h`,
-  `libtrn/Article.cpp`.
-- Kind: mutable C-string normalization.
-- Function: `fix_msg_id`.
-- Change: replace the mutating `char *` helper with normalization over
-  `std::string_view` that returns an owned `std::string`.  Update the
-  direct callers so no caller passes local string storage only to have
-  the helper edit it in place.
-- Tests: thread/message-id tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices use Tier 1 results or replace one owner of string storage.

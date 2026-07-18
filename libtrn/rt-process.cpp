@@ -88,19 +88,22 @@ void free_pending_msg_id(HashDatum *data)
     data->dat_ptr = nullptr;
 }
 
-void fix_msg_id(char *msgid)
+std::string fix_msg_id(std::string_view msgid)
 {
-    char *cp = std::strchr(msgid, '@');
-    if (cp != nullptr)
+    std::string       normalized{msgid};
+    const std::size_t domain = normalized.find('@');
+    if (domain != std::string::npos)
     {
-        while (*++cp)
+        for (std::size_t idx = domain + 1; idx < normalized.size(); idx++)
         {
-            if (std::isupper(*cp))
+            const unsigned char ch = static_cast<unsigned char>(normalized[idx]);
+            if (std::isupper(ch))
             {
-                *cp = std::tolower(*cp);     // lower-case domain portion
+                normalized[idx] = static_cast<char>(std::tolower(ch)); // lower-case domain portion
             }
         }
     }
+    return normalized;
 }
 
 int msg_id_cmp(std::string_view key, HashDatum data)
@@ -117,10 +120,9 @@ int msg_id_cmp(std::string_view key, HashDatum data)
 Article *get_article(char *msgid)
 {
     Article* article;
+    std::string normalized_msg_id = fix_msg_id(msgid);
 
-    fix_msg_id(msgid);
-
-    HashDatum data = hash_fetch(g_msg_id_hash, msgid);
+    HashDatum data = hash_fetch(g_msg_id_hash, normalized_msg_id);
     if (data.dat_len)
     {
         const unsigned hash_flags = data.dat_len;
@@ -143,7 +145,7 @@ Article *get_article(char *msgid)
     {
         article = allocate_article(ArticleNum{});
         data.dat_ptr = (char *) article;
-        article->m_msg_id = msgid;
+        article->m_msg_id = std::move(normalized_msg_id);
         hash_store_last(data);
     }
     return article;

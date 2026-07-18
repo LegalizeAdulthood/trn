@@ -9,6 +9,7 @@
 #include <trn/hash.h>
 
 #include <string>
+#include <string_view>
 
 struct Article;
 struct Subject;
@@ -20,7 +21,7 @@ void        free_pending_msg_id(HashDatum *data);
 int         msg_id_cmp(std::string_view key, HashDatum data);
 Article    *get_article(char *msgid);
 void        merge_threads(Subject *s1, Subject *s2);
-void        fix_msg_id(char *msgid);
+std::string fix_msg_id(std::string_view msgid);
 void        unlink_child(Article *child);
 
 #endif

@@ -10,6 +10,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
 namespace
 {
 
@@ -53,7 +55,7 @@ TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
     Article *article = get_article(lookup);
 
     ASSERT_NE(nullptr, article);
-    EXPECT_STREQ("<case@example.com>", lookup);
+    EXPECT_STREQ("<case@EXAMPLE.COM>", lookup);
     ASSERT_TRUE(article->m_msg_id);
     EXPECT_EQ("<case@example.com>", *article->m_msg_id);
     EXPECT_TRUE((article->m_flags & AF_FAKE) != 0);
@@ -61,10 +63,19 @@ TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
     EXPECT_TRUE((article->m_auto_flags & AUTO_SEL_THD) != 0);
     EXPECT_EQ(1, g_kf_change_thread_cnt);
 
-    const HashDatum stored = hash_fetch(g_msg_id_hash, lookup);
+    const HashDatum stored = hash_fetch(g_msg_id_hash, "<case@example.com>");
     EXPECT_EQ(0U, stored.dat_len);
     EXPECT_EQ(article, reinterpret_cast<Article *>(stored.dat_ptr));
 
     article->clear_article();
     delete article;
+}
+
+TEST(MessageIdTest, fixMsgIdLowercasesOnlyDomain)
+{
+    const char  lookup[] = "<Case@EXAMPLE.COM>";
+    std::string normalized = fix_msg_id(lookup);
+
+    EXPECT_EQ("<Case@example.com>", normalized);
+    EXPECT_STREQ("<Case@EXAMPLE.COM>", lookup);
 }
