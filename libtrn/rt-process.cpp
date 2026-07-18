@@ -117,7 +117,7 @@ int msg_id_cmp(std::string_view key, HashDatum data)
 // Take a message-id and see if we already know about it.  If so, return
 // the article, otherwise create a fake one.
 //
-Article *get_article(char *msgid)
+Article *get_article(std::string_view msgid)
 {
     Article* article;
     std::string normalized_msg_id = fix_msg_id(msgid);

@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
 
 namespace
 {
@@ -66,6 +67,24 @@ TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
     const HashDatum stored = hash_fetch(g_msg_id_hash, "<case@example.com>");
     EXPECT_EQ(0U, stored.dat_len);
     EXPECT_EQ(article, reinterpret_cast<Article *>(stored.dat_ptr));
+
+    article->clear_article();
+    delete article;
+}
+
+TEST_F(MessageIdHashTest, getArticleUsesOnlyTheProvidedView)
+{
+    HashDatum data = make_pending_msg_id("<case@example.com>", AUTO_SEL_THD | 1);
+    hash_store(g_msg_id_hash, "<case@example.com>", data);
+
+    constexpr std::string_view message_id{"<case@EXAMPLE.COM>"};
+    std::string                lookup = std::string{message_id} + " trailing";
+
+    Article *article = get_article({lookup.data(), message_id.size()});
+
+    ASSERT_NE(nullptr, article);
+    ASSERT_TRUE(article->m_msg_id);
+    EXPECT_EQ("<case@example.com>", *article->m_msg_id);
 
     article->clear_article();
     delete article;

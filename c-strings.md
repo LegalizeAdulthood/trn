@@ -520,18 +520,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-112 - Get Article Message-id View
-
-- Files: `libtrn/rt-process.cpp`, `libtrn/include/trn/rt-process.h`,
-  `libtrn/Article.cpp`, `libtrn/kfile.cpp`.
-- Kind: mutable C-string lookup key.
-- Function: `get_article`.
-- Depends on: `CSTR-111`.
-- Change: accept `std::string_view` and use the normalized owned
-  message-id string for hash lookup/storage.  Update direct callers that
-  currently split a mutable line only to pass a null-terminated token.
-- Tests: thread/message-id and KILL-file tests.
-
 #### CSTR-115 - Nntplist Argument Views
 
 - Files: `nntplist/nntplist.cpp`.

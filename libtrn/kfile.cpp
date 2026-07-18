@@ -315,14 +315,15 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 perform_status_init(g_newsgroup_ptr->m_to_read);
                 last_kill_type = '<';
             }
+            std::string_view msg_id{bp};
             std::string_view cmd{"T,"};
             char *split = std::strchr(bp,' ');
             if (split)
             {
-                *split++ = '\0';
-                cmd = split;
+                msg_id = {bp, static_cast<std::size_t>(split - bp)};
+                cmd = split + 1;
             }
-            Article *ap = get_article(bp);
+            Article *ap = get_article(msg_id);
             if (ap != nullptr)
             {
                 if ((ap->m_flags & AF_FAKE) && !ap->m_child1)
@@ -778,25 +779,27 @@ void edit_kill_file()
                 }
                 else if (*bp == '<')
                 {
-                    char* split = std::strchr(bp,' ');
-                    const char *cmd = ",";
+                    std::string_view msg_id{bp};
+                    std::string_view cmd{","};
+                    char *split = std::strchr(bp,' ');
                     if (split)
                     {
-                        *split++ = '\0';
-                        cmd = split;
+                        msg_id = {bp, static_cast<std::size_t>(split - bp)};
+                        cmd = split + 1;
                     }
-                    Article *ap = get_article(bp);
+                    Article *ap = get_article(msg_id);
                     if (ap != nullptr)
                     {
-                        const char *thread_cmd = cmd;
-                        if (*thread_cmd == 'T')
+                        std::string_view thread_cmd = cmd;
+                        if (!thread_cmd.empty() && thread_cmd.front() == 'T')
                         {
-                            thread_cmd++;
+                            thread_cmd.remove_prefix(1);
                         }
-                        thread_cmd = std::strchr(s_thread_cmd_ltr, *thread_cmd);
-                        if (thread_cmd != nullptr)
+                        const char *thread_cmd_match =
+                            thread_cmd.empty() ? nullptr : std::strchr(s_thread_cmd_ltr, thread_cmd.front());
+                        if (thread_cmd_match != nullptr)
                         {
-                            ap->m_auto_flags |= s_thread_cmd_flag[thread_cmd - s_thread_cmd_ltr];
+                            ap->m_auto_flags |= s_thread_cmd_flag[thread_cmd_match - s_thread_cmd_ltr];
                         }
                     }
                 }

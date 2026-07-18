@@ -977,7 +977,7 @@ void Article::thread_article(char *references)
             {
                 break;
             }
-            ap = get_article(cp);
+            ap = get_article({cp, static_cast<std::size_t>(end - cp + 1)});
             *cp = '\0';
             chain_autofl |= ap->m_auto_flags;
             if (ap->m_subj == m_subj)
