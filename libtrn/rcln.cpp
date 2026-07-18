@@ -17,7 +17,9 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -453,10 +455,7 @@ static void prange(char *where, ART_NUM min, ART_NUM max)
 //
 void NewsgroupData::set_to_read(bool lax_high_check)
 {
-    char      *   c;
-    char    tmpbuf[64];
-    char*   mybuf = tmpbuf;
-    bool    virgin_ng = (!m_abs_first);
+    bool       virgin_ng = (!m_abs_first);
     ArticleNum ngsize = get_newsgroup_size();
     ArticleNum unread = ngsize;
     ArticleNum newmax;
@@ -465,7 +464,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
     {
         if (!g_to_read_quiet)
         {
-            std::printf("\nInvalid (bogus) newsgroup found: %s\n",rc_line_c_str());
+            std::printf("\nInvalid (bogus) newsgroup found: %s\n", rc_line_c_str());
         }
         g_paranoid = true;
         if (virgin_ng || m_to_read >= g_newsgroup_min_to_read)
@@ -478,40 +477,53 @@ void NewsgroupData::set_to_read(bool lax_high_check)
     }
     if (virgin_ng)
     {
-        std::sprintf(tmpbuf," 1-%ld",(long)ngsize.value_of());
-        if (std::strcmp(tmpbuf, rc_numbers_c_str()) != 0)
+        const std::string all_read = fmt::format(" 1-{}", ngsize.value_of());
+        if (all_read != rc_numbers_c_str())
         {
-            check_expired(m_abs_first);        // this might realloc rcline
+            check_expired(m_abs_first); // this might realloc rcline
         }
     }
-    const char *nums = rc_numbers_c_str();
-    int   length = std::strlen(nums);
-    if (length+MAX_DIGITS+1 > sizeof tmpbuf)
+    auto parse_article_num = [](std::string_view text)
     {
-        mybuf = safe_malloc((MemorySize) (length + MAX_DIGITS + 1));
-    }
-    std::strcpy(mybuf,nums);
-    mybuf[length++] = ',';
-    mybuf[length] = '\0';
-    char *s = skip_space(mybuf);
-    for ( ; (c = std::strchr(s,',')) != nullptr ; s = ++c)    // for each range
-    {
-        *c = '\0';                  // keep index from running off
-        char *h = std::strchr(s, '-');
-        if (h != nullptr) // find - in range, if any
+        const char *first = text.data();
+        const char *last = first + text.size();
+        while (first != last && std::isspace(static_cast<unsigned char>(*first)))
         {
-            newmax = ArticleNum{atol(h + 1)};
-            unread -= newmax - article_after(ArticleNum{atol(s)});
+            ++first;
+        }
+        long value{};
+        std::from_chars(first, last, value);
+        return ArticleNum{value};
+    };
+    const std::string_view nums = rc_numbers_c_str();
+    std::string            ranges;
+    ranges.reserve(std::max<std::size_t>(64, nums.size() + MAX_DIGITS + 1));
+    ranges.append(nums.data(), nums.size());
+    ranges += ',';
+    std::string_view  s{ranges};
+    const std::size_t first_range = s.find_first_not_of(" \f\n\r\t\v");
+    if (first_range > 0 && first_range != std::string_view::npos)
+    {
+        s.remove_prefix(first_range);
+    }
+    for (std::size_t comma = s.find(','); comma != std::string_view::npos; comma = s.find(',')) // for each range
+    {
+        const std::string_view range = s.substr(0, comma);
+        const std::size_t      hyphen = range.find('-');
+        if (hyphen != std::string_view::npos) // find - in range, if any
+        {
+            newmax = parse_article_num(range.substr(hyphen + 1));
+            unread -= newmax - article_after(parse_article_num(range));
         }
         else
         {
-            newmax = ArticleNum{std::atol(s)};
+            newmax = parse_article_num(range);
         }
         if (newmax != 0)
         {
-            --unread;           // recalculate length
+            --unread; // recalculate length
         }
-        if (newmax > ngsize)    // paranoia check
+        if (newmax > ngsize) // paranoia check
         {
             if (!lax_high_check && newmax > ngsize)
             {
@@ -522,17 +534,17 @@ void NewsgroupData::set_to_read(bool lax_high_check)
             m_ng_max = newmax;
             ngsize = newmax;
         }
+        s.remove_prefix(comma + 1);
     }
-    if (unread < 0)                     // SOMEONE RESET THE NEWSGROUP!!!
+    if (unread < 0) // SOMEONE RESET THE NEWSGROUP!!!
     {
-        unread = ngsize;                // assume nothing carried over
+        unread = ngsize; // assume nothing carried over
         if (!g_to_read_quiet)
         {
-            std::printf("\nSomebody reset %s -- assuming nothing read.\n",
-                   rc_line_c_str());
+            std::printf("\nSomebody reset %s -- assuming nothing read.\n", rc_line_c_str());
         }
         *rc_numbers_data() = '\0';
-        g_paranoid = true;          // enough to make a guy paranoid
+        g_paranoid = true; // enough to make a guy paranoid
         m_rc->flags |= RF_RC_CHANGED;
     }
     if (m_subscribe_char == UNSUBSCRIBED_CHAR)
@@ -559,11 +571,6 @@ void NewsgroupData::set_to_read(bool lax_high_check)
         }
     }
     m_to_read = (ArticleUnread)unread.value_of();    // remember how many are left
-
-    if (mybuf != tmpbuf)
-    {
-        std::free(mybuf);
-    }
 }
 
 // make sure expired articles are marked as read

@@ -9,11 +9,18 @@
 
 #include <gtest/gtest.h>
 
+#include <test_config.h>
+
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <string>
+#include <system_error>
 
 namespace
 {
+
+namespace fs = std::filesystem;
 
 int compare_newsgroup_name(std::string_view key, HashDatum data)
 {
@@ -46,6 +53,63 @@ protected:
         return line;
     }
 
+    Newsrc        m_newsrc{};
+    NewsgroupData m_group{};
+};
+
+class SetToReadTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+
+        m_old_newsgroup_min_to_read = g_newsgroup_min_to_read;
+        m_old_to_read_quiet = g_to_read_quiet;
+        g_newsgroup_min_to_read = TR_ONE;
+        g_to_read_quiet = true;
+
+        m_active_path = m_output_dir / "active";
+        std::ofstream{m_active_path} << "comp.lang.apl 100 1 y\n";
+        ASSERT_EQ(1, m_data_source.m_act_sf.open(m_active_path, "", nullptr));
+
+        m_newsrc.flags = RF_NONE;
+        m_newsrc.data_source = &m_data_source;
+        m_group.m_rc = &m_newsrc;
+        m_group.m_abs_first = ArticleNum{1};
+        m_group.m_to_read = ArticleUnread{100};
+        m_group.m_subscribe_char = ':';
+    }
+
+    void TearDown() override
+    {
+        m_data_source.m_act_sf.close();
+        g_newsgroup_min_to_read = m_old_newsgroup_min_to_read;
+        g_to_read_quiet = m_old_to_read_quiet;
+
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+    }
+
+    void set_numbers(const std::string &numbers)
+    {
+        m_group.m_rc_line = "comp.lang.apl: " + numbers;
+        m_group.m_num_offset = static_cast<int>(std::string{"comp.lang.apl"}.size()) + 1;
+        m_group.hide_subscribe_char();
+    }
+
+    fs::path      m_output_dir;
+    fs::path      m_active_path;
+    ArticleUnread m_old_newsgroup_min_to_read{};
+    bool          m_old_to_read_quiet{};
+    DataSource    m_data_source{};
     Newsrc        m_newsrc{};
     NewsgroupData m_group{};
 };
@@ -114,6 +178,18 @@ TEST_F(ExpiredArticleTest, extendsReadRangeToFirstAvailableArticle)
     EXPECT_EQ("comp.lang.apl: 1-20,25", visible_rc_line());
     EXPECT_EQ('\0', m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)]);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_F(SetToReadTest, countsUnreadArticlesFromLongReadList)
+{
+    set_numbers("1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,"
+                "31,33,35,37,39,41,43,45,47,49,51,53,55,57,59");
+
+    m_group.set_to_read(ST_STRICT);
+
+    EXPECT_EQ(ArticleUnread{70}, m_group.m_to_read);
+    EXPECT_EQ(ArticleNum{100}, m_group.m_ng_max);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
 }
 
 TEST_F(AddArtNumTest, insertsStandaloneArticleBeforeLaterRange)
