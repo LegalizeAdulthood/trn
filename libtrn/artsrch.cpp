@@ -37,7 +37,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
 std::string    g_last_pat;                  // last search pattern
 CompiledRegex *g_bra_compex{&s_art_compex}; // current compex with brackets
-const char    *g_scope_str{"sfHhbBa"};      //
+const std::string_view g_scope_str{"sfHhbBa"}; //
 ArtScope       g_art_how_much{};            // search scope
 HeaderLineType g_art_srch_hdr{};            // specific header number to search
 bool           g_art_do_read{};             // search read articles?

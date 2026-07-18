@@ -520,18 +520,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-117 - Article Search Scope Characters View
-
-- Files: `libtrn/artsrch.cpp`, `libtrn/include/trn/artsrch.h`,
-  `libtrn/intrp.cpp`.
-- Kind: literal-only global character sequence.
-- Function: storage-centered `g_scope_str`.
-- Change: replace the mutable global pointer with a `std::string_view`
-  or `constexpr std::string_view` and update indexing callers to use the
-  view directly.  Do not introduce a `std::string` because the value is a
-  fixed literal.
-- Tests: article search and interpolation tests.
-
 #### CSTR-118 - Selector Mode Label Views
 
 - Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,

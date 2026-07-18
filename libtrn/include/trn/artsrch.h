@@ -8,6 +8,7 @@
 #include <trn/search.h>
 
 #include <string>
+#include <string_view>
 
 enum ArtSearchResult
 {
@@ -33,7 +34,7 @@ enum ArtScope
 
 extern std::string    g_last_pat;         // last search pattern
 extern CompiledRegex *g_bra_compex;       // current compex with brackets
-extern const char    *g_scope_str;        //
+extern const std::string_view g_scope_str; //
 extern ArtScope       g_art_how_much;     // search scope
 extern HeaderLineType g_art_srch_hdr;     // specific header number to search
 extern bool           g_art_do_read;      // search read articles?
