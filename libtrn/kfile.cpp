@@ -6,6 +6,7 @@
 #include <trn/kfile.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <trn/artsrch.h>
 #include <trn/bits.h>
 #include <trn/cache.h>
@@ -77,7 +78,7 @@ inline long kill_file_day_num(long x)
 
 void kill_file_init()
 {
-    std::string_view kill_threads = get_val_const("KILLTHREADS", s_kill_threads);
+    std::string kill_threads = get_env_var("KILLTHREADS", s_kill_threads);
     if (!kill_threads.empty() && kill_threads != "none")
     {
         s_kill_file_day_num = kill_file_day_num(0);
@@ -202,7 +203,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             if (!std::strchr(include_name.c_str(), '/'))
             {
                 set_newsgroup_name(include_name.c_str());
-                include_name = file_exp(get_val_const("KILLLOCAL", s_kill_local));
+                include_name = file_exp(get_env_var("KILLLOCAL", s_kill_local));
                 set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
             }
             std::FILE *incfile = std::fopen(include_name.c_str(), "r");
@@ -514,7 +515,7 @@ static void rewrite_kill_file(ArticleNum thru)
                                  == KFS_THREAD_LINES;
     bool has_star_commands = false;
     bool needs_newline = false;
-    const fs::path killname{file_exp(get_val_const("KILLLOCAL",s_kill_local))};
+    const fs::path killname{file_exp(get_env_var("KILLLOCAL", s_kill_local))};
     std::error_code error;
     char* bp;
 
@@ -698,7 +699,7 @@ void update_thread_kill_file()
         return;
     }
 
-    const fs::path kname{file_exp(get_val_const("KILLTHREADS", s_kill_threads))};
+    const fs::path kname{file_exp(get_env_var("KILLTHREADS", s_kill_threads))};
     std::error_code error;
     fs::create_directories(kname.parent_path(), error);
     if (g_kf_change_thread_cnt * 5 > s_kill_file_thread_cnt)
@@ -747,16 +748,16 @@ void edit_kill_file()
                 sp->clear_subject();
             }
         }
-        kill_file = file_exp(get_val_const("KILLLOCAL", s_kill_local));
+        kill_file = file_exp(get_env_var("KILLLOCAL", s_kill_local));
     }
     else
     {
-        kill_file = file_exp(get_val_const("KILLGLOBAL", s_kill_global));
+        kill_file = file_exp(get_env_var("KILLGLOBAL", s_kill_global));
     }
     if (!make_dir(kill_file.c_str(), MD_FILE))
     {
         const std::string command =
-            fmt::format("{} {}", file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))), kill_file);
+            fmt::format("{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), kill_file);
         fmt::print("\nEditing {} KILL file:\n{}\n", g_in_ng ? "local" : "global", command);
         term_down(3);
         reset_tty();                      // make sure tty is friendly
@@ -812,7 +813,7 @@ void edit_kill_file()
 void open_kill_file(int local)
 {
     const fs::path kname{
-        file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global))};
+        file_exp(local ? get_env_var("KILLLOCAL", s_kill_local) : get_env_var("KILLGLOBAL", s_kill_global))};
 
     // delete the file if it is empty
     if (fs::exists(kname) && fs::file_size(kname) == 0)
@@ -840,7 +841,7 @@ void open_kill_file(int local)
 void kill_file_append(const char *cmd, bool local)
 {
     std::strcpy(g_cmd_buf,
-                file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global))
+                file_exp(local ? get_env_var("KILLLOCAL", s_kill_local) : get_env_var("KILLGLOBAL", s_kill_global))
                     .c_str());
     if (!make_dir(g_cmd_buf, MD_FILE))
     {

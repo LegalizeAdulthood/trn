@@ -10,6 +10,7 @@
 #include <trn/univ.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/string_case_compare.h>
 #include <trn/cache.h>
 #include <trn/final.h>
@@ -1097,7 +1098,7 @@ void univ_page_file(std::string_view fname)
     }
 
     const std::string command =
-        fmt::format("{} {}", file_exp(get_val_const("HELPPAGER", get_val_const("PAGER", "more"))), file_exp(fname));
+        fmt::format("{} {}", file_exp(get_env_var("HELPPAGER", get_env_var("PAGER", "more"))), file_exp(fname));
     term_down(3);
     reset_tty();                  // make sure tty is friendly
     do_shell(SH, command.c_str()); // invoke the shell

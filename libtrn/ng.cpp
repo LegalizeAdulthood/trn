@@ -6,6 +6,7 @@
 #include <trn/ng.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <nntp/nntpclient.h>
 #include <trn/art.h>
 #include <trn/artio.h>
@@ -1851,7 +1852,7 @@ void set_mail(bool force)
     }
     if (!(g_mail_count++))
     {
-        const std::string mailfile = file_exp(get_val_const("MAILFILE", MAIL_FILE));
+        const std::string mailfile = file_exp(get_env_var("MAILFILE", MAIL_FILE));
         stat_t            mail_file_stat{};
         if (stat(mailfile.c_str(), &mail_file_stat) < 0 || !mail_file_stat.st_size ||
             mail_file_stat.st_atime > mail_file_stat.st_mtime)

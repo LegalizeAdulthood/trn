@@ -6,6 +6,7 @@
 #include <trn/ngdata.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
 #include <trn/bits.h>
@@ -519,11 +520,11 @@ ArticleNum NewsgroupData::get_newsgroup_size()
         switch (ch)
         {
         case 'n':
-            g_moderated = get_val_const("NOPOSTRING"," (no posting)");
+            g_moderated = get_env_var("NOPOSTRING", " (no posting)");
             break;
 
         case 'm':
-            g_moderated = get_val_const("MODSTRING", " (moderated)");
+            g_moderated = get_env_var("MODSTRING", " (moderated)");
             break;
 
         case 'x':

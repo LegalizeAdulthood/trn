@@ -7,6 +7,7 @@
 #include <trn/mime-internal.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/string_case_compare.h>
 #include <trn/art.h>
 #include <trn/artio.h>
@@ -97,10 +98,10 @@ void mime_init()
     s_executor = do_shell;
     s_mimecap_entries.clear();
 
-    const char *mcname = get_val_const("MIMECAPS");
-    if (mcname == nullptr)
+    std::string mcname = get_env_var("MIMECAPS");
+    if (mcname.empty())
     {
-        mcname = get_val_const("MAILCAPS", MIMECAP);
+        mcname = get_env_var("MAILCAPS", MIMECAP);
     }
     std::string_view mcname_list{mcname};
     while (!mcname_list.empty())

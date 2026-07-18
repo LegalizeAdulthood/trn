@@ -9,6 +9,7 @@
 #include <trn/scorefile-internal.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/string_case_compare.h>
 #include <trn/cache.h>
 #include <trn/head.h>
@@ -344,7 +345,7 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 // filenames of type a/b/c/foo.bar.misc for group foo.bar.misc
 static std::string sf_get_filename(int level)
 {
-    const fs::path score_dir{file_exp(get_val_const("SCOREDIR", DEFAULT_SCOREDIR))};
+    const fs::path score_dir{file_exp(get_env_var("SCOREDIR", DEFAULT_SCOREDIR))};
     if (!level)
     {
         // allow environment variable later...
@@ -382,7 +383,7 @@ static std::string sf_cmd_fname(std::string_view s)
         return std::string{s};
     }
     // no slashes in this filename
-    return (fs::path{get_val_const("SCOREDIR", DEFAULT_SCOREDIR)} / std::string{s}).generic_string();
+    return (fs::path{get_env_var("SCOREDIR", DEFAULT_SCOREDIR)} / std::string{s}).generic_string();
 }
 
 // returns true if good command, false otherwise
@@ -1060,13 +1061,13 @@ void sf_append(char *line)
     if (filechar == '"') // do local group
     {
         // Note: should probably be changed to use sf_ file functions
-        filename = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
+        filename = get_env_var("SCOREDIR", DEFAULT_SCOREDIR);
         filename += "/%C";
     }
     else if (filechar == '*') // do global scorefile
     {
         // Note: should probably be changed to use sf_ file functions
-        filename = get_val_const("SCOREDIR", DEFAULT_SCOREDIR);
+        filename = get_env_var("SCOREDIR", DEFAULT_SCOREDIR);
         filename += "/global";
     }
     else
@@ -1295,12 +1296,12 @@ void sf_edit_file(const char *filespec)
     else if (filechar == '"')   // edit local group
     {
         // Note: should probably be changed to use sf_ file functions
-        file_name = (fs::path{get_val_const("SCOREDIR", DEFAULT_SCOREDIR)} / "%C").generic_string();
+        file_name = (fs::path{get_env_var("SCOREDIR", DEFAULT_SCOREDIR)} / "%C").generic_string();
     }
     else if (filechar == '*')   // edit global scorefile
     {
         // Note: should probably be changed to use sf_ file functions
-        file_name = (fs::path{get_val_const("SCOREDIR", DEFAULT_SCOREDIR)} / "global").generic_string();
+        file_name = (fs::path{get_env_var("SCOREDIR", DEFAULT_SCOREDIR)} / "global").generic_string();
     }
     else        // abbreviation
     {

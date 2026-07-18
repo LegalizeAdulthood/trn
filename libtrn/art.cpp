@@ -7,6 +7,7 @@
 #include <trn/art.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <trn/artio.h>
 #include <trn/artstate.h>
 #include <trn/backpage.h>
@@ -377,8 +378,9 @@ DoArticleResult do_article()
                     if (g_curr_artp->m_date != -1)
                     {
                         std::strncpy(g_art_line,buf_ptr,6);
+                        const std::string local_time_format = get_env_var("LOCALTIMEFMT", LOCALTIME_FMT);
                         std::strftime(g_art_line+6, (sizeof g_art_line)-6,
-                                 get_val_const("LOCALTIMEFMT", LOCALTIME_FMT),
+                                 local_time_format.c_str(),
                                  std::localtime(&g_curr_artp->m_date));
                         buf_ptr = g_art_line;
                     }

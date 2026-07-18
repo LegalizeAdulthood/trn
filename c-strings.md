@@ -515,19 +515,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-110 - Environment Value String Callers
-
-- Files: `util/env.cpp`, `util/include/util/env.h`, and remaining
-  `get_val`/`get_val_const` callers.
-- Kind: raw environment value access.
-- Function: storage-centered environment accessor cleanup.
-- Change: replace callers that need value-or-default text with
-  `get_env_var(name, default_value)` and plain `std::string` locals.
-  Leave null-sentinel callers until the callee logic can be changed to
-  use `empty()` or another explicit state.  Remove `get_val` and
-  `get_val_const` only after no raw-pointer callers remain.
-- Tests: config env tests and affected caller tests.
-
 #### CSTR-111 - Message-id Normalization Without Mutation
 
 - Files: `libtrn/rt-process.cpp`, `libtrn/include/trn/rt-process.h`,

@@ -247,9 +247,8 @@ TEST_F(ScoreFileTest, replyScoreRecognizesReplyPrefix)
     article_ptr(TEST_ARTICLE_NUM)->m_flags |= AF_HAS_RE;
 
     trn::testing::MockEnvironment env;
-    std::string                   score_dir_name{score_dir.string()};
-    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
-        .WillRepeatedly(::testing::Return(score_dir_name.data()));
+    const std::string             score_dir_name{score_dir.string()};
+    env.expect_env("SCOREDIR", score_dir_name.c_str());
 
     sf_init();
 
@@ -270,9 +269,8 @@ TEST_F(ScoreFileTest, initReadsGlobalAndHierarchicalGroupScoreFiles)
     g_newsgroup_name = "comp.lang.apl";
 
     trn::testing::MockEnvironment env;
-    std::string                   score_dir_name{score_dir.string()};
-    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
-        .WillRepeatedly(::testing::Return(score_dir_name.data()));
+    const std::string             score_dir_name{score_dir.string()};
+    env.expect_env("SCOREDIR", score_dir_name.c_str());
 
     sf_init();
 
@@ -290,9 +288,8 @@ TEST_F(ScoreFileTest, initReadsScorefileLinePastLegacyBufferLimit)
     g_newsgroup_name = "comp.lang.apl";
 
     trn::testing::MockEnvironment env;
-    std::string                   score_dir_name{score_dir.string()};
-    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
-        .WillRepeatedly(::testing::Return(score_dir_name.data()));
+    const std::string             score_dir_name{score_dir.string()};
+    env.expect_env("SCOREDIR", score_dir_name.c_str());
 
     sf_init();
 
@@ -346,8 +343,7 @@ TEST_F(ScoreFileTest, appendAbbreviationWritesConfiguredFile)
     g_newsgroup_name = "comp.lang.apl";
 
     trn::testing::MockEnvironment env;
-    EXPECT_CALL(env.getter, Call(::testing::StrEq("SCOREDIR")))
-        .WillRepeatedly(::testing::Return(const_cast<char *>(score_dir.c_str())));
+    env.expect_env("SCOREDIR", score_dir.c_str());
     sf_init();
 
     char abbreviation[]{"!file @ abbr-score"};

@@ -138,8 +138,7 @@ TEST_F(ArticleSearchTest, serializesLocalSubjectKillCommand)
 {
     const fs::path    kill_file{m_output_dir / "local-kill"};
     const std::string kill_file_name = kill_file.generic_string();
-    EXPECT_CALL(m_env.getter, Call(::testing::StrEq("KILLLOCAL")))
-        .WillRepeatedly(::testing::Return(const_cast<char *>(kill_file_name.c_str())));
+    m_env.expect_env("KILLLOCAL", kill_file_name.c_str());
 
     char command[]{"/one\\/two/K:j"};
 
@@ -151,8 +150,7 @@ TEST_F(ArticleSearchTest, serializesHeaderKillCommand)
 {
     const fs::path    kill_file{m_output_dir / "header-kill"};
     const std::string kill_file_name = kill_file.generic_string();
-    EXPECT_CALL(m_env.getter, Call(::testing::StrEq("KILLLOCAL")))
-        .WillRepeatedly(::testing::Return(const_cast<char *>(kill_file_name.c_str())));
+    m_env.expect_env("KILLLOCAL", kill_file_name.c_str());
 
     char command[]{"/Casey/KHFrom:+"};
 

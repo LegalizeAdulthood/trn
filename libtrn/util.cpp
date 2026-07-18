@@ -440,7 +440,7 @@ void verify_sig()
     int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A").c_str());
     if (!i)     // found RIPEM
     {
-        i = do_shell(SH, file_exp(get_val_const("VERIFY_RIPEM", VERIFY_RIPEM)).c_str());
+        i = do_shell(SH, file_exp(get_env_var("VERIFY_RIPEM", VERIFY_RIPEM)).c_str());
         std::printf("\nReturned value: %d\n",i);
         return;
     }
@@ -448,7 +448,7 @@ void verify_sig()
     i = do_shell(SH, file_exp("grep -s \"BEGIN PGP\" %A").c_str());
     if (!i)     // found PGP
     {
-        i = do_shell(SH, file_exp(get_val_const("VERIFY_PGP", VERIFY_PGP)).c_str());
+        i = do_shell(SH, file_exp(get_env_var("VERIFY_PGP", VERIFY_PGP)).c_str());
         std::printf("\nReturned value: %d\n",i);
         return;
     }
@@ -765,7 +765,7 @@ int edit_file(const char *fname)
     }
 
     const std::string command = fmt::format(
-        "{} {}", file_exp(get_val_const("VISUAL", get_val_const("EDITOR", DEFAULT_EDITOR))), file_exp(fname));
+        "{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), file_exp(fname));
     term_down(3);
     reset_tty();                  // make sure tty is friendly
     r = do_shell(SH, command.c_str());  // invoke the shell

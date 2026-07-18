@@ -266,13 +266,13 @@ int main(int argc, char *argv[])
     }
     if (!has_fromline)
     {
-        const char *real_name = get_val_const("NAME", g_real_name.c_str());
+        const std::string real_name = get_env_var("NAME", g_real_name);
         output_line = fmt::format("From: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);
         inews_fputs(output_line.c_str());
     }
     if (!std::getenv("NO_ORIGINATOR"))
     {
-        const char *real_name = get_val_const("NAME", g_real_name.c_str());
+        const std::string real_name = get_env_var("NAME", g_real_name);
         output_line = fmt::format("Originator: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);
         inews_fputs(output_line.c_str());
     }

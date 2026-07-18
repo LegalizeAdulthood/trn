@@ -8,6 +8,7 @@
 #include <trn/scoresave.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <trn/cache.h>
 #include <trn/ngdata.h>
 #include <trn/scan.h>
@@ -85,7 +86,7 @@ static void sc_sv_get_file()
 {
     s_lines.clear();
 
-    std::ifstream input{file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores"))};
+    std::ifstream input{file_exp(get_env_var("SAVESCOREFILE", "%+/savedscores"))};
     if (!input)
     {
 // Debug
@@ -110,7 +111,7 @@ void sc_sv_save_file()
     }
 
     g_waiting = true;   // don't interrupt
-    const fs::path savename{file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores"))};
+    const fs::path savename{file_exp(get_env_var("SAVESCOREFILE", "%+/savedscores"))};
     fs::path       temp_name{savename};
     temp_name += ".tmp";
     std::FILE *tmpfp = std::fopen(temp_name.string().c_str(), "w");

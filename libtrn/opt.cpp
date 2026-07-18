@@ -117,7 +117,7 @@ void opt_init(int argc, char *argv[], char *tcbuf)
     set_header_list(HT_DEF_HIDE, HT_HIDE, "");
     set_header_list(HT_DEF_MAGIC, HT_MAGIC, "");
 
-    g_ini_file = file_exp(g_use_threads ? get_val_const("TRNRC", "%+/trnrc") : get_val_const("RNRC", "%+/rnrc"));
+    g_ini_file = file_exp(g_use_threads ? get_env_var("TRNRC", "%+/trnrc") : get_env_var("RNRC", "%+/rnrc"));
 
     const fs::path trn_dir{file_exp("%+")};
     std::error_code error;

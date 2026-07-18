@@ -6,6 +6,7 @@
 #include <trn/respond.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/string_case_compare.h>
 #include <config/user_id.h>
 #include <nntp/nntpclient.h>
@@ -166,7 +167,7 @@ SaveResult save_article()
 
         if (!FILE_REF(destination.c_str())) // relative path?
         {
-            std::string save_directory = file_exp(get_val_const("SAVEDIR", SAVEDIR));
+            std::string save_directory = file_exp(get_env_var("SAVEDIR", SAVEDIR));
             save_directory.reserve(LINE_BUF_LEN);
             if (make_dir(save_directory.c_str(), MD_DIR)) // ensure directory exists
             {
@@ -200,7 +201,7 @@ SaveResult save_article()
         {
             fmt::print("Extracting article into {} using {}\n", fs::current_path().generic_string(), g_extract_prog);
             term_down(1);
-            interp(g_cmd_buf, sizeof g_cmd_buf, get_val_const("CUSTOMSAVER", CUSTOM_SAVER));
+            interp(g_cmd_buf, sizeof g_cmd_buf, get_env_var("CUSTOMSAVER", CUSTOM_SAVER).c_str());
             invoke(g_cmd_buf, nullptr);
         }
         else if (g_is_mime)
@@ -258,7 +259,7 @@ SaveResult save_article()
             case 1:
                 fmt::print("Extracting shar into {}:\n", fs::current_path().generic_string());
                 term_down(1);
-                interp(g_cmd_buf, (sizeof g_cmd_buf), get_val_const("SHARSAVER", SHAR_SAVER));
+                interp(g_cmd_buf, (sizeof g_cmd_buf), get_env_var("SHARSAVER", SHAR_SAVER).c_str());
                 invoke(g_cmd_buf, nullptr);
                 break;
 
@@ -301,7 +302,7 @@ SaveResult save_article()
         {
             nntp_finish_body(FB_SILENT);
         }
-        interp(g_cmd_buf, (sizeof g_cmd_buf), get_val_const("PIPESAVER", PIPE_SAVER));
+        interp(g_cmd_buf, (sizeof g_cmd_buf), get_env_var("PIPESAVER", PIPE_SAVER).c_str());
         // then set up for command
         termlib_reset();
         reset_tty();              // restore tty state
@@ -322,7 +323,7 @@ SaveResult save_article()
     {
         bool  there;
         bool  mailbox;
-        const char *savename = get_val_const("SAVENAME", SAVENAME);
+        const std::string savename = get_env_var("SAVENAME", SAVENAME);
 
         s = g_buf+1;            // skip s or S
         if (*s == '-')          // if they are confused, skip - also
@@ -345,7 +346,7 @@ SaveResult save_article()
         std::string destination = file_exp(s);
         if (!FILE_REF(destination.c_str()))
         {
-            std::string save_directory = file_exp(get_val_const("SAVEDIR", SAVEDIR));
+            std::string save_directory = file_exp(get_env_var("SAVEDIR", SAVEDIR));
             if (make_dir(save_directory.c_str(), MD_DIR)) // ensure directory exists
             {
                 save_directory = g_priv_dir;
@@ -384,7 +385,7 @@ SaveResult save_article()
             }
             else
             {
-                const char *dflt = (in_string(savename, "%a", true) ? "nyq" : "ynq");
+                const char *dflt = (in_string(savename.c_str(), "%a", true) ? "nyq" : "ynq");
 
 reask_save:
                 in_char(fmt::format("\nFile {} doesn't exist--\n        use mailbox format?", destination).c_str(),
@@ -640,7 +641,7 @@ int cancel_article()
     }
     std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
     std::string from_buf = fetch_lines(g_art, FROM_LINE);
-    if (!string_case_equal(get_val_const("FROM", ""), from_buf.c_str())      //
+    if (!string_case_equal(get_env_var("FROM"), from_buf)                    //
         && (!in_string(from_buf.c_str(), g_host_name.c_str(), false)         //
             || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
                 && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
@@ -653,7 +654,7 @@ int cancel_article()
         if (g_debug)
         {
             fmt::print("\n{}@{} != {}\n", g_login_name, g_host_name, from_buf);
-            fmt::print("{} != {}\n", get_val_const("FROM", ""), from_buf);
+            fmt::print("{} != {}\n", get_env_var("FROM"), from_buf);
             term_down(3);
         }
 #endif
@@ -676,12 +677,12 @@ int cancel_article()
             term_down(1);
             goto done;
         }
-        interp(hbuf, sizeof hbuf, get_val_const("CANCELHEADER", CANCEL_HEADER));
+        interp(hbuf, sizeof hbuf, get_env_var("CANCELHEADER", CANCEL_HEADER).c_str());
         std::fputs(hbuf,header);
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
         term_down(2);
-        r = do_shell(SH, file_exp(get_val_const("CANCEL", CALL_INEWS)).c_str());
+        r = do_shell(SH, file_exp(get_env_var("CANCEL", CALL_INEWS)).c_str());
     }
 done:
     return r;
@@ -709,7 +710,7 @@ int supersede_article()         // Supersedes:
     }
     std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
     std::string from_buf = fetch_lines(g_art, FROM_LINE);
-    if (!string_case_equal(get_val_const("FROM", ""), from_buf.c_str())      //
+    if (!string_case_equal(get_env_var("FROM"), from_buf)                    //
         && (!in_string(from_buf.c_str(), g_host_name.c_str(), false)         //
             || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
                 && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
@@ -722,7 +723,7 @@ int supersede_article()         // Supersedes:
         if (g_debug)
         {
             fmt::print("\n{}@{} != {}\n", g_login_name, g_host_name, from_buf);
-            fmt::print("{} != {}\n", get_val_const("FROM", ""), from_buf);
+            fmt::print("{} != {}\n", get_env_var("FROM"), from_buf);
             term_down(3);
         }
 #endif
@@ -745,7 +746,7 @@ int supersede_article()         // Supersedes:
             term_down(1);
             goto done;
         }
-        interp(hbuf, sizeof hbuf, get_val_const("SUPERSEDEHEADER", SUPERSEDE_HEADER));
+        interp(hbuf, sizeof hbuf, get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER).c_str());
         std::fputs(hbuf,header);
         if (incl_body && g_art_fp != nullptr)
         {
@@ -771,7 +772,7 @@ static int nntp_date()
 
 static void follow_it_up()
 {
-    if (invoke(file_exp(get_val_const("NEWSPOSTER", NEWS_POSTER)).c_str(), //
+    if (invoke(file_exp(get_env_var("NEWSPOSTER", NEWS_POSTER)).c_str(), //
                g_orig_dir.c_str()) == 42)
     {
         int ret;
@@ -819,7 +820,7 @@ void reply()
 {
     char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'R' && g_art);
-    const std::string mail_doer{get_val_const("MAILPOSTER", MAIL_POSTER)};
+    const std::string mail_doer = get_env_var("MAILPOSTER", MAIL_POSTER);
 
     art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
@@ -829,7 +830,7 @@ void reply()
         term_down(1);
         return;
     }
-    interp(hbuf, sizeof hbuf, get_val_const("MAILHEADER", MAIL_HEADER));
+    interp(hbuf, sizeof hbuf, get_env_var("MAILHEADER", MAIL_HEADER).c_str());
     std::fputs(hbuf,header);
     if (!in_string(mail_doer.c_str(), "%h", true))
     {
@@ -846,7 +847,7 @@ void reply()
     if (incl_body && g_art_fp != nullptr)
     {
         char* s;
-        interp(g_buf, (sizeof g_buf), get_val_const("YOUSAID", YOU_SAID));
+        interp(g_buf, (sizeof g_buf), get_env_var("YOUSAID", YOU_SAID).c_str());
         std::fprintf(header,"%s\n",g_buf);
         parse_header(g_art);
         mime_set_article();
@@ -876,7 +877,7 @@ void reply()
 void forward()
 {
     char hbuf[5*LINE_BUF_LEN];
-    const std::string mail_doer{get_val_const("FORWARDPOSTER", FORWARD_POSTER)};
+    const std::string mail_doer = get_env_var("FORWARDPOSTER", FORWARD_POSTER);
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
@@ -896,7 +897,7 @@ void forward()
         term_down(1);
         goto done;
     }
-    interp(hbuf, sizeof hbuf, get_val_const("FORWARDHEADER", FORWARD_HEADER));
+    interp(hbuf, sizeof hbuf, get_env_var("FORWARDHEADER", FORWARD_HEADER).c_str());
     std::fputs(hbuf,header);
 #ifdef REGEX_WORKS_RIGHT
     if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
@@ -968,7 +969,7 @@ void forward()
     }
     if (g_art_fp != nullptr)
     {
-        interp(g_buf, sizeof g_buf, get_val_const("FORWARDMSG", FORWARD_MSG));
+        interp(g_buf, sizeof g_buf, get_env_var("FORWARDMSG", FORWARD_MSG).c_str());
         if (mime_boundary)
         {
             if (*g_buf && string_case_compare(g_buf, "Content-", 8))
@@ -999,7 +1000,7 @@ void forward()
         }
         else
         {
-            interp(g_buf, (sizeof g_buf), get_val_const("FORWARDMSGEND", FORWARD_MSG_END));
+            interp(g_buf, (sizeof g_buf), get_env_var("FORWARDMSGEND", FORWARD_MSG_END).c_str());
             if (*g_buf)
             {
                 std::fprintf(header, "%s\n", g_buf);
@@ -1044,7 +1045,7 @@ void followup()
         g_art = oldart;
         return;
     }
-    interp(hbuf, sizeof hbuf, get_val_const("NEWSHEADER", NEWS_HEADER));
+    interp(hbuf, sizeof hbuf, get_env_var("NEWSHEADER", NEWS_HEADER).c_str());
     std::fputs(hbuf,header);
     if (incl_body && g_art_fp != nullptr)
     {
@@ -1056,7 +1057,7 @@ void followup()
                   "trim the quoted article down as much as possible.)\n",
                   stdout);
         }
-        interp(g_buf, (sizeof g_buf), get_val_const("ATTRIBUTION", ATTRIBUTION));
+        interp(g_buf, (sizeof g_buf), get_env_var("ATTRIBUTION", ATTRIBUTION).c_str());
         std::fprintf(header,"%s\n",g_buf);
         parse_header(g_art);
         mime_set_article();

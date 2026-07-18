@@ -6,6 +6,7 @@
 #include <trn/intrp.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/pipe_io.h>
 #include <config/user_id.h>
 #include <trn/artio.h>
@@ -278,6 +279,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
         if (*pattern == '%' && pattern[1])
         {
             char spfbuf[512];
+            std::string env_value;
             std::string search_command;
             std::string transform_text;
             std::string format_input;
@@ -385,7 +387,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     {
                         m = s_empty;
                     }
-                    s = get_val(scrbuf,m);
+                    env_value = get_env_var(scrbuf, m);
+                    s = env_value.data();
                     break;
                 }
 
@@ -402,7 +405,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     {
                         s = s_empty;
                     }
-                    interp(scrbuf, 8192, get_val(scrbuf, s));
+                    env_value = get_env_var(scrbuf, s);
+                    interp(scrbuf, 8192, env_value.c_str());
                     s = scrbuf;
                     break;
                 }
@@ -858,22 +862,22 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'N':                       // full name
-                    std::strcpy(scrbuf, g_real_name.c_str());
-                    s = get_val("NAME", scrbuf);
+                    env_value = get_env_var("NAME", g_real_name);
+                    s = env_value.data();
                     break;
 
                 case 'o': // organization
                 {
 #ifdef IGNORE_ORG
-                    s = get_val("NEWSORG", s_orgname);
+                    env_value = get_env_var("NEWSORG", s_orgname);
 #else
-                    s = get_val("NEWSORG", nullptr);
-                    if (s == nullptr)
+                    env_value = get_env_var("NEWSORG");
+                    if (env_value.empty())
                     {
-                        std::strcpy(scrbuf, ORG_NAME);
-                        s = get_val("ORGANIZATION", scrbuf);
+                        env_value = get_env_var("ORGANIZATION", ORG_NAME);
                     }
 #endif
+                    s = env_value.data();
                     const std::string org_file = file_exp(s);
                     if (FILE_REF(org_file.c_str()))
                     {
