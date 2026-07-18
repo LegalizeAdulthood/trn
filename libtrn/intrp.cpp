@@ -31,6 +31,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #ifdef HAS_UNAME
 #include <sys/utsname.h>
 struct utsname utsn;
@@ -44,6 +46,8 @@ struct utsname utsn;
 #include <optional>
 #include <string>
 #include <string_view>
+
+namespace fs = std::filesystem;
 
 std::string g_orig_dir;    // cwd when rn invoked
 std::string g_host_name;   // host name to match local postings
@@ -60,7 +64,7 @@ static void abort_interp();
 
 static const char   *s_regexp_specials = "^$.*[\\/?%";
 static CompiledRegex s_cond_compex;
-static char          s_empty[]{""};
+static constexpr char s_empty[]{""};
 static std::string   s_last_input;
 
 void interp_init(char *tcbuf, int tcbuf_len)
@@ -269,28 +273,110 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
     std::optional<std::string> line_buf;
     char                      *line_split = nullptr;
     char                      *orig_dest = dest;
-    char                       scrbuf[8192];
-    char                       space_text[]{" "};
-    char                       noname_text[]{"noname"};
-    int metabit = 0;
+    const std::size_t          scratch_size = 8192;
+    const std::size_t          format_size = 512;
+    std::string                scratch;
+    const char                *space_text = " ";
+    const char                *noname_text = "noname";
+    int                        metabit = 0;
+
+    scratch.reserve(scratch_size);
+    const auto assign_scratch = [&scratch](std::string_view text) -> const char *
+    {
+        scratch.assign(text);
+        return scratch.c_str();
+    };
+    const auto make_scratch_buffer = [&scratch, scratch_size]() -> char *
+    {
+        scratch.assign(scratch_size, '\0');
+        return scratch.data();
+    };
+    const auto trim_scratch = [&scratch]()
+    {
+        const std::size_t end = scratch.find('\0');
+        if (end != std::string::npos)
+        {
+            scratch.resize(end);
+        }
+    };
+    const auto copy_till_scratch = [&scratch](const char *from, int delim) -> const char *
+    {
+        scratch.clear();
+        while (*from)
+        {
+            if (*from == '\\' && from[1] == delim)
+            {
+                from++;
+            }
+            else if (*from == delim)
+            {
+                break;
+            }
+            scratch.push_back(*from++);
+        }
+        return from;
+    };
+    const auto do_interp_scratch = [&make_scratch_buffer, &scratch, &trim_scratch,
+                                    cmd](const char *interp_pattern, const char *interp_stoppers) -> const char *
+    {
+        char       *buffer = make_scratch_buffer();
+        const int   buffer_size = static_cast<int>(scratch.size());
+        const char *next = do_interp(buffer, buffer_size, interp_pattern, interp_stoppers, cmd);
+        trim_scratch();
+        return next;
+    };
+    const auto read_scratch_line = [&make_scratch_buffer, &scratch, &trim_scratch](std::FILE *fp) -> bool
+    {
+        char     *buffer = make_scratch_buffer();
+        const int buffer_size = static_cast<int>(scratch.size());
+        if (std::fgets(buffer, buffer_size, fp) == nullptr)
+        {
+            scratch.clear();
+            return false;
+        }
+        trim_scratch();
+        return true;
+    };
 
     while (*pattern && (!stoppers || !std::strchr(stoppers, *pattern)))
     {
         if (*pattern == '%' && pattern[1])
         {
-            char spfbuf[512];
             std::string env_value;
+            std::string format_spec;
             std::string search_command;
             std::string transform_text;
             std::string format_input;
-            bool upper = false;
-            bool lastcomp = false;
-            bool re_quote = false;
-            int tick_quote = 0;
-            bool address_parse = false;
-            bool comment_parse = false;
-            bool proc_sprintf = false;
-            char *s = nullptr;
+            bool        upper = false;
+            bool        lastcomp = false;
+            bool        re_quote = false;
+            int         tick_quote = 0;
+            bool        address_parse = false;
+            bool        comment_parse = false;
+            bool        proc_sprintf = false;
+            const char *s = nullptr;
+            const auto  make_mutable_text = [&s, &scratch, &transform_text]() -> char *
+            {
+                if (s != scratch.data() && s != transform_text.data())
+                {
+                    transform_text = s;
+                    s = transform_text.c_str();
+                }
+                return s == scratch.data() ? scratch.data() : transform_text.data();
+            };
+            const auto format_scratch = [&scratch](const char *format, const char *value) -> const char *
+            {
+                const int size = std::snprintf(nullptr, 0, format, value);
+                if (size < 0)
+                {
+                    scratch.clear();
+                    return scratch.c_str();
+                }
+                scratch.assign(static_cast<std::size_t>(size) + 1, '\0');
+                std::snprintf(scratch.data(), scratch.size(), format, value);
+                scratch.resize(static_cast<std::size_t>(size));
+                return scratch.c_str();
+            };
             while (s == nullptr)
             {
                 switch (*++pattern)
@@ -322,23 +408,22 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case ':':
                 {
                     proc_sprintf = true;
-                    char *h = spfbuf;
-                    *h++ = '%';
-                    pattern++;  // Skip over ':'
+                    format_spec.reserve(format_size);
+                    format_spec = '%';
+                    pattern++;      // Skip over ':'
                     while (*pattern //
                            && (*pattern == '.' || *pattern == '-' || isdigit(*pattern)))
                     {
-                        *h++ = *pattern++;
-                     }
-                    *h++ = 's';
-                    *h++ = '\0';
+                        format_spec += *pattern++;
+                    }
+                    format_spec += 's';
                     pattern--;
                     break;
                 }
 
                 case '/':
                 {
-                    search_command.reserve(sizeof scrbuf);
+                    search_command.reserve(scratch_size);
                     if (!cmd || !std::strchr("/?g", *cmd))
                     {
                         search_command += '/';
@@ -370,58 +455,60 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             }
                         }
                     }
-                    s = search_command.data();
+                    s = search_command.c_str();
                     break;
                 }
 
                 case '{':
                 {
                     const char *pattern_start = pattern + 1;
-                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, '}') - pattern_start);
-                    char *m = std::strchr(scrbuf, '-');
+                    pattern = copy_till_scratch(pattern_start, '}');
+                    const char *m = std::strchr(scratch.c_str(), '-');
                     if (m != nullptr)
                     {
-                        *m++ = '\0';
+                        scratch[static_cast<std::size_t>(m - scratch.c_str())] = '\0';
+                        m++;
                     }
                     else
                     {
                         m = s_empty;
                     }
-                    env_value = get_env_var(scrbuf, m);
-                    s = env_value.data();
+                    env_value = get_env_var(scratch.c_str(), m);
+                    s = env_value.c_str();
                     break;
                 }
 
                 case '<':
                 {
                     const char *pattern_start = pattern + 1;
-                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, '>') - pattern_start);
-                    s = std::strchr(scrbuf, '-');
+                    pattern = copy_till_scratch(pattern_start, '>');
+                    s = std::strchr(scratch.c_str(), '-');
                     if (s != nullptr)
                     {
-                        *s++ = '\0';
+                        scratch[static_cast<std::size_t>(s - scratch.c_str())] = '\0';
+                        s++;
                     }
                     else
                     {
                         s = s_empty;
                     }
-                    env_value = get_env_var(scrbuf, s);
-                    interp(scrbuf, 8192, env_value.c_str());
-                    s = scrbuf;
+                    env_value = get_env_var(scratch.c_str(), s);
+                    env_value = do_interp(env_value);
+                    s = env_value.c_str();
                     break;
                 }
 
                 case '[':
                 {
                     const char *pattern_start = pattern + 1;
-                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, ']') - pattern_start);
+                    pattern = copy_till_scratch(pattern_start, ']');
                     if (g_in_ng)
                     {
                         HeaderLineType which_line;
-                        if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
+                        if (!scratch.empty() && (which_line = get_header_num(scratch.c_str())) != SOME_LINE)
                         {
                             line_buf = fetch_lines(g_art, which_line);
-                            s = line_buf->data();
+                            s = line_buf->c_str();
                         }
                         else
                         {
@@ -452,42 +539,43 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         goto getout;
                     }
                     const char *pattern_start = pattern + 1;
-                    pattern = pattern_start + (copy_till(scrbuf, pattern_start, '?') - pattern_start);
+                    pattern = copy_till_scratch(pattern_start, '?');
                     if (!*pattern)
                     {
                         goto getout;
                     }
-                    s = scrbuf;
-                    char *h = spfbuf;
+                    s = scratch.c_str();
+                    format_spec.clear();
+                    format_spec.reserve(format_size);
                     proc_sprintf = false;
-                    do
+                    for (const char *scan = s; *scan; scan++)
                     {
-                        switch (*s)
+                        switch (*scan)
                         {
                         case '^':
-                            *h++ = '\\';
+                            format_spec += '\\';
                             break;
 
                         case '\\':
-                            *h++ = '\\';
-                            *h++ = '\\';
+                            format_spec += '\\';
+                            format_spec += '\\';
                             break;
 
                         case '%':
                             proc_sprintf = true;
                             break;
                         }
-                        *h++ = *s;
-                    } while (*s++);
+                        format_spec += *scan;
+                    }
                     if (proc_sprintf)
                     {
-                        do_interp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
+                        do_interp_scratch(format_spec.c_str(), nullptr);
                         proc_sprintf = false;
                     }
-                    const char *compile_error = s_cond_compex.compile(scrbuf, true, true);
+                    const char *compile_error = s_cond_compex.compile(scratch.c_str(), true, true);
                     if (compile_error != nullptr)
                     {
-                        std::printf("%s: %s\n",scrbuf,compile_error);
+                        fmt::print("{}: {}\n", scratch, compile_error);
                         pattern += std::strlen(pattern);
                         s_cond_compex.free_compex();
                         goto getout;
@@ -524,86 +612,82 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case '`':
                 {
-                    pattern = do_interp(scrbuf,(sizeof scrbuf),pattern+1,"`",cmd);
-                    std::FILE* pipefp = popen(scrbuf,"r");
+                    pattern = do_interp_scratch(pattern + 1, "`");
+                    std::FILE *pipefp = popen(scratch.c_str(), "r");
                     if (pipefp != nullptr)
                     {
-                        int len = std::fread(scrbuf, sizeof(char), (sizeof scrbuf) - 1, pipefp);
-                        scrbuf[len] = '\0';
+                        scratch.assign(scratch_size, '\0');
+                        const std::size_t len = std::fread(scratch.data(), sizeof(char), scratch.size() - 1, pipefp);
+                        scratch.resize(len);
                         pclose(pipefp);
                     }
                     else
                     {
-                        std::printf("\nCan't run %s\n",scrbuf);
-                        *scrbuf = '\0';
+                        fmt::print("\nCan't run {}\n", scratch);
+                        scratch.clear();
                     }
-                    for (char *t = scrbuf; *t; t++)
+                    for (std::size_t i = 0; i < scratch.size(); i++)
                     {
-                        if (*t == '\n')
+                        if (scratch[i] == '\n')
                         {
-                            if (t[1])
+                            if (i + 1 < scratch.size())
                             {
-                                *t = ' ';
+                                scratch[i] = ' ';
                             }
                             else
                             {
-                                *t = '\0';
+                                scratch.resize(i);
+                                break;
                             }
                         }
                     }
-                    s = scrbuf;
+                    s = scratch.c_str();
                     break;
                 }
 
                 case '"':
                 {
-                    pattern = do_interp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
-                    std::fputs(scrbuf,stdout);
+                    pattern = do_interp_scratch(pattern + 1, "\"");
+                    fmt::print("{}", scratch);
                     reset_tty();
-                    std::fgets(scrbuf, sizeof scrbuf, stdin);
+                    read_scratch_line(stdin);
                     no_echo();
                     cr_mode();
-                    int i = std::strlen(scrbuf);
-                    if (scrbuf[i - 1] == '\n')
+                    if (!scratch.empty() && scratch.back() == '\n')
                     {
-                        scrbuf[--i] = '\0';
+                        scratch.pop_back();
                     }
-                    s_last_input = scrbuf;
-                    s = scrbuf;
+                    s_last_input = scratch;
+                    s = scratch.c_str();
                     break;
                 }
 
                 case '~':
-                    std::strcpy(scrbuf, g_home_dir.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_home_dir);
                     break;
 
                 case '.':
-                    std::strcpy(scrbuf, g_dot_dir.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_dot_dir);
                     break;
 
                 case '+':
-                    std::strcpy(scrbuf, g_trn_dir.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_trn_dir);
                     break;
 
                 case '$':
-                    std::sprintf(scrbuf, "%ld", g_our_pid);
-                    s = scrbuf;
+                    s = assign_scratch(std::to_string(g_our_pid));
                     break;
 
                 case '#':
                     if (upper)
                     {
                         static int counter = 0;
-                        std::sprintf(scrbuf, "%d", ++counter);
+                        s = assign_scratch(std::to_string(++counter));
                     }
                     else
                     {
-                        std::sprintf(scrbuf, "%d", g_perform_count);
+                        s = assign_scratch(std::to_string(g_perform_count));
                     }
-                    s = scrbuf;
                     break;
 
                 case '?':
@@ -613,15 +697,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case '0': case '1': case '2': case '3': case '4':
                 case '5': case '6': case '7': case '8': case '9':
-                    std::strcpy(scrbuf, g_bra_compex->get_bracket(*pattern - '0'));
-                    s = scrbuf;
+                    s = assign_scratch(g_bra_compex->get_bracket(*pattern - '0'));
                     break;
 
                 case 'a':
                     if (g_in_ng)
                     {
-                        s = scrbuf;
-                        std::sprintf(s,"%ld", g_art.value_of());
+                        s = assign_scratch(std::to_string(g_art.value_of()));
                     }
                     else
                     {
@@ -637,8 +719,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             if (art_open(g_art, (ArticlePosition) 0))
                             {
                                 nntp_finish_body(FB_SILENT);
-                                std::sprintf(s = scrbuf, "%s/%s", g_data_source->m_spool_dir.c_str(),
-                                             nntp_art_name(g_art, false).c_str());
+                                s = assign_scratch(
+                                    fmt::format("{}/{}", g_data_source->m_spool_dir, nntp_art_name(g_art, false)));
                             }
                             else
                             {
@@ -647,8 +729,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         }
                         else
                         {
-                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->m_spool_dir.c_str(),
-                                         g_newsgroup_dir.c_str(), g_art.value_of());
+                            s = assign_scratch(
+                                fmt::format("{}/{}/{}", g_data_source->m_spool_dir, g_newsgroup_dir, g_art.value_of()));
                         }
                     }
                     else
@@ -658,30 +740,25 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'b':
-                    std::strcpy(scrbuf, g_save_dest.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_save_dest);
                     break;
 
                 case 'B':
-                    s = scrbuf;
-                    std::sprintf(s,"%ld", g_save_from.value_of());
+                    s = assign_scratch(std::to_string(g_save_from.value_of()));
                     break;
 
                 case 'c':
-                    std::strcpy(scrbuf, g_newsgroup_dir.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_newsgroup_dir);
                     break;
 
                 case 'C':
-                    std::strcpy(scrbuf, g_newsgroup_name.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_newsgroup_name);
                     break;
 
                 case 'd':
                     if (!g_newsgroup_dir.empty())
                     {
-                        std::sprintf(scrbuf, "%s/%s", g_data_source->m_spool_dir.c_str(), g_newsgroup_dir.c_str());
-                        s = scrbuf;
+                        s = assign_scratch(fmt::format("{}/{}", g_data_source->m_spool_dir, g_newsgroup_dir));
                     }
                     else
                     {
@@ -693,7 +770,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_in_ng)
                     {
                         dist_buf = fetch_lines(g_art, DIST_LINE);
-                        s = dist_buf->data();
+                        s = dist_buf->c_str();
                     }
                     else
                     {
@@ -703,15 +780,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case 'e':
                 {
-                    static char dash[]{"-"};
                     if (g_extract_prog.empty())
                     {
-                        s = dash;
+                        s = "-";
                     }
                     else
                     {
-                        std::strcpy(scrbuf, g_extract_prog.c_str());
-                        s = scrbuf;
+                        s = assign_scratch(g_extract_prog);
                     }
                     break;
                 }
@@ -723,8 +798,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     }
                     else
                     {
-                        std::strcpy(scrbuf, g_extract_dest.c_str());
-                        s = scrbuf;
+                        s = assign_scratch(g_extract_dest);
                     }
                     break;
 
@@ -739,7 +813,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             {
                                 reply_buf = fetch_lines(g_art, REPLY_LINE);
                             }
-                            s = reply_buf->data();
+                            s = reply_buf->c_str();
                         }
                         else
                         {
@@ -747,7 +821,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             {
                                 from_buf = fetch_lines(g_art, FROM_LINE);
                             }
-                            s = from_buf->data();
+                            s = from_buf->c_str();
                         }
                     }
                     else
@@ -764,12 +838,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                                         // is there a Followup-To line?
                         {
                             follow_buf = fetch_lines(g_art, FOLLOW_LINE);
-                            s = follow_buf->data();
+                            s = follow_buf->c_str();
                         }
                         else
                         {
                             ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-                            s = ngs_buf->data();
+                            s = ngs_buf->c_str();
                         }
                     }
                     else
@@ -779,19 +853,16 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'g':                       // general mode
-                    scrbuf[0] = static_cast<char>(g_general_mode);
-                    scrbuf[1] = '\0';
-                    s = scrbuf;
+                    scratch.assign(1, static_cast<char>(g_general_mode));
+                    s = scratch.c_str();
                     break;
 
                 case 'h':                       // header file name
-                    std::strcpy(scrbuf, g_head_name.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_head_name);
                     break;
 
                 case 'H':                       // host name in postings
-                    std::strcpy(scrbuf, g_p_host_name.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_p_host_name);
                     break;
 
                 case 'i':
@@ -801,11 +872,10 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         {
                             artid_buf = fetch_lines(g_art, MSG_ID_LINE);
                         }
-                        s = artid_buf->data();
+                        s = artid_buf->c_str();
                         if (*s && *s != '<')
                         {
-                            std::sprintf(scrbuf,"<%s>",artid_buf->c_str());
-                            s = scrbuf;
+                            s = assign_scratch(fmt::format("<{}>", *artid_buf));
                         }
                     }
                     else
@@ -815,45 +885,39 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'I':                       // indent string for quoting
-                    std::sprintf(scrbuf,"'%s'",g_indent_string.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(fmt::format("'{}'", g_indent_string));
                     break;
 
                 case 'j':
-                    s = scrbuf;
-                    std::sprintf(scrbuf,"%d",g_just_a_sec*10);
+                    s = assign_scratch(std::to_string(g_just_a_sec * 10));
                     break;
 
                 case 'l':                       // news admin login
 #ifdef HAS_NEWS_ADMIN
-                    std::strcpy(scrbuf, g_news_admin.c_str());
+                    s = assign_scratch(g_news_admin);
 #else
-                    std::strcpy(scrbuf, "???");
+                    s = "???";
 #endif
-                    s = scrbuf;
                     break;
 
                 case 'L':                       // login id
-                    std::strcpy(scrbuf, g_login_name.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_login_name);
                     break;
 
                 case 'm':               // current mode
-                    s = scrbuf;
-                    *s = static_cast<char>(g_mode);
-                    s[1] = '\0';
+                    scratch.assign(1, static_cast<char>(g_mode));
+                    s = scratch.c_str();
                     break;
 
                 case 'M':
-                    std::sprintf(scrbuf,"%ld",(long)g_dm_count);
-                    s = scrbuf;
+                    s = assign_scratch(std::to_string(g_dm_count));
                     break;
 
                 case 'n':                       // newsgroups
                     if (g_in_ng)
                     {
                         ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-                        s = ngs_buf->data();
+                        s = ngs_buf->c_str();
                     }
                     else
                     {
@@ -863,7 +927,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case 'N':                       // full name
                     env_value = get_env_var("NAME", g_real_name);
-                    s = env_value.data();
+                    s = env_value.c_str();
                     break;
 
                 case 'o': // organization
@@ -877,7 +941,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         env_value = get_env_var("ORGANIZATION", ORG_NAME);
                     }
 #endif
-                    s = env_value.data();
+                    s = env_value.c_str();
                     const std::string org_file = file_exp(s);
                     if (FILE_REF(org_file.c_str()))
                     {
@@ -885,17 +949,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                         if (ofp)
                         {
-                            if (std::fgets(scrbuf, sizeof scrbuf, ofp) == nullptr)
-                            {
-                                *scrbuf = '\0';
-                            }
+                            read_scratch_line(ofp);
                             std::fclose(ofp);
-                            s = scrbuf + std::strlen(scrbuf) - 1;
-                            if (*scrbuf && *s == '\n')
+                            if (!scratch.empty() && scratch.back() == '\n')
                             {
-                                *s = '\0';
+                                scratch.pop_back();
                             }
-                            s = scrbuf;
+                            s = scratch.c_str();
                         }
                         else
                         {
@@ -906,20 +966,17 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
 
                 case 'O':
-                    std::strcpy(scrbuf, g_orig_dir.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_orig_dir);
                     break;
 
                 case 'p':
-                    std::strcpy(scrbuf, g_priv_dir.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_priv_dir);
                     break;
 
                 case 'P':
                     if (g_data_source)
                     {
-                        std::strcpy(scrbuf, g_data_source->m_spool_dir.c_str());
-                        s = scrbuf;
+                        s = assign_scratch(g_data_source->m_spool_dir);
                     }
                     else
                     {
@@ -928,8 +985,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'q':
-                    std::strcpy(scrbuf, s_last_input.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(s_last_input);
                     break;
 
                 case 'r':
@@ -1008,7 +1064,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         refs_buf->append(*artid_buf);
                         refs_buf->push_back('>');
                     }
-                    s = refs_buf->data();
+                    s = refs_buf->c_str();
                     break;
                 }
 
@@ -1054,12 +1110,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         {
                             reply_buf = fetch_lines(g_art, REPLY_LINE);
                         }
-                        s = reply_buf->data();
+                        s = reply_buf->c_str();
                     }
                     else if (!from_buf)
                     {
                         from_buf = fetch_lines(g_art, FROM_LINE);
-                        s = from_buf->data();
+                        s = from_buf->c_str();
                     }
                     else
                     {
@@ -1071,7 +1127,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         {
                                         // should we substitute path?
                             path_buf = fetch_lines(g_art, PATH_LINE);
-                            s = path_buf->data();
+                            s = path_buf->c_str();
                         }
                         int i = std::strlen(g_p_host_name.c_str());
                         if (!std::strncmp(g_p_host_name.c_str(),s,i) && s[i] == '!')
@@ -1085,8 +1141,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'u':
                     if (g_in_ng)
                     {
-                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->m_to_read);
-                        s = scrbuf;
+                        s = assign_scratch(std::to_string(g_newsgroup_ptr->m_to_read));
                     }
                     else
                     {
@@ -1105,13 +1160,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_selected_only)
                     {
                         const bool selected = g_curr_artp != nullptr && (g_curr_artp->m_flags & AF_SEL) != AF_NONE;
-                        std::sprintf(scrbuf, "%ld", g_selected_count - (selected && unseen ? 1 : 0));
+                        s = assign_scratch(std::to_string(g_selected_count - (selected && unseen ? 1 : 0)));
                     }
                     else
                     {
-                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->m_to_read - (unseen ? 1 : 0));
+                        s = assign_scratch(std::to_string(g_newsgroup_ptr->m_to_read - (unseen ? 1 : 0)));
                     }
-                    s = scrbuf;
                     break;
                 }
 
@@ -1121,9 +1175,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     {
                         const bool selected = g_curr_artp && g_curr_artp->m_flags & AF_SEL;
                         const bool unseen = g_art <= g_last_art && !was_read(g_art);
-                        std::sprintf(scrbuf, "%ld",
-                                g_newsgroup_ptr->m_to_read - g_selected_count - (!selected && unseen ? 1 : 0));
-                        s = scrbuf;
+                        s = assign_scratch(std::to_string(g_newsgroup_ptr->m_to_read - g_selected_count -
+                                                          (!selected && unseen ? 1 : 0)));
                     }
                     else
                     {
@@ -1133,18 +1186,15 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
 
                 case 'V':
-                    std::strcpy(scrbuf, g_patch_level.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_patch_level);
                     break;
 
                 case 'x':                           // news library
-                    std::strcpy(scrbuf, g_lib.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_lib);
                     break;
 
                 case 'X':                           // rn library
-                    std::strcpy(scrbuf, g_rn_lib.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_rn_lib);
                     break;
 
                 case 'y':       // from line with *-shortening
@@ -1153,16 +1203,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         s = s_empty;
                         break;
                     }
-                    // XXX Rewrite this!
-                    {   // sick, but I don't want to hunt down a buf...
-                        static char tmpbuf[1024];
-                        std::string s2;
-                        char* s3;
-                        int i = 0;
+                    {
+                        from_buf = fetch_lines(g_art, FROM_LINE);
+                        char *at = from_buf->data();
+                        char *s3 = nullptr;
+                        int   i = 0;
 
-                        s2 = fetch_lines(g_art,FROM_LINE);
-                        std::strcpy(tmpbuf,s2.c_str());
-                        char *at = tmpbuf;
                         for (; (*at && (*at != '@') && (*at != ' ')); at++)
                         {
                         }
@@ -1176,7 +1222,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                                 }
                             }
                         }
-                        if (i>1)   // more than one dot
+                        if (i > 1)   // more than one dot
                         {
                             s3 = at;    // will be incremented before use
                             while (i >= 2)
@@ -1187,23 +1233,21 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                                     i--;
                                 }
                             }
-                            at++;
-                            *at = '*';
-                            at++;
-                            *at = '\0';
-                            from_buf = std::string{tmpbuf} + s3;
+                            const std::size_t replace_pos = static_cast<std::size_t>(at + 1 - from_buf->data());
+                            const std::size_t suffix_pos = static_cast<std::size_t>(s3 - from_buf->data());
+                            std::string       shortened_from;
+                            shortened_from.reserve(1024);
+                            shortened_from.append(*from_buf, 0, replace_pos);
+                            shortened_from.push_back('*');
+                            shortened_from.append(*from_buf, suffix_pos, std::string::npos);
+                            from_buf = std::move(shortened_from);
                         }
-                        else
-                        {
-                            from_buf = tmpbuf;
-                        }
-                        s = from_buf->data();
+                        s = from_buf->c_str();
                     }
                     break;
 
                 case 'Y':
-                    std::strcpy(scrbuf, g_tmp_dir.c_str());
-                    s = scrbuf;
+                    s = assign_scratch(g_tmp_dir);
                     break;
 
                 case 'z':
@@ -1212,8 +1256,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         s = s_empty;
                         break;
                     }
-                    std::sprintf(scrbuf, "%5s", std::to_string(std::filesystem::file_size(std::to_string(g_art.value_of()))).c_str());
-                    s = scrbuf;
+                    s = assign_scratch(fmt::format("{:>5}", fs::file_size(std::to_string(g_art.value_of()))));
                     break;
 
                 case 'Z':
@@ -1223,8 +1266,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     }
                     else
                     {
-                        std::sprintf(scrbuf,"%ld",(long)g_selected_count);
-                        s = scrbuf;
+                        s = assign_scratch(std::to_string(g_selected_count));
                     }
                     break;
 
@@ -1244,14 +1286,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             }
             if (proc_sprintf)
             {
-                if (s == scrbuf)
+                if (s == scratch.data())
                 {
-                    format_input.reserve(sizeof scrbuf);
-                    format_input = scrbuf;
-                    s = format_input.data();
+                    format_input.reserve(scratch_size);
+                    format_input = scratch;
+                    s = format_input.c_str();
                 }
-                std::sprintf(scrbuf, spfbuf, s);
-                s = scrbuf;
+                s = format_scratch(format_spec.c_str(), s);
             }
             if (*pattern)
             {
@@ -1259,16 +1300,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             }
             if (upper || lastcomp)
             {
-                if (s != scrbuf && s != transform_text.data())
+                char *mutable_s = make_mutable_text();
+                char *t;
+                if (upper || !(t = std::strrchr(mutable_s, '/')))
                 {
-                    transform_text.reserve(sizeof scrbuf);
-                    transform_text = s;
-                    s = transform_text.data();
-                }
-                char* t;
-                if (upper || !(t = std::strrchr(s,'/')))
-                {
-                    t = s;
+                    t = mutable_s;
                 }
                 while (*t && !std::isalpha(*t))
                 {
@@ -1290,25 +1326,22 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             // A maze of twisty little conditions, all alike...
             if (address_parse || comment_parse)
             {
-                if (s != scrbuf && s != transform_text.data())
-                {
-                    transform_text.reserve(sizeof scrbuf);
-                    transform_text = s;
-                    s = transform_text.data();
-                }
-                decode_header(s, s);
+                char *mutable_s = make_mutable_text();
+                decode_header(mutable_s, mutable_s);
+                s = mutable_s;
                 if (address_parse)
                 {
-                    char *h = std::strchr(s, '<');
+                    char *h = std::strchr(mutable_s, '<');
                     if (h != nullptr)   // grab the good part
                     {
-                        s = h+1;
-                        if ((h=std::strchr(s,'>')) != nullptr)
+                        char *value_start = h + 1;
+                        s = value_start;
+                        if ((h = std::strchr(value_start, '>')) != nullptr)
                         {
                             *h = '\0';
                         }
                     }
-                    else if ((h = std::strchr(s, '(')) != nullptr)
+                    else if ((h = std::strchr(mutable_s, '(')) != nullptr)
                     {
                         while (h-- != s && *h == ' ')
                         {
@@ -1318,7 +1351,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
                 else
                 {
-                    if (!(s = extract_name(s)))
+                    char *name = extract_name(mutable_s);
+                    if (name != nullptr)
+                    {
+                        s = name;
+                    }
+                    else
                     {
                         s = s_empty;
                     }
@@ -1349,9 +1387,9 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 if (s == dest)
                 {
                     // copy out so we can copy in.
-                    transform_text.reserve(sizeof scrbuf);
+                    transform_text.reserve(scratch_size);
                     transform_text = s;
-                    s = transform_text.data();
+                    s = transform_text.c_str();
                 }
                 while (*s)
                 {

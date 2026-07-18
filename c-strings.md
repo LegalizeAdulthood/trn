@@ -525,18 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-057 - Interpolation Scratch Formatting
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: local fixed interpolation scratch buffers.
-- Function: `do_interp`.
-- Change: replace residual `scrbuf[8192]`, `spfbuf[512]`, and the
-  static `%y` `tmpbuf[1024]` with owned `std::string` storage.  Replace
-  mutable literal arrays such as `space_text`, `noname_text`, and `dash`
-  with const text.  Keep runtime printf-style formatting isolated and
-  do not let local string pointers escape.
-- Tests: interpolation tests.
-
 #### CSTR-088 - Ngstuff Command Expansion Buffers
 
 - Files: `libtrn/ngstuff.cpp`.
