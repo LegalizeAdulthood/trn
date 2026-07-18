@@ -18,18 +18,27 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <string>
 #include <system_error>
+#include <vector>
 
 namespace fs = std::filesystem;
 
 enum
 {
     MAX_NGS = 100
+};
+
+struct ArticleNewsgroup
+{
+    std::string name;
+    bool        found_active{};
+    bool        found_description{};
 };
 
 int server_connection();
@@ -47,12 +56,9 @@ int main(int argc, char *argv[])
     bool check_ng = false;
     char buff[LINE_BUF_LEN];
     char*cp;
-    char*ngptrs[MAX_NGS];
-    int  nglens[MAX_NGS];
-    int  foundactive[MAX_NGS];
+    std::vector<ArticleNewsgroup> newsgroups;
     int  max_col_len;
     int  line_num = 0;
-    int  ngcnt = 0;
     int  found_newsgroups = 0;
 
     const char *home_dir = std::getenv("HOME");
@@ -137,17 +143,14 @@ int main(int argc, char *argv[])
                 {
                     *cp2++ = '\0';
                 }
-                if (ngcnt < MAX_NGS)
+                if (newsgroups.size() < static_cast<std::size_t>(MAX_NGS))
                 {
-                    nglens[ngcnt] = std::strlen(cp);
-                    foundactive[ngcnt] = 0;
-                    ngptrs[ngcnt] = safe_malloc(nglens[ngcnt]+1);
-                    std::strcpy(ngptrs[ngcnt], cp);
-                    ngcnt++;
+                    ArticleNewsgroup &newsgroup = newsgroups.emplace_back();
+                    newsgroup.name = cp;
                 }
                 cp = cp2;
             }
-            if (!ngcnt)
+            if (newsgroups.empty())
             {
                 std::printf("\n"
                        "ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
@@ -223,7 +226,7 @@ int main(int argc, char *argv[])
             g_server_name.clear();
         }
     }
-    if (ngcnt)
+    if (!newsgroups.empty())
     {
         if (fs::file_size(newsgroups_file, file_error) > 0 && !file_error)
         {
@@ -243,35 +246,36 @@ int main(int argc, char *argv[])
             check_active = true;
         }
     }
-    if (ngcnt && (check_ng || check_active))
+    if (!newsgroups.empty() && (check_ng || check_active))
     {
         int ngleft;
         // Print a note about each newsgroup
-        std::printf("\nYour article's newsgroup%s:\n", plural(ngcnt));
+        std::printf("\nYour article's newsgroup%s:\n", plural(static_cast<int>(newsgroups.size())));
         if (!check_active)
         {
-            for (int i = 0; i < ngcnt; i++)
+            for (ArticleNewsgroup &newsgroup : newsgroups)
             {
-                foundactive[i] = 1;
+                newsgroup.found_active = true;
             }
         }
         else if (fp_active != nullptr)
         {
-            ngleft = ngcnt;
+            ngleft = static_cast<int>(newsgroups.size());
             while (std::fgets(buff, LINE_BUF_LEN, fp_active))
             {
                 if (!ngleft)
                 {
                     break;
                 }
-                for (int i = 0; i < ngcnt; i++)
+                for (ArticleNewsgroup &newsgroup : newsgroups)
                 {
-                    if (!foundactive[i])
+                    if (!newsgroup.found_active)
                     {
-                        if (is_hor_space(buff[nglens[i]]) //
-                            && !std::strncmp(ngptrs[i], buff, nglens[i]))
+                        const std::size_t name_length = newsgroup.name.size();
+                        if (is_hor_space(buff[name_length]) //
+                            && !std::strncmp(newsgroup.name.c_str(), buff, name_length))
                         {
-                            foundactive[i] = 1;
+                            newsgroup.found_active = true;
                             ngleft--;
                         }
                     }
@@ -282,11 +286,12 @@ int main(int argc, char *argv[])
         else if (!g_server_name.empty())
         {
             int listactive_works = 1;
-            for (int i = 0; i < ngcnt; i++)
+            for (std::size_t i = 0; i < newsgroups.size(); i++)
             {
+                ArticleNewsgroup &newsgroup = newsgroups[i];
                 if (listactive_works)
                 {
-                    std::sprintf(g_ser_line, "list active %s", ngptrs[i]);
+                    std::sprintf(g_ser_line, "list active %s", newsgroup.name.c_str());
                     if (nntp_command(g_ser_line) <= 0)
                     {
                         break;
@@ -299,7 +304,7 @@ int main(int argc, char *argv[])
                             {
                                 break;
                             }
-                            foundactive[i] = 1;
+                            newsgroup.found_active = true;
                         }
                     }
                     else if (*g_ser_line == NNTP_CLASS_FATAL)
@@ -310,14 +315,14 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    std::sprintf(g_ser_line, "GROUP %s", ngptrs[i]);
+                    std::sprintf(g_ser_line, "GROUP %s", newsgroup.name.c_str());
                     if (nntp_command(g_ser_line) <= 0)
                     {
                         break;
                     }
                     if (nntp_check() > 0)
                     {
-                        foundactive[i] = 1;
+                        newsgroup.found_active = true;
                     }
                 }
             }
@@ -329,10 +334,10 @@ int main(int argc, char *argv[])
             fs::remove(newsgroups_file, file_error);
             if (fp_ng != nullptr)
             {
-                for (int i = 0; i < ngcnt; i++)
+                for (const ArticleNewsgroup &newsgroup : newsgroups)
                 {
                     // issue a description list command
-                    std::sprintf(g_ser_line, "XGTITLE %s", ngptrs[i]);
+                    std::sprintf(g_ser_line, "XGTITLE %s", newsgroup.name.c_str());
                     if (nntp_command(g_ser_line) <= 0)
                     {
                         break;
@@ -356,21 +361,22 @@ int main(int argc, char *argv[])
         }
         if (fp_ng != nullptr)
         {
-            ngleft = ngcnt;
+            ngleft = static_cast<int>(newsgroups.size());
             while (std::fgets(buff, LINE_BUF_LEN, fp_ng))
             {
                 if (!ngleft)
                 {
                     break;
                 }
-                for (int i = 0; i < ngcnt; i++)
+                for (ArticleNewsgroup &newsgroup : newsgroups)
                 {
-                    if (foundactive[i] && ngptrs[i])
+                    if (newsgroup.found_active && !newsgroup.found_description)
                     {
-                        if (is_hor_space(buff[nglens[i]]) //
-                            && !std::strncmp(ngptrs[i], buff, nglens[i]))
+                        const std::size_t name_length = newsgroup.name.size();
+                        if (is_hor_space(buff[name_length]) //
+                            && !std::strncmp(newsgroup.name.c_str(), buff, name_length))
                         {
-                            cp = &buff[nglens[i]];
+                            cp = &buff[name_length];
                             *cp++ = '\0';
                             const char *desc = skip_hor_space(cp);
                             if (desc[0] == '?' && desc[1] == '?')
@@ -378,8 +384,7 @@ int main(int argc, char *argv[])
                                 desc = "[no description available]\n";
                             }
                             std::printf("%-23s %s", buff, desc);
-                            free(ngptrs[i]);
-                            ngptrs[i] = nullptr;
+                            newsgroup.found_description = true;
                             ngleft--;
                         }
                     }
@@ -387,18 +392,15 @@ int main(int argc, char *argv[])
             }
             std::fclose(fp_ng);
         }
-        for (int i = 0; i < ngcnt; i++)
+        for (const ArticleNewsgroup &newsgroup : newsgroups)
         {
-            if (!foundactive[i])
+            if (!newsgroup.found_active)
             {
-                std::printf("%-23s ** invalid news group -- check spelling **\n",
-                   ngptrs[i]);
-                std::free(ngptrs[i]);
+                std::printf("%-23s ** invalid news group -- check spelling **\n", newsgroup.name.c_str());
             }
-            else if (ngptrs[i])
+            else if (!newsgroup.found_description)
             {
-                std::printf("%-23s [no description available]\n", ngptrs[i]);
-                std::free(ngptrs[i]);
+                std::printf("%-23s [no description available]\n", newsgroup.name.c_str());
             }
         }
     }

@@ -518,17 +518,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-065 - Trn-artchk Newsgroup Name Storage
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: local heap-owned string array.
-- Function: `main`.
-- Change: replace `ngptrs`, `nglens`, and `foundactive` with a local
-  vector of structs that owns each newsgroup name as `std::string` and
-  carries the active-found state.  Remove `safe_malloc`, `strcpy`, and
-  the matching `free` paths.
-- Tests: add or use trn-artchk tool tests.
-
 #### CSTR-066 - Trn-artchk Line Input Buffer
 
 - Files: `trn-artchk/trn-artchk.cpp`.
