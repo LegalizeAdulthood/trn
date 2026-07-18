@@ -9,6 +9,7 @@
 #include <trn/enum-flags.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -57,11 +58,11 @@ struct Newsrc
 {
     Newsrc     *next;
     DataSource *data_source;
-    std::string name;      // the name of the associated newsrc
-    std::string old_name;  // the backup of the newsrc
-    std::string new_name;  // our working newsrc file
-    std::string info_name; // the time/size info file
-    std::string lock_name; // the lock file we created
+    std::filesystem::path name;      // the associated newsrc
+    std::filesystem::path old_name;  // the backup of the newsrc
+    std::filesystem::path new_name;  // our working newsrc file
+    std::filesystem::path info_name; // the time/size info file
+    std::filesystem::path lock_name; // the lock file we created
     NewsrcFlags flags;
 };
 
@@ -78,7 +79,7 @@ struct Multirc
     bool        use_multirc();
     bool        use_next_multirc();
     bool        use_prev_multirc();
-    const char *multirc_name() const;
+    std::string multirc_name() const;
 
     Newsrc      *m_first;
     int          m_num;

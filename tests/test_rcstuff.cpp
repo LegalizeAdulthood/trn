@@ -191,10 +191,10 @@ protected:
     {
         Newsrc newsrc{};
         newsrc.data_source = &m_data_source;
-        newsrc.name = (m_output_dir / "newsrc").generic_string();
-        newsrc.old_name = (m_output_dir / "old-newsrc").generic_string();
-        newsrc.new_name = (m_output_dir / "new-newsrc").generic_string();
-        newsrc.info_name = (m_output_dir / "newsrc.info").generic_string();
+        newsrc.name = m_output_dir / "newsrc";
+        newsrc.old_name = m_output_dir / "old-newsrc";
+        newsrc.new_name = m_output_dir / "new-newsrc";
+        newsrc.info_name = m_output_dir / "newsrc.info";
         newsrc.flags = RF_ACTIVE | RF_RC_CHANGED;
         return newsrc;
     }

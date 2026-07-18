@@ -172,7 +172,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
         bp = skip_space(g_buf);
         if (!std::strncmp(bp, "THRU", 4))
         {
-            const std::string &rc_name = g_newsgroup_ptr->m_rc->name;
+            const std::string rc_name = g_newsgroup_ptr->m_rc->name.generic_string();
             const std::size_t  len = rc_name.size();
             cp = skip_space(bp + 4);
             if (std::strncmp(cp, rc_name.c_str(), len) != 0 || !std::isspace(cp[len]))
@@ -533,13 +533,13 @@ static void rewrite_kill_file(ArticleNum thru)
     s_new_kill_file_fp = std::fopen(killname.string().c_str(), "w");
     if (s_new_kill_file_fp != nullptr)
     {
-        fmt::print(s_new_kill_file_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name, thru.value_of());
+        fmt::print(s_new_kill_file_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
         while (g_local_kfp && std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
         {
             if (!std::strncmp(g_buf, "THRU", 4))
             {
                 char* cp = g_buf+4;
-                const std::string &rc_name = g_newsgroup_ptr->m_rc->name;
+                const std::string rc_name = g_newsgroup_ptr->m_rc->name.generic_string();
                 const std::size_t  len = rc_name.size();
                 cp = skip_space(cp);
                 if (std::isdigit(*cp))

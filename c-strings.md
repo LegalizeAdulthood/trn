@@ -525,17 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-074 - Newsrc Path Fields
-
-- Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`.
-- Kind: struct-owned filename fields.
-- Function: storage-centered `Newsrc` path fields.
-- Change: evaluate `Newsrc::name`, `old_name`, `new_name`,
-  `info_name`, and `lock_name` for `fs::path` conversion where the value
-  is a filesystem path.  Keep display and config identities as strings
-  if they are not path-only values.
-- Tests: newsrc locking, checkpoint, and rewrite tests.
-
 #### CSTR-078 - Universal Selector File Path Split
 
 - Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.

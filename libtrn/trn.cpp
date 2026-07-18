@@ -498,7 +498,7 @@ do_command:
             break;
         }
         std::printf("\nThe abandoned changes are in %s.new.\n",
-               g_multirc->multirc_name());
+               g_multirc->multirc_name().c_str());
         term_down(2);
         s_restore_old_newsrc = true;
         return ING_QUIT;
@@ -996,7 +996,7 @@ void trn_version()
                 continue;
             }
             const DataSource &data_source = *rp->data_source;
-            print_lines(fmt::format("ID {}:\nNewsrc {}.\n", data_source.m_name, rp->name).c_str(), NO_MARKING);
+            print_lines(fmt::format("ID {}:\nNewsrc {}.\n", data_source.m_name, rp->name.generic_string()).c_str(), NO_MARKING);
             if (data_source.m_flags & DF_REMOTE)
             {
                 print_lines(fmt::format("News from server {}.\n", data_source.m_news_id).c_str(), NO_MARKING);
