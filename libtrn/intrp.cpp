@@ -1452,6 +1452,20 @@ getout:
     return pattern; // where we left off
 }
 
+std::string do_interp(std::string_view pattern)
+{
+    std::string pattern_text{pattern};
+    std::string result(CMD_BUF_LEN, '\0');
+
+    do_interp(result.data(), static_cast<int>(result.size()), pattern_text.c_str(), nullptr, nullptr);
+    const std::size_t result_end = result.find('\0');
+    if (result_end != std::string::npos)
+    {
+        result.resize(result_end);
+    }
+    return result;
+}
+
 /// @brief Converts escape sequences in a pattern to their corresponding characters.
 ///
 /// This function processes escape sequences in the input pattern and converts them

@@ -518,17 +518,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-064 - Tool Interpolation Output Buffer
-
-- Files: `tool/util3.cpp`, `tool/include/tool/util3.h`,
-  `util/util2.cpp`.
-- Kind: caller output buffer and `safe_copy` use.
-- Function: tool-side `do_interp`.
-- Change: return an owned `std::string` for the simple tool expansion
-  helper and update `file_exp` callers so the tool no longer needs
-  bounded writes into caller storage.
-- Tests: file expansion tests.
-
 #### CSTR-065 - Trn-artchk Newsgroup Name Storage
 
 - Files: `trn-artchk/trn-artchk.cpp`.

@@ -10,8 +10,8 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <string>
+#include <string_view>
 
 static std::string    s_nntp_password;
 static constexpr char s_no_memory[] = "trn: out of memory!\n";
@@ -57,22 +57,22 @@ char *safe_realloc(char *where, MemorySize size)
 }
 #endif
 
-const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
+std::string do_interp(std::string_view pattern)
 {
     extern std::string g_dot_dir;
-    if (*pattern == '%' && pattern[1] == '.')
+    if (pattern.size() >= 2 && pattern[0] == '%' && pattern[1] == '.')
     {
-        int len = std::strlen(g_dot_dir.c_str());
-        safe_copy(dest, g_dot_dir.c_str(), dest_size);
-        if (len < dest_size)
-        {
-            safe_copy(dest+len, pattern+2, dest_size - len);
-        }
+        std::string result{g_dot_dir};
+        result.append(pattern.data() + 2, pattern.size() - 2);
+        return result;
     }
-    else
-    {
-        safe_copy(dest, pattern, dest_size);
-    }
+    return std::string{pattern};
+}
+
+const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
+{
+    const std::string result = do_interp(std::string_view{pattern});
+    safe_copy(dest, result.c_str(), dest_size);
     return nullptr; // This is wrong on purpose
 }
 

@@ -80,14 +80,17 @@ protected:
     void SetUp() override
     {
         m_old_home_dir = g_home_dir;
+        m_old_dot_dir = g_dot_dir;
     }
 
     void TearDown() override
     {
         g_home_dir = m_old_home_dir;
+        g_dot_dir = m_old_dot_dir;
     }
 
     std::string m_old_home_dir;
+    std::string m_old_dot_dir;
 };
 
 class EnvInitTest : public testing::Test
@@ -228,6 +231,13 @@ TEST_F(FileExpansionTest, expandsEnvironmentVariable)
     env.expect_env("ARTICLE", "C:/articles");
 
     EXPECT_EQ("C:/articles/current", file_exp("$ARTICLE/current"));
+}
+
+TEST_F(FileExpansionTest, expandsDotDirectory)
+{
+    g_dot_dir = "C:/Users/tester/.trn";
+
+    EXPECT_EQ("C:/Users/tester/.trn/access", file_exp("%./access"));
 }
 
 TEST_F(EnvInitTest, readsRealNameFromFullnameFile)

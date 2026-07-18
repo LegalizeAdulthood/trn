@@ -1,12 +1,14 @@
 /* util3.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_UTIL3_H
 #define TRN_UTIL3_H
 
 #include <config/typedef.h>
 
 #include <string>
+#include <string_view>
 
 extern std::string g_home_dir;
 
@@ -17,6 +19,7 @@ char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);
 #endif
 const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd);
+std::string do_interp(std::string_view pattern);
 int   nntp_handle_nested_lists();
 std::string get_auth_user();
 std::string get_auth_pass();

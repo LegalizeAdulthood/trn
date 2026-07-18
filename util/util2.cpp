@@ -62,13 +62,8 @@ const char *copy_till(char *to, const char *from, int delim)
 
 std::string file_exp(std::string_view text)
 {
-    std::string sbuf{text};
-    char       *s = sbuf.data();
-    std::string filename(CMD_BUF_LEN, '\0');
-
-    // interpret any % escapes
-    do_interp(filename.data(), static_cast<int>(filename.size()), s, nullptr, nullptr);
-    s = filename.data();
+    std::string filename = do_interp(text);
+    char       *s = filename.data();
     if (*s == '~') // does destination start with ~?
     {
         if (!*(++s) || *s == '/')
@@ -184,10 +179,9 @@ std::string file_exp(std::string_view text)
             scrbuf += s;
         }
         // this might do some extra '%'s, but that's how the Mercedes Benz
-        filename.assign(CMD_BUF_LEN, '\0');
-        do_interp(filename.data(), static_cast<int>(filename.size()), scrbuf.c_str(), nullptr, nullptr);
+        filename = do_interp(scrbuf);
     }
-    return filename.c_str();
+    return filename;
 }
 
 // return ptr to little string in big string, nullptr if not found
