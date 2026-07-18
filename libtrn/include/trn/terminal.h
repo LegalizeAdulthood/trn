@@ -11,6 +11,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 // stuff wanted by terminal mode diddling routines
 
@@ -32,21 +33,22 @@ extern char          g_kill_char;  // line delete character
 extern unsigned char g_last_char;
 extern bool          g_bizarre; // do we need to restore terminal?
 
-extern int g_univ_sel_btn_cnt;
-extern int g_newsrc_sel_btn_cnt;
-extern int g_add_sel_btn_cnt;
-extern int g_newsgroup_sel_btn_cnt;
-extern int g_news_sel_btn_cnt;
-extern int g_option_sel_btn_cnt;
-extern int g_art_pager_btn_cnt;
+struct MouseButton
+{
+    std::string label;
+    std::string command;
+    bool        has_label{};
+};
 
-extern char *g_univ_sel_btns;
-extern char *g_newsrc_sel_btns;
-extern char *g_add_sel_btns;
-extern char *g_newsgroup_sel_btns;
-extern char *g_news_sel_btns;
-extern char *g_option_sel_btns;
-extern char *g_art_pager_btns;
+using MouseButtonList = std::vector<MouseButton>;
+
+extern MouseButtonList g_univ_sel_btns;
+extern MouseButtonList g_newsrc_sel_btns;
+extern MouseButtonList g_add_sel_btns;
+extern MouseButtonList g_newsgroup_sel_btns;
+extern MouseButtonList g_news_sel_btns;
+extern MouseButtonList g_option_sel_btns;
+extern MouseButtonList g_art_pager_btns;
 
 extern bool        g_muck_up_clear;   // -loco
 extern bool        g_erase_screen;    // -e

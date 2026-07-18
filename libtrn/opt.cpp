@@ -83,8 +83,8 @@ static char s_univ_sel_cmds[3]{"Z>"};
 static std::string hidden_list();
 static std::string magic_list();
 static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str);
-static int   parse_mouse_buttons(char **cpp, const char *btns);
-static std::string expand_mouse_buttons(const char *cp, int cnt);
+static MouseButtonList parse_mouse_buttons(std::string_view btns);
+static std::string expand_mouse_buttons(const MouseButtonList &buttons);
 
 void opt_init(int argc, char *argv[], char *tcbuf)
 {
@@ -92,19 +92,15 @@ void opt_init(int argc, char *argv[], char *tcbuf)
     g_sel_art_display_mode = "lmds";
     g_sel_grp_display_mode_index = 0;
     g_sel_art_display_mode_index = 0;
-    g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,
-                                        "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
-    g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,
-                                          "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
-    g_add_sel_btn_cnt = parse_mouse_buttons(&g_add_sel_btns,
-                                       "[Top]^ [Bot]$ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
-    g_option_sel_btn_cnt = parse_mouse_buttons(&g_option_sel_btns,
-                                          "[Find]/ [FindNext]/^j [Top]^ [Bot]$ [PgUp]< [PgDn]> [Use]^i [Save]S [Abandon]q [Help]?");
-    g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,
-                                             "[Top]^ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
-    g_news_sel_btn_cnt =
-        parse_mouse_buttons(&g_news_sel_btns, "[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
-    g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns, "[Next]n [Sel]+ [Quit]q [Help]h");
+    g_univ_sel_btns = parse_mouse_buttons("[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
+    g_newsrc_sel_btns = parse_mouse_buttons("[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
+    g_add_sel_btns = parse_mouse_buttons("[Top]^ [Bot]$ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
+    g_option_sel_btns =
+        parse_mouse_buttons("[Find]/ [FindNext]/^j [Top]^ [Bot]$ [PgUp]< [PgDn]> [Use]^i [Save]S [Abandon]q "
+                            "[Help]?");
+    g_newsgroup_sel_btns = parse_mouse_buttons("[Top]^ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
+    g_news_sel_btns = parse_mouse_buttons("[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
+    g_art_pager_btns = parse_mouse_buttons("[Next]n [Sel]+ [Quit]q [Help]h");
 
     if (argc >= 2 && std::string_view{argv[1]} == "-c")
     {
@@ -181,13 +177,13 @@ void opt_final()
     g_option_saved_vals.clear();
     g_ini_file.clear();
     g_option_def_vals.clear();
-    safe_free0(g_art_pager_btns);
-    safe_free0(g_news_sel_btns);
-    safe_free0(g_newsgroup_sel_btns);
-    safe_free0(g_option_sel_btns);
-    safe_free0(g_add_sel_btns);
-    safe_free0(g_newsrc_sel_btns);
-    safe_free0(g_univ_sel_btns);
+    g_art_pager_btns.clear();
+    g_news_sel_btns.clear();
+    g_newsgroup_sel_btns.clear();
+    g_option_sel_btns.clear();
+    g_add_sel_btns.clear();
+    g_newsrc_sel_btns.clear();
+    g_univ_sel_btns.clear();
     g_sel_art_display_mode.clear();
     g_sel_grp_display_mode.clear();
     g_sel_art_display_mode_index = 0;
@@ -332,7 +328,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_UNIV_SEL_BTNS:
-        g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,s);
+        g_univ_sel_btns = parse_mouse_buttons(s);
         break;
 
     case OI_UNIV_SEL_ORDER:
@@ -356,7 +352,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWSRC_SEL_BTNS:
-        g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,s);
+        g_newsrc_sel_btns = parse_mouse_buttons(s);
         break;
 
     case OI_USE_ADD_SEL:
@@ -372,7 +368,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_ADD_SEL_BTNS:
-        g_add_sel_btn_cnt = parse_mouse_buttons(&g_add_sel_btns,s);
+        g_add_sel_btns = parse_mouse_buttons(s);
         break;
 
     case OI_USE_NEWSGROUP_SEL:
@@ -392,7 +388,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWSGROUP_SEL_BTNS:
-        g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,s);
+        g_newsgroup_sel_btns = parse_mouse_buttons(s);
         break;
 
     case OI_NEWSGROUP_SEL_STYLES:
@@ -437,7 +433,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWS_SEL_BTNS:
-        g_news_sel_btn_cnt = parse_mouse_buttons(&g_news_sel_btns,s);
+        g_news_sel_btns = parse_mouse_buttons(s);
         break;
 
     case OI_NEWS_SEL_STYLES:
@@ -454,7 +450,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_OPTION_SEL_BTNS:
-        g_option_sel_btn_cnt = parse_mouse_buttons(&g_option_sel_btns,s);
+        g_option_sel_btns = parse_mouse_buttons(s);
         break;
 
     case OI_AUTO_SAVE_NAME:
@@ -757,7 +753,7 @@ void apply_global_option(OptionIndex num, const char *s)
         break;
 
     case OI_ART_PAGER_BTNS:
-        g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns,s);
+        g_art_pager_btns = parse_mouse_buttons(s);
         break;
 
     case OI_SCAN_ITEM_NUM:
@@ -991,7 +987,7 @@ std::string option_value(OptionIndex num)
         return s_univ_sel_cmds;
 
     case OI_UNIV_SEL_BTNS:
-        return expand_mouse_buttons(g_univ_sel_btns,g_univ_sel_btn_cnt);
+        return expand_mouse_buttons(g_univ_sel_btns);
 
     case OI_UNIV_SEL_ORDER:
         return get_sel_order(SM_UNIVERSAL);
@@ -1007,7 +1003,7 @@ std::string option_value(OptionIndex num)
         return g_newsrc_sel_cmds;
 
     case OI_NEWSRC_SEL_BTNS:
-        return expand_mouse_buttons(g_newsrc_sel_btns,g_newsrc_sel_btn_cnt);
+        return expand_mouse_buttons(g_newsrc_sel_btns);
 
     case OI_USE_ADD_SEL:
         return yes_or_no(g_use_add_selector);
@@ -1016,7 +1012,7 @@ std::string option_value(OptionIndex num)
         return g_add_sel_cmds;
 
     case OI_ADD_SEL_BTNS:
-        return expand_mouse_buttons(g_add_sel_btns,g_add_sel_btn_cnt);
+        return expand_mouse_buttons(g_add_sel_btns);
 
     case OI_USE_NEWSGROUP_SEL:
         return yes_or_no(g_use_newsgroup_selector);
@@ -1028,7 +1024,7 @@ std::string option_value(OptionIndex num)
         return g_newsgroup_sel_cmds;
 
     case OI_NEWSGROUP_SEL_BTNS:
-        return expand_mouse_buttons(g_newsgroup_sel_btns,g_newsgroup_sel_btn_cnt);
+        return expand_mouse_buttons(g_newsgroup_sel_btns);
 
     case OI_NEWSGROUP_SEL_STYLES:
         return g_sel_grp_display_mode.c_str();
@@ -1060,7 +1056,7 @@ std::string option_value(OptionIndex num)
         return g_news_sel_cmds;
 
     case OI_NEWS_SEL_BTNS:
-        return expand_mouse_buttons(g_news_sel_btns,g_news_sel_btn_cnt);
+        return expand_mouse_buttons(g_news_sel_btns);
 
     case OI_NEWS_SEL_STYLES:
         return g_sel_art_display_mode.c_str();
@@ -1069,7 +1065,7 @@ std::string option_value(OptionIndex num)
         return g_option_sel_cmds;
 
     case OI_OPTION_SEL_BTNS:
-        return expand_mouse_buttons(g_option_sel_btns,g_option_sel_btn_cnt);
+        return expand_mouse_buttons(g_option_sel_btns);
 
     case OI_AUTO_SAVE_NAME:
         return yes_or_no(get_env_var("SAVEDIR", SAVEDIR) == "%p/%c");
@@ -1248,7 +1244,7 @@ std::string option_value(OptionIndex num)
         return secs_to_text(g_def_refetch_secs);
 
     case OI_ART_PAGER_BTNS:
-        return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);
+        return expand_mouse_buttons(g_art_pager_btns);
 
     case OI_SCAN_ITEM_NUM:
         return yes_or_no(g_s_item_num);
@@ -1503,81 +1499,86 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
     }
 }
 
-static int parse_mouse_buttons(char **cpp, const char *btns)
+static void skip_mouse_button_spaces(std::string_view &text)
 {
-    char* t = *cpp;
-    int cnt = 0;
-
-    safe_free(t);
-    btns = skip_eq(btns, ' ');
-    *cpp = safe_malloc(std::strlen(btns) + 1);
-    t = *cpp;
-
-    while (*btns)
+    while (!text.empty() && text.front() == ' ')
     {
-        if (*btns == '[')
+        text.remove_prefix(1);
+    }
+}
+
+static MouseButtonList parse_mouse_buttons(std::string_view btns)
+{
+    MouseButtonList buttons;
+
+    skip_mouse_button_spaces(btns);
+    while (!btns.empty())
+    {
+        MouseButton button;
+        if (btns.front() == '[')
         {
-            if (!btns[1])
+            if (btns.size() == 1)
             {
                 break;
             }
-            while (*btns)
+            button.has_label = true;
+            btns.remove_prefix(1);
+            while (!btns.empty())
             {
-                if (*btns == '\\' && btns[1])
+                if (btns.front() == '\\' && btns.size() > 1)
                 {
-                    btns++;
+                    btns.remove_prefix(1);
+                    button.label += btns.front();
                 }
-                else if (*btns == ']')
+                else if (btns.front() == ']')
                 {
                     break;
                 }
-                *t++ = *btns++;
+                else
+                {
+                    button.label += btns.front();
+                }
+                btns.remove_prefix(1);
             }
-            *t++ = '\0';
-            if (*btns)
+            if (!btns.empty())
             {
-                btns = skip_eq(++btns, ' ');
+                btns.remove_prefix(1);
+                skip_mouse_button_spaces(btns);
             }
         }
-        while (*btns && *btns != ' ')
+        while (!btns.empty() && btns.front() != ' ')
         {
-            *t++ = *btns++;
+            button.command += btns.front();
+            btns.remove_prefix(1);
         }
-        btns = skip_eq(btns, ' ');
-        *t++ = '\0';
-        cnt++;
+        skip_mouse_button_spaces(btns);
+        buttons.push_back(std::move(button));
     }
 
-    return cnt;
+    return buttons;
 }
 
-static std::string expand_mouse_buttons(const char *cp, int cnt)
+static std::string expand_mouse_buttons(const MouseButtonList &buttons)
 {
     std::string result;
-    result.reserve(sizeof g_buf);
-    while (cnt--)
+    result.reserve(LINE_BUF_LEN + 1);
+    for (const MouseButton &button : buttons)
     {
         if (!result.empty())
         {
             result += ' ';
         }
-        if (*cp == '[')
+        if (button.has_label)
         {
-            const std::size_t len = std::strlen(cp);
-            result.append(cp, len);
+            result += '[';
+            result += button.label;
             result += ']';
-            cp += len + 1;
-            result += cp;
         }
-        else
-        {
-            result += cp;
-        }
+        result += button.command;
         if (!result.empty() && result.back() == '\n')
         {
             result.pop_back();
         }
-        cp += std::strlen(cp) + 1;
     }
     return result;
 }

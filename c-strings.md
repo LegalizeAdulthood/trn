@@ -435,9 +435,9 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: seven hits remain: the helper declaration, the helper
   definition, and five call sites in three owner clusters.  The call
   sites are inventoried below.
-- `safe_malloc`: remaining string-shaped owners are mouse button
-  storage, inactive `MCHASE` newsrc editing code, terminal CR fallback
-  storage, `g_head_buf`, and `g_art_buf`.
+- `safe_malloc`: remaining string-shaped owners are inactive `MCHASE`
+  newsrc editing code, terminal CR fallback storage, `g_head_buf`, and
+  `g_art_buf`.
   Non-string owners include hash tables, selector page storage, regex
   bytecode, HTML block arrays, article subject pointer arrays, and
   generic allocation helpers.
@@ -446,9 +446,9 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - Fixed buffers: current candidates include `inews` and `trn-artchk`
   tool output/global buffers, `g_ser_line`, `g_art_line`,
   interpolation scratch storage, `g_head_buf`, `g_art_buf`,
-  mouse/terminal storage, response header buffers, command-switch
-  scratch buffers, `uudecode` pending-line storage, selector command key
-  storage, and global command/message buffers.
+  terminal storage, response header buffers, command-switch scratch
+  buffers, `uudecode` pending-line storage, selector command key storage,
+  and global command/message buffers.
 - Filename storage: current path candidates remain in decode, KILL-file
   editing/appending, score-file loading/editing, newsrc file fields, and
   some universal-selector file fields.  Mixed URL/path/host fields need
@@ -474,10 +474,10 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 77, `strncpy` 5, `strcat` 3.
+- Copy and concatenation: `strcpy` 77, `strncpy` 4, `strcat` 3.
 - Comparison: `strcmp` 4, `strncmp` 24.
 - Search and length: `strchr` 92, `strrchr` 7, `strstr` 2,
-  `strlen` 97.
+  `strlen` 84.
 - Formatting into C buffers: `sprintf` 97.
 - C text I/O roots: `fgets` 31, `fputs` 206, `printf` 490,
   `fprintf` 57.
@@ -515,18 +515,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-071 - Mouse Button Packed Storage
-
-- Files: `libtrn/opt.cpp`, `libtrn/terminal.cpp`,
-  `libtrn/include/trn/terminal.h`.
-- Kind: packed NUL-separated heap string storage.
-- Function: `parse_mouse_buttons`, `expand_mouse_buttons`, mouse bar
-  traversal.
-- Change: replace the exported `char *` button stores and parallel
-  counts with an owned container of button label/command entries.  Update
-  parsing, option expansion, rendering, and mouse hit testing together.
-- Tests: option and terminal mouse tests.
 
 #### CSTR-072 - Terminal CR Fallback Storage
 

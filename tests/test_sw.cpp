@@ -99,14 +99,11 @@ struct SwitchFlagRestorer
 
 struct MouseButtonsRestorer
 {
-    char *buttons;
-    int   count;
+    MouseButtonList buttons;
 
     ~MouseButtonsRestorer()
     {
-        safe_free(g_univ_sel_btns);
         g_univ_sel_btns = buttons;
-        g_univ_sel_btn_cnt = count;
     }
 };
 
@@ -248,9 +245,8 @@ TEST(SwitchTest, selectorDisplayStyleOptionsReturnConfiguredOrder)
 
 TEST(OptionValueTest, expandsMouseButtonsWithoutChangingParsedStorage)
 {
-    MouseButtonsRestorer restore{g_univ_sel_btns, g_univ_sel_btn_cnt};
-    g_univ_sel_btns = nullptr;
-    g_univ_sel_btn_cnt = 0;
+    MouseButtonsRestorer restore{g_univ_sel_btns};
+    g_univ_sel_btns.clear();
     set_option(OI_UNIV_SEL_BTNS, "[Top]^ [Quit]q x");
 
     EXPECT_EQ("[Top]^ [Quit]q x", option_value(OI_UNIV_SEL_BTNS));

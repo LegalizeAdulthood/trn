@@ -4,6 +4,7 @@
 #include <trn/terminal.h>
 
 #include <trn/final.h>
+#include <trn/opt.h>
 
 #include <gtest/gtest.h>
 
@@ -124,6 +125,94 @@ protected:
     char       *m_old_tc_ce{};
 };
 
+class MouseBarTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        drain_macro_buffer();
+
+        m_old_univ_sel_btns = g_univ_sel_btns;
+        m_old_mouse_bar_cnt = g_mouse_bar_cnt;
+        m_old_mouse_bar_width = g_mouse_bar_width;
+        m_old_use_mouse = g_use_mouse;
+        m_old_general_mode = g_general_mode;
+        m_old_mode = g_mode;
+        m_old_tc_lines = g_tc_LINES;
+        m_old_tc_cols = g_tc_COLS;
+        m_old_term_line = g_term_line;
+        m_old_term_col = g_term_col;
+        m_old_tc_cm = g_tc_CM;
+        m_old_tc_bc = g_tc_BC;
+        m_old_tc_up = g_tc_UP;
+        m_old_tc_cr = g_tc_CR;
+        m_old_tc_so = g_tc_SO;
+        m_old_tc_se = g_tc_SE;
+
+        g_univ_sel_btns.clear();
+        g_mouse_bar_cnt = 0;
+        g_mouse_bar_width = 0;
+        g_use_mouse = true;
+        g_general_mode = GM_SELECTOR;
+        g_mode = MM_UNIVERSAL;
+        g_tc_LINES = 24;
+        g_tc_COLS = 80;
+        g_term_line = 23;
+        g_term_col = 67;
+        g_tc_CM = m_cursor_motion;
+        g_tc_BC = m_backspace;
+        g_tc_UP = m_cursor_up;
+        g_tc_CR = m_carriage_return;
+        g_tc_SO = m_standout_start;
+        g_tc_SE = m_standout_end;
+    }
+
+    void TearDown() override
+    {
+        drain_macro_buffer();
+        xmouse_off();
+        g_univ_sel_btns = m_old_univ_sel_btns;
+        g_mouse_bar_cnt = m_old_mouse_bar_cnt;
+        g_mouse_bar_width = m_old_mouse_bar_width;
+        g_use_mouse = m_old_use_mouse;
+        g_general_mode = m_old_general_mode;
+        g_mode = m_old_mode;
+        g_tc_LINES = m_old_tc_lines;
+        g_tc_COLS = m_old_tc_cols;
+        g_term_line = m_old_term_line;
+        g_term_col = m_old_term_col;
+        g_tc_CM = m_old_tc_cm;
+        g_tc_BC = m_old_tc_bc;
+        g_tc_UP = m_old_tc_up;
+        g_tc_CR = m_old_tc_cr;
+        g_tc_SO = m_old_tc_so;
+        g_tc_SE = m_old_tc_se;
+    }
+
+    MouseButtonList m_old_univ_sel_btns;
+    int             m_old_mouse_bar_cnt{};
+    int             m_old_mouse_bar_width{};
+    bool            m_old_use_mouse{};
+    GeneralMode     m_old_general_mode{};
+    MinorMode       m_old_mode{};
+    int             m_old_tc_lines{};
+    int             m_old_tc_cols{};
+    int             m_old_term_line{};
+    int             m_old_term_col{};
+    char           *m_old_tc_cm{};
+    const char     *m_old_tc_bc{};
+    char           *m_old_tc_up{};
+    const char     *m_old_tc_cr{};
+    char           *m_old_tc_so{};
+    char           *m_old_tc_se{};
+    char            m_cursor_motion[1]{};
+    char            m_backspace[1]{};
+    char            m_cursor_up[1]{};
+    char            m_carriage_return[1]{};
+    char            m_standout_start[5]{"<so>"};
+    char            m_standout_end[5]{"<se>"};
+};
+
 } // namespace
 
 TEST_F(TerminalTest, getCommandExpandsMacroString)
@@ -201,4 +290,20 @@ TEST_F(ChoiceInputTest, inChoiceDoesNotSplitSlashInsideFreeFormValue)
     EXPECT_TRUE(clean_screen);
     EXPECT_STREQ("a/b", g_buf);
     EXPECT_EQ("<cr><cr><ce><cr>> a/b", output);
+}
+
+TEST_F(MouseBarTest, checkMouseBarPushesClickedButtonCommand)
+{
+    set_option(OI_UNIV_SEL_BTNS, "[Quit]q");
+
+    testing::internal::CaptureStdout();
+    xmouse_check();
+    EXPECT_TRUE(check_mouse_bar(3, 75, 23, 0, 75, 23));
+    testing::internal::GetCapturedStdout();
+
+    ASSERT_TRUE(macro_pending());
+    char command{};
+    read_tty(&command, 1);
+
+    EXPECT_EQ('q', command);
 }

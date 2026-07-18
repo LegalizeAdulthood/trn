@@ -20,6 +20,7 @@
 #include <trn/opt.h>
 #include <trn/rt-select.h>
 #include <trn/sdisp.h>
+#include <trn/size_cast.h>
 #include <trn/string-algos.h>
 #include <trn/trn.h>
 #include <trn/univ.h>
@@ -62,20 +63,13 @@ char          g_erase_char{}; // rubout character
 char          g_kill_char{};  // line delete character
 unsigned char g_last_char{};  //
 bool          g_bizarre{};    // do we need to restore terminal?
-int           g_univ_sel_btn_cnt{};
-int           g_newsrc_sel_btn_cnt{};
-int           g_add_sel_btn_cnt{};
-int           g_newsgroup_sel_btn_cnt{};
-int           g_news_sel_btn_cnt{};
-int           g_option_sel_btn_cnt{};
-int           g_art_pager_btn_cnt{};
-char         *g_univ_sel_btns{};
-char         *g_newsrc_sel_btns{};
-char         *g_add_sel_btns{};
-char         *g_newsgroup_sel_btns{};
-char         *g_news_sel_btns{};
-char         *g_option_sel_btns{};
-char         *g_art_pager_btns{};
+MouseButtonList g_univ_sel_btns;
+MouseButtonList g_newsrc_sel_btns;
+MouseButtonList g_add_sel_btns;
+MouseButtonList g_newsgroup_sel_btns;
+MouseButtonList g_news_sel_btns;
+MouseButtonList g_option_sel_btns;
+MouseButtonList g_art_pager_btns;
 bool          g_muck_up_clear{};                  // -loco
 bool          g_erase_screen{};                   // -e
 bool          g_can_home{};                       //
@@ -123,7 +117,7 @@ int   g_mouse_bar_width{};    //
 bool  g_mouse_is_down{};      //
 int   g_auto_arrow_macros{2}; // -A
 
-static const char *s_mouse_bar_btns{};
+static const MouseButtonList *s_mouse_bar_btns{};
 static int   s_mouse_bar_start{};
 static bool  s_xmouse_is_on{};
 static const char *s_tc_CL{}; // home and clear screen
@@ -2333,9 +2327,74 @@ void xmouse_init(std::string_view progname)
     }
 }
 
+struct MouseButtonDisplay
+{
+    std::string text;
+    std::string highlight;
+    int         highlight_col{};
+    int         width{};
+};
+
+static MouseButtonDisplay mouse_button_display(const MouseButton &button)
+{
+    MouseButtonDisplay display;
+    if (button.has_label)
+    {
+        display.text = button.label;
+        const std::size_t highlight_start = display.text.find_first_not_of(' ');
+        if (highlight_start != std::string::npos)
+        {
+            const std::size_t highlight_end = display.text.find(' ', highlight_start);
+            display.highlight_col = static_cast<int>(highlight_start);
+            display.highlight = display.text.substr(highlight_start, highlight_end - highlight_start);
+        }
+    }
+    else
+    {
+        switch (button.command.size())
+        {
+        case 0:
+            display.text = "   ";
+            display.highlight_col = 1;
+            break;
+
+        case 1:
+        case 2:
+            display.text = " " + button.command + " ";
+            display.highlight_col = 1;
+            display.highlight = button.command;
+            break;
+
+        case 3:
+        case 4:
+            display.text = button.command;
+            display.highlight = button.command;
+            break;
+
+        default:
+            display.text = button.command.substr(0, 5);
+            display.highlight = display.text;
+            break;
+        }
+    }
+    display.width = static_cast<int>(display.text.size()) + 1;
+    return display;
+}
+
+static int mouse_button_bar_width(const MouseButtonList &buttons)
+{
+    int width = 0;
+    for (const MouseButton &button : buttons)
+    {
+        width += mouse_button_display(button).width;
+    }
+    return width;
+}
+
 void xmouse_check()
 {
     g_mouse_bar_cnt = 0;
+    g_mouse_bar_width = 0;
     if (g_use_mouse)
     {
         bool turn_it_on;
@@ -2360,62 +2419,42 @@ void xmouse_check()
             switch (mmode)
             {
             case MM_NEWSRC_SELECTOR:
-                s_mouse_bar_btns = g_newsrc_sel_btns;
-                g_mouse_bar_cnt = g_newsrc_sel_btn_cnt;
+                s_mouse_bar_btns = &g_newsrc_sel_btns;
                 break;
 
             case MM_ADD_GROUP_SELECTOR:
-                s_mouse_bar_btns = g_add_sel_btns;
-                g_mouse_bar_cnt = g_add_sel_btn_cnt;
+                s_mouse_bar_btns = &g_add_sel_btns;
                 break;
 
             case MM_OPTION_SELECTOR:
-                s_mouse_bar_btns = g_option_sel_btns;
-                g_mouse_bar_cnt = g_option_sel_btn_cnt;
+                s_mouse_bar_btns = &g_option_sel_btns;
                 break;
 
             case MM_THREAD_SELECTOR:
-                s_mouse_bar_btns = g_news_sel_btns;
-                g_mouse_bar_cnt = g_news_sel_btn_cnt;
+                s_mouse_bar_btns = &g_news_sel_btns;
                 break;
 
             case MM_NEWSGROUP_SELECTOR:
-                s_mouse_bar_btns = g_newsgroup_sel_btns;
-                g_mouse_bar_cnt = g_newsgroup_sel_btn_cnt;
+                s_mouse_bar_btns = &g_newsgroup_sel_btns;
                 break;
 
-            case MM_ARTICLE:  case MM_PAGER:
-                s_mouse_bar_btns = g_art_pager_btns;
-                g_mouse_bar_cnt = g_art_pager_btn_cnt;
+            case MM_ARTICLE:
+            case MM_PAGER:
+                s_mouse_bar_btns = &g_art_pager_btns;
                 break;
 
             case MM_UNIVERSAL:
-                s_mouse_bar_btns = g_univ_sel_btns;
-                g_mouse_bar_cnt = g_univ_sel_btn_cnt;
+                s_mouse_bar_btns = &g_univ_sel_btns;
                 break;
 
             default:
-                s_mouse_bar_btns = "";
-                // g_mousebar_cnt = 0;
+                s_mouse_bar_btns = nullptr;
                 break;
             }
-            const char *s = s_mouse_bar_btns;
-            g_mouse_bar_width = 0;
-            for (int i = 0; i < g_mouse_bar_cnt; i++)
+            if (s_mouse_bar_btns != nullptr)
             {
-                int j = std::strlen(s);
-                if (*s == '[')
-                {
-                    g_mouse_bar_width += j;
-                    s += j + 1;
-                    j = std::strlen(s);
-                }
-                else
-                {
-                    g_mouse_bar_width += (j < 2? 3+1 : (j == 2? 4+1
-                                                     : (j < 5? j: 5+1)));
-                }
-                s += j + 1;
+                g_mouse_bar_cnt = size_cast<int>(*s_mouse_bar_btns);
+                g_mouse_bar_width = mouse_button_bar_width(*s_mouse_bar_btns);
             }
             xmouse_on();
         }
@@ -2455,76 +2494,30 @@ void draw_mouse_bar(int limit, bool restore_cursor)
     int save_line = g_term_line;
 
     g_mouse_bar_width = 0;
-    if (g_mouse_bar_cnt == 0)
+    if (s_mouse_bar_btns == nullptr || g_mouse_bar_cnt == 0)
     {
         return;
     }
 
-    const char *s = s_mouse_bar_btns;
-    char *t = g_msg;
-    for (int i = 0; i < g_mouse_bar_cnt; i++)
-    {
-        if (*s == '[')
-        {
-            while (*++s)
-            {
-                *t++ = *s;
-            }
-            s++;
-        }
-        else
-        {
-            switch (std::strlen(s))
-            {
-            case 0:
-                *t++ = ' ';
-                // FALL THROUGH
-
-            case 1:  case 2:
-                *t++ = ' ';
-                while (*s)
-                {
-                    *t++ = *s++;
-                }
-                *t++ = ' ';
-                break;
-
-            case 3:  case 4:
-                while (*s)
-                {
-                    *t++ = *s++;
-                }
-                break;
-
-            default:
-                std::strncpy(t, s, 5);
-                t += 5;
-                break;
-            }
-        }
-        s += std::strlen(s) + 1;
-        *t++ = '\0';
-    }
-    g_mouse_bar_width = t - g_msg;
+    g_mouse_bar_width = mouse_button_bar_width(*s_mouse_bar_btns);
     s_mouse_bar_start = 0;
 
-    s = g_msg;
-    while (g_mouse_bar_width > limit)
+    while (g_mouse_bar_width > limit && s_mouse_bar_start < g_mouse_bar_cnt)
     {
-        int len = std::strlen(s) + 1;
-        s += len;
-        g_mouse_bar_width -= len;
+        const MouseButtonDisplay display =
+            mouse_button_display((*s_mouse_bar_btns)[static_cast<std::size_t>(s_mouse_bar_start)]);
+        g_mouse_bar_width -= display.width;
         s_mouse_bar_start++;
     }
 
-    goto_xy(g_tc_COLS - g_mouse_bar_width - 1, g_tc_LINES-1);
+    goto_xy(g_tc_COLS - g_mouse_bar_width - 1, g_tc_LINES - 1);
     for (int i = s_mouse_bar_start; i < g_mouse_bar_cnt; i++)
     {
+        const MouseButtonDisplay display = mouse_button_display((*s_mouse_bar_btns)[static_cast<std::size_t>(i)]);
         std::putchar(' ');
-        color_string(COLOR_MOUSE,s);
-        s += std::strlen(s) + 1;
+        color_string(COLOR_MOUSE, display.text);
     }
-    g_term_col = g_tc_COLS-1;
+    g_term_col = g_tc_COLS - 1;
     if (restore_cursor)
     {
         goto_xy(save_col, save_line);
@@ -2585,89 +2578,48 @@ static void mouse_input(const char *cp)
 
 bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    const char *s = s_mouse_bar_btns;
-    int  col = g_tc_COLS - g_mouse_bar_width;
+    int col = g_tc_COLS - g_mouse_bar_width;
 
-    if (g_mouse_bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
+    if (s_mouse_bar_btns != nullptr && g_mouse_bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
         && (x_clk -= col - 1) > 0)
     {
-        x -= col-1;
-        for (int i = 0; i < s_mouse_bar_start; i++)
+        x -= col - 1;
+        for (int button_index = s_mouse_bar_start; button_index < g_mouse_bar_cnt; button_index++)
         {
-            if (*s == '[')
-            {
-                s += std::strlen(s) + 1;
-            }
-            s += std::strlen(s) + 1;
-        }
-        while (true)
-        {
-            int j;
-            int i = std::strlen(s);
-            const char *t = s;
-            if (*s == '[')
-            {
-                s += i + 1;
-                j = 0;
-                while (*++t == ' ')
-                {
-                    j++;
-                }
-            }
-            else if (i <= 2)
-            {
-                i = 3 + (i==2) + 1;
-                j = 1;
-            }
-            else
-            {
-                i = (i < 5? i+1 : 5+1);
-                j = 0;
-            }
-            if (x_clk < i)
+            const MouseButton       &button = (*s_mouse_bar_btns)[static_cast<std::size_t>(button_index)];
+            const MouseButtonDisplay display = mouse_button_display(button);
+            if (x_clk < display.width)
             {
                 int tcol = g_term_col;
                 int tline = g_term_line;
-                goto_xy(col+j,g_tc_LINES-1);
+                goto_xy(col + display.highlight_col, g_tc_LINES - 1);
                 if (btn == 3)
                 {
                     color_object(COLOR_MOUSE, true);
                 }
-                if (s == t)
+                for (const char ch : display.highlight)
                 {
-                    for (int k = 0; k < 5 && *t; k++, t++)
-                    {
-                        g_term_col++;
-                        std::putchar(*t);
-                    }
-                }
-                else
-                {
-                    for (; *t && *t != ' '; t++)
-                    {
-                        g_term_col++;
-                        std::putchar(*t);
-                    }
+                    g_term_col++;
+                    std::putchar(ch);
                 }
                 if (btn == 3)
                 {
-                    color_pop();        // of COLOR_MOUSE
+                    color_pop(); // of COLOR_MOUSE
                 }
-                goto_xy(tcol,tline);
+                goto_xy(tcol, tline);
                 std::fflush(stdout);
-                if (btn == 3 && x > 0 && x < i)
+                if (btn == 3 && x > 0 && x < display.width)
                 {
-                    push_string(s,0);
+                    push_string(button.command.c_str(), 0);
                 }
                 break;
             }
-            if (!(x_clk -= i))
+            if (!(x_clk -= display.width))
             {
                 break;
             }
-            x -= i;
-            col += i;
-            s += std::strlen(s) + 1;
+            x -= display.width;
+            col += display.width;
         }
         return true;
     }
