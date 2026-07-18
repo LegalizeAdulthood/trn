@@ -435,22 +435,21 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: seven hits remain: the helper declaration, the helper
   definition, and five call sites in three owner clusters.  The call
   sites are inventoried below.
-- `safe_malloc`: remaining string-shaped owners are `inews` header
-  input, `trn-artchk` newsgroup names, mouse button storage, newsrc line
-  builders, `NewsgroupData` newsrc editing scratch text, terminal CR
-  fallback storage, `g_head_buf`, and `g_art_buf`.  Non-string owners
-  include hash tables, selector page storage, regex bytecode, HTML block
-  arrays, article subject pointer arrays, and generic allocation
-  helpers.
-- `safe_realloc`: string-shaped owners are `inews` header input,
-  `g_head_buf`, and `g_art_buf`.  Regex bytecode remains a non-string
-  owner.
+- `safe_malloc`: remaining string-shaped owners are mouse button
+  storage, newsrc line builders, `NewsgroupData` newsrc editing scratch
+  text, terminal CR fallback storage, `g_head_buf`, and `g_art_buf`.
+  Non-string owners include hash tables, selector page storage, regex
+  bytecode, HTML block arrays, article subject pointer arrays, and
+  generic allocation helpers.
+- `safe_realloc`: string-shaped owners are `g_head_buf` and
+  `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Fixed buffers: current candidates include `inews` and `trn-artchk`
-  tool buffers, `g_ser_line`, `g_art_line`, interpolation scratch
-  storage, `g_head_buf`, `g_art_buf`, mouse/terminal storage, newsrc
-  scratch buffers, response header buffers, command-switch scratch
-  buffers, `uudecode` pending-line storage, selector command key
-  storage, and global command/message buffers.
+  tool output/global buffers, `g_ser_line`, `g_art_line`,
+  interpolation scratch storage, `g_head_buf`, `g_art_buf`,
+  mouse/terminal storage, newsrc scratch buffers, response header
+  buffers, command-switch scratch buffers, `uudecode` pending-line
+  storage, selector command key storage, and global command/message
+  buffers.
 - Filename storage: current path candidates remain in decode, KILL-file
   editing/appending, score-file loading/editing, newsrc file fields, and
   some universal-selector file fields.  Mixed URL/path/host fields need
@@ -517,16 +516,6 @@ that later caller slices can consume directly.
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
-
-#### CSTR-067 - Inews Header Input Buffer
-
-- Files: `inews/inews.cpp`.
-- Kind: growable raw header/body input buffer.
-- Function: `main`.
-- Change: replace `headbuf` plus `headbuf_size` with owned
-  `std::string` storage and direct appends.  Preserve dot-stuffing,
-  header validation, and CRLF conversion order.
-- Tests: inews posting tests.
 
 #### CSTR-068 - Inews Posting Output Strings
 

@@ -74,16 +74,18 @@ int main(int argc, char *argv[])
 {
     bool has_fromline;
     bool in_header;
-    bool has_pathline;
-    bool found_nl;
-    bool  had_nl;
-    int   artpos;
-    int   len;
-    char *cp;
-    int  i;
+    bool        has_pathline;
+    bool        found_nl;
+    bool        had_nl;
+    char       *cp;
+    int         i;
+    std::string article_header;
+    std::string input_line;
+    std::string body_line;
 
-    int   headbuf_size = LINE_BUF_LEN * 8;
-    char *headbuf = safe_malloc(headbuf_size);
+    article_header.reserve(LINE_BUF_LEN * 8);
+    input_line.reserve(LINE_BUF_LEN);
+    body_line.reserve(LINE_BUF_LEN * 8);
 
 #ifdef LAX_INEWS
     env_init(true);
@@ -150,23 +152,14 @@ int main(int argc, char *argv[])
     in_header = false;
     has_fromline = false;
     has_pathline = false;
-    artpos = 0;
-    cp = headbuf;
     had_nl = true;
 
     while (true)
     {
-        if (headbuf_size < artpos + LINE_BUF_LEN + 1)
-        {
-            len = cp - headbuf;
-            headbuf_size += LINE_BUF_LEN * 4;
-            headbuf = safe_realloc(headbuf,headbuf_size);
-            cp = headbuf + len;
-        }
         i = std::getc(stdin);
         if (!g_server_name.empty() && had_nl && i == '.')
         {
-            *cp++ = '.';
+            article_header += '.';
         }
 
         if (i == '\n')
@@ -177,21 +170,29 @@ int main(int argc, char *argv[])
             }
             break;
         }
-        if (i == EOF || !std::fgets(cp + 1, LINE_BUF_LEN - 1, stdin))
+        if (i == EOF)
         {
             // Still in header after EOF?  Hmm...
-            std::fprintf(stderr,"Article was all header -- no body.\n");
+            std::fprintf(stderr, "Article was all header -- no body.\n");
             std::exit(1);
         }
-        *cp = (char)i;
-        len = std::strlen(cp);
-        found_nl = (len && cp[len-1] == '\n');
+        input_line.clear();
+        input_line += static_cast<char>(i);
+        while ((i = std::getc(stdin)) != EOF)
+        {
+            input_line += static_cast<char>(i);
+            if (i == '\n')
+            {
+                break;
+            }
+        }
+        found_nl = !input_line.empty() && input_line.back() == '\n';
         if (had_nl)
         {
-            i = valid_header(cp);
+            i = valid_header(input_line);
             if (i == 0)
             {
-                std::fprintf(stderr,"Invalid header:\n%s",cp);
+                std::fprintf(stderr, "Invalid header:\n%s", input_line.c_str());
                 std::exit(1);
             }
             if (i == 2)
@@ -203,25 +204,23 @@ int main(int argc, char *argv[])
                 break;
             }
             in_header = true;
-            if (string_case_equal(cp, "From:", 5))
+            if (string_case_equal(input_line.c_str(), "From:", 5))
             {
                 has_fromline = true;
             }
-            else if (string_case_equal(cp, "Path:", 5))
+            else if (string_case_equal(input_line.c_str(), "Path:", 5))
             {
                 has_pathline = true;
             }
         }
-        artpos += len;
-        cp += len;
         had_nl = found_nl;
         if (had_nl != 0 && !g_server_name.empty())
         {
-            cp[-1] = '\r';
-            *cp++ = '\n';
+            input_line.back() = '\r';
+            input_line += '\n';
         }
+        article_header += input_line;
     }
-    *cp = '\0';
 
     // Well, the header looks ok, so let's get on with it.
 
@@ -256,7 +255,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    inews_fputs(headbuf);
+    inews_fputs(article_header.c_str());
     if (!has_pathline)
     {
         std::sprintf(g_buf,"Path: not-for-mail%s",line_end);
@@ -279,25 +278,38 @@ int main(int argc, char *argv[])
     inews_fputs(g_buf);
 
     had_nl = true;
-    while (std::fgets(headbuf, headbuf_size, stdin))
+    while (true)
     {
+        body_line.clear();
+        while ((i = std::getc(stdin)) != EOF)
+        {
+            body_line += static_cast<char>(i);
+            if (i == '\n')
+            {
+                break;
+            }
+        }
+        if (body_line.empty())
+        {
+            break;
+        }
         // Single . is eof, so put in extra one
-        if (!g_server_name.empty() && had_nl && *headbuf == '.')
+        if (!g_server_name.empty() && had_nl && body_line.front() == '.')
         {
             inews_fputc('.');
         }
         // check on newline
-        cp = headbuf + std::strlen(headbuf);
-        if (cp > headbuf && *--cp == '\n')
+        found_nl = body_line.back() == '\n';
+        if (found_nl)
         {
-            *cp = '\0';
-            std::sprintf(g_buf, "%s%s", headbuf, line_end);
-            inews_fputs(g_buf);
+            body_line.pop_back();
+            body_line += line_end;
+            inews_fputs(body_line.c_str());
             had_nl = true;
         }
         else
         {
-            inews_fputs(headbuf);
+            inews_fputs(body_line.c_str());
             had_nl = false;
         }
     }
