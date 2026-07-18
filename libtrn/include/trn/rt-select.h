@@ -1,6 +1,7 @@
 /* trn/rt-select.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_RT_SELECT_H
 #define TRN_RT_SELECT_H
 
@@ -9,6 +10,7 @@
 #include <trn/help.h>
 #include <trn/rcstuff.h>
 
+#include <string>
 #include <string_view>
 
 enum SelectionMode
@@ -56,7 +58,7 @@ extern bool              g_selected_only;
 extern ArticleUnread     g_selected_count;
 extern int               g_selected_subj_cnt;
 extern int               g_added_articles;
-extern const char       *g_sel_chars;
+extern std::string       g_sel_chars;
 extern int               g_sel_item_index;
 extern int               g_sel_last_line;
 extern bool              g_sel_at_end;

@@ -44,6 +44,7 @@ add_executable(trn-test
     test_rcln.cpp
     test_rcstuff.cpp
     test_rthread.cpp
+    test_rt-page.cpp
     test_rt-ov.cpp
     test_rt-process.cpp
     test_rt-util.cpp

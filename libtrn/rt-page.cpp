@@ -477,7 +477,7 @@ static void sel_page_init()
     g_sel_chars = get_val_const("SELECTCHARS", SELECTION_CHARS);
     // The numeric option of up to 99 lines will require many adaptations
     // to be able to switch from a large numeric page (more than
-    // strlen(g_sel_chars) lines) to an alphanumeric page. XXX
+    // g_sel_chars.size() lines) to an alphanumeric page. XXX
     //
     if (g_use_sel_num)
     {
@@ -485,7 +485,7 @@ static void sel_page_init()
     }
     else
     {
-        s_sel_max_per_page = std::strlen(g_sel_chars);
+        s_sel_max_per_page = static_cast<int>(g_sel_chars.size());
     }
     s_sel_max_per_page = std::min(s_sel_max_per_page, static_cast<int>(MAX_SEL));
     s_sel_max_per_page = std::min(s_sel_max_per_page, s_sel_max_line_cnt);

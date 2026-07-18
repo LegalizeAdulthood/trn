@@ -520,18 +520,6 @@ that later caller slices can consume directly.
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
 
-#### CSTR-119 - Selector Character Set Storage
-
-- Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,
-  `libtrn/include/trn/rt-select.h`.
-- Kind: environment-derived global string storage.
-- Function: storage-centered `g_sel_chars`.
-- Change: replace the raw pointer from `get_val_const("SELECTCHARS",
-  ...)` with owned `std::string` storage.  Replace `strlen` and
-  `strchr` uses with string operations while preserving the current
-  selection character order and empty-value behavior.
-- Tests: selector input tests.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

@@ -85,7 +85,7 @@ bool              g_selected_only{};
 ArticleUnread     g_selected_count{};
 int               g_selected_subj_cnt{};
 int               g_added_articles{};
-const char       *g_sel_chars{};
+std::string       g_sel_chars;
 int               g_sel_item_index{};
 int               g_sel_last_line{};
 bool              g_sel_at_end{};
@@ -1327,7 +1327,7 @@ reinp_selector:
     {
         ch = '.';
     }
-    const char *in_select = std::strchr(g_sel_chars, ch);
+    const std::size_t in_select = g_sel_chars.find(static_cast<char>(ch));
     if (g_use_sel_num && ch >= '0' && ch <= '9')
     {
         int ch_num1 = ch;
@@ -1443,9 +1443,9 @@ reinp_selector:
             action = '+';
         }
     }
-    else if (in_select && !g_use_sel_num)
+    else if (in_select != std::string::npos && !g_use_sel_num)
     {
-        j = in_select - g_sel_chars;
+        j = static_cast<int>(in_select);
         if (j >= g_sel_page_item_cnt)
         {
             dingaling();
@@ -2556,7 +2556,7 @@ static char another_command(char_int ch)
         if (ch > 0)
         {
             // try to optimize the screen update for some commands.
-            if (!std::strchr(g_sel_chars, ch) //
+            if (g_sel_chars.find(static_cast<char>(ch)) == std::string::npos //
                 && (std::strchr(SPECIAL_CMD_LETTERS, ch) || ch == Ctl('k')))
             {
                 s_sel_ret = ch;
