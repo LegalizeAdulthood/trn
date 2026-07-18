@@ -28,6 +28,7 @@
 #include <parsedate/parsedate.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -46,7 +47,7 @@ static HeaderLineType s_header_num[] = {
     REFS_LINE, BYTES_LINE, LINES_LINE, XREF_LINE
 };
 
-static void             ov_parse(char *line, std::size_t line_length, ArticleNum artnum, bool remote);
+static void             ov_parse(std::string_view line, ArticleNum artnum, bool remote);
 static std::string      ov_name(std::string_view group);
 static OverviewFieldNum ov_num(char *hdr, char *end);
 static const char      *ov_field_name(int num);
@@ -322,7 +323,7 @@ beginning:
             break;
         }
         g_spin_todo -= (an - artnum).value_of() - 1;
-        ov_parse(line.data(), line.size(), artnum = an, remote);
+        ov_parse(line, artnum = an, remote);
         if (g_int_count)
         {
             g_int_count = 0;
@@ -424,12 +425,12 @@ exit:
     return success;
 }
 
-static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, bool remote)
+static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
 {
     OverviewFieldNum *fieldnum = g_data_source->m_field_num;
     FieldFlags  *fieldflags = g_data_source->m_field_flags;
-    char         *fields[OV_MAX_FIELDS];
-    char         *tab;
+    std::array<std::string_view, OV_MAX_FIELDS> fields{};
+    std::array<bool, OV_MAX_FIELDS>             field_present{};
 
     Article *article = article_ptr(artnum);
     if (article->m_flags & AF_THREADED)
@@ -438,27 +439,21 @@ static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, boo
         return;
     }
 
-    if (line_length > 0 && line[line_length - 1] == '\n')
+    if (!line.empty() && line.back() == '\n')
     {
-        if (line_length > 1 && line[line_length - 2] == '\r')
+        line.remove_suffix(1);
+        if (!line.empty() && line.back() == '\r')
         {
-            line[line_length - 2] = '\0';
-        }
-        else
-        {
-            line[line_length - 1] = '\0';
+            line.remove_suffix(1);
         }
     }
-    char *cp = line;
 
-    std::memset(fields,0,sizeof fields);
-    for (int i = 0; cp && i < OV_MAX_FIELDS; cp = tab)
+    std::size_t field_start = 0;
+    for (int i = 0; i < OV_MAX_FIELDS && field_start <= line.size();)
     {
-        tab = std::strchr(cp, '\t');
-        if (tab != nullptr)
-        {
-            *tab++ = '\0';
-        }
+        const std::size_t tab = line.find('\t', field_start);
+        std::string_view  field =
+            line.substr(field_start, tab == std::string_view::npos ? std::string_view::npos : tab - field_start);
         int fn = fieldnum[i];
         if (!(fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD)))
         {
@@ -466,10 +461,10 @@ static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, boo
         }
         if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK_FOR_HEADER))
         {
-            char* s = std::strchr(cp, ':');
+            const std::size_t colon = field.find(':');
             if (fieldflags[fn] & FF_CHECK_FOR_HEADER)
             {
-                if (s)
+                if (colon != std::string_view::npos)
                 {
                     fieldflags[fn] |= FF_HAS_HDR;
                 }
@@ -477,24 +472,40 @@ static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, boo
             }
             if (fieldflags[fn] & FF_HAS_HDR)
             {
-                if (!s)
+                if (colon == std::string_view::npos)
                 {
                     break;
                 }
-                if (s - cp != g_header_type[s_header_num[fn]].length
-                 || string_case_compare(cp,g_header_type[s_header_num[fn]].name.c_str(),g_header_type[s_header_num[fn]].length))
+                const std::string_view header_name = field.substr(0, colon);
+                if (header_name.size() != static_cast<std::size_t>(g_header_type[s_header_num[fn]].length) ||
+                    string_case_compare(header_name.data(), g_header_type[s_header_num[fn]].name.c_str(),
+                                        g_header_type[s_header_num[fn]].length))
                 {
+                    if (tab == std::string_view::npos)
+                    {
+                        break;
+                    }
+                    field_start = tab + 1;
                     continue;
                 }
-                cp = s;
-                cp = skip_eq(++cp, ' ');
+                field.remove_prefix(colon + 1);
+                while (!field.empty() && field.front() == ' ')
+                {
+                    field.remove_prefix(1);
+                }
             }
         }
-        fields[fn] = cp;
+        fields[fn] = field;
+        field_present[fn] = true;
         i++;
+        if (tab == std::string_view::npos)
+        {
+            break;
+        }
+        field_start = tab + 1;
     }
-    if (!fields[OV_SUBJ] || !fields[OV_MSG_ID]
-     || !fields[OV_FROM] || !fields[OV_DATE])
+    if (!field_present[OV_SUBJ] || !field_present[OV_MSG_ID]
+     || !field_present[OV_FROM] || !field_present[OV_DATE])
     {
         return;         // skip this line if it's too short
     }
@@ -513,26 +524,26 @@ static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, boo
     }
     if (!article->m_date)
     {
-        article->m_date = parsedate(fields[OV_DATE]);
+        article->m_date = parsedate(std::string{fields[OV_DATE]}.c_str());
     }
-    if (!article->m_bytes && fields[OV_BYTES])
+    if (!article->m_bytes && field_present[OV_BYTES])
     {
         article->set_cached_line(BYTES_LINE, fields[OV_BYTES]);
     }
-    if (!article->m_lines && fields[OV_LINES])
+    if (!article->m_lines && field_present[OV_LINES])
     {
         article->set_cached_line(LINES_LINE, fields[OV_LINES]);
     }
 
     if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD))
     {
-        if (!article->m_xrefs && fields[OV_XREF])
+        if (!article->m_xrefs && field_present[OV_XREF])
         {
             // Exclude an xref for just this group
-            cp = std::strchr(fields[OV_XREF], ':');
-            if (cp && std::strchr(cp+1, ':'))
+            const std::size_t colon = fields[OV_XREF].find(':');
+            if (colon != std::string_view::npos && fields[OV_XREF].find(':', colon + 1) != std::string_view::npos)
             {
-                article->m_xrefs = fields[OV_XREF];
+                article->m_xrefs = std::string{fields[OV_XREF]};
             }
         }
 
@@ -543,7 +554,7 @@ static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, boo
                 article->m_xrefs = "";
             }
         }
-        else if (fields[OV_XREF])
+        else if (field_present[OV_XREF])
         {
             for (ArticleNum an = article_first(g_abs_first); an < artnum; an = article_next(an))
             {
@@ -566,7 +577,7 @@ static void ov_parse(char *line, std::size_t line_length, ArticleNum artnum, boo
     {
         if (article->valid_article())
         {
-            article->thread_article(fields[OV_REFS] ? fields[OV_REFS] : "");
+            article->thread_article(field_present[OV_REFS] ? fields[OV_REFS] : std::string_view{});
         }
     }
     else if (!(article->m_flags & AF_CACHED))

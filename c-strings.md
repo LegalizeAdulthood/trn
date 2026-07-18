@@ -525,19 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-114 - Overview Field Views
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: local array of C-string field tokens.
-- Function: `ov_parse`.
-- Depends on: `CSTR-109`, `CSTR-113`.
-- Change: replace `char *fields[OV_MAX_FIELDS]` with
-  `std::array<std::string_view, OV_MAX_FIELDS>`.  Parse tabs by view
-  extent instead of overwriting delimiters, pass views to `Article`
-  setters, and keep only the source line storage mutable when another
-  callee still requires it.
-- Tests: overview parser tests.
-
 #### CSTR-056 - KILL File Append Paths
 
 - Files: `libtrn/kfile.cpp`.
