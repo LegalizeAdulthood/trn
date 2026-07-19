@@ -637,18 +637,6 @@ and clarified ownership at the edges.
   state is intentionally carrying a partial tag across input chunks.
 - Tests: MIME HTML filtering tests before refactor.
 
-#### CSTR-102 - Terminal Macro Line Expansion Buffer
-
-- Files: `libtrn/terminal.cpp`, `libtrn/ngstuff.cpp`.
-- Kind: caller-provided fixed expansion buffer.
-- Function: `mac_line`.
-- Change: replace the `tmpbuf` plus `tbsize` output contract with owned
-  `std::string` expansion storage inside `mac_line`.  Update the
-  terminal macro initializer and `ngstuff` caller in the same slice.  Do
-  not let string data pointers escape into keymap storage; copy into the
-  existing owned macro storage when needed.
-- Tests: terminal macro tests.
-
 #### CSTR-103 - Terminal Pushed String Expansion Buffer
 
 - Files: `libtrn/terminal.cpp`.

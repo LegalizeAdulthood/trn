@@ -180,6 +180,8 @@ static int circfill();
 #endif
 #endif
 static char   *edit_buf(char *s, const char *cmd);
+static void    install_macro(std::string_view sequence, std::string_view definition,
+                             bool report_overrides);
 static void    mac_init(char *tcbuf);
 static KeyMap *new_key_map();
 static void    reprint();
@@ -463,7 +465,11 @@ void set_macro(std::string_view seq, std::string_view def)
     std::string seq_text{seq};
     std::string def_text{def};
 
-    mac_line(def_text.data(), seq_text.data(), 0);
+    if (!def_text.empty() && def_text.back() == '\n')
+    {
+        def_text.pop_back();
+    }
+    install_macro(seq_text, def_text, false);
     // check for common (?) brain damage: ku/kd/etc sequence may be the
     // cursor move sequence instead of the input sequence.
     // (This happens on the local xterm definitions.)
@@ -473,13 +479,13 @@ void set_macro(std::string_view seq, std::string_view def)
     {
         std::string alt_seq{seq_text};
         alt_seq[1] = 'O';
-        mac_line(def_text.data(), alt_seq.data(), 0);
+        install_macro(alt_seq, def_text, false);
     }
     if (seq_text.size() > 2 && seq_text[0] == '\033' && seq_text[1] == 'O')
     {
         std::string alt_seq{seq_text};
         alt_seq[1] = '[';
-        mac_line(def_text.data(), alt_seq.data(), 0);
+        install_macro(alt_seq, def_text, false);
     }
 }
 
@@ -571,8 +577,6 @@ void arrow_macros()
 
 static void mac_init(char *tcbuf)
 {
-    char tmpbuf[1024];
-
     if (g_auto_arrow_macros)
     {
         arrow_macros();
@@ -586,18 +590,16 @@ static void mac_init(char *tcbuf)
     {
         while (std::fgets(tcbuf,TCBUF_SIZE,macros) != nullptr)
         {
-            mac_line(tcbuf,tmpbuf,sizeof tmpbuf);
+            mac_line(tcbuf);
         }
         std::fclose(macros);
     }
 }
 
-void mac_line(char *line, char *tmpbuf, int tbsize)
+void mac_line(char *line)
 {
-    const char *m;
-    KeyMap*     curmap;
-    int         garbage = 0;
-    static constexpr char OVERRIDE[] = "\nkeymap overrides string\n";
+    std::string macro_sequence(CMD_BUF_LEN, '\0');
+    const char *definition;
 
     if (s_top_map == nullptr)
     {
@@ -612,39 +614,46 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     {
         line[ch] = '\0';
     }
-    // A 0 length signifies we already parsed the macro into tmpbuf,
-    // so line is just the definition.
-    if (tbsize)
-    {
-        m = do_interp(tmpbuf,tbsize,line," \t",nullptr);
-    }
-    else
-    {
-        m = line;
-    }
-    if (!*m)
+    definition =
+        do_interp(macro_sequence.data(), static_cast<int>(macro_sequence.size()), line, " \t", nullptr);
+    if (!*definition)
     {
         return;
     }
-    m = skip_hor_space(m);
-    curmap=s_top_map;
-    for (char *s = tmpbuf; *s; s++)
+    macro_sequence.resize(std::strlen(macro_sequence.c_str()));
+    install_macro(macro_sequence, skip_hor_space(definition), true);
+}
+
+static void install_macro(std::string_view sequence, std::string_view definition,
+                          bool report_overrides)
+{
+    KeyMap*     curmap;
+    int         garbage = 0;
+    static constexpr char OVERRIDE[] = "\nkeymap overrides string\n";
+
+    if (s_top_map == nullptr)
     {
-        ch = *s & 0177;
-        if (s[1] == '+' && std::isdigit(s[2]))
+        s_top_map = new_key_map();
+    }
+    curmap=s_top_map;
+    for (std::size_t position = 0; position < sequence.size(); position++)
+    {
+        int ch = static_cast<unsigned char>(sequence[position]) & 0177;
+        if (position + 2 < sequence.size() && sequence[position + 1] == '+'
+            && std::isdigit(static_cast<unsigned char>(sequence[position + 2])))
         {
-            s += 2;
-            garbage = (*s & KM_GMASK) << KM_GSHIFT;
+            position += 2;
+            garbage = (static_cast<unsigned char>(sequence[position]) & KM_GMASK) << KM_GSHIFT;
         }
         else
         {
             garbage = 0;
         }
-        if (s[1])
+        if (position + 1 < sequence.size())
         {
             if ((curmap->km_type[ch] & KM_TMASK) == KM_STRING)
             {
-                if (tbsize)
+                if (report_overrides)
                 {
                     std::fputs(OVERRIDE,stdout);
                     term_down(2);
@@ -660,7 +669,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
         }
         else
         {
-            if (tbsize && (curmap->km_type[ch] & KM_TMASK) == KM_KEYMAP)
+            if (report_overrides && (curmap->km_type[ch] & KM_TMASK) == KM_KEYMAP)
             {
                 std::fputs(OVERRIDE,stdout);
                 term_down(2);
@@ -672,7 +681,14 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
                     curmap->km_km[ch] = nullptr;
                 }
                 curmap->km_type[ch] = KM_STRING + garbage;
-                curmap->km_str[ch] = m;
+                if (definition.empty())
+                {
+                    curmap->km_str[ch].clear();
+                }
+                else
+                {
+                    curmap->km_str[ch].assign(definition.data(), definition.size());
+                }
             }
         }
     }

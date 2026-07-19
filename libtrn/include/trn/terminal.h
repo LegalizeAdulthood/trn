@@ -171,7 +171,7 @@ void  term_init();
 void  term_set(char *tcbuf);
 void  set_macro(std::string_view seq, std::string_view def);
 void  arrow_macros();
-void  mac_line(char *line, char *tmpbuf, int tbsize);
+void  mac_line(char *line);
 void  show_macros();
 void  set_mode(GeneralMode new_gmode, MinorMode new_mode);
 int   put_char(char_int ch);

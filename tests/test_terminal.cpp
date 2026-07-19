@@ -274,6 +274,19 @@ TEST_F(TerminalTest, getCommandExpandsMacroString)
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }
 
+TEST_F(TerminalTest, macLineParsesExpandedKey)
+{
+    char line[] = "^B q\n";
+
+    mac_line(line);
+
+    push_char('\002');
+    get_cmd(g_buf);
+
+    EXPECT_EQ('q', g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+}
+
 TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)
 {
     set_macro("\001A", "result");

@@ -154,9 +154,8 @@ bool switcheroo()
         }
         else
         {
-            std::string tmp_buf(LINE_BUF_LEN, '\0');
-            char       *s = skip_space(g_buf + 2);
-            mac_line(s, tmp_buf.data(), static_cast<int>(tmp_buf.size()));
+            char *s = skip_space(g_buf + 2);
+            mac_line(s);
         }
     }
     else
