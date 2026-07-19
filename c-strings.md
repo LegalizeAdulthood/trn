@@ -531,15 +531,6 @@ broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-092 - Supersede Article Header Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local fixed header buffer.
-- Function: `supersede_article`.
-- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
-  header storage.  Preserve generated header text and edit/post flow.
-- Tests: response/supersede tests.
-
 #### CSTR-093 - Reply Header Buffer
 
 - Files: `libtrn/respond.cpp`.

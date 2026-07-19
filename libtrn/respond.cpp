@@ -697,7 +697,6 @@ done:
 
 int supersede_article()         // Supersedes:
 {
-    char hbuf[5*LINE_BUF_LEN];
     int  myuid = current_user_id();
     int  r = -1;
     bool incl_body = (*g_buf == 'Z');
@@ -753,8 +752,15 @@ int supersede_article()         // Supersedes:
             term_down(1);
             goto done;
         }
-        interp(hbuf, sizeof hbuf, get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER).c_str());
-        std::fputs(hbuf,header);
+        constexpr int header_size = 5 * LINE_BUF_LEN;
+        std::string   header_text(header_size, '\0');
+        interp(header_text.data(), header_size, get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER).c_str());
+        const std::size_t header_end = header_text.find('\0');
+        if (header_end != std::string::npos)
+        {
+            header_text.resize(header_end);
+        }
+        std::fputs(header_text.c_str(),header);
         if (incl_body && g_art_fp != nullptr)
         {
             parse_header(g_art);
