@@ -895,7 +895,8 @@ void reply()
 
 void forward()
 {
-    char hbuf[5*LINE_BUF_LEN];
+    constexpr int header_size = 5 * LINE_BUF_LEN;
+    std::string   header_text(header_size, '\0');
     const std::string mail_doer = get_env_var("FORWARDPOSTER", FORWARD_POSTER);
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
@@ -916,11 +917,16 @@ void forward()
         term_down(1);
         goto done;
     }
-    interp(hbuf, sizeof hbuf, get_env_var("FORWARDHEADER", FORWARD_HEADER).c_str());
-    std::fputs(hbuf,header);
+    interp(header_text.data(), header_size, get_env_var("FORWARDHEADER", FORWARD_HEADER).c_str());
+    const std::size_t header_end = header_text.find('\0');
+    if (header_end != std::string::npos)
+    {
+        header_text.resize(header_end);
+    }
+    std::fputs(header_text.c_str(),header);
 #ifdef REGEX_WORKS_RIGHT
     if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
-        && mime_compex.execute(hbuf) != nullptr)
+        && mime_compex.execute(header_text.c_str()) != nullptr)
     {
         mime_boundary = mime_compex.get_bracket(1);
     }
@@ -930,7 +936,7 @@ void forward()
     }
 #else
     mime_boundary = nullptr;
-    for (char *s = hbuf; s; s = eol)
+    for (char *s = header_text.data(); s; s = eol)
     {
         eol = std::strchr(s, '\n');
         if (eol)
@@ -978,11 +984,11 @@ void forward()
     {
         if (g_verbose)
         {
-            std::printf("\n%s\n(Above lines saved in file %s)\n", hbuf, g_head_name.c_str());
+            std::printf("\n%s\n(Above lines saved in file %s)\n", header_text.c_str(), g_head_name.c_str());
         }
         else
         {
-            std::printf("\n%s\n(Header in %s)\n", hbuf, g_head_name.c_str());
+            std::printf("\n%s\n(Header in %s)\n", header_text.c_str(), g_head_name.c_str());
         }
         term_down(3);
     }
