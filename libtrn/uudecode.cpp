@@ -16,6 +16,7 @@
 #include <charconv>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <string_view>
 
 static void uudecode_line(char *line, std::FILE *ofp);
@@ -237,6 +238,8 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
 {
     static std::FILE *ofp = nullptr;
     static int   line_length;
+    std::string       lastline;
+    lastline.reserve(UU_LENGTH + 1);
 
     if (state == DECODE_DONE)
     {
@@ -251,7 +254,6 @@ all_done:
 
     while (ifp ? std::fgets(g_buf, sizeof g_buf, ifp) : read_art(g_buf, sizeof g_buf))
     {
-        char lastline[UU_LENGTH+1];
         if (!ifp && mime_end_of_section(g_buf))
         {
             break;
@@ -328,7 +330,7 @@ all_done:
                 break;
             }
             // May be nearing end of file, so save this line
-            std::strcpy(lastline, g_buf);
+            lastline = g_buf;
             // some encoders put the end line right after the last M line
             if (!std::strncmp(g_buf, "end", 3))
             {
@@ -363,7 +365,9 @@ all_done:
             if (!std::strncmp(g_buf, "end", 3) && std::isspace(g_buf[3]))
             {
                 // Handle that last line we saved
-                uudecode_line(lastline, ofp);
+                lastline.resize(std::max(lastline.size(), static_cast<std::string::size_type>(UU_LENGTH + 1)), '\0');
+                uudecode_line(lastline.data(), ofp);
+                lastline.clear();
 end:            if (ofp)
                 {
                     std::fclose(ofp);

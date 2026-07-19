@@ -539,16 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-096 - Uudecode Pending Line Buffer
-
-- Files: `libtrn/uudecode.cpp`.
-- Kind: local fixed pending-line buffer plus global input buffer use.
-- Function: `uudecode`.
-- Change: replace `lastline[UU_LENGTH+1]` with owned string storage
-  when the pending decoded line is text.  Keep meaningful uuencoded line
-  length validation and defer `g_buf` input ownership to `CSTR-077`.
-- Tests: uudecode tests.
-
 #### CSTR-097 - Selector Command Key Storage
 
 - Files: `libtrn/rt-select.cpp`, `libtrn/include/trn/rt-select.h`,
