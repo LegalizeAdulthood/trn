@@ -16,6 +16,8 @@
 #include <cstring>
 #include <fstream>
 
+namespace fs = std::filesystem;
+
 #ifdef TILDE_NAME
 static std::string s_tilde_name;
 static std::string s_tilde_dir;
@@ -243,15 +245,15 @@ char *in_string(char *big, const char *little, bool case_matters)
     return const_cast<char *>(in_string(static_cast<const char *>(big), little, case_matters));
 }
 
-AuthCredentials read_auth_file(const char *file)
+AuthCredentials read_auth_file(const fs::path &file)
 {
-    if (file == nullptr || *file == '\0')
+    if (file.empty())
     {
         return {};
     }
 
     AuthCredentials result;
-    std::ifstream fp{file};
+    std::ifstream   fp{file};
     if (fp)
     {
         std::getline(fp, result.user);

@@ -456,6 +456,21 @@ TEST_F(DataSourceInitTest, readsForceAuthFromEnvironment)
     EXPECT_TRUE(source.m_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED);
 }
 
+TEST_F(DataSourceInitTest, readsNntpAuthFileForRemoteSource)
+{
+    std::ofstream{m_output_dir / ".nntpauth"} << "reader\n"
+                                              << "secret\n";
+    m_env.expect_env("NNTPSERVER", "news.example");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    ASSERT_EQ(1U, g_data_sources.size());
+    const DataSource &source = g_data_sources.front();
+    EXPECT_EQ("reader", source.m_auth_user);
+    EXPECT_EQ("secret", source.m_auth_pass);
+}
+
 TEST_F(DataSourceInitTest, parsesNntpServerPort)
 {
     m_env.expect_env("NNTPSERVER", "news.example;119");

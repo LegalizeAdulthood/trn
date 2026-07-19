@@ -5,6 +5,7 @@
 #ifndef TRN_UTIL2_H
 #define TRN_UTIL2_H
 
+#include <filesystem>
 #include <string>
 #include <string_view>
 
@@ -20,6 +21,6 @@ struct AuthCredentials
     std::string password;
 };
 
-AuthCredentials read_auth_file(const char *file);
+AuthCredentials read_auth_file(const std::filesystem::path &file);
 
 #endif

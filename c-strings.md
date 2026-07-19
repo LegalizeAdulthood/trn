@@ -521,18 +521,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-153 - Auth File Path API
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`,
-  `libtrn/datasrc.cpp`, `tool/util3.cpp`.
-- Kind: nullable C-string filename helper.
-- Function: `read_auth_file`.
-- Change: accept a path-shaped value instead of `const char *`; use an
-  empty path as the missing-file sentinel and update callers to pass
-  `g_nntp_auth_file` directly instead of `c_str()`.
-- Tests: auth-file tests if present; otherwise data-source and tool
-  build coverage.
-
 #### CSTR-154 - UTF Charset View API
 
 - Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,

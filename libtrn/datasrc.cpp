@@ -106,7 +106,7 @@ void data_source_init()
     if (!server_name.empty() && server_name != "local")
     {
         DataSourceConfig      config;
-        const AuthCredentials credentials = read_auth_file(g_nntp_auth_file.c_str());
+        const AuthCredentials credentials = read_auth_file(g_nntp_auth_file);
         config.set_nntp_server(server_name.c_str());
         config.set_auth_user(credentials.user.c_str());
         config.set_auth_password(credentials.password.c_str());
@@ -146,7 +146,7 @@ void data_source_init()
         config.set_group_desc(GROUP_DESC);
         if (!server_name.empty())
         {
-            const AuthCredentials credentials = read_auth_file(g_nntp_auth_file.c_str());
+            const AuthCredentials credentials = read_auth_file(g_nntp_auth_file);
             config.set_auth_user(credentials.user.c_str());
             config.set_auth_password(credentials.password.c_str());
             config.set_force_auth(force_auth.c_str());
