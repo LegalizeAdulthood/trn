@@ -529,18 +529,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-106 - Terminal Capability Const Pointers
-
-- Files: `libtrn/terminal.cpp`,
-  `libtrn/include/trn/terminal.h`, terminal tests.
-- Kind: literal and termcap capability pointers exposed as mutable.
-- Function: storage-centered terminal capability globals and helpers.
-- Change: convert read-only terminal capability pointers from `char *`
-  to `const char *`, including the local MSDOS literal assignments and
-  termcap helper return values.  Update only call sites that need the
-  const-correct type.  Do not change the termcap storage buffer.
-- Tests: terminal tests.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts

@@ -98,10 +98,10 @@ protected:
     const char *m_old_char_subst{};
     int         m_old_max_tree_lines{};
     int         m_old_tc_cols{};
-    char       *m_old_tc_so{};
-    char       *m_old_tc_se{};
-    char       *m_old_tc_us{};
-    char       *m_old_tc_ue{};
+    const char *m_old_tc_so{};
+    const char *m_old_tc_se{};
+    const char *m_old_tc_us{};
+    const char *m_old_tc_ue{};
     const char *m_old_tc_uc{};
     int         m_old_fire_is_out{};
     bool        m_old_erase_screen{};

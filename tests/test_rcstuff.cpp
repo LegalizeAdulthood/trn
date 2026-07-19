@@ -242,8 +242,8 @@ protected:
     bool                         m_old_erase_screen{};
     int                          m_old_tc_lines{};
     int                          m_old_tc_cols{};
-    char                        *m_old_tc_so{};
-    char                        *m_old_tc_se{};
+    const char                  *m_old_tc_so{};
+    const char                  *m_old_tc_se{};
     bool                         m_old_tc_am{};
     char                         m_empty_tc_so[1]{};
     char                         m_empty_tc_se[1]{};

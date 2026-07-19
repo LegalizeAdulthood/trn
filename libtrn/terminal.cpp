@@ -86,18 +86,18 @@ GeneralMode   g_general_mode{GM_INIT};            // general mode of trn
 #ifdef HAS_TERMLIB
 bool  g_tc_GT{};              // hardware tabs
 const char *g_tc_BC{};        // backspace character
-char *g_tc_UP{};              // move cursor up one line
+const char *g_tc_UP{};        // move cursor up one line
 const char *g_tc_CR{};        // get to left margin, somehow
 const char *g_tc_VB{};        // visible bell
-char *g_tc_CE{};              // clear to end of line
-char *g_tc_CM{};              // cursor motion
-char *g_tc_HO{};              // home cursor
-char *g_tc_IL{};              // insert line
-char *g_tc_CD{};              // clear to end of display
-char *g_tc_SO{};              // begin standout mode
-char *g_tc_SE{};              // end standout mode
-char *g_tc_US{};              // start underline mode
-char *g_tc_UE{};              // end underline mode
+const char *g_tc_CE{};        // clear to end of line
+const char *g_tc_CM{};        // cursor motion
+const char *g_tc_HO{};        // home cursor
+const char *g_tc_IL{};        // insert line
+const char *g_tc_CD{};        // clear to end of display
+const char *g_tc_SO{};        // begin standout mode
+const char *g_tc_SE{};        // end standout mode
+const char *g_tc_US{};        // start underline mode
+const char *g_tc_UE{};        // end underline mode
 const char *g_tc_UC{};        // underline a character, if that's how it's done
 bool  g_tc_UG{};              // blanks left by US and UE
 bool  g_tc_AM{};              // does terminal have automatic margins?
@@ -120,10 +120,10 @@ static const MouseButtonList *s_mouse_bar_btns{};
 static int   s_mouse_bar_start{};
 static bool  s_xmouse_is_on{};
 static const char *s_tc_CL{}; // home and clear screen
-static char *s_tc_TI{}; // initialize terminal
-static char *s_tc_TE{}; // reset terminal
-static char *s_tc_KS{}; // enter `keypad transmit' mode
-static char *s_tc_KE{}; // exit `keypad transmit' mode
+static const char *s_tc_TI{}; // initialize terminal
+static const char *s_tc_TE{}; // reset terminal
+static const char *s_tc_KS{}; // enter `keypad transmit' mode
+static const char *s_tc_KE{}; // exit `keypad transmit' mode
 static char  s_tc_PC{}; // pad character for use by tputs()
 #ifndef MSDOS
 static std::string s_tc_CR_fallback;
@@ -253,7 +253,7 @@ int devtty;
 #ifndef MSDOS
 // guarantee capability pointer != nullptr
 // (I believe terminfo will ignore the &tmpaddr argument.)
-inline char *Tgetstr(const char *key)
+inline const char *Tgetstr(const char *key)
 {
     char *tmpaddr{};
     char *temp = tgetstr(key, &tmpaddr);
@@ -2120,7 +2120,7 @@ void home_cursor()
 
 void goto_xy(int to_col, int to_line)
 {
-    char*str;
+    const char *str;
     int  cmcost;
 
     if (g_term_col == to_col && g_term_line == to_line)
@@ -2702,7 +2702,7 @@ int tputs(const char *str, int num, int (*func)(int))
 #endif
 
 #ifdef MSDOS
-char *tgoto(char *str, int x, int y)
+const char *tgoto(const char *str, int x, int y)
 {
     static char gbuf[32];
     std::sprintf(gbuf,str,y+1,x+1);
