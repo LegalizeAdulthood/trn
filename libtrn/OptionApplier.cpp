@@ -8,7 +8,17 @@
 #include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 
-void apply_global_option(OptionIndex option, const char *value);
+void apply_global_option(OptionIndex option, std::string_view value);
+
+namespace
+{
+
+std::string_view to_view(const std::string &value)
+{
+    return {value.data(), value.size()};
+}
+
+} // namespace
 
 OptionApplier::OptionApplier() :
     OptionApplier(apply_global_option)
@@ -28,9 +38,9 @@ void OptionApplier::apply(const IniSectionValues &values) const
         if (catalog.is_option(row))
         {
             const OptionIndex option = catalog.option(row);
-            if (const char *value = values.c_str(option); value != nullptr)
+            if (const std::optional<std::string_view> value = values.value(option); value.has_value())
             {
-                apply(option, value);
+                apply(option, *value);
             }
         }
     }
@@ -41,23 +51,23 @@ void OptionApplier::apply(const OptionDraft &draft) const
     const int limit = static_cast<int>(draft.limit());
     for (int i = 1; i < limit; i++)
     {
-        if (const char *value = draft.value(i); value != nullptr)
+        if (const std::optional<std::string_view> value = draft.value(i); value.has_value())
         {
-            apply(static_cast<OptionIndex>(i), value);
+            apply(static_cast<OptionIndex>(i), *value);
         }
     }
     for (int i = 1; i < limit; i++)
     {
-        const char *value = draft.value(i);
-        if (value != nullptr && !g_option_saved_vals.empty() && g_option_saved_vals[i] //
-            && *g_option_saved_vals[i] == value)
+        const std::optional<std::string_view> value = draft.value(i);
+        if (value.has_value() && !g_option_saved_vals.empty() && g_option_saved_vals[i] //
+            && to_view(*g_option_saved_vals[i]) == *value)
         {
             g_option_saved_vals[i].reset();
         }
     }
 }
 
-void OptionApplier::apply(OptionIndex option, const char *value) const
+void OptionApplier::apply(OptionIndex option, std::string_view value) const
 {
     if (m_apply_one != nullptr)
     {

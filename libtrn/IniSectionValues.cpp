@@ -24,16 +24,6 @@ bool IniSectionValues::contains(int field_id) const
     return m_values.find(field_id) != m_values.end();
 }
 
-const char *IniSectionValues::c_str(int field_id) const
-{
-    const auto it = m_values.find(field_id);
-    if (it == m_values.end())
-    {
-        return nullptr;
-    }
-    return it->second.c_str();
-}
-
 std::optional<std::string_view> IniSectionValues::value(int field_id) const
 {
     const auto it = m_values.find(field_id);

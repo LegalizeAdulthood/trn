@@ -534,23 +534,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-107 - Option Value View Access
-
-- Files: `libtrn/IniSectionValues.cpp`,
-  `libtrn/include/trn/IniSectionValues.h`,
-  `libtrn/OptionDraft.cpp`, `libtrn/include/trn/OptionDraft.h`,
-  `libtrn/OptionApplier.cpp`, `libtrn/include/trn/OptionApplier.h`.
-- Kind: owned option strings exposed as nullable C strings.
-- Function: `IniSectionValues::c_str`, `OptionDraft::value`,
-  `OptionApplier::apply`.
-- Change: expose stored option values as
-  `std::optional<std::string_view>` and update option application to
-  pass string views through the callback API.  Keep nullability as
-  absence, not empty string, because option drafts and parsed INI
-  sections distinguish missing fields from present empty values.
-- Tests: `IniSectionValues`, `OptionDraft`, and `OptionApplier` tests
-  before and after refactor.
-
 #### CSTR-108 - RcGroupConfig Optional Value Views
 
 - Files: `libtrn/RcGroupConfig.cpp`,

@@ -46,13 +46,13 @@ bool OptionDraft::contains(int index) const
     return valid_index(index) && m_values[index].has_value();
 }
 
-const char *OptionDraft::value(int index) const
+std::optional<std::string_view> OptionDraft::value(int index) const
 {
     if (!contains(index))
     {
-        return nullptr;
+        return std::nullopt;
     }
-    return m_values[index]->c_str();
+    return *m_values[index];
 }
 
 bool OptionDraft::valid_index(int index) const

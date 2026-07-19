@@ -7,20 +7,22 @@
 
 #include <trn/opt.h>
 
+#include <string_view>
+
 class IniSectionValues;
 class OptionDraft;
 
 class OptionApplier
 {
 public:
-    using ApplyOne = void (*)(OptionIndex option, const char *value);
+    using ApplyOne = void (*)(OptionIndex option, std::string_view value);
 
     OptionApplier();
     explicit OptionApplier(ApplyOne apply_one);
 
     void apply(const IniSectionValues &values) const;
     void apply(const OptionDraft &draft) const;
-    void apply(OptionIndex option, const char *value) const;
+    void apply(OptionIndex option, std::string_view value) const;
 
 private:
     ApplyOne m_apply_one;

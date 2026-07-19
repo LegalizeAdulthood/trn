@@ -2031,7 +2031,9 @@ static bool select_option(OptionIndex i)
     std::string val{oldval};
     if (had_draft)
     {
-        val = g_option_draft->value(option);
+        const std::optional<std::string_view> draft_value = g_option_draft->value(option);
+        TRN_ASSERT(draft_value.has_value());
+        val.assign(draft_value->data(), draft_value->size());
     }
     s_clean_screen = in_choice("> ", val, help, MM_OPTION_EDIT_PROMPT);
     if (val != g_buf)

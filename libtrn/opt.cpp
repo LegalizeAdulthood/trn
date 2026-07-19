@@ -265,18 +265,21 @@ bool option_draft_contains(OptionIndex num)
     return g_option_draft != nullptr && g_option_draft->contains(num);
 }
 
-const char *option_draft_value(OptionIndex num)
+std::optional<std::string_view> option_draft_value(OptionIndex num)
 {
-    return g_option_draft != nullptr ? g_option_draft->value(num) : nullptr;
+    return g_option_draft != nullptr ? g_option_draft->value(num) : std::nullopt;
 }
 
-void set_option(OptionIndex num, const char *s)
+void set_option(OptionIndex num, std::string_view s)
 {
     OptionApplier{}.apply(num, s);
 }
 
-void apply_global_option(OptionIndex num, const char *s)
+void apply_global_option(OptionIndex num, std::string_view value)
 {
+    const std::string value_text{value};
+    const char       *s = value_text.c_str();
+
     if (!g_option_saved_vals.empty())
     {
         if (!g_option_saved_vals[num])

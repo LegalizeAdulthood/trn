@@ -2861,12 +2861,12 @@ void display_option(int op, int item_index)
         len = item.size();
         post = "..................................";
         const OptionIndex option = catalog.option(op);
-        const char *option_val = option_draft_value(option);
-        if (!option_val)
+        std::optional<std::string_view> option_val = option_draft_value(option);
+        if (!option_val.has_value())
         {
             option_val = quote_string(option_value(option));
         }
-        val = option_val;
+        val = *option_val;
     }
     post = post.substr(len);
     output_sel(item_index, g_sel_items[item_index].sel, false);

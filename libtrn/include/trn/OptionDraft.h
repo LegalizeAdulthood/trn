@@ -20,7 +20,7 @@ public:
     void        erase(int index);
     void        set(int index, std::string_view value);
     bool        contains(int index) const;
-    const char *value(int index) const;
+    std::optional<std::string_view> value(int index) const;
     std::size_t size() const;
     std::size_t limit() const;
 

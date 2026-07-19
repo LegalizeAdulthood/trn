@@ -38,7 +38,7 @@ struct OptionValueRestorer
     }
 };
 
-void record_option(OptionIndex option, const char *value)
+void record_option(OptionIndex option, std::string_view value)
 {
     s_applied_options.push_back({option, value});
 }

@@ -4,7 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
 #include <string>
+#include <string_view>
 
 TEST(OptionDraftTest, storesOwnedValuesByOptionIndex)
 {
@@ -14,8 +16,11 @@ TEST(OptionDraftTest, storesOwnedValuesByOptionIndex)
     draft.set(2, source);
     source = "changed";
 
+    const std::optional<std::string_view> value = draft.value(2);
     EXPECT_TRUE(draft.contains(2));
-    EXPECT_STREQ("draft value", draft.value(2));
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(std::string_view{"draft value"}, *value);
+    EXPECT_NE(source.data(), value->data());
     EXPECT_EQ(1U, draft.size());
 }
 
@@ -26,7 +31,9 @@ TEST(OptionDraftTest, replacingValueKeepsOneSelection)
     draft.set(2, "first");
     draft.set(2, "second");
 
-    EXPECT_STREQ("second", draft.value(2));
+    const std::optional<std::string_view> value = draft.value(2);
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(std::string_view{"second"}, *value);
     EXPECT_EQ(1U, draft.size());
 }
 
@@ -39,12 +46,15 @@ TEST(OptionDraftTest, eraseAndClearDiscardOwnedEdits)
     draft.erase(1);
 
     EXPECT_FALSE(draft.contains(1));
-    EXPECT_STREQ("two", draft.value(2));
+    const std::optional<std::string_view> value = draft.value(2);
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(std::string_view{"two"}, *value);
     EXPECT_EQ(1U, draft.size());
 
     draft.clear();
 
     EXPECT_FALSE(draft.contains(2));
+    EXPECT_FALSE(draft.value(2).has_value());
     EXPECT_EQ(0U, draft.size());
 }
 
@@ -56,7 +66,7 @@ TEST(OptionDraftTest, invalidIndexesAreIgnored)
     draft.set(2, "past-end");
     draft.erase(2);
 
-    EXPECT_EQ(nullptr, draft.value(-1));
-    EXPECT_EQ(nullptr, draft.value(2));
+    EXPECT_FALSE(draft.value(-1).has_value());
+    EXPECT_FALSE(draft.value(2).has_value());
     EXPECT_EQ(0U, draft.size());
 }
