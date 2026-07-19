@@ -369,7 +369,7 @@ static int newsgroup_order_number(const NewsgroupData *np1, const NewsgroupData 
 
 static int newsgroup_order_group_name(const NewsgroupData *np1, const NewsgroupData *np2)
 {
-    return string_case_compare(np1->rc_line_c_str(), np2->rc_line_c_str()) * g_sel_direction;
+    return string_case_compare(np1->m_rc_line, np2->m_rc_line) * g_sel_direction;
 }
 
 static int newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *np2)

@@ -453,10 +453,16 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   in several caller functions.  External callers should move to
   `get_env_var`; `env_init` paths must keep their testable environment
   hook until that hook has an owned-string replacement.
-- Case-insensitive comparison helpers now provide `std::string_view`
-  overloads.  Remaining candidates are callers that still force
-  `c_str()`, `data()`, or pointer/length pairs after deriving strings or
-  views locally.
+- `string_case_compare` production callers that already have strings or
+  views now use the view overload instead of `c_str()`, `data()`, or
+  pointer/length calls.  The remaining C-string overloads belong to the
+  helper API and tests.
+- `string_case_equal` still has production callers that pass `c_str()`,
+  `data()`, or pointer/length spans.  Treat those as ordinary audit
+  candidates when the owning function or buffer is touched.
+- The comparison cleanup also narrowed local work inside `addng`,
+  `ngdata`, `respond`, `rthread`, `rt-ov`, and `univ`.  Do not add
+  separate slices for those completed `string_case_compare` call sites.
 - Remaining literal tables include color object names, signal names,
   status labels, MIME entity mappings, charset names, and transliteration
   tables.  The useful current targets are the tables whose users already
@@ -510,28 +516,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-122 - Overview Header Name View Compare
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: derived `std::string_view` forced through pointer/length
-  comparison.
-- Function: `ov_parse`.
-- Change: compare the derived `header_name` view against the header
-  table name with the existing view comparison helpers.  Do not pass
-  `header_name.data()` or manually thread the header length through the
-  call.
-- Tests: overview parsing tests.
-
-#### CSTR-123 - Add Group Name Sort View Compare
-
-- Files: `libtrn/addng.cpp`.
-- Kind: `std::string` values forced through C-string accessors.
-- Function: `add_group_order_group_name`.
-- Change: compare add-group names through `std::string_view` or direct
-  string arguments instead of calling `c_str()` only to enter the
-  case-insensitive comparison helper.
-- Tests: add-newsgroup selector sorting tests.
 
 #### CSTR-124 - Autosubscribe Environment Pattern Reads
 

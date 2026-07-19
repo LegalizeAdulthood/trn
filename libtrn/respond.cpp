@@ -40,6 +40,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 namespace fs = std::filesystem;
 
@@ -972,7 +973,7 @@ void forward()
         interp(g_buf, sizeof g_buf, get_env_var("FORWARDMSG", FORWARD_MSG).c_str());
         if (mime_boundary)
         {
-            if (*g_buf && string_case_compare(g_buf, "Content-", 8))
+            if (*g_buf && string_case_compare(std::string_view{g_buf}.substr(0, 8), "Content-") != 0)
             {
                 std::strcpy(g_buf, "Content-Type: text/plain\n");
             }

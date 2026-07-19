@@ -513,7 +513,7 @@ static int add_group_order_number(const AddGroup **app1, const AddGroup **app2)
 
 static int add_group_order_group_name(const AddGroup **app1, const AddGroup **app2)
 {
-    return string_case_compare((*app1)->m_name.c_str(), (*app2)->m_name.c_str()) * g_sel_direction;
+    return string_case_compare((*app1)->m_name, (*app2)->m_name) * g_sel_direction;
 }
 
 static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)

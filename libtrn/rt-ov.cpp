@@ -477,9 +477,7 @@ static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
                     break;
                 }
                 const std::string_view header_name = field.substr(0, colon);
-                if (header_name.size() != static_cast<std::size_t>(g_header_type[s_header_num[fn]].length) ||
-                    string_case_compare(header_name.data(), g_header_type[s_header_num[fn]].name.c_str(),
-                                        g_header_type[s_header_num[fn]].length))
+                if (string_case_compare(header_name, g_header_type[s_header_num[fn]].name) != 0)
                 {
                     if (tab == std::string_view::npos)
                     {

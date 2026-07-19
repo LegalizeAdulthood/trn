@@ -809,7 +809,7 @@ static bool univ_do_line(char *line)
 
     if (!s_univ_begin_found)
     {
-        if (string_case_compare(s,"begin group",11))
+        if (string_case_compare(std::string_view{s}.substr(0, 11), "begin group") != 0)
         {
             return true;        // wait until "begin group" is found
         }

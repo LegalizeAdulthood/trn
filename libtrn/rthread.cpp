@@ -1171,7 +1171,7 @@ void count_subjects(CountSubjectMode cmode)
 
 static int subject_order_subject(const Subject **spp1, const Subject**spp2)
 {
-    return string_case_compare((*spp1)->stripped_text(), (*spp2)->stripped_text()) * g_sel_direction;
+    return string_case_compare((*spp1)->stripped_view(), (*spp2)->stripped_view()) * g_sel_direction;
 }
 
 static int subject_order_date(const Subject **spp1, const Subject**spp2)
@@ -1236,7 +1236,7 @@ static int thread_order_subject(const Subject **spp1, const Subject**spp2)
     Article* t2 = (*spp2)->m_thread;
     if (t1 != t2 && t1 && t2)
     {
-        return string_case_compare(t1->m_subj->stripped_text(), t2->m_subj->stripped_text()) * g_sel_direction;
+        return string_case_compare(t1->m_subj->stripped_view(), t2->m_subj->stripped_view()) * g_sel_direction;
     }
     return subject_order_date(spp1, spp2);
 }
@@ -1272,7 +1272,7 @@ static int thread_order_date(const Subject **spp1, const Subject**spp2)
         }
         if (!(eq = sp1->m_date - sp2->m_date))
         {
-            return string_case_compare(sp1->stripped_text(), sp2->stripped_text());
+            return string_case_compare(sp1->stripped_view(), sp2->stripped_view());
         }
         return eq > 0? g_sel_direction : -g_sel_direction;
     }
@@ -1477,13 +1477,12 @@ static int article_order_subject(const Article **art1, const Article **art2)
     {
         return article_order_date(art1, art2);
     }
-    return string_case_compare((*art1)->m_subj->stripped_text(), (*art2)->m_subj->stripped_text())
-        * g_sel_direction;
+    return string_case_compare((*art1)->m_subj->stripped_view(), (*art2)->m_subj->stripped_view()) * g_sel_direction;
 }
 
 static int article_order_author(const Article **art1, const Article **art2)
 {
-    int eq = string_case_compare((*art1)->from_c_str(), (*art2)->from_c_str());
+    int eq = string_case_compare((*art1)->from_view(), (*art2)->from_view());
     return eq? eq * g_sel_direction : article_order_date(art1, art2);
 }
 
