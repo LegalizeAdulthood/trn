@@ -39,6 +39,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
 
@@ -786,23 +787,26 @@ static void follow_it_up()
         }
         if (ret)
         {
-            int   appended = 0;
+            int               appended = 0;
             const std::string deadart = file_exp("%./dead.article");
-            std::FILE        *fp_out = std::fopen(deadart.c_str(), "a");
-            if (fp_out != nullptr)
+            std::ofstream     fp_out{deadart, std::ios::app};
+            if (fp_out)
             {
-                std::FILE *fp_in = std::fopen(g_head_name.c_str(), "r");
-                if (fp_in != nullptr)
+                std::ifstream fp_in{g_head_name};
+                if (fp_in)
                 {
-                    std::string line(CMD_BUF_LEN, '\0');
-                    while (std::fgets(line.data(), static_cast<int>(line.size()), fp_in))
+                    std::string line;
+                    line.reserve(CMD_BUF_LEN);
+                    while (std::getline(fp_in, line))
                     {
-                        std::fputs(line.c_str(), fp_out);
+                        fp_out << line;
+                        if (!fp_in.eof())
+                        {
+                            fp_out << '\n';
+                        }
                     }
-                    std::fclose(fp_in);
                     appended = 1;
                 }
-                std::fclose(fp_out);
             }
             if (appended)
             {

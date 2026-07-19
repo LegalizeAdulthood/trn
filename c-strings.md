@@ -539,17 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-118 - Dead Article Copy Line Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: fixed-size line input string used as C output buffer.
-- Function: `follow_it_up`.
-- Change: replace the `CMD_BUF_LEN` `fgets` copy loop with
-  `std::string` line input when appending a failed post to
-  `dead.article`.  The current truncation is arbitrary file-copy
-  chunking, not a meaningful line limit.
-- Tests: failed-post dead-article tests before refactor.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

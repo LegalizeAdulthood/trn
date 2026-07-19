@@ -49,6 +49,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdlib>
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
@@ -64,6 +65,25 @@ namespace
 
 using Environment = StrictMock<trn::testing::MockEnvironment>;
 namespace fs = std::filesystem;
+
+constexpr char s_path_separator =
+#ifdef _WIN32
+    ';';
+#else
+    ':';
+#endif
+
+void create_failing_inews(const fs::path &directory)
+{
+    const fs::path script = directory / "inews";
+    std::ofstream{script} << "#!/bin/sh\nexit 1\n";
+    std::error_code error;
+    fs::permissions(script, fs::perms::owner_exec, fs::perm_options::add, error);
+
+#ifdef _WIN32
+    std::ofstream{directory / "inews.cmd"} << "@exit /b 1\n";
+#endif
+}
 
 class TestOutputDirectory
 {
@@ -1701,6 +1721,45 @@ TEST_F(InterpolatorNewsgroupTest, supersedeArticleWritesInterpolatedHeaderAndBod
     const std::string written = file_contents(head_file);
     EXPECT_THAT(written, StartsWith(expected_header));
     EXPECT_THAT(written, HasSubstr(TRN_TEST_BODY));
+}
+
+TEST_F(InterpolatorNewsgroupTest, failedPostAppendsHeaderToDeadArticle)
+{
+    if (do_shell(SH, "exit 42") != 42)
+    {
+        GTEST_SKIP() << "configured shell cannot produce the NEWSPOSTER sentinel";
+    }
+    create_failing_inews(fs::path{m_output.path()});
+    const char             *old_path = std::getenv("PATH");
+    const std::string       path = m_output.path() + s_path_separator + (old_path == nullptr ? "" : old_path);
+    const fs::path          head_file = fs::path{m_output.path()} / "failed-post-head";
+    const fs::path          dead_article = fs::path{m_output.path()} / "dead.article";
+    const std::string       existing_dead_article = "previous failed post\n";
+    const std::string       long_header_value(CMD_BUF_LEN + 75, 'x');
+    const std::string       supersede_header = "Newsgroups: %n\n"
+                                               "X-Long: " +
+                                               long_header_value + "\n";
+    ValueSaver<std::string> head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string> orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string> dot_dir(g_dot_dir, m_output.path());
+    ValueSaver<std::string> spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_env("PATH", path.c_str());
+    m_env.expect_env("FROM", TRN_TEST_HEADER_FROM);
+    m_env.expect_env("SUPERSEDEHEADER", supersede_header.c_str());
+    m_env.expect_env("NEWSPOSTER", "exit 42");
+    std::ofstream{dead_article} << existing_dead_article;
+    g_buf[0] = 'z';
+
+    testing::internal::CaptureStdout();
+    supersede_article();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    const std::string expected_header = "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"
+                                        "X-Long: " +
+                                        long_header_value + "\n";
+    EXPECT_THAT(output, HasSubstr("Article appended to " + dead_article.generic_string()));
+    EXPECT_EQ(existing_dead_article + expected_header, file_contents(dead_article));
 }
 
 TEST_F(InterpolatorNewsgroupTest, replyWritesInterpolatedHeaderAndQuotedBody)
