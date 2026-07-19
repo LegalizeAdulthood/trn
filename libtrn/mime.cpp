@@ -16,6 +16,7 @@
 #include <trn/head.h>
 #include <trn/ng.h>
 #include <trn/respond.h>
+#include <trn/size_cast.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/utf.h>
@@ -474,13 +475,12 @@ void MimeSection::mime_clear_struct()
     m_type_name.reset();
     m_type_params.clear();
     m_boundary.reset();
-    safe_free0(m_html_blocks);
+    m_html_blocks.clear();
     m_type = NOT_MIME;
     m_encoding = MENCODE_NONE;
     m_total = 0;
     m_part = 0;
     m_boundary_len = 0;
-    m_html_block_count = 0;
     m_flags = MFS_NONE;
     m_html = HF_NONE;
     m_html_line_start = 0;
@@ -1525,12 +1525,6 @@ int filter_html(char *t, const char *f)
         g_mime_section->m_html_line_start = t - g_art_buf;
     }
 
-    if (!g_mime_section->m_html_blocks)
-    {
-        g_mime_section->m_html_blocks = (HtmlBlock*)safe_malloc(HTML_MAX_BLOCKS
-                                                  * sizeof (HtmlBlock));
-    }
-
     for (bp = t; *f; f++)
     {
         if (g_mime_section->m_html & HF_IN_DQUOTE)
@@ -1797,7 +1791,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
     int   num;
     bool match = false;
     const char *roman_letters;
-    HtmlBlock* blks = g_mime_section->m_html_blocks;
+    std::vector<HtmlBlock> &blks = g_mime_section->m_html_blocks;
 
     const char *tmp;
     for (tmp = word; *tmp && *tmp != ' '; tmp++)
@@ -1833,7 +1827,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
     }
 
     if (g_mime_section->m_html & HF_IN_HIDING
-     && (opening_tag || tnum != blks[g_mime_section->m_html_block_count-1].tag_num))
+     && (opening_tag || blks.empty() || tnum != blks.back().tag_num))
     {
         return t;
     }
@@ -1873,13 +1867,10 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             }
         }
 
-        if (s_tag_attr[tnum].flags & TF_BLOCK //
-            && g_mime_section->m_html_block_count < HTML_MAX_BLOCKS)
+        if (s_tag_attr[tnum].flags & TF_BLOCK)
         {
-            j = g_mime_section->m_html_block_count++;
-            blks[j].tag_num = tnum;
-            blks[j].indent = 0;
-            blks[j].count = 0;
+            blks.push_back({tnum, 0, 0});
+            j = size_cast<int>(blks) - 1;
 
             if (s_tag_attr[tnum].flags & TF_LIST)
             {
@@ -1892,7 +1883,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
         }
         else
         {
-            j = g_mime_section->m_html_block_count - 1;
+            j = size_cast<int>(blks) - 1;
         }
 
         if ((s_tag_attr[tnum].flags & (TF_BLOCK|TF_HIDE)) == (TF_BLOCK|TF_HIDE))
@@ -1970,9 +1961,9 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             }
             else
             {
-                for (int i = 0; i < g_mime_section->m_html_block_count; i++)
+                for (const HtmlBlock &block : blks)
                 {
-                    if (blks[i].indent && blks[i].indent < ' ')
+                    if (block.indent && block.indent < ' ')
                     {
                         if (++itype == 3)
                         {
@@ -2087,16 +2078,16 @@ roman_numerals:
     {
         if (s_tag_attr[tnum].flags & TF_BLOCK)
         {
-            for (j = g_mime_section->m_html_block_count; j--;)
+            for (j = size_cast<int>(blks); j--;)
             {
                 if (blks[j].tag_num == tnum)
                 {
-                    for (int i = g_mime_section->m_html_block_count; --i > j;)
+                    for (int i = size_cast<int>(blks); --i > j;)
                     {
                         t = tag_action(t, s_tag_attr[blks[i].tag_num].name,
                                        CLOSING_TAG);
                     }
-                    g_mime_section->m_html_block_count = j;
+                    blks.resize(j);
                     break;
                 }
             }
@@ -2111,7 +2102,7 @@ roman_numerals:
             }
         }
 
-        j = g_mime_section->m_html_block_count - 1;
+        j = size_cast<int>(blks) - 1;
         if (j >= 0 && s_tag_attr[blks[j].tag_num].flags & TF_LIST)
         {
             g_mime_section->m_html |= HF_COMPACT;
@@ -2209,47 +2200,44 @@ static int do_indent(char *t)
         g_mime_section->m_html &= ~HF_NEED_INDENT;
     }
 
-    HtmlBlock *blks = g_mime_section->m_html_blocks;
-    if (blks != nullptr)
+    const std::vector<HtmlBlock> &blks = g_mime_section->m_html_blocks;
+    for (const HtmlBlock &block : blks)
     {
-        for (int j = 0; j < g_mime_section->m_html_block_count; j++)
+        int ch = block.indent;
+        if (ch != 0)
         {
-            int ch = blks[j].indent;
-            if (ch != 0)
+            switch (ch)
             {
-                switch (ch)
-                {
-                case '>':
-                    spaces = 1;
-                    break;
+            case '>':
+                spaces = 1;
+                break;
 
-                case ' ':
-                    spaces = 3;
-                    break;
+            case ' ':
+                spaces = 3;
+                break;
 
-                case 7:  case 8:
-                    ch = ' ';
-                    spaces = 5;
-                    break;
+            case 7:  case 8:
+                ch = ' ';
+                spaces = 5;
+                break;
 
-                default:
-                    ch = ' ';
-                    spaces = 3;
-                    break;
-                }
-                len += spaces + 1;
-                if (len > 64)
+            default:
+                ch = ' ';
+                spaces = 3;
+                break;
+            }
+            len += spaces + 1;
+            if (len > 64)
+            {
+                len -= spaces + 1;
+                break;
+            }
+            if (t)
+            {
+                *t++ = ch;
+                while (spaces--)
                 {
-                    len -= spaces + 1;
-                    break;
-                }
-                if (t)
-                {
-                    *t++ = ch;
-                    while (spaces--)
-                    {
-                        *t++ = ' ';
-                    }
+                    *t++ = ' ';
                 }
             }
         }

@@ -16,9 +16,9 @@
 
 struct HtmlBlock
 {
-    int   tag_num;
-    short count;
-    char  indent;
+    int tag_num;
+    int count;
+    int indent;
 };
 
 enum MimeState
@@ -88,8 +88,8 @@ struct MimeSection
     std::optional<std::string> m_type_name;
     std::vector<std::string>   m_type_params;
     std::optional<std::string> m_boundary;
-    int              m_html_line_start;
-    HtmlBlock       *m_html_blocks;
+    int                    m_html_line_start;
+    std::vector<HtmlBlock> m_html_blocks;
     MimeState        m_type;
     MimeEncoding     m_encoding;
     short            m_part;
@@ -97,12 +97,6 @@ struct MimeSection
     short            m_boundary_len;
     MimeSectionFlags m_flags;
     HtmlFlags        m_html;
-    short            m_html_block_count;
-};
-
-enum
-{
-    HTML_MAX_BLOCKS = 256
 };
 
 enum TagFlags : std::uint16_t
