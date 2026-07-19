@@ -270,7 +270,7 @@ void term_set(char *tcbuf)
 {
     char* tmpaddr;                      // must not be register
     char* tmpstr;
-    char* s;
+    const char *s;
     int status;
 #ifdef TIOCGWINSZ
     struct winsize winsize;
