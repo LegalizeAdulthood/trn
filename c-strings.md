@@ -441,22 +441,24 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
   interpolation scratch storage, `g_head_buf`, `g_art_buf`, MIME HTML
   tag parser state, terminal storage, terminal command-input scratch,
-  response header buffers, `ngstuff` command expansion buffers,
-  `uudecode` pending-line storage, selector command key storage,
-  tree-indent storage, overview-format parsing, and global
-  command/message buffers.
-- Filename storage: newsrc fields are already `fs::path`.  The current
-  low-risk path candidate is the local KILL-file edit path in
-  `edit_kill_file`.  Score-file shortcut strings and universal-selector
-  file strings still mix expansion templates, URLs, labels, and real
-  paths, so they are not honest path-only candidates yet.
+  response header buffers, `uudecode` pending-line storage, selector
+  command key storage, tree-indent storage, and global command/message
+  buffers.  Tiny UTF byte scratch buffers and regex bytecode arrays are
+  non-string protocol or parser storage, not current string slices.
+- Filename storage: newsrc fields are already `fs::path`.
+  `read_auth_file` is still exposed as a nullable `const char *` path
+  helper even though its callers already hold strings.  Score-file
+  shortcut strings and universal-selector file strings still mix
+  expansion templates, URLs, labels, and real paths, so they are not
+  honest path-only candidates yet.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
   helper API and tests.
 - `string_case_equal` still has production callers that pass `c_str()`,
-  `data()`, or pointer/length spans.  Treat those as ordinary audit
-  candidates when the owning function or buffer is touched.
+  `data()`, or pointer/length spans.  Simple string/view call sites are
+  listed as Tier 0 slices; parser and shared-buffer call sites move with
+  their owner slices.
 - The comparison cleanup also narrowed local work inside `addng`,
   `ngdata`, `respond`, `rthread`, `rt-ov`, and `univ`.  Do not add
   separate slices for those completed `string_case_compare` call sites.
@@ -483,11 +485,11 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 46, `strncpy` 3, `strcat` 1.
-- Comparison: `strcmp` 4, `strncmp` 24.
-- Search and length: `strchr` 79, `strrchr` 5, `strstr` 2,
-  `strlen` 80.
+- Comparison: `strcmp` 4, `strncmp` 23.
+- Search and length: `strchr` 78, `strrchr` 5, `strstr` 2,
+  `strlen` 78.
 - Formatting into C buffers: `sprintf` 58, `snprintf` 2.
-- C text I/O roots: `fgets` 29, `fputs` 203, `printf` 429,
+- C text I/O roots: `fgets` 29, `fputs` 201, `printf` 431,
   `fprintf` 55.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -514,10 +516,149 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-142 - NNTP List Type Case View
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: local string/view comparison cleanup.
+- Function: `nntp_list`.
+- Change: compare the `type` string view directly with the
+  `string_case_equal` view overload instead of constructing
+  `type_name` only to call `c_str()`.
+- Tests: run NNTP tests.
+
+#### CSTR-143 - NNTP Nested-list Command Case View
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: local string comparison cleanup.
+- Function: `nntp_handle_nested_lists`.
+- Change: compare `g_last_command` directly with `quit` instead of
+  calling `c_str()` for the comparison.
+- Tests: run NNTP tests.
+
+#### CSTR-144 - NNTP Timeout Command Case View
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: local string comparison cleanup.
+- Function: `nntp_handle_timeout`.
+- Change: compare `g_last_command` directly with `quit` instead of
+  calling `c_str()` for the comparison.
+- Tests: run NNTP tests.
+
+#### CSTR-145 - Inews Header Prefix Case Views
+
+- Files: `inews/inews.cpp`.
+- Kind: local string prefix comparison cleanup.
+- Function: `main`.
+- Change: compare `input_line` prefixes as string views for `From:` and
+  `Path:` instead of using `c_str()` plus explicit lengths.
+- Tests: run inews tests if present; otherwise build.
+
+#### CSTR-146 - Inews Timeout Command Case View
+
+- Files: `inews/inews.cpp`.
+- Kind: local string comparison cleanup.
+- Function: `nntp_handle_timeout`.
+- Change: compare `g_last_command` directly with `quit` instead of
+  calling `c_str()` for the comparison.
+- Tests: run inews tests if present; otherwise build.
+
+#### CSTR-147 - Decode Reserved Filename Case Views
+
+- Files: `libtrn/decode.cpp`.
+- Kind: string-view comparison cleanup.
+- Function: `bad_filename`.
+- Change: compare the `filename` view directly against the reserved DOS
+  device names instead of using `data()` plus fixed lengths.  Keep the
+  existing `MSDOS` feature guard behavior.
+- Tests: decode filename tests.
+
+#### CSTR-148 - Scorefile URL Prefix View
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: string-view prefix comparison cleanup.
+- Function: `sf_is_url`.
+- Change: compare the `name` view prefix directly against `URL:`
+  instead of using `data()` plus an explicit length.
+- Tests: scorefile tests.
+
+#### CSTR-149 - Universal File URL Prefix View
+
+- Files: `libtrn/univ.cpp`.
+- Kind: local string prefix comparison cleanup.
+- Function: `univ_use_file`.
+- Change: compare `open_name` directly with the `URL:` prefix instead
+  of calling `c_str()` for the comparison.
+- Tests: universal-selector file tests.
+
+#### CSTR-150 - Universal Line Prefix Views
+
+- Files: `libtrn/univ.cpp`.
+- Kind: local string-view prefix comparison cleanup.
+- Function: `univ_do_line`.
+- Change: use a view over the already-trimmed line text for `end group`
+  and `URL:` prefix checks.  Do not change the mutable line parsing that
+  follows in the same slice.
+- Tests: universal-selector file tests.
+
+#### CSTR-151 - Data Source Group Section Prefix View
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: string-view prefix comparison cleanup.
+- Function: `DataSource::read_config`.
+- Change: compare the `section_name` view prefix directly with `group `
+  instead of using `data()` plus an explicit length.
+- Tests: data-source config tests.
+
+#### CSTR-152 - Rcstuff Group Section Prefix View
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: string-view prefix comparison cleanup.
+- Function: `read_newsrc`.
+- Change: compare the `section_name` view prefix directly with `group `
+  instead of using `data()` plus an explicit length.
+- Tests: newsrc tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-153 - Auth File Path API
+
+- Files: `util/util2.cpp`, `util/include/util/util2.h`,
+  `libtrn/datasrc.cpp`, `tool/util3.cpp`.
+- Kind: nullable C-string filename helper.
+- Function: `read_auth_file`.
+- Change: accept a path-shaped value instead of `const char *`; use an
+  empty path as the missing-file sentinel and update callers to pass
+  `g_nntp_auth_file` directly instead of `c_str()`.
+- Tests: auth-file tests if present; otherwise data-source and tool
+  build coverage.
+
+#### CSTR-154 - UTF Charset View API
+
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `libtrn/cache.cpp`, `libtrn/charsubst.cpp`, `libtrn/mime.cpp`,
+  `libtrn/rt-page.cpp`, `tests/test_utf.cpp`.
+- Kind: read-only charset name API.
+- Function: `find_charset`, `utf_init`, `input_charset_name`, and
+  `output_charset_name`.
+- Change: use `std::string_view` for charset name inputs and getters.
+  Treat empty input as the unknown charset sentinel instead of
+  preserving public `nullptr` semantics.
+- Tests: update and run UTF tests before and after the refactor.
+
+#### CSTR-155 - Boolean In-string View Helper
+
+- Files: `util/util2.cpp`, `util/include/util/util2.h`,
+  `libtrn/Article.cpp`, `libtrn/art.cpp`, `libtrn/ngstuff.cpp`,
+  `libtrn/respond.cpp`, `libtrn/trn.cpp`.
+- Kind: read-only substring search helper.
+- Function: `in_string` and boolean-only callers.
+- Change: add or migrate to a view-based boolean search using standard
+  algorithms for the case-insensitive path.  Convert only callers that
+  test for presence.  Keep pointer-return overloads for cursor callers.
+- Tests: affected article, response, and command tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
