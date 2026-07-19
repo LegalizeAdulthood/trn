@@ -437,9 +437,8 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   declarations now have no production callers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
-- Direct environment C-string reads outside the config env wrapper remain
-  in `inews`, `nntplist`, and `trn-artchk`.  These are listed as early
-  leaf slices below.
+- Direct environment C-string reads now remain only inside the config env
+  wrapper implementation.
 - Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
   interpolation scratch storage, `g_head_buf`, `g_art_buf`, MIME HTML
   tag parser state, terminal storage, terminal command-input scratch,
@@ -515,38 +514,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-138 - Inews Environment Reads
-
-- Files: `inews/inews.cpp`.
-- Kind: direct environment C-string reads.
-- Function: `main`.
-- Change: replace the remaining direct `std::getenv` calls with
-  `get_env_var` and empty-string checks.  This covers
-  `NNTP_FORCE_AUTH` and `NO_ORIGINATOR`; keep the existing owned
-  `std::string` flow for `NNTPSERVER` and `NAME`.
-- Tests: build, plus focused inews tests if present.
-
-#### CSTR-139 - Nntplist Environment Reads
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: direct environment C-string reads.
-- Function: `main`.
-- Change: replace the remaining direct `getenv` call for
-  `NNTP_FORCE_AUTH` with `get_env_var` and an empty-string check.  Keep
-  the existing owned `std::string` flow for `NNTPSERVER`.
-- Tests: build, plus focused nntplist tests if present.
-
-#### CSTR-140 - Trn-artchk Environment Reads
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: direct environment C-string reads.
-- Function: `main`.
-- Change: replace direct `std::getenv` calls for `HOME`, `LOGDIR`,
-  `DOTDIR`, and `NNTP_FORCE_AUTH` with `get_env_var`.  Use empty string
-  as the missing-value sentinel and preserve the existing HOME/LOGDIR
-  fallback before assigning `g_home_dir` and `g_dot_dir`.
-- Tests: build, plus focused trn-artchk tests if present.
 
 #### CSTR-128 - Tool Safe Allocation Helper Removal
 

@@ -317,8 +317,8 @@ void term_set(char *tcbuf)
     g_tc_UC = "";
     g_tc_AM = true;
 #else
-    s = getenv("TERM");
-    status = tgetent(tcbuf,s? s : "dumb");      // get termcap entry
+    const std::string term = get_env_var("TERM", "dumb");
+    status = tgetent(tcbuf, term.c_str());      // get termcap entry
     if (status < 1)
     {
         std::printf("No termcap %s found.\n", status ? "file" : "entry");

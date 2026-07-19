@@ -62,16 +62,16 @@ int main(int argc, char *argv[])
     int                           line_num = 0;
     int                           found_newsgroups = 0;
 
-    const char *home_dir = std::getenv("HOME");
-    if (home_dir == nullptr)
+    std::string home_dir = get_env_var("HOME");
+    if (home_dir.empty())
     {
-        home_dir = std::getenv("LOGDIR");
+        home_dir = get_env_var("LOGDIR");
     }
-    if (home_dir != nullptr)
+    if (!home_dir.empty())
     {
         g_home_dir = home_dir;
     }
-    g_dot_dir = std::getenv("DOTDIR");
+    g_dot_dir = get_env_var("DOTDIR");
     if (g_dot_dir.empty())
     {
         g_dot_dir = g_home_dir;
@@ -210,8 +210,8 @@ int main(int argc, char *argv[])
             g_server_name.resize(separator);
         }
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
-        const char *force_auth = std::getenv("NNTP_FORCE_AUTH");
-        if (force_auth != nullptr && (*force_auth == 'y' || *force_auth == 'Y'))
+        const std::string force_auth = get_env_var("NNTP_FORCE_AUTH");
+        if (!force_auth.empty() && (force_auth.front() == 'y' || force_auth.front() == 'Y'))
         {
             g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }

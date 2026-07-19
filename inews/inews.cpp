@@ -140,8 +140,8 @@ int main(int argc, char *argv[])
         }
         line_end = "\r\n";
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
-        const char *force_auth = std::getenv("NNTP_FORCE_AUTH");
-        if (force_auth != nullptr && (*force_auth == 'y' || *force_auth == 'Y'))
+        const std::string force_auth = get_env_var("NNTP_FORCE_AUTH");
+        if (!force_auth.empty() && (force_auth.front() == 'y' || force_auth.front() == 'Y'))
         {
             g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
         output_line = fmt::format("From: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);
         inews_fputs(output_line.c_str());
     }
-    if (!std::getenv("NO_ORIGINATOR"))
+    if (get_env_var("NO_ORIGINATOR").empty())
     {
         const std::string real_name = get_env_var("NAME", g_real_name);
         output_line = fmt::format("Originator: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);

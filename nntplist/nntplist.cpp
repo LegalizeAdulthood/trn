@@ -108,8 +108,8 @@ int main(int argc, char *argv[])
             s_server_name.resize(separator);
         }
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
-        const char *force_auth = getenv("NNTP_FORCE_AUTH");
-        if (force_auth != nullptr && (*force_auth == 'y' || *force_auth == 'Y'))
+        const std::string force_auth = get_env_var("NNTP_FORCE_AUTH");
+        if (!force_auth.empty() && (force_auth.front() == 'y' || force_auth.front() == 'Y'))
         {
             g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
