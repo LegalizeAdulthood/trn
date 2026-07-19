@@ -14,7 +14,6 @@
 #include <string_view>
 
 static std::string    s_nntp_password;
-static constexpr char s_no_memory[] = "trn: out of memory!\n";
 
 int do_shell(const char *shell, const char *cmd)
 {
@@ -26,36 +25,6 @@ int do_shell(const char *shell, const char *cmd)
     nntp_close(true);
     std::exit(num);
 }
-
-// paranoid version of malloc
-
-#ifndef USE_DEBUGGING_MALLOC
-char *safe_malloc(MemorySize size)
-{
-    char *ptr = (char*)std::malloc(size ? size : (MemorySize)1);
-    if (!ptr)
-    {
-        std::fputs(s_no_memory,stdout);
-        finalize(1);
-    }
-    return ptr;
-}
-#endif
-
-// paranoid version of realloc.  If where is nullptr, call malloc
-
-#ifndef USE_DEBUGGING_MALLOC
-char *safe_realloc(char *where, MemorySize size)
-{
-    char *ptr = (char*)std::realloc(where, size ? size : (MemorySize)1);
-    if (!ptr)
-    {
-        std::fputs(s_no_memory,stdout);
-        finalize(1);
-    }
-    return ptr;
-}
-#endif
 
 std::string do_interp(std::string_view pattern)
 {

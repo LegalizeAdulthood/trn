@@ -433,8 +433,7 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - `safe_malloc`: remaining string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
-  helpers.  The `tool` allocation helper declarations now have no
-  production callers.
+  helpers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Direct environment C-string reads now remain only inside the config env
@@ -508,21 +507,6 @@ completed; remove the completed slice.  The physical order is grouped
 by dependency tier: finish earlier tiers first so later caller and
 shared-buffer slices have cleaner helper and ownership contracts to
 build on.
-
-### Tier 0 - Leaf Cleanup
-
-These slices have no slice dependency.  They remove local C string
-construction, comparison, or display roots without changing a larger
-owner.
-
-#### CSTR-128 - Tool Safe Allocation Helper Removal
-
-- Files: `tool/util3.cpp`, `tool/include/tool/util3.h`.
-- Kind: unused raw allocation helpers.
-- Function: `safe_malloc`, `safe_realloc`.
-- Change: remove the unused tool-library declarations and definitions.
-  The current scan finds no production callers under `tool`.
-- Tests: build.
 
 ### Tier 1 - Helper And API Foundations
 
