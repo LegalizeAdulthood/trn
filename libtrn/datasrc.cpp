@@ -203,7 +203,7 @@ static std::string read_data_sources(std::string_view filename)
         }
 
         const std::string_view section_name = section.name();
-        if (section_name.size() >= 6 && string_case_equal(section_name.data(), "group ", 6))
+        if (string_case_equal(section_name.substr(0, 6), "group "))
         {
             continue;
         }

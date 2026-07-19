@@ -84,18 +84,18 @@ static bool bad_filename(std::string_view filename)
 #ifdef MSDOS
     if (filename.size() == 3)
     {
-        if (string_case_equal(filename.data(), "aux", 3) || string_case_equal(filename.data(), "con", 3) //
-            || string_case_equal(filename.data(), "nul", 3) || string_case_equal(filename.data(), "prn", 3))
+        if (string_case_equal(filename, "aux") || string_case_equal(filename, "con") //
+            || string_case_equal(filename, "nul") || string_case_equal(filename, "prn"))
         {
             return true;
         }
     }
     else if (filename.size() == 4)
     {
-        if (string_case_equal(filename.data(), "com1", 4) || string_case_equal(filename.data(), "com2", 4)    //
-            || string_case_equal(filename.data(), "com3", 4) || string_case_equal(filename.data(), "com4", 4) //
-            || string_case_equal(filename.data(), "lpt1", 4) || string_case_equal(filename.data(), "lpt2", 4) //
-            || string_case_equal(filename.data(), "lpt3", 4))
+        if (string_case_equal(filename, "com1") || string_case_equal(filename, "com2")    //
+            || string_case_equal(filename, "com3") || string_case_equal(filename, "com4") //
+            || string_case_equal(filename, "lpt1") || string_case_equal(filename, "lpt2") //
+            || string_case_equal(filename, "lpt3"))
         {
             return true;
         }

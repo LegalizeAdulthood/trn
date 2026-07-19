@@ -95,7 +95,7 @@ static void  sf_exclude_file(std::string_view fname);
 
 static bool sf_is_url(std::string_view name)
 {
-    return name.size() >= 4 && string_case_equal(name.data(), "URL:", 4);
+    return string_case_equal(name.substr(0, 4), "URL:");
 }
 
 static bool sf_default_url_get(std::string_view url, const char *outfile)
@@ -318,7 +318,7 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 
     for (const char *s = g_head_buf; s && *s && *s != '\n'; s++)
     {
-        if (string_case_equal(head.c_str(), s, len))
+        if (string_case_equal(head, std::string_view{s, static_cast<std::size_t>(len)}))
         {
             s = std::strchr(s,':');
             if (!s)

@@ -282,12 +282,9 @@ bool mime_types_match(std::string_view ct, std::string_view pat)
     const std::size_t slash = pat.find('/');
     const std::size_t len = slash == std::string_view::npos ? pat.size() : slash;
     const bool        iswild = slash == std::string_view::npos || pat.substr(slash + 1) == "*";
-    const std::string content_type{ct};
-    const std::string pattern{pat};
 
-    return string_case_equal(content_type.c_str(), pattern.c_str()) ||
-           (iswild && ct.size() > len &&
-            string_case_equal(content_type.c_str(), pattern.c_str(), static_cast<int>(len)) && ct[len] == '/');
+    return string_case_equal(ct, pat) ||
+           (iswild && ct.size() > len && string_case_equal(ct.substr(0, len), pat.substr(0, len)) && ct[len] == '/');
 }
 
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos)
@@ -347,7 +344,7 @@ static std::string mime_find_param(const Params &params, std::string_view param)
         const std::string_view name = text.substr(name_begin, pos - name_begin);
         pos = mime_skip_whitespace(text, pos);
         if (name.size() != param.size() || pos == text.size() || text[pos] != '=' ||
-            !string_case_equal(name.data(), param.data(), static_cast<int>(param.size())))
+            !string_case_equal(name, param))
         {
             continue;
         }
@@ -639,7 +636,7 @@ void MimeSection::mime_parse_type(std::string_view text)
 void MimeSection::mime_parse_disposition(std::string_view text)
 {
     const MimeParamViews parsed = mime_parse_params(text);
-    if (parsed.value.size() == 6 && string_case_equal(parsed.value.data(), "inline", 6))
+    if (string_case_equal(parsed.value, "inline"))
     {
         m_flags |= MSF_INLINE;
     }
@@ -2261,7 +2258,8 @@ static const char *find_attr(const char *str, std::string_view attr)
         {
             cp++;
         }
-        if (s - str > len && s[-len - 1] == ' ' && string_case_equal(s - len, attr.data(), len))
+        if (s - str > len && s[-len - 1] == ' ' &&
+            string_case_equal(std::string_view{s - len, static_cast<std::size_t>(len)}, attr))
         {
             return cp + 1;
         }

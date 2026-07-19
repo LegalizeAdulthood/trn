@@ -1398,7 +1398,7 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
     const int len = static_cast<int>(s.size());
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!len || string_case_equal(s.data(), g_header_type[i].name.c_str(), len))
+        if (!len || string_case_equal(s, std::string_view{g_header_type[i].name}.substr(0, s.size())))
         {
             if (setit && (flag != HT_MAGIC || (g_header_type[i].flags & HT_MAGIC_OK)))
             {
@@ -1419,13 +1419,14 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
         for (int i = g_user_header_type_index[ch - 'a']; g_user_header_type[i].name[0] == ch; i--)
         {
             if (len <= g_user_header_type[i].length //
-                && string_case_equal(s.data(), g_user_header_type[i].name.c_str(), len))
+                && string_case_equal(s, std::string_view{g_user_header_type[i].name}.substr(0, s.size())))
             {
                 g_user_header_type[i].name.clear();
                 killed = i;
             }
             else if (len > g_user_header_type[i].length //
-                     && string_case_equal(s.data(), g_user_header_type[i].name.c_str(), g_user_header_type[i].length))
+                     && string_case_equal(s.substr(0, static_cast<std::size_t>(g_user_header_type[i].length)),
+                                          g_user_header_type[i].name))
             {
                 if (!add_at)
                 {

@@ -607,7 +607,7 @@ std::string nntp_tmp_name(int ndx)
 
 int nntp_handle_nested_lists()
 {
-    if (string_case_equal(g_last_command.c_str(), "quit"))
+    if (string_case_equal(g_last_command, "quit"))
     {
         return 0; // TODO: flush data needed?
     }
@@ -623,7 +623,7 @@ int nntp_handle_timeout()
 {
     static bool handling_timeout = false;
 
-    if (string_case_equal(g_last_command.c_str(), "quit"))
+    if (string_case_equal(g_last_command, "quit"))
     {
         return 0;
     }

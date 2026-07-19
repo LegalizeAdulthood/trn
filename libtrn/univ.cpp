@@ -642,7 +642,7 @@ static bool univ_use_file(std::string_view fname, const char *label)
     std::string      open_name{file_name};
     bool             have_open_name = true;
     // open URLs and translate them into local temporary filenames
-    if (string_case_equal(open_name.c_str(), "URL:", 4))
+    if (string_case_equal(std::string_view{open_name}.substr(0, 4), "URL:"))
     {
         open_name = temp_filename();
         g_univ_tmp_file = open_name;
@@ -839,11 +839,12 @@ static bool univ_do_line(char *line)
     }
     s = skip_space(s);
     const char *line_desc = s_univ_line_desc.empty() ? nullptr : s_univ_line_desc.c_str();
-    if (string_case_equal(s, "end group",9))
+    const std::string_view line_text{s};
+    if (string_case_equal(line_text.substr(0, 9), "end group"))
     {
         return false;
     }
-    if (string_case_equal(s, "URL:", 4))
+    if (string_case_equal(line_text.substr(0, 4), "URL:"))
     {
         p = skip_ne(s, '>');
         if (*p)

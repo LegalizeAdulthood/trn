@@ -455,10 +455,10 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
   helper API and tests.
-- `string_case_equal` still has production callers that pass `c_str()`,
-  `data()`, or pointer/length spans.  Simple string/view call sites are
-  listed as Tier 0 slices; parser and shared-buffer call sites move with
-  their owner slices.
+- `string_case_equal` production callers that already have strings or
+  views now use the view overload instead of `c_str()`, `data()`, or
+  pointer/length calls.  Remaining pointer/length calls belong to parser
+  cursors and shared buffers and move with their owner slices.
 - The comparison cleanup also narrowed local work inside `addng`,
   `ngdata`, `respond`, `rthread`, `rt-ov`, and `univ`.  Do not add
   separate slices for those completed `string_case_compare` call sites.
@@ -515,98 +515,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-143 - NNTP Nested-list Command Case View
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: local string comparison cleanup.
-- Function: `nntp_handle_nested_lists`.
-- Change: compare `g_last_command` directly with `quit` instead of
-  calling `c_str()` for the comparison.
-- Tests: run NNTP tests.
-
-#### CSTR-144 - NNTP Timeout Command Case View
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: local string comparison cleanup.
-- Function: `nntp_handle_timeout`.
-- Change: compare `g_last_command` directly with `quit` instead of
-  calling `c_str()` for the comparison.
-- Tests: run NNTP tests.
-
-#### CSTR-145 - Inews Header Prefix Case Views
-
-- Files: `inews/inews.cpp`.
-- Kind: local string prefix comparison cleanup.
-- Function: `main`.
-- Change: compare `input_line` prefixes as string views for `From:` and
-  `Path:` instead of using `c_str()` plus explicit lengths.
-- Tests: run inews tests if present; otherwise build.
-
-#### CSTR-146 - Inews Timeout Command Case View
-
-- Files: `inews/inews.cpp`.
-- Kind: local string comparison cleanup.
-- Function: `nntp_handle_timeout`.
-- Change: compare `g_last_command` directly with `quit` instead of
-  calling `c_str()` for the comparison.
-- Tests: run inews tests if present; otherwise build.
-
-#### CSTR-147 - Decode Reserved Filename Case Views
-
-- Files: `libtrn/decode.cpp`.
-- Kind: string-view comparison cleanup.
-- Function: `bad_filename`.
-- Change: compare the `filename` view directly against the reserved DOS
-  device names instead of using `data()` plus fixed lengths.  Keep the
-  existing `MSDOS` feature guard behavior.
-- Tests: decode filename tests.
-
-#### CSTR-148 - Scorefile URL Prefix View
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: string-view prefix comparison cleanup.
-- Function: `sf_is_url`.
-- Change: compare the `name` view prefix directly against `URL:`
-  instead of using `data()` plus an explicit length.
-- Tests: scorefile tests.
-
-#### CSTR-149 - Universal File URL Prefix View
-
-- Files: `libtrn/univ.cpp`.
-- Kind: local string prefix comparison cleanup.
-- Function: `univ_use_file`.
-- Change: compare `open_name` directly with the `URL:` prefix instead
-  of calling `c_str()` for the comparison.
-- Tests: universal-selector file tests.
-
-#### CSTR-150 - Universal Line Prefix Views
-
-- Files: `libtrn/univ.cpp`.
-- Kind: local string-view prefix comparison cleanup.
-- Function: `univ_do_line`.
-- Change: use a view over the already-trimmed line text for `end group`
-  and `URL:` prefix checks.  Do not change the mutable line parsing that
-  follows in the same slice.
-- Tests: universal-selector file tests.
-
-#### CSTR-151 - Data Source Group Section Prefix View
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: string-view prefix comparison cleanup.
-- Function: `DataSource::read_config`.
-- Change: compare the `section_name` view prefix directly with `group `
-  instead of using `data()` plus an explicit length.
-- Tests: data-source config tests.
-
-#### CSTR-152 - Rcstuff Group Section Prefix View
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: string-view prefix comparison cleanup.
-- Function: `read_newsrc`.
-- Change: compare the `section_name` view prefix directly with `group `
-  instead of using `data()` plus an explicit length.
-- Tests: newsrc tests.
 
 ### Tier 1 - Helper And API Foundations
 

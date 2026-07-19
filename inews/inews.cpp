@@ -207,11 +207,11 @@ int main(int argc, char *argv[])
                 break;
             }
             in_header = true;
-            if (string_case_equal(input_line.c_str(), "From:", 5))
+            if (string_case_equal(std::string_view{input_line}.substr(0, 5), "From:"))
             {
                 has_fromline = true;
             }
-            else if (string_case_equal(input_line.c_str(), "Path:", 5))
+            else if (string_case_equal(std::string_view{input_line}.substr(0, 5), "Path:"))
             {
                 has_pathline = true;
             }
@@ -451,7 +451,7 @@ int nntp_handle_timeout()
         static bool handling_timeout = false;
         const std::string last_command_save{g_last_command};
 
-        if (string_case_equal(g_last_command.c_str(), "quit"))
+        if (string_case_equal(g_last_command, "quit"))
         {
             return 0;
         }
