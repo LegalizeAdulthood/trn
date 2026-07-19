@@ -3,12 +3,15 @@
 
 #include <trn/terminal.h>
 
+#include <config/env.h>
 #include <trn/final.h>
+#include <trn/ng.h>
 #include <trn/opt.h>
 
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
 
 namespace
 {
@@ -213,6 +216,51 @@ protected:
     char            m_standout_end[5]{"<se>"};
 };
 
+class XMouseInitTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_can_home = g_can_home;
+        m_old_use_threads = g_use_threads;
+        m_old_use_mouse = g_use_mouse;
+        m_old_xterm_mouse = get_env_var(XTERM_MOUSE_ENV);
+
+        g_can_home = true;
+        g_use_threads = true;
+        g_use_mouse = false;
+        unset_env_var(XTERM_MOUSE_ENV);
+    }
+
+    void TearDown() override
+    {
+        g_can_home = m_old_can_home;
+        g_use_threads = m_old_use_threads;
+        g_use_mouse = m_old_use_mouse;
+        restore_env(XTERM_MOUSE_ENV, m_old_xterm_mouse);
+    }
+
+private:
+    static constexpr std::string_view XTERM_MOUSE_ENV{"XTERMMOUSE"};
+
+    static void restore_env(std::string_view name, const std::string &value)
+    {
+        if (value.empty())
+        {
+            unset_env_var(name);
+        }
+        else
+        {
+            set_env_var(name, value);
+        }
+    }
+
+    bool        m_old_can_home{};
+    bool        m_old_use_threads{};
+    bool        m_old_use_mouse{};
+    std::string m_old_xterm_mouse;
+};
+
 } // namespace
 
 TEST_F(TerminalTest, getCommandExpandsMacroString)
@@ -306,4 +354,39 @@ TEST_F(MouseBarTest, checkMouseBarPushesClickedButtonCommand)
     read_tty(&command, 1);
 
     EXPECT_EQ('q', command);
+}
+
+TEST_F(XMouseInitTest, environmentValueEnablesMouse)
+{
+    set_env_var("XTERMMOUSE", "y");
+
+    xmouse_init("trn");
+
+    EXPECT_TRUE(g_use_mouse);
+}
+
+TEST_F(XMouseInitTest, environmentValueWinsOverProgramNameSuffix)
+{
+    set_env_var("XTERMMOUSE", "n");
+
+    xmouse_init("trnx");
+
+    EXPECT_FALSE(g_use_mouse);
+}
+
+TEST_F(XMouseInitTest, programNameSuffixEnablesMouseWhenEnvironmentMissing)
+{
+    xmouse_init("trnx");
+
+    EXPECT_TRUE(g_use_mouse);
+}
+
+TEST_F(XMouseInitTest, disabledTerminalStateSkipsMouseSetup)
+{
+    set_env_var("XTERMMOUSE", "y");
+    g_can_home = false;
+
+    xmouse_init("trnx");
+
+    EXPECT_FALSE(g_use_mouse);
 }

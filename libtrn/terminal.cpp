@@ -26,7 +26,6 @@
 #include <trn/univ.h>
 #include <trn/utf.h>
 #include <trn/util.h>
-#include <util/env.h>
 #include <util/util2.h>
 
 #include <fmt/format.h>
@@ -2315,10 +2314,10 @@ void xmouse_init(std::string_view progname)
     {
         return;
     }
-    char *s = get_val("XTERMMOUSE");
-    if (s && *s)
+    const std::string mouse_setting = get_env_var("XTERMMOUSE");
+    if (!mouse_setting.empty())
     {
-        interp(g_msg, sizeof g_msg, s);
+        interp(g_msg, sizeof g_msg, mouse_setting.c_str());
         set_option(OI_USE_MOUSE, g_msg);
     }
     else if (!progname.empty() && progname.back() == 'x')

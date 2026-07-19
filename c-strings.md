@@ -517,16 +517,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-125 - Xterm Mouse Environment Read
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: nullable environment C-string read.
-- Function: `xmouse_init`.
-- Change: read `XTERMMOUSE` with `get_env_var` and use empty string as
-  the missing sentinel.  Pass `c_str()` only at the legacy
-  interpolation call.
-- Tests: terminal option tests.
-
 #### CSTR-126 - Shell Default Environment Read
 
 - Files: `libtrn/util.cpp`.
@@ -910,9 +900,8 @@ owned strings or owner-specific storage.
 - Files: `util/env.cpp`, `util/include/util/env.h`.
 - Kind: obsolete nullable environment C-string helpers.
 - Function: `get_val`, `get_val_const`.
-- Depends: `CSTR-120`, `CSTR-125`, `CSTR-126`, `CSTR-127`,
-  `CSTR-129`, `CSTR-130`, `CSTR-131`, `CSTR-132`, `CSTR-133`, and
-  `CSTR-134`.
+- Depends: `CSTR-120`, `CSTR-126`, `CSTR-127`, `CSTR-129`,
+  `CSTR-130`, `CSTR-131`, `CSTR-132`, `CSTR-133`, and `CSTR-134`.
 - Change: remove the declarations and definitions after all production
   callers have moved to owned strings or path storage.
 - Tests: build.
