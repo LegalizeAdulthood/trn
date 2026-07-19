@@ -232,7 +232,9 @@ TEST(InStringTest, findsCaseInsensitiveNeedle)
 
 TEST(InStringTest, findsEmptyNeedleOnlyInNonEmptyText)
 {
-    EXPECT_EQ("text", in_string("text", "", true));
+    const char *text = "text";
+
+    EXPECT_EQ(text, in_string(text, "", true));
     EXPECT_EQ(nullptr, in_string("", "", true));
 }
 

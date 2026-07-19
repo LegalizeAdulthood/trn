@@ -901,6 +901,7 @@ void forward()
     constexpr int header_size = 5 * LINE_BUF_LEN;
     std::string   header_text(header_size, '\0');
     const std::string mail_doer = get_env_var("FORWARDPOSTER", FORWARD_POSTER);
+    std::size_t header_end = std::string::npos;
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
@@ -921,7 +922,7 @@ void forward()
         goto done;
     }
     interp(header_text.data(), header_size, get_env_var("FORWARDHEADER", FORWARD_HEADER).c_str());
-    const std::size_t header_end = header_text.find('\0');
+    header_end = header_text.find('\0');
     if (header_end != std::string::npos)
     {
         header_text.resize(header_end);
