@@ -438,13 +438,26 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Direct environment C-string reads now remain only inside the config env
   wrapper implementation.
-- Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
-  interpolation scratch storage, `g_head_buf`, `g_art_buf`, MIME HTML
-  tag parser state, terminal storage, terminal command-input scratch,
-  response header buffers, `uudecode` pending-line storage, selector
-  command key storage, tree-indent storage, and global command/message
-  buffers.  Tiny UTF byte scratch buffers and regex bytecode arrays are
+- Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
+  `g_art_line`, `g_head_buf`, `g_art_buf`, MIME HTML tag parser state,
+  `uudecode` pending-line storage, selector command key storage,
+  tree-indent storage, terminal push-string expansion storage, terminal
+  command-input scratch, and the MSDOS `tgoto` static return buffer.
+  Tiny UTF byte scratch buffers, translation tables, MIME decode tables,
+  terminal pushback bytes, termcap storage, and regex bytecode arrays are
   non-string protocol or parser storage, not current string slices.
+- Termcap capability globals are still exposed as mutable `char *` even
+  though the code treats most capability text as read-only after
+  discovery.  This is a const-correctness slice before the remaining
+  MSDOS `tgoto` cleanup.
+- INI and option helper classes own strings but still expose nullable
+  `const char *` views through `c_str`-shaped accessors.  These are
+  config or draft boundaries where absence is meaningful, so promote
+  them to optional string views rather than plain strings.
+- Several call sites now use `std::string` as a fixed-size C output
+  buffer for `interp` or `do_interp`, then trim at the first NUL.  These
+  are not raw arrays anymore, but they are still fixed-size C-string
+  output contracts and should be converted one function at a time.
 - Filename storage: newsrc fields are already `fs::path`.
   `read_auth_file` is still exposed as a nullable `const char *` path
   helper even though its callers already hold strings.  Score-file
@@ -484,12 +497,12 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 46, `strncpy` 3, `strcat` 1.
+- Copy and concatenation: `strcpy` 30, `strncpy` 3, `strcat` 1.
 - Comparison: `strcmp` 4, `strncmp` 23.
-- Search and length: `strchr` 78, `strrchr` 5, `strstr` 2,
-  `strlen` 78.
-- Formatting into C buffers: `sprintf` 58, `snprintf` 2.
-- C text I/O roots: `fgets` 29, `fputs` 201, `printf` 431,
+- Search and length: `strchr` 77, `strrchr` 5, `strstr` 2,
+  `strlen` 74.
+- Formatting into C buffers: `sprintf` 34, `snprintf` 2.
+- C text I/O roots: `fgets` 29, `fputs` 206, `printf` 398,
   `fprintf` 55.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -516,20 +529,234 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-103 - Terminal Pushed String Expansion Buffer
+
+- Files: `libtrn/terminal.cpp`,
+  `libtrn/include/trn/terminal.h`.
+- Kind: local fixed interpolation buffer.
+- Function: `push_string`.
+- Change: replace `tmpbuf[PUSH_SIZE]` with owned `std::string`
+  expansion storage.  Promote the input parameter to `std::string_view`
+  in the same slice if doing so does not create an extra temporary.
+  Preserve the reverse push order, the previous push-size truncation or
+  overflow behavior, and macro bit handling.
+- Tests: terminal input macro tests.
+
+#### CSTR-106 - Terminal Capability Const Pointers
+
+- Files: `libtrn/terminal.cpp`,
+  `libtrn/include/trn/terminal.h`, terminal tests.
+- Kind: literal and termcap capability pointers exposed as mutable.
+- Function: storage-centered terminal capability globals and helpers.
+- Change: convert read-only terminal capability pointers from `char *`
+  to `const char *`, including the local MSDOS literal assignments and
+  termcap helper return values.  Update only call sites that need the
+  const-correct type.  Do not change the termcap storage buffer.
+- Tests: terminal tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-107 - Option Value View Access
+
+- Files: `libtrn/IniSectionValues.cpp`,
+  `libtrn/include/trn/IniSectionValues.h`,
+  `libtrn/OptionDraft.cpp`, `libtrn/include/trn/OptionDraft.h`,
+  `libtrn/OptionApplier.cpp`, `libtrn/include/trn/OptionApplier.h`.
+- Kind: owned option strings exposed as nullable C strings.
+- Function: `IniSectionValues::c_str`, `OptionDraft::value`,
+  `OptionApplier::apply`.
+- Change: expose stored option values as
+  `std::optional<std::string_view>` and update option application to
+  pass string views through the callback API.  Keep nullability as
+  absence, not empty string, because option drafts and parsed INI
+  sections distinguish missing fields from present empty values.
+- Tests: `IniSectionValues`, `OptionDraft`, and `OptionApplier` tests
+  before and after refactor.
+
+#### CSTR-108 - RcGroupConfig Optional Value Views
+
+- Files: `libtrn/RcGroupConfig.cpp`,
+  `libtrn/include/trn/RcGroupConfig.h`, `libtrn/rcstuff.cpp`.
+- Kind: owned config strings exposed as nullable C strings.
+- Function: `RcGroupConfig` accessors and `new_newsrc`.
+- Change: return `std::optional<std::string_view>` from config
+  accessors and accept string views in setters where callers already
+  hold strings.  Update `new_newsrc` to use optional views directly and
+  convert to `std::string` only for owned path expansion.
+- Tests: `RcGroupConfig` and rcstuff tests.
+
+#### CSTR-109 - DataSourceConfig Optional Value Views
+
+- Files: `libtrn/DataSourceConfig.cpp`,
+  `libtrn/include/trn/DataSourceConfig.h`, `libtrn/datasrc.cpp`.
+- Kind: owned config strings exposed as nullable C strings.
+- Function: `DataSourceConfig` accessors and `new_data_source`.
+- Change: return `std::optional<std::string_view>` from config
+  accessors and accept string views in setters where callers already
+  hold strings.  Preserve absence semantics at this config boundary and
+  use empty strings only after values are stored in `DataSource`.
+- Tests: `DataSourceConfig` and data source tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
+#### CSTR-096 - Uudecode Pending Line Buffer
+
+- Files: `libtrn/uudecode.cpp`.
+- Kind: local fixed pending-line buffer plus global input buffer use.
+- Function: `uudecode`.
+- Change: replace `lastline[UU_LENGTH+1]` with owned string storage
+  when the pending decoded line is text.  Keep meaningful uuencoded line
+  length validation and defer `g_buf` input ownership to `CSTR-077`.
+- Tests: uudecode tests.
+
+#### CSTR-097 - Selector Command Key Storage
+
+- Files: `libtrn/rt-select.cpp`, `libtrn/include/trn/rt-select.h`,
+  `libtrn/opt.cpp`.
+- Kind: global fixed selector command buffers.
+- Function: storage-centered selector command keys.
+- Change: replace the five `char[3]` selector command globals and
+  `s_univ_sel_cmds[3]` with a small owned text type or `std::string`
+  storage.  Preserve the two-character command limit if it is a
+  documented selector behavior.
+- Tests: selector command tests.
+
+#### CSTR-100 - MIME HTML Tag Parser State
+
+- Files: `libtrn/mime.cpp`.
+- Kind: static fixed parser token buffer and literal entity table.
+- Function: `filter_html`.
+- Change: replace `tagword[32]` and `tagword_len` with parser-owned
+  `std::string` state.  Convert the named-entity lookup table to a
+  view-friendly mapping so the entity loop no longer calls `strlen` on
+  table keys.  Preserve cross-call tag parsing if the current static
+  state is intentionally carrying a partial tag across input chunks.
+- Tests: MIME HTML filtering tests before refactor.
+
+#### CSTR-105 - Thread Tree Indent Storage
+
+- Files: `libtrn/rt-wumpus.cpp`.
+- Kind: mutable file-scope C-string layout buffer.
+- Function: storage-centered `s_tree_indent`.
+- Change: replace the mutable `char[]` indentation buffer with owned
+  string or indexed layout storage.  Preserve the tree display layout
+  and avoid copying the whole indent table per display operation.
+- Tests: thread tree display tests.
+
+#### CSTR-110 - Perform Command Interpolation Buffer
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: `perform`.
+- Change: replace the `std::string(512, '\0')` interpolation buffer and
+  `strlen(c_str())` trimming with owned string construction for `%`
+  commands.  Preserve `cmdlst` advancement for colon-separated command
+  lists and avoid adding a wrapper that no caller uses.
+- Tests: ngstuff perform tests before refactor.
+
+#### CSTR-111 - Article Mail Prompt Interpolation Buffer
+
+- Files: `libtrn/art.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: article pager prompt path using `g_mail_call`.
+- Change: replace the `CMD_BUF_LEN` mail-call interpolation buffer with
+  owned string construction and pass `c_str()` only to the prompt
+  `printf` call.  Preserve runtime prompt-format behavior.
+- Tests: article pager prompt tests before refactor.
+
+#### CSTR-112 - Newsgroup Subject Line Interpolation Buffer
+
+- Files: `libtrn/ng.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: subject-line display path for `g_subj_line`.
+- Change: replace the fixed `subject_line` interpolation buffer and
+  `strlen(c_str())` trimming with owned string construction.  Preserve
+  the existing order of subject lookup and interpolation.
+- Tests: newsgroup subject-line display tests before refactor.
+
+#### CSTR-113 - Cancel Header Interpolation Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: `cancel_article`.
+- Change: replace the `5 * LINE_BUF_LEN` header interpolation buffer
+  with owned string construction for `CANCELHEADER`.  Preserve header
+  file contents and failure handling.
+- Tests: cancel response tests before refactor.
+
+#### CSTR-114 - Supersede Header Interpolation Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: `supersede_article`.
+- Change: replace the `5 * LINE_BUF_LEN` header interpolation buffer
+  with owned string construction for `SUPERSEDEHEADER`.  Preserve body
+  inclusion behavior.
+- Tests: supersede response tests before refactor.
+
+#### CSTR-115 - Reply Header Interpolation Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: `reply`.
+- Change: replace the `5 * LINE_BUF_LEN` header interpolation buffer
+  with owned string construction for `MAILHEADER`.  Preserve body
+  quoting and header-display behavior.
+- Tests: reply response tests before refactor.
+
+#### CSTR-116 - Forward Header Interpolation Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: `forward`.
+- Change: replace the `5 * LINE_BUF_LEN` header interpolation buffer
+  with owned string construction for `FORWARDHEADER`.  Preserve MIME
+  boundary detection and the non-`REGEX_WORKS_RIGHT` parsing path.
+- Tests: forward response tests before refactor.
+
+#### CSTR-117 - Followup Header Interpolation Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: fixed-size string used as C output buffer.
+- Function: `followup`.
+- Change: replace the `5 * LINE_BUF_LEN` header interpolation buffer
+  with owned string construction for `NEWSHEADER`.  Preserve body
+  inclusion and new-topic prompting behavior.
+- Tests: followup response tests before refactor.
+
+#### CSTR-118 - Dead Article Copy Line Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: fixed-size line input string used as C output buffer.
+- Function: `follow_it_up`.
+- Change: replace the `CMD_BUF_LEN` `fgets` copy loop with
+  `std::string` line input when appending a failed post to
+  `dead.article`.  The current truncation is arbitrary file-copy
+  chunking, not a meaningful line limit.
+- Tests: failed-post dead-article tests before refactor.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-104 - MSDOS Tgoto Format Buffer
+
+- Files: `libtrn/terminal.cpp`,
+  `libtrn/include/trn/terminal.h`.
+- Kind: static returned formatting buffer.
+- Function: `tgoto` under `MSDOS`.
+- Change: after `CSTR-106`, replace the static `gbuf[32]` returned
+  buffer with a modern owner contract or remove the compatibility shim
+  with the old DOS holdover cleanup.  Do not return a pointer into local
+  string storage.
+- Tests: build with the relevant feature setting if the shim remains.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -603,68 +830,17 @@ and clarified ownership at the edges.
   reduced direct mutation.
 - Tests: article display, MIME decode, response, and uudecode tests.
 
-#### CSTR-096 - Uudecode Pending Line Buffer
+#### CSTR-119 - Terminal Command Input Buffers
 
-- Files: `libtrn/uudecode.cpp`.
-- Kind: local fixed pending-line buffer plus global input buffer use.
-- Function: `uudecode`.
-- Change: replace `lastline[UU_LENGTH+1]` with owned string storage
-  when the pending decoded line is text.  Keep meaningful uuencoded line
-  length validation and defer `g_buf` input ownership to `CSTR-077`.
-- Tests: uudecode tests.
-
-#### CSTR-097 - Selector Command Key Storage
-
-- Files: `libtrn/rt-select.cpp`, `libtrn/include/trn/rt-select.h`,
-  `libtrn/opt.cpp`.
-- Kind: global fixed selector command buffers.
-- Function: storage-centered selector command keys.
-- Change: replace the five `char[3]` selector command globals and
-  `s_univ_sel_cmds[3]` with a small owned text type or `std::string`
-  storage.  Preserve the two-character command limit if it is a
-  documented selector behavior.
-- Tests: selector command tests.
-
-#### CSTR-100 - MIME HTML Tag Parser State
-
-- Files: `libtrn/mime.cpp`.
-- Kind: static fixed parser token buffer and literal entity table.
-- Function: `filter_html`.
-- Change: replace `tagword[32]` and `tagword_len` with parser-owned
-  `std::string` state.  Convert the named-entity lookup table to a
-  view-friendly mapping so the entity loop no longer calls `strlen` on
-  table keys.  Preserve cross-call tag parsing if the current static
-  state is intentionally carrying a partial tag across input chunks.
-- Tests: MIME HTML filtering tests before refactor.
-
-#### CSTR-103 - Terminal Pushed String Expansion Buffer
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: local fixed interpolation buffer.
-- Function: `push_string`.
-- Change: replace `tmpbuf[PUSH_SIZE]` with owned `std::string`
-  expansion.  Preserve the reverse push order and macro bit handling.
-- Tests: terminal input macro tests.
-
-#### CSTR-104 - MSDOS Tgoto Format Buffer
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: static returned formatting buffer.
-- Function: `tgoto` under `MSDOS`.
-- Change: replace the static `gbuf[32]` returned buffer with a modern
-  owner contract or remove the compatibility shim with the old DOS
-  holdover cleanup.  Do not return a pointer into local string storage.
-- Tests: build with the relevant feature setting if the shim remains.
-
-#### CSTR-105 - Thread Tree Indent Storage
-
-- Files: `libtrn/rt-wumpus.cpp`.
-- Kind: mutable file-scope C-string layout buffer.
-- Function: storage-centered `s_tree_indent`.
-- Change: replace the mutable `char[]` indentation buffer with owned
-  string or indexed layout storage.  Preserve the tree display layout
-  and avoid copying the whole indent table per display operation.
-- Tests: thread tree display tests.
+- Files: `libtrn/terminal.cpp`,
+  `libtrn/include/trn/terminal.h`, command-input callers.
+- Kind: caller-owned fixed command buffers.
+- Function: `get_cmd`, `get_anything`, `in_char`, and related callers.
+- Change: replace terminal command input output buffers with owned
+  string results after smaller terminal macro and push-string slices are
+  complete.  Preserve typeahead, macro expansion, and mouse input
+  behavior.
+- Tests: terminal input, option editing, and selector tests.
 
 ### Tier 5 - Helper Removal
 
