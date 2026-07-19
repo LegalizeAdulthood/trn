@@ -17,6 +17,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -156,6 +157,42 @@ private:
     std::string m_old_save_name;
 };
 
+struct SavedSelectorCommand
+{
+    OptionIndex option;
+    std::string value;
+};
+
+class SelectorCommandOptionTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        for (SavedSelectorCommand &saved : m_saved_values)
+        {
+            saved.value = option_value(saved.option);
+        }
+    }
+
+    void TearDown() override
+    {
+        for (const SavedSelectorCommand &saved : m_saved_values)
+        {
+            set_option(saved.option, saved.value);
+        }
+    }
+
+private:
+    std::array<SavedSelectorCommand, 6> m_saved_values{{
+        {OI_UNIV_SEL_CMDS, {}},
+        {OI_NEWSRC_SEL_CMDS, {}},
+        {OI_ADD_SEL_CMDS, {}},
+        {OI_NEWSGROUP_SEL_CMDS, {}},
+        {OI_NEWS_SEL_CMDS, {}},
+        {OI_OPTION_SEL_CMDS, {}},
+    }};
+};
+
 } // namespace
 
 TEST_F(CwdCheckTest, defaultsEmptySaveDirectoryToHomeNews)
@@ -255,4 +292,45 @@ TEST_F(AutoSaveNameOptionTest, optionValueFallsBackToCompiledSaveDirectory)
     const bool uses_category_save_directory = std::string_view{SAVEDIR} == "%p/%c";
 
     EXPECT_EQ(yes_or_no(uses_category_save_directory), option_value(OI_AUTO_SAVE_NAME));
+}
+
+TEST_F(SelectorCommandOptionTest, commandOptionsKeepOnlyFirstTwoCharacters)
+{
+    set_option(OI_UNIV_SEL_CMDS, "abcd");
+    set_option(OI_NEWSRC_SEL_CMDS, "abcd");
+    set_option(OI_ADD_SEL_CMDS, "abcd");
+    set_option(OI_NEWSGROUP_SEL_CMDS, "abcd");
+    set_option(OI_NEWS_SEL_CMDS, "abcd");
+    set_option(OI_OPTION_SEL_CMDS, "abcd");
+
+    EXPECT_EQ("ab", option_value(OI_UNIV_SEL_CMDS));
+    EXPECT_EQ("ab", option_value(OI_NEWSRC_SEL_CMDS));
+    EXPECT_EQ("ab", option_value(OI_ADD_SEL_CMDS));
+    EXPECT_EQ("ab", option_value(OI_NEWSGROUP_SEL_CMDS));
+    EXPECT_EQ("ab", option_value(OI_NEWS_SEL_CMDS));
+    EXPECT_EQ("ab", option_value(OI_OPTION_SEL_CMDS));
+}
+
+TEST_F(SelectorCommandOptionTest, oneCharacterCommandOptionsPreservePageCommand)
+{
+    set_option(OI_UNIV_SEL_CMDS, "ab");
+    set_option(OI_NEWSRC_SEL_CMDS, "ab");
+    set_option(OI_ADD_SEL_CMDS, "ab");
+    set_option(OI_NEWSGROUP_SEL_CMDS, "ab");
+    set_option(OI_NEWS_SEL_CMDS, "ab");
+    set_option(OI_OPTION_SEL_CMDS, "ab");
+
+    set_option(OI_UNIV_SEL_CMDS, "x");
+    set_option(OI_NEWSRC_SEL_CMDS, "x");
+    set_option(OI_ADD_SEL_CMDS, "x");
+    set_option(OI_NEWSGROUP_SEL_CMDS, "x");
+    set_option(OI_NEWS_SEL_CMDS, "x");
+    set_option(OI_OPTION_SEL_CMDS, "x");
+
+    EXPECT_EQ("xb", option_value(OI_UNIV_SEL_CMDS));
+    EXPECT_EQ("xb", option_value(OI_NEWSRC_SEL_CMDS));
+    EXPECT_EQ("xb", option_value(OI_ADD_SEL_CMDS));
+    EXPECT_EQ("xb", option_value(OI_NEWSGROUP_SEL_CMDS));
+    EXPECT_EQ("xb", option_value(OI_NEWS_SEL_CMDS));
+    EXPECT_EQ("xb", option_value(OI_OPTION_SEL_CMDS));
 }

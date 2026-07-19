@@ -90,11 +90,11 @@ int               g_sel_item_index{};
 int               g_sel_last_line{};
 bool              g_sel_at_end{};
 int               g_keep_the_group_static{}; // -K
-char              g_newsrc_sel_cmds[3]{"Z>"};
-char              g_add_sel_cmds[3]{"Z>"};
-char              g_newsgroup_sel_cmds[3]{"Z>"};
-char              g_news_sel_cmds[3]{"Z>"};
-char              g_option_sel_cmds[3]{"Z>"};
+std::string       g_newsrc_sel_cmds{"Z>"};
+std::string       g_add_sel_cmds{"Z>"};
+std::string       g_newsgroup_sel_cmds{"Z>"};
+std::string       g_news_sel_cmds{"Z>"};
+std::string       g_option_sel_cmds{"Z>"};
 bool              g_use_sel_num{};
 bool              g_sel_num_goto{};
 
@@ -115,6 +115,38 @@ static bool          s_clean_screen{};
 static RemovedPrompt s_removed_prompt{};
 static int           s_force_sel_pos{};
 static DisplayState (*s_extra_commands)(char_int){};
+
+void set_selector_commands(std::string &commands, std::string_view value)
+{
+    if (value.empty())
+    {
+        commands.clear();
+        return;
+    }
+
+    if (value.size() == 1 && commands.size() > 1)
+    {
+        commands[0] = value.front();
+        return;
+    }
+
+    commands.clear();
+    commands += value[0];
+    if (value.size() > 1)
+    {
+        commands += value[1];
+    }
+}
+
+char selector_end_command(std::string_view commands)
+{
+    return commands.empty() ? '\0' : commands[0];
+}
+
+char selector_page_command(std::string_view commands)
+{
+    return commands.size() > 1 ? commands[1] : '\0';
+}
 
 namespace
 {
@@ -253,8 +285,8 @@ sel_restart:
     }
     else
     {
-        s_end_char = g_news_sel_cmds[0];
-        s_page_char = g_news_sel_cmds[1];
+        s_end_char = selector_end_command(g_news_sel_cmds);
+        s_page_char = selector_page_command(g_news_sel_cmds);
         if (g_curr_artp)
         {
             g_sel_last_ap = g_curr_artp;
@@ -483,8 +515,8 @@ char multirc_selector()
     set_selector(SM_MULTIRC, SS_MAGIC_NUMBER);
 
 sel_restart:
-    s_end_char = g_newsrc_sel_cmds[0];
-    s_page_char = g_newsrc_sel_cmds[1];
+    s_end_char = selector_end_command(g_newsrc_sel_cmds);
+    s_page_char = selector_page_command(g_newsrc_sel_cmds);
     g_sel_mask = AGF_SEL;
     s_extra_commands = multirc_commands;
 
@@ -579,8 +611,8 @@ sel_restart:
         }
     }
 
-    s_end_char = g_newsgroup_sel_cmds[0];
-    s_page_char = g_newsgroup_sel_cmds[1];
+    s_end_char = selector_end_command(g_newsgroup_sel_cmds);
+    s_page_char = selector_page_command(g_newsgroup_sel_cmds);
     if (g_sel_rereading)
     {
         g_sel_mask = AGF_DEL_SEL;
@@ -677,8 +709,8 @@ sel_restart:
         }
     }
 
-    s_end_char = g_add_sel_cmds[0];
-    s_page_char = g_add_sel_cmds[1];
+    s_end_char = selector_end_command(g_add_sel_cmds);
+    s_page_char = selector_page_command(g_add_sel_cmds);
     // Setup for selecting articles to read or set unread
     if (g_sel_rereading)
     {
@@ -757,8 +789,8 @@ char option_selector()
     set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
 
 sel_restart:
-    s_end_char = g_option_sel_cmds[0];
-    s_page_char = g_option_sel_cmds[1];
+    s_end_char = selector_end_command(g_option_sel_cmds);
+    s_page_char = selector_page_command(g_option_sel_cmds);
     if (g_sel_rereading)
     {
         g_sel_mask = AGF_DEL_SEL;

@@ -539,18 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-097 - Selector Command Key Storage
-
-- Files: `libtrn/rt-select.cpp`, `libtrn/include/trn/rt-select.h`,
-  `libtrn/opt.cpp`.
-- Kind: global fixed selector command buffers.
-- Function: storage-centered selector command keys.
-- Change: replace the five `char[3]` selector command globals and
-  `s_univ_sel_cmds[3]` with a small owned text type or `std::string`
-  storage.  Preserve the two-character command limit if it is a
-  documented selector behavior.
-- Tests: selector command tests.
-
 #### CSTR-100 - MIME HTML Tag Parser State
 
 - Files: `libtrn/mime.cpp`.

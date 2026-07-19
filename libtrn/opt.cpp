@@ -78,7 +78,7 @@ OptionFlags *g_option_flags{};
 OptionDraft *g_option_draft{};
 int          g_sel_page_op{};
 
-static char s_univ_sel_cmds[3]{"Z>"};
+static std::string s_univ_sel_cmds{"Z>"};
 
 static std::string hidden_list();
 static std::string magic_list();
@@ -322,11 +322,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_UNIV_SEL_CMDS:
-        *s_univ_sel_cmds = *s;
-        if (s[1])
-        {
-            s_univ_sel_cmds[1] = s[1];
-        }
+        set_selector_commands(s_univ_sel_cmds, s);
         break;
 
     case OI_UNIV_SEL_BTNS:
@@ -346,11 +342,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_NEWSRC_SEL_CMDS:
-        *g_newsrc_sel_cmds = *s;
-        if (s[1])
-        {
-            g_newsrc_sel_cmds[1] = s[1];
-        }
+        set_selector_commands(g_newsrc_sel_cmds, s);
         break;
 
     case OI_NEWSRC_SEL_BTNS:
@@ -362,11 +354,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_ADD_SEL_CMDS:
-        *g_add_sel_cmds = *s;
-        if (s[1])
-        {
-            g_add_sel_cmds[1] = s[1];
-        }
+        set_selector_commands(g_add_sel_cmds, s);
         break;
 
     case OI_ADD_SEL_BTNS:
@@ -382,11 +370,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_NEWSGROUP_SEL_CMDS:
-        *g_newsgroup_sel_cmds = *s;
-        if (s[1])
-        {
-            g_newsgroup_sel_cmds[1] = s[1];
-        }
+        set_selector_commands(g_newsgroup_sel_cmds, s);
         break;
 
     case OI_NEWSGROUP_SEL_BTNS:
@@ -427,11 +411,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_NEWS_SEL_CMDS:
-        *g_news_sel_cmds = *s;
-        if (s[1])
-        {
-            g_news_sel_cmds[1] = s[1];
-        }
+        set_selector_commands(g_news_sel_cmds, s);
         break;
 
     case OI_NEWS_SEL_BTNS:
@@ -444,11 +424,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_OPTION_SEL_CMDS:
-        *g_option_sel_cmds = *s;
-        if (s[1])
-        {
-            g_option_sel_cmds[1] = s[1];
-        }
+        set_selector_commands(g_option_sel_cmds, s);
         break;
 
     case OI_OPTION_SEL_BTNS:

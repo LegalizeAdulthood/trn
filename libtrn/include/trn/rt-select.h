@@ -63,14 +63,17 @@ extern int               g_sel_item_index;
 extern int               g_sel_last_line;
 extern bool              g_sel_at_end;
 extern int               g_keep_the_group_static; // -K
-extern char              g_newsrc_sel_cmds[3];
-extern char              g_add_sel_cmds[3];
-extern char              g_newsgroup_sel_cmds[3];
-extern char              g_news_sel_cmds[3];
-extern char              g_option_sel_cmds[3];
+extern std::string       g_newsrc_sel_cmds;
+extern std::string       g_add_sel_cmds;
+extern std::string       g_newsgroup_sel_cmds;
+extern std::string       g_news_sel_cmds;
+extern std::string       g_option_sel_cmds;
 extern bool              g_use_sel_num;
 extern bool              g_sel_num_goto;
 
+void set_selector_commands(std::string &commands, std::string_view value);
+char selector_end_command(std::string_view commands);
+char selector_page_command(std::string_view commands);
 char article_selector(char_int cmd);
 char multirc_selector();
 char newsgroup_selector();
