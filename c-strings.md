@@ -531,16 +531,6 @@ broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-095 - Followup Header Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local fixed header buffer.
-- Function: `followup`.
-- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
-  header storage.  Preserve followup header generation and posting
-  flow.
-- Tests: response/followup tests.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers

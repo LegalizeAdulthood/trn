@@ -1043,7 +1043,8 @@ done:
 
 void followup()
 {
-    char hbuf[5*LINE_BUF_LEN];
+    constexpr int header_size = 5 * LINE_BUF_LEN;
+    std::string   header_text(header_size, '\0');
     bool incl_body = (*g_buf == 'F' && g_art);
     ArticleNum oldart = g_art;
 
@@ -1070,8 +1071,13 @@ void followup()
         g_art = oldart;
         return;
     }
-    interp(hbuf, sizeof hbuf, get_env_var("NEWSHEADER", NEWS_HEADER).c_str());
-    std::fputs(hbuf,header);
+    interp(header_text.data(), header_size, get_env_var("NEWSHEADER", NEWS_HEADER).c_str());
+    const std::size_t header_end = header_text.find('\0');
+    if (header_end != std::string::npos)
+    {
+        header_text.resize(header_end);
+    }
+    std::fputs(header_text.c_str(), header);
     if (incl_body && g_art_fp != nullptr)
     {
         char* s;
