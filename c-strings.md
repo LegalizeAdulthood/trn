@@ -517,17 +517,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-124 - Autosubscribe Environment Pattern Reads
-
-- Files: `libtrn/autosub.cpp`.
-- Kind: nullable environment C-string reads.
-- Function: `auto_subscribe`.
-- Change: read `AUTOSUBSCRIBE` and `AUTOUNSUBSCRIBE` with
-  `get_env_var`, use empty string as the missing sentinel, and pass
-  views into `match_list`.  Drop the `<util/env.h>` include when it is
-  no longer needed.
-- Tests: autosubscribe tests.
-
 #### CSTR-125 - Xterm Mouse Environment Read
 
 - Files: `libtrn/terminal.cpp`.
@@ -921,9 +910,9 @@ owned strings or owner-specific storage.
 - Files: `util/env.cpp`, `util/include/util/env.h`.
 - Kind: obsolete nullable environment C-string helpers.
 - Function: `get_val`, `get_val_const`.
-- Depends: `CSTR-120`, `CSTR-124`, `CSTR-125`, `CSTR-126`,
-  `CSTR-127`, `CSTR-129`, `CSTR-130`, `CSTR-131`, `CSTR-132`,
-  `CSTR-133`, and `CSTR-134`.
+- Depends: `CSTR-120`, `CSTR-125`, `CSTR-126`, `CSTR-127`,
+  `CSTR-129`, `CSTR-130`, `CSTR-131`, `CSTR-132`, `CSTR-133`, and
+  `CSTR-134`.
 - Change: remove the declarations and definitions after all production
   callers have moved to owned strings or path storage.
 - Tests: build.

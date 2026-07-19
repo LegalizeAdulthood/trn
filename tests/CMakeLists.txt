@@ -10,6 +10,7 @@ configure_trn_test_data()
 add_executable(trn-test
     mock_env.h
     test_addng.cpp
+    test_autosub.cpp
     test_artsrch.cpp
     test_bits.cpp
     test_cache.cpp

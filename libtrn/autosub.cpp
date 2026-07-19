@@ -6,10 +6,10 @@
 #include <trn/autosub.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <trn/final.h>
 #include <trn/ngsrch.h>
 #include <trn/search.h>
-#include <util/env.h>
 
 #include <cstdio>
 #include <string>
@@ -23,14 +23,12 @@ static bool match_list(std::string_view pat_list, std::string_view s);
 // \0 if we should ask the user.
 AddNewType auto_subscribe(std::string_view name)
 {
-    const char *s = get_val_const("AUTOSUBSCRIBE", nullptr);
-    if (s && match_list(s, name))
+    if (const std::string patterns = get_env_var("AUTOSUBSCRIBE"); !patterns.empty() && match_list(patterns, name))
     {
         return ADDNEW_SUB;
     }
 
-    s = get_val_const("AUTOUNSUBSCRIBE", nullptr);
-    if (s && match_list(s, name))
+    if (const std::string patterns = get_env_var("AUTOUNSUBSCRIBE"); !patterns.empty() && match_list(patterns, name))
     {
         return ADDNEW_UNSUB;
     }
