@@ -46,7 +46,7 @@ int nntp_list(std::string_view type, std::string_view arg)
 {
     int               ret;
     const std::string type_name{type};
-    const bool        is_active = string_case_equal(type_name.c_str(), "active");
+    const bool        is_active = string_case_equal(type, "active");
 #ifdef DEBUG
     if (!arg.empty() && (g_debug & 1) && is_active)
     {

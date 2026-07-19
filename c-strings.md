@@ -516,16 +516,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-142 - NNTP List Type Case View
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: local string/view comparison cleanup.
-- Function: `nntp_list`.
-- Change: compare the `type` string view directly with the
-  `string_case_equal` view overload instead of constructing
-  `type_name` only to call `c_str()`.
-- Tests: run NNTP tests.
-
 #### CSTR-143 - NNTP Nested-list Command Case View
 
 - Files: `libtrn/nntp.cpp`.
