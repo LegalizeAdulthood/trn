@@ -2077,12 +2077,8 @@ bool output_subject(char *ptr, int flag)
         if (custom_subject_line)
         {
             subject_line.reserve(256);
-            fmt::format_to(std::back_inserter(subject_line), "{:<5} ", i.value_of());
-            const std::size_t len = subject_line.size();
-            subject_line.resize(256);
             g_art = i;
-            interp(subject_line.data() + len, static_cast<int>(subject_line.size() - len), g_subj_line->c_str());
-            subject_line.resize(std::strlen(subject_line.c_str()));
+            fmt::format_to(std::back_inserter(subject_line), "{:<5} {}", i.value_of(), do_interp(*g_subj_line));
         }
         else
         {

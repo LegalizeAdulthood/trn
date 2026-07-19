@@ -539,16 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-112 - Newsgroup Subject Line Interpolation Buffer
-
-- Files: `libtrn/ng.cpp`.
-- Kind: fixed-size string used as C output buffer.
-- Function: subject-line display path for `g_subj_line`.
-- Change: replace the fixed `subject_line` interpolation buffer and
-  `strlen(c_str())` trimming with owned string construction.  Preserve
-  the existing order of subject lookup and interpolation.
-- Tests: newsgroup subject-line display tests before refactor.
-
 #### CSTR-113 - Cancel Header Interpolation Buffer
 
 - Files: `libtrn/respond.cpp`.
