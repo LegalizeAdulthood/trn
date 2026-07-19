@@ -455,7 +455,8 @@ static bool set_p_host_name()
 #ifdef HAS_GETDOMAINNAME
         {
             std::array<char, LINE_BUF_LEN + 1> domain_name{};
-            if (getdomainname(domain_name.data(), LINE_BUF_LEN) == 0)
+            if (getdomainname(domain_name.data(), LINE_BUF_LEN) == 0 && domain_name[0] != '\0' &&
+                std::strcmp(domain_name.data(), "(none)") != 0)
             {
                 posting_host_name += domain_name.data();
             }

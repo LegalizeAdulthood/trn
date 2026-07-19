@@ -865,16 +865,14 @@ void kill_file_append(const char *cmd, bool local)
         }
         if (std::FILE *fp = std::fopen(kill_file.string().c_str(), "a+"))
         {
-            char ch;
-            if (std::fseek(fp,-1L,2) < 0)
+            char ch = '\n';
+            std::fseek(fp, 0L, SEEK_END);
+            if (std::ftell(fp) > 0)
             {
-                ch = '\n';
-            }
-            else
-            {
+                std::fseek(fp, -1L, SEEK_END);
                 ch = std::getc(fp);
+                std::fseek(fp, 0L, SEEK_END);
             }
-            std::fseek(fp,0L,2);
             if (ch != '\n')
             {
                 std::putc('\n', fp);
