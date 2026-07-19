@@ -8,8 +8,8 @@
 class IniSchema;
 class IniSectionValues;
 
-#include <optional>
 #include <string>
+#include <string_view>
 
 enum class RcGroupConfigField
 {
@@ -24,51 +24,48 @@ public:
     static const IniSchema &schema();
     static RcGroupConfig    from(const IniSectionValues &values);
 
-    const char *id() const;
-    const char *newsrc() const;
-    const char *add_groups() const;
+    std::string_view id() const;
+    std::string_view newsrc() const;
+    std::string_view add_groups() const;
 
-    void set_id(const char *value);
-    void set_newsrc(const char *value);
-    void set_add_groups(const char *value);
+    void set_id(std::string_view value);
+    void set_newsrc(std::string_view value);
+    void set_add_groups(std::string_view value);
 
 private:
-    static const char *c_str(const std::optional<std::string> &value);
-    static void        set_value(std::optional<std::string> &target, const char *value);
-
-    std::optional<std::string> m_id;
-    std::optional<std::string> m_newsrc;
-    std::optional<std::string> m_add_groups;
+    std::string m_id;
+    std::string m_newsrc;
+    std::string m_add_groups;
 };
 
-inline const char *RcGroupConfig::id() const
+inline std::string_view RcGroupConfig::id() const
 {
-    return c_str(m_id);
+    return m_id;
 }
 
-inline const char *RcGroupConfig::newsrc() const
+inline std::string_view RcGroupConfig::newsrc() const
 {
-    return c_str(m_newsrc);
+    return m_newsrc;
 }
 
-inline const char *RcGroupConfig::add_groups() const
+inline std::string_view RcGroupConfig::add_groups() const
 {
-    return c_str(m_add_groups);
+    return m_add_groups;
 }
 
-inline void RcGroupConfig::set_id(const char *value)
+inline void RcGroupConfig::set_id(std::string_view value)
 {
-    set_value(m_id, value);
+    m_id = value;
 }
 
-inline void RcGroupConfig::set_newsrc(const char *value)
+inline void RcGroupConfig::set_newsrc(std::string_view value)
 {
-    set_value(m_newsrc, value);
+    m_newsrc = value;
 }
 
-inline void RcGroupConfig::set_add_groups(const char *value)
+inline void RcGroupConfig::set_add_groups(std::string_view value)
 {
-    set_value(m_add_groups, value);
+    m_add_groups = value;
 }
 
 #endif

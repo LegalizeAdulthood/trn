@@ -58,16 +58,16 @@ TEST_F(RcGroupConfigTest, parsesValuesIntoNamedFields)
                                        "Newsrc = /home/me/.newsrc\n"
                                        "Add Groups = manual\n");
 
-    EXPECT_STREQ("test-local", config.id());
-    EXPECT_STREQ("/home/me/.newsrc", config.newsrc());
-    EXPECT_STREQ("manual", config.add_groups());
+    EXPECT_EQ(std::string_view{"test-local"}, config.id());
+    EXPECT_EQ(std::string_view{"/home/me/.newsrc"}, config.newsrc());
+    EXPECT_EQ(std::string_view{"manual"}, config.add_groups());
 }
 
-TEST_F(RcGroupConfigTest, missingValuesRemainNull)
+TEST_F(RcGroupConfigTest, missingValuesReturnEmptyViews)
 {
     const RcGroupConfig config = parse("[Group 1]\nID = default\n");
 
-    EXPECT_STREQ("default", config.id());
-    EXPECT_EQ(nullptr, config.newsrc());
-    EXPECT_EQ(nullptr, config.add_groups());
+    EXPECT_EQ(std::string_view{"default"}, config.id());
+    EXPECT_TRUE(config.newsrc().empty());
+    EXPECT_TRUE(config.add_groups().empty());
 }

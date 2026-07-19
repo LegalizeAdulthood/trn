@@ -534,18 +534,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-108 - RcGroupConfig Optional Value Views
-
-- Files: `libtrn/RcGroupConfig.cpp`,
-  `libtrn/include/trn/RcGroupConfig.h`, `libtrn/rcstuff.cpp`.
-- Kind: owned config strings exposed as nullable C strings.
-- Function: `RcGroupConfig` accessors and `new_newsrc`.
-- Change: return `std::optional<std::string_view>` from config
-  accessors and accept string views in setters where callers already
-  hold strings.  Update `new_newsrc` to use optional views directly and
-  convert to `std::string` only for owned path expansion.
-- Tests: `RcGroupConfig` and rcstuff tests.
-
 #### CSTR-109 - DataSourceConfig Optional Value Views
 
 - Files: `libtrn/DataSourceConfig.cpp`,

@@ -353,19 +353,19 @@ void rcstuff_final()
 
 static Newsrc *new_newsrc(const RcGroupConfig &config)
 {
-    const char *name = config.id();
-    if (!name || !*name)
+    const std::string_view name = config.id();
+    if (name.empty())
     {
         return nullptr;
     }
 
-    std::string newsrc = config.newsrc() == nullptr ? std::string{} : std::string{config.newsrc()};
+    std::string newsrc{config.newsrc()};
     if (newsrc.empty())
     {
         newsrc = get_env_var("NEWSRC", RCNAME);
     }
 
-    const char *add_ok = config.add_groups();
+    const std::string_view add_ok = config.add_groups();
     DataSource *dp = get_data_source(name);
     if (!dp)
     {
@@ -378,7 +378,7 @@ static Newsrc *new_newsrc(const RcGroupConfig &config)
     rp->old_name = fmt::sprintf(RCNAME_OLD, rp->name.generic_string().c_str());
     rp->new_name = fmt::sprintf(RCNAME_NEW, rp->name.generic_string().c_str());
 
-    switch (add_ok ? *add_ok : 'y')
+    switch (add_ok.empty() ? 'y' : add_ok.front())
     {
     case 'n':
     case 'N':
