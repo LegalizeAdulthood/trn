@@ -433,7 +433,8 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - `safe_malloc`: remaining string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include hash tables, selector page
   storage, regex bytecode, HTML block arrays, article subject pointer
-  arrays, and generic allocation helpers.
+  arrays, and generic allocation helpers.  The `tool` allocation helper
+  declarations now have no production callers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
@@ -441,15 +442,21 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   tag parser state, terminal storage, terminal command-input scratch,
   response header buffers, `ngstuff` command expansion buffers,
   `uudecode` pending-line storage, selector command key storage,
-  tree-indent storage, and global command/message buffers.
+  tree-indent storage, overview-format parsing, and global
+  command/message buffers.
 - Filename storage: current path candidates remain in KILL-file
   appending, score-file loading/editing, newsrc file fields, and some
   universal-selector file fields.  Mixed URL/path/host fields need
   ownership and identity splits before they can honestly become
   `fs::path`.
-- Case-insensitive comparison helpers still expose only C-string
-  interfaces, so callers with `std::string_view` inputs sometimes build
-  temporary strings or pass pointer/length pairs manually.
+- Legacy environment reads through `get_val` and `get_val_const` remain
+  in several caller functions.  External callers should move to
+  `get_env_var`; `env_init` paths must keep their testable environment
+  hook until that hook has an owned-string replacement.
+- Case-insensitive comparison helpers now provide `std::string_view`
+  overloads.  Remaining candidates are callers that still force
+  `c_str()`, `data()`, or pointer/length pairs after deriving strings or
+  views locally.
 - Remaining literal tables include color object names, signal names,
   status labels, MIME entity mappings, charset names, and transliteration
   tables.  The useful current targets are the tables whose users already
@@ -472,18 +479,18 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 74, `strncpy` 3, `strcat` 2.
+- Copy and concatenation: `strcpy` 46, `strncpy` 3, `strcat` 1.
 - Comparison: `strcmp` 4, `strncmp` 24.
-- Search and length: `strchr` 88, `strrchr` 7, `strstr` 2,
-  `strlen` 81.
-- Formatting into C buffers: `sprintf` 82.
-- C text I/O roots: `fgets` 30, `fputs` 205, `printf` 479,
-  `fprintf` 57.
-- Character byte operations: `memcpy` 7, `memset` 8, `memcmp` 1.
+- Search and length: `strchr` 79, `strrchr` 5, `strstr` 2,
+  `strlen` 80.
+- Formatting into C buffers: `sprintf` 58, `snprintf` 2.
+- C text I/O roots: `fgets` 29, `fputs` 203, `printf` 432,
+  `fprintf` 55.
+- Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
-`strcspn`, `strpbrk`, `strtok`, `snprintf`, `vsprintf`, `vsnprintf`,
-`puts`, `memmove`, or `memchr`.
+`strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
+`memmove`, or `memchr`.
 
 High-count functions are not self-deferred.  They are grouped into
 owner slices below because most calls sit on shared buffers such as
@@ -504,15 +511,174 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-122 - Overview Header Name View Compare
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: derived `std::string_view` forced through pointer/length
+  comparison.
+- Function: `ov_parse`.
+- Change: compare the derived `header_name` view against the header
+  table name with the existing view comparison helpers.  Do not pass
+  `header_name.data()` or manually thread the header length through the
+  call.
+- Tests: overview parsing tests.
+
+#### CSTR-123 - Add Group Name Sort View Compare
+
+- Files: `libtrn/addng.cpp`.
+- Kind: `std::string` values forced through C-string accessors.
+- Function: `add_group_order_group_name`.
+- Change: compare add-group names through `std::string_view` or direct
+  string arguments instead of calling `c_str()` only to enter the
+  case-insensitive comparison helper.
+- Tests: add-newsgroup selector sorting tests.
+
+#### CSTR-124 - Autosubscribe Environment Pattern Reads
+
+- Files: `libtrn/autosub.cpp`.
+- Kind: nullable environment C-string reads.
+- Function: `auto_subscribe`.
+- Change: read `AUTOSUBSCRIBE` and `AUTOUNSUBSCRIBE` with
+  `get_env_var`, use empty string as the missing sentinel, and pass
+  views into `match_list`.  Drop the `<util/env.h>` include when it is
+  no longer needed.
+- Tests: autosubscribe tests.
+
+#### CSTR-125 - Xterm Mouse Environment Read
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: nullable environment C-string read.
+- Function: `xmouse_init`.
+- Change: read `XTERMMOUSE` with `get_env_var` and use empty string as
+  the missing sentinel.  Pass `c_str()` only at the legacy
+  interpolation call.
+- Tests: terminal option tests.
+
+#### CSTR-126 - Shell Default Environment Read
+
+- Files: `libtrn/util.cpp`.
+- Kind: nullable environment C-string read feeding process launch.
+- Function: `do_shell`.
+- Change: when the caller does not supply a shell, keep the default
+  shell in a local `std::string` from `get_env_var("SHELL",
+  PREF_SHELL)` and pass `c_str()` only to `spawnl` or `execl`.
+  Preserve caller-supplied shell pointers.
+- Tests: shell invocation tests or build if no focused coverage exists.
+
+#### CSTR-127 - Tilde Prefix Environment Probe
+
+- Files: `util/util2.cpp`.
+- Kind: discarded nullable environment C-string read.
+- Function: `file_exp`.
+- Change: audit the `~~` branch that calls
+  `get_val_const("TRNPREFIX", INSTALL_PREFIX)` and discards the result.
+  Remove the dead probe if there is no documented behavior, or replace
+  it with owned `get_env_var` storage if the prefix value should affect
+  expansion.
+- Tests: file expansion tests.
+
+#### CSTR-128 - Tool Safe Allocation Helper Removal
+
+- Files: `tool/util3.cpp`, `tool/include/tool/util3.h`.
+- Kind: unused raw allocation helpers.
+- Function: `safe_malloc`, `safe_realloc`.
+- Change: remove the unused tool-library declarations and definitions.
+  The current scan finds no production callers under `tool`.
+- Tests: build.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-129 - Data Source Environment Reads
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: nullable environment C-string reads feeding owned config
+  strings.
+- Function: `data_source_init`.
+- Change: use `get_env_var` for `NNTPSERVER` and `NNTP_FORCE_AUTH`.
+  Keep `server_name` and `force_auth` as owned strings, use empty string
+  as the missing sentinel, and avoid maintaining a parallel C-string
+  `machine` variable.
+- Tests: data source and NNTP initialization tests.
+
+#### CSTR-130 - Startup Switch Environment Reads
+
+- Files: `libtrn/opt.cpp`.
+- Kind: nullable environment C-string reads feeding switch parsing.
+- Function: `opt_init`.
+- Change: read `TRNINIT` and `RNINIT` into owned strings with
+  `get_env_var`, use empty string as the missing sentinel, and pass a
+  view to `sw_list` or `sw_file`.
+- Tests: option initialization tests.
+
+#### CSTR-131 - Save Article Saver Environment Read
+
+- Files: `libtrn/respond.cpp`.
+- Kind: nullable environment C-string read feeding command expansion.
+- Function: `save_article`.
+- Change: read `MBOXSAVER` or `NORMSAVER` with `get_env_var`, use empty
+  string as the missing sentinel, and pass the owned string to
+  `file_exp` before invoking the shell.
+- Tests: save-article tests.
+
+#### CSTR-132 - Newsrc Filename Environment Read
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: nullable environment C-string read feeding path storage.
+- Function: `new_newsrc`.
+- Change: keep the selected newsrc name in an owned `std::string` from
+  the config value or `get_env_var("NEWSRC", RCNAME)`, then pass it to
+  `file_exp`.  Preserve config value precedence.
+- Tests: newsrc configuration tests.
+
+#### CSTR-133 - Selector Character Environment Read
+
+- Files: `libtrn/rt-page.cpp`.
+- Kind: nullable environment C-string read feeding owned global string.
+- Function: `sel_page_init`.
+- Change: assign `g_sel_chars` from `get_env_var("SELECTCHARS",
+  SELECTION_CHARS)` instead of `get_val_const`.
+- Tests: selector paging tests.
+
+#### CSTR-134 - Env Initialization Testable Reads
+
+- Files: `util/env.cpp`.
+- Kind: nullable environment C-string reads behind a test hook.
+- Function: `env_init`, `env_init2`.
+- Change: replace internal `get_val_const` calls with a local
+  owned-string helper that still uses `s_getenv_fn`.  Do not bypass the
+  existing test hook by calling `get_env_var` directly from these
+  functions.
+- Tests: `test_init` and interpolation environment tests.
+
+#### CSTR-135 - Header Line Type View API
+
+- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`,
+  `libtrn/mime.cpp`, `libtrn/rt-ov.cpp`, `libtrn/scorefile.cpp`.
+- Kind: pointer-pair header-name API with hidden global scratch output.
+- Function: `set_line_type`, `get_header_num`.
+- Change: replace the pointer-pair header-name contract with a
+  `std::string_view` contract.  Preserve custom-header behavior without
+  using `g_msg` as an implicit lower-case output channel.
+- Tests: header parsing, MIME, overview, and score-file tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices use Tier 1 results or replace one owner of string storage.
 Finish these before broad global-buffer work.
+
+#### CSTR-136 - Overview Format Field Parser
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: local pointer/end parser over an overview format line.
+- Function: `ov_num`.
+- Depends: `CSTR-135`.
+- Change: make `ov_num` take `std::string_view`, split the caller's
+  line with `find(':')`, and remove the local `strchr` and `strlen`
+  plumbing.
+- Tests: overview format parsing tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -764,4 +930,16 @@ owned strings or owner-specific storage.
 - Function: `safe_copy`.
 - Change: remove `safe_copy` only after `CSTR-033` and `CSTR-036` have
   removed every production call site.
+- Tests: build.
+
+#### CSTR-137 - Legacy Env Helper Removal
+
+- Files: `util/env.cpp`, `util/include/util/env.h`.
+- Kind: obsolete nullable environment C-string helpers.
+- Function: `get_val`, `get_val_const`.
+- Depends: `CSTR-120`, `CSTR-124`, `CSTR-125`, `CSTR-126`,
+  `CSTR-127`, `CSTR-129`, `CSTR-130`, `CSTR-131`, `CSTR-132`,
+  `CSTR-133`, and `CSTR-134`.
+- Change: remove the declarations and definitions after all production
+  callers have moved to owned strings or path storage.
 - Tests: build.
