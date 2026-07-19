@@ -136,3 +136,29 @@ TEST_F(TreeRenderingTest, normalHeaderKeywordIsSplitFromValue)
     EXPECT_EQ("From: Tester\n", output);
     EXPECT_EQ(ArticleLine{1}, lines);
 }
+
+TEST_F(TreeRenderingTest, siblingBranchesAreRenderedOnSeparateLines)
+{
+    Article sibling{};
+    sibling.m_subj = &m_subject;
+    sibling.m_parent = &m_current;
+    sibling.m_flags = AF_EXISTS | AF_CACHED | AF_UNREAD;
+    m_recent.m_sibling = &sibling;
+
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts("+", ArticleLine{}, 0);
+    const ArticleLine second_lines = tree_puts("+", ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    std::string expected{"+"};
+    expected.append(27, ' ');
+    expected += "  <so>[1]<se>+-[<so>1<se>]\n";
+    expected += "+";
+    expected.append(27, ' ');
+    expected += "     \\-[1]\n";
+    EXPECT_EQ(expected, output);
+    EXPECT_EQ(ArticleLine{1}, lines);
+    EXPECT_EQ(ArticleLine{1}, second_lines);
+}

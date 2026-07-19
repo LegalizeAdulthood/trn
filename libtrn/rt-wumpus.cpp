@@ -26,13 +26,14 @@
 #include <fmt/format.h>
 
 #include <algorithm>
-#include <array>
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <string_view>
+#include <vector>
 
 int g_max_tree_lines{6};
 
@@ -40,25 +41,7 @@ static constexpr std::string_view s_letters{"123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ
 static constexpr int              LAST_ALPHANUM{9 + 26 + 26};
 static_assert(LAST_ALPHANUM == static_cast<int>(s_letters.size() - 1));
 
-// clang-format off
-static char s_tree_indent[] = {
-    ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
-    ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0
-};
-// clang-format on
+static constexpr int TREE_INDENT_STEP{5};
 static Article *s_tree_article{};
 static int      s_max_depth{};
 static int      s_max_line{-1}; // TODO: ArticleLine?
@@ -66,27 +49,37 @@ static int      s_first_depth{};
 static int      s_first_line{};
 static int      s_my_depth{};
 static int      s_my_line{};
-static bool     s_node_on_line{};
-static int      s_node_line_cnt{};
-static int      s_line_num{};
 static int      s_header_indent{};
-static std::array<std::string, 11> s_tree_lines{};
-static std::string                 s_tree_buff;
+static std::vector<std::string> s_tree_lines{};
+
+struct TreeRenderState
+{
+    int                      first_depth{};
+    int                      max_depth{};
+    int                      first_line{};
+    int                      max_line{};
+    int                      line_num{};
+    int                      node_line_count{};
+    bool                     node_on_line{};
+    bool                     stop_at_max_depth{};
+    std::string              line;
+    std::string              prefix;
+    std::vector<std::string> lines;
+};
 
 static void     find_depth(Article *article, int depth);
-static void     cache_tree(Article *ap, int depth, char *cp);
+static void     cache_tree(Article *ap, int depth, TreeRenderState &render);
 static Article *find_artp(Article *article, int x);
-static void     display_tree(Article *article, char *cp);
+static std::vector<std::string> render_tree_lines(Article *article, TreeRenderState &render);
+static void     print_tree_line(std::string_view tree_line);
 
 // Prepare tree display for inclusion in the article header.
 void init_tree()
 {
     Article*thread;
 
-    while (s_max_line >= 0)
-    {
-        s_tree_lines[s_max_line--].clear();
-    }
+    s_tree_lines.clear();
+    s_max_line = -1;
 
     if (!(s_tree_article = g_curr_artp) || !s_tree_article->m_subj)
     {
@@ -109,7 +102,6 @@ void init_tree()
     s_max_line = 0;
     s_my_depth = 0;
     s_my_line = 0;
-    s_node_line_cnt = 0;
     find_depth(thread, 0);
 
     if (s_max_depth <= 5)
@@ -147,20 +139,20 @@ void init_tree()
         s_max_line = s_first_line + g_max_tree_lines-1;
     }
 
-    s_tree_buff.clear();
-    s_tree_buff.reserve(128);
-    s_tree_buff += ' ';
-    s_node_on_line = false;
-    s_line_num = 0;
-    // cache our portion of the tree
-    cache_tree(thread, 0, s_tree_indent);
+    TreeRenderState render;
+    render.first_depth = s_first_depth;
+    render.max_depth = s_max_depth;
+    render.first_line = s_first_line;
+    render.max_line = s_max_line;
+    s_tree_lines = render_tree_lines(thread, render);
+    s_first_line = render.first_line;
 
     s_max_depth = (s_max_depth-s_first_depth+1) * 5;    // turn depth into char width
     s_max_line -= s_first_line;                 // turn s_max_line into count
     // shorten tree if lower lines aren't visible
-    if (s_node_line_cnt < s_max_line)
+    if (render.node_line_count < s_max_line)
     {
-        s_max_line = s_node_line_cnt + 1;
+        s_max_line = render.node_line_count + 1;
     }
 }
 
@@ -190,24 +182,96 @@ static void find_depth(Article *article, int depth)
     }
 }
 
-// Place the tree display in a maximum of 11 lines x 6 nodes.
-static void cache_tree(Article *ap, int depth, char *cp)
+static void set_tree_prefix(std::string &prefix, int visible_depth, char ch)
+{
+    const std::size_t offset = static_cast<std::size_t>(visible_depth * TREE_INDENT_STEP);
+    if (prefix.size() <= offset)
+    {
+        prefix.resize(offset + 1, ' ');
+    }
+    prefix[offset] = ch;
+}
+
+static void truncate_tree_prefix(std::string &prefix, int visible_depth)
+{
+    const std::size_t length = static_cast<std::size_t>(visible_depth * TREE_INDENT_STEP + 1);
+    if (prefix.size() > length)
+    {
+        prefix.resize(length);
+    }
+}
+
+static void append_tree_node(std::string &line, Article *article)
+{
+    char ch;
+
+    line += ((article->m_flags & AF_HAS_RE) || article->m_parent) ? '-' : ' ';
+    if (article == g_curr_artp)
+    {
+        line += '*';
+    }
+    if (!(article->m_flags & AF_UNREAD))
+    {
+        line += '(';
+        ch = ')';
+    }
+    else if (!g_selected_only || (article->m_flags & AF_SEL))
+    {
+        line += '[';
+        ch = ']';
+    }
+    else
+    {
+        line += '<';
+        ch = '>';
+    }
+    if (article == g_recent_artp && article != g_curr_artp)
+    {
+        line += '@';
+    }
+    line += article->thread_letter();
+    line += ch;
+    if (article->m_child1)
+    {
+        line += article->m_child1->m_sibling ? '+' : '-';
+    }
+}
+
+static std::vector<std::string> render_tree_lines(Article *article, TreeRenderState &render)
+{
+    render.line.clear();
+    render.line.reserve(128);
+    render.line += ' ';
+    render.prefix.clear();
+    render.lines.clear();
+    render.line_num = 0;
+    render.node_line_count = 0;
+    render.node_on_line = false;
+
+    cache_tree(article, 0, render);
+    return std::move(render.lines);
+}
+
+// Build the tree display lines for the current render window.
+static void cache_tree(Article *ap, int depth, TreeRenderState &render)
 {
     int depth_mode;
+    int visible_depth = depth - render.first_depth;
 
-    cp[1] = ' ';
-    if (depth >= s_first_depth && depth <= s_max_depth)
+    if (render.stop_at_max_depth && depth > render.max_depth)
     {
-        cp += 5;
+        return;
+    }
+    if (visible_depth >= 0 && depth <= render.max_depth)
+    {
         depth_mode = 1;
     }
-    else if (depth + 1 == s_first_depth)
+    else if (depth + 1 == render.first_depth)
     {
         depth_mode = 2;
     }
     else
     {
-        cp = s_tree_indent;
         depth_mode = 0;
     }
     while (true)
@@ -215,53 +279,17 @@ static void cache_tree(Article *ap, int depth, char *cp)
         switch (depth_mode)
         {
         case 1:
-        {
-            char ch;
-
-            s_tree_buff += ((ap->m_flags & AF_HAS_RE) || ap->m_parent) ? '-' : ' ';
-            if (ap == s_tree_article)
-            {
-                s_tree_buff += '*';
-            }
-            if (!(ap->m_flags & AF_UNREAD))
-            {
-                s_tree_buff += '(';
-                ch = ')';
-            }
-            else if (!g_selected_only || (ap->m_flags & AF_SEL))
-            {
-                s_tree_buff += '[';
-                ch = ']';
-            }
-            else
-            {
-                s_tree_buff += '<';
-                ch = '>';
-            }
-            if (ap == g_recent_artp && ap != s_tree_article)
-            {
-                s_tree_buff += '@';
-            }
-            s_tree_buff += ap->thread_letter();
-            s_tree_buff += ch;
-            if (ap->m_child1)
-            {
-                s_tree_buff += ap->m_child1->m_sibling ? '+' : '-';
-            }
-            if (ap->m_sibling)
-            {
-                *cp = '|';
-            }
-            else
-            {
-                *cp = ' ';
-            }
-            s_node_on_line = true;
+            append_tree_node(render.line, ap);
+            set_tree_prefix(render.prefix, visible_depth, ap->m_sibling ? '|' : ' ');
+            render.node_on_line = true;
             break;
-        }
 
         case 2:
-            s_tree_buff.front() = (!ap->m_child1) ? ' ' : (ap->m_child1->m_sibling) ? '+' : '-';
+            if (render.line.empty())
+            {
+                render.line += ' ';
+            }
+            render.line.front() = (!ap->m_child1) ? ' ' : (ap->m_child1->m_sibling) ? '+' : '-';
             break;
 
         default:
@@ -269,43 +297,46 @@ static void cache_tree(Article *ap, int depth, char *cp)
         }
         if (ap->m_child1)
         {
-            cache_tree(ap->m_child1, depth+1, cp);
-            cp[1] = '\0';
+            cache_tree(ap->m_child1, depth + 1, render);
+            if (depth_mode == 1)
+            {
+                truncate_tree_prefix(render.prefix, visible_depth);
+            }
         }
         else
         {
-            if (!s_node_on_line && s_first_line == s_line_num)
+            if (!render.node_on_line && render.first_line == render.line_num)
             {
-                s_first_line++;
+                render.first_line++;
             }
-            if (s_line_num >= s_first_line)
+            if (render.line_num >= render.first_line)
             {
-                if (s_tree_buff.back() == ' ')
+                if (!render.line.empty() && render.line.back() == ' ')
                 {
-                    s_tree_buff.pop_back();
+                    render.line.pop_back();
                 }
-                s_tree_lines[s_line_num - s_first_line] = s_tree_buff;
-                if (s_node_on_line)
+                render.lines.push_back(render.line);
+                if (render.node_on_line)
                 {
-                    s_node_line_cnt = s_line_num - s_first_line;
+                    render.node_line_count = render.line_num - render.first_line;
                 }
             }
-            s_line_num++;
-            s_node_on_line = false;
+            render.line_num++;
+            render.node_on_line = false;
         }
-        if (!(ap = ap->m_sibling) || s_line_num > s_max_line)
+        if (!(ap = ap->m_sibling) || render.line_num > render.max_line)
         {
             break;
         }
-        if (!ap->m_sibling)
+        if (depth_mode == 1 && !ap->m_sibling)
         {
-            *cp = '\\';
+            set_tree_prefix(render.prefix, visible_depth, '\\');
         }
-        if (!s_first_depth)
+        if (!render.first_depth && !render.prefix.empty())
         {
-            s_tree_indent[5] = ' ';
+            render.prefix.front() = ' ';
         }
-        s_tree_buff = s_tree_indent + 5;
+        render.line = render.prefix;
     }
 }
 
@@ -361,6 +392,22 @@ static Article *find_artp(Article *article, int x)
 inline bool header_conv()
 {
     return g_char_subst[0] == 'a' || g_char_subst[0] == 'm';
+}
+
+static void print_tree_line(std::string_view tree_line)
+{
+    for (std::size_t marker = tree_line.find_first_of("*@"); marker != std::string_view::npos;
+         marker = tree_line.find_first_of("*@"))
+    {
+        fmt::print("{}", tree_line.substr(0, marker));
+        const std::size_t marked_size = tree_line[marker] == '*' ? 3 : 1;
+        tree_line.remove_prefix(marker + 1);
+        color_object(COLOR_TREE_MARK, true);
+        fmt::print("{}", tree_line.substr(0, marked_size));
+        color_pop(); // of COLOR_TREE_MARK
+        tree_line.remove_prefix(marked_size);
+    }
+    fmt::print("{}", tree_line);
 }
 
 // Output a header line with possible tree display on the right hand side.
@@ -553,22 +600,11 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             g_term_col = wrap_at;
             // Check string for the '*' flagging our current node
             // and the '@' flagging our prior node.
-            std::string_view tree_line{s_tree_lines[header_line.value_of()]};
             color_object(COLOR_TREE, true);
-            // Handle standout output for '*' and '@' marked nodes, then
-            // continue with the rest of the line.
-            for (std::size_t marker = tree_line.find_first_of("*@"); marker != std::string_view::npos;
-                 marker = tree_line.find_first_of("*@"))
+            if (header_line.value_of() < static_cast<int>(s_tree_lines.size()))
             {
-                fmt::print("{}", tree_line.substr(0, marker));
-                const std::size_t marked_size = tree_line[marker] == '*' ? 3 : 1;
-                tree_line.remove_prefix(marker + 1);
-                color_object(COLOR_TREE_MARK, true);
-                fmt::print("{}", tree_line.substr(0, marked_size));
-                color_pop(); // of COLOR_TREE_MARK
-                tree_line.remove_prefix(marked_size);
+                print_tree_line(s_tree_lines[header_line.value_of()]);
             }
-            fmt::print("{}", tree_line);
             color_pop(); // of COLOR_TREE
         }// if
         newline();
@@ -664,101 +700,26 @@ void entire_tree(Article* ap)
     {
         return;
     }
-    std::putchar(' ');
-    g_buf[3] = '\0';
-    display_tree(thread, s_tree_indent);
 
-    if (check_page_line())
-    {
-        return;
-    }
-    newline();
-}
+    TreeRenderState render;
+    render.first_depth = 0;
+    render.max_depth = g_tc_COLS / TREE_INDENT_STEP;
+    render.first_line = 0;
+    render.max_line = std::numeric_limits<int>::max();
+    render.stop_at_max_depth = true;
 
-// A recursive routine to output the entire article tree.
-//
-static void display_tree(Article *article, char *cp)
-{
-    if (cp - s_tree_indent > g_tc_COLS || g_page_line < 0)
+    for (const std::string &tree_line : render_tree_lines(thread, render))
     {
-        return;
-    }
-    cp[1] = ' ';
-    cp += 5;
-    color_object(COLOR_TREE, true);
-    while (true)
-    {
-        std::putchar(((article->m_flags&AF_HAS_RE) || article->m_parent) ? '-' : ' ');
-        if (!(article->m_flags & AF_UNREAD))
-        {
-            g_buf[0] = '(';
-            g_buf[2] = ')';
-        }
-        else if (!g_selected_only || (article->m_flags & AF_SEL))
-        {
-            g_buf[0] = '[';
-            g_buf[2] = ']';
-        }
-        else
-        {
-            g_buf[0] = '<';
-            g_buf[2] = '>';
-        }
-        g_buf[1] = article->thread_letter();
-        if (article == g_curr_artp)
-        {
-            color_string(COLOR_TREE_MARK,g_buf);
-        }
-        else if (article == g_recent_artp)
-        {
-            std::putchar(g_buf[0]);
-            color_object(COLOR_TREE_MARK, true);
-            std::putchar(g_buf[1]);
-            color_pop();        // of COLOR_TREE_MARK
-            std::putchar(g_buf[2]);
-        }
-        else
-        {
-            std::fputs(g_buf, stdout);
-        }
-
-        if (article->m_sibling)
-        {
-            *cp = '|';
-        }
-        else
-        {
-            *cp = ' ';
-        }
-        if (article->m_child1)
-        {
-            std::putchar((article->m_child1->m_sibling)? '+' : '-');
-            color_pop();        // of COLOR_TREE
-            display_tree(article->m_child1, cp);
-            color_object(COLOR_TREE, true);
-            cp[1] = '\0';
-        }
-        else
-        {
-            newline();
-        }
-        if (!(article = article->m_sibling))
-        {
-            break;
-        }
-        if (!article->m_sibling)
-        {
-            *cp = '\\';
-        }
-        s_tree_indent[5] = ' ';
         if (check_page_line())
         {
-            color_pop();
             return;
         }
-        std::fputs(s_tree_indent+5, stdout);
+        color_object(COLOR_TREE, true);
+        print_tree_line(tree_line);
+        color_pop(); // of COLOR_TREE
+        newline();
     }
-    color_pop();        // of COLOR_TREE
+    newline();
 }
 
 // Calculate the subject letter representation.  "Place-holder" nodes

@@ -539,16 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-105 - Thread Tree Indent Storage
-
-- Files: `libtrn/rt-wumpus.cpp`.
-- Kind: mutable file-scope C-string layout buffer.
-- Function: storage-centered `s_tree_indent`.
-- Change: replace the mutable `char[]` indentation buffer with owned
-  string or indexed layout storage.  Preserve the tree display layout
-  and avoid copying the whole indent table per display operation.
-- Tests: thread tree display tests.
-
 #### CSTR-110 - Perform Command Interpolation Buffer
 
 - Files: `libtrn/ngstuff.cpp`.
