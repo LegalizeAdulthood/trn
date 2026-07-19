@@ -539,17 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-110 - Perform Command Interpolation Buffer
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: fixed-size string used as C output buffer.
-- Function: `perform`.
-- Change: replace the `std::string(512, '\0')` interpolation buffer and
-  `strlen(c_str())` trimming with owned string construction for `%`
-  commands.  Preserve `cmdlst` advancement for colon-separated command
-  lists and avoid adding a wrapper that no caller uses.
-- Tests: ngstuff perform tests before refactor.
-
 #### CSTR-111 - Article Mail Prompt Interpolation Buffer
 
 - Files: `libtrn/art.cpp`.

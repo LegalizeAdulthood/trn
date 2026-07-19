@@ -258,6 +258,15 @@ getout:
     return pattern;                     // where we left off
 }
 
+std::size_t skip_interp(std::string_view pattern, std::string_view stoppers)
+{
+    std::string pattern_text{pattern};
+    std::string stoppers_text{stoppers};
+    const char *start = pattern_text.c_str();
+
+    return skip_interp(start, stoppers_text.c_str()) - start;
+}
+
 // interpret interpolations
 const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
 {

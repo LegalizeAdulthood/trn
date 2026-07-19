@@ -678,21 +678,19 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else if (ch == '%')
         {
-            std::string expanded_command(512, '\0');
-            char       *expanded_buffer = expanded_command.data();
-            const int   expanded_size = static_cast<int>(expanded_command.size());
+            std::string expanded_command;
 
             if (g_one_command)
             {
-                interp(expanded_buffer, expanded_size, cmdlst);
+                expanded_command = do_interp(cmdlst);
             }
             else
             {
                 char *cmd_start = cmdlst;
-                cmdlst =
-                    cmd_start + (do_interp(expanded_buffer, expanded_size, cmd_start, ":", nullptr) - cmd_start) - 1;
+                const std::size_t command_size = skip_interp(cmd_start, ":");
+                expanded_command = do_interp(std::string_view{cmd_start, command_size});
+                cmdlst = cmd_start + command_size - 1;
             }
-            expanded_command.resize(std::strlen(expanded_command.c_str()));
             g_perform_count--;
             if (perform(expanded_command, output_level ? 2 : 0) < 0)
             {
