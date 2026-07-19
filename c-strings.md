@@ -524,16 +524,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-141 - Edit Kill File Path Storage
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: local filename string used as a filesystem path.
-- Function: `edit_kill_file`.
-- Change: replace the local `std::string kill_file` with `fs::path`.
-  Keep direct path use for filesystem work, and convert to string only
-  at legacy C APIs and shell command construction sites.
-- Tests: add or run KILL-file editing coverage if present.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

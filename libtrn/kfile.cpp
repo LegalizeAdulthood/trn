@@ -734,7 +734,7 @@ void update_thread_kill_file()
 void edit_kill_file()
 {
     char* bp;
-    std::string kill_file;
+    fs::path kill_file;
 
     if (g_in_ng)
     {
@@ -755,10 +755,13 @@ void edit_kill_file()
     {
         kill_file = file_exp(get_env_var("KILLGLOBAL", s_kill_global));
     }
-    if (!make_dir(kill_file.c_str(), MD_FILE))
+    std::error_code error;
+    fs::create_directories(kill_file.parent_path(), error);
+    if (!error)
     {
         const std::string command =
-            fmt::format("{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), kill_file);
+            fmt::format("{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))),
+                        kill_file.string());
         fmt::print("\nEditing {} KILL file:\n{}\n", g_in_ng ? "local" : "global", command);
         term_down(3);
         reset_tty();                      // make sure tty is friendly
@@ -808,7 +811,7 @@ void edit_kill_file()
     }
     else
     {
-        fmt::print("Can't make {}\n", kill_file);
+        fmt::print("Can't make {}\n", kill_file.string());
         term_down(1);
     }
 }
