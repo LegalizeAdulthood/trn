@@ -531,16 +531,6 @@ broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-091 - Cancel Article Header Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local fixed header buffer.
-- Function: `cancel_article`.
-- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
-  header storage.  Preserve the current authorization checks and cancel
-  message construction.
-- Tests: response/cancel tests.
-
 #### CSTR-092 - Supersede Article Header Buffer
 
 - Files: `libtrn/respond.cpp`.
