@@ -17,12 +17,6 @@ enum
     S_NOT_FOUND = -3 // command was not found in common scan subset
 };
 
-// number of entries allocated for a page
-enum
-{
-    MAX_PAGE_SIZE = 256
-};
-
 // different context types
 enum ScanContextType
 {
@@ -52,9 +46,7 @@ struct ScanContext
     std::vector<long> ent_index;      // indexes into ent_sorted
     long              ent_index_max;  // maximum entry number added
 
-    int page_size;        // number of entries allocated for page
-                          // (usually fixed, > max screen lines)
-    PageEntry *page_ents; // array of entries on page
+    std::vector<PageEntry> page_ents; // entries on page
     // -1 means not initialized for top and bottom entry
     long top_ent; // top entry on page
     long bot_ent; // bottom entry (note change)
@@ -79,12 +71,10 @@ struct ScanContext
 };
 
 // the current values
-extern long  g_s_ent_sort_max;   // maximum index of sorted array
-extern long  g_s_ent_sorted_max; // maximum index *that is sorted*
-extern long  g_s_ent_index_max;  // maximum entry number added
-extern int   g_s_page_size;      // number of entries allocated for page
-// (usually fixed, > max screen lines)
-extern PageEntry *g_page_ents; // array of entries on page
+extern long                   g_s_ent_sort_max;   // maximum index of sorted array
+extern long                   g_s_ent_sorted_max; // maximum index *that is sorted*
+extern long                   g_s_ent_index_max;  // maximum entry number added
+extern std::vector<PageEntry> g_page_ents;        // entries on page
 // -1 means not initialized for top and bottom entry
 extern long g_s_top_ent; // top entry on page
 extern long g_s_bot_ent; // bottom entry (note change)

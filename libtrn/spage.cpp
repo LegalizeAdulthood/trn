@@ -14,6 +14,7 @@
 #include <trn/scan.h>
 #include <trn/scanart.h>
 #include <trn/sdisp.h> // for display dimension sizes
+#include <trn/size_cast.h>
 #include <trn/smisc.h>
 #include <trn/sorder.h>
 
@@ -26,9 +27,7 @@ static void s_clean_page();
 //long end;             // entry number to be last on page
 bool s_fill_page_backward(long end)
 {
-    int min_page_ents;  // current minimum
     int  i;
-    int  j;
     long a;             // misc entry number
     int page_lines;     // lines available on page
     int line_on;        // line # currently on: 0=line after top status bar
@@ -39,7 +38,11 @@ bool s_fill_page_backward(long end)
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
-    min_page_ents = MAX_PAGE_SIZE-1;
+    g_page_ents.clear();
+    if (page_lines > 0)
+    {
+        g_page_ents.reserve(page_lines);
+    }
     g_s_bot_ent = -1;   // none yet
     line_on = 0;
 
@@ -74,15 +77,10 @@ bool s_fill_page_backward(long end)
 
 // CONSIDER: make setspin conditional on context?
     set_spin(SPIN_BACKGROUND);   // turn on spin on cache misses
-    // uncertain what next comment means now
-    // later do sheer paranoia check for min_page_ents
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
-        g_page_ents[min_page_ents].ent_num = a;
         i = s_ent_lines(a);
-        g_page_ents[min_page_ents].lines = i;
-        min_page_ents--;
-        g_s_bot_ent += 1;
+        g_page_ents.push_back({a, static_cast<short>(i), 0, (char)0});
         line_on = line_on+i;
         a = s_prev_elig(a);
         if (!a)         // no more eligible
@@ -92,19 +90,19 @@ bool s_fill_page_backward(long end)
     }
 // what if none on page? (desc. too long) Fix later
     set_spin(SPIN_POP);  // turn off spin on cache misses
-    // replace the entries at the front of the g_page_ents array
-    // also set start_line entries
-    j = 0;
-    line_on = 0;
-    for (int k = min_page_ents + 1; k < MAX_PAGE_SIZE; k++)
+    if (g_page_ents.empty())
     {
-        g_page_ents[j].ent_num = g_page_ents[k].ent_num;
-        g_page_ents[j].page_flags = (char)0;
-        g_page_ents[j].lines = g_page_ents[k].lines;
-        g_page_ents[j].start_line = line_on;
-        line_on = line_on + g_page_ents[j].lines;
-        j++;
+        return false;
     }
+    std::reverse(g_page_ents.begin(), g_page_ents.end());
+    line_on = 0;
+    for (PageEntry &entry : g_page_ents)
+    {
+        entry.page_flags = (char)0;
+        entry.start_line = static_cast<short>(line_on);
+        line_on = line_on + entry.lines;
+    }
+    g_s_bot_ent = size_cast<long>(g_page_ents) - 1;
     // set new g_s_top_ent
     g_s_top_ent = g_page_ents[0].ent_num;
     // Now, suppose that the pointer position is off the page.  That would
@@ -150,6 +148,11 @@ bool s_fill_page_forward(long start)
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
+    g_page_ents.clear();
+    if (page_lines > 0)
+    {
+        g_page_ents.reserve(page_lines);
+    }
     g_s_bot_ent = -1;
     line_on = 0;
 
@@ -187,12 +190,8 @@ bool s_fill_page_forward(long start)
 // ?  later do paranoia check for g_s_bot_ent
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
-        g_s_bot_ent += 1;
-        g_page_ents[g_s_bot_ent].ent_num = a;
-        g_page_ents[g_s_bot_ent].start_line = line_on;
         i = s_ent_lines(a);
-        g_page_ents[g_s_bot_ent].lines = i;
-        g_page_ents[g_s_bot_ent].page_flags = (char)0;
+        g_page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char)0});
         line_on = line_on+i;
         a = s_next_elig(a);
         if (!a)         // no more eligible
@@ -201,6 +200,11 @@ bool s_fill_page_forward(long start)
         }
     }
     set_spin(SPIN_POP);  // turn off spin on cache misses
+    if (g_page_ents.empty())
+    {
+        return false;
+    }
+    g_s_bot_ent = size_cast<long>(g_page_ents) - 1;
     // Now, suppose that the pointer position is off the page.  That would
     // be bad, so lets make sure it doesn't happen.
     //
@@ -286,22 +290,24 @@ bool s_refill_page()
     j = i-1;    // j is the last "good" entry
 
     g_s_bot_ent = j;
+    g_page_ents.resize(j + 1);
     line_on = g_page_ents[j].start_line + s_ent_lines(g_page_ents[j].ent_num);
     a = s_next_elig(g_page_ents[j].ent_num);
+    if (page_lines > 0)
+    {
+        g_page_ents.reserve(page_lines);
+    }
 
     set_spin(SPIN_BACKGROUND);
     while (a && line_on + s_ent_lines(a) <= page_lines)
     {
         i = s_ent_lines(a);
-        g_s_bot_ent += 1;
-        g_page_ents[g_s_bot_ent].ent_num = a;
-        g_page_ents[g_s_bot_ent].lines = i;
-        g_page_ents[g_s_bot_ent].start_line = line_on;
-        g_page_ents[g_s_bot_ent].page_flags = (char)0;
+        g_page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char)0});
         line_on = line_on+i;
         a = s_next_elig(a);
     }
     set_spin(SPIN_POP);
+    g_s_bot_ent = size_cast<long>(g_page_ents) - 1;
 
     // there are fairly good reasons to refresh the last good entry, such
     // as clearing the rest of the screen...

@@ -431,8 +431,8 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   definition, and two call sites in two owner clusters.  The call
   sites are inventoried below.
 - `safe_malloc`: remaining string-shaped owners are `g_head_buf` and
-  `g_art_buf`.  Non-string owners include hash tables, selector page
-  storage, regex bytecode, HTML block arrays, and generic allocation
+  `g_art_buf`.  Non-string owners include the `AddGroup` temporary
+  pointer list, hash tables, regex bytecode, and generic allocation
   helpers.  The `tool` allocation helper declarations now have no
   production callers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and

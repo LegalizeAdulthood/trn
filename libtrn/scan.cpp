@@ -10,21 +10,19 @@
 #include <config/common.h>
 #include <trn/size_cast.h>
 #include <trn/sorder.h>
-#include <trn/util.h> // allocation
 
 #include <cstdio>
 
 // TODO: make a scontext file for the scan context stuff.
 
 // the current values
-long       g_s_ent_sort_max{};   // maximum index of sorted array
-long       g_s_ent_sorted_max{}; // maximum index *that is sorted*
-long       g_s_ent_index_max{};  // maximum entry number added
-int        g_s_page_size{};      // number of entries allocated for page (usually fixed, > max screen lines)
-PageEntry *g_page_ents{};        // array of entries on page; -1 means not initialized for top and bottom entry
-long       g_s_top_ent{};        // top entry on page
-long       g_s_bot_ent{};        // bottom entry (note change)
-bool       g_s_refill{};         // does the page need refilling?
+long                   g_s_ent_sort_max{};   // maximum index of sorted array
+long                   g_s_ent_sorted_max{}; // maximum index *that is sorted*
+long                   g_s_ent_index_max{};  // maximum entry number added
+std::vector<PageEntry> g_page_ents{};        // entries on page
+long                   g_s_top_ent{};        // top entry on page
+long                   g_s_bot_ent{};        // bottom entry (note change)
+bool                   g_s_refill{};         // does the page need refilling?
 // refresh entries
 bool  g_s_ref_all{};    // refresh all on page
 bool  g_s_ref_top{};    // top status bar
@@ -65,11 +63,7 @@ static void s_init_context(int cnum, ScanContextType type)
     p->ent_sorted_max = -1;
     p->ent_index.clear();
     p->ent_index_max = -1;
-    p->page_size = MAX_PAGE_SIZE;
-    if (p->page_ents == nullptr)
-    {
-        p->page_ents = (PageEntry*)safe_malloc(MAX_PAGE_SIZE*sizeof(PageEntry));
-    }
+    p->page_ents.clear();
     p->top_ent = -1;
     p->bot_ent = -1;
     p->refill = true;
@@ -87,14 +81,6 @@ static void s_init_context(int cnum, ScanContextType type)
     p->item_num_cols = 0;
     p->ptr_page_line = 0;
     p->flags = 0;
-    // clear the page entries
-    for (int i = 0; i < MAX_PAGE_SIZE; i++)
-    {
-        p->page_ents[i].ent_num = 0;
-        p->page_ents[i].lines = 0;
-        p->page_ents[i].start_line = 0;
-        p->page_ents[i].page_flags = (char)0;
-    }
 }
 
 // allocate a new context number and initialize it
@@ -120,7 +106,6 @@ int s_new_context(ScanContextType type)
     // none deleted, so allocate a new one
     g_s_contexts.emplace_back();
     i = size_cast<int>(g_s_contexts) - 1;
-    g_s_contexts[i].page_ents = (PageEntry*)safe_malloc(MAX_PAGE_SIZE*sizeof(PageEntry));
     s_init_context(i,type);
     return i;
 }
@@ -137,7 +122,6 @@ void s_save_context()
     p->ent_sorted_max = g_s_ent_sorted_max;
     p->ent_index_max = g_s_ent_index_max;
 
-    p->page_size = g_s_page_size;
     p->top_ent = g_s_top_ent;
     p->bot_ent = g_s_bot_ent;
     p->refill = g_s_refill;
@@ -175,7 +159,6 @@ void s_change_context(int newcontext)
     g_s_ent_sorted_max = p->ent_sorted_max;
     g_s_ent_index_max = p->ent_index_max;
 
-    g_s_page_size = p->page_size;
     g_s_top_ent = p->top_ent;
     g_s_bot_ent = p->bot_ent;
     g_s_refill = p->refill;
@@ -219,6 +202,7 @@ void s_delete_context(int cnum)
         g_s_contexts[cnum].ent_sorted_max = -1;
         g_s_contexts[cnum].ent_index.clear();
         g_s_contexts[cnum].ent_index_max = -1;
+        g_s_contexts[cnum].page_ents.clear();
     }
     // mark the context as empty
     g_s_contexts[cnum].type = S_NONE;
