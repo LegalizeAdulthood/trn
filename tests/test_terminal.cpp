@@ -287,6 +287,18 @@ TEST_F(TerminalTest, macLineParsesExpandedKey)
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }
 
+TEST_F(TerminalTest, pushStringExpandsInInputOrderWithMacroBits)
+{
+    push_string("a^B", 0200);
+
+    char command{};
+    read_tty(&command, 1);
+    EXPECT_EQ(static_cast<unsigned char>('a' ^ 0200), static_cast<unsigned char>(command));
+
+    read_tty(&command, 1);
+    EXPECT_EQ(static_cast<unsigned char>('\002' ^ 0200), static_cast<unsigned char>(command));
+}
+
 TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)
 {
     set_macro("\001A", "result");

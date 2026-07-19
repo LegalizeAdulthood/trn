@@ -529,19 +529,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-103 - Terminal Pushed String Expansion Buffer
-
-- Files: `libtrn/terminal.cpp`,
-  `libtrn/include/trn/terminal.h`.
-- Kind: local fixed interpolation buffer.
-- Function: `push_string`.
-- Change: replace `tmpbuf[PUSH_SIZE]` with owned `std::string`
-  expansion storage.  Promote the input parameter to `std::string_view`
-  in the same slice if doing so does not create an extra temporary.
-  Preserve the reverse push order, the previous push-size truncation or
-  overflow behavior, and macro bit handling.
-- Tests: terminal input macro tests.
-
 #### CSTR-106 - Terminal Capability Const Pointers
 
 - Files: `libtrn/terminal.cpp`,
