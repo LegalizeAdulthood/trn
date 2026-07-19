@@ -6,6 +6,7 @@
 #define UTF_H_INCLUDED
 
 #include <string>
+#include <string_view>
 
 #define USE_UTF_HACK
 
@@ -27,9 +28,9 @@ enum CharsetType
 
 using CodePoint = unsigned long;
 
-CharsetType utf_init(const char *from, const char *to);
-const char *input_charset_name();
-const char *output_charset_name();
+CharsetType      utf_init(std::string_view from, std::string_view to);
+std::string_view input_charset_name();
+std::string_view output_charset_name();
 
 bool at_norm_char(const char *s);
 

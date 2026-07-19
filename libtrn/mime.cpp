@@ -553,7 +553,7 @@ void MimeSection::mime_parse_type(std::string_view text)
         }
 #ifdef USE_UTF_HACK
         t = mime_find_param(m_type_params, "charset");
-        utf_init(t.c_str(), CHARSET_NAME_UTF8); // FIXME
+        utf_init(t, CHARSET_NAME_UTF8); // FIXME
 #endif
         if (string_case_equal(s, "html", 4))
         {

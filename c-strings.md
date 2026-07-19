@@ -463,9 +463,9 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   `ngdata`, `respond`, `rthread`, `rt-ov`, and `univ`.  Do not add
   separate slices for those completed `string_case_compare` call sites.
 - Remaining literal tables include color object names, signal names,
-  status labels, MIME entity mappings, charset names, and transliteration
-  tables.  The useful current targets are the tables whose users already
-  operate on views or compute lengths manually.
+  status labels, MIME entity mappings, and transliteration tables.  The
+  useful current targets are the tables whose users already operate on
+  views or compute lengths manually.
 
 ## Current `safe_copy` Inventory
 
@@ -520,19 +520,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-154 - UTF Charset View API
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `libtrn/cache.cpp`, `libtrn/charsubst.cpp`, `libtrn/mime.cpp`,
-  `libtrn/rt-page.cpp`, `tests/test_utf.cpp`.
-- Kind: read-only charset name API.
-- Function: `find_charset`, `utf_init`, `input_charset_name`, and
-  `output_charset_name`.
-- Change: use `std::string_view` for charset name inputs and getters.
-  Treat empty input as the unknown charset sentinel instead of
-  preserving public `nullptr` semantics.
-- Tests: update and run UTF tests before and after the refactor.
 
 #### CSTR-155 - Boolean In-string View Helper
 

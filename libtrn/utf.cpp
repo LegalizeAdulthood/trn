@@ -9,12 +9,13 @@
 #include <trn/utf.h>
 
 #include <config/common.h>
+#include <config/string_case_compare.h>
 
-#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 // OK - valid second and subsequent bytes in UTF-8
 #define OK(s) ((*(s) & 0xC0) == 0x80)
@@ -118,14 +119,13 @@ struct GraphicState
 
 static GraphicState s_gs = { CHARSET_UTF8, CHARSET_UTF8, nullptr, nullptr };
 
-static CharsetType find_charset(const char *s)
+static CharsetType find_charset(std::string_view s)
 {
-    if (!s)
+    if (s.empty())
     {
         return CHARSET_UNKNOWN;
     }
 
-    CharsetType it = CHARSET_UNKNOWN;
     for (int i = 0;; ++i)
     {
         const char *name = s_charset_descs[i].name;
@@ -133,27 +133,12 @@ static CharsetType find_charset(const char *s)
         {
             break;
         }
-        for (int j = 0;; ++j)
+        if (string_case_equal(s, name))
         {
-            if (std::tolower(s[j]) != std::tolower(name[j]))
-            {
-                break;
-            }
-            if (s[j] == 0 && name[j] == 0)
-            {
-                it = s_charset_descs[i].id;
-            }
-            if (s[j] == 0 || name[j] == 0)
-            {
-                break;
-            }
-        }
-        if (it != CHARSET_UNKNOWN)
-        {
-            break;
+            return s_charset_descs[i].id;
         }
     }
-    return it;
+    return CHARSET_UNKNOWN;
 }
 
 static const CharsetDesc *find_charset_desc(int id)
@@ -178,7 +163,7 @@ static const CharsetDesc *find_charset_desc(int id)
     return it;
 }
 
-CharsetType utf_init(const char *from, const char *to)
+CharsetType utf_init(std::string_view from, std::string_view to)
 {
     CharsetType in = find_charset(from);
     CharsetType out = find_charset(to);
@@ -203,12 +188,12 @@ CharsetType utf_init(const char *from, const char *to)
     return in;
 }
 
-const char *input_charset_name()
+std::string_view input_charset_name()
 {
     return find_charset_desc(s_gs.in)->name;
 }
 
-const char *output_charset_name()
+std::string_view output_charset_name()
 {
     return find_charset_desc(s_gs.out)->name;
 }

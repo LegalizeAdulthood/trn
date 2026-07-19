@@ -528,11 +528,11 @@ int decode_header(char *to, std::string_view from)
 
             if (ch == 'q' || ch == 'Q' || ch == 'b' || ch == 'B')
             {
-                const char *old_ics = input_charset_name();
-                const char *old_ocs = output_charset_name();
+                std::string_view old_ics = input_charset_name();
+                std::string_view old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
                 std::string charset{cursor + 2, q};
-                utf_init(charset.c_str(), CHARSET_NAME_UTF8); // FIXME
+                utf_init(charset, CHARSET_NAME_UTF8); // FIXME
 #endif
                 e = q + 2;
                 do

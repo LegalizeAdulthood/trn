@@ -14,12 +14,13 @@
 
 #include <cstring>
 #include <string>
+#include <string_view>
 
 using namespace testing;
 
-TEST(UTFInitTest, charset_null_utf8)
+TEST(UTFInitTest, charset_empty_utf8)
 {
-    ASSERT_EQ(CHARSET_UNKNOWN, utf_init(nullptr, "utf8"));
+    ASSERT_EQ(CHARSET_UNKNOWN, utf_init("", "utf8"));
 }
 
 TEST(UTFInitTest, charset_ascii_utf8)
@@ -80,9 +81,9 @@ TEST_P(TestInputCharsetName, tag_from_name)
     const char *expected = GetParam().name;
     utf_init(before, CHARSET_NAME_UTF8);
 
-    const char *after = input_charset_name();
+    std::string_view after = input_charset_name();
 
-    ASSERT_STREQ(expected, after);
+    ASSERT_EQ(std::string_view{expected}, after);
 }
 
 INSTANTIATE_TEST_SUITE_P(UTFCharsetNames, TestInputCharsetName, ValuesIn(charsets));
@@ -97,9 +98,9 @@ TEST_P(TestOutputCharsetName, tag_from_name)
     const char *expected = GetParam().name;
     utf_init(CHARSET_NAME_UTF8, before);
 
-    const char *after = output_charset_name();
+    std::string_view after = output_charset_name();
 
-    EXPECT_STREQ(expected, after);
+    EXPECT_EQ(std::string_view{expected}, after);
 }
 
 INSTANTIATE_TEST_SUITE_P(UTFCharsetNames, TestOutputCharsetName, ValuesIn(charsets));
