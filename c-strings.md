@@ -539,16 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-117 - Followup Header Interpolation Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: fixed-size string used as C output buffer.
-- Function: `followup`.
-- Change: replace the `5 * LINE_BUF_LEN` header interpolation buffer
-  with owned string construction for `NEWSHEADER`.  Preserve body
-  inclusion and new-topic prompting behavior.
-- Tests: followup response tests before refactor.
-
 #### CSTR-118 - Dead Article Copy Line Buffer
 
 - Files: `libtrn/respond.cpp`.

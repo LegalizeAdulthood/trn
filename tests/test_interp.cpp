@@ -1807,6 +1807,59 @@ TEST_F(InterpolatorNewsgroupTest, forwardUsesMimeBoundaryFromInterpolatedHeader)
     EXPECT_THAT(written, HasSubstr("\n--trn-boundary--\n"));
 }
 
+TEST_F(InterpolatorNewsgroupTest, followupWritesInterpolatedHeaderAndQuotedBody)
+{
+    const fs::path           head_file = fs::path{m_output.path()} / "followup-head";
+    const std::string        long_header_value(600, 'x');
+    const std::string        news_header = "Newsgroups: %F\n"
+                                           "References: %i\n"
+                                           "X-Long: " +
+                                           long_header_value + "\n\n";
+    ValueSaver<std::string>  head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string>  orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string>  spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string>  group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    ValueSaver<std::string>  indent(g_indent_string, ">");
+    ValueSaver<const char *> char_subst(g_char_subst, g_charsets.c_str());
+    m_env.expect_env("NEWSPOSTER", "exit 0");
+    m_env.expect_env("NEWSHEADER", news_header.c_str());
+    m_env.expect_env("ATTRIBUTION", "In article %i:");
+    g_buf[0] = 'F';
+
+    testing::internal::CaptureStdout();
+    followup();
+    testing::internal::GetCapturedStdout();
+
+    const std::string expected_header = "Newsgroups: " TRN_TEST_HEADER_FOLLOWUP_TO "\n"
+                                        "References: " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                        "X-Long: " +
+                                        long_header_value + "\n\n";
+    const std::string written = file_contents(head_file);
+    EXPECT_THAT(written, StartsWith(expected_header + "In article " TRN_TEST_HEADER_MESSAGE_ID ":\n"));
+    EXPECT_THAT(written, HasSubstr(">" TRN_TEST_BODY "\n"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, followupPromptDefaultStartsNewTopic)
+{
+    const fs::path          head_file = fs::path{m_output.path()} / "followup-head";
+    ValueSaver<std::string> head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string> orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string> spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_env("NEWSPOSTER", "exit 0");
+    m_env.expect_env("NEWSHEADER", "Message-Id: %i\n\n");
+    g_buf[0] = 'f';
+    push_char('\n');
+
+    testing::internal::CaptureStdout();
+    followup();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_THAT(output, HasSubstr("Are you starting an unrelated topic? [ynq]"));
+    EXPECT_EQ("Message-Id: \n\n", file_contents(head_file));
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+}
+
 TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
 {
     ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
