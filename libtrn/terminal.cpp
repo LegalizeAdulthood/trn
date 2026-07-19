@@ -29,6 +29,7 @@
 #include <util/util2.h>
 
 #include <fmt/format.h>
+#include <fmt/printf.h>
 
 #ifdef MSDOS
 #include <conio.h>
@@ -2107,7 +2108,7 @@ void home_cursor()
             term_down(3);
             return;             // forget it.
         }
-        tputs(tgoto(g_tc_CM, 0, 0), 1, put_char); // go to home via CM
+        tputs(tgoto_string(g_tc_CM, 0, 0).c_str(), 1, put_char); // go to home via CM
     }
     else                        // we have home sequence
     {
@@ -2120,6 +2121,7 @@ void home_cursor()
 
 void goto_xy(int to_col, int to_line)
 {
+    std::string motion;
     const char *str;
     int  cmcost;
 
@@ -2129,8 +2131,9 @@ void goto_xy(int to_col, int to_line)
     }
     if (*g_tc_CM && !g_muck_up_clear)
     {
-        str = tgoto(g_tc_CM,to_col,to_line);
-        cmcost = std::strlen(str);
+        motion = tgoto_string(g_tc_CM,to_col,to_line);
+        str = motion.c_str();
+        cmcost = motion.size();
     }
     else
     {
@@ -2701,11 +2704,12 @@ int tputs(const char *str, int num, int (*func)(int))
 }
 #endif
 
-#ifdef MSDOS
-const char *tgoto(const char *str, int x, int y)
+std::string tgoto_string(const char *str, int x, int y)
 {
-    static char gbuf[32];
-    std::sprintf(gbuf,str,y+1,x+1);
-    return gbuf;
-}
+#ifdef MSDOS
+    return fmt::sprintf(str, y + 1, x + 1);
+#else
+    const char *result = tgoto(str, x, y);
+    return result == nullptr ? std::string{} : result;
 #endif
+}

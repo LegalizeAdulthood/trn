@@ -274,6 +274,13 @@ TEST_F(TerminalTest, getCommandExpandsMacroString)
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }
 
+#ifdef MSDOS
+TEST_F(TerminalTest, tgotoStringFormatsDosCursorMotion)
+{
+    EXPECT_EQ("\033[8;4H", tgoto_string("\033[%d;%dH", 3, 7));
+}
+#endif
+
 TEST_F(TerminalTest, macLineParsesExpandedKey)
 {
     char line[] = "^B q\n";

@@ -544,18 +544,6 @@ broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-104 - MSDOS Tgoto Format Buffer
-
-- Files: `libtrn/terminal.cpp`,
-  `libtrn/include/trn/terminal.h`.
-- Kind: static returned formatting buffer.
-- Function: `tgoto` under `MSDOS`.
-- Change: after `CSTR-106`, replace the static `gbuf[32]` returned
-  buffer with a modern owner contract or remove the compatibility shim
-  with the old DOS holdover cleanup.  Do not return a pointer into local
-  string storage.
-- Tests: build with the relevant feature setting if the shim remains.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers
