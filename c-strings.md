@@ -437,6 +437,9 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   declarations now have no production callers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
+- Direct environment C-string reads outside the config env wrapper remain
+  in `inews`, `nntplist`, and `trn-artchk`.  These are listed as early
+  leaf slices below.
 - Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
   interpolation scratch storage, `g_head_buf`, `g_art_buf`, MIME HTML
   tag parser state, terminal storage, terminal command-input scratch,
@@ -444,11 +447,11 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   `uudecode` pending-line storage, selector command key storage,
   tree-indent storage, overview-format parsing, and global
   command/message buffers.
-- Filename storage: current path candidates remain in KILL-file
-  appending, score-file loading/editing, newsrc file fields, and some
-  universal-selector file fields.  Mixed URL/path/host fields need
-  ownership and identity splits before they can honestly become
-  `fs::path`.
+- Filename storage: newsrc fields are already `fs::path`.  The current
+  low-risk path candidate is the local KILL-file edit path in
+  `edit_kill_file`.  Score-file shortcut strings and universal-selector
+  file strings still mix expansion templates, URLs, labels, and real
+  paths, so they are not honest path-only candidates yet.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
@@ -486,7 +489,7 @@ production code.
 - Search and length: `strchr` 79, `strrchr` 5, `strstr` 2,
   `strlen` 80.
 - Formatting into C buffers: `sprintf` 58, `snprintf` 2.
-- C text I/O roots: `fgets` 29, `fputs` 203, `printf` 432,
+- C text I/O roots: `fgets` 29, `fputs` 203, `printf` 429,
   `fprintf` 55.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -512,6 +515,38 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
+
+#### CSTR-138 - Inews Environment Reads
+
+- Files: `inews/inews.cpp`.
+- Kind: direct environment C-string reads.
+- Function: `main`.
+- Change: replace the remaining direct `std::getenv` calls with
+  `get_env_var` and empty-string checks.  This covers
+  `NNTP_FORCE_AUTH` and `NO_ORIGINATOR`; keep the existing owned
+  `std::string` flow for `NNTPSERVER` and `NAME`.
+- Tests: build, plus focused inews tests if present.
+
+#### CSTR-139 - Nntplist Environment Reads
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: direct environment C-string reads.
+- Function: `main`.
+- Change: replace the remaining direct `getenv` call for
+  `NNTP_FORCE_AUTH` with `get_env_var` and an empty-string check.  Keep
+  the existing owned `std::string` flow for `NNTPSERVER`.
+- Tests: build, plus focused nntplist tests if present.
+
+#### CSTR-140 - Trn-artchk Environment Reads
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: direct environment C-string reads.
+- Function: `main`.
+- Change: replace direct `std::getenv` calls for `HOME`, `LOGDIR`,
+  `DOTDIR`, and `NNTP_FORCE_AUTH` with `get_env_var`.  Use empty string
+  as the missing-value sentinel and preserve the existing HOME/LOGDIR
+  fallback before assigning `g_home_dir` and `g_dot_dir`.
+- Tests: build, plus focused trn-artchk tests if present.
 
 #### CSTR-128 - Tool Safe Allocation Helper Removal
 
@@ -553,6 +588,16 @@ Finish these before broad global-buffer work.
   line with `find(':')`, and remove the local `strchr` and `strlen`
   plumbing.
 - Tests: overview format parsing tests.
+
+#### CSTR-141 - Edit Kill File Path Storage
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: local filename string used as a filesystem path.
+- Function: `edit_kill_file`.
+- Change: replace the local `std::string kill_file` with `fs::path`.
+  Keep direct path use for filesystem work, and convert to string only
+  at legacy C APIs and shell command construction sites.
+- Tests: add or run KILL-file editing coverage if present.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -613,20 +658,6 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-120 - Article Display Option String Globals
-
-- Files: `libtrn/art.cpp`, `libtrn/include/trn/artstate.h`,
-  `libtrn/ng.cpp`, `libtrn/include/trn/ng.h`, `libtrn/rt-select.cpp`,
-  `libtrn/rt-util.cpp`, `libtrn/sdisp.cpp`.
-- Kind: environment-derived global C-string option storage.
-- Function: storage-centered `g_first_line`, `g_hide_line`,
-  `g_page_stop`, `g_subj_line`, and `g_mail_call`.
-- Change: replace nullable raw pointers with owned `std::string`
-  storage using empty string as the missing sentinel where empty has no
-  distinct meaning.  Compile regexes only when the stored string is not
-  empty and pass `c_str()` to interpolation helpers.
-- Tests: article display, newsgroup display, and interpolation tests.
-
 #### CSTR-121 - Common Message Format Globals
 
 - Files: `config/common.cpp`, `config/include/config/common.h`, many
@@ -634,10 +665,10 @@ and clarified ownership at the edges.
 - Kind: global literal message and printf-format pointers.
 - Function: storage-centered `g_h_for_help`, `g_unsub_to`,
   `g_cant_open`, `g_cant_create`, and `g_no_cd`.
-- Change: first make literal-only storage immutable, then convert call
-  sites to `fmt::print` or direct string output before considering
-  `std::string_view` storage.  Keep runtime printf-style formatting out
-  of the conversion until each format use is audited.
+- Change: convert call sites to `fmt::print` or direct string output
+  before considering `std::string_view` storage.  Keep runtime
+  printf-style formatting out of the conversion until each format use is
+  audited.
 - Tests: broad workflow required.
 
 #### CSTR-031 - Global Command And Message Buffers
@@ -754,13 +785,14 @@ and clarified ownership at the edges.
 
 #### CSTR-102 - Terminal Macro Line Expansion Buffer
 
-- Files: `libtrn/terminal.cpp`.
+- Files: `libtrn/terminal.cpp`, `libtrn/ngstuff.cpp`.
 - Kind: caller-provided fixed expansion buffer.
 - Function: `mac_line`.
 - Change: replace the `tmpbuf` plus `tbsize` output contract with owned
-  `std::string` expansion storage inside `mac_line`.  Do not let string
-  data pointers escape into keymap storage; copy into the existing owned
-  macro storage when needed.
+  `std::string` expansion storage inside `mac_line`.  Update the
+  terminal macro initializer and `ngstuff` caller in the same slice.  Do
+  not let string data pointers escape into keymap storage; copy into the
+  existing owned macro storage when needed.
 - Tests: terminal macro tests.
 
 #### CSTR-103 - Terminal Pushed String Expansion Buffer
