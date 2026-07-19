@@ -33,10 +33,6 @@ enum
 
 bool g_to_read_quiet{};
 
-#ifdef MCHASE
-static void prange(char *where, ART_NUM min, ART_NUM max);
-#endif
-
 void rcln_init()
 {
 }
@@ -279,175 +275,165 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
 // delete an article number from a newsgroup, if it is there
 
 #ifdef MCHASE
-void sub_art_num(DataSource *dp, ArticleNum art_num, char *ng_name)
+void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_name)
 {
-    NGDATA* np;
-    char* s;
-    char* t;
-    ART_NUM min, max;
-    char* mbuf;
-    int curlen;
-
     if (!art_num)
     {
         return;
     }
-    np = find_ng(ng_name);
-    if (np == nullptr)                  // not found in newsrc?
+    NewsgroupData *np = find_newsgroup(newsgroup_name);
+    if (np == nullptr) // not found in newsrc?
     {
         return;
     }
-    if (dp != np->rc->g_datasrc)                // punt on cross-host xrefs
+    if (dp != np->m_rc->data_source) // punt on cross-host xrefs
     {
         return;
     }
-    if (!np->numoffset)
+    if (!np->m_num_offset)
     {
         return;
     }
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("%ld<-\n%s%c%s\n",(long)artnum,np->rcline,np->subscribechar,
-          np->rcline + np->numoffset);
+        std::printf("%ld<-\n%s%c%s\n", art_num.value_of(), np->rc_line_c_str(), np->m_subscribe_char,
+                    np->rc_numbers_c_str());
     }
 #endif
-    s = np->rcline + np->numoffset;
-    s = skip_eq(s, ' ');                // skip spaces
+    np->show_subscribe_char();
+    char *rc_line = np->rc_line_data();
+    char *s = skip_eq(np->rc_numbers_data(), ' '); // skip spaces
 
     // a little optimization, since it is almost always the last number
 
-    for (t=s; *t; t++)                  // find end of string
+    char *t = s + std::strlen(s); // find end of string
+    char *last_number = t;
+    while (last_number != s && std::isdigit(static_cast<unsigned char>(last_number[-1])))
     {
+        --last_number;
     }
-    curlen = t - np->rcline;
-    for (t--; std::isdigit(*t); t--)         // find previous delim
+    if (last_number != s && last_number[-1] == ',' && ArticleNum{std::atol(last_number)} == art_num)
     {
-    }
-    if (*t == ',' && std::atol(t + 1) == artnum)
-    {
-        *t = '\0';
-        if (np->toread >= TR_NONE)
-        {
-            ++np->toread;
-        }
+        std::string new_rc_line;
+        new_rc_line.reserve(std::strlen(rc_line));
+        new_rc_line.assign(rc_line, static_cast<std::size_t>(last_number - 1 - rc_line));
 #ifdef DEBUG
         if (g_debug & DEB_XREF_MARKER)
         {
-            std::printf("%s%c %s\n",np->rcline,np->subscribechar,s);
+            fmt::print("{}\n", new_rc_line);
         }
 #endif
+        np->m_rc_line = std::move(new_rc_line);
+        np->hide_subscribe_char();
+        if (np->m_to_read >= TR_NONE)
+        {
+            ++np->m_to_read;
+        }
         return;
     }
 
     // not the last number, oh well, we may need the length anyway
 
-    while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
+    ArticleNum min{};
+    while (std::isdigit(static_cast<unsigned char>(*s)) && art_num >= (min = ArticleNum{std::atol(s)}))
     {
-                                        // while it might have been read
-        t = skip_digits(s);             // skip number
-        if (*t == '-')                  // is it a range?
+        // while it might have been read
+        t = skip_digits(s); // skip number
+        if (*t == '-')      // is it a range?
         {
-            t++;                        // skip to next number
-            max = std::atol(t);
-            t = skip_digit(t);          // skip second number
-            if (artnum <= max)
+            ++t; // skip to next number
+            ArticleNum max{std::atol(t)};
+            t = skip_digits(t); // skip second number
+            if (art_num <= max)
             {
-                                        // it is in range => already read
-                if (artnum == min)
+                // it is in range => already read
+                ArticleNum split_num = art_num;
+                if (art_num == min)
                 {
-                    min++;
-                    artnum = 0;
+                    min = article_after(min);
+                    split_num = ArticleNum{};
                 }
-                else if (artnum == max)
+                else if (art_num == max)
                 {
-                    max--;
-                    artnum = 0;
+                    max = article_before(max);
+                    split_num = ArticleNum{};
                 }
-                *(np->rcline + np->numoffset - 1) = np->subscribechar;
-                mbuf = safe_malloc((MemorySize)(curlen+(artnum?(MAX_DIGITS+1)*2+1:1+1)));
-                *s = '\0';
-                std::strcpy(mbuf,np->rcline);        // make new rc line
-                s = mbuf + (s - np->rcline);
-                                        // point s into mbuf now
-                if (artnum)             // split into two ranges?
+
+                std::string new_rc_line;
+                new_rc_line.reserve(std::strlen(rc_line) + (split_num ? (MAX_DIGITS + 1) * 2 + 1 : 2));
+                new_rc_line.assign(rc_line, static_cast<std::size_t>(s - rc_line));
+                if (split_num) // split into two ranges?
                 {
-                    prange(s,min,artnum-1);
-                    s += std::strlen(s);
-                    *s++ = ',';
-                    prange(s,artnum+1,max);
+                    new_rc_line += fmt::format("{}-{},{}-{}", min.value_of(), article_before(split_num).value_of(),
+                                               article_after(split_num).value_of(), max.value_of());
                 }
-                else                    // only one range
+                else if (min == max)
                 {
-                    prange(s,min,max);
+                    new_rc_line += fmt::format("{}", min.value_of());
                 }
-                std::strcat(s,t);            // copy remainder over
+                else // only one range
+                {
+                    new_rc_line += fmt::format("{}-{}", min.value_of(), max.value_of());
+                }
+                new_rc_line += t; // copy remainder over
 #ifdef DEBUG
                 if (g_debug & DEB_XREF_MARKER)
                 {
-                    std::printf("%s\n",mbuf);
+                    fmt::print("{}\n", new_rc_line);
                 }
 #endif
-                std::free(np->rcline);
-                np->rcline = mbuf;      // pull the switcheroo
-                *(np->rcline + np->numoffset - 1) = '\0';
-                                        // wipe out : or !
-                if (np->toread >= TR_NONE)
+                np->m_rc_line = std::move(new_rc_line);
+                np->hide_subscribe_char();
+                if (np->m_to_read >= TR_NONE)
                 {
-                    np->toread++;
+                    ++np->m_to_read;
                 }
                 return;
             }
         }
-        else
+        else if (art_num == min) // explicitly a read article?
         {
-            if (artnum == min)          // explicitly a read article?
+            char *remove_start = s;
+            char *remove_end = t;
+            if (*remove_end == ',') // pick a comma, any comma
             {
-                if (*t == ',')          // pick a comma, any comma
-                {
-                    t++;
-                }
-                else if (s[-1] == ',')
-                {
-                    s--;
-                }
-                else if (s[-2] == ',')  // (in case of space)
-                {
-                    s -= 2;
-                }
-                std::strcpy(s,t);            // no need to realloc
-                if (np->toread >= TR_NONE)
-                {
-                    np->toread++;
-                }
-#ifdef DEBUG
-                if (g_debug & DEB_XREF_MARKER)
-                {
-                    std::printf("%s%c%s\n",np->rcline,np->subscribechar,
-                      np->rcline + np->numoffset);
-                }
-#endif
-                return;
+                ++remove_end;
             }
+            else if (remove_start > rc_line && remove_start[-1] == ',')
+            {
+                --remove_start;
+            }
+            else if (remove_start - rc_line >= 2 && remove_start[-2] == ',') // (in case of space)
+            {
+                remove_start -= 2;
+            }
+
+            std::string new_rc_line;
+            new_rc_line.reserve(std::strlen(rc_line));
+            new_rc_line.assign(rc_line, static_cast<std::size_t>(remove_start - rc_line));
+            new_rc_line += remove_end;
+#ifdef DEBUG
+            if (g_debug & DEB_XREF_MARKER)
+            {
+                fmt::print("{}\n", new_rc_line);
+            }
+#endif
+            np->m_rc_line = std::move(new_rc_line);
+            np->hide_subscribe_char();
+            if (np->m_to_read >= TR_NONE)
+            {
+                ++np->m_to_read;
+            }
+            return;
         }
-        while (*t && !std::isdigit(*t))      // skip comma and any spaces
+        while (*t && !std::isdigit(static_cast<unsigned char>(*t))) // skip comma and any spaces
         {
-            t++;
+            ++t;
         }
         s = t;
     }
-}
-
-static void prange(char *where, ART_NUM min, ART_NUM max)
-{
-    if (min == max)
-    {
-        std::sprintf(where,"%ld",(long)min);
-    }
-    else
-    {
-        std::sprintf(where,"%ld-%ld",(long)min,(long)max);
-    }
+    np->hide_subscribe_char();
 }
 #endif
 

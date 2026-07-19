@@ -420,11 +420,6 @@ when keeping runtime formatting is intentional.  Do not create fmt
 string-building slices for C-buffer `sprintf` sites; convert those when
 the C-style string buffer itself is refactored.
 
-`libtrn/rcln.cpp` still contains obsolete C-string field names inside
-the inactive `MCHASE` block.  That block does not compile today and
-should be removed or overhauled with the old chase mechanism, not patched
-as a local string modernization slice.
-
 ## Current Audit Summary
 
 The current scan covers production code under `config`, `libtrn`,
@@ -435,11 +430,10 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in two owner clusters.  The call
   sites are inventoried below.
-- `safe_malloc`: remaining string-shaped owners are inactive `MCHASE`
-  newsrc editing code, `g_head_buf`, and `g_art_buf`.
-  Non-string owners include hash tables, selector page storage, regex
-  bytecode, HTML block arrays, article subject pointer arrays, and
-  generic allocation helpers.
+- `safe_malloc`: remaining string-shaped owners are `g_head_buf` and
+  `g_art_buf`.  Non-string owners include hash tables, selector page
+  storage, regex bytecode, HTML block arrays, article subject pointer
+  arrays, and generic allocation helpers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Fixed buffers: current candidates include `g_ser_line`, `g_art_line`,
@@ -524,16 +518,6 @@ Finish these before broad global-buffer work.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-075 - MCHASE Rc-line Editing Cleanup
-
-- Files: `libtrn/rcln.cpp`, `libtrn/include/trn/rcln.h`.
-- Kind: inactive legacy C-string mutation block.
-- Function: `sub_art_num`, `prange` under `MCHASE`.
-- Change: remove the obsolete chase block if the feature is dead, or
-  rewrite it against current `NewsgroupData` storage before doing string
-  modernization.  Do not patch stale field names as isolated cleanup.
-- Tests: build with the relevant feature setting if the block remains.
 
 #### CSTR-091 - Cancel Article Header Buffer
 

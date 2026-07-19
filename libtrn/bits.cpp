@@ -573,7 +573,7 @@ static bool check_chase(char *ptr, int until_key)
 #ifdef MCHASE
     if (ap->m_flags & AF_M_CHASE)
     {
-        chase_xref(ap->article_num(), true);
+        chase_xref(ap->article_num(), false);
         ap->m_flags &= ~AF_M_CHASE;
         if (!--s_chase_count)
         {
@@ -683,7 +683,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 # ifdef MCHASE
                 else
                 {
-                    onemore(article_ptr(x));
+                    article_ptr(x)->one_more();
                 }
 # endif
             }

@@ -165,6 +165,9 @@ function(configure_trn)
     set(POSTING_HOSTNAME "%X/posting-hostname" CACHE STRING
         "This symbol contains the posting host's name or a file from which to read its name.")
     option(HOST_BITS "Set to true if we should compare only the domain portion of the hostname when looking for local articles." ON)
+    option(TRN_MARK_XREFS_UNREAD
+        "If ON, unmark xrefed articles in other newsgroups when articles are unmarked." ON)
+    set(MCHASE ${TRN_MARK_XREFS_UNREAD})
     set(PRIVATE_LIB "%x/trn" CACHE STRING "The path to private executables; ~, %x and %l expansion allowed.")
     set(OVERVIEW_DIR "" CACHE STRING "The directory containing overview files.")
     set(OVERVIEW_FMT "" CACHE STRING "The name of the overview.fmt file.")

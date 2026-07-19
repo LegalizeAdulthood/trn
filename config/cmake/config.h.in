@@ -287,12 +287,19 @@
  *      This symbol contains the posting host's name or a file from which
  *      to read its name.
  */
+#define POSTING_HOSTNAME "@POSTING_HOSTNAME@"
+
 /* HOST_BITS:
  *      Set to true if we should compare only the domain portion of the
  *      hostname when looking for local articles.
  */
-#define POSTING_HOSTNAME "@POSTING_HOSTNAME@"
 #cmakedefine01 HOST_BITS
+
+/* MCHASE:
+ *      This symbol, if defined, causes unmarking an article to also unmark
+ *      cross-referenced articles in other newsgroups.
+ */
+#cmakedefine MCHASE
 
 /* PRIVATE_LIB:
  *      This symbol contains the name of the private library for this package.

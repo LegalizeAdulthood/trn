@@ -1,6 +1,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
+#include <config/common.h>
 #include <trn/datasrc.h>
 #include <trn/hash.h>
 #include <trn/ngdata.h>
@@ -154,6 +155,13 @@ protected:
         add_art_num(&m_data_source, art_num, "comp.lang.apl");
     }
 
+#ifdef MCHASE
+    void remove_article(ArticleNum art_num)
+    {
+        sub_art_num(&m_data_source, art_num, "comp.lang.apl");
+    }
+#endif
+
     std::string visible_rc_line() const
     {
         std::string line = m_group.m_rc_line;
@@ -231,6 +239,38 @@ TEST_F(AddArtNumTest, bridgesAdjacentRanges)
     EXPECT_EQ("comp.lang.apl: 1-7", visible_rc_line());
     EXPECT_EQ(ArticleUnread{9}, m_group.m_to_read);
 }
+
+#ifdef MCHASE
+TEST_F(AddArtNumTest, removesTrailingSingleton)
+{
+    set_numbers("1-3,5");
+
+    remove_article(ArticleNum{5});
+
+    EXPECT_EQ("comp.lang.apl: 1-3", visible_rc_line());
+    EXPECT_EQ(ArticleUnread{11}, m_group.m_to_read);
+}
+
+TEST_F(AddArtNumTest, splitsRange)
+{
+    set_numbers("1-7");
+
+    remove_article(ArticleNum{4});
+
+    EXPECT_EQ("comp.lang.apl: 1-3,5-7", visible_rc_line());
+    EXPECT_EQ(ArticleUnread{11}, m_group.m_to_read);
+}
+
+TEST_F(AddArtNumTest, removesStandaloneFromMiddle)
+{
+    set_numbers("1,3,5");
+
+    remove_article(ArticleNum{3});
+
+    EXPECT_EQ("comp.lang.apl: 1,5", visible_rc_line());
+    EXPECT_EQ(ArticleUnread{11}, m_group.m_to_read);
+}
+#endif
 
 TEST_F(ExpiredArticleTest, removesExpiredRangesAndKeepsUnreadSuffix)
 {
