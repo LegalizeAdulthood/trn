@@ -874,14 +874,13 @@ void reply()
 
 void forward()
 {
-    constexpr int header_size = 5 * LINE_BUF_LEN;
-    std::string   header_text(header_size, '\0');
+    std::string       header_text;
     const std::string mail_doer = get_env_var("FORWARDPOSTER", FORWARD_POSTER);
-    std::size_t header_end = std::string::npos;
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
-    char* eol;
+    constexpr std::string_view content_type_prefix{"Content-Type: multipart/"};
+    constexpr std::string_view boundary_prefix{"boundary=\""};
     std::string mime_boundary_storage;
 #endif
     const char *mime_boundary;
@@ -897,12 +896,7 @@ void forward()
         term_down(1);
         goto done;
     }
-    interp(header_text.data(), header_size, get_env_var("FORWARDHEADER", FORWARD_HEADER).c_str());
-    header_end = header_text.find('\0');
-    if (header_end != std::string::npos)
-    {
-        header_text.resize(header_end);
-    }
+    header_text = do_interp(get_env_var("FORWARDHEADER", FORWARD_HEADER), 5 * LINE_BUF_LEN);
     std::fputs(header_text.c_str(),header);
 #ifdef REGEX_WORKS_RIGHT
     if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
@@ -916,48 +910,61 @@ void forward()
     }
 #else
     mime_boundary = nullptr;
-    for (char *s = header_text.data(); s; s = eol)
+    for (std::string_view header_lines{header_text}; !header_lines.empty();)
     {
-        eol = std::strchr(s, '\n');
-        if (eol)
+        const std::size_t      eol = header_lines.find('\n');
+        const std::string_view line = header_lines.substr(0, eol == std::string_view::npos ? header_lines.size() : eol);
+        if (!line.empty() && line.front() == 'C' && line.size() >= content_type_prefix.size() &&
+            string_case_equal(line.substr(0, content_type_prefix.size()), content_type_prefix))
         {
-            eol++;
-        }
-        if (*s == 'C' && string_case_equal(s, "Content-Type: multipart/", 24))
-        {
-            s += 24;
-            while (true)
+            std::string_view content_type = header_lines.substr(content_type_prefix.size());
+            std::size_t      content_type_end = 0;
+            while (content_type_end < content_type.size())
             {
-                for (; *s && *s != ';'; s++)
+                const std::size_t newline = content_type.find('\n', content_type_end);
+                if (newline == std::string_view::npos)
                 {
-                    if (*s == '\n' && !std::isspace(s[1]))
-                    {
-                        break;
-                    }
-                }
-                if (*s != ';')
-                {
+                    content_type_end = content_type.size();
                     break;
                 }
-                s = skip_eq(++s, ' ');
-                if (*s == 'b' && string_case_equal(s, "boundary=\"", 10))
+                if (newline + 1 == content_type.size() ||
+                    !std::isspace(static_cast<unsigned char>(content_type[newline + 1])))
                 {
-                    char *boundary = s + 10;
-                    s = std::strchr(boundary, '"');
-                    if (s != nullptr)
+                    content_type_end = newline;
+                    break;
+                }
+                content_type_end = newline + 1;
+            }
+            content_type = content_type.substr(0, content_type_end);
+            for (std::size_t param_start = content_type.find(';'); param_start != std::string_view::npos;
+                 param_start = content_type.find(';', param_start))
+            {
+                ++param_start;
+                while (param_start < content_type.size() && content_type[param_start] == ' ')
+                {
+                    ++param_start;
+                }
+                const std::string_view param = content_type.substr(param_start);
+                if (param.size() >= boundary_prefix.size() &&
+                    string_case_equal(param.substr(0, boundary_prefix.size()), boundary_prefix))
+                {
+                    const std::string_view boundary = param.substr(boundary_prefix.size());
+                    const std::size_t      boundary_end = boundary.find('"');
+                    if (boundary_end != std::string_view::npos)
                     {
-                        *s = '\0';
-                    }
-                    mime_boundary_storage = boundary;
-                    mime_boundary = mime_boundary_storage.c_str();
-                    if (s)
-                    {
-                        *s = '"';
+                        mime_boundary_storage = boundary.substr(0, boundary_end);
+                        mime_boundary = mime_boundary_storage.c_str();
                     }
                     break;
                 }
             }
+            break;
         }
+        if (eol == std::string_view::npos)
+        {
+            break;
+        }
+        header_lines.remove_prefix(eol + 1);
     }
 #endif
     if (!in_string(mail_doer, "%h", true))

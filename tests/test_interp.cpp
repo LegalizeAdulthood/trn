@@ -1752,6 +1752,61 @@ TEST_F(InterpolatorNewsgroupTest, replyDisplaysHeaderFileWhenMailerDoesNotAccept
     EXPECT_THAT(output, HasSubstr("(Above lines saved in file " + head_file.generic_string() + ")"));
 }
 
+TEST_F(InterpolatorNewsgroupTest, forwardWritesInterpolatedHeaderMessageAndArticle)
+{
+    const fs::path          head_file = fs::path{m_output.path()} / "forward-head";
+    const std::string       long_header_value(600, 'x');
+    const std::string       forward_header = "Subject: forward %i\n"
+                                             "X-Long: " +
+                                             long_header_value + "\n\n";
+    ValueSaver<std::string> head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string> orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string> spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_env("FORWARDPOSTER", "exit 0 %h");
+    m_env.expect_env("FORWARDHEADER", forward_header.c_str());
+    m_env.expect_env("FORWARDMSG", "Forwarded %i");
+    m_env.expect_env("FORWARDMSGEND", "End %i");
+
+    testing::internal::CaptureStdout();
+    forward();
+    testing::internal::GetCapturedStdout();
+
+    const std::string expected_header = "Subject: forward " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                        "X-Long: " +
+                                        long_header_value + "\n\n";
+    const std::string written = file_contents(head_file);
+    EXPECT_THAT(written, StartsWith(expected_header + "Forwarded " TRN_TEST_HEADER_MESSAGE_ID "\n"));
+    EXPECT_THAT(written, HasSubstr("Path: " TRN_TEST_HEADER_PATH "\n"));
+    EXPECT_THAT(written, HasSubstr(TRN_TEST_BODY));
+    EXPECT_THAT(written, HasSubstr("End " TRN_TEST_HEADER_MESSAGE_ID "\n"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, forwardUsesMimeBoundaryFromInterpolatedHeader)
+{
+    const fs::path          head_file = fs::path{m_output.path()} / "forward-head";
+    const std::string       forward_header = "Subject: MIME forward\n"
+                                             "Content-Type: multipart/mixed; boundary=\"trn-boundary\"\n\n";
+    ValueSaver<std::string> head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string> orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string> spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_env("FORWARDPOSTER", "exit 0 %h");
+    m_env.expect_env("FORWARDHEADER", forward_header.c_str());
+    m_env.expect_env("FORWARDMSG", "Forwarded %i");
+
+    forward();
+
+    const std::string written = file_contents(head_file);
+    EXPECT_THAT(written, StartsWith(forward_header));
+    EXPECT_THAT(written, HasSubstr("--trn-boundary\nContent-Type: text/plain\n\n"));
+    EXPECT_THAT(written, HasSubstr("[Replace this with your comments.]\n\n"
+                                   "--trn-boundary\n"
+                                   "Content-Type: message/rfc822\n\n"
+                                   "Path: " TRN_TEST_HEADER_PATH "\n"));
+    EXPECT_THAT(written, HasSubstr("\n--trn-boundary--\n"));
+}
+
 TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
 {
     ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
