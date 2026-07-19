@@ -25,6 +25,7 @@ add_executable(trn-test
     test_flags.cpp
     test_getwd.cpp
     test_hash.cpp
+    test_head.cpp
     test_IniDocument.cpp
     test_IniSchema.cpp
     test_IniSection.cpp

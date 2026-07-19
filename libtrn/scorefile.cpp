@@ -284,12 +284,9 @@ static int sf_check_extra_headers(const char *head)
 //char* head;           // new header name, (without ':' character)
 static void sf_add_extra_header(const char *head)
 {
-    std::string header_name{head};
-    header_name += ':';
-
     // check to see if it's already known
     // first see if it is a known system header
-    if (set_line_type(header_name.data(), header_name.data() + header_name.size() - 1) != SOME_LINE)
+    if (set_line_type(head) != SOME_LINE)
     {
         return; // known types should be interpreted in normal way
     }
@@ -299,7 +296,7 @@ static void sf_add_extra_header(const char *head)
         return;
     }
 
-    header_name.pop_back();
+    std::string header_name{head};
     for (char &ch : header_name)
     {
         if (std::isalpha(ch) && std::isupper(ch))
@@ -694,7 +691,7 @@ static bool sf_do_line(char *line, bool check)
     } // while
     // s is start of header name, s2 points to the ':' character
     const std::string_view header{s, static_cast<std::size_t>(s2 - s)};
-    int                    j = set_line_type(s, s2);
+    int                    j = set_line_type(header);
     if (j == SOME_LINE)
     {
         const std::string header_name{header};

@@ -755,7 +755,7 @@ void mime_parse_sub_header(std::FILE *ifp, const char *next_line)
             break;
         }
 
-        int linetype = set_line_type(line.c_str(), s);
+        int linetype = set_line_type(std::string_view{line.data(), static_cast<std::size_t>(s - line.data())});
         switch (linetype)
         {
         case CONT_TYPE_LINE:

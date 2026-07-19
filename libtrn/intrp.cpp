@@ -505,7 +505,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_in_ng)
                     {
                         HeaderLineType which_line;
-                        if (!scratch.empty() && (which_line = get_header_num(scratch.c_str())) != SOME_LINE)
+                        if (!scratch.empty() && (which_line = get_header_num(scratch)) != SOME_LINE)
                         {
                             line_buf = fetch_lines(g_art, which_line);
                             s = line_buf->c_str();

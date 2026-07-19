@@ -169,7 +169,7 @@ OverviewFieldNum ov_num(char *hdr, char *end)
         end = hdr + std::strlen(hdr);
     }
 
-    switch (set_line_type(hdr, end))
+    switch (set_line_type(std::string_view{hdr, static_cast<std::size_t>(end - hdr)}))
     {
     case SUBJ_LINE:
         return OV_SUBJ;

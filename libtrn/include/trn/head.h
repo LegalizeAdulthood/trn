@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 struct Article;
@@ -102,8 +103,8 @@ void head_final();
 #ifdef DEBUG
 void dumpheader(char *where);
 #endif
-HeaderLineType set_line_type(const char *bufptr, const char *colon);
-HeaderLineType get_header_num(const char *s);
+HeaderLineType set_line_type(std::string_view header_name);
+HeaderLineType get_header_num(std::string_view header_name);
 void           start_header(ArticleNum artnum);
 bool           parse_line(char *art_buf, int new_hide, int old_hide);
 void           end_header();

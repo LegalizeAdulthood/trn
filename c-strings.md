@@ -508,33 +508,16 @@ by dependency tier: finish earlier tiers first so later caller and
 shared-buffer slices have cleaner helper and ownership contracts to
 build on.
 
-### Tier 1 - Helper And API Foundations
-
-These slices change lower-level helper, parser, or storage contracts
-that later caller slices can consume directly.
-
-#### CSTR-135 - Header Line Type View API
-
-- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`,
-  `libtrn/mime.cpp`, `libtrn/rt-ov.cpp`, `libtrn/scorefile.cpp`.
-- Kind: pointer-pair header-name API with hidden global scratch output.
-- Function: `set_line_type`, `get_header_num`.
-- Change: replace the pointer-pair header-name contract with a
-  `std::string_view` contract.  Preserve custom-header behavior without
-  using `g_msg` as an implicit lower-case output channel.
-- Tests: header parsing, MIME, overview, and score-file tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
-These slices use Tier 1 results or replace one owner of string storage.
-Finish these before broad global-buffer work.
+These slices replace one owner of string storage.  Finish these before
+broad global-buffer work.
 
 #### CSTR-136 - Overview Format Field Parser
 
 - Files: `libtrn/rt-ov.cpp`.
 - Kind: local pointer/end parser over an overview format line.
 - Function: `ov_num`.
-- Depends: `CSTR-135`.
 - Change: make `ov_num` take `std::string_view`, split the caller's
   line with `find(':')`, and remove the local `strchr` and `strlen`
   plumbing.

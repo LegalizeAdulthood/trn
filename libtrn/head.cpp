@@ -6,6 +6,7 @@
 #include <trn/head.h>
 
 #include <config/common.h>
+#include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
 #include <trn/ngdata.h>
 #include <trn/artio.h>
@@ -104,6 +105,7 @@ static HeaderLineType s_htypeix[26]{};
 static void        end_header_line();
 static bool        header_line_span(HeaderLineType which_line, char *&line, int &size);
 static std::string current_header_line_text(HeaderLineType which_line);
+static std::string lower_header_name(std::string_view header_name);
 
 void head_init()
 {
@@ -142,72 +144,79 @@ static void dump_header(const char *where)
 }
 #endif
 
-HeaderLineType set_line_type(const char *bufptr, const char *colon)
+static std::string lower_header_name(std::string_view header_name)
 {
-    char* t;
-    const char* f;
-
-    if (colon-bufptr > sizeof g_msg)
+    std::string result;
+    result.reserve(header_name.size());
+    for (char ch : header_name)
     {
-        return SOME_LINE;
+        const unsigned char uch = static_cast<unsigned char>(ch);
+        result += std::isupper(uch) ? static_cast<char>(std::tolower(uch)) : ch;
     }
+    return result;
+}
 
-    for (t = g_msg, f = bufptr; f < colon; f++, t++)
+HeaderLineType set_line_type(std::string_view header_name)
+{
+    for (char ch : header_name)
     {
         // guard against space before :
-        if (std::isspace(*f))
+        if (std::isspace(static_cast<unsigned char>(ch)))
         {
             return SOME_LINE;
         }
-        *t = std::isupper(*f) ? static_cast<char>(std::tolower(*f)) : *f;
     }
-    *t = '\0';
-    f = g_msg;                          // get g_msg into a register
-    int len = t - f;
+    const std::size_t len = header_name.size();
 
     // now scan the HeaderType table, backwards so we don't have to supply an
     // extra terminating value, using first letter as index, and length as
     // optimization to avoid calling subroutine strEQ unnecessarily.  Hauls.
     //
-    if (*f >= 'a' && *f <= 'z')
+    if (!header_name.empty())
     {
-        for (int i = s_htypeix[*f - 'a']; g_header_type[i].name[0] == *f; i--)
+        const unsigned char first_char = static_cast<unsigned char>(header_name[0]);
+        const char first = std::isupper(first_char) ? static_cast<char>(std::tolower(first_char)) : header_name[0];
+        if (first >= 'a' && first <= 'z')
         {
-            if (len == g_header_type[i].length && f == g_header_type[i].name)
+            for (int i = s_htypeix[first - 'a']; g_header_type[i].name[0] == first; i--)
             {
-                return static_cast<HeaderLineType>(i);
-            }
-        }
-        if (len == g_header_type[CUSTOM_LINE].length && f == g_header_type[(((0 + 1) + 1) + 1)].name)
-        {
-            return CUSTOM_LINE;
-        }
-        for (int i = g_user_header_type_index[*f - 'a']; g_user_header_type[i].name[0] == *f; i--)
-        {
-            if (len >= g_user_header_type[i].length //
-                && !std::strncmp(f, g_user_header_type[i].name.c_str(), g_user_header_type[i].length))
-            {
-                if (g_user_header_type[i].flags & HT_HIDE)
+                if (len == static_cast<std::size_t>(g_header_type[i].length) &&
+                    string_case_equal(header_name, g_header_type[i].name))
                 {
-                    return HIDDEN_LINE;
+                    return static_cast<HeaderLineType>(i);
                 }
-                return SHOWN_LINE;
+            }
+            if (len == static_cast<std::size_t>(g_header_type[CUSTOM_LINE].length) &&
+                string_case_equal(header_name, g_header_type[CUSTOM_LINE].name))
+            {
+                return CUSTOM_LINE;
+            }
+            for (int i = g_user_header_type_index[first - 'a']; g_user_header_type[i].name[0] == first; i--)
+            {
+                const std::size_t user_len = static_cast<std::size_t>(g_user_header_type[i].length);
+                if (len >= user_len //
+                    && string_case_equal(header_name.substr(0, user_len), g_user_header_type[i].name))
+                {
+                    if (g_user_header_type[i].flags & HT_HIDE)
+                    {
+                        return HIDDEN_LINE;
+                    }
+                    return SHOWN_LINE;
+                }
             }
         }
     }
     return SOME_LINE;
 }
 
-HeaderLineType get_header_num(const char *s)
+HeaderLineType get_header_num(std::string_view header_name)
 {
-    const char *end = s + std::strlen(s);
-
-    HeaderLineType i = set_line_type(s, end); // Sets g_msg to lower-cased header name
+    HeaderLineType i = set_line_type(header_name);
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
-        g_header_type[CUSTOM_LINE].name = g_msg;
-        g_header_type[CUSTOM_LINE].length = end - s;
+        g_header_type[CUSTOM_LINE].name = lower_header_name(header_name);
+        g_header_type[CUSTOM_LINE].length = static_cast<char>(header_name.size());
         g_header_type[CUSTOM_LINE].flags = g_header_type[i].flags;
         g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{-1};
         g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{};
@@ -221,7 +230,8 @@ HeaderLineType get_header_num(const char *s)
             *line_end = '\0';
             char *colon = std::strchr(bp, ':');
             *line_end = ch;
-            if (!colon || (i = set_line_type(bp, colon)) != CUSTOM_LINE)
+            if (!colon
+                || (i = set_line_type(std::string_view{bp, static_cast<std::size_t>(colon - bp)})) != CUSTOM_LINE)
             {
                 continue;
             }
@@ -318,7 +328,7 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
     }
     else                // it is a new header line
     {
-            g_in_header = set_line_type(art_buf,s);
+            g_in_header = set_line_type(std::string_view{art_buf, static_cast<std::size_t>(s - art_buf)});
             s_first_one = (g_header_type[g_in_header].min_pos < ArticlePosition{});
             if (s_first_one)
             {
