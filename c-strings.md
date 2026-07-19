@@ -539,18 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-100 - MIME HTML Tag Parser State
-
-- Files: `libtrn/mime.cpp`.
-- Kind: static fixed parser token buffer and literal entity table.
-- Function: `filter_html`.
-- Change: replace `tagword[32]` and `tagword_len` with parser-owned
-  `std::string` state.  Convert the named-entity lookup table to a
-  view-friendly mapping so the entity loop no longer calls `strlen` on
-  table keys.  Preserve cross-call tag parsing if the current static
-  state is intentionally carrying a partial tag across input chunks.
-- Tests: MIME HTML filtering tests before refactor.
-
 #### CSTR-105 - Thread Tree Indent Storage
 
 - Files: `libtrn/rt-wumpus.cpp`.

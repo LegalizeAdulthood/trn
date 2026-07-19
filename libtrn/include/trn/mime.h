@@ -88,9 +88,10 @@ struct MimeSection
     std::optional<std::string> m_type_name;
     std::vector<std::string>   m_type_params;
     std::optional<std::string> m_boundary;
-    int                    m_html_line_start;
-    std::vector<HtmlBlock> m_html_blocks;
-    MimeState        m_type;
+    int                        m_html_line_start;
+    std::vector<HtmlBlock>     m_html_blocks;
+    std::string                m_html_tag_word;
+    MimeState                  m_type;
     MimeEncoding     m_encoding;
     short            m_part;
     short            m_total;

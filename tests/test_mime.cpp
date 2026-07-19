@@ -292,6 +292,16 @@ protected:
         return {m_output.data(), static_cast<std::size_t>(length)};
     }
 
+    std::string filter(std::string_view first, std::string_view second)
+    {
+        char       *output = m_output.data();
+        std::string input{first};
+        output += filter_html(output, input.c_str());
+        input = std::string{second};
+        output += filter_html(output, input.c_str());
+        return {m_output.data(), static_cast<std::size_t>(output - m_output.data())};
+    }
+
     MimeSection                    m_mime_section{};
     MimeSection                   *m_old_mime_section{};
     char                          *m_old_art_buf{};
@@ -312,4 +322,14 @@ TEST_F(HtmlFilterTest, rendersUpperRomanListMarkers)
 {
     EXPECT_EQ("List:\n\n   I. one\n  II. two\n III. three", //
               filter("List:<ol type=I><li>one<li>two<li>three</ol>"));
+}
+
+TEST_F(HtmlFilterTest, rendersNamedEntities)
+{
+    EXPECT_EQ("Tom & Jerry <tag>", filter("Tom &amp; Jerry &lt;tag&gt;"));
+}
+
+TEST_F(HtmlFilterTest, keepsPartialTagNameAcrossCalls)
+{
+    EXPECT_EQ("List:\n\n 1. one", filter("List:<o", "l><li>one</ol>"));
 }

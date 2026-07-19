@@ -473,6 +473,7 @@ void MimeSection::mime_clear_struct()
     m_type_params.clear();
     m_boundary.reset();
     m_html_blocks.clear();
+    m_html_tag_word.clear();
     m_type = NOT_MIME;
     m_encoding = MENCODE_NONE;
     m_total = 0;
@@ -1447,54 +1448,71 @@ static int s_word_wrap_in_pre{};
 static int s_normal_word_wrap{};
 static int s_word_wrap{};
 
+struct NamedEntity
+{
+    std::string_view name;
+    std::string_view replacement;
+};
+
 // clang-format off
-static const char* s_named_entities[] = {
-    "lt",       "<",
-    "gt",       ">",
-    "amp",      "&",
-    "quot",     "\"",
-    "apo",      "'",    // non-standard but seen in the wild
+static constexpr NamedEntity s_named_entities[] = {
+    {"lt",       "<"},
+    {"gt",       ">"},
+    {"amp",      "&"},
+    {"quot",     "\""},
+    {"apo",      "'"},    // non-standard but seen in the wild
 #ifndef USE_UTF_HACK
-    "nbsp",     " ",
-    "ensp",     " ",    // seen in the wild
-    "lsquo",    "'",
-    "rsquo",    "'",
-    "ldquo",    "\"",
-    "rdquo",    "\"",
-    "ndash",    "-",
-    "mdash",    "-",
-    "copy",     "(C)",
-    "trade",    "(TM)",
-    "zwsp",     "",
-    "zwnj",     "",
-    "ccedil",   "c",    // per charsubst.cpp
-    "eacute",   "e",
+    {"nbsp",     " "},
+    {"ensp",     " "},    // seen in the wild
+    {"lsquo",    "'"},
+    {"rsquo",    "'"},
+    {"ldquo",    "\""},
+    {"rdquo",    "\""},
+    {"ndash",    "-"},
+    {"mdash",    "-"},
+    {"copy",     "(C)"},
+    {"trade",    "(TM)"},
+    {"zwsp",     ""},
+    {"zwnj",     ""},
+    {"ccedil",   "c"},    // per charsubst.cpp
+    {"eacute",   "e"},
 #else // USE_UTF_HACK
-    "nbsp",     "\xC2\xA0",
-    "ensp",     "\xE2\x80\x82",    // U+2002
-    "lsquo",    "\xE2\x80\x98",
-    "rsquo",    "\xE2\x80\x99",
-    "ldquo",    "\xE2\x80\x9C",
-    "rdquo",    "\xE2\x80\x9D",
-    "ndash",    "\xE2\x80\x93",
-    "mdash",    "\xE2\x80\x94",
-    "copy",     "\xC2\xA9",
-    "trade",    "\xE2\x84\xA2",
-    "zwsp",     "\xE2\x80\x8B",
-    "zwnj",     "\xE2\x80\x8C",
-    "ccedil",   "\xC3\xA7",
-    "eacute",   "\xC3\xA9",
+    {"nbsp",     "\xC2\xA0"},
+    {"ensp",     "\xE2\x80\x82"},    // U+2002
+    {"lsquo",    "\xE2\x80\x98"},
+    {"rsquo",    "\xE2\x80\x99"},
+    {"ldquo",    "\xE2\x80\x9C"},
+    {"rdquo",    "\xE2\x80\x9D"},
+    {"ndash",    "\xE2\x80\x93"},
+    {"mdash",    "\xE2\x80\x94"},
+    {"copy",     "\xC2\xA9"},
+    {"trade",    "\xE2\x84\xA2"},
+    {"zwsp",     "\xE2\x80\x8B"},
+    {"zwnj",     "\xE2\x80\x8C"},
+    {"ccedil",   "\xC3\xA7"},
+    {"eacute",   "\xC3\xA9"},
 #endif
-    nullptr,    nullptr,
 };
 // clang-format on
 
+static bool named_entity_matches(const char *text, std::string_view name)
+{
+    for (std::size_t index = 0; index < name.size(); index++)
+    {
+        if (text[index] == '\0' ||
+            static_cast<char>(std::tolower(static_cast<unsigned char>(text[index]))) != name[index])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 int filter_html(char *t, const char *f)
 {
-    static char tagword[32];
-    static int tagword_len;
-    char* bp;
-    char* cp;
+    char        *bp;
+    char        *cp;
+    std::string &tag_word = g_mime_section->m_html_tag_word;
 
     if (g_word_wrap_offset < 0)
     {
@@ -1530,9 +1548,9 @@ int filter_html(char *t, const char *f)
             {
                 g_mime_section->m_html &= ~HF_IN_DQUOTE;
             }
-            else if (tagword_len < sizeof tagword - 1)
+            else
             {
-                tagword[tagword_len++] = *f;
+                tag_word += *f;
             }
         }
         else if (g_mime_section->m_html & HF_IN_SQUOTE)
@@ -1541,9 +1559,9 @@ int filter_html(char *t, const char *f)
             {
                 g_mime_section->m_html &= ~HF_IN_SQUOTE;
             }
-            else if (tagword_len < sizeof tagword - 1)
+            else
             {
-                tagword[tagword_len++] = *f;
+                tag_word += *f;
             }
         }
         else if (g_mime_section->m_html & HF_IN_TAG)
@@ -1551,15 +1569,15 @@ int filter_html(char *t, const char *f)
             if (*f == '>')
             {
                 g_mime_section->m_html &= ~(HF_IN_TAG | HF_IN_COMMENT);
-                tagword[tagword_len] = '\0';
-                if (*tagword == '/')
+                if (!tag_word.empty() && tag_word.front() == '/')
                 {
-                    t = tag_action(t, tagword + 1, CLOSING_TAG);
+                    t = tag_action(t, tag_word.c_str() + 1, CLOSING_TAG);
                 }
                 else
                 {
-                    t = tag_action(t, tagword, OPENING_TAG);
+                    t = tag_action(t, tag_word.c_str(), OPENING_TAG);
                 }
+                tag_word.clear();
             }
             else if (*f == '-' && f[1] == '-')
             {
@@ -1574,9 +1592,9 @@ int filter_html(char *t, const char *f)
             {
                 g_mime_section->m_html |= HF_IN_SQUOTE;
             }
-            else if (tagword_len < sizeof tagword - 1)
+            else
             {
-                tagword[tagword_len++] = at_grey_space(f)? ' ' : *f;
+                tag_word += at_grey_space(f) ? ' ' : *f;
             }
         }
         else if (g_mime_section->m_html & HF_IN_COMMENT)
@@ -1589,7 +1607,8 @@ int filter_html(char *t, const char *f)
         }
         else if (*f == '<')
         {
-            tagword_len = 0;
+            tag_word.clear();
+            tag_word.reserve(32);
             g_mime_section->m_html |= HF_IN_TAG;
         }
         else if (g_mime_section->m_html & HF_IN_HIDING)
@@ -1638,40 +1657,36 @@ int filter_html(char *t, const char *f)
                 *t++ = *f;
             }
         }
-        else if (*f == '&' && std::isalpha(f[1]))   // see html-spec.txt 3.2.1
+        else if (*f == '&' && std::isalpha(f[1])) // see html-spec.txt 3.2.1
         {
-            int i;
-            int entity_found = 0;
+            int              entity_found = 0;
+            std::string_view entity_replacement;
             t = output_prep(t);
-            for (i = 0; s_named_entities[i] != nullptr; i += 2)
+            for (const NamedEntity &entity : s_named_entities)
             {
-                int n = std::strlen(s_named_entities[i]);
-                if (string_case_equal(f + 1, s_named_entities[i], n))
+                const int n = static_cast<int>(entity.name.size());
+                if (named_entity_matches(f + 1, entity.name))
                 {
                     char det = f[n + 1];
                     if (det == ';')
                     {
                         entity_found = n + 1;
                     }
-                    else if (!(det == '-' || isalnum(det))) // see html-spec.txt 3.2.1
+                    else if (!(det == '-' || std::isalnum(static_cast<unsigned char>(det)))) // see html-spec.txt 3.2.1
                     {
                         entity_found = n;
                     }
                 }
                 if (entity_found)
                 {
+                    entity_replacement = entity.replacement;
                     break;
                 }
             }
             if (entity_found)
             {
-                for (int j = 0;; j++)
+                for (const char c : entity_replacement)
                 {
-                    char c = s_named_entities[i + 1][j];
-                    if (c == '\0')
-                    {
-                        break;
-                    }
                     *t++ = c;
                 }
                 f += entity_found;
