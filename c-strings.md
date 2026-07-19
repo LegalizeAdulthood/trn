@@ -432,9 +432,9 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   sites are inventoried below.
 - `safe_malloc`: remaining string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include hash tables, selector page
-  storage, regex bytecode, HTML block arrays, article subject pointer
-  arrays, and generic allocation helpers.  The `tool` allocation helper
-  declarations now have no production callers.
+  storage, regex bytecode, HTML block arrays, and generic allocation
+  helpers.  The `tool` allocation helper declarations now have no
+  production callers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
 - Direct environment C-string reads now remain only inside the config env

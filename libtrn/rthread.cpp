@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <vector>
 
 ArticleNum g_obj_count{};
 int        g_subject_count{};
@@ -1426,19 +1427,20 @@ void sort_subjects()
         break;
     }
 
-    Subject **subj_list = (Subject**)safe_malloc(g_subject_count * sizeof(Subject*));
-    for (lp = subj_list, sp = g_first_subject; sp; sp = sp->m_next)
+    std::vector<Subject *> subj_list(g_subject_count);
+    for (lp = subj_list.data(), sp = g_first_subject; sp; sp = sp->m_next)
     {
         *lp++ = sp;
     }
-    TRN_ASSERT(lp - subj_list == g_subject_count);
+    TRN_ASSERT(lp - subj_list.data() == g_subject_count);
 
-    std::qsort(subj_list, g_subject_count, sizeof (Subject*), ((int(*)(const void *, const void *))sort_procedure));
+    std::qsort(subj_list.data(), subj_list.size(), sizeof (Subject*),
+               ((int(*)(const void *, const void *))sort_procedure));
 
     g_first_subject = subj_list[0];
     sp = subj_list[0];
     sp->m_prev = nullptr;
-    lp = subj_list;
+    lp = subj_list.data();
     for (int i = g_subject_count; --i; lp++)
     {
         lp[0]->m_next = lp[1];
@@ -1462,7 +1464,6 @@ void sort_subjects()
     {
         g_last_subject->m_thread_link = sp;
     }
-    std::free((char*)subj_list);
 }
 
 static int article_order_date(const Article **art1, const Article **art2)
