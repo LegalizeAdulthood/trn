@@ -486,8 +486,7 @@ void apply_global_option(OptionIndex num, const char *s)
         }
         if (g_mode != MM_INITIALIZING && g_auto_arrow_macros != prev)
         {
-            char tmpbuf[1024];
-            arrow_macros(tmpbuf);
+            arrow_macros();
         }
         break;
     }

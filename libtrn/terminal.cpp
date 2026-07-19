@@ -515,9 +515,8 @@ static const char *s_right[] = {
 // Turn the arrow keys into macros that do some basic trn functions.
 // Code provided by Clifford Adams.
 //
-void arrow_macros(char *tmpbuf)
+void arrow_macros()
 {
-    (void) tmpbuf;
 #ifdef HAS_TERMLIB
 
     // If arrows are defined as single keys, we probably don't
@@ -576,7 +575,7 @@ static void mac_init(char *tcbuf)
 
     if (g_auto_arrow_macros)
     {
-        arrow_macros(tmpbuf);
+        arrow_macros();
     }
     std::FILE *macros;
     if (!g_use_threads || (macros = std::fopen(file_exp(get_env_var("TRNMACRO", TRNMACRO)).c_str(), "r")) == nullptr)

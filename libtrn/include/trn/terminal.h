@@ -170,7 +170,7 @@ extern int   g_auto_arrow_macros; // -A
 void  term_init();
 void  term_set(char *tcbuf);
 void  set_macro(std::string_view seq, std::string_view def);
-void  arrow_macros(char *tmpbuf);
+void  arrow_macros();
 void  mac_line(char *line, char *tmpbuf, int tbsize);
 void  show_macros();
 void  set_mode(GeneralMode new_gmode, MinorMode new_mode);

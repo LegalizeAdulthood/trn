@@ -637,16 +637,6 @@ and clarified ownership at the edges.
   state is intentionally carrying a partial tag across input chunks.
 - Tests: MIME HTML filtering tests before refactor.
 
-#### CSTR-101 - Terminal Arrow Macro Scratch Parameter
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  `libtrn/opt.cpp`.
-- Kind: unused caller scratch buffer.
-- Function: `arrow_macros`.
-- Change: remove the unused `tmpbuf` parameter and the caller's
-  `tmpbuf[1024]` storage.  Keep arrow macro behavior unchanged.
-- Tests: terminal macro tests.
-
 #### CSTR-102 - Terminal Macro Line Expansion Buffer
 
 - Files: `libtrn/terminal.cpp`, `libtrn/ngstuff.cpp`.
