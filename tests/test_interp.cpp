@@ -1703,6 +1703,55 @@ TEST_F(InterpolatorNewsgroupTest, supersedeArticleWritesInterpolatedHeaderAndBod
     EXPECT_THAT(written, HasSubstr(TRN_TEST_BODY));
 }
 
+TEST_F(InterpolatorNewsgroupTest, replyWritesInterpolatedHeaderAndQuotedBody)
+{
+    const fs::path           head_file = fs::path{m_output.path()} / "reply-head";
+    const std::string        long_header_value(600, 'x');
+    const std::string        mail_header = "To: tester@example.org\n"
+                                           "In-Reply-To: %i\n"
+                                           "X-Long: " +
+                                           long_header_value + "\n\n";
+    ValueSaver<std::string>  head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string>  orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string>  spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string>  group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    ValueSaver<std::string>  indent(g_indent_string, ">");
+    ValueSaver<const char *> char_subst(g_char_subst, g_charsets.c_str());
+    m_env.expect_env("MAILPOSTER", "exit 0 %h");
+    m_env.expect_env("MAILHEADER", mail_header.c_str());
+    m_env.expect_env("YOUSAID", "said %i:");
+    g_buf[0] = 'R';
+
+    reply();
+
+    const std::string expected_header = "To: tester@example.org\n"
+                                        "In-Reply-To: " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                        "X-Long: " +
+                                        long_header_value + "\n\n";
+    const std::string written = file_contents(head_file);
+    EXPECT_THAT(written, StartsWith(expected_header + "said " TRN_TEST_HEADER_MESSAGE_ID ":\n"));
+    EXPECT_THAT(written, HasSubstr(">" TRN_TEST_BODY "\n"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, replyDisplaysHeaderFileWhenMailerDoesNotAcceptHeader)
+{
+    const fs::path          head_file = fs::path{m_output.path()} / "reply-head";
+    ValueSaver<std::string> head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string> orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string> spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_env("MAILPOSTER", "exit 0");
+    m_env.expect_env("MAILHEADER", "To: tester@example.org\n\n");
+    g_buf[0] = 'r';
+    g_buf[1] = '\0';
+
+    testing::internal::CaptureStdout();
+    reply();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_THAT(output, HasSubstr("(Above lines saved in file " + head_file.generic_string() + ")"));
+}
+
 TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
 {
     ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
