@@ -539,16 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-113 - Cancel Header Interpolation Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: fixed-size string used as C output buffer.
-- Function: `cancel_article`.
-- Change: replace the `5 * LINE_BUF_LEN` header interpolation buffer
-  with owned string construction for `CANCELHEADER`.  Preserve header
-  file contents and failure handling.
-- Tests: cancel response tests before refactor.
-
 #### CSTR-114 - Supersede Header Interpolation Buffer
 
 - Files: `libtrn/respond.cpp`.

@@ -679,15 +679,7 @@ int cancel_article()
             term_down(1);
             goto done;
         }
-        constexpr int header_size = 5 * LINE_BUF_LEN;
-        std::string   header_text(header_size, '\0');
-        interp(header_text.data(), header_size, get_env_var("CANCELHEADER", CANCEL_HEADER).c_str());
-        const std::size_t header_end = header_text.find('\0');
-        if (header_end != std::string::npos)
-        {
-            header_text.resize(header_end);
-        }
-        std::fputs(header_text.c_str(),header);
+        std::fputs(do_interp(get_env_var("CANCELHEADER", CANCEL_HEADER), 5 * LINE_BUF_LEN).c_str(),header);
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
         term_down(2);

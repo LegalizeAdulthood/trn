@@ -1650,6 +1650,31 @@ TEST_F(InterpolatorNewsgroupTest, extractUsesCustomCommand)
     EXPECT_EQ(expected_output, output);
 }
 
+TEST_F(InterpolatorNewsgroupTest, cancelArticleWritesInterpolatedHeader)
+{
+    const fs::path          head_file = fs::path{m_output.path()} / "cancel-head";
+    const std::string       long_header_value(600, 'x');
+    const std::string       cancel_header = "Newsgroups: %n\n"
+                                            "Control: cancel %i\n"
+                                            "X-Long: " +
+                                            long_header_value + "\n\n";
+    ValueSaver<std::string> head_name(g_head_name, head_file.generic_string());
+    m_env.expect_env("FROM", TRN_TEST_HEADER_FROM);
+    m_env.expect_env("CANCELHEADER", cancel_header.c_str());
+    m_env.expect_env("CANCEL", "exit 0");
+
+    testing::internal::CaptureStdout();
+    cancel_article();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    const std::string expected_header = "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"
+                                        "Control: cancel " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                        "X-Long: " +
+                                        long_header_value + "\n\n";
+    EXPECT_THAT(output, HasSubstr("Canceling..."));
+    EXPECT_EQ(expected_header, file_contents(head_file));
+}
+
 TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
 {
     ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);

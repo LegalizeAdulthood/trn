@@ -1506,8 +1506,13 @@ getout:
 
 std::string do_interp(std::string_view pattern)
 {
+    return do_interp(pattern, CMD_BUF_LEN);
+}
+
+std::string do_interp(std::string_view pattern, std::size_t result_size)
+{
     std::string pattern_text{pattern};
-    std::string result(CMD_BUF_LEN, '\0');
+    std::string result(result_size, '\0');
 
     do_interp(result.data(), static_cast<int>(result.size()), pattern_text.c_str(), nullptr, nullptr);
     const std::size_t result_end = result.find('\0');
