@@ -19,6 +19,7 @@ add_executable(trn-test
     test_DataSourceConfig.cpp
     test_datasrc.cpp
     test_decode.cpp
+    test_edit_dist.cpp
     test_enum_order.cpp
     test_final.cpp
     test_flags.cpp

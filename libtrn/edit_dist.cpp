@@ -9,12 +9,11 @@
 
 #include <trn/edit_dist.h>
 
-#include <config/common.h> // Declare MemorySize
-#include <trn/util.h>      // Declare safe_malloc()
+#include <config/common.h> // Declare MIN_DIST
 
 #include <algorithm>
-#include <cstdlib>
 #include <string_view>
+#include <vector>
 
 // edit_dist -- returns the minimum edit distance between two strings
 //
@@ -87,12 +86,6 @@ int edit_distn(std::string_view from, std::string_view to)
 #ifdef TRN_SPEEDUP
     int low;
 #endif
-    int* buffer;                // pointer to storage for one row
-                                //         of the d.p. array
-    static int store[THRESHOLD / sizeof (int)];
-                                        // a small amount of static
-                                        // storage, to be used when the
-                                        // input strings are small enough
     int from_len = static_cast<int>(from.size());
     int to_len = static_cast<int>(to.size());
 
@@ -136,16 +129,9 @@ int edit_distn(std::string_view from, std::string_view to)
 #endif
     } // if from_len > to_len
 
-// Allocate the array storage (from the heap if necessary)
+// Allocate storage for one row of the d.p. array.
 
-    if (from_len <= STRLENTHRESHOLD)
-    {
-        buffer = store;
-    }
-    else
-    {
-        buffer = (int *) safe_malloc((MemorySize) radix * sizeof(int));
-    }
+    std::vector<int> buffer(radix);
 
     // Here's where the fun begins.  We will find the minimum edit distance
     // using dynamic programming.  We only need to store two rows of the matrix
@@ -288,9 +274,5 @@ int edit_distn(std::string_view from, std::string_view to)
     } // for row = 1
 
     row = buffer[mod(index + radix - 1)];
-    if (buffer != store)
-    {
-        std::free((char *) buffer);
-    }
     return row;
 } // edit_distn
