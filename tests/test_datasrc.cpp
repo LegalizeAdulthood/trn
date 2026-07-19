@@ -444,6 +444,18 @@ TEST_F(DataSourceInitTest, createsDefaultRemoteSourceFromNntpServer)
     EXPECT_TRUE(source.m_flags & DF_REMOTE);
 }
 
+TEST_F(DataSourceInitTest, readsForceAuthFromEnvironment)
+{
+    m_env.expect_env("NNTPSERVER", "news.example");
+    m_env.expect_env("NNTP_FORCE_AUTH", "yes");
+
+    data_source_init();
+
+    ASSERT_EQ(1U, g_data_sources.size());
+    const DataSource &source = g_data_sources.front();
+    EXPECT_TRUE(source.m_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED);
+}
+
 TEST_F(DataSourceInitTest, parsesNntpServerPort)
 {
     m_env.expect_env("NNTPSERVER", "news.example;119");

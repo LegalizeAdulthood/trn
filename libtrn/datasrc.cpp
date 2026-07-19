@@ -9,6 +9,7 @@
 #include <file_contents.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
@@ -100,16 +101,16 @@ void data_source_init()
 
     g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
 
-    const char *machine = get_val("NNTPSERVER");
-    std::string expanded_machine;
-    if (machine != nullptr && std::string_view{machine} != "local")
+    std::string       server_name = get_env_var("NNTPSERVER");
+    const std::string force_auth = get_env_var("NNTP_FORCE_AUTH");
+    if (!server_name.empty() && server_name != "local")
     {
-        DataSourceConfig config;
-        const AuthCredentials  credentials = read_auth_file(g_nntp_auth_file.c_str());
-        config.set_nntp_server(machine);
+        DataSourceConfig      config;
+        const AuthCredentials credentials = read_auth_file(g_nntp_auth_file.c_str());
+        config.set_nntp_server(server_name.c_str());
         config.set_auth_user(credentials.user.c_str());
         config.set_auth_password(credentials.password.c_str());
-        config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
+        config.set_force_auth(force_auth.c_str());
         new_data_source("default", config);
     }
 
@@ -120,36 +121,35 @@ void data_source_init()
         g_trn_access_text = std::move(default_access_text);
     }
 
-    if (!machine)
+    if (server_name.empty())
     {
-        expanded_machine = file_exp(SERVER_NAME);
-        if (!expanded_machine.empty())
+        server_name = file_exp(SERVER_NAME);
+        if (!server_name.empty())
         {
-            if (FILE_REF(expanded_machine.c_str()))
+            if (FILE_REF(server_name.c_str()))
             {
-                expanded_machine = nntp_server_name(expanded_machine);
+                server_name = nntp_server_name(server_name);
             }
-            machine = expanded_machine.c_str();
         }
-        if (machine != nullptr && std::string_view{machine} == "local")
+        if (server_name == "local")
         {
-            machine = nullptr;
+            server_name.clear();
             actname = ACTIVE;
         }
         DataSourceConfig config;
-        config.set_nntp_server(machine);
+        config.set_nntp_server(server_name.empty() ? nullptr : server_name.c_str());
         config.set_active_file(actname);
         config.set_spool_dir(NEWS_SPOOL);
         config.set_overview_dir(OVERVIEW_DIR);
         config.set_overview_format_file(OVERVIEW_FMT);
         config.set_active_times(ACTIVE_TIMES);
         config.set_group_desc(GROUP_DESC);
-        if (machine)
+        if (!server_name.empty())
         {
             const AuthCredentials credentials = read_auth_file(g_nntp_auth_file.c_str());
             config.set_auth_user(credentials.user.c_str());
             config.set_auth_password(credentials.password.c_str());
-            config.set_force_auth(get_val("NNTP_FORCE_AUTH"));
+            config.set_force_auth(force_auth.c_str());
         }
         new_data_source("default", config);
     }

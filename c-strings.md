@@ -449,8 +449,6 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   universal-selector file fields.  Mixed URL/path/host fields need
   ownership and identity splits before they can honestly become
   `fs::path`.
-- Legacy environment reads through `get_val` remain in several caller
-  functions.  External callers should move to `get_env_var`.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
@@ -528,38 +526,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-129 - Data Source Environment Reads
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: nullable environment C-string reads feeding owned config
-  strings.
-- Function: `data_source_init`.
-- Change: use `get_env_var` for `NNTPSERVER` and `NNTP_FORCE_AUTH`.
-  Keep `server_name` and `force_auth` as owned strings, use empty string
-  as the missing sentinel, and avoid maintaining a parallel C-string
-  `machine` variable.
-- Tests: data source and NNTP initialization tests.
-
-#### CSTR-130 - Startup Switch Environment Reads
-
-- Files: `libtrn/opt.cpp`.
-- Kind: nullable environment C-string reads feeding switch parsing.
-- Function: `opt_init`.
-- Change: read `TRNINIT` and `RNINIT` into owned strings with
-  `get_env_var`, use empty string as the missing sentinel, and pass a
-  view to `sw_list` or `sw_file`.
-- Tests: option initialization tests.
-
-#### CSTR-131 - Save Article Saver Environment Read
-
-- Files: `libtrn/respond.cpp`.
-- Kind: nullable environment C-string read feeding command expansion.
-- Function: `save_article`.
-- Change: read `MBOXSAVER` or `NORMSAVER` with `get_env_var`, use empty
-  string as the missing sentinel, and pass the owned string to
-  `file_exp` before invoking the shell.
-- Tests: save-article tests.
 
 #### CSTR-135 - Header Line Type View API
 
@@ -838,14 +804,4 @@ owned strings or owner-specific storage.
 - Function: `safe_copy`.
 - Change: remove `safe_copy` only after `CSTR-033` and `CSTR-036` have
   removed every production call site.
-- Tests: build.
-
-#### CSTR-137 - Legacy Env Helper Removal
-
-- Files: `util/env.cpp`, `util/include/util/env.h`.
-- Kind: obsolete nullable environment C-string helper.
-- Function: `get_val`.
-- Depends: `CSTR-120`, `CSTR-129`, `CSTR-130`, and `CSTR-131`.
-- Change: remove the declarations and definitions after all production
-  callers have moved to owned strings or path storage.
 - Tests: build.

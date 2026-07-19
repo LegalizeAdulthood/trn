@@ -464,9 +464,9 @@ reask_save:
             }
         }
 
-        const char *saver = get_val(mailbox ? "MBOXSAVER" : "NORMSAVER");
+        const std::string saver = get_env_var(mailbox ? "MBOXSAVER" : "NORMSAVER");
         int i;
-        if (saver != nullptr)
+        if (!saver.empty())
         {
             if (s_tmp_fp)
             {

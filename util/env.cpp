@@ -472,13 +472,3 @@ static bool set_p_host_name()
     g_p_host_name = posting_host_name;
     return hostname_ok;
 }
-
-char *get_val(const char *nam, char *def)
-{
-    char *val = s_getenv_fn(nam);
-    if (val == nullptr || !*val)
-    {
-        return def;
-    }
-    return val;
-}

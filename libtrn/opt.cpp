@@ -135,12 +135,11 @@ void opt_init(int argc, char *argv[], char *tcbuf)
     {
         opt_file(g_ini_file.c_str(), true);
     }
-    char *s;
-    if (!g_use_threads || (s = get_val("TRNINIT")) == nullptr)
+    std::string switches = g_use_threads ? get_env_var("TRNINIT") : std::string{};
+    if (switches.empty())
     {
-        s = get_val("RNINIT");
+        switches = get_env_var("RNINIT");
     }
-    const std::string_view switches{s != nullptr ? s : ""};
     if (!switches.empty())
     {
         if (switches.front() == '-' || switches.front() == '+' ||
