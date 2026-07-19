@@ -1675,6 +1675,34 @@ TEST_F(InterpolatorNewsgroupTest, cancelArticleWritesInterpolatedHeader)
     EXPECT_EQ(expected_header, file_contents(head_file));
 }
 
+TEST_F(InterpolatorNewsgroupTest, supersedeArticleWritesInterpolatedHeaderAndBody)
+{
+    const fs::path          head_file = fs::path{m_output.path()} / "supersede-head";
+    const std::string       long_header_value(600, 'x');
+    const std::string       supersede_header = "Newsgroups: %n\n"
+                                               "Supersedes: %i\n"
+                                               "X-Long: " +
+                                               long_header_value + "\n\n";
+    ValueSaver<std::string> head_name(g_head_name, head_file.generic_string());
+    ValueSaver<std::string> orig_dir(g_orig_dir, m_output.path());
+    ValueSaver<std::string> spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_env("FROM", TRN_TEST_HEADER_FROM);
+    m_env.expect_env("SUPERSEDEHEADER", supersede_header.c_str());
+    m_env.expect_env("NEWSPOSTER", "exit 0");
+    g_buf[0] = 'Z';
+
+    supersede_article();
+
+    const std::string expected_header = "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"
+                                        "Supersedes: " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                        "X-Long: " +
+                                        long_header_value + "\n\n";
+    const std::string written = file_contents(head_file);
+    EXPECT_THAT(written, StartsWith(expected_header));
+    EXPECT_THAT(written, HasSubstr(TRN_TEST_BODY));
+}
+
 TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
 {
     ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
