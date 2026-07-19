@@ -508,20 +508,21 @@ by dependency tier: finish earlier tiers first so later caller and
 shared-buffer slices have cleaner helper and ownership contracts to
 build on.
 
+### Tier 0 - Leaf Cleanup
+
+These slices have no slice dependency.  They remove local C string
+construction, comparison, or display roots without changing a larger
+owner.
+
+### Tier 1 - Helper And API Foundations
+
+These slices change lower-level helper, parser, or storage contracts
+that later caller slices can consume directly.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
-
-#### CSTR-136 - Overview Format Field Parser
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: local pointer/end parser over an overview format line.
-- Function: `ov_num`.
-- Change: make `ov_num` take `std::string_view`, split the caller's
-  line with `find(':')`, and remove the local `strchr` and `strlen`
-  plumbing.
-- Tests: overview format parsing tests.
 
 #### CSTR-141 - Edit Kill File Path Storage
 

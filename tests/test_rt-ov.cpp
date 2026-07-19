@@ -9,6 +9,7 @@
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
+#include <trn/head.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rt-util.h>
@@ -96,6 +97,8 @@ protected:
         g_curr_artp = nullptr;
         g_sentinel_art_ptr = nullptr;
 
+        head_init();
+
         m_group.m_rc_line = "comp.lang.apl: ";
         m_group.m_num_offset = static_cast<int>(std::string{"comp.lang.apl"}.size()) + 1;
         m_group.m_abs_first = g_abs_first;
@@ -133,6 +136,8 @@ protected:
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
 
         fs::remove_all(m_output_dir, error);
+
+        head_final();
     }
 
     fs::path overview_file() const
@@ -202,4 +207,37 @@ TEST_F(OverviewTest, localOverviewLinePopulatesArticleFields)
     EXPECT_EQ(56, article->m_lines);
     ASSERT_TRUE(article->m_xrefs);
     EXPECT_EQ("comp.lang.apl:1 comp.lang.cpp:5", *article->m_xrefs);
+}
+
+TEST_F(OverviewTest, initMapsOverviewFormatFields)
+{
+    const fs::path overview_format = m_output_dir / "overview.fmt";
+    std::ofstream{overview_format} << "Subject:\n"
+                                      "From:\n"
+                                      "Date:\n"
+                                      "Message-ID:\n"
+                                      "References:\n"
+                                      "Bytes:full\n"
+                                      "Lines:\n"
+                                      "Xref:full\n";
+    m_data_source.m_over_fmt = overview_format.generic_string();
+    for (int i = 0; i < OV_MAX_FIELDS; ++i)
+    {
+        m_data_source.m_field_num[i] = OV_NUM;
+        m_data_source.m_field_flags[i] = FF_NONE;
+    }
+
+    EXPECT_TRUE(ov_init());
+
+    EXPECT_EQ(OV_NUM, m_data_source.m_field_num[0]);
+    EXPECT_EQ(OV_SUBJ, m_data_source.m_field_num[1]);
+    EXPECT_EQ(OV_FROM, m_data_source.m_field_num[2]);
+    EXPECT_EQ(OV_DATE, m_data_source.m_field_num[3]);
+    EXPECT_EQ(OV_MSG_ID, m_data_source.m_field_num[4]);
+    EXPECT_EQ(OV_REFS, m_data_source.m_field_num[5]);
+    EXPECT_EQ(OV_BYTES, m_data_source.m_field_num[6]);
+    EXPECT_EQ(OV_LINES, m_data_source.m_field_num[7]);
+    EXPECT_EQ(OV_XREF, m_data_source.m_field_num[8]);
+    EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_BYTES]);
+    EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_XREF]);
 }

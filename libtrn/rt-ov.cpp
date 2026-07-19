@@ -49,7 +49,7 @@ static HeaderLineType s_header_num[] = {
 
 static void             ov_parse(std::string_view line, ArticleNum artnum, bool remote);
 static std::string      ov_name(std::string_view group);
-static OverviewFieldNum ov_num(char *hdr, char *end);
+static OverviewFieldNum ov_num(std::string_view header_name);
 static const char      *ov_field_name(int num);
 
 bool ov_init()
@@ -121,10 +121,14 @@ bool ov_init()
             }
             if (i < OV_MAX_FIELDS)
             {
-                char *s = std::strchr(g_buf,':');
-                fieldnum[i] = ov_num(g_buf,s);
-                fieldflags[fieldnum[i]] = FF_HAS_FIELD |
-                    ((s && string_case_equal("full", s+1,4))? FF_HAS_HDR : FF_NONE);
+                const std::string_view line{g_buf};
+                const std::size_t      colon = line.find(':');
+                const OverviewFieldNum field = ov_num(line.substr(0, colon));
+                fieldnum[i] = field;
+                fieldflags[field] = FF_HAS_FIELD | ((colon != std::string_view::npos && line.size() - colon > 4 &&
+                                                     string_case_equal(line.substr(colon + 1, 4), "full"))
+                                                        ? FF_HAS_HDR
+                                                        : FF_NONE);
                 i++;
             }
         }
@@ -162,14 +166,9 @@ bool ov_init()
     return true;
 }
 
-OverviewFieldNum ov_num(char *hdr, char *end)
+OverviewFieldNum ov_num(std::string_view header_name)
 {
-    if (!end)
-    {
-        end = hdr + std::strlen(hdr);
-    }
-
-    switch (set_line_type(std::string_view{hdr, static_cast<std::size_t>(end - hdr)}))
+    switch (set_line_type(header_name))
     {
     case SUBJ_LINE:
         return OV_SUBJ;
