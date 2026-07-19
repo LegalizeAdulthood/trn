@@ -386,7 +386,7 @@ SaveResult save_article()
             }
             else
             {
-                const char *dflt = (in_string(savename.c_str(), "%a", true) ? "nyq" : "ynq");
+                const char *dflt = (in_string(savename, "%a", true) ? "nyq" : "ynq");
 
 reask_save:
                 in_char(fmt::format("\nFile {} doesn't exist--\n        use mailbox format?", destination).c_str(),
@@ -643,9 +643,9 @@ int cancel_article()
     std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
     std::string from_buf = fetch_lines(g_art, FROM_LINE);
     if (!string_case_equal(get_env_var("FROM"), from_buf)                    //
-        && (!in_string(from_buf.c_str(), g_host_name.c_str(), false)         //
-            || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
-                && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
+        && (!in_string(from_buf, g_host_name, false)                         //
+            || (!in_string(from_buf, g_login_name, true)                     //
+                && !in_string(reply_buf, g_login_name, true)                 //
 #ifdef HAS_NEWS_ADMIN
                 && myuid != g_news_uid //
 #endif
@@ -712,9 +712,9 @@ int supersede_article()         // Supersedes:
     std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
     std::string from_buf = fetch_lines(g_art, FROM_LINE);
     if (!string_case_equal(get_env_var("FROM"), from_buf)                    //
-        && (!in_string(from_buf.c_str(), g_host_name.c_str(), false)         //
-            || (!in_string(from_buf.c_str(), g_login_name.c_str(), true)     //
-                && !in_string(reply_buf.c_str(), g_login_name.c_str(), true) //
+        && (!in_string(from_buf, g_host_name, false)                         //
+            || (!in_string(from_buf, g_login_name, true)                     //
+                && !in_string(reply_buf, g_login_name, true)                 //
 #ifdef HAS_NEWS_ADMIN                                                //
                 && myuid != g_news_uid                                //
 #endif
@@ -833,7 +833,7 @@ void reply()
     }
     interp(hbuf, sizeof hbuf, get_env_var("MAILHEADER", MAIL_HEADER).c_str());
     std::fputs(hbuf,header);
-    if (!in_string(mail_doer.c_str(), "%h", true))
+    if (!in_string(mail_doer, "%h", true))
     {
         if (g_verbose)
         {
@@ -956,7 +956,7 @@ void forward()
         }
     }
 #endif
-    if (!in_string(mail_doer.c_str(), "%h", true))
+    if (!in_string(mail_doer, "%h", true))
     {
         if (g_verbose)
         {

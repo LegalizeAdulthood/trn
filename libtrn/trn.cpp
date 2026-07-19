@@ -782,7 +782,7 @@ reask_abandon:
         end_only();
         if (g_buf[1])
         {
-            bool minusd = in_string(g_buf+1,"-d", true) != nullptr;
+            bool minusd = in_string(std::string_view{g_buf + 1}, "-d", true);
             sw_list(g_buf+1);
             if (minusd)
             {

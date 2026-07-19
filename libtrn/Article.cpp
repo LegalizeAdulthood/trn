@@ -20,8 +20,6 @@
 #include <util/env.h>
 #include <util/util2.h>
 
-#include <algorithm>
-#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -30,21 +28,6 @@
 #include <string_view>
 
 static Subject *s_fake_had_subj{}; // the fake-turned-real article had this subject
-
-static bool char_equal_ignore_case(char left, char right)
-{
-    return std::tolower(static_cast<unsigned char>(left)) == std::tolower(static_cast<unsigned char>(right));
-}
-
-static bool contains_ignore_case(std::string_view text, std::string_view pattern)
-{
-    if (pattern.empty())
-    {
-        return true;
-    }
-    const auto match = std::search(text.begin(), text.end(), pattern.begin(), pattern.end(), char_equal_ignore_case);
-    return match != text.end();
-}
 
 static bool is_message_id_close_substitute(char ch)
 {
@@ -181,7 +164,7 @@ void Article::check_poster()
 
             if (user == std::string_view{g_login_name.data(), g_login_name.size()})
             {
-                if (contains_ignore_case(host, g_host_name))
+                if (in_string(host, g_host_name, false))
                 {
                     switch (g_auto_select_postings)
                     {
@@ -209,7 +192,7 @@ void Article::check_poster()
                 {
 #ifdef REPLYTO_POSTER_CHECKING
                     std::string reply_buf = fetch_lines(article_num(), REPLY_LINE);
-                    if (in_string(reply_buf.c_str(), g_login_name.c_str(), true))
+                    if (in_string(reply_buf, g_login_name, true))
                     {
                         select_sub_thread(this, AUTO_SEL_FOL);
                     }

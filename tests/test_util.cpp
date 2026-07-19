@@ -218,6 +218,58 @@ TEST_F(EditFileTest, doesNotCopyEditorCommandToGlobalScratchBuffer)
     EXPECT_STREQ("#", g_cmd_buf);
 }
 
+TEST(InStringTest, findsCaseSensitiveNeedle)
+{
+    const char *text = "The quick brown fox";
+
+    const char *match = in_string(text, "quick", true);
+
+    ASSERT_NE(nullptr, match);
+    EXPECT_EQ(4, match - text);
+}
+
+TEST(InStringTest, rejectsCaseSensitiveMismatch)
+{
+    EXPECT_EQ(nullptr, in_string("The quick brown fox", "Quick", true));
+}
+
+TEST(InStringTest, findsCaseInsensitiveNeedle)
+{
+    const char *text = "The quick brown fox";
+
+    const char *match = in_string(text, "QUICK", false);
+
+    ASSERT_NE(nullptr, match);
+    EXPECT_EQ(4, match - text);
+}
+
+TEST(InStringTest, findsEmptyNeedleOnlyInNonEmptyText)
+{
+    EXPECT_EQ("text", in_string("text", "", true));
+    EXPECT_EQ(nullptr, in_string("", "", true));
+}
+
+TEST(InStringTest, stringViewOverloadFindsCaseSensitiveNeedle)
+{
+    const std::string text{"The quick brown fox"};
+
+    EXPECT_TRUE(in_string(std::string_view{text}, "quick", true));
+    EXPECT_FALSE(in_string(std::string_view{text}, "Quick", true));
+}
+
+TEST(InStringTest, stringViewOverloadFindsCaseInsensitiveNeedle)
+{
+    const std::string text{"The quick brown fox"};
+
+    EXPECT_TRUE(in_string(std::string_view{text}, "QUICK", false));
+}
+
+TEST(InStringTest, stringViewOverloadFindsEmptyNeedleOnlyInNonEmptyText)
+{
+    EXPECT_TRUE(in_string(std::string_view{"text"}, "", true));
+    EXPECT_FALSE(in_string(std::string_view{}, "", true));
+}
+
 TEST_F(FileExpansionTest, expandsHomeDirectory)
 {
     g_home_dir = "C:/Users/tester";

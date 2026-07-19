@@ -6,10 +6,12 @@
 #include <util/util2.h>
 
 #include <config/common.h>
+#include <config/string_case_compare.h>
 #include <tool/util3.h>
 #include <trn/util.h>
 #include <util/env.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -22,6 +24,11 @@ namespace fs = std::filesystem;
 static std::string s_tilde_name;
 static std::string s_tilde_dir;
 #endif
+
+static bool char_equal_ignore_case(char left, char right)
+{
+    return string_case_equal(std::string_view{&left, 1}, std::string_view{&right, 1});
+}
 
 // safe version of string copy
 char *safe_copy(char *to, const char *from, int len)
@@ -186,13 +193,13 @@ std::string file_exp(std::string_view text)
     return filename;
 }
 
-// return ptr to little string in big string, nullptr if not found
+// return ptr to needle string in haystack string, nullptr if not found
 
-const char *in_string(const char *big, const char *little, bool case_matters)
+const char *in_string(const char *haystack, const char *needle, bool case_matters)
 {
-    for (const char *t = big; *t; t++)
+    for (const char *t = haystack; *t; t++)
     {
-        const char *s = little;
+        const char *s = needle;
         for (const char *x = t; *s; x++, s++)
         {
             if (!*x)
@@ -240,9 +247,25 @@ const char *in_string(const char *big, const char *little, bool case_matters)
     return nullptr;
 }
 
-char *in_string(char *big, const char *little, bool case_matters)
+char *in_string(char *haystack, const char *needle, bool case_matters)
 {
-    return const_cast<char *>(in_string(static_cast<const char *>(big), little, case_matters));
+    return const_cast<char *>(in_string(static_cast<const char *>(haystack), needle, case_matters));
+}
+
+bool in_string(std::string_view haystack, std::string_view needle, bool case_matters)
+{
+    if (needle.empty())
+    {
+        return !haystack.empty();
+    }
+    if (case_matters)
+    {
+        return haystack.find(needle) != std::string_view::npos;
+    }
+
+    const std::string_view::const_iterator match =
+        std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), char_equal_ignore_case);
+    return match != haystack.end();
 }
 
 AuthCredentials read_auth_file(const fs::path &file)

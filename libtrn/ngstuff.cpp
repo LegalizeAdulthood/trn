@@ -161,7 +161,7 @@ bool switcheroo()
     }
     else
     {
-        bool do_cd = in_string(g_buf, "-d", true) != nullptr;
+        bool     do_cd = in_string(std::string_view{g_buf}, "-d", true);
         fs::path where_am_i;
 
         if (do_cd)

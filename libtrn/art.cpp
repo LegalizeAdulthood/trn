@@ -399,7 +399,7 @@ DoArticleResult do_article()
                 else
                 {
                     int length = std::strlen(buf_ptr+1);
-                    notes_files = in_string(&buf_ptr[length-10]," - (nf", true)!=nullptr;
+                    notes_files = in_string(std::string_view{&buf_ptr[length - 10]}, " - (nf", true);
                     ++g_art_line_num;
                     if (!cached_subj)
                     {

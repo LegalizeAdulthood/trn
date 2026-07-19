@@ -521,18 +521,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-155 - Boolean In-string View Helper
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`,
-  `libtrn/Article.cpp`, `libtrn/art.cpp`, `libtrn/ngstuff.cpp`,
-  `libtrn/respond.cpp`, `libtrn/trn.cpp`.
-- Kind: read-only substring search helper.
-- Function: `in_string` and boolean-only callers.
-- Change: add or migrate to a view-based boolean search using standard
-  algorithms for the case-insensitive path.  Convert only callers that
-  test for presence.  Keep pointer-return overloads for cursor callers.
-- Tests: affected article, response, and command tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
