@@ -7,6 +7,10 @@
 #include <trn/IniSchema.h>
 #include <trn/IniSectionValues.h>
 
+#include <optional>
+#include <string>
+#include <string_view>
+
 namespace
 {
 
@@ -17,7 +21,7 @@ constexpr int field_id(DataSourceConfigField field)
 
 std::optional<std::string> value_or_null(const IniSectionValues &values, DataSourceConfigField field)
 {
-    const auto value = values.value(field_id(field));
+    const std::optional<std::string_view> value = values.value(field_id(field));
     if (!value.has_value())
     {
         return std::nullopt;
@@ -53,21 +57,9 @@ const IniSchema &DataSourceConfig::schema()
     return s_schema;
 }
 
-const char *DataSourceConfig::c_str(const std::optional<std::string> &value)
+void DataSourceConfig::set_value(std::optional<std::string> &target, std::string_view value)
 {
-    return value.has_value() ? value->c_str() : nullptr;
-}
-
-void DataSourceConfig::set_value(std::optional<std::string> &target, const char *value)
-{
-    if (value == nullptr)
-    {
-        target.reset();
-    }
-    else
-    {
-        target = value;
-    }
+    target = std::string{value};
 }
 
 DataSourceConfig DataSourceConfig::from(const IniSectionValues &values)

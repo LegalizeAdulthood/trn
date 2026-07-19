@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
 #include <string_view>
 
 namespace
@@ -38,6 +39,12 @@ protected:
 private:
     IniSectionValues m_values;
 };
+
+void expect_value(std::string_view expected, std::optional<std::string_view> actual)
+{
+    ASSERT_TRUE(actual.has_value());
+    EXPECT_EQ(expected, *actual);
+}
 
 } // namespace
 
@@ -71,30 +78,30 @@ TEST_F(DataSourceConfigTest, parsesValuesIntoNamedFields)
                                           "Overview Format File = overview.fmt\n"
                                           "Force Auth = yes\n");
 
-    EXPECT_STREQ("news.example.org", config.nntp_server());
-    EXPECT_STREQ("active.cache", config.active_file());
-    EXPECT_STREQ("1 day", config.active_file_refetch());
-    EXPECT_STREQ("/var/spool/news", config.spool_dir());
-    EXPECT_STREQ("/var/threads", config.thread_dir());
-    EXPECT_STREQ("/var/overview", config.overview_dir());
-    EXPECT_STREQ("active.times", config.active_times());
-    EXPECT_STREQ("newsgroups", config.group_desc());
-    EXPECT_STREQ("2 days", config.group_desc_refetch());
-    EXPECT_STREQ("reader", config.auth_user());
-    EXPECT_STREQ("secret", config.auth_password());
-    EXPECT_STREQ("get-auth", config.auth_command());
-    EXPECT_STREQ("y", config.xhdr_broken());
-    EXPECT_STREQ("n", config.xrefs());
-    EXPECT_STREQ("overview.fmt", config.overview_format_file());
-    EXPECT_STREQ("yes", config.force_auth());
+    expect_value("news.example.org", config.nntp_server());
+    expect_value("active.cache", config.active_file());
+    expect_value("1 day", config.active_file_refetch());
+    expect_value("/var/spool/news", config.spool_dir());
+    expect_value("/var/threads", config.thread_dir());
+    expect_value("/var/overview", config.overview_dir());
+    expect_value("active.times", config.active_times());
+    expect_value("newsgroups", config.group_desc());
+    expect_value("2 days", config.group_desc_refetch());
+    expect_value("reader", config.auth_user());
+    expect_value("secret", config.auth_password());
+    expect_value("get-auth", config.auth_command());
+    expect_value("y", config.xhdr_broken());
+    expect_value("n", config.xrefs());
+    expect_value("overview.fmt", config.overview_format_file());
+    expect_value("yes", config.force_auth());
 }
 
-TEST_F(DataSourceConfigTest, missingValuesRemainNull)
+TEST_F(DataSourceConfigTest, missingValuesRemainAbsent)
 {
     const DataSourceConfig config = parse("[source]\nActive File = active\n");
 
-    EXPECT_STREQ("active", config.active_file());
-    EXPECT_EQ(nullptr, config.nntp_server());
-    EXPECT_EQ(nullptr, config.spool_dir());
-    EXPECT_EQ(nullptr, config.thread_dir());
+    expect_value("active", config.active_file());
+    EXPECT_FALSE(config.nntp_server().has_value());
+    EXPECT_FALSE(config.spool_dir().has_value());
+    EXPECT_FALSE(config.thread_dir().has_value());
 }

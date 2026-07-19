@@ -53,6 +53,7 @@ struct utimbuf
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -67,8 +68,8 @@ std::string             g_trn_access_text;                        //
 std::string             g_nntp_auth_file;                         //
 time_t                  g_def_refetch_secs{DEFAULT_REFETCH_SECS}; // -z
 
-static std::string                dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags flag);
-static std::string                file_or_empty(const char *fn);
+static std::string                dir_or_empty(DataSource *dp, std::string_view dir, DataSourceFlags flag);
+static std::string                file_or_empty(std::string_view fn);
 static HashDatum                  source_file_hash_datum(SourceFile *source_file, std::size_t index);
 static SourceFile                *source_file_from_hash(HashDatum data);
 static std::string               *source_file_line(HashDatum data);
@@ -107,10 +108,10 @@ void data_source_init()
     {
         DataSourceConfig      config;
         const AuthCredentials credentials = read_auth_file(g_nntp_auth_file);
-        config.set_nntp_server(server_name.c_str());
-        config.set_auth_user(credentials.user.c_str());
-        config.set_auth_password(credentials.password.c_str());
-        config.set_force_auth(force_auth.c_str());
+        config.set_nntp_server(server_name);
+        config.set_auth_user(credentials.user);
+        config.set_auth_password(credentials.password);
+        config.set_force_auth(force_auth);
         new_data_source("default", config);
     }
 
@@ -137,8 +138,14 @@ void data_source_init()
             actname = ACTIVE;
         }
         DataSourceConfig config;
-        config.set_nntp_server(server_name.empty() ? nullptr : server_name.c_str());
-        config.set_active_file(actname);
+        if (!server_name.empty())
+        {
+            config.set_nntp_server(server_name);
+        }
+        if (actname != nullptr)
+        {
+            config.set_active_file(actname);
+        }
         config.set_spool_dir(NEWS_SPOOL);
         config.set_overview_dir(OVERVIEW_DIR);
         config.set_overview_format_file(OVERVIEW_FMT);
@@ -147,9 +154,9 @@ void data_source_init()
         if (!server_name.empty())
         {
             const AuthCredentials credentials = read_auth_file(g_nntp_auth_file);
-            config.set_auth_user(credentials.user.c_str());
-            config.set_auth_password(credentials.password.c_str());
-            config.set_force_auth(force_auth.c_str());
+            config.set_auth_user(credentials.user);
+            config.set_auth_password(credentials.password);
+            config.set_force_auth(force_auth);
         }
         new_data_source("default", config);
     }
@@ -227,14 +234,17 @@ DataSource *get_data_source(std::string_view name)
 
 static DataSource *new_data_source(std::string_view name, const DataSourceConfig &config)
 {
-    if (config.nntp_server() == nullptr && config.active_file() == nullptr)
+    const std::optional<std::string_view> nntp_server = config.nntp_server();
+    const std::optional<std::string_view> active_file = config.active_file();
+
+    if (!nntp_server && !active_file)
     {
         return nullptr;
     }
 
     DataSource *dp = &g_data_sources.emplace_back();
 
-    if (config.nntp_server())
+    if (nntp_server)
     {
         dp->m_flags |= DF_REMOTE;
     }
@@ -245,10 +255,9 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
         dp->m_flags |= DF_DEFAULT;
     }
 
-    const char *v = config.nntp_server();
-    if (v != nullptr)
+    if (nntp_server)
     {
-        dp->m_news_id = v;
+        dp->m_news_id = *nntp_server;
         const std::string::size_type port_separator = dp->m_news_id.find(';');
         if (port_separator != std::string::npos)
         {
@@ -258,22 +267,22 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
             dp->m_news_id.resize(port_separator);
         }
 
-        v = config.active_file_refetch();
-        if (v != nullptr && *v)
+        const std::optional<std::string_view> active_file_refetch = config.active_file_refetch();
+        if (active_file_refetch && !active_file_refetch->empty())
         {
-            dp->m_act_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
+            dp->m_act_sf.m_refetch_secs = text_to_secs(std::string{*active_file_refetch}.c_str(), g_def_refetch_secs);
         }
-        else if (!config.active_file())
+        else if (!active_file)
         {
             dp->m_act_sf.m_refetch_secs = g_def_refetch_secs;
         }
     }
     else
     {
-        dp->m_news_id = file_exp(config.active_file());
+        dp->m_news_id = file_exp(*active_file);
     }
 
-    if (std::string spool_dir = file_or_empty(config.spool_dir()); !spool_dir.empty())
+    if (std::string spool_dir = file_or_empty(config.spool_dir().value_or(std::string_view{})); !spool_dir.empty())
     {
         dp->m_spool_dir = spool_dir;
     }
@@ -282,16 +291,16 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
         dp->m_spool_dir = g_tmp_dir;
     }
 
-    dp->m_over_dir = dir_or_empty(dp, config.overview_dir(), DF_TRY_OVERVIEW);
-    dp->m_over_fmt = file_or_empty(config.overview_format_file());
-    dp->m_group_desc = dir_or_empty(dp, config.group_desc(), DF_NONE);
-    dp->m_extra_name = dir_or_empty(dp, config.active_times(), DF_ADD_OK);
+    dp->m_over_dir = dir_or_empty(dp, config.overview_dir().value_or(std::string_view{}), DF_TRY_OVERVIEW);
+    dp->m_over_fmt = file_or_empty(config.overview_format_file().value_or(std::string_view{}));
+    dp->m_group_desc = dir_or_empty(dp, config.group_desc().value_or(std::string_view{}), DF_NONE);
+    dp->m_extra_name = dir_or_empty(dp, config.active_times().value_or(std::string_view{}), DF_ADD_OK);
     if (dp->m_flags & DF_REMOTE)
     {
         // FYI, we know extra_name is empty in this case.
-        if (config.active_file())
+        if (active_file)
         {
-            dp->m_extra_name = file_exp(config.active_file());
+            dp->m_extra_name = file_exp(*active_file);
             stat_t extra_stat{};
             if (stat(dp->m_extra_name.c_str(), &extra_stat) >= 0)
             {
@@ -308,10 +317,10 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
             }
         }
 
-        v = config.group_desc_refetch();
-        if (v != nullptr && *v)
+        const std::optional<std::string_view> group_desc_refetch = config.group_desc_refetch();
+        if (group_desc_refetch && !group_desc_refetch->empty())
         {
-            dp->m_desc_sf.m_refetch_secs = text_to_secs(v, g_def_refetch_secs);
+            dp->m_desc_sf.m_refetch_secs = text_to_secs(std::string{*group_desc_refetch}.c_str(), g_def_refetch_secs);
         }
         else if (dp->m_group_desc.empty())
         {
@@ -335,28 +344,27 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
             }
         }
     }
-    v = config.force_auth();
-    if (v != nullptr && (*v == 'y' || *v == 'Y'))
+    if (const std::optional<std::string_view> force_auth = config.force_auth();
+        force_auth && !force_auth->empty() && (force_auth->front() == 'y' || force_auth->front() == 'Y'))
     {
         dp->m_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
     }
-    v = config.auth_user();
-    if (v != nullptr && *v)
+    if (const std::optional<std::string_view> auth_user = config.auth_user(); auth_user && !auth_user->empty())
     {
-        dp->m_auth_user = v;
+        dp->m_auth_user = *auth_user;
     }
-    v = config.auth_password();
-    if (v != nullptr && *v)
+    if (const std::optional<std::string_view> auth_password = config.auth_password();
+        auth_password && !auth_password->empty())
     {
-        dp->m_auth_pass = v;
+        dp->m_auth_pass = *auth_password;
     }
-    v = config.xhdr_broken();
-    if (v != nullptr && (*v == 'y' || *v == 'Y'))
+    if (const std::optional<std::string_view> xhdr_broken = config.xhdr_broken();
+        xhdr_broken && !xhdr_broken->empty() && (xhdr_broken->front() == 'y' || xhdr_broken->front() == 'Y'))
     {
         dp->m_flags |= DF_XHDR_BROKEN;
     }
-    v = config.xrefs();
-    if (v != nullptr && (*v == 'n' || *v == 'N'))
+    if (const std::optional<std::string_view> xrefs = config.xrefs();
+        xrefs && !xrefs->empty() && (xrefs->front() == 'n' || xrefs->front() == 'N'))
     {
         dp->m_flags |= DF_NO_XREFS;
     }
@@ -364,10 +372,9 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
     return dp;
 }
 
-static std::string dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags flag)
+static std::string dir_or_empty(DataSource *dp, std::string_view dir, DataSourceFlags flag)
 {
-    const std::string_view dir_view{dir != nullptr ? dir : ""};
-    if (dir_view.empty() || dir_view == "remote")
+    if (dir.empty() || dir == "remote")
     {
         dp->m_flags |= flag;
         if (dp->m_flags & DF_REMOTE)
@@ -390,13 +397,13 @@ static std::string dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags
         return dp->m_spool_dir;
     }
 
-    if (dir_view == "none")
+    if (dir == "none")
     {
         return {};
     }
 
     dp->m_flags |= flag;
-    const std::string expanded_dir = file_exp(dir_view);
+    const std::string expanded_dir = file_exp(dir);
     if (expanded_dir == dp->m_spool_dir)
     {
         return dp->m_spool_dir;
@@ -404,9 +411,8 @@ static std::string dir_or_empty(DataSource *dp, const char *dir, DataSourceFlags
     return expanded_dir;
 }
 
-static std::string file_or_empty(const char *fn)
+static std::string file_or_empty(std::string_view file)
 {
-    const std::string_view file{fn != nullptr ? fn : ""};
     if (file.empty() || file == "none" || file == "remote")
     {
         return {};

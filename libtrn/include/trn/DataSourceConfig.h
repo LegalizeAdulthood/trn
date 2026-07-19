@@ -10,6 +10,7 @@ class IniSectionValues;
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 enum class DataSourceConfigField
 {
@@ -37,43 +38,43 @@ public:
     static const IniSchema &schema();
     static DataSourceConfig from(const IniSectionValues &values);
 
-    const char *nntp_server() const;
-    const char *active_file() const;
-    const char *active_file_refetch() const;
-    const char *spool_dir() const;
-    const char *thread_dir() const;
-    const char *overview_dir() const;
-    const char *active_times() const;
-    const char *group_desc() const;
-    const char *group_desc_refetch() const;
-    const char *auth_user() const;
-    const char *auth_password() const;
-    const char *auth_command() const;
-    const char *xhdr_broken() const;
-    const char *xrefs() const;
-    const char *overview_format_file() const;
-    const char *force_auth() const;
+    std::optional<std::string_view> nntp_server() const;
+    std::optional<std::string_view> active_file() const;
+    std::optional<std::string_view> active_file_refetch() const;
+    std::optional<std::string_view> spool_dir() const;
+    std::optional<std::string_view> thread_dir() const;
+    std::optional<std::string_view> overview_dir() const;
+    std::optional<std::string_view> active_times() const;
+    std::optional<std::string_view> group_desc() const;
+    std::optional<std::string_view> group_desc_refetch() const;
+    std::optional<std::string_view> auth_user() const;
+    std::optional<std::string_view> auth_password() const;
+    std::optional<std::string_view> auth_command() const;
+    std::optional<std::string_view> xhdr_broken() const;
+    std::optional<std::string_view> xrefs() const;
+    std::optional<std::string_view> overview_format_file() const;
+    std::optional<std::string_view> force_auth() const;
 
-    void set_nntp_server(const char *value);
-    void set_active_file(const char *value);
-    void set_active_file_refetch(const char *value);
-    void set_spool_dir(const char *value);
-    void set_thread_dir(const char *value);
-    void set_overview_dir(const char *value);
-    void set_active_times(const char *value);
-    void set_group_desc(const char *value);
-    void set_group_desc_refetch(const char *value);
-    void set_auth_user(const char *value);
-    void set_auth_password(const char *value);
-    void set_auth_command(const char *value);
-    void set_xhdr_broken(const char *value);
-    void set_xrefs(const char *value);
-    void set_overview_format_file(const char *value);
-    void set_force_auth(const char *value);
+    void set_nntp_server(std::string_view value);
+    void set_active_file(std::string_view value);
+    void set_active_file_refetch(std::string_view value);
+    void set_spool_dir(std::string_view value);
+    void set_thread_dir(std::string_view value);
+    void set_overview_dir(std::string_view value);
+    void set_active_times(std::string_view value);
+    void set_group_desc(std::string_view value);
+    void set_group_desc_refetch(std::string_view value);
+    void set_auth_user(std::string_view value);
+    void set_auth_password(std::string_view value);
+    void set_auth_command(std::string_view value);
+    void set_xhdr_broken(std::string_view value);
+    void set_xrefs(std::string_view value);
+    void set_overview_format_file(std::string_view value);
+    void set_force_auth(std::string_view value);
 
 private:
-    static const char *c_str(const std::optional<std::string> &value);
-    static void        set_value(std::optional<std::string> &target, const char *value);
+    static std::optional<std::string_view> view(const std::optional<std::string> &value);
+    static void                            set_value(std::optional<std::string> &target, std::string_view value);
 
     std::optional<std::string> m_nntp_server;
     std::optional<std::string> m_active_file;
@@ -93,162 +94,171 @@ private:
     std::optional<std::string> m_force_auth;
 };
 
-inline const char *DataSourceConfig::nntp_server() const
+inline std::optional<std::string_view> DataSourceConfig::view(const std::optional<std::string> &value)
 {
-    return c_str(m_nntp_server);
+    if (!value.has_value())
+    {
+        return std::nullopt;
+    }
+    return std::string_view{*value};
 }
 
-inline const char *DataSourceConfig::active_file() const
+inline std::optional<std::string_view> DataSourceConfig::nntp_server() const
 {
-    return c_str(m_active_file);
+    return view(m_nntp_server);
 }
 
-inline const char *DataSourceConfig::active_file_refetch() const
+inline std::optional<std::string_view> DataSourceConfig::active_file() const
 {
-    return c_str(m_active_file_refetch);
+    return view(m_active_file);
 }
 
-inline const char *DataSourceConfig::spool_dir() const
+inline std::optional<std::string_view> DataSourceConfig::active_file_refetch() const
 {
-    return c_str(m_spool_dir);
+    return view(m_active_file_refetch);
 }
 
-inline const char *DataSourceConfig::thread_dir() const
+inline std::optional<std::string_view> DataSourceConfig::spool_dir() const
 {
-    return c_str(m_thread_dir);
+    return view(m_spool_dir);
 }
 
-inline const char *DataSourceConfig::overview_dir() const
+inline std::optional<std::string_view> DataSourceConfig::thread_dir() const
 {
-    return c_str(m_overview_dir);
+    return view(m_thread_dir);
 }
 
-inline const char *DataSourceConfig::active_times() const
+inline std::optional<std::string_view> DataSourceConfig::overview_dir() const
 {
-    return c_str(m_active_times);
+    return view(m_overview_dir);
 }
 
-inline const char *DataSourceConfig::group_desc() const
+inline std::optional<std::string_view> DataSourceConfig::active_times() const
 {
-    return c_str(m_group_desc);
+    return view(m_active_times);
 }
 
-inline const char *DataSourceConfig::group_desc_refetch() const
+inline std::optional<std::string_view> DataSourceConfig::group_desc() const
 {
-    return c_str(m_group_desc_refetch);
+    return view(m_group_desc);
 }
 
-inline const char *DataSourceConfig::auth_user() const
+inline std::optional<std::string_view> DataSourceConfig::group_desc_refetch() const
 {
-    return c_str(m_auth_user);
+    return view(m_group_desc_refetch);
 }
 
-inline const char *DataSourceConfig::auth_password() const
+inline std::optional<std::string_view> DataSourceConfig::auth_user() const
 {
-    return c_str(m_auth_password);
+    return view(m_auth_user);
 }
 
-inline const char *DataSourceConfig::auth_command() const
+inline std::optional<std::string_view> DataSourceConfig::auth_password() const
 {
-    return c_str(m_auth_command);
+    return view(m_auth_password);
 }
 
-inline const char *DataSourceConfig::xhdr_broken() const
+inline std::optional<std::string_view> DataSourceConfig::auth_command() const
 {
-    return c_str(m_xhdr_broken);
+    return view(m_auth_command);
 }
 
-inline const char *DataSourceConfig::xrefs() const
+inline std::optional<std::string_view> DataSourceConfig::xhdr_broken() const
 {
-    return c_str(m_xrefs);
+    return view(m_xhdr_broken);
 }
 
-inline const char *DataSourceConfig::overview_format_file() const
+inline std::optional<std::string_view> DataSourceConfig::xrefs() const
 {
-    return c_str(m_overview_format_file);
+    return view(m_xrefs);
 }
 
-inline const char *DataSourceConfig::force_auth() const
+inline std::optional<std::string_view> DataSourceConfig::overview_format_file() const
 {
-    return c_str(m_force_auth);
+    return view(m_overview_format_file);
 }
 
-inline void DataSourceConfig::set_nntp_server(const char *value)
+inline std::optional<std::string_view> DataSourceConfig::force_auth() const
+{
+    return view(m_force_auth);
+}
+
+inline void DataSourceConfig::set_nntp_server(std::string_view value)
 {
     set_value(m_nntp_server, value);
 }
 
-inline void DataSourceConfig::set_active_file(const char *value)
+inline void DataSourceConfig::set_active_file(std::string_view value)
 {
     set_value(m_active_file, value);
 }
 
-inline void DataSourceConfig::set_active_file_refetch(const char *value)
+inline void DataSourceConfig::set_active_file_refetch(std::string_view value)
 {
     set_value(m_active_file_refetch, value);
 }
 
-inline void DataSourceConfig::set_spool_dir(const char *value)
+inline void DataSourceConfig::set_spool_dir(std::string_view value)
 {
     set_value(m_spool_dir, value);
 }
 
-inline void DataSourceConfig::set_thread_dir(const char *value)
+inline void DataSourceConfig::set_thread_dir(std::string_view value)
 {
     set_value(m_thread_dir, value);
 }
 
-inline void DataSourceConfig::set_overview_dir(const char *value)
+inline void DataSourceConfig::set_overview_dir(std::string_view value)
 {
     set_value(m_overview_dir, value);
 }
 
-inline void DataSourceConfig::set_active_times(const char *value)
+inline void DataSourceConfig::set_active_times(std::string_view value)
 {
     set_value(m_active_times, value);
 }
 
-inline void DataSourceConfig::set_group_desc(const char *value)
+inline void DataSourceConfig::set_group_desc(std::string_view value)
 {
     set_value(m_group_desc, value);
 }
 
-inline void DataSourceConfig::set_group_desc_refetch(const char *value)
+inline void DataSourceConfig::set_group_desc_refetch(std::string_view value)
 {
     set_value(m_group_desc_refetch, value);
 }
 
-inline void DataSourceConfig::set_auth_user(const char *value)
+inline void DataSourceConfig::set_auth_user(std::string_view value)
 {
     set_value(m_auth_user, value);
 }
 
-inline void DataSourceConfig::set_auth_password(const char *value)
+inline void DataSourceConfig::set_auth_password(std::string_view value)
 {
     set_value(m_auth_password, value);
 }
 
-inline void DataSourceConfig::set_auth_command(const char *value)
+inline void DataSourceConfig::set_auth_command(std::string_view value)
 {
     set_value(m_auth_command, value);
 }
 
-inline void DataSourceConfig::set_xhdr_broken(const char *value)
+inline void DataSourceConfig::set_xhdr_broken(std::string_view value)
 {
     set_value(m_xhdr_broken, value);
 }
 
-inline void DataSourceConfig::set_xrefs(const char *value)
+inline void DataSourceConfig::set_xrefs(std::string_view value)
 {
     set_value(m_xrefs, value);
 }
 
-inline void DataSourceConfig::set_overview_format_file(const char *value)
+inline void DataSourceConfig::set_overview_format_file(std::string_view value)
 {
     set_value(m_overview_format_file, value);
 }
 
-inline void DataSourceConfig::set_force_auth(const char *value)
+inline void DataSourceConfig::set_force_auth(std::string_view value)
 {
     set_value(m_force_auth, value);
 }

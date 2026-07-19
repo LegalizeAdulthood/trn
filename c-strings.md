@@ -534,18 +534,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-109 - DataSourceConfig Optional Value Views
-
-- Files: `libtrn/DataSourceConfig.cpp`,
-  `libtrn/include/trn/DataSourceConfig.h`, `libtrn/datasrc.cpp`.
-- Kind: owned config strings exposed as nullable C strings.
-- Function: `DataSourceConfig` accessors and `new_data_source`.
-- Change: return `std::optional<std::string_view>` from config
-  accessors and accept string views in setters where callers already
-  hold strings.  Preserve absence semantics at this config boundary and
-  use empty strings only after values are stored in `DataSource`.
-- Tests: `DataSourceConfig` and data source tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
