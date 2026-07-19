@@ -32,10 +32,12 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -863,22 +865,27 @@ void kill_file_append(const char *cmd, bool local)
         {
             sleep(2);
         }
-        if (std::FILE *fp = std::fopen(kill_file.string().c_str(), "a+"))
+        std::error_code      error;
+        const std::uintmax_t file_size = fs::file_size(kill_file, error);
+        bool                 needs_newline = !error && file_size > 0;
+        if (needs_newline)
         {
-            char ch = '\n';
-            std::fseek(fp, 0L, SEEK_END);
-            if (std::ftell(fp) > 0)
+            std::ifstream input{kill_file, std::ios::binary};
+            input.seekg(-1, std::ios::end);
+            char last_char{};
+            input.get(last_char);
+            needs_newline = input && last_char != '\n';
+        }
+
+        std::ofstream output{kill_file, std::ios::app};
+        if (output)
+        {
+            if (needs_newline)
             {
-                std::fseek(fp, -1L, SEEK_END);
-                ch = std::getc(fp);
-                std::fseek(fp, 0L, SEEK_END);
+                output.put('\n');
             }
-            if (ch != '\n')
-            {
-                std::putc('\n', fp);
-            }
-            fmt::print(fp, "{}\n", cmd);
-            std::fclose(fp);
+            output << cmd << '\n';
+            output.close();
             if (local && !g_local_kfp)
             {
                 open_kill_file(KF_LOCAL);

@@ -90,16 +90,7 @@ int main(int argc, char *argv[])
     body_line.reserve(LINE_BUF_LEN * 8);
     output_line.reserve(LINE_BUF_LEN);
 
-#ifdef LAX_INEWS
     env_init(true);
-#else
-    if (!env_init(false))
-    {
-        fprintf(stderr,"Can't get %s information. Please contact your system adminstrator.\n",
-                (!g_login_name.empty() || g_real_name.empty())? "user" : "host");
-        exit(1);
-    }
-#endif
 
     argv++;
     while (argc > 1)
@@ -226,6 +217,15 @@ int main(int argc, char *argv[])
     }
 
     // Well, the header looks ok, so let's get on with it.
+
+#ifndef LAX_INEWS
+    if (!env_init(false))
+    {
+        fprintf(stderr, "Can't get %s information. Please contact your system adminstrator.\n",
+                (!g_login_name.empty() || g_real_name.empty()) ? "user" : "host");
+        exit(1);
+    }
+#endif
 
     if (!g_server_name.empty())
     {
