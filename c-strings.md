@@ -449,10 +449,8 @@ does not include tests, generated files, or the vendored `vcpkg` tree.
   universal-selector file fields.  Mixed URL/path/host fields need
   ownership and identity splits before they can honestly become
   `fs::path`.
-- Legacy environment reads through `get_val` and `get_val_const` remain
-  in several caller functions.  External callers should move to
-  `get_env_var`; `env_init` paths must keep their testable environment
-  hook until that hook has an owned-string replacement.
+- Legacy environment reads through `get_val` remain in several caller
+  functions.  External callers should move to `get_env_var`.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
@@ -517,29 +515,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-126 - Shell Default Environment Read
-
-- Files: `libtrn/util.cpp`.
-- Kind: nullable environment C-string read feeding process launch.
-- Function: `do_shell`.
-- Change: when the caller does not supply a shell, keep the default
-  shell in a local `std::string` from `get_env_var("SHELL",
-  PREF_SHELL)` and pass `c_str()` only to `spawnl` or `execl`.
-  Preserve caller-supplied shell pointers.
-- Tests: shell invocation tests or build if no focused coverage exists.
-
-#### CSTR-127 - Tilde Prefix Environment Probe
-
-- Files: `util/util2.cpp`.
-- Kind: discarded nullable environment C-string read.
-- Function: `file_exp`.
-- Change: audit the `~~` branch that calls
-  `get_val_const("TRNPREFIX", INSTALL_PREFIX)` and discards the result.
-  Remove the dead probe if there is no documented behavior, or replace
-  it with owned `get_env_var` storage if the prefix value should affect
-  expansion.
-- Tests: file expansion tests.
-
 #### CSTR-128 - Tool Safe Allocation Helper Removal
 
 - Files: `tool/util3.cpp`, `tool/include/tool/util3.h`.
@@ -585,36 +560,6 @@ that later caller slices can consume directly.
   string as the missing sentinel, and pass the owned string to
   `file_exp` before invoking the shell.
 - Tests: save-article tests.
-
-#### CSTR-132 - Newsrc Filename Environment Read
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: nullable environment C-string read feeding path storage.
-- Function: `new_newsrc`.
-- Change: keep the selected newsrc name in an owned `std::string` from
-  the config value or `get_env_var("NEWSRC", RCNAME)`, then pass it to
-  `file_exp`.  Preserve config value precedence.
-- Tests: newsrc configuration tests.
-
-#### CSTR-133 - Selector Character Environment Read
-
-- Files: `libtrn/rt-page.cpp`.
-- Kind: nullable environment C-string read feeding owned global string.
-- Function: `sel_page_init`.
-- Change: assign `g_sel_chars` from `get_env_var("SELECTCHARS",
-  SELECTION_CHARS)` instead of `get_val_const`.
-- Tests: selector paging tests.
-
-#### CSTR-134 - Env Initialization Testable Reads
-
-- Files: `util/env.cpp`.
-- Kind: nullable environment C-string reads behind a test hook.
-- Function: `env_init`, `env_init2`.
-- Change: replace internal `get_val_const` calls with a local
-  owned-string helper that still uses `s_getenv_fn`.  Do not bypass the
-  existing test hook by calling `get_env_var` directly from these
-  functions.
-- Tests: `test_init` and interpolation environment tests.
 
 #### CSTR-135 - Header Line Type View API
 
@@ -898,10 +843,9 @@ owned strings or owner-specific storage.
 #### CSTR-137 - Legacy Env Helper Removal
 
 - Files: `util/env.cpp`, `util/include/util/env.h`.
-- Kind: obsolete nullable environment C-string helpers.
-- Function: `get_val`, `get_val_const`.
-- Depends: `CSTR-120`, `CSTR-126`, `CSTR-127`, `CSTR-129`,
-  `CSTR-130`, `CSTR-131`, `CSTR-132`, `CSTR-133`, and `CSTR-134`.
+- Kind: obsolete nullable environment C-string helper.
+- Function: `get_val`.
+- Depends: `CSTR-120`, `CSTR-129`, `CSTR-130`, and `CSTR-131`.
 - Change: remove the declarations and definitions after all production
   callers have moved to owned strings or path storage.
 - Tests: build.

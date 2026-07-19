@@ -54,6 +54,12 @@ int         g_net_speed{20}; // how fast our net-connection is
 
 static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
 
+static std::string get_environment_value(const char *name, std::string_view default_value = {})
+{
+    const char *value = s_getenv_fn(name);
+    return value == nullptr || *value == '\0' ? std::string{default_value} : std::string{value};
+}
+
 static void env_init2();
 static bool set_user_name();
 static bool set_p_host_name();
@@ -87,7 +93,7 @@ bool env_init(bool lax, const std::function<bool()> &set_user_name_fn, const std
     const char *val = s_getenv_fn("TMPDIR");
     if (val == nullptr)
     {
-        g_tmp_dir = get_val_const("TMP","/tmp");
+        g_tmp_dir = get_environment_value("TMP", "/tmp");
     }
     else
     {
@@ -151,18 +157,18 @@ bool env_init(bool lax, const std::function<bool()> &set_user_name_fn, const std
     }
 
     {
-        const char* cp = get_val_const("NETSPEED","5");
-        if (*cp == 'f')
+        const std::string net_speed = get_environment_value("NETSPEED", "5");
+        if (net_speed.front() == 'f')
         {
             g_net_speed = 10;
         }
-        else if (*cp == 's')
+        else if (net_speed.front() == 's')
         {
             g_net_speed = 1;
         }
         else
         {
-            g_net_speed = std::atoi(cp);
+            g_net_speed = std::atoi(net_speed.c_str());
             g_net_speed = std::max(g_net_speed, 1);
         }
     }
@@ -200,8 +206,8 @@ static void env_init2()
     {
         g_home_dir = "/";
     }
-    g_dot_dir = get_val_const("DOTDIR", g_home_dir.c_str());
-    g_trn_dir = file_exp(get_val_const("TRNDIR",TRNDIR));
+    g_dot_dir = get_environment_value("DOTDIR", g_home_dir);
+    g_trn_dir = file_exp(get_environment_value("TRNDIR", TRNDIR));
     g_lib = file_exp(NEWS_LIB);
     g_rn_lib = file_exp(PRIVATE_LIB);
 }
@@ -475,10 +481,4 @@ char *get_val(const char *nam, char *def)
         return def;
     }
     return val;
-}
-
-const char *get_val_const(const char *nam, const char *def)
-{
-    const char *val = s_getenv_fn(nam);
-    return val == nullptr || !*val ? def : val;
 }

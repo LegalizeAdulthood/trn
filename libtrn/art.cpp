@@ -68,9 +68,9 @@ bool            g_is_mime{};              // process mime in an article?
 bool            g_multimedia_mime{};      // images/audio to see/hear?
 bool            g_rotate{};               // has rotation been requested?
 std::string     g_prompt;                 // current prompt
-const char     *g_first_line{};           // s_special first line?
-const char     *g_hide_line{};            // custom line hiding?
-const char     *g_page_stop{};            // custom page terminator?
+std::string     g_first_line;             // s_special first line?
+std::string     g_hide_line;              // custom line hiding?
+std::string     g_page_stop;              // custom page terminator?
 CompiledRegex   g_hide_compex{};          //
 CompiledRegex   g_page_compex{};          //
 bool            g_dont_filter_control{};  // -j
@@ -207,9 +207,9 @@ DoArticleResult do_article()
         ArticleLine line_num{1};
         if (s_first_page)
         {
-            if (g_first_line)
+            if (!g_first_line.empty())
             {
-                interp(g_art_line,sizeof g_art_line,g_first_line);
+                interp(g_art_line,sizeof g_art_line,g_first_line.c_str());
                 line_num += tree_puts(g_art_line,line_num+g_top_line,0);
             }
             else
@@ -330,7 +330,7 @@ DoArticleResult do_article()
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
-            if (g_hide_line && !s_continuation && g_hide_compex.execute(buf_ptr))
+            if (!g_hide_line.empty() && !s_continuation && g_hide_compex.execute(buf_ptr))
             {
                 hide_this_line = true;
             }
@@ -461,7 +461,7 @@ DoArticleResult do_article()
                     }
                 }
                 output_ok = !g_hide_everything;
-                if (g_page_stop && !s_continuation && g_page_compex.execute(buf_ptr))
+                if (!g_page_stop.empty() && !s_continuation && g_page_compex.execute(buf_ptr))
                 {
                     line_num = ArticleLine{32700};
                 }
@@ -1292,7 +1292,7 @@ leave_pager:
         {
             set_default_cmd();
             color_object(COLOR_CMD, true);
-            interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mail_call, g_buf);
+            interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mail_call.c_str(), g_buf);
             std::printf(g_prompt.c_str(),g_cmd_buf,
                    current_char_subst().c_str(),
                    g_default_cmd.c_str());  // print prompt, whatever it is
@@ -1334,7 +1334,8 @@ leave_pager:
             s_special_lines = g_tc_LINES;
         }
 go_forward:
-          if (*line_ptr(s_a_line_begin) != '\f' && (!g_page_stop || s_continuation || !g_page_compex.execute(line_ptr(s_a_line_begin))))
+        if (*line_ptr(s_a_line_begin) != '\f' &&
+            (g_page_stop.empty() || s_continuation || !g_page_compex.execute(line_ptr(s_a_line_begin))))
           {
               if (!s_special //
                   || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))

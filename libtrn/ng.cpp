@@ -65,11 +65,11 @@ Article   *g_curr_artp{};       //
 Article   *g_artp{};            // the article ptr we use when art is 0
 int        g_check_count{};     // how many articles have we read in the current newsgroup since the last checkpoint?
 int        g_do_check_when{20}; // how often to do checkpoint
-const char *g_subj_line{};       // what format to use for '='
+std::optional<std::string> g_subj_line; // what format to use for '='
 #ifdef MAIL_CALL
 int        g_mail_count{};      // check for mail when 0 mod 10
 #endif
-const char *g_mail_call{""};
+std::string g_mail_call;
 bool        g_force_last{};             // ought we show "End of newsgroup"?
 bool        g_force_grow{};             // do we want to recalculate size of newsgroup, e.g. after posting?
 int         g_scan_on{};                // -S
@@ -214,17 +214,17 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     // do they want a special top line?
 
-    g_first_line = get_val_const("FIRSTLINE", nullptr);
+    g_first_line = get_env_var("FIRSTLINE");
 
     // custom line suppression, custom page ending
 
-    g_hide_line = get_val_const("HIDELINE", nullptr);
-    if (g_hide_line != nullptr)
+    g_hide_line = get_env_var("HIDELINE");
+    if (!g_hide_line.empty())
     {
         g_hide_compex.compile(g_hide_line, true, true);
     }
-    g_page_stop = get_val_const("PAGESTOP", nullptr);
-    if (g_page_stop != nullptr)
+    g_page_stop = get_env_var("PAGESTOP");
+    if (!g_page_stop.empty())
     {
         g_page_compex.compile(g_page_stop, true, true);
     }
@@ -502,7 +502,7 @@ reask_article:
         }
         unflush_output();               // disable any ^O in effect
         // print prompt, whatever it is
-        interp(g_cmd_buf, sizeof g_cmd_buf, g_mail_call);
+        interp(g_cmd_buf, sizeof g_cmd_buf, g_mail_call.c_str());
         std::sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
                 current_char_subst().c_str(),
                 g_default_cmd.c_str());
@@ -1524,7 +1524,7 @@ run_the_selector:
         page_start();
         article_walk(output_subject, AF_UNREAD);
         g_int_count = 0;
-        g_subj_line = nullptr;
+        g_subj_line = std::nullopt;
         g_art = oldart;
         return AS_ASK;
     }
@@ -1857,11 +1857,11 @@ void set_mail(bool force)
         if (stat(mailfile.c_str(), &mail_file_stat) < 0 || !mail_file_stat.st_size ||
             mail_file_stat.st_atime > mail_file_stat.st_mtime)
         {
-            g_mail_call = "";
+            g_mail_call.clear();
         }
         else
         {
-            g_mail_call = get_val_const("MAILCALL", "(Mail) ");
+            g_mail_call = get_env_var("MAILCALL", "(Mail) ");
         }
     }
     g_mail_count %= 5;                   // check every 5 articles
@@ -2059,11 +2059,7 @@ bool output_subject(char *ptr, int flag)
 
     if (!g_subj_line)
     {
-        g_subj_line = get_val_const("SUBJLINE", nullptr);
-        if (!g_subj_line)
-        {
-            g_subj_line = "";
-        }
+        g_subj_line = get_env_var("SUBJLINE");
     }
 
     Article *ap = (Article*)ptr;
@@ -2075,7 +2071,7 @@ bool output_subject(char *ptr, int flag)
     const std::string subject = fetch_subj_copy(i);
     if (!subject.empty())
     {
-        const bool  custom_subject_line = !empty(g_subj_line);
+        const bool  custom_subject_line = !g_subj_line->empty();
         std::string subject_line;
         if (custom_subject_line)
         {
@@ -2084,7 +2080,7 @@ bool output_subject(char *ptr, int flag)
             const std::size_t len = subject_line.size();
             subject_line.resize(256);
             g_art = i;
-            interp(subject_line.data() + len, static_cast<int>(subject_line.size() - len), g_subj_line);
+            interp(subject_line.data() + len, static_cast<int>(subject_line.size() - len), g_subj_line->c_str());
             subject_line.resize(std::strlen(subject_line.c_str()));
         }
         else

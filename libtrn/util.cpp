@@ -173,13 +173,11 @@ int do_shell(const char *shell, const char *cmd)
     interp(g_buf,64-1+2,"%I");
     g_buf[std::strlen(g_buf)-1] = '\0';
     set_env_var(s_quotechars_env, g_buf + 1);
+    std::string shell_text;
     if (shell == nullptr)
     {
-        shell = get_val_const("SHELL", nullptr);
-    }
-    if (shell == nullptr)
-    {
-        shell = PREF_SHELL;
+        shell_text = get_env_var("SHELL", PREF_SHELL);
+        shell = shell_text.c_str();
     }
     termlib_reset();
 #ifdef MSDOS

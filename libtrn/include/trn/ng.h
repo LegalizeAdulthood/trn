@@ -21,11 +21,11 @@ extern Article   *g_curr_artp;   //
 extern Article   *g_artp;        // the article ptr we use when g_art is 0
 extern int        g_check_count; // how many articles have we read in the current newsgroup since the last checkpoint?
 extern int        g_do_check_when; // how often to do checkpoint
-extern const char *g_subj_line;     // what format to use for '='
+extern std::optional<std::string> g_subj_line; // what format to use for '='
 #ifdef MAIL_CALL
 extern int g_mail_count;           // check for mail when 0 mod 5
 #endif
-extern const char *g_mail_call;
+extern std::string g_mail_call;
 extern bool        g_force_last;      // ought we show "End of newsgroup"?
 extern bool        g_force_grow;      // do we want to recalculate size of newsgroup, e.g. after posting?
 extern int         g_scan_on;         // -S

@@ -74,7 +74,7 @@ std::string file_exp(std::string_view text)
         }
         else if (*s == '~' && (!s[1] || s[1] == '/'))
         {
-            (void) get_val_const("TRNPREFIX", INSTALL_PREFIX);
+            // Preserve legacy no-op handling for ~~ expansion.
         }
         else
         {

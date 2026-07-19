@@ -935,7 +935,7 @@ void perform_status_init(int cnt)
 {
     g_perform_count = 0;
     g_error_occurred = false;
-    g_subj_line = nullptr;
+    g_subj_line = std::nullopt;
     g_page_line = 1;
     g_performed_article_loop = true;
 

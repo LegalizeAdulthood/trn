@@ -14,11 +14,14 @@
 
 #include <test_config.h>
 
+#include "mock_env.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <optional>
 #include <string>
 #include <system_error>
 
@@ -82,7 +85,7 @@ protected:
         g_threaded_group = false;
         g_thread_always = false;
         g_int_count = 0;
-        g_subj_line = "";
+        g_subj_line = std::string{};
         g_page_line = 1;
         g_tc_LINES = 200;
         g_tc_COLS = 200;
@@ -147,7 +150,7 @@ protected:
     bool                          m_old_threaded_group{};
     bool                          m_old_thread_always{};
     int                           m_old_int_count{};
-    const char                   *m_old_subj_line{};
+    std::optional<std::string>    m_old_subj_line;
     int                           m_old_page_line{};
     int                           m_old_tc_lines{};
     int                           m_old_tc_cols{};
@@ -211,7 +214,25 @@ TEST_F(SubjectStorageTest, outputSubjectPrintsCustomSubjectLine)
 {
     Article *article = article_ptr(ArticleNum{1});
     article->set_subj_line("A Subject");
-    g_subj_line = "[%s]";
+    g_subj_line = std::string{"[%s]"};
+    g_in_ng = true;
+    g_artp = article;
+
+    testing::internal::CaptureStdout();
+    const bool        stopped = output_subject(reinterpret_cast<char *>(article), 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(stopped);
+    EXPECT_EQ("1     [A Subject]\n", output);
+}
+
+TEST_F(SubjectStorageTest, outputSubjectReadsCustomSubjectLineFromEnvironment)
+{
+    trn::testing::MockEnvironment env;
+    env.expect_env("SUBJLINE", "[%s]");
+    Article *article = article_ptr(ArticleNum{1});
+    article->set_subj_line("A Subject");
+    g_subj_line = std::nullopt;
     g_in_ng = true;
     g_artp = article;
 

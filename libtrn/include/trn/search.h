@@ -19,6 +19,10 @@ struct CompiledRegex
     void        free_compex();
     const char *get_bracket(int n);
     const char *compile(const char *strp, bool re, bool fold);
+    const char *compile(const std::string &strp, bool re, bool fold)
+    {
+        return compile(strp.c_str(), re, fold);
+    }
     char       *grow_eb(char *epp, char **alt);
     const char *execute(const char *addr);
     bool        advance(const char *lp, const char *ep);

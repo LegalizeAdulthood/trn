@@ -7,6 +7,7 @@
 #include <trn/rt-page.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <trn/addng.h>
 #include <trn/cache.h>
 #include <trn/color.h>
@@ -27,7 +28,6 @@
 #include <trn/univ.h>
 #include <trn/utf.h>
 #include <trn/util.h>
-#include <util/env.h>
 
 #include <fmt/format.h>
 
@@ -474,7 +474,7 @@ thread_subj_sort:
 static void sel_page_init()
 {
     s_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50? 6 : 5);
-    g_sel_chars = get_val_const("SELECTCHARS", SELECTION_CHARS);
+    g_sel_chars = get_env_var("SELECTCHARS", SELECTION_CHARS);
     // The numeric option of up to 99 lines will require many adaptations
     // to be able to switch from a large numeric page (more than
     // g_sel_chars.size() lines) to an alphanumeric page. XXX

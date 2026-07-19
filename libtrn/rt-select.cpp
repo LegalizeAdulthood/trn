@@ -1757,7 +1757,7 @@ static void sel_prompt()
                 (long)((g_sel_prior_obj_cnt+g_sel_page_obj_cnt)*100 / g_sel_total_obj_cnt),
                 s_page_char, s_end_char);
     }
-    interp(g_buf, sizeof g_buf, g_mail_call);
+    interp(g_buf, sizeof g_buf, g_mail_call.c_str());
     const std::string prompt = fmt::format("{}-- {} {} ({}{} order) -- {}",
             g_buf, g_sel_exclusive && g_in_ng? "SELECTED" : "Select",
             g_sel_mode_string, g_sel_direction<0? "reverse " : "",

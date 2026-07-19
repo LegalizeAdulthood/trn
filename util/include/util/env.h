@@ -21,6 +21,5 @@ extern int         g_net_speed;   // how fast our net-connection is
 bool  env_init(bool lax);
 void  env_final();
 char *get_val(const char *nam, char *def = nullptr);
-const char *get_val_const(const char *nam, const char *def = nullptr);
 
 #endif

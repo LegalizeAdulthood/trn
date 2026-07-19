@@ -6,6 +6,7 @@
 #include <trn/rcstuff.h>
 
 #include <config/common.h>
+#include <config/env.h>
 #include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
 #include <trn/autosub.h>
@@ -358,14 +359,10 @@ static Newsrc *new_newsrc(const RcGroupConfig &config)
         return nullptr;
     }
 
-    const char *newsrc = config.newsrc();
-    if (!newsrc || !*newsrc)
+    std::string newsrc = config.newsrc() == nullptr ? std::string{} : std::string{config.newsrc()};
+    if (newsrc.empty())
     {
-        newsrc = get_val_const("NEWSRC");
-        if (!newsrc)
-        {
-            newsrc = RCNAME;
-        }
+        newsrc = get_env_var("NEWSRC", RCNAME);
     }
 
     const char *add_ok = config.add_groups();
