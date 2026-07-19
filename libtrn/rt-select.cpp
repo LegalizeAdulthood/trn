@@ -844,11 +844,10 @@ static UniversalReadResult univ_read(UniversalItem *ui)
     }
     else if (const UniversalTextFile *text_file = std::get_if<UniversalTextFile>(&ui->m_data))
     {
-        const std::string &file_name = text_file->fname;
-        if (!file_name.empty())
+        if (!text_file->fname.empty())
         {
             // later have some way of getting a return code back
-            univ_page_file(file_name);
+            univ_page_file(text_file->fname);
         }
     }
     else if (const UniversalVirtualArticle *article = std::get_if<UniversalVirtualArticle>(&ui->m_data))

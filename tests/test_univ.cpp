@@ -238,7 +238,7 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalTextFile>(item->m_data));
     EXPECT_EQ("Help", item->m_desc);
-    EXPECT_EQ(file_exp(help_name), item->text_file().fname);
+    EXPECT_EQ(fs::path{file_exp(help_name)}, item->text_file().fname);
 }
 
 TEST_F(UnivTest, debugItemStoresStringPayload)

@@ -525,18 +525,6 @@ Finish these before broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-078 - Universal Selector File Path Split
-
-- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`.
-- Kind: mixed URL/path filename fields.
-- Function: `univ_add_file`, `univ_use_file`, `univ_include_file`,
-  `univ_file_load`, `univ_page_file`.
-- Change: split values that may be URLs, macro-expanded path text, or
-  local filesystem paths before promoting storage to `fs::path`.
-  Convert local path construction and file operations to `fs::path`, and
-  keep URL and command text as strings.
-- Tests: universal selector tests.
-
 #### CSTR-075 - MCHASE Rc-line Editing Cleanup
 
 - Files: `libtrn/rcln.cpp`, `libtrn/include/trn/rcln.h`.

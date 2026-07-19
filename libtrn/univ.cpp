@@ -91,7 +91,7 @@ static void           univ_add_text(const char *txt);
 static void           univ_add_debug(const char *desc, const char *txt);
 static void           univ_add_group(const char *desc, std::string_view grpname);
 static void           univ_add_mask(const char *desc, const char *mask);
-static void           univ_add_file(const char *desc, const char *fname, const char *label);
+static void           univ_add_file(const char *desc, std::string_view fname, const char *label);
 static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art);
 static void           univ_add_text_file(const char *desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
@@ -99,7 +99,7 @@ static void           univ_use_pattern(const char *pattern, int type);
 static void           univ_use_group_line(char *line, int type);
 static bool  univ_do_match(const char *text, const char *p);
 static bool  univ_use_file(std::string_view fname, const char *label);
-static bool  univ_include_file(const char *fname);
+static bool  univ_include_file(std::string_view fname);
 static void  univ_do_line_ext1(const char *desc, char *line);
 static bool  univ_do_line(char *line);
 static std::string univ_edit_new_user_file();
@@ -389,13 +389,12 @@ static void univ_add_mask(const char *desc, const char *mask)
     group_mask.title = desc;
 }
 
-//char* fname;                          // May be URL
-static void univ_add_file(const char *desc, const char *fname, const char *label)
+static void univ_add_file(const char *desc, std::string_view fname, const char *label)
 {
     UniversalItem           *ui = univ_add(UniversalConfigFileData{}, desc);
     UniversalConfigFileData &config_file = ui->config_file();
     config_file.title = desc;
-    config_file.fname = fname;
+    config_file.fname.assign(fname.data(), fname.size());
     if (label && *label)
     {
         config_file.label = label;
@@ -414,7 +413,7 @@ static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, Artic
 static void univ_add_text_file(const char *desc, std::string_view name)
 {
     UniversalItem   *ui;
-    std::string      file_name{name};
+    fs::path         file_name{name};
     std::string_view s{name};
 
     switch (s.empty() ? '\0' : s.front())
@@ -428,12 +427,8 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     {
         // XXX later have error checking on length
         const fs::path current_file{g_univ_fname};
-        file_name = current_file.has_parent_path() ? current_file.parent_path().string() : "/";
-        if (file_name.back() != '/')
-        {
-            file_name += '/';
-        }
-        file_name.append(s);
+        file_name = current_file.has_parent_path() ? current_file.parent_path() : fs::path{"/"};
+        file_name /= s;
     }
         // FALL THROUGH
 
@@ -441,7 +436,7 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     case '%':
     case '/':
         ui = univ_add(UniversalTextFile{}, desc);
-        ui->text_file().fname = file_exp(file_name);
+        ui->text_file().fname = file_exp(file_name.generic_string());
         break;
     }
 }
@@ -707,10 +702,10 @@ static bool univ_use_file(std::string_view fname, const char *label)
     return true;
 }
 
-static bool univ_include_file(const char *fname)
+static bool univ_include_file(std::string_view fname)
 {
     const std::string old_univ_fname = g_univ_fname;
-    g_univ_fname = fname;
+    g_univ_fname.assign(fname.data(), fname.size());
     bool retval = univ_use_file(g_univ_fname, nullptr);
     g_univ_fname = old_univ_fname;
     return retval;
@@ -879,12 +874,9 @@ static bool univ_do_line(char *line)
             if (!g_univ_fname.empty())
             {
                 const fs::path current_file{g_univ_fname};
-                relative_file = current_file.has_parent_path() ? current_file.parent_path().string() : "/";
-                if (relative_file.back() != '/')
-                {
-                    relative_file += '/';
-                }
-                relative_file.append(s + 1);
+                fs::path relative_path = current_file.has_parent_path() ? current_file.parent_path() : fs::path{"/"};
+                relative_path /= s + 1;
+                relative_file = relative_path.generic_string();
                 s = relative_file.data();
             } // XXX later have else which will complain
             // FALL THROUGH
@@ -904,8 +896,7 @@ static bool univ_do_line(char *line)
             const char *label_ptr = label.empty() ? nullptr : label.c_str();
 
             // description defaults to name
-            univ_add_file(line_desc ? line_desc : file_name.c_str(), file_exp(file_name).c_str(),
-                          label_ptr);
+            univ_add_file(line_desc ? line_desc : file_name.c_str(), file_exp(file_name), label_ptr);
             break;
         }
 
@@ -916,7 +907,7 @@ static bool univ_do_line(char *line)
                 // XXX give an error message later
               break;
             }
-            univ_add_file(line_desc ? line_desc : s, g_univ_fname.c_str(), s);
+            univ_add_file(line_desc ? line_desc : s, g_univ_fname, s);
             break;
 
         case '>':
@@ -958,13 +949,13 @@ static bool univ_do_line(char *line)
 //
 
 // level generator
-bool univ_file_load(const char *fname, const char *title, const char *label)
+bool univ_file_load(std::string_view fname, const char *title, const char *label)
 {
     univ_open();
 
-    if (fname)
+    if (!fname.empty())
     {
-        g_univ_fname = fname;
+        g_univ_fname.assign(fname.data(), fname.size());
     }
     if (title)
     {
@@ -974,7 +965,7 @@ bool univ_file_load(const char *fname, const char *title, const char *label)
     {
         g_univ_label = label;
     }
-    bool flag = fname != nullptr && univ_use_file(fname, label);
+    bool flag = !fname.empty() && univ_use_file(fname, label);
     if (!flag)
     {
         univ_close();
@@ -1016,7 +1007,7 @@ void univ_redo_file()
     univ_close();
     if (g_univ_level)
     {
-        (void)univ_file_load(tmp_fname.empty() ? nullptr : tmp_fname.c_str(),
+        (void)univ_file_load(tmp_fname,
             tmp_title.c_str(),tmp_label.c_str());
     }
     else
@@ -1090,15 +1081,15 @@ void univ_edit()
 }
 
 // later use some internal pager
-void univ_page_file(std::string_view fname)
+void univ_page_file(const fs::path &fname)
 {
     if (fname.empty())
     {
         return;
     }
 
-    const std::string command =
-        fmt::format("{} {}", file_exp(get_env_var("HELPPAGER", get_env_var("PAGER", "more"))), file_exp(fname));
+    const std::string command = fmt::format("{} {}", file_exp(get_env_var("HELPPAGER", get_env_var("PAGER", "more"))),
+                                            file_exp(fname.generic_string()));
     term_down(3);
     reset_tty();                  // make sure tty is friendly
     do_shell(SH, command.c_str()); // invoke the shell

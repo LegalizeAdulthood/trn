@@ -13,6 +13,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -75,7 +76,7 @@ struct UniversalNewsgroup
 
 struct UniversalTextFile
 {
-    std::string fname;
+    std::filesystem::path fname;
 };
 
 struct UniversalDebugData
@@ -192,11 +193,11 @@ extern std::string    g_univ_tmp_file; // temp. file (may be empty)
 void           univ_init();
 void           univ_startup();
 void           univ_close();
-bool           univ_file_load(const char *fname, const char *title, const char *label);
+bool           univ_file_load(std::string_view fname, const char *title, const char *label);
 void           univ_mask_load(std::string_view mask, const char *title);
 void           univ_redo_file();
 void           univ_edit();
-void           univ_page_file(std::string_view fname);
+void           univ_page_file(const std::filesystem::path &fname);
 void           univ_newsgroup_virtual();
 int            univ_visit_group_main(std::string_view gname);
 void           univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending);
