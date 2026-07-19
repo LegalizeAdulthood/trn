@@ -765,15 +765,11 @@ reask_pager:
         unflush_output();       // disable any ^O in effect
          maybe_eol();
         color_default();
-        if (g_art_size < 0)
         {
-            std::strcpy(g_cmd_buf, "?");
+            const std::string percent =
+                g_art_size < 0 ? "?" : std::to_string(g_art_pos.value_of() * 100 / g_art_size.value_of());
+            *fmt::format_to_n(g_buf, sizeof g_buf - 1, "{}--MORE--({}%)", current_char_subst(), percent).out = '\0';
         }
-        else
-        {
-            std::sprintf(g_cmd_buf, "%ld", (long) (g_art_pos.value_of() * 100 / g_art_size.value_of()));
-        }
-        std::sprintf(g_buf,"%s--MORE--(%s%%)",current_char_subst().c_str(),g_cmd_buf);
         out_pos = g_term_col + std::strlen(g_buf);
         draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES-1? out_pos+5 : 0), true);
         color_string(COLOR_MORE,g_buf);
@@ -921,8 +917,8 @@ static PageSwitchResult page_switch()
                 break;
             }
         }
-        std::sprintf(g_cmd_buf,"^[^%c\n]",*s);
-        s_gcompex.compile(g_cmd_buf, true, true);
+        const std::string search_pattern = fmt::format("^[^{}\n]", *s);
+        s_gcompex.compile(search_pattern.c_str(), true, true);
         goto caseG;
     }
 
@@ -1292,11 +1288,16 @@ leave_pager:
         {
             set_default_cmd();
             color_object(COLOR_CMD, true);
-            interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mail_call.c_str(), g_buf);
-            std::printf(g_prompt.c_str(),g_cmd_buf,
-                   current_char_subst().c_str(),
-                   g_default_cmd.c_str());  // print prompt, whatever it is
-            color_pop();        // of COLOR_CMD
+            std::string mail_call(CMD_BUF_LEN, '\0');
+            interp_search(mail_call.data(), static_cast<int>(mail_call.size()), g_mail_call.c_str(), g_buf);
+            const std::size_t mail_call_end = mail_call.find('\0');
+            if (mail_call_end != std::string::npos)
+            {
+                mail_call.resize(mail_call_end);
+            }
+            std::printf(g_prompt.c_str(), mail_call.c_str(), current_char_subst().c_str(),
+                        g_default_cmd.c_str()); // print prompt, whatever it is
+            color_pop();                        // of COLOR_CMD
             std::putchar(' ');
             std::fflush(stdout);
         }

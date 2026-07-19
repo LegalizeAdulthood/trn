@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <iterator>
 #include <string>
 #include <string_view>
 #include <ctime>
@@ -120,11 +121,13 @@ static void process_list(GetNewsgroupFlags flag)
 {
     if (flag == GNG_NONE)
     {
-        std::sprintf(g_cmd_buf,
-                "\n"
-                "Unsubscribed but mentioned in your current newsrc%s:\n",
-                g_multirc->m_first->next ? "s" : "");
-        print_lines(g_cmd_buf, STANDOUT);
+        std::string line;
+        line.reserve(CMD_BUF_LEN);
+        fmt::format_to(std::back_inserter(line),
+                       "\n"
+                       "Unsubscribed but mentioned in your current newsrc{}:\n",
+                       g_multirc->m_first->next ? "s" : "");
+        print_lines(line.c_str(), STANDOUT);
     }
     AddGroup* node = g_first_add_group;
     if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
@@ -135,8 +138,10 @@ static void process_list(GetNewsgroupFlags flag)
     {
         if (flag == GNG_NONE)
         {
-            std::sprintf(g_cmd_buf, "%s\n", node->m_name.c_str());
-            print_lines(g_cmd_buf, NO_MARKING);
+            std::string line;
+            line.reserve(CMD_BUF_LEN);
+            fmt::format_to(std::back_inserter(line), "{}\n", node->m_name);
+            print_lines(line.c_str(), NO_MARKING);
         }
         else if (!g_use_add_selector)
         {

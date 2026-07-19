@@ -193,7 +193,8 @@ void rc_to_bits()
     {
         std::fputs("\n(hit CR)",stdout);
         term_down(1);
-        std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
+        std::string input(CMD_BUF_LEN, '\0');
+        std::fgets(input.data(), static_cast<int>(input.size()), stdin);
     }
 #endif
     g_newsgroup_ptr->m_to_read = unread.value_of();

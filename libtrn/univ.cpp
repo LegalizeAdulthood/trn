@@ -1056,7 +1056,6 @@ static std::string univ_edit_new_user_file()
 }
 
 // code adapted from edit_kfile in kfile.cpp
-// XXX problem if elements expand to larger than g_cmd_buf
 void univ_edit()
 {
     std::string filename;

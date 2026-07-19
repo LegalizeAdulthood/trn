@@ -202,8 +202,8 @@ SaveResult save_article()
         {
             fmt::print("Extracting article into {} using {}\n", fs::current_path().generic_string(), g_extract_prog);
             term_down(1);
-            interp(g_cmd_buf, sizeof g_cmd_buf, get_env_var("CUSTOMSAVER", CUSTOM_SAVER).c_str());
-            invoke(g_cmd_buf, nullptr);
+            const std::string command = do_interp(get_env_var("CUSTOMSAVER", CUSTOM_SAVER));
+            invoke(command.c_str(), nullptr);
         }
         else if (g_is_mime)
         {
@@ -260,8 +260,10 @@ SaveResult save_article()
             case 1:
                 fmt::print("Extracting shar into {}:\n", fs::current_path().generic_string());
                 term_down(1);
-                interp(g_cmd_buf, (sizeof g_cmd_buf), get_env_var("SHARSAVER", SHAR_SAVER).c_str());
-                invoke(g_cmd_buf, nullptr);
+                {
+                    const std::string command = do_interp(get_env_var("SHARSAVER", SHAR_SAVER));
+                    invoke(command.c_str(), nullptr);
+                }
                 break;
 
             case 2:
@@ -303,18 +305,18 @@ SaveResult save_article()
         {
             nntp_finish_body(FB_SILENT);
         }
-        interp(g_cmd_buf, (sizeof g_cmd_buf), get_env_var("PIPESAVER", PIPE_SAVER).c_str());
+        const std::string command = do_interp(get_env_var("PIPESAVER", PIPE_SAVER));
         // then set up for command
         termlib_reset();
         reset_tty();              // restore tty state
         if (use_pref)           // use preferred shell?
         {
-            do_shell(nullptr,g_cmd_buf);
+            do_shell(nullptr, command.c_str());
                                 // do command with it
         }
         else
         {
-            do_shell(SH,g_cmd_buf);  // do command with sh
+            do_shell(SH, command.c_str());  // do command with sh
         }
         no_echo();               // and stop echoing
         cr_mode();               // and start cbreaking
@@ -492,8 +494,8 @@ reask_save:
 #if MBOX_CHAR == '\001'
                 std::fprintf(s_tmpfp,"\001\001\001\001\n");
 #else
-                interp(g_cmd_buf, sizeof g_cmd_buf, "From %t %`LANG= date`\n");
-                std::fputs(g_cmd_buf, s_tmp_fp);
+                const std::string from_line = do_interp("From %t %`LANG= date`\n");
+                std::fputs(from_line.c_str(), s_tmp_fp);
                 quote_From = true;
 #endif
             }
@@ -808,9 +810,10 @@ static void follow_it_up()
                 std::FILE *fp_in = std::fopen(g_head_name.c_str(), "r");
                 if (fp_in != nullptr)
                 {
-                    while (std::fgets(g_cmd_buf, sizeof g_cmd_buf, fp_in))
+                    std::string line(CMD_BUF_LEN, '\0');
+                    while (std::fgets(line.data(), static_cast<int>(line.size()), fp_in))
                     {
-                        std::fputs(g_cmd_buf, fp_out);
+                        std::fputs(line.c_str(), fp_out);
                     }
                     std::fclose(fp_in);
                     appended = 1;

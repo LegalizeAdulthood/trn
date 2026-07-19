@@ -95,7 +95,7 @@ Existing good precedents:
 Most raw string pointers are not local cleanup targets yet.  They are
 owned buffers, caller-owned mutable buffers, struct fields, termcap and
 NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
-`g_buf`, `g_cmd_buf`, `g_ser_line`, `Article` and `Subject` fields,
+`g_buf`, `g_ser_line`, `Article` and `Subject` fields,
 `HashDatum` payloads, `parse_string`, and `push_string`.
 `CompiledRegex::m_exp_buf` and `m_alternatives` are regex bytecode and
 internal cursors, not ordinary string storage.
@@ -499,7 +499,7 @@ The scan found no current production hits for `strncat`, `strspn`,
 
 High-count functions are not self-deferred.  They are grouped into
 owner slices below because most calls sit on shared buffers such as
-`g_buf`, `g_msg`, `g_cmd_buf`, `g_ser_line`, article storage, terminal
+`g_buf`, `g_msg`, `g_ser_line`, article storage, terminal
 storage, and parser workspaces.
 
 ## Refactoring Slices
@@ -540,11 +540,10 @@ and clarified ownership at the edges.
 
 - Files: `config/common.cpp`, `config/include/config/common.h`, many
   users.
-- Kind: global fixed buffers `g_msg`, `g_buf`, and `g_cmd_buf`.
+- Kind: global fixed buffers `g_msg` and `g_buf`.
 - Function: storage-centered; no single function owns it.
 - Change: replace one global buffer at a time with owned string or
-  scoped command/message objects.  Start only after local slices above
-  have reduced direct writers.
+  scoped command/message objects.
 - Tests: broad workflow required.
 
 #### CSTR-033 - Article Body Wrap Buffer

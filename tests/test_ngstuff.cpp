@@ -48,7 +48,6 @@ protected:
         m_old_bizarre = g_bizarre;
         m_old_check_flag = g_check_flag;
         std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
-        std::copy_n(g_cmd_buf, m_old_cmd_buf.size(), m_old_cmd_buf.begin());
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_root = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -75,7 +74,6 @@ protected:
     void TearDown() override
     {
         std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
-        std::copy(m_old_cmd_buf.begin(), m_old_cmd_buf.end(), g_cmd_buf);
         g_priv_dir = m_old_priv_dir;
         g_save_dir = m_old_save_dir;
         g_bizarre = m_old_bizarre;
@@ -101,7 +99,6 @@ protected:
     std::string                        m_old_priv_dir;
     std::string                        m_old_save_dir;
     std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
-    std::array<char, CMD_BUF_LEN>      m_old_cmd_buf{};
     bool                               m_old_bizarre{};
     bool                               m_old_check_flag{};
 };

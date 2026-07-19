@@ -531,7 +531,8 @@ static bool header_line_span(HeaderLineType which_line, char *&line, int &size)
     if (g_debug && (size < 1 || size > 1000))
     {
         std::printf("Firstpos = %ld, lastpos = %ld\n", firstpos.value_of(), lastpos.value_of());
-        std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
+        std::string input(CMD_BUF_LEN, '\0');
+        std::fgets(input.data(), static_cast<int>(input.size()), stdin);
     }
 #endif
     return true;

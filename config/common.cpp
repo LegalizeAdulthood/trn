@@ -10,4 +10,3 @@
 
 char g_msg[CMD_BUF_LEN];     // general purpose message buffer
 char g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
-char g_cmd_buf[CMD_BUF_LEN]; // buffer for formatting system commands

@@ -93,9 +93,9 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
         }
     }
     s = skip_eq(s, ' ');                // skip leading spaces
-    interp(g_cmd_buf, (sizeof g_cmd_buf), s);// interpret any % escapes
+    const std::string command = do_interp(s);
     reset_tty();                          // make sure tty is friendly
-    shell_runner(nullptr,g_cmd_buf); // invoke the shell
+    shell_runner(nullptr, command.c_str()); // invoke the shell
     no_echo();                           // and make terminal
     cr_mode();                           // unfriendly again
     if (do_cd)

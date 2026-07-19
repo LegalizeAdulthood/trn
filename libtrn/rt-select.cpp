@@ -1731,7 +1731,6 @@ reinp_selector:
 /// the items. It also handles drawing the mouse bar and updating the terminal column.
 ///
 /// @globals
-/// - g_cmd_buf: Updated with the constructed prompt string.
 /// - g_term_col: Updated to the length of the displayed prompt message.
 /// - s_removed_prompt: Set to RP_NONE to indicate no removed prompt state.
 ///
@@ -1745,23 +1744,16 @@ static void sel_prompt()
 #ifdef MAIL_CALL
     set_mail(false);
 #endif
-    if (g_sel_at_end)
-    {
-        std::sprintf(g_cmd_buf, "%s [%c%c] --",
-                (!g_sel_prior_obj_cnt? "All" : "Bot"), s_end_char, s_page_char);
-    }
-    else
-    {
-        std::sprintf(g_cmd_buf, "%s%ld%% [%c%c] --",
-                (!g_sel_prior_obj_cnt? "Top " : ""),
-                (long)((g_sel_prior_obj_cnt+g_sel_page_obj_cnt)*100 / g_sel_total_obj_cnt),
-                s_page_char, s_end_char);
-    }
+    const std::string page_prompt =
+        g_sel_at_end
+            ? fmt::format("{} [{}{}] --", !g_sel_prior_obj_cnt ? "All" : "Bot", s_end_char, s_page_char)
+            : fmt::format("{}{}% [{}{}] --", !g_sel_prior_obj_cnt ? "Top " : "",
+                          static_cast<long>((g_sel_prior_obj_cnt + g_sel_page_obj_cnt) * 100 / g_sel_total_obj_cnt),
+                          s_page_char, s_end_char);
     interp(g_buf, sizeof g_buf, g_mail_call.c_str());
-    const std::string prompt = fmt::format("{}-- {} {} ({}{} order) -- {}",
-            g_buf, g_sel_exclusive && g_in_ng? "SELECTED" : "Select",
-            g_sel_mode_string, g_sel_direction<0? "reverse " : "",
-            g_sel_sort_string, g_cmd_buf);
+    const std::string prompt =
+        fmt::format("{}-- {} {} ({}{} order) -- {}", g_buf, g_sel_exclusive && g_in_ng ? "SELECTED" : "Select",
+                    g_sel_mode_string, g_sel_direction < 0 ? "reverse " : "", g_sel_sort_string, page_prompt);
     color_string(COLOR_CMD, prompt);
     g_term_col = static_cast<int>(prompt.size());
     s_removed_prompt = RP_NONE;

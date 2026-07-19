@@ -1664,14 +1664,14 @@ void cwd_check()
         save_dir = file_exp(g_priv_dir);
         if (make_dir(save_dir.c_str(), MD_DIR) || change_dir(save_dir))
         {
-            interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
-            if (make_dir(g_cmd_buf, MD_DIR))
+            const std::string default_save_dir = do_interp("%~/News");
+            if (make_dir(default_save_dir.c_str(), MD_DIR))
             {
                 save_dir = g_home_dir;
             }
             else
             {
-                save_dir = g_cmd_buf;
+                save_dir = default_save_dir;
             }
             change_dir(save_dir);
             if (g_verbose)

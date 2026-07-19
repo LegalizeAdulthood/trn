@@ -502,10 +502,11 @@ reask_article:
         }
         unflush_output();               // disable any ^O in effect
         // print prompt, whatever it is
-        interp(g_cmd_buf, sizeof g_cmd_buf, g_mail_call.c_str());
-        std::sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
-                current_char_subst().c_str(),
-                g_default_cmd.c_str());
+        {
+            const std::string mail_call = do_interp(g_mail_call);
+            std::sprintf(g_buf, g_prompt.c_str(), mail_call.c_str(), current_char_subst().c_str(),
+                         g_default_cmd.c_str());
+        }
         draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES-1? std::strlen(g_buf)+5 : 0), true);
         color_string(COLOR_CMD,g_buf);
         std::putchar(' ');
@@ -2132,9 +2133,8 @@ char ask_memorize(char_int ch)
         newline();
     }
 reask_memorize:
-    std::sprintf(g_cmd_buf, "%sMemorize %.*s command:", global_save ? "Global-" : "",
-                 static_cast<int>(mode_string.size()), mode_string.data());
-    in_char(g_cmd_buf, MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
+    const std::string prompt = fmt::format("{}Memorize {} command:", global_save ? "Global-" : "", mode_string);
+    in_char(prompt.c_str(), MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
     print_cmd();
     ch = *g_buf;
     if (!thread_cmd && ch == 'f')
