@@ -13,6 +13,8 @@
 #include <trn/trn.h>
 #include <trn/util.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <string>
 #include <string_view>
@@ -78,12 +80,12 @@ void end_only()
     {
         if (g_verbose)
         {
-            std::sprintf(g_msg, "Restriction %s%s removed.",g_newsgroup_to_do[0].c_str(),
-                   g_max_newsgroup_to_do > 1 ? ", etc." : "");
+            g_msg = fmt::format("Restriction {}{} removed.", g_newsgroup_to_do[0],
+                                g_max_newsgroup_to_do > 1 ? ", etc." : "");
         }
         else
         {
-            std::sprintf(g_msg, "Exiting \"only\".");
+            g_msg = "Exiting \"only\".";
         }
         for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
         {

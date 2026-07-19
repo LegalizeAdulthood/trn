@@ -514,7 +514,7 @@ void yank_back()
         }
         else if (g_general_mode == GM_SELECTOR)
         {
-            std::sprintf(g_msg, "Returned %ld Marked article%s.", (long) g_dm_count, plural(g_dm_count));
+            g_msg = fmt::format("Returned {} Marked article{}.", g_dm_count, plural(g_dm_count));
         }
         else
         {

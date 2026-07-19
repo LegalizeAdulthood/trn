@@ -536,14 +536,14 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-031 - Global Command And Message Buffers
+#### CSTR-031 - Global Command Buffer
 
 - Files: `config/common.cpp`, `config/include/config/common.h`, many
   users.
-- Kind: global fixed buffers `g_msg` and `g_buf`.
+- Kind: global fixed buffer `g_buf`.
 - Function: storage-centered; no single function owns it.
-- Change: replace one global buffer at a time with owned string or
-  scoped command/message objects.
+- Change: replace the global line buffer with owned strings or scoped
+  command objects.
 - Tests: broad workflow required.
 
 #### CSTR-033 - Article Body Wrap Buffer

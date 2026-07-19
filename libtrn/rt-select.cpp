@@ -268,7 +268,7 @@ sel_restart:
 
     init_pages(FILL_LAST_PAGE);
     g_sel_item_index = 0;
-    *g_msg = '\0';
+    g_msg.clear();
     if (g_added_articles)
     {
         long i = g_added_articles;
@@ -281,21 +281,18 @@ sel_restart:
         }
         if (i == g_added_articles)
         {
-            std::sprintf(g_msg, "** %ld new article%s arrived **  ",
-               (long)g_added_articles, plural(g_added_articles));
+            g_msg = fmt::format("** {} new article{} arrived **  ", g_added_articles, plural(g_added_articles));
         }
         else
         {
-            std::sprintf(g_msg, "** %ld of %ld new articles unread **  ",
-               i, (long)g_added_articles);
+            g_msg = fmt::format("** {} of {} new articles unread **  ", i, g_added_articles);
         }
         s_disp_status_line = 1;
     }
     g_added_articles = 0;
     if (cmd && g_selected_count)
     {
-        std::sprintf(g_msg+std::strlen(g_msg), "%ld article%s selected.",
-                (long)g_selected_count, g_selected_count == 1? " is" : "s are");
+        g_msg += fmt::format("{} article{} selected.", g_selected_count, g_selected_count == 1 ? " is" : "s are");
         s_disp_status_line = 1;
     }
     cmd = 0;
@@ -1144,8 +1141,8 @@ static void sel_display()
     if (s_disp_status_line == 1)
     {
         newline();
-        std::fputs(g_msg, stdout);
-        g_term_col = std::strlen(g_msg);
+        std::fputs(g_msg.c_str(), stdout);
+        g_term_col = static_cast<int>(g_msg.size());
         s_disp_status_line = 2;
     }
 }
@@ -1574,8 +1571,8 @@ reinp_selector:
             if (s_disp_status_line == 1)
             {
                 newline();
-                std::fputs(g_msg,stdout);
-                g_term_col = std::strlen(g_msg);
+                std::fputs(g_msg.c_str(),stdout);
+                g_term_col = static_cast<int>(g_msg.size());
                 if (s_removed_prompt & RP_MOUSE_BAR)
                 {
                     draw_mouse_bar(g_tc_COLS,false);
@@ -2430,13 +2427,13 @@ the_default:
         default:
             return ret;
         }
-        std::strcpy(g_msg,"Type ? for help.");
+        g_msg = "Type ? for help.";
         settle_down();
         if (s_clean_screen)
         {
             return DS_STATUS;
         }
-        std::printf("\n%s\n",g_msg);
+        std::printf("\n%s\n",g_msg.c_str());
         ch = another_command(1);
         if (ch != '\0')
         {
@@ -2481,7 +2478,7 @@ static bool sel_perform_change(long cnt, const char *obj_type)
 
     if (g_error_occurred)
     {
-        print_lines(g_msg, NO_MARKING);
+        print_lines(g_msg.c_str(), NO_MARKING);
         s_clean_screen = false;
         g_error_occurred = false;
     }
@@ -2501,7 +2498,7 @@ static bool sel_perform_change(long cnt, const char *obj_type)
     }
     else if (s_disp_status_line == 1)
     {
-        print_lines(g_msg, NO_MARKING);
+        print_lines(g_msg.c_str(), NO_MARKING);
         s_disp_status_line = 0;
     }
 
@@ -2625,7 +2622,7 @@ static DisplayState article_commands(char_int ch)
     case 'Y':
         if (!g_dm_count)
         {
-            std::strcpy(g_msg,"No marked articles to yank back.");
+            g_msg = "No marked articles to yank back.";
             return DS_STATUS;
         }
         yank_back();
@@ -2907,7 +2904,7 @@ reask_sort:
     case 'T':
         if (!g_threaded_group)
         {
-            std::strcpy(g_msg,"Group is not threaded.");
+            g_msg = "Group is not threaded.";
             return DS_STATUS;
         }
         // FALL THROUGH
@@ -2943,17 +2940,17 @@ reask_sort:
         case 'J': case 'j': case 'K':  case ',':
             count_subjects(g_sel_rereading? CS_NORM : CS_UNSELECT);
             init_pages(PRESERVE_PAGE);
-            std::strcpy(g_msg,"Kill memorized.");
+            g_msg = "Kill memorized.";
             s_disp_status_line = 1;
             return DS_DISPLAY;
 
         case '+': case '.': case 'S': case 'm':
-            std::strcpy(g_msg,"Selection memorized.");
+            g_msg = "Selection memorized.";
             s_disp_status_line = 1;
             return DS_UPDATE;
 
         case 'c':  case 'C':
-            std::strcpy(g_msg,"Auto-commands cleared.");
+            g_msg = "Auto-commands cleared.";
             s_disp_status_line = 1;
             return DS_UPDATE;
 
@@ -3381,7 +3378,7 @@ reask_sort:
         }
         else
         {
-            std::strcpy(g_msg, "No newsgroup to catchup.");
+            g_msg = "No newsgroup to catchup.";
             s_disp_status_line = 1;
             return DS_UPDATE;
         }
@@ -3890,7 +3887,7 @@ static DisplayState option_commands(char_int ch)
         const char *compile_error = g_opt_compex.compile(pattern, true, true);
         if (compile_error != nullptr)
         {
-            std::strcpy(g_msg,compile_error);
+            g_msg = compile_error;
             return DS_STATUS;
         }
         const OptionCatalog catalog;
@@ -4116,7 +4113,7 @@ static void switch_dmode(std::string &dmode, std::size_t &dmode_index)
         s = "long";
         break;
     }
-    std::sprintf(g_msg, "(%.*s display style)", static_cast<int>(s.size()), s.data());
+    g_msg = fmt::format("({} display style)", s);
     s_disp_status_line = 1;
 }
 

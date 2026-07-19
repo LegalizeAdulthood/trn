@@ -1963,28 +1963,28 @@ void page_start()
     }
 }
 
-void error_msg(const char *str)
+void error_msg(std::string_view str)
 {
     if (g_general_mode == GM_SELECTOR)
     {
-        if (str != g_msg)
+        if (str.data() != g_msg.data())
         {
-            std::strcpy(g_msg,str);
+            g_msg = str;
         }
         g_error_occurred = true;
     }
-    else if (*str)
+    else if (!str.empty())
     {
-        std::printf("\n%s\n", str);
+        fmt::print("\n{}\n", str);
         term_down(2);
     }
 }
 
-void warn_msg(const char *str)
+void warn_msg(std::string_view str)
 {
     if (g_general_mode != GM_SELECTOR)
     {
-        std::printf("\n%s\n", str);
+        fmt::print("\n{}\n", str);
         term_down(2);
         pad(g_just_a_sec/3);
     }
@@ -2317,8 +2317,8 @@ void xmouse_init(std::string_view progname)
     const std::string mouse_setting = get_env_var("XTERMMOUSE");
     if (!mouse_setting.empty())
     {
-        interp(g_msg, sizeof g_msg, mouse_setting.c_str());
-        set_option(OI_USE_MOUSE, g_msg);
+        const std::string use_mouse = do_interp(mouse_setting);
+        set_option(OI_USE_MOUSE, use_mouse.c_str());
     }
     else if (!progname.empty() && progname.back() == 'x')
     {
@@ -2411,8 +2411,8 @@ void xmouse_check()
         }
         else
         {
-            interp(g_msg, sizeof g_msg, g_mouse_modes.c_str());
-            turn_it_on = (std::strchr(g_msg, static_cast<char>(g_mode)) != nullptr);
+            const std::string mouse_modes = do_interp(g_mouse_modes);
+            turn_it_on = mouse_modes.find(static_cast<char>(g_mode)) != std::string::npos;
         }
         if (turn_it_on)
         {

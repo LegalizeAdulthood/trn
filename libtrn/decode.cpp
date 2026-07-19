@@ -291,7 +291,7 @@ std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
 //
 bool decode_piece(MimeCapEntry *mcp, char *first_line)
 {
-    *g_msg = '\0';
+    g_msg.clear();
     const auto open_path = [](const fs::path &path, const char *mode)
     { return std::fopen(path.string().c_str(), mode); };
     const auto remove_path = [](const fs::path &path)
@@ -317,7 +317,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         dir = decode_mkdir(filename);
         if (dir.empty())
         {
-            std::strcpy(g_msg, "Failed.");
+            g_msg = "Failed.";
             return false;
         }
     }
@@ -353,7 +353,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         fp = open_path(dir / std::to_string(part), "w");
         if (!fp)
         {
-            std::strcpy(g_msg,"Failed.");
+            g_msg = "Failed.";
             return false;
         }
         while (read_art(g_art_line, sizeof g_art_line))
@@ -429,7 +429,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     DecodeFunc decoder = decode_function(g_mime_section->m_encoding);
     if (!decoder)
     {
-        std::strcpy(g_msg,"Unhandled encoding type -- aborting.");
+        g_msg = "Unhandled encoding type -- aborting.";
         if (fp)
         {
             std::fclose(fp);
@@ -461,7 +461,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         }
         if (state == DECODE_ERROR)
         {
-            std::strcpy(g_msg,"Failed.");
+            g_msg = "Failed.";
             return false;
         }
     }
@@ -471,7 +471,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         (void) decoder(nullptr, DECODE_DONE);
         if (state != DECODE_MAYBE_DONE)
         {
-            std::strcpy(g_msg,"Premature EOF.");
+            g_msg = "Premature EOF.";
             return false;
         }
     }

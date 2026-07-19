@@ -199,8 +199,8 @@ bool in_choice(std::string_view prompt, std::string_view value, std::string_view
 int  print_lines(const char *what_to_print, int hilite);
 int  check_page_line();
 void page_start();
-void error_msg(const char *str);
-void warn_msg(const char *str);
+void error_msg(std::string_view str);
+void warn_msg(std::string_view str);
 void pad(int num);
 void print_cmd();
 void rubout();

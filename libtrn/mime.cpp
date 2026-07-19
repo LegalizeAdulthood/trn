@@ -1034,10 +1034,10 @@ void mime_decode_article(bool view)
             }
             else
             {
-                if (*g_msg)
+                if (!g_msg.empty())
                 {
                     newline();
-                    std::fputs(g_msg,stdout);
+                    std::fputs(g_msg.c_str(),stdout);
                 }
                 g_mime_state = SKIP_MIME;
             }

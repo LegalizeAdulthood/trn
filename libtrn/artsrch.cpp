@@ -112,8 +112,22 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 
                 case 'H':               // scan a specific header
                     how_much = ARTSCOPE_ONE_HDR;
-                    s = copy_till(g_msg, s+1, ':');
-                    search_header = get_header_num(g_msg);
+                    {
+                        std::string header_name;
+                        for (s++; *s; s++)
+                        {
+                            if (*s == '\\' && s[1] == ':')
+                            {
+                                s++;
+                            }
+                            else if (*s == ':')
+                            {
+                                break;
+                            }
+                            header_name += *s;
+                        }
+                        search_header = get_header_num(header_name.c_str());
+                    }
                     goto loop_break;
 
                 case 'h':               // scan header
@@ -258,11 +272,11 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             {
                 if (g_verbose)
                 {
-                    std::sprintf(g_msg, "Current article has no %s.", finding_str);
+                    g_msg = fmt::format("Current article has no {}.", finding_str);
                 }
                 else
                 {
-                    std::sprintf(g_msg, "Null %s.", finding_str);
+                    g_msg = fmt::format("Null {}.", finding_str);
                 }
                 error_msg(g_msg);
                 ret = SRCH_ABORT;

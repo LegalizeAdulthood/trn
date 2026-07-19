@@ -167,7 +167,7 @@ protected:
     {
         m_old_one_command = g_one_command;
         m_old_perform_count = g_perform_count;
-        std::copy_n(g_msg, m_old_msg.size(), m_old_msg.begin());
+        m_old_msg = g_msg;
 
         g_one_command = false;
         g_perform_count = 0;
@@ -177,12 +177,12 @@ protected:
     {
         g_one_command = m_old_one_command;
         g_perform_count = m_old_perform_count;
-        std::copy(m_old_msg.begin(), m_old_msg.end(), g_msg);
+        g_msg = m_old_msg;
     }
 
-    std::array<char, CMD_BUF_LEN> m_old_msg{};
-    bool                         m_old_one_command{};
-    int                          m_old_perform_count{};
+    std::string m_old_msg;
+    bool        m_old_one_command{};
+    int         m_old_perform_count{};
 };
 
 } // namespace
@@ -260,5 +260,5 @@ TEST_F(PerformExpansionTest, expandsCommandBeforeContinuingAfterColon)
     const int result = perform("%Z:Z", 0);
 
     EXPECT_EQ(-1, result);
-    EXPECT_STREQ("Unknown command: Z", g_msg);
+    EXPECT_EQ("Unknown command: Z", g_msg);
 }

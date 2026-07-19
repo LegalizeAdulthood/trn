@@ -654,7 +654,7 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 
 // various things of type char
 
-extern char g_msg[CMD_BUF_LEN];     // general purpose message buffer
+extern std::string g_msg;                   // general purpose message text
 extern char g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
 
 #ifdef DEBUG

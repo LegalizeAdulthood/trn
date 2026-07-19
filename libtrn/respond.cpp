@@ -281,10 +281,10 @@ SaveResult save_article()
                 g_mime_section->m_encoding = MENCODE_UUE;
                 g_mime_section->m_part = part;
                 g_mime_section->m_total = total;
-                if (!decode_piece(nullptr,nullptr) && *g_msg)
+                if (!decode_piece(nullptr, nullptr) && !g_msg.empty())
                 {
                     newline();
-                    std::fputs(g_msg,stdout);
+                    std::fputs(g_msg.c_str(),stdout);
                 }
                 newline();
                 break;
@@ -600,10 +600,10 @@ SaveResult view_article()
                 g_mime_section->m_encoding = MENCODE_UUE;
                 g_mime_section->m_part = part;
                 g_mime_section->m_total = total;
-                if (mc && !decode_piece(mc, nullptr) && *g_msg)
+                if (mc && !decode_piece(mc, nullptr) && !g_msg.empty())
                 {
                     newline();
-                    std::fputs(g_msg, stdout);
+                    std::fputs(g_msg.c_str(), stdout);
                 }
                 newline();
                 cnt = 0;

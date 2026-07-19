@@ -271,7 +271,7 @@ NumNumResult num_num()
         if (min < g_abs_first)
         {
             min = g_abs_first;
-            std::sprintf(g_msg,"(First article is %ld)",(long)g_abs_first.value_of());
+            g_msg = fmt::format("(First article is {})", g_abs_first.value_of());
             warn_msg(g_msg);
         }
         if ((t = std::strchr(t, '-')) != nullptr)
@@ -298,7 +298,7 @@ NumNumResult num_num()
         {
             max = g_last_art;
             min = std::min(min, max);
-            std::sprintf(g_msg,"(Last article is %ld)",(long)g_last_art.value_of());
+            g_msg = fmt::format("(Last article is {})", g_last_art.value_of());
             warn_msg(g_msg);
         }
         if (max < min)
@@ -318,11 +318,11 @@ NumNumResult num_num()
             {
                 if (g_verbose)
                 {
-                    std::sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art.value_of());
+                    g_msg = fmt::format("(Interrupted at article {})", g_art.value_of());
                 }
                 else
                 {
-                    std::sprintf(g_msg, "(Intr at %ld)", (long) g_art.value_of());
+                    g_msg = fmt::format("(Intr at {})", g_art.value_of());
                 }
                 error_msg(g_msg);
                 return NN_ASK;
@@ -752,7 +752,7 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else
         {
-            *fmt::format_to_n(g_msg, sizeof g_msg - 1, "Unknown command: {}", cmdlst).out = '\0';
+            g_msg = fmt::format("Unknown command: {}", cmdlst);
             error_msg(g_msg);
             return -1;
         }
@@ -899,7 +899,7 @@ deselect:
             goto deselect;
 
         default:
-            *fmt::format_to_n(g_msg, sizeof g_msg - 1, "Unknown command: {}", cmdlst).out = '\0';
+            g_msg = fmt::format("Unknown command: {}", cmdlst);
             error_msg(g_msg);
             return -1;
         }
@@ -1009,7 +1009,7 @@ int AddGroup::add_group_perform(std::string_view cmdlst, int output_level)
         }
         else
         {
-            *fmt::format_to_n(g_msg, sizeof g_msg - 1, "Unknown command: {}", cmdlst).out = '\0';
+            g_msg = fmt::format("Unknown command: {}", cmdlst);
             error_msg(g_msg);
             return -1;
         }

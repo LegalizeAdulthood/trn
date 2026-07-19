@@ -272,7 +272,7 @@ restart:
                         }
                         term_down(2);
                         end_only();     // release the restriction
-                        std::printf("\n%s\n", g_msg);
+                        std::printf("\n%s\n", g_msg.c_str());
                         term_down(2);
                         retry = true;
                     }
@@ -413,7 +413,7 @@ reinp_newsgroup:
                 break;
 
             case ING_MESSAGE:
-                std::printf("\n%s\n", g_msg);
+                std::printf("\n%s\n", g_msg.c_str());
                 term_down(2);
                 break;
             }
@@ -778,7 +778,7 @@ reask_abandon:
         {
             return ING_INPUT;
         }
-        *g_msg = '\0';
+        g_msg.clear();
         end_only();
         if (g_buf[1])
         {
@@ -795,7 +795,7 @@ reask_abandon:
             g_newsgroup_min_to_read = *g_buf == g_empty_only_char && g_max_newsgroup_to_do ? TR_NONE : TR_ONE;
         }
         g_newsgroup_ptr = newsgroup_first(); // simulate ^
-        if (*g_msg && !g_max_newsgroup_to_do)
+        if (!g_msg.empty() && !g_max_newsgroup_to_do)
         {
             return ING_MESSAGE;
         }

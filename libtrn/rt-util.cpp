@@ -40,7 +40,7 @@ static int s_spin_marks{25}; // how many bargraph marks we want
 
 static char *compress_address(char *name, int max);
 static char *compress_name_in_place(char *name, int max);
-static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);
+static void output_change(std::string &out, long num, const char *obj_type, const char *modifier, const char *action);
 
 // Name-munging routines written by Ross Ridge.
 // Enhanced by Wayne Davison.
@@ -1000,7 +1000,15 @@ void perform_status(int cnt, int spin)
     std::fflush(stdout);
 }
 
-static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action)
+static void append_until_pipe(std::string &out, const char *&s)
+{
+    while (*s && *s != '|')
+    {
+        out += *s++;
+    }
+}
+
+static void output_change(std::string &out, long num, const char *obj_type, const char *modifier, const char *action)
 {
     bool neg;
 
@@ -1014,40 +1022,35 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
         neg = false;
     }
 
-    if (cp != g_msg)
+    if (!out.empty())
     {
-        *cp++ = ',';
-        *cp++ = ' ';
+        out += ", ";
     }
-    std::sprintf(cp, "%ld ", num);
+    out += std::to_string(num);
+    out += ' ';
     if (obj_type)
     {
-        std::sprintf(cp += std::strlen(cp), "%s%s ", obj_type, plural(num));
+        out += obj_type;
+        out += plural(num);
+        out += ' ';
     }
-    cp += std::strlen(cp);
     const char *s = modifier;
     if (s != nullptr)
     {
-        *cp++ = ' ';
+        out += ' ';
         if (num != 1)
         {
             s = skip_ne(s, '|');
         }
-        while (*s && *s != '|')
-        {
-            *cp++ = *s++;
-        }
-        *cp++ = ' ';
+        append_until_pipe(out, s);
+        out += ' ';
     }
     s = action;
     if (!neg)
     {
         s = skip_ne(s, '|');
     }
-    while (*s && *s != '|')
-    {
-        *cp++ = *s++;
-    }
+    append_until_pipe(out, s);
     s++;
     if (neg)
     {
@@ -1055,21 +1058,20 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     }
     while (*s)
     {
-        *cp++ = *s++;
+        out += *s++;
     }
-
-    *cp = '\0';
-    return cp;
 }
 
 int perform_status_end(long cnt, const char *obj_type)
 {
-    char*cp = g_msg;
     bool article_status = (*obj_type == 'a');
 
+    g_msg.clear();
     if (g_perform_count == 0)
     {
-        std::sprintf(g_msg, "No %ss affected.", obj_type);
+        g_msg = "No ";
+        g_msg += obj_type;
+        g_msg += "s affected.";
         return 0;
     }
 
@@ -1079,36 +1081,36 @@ int perform_status_end(long cnt, const char *obj_type)
 
     if (!g_performed_article_loop)
     {
-        cp = output_change(cp, (long)g_perform_count,
+        output_change(g_msg, (long)g_perform_count,
                            g_sel_mode == SM_THREAD? "thread" : "subject",
                            nullptr, "ERR|match|ed");
     }
     else if (g_perform_count != sels && g_perform_count != -sels //
              && g_perform_count != kills && g_perform_count != -kills)
     {
-        cp = output_change(cp, (long)g_perform_count, obj_type, nullptr,
+        output_change(g_msg, (long)g_perform_count, obj_type, nullptr,
                            "ERR|match|ed");
         obj_type = nullptr;
     }
     if (kills)
     {
-        cp = output_change(cp, kills, obj_type, nullptr,
+        output_change(g_msg, kills, obj_type, nullptr,
                            article_status? "un||killed" : "more|less|");
         obj_type = nullptr;
     }
     if (sels)
     {
-        cp = output_change(cp, sels, obj_type, nullptr, "de||selected");
+        output_change(g_msg, sels, obj_type, nullptr, "de||selected");
         obj_type = nullptr;
     }
     if (article_status && missing > 0)
     {
-        *cp++ = '(';
-        cp = output_change(cp, missing, obj_type, "was|were", "ERR|missing|");
-        *cp++ = ')';
+        g_msg += '(';
+        output_change(g_msg, missing, obj_type, "was|were", "ERR|missing|");
+        g_msg += ')';
     }
 
-    std::strcpy(cp, ".");
+    g_msg += ".";
 
     // If we only selected/deselected things, return 1, else 2
     return (kills | missing) == 0? 1 : 2;

@@ -8,5 +8,5 @@
 
 // various things of type char
 
-char g_msg[CMD_BUF_LEN];     // general purpose message buffer
+std::string g_msg;                   // general purpose message text
 char g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer

@@ -1011,7 +1011,7 @@ not_threaded:
         }
         carriage_return();
         perform_status_end(g_newsgroup_ptr->m_to_read, "article");
-        std::fputs(g_msg, stdout);
+        std::fputs(g_msg.c_str(), stdout);
         newline();
         g_art = g_curr_art;
         g_artp = g_curr_artp;
@@ -1252,7 +1252,7 @@ check_dec_art:
             {
                 erase_line(false);
                 perform_status_end(g_newsgroup_ptr->m_to_read, "article");
-                std::fputs(g_msg, stdout);
+                std::fputs(g_msg.c_str(), stdout);
             }
             newline();
             return AS_ASK;
@@ -1324,7 +1324,7 @@ normal_search:
             {
                 erase_line(false);
                 perform_status_end(g_newsgroup_ptr->m_to_read, "article");
-                std::printf("%s\n",g_msg);
+                std::printf("%s\n", g_msg.c_str());
             }
             else
             {
