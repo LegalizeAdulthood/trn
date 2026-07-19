@@ -531,16 +531,6 @@ broad global-buffer work.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-093 - Reply Header Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local fixed header buffer.
-- Function: `reply`.
-- Change: replace `hbuf[5*LINE_BUF_LEN]` with owned `std::string`
-  header storage.  Preserve reply header generation and mailer
-  invocation order.
-- Tests: response/reply tests.
-
 #### CSTR-094 - Forward Header Buffer
 
 - Files: `libtrn/respond.cpp`.

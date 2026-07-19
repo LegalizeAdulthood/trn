@@ -831,7 +831,6 @@ static void follow_it_up()
 
 void reply()
 {
-    char hbuf[5*LINE_BUF_LEN];
     bool incl_body = (*g_buf == 'R' && g_art);
     const std::string mail_doer = get_env_var("MAILPOSTER", MAIL_POSTER);
 
@@ -843,8 +842,15 @@ void reply()
         term_down(1);
         return;
     }
-    interp(hbuf, sizeof hbuf, get_env_var("MAILHEADER", MAIL_HEADER).c_str());
-    std::fputs(hbuf,header);
+    constexpr int header_size = 5 * LINE_BUF_LEN;
+    std::string   header_text(header_size, '\0');
+    interp(header_text.data(), header_size, get_env_var("MAILHEADER", MAIL_HEADER).c_str());
+    const std::size_t header_end = header_text.find('\0');
+    if (header_end != std::string::npos)
+    {
+        header_text.resize(header_end);
+    }
+    std::fputs(header_text.c_str(),header);
     if (!in_string(mail_doer, "%h", true))
     {
         if (g_verbose)
