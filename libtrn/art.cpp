@@ -1288,13 +1288,7 @@ leave_pager:
         {
             set_default_cmd();
             color_object(COLOR_CMD, true);
-            std::string mail_call(CMD_BUF_LEN, '\0');
-            interp_search(mail_call.data(), static_cast<int>(mail_call.size()), g_mail_call.c_str(), g_buf);
-            const std::size_t mail_call_end = mail_call.find('\0');
-            if (mail_call_end != std::string::npos)
-            {
-                mail_call.resize(mail_call_end);
-            }
+            const std::string mail_call = interp_search(g_mail_call, g_buf);
             std::printf(g_prompt.c_str(), mail_call.c_str(), current_char_subst().c_str(),
                         g_default_cmd.c_str()); // print prompt, whatever it is
             color_pop();                        // of COLOR_CMD

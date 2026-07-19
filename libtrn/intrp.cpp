@@ -1518,6 +1518,20 @@ std::string do_interp(std::string_view pattern)
     return result;
 }
 
+std::string interp_search(std::string_view pattern, const char *cmd)
+{
+    std::string pattern_text{pattern};
+    std::string result(CMD_BUF_LEN, '\0');
+
+    interp_search(result.data(), static_cast<int>(result.size()), pattern_text.c_str(), cmd);
+    const std::size_t result_end = result.find('\0');
+    if (result_end != std::string::npos)
+    {
+        result.resize(result_end);
+    }
+    return result;
+}
+
 /// @brief Converts escape sequences in a pattern to their corresponding characters.
 ///
 /// This function processes escape sequences in the input pattern and converts them

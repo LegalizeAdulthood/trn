@@ -539,16 +539,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-111 - Article Mail Prompt Interpolation Buffer
-
-- Files: `libtrn/art.cpp`.
-- Kind: fixed-size string used as C output buffer.
-- Function: article pager prompt path using `g_mail_call`.
-- Change: replace the `CMD_BUF_LEN` mail-call interpolation buffer with
-  owned string construction and pass `c_str()` only to the prompt
-  `printf` call.  Preserve runtime prompt-format behavior.
-- Tests: article pager prompt tests before refactor.
-
 #### CSTR-112 - Newsgroup Subject Line Interpolation Buffer
 
 - Files: `libtrn/ng.cpp`.
