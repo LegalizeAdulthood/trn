@@ -87,7 +87,7 @@ void write_last()
     }
     else
     {
-        std::printf(g_cant_create, temp_file.string().c_str());
+        fmt::print("Can't create {}\n", temp_file.string());
         // term_down(1);
     }
 }

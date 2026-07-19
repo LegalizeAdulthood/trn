@@ -690,12 +690,4 @@ bool all_bits(T val, U bits)
     return (val & tbits) == tbits;
 }
 
-// Factored strings
-
-extern const char *g_h_for_help;
-extern const char *g_unsub_to;
-extern const char *g_cant_open;
-extern const char *g_cant_create;
-extern const char *g_no_cd;
-
 #endif

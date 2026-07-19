@@ -99,7 +99,7 @@ SaveResult save_article()
     }
     if (change_dir(g_priv_dir))
     {
-        std::printf(g_no_cd,g_priv_dir.c_str());
+        fmt::print("Can't chdir to directory {}\n", g_priv_dir);
         sig_catcher(0);
     }
     if (cmd == 'e')             // is this an extract command?
@@ -428,7 +428,7 @@ reask_save:
                 }
                 else
                 {
-                    std::fputs(g_h_for_help,stdout);
+                    std::fputs("Type h for help.\n", stdout);
                     term_down(1);
                     settle_down();
                     goto reask_save;
@@ -673,7 +673,7 @@ int cancel_article()
         std::FILE *header = std::fopen(g_head_name.c_str(),"w");   // open header file
         if (header == nullptr)
         {
-            std::printf(g_cant_create,g_head_name.c_str());
+            fmt::print("Can't create {}\n", g_head_name);
             term_down(1);
             goto done;
         }
@@ -748,7 +748,7 @@ int supersede_article()         // Supersedes:
         std::FILE *header = std::fopen(g_head_name.c_str(),"w");   // open header file
         if (header == nullptr)
         {
-            std::printf(g_cant_create,g_head_name.c_str());
+            fmt::print("Can't create {}\n", g_head_name);
             term_down(1);
             goto done;
         }
@@ -838,7 +838,7 @@ void reply()
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
     if (header == nullptr)
     {
-        std::printf(g_cant_create,g_head_name.c_str());
+        fmt::print("Can't create {}\n", g_head_name);
         term_down(1);
         return;
     }
@@ -913,7 +913,7 @@ void forward()
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
     if (header == nullptr)
     {
-        std::printf(g_cant_create,g_head_name.c_str());
+        fmt::print("Can't create {}\n", g_head_name);
         term_down(1);
         goto done;
     }
@@ -1066,7 +1066,7 @@ void followup()
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");
     if (header == nullptr)
     {
-        std::printf(g_cant_create,g_head_name.c_str());
+        fmt::print("Can't create {}\n", g_head_name);
         term_down(1);
         g_art = oldart;
         return;
@@ -1135,7 +1135,7 @@ static int invoke(const char *cmd, const char *dir)
     {
         if (change_dir(dir))
         {
-            std::printf(g_no_cd,dir);
+            fmt::print("Can't chdir to directory {}\n", dir);
             return ret;
         }
     }

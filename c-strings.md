@@ -536,19 +536,6 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-121 - Common Message Format Globals
-
-- Files: `config/common.cpp`, `config/include/config/common.h`, many
-  users.
-- Kind: global literal message and printf-format pointers.
-- Function: storage-centered `g_h_for_help`, `g_unsub_to`,
-  `g_cant_open`, `g_cant_create`, and `g_no_cd`.
-- Change: convert call sites to `fmt::print` or direct string output
-  before considering `std::string_view` storage.  Keep runtime
-  printf-style formatting out of the conversion until each format use is
-  audited.
-- Tests: broad workflow required.
-
 #### CSTR-031 - Global Command And Message Buffers
 
 - Files: `config/common.cpp`, `config/include/config/common.h`, many

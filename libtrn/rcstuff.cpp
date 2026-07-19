@@ -1202,7 +1202,7 @@ reask_add:
             }
             else
             {
-                std::fputs(g_h_for_help,stdout);
+                std::fputs("Type h for help.\n", stdout);
                 term_down(1);
                 settle_down();
                 goto reask_add;
@@ -1250,7 +1250,7 @@ reask_unsub:
         }
         else
         {
-            std::fputs(g_h_for_help,stdout);
+            std::fputs("Type h for help.\n", stdout);
             term_down(1);
             settle_down();
             goto reask_unsub;
@@ -1449,7 +1449,7 @@ reinp_reloc:
         }
         else
         {
-            std::printf("\n%s",g_h_for_help);
+            std::fputs("\nType h for help.\n", stdout);
             term_down(2);
             settle_down();
             goto reask_reloc;
@@ -1633,7 +1633,7 @@ reask_bogus:
         }
         else
         {
-            std::fputs(g_h_for_help,stdout);
+            std::fputs("Type h for help.\n", stdout);
             term_down(1);
             settle_down();
             goto reask_bogus;

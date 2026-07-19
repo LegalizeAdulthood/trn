@@ -21,6 +21,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -271,7 +273,7 @@ static void new_local_groups(DataSource *dp)
     std::FILE *fp = std::fopen(dp->m_extra_name.c_str(), "r");
     if (fp == nullptr)
     {
-        std::printf(g_cant_open, dp->m_extra_name.c_str());
+        fmt::print("Can't open {}\n", dp->m_extra_name);
         term_down(1);
         return;
     }

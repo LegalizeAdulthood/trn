@@ -31,6 +31,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -292,7 +294,7 @@ int access_newsgroup()
         // chdir to newsgroup subdirectory
         if (change_dir(g_newsgroup_dir))
         {
-            std::printf(g_no_cd,g_newsgroup_dir.c_str());
+            fmt::print("Can't chdir to directory {}\n", g_newsgroup_dir);
             return 0;
         }
         g_last_art = g_newsgroup_ptr->get_newsgroup_size();
@@ -316,7 +318,7 @@ void chdir_news_dir()
     if (change_dir(g_data_source->m_spool_dir.c_str()) ||
         (!(g_data_source->m_flags & DF_REMOTE) && change_dir(g_newsgroup_dir)))
     {
-        std::printf(g_no_cd, g_newsgroup_dir.c_str());
+        fmt::print("Can't chdir to directory {}\n", g_newsgroup_dir);
         sig_catcher(0);
     }
 }

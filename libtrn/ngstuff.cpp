@@ -88,7 +88,7 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
         }
         if (change_dir(g_priv_dir))
         {
-            std::printf(g_no_cd,g_priv_dir.c_str());
+            fmt::print("Can't chdir to directory {}\n", g_priv_dir);
             sig_catcher(0);
         }
     }
@@ -102,7 +102,7 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
     {
         if (change_dir(where_i_am))
         {
-            std::printf(g_no_cd,where_i_am.generic_string().c_str());
+            fmt::print("Can't chdir to directory {}\n", where_i_am.generic_string());
             sig_catcher(0);
         }
     }
@@ -194,7 +194,7 @@ bool switcheroo()
             cwd_check();
             if (change_dir(where_am_i))                // -d does chdirs
             {
-                std::printf(g_no_cd,where_am_i.generic_string().c_str());
+                fmt::print("Can't chdir to directory {}\n", where_am_i.generic_string());
                 sig_catcher(0);
             }
         }
@@ -888,7 +888,7 @@ deselect:
         case 'u':
             if (output_level && g_verbose)
             {
-                std::printf(g_unsub_to, g_newsgroup_ptr->rc_line_c_str());
+                fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_ptr->rc_name());
                 term_down(1);
             }
             g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;

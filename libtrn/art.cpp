@@ -1377,7 +1377,7 @@ go_forward:
         return PS_TO_END;
 
     default:
-        std::fputs(g_h_for_help,stdout);
+        std::fputs("Type h for help.\n", stdout);
         term_down(1);
         settle_down();
         return PS_ASK;

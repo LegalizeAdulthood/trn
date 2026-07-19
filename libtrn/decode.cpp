@@ -325,7 +325,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     {
         if (change_dir(dir))
         {
-            std::printf(g_no_cd, dir.string().c_str());
+            fmt::print("Can't chdir to directory {}\n", dir.string());
             sig_catcher(0);
         }
     }

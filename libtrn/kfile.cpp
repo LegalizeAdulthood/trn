@@ -606,7 +606,7 @@ static void rewrite_kill_file(ArticleNum thru)
     }
     else
     {
-        std::printf(g_cant_create, killname.string().c_str());
+        fmt::print("Can't create {}\n", killname.string());
     }
 }
 
@@ -889,7 +889,7 @@ void kill_file_append(const char *cmd, bool local)
         }
         else
         {
-            std::printf(g_cant_open, kill_file.string().c_str());
+            fmt::print("Can't open {}\n", kill_file.string());
         }
         term_down(2);
     }

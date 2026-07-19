@@ -10,6 +10,8 @@
 #include <trn/final.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <filesystem>
 #include <string>
@@ -33,7 +35,7 @@ void back_page_init()
     fs::remove(vary_name, error);
     if (s_vary_fd < 0)
     {
-        std::printf(g_cant_open, vary_name.c_str());
+        fmt::print("Can't open {}\n", vary_name);
         sig_catcher(0);
     }
 }

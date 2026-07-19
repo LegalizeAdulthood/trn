@@ -380,7 +380,7 @@ reinp_newsgroup:
                 goto reinp_newsgroup;
 
             case ING_ERROR:
-                std::printf("\n%s",g_h_for_help);
+                std::fputs("\nType h for help.\n", stdout);
                 term_down(2);
                 settle_down();
                 goto reask_newsgroup;
@@ -713,7 +713,7 @@ display_multirc:
         if (g_newsgroup_ptr && g_newsgroup_ptr->m_to_read >= TR_NONE) // unsubscribable?
         {
             newline();
-            std::printf(g_unsub_to, g_newsgroup_ptr->rc_line_c_str());
+            fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_ptr->rc_name());
             term_down(1);
             g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR; // unsubscribe it
             g_newsgroup_ptr->m_to_read = TR_UNSUB;                 // and make line invisible
@@ -756,7 +756,7 @@ reask_abandon:
         }
         else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q')
         {
-            std::fputs(g_h_for_help,stdout);
+            std::fputs("Type h for help.\n", stdout);
             term_down(1);
             settle_down();
             goto reask_abandon;

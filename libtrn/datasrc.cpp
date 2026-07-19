@@ -935,7 +935,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
 
     if (has_filename && fp == nullptr)
     {
-        std::printf(g_cant_open, filename.string().c_str());
+        fmt::print("Can't open {}\n", filename.string());
         term_down(1);
         return 0;
     }
@@ -1371,7 +1371,7 @@ reask:
                 return 1;
             }
         }
-        std::fputs(g_h_for_help, stdout);
+        std::fputs("Type h for help.\n", stdout);
         break;
     }
 

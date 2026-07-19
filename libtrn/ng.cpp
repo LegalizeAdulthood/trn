@@ -147,7 +147,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     if (change_dir(g_data_source->m_spool_dir.c_str()))
     {
-        std::printf(g_no_cd, g_data_source->m_spool_dir.c_str());
+        fmt::print("Can't chdir to directory {}\n", g_data_source->m_spool_dir);
         return NG_ERROR;
     }
 
@@ -800,7 +800,7 @@ reask_unread:
         }
         else
         {
-            std::fputs(g_h_for_help,stdout);
+            std::fputs("Type h for help.\n", stdout);
             term_down(1);
             settle_down();
             goto reask_unread;
@@ -1372,7 +1372,7 @@ normal_search:
 
     case 'u':                 // unsubscribe from this newsgroup?
         newline();
-        std::printf(g_unsub_to,g_newsgroup_name.c_str());
+        fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_name);
         term_down(1);
         g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;
         g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
@@ -1833,7 +1833,7 @@ refresh_screen:
         // FALL THROUGH
 
     default:
-        std::printf("\n%s",g_h_for_help);
+        std::fputs("\nType h for help.\n", stdout);
         term_down(2);
         settle_down();
         break;
@@ -1974,7 +1974,7 @@ reask_catchup:
     if (ch != 'y' && ch != 'u')
     {
         use_one_line = false;
-        std::printf("\n%s\n", g_h_for_help);
+        std::fputs("\nType h for help.\n\n", stdout);
         term_down(3);
         settle_down();
         goto reask_catchup;
@@ -2011,7 +2011,7 @@ reask_catchup:
         g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
         --g_newsgroup_to_read;
         newline();
-        std::printf(g_unsub_to,g_newsgroup_name.c_str());
+        fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_name);
         std::printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
         term_down(2);
     }
@@ -2359,7 +2359,7 @@ reask_memorize:
     else
     {
         use_one_line = false;
-        std::printf("\n%s\n", g_h_for_help);
+        std::fputs("\nType h for help.\n\n", stdout);
         term_down(3);
         settle_down();
         goto reask_memorize;

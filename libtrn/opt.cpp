@@ -241,7 +241,7 @@ static void opt_file(const char *filename, bool bleat)
     }
     else if (bleat && !fs::exists(filename))
     {
-        std::printf(g_cant_open, filename);
+        fmt::print("Can't open {}\n", filename);
         // term_down(1);
     }
 }
@@ -838,7 +838,7 @@ void save_options(const char *filename)
     std::FILE *fp_out = std::fopen(new_filename.string().c_str(), "w");
     if (!fp_out)
     {
-        std::printf(g_cant_create,new_filename.string().c_str());
+        fmt::print("Can't create {}\n", new_filename.string());
         return;
     }
     std::ifstream input{filename_path};
