@@ -56,7 +56,7 @@ inline bool is_text_zero(const char *s)
 }
 
 int   sf_score(ArticleNum a);
-void  sf_append(char *line);
+void  sf_append(std::string_view line);
 void  sf_edit_file(std::string_view filespec);
 
 #endif

@@ -88,7 +88,7 @@ static std::string_view sf_freeform(std::string_view keyword, std::string_view r
 static bool  sf_do_line(std::string_view line, bool check);
 static void  sf_do_file(std::string_view fname);
 static int   score_match(const char *str, int ind);
-static std::string sf_missing_score(const char *line);
+static std::string sf_missing_score(std::string_view line);
 static std::string sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
 static void  sf_exclude_file(std::string_view fname);
@@ -910,7 +910,7 @@ int sf_score(ArticleNum a)
 }
 
 // returns changed score line or empty if no changes
-static std::string sf_missing_score(const char *line)
+static std::string sf_missing_score(std::string_view line)
 {
     // save line since it is probably pointing at (the TRN-global) g_buf
     std::string saved_line{line};
@@ -930,14 +930,19 @@ static std::string sf_missing_score(const char *line)
 
 // Interprets the '\"' command for creating new score entries online
 // consider using some external buffer rather than the 2 internal ones
-void sf_append(char *line)
+void sf_append(std::string_view line)
 {
-    if (!line)
+    const std::size_t nul = line.find('\0');
+    if (nul != std::string_view::npos)
+    {
+        line = line.substr(0, nul);
+    }
+    if (line.empty())
     {
         return; // do nothing with empty string
     }
 
-    char filechar = *line; // ch is file abbreviation
+    char filechar = line.front(); // ch is file abbreviation
 
     if (filechar == '?') // list known file abbreviations
     {
@@ -955,13 +960,14 @@ void sf_append(char *line)
     }
 
     // skip whitespace after filechar
-    char *scoreline = skip_hor_space(line + 1);
+    std::string_view scoreline = line.substr(1);
+    scoreline.remove_prefix(std::min(scoreline.find_first_not_of(" \t"), scoreline.size()));
     std::string missing_scoreline;
 
-    char ch = *scoreline; // first non-whitespace after filechar
+    const char ch = scoreline.empty() ? '\0' : scoreline.front(); // first non-whitespace after filechar
     // If the scorefile line does not begin with a number,
     // and is not a valid command, request a score
-    if (!std::isdigit(ch) && ch != '+' && ch != '-' && ch != ':' && ch != '!' && ch != '#')
+    if (!std::isdigit(static_cast<unsigned char>(ch)) && ch != '+' && ch != '-' && ch != ':' && ch != '!' && ch != '#')
     {
         if (!sf_do_line(scoreline, true)) // just checking
         {
@@ -971,12 +977,12 @@ void sf_append(char *line)
                 std::printf("Score entry aborted.\n");
                 return;
             }
-            scoreline = missing_scoreline.data();
+            scoreline = missing_scoreline;
         }
     }
 
     // scoretext = first non-whitespace after score#
-    std::string_view  scoretext{scoreline};
+    std::string_view  scoretext = scoreline;
     const std::size_t scoretext_start = scoretext.find_first_not_of("0123456789+- \t");
     scoretext.remove_prefix(scoretext_start == std::string_view::npos ? scoretext.size() : scoretext_start);
     std::string shortcut_scoreline;
@@ -984,13 +990,13 @@ void sf_append(char *line)
     // special one-character shortcuts
     if (scoretext.size() == 1)
     {
-        const std::size_t prefix_size = scoretext.data() - scoreline;
+        const std::size_t prefix_size = static_cast<std::size_t>(scoretext.data() - scoreline.data());
         switch (scoretext.front())
         {
         case 'F': // domain-shortened FROM line
-            shortcut_scoreline.assign(scoreline, prefix_size);
+            shortcut_scoreline.assign(scoreline.data(), prefix_size);
             shortcut_scoreline += file_exp("from: %y");
-            scoreline = shortcut_scoreline.data();
+            scoreline = shortcut_scoreline;
             break;
 
         case 'S': // current subject
@@ -1007,19 +1013,19 @@ void sf_append(char *line)
             {
                 subject_text.remove_prefix(4);
             }
-            shortcut_scoreline.assign(scoreline, prefix_size);
+            shortcut_scoreline.assign(scoreline.data(), prefix_size);
             shortcut_scoreline += "subject: ";
             // Preserve the historical LINE_BUF_LEN-derived subject limit.
             shortcut_scoreline.append(subject_text.substr(0, 900));
-            scoreline = shortcut_scoreline.data();
+            scoreline = shortcut_scoreline;
             break;
         }
 
         default:
-            std::printf("\nBad scorefile line: |%s| (not added)\n", line);
+            fmt::print("\nBad scorefile line: |{}| (not added)\n", line);
             return;
         }
-        std::printf("%s\n", scoreline);
+        fmt::print("{}\n", scoreline);
     }
 
     // test the scoring line unless filechar is '!' (meaning do it now)
