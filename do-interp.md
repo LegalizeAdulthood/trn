@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-024 - Newsgroup Name Cases
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Cases: `%c`, `%C`, `%n`.
-- Change: expose newsgroup directory/name text and fetched Newsgroups
-  headers as string/string-view values.
-- Preserve: empty result outside a newsgroup.
-- Tests: focused interpolation tests.
-
 #### DINT-012-025 - Article File Path Case
 
 - Files: `libtrn/intrp.cpp`.

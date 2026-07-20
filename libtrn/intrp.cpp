@@ -805,11 +805,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'c':
-                    s = assign_scratch(g_newsgroup_dir);
+                    set_value(g_newsgroup_dir);
                     break;
 
                 case 'C':
-                    s = assign_scratch(g_newsgroup_name);
+                    set_value(g_newsgroup_name);
                     break;
 
                 case 'd':
@@ -974,11 +974,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_in_ng)
                     {
                         ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-                        s = ngs_buf->c_str();
+                        set_value(*ngs_buf);
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 
