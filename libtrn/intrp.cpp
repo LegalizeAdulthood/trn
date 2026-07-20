@@ -776,23 +776,23 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             if (art_open(g_art, (ArticlePosition) 0))
                             {
                                 nntp_finish_body(FB_SILENT);
-                                s = assign_scratch(
+                                set_owned_value(
                                     fmt::format("{}/{}", g_data_source->m_spool_dir, nntp_art_name(g_art, false)));
                             }
                             else
                             {
-                                s = s_empty;
+                                set_value({});
                             }
                         }
                         else
                         {
-                            s = assign_scratch(
+                            set_owned_value(
                                 fmt::format("{}/{}/{}", g_data_source->m_spool_dir, g_newsgroup_dir, g_art.value_of()));
                         }
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 

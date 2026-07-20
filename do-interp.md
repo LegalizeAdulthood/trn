@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-025 - Article File Path Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Case: `%A`.
-- Change: build the article path in local `std::string` storage and
-  expose it through the local value view.
-- Preserve: remote/local behavior and `nntp_finish_body` side effect.
-- Tests: focused interpolation tests.
-
 #### DINT-012-026 - Simple String Setting Cases
 
 - Files: `libtrn/intrp.cpp`.
