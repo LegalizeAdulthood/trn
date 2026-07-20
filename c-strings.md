@@ -450,10 +450,8 @@ generated files, or the vendored `vcpkg` tree.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
-- The legacy C-buffer `do_interp`, `interp`, `interp_search`, and
-  `interp_backslash` APIs are gone.  The remaining interpolation
-  raw-string helper is `normalize_refs`, which mutates caller string
-  storage.
+- The legacy C-buffer `do_interp`, `interp`, `interp_search`,
+  `interp_backslash`, and `normalize_refs` APIs are gone.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`, and
   `SourceFile::open` already use modern path or view signatures.
   Score-file shortcut strings, universal-selector file strings, shell
@@ -538,19 +536,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-136 - References Normalizer
-
-- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
-- Kind: mutable C string parser over owned string storage.
-- Function: `normalize_refs`.
-- Depends on: none.
-- Change: make the normalizer consume `std::string_view` and return a
-  normalized `std::string`.  Update the `%r` and `%R` interpolation
-  cases to assign the returned string instead of mutating
-  `refs_buf->data()` and searching for a synthetic NUL terminator.
-- Tests: run interpolation tests that cover `%r` and `%R`; add coverage
-  first if those cases are missing.
 
 #### CSTR-137 - Scorefile Freeform Keyword Parser
 

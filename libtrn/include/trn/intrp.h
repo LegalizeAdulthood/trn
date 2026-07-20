@@ -26,6 +26,6 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
 std::string interp_search(std::string_view pattern, std::string_view cmd);
 std::size_t skip_interp(std::string_view pattern, std::string_view stoppers);
 char        interp_backslash(std::string_view &pattern);
-void        normalize_refs(char *refs);
+std::string normalize_refs(std::string_view refs);
 
 #endif

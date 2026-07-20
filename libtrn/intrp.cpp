@@ -1040,14 +1040,8 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         refs_buf.reset();
                         if (g_header_type[REFS_LINE].min_pos >= 0)
                         {
-                            refs_buf = fetch_lines(g_art, REFS_LINE);
-                            normalize_refs(refs_buf->data());
-                            const std::size_t normalized_size = refs_buf->find('\0');
-                            if (normalized_size != std::string::npos)
-                            {
-                                refs_buf->resize(normalized_size);
-                            }
-                            const std::string_view refs_text{refs_buf->data(), refs_buf->size()};
+                            refs_buf = normalize_refs(fetch_lines(g_art, REFS_LINE));
+                            const std::string_view refs_text{*refs_buf};
                             const std::size_t      last_ref = refs_text.rfind('<');
                             if (last_ref != std::string_view::npos)
                             {
@@ -1070,13 +1064,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     refs_buf.reset();
                     if (g_header_type[REFS_LINE].min_pos >= 0)
                     {
-                        refs_buf = fetch_lines(g_art, REFS_LINE);
-                        normalize_refs(refs_buf->data());
-                        const std::size_t normalized_size = refs_buf->find('\0');
-                        if (normalized_size != std::string::npos)
-                        {
-                            refs_buf->resize(normalized_size);
-                        }
+                        refs_buf = normalize_refs(fetch_lines(g_art, REFS_LINE));
                         // no more than 3 prior references PLUS the
                         // root article allowed, including the one
                         // concatenated below
@@ -1552,36 +1540,44 @@ char interp_backslash(std::string_view &pattern)
     }
 }
 
-// normalize a references line in place
+// normalize a references line
 
-void normalize_refs(char *refs)
+std::string normalize_refs(std::string_view refs)
 {
-    char* t = refs;
+    std::string normalized;
 
-    for (char *f = refs; *f;)
+    normalized.reserve(refs.size());
+    for (std::size_t pos = 0; pos < refs.size() && refs[pos] != '\0';)
     {
-        if (*f == '<')
+        if (refs[pos] == '<')
         {
-            while (*f && (*t++ = *f++) != '>')
+            while (pos < refs.size() && refs[pos] != '\0')
             {
+                const char ch = refs[pos++];
+                normalized.push_back(ch);
+                if (ch == '>')
+                {
+                    break;
+                }
             }
-            while (is_hor_space(*f) || *f == '\n' || *f == ',')
+            while (pos < refs.size() && (is_hor_space(refs[pos]) || refs[pos] == '\n' || refs[pos] == ','))
             {
-                f++;
+                pos++;
             }
-            if (f != t)
+            // Preserve the old in-place compactor's source/output offset test.
+            if (pos != normalized.size())
             {
-                *t++ = ' ';
+                normalized.push_back(' ');
             }
         }
         else
         {
-            f++;
+            pos++;
         }
     }
-    if (t != refs && t[-1] == ' ')
+    if (!normalized.empty() && normalized.back() == ' ')
     {
-        t--;
+        normalized.pop_back();
     }
-    *t = '\0';
+    return normalized;
 }

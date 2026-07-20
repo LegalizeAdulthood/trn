@@ -2277,11 +2277,7 @@ TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroupNoArticleIsEmpty)
 
 TEST(NormalizeReferencesTest, normalize)
 {
-    char buffer[] = TRN_TEST_HEADER_REFERENCES;
-
-    normalize_refs(buffer);
-
-    ASSERT_EQ(TRN_TEST_HEADER_REFERENCES, std::string{buffer});
+    ASSERT_EQ(TRN_TEST_HEADER_REFERENCES, normalize_refs(TRN_TEST_HEADER_REFERENCES));
 }
 
 TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
