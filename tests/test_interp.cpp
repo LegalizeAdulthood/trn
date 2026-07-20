@@ -2209,6 +2209,17 @@ TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_LAST_REFERENCE, buffer());
 }
 
+TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroupNoArticleIsEmpty)
+{
+    g_art = ArticleNum{};
+    char pattern[]{"%r"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(bufferIsEmpty());
+}
+
 TEST(NormalizeReferencesTest, normalize)
 {
     char buffer[] = TRN_TEST_HEADER_REFERENCES;

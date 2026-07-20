@@ -1051,16 +1051,23 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         refs_buf.reset();
                         if (g_header_type[REFS_LINE].min_pos >= 0)
                         {
-                            refs_buf = fetch_lines(g_art,REFS_LINE);
+                            refs_buf = fetch_lines(g_art, REFS_LINE);
                             normalize_refs(refs_buf->data());
-                            s = std::strrchr(refs_buf->data(), '<');
-                            if (s != nullptr)
+                            const std::size_t normalized_size = refs_buf->find('\0');
+                            if (normalized_size != std::string::npos)
                             {
+                                refs_buf->resize(normalized_size);
+                            }
+                            const std::string_view refs_text{refs_buf->data(), refs_buf->size()};
+                            const std::size_t      last_ref = refs_text.rfind('<');
+                            if (last_ref != std::string_view::npos)
+                            {
+                                set_value(refs_text.substr(last_ref));
                                 break;
                             }
                         }
                     }
-                    s = s_empty;
+                    set_value({});
                     break;
 
                 case 'R':
