@@ -15,9 +15,9 @@
 
 #include <algorithm>
 #include <cstdio>
-#include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <system_error>
 
@@ -48,25 +48,21 @@ void last_final()
 
 void read_last()
 {
-    if (std::FILE *fp = std::fopen(s_last_file.c_str(), "r"))
+    std::ifstream input{s_last_file};
+    std::string   last_newsgroup_name;
+    if (std::getline(input, last_newsgroup_name))
     {
-        if (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
+        long old_last = g_last_time;
+        if (!last_newsgroup_name.empty())
         {
-            long old_last = g_last_time;
-            g_buf[std::strlen(g_buf)-1] = '\0';
-            if (*g_buf)
-            {
-                g_last_newsgroup_name = g_buf;
-            }
-            std::fscanf(fp,"%ld %ld %ld %ld",&g_last_time,&g_last_active_size,
-                                           &g_last_new_time,&g_last_extra_num);
-            if (!g_last_new_time)
-            {
-                g_last_new_time = s_start_time;
-            }
-            g_last_time = std::max(old_last, g_last_time);
+            g_last_newsgroup_name = last_newsgroup_name;
         }
-        std::fclose(fp);
+        input >> g_last_time >> g_last_active_size >> g_last_new_time >> g_last_extra_num;
+        if (!g_last_new_time)
+        {
+            g_last_new_time = s_start_time;
+        }
+        g_last_time = std::max(old_last, g_last_time);
     }
 }
 

@@ -441,13 +441,12 @@ generated files, or the vendored `vcpkg` tree.
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
   `g_art_line`, `g_head_buf`, `g_art_buf`, `g_buf` uses in
-  `read_last`, `news_news_check`, `scan_active_line` callers, terminal
-  command-input scratch, MIME HTML tag parser state, `uudecode`
-  pending-line storage, selector command key storage, and tree-indent
-  storage.  Tiny UTF byte scratch buffers, translation tables, MIME
-  decode tables, terminal pushback bytes, termcap storage, and regex
-  bytecode arrays are non-string protocol or parser storage, not current
-  string slices.
+  `news_news_check`, `scan_active_line` callers, terminal command-input
+  scratch, MIME HTML tag parser state, `uudecode` pending-line storage,
+  selector command key storage, and tree-indent storage.  Tiny UTF byte
+  scratch buffers, translation tables, MIME decode tables, terminal
+  pushback bytes, termcap storage, and regex bytecode arrays are
+  non-string protocol or parser storage, not current string slices.
 - Termcap capability globals are still exposed as mutable `char *` even
   though the code treats most capability text as read-only after
   discovery.  This is a const-correctness slice before the remaining
@@ -505,9 +504,9 @@ production code.
 - Copy and concatenation: `strcpy` 29, `strncpy` 3, `strcat` 1.
 - Comparison: `strcmp` 4, `strncmp` 23.
 - Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
-  `strlen` 66.
+  `strlen` 65.
 - Formatting into C buffers: `sprintf` 29, `snprintf` 2.
-- C text I/O roots: `fgets` 28, `fputs` 202, `printf` 385,
+- C text I/O roots: `fgets` 27, `fputs` 202, `printf` 385,
   `fprintf` 54.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -533,19 +532,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-120 - Last File Read Buffer
-
-- Files: `libtrn/last.cpp`, `tests/test_last.cpp`.
-- Kind: local `g_buf` file input.
-- Function: `read_last`.
-- Depends on: none.
-- Change: read the first `.rnlast` line into a local `std::string`,
-  strip the line ending with string operations, and assign
-  `g_last_newsgroup_name` from the string.  Keep the existing numeric
-  field parsing behavior.
-- Truncation: arbitrary `LINE_BUF_LEN` limit from the global buffer.
-- Tests: run `test_last`.
 
 #### CSTR-121 - News News Display Buffer
 

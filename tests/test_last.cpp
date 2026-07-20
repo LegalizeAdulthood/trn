@@ -120,3 +120,21 @@ TEST_F(LastTest, writeLastRecordsCurrentState)
               read_lines(last_file()));
     EXPECT_FALSE(fs::exists(temp_file()));
 }
+
+TEST_F(LastTest, readLastLoadsCurrentState)
+{
+    std::ofstream{last_file()} << "comp.lang.apl\n10\n20\n30\n40\n";
+    g_last_newsgroup_name = "comp.lang.c++";
+    g_last_time = 99;
+    g_last_active_size = 0;
+    g_last_new_time = 0;
+    g_last_extra_num = 0;
+
+    read_last();
+
+    EXPECT_EQ("comp.lang.apl", g_last_newsgroup_name);
+    EXPECT_EQ(99, g_last_time);
+    EXPECT_EQ(20, g_last_active_size);
+    EXPECT_EQ(30, g_last_new_time);
+    EXPECT_EQ(40, g_last_extra_num);
+}
