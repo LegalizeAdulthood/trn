@@ -108,19 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-012 - Interpolated Environment Default Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-011`.
-- Case: `%<name-default>`.
-- Change: parse the name/default text into string storage, call
-  `get_env_var`, interpolate the result as a `std::string`, and expose it
-  through the local value view.
-- Preserve: recursive interpolation of the default result.
-- Tests: focused interpolation tests.
-
 #### DINT-012-013 - Header Fetch Case
 
 - Files: `libtrn/intrp.cpp`.
