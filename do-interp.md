@@ -103,20 +103,6 @@ completed; remove the completed slice from this file.
 
 These slices add or tighten tests before the parser implementation moves.
 
-#### DINT-001 - Stopper Cursor Coverage
-
-- Files: `tests/test_interp.cpp`.
-- Kind: behavior coverage.
-- Functions: legacy C `do_interp` stopper calls.
-- Depends on: none.
-- Change: add tests proving that interpolation stops before the stopper,
-  returns a cursor pointing at the stopper, and does not consume the
-  stopper.
-- Include: a plain stopper case, escaped delimiter text if currently
-  supported, and an end-of-string case.
-- Tests: run focused interpolation tests before and after adding the
-  tests.
-
 #### DINT-002 - String Wrapper Coverage
 
 - Files: `tests/test_interp.cpp`.
@@ -155,7 +141,7 @@ callers off the C wrappers.
 - Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`.
 - Kind: public API foundation.
 - Function: `do_interp`.
-- Depends on: `DINT-001`, `DINT-002`, `DINT-003`.
+- Depends on: `DINT-002`, `DINT-003`.
 - Change: add
   `std::string do_interp(std::string_view &pattern,
   std::string_view stoppers, std::string_view cmd);`.
