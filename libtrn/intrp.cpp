@@ -815,11 +815,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'd':
                     if (!g_newsgroup_dir.empty())
                     {
-                        s = assign_scratch(fmt::format("{}/{}", g_data_source->m_spool_dir, g_newsgroup_dir));
+                        set_owned_value(fmt::format("{}/{}", g_data_source->m_spool_dir, g_newsgroup_dir));
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 

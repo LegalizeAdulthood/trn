@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-030 - Spool Directory Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-020`.
-- Case: `%d`.
-- Change: build the current spool/newsgroup directory path in local
-  `std::string` storage.
-- Preserve: empty result when there is no current newsgroup directory.
-- Tests: focused interpolation tests.
-
 #### DINT-012-031 - Distribution Header Case
 
 - Files: `libtrn/intrp.cpp`.
