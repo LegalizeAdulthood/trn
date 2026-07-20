@@ -637,8 +637,6 @@ static int subject_cmp(std::string_view key, HashDatum data)
 void look_ahead()
 {
 #ifdef ARTSEARCH
-    char* h;
-    char* s;
 
 #ifdef DEBUG
     if (g_debug && g_srchahead)
@@ -662,21 +660,21 @@ void look_ahead()
 #ifdef ARTSEARCH
     if (g_srchahead && g_srchahead < g_art)     // in ^N mode?
     {
-        char* pattern;
-
-        pattern = g_buf+1;
-        std::strcpy(pattern,": *");
-        h = pattern + std::strlen(pattern);
-        interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
+        std::string pattern;
+        pattern.reserve(LINE_BUF_LEN);
+        pattern = ": *";
+        const std::string::size_type subject_start = pattern.size();
+        pattern += do_interp("%\\s");
         {                       // compensate for notes files
-            for (int i = 24; *h && i--; h++)
+            std::string::size_type subject_end = subject_start;
+            for (int i = 24; subject_end < pattern.size() && i--; ++subject_end)
             {
-                if (*h == '\\')
+                if (pattern[subject_end] == '\\' && subject_end + 1 < pattern.size())
                 {
-                    h++;
+                    ++subject_end;
                 }
             }
-            *h = '\0';
+            pattern.resize(subject_end);
         }
 #ifdef DEBUG
         if (g_debug & DEB_SEARCH_AHEAD)
@@ -684,7 +682,7 @@ void look_ahead()
             std::fputs("(hit CR)",stdout);
             std::fflush(stdout);
             std::fgets(g_buf+128, sizeof g_buf-128, stdin);
-            std::printf("\npattern = %s\n",pattern);
+            std::printf("\npattern = %s\n",pattern.c_str());
             term_down(2);
         }
 #endif

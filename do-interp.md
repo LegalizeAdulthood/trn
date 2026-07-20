@@ -125,17 +125,6 @@ the string API.  They are ordered after the implementation slices because
 each caller should delegate to the new string implementation, not to a
 fresh wrapper around the old parser.
 
-#### DINT-042 - Cache Look-ahead Subject Interpolation
-
-- Files: `libtrn/cache.cpp`.
-- Kind: legacy `interp` caller migration.
-- Function: `look_ahead`.
-- Depends on: `DINT-014`.
-- Change: replace the `g_buf` interpolation write used to seed the
-  look-ahead subject pattern with a local `std::string`.
-- Tests: cache/look-ahead coverage if present; otherwise add focused
-  coverage first if the behavior is easy to isolate.
-
 #### DINT-043 - Option Startup Interpolation
 
 - Files: `libtrn/opt.cpp`.
@@ -233,9 +222,9 @@ fresh wrapper around the old parser.
 - Files: `tests/test_interp.cpp`.
 - Kind: legacy C test migration.
 - Function: test helper around `do_interp`.
-- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-042`,
-  `DINT-043`, `DINT-044`, `DINT-045`, `DINT-046`,
-  `DINT-047`, `DINT-048`, `DINT-049`, `DINT-050`.
+- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-043`,
+  `DINT-044`, `DINT-045`, `DINT-046`, `DINT-047`, `DINT-048`,
+  `DINT-049`, `DINT-050`.
 - Change: migrate tests that call the C buffer API to the public string
   API, using a reference `std::string_view` cursor for stopper tests.
 - Tests: focused interpolation tests.
