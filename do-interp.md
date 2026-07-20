@@ -108,24 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-080 - Move Outer Parser To Reference Cursor
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: implementation replacement.
-- Function: `do_interp(std::string_view &, std::string_view,
-  std::string_view)`.
-- Depends on: `DINT-012-070`.
-- Change: move the parser body to the reference-cursor string overload.
-- Replace: C output-buffer writes with local `std::string`
-  construction.
-- Replace: pointer cursor mutation with `std::string_view::remove_prefix`
-  and view slicing.
-- Replace: `std::strchr(stoppers, ch)` with `stoppers.find(ch)`.
-- Preserve: stopper position, nested interpolation, `%?` line splitting,
-  modifiers, formatting, shell command interpolation, prompted input, and
-  current error paths.
-- Tests: focused interpolation tests.
-
 #### DINT-013 - Make C Buffer API A Wrapper
 
 - Files: `libtrn/intrp.cpp`.
