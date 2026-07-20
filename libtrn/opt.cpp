@@ -106,8 +106,8 @@ void opt_init(int argc, char *argv[], char *tcbuf)
     {
         g_check_flag = true; // so we can optimize for -c
     }
-    interp(tcbuf, TCBUF_SIZE, GLOBAL_INIT);
-    opt_file(tcbuf, false);
+    const std::string global_init_file = do_interp(GLOBAL_INIT);
+    opt_file(global_init_file.c_str(), false);
     *tcbuf = '\0';
 
     const OptionCatalog catalog;
