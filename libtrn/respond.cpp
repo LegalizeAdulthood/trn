@@ -985,19 +985,20 @@ void forward()
     }
     if (g_art_fp != nullptr)
     {
-        interp(g_buf, sizeof g_buf, get_env_var("FORWARDMSG", FORWARD_MSG).c_str());
+        std::string forward_message = do_interp(get_env_var("FORWARDMSG", FORWARD_MSG));
         if (mime_boundary)
         {
-            if (*g_buf && string_case_compare(std::string_view{g_buf}.substr(0, 8), "Content-") != 0)
+            if (!forward_message.empty() &&
+                string_case_compare(std::string_view{forward_message}.substr(0, 8), "Content-") != 0)
             {
-                std::strcpy(g_buf, "Content-Type: text/plain\n");
+                forward_message = "Content-Type: text/plain\n";
             }
-            std::fprintf(header,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
-                    mime_boundary,g_buf,mime_boundary);
+            fmt::print(header, "--{}\n{}\n[Replace this with your comments.]\n\n--{}\nContent-Type: message/rfc822\n\n",
+                       mime_boundary, forward_message, mime_boundary);
         }
-        else if (*g_buf)
+        else if (!forward_message.empty())
         {
-            std::fprintf(header, "%s\n", g_buf);
+            fmt::print(header, "{}\n", forward_message);
         }
         parse_header(g_art);
         seek_art((ArticlePosition)0);
@@ -1016,10 +1017,10 @@ void forward()
         }
         else
         {
-            interp(g_buf, (sizeof g_buf), get_env_var("FORWARDMSGEND", FORWARD_MSG_END).c_str());
-            if (*g_buf)
+            const std::string forward_message_end = do_interp(get_env_var("FORWARDMSGEND", FORWARD_MSG_END));
+            if (!forward_message_end.empty())
             {
-                std::fprintf(header, "%s\n", g_buf);
+                fmt::print(header, "{}\n", forward_message_end);
             }
         }
     }
