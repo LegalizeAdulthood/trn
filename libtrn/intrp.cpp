@@ -267,7 +267,7 @@ std::size_t skip_interp(std::string_view pattern, std::string_view stoppers)
     return skip_interp(start, stoppers_text.c_str()) - start;
 }
 
-// interpret interpolations
+// expand interpolation strings
 const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
 {
     std::optional<std::string> subj_buf;

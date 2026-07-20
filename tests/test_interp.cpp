@@ -264,9 +264,25 @@ TEST_F(InterpolatorTest, stringDoInterpReturnsInterpolatedText)
     EXPECT_EQ("this string contains no escapes", do_interp("this string contains no escapes"));
 }
 
+TEST_F(InterpolatorTest, stringDoInterpExpandsEnvironmentVar)
+{
+    m_env.expect_env("FOO", "value");
+
+    EXPECT_EQ("value", do_interp("%{FOO}"));
+}
+
 TEST_F(InterpolatorTest, sizedStringDoInterpReturnsInterpolatedText)
 {
     EXPECT_EQ("this string contains no escapes", do_interp("this string contains no escapes", CMD_BUF_LEN));
+}
+
+TEST_F(InterpolatorTest, sizedStringDoInterpHandlesResponseHeaderSizedText)
+{
+    std::string header{"Subject: "};
+    header.append(2 * LINE_BUF_LEN, 'x');
+    header += "\n";
+
+    EXPECT_EQ(header, do_interp(header, 5 * LINE_BUF_LEN));
 }
 
 TEST_F(InterpolatorTest, stringInterpSearchUsesSearchCommand)

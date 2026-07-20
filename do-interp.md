@@ -103,20 +103,6 @@ completed; remove the completed slice from this file.
 
 These slices add or tighten tests before the parser implementation moves.
 
-#### DINT-002 - String Wrapper Coverage
-
-- Files: `tests/test_interp.cpp`.
-- Kind: behavior coverage.
-- Functions: string `do_interp` and `interp_search` overloads.
-- Depends on: none.
-- Change: cover the public string overloads that will delegate to the
-  new reference-cursor API.
-- Include: literal pass-through, environment interpolation, search
-  command interpolation, and a response-header-sized input that should
-  no longer depend on an explicit output buffer size.
-- Tests: run focused interpolation tests before and after adding the
-  tests.
-
 #### DINT-003 - Nested Interpolation Coverage
 
 - Files: `tests/test_interp.cpp`.
@@ -141,7 +127,7 @@ callers off the C wrappers.
 - Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`.
 - Kind: public API foundation.
 - Function: `do_interp`.
-- Depends on: `DINT-002`, `DINT-003`.
+- Depends on: `DINT-003`.
 - Change: add
   `std::string do_interp(std::string_view &pattern,
   std::string_view stoppers, std::string_view cmd);`.
