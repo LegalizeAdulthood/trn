@@ -1267,49 +1267,37 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'y':       // from line with *-shortening
                     if (!g_in_ng)
                     {
-                        s = s_empty;
+                        set_value({});
                         break;
                     }
                     {
                         from_buf = fetch_lines(g_art, FROM_LINE);
-                        char *at = from_buf->data();
-                        char *s3 = nullptr;
-                        int   i = 0;
-
-                        for (; (*at && (*at != '@') && (*at != ' ')); at++)
+                        const std::string_view from{*from_buf};
+                        const std::size_t      at_pos = from.find_first_of("@ ");
+                        if (at_pos != std::string_view::npos && from[at_pos] == '@') // we have normal form...
                         {
-                        }
-                        if (*at == '@')         // we have normal form...
-                        {
-                            for (s3 = at + 1; (*s3 && (*s3 != ' ')); s3++)
+                            const std::size_t domain_start = at_pos + 1;
+                            const std::size_t address_end = from.find(' ', domain_start);
+                            const std::size_t domain_end =
+                                address_end == std::string_view::npos ? from.size() : address_end;
+                            const std::size_t last_dot =
+                                domain_start < domain_end ? from.rfind('.', domain_end - 1) : std::string_view::npos;
+                            if (last_dot != std::string_view::npos && last_dot >= domain_start)
                             {
-                                if (*s3 == '.')
+                                const std::size_t suffix_pos = from.rfind('.', last_dot - 1);
+                                if (suffix_pos != std::string_view::npos && suffix_pos >= domain_start)
                                 {
-                                    i++;
+                                    std::string shortened_from;
+                                    shortened_from.reserve(1024);
+                                    shortened_from.append(from, 0, domain_start);
+                                    shortened_from.push_back('*');
+                                    shortened_from.append(from, suffix_pos, std::string::npos);
+                                    set_owned_value(std::move(shortened_from));
+                                    break;
                                 }
                             }
                         }
-                        if (i > 1)   // more than one dot
-                        {
-                            s3 = at;    // will be incremented before use
-                            while (i >= 2)
-                            {
-                                s3++;
-                                if (*s3 == '.')
-                                {
-                                    i--;
-                                }
-                            }
-                            const std::size_t replace_pos = static_cast<std::size_t>(at + 1 - from_buf->data());
-                            const std::size_t suffix_pos = static_cast<std::size_t>(s3 - from_buf->data());
-                            std::string       shortened_from;
-                            shortened_from.reserve(1024);
-                            shortened_from.append(*from_buf, 0, replace_pos);
-                            shortened_from.push_back('*');
-                            shortened_from.append(*from_buf, suffix_pos, std::string::npos);
-                            from_buf = std::move(shortened_from);
-                        }
-                        s = from_buf->c_str();
+                        set_value(from);
                     }
                     break;
 

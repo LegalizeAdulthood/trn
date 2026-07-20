@@ -2377,6 +2377,18 @@ TEST_F(InterpolatorNewsgroupTest, shortenedFromInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_FROM, buffer());
 }
 
+TEST_F(InterpolatorNewsgroupTest, shortenedFromShortensMultiPartDomain)
+{
+    article_ptr(g_art)->set_cached_line(FROM_LINE, "casey@host.news.example.test (Casey)");
+    g_parsed_art = ArticleNum{};
+    char pattern[]{"%y"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("casey@*.example.test (Casey)", buffer());
+}
+
 TEST_F(InterpolatorNewsgroupTest, articleSizeInNewsgroup)
 {
     std::ostringstream str;

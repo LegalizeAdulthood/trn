@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-040 - Short From Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-032`.
-- Case: `%y`.
-- Change: replace pointer-walking shortening with string position logic
-  and expose the result through the local value view.
-- Preserve: current star-shortening behavior.
-- Tests: focused interpolation tests.
-
 #### DINT-012-041 - Article Size Case
 
 - Files: `libtrn/intrp.cpp`.
