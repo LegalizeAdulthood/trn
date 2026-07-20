@@ -849,8 +849,8 @@ void reply()
     if (incl_body && g_art_fp != nullptr)
     {
         char* s;
-        interp(g_buf, (sizeof g_buf), get_env_var("YOUSAID", YOU_SAID).c_str());
-        std::fprintf(header,"%s\n",g_buf);
+        const std::string introduction = do_interp(get_env_var("YOUSAID", YOU_SAID));
+        fmt::print(header, "{}\n", introduction);
         parse_header(g_art);
         mime_set_article();
         clear_art_buf();
@@ -869,7 +869,7 @@ void reply()
                 *t = '\0';
             }
         }
-        std::fprintf(header,"\n");
+        fmt::print(header, "\n");
         g_wrapped_nl = WRAPPED_NL;
     }
     std::fclose(header);
