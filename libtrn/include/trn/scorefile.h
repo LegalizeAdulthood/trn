@@ -46,15 +46,6 @@ extern bool g_sf_verbose;       // if true print more stuff while loading
 void sf_init();
 void sf_clean();
 
-// Returns true if text pointed to by s is a text representation of
-// the number 0.  Used for error checking.
-// Note: does not check for trailing garbage ("+00kjsdfk" returns true).
-//
-inline bool is_text_zero(const char *s)
-{
-    return *s == '0' || ((*s == '+' || *s == '-') && s[1]=='0');
-}
-
 int   sf_score(ArticleNum a);
 void  sf_append(std::string_view line);
 void  sf_edit_file(std::string_view filespec);

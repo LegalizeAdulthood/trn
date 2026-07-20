@@ -558,17 +558,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-142 - Unused Scorefile Text-zero Helper
-
-- Files: `libtrn/include/trn/scorefile.h`.
-- Kind: unused C-string helper.
-- Function: `is_text_zero`.
-- Depends on: none.
-- Change: remove the unused inline helper and its stale C-string
-  comments.  The score parser already performs the check locally with
-  string-view operations.
-- Tests: build or run the scorefile header standalone test.
-
 #### CSTR-143 - Scorefile Match Printer Views
 
 - Files: `libtrn/scorefile.cpp`.
