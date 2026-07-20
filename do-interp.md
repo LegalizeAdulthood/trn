@@ -103,20 +103,6 @@ completed; remove the completed slice from this file.
 
 These slices add or tighten tests before the parser implementation moves.
 
-#### DINT-003 - Nested Interpolation Coverage
-
-- Files: `tests/test_interp.cpp`.
-- Kind: behavior coverage.
-- Functions: conditional, prompt, backtick, and `skip_interp` paths.
-- Depends on: none.
-- Change: add targeted coverage for nested interpolation cursor movement
-  that the string-view implementation must preserve.
-- Include: condition true branch, condition false branch, skipped nested
-  branch, and backtick/prompt only when an existing isolated test harness
-  already makes the side effect safe.
-- Tests: run focused interpolation tests before and after adding the
-  tests.
-
 ### Tier 1 - Public API Foundation
 
 These slices change the owning parser API.  Complete them before moving
@@ -127,7 +113,7 @@ callers off the C wrappers.
 - Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`.
 - Kind: public API foundation.
 - Function: `do_interp`.
-- Depends on: `DINT-003`.
+- Depends on: none.
 - Change: add
   `std::string do_interp(std::string_view &pattern,
   std::string_view stoppers, std::string_view cmd);`.

@@ -1185,6 +1185,66 @@ TEST_F(InterpolatorTest, equalInterpolatedFalse)
     ASSERT_EQ("p", buffer());
 }
 
+TEST_F(InterpolatorTest, conditionalTrueBranchStopsBeforeOuterStopper)
+{
+    char pattern[]{"%(x=x?true:false)|tail"};
+
+    const char       *new_pattern = interpolate(pattern, "|");
+    const std::size_t stopper = std::string_view{pattern}.find('|');
+
+    ASSERT_EQ('|', *new_pattern);
+    ASSERT_EQ(stopper, static_cast<std::size_t>(new_pattern - pattern));
+    ASSERT_EQ("|tail", std::string_view{new_pattern});
+    ASSERT_EQ("true", buffer());
+}
+
+TEST_F(InterpolatorTest, conditionalFalseBranchStopsBeforeOuterStopper)
+{
+    char pattern[]{"%(x=y?true:false)|tail"};
+
+    const char       *new_pattern = interpolate(pattern, "|");
+    const std::size_t stopper = std::string_view{pattern}.find('|');
+
+    ASSERT_EQ('|', *new_pattern);
+    ASSERT_EQ(stopper, static_cast<std::size_t>(new_pattern - pattern));
+    ASSERT_EQ("|tail", std::string_view{new_pattern});
+    ASSERT_EQ("false", buffer());
+}
+
+TEST_F(InterpolatorTest, conditionalSkipsNestedUnusedBranch)
+{
+    char pattern[]{"%(x=y?%(a=a?wrong:wrong):right)|tail"};
+
+    const char       *new_pattern = interpolate(pattern, "|");
+    const std::size_t stopper = std::string_view{pattern}.find('|');
+
+    ASSERT_EQ('|', *new_pattern);
+    ASSERT_EQ(stopper, static_cast<std::size_t>(new_pattern - pattern));
+    ASSERT_EQ("|tail", std::string_view{new_pattern});
+    ASSERT_EQ("right", buffer());
+}
+
+TEST_F(InterpolatorTest, skipInterpSkipsNestedConditional)
+{
+    const std::string_view pattern{"%(x=x?yes:%(a=a?skip:skip))|tail"};
+
+    EXPECT_EQ(pattern.find('|'), skip_interp(pattern, "|"));
+}
+
+TEST_F(InterpolatorTest, skipInterpSkipsBacktickText)
+{
+    const std::string_view pattern{"%`printf |`|tail"};
+
+    EXPECT_EQ(pattern.rfind('|'), skip_interp(pattern, "|"));
+}
+
+TEST_F(InterpolatorTest, skipInterpSkipsPromptText)
+{
+    const std::string_view pattern{"%\"prompt | text\"|tail"};
+
+    EXPECT_EQ(pattern.rfind('|'), skip_interp(pattern, "|"));
+}
+
 TEST_F(InterpolatorTest, notEqualTriviallyTrue)
 {
     char pattern[]{"%(x!=y?true:false)"};
