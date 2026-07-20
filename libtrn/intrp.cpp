@@ -797,7 +797,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'b':
-                    s = assign_scratch(g_save_dest);
+                    set_value(g_save_dest);
                     break;
 
                 case 'B':
@@ -915,11 +915,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'h':                       // header file name
-                    s = assign_scratch(g_head_name);
+                    set_value(g_head_name);
                     break;
 
                 case 'H':                       // host name in postings
-                    s = assign_scratch(g_p_host_name);
+                    set_value(g_p_host_name);
                     break;
 
                 case 'i':
@@ -942,7 +942,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'I':                       // indent string for quoting
-                    s = assign_scratch(fmt::format("'{}'", g_indent_string));
+                    set_owned_value(fmt::format("'{}'", g_indent_string));
                     break;
 
                 case 'j':
@@ -951,14 +951,14 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case 'l':                       // news admin login
 #ifdef HAS_NEWS_ADMIN
-                    s = assign_scratch(g_news_admin);
+                    set_value(g_news_admin);
 #else
-                    s = "???";
+                    set_value("???");
 #endif
                     break;
 
                 case 'L':                       // login id
-                    s = assign_scratch(g_login_name);
+                    set_value(g_login_name);
                     break;
 
                 case 'm':               // current mode
@@ -984,7 +984,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case 'N':                       // full name
                     env_value = get_env_var("NAME", g_real_name);
-                    s = env_value.c_str();
+                    set_value(env_value);
                     break;
 
                 case 'o': // organization
@@ -1243,15 +1243,15 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
 
                 case 'V':
-                    s = assign_scratch(g_patch_level);
+                    set_value(g_patch_level);
                     break;
 
                 case 'x':                           // news library
-                    s = assign_scratch(g_lib);
+                    set_value(g_lib);
                     break;
 
                 case 'X':                           // rn library
-                    s = assign_scratch(g_rn_lib);
+                    set_value(g_rn_lib);
                     break;
 
                 case 'y':       // from line with *-shortening

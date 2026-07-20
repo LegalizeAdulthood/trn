@@ -108,17 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-026 - Simple String Setting Cases
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Cases: `%b`, `%h`, `%H`, `%I`, `%l`, `%L`, `%N`, `%V`, `%x`, `%X`.
-- Change: expose global string settings as string/string-view values.
-- Preserve: `%l` fallback when `HAS_NEWS_ADMIN` is absent.
-- Tests: focused interpolation tests.
-
 #### DINT-012-027 - Single-character Mode Cases
 
 - Files: `libtrn/intrp.cpp`.
