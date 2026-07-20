@@ -517,18 +517,16 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 {
                     const char *pattern_start = pattern + 1;
                     pattern = copy_till_scratch(pattern_start, '}');
-                    const char *m = std::strchr(scratch.c_str(), '-');
-                    if (m != nullptr)
+                    std::string_view  name{scratch};
+                    std::string_view  default_value;
+                    const std::size_t dash = name.find('-');
+                    if (dash != std::string_view::npos)
                     {
-                        scratch[static_cast<std::size_t>(m - scratch.c_str())] = '\0';
-                        m++;
+                        default_value = name.substr(dash + 1);
+                        name = name.substr(0, dash);
                     }
-                    else
-                    {
-                        m = s_empty;
-                    }
-                    env_value = get_env_var(scratch.c_str(), m);
-                    s = env_value.c_str();
+                    env_value = get_env_var(name, default_value);
+                    set_value(env_value);
                     break;
                 }
 
