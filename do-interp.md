@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-028 - Optional Extract Cases
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Cases: `%e`, `%E`.
-- Change: expose extract program and destination as string/string-view
-  values.
-- Preserve: `%e` returns `-` when no extract program is configured.
-- Tests: focused interpolation tests.
-
 #### DINT-012-030 - Spool Directory Case
 
 - Files: `libtrn/intrp.cpp`.

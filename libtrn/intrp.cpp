@@ -839,11 +839,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 {
                     if (g_extract_prog.empty())
                     {
-                        s = "-";
+                        set_value("-");
                     }
                     else
                     {
-                        s = assign_scratch(g_extract_prog);
+                        set_value(g_extract_prog);
                     }
                     break;
                 }
@@ -851,11 +851,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'E':
                     if (g_extract_dest.empty())
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     else
                     {
-                        s = assign_scratch(g_extract_dest);
+                        set_value(g_extract_dest);
                     }
                     break;
 
