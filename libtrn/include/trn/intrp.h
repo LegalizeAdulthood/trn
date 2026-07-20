@@ -24,7 +24,7 @@ void  interp_final();
 std::string do_interp(std::string_view pattern);
 std::string do_interp(std::string_view pattern, std::size_t result_size);
 std::string do_interp(std::string_view &pattern, std::string_view stoppers, std::string_view cmd);
-std::string interp_search(std::string_view pattern, const char *cmd);
+std::string interp_search(std::string_view pattern, std::string_view cmd);
 std::size_t skip_interp(std::string_view pattern, std::string_view stoppers);
 const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd);
 const char *interp_backslash(char *dest, const char *pattern);

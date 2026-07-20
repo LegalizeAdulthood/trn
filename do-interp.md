@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-014 - Delegate String Overloads To New API
-
-- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
-- Kind: overload cleanup.
-- Functions: string `do_interp`, string `interp_search`.
-- Depends on: `DINT-013`.
-- Change: remove `interp_to_string` and make every string overload
-  delegate to the reference-cursor `do_interp`.
-- Change: make string `interp_search` accept `std::string_view cmd`.
-- Keep: a temporary `const char *cmd` adapter only if needed for callers.
-- Tests: focused interpolation tests.
-
 ### Tier 2 - Remove Obsolete Size API
 
 These slices remove the fixed-buffer size from string call sites after
