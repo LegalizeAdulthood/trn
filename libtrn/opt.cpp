@@ -124,7 +124,7 @@ void opt_init(int argc, char *argv[], char *tcbuf)
     if (!fs::is_directory(trn_dir, error))
     {
         std::printf("Creating the directory %s.\n", trn_dir.string().c_str());
-        if (make_dir(trn_dir.string().c_str(), MD_DIR))
+        if (make_dir(trn_dir, MD_DIR))
         {
             std::printf("Unable to create `%s'.\n", trn_dir.string().c_str());
             finalize(1);
@@ -1640,10 +1640,10 @@ void cwd_check()
     if (change_dir(g_priv_dir))
     {
         save_dir = file_exp(g_priv_dir);
-        if (make_dir(save_dir.c_str(), MD_DIR) || change_dir(save_dir))
+        if (make_dir(save_dir, MD_DIR) || change_dir(save_dir))
         {
             const std::string default_save_dir = do_interp("%~/News");
-            if (make_dir(default_save_dir.c_str(), MD_DIR))
+            if (make_dir(default_save_dir, MD_DIR))
             {
                 save_dir = g_home_dir;
             }

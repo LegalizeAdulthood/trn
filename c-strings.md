@@ -538,19 +538,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-125 - Make Directory Path Signature
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `tests/test_makedir.cpp`, direct callers.
-- Kind: filename parameter.
-- Function: `make_dir`.
-- Depends on: none.
-- Change: promote the filename parameter to `const fs::path &`, because
-  the implementation immediately constructs a path.  Update callers that
-  already hold paths to pass them directly, and leave string callers to
-  use implicit path construction.
-- Tests: run `test_makedir`.
-
 #### CSTR-126 - Safe Link Path Signature
 
 - Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,

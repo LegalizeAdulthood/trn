@@ -171,7 +171,7 @@ SaveResult save_article()
         {
             std::string save_directory = file_exp(get_env_var("SAVEDIR", SAVEDIR));
             save_directory.reserve(LINE_BUF_LEN);
-            if (make_dir(save_directory.c_str(), MD_DIR)) // ensure directory exists
+            if (make_dir(save_directory, MD_DIR)) // ensure directory exists
             {
                 save_directory = g_priv_dir;
             }
@@ -189,7 +189,7 @@ SaveResult save_article()
             destination = (fs::path{g_priv_dir} / destination).generic_string();
         }
         g_extract_dest = destination;                 // make it handy for %E
-        if (make_dir(g_extract_dest.c_str(), MD_DIR)) // ensure directory exists
+        if (make_dir(g_extract_dest, MD_DIR)) // ensure directory exists
         {
             g_int_count++;
             return SAVE_DONE;
@@ -351,7 +351,7 @@ SaveResult save_article()
         if (!FILE_REF(destination.c_str()))
         {
             std::string save_directory = file_exp(get_env_var("SAVEDIR", SAVEDIR));
-            if (make_dir(save_directory.c_str(), MD_DIR)) // ensure directory exists
+            if (make_dir(save_directory, MD_DIR)) // ensure directory exists
             {
                 save_directory = g_priv_dir;
             }
@@ -370,7 +370,7 @@ SaveResult save_article()
         {
             destination = (fs::path{destination} / file_exp(i ? "News" : savename)).generic_string();
         }
-        make_dir(destination.c_str(), MD_FILE);
+        make_dir(destination, MD_FILE);
         if (!FILE_REF(destination.c_str())) // relative path?
         {
             destination = (fs::path{g_priv_dir} / destination).generic_string();

@@ -850,7 +850,7 @@ void kill_file_append(const char *cmd, bool local)
 {
     const fs::path kill_file{
         file_exp(local ? get_env_var("KILLLOCAL", s_kill_local) : get_env_var("KILLGLOBAL", s_kill_global))};
-    if (!make_dir(kill_file.string().c_str(), MD_FILE))
+    if (!make_dir(kill_file, MD_FILE))
     {
         if (g_verbose)
         {

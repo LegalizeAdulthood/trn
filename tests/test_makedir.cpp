@@ -5,8 +5,9 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -20,16 +21,13 @@ protected:
     void SetUp() override;
     void TearDown() override;
 
-    void setup_buffer(const std::filesystem::path &path);
-
-    std::filesystem::path m_path{TEST_MAKEDIR_BASE};
-    char m_buffer[256]{};
+    fs::path m_path{TEST_MAKEDIR_BASE};
 };
 
 void TestMakeDir::SetUp()
 {
     Test::SetUp();
-    ASSERT_TRUE(std::filesystem::exists(TEST_MAKEDIR_BASE));
+    ASSERT_TRUE(fs::exists(TEST_MAKEDIR_BASE));
 }
 
 void TestMakeDir::TearDown()
@@ -37,49 +35,36 @@ void TestMakeDir::TearDown()
     Test::TearDown();
 }
 
-void TestMakeDir::setup_buffer(const std::filesystem::path &path)
-{
-    std::strcpy(m_buffer, path.string().c_str());
-    for (char *backslash = std::strchr(m_buffer, '\\'); backslash != nullptr; backslash = std::strchr(m_buffer, '\\'))
-    {
-        *backslash = '/';
-    }
-}
-
 } // namespace
 
 TEST_F(TestMakeDir, directoryExists)
 {
-    setup_buffer(m_path);
-
-    bool result{make_dir(m_buffer, MD_DIR)};
+    bool result{make_dir(m_path, MD_DIR)};
 
     EXPECT_FALSE(result);
-    EXPECT_TRUE(exists(std::filesystem::path{TEST_MAKEDIR_BASE}));
+    EXPECT_TRUE(exists(fs::path{TEST_MAKEDIR_BASE}));
 }
 
 TEST_F(TestMakeDir, fileDirectoryExists)
 {
-    std::filesystem::path file{TEST_MAKEDIR_BASE};
+    fs::path file{TEST_MAKEDIR_BASE};
     file /= "file.txt";
-    setup_buffer(file);
 
-    bool result{make_dir(m_buffer, MD_FILE)};
+    bool result{make_dir(file, MD_FILE)};
 
     EXPECT_FALSE(result);
-    EXPECT_TRUE(std::filesystem::exists(TEST_MAKEDIR_BASE));
+    EXPECT_TRUE(fs::exists(TEST_MAKEDIR_BASE));
     EXPECT_FALSE(exists(file));
 }
 
 TEST_F(TestMakeDir, createDirectory)
 {
-    std::filesystem::path dir{TEST_MAKEDIR_BASE};
+    fs::path dir{TEST_MAKEDIR_BASE};
     dir /= "create_dir";
     remove_all(dir);
     ASSERT_FALSE(exists(dir));
-    setup_buffer(dir);
 
-    bool result{make_dir(m_buffer, MD_DIR)};
+    bool result{make_dir(dir, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -87,15 +72,14 @@ TEST_F(TestMakeDir, createDirectory)
 
 TEST_F(TestMakeDir, fileCreateDirectory)
 {
-    std::filesystem::path dir{TEST_MAKEDIR_BASE};
+    fs::path dir{TEST_MAKEDIR_BASE};
     dir /= "file_create_dir";
     remove_all(dir);
-    std::filesystem::path file{dir / "file.txt"};
+    fs::path file{dir / "file.txt"};
     ASSERT_FALSE(exists(dir));
     ASSERT_FALSE(exists(file));
-    setup_buffer(file);
 
-    bool result{make_dir(m_buffer, MD_FILE)};
+    bool result{make_dir(file, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -105,14 +89,13 @@ TEST_F(TestMakeDir, fileCreateDirectory)
 
 TEST_F(TestMakeDir, createSubDirectory)
 {
-    std::filesystem::path dir{TEST_MAKEDIR_BASE};
+    fs::path dir{TEST_MAKEDIR_BASE};
     dir /= "create_sub_dir";
     dir /= "sub_dir";
     remove_all(dir);
     ASSERT_FALSE(exists(dir));
-    setup_buffer(dir);
 
-    bool result{make_dir(m_buffer, MD_DIR)};
+    bool result{make_dir(dir, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -120,15 +103,14 @@ TEST_F(TestMakeDir, createSubDirectory)
 
 TEST_F(TestMakeDir, fileCreateSubDirectory)
 {
-    std::filesystem::path dir{TEST_MAKEDIR_BASE};
+    fs::path dir{TEST_MAKEDIR_BASE};
     dir = dir / "file_create_sub_dir" / "sub_dir";
     remove_all(dir);
-    std::filesystem::path file{dir / "file.txt"};
+    fs::path file{dir / "file.txt"};
     ASSERT_FALSE(exists(dir));
     ASSERT_FALSE(exists(file));
-    setup_buffer(file);
 
-    bool result{make_dir(m_buffer, MD_FILE)};
+    bool result{make_dir(file, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));

@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <string>
 #include <string_view>
 
@@ -47,7 +48,7 @@ int eaccess(char *, int);
 #endif
 std::string trn_getwd();
 std::string get_a_line(std::FILE *fp);
-bool  make_dir(const char *dirname, MakeDirNameType nametype);
+bool  make_dir(const std::filesystem::path &dirname, MakeDirNameType nametype);
 void  not_incl(std::string_view feature);
 void  set_def(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS

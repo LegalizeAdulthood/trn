@@ -370,15 +370,15 @@ std::string get_a_line(std::FILE *fp)
     return line;
 }
 
-bool make_dir(const char *dirname, MakeDirNameType nametype)
+bool make_dir(const fs::path &dirname, MakeDirNameType nametype)
 {
-    std::filesystem::path dir{dirname};
+    fs::path dir{dirname};
     if (nametype == MD_FILE)
     {
         dir = dir.parent_path();
     }
     std::error_code ec;
-    create_directories(dir, ec);
+    fs::create_directories(dir, ec);
     return static_cast<bool>(ec);
 }
 
