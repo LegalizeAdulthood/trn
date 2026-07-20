@@ -125,18 +125,6 @@ the string API.  They are ordered after the implementation slices because
 each caller should delegate to the new string implementation, not to a
 fresh wrapper around the old parser.
 
-#### DINT-040 - Article First-line Interpolation
-
-- Files: `libtrn/art.cpp`.
-- Kind: legacy `interp` caller migration.
-- Function: `do_article`.
-- Depends on: `DINT-014`.
-- Change: replace the `g_art_line` interpolation destination for
-  `g_first_line` with a local `std::string` and pass that text to
-  `tree_puts`.
-- Tests: existing article display coverage if present; otherwise add
-  focused coverage first if the behavior is easy to isolate.
-
 #### DINT-041 - Article Search Pattern Interpolation
 
 - Files: `libtrn/artsrch.cpp`.

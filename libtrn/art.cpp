@@ -209,8 +209,8 @@ DoArticleResult do_article()
         {
             if (!g_first_line.empty())
             {
-                interp(g_art_line,sizeof g_art_line,g_first_line.c_str());
-                line_num += tree_puts(g_art_line,line_num+g_top_line,0);
+                const std::string first_line = do_interp(g_first_line);
+                line_num += tree_puts(first_line, line_num + g_top_line, 0);
             }
             else
             {

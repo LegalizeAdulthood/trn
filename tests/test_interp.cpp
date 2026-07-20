@@ -2098,6 +2098,28 @@ TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
               g_prompt);
 }
 
+TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
+{
+    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<std::string> first_line(g_first_line, std::string{"X-First: article %a"});
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    g_char_subst = g_charsets.c_str();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_no_envar("LOCALTIMEFMT");
+    ASSERT_TRUE(parse_header(g_art));
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_NORM, result);
+    EXPECT_THAT(output, HasSubstr("X-First: article " + std::to_string(TRN_TEST_ARTICLE_NUM)));
+}
+
 TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerCommand)
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
