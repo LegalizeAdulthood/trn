@@ -680,7 +680,7 @@ int cancel_article()
             term_down(1);
             goto done;
         }
-        std::fputs(do_interp(get_env_var("CANCELHEADER", CANCEL_HEADER), 5 * LINE_BUF_LEN).c_str(),header);
+        std::fputs(do_interp(get_env_var("CANCELHEADER", CANCEL_HEADER)).c_str(), header);
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
         term_down(2);
@@ -747,7 +747,7 @@ int supersede_article()         // Supersedes:
             term_down(1);
             goto done;
         }
-        std::fputs(do_interp(get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER), 5 * LINE_BUF_LEN).c_str(),header);
+        std::fputs(do_interp(get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER)).c_str(), header);
         if (incl_body && g_art_fp != nullptr)
         {
             parse_header(g_art);
@@ -833,7 +833,7 @@ void reply()
         term_down(1);
         return;
     }
-    std::fputs(do_interp(get_env_var("MAILHEADER", MAIL_HEADER), 5 * LINE_BUF_LEN).c_str(), header);
+    std::fputs(do_interp(get_env_var("MAILHEADER", MAIL_HEADER)).c_str(), header);
     if (!in_string(mail_doer, "%h", true))
     {
         if (g_verbose)
@@ -900,7 +900,7 @@ void forward()
         term_down(1);
         goto done;
     }
-    header_text = do_interp(get_env_var("FORWARDHEADER", FORWARD_HEADER), 5 * LINE_BUF_LEN);
+    header_text = do_interp(get_env_var("FORWARDHEADER", FORWARD_HEADER));
     std::fputs(header_text.c_str(),header);
 #ifdef REGEX_WORKS_RIGHT
     if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
@@ -1060,7 +1060,7 @@ void followup()
         g_art = oldart;
         return;
     }
-    std::fputs(do_interp(get_env_var("NEWSHEADER", NEWS_HEADER), 5 * LINE_BUF_LEN).c_str(), header);
+    std::fputs(do_interp(get_env_var("NEWSHEADER", NEWS_HEADER)).c_str(), header);
     if (incl_body && g_art_fp != nullptr)
     {
         char* s;

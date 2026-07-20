@@ -113,16 +113,6 @@ callers off the C wrappers.
 These slices remove the fixed-buffer size from string call sites after
 the string implementation is unbounded.
 
-#### DINT-020 - Response Header String Callers
-
-- Files: `libtrn/respond.cpp`.
-- Kind: obsolete size argument removal.
-- Functions: cancel, supersede, mail, forward, and news header builders.
-- Depends on: `DINT-014`.
-- Change: replace `do_interp(pattern, 5 * LINE_BUF_LEN)` with
-  `do_interp(pattern)`.
-- Tests: response/interpolation tests that cover generated headers.
-
 #### DINT-021 - Remove size_t String Overload
 
 - Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`,
