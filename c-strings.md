@@ -432,6 +432,12 @@ generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in article and NNTP buffer owner
   clusters.  The call sites are inventoried below.
+- `copy_till`: six production call sites remain.  They are tied to
+  command parsing, mimecap entry parsing, and universal selector line
+  parsing.  Convert the callers first, then remove the helper.
+- `in_string`: the string-view overload is already used by callers that
+  have strings or views.  Remaining pointer-return use belongs to
+  mutable parser buffers or inactive legacy site validation.
 - `safe_malloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
@@ -454,9 +460,19 @@ generated files, or the vendored `vcpkg` tree.
   `interp_backslash`, and `normalize_refs` APIs are gone.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`, and
   `SourceFile::open` already use modern path or view signatures.
-  Score-file shortcut strings, universal-selector file strings, shell
-  commands, URLs, and expansion templates still mix path and non-path
-  text, so they are not honest path-only candidates yet.
+  Current filename or path candidates are `mime_read_mimecap`, URL
+  output-file plumbing, option-file loading, and option saving.  Score
+  file shortcut strings, universal-selector labels, shell commands,
+  URLs, and expansion templates still mix path and non-path text, so
+  only the path-only arguments are listed below.
+- Scorefile parsing has several newly exposed local helpers where the
+  caller already has a string or view.  These are leaf or Tier 1 slices:
+  remove `is_text_zero`, promote extra-header helpers, promote
+  `score_match`, and clean up `sf_print_match`.
+- Author compression still has a string public result wrapped around
+  mutable character-pointer helpers.  The public input can move to
+  `std::string_view` first; the internal name/address helpers can then
+  be replaced with string storage under the existing tests.
 - `scan_active_line` already accepts `std::string_view`; do not add a
   new slice for it.
 - `string_case_compare` production callers that already have strings or
@@ -486,6 +502,24 @@ until the owning storage or API changes.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
 
+## Current `copy_till` Inventory
+
+The current tree has one helper declaration, one helper definition, and
+six production call sites.
+
+- `libtrn/artsrch.cpp`, `art_search`: copies the typed article search
+  pattern into `g_buf` and returns a pointer to modifiers.
+- `libtrn/ngsrch.cpp`, `newsgroup_search`: copies the typed newsgroup
+  search pattern into `g_buf` and returns a pointer to modifiers.
+- `libtrn/mime.cpp`, `mime_read_mimecap`: strips quotes from a mimecap
+  parameter value while mutating the entry buffer.
+- `libtrn/ngstuff.cpp`, command execution loop: copies one command into
+  `g_buf` when a command list is colon-delimited.
+- `libtrn/univ.cpp`, `univ_do_line`: copies a quoted description while
+  mutating the universal selector input line.
+- `util/util2.cpp`: helper implementation.  Remove it only after the
+  callers above are converted.
+
 ## Current C String Function Inventory
 
 The current scan covers the production roots listed above.  Counts below
@@ -493,11 +527,11 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 5, `strncmp` 20.
-- Search and length: `strchr` 69, `strrchr` 3, `strstr` 2,
-  `strlen` 57.
+- Comparison: `strcmp` 5, `strncmp` 18.
+- Search and length: `strchr` 68, `strrchr` 3, `strstr` 2,
+  `strlen` 56.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 396,
+- C text I/O roots: `fgets` 25, `fputs` 200, `printf` 393,
   `fprintf` 48.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
@@ -524,20 +558,212 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-142 - Unused Scorefile Text-zero Helper
+
+- Files: `libtrn/include/trn/scorefile.h`.
+- Kind: unused C-string helper.
+- Function: `is_text_zero`.
+- Depends on: none.
+- Change: remove the unused inline helper and its stale C-string
+  comments.  The score parser already performs the check locally with
+  string-view operations.
+- Tests: build or run the scorefile header standalone test.
+
+#### CSTR-143 - Scorefile Match Printer Views
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: local `const char *` display aliases and `printf`.
+- Function: `sf_print_match`.
+- Depends on: none.
+- Change: use `std::string_view` for the pattern prefix and header name,
+  keep string literals as views, and use fmt for the output.  Do not let
+  addresses of local string data escape.
+- Tests: if no verbose score-output coverage exists, add a captured
+  output test before refactoring.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-144 - Scorefile Extra Header Input Views
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: local helper parameters passed through temporary `c_str()`.
+- Functions: `sf_check_extra_headers`, `sf_add_extra_header`.
+- Depends on: none.
+- Change: accept `std::string_view` for header names.  Lowercase into a
+  local `std::string` only when storage or comparison needs an owned
+  normalized value.  Pass parser views directly to the helpers.
+- Tests: `ScoreFileTest.extraHeaderLookupIsCaseInsensitive`.
+
+#### CSTR-145 - Scorefile Match Input String
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: local helper takes `const char *` even though callers already
+  hold `std::string` header text.
+- Function: `score_match`.
+- Depends on: none.
+- Change: accept `const std::string &text`, call the legacy regex engine
+  with `text.c_str()` inside the helper, and use direct string find
+  operations for non-regex rules.
+- Tests: `ScoreFileTest.fromWildcardMatchesBothPiecesInOrder` and
+  `ScoreFileTest.patternKeywordMatchesWithRegularExpression`.
+
+#### CSTR-146 - Mimecap Filename View
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
+- Kind: filename parameter and temporary `.c_str()` at the caller.
+- Function: `mime_read_mimecap`.
+- Depends on: none.
+- Change: accept `std::string_view`, pass mimecap list items directly
+  from `mime_init`, and leave filesystem expansion inside
+  `mime_read_mimecap`.
+- Tests: `test_mime`.
+
+#### CSTR-147 - URL Output Path API
+
+- Files: `libtrn/url.cpp`, `libtrn/include/trn/url.h`,
+  `libtrn/scorefile.cpp`, `libtrn/include/trn/scorefile-internal.h`,
+  `libtrn/univ.cpp`, `tests/test_url.cpp`, `tests/test_scorefile.cpp`.
+- Kind: output filename as `const char *` through URL and scorefile
+  callback APIs.
+- Functions: `url_get`, `fetch_http`, `fetch_ftp`,
+  `sf_default_url_get`, `ScoreFileUrlGetter`.
+- Depends on: none.
+- Change: pass output files as `std::filesystem::path` references at the
+  API boundary.  Keep `fopen`, shell-command, or command-string C
+  conversions local to the functions that actually need them.
+- Tests: URL tests and `ScoreFileTest.includeUrlFetchesScoreFile`.
+
+#### CSTR-150 - Author From Compression Input View
+
+- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
+  `libtrn/rt-page.cpp`, `libtrn/sadesc.cpp`, `libtrn/univ.cpp`.
+- Kind: public helper takes `const char *` while returning an owned
+  `std::string`.
+- Function: `compress_from`.
+- Depends on: none.
+- Change: accept `std::string_view`; use an empty view where callers
+  currently pass `nullptr`.  Preserve the current "NO NAME" fallback for
+  empty input.
+- Tests: `test_rt-util`.
+
+#### CSTR-154 - MIME Command Interpolation View
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
+- Kind: command input as `const char *` plus pointer walking.
+- Function: `mime_exec`.
+- Depends on: none.
+- Change: accept `std::string_view`, iterate by index or views, use
+  `find` to locate `%{name}` terminators, and keep the shell-executor
+  `c_str()` conversion local to the final command string.
+- Tests: existing `mime_exec` tests for `%n`, `%F`, and malformed
+  `%{name`.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
+#### CSTR-151 - Author Compression Internal String Storage
+
+- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
+  callers of `extract_name`.
+- Kind: mutable C-string parsing hidden behind string-returning helpers.
+- Functions: `extract_name`, `compress_name_in_place`,
+  `compress_address`, `compress_name`, `compress_from`.
+- Depends on: `CSTR-150`.
+- Change: replace pointer-return helpers with string or string-view
+  results over owned local storage.  Keep truncation behavior that is
+  covered by `test_rt-util`.
+- Tests: `test_rt-util`.
+
+#### CSTR-153 - MIME Entry Argument Parser
+
+- Files: `libtrn/mime.cpp`.
+- Kind: in-place mimecap parser using `char **`, `strchr`, and
+  `copy_till`.
+- Functions: `mime_read_mimecap`, `mime_parse_entry_arg`.
+- Depends on: `CSTR-146`.
+- Change: parse each mimecap entry with string views over the owned
+  entry line, return owned strings for values stored in `MimeCapEntry`,
+  and strip quoted parameter values without mutating caller buffers.
+- Tests: `test_mime`.
+
+#### CSTR-148 - Option File Path API
+
+- Files: `libtrn/opt.cpp`.
+- Kind: static filename helper passed through `.c_str()`.
+- Function: `opt_file`.
+- Depends on: none.
+- Change: pass the already-owned option filename directly as a view or
+  path object, use `file_contents`, and avoid introducing string-form
+  temporaries whose only purpose is `.c_str()`.
+- Tests: `test_opt` if option loading coverage exists; otherwise build.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-155 - Article Search Pattern Split
+
+- Files: `libtrn/artsrch.cpp`.
+- Kind: `copy_till` into `g_buf` and modifier pointer traversal.
+- Function: `art_search`.
+- Depends on: none.
+- Change: split the pattern and modifier tail with string views.  Keep
+  assignment to persistent search strings explicit, and do not change
+  command execution order.
+- Tests: article-search tests; add coverage first if absent.
+
+#### CSTR-156 - Newsgroup Search Pattern Split
+
+- Files: `libtrn/ngsrch.cpp`.
+- Kind: `copy_till` into `g_buf` and modifier pointer traversal.
+- Function: `newsgroup_search`.
+- Depends on: none.
+- Change: split the search pattern and modifier tail with string views.
+  Keep existing retry and empty-search behavior.
+- Tests: newsgroup-search tests; add coverage first if absent.
+
+#### CSTR-157 - Newsgroup Command-list Split
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: `copy_till` into `g_buf` for colon-delimited commands.
+- Function: command execution loop in `ngstuff`.
+- Depends on: none.
+- Change: use views to select the next command, copy into `g_buf` only
+  if a downstream command still requires the global buffer, and preserve
+  `g_one_command` behavior.
+- Tests: newsgroup command tests; add focused coverage first if absent.
+
+#### CSTR-158 - Universal Description Split
+
+- Files: `libtrn/univ.cpp`.
+- Kind: `copy_till`, `strcmp`, and line-buffer mutation while parsing a
+  quoted universal selector description.
+- Function: `univ_do_line`.
+- Depends on: none.
+- Change: parse the optional quoted description with string views over
+  the line, store the description in `s_univ_line_desc`, and keep empty
+  label handling unchanged.
+- Tests: universal selector parser tests.
+
+#### CSTR-149 - Option Save File Buffer
+
+- Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`,
+  `libtrn/rt-select.cpp`, `tests/test_opt.cpp`.
+- Kind: filename `const char *` and mutable file buffer split with
+  `strchr` and `strncmp`.
+- Function: `save_options`.
+- Depends on: `CSTR-148`.
+- Change: accept a filesystem path or view at the public boundary, use
+  string-view line iteration over the owned file contents, and retain the
+  `.new` and `.old` path behavior.
+- Tests: existing option-save test.  Add current-behavior coverage before
+  changing line parsing if needed.
 
 #### CSTR-132 - Main Multirc Display Builder
 
@@ -667,6 +893,17 @@ and clarified ownership at the edges.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
+
+#### CSTR-160 - Copy Till Helper Removal
+
+- Files: `util/util2.cpp`, `util/include/util/util2.h`.
+- Kind: obsolete bounded copy-and-scan helper.
+- Function: `copy_till`.
+- Depends on: `CSTR-153`, `CSTR-155`, `CSTR-156`, `CSTR-157`, and
+  `CSTR-158`.
+- Change: remove the helper once every caller has moved to
+  string-view-based parsing.
+- Tests: build.
 
 #### CSTR-048 - Safe Copy Helper Removal
 
