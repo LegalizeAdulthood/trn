@@ -125,22 +125,11 @@ the string API.  They are ordered after the implementation slices because
 each caller should delegate to the new string implementation, not to a
 fresh wrapper around the old parser.
 
-#### DINT-051 - Legacy Interpolation Tests
-
-- Files: `tests/test_interp.cpp`.
-- Kind: legacy C test migration.
-- Function: test helper around `do_interp`.
-- Depends on: `DINT-030`, `DINT-031`, `DINT-040`.
-- Change: migrate tests that call the C buffer API to the public string
-  API, using a reference `std::string_view` cursor for stopper tests.
-- Tests: focused interpolation tests.
-
 #### DINT-099 - Remove Legacy C APIs
 
 - Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`.
 - Kind: API removal.
 - Functions: C `do_interp`, C `interp`, C `interp_search`.
-- Depends on: `DINT-021`, `DINT-030`, `DINT-031`, `DINT-051`.
 - Change: delete the C buffer declarations and wrappers after no
   production or test callers remain.
 - Tests: full build and focused interpolation tests.

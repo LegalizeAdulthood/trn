@@ -56,8 +56,6 @@
 #include <string>
 #include <system_error>
 
-constexpr int BUFFER_SIZE{4096};
-
 using namespace testing;
 
 namespace
@@ -111,14 +109,17 @@ protected:
     void SetUp() override;
     void TearDown() override;
 
-    const char *interpolate(char *pattern, const char *stoppers = "")
+    const char *interpolate(char *pattern, std::string_view stoppers = {})
     {
-        return do_interp(m_buffer.data(), BUFFER_SIZE, pattern, stoppers, nullptr);
+        const std::string_view input{pattern};
+        std::string_view       cursor{input};
+        m_buffer = do_interp(cursor, stoppers, {});
+        return pattern + (input.size() - cursor.size());
     }
 
     std::string buffer() const
     {
-        return m_buffer.data();
+        return m_buffer;
     }
 
     AssertionResult bufferIsEmpty() const
@@ -131,11 +132,11 @@ protected:
         return AssertionFailure() << "Contents: '" << buffer() << "'";
     }
 
-    Environment                   m_env;
-    TestOutputDirectory           m_output;
-    std::array<char, TCBUF_SIZE>  m_tcbuf{};
-    std::array<char, BUFFER_SIZE> m_buffer{};
-    long                          m_test_pid{6421};
+    Environment                  m_env;
+    TestOutputDirectory          m_output;
+    std::array<char, TCBUF_SIZE> m_tcbuf{};
+    std::string                  m_buffer;
+    long                         m_test_pid{6421};
 };
 
 void TestOutputDirectory::SetUp()
@@ -1100,7 +1101,7 @@ TEST_F(InterpolatorTest, unknownEscapePreservesMetabit)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(0200 | '!', static_cast<unsigned char>(m_buffer[0]));
-    ASSERT_EQ('\0', m_buffer[1]);
+    ASSERT_EQ(std::size_t{1}, m_buffer.size());
 }
 
 TEST_F(InterpolatorTest, performCount)
