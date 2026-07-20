@@ -5,7 +5,9 @@
 
 #include <tool/util3.h>
 
+#include <config/env.h>
 #include <nntp/nntpclient.h>
+#include <util/env.h>
 #include <util/util2.h>
 
 #include <cstdio>
@@ -28,12 +30,21 @@ int do_shell(const char *shell, const char *cmd)
 
 std::string do_interp(std::string_view pattern)
 {
-    extern std::string g_dot_dir;
     if (pattern.size() >= 2 && pattern[0] == '%' && pattern[1] == '.')
     {
         std::string result{g_dot_dir};
-        result.append(pattern.data() + 2, pattern.size() - 2);
+        result.append(pattern.substr(2));
         return result;
+    }
+    if (pattern.size() >= 3 && pattern[0] == '%' && pattern[1] == '{')
+    {
+        const std::string_view::size_type close = pattern.find('}', 2);
+        if (close != std::string_view::npos)
+        {
+            std::string result = get_env_var(pattern.substr(2, close - 2));
+            result.append(pattern.substr(close + 1));
+            return result;
+        }
     }
     return std::string{pattern};
 }
