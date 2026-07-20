@@ -502,7 +502,7 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 29, `strncpy` 3, `strcat` 1.
-- Comparison: `strcmp` 4, `strncmp` 23.
+- Comparison: `strcmp` 4, `strncmp` 22.
 - Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
   `strlen` 65.
 - Formatting into C buffers: `sprintf` 29, `snprintf` 2.
@@ -532,19 +532,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-124 - First Article Range Parser
-
-- Files: `libtrn/bits.cpp`, `libtrn/include/trn/bits.h`.
-- Kind: read-only C-string parameter.
-- Function: `set_first_art`.
-- Depends on: none.
-- Change: promote the parameter to `std::string_view`, trim leading
-  spaces with view operations, compare the `1-` prefix directly, and
-  build a temporary string only for the legacy numeric conversion if
-  needed.
-- Tests: add direct tests if practical; otherwise run affected cache and
-  bits tests.
 
 ### Tier 1 - Helper And API Foundations
 

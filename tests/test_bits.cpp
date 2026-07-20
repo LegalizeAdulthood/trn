@@ -137,6 +137,20 @@ TEST_F(BitsToRcTest, decodesLeadingReadRangeIntoFirstUnreadArticle)
     EXPECT_EQ(ArticleUnread{4}, m_group.m_to_read);
 }
 
+TEST_F(BitsToRcTest, setFirstArtSkipsLeadingReadRange)
+{
+    EXPECT_TRUE(set_first_art(" 1-2,4"));
+    EXPECT_EQ(ArticleNum{3}, g_first_art);
+}
+
+TEST_F(BitsToRcTest, setFirstArtUsesAbsoluteFirstWithoutLeadingReadRange)
+{
+    g_abs_first = ArticleNum{4};
+
+    EXPECT_FALSE(set_first_art("2,6"));
+    EXPECT_EQ(ArticleNum{4}, g_first_art);
+}
+
 TEST_F(BitsToRcTest, reconstructsSubscribedLineFromReadRanges)
 {
     add_article(1, false);

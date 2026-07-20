@@ -29,6 +29,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <charconv>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -39,6 +40,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 int g_dm_count{};
@@ -201,12 +203,21 @@ void rc_to_bits()
     g_newsgroup_ptr->m_to_read = unread.value_of();
 }
 
-bool set_first_art(const char *s)
+bool set_first_art(std::string_view s)
 {
-    s = skip_eq(s, ' ');
-    if (!std::strncmp(s,"1-",2))                     // can we save some time here?
+    const std::size_t first = s.find_first_not_of(' ');
+    if (first == std::string_view::npos)
     {
-        g_first_art = ArticleNum{std::atol(s+2)+1};               // process first range thusly
+        g_first_art = g_abs_first;
+        return false;
+    }
+    s.remove_prefix(first);
+    if (s.substr(0, 2) == std::string_view{"1-"}) // can we save some time here?
+    {
+        long first_unread{};
+        s.remove_prefix(2);
+        std::from_chars(s.data(), s.data() + s.size(), first_unread);
+        g_first_art = ArticleNum{first_unread + 1}; // process first range thusly
         g_first_art = std::max(g_first_art, g_abs_first);
         return true;
     }

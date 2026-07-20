@@ -6,13 +6,15 @@
 
 #include <config/typedef.h>
 
+#include <string_view>
+
 struct Article;
 
 extern int g_dm_count;
 
 void bits_init();
 void rc_to_bits();
-bool set_first_art(const char *s);
+bool set_first_art(std::string_view s);
 void bits_to_rc();
 void find_existing_articles();
 void one_less_art_num(ArticleNum art_num);
