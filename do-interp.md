@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-070 - Remove Case-local C String Result
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: parser cleanup.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-010` through `DINT-012-060`.
-- Change: remove the case-local `const char *s` result variable after all
-  switch arms produce string/string-view values.
-- Keep: C output buffer and pointer cursor as temporary outer parser
-  scaffolding.
-- Tests: focused interpolation tests.
-
 #### DINT-012-080 - Move Outer Parser To Reference Cursor
 
 - Files: `libtrn/intrp.cpp`.

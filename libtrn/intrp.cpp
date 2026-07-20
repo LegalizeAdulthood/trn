@@ -66,7 +66,6 @@ static void abort_interp();
 
 static const char   *s_regexp_specials = "^$.*[\\/?%";
 static CompiledRegex s_cond_compex;
-static constexpr char s_empty[]{""};
 static std::string   s_last_input;
 
 void interp_init(char *tcbuf, int tcbuf_len)
@@ -306,11 +305,6 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
     int                        metabit = 0;
 
     scratch.reserve(scratch_size);
-    const auto assign_scratch = [&scratch](std::string_view text) -> const char *
-    {
-        scratch.assign(text);
-        return scratch.c_str();
-    };
     const auto make_scratch_buffer = [&scratch, scratch_size]() -> char *
     {
         scratch.assign(scratch_size, '\0');
@@ -391,7 +385,6 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             std::string search_command;
             std::string owned_value;
             std::string transform_text;
-            std::string format_input;
             std::string_view value;
             bool        upper = false;
             bool        lastcomp = false;
@@ -401,7 +394,6 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             bool        comment_parse = false;
             bool        proc_sprintf = false;
             bool        has_value = false;
-            const char *s = nullptr;
             const auto  set_value = [&has_value, &value](std::string_view text)
             {
                 value = text;
@@ -412,41 +404,25 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 owned_value = std::move(text);
                 set_value(owned_value);
             };
-            const auto materialize_value = [&owned_value, &s, &value, &has_value]()
+            const auto make_mutable_text = [&transform_text, &value]()
             {
-                if (s == nullptr)
-                {
-                    std::string text{has_value ? value : std::string_view{}};
-                    owned_value = std::move(text);
-                    value = owned_value;
-                    s = owned_value.c_str();
-                }
-                return s;
+                transform_text.assign(value);
+                return transform_text.data();
             };
-            const auto make_mutable_text = [&s, &scratch, &transform_text, &materialize_value]()
+            const auto format_value = [](const char *format, std::string_view text)
             {
-                materialize_value();
-                if (s != scratch.data() && s != transform_text.data())
-                {
-                    transform_text = s;
-                    s = transform_text.c_str();
-                }
-                return s == scratch.data() ? scratch.data() : transform_text.data();
-            };
-            const auto format_scratch = [&scratch](const char *format, const char *value) -> const char *
-            {
-                const int size = std::snprintf(nullptr, 0, format, value);
+                const std::string input{text};
+                const int         size = std::snprintf(nullptr, 0, format, input.c_str());
                 if (size < 0)
                 {
-                    scratch.clear();
-                    return scratch.c_str();
+                    return std::string{};
                 }
-                scratch.assign(static_cast<std::size_t>(size) + 1, '\0');
-                std::snprintf(scratch.data(), scratch.size(), format, value);
-                scratch.resize(static_cast<std::size_t>(size));
-                return scratch.c_str();
+                std::string result(static_cast<std::size_t>(size) + 1, '\0');
+                std::snprintf(result.data(), result.size(), format, input.c_str());
+                result.resize(static_cast<std::size_t>(size));
+                return result;
             };
-            while (s == nullptr && !has_value)
+            while (!has_value)
             {
                 switch (*++pattern)
                 {
@@ -1058,7 +1034,8 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'q':
-                    s = assign_scratch(s_last_input);
+                    scratch.assign(s_last_input);
+                    set_value(scratch);
                     break;
 
                 case 'r':
@@ -1343,7 +1320,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case '\0':
-                    s = s_empty;
+                    set_value({});
                     break;
 
                 default:
@@ -1353,54 +1330,35 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             }
             if (proc_sprintf)
             {
-                materialize_value();
-                if (s == scratch.data())
-                {
-                    format_input.reserve(scratch_size);
-                    format_input = scratch;
-                    s = format_input.c_str();
-                }
-                s = format_scratch(format_spec.c_str(), s);
+                set_owned_value(format_value(format_spec.c_str(), value));
             }
             if (*pattern)
             {
                 pattern++;
             }
-            if (!has_value)
-            {
-                set_value(s == nullptr ? std::string_view{} : std::string_view{s});
-            }
             if (upper || lastcomp)
             {
                 char *mutable_s = make_mutable_text();
-                char *t;
-                if (upper || !(t = std::strrchr(mutable_s, '/')))
+                std::size_t pos = upper ? 0 : transform_text.rfind('/');
+                if (pos == std::string::npos)
                 {
-                    t = mutable_s;
+                    pos = 0;
                 }
-                while (*t && !std::isalpha(*t))
+                while (pos < transform_text.size() && !std::isalpha(transform_text[pos]))
                 {
-                    t++;
+                    pos++;
                 }
-                if (std::islower(*t))
+                if (pos < transform_text.size() && std::islower(transform_text[pos]))
                 {
-                    *t = std::toupper(*t);
+                    transform_text[pos] = static_cast<char>(std::toupper(transform_text[pos]));
                 }
                 set_value(mutable_s);
             }
             // Do we have room left?
-            int i;
-            if (s == nullptr)
+            const int i = static_cast<int>(value.size());
+            if (value.size() >= static_cast<std::size_t>(dest_size))
             {
-                if (value.size() >= static_cast<std::size_t>(dest_size))
-                {
-                    abort_interp();
-                }
-                i = static_cast<int>(value.size());
-            }
-            else
-            {
-                i = std::strlen(s);
+                abort_interp();
             }
             if (dest_size <= i)
             {
@@ -1413,14 +1371,14 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             {
                 char *mutable_s = make_mutable_text();
                 decode_header(mutable_s, mutable_s);
-                s = mutable_s;
+                char *start = mutable_s;
                 if (address_parse)
                 {
                     char *h = std::strchr(mutable_s, '<');
                     if (h != nullptr)   // grab the good part
                     {
                         char *value_start = h + 1;
-                        s = value_start;
+                        start = value_start;
                         if ((h = std::strchr(value_start, '>')) != nullptr)
                         {
                             *h = '\0';
@@ -1428,7 +1386,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     }
                     else if ((h = std::strchr(mutable_s, '(')) != nullptr)
                     {
-                        while (h-- != s && *h == ' ')
+                        while (h-- != start && *h == ' ')
                         {
                         }
                         h[1] = '\0';            // or strip the comment
@@ -1439,56 +1397,32 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     char *name = extract_name(mutable_s);
                     if (name != nullptr)
                     {
-                        s = name;
+                        start = name;
                     }
                     else
                     {
-                        s = s_empty;
+                        start = mutable_s + std::strlen(mutable_s);
                     }
                 }
-                set_value(s);
+                set_value(start);
             }
             if (metabit)
             {
                 // set meta bit while copying.
-                i = metabit;            // maybe get into register
-                if (s == dest)
+                const int meta_mask = metabit; // maybe get into register
+                for (char ch : value)
                 {
-                    while (*dest)
-                    {
-                        *dest++ |= i;
-                    }
-                }
-                else if (s == nullptr)
-                {
-                    for (char ch : value)
-                    {
-                        *dest++ = ch | i;
-                    }
-                }
-                else
-                {
-                    while (*s)
-                    {
-                        *dest++ = *s++ | i;
-                    }
+                    *dest++ = static_cast<char>(ch | meta_mask);
                 }
             }
             else if (re_quote || tick_quote)
             {
                 // put a backslash before regexp specials while copying.
-                materialize_value();
-                if (s == dest)
+                for (std::size_t pos = 0; pos < value.size(); pos++)
                 {
-                    // copy out so we can copy in.
-                    transform_text.reserve(scratch_size);
-                    transform_text = s;
-                    s = transform_text.c_str();
-                }
-                while (*s)
-                {
-                    if ((re_quote && std::strchr(s_regexp_specials, *s)) //
-                        || (tick_quote == 2 && *s == '"'))
+                    const char ch = value[pos];
+                    if ((re_quote && std::strchr(s_regexp_specials, ch)) //
+                        || (tick_quote == 2 && ch == '"'))
                     {
                         if (--dest_size <= 0)
                         {
@@ -1496,14 +1430,17 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         }
                         *dest++ = '\\';
                     }
-                    else if (re_quote && *s == ' ' && s[1] == ' ')
+                    else if (re_quote && ch == ' ' && pos + 1 < value.size() && value[pos + 1] == ' ')
                     {
                         *dest++ = ' ';
                         *dest++ = '*';
-                        s = skip_eq(++s, ' ');
+                        while (pos + 1 < value.size() && value[pos + 1] == ' ')
+                        {
+                            pos++;
+                        }
                         continue;
                     }
-                    else if (tick_quote && *s == '\'')
+                    else if (tick_quote && ch == '\'')
                     {
                         if ((dest_size -= 3) <= 0)
                         {
@@ -1513,29 +1450,15 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         *dest++ = '\\';
                         *dest++ = '\'';
                     }
-                    *dest++ = *s++;
+                    *dest++ = ch;
                 }
             }
             else
             {
                 // straight copy.
-                if (s == dest)
+                for (char ch : value)
                 {
-                    dest += i;
-                }
-                else if (s == nullptr)
-                {
-                    for (char ch : value)
-                    {
-                        *dest++ = ch;
-                    }
-                }
-                else
-                {
-                    while (*s)
-                    {
-                        *dest++ = *s++;
-                    }
+                    *dest++ = ch;
                 }
             }
         }
