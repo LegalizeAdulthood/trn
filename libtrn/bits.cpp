@@ -34,7 +34,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <iostream>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -191,10 +193,9 @@ void rc_to_bits()
 #ifdef DEBUG
     if (g_debug & DEB_CTLAREA_BITMAP)
     {
-        std::fputs("\n(hit CR)",stdout);
+        fmt::print(stdout, "\n(hit CR)");
         term_down(1);
-        std::string input(CMD_BUF_LEN, '\0');
-        std::fgets(input.data(), static_cast<int>(input.size()), stdin);
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 #endif
     g_newsgroup_ptr->m_to_read = unread.value_of();
