@@ -5,6 +5,8 @@
 
 #include <trn/init.h>
 
+#include <file_contents.h>
+
 #include <config/common.h>
 #include <nntp/nntpinit.h>
 #include <trn/addng.h>
@@ -41,12 +43,16 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #ifdef _WIN32
 #include <process.h>
 #endif
 
 #include <array>
 #include <cstdio>
+#include <ctime>
+#include <string>
 
 long g_our_pid{};
 
@@ -180,19 +186,12 @@ bool initialize(int argc, char *argv[])
 static void news_news_check()
 {
     const std::string newsnewsname = file_exp(NEWSNEWSNAME);
-    if (std::FILE *fp = std::fopen(newsnewsname.c_str(), "r"))
+    stat_t            news_news_stat{};
+    if (stat(newsnewsname.c_str(), &news_news_stat) == 0 &&
+        news_news_stat.st_mtime > static_cast<std::time_t>(g_last_time))
     {
-        stat_t news_news_stat{};
-        fstat(fileno(fp),&news_news_stat);
-        if (news_news_stat.st_mtime > (std::time_t) g_last_time)
-        {
-            while (std::fgets(g_buf,sizeof(g_buf),fp) != nullptr)
-            {
-                std::fputs(g_buf, stdout);
-            }
-            get_anything();
-            std::putchar('\n');
-        }
-        std::fclose(fp);
+        fmt::print("{}", file_contents(newsnewsname));
+        get_anything();
+        std::putchar('\n');
     }
 }

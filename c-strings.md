@@ -441,12 +441,12 @@ generated files, or the vendored `vcpkg` tree.
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
   `g_art_line`, `g_head_buf`, `g_art_buf`, `g_buf` uses in
-  `news_news_check`, `scan_active_line` callers, terminal command-input
-  scratch, MIME HTML tag parser state, `uudecode` pending-line storage,
-  selector command key storage, and tree-indent storage.  Tiny UTF byte
-  scratch buffers, translation tables, MIME decode tables, terminal
-  pushback bytes, termcap storage, and regex bytecode arrays are
-  non-string protocol or parser storage, not current string slices.
+  `scan_active_line` callers, terminal command-input scratch, MIME HTML
+  tag parser state, `uudecode` pending-line storage, selector command
+  key storage, and tree-indent storage.  Tiny UTF byte scratch buffers,
+  translation tables, MIME decode tables, terminal pushback bytes,
+  termcap storage, and regex bytecode arrays are non-string protocol or
+  parser storage, not current string slices.
 - Termcap capability globals are still exposed as mutable `char *` even
   though the code treats most capability text as read-only after
   discovery.  This is a const-correctness slice before the remaining
@@ -506,7 +506,7 @@ production code.
 - Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
   `strlen` 65.
 - Formatting into C buffers: `sprintf` 29, `snprintf` 2.
-- C text I/O roots: `fgets` 27, `fputs` 202, `printf` 385,
+- C text I/O roots: `fgets` 26, `fputs` 201, `printf` 385,
   `fprintf` 54.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -532,19 +532,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-121 - News News Display Buffer
-
-- Files: `libtrn/init.cpp`.
-- Kind: local `g_buf` file display.
-- Function: `news_news_check`.
-- Depends on: none.
-- Change: display the `NEWSNEWSNAME` file using local string or stream
-  storage instead of `g_buf`, then keep the existing `get_anything`
-  prompt and trailing newline behavior.
-- Truncation: arbitrary `LINE_BUF_LEN` file-read limit.
-- Tests: add coverage first if an isolated prompt test is practical;
-  otherwise run the normal build.
 
 #### CSTR-122 - Bits Debug Pause Buffer
 
