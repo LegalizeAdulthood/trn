@@ -108,21 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-001 - Add Mixed String Value Tail
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: parser scaffolding.
-- Function: legacy C `do_interp`.
-- Depends on: none.
-- Change: add local `std::string` and `std::string_view` output
-  variables used by converted switch arms.
-- Change: keep the existing C output buffer and pointer cursor as the
-  outer parser scaffolding.
-- Change: let converted arms append through the same shared modifier,
-  formatting, and bounded-copy tail as unconverted arms.
-- Preserve: all current interpolation semantics.
-- Tests: focused interpolation tests.
-
 #### DINT-012-002 - Modifier Prefixes And Format Specifier
 
 - Files: `libtrn/intrp.cpp`.

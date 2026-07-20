@@ -46,6 +46,7 @@ struct utsname utsn;
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -378,8 +379,10 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             std::string env_value;
             std::string format_spec;
             std::string search_command;
+            std::string owned_value;
             std::string transform_text;
             std::string format_input;
+            std::string_view value;
             bool        upper = false;
             bool        lastcomp = false;
             bool        re_quote = false;
@@ -387,9 +390,27 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             bool        address_parse = false;
             bool        comment_parse = false;
             bool        proc_sprintf = false;
+            bool        has_value = false;
             const char *s = nullptr;
-            const auto  make_mutable_text = [&s, &scratch, &transform_text]() -> char *
+            const auto  set_value = [&has_value, &value](std::string_view text)
             {
+                value = text;
+                has_value = true;
+            };
+            const auto materialize_value = [&owned_value, &s, &value, &has_value]()
+            {
+                if (s == nullptr)
+                {
+                    std::string text{has_value ? value : std::string_view{}};
+                    owned_value = std::move(text);
+                    value = owned_value;
+                    s = owned_value.c_str();
+                }
+                return s;
+            };
+            const auto make_mutable_text = [&s, &scratch, &transform_text, &materialize_value]()
+            {
+                materialize_value();
                 if (s != scratch.data() && s != transform_text.data())
                 {
                     transform_text = s;
@@ -410,7 +431,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 scratch.resize(static_cast<std::size_t>(size));
                 return scratch.c_str();
             };
-            while (s == nullptr)
+            while (s == nullptr && !has_value)
             {
                 switch (*++pattern)
                 {
@@ -1319,6 +1340,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             }
             if (proc_sprintf)
             {
+                materialize_value();
                 if (s == scratch.data())
                 {
                     format_input.reserve(scratch_size);
@@ -1330,6 +1352,10 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             if (*pattern)
             {
                 pattern++;
+            }
+            if (!has_value)
+            {
+                set_value(s == nullptr ? std::string_view{} : std::string_view{s});
             }
             if (upper || lastcomp)
             {
@@ -1347,9 +1373,22 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 {
                     *t = std::toupper(*t);
                 }
+                set_value(mutable_s);
             }
             // Do we have room left?
-            int i = std::strlen(s);
+            int i;
+            if (s == nullptr)
+            {
+                if (value.size() >= static_cast<std::size_t>(dest_size))
+                {
+                    abort_interp();
+                }
+                i = static_cast<int>(value.size());
+            }
+            else
+            {
+                i = std::strlen(s);
+            }
             if (dest_size <= i)
             {
                 abort_interp();
@@ -1394,6 +1433,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         s = s_empty;
                     }
                 }
+                set_value(s);
             }
             if (metabit)
             {
@@ -1404,6 +1444,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     while (*dest)
                     {
                         *dest++ |= i;
+                    }
+                }
+                else if (s == nullptr)
+                {
+                    for (char ch : value)
+                    {
+                        *dest++ = ch | i;
                     }
                 }
                 else
@@ -1417,6 +1464,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             else if (re_quote || tick_quote)
             {
                 // put a backslash before regexp specials while copying.
+                materialize_value();
                 if (s == dest)
                 {
                     // copy out so we can copy in.
@@ -1461,6 +1509,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 if (s == dest)
                 {
                     dest += i;
+                }
+                else if (s == nullptr)
+                {
+                    for (char ch : value)
+                    {
+                        *dest++ = ch;
+                    }
                 }
                 else
                 {
