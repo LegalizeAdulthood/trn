@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-032 - From And Reply-To Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-013`.
-- Case: `%f`.
-- Change: keep fetched From/Reply-To header text in owning string storage
-  and expose it through the local value view.
-- Preserve: Reply-To preference unless comment parsing is requested.
-- Tests: focused interpolation tests.
-
 #### DINT-012-033 - Followup Target Case
 
 - Files: `libtrn/intrp.cpp`.

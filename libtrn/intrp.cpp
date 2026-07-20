@@ -870,7 +870,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             {
                                 reply_buf = fetch_lines(g_art, REPLY_LINE);
                             }
-                            s = reply_buf->c_str();
+                            set_value(*reply_buf);
                         }
                         else
                         {
@@ -878,12 +878,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             {
                                 from_buf = fetch_lines(g_art, FROM_LINE);
                             }
-                            s = from_buf->c_str();
+                            set_value(*from_buf);
                         }
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 
