@@ -43,6 +43,7 @@ struct utsname utsn;
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -999,26 +1000,23 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         env_value = get_env_var("ORGANIZATION", ORG_NAME);
                     }
 #endif
-                    s = env_value.c_str();
-                    const std::string org_file = file_exp(s);
+                    const std::string org_file = file_exp(env_value);
                     if (FILE_REF(org_file.c_str()))
                     {
-                        std::FILE *ofp = std::fopen(org_file.c_str(), "r");
-
-                        if (ofp)
+                        std::ifstream input{org_file};
+                        if (input)
                         {
-                            read_scratch_line(ofp);
-                            std::fclose(ofp);
-                            if (!scratch.empty() && scratch.back() == '\n')
-                            {
-                                scratch.pop_back();
-                            }
-                            s = scratch.c_str();
+                            std::getline(input, owned_value);
+                            set_value(owned_value);
                         }
                         else
                         {
-                            s = s_empty;
+                            set_value({});
                         }
+                    }
+                    else
+                    {
+                        set_value(env_value);
                     }
                     break;
                 }
