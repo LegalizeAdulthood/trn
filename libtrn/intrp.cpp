@@ -62,7 +62,6 @@ int               g_news_uid{};
 #endif
 
 static void        skip_interp_cursor(std::string_view &pattern, std::string_view stoppers);
-static const char *skip_interp_pointer(const char *pattern, std::string_view stoppers);
 static void abort_interp();
 
 static const char   *s_regexp_specials = "^$.*[\\/?%";
@@ -277,14 +276,6 @@ static void skip_interp_cursor(std::string_view &pattern, std::string_view stopp
     }
 }
 
-static const char *skip_interp_pointer(const char *pattern, std::string_view stoppers)
-{
-    std::string_view cursor{pattern};
-
-    skip_interp_cursor(cursor, stoppers);
-    return cursor.data();
-}
-
 std::size_t skip_interp(std::string_view pattern, std::string_view stoppers)
 {
     const std::string_view start{pattern};
@@ -349,6 +340,25 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
             scratch.push_back(*from++);
         }
         return from;
+    };
+    const auto copy_till_view = [](std::string_view &from, char delim)
+    {
+        std::string result;
+        result.reserve(from.size());
+        while (!from.empty())
+        {
+            if (from.front() == '\\' && from.size() > 1 && from[1] == delim)
+            {
+                from.remove_prefix(1);
+            }
+            else if (from.front() == delim)
+            {
+                break;
+            }
+            result.push_back(from.front());
+            from.remove_prefix(1);
+        }
+        return result;
     };
     const auto do_interp_scratch = [&make_scratch_buffer, &scratch, &trim_scratch,
                                     cmd](const char *interp_pattern, const char *interp_stoppers) -> const char *
@@ -580,32 +590,37 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case '(':
                 {
                     CompiledRegex *oldbra_compex = g_bra_compex;
-                    char rch;
-                    bool matched;
+                    char           rch;
+                    bool           matched;
 
-                    pattern = do_interp(dest,dest_size,pattern+1,"!=",cmd);
-                    rch = *pattern;
+                    const std::string_view cmd_view{cmd == nullptr ? std::string_view{} : std::string_view{cmd}};
+                    std::string_view       condition_cursor{pattern + 1};
+                    const std::string      condition_text = do_interp(condition_cursor, "!=", cmd_view);
+                    pattern = condition_cursor.data();
+                    rch = condition_cursor.empty() ? '\0' : condition_cursor.front();
                     if (rch == '!')
                     {
-                        pattern++;
+                        condition_cursor.remove_prefix(1);
+                        pattern = condition_cursor.data();
                     }
-                    if (*pattern != '=')
+                    if (condition_cursor.empty() || condition_cursor.front() != '=')
                     {
                         goto getout;
                     }
-                    const char *pattern_start = pattern + 1;
-                    pattern = copy_till_scratch(pattern_start, '?');
-                    if (!*pattern)
+                    condition_cursor.remove_prefix(1);
+                    std::string regex_text = copy_till_view(condition_cursor, '?');
+                    pattern = condition_cursor.data();
+                    if (condition_cursor.empty())
                     {
                         goto getout;
                     }
-                    s = scratch.c_str();
                     format_spec.clear();
                     format_spec.reserve(format_size);
                     proc_sprintf = false;
-                    for (const char *scan = s; *scan; scan++)
+                    bool interp_regex = false;
+                    for (const char ch : regex_text)
                     {
-                        switch (*scan)
+                        switch (ch)
                         {
                         case '^':
                             format_spec += '\\';
@@ -617,49 +632,51 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             break;
 
                         case '%':
-                            proc_sprintf = true;
+                            interp_regex = true;
                             break;
                         }
-                        format_spec += *scan;
+                        format_spec += ch;
                     }
-                    if (proc_sprintf)
+                    if (interp_regex)
                     {
-                        do_interp_scratch(format_spec.c_str(), nullptr);
-                        proc_sprintf = false;
+                        std::string_view regex_cursor{format_spec};
+                        regex_text = do_interp(regex_cursor, {}, cmd_view);
                     }
-                    const char *compile_error = s_cond_compex.compile(scratch.c_str(), true, true);
+                    const char *compile_error = s_cond_compex.compile(regex_text.c_str(), true, true);
                     if (compile_error != nullptr)
                     {
-                        fmt::print("{}: {}\n", scratch, compile_error);
+                        fmt::print("{}: {}\n", regex_text, compile_error);
                         pattern += std::strlen(pattern);
                         s_cond_compex.free_compex();
                         goto getout;
                     }
-                    matched = s_cond_compex.execute(dest) != nullptr;
+                    matched = s_cond_compex.execute(condition_text.c_str()) != nullptr;
                     if (s_cond_compex.get_bracket(0)) // were there brackets?
                     {
                         g_bra_compex = &s_cond_compex;
                     }
+                    condition_cursor.remove_prefix(1);
+                    std::string branch_text;
                     if (matched == (rch == '='))
                     {
-                        pattern = do_interp(dest, dest_size, pattern + 1, ":)", cmd);
-                        if (*pattern == ':')
+                        branch_text = do_interp(condition_cursor, ":)", cmd_view);
+                        if (!condition_cursor.empty() && condition_cursor.front() == ':')
                         {
-                            const char *pattern_start = pattern + 1;
-                            pattern = skip_interp_pointer(pattern_start, ")");
+                            condition_cursor.remove_prefix(1);
+                            skip_interp_cursor(condition_cursor, ")");
                         }
                     }
                     else
                     {
-                        const char *pattern_start = pattern + 1;
-                        pattern = skip_interp_pointer(pattern_start, ":)");
-                        if (*pattern == ':')
+                        skip_interp_cursor(condition_cursor, ":)");
+                        if (!condition_cursor.empty() && condition_cursor.front() == ':')
                         {
-                            pattern++;
+                            condition_cursor.remove_prefix(1);
                         }
-                        pattern = do_interp(dest, dest_size, pattern, ")", cmd);
+                        branch_text = do_interp(condition_cursor, ")", cmd_view);
                     }
-                    s = dest;
+                    pattern = condition_cursor.data();
+                    set_owned_value(std::move(branch_text));
                     g_bra_compex = oldbra_compex;
                     s_cond_compex.free_compex();
                     break;

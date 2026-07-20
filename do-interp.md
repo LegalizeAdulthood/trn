@@ -108,19 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-050 - Conditional Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-010` through `DINT-012-041`.
-- Case: `%(...?...:...)`.
-- Change: make condition interpolation use the reference-cursor string
-  API and string/string-view values internally.
-- Preserve: stopper position, regex matching against current output,
-  false-branch skipping, and nested interpolation.
-- Tests: focused interpolation tests.
-
 #### DINT-012-060 - Default Literal Case
 
 - Files: `libtrn/intrp.cpp`.
