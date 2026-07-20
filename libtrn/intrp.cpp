@@ -713,15 +713,15 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
 
                 case '~':
-                    s = assign_scratch(g_home_dir);
+                    set_value(g_home_dir);
                     break;
 
                 case '.':
-                    s = assign_scratch(g_dot_dir);
+                    set_value(g_dot_dir);
                     break;
 
                 case '+':
-                    s = assign_scratch(g_trn_dir);
+                    set_value(g_trn_dir);
                     break;
 
                 case '$':
@@ -1016,21 +1016,21 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 }
 
                 case 'O':
-                    s = assign_scratch(g_orig_dir);
+                    set_value(g_orig_dir);
                     break;
 
                 case 'p':
-                    s = assign_scratch(g_priv_dir);
+                    set_value(g_priv_dir);
                     break;
 
                 case 'P':
                     if (g_data_source)
                     {
-                        s = assign_scratch(g_data_source->m_spool_dir);
+                        set_value(g_data_source->m_spool_dir);
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 
@@ -1297,7 +1297,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'Y':
-                    s = assign_scratch(g_tmp_dir);
+                    set_value(g_tmp_dir);
                     break;
 
                 case 'z':
