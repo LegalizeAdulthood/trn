@@ -599,30 +599,27 @@ static void mac_init(char *tcbuf)
 
 void mac_line(char *line)
 {
-    std::string macro_sequence(CMD_BUF_LEN, '\0');
-    const char *definition;
-
     if (s_top_map == nullptr)
     {
         s_top_map = new_key_map();
     }
-    if (*line == '#' || *line == '\n')
+    std::string_view pattern{line};
+    if (pattern.empty() || pattern.front() == '#' || pattern.front() == '\n')
     {
         return;
     }
-    int ch = std::strlen(line) - 1;
-    if (line[ch] == '\n')
+    if (pattern.back() == '\n')
     {
-        line[ch] = '\0';
+        pattern.remove_suffix(1);
     }
-    definition =
-        do_interp(macro_sequence.data(), static_cast<int>(macro_sequence.size()), line, " \t", nullptr);
-    if (!*definition)
+    std::string_view  cursor{pattern};
+    const std::string macro_sequence = do_interp(cursor, " \t", {});
+    if (cursor.empty())
     {
         return;
     }
-    macro_sequence.resize(std::strlen(macro_sequence.c_str()));
-    install_macro(macro_sequence, skip_hor_space(definition), true);
+    cursor.remove_prefix(std::min(cursor.find_first_not_of(" \t"), cursor.size()));
+    install_macro(macro_sequence, cursor, true);
 }
 
 static void install_macro(std::string_view sequence, std::string_view definition,

@@ -118,18 +118,6 @@ the string implementation is unbounded.
 These slices move local callers that want the updated cursor directly to
 the reference-cursor string API.
 
-#### DINT-030 - Terminal Macro Parser
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: stopper-aware caller migration.
-- Function: `mac_line`.
-- Depends on: `DINT-014`.
-- Change: pass a `std::string_view` cursor to the new API with
-  stoppers `" \t"`, then pass the returned string as the macro sequence
-  and the remaining cursor, after horizontal-space skipping, as the macro
-  definition.
-- Tests: terminal macro tests.
-
 #### DINT-031 - Utility Conditional Parser
 
 - Files: `libtrn/util.cpp`.
