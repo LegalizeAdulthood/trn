@@ -397,6 +397,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 value = text;
                 has_value = true;
             };
+            const auto  set_owned_value = [&owned_value, &set_value](std::string text)
+            {
+                owned_value = std::move(text);
+                set_value(owned_value);
+            };
             const auto materialize_value = [&owned_value, &s, &value, &has_value]()
             {
                 if (s == nullptr)
@@ -725,18 +730,18 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case '$':
-                    s = assign_scratch(std::to_string(g_our_pid));
+                    set_owned_value(std::to_string(g_our_pid));
                     break;
 
                 case '#':
                     if (upper)
                     {
                         static int counter = 0;
-                        s = assign_scratch(std::to_string(++counter));
+                        set_owned_value(std::to_string(++counter));
                     }
                     else
                     {
-                        s = assign_scratch(std::to_string(g_perform_count));
+                        set_owned_value(std::to_string(g_perform_count));
                     }
                     break;
 
@@ -753,11 +758,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'a':
                     if (g_in_ng)
                     {
-                        s = assign_scratch(std::to_string(g_art.value_of()));
+                        set_owned_value(std::to_string(g_art.value_of()));
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 
@@ -794,7 +799,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'B':
-                    s = assign_scratch(std::to_string(g_save_from.value_of()));
+                    set_owned_value(std::to_string(g_save_from.value_of()));
                     break;
 
                 case 'c':
@@ -939,7 +944,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'j':
-                    s = assign_scratch(std::to_string(g_just_a_sec * 10));
+                    set_owned_value(std::to_string(g_just_a_sec * 10));
                     break;
 
                 case 'l':                       // news admin login
@@ -960,7 +965,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'M':
-                    s = assign_scratch(std::to_string(g_dm_count));
+                    set_owned_value(std::to_string(g_dm_count));
                     break;
 
                 case 'n':                       // newsgroups
@@ -1191,11 +1196,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'u':
                     if (g_in_ng)
                     {
-                        s = assign_scratch(std::to_string(g_newsgroup_ptr->m_to_read));
+                        set_owned_value(std::to_string(g_newsgroup_ptr->m_to_read));
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 
@@ -1203,18 +1208,18 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 {
                     if (!g_in_ng)
                     {
-                        s = s_empty;
+                        set_value({});
                         break;
                     }
                     const bool unseen = g_art <= g_last_art && !was_read(g_art);
                     if (g_selected_only)
                     {
                         const bool selected = g_curr_artp != nullptr && (g_curr_artp->m_flags & AF_SEL) != AF_NONE;
-                        s = assign_scratch(std::to_string(g_selected_count - (selected && unseen ? 1 : 0)));
+                        set_owned_value(std::to_string(g_selected_count - (selected && unseen ? 1 : 0)));
                     }
                     else
                     {
-                        s = assign_scratch(std::to_string(g_newsgroup_ptr->m_to_read - (unseen ? 1 : 0)));
+                        set_owned_value(std::to_string(g_newsgroup_ptr->m_to_read - (unseen ? 1 : 0)));
                     }
                     break;
                 }
@@ -1225,12 +1230,12 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     {
                         const bool selected = g_curr_artp && g_curr_artp->m_flags & AF_SEL;
                         const bool unseen = g_art <= g_last_art && !was_read(g_art);
-                        s = assign_scratch(std::to_string(g_newsgroup_ptr->m_to_read - g_selected_count -
-                                                          (!selected && unseen ? 1 : 0)));
+                        set_owned_value(std::to_string(g_newsgroup_ptr->m_to_read - g_selected_count -
+                                                       (!selected && unseen ? 1 : 0)));
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
                 }
@@ -1312,11 +1317,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'Z':
                     if (!g_in_ng)
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     else
                     {
-                        s = assign_scratch(std::to_string(g_selected_count));
+                        set_owned_value(std::to_string(g_selected_count));
                     }
                     break;
 
