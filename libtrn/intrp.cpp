@@ -751,8 +751,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case '0': case '1': case '2': case '3': case '4':
                 case '5': case '6': case '7': case '8': case '9':
-                    s = assign_scratch(g_bra_compex->get_bracket(*pattern - '0'));
+                {
+                    const char *bracket = g_bra_compex->get_bracket(*pattern - '0');
+                    set_value(bracket == nullptr ? std::string_view{} : std::string_view{bracket});
                     break;
+                }
 
                 case 'a':
                     if (g_in_ng)

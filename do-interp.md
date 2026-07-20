@@ -108,17 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-023 - Regex Bracket Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Cases: `%0` through `%9`.
-- Change: expose regex bracket text as a `std::string_view` value.
-- Preserve: existing bracket lookup.
-- Tests: focused interpolation tests.
-
 #### DINT-012-024 - Newsgroup Name Cases
 
 - Files: `libtrn/intrp.cpp`.
