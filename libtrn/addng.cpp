@@ -23,6 +23,7 @@
 
 #include <fmt/format.h>
 
+#include <charconv>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -31,6 +32,7 @@
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <ctime>
 
 namespace fs = std::filesystem;
@@ -51,7 +53,7 @@ static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
 static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch);
 static int  list_groups(int key_len, HashDatum *data, int add_matching);
-static void scan_active_line(char *active_line, bool add_matching);
+static void scan_active_line(std::string_view active_line, bool add_matching);
 static int  add_group_order_number(const AddGroup **app1, const AddGroup **app2);
 static int  add_group_order_group_name(const AddGroup **app1, const AddGroup **app2);
 static int  add_group_order_count(const AddGroup **app1, const AddGroup **app2);
@@ -462,40 +464,67 @@ bool scan_active(bool add_matching)
 
 static int list_groups(int key_len, HashDatum *data, int add_matching)
 {
-    SourceFile  *source_file = reinterpret_cast<SourceFile *>(data->dat_ptr);
-    std::string &line = source_file->m_lines[data->dat_len];
-    const int    line_len = static_cast<int>(line.size());
-    (void) std::memcpy(g_buf, line.data(), line_len);
-    g_buf[line_len] = '\0';
-    scan_active_line(g_buf, add_matching);
+    (void) key_len;
+    SourceFile        *source_file = reinterpret_cast<SourceFile *>(data->dat_ptr);
+    const std::string &line = source_file->m_lines[data->dat_len];
+    scan_active_line(line, add_matching != 0);
     return 0;
 }
 
-static void scan_active_line(char *active_line, bool add_matching)
+static void scan_active_line(std::string_view active_line, bool add_matching)
 {
-    char *s = std::strchr(active_line, ' ');
-    if (s == nullptr)
+    const std::size_t name_end = active_line.find(' ');
+    if (name_end == std::string_view::npos)
     {
         return;
     }
 
-    *s++ = '\0';                // this buffer is expendable
+    const std::string_view group_name = active_line.substr(0, name_end);
+    std::string_view       fields = active_line.substr(name_end + 1);
+    const auto             skip_space = [](std::string_view &text)
+    {
+        const std::size_t non_space = text.find_first_not_of(" \f\n\r\t\v");
+        text.remove_prefix(non_space == std::string_view::npos ? text.size() : non_space);
+    };
+    const auto read_number = [&skip_space](std::string_view &text, long &value)
+    {
+        skip_space(text);
+        const char                  *first = text.data();
+        const char                  *last = first + text.size();
+        long                         parsed{};
+        const std::from_chars_result result = std::from_chars(first, last, parsed);
+        if (result.ec != std::errc{})
+        {
+            return false;
+        }
+        value = parsed;
+        text.remove_prefix(static_cast<std::size_t>(result.ptr - first));
+        return true;
+    };
+
     long high;
     long low;
     char ch;
     high = 0;
     low = 1;
     ch = 'y';
-    std::sscanf(s, "%ld %ld %c", &high, &low, &ch);
-    if (ch == 'x' || !std::strncmp(active_line,"to.",3))
+    if (read_number(fields, high) && read_number(fields, low))
+    {
+        skip_space(fields);
+        if (!fields.empty())
+        {
+            ch = fields.front();
+        }
+    }
+    if (ch == 'x' || (group_name.size() >= 3 && group_name.substr(0, 3) == "to."))
     {
         return;
     }
-    if (!in_list(active_line))
+    if (!in_list(group_name))
     {
         return;
     }
-    NewsgroupData *np = find_newsgroup(active_line);
+    NewsgroupData *np = find_newsgroup(group_name);
     if (np != nullptr && np->m_to_read > TR_UNSUB)
     {
         return;
@@ -503,12 +532,13 @@ static void scan_active_line(char *active_line, bool add_matching)
     if (add_matching || np)
     {
         // it's not in a newsrc
-        add_to_list(active_line, high-low, 0);
+        add_to_list(group_name, high-low, 0);
     }
     else
     {
-        std::strcat(active_line,"\n");
-        print_lines(active_line, NO_MARKING);
+        std::string line{group_name};
+        line += '\n';
+        print_lines(line.c_str(), NO_MARKING);
     }
 }
 

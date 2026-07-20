@@ -501,14 +501,14 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 29, `strncpy` 3, `strcat` 1.
-- Comparison: `strcmp` 4, `strncmp` 22.
-- Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
+- Copy and concatenation: `strcpy` 29, `strncpy` 3, `strcat` 0.
+- Comparison: `strcmp` 4, `strncmp` 21.
+- Search and length: `strchr` 74, `strrchr` 5, `strstr` 2,
   `strlen` 65.
 - Formatting into C buffers: `sprintf` 29, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 200, `printf` 379,
   `fprintf` 54.
-- Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
+- Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
@@ -537,18 +537,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-129 - Active File Line Scanner
-
-- Files: `libtrn/addng.cpp`.
-- Kind: mutable C-string parser input.
-- Function: `scan_active_line`.
-- Depends on: none.
-- Change: promote the input line to `std::string_view`, parse the group
-  name and fields without mutating the caller buffer, and update
-  `list_groups` so it no longer copies `SourceFile::m_lines` into
-  `g_buf`.
-- Tests: run add-newsgroup tests.
 
 #### CSTR-130 - Interpolation String Result Buffers
 
