@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-031 - Distribution Header Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-013`.
-- Case: `%D`.
-- Change: keep fetched Distribution header text in owning string storage
-  and expose it through the local value view.
-- Preserve: empty result outside a newsgroup.
-- Tests: focused interpolation tests.
-
 #### DINT-012-032 - From And Reply-To Case
 
 - Files: `libtrn/intrp.cpp`.

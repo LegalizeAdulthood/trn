@@ -827,11 +827,11 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (g_in_ng)
                     {
                         dist_buf = fetch_lines(g_art, DIST_LINE);
-                        s = dist_buf->c_str();
+                        set_value(*dist_buf);
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 
