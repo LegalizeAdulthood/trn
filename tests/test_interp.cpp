@@ -686,6 +686,11 @@ TEST_F(InterpolatorTest, indentString)
     ASSERT_EQ("'>'", buffer());
 }
 
+TEST_F(InterpolatorTest, doShellPassesQuotecharsFromIndentString)
+{
+    EXPECT_EQ(0, do_shell(SH, "test \"$QUOTECHARS\" = '>'"));
+}
+
 TEST_F(InterpolatorTest, approximateBaudRate)
 {
     char pattern[]{"%j"};

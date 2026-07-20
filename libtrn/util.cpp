@@ -171,9 +171,9 @@ int do_shell(const char *shell, const char *cmd)
     {
         unset_env_var(s_newsdescriptions_env);
     }
-    interp(g_buf,64-1+2,"%I");
-    g_buf[std::strlen(g_buf)-1] = '\0';
-    set_env_var(s_quotechars_env, g_buf + 1);
+    const std::string quotechars = do_interp("%I");
+    TRN_ASSERT(quotechars.size() >= 2);
+    set_env_var(s_quotechars_env, quotechars.substr(1, quotechars.size() - 2));
     std::string shell_text;
     if (shell == nullptr)
     {

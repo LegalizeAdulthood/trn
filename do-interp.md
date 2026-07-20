@@ -125,24 +125,12 @@ the string API.  They are ordered after the implementation slices because
 each caller should delegate to the new string implementation, not to a
 fresh wrapper around the old parser.
 
-#### DINT-050 - Shell Quotechars Interpolation
-
-- Files: `libtrn/util.cpp`.
-- Kind: legacy `interp` caller migration.
-- Function: `do_shell`.
-- Depends on: `DINT-014`.
-- Change: replace the fixed `g_buf` interpolation of `%I` with the string
-  API, preserve the existing removal of the trailing interpolated
-  character, and set `QUOTECHARS` from the resulting string.
-- Tests: shell environment setup tests if present; otherwise add focused
-  coverage first if the behavior is easy to isolate.
-
 #### DINT-051 - Legacy Interpolation Tests
 
 - Files: `tests/test_interp.cpp`.
 - Kind: legacy C test migration.
 - Function: test helper around `do_interp`.
-- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-050`.
+- Depends on: `DINT-030`, `DINT-031`, `DINT-040`.
 - Change: migrate tests that call the C buffer API to the public string
   API, using a reference `std::string_view` cursor for stopper tests.
 - Tests: focused interpolation tests.
