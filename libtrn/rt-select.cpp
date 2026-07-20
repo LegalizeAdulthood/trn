@@ -1779,9 +1779,9 @@ static void sel_prompt()
             : fmt::format("{}{}% [{}{}] --", !g_sel_prior_obj_cnt ? "Top " : "",
                           static_cast<long>((g_sel_prior_obj_cnt + g_sel_page_obj_cnt) * 100 / g_sel_total_obj_cnt),
                           s_page_char, s_end_char);
-    interp(g_buf, sizeof g_buf, g_mail_call.c_str());
+    const std::string mail_call = do_interp(g_mail_call);
     const std::string prompt =
-        fmt::format("{}-- {} {} ({}{} order) -- {}", g_buf, g_sel_exclusive && g_in_ng ? "SELECTED" : "Select",
+        fmt::format("{}-- {} {} ({}{} order) -- {}", mail_call, g_sel_exclusive && g_in_ng ? "SELECTED" : "Select",
                     g_sel_mode_string, g_sel_direction < 0 ? "reverse " : "", g_sel_sort_string, page_prompt);
     color_string(COLOR_CMD, prompt);
     g_term_col = static_cast<int>(prompt.size());

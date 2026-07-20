@@ -125,17 +125,6 @@ the string API.  They are ordered after the implementation slices because
 each caller should delegate to the new string implementation, not to a
 fresh wrapper around the old parser.
 
-#### DINT-047 - Selector Mail Prompt Interpolation
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: legacy `interp` caller migration.
-- Function: `sel_prompt`.
-- Depends on: `DINT-014`.
-- Change: replace the `g_buf` interpolation of `g_mail_call` with the
-  string API and use the result directly in the prompt format.
-- Tests: selector prompt coverage if present; otherwise add focused
-  coverage first if the behavior is easy to isolate.
-
 #### DINT-048 - Terminal Edit Search Interpolation
 
 - Files: `libtrn/terminal.cpp`.
@@ -177,8 +166,8 @@ fresh wrapper around the old parser.
 - Files: `tests/test_interp.cpp`.
 - Kind: legacy C test migration.
 - Function: test helper around `do_interp`.
-- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-047`,
-  `DINT-048`, `DINT-049`, `DINT-050`.
+- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-048`,
+  `DINT-049`, `DINT-050`.
 - Change: migrate tests that call the C buffer API to the public string
   API, using a reference `std::string_view` cursor for stopper tests.
 - Tests: focused interpolation tests.
