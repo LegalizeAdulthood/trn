@@ -118,18 +118,6 @@ the string implementation is unbounded.
 These slices move local callers that want the updated cursor directly to
 the reference-cursor string API.
 
-#### DINT-031 - Utility Conditional Parser
-
-- Files: `libtrn/util.cpp`.
-- Kind: stopper-aware caller migration.
-- Function: condition parsing around the `do_interp` stopper call.
-- Depends on: `DINT-014`.
-- Change: replace the caller-owned `g_buf` interpolation output with the
-  string return value and use the updated view cursor for the condition
-  remainder.
-- Tests: focused tests for conditional parsing if available; otherwise
-  add coverage before refactoring.
-
 ### Tier 4 - Legacy C API Reduction
 
 These slices migrate every remaining direct caller of the C buffer API to

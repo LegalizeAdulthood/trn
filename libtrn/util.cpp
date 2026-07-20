@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #endif
 
+#include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <cstdio>
@@ -683,34 +684,36 @@ bool parse_ini_section(const IniSection &section, const IniSchema &schema, IniSe
 
 bool check_ini_cond(std::string_view cond)
 {
-    const std::string condition{cond};
-    const char       *cond_cursor = do_interp(g_buf, sizeof g_buf, condition.c_str(), "!=<>", nullptr);
-    char             *s = g_buf + std::strlen(g_buf);
-    while (s != g_buf && std::isspace(s[-1]))
+    std::string_view cond_cursor{cond};
+    std::string      condition_text = do_interp(cond_cursor, "!=<>", {});
+    while (!condition_text.empty() && std::isspace(static_cast<unsigned char>(condition_text.back())))
     {
-        s--;
+        condition_text.pop_back();
     }
-    *s = '\0';
-    const int negate = *cond_cursor == '!' ? 1 : 0;
-    if (negate != 0)
+    const bool negate = !cond_cursor.empty() && cond_cursor.front() == '!';
+    if (negate)
     {
-        cond_cursor++;
+        cond_cursor.remove_prefix(1);
     }
-    const int upordown = *cond_cursor == '<' ? -1 : (*cond_cursor == '>' ? 1 : 0);
+    const int upordown = !cond_cursor.empty() && cond_cursor.front() == '<'
+                             ? -1
+                             : (!cond_cursor.empty() && cond_cursor.front() == '>' ? 1 : 0);
     if (upordown != 0)
     {
-        cond_cursor++;
+        cond_cursor.remove_prefix(1);
     }
-    bool equal = *cond_cursor == '=';
+    bool equal = !cond_cursor.empty() && cond_cursor.front() == '=';
     if (equal)
     {
-        cond_cursor++;
+        cond_cursor.remove_prefix(1);
     }
-    cond_cursor = skip_space(cond_cursor);
+    cond_cursor.remove_prefix(std::min(cond_cursor.find_first_not_of(" \t\n\r\f\v"), cond_cursor.size()));
     if (upordown)
     {
-        const int num = std::atoi(cond_cursor) - std::atoi(g_buf);
-        if (!((equal && !num) || (upordown * num < 0)) ^ negate)
+        const std::string right_text{cond_cursor};
+        const int         num = std::atoi(right_text.c_str()) - std::atoi(condition_text.c_str());
+        const bool        comparison = (equal && num == 0) || (upordown * num < 0);
+        if (comparison == negate)
         {
             return false;
         }
@@ -719,7 +722,8 @@ bool check_ini_cond(std::string_view cond)
     {
         CompiledRegex condcompex;
         condcompex.init_compex();
-        const char *compile_error = condcompex.compile(cond_cursor, true, true);
+        const std::string regex_text{cond_cursor};
+        const char       *compile_error = condcompex.compile(regex_text.c_str(), true, true);
         if (compile_error != nullptr)
         {
             // warning(s)
@@ -727,7 +731,7 @@ bool check_ini_cond(std::string_view cond)
         }
         else
         {
-            equal = condcompex.execute(g_buf) != nullptr;
+            equal = condcompex.execute(condition_text.c_str()) != nullptr;
         }
         condcompex.free_compex();
         return equal;
