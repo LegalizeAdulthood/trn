@@ -125,18 +125,6 @@ the string API.  They are ordered after the implementation slices because
 each caller should delegate to the new string implementation, not to a
 fresh wrapper around the old parser.
 
-#### DINT-049 - Terminal Push String Interpolation
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: legacy `interp` caller migration.
-- Function: `push_string`.
-- Depends on: `DINT-014`.
-- Change: replace the fixed `PUSH_SIZE` string buffer and NUL trimming
-  with the string API result, then iterate the resulting string in
-  reverse.
-- Tests: terminal push-string coverage if present; otherwise add focused
-  coverage first if the behavior is easy to isolate.
-
 #### DINT-050 - Shell Quotechars Interpolation
 
 - Files: `libtrn/util.cpp`.
@@ -154,8 +142,7 @@ fresh wrapper around the old parser.
 - Files: `tests/test_interp.cpp`.
 - Kind: legacy C test migration.
 - Function: test helper around `do_interp`.
-- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-049`,
-  `DINT-050`.
+- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-050`.
 - Change: migrate tests that call the C buffer API to the public string
   API, using a reference `std::string_view` cursor for stopper tests.
 - Tests: focused interpolation tests.

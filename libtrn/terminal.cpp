@@ -1432,13 +1432,7 @@ got_canonical:
 void push_string(const char *str, char_int bits)
 {
     TRN_ASSERT(str != nullptr);
-    std::string expanded(PUSH_SIZE, '\0');
-    interp(expanded.data(), static_cast<int>(expanded.size()), str);
-    const std::size_t expanded_end = expanded.find('\0');
-    if (expanded_end != std::string::npos)
-    {
-        expanded.resize(expanded_end);
-    }
+    const std::string expanded = do_interp(str);
     for (std::string::const_reverse_iterator ch = expanded.rbegin(); ch != expanded.rend(); ++ch)
     {
         push_char(*ch ^ bits);
