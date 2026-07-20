@@ -259,6 +259,25 @@ TEST_F(InterpolatorTest, noEscapes)
     ASSERT_EQ(pattern, buffer());
 }
 
+TEST_F(InterpolatorTest, stringDoInterpReturnsInterpolatedText)
+{
+    EXPECT_EQ("this string contains no escapes", do_interp("this string contains no escapes"));
+}
+
+TEST_F(InterpolatorTest, sizedStringDoInterpReturnsInterpolatedText)
+{
+    EXPECT_EQ("this string contains no escapes", do_interp("this string contains no escapes", CMD_BUF_LEN));
+}
+
+TEST_F(InterpolatorTest, stringInterpSearchUsesSearchCommand)
+{
+    g_last_pat = "needle";
+    g_art_do_read = false;
+    g_art_how_much = ARTSCOPE_SUBJECT;
+
+    EXPECT_EQ("needle?", interp_search("%/", "?"));
+}
+
 TEST_F(InterpolatorTest, articleSearchPattern)
 {
     g_last_pat = "needle";

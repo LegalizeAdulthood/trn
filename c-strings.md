@@ -538,18 +538,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-130 - Interpolation String Result Buffers
-
-- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
-- Kind: fixed-size string output buffers.
-- Function: string-returning `do_interp` and `interp_search` overloads.
-- Depends on: none.
-- Change: replace `std::string(CMD_BUF_LEN, '\0')` plus first-NUL
-  trimming with an owned string-building helper.  Preserve the legacy
-  destination-buffer API for callers that still pass a caller-owned
-  output buffer.
-- Tests: run interpolation tests before and after the refactor.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
@@ -560,7 +548,7 @@ broad global-buffer work.
 - Files: `libtrn/terminal.cpp`.
 - Kind: fixed-size interpolation output buffer.
 - Function: `mac_line`.
-- Depends on: `CSTR-130`.
+- Depends on: none.
 - Change: use a string-returning interpolation helper that also reports
   the remaining definition text, then install the macro from string
   views.  Remove the `std::string(CMD_BUF_LEN, '\0')` scratch buffer.

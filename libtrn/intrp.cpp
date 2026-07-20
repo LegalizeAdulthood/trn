@@ -1504,6 +1504,20 @@ getout:
     return pattern; // where we left off
 }
 
+static std::string interp_to_string(std::string_view pattern, std::size_t result_size, const char *cmd)
+{
+    std::string pattern_text{pattern};
+    std::string result(result_size, '\0');
+
+    do_interp(result.data(), static_cast<int>(result.size()), pattern_text.c_str(), nullptr, cmd);
+    const std::size_t result_end = result.find('\0');
+    if (result_end != std::string::npos)
+    {
+        result.resize(result_end);
+    }
+    return result;
+}
+
 std::string do_interp(std::string_view pattern)
 {
     return do_interp(pattern, CMD_BUF_LEN);
@@ -1511,30 +1525,12 @@ std::string do_interp(std::string_view pattern)
 
 std::string do_interp(std::string_view pattern, std::size_t result_size)
 {
-    std::string pattern_text{pattern};
-    std::string result(result_size, '\0');
-
-    do_interp(result.data(), static_cast<int>(result.size()), pattern_text.c_str(), nullptr, nullptr);
-    const std::size_t result_end = result.find('\0');
-    if (result_end != std::string::npos)
-    {
-        result.resize(result_end);
-    }
-    return result;
+    return interp_to_string(pattern, result_size, nullptr);
 }
 
 std::string interp_search(std::string_view pattern, const char *cmd)
 {
-    std::string pattern_text{pattern};
-    std::string result(CMD_BUF_LEN, '\0');
-
-    interp_search(result.data(), static_cast<int>(result.size()), pattern_text.c_str(), cmd);
-    const std::size_t result_end = result.find('\0');
-    if (result_end != std::string::npos)
-    {
-        result.resize(result_end);
-    }
-    return result;
+    return interp_to_string(pattern, CMD_BUF_LEN, cmd);
 }
 
 /// @brief Converts escape sequences in a pattern to their corresponding characters.
