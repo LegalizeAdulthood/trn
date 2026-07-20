@@ -11,7 +11,9 @@ and function parameters that can become `std::string_view` or
 
 Follow-up passes also look for fixed-length `char name[N]` buffers in
 all storage classes and for functions that hide owned string allocation
-behind a raw `char *` return.
+behind a raw `char *` return.  They also look for obsolete C-style
+overloads and wrappers left behind after migration to `std::string` or
+`std::string_view`.
 
 ## Audit Criteria
 
@@ -33,6 +35,11 @@ Run every scan from the innermost lexical scope outward:
   storage before deciding whether it is a string candidate.
 - `const char *` values that can become `std::string_view` because the
   local code only reads, slices, compares, or forwards text by extent.
+- C-style overloads, wrappers, and helpers that take or return
+  `char *` or `const char *` when a `std::string` or
+  `std::string_view` API already exists nearby.  Check whether
+  production code calls them.  If only tests call them, decide whether
+  the tests preserve a real public API or only stale compatibility.
 - `char *` storage populated from `save_str` or `safe_copy` that can
   become owned `std::string` storage without pointer escape.
 - `char *` results from functions that return owned raw strings from
@@ -156,6 +163,21 @@ Refactor by changing the function signature or local variable to
 `std::string_view`, then use `empty`, `front`, `remove_prefix`, `substr`,
 and direct comparison.  Build a local `std::string` only when a callee
 needs a null terminator, and pass `c_str()` for `std::string` values.
+
+### Unused C-style Overloads And Wrappers
+
+Select when a `char *` or `const char *` overload, wrapper, or helper is
+unused by production code, or when every production caller can already
+use a nearby `std::string` or `std::string_view` API.  Include helpers
+that only delegate to modern APIs and legacy overloads used only by
+tests.
+
+Refactor by deleting unused helpers and overloads.  If a C-style wrapper
+is still needed for a real C boundary, command-line entry point, external
+library callback, or active migration path, keep it visible as a wrapper
+slice and migrate its callers bottom-up.  Do not keep an overload solely
+because a test still calls it; update or remove stale compatibility
+tests when the production API no longer exists.
 
 ### `save_str` or `safe_copy` to `std::string`
 
@@ -458,6 +480,13 @@ generated files, or the vendored `vcpkg` tree.
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
+- Unused overload/wrapper scan: no dead C-style wrappers remain in the
+  current pass.  Keep `nntp_init_error`, `string_case_compare`,
+  `string_case_equal`, `in_string`, `Subject` C-string accessors,
+  `is_yes`, `is_no`, `Tgetstr`, `line_ptr`, `line_offset`, `file_ref`,
+  `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
+  they still have production/source callers or platform/API boundary
+  use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`, and
   `SourceFile::open` already use modern path or view signatures.
   Current filename or path candidates are `mime_read_mimecap`, URL
