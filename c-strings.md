@@ -450,10 +450,9 @@ generated files, or the vendored `vcpkg` tree.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
-- The legacy C-buffer `do_interp`, `interp`, and `interp_search` APIs
-  are gone.  Remaining interpolation raw-string helpers are
-  `interp_backslash`, which writes one decoded character through a
-  caller buffer, and `normalize_refs`, which mutates caller string
+- The legacy C-buffer `do_interp`, `interp`, `interp_search`, and
+  `interp_backslash` APIs are gone.  The remaining interpolation
+  raw-string helper is `normalize_refs`, which mutates caller string
   storage.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`, and
   `SourceFile::open` already use modern path or view signatures.
@@ -540,19 +539,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-135 - Backslash Escape Reader
-
-- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`,
-  `libtrn/sw.cpp`, `libtrn/util.cpp`.
-- Kind: caller-output C string helper.
-- Functions: `interp_backslash`, `sw_list`, `parse_string`.
-- Depends on: none.
-- Change: replace the `char *dest` output helper with a view-cursor
-  helper that returns the decoded character and advances a
-  `std::string_view &`.  Update the direct callers to write the returned
-  character into their current storage; later slices remove that storage.
-- Tests: run switch parsing, option edit, and interpolation tests.
-
 #### CSTR-136 - References Normalizer
 
 - Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
@@ -588,7 +574,7 @@ broad global-buffer work.
 - Files: `libtrn/sw.cpp`.
 - Kind: mutable NUL-separated token buffer.
 - Function: `sw_list`.
-- Depends on: `CSTR-135`.
+- Depends on: none.
 - Change: parse the switch list into owned string tokens or direct
   string views instead of writing embedded NULs into a copied buffer.
   Keep `decode_switch(token.c_str())` only as the boundary until its
@@ -601,7 +587,7 @@ broad global-buffer work.
   `libtrn/rt-select.cpp`.
 - Kind: `char **` parser cursor and output API.
 - Function: `parse_string`.
-- Depends on: `CSTR-135`.
+- Depends on: none.
 - Change: replace the `char **to` and `char **from` API with
   `std::string` storage and a `std::string_view` input cursor.  Drop the
   newline-status return if the current caller still ignores it.

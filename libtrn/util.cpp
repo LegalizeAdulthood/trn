@@ -626,12 +626,16 @@ bool parse_string(char **to, char **from)
         }
         if (*f == '\\')
         {
-            if (*++f == '\n')
+            f++;
+            if (*f == '\n')
             {
                 continue;
             }
-            f = interp_backslash(t, f);
-            t++;
+            std::string_view  escape{f};
+            const std::size_t original_size = escape.size();
+            *t++ = interp_backslash(escape);
+            f += original_size - escape.size();
+            f--;
         }
         else
         {

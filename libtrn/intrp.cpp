@@ -313,67 +313,6 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
 
     result.reserve(CMD_BUF_LEN);
     scratch.reserve(scratch_size);
-    const auto read_backslash = [](std::string_view &cursor)
-    {
-        if (cursor.empty() || cursor.front() == '\0')
-        {
-            return '\\';
-        }
-        if (cursor.front() >= '0' && cursor.front() <= '7')
-        {
-            int i = 0;
-            while (i < 01000 && !cursor.empty() && cursor.front() >= '0' && cursor.front() <= '7')
-            {
-                i <<= 3;
-                i += cursor.front() - '0';
-                cursor.remove_prefix(1);
-            }
-            return static_cast<char>(i & 0377);
-        }
-        const char escaped = cursor.front();
-        cursor.remove_prefix(1);
-        switch (escaped)
-        {
-        case 'a':
-            return '\a';
-
-        case 'b':
-            return '\b';
-
-        case 'f':
-            return '\f';
-
-        case 'n':
-            return '\n';
-
-        case 'r':
-            return '\r';
-
-        case 't':
-            return '\t';
-
-        case 'v':
-            return '\v';
-
-        case 'x':
-            if (!cursor.empty() && std::isxdigit(static_cast<unsigned char>(cursor.front())))
-            {
-                int i = 0;
-                while (i < 01000 && !cursor.empty() && std::isxdigit(static_cast<unsigned char>(cursor.front())))
-                {
-                    static constexpr char hex_digits[]{"0123456789ABCDEF"};
-                    i <<= 4;
-                    i += std::strchr(hex_digits, std::toupper(static_cast<unsigned char>(cursor.front()))) - hex_digits;
-                    cursor.remove_prefix(1);
-                }
-                return static_cast<char>(i & 0377);
-            }
-            return escaped;
-
-        default:
-            return escaped;
-        }
-    };
     const auto copy_till_view = [](std::string_view &from, char delim)
     {
         std::string text;
@@ -1520,7 +1459,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
             else if (pattern.front() == '\\' && pattern.size() > 1 && pattern[1] != '\0')
             {
                 pattern.remove_prefix(1);
-                result.push_back(static_cast<char>(read_backslash(pattern) | metabit));
+                result.push_back(static_cast<char>(interp_backslash(pattern) | metabit));
             }
             else
             {
@@ -1543,90 +1482,74 @@ std::string interp_search(std::string_view pattern, std::string_view cmd)
     return do_interp(cursor, {}, cmd);
 }
 
-/// @brief Converts escape sequences in a pattern to their corresponding characters.
+/// @brief Converts an escape sequence in a pattern to its corresponding character.
 ///
-/// This function processes escape sequences in the input pattern and converts them
-/// to their corresponding characters, such as '\n' to newline, '\t' to tab, etc.
-/// It also handles octal and hexadecimal escape sequences.
+/// This function processes one escape sequence in the input pattern, such as
+/// '\n', '\t', octal, or hexadecimal escapes.
 ///
-/// @param dest Pointer to the destination buffer where the converted character will be stored.
-/// @param pattern Pointer to the input pattern containing escape sequences.
-/// @return Pointer to the next character in the pattern after the processed escape sequence.
+/// @param pattern Input pattern cursor, advanced past the consumed escape.
+/// @return The decoded character.
 ///
-const char *interp_backslash(char *dest, const char *pattern)
+char interp_backslash(std::string_view &pattern)
 {
-    int i = *pattern;
-
-    if (i >= '0' && i <= '7')
+    if (pattern.empty() || pattern.front() == '\0')
     {
-        i = 0;
-        while (i < 01000 && *pattern >= '0' && *pattern <= '7')
+        return '\\';
+    }
+    if (pattern.front() >= '0' && pattern.front() <= '7')
+    {
+        int i = 0;
+        while (i < 01000 && !pattern.empty() && pattern.front() >= '0' && pattern.front() <= '7')
         {
             i <<= 3;
-            i += *pattern++ - '0';
+            i += pattern.front() - '0';
+            pattern.remove_prefix(1);
         }
-        *dest = (char) (i & 0377);
-        return pattern - 1;
+        return static_cast<char>(i & 0377);
     }
-    switch (i)
+    const char escaped = pattern.front();
+    pattern.remove_prefix(1);
+    switch (escaped)
     {
     case 'a':
-        *dest = '\a';
-        break;
+        return '\a';
 
     case 'b':
-        *dest = '\b';
-        break;
+        return '\b';
 
     case 'f':
-        *dest = '\f';
-        break;
+        return '\f';
 
     case 'n':
-        *dest = '\n';
-        break;
+        return '\n';
 
     case 'r':
-        *dest = '\r';
-        break;
+        return '\r';
 
     case 't':
-        *dest = '\t';
-        break;
+        return '\t';
 
     case 'v':
-        *dest = '\v';
-        break;
+        return '\v';
 
     case 'x':
-        if (std::isxdigit(pattern[1]))
+        if (!pattern.empty() && std::isxdigit(static_cast<unsigned char>(pattern.front())))
         {
-            i = 0;
-            while (i < 01000 && std::isxdigit(*++pattern))
+            int i = 0;
+            while (i < 01000 && !pattern.empty() && std::isxdigit(static_cast<unsigned char>(pattern.front())))
             {
                 static constexpr char hex_digits[]{"0123456789ABCDEF"};
                 i <<= 4;
-                i += std::strchr(hex_digits, std::toupper(*pattern)) - hex_digits;
+                i += std::strchr(hex_digits, std::toupper(static_cast<unsigned char>(pattern.front()))) - hex_digits;
+                pattern.remove_prefix(1);
             }
-            *dest = static_cast<char>(i & 0377);
-            return pattern - 1;
+            return static_cast<char>(i & 0377);
         }
-        break;
-
-    case '\0':
-        *dest = '\\';
-        return pattern - 1;
+        return escaped;
 
     default:
-        *dest = (char) i;
-        break;
+        return escaped;
     }
-    return pattern;
-}
-
-char *interp_backslash(char *dest, char *pattern)
-{
-    return pattern + (interp_backslash(dest, static_cast<const char *>(pattern)) - pattern);
 }
 
 // normalize a references line in place

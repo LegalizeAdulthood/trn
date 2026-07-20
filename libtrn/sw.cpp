@@ -92,14 +92,20 @@ void sw_list(std::string_view switches)
                                         // OK, I know when I am not wanted
             inquote = *s++;             // remember & del single or double
         }
-        else if (*s == '\\')            // quoted something?
+        else if (*s == '\\') // quoted something?
         {
-            if (*++s != '\n')           // newline?
-            {
-                s = interp_backslash(p, s);
-                p++;
-            }
             s++;
+            if (*s != '\n') // newline?
+            {
+                std::string_view  escape{s};
+                const std::size_t original_size = escape.size();
+                *p++ = interp_backslash(escape);
+                s += original_size - escape.size();
+            }
+            else
+            {
+                s++;
+            }
         }
         else
         {

@@ -190,6 +190,24 @@ bool ends_with(std::string_view text, std::string_view suffix)
     return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
+struct ParsedString
+{
+    std::string text;
+    bool        continued;
+    char        next;
+};
+
+ParsedString parse_test_string(std::string text)
+{
+    std::string output(text.size() + 2, '\0');
+    char       *to = output.data();
+    char       *from = text.data();
+
+    const bool continued = parse_string(&to, &from);
+    output.resize(output.find('\0'));
+    return {output, continued, *from};
+}
+
 } // namespace
 
 TEST_F(TempFilenameTest, returnsUniqueNameInTempDirectory)
@@ -257,6 +275,33 @@ TEST(InStringTest, stringViewOverloadFindsEmptyNeedleOnlyInNonEmptyText)
 {
     EXPECT_TRUE(in_string(std::string_view{"text"}, "", true));
     EXPECT_FALSE(in_string(std::string_view{}, "", true));
+}
+
+TEST(ParseStringTest, decodesBackslashEscapes)
+{
+    const ParsedString parsed = parse_test_string(R"(alpha\nbeta \101\x42)");
+
+    EXPECT_EQ("alpha\nbeta AB", parsed.text);
+    EXPECT_FALSE(parsed.continued);
+    EXPECT_EQ('\0', parsed.next);
+}
+
+TEST(ParseStringTest, trimsAfterClosingQuoteBeforeComment)
+{
+    const ParsedString parsed = parse_test_string("  \"quoted value\" # comment\nnext");
+
+    EXPECT_EQ("quoted value", parsed.text);
+    EXPECT_TRUE(parsed.continued);
+    EXPECT_EQ('\n', parsed.next);
+}
+
+TEST(ParseStringTest, preservesTrailingBackslash)
+{
+    const ParsedString parsed = parse_test_string(R"(value\)");
+
+    EXPECT_EQ(R"(value\)", parsed.text);
+    EXPECT_FALSE(parsed.continued);
+    EXPECT_EQ('\0', parsed.next);
 }
 
 TEST_F(FileExpansionTest, expandsHomeDirectory)
