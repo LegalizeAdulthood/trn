@@ -774,7 +774,7 @@ static bool open_newsrc(Newsrc *rp)
         std::error_code error;
         fs::remove(rp->old_name, error);
 #ifndef NO_FILELINKS
-        safe_link(rp->name.string().c_str(), rp->old_name.string().c_str());
+        safe_link(rp->name, rp->old_name);
 #endif
     }
 

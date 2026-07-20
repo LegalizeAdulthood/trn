@@ -52,7 +52,7 @@ bool  make_dir(const std::filesystem::path &dirname, MakeDirNameType nametype);
 void  not_incl(std::string_view feature);
 void  set_def(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
-void safe_link(const char *old_name, const char *new_name);
+void safe_link(const std::filesystem::path &old_name, const std::filesystem::path &new_name);
 #endif
 void        verify_sig();
 double      current_time();

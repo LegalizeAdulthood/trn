@@ -506,7 +506,7 @@ production code.
 - Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
   `strlen` 65.
 - Formatting into C buffers: `sprintf` 29, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 384,
+- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 383,
   `fprintf` 54.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -537,18 +537,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-126 - Safe Link Path Signature
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `libtrn/rcstuff.cpp`.
-- Kind: filename parameters.
-- Function: `safe_link`.
-- Depends on: none.
-- Change: promote both path parameters to `const fs::path &`, pass
-  `path.string().c_str()` only at the `link` call, and print path text
-  through fmt.
-- Tests: run newsrc tests if available; otherwise build.
 
 #### CSTR-127 - Edit File Argument
 

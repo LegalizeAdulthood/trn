@@ -413,11 +413,11 @@ void set_def(char *buffer, const char *dflt)
 }
 
 #ifndef NO_FILELINKS
-void safe_link(const char *old_name, const char *new_name)
+void safe_link(const fs::path &old_name, const fs::path &new_name)
 {
-    if (link(old_name, new_name))
+    if (link(old_name.string().c_str(), new_name.string().c_str()))
     {
-        std::printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name);
+        fmt::print("Can't link backup ({}) to .newsrc ({})\n", old_name.string(), new_name.string());
 // Debug
 #if 0
         if (errno>0 && errno<sys_nerr)
