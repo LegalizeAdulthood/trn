@@ -424,46 +424,51 @@ the C-style string buffer itself is refactored.
 
 The current scan covers production code under `config`, `libtrn`,
 `util`, `nntp`, `inews`, `nntplist`, `trn-artchk`, and `tool`.  It
-does not include tests, generated files, or the vendored `vcpkg` tree.
+also checks `wildmat` and `parsedate`.  It does not include tests,
+generated files, or the vendored `vcpkg` tree.
 
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
-  definition, and two call sites in two owner clusters.  The call
-  sites are inventoried below.
-- `safe_malloc`: remaining string-shaped owners are `g_head_buf` and
+  definition, and two call sites in article and NNTP buffer owner
+  clusters.  The call sites are inventoried below.
+- `safe_malloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
   helpers.
 - `safe_realloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Regex bytecode remains a non-string owner.
-- Direct environment C-string reads now remain only inside the config env
-  wrapper implementation.
+- Direct environment C-string reads now remain only inside the
+  environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
-  `g_art_line`, `g_head_buf`, `g_art_buf`, MIME HTML tag parser state,
-  `uudecode` pending-line storage, selector command key storage,
-  tree-indent storage, terminal push-string expansion storage, terminal
-  command-input scratch, and the MSDOS `tgoto` static return buffer.
-  Tiny UTF byte scratch buffers, translation tables, MIME decode tables,
-  terminal pushback bytes, termcap storage, and regex bytecode arrays are
-  non-string protocol or parser storage, not current string slices.
+  `g_art_line`, `g_head_buf`, `g_art_buf`, `g_buf` uses in
+  `read_last`, `news_news_check`, `scan_active_line` callers, terminal
+  command-input scratch, MIME HTML tag parser state, `uudecode`
+  pending-line storage, selector command key storage, and tree-indent
+  storage.  Tiny UTF byte scratch buffers, translation tables, MIME
+  decode tables, terminal pushback bytes, termcap storage, and regex
+  bytecode arrays are non-string protocol or parser storage, not current
+  string slices.
 - Termcap capability globals are still exposed as mutable `char *` even
   though the code treats most capability text as read-only after
   discovery.  This is a const-correctness slice before the remaining
   MSDOS `tgoto` cleanup.
-- INI and option helper classes own strings but still expose nullable
-  `const char *` views through `c_str`-shaped accessors.  These are
-  config or draft boundaries where absence is meaningful, so promote
-  them to optional string views rather than plain strings.
 - Several call sites now use `std::string` as a fixed-size C output
   buffer for `interp` or `do_interp`, then trim at the first NUL.  These
   are not raw arrays anymore, but they are still fixed-size C-string
   output contracts and should be converted one function at a time.
 - Filename storage: newsrc fields are already `fs::path`.
-  `read_auth_file` is still exposed as a nullable `const char *` path
-  helper even though its callers already hold strings.  Score-file
-  shortcut strings and universal-selector file strings still mix
-  expansion templates, URLs, labels, and real paths, so they are not
-  honest path-only candidates yet.
+  `make_dir` and `safe_link` still expose filename parameters as raw
+  C strings even though the implementations or callers already work with
+  paths.  Score-file shortcut strings, universal-selector file strings,
+  shell commands, URLs, and expansion templates still mix path and
+  non-path text, so they are not honest path-only candidates yet.
+- `SourceFile::open` still models an optional NNTP server as nullable
+  `const char *`.  Its callers can pass an empty string view instead,
+  keeping null out of the local data flow.
+- `scan_active_line` mutates its input buffer, forcing callers to copy
+  current `std::string` storage into `g_buf` before parsing.  Promoting
+  the argument to `std::string_view` and parsing locally unlocks later
+  `g_buf` removal in `addng.cpp`.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
@@ -497,13 +502,13 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 30, `strncpy` 3, `strcat` 1.
+- Copy and concatenation: `strcpy` 29, `strncpy` 3, `strcat` 1.
 - Comparison: `strcmp` 4, `strncmp` 23.
-- Search and length: `strchr` 77, `strrchr` 5, `strstr` 2,
-  `strlen` 74.
-- Formatting into C buffers: `sprintf` 34, `snprintf` 2.
-- C text I/O roots: `fgets` 29, `fputs` 206, `printf` 398,
-  `fprintf` 55.
+- Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
+  `strlen` 66.
+- Formatting into C buffers: `sprintf` 29, `snprintf` 2.
+- C text I/O roots: `fgets` 28, `fputs` 202, `printf` 385,
+  `fprintf` 54.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -529,20 +534,207 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-120 - Last File Read Buffer
+
+- Files: `libtrn/last.cpp`, `tests/test_last.cpp`.
+- Kind: local `g_buf` file input.
+- Function: `read_last`.
+- Depends on: none.
+- Change: read the first `.rnlast` line into a local `std::string`,
+  strip the line ending with string operations, and assign
+  `g_last_newsgroup_name` from the string.  Keep the existing numeric
+  field parsing behavior.
+- Truncation: arbitrary `LINE_BUF_LEN` limit from the global buffer.
+- Tests: run `test_last`.
+
+#### CSTR-121 - News News Display Buffer
+
+- Files: `libtrn/init.cpp`.
+- Kind: local `g_buf` file display.
+- Function: `news_news_check`.
+- Depends on: none.
+- Change: display the `NEWSNEWSNAME` file using local string or stream
+  storage instead of `g_buf`, then keep the existing `get_anything`
+  prompt and trailing newline behavior.
+- Truncation: arbitrary `LINE_BUF_LEN` file-read limit.
+- Tests: add coverage first if an isolated prompt test is practical;
+  otherwise run the normal build.
+
+#### CSTR-122 - Bits Debug Pause Buffer
+
+- Files: `libtrn/bits.cpp`.
+- Kind: fixed-size debug-only stdin buffer.
+- Function: `rc_to_bits`.
+- Depends on: none.
+- Change: replace the `std::string(CMD_BUF_LEN, '\0')` plus `fgets`
+  pause with ordinary line input or a minimal input discard that does
+  not model a fixed C output buffer.
+- Truncation: arbitrary debug pause limit.
+- Tests: build.
+
+#### CSTR-123 - Header Debug Pause Buffer
+
+- Files: `libtrn/head.cpp`.
+- Kind: fixed-size debug-only stdin buffer.
+- Function: `header_line_span`.
+- Depends on: none.
+- Change: replace the `std::string(CMD_BUF_LEN, '\0')` plus `fgets`
+  pause with ordinary line input or a minimal input discard that does
+  not model a fixed C output buffer.
+- Truncation: arbitrary debug pause limit.
+- Tests: build.
+
+#### CSTR-124 - First Article Range Parser
+
+- Files: `libtrn/bits.cpp`, `libtrn/include/trn/bits.h`.
+- Kind: read-only C-string parameter.
+- Function: `set_first_art`.
+- Depends on: none.
+- Change: promote the parameter to `std::string_view`, trim leading
+  spaces with view operations, compare the `1-` prefix directly, and
+  build a temporary string only for the legacy numeric conversion if
+  needed.
+- Tests: add direct tests if practical; otherwise run affected cache and
+  bits tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-125 - Make Directory Path Signature
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `tests/test_makedir.cpp`, direct callers.
+- Kind: filename parameter.
+- Function: `make_dir`.
+- Depends on: none.
+- Change: promote the filename parameter to `const fs::path &`, because
+  the implementation immediately constructs a path.  Update callers that
+  already hold paths to pass them directly, and leave string callers to
+  use implicit path construction.
+- Tests: run `test_makedir`.
+
+#### CSTR-126 - Safe Link Path Signature
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `libtrn/rcstuff.cpp`.
+- Kind: filename parameters.
+- Function: `safe_link`.
+- Depends on: none.
+- Change: promote both path parameters to `const fs::path &`, pass
+  `path.string().c_str()` only at the `link` call, and print path text
+  through fmt.
+- Tests: run newsrc tests if available; otherwise build.
+
+#### CSTR-127 - Edit File Argument
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `libtrn/scorefile.cpp`, `libtrn/univ.cpp`.
+- Kind: read-only filename/template parameter.
+- Function: `edit_file`.
+- Depends on: none.
+- Change: promote the parameter to `std::string_view`, use `empty()` as
+  the missing-value sentinel, and pass the view to `file_exp` without a
+  C-string round trip.
+- Tests: run score-file and universal-selector tests covering edit
+  command construction if available.
+
+#### CSTR-128 - Source File Server Sentinel
+
+- Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.
+- Kind: nullable read-only C-string parameter.
+- Function: `SourceFile::open`.
+- Depends on: none.
+- Change: promote the `server` parameter to `std::string_view`, using
+  empty string as the no-server sentinel.  Keep `fetch_cmd` as a view
+  and pass string data to NNTP/file APIs only when consumed immediately.
+- Tests: run data-source tests.
+
+#### CSTR-129 - Active File Line Scanner
+
+- Files: `libtrn/addng.cpp`.
+- Kind: mutable C-string parser input.
+- Function: `scan_active_line`.
+- Depends on: none.
+- Change: promote the input line to `std::string_view`, parse the group
+  name and fields without mutating the caller buffer, and update
+  `list_groups` so it no longer copies `SourceFile::m_lines` into
+  `g_buf`.
+- Tests: run add-newsgroup tests.
+
+#### CSTR-130 - Interpolation String Result Buffers
+
+- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
+- Kind: fixed-size string output buffers.
+- Function: string-returning `do_interp` and `interp_search` overloads.
+- Depends on: none.
+- Change: replace `std::string(CMD_BUF_LEN, '\0')` plus first-NUL
+  trimming with an owned string-building helper.  Preserve the legacy
+  destination-buffer API for callers that still pass a caller-owned
+  output buffer.
+- Tests: run interpolation tests before and after the refactor.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
+#### CSTR-131 - Terminal Macro Line Parser
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: fixed-size interpolation output buffer.
+- Function: `mac_line`.
+- Depends on: `CSTR-130`.
+- Change: use a string-returning interpolation helper that also reports
+  the remaining definition text, then install the macro from string
+  views.  Remove the `std::string(CMD_BUF_LEN, '\0')` scratch buffer.
+- Tests: run terminal macro tests.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-132 - Main Multirc Display Builder
+
+- Files: `libtrn/trn.cpp`.
+- Kind: `g_buf` string building with `sprintf`, `strlen`, and `strcpy`.
+- Function: main newsgroup command loop multirc display block.
+- Depends on: none.
+- Change: build the active data-source list in a local `std::string`,
+  preserve the existing display truncation threshold, and print with
+  fmt.
+- Truncation: meaningful display abbreviation at roughly 66 columns;
+  preserve the `, ...` behavior.
+- Tests: run selector or main loop tests if available.
+
+#### CSTR-133 - Selector Header Multirc Display Builder
+
+- Files: `libtrn/rt-page.cpp`.
+- Kind: `g_buf` string building with `sprintf`, `strlen`, `strcpy`, and
+  `strcmp`.
+- Function: selector page header rendering.
+- Depends on: none.
+- Change: build the active data-source list in a local `std::string`,
+  compare directly to `"default"`, preserve the existing display
+  truncation threshold, and print with fmt.
+- Truncation: meaningful display abbreviation at roughly 34 columns;
+  preserve the `, ...` behavior.
+- Tests: run selector page tests.
+
+#### CSTR-134 - Multirc Page Item Display Builder
+
+- Files: `libtrn/rt-page.cpp`.
+- Kind: `g_buf` string building with `sprintf`, `strlen`, and `strcpy`.
+- Function: multirc page item rendering.
+- Depends on: none.
+- Change: build the active data-source list in a local `std::string`,
+  preserve the existing display truncation threshold, and print with
+  fmt.
+- Truncation: meaningful display abbreviation at roughly 34 columns;
+  preserve the `, ...` behavior.
+- Tests: run selector page tests.
 
 ### Tier 4 - Broad Shared Buffers
 
