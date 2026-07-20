@@ -108,20 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-013 - Make C Buffer API A Wrapper
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: compatibility wrapper.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-080`.
-- Change: replace the old C implementation with a wrapper that creates a
-  view cursor, calls the reference-cursor string API, copies the result
-  into `dest`, preserves legacy overflow handling, and returns the cursor
-  as a pointer into the original pattern.
-- Keep: `interp` and C `interp_search` delegating through the legacy C
-  `do_interp` wrapper.
-- Tests: focused interpolation tests.
-
 #### DINT-014 - Delegate String Overloads To New API
 
 - Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
