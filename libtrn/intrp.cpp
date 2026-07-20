@@ -928,15 +928,18 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         {
                             artid_buf = fetch_lines(g_art, MSG_ID_LINE);
                         }
-                        s = artid_buf->c_str();
-                        if (*s && *s != '<')
+                        if (!artid_buf->empty() && artid_buf->front() != '<')
                         {
-                            s = assign_scratch(fmt::format("<{}>", *artid_buf));
+                            set_owned_value(fmt::format("<{}>", *artid_buf));
+                        }
+                        else
+                        {
+                            set_value(*artid_buf);
                         }
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 

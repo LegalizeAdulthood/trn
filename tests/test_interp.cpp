@@ -2178,6 +2178,17 @@ TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_MESSAGE_ID, buffer());
 }
 
+TEST_F(InterpolatorNewsgroupTest, messageIdAddsAngleBrackets)
+{
+    g_art = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
+    char pattern[]{"%i"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{"<"} + TRN_TEST_HEADER_BARE_MESSAGE_ID + ">", buffer());
+}
+
 TEST_F(InterpolatorNewsgroupTest, newsgroupsLineInNewsgroup)
 {
     char pattern[]{"%n"};

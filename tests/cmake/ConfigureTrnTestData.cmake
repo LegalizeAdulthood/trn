@@ -61,6 +61,7 @@ function(configure_trn_test_data)
     set(TRN_TEST_HEADER_REPLY_TO "Cyrus Longworth <${TRN_TEST_HEADER_REPLY_TO_ADDRESS}>")
     set(TRN_TEST_HEADER_DATE "Tue, 21 Jan 2003 01:21:09 +0000 (UTC)")
     set(TRN_TEST_HEADER_MESSAGE_ID "<b0i7a5$aoq$1@terabinaries.xmission.com>")
+    set(TRN_TEST_HEADER_BARE_MESSAGE_ID "b0i7a5$aoq$1@terabinaries.xmission.com")
     set(TRN_TEST_REFERENCE_IDS
             "<u0fn0g$34scf$1@dont-email.me>"
             "<874jpv84uv.fsf@bsb.me.uk>"
@@ -76,9 +77,10 @@ function(configure_trn_test_data)
 
     # Article with no fallbacks for other fields, e.g. no Reply-To: for From:.
     set(TRN_TEST_ARTICLE_NO_FALLBACKS_NUM 624)
+    set(TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM 625)
 
     # Active file contents.
-    set(TRN_TEST_NEWSGROUP_HIGH "${TRN_TEST_ARTICLE_NO_FALLBACKS_NUM}")
+    set(TRN_TEST_NEWSGROUP_HIGH "${TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM}")
     set(TRN_TEST_NEWSGROUP_LOW "${TRN_TEST_ARTICLE_NUM}")
     set(TRN_TEST_NEWSGROUP_PERM "y")
 
@@ -132,6 +134,7 @@ function(configure_trn_test_data)
     configure_file(cmake/test_active_file.in            "${TRN_TEST_SPOOL_DIR}/active")
     configure_file(cmake/test_article.in                "${TRN_TEST_ARTICLE_FILE}")
     configure_file(cmake/test_article_no_fallbacks.in   "${TRN_TEST_NEWSGROUP_DIR}/${TRN_TEST_ARTICLE_NO_FALLBACKS_NUM}")
+    configure_file(cmake/test_article_bare_message_id.in "${TRN_TEST_NEWSGROUP_DIR}/${TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM}")
     configure_file(cmake/test_local_newsrc.in           "${TRN_TEST_LOCAL_NEWSRC_FILE}")
     configure_file(cmake/test_mimecap_file.in           "${TRN_TEST_MIMECAP_FILE}")
     configure_file(cmake/test_nntp_auth_file.in         "${TRN_TEST_DOT_DIR}/.nntpauth")
