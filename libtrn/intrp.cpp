@@ -509,7 +509,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             }
                         }
                     }
-                    s = search_command.c_str();
+                    set_value(search_command);
                     break;
                 }
 

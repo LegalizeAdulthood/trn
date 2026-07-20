@@ -108,32 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-002 - Modifier Prefixes And Format Specifier
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: parser scaffolding.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Cases: `%^`, `%_`, `%\`, `%'`, `%>`, `%)`, `%:`.
-- Change: keep these non-output cases as state changes used by later
-  string/string-view value cases.
-- Change: make the `%:` format string storage a `std::string`.
-- Preserve: current modifier ordering and format behavior.
-- Tests: focused interpolation tests.
-
-#### DINT-012-010 - Search Command Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Case: `%/`.
-- Change: produce the search command in local `std::string` storage and
-  expose it as a `std::string_view` to the shared tail.
-- Preserve: current interaction with `cmd`, `g_last_pat`,
-  `g_art_do_read`, and `g_art_how_much`.
-- Tests: focused interpolation tests.
-
 #### DINT-012-011 - Environment Default Case
 
 - Files: `libtrn/intrp.cpp`.
