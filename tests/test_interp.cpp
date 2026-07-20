@@ -2326,6 +2326,17 @@ TEST_F(InterpolatorNewsgroupTest, toFromPathInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_PATH, buffer());
 }
 
+TEST_F(InterpolatorNewsgroupTest, toFromPathTrimsPostingHostPrefix)
+{
+    g_p_host_name = "foo";
+    char pattern[]{"%T"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("bar!goink!not-for-mail", buffer());
+}
+
 TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesInNewsgroup)
 {
     char pattern[]{"%u"};

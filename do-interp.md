@@ -108,19 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-039 - Author Cases
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-032`.
-- Cases: `%t`, `%T`.
-- Change: keep selected author source text in owning string storage and
-  expose it through the local value view before address parsing.
-- Preserve: Reply-To preference, Path substitution for `%T`, and host
-  prefix trimming.
-- Tests: focused interpolation tests.
-
 #### DINT-012-040 - Short From Case
 
 - Files: `libtrn/intrp.cpp`.

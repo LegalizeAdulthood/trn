@@ -1159,12 +1159,14 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
 
                 case 't':
                 case 'T':
+                {
                     if (!g_in_ng)
                     {
-                        s = s_empty;
+                        set_value({});
                         break;
                     }
                     parse_header(g_art);
+                    std::string_view author;
                     if (g_header_type[REPLY_LINE].min_pos >= 0)
                     {
                                         // was there a reply line?
@@ -1172,16 +1174,16 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         {
                             reply_buf = fetch_lines(g_art, REPLY_LINE);
                         }
-                        s = reply_buf->c_str();
+                        author = *reply_buf;
                     }
                     else if (!from_buf)
                     {
                         from_buf = fetch_lines(g_art, FROM_LINE);
-                        s = from_buf->c_str();
+                        author = *from_buf;
                     }
                     else
                     {
-                        s = noname_text;
+                        author = noname_text;
                     }
                     if (*pattern == 'T')
                     {
@@ -1189,16 +1191,19 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         {
                                         // should we substitute path?
                             path_buf = fetch_lines(g_art, PATH_LINE);
-                            s = path_buf->c_str();
+                            author = *path_buf;
                         }
-                        int i = std::strlen(g_p_host_name.c_str());
-                        if (!std::strncmp(g_p_host_name.c_str(),s,i) && s[i] == '!')
+                        const std::string_view host{g_p_host_name};
+                        if (author.size() > host.size() && author.substr(0, host.size()) == host &&
+                            author[host.size()] == '!')
                         {
-                            s += i + 1;
+                            author.remove_prefix(host.size() + 1);
                         }
                     }
+                    set_value(author);
                     address_parse = true;       // just the good part
                     break;
+                }
 
                 case 'u':
                     if (g_in_ng)
