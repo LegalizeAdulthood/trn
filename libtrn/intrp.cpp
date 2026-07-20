@@ -310,7 +310,6 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
     const std::size_t          scratch_size = 8192;
     const std::size_t          format_size = 512;
     std::string                scratch;
-    const char                *space_text = " ";
     const char                *noname_text = "noname";
     int                        metabit = 0;
 
@@ -746,7 +745,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case '?':
-                    s = space_text;
+                    set_value(" ");
                     line_split = dest;
                     break;
 

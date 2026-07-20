@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-022 - Line Split Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Case: `%?`.
-- Change: express the inserted space as a `std::string_view` value while
-  keeping the current line-split pointer until the outer parser changes.
-- Preserve: current split point behavior.
-- Tests: focused interpolation tests.
-
 #### DINT-012-023 - Regex Bracket Case
 
 - Files: `libtrn/intrp.cpp`.
