@@ -285,6 +285,26 @@ TEST_F(InterpolatorTest, sizedStringDoInterpHandlesResponseHeaderSizedText)
     EXPECT_EQ(header, do_interp(header, 5 * LINE_BUF_LEN));
 }
 
+TEST_F(InterpolatorTest, referenceCursorDoInterpStopsBeforeStopper)
+{
+    m_env.expect_env("FOO", "value");
+    std::string_view pattern{"%{FOO}|tail"};
+
+    EXPECT_EQ("value", do_interp(pattern, "|", ""));
+    EXPECT_EQ("|tail", pattern);
+}
+
+TEST_F(InterpolatorTest, referenceCursorDoInterpUsesSearchCommand)
+{
+    g_last_pat = "needle";
+    g_art_do_read = false;
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    std::string_view pattern{"%/"};
+
+    EXPECT_EQ("needle?", do_interp(pattern, "", "?"));
+    EXPECT_TRUE(pattern.empty());
+}
+
 TEST_F(InterpolatorTest, stringInterpSearchUsesSearchCommand)
 {
     g_last_pat = "needle";

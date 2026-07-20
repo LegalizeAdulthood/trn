@@ -108,24 +108,12 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-010 - Declare Reference-cursor String API
-
-- Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`.
-- Kind: public API foundation.
-- Function: `do_interp`.
-- Depends on: none.
-- Change: add
-  `std::string do_interp(std::string_view &pattern,
-  std::string_view stoppers, std::string_view cmd);`.
-- Keep: existing overload declarations until their callers are migrated.
-- Tests: header standalone test and focused interpolation tests.
-
 #### DINT-011 - Convert skip_interp To View Cursor Logic
 
 - Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
 - Kind: parser helper foundation.
 - Function: `skip_interp`.
-- Depends on: `DINT-010`.
+- Depends on: none.
 - Change: replace the private pointer-walking `skip_interp` with
   string-view cursor logic that mirrors the target interpolation cursor
   semantics.

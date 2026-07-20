@@ -1528,6 +1528,26 @@ std::string do_interp(std::string_view pattern, std::size_t result_size)
     return interp_to_string(pattern, result_size, nullptr);
 }
 
+std::string do_interp(std::string_view &pattern, std::string_view stoppers, std::string_view cmd)
+{
+    std::string pattern_text{pattern};
+    std::string stoppers_text{stoppers};
+    std::string cmd_text{cmd};
+    std::string result(CMD_BUF_LEN, '\0');
+
+    const char *next =
+        do_interp(result.data(), static_cast<int>(result.size()), pattern_text.c_str(),
+                  stoppers.empty() ? nullptr : stoppers_text.c_str(), cmd.empty() ? nullptr : cmd_text.c_str());
+    const std::size_t consumed = static_cast<std::size_t>(next - pattern_text.c_str());
+    pattern.remove_prefix(consumed <= pattern.size() ? consumed : pattern.size());
+    const std::size_t result_end = result.find('\0');
+    if (result_end != std::string::npos)
+    {
+        result.resize(result_end);
+    }
+    return result;
+}
+
 std::string interp_search(std::string_view pattern, const char *cmd)
 {
     return interp_to_string(pattern, CMD_BUF_LEN, cmd);
