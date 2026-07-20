@@ -2239,6 +2239,17 @@ TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_REFERENCES " " TRN_TEST_HEADER_MESSAGE_ID, buffer());
 }
 
+TEST_F(InterpolatorNewsgroupTest, newReferencesAddsMessageIdAngleBrackets)
+{
+    g_art = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
+    char pattern[]{"%R"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{TRN_TEST_HEADER_REFERENCES} + " <" + TRN_TEST_HEADER_BARE_MESSAGE_ID + ">", buffer());
+}
+
 TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroupNoArticleIsEmpty)
 {
     g_art = ArticleNum{};

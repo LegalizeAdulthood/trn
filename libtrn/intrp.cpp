@@ -1074,14 +1074,14 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 {
                     if (!g_in_ng)
                     {
-                        s = s_empty;
+                        set_value({});
                         break;
                     }
                     parse_header(g_art);
                     refs_buf.reset();
                     if (g_header_type[REFS_LINE].min_pos >= 0)
                     {
-                        refs_buf = fetch_lines(g_art,REFS_LINE);
+                        refs_buf = fetch_lines(g_art, REFS_LINE);
                         normalize_refs(refs_buf->data());
                         const std::size_t normalized_size = refs_buf->find('\0');
                         if (normalized_size != std::string::npos)
@@ -1117,7 +1117,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     {
                         refs_buf->push_back(' ');
                     }
-                    if (!artid_buf->empty() && (*artid_buf)[0] == '<')
+                    if (!artid_buf->empty() && artid_buf->front() == '<')
                     {
                         refs_buf->append(*artid_buf);
                     }
@@ -1127,7 +1127,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         refs_buf->append(*artid_buf);
                         refs_buf->push_back('>');
                     }
-                    s = refs_buf->c_str();
+                    set_value(*refs_buf);
                     break;
                 }
 
