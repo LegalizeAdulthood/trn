@@ -558,16 +558,16 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         if (!scratch.empty() && (which_line = get_header_num(scratch)) != SOME_LINE)
                         {
                             line_buf = fetch_lines(g_art, which_line);
-                            s = line_buf->c_str();
+                            set_value(*line_buf);
                         }
                         else
                         {
-                            s = s_empty;
+                            set_value({});
                         }
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
                 }
