@@ -108,16 +108,406 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012 - Move Parser Body To Reference-cursor do_interp
+#### DINT-012-001 - Add Mixed String Value Tail
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: parser scaffolding.
+- Function: legacy C `do_interp`.
+- Depends on: none.
+- Change: add local `std::string` and `std::string_view` output
+  variables used by converted switch arms.
+- Change: keep the existing C output buffer and pointer cursor as the
+  outer parser scaffolding.
+- Change: let converted arms append through the same shared modifier,
+  formatting, and bounded-copy tail as unconverted arms.
+- Preserve: all current interpolation semantics.
+- Tests: focused interpolation tests.
+
+#### DINT-012-002 - Modifier Prefixes And Format Specifier
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: parser scaffolding.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%^`, `%_`, `%\`, `%'`, `%>`, `%)`, `%:`.
+- Change: keep these non-output cases as state changes used by later
+  string/string-view value cases.
+- Change: make the `%:` format string storage a `std::string`.
+- Preserve: current modifier ordering and format behavior.
+- Tests: focused interpolation tests.
+
+#### DINT-012-010 - Search Command Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: `%/`.
+- Change: produce the search command in local `std::string` storage and
+  expose it as a `std::string_view` to the shared tail.
+- Preserve: current interaction with `cmd`, `g_last_pat`,
+  `g_art_do_read`, and `g_art_how_much`.
+- Tests: focused interpolation tests.
+
+#### DINT-012-011 - Environment Default Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: `%{name-default}`.
+- Change: parse the name/default text into string storage and return the
+  `get_env_var` result through the local value view.
+- Preserve: default value behavior.
+- Tests: focused interpolation tests.
+
+#### DINT-012-012 - Interpolated Environment Default Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-011`.
+- Case: `%<name-default>`.
+- Change: parse the name/default text into string storage, call
+  `get_env_var`, interpolate the result as a `std::string`, and expose it
+  through the local value view.
+- Preserve: recursive interpolation of the default result.
+- Tests: focused interpolation tests.
+
+#### DINT-012-013 - Header Fetch Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: `%[header]`.
+- Change: keep fetched header text in owning string storage and expose it
+  through the local value view.
+- Preserve: empty result outside a newsgroup.
+- Tests: focused interpolation tests.
+
+#### DINT-012-014 - Shell Command Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: backtick command interpolation.
+- Change: keep command output in string storage and expose each collected
+  result through the local value view.
+- Preserve: command execution, trailing newline trimming, and error
+  behavior.
+- Tests: focused interpolation tests.
+
+#### DINT-012-015 - Prompted Input Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: `%"prompt"`.
+- Change: keep prompted input in string storage and expose it through the
+  local value view.
+- Preserve: terminal mode changes and `s_last_input`.
+- Tests: focused interpolation tests.
+
+#### DINT-012-020 - Directory Alias Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%~`, `%.`, `%+`, `%O`, `%p`, `%P`, `%Y`.
+- Change: expose existing `std::string` directory values as
+  `std::string_view` values.
+- Preserve: empty result for `%P` when no data source exists.
+- Tests: focused interpolation tests.
+
+#### DINT-012-021 - Scalar Counter Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%$`, `%#`, `%a`, `%B`, `%j`, `%M`, `%u`, `%U`, `%v`, `%Z`.
+- Change: format numeric values into local `std::string` storage and
+  expose them through the local value view.
+- Preserve: `%#` uppercase counter side effect.
+- Tests: focused interpolation tests.
+
+#### DINT-012-022 - Line Split Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: `%?`.
+- Change: express the inserted space as a `std::string_view` value while
+  keeping the current line-split pointer until the outer parser changes.
+- Preserve: current split point behavior.
+- Tests: focused interpolation tests.
+
+#### DINT-012-023 - Regex Bracket Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%0` through `%9`.
+- Change: expose regex bracket text as a `std::string_view` value.
+- Preserve: existing bracket lookup.
+- Tests: focused interpolation tests.
+
+#### DINT-012-024 - Newsgroup Name Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%c`, `%C`, `%n`.
+- Change: expose newsgroup directory/name text and fetched Newsgroups
+  headers as string/string-view values.
+- Preserve: empty result outside a newsgroup.
+- Tests: focused interpolation tests.
+
+#### DINT-012-025 - Article File Path Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: `%A`.
+- Change: build the article path in local `std::string` storage and
+  expose it through the local value view.
+- Preserve: remote/local behavior and `nntp_finish_body` side effect.
+- Tests: focused interpolation tests.
+
+#### DINT-012-026 - Simple String Setting Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%b`, `%h`, `%H`, `%I`, `%l`, `%L`, `%N`, `%V`, `%x`, `%X`.
+- Change: expose global string settings as string/string-view values.
+- Preserve: `%l` fallback when `HAS_NEWS_ADMIN` is absent.
+- Tests: focused interpolation tests.
+
+#### DINT-012-027 - Single-character Mode Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%g`, `%m`.
+- Change: build the one-character value in local `std::string` storage.
+- Preserve: current character values.
+- Tests: focused interpolation tests.
+
+#### DINT-012-028 - Optional Extract Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Cases: `%e`, `%E`.
+- Change: expose extract program and destination as string/string-view
+  values.
+- Preserve: `%e` returns `-` when no extract program is configured.
+- Tests: focused interpolation tests.
+
+#### DINT-012-030 - Spool Directory Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-020`.
+- Case: `%d`.
+- Change: build the current spool/newsgroup directory path in local
+  `std::string` storage.
+- Preserve: empty result when there is no current newsgroup directory.
+- Tests: focused interpolation tests.
+
+#### DINT-012-031 - Distribution Header Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-013`.
+- Case: `%D`.
+- Change: keep fetched Distribution header text in owning string storage
+  and expose it through the local value view.
+- Preserve: empty result outside a newsgroup.
+- Tests: focused interpolation tests.
+
+#### DINT-012-032 - From And Reply-To Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-013`.
+- Case: `%f`.
+- Change: keep fetched From/Reply-To header text in owning string storage
+  and expose it through the local value view.
+- Preserve: Reply-To preference unless comment parsing is requested.
+- Tests: focused interpolation tests.
+
+#### DINT-012-033 - Followup Target Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-013`.
+- Case: `%F`.
+- Change: keep fetched Followup-To or Newsgroups header text in owning
+  string storage and expose it through the local value view.
+- Preserve: Followup-To preference.
+- Tests: focused interpolation tests.
+
+#### DINT-012-034 - Message-id Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-013`.
+- Case: `%i`.
+- Change: keep fetched or synthesized Message-ID text in string storage
+  and expose it through the local value view.
+- Preserve: angle-bracket insertion.
+- Tests: focused interpolation tests.
+
+#### DINT-012-035 - Organization Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-011`.
+- Case: `%o`.
+- Change: keep organization text in string storage, including file
+  contents when the organization value names a file.
+- Preserve: `NEWSORG`, `ORGANIZATION`, `IGNORE_ORG`, and file fallback
+  behavior.
+- Tests: focused interpolation tests.
+
+#### DINT-012-036 - References Tail Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-013`.
+- Case: `%r`.
+- Change: normalize fetched References text in owning string storage and
+  expose only the last reference as a string view.
+- Preserve: empty result when no reference is found.
+- Tests: focused interpolation tests.
+
+#### DINT-012-037 - References Header Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-036`.
+- Case: `%R`.
+- Change: normalize and build References text in owning string storage.
+- Preserve: root/prior reference trimming and Message-ID append behavior.
+- Tests: focused interpolation tests.
+
+#### DINT-012-038 - Subject Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-013`.
+- Cases: `%s`, `%S`.
+- Change: derive the subject string view from owning subject storage
+  without pointer walking.
+- Preserve: `Re:` removal for `%s` and the old `- (nf` truncation.
+- Tests: focused interpolation tests.
+
+#### DINT-012-039 - Author Cases
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-032`.
+- Cases: `%t`, `%T`.
+- Change: keep selected author source text in owning string storage and
+  expose it through the local value view before address parsing.
+- Preserve: Reply-To preference, Path substitution for `%T`, and host
+  prefix trimming.
+- Tests: focused interpolation tests.
+
+#### DINT-012-040 - Short From Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-032`.
+- Case: `%y`.
+- Change: replace pointer-walking shortening with string position logic
+  and expose the result through the local value view.
+- Preserve: current star-shortening behavior.
+- Tests: focused interpolation tests.
+
+#### DINT-012-041 - Article Size Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: `%z`.
+- Change: build the formatted article size in local `std::string`
+  storage.
+- Preserve: empty result outside a newsgroup.
+- Tests: focused interpolation tests.
+
+#### DINT-012-050 - Conditional Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-010` through `DINT-012-041`.
+- Case: `%(...?...:...)`.
+- Change: make condition interpolation use the reference-cursor string
+  API and string/string-view values internally.
+- Preserve: stopper position, regex matching against current output,
+  false-branch skipping, and nested interpolation.
+- Tests: focused interpolation tests.
+
+#### DINT-012-060 - Default Literal Case
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: switch-arm value conversion.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-001`.
+- Case: unknown `%` escape.
+- Change: append the literal escaped character through the same local
+  string/string-view value path used by converted cases.
+- Preserve: `metabit` handling.
+- Tests: focused interpolation tests.
+
+#### DINT-012-070 - Remove Case-local C String Result
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: parser cleanup.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012-010` through `DINT-012-060`.
+- Change: remove the case-local `const char *s` result variable after all
+  switch arms produce string/string-view values.
+- Keep: C output buffer and pointer cursor as temporary outer parser
+  scaffolding.
+- Tests: focused interpolation tests.
+
+#### DINT-012-080 - Move Outer Parser To Reference Cursor
 
 - Files: `libtrn/intrp.cpp`.
 - Kind: implementation replacement.
 - Function: `do_interp(std::string_view &, std::string_view,
   std::string_view)`.
-- Depends on: none.
-- Change: make the reference-cursor string overload the real
-  implementation.
-- Replace: output-buffer writes with local `std::string` construction.
+- Depends on: `DINT-012-070`.
+- Change: move the parser body to the reference-cursor string overload.
+- Replace: C output-buffer writes with local `std::string`
+  construction.
 - Replace: pointer cursor mutation with `std::string_view::remove_prefix`
   and view slicing.
 - Replace: `std::strchr(stoppers, ch)` with `stoppers.find(ch)`.
@@ -131,7 +521,7 @@ callers off the C wrappers.
 - Files: `libtrn/intrp.cpp`.
 - Kind: compatibility wrapper.
 - Function: legacy C `do_interp`.
-- Depends on: `DINT-012`.
+- Depends on: `DINT-012-080`.
 - Change: replace the old C implementation with a wrapper that creates a
   view cursor, calls the reference-cursor string API, copies the result
   into `dest`, preserves legacy overflow handling, and returns the cursor
