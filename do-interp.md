@@ -108,19 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-014 - Shell Command Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Case: backtick command interpolation.
-- Change: keep command output in string storage and expose each collected
-  result through the local value view.
-- Preserve: command execution, trailing newline trimming, and error
-  behavior.
-- Tests: focused interpolation tests.
-
 #### DINT-012-015 - Prompted Input Case
 
 - Files: `libtrn/intrp.cpp`.

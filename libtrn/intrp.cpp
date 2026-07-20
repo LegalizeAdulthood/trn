@@ -691,7 +691,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                             }
                         }
                     }
-                    s = scratch.c_str();
+                    set_value(scratch);
                     break;
                 }
 
