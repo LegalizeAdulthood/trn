@@ -538,19 +538,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-127 - Edit File Argument
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `libtrn/scorefile.cpp`, `libtrn/univ.cpp`.
-- Kind: read-only filename/template parameter.
-- Function: `edit_file`.
-- Depends on: none.
-- Change: promote the parameter to `std::string_view`, use `empty()` as
-  the missing-value sentinel, and pass the view to `file_exp` without a
-  C-string round trip.
-- Tests: run score-file and universal-selector tests covering edit
-  command construction if available.
-
 #### CSTR-128 - Source File Server Sentinel
 
 - Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.

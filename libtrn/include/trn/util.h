@@ -65,7 +65,7 @@ bool        parse_string(char **to, char **from);
 bool        parse_ini_section(const IniSection &section, const IniSchema &schema, IniSectionValues &values);
 bool        check_ini_cond(std::string_view cond);
 char        menu_get_char();
-int         edit_file(const char *fname);
+int         edit_file(std::string_view fname);
 
 inline void safe_free(void *ptr)
 {

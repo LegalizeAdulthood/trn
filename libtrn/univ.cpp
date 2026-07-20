@@ -1077,7 +1077,7 @@ void univ_edit()
     }
 
     // later consider directory push/pop pair around editing
-    (void)edit_file(filename.c_str());
+    (void)edit_file(filename);
 }
 
 // later use some internal pager

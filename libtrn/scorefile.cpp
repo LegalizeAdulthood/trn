@@ -1319,7 +1319,7 @@ void sf_edit_file(std::string_view filespec)
     fs::create_directories(expanded_file.parent_path(), error);
     if (!error)
     {
-        (void)edit_file(fname_noexpand.c_str());
+        (void)edit_file(fname_noexpand);
         sf_file_clear();
     }
     else
