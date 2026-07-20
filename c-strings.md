@@ -459,9 +459,9 @@ generated files, or the vendored `vcpkg` tree.
   text, so they are not honest path-only candidates yet.
 - `scan_active_line` already accepts `std::string_view`; do not add a
   new slice for it.
-- The scorefile parser still has a raw mutable line boundary:
-  `sf_append` passes interior `char *` slices to `sf_do_line`, and
-  `sf_do_line` still mutates the caller-provided line while parsing.
+- The scorefile append interface still has a raw mutable line boundary:
+  `sf_append` accepts `char *` and uses interior `char *` slices before
+  calling the view-based line parser.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
@@ -537,25 +537,13 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-140 - Scorefile Line Parser
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: mutable scorefile line parser.
-- Function: `sf_do_line`.
-- Depends on: none.
-- Change: accept `std::string_view`, keep any needed lowercase copy in a
-  local `std::string`, and parse score, header, freeform keywords, and
-  pattern text with view operations instead of interior mutable
-  pointers.
-- Tests: run `test_scorefile`.
-
 #### CSTR-141 - Scorefile Append Interface
 
 - Files: `libtrn/scorefile.cpp`, `libtrn/include/trn/scorefile.h`,
   scorefile callers.
 - Kind: public mutable C string parameter.
 - Function: `sf_append`.
-- Depends on: `CSTR-140`.
+- Depends on: none.
 - Change: accept `std::string_view`, keep missing-score or shortcut
   expansions in owned strings, and pass views to `sf_do_line` instead
   of storing interior mutable pointers into temporary string storage.

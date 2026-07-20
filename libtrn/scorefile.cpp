@@ -85,7 +85,7 @@ static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
 static bool        sf_do_command(std::string_view cmd, bool check);
 static std::string_view sf_freeform(std::string_view keyword, std::string_view remaining);
-static bool  sf_do_line(char *line, bool check);
+static bool  sf_do_line(std::string_view line, bool check);
 static void  sf_do_file(std::string_view fname);
 static int   score_match(const char *str, int ind);
 static std::string sf_missing_score(const char *line);
@@ -557,24 +557,27 @@ static std::string_view sf_freeform(std::string_view keyword, std::string_view r
 }
 
 //bool check;           // if true, just check the line, don't act.
-static bool sf_do_line(char *line, bool check)
+static bool sf_do_line(std::string_view line, bool check)
 {
-    if (line == nullptr || *line == '\0')
+    const std::size_t nul = line.find('\0');
+    if (nul != std::string_view::npos)
+    {
+        line = line.substr(0, nul);
+    }
+    if (line.empty())
     {
         return true; // very empty line
     }
-    std::string_view line_text{line};
-    if (line_text.back() == '\n')
+    if (line.back() == '\n')
     {
-        line[line_text.size() - 1] = '\0';
-        line_text.remove_suffix(1);
+        line.remove_suffix(1);
     }
-    if (line_text.empty())
+    if (line.empty())
     {
         return true;
     }
 
-    const char ch = line_text.front();
+    const char ch = line.front();
     if (ch == '#') // comment
     {
         return true;
@@ -585,32 +588,54 @@ static bool sf_do_line(char *line, bool check)
 
     if (std::isalpha(static_cast<unsigned char>(ch))) // command line
     {
-        return sf_do_command(line_text, check);
+        return sf_do_command(line, check);
     }
 
     // skip whitespace
-    line_text.remove_prefix(std::min(line_text.find_first_not_of(" \t"), line_text.size()));
-    if (line_text.empty() || line_text.front() == '#')
+    line.remove_prefix(std::min(line.find_first_not_of(" \t"), line.size()));
+    if (line.empty() || line.front() == '#')
     {
         return true; // line was whitespace or comment after whitespace
     }
     // convert line to lowercase (make optional later?)
-    const std::size_t line_offset = static_cast<std::size_t>(line_text.data() - line);
-    for (std::size_t offset = 0; offset < line_text.size(); ++offset)
+    std::string normalized_line{line};
+    for (char &value : normalized_line)
     {
-        char &value = line[line_offset + offset];
         if (std::isupper(static_cast<unsigned char>(value)))
         {
             value = static_cast<char>(std::tolower(static_cast<unsigned char>(value)));
         }
     }
-    const std::string_view normalized_text{line_text};
+    const std::string_view normalized_text{normalized_line};
     const std::size_t      header_start = normalized_text.find_first_not_of("0123456789+- \t");
     const std::string_view score_text = normalized_text.substr(0, std::min(header_start, normalized_text.size()));
-    const int              score = std::atoi(score_text.data());
+    std::string_view       score_digits{score_text};
+    bool                   negative_score = false;
+    if (!score_digits.empty() && (score_digits.front() == '+' || score_digits.front() == '-'))
+    {
+        negative_score = score_digits.front() == '-';
+        score_digits.remove_prefix(1);
+    }
+    int score{};
+    if (!score_digits.empty() && score_digits.front() != '+' && score_digits.front() != '-')
+    {
+        const std::from_chars_result score_result =
+            std::from_chars(score_digits.data(), score_digits.data() + score_digits.size(), score);
+        if (score_result.ec != std::errc{} || score_result.ptr == score_digits.data())
+        {
+            score = 0;
+        }
+        else if (negative_score)
+        {
+            score = -score;
+        }
+    }
     if (score == 0) // it might not be a number
     {
-        if (!is_text_zero(score_text.data()))
+        const bool text_zero = !score_text.empty() && (score_text.front() == '0' ||
+                                                       ((score_text.front() == '+' || score_text.front() == '-') &&
+                                                        score_text.size() > 1 && score_text[1] == '0'));
+        if (!text_zero)
         {
             fmt::print("\nBad scorefile line:\n|{}|\n", normalized_text);
             return false;
@@ -743,8 +768,7 @@ static void sf_do_file(std::string_view fname)
     const ScoreFile &file = s_sf_files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
     {
-        std::string line{s};
-        (void)sf_do_line(line.data(),false);
+        (void)sf_do_line(s, false);
     }
     // add end marker to scoring array
     sf_grow();
@@ -1008,6 +1032,28 @@ void sf_append(char *line)
     {
         return; // don't actually append to file
     }
+    std::string output_scoreline{scoreline};
+    if (!output_scoreline.empty() && output_scoreline.back() == '\n')
+    {
+        output_scoreline.pop_back();
+    }
+    std::string_view output_text{output_scoreline};
+    if (!output_text.empty() && output_text.front() != '#' &&
+        !std::isalpha(static_cast<unsigned char>(output_text.front())))
+    {
+        const std::size_t lower_start = output_text.find_first_not_of(" \t");
+        if (lower_start != std::string_view::npos && output_text[lower_start] != '#')
+        {
+            for (std::size_t offset = lower_start; offset < output_scoreline.size(); ++offset)
+            {
+                char &value = output_scoreline[offset];
+                if (std::isupper(static_cast<unsigned char>(value)))
+                {
+                    value = static_cast<char>(std::tolower(static_cast<unsigned char>(value)));
+                }
+            }
+        }
+    }
     std::string filename;
     if (filechar == '"') // do local group
     {
@@ -1039,7 +1085,7 @@ void sf_append(char *line)
     std::ofstream output{score_file, std::ios::app};
     if (output)
     {
-        output << scoreline << '\n'; // open (or create) for append
+        output << output_scoreline << '\n'; // open (or create) for append
     }
     else // unsuccessful in opening file
     {
