@@ -1,0 +1,432 @@
+<!-- Copyright (c) 2026, Richard Thomson -->
+
+# do_interp Refactor
+
+## Target Shape
+
+The real interpolation implementation is this public API:
+
+```cpp
+std::string do_interp(
+    std::string_view &pattern,
+    std::string_view stoppers,
+    std::string_view cmd);
+```
+
+Contract:
+
+- `pattern` is the input cursor.
+- The return value is the interpolated text.
+- On return, `pattern` has been advanced to the stopper or to the end.
+- The stopper is not consumed.
+- Empty `stoppers` means interpolate to the end.
+- Empty `cmd` means there is no search command context.
+
+All other overloads delegate to this API or wrap it for legacy callers.
+There is no hidden `do_interp_core` and no result structure.
+
+Convenience overloads:
+
+```cpp
+std::string do_interp(std::string_view pattern);
+std::string interp_search(std::string_view pattern, std::string_view cmd);
+```
+
+Legacy wrappers:
+
+```cpp
+const char *do_interp(
+    char *dest,
+    int dest_size,
+    const char *pattern,
+    const char *stoppers,
+    const char *cmd);
+const char *interp(char *dest, int dest_size, const char *pattern);
+const char *interp_search(
+    char *dest,
+    int dest_size,
+    const char *pattern,
+    const char *cmd);
+```
+
+The legacy wrappers copy the string result into the caller-owned buffer
+and return a pointer into the original pattern.
+
+## Refactoring Rules
+
+- Add or extend tests before changing behavior covered by a slice.
+- Newly added tests must pass against the current implementation before
+  refactoring.
+- Do not preserve the `std::size_t result_size` overload in the final
+  string API.  It only exists because the current implementation writes
+  into fixed-size output buffers.
+- Keep bounded output and overflow handling inside the legacy C-buffer
+  wrapper only.
+- Do not let the address of local string storage escape through output
+  parameters, global variables, static variables, or functions that cache
+  those addresses.
+- Keep current interpolation semantics unless the behavior is explicitly
+  changed by user decision.
+- Keep `std::string_view` cursors tied to caller-owned input.  Never
+  return a view into a local temporary.
+
+## Current C API Roles
+
+The current C function does three jobs:
+
+- Parses the interpolation pattern.
+- Writes interpolated text into a caller-owned fixed-size buffer.
+- Returns a pointer to the unconsumed pattern text.
+
+After the refactor, parsing and output construction belong to the string
+API.  The C overload only adapts legacy caller-owned buffers.
+
+Current stopper-aware callers:
+
+- `libtrn/terminal.cpp`, `mac_line`: splits macro sequence from macro
+  definition at space or tab.
+- `libtrn/util.cpp`, condition parsing: stops at comparison tokens.
+- Internal conditional, prompt, and backtick parsing in `intrp.cpp`.
+
+Current size-limited string callers:
+
+- Response header builders pass `5 * LINE_BUF_LEN`.
+- Those calls should become ordinary `do_interp(pattern)` calls after
+  the string implementation is unbounded.
+
+## Implementation Slices
+
+Slices are stable.  Do not renumber remaining slices when one is
+completed; remove the completed slice from this file.
+
+### Tier 0 - Coverage
+
+These slices add or tighten tests before the parser implementation moves.
+
+#### DINT-001 - Stopper Cursor Coverage
+
+- Files: `tests/test_interp.cpp`.
+- Kind: behavior coverage.
+- Functions: legacy C `do_interp` stopper calls.
+- Depends on: none.
+- Change: add tests proving that interpolation stops before the stopper,
+  returns a cursor pointing at the stopper, and does not consume the
+  stopper.
+- Include: a plain stopper case, escaped delimiter text if currently
+  supported, and an end-of-string case.
+- Tests: run focused interpolation tests before and after adding the
+  tests.
+
+#### DINT-002 - String Wrapper Coverage
+
+- Files: `tests/test_interp.cpp`.
+- Kind: behavior coverage.
+- Functions: string `do_interp` and `interp_search` overloads.
+- Depends on: none.
+- Change: cover the public string overloads that will delegate to the
+  new reference-cursor API.
+- Include: literal pass-through, environment interpolation, search
+  command interpolation, and a response-header-sized input that should
+  no longer depend on an explicit output buffer size.
+- Tests: run focused interpolation tests before and after adding the
+  tests.
+
+#### DINT-003 - Nested Interpolation Coverage
+
+- Files: `tests/test_interp.cpp`.
+- Kind: behavior coverage.
+- Functions: conditional, prompt, backtick, and `skip_interp` paths.
+- Depends on: none.
+- Change: add targeted coverage for nested interpolation cursor movement
+  that the string-view implementation must preserve.
+- Include: condition true branch, condition false branch, skipped nested
+  branch, and backtick/prompt only when an existing isolated test harness
+  already makes the side effect safe.
+- Tests: run focused interpolation tests before and after adding the
+  tests.
+
+### Tier 1 - Public API Foundation
+
+These slices change the owning parser API.  Complete them before moving
+callers off the C wrappers.
+
+#### DINT-010 - Declare Reference-cursor String API
+
+- Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`.
+- Kind: public API foundation.
+- Function: `do_interp`.
+- Depends on: `DINT-001`, `DINT-002`, `DINT-003`.
+- Change: add
+  `std::string do_interp(std::string_view &pattern,
+  std::string_view stoppers, std::string_view cmd);`.
+- Keep: existing overload declarations until their callers are migrated.
+- Tests: header standalone test and focused interpolation tests.
+
+#### DINT-011 - Convert skip_interp To View Cursor Logic
+
+- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
+- Kind: parser helper foundation.
+- Function: `skip_interp`.
+- Depends on: `DINT-010`.
+- Change: replace the private pointer-walking `skip_interp` with
+  string-view cursor logic that mirrors the target interpolation cursor
+  semantics.
+- Keep: the public `skip_interp(std::string_view, std::string_view)`
+  wrapper returning an offset for existing callers.
+- Tests: focused interpolation tests.
+
+#### DINT-012 - Move Parser Body To Reference-cursor do_interp
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: implementation replacement.
+- Function: `do_interp(std::string_view &, std::string_view,
+  std::string_view)`.
+- Depends on: `DINT-011`.
+- Change: make the reference-cursor string overload the real
+  implementation.
+- Replace: output-buffer writes with local `std::string` construction.
+- Replace: pointer cursor mutation with `std::string_view::remove_prefix`
+  and view slicing.
+- Replace: `std::strchr(stoppers, ch)` with `stoppers.find(ch)`.
+- Preserve: stopper position, nested interpolation, `%?` line splitting,
+  modifiers, formatting, shell command interpolation, prompted input, and
+  current error paths.
+- Tests: focused interpolation tests.
+
+#### DINT-013 - Make C Buffer API A Wrapper
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: compatibility wrapper.
+- Function: legacy C `do_interp`.
+- Depends on: `DINT-012`.
+- Change: replace the old C implementation with a wrapper that creates a
+  view cursor, calls the reference-cursor string API, copies the result
+  into `dest`, preserves legacy overflow handling, and returns the cursor
+  as a pointer into the original pattern.
+- Keep: `interp` and C `interp_search` delegating through the legacy C
+  `do_interp` wrapper.
+- Tests: focused interpolation tests.
+
+#### DINT-014 - Delegate String Overloads To New API
+
+- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
+- Kind: overload cleanup.
+- Functions: string `do_interp`, string `interp_search`.
+- Depends on: `DINT-013`.
+- Change: remove `interp_to_string` and make every string overload
+  delegate to the reference-cursor `do_interp`.
+- Change: make string `interp_search` accept `std::string_view cmd`.
+- Keep: a temporary `const char *cmd` adapter only if needed for callers.
+- Tests: focused interpolation tests.
+
+### Tier 2 - Remove Obsolete Size API
+
+These slices remove the fixed-buffer size from string call sites after
+the string implementation is unbounded.
+
+#### DINT-020 - Response Header String Callers
+
+- Files: `libtrn/respond.cpp`.
+- Kind: obsolete size argument removal.
+- Functions: cancel, supersede, mail, forward, and news header builders.
+- Depends on: `DINT-014`.
+- Change: replace `do_interp(pattern, 5 * LINE_BUF_LEN)` with
+  `do_interp(pattern)`.
+- Tests: response/interpolation tests that cover generated headers.
+
+#### DINT-021 - Remove size_t String Overload
+
+- Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`,
+  `tests/test_interp.cpp`.
+- Kind: API removal.
+- Function: `do_interp(std::string_view, std::size_t)`.
+- Depends on: `DINT-020`.
+- Change: delete the obsolete overload and update tests that were only
+  proving the old fixed-buffer API shape.
+- Tests: focused interpolation tests and header standalone test.
+
+### Tier 3 - Stopper-aware Caller Migration
+
+These slices move local callers that want the updated cursor directly to
+the reference-cursor string API.
+
+#### DINT-030 - Terminal Macro Parser
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: stopper-aware caller migration.
+- Function: `mac_line`.
+- Depends on: `DINT-014`.
+- Change: pass a `std::string_view` cursor to the new API with
+  stoppers `" \t"`, then pass the returned string as the macro sequence
+  and the remaining cursor, after horizontal-space skipping, as the macro
+  definition.
+- Tests: terminal macro tests.
+
+#### DINT-031 - Utility Conditional Parser
+
+- Files: `libtrn/util.cpp`.
+- Kind: stopper-aware caller migration.
+- Function: condition parsing around the `do_interp` stopper call.
+- Depends on: `DINT-014`.
+- Change: replace the caller-owned `g_buf` interpolation output with the
+  string return value and use the updated view cursor for the condition
+  remainder.
+- Tests: focused tests for conditional parsing if available; otherwise
+  add coverage before refactoring.
+
+### Tier 4 - Legacy C API Reduction
+
+These slices migrate every remaining direct caller of the C buffer API to
+the string API.  They are ordered after the implementation slices because
+each caller should delegate to the new string implementation, not to a
+fresh wrapper around the old parser.
+
+#### DINT-040 - Article First-line Interpolation
+
+- Files: `libtrn/art.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `do_article`.
+- Depends on: `DINT-014`.
+- Change: replace the `g_art_line` interpolation destination for
+  `g_first_line` with a local `std::string` and pass that text to
+  `tree_puts`.
+- Tests: existing article display coverage if present; otherwise add
+  focused coverage first if the behavior is easy to isolate.
+
+#### DINT-041 - Article Search Pattern Interpolation
+
+- Files: `libtrn/artsrch.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `art_search`.
+- Depends on: `DINT-014`.
+- Change: replace the two `pat_buf` interpolation writes for `%\s` and
+  `%\>f` with string API results, preserving the existing search pattern
+  text.
+- Tests: article search tests covering subject and author pattern
+  construction if available; otherwise add focused coverage first if the
+  behavior is easy to isolate.
+
+#### DINT-042 - Cache Look-ahead Subject Interpolation
+
+- Files: `libtrn/cache.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `look_ahead`.
+- Depends on: `DINT-014`.
+- Change: replace the `g_buf` interpolation write used to seed the
+  look-ahead subject pattern with a local `std::string`.
+- Tests: cache/look-ahead coverage if present; otherwise add focused
+  coverage first if the behavior is easy to isolate.
+
+#### DINT-043 - Option Startup Interpolation
+
+- Files: `libtrn/opt.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `opt_init`.
+- Depends on: `DINT-014`.
+- Change: replace the `tcbuf` interpolation of `GLOBAL_INIT` with a local
+  `std::string` and pass that to option-file processing.
+- Tests: option initialization coverage if present; otherwise add focused
+  coverage first if the behavior is easy to isolate.
+
+#### DINT-044 - Reply Body Introduction Interpolation
+
+- Files: `libtrn/respond.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `reply`.
+- Depends on: `DINT-014`.
+- Change: replace the `g_buf` interpolation of `YOUSAID` with a local
+  `std::string` and write it with fmt.
+- Tests: reply/header tests if present; otherwise add focused coverage
+  first if the behavior is easy to isolate.
+
+#### DINT-045 - Forward Body Marker Interpolation
+
+- Files: `libtrn/respond.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `forward`.
+- Depends on: `DINT-014`.
+- Change: replace the `g_buf` interpolations of `FORWARDMSG` and
+  `FORWARDMSGEND` with local `std::string` values, preserving the empty
+  string checks and MIME boundary behavior.
+- Tests: forward-message tests if present; otherwise add focused coverage
+  first if the behavior is easy to isolate.
+
+#### DINT-046 - Followup Attribution Interpolation
+
+- Files: `libtrn/respond.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `followup`.
+- Depends on: `DINT-014`.
+- Change: replace the `g_buf` interpolation of `ATTRIBUTION` with a local
+  `std::string` and write it with fmt.
+- Tests: followup/header tests if present; otherwise add focused coverage
+  first if the behavior is easy to isolate.
+
+#### DINT-047 - Selector Mail Prompt Interpolation
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `sel_prompt`.
+- Depends on: `DINT-014`.
+- Change: replace the `g_buf` interpolation of `g_mail_call` with the
+  string API and use the result directly in the prompt format.
+- Tests: selector prompt coverage if present; otherwise add focused
+  coverage first if the behavior is easy to isolate.
+
+#### DINT-048 - Terminal Edit Search Interpolation
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: legacy `interp_search` caller migration.
+- Function: `edit_buf`.
+- Depends on: `DINT-014`.
+- Change: replace both buffer-writing `interp_search` calls with the
+  string API, preserving the full-buffer replacement and in-place suffix
+  insertion behavior.
+- Tests: terminal editing tests if present; otherwise add focused coverage
+  first if the behavior is easy to isolate.
+
+#### DINT-049 - Terminal Push String Interpolation
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `push_string`.
+- Depends on: `DINT-014`.
+- Change: replace the fixed `PUSH_SIZE` string buffer and NUL trimming
+  with the string API result, then iterate the resulting string in
+  reverse.
+- Tests: terminal push-string coverage if present; otherwise add focused
+  coverage first if the behavior is easy to isolate.
+
+#### DINT-050 - Shell Quotechars Interpolation
+
+- Files: `libtrn/util.cpp`.
+- Kind: legacy `interp` caller migration.
+- Function: `do_shell`.
+- Depends on: `DINT-014`.
+- Change: replace the fixed `g_buf` interpolation of `%I` with the string
+  API, preserve the existing removal of the trailing interpolated
+  character, and set `QUOTECHARS` from the resulting string.
+- Tests: shell environment setup tests if present; otherwise add focused
+  coverage first if the behavior is easy to isolate.
+
+#### DINT-051 - Legacy Interpolation Tests
+
+- Files: `tests/test_interp.cpp`.
+- Kind: legacy C test migration.
+- Function: test helper around `do_interp`.
+- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-041`,
+  `DINT-042`, `DINT-043`, `DINT-044`, `DINT-045`, `DINT-046`,
+  `DINT-047`, `DINT-048`, `DINT-049`, `DINT-050`.
+- Change: migrate tests that call the C buffer API to the public string
+  API, using a reference `std::string_view` cursor for stopper tests.
+- Tests: focused interpolation tests.
+
+#### DINT-099 - Remove Legacy C APIs
+
+- Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`.
+- Kind: API removal.
+- Functions: C `do_interp`, C `interp`, C `interp_search`.
+- Depends on: `DINT-021`, `DINT-030`, `DINT-031`, `DINT-051`.
+- Change: delete the C buffer declarations and wrappers after no
+  production or test callers remain.
+- Tests: full build and focused interpolation tests.
