@@ -307,12 +307,6 @@ std::string do_interp(std::string_view pattern)
     return do_interp(cursor, {}, {});
 }
 
-std::string do_interp(std::string_view pattern, std::size_t)
-{
-    std::string_view cursor{pattern};
-    return do_interp(cursor, {}, {});
-}
-
 std::string do_interp(std::string_view &pattern, std::string_view stoppers, std::string_view cmd)
 {
     std::optional<std::string>        subj_buf;

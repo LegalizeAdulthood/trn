@@ -113,17 +113,6 @@ callers off the C wrappers.
 These slices remove the fixed-buffer size from string call sites after
 the string implementation is unbounded.
 
-#### DINT-021 - Remove size_t String Overload
-
-- Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`,
-  `tests/test_interp.cpp`.
-- Kind: API removal.
-- Function: `do_interp(std::string_view, std::size_t)`.
-- Depends on: `DINT-020`.
-- Change: delete the obsolete overload and update tests that were only
-  proving the old fixed-buffer API shape.
-- Tests: focused interpolation tests and header standalone test.
-
 ### Tier 3 - Stopper-aware Caller Migration
 
 These slices move local callers that want the updated cursor directly to
