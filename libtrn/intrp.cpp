@@ -895,17 +895,17 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                                         // is there a Followup-To line?
                         {
                             follow_buf = fetch_lines(g_art, FOLLOW_LINE);
-                            s = follow_buf->c_str();
+                            set_value(*follow_buf);
                         }
                         else
                         {
                             ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
-                            s = ngs_buf->c_str();
+                            set_value(*ngs_buf);
                         }
                     }
                     else
                     {
-                        s = s_empty;
+                        set_value({});
                     }
                     break;
 
