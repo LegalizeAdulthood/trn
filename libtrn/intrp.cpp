@@ -910,8 +910,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'g':                       // general mode
-                    scratch.assign(1, static_cast<char>(g_general_mode));
-                    s = scratch.c_str();
+                    set_owned_value(std::string(1, static_cast<char>(g_general_mode)));
                     break;
 
                 case 'h':                       // header file name
@@ -962,8 +961,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 case 'm':               // current mode
-                    scratch.assign(1, static_cast<char>(g_mode));
-                    s = scratch.c_str();
+                    set_owned_value(std::string(1, static_cast<char>(g_mode)));
                     break;
 
                 case 'M':

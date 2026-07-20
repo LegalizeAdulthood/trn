@@ -108,17 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-027 - Single-character Mode Cases
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Cases: `%g`, `%m`.
-- Change: build the one-character value in local `std::string` storage.
-- Preserve: current character values.
-- Tests: focused interpolation tests.
-
 #### DINT-012-028 - Optional Extract Cases
 
 - Files: `libtrn/intrp.cpp`.
