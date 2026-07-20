@@ -1091,6 +1091,27 @@ TEST_F(InterpolatorTest, trailingPercentRemains)
     ASSERT_EQ("%", buffer());
 }
 
+TEST_F(InterpolatorTest, unknownEscapeIsLiteral)
+{
+    char pattern[]{"%!"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("!", buffer());
+}
+
+TEST_F(InterpolatorTest, unknownEscapePreservesMetabit)
+{
+    char pattern[]{"^(%!^)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(0200 | '!', static_cast<unsigned char>(m_buffer[0]));
+    ASSERT_EQ('\0', m_buffer[1]);
+}
+
 TEST_F(InterpolatorTest, performCount)
 {
     ValueSaver<int> saved(g_perform_count, 86);

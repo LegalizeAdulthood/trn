@@ -1347,12 +1347,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     break;
 
                 default:
-                    if (--dest_size <= 0)
-                    {
-                        abort_interp();
-                    }
-                    *dest++ = *pattern | metabit;
-                    s = s_empty;
+                    set_owned_value(std::string(1, *pattern));
                     break;
                 }
             }

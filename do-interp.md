@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-060 - Default Literal Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Case: unknown `%` escape.
-- Change: append the literal escaped character through the same local
-  string/string-view value path used by converted cases.
-- Preserve: `metabit` handling.
-- Tests: focused interpolation tests.
-
 #### DINT-012-070 - Remove Case-local C String Result
 
 - Files: `libtrn/intrp.cpp`.
