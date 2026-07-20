@@ -1136,7 +1136,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 {
                     if (!g_in_ng || !g_art || !g_artp)
                     {
-                        s = s_empty;
+                        set_value({});
                         break;
                     }
                     if (!subj_buf)
@@ -1147,14 +1147,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                     if (*pattern == 's')
                     {
                         subject_has_re(subject, subject);
+                        const std::size_t notes_file = subject.find("- (nf");
+                        if (notes_file != std::string_view::npos)
+                        {
+                            subject = subject.substr(0, notes_file);
+                        }
                     }
-                    char *str = subj_buf->data() + (subj_buf->size() - subject.size());
-                    char *h;
-                    if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)
-                    {
-                        *h = '\0';
-                    }
-                    s = str;
+                    set_value(subject);
                     break;
                 }
 

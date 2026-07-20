@@ -2272,6 +2272,18 @@ TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, buffer());
 }
 
+TEST_F(InterpolatorNewsgroupTest, strippedSubjectDropsNotesFileSuffix)
+{
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NOTES_FILE_SUBJECT_NUM};
+    g_artp = article_ptr(g_art);
+    char pattern[]{"%s"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{TRN_TEST_HEADER_STRIPPED_SUBJECT} + " ", buffer());
+}
+
 TEST_F(InterpolatorNewsgroupTest, oneReStrippedSubjectInNewsgroup)
 {
     g_artp = article_ptr(g_art);

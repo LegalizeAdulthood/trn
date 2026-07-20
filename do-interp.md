@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-038 - Subject Cases
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-013`.
-- Cases: `%s`, `%S`.
-- Change: derive the subject string view from owning subject storage
-  without pointer walking.
-- Preserve: `Re:` removal for `%s` and the old `- (nf` truncation.
-- Tests: focused interpolation tests.
-
 #### DINT-012-039 - Author Cases
 
 - Files: `libtrn/intrp.cpp`.
