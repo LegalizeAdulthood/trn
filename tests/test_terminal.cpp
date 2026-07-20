@@ -4,6 +4,7 @@
 #include <trn/terminal.h>
 
 #include <config/env.h>
+#include <trn/artsrch.h>
 #include <trn/final.h>
 #include <trn/ng.h>
 #include <trn/opt.h>
@@ -107,6 +108,9 @@ protected:
         MacroDisplayTest::SetUp();
         drain_macro_buffer();
 
+        m_old_last_pat = g_last_pat;
+        m_old_art_do_read = g_art_do_read;
+        m_old_art_how_much = g_art_how_much;
         m_old_tc_cr = g_tc_CR;
         m_old_tc_ce = g_tc_CE;
         g_tc_CR = m_carriage_return;
@@ -116,6 +120,9 @@ protected:
     void TearDown() override
     {
         drain_macro_buffer();
+        g_last_pat = m_old_last_pat;
+        g_art_do_read = m_old_art_do_read;
+        g_art_how_much = m_old_art_how_much;
         g_tc_CR = m_old_tc_cr;
         g_tc_CE = m_old_tc_ce;
         MacroDisplayTest::TearDown();
@@ -124,6 +131,9 @@ protected:
     char m_carriage_return[5]{"<cr>"};
     char m_erase_line[5]{"<ce>"};
 
+    std::string m_old_last_pat;
+    bool        m_old_art_do_read{};
+    ArtScope    m_old_art_how_much{};
     const char *m_old_tc_cr{};
     const char *m_old_tc_ce{};
 };
@@ -370,6 +380,39 @@ TEST_F(ChoiceInputTest, inChoiceDoesNotSplitSlashInsideFreeFormValue)
     EXPECT_TRUE(clean_screen);
     EXPECT_STREQ("a/b", g_buf);
     EXPECT_EQ("<cr><cr><ce><cr>> a/b", output);
+}
+
+TEST_F(ChoiceInputTest, inChoiceEscapeEscapeInterpolatesWholeBuffer)
+{
+    g_last_pat = "needle";
+    g_art_do_read = false;
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    push_char('\n');
+    push_char('\033');
+    push_char('\033');
+
+    testing::internal::CaptureStdout();
+    in_choice("> ", "%/", "<search>", MM_OPTION_EDIT_PROMPT);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_STREQ("/needle/", g_buf);
+}
+
+TEST_F(ChoiceInputTest, inChoiceEscapeSlashInsertsSearchPattern)
+{
+    g_last_pat = "needle";
+    g_art_do_read = false;
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    push_char('\n');
+    push_char('/');
+    push_char('\033');
+
+    testing::internal::CaptureStdout();
+    const bool clean_screen = in_choice("> ", "prefix", "<search>", MM_OPTION_EDIT_PROMPT);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(clean_screen);
+    EXPECT_STREQ("prefix/needle/", g_buf);
 }
 
 TEST_F(MouseBarTest, checkMouseBarPushesClickedButtonCommand)

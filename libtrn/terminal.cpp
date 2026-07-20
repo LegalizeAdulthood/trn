@@ -947,7 +947,8 @@ static char *edit_buf(char *s, const char *cmd)
     }
     if (*s == '\033')           // substitution desired?
     {
-        std::string substitution{"% "};
+        std::string            substitution{"% "};
+        const std::string_view command = cmd != nullptr ? std::string_view{cmd} : std::string_view{};
 
         read_tty(substitution.data() + 1,1);
 #ifdef RAWONLY
@@ -963,15 +964,23 @@ static char *edit_buf(char *s, const char *cmd)
         {
             *s = '\0';
             const std::string cpybuf{g_buf};
-            interp_search(g_buf, sizeof g_buf, cpybuf.c_str(), cmd);
-            s = g_buf + std::strlen(g_buf);
+            const std::string expanded = interp_search(cpybuf, command);
+            const std::size_t copy_size = std::min(expanded.size(), static_cast<std::size_t>(LINE_BUF_LEN - 1));
+            std::copy_n(expanded.begin(), copy_size, g_buf);
+            g_buf[copy_size] = '\0';
+            s = g_buf + copy_size;
             reprint();
         }
         else
         {
-            interp_search(s, sizeof g_buf - (s-g_buf), substitution.c_str(), cmd);
+            const std::string expanded = interp_search(substitution, command);
+            const std::size_t remaining = static_cast<std::size_t>(LINE_BUF_LEN - (s - g_buf));
+            TRN_ASSERT(remaining > 0);
+            const std::size_t copy_size = std::min(expanded.size(), remaining - 1);
+            std::copy_n(expanded.begin(), copy_size, s);
+            s[copy_size] = '\0';
             std::fputs(s,stdout);
-            s += std::strlen(s);
+            s += copy_size;
         }
         return s;
     }
