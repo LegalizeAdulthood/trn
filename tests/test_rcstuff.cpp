@@ -328,7 +328,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForMissingNewsrcGroup)
 {
     const fs::path active_path = m_output_dir / "active";
     std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
-    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_path, "", nullptr));
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_path, "", ""));
 
     Newsrc  newsrc = make_newsrc();
     Multirc multirc{};

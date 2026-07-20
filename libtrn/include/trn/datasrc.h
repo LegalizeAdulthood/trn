@@ -27,7 +27,7 @@ struct HashTable;
 
 struct SourceFile
 {
-    int              open(const std::filesystem::path &filename, std::string_view fetch_cmd, const char *server);
+    int              open(const std::filesystem::path &filename, std::string_view fetch_cmd, std::string_view server);
     std::string_view append(std::string_view line, int key_len);
     void             end_append(const std::filesystem::path &filename);
     void             close();

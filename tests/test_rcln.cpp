@@ -79,7 +79,7 @@ protected:
 
         m_active_path = m_output_dir / "active";
         std::ofstream{m_active_path} << "comp.lang.apl 100 1 y\n";
-        ASSERT_EQ(1, m_data_source.m_act_sf.open(m_active_path, "", nullptr));
+        ASSERT_EQ(1, m_data_source.m_act_sf.open(m_active_path, "", ""));
 
         m_newsrc.flags = RF_NONE;
         m_newsrc.data_source = &m_data_source;

@@ -470,7 +470,7 @@ bool DataSource::open()
                     m_flags &= ~DF_TMP_ACTIVE_FILE;
                     m_extra_name.clear();
                     m_act_sf.m_refetch_secs = 0;
-                    success = m_act_sf.open({}, "", nullptr);
+                    success = m_act_sf.open({}, "", "");
                 }
                 else
                 {
@@ -611,7 +611,7 @@ bool DataSource::active_file_hash()
         DataSource *save_datasrc = g_data_source;
         set_data_source(this);
         g_spin_todo = m_act_sf.m_recent_cnt;
-        ret = m_act_sf.open(m_extra_name, "active", m_news_id.c_str());
+        ret = m_act_sf.open(m_extra_name, "active", m_news_id);
         if (g_spin_count > 0)
         {
             m_act_sf.m_recent_cnt = g_spin_count;
@@ -620,7 +620,7 @@ bool DataSource::active_file_hash()
     }
     else
     {
-        ret = m_act_sf.open(m_news_id, "", nullptr);
+        ret = m_act_sf.open(m_news_id, "", "");
     }
     return ret != 0;
 }
@@ -777,11 +777,11 @@ std::string_view DataSource::find_group_desc(std::string_view group_name)
             if ((m_flags & (DF_TMP_GROUP_DESC | DF_NO_XGTITLE)) == DF_TMP_GROUP_DESC //
                 && g_net_speed < 5)
             {
-                (void) m_desc_sf.open({}, "", nullptr);
+                (void) m_desc_sf.open({}, "", "");
                 goto try_xgtitle;
             }
             g_spin_todo = m_desc_sf.m_recent_cnt;
-            ret = m_desc_sf.open(m_group_desc, "newsgroups", m_news_id.c_str());
+            ret = m_desc_sf.open(m_group_desc, "newsgroups", m_news_id);
             if (g_spin_count > 0)
             {
                 m_desc_sf.m_recent_cnt = g_spin_count;
@@ -789,7 +789,7 @@ std::string_view DataSource::find_group_desc(std::string_view group_name)
         }
         else
         {
-            ret = m_desc_sf.open(m_group_desc, "", nullptr);
+            ret = m_desc_sf.open(m_group_desc, "", "");
         }
         if (!ret)
         {
@@ -869,24 +869,24 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
     return s;
 }
 
-int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const char *server)
+int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::string_view server)
 {
     long              pos = 0;
     std::FILE        *fp;
     std::time_t       now = std::time(nullptr);
     bool              use_buffered_nntp_gets = false;
-    const std::string fetch_command{fetch_cmd};
     const bool        has_filename = !filename.empty();
+    bool              use_server = !server.empty();
 
     if (!has_filename)
     {
         fp = nullptr;
     }
-    else if (server)
+    else if (use_server)
     {
         if (!m_refetch_secs)
         {
-            server = nullptr;
+            use_server = false;
             fp = std::fopen(filename.string().c_str(), "r");
             g_spin_todo = 0;
         }
@@ -895,7 +895,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
             fp = std::fopen(filename.string().c_str(), "w+");
             if (fp)
             {
-                std::printf("Getting %s file from %s.", fetch_command.c_str(), server);
+                fmt::print("Getting {} file from {}.", fetch_cmd, server);
                 std::fflush(stdout);
                 // tell server we want the file
                 if (!(g_nntp_link.flags & NNTP_NEW_CMD_OK))
@@ -904,8 +904,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
                 }
                 else if (nntp_list(fetch_cmd, "") < 0)
                 {
-                    std::printf("\nCan't get %s file from server: \n%s\n",
-                           fetch_command.c_str(), g_ser_line);
+                    fmt::print("\nCan't get {} file from server: \n{}\n", fetch_cmd, g_ser_line);
                     term_down(2);
                     std::fclose(fp);
                     return 0;
@@ -919,7 +918,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
         }
         else
         {
-            server = nullptr;
+            use_server = false;
             fp = std::fopen(filename.string().c_str(), "r+");
             if (!fp)
             {
@@ -963,7 +962,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
     for (;;)
     {
         line.clear();
-        if (server)
+        if (use_server)
         {
             if (use_buffered_nntp_gets)
             {
@@ -971,7 +970,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
             }
             else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR)
             {
-                std::printf("\nError getting %s file.\n", fetch_command.c_str());
+                fmt::print("\nError getting {} file.\n", fetch_cmd);
                 term_down(2);
                 close();
                 set_spin(SPIN_OFF);
@@ -1046,12 +1045,12 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
     }
     set_spin(SPIN_OFF);
 
-    if (server)
+    if (use_server)
     {
         std::fflush(fp);
         if (std::ferror(fp))
         {
-            std::printf("\nError writing the %s file %s.\n",fetch_command.c_str(),filename.string().c_str());
+            fmt::print("\nError writing the {} file {}.\n", fetch_cmd, filename.string());
             term_down(2);
             close();
             return 0;
@@ -1060,7 +1059,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, const
     }
     std::fseek(fp,0L,0);
 
-    return server? 2 : 1;
+    return use_server ? 2 : 1;
 }
 
 std::string_view SourceFile::append(std::string_view line, int key_len)

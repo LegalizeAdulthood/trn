@@ -506,7 +506,7 @@ production code.
 - Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
   `strlen` 65.
 - Formatting into C buffers: `sprintf` 29, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 383,
+- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 379,
   `fprintf` 54.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -537,17 +537,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-128 - Source File Server Sentinel
-
-- Files: `libtrn/datasrc.cpp`, `libtrn/include/trn/datasrc.h`.
-- Kind: nullable read-only C-string parameter.
-- Function: `SourceFile::open`.
-- Depends on: none.
-- Change: promote the `server` parameter to `std::string_view`, using
-  empty string as the no-server sentinel.  Keep `fetch_cmd` as a view
-  and pass string data to NNTP/file APIs only when consumed immediately.
-- Tests: run data-source tests.
 
 #### CSTR-129 - Active File Line Scanner
 

@@ -96,7 +96,7 @@ protected:
         SourceFileTest::SetUp();
         m_source_path = m_output_dir / "active";
         std::ofstream{m_source_path} << "comp.lang.apl 0000000001 0000000001 y\n";
-        ASSERT_EQ(1, m_data_source.m_act_sf.open(m_source_path, "", nullptr));
+        ASSERT_EQ(1, m_data_source.m_act_sf.open(m_source_path, "", ""));
     }
 
     void TearDown() override
@@ -185,7 +185,7 @@ protected:
         g_data_sources.emplace_back();
         DataSource &source = g_data_sources.back();
         source.m_flags = DF_OPEN;
-        ASSERT_EQ(1, source.m_act_sf.open(source_path, "", nullptr));
+        ASSERT_EQ(1, source.m_act_sf.open(source_path, "", ""));
     }
 
     std::vector<DataSource> m_saved_data_sources;
@@ -274,7 +274,7 @@ TEST_F(SourceFileTest, openReadsLinesFromLocalFile)
     SourceFileOwner source_file_owner;
     SourceFile     &source_file = source_file_owner.get();
 
-    const int result = source_file.open(source_path, "", nullptr);
+    const int result = source_file.open(source_path, "", "");
 
     ASSERT_EQ(1, result);
     ASSERT_EQ(2U, source_file.m_lines.size());
@@ -290,7 +290,7 @@ TEST_F(SourceFileTest, openNormalizesUnterminatedLocalLine)
     SourceFileOwner source_file_owner;
     SourceFile     &source_file = source_file_owner.get();
 
-    const int result = source_file.open(source_path, "", nullptr);
+    const int result = source_file.open(source_path, "", "");
 
     ASSERT_EQ(1, result);
     ASSERT_EQ(1U, source_file.m_lines.size());
@@ -306,7 +306,7 @@ TEST_F(SourceFileTest, openPreservesLongLocalLine)
     SourceFileOwner source_file_owner;
     SourceFile     &source_file = source_file_owner.get();
 
-    const int result = source_file.open(source_path, "", nullptr);
+    const int result = source_file.open(source_path, "", "");
 
     ASSERT_EQ(1, result);
     ASSERT_EQ(1U, source_file.m_lines.size());
@@ -409,7 +409,7 @@ TEST_F(DataSourceFindGroupDescTest, fetchesDescriptionFromServer)
 TEST_F(DataSourceFindGroupDescTest, returnsCachedDescription)
 {
     const std::string_view group_name{"comp.lang.apl"};
-    ASSERT_EQ(1, m_data_source.m_desc_sf.open({}, "", nullptr));
+    ASSERT_EQ(1, m_data_source.m_desc_sf.open({}, "", ""));
     (void) m_data_source.m_desc_sf.append("comp.lang.apl APL discussion\n", static_cast<int>(group_name.size()));
 
     const std::string_view description = m_data_source.find_group_desc(group_name);
