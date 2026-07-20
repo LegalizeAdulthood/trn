@@ -62,7 +62,6 @@ int               g_news_uid{};
 #endif
 
 static void        skip_interp_cursor(std::string_view &pattern, std::string_view stoppers);
-static void abort_interp();
 
 static const char   *s_regexp_specials = "^$.*[\\/?%";
 static CompiledRegex s_cond_compex;
@@ -282,23 +281,6 @@ std::size_t skip_interp(std::string_view pattern, std::string_view stoppers)
 
     skip_interp_cursor(pattern, stoppers);
     return start.size() - pattern.size();
-}
-
-// expand interpolation strings
-const char *do_interp(char *dest, int dest_size, const char *pattern, const char *stoppers, const char *cmd)
-{
-    const std::string_view original{pattern};
-    std::string_view       cursor{original};
-    const std::string result = do_interp(cursor, stoppers == nullptr ? std::string_view{} : std::string_view{stoppers},
-                                         cmd == nullptr ? std::string_view{} : std::string_view{cmd});
-
-    if (dest_size <= 0 || result.size() >= static_cast<std::size_t>(dest_size))
-    {
-        abort_interp();
-    }
-    std::memcpy(dest, result.data(), result.size());
-    dest[result.size()] = '\0';
-    return original.data() + (original.size() - cursor.size());
 }
 
 std::string do_interp(std::string_view pattern)
@@ -1647,18 +1629,6 @@ char *interp_backslash(char *dest, char *pattern)
     return pattern + (interp_backslash(dest, static_cast<const char *>(pattern)) - pattern);
 }
 
-// helper functions
-
-const char *interp(char *dest, int dest_size, const char *pattern)
-{
-    return do_interp(dest, dest_size, pattern, nullptr, nullptr);
-}
-
-const char *interp_search(char *dest, int dest_size, const char *pattern, const char *cmd)
-{
-    return do_interp(dest, dest_size, pattern, nullptr, cmd);
-}
-
 // normalize a references line in place
 
 void normalize_refs(char *refs)
@@ -1691,10 +1661,4 @@ void normalize_refs(char *refs)
         t--;
     }
     *t = '\0';
-}
-
-static void abort_interp()
-{
-    std::fputs("\n% interp buffer overflow!\n",stdout);
-    sig_catcher(0);
 }
