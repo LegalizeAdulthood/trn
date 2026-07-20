@@ -1308,10 +1308,10 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                 case 'z':
                     if (!g_in_ng)
                     {
-                        s = s_empty;
+                        set_value({});
                         break;
                     }
-                    s = assign_scratch(fmt::format("{:>5}", fs::file_size(std::to_string(g_art.value_of()))));
+                    set_owned_value(fmt::format("{:>5}", fs::file_size(std::to_string(g_art.value_of()))));
                     break;
 
                 case 'Z':
