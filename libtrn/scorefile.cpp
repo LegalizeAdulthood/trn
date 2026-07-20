@@ -84,7 +84,7 @@ static void  sf_add_extra_header(const char *head);
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
 static bool        sf_do_command(std::string_view cmd, bool check);
-static char *sf_freeform(char *start1, char *end1);
+static std::string_view sf_freeform(std::string_view keyword, std::string_view remaining);
 static bool  sf_do_line(char *line, bool check);
 static void  sf_do_file(std::string_view fname);
 static int   score_match(const char *str, int ind);
@@ -544,64 +544,16 @@ static bool sf_do_command(std::string_view cmd, bool check)
     return false;
 }
 
-// char* start1;         // points to first character of keyword
-// char* end1;           // points to last  character of keyword
-static char *sf_freeform(char *start1, char *end1)
+static std::string_view sf_freeform(std::string_view keyword, std::string_view remaining)
 {
-    char*s;
-
-    bool error = false; // be optimistic :-)
-    // cases are # of letters in keyword
-    switch (end1 - start1 + 1)
+    if (keyword == "pattern")
     {
-    case 7:
-        if (!std::strncmp(start1,"pattern",7))
-        {
-            s_sf_pattern_status = true;
-            break;
-        }
-        error = true;
-        break;
-
-    case 4:
-#ifdef UNDEF
-        // here is an example of a hypothetical freeform key with an argument
-        if (!std::strncmp(start1,"date",4))
-        {
-            char* s1;
-            int datenum;
-            // skip whitespace and = sign
-            s = skip_hor_space(end1 + 1);
-            if (!*s)    // ran out of line
-            {
-                std::printf("freeform: date keyword: ran out of input\n");
-                return s;
-            }
-            datenum = atoi(s);
-            std::printf("Date: %d\n",datenum);
-            s = skip_digits(s); // skip datenum
-            end1 = s;           // end of key data
-            break;
-        }
-#endif
-        error = true;
-        break;
-
-    default:
-        error = true;
-        break;
+        s_sf_pattern_status = true;
+        remaining.remove_prefix(std::min(remaining.find_first_not_of(" \t"), remaining.size()));
+        return remaining;
     }
-    if (error)
-    {
-        s = end1+1;
-        char ch = *s;
-        *s = '\0';
-        std::printf("Scorefile freeform: unknown key: |%s|\n",start1);
-        *s = ch;
-        return nullptr; // error indicated
-    }
-    // no error, so skip whitespace at end of key
-    return skip_hor_space(end1 + 1);
+    fmt::print("Scorefile freeform: unknown key: |{}|\n", keyword);
+    return {};
 }
 
 //bool check;           // if true, just check the line, don't act.
@@ -669,29 +621,30 @@ static bool sf_do_line(char *line, bool check)
         fmt::print("Scorefile entry error error (freeform parse).  Line was:\n|{}|\n", normalized_text);
         return false;
     }
-    // add the line as a scoring entry
-    char *s = line + line_offset + header_start;
-    char *s2;
+    std::string_view line_rest = normalized_text.substr(header_start);
+    std::string_view header;
+    std::string_view pattern;
     while (true)
     {
-        for (s2 = s; *s2 && !is_hor_space(*s2); s2++)
+        const std::size_t      keyword_end = line_rest.find_first_of(" \t");
+        const std::string_view keyword = line_rest.substr(0, keyword_end);
+        if (!keyword.empty() && keyword.back() == ':') // did header
         {
-        }
-        s2--;
-        if (*s2 == ':') // did header
-        {
+            header = keyword.substr(0, keyword.size() - 1);
+            pattern = keyword_end == std::string_view::npos ? std::string_view{} : line_rest.substr(keyword_end);
+            pattern.remove_prefix(std::min(pattern.find_first_not_of(" \t"), pattern.size()));
             break; // go to set header routine
         }
-        s = sf_freeform(s, s2);
-        if (!s || !*s) // used up all the line's text, or error
+        const std::string_view remaining =
+            keyword_end == std::string_view::npos ? std::string_view{} : line_rest.substr(keyword_end);
+        line_rest = sf_freeform(keyword, remaining);
+        if (line_rest.empty()) // used up all the line's text, or error
         {
             fmt::print("Scorefile entry error error (freeform parse).  Line was:\n|{}|\n", normalized_text);
             return false; // error
         }
     } // while
-    // s is start of header name, s2 points to the ':' character
-    const std::string_view header{s, static_cast<std::size_t>(s2 - s)};
-    int                    j = set_line_type(header);
+    int j = set_line_type(header);
     if (j == SOME_LINE)
     {
         const std::string header_name{header};
@@ -706,10 +659,6 @@ static bool sf_do_line(char *line, bool check)
             return false;
         }
     }
-    // skip whitespace
-    const char *const line_end = normalized_text.data() + normalized_text.size();
-    std::string_view  pattern{s2 + 1, static_cast<std::size_t>(line_end - (s2 + 1))};
-    pattern.remove_prefix(std::min(pattern.find_first_not_of(" \t"), pattern.size()));
     if (pattern.empty()) // no pattern
     {
         fmt::print("Empty score pattern.  Line follows:\n|{}|\n", normalized_text);

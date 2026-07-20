@@ -466,7 +466,7 @@ generated files, or the vendored `vcpkg` tree.
   parser can likely return owned text or fill a `std::string`.
 - The scorefile parser still has a raw mutable line boundary:
   `sf_append` passes interior `char *` slices to `sf_do_line`, and
-  `sf_do_line` uses `sf_freeform` as a raw pointer cursor helper.
+  `sf_do_line` still mutates the caller-provided line while parsing.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
@@ -537,18 +537,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-137 - Scorefile Freeform Keyword Parser
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: raw pointer cursor helper.
-- Function: `sf_freeform`.
-- Depends on: none.
-- Change: replace the `char *start1`, `char *end1`, and returned
-  interior `char *` cursor with view arguments and a view result.  Use
-  `std::optional<std::string_view>` only if error must remain distinct
-  from an empty remaining view.
-- Tests: run `test_scorefile`.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
@@ -584,7 +572,7 @@ broad global-buffer work.
 - Files: `libtrn/scorefile.cpp`.
 - Kind: mutable scorefile line parser.
 - Function: `sf_do_line`.
-- Depends on: `CSTR-137`.
+- Depends on: none.
 - Change: accept `std::string_view`, keep any needed lowercase copy in a
   local `std::string`, and parse score, header, freeform keywords, and
   pattern text with view operations instead of interior mutable

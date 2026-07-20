@@ -166,6 +166,14 @@ TEST_F(ScoreFileTest, fromWildcardMatchesBothPiecesInOrder)
     g_data_source = old_data_source;
 }
 
+TEST_F(ScoreFileTest, patternKeywordMatchesWithRegularExpression)
+{
+    char pattern_rule[]{"!10 pattern subject: compact.*subject"};
+    sf_append(pattern_rule);
+
+    EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
+}
+
 TEST_F(ScoreFileTest, killThresholdCommandAcceptsSpaceSeparator)
 {
     char kill_threshold[]{"!killthreshold -11"};
