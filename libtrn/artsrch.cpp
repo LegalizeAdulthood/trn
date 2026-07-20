@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 static CompiledRegex s_sub_compex{}; // last compiled subject search
 static CompiledRegex s_art_compex{}; // last compiled normal search
@@ -214,19 +215,20 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             ret = SRCH_SUBJ_DONE;
         }
         compex = &s_sub_compex;
-        pattern = pat_buf+1;
-        char *h;
+        pattern = pat_buf + 1;
+        const std::size_t pattern_capacity = static_cast<std::size_t>(pat_buf_siz - 2);
+        char             *h;
         if (how_much == ARTSCOPE_SUBJECT)
         {
-            std::strcpy(pattern,": *");
-            h = pattern + std::strlen(pattern);
-            interp(h,pat_buf_siz - (h-pat_buf),"%\\s");  // fetch current subject
+            constexpr std::string_view prefix{": *"};
+            *fmt::format_to_n(pattern, pattern_capacity, "{}{}", prefix, do_interp("%\\s")).out = '\0';
+            h = pattern + prefix.size();
         }
         else
         {
             h = pattern;
             // TODO: if using thread files, make this "%\\)f"
-            interp(pattern, pat_buf_siz - 1, "%\\>f");
+            *fmt::format_to_n(pattern, pattern_capacity, "{}", do_interp("%\\>f")).out = '\0';
         }
         if (cmd_chr == 'k' || cmd_chr == 'K' || cmd_chr == ',' //
             || cmd_chr == '+' || cmd_chr == '.' || cmd_chr == 's')

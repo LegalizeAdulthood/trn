@@ -125,19 +125,6 @@ the string API.  They are ordered after the implementation slices because
 each caller should delegate to the new string implementation, not to a
 fresh wrapper around the old parser.
 
-#### DINT-041 - Article Search Pattern Interpolation
-
-- Files: `libtrn/artsrch.cpp`.
-- Kind: legacy `interp` caller migration.
-- Function: `art_search`.
-- Depends on: `DINT-014`.
-- Change: replace the two `pat_buf` interpolation writes for `%\s` and
-  `%\>f` with string API results, preserving the existing search pattern
-  text.
-- Tests: article search tests covering subject and author pattern
-  construction if available; otherwise add focused coverage first if the
-  behavior is easy to isolate.
-
 #### DINT-042 - Cache Look-ahead Subject Interpolation
 
 - Files: `libtrn/cache.cpp`.
@@ -246,8 +233,8 @@ fresh wrapper around the old parser.
 - Files: `tests/test_interp.cpp`.
 - Kind: legacy C test migration.
 - Function: test helper around `do_interp`.
-- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-041`,
-  `DINT-042`, `DINT-043`, `DINT-044`, `DINT-045`, `DINT-046`,
+- Depends on: `DINT-030`, `DINT-031`, `DINT-040`, `DINT-042`,
+  `DINT-043`, `DINT-044`, `DINT-045`, `DINT-046`,
   `DINT-047`, `DINT-048`, `DINT-049`, `DINT-050`.
 - Change: migrate tests that call the C buffer API to the public string
   API, using a reference `std::string_view` cursor for stopper tests.
