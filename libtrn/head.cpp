@@ -29,6 +29,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -530,9 +532,8 @@ static bool header_line_span(HeaderLineType which_line, char *&line, int &size)
 #ifdef DEBUG
     if (g_debug && (size < 1 || size > 1000))
     {
-        std::printf("Firstpos = %ld, lastpos = %ld\n", firstpos.value_of(), lastpos.value_of());
-        std::string input(CMD_BUF_LEN, '\0');
-        std::fgets(input.data(), static_cast<int>(input.size()), stdin);
+        fmt::print(stdout, "Firstpos = {}, lastpos = {}\n", firstpos.value_of(), lastpos.value_of());
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 #endif
     return true;

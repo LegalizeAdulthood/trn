@@ -506,7 +506,7 @@ production code.
 - Search and length: `strchr` 75, `strrchr` 5, `strstr` 2,
   `strlen` 65.
 - Formatting into C buffers: `sprintf` 29, `snprintf` 2.
-- C text I/O roots: `fgets` 25, `fputs` 200, `printf` 385,
+- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 384,
   `fprintf` 54.
 - Character byte operations: `memcpy` 7, `memset` 7, `memcmp` 1.
 
@@ -532,18 +532,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-123 - Header Debug Pause Buffer
-
-- Files: `libtrn/head.cpp`.
-- Kind: fixed-size debug-only stdin buffer.
-- Function: `header_line_span`.
-- Depends on: none.
-- Change: replace the `std::string(CMD_BUF_LEN, '\0')` plus `fgets`
-  pause with ordinary line input or a minimal input discard that does
-  not model a fixed C output buffer.
-- Truncation: arbitrary debug pause limit.
-- Tests: build.
 
 #### CSTR-124 - First Article Range Parser
 
