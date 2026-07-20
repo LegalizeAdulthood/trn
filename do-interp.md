@@ -108,18 +108,6 @@ These slices add or tighten tests before the parser implementation moves.
 These slices change the owning parser API.  Complete them before moving
 callers off the C wrappers.
 
-#### DINT-012-015 - Prompted Input Case
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: switch-arm value conversion.
-- Function: legacy C `do_interp`.
-- Depends on: `DINT-012-001`.
-- Case: `%"prompt"`.
-- Change: keep prompted input in string storage and expose it through the
-  local value view.
-- Preserve: terminal mode changes and `s_last_input`.
-- Tests: focused interpolation tests.
-
 #### DINT-012-020 - Directory Alias Cases
 
 - Files: `libtrn/intrp.cpp`.

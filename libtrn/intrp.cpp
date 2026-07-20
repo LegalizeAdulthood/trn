@@ -708,7 +708,7 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         scratch.pop_back();
                     }
                     s_last_input = scratch;
-                    s = scratch.c_str();
+                    set_value(scratch);
                     break;
                 }
 
