@@ -61,7 +61,7 @@ std::string secs_to_text(std::time_t secs);
 std::string temp_filename();
 std::string get_auth_user();
 std::string get_auth_pass();
-bool        parse_string(char **to, char **from);
+void        parse_string(std::string &to, std::string_view &from);
 bool        parse_ini_section(const IniSection &section, const IniSchema &schema, IniSectionValues &values);
 bool        check_ini_cond(std::string_view cond);
 char        menu_get_char();

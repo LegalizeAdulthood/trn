@@ -581,65 +581,81 @@ std::string get_auth_pass()
 /// - Escape sequences (e.g., '\n').
 /// - Trimming trailing whitespace.
 ///
-/// The parsed string is written to the output buffer, and the input pointer is updated to the next position.
+/// The parsed string is written to the output string, and the input view
+/// is updated to the next position.
 ///
-/// @param to   Pointer to the output buffer where the parsed string will be written.
-/// @param from Pointer to the input buffer to read and parse the string from.
-/// @return True if the string ended with a newline, false otherwise.
+/// @param to   Output string where the parsed string will be written.
+/// @param from Input cursor to read and parse the string from.
 ///
-bool parse_string(char **to, char **from)
+void parse_string(std::string &to, std::string_view &from)
 {
     char inquote = 0;
-    char* t = *to;
-    char* f = *from;
+    to.clear();
+    std::size_t trim_boundary = 0;
 
-    while (std::isspace(*f) && *f != '\n')
+    while (!from.empty() && from.front() != '\n' && std::isspace(static_cast<unsigned char>(from.front())))
     {
-        f++;
+        from.remove_prefix(1);
     }
 
-    char* s;
-    for (s = t; *f; f++)
+    while (!from.empty())
     {
+        const char ch = from.front();
         if (inquote)
         {
-            if (*f == inquote)
+            if (ch == inquote)
             {
                 inquote = 0;
-                s = t;
+                trim_boundary = to.size();
+                from.remove_prefix(1);
                 continue;
             }
         }
-        else if (*f == '\n')
+        else if (ch == '\0' || ch == '\n')
         {
             break;
         }
-        else if (*f == '\'' || *f == '"')
+        else if (ch == '\'' || ch == '"')
         {
-            inquote = *f;
+            inquote = ch;
+            from.remove_prefix(1);
             continue;
         }
-        else if (*f == '#')
+        else if (ch == '#')
         {
-            f = skip_ne(f, '\n');
+            while (!from.empty() && from.front() != '\0' && from.front() != '\n')
+            {
+                from.remove_prefix(1);
+            }
             break;
         }
-        if (*f == '\\')
+        if (ch == '\\')
         {
-            f++;
-            if (*f == '\n')
+            from.remove_prefix(1);
+            if (from.empty())
             {
+                to.push_back('\\');
+                break;
+            }
+            if (from.front() == '\0')
+            {
+                to.push_back('\\');
+                break;
+            }
+            if (from.front() == '\n')
+            {
+                from.remove_prefix(1);
                 continue;
             }
-            std::string_view  escape{f};
+            std::string_view  escape{from};
             const std::size_t original_size = escape.size();
-            *t++ = interp_backslash(escape);
-            f += original_size - escape.size();
-            f--;
+            to.push_back(interp_backslash(escape));
+            from.remove_prefix(original_size - escape.size());
         }
         else
         {
-            *t++ = *f;
+            to.push_back(ch);
+            from.remove_prefix(1);
         }
     }
 // Debug
@@ -649,18 +665,11 @@ bool parse_string(char **to, char **from)
         std::printf("Unbalanced quotes.\n");
     }
 #endif
-    inquote = (*f != '\0');
 
-    while (t != s && std::isspace(t[-1]))
+    while (to.size() != trim_boundary && std::isspace(static_cast<unsigned char>(to.back())))
     {
-        t--;
+        to.pop_back();
     }
-    *t++ = '\0';
-
-    *to = t;
-    *from = f;
-
-    return inquote; // return true if the string ended with a newline
 }
 
 bool parse_ini_section(const IniSection &section, const IniSchema &schema, IniSectionValues &values)

@@ -2070,21 +2070,21 @@ static bool select_option(OptionIndex i)
     s_clean_screen = in_choice("> ", val, help, MM_OPTION_EDIT_PROMPT);
     if (val != g_buf)
     {
-        char * to = g_buf;
-        char* from = g_buf;
-        parse_string(&to, &from);
+        std::string      parsed_value;
+        std::string_view edit_text{g_buf};
+        parse_string(parsed_value, edit_text);
         changed = true;
         if (had_draft)
         {
             g_option_draft->erase(option);
             g_selected_count--;
         }
-        if (had_draft && oldval == g_buf)
+        if (had_draft && oldval == parsed_value)
         {
         }
         else
         {
-            g_option_draft->set(option, g_buf);
+            g_option_draft->set(option, parsed_value);
             g_selected_count++;
         }
     }

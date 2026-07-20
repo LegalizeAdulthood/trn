@@ -459,9 +459,6 @@ generated files, or the vendored `vcpkg` tree.
   text, so they are not honest path-only candidates yet.
 - `scan_active_line` already accepts `std::string_view`; do not add a
   new slice for it.
-- `parse_string` still exposes a `char **` cursor/output API.  Its only
-  current production caller ignores the newline-status return, so the
-  parser can likely return owned text or fill a `std::string`.
 - The scorefile parser still has a raw mutable line boundary:
   `sf_append` passes interior `char *` slices to `sf_do_line`, and
   `sf_do_line` still mutates the caller-provided line while parsing.
@@ -539,19 +536,6 @@ that later caller slices can consume directly.
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
-
-#### CSTR-139 - Option Edit String Parser
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `libtrn/rt-select.cpp`.
-- Kind: `char **` parser cursor and output API.
-- Function: `parse_string`.
-- Depends on: none.
-- Change: replace the `char **to` and `char **from` API with
-  `std::string` storage and a `std::string_view` input cursor.  Drop the
-  newline-status return if the current caller still ignores it.
-- Tests: run option selector tests; add focused coverage first if the
-  edited-option quote, comment, and escape behavior is not covered.
 
 #### CSTR-140 - Scorefile Line Parser
 
