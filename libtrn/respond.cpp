@@ -1072,8 +1072,8 @@ void followup()
                   "trim the quoted article down as much as possible.)\n",
                   stdout);
         }
-        interp(g_buf, (sizeof g_buf), get_env_var("ATTRIBUTION", ATTRIBUTION).c_str());
-        std::fprintf(header,"%s\n",g_buf);
+        const std::string attribution = do_interp(get_env_var("ATTRIBUTION", ATTRIBUTION));
+        fmt::print(header, "{}\n", attribution);
         parse_header(g_art);
         mime_set_article();
         clear_art_buf();
@@ -1092,7 +1092,7 @@ void followup()
                 *t = '\0';
             }
         }
-        std::fprintf(header,"\n");
+        fmt::print(header, "\n");
         g_wrapped_nl = WRAPPED_NL;
     }
     std::fclose(header);
