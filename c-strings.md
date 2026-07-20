@@ -441,34 +441,35 @@ generated files, or the vendored `vcpkg` tree.
 - Direct environment C-string reads now remain only inside the
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
-  `g_art_line`, `g_head_buf`, `g_art_buf`, `g_buf` uses in
-  `scan_active_line` callers, terminal command-input scratch, MIME HTML
-  tag parser state, `uudecode` pending-line storage, selector command
-  key storage, and tree-indent storage.  Tiny UTF byte scratch buffers,
-  translation tables, MIME decode tables, terminal pushback bytes,
-  termcap storage, and regex bytecode arrays are non-string protocol or
-  parser storage, not current string slices.
-- Termcap capability globals are still exposed as mutable `char *` even
-  though the code treats most capability text as read-only after
-  discovery.  This is a const-correctness slice before the remaining
-  MSDOS `tgoto` cleanup.
-- Several call sites now use `std::string` as a fixed-size C output
-  buffer for `interp` or `do_interp`, then trim at the first NUL.  These
-  are not raw arrays anymore, but they are still fixed-size C-string
-  output contracts and should be converted one function at a time.
-- Filename storage: newsrc fields are already `fs::path`.
-  `make_dir` and `safe_link` still expose filename parameters as raw
-  C strings even though the implementations or callers already work with
-  paths.  Score-file shortcut strings, universal-selector file strings,
-  shell commands, URLs, and expansion templates still mix path and
-  non-path text, so they are not honest path-only candidates yet.
-- `SourceFile::open` still models an optional NNTP server as nullable
-  `const char *`.  Its callers can pass an empty string view instead,
-  keeping null out of the local data flow.
-- `scan_active_line` mutates its input buffer, forcing callers to copy
-  current `std::string` storage into `g_buf` before parsing.  Promoting
-  the argument to `std::string_view` and parsing locally unlocks later
-  `g_buf` removal in `addng.cpp`.
+  `g_art_line`, `g_head_buf`, `g_art_buf`, terminal command-input
+  scratch, NNTP local protocol buffers, and `nntpinit` name scratch.
+  Tiny UTF byte scratch buffers, translation tables, MIME decode tables,
+  terminal pushback bytes, termcap storage, and regex bytecode arrays
+  are non-string protocol or parser storage, not current local string
+  slices.
+- Terminal capability globals are already `const char *`.  The remaining
+  termcap area is file-scope borrowed storage behind those pointers and
+  belongs with terminal-owner cleanup, not a local `string_view` slice.
+- The legacy C-buffer `do_interp`, `interp`, and `interp_search` APIs
+  are gone.  Remaining interpolation raw-string helpers are
+  `interp_backslash`, which writes one decoded character through a
+  caller buffer, and `normalize_refs`, which mutates caller string
+  storage.
+- Filename storage: newsrc fields, `make_dir`, `safe_link`, and
+  `SourceFile::open` already use modern path or view signatures.
+  Score-file shortcut strings, universal-selector file strings, shell
+  commands, URLs, and expansion templates still mix path and non-path
+  text, so they are not honest path-only candidates yet.
+- `scan_active_line` already accepts `std::string_view`; do not add a
+  new slice for it.
+- `sw_list` still converts an input view into a mutable,
+  NUL-separated token buffer before calling `decode_switch`.
+- `parse_string` still exposes a `char **` cursor/output API.  Its only
+  current production caller ignores the newline-status return, so the
+  parser can likely return owned text or fill a `std::string`.
+- The scorefile parser still has a raw mutable line boundary:
+  `sf_append` passes interior `char *` slices to `sf_do_line`, and
+  `sf_do_line` uses `sf_freeform` as a raw pointer cursor helper.
 - `string_case_compare` production callers that already have strings or
   views now use the view overload instead of `c_str()`, `data()`, or
   pointer/length calls.  The remaining C-string overloads belong to the
@@ -502,13 +503,13 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 29, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 4, `strncmp` 21.
-- Search and length: `strchr` 74, `strrchr` 5, `strstr` 2,
-  `strlen` 65.
-- Formatting into C buffers: `sprintf` 29, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 379,
-  `fprintf` 54.
+- Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
+- Comparison: `strcmp` 5, `strncmp` 20.
+- Search and length: `strchr` 69, `strrchr` 3, `strstr` 2,
+  `strlen` 57.
+- Formatting into C buffers: `sprintf` 34, `snprintf` 2.
+- C text I/O roots: `fgets` 24, `fputs` 200, `printf` 396,
+  `fprintf` 48.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -539,21 +540,97 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-135 - Backslash Escape Reader
+
+- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`,
+  `libtrn/sw.cpp`, `libtrn/util.cpp`.
+- Kind: caller-output C string helper.
+- Functions: `interp_backslash`, `sw_list`, `parse_string`.
+- Depends on: none.
+- Change: replace the `char *dest` output helper with a view-cursor
+  helper that returns the decoded character and advances a
+  `std::string_view &`.  Update the direct callers to write the returned
+  character into their current storage; later slices remove that storage.
+- Tests: run switch parsing, option edit, and interpolation tests.
+
+#### CSTR-136 - References Normalizer
+
+- Files: `libtrn/intrp.cpp`, `libtrn/include/trn/intrp.h`.
+- Kind: mutable C string parser over owned string storage.
+- Function: `normalize_refs`.
+- Depends on: none.
+- Change: make the normalizer consume `std::string_view` and return a
+  normalized `std::string`.  Update the `%r` and `%R` interpolation
+  cases to assign the returned string instead of mutating
+  `refs_buf->data()` and searching for a synthetic NUL terminator.
+- Tests: run interpolation tests that cover `%r` and `%R`; add coverage
+  first if those cases are missing.
+
+#### CSTR-137 - Scorefile Freeform Keyword Parser
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: raw pointer cursor helper.
+- Function: `sf_freeform`.
+- Depends on: none.
+- Change: replace the `char *start1`, `char *end1`, and returned
+  interior `char *` cursor with view arguments and a view result.  Use
+  `std::optional<std::string_view>` only if error must remain distinct
+  from an empty remaining view.
+- Tests: run `test_scorefile`.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-131 - Terminal Macro Line Parser
+#### CSTR-138 - Switch List Tokenizer
 
-- Files: `libtrn/terminal.cpp`.
-- Kind: fixed-size interpolation output buffer.
-- Function: `mac_line`.
-- Depends on: none.
-- Change: use a string-returning interpolation helper that also reports
-  the remaining definition text, then install the macro from string
-  views.  Remove the `std::string(CMD_BUF_LEN, '\0')` scratch buffer.
-- Tests: run terminal macro tests.
+- Files: `libtrn/sw.cpp`.
+- Kind: mutable NUL-separated token buffer.
+- Function: `sw_list`.
+- Depends on: `CSTR-135`.
+- Change: parse the switch list into owned string tokens or direct
+  string views instead of writing embedded NULs into a copied buffer.
+  Keep `decode_switch(token.c_str())` only as the boundary until its
+  signature is changed.
+- Tests: run switch parsing tests.
+
+#### CSTR-139 - Option Edit String Parser
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `libtrn/rt-select.cpp`.
+- Kind: `char **` parser cursor and output API.
+- Function: `parse_string`.
+- Depends on: `CSTR-135`.
+- Change: replace the `char **to` and `char **from` API with
+  `std::string` storage and a `std::string_view` input cursor.  Drop the
+  newline-status return if the current caller still ignores it.
+- Tests: run option selector tests; add focused coverage first if the
+  edited-option quote, comment, and escape behavior is not covered.
+
+#### CSTR-140 - Scorefile Line Parser
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: mutable scorefile line parser.
+- Function: `sf_do_line`.
+- Depends on: `CSTR-137`.
+- Change: accept `std::string_view`, keep any needed lowercase copy in a
+  local `std::string`, and parse score, header, freeform keywords, and
+  pattern text with view operations instead of interior mutable
+  pointers.
+- Tests: run `test_scorefile`.
+
+#### CSTR-141 - Scorefile Append Interface
+
+- Files: `libtrn/scorefile.cpp`, `libtrn/include/trn/scorefile.h`,
+  scorefile callers.
+- Kind: public mutable C string parameter.
+- Function: `sf_append`.
+- Depends on: `CSTR-140`.
+- Change: accept `std::string_view`, keep missing-score or shortcut
+  expansions in owned strings, and pass views to `sf_do_line` instead
+  of storing interior mutable pointers into temporary string storage.
+- Tests: run `test_scorefile`.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
