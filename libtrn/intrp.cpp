@@ -59,7 +59,8 @@ const std::string g_news_admin{NEWS_ADMIN}; // news administrator
 int               g_news_uid{};
 #endif
 
-static const char *skip_interp(const char *pattern, const char *stoppers);
+static void        skip_interp_cursor(std::string_view &pattern, std::string_view stoppers);
+static const char *skip_interp_pointer(const char *pattern, std::string_view stoppers);
 static void abort_interp();
 
 static const char   *s_regexp_specials = "^$.*[\\/?%";
@@ -142,129 +143,152 @@ void interp_final()
 
 // skip interpolations
 
-static const char *skip_interp(const char *pattern, const char *stoppers)
+static bool at_skip_stopper(std::string_view pattern, std::string_view stoppers)
+{
+    return !pattern.empty() && !stoppers.empty() && stoppers.find(pattern.front()) != std::string_view::npos;
+}
+
+static void skip_escaped_until(std::string_view &pattern, char stopper)
+{
+    while (!pattern.empty() && pattern.front() != stopper)
+    {
+        pattern.remove_prefix(pattern.front() == '\\' && pattern.size() > 1 ? 2U : 1U);
+    }
+}
+
+static void skip_interp_cursor(std::string_view &pattern, std::string_view stoppers)
 {
 #ifdef DEBUG
     if (g_debug & DEB_INTRP)
     {
-        std::printf("skipinterp %s (till %s)\n",pattern,stoppers?stoppers:"");
+        std::printf("skipinterp %.*s (till %.*s)\n", static_cast<int>(pattern.size()),
+                    pattern.empty() ? "" : pattern.data(), static_cast<int>(stoppers.size()),
+                    stoppers.empty() ? "" : stoppers.data());
     }
 #endif
 
-    while (*pattern && (!stoppers || !std::strchr(stoppers, *pattern)))
+    while (!pattern.empty() && !at_skip_stopper(pattern, stoppers))
     {
-        if (*pattern == '%' && pattern[1])
+        if (pattern.front() == '%' && pattern.size() > 1)
         {
-switch_again:
-            switch (*++pattern)
+            pattern.remove_prefix(1);
+            for (;;)
             {
-            case '^':
-            case '_':
-            case '\\':
-            case '\'':
-            case '>':
-            case ')':
-                goto switch_again;
-
-            case ':':
-                pattern++;
-                while (*pattern //
-                       && (*pattern == '.' || *pattern == '-' || isdigit(*pattern)))
+                if (pattern.empty())
                 {
-                    pattern++;
+                    return;
                 }
-                pattern--;
-                goto switch_again;
-
-            case '{':
-                for (pattern++; *pattern && *pattern != '}'; pattern++)
+                switch (pattern.front())
                 {
-                    if (*pattern == '\\')
+                case '^':
+                case '_':
+                case '\\':
+                case '\'':
+                case '>':
+                case ')':
+                    pattern.remove_prefix(1);
+                    continue;
+
+                case ':':
+                    pattern.remove_prefix(1);
+                    while (!pattern.empty() //
+                           && (pattern.front() == '.' || pattern.front() == '-' ||
+                               std::isdigit(static_cast<unsigned char>(pattern.front()))))
                     {
-                        pattern++;
+                        pattern.remove_prefix(1);
                     }
+                    continue;
+
+                default:
+                    break;
                 }
+                break;
+            }
+            switch (pattern.front())
+            {
+            case '{':
+                pattern.remove_prefix(1);
+                skip_escaped_until(pattern, '}');
                 break;
 
             case '[':
-                for (pattern++; *pattern && *pattern != ']'; pattern++)
-                {
-                    if (*pattern == '\\')
-                    {
-                        pattern++;
-                    }
-                }
+                pattern.remove_prefix(1);
+                skip_escaped_until(pattern, ']');
                 break;
 
             case '(':
-            {
-                pattern = skip_interp(pattern+1,"!=");
-                if (!*pattern)
+                pattern.remove_prefix(1);
+                skip_interp_cursor(pattern, "!=");
+                if (pattern.empty())
                 {
-                    goto getout;
+                    return;
                 }
-                for (pattern++; *pattern && *pattern != '?'; pattern++)
+                pattern.remove_prefix(1);
+                skip_escaped_until(pattern, '?');
+                if (pattern.empty())
                 {
-                    if (*pattern == '\\')
-                    {
-                        pattern++;
-                    }
+                    return;
                 }
-                if (!*pattern)
+                pattern.remove_prefix(1);
+                skip_interp_cursor(pattern, ":)");
+                if (!pattern.empty() && pattern.front() == ':')
                 {
-                    goto getout;
-                }
-                pattern = skip_interp(pattern+1,":)");
-                if (*pattern == ':')
-                {
-                    pattern = skip_interp(pattern + 1, ")");
+                    pattern.remove_prefix(1);
+                    skip_interp_cursor(pattern, ")");
                 }
                 break;
-            }
 
             case '`':
-            {
-                pattern = skip_interp(pattern+1,"`");
+                pattern.remove_prefix(1);
+                skip_interp_cursor(pattern, "`");
                 break;
-            }
 
             case '"':
-                pattern = skip_interp(pattern+1,"\"");
+                pattern.remove_prefix(1);
+                skip_interp_cursor(pattern, "\"");
                 break;
 
             default:
                 break;
             }
-            pattern++;
+            if (!pattern.empty())
+            {
+                pattern.remove_prefix(1);
+            }
         }
         else
         {
-            if (*pattern == '^' //
-                && ((Uchar) pattern[1] >= '?' || pattern[1] == '(' || pattern[1] == ')'))
+            if (pattern.front() == '^' && pattern.size() > 1 //
+                && (static_cast<Uchar>(pattern[1]) >= '?' || pattern[1] == '(' || pattern[1] == ')'))
             {
-                pattern += 2;
+                pattern.remove_prefix(2);
             }
-            else if (*pattern == '\\' && pattern[1])
+            else if (pattern.front() == '\\' && pattern.size() > 1)
             {
-                pattern += 2;
+                pattern.remove_prefix(2);
             }
             else
             {
-                pattern++;
+                pattern.remove_prefix(1);
             }
         }
     }
-getout:
-    return pattern;                     // where we left off
+}
+
+static const char *skip_interp_pointer(const char *pattern, std::string_view stoppers)
+{
+    std::string_view cursor{pattern};
+
+    skip_interp_cursor(cursor, stoppers);
+    return cursor.data();
 }
 
 std::size_t skip_interp(std::string_view pattern, std::string_view stoppers)
 {
-    std::string pattern_text{pattern};
-    std::string stoppers_text{stoppers};
-    const char *start = pattern_text.c_str();
+    const std::string_view start{pattern};
 
-    return skip_interp(start, stoppers_text.c_str()) - start;
+    skip_interp_cursor(pattern, stoppers);
+    return start.size() - pattern.size();
 }
 
 // expand interpolation strings
@@ -600,13 +624,13 @@ const char *do_interp(char *dest, int dest_size, const char *pattern, const char
                         if (*pattern == ':')
                         {
                             const char *pattern_start = pattern + 1;
-                            pattern = pattern_start + (skip_interp(pattern_start, ")") - pattern_start);
+                            pattern = skip_interp_pointer(pattern_start, ")");
                         }
                     }
                     else
                     {
                         const char *pattern_start = pattern + 1;
-                        pattern = pattern_start + (skip_interp(pattern_start, ":)") - pattern_start);
+                        pattern = skip_interp_pointer(pattern_start, ":)");
                         if (*pattern == ':')
                         {
                             pattern++;
