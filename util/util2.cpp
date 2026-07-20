@@ -71,34 +71,31 @@ const char *copy_till(char *to, const char *from, int delim)
 
 std::string file_exp(std::string_view text)
 {
-    std::string filename = do_interp(text);
-    char       *s = filename.data();
-    if (*s == '~') // does destination start with ~?
+    std::string            filename = do_interp(text);
+    const std::string_view expanded{filename};
+    if (!expanded.empty() && expanded.front() == '~') // does destination start with ~?
     {
-        if (!*(++s) || *s == '/')
+        const std::string_view tilde_text = expanded.substr(1);
+        if (tilde_text.empty() || tilde_text.front() == '/')
         {
-            const std::string suffix{s};
-            filename = g_home_dir;
-            filename += suffix;
+            filename.replace(0, 1, g_home_dir);
         }
-        else if (*s == '~' && (!s[1] || s[1] == '/'))
+        else if (tilde_text.front() == '~' && (tilde_text.size() == 1 || tilde_text[1] == '/'))
         {
             // Preserve legacy no-op handling for ~~ expansion.
         }
         else
         {
 #ifdef TILDE_NAME
-            const char *login_start = s;
-            while (std::isalnum(*s))
-            {
-                ++s;
-            }
-            std::string login_name{login_start, static_cast<std::size_t>(s - login_start)};
-            std::string suffix{s};
+            const std::string_view::const_iterator suffix =
+                std::find_if(tilde_text.begin(), tilde_text.end(),
+                             [](char ch) { return !std::isalnum(static_cast<unsigned char>(ch)); });
+            std::string login_name{tilde_text.begin(), suffix};
+            std::string suffix_text{suffix, tilde_text.end()};
             if (!s_tilde_dir.empty() && s_tilde_name == login_name)
             {
                 filename = s_tilde_dir;
-                filename += suffix;
+                filename += suffix_text;
             }
             else
             {
@@ -114,7 +111,7 @@ std::string file_exp(std::string_view text)
                     }
                     s_tilde_dir = pwd->pw_dir;
                     filename = s_tilde_dir;
-                    filename += suffix;
+                    filename += suffix_text;
                     endpwent();
                 }
 #else // this will run faster, and is less D space
@@ -143,7 +140,7 @@ std::string file_exp(std::string_view text)
                                     end = line.find(':', begin);
                                     s_tilde_dir = line.substr(begin, end - begin);
                                     filename = s_tilde_dir;
-                                    filename += suffix;
+                                    filename += suffix_text;
                                 }
                                 break;
                             }
@@ -169,26 +166,26 @@ std::string file_exp(std::string_view text)
 #endif
         }
     }
-    else if (*s == '$')
+    else if (!expanded.empty() && expanded.front() == '$')
     { // starts with some env variable?
-        std::string scrbuf{"%"};
-        if (s[1] == '{')
+        std::string env_pattern{"%"};
+        if (expanded.size() > 1 && expanded[1] == '{')
         {
-            scrbuf += s + 2;
+            env_pattern.append(expanded.substr(2));
         }
         else
         {
-            scrbuf += '{';
-            for (s++; std::isalnum(*s); s++)
-            {
-                scrbuf += *s;
-            }
+            env_pattern += '{';
+            const std::string_view::const_iterator suffix =
+                std::find_if(expanded.begin() + 1, expanded.end(),
+                             [](char ch) { return !std::isalnum(static_cast<unsigned char>(ch)); });
+            env_pattern.append(expanded.begin() + 1, suffix);
             // skip over token
-            scrbuf += '}';
-            scrbuf += s;
+            env_pattern += '}';
+            env_pattern.append(suffix, expanded.end());
         }
         // this might do some extra '%'s, but that's how the Mercedes Benz
-        filename = do_interp(scrbuf);
+        filename = do_interp(env_pattern);
     }
     return filename;
 }

@@ -81,8 +81,9 @@ Existing good precedents:
 - `libtrn/univ.cpp`, `univ_add_text_file`: accepts a legacy C string at
   the boundary, then uses `std::string_view` for slicing and
   `std::string` for owned path assembly.
-- `util/util2.cpp`, `file_exp`: accepts a `std::string_view`, keeps
-  mutable scratch storage local, and returns an owned `std::string`.
+- `util/util2.cpp`, `file_exp`: accepts a `std::string_view`, uses
+  `std::string_view` slices and `std::find_if` scans for prefix
+  parsing, and returns an owned `std::string`.
 - `libtrn/terminal.cpp`, `set_macro`: accepts string views and creates
   owned strings only when a null-terminated value is needed.
 - `libtrn/autosub.cpp`, `match_list`: passes comma-delimited pattern
