@@ -26,7 +26,6 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -54,78 +53,89 @@ void sw_file(std::string_view filename)
 
 void sw_list(std::string_view switches)
 {
-    std::string storage;
-    storage.reserve(switches.size() + 2);
-    storage.assign(switches);
-    storage.resize(storage.size() + 2);
-    char *swlist = storage.data();
-    char* p;
-    char inquote = 0;
-
-    char *s = swlist;
-    p = swlist;
-    while (*s)                          // "String, or nothing"
+    std::vector<std::string> tokens;
+    std::string              token;
+    token.reserve(switches.size());
+    char        inquote = 0;
+    std::size_t index = 0;
+    while (index < switches.size() && switches[index] != '\0') // "String, or nothing"
     {
-        if (!inquote && std::isspace(*s))    // word delimiter?
+        const char ch = switches[index];
+        if (!inquote && std::isspace(static_cast<unsigned char>(ch))) // word delimiter?
         {
-            while (true)
+            while (index < switches.size())
             {
-                s = skip_space(s);
-                if (*s != '#')
+                while (index < switches.size() && std::isspace(static_cast<unsigned char>(switches[index])))
+                {
+                    ++index;
+                }
+                if (index == switches.size() || switches[index] != '#')
                 {
                     break;
                 }
-                s = skip_ne(s, '\n');
+                while (index < switches.size() && switches[index] != '\n' && switches[index] != '\0')
+                {
+                    ++index;
+                }
             }
-            if (p != swlist)
+            if (!token.empty())
             {
-                *p++ = '\0';            // chop here
+                tokens.push_back(token);
+                token.clear();
             }
         }
-        else if (inquote == *s)
+        else if (inquote == ch)
         {
-            s++;                        // delete trailing quote
-            inquote = 0;                // no longer quoting
+            ++index;     // delete trailing quote
+            inquote = 0; // no longer quoting
         }
-        else if (!inquote && (*s == '"' || *s == '\''))
+        else if (!inquote && (ch == '"' || ch == '\''))
         {
-                                        // OK, I know when I am not wanted
-            inquote = *s++;             // remember & del single or double
+            // OK, I know when I am not wanted
+            inquote = ch; // remember & del single or double
+            ++index;
         }
-        else if (*s == '\\') // quoted something?
+        else if (ch == '\\') // quoted something?
         {
-            s++;
-            if (*s != '\n') // newline?
+            ++index;
+            if (index < switches.size() && switches[index] != '\n' && switches[index] != '\0')
             {
-                std::string_view  escape{s};
+                std::string_view escape = switches.substr(index);
+                if (const std::size_t end = escape.find('\0'); end != std::string_view::npos)
+                {
+                    escape = escape.substr(0, end);
+                }
                 const std::size_t original_size = escape.size();
-                *p++ = interp_backslash(escape);
-                s += original_size - escape.size();
+                token.push_back(interp_backslash(escape));
+                index += original_size - escape.size();
+            }
+            else if (index < switches.size() && switches[index] == '\n')
+            {
+                ++index;
             }
             else
             {
-                s++;
+                token.push_back('\\');
             }
         }
         else
         {
-            *p++ = *s++;                // normal char
+            token.push_back(ch); // normal char
+            ++index;
         }
     }
-    *p++ = '\0';
-    *p = '\0';                          // put an extra null on the end
+    if (!token.empty())
+    {
+        tokens.push_back(token);
+    }
     if (inquote)
     {
-        std::printf("Unmatched %c in switch\n",inquote);
+        fmt::print("Unmatched {} in switch\n", inquote);
         term_down(1);
     }
-    for (char *c = swlist; *c; /* p += strlen(p)+1 */)
+    for (const std::string &switch_token : tokens)
     {
-        decode_switch(c);
-        while (*c++)
-        {
-                                        // point at null + 1
-        }
+        decode_switch(switch_token.c_str());
     }
 }
 

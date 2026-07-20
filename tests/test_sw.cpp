@@ -273,6 +273,17 @@ TEST_F(EnvironmentSwitchTest, decodeEnvironmentSwitchPreservesEqualsInValue)
     EXPECT_EQ("left=right", get_env_var(EQUALS_ENV_VAR));
 }
 
+TEST_F(EnvironmentSwitchTest, switchListPreservesQuotedEnvironmentValue)
+{
+    std::string switches{"-E="};
+    switches.append(VALUE_ENV_VAR);
+    switches += "=\"left right\"";
+
+    sw_list(switches);
+
+    EXPECT_EQ("left right", get_env_var(VALUE_ENV_VAR));
+}
+
 TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)
 {
     SelectorRestorer restore{g_sel_mode,        g_sel_default_mode, g_sel_thread_mode,    g_sel_sort,

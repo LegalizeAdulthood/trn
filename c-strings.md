@@ -459,8 +459,6 @@ generated files, or the vendored `vcpkg` tree.
   text, so they are not honest path-only candidates yet.
 - `scan_active_line` already accepts `std::string_view`; do not add a
   new slice for it.
-- `sw_list` still converts an input view into a mutable,
-  NUL-separated token buffer before calling `decode_switch`.
 - `parse_string` still exposes a `char **` cursor/output API.  Its only
   current production caller ignores the newline-status return, so the
   parser can likely return owned text or fill a `std::string`.
@@ -541,18 +539,6 @@ that later caller slices can consume directly.
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
-
-#### CSTR-138 - Switch List Tokenizer
-
-- Files: `libtrn/sw.cpp`.
-- Kind: mutable NUL-separated token buffer.
-- Function: `sw_list`.
-- Depends on: none.
-- Change: parse the switch list into owned string tokens or direct
-  string views instead of writing embedded NULs into a copied buffer.
-  Keep `decode_switch(token.c_str())` only as the boundary until its
-  signature is changed.
-- Tests: run switch parsing tests.
 
 #### CSTR-139 - Option Edit String Parser
 
