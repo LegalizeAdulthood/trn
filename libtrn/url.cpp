@@ -21,11 +21,13 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <iterator>
 #include <string>
 #include <string_view>
 
 namespace asio = boost::asio;
+namespace fs = std::filesystem;
 using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code_t = boost::system::error_code;
 
@@ -37,12 +39,12 @@ struct UrlParts
     int         port{80};
 };
 
-static bool fetch_http(const char *host, int port, const char *path, const char *outname);
-static bool fetch_ftp(const char *host, const char *origpath, const char *outname);
+static bool     fetch_http(const char *host, int port, const char *path, const fs::path &outname);
+static bool     fetch_ftp(const char *host, const char *origpath, const fs::path &outname);
 static UrlParts parse_url(std::string_view url);
 
 // returns true if successful
-static bool fetch_http(const char *host, int port, const char *path, const char *outname)
+static bool fetch_http(const char *host, int port, const char *path, const fs::path &outname)
 {
     asio::io_context context;
     asio::ip::tcp::resolver s_resolver(context);
@@ -73,7 +75,7 @@ static bool fetch_http(const char *host, int port, const char *path, const char 
         return false;
     }
 
-    std::FILE *fp_out = std::fopen(outname, "w");
+    std::FILE *fp_out = std::fopen(outname.string().c_str(), "w");
     if (!fp_out)
     {
         std::printf("\nURL output file could not be opened.\n");
@@ -99,7 +101,7 @@ static bool fetch_http(const char *host, int port, const char *path, const char 
 }
 
 // add port support later?
-static bool fetch_ftp(const char *host, const char *origpath, const char *outname)
+static bool fetch_ftp(const char *host, const char *origpath, const fs::path &outname)
 {
 #ifdef USE_FTP
     const std::string_view path{origpath};
@@ -119,7 +121,7 @@ static bool fetch_ftp(const char *host, const char *origpath, const char *outnam
     command.reserve(1024);
     fmt::format_to(std::back_inserter(command), "{}/ftpgrab {} ftp {}@{} {} {} {}", file_exp("%X"), host,
                    file_exp("%L"), file_exp("%H"), path.substr(0, slash == 0 ? 1 : slash), path.substr(slash + 1),
-                   outname);
+                   outname.string());
 
     // modified escape_shell_cmd code from NCSA HTTPD util.cpp
     // serious security holes could result without this code
@@ -232,7 +234,7 @@ static UrlParts parse_url(std::string_view url)
     return parts;
 }
 
-bool url_get(std::string_view url, const char *outfile)
+bool url_get(std::string_view url, const fs::path &outfile)
 {
     const UrlParts parts = parse_url(url);
     if (parts.path.empty())

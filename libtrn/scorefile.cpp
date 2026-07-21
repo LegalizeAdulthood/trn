@@ -44,7 +44,7 @@
 namespace fs = std::filesystem;
 
 static std::string_view sf_get_extra_header(ArticleNum art, int hnum);
-static bool             sf_default_url_get(std::string_view url, const char *outfile);
+static bool             sf_default_url_get(std::string_view url, const fs::path &outfile);
 
 int  g_sf_num_entries{};   // # of entries
 int  g_sf_score_verbose{}; // when true, the scoring routine prints lots of info...
@@ -98,7 +98,7 @@ static bool sf_is_url(std::string_view name)
     return string_case_equal(name.substr(0, 4), "URL:");
 }
 
-static bool sf_default_url_get(std::string_view url, const char *outfile)
+static bool sf_default_url_get(std::string_view url, const fs::path &outfile)
 {
     return url_get(url, outfile);
 }
@@ -1349,7 +1349,7 @@ static int sf_open_file(std::string_view name)
     if (sf_is_url(name_text))
     {
         temp_name = temp_filename();
-        if (!s_url_getter(std::string_view{name_text}.substr(4), temp_name.c_str()))
+        if (!s_url_getter(std::string_view{name_text}.substr(4), temp_name))
         {
             return -1;
         }

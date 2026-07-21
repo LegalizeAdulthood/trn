@@ -591,21 +591,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-147 - URL Output Path API
-
-- Files: `libtrn/url.cpp`, `libtrn/include/trn/url.h`,
-  `libtrn/scorefile.cpp`, `libtrn/include/trn/scorefile-internal.h`,
-  `libtrn/univ.cpp`, `tests/test_url.cpp`, `tests/test_scorefile.cpp`.
-- Kind: output filename as `const char *` through URL and scorefile
-  callback APIs.
-- Functions: `url_get`, `fetch_http`, `fetch_ftp`,
-  `sf_default_url_get`, `ScoreFileUrlGetter`.
-- Depends on: none.
-- Change: pass output files as `std::filesystem::path` references at the
-  API boundary.  Keep `fopen`, shell-command, or command-string C
-  conversions local to the functions that actually need them.
-- Tests: URL tests and `ScoreFileTest.includeUrlFetchesScoreFile`.
-
 #### CSTR-150 - Author From Compression Input View
 
 - Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,

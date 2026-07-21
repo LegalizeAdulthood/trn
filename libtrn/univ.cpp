@@ -647,7 +647,7 @@ static bool univ_use_file(std::string_view fname, const char *label)
         open_name = temp_filename();
         g_univ_tmp_file = open_name;
 
-        if (!url_get(file_name.substr(4), open_name.c_str()))
+        if (!url_get(file_name.substr(4), open_name))
         {
             have_open_name = false;
         }

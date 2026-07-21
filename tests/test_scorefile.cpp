@@ -41,10 +41,10 @@ namespace fs = std::filesystem;
 
 constexpr ArticleNum TEST_ARTICLE_NUM{1};
 
-bool fetch_score_url(std::string_view url, const char *outfile)
+bool fetch_score_url(std::string_view url, const fs::path &outfile)
 {
     g_fetched_url = std::string{url};
-    g_fetched_outfile = outfile;
+    g_fetched_outfile = outfile.string();
 
     std::ofstream output{outfile, std::ios::binary};
     output << "10 subject: remote\n";

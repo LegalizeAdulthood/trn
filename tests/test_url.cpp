@@ -68,8 +68,7 @@ TEST_F(UrlFetchTest, downloadsHttpResponse)
     std::future<void>       server =
         std::async(std::launch::async, serve_http_response, std::ref(acceptor), std::ref(request));
 
-    const bool result =
-        url_get("http://127.0.0.1:" + std::to_string(port) + "/resource", (m_output_dir / "download").string().c_str());
+    const bool result = url_get("http://127.0.0.1:" + std::to_string(port) + "/resource", m_output_dir / "download");
     server.get();
 
     EXPECT_TRUE(result);
