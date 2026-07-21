@@ -458,8 +458,9 @@ generated files, or the vendored `vcpkg` tree.
   command parsing and universal selector line parsing.  Convert the
   callers first, then remove the helper.
 - `in_string`: the string-view overload is already used by callers that
-  have strings or views.  Remaining pointer-return use belongs to
-  mutable parser buffers or inactive legacy site validation.
+  have strings or views.  The mutable `char *` overload is kept alive
+  only by the inactive `ANCIENT_NEWS` site-validation block in
+  `bits.cpp`; that block is listed below so the overload can be removed.
 - `safe_malloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
@@ -475,28 +476,32 @@ generated files, or the vendored `vcpkg` tree.
   terminal pushback bytes, termcap storage, and regex bytecode arrays
   are non-string protocol or parser storage, not current local string
   slices.
+- Newly exposed leaf helpers include option yes/no tests, option header
+  comma splitting, option quoting, termcap string registration and
+  lookup, color-attribute parsing, URL fetch helper inputs, and an
+  unused overview-field helper.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
-- Unused overload/wrapper scan: no dead C-style wrappers remain in the
-  current pass.  Keep `nntp_init_error`, `string_case_compare`,
-  `string_case_equal`, `in_string`, `Subject` C-string accessors,
-  `is_yes`, `is_no`, `Tgetstr`, `line_ptr`, `line_offset`, `file_ref`,
-  `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
-  they still have production/source callers or platform/API boundary
-  use.
+- Unused overload/wrapper scan: `ov_field_name` in `rt-ov.cpp` has no
+  production caller and is listed as a Tier 0 deletion.  Keep
+  `nntp_init_error`, `string_case_compare`, `string_case_equal`,
+  `Subject` C-string accessors, `Tgetstr`, `line_ptr`, `line_offset`,
+  `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
+  `at_grey_space`; they still have production/source callers or
+  platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`, and
-  `SourceFile::open` already use modern path or view signatures.
-  Current filename or path candidates are URL output-file plumbing,
-  option-file loading, and option saving.  Score file shortcut strings,
+  `SourceFile::open`, and option-file loading already use modern path or
+  view signatures.  Current filename or path candidates are URL fetch
+  helper inputs and option saving.  Score file shortcut strings,
   universal-selector labels, shell commands, URLs, and expansion
   templates still mix path and non-path text, so only the path-only
   arguments are listed below.
-- Scorefile parsing has several newly exposed local helpers where the
-  caller already has a string or view.  These are leaf or Tier 1 slices:
-  remove `is_text_zero` and clean up related scorefile parsing helpers.
+- Scorefile parsing has no new leaf string slice in this pass.  Remaining
+  scorefile C-string work is tied to shared header buffers, regex
+  bytecode, or command text.
 - Author compression still has a string public result wrapped around
   mutable character-pointer helpers.  The public input can move to
   `std::string_view` first; the internal name/address helpers can then
@@ -554,10 +559,10 @@ production code.
 
 - Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 5, `strncmp` 18.
-- Search and length: `strchr` 67, `strrchr` 3, `strstr` 2,
-  `strlen` 56.
+- Search and length: `strchr` 64, `strrchr` 1, `strstr` 2,
+  `strlen` 53.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
-- C text I/O roots: `fgets` 25, `fputs` 200, `printf` 393,
+- C text I/O roots: `fgets` 25, `fputs` 198, `printf` 388,
   `fprintf` 48.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
@@ -584,20 +589,124 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-161 - Option Yes/No Helpers
+
+- Files: `libtrn/opt.cpp`.
+- Kind: local read-only C-string helper parameters.
+- Functions: `is_yes`, `is_no`.
+- Depends on: none.
+- Change: accept `std::string_view`, use `empty()` and `front()`, and
+  update the local callers that already have string storage.  Do not
+  refactor all of `apply_global_option` in the same slice.
+- Tests: existing option tests or build.
+
+#### CSTR-162 - Option Header List Split
+
+- Files: `libtrn/opt.cpp`.
+- Kind: mutable local string copy split with `strchr`.
+- Function: `set_header_list`.
+- Depends on: none.
+- Change: split the comma-delimited header list with string views over
+  the input, strip a leading `!` by view adjustment, and call
+  `set_header` directly.  Preserve the current empty-list behavior.
+- Tests: option/header-list tests; add focused coverage first if absent.
+
+#### CSTR-163 - Unused Overview Field Name Helper
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: unused `const char *` helper returning borrowed storage.
+- Function: `ov_field_name`.
+- Depends on: none.
+- Change: remove the declaration and definition; no production caller
+  remains.
+- Tests: build.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-164 - Termcap String Registration Views
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `libtrn/opt.cpp`, `tests/test_color.cpp`.
+- Kind: helper stores borrowed C-string parameters into owned strings.
+- Function: `add_tc_string`.
+- Depends on: none.
+- Change: accept `std::string_view` for capability and value, assign
+  into the terminal capability table, and pass INI setting views directly
+  from `opt.cpp`.
+- Tests: `test_color`.
+
+#### CSTR-165 - Termcap Color Capability Lookup View
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `libtrn/color.cpp`.
+- Kind: lookup input `const char *` compared against owned strings.
+- Function: `tc_color_capability`.
+- Depends on: none.
+- Change: accept `std::string_view` for the lookup key.  Keep the
+  pointer return for now because missing and empty capability strings may
+  need to remain distinct.
+- Tests: `test_color`.
+
+#### CSTR-166 - Quote String Owned Return
+
+- Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`,
+  `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`, `libtrn/sw.cpp`,
+  `tests/test_opt.cpp`.
+- Kind: borrowed static-buffer return from function-static
+  `std::string`.
+- Function: `quote_string`.
+- Depends on: none.
+- Change: return `std::string` and remove the function-static buffer.
+  Update immediate display, compare, and save callers.  Prefer fmt for
+  changed formatted output.
+- Tests: option-save tests; add quote-specific coverage first if needed.
+
+#### CSTR-167 - Mutable `in_string` Overload Removal
+
+- Files: `libtrn/bits.cpp`, `util/util2.cpp`,
+  `util/include/util/util2.h`.
+- Kind: mutable C-string overload kept alive by inactive legacy parsing.
+- Function: `valid_xref_site` under `ANCIENT_NEWS`, and
+  `in_string(char *, const char *, bool)`.
+- Depends on: none.
+- Change: parse the inactive `ANCIENT_NEWS` site suffix with
+  string-view/string logic, then remove the mutable overload.  Keep the
+  const pointer-return and bool string-view overloads.
+- Tests: build; add coverage only if `ANCIENT_NEWS` can be configured
+  easily.
+
+#### CSTR-168 - URL Fetch Helper Views
+
+- Files: `libtrn/url.cpp`, `tests/test_url.cpp`.
+- Kind: owned URL parts converted to C strings for internal helpers.
+- Functions: `fetch_http`, `fetch_ftp`, `url_get`.
+- Depends on: none.
+- Change: make the static fetch helpers accept `std::string_view` host
+  and path values.  Construct temporary strings only at legacy library
+  boundaries that require null termination.  Keep the output path as
+  `fs::path`.
+- Tests: `test_url`.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
-These slices replace one owner of string storage.  Finish these before
-broad global-buffer work.
+These slices replace one parser or local owner of string storage.  Finish
+them before broad global-buffer work and before removing helpers.
 
-### Tier 3 - Workflow Callers And Path Owners
+#### CSTR-169 - Color Attribute Value Parser
 
-These slices clean up workflows after their helper/storage dependencies
-are available.  Keep the listed order inside dependent families.
+- Files: `libtrn/color.cpp`, `libtrn/include/trn/color.h`,
+  `libtrn/opt.cpp`, `tests/test_color.cpp`.
+- Kind: caller-owned string mutated through a `char *` parser.
+- Function: `color_rc_attribute`.
+- Depends on: `CSTR-164` and `CSTR-165`.
+- Change: accept `std::string_view value`, split the attribute,
+  foreground, and background fields with views, and stop inserting
+  temporary NUL bytes into caller storage.  Use fmt for changed
+  diagnostics if the slice touches formatted output.
+- Tests: `test_color`; add malformed value cases first if missing.
 
 #### CSTR-155 - Article Search Pattern Split
 
@@ -643,6 +752,11 @@ are available.  Keep the listed order inside dependent families.
   label handling unchanged.
 - Tests: universal selector parser tests.
 
+### Tier 3 - Workflow Callers And Path Owners
+
+These slices clean up workflows after their helper/storage dependencies
+are available.  Keep the listed order inside dependent families.
+
 #### CSTR-149 - Option Save File Buffer
 
 - Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`,
@@ -650,7 +764,7 @@ are available.  Keep the listed order inside dependent families.
 - Kind: filename `const char *` and mutable file buffer split with
   `strchr` and `strncmp`.
 - Function: `save_options`.
-- Depends on: none.
+- Depends on: `CSTR-166`.
 - Change: accept a filesystem path or view at the public boundary, use
   string-view line iteration over the owned file contents, and retain the
   `.new` and `.old` path behavior.
