@@ -1339,35 +1339,26 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::
                        ? (g_header_type[i].flags | flag)
                        : (g_header_type[i].flags & ~flag));
     }
-    std::string buffer{str};
-    if (buffer.empty())
-    {
-        buffer = " ";
-    }
-    char *buff = buffer.data();
+    std::string_view remaining = str.empty() ? std::string_view{" "} : str;
     while (true)
     {
-        char *cp = std::strchr(buff, ',');
-        if (cp != nullptr)
-        {
-            *cp = '\0';
-        }
-        if (*buff == '!')
+        const std::size_t comma = remaining.find(',');
+        std::string_view  header = remaining.substr(0, comma);
+        if (!header.empty() && header.front() == '!')
         {
             setit = false;
-            buff++;
+            header.remove_prefix(1);
         }
         else
         {
             setit = true;
         }
-        set_header(buff,flag,setit);
-        if (!cp)
+        set_header(header, flag, setit);
+        if (comma == std::string_view::npos)
         {
             break;
         }
-        *cp = ',';
-        buff = cp+1;
+        remaining.remove_prefix(comma + 1);
     }
 }
 

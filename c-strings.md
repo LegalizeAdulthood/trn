@@ -476,10 +476,9 @@ generated files, or the vendored `vcpkg` tree.
   terminal pushback bytes, termcap storage, and regex bytecode arrays
   are non-string protocol or parser storage, not current local string
   slices.
-- Newly exposed leaf helpers include option yes/no tests, option header
-  comma splitting, option quoting, termcap string registration and
-  lookup, color-attribute parsing, URL fetch helper inputs, and an
-  unused overview-field helper.
+- Newly exposed leaf helpers include option quoting, termcap string
+  registration and lookup, color-attribute parsing, URL fetch helper
+  inputs, and an unused overview-field helper.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
@@ -559,7 +558,7 @@ production code.
 
 - Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 5, `strncmp` 18.
-- Search and length: `strchr` 64, `strrchr` 1, `strstr` 2,
+- Search and length: `strchr` 63, `strrchr` 1, `strstr` 2,
   `strlen` 53.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
 - C text I/O roots: `fgets` 25, `fputs` 198, `printf` 388,
@@ -588,17 +587,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-162 - Option Header List Split
-
-- Files: `libtrn/opt.cpp`.
-- Kind: mutable local string copy split with `strchr`.
-- Function: `set_header_list`.
-- Depends on: none.
-- Change: split the comma-delimited header list with string views over
-  the input, strip a leading `!` by view adjustment, and call
-  `set_header` directly.  Preserve the current empty-list behavior.
-- Tests: option/header-list tests; add focused coverage first if absent.
 
 #### CSTR-163 - Unused Overview Field Name Helper
 

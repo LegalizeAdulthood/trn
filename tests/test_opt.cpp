@@ -7,6 +7,7 @@
 
 #include <config/common.h>
 #include <config/env.h>
+#include <trn/head.h>
 #include <trn/OptionCatalog.h>
 #include <trn/rcstuff.h>
 #include <trn/respond.h>
@@ -23,6 +24,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace
 {
@@ -193,6 +195,68 @@ private:
     }};
 };
 
+class HeaderListOptionTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        for (int i = 0; i < HEAD_LAST; ++i)
+        {
+            m_old_header_type[static_cast<std::size_t>(i)] = g_header_type[i];
+        }
+        m_old_user_header_type = g_user_header_type;
+        for (int i = 0; i < 26; ++i)
+        {
+            m_old_user_header_type_index[static_cast<std::size_t>(i)] = g_user_header_type_index[i];
+        }
+        m_old_user_header_type_count = g_user_header_type_count;
+        m_old_user_header_type_max = g_user_header_type_max;
+
+        reset_user_header_type();
+        set_option(OI_HEADER_HIDING, "");
+        set_option(OI_HEADER_MAGIC, "");
+    }
+
+    void TearDown() override
+    {
+        for (int i = 0; i < HEAD_LAST; ++i)
+        {
+            g_header_type[i] = m_old_header_type[static_cast<std::size_t>(i)];
+        }
+        g_user_header_type = m_old_user_header_type;
+        for (int i = 0; i < 26; ++i)
+        {
+            g_user_header_type_index[i] = m_old_user_header_type_index[static_cast<std::size_t>(i)];
+        }
+        g_user_header_type_count = m_old_user_header_type_count;
+        g_user_header_type_max = m_old_user_header_type_max;
+    }
+
+    static bool has_flag(HeaderLineType header, HeaderTypeFlags flag)
+    {
+        return (g_header_type[header].flags & flag) != HT_NONE;
+    }
+
+private:
+    static void reset_user_header_type()
+    {
+        g_user_header_type_max = 10;
+        g_user_header_type.assign(static_cast<std::size_t>(g_user_header_type_max), UserHeaderType{});
+        g_user_header_type_count = 1;
+        g_user_header_type[0].name = "*";
+        for (short &index : g_user_header_type_index)
+        {
+            index = 0;
+        }
+    }
+
+    std::array<HeaderType, HEAD_LAST> m_old_header_type;
+    std::array<short, 26>             m_old_user_header_type_index;
+    std::vector<UserHeaderType>       m_old_user_header_type;
+    int                               m_old_user_header_type_count{};
+    int                               m_old_user_header_type_max{};
+};
+
 } // namespace
 
 TEST_F(CwdCheckTest, defaultsEmptySaveDirectoryToHomeNews)
@@ -333,4 +397,33 @@ TEST_F(SelectorCommandOptionTest, oneCharacterCommandOptionsPreservePageCommand)
     EXPECT_EQ("xb", option_value(OI_NEWSGROUP_SEL_CMDS));
     EXPECT_EQ("xb", option_value(OI_NEWS_SEL_CMDS));
     EXPECT_EQ("xb", option_value(OI_OPTION_SEL_CMDS));
+}
+
+TEST_F(HeaderListOptionTest, hidingOptionParsesCommaSeparatedOverrides)
+{
+    set_option(OI_HEADER_HIDING, "subject,!xref,x-widget");
+
+    EXPECT_TRUE(has_flag(SUBJ_LINE, HT_HIDE));
+    EXPECT_FALSE(has_flag(XREF_LINE, HT_HIDE));
+    EXPECT_EQ("subject,!xref,x-widget", option_value(OI_HEADER_HIDING));
+}
+
+TEST_F(HeaderListOptionTest, magicOptionParsesCommaSeparatedOverrides)
+{
+    set_option(OI_HEADER_MAGIC, "!date,from");
+
+    EXPECT_FALSE(has_flag(DATE_LINE, HT_MAGIC));
+    EXPECT_TRUE(has_flag(FROM_LINE, HT_MAGIC));
+    EXPECT_EQ("!date,from", option_value(OI_HEADER_MAGIC));
+}
+
+TEST_F(HeaderListOptionTest, emptyHeaderListRestoresDefaults)
+{
+    set_option(OI_HEADER_MAGIC, "!date,from");
+
+    set_option(OI_HEADER_MAGIC, "");
+
+    EXPECT_TRUE(has_flag(DATE_LINE, HT_MAGIC));
+    EXPECT_FALSE(has_flag(FROM_LINE, HT_MAGIC));
+    EXPECT_EQ("", option_value(OI_HEADER_MAGIC));
 }
