@@ -47,25 +47,6 @@ char *safe_copy(char *to, const char *from, int len)
     return to;
 }
 
-// copy a string up to some (non-backslashed) delimiter, if any
-const char *copy_till(char *to, const char *from, int delim)
-{
-    while (*from)
-    {
-        if (*from == '\\' && from[1] == delim)
-        {
-            from++;
-        }
-        else if (*from == delim)
-        {
-            break;
-        }
-        *to++ = *from++;
-    }
-    *to = '\0';
-    return from;
-}
-
 // expand filename via %, ~, and $ interpretation
 // Note that there is a 1-deep cache of ~name interpretation
 

@@ -454,8 +454,6 @@ generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in article and NNTP buffer owner
   clusters.  The call sites are inventoried below.
-- `copy_till`: no production call sites remain.  Remove the helper in
-  `CSTR-160`.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
   overload is already used by production callers that have strings or
   views.  The const pointer-return overload is now only exercised by
@@ -535,14 +533,6 @@ until the owning storage or API changes.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
 
-## Current `copy_till` Inventory
-
-The current tree has one helper declaration, one helper definition, and
-no production call sites.
-
-- `util/include/util/util2.h`: helper declaration.
-- `util/util2.cpp`: helper implementation.
-
 ## Current `in_string` Inventory
 
 The current tree has the string-view bool overload, the const
@@ -591,16 +581,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-160 - Copy Till Helper Removal
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`.
-- Kind: obsolete bounded copy-and-scan helper.
-- Function: `copy_till`.
-- Depends on: none.
-- Change: remove the helper declaration and implementation now that
-  every caller has moved to string-view-based parsing.
-- Tests: build.
 
 #### CSTR-161 - In String Pointer Overload Removal
 
