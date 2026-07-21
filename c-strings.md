@@ -454,7 +454,7 @@ generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in article and NNTP buffer owner
   clusters.  The call sites are inventoried below.
-- `copy_till`: four production call sites remain.  They are tied to
+- `copy_till`: three production call sites remain.  They are tied to
   command parsing and universal selector line parsing.  Convert the
   callers first, then remove the helper.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
@@ -532,10 +532,8 @@ until the owning storage or API changes.
 ## Current `copy_till` Inventory
 
 The current tree has one helper declaration, one helper definition, and
-four production call sites.
+three production call sites.
 
-- `libtrn/artsrch.cpp`, `art_search`: copies the typed article search
-  pattern into `g_buf` and returns a pointer to modifiers.
 - `libtrn/ngsrch.cpp`, `newsgroup_search`: copies the typed newsgroup
   search pattern into `g_buf` and returns a pointer to modifiers.
 - `libtrn/ngstuff.cpp`, command execution loop: copies one command into
@@ -592,17 +590,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-155 - Article Search Pattern Split
-
-- Files: `libtrn/artsrch.cpp`.
-- Kind: `copy_till` into `g_buf` and modifier pointer traversal.
-- Function: `art_search`.
-- Depends on: none.
-- Change: split the pattern and modifier tail with string views.  Keep
-  assignment to persistent search strings explicit, and do not change
-  command execution order.
-- Tests: article-search tests; add coverage first if absent.
 
 #### CSTR-156 - Newsgroup Search Pattern Split
 
@@ -790,7 +777,7 @@ owned strings or owner-specific storage.
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
 - Kind: obsolete bounded copy-and-scan helper.
 - Function: `copy_till`.
-- Depends on: `CSTR-155`, `CSTR-156`, `CSTR-157`, and `CSTR-158`.
+- Depends on: `CSTR-156`, `CSTR-157`, and `CSTR-158`.
 - Change: remove the helper once every caller has moved to
   string-view-based parsing.
 - Tests: build.

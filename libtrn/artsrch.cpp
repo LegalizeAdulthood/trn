@@ -21,10 +21,10 @@
 #include <trn/search.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
-#include <util/util2.h>
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
@@ -55,12 +55,13 @@ void art_search_init()
 // if patbuf != g_buf, get_cmd must be set to false!!!
 ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 {
-    char* pattern;                      // unparsed pattern
-    char cmd_chr = *pat_buf;              // what kind of search?
+    const char* pattern;                 // unparsed pattern
+    char cmd_chr = *pat_buf;             // what kind of search?
     bool backward = cmd_chr == '?' || cmd_chr == Ctl('p');
                                         // direction of search
-    CompiledRegex* compex;                     // which compiled expression
-    std::string     cmd_lst;                    // list of commands to do
+    CompiledRegex* compex;               // which compiled expression
+    std::string     cmd_lst;             // list of commands to do
+    std::string     pattern_text;
     ArtSearchResult ret = SRCH_NOT_FOUND; // assume no commands
     int salt_away = 0;                   // store in KILL file?
     ArtScope how_much;                  // search scope: subj/from/Hdr/head/art
@@ -73,7 +74,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     ArticleNum search_first;
 
     g_int_count = 0;
-    if (cmd_chr == '/' || cmd_chr == '?')         // normal search?
+    if (cmd_chr == '/' || cmd_chr == '?') // normal search?
     {
         if (get_cmd && g_buf == pat_buf)
         {
@@ -95,99 +96,135 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             search_header = g_art_srch_hdr;
             do_read = g_art_do_read;
         }
-        const char *s = copy_till(g_buf, pat_buf + 1, cmd_chr); // ok to cpy g_buf+1 to g_buf
-        pattern = g_buf;
-        if (*pattern)
+        const std::string_view search_text{pat_buf + 1};
+        pattern_text.reserve(search_text.size());
+        std::size_t tail_start{};
+        while (tail_start < search_text.size())
         {
-            g_last_pat = pattern;
-        }
-        if (*s)                         // modifiers or commands?
-        {
-            while (*++s)
+            if (search_text[tail_start] == '\\' && tail_start + 1 < search_text.size() &&
+                search_text[tail_start + 1] == cmd_chr)
             {
-                switch (*s)
+                ++tail_start;
+            }
+            else if (search_text[tail_start] == cmd_chr)
+            {
+                break;
+            }
+            pattern_text += search_text[tail_start];
+            ++tail_start;
+        }
+        pattern = pattern_text.c_str();
+        if (!pattern_text.empty())
+        {
+            g_last_pat = pattern_text;
+        }
+        std::string_view modifier_tail = search_text.substr(tail_start);
+        if (!modifier_tail.empty()) // modifiers or commands?
+        {
+            modifier_tail.remove_prefix(1);
+            std::size_t modifier_pos{};
+            bool        done_modifiers{};
+            while (modifier_pos < modifier_tail.size() && !done_modifiers)
+            {
+                switch (modifier_tail[modifier_pos])
                 {
-                case 'f':               // scan the From line
+                case 'f': // scan the From line
                     how_much = ARTSCOPE_FROM;
+                    ++modifier_pos;
                     break;
 
-                case 'H':               // scan a specific header
+                case 'H': // scan a specific header
                     how_much = ARTSCOPE_ONE_HDR;
                     {
                         std::string header_name;
-                        for (s++; *s; s++)
+                        ++modifier_pos;
+                        while (modifier_pos < modifier_tail.size())
                         {
-                            if (*s == '\\' && s[1] == ':')
+                            if (modifier_tail[modifier_pos] == '\\' && modifier_pos + 1 < modifier_tail.size() &&
+                                modifier_tail[modifier_pos + 1] == ':')
                             {
-                                s++;
+                                ++modifier_pos;
                             }
-                            else if (*s == ':')
+                            else if (modifier_tail[modifier_pos] == ':')
                             {
                                 break;
                             }
-                            header_name += *s;
+                            header_name += modifier_tail[modifier_pos];
+                            ++modifier_pos;
                         }
-                        search_header = get_header_num(header_name.c_str());
+                        search_header = get_header_num(header_name);
                     }
-                    goto loop_break;
+                    done_modifiers = true;
+                    break;
 
-                case 'h':               // scan header
+                case 'h': // scan header
                     how_much = ARTSCOPE_HEAD;
+                    ++modifier_pos;
                     break;
 
-                case 'b':               // scan body sans signature
+                case 'b': // scan body sans signature
                     how_much = ARTSCOPE_BODY_NO_SIG;
+                    ++modifier_pos;
                     break;
 
-                case 'B':               // scan body
+                case 'B': // scan body
                     how_much = ARTSCOPE_BODY;
+                    ++modifier_pos;
                     break;
 
-                case 'a':               // scan article
+                case 'a': // scan article
                     how_much = ARTSCOPE_ARTICLE;
+                    ++modifier_pos;
                     break;
 
-                case 't':               // start from the top
+                case 't': // start from the top
                     top_start = true;
+                    ++modifier_pos;
                     break;
 
-                case 'r':               // scan read articles
+                case 'r': // scan read articles
                     do_read = true;
+                    ++modifier_pos;
                     break;
 
-                case 'K':               // put into KILL file
+                case 'K': // put into KILL file
                     salt_away = 1;
+                    ++modifier_pos;
                     break;
 
-                case 'c':               // make search case sensitive
+                case 'c': // make search case sensitive
                     fold_case = false;
+                    ++modifier_pos;
                     break;
 
-                case 'I':               // ignore the kill file thru line
+                case 'I': // ignore the kill file thru line
                     ignore_thru = 1;
+                    ++modifier_pos;
                     break;
 
-                case 'N':               // override ignore if -k was used
+                case 'N': // override ignore if -k was used
                     ignore_thru = -1;
+                    ++modifier_pos;
                     break;
 
                 default:
-                    goto loop_break;
+                    done_modifiers = true;
+                    break;
                 }
             }
-          loop_break:;
+            modifier_tail.remove_prefix(modifier_pos);
         }
-        while (std::isspace(*s) || *s == ':')
+        const std::string_view::const_iterator command_begin =
+            std::find_if_not(modifier_tail.begin(), modifier_tail.end(),
+                             [](char ch) { return std::isspace(static_cast<unsigned char>(ch)) || ch == ':'; });
+        modifier_tail.remove_prefix(static_cast<std::size_t>(command_begin - modifier_tail.begin()));
+        if (!modifier_tail.empty())
         {
-            s++;
-        }
-        if (*s)
-        {
-            if (*s == 'm')
+            if (modifier_tail.front() == 'm')
             {
                 do_read = true;
             }
-            cmd_lst = s;
+            cmd_lst.assign(modifier_tail.data(), modifier_tail.size());
             if (cmd_lst[0] == 'k') // grandfather clause
             {
                 cmd_lst[0] = 'j';
@@ -215,20 +252,21 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             ret = SRCH_SUBJ_DONE;
         }
         compex = &s_sub_compex;
-        pattern = pat_buf + 1;
+        char *generated_pattern = pat_buf + 1;
+        pattern = generated_pattern;
         const std::size_t pattern_capacity = static_cast<std::size_t>(pat_buf_siz - 2);
         char             *h;
         if (how_much == ARTSCOPE_SUBJECT)
         {
             constexpr std::string_view prefix{": *"};
-            *fmt::format_to_n(pattern, pattern_capacity, "{}{}", prefix, do_interp("%\\s")).out = '\0';
-            h = pattern + prefix.size();
+            *fmt::format_to_n(generated_pattern, pattern_capacity, "{}{}", prefix, do_interp("%\\s")).out = '\0';
+            h = generated_pattern + prefix.size();
         }
         else
         {
-            h = pattern;
+            h = generated_pattern;
             // TODO: if using thread files, make this "%\\)f"
-            *fmt::format_to_n(pattern, pattern_capacity, "{}", do_interp("%\\>f")).out = '\0';
+            *fmt::format_to_n(generated_pattern, pattern_capacity, "{}", do_interp("%\\>f")).out = '\0';
         }
         if (cmd_chr == 'k' || cmd_chr == 'K' || cmd_chr == ',' //
             || cmd_chr == '+' || cmd_chr == '.' || cmd_chr == 's')
