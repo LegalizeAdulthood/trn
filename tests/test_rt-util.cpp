@@ -242,6 +242,11 @@ TEST_F(CompressFromTest, padsShortAddress)
     EXPECT_EQ(padded("r@example.com", 16), compress_from("r@example.com", 16));
 }
 
+TEST_F(CompressFromTest, usesNoNameForEmptyInput)
+{
+    EXPECT_EQ(std::string{"NO NAME"} + std::string(8, ' '), compress_from("", 8));
+}
+
 TEST_F(CompressFromTest, truncatesPlainAddressFromStart)
 {
     EXPECT_EQ("really.lon", compress_from("really.long.local@example.com", 10));

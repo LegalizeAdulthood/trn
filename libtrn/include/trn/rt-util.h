@@ -29,7 +29,7 @@ enum SpinMode
 
 char *extract_name(char *name);
 std::string compress_name(std::string_view name, int max);
-std::string compress_from(const char *from, int size);
+std::string compress_from(std::string_view from, int size);
 bool        strip_one_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject);

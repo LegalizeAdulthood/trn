@@ -591,19 +591,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-150 - Author From Compression Input View
-
-- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
-  `libtrn/rt-page.cpp`, `libtrn/sadesc.cpp`, `libtrn/univ.cpp`.
-- Kind: public helper takes `const char *` while returning an owned
-  `std::string`.
-- Function: `compress_from`.
-- Depends on: none.
-- Change: accept `std::string_view`; use an empty view where callers
-  currently pass `nullptr`.  Preserve the current "NO NAME" fallback for
-  empty input.
-- Tests: `test_rt-util`.
-
 #### CSTR-154 - MIME Command Interpolation View
 
 - Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.

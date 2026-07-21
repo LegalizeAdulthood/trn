@@ -595,14 +595,14 @@ static char *compress_address(char *name, int max)
 // Fit the author name in <max> chars.  Uses the comment portion if present
 // and pads with spaces.
 //
-std::string compress_from(const char *from, int size)
+std::string compress_from(std::string_view from, int size)
 {
     if (size <= 0)
     {
         return {};
     }
 
-    std::string buffer = str_char_subst(from ? from : "", *g_char_subst);
+    std::string buffer = str_char_subst(from, *g_char_subst);
     char       *s = extract_name(buffer.data());
     std::string text;
     if (s != nullptr)

@@ -1330,7 +1330,7 @@ void sort_univ()
 std::string UniversalItem::univ_article_desc() const
 {
     const UniversalVirtualArticle &art = article();
-    std::string from = art.from.empty() ? "<No Author> " : compress_from(art.from.c_str(), 16);
+    std::string from = art.from.empty() ? "<No Author> " : compress_from(art.from, 16);
     if (from.size() > 16)
     {
         from.resize(16);
