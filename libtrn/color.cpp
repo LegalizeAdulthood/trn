@@ -214,7 +214,7 @@ void color_rc_attribute(std::string_view object, char *value)
     else
     {
         const std::string capability = fmt::format("fg {}", s);
-        s_objects[i].fg = tc_color_capability(capability.c_str());
+        s_objects[i].fg = tc_color_capability(capability);
         if (s_objects[i].fg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
@@ -252,7 +252,7 @@ void color_rc_attribute(std::string_view object, char *value)
     else
     {
         const std::string capability = fmt::format("bg {}", s);
-        s_objects[i].bg = tc_color_capability(capability.c_str());
+        s_objects[i].bg = tc_color_capability(capability);
         if (s_objects[i].bg.empty())
         {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",

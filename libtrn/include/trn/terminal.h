@@ -219,7 +219,7 @@ void  xmouse_off();
 void  draw_mouse_bar(int limit, bool restore_cursor);
 bool  check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 void  add_tc_string(std::string_view capability, std::string_view value);
-const char *tc_color_capability(const char *capability);
+const char *tc_color_capability(std::string_view capability);
 std::string tgoto_string(const char *str, int x, int y);
 #ifdef MSDOS
 int   tputs(const char *str, int num, int (*func)(int));

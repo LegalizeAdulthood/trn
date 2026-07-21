@@ -476,8 +476,8 @@ generated files, or the vendored `vcpkg` tree.
   terminal pushback bytes, termcap storage, and regex bytecode arrays
   are non-string protocol or parser storage, not current local string
   slices.
-- Newly exposed leaf helpers include option quoting, termcap lookup,
-  color-attribute parsing, and URL fetch helper inputs.
+- Newly exposed leaf helpers include option quoting, color-attribute
+  parsing, and URL fetch helper inputs.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
@@ -591,18 +591,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-165 - Termcap Color Capability Lookup View
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  `libtrn/color.cpp`.
-- Kind: lookup input `const char *` compared against owned strings.
-- Function: `tc_color_capability`.
-- Depends on: none.
-- Change: accept `std::string_view` for the lookup key.  Keep the
-  pointer return for now because missing and empty capability strings may
-  need to remain distinct.
-- Tests: `test_color`.
-
 #### CSTR-166 - Quote String Owned Return
 
 - Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`,
@@ -654,7 +642,7 @@ them before broad global-buffer work and before removing helpers.
   `libtrn/opt.cpp`, `tests/test_color.cpp`.
 - Kind: caller-owned string mutated through a `char *` parser.
 - Function: `color_rc_attribute`.
-- Depends on: `CSTR-165`.
+- Depends on: none.
 - Change: accept `std::string_view value`, split the attribute,
   foreground, and background fields with views, and stop inserting
   temporary NUL bytes into caller storage.  Use fmt for changed

@@ -2684,7 +2684,7 @@ void add_tc_string(std::string_view capability, std::string_view value)
 }
 
 // Return the named termcap color capability's string.
-const char *tc_color_capability(const char *capability)
+const char *tc_color_capability(std::string_view capability)
 {
     for (int c = 0; c < s_tc_string_cnt; c++)
     {
