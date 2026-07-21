@@ -2657,7 +2657,7 @@ struct ColorCapability
 static ColorCapability s_tc_strings[TC_STRINGS];
 
 // Parse a line from the [termcap] section of trnrc.
-void add_tc_string(const char *capability, const char *value)
+void add_tc_string(std::string_view capability, std::string_view value)
 {
     int i;
 

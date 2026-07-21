@@ -224,9 +224,7 @@ static void opt_file(const fs::path &filename, bool bleat)
             {
                 for (const IniSetting setting : section)
                 {
-                    const std::string capability{setting.name()};
-                    const std::string value = setting.value();
-                    add_tc_string(capability.c_str(), value.c_str());
+                    add_tc_string(setting.name(), setting.value());
                 }
             }
             else if (section_name == "attribute")
