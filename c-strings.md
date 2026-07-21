@@ -489,11 +489,11 @@ generated files, or the vendored `vcpkg` tree.
   use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`, and
   `SourceFile::open` already use modern path or view signatures.
-  Current filename or path candidates are `mime_read_mimecap`, URL
-  output-file plumbing, option-file loading, and option saving.  Score
-  file shortcut strings, universal-selector labels, shell commands,
-  URLs, and expansion templates still mix path and non-path text, so
-  only the path-only arguments are listed below.
+  Current filename or path candidates are URL output-file plumbing,
+  option-file loading, and option saving.  Score file shortcut strings,
+  universal-selector labels, shell commands, URLs, and expansion
+  templates still mix path and non-path text, so only the path-only
+  arguments are listed below.
 - Scorefile parsing has several newly exposed local helpers where the
   caller already has a string or view.  These are leaf or Tier 1 slices:
   remove `is_text_zero` and clean up related scorefile parsing helpers.
@@ -591,17 +591,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-146 - Mimecap Filename View
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
-- Kind: filename parameter and temporary `.c_str()` at the caller.
-- Function: `mime_read_mimecap`.
-- Depends on: none.
-- Change: accept `std::string_view`, pass mimecap list items directly
-  from `mime_init`, and leave filesystem expansion inside
-  `mime_read_mimecap`.
-- Tests: `test_mime`.
-
 #### CSTR-147 - URL Output Path API
 
 - Files: `libtrn/url.cpp`, `libtrn/include/trn/url.h`,
@@ -666,7 +655,7 @@ broad global-buffer work.
 - Kind: in-place mimecap parser using `char **`, `strchr`, and
   `copy_till`.
 - Functions: `mime_read_mimecap`, `mime_parse_entry_arg`.
-- Depends on: `CSTR-146`.
+- Depends on: none.
 - Change: parse each mimecap entry with string views over the owned
   entry line, return owned strings for values stored in `MimeCapEntry`,
   and strip quoted parameter values without mutating caller buffers.

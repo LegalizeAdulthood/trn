@@ -111,8 +111,7 @@ void mime_init()
         const std::string_view item = mcname_list.substr(0, next);
         if (!item.empty())
         {
-            const std::string item_text{item};
-            mime_read_mimecap(item_text.c_str());
+            mime_read_mimecap(item);
         }
         if (next == std::string_view::npos)
         {
@@ -127,7 +126,7 @@ void mime_final()
     s_mimecap_entries.clear();
 }
 
-void mime_read_mimecap(const char *mcname)
+void mime_read_mimecap(std::string_view mcname)
 {
     std::ifstream input{file_exp(mcname)};
     if (!input)
