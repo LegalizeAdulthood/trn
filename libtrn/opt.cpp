@@ -68,7 +68,7 @@
 
 namespace fs = std::filesystem;
 
-static void opt_file(const char *filename, bool bleat);
+static void opt_file(const fs::path &filename, bool bleat);
 
 CompiledRegex g_opt_compex;
 std::string   g_ini_file;
@@ -107,7 +107,7 @@ void opt_init(int argc, char *argv[], char *tcbuf)
         g_check_flag = true; // so we can optimize for -c
     }
     const std::string global_init_file = do_interp(GLOBAL_INIT);
-    opt_file(global_init_file.c_str(), false);
+    opt_file(global_init_file, false);
     *tcbuf = '\0';
 
     const OptionCatalog catalog;
@@ -133,7 +133,7 @@ void opt_init(int argc, char *argv[], char *tcbuf)
     error.clear();
     if (fs::exists(g_ini_file, error))
     {
-        opt_file(g_ini_file.c_str(), true);
+        opt_file(g_ini_file, true);
     }
     std::string switches = g_use_threads ? get_env_var("TRNINIT") : std::string{};
     if (switches.empty())
@@ -189,13 +189,13 @@ void opt_final()
     g_sel_grp_display_mode_index = 0;
 }
 
-static void opt_file(const char *filename, bool bleat)
+static void opt_file(const fs::path &filename, bool bleat)
 {
     std::string filebuf = file_contents(filename);
 
     if (!filebuf.empty())
     {
-        IniDocument document{std::move(filebuf), filename};
+        IniDocument document{std::move(filebuf)};
         for (const IniSection section : document)
         {
             if (section.has_condition())
@@ -241,7 +241,7 @@ static void opt_file(const char *filename, bool bleat)
     }
     else if (bleat && !fs::exists(filename))
     {
-        fmt::print("Can't open {}\n", filename);
+        fmt::print("Can't open {}\n", filename.string());
         // term_down(1);
     }
 }

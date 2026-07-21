@@ -594,17 +594,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-148 - Option File Path API
-
-- Files: `libtrn/opt.cpp`.
-- Kind: static filename helper passed through `.c_str()`.
-- Function: `opt_file`.
-- Depends on: none.
-- Change: pass the already-owned option filename directly as a view or
-  path object, use `file_contents`, and avoid introducing string-form
-  temporaries whose only purpose is `.c_str()`.
-- Tests: `test_opt` if option loading coverage exists; otherwise build.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
@@ -661,7 +650,7 @@ are available.  Keep the listed order inside dependent families.
 - Kind: filename `const char *` and mutable file buffer split with
   `strchr` and `strncmp`.
 - Function: `save_options`.
-- Depends on: `CSTR-148`.
+- Depends on: none.
 - Change: accept a filesystem path or view at the public boundary, use
   string-view line iteration over the owned file contents, and retain the
   `.new` and `.old` path behavior.
