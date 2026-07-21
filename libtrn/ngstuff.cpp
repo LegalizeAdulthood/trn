@@ -699,15 +699,35 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else if (std::strchr("!&sSwWae|", ch))
         {
-            if (g_one_command)
+            std::string_view command_text{cmdlst};
+            std::string      command_storage;
+            if (!g_one_command)
             {
-                std::strcpy(g_buf, cmdlst);
+                command_storage.reserve(command_text.size());
+                std::size_t command_size{};
+                while (command_size < command_text.size())
+                {
+                    if (command_text[command_size] == '\\' && command_size + 1 < command_text.size() &&
+                        command_text[command_size + 1] == ':')
+                    {
+                        ++command_size;
+                    }
+                    else if (command_text[command_size] == ':')
+                    {
+                        break;
+                    }
+                    command_storage += command_text[command_size];
+                    ++command_size;
+                }
+                command_text = command_storage;
+                if (command_size != 0)
+                {
+                    cmdlst += command_size - 1;
+                }
             }
-            else
-            {
-                char *cmd_start = cmdlst;
-                cmdlst = cmd_start + (copy_till(g_buf, cmd_start, ':') - cmd_start) - 1;
-            }
+            const std::size_t command_size = std::min(command_text.size(), static_cast<std::size_t>(LINE_BUF_LEN));
+            command_text.copy(g_buf, command_size);
+            g_buf[command_size] = '\0';
             // we now have the command in g_buf
             if (ch == '!')
             {

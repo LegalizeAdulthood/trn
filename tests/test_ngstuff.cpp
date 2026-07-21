@@ -168,6 +168,8 @@ protected:
         m_old_one_command = g_one_command;
         m_old_perform_count = g_perform_count;
         m_old_msg = g_msg;
+        std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
+        drain_macro_buffer();
 
         g_one_command = false;
         g_perform_count = 0;
@@ -178,11 +180,14 @@ protected:
         g_one_command = m_old_one_command;
         g_perform_count = m_old_perform_count;
         g_msg = m_old_msg;
+        drain_macro_buffer();
+        std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
     }
 
-    std::string m_old_msg;
-    bool        m_old_one_command{};
-    int         m_old_perform_count{};
+    std::string                        m_old_msg;
+    std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
+    bool                               m_old_one_command{};
+    int                                m_old_perform_count{};
 };
 
 } // namespace
@@ -261,4 +266,16 @@ TEST_F(PerformExpansionTest, expandsCommandBeforeContinuingAfterColon)
 
     EXPECT_EQ(-1, result);
     EXPECT_EQ("Unknown command: Z", g_msg);
+}
+
+TEST_F(PerformExpansionTest, splitsSwitcherooCommandBeforeContinuingAfterColon)
+{
+    const int result = perform("&&~ \\::Z", 0);
+
+    EXPECT_EQ(-1, result);
+    EXPECT_EQ("Unknown command: Z", g_msg);
+    push_char('~');
+    get_cmd(g_buf);
+    EXPECT_EQ(':', g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }

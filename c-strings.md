@@ -454,9 +454,9 @@ generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in article and NNTP buffer owner
   clusters.  The call sites are inventoried below.
-- `copy_till`: two production call sites remain.  They are tied to
-  command parsing and universal selector line parsing.  Convert the
-  callers first, then remove the helper.
+- `copy_till`: one production call site remains.  It is tied to
+  universal selector line parsing.  Convert the caller first, then remove
+  the helper.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
   overload is already used by callers that have strings or views.  The
   const pointer-return overload remains for callers that need a match
@@ -532,14 +532,12 @@ until the owning storage or API changes.
 ## Current `copy_till` Inventory
 
 The current tree has one helper declaration, one helper definition, and
-two production call sites.
+one production call site.
 
-- `libtrn/ngstuff.cpp`, command execution loop: copies one command into
-  `g_buf` when a command list is colon-delimited.
 - `libtrn/univ.cpp`, `univ_do_line`: copies a quoted description while
   mutating the universal selector input line.
 - `util/util2.cpp`: helper implementation.  Remove it only after the
-  callers above are converted.
+  caller above is converted.
 
 ## Current C String Function Inventory
 
@@ -588,17 +586,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-157 - Newsgroup Command-list Split
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: `copy_till` into `g_buf` for colon-delimited commands.
-- Function: command execution loop in `ngstuff`.
-- Depends on: none.
-- Change: use views to select the next command, copy into `g_buf` only
-  if a downstream command still requires the global buffer, and preserve
-  `g_one_command` behavior.
-- Tests: newsgroup command tests; add focused coverage first if absent.
 
 #### CSTR-158 - Universal Description Split
 
@@ -765,7 +752,7 @@ owned strings or owner-specific storage.
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
 - Kind: obsolete bounded copy-and-scan helper.
 - Function: `copy_till`.
-- Depends on: `CSTR-157` and `CSTR-158`.
+- Depends on: `CSTR-158`.
 - Change: remove the helper once every caller has moved to
   string-view-based parsing.
 - Tests: build.
