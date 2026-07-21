@@ -454,9 +454,7 @@ generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in article and NNTP buffer owner
   clusters.  The call sites are inventoried below.
-- `copy_till`: one production call site remains.  It is tied to
-  universal selector line parsing.  Convert the caller first, then remove
-  the helper.
+- `copy_till`: no production call sites remain.  Remove the helper.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
   overload is already used by callers that have strings or views.  The
   const pointer-return overload remains for callers that need a match
@@ -532,12 +530,10 @@ until the owning storage or API changes.
 ## Current `copy_till` Inventory
 
 The current tree has one helper declaration, one helper definition, and
-one production call site.
+no production call sites.
 
-- `libtrn/univ.cpp`, `univ_do_line`: copies a quoted description while
-  mutating the universal selector input line.
-- `util/util2.cpp`: helper implementation.  Remove it only after the
-  caller above is converted.
+- `util/include/util/util2.h`: helper declaration.
+- `util/util2.cpp`: helper implementation.
 
 ## Current C String Function Inventory
 
@@ -546,7 +542,7 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 5, `strncmp` 18.
+- Comparison: `strcmp` 4, `strncmp` 18.
 - Search and length: `strchr` 62, `strrchr` 1, `strstr` 2,
   `strlen` 53.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
@@ -586,18 +582,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-158 - Universal Description Split
-
-- Files: `libtrn/univ.cpp`.
-- Kind: `copy_till`, `strcmp`, and line-buffer mutation while parsing a
-  quoted universal selector description.
-- Function: `univ_do_line`.
-- Depends on: none.
-- Change: parse the optional quoted description with string views over
-  the line, store the description in `s_univ_line_desc`, and keep empty
-  label handling unchanged.
-- Tests: universal selector parser tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -752,7 +736,7 @@ owned strings or owner-specific storage.
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
 - Kind: obsolete bounded copy-and-scan helper.
 - Function: `copy_till`.
-- Depends on: `CSTR-158`.
+- Depends on: none.
 - Change: remove the helper once every caller has moved to
   string-view-based parsing.
 - Tests: build.

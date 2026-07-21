@@ -227,6 +227,26 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
     EXPECT_EQ("alt.test !alt.noise", item->group_mask().mask_list);
 }
 
+TEST_F(UnivTest, fileLoadAllowsEscapedQuoteInDescription)
+{
+    const fs::path  temp_dir = fs::path{TRN_TEST_TMP_DIR} / "UnivTest" / "fileLoadAllowsEscapedQuoteInDescription";
+    std::error_code error;
+    fs::remove_all(temp_dir, error);
+    fs::create_directories(temp_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    const fs::path selector_file = temp_dir / "selector.univ";
+    std::ofstream{selector_file} << "\"Filter \\\"Name\\\"\" alt.test !alt.noise\n";
+
+    ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", nullptr));
+    UniversalItem *item = univ_first_item();
+    ASSERT_NE(nullptr, item);
+    EXPECT_TRUE(std::holds_alternative<UniversalGroupMaskData>(item->m_data));
+    EXPECT_EQ("Filter \"Name\"", item->m_desc);
+    EXPECT_EQ("Filter \"Name\"", item->group_mask().title);
+    EXPECT_EQ("alt.test !alt.noise", item->group_mask().mask_list);
+    fs::remove_all(temp_dir, error);
+}
+
 TEST_F(UnivTest, fileLoadCreatesTextFileItem)
 {
     const fs::path selector_path{TRN_TEST_UNIV_TEXT_FILE};

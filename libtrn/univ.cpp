@@ -817,25 +817,40 @@ static bool univ_do_line(char *line)
     }
     if (!s_univ_begin_label.empty())
     {
-        if (*s == '>' && s[1] == ':' && !std::strcmp(s + 2, s_univ_begin_label.c_str()))
+        if (*s == '>' && s[1] == ':' && std::string_view{s + 2} == s_univ_begin_label)
         {
             s_univ_begin_label.clear(); // interpret starting at next line
         }
         return true;
     }
     s_univ_line_desc.clear();
-    if (*s == '"')      // description name
+    if (*s == '"') // description name
     {
-        char *desc = s + 1;
-        p = desc + (copy_till(s, desc, '"') - desc);
-        if (!*p)
+        std::string_view description_text{s + 1};
+        std::string      description;
+        description.reserve(description_text.size());
+        std::size_t description_size{};
+        while (description_size < description_text.size())
         {
-            std::printf("univ: unmatched quote in string:\n\"%s\"\n", s);
+            if (description_text[description_size] == '\\' && description_size + 1 < description_text.size() &&
+                description_text[description_size + 1] == '"')
+            {
+                ++description_size;
+            }
+            else if (description_text[description_size] == '"')
+            {
+                break;
+            }
+            description += description_text[description_size];
+            ++description_size;
+        }
+        if (description_size == description_text.size())
+        {
+            std::printf("univ: unmatched quote in string:\n\"%s\"\n", description.c_str());
             return true;
         }
-        *p = '\0';
-        s_univ_line_desc = s;
-        s = p+1;
+        s_univ_line_desc = description;
+        s += description_size + 2;
     }
     s = skip_space(s);
     const char *line_desc = s_univ_line_desc.empty() ? nullptr : s_univ_line_desc.c_str();
