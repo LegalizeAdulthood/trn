@@ -2058,7 +2058,7 @@ static bool select_option(OptionIndex i)
     color_pop();        // of COLOR_CMD
     newline();
     *g_buf = '\0';
-    const std::string oldval{quote_string(option_value(option))};
+    const std::string oldval = quote_string(option_value(option));
     const bool had_draft = g_option_draft->contains(option);
     std::string val{oldval};
     if (had_draft)

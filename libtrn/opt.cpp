@@ -910,7 +910,7 @@ void save_options(const char *filename)
             {
                 std::fputs("#default of ", fp_out);
             }
-            std::fprintf(fp_out, "%s\n", quote_string(option_value(option)));
+            fmt::print(fp_out, "{}\n", quote_string(option_value(option)));
             if (g_option_saved_vals[option])
             {
                 g_option_saved_vals[option].reset();
@@ -1550,15 +1550,12 @@ static std::string expand_mouse_buttons(const MouseButtonList &buttons)
     return result;
 }
 
-const char *quote_string(std::string_view val)
+std::string quote_string(std::string_view val)
 {
-    static std::string buff;
-
     bool needs_quotes = false;
     int  ticks = 0;
     int  quotes = 0;
     int  backslashes = 0;
-    buff.clear();
 
     if (!val.empty() && std::isspace(val.front()))
     {
@@ -1598,22 +1595,21 @@ const char *quote_string(std::string_view val)
     if (needs_quotes || ticks || quotes || backslashes)
     {
         const char usequote = quotes > ticks? '\'' : '"';
-        buff = usequote;
+        std::string result;
+        result.reserve(val.size() + 2 + backslashes + (usequote == '\'' ? ticks : quotes));
+        result = usequote;
         for (const char ch : val)
         {
             if (ch == usequote || ch == '\\')
             {
-                buff += '\\';
+                result += '\\';
             }
-            buff += ch;
+            result += ch;
         }
-        buff += usequote;
+        result += usequote;
+        return result;
     }
-    else
-    {
-        buff.assign(val.data(), val.size());
-    }
-    return buff.c_str();
+    return std::string{val};
 }
 
 void cwd_check()

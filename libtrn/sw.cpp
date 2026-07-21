@@ -569,7 +569,7 @@ void write_init_environment(std::FILE *fp)
 {
     for (const InitEnvironmentString &entry : s_init_environment_strings)
     {
-        std::fprintf(fp, "%s=%s\n", entry.name.c_str(), quote_string(entry.value.c_str()));
+        fmt::print(fp, "{}={}\n", entry.name, quote_string(entry.value));
     }
     s_init_environment_strings.clear();
 }

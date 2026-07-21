@@ -306,6 +306,25 @@ TEST_F(SaveOptionsTest, preservesNonOptionTextWhenReplacingOptionsSection)
     EXPECT_NE(std::string::npos, output.find("# keep this note\n\n[extra]\nvalue = yes\n"));
 }
 
+TEST(QuoteStringTest, leavesSimpleValuesUnquoted)
+{
+    EXPECT_EQ(std::string{"plain-value"}, quote_string("plain-value"));
+}
+
+TEST(QuoteStringTest, quotesWhitespaceAndComments)
+{
+    EXPECT_EQ(std::string{"\" leading\""}, quote_string(" leading"));
+    EXPECT_EQ(std::string{"\"two  spaces\""}, quote_string("two  spaces"));
+    EXPECT_EQ(std::string{"\"value#comment\""}, quote_string("value#comment"));
+}
+
+TEST(QuoteStringTest, escapesChosenQuoteAndBackslash)
+{
+    EXPECT_EQ(std::string{"\"can't\""}, quote_string("can't"));
+    EXPECT_EQ(std::string{"'say \"hi\"'"}, quote_string("say \"hi\""));
+    EXPECT_EQ(std::string{"\"c:\\\\tmp\""}, quote_string("c:\\tmp"));
+}
+
 TEST_F(AutoSaveNameOptionTest, yesUsesArticleNameInNewsgroupDirectory)
 {
     set_option(OI_AUTO_SAVE_NAME, "yes");

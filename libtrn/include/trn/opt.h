@@ -158,7 +158,7 @@ std::string option_value(OptionIndex num);
 bool        option_draft_contains(OptionIndex num);
 std::optional<std::string_view> option_draft_value(OptionIndex num);
 void        set_header(std::string_view s, HeaderTypeFlags flag, bool setit);
-const char *quote_string(std::string_view val);
+std::string quote_string(std::string_view val);
 void        cwd_check();
 
 inline const char *yes_or_no(bool v)

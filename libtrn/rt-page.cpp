@@ -2846,6 +2846,7 @@ void display_option(int op, int item_index)
     std::string_view    item;
     std::string_view    post;
     std::string_view    val;
+    std::string         quoted_val;
     if (catalog.is_group(op))
     {
         item = catalog.name(op);
@@ -2864,7 +2865,8 @@ void display_option(int op, int item_index)
         std::optional<std::string_view> option_val = option_draft_value(option);
         if (!option_val.has_value())
         {
-            option_val = quote_string(option_value(option));
+            quoted_val = quote_string(option_value(option));
+            option_val = quoted_val;
         }
         val = *option_val;
     }

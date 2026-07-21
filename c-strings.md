@@ -476,8 +476,8 @@ generated files, or the vendored `vcpkg` tree.
   terminal pushback bytes, termcap storage, and regex bytecode arrays
   are non-string protocol or parser storage, not current local string
   slices.
-- Newly exposed leaf helpers include option quoting, color-attribute
-  parsing, and URL fetch helper inputs.
+- Newly exposed leaf helpers include color-attribute parsing and URL
+  fetch helper inputs.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
@@ -560,7 +560,7 @@ production code.
   `strlen` 53.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
 - C text I/O roots: `fgets` 25, `fputs` 198, `printf` 388,
-  `fprintf` 48.
+  `fprintf` 46.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -590,20 +590,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-166 - Quote String Owned Return
-
-- Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`,
-  `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`, `libtrn/sw.cpp`,
-  `tests/test_opt.cpp`.
-- Kind: borrowed static-buffer return from function-static
-  `std::string`.
-- Function: `quote_string`.
-- Depends on: none.
-- Change: return `std::string` and remove the function-static buffer.
-  Update immediate display, compare, and save callers.  Prefer fmt for
-  changed formatted output.
-- Tests: option-save tests; add quote-specific coverage first if needed.
 
 #### CSTR-167 - Mutable `in_string` Overload Removal
 
@@ -705,7 +691,7 @@ are available.  Keep the listed order inside dependent families.
 - Kind: filename `const char *` and mutable file buffer split with
   `strchr` and `strncmp`.
 - Function: `save_options`.
-- Depends on: `CSTR-166`.
+- Depends on: none.
 - Change: accept a filesystem path or view at the public boundary, use
   string-view line iteration over the owned file contents, and retain the
   `.new` and `.old` path behavior.
