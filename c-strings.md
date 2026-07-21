@@ -596,19 +596,6 @@ that later caller slices can consume directly.
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
 
-#### CSTR-151 - Author Compression Internal String Storage
-
-- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`,
-  callers of `extract_name`.
-- Kind: mutable C-string parsing hidden behind string-returning helpers.
-- Functions: `extract_name`, `compress_name_in_place`,
-  `compress_address`, `compress_name`, `compress_from`.
-- Depends on: `CSTR-150`.
-- Change: replace pointer-return helpers with string or string-view
-  results over owned local storage.  Keep truncation behavior that is
-  covered by `test_rt-util`.
-- Tests: `test_rt-util`.
-
 #### CSTR-153 - MIME Entry Argument Parser
 
 - Files: `libtrn/mime.cpp`.

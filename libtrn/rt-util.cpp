@@ -38,71 +38,86 @@ bool g_unbroken_subjects{};      // -u
 
 static int s_spin_marks{25}; // how many bargraph marks we want
 
-static char *compress_address(char *name, int max);
-static char *compress_name_in_place(char *name, int max);
+static std::string      compress_address(std::string_view name, int max);
+static std::string_view compress_name_in_place(std::string &storage, int max);
 static void output_change(std::string &out, long num, const char *obj_type, const char *modifier, const char *action);
+
+static bool is_space(char ch)
+{
+    return std::isspace(static_cast<unsigned char>(ch)) != 0;
+}
+
+static std::string_view trim_left(std::string_view text)
+{
+    while (!text.empty() && is_space(text.front()))
+    {
+        text.remove_prefix(1);
+    }
+    return text;
+}
+
+static std::string_view trim_right(std::string_view text)
+{
+    while (!text.empty() && is_space(text.back()))
+    {
+        text.remove_suffix(1);
+    }
+    return text;
+}
 
 // Name-munging routines written by Ross Ridge.
 // Enhanced by Wayne Davison.
 //
 
-// Extract the full-name part of an email address, returning nullptr if not
-// found.
+// Extract the full-name part of an email address, returning an empty view
+// if not found.
 //
-char *extract_name(char *name)
+std::string_view extract_name(std::string_view name)
 {
-    name = skip_space(name);
-    char *lparen = std::strchr(name, '(');
-    char *rparen = std::strrchr(name, ')');
-    char *langle = std::strchr(name, '<');
-    if (!lparen && !langle)
+    name = trim_left(name);
+    const std::size_t lparen = name.find('(');
+    const std::size_t rparen = name.rfind(')');
+    const std::size_t langle = name.find('<');
+    const bool        has_lparen = lparen != std::string_view::npos;
+    const bool        has_rparen = rparen != std::string_view::npos;
+    const bool        has_langle = langle != std::string_view::npos;
+    if (!has_lparen && !has_langle)
     {
-        return nullptr;
+        return {};
     }
 
-    if (langle && (!lparen || !rparen || lparen > langle || rparen < langle))
+    std::string_view display_name;
+    if (has_langle && (!has_lparen || !has_rparen || lparen > langle || rparen < langle))
     {
-        if (langle == name)
+        if (langle == 0)
         {
-            return nullptr;
+            return {};
         }
-        *langle = '\0';
+        display_name = name.substr(0, langle);
     }
     else
     {
-        name = lparen;
-        *name++ = '\0';
-        name = skip_space(name);
-        if (name == rparen)
+        const std::size_t name_begin = lparen + 1;
+        display_name = name.substr(name_begin, has_rparen ? rparen - name_begin : std::string_view::npos);
+        display_name = trim_left(display_name);
+        if (display_name.empty())
         {
-            return nullptr;
-        }
-        if (rparen != nullptr)
-        {
-            *rparen = '\0';
+            return {};
         }
     }
 
-    if (*name == '"')
+    if (!display_name.empty() && display_name.front() == '"')
     {
-        name++;
-        name = skip_space(name);
-        char *s = std::strrchr(name, '"');
-        if (s != nullptr)
+        display_name.remove_prefix(1);
+        display_name = trim_left(display_name);
+        const std::size_t quote = display_name.rfind('"');
+        if (quote != std::string_view::npos)
         {
-            *s = '\0';
+            display_name = display_name.substr(0, quote);
         }
     }
 
-    // strip trailing whitespace
-    int len = std::strlen(name);
-    while (len > 0 && std::isspace(name[len-1]))
-    {
-        len--;
-    }
-    name[len] = '\0';
-
-    return name;
+    return trim_right(display_name);
 }
 
 // If necessary, compress a net user's full name by playing games with
@@ -120,11 +135,12 @@ std::string compress_name(std::string_view name, int max)
     }
 
     std::string buffer{name};
-    return compress_name_in_place(buffer.data(), max);
+    return std::string{compress_name_in_place(buffer, max)};
 }
 
-static char *compress_name_in_place(char *name, int max)
+static std::string_view compress_name_in_place(std::string &storage, int max)
 {
+    char *name = storage.data();
     char *d;
     int   midlen;
     bool  notlast;
@@ -473,123 +489,97 @@ try_again:
 // the addresses as possible.  The order of precedence is @ ! %, but
 // @ % ! may be better...
 //
-static char *compress_address(char *name, int max)
+static std::string compress_address(std::string_view name, int max)
 {
-    char*start;
+    if (max <= 0)
+    {
+        return {};
+    }
+    const std::size_t max_len = static_cast<std::size_t>(max);
 
     // Remove white space from both ends.
-    name = skip_space(name);
-    int len = std::strlen(name);
-    if (len == 0)
+    name = trim_right(trim_left(name));
+    if (name.empty())
     {
-        return name;
+        return {};
     }
+    if (name.front() == '<')
     {
-        char *s = name + len - 1;
-        while (std::isspace(*s))
+        name.remove_prefix(1);
+        if (!name.empty() && name.back() == '>')
         {
-            s--;
+            name.remove_suffix(1);
         }
-        s[1] = '\0';
-        if (*name == '<')
-        {
-            name++;
-            if (*s == '>')
-            {
-                *s-- = '\0';
-            }
-        }
-        len = s - name + 1;
-        if (len <= max)
-        {
-            return name;
-        }
+    }
+    if (name.size() <= max_len)
+    {
+        return std::string{name};
     }
 
-    char *at = nullptr;
-    char *bang = nullptr;
-    char *hack = nullptr;
-    for (char *s = name + 1; *s; s++)
+    std::size_t at = std::string_view::npos;
+    std::size_t bang = std::string_view::npos;
+    std::size_t hack = std::string_view::npos;
+    for (std::size_t pos = 1; pos < name.size(); pos++)
     {
         // If there's whitespace in the middle then it's probably not
         // really an email address.
-        if (std::isspace(*s))
+        if (is_space(name[pos]))
         {
-            name[max] = '\0';
-            return name;
+            return std::string{name.substr(0, max_len)};
         }
-        switch (*s)
+        switch (name[pos])
         {
         case '@':
-            if (at == nullptr)
+            if (at == std::string_view::npos)
             {
-                at = s;
+                at = pos;
             }
             break;
 
         case '!':
-            if (at == nullptr)
+            if (at == std::string_view::npos)
             {
-                bang = s;
-                hack = nullptr;
+                bang = pos;
+                hack = std::string_view::npos;
             }
             break;
 
         case '%':
-            if (at == nullptr && hack == nullptr)
+            if (at == std::string_view::npos && hack == std::string_view::npos)
             {
-                hack = s;
+                hack = pos;
             }
             break;
         }
     }
-    if (at == nullptr)
+    if (at == std::string_view::npos)
     {
-        at = name + len;
+        at = name.size();
     }
 
-    if (hack != nullptr)
+    std::size_t start = 0;
+    if (hack != std::string_view::npos)
     {
-        if (bang != nullptr)
+        if (bang != std::string_view::npos)
         {
-            if (at - bang - 1 >= max)
+            if (at - bang - 1 >= max_len)
             {
                 start = bang + 1;
             }
-            else if (at - name >= max)
+            else if (at >= max_len)
             {
-                start = at - max;
-            }
-            else
-            {
-                start = name;
+                start = at - max_len;
             }
         }
-        else
+    }
+    else if (bang != std::string_view::npos)
+    {
+        if (at >= max_len)
         {
-            start = name;
+            start = at - max_len;
         }
     }
-    else if (bang != nullptr)
-    {
-        if (at - name >= max)
-        {
-            start = at - max;
-        }
-        else
-        {
-            start = name;
-        }
-    }
-    else
-    {
-        start = name;
-    }
-    if (len - (start - name) > max)
-    {
-        start[max] = '\0';
-    }
-    return start;
+    return std::string{name.substr(start, max_len)};
 }
 
 // Fit the author name in <max> chars.  Uses the comment portion if present
@@ -602,16 +592,16 @@ std::string compress_from(std::string_view from, int size)
         return {};
     }
 
-    std::string buffer = str_char_subst(from, *g_char_subst);
-    char       *s = extract_name(buffer.data());
-    std::string text;
-    if (s != nullptr)
+    std::string      buffer = str_char_subst(from, *g_char_subst);
+    std::string_view name = extract_name(buffer);
+    std::string      text;
+    if (!name.empty())
     {
-        text = compress_name(s, size);
+        text = compress_name(name, size);
     }
     else
     {
-        text = compress_address(buffer.data(), size);
+        text = compress_address(buffer, size);
     }
 
     std::size_t len = text.size();

@@ -365,10 +365,11 @@ DoArticleResult do_article()
                     from_line.reserve(LINE_BUF_LEN);
                     const std::string_view from_text{buf_ptr};
                     from_line = from_text.substr(0, from_text.find('\n'));
-                    s = extract_name(from_line.data() + 6);
-                    if (s != nullptr)
+                    const std::string name{extract_name(std::string_view{from_line}.substr(6))};
+                    if (!name.empty())
                     {
-                        from_line = from_line.substr(0, 6) + s;
+                        from_line.resize(6);
+                        from_line += name;
                         buf_ptr = from_line.data();
                     }
                     break;

@@ -27,7 +27,7 @@ enum SpinMode
     SPIN_BAR_GRAPH
 };
 
-char *extract_name(char *name);
+std::string_view extract_name(std::string_view name);
 std::string compress_name(std::string_view name, int max);
 std::string compress_from(std::string_view from, int size);
 bool        strip_one_re(std::string_view subject, std::string_view &remaining);

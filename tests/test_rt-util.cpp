@@ -25,6 +25,31 @@ using namespace testing;
 
 constexpr int COMPRESSED_NAME_MAX{29};
 
+static std::string extract_author_name(std::string text)
+{
+    return std::string{extract_name(text)};
+}
+
+TEST(ExtractNameTest, usesNameBeforeAngleAddress)
+{
+    EXPECT_EQ("Ross Ridge", extract_author_name("Ross Ridge <ross@example.com>"));
+}
+
+TEST(ExtractNameTest, usesNameFromComment)
+{
+    EXPECT_EQ("Ross Ridge", extract_author_name("ross@example.com (Ross Ridge)"));
+}
+
+TEST(ExtractNameTest, stripsQuotesFromDisplayName)
+{
+    EXPECT_EQ("Ross Ridge", extract_author_name("\"Ross Ridge\" <ross@example.com>"));
+}
+
+TEST(ExtractNameTest, returnsEmptyWhenNoDisplayNameExists)
+{
+    EXPECT_EQ("", extract_author_name("<ross@example.com>"));
+}
+
 class CompressNameTest : public Test
 {
 protected:

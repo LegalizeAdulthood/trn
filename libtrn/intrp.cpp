@@ -1339,9 +1339,10 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
             {
                 char *mutable_s = make_mutable_text();
                 decode_header(mutable_s, mutable_s);
-                char *start = mutable_s;
+                std::string_view parsed_value;
                 if (address_parse)
                 {
+                    char *start = mutable_s;
                     char *h = std::strchr(mutable_s, '<');
                     if (h != nullptr) // grab the good part
                     {
@@ -1359,20 +1360,13 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         }
                         h[1] = '\0'; // or strip the comment
                     }
+                    parsed_value = start;
                 }
                 else
                 {
-                    char *name = extract_name(mutable_s);
-                    if (name != nullptr)
-                    {
-                        start = name;
-                    }
-                    else
-                    {
-                        start = mutable_s + std::strlen(mutable_s);
-                    }
+                    parsed_value = extract_name(mutable_s);
                 }
-                set_value(start);
+                set_value(parsed_value);
             }
             if (metabit)
             {
