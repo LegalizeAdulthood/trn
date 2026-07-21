@@ -591,18 +591,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-154 - MIME Command Interpolation View
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
-- Kind: command input as `const char *` plus pointer walking.
-- Function: `mime_exec`.
-- Depends on: none.
-- Change: accept `std::string_view`, iterate by index or views, use
-  `find` to locate `%{name}` terminators, and keep the shell-executor
-  `c_str()` conversion local to the final command string.
-- Tests: existing `mime_exec` tests for `%n`, `%F`, and malformed
-  `%{name`.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one owner of string storage.  Finish these before

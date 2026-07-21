@@ -488,7 +488,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
 
     if (mcp)
     {
-        mime_exec(mcp->command.c_str());
+        mime_exec(mcp->command);
         remove_path(g_decode_filename);
         change_dir("..");
     }

@@ -267,7 +267,7 @@ MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags
             {
                 return &mcp;
             }
-            if (mime_exec(mcp.test_command.c_str()) == 0)
+            if (mime_exec(mcp.test_command) == 0)
             {
                 return &mcp;
             }
@@ -378,16 +378,21 @@ static std::string mime_find_param(const Params &params, std::string_view param)
     return {};
 }
 
-int mime_exec(const char *cmd)
+int mime_exec(std::string_view cmd)
 {
     std::string command;
     command.reserve(CMD_BUF_LEN);
 
-    for (const char *f = cmd; *f; f++)
+    for (std::size_t pos = 0; pos < cmd.size(); pos++)
     {
-        if (*f == '%')
+        if (cmd[pos] == '%')
         {
-            switch (*++f)
+            pos++;
+            if (pos >= cmd.size())
+            {
+                continue;
+            }
+            switch (cmd[pos])
             {
             case 's':
                 command += g_decode_filename;
@@ -401,16 +406,16 @@ int mime_exec(const char *cmd)
 
             case '{':
             {
-                const char *s = std::strchr(f, '}');
-                if (!s)
+                const std::size_t param_begin = pos + 1;
+                const std::size_t param_end = cmd.find('}', param_begin);
+                if (param_end == std::string_view::npos)
                 {
                     return -1;
                 }
-                f++;
                 command += '\'';
-                command += mime_find_param(g_mime_section->m_type_params,
-                                           std::string_view{f, static_cast<std::size_t>(s - f)});
-                f = s;
+                command +=
+                    mime_find_param(g_mime_section->m_type_params, cmd.substr(param_begin, param_end - param_begin));
+                pos = param_end;
                 command += '\'';
                 break;
             }
@@ -426,7 +431,7 @@ int mime_exec(const char *cmd)
         }
         else
         {
-            command += *f;
+            command += cmd[pos];
         }
     }
 
