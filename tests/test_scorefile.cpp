@@ -174,6 +174,19 @@ TEST_F(ScoreFileTest, patternKeywordMatchesWithRegularExpression)
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 }
 
+TEST_F(ScoreFileTest, verboseScoringPrintsMatchedPatternRule)
+{
+    char pattern_rule[]{"!10 pattern subject: compact.*subject"};
+    sf_append(pattern_rule);
+    g_sf_score_verbose = 1;
+
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("10 pattern subject: compact.*subject\n", output);
+}
+
 TEST_F(ScoreFileTest, killThresholdCommandAcceptsSpaceSeparator)
 {
     char kill_threshold[]{"!killthreshold -11"};

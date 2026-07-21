@@ -497,7 +497,7 @@ generated files, or the vendored `vcpkg` tree.
 - Scorefile parsing has several newly exposed local helpers where the
   caller already has a string or view.  These are leaf or Tier 1 slices:
   remove `is_text_zero`, promote extra-header helpers, promote
-  `score_match`, and clean up `sf_print_match`.
+  `score_match`, and clean up related scorefile parsing helpers.
 - Author compression still has a string public result wrapped around
   mutable character-pointer helpers.  The public input can move to
   `std::string_view` first; the internal name/address helpers can then
@@ -586,18 +586,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-143 - Scorefile Match Printer Views
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: local `const char *` display aliases and `printf`.
-- Function: `sf_print_match`.
-- Depends on: none.
-- Change: use `std::string_view` for the pattern prefix and header name,
-  keep string literals as views, and use fmt for the output.  Do not let
-  addresses of local string data escape.
-- Tests: if no verbose score-output coverage exists, add a captured
-  output test before refactoring.
 
 ### Tier 1 - Helper And API Foundations
 

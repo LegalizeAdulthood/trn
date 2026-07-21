@@ -1154,8 +1154,6 @@ static void sf_print_match(int indx)
 {
     int  i;
     int  level; // level is initialized iff used
-    const char*head_name;
-    const char*pattern;
 
     for (i = indx; i >= 0; i--)
     {
@@ -1192,39 +1190,32 @@ static void sf_print_match(int indx)
             level--;    // go out...
             for (int k = 0; k < level; k++)
             {
-                std::printf(".");            // make putchar later?
+                fmt::print(".");            // make putchar later?
             }
-            std::printf("From file: %s\n",s_sf_entries[i].str1.c_str());
+            fmt::print("From file: {}\n", s_sf_entries[i].str1);
             if (level == 0)             // top level
             {
                 break;          // out of the big for loop
             }
         }
     }
-    if (s_sf_entries[indx].flags & 1)   // regex type
-    {
-        pattern = "pattern ";
-    }
-    else
-    {
-        pattern = "";
-    }
+    const std::string_view pattern = (s_sf_entries[indx].flags & 1) ? "pattern " : "";
 
+    std::string_view head_name;
     if (s_sf_entries[indx].head_type >= HEAD_LAST)
     {
-        head_name = s_sf_extra_headers[s_sf_entries[indx].head_type - HEAD_LAST].c_str();
+        head_name = s_sf_extra_headers[s_sf_entries[indx].head_type - HEAD_LAST];
     }
     else
     {
-        head_name = g_header_type[s_sf_entries[indx].head_type].name.c_str();
+        head_name = g_header_type[s_sf_entries[indx].head_type].name;
     }
-    std::printf("%d %s%s: %s", s_sf_entries[indx].score,pattern,head_name,
-           s_sf_entries[indx].str1.c_str());
+    fmt::print("{} {}{}: {}", s_sf_entries[indx].score, pattern, head_name, s_sf_entries[indx].str1);
     if (!s_sf_entries[indx].str2.empty())
     {
-        std::printf("*%s",s_sf_entries[indx].str2.c_str());
+        fmt::print("*{}", s_sf_entries[indx].str2);
     }
-    std::printf("\n");
+    fmt::print("\n");
 }
 
 static void sf_exclude_file(std::string_view fname)
