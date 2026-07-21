@@ -31,12 +31,12 @@
 #include <config/common.h>
 #include <config/string_case_compare.h>
 #include <trn/final.h>
-#include <trn/string-algos.h>
 #include <trn/terminal.h>
-#include <util/util2.h>
 
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <string>
 #include <string_view>
@@ -56,7 +56,10 @@ enum
 
 static bool s_use_colors{};
 
-static void output_color();
+static bool             is_attribute_space(char ch);
+static void             skip_attribute_token(std::string_view &text);
+static std::string_view next_attribute_token(std::string_view &text);
+static void             output_color();
 
 //
 // Object properties.
@@ -141,11 +144,31 @@ void color_init()
     color_default();
 }
 
+static bool is_attribute_space(char ch)
+{
+    return std::isspace(static_cast<unsigned char>(ch)) != 0;
+}
+
+static void skip_attribute_token(std::string_view &text)
+{
+    const std::string_view::const_iterator token_end = std::find_if(text.begin(), text.end(), is_attribute_space);
+    text.remove_prefix(static_cast<std::size_t>(token_end - text.begin()));
+}
+
+static std::string_view next_attribute_token(std::string_view &text)
+{
+    const std::string_view::const_iterator token_begin = std::find_if_not(text.begin(), text.end(), is_attribute_space);
+    text.remove_prefix(static_cast<std::size_t>(token_begin - text.begin()));
+    const std::string_view::const_iterator token_end = std::find_if(text.begin(), text.end(), is_attribute_space);
+    const std::string_view                 token = text.substr(0, static_cast<std::size_t>(token_end - text.begin()));
+    text.remove_prefix(token.size());
+    return token;
+}
+
 // Parse a line from the [attribute] section of trnrc.
-void color_rc_attribute(std::string_view object, char *value)
+void color_rc_attribute(std::string_view object, std::string_view value)
 {
     // Find the specified object.
-    const std::string object_name{object};
     int i;
     for (i = 0; i < MAX_COLORS; i++)
     {
@@ -156,113 +179,87 @@ void color_rc_attribute(std::string_view object, char *value)
     }
     if (i >= MAX_COLORS)
     {
-        std::fprintf(stderr,"trn: unknown object '%s' in [attribute] section.\n",
-                object_name.c_str());
+        fmt::print(stderr, "trn: unknown object '{}' in [attribute] section.\n", object);
         finalize(1);
     }
 
     // Parse the video attribute.
-    if (*value == 's' || *value == 'S')
+    if (!value.empty() && (value.front() == 's' || value.front() == 'S'))
     {
         s_objects[i].attr = STANDOUT;
     }
-    else if (*value == 'u' || *value == 'U')
+    else if (!value.empty() && (value.front() == 'u' || value.front() == 'U'))
     {
         s_objects[i].attr = UNDERLINE;
     }
-    else if (*value == 'n' || *value == 'N')
+    else if (!value.empty() && (value.front() == 'n' || value.front() == 'N'))
     {
         s_objects[i].attr = NO_MARKING;
     }
-    else if (*value == '-')
+    else if (!value.empty() && value.front() == '-')
     {
         s_objects[i].attr = LAST_MARKING;
     }
     else
     {
-        std::fprintf(stderr,"trn: bad attribute '%s' for %s in [attribute] section.\n",
-                value, object_name.c_str());
+        fmt::print(stderr, "trn: bad attribute '{}' for {} in [attribute] section.\n", value, object);
         finalize(1);
     }
 
     // See if they specified a color
-    char *s = skip_non_space(value);
-    s = skip_space(s);
-    if (!*s)
+    std::string_view rest = value;
+    skip_attribute_token(rest);
+    std::string_view color = next_attribute_token(rest);
+    if (color.empty())
     {
         s_objects[i].fg.clear();
         s_objects[i].bg.clear();
         return;
-    }
-    char *t = skip_non_space(s);
-    char* n = nullptr;
-    if (*t)
-    {
-        n = t++;
-        *n = '\0';
-        t = skip_space(t);
     }
 
     // We have both colors and attributes, so turn colors on.
     s_use_colors = true;
 
     // Parse the foreground color.
-    if (*s == '-')
+    if (color.front() == '-')
     {
         s_objects[i].fg.clear();
     }
     else
     {
-        const std::string capability = fmt::format("fg {}", s);
-        s_objects[i].fg = tc_color_capability(capability);
-        if (s_objects[i].fg.empty())
+        const std::string capability = fmt::format("fg {}", color);
+        const char       *color_capability = tc_color_capability(capability);
+        if (color_capability == nullptr || *color_capability == '\0')
         {
-            std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-                    capability.c_str(), object_name.c_str());
+            fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);
         }
-    }
-    if (n)
-    {
-        *n = ' ';
-        n = nullptr;
+        s_objects[i].fg = color_capability;
     }
 
     // Make sure we have one more parameter.
-    s = t;
-    t = skip_non_space(t);
-    if (*t)
+    color = next_attribute_token(rest);
+    if (color.empty() || !next_attribute_token(rest).empty())
     {
-        n = t++;
-        *n = '\0';
-        t = skip_space(t);
-    }
-    if (!*s || *t)
-    {
-        std::fprintf(stderr,"trn: wrong number of parameters for %s in [attribute] section.\n",
-                object_name.c_str());
+        fmt::print(stderr, "trn: wrong number of parameters for {} in [attribute] section.\n", object);
         finalize(1);
     }
 
     // Parse the background color.
-    if (*s == '-')
+    if (color.front() == '-')
     {
-        s_objects[i].bg = nullptr;
+        s_objects[i].bg.clear();
     }
     else
     {
-        const std::string capability = fmt::format("bg {}", s);
-        s_objects[i].bg = tc_color_capability(capability);
-        if (s_objects[i].bg.empty())
+        const std::string capability = fmt::format("bg {}", color);
+        const char       *color_capability = tc_color_capability(capability);
+        if (color_capability == nullptr || *color_capability == '\0')
         {
-            std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-                    capability.c_str(), object_name.c_str());
+            fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);
         }
-    }
-    if (n)
-    {
-        *n = ' ';
+        s_objects[i].bg = color_capability;
     }
 }
 

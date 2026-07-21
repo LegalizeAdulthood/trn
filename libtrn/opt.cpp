@@ -231,8 +231,7 @@ static void opt_file(const fs::path &filename, bool bleat)
             {
                 for (const IniSetting setting : section)
                 {
-                    std::string value = setting.value();
-                    color_rc_attribute(setting.name(), value.data());
+                    color_rc_attribute(setting.name(), setting.value());
                 }
             }
         }

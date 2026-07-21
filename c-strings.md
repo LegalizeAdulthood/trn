@@ -476,7 +476,6 @@ generated files, or the vendored `vcpkg` tree.
   terminal pushback bytes, termcap storage, and regex bytecode arrays
   are non-string protocol or parser storage, not current local string
   slices.
-- Newly exposed leaf helpers include color-attribute parsing.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
@@ -557,8 +556,8 @@ production code.
 - Search and length: `strchr` 62, `strrchr` 1, `strstr` 2,
   `strlen` 53.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
-- C text I/O roots: `fgets` 25, `fputs` 198, `printf` 388,
-  `fprintf` 46.
+- C text I/O roots: `fgets` 24, `fputs` 198, `printf` 380,
+  `fprintf` 40.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -593,19 +592,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-169 - Color Attribute Value Parser
-
-- Files: `libtrn/color.cpp`, `libtrn/include/trn/color.h`,
-  `libtrn/opt.cpp`, `tests/test_color.cpp`.
-- Kind: caller-owned string mutated through a `char *` parser.
-- Function: `color_rc_attribute`.
-- Depends on: none.
-- Change: accept `std::string_view value`, split the attribute,
-  foreground, and background fields with views, and stop inserting
-  temporary NUL bytes into caller storage.  Use fmt for changed
-  diagnostics if the slice touches formatted output.
-- Tests: `test_color`; add malformed value cases first if missing.
 
 #### CSTR-155 - Article Search Pattern Split
 

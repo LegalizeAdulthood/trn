@@ -38,7 +38,7 @@ enum ObjectNumber
 };
 
 void color_init();
-void color_rc_attribute(std::string_view object, char *value);
+void color_rc_attribute(std::string_view object, std::string_view value);
 void color_object(int object, bool push);
 void color_pop();
 void color_string(int object, std::string_view str);
