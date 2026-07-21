@@ -244,11 +244,6 @@ const char *in_string(const char *haystack, const char *needle, bool case_matter
     return nullptr;
 }
 
-char *in_string(char *haystack, const char *needle, bool case_matters)
-{
-    return const_cast<char *>(in_string(static_cast<const char *>(haystack), needle, case_matters));
-}
-
 bool in_string(std::string_view haystack, std::string_view needle, bool case_matters)
 {
     if (needle.empty())

@@ -732,32 +732,34 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 static bool valid_xref_site(ArticleNum art_num, const char *site)
 {
     std::string sitebuf;
-    char* s;
 
     if (s_inews_site && *s_inews_site == site)
         return true;
 
 #ifndef ANCIENT_NEWS
     // Grab the site from the first component of the Path line
-    sitebuf = fetch_lines(art_num,PATH_LINE);
-    s = std::strchr(sitebuf.data(), '!');
+    sitebuf = fetch_lines(art_num, PATH_LINE);
+    char *s = std::strchr(sitebuf.data(), '!');
     if (s != nullptr)
     {
         *s = '\0';
         s_inews_site = sitebuf;
     }
-#else // ANCIENT_NEWS
+#else  // ANCIENT_NEWS
     // Grab the site from the Posting-Version line
-    sitebuf = fetch_lines(art_num,RVER_LINE);
-    s = in_string(sitebuf.data(), "; site ", true);
-    if (s != nullptr)
+    sitebuf = fetch_lines(art_num, RVER_LINE);
+    const std::string_view marker{"; site "};
+    const std::string_view line{sitebuf};
+    const std::size_t      site_start = line.find(marker);
+    if (site_start != std::string_view::npos)
     {
-        char* t = std::strchr(s+7, '.');
-        if (t)
+        std::string_view  inews_site = line.substr(site_start + marker.size());
+        const std::size_t dot = inews_site.find('.');
+        if (dot != std::string_view::npos)
         {
-            *t = '\0';
+            inews_site = inews_site.substr(0, dot);
         }
-        s_inews_site = s+7;
+        s_inews_site.emplace(inews_site.data(), inews_site.size());
     }
 #endif // ANCIENT_NEWS
     else

@@ -457,10 +457,10 @@ generated files, or the vendored `vcpkg` tree.
 - `copy_till`: four production call sites remain.  They are tied to
   command parsing and universal selector line parsing.  Convert the
   callers first, then remove the helper.
-- `in_string`: the string-view overload is already used by callers that
-  have strings or views.  The mutable `char *` overload is kept alive
-  only by the inactive `ANCIENT_NEWS` site-validation block in
-  `bits.cpp`; that block is listed below so the overload can be removed.
+- `in_string`: the mutable `char *` overload is gone.  The string-view
+  overload is already used by callers that have strings or views.  The
+  const pointer-return overload remains for callers that need a match
+  position in existing C-string storage.
 - `safe_malloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
@@ -556,7 +556,7 @@ production code.
 
 - Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 5, `strncmp` 18.
-- Search and length: `strchr` 63, `strrchr` 1, `strstr` 2,
+- Search and length: `strchr` 62, `strrchr` 1, `strstr` 2,
   `strlen` 53.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
 - C text I/O roots: `fgets` 25, `fputs` 198, `printf` 388,
@@ -590,20 +590,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-167 - Mutable `in_string` Overload Removal
-
-- Files: `libtrn/bits.cpp`, `util/util2.cpp`,
-  `util/include/util/util2.h`.
-- Kind: mutable C-string overload kept alive by inactive legacy parsing.
-- Function: `valid_xref_site` under `ANCIENT_NEWS`, and
-  `in_string(char *, const char *, bool)`.
-- Depends on: none.
-- Change: parse the inactive `ANCIENT_NEWS` site suffix with
-  string-view/string logic, then remove the mutable overload.  Keep the
-  const pointer-return and bool string-view overloads.
-- Tests: build; add coverage only if `ANCIENT_NEWS` can be configured
-  easily.
 
 #### CSTR-168 - URL Fetch Helper Views
 
