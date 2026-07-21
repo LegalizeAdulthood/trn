@@ -77,7 +77,8 @@ static MimeExecutor              s_executor;
 constexpr bool CLOSING_TAG = false;
 constexpr bool OPENING_TAG = true;
 
-static char       *mime_parse_entry_arg(char **cpp);
+static std::string mime_parse_entry_arg(std::string_view &text);
+static std::string mime_parse_entry_value(std::string_view text);
 static int         mime_getc(std::FILE *fp);
 static void        mime_init_sections();
 static bool        mime_pop_section();
@@ -158,102 +159,137 @@ void mime_read_mimecap(std::string_view mcname)
             }
         }
 
-        char *s = skip_space(entry.data());
-        if (!*s)
+        std::string_view args{entry};
+        while (!args.empty() && std::isspace(static_cast<unsigned char>(args.front())))
+        {
+            args.remove_prefix(1);
+        }
+        if (args.empty())
         {
             continue;
         }
-        char *t = mime_parse_entry_arg(&s);
-        if (!s)
+        std::string content_type = mime_parse_entry_arg(args);
+        if (args.empty())
         {
-            fmt::print(stderr, "trn: Ignoring invalid mimecap entry: {}\n", entry.c_str());
+            fmt::print(stderr, "trn: Ignoring invalid mimecap entry: {}\n", entry);
             continue;
         }
         MimeCapEntry &mcp = s_mimecap_entries.emplace_back();
-        mcp.content_type = t;
-        mcp.command = mime_parse_entry_arg(&s);
-        while (s)
+        mcp.content_type = std::move(content_type);
+        mcp.command = mime_parse_entry_arg(args);
+        while (!args.empty())
         {
-            t = mime_parse_entry_arg(&s);
-            char *arg = std::strchr(t, '=');
-            if (arg != nullptr)
+            std::string       argument = mime_parse_entry_arg(args);
+            std::string_view  name{argument};
+            std::string_view  value;
+            const std::size_t equal = name.find('=');
+            const bool        has_value = equal != std::string_view::npos;
+            if (has_value)
             {
-                char *f = arg + 1;
-                while (arg != t && std::isspace(arg[-1]))
+                value = name.substr(equal + 1);
+                while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front())))
                 {
-                    arg--;
+                    value.remove_prefix(1);
                 }
-                *arg++ = '\0';
-                f = skip_space(f);
-                if (*f == '"')
+                name = name.substr(0, equal);
+                while (!name.empty() && std::isspace(static_cast<unsigned char>(name.back())))
                 {
-                    copy_till(arg, f + 1, '"');
-                }
-                else
-                {
-                    arg = f;
+                    name.remove_suffix(1);
                 }
             }
-            if (*t)
+            if (!name.empty())
             {
-                if (string_case_equal(t, "needsterminal"))
+                if (string_case_equal(name, "needsterminal"))
                 {
                     mcp.flags |= MCF_NEEDS_TERMINAL;
                 }
-                else if (string_case_equal(t, "copiousoutput"))
+                else if (string_case_equal(name, "copiousoutput"))
                 {
                     mcp.flags |= MCF_COPIOUS_OUTPUT;
                 }
-                else if (arg && string_case_equal(t, "test"))
+                else if (has_value && string_case_equal(name, "test"))
                 {
-                    mcp.test_command = arg;
+                    mcp.test_command = mime_parse_entry_value(value);
                 }
-                else if (arg && (string_case_equal(t, "description") || string_case_equal(t, "label")))
+                else if (has_value && (string_case_equal(name, "description") || string_case_equal(name, "label")))
                 {
-                    mcp.description = arg; // 'label' is the legacy name for description
+                    // 'label' is the legacy name for description.
+                    mcp.description = mime_parse_entry_value(value);
                 }
             }
         }
     }
 }
 
-static char *mime_parse_entry_arg(char **cpp)
+static std::string mime_parse_entry_arg(std::string_view &text)
 {
-    char*f;
-    char*t;
-
-    char *s = skip_space(*cpp);
-
-    for (f = t = s; *f && *f != ';';)
+    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.front())))
     {
-        if (*f == '\\')
+        text.remove_prefix(1);
+    }
+
+    std::string result;
+    result.reserve(text.size());
+    while (!text.empty())
+    {
+        const char ch = text.front();
+        text.remove_prefix(1);
+        if (ch == '\\')
         {
-            if (*++f == '%')
-            {
-                *t++ = '%';
-            }
-            else if (!*f)
+            if (text.empty())
             {
                 break;
             }
+            const char escaped = text.front();
+            if (escaped == '%')
+            {
+                result.push_back('%');
+            }
+            result.push_back(escaped);
+            text.remove_prefix(1);
+            continue;
         }
-        *t++ = *f++;
+        if (ch == ';')
+        {
+            break;
+        }
+        result.push_back(ch);
     }
-    while (std::isspace(*f) || *f == ';')
+
+    while (!text.empty() && (std::isspace(static_cast<unsigned char>(text.front())) || text.front() == ';'))
     {
-        f++;
+        text.remove_prefix(1);
     }
-    if (!*f)
+    while (!result.empty() && std::isspace(static_cast<unsigned char>(result.back())))
     {
-        f = nullptr;
+        result.pop_back();
     }
-    while (t != s && std::isspace(t[-1]))
+    return result;
+}
+
+static std::string mime_parse_entry_value(std::string_view text)
+{
+    if (text.empty() || text.front() != '"')
     {
-        t--;
+        return std::string{text};
     }
-    *t = '\0';
-    *cpp = f;
-    return s;
+
+    text.remove_prefix(1);
+    std::string result;
+    result.reserve(text.size());
+    for (std::size_t pos = 0; pos < text.size(); pos++)
+    {
+        if (text[pos] == '\\' && pos + 1 < text.size() && text[pos + 1] == '"')
+        {
+            pos++;
+        }
+        else if (text[pos] == '"')
+        {
+            break;
+        }
+        result.push_back(text[pos]);
+    }
+    return result;
 }
 
 MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags skip_flags)

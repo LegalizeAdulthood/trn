@@ -58,6 +58,17 @@ TEST_F(MimeTest, imageGif)
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
+TEST_F(MimeTest, escapedPercentBecomesInterpolatorLiteralPercent)
+{
+    MimeCapEntry *cap = mime_find_mimecap_entry("application/x-percent", MCF_NONE);
+
+    ASSERT_NE(nullptr, cap);
+    ASSERT_EQ("percent %%s", cap->command);
+    ASSERT_TRUE(cap->test_command.empty());
+    ASSERT_EQ("Escaped percent", cap->description);
+    ASSERT_EQ(MCF_NONE, cap->flags);
+}
+
 TEST_F(MimeTest, imageWildcardWithLabel)
 {
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);

@@ -9,6 +9,7 @@
 # Blank lines are ignored
 
 @TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE@; @TRN_TEST_MIME_IMAGE_GIF_COMMAND@; description="@TRN_TEST_MIME_IMAGE_GIF_DESCRIPTION@"
+application/x-percent; percent \%s; description="Escaped percent"
 # 'label' is the legacy description name.
 @TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE@; @TRN_TEST_MIME_IMAGE_ANY_COMMAND@; label="@TRN_TEST_MIME_IMAGE_ANY_DESCRIPTION@"
 

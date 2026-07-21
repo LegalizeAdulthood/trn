@@ -454,9 +454,9 @@ generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in article and NNTP buffer owner
   clusters.  The call sites are inventoried below.
-- `copy_till`: six production call sites remain.  They are tied to
-  command parsing, mimecap entry parsing, and universal selector line
-  parsing.  Convert the callers first, then remove the helper.
+- `copy_till`: four production call sites remain.  They are tied to
+  command parsing and universal selector line parsing.  Convert the
+  callers first, then remove the helper.
 - `in_string`: the string-view overload is already used by callers that
   have strings or views.  Remaining pointer-return use belongs to
   mutable parser buffers or inactive legacy site validation.
@@ -533,14 +533,12 @@ until the owning storage or API changes.
 ## Current `copy_till` Inventory
 
 The current tree has one helper declaration, one helper definition, and
-six production call sites.
+four production call sites.
 
 - `libtrn/artsrch.cpp`, `art_search`: copies the typed article search
   pattern into `g_buf` and returns a pointer to modifiers.
 - `libtrn/ngsrch.cpp`, `newsgroup_search`: copies the typed newsgroup
   search pattern into `g_buf` and returns a pointer to modifiers.
-- `libtrn/mime.cpp`, `mime_read_mimecap`: strips quotes from a mimecap
-  parameter value while mutating the entry buffer.
 - `libtrn/ngstuff.cpp`, command execution loop: copies one command into
   `g_buf` when a command list is colon-delimited.
 - `libtrn/univ.cpp`, `univ_do_line`: copies a quoted description while
@@ -556,7 +554,7 @@ production code.
 
 - Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 5, `strncmp` 18.
-- Search and length: `strchr` 68, `strrchr` 3, `strstr` 2,
+- Search and length: `strchr` 67, `strrchr` 3, `strstr` 2,
   `strlen` 56.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
 - C text I/O roots: `fgets` 25, `fputs` 200, `printf` 393,
@@ -595,18 +593,6 @@ that later caller slices can consume directly.
 
 These slices replace one owner of string storage.  Finish these before
 broad global-buffer work.
-
-#### CSTR-153 - MIME Entry Argument Parser
-
-- Files: `libtrn/mime.cpp`.
-- Kind: in-place mimecap parser using `char **`, `strchr`, and
-  `copy_till`.
-- Functions: `mime_read_mimecap`, `mime_parse_entry_arg`.
-- Depends on: none.
-- Change: parse each mimecap entry with string views over the owned
-  entry line, return owned strings for values stored in `MimeCapEntry`,
-  and strip quoted parameter values without mutating caller buffers.
-- Tests: `test_mime`.
 
 #### CSTR-148 - Option File Path API
 
@@ -816,8 +802,7 @@ owned strings or owner-specific storage.
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
 - Kind: obsolete bounded copy-and-scan helper.
 - Function: `copy_till`.
-- Depends on: `CSTR-153`, `CSTR-155`, `CSTR-156`, `CSTR-157`, and
-  `CSTR-158`.
+- Depends on: `CSTR-155`, `CSTR-156`, `CSTR-157`, and `CSTR-158`.
 - Change: remove the helper once every caller has moved to
   string-view-based parsing.
 - Tests: build.
