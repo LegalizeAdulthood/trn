@@ -38,6 +38,7 @@ add_executable(trn-test
     test_makedir.cpp
     test_mime.cpp
     test_nntp.cpp
+    test_ngsrch.cpp
     test_ngstuff.cpp
     test_opt.cpp
     test_OptionApplier.cpp

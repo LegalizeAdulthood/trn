@@ -17,8 +17,8 @@
 #include <trn/rt-util.h>
 #include <trn/search.h>
 #include <trn/terminal.h>
-#include <util/util2.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <string>
@@ -40,48 +40,72 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     g_int_count = 0;
     if (get_cmd && g_buf == patbuf)
     {
-        if (!finish_command(false))     // get rest of command
+        if (!finish_command(false)) // get rest of command
         {
             return NGS_ABORT;
         }
     }
 
     perform_status_init(g_newsgroup_to_read.value_of());
-    const char cmdchr = *patbuf;         // what kind of search?
-    const char *s = copy_till(g_buf, patbuf + 1, cmdchr); // ok to cpy g_buf+1 to g_buf
-    char *pattern;                                // unparsed pattern
-    for (pattern = g_buf; *pattern == ' '; pattern++)
+    const char             cmdchr = *patbuf; // what kind of search?
+    const std::string_view search_text{patbuf + 1};
+    std::string            pattern_text;
+    pattern_text.reserve(search_text.size());
+    std::size_t tail_start{};
+    while (tail_start < search_text.size())
     {
+        if (search_text[tail_start] == '\\' && tail_start + 1 < search_text.size() &&
+            search_text[tail_start + 1] == cmdchr)
+        {
+            ++tail_start;
+        }
+        else if (search_text[tail_start] == cmdchr)
+        {
+            break;
+        }
+        pattern_text += search_text[tail_start];
+        ++tail_start;
     }
-    if (*pattern)
+    std::string_view pattern{pattern_text}; // unparsed pattern
+    while (!pattern.empty() && pattern.front() == ' ')
+    {
+        pattern.remove_prefix(1);
+    }
+    if (!pattern.empty())
     {
         s_newsgroup_do_empty = false;
     }
 
-    if (*s)                             // modifiers or commands?
+    std::string_view modifier_tail = search_text.substr(tail_start);
+    if (!modifier_tail.empty()) // modifiers or commands?
     {
-        while (*++s)
+        modifier_tail.remove_prefix(1);
+        std::size_t modifier_pos{};
+        bool        done_modifiers{};
+        while (modifier_pos < modifier_tail.size() && !done_modifiers)
         {
-            switch (*s)
+            switch (modifier_tail[modifier_pos])
             {
             case 'r':
                 s_newsgroup_do_empty = true;
+                ++modifier_pos;
                 break;
 
             default:
-                goto loop_break;
+                done_modifiers = true;
+                break;
             }
         }
-      loop_break:;
+        modifier_tail.remove_prefix(modifier_pos);
     }
-    while (std::isspace(*s) || *s == ':')
-    {
-        s++;
-    }
+    const std::string_view::const_iterator command_begin =
+        std::find_if_not(modifier_tail.begin(), modifier_tail.end(),
+                         [](char ch) { return std::isspace(static_cast<unsigned char>(ch)) || ch == ':'; });
+    modifier_tail.remove_prefix(static_cast<std::size_t>(command_begin - modifier_tail.begin()));
     std::string cmdlst; // list of commands to do
-    if (*s)
+    if (!modifier_tail.empty())
     {
-        cmdlst = s;
+        cmdlst.assign(modifier_tail.data(), modifier_tail.size());
     }
     else if (g_general_mode == GM_SELECTOR)
     {
