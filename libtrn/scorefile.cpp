@@ -79,8 +79,8 @@ static CompiledRegex  *s_sf_compex{};
 static int sf_open_file(std::string_view name);
 static void sf_file_clear();
 static void  sf_grow();
-static int   sf_check_extra_headers(const char *head);
-static void  sf_add_extra_header(const char *head);
+static int sf_check_extra_headers(std::string_view head);
+static void sf_add_extra_header(std::string_view head);
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
 static bool        sf_do_command(std::string_view cmd, bool check);
@@ -255,8 +255,8 @@ static void sf_grow()
 // Returns -1 if no matching extra header found, otherwise returns offset
 // into the s_sf_extra_headers array.
 //
-//char* head;           // header name, (without ':' character)
-static int sf_check_extra_headers(const char *head)
+// header name, without ':' character
+static int sf_check_extra_headers(std::string_view head)
 {
     std::string lower_head{head};
 
@@ -281,8 +281,8 @@ static int sf_check_extra_headers(const char *head)
 // adds the header to the list of known extra headers if it is not already
 // known.
 //
-//char* head;           // new header name, (without ':' character)
-static void sf_add_extra_header(const char *head)
+// new header name, without ':' character
+static void sf_add_extra_header(std::string_view head)
 {
     // check to see if it's already known
     // first see if it is a known system header
@@ -502,8 +502,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
         {
             return true;
         }
-        const std::string header{argument.substr(0, colon)};
-        sf_add_extra_header(header.c_str());
+        sf_add_extra_header(argument.substr(0, colon));
         return true;
     }
     if (command == "begin" || command == "end")
@@ -672,8 +671,7 @@ static bool sf_do_line(std::string_view line, bool check)
     int j = set_line_type(header);
     if (j == SOME_LINE)
     {
-        const std::string header_name{header};
-        j = sf_check_extra_headers(header_name.c_str());
+        j = sf_check_extra_headers(header);
         if (j >= 0)
         {
             j += HEAD_LAST;

@@ -496,8 +496,8 @@ generated files, or the vendored `vcpkg` tree.
   only the path-only arguments are listed below.
 - Scorefile parsing has several newly exposed local helpers where the
   caller already has a string or view.  These are leaf or Tier 1 slices:
-  remove `is_text_zero`, promote extra-header helpers, promote
-  `score_match`, and clean up related scorefile parsing helpers.
+  remove `is_text_zero`, promote `score_match`, and clean up related
+  scorefile parsing helpers.
 - Author compression still has a string public result wrapped around
   mutable character-pointer helpers.  The public input can move to
   `std::string_view` first; the internal name/address helpers can then
@@ -591,17 +591,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-144 - Scorefile Extra Header Input Views
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: local helper parameters passed through temporary `c_str()`.
-- Functions: `sf_check_extra_headers`, `sf_add_extra_header`.
-- Depends on: none.
-- Change: accept `std::string_view` for header names.  Lowercase into a
-  local `std::string` only when storage or comparison needs an owned
-  normalized value.  Pass parser views directly to the helpers.
-- Tests: `ScoreFileTest.extraHeaderLookupIsCaseInsensitive`.
 
 #### CSTR-145 - Scorefile Match Input String
 
