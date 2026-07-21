@@ -50,7 +50,6 @@ static HeaderLineType s_header_num[] = {
 static void             ov_parse(std::string_view line, ArticleNum artnum, bool remote);
 static std::string      ov_name(std::string_view group);
 static OverviewFieldNum ov_num(std::string_view header_name);
-static const char      *ov_field_name(int num);
 
 bool ov_init()
 {
@@ -621,9 +620,4 @@ void ov_close()
         }
         g_data_source->m_ov_opened = 0;
     }
-}
-
-static const char *ov_field_name(int num)
-{
-    return g_header_type[s_header_num[num]].name.c_str();
 }

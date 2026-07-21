@@ -478,19 +478,18 @@ generated files, or the vendored `vcpkg` tree.
   slices.
 - Newly exposed leaf helpers include option quoting, termcap string
   registration and lookup, color-attribute parsing, URL fetch helper
-  inputs, and an unused overview-field helper.
+  inputs.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
-- Unused overload/wrapper scan: `ov_field_name` in `rt-ov.cpp` has no
-  production caller and is listed as a Tier 0 deletion.  Keep
-  `nntp_init_error`, `string_case_compare`, `string_case_equal`,
-  `Subject` C-string accessors, `Tgetstr`, `line_ptr`, `line_offset`,
-  `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
-  `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.
+- Unused overload/wrapper scan: no dead C-style wrappers remain in this
+  pass.  Keep `nntp_init_error`, `string_case_compare`,
+  `string_case_equal`, `Subject` C-string accessors, `Tgetstr`,
+  `line_ptr`, `line_offset`, `file_ref`, `yes_or_no`, `empty`,
+  `plural`, `force_me`, and `at_grey_space`; they still have
+  production/source callers or platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`, and
   `SourceFile::open`, and option-file loading already use modern path or
   view signatures.  Current filename or path candidates are URL fetch
@@ -587,16 +586,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-163 - Unused Overview Field Name Helper
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: unused `const char *` helper returning borrowed storage.
-- Function: `ov_field_name`.
-- Depends on: none.
-- Change: remove the declaration and definition; no production caller
-  remains.
-- Tests: build.
 
 ### Tier 1 - Helper And API Foundations
 
