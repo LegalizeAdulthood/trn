@@ -454,11 +454,13 @@ generated files, or the vendored `vcpkg` tree.
 - `safe_copy`: four hits remain: the helper declaration, the helper
   definition, and two call sites in article and NNTP buffer owner
   clusters.  The call sites are inventoried below.
-- `copy_till`: no production call sites remain.  Remove the helper.
+- `copy_till`: no production call sites remain.  Remove the helper in
+  `CSTR-160`.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
-  overload is already used by callers that have strings or views.  The
-  const pointer-return overload remains for callers that need a match
-  position in existing C-string storage.
+  overload is already used by production callers that have strings or
+  views.  The const pointer-return overload is now only exercised by
+  tests, so remove it in `CSTR-161` unless a real production caller
+  reappears.
 - `safe_malloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
@@ -469,22 +471,23 @@ generated files, or the vendored `vcpkg` tree.
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
   `g_art_line`, `g_head_buf`, `g_art_buf`, terminal command-input
-  scratch, NNTP local protocol buffers, and `nntpinit` name scratch.
-  Tiny UTF byte scratch buffers, translation tables, MIME decode tables,
-  terminal pushback bytes, termcap storage, and regex bytecode arrays
-  are non-string protocol or parser storage, not current local string
-  slices.
+  scratch, NNTP local protocol buffers, `nntpinit` name scratch, and
+  environment host/domain probe scratch.  Tiny UTF byte scratch buffers,
+  translation tables, MIME decode tables, terminal pushback bytes,
+  termcap storage, and regex bytecode arrays are non-string protocol or
+  parser storage, not current local string slices.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
-- Unused overload/wrapper scan: no dead C-style wrappers remain in this
-  pass.  Keep `nntp_init_error`, `string_case_compare`,
-  `string_case_equal`, `Subject` C-string accessors, `Tgetstr`,
-  `line_ptr`, `line_offset`, `file_ref`, `yes_or_no`, `empty`,
-  `plural`, `force_me`, and `at_grey_space`; they still have
-  production/source callers or platform/API boundary use.
+- Unused overload/wrapper scan: `copy_till` and the pointer-return
+  `in_string` overload have no production callers.  Keep
+  `nntp_init_error`, `string_case_compare`, `string_case_equal`,
+  `Subject` C-string accessors, `Tgetstr`, `line_ptr`, `line_offset`,
+  `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
+  `at_grey_space`; they still have production/source callers or
+  platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -511,6 +514,11 @@ generated files, or the vendored `vcpkg` tree.
 - The comparison cleanup also narrowed local work inside `addng`,
   `ngdata`, `respond`, `rthread`, `rt-ov`, and `univ`.  Do not add
   separate slices for those completed `string_case_compare` call sites.
+- Universal-selector helper signatures still carry nullable
+  `const char *` parameters even though the implementation stores text
+  in `std::string` and uses empty strings as the practical sentinel.
+  Migrate these helpers bottom-up before touching broader shared
+  buffers.
 - Remaining literal tables include color object names, signal names,
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are the tables whose users already operate on
@@ -534,6 +542,17 @@ no production call sites.
 
 - `util/include/util/util2.h`: helper declaration.
 - `util/util2.cpp`: helper implementation.
+
+## Current `in_string` Inventory
+
+The current tree has the string-view bool overload, the const
+pointer-return overload, and no production callers that require the
+pointer-return overload.  The remaining pointer-return calls are stale
+utility tests.
+
+- `util/include/util/util2.h`: pointer-return overload declaration.
+- `util/util2.cpp`: pointer-return overload implementation.
+- `tests/test_util.cpp`: pointer-return overload tests.
 
 ## Current C String Function Inventory
 
@@ -573,10 +592,159 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-160 - Copy Till Helper Removal
+
+- Files: `util/util2.cpp`, `util/include/util/util2.h`.
+- Kind: obsolete bounded copy-and-scan helper.
+- Function: `copy_till`.
+- Depends on: none.
+- Change: remove the helper declaration and implementation now that
+  every caller has moved to string-view-based parsing.
+- Tests: build.
+
+#### CSTR-161 - In String Pointer Overload Removal
+
+- Files: `util/util2.cpp`, `util/include/util/util2.h`,
+  `tests/test_util.cpp`.
+- Kind: unused C-style overload returning an interior pointer.
+- Function: `in_string`.
+- Depends on: none.
+- Change: remove the pointer-return overload and update stale tests so
+  they cover the `std::string_view` bool API that production callers use.
+- Tests: run utility tests.
+
+#### CSTR-162 - Posting Domain Name Comparison
+
+- Files: `util/env.cpp`.
+- Kind: C-string comparison on platform API scratch storage.
+- Function: `env_init2`.
+- Depends on: none.
+- Change: keep the `getdomainname` output buffer, but view the populated
+  result as text and compare it directly to `"(none)"`.
+- Truncation: meaningful platform API output buffer; preserve the call
+  capacity and only remove the local `strcmp`.
+- Tests: run config or environment tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-163 - Universal Add Description View
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable description pointer stored as `std::string`.
+- Function: `univ_add`.
+- Depends on: none.
+- Change: accept `std::string_view desc`, use empty view as the missing
+  sentinel, and update direct callers to pass `{}` instead of `nullptr`.
+- Tests: run universal selector tests.
+
+#### CSTR-164 - Universal Text Placeholder View
+
+- Files: `libtrn/univ.cpp`.
+- Kind: read-only text pointer stored as `std::string`.
+- Function: `univ_add_text`.
+- Depends on: `CSTR-163`.
+- Change: accept `std::string_view txt` and pass the view to
+  `univ_add`.
+- Tests: run universal selector tests.
+
+#### CSTR-165 - Universal Debug Text Views
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable description and read-only text pointers stored as
+  `std::string`.
+- Function: `univ_add_debug`.
+- Depends on: `CSTR-163`.
+- Change: accept `std::string_view desc` and `txt`, using empty
+  description as the missing sentinel.
+- Tests: run universal selector tests.
+
+#### CSTR-166 - Universal Add Mask Views
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable description pointer and read-only mask pointer stored as
+  `std::string`.
+- Function: `univ_add_mask`.
+- Depends on: `CSTR-163`.
+- Change: accept `std::string_view desc` and `mask`, using empty
+  description as the missing sentinel.
+- Tests: run universal selector tests.
+
+#### CSTR-167 - Universal Add File Label Views
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable description and label pointers stored as strings.
+- Function: `univ_add_file`.
+- Depends on: `CSTR-163`.
+- Change: accept `std::string_view desc` and `label`; keep empty label
+  as the no-label sentinel.
+- Tests: run universal selector tests.
+
+#### CSTR-168 - Universal Virtual Article Views
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable description and group pointers stored as strings.
+- Function: `univ_add_virt_num`.
+- Depends on: `CSTR-163`.
+- Change: accept `std::string_view desc` and `grp`, using empty strings
+  as missing sentinels.
+- Tests: run universal selector tests.
+
+#### CSTR-169 - Universal Text File Description View
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable description pointer stored as `std::string`.
+- Function: `univ_add_text_file`.
+- Depends on: `CSTR-163`.
+- Change: accept `std::string_view desc`; keep the existing filename
+  view and use empty description as the missing sentinel.
+- Tests: run universal selector tests.
+
+#### CSTR-170 - Universal Use File Label View
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable label pointer forwarded to file item creation.
+- Function: `univ_use_file`.
+- Depends on: `CSTR-167`.
+- Change: accept `std::string_view label` and pass the view through to
+  `univ_add_file`; use empty label as the no-label sentinel.
+- Tests: run universal selector tests.
+
+#### CSTR-171 - Universal File Load Title And Label Views
+
+- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,
+  `libtrn/rt-select.cpp`, `tests/test_univ.cpp`.
+- Kind: public nullable title and label pointers stored or forwarded as
+  strings.
+- Function: `univ_file_load`.
+- Depends on: `CSTR-170`.
+- Change: accept `std::string_view title` and `label`, update callers to
+  pass strings/views directly, and use empty label as the no-label
+  sentinel.
+- Tests: run universal selector tests.
+
+#### CSTR-172 - Universal Mask Load Title View
+
+- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,
+  `libtrn/rt-select.cpp`, `tests/test_univ.cpp`.
+- Kind: public title pointer stored as `std::string`.
+- Function: `univ_mask_load`.
+- Depends on: `CSTR-166`.
+- Change: accept `std::string_view title` and update callers to pass
+  strings/views directly.
+- Tests: run universal selector tests.
+
+#### CSTR-173 - Universal Extension Description View
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable description pointer forwarded to item creation.
+- Function: `univ_do_line_ext1`.
+- Depends on: `CSTR-168`, `CSTR-169`.
+- Change: accept `std::string_view desc` and replace local
+  `desc ? desc : ...` decisions with empty-view checks.
+- Tests: run universal selector tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -716,16 +884,6 @@ and clarified ownership at the edges.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
-
-#### CSTR-160 - Copy Till Helper Removal
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`.
-- Kind: obsolete bounded copy-and-scan helper.
-- Function: `copy_till`.
-- Depends on: none.
-- Change: remove the helper once every caller has moved to
-  string-view-based parsing.
-- Tests: build.
 
 #### CSTR-048 - Safe Copy Helper Removal
 
