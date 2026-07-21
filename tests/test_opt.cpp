@@ -296,7 +296,7 @@ TEST_F(SaveOptionsTest, preservesNonOptionTextWhenReplacingOptionsSection)
                         << "[extra]\n"
                         << "value = yes\n";
 
-    save_options(path.string().c_str());
+    save_options(path);
 
     const std::string output = file_contents(path);
 

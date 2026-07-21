@@ -9,6 +9,7 @@
 #include <trn/head.h>
 #include <trn/search.h>
 
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -153,7 +154,7 @@ void        opt_init(int argc, char *argv[], char *tcbuf);
 void        opt_final();
 void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, std::string_view s);
-void        save_options(const char *filename);
+void        save_options(const std::filesystem::path &filename);
 std::string option_value(OptionIndex num);
 bool        option_draft_contains(OptionIndex num);
 std::optional<std::string_view> option_draft_value(OptionIndex num);

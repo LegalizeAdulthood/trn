@@ -486,11 +486,11 @@ generated files, or the vendored `vcpkg` tree.
   `plural`, `force_me`, and `at_grey_space`; they still have
   production/source callers or platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
-  `SourceFile::open`, and option-file loading already use modern path or
-  view signatures.  Current filename or path candidates include option
-  saving.  Score file shortcut strings, universal-selector labels, shell
-  commands, URLs, and expansion templates still mix path and non-path
-  text, so only the path-only arguments are listed below.
+  `SourceFile::open`, option-file loading, and option saving already use
+  modern path or view signatures.  Score file shortcut strings,
+  universal-selector labels, shell commands, URLs, and expansion
+  templates still mix path and non-path text, so only the path-only
+  arguments are listed below.
 - Scorefile parsing has no new leaf string slice in this pass.  Remaining
   scorefile C-string work is tied to shared header buffers, regex
   bytecode, or command text.
@@ -541,13 +541,13 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 26, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 4, `strncmp` 18.
-- Search and length: `strchr` 62, `strrchr` 1, `strstr` 2,
+- Copy and concatenation: `strcpy` 25, `strncpy` 3, `strcat` 0.
+- Comparison: `strcmp` 4, `strncmp` 17.
+- Search and length: `strchr` 60, `strrchr` 1, `strstr` 2,
   `strlen` 53.
 - Formatting into C buffers: `sprintf` 34, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 198, `printf` 380,
-  `fprintf` 40.
+- C text I/O roots: `fgets` 24, `fputs` 196, `printf` 383,
+  `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -587,20 +587,6 @@ them before broad global-buffer work and before removing helpers.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-149 - Option Save File Buffer
-
-- Files: `libtrn/opt.cpp`, `libtrn/include/trn/opt.h`,
-  `libtrn/rt-select.cpp`, `tests/test_opt.cpp`.
-- Kind: filename `const char *` and mutable file buffer split with
-  `strchr` and `strncmp`.
-- Function: `save_options`.
-- Depends on: none.
-- Change: accept a filesystem path or view at the public boundary, use
-  string-view line iteration over the owned file contents, and retain the
-  `.new` and `.old` path behavior.
-- Tests: existing option-save test.  Add current-behavior coverage before
-  changing line parsing if needed.
 
 #### CSTR-132 - Main Multirc Display Builder
 

@@ -823,7 +823,7 @@ sel_restart:
         set_options(draft);
         if (s_sel_ret == 'S')
         {
-            save_options(g_ini_file.c_str());
+            save_options(g_ini_file);
         }
     }
     g_option_draft = saved_draft;

@@ -57,10 +57,8 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <iterator>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -799,16 +797,15 @@ void apply_global_option(OptionIndex num, std::string_view value)
     }
 }
 
-void save_options(const char *filename)
+void save_options(const fs::path &filename_path)
 {
-    std::string filebuf;
-    char* line = nullptr;
     static bool first_time = true;
-    const fs::path filename_path{filename};
-    fs::path new_filename{filename_path};
+    fs::path    new_filename{filename_path};
     new_filename += ".new";
     fs::path old_filename{filename_path};
     old_filename += ".old";
+    std::string      filebuf;
+    std::string_view preserved_tail;
 
     std::FILE *fp_out = std::fopen(new_filename.string().c_str(), "w");
     if (!fp_out)
@@ -816,64 +813,77 @@ void save_options(const char *filename)
         fmt::print("Can't create {}\n", new_filename.string());
         return;
     }
-    std::ifstream input{filename_path};
-    const bool had_existing_file = input.good();
+    bool had_existing_file{};
+    {
+        std::ifstream input{filename_path};
+        had_existing_file = input.good();
+    }
     if (had_existing_file)
     {
-        filebuf.assign(std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{});
-        input.close();
-        char* cp;
-        char* nlp = nullptr;
-        char* comments = nullptr;
-
-        for (line = filebuf.empty() ? nullptr : filebuf.data(); line && *line; line = nlp)
+        filebuf = file_contents(filename_path);
+        const std::string_view file_text{filebuf};
+        const auto             skip_space_view = [](std::string_view text)
         {
-            cp = line;
-            nlp = std::strchr(cp, '\n');
-            if (nlp)
+            const std::string_view::const_iterator first_non_space = std::find_if_not(
+                text.begin(), text.end(), [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+            text.remove_prefix(static_cast<std::size_t>(first_non_space - text.begin()));
+            return text;
+        };
+        std::size_t line_start{};
+        while (line_start < file_text.size())
+        {
+            const std::size_t line_end = file_text.find('\n', line_start);
+            const std::size_t line_size =
+                line_end == std::string_view::npos ? file_text.size() - line_start : line_end - line_start;
+            const std::size_t      next_line = line_end == std::string_view::npos ? file_text.size() : line_end + 1;
+            const std::string_view line = file_text.substr(line_start, line_size);
+            std::string_view       text = skip_space_view(line);
+            if (text.substr(0, 9) == "[options]")
             {
-                *nlp++ = '\0';
-            }
-            cp = skip_space(cp);
-            if (*cp == '[' && !std::strncmp(cp + 1, "options]", 8))
-            {
-                cp = skip_space(cp + 9);
-                if (!*cp)
+                text.remove_prefix(9);
+                if (skip_space_view(text).empty())
                 {
+                    line_start = next_line;
                     break;
                 }
             }
-            std::fputs(line, fp_out);
-            std::fputc('\n', fp_out);
+            fmt::print(fp_out, "{}\n", line);
+            line_start = next_line;
         }
-        for (line = nlp; line && *line; line = nlp)
+
+        std::size_t tail_start = std::string_view::npos;
+        std::size_t comments_start = std::string_view::npos;
+        while (line_start < file_text.size())
         {
-            cp = line;
-            nlp = std::strchr(cp, '\n');
-            if (nlp)
+            const std::size_t current_line = line_start;
+            const std::size_t line_end = file_text.find('\n', line_start);
+            const std::size_t line_size =
+                line_end == std::string_view::npos ? file_text.size() - line_start : line_end - line_start;
+            const std::size_t      next_line = line_end == std::string_view::npos ? file_text.size() : line_end + 1;
+            const std::string_view line = file_text.substr(line_start, line_size);
+            const std::string_view text = skip_space_view(line);
+            if (!text.empty() && text.front() == '[')
             {
-                nlp++;
-            }
-            while (*cp != '\n' && std::isspace(*cp))
-            {
-                cp++;
-            }
-            if (*cp == '[')
-            {
+                tail_start = current_line;
                 break;
             }
-            if (std::isalpha(*cp))
+            if (!text.empty() && std::isalpha(static_cast<unsigned char>(text.front())))
             {
-                comments = nullptr;
+                comments_start = std::string_view::npos;
             }
-            else if (!comments)
+            else if (comments_start == std::string_view::npos)
             {
-                comments = line;
+                comments_start = current_line;
             }
+            line_start = next_line;
         }
-        if (comments)
+        if (comments_start != std::string_view::npos)
         {
-            line = comments;
+            tail_start = comments_start;
+        }
+        if (tail_start != std::string_view::npos)
+        {
+            preserved_tail = file_text.substr(tail_start);
         }
     }
     else
@@ -916,10 +926,10 @@ void save_options(const char *filename)
             }
         }
     }
-    if (line)
+    if (!preserved_tail.empty())
     {
         // std::putc('\n',fp_out);
-        std::fputs(line,fp_out);
+        fmt::print(fp_out, "{}", preserved_tail);
     }
     std::fclose(fp_out);
 
