@@ -589,17 +589,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-161 - Option Yes/No Helpers
-
-- Files: `libtrn/opt.cpp`.
-- Kind: local read-only C-string helper parameters.
-- Functions: `is_yes`, `is_no`.
-- Depends on: none.
-- Change: accept `std::string_view`, use `empty()` and `front()`, and
-  update the local callers that already have string storage.  Do not
-  refactor all of `apply_global_option` in the same slice.
-- Tests: existing option tests or build.
-
 #### CSTR-162 - Option Header List Split
 
 - Files: `libtrn/opt.cpp`.

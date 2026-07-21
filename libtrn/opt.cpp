@@ -246,13 +246,13 @@ static void opt_file(const fs::path &filename, bool bleat)
     }
 }
 
-inline bool is_yes(const char *s)
+inline bool is_yes(std::string_view s)
 {
-    return *s == 'y' || *s == 'Y';
+    return !s.empty() && (s.front() == 'y' || s.front() == 'Y');
 }
-inline bool is_no(const char *s)
+inline bool is_no(std::string_view s)
 {
-    return *s == 'n' || *s == 'N';
+    return !s.empty() && (s.front() == 'n' || s.front() == 'N');
 }
 
 void set_options(const OptionDraft &draft)
@@ -301,11 +301,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
     switch (num)
     {
     case OI_USE_THREADS:
-        g_use_threads = is_yes(s);
+        g_use_threads = is_yes(value);
         break;
 
     case OI_USE_MOUSE:
-        g_use_mouse = is_yes(s);
+        g_use_mouse = is_yes(value);
         if (g_use_mouse)
         {
             // set up the Xterm mouse sequence
@@ -318,7 +318,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_USE_UNIV_SEL:
-        g_use_univ_selector = is_yes(s);
+        g_use_univ_selector = is_yes(value);
         break;
 
     case OI_UNIV_SEL_CMDS:
@@ -334,11 +334,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_UNIV_FOLLOW:
-        g_univ_follow = is_yes(s);
+        g_univ_follow = is_yes(value);
         break;
 
     case OI_USE_NEWSRC_SEL:
-        g_use_newsrc_selector = is_yes(s);
+        g_use_newsrc_selector = is_yes(value);
         break;
 
     case OI_NEWSRC_SEL_CMDS:
@@ -350,7 +350,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_USE_ADD_SEL:
-        g_use_add_selector = is_yes(s);
+        g_use_add_selector = is_yes(value);
         break;
 
     case OI_ADD_SEL_CMDS:
@@ -362,7 +362,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_USE_NEWSGROUP_SEL:
-        g_use_newsgroup_selector = is_yes(s);
+        g_use_newsgroup_selector = is_yes(value);
         break;
 
     case OI_NEWSGROUP_SEL_ORDER:
@@ -389,7 +389,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         }
         else
         {
-            g_use_news_selector = static_cast<int>(is_yes(s)) - 1;
+            g_use_news_selector = static_cast<int>(is_yes(value)) - 1;
         }
         break;
 
@@ -434,7 +434,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
     case OI_AUTO_SAVE_NAME:
         if (!g_check_flag)
         {
-            if (is_yes(s))
+            if (is_yes(value))
             {
                 set_env_var("SAVEDIR", "%p/%c");
                 set_env_var("SAVENAME", "%a");
@@ -449,19 +449,19 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_BACKGROUND_THREADING:
-        g_thread_always = !is_yes(s);
+        g_thread_always = !is_yes(value);
         break;
 
     case OI_AUTO_ARROW_MACROS:
     {
         int prev = g_auto_arrow_macros;
-        if (is_yes(s) || *s == 'r' || *s == 'R')
+        if (is_yes(value) || *s == 'r' || *s == 'R')
         {
             g_auto_arrow_macros = 2;
         }
         else
         {
-            g_auto_arrow_macros = !is_no(s);
+            g_auto_arrow_macros = !is_no(value);
         }
         if (g_mode != MM_INITIALIZING && g_auto_arrow_macros != prev)
         {
@@ -471,11 +471,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
     }
 
     case OI_READ_BREADTH_FIRST:
-        g_breadth_first = is_yes(s);
+        g_breadth_first = is_yes(value);
         break;
 
     case OI_BACKGROUND_SPINNER:
-        g_bkgnd_spinner = is_yes(s);
+        g_bkgnd_spinner = is_yes(value);
         break;
 
     case OI_CHECKPOINT_NEWSRC_FREQUENCY:
@@ -495,11 +495,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_ERASE_SCREEN:
-        g_erase_screen = is_yes(s);
+        g_erase_screen = is_yes(value);
         break;
 
     case OI_NOVICE_DELAYS:
-        g_novice_delays = is_yes(s);
+        g_novice_delays = is_yes(value);
         break;
 
     case OI_CITED_TEXT_STRING:
@@ -511,7 +511,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_FUZZY_NEWSGROUP_NAMES:
-        g_fuzzy_get = is_yes(s);
+        g_fuzzy_get = is_yes(value);
         break;
 
     case OI_HEADER_MAGIC:
@@ -530,11 +530,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:
-        g_append_unsub = is_yes(s);
+        g_append_unsub = is_yes(value);
         break;
 
     case OI_FILTER_CONTROL_CHARACTERS:
-        g_dont_filter_control = !is_yes(s);
+        g_dont_filter_control = !is_yes(value);
         break;
 
     case OI_JOIN_SUBJECT_LINES:
@@ -544,24 +544,24 @@ void apply_global_option(OptionIndex num, std::string_view value)
         }
         else
         {
-            change_join_subject_len(is_yes(s)? 30 : 0);
+            change_join_subject_len(is_yes(value) ? 30 : 0);
         }
         break;
 
     case OI_IGNORE_THRU_ON_SELECT:
-        g_kill_thru_kludge = is_yes(s);
+        g_kill_thru_kludge = is_yes(value);
         break;
 
     case OI_AUTO_GROW_GROUPS:
-        g_keep_the_group_static = !is_yes(s);
+        g_keep_the_group_static = !is_yes(value);
         break;
 
     case OI_MUCK_UP_CLEAR:
-        g_muck_up_clear = is_yes(s);
+        g_muck_up_clear = is_yes(value);
         break;
 
     case OI_ERASE_EACH_LINE:
-        g_erase_each_line = is_yes(s);
+        g_erase_each_line = is_yes(value);
         break;
 
     case OI_SAVE_FILE_TYPE:
@@ -578,7 +578,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         {
             g_marking_areas = HALF_PAGE_MARKING;
         }
-        if (is_no(s))
+        if (is_no(value))
         {
             g_marking = NO_MARKING;
         }
@@ -599,12 +599,12 @@ void apply_global_option(OptionIndex num, std::string_view value)
         }
         else
         {
-            g_olden_days = is_yes(s);
+            g_olden_days = is_yes(value);
         }
         break;
 
     case OI_SELECT_MY_POSTS:
-        if (is_no(s))
+        if (is_no(value))
         {
             g_auto_select_postings = 0;
         }
@@ -632,15 +632,15 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_AUTO_VIEW_INLINE:
-        g_auto_view_inline = is_yes(s);
+        g_auto_view_inline = is_yes(value);
         break;
 
     case OI_NEW_GROUP_CHECK:
-        g_quick_start = !is_yes(s);
+        g_quick_start = !is_yes(value);
         break;
 
     case OI_RESTRICTION_INCLUDES_EMPTIES:
-        g_empty_only_char = is_yes(s)? 'o' : 'O';
+        g_empty_only_char = is_yes(value) ? 'o' : 'O';
         break;
 
     case OI_CHARSET:
@@ -655,7 +655,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         }
         else
         {
-            g_suppress_cn = is_no(s);
+            g_suppress_cn = is_no(value);
             if (!g_suppress_cn)
             {
                 g_countdown = 5;
@@ -664,7 +664,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_RESTART_AT_LAST_GROUP:
-        g_find_last = is_yes(s) * (g_mode == MM_INITIALIZING? 1 : -1);
+        g_find_last = is_yes(value) * (g_mode == MM_INITIALIZING ? 1 : -1);
         break;
 
     case OI_SCAN_MODE_COUNT:
@@ -674,12 +674,12 @@ void apply_global_option(OptionIndex num, std::string_view value)
         }
         else
         {
-            g_scan_on = is_yes(s)*3;
+            g_scan_on = is_yes(value) * 3;
         }
         break;
 
     case OI_TERSE_OUTPUT:
-        g_verbose = !is_yes(s);
+        g_verbose = !is_yes(value);
         if (!g_verbose)
         {
             g_novice_delays = false;
@@ -687,15 +687,15 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_EAT_TYPEAHEAD:
-        g_allow_typeahead = !is_yes(s);
+        g_allow_typeahead = !is_yes(value);
         break;
 
     case OI_COMPRESS_SUBJECTS:
-        g_unbroken_subjects = !is_yes(s);
+        g_unbroken_subjects = !is_yes(value);
         break;
 
     case OI_VERIFY_INPUT:
-        g_verify = is_yes(s);
+        g_verify = is_yes(value);
         break;
 
     case OI_ARTICLE_TREE_LINES:
@@ -706,7 +706,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         }
         else
         {
-            g_max_tree_lines = is_yes(s) * 6;
+            g_max_tree_lines = is_yes(value) * 6;
         }
         break;
 
@@ -715,7 +715,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         {
             g_word_wrap_offset = std::atoi(s);
         }
-        else if (is_yes(s))
+        else if (is_yes(value))
         {
             g_word_wrap_offset = 8;
         }
@@ -734,66 +734,66 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_SCAN_ITEM_NUM:
-        g_s_item_num = is_yes(s);
+        g_s_item_num = is_yes(value);
         break;
 
     case OI_SCAN_VI:
-        g_s_mode_vi = is_yes(s);
+        g_s_mode_vi = is_yes(value);
         break;
 
     case OI_SCAN_ART_FOLLOW:
-        g_sa_follow = is_yes(s);
+        g_sa_follow = is_yes(value);
         break;
 
     case OI_SCAN_ART_FOLD:
-        g_sa_mode_fold = is_yes(s);
+        g_sa_mode_fold = is_yes(value);
         break;
 
     case OI_SCAN_ART_UNZOOM_FOLD:
-        g_sa_unzoom_refold = is_yes(s);
+        g_sa_unzoom_refold = is_yes(value);
         break;
 
     case OI_SCAN_ART_MARK_STAY:
-        g_sa_mark_stay = is_yes(s);
+        g_sa_mark_stay = is_yes(value);
         break;
 
     case OI_SCAN_ART_DISP_ART_NUM:
-        g_sa_mode_desc_art_num = is_yes(s);
+        g_sa_mode_desc_art_num = is_yes(value);
         break;
 
     case OI_SCAN_ART_DISP_AUTHOR:
-        g_sa_mode_desc_author = is_yes(s);
+        g_sa_mode_desc_author = is_yes(value);
         break;
 
     case OI_SCAN_ART_DISP_SCORE:
-        g_sa_mode_desc_score = is_yes(s);
+        g_sa_mode_desc_score = is_yes(value);
         break;
 
     case OI_SCAN_ART_DISP_SUB_COUNT:
-        g_sa_mode_desc_thread_count = is_yes(s);
+        g_sa_mode_desc_thread_count = is_yes(value);
         break;
 
     case OI_SCAN_ART_DISP_SUBJ:
         break;
 
     case OI_SCAN_ART_DISP_SUMMARY:
-        g_sa_mode_desc_summary = is_yes(s);
+        g_sa_mode_desc_summary = is_yes(value);
         break;
 
     case OI_SCAN_ART_DISP_KEYW:
-        g_sa_mode_desc_keyw = is_yes(s);
+        g_sa_mode_desc_keyw = is_yes(value);
         break;
 
     case OI_SC_VERBOSE:
-        g_sf_verbose = is_yes(s);
+        g_sf_verbose = is_yes(value);
         break;
 
     case OI_USE_SEL_NUM:
-        g_use_sel_num = is_yes(s);
+        g_use_sel_num = is_yes(value);
         break;
 
     case OI_SEL_NUM_GOTO:
-        g_sel_num_goto = is_yes(s);
+        g_sel_num_goto = is_yes(value);
         break;
 
     default:
