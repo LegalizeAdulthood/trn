@@ -39,22 +39,22 @@ struct UrlParts
     int         port{80};
 };
 
-static bool     fetch_http(const char *host, int port, const char *path, const fs::path &outname);
-static bool     fetch_ftp(const char *host, const char *origpath, const fs::path &outname);
+static bool     fetch_http(std::string_view host, int port, std::string_view path, const fs::path &outname);
+static bool     fetch_ftp(std::string_view host, std::string_view path, const fs::path &outname);
 static UrlParts parse_url(std::string_view url);
 
 // returns true if successful
-static bool fetch_http(const char *host, int port, const char *path, const fs::path &outname)
+static bool fetch_http(std::string_view host, int port, std::string_view path, const fs::path &outname)
 {
-    asio::io_context context;
+    asio::io_context        context;
     asio::ip::tcp::resolver s_resolver(context);
-    error_code_t ec;
-    std::string service{"http"};
+    error_code_t            ec;
+    std::string             service{"http"};
     if (port)
     {
-        service =std::to_string(port);
+        service = std::to_string(port);
     }
-    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(host, service, ec);
+    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(std::string{host}, service, ec);
     if (ec)
     {
         return false;
@@ -78,7 +78,7 @@ static bool fetch_http(const char *host, int port, const char *path, const fs::p
     std::FILE *fp_out = std::fopen(outname.string().c_str(), "w");
     if (!fp_out)
     {
-        std::printf("\nURL output file could not be opened.\n");
+        fmt::print("\nURL output file could not be opened.\n");
         return false;
     }
     std::array<char, 1030> read_buffer;
@@ -87,12 +87,12 @@ static bool fetch_http(const char *host, int port, const char *path, const fs::p
         size_t len = read(socket, asio::buffer(read_buffer), ec);
         if (ec != asio::error::eof)
         {
-            std::printf("\nError: reading URL reply\n");
+            fmt::print("\nError: reading URL reply\n");
             return false;
         }
         if (len == 0)
         {
-            break;      // no data, end connection
+            break; // no data, end connection
         }
         std::fwrite(read_buffer.data(), 1, len, fp_out);
     }
@@ -101,11 +101,10 @@ static bool fetch_http(const char *host, int port, const char *path, const fs::p
 }
 
 // add port support later?
-static bool fetch_ftp(const char *host, const char *origpath, const fs::path &outname)
+static bool fetch_ftp(std::string_view host, std::string_view path, const fs::path &outname)
 {
 #ifdef USE_FTP
-    const std::string_view path{origpath};
-    const std::size_t      slash = path.rfind('/');
+    const std::size_t slash = path.rfind('/');
     if (slash == std::string_view::npos)
     {
         fmt::print("Error: URL:ftp path has no '/' character.\n");
@@ -244,11 +243,11 @@ bool url_get(std::string_view url, const fs::path &outfile)
 
     if (parts.type == "http")
     {
-        return fetch_http(parts.host.c_str(), parts.port, parts.path.c_str(), outfile);
+        return fetch_http(parts.host, parts.port, parts.path, outfile);
     }
     if (parts.type == "ftp")
     {
-        return fetch_ftp(parts.host.c_str(), parts.path.c_str(), outfile);
+        return fetch_ftp(parts.host, parts.path, outfile);
     }
     fmt::print("\nURL type {} not supported (yet?)\n", parts.type);
     return false;

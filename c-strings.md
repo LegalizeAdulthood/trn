@@ -476,8 +476,7 @@ generated files, or the vendored `vcpkg` tree.
   terminal pushback bytes, termcap storage, and regex bytecode arrays
   are non-string protocol or parser storage, not current local string
   slices.
-- Newly exposed leaf helpers include color-attribute parsing and URL
-  fetch helper inputs.
+- Newly exposed leaf helpers include color-attribute parsing.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
@@ -489,13 +488,12 @@ generated files, or the vendored `vcpkg` tree.
   `line_ptr`, `line_offset`, `file_ref`, `yes_or_no`, `empty`,
   `plural`, `force_me`, and `at_grey_space`; they still have
   production/source callers or platform/API boundary use.
-- Filename storage: newsrc fields, `make_dir`, `safe_link`, and
+- Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, and option-file loading already use modern path or
-  view signatures.  Current filename or path candidates are URL fetch
-  helper inputs and option saving.  Score file shortcut strings,
-  universal-selector labels, shell commands, URLs, and expansion
-  templates still mix path and non-path text, so only the path-only
-  arguments are listed below.
+  view signatures.  Current filename or path candidates include option
+  saving.  Score file shortcut strings, universal-selector labels, shell
+  commands, URLs, and expansion templates still mix path and non-path
+  text, so only the path-only arguments are listed below.
 - Scorefile parsing has no new leaf string slice in this pass.  Remaining
   scorefile C-string work is tied to shared header buffers, regex
   bytecode, or command text.
@@ -590,18 +588,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-168 - URL Fetch Helper Views
-
-- Files: `libtrn/url.cpp`, `tests/test_url.cpp`.
-- Kind: owned URL parts converted to C strings for internal helpers.
-- Functions: `fetch_http`, `fetch_ftp`, `url_get`.
-- Depends on: none.
-- Change: make the static fetch helpers accept `std::string_view` host
-  and path values.  Construct temporary strings only at legacy library
-  boundaries that require null termination.  Keep the output path as
-  `fs::path`.
-- Tests: `test_url`.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
