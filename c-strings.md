@@ -496,8 +496,7 @@ generated files, or the vendored `vcpkg` tree.
   only the path-only arguments are listed below.
 - Scorefile parsing has several newly exposed local helpers where the
   caller already has a string or view.  These are leaf or Tier 1 slices:
-  remove `is_text_zero`, promote `score_match`, and clean up related
-  scorefile parsing helpers.
+  remove `is_text_zero` and clean up related scorefile parsing helpers.
 - Author compression still has a string public result wrapped around
   mutable character-pointer helpers.  The public input can move to
   `std::string_view` first; the internal name/address helpers can then
@@ -591,19 +590,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-145 - Scorefile Match Input String
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: local helper takes `const char *` even though callers already
-  hold `std::string` header text.
-- Function: `score_match`.
-- Depends on: none.
-- Change: accept `const std::string &text`, call the legacy regex engine
-  with `text.c_str()` inside the helper, and use direct string find
-  operations for non-regex rules.
-- Tests: `ScoreFileTest.fromWildcardMatchesBothPiecesInOrder` and
-  `ScoreFileTest.patternKeywordMatchesWithRegularExpression`.
 
 #### CSTR-146 - Mimecap Filename View
 

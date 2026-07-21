@@ -87,7 +87,7 @@ static bool        sf_do_command(std::string_view cmd, bool check);
 static std::string_view sf_freeform(std::string_view keyword, std::string_view remaining);
 static bool  sf_do_line(std::string_view line, bool check);
 static void  sf_do_file(std::string_view fname);
-static int   score_match(const char *str, int ind);
+static int   score_match(const std::string &text, int ind);
 static std::string sf_missing_score(std::string_view line);
 static std::string sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
@@ -778,16 +778,16 @@ static void sf_do_file(std::string_view fname)
     s_sf_file_level--;
 }
 
-//const char* str;      // string to match on
-//int ind;              // index into s_sf_entries
-static int score_match(const char *str, int ind)
+//const std::string& text; // string to match on
+//int ind;                 // index into s_sf_entries
+static int score_match(const std::string &text, int ind)
 {
     if (s_sf_entries[ind].flags & 1)    // pattern style match
     {
         if (s_sf_entries[ind].compex != nullptr)
         {
             // we have a good pattern
-            const char *s2 = s_sf_entries[ind].compex->execute(str);
+            const char *s2 = s_sf_entries[ind].compex->execute(text.c_str());
             if (s2 != nullptr)
             {
                 return true;
@@ -798,10 +798,9 @@ static int score_match(const char *str, int ind)
     // default case
     const std::string     &s1 = s_sf_entries[ind].str1;
     const std::string     &s2 = s_sf_entries[ind].str2;
-    const std::string_view text{str};
     const std::size_t      first = text.find(s1);
-    return first != std::string_view::npos &&
-           (s2.empty() || text.find(s2, first + s1.size()) != std::string_view::npos);
+    return first != std::string::npos &&
+           (s2.empty() || text.find(s2, first + s1.size()) != std::string::npos);
 }
 
 int sf_score(ArticleNum a)
@@ -860,7 +859,7 @@ int sf_score(ArticleNum a)
                 {
                     s_sf_entries[j].flags |= 2; // rule has been applied.
                 }
-                if (score_match(s.c_str(), j))
+                if (score_match(s, j))
                 {
                     sum = sum + s_sf_entries[j].score;
                     if (h == FROM_LINE)
