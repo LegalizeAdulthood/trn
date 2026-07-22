@@ -583,19 +583,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-134 - Multirc Page Item Display Builder
-
-- Files: `libtrn/rt-page.cpp`.
-- Kind: `g_buf` string building with `sprintf`, `strlen`, and `strcpy`.
-- Function: multirc page item rendering.
-- Depends on: none.
-- Change: build the active data-source list in a local `std::string`,
-  preserve the existing display truncation threshold, and print with
-  fmt.
-- Truncation: meaningful display abbreviation at roughly 34 columns;
-  preserve the `, ...` behavior.
-- Tests: run selector page tests.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers

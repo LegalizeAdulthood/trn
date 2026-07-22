@@ -2095,7 +2095,6 @@ try_again:
     {
         Multirc *mp = g_sel_page_mp;
         Newsrc  *rp;
-        int      len;
         for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
         {
             if (!(mp->m_flags & MF_INCLUDED))
@@ -2112,17 +2111,21 @@ try_again:
             g_sel_page_obj_cnt++;
 
             maybe_eol();
-            for (rp = mp->m_first, len = 0; rp && len < 34; rp = rp->next)
+            std::string news_sources;
+            news_sources.reserve(34);
+            std::size_t len = 0;
+            for (rp = mp->m_first; rp && len < 34; rp = rp->next)
             {
-                std::sprintf(g_buf + len, ", %s", rp->data_source->m_name.c_str());
-                len += std::strlen(g_buf + len);
+                fmt::format_to(std::back_inserter(news_sources), "{}{}", news_sources.empty() ? "" : ", ",
+                               rp->data_source->m_name);
+                len = news_sources.size() + 2;
             }
             if (rp)
             {
-                std::strcpy(g_buf + len, ", ...");
+                news_sources += ", ...";
             }
             output_sel(g_sel_page_item_cnt, sel, false);
-            std::printf("%5d %s\n", mp->m_num, g_buf+2);
+            fmt::print("{:5} {}\n", mp->m_num, news_sources);
             term_down(1);
             g_sel_page_item_cnt++;
         }
