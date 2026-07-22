@@ -284,6 +284,43 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
     EXPECT_EQ(fs::path{file_exp(help_name)}, item->text_file().fname);
 }
 
+TEST_F(UnivTest, fileLoadCreatesNumberedVirtualArticle)
+{
+    const fs::path  temp_dir = fs::path{TRN_TEST_TMP_DIR} / "UnivTest" / "fileLoadCreatesNumberedVirtualArticle";
+    std::error_code error;
+    fs::remove_all(temp_dir, error);
+    fs::create_directories(temp_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    const fs::path selector_file = temp_dir / "selector.univ";
+    std::ofstream{selector_file} << "\"Article\" $v1 1500 news.admin\n";
+
+    ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", {}));
+    UniversalItem *item = univ_first_item();
+    ASSERT_NE(nullptr, item);
+    EXPECT_TRUE(std::holds_alternative<UniversalVirtualArticle>(item->m_data));
+    EXPECT_EQ("Article", item->m_desc);
+    EXPECT_EQ("news.admin", item->article().ng);
+    EXPECT_EQ(ArticleNum{1500}, item->article().num);
+    EXPECT_EQ(nullptr, univ_next_item(item));
+    fs::remove_all(temp_dir, error);
+}
+
+TEST_F(UnivTest, fileLoadParsesVirtualGroupExtensionWithoutMatches)
+{
+    const fs::path temp_dir =
+        fs::path{TRN_TEST_TMP_DIR} / "UnivTest" / "fileLoadParsesVirtualGroupExtensionWithoutMatches";
+    std::error_code error;
+    fs::remove_all(temp_dir, error);
+    fs::create_directories(temp_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    const fs::path selector_file = temp_dir / "selector.univ";
+    std::ofstream{selector_file} << "\"Virtual\" $vg +5 no.match\n";
+
+    ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", {}));
+    EXPECT_EQ(nullptr, univ_first_item());
+    fs::remove_all(temp_dir, error);
+}
+
 TEST_F(UnivTest, debugItemStoresStringPayload)
 {
     UniversalItem item = make_universal_item(UniversalDebugData{});

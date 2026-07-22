@@ -583,23 +583,11 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-148 - Universal Extension Line Parsing
-
-- Files: `libtrn/univ.cpp`.
-- Kind: `$` extension pointer parsing and temporary NUL writes.
-- Function: `univ_do_line_ext1`.
-- Change: take the extension text as `std::string_view`, parse `$v` and
-  `$t` cases with views, and stop mutating the line while extracting
-  virtual article numbers and group names.
-- Tests: run universal-selector tests; add current-behavior coverage
-  first if the `$v` extension cases are not covered.
-
 #### CSTR-149 - Universal Config Line Parsing
 
 - Files: `libtrn/univ.cpp`.
 - Kind: mutable line parsing from owned `std::string` input.
 - Function: `univ_do_line`.
-- Depends on: `CSTR-148`.
 - Change: take a line view, strip the trailing newline by view extent,
   parse descriptions and file references without mutating the input
   string, and pass extension text to the view API.

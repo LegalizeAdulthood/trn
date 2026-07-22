@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <charconv>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -98,7 +99,7 @@ static void           univ_use_group_line(std::string_view line, int type);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
-static void  univ_do_line_ext1(std::string_view desc, char *line);
+static void           univ_do_line_ext1(std::string_view desc, std::string_view line);
 static bool  univ_do_line(char *line);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
@@ -698,74 +699,115 @@ static bool univ_include_file(std::string_view fname)
 }
 
 // do the '$' extensions of the line.
-//char* line;                   // may be temporarily edited
-static void univ_do_line_ext1(std::string_view desc, char *line)
+static void univ_do_line_ext1(std::string_view desc, std::string_view line)
 {
-    char* p;
-    char* q;
-    ArticleNum a;
-    char ch;
-
-    char *s = line;
-
-    s++;
-    switch (*s)
+    if (line.empty())
+    {
+        return;
+    }
+    line.remove_prefix(1);
+    if (line.empty())
+    {
+        return;
+    }
+    switch (line.front())
     {
     case 'v':
-        s++;
-        switch (*s)
+    {
+        line.remove_prefix(1);
+        if (line.empty())
         {
-        case '0':             // test vector: "desc" $v0
-            s++;
-            (void) univ_add_virt_num(!desc.empty() ? desc : s, "news.software.readers", ArticleNum{15000});
+            break;
+        }
+        switch (line.front())
+        {
+        case '0': // test vector: "desc" $v0
+            line.remove_prefix(1);
+            (void) univ_add_virt_num(!desc.empty() ? desc : line, "news.software.readers", ArticleNum{15000});
             break;
 
-        case '1':             // "desc" $v1 1500 news.admin
-            // XXX error checking
-            s++;
-            s = skip_space(s);
-            p = skip_digits(s);
-            ch = *p;
-            *p = '\0';
-            a = ArticleNum{atoi(s)};
-            *p = ch;
-            if (*p)
+        case '1': // "desc" $v1 1500 news.admin
+        {
+            line.remove_prefix(1);
+            const std::size_t number_start = line.find_first_not_of(" \f\n\r\t\v");
+            if (number_start == std::string_view::npos)
             {
-                p++;
-                (void)univ_add_virt_num(!desc.empty() ? desc : s, p, a);
+                break;
+            }
+            line.remove_prefix(number_start);
+            std::size_t number_end = line.find_first_not_of("0123456789");
+            if (number_end == std::string_view::npos)
+            {
+                number_end = line.size();
+            }
+            const std::string_view art_num_text = line.substr(0, number_end);
+            long                   art_num{};
+            if (!art_num_text.empty())
+            {
+                (void) std::from_chars(art_num_text.data(), art_num_text.data() + art_num_text.size(), art_num);
+            }
+            if (number_end < line.size())
+            {
+                (void) univ_add_virt_num(!desc.empty() ? desc : line, line.substr(number_end + 1), ArticleNum{art_num});
             }
             break;
+        }
 
-        case 'g':             // $vg [scorenum] news.* !news.foo.*
-            p = s;
-            p++;
-            p = skip_space(p);
-            q = p;
-            if ((*p=='+') || (*p=='-'))
+        case 'g': // $vg [scorenum] news.* !news.foo.*
+        {
+            line.remove_prefix(1);
+            const std::size_t pattern_start = line.find_first_not_of(" \f\n\r\t\v");
+            if (pattern_start == std::string_view::npos)
             {
-              p++;
+                break;
             }
-            p = skip_digits(p);
-            if (std::isspace(*p))
+            line.remove_prefix(pattern_start);
+            std::string_view score_text = line;
+            if (!score_text.empty() && (score_text.front() == '+' || score_text.front() == '-'))
             {
-              *p = '\0';
-              s_univ_min_score = std::atoi(q);
-              s_univ_use_min_score = true;
-              s = p;
-              s++;
+                score_text.remove_prefix(1);
             }
-            univ_use_group_line(s,1);
+            const std::size_t score_offset = static_cast<std::size_t>(score_text.data() - line.data());
+            const std::size_t score_digits_end = score_text.find_first_not_of("0123456789");
+            const std::size_t score_end =
+                score_digits_end == std::string_view::npos ? line.size() : score_digits_end + score_offset;
+            if (score_end < line.size() && std::isspace(static_cast<unsigned char>(line[score_end])))
+            {
+                score_text = line.substr(0, score_end);
+                bool negative = false;
+                if (!score_text.empty() && (score_text.front() == '+' || score_text.front() == '-'))
+                {
+                    negative = score_text.front() == '-';
+                    score_text.remove_prefix(1);
+                }
+                int score{};
+                if (!score_text.empty())
+                {
+                    (void) std::from_chars(score_text.data(), score_text.data() + score_text.size(), score);
+                }
+                s_univ_min_score = negative ? -score : score;
+                s_univ_use_min_score = true;
+                line.remove_prefix(score_end + 1);
+            }
+            univ_use_group_line(line, 1);
             s_univ_use_min_score = false;
             break;
         }
+        }
         break;
+    }
 
-    case 't':         // text file
-        s++;
-        switch (*s)
+    case 't': // text file
+        line.remove_prefix(1);
+        if (line.empty())
+        {
+            break;
+        }
+        switch (line.front())
         {
         case '0':             // test vector: "desc" $t0
-            univ_add_text_file(!desc.empty() ? desc : s, "/home/c/caadams/ztext");
+            line.remove_prefix(1);
+            univ_add_text_file(!desc.empty() ? desc : line, "/home/c/caadams/ztext");
             break;
         }
         break;
