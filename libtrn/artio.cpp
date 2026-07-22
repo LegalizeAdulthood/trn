@@ -39,18 +39,23 @@ ArticlePosition g_art_buf_len{};          //
 char            g_wrapped_nl{WRAPPED_NL}; //
 int             g_word_wrap_offset{8};    // right-hand column size (0 is off)
 
-static long s_art_buf_size{};
+static constexpr std::size_t INITIAL_ART_BUF_SIZE{8 * 1024};
+static constexpr std::size_t ART_BUF_GROWTH{LINE_BUF_LEN * 4};
+
+static std::string s_art_buf;
 
 void art_io_init()
 {
-    s_art_buf_size = 8 * 1024;
-    g_art_buf = safe_malloc(s_art_buf_size);
+    s_art_buf.assign(INITIAL_ART_BUF_SIZE, '\0');
+    g_art_buf = s_art_buf.data();
     clear_art_buf();
 }
 
 void art_io_final()
 {
-    safe_free0(g_art_buf);
+    s_art_buf.clear();
+    s_art_buf.shrink_to_fit();
+    g_art_buf = nullptr;
 }
 
 // open an article, unless it's already open
@@ -241,10 +246,10 @@ char *read_art_buf(bool view_inline)
 read_more:
     extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
-    if (s_art_buf_size < g_art_buf_pos.value_of() + o + LINE_BUF_LEN)
+    if (s_art_buf.size() < static_cast<std::size_t>(g_art_buf_pos.value_of() + o + LINE_BUF_LEN))
     {
-        s_art_buf_size += LINE_BUF_LEN * 4;
-        g_art_buf = safe_realloc(g_art_buf,s_art_buf_size);
+        s_art_buf.resize(s_art_buf.size() + ART_BUF_GROWTH);
+        g_art_buf = s_art_buf.data();
         bp = g_art_buf + g_art_buf_pos.value_of();
     }
     switch (g_mime_state)
@@ -256,7 +261,7 @@ read_more:
     default:
         read_something = 1;
         // The -1 leaves room for appending a newline, if needed
-        if (!read_art(bp + o, s_art_buf_size - g_art_buf_pos.value_of() - o - 1))
+        if (!read_art(bp + o, static_cast<int>(s_art_buf.size() - g_art_buf_pos.value_of() - o - 1)))
         {
             if (!read_offset)
             {
@@ -560,7 +565,15 @@ done:
                         for (t++; *++t == ' ' || *t == '\t'; spaces++)
                         {
                         }
-                        safe_copy(t-spaces,t,extra_chars);
+                        const std::size_t source_offset = static_cast<std::size_t>(t - g_art_buf);
+                        const std::size_t dest_offset = static_cast<std::size_t>(t - spaces - g_art_buf);
+                        const std::size_t copy_limit = extra_chars > 0 ? static_cast<std::size_t>(extra_chars - 1) : 0;
+                        const std::size_t source_end = source_offset + copy_limit;
+                        const std::size_t nul_offset = s_art_buf.find('\0', source_offset);
+                        const std::size_t copy_count =
+                            nul_offset < source_end ? nul_offset - source_offset : copy_limit;
+                        std::char_traits<char>::move(&s_art_buf[dest_offset], &s_art_buf[source_offset], copy_count);
+                        s_art_buf[dest_offset + copy_count] = '\0';
                         extra_chars -= spaces;
                         t -= spaces + 1;
                     }

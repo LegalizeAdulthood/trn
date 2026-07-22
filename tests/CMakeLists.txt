@@ -12,6 +12,7 @@ add_executable(trn-test
     test_addng.cpp
     test_autosub.cpp
     test_artsrch.cpp
+    test_artio.cpp
     test_bits.cpp
     test_cache.cpp
     test_color.cpp

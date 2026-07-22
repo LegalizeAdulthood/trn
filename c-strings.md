@@ -526,12 +526,10 @@ generated files, or the vendored `vcpkg` tree.
 
 ## Current `safe_copy` Inventory
 
-The current tree has four `safe_copy` hits: the helper definition, the
-helper declaration, and two call sites.  Keep each call site visible
+The current tree has three `safe_copy` hits: the helper definition, the
+helper declaration, and one call site.  Keep the call site visible
 until the owning storage or API changes.
 
-- `libtrn/artio.cpp`, `read_art_buf`: compacts a mutable article buffer
-  during word wrapping.  See `CSTR-033`.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
 
@@ -598,15 +596,6 @@ formatting-only leaves first, because they do not affect command input,
 typeahead, article reading, or protocol line ownership.  Terminal
 command input remains in `CSTR-119`; file and protocol read buffers stay
 with their owner slices unless a local use is clearly formatting-only.
-
-#### CSTR-033 - Article Body Wrap Buffer
-
-- Files: `libtrn/artio.cpp`.
-- Kind: mutable article-body buffer compaction.
-- Function: `read_art_buf`.
-- Change: convert article body storage to owned string storage before
-  removing the in-place `safe_copy`.
-- Tests: add wrapped article body coverage first.
 
 #### CSTR-036 - NNTP Protocol Line Compaction
 
@@ -678,6 +667,6 @@ owned strings or owner-specific storage.
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
 - Kind: obsolete bounded C-string copy helper.
 - Function: `safe_copy`.
-- Change: remove `safe_copy` only after `CSTR-033` and `CSTR-036` have
-  removed every production call site.
+- Change: remove `safe_copy` only after `CSTR-036` has removed every
+  production call site.
 - Tests: build.
