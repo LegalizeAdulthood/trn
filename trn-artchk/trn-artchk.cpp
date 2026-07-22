@@ -18,6 +18,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -290,8 +292,7 @@ int main(int argc, char *argv[])
                 ArticleNewsgroup &newsgroup = newsgroups[i];
                 if (listactive_works)
                 {
-                    std::sprintf(g_ser_line, "list active %s", newsgroup.name.c_str());
-                    if (nntp_command(g_ser_line) <= 0)
+                    if (nntp_command(fmt::format("list active {}", newsgroup.name)) <= 0)
                     {
                         break;
                     }
@@ -314,8 +315,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    std::sprintf(g_ser_line, "GROUP %s", newsgroup.name.c_str());
-                    if (nntp_command(g_ser_line) <= 0)
+                    if (nntp_command(fmt::format("GROUP {}", newsgroup.name)) <= 0)
                     {
                         break;
                     }
@@ -336,8 +336,7 @@ int main(int argc, char *argv[])
                 for (const ArticleNewsgroup &newsgroup : newsgroups)
                 {
                     // issue a description list command
-                    std::sprintf(g_ser_line, "XGTITLE %s", newsgroup.name.c_str());
-                    if (nntp_command(g_ser_line) <= 0)
+                    if (nntp_command(fmt::format("XGTITLE {}", newsgroup.name)) <= 0)
                     {
                         break;
                     }

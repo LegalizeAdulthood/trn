@@ -531,7 +531,7 @@ unqualified C calls in production code.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 46.
-- Formatting into C buffers: `sprintf` 14, `snprintf` 2.
+- Formatting into C buffers: `sprintf` 11, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 193, `printf` 375,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
@@ -558,17 +558,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-143 - Article-check NNTP Command Formatting
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: outgoing command construction in shared response buffer.
-- Function: `main`.
-- Change: replace `g_ser_line` command construction for `list active`,
-  `GROUP`, and `XGTITLE` with local formatted strings passed to
-  `nntp_command`.  Keep `g_ser_line` for response lines read by
-  `nntp_check` and `nntp_gets`.
-- Tests: trn-artchk tests or build if no focused test exists.
 
 #### CSTR-144 - NNTP Connect Error Formatting
 
