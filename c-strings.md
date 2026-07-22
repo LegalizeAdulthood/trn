@@ -546,7 +546,7 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 21, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 8, `strncmp` 17.
+- Comparison: `strcmp` 8, `strncmp` 16.
 - Search and length: `strchr` 60, `strrchr` 1, `strstr` 2,
   `strlen` 50.
 - Formatting into C buffers: `sprintf` 26, `snprintf` 2.
@@ -576,15 +576,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-135 - Subject Duplicate Check
-
-- Files: `libtrn/cache.cpp`.
-- Kind: `Subject::stripped_text` C-string comparison.
-- Function: `Article::set_subj_line`.
-- Change: compare `m_subj->stripped_view()` with a view of the new
-  subject key instead of calling `strncmp` through `stripped_text`.
-- Tests: run subject and cache tests.
 
 #### CSTR-136 - Thread Subject Enumeration
 

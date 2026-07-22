@@ -440,7 +440,8 @@ void Article::set_subj_line(std::string_view subj)
     }
     new_subj.resize(static_cast<std::size_t>(size) + 4);
 
-    if (m_subj && !std::strncmp(m_subj->stripped_text(), new_subj.c_str() + 4, size))
+    const std::string_view new_key{new_subj.c_str() + 4, static_cast<std::size_t>(size)};
+    if (m_subj && m_subj->stripped_view() == new_key)
     {
         return;
     }
@@ -455,7 +456,6 @@ void Article::set_subj_line(std::string_view subj)
     }
     else
     {
-        const std::string_view new_key{new_subj.c_str() + 4, static_cast<std::size_t>(size)};
         data = hash_fetch(s_subj_hash, new_key);
         if (!(sp = (Subject *) data.dat_ptr))
         {
