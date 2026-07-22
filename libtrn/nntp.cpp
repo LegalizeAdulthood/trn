@@ -18,7 +18,6 @@
 #include <trn/rcstuff.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
-#include <util/util2.h>
 
 #include <fmt/format.h>
 
@@ -30,7 +29,7 @@
 #include <string_view>
 
 static ArticleNum nntp_next_art();
-static int nntp_copy_body(char *s, int limit, ArticlePosition pos);
+static int        nntp_copy_body(std::string &line, int limit, ArticlePosition pos);
 #ifdef SUPPORT_XTHREAD
 static long nntp_read_check();
 static long nntp_read(char *buf, long n);
@@ -284,12 +283,13 @@ void nntp_body(ArticleNum art_num)
     }
     else
     {
-        char b[NNTP_STRLEN];
+        std::string line;
+        line.reserve(NNTP_STRLEN);
         s_body_end = ArticlePosition{};
         ArticlePosition prev_pos{};
-        while (nntp_copy_body(b, sizeof b, s_body_end + ArticlePosition{1}) > 0)
+        while (nntp_copy_body(line, NNTP_STRLEN, s_body_end + ArticlePosition{1}) > 0)
         {
-            if (*b == '\n' && (s_body_end - prev_pos).value_of() < sizeof b)
+            if (!line.empty() && line[0] == '\n' && (s_body_end - prev_pos).value_of() < NNTP_STRLEN)
             {
                 break;
             }
@@ -305,36 +305,45 @@ ArticlePosition nntp_art_size()
     return s_body_pos < 0 ? s_body_end : ArticlePosition{-1};
 }
 
-static int nntp_copy_body(char *s, int limit, ArticlePosition pos)
+static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
 {
     bool had_nl = true;
+    line.reserve(static_cast<std::size_t>(limit));
 
     while (pos > s_body_end || !had_nl)
     {
-        const int result = nntp_gets(s, limit);
+        line.resize(static_cast<std::size_t>(limit));
+        const int result = nntp_gets(line.data(), limit);
         if (result == NGSR_ERROR)
         {
-            std::strcpy(s, ".");
+            line = ".";
+        }
+        else
+        {
+            const std::size_t end = line.find('\0');
+            if (end != std::string::npos)
+            {
+                line.resize(end);
+            }
         }
         if (had_nl)
         {
-            if (nntp_at_list_end(s))
+            if (nntp_at_list_end(line))
             {
-                std::fseek(g_art_fp, (long)s_body_pos.value_of(), 0);
+                std::fseek(g_art_fp, (long) s_body_pos.value_of(), 0);
                 s_body_pos = ArticlePosition{-1};
                 return 0;
             }
-            if (s[0] == '.')
+            if (!line.empty() && line[0] == '.')
             {
-                safe_copy(s, s + 1, limit);
+                line.erase(0, 1);
             }
         }
-        int len = std::strlen(s);
         if (result == NGSR_FULL_LINE)
         {
-            std::strcpy(s + len, "\n");
+            line += '\n';
         }
-        std::fputs(s, g_art_fp);
+        fmt::print(g_art_fp, "{}", line);
         s_body_end = ftell_art();
         had_nl = result == NGSR_FULL_LINE;
     }
@@ -343,7 +352,8 @@ static int nntp_copy_body(char *s, int limit, ArticlePosition pos)
 
 int nntp_finish_body(FinishBodyMode bmode)
 {
-    char b[NNTP_STRLEN];
+    std::string line;
+    line.reserve(NNTP_STRLEN);
     if (s_body_pos < 0)
     {
         return 0;
@@ -369,11 +379,11 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     if (bmode != FB_BACKGROUND)
     {
-        nntp_copy_body(b, sizeof b, ArticlePosition{0x7fffffffL});
+        nntp_copy_body(line, NNTP_STRLEN, ArticlePosition{0x7fffffffL});
     }
     else
     {
-        while (nntp_copy_body(b, sizeof b, s_body_end + ArticlePosition{1}))
+        while (nntp_copy_body(line, NNTP_STRLEN, s_body_end + ArticlePosition{1}))
         {
             if (input_pending())
             {
@@ -398,9 +408,10 @@ int nntp_seek_art(ArticlePosition pos)
     {
         if (s_body_end < pos)
         {
-            char b[NNTP_STRLEN];
+            std::string line;
+            line.reserve(NNTP_STRLEN);
             std::fseek(g_art_fp, s_body_end.value_of(), 0);
-            nntp_copy_body(b, sizeof b, pos);
+            nntp_copy_body(line, NNTP_STRLEN, pos);
             if (s_body_pos >= 0)
             {
                 s_body_pos = pos;
@@ -425,12 +436,16 @@ char *nntp_read_art(char *s, int limit)
     {
         if (s_body_pos == s_body_end)
         {
-            if (nntp_copy_body(s, limit, s_body_pos + ArticlePosition{1}) <= 0)
+            std::string line;
+            line.reserve(static_cast<std::size_t>(limit));
+            if (nntp_copy_body(line, limit, s_body_pos + ArticlePosition{1}) <= 0)
             {
                 return nullptr;
             }
             if (s_body_end - s_body_pos < ArticlePosition{limit})
             {
+                const std::size_t line_size = line.copy(s, static_cast<std::size_t>(limit - 1));
+                s[line_size] = '\0';
                 s_body_pos = s_body_end;
                 return s;
             }

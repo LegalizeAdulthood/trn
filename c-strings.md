@@ -522,26 +522,23 @@ generated files, or the vendored `vcpkg` tree.
 
 ## Current `safe_copy` Inventory
 
-The current tree has three `safe_copy` hits: the helper definition, the
-helper declaration, and one call site.  Keep the call site visible
-until the owning storage or API changes.
-
-- `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
-  See `CSTR-036`.
+The current tree has two `safe_copy` hits: the helper definition and the
+helper declaration.  No production call sites remain; remove the helper
+through `CSTR-048`.
 
 ## Current C String Function Inventory
 
 The current scan covers the production roots listed above.  Counts below
-are raw direct token counts for `std::` calls and unqualified C calls in
-production code.
+are identifier-aware function-call counts for `std::` calls and
+unqualified C calls in production code.
 
-- Copy and concatenation: `strcpy` 15, `strncpy` 3, `strcat` 0.
+- Copy and concatenation: `strcpy` 13, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 56, `strrchr` 1, `strstr` 2,
-  `strlen` 44.
-- Formatting into C buffers: `sprintf` 25, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 194, `printf` 376,
-  `fprintf` 41.
+- Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
+  `strlen` 46.
+- Formatting into C buffers: `sprintf` 20, `snprintf` 2.
+- C text I/O roots: `fgets` 23, `fputs` 190, `printf` 367,
+  `fprintf` 40.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -576,15 +573,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-036 - NNTP Protocol Line Compaction
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: protocol read buffer compaction.
-- Function: `nntp_read_art`.
-- Change: keep the protocol line in owned string storage once the NNTP
-  read API no longer exposes a caller mutable buffer.
-- Tests: run `test_nntp`.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -663,6 +651,5 @@ owned strings or owner-specific storage.
 - Files: `util/util2.cpp`, `util/include/util/util2.h`.
 - Kind: obsolete bounded C-string copy helper.
 - Function: `safe_copy`.
-- Change: remove `safe_copy` only after `CSTR-036` has removed every
-  production call site.
+- Change: remove `safe_copy`; no production call sites remain.
 - Tests: build.

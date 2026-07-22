@@ -4,10 +4,13 @@
 
 #include <config/common.h>
 #include <trn/Article.h>
+#include <trn/artio.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/head.h>
+#include <trn/init.h>
 #include <trn/ngdata.h>
+#include <trn/nntp.h>
 
 #include <test_config.h>
 
@@ -15,10 +18,12 @@
 
 #include <gmock/gmock.h>
 
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <string>
+#include <system_error>
 #include <utility>
 
 namespace fs = std::filesystem;
@@ -248,6 +253,85 @@ TEST_F(NNTPGetStringTest, error)
 
     EXPECT_EQ(NGSR_ERROR, result);
     EXPECT_EQ("junk", std::string(buffer));
+}
+
+class NNTPBodyTest : public NNTPGetStringTest
+{
+protected:
+    void SetUp() override
+    {
+        NNTPGetStringTest::SetUp();
+
+        m_old_art_fp = g_art_fp;
+        m_old_current_path = fs::current_path();
+        m_old_parsed_art = g_parsed_art;
+        m_old_nntp_flags = g_nntp_link.flags;
+        m_old_pid = g_our_pid;
+
+        const TestInfo *test_info = UnitTest::GetInstance()->current_test_info();
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::current_path(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+
+        (void) nntp_art_name(ArticleNum{}, false);
+        g_art_fp = nullptr;
+        g_parsed_art = ArticleNum{};
+        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_our_pid = 24680;
+    }
+
+    void TearDown() override
+    {
+        if (g_art_fp != nullptr)
+        {
+            std::fclose(g_art_fp);
+            g_art_fp = nullptr;
+        }
+        (void) nntp_art_name(ArticleNum{}, false);
+
+        g_art_fp = m_old_art_fp;
+        g_parsed_art = m_old_parsed_art;
+        g_nntp_link.flags = m_old_nntp_flags;
+        g_our_pid = m_old_pid;
+
+        std::error_code error;
+        fs::current_path(m_old_current_path, error);
+        fs::remove_all(m_output_dir, error);
+
+        NNTPGetStringTest::TearDown();
+    }
+
+    std::FILE *m_old_art_fp{};
+    fs::path   m_old_current_path;
+    ArticleNum m_old_parsed_art{};
+    NNTPFlags  m_old_nntp_flags{};
+    long       m_old_pid{};
+    fs::path   m_output_dir;
+};
+
+TEST_F(NNTPBodyTest, unstuffsDotPrefixedBodyLines)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("ARTICLE 7"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("220 7 <message@example.test> article follows"))
+        .WillOnce(Return("plain"))
+        .WillOnce(Return("..dot-stuffed"))
+        .WillOnce(Return("."));
+
+    nntp_body(ArticleNum{7});
+
+    char line[NNTP_STRLEN]{};
+    ASSERT_EQ(line, nntp_read_art(line, sizeof line));
+    EXPECT_STREQ("plain\n", line);
+    ASSERT_EQ(line, nntp_read_art(line, sizeof line));
+    EXPECT_STREQ(".dot-stuffed\n", line);
+    EXPECT_EQ(nullptr, nntp_read_art(line, sizeof line));
 }
 
 class RemoteHeaderPrefetchTest : public NNTPGetStringTest
