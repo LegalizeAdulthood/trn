@@ -978,16 +978,13 @@ bool univ_file_load(std::string_view fname, std::string_view title, std::string_
 }
 
 // level generator
-void univ_mask_load(std::string_view mask, const char *title)
+void univ_mask_load(std::string_view mask, std::string_view title)
 {
     univ_open();
 
     std::string mask_buffer{mask};
     univ_use_group_line(mask_buffer.data(), 0);
-    if (title)
-    {
-        g_univ_title = title;
-    }
+    g_univ_title.assign(title.data(), title.size());
     if (g_int_count)
     {
         g_int_count = 0;

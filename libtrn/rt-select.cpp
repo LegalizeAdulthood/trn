@@ -938,7 +938,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
     }
     else if (const UniversalGroupMaskData *group_mask = std::get_if<UniversalGroupMaskData>(&ui->m_data))
     {
-        univ_mask_load(group_mask->mask_list, group_mask->title.c_str());
+        univ_mask_load(group_mask->mask_list, group_mask->title);
         ch = universal_selector();
         switch (ch)
         {

@@ -573,17 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-172 - Universal Mask Load Title View
-
-- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,
-  `libtrn/rt-select.cpp`, `tests/test_univ.cpp`.
-- Kind: public title pointer stored as `std::string`.
-- Function: `univ_mask_load`.
-- Depends on: none.
-- Change: accept `std::string_view title` and update callers to pass
-  strings/views directly.
-- Tests: run universal selector tests.
-
 #### CSTR-173 - Universal Extension Description View
 
 - Files: `libtrn/univ.cpp`.
