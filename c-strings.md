@@ -568,18 +568,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-162 - Posting Domain Name Comparison
-
-- Files: `util/env.cpp`.
-- Kind: C-string comparison on platform API scratch storage.
-- Function: `env_init2`.
-- Depends on: none.
-- Change: keep the `getdomainname` output buffer, but view the populated
-  result as text and compare it directly to `"(none)"`.
-- Truncation: meaningful platform API output buffer; preserve the call
-  capacity and only remove the local `strcmp`.
-- Tests: run config or environment tests.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts

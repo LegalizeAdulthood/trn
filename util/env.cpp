@@ -34,7 +34,6 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <fstream>
 #include <functional>
 #include <string>
@@ -455,10 +454,14 @@ static bool set_p_host_name()
 #ifdef HAS_GETDOMAINNAME
         {
             std::array<char, LINE_BUF_LEN + 1> domain_name{};
-            if (getdomainname(domain_name.data(), LINE_BUF_LEN) == 0 && domain_name[0] != '\0' &&
-                std::strcmp(domain_name.data(), "(none)") != 0)
+            std::string_view                   domain_name_text;
+            if (getdomainname(domain_name.data(), LINE_BUF_LEN) == 0)
             {
-                posting_host_name += domain_name.data();
+                domain_name_text = domain_name.data();
+            }
+            if (!domain_name_text.empty() && domain_name_text != "(none)")
+            {
+                posting_host_name += domain_name_text;
             }
             else
 #endif
