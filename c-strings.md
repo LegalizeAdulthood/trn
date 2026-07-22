@@ -485,9 +485,8 @@ generated files, or the vendored `vcpkg` tree.
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.  `Article::msg_id_c_str` is still live,
-  but its callers can move to views bottom-up.  See `CSTR-137` and
-  `CSTR-138`.
+  platform/API boundary use.  `Article::msg_id_c_str` is still live
+  only for `hash_msg_id_c_str`.  See `CSTR-138`.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -572,16 +571,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-137 - Article Message-ID View Accessor
-
-- Files: `libtrn/include/trn/Article.h`, `libtrn/kfile.cpp`.
-- Kind: borrowed string view accessor.
-- Function: `Article::msg_id_c_str`.
-- Change: replace direct article message-id C-string callers with a
-  view accessor.  Keep the C-string accessor only while
-  `hash_msg_id_c_str` still needs it.
-- Tests: kill-file and thread tests.
 
 #### CSTR-138 - Hash Message-ID View Helper
 

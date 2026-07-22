@@ -506,7 +506,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
                 break;
             }
         }
-        fmt::print(s_new_kill_file_fp, "{} T{}\n", ap->msg_id_c_str(), ch);
+        fmt::print(s_new_kill_file_fp, "{} T{}\n", ap->msg_id_view(), ch);
     }
     return 0;
 }
@@ -618,8 +618,8 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
 {
     int autofl;
     int age;
-    const char *msgid;
-    char        ch;
+    std::string_view msgid;
+    char             ch;
 
     if (data->dat_len)
     {
@@ -641,7 +641,7 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
         }
         ap->m_auto_flags |= AUTO_OLD;
         age = 0;
-        msgid = ap->msg_id_c_str();
+        msgid = ap->msg_id_view();
     }
 
     // The arrays are in priority order, so find highest priority bit.
