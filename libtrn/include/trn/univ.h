@@ -193,7 +193,7 @@ extern std::string    g_univ_tmp_file; // temp. file (may be empty)
 void           univ_init();
 void           univ_startup();
 void           univ_close();
-bool           univ_file_load(std::string_view fname, const char *title, const char *label);
+bool           univ_file_load(std::string_view fname, std::string_view title, std::string_view label);
 void           univ_mask_load(std::string_view mask, const char *title);
 void           univ_redo_file();
 void           univ_edit();

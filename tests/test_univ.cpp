@@ -218,7 +218,7 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
 {
     const std::string file_name = fs::path{TRN_TEST_UNIV_GROUP_MASK_FILE}.generic_string();
 
-    ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
+    ASSERT_TRUE(univ_file_load(file_name, "Top", {}));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalGroupMaskData>(item->m_data));
@@ -237,7 +237,7 @@ TEST_F(UnivTest, fileLoadAllowsEscapedQuoteInDescription)
     const fs::path selector_file = temp_dir / "selector.univ";
     std::ofstream{selector_file} << "\"Filter \\\"Name\\\"\" alt.test !alt.noise\n";
 
-    ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", nullptr));
+    ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", {}));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalGroupMaskData>(item->m_data));
@@ -253,7 +253,7 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
     const std::string file_name = selector_path.generic_string();
     const std::string help_name = (selector_path.parent_path() / "help.txt").generic_string();
 
-    ASSERT_TRUE(univ_file_load(file_name.c_str(), "Top", nullptr));
+    ASSERT_TRUE(univ_file_load(file_name, "Top", {}));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalTextFile>(item->m_data));
@@ -357,7 +357,7 @@ TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
     const std::string top_name = fs::path{TRN_TEST_UNIV_COLON_PATH_FILE}.generic_string();
     const std::string child_name = fs::path{TRN_TEST_UNIV_CHILD_FILE}.generic_string();
 
-    ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
+    ASSERT_TRUE(univ_file_load(top_name, "Top", {}));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalConfigFileData>(item->m_data));
@@ -371,7 +371,7 @@ TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
     const std::string top_name = fs::path{TRN_TEST_UNIV_COLON_PATH_LABEL_FILE}.generic_string();
     const std::string child_name = fs::path{TRN_TEST_UNIV_CHILD_FILE}.generic_string();
 
-    ASSERT_TRUE(univ_file_load(top_name.c_str(), "Top", nullptr));
+    ASSERT_TRUE(univ_file_load(top_name, "Top", {}));
     UniversalItem *item = univ_first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalConfigFileData>(item->m_data));

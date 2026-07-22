@@ -573,19 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-171 - Universal File Load Title And Label Views
-
-- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,
-  `libtrn/rt-select.cpp`, `tests/test_univ.cpp`.
-- Kind: public nullable title and label pointers stored or forwarded as
-  strings.
-- Function: `univ_file_load`.
-- Depends on: none.
-- Change: accept `std::string_view title` and `label`, update callers to
-  pass strings/views directly, and use empty label as the no-label
-  sentinel.
-- Tests: run universal selector tests.
-
 #### CSTR-172 - Universal Mask Load Title View
 
 - Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,

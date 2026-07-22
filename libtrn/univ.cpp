@@ -250,7 +250,7 @@ static std::size_t univ_position(UniversalItemIndex item_index)
 void univ_startup()
 {
     // later: make user top file an option or environment variable?
-    if (!univ_file_load("%+/univ/top", "Top Level", nullptr))
+    if (!univ_file_load("%+/univ/top", "Top Level", {}))
     {
         univ_open();
         g_univ_title = "Top Level";
@@ -948,7 +948,7 @@ static bool univ_do_line(char *line)
 //
 
 // level generator
-bool univ_file_load(std::string_view fname, const char *title, const char *label)
+bool univ_file_load(std::string_view fname, std::string_view title, std::string_view label)
 {
     univ_open();
 
@@ -956,15 +956,12 @@ bool univ_file_load(std::string_view fname, const char *title, const char *label
     {
         g_univ_fname.assign(fname.data(), fname.size());
     }
-    if (title)
+    g_univ_title.assign(title.data(), title.size());
+    if (!label.empty())
     {
-        g_univ_title = title;
+        g_univ_label.assign(label.data(), label.size());
     }
-    if (label)
-    {
-        g_univ_label = label;
-    }
-    bool flag = !fname.empty() && univ_use_file(fname, label != nullptr ? label : "");
+    bool flag = !fname.empty() && univ_use_file(fname, label);
     if (!flag)
     {
         univ_close();
@@ -1006,8 +1003,7 @@ void univ_redo_file()
     univ_close();
     if (g_univ_level)
     {
-        (void)univ_file_load(tmp_fname,
-            tmp_title.c_str(),tmp_label.c_str());
+        (void)univ_file_load(tmp_fname, tmp_title, tmp_label);
     }
     else
     {

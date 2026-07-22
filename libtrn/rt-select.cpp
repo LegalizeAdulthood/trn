@@ -954,8 +954,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
     }
     else if (const UniversalConfigFileData *config_file = std::get_if<UniversalConfigFileData>(&ui->m_data))
     {
-        univ_file_load(config_file->fname.c_str(), config_file->title.c_str(),
-                       config_file->label.empty() ? nullptr : config_file->label.c_str());
+        univ_file_load(config_file->fname, config_file->title, config_file->label);
         ch = universal_selector();
         switch (ch)
         {
