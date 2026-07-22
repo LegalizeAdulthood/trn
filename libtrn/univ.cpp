@@ -87,7 +87,6 @@ static bool           s_univ_user_top{};         // if true, the user has loaded
 
 static void           univ_open();
 static UniversalItem *univ_add(UniversalData data, std::string_view desc);
-static void           univ_add_debug(const char *desc, const char *txt);
 static void           univ_add_group(const char *desc, std::string_view grpname);
 static void           univ_add_mask(const char *desc, const char *mask);
 static void           univ_add_file(const char *desc, std::string_view fname, const char *label);
@@ -328,14 +327,6 @@ static UniversalItem *univ_add(UniversalData data, std::string_view desc)
     node.m_data = std::move(data);
 
     return &node;
-}
-
-// temp for testing
-static void univ_add_debug(const char *desc, const char *txt)
-{
-    // later check text for bad things
-    UniversalItem *ui = univ_add(UniversalDebugData{}, desc != nullptr ? desc : "");
-    ui->debug_string() = txt ? txt : "";
 }
 
 static void univ_add_group(const char *desc, std::string_view grpname)

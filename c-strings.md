@@ -573,17 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-165 - Universal Debug Text Views
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable description and read-only text pointers stored as
-  `std::string`.
-- Function: `univ_add_debug`.
-- Depends on: none.
-- Change: accept `std::string_view desc` and `txt`, using empty
-  description as the missing sentinel.
-- Tests: run universal selector tests.
-
 #### CSTR-166 - Universal Add Mask Views
 
 - Files: `libtrn/univ.cpp`.
