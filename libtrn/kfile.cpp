@@ -537,17 +537,20 @@ static void rewrite_kill_file(ArticleNum thru)
         fmt::print(s_new_kill_file_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
         while (g_local_kfp && std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
         {
-            if (!std::strncmp(g_buf, "THRU", 4))
+            const std::string_view line{g_buf};
+            if (line.substr(0, 4) == "THRU")
             {
                 char* cp = g_buf+4;
                 const std::string rc_name = g_newsgroup_ptr->m_rc->name.generic_string();
-                const std::size_t  len = rc_name.size();
+                const std::size_t len = rc_name.size();
                 cp = skip_space(cp);
                 if (std::isdigit(*cp))
                 {
                     continue;
                 }
-                if (std::strncmp(cp, rc_name.c_str(), len) != 0 || (cp[len] && !std::isspace(cp[len])))
+                const std::string_view thru_args{cp};
+                if (thru_args.size() < len || thru_args.substr(0, len) != rc_name ||
+                    (thru_args.size() > len && !std::isspace(static_cast<unsigned char>(thru_args[len]))))
                 {
                     std::fputs(g_buf,s_new_kill_file_fp);
                     needs_newline = !std::strchr(g_buf,'\n');

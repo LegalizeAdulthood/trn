@@ -546,7 +546,7 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 21, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 8, `strncmp` 14.
+- Comparison: `strcmp` 8, `strncmp` 12.
 - Search and length: `strchr` 60, `strrchr` 1, `strstr` 2,
   `strlen` 50.
 - Formatting into C buffers: `sprintf` 26, `snprintf` 2.
@@ -576,15 +576,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-141 - Kill-file Rewrite THRU Check
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: `g_buf` local line-prefix parsing.
-- Function: `rewrite_kill_file`.
-- Change: use a local `std::string_view` over each copied kill-file line
-  for the `THRU` and newsrc-name checks instead of `strncmp`.
-- Tests: run kill-file tests.
 
 ### Tier 1 - Helper And API Foundations
 
