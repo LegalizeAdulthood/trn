@@ -94,7 +94,7 @@ static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view 
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
 static void           univ_use_pattern(std::string_view pattern, int type);
-static void           univ_use_group_line(char *line, int type);
+static void           univ_use_group_line(std::string_view line, int type);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
@@ -592,31 +592,30 @@ static void univ_use_pattern(std::string_view pattern, int type)
 
 // interprets a line of newsgroups, adding or subtracting each pattern
 // Newsgroup patterns are separated by spaces and/or commas
-static void univ_use_group_line(char *line, int type)
+static void univ_use_group_line(std::string_view line, int type)
 {
-    char* p;
-
-    char *s = line;
-    if (!s || !*s)
+    if (line.empty())
     {
         return;
     }
 
     // newsgroup patterns will be separated by space(s) and/or comma(s)
-    while (*s)
+    while (!line.empty())
     {
-        while (*s == ' ' || *s == ',')
+        const std::size_t pattern_start = line.find_first_not_of(" ,");
+        if (pattern_start == std::string_view::npos)
         {
-            s++;
+            break;
         }
-        for (p = s; *p && *p != ' ' && *p != ','; p++)
+        line.remove_prefix(pattern_start);
+        const std::size_t pattern_end = line.find_first_of(" ,");
+        if (pattern_end == std::string_view::npos)
         {
+            univ_use_pattern(line, type);
+            break;
         }
-        char ch = *p;
-        *p = '\0';
-        univ_use_pattern(s,type);
-        *p = ch;
-        s = p;
+        univ_use_pattern(line.substr(0, pattern_end), type);
+        line.remove_prefix(pattern_end);
     }
 }
 
@@ -985,8 +984,7 @@ void univ_mask_load(std::string_view mask, std::string_view title)
 {
     univ_open();
 
-    std::string mask_buffer{mask};
-    univ_use_group_line(mask_buffer.data(), 0);
+    univ_use_group_line(mask, 0);
     g_univ_title.assign(title.data(), title.size());
     if (g_int_count)
     {

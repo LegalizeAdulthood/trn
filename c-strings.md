@@ -583,22 +583,11 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-147 - Universal Pattern List Splitting
-
-- Files: `libtrn/univ.cpp`.
-- Kind: mutable token splitting of caller line.
-- Function: `univ_use_group_line`.
-- Change: take `std::string_view line`, split on spaces and commas with
-  view operations, and call `univ_use_pattern` without writing temporary
-  NULs into the line.
-- Tests: run universal-selector tests.
-
 #### CSTR-148 - Universal Extension Line Parsing
 
 - Files: `libtrn/univ.cpp`.
 - Kind: `$` extension pointer parsing and temporary NUL writes.
 - Function: `univ_do_line_ext1`.
-- Depends on: `CSTR-147`.
 - Change: take the extension text as `std::string_view`, parse `$v` and
   `$t` cases with views, and stop mutating the line while extracting
   virtual article numbers and group names.
