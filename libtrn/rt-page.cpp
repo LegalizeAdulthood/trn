@@ -35,6 +35,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -1981,25 +1982,28 @@ static void display_page_title(bool home_only)
     }
     else
     {
-        int len;
         Newsrc* rp;
+        std::string news_sources;
+        news_sources.reserve(34);
+        std::size_t len = 0;
         color_object(COLOR_HEADING, true);
         std::printf("Newsgroups");
-        for (rp = g_multirc->m_first, len = 0; rp && len < 34; rp = rp->next)
+        for (rp = g_multirc->m_first; rp && len < 34; rp = rp->next)
         {
             if (rp->flags & RF_ACTIVE)
             {
-                std::sprintf(g_buf + len, ", %s", rp->data_source->m_name.c_str());
-                len += std::strlen(g_buf + len);
+                fmt::format_to(std::back_inserter(news_sources), "{}{}", news_sources.empty() ? "" : ", ",
+                               rp->data_source->m_name);
+                len = news_sources.size() + 2;
             }
         }
         if (rp)
         {
-            std::strcpy(g_buf + len, ", ...");
+            news_sources += ", ...";
         }
-        if (std::strcmp(g_buf+2,"default") != 0)
+        if (news_sources != "default")
         {
-            std::printf(" (group #%d: %s)", g_multirc->m_num, g_buf + 2);
+            fmt::print(" (group #{}: {})", g_multirc->m_num, news_sources);
         }
         color_pop();    // of COLOR_HEADING
     }

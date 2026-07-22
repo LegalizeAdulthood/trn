@@ -583,20 +583,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-133 - Selector Header Multirc Display Builder
-
-- Files: `libtrn/rt-page.cpp`.
-- Kind: `g_buf` string building with `sprintf`, `strlen`, `strcpy`, and
-  `strcmp`.
-- Function: selector page header rendering.
-- Depends on: none.
-- Change: build the active data-source list in a local `std::string`,
-  compare directly to `"default"`, preserve the existing display
-  truncation threshold, and print with fmt.
-- Truncation: meaningful display abbreviation at roughly 34 columns;
-  preserve the `, ...` behavior.
-- Tests: run selector page tests.
-
 #### CSTR-134 - Multirc Page Item Display Builder
 
 - Files: `libtrn/rt-page.cpp`.
