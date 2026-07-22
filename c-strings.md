@@ -513,10 +513,9 @@ generated files, or the vendored `vcpkg` tree.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
 - Remaining literal tables include color object names, signal names,
-  status labels, MIME entity mappings, HTML tag names, and
-  transliteration tables.  The useful current targets are tables whose
-  users already operate on views or compute lengths manually.  See
-  `CSTR-140` for the HTML tag table.
+  status labels, MIME entity mappings, and transliteration tables.  The
+  useful current targets are tables whose users already operate on views
+  or compute lengths manually.
 
 ## Current `safe_copy` Inventory
 
@@ -559,16 +558,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-140 - HTML Tag Table String Views
-
-- Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`.
-- Kind: literal table with manual string lengths.
-- Function: `tag_action`.
-- Change: replace `HtmlTag::name` plus `HtmlTag::length` with
-  `std::string_view name`.  Update tag matching to use view size and
-  direct view comparisons while preserving the sorted-table scan.
-- Tests: MIME HTML filtering tests.
 
 #### CSTR-141 - Core NNTP Command Formatting
 

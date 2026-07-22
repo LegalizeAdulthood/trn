@@ -50,25 +50,25 @@ char        *g_mime_getc_line{};
 #endif
 
 // clang-format off
-static HtmlTag s_tag_attr[LAST_TAG] = {
- // name               length   flags
-    {"blockquote",      10,     TF_BLOCK | TF_P | TF_NL                 },
-    {"br",               2,     TF_NL | TF_BR                           },
-    {"div",              3,     TF_BLOCK | TF_NL                        },
-    {"hr",               2,     TF_NL                                   },
-    {"img",              3,     TF_NONE                                 },
-    {"li",               2,     TF_NL                                   },
-    {"ol",               2,     TF_BLOCK | TF_P | TF_NL | TF_LIST       },
-    {"p",                1,     TF_HAS_CLOSE | TF_P | TF_NL             },
-    {"pre",              3,     TF_BLOCK | TF_P | TF_NL                 },
-    {"script",           6,     TF_BLOCK | TF_HIDE                      },
-    {"style",            5,     TF_BLOCK | TF_HIDE                      },
-    {"td",               2,     TF_TAB                                  },
-    {"th",               2,     TF_TAB                                  },
-    {"tr",               2,     TF_NL                                   },
-    {"title",            5,     TF_BLOCK | TF_HIDE                      },
-    {"ul",               2,     TF_BLOCK | TF_P | TF_NL | TF_LIST       },
-    {"xml",              3,     TF_BLOCK | TF_HIDE                      }, // non-standard but seen in the wild
+static const HtmlTag s_tag_attr[LAST_TAG] = {
+    // name        flags
+    {"blockquote", TF_BLOCK | TF_P | TF_NL                 },
+    {"br",         TF_NL | TF_BR                           },
+    {"div",        TF_BLOCK | TF_NL                        },
+    {"hr",         TF_NL                                   },
+    {"img",        TF_NONE                                 },
+    {"li",         TF_NL                                   },
+    {"ol",         TF_BLOCK | TF_P | TF_NL | TF_LIST       },
+    {"p",          TF_HAS_CLOSE | TF_P | TF_NL             },
+    {"pre",        TF_BLOCK | TF_P | TF_NL                 },
+    {"script",     TF_BLOCK | TF_HIDE                      },
+    {"style",      TF_BLOCK | TF_HIDE                      },
+    {"td",         TF_TAB                                  },
+    {"th",         TF_TAB                                  },
+    {"tr",         TF_NL                                   },
+    {"title",      TF_BLOCK | TF_HIDE                      },
+    {"ul",         TF_BLOCK | TF_P | TF_NL | TF_LIST       },
+    {"xml",        TF_BLOCK | TF_HIDE                      }, // non-standard but seen in the wild
 };
 // clang-format on
 static std::vector<MimeCapEntry> s_mimecap_entries;
@@ -1841,6 +1841,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
     int   itype;
     int   cnt;
     int   num;
+    char  ch;
     bool match = false;
     const char *roman_letters;
     std::vector<HtmlBlock> &blks = g_mime_section->m_html_blocks;
@@ -1849,20 +1850,19 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
     for (tmp = word; *tmp && *tmp != ' '; tmp++)
     {
     }
-    int len = tmp - word;
+    const std::string_view tag_name{word, static_cast<std::size_t>(tmp - word)};
 
-    if (!std::isalpha(*word))
+    if (tag_name.empty() || !std::isalpha(static_cast<unsigned char>(tag_name.front())))
     {
         return t;
     }
-    int ch = std::isupper(*word) ? std::tolower(*word) : *word;
-    for (tnum = 0; tnum < LAST_TAG && *s_tag_attr[tnum].name != ch; tnum++)
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(tag_name.front())));
+    for (tnum = 0; tnum < LAST_TAG && s_tag_attr[tnum].name.front() != ch; tnum++)
     {
     }
-    for (; tnum < LAST_TAG && *s_tag_attr[tnum].name == ch; tnum++)
+    for (; tnum < LAST_TAG && s_tag_attr[tnum].name.front() == ch; tnum++)
     {
-        if (len == s_tag_attr[tnum].length //
-            && string_case_equal(word, s_tag_attr[tnum].name, len))
+        if (string_case_equal(tag_name, s_tag_attr[tnum].name))
         {
             match = true;
             break;
@@ -2136,8 +2136,7 @@ roman_numerals:
                 {
                     for (int i = size_cast<int>(blks); --i > j;)
                     {
-                        t = tag_action(t, s_tag_attr[blks[i].tag_num].name,
-                                       CLOSING_TAG);
+                        t = tag_action(t, s_tag_attr[blks[i].tag_num].name.data(), CLOSING_TAG);
                     }
                     blks.resize(j);
                     break;

@@ -140,9 +140,8 @@ enum
 
 struct HtmlTag
 {
-    const char *name;
-    char        length;
-    TagFlags    flags;
+    std::string_view name;
+    TagFlags         flags;
 };
 
 extern MimeSection  g_mime_article;
