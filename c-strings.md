@@ -588,15 +588,29 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-031 - Global Command Buffer
+Global command buffer work must be split by function.  Prefer
+formatting-only leaves first, because they do not affect command input,
+typeahead, article reading, or protocol line ownership.  Terminal
+command input remains in `CSTR-119`; file and protocol read buffers stay
+with their owner slices unless a local use is clearly formatting-only.
 
-- Files: `config/common.cpp`, `config/include/config/common.h`, many
-  users.
-- Kind: global fixed buffer `g_buf`.
-- Function: storage-centered; no single function owns it.
-- Change: replace the global line buffer with owned strings or scoped
-  command objects.
-- Tests: broad workflow required.
+#### CSTR-031B - Newsgroup Growth Processing Notice
+
+- Files: `libtrn/ngdata.cpp`.
+- Kind: `g_buf` local status-message formatting.
+- Function: `grow_newsgroup`.
+- Change: build the memorized-command processing message in a local
+  `std::string` and pass `c_str()` to `kill_unwanted`.
+- Tests: run newsgroup data and kill-file tests if available.
+
+#### CSTR-031C - Catchup Prompt Builder
+
+- Files: `libtrn/ng.cpp`.
+- Kind: `g_buf` local prompt formatting before `in_char`.
+- Function: `ask_catchup`.
+- Change: build the prompt in a local `std::string` and pass `c_str()`
+  to `in_char`; keep `g_buf` only for the input result.
+- Tests: run newsgroup command tests if available.
 
 #### CSTR-033 - Article Body Wrap Buffer
 

@@ -390,16 +390,12 @@ static int do_kill_file(std::FILE *kfp, int entering)
     }
     if (thread_kill_cnt)
     {
-        std::sprintf(g_buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
-                plural(thread_kill_cnt));
-        mention(g_buf);
+        mention(fmt::format("{} auto-kill command{}.", thread_kill_cnt, plural(thread_kill_cnt)));
         s_kill_mentioned = true;
     }
     if (thread_select_cnt)
     {
-        std::sprintf(g_buf,"%ld auto-select command%s.", (long)thread_select_cnt,
-                plural(thread_select_cnt));
-        mention(g_buf);
+        mention(fmt::format("{} auto-select command{}.", thread_select_cnt, plural(thread_select_cnt)));
         s_kill_mentioned = true;
     }
     if (last_kill_type)
