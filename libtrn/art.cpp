@@ -391,8 +391,8 @@ DoArticleResult do_article()
             if (g_in_header == SUBJ_LINE && g_do_hiding   //
                 && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
             {
-                const char *cached_subj = g_artp->get_cached_line(SUBJ_LINE, false);
-                if (cached_subj && s_continuation)
+                const std::string_view cached_subj = g_artp->get_cached_line_view(SUBJ_LINE, false);
+                if (!cached_subj.empty() && s_continuation)
                 {
                     // continuation lines were already output
                     --line_num;
@@ -402,7 +402,7 @@ DoArticleResult do_article()
                     int length = std::strlen(buf_ptr+1);
                     notes_files = in_string(std::string_view{&buf_ptr[length - 10]}, " - (nf", true);
                     ++g_art_line_num;
-                    if (!cached_subj)
+                    if (cached_subj.empty())
                     {
                         buf_ptr += (s_continuation ? 0 : 9);
                     }

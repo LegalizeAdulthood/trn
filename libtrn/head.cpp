@@ -283,7 +283,7 @@ static void end_header_line()
         g_header_type[g_in_header].max_pos = g_art_pos;
         if (g_header_type[g_in_header].flags & HT_CACHED)
         {
-            if (!s_parsed_artp->get_cached_line(g_in_header, true))
+            if (s_parsed_artp->get_cached_line_view(g_in_header, true).empty())
             {
                 int start = g_header_type[g_in_header].min_pos.value_of()
                           + g_header_type[g_in_header].length + 1;

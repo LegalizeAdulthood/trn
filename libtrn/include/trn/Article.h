@@ -64,8 +64,8 @@ struct Article
     void       check_for_near_subj();
     void       check_poster();
     void       uncache_article(bool remove_empties);
-    const char *get_cached_line(HeaderLineType which_line, bool no_truncs) const;
-    std::string get_cached_line_text(HeaderLineType which_line, bool no_truncs) const;
+    std::string_view get_cached_line_view(HeaderLineType which_line, bool no_truncs) const;
+    std::string      get_cached_line_text(HeaderLineType which_line, bool no_truncs) const;
     void       set_subj_line(std::string_view subj);
     void       set_cached_line(int which_line, std::string_view line);
     void       clear_article();

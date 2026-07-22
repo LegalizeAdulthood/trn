@@ -582,17 +582,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-142 - Cached Header Line View API
-
-- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`,
-  direct cached-line callers.
-- Kind: `const char *` return over owned article strings.
-- Function: `Article::get_cached_line`.
-- Change: add a view-returning cached-line API that preserves absence
-  separately if empty header values must remain distinct.  Migrate
-  callers that only test presence or copy to `std::string`.
-- Tests: run article, header, cache, and subject tests.
-
 #### CSTR-144 - Universal Newsgroup Add Description
 
 - Files: `libtrn/univ.cpp`.

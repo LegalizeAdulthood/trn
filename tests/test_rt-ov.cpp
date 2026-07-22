@@ -197,7 +197,7 @@ TEST_F(OverviewTest, localOverviewLinePopulatesArticleFields)
 
     Article *article = article_ptr(TEST_ARTICLE_NUM);
     EXPECT_TRUE(article->m_flags & AF_CACHED);
-    EXPECT_STREQ("Re: Overview Subject", article->get_cached_line(SUBJ_LINE, false));
+    EXPECT_EQ("Re: Overview Subject", article->get_cached_line_text(SUBJ_LINE, false));
     ASSERT_TRUE(article->m_from);
     EXPECT_EQ("Alice <alice@example.com>", *article->m_from);
     ASSERT_TRUE(article->m_msg_id);

@@ -203,43 +203,32 @@ void Article::check_poster()
     }
 }
 
-// Return a pointer to a cached header line for the indicated article.
+// Return a view of a cached header line for the indicated article.
 // Truncated headers (e.g. from a .thread file) are optionally ignored.
 //
-const char *Article::get_cached_line(HeaderLineType which_line, bool no_truncs) const
+std::string_view Article::get_cached_line_view(HeaderLineType which_line, bool no_truncs) const
 {
-    const char *s;
-
     switch (which_line)
     {
     case SUBJ_LINE:
         if (!m_subj || (no_truncs && (m_subj->m_flags & SF_SUBJ_TRUNCATED)))
         {
-            s = nullptr;
+            return {};
         }
-        else
-        {
-            s = (m_flags & AF_HAS_RE) ? m_subj->text() : m_subj->stripped_text();
-        }
-        break;
+        return (m_flags & AF_HAS_RE) ? std::string_view{m_subj->text()} : m_subj->stripped_view();
 
     case FROM_LINE:
-        s = from_c_str();
-        break;
+        return m_from ? std::string_view{*m_from} : std::string_view{};
 
     case XREF_LINE:
-        s = xrefs_c_str();
-        break;
+        return m_xrefs ? std::string_view{*m_xrefs} : std::string_view{};
 
     case MSG_ID_LINE:
-        s = msg_id_c_str();
-        break;
+        return m_msg_id ? std::string_view{*m_msg_id} : std::string_view{};
 
     default:
-        s = nullptr;
-        break;
+        return {};
     }
-    return s;
 }
 
 std::string Article::get_cached_line_text(HeaderLineType which_line, bool no_truncs) const
@@ -253,14 +242,7 @@ std::string Article::get_cached_line_text(HeaderLineType which_line, bool no_tru
         return std::to_string(m_bytes);
 
     default:
-    {
-        const char *line = get_cached_line(which_line, no_truncs);
-        if (line == nullptr)
-        {
-            return {};
-        }
-        return std::string{line};
-    }
+        return std::string{get_cached_line_view(which_line, no_truncs)};
     }
 }
 
