@@ -480,9 +480,8 @@ generated files, or the vendored `vcpkg` tree.
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
-- Unused overload/wrapper scan: `Subject::stripped_text` has no current
-  production or test callers.  See `CSTR-133`.  Keep `nntp_init_error`,
-  `string_case_compare`,
+- Unused overload/wrapper scan: no dead C-style wrappers remain in this
+  pass.  Keep `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
@@ -570,15 +569,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-133 - Remove Subject Stripped C-string Accessor
-
-- Files: `libtrn/include/trn/Subject.h`.
-- Kind: unused C-style accessor.
-- Function: `Subject::stripped_text`.
-- Change: remove the accessor because `stripped_view` is the live API
-  and no production or test caller uses the C-string accessor.
-- Tests: header standalone tests.
 
 #### CSTR-134 - Subject Full Text View
 
