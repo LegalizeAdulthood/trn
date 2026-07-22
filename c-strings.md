@@ -451,40 +451,45 @@ also checks `wildmat` and `parsedate`.  It does not include tests,
 generated files, or the vendored `vcpkg` tree.
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: four hits remain: the helper declaration, the helper
-  definition, and two call sites in article and NNTP buffer owner
-  clusters.  The call sites are inventoried below.
+- `safe_copy`: three hits remain: the helper declaration, the helper
+  definition, and one call site in the NNTP buffer owner cluster.  The
+  call site is inventoried below.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
   overload is already used by production callers that have strings or
   views, and the legacy pointer-return overload is gone.
-- `safe_malloc`: string-shaped owners are `g_head_buf` and
-  `g_art_buf`.  Non-string owners include the `AddGroup` temporary
+- `safe_malloc`: the remaining string-shaped owner is `g_head_buf`.
+  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
   helpers.
-- `safe_realloc`: string-shaped owners are `g_head_buf` and
-  `g_art_buf`.  Regex bytecode remains a non-string owner.
+- `safe_realloc`: the remaining string-shaped owner is `g_head_buf`.
+  Regex bytecode remains a non-string owner.
 - Direct environment C-string reads now remain only inside the
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
-  `g_art_line`, `g_head_buf`, `g_art_buf`, terminal command-input
+  `g_art_line`, `g_head_buf`, terminal command-input
   scratch, NNTP local protocol buffers, `nntpinit` name scratch, and
   environment host/domain probe scratch.  Tiny UTF byte scratch buffers,
   translation tables, MIME decode tables, terminal pushback bytes,
   termcap storage, and regex bytecode arrays are non-string protocol or
   parser storage, not current local string slices.
+- `g_art_buf` is now backed by owned `std::string` storage, with the
+  global pointer kept as a compatibility view.  `read_art_buf` still has
+  local C-string construction against that storage.  See `CSTR-139`.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
-- Unused overload/wrapper scan: no dead C-style wrappers remain in this
-  pass.  Keep `nntp_init_error`, `string_case_compare`,
+- Unused overload/wrapper scan: `Article::from_c_str`,
+  `Article::xrefs_c_str`, and `Subject::stripped_text` have no current
+  production or test callers.  See `CSTR-131`, `CSTR-132`, and
+  `CSTR-133`.  Keep `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.  `Subject` and `Article` C-string
-  accessors are still live, but direct callers that already have view
-  alternatives are now listed as slices.
+  platform/API boundary use.  `Subject::text` and
+  `Article::msg_id_c_str` are still live, but their callers can move to
+  views bottom-up.  See `CSTR-134`, `CSTR-137`, and `CSTR-138`.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -511,14 +516,10 @@ generated files, or the vendored `vcpkg` tree.
 - The comparison cleanup also narrowed local work inside `addng`,
   `ngdata`, `respond`, `rthread`, `rt-ov`, and `univ`.  Do not add
   separate slices for those completed `string_case_compare` call sites.
-- Universal-selector helper signatures still carry nullable
-  `const char *` parameters even though the implementation stores text
-  in `std::string` and uses empty strings as the practical sentinel.
-  They are listed below in bottom-up order.
-- `nntp_at_list_end` is a live C-string helper, not dead code.  No
-  current production caller passes `nullptr`, and several callers have
-  `std::string` values that can flow directly after the helper accepts a
-  view.
+- `UniversalItem::univ_key_help_mode_str` still returns a nullable
+  `const char *` selected from string literals.  See `CSTR-136`.
+- `nntp_at_list_end` already accepts `std::string_view`; do not add a
+  slice for it.
 - Remaining literal tables include color object names, signal names,
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are the tables whose users already operate on
@@ -540,11 +541,11 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 21, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 8, `strncmp` 12.
-- Search and length: `strchr` 59, `strrchr` 1, `strstr` 2,
-  `strlen` 50.
+- Comparison: `strcmp` 1, `strncmp` 12.
+- Search and length: `strchr` 56, `strrchr` 1, `strstr` 2,
+  `strlen` 48.
 - Formatting into C buffers: `sprintf` 26, `snprintf` 2.
-- C text I/O roots: `fgets` 25, `fputs` 196, `printf` 388,
+- C text I/O roots: `fgets` 24, `fputs` 194, `printf` 376,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
@@ -571,15 +572,115 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-131 - Remove Article From C-string Accessor
+
+- Files: `libtrn/include/trn/Article.h`.
+- Kind: unused C-style accessor.
+- Function: `Article::from_c_str`.
+- Change: remove the accessor because no production or test caller uses
+  it.
+- Tests: header standalone tests.
+
+#### CSTR-132 - Remove Article Xrefs C-string Accessor
+
+- Files: `libtrn/include/trn/Article.h`.
+- Kind: unused C-style accessor.
+- Function: `Article::xrefs_c_str`.
+- Change: remove the accessor because no production or test caller uses
+  it.
+- Tests: header standalone tests.
+
+#### CSTR-133 - Remove Subject Stripped C-string Accessor
+
+- Files: `libtrn/include/trn/Subject.h`.
+- Kind: unused C-style accessor.
+- Function: `Subject::stripped_text`.
+- Change: remove the accessor because `stripped_view` is the live API
+  and no production or test caller uses the C-string accessor.
+- Tests: header standalone tests.
+
+#### CSTR-134 - Subject Full Text View
+
+- Files: `libtrn/include/trn/Subject.h`, `libtrn/Article.cpp`,
+  `libtrn/ng.cpp`.
+- Kind: borrowed string view accessor.
+- Function: `Subject::text`.
+- Change: replace the full-text C-string accessor with a
+  `std::string_view` accessor and update its two production callers.
+  Preserve the inactive `DEBUG` block in `ng.cpp`.
+- Tests: subject, article, and newsgroup tests.
+
+#### CSTR-135 - Article Newsgroups Header Compare
+
+- Files: `libtrn/art.cpp`.
+- Kind: local C-string comparison.
+- Function: `do_article`.
+- Change: replace temporary newline NULing plus `strcmp` for
+  `Newsgroups:` header hiding with a `std::string_view` slice and direct
+  comparison to `g_newsgroup_name`.
+- Tests: add or run article header-hiding coverage.
+
+#### CSTR-136 - Universal Help Mode Label View
+
+- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,
+  `libtrn/rt-page.cpp`.
+- Kind: literal label return.
+- Function: `UniversalItem::univ_key_help_mode_str`.
+- Change: return `std::string_view` and use an empty view for the
+  default case instead of returning `nullptr`.
+- Tests: universal selector and rt-page tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-137 - Article Message-ID View Accessor
+
+- Files: `libtrn/include/trn/Article.h`, `libtrn/kfile.cpp`.
+- Kind: borrowed string view accessor.
+- Function: `Article::msg_id_c_str`.
+- Change: replace direct article message-id C-string callers with a
+  view accessor.  Keep the C-string accessor only while
+  `hash_msg_id_c_str` still needs it.
+- Tests: kill-file and thread tests.
+
+#### CSTR-138 - Hash Message-ID View Helper
+
+- Files: `libtrn/rt-process.cpp`, `libtrn/include/trn/rt-process.h`,
+  `libtrn/kfile.cpp`, `libtrn/include/trn/Article.h`.
+- Kind: borrowed string view helper.
+- Function: `hash_msg_id_c_str`.
+- Change: replace the helper with a `std::string_view` return, update
+  callers, and remove `Article::msg_id_c_str` if no caller remains.
+- Tests: hash, rt-process, rthread, and kill-file tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-139 - Article Buffer String-owned Writes
+
+- Files: `libtrn/artio.cpp`.
+- Kind: owner-local string buffer operations.
+- Function: `read_art_buf`.
+- Change: now that `g_art_buf` is backed by `std::string`, replace local
+  C-string construction into that storage where it is not required by
+  `read_art`, MIME decoder output, or HTML filter output.  Start with
+  newline writes and multipart separator formatting; preserve existing
+  pointer-return behavior.
+- Tests: ArticleIo, article display, and MIME tests; add focused
+  coverage before changing any uncovered behavior.
+
+#### CSTR-036 - NNTP Protocol Line Compaction
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: protocol read buffer compaction.
+- Function: `nntp_read_art`.
+- Change: keep the protocol line in owned string storage once the NNTP
+  read API no longer exposes a caller mutable buffer.
+- Tests: run `test_nntp`.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -596,15 +697,6 @@ formatting-only leaves first, because they do not affect command input,
 typeahead, article reading, or protocol line ownership.  Terminal
 command input remains in `CSTR-119`; file and protocol read buffers stay
 with their owner slices unless a local use is clearly formatting-only.
-
-#### CSTR-036 - NNTP Protocol Line Compaction
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: protocol read buffer compaction.
-- Function: `nntp_read_art`.
-- Change: keep the protocol line in owned string storage once the NNTP
-  read API no longer exposes a caller mutable buffer.
-- Tests: run `test_nntp`.
 
 #### CSTR-058 - Header Buffer Storage
 
