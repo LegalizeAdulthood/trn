@@ -582,15 +582,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-145 - Universal Pattern Matcher Views
-
-- Files: `libtrn/univ.cpp`.
-- Kind: read-only C-string recursive matcher.
-- Function: `univ_do_match`.
-- Change: accept `std::string_view text` and `std::string_view pattern`
-  and implement the wildcard recursion without raw pointer walking.
-- Tests: add or run universal-selector pattern tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -612,7 +603,6 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/univ.cpp`.
 - Kind: nullable pattern parameter and pointer cursor.
 - Function: `univ_use_pattern`.
-- Depends on: `CSTR-145`.
 - Change: take `std::string_view pattern`, remove the `nullptr`
   sentinel, use `remove_prefix` for `!`, and pass views to matcher and
   add helpers.

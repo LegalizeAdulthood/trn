@@ -214,6 +214,29 @@ TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
     EXPECT_EQ(nullptr, univ_next_item(item));
 }
 
+TEST_F(UnivTest, groupMaskWildcardSelectsMatchingGroups)
+{
+    g_newsgroup_data.reserve(3);
+    add_test_newsgroup("alt.test");
+    add_test_newsgroup("comp.test");
+    add_test_newsgroup("alt.noise");
+
+    univ_mask_load("alt.*", "Groups");
+
+    UniversalItem *first = univ_first_item();
+    ASSERT_NE(nullptr, first);
+    EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(first->m_data));
+    EXPECT_EQ(UIS_NORMAL, first->m_state);
+    EXPECT_EQ("alt.test", first->group().ng);
+
+    UniversalItem *second = univ_next_item(first);
+    ASSERT_NE(nullptr, second);
+    EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(second->m_data));
+    EXPECT_EQ(UIS_NORMAL, second->m_state);
+    EXPECT_EQ("alt.noise", second->group().ng);
+    EXPECT_EQ(nullptr, univ_next_item(second));
+}
+
 TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
 {
     const std::string file_name = fs::path{TRN_TEST_UNIV_GROUP_MASK_FILE}.generic_string();

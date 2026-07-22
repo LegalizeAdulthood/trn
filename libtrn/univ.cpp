@@ -95,7 +95,7 @@ static void           univ_add_text_file(std::string_view desc, std::string_view
 static void           univ_add_virtual_group(std::string_view grpname);
 static void           univ_use_pattern(const char *pattern, int type);
 static void           univ_use_group_line(char *line, int type);
-static bool  univ_do_match(const char *text, const char *p);
+static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
 static void  univ_do_line_ext1(std::string_view desc, char *line);
@@ -479,35 +479,39 @@ static void univ_add_virtual_group(std::string_view grpname)
 //
 
 //
-//  Match text and p, return true, false.
+//  Match text and pattern, return true, false.
 //
-static bool univ_do_match(const char *text, const char *p)
+static bool univ_do_match(std::string_view text, std::string_view pattern)
 {
-    for (; *p; text++, p++)
+    while (!pattern.empty())
     {
-        if (*p == '*')
+        if (pattern.front() == '*')
         {
-            p = skip_eq(p, '*'); // Consecutive stars act just like one.
-            if (*p == '\0')
+            const std::size_t pattern_start = pattern.find_first_not_of('*');
+            if (pattern_start == std::string_view::npos)
             {
                 // Trailing star matches everything.
                 return true;
             }
-            while (*text)
+            pattern.remove_prefix(pattern_start);
+            while (!text.empty())
             {
-                if (univ_do_match(text++, p))
+                if (univ_do_match(text, pattern))
                 {
                     return true;
                 }
+                text.remove_prefix(1);
             }
             return false;
         }
-        if (*text != *p)
+        if (text.empty() || text.front() != pattern.front())
         {
             return false;
         }
+        text.remove_prefix(1);
+        pattern.remove_prefix(1);
     }
-    return *text == '\0';
+    return text.empty();
 }
 
 // type: 0=newsgroup, 1=virtual (more in future?)
