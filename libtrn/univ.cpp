@@ -90,7 +90,7 @@ static UniversalItem *univ_add(UniversalData data, std::string_view desc);
 static void           univ_add_group(const char *desc, std::string_view grpname);
 static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
-static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art);
+static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
 static void           univ_add_text_file(const char *desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
 static void           univ_use_pattern(const char *pattern, int type);
@@ -385,11 +385,11 @@ static void univ_add_file(std::string_view desc, std::string_view fname, std::st
     }
 }
 
-static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
+static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art)
 {
-    UniversalItem           *ui = univ_add(UniversalVirtualArticle{}, desc != nullptr ? desc : "");
+    UniversalItem           *ui = univ_add(UniversalVirtualArticle{}, desc);
     UniversalVirtualArticle &article = ui->article();
-    article.ng = grp ? grp : "";
+    article.ng.assign(grp);
     article.num = art;
     return ui;
 }
@@ -1146,7 +1146,7 @@ static void univ_vg_add_article(ArticleNum a)
     // later scan/replace bad characters
 
     // later consider author in description, scoring, etc.
-    UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
+    UniversalItem *ui = univ_add_virt_num({}, g_newsgroup_name, a);
     ui->m_score = score;
     UniversalVirtualArticle &article = ui->article();
     article.subj = subject;

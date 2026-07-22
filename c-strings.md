@@ -573,16 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-168 - Universal Virtual Article Views
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable description and group pointers stored as strings.
-- Function: `univ_add_virt_num`.
-- Depends on: none.
-- Change: accept `std::string_view desc` and `grp`, using empty strings
-  as missing sentinels.
-- Tests: run universal selector tests.
-
 #### CSTR-169 - Universal Text File Description View
 
 - Files: `libtrn/univ.cpp`.
@@ -632,7 +622,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/univ.cpp`.
 - Kind: nullable description pointer forwarded to item creation.
 - Function: `univ_do_line_ext1`.
-- Depends on: `CSTR-168`, `CSTR-169`.
+- Depends on: `CSTR-169`.
 - Change: accept `std::string_view desc` and replace local
   `desc ? desc : ...` decisions with empty-view checks.
 - Tests: run universal selector tests.
