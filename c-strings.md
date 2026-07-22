@@ -569,16 +569,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-146 - Author Compression String Algorithm
-
-- Files: `libtrn/rt-util.cpp`.
-- Kind: in-place string algorithm hidden behind a string API.
-- Function: `compress_name_in_place`.
-- Change: replace the remaining mutable C-pointer assembly in
-  `compress_name_in_place` with string/view operations.  Preserve the
-  documented truncation behavior and existing UTF conditional behavior.
-- Tests: `CompressNameTest` and `CompressFromTest`.
-
 #### CSTR-147 - MIME HTML Output Cursor Writes
 
 - Files: `libtrn/mime.cpp`.

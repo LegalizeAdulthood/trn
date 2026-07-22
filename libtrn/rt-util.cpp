@@ -24,7 +24,6 @@
 
 #include <cctype>
 #include <cstdio>
-#include <cstring>
 #include <ctime>
 #include <string>
 
@@ -38,13 +37,23 @@ bool g_unbroken_subjects{};      // -u
 
 static int s_spin_marks{25}; // how many bargraph marks we want
 
-static std::string      compress_address(std::string_view name, int max);
-static std::string_view compress_name_in_place(std::string &storage, int max);
+static std::string compress_address(std::string_view name, int max);
+static std::string compress_name_text(std::string_view name, int max);
 static void output_change(std::string &out, long num, const char *obj_type, const char *modifier, const char *action);
 
 static bool is_space(char ch)
 {
     return std::isspace(static_cast<unsigned char>(ch)) != 0;
+}
+
+static bool is_alpha(char ch)
+{
+    return std::isalpha(static_cast<unsigned char>(ch)) != 0;
+}
+
+static bool is_digit(char ch)
+{
+    return std::isdigit(static_cast<unsigned char>(ch)) != 0;
 }
 
 static std::string_view trim_left(std::string_view text)
@@ -120,6 +129,192 @@ std::string_view extract_name(std::string_view name)
     return trim_right(display_name);
 }
 
+static std::string trim_string(std::string_view text)
+{
+    return std::string{trim_right(trim_left(text))};
+}
+
+static int visible_length(std::string_view text)
+{
+#ifdef USE_UTF_HACK
+    const std::string storage{text};
+    return visual_length_of(storage.c_str());
+#else
+    return static_cast<int>(text.size());
+#endif
+}
+
+static bool visible_fits(std::string_view text, int max)
+{
+    return visible_length(text) <= max;
+}
+
+static std::size_t next_character(std::string_view text, std::size_t pos)
+{
+    if (pos >= text.size())
+    {
+        return text.size();
+    }
+#ifdef USE_UTF_HACK
+    const int width = byte_length_at(text.data() + pos);
+    if (width > 0)
+    {
+        const std::size_t next = pos + static_cast<std::size_t>(width);
+        return next < text.size() ? next : text.size();
+    }
+#endif
+    return pos + 1;
+}
+
+static std::string first_character(std::string_view text)
+{
+    if (text.empty())
+    {
+        return {};
+    }
+    return std::string{text.substr(0, next_character(text, 0))};
+}
+
+static std::string truncate_visible(std::string_view text, int max)
+{
+    if (max <= 0)
+    {
+        return {};
+    }
+#ifndef USE_UTF_HACK
+    const std::size_t size = static_cast<std::size_t>(max);
+    return std::string{text.substr(0, size < text.size() ? size : text.size())};
+#else
+    std::string result;
+    int         width = 0;
+    for (std::size_t pos = 0; pos < text.size();)
+    {
+        const int char_bytes = byte_length_at(text.data() + pos);
+        const int char_width = visual_width_at(text.data() + pos);
+        if (char_bytes <= 0 || char_width < 0 || width + char_width > max)
+        {
+            break;
+        }
+        result += text.substr(pos, static_cast<std::size_t>(char_bytes));
+        width += char_width;
+        pos += static_cast<std::size_t>(char_bytes);
+    }
+    return result;
+#endif
+}
+
+static std::size_t last_token_start(std::string_view text)
+{
+    std::size_t end = text.size();
+    while (end > 0 && is_space(text[end - 1]))
+    {
+        --end;
+    }
+    std::size_t start = end;
+    while (start > 0 && !is_space(text[start - 1]))
+    {
+        --start;
+    }
+    return start;
+}
+
+static std::size_t first_token_end(std::string_view text)
+{
+    std::size_t end = 0;
+    while (end < text.size() && !is_space(text[end]))
+    {
+        end = next_character(text, end);
+    }
+    return end;
+}
+
+static bool contains_digit(std::string_view text)
+{
+    for (char ch : text)
+    {
+        if (is_digit(ch))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool is_initial(std::string_view text)
+{
+    return text.size() == 1 || (text.size() == 2 && text[1] == '.');
+}
+
+static std::string join_name_parts(std::string_view first, std::string_view middle, std::string_view last)
+{
+    std::string result;
+    if (!first.empty())
+    {
+        result += first;
+    }
+    if (!middle.empty())
+    {
+        if (!result.empty())
+        {
+            result += ' ';
+        }
+        result += middle;
+    }
+    if (!last.empty())
+    {
+        if (!result.empty())
+        {
+            result += ' ';
+        }
+        result += last;
+    }
+    return result;
+}
+
+static std::string remove_trailing_junk(std::string_view text)
+{
+    for (std::size_t pos = next_character(text, 0); pos < text.size(); pos = next_character(text, pos))
+    {
+        const char ch = text[pos];
+        const char next = pos + 1 < text.size() ? text[pos + 1] : '\0';
+        if (ch == ',' || ch == ';' || ch == '(' || ch == '@' || (ch == '-' && (next == '-' || next == ' ')))
+        {
+            return std::string{trim_right(text.substr(0, pos))};
+        }
+    }
+    return std::string{text};
+}
+
+static std::string middle_initials(std::string_view middle)
+{
+    std::string result;
+    for (std::size_t pos = 0; pos < middle.size();)
+    {
+        while (pos < middle.size() && is_space(middle[pos]))
+        {
+            ++pos;
+        }
+        if (pos >= middle.size())
+        {
+            break;
+        }
+        if (is_alpha(middle[pos]))
+        {
+            if (!result.empty())
+            {
+                result += ' ';
+            }
+            const std::size_t next = next_character(middle, pos);
+            result += middle.substr(pos, next - pos);
+        }
+        while (pos < middle.size() && !is_space(middle[pos]))
+        {
+            pos = next_character(middle, pos);
+        }
+    }
+    return result;
+}
+
 // If necessary, compress a net user's full name by playing games with
 // initials and the middle name(s).  If we start with "Ross Douglas Ridge"
 // we try "Ross D Ridge", "Ross Ridge", "R D Ridge" and finally "R Ridge"
@@ -134,356 +329,111 @@ std::string compress_name(std::string_view name, int max)
         return {};
     }
 
-    std::string buffer{name};
-    return std::string{compress_name_in_place(buffer, max)};
+    return compress_name_text(name, max);
 }
 
-static std::string_view compress_name_in_place(std::string &storage, int max)
+static std::string compress_name_text(std::string_view name, int max)
 {
-    char *name = storage.data();
-    char *d;
-    int   midlen;
-    bool  notlast;
-
-try_again:
-    // First remove white space from both ends.
-    name = skip_space(name);
-    int len = std::strlen(name);
-    if (len == 0)
+    std::string text = trim_string(name);
+    if (text.empty() || visible_fits(text, max))
     {
-        return name;
-    }
-    char *s = name + len - 1;
-    while (std::isspace(*s))
-    {
-        s--;
-    }
-    s[1] = '\0';
-
-#ifdef USE_UTF_HACK
-    int vis_len;
-    int vis_namelen;
-    int vis_midlen;
-#else
-#define vis_len len
-#define vis_namelen namelen
-#define vis_midlen midlen
-#endif
-#ifdef USE_UTF_HACK
-    vis_len = visual_length_between(s, name) + 1;
-#else
-    vis_len = s - name + 1;
-#endif
-    if (vis_len <= max)
-    {
-        return name;
+        return text;
     }
 
-    // Look for characters that likely mean the end of the name
-    // and the start of some hopefully uninteresting additional info.
-    // Splitting at a comma is somewhat questionable, but since
-    // "Ross Ridge, The Great HTMU" comes up much more often than
-    // "Ridge, Ross" and since "R HTMU" is worse than "Ridge" we do
-    // it anyways.
-    for (d = name;;)
+    text = remove_trailing_junk(text);
+    while (!text.empty())
     {
-#ifdef USE_UTF_HACK
-        int w = byte_length_at(d);
-        int x = byte_length_at(d + w);
-#else
-        int w = 1;
-        int x = w + 1;
-#endif
-        char ch = d[w];
-        char next = d[x];
-        if (!ch)
+        text = std::string{trim_right(text)};
+        if (visible_fits(text, max))
         {
-            break;
+            return text;
         }
-        if (ch == ',' || ch == ';' || ch == '(' || ch == '@' || (ch == '-' && (next == '-' || next == ' ')))
+
+        const std::size_t last_start = last_token_start(text);
+        if (last_start == 0)
         {
-            d[w] = '\0';
-            s = d;
-            break;
+            return truncate_visible(text, max);
         }
-        d += w;
+
+        const std::string_view last_token{text.data() + last_start, text.size() - last_start};
+        if (!last_token.empty() && (last_token.back() == '.' || contains_digit(last_token)))
+        {
+            text = std::string{trim_right(std::string_view{text}.substr(0, last_start))};
+            continue;
+        }
+        break;
+    }
+    if (text.empty())
+    {
+        return {};
     }
 
-    // Find the last name
-    do
+    const std::size_t last_start = last_token_start(text);
+    std::string       last{text.substr(last_start)};
+    const std::string before_last{trim_right(std::string_view{text}.substr(0, last_start))};
+    const std::size_t first_end = first_token_end(before_last);
+    std::string       first{before_last.substr(0, first_end)};
+    std::string       middle =
+        first_end < before_last.size() ? trim_string(std::string_view{before_last}.substr(first_end)) : std::string{};
+
+    if (!middle.empty())
     {
-        notlast = false;
-        while (std::isspace(*s))
+        const bool middle_is_quoted = middle.size() >= 2 && middle.front() == '"' && middle.back() == '"';
+        if (visible_fits(join_name_parts(middle, {}, last), max) &&
+            ((is_initial(first) && !is_initial(middle)) || middle_is_quoted))
         {
-            s--;
+            first = middle_is_quoted ? middle.substr(1, middle.size() - 2) : middle;
+            middle.clear();
         }
-        s[1] = '\0';
-        len = s - name + 1;
-#ifdef USE_UTF_HACK
-        vis_len = visual_length_between(s, name) + 1;
-#endif
-        if (vis_len <= max)
+        else if (middle_is_quoted)
         {
-            return name;
-        }
-        // If the last name is an abbreviation it's not the one we want.
-        if (*s == '.')
-        {
-            notlast = true;
-        }
-        while (!std::isspace(*s))
-        {
-            if (s == name) // only one name
+            const std::string quoted{middle.substr(1, middle.size() - 2)};
+            if (!visible_fits(quoted, max))
             {
-#ifdef USE_UTF_HACK
-                terminate_string_at_visual_index(name, max);
-#else
-                name[max] = '\0';
-#endif
-                return name;
-            }
-            if (std::isdigit(*s))    // probably a phone number
-            {
-                notlast = true; // so chuck it
-            }
-            s--;
-        }
-    } while (notlast);
-
-    char *last = s-- + 1;
-
-    // Look for a middle name
-    while (std::isspace(*s)) // get rid of any extra space
-    {
-        len--;
-        s--;
-    }
-    char *mid = name;
-    while (!std::isspace(*mid))
-    {
-#ifdef USE_UTF_HACK
-        mid += byte_length_at(mid);
-#else
-        mid++;
-#endif
-    }
-    int namelen = mid - name + 1;
-#ifdef USE_UTF_HACK
-    vis_namelen = visual_length_between(mid, name) + 1;
-#endif
-    if (mid == s + 1) // no middle name
-    {
-        mid = nullptr;
-        midlen = 0;
-    }
-    else
-    {
-        *mid++ = '\0';
-        while (std::isspace(*mid))
-        {
-            len--;
-#ifdef USE_UTF_HACK
-            mid += byte_length_at(mid);
-#else
-            mid++;
-#endif
-        }
-        midlen = s - mid + 2;
-#ifdef USE_UTF_HACK
-        vis_midlen = visual_length_between(s, mid) + 2;
-#endif
-        // If first name is an initial and middle isn't and it all fits
-        // without the first initial, drop it.
-        if (vis_len > max && mid != s)
-        {
-            if (vis_len - vis_namelen <= max &&
-                ((mid[1] != '.' && (!name[1] || (name[1] == '.' && !name[2]))) || (*mid == '"' && *s == '"')))
-            {
-                len -= namelen;
-                name = mid;
-                namelen = midlen;
-#ifdef USE_UTF_HACK
-                vis_len = vis_namelen;
-                vis_namelen = vis_midlen;
-#endif
-                mid = nullptr;
-            }
-            else if (*mid == '"' && *s == '"')
-            {
-                if (vis_midlen > max)
-                {
-                    name = mid + 1;
-                    *s = '\0';
-                    goto try_again;
-                }
-                len = midlen;
-                last = mid;
-                namelen = 0;
-                mid = nullptr;
-#ifdef USE_UTF_HACK
-                vis_len = vis_midlen;
-                vis_namelen = 0;
-#endif
+                return compress_name_text(quoted, max);
             }
         }
     }
-    s[1] = '\0';
-    if (mid && vis_len > max)
+
+    if (!middle.empty())
     {
-        // Turn middle names into initials
-        len -= s - mid + 2;
-#ifdef USE_UTF_HACK
-        vis_len -= visual_length_between(s, mid) + 2;
-#endif
-        d = mid;
-        s = mid;
-        while (*s)
+        const std::string initials = middle_initials(middle);
+        if (!initials.empty())
         {
-            if (std::isalpha(*s))
+            const std::string candidate = join_name_parts(first, initials, last);
+            if (visible_fits(candidate, max))
             {
-                if (d != mid)
-                {
-#ifdef USE_UTF_HACK
-                    int w = byte_length_at(s);
-                    std::memset(d, ' ', w);
-                    d += w;
-#else
-                    *d++ = ' ';
-#endif
-                }
-#ifdef USE_UTF_HACK
-                int w = byte_length_at(s);
-                std::memcpy(d, s, w);
-                d += w;
-                s += w;
-#else
-                *d++ = *s++;
-#endif
+                return candidate;
             }
-            while (*s && !std::isspace(*s))
-            {
-#ifdef USE_UTF_HACK
-                s += byte_length_at(s);
-#else
-                s++;
-#endif
-            }
-            s = skip_space(s);
-        }
-        if (d != mid)
-        {
-            *d = '\0';
-            midlen = d - mid + 1;
-            len += midlen;
-#ifdef USE_UTF_HACK
-            vis_midlen = visual_length_between(d, mid) + 1;
-            vis_len += vis_midlen;
-#endif
+            middle = initials;
         }
         else
         {
-            mid = nullptr;
-        }
-    }
-    if (vis_len > max)
-    {
-        // If the first name fits without the middle initials, drop them
-        if (mid && vis_len - vis_midlen <= max)
-        {
-            len -= midlen;
-#ifdef USE_UTF_HACK
-            vis_len -= vis_midlen;
-#endif
-            mid = nullptr;
-        }
-        else if (namelen > 0)
-        {
-            // Turn the first name into an initial
-#ifdef USE_UTF_HACK
-            int w = byte_length_at(name);
-            len -= namelen - (w + 1);
-            name[w] = '\0';
-            namelen = w + 1;
-            vis_namelen = visual_width_at(name) + 1;
-#else
-            len -= namelen - 2;
-            name[1] = '\0';
-            namelen = 2;
-#endif
-            if (vis_len > max)
-            {
-                // Dump the middle initials (if present)
-                if (mid)
-                {
-                    len -= midlen;
-#ifdef USE_UTF_HACK
-                    vis_len -= vis_midlen;
-#endif
-                    mid = nullptr;
-                }
-                if (vis_len > max)
-                {
-                    // Finally just truncate the last name
-#ifdef USE_UTF_HACK
-                    terminate_string_at_visual_index(last, max - 2);
-#else
-                    last[max - 2] = '\0';
-#endif
-                }
-            }
-        }
-        else
-        {
-            namelen = 0;
-#ifdef USE_UTF_HACK
-            vis_namelen = 0;
-#endif
+            middle.clear();
         }
     }
 
-    // Paste the names back together
-    d = name + namelen;
-    if (namelen)
+    if (!middle.empty())
     {
-        d[-1] = ' ';
-    }
-    if (mid)
-    {
-        if (d != mid)
+        const std::string candidate = join_name_parts(first, {}, last);
+        if (visible_fits(candidate, max))
         {
-            std::strcpy(d, mid);
+            return candidate;
         }
-        d += midlen;
-        d[-1] = ' ';
     }
-#ifdef USE_UTF_HACK
-    // FIXME - need to move into some function
-    do
+
+    if (!first.empty())
     {
-        int i;
-        int j;
-        for (i = j = 0; last[i] && j < max;)
+        const std::string candidate = join_name_parts(first_character(first), {}, last);
+        if (visible_fits(candidate, max))
         {
-            int w = byte_length_at(last + i);
-            int v = visual_width_at(last + i);
-            if (w == 0 || j + v > max)
-            {
-                break;
-            }
-            std::memcpy(d + i, last + i, w);
-            i += w;
-            j += v;
+            return candidate;
         }
-        d[i] = '\0';
-    } while (false);
-#else
-    safecpy(d, last, max); // "max - (d-name)" would be overkill
-#endif
-    return name;
+        return join_name_parts(first_character(first), {}, truncate_visible(last, max - 2));
+    }
+
+    return truncate_visible(last, max);
 }
-#undef vis_len
-#undef vis_namelen
-#undef vis_midlen
 
 // Compress an email address, trying to keep as much of the local part of
 // the addresses as possible.  The order of precedence is @ ! %, but
