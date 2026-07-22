@@ -514,8 +514,6 @@ generated files, or the vendored `vcpkg` tree.
 - The comparison cleanup also narrowed local work inside `addng`,
   `ngdata`, `respond`, `rthread`, `rt-ov`, and `univ`.  Do not add
   separate slices for those completed `string_case_compare` call sites.
-- `UniversalItem::univ_key_help_mode_str` still returns a nullable
-  `const char *` selected from string literals.  See `CSTR-136`.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
 - Remaining literal tables include color object names, signal names,
@@ -569,16 +567,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-136 - Universal Help Mode Label View
-
-- Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,
-  `libtrn/rt-page.cpp`.
-- Kind: literal label return.
-- Function: `UniversalItem::univ_key_help_mode_str`.
-- Change: return `std::string_view` and use an empty view for the
-  default case instead of returning `nullptr`.
-- Tests: universal selector and rt-page tests.
 
 ### Tier 1 - Helper And API Foundations
 

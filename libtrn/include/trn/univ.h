@@ -140,7 +140,7 @@ struct UniversalItem
     HelpLocation &help_location();
     HelpLocation help_location() const;
     std::string       univ_article_desc() const;
-    const char        *univ_key_help_mode_str() const;
+    std::string_view               univ_key_help_mode_str() const;
 };
 
 class UniversalItemIterator

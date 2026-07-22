@@ -166,6 +166,20 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
     EXPECT_EQ("Empty", g_univ_title);
 }
 
+TEST_F(UnivTest, keyHelpModeStringLabelsKnownMode)
+{
+    UniversalItem item = make_universal_item(UHELP_NGSEL);
+
+    EXPECT_EQ(std::string_view{"Newsgroup Selector"}, item.univ_key_help_mode_str());
+}
+
+TEST_F(UnivTest, keyHelpModeStringReturnsEmptyViewForUnknownMode)
+{
+    UniversalItem item = make_universal_item(static_cast<HelpLocation>(0));
+
+    EXPECT_TRUE(item.univ_key_help_mode_str().empty());
+}
+
 TEST_F(UnivTest, closeRemovesTemporaryFile)
 {
     const fs::path  temp_dir = fs::path{TRN_TEST_TMP_DIR} / "UnivTest" / "closeRemovesTemporaryFile";

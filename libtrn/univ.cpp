@@ -1525,7 +1525,7 @@ void univ_help(HelpLocation where)
     univ_visit_help(where);     // push old selector info to stack
 }
 
-const char *UniversalItem::univ_key_help_mode_str() const
+std::string_view UniversalItem::univ_key_help_mode_str() const
 {
     switch (help_location())
     {
@@ -1563,6 +1563,6 @@ const char *UniversalItem::univ_key_help_mode_str() const
         return "Universal Selector";
 
     default:
-        return nullptr;
+        return {};
     }
 }
