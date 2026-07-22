@@ -58,9 +58,7 @@ try_to_connect:
             }
             else
             {
-                const std::string message{
-                    fmt::format("News server \"{}\" is unavailable: {}\n", machine, &g_ser_line[4])};
-                nntp_init_error(message.c_str());
+                fmt::print("News server \"{}\" is unavailable: {}\n", machine, &g_ser_line[4]);
             }
             response = 0;
             break;
@@ -73,8 +71,7 @@ try_to_connect:
         }
         else
         {
-            std::sprintf(g_ser_line,"News server \"%s\" is unavailable.\n",machine);
-            nntp_init_error(g_ser_line);
+            fmt::print("News server \"{}\" is unavailable.\n", machine);
         }
         response = 0;
         break;
@@ -86,10 +83,7 @@ try_to_connect:
         }
         else
         {
-            std::sprintf(g_ser_line,
-                    "This machine does not have permission to use the %s news server.\n\n",
-                    machine);
-            nntp_init_error(g_ser_line);
+            fmt::print("This machine does not have permission to use the {} news server.\n\n", machine);
         }
         response = -1;
         break;
@@ -117,9 +111,7 @@ try_to_connect:
         }
         else
         {
-            std::sprintf(g_ser_line,"\nUnknown response code %d from %s.\n",
-                    response,machine);
-            nntp_init_error(g_ser_line);
+            fmt::print("\nUnknown response code {} from {}.\n", response, machine);
         }
         response = 0;
         break;

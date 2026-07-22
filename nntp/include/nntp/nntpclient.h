@@ -10,7 +10,6 @@
 
 #include <boost/system/error_code.hpp>
 
-#include <cstdio>
 #include <functional>
 #include <memory>
 #include <stdlib.h> // size_t
@@ -115,10 +114,5 @@ enum NNTPGetsResult
 NNTPGetsResult nntp_gets(char *bp, int len);
 void           nntp_gets_clear_buffer();
 void           nntp_close(bool send_quit);
-
-inline void nntp_init_error(const char *str)
-{
-    std::fputs(str, stdout);
-}
 
 #endif

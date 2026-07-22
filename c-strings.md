@@ -531,7 +531,7 @@ unqualified C calls in production code.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 46.
-- Formatting into C buffers: `sprintf` 11, `snprintf` 2.
+- Formatting into C buffers: `sprintf` 8, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 193, `printf` 375,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
@@ -558,17 +558,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-144 - NNTP Connect Error Formatting
-
-- Files: `nntp/nntpclient.cpp`.
-- Kind: formatted diagnostic text in shared response buffer.
-- Function: `nntp_connect`.
-- Change: replace diagnostic-only `sprintf(g_ser_line, ...)` writes with
-  local `fmt::format` strings passed to `nntp_init_error`.  Preserve
-  response text in `g_ser_line` where later code observes the server
-  response.
-- Tests: NNTP connection tests.
 
 ### Tier 1 - Helper And API Foundations
 

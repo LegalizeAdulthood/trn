@@ -76,6 +76,18 @@ TEST_F(NNTPTest, server_init_connection_failed)
     EXPECT_EQ(-1, result);
 }
 
+TEST_F(NNTPTest, nntpConnectConnectionFailedReportsUnavailable)
+{
+    configure_factory_create(nullptr);
+
+    testing::internal::CaptureStdout();
+    const int         result = nntp_connect(m_machine, false);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(0, result);
+    EXPECT_EQ("News server \"news.gmane.io\" is unavailable.\n", output);
+}
+
 class NNTPConnectedTest : public NNTPTest
 {
 public:
@@ -131,6 +143,31 @@ TEST_F(NNTPConnectedTest, server_init_permanently_unavailable)
     const int result = server_init(m_machine);
 
     EXPECT_EQ(NNTP_ACCESS_VAL, result);
+}
+
+TEST_F(NNTPConnectedTest, nntpConnectAccessDeniedReportsPermissionDenied)
+{
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("502 news.gmane.io InterNetNews NNRP server INN 2.6.3 permanently unavailable"));
+
+    testing::internal::CaptureStdout();
+    const int         result = nntp_connect(m_machine, false);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(-1, result);
+    EXPECT_EQ("This machine does not have permission to use the news.gmane.io news server.\n\n", output);
+}
+
+TEST_F(NNTPConnectedTest, nntpConnectUnknownResponseReportsCode)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("600 unfamiliar response"));
+
+    testing::internal::CaptureStdout();
+    const int         result = nntp_connect(m_machine, false);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(0, result);
+    EXPECT_EQ("\nUnknown response code 600 from news.gmane.io.\n", output);
 }
 
 class NntpServerNameTest : public Test
