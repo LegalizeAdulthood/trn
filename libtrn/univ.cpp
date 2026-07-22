@@ -96,7 +96,7 @@ static void           univ_add_virtual_group(std::string_view grpname);
 static void           univ_use_pattern(const char *pattern, int type);
 static void           univ_use_group_line(char *line, int type);
 static bool  univ_do_match(const char *text, const char *p);
-static bool  univ_use_file(std::string_view fname, const char *label);
+static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
 static void  univ_do_line_ext1(const char *desc, char *line);
 static bool  univ_do_line(char *line);
@@ -259,7 +259,7 @@ void univ_startup()
         // read in trn default top file
         (void)univ_include_file("%X/sitetop");          // pure local
         bool sys_top_load = univ_include_file("%X/trn4top");
-        bool user_top_load = univ_use_file("%+/univ/usertop", nullptr);
+        bool user_top_load = univ_use_file("%+/univ/usertop", {});
 
         if (!(sys_top_load || user_top_load))
         {
@@ -618,7 +618,7 @@ static void univ_use_group_line(char *line, int type)
 }
 
 // returns true on success, false otherwise
-static bool univ_use_file(std::string_view fname, const char *label)
+static bool univ_use_file(std::string_view fname, std::string_view label)
 {
     bool begin_top = true; // default assumption (might be changed later)
 
@@ -648,9 +648,9 @@ static bool univ_use_file(std::string_view fname, const char *label)
     }
     s_univ_begin_found = begin_top;
     s_univ_begin_label.clear();
-    if (label)
+    if (!label.empty())
     {
-        s_univ_begin_label = label;
+        s_univ_begin_label.assign(label.data(), label.size());
     }
     std::ifstream input{file_exp(open_name)};
     if (!input)
@@ -690,7 +690,7 @@ static bool univ_include_file(std::string_view fname)
 {
     const std::string old_univ_fname = g_univ_fname;
     g_univ_fname.assign(fname.data(), fname.size());
-    bool retval = univ_use_file(g_univ_fname, nullptr);
+    bool retval = univ_use_file(g_univ_fname, {});
     g_univ_fname = old_univ_fname;
     return retval;
 }
@@ -964,7 +964,7 @@ bool univ_file_load(std::string_view fname, const char *title, const char *label
     {
         g_univ_label = label;
     }
-    bool flag = !fname.empty() && univ_use_file(fname, label);
+    bool flag = !fname.empty() && univ_use_file(fname, label != nullptr ? label : "");
     if (!flag)
     {
         univ_close();
@@ -1486,7 +1486,7 @@ void univ_help_main(HelpLocation where)
 
     // read in main help file
     g_univ_fname = "%X/HelpFiles/top";
-    bool flag = univ_use_file(g_univ_fname, g_univ_label.c_str());
+    bool flag = univ_use_file(g_univ_fname, g_univ_label);
 
     // later: if flag is not true, then add message?
 }

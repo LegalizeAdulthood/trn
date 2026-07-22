@@ -573,16 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-170 - Universal Use File Label View
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable label pointer forwarded to file item creation.
-- Function: `univ_use_file`.
-- Depends on: none.
-- Change: accept `std::string_view label` and pass the view through to
-  `univ_add_file`; use empty label as the no-label sentinel.
-- Tests: run universal selector tests.
-
 #### CSTR-171 - Universal File Load Title And Label Views
 
 - Files: `libtrn/univ.cpp`, `libtrn/include/trn/univ.h`,
@@ -590,7 +580,7 @@ that later caller slices can consume directly.
 - Kind: public nullable title and label pointers stored or forwarded as
   strings.
 - Function: `univ_file_load`.
-- Depends on: `CSTR-170`.
+- Depends on: none.
 - Change: accept `std::string_view title` and `label`, update callers to
   pass strings/views directly, and use empty label as the no-label
   sentinel.
