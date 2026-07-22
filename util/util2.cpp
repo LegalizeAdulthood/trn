@@ -14,8 +14,6 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -28,23 +26,6 @@ static std::string s_tilde_dir;
 static bool char_equal_ignore_case(char left, char right)
 {
     return string_case_equal(std::string_view{&left, 1}, std::string_view{&right, 1});
-}
-
-// safe version of string copy
-char *safe_copy(char *to, const char *from, int len)
-{
-    char* dest = to;
-
-    if (from)
-    {
-        while (--len && *from)
-        {
-            *dest++ = *from++;
-        }
-    }
-    *dest = '\0';
-
-    return to;
 }
 
 // expand filename via %, ~, and $ interpretation

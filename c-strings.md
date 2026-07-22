@@ -451,8 +451,7 @@ also checks `wildmat` and `parsedate`.  It does not include tests,
 generated files, or the vendored `vcpkg` tree.
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: two hits remain: the helper declaration and definition.
-  No production call sites remain.  See `CSTR-048`.
+- `safe_copy`: no production hits remain in the current tree.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
   overload is already used by production callers that have strings or
   views, and the legacy pointer-return overload is gone.
@@ -521,9 +520,7 @@ generated files, or the vendored `vcpkg` tree.
 
 ## Current `safe_copy` Inventory
 
-The current tree has two `safe_copy` hits: the helper definition and the
-helper declaration.  No production call sites remain; remove the helper
-through `CSTR-048`.
+The current tree has no `safe_copy` hits.
 
 ## Current C String Function Inventory
 
@@ -562,14 +559,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-048 - Safe Copy Helper Removal
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`.
-- Kind: obsolete bounded C-string copy helper.
-- Function: `safe_copy`.
-- Change: remove `safe_copy`; no production call sites remain.
-- Tests: build.
 
 #### CSTR-140 - HTML Tag Table String Views
 
