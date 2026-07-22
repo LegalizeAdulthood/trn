@@ -93,7 +93,7 @@ static void           univ_add_file(std::string_view desc, std::string_view fnam
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
-static void           univ_use_pattern(const char *pattern, int type);
+static void           univ_use_pattern(std::string_view pattern, int type);
 static void           univ_use_group_line(char *line, int type);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
@@ -515,22 +515,21 @@ static bool univ_do_match(std::string_view text, std::string_view pattern)
 }
 
 // type: 0=newsgroup, 1=virtual (more in future?)
-static void univ_use_pattern(const char *pattern, int type)
+static void univ_use_pattern(std::string_view pattern, int type)
 {
-    const char* s = pattern;
-    NewsgroupData* np;
+    NewsgroupData *np;
 
-    if (!s || !*s)
+    if (pattern.empty())
     {
-        std::printf("\ngroup pattern: empty regular expression\n");
+        fmt::print("\ngroup pattern: empty regular expression\n");
         return;
     }
     // XXX later: match all newsgroups in current datasrc to the pattern.
     // XXX later do a quick check to see if the group is a simple one.
 
-    if (*s == '!')
+    if (pattern.front() == '!')
     {
-        s++;
+        pattern.remove_prefix(1);
         switch (type)
         {
         case 0:
@@ -541,7 +540,7 @@ static void univ_use_pattern(const char *pattern, int type)
                 {
                     continue;
                 }
-                if (item.m_state == UIS_NORMAL && univ_do_match(newsgroup->ng.c_str(), s))
+                if (item.m_state == UIS_NORMAL && univ_do_match(newsgroup->ng, pattern))
                 {
                     item.m_state = UIS_DESELECTED;
                 }
@@ -556,7 +555,7 @@ static void univ_use_pattern(const char *pattern, int type)
                 {
                     continue;
                 }
-                if (item.m_state == UIS_NORMAL && univ_do_match(vgroup->ng.c_str(), s))
+                if (item.m_state == UIS_NORMAL && univ_do_match(vgroup->ng, pattern))
                 {
                     item.m_state = UIS_DESELECTED;
                 }
@@ -571,7 +570,7 @@ static void univ_use_pattern(const char *pattern, int type)
         case 0:
             for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
-                if (univ_do_match(np->rc_line_c_str(), s))
+                if (univ_do_match(np->rc_line_c_str(), pattern))
                 {
                     univ_add_group(np->rc_line_c_str(), np->rc_line_c_str());
                 }
@@ -581,7 +580,7 @@ static void univ_use_pattern(const char *pattern, int type)
         case 1:
             for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
-                if (univ_do_match(np->rc_line_c_str(), s))
+                if (univ_do_match(np->rc_line_c_str(), pattern))
                 {
                     univ_add_virtual_group(np->rc_line_c_str());
                 }

@@ -519,10 +519,6 @@ generated files, or the vendored `vcpkg` tree.
   current production caller passes `nullptr`, and several callers have
   `std::string` values that can flow directly after the helper accepts a
   view.
-- `bits.cpp`, `chase_xref`, still copies a cached Xref header into a
-  mutable string only to split it by writing NUL bytes.  Convert the
-  inactive `VALIDATE_XREF_SITE` helper first, then parse the Xref header
-  with string views.
 - Remaining literal tables include color object names, signal names,
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are the tables whose users already operate on
@@ -587,22 +583,11 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-146 - Universal Pattern Application
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable pattern parameter and pointer cursor.
-- Function: `univ_use_pattern`.
-- Change: take `std::string_view pattern`, remove the `nullptr`
-  sentinel, use `remove_prefix` for `!`, and pass views to matcher and
-  add helpers.
-- Tests: run universal-selector tests.
-
 #### CSTR-147 - Universal Pattern List Splitting
 
 - Files: `libtrn/univ.cpp`.
 - Kind: mutable token splitting of caller line.
 - Function: `univ_use_group_line`.
-- Depends on: `CSTR-146`.
 - Change: take `std::string_view line`, split on spaces and commas with
   view operations, and call `univ_use_pattern` without writing temporary
   NULs into the line.
