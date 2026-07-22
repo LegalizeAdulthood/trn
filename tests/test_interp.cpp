@@ -2104,6 +2104,31 @@ TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
               g_prompt);
 }
 
+TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
+{
+    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<std::string> newsgroup_name(g_newsgroup_name, TRN_TEST_NEWSGROUP);
+    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
+    g_header_type[NEWSGROUPS_LINE].flags |= HT_MAGIC;
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    g_char_subst = g_charsets.c_str();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_no_envar("LOCALTIMEFMT");
+    ASSERT_TRUE(parse_header(g_art));
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_NORM, result);
+    EXPECT_THAT(output, HasSubstr(TRN_TEST_BODY));
+    EXPECT_EQ(std::string::npos, output.find("Newsgroups: " TRN_TEST_NEWSGROUP));
+}
+
 TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
@@ -2220,7 +2245,7 @@ TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_HEADER_NEWSGROUPS, buffer());
+    ASSERT_EQ(TRN_TEST_NEWSGROUP, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)

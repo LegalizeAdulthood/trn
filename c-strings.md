@@ -539,7 +539,7 @@ are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
 - Copy and concatenation: `strcpy` 21, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 1, `strncmp` 12.
+- Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 56, `strrchr` 1, `strstr` 2,
   `strlen` 48.
 - Formatting into C buffers: `sprintf` 26, `snprintf` 2.
@@ -569,16 +569,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-135 - Article Newsgroups Header Compare
-
-- Files: `libtrn/art.cpp`.
-- Kind: local C-string comparison.
-- Function: `do_article`.
-- Change: replace temporary newline NULing plus `strcmp` for
-  `Newsgroups:` header hiding with a `std::string_view` slice and direct
-  comparison to `g_newsgroup_name`.
-- Tests: add or run article header-hiding coverage.
 
 #### CSTR-136 - Universal Help Mode Label View
 

@@ -339,18 +339,13 @@ DoArticleResult do_article()
                 switch (g_in_header)
                 {
                 case NEWSGROUPS_LINE:
-                    s = std::strchr(buf_ptr, '\n');
-                    if (s != nullptr)
-                    {
-                        *s = '\0';
-                    }
-                    hide_this_line = (std::strchr(buf_ptr,',') == nullptr)
-                        && !strcmp(buf_ptr+12,g_newsgroup_name.c_str());
-                    if (s != nullptr)
-                    {
-                        *s = '\n';
-                    }
+                {
+                    std::string_view newsgroups{buf_ptr};
+                    newsgroups = newsgroups.substr(0, newsgroups.find('\n'));
+                    newsgroups.remove_prefix(std::min(newsgroups.size(), sizeof("Newsgroups: ") - 1));
+                    hide_this_line = newsgroups.find(',') == std::string_view::npos && newsgroups == g_newsgroup_name;
                     break;
+                }
 
                 case EXPIR_LINE:
                     if (!(g_header_type[EXPIR_LINE].flags & HT_HIDE))
