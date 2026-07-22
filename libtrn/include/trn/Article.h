@@ -104,10 +104,6 @@ struct Article
     {
         return m_num;
     }
-    const char *from_c_str() const
-    {
-        return m_from ? m_from->c_str() : nullptr;
-    }
     std::string_view from_view() const
     {
         return m_from ? *m_from : std::string_view{};
