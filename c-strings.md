@@ -485,8 +485,7 @@ generated files, or the vendored `vcpkg` tree.
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.  `Article::msg_id_c_str` is still live
-  only for `hash_msg_id_c_str`.  See `CSTR-138`.
+  platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -571,16 +570,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-138 - Hash Message-ID View Helper
-
-- Files: `libtrn/rt-process.cpp`, `libtrn/include/trn/rt-process.h`,
-  `libtrn/kfile.cpp`, `libtrn/include/trn/Article.h`.
-- Kind: borrowed string view helper.
-- Function: `hash_msg_id_c_str`.
-- Change: replace the helper with a `std::string_view` return, update
-  callers, and remove `Article::msg_id_c_str` if no caller remains.
-- Tests: hash, rt-process, rthread, and kill-file tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

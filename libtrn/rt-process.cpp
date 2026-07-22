@@ -66,10 +66,9 @@ HashDatum make_pending_msg_id(std::string_view msg_id, unsigned flags)
     return {reinterpret_cast<char *>(new PendingMessageId{std::string{msg_id}}), flags};
 }
 
-const char *hash_msg_id_c_str(HashDatum data)
+std::string_view hash_msg_id_view(HashDatum data)
 {
-    return data.dat_len ? pending_msg_id(data)->msg_id.c_str()
-                        : reinterpret_cast<Article *>(data.dat_ptr)->msg_id_c_str();
+    return data.dat_len ? pending_msg_id(data)->msg_id : reinterpret_cast<Article *>(data.dat_ptr)->msg_id_view();
 }
 
 std::string take_pending_msg_id(HashDatum *data)
@@ -108,10 +107,7 @@ std::string fix_msg_id(std::string_view msgid)
 
 int msg_id_cmp(std::string_view key, HashDatum data)
 {
-    const char            *msg_id = hash_msg_id_c_str(data);
-    const std::string_view msg_id_view{msg_id, key.size()};
-
-    return key.compare(msg_id_view);
+    return key.compare(hash_msg_id_view(data));
 }
 
 // Take a message-id and see if we already know about it.  If so, return

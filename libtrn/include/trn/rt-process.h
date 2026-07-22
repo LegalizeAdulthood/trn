@@ -15,7 +15,7 @@ struct Article;
 struct Subject;
 
 HashDatum   make_pending_msg_id(std::string_view msg_id, unsigned flags);
-const char *hash_msg_id_c_str(HashDatum data);
+std::string_view hash_msg_id_view(HashDatum data);
 std::string take_pending_msg_id(HashDatum *data);
 void        free_pending_msg_id(HashDatum *data);
 int         msg_id_cmp(std::string_view key, HashDatum data);

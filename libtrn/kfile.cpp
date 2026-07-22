@@ -629,7 +629,7 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
         }
         autofl = data->dat_len;
         age = autofl & KF_AGE_MASK;
-        msgid = hash_msg_id_c_str(*data);
+        msgid = hash_msg_id_view(*data);
     }
     else
     {
