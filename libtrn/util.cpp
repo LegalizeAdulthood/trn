@@ -385,8 +385,7 @@ bool make_dir(const fs::path &dirname, MakeDirNameType nametype)
 
 void not_incl(std::string_view feature)
 {
-    std::printf("\nNo room for feature \"%.*s\" on this machine.\n", static_cast<int>(feature.size()),
-                feature.empty() ? "" : feature.data());
+    fmt::print("\nNo room for feature \"{}\" on this machine.\n", feature);
 }
 
 void set_def(char *buffer, const char *dflt)

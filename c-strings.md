@@ -519,8 +519,8 @@ tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
-- New helper and leaf candidates found by this scan are `not_incl`,
-  `eaccess`, `s_finish_cmd`, `file_ref`, `text_to_secs`,
+- New helper and leaf candidates found by this scan are `eaccess`,
+  `s_finish_cmd`, `file_ref`, `text_to_secs`,
   `MimeSection::mime_parse_encoding`, MIME HTML `find_attr`, and
   `wildcard_match`.
 
@@ -540,7 +540,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 43.
 - Formatting into C buffers: `sprintf` 6, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 192, `printf` 380,
+- C text I/O roots: `fgets` 24, `fputs` 192, `printf` 379,
   `fprintf` 41.
 - Character byte operations: `memcpy` 4, `memset` 6, `memcmp` 1.
 
@@ -566,17 +566,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-148 - Utility Not-included Message
-
-- Files: `libtrn/util.cpp`.
-- Kind: formatted output from an existing `std::string_view`.
-- Function: `not_incl`.
-- Change: replace the `%.*s` `std::printf` call with `fmt::print`
-  using the existing view directly.  Do not add temporary strings for
-  null termination.
-- Tests: build-only unless existing option/switch tests already cover
-  the message path.
 
 #### CSTR-149 - SETUIDGID Effective Access Path
 
