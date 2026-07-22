@@ -456,9 +456,7 @@ generated files, or the vendored `vcpkg` tree.
   clusters.  The call sites are inventoried below.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
   overload is already used by production callers that have strings or
-  views.  The const pointer-return overload is now only exercised by
-  tests, so remove it in `CSTR-161` unless a real production caller
-  reappears.
+  views, and the legacy pointer-return overload is gone.
 - `safe_malloc`: string-shaped owners are `g_head_buf` and
   `g_art_buf`.  Non-string owners include the `AddGroup` temporary
   pointer list, hash tables, regex bytecode, and generic allocation
@@ -479,13 +477,12 @@ generated files, or the vendored `vcpkg` tree.
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
-- Unused overload/wrapper scan: `copy_till` and the pointer-return
-  `in_string` overload have no production callers.  Keep
-  `nntp_init_error`, `string_case_compare`, `string_case_equal`,
-  `Subject` C-string accessors, `Tgetstr`, `line_ptr`, `line_offset`,
-  `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
-  `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.
+- Unused overload/wrapper scan: no dead C-style wrappers remain in this
+  pass.  Keep `nntp_init_error`, `string_case_compare`,
+  `string_case_equal`, `Subject` C-string accessors, `Tgetstr`,
+  `line_ptr`, `line_offset`, `file_ref`, `yes_or_no`, `empty`,
+  `plural`, `force_me`, and `at_grey_space`; they still have
+  production/source callers or platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -533,17 +530,6 @@ until the owning storage or API changes.
 - `libtrn/nntp.cpp`, `nntp_read_art`: compacts an NNTP protocol line.
   See `CSTR-036`.
 
-## Current `in_string` Inventory
-
-The current tree has the string-view bool overload, the const
-pointer-return overload, and no production callers that require the
-pointer-return overload.  The remaining pointer-return calls are stale
-utility tests.
-
-- `util/include/util/util2.h`: pointer-return overload declaration.
-- `util/util2.cpp`: pointer-return overload implementation.
-- `tests/test_util.cpp`: pointer-return overload tests.
-
 ## Current C String Function Inventory
 
 The current scan covers the production roots listed above.  Counts below
@@ -581,17 +567,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-161 - In String Pointer Overload Removal
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`,
-  `tests/test_util.cpp`.
-- Kind: unused C-style overload returning an interior pointer.
-- Function: `in_string`.
-- Depends on: none.
-- Change: remove the pointer-return overload and update stale tests so
-  they cover the `std::string_view` bool API that production callers use.
-- Tests: run utility tests.
 
 #### CSTR-162 - Posting Domain Name Comparison
 

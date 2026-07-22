@@ -171,60 +171,6 @@ std::string file_exp(std::string_view text)
     return filename;
 }
 
-// return ptr to needle string in haystack string, nullptr if not found
-
-const char *in_string(const char *haystack, const char *needle, bool case_matters)
-{
-    for (const char *t = haystack; *t; t++)
-    {
-        const char *s = needle;
-        for (const char *x = t; *s; x++, s++)
-        {
-            if (!*x)
-            {
-                return nullptr;
-            }
-            if (case_matters)
-            {
-                if (*s != *x)
-                {
-                    break;
-                }
-            }
-            else
-            {
-                char c;
-                char d;
-                if (std::isupper(*s))
-                {
-                    c = std::tolower(*s);
-                }
-                else
-                {
-                    c = *s;
-                }
-                if (std::isupper(*x))
-                {
-                    d = std::tolower(*x);
-                }
-                else
-                {
-                    d = *x;
-                }
-                if (c != d)
-                {
-                    break;
-                }
-            }
-        }
-        if (!*s)
-        {
-            return t;
-        }
-    }
-    return nullptr;
-}
-
 bool in_string(std::string_view haystack, std::string_view needle, bool case_matters)
 {
     if (needle.empty())

@@ -11,7 +11,6 @@
 
 char       *safe_copy(char *to, const char *from, int len);
 std::string file_exp(std::string_view text);
-const char *in_string(const char *haystack, const char *needle, bool case_matters);
 bool        in_string(std::string_view haystack, std::string_view needle, bool case_matters);
 
 struct AuthCredentials
