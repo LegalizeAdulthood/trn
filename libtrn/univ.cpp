@@ -88,7 +88,7 @@ static bool           s_univ_user_top{};         // if true, the user has loaded
 static void           univ_open();
 static UniversalItem *univ_add(UniversalData data, std::string_view desc);
 static void           univ_add_group(const char *desc, std::string_view grpname);
-static void           univ_add_mask(const char *desc, const char *mask);
+static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(const char *desc, std::string_view fname, const char *label);
 static UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art);
 static void           univ_add_text_file(const char *desc, std::string_view name);
@@ -365,12 +365,12 @@ static void univ_add_group(const char *desc, std::string_view grpname)
     ui->group().ng = group_name;
 }
 
-static void univ_add_mask(const char *desc, const char *mask)
+static void univ_add_mask(std::string_view desc, std::string_view mask)
 {
-    UniversalItem          *ui = univ_add(UniversalGroupMaskData{}, desc != nullptr ? desc : "");
+    UniversalItem          *ui = univ_add(UniversalGroupMaskData{}, desc);
     UniversalGroupMaskData &group_mask = ui->group_mask();
-    group_mask.mask_list = mask;
-    group_mask.title = desc;
+    group_mask.mask_list.assign(mask);
+    group_mask.title.assign(desc);
 }
 
 static void univ_add_file(const char *desc, std::string_view fname, const char *label)

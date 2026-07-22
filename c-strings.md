@@ -573,17 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-166 - Universal Add Mask Views
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable description pointer and read-only mask pointer stored as
-  `std::string`.
-- Function: `univ_add_mask`.
-- Depends on: none.
-- Change: accept `std::string_view desc` and `mask`, using empty
-  description as the missing sentinel.
-- Tests: run universal selector tests.
-
 #### CSTR-167 - Universal Add File Label Views
 
 - Files: `libtrn/univ.cpp`.
@@ -643,7 +632,7 @@ that later caller slices can consume directly.
   `libtrn/rt-select.cpp`, `tests/test_univ.cpp`.
 - Kind: public title pointer stored as `std::string`.
 - Function: `univ_mask_load`.
-- Depends on: `CSTR-166`.
+- Depends on: none.
 - Change: accept `std::string_view title` and update callers to pass
   strings/views directly.
 - Tests: run universal selector tests.
