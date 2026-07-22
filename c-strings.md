@@ -531,7 +531,7 @@ unqualified C calls in production code.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 46.
-- Formatting into C buffers: `sprintf` 8, `snprintf` 2.
+- Formatting into C buffers: `sprintf` 7, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 193, `printf` 375,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
@@ -568,17 +568,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-145 - AddGroup Active Line Formatting
-
-- Files: `libtrn/addng.cpp`.
-- Kind: active-file line formatting into shared protocol buffer.
-- Function: `new_nntp_groups`.
-- Change: replace the local `sprintf` append into `g_ser_line` with
-  owned string formatting for the active-file line being appended.
-  Preserve the existing parsing order and any meaningful field width.
-- Tests: add-newsgroup tests; add coverage first if the active-line
-  rewrite path is not covered.
 
 #### CSTR-146 - Author Compression String Algorithm
 

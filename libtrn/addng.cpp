@@ -210,8 +210,8 @@ static void new_nntp_groups(DataSource *dp)
         }
         if (dp->m_act_sf.m_fp)
         {
-            const std::string active_line =
-                dp->find_active_group(std::string_view{g_ser_line, static_cast<std::size_t>(len)}, ArticleNum{});
+            const std::string_view group_name{g_ser_line, static_cast<std::size_t>(len)};
+            const std::string      active_line = dp->find_active_group(group_name, ArticleNum{});
             if (!active_line.empty())
             {
                 if (!s)
@@ -234,8 +234,8 @@ static void new_nntp_groups(DataSource *dp)
                 {
                     s = g_ser_line + len;
                 }
-                std::sprintf(s, " %010ld %05ld %c\n", high, low, ch);
-                (void) dp->m_act_sf.append(g_ser_line, len);
+                const std::string new_active_line = fmt::format("{} {:010} {:05} {}\n", group_name, high, low, ch);
+                (void) dp->m_act_sf.append(new_active_line, len);
             }
         }
         if (s)
