@@ -479,10 +479,12 @@ generated files, or the vendored `vcpkg` tree.
   `interp_backslash`, and `normalize_refs` APIs are gone.
 - Unused overload/wrapper scan: no dead C-style wrappers remain in this
   pass.  Keep `nntp_init_error`, `string_case_compare`,
-  `string_case_equal`, `Subject` C-string accessors, `Tgetstr`,
-  `line_ptr`, `line_offset`, `file_ref`, `yes_or_no`, `empty`,
-  `plural`, `force_me`, and `at_grey_space`; they still have
-  production/source callers or platform/API boundary use.
+  `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
+  `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
+  `at_grey_space`; they still have production/source callers or
+  platform/API boundary use.  `Subject` and `Article` C-string
+  accessors are still live, but direct callers that already have view
+  alternatives are now listed as slices.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -512,8 +514,15 @@ generated files, or the vendored `vcpkg` tree.
 - Universal-selector helper signatures still carry nullable
   `const char *` parameters even though the implementation stores text
   in `std::string` and uses empty strings as the practical sentinel.
-  Migrate these helpers bottom-up before touching broader shared
-  buffers.
+  They are listed below in bottom-up order.
+- `nntp_at_list_end` is a live C-string helper, not dead code.  No
+  current production caller passes `nullptr`, and several callers have
+  `std::string` values that can flow directly after the helper accepts a
+  view.
+- `bits.cpp`, `chase_xref`, still copies a cached Xref header into a
+  mutable string only to split it by writing NUL bytes.  Convert the
+  inactive `VALIDATE_XREF_SITE` helper first, then parse the Xref header
+  with string views.
 - Remaining literal tables include color object names, signal names,
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are the tables whose users already operate on
@@ -536,12 +545,12 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 25, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 4, `strncmp` 17.
+- Copy and concatenation: `strcpy` 22, `strncpy` 3, `strcat` 0.
+- Comparison: `strcmp` 8, `strncmp` 17.
 - Search and length: `strchr` 60, `strrchr` 1, `strstr` 2,
-  `strlen` 53.
-- Formatting into C buffers: `sprintf` 34, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 196, `printf` 383,
+  `strlen` 50.
+- Formatting into C buffers: `sprintf` 29, `snprintf` 2.
+- C text I/O roots: `fgets` 25, `fputs` 196, `printf` 388,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
@@ -568,32 +577,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-### Tier 1 - Helper And API Foundations
-
-These slices change lower-level helper, parser, or storage contracts
-that later caller slices can consume directly.
-
-### Tier 2 - Tool-local And Owner-local Storage
-
-These slices replace one parser or local owner of string storage.  Finish
-them before broad global-buffer work and before removing helpers.
-
-### Tier 3 - Workflow Callers And Path Owners
-
-These slices clean up workflows after their helper/storage dependencies
-are available.  Keep the listed order inside dependent families.
-
-### Tier 4 - Broad Shared Buffers
-
-These slices should wait until earlier tiers have reduced direct callers
-and clarified ownership at the edges.
-
-Global command buffer work must be split by function.  Prefer
-formatting-only leaves first, because they do not affect command input,
-typeahead, article reading, or protocol line ownership.  Terminal
-command input remains in `CSTR-119`; file and protocol read buffers stay
-with their owner slices unless a local use is clearly formatting-only.
-
 #### CSTR-031B - Newsgroup Growth Processing Notice
 
 - Files: `libtrn/ngdata.cpp`.
@@ -611,6 +594,175 @@ with their owner slices unless a local use is clearly formatting-only.
 - Change: build the prompt in a local `std::string` and pass `c_str()`
   to `in_char`; keep `g_buf` only for the input result.
 - Tests: run newsgroup command tests if available.
+
+#### CSTR-135 - Subject Duplicate Check
+
+- Files: `libtrn/cache.cpp`.
+- Kind: `Subject::stripped_text` C-string comparison.
+- Function: `Article::set_subj_line`.
+- Change: compare `m_subj->stripped_view()` with a view of the new
+  subject key instead of calling `strncmp` through `stripped_text`.
+- Tests: run subject and cache tests.
+
+#### CSTR-136 - Thread Subject Enumeration
+
+- Files: `libtrn/rt-wumpus.cpp`.
+- Kind: `Subject::stripped_text` display.
+- Function: `entire_tree`.
+- Change: pass `sp->stripped_view()` to `fmt::print`.
+- Tests: run tree rendering tests.
+
+#### CSTR-140 - Kill-file THRU Start Check
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: `g_buf` local line-prefix parsing.
+- Function: `do_kill_file`.
+- Change: use a local `std::string_view` over the trimmed kill-file
+  line for the `THRU` and newsrc-name checks instead of `strncmp`.
+- Tests: run kill-file tests.
+
+#### CSTR-141 - Kill-file Rewrite THRU Check
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: `g_buf` local line-prefix parsing.
+- Function: `rewrite_kill_file`.
+- Change: use a local `std::string_view` over each copied kill-file line
+  for the `THRU` and newsrc-name checks instead of `strncmp`.
+- Tests: run kill-file tests.
+
+### Tier 1 - Helper And API Foundations
+
+These slices change lower-level helper, parser, or storage contracts
+that later caller slices can consume directly.
+
+#### CSTR-137 - NNTP List Terminator Predicate
+
+- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
+  NNTP list readers.
+- Kind: live C-string helper signature.
+- Function: `nntp_at_list_end`.
+- Change: accept `std::string_view`, remove the dead `nullptr` branch
+  after verifying callers, and pass `std::string` lines directly from
+  callers that already own strings.
+- Tests: run NNTP, data-source, add-newsgroup, and nntplist tests.
+
+#### CSTR-138 - Xref Site Validation View
+
+- Files: `libtrn/bits.cpp`.
+- Kind: inactive validation helper string parsing.
+- Function: `valid_xref_site`.
+- Change: accept `std::string_view site`, parse the fetched Path or
+  Posting-Version line with views, and stop writing NULs into
+  `sitebuf`.
+- Tests: build with the validation block enabled if practical; otherwise
+  run the normal bits and MCHASE-related tests after the edit.
+
+#### CSTR-142 - Cached Header Line View API
+
+- Files: `libtrn/Article.cpp`, `libtrn/include/trn/Article.h`,
+  direct cached-line callers.
+- Kind: `const char *` return over owned article strings.
+- Function: `Article::get_cached_line`.
+- Change: add a view-returning cached-line API that preserves absence
+  separately if empty header values must remain distinct.  Migrate
+  callers that only test presence or copy to `std::string`.
+- Tests: run article, header, cache, and subject tests.
+
+#### CSTR-144 - Universal Newsgroup Add Description
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable `const char *` parameter over string storage.
+- Function: `univ_add_group`.
+- Change: take `std::string_view desc`, use empty string as the missing
+  description sentinel, and keep `grpname` as the required group view.
+- Tests: run universal-selector tests.
+
+#### CSTR-145 - Universal Pattern Matcher Views
+
+- Files: `libtrn/univ.cpp`.
+- Kind: read-only C-string recursive matcher.
+- Function: `univ_do_match`.
+- Change: accept `std::string_view text` and `std::string_view pattern`
+  and implement the wildcard recursion without raw pointer walking.
+- Tests: add or run universal-selector pattern tests.
+
+### Tier 2 - Tool-local And Owner-local Storage
+
+These slices replace one parser or local owner of string storage.  Finish
+them before broad global-buffer work and before removing helpers.
+
+#### CSTR-139 - Xref Header Tokenization
+
+- Files: `libtrn/bits.cpp`.
+- Kind: local copied string used as mutable token storage.
+- Function: `chase_xref`.
+- Depends on: `CSTR-138`.
+- Change: parse the cached Xref header with `std::string_view` tokens
+  instead of copying to `xref_buf`, writing NUL separators, and using
+  `strchr`, `strlen`, and `strcmp`.
+- Tests: add coverage first if current bits tests do not cover marking
+  and unmarking xrefs; run MCHASE-related tests after refactoring.
+
+#### CSTR-146 - Universal Pattern Application
+
+- Files: `libtrn/univ.cpp`.
+- Kind: nullable pattern parameter and pointer cursor.
+- Function: `univ_use_pattern`.
+- Depends on: `CSTR-144`, `CSTR-145`.
+- Change: take `std::string_view pattern`, remove the `nullptr`
+  sentinel, use `remove_prefix` for `!`, and pass views to matcher and
+  add helpers.
+- Tests: run universal-selector tests.
+
+#### CSTR-147 - Universal Pattern List Splitting
+
+- Files: `libtrn/univ.cpp`.
+- Kind: mutable token splitting of caller line.
+- Function: `univ_use_group_line`.
+- Depends on: `CSTR-146`.
+- Change: take `std::string_view line`, split on spaces and commas with
+  view operations, and call `univ_use_pattern` without writing temporary
+  NULs into the line.
+- Tests: run universal-selector tests.
+
+#### CSTR-148 - Universal Extension Line Parsing
+
+- Files: `libtrn/univ.cpp`.
+- Kind: `$` extension pointer parsing and temporary NUL writes.
+- Function: `univ_do_line_ext1`.
+- Depends on: `CSTR-147`.
+- Change: take the extension text as `std::string_view`, parse `$v` and
+  `$t` cases with views, and stop mutating the line while extracting
+  virtual article numbers and group names.
+- Tests: run universal-selector tests; add current-behavior coverage
+  first if the `$v` extension cases are not covered.
+
+#### CSTR-149 - Universal Config Line Parsing
+
+- Files: `libtrn/univ.cpp`.
+- Kind: mutable line parsing from owned `std::string` input.
+- Function: `univ_do_line`.
+- Depends on: `CSTR-148`.
+- Change: take a line view, strip the trailing newline by view extent,
+  parse descriptions and file references without mutating the input
+  string, and pass extension text to the view API.
+- Tests: run universal-selector tests.
+
+### Tier 3 - Workflow Callers And Path Owners
+
+These slices clean up workflows after their helper/storage dependencies
+are available.  Keep the listed order inside dependent families.
+
+### Tier 4 - Broad Shared Buffers
+
+These slices should wait until earlier tiers have reduced direct callers
+and clarified ownership at the edges.
+
+Global command buffer work must be split by function.  Prefer
+formatting-only leaves first, because they do not affect command input,
+typeahead, article reading, or protocol line ownership.  Terminal
+command input remains in `CSTR-119`; file and protocol read buffers stay
+with their owner slices unless a local use is clearly formatting-only.
 
 #### CSTR-033 - Article Body Wrap Buffer
 
