@@ -582,15 +582,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-144 - Universal Newsgroup Add Description
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable `const char *` parameter over string storage.
-- Function: `univ_add_group`.
-- Change: take `std::string_view desc`, use empty string as the missing
-  description sentinel, and keep `grpname` as the required group view.
-- Tests: run universal-selector tests.
-
 #### CSTR-145 - Universal Pattern Matcher Views
 
 - Files: `libtrn/univ.cpp`.
@@ -621,7 +612,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/univ.cpp`.
 - Kind: nullable pattern parameter and pointer cursor.
 - Function: `univ_use_pattern`.
-- Depends on: `CSTR-144`, `CSTR-145`.
+- Depends on: `CSTR-145`.
 - Change: take `std::string_view pattern`, remove the `nullptr`
   sentinel, use `remove_prefix` for `!`, and pass views to matcher and
   add helpers.

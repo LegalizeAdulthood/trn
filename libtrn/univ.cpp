@@ -87,7 +87,7 @@ static bool           s_univ_user_top{};         // if true, the user has loaded
 
 static void           univ_open();
 static UniversalItem *univ_add(UniversalData data, std::string_view desc);
-static void           univ_add_group(const char *desc, std::string_view grpname);
+static void           univ_add_group(std::string_view desc, std::string_view grpname);
 static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
@@ -329,11 +329,11 @@ static UniversalItem *univ_add(UniversalData data, std::string_view desc)
     return &node;
 }
 
-static void univ_add_group(const char *desc, std::string_view grpname)
+static void univ_add_group(std::string_view desc, std::string_view grpname)
 {
     UniversalItem* ui;
 
-    if (grpname.data() == nullptr)
+    if (grpname.empty())
     {
         return;
     }
@@ -361,7 +361,7 @@ static void univ_add_group(const char *desc, std::string_view grpname)
         return;
     }
     g_univ_ng_names.insert(group_name);
-    ui = univ_add(UniversalNewsgroup{}, desc != nullptr ? desc : "");
+    ui = univ_add(UniversalNewsgroup{}, desc);
     ui->group().ng = group_name;
 }
 
