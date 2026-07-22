@@ -573,16 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-173 - Universal Extension Description View
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable description pointer forwarded to item creation.
-- Function: `univ_do_line_ext1`.
-- Depends on: none.
-- Change: accept `std::string_view desc` and replace local
-  `desc ? desc : ...` decisions with empty-view checks.
-- Tests: run universal selector tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish

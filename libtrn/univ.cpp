@@ -98,7 +98,7 @@ static void           univ_use_group_line(char *line, int type);
 static bool  univ_do_match(const char *text, const char *p);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
-static void  univ_do_line_ext1(const char *desc, char *line);
+static void  univ_do_line_ext1(std::string_view desc, char *line);
 static bool  univ_do_line(char *line);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
@@ -697,7 +697,7 @@ static bool univ_include_file(std::string_view fname)
 
 // do the '$' extensions of the line.
 //char* line;                   // may be temporarily edited
-static void univ_do_line_ext1(const char *desc, char *line)
+static void univ_do_line_ext1(std::string_view desc, char *line)
 {
     char* p;
     char* q;
@@ -715,7 +715,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
         {
         case '0':             // test vector: "desc" $v0
             s++;
-            (void) univ_add_virt_num(desc ? desc : s, "news.software.readers", ArticleNum{15000});
+            (void) univ_add_virt_num(!desc.empty() ? desc : s, "news.software.readers", ArticleNum{15000});
             break;
 
         case '1':             // "desc" $v1 1500 news.admin
@@ -730,7 +730,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
             if (*p)
             {
                 p++;
-                (void)univ_add_virt_num(desc ? desc : s, p, a);
+                (void)univ_add_virt_num(!desc.empty() ? desc : s, p, a);
             }
             break;
 
@@ -763,7 +763,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
         switch (*s)
         {
         case '0':             // test vector: "desc" $t0
-            univ_add_text_file(desc? desc : s, "/home/c/caadams/ztext");
+            univ_add_text_file(!desc.empty() ? desc : s, "/home/c/caadams/ztext");
             break;
         }
         break;
@@ -925,7 +925,7 @@ static bool univ_do_line(char *line)
             break;
 
         case '$':       // extension 1
-            univ_do_line_ext1(line_desc,s);
+            univ_do_line_ext1(line_desc ? std::string_view{line_desc} : std::string_view{}, s);
             break;
 
         default:
