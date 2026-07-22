@@ -104,7 +104,7 @@ std::string nntp_server_name(std::string_view name);
 int   nntp_command(std::string_view bp);
 int   nntp_xgtitle(std::string_view groupname);
 int   nntp_check();
-bool  nntp_at_list_end(const char *s);
+bool        nntp_at_list_end(std::string_view s);
 enum NNTPGetsResult
 {
     // NGSR: nntp get string result

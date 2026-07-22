@@ -295,7 +295,7 @@ beginning:
         if (remote)
         {
             line = nntp_get_a_line();
-            if (nntp_at_list_end(line.c_str()))
+            if (nntp_at_list_end(line))
             {
                 break;
             }

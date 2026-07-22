@@ -295,9 +295,9 @@ read_it:
     return ret;
 }
 
-bool nntp_at_list_end(const char *s)
+bool nntp_at_list_end(std::string_view s)
 {
-    if (!s || (*s == '.' && (s[1] == '\0' || s[1] == '\r')))
+    if (!s.empty() && s[0] == '.' && (s.size() == 1 || s[1] == '\r'))
     {
         g_nntp_link.flags |= NNTP_NEW_CMD_OK;
         return true;

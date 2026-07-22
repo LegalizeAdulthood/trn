@@ -652,7 +652,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             if (g_debug & DEB_NNTP)
                 std::printf("<%s", line.empty() ? "<EOF>" : line.c_str());
 #endif
-            if (nntp_at_list_end(line.c_str()))
+            if (nntp_at_list_end(line))
             {
                 break;
             }

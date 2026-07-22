@@ -582,17 +582,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-137 - NNTP List Terminator Predicate
-
-- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
-  NNTP list readers.
-- Kind: live C-string helper signature.
-- Function: `nntp_at_list_end`.
-- Change: accept `std::string_view`, remove the dead `nullptr` branch
-  after verifying callers, and pass `std::string` lines directly from
-  callers that already own strings.
-- Tests: run NNTP, data-source, add-newsgroup, and nntplist tests.
-
 #### CSTR-138 - Xref Site Validation View
 
 - Files: `libtrn/bits.cpp`.
