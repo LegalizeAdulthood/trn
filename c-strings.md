@@ -573,16 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-164 - Universal Text Placeholder View
-
-- Files: `libtrn/univ.cpp`.
-- Kind: read-only text pointer stored as `std::string`.
-- Function: `univ_add_text`.
-- Depends on: none.
-- Change: accept `std::string_view txt` and pass the view to
-  `univ_add`.
-- Tests: run universal selector tests.
-
 #### CSTR-165 - Universal Debug Text Views
 
 - Files: `libtrn/univ.cpp`.
