@@ -27,6 +27,8 @@
 
 #include <parsedate/parsedate.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <array>
 #include <cstdio>
@@ -248,8 +250,7 @@ beginning:
 
     if (remote)
     {
-        std::sprintf(g_ser_line, "XOVER %ld-%ld", (long)first.value_of(), (long)last.value_of());
-        if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
+        if (nntp_command(fmt::format("XOVER {}-{}", first.value_of(), last.value_of())) <= 0 || nntp_check() <= 0)
         {
             success = false;
             goto exit;

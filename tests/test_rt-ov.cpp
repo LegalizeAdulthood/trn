@@ -3,6 +3,8 @@
 
 #include <trn/rt-ov.h>
 
+#include <nntp/nntpclient.h>
+
 #include <config/common.h>
 #include <test_config.h>
 #include <trn/Article.h>
@@ -18,10 +20,12 @@
 
 #include <parsedate/parsedate.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -32,6 +36,17 @@ namespace
 namespace fs = std::filesystem;
 
 constexpr ArticleNum TEST_ARTICLE_NUM{1};
+
+class MockNNTPConnection : public INNTPConnection
+{
+public:
+    ~MockNNTPConnection() override = default;
+
+    MOCK_METHOD(std::string, read_line, (error_code_t &), (override));
+    MOCK_METHOD(void, write_line, (const std::string &, error_code_t &), (override));
+    MOCK_METHOD(void, write, (const char *, size_t, error_code_t &), (override));
+    MOCK_METHOD(size_t, read, (char *, size_t, error_code_t &), (override));
+};
 
 class OverviewTest : public testing::Test
 {
@@ -57,6 +72,8 @@ protected:
         m_old_int_count = g_int_count;
         m_old_curr_artp = g_curr_artp;
         m_old_sentinel_art_ptr = g_sentinel_art_ptr;
+        m_old_nntp_connection = g_nntp_link.connection;
+        m_old_nntp_flags = g_nntp_link.flags;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -96,6 +113,8 @@ protected:
         g_int_count = 0;
         g_curr_artp = nullptr;
         g_sentinel_art_ptr = nullptr;
+        g_nntp_link.connection.reset();
+        g_nntp_link.flags = NNTP_NEW_CMD_OK;
 
         head_init();
 
@@ -134,6 +153,8 @@ protected:
         g_int_count = m_old_int_count;
         g_curr_artp = m_old_curr_artp;
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
+        g_nntp_link.connection = std::move(m_old_nntp_connection);
+        g_nntp_link.flags = m_old_nntp_flags;
 
         fs::remove_all(m_output_dir, error);
 
@@ -170,6 +191,8 @@ protected:
     char        m_old_int_count{};
     Article    *m_old_curr_artp{};
     Article    *m_old_sentinel_art_ptr{};
+    ConnectionPtr m_old_nntp_connection;
+    NNTPFlags     m_old_nntp_flags{};
 };
 
 } // namespace
@@ -207,6 +230,30 @@ TEST_F(OverviewTest, localOverviewLinePopulatesArticleFields)
     EXPECT_EQ(56, article->m_lines);
     ASSERT_TRUE(article->m_xrefs);
     EXPECT_EQ("comp.lang.apl:1 comp.lang.cpp:5", *article->m_xrefs);
+}
+
+TEST_F(OverviewTest, remoteOverviewRequestsXoverRange)
+{
+    const std::shared_ptr<testing::StrictMock<MockNNTPConnection>> connection =
+        std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    const std::string date{"Tue, 01 Jan 2019 00:00:00 GMT"};
+    g_nntp_link.connection = connection;
+    m_data_source.m_over_dir.clear();
+    m_data_source.m_flags |= DF_REMOTE;
+
+    EXPECT_CALL(*connection, write_line(testing::StrEq("XOVER 1-1"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_))
+        .WillOnce(testing::Return("224 Overview follows"))
+        .WillOnce(testing::Return("1\tRe: Overview Subject\tAlice <alice@example.com>\t" + date +
+                                  "\t<child@example.com>\t<parent@example.com>\t"
+                                  "1234\t56\tcomp.lang.apl:1 comp.lang.cpp:5"))
+        .WillOnce(testing::Return("."));
+
+    EXPECT_TRUE(ov_data(TEST_ARTICLE_NUM, TEST_ARTICLE_NUM, false));
+
+    Article *article = article_ptr(TEST_ARTICLE_NUM);
+    EXPECT_TRUE(article->m_flags & AF_CACHED);
+    EXPECT_EQ("Re: Overview Subject", article->get_cached_line_text(SUBJ_LINE, false));
 }
 
 TEST_F(OverviewTest, initMapsOverviewFormatFields)

@@ -531,7 +531,7 @@ unqualified C calls in production code.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 46.
-- Formatting into C buffers: `sprintf` 15, `snprintf` 2.
+- Formatting into C buffers: `sprintf` 14, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 193, `printf` 375,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
@@ -558,16 +558,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-142 - Overview XOVER Command Formatting
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: outgoing command construction in shared response buffer.
-- Function: `ov_data`.
-- Change: replace `sprintf(g_ser_line, "XOVER ...")` with a local
-  formatted command passed to `nntp_command`, leaving `g_ser_line` for
-  the server response.
-- Tests: overview and NNTP tests.
 
 #### CSTR-143 - Article-check NNTP Command Formatting
 
