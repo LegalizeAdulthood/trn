@@ -573,22 +573,12 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-163 - Universal Add Description View
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable description pointer stored as `std::string`.
-- Function: `univ_add`.
-- Depends on: none.
-- Change: accept `std::string_view desc`, use empty view as the missing
-  sentinel, and update direct callers to pass `{}` instead of `nullptr`.
-- Tests: run universal selector tests.
-
 #### CSTR-164 - Universal Text Placeholder View
 
 - Files: `libtrn/univ.cpp`.
 - Kind: read-only text pointer stored as `std::string`.
 - Function: `univ_add_text`.
-- Depends on: `CSTR-163`.
+- Depends on: none.
 - Change: accept `std::string_view txt` and pass the view to
   `univ_add`.
 - Tests: run universal selector tests.
@@ -599,7 +589,7 @@ that later caller slices can consume directly.
 - Kind: nullable description and read-only text pointers stored as
   `std::string`.
 - Function: `univ_add_debug`.
-- Depends on: `CSTR-163`.
+- Depends on: none.
 - Change: accept `std::string_view desc` and `txt`, using empty
   description as the missing sentinel.
 - Tests: run universal selector tests.
@@ -610,7 +600,7 @@ that later caller slices can consume directly.
 - Kind: nullable description pointer and read-only mask pointer stored as
   `std::string`.
 - Function: `univ_add_mask`.
-- Depends on: `CSTR-163`.
+- Depends on: none.
 - Change: accept `std::string_view desc` and `mask`, using empty
   description as the missing sentinel.
 - Tests: run universal selector tests.
@@ -620,7 +610,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/univ.cpp`.
 - Kind: nullable description and label pointers stored as strings.
 - Function: `univ_add_file`.
-- Depends on: `CSTR-163`.
+- Depends on: none.
 - Change: accept `std::string_view desc` and `label`; keep empty label
   as the no-label sentinel.
 - Tests: run universal selector tests.
@@ -630,7 +620,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/univ.cpp`.
 - Kind: nullable description and group pointers stored as strings.
 - Function: `univ_add_virt_num`.
-- Depends on: `CSTR-163`.
+- Depends on: none.
 - Change: accept `std::string_view desc` and `grp`, using empty strings
   as missing sentinels.
 - Tests: run universal selector tests.
@@ -640,7 +630,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/univ.cpp`.
 - Kind: nullable description pointer stored as `std::string`.
 - Function: `univ_add_text_file`.
-- Depends on: `CSTR-163`.
+- Depends on: none.
 - Change: accept `std::string_view desc`; keep the existing filename
   view and use empty description as the missing sentinel.
 - Tests: run universal selector tests.
