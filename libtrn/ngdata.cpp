@@ -341,22 +341,17 @@ void grow_newsgroup(ArticleNum new_last)
         thread_grow();
         // Score all new articles now just in case they weren't done above.
         sc_fill_score_list(tmpfirst,new_last);
-        if (g_verbose)
-        {
-            std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
-                         g_last_art.value_of() - tmpfirst.value_of() + 1,
-                         g_last_art > tmpfirst ? "s have" : " has");
-        }
-        else                    // my, my, how clever we are
-        {
-            std::strcpy(g_buf, "More news -- auto-processing...\n\n");
-        }
+        const std::string message =
+            g_verbose ? fmt::format("{} more article{} arrived -- processing memorized commands...\n\n",
+                                    g_last_art.value_of() - tmpfirst.value_of() + 1,
+                                    g_last_art > tmpfirst ? "s have" : " has")
+                      : "More news -- auto-processing...\n\n";
         term_down(2);
         if (g_kf_state & KFS_NORMAL_LINES)
         {
             bool forcelast_save = g_force_last;
             Article* artp_save = g_artp;
-            kill_unwanted(tmpfirst,g_buf,true);
+            kill_unwanted(tmpfirst, message.c_str(), true);
             g_artp = artp_save;
             g_force_last = forcelast_save;
         }

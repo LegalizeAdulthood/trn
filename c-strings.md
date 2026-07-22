@@ -577,15 +577,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-031B - Newsgroup Growth Processing Notice
-
-- Files: `libtrn/ngdata.cpp`.
-- Kind: `g_buf` local status-message formatting.
-- Function: `grow_newsgroup`.
-- Change: build the memorized-command processing message in a local
-  `std::string` and pass `c_str()` to `kill_unwanted`.
-- Tests: run newsgroup data and kill-file tests if available.
-
 #### CSTR-031C - Catchup Prompt Builder
 
 - Files: `libtrn/ng.cpp`.
