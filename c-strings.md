@@ -583,16 +583,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-149 - Universal Config Line Parsing
-
-- Files: `libtrn/univ.cpp`.
-- Kind: mutable line parsing from owned `std::string` input.
-- Function: `univ_do_line`.
-- Change: take a line view, strip the trailing newline by view extent,
-  parse descriptions and file references without mutating the input
-  string, and pass extension text to the view API.
-- Tests: run universal-selector tests.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

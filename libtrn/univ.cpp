@@ -100,7 +100,7 @@ static bool           univ_do_match(std::string_view text, std::string_view patt
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
 static void           univ_do_line_ext1(std::string_view desc, std::string_view line);
-static bool  univ_do_line(char *line);
+static bool           univ_do_line(std::string_view line);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
 static void  univ_vg_add_group();
@@ -667,8 +667,7 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     std::string line;
     while (std::getline(input, line))
     {
-        line += '\n';
-        if (!univ_do_line(line.data()))
+        if (!univ_do_line(line))
         {
             break; // end of useful file
         }
@@ -818,43 +817,42 @@ static void univ_do_line_ext1(std::string_view desc, std::string_view line)
 }
 
 // returns false when no more lines should be interpreted
-static bool univ_do_line(char *line)
+static bool univ_do_line(std::string_view line)
 {
-    char* p;
     std::string relative_file;
 
-    char *s = line + std::strlen(line) - 1;
-    if (*s == '\n')
+    if (!line.empty() && line.back() == '\n')
     {
-        *s = '\0';                              // delete newline
+        line.remove_suffix(1);
     }
 
-    s = skip_space(line);
-    if (*s == '\0')
+    const std::size_t line_start = line.find_first_not_of(" \f\n\r\t\v");
+    if (line_start == std::string_view::npos)
     {
-        return true;    // empty line
+        return true; // empty line
     }
+    line.remove_prefix(line_start);
 
     if (!s_univ_begin_found)
     {
-        if (string_case_compare(std::string_view{s}.substr(0, 11), "begin group") != 0)
+        if (!string_case_equal(line.substr(0, 11), "begin group"))
         {
-            return true;        // wait until "begin group" is found
+            return true; // wait until "begin group" is found
         }
         s_univ_begin_found = true;
     }
     if (!s_univ_begin_label.empty())
     {
-        if (*s == '>' && s[1] == ':' && std::string_view{s + 2} == s_univ_begin_label)
+        if (line.size() >= 2 && line[0] == '>' && line[1] == ':' && line.substr(2) == s_univ_begin_label)
         {
             s_univ_begin_label.clear(); // interpret starting at next line
         }
         return true;
     }
     s_univ_line_desc.clear();
-    if (*s == '"') // description name
+    if (line.front() == '"') // description name
     {
-        std::string_view description_text{s + 1};
+        std::string_view description_text = line.substr(1);
         std::string      description;
         description.reserve(description_text.size());
         std::size_t description_size{};
@@ -874,62 +872,54 @@ static bool univ_do_line(char *line)
         }
         if (description_size == description_text.size())
         {
-            std::printf("univ: unmatched quote in string:\n\"%s\"\n", description.c_str());
+            fmt::print("univ: unmatched quote in string:\n\"{}\"\n", description);
             return true;
         }
         s_univ_line_desc = description;
-        s += description_size + 2;
+        line.remove_prefix(description_size + 2);
     }
-    s = skip_space(s);
-    const char *line_desc = s_univ_line_desc.empty() ? nullptr : s_univ_line_desc.c_str();
-    const std::string_view line_text{s};
-    if (string_case_equal(line_text.substr(0, 9), "end group"))
+    const std::size_t text_start = line.find_first_not_of(" \f\n\r\t\v");
+    line = text_start == std::string_view::npos ? std::string_view{} : line.substr(text_start);
+    const std::string_view line_desc{s_univ_line_desc};
+    if (string_case_equal(line.substr(0, 9), "end group"))
     {
         return false;
     }
-    if (string_case_equal(line_text.substr(0, 4), "URL:"))
+    if (string_case_equal(line.substr(0, 4), "URL:"))
     {
-        p = skip_ne(s, '>');
-        if (*p)
+        std::string_view  label;
+        const std::size_t label_pos = line.find('>');
+        if (label_pos != std::string_view::npos && label_pos + 1 < line.size())
         {
-            p++;
-            if (!*p)            // empty label
-            {
-                p = nullptr;
-            }
+            label = line.substr(label_pos + 1);
             // XXX later do more error checking
         }
-        else
-        {
-            p = nullptr;
-        }
         // description defaults to name
-        univ_add_file(line_desc ? line_desc : s, s, p != nullptr ? p : "");
+        univ_add_file(!line_desc.empty() ? line_desc : line, line, label);
     }
-    else
+    else if (!line.empty())
     {
-        switch (*s)
+        switch (line.front())
         {
-        case '#':     // comment
+        case '#': // comment
             break;
 
-        case ':':     // relative to g_univ_fname
-            // XXX hack the variable and fall through
+        case ':': // relative to g_univ_fname
             if (!g_univ_fname.empty())
             {
                 const fs::path current_file{g_univ_fname};
                 fs::path relative_path = current_file.has_parent_path() ? current_file.parent_path() : fs::path{"/"};
-                relative_path /= s + 1;
+                relative_path /= line.substr(1);
                 relative_file = relative_path.generic_string();
-                s = relative_file.data();
+                line = relative_file;
             } // XXX later have else which will complain
             // FALL THROUGH
 
-        case '~':     // ...or full file names
+        case '~': // ...or full file names
         case '%':
         case '/':
         {
-            std::string       file_name{s};
+            std::string       file_name{line};
             std::string       label;
             const std::size_t label_pos = file_name.find('>');
             if (label_pos != std::string::npos)
@@ -938,53 +928,56 @@ static bool univ_do_line(char *line)
                 file_name.erase(label_pos);
             }
             // description defaults to name
-            univ_add_file(line_desc ? std::string_view{line_desc} : std::string_view{file_name}, file_exp(file_name),
-                          label);
+            univ_add_file(!line_desc.empty() ? line_desc : std::string_view{file_name}, file_exp(file_name), label);
             break;
         }
 
-        case '-':     // label within same file
-            s++;
-            if (*s++ != '>')
+        case '-': // label within same file
+            if (line.size() < 2 || line[1] != '>')
             {
                 // XXX give an error message later
-              break;
+                break;
             }
-            univ_add_file(line_desc ? line_desc : s, g_univ_fname, s);
+            line.remove_prefix(2);
+            univ_add_file(!line_desc.empty() ? line_desc : line, g_univ_fname, line);
             break;
 
         case '>':
-            if (s[1] == ':')
+            if (line.size() >= 2 && line[1] == ':')
             {
-                return false;   // label found, end of previous block
+                return false; // label found, end of previous block
             }
-            break;      // just ignore the line (print warning later?)
+            break; // just ignore the line (print warning later?)
 
-        case '@':       // virtual newsgroup file
-            break;      // not used now
+        case '@':  // virtual newsgroup file
+            break; // not used now
 
-        case '&':       // text file shortcut (for help files)
-            s++;
-            univ_add_text_file(line_desc ? line_desc : s, s);
+        case '&': // text file shortcut (for help files)
+            line.remove_prefix(1);
+            univ_add_text_file(!line_desc.empty() ? line_desc : line, line);
             break;
 
-        case '$':       // extension 1
-            univ_do_line_ext1(line_desc ? std::string_view{line_desc} : std::string_view{}, s);
+        case '$': // extension 1
+            univ_do_line_ext1(line_desc, line);
             break;
 
         default:
             // if there is a description, this must be a restriction list
-            if (line_desc)
+            if (!line_desc.empty())
             {
-                univ_add_mask(line_desc,s);
-              break;
+                univ_add_mask(line_desc, line);
+                break;
             }
             // one or more newsgroups instead
-            univ_use_group_line(s,0);
+            univ_use_group_line(line, 0);
             break;
         }
     }
-    return true;        // continue reading
+    else if (!line_desc.empty())
+    {
+        univ_add_mask(line_desc, line);
+    }
+    return true; // continue reading
 }
 
 // features to return later (?):
