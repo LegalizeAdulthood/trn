@@ -547,7 +547,7 @@ production code.
 
 - Copy and concatenation: `strcpy` 21, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 8, `strncmp` 12.
-- Search and length: `strchr` 60, `strrchr` 1, `strstr` 2,
+- Search and length: `strchr` 59, `strrchr` 1, `strstr` 2,
   `strlen` 50.
 - Formatting into C buffers: `sprintf` 26, `snprintf` 2.
 - C text I/O roots: `fgets` 25, `fputs` 196, `printf` 388,
@@ -581,17 +581,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-138 - Xref Site Validation View
-
-- Files: `libtrn/bits.cpp`.
-- Kind: inactive validation helper string parsing.
-- Function: `valid_xref_site`.
-- Change: accept `std::string_view site`, parse the fetched Path or
-  Posting-Version line with views, and stop writing NULs into
-  `sitebuf`.
-- Tests: build with the validation block enabled if practical; otherwise
-  run the normal bits and MCHASE-related tests after the edit.
 
 #### CSTR-142 - Cached Header Line View API
 
@@ -632,7 +621,6 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/bits.cpp`.
 - Kind: local copied string used as mutable token storage.
 - Function: `chase_xref`.
-- Depends on: `CSTR-138`.
 - Change: parse the cached Xref header with `std::string_view` tokens
   instead of copying to `xref_buf`, writing NUL separators, and using
   `strchr`, `strlen`, and `strcmp`.

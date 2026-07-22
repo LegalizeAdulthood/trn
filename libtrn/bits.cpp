@@ -54,7 +54,7 @@ static bool yank_article(char *ptr, int arg);
 static bool check_chase(char *ptr, int until_key);
 static int chase_xref(ArticleNum art_num, bool mark_read);
 #ifdef VALIDATE_XREF_SITE
-static bool valid_xref_site(ArticleNum art_num, const char *site);
+static bool valid_xref_site(ArticleNum art_num, std::string_view site);
 #endif
 
 void bits_init()
@@ -729,25 +729,27 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 // Xrefs correctly--each article need only match itself to be valid.
 //
 # ifdef VALIDATE_XREF_SITE
-static bool valid_xref_site(ArticleNum art_num, const char *site)
+static bool valid_xref_site(ArticleNum art_num, std::string_view site)
 {
-    std::string sitebuf;
-
-    if (s_inews_site && *s_inews_site == site)
+    if (s_inews_site && std::string_view{s_inews_site->data(), s_inews_site->size()} == site)
         return true;
 
 #ifndef ANCIENT_NEWS
     // Grab the site from the first component of the Path line
-    sitebuf = fetch_lines(art_num, PATH_LINE);
-    char *s = std::strchr(sitebuf.data(), '!');
-    if (s != nullptr)
+    const std::string      sitebuf = fetch_lines(art_num, PATH_LINE);
+    const std::string_view line{sitebuf};
+    const std::size_t      bang = line.find('!');
+    if (bang != std::string_view::npos)
     {
-        *s = '\0';
-        s_inews_site = sitebuf;
+        s_inews_site.emplace(line.data(), bang);
+    }
+    else
+    {
+        s_inews_site = "";
     }
 #else  // ANCIENT_NEWS
     // Grab the site from the Posting-Version line
-    sitebuf = fetch_lines(art_num, RVER_LINE);
+    const std::string      sitebuf = fetch_lines(art_num, RVER_LINE);
     const std::string_view marker{"; site "};
     const std::string_view line{sitebuf};
     const std::size_t      site_start = line.find(marker);
@@ -761,13 +763,13 @@ static bool valid_xref_site(ArticleNum art_num, const char *site)
         }
         s_inews_site.emplace(inews_site.data(), inews_site.size());
     }
-#endif // ANCIENT_NEWS
     else
     {
         s_inews_site = "";
     }
+#endif // ANCIENT_NEWS
 
-    if (*s_inews_site == site)
+    if (std::string_view{s_inews_site->data(), s_inews_site->size()} == site)
     {
         return true;
     }
