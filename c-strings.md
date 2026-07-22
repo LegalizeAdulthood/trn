@@ -583,19 +583,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-132 - Main Multirc Display Builder
-
-- Files: `libtrn/trn.cpp`.
-- Kind: `g_buf` string building with `sprintf`, `strlen`, and `strcpy`.
-- Function: main newsgroup command loop multirc display block.
-- Depends on: none.
-- Change: build the active data-source list in a local `std::string`,
-  preserve the existing display truncation threshold, and print with
-  fmt.
-- Truncation: meaningful display abbreviation at roughly 66 columns;
-  preserve the `, ...` behavior.
-- Tests: run selector or main loop tests if available.
-
 #### CSTR-133 - Selector Header Multirc Display Builder
 
 - Files: `libtrn/rt-page.cpp`.

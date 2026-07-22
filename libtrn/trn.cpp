@@ -665,20 +665,23 @@ do_command:
 display_multirc:
         {
             Newsrc* rp;
-            int len;
-            for (rp = g_multirc->m_first, len = 0; rp && len < 66; rp = rp->next)
+            std::string news_sources;
+            news_sources.reserve(66);
+            std::size_t len = 0;
+            for (rp = g_multirc->m_first; rp && len < 66; rp = rp->next)
             {
                 if (rp->flags & RF_ACTIVE)
                 {
-                    std::sprintf(g_buf + len, ", %s", rp->data_source->m_name.c_str());
-                    len += std::strlen(g_buf + len);
+                    fmt::format_to(std::back_inserter(news_sources), "{}{}", news_sources.empty() ? "" : ", ",
+                                   rp->data_source->m_name);
+                    len = news_sources.size() + 2;
                 }
             }
             if (rp)
             {
-                std::strcpy(g_buf+len, ", ...");
+                news_sources += ", ...";
             }
-            std::printf("\nUsing newsrc group #%d: %s.\n",g_multirc->m_num,g_buf+2);
+            fmt::print("\nUsing newsrc group #{}: {}.\n", g_multirc->m_num, news_sources);
             term_down(3);
             return ING_RESTART;
         }
