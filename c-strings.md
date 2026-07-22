@@ -473,8 +473,9 @@ generated files, or the vendored `vcpkg` tree.
   termcap storage, and regex bytecode arrays are non-string protocol or
   parser storage, not current local string slices.
 - `g_art_buf` is now backed by owned `std::string` storage, with the
-  global pointer kept as a compatibility view.  `read_art_buf` still has
-  local C-string construction against that storage.  See `CSTR-139`.
+  global pointer kept as a compatibility view.  Remaining direct pointer
+  writes in `read_art_buf` are read/decode/filter plumbing, not current
+  local string construction slices.
 - Terminal capability globals are already `const char *`.  The remaining
   termcap area is file-scope borrowed storage behind those pointers and
   belongs with terminal-owner cleanup, not a local `string_view` slice.
@@ -534,11 +535,11 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 21, `strncpy` 3, `strcat` 0.
+- Copy and concatenation: `strcpy` 15, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 56, `strrchr` 1, `strstr` 2,
-  `strlen` 48.
-- Formatting into C buffers: `sprintf` 26, `snprintf` 2.
+  `strlen` 44.
+- Formatting into C buffers: `sprintf` 25, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 194, `printf` 376,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
@@ -575,19 +576,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-139 - Article Buffer String-owned Writes
-
-- Files: `libtrn/artio.cpp`.
-- Kind: owner-local string buffer operations.
-- Function: `read_art_buf`.
-- Change: now that `g_art_buf` is backed by `std::string`, replace local
-  C-string construction into that storage where it is not required by
-  `read_art`, MIME decoder output, or HTML filter output.  Start with
-  newline writes and multipart separator formatting; preserve existing
-  pointer-return behavior.
-- Tests: ArticleIo, article display, and MIME tests; add focused
-  coverage before changing any uncovered behavior.
 
 #### CSTR-036 - NNTP Protocol Line Compaction
 

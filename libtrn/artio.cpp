@@ -24,6 +24,7 @@
 #include <fmt/format.h>
 
 #include <cerrno>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -203,6 +204,11 @@ char *read_art_buf(bool view_inline)
     int   extra_chars = 0;
     int read_something = 0;
     std::string description;
+    const auto  write_newline = [](std::size_t offset)
+    {
+        s_art_buf[offset] = '\n';
+        s_art_buf[offset + 1] = '\0';
+    };
 
     if (!g_do_hiding)
     {
@@ -270,7 +276,7 @@ read_more:
                 bp = nullptr;
                 goto done;
             }
-            std::strcpy(bp+o, "\n");
+            write_newline(static_cast<std::size_t>(bp + o - g_art_buf));
             read_something = -1;
         }
         len = std::strlen(bp+o) + read_offset;
@@ -281,7 +287,7 @@ read_more:
                 read_offset = len;
                 goto read_more;
             }
-            std::strcpy(bp + len++ + extra_offset, "\n");
+            write_newline(static_cast<std::size_t>(bp + len++ + extra_offset - g_art_buf));
         }
         if (!g_is_mime)
         {
@@ -291,7 +297,7 @@ read_more:
         mime_set_state(bp+o);
         if (bp[o] == '\0')
         {
-            std::strcpy(bp+o, "\n");
+            write_newline(static_cast<std::size_t>(bp + o - g_art_buf));
             len = line_offset+1;
         }
         break;
@@ -317,7 +323,7 @@ mime_switch:
                     line_offset = len;
                     goto read_more;
                 }
-                std::strcpy(bp + len++ + extra_offset, "\n");
+                write_newline(static_cast<std::size_t>(bp + len++ + extra_offset - g_art_buf));
             }
         }
         else if (g_mime_section->m_encoding == MENCODE_BASE64)
@@ -333,7 +339,7 @@ mime_switch:
                     line_offset = len;
                     goto read_more;
                 }
-                std::strcpy(bp + len++ + extra_offset, "\n");
+                write_newline(static_cast<std::size_t>(bp + len++ + extra_offset - g_art_buf));
             }
             else
             {
@@ -357,7 +363,7 @@ mime_switch:
                 filter_offset = len;
                 goto read_more;
             }
-            std::strcpy(bp + len++, "\n");
+            write_newline(static_cast<std::size_t>(bp + len++ - g_art_buf));
             extra_chars = 0;
         }
         else
@@ -452,13 +458,13 @@ mime_switch:
         // FALL THROUGH
 
     case BETWEEN_MIME:
-        len = std::strlen(g_multipart_separator.c_str()) + 1;
+        len = static_cast<int>(g_multipart_separator.size()) + 1;
         if (extra_offset && filter_offset)
         {
             extra_chars = len + 1;
             len = read_offset + 1;
             o = read_offset + 1;
-            bp[o-1] = '\n';
+            s_art_buf[static_cast<std::size_t>(bp + o - 1 - g_art_buf)] = '\n';
         }
         else
         {
@@ -466,7 +472,12 @@ mime_switch:
             ++g_art_buf_pos;
             bp++;
         }
-        std::sprintf(bp+o,"\002%s\n",g_multipart_separator.c_str());
+        {
+            const std::size_t separator_offset = static_cast<std::size_t>(bp + o - g_art_buf);
+            s_art_buf[separator_offset] = '\002';
+            g_multipart_separator.copy(&s_art_buf[separator_offset + 1], g_multipart_separator.size());
+            write_newline(separator_offset + g_multipart_separator.size() + 1);
+        }
         break;
 
     case UNHANDLED_MIME:

@@ -41,6 +41,8 @@ protected:
         m_old_do_hiding = g_do_hiding;
         m_old_is_mime = g_is_mime;
         m_old_mime_state = g_mime_state;
+        m_old_mime_section = g_mime_section;
+        m_old_multipart_separator = g_multipart_separator;
         m_old_data_source = g_data_source;
         m_old_past_header = g_header_type[PAST_HEADER];
         m_old_tc_cols = g_tc_COLS;
@@ -59,6 +61,7 @@ protected:
         g_do_hiding = true;
         g_is_mime = false;
         g_mime_state = NOT_MIME;
+        g_mime_section = m_old_mime_section;
         g_header_type[PAST_HEADER].min_pos = ArticlePosition{};
         g_tc_COLS = 30;
         g_word_wrap_offset = 8;
@@ -72,6 +75,7 @@ protected:
             g_art_fp = nullptr;
         }
         art_io_final();
+        reset_mime_section();
 
         g_art_fp = m_old_art_fp;
         g_art_buf = m_old_art_buf;
@@ -83,6 +87,8 @@ protected:
         g_do_hiding = m_old_do_hiding;
         g_is_mime = m_old_is_mime;
         g_mime_state = m_old_mime_state;
+        g_mime_section = m_old_mime_section;
+        g_multipart_separator = m_old_multipart_separator;
         g_data_source = m_old_data_source;
         g_header_type[PAST_HEADER] = m_old_past_header;
         g_tc_COLS = m_old_tc_cols;
@@ -108,7 +114,20 @@ protected:
         clear_art_buf();
     }
 
+    void reset_mime_section()
+    {
+        while (g_mime_section != nullptr && g_mime_section != m_old_mime_section && g_mime_section != &m_mime_section)
+        {
+            MimeSection *previous = g_mime_section->m_prev;
+            g_mime_section->mime_clear_struct();
+            delete g_mime_section;
+            g_mime_section = previous;
+        }
+        m_mime_section.mime_clear_struct();
+    }
+
     DataSource      m_data_source{};
+    MimeSection     m_mime_section{};
     fs::path        m_output_dir;
     std::FILE      *m_old_art_fp{};
     char           *m_old_art_buf{};
@@ -120,6 +139,8 @@ protected:
     bool            m_old_do_hiding{};
     bool            m_old_is_mime{};
     MimeState       m_old_mime_state{};
+    MimeSection    *m_old_mime_section{};
+    std::string     m_old_multipart_separator;
     DataSource     *m_old_data_source{};
     HeaderType      m_old_past_header{};
     int             m_old_tc_cols{};
@@ -143,4 +164,37 @@ TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
 
     ASSERT_NE(nullptr, second);
     EXPECT_STREQ("epsilon zeta eta\n", second);
+}
+
+TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
+{
+    open_article_text("alpha");
+
+    char *first = read_art_buf(false);
+
+    ASSERT_NE(nullptr, first);
+    EXPECT_STREQ("alpha\n", first);
+    EXPECT_EQ(6, g_art_buf_pos.value_of());
+    EXPECT_EQ(6, g_art_buf_len.value_of());
+
+    EXPECT_EQ(nullptr, read_art_buf(false));
+}
+
+TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
+{
+    m_mime_section.m_type = MULTIPART_MIME;
+    m_mime_section.m_type_name = "multipart/mixed";
+    m_mime_section.m_boundary = "part";
+    m_mime_section.m_boundary_len = 4;
+    g_mime_section = &m_mime_section;
+    g_mime_state = MULTIPART_MIME;
+    g_is_mime = true;
+    g_multipart_separator = "part separator";
+    open_article_text("--part\nContent-Type: text/plain\n\nbody\n");
+
+    char *first = read_art_buf(false);
+
+    ASSERT_NE(nullptr, first);
+    EXPECT_EQ('\002', first[-1]);
+    EXPECT_STREQ("part separator\n", first);
 }
