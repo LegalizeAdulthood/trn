@@ -1903,15 +1903,9 @@ char ask_catchup()
         newline();
     }
 reask_catchup:
-    if (g_verbose)
-    {
-        std::sprintf(g_buf, "Mark everything in %s as read?", g_newsgroup_name.c_str());
-    }
-    else
-    {
-        std::sprintf(g_buf, "Catchup %s?", g_newsgroup_name.c_str());
-    }
-    in_char(g_buf,MM_CONFIRM_CATCH_UP_PROMPT,"yn#h");
+    const std::string prompt = g_verbose ? fmt::format("Mark everything in {} as read?", g_newsgroup_name)
+                                         : fmt::format("Catchup {}?", g_newsgroup_name);
+    in_char(prompt.c_str(), MM_CONFIRM_CATCH_UP_PROMPT, "yn#h");
     print_cmd();
     char ch = *g_buf;
     if (ch == 'h' || ch == 'H')

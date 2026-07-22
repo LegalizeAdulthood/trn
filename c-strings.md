@@ -545,11 +545,11 @@ The current scan covers the production roots listed above.  Counts below
 are raw direct token counts for `std::` calls and unqualified C calls in
 production code.
 
-- Copy and concatenation: `strcpy` 22, `strncpy` 3, `strcat` 0.
+- Copy and concatenation: `strcpy` 21, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 8, `strncmp` 17.
 - Search and length: `strchr` 60, `strrchr` 1, `strstr` 2,
   `strlen` 50.
-- Formatting into C buffers: `sprintf` 29, `snprintf` 2.
+- Formatting into C buffers: `sprintf` 26, `snprintf` 2.
 - C text I/O roots: `fgets` 25, `fputs` 196, `printf` 388,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
@@ -576,15 +576,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-031C - Catchup Prompt Builder
-
-- Files: `libtrn/ng.cpp`.
-- Kind: `g_buf` local prompt formatting before `in_char`.
-- Function: `ask_catchup`.
-- Change: build the prompt in a local `std::string` and pass `c_str()`
-  to `in_char`; keep `g_buf` only for the input result.
-- Tests: run newsgroup command tests if available.
 
 #### CSTR-135 - Subject Duplicate Check
 
