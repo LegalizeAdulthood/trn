@@ -686,7 +686,7 @@ void entire_tree(Article* ap)
         {
             return;
         }
-        fmt::print("[{}] {}\n", s_letters[std::min(num, LAST_ALPHANUM)], sp->stripped_text());
+        fmt::print("[{}] {}\n", s_letters[std::min(num, LAST_ALPHANUM)], sp->stripped_view());
         term_down(1);
         sp->m_misc = num++;
         sp = sp->m_thread_link;

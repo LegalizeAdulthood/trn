@@ -577,14 +577,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-136 - Thread Subject Enumeration
-
-- Files: `libtrn/rt-wumpus.cpp`.
-- Kind: `Subject::stripped_text` display.
-- Function: `entire_tree`.
-- Change: pass `sp->stripped_view()` to `fmt::print`.
-- Tests: run tree rendering tests.
-
 #### CSTR-140 - Kill-file THRU Start Check
 
 - Files: `libtrn/kfile.cpp`.
