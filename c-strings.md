@@ -451,9 +451,8 @@ also checks `wildmat` and `parsedate`.  It does not include tests,
 generated files, or the vendored `vcpkg` tree.
 
 - `save_str`: no production hits remain in the current tree.
-- `safe_copy`: three hits remain: the helper declaration, the helper
-  definition, and one call site in the NNTP buffer owner cluster.  The
-  call site is inventoried below.
+- `safe_copy`: two hits remain: the helper declaration and definition.
+  No production call sites remain.  See `CSTR-048`.
 - `in_string`: the mutable `char *` overload is gone.  The string-view
   overload is already used by production callers that have strings or
   views, and the legacy pointer-return overload is gone.
@@ -467,11 +466,11 @@ generated files, or the vendored `vcpkg` tree.
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
   `g_art_line`, `g_head_buf`, terminal command-input
-  scratch, NNTP local protocol buffers, `nntpinit` name scratch, and
-  environment host/domain probe scratch.  Tiny UTF byte scratch buffers,
-  translation tables, MIME decode tables, terminal pushback bytes,
-  termcap storage, and regex bytecode arrays are non-string protocol or
-  parser storage, not current local string slices.
+  scratch, `nntpinit` name scratch, and environment host/domain probe
+  scratch.  Tiny UTF byte scratch buffers, translation tables, MIME
+  decode tables, terminal pushback bytes, termcap storage, address
+  conversion scratch, and regex bytecode arrays are non-string protocol
+  or parser storage, not current local string slices.
 - `g_art_buf` is now backed by owned `std::string` storage, with the
   global pointer kept as a compatibility view.  Remaining direct pointer
   writes in `read_art_buf` are read/decode/filter plumbing, not current
@@ -481,12 +480,11 @@ generated files, or the vendored `vcpkg` tree.
   belongs with terminal-owner cleanup, not a local `string_view` slice.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, and `normalize_refs` APIs are gone.
-- Unused overload/wrapper scan: no dead C-style wrappers remain in this
-  pass.  Keep `nntp_init_error`, `string_case_compare`,
-  `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
-  `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
-  `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.
+- Unused overload/wrapper scan: `safe_copy` has no production callers.
+  Keep `nntp_init_error`, `string_case_compare`, `string_case_equal`,
+  `Tgetstr`, `line_ptr`, `line_offset`, `file_ref`, `yes_or_no`,
+  `empty`, `plural`, `force_me`, and `at_grey_space`; they still have
+  production/source callers or platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -497,9 +495,9 @@ generated files, or the vendored `vcpkg` tree.
   scorefile C-string work is tied to shared header buffers, regex
   bytecode, or command text.
 - Author compression still has a string public result wrapped around
-  mutable character-pointer helpers.  The public input can move to
-  `std::string_view` first; the internal name/address helpers can then
-  be replaced with string storage under the existing tests.
+  mutable character-pointer helpers.  The remaining in-place helper can
+  be replaced under existing `CompressNameTest` and `CompressFromTest`
+  coverage.  See `CSTR-146`.
 - `scan_active_line` already accepts `std::string_view`; do not add a
   new slice for it.
 - `string_case_compare` production callers that already have strings or
@@ -516,9 +514,10 @@ generated files, or the vendored `vcpkg` tree.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
 - Remaining literal tables include color object names, signal names,
-  status labels, MIME entity mappings, and transliteration tables.  The
-  useful current targets are the tables whose users already operate on
-  views or compute lengths manually.
+  status labels, MIME entity mappings, HTML tag names, and
+  transliteration tables.  The useful current targets are tables whose
+  users already operate on views or compute lengths manually.  See
+  `CSTR-140` for the HTML tag table.
 
 ## Current `safe_copy` Inventory
 
@@ -537,8 +536,8 @@ unqualified C calls in production code.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 46.
 - Formatting into C buffers: `sprintf` 20, `snprintf` 2.
-- C text I/O roots: `fgets` 23, `fputs` 190, `printf` 367,
-  `fprintf` 40.
+- C text I/O roots: `fgets` 24, `fputs` 193, `printf` 375,
+  `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -564,6 +563,67 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-048 - Safe Copy Helper Removal
+
+- Files: `util/util2.cpp`, `util/include/util/util2.h`.
+- Kind: obsolete bounded C-string copy helper.
+- Function: `safe_copy`.
+- Change: remove `safe_copy`; no production call sites remain.
+- Tests: build.
+
+#### CSTR-140 - HTML Tag Table String Views
+
+- Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`.
+- Kind: literal table with manual string lengths.
+- Function: `tag_action`.
+- Change: replace `HtmlTag::name` plus `HtmlTag::length` with
+  `std::string_view name`.  Update tag matching to use view size and
+  direct view comparisons while preserving the sorted-table scan.
+- Tests: MIME HTML filtering tests.
+
+#### CSTR-141 - Core NNTP Command Formatting
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: outgoing command construction in shared response buffer.
+- Functions: `nntp_stat`, `nntp_header`, `nntp_body`,
+  `nntp_new_groups`.
+- Change: replace `sprintf(g_ser_line, ...)` command construction with
+  `fmt::format` or direct `nntp_command(fmt::format(...))` calls.  Keep
+  `g_ser_line` only for server responses.
+- Tests: NNTP tests.
+
+#### CSTR-142 - Overview XOVER Command Formatting
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: outgoing command construction in shared response buffer.
+- Function: `ov_data`.
+- Change: replace `sprintf(g_ser_line, "XOVER ...")` with a local
+  formatted command passed to `nntp_command`, leaving `g_ser_line` for
+  the server response.
+- Tests: overview and NNTP tests.
+
+#### CSTR-143 - Article-check NNTP Command Formatting
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: outgoing command construction in shared response buffer.
+- Function: `main`.
+- Change: replace `g_ser_line` command construction for `list active`,
+  `GROUP`, and `XGTITLE` with local formatted strings passed to
+  `nntp_command`.  Keep `g_ser_line` for response lines read by
+  `nntp_check` and `nntp_gets`.
+- Tests: trn-artchk tests or build if no focused test exists.
+
+#### CSTR-144 - NNTP Connect Error Formatting
+
+- Files: `nntp/nntpclient.cpp`.
+- Kind: formatted diagnostic text in shared response buffer.
+- Function: `nntp_connect`.
+- Change: replace diagnostic-only `sprintf(g_ser_line, ...)` writes with
+  local `fmt::format` strings passed to `nntp_init_error`.  Preserve
+  response text in `g_ser_line` where later code observes the server
+  response.
+- Tests: NNTP connection tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
@@ -573,6 +633,38 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-145 - AddGroup Active Line Formatting
+
+- Files: `libtrn/addng.cpp`.
+- Kind: active-file line formatting into shared protocol buffer.
+- Function: `new_nntp_groups`.
+- Change: replace the local `sprintf` append into `g_ser_line` with
+  owned string formatting for the active-file line being appended.
+  Preserve the existing parsing order and any meaningful field width.
+- Tests: add-newsgroup tests; add coverage first if the active-line
+  rewrite path is not covered.
+
+#### CSTR-146 - Author Compression String Algorithm
+
+- Files: `libtrn/rt-util.cpp`.
+- Kind: in-place string algorithm hidden behind a string API.
+- Function: `compress_name_in_place`.
+- Change: replace the remaining mutable C-pointer assembly in
+  `compress_name_in_place` with string/view operations.  Preserve the
+  documented truncation behavior and existing UTF conditional behavior.
+- Tests: `CompressNameTest` and `CompressFromTest`.
+
+#### CSTR-147 - MIME HTML Output Cursor Writes
+
+- Files: `libtrn/mime.cpp`.
+- Kind: output-buffer cursor formatting.
+- Functions: `tag_action`, `output_prep`, `do_newline`.
+- Change: replace local HTML text construction such as `strcpy(t,
+  "[Image] ")` and `sprintf(t - 4, ...)` with owned string or
+  `fmt::format_to` operations only after the output storage and cursor
+  lifetime are clear.  Do not let local string storage escape.
+- Tests: MIME HTML filtering tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -612,10 +704,10 @@ with their owner slices unless a local use is clearly formatting-only.
 - Function: storage-centered `g_ser_line`.
 - Change: separate NNTP status text from protocol line input/output so
   callers do not format commands or cache responses through one shared
-  `char[NNTP_STRLEN]` buffer.  Include the local `b[NNTP_STRLEN]`
-  buffers in `libtrn/nntp.cpp`, the `inet_ntop` logging scratch buffer,
-  and legacy non-`INET6` raw-address name storage in `get_tcp_socket` in
-  the same protocol owner review.
+  `char[NNTP_STRLEN]` buffer.  Do this after the command-formatting
+  leaves above have stopped using `g_ser_line` for outgoing commands.
+  Include legacy non-`INET6` raw-address name storage in
+  `get_tcp_socket` in the same protocol owner review.
 - Tests: NNTP, inews, nntplist, and trn-artchk tests.
 
 #### CSTR-077 - Article Display Line Buffer
@@ -644,12 +736,5 @@ with their owner slices unless a local use is clearly formatting-only.
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
-owned strings or owner-specific storage.
-
-#### CSTR-048 - Safe Copy Helper Removal
-
-- Files: `util/util2.cpp`, `util/include/util/util2.h`.
-- Kind: obsolete bounded C-string copy helper.
-- Function: `safe_copy`.
-- Change: remove `safe_copy`; no production call sites remain.
-- Tests: build.
+owned strings or owner-specific storage.  No slices remain in this tier
+after the current scan.
