@@ -573,16 +573,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-169 - Universal Text File Description View
-
-- Files: `libtrn/univ.cpp`.
-- Kind: nullable description pointer stored as `std::string`.
-- Function: `univ_add_text_file`.
-- Depends on: none.
-- Change: accept `std::string_view desc`; keep the existing filename
-  view and use empty description as the missing sentinel.
-- Tests: run universal selector tests.
-
 #### CSTR-170 - Universal Use File Label View
 
 - Files: `libtrn/univ.cpp`.
@@ -622,7 +612,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/univ.cpp`.
 - Kind: nullable description pointer forwarded to item creation.
 - Function: `univ_do_line_ext1`.
-- Depends on: `CSTR-169`.
+- Depends on: none.
 - Change: accept `std::string_view desc` and replace local
   `desc ? desc : ...` decisions with empty-view checks.
 - Tests: run universal selector tests.

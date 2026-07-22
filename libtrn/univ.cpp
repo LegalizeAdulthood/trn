@@ -91,7 +91,7 @@ static void           univ_add_group(const char *desc, std::string_view grpname)
 static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
-static void           univ_add_text_file(const char *desc, std::string_view name);
+static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
 static void           univ_use_pattern(const char *pattern, int type);
 static void           univ_use_group_line(char *line, int type);
@@ -394,7 +394,7 @@ static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view 
     return ui;
 }
 
-static void univ_add_text_file(const char *desc, std::string_view name)
+static void univ_add_text_file(std::string_view desc, std::string_view name)
 {
     UniversalItem   *ui;
     fs::path         file_name{name};
@@ -419,7 +419,7 @@ static void univ_add_text_file(const char *desc, std::string_view name)
     case '~': // ...or full file names
     case '%':
     case '/':
-        ui = univ_add(UniversalTextFile{}, desc != nullptr ? desc : "");
+        ui = univ_add(UniversalTextFile{}, desc);
         ui->text_file().fname = file_exp(file_name.generic_string());
         break;
     }
