@@ -335,6 +335,18 @@ TEST_F(HtmlFilterTest, rendersUpperRomanListMarkers)
               filter("List:<ol type=I><li>one<li>two<li>three</ol>"));
 }
 
+TEST_F(HtmlFilterTest, rendersDecimalListMarkersPastTwoDigits)
+{
+    EXPECT_EQ("List:\n\n 1. one\n 2. two\n 3. three\n 4. four\n 5. five\n 6. six\n 7. seven\n 8. eight\n"
+              " 9. nine\n10. ten",
+              filter("List:<ol><li>one<li>two<li>three<li>four<li>five<li>six<li>seven<li>eight<li>nine<li>ten</ol>"));
+}
+
+TEST_F(HtmlFilterTest, rendersImageMarker)
+{
+    EXPECT_EQ("Before [Image] after", filter("Before <img src=x>after"));
+}
+
 TEST_F(HtmlFilterTest, rendersNamedEntities)
 {
     EXPECT_EQ("Tom & Jerry <tag>", filter("Tom &amp; Jerry &lt;tag&gt;"));

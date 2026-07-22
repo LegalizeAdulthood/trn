@@ -527,11 +527,11 @@ The current scan covers the production roots listed above.  Counts below
 are identifier-aware function-call counts for `std::` calls and
 unqualified C calls in production code.
 
-- Copy and concatenation: `strcpy` 13, `strncpy` 3, `strcat` 0.
+- Copy and concatenation: `strcpy` 11, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 46.
-- Formatting into C buffers: `sprintf` 7, `snprintf` 2.
+- Formatting into C buffers: `sprintf` 6, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 193, `printf` 375,
   `fprintf` 41.
 - Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
@@ -568,17 +568,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-147 - MIME HTML Output Cursor Writes
-
-- Files: `libtrn/mime.cpp`.
-- Kind: output-buffer cursor formatting.
-- Functions: `tag_action`, `output_prep`, `do_newline`.
-- Change: replace local HTML text construction such as `strcpy(t,
-  "[Image] ")` and `sprintf(t - 4, ...)` with owned string or
-  `fmt::format_to` operations only after the output storage and cursor
-  lifetime are clear.  Do not let local string storage escape.
-- Tests: MIME HTML filtering tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 

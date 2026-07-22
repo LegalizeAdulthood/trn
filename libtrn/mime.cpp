@@ -1974,8 +1974,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
             {
                 *t++ = ' ';
             }
-            std::strcpy(t, "[Image] ");
-            t += 8;
+            t = fmt::format_to(t, "[Image] ");
             g_mime_section->m_html &= ~HF_SPACE_OK;
             break;
 
@@ -2038,11 +2037,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
                 break;
 
             case 4:
-                std::sprintf(t-4, "%2d. ", ++blks[j].count);
-                if (*t)
-                {
-                    t += std::strlen(t);
-                }
+                t = fmt::format_to(t - 4, "{:2}. ", ++blks[j].count);
                 break;
 
             case 5: case 6:
