@@ -172,16 +172,19 @@ static int do_kill_file(std::FILE *kfp, int entering)
             *cp = '\0';
         }
         bp = skip_space(g_buf);
-        if (!std::strncmp(bp, "THRU", 4))
+        const std::string_view line{bp};
+        if (line.size() >= 4 && line.substr(0, 4) == "THRU")
         {
             const std::string rc_name = g_newsgroup_ptr->m_rc->name.generic_string();
-            const std::size_t  len = rc_name.size();
+            const std::size_t len = rc_name.size();
             cp = skip_space(bp + 4);
-            if (std::strncmp(cp, rc_name.c_str(), len) != 0 || !std::isspace(cp[len]))
+            const std::string_view thru_args{cp};
+            if (thru_args.size() <= len || thru_args.substr(0, len) != rc_name ||
+                !std::isspace(static_cast<unsigned char>(thru_args[len])))
             {
                 continue;
             }
-            g_kill_first = ArticleNum{std::atol(cp+len+1)+1};
+            g_kill_first = ArticleNum{std::atol(thru_args.data() + len + 1) + 1};
             g_kill_first = std::max(g_kill_first, g_first_art);
             if (g_kill_first > g_last_art)
             {
