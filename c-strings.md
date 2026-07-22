@@ -446,9 +446,10 @@ the C-style string buffer itself is refactored.
 ## Current Audit Summary
 
 The current scan covers production code under `config`, `libtrn`,
-`util`, `nntp`, `inews`, `nntplist`, `trn-artchk`, and `tool`.  It
-also checks `wildmat` and `parsedate`.  It does not include tests,
-generated files, or the vendored `vcpkg` tree.
+`util`, `nntp`, `inews`, `nntplist`, `trn-artchk`, `tool`,
+`wildmat`, `parsedate`, and `main.cpp`.  It does not include tests,
+generated files, legacy Configure scripts, or the vendored `vcpkg`
+tree.
 
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: no production hits remain in the current tree.
@@ -466,10 +467,12 @@ generated files, or the vendored `vcpkg` tree.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
   `g_art_line`, `g_head_buf`, terminal command-input
   scratch, `nntpinit` name scratch, and environment host/domain probe
-  scratch.  Tiny UTF byte scratch buffers, translation tables, MIME
-  decode tables, terminal pushback bytes, termcap storage, address
-  conversion scratch, and regex bytecode arrays are non-string protocol
-  or parser storage, not current local string slices.
+  scratch.  The `parsedate` lexer word buffer is a local string scratch
+  candidate, but inactive self-test buffers are not current production
+  work.  Tiny UTF byte scratch buffers, translation tables, MIME decode
+  tables, terminal pushback bytes, termcap storage, address conversion
+  scratch, and regex bytecode arrays are non-string protocol or parser
+  storage, not current local string slices.
 - `g_art_buf` is now backed by owned `std::string` storage, with the
   global pointer kept as a compatibility view.  Remaining direct pointer
   writes in `read_art_buf` are read/decode/filter plumbing, not current
@@ -516,6 +519,10 @@ generated files, or the vendored `vcpkg` tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
+- New helper and leaf candidates found by this scan are `not_incl`,
+  `eaccess`, `s_finish_cmd`, `file_ref`, `text_to_secs`,
+  `MimeSection::mime_parse_encoding`, MIME HTML `find_attr`, and
+  `wildcard_match`.
 
 ## Current `safe_copy` Inventory
 
@@ -524,17 +531,18 @@ The current tree has no `safe_copy` hits.
 ## Current C String Function Inventory
 
 The current scan covers the production roots listed above.  Counts below
-are identifier-aware function-call counts for `std::` calls and
-unqualified C calls in production code.
+are lexical, identifier-aware source counts for `std::` calls and
+unqualified C calls.  The scan excludes test trees, legacy Configure
+scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 11, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 0, `strncmp` 12.
+- Comparison: `strcmp` 6, `strncmp` 12.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
-  `strlen` 46.
+  `strlen` 43.
 - Formatting into C buffers: `sprintf` 6, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 193, `printf` 375,
+- C text I/O roots: `fgets` 24, `fputs` 192, `printf` 380,
   `fprintf` 41.
-- Character byte operations: `memcpy` 6, `memset` 7, `memcmp` 1.
+- Character byte operations: `memcpy` 4, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
@@ -559,15 +567,165 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-148 - Utility Not-included Message
+
+- Files: `libtrn/util.cpp`.
+- Kind: formatted output from an existing `std::string_view`.
+- Function: `not_incl`.
+- Change: replace the `%.*s` `std::printf` call with `fmt::print`
+  using the existing view directly.  Do not add temporary strings for
+  null termination.
+- Tests: build-only unless existing option/switch tests already cover
+  the message path.
+
+#### CSTR-149 - SETUIDGID Effective Access Path
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`.
+- Kind: mutable C-string parameter that is only read.
+- Function: `eaccess`.
+- Change: change the `SETUIDGID` implementation and declaration from
+  `char *` to `const char *`.  Keep the compatibility macro path alone
+  when `eaccess` maps directly to `access`.
+- Tests: build all supported configurations that compile the
+  `SETUIDGID` branch, if available.
+
+#### CSTR-150 - Scan Command Prompt Text
+
+- Files: `libtrn/scmd.cpp`, `libtrn/include/trn/scmd.h`,
+  `libtrn/sacmd.cpp`.
+- Kind: nullable prompt pointer and C stdio output.
+- Function: `s_finish_cmd`.
+- Change: take the prompt as `std::string_view` with empty string as the
+  no-prompt sentinel.  Replace `std::printf("%s", ...)` with
+  `fmt::print`.  Update the one `nullptr` caller to pass an empty view.
+- Tests: selector/scan command tests if they cover the bottom-line
+  prompt path; otherwise build-only.
+
+#### CSTR-160 - Article First-page Title Line
+
+- Files: `libtrn/art.cpp`.
+- Kind: local formatted string built through the global article buffer.
+- Function: article page rendering first-page title branch.
+- Change: build the title line as a local `std::string` with `fmt`, then
+  pass it to `tree_puts`.  Do not write this title through
+  `g_art_line`; reserve the old line buffer size before appending.
+- Tests: article rendering tests should be added first if no existing
+  test covers the first-page title output.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-151 - File Reference Helper View API
+
+- Files: `config/include/config/config2.h`,
+  `config/include/config/msdos.h`, call sites using `FILE_REF`.
+- Kind: path spelling helper that forces `c_str()` at call sites.
+- Function: `file_ref` and the `FILE_REF` macro.
+- Change: change `file_ref` to accept `std::string_view` and guard
+  length before indexing.  Update call sites that already hold
+  `std::string` or `std::string_view` to pass the object directly.
+- Tests: config/header standalone tests and any path option tests that
+  exercise absolute path detection.
+
+#### CSTR-152 - Refetch Interval Parser View API
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `libtrn/datasrc.cpp`, `libtrn/opt.cpp`.
+- Kind: read-only parser parameter that makes callers allocate.
+- Function: `text_to_secs`.
+- Change: accept `std::string_view`, parse with view indices or view
+  prefix removal, and update callers that currently build a temporary
+  `std::string` only to call `c_str()`.
+- Tests: add focused tests for `text_to_secs` current behavior before
+  changing the implementation.
+
+#### CSTR-153 - MIME Encoding Parser View API
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
+- Kind: mutable pointer parameter that is only read.
+- Function: `MimeSection::mime_parse_encoding`.
+- Change: accept `std::string_view` and use the existing view-based
+  MIME whitespace helper.  Update callers to pass strings or views
+  directly instead of `data()` or pointer offsets.
+- Tests: existing MIME sub-header tests cover the base64 branch; add
+  focused tests first if changing other encoding branches.
+
+#### CSTR-154 - MIME Header Name Whitespace View
+
+- Files: `libtrn/mime.cpp`.
+- Kind: remaining mutable whitespace helper call.
+- Function: `mime_parse_sub_header`.
+- Change: change the `Content-Name` branch to use a view from the text
+  after the colon and the view-based whitespace helper.  Remove the
+  `char *` `mime_skip_whitespace` overload once no callers remain.
+- Tests: MIME sub-header tests covering `Content-Name`.
+
+#### CSTR-155 - MIME HTML Attribute Views
+
+- Files: `libtrn/mime.cpp`.
+- Kind: borrowed pointer return into a tag buffer.
+- Function: `find_attr`.
+- Change: return a bounded `std::string_view` for the attribute value,
+  using an empty view as the no-match sentinel because the current
+  callers treat empty values as no useful value.  Update `tag_action`
+  to use view comparison and `front()` checks.
+- Tests: HTML filter tests for blockquote `type`/`style`, ordered-list
+  `type`, unordered-list `type`, and empty attributes.
+
+#### CSTR-156 - Wildmat String View API
+
+- Files: `wildmat/wildmat.cpp`, `wildmat/include/wildmat/wildmat.h`,
+  `nntplist/nntplist.cpp`.
+- Kind: read-only pattern matching API.
+- Function: `wildcard_match`.
+- Change: accept `std::string_view` for text and pattern, and update the
+  recursive matcher to use view operations instead of NUL-terminated
+  pointer traversal.  Update the `nntplist` caller to pass its wildcard
+  view directly.
+- Tests: existing wildmat tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-157 - Environment Hostname Scratch Buffers
+
+- Files: `util/env.cpp`.
+- Kind: local fixed-size string scratch buffers.
+- Function: `env_init`.
+- Change: replace `std::array<char, TCBUF_SIZE + 1>` hostname scratch
+  with local `std::string` storage where the platform API allows a
+  mutable buffer.  Preserve the existing `TCBUF_SIZE` truncation where
+  it comes from platform API capacity, and use line input APIs that do
+  not require a fixed C string buffer for pipe output.
+- Tests: util environment tests.
+
+#### CSTR-158 - Parsedate Lexer Word Buffer
+
+- Files: `parsedate/parsedate.y`.
+- Kind: local fixed-size token buffer.
+- Function: `date_lex` and `LookupWord`.
+- Change: replace the `char buff[20]` word token with owned string
+  storage or a bounded view built from the input.  First decide whether
+  the 19-character truncation is meaningful parser behavior or an
+  arbitrary buffer limit; preserve it only if tests or documented
+  behavior require it.
+- Tests: parsedate tests covering long weekday/month/timezone tokens.
+
+#### CSTR-159 - NNTPLIST Local File Line Storage
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: tool-local fixed line input through the global NNTP buffer.
+- Function: `main`.
+- Change: read local active/subscription/overview input with owned
+  `std::string` line storage instead of `g_ser_line`.  After
+  `CSTR-156`, apply the wildcard filter to a view of the group name
+  without temporarily writing NUL into the line.
+- Tests: nntplist tests for local file listing with and without
+  wildcard filtering.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -584,6 +742,19 @@ formatting-only leaves first, because they do not affect command input,
 typeahead, article reading, or protocol line ownership.  Terminal
 command input remains in `CSTR-119`; file and protocol read buffers stay
 with their owner slices unless a local use is clearly formatting-only.
+
+#### CSTR-161 - General Command Buffer Storage
+
+- Files: `config/common.cpp`, `config/include/config/common.h`,
+  command prompt/input users across `libtrn`.
+- Kind: global general-purpose command and line buffer.
+- Function: storage-centered `g_buf`.
+- Change: split command input, prompt formatting, scratch line input,
+  and file-copy uses into owned strings or owner-specific buffers.  Work
+  bottom-up by function; do not replace `g_buf` with one global string
+  that preserves the same hidden shared state.
+- Tests: terminal command, option, kill-file, score, newsrc, and
+  newsgroup workflow tests.
 
 #### CSTR-058 - Header Buffer Storage
 
