@@ -199,17 +199,21 @@ protected:
         Test::SetUp();
         nntp_gets_clear_buffer();
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
+        m_saved_nntp_flags = g_nntp_link.flags;
         g_nntp_link.connection = m_connection;
+        g_nntp_link.flags = NNTP_NEW_CMD_OK;
     }
 
     void TearDown() override
     {
         Test::TearDown();
         g_nntp_link.connection.reset();
+        g_nntp_link.flags = m_saved_nntp_flags;
     }
 
     std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;
     boost::system::error_code                       m_ec;
+    NNTPFlags                                       m_saved_nntp_flags{};
 };
 
 TEST_F(NNTPGetStringTest, line_fits)
@@ -255,12 +259,37 @@ TEST_F(NNTPGetStringTest, error)
     EXPECT_EQ("junk", std::string(buffer));
 }
 
+TEST_F(NNTPGetStringTest, statFormatsArticleNumberCommand)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("STAT 123"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 123 <message@example.test>"));
+
+    EXPECT_EQ(1, nntp_stat(ArticleNum{123}));
+}
+
+TEST_F(NNTPGetStringTest, headerFormatsArticleNumberCommand)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("HEAD 123"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("221 123 <message@example.test> header follows"));
+
+    EXPECT_EQ(1, nntp_header(ArticleNum{123}));
+}
+
+TEST_F(NNTPGetStringTest, newGroupsFormatsGmtTimestampCommand)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("NEWGROUPS 700101 000000 GMT"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("231 list of new newsgroups follows"));
+
+    EXPECT_EQ(1, nntp_new_groups(std::time_t{}));
+}
+
 class NNTPBodyTest : public NNTPGetStringTest
 {
 protected:
     void SetUp() override
     {
         NNTPGetStringTest::SetUp();
+        head_init();
 
         m_old_art_fp = g_art_fp;
         m_old_current_path = fs::current_path();
@@ -299,6 +328,7 @@ protected:
         g_parsed_art = m_old_parsed_art;
         g_nntp_link.flags = m_old_nntp_flags;
         g_our_pid = m_old_pid;
+        head_final();
 
         std::error_code error;
         fs::current_path(m_old_current_path, error);
@@ -332,6 +362,20 @@ TEST_F(NNTPBodyTest, unstuffsDotPrefixedBodyLines)
     ASSERT_EQ(line, nntp_read_art(line, sizeof line));
     EXPECT_STREQ(".dot-stuffed\n", line);
     EXPECT_EQ(nullptr, nntp_read_art(line, sizeof line));
+}
+
+TEST_F(NNTPBodyTest, requestsBodyWhenArticleHeaderIsParsed)
+{
+    const std::string header{"Subject: cached\n\n"};
+    ASSERT_NE(nullptr, g_head_buf);
+    header.copy(g_head_buf, header.size());
+    g_head_buf[header.size()] = '\0';
+    g_parsed_art = ArticleNum{7};
+
+    EXPECT_CALL(*m_connection, write_line(StrEq("BODY 7"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("222 7 <message@example.test> body follows"));
+
+    nntp_body(ArticleNum{7});
 }
 
 class RemoteHeaderPrefetchTest : public NNTPGetStringTest

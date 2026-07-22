@@ -169,8 +169,7 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
 
 int nntp_stat(ArticleNum art_num)
 {
-    std::sprintf(g_ser_line, "STAT %ld", (long)art_num.value_of());
-    if (nntp_command(g_ser_line) <= 0)
+    if (nntp_command(fmt::format("STAT {}", art_num.value_of())) <= 0)
     {
         return -2;
     }
@@ -213,8 +212,7 @@ static ArticleNum nntp_next_art()
 
 int nntp_header(ArticleNum art_num)
 {
-    std::sprintf(g_ser_line, "HEAD %ld", (long)art_num.value_of());
-    if (nntp_command(g_ser_line) <= 0)
+    if (nntp_command(fmt::format("HEAD {}", art_num.value_of())) <= 0)
     {
         return -2;
     }
@@ -250,15 +248,7 @@ void nntp_body(ArticleNum art_num)
 #ifndef MSDOS
     chmod(artname.c_str(), 0600);
 #endif
-    if (g_parsed_art == art_num)
-    {
-        std::sprintf(g_ser_line, "BODY %ld", (long) art_num.value_of());
-    }
-    else
-    {
-        std::sprintf(g_ser_line, "ARTICLE %ld", (long) art_num.value_of());
-    }
-    if (nntp_command(g_ser_line) <= 0)
+    if (nntp_command(fmt::format("{} {}", g_parsed_art == art_num ? "BODY" : "ARTICLE", art_num.value_of())) <= 0)
     {
         finalize(1);
     }
@@ -515,10 +505,8 @@ std::time_t nntp_time()
 int nntp_new_groups(std::time_t t)
 {
     std::tm *ts = std::gmtime(&t);
-    std::sprintf(g_ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
-        ts->tm_year % 100, ts->tm_mon+1, ts->tm_mday,
-        ts->tm_hour, ts->tm_min, ts->tm_sec);
-    if (nntp_command(g_ser_line) <= 0)
+    if (nntp_command(fmt::format("NEWGROUPS {:02}{:02}{:02} {:02}{:02}{:02} GMT", ts->tm_year % 100, ts->tm_mon + 1,
+                                 ts->tm_mday, ts->tm_hour, ts->tm_min, ts->tm_sec)) <= 0)
     {
         return -2;
     }
