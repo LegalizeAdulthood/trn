@@ -6,18 +6,31 @@
 #include <config/common.h>
 #include <trn/Article.h>
 #include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/hash.h>
+#include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rcstuff.h>
+#include <trn/rthread.h>
+#include <trn/trn.h>
 
 #include <gtest/gtest.h>
 
 #include <cstddef>
 #include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace
 {
+
+int compare_newsgroup_name(std::string_view key, HashDatum data)
+{
+    const NewsgroupData *group = reinterpret_cast<NewsgroupData *>(data.dat_ptr);
+
+    return key.compare(group->rc_name());
+}
 
 class BitsToRcTest : public testing::Test
 {
@@ -97,6 +110,111 @@ protected:
     ArticleNum                    m_old_abs_first{};
     ArticleNum                    m_old_first_art{};
     ArticleNum                    m_old_last_art{};
+};
+
+class XrefChaseTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_article_list = std::move(g_article_list);
+        m_old_newsgroup_ptr = g_newsgroup_ptr;
+        m_old_data_source = g_data_source;
+        m_old_newsrc_hash = g_newsrc_hash;
+        m_old_newsgroup_name = g_newsgroup_name;
+        m_old_abs_first = g_abs_first;
+        m_old_first_art = g_first_art;
+        m_old_last_art = g_last_art;
+        m_old_check_count = g_check_count;
+        m_old_output_chase_phrase = g_output_chase_phrase;
+
+        g_article_list.clear();
+        g_newsrc_hash = hash_create(17, compare_newsgroup_name);
+        g_data_source = &m_data_source;
+        g_newsgroup_name = "comp.lang.apl";
+        g_newsgroup_ptr = &m_current_group;
+        g_abs_first = ArticleNum{1};
+        g_first_art = ArticleNum{1};
+        g_last_art = ArticleNum{10};
+        g_check_count = 0;
+        g_output_chase_phrase = false;
+
+        m_newsrc.flags = RF_NONE;
+        m_newsrc.data_source = &m_data_source;
+        configure_group(m_current_group, "comp.lang.apl", "", ArticleUnread{1});
+        configure_group(m_target_group, "comp.lang.cpp", "1-4", ArticleUnread{6});
+        store_group(m_current_group);
+        store_group(m_target_group);
+    }
+
+    void TearDown() override
+    {
+        chase_xrefs(false);
+        hash_destroy(g_newsrc_hash);
+        g_article_list = std::move(m_old_article_list);
+        g_newsgroup_ptr = m_old_newsgroup_ptr;
+        g_data_source = m_old_data_source;
+        g_newsrc_hash = m_old_newsrc_hash;
+        g_newsgroup_name = m_old_newsgroup_name;
+        g_abs_first = m_old_abs_first;
+        g_first_art = m_old_first_art;
+        g_last_art = m_old_last_art;
+        g_check_count = m_old_check_count;
+        g_output_chase_phrase = m_old_output_chase_phrase;
+    }
+
+    void configure_group(NewsgroupData &group, std::string_view name, std::string_view numbers, ArticleUnread unread)
+    {
+        group = {};
+        group.m_rc = &m_newsrc;
+        group.m_rc_line.assign(name);
+        group.m_rc_line += ": ";
+        group.m_rc_line += numbers;
+        group.m_num_offset = static_cast<int>(name.size()) + 1;
+        group.m_subscribe_char = ':';
+        group.m_abs_first = ArticleNum{1};
+        group.m_ng_max = ArticleNum{10};
+        group.m_to_read = unread;
+        group.hide_subscribe_char();
+    }
+
+    void store_group(NewsgroupData &group)
+    {
+        HashDatum data{};
+        data.dat_ptr = reinterpret_cast<char *>(&group);
+        data.dat_len = static_cast<unsigned>(group.rc_name().size());
+        hash_store(g_newsrc_hash, group.rc_name(), data);
+    }
+
+    Article *add_xref_article()
+    {
+        Article *article = article_ptr(ArticleNum{1});
+        article->m_flags = AF_EXISTS | AF_UNREAD;
+        article->set_cached_line(XREF_LINE, "news.example comp.lang.apl:1 comp.lang.cpp:5");
+        return article;
+    }
+
+    std::string visible_rc_line(const NewsgroupData &group) const
+    {
+        std::string line = group.m_rc_line;
+        line[static_cast<std::size_t>(group.m_num_offset - 1)] = group.m_subscribe_char;
+        return line;
+    }
+
+    std::map<ArticleNum, Article> m_old_article_list;
+    NewsgroupData                *m_old_newsgroup_ptr{};
+    DataSource                   *m_old_data_source{};
+    HashTable                    *m_old_newsrc_hash{};
+    std::string                   m_old_newsgroup_name;
+    ArticleNum                    m_old_abs_first{};
+    ArticleNum                    m_old_first_art{};
+    ArticleNum                    m_old_last_art{};
+    int                           m_old_check_count{};
+    bool                          m_old_output_chase_phrase{};
+    DataSource                    m_data_source{};
+    Newsrc                        m_newsrc{};
+    NewsgroupData                 m_current_group{};
+    NewsgroupData                 m_target_group{};
 };
 
 } // namespace
@@ -188,3 +306,30 @@ TEST_F(BitsToRcTest, reconstructsUnsubscribedLineAndKeepsItInvisible)
     EXPECT_EQ(TR_UNSUB, m_group.m_to_read);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
 }
+
+TEST_F(XrefChaseTest, markAsReadChasesXrefToOtherGroup)
+{
+    Article *article = add_xref_article();
+
+    article->mark_as_read();
+    EXPECT_TRUE(chase_xrefs(false));
+
+    EXPECT_EQ("comp.lang.cpp: 1-5", visible_rc_line(m_target_group));
+    EXPECT_EQ(ArticleUnread{5}, m_target_group.m_to_read);
+}
+
+#ifdef MCHASE
+TEST_F(XrefChaseTest, unmarkAsReadChasesXrefToOtherGroup)
+{
+    configure_group(m_target_group, "comp.lang.cpp", "1-5", ArticleUnread{5});
+    store_group(m_target_group);
+    Article *article = add_xref_article();
+    article->m_flags &= ~AF_UNREAD;
+
+    article->unmark_as_read();
+    EXPECT_TRUE(chase_xrefs(false));
+
+    EXPECT_EQ("comp.lang.cpp: 1-4", visible_rc_line(m_target_group));
+    EXPECT_EQ(ArticleUnread{6}, m_target_group.m_to_read);
+}
+#endif

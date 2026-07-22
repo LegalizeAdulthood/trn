@@ -587,17 +587,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-139 - Xref Header Tokenization
-
-- Files: `libtrn/bits.cpp`.
-- Kind: local copied string used as mutable token storage.
-- Function: `chase_xref`.
-- Change: parse the cached Xref header with `std::string_view` tokens
-  instead of copying to `xref_buf`, writing NUL separators, and using
-  `strchr`, `strlen`, and `strcmp`.
-- Tests: add coverage first if current bits tests do not cover marking
-  and unmarking xrefs; run MCHASE-related tests after refactoring.
-
 #### CSTR-146 - Universal Pattern Application
 
 - Files: `libtrn/univ.cpp`.

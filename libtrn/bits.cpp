@@ -41,6 +41,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 
 int g_dm_count{};
@@ -606,8 +607,6 @@ static bool check_chase(char *ptr, int until_key)
 // The Xref-line-using version
 static int chase_xref(ArticleNum art_num, bool mark_read)
 {
-    ArticleNum x;
-
     if (g_data_source->m_flags & DF_NO_XREFS)
     {
         return 0;
@@ -623,16 +622,16 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         {
             if (g_verbose)
             {
-                std::fputs("\nChasing xrefs", stdout);
+                fmt::print("\nChasing xrefs");
             }
             else
             {
-                std::fputs("\nXrefs", stdout);
+                fmt::print("\nXrefs");
             }
             term_down(1);
             g_output_chase_phrase = false;
         }
-        std::putchar('.');
+        fmt::print(".");
         std::fflush(stdout);
     }
 
@@ -642,48 +641,56 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         return 0;
     }
 
-    std::string xref_buf{xref_text};
 # ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("Xref: %s\n",xref_buf.c_str());
+        fmt::print("Xref: {}\n", xref_text);
         term_down(1);
     }
 # endif
-    char *cur_xref = std::strchr(xref_buf.data(), ' ');
-    if (cur_xref == nullptr)
+    std::string_view  xrefs{xref_text};
+    const std::size_t site_end = xrefs.find(' ');
+    if (site_end == std::string_view::npos)
     {
         return 0;
     }
-    *cur_xref++ = '\0';
+    const std::string_view site = xrefs.substr(0, site_end);
+    std::string_view       cur_xref = xrefs.substr(site_end + 1);
 # ifdef VALIDATE_XREF_SITE
-    if (valid_xref_site(art_num, xref_buf.data()))
+    if (valid_xref_site(art_num, site))
 # endif
     {
-        while (*cur_xref)            // for each newsgroup
+        while (!cur_xref.empty()) // for each newsgroup
         {
-            char *next_xref = std::strchr(cur_xref, ' ');
-            if (next_xref != nullptr)
+            const std::size_t      next_xref = cur_xref.find(' ');
+            const std::string_view xref =
+                next_xref == std::string_view::npos ? cur_xref : cur_xref.substr(0, next_xref);
+            if (next_xref == std::string_view::npos)
             {
-                *next_xref++ = '\0';
+                cur_xref = {};
             }
             else
             {
-                next_xref = cur_xref + std::strlen(cur_xref);
+                cur_xref.remove_prefix(next_xref + 1);
+                const std::size_t next_start = cur_xref.find_first_not_of(" \f\n\r\t\v");
+                cur_xref = next_start == std::string_view::npos ? std::string_view{} : cur_xref.substr(next_start);
             }
-            char *group_name = cur_xref;
-            cur_xref = skip_space(next_xref);
-            char *xartnum = std::strchr(group_name, ':');
-            if (!xartnum)
+            const std::size_t art_num_start = xref.find(':');
+            if (art_num_start == std::string_view::npos)
             {
                 break;
             }
-            *xartnum++ = '\0';
-            if (!(value_of(x) = std::atol(xartnum)))
+            const std::string_view       group_name = xref.substr(0, art_num_start);
+            const std::string_view       xartnum = xref.substr(art_num_start + 1);
+            long                         parsed_art_num{};
+            const std::from_chars_result result =
+                std::from_chars(xartnum.data(), xartnum.data() + xartnum.size(), parsed_art_num);
+            if (result.ec != std::errc{} || parsed_art_num == 0)
             {
                 continue;
             }
-            if (!std::strcmp(group_name,g_newsgroup_name.c_str()))  // is this the current newsgroup?
+            const ArticleNum x{parsed_art_num};
+            if (group_name == g_newsgroup_name) // is this the current newsgroup?
             {
                 if (x < g_abs_first || x > g_last_art)
                 {
@@ -777,7 +784,7 @@ static bool valid_xref_site(ArticleNum art_num, std::string_view site)
 #ifdef DEBUG
     if (g_debug)
     {
-        std::printf("Xref not from %s -- ignoring\n",s_inews_site->c_str());
+        fmt::print("Xref not from {} -- ignoring\n", *s_inews_site);
         term_down(1);
     }
 #endif
