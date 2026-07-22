@@ -112,10 +112,6 @@ struct Article
     {
         return m_msg_id ? m_msg_id->c_str() : nullptr;
     }
-    const char *xrefs_c_str() const
-    {
-        return m_xrefs ? m_xrefs->c_str() : nullptr;
-    }
     bool has_xrefs() const
     {
         return m_xrefs && !m_xrefs->empty();
