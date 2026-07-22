@@ -43,7 +43,7 @@ struct Subject
     void     clear_subject();
     Article *subj_article();
     std::size_t stripped_offset() const { return m_str.size() < 4 ? m_str.size() : 4; }
-    const char *text() const { return m_str.c_str(); }
+    std::string_view text() const { return m_str; }
     std::string_view stripped_view() const { return std::string_view{m_str}.substr(stripped_offset()); }
 
     Subject     *m_next;

@@ -485,9 +485,9 @@ generated files, or the vendored `vcpkg` tree.
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `file_ref`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.  `Subject::text` and
-  `Article::msg_id_c_str` are still live, but their callers can move to
-  views bottom-up.  See `CSTR-134`, `CSTR-137`, and `CSTR-138`.
+  platform/API boundary use.  `Article::msg_id_c_str` is still live,
+  but its callers can move to views bottom-up.  See `CSTR-137` and
+  `CSTR-138`.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -569,17 +569,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-134 - Subject Full Text View
-
-- Files: `libtrn/include/trn/Subject.h`, `libtrn/Article.cpp`,
-  `libtrn/ng.cpp`.
-- Kind: borrowed string view accessor.
-- Function: `Subject::text`.
-- Change: replace the full-text C-string accessor with a
-  `std::string_view` accessor and update its two production callers.
-  Preserve the inactive `DEBUG` block in `ng.cpp`.
-- Tests: subject, article, and newsgroup tests.
 
 #### CSTR-135 - Article Newsgroups Header Compare
 

@@ -215,7 +215,7 @@ std::string_view Article::get_cached_line_view(HeaderLineType which_line, bool n
         {
             return {};
         }
-        return (m_flags & AF_HAS_RE) ? std::string_view{m_subj->text()} : m_subj->stripped_view();
+        return (m_flags & AF_HAS_RE) ? m_subj->text() : m_subj->stripped_view();
 
     case FROM_LINE:
         return m_from ? std::string_view{*m_from} : std::string_view{};
