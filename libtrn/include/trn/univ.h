@@ -20,7 +20,7 @@
 #include <variant>
 #include <vector>
 
-using UniversalGroupVisitor = int (*)(const char *);
+using UniversalGroupVisitor = int (*)(std::string_view);
 using UniversalInputPending = bool (*)();
 using UniversalItemIndex = int;
 

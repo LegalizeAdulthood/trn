@@ -4293,11 +4293,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 }
 
 // Icky placement, but the PUSH/POP stuff is local to this file
-int univ_visit_group(const char *group_name)
+int univ_visit_group(std::string_view group_name)
 {
     PUSH_SELECTOR();
 
-    univ_visit_group_main(group_name ? group_name : "");
+    univ_visit_group_main(group_name);
 
     POP_SELECTOR();
     return 0;           // later may have some error return values

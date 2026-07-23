@@ -81,7 +81,7 @@ char add_group_selector(GetNewsgroupFlags flags);
 char option_selector();
 char universal_selector();
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
-int  univ_visit_group(const char *group_name);
+int  univ_visit_group(std::string_view group_name);
 void univ_visit_help(HelpLocation where);
 
 #endif

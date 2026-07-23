@@ -1280,7 +1280,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
                 s_univ_use_min_score = true;
                 s_univ_min_score = vgroup->min_score;
             }
-            (void)visit_group(group_name.c_str());
+            (void)visit_group(group_name);
             s_univ_use_min_score = false;
             s_current_vg_ui_index = {};
             // later do something with return value
@@ -1313,7 +1313,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
             }
             const std::string group_name = article->ng;
             s_current_vg_ui_index = univ_index(ui);
-            (void)visit_group(group_name.c_str());
+            (void)visit_group(group_name);
             s_current_vg_ui_index = {};
             // later do something with return value
         }

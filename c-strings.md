@@ -587,19 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-199 - Universal Group Visitor View
-
-- Files: `libtrn/univ.cpp`, `libtrn/rt-select.cpp`,
-  `libtrn/include/trn/univ.h`, `libtrn/include/trn/rt-select.h`,
-  `tests/test_univ.cpp`.
-- Kind: internal callback parameter.
-- Function: `UniversalGroupVisitor`, `univ_visit_group`,
-  `univ_virt_pass`.
-- Change: make the visitor callback accept `std::string_view`, pass the
-  stored virtual-group string directly, and remove `c_str()` from the
-  visitor call path.
-- Tests: existing universal selector virtual-pass tests.
-
 #### CSTR-200 - UTF Output Cursor Constness
 
 - Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,

@@ -54,10 +54,10 @@ NewsgroupData *add_test_newsgroup(std::string_view group_name)
     return &group;
 }
 
-int fake_visit_group(const char *group_name)
+int fake_visit_group(std::string_view group_name)
 {
     ++g_visit_count;
-    g_visited_group = group_name ? group_name : "";
+    g_visited_group = group_name;
     return NG_NORM;
 }
 
