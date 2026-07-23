@@ -9,7 +9,6 @@
 #include <nntp/nntpclient.h>
 #include <nntp/nntpinit.h>
 #include <tool/util3.h>
-#include <trn/string-algos.h>
 #include <util/env.h>
 #include <util/util2.h>
 #include <wildmat/wildmat.h>
@@ -88,7 +87,6 @@ int main(int argc, char *argv[])
 
     env_init(true);
 
-    char       *cp;
     std::string server_name = get_env_var("NNTPSERVER");
     if (server_name.empty())
     {
@@ -201,17 +199,11 @@ int main(int argc, char *argv[])
         {
             if (!wildarg.empty())
             {
-                cp = skip_non_space(g_ser_line);
-                if (!cp)
+                const std::string_view line{g_ser_line};
+                if (!wildcard_match(line.substr(0, line.find_first_of(" \f\n\r\t\v")), wildarg))
                 {
                     continue;
                 }
-                *cp = '\0';
-                if (!wildcard_match(g_ser_line, wildarg.data()))
-                {
-                    continue;
-                }
-                *cp = ' ';
             }
             std::fputs(g_ser_line, out_fp);
         }

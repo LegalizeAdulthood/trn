@@ -3,9 +3,19 @@
 
 #include <gtest/gtest.h>
 
+#include <string_view>
+
 TEST(TestWildMat, exactMatch)
 {
     EXPECT_TRUE(wildcard_match("alt.flame", "alt.flame"));
+}
+
+TEST(TestWildMat, boundedViewMatch)
+{
+    constexpr std::string_view text{"alt.flame.suffix"};
+    constexpr std::string_view pattern{"alt.flame.mismatch"};
+
+    EXPECT_TRUE(wildcard_match(text.substr(0, 9), pattern.substr(0, 9)));
 }
 
 TEST(TestWildMat, fontMatch)

@@ -570,18 +570,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-156 - Wildmat String View API
-
-- Files: `wildmat/wildmat.cpp`, `wildmat/include/wildmat/wildmat.h`,
-  `nntplist/nntplist.cpp`.
-- Kind: read-only pattern matching API.
-- Function: `wildcard_match`.
-- Change: accept `std::string_view` for text and pattern, and update the
-  recursive matcher to use view operations instead of NUL-terminated
-  pointer traversal.  Update the `nntplist` caller to pass its wildcard
-  view directly.
-- Tests: existing wildmat tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish

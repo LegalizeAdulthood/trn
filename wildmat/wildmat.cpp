@@ -44,104 +44,133 @@
 #define OPTIMIZE_JUST_STAR // Is "*" a common pattern?
 #undef MATCH_TAR_PATTERN   // Do tar(1) matching rules, which ignore a trailing slash?
 
-static bool do_match(const char *text, const char *p);
+static bool do_match(std::string_view text, std::string_view pattern);
 
 //
 //  Match text and p, return true, false.
 //
-static bool do_match(const char *text, const char *p)
+static bool do_match(std::string_view text, std::string_view pattern)
 {
-    for (; *p; text++, p++)
+    std::size_t text_pos{};
+    std::size_t pattern_pos{};
+
+    while (pattern_pos < pattern.size())
     {
-        if (*text == '\0' && *p != '*')
+        if (text_pos == text.size() && pattern[pattern_pos] != '*')
         {
             return false;
         }
-        switch (*p)
+        switch (pattern[pattern_pos])
         {
         case '\\':
             // Literal match with following character.
-            p++;
-            // FALLTHROUGH
-
-        default:
-            if (*text != *p)
+            ++pattern_pos;
+            if (pattern_pos == pattern.size())
             {
                 return false;
             }
-            continue;
+            // FALLTHROUGH
+
+        default:
+            if (text[text_pos] != pattern[pattern_pos])
+            {
+                return false;
+            }
+            ++text_pos;
+            ++pattern_pos;
+            break;
 
         case '?':
             // Match anything.
-            continue;
+            ++text_pos;
+            ++pattern_pos;
+            break;
 
         case '*':
-            while (*++p == '*')
+            while (++pattern_pos < pattern.size() && pattern[pattern_pos] == '*')
             {
                 // Consecutive stars act just like one.
             }
-            if (*p == '\0')
+            if (pattern_pos == pattern.size())
             {
                 // Trailing star matches everything.
                 return true;
             }
-            while (*text)
+            while (text_pos < text.size())
             {
-                if (do_match(text++, p))
+                if (do_match(text.substr(text_pos), pattern.substr(pattern_pos)))
                 {
                     return true;
                 }
+                ++text_pos;
             }
             return false;
 
         case '[':
         {
-            const bool reverse = p[1] == NEGATE_CLASS;
-            if (reverse)
-            {
-                // Inverted character class.
-                p++;
-            }
-            bool matched{};
-            for (int last = 0400; *++p && *p != ']'; last = *p)
+            const bool  reverse = pattern_pos + 1 < pattern.size() && pattern[pattern_pos + 1] == NEGATE_CLASS;
+            std::size_t class_pos = pattern_pos + (reverse ? 2 : 1);
+            bool        matched{};
+            int         last = 0400;
+            while (class_pos < pattern.size() && pattern[class_pos] != ']')
             {
                 // This next line requires a good C compiler.
-                if (*p == '-' ? *text <= *++p && *text >= last : *text == *p)
+                const char ch = pattern[class_pos++];
+                if (ch == '-' && class_pos < pattern.size())
                 {
-                    matched = true;
+                    const char range_end = pattern[class_pos++];
+                    if (text[text_pos] <= range_end && text[text_pos] >= last)
+                    {
+                        matched = true;
+                    }
+                    last = range_end;
+                }
+                else
+                {
+                    if (text[text_pos] == ch)
+                    {
+                        matched = true;
+                    }
+                    last = ch;
                 }
             }
             if (matched == reverse)
             {
                 return false;
             }
-            continue;
+            ++text_pos;
+            pattern_pos = class_pos;
+            if (pattern_pos < pattern.size() && pattern[pattern_pos] == ']')
+            {
+                ++pattern_pos;
+            }
+            break;
         }
         }
     }
 
 #ifdef  MATCH_TAR_PATTERN
-    if (*text == '/')
+    if (text_pos < text.size() && text[text_pos] == '/')
     {
         return true;
     }
 #endif  // MATCH_TAR_ATTERN
-    return *text == '\0';
+    return text_pos == text.size();
 }
 
 
 //
 //  User-level routine.  Returns true or false.
 //
-bool wildcard_match(const char *text, const char *p)
+bool wildcard_match(std::string_view text, std::string_view pattern)
 {
 #ifdef  OPTIMIZE_JUST_STAR
-    if (p[0] == '*' && p[1] == '\0')
+    if (pattern == "*")
     {
         return true;
     }
 #endif  // OPTIMIZE_JUST_STAR
-    return do_match(text, p);
+    return do_match(text, pattern);
 }
 
 #ifdef  TEST
