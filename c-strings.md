@@ -536,7 +536,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 10, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 52, `strrchr` 1, `strstr` 2,
+- Search and length: `strchr` 50, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
 - C text I/O roots: `fgets` 22, `fputs` 184, `printf` 363,
@@ -565,16 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-176 - Decode Filename Character Sets
-
-- Files: `libtrn/decode.cpp`.
-- Kind: literal character-set tables and `strchr` membership tests.
-- Function: `decode_fix_filename`.
-- Change: replace `GOODCHARS` and `BADCHARS` C-string macros with
-  `constexpr std::string_view` tables and use `.find()` membership tests
-  while preserving the current `MSDOS` variation.
-- Tests: filename decode tests.
 
 #### CSTR-177 - Interpolation Hex Digit Lookup
 

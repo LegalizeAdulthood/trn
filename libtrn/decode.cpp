@@ -32,12 +32,11 @@
 namespace fs = std::filesystem;
 
 #ifdef MSDOS
-#define GOODCHARS                \
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
-    "abcdefghijklmnopqrstuvwxyz" \
-    "0123456789-_^#%"
+static constexpr std::string_view s_good_chars{"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                               "abcdefghijklmnopqrstuvwxyz"
+                                               "0123456789-_^#%"};
 #else
-#define BADCHARS "!$&*()|\'\";<>[]{}?/`\\ \t"
+static constexpr std::string_view s_bad_chars{"!$&*()|'\";<>[]{}?/`\\ \t"};
 #endif
 
 std::string g_decode_filename;
@@ -61,10 +60,10 @@ std::string decode_fix_filename(std::string_view text)
     for (const char ch : fs::path{path}.filename().string())
     {
         if (std::isprint(static_cast<unsigned char>(ch))
-#ifdef GOODCHARS
-            && std::strchr(GOODCHARS, ch) != nullptr
+#ifdef MSDOS
+            && s_good_chars.find(ch) != std::string_view::npos
 #else
-            && std::strchr(BADCHARS, ch) == nullptr
+            && s_bad_chars.find(ch) == std::string_view::npos
 #endif
         )
         {
