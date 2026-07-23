@@ -9,15 +9,19 @@
 #include <config/common.h>
 #include <trn/Article.h>
 #include <trn/charsubst.h>
+#include <trn/intrp.h>
+#include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
 #include <trn/Subject.h>
+#include <trn/terminal.h>
 
 #include <test_config.h>
 
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -361,6 +365,112 @@ TEST_F(CompressSubjectTest, truncatesLongSubject)
     m_subject.m_str = "    LongSubjectValue";
 
     EXPECT_EQ("LongSubj", compress(&m_article, 8));
+}
+
+class PerformStatusEndTest : public Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_msg = g_msg;
+        m_old_perform_count = g_perform_count;
+        m_old_error_occurred = g_error_occurred;
+        m_old_subj_line = g_subj_line;
+        m_old_page_line = g_page_line;
+        m_old_performed_article_loop = g_performed_article_loop;
+        m_old_selected_count = g_selected_count;
+        m_old_missing_count = g_missing_count;
+        m_old_sel_mode = g_sel_mode;
+    }
+
+    void TearDown() override
+    {
+        g_msg = m_old_msg;
+        g_perform_count = m_old_perform_count;
+        g_error_occurred = m_old_error_occurred;
+        g_subj_line = m_old_subj_line;
+        g_page_line = m_old_page_line;
+        g_performed_article_loop = m_old_performed_article_loop;
+        g_selected_count = m_old_selected_count;
+        g_missing_count = m_old_missing_count;
+        g_sel_mode = m_old_sel_mode;
+    }
+
+    void begin_status(int count, ArticleUnread selected_count = ArticleUnread{},
+                      ArticleUnread missing_count = ArticleUnread{})
+    {
+        g_selected_count = selected_count;
+        g_missing_count = missing_count;
+        perform_status_init(count);
+    }
+
+    std::string                m_old_msg;
+    int                        m_old_perform_count{};
+    bool                       m_old_error_occurred{};
+    std::optional<std::string> m_old_subj_line;
+    int                        m_old_page_line{};
+    bool                       m_old_performed_article_loop{};
+    ArticleUnread              m_old_selected_count{};
+    ArticleUnread              m_old_missing_count{};
+    SelectionMode              m_old_sel_mode{};
+};
+
+TEST_F(PerformStatusEndTest, reportsNoArticlesAffected)
+{
+    begin_status(3);
+
+    const int result = perform_status_end(3, "article");
+
+    EXPECT_EQ(0, result);
+    EXPECT_EQ("No articles affected.", g_msg);
+}
+
+TEST_F(PerformStatusEndTest, reportsThreadMatchesWithoutArticleLoop)
+{
+    begin_status(0);
+    g_performed_article_loop = false;
+    g_sel_mode = SM_THREAD;
+    g_perform_count = 1;
+
+    const int result = perform_status_end(0, "article");
+
+    EXPECT_EQ(1, result);
+    EXPECT_EQ("1 thread matched.", g_msg);
+}
+
+TEST_F(PerformStatusEndTest, reportsKilledArticles)
+{
+    begin_status(5);
+    g_perform_count = 2;
+
+    const int result = perform_status_end(3, "article");
+
+    EXPECT_EQ(2, result);
+    EXPECT_EQ("2 articles killed.", g_msg);
+}
+
+TEST_F(PerformStatusEndTest, reportsDeselectedArticles)
+{
+    begin_status(3, ArticleUnread{3});
+    g_selected_count = ArticleUnread{1};
+    g_perform_count = -2;
+
+    const int result = perform_status_end(3, "article");
+
+    EXPECT_EQ(1, result);
+    EXPECT_EQ("2 articles deselected.", g_msg);
+}
+
+TEST_F(PerformStatusEndTest, reportsMissingArticlesWithPluralModifier)
+{
+    begin_status(5);
+    g_missing_count = ArticleUnread{2};
+    g_perform_count = 2;
+
+    const int result = perform_status_end(1, "article");
+
+    EXPECT_EQ(2, result);
+    EXPECT_EQ("2 articles killed(, 2  were missing).", g_msg);
 }
 
 TEST(SubjectHasReTest, one)

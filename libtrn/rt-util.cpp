@@ -14,7 +14,6 @@
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
-#include <trn/string-algos.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -39,7 +38,8 @@ static int s_spin_marks{25}; // how many bargraph marks we want
 
 static std::string compress_address(std::string_view name, int max);
 static std::string compress_name_text(std::string_view name, int max);
-static void output_change(std::string &out, long num, const char *obj_type, const char *modifier, const char *action);
+static void output_change(std::string &out, long num, std::string_view obj_type, std::string_view modifier,
+                          std::string_view action);
 
 static bool is_space(char ch)
 {
@@ -940,15 +940,30 @@ void perform_status(int cnt, int spin)
     std::fflush(stdout);
 }
 
-static void append_until_pipe(std::string &out, const char *&s)
+static void skip_past_pipe(std::string_view &text)
 {
-    while (*s && *s != '|')
+    const std::size_t pipe = text.find('|');
+    text.remove_prefix(pipe == std::string_view::npos ? text.size() : pipe + 1);
+}
+
+static void append_until_pipe(std::string &out, std::string_view &text)
+{
+    const std::size_t pipe = text.find('|');
+    const std::size_t count = pipe == std::string_view::npos ? text.size() : pipe;
+    out += text.substr(0, count);
+    text.remove_prefix(count);
+}
+
+static void skip_separator(std::string_view &text)
+{
+    if (!text.empty())
     {
-        out += *s++;
+        text.remove_prefix(1);
     }
 }
 
-static void output_change(std::string &out, long num, const char *obj_type, const char *modifier, const char *action)
+static void output_change(std::string &out, long num, std::string_view obj_type, std::string_view modifier,
+                          std::string_view action)
 {
     bool neg;
 
@@ -968,43 +983,40 @@ static void output_change(std::string &out, long num, const char *obj_type, cons
     }
     out += std::to_string(num);
     out += ' ';
-    if (obj_type)
+    if (!obj_type.empty())
     {
         out += obj_type;
         out += plural(num);
         out += ' ';
     }
-    const char *s = modifier;
-    if (s != nullptr)
+    std::string_view text = modifier;
+    if (!text.empty())
     {
         out += ' ';
         if (num != 1)
         {
-            s = skip_ne(s, '|');
+            skip_past_pipe(text);
         }
-        append_until_pipe(out, s);
+        append_until_pipe(out, text);
         out += ' ';
     }
-    s = action;
+    text = action;
     if (!neg)
     {
-        s = skip_ne(s, '|');
+        skip_past_pipe(text);
     }
-    append_until_pipe(out, s);
-    s++;
+    append_until_pipe(out, text);
+    skip_separator(text);
     if (neg)
     {
-        s = skip_ne(s, '|');
+        skip_past_pipe(text);
     }
-    while (*s)
-    {
-        out += *s++;
-    }
+    out += text;
 }
 
-int perform_status_end(long cnt, const char *obj_type)
+int perform_status_end(long cnt, std::string_view obj_type)
 {
-    bool article_status = (*obj_type == 'a');
+    bool article_status = !obj_type.empty() && obj_type.front() == 'a';
 
     g_msg.clear();
     if (g_perform_count == 0)
@@ -1023,25 +1035,25 @@ int perform_status_end(long cnt, const char *obj_type)
     {
         output_change(g_msg, (long)g_perform_count,
                            g_sel_mode == SM_THREAD? "thread" : "subject",
-                           nullptr, "ERR|match|ed");
+                           {}, "ERR|match|ed");
     }
     else if (g_perform_count != sels && g_perform_count != -sels //
              && g_perform_count != kills && g_perform_count != -kills)
     {
-        output_change(g_msg, (long)g_perform_count, obj_type, nullptr,
+        output_change(g_msg, (long)g_perform_count, obj_type, {},
                            "ERR|match|ed");
-        obj_type = nullptr;
+        obj_type = {};
     }
     if (kills)
     {
-        output_change(g_msg, kills, obj_type, nullptr,
+        output_change(g_msg, kills, obj_type, {},
                            article_status? "un||killed" : "more|less|");
-        obj_type = nullptr;
+        obj_type = {};
     }
     if (sels)
     {
-        output_change(g_msg, sels, obj_type, nullptr, "de||selected");
-        obj_type = nullptr;
+        output_change(g_msg, sels, obj_type, {}, "de||selected");
+        obj_type = {};
     }
     if (article_status && missing > 0)
     {

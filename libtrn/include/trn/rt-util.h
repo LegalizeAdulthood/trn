@@ -39,6 +39,6 @@ void spin(int count);
 bool in_background();
 void perform_status_init(int cnt);
 void perform_status(int cnt, int spin);
-int perform_status_end(long cnt, const char *obj_type);
+int perform_status_end(long cnt, std::string_view obj_type);
 
 #endif

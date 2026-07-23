@@ -570,19 +570,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-168 - RT-UTIL Status Message Views
-
-- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`.
-- Kind: helper pointer parsing over pipe-delimited literals.
-- Function: `append_until_pipe`, `output_change`, and
-  `perform_status_end`.
-- Change: replace `const char *` cursor walking for
-  pipe-delimited `modifier` and `action` text with `std::string_view`
-  slicing.  Use empty views for absent optional text when empty remains
-  an unambiguous sentinel.
-- Tests: add or extend selector/status tests before refactoring if the
-  exact status strings are not already covered.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
