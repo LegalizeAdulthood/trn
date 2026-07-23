@@ -4,7 +4,11 @@
 #include <trn/kfile.h>
 
 #include <trn/cache.h>
+#include <trn/ng.h>
 #include <trn/ngdata.h>
+#include <trn/rcstuff.h>
+#include <trn/rt-process.h>
+#include <trn/rthread.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 
@@ -19,6 +23,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <string>
 #include <system_error>
 
@@ -35,6 +40,14 @@ protected:
         m_old_in_ng = g_in_ng;
         m_old_kf_state = g_kf_state;
         m_old_local_kfp = g_local_kfp;
+        m_old_msg_id_hash = g_msg_id_hash;
+        m_old_article_list = g_article_list;
+        m_old_newsgroup_ptr = g_newsgroup_ptr;
+        m_old_first_art = g_first_art;
+        m_old_last_art = g_last_art;
+        m_old_force_last = g_force_last;
+        m_old_general_mode = g_general_mode;
+        m_old_mode = g_mode;
         m_old_first_subject = g_first_subject;
         m_old_verbose = g_verbose;
         m_old_novice_delays = g_novice_delays;
@@ -51,6 +64,14 @@ protected:
         g_in_ng = false;
         g_kf_state = KFS_NONE;
         g_local_kfp = nullptr;
+        g_msg_id_hash = hash_create(17, msg_id_cmp);
+        g_article_list.clear();
+        g_newsgroup_ptr = nullptr;
+        g_first_art = ArticleNum{};
+        g_last_art = ArticleNum{};
+        g_force_last = false;
+        g_general_mode = GM_READ;
+        g_mode = MM_NONE;
         g_first_subject = nullptr;
         g_verbose = false;
         g_novice_delays = false;
@@ -62,10 +83,22 @@ protected:
         {
             std::fclose(g_local_kfp);
         }
+        if (g_msg_id_hash != nullptr && g_msg_id_hash != m_old_msg_id_hash)
+        {
+            hash_destroy(g_msg_id_hash);
+        }
 
         g_in_ng = m_old_in_ng;
         g_kf_state = m_old_kf_state;
         g_local_kfp = m_old_local_kfp;
+        g_msg_id_hash = m_old_msg_id_hash;
+        g_article_list = m_old_article_list;
+        g_newsgroup_ptr = m_old_newsgroup_ptr;
+        g_first_art = m_old_first_art;
+        g_last_art = m_old_last_art;
+        g_force_last = m_old_force_last;
+        g_general_mode = m_old_general_mode;
+        g_mode = m_old_mode;
         g_first_subject = m_old_first_subject;
         g_verbose = m_old_verbose;
         g_novice_delays = m_old_novice_delays;
@@ -88,6 +121,14 @@ protected:
     bool                          m_old_in_ng{};
     KillFileStateFlags            m_old_kf_state{};
     std::FILE                    *m_old_local_kfp{};
+    HashTable                    *m_old_msg_id_hash{};
+    std::map<ArticleNum, Article> m_old_article_list;
+    NewsgroupData                *m_old_newsgroup_ptr{};
+    ArticleNum                    m_old_first_art{};
+    ArticleNum                    m_old_last_art{};
+    bool                          m_old_force_last{};
+    GeneralMode                   m_old_general_mode{};
+    MinorMode                     m_old_mode{};
     Subject                      *m_old_first_subject{};
     bool                          m_old_verbose{};
     bool                          m_old_novice_delays{};
@@ -142,4 +183,33 @@ TEST_F(KillFileEditTest, appendLocalKillFileWritesConfiguredPath)
     EXPECT_EQ("/old/j\n/new/j\n", file_contents(kill_file));
     EXPECT_NE(nullptr, g_local_kfp);
     EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
+}
+
+TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
+{
+    const fs::path    kill_file = m_output_dir / "local-rewrite" / "KILL";
+    const std::string kill_file_name = kill_file.generic_string();
+
+    Newsrc newsrc{};
+    newsrc.name = "news.example";
+    NewsgroupData newsgroup{};
+    newsgroup.m_rc = &newsrc;
+    newsgroup.m_to_read = ArticleUnread{1};
+    g_newsgroup_ptr = &newsgroup;
+    g_last_art = ArticleNum{42};
+    g_kf_state = KFS_LOCAL_CHANGES | KFS_THREAD_LINES;
+
+    Article *article = article_ptr(ArticleNum{1});
+    article->m_msg_id = "<case@example.com>";
+    article->m_flags = AF_EXISTS;
+    article->m_auto_flags = AUTO_SEL_THD;
+    hash_store(g_msg_id_hash, article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
+
+    m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
+
+    testing::internal::CaptureStdout();
+    kill_unwanted(ArticleNum{1}, nullptr, false);
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("THRU news.example 42\n<case@example.com> T+\n", file_contents(kill_file));
 }
