@@ -37,16 +37,16 @@ void append_signature();
 
 static std::FILE *inews_wr_fp{};
 
-static void inews_fputs(const char *buff)
+static void inews_fputs(std::string_view buff)
 {
     if (inews_wr_fp)
     {
-        std::fputs(buff, inews_wr_fp);
+        std::fwrite(buff.data(), 1, buff.size(), inews_wr_fp);
     }
     else
     {
         boost::system::error_code ec;
-        g_nntp_link.connection->write(buff, 0, ec);
+        g_nntp_link.connection->write(buff, ec);
     }
 }
 
@@ -59,7 +59,7 @@ static void inews_fputc(char c)
     else
     {
         boost::system::error_code ec;
-        g_nntp_link.connection->write(&c, 1, ec);
+        g_nntp_link.connection->write(std::string_view{&c, 1}, ec);
     }
 }
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
             server_name = nntp_server_name(server_name);
         }
     }
-    const char *line_end;
+    std::string_view line_end;
     if (!server_name.empty() && server_name != "local")
     {
         g_server_name = server_name;
@@ -258,23 +258,23 @@ int main(int argc, char *argv[])
         }
     }
 
-    inews_fputs(article_header.c_str());
+    inews_fputs(article_header);
     if (!has_pathline)
     {
         output_line = fmt::format("Path: not-for-mail{}", line_end);
-        inews_fputs(output_line.c_str());
+        inews_fputs(output_line);
     }
     if (!has_fromline)
     {
         const std::string real_name = get_env_var("NAME", g_real_name);
         output_line = fmt::format("From: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);
-        inews_fputs(output_line.c_str());
+        inews_fputs(output_line);
     }
     if (get_env_var("NO_ORIGINATOR").empty())
     {
         const std::string real_name = get_env_var("NAME", g_real_name);
         output_line = fmt::format("Originator: {}@{} ({}){}", g_login_name, g_p_host_name, real_name, line_end);
-        inews_fputs(output_line.c_str());
+        inews_fputs(output_line);
     }
     inews_fputs(line_end);
 
@@ -305,12 +305,12 @@ int main(int argc, char *argv[])
         {
             body_line.pop_back();
             body_line += line_end;
-            inews_fputs(body_line.c_str());
+            inews_fputs(body_line);
             had_nl = true;
         }
         else
         {
-            inews_fputs(body_line.c_str());
+            inews_fputs(body_line);
             had_nl = false;
         }
     }
@@ -439,7 +439,7 @@ void append_signature()
             *cp = '\0';
         }
         output_line = fmt::format("{}\r\n", g_ser_line);
-        inews_fputs(output_line.c_str());
+        inews_fputs(output_line);
     }
     (void) std::fclose(fp);
 }

@@ -48,7 +48,7 @@ public:
 
     std::string read_line(error_code_t &ec) override;
     void        write_line(const std::string &line, error_code_t &ec) override;
-    void        write(const char *buffer, size_t len, error_code_t &ec) override;
+    void        write(std::string_view buffer, error_code_t &ec) override;
     size_t      read(char *buf, size_t size, error_code_t &ec) override;
 
 private:
@@ -75,12 +75,12 @@ std::string NNTPConnection::read_line(error_code_t &ec)
 void NNTPConnection::write_line(const std::string &line, error_code_t &ec)
 {
     const std::string buffer{line + "\r\n"};
-    write(buffer.c_str(), buffer.size(), ec);
+    write(buffer, ec);
 }
 
-void NNTPConnection::write(const char *buffer, size_t len, error_code_t &ec)
+void NNTPConnection::write(std::string_view buffer, error_code_t &ec)
 {
-    asio::write(m_socket, asio::buffer(buffer, len), ec);
+    asio::write(m_socket, asio::buffer(buffer.data(), buffer.size()), ec);
 }
 
 size_t NNTPConnection::read(char *buf, size_t size, error_code_t &ec)

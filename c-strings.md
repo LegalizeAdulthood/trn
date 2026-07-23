@@ -570,21 +570,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-167 - INEWS String Output Helper
-
-- Files: `inews/inews.cpp`,
-  `nntp/include/nntp/nntpclient.h`, `nntp/nntpinit.cpp`.
-- Kind: helper parameter and buffer plus size.
-- Function: `inews_fputs` and `INNTPConnection::write`.
-- Change: change `inews_fputs` to accept `std::string_view` and write
-  the exact view extent.  Update `INNTPConnection::write` to take a
-  `std::string_view` instead of `const char *` plus `size_t`, then use
-  `asio::buffer(view.data(), view.size())` at the implementation
-  boundary.  Update mocks and call sites in the same slice.
-- Tests: run NNTP tests and existing inews failure tests.  Add posting
-  output coverage first if the helper semantics are not already covered
-  by mocks.
-
 #### CSTR-168 - RT-UTIL Status Message Views
 
 - Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`.
@@ -608,7 +593,6 @@ them before broad global-buffer work and before removing helpers.
 - Files: `inews/inews.cpp`.
 - Kind: tool-local fixed line input through the global NNTP buffer.
 - Function: `append_signature`.
-- Depends on: `CSTR-167`.
 - Change: read `.signature` with owned `std::string` line storage
   instead of `g_ser_line`, `std::fgets`, manual newline stripping, and
   `std::strlen`.  Preserve the `MAX_SIGNATURE` line limit and emitted

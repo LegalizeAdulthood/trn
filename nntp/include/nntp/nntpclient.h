@@ -33,7 +33,7 @@ struct INNTPConnection
 
     virtual std::string read_line(error_code_t &ec) = 0;
     virtual void        write_line(const std::string &line, error_code_t &ec) = 0;
-    virtual void        write(const char *buffer, size_t len, error_code_t &ec) = 0;
+    virtual void        write(std::string_view buffer, error_code_t &ec) = 0;
     virtual size_t      read(char *buf, size_t size, error_code_t &ec) = 0;
 };
 
