@@ -237,7 +237,7 @@ static bool                select_option(OptionIndex i);
 static void                sel_cleanup();
 static bool                mark_del_as_read(char *ptr, int arg);
 static DisplayState        sel_command(char_int ch);
-static bool                sel_perform_change(long cnt, const char *obj_type);
+static bool                sel_perform_change(long cnt, std::string_view obj_type);
 static char                another_command(char_int ch);
 static DisplayState        article_commands(char_int ch);
 static DisplayState        newsgroup_commands(char_int ch);
@@ -2493,7 +2493,7 @@ the_default:
 /// - s_clean_screen: Set to false if the screen should not be cleared.
 /// - g_error_occurred: Set to false after handling an error.
 ///
-static bool sel_perform_change(long cnt, const char *obj_type)
+static bool sel_perform_change(long cnt, std::string_view obj_type)
 {
     carriage_return();
     if (g_page_line == 1)

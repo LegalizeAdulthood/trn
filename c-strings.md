@@ -571,16 +571,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-182 - Selector Change Object Type
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: literal-only function parameter.
-- Function: `sel_perform_change`.
-- Change: promote `obj_type` from `const char *` to `std::string_view`.
-  Callers already pass string literals, and the callee passes the value
-  to `perform_status_end`, which accepts a view.
-- Tests: universal selector status tests.
-
 #### CSTR-183 - Newsgroup Display Names
 
 - Files: `libtrn/rt-page.cpp`.
