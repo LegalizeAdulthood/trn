@@ -514,9 +514,9 @@ tree.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
 - Remaining literal tables include color object names, signal names,
-  status labels, MIME entity mappings, and transliteration tables.  The
-  useful current targets are tables whose users already operate on views
-  or compute lengths manually.
+  MIME entity mappings, and transliteration tables.  The useful current
+  targets are tables whose users already operate on views or compute
+  lengths manually.
 - MIME HTML `find_attr` and `wildcard_match` are already view-based and
   should not be re-added as slices.  New local leaves from this scan are
   dead NNTP socket code, simple timeout output functions, literal lookup
@@ -565,16 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-175 - Newsgroup Status Labels
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: local literal table.
-- Function: `list_newsgroups`.
-- Change: replace the local `static const char *status[]` table with a
-  `constexpr std::array<std::string_view, 5>` and pass views directly to
-  formatting/output code.
-- Tests: newsgroup listing tests.
 
 #### CSTR-176 - Decode Filename Character Sets
 

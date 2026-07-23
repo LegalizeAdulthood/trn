@@ -38,6 +38,7 @@
 #include <fmt/printf.h>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
@@ -1479,7 +1480,8 @@ void list_newsgroups()
     NewsgroupData     *np;
     NewsgroupNum       i;
     std::string        line;
-    static const char *status[] = {"(READ)", "(UNSUB)", "(DUP)", "(BOGUS)", "(JUNK)"};
+    static constexpr std::array<std::string_view, 5> status{
+        "(READ)", "(UNSUB)", "(DUP)", "(BOGUS)", "(JUNK)"};
 
     line.reserve(2048);
     page_start();
