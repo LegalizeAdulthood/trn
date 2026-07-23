@@ -63,7 +63,7 @@ int               g_news_uid{};
 
 static void        skip_interp_cursor(std::string_view &pattern, std::string_view stoppers);
 
-static const char   *s_regexp_specials = "^$.*[\\/?%";
+static constexpr std::string_view s_regexp_specials{R"(^$.*[\/?%)"};
 static CompiledRegex s_cond_compex;
 static std::string   s_last_input;
 static int           s_interp_counter{};
@@ -1381,7 +1381,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 for (std::size_t pos = 0; pos < value.size(); pos++)
                 {
                     const char ch = value[pos];
-                    if ((re_quote && std::strchr(s_regexp_specials, ch)) //
+                    if ((re_quote && s_regexp_specials.find(ch) != std::string_view::npos) //
                         || (tick_quote == 2 && ch == '"'))
                     {
                         result.push_back('\\');

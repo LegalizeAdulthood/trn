@@ -296,6 +296,20 @@ TEST_F(InterpolatorTest, stringDoInterpExpandsEnvironmentVar)
     EXPECT_EQ("value", do_interp("%{FOO}"));
 }
 
+TEST_F(InterpolatorTest, regexpQuoteEscapesSpecials)
+{
+    m_env.expect_env("FOO", R"(^$.*[\/?%)");
+
+    EXPECT_EQ(R"(\^\$\.\*\[\\\/\?\%)", do_interp(R"(%\{FOO})"));
+}
+
+TEST_F(InterpolatorTest, regexpQuoteCollapsesMultipleSpaces)
+{
+    m_env.expect_env("FOO", "a   b");
+
+    EXPECT_EQ("a *b", do_interp(R"(%\{FOO})"));
+}
+
 TEST_F(InterpolatorTest, referenceCursorDoInterpStopsBeforeStopper)
 {
     m_env.expect_env("FOO", "value");
