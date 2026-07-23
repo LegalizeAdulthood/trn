@@ -516,10 +516,13 @@ tree.
   separate slices for those completed `string_case_compare` call sites.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
-- `nntp_gets` is now the main raw output-buffer API in the NNTP line
-  path.  Its core storage is already `std::string`, but the public
-  function still copies into caller buffers and drives `g_ser_line` and
-  `g_buf` callers.
+- `nntp_gets` now has a string API.  `nntplist` and `trn-artchk` use
+  it directly.  Remaining production raw-buffer callers are
+  `inews::main`, `new_nntp_groups`, `find_new_groups`, `check_first`,
+  `DataSource::open`, `DataSource::find_group_desc`,
+  `SourceFile::open`, `parse_header`, `nntp_list`,
+  `nntp_finish_list`, `nntp_copy_body`, `open_newsrc`, and `ov_init`.
+  Keep the C wrapper until those callers move.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -549,13 +552,13 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 10, `strncpy` 3, `strcat` 0.
+- Copy and concatenation: `strcpy` 10, `strncpy` 1, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 45, `strrchr` 1, `strstr` 2,
-  `strlen` 38.
+- Search and length: `strchr` 44, `strrchr` 1, `strstr` 2,
+  `strlen` 37.
 - Formatting into C buffers: `sprintf` 1, `snprintf` 2.
-- C text parsing: `sscanf` 9.
-- C text I/O roots: `fgets` 22, `fputs` 179, `printf` 357,
+- C text parsing: `sscanf` 4.
+- C text I/O roots: `fgets` 22, `fputs` 176, `printf` 351,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -587,6 +590,28 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-210 - NNTP List Drain Helper
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: NNTP list-drain helper.
+- Function: `nntp_finish_list`.
+- Depends on: `CSTR-202`.
+- Change: drain response lines into local `std::string` storage and
+  pass views to `nntp_at_list_end` instead of reading through
+  `g_ser_line`.
+- Tests: NNTP tests.
+
+#### CSTR-211 - NNTP Body Copy Line Reader
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: NNTP article-body reader helper.
+- Function: `nntp_copy_body`.
+- Depends on: `CSTR-202`.
+- Change: read body lines through the string `nntp_gets` API instead of
+  resizing a string and passing `data()` as a writable C buffer.
+  Preserve the `"."` fallback on read error.
+- Tests: NNTP article body tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -607,22 +632,120 @@ are available.  Keep the listed order inside dependent families.
   status through views instead of `g_ser_line`.
 - Tests: inews posting tests.
 
-#### CSTR-210 - Libtrn NNTP List Callers
+#### CSTR-212 - Bits LISTGROUP Response Lines
 
-- Files: `libtrn/addng.cpp`, `libtrn/bits.cpp`, `libtrn/datasrc.cpp`,
-  `libtrn/head.cpp`, `libtrn/nntp.cpp`, `libtrn/rcstuff.cpp`,
-  `libtrn/rt-ov.cpp`.
-- Kind: NNTP line-reader callers feeding shared buffers.
+- Files: `libtrn/bits.cpp`.
+- Kind: NNTP article-number list reader.
+- Function: `check_first`.
 - Depends on: `CSTR-202`.
-- Change: migrate one caller function at a time from `nntp_gets(char *,
-  int)` to the string line-reader API.  Keep protocol status text in
-  `g_ser_line` only where callers still need the global status value.
-- Tests: NNTP, active-file, header, newsrc, and overview tests.
+- Change: read `LISTGROUP` response lines into local `std::string`
+  storage, check the terminator from the string, and parse article
+  numbers from the owned line text.
+- Tests: article existence and NNTP tests.
+
+#### CSTR-213 - Datasrc XGTITLE Description Line
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: NNTP description-list reader.
+- Function: `DataSource::find_group_desc`.
+- Depends on: `CSTR-210`.
+- Change: read the `XGTITLE` response into local `std::string` storage,
+  check the terminator from the string, and append the description from
+  owned text.
+- Tests: data-source group description tests.
+
+#### CSTR-214 - Addng New NNTP Groups Response Lines
+
+- Files: `libtrn/addng.cpp`.
+- Kind: NNTP active-list reader.
+- Function: `new_nntp_groups`.
+- Depends on: `CSTR-202`.
+- Change: read `NEWGROUPS` response lines into local `std::string`
+  storage, pass views to `nntp_at_list_end`, and parse active fields
+  from views instead of `g_ser_line`.
+- Tests: add-newsgroup and active-list tests.
+
+#### CSTR-215 - Addng Find New Groups Active Lines
+
+- Files: `libtrn/addng.cpp`.
+- Kind: NNTP active-list reader.
+- Function: `find_new_groups`.
+- Depends on: `CSTR-214`.
+- Change: copy the initial `nntp_list` response line into local
+  `std::string` storage, then read later lines through the string
+  `nntp_gets` API and pass views to `scan_active_line`.
+- Tests: add-newsgroup and active-list tests.
+
+#### CSTR-216 - Rcstuff Subscriptions Response Lines
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: NNTP subscriptions-list reader and generated newsrc output.
+- Function: `open_newsrc`.
+- Depends on: `CSTR-210`.
+- Change: preserve the existing pre-read output behavior, then read
+  later subscription lines through the string `nntp_gets` API and write
+  subscription lines without `std::fputs`.
+- Tests: newsrc creation tests.
+
+#### CSTR-217 - Overview Format Response Lines
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: NNTP overview-format reader.
+- Function: `ov_init`.
+- Depends on: `CSTR-210`.
+- Change: read remote `overview.fmt` lines into local `std::string`
+  storage and parse fields from views instead of `g_buf`.
+- Tests: overview format tests.
 
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
+
+#### CSTR-218 - Datasrc Active Control Probe
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: NNTP active-list probe using shared status and command buffers.
+- Function: `DataSource::open`.
+- Depends on: `CSTR-214`, `CSTR-215`.
+- Change: replace the one-line remote active probe with local
+  `std::string` storage while preserving the fallback that copies the
+  first server line into the active-file path.
+- Tests: data-source active-file tests.
+
+#### CSTR-219 - SourceFile Remote Fetch Lines
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: NNTP fetched-file reader using `g_buf`.
+- Function: `SourceFile::open`.
+- Depends on: `CSTR-210`, `CSTR-217`, `CSTR-218`.
+- Change: replace remote fetch line storage with local `std::string`
+  storage and remove reliance on stale `g_buf` contents when
+  `use_buffered_nntp_gets` is true.
+- Tests: active-file, newsgroups-file, and overview fetch tests.
+
+#### CSTR-220 - Header Parser NNTP Lines
+
+- Files: `libtrn/head.cpp`.
+- Kind: NNTP header reader using `g_head_buf`.
+- Function: `parse_header`.
+- Depends on: `CSTR-211`.
+- Change: read NNTP header lines through owned string storage before
+  appending them to the growable header buffer.  Preserve dot-stuffed
+  line handling and end-of-header detection.
+- Tests: header parsing and NNTP article tests.
+
+#### CSTR-221 - NNTP List First Response Line
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: NNTP list helper with first-line side effect.
+- Function: `nntp_list`.
+- Depends on: `CSTR-213`, `CSTR-215`, `CSTR-216`, `CSTR-217`,
+  `CSTR-219`.
+- Change: stop exposing the first list response through `g_ser_line`.
+  Return or otherwise hand the first line to callers with owned string
+  storage after callers no longer consume the global side effect.
+- Tests: NNTP list, active-list, subscription, and overview tests.
 
 Global command buffer work must be split by function.  Prefer
 formatting-only leaves first, because they do not affect command input,
