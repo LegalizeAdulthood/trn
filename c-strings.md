@@ -516,13 +516,12 @@ tree.
   separate slices for those completed `string_case_compare` call sites.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
-- `nntp_gets` now has a string API.  `nntplist` and `trn-artchk` use
-  it directly.  Remaining production raw-buffer callers are
-  `inews::main`, `new_nntp_groups`, `find_new_groups`, `check_first`,
+- `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
+  `inews::main` use it directly.  Remaining production raw-buffer
+  callers are `new_nntp_groups`, `find_new_groups`, `check_first`,
   `DataSource::open`, `DataSource::find_group_desc`,
-  `SourceFile::open`, `parse_header`, `nntp_list`,
-  `open_newsrc`, and `ov_init`.  Keep the C wrapper until those callers
-  move.
+  `SourceFile::open`, `parse_header`, `nntp_list`, `open_newsrc`, and
+  `ov_init`.  Keep the C wrapper until those callers move.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -599,16 +598,6 @@ them before broad global-buffer work and before removing helpers.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-209 - Inews Post Response Line
-
-- Files: `inews/inews.cpp`.
-- Kind: NNTP post-response line reader.
-- Function: post command response handling in `main`.
-- Depends on: `CSTR-202`.
-- Change: read the post response into owned string storage and parse the
-  status through views instead of `g_ser_line`.
-- Tests: inews posting tests.
 
 #### CSTR-212 - Bits LISTGROUP Response Lines
 

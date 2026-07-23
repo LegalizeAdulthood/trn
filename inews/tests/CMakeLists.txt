@@ -1,3 +1,14 @@
+include(GoogleTest)
+
+find_package(GTest CONFIG REQUIRED)
+
+add_executable(inews-test
+    test_post_response.cpp
+)
+target_link_libraries(inews-test PUBLIC inews-common GTest::gtest_main)
+target_folder(inews-test "Tests")
+gtest_discover_tests(inews-test PROPERTIES LABELS trn)
+
 set(inews_test_dir "${CMAKE_CURRENT_BINARY_DIR}/test_data")
 set(inews_invalid_header_article
     "${inews_test_dir}/invalid-header.article")

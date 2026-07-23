@@ -7,6 +7,7 @@
 #include <config/env.h>
 #include <config/pipe_io.h>
 #include <config/string_case_compare.h>
+#include <inews/post_response.h>
 #include <nntp/nntpclient.h>
 #include <nntp/nntpinit.h>
 #include <tool/util3.h>
@@ -81,11 +82,13 @@ int main(int argc, char *argv[])
     std::string input_line;
     std::string body_line;
     std::string output_line;
+    std::string post_response;
 
     article_header.reserve(LINE_BUF_LEN * 8);
     input_line.reserve(LINE_BUF_LEN);
     body_line.reserve(LINE_BUF_LEN * 8);
     output_line.reserve(LINE_BUF_LEN);
+    post_response.reserve(NNTP_STRLEN);
 
     env_init(true);
 
@@ -327,31 +330,18 @@ int main(int argc, char *argv[])
     inews_fputs(".\r\n");
     inews_fflush();
 
-    if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0 //
-        || *g_ser_line != NNTP_CLASS_OK)
+    const NNTPGetsResult post_response_result = nntp_gets(post_response, NNTP_STRLEN);
+    if (post_response_result == NGSR_ERROR //
+        || post_response.empty() || post_response.front() != NNTP_CLASS_OK)
     {
-        if (std::atoi(g_ser_line) == NNTP_POSTFAIL_VAL)
+        if (inews_post_response_code(post_response) == NNTP_POSTFAIL_VAL)
         {
             fmt::print(stderr, "Article not accepted by server; not posted:\n");
-            std::string_view server_message{g_ser_line};
-            server_message = server_message.size() > 4 ? server_message.substr(4) : std::string_view{};
-            if (const std::size_t carriage_return = server_message.find('\r');
-                carriage_return != std::string_view::npos)
-            {
-                server_message = server_message.substr(0, carriage_return);
-            }
-
-            std::string post_failure;
-            post_failure.reserve(server_message.size());
-            for (const char ch : server_message)
-            {
-                post_failure += ch == '\\' ? '\n' : ch;
-            }
-            fmt::print(stderr, "{}\n", post_failure);
+            fmt::print(stderr, "{}\n", inews_post_failure_message(post_response));
         }
         else
         {
-            fmt::print(stderr, "Remote error: {}\n", g_ser_line);
+            fmt::print(stderr, "Remote error: {}\n", post_response);
         }
         if (new_connection)
         {
