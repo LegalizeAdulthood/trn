@@ -576,15 +576,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-187 - Kill-file Edit Thread Command Lookup
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: shared command-letter table and `strchr` offset lookup.
-- Function: `edit_kill_file`.
-- Change: use a `std::string_view` over `s_thread_cmd_ltr` and `.find()`
-  to compute the matching command index for `s_thread_cmd_flag`.
-- Tests: kill-file editing tests.
-
 #### CSTR-188 - MIME Roman List Labels
 
 - Files: `libtrn/mime.cpp`.

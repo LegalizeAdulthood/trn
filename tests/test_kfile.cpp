@@ -223,6 +223,29 @@ TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
     EXPECT_EQ("THRU news.example 42\n<case@example.com> T+\n", file_contents(kill_file));
 }
 
+TEST_F(KillFileEditTest, editLocalKillFileAppliesThreadCommand)
+{
+    const fs::path    kill_file = m_output_dir / "local-edit" / "KILL";
+    const std::string kill_file_name = kill_file.generic_string();
+
+    fs::create_directories(kill_file.parent_path());
+    std::ofstream{kill_file} << "<case@example.com> T+\n";
+
+    g_in_ng = true;
+    Article *article = article_ptr(ArticleNum{1});
+    article->m_msg_id = "<case@example.com>";
+    hash_store(g_msg_id_hash, article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
+
+    m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
+    expect_editor();
+
+    testing::internal::CaptureStdout();
+    edit_kill_file();
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE((article->m_auto_flags & AUTO_SEL_THD) != 0);
+}
+
 TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
 {
     const fs::path    kill_file = m_output_dir / "global-thread" / "KILLTHREADS";
