@@ -459,6 +459,6 @@ int nntp_handle_timeout()
         new_connection = true;
         return 1;
     }
-    std::fputs("\n503 Server timed out.\n",stderr);
+    fmt::print(stderr, "\n503 Server timed out.\n");
     return -2;
 }
