@@ -565,18 +565,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-166 - UTIL2 File-expansion Diagnostics
-
-- Files: `util/util2.cpp`.
-- Kind: leaf formatted/plain C stdio output.
-- Function: `file_exp`.
-- Change: replace `std::printf` and `std::fputs` diagnostics with
-  `fmt::print`.  Do not change tilde or `$NAME` expansion behavior in
-  this slice.
-- Tests: existing file-expansion tests cover ordinary expansion.  Add
-  focused diagnostic coverage first if a reachable platform branch is
-  edited.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts

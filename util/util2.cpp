@@ -11,9 +11,10 @@
 #include <trn/util.h>
 #include <util/env.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
-#include <cstdio>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -68,7 +69,7 @@ std::string file_exp(std::string_view text)
                     struct passwd *pwd = getpwnam(s_tilde_name.c_str());
                     if (pwd == nullptr)
                     {
-                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name.c_str());
+                        fmt::print("{} is an unknown user. Using default.\n", s_tilde_name);
                         return {};
                     }
                     s_tilde_dir = pwd->pw_dir;
@@ -110,7 +111,7 @@ std::string file_exp(std::string_view text)
                     }
                     if (s_tilde_dir.empty())
                     {
-                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name.c_str());
+                        fmt::print("{} is an unknown user. Using default.\n", s_tilde_name);
                         return {};
                     }
                 }
@@ -119,11 +120,11 @@ std::string file_exp(std::string_view text)
 #else // !TILDENAME
             if (g_verbose)
             {
-                std::fputs("~loginname not implemented.\n", stdout);
+                fmt::print("~loginname not implemented.\n");
             }
             else
             {
-                std::fputs("~login not impl.\n", stdout);
+                fmt::print("~login not impl.\n");
             }
 #endif
         }
