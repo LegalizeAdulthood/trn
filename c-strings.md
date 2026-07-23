@@ -592,17 +592,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-204 - Score Command View
-
-- Files: `libtrn/score.cpp`, `libtrn/include/trn/score.h`,
-  `libtrn/ng.cpp`, `libtrn/sacmd.cpp`.
-- Kind: read-only command parser input.
-- Function: `sc_score_cmd`.
-- Change: accept `std::string_view line`, keep the owned easy-command
-  fallback in local storage, and use view slicing for the optional edit
-  filename argument.
-- Tests: score command tests if practical.
-
 #### CSTR-205 - Switch Decoder View
 
 - Files: `libtrn/sw.cpp`, `libtrn/include/trn/sw.h`, `libtrn/opt.cpp`.

@@ -8,6 +8,8 @@
 
 #include <config/typedef.h>
 
+#include <string_view>
+
 // RETHINK LOWSCORE: (especially for 16-bit scores?)
 // score given to unavailable articles
 enum
@@ -34,7 +36,7 @@ void sc_look_ahead(bool flag, bool nowait);
 int  sc_percent_scored();
 void sc_append(char *line);
 void sc_rescore();
-void sc_score_cmd(const char *line);
+void sc_score_cmd(std::string_view line);
 void sc_kill_threshold(int thresh);
 
 #endif

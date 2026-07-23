@@ -23,8 +23,12 @@
 #include <trn/string-algos.h>
 #include <trn/terminal.h> // input_pending()
 
+#include <fmt/format.h>
+
+#include <algorithm>
 #include <cstdio>
 #include <string>
+#include <string_view>
 
 bool       g_kill_thresh_active{};   //
 int        g_kill_thresh{LOW_SCORE}; // KILL articles at or below this score
@@ -541,11 +545,10 @@ void sc_rescore()
 }
 
 // May have a very different interface in the user versions
-void sc_score_cmd(const char *line)
+void sc_score_cmd(std::string_view line)
 {
     long        i;
     long        j;
-    const char* s;
     std::string easy_command;
 
     if (!g_sc_initialized)
@@ -568,7 +571,7 @@ void sc_score_cmd(const char *line)
         std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
-    if (!*line)
+    if (line.empty())
     {
         easy_command = sc_easy_command();
         if (easy_command.empty())
@@ -581,9 +584,9 @@ void sc_score_cmd(const char *line)
             sc_append(g_buf);
             return;
         }
-        line = easy_command.c_str();
+        line = easy_command;
     }
-    switch (*line)
+    switch (line.front())
     {
     case 'f': // fill (useful when PENDING is unavailable)
         std::printf("Scoring more articles...");
@@ -621,19 +624,24 @@ void sc_score_cmd(const char *line)
         break;
 
     case 'e': // edit scorefile or other file
-        s = skip_hor_space(line+1);
-        if (!*s)                // empty name for scorefile
+    {
+        std::string_view filespec = line.substr(1);
+        const std::string_view::const_iterator first_non_space =
+            std::find_if_not(filespec.begin(), filespec.end(), is_hor_space);
+        filespec.remove_prefix(static_cast<std::size_t>(first_non_space - filespec.begin()));
+        if (filespec.empty())                // empty name for scorefile
         {
             sf_edit_file("\""); // edit local scorefile
         }
         else
         {
-            sf_edit_file(s);
+            sf_edit_file(filespec);
         }
         break;
+    }
 
     default:
-        std::printf("Unknown scoring command |%s|\n",line);
+        fmt::print("Unknown scoring command |{}|\n", line);
     } // switch
 }
 

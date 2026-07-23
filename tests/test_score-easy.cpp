@@ -3,11 +3,13 @@
 
 #include <trn/score-easy.h>
 
+#include <trn/score.h>
 #include <trn/terminal.h>
 
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
 
 namespace
 {
@@ -33,6 +35,23 @@ protected:
     {
         drain_macro_buffer();
     }
+};
+
+class ScoreCommandTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_sc_initialized = g_sc_initialized;
+        g_sc_initialized = true;
+    }
+
+    void TearDown() override
+    {
+        g_sc_initialized = m_old_sc_initialized;
+    }
+
+    bool m_old_sc_initialized{};
 };
 
 } // namespace
@@ -100,4 +119,15 @@ TEST_F(ScoreEasyTest, commandAppendReturnsAppendMarker)
               "5) Continue scoring unscored articles.\n"
               "Enter your choice: 1\n",
               output);
+}
+
+TEST_F(ScoreCommandTest, unknownCommandReportsCommandText)
+{
+    const std::string command{"xignored"};
+
+    testing::internal::CaptureStdout();
+    sc_score_cmd(std::string_view{command.data(), 1});
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Unknown scoring command |x|\n", output);
 }
