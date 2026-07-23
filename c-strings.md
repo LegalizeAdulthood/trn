@@ -519,9 +519,9 @@ tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
-- New helper and leaf candidates found by this scan are `s_finish_cmd`,
-  `file_ref`, `text_to_secs`, `MimeSection::mime_parse_encoding`,
-  MIME HTML `find_attr`, and `wildcard_match`.
+- New helper and leaf candidates found by this scan are `file_ref`,
+  `text_to_secs`, `MimeSection::mime_parse_encoding`, MIME HTML
+  `find_attr`, and `wildcard_match`.
 
 ## Current `safe_copy` Inventory
 
@@ -539,7 +539,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
   `strlen` 43.
 - Formatting into C buffers: `sprintf` 6, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 192, `printf` 379,
+- C text I/O roots: `fgets` 24, `fputs` 192, `printf` 378,
   `fprintf` 41.
 - Character byte operations: `memcpy` 4, `memset` 6, `memcmp` 1.
 
@@ -565,18 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-150 - Scan Command Prompt Text
-
-- Files: `libtrn/scmd.cpp`, `libtrn/include/trn/scmd.h`,
-  `libtrn/sacmd.cpp`.
-- Kind: nullable prompt pointer and C stdio output.
-- Function: `s_finish_cmd`.
-- Change: take the prompt as `std::string_view` with empty string as the
-  no-prompt sentinel.  Replace `std::printf("%s", ...)` with
-  `fmt::print`.  Update the one `nullptr` caller to pass an empty view.
-- Tests: selector/scan command tests if they cover the bottom-line
-  prompt path; otherwise build-only.
 
 #### CSTR-160 - Article First-page Title Line
 

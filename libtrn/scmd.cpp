@@ -24,6 +24,8 @@
 #include <trn/terminal.h>
 #include <trn/univ.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <string>
@@ -48,12 +50,12 @@ void s_go_bot()
 
 // finishes a command on the bottom line...
 // returns true if command entered, false if wiped out...
-int s_finish_cmd(const char *string)
+int s_finish_cmd(std::string_view prompt)
 {
     s_go_bot();
-    if (string && *string)
+    if (!prompt.empty())
     {
-        std::printf("%s",string);
+        fmt::print("{}", prompt);
         std::fflush(stdout);
     }
     g_buf[1] = FINISH_CMD;
@@ -436,7 +438,7 @@ static void s_search()
     }
     s_rub_ptr();
     g_buf[1] = '\0';
-    if (!s_finish_cmd(nullptr))
+    if (!s_finish_cmd(""))
     {
         return;
     }
