@@ -19,3 +19,20 @@ TEST(ParseDateTest, oldStyleDate)
 #endif
     ASSERT_EQ("Wed Dec  3 12:23:34 1980\n", std::string{buffer});
 }
+
+TEST(ParseDateTest, rejectsLongWeekdayToken)
+{
+    EXPECT_EQ(-1, parsedate("WednesdayWednesdayness, 3 Dec 1980 12:23:34 GMT"));
+}
+
+TEST(ParseDateTest, rejectsLongMonthToken)
+{
+    EXPECT_EQ(-1, parsedate("SeptemberSeptemberness 3, 1980 12:23:34 GMT"));
+}
+
+TEST(ParseDateTest, treatsLongUnknownTimezoneAsGmt)
+{
+    const std::time_t gmt_time = parsedate("3 Dec 1980 12:23:34 GMT");
+
+    EXPECT_EQ(gmt_time, parsedate("3 Dec 1980 12:23:34 VeryLongUnknownTimezoneName"));
+}

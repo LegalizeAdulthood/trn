@@ -10,7 +10,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
 endif()
 find_package(BISON REQUIRED)
 
-bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
+bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.cpp)
 add_library(parsedate
     ${BISON_parsedate_OUTPUTS}
     include/parsedate/parsedate.h

@@ -23,9 +23,13 @@
 #include <string.h>
 #include <time.h>
 
+#include <algorithm>
+#include <string>
+#include <string_view>
+
 int         date_parse(void);
 int         date_lex(void);
-static void date_error(char *s);
+static void date_error(const char *s);
 
 #define yyparse         date_parse
 #define yylex           date_lex
@@ -53,7 +57,7 @@ static void date_error(char *s);
 **  An entry in the lexical lookup table.
 */
 typedef struct _TABLE {
-    char        *name;
+    std::string_view name;
     int         type;
     time_t      value;
 } TABLE;
@@ -305,7 +309,7 @@ udtime  : tUNUMBER ':' tUNUMBER ':' tUNUMBER {
 %%
 
 /* Month and day table. */
-static TABLE    MonthDayTable[] = {
+static const TABLE    MonthDayTable[] = {
     { "january",        tMONTH,  1 },
     { "february",       tMONTH,  2 },
     { "march",          tMONTH,  3 },
@@ -329,7 +333,7 @@ static TABLE    MonthDayTable[] = {
 };
 
 /* Time units table. */
-static TABLE    UnitsTable[] = {
+static const TABLE    UnitsTable[] = {
     { "year",           tMONTH_UNIT,    12 },
     { "month",          tMONTH_UNIT,    1 },
     { "week",           tSEC_UNIT,      7L * 24 * 60 * 60 },
@@ -342,7 +346,7 @@ static TABLE    UnitsTable[] = {
 };
 
 /* Timezone table. */
-static TABLE    TimezoneTable[] = {
+static const TABLE    TimezoneTable[] = {
     { "gmt",    tZONE,     HOUR( 0) },  /* Greenwich Mean */
     { "ut",     tZONE,     HOUR( 0) },  /* Universal */
     { "utc",    tZONE,     HOUR( 0) },  /* Universal Coordinated */
@@ -456,7 +460,7 @@ static TABLE    TimezoneTable[] = {
 
 
 /* ARGSUSED */
-static void date_error(char *s)
+static void date_error(const char *s)
 {
     /* NOTREACHED */
 }
@@ -564,84 +568,72 @@ static time_t RelativeMonth(time_t Start, time_t RelMonth)
 }
 
 
-static int LookupWord(char *buff, int length)
+static int LookupWord(std::string &word)
 {
-    char        *p;
-    char        *q;
-    TABLE       *tp;
+    const TABLE *tp;
     int c;
 
-    p = buff;
-    c = p[0];
+    c = word.front();
 
     /* See if we have an abbreviation for a month. */
-    if (length == 3 || (length == 4 && p[3] == '.'))
+    if (word.size() == 3 || (word.size() == 4 && word[3] == '.'))
         for (tp = MonthDayTable; tp < ENDOF(MonthDayTable); tp++) {
-            q = tp->name;
-            if (c == q[0] && p[1] == q[1] && p[2] == q[2]) {
+            std::string_view name = tp->name;
+            if (c == name[0] && word[1] == name[1] && word[2] == name[2]) {
                 yylval.Number = tp->value;
                 return tp->type;
             }
         }
     else
         for (tp = MonthDayTable; tp < ENDOF(MonthDayTable); tp++)
-            if (c == tp->name[0] && strcmp(p, tp->name) == 0) {
+            if (c == tp->name[0] && std::string_view{word} == tp->name) {
                 yylval.Number = tp->value;
                 return tp->type;
             }
 
     /* Try for a timezone. */
     for (tp = TimezoneTable; tp < ENDOF(TimezoneTable); tp++)
-        if (c == tp->name[0] && p[1] == tp->name[1]
-         && strcmp(p, tp->name) == 0) {
+        if (c == tp->name[0] && std::string_view{word} == tp->name) {
             yylval.Number = tp->value;
             return tp->type;
         }
 
     /* Try the units table. */
     for (tp = UnitsTable; tp < ENDOF(UnitsTable); tp++)
-        if (c == tp->name[0] && strcmp(p, tp->name) == 0) {
+        if (c == tp->name[0] && std::string_view{word} == tp->name) {
             yylval.Number = tp->value;
             return tp->type;
         }
 
     /* Strip off any plural and try the units table again. */
-    if (--length > 0 && p[length] == 's') {
-        p[length] = '\0';
+    if (word.size() > 1 && word.back() == 's') {
+        std::string_view singular{word.data(), word.size() - 1};
         for (tp = UnitsTable; tp < ENDOF(UnitsTable); tp++)
-            if (c == tp->name[0] && strcmp(p, tp->name) == 0) {
-                p[length] = 's';
+            if (c == tp->name[0] && singular == tp->name) {
                 yylval.Number = tp->value;
                 return tp->type;
             }
-        p[length] = 's';
     }
-    length++;
 
     /* Drop out any periods. */
-    for (p = buff, q = (char*)buff; *q; q++)
-        if (*q != '.')
-            *p++ = *q;
-    *p = '\0';
+    const std::size_t length = word.size();
+    word.erase(std::remove(word.begin(), word.end(), '.'), word.end());
 
     /* Try the meridians. */
-    if (buff[1] == 'm' && buff[2] == '\0') {
-        if (buff[0] == 'a') {
-            yylval.Meridian = MERam;
-            return tMERIDIAN;
-        }
-        if (buff[0] == 'p') {
-            yylval.Meridian = MERpm;
-            return tMERIDIAN;
-        }
+    if (word == "am") {
+        yylval.Meridian = MERam;
+        return tMERIDIAN;
+    }
+    if (word == "pm") {
+        yylval.Meridian = MERpm;
+        return tMERIDIAN;
     }
 
     /* If we saw any periods, try the timezones again. */
-    if (p - buff != length) {
-        c = buff[0];
-        for (p = buff, tp = TimezoneTable; tp < ENDOF(TimezoneTable); tp++)
-            if (c == tp->name[0] && p[1] == tp->name[1]
-            && strcmp(p, tp->name) == 0) {
+    if (word.size() != length) {
+        c = word.front();
+        for (tp = TimezoneTable; tp < ENDOF(TimezoneTable); tp++)
+            if (c == tp->name[0] && std::string_view{word} == tp->name) {
                 yylval.Number = tp->value;
                 return tp->type;
             }
@@ -657,8 +649,6 @@ int
 date_lex(void)
 {
     char        c;
-    char        *p;
-    char                buff[20];
     int sign;
     int i;
     int nesting;
@@ -703,12 +693,12 @@ date_lex(void)
 
         /* A word? */
         if (isalpha(c)) {
-            for (p = buff; (c = *yyInput++) == '.' || isalpha(c); )
-                if (p < &buff[sizeof buff - 1])
-                    *p++ = isupper(c) ? tolower(c) : c;
-            *p = '\0';
+            std::string word;
+            word.reserve(20);
+            for ( ; (c = *yyInput++) == '.' || isalpha(c); )
+                word += isupper(c) ? static_cast<char>(tolower(c)) : c;
             yyInput--;
-            return LookupWord(buff, p - buff);
+            return LookupWord(word);
         }
 
         return *yyInput++;
@@ -716,7 +706,7 @@ date_lex(void)
 }
 
 
-time_t
+extern "C" time_t
 parsedate(const char *p)
 {
     time_t              Start;

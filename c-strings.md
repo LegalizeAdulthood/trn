@@ -575,18 +575,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-158 - Parsedate Lexer Word Buffer
-
-- Files: `parsedate/parsedate.y`.
-- Kind: local fixed-size token buffer.
-- Function: `date_lex` and `LookupWord`.
-- Change: replace the `char buff[20]` word token with owned string
-  storage or a bounded view built from the input.  First decide whether
-  the 19-character truncation is meaningful parser behavior or an
-  arbitrary buffer limit; preserve it only if tests or documented
-  behavior require it.
-- Tests: parsedate tests covering long weekday/month/timezone tokens.
-
 #### CSTR-159 - NNTPLIST Local File Line Storage
 
 - Files: `nntplist/nntplist.cpp`.
