@@ -48,6 +48,7 @@
 #include <util/util2.h>
 
 #include <fmt/format.h>
+#include <fmt/printf.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -504,14 +505,15 @@ reask_article:
         // print prompt, whatever it is
         {
             const std::string mail_call = do_interp(g_mail_call);
-            std::sprintf(g_buf, g_prompt.c_str(), mail_call.c_str(), current_char_subst().c_str(),
-                         g_default_cmd.c_str());
+            const std::string prompt_text =
+                fmt::sprintf(g_prompt, mail_call.c_str(), current_char_subst().c_str(), g_default_cmd.c_str());
+            draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? static_cast<int>(prompt_text.size()) + 5 : 0),
+                           true);
+            color_string(COLOR_CMD, prompt_text);
+            std::putchar(' ');
+            std::fflush(stdout);
+            g_term_col = static_cast<int>(prompt_text.size()) + 1;
         }
-        draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES-1? std::strlen(g_buf)+5 : 0), true);
-        color_string(COLOR_CMD,g_buf);
-        std::putchar(' ');
-        std::fflush(stdout);
-        g_term_col = std::strlen(g_buf) + 1;
 reinp_article:
         g_reread = false;
         g_force_last = false;
