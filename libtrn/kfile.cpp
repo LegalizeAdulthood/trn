@@ -434,7 +434,7 @@ static bool kill_file_junk(char *ptr, int killmask)
     return false;
 }
 
-void kill_unwanted(ArticleNum starting, const char *message, int entering)
+void kill_unwanted(ArticleNum starting, std::string_view message, int entering)
 {
     bool intr = false;                  // did we get an interrupt?
     MinorMode oldmode = g_mode;
@@ -447,9 +447,9 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
         ArticleNum oldfirst = g_first_art;
         g_first_art = starting;
         clear();
-        if (message && (g_verbose || entering))
+        if (!message.empty() && (g_verbose || entering))
         {
-            std::fputs(message, stdout);
+            fmt::print("{}", message);
         }
 
         s_kill_mentioned = false;

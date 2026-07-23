@@ -217,7 +217,7 @@ TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
     m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
 
     testing::internal::CaptureStdout();
-    kill_unwanted(ArticleNum{1}, nullptr, false);
+    kill_unwanted(ArticleNum{1}, "", false);
     (void) testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("THRU news.example 42\n<case@example.com> T+\n", file_contents(kill_file));

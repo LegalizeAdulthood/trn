@@ -71,7 +71,7 @@ extern int                g_kf_change_thread_cnt;  // # entries changed from old
 extern ArticleNum         g_kill_first;            // used as g_first_art when killing
 
 void kill_file_init();
-void kill_unwanted(ArticleNum starting, const char *message, int entering);
+void kill_unwanted(ArticleNum starting, std::string_view message, int entering);
 void update_thread_kill_file();
 void edit_kill_file();
 void open_kill_file(int local);

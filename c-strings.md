@@ -582,18 +582,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-192 - Kill-unwanted Message View
-
-- Files: `libtrn/kfile.cpp`, `libtrn/include/trn/kfile.h`,
-  `libtrn/ng.cpp`, `libtrn/ngdata.cpp`, `tests/test_kfile.cpp`.
-- Kind: nullable read-only message parameter.
-- Function: `kill_unwanted`.
-- Change: replace the nullable `const char *message` with
-  `std::string_view message`, using empty view as the no-message
-  sentinel.  Update the test that passes `nullptr` to pass an empty
-  string view.
-- Tests: existing kill-file tests.
-
 #### CSTR-193 - Directory Article Filename Parse
 
 - Files: `libtrn/bits.cpp`.

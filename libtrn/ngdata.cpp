@@ -351,7 +351,7 @@ void grow_newsgroup(ArticleNum new_last)
         {
             bool forcelast_save = g_force_last;
             Article* artp_save = g_artp;
-            kill_unwanted(tmpfirst, message.c_str(), true);
+            kill_unwanted(tmpfirst, message, true);
             g_artp = artp_save;
             g_force_last = forcelast_save;
         }
