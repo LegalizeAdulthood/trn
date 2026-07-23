@@ -565,16 +565,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-162 - NNTPLIST Usage Output
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: leaf formatted C stdio output.
-- Function: `usage`.
-- Change: replace the multiline `std::fprintf(stderr, ...)` usage text
-  with `fmt::print(stderr, ...)`.
-- Tests: add a focused nntplist bad-argument CMake test first, then run
-  it before and after the refactor.
-
 #### CSTR-163 - NNTPLIST Timeout Output
 
 - Files: `nntplist/nntplist.cpp`.

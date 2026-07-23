@@ -220,9 +220,9 @@ int main(int argc, char *argv[])
 
 static void usage()
 {
-    std::fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n"
-                    "\n"
-                    "Where type is any of the LIST command arguments your server accepts.\n");
+    fmt::print(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n"
+                       "\n"
+                       "Where type is any of the LIST command arguments your server accepts.\n");
     std::exit(1);
 }
 
