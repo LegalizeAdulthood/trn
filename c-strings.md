@@ -565,15 +565,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-163 - NNTPLIST Timeout Output
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: leaf plain C stdio output.
-- Function: `nntp_handle_timeout`.
-- Change: replace `std::fputs` with `fmt::print(stderr, ...)`.
-- Tests: build-only unless a small timeout-path tool test is easy to
-  add without real network timing.
-
 #### CSTR-164 - TRN-ARTCHK Main Output
 
 - Files: `trn-artchk/trn-artchk.cpp`.

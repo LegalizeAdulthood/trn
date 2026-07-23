@@ -228,6 +228,6 @@ static void usage()
 
 int nntp_handle_timeout()
 {
-    std::fputs("\n503 Server timed out.\n",stderr);
+    fmt::print(stderr, "\n503 Server timed out.\n");
     return -2;
 }
