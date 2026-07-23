@@ -592,17 +592,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-203 - Article Date Line Local Storage
-
-- Files: `libtrn/art.cpp`.
-- Kind: local display string built in a global article buffer.
-- Function: `do_article`.
-- Change: build the rewritten Date header in local `std::string`
-  storage, reserving `LINE_BUF_LEN`, and point the display cursor at
-  that string for the remainder of the current line rendering.  Preserve
-  the current `LOCALTIMEFMT` behavior.
-- Tests: article display Date-header coverage if practical.
-
 #### CSTR-204 - Score Command View
 
 - Files: `libtrn/score.cpp`, `libtrn/include/trn/score.h`,

@@ -120,6 +120,7 @@ DoArticleResult do_article()
     bool under_lining = false;   // are we underlining a word?
     char* buf_ptr = g_art_line;   // pointer to input buffer
     std::string from_line;
+    std::string date_line;
     int out_pos;                  // column position of output
     bool notes_files = false;     // might there be notes files junk?
     MinorMode old_mode = g_mode;
@@ -384,12 +385,16 @@ DoArticleResult do_article()
                 case DATE_LINE:
                     if (g_curr_artp->m_date != -1)
                     {
-                        std::strncpy(g_art_line,buf_ptr,6);
+                        date_line.clear();
+                        date_line.reserve(LINE_BUF_LEN);
+                        date_line.append(buf_ptr, 6);
+                        date_line.resize(LINE_BUF_LEN);
                         const std::string local_time_format = get_env_var("LOCALTIMEFMT", LOCALTIME_FMT);
-                        std::strftime(g_art_line+6, (sizeof g_art_line)-6,
-                                 local_time_format.c_str(),
-                                 std::localtime(&g_curr_artp->m_date));
-                        buf_ptr = g_art_line;
+                        const std::size_t date_length =
+                            std::strftime(date_line.data() + 6, date_line.size() - 6, local_time_format.c_str(),
+                                          std::localtime(&g_curr_artp->m_date));
+                        date_line.resize(6 + date_length);
+                        buf_ptr = date_line.data();
                     }
                     break;
                 }
