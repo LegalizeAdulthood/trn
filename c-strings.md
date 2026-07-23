@@ -466,8 +466,8 @@ tree.
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
   `g_art_line`, `g_head_buf`, terminal command-input
-  scratch, `nntpinit` name scratch, and environment host/domain probe
-  scratch.  Inactive self-test buffers are not current production work.
+  scratch, and environment host/domain probe scratch.  Inactive
+  self-test buffers are not current production work.
   Tiny UTF byte scratch buffers, translation tables, MIME decode tables,
   terminal pushback bytes, termcap storage, address conversion scratch,
   and regex bytecode arrays are non-string protocol or parser storage,
@@ -534,14 +534,14 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 11, `strncpy` 3, `strcat` 0.
+- Copy and concatenation: `strcpy` 10, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 52, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
 - C text I/O roots: `fgets` 22, `fputs` 187, `printf` 363,
-  `fprintf` 29.
-- Character byte operations: `memcpy` 4, `memset` 6, `memcmp` 1.
+  `fprintf` 20.
+- Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
@@ -565,16 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-170 - Remove Dead NNTP Socket Helper
-
-- Files: `nntp/nntpinit.cpp`.
-- Kind: unused static helper with fixed buffers and C string calls.
-- Function: `get_tcp_socket`.
-- Change: delete the declaration and definition.  The ASIO connection
-  factory is the only live connection path, and no production caller
-  references this helper.
-- Tests: build plus NNTP connection tests.
 
 #### CSTR-171 - Data Source Active File Sentinel
 
@@ -821,8 +811,6 @@ with their owner slices unless a local use is clearly formatting-only.
   callers do not format commands or cache responses through one shared
   `char[NNTP_STRLEN]` buffer.  Do this after the command-formatting
   leaves above have stopped using `g_ser_line` for outgoing commands.
-  Include legacy non-`INET6` raw-address name storage in
-  `get_tcp_socket` in the same protocol owner review.
 - Tests: NNTP, inews, nntplist, and trn-artchk tests.
 
 #### CSTR-077 - Article Display Line Buffer
