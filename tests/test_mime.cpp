@@ -393,6 +393,36 @@ TEST_F(HtmlFilterTest, rendersUpperRomanListMarkers)
               filter("List:<ol type=I><li>one<li>two<li>three</ol>"));
 }
 
+TEST_F(HtmlFilterTest, rendersBlockquoteCiteIndent)
+{
+    EXPECT_EQ("Intro\n\n> quoted", filter("Intro<blockquote type=cite>quoted</blockquote>"));
+}
+
+TEST_F(HtmlFilterTest, rendersBlockquoteBorderStyleIndent)
+{
+    EXPECT_EQ("Intro\n\n> quoted", filter("Intro<blockquote style=\"border-left: solid\">quoted</blockquote>"));
+}
+
+TEST_F(HtmlFilterTest, rendersUnorderedListCircleMarker)
+{
+    EXPECT_EQ("List:\n\n  o one", filter("List:<ul type=circle><li>one</ul>"));
+}
+
+TEST_F(HtmlFilterTest, rendersUnorderedListSquareMarker)
+{
+    EXPECT_EQ("List:\n\n  + one", filter("List:<ul type=square><li>one</ul>"));
+}
+
+TEST_F(HtmlFilterTest, treatsEmptyBlockquoteAttributesAsAbsent)
+{
+    EXPECT_EQ("Intro\n\n    quoted", filter("Intro<blockquote type= style=>quoted</blockquote>"));
+}
+
+TEST_F(HtmlFilterTest, treatsEmptyOrderedListTypeAsAbsent)
+{
+    EXPECT_EQ("List:\n\n 1. one", filter("List:<ol type=><li>one</ol>"));
+}
+
 TEST_F(HtmlFilterTest, rendersDecimalListMarkersPastTwoDigits)
 {
     EXPECT_EQ("List:\n\n 1. one\n 2. two\n 3. three\n 4. four\n 5. five\n 6. six\n 7. seven\n 8. eight\n"

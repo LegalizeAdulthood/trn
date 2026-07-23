@@ -570,18 +570,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-155 - MIME HTML Attribute Views
-
-- Files: `libtrn/mime.cpp`.
-- Kind: borrowed pointer return into a tag buffer.
-- Function: `find_attr`.
-- Change: return a bounded `std::string_view` for the attribute value,
-  using an empty view as the no-match sentinel because the current
-  callers treat empty values as no useful value.  Update `tag_action`
-  to use view comparison and `front()` checks.
-- Tests: HTML filter tests for blockquote `type`/`style`, ordered-list
-  `type`, unordered-list `type`, and empty attributes.
-
 #### CSTR-156 - Wildmat String View API
 
 - Files: `wildmat/wildmat.cpp`, `wildmat/include/wildmat/wildmat.h`,

@@ -87,7 +87,7 @@ static char       *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, HtmlFlags flag);
 static int         do_indent(char *t);
-static const char *find_attr(const char *str, std::string_view attr);
+static std::string_view find_attr(std::string_view str, std::string_view attr);
 
 void mime_set_executor(MimeExecutor executor)
 {
@@ -1910,9 +1910,10 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
         {
         case TAG_BLOCKQUOTE:
         {
-            const char *cp;
-            if (((cp = find_attr(word, "type")) != nullptr && string_case_equal(cp, "cite", 4)) ||
-                ((cp = find_attr(word, "style")) != nullptr && string_case_equal(cp, "border-left:", 12)))
+            const std::string_view type_attr = find_attr(word, "type");
+            const std::string_view style_attr = find_attr(word, "style");
+            if ((type_attr.size() >= 4 && string_case_equal(type_attr.substr(0, 4), "cite")) ||
+                (style_attr.size() >= 12 && string_case_equal(style_attr.substr(0, 12), "border-left:")))
             {
                 blks[j].indent = '>';
             }
@@ -1944,10 +1945,10 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
         case TAG_OL:
         {
             itype = 4;
-            const char *cp = find_attr(word, "type");
-            if (cp != nullptr)
+            const std::string_view type_attr = find_attr(word, "type");
+            if (!type_attr.empty())
             {
-                switch (*cp)
+                switch (type_attr.front())
                 {
                 case 'a':  itype = 5;  break;
                 case 'A':  itype = 6;  break;
@@ -1963,10 +1964,10 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
         case TAG_UL:
         {
             itype = 1;
-            const char *cp = find_attr(word, "type");
-            if (cp != nullptr)
+            const std::string_view type_attr = find_attr(word, "type");
+            if (!type_attr.empty())
             {
-                switch (*cp)
+                switch (type_attr.front())
                 {
                 case 'd': case 'D':  itype = 1;  break;
                 case 'c': case 'C':  itype = 2;  break;
@@ -2255,26 +2256,28 @@ static int do_indent(char *t)
     return len;
 }
 
-static const char *find_attr(const char *str, std::string_view attr)
+static std::string_view find_attr(std::string_view str, std::string_view attr)
 {
-    const int   len = static_cast<int>(attr.size());
-    const char *cp = str;
-    const char *s;
-
-    while ((cp = std::strchr(cp + 1, '=')) != nullptr)
+    std::size_t pos = 0;
+    while ((pos = str.find('=', pos + 1)) != std::string_view::npos)
     {
-        for (s = cp; s[-1] == ' '; s--)
+        std::size_t attr_end = pos;
+        while (attr_end > 0 && str[attr_end - 1] == ' ')
         {
+            --attr_end;
         }
-        while (cp[1] == ' ')
+        std::size_t value_begin = pos + 1;
+        while (value_begin < str.size() && str[value_begin] == ' ')
         {
-            cp++;
+            ++value_begin;
         }
-        if (s - str > len && s[-len - 1] == ' ' &&
-            string_case_equal(std::string_view{s - len, static_cast<std::size_t>(len)}, attr))
+        if (attr_end > attr.size() && str[attr_end - attr.size() - 1] == ' ' &&
+            string_case_equal(str.substr(attr_end - attr.size(), attr.size()), attr))
         {
-            return cp + 1;
+            const std::size_t value_end = str.find(' ', value_begin);
+            return str.substr(value_begin,
+                              value_end == std::string_view::npos ? value_end : value_end - value_begin);
         }
     }
-    return nullptr;
+    return {};
 }
