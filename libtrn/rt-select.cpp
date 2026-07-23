@@ -1265,7 +1265,7 @@ reinp_selector:
     get_cmd(g_buf);
     if (*g_buf == ' ')
     {
-        set_def(g_buf, g_sel_at_end ? &s_end_char : &s_page_char);
+        set_def(g_buf, g_sel_at_end ? std::string_view{&s_end_char, 1} : std::string_view{&s_page_char, 1});
     }
     int ch = *g_buf;
     if (errno)

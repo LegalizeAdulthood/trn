@@ -587,17 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-196 - Terminal Default Command View
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`, direct callers.
-- Kind: read-only default command parameter plus command-buffer output.
-- Function: `set_def`.
-- Change: keep the command buffer parameter raw because `get_cmd` still
-  writes into it, but change the default command parameter to
-  `std::string_view`.  Update single-character callers to pass explicit
-  one-character views instead of raw character addresses.
-- Tests: terminal prompt and selector prompt tests if practical.
-
 #### CSTR-197 - Terminal Prompt View
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,

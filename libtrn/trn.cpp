@@ -449,7 +449,7 @@ InputNewsgroupResult input_newsgroup()
         return ING_ASK;
     }
     g_buf[2] = *g_buf;
-    set_def(g_buf,g_default_cmd.c_str());
+    set_def(g_buf, g_default_cmd);
     print_cmd();
     if (g_newsgroup_ptr != nullptr)
     {

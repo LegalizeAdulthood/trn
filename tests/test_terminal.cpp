@@ -8,6 +8,9 @@
 #include <trn/final.h>
 #include <trn/ng.h>
 #include <trn/opt.h>
+#include <trn/smisc.h>
+#include <trn/univ.h>
+#include <trn/util.h>
 
 #include <gtest/gtest.h>
 
@@ -31,13 +34,20 @@ class TerminalTest : public testing::Test
 protected:
     void SetUp() override
     {
+        m_old_s_default_cmd = g_s_default_cmd;
+        m_old_univ_default_cmd = g_univ_default_cmd;
         drain_macro_buffer();
     }
 
     void TearDown() override
     {
         drain_macro_buffer();
+        g_s_default_cmd = m_old_s_default_cmd;
+        g_univ_default_cmd = m_old_univ_default_cmd;
     }
+
+    bool m_old_s_default_cmd{};
+    bool m_old_univ_default_cmd{};
 };
 
 class MacroDisplayTest : public testing::Test
@@ -314,6 +324,30 @@ TEST_F(TerminalTest, pushStringExpandsInInputOrderWithMacroBits)
 
     read_tty(&command, 1);
     EXPECT_EQ(static_cast<unsigned char>('\002' ^ 0200), static_cast<unsigned char>(command));
+}
+
+TEST_F(TerminalTest, setDefUsesDefaultCommandForBlankInput)
+{
+    g_buf[0] = ' ';
+    g_buf[1] = '\0';
+
+    set_def(g_buf, "n");
+
+    EXPECT_EQ('n', g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+}
+
+TEST_F(TerminalTest, setDefExpandsControlDefaultCommand)
+{
+    g_buf[0] = ' ';
+    g_buf[1] = '\0';
+
+    set_def(g_buf, "^N");
+
+    EXPECT_EQ(Ctl('N'), g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }
 
 TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)

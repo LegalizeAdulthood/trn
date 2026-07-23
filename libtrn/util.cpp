@@ -386,25 +386,25 @@ void not_incl(std::string_view feature)
     fmt::print("\nNo room for feature \"{}\" on this machine.\n", feature);
 }
 
-void set_def(char *buffer, const char *dflt)
+void set_def(char *buffer, std::string_view dflt)
 {
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
     if (*buffer == ' '                        //
-#ifndef STRICT_CR                              //
+#ifndef STRICT_CR                             //
         || *buffer == '\n' || *buffer == '\r' //
 #endif                                        //
     )
     {
         g_s_default_cmd = true;
         g_univ_default_cmd = true;
-        if (*dflt == '^' && std::isupper(dflt[1]))
+        if (dflt.size() > 1 && dflt.front() == '^' && std::isupper(dflt[1]))
         {
             push_char(Ctl(dflt[1]));
         }
         else
         {
-            push_char(*dflt);
+            push_char(dflt.empty() ? '\0' : dflt.front());
         }
         get_cmd(buffer);
     }

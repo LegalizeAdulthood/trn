@@ -655,7 +655,7 @@ cleanup2:
 
 static ArticleSwitchResult art_switch()
 {
-    set_def(g_buf,g_default_cmd.c_str());
+    set_def(g_buf, g_default_cmd);
     print_cmd();
 
     g_buf[2] = '\0';
