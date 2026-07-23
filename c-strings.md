@@ -58,8 +58,8 @@ Run every scan from the innermost lexical scope outward:
 - C string library calls.  Treat `strcpy`, `strncpy`, `strcat`,
   `strncat`, `strcmp`, `strncmp`, `strchr`, `strrchr`, `strstr`,
   `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`, `sprintf`,
-  `snprintf`, `vsprintf`, `vsnprintf`, `fgets`, `fputs`, `puts`,
-  `printf`, and `fprintf` as audit roots.
+  `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `fgets`, `fputs`,
+  `puts`, `printf`, and `fprintf` as audit roots.
 - C byte library calls on character storage.  Treat `memcpy`, `memmove`,
   `memset`, `memcmp`, and `memchr` as audit roots when the destination
   or compared data is string-like `char` storage.  Non-string table
@@ -341,6 +341,9 @@ the storage:
   Prefer `std::string_view` operations when the code does not need to
   mutate the source.  Preserve mutable parsing only when the function
   intentionally edits a caller buffer.
+- `sscanf`: parsing from null-terminated text.  Prefer
+  `std::string_view` tokenization and `std::from_chars` when the source
+  is already a view or owned string.
 - `fgets`: fixed-size line input.  Prefer `std::string` line input when
   truncation is arbitrary.  Keep fixed protocol buffers only when the
   size is meaningful.
@@ -513,6 +516,14 @@ tree.
   separate slices for those completed `string_case_compare` call sites.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
+- `nntp_gets` is now the main raw output-buffer API in the NNTP line
+  path.  Its core storage is already `std::string`, but the public
+  function still copies into caller buffers and drives `g_ser_line` and
+  `g_buf` callers.
+- `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
+  `kill_file_append`, `in_char`, `in_answer`, and the universal group
+  visitor callback still expose pointer-shaped text APIs even though
+  callers already have strings, views, or literals.
 - Remaining literal tables include color object names, signal names,
   MIME entity mappings, and transliteration tables.  The useful current
   targets are tables whose users already operate on views or compute
@@ -522,6 +533,10 @@ tree.
   dead NNTP socket code, simple timeout output functions, literal lookup
   tables, pointer-and-length display signatures, and owner-local command
   or spinner tables.
+- The article pager still has one formatting-only `g_buf` use for the
+  MORE prompt.  This is a leaf of `CSTR-161`, not command input.
+- `do_article` still formats a rewritten Date header into
+  `g_art_line`.  This is a local display-storage leaf of `CSTR-077`.
 
 ## Current `safe_copy` Inventory
 
@@ -536,10 +551,11 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 10, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 46, `strrchr` 1, `strstr` 2,
-  `strlen` 40.
-- Formatting into C buffers: `sprintf` 7, `snprintf` 2.
-- C text I/O roots: `fgets` 22, `fputs` 179, `printf` 356,
+- Search and length: `strchr` 45, `strrchr` 1, `strstr` 2,
+  `strlen` 38.
+- Formatting into C buffers: `sprintf` 1, `snprintf` 2.
+- C text parsing: `sscanf` 9.
+- C text I/O roots: `fgets` 22, `fputs` 179, `printf` 357,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -566,20 +582,252 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-190 - Article MORE Prompt Storage
+
+- Files: `libtrn/art.cpp`.
+- Kind: formatting-only global buffer use.
+- Function: `do_article`.
+- Change: build the pager MORE prompt in a local `std::string` with
+  `fmt::format`, use its size for `out_pos`, and pass it directly to
+  `color_string`.  Do not touch command-input uses of `g_buf`.
+- Tests: article pager or display tests if practical; otherwise run the
+  existing article/display coverage.
+
+#### CSTR-191 - Kill-file Append Command View
+
+- Files: `libtrn/kfile.cpp`, `libtrn/include/trn/kfile.h`,
+  `libtrn/artsrch.cpp`, `tests/test_kfile.cpp`.
+- Kind: read-only command parameter.
+- Function: `kill_file_append`.
+- Change: accept `std::string_view cmd` and write the view to the
+  append stream.  Update callers that currently pass `c_str()` from an
+  owned string to pass the string directly.
+- Tests: existing kill-file append tests.
+
+#### CSTR-192 - Kill-unwanted Message View
+
+- Files: `libtrn/kfile.cpp`, `libtrn/include/trn/kfile.h`,
+  `libtrn/ng.cpp`, `libtrn/ngdata.cpp`, `tests/test_kfile.cpp`.
+- Kind: nullable read-only message parameter.
+- Function: `kill_unwanted`.
+- Change: replace the nullable `const char *message` with
+  `std::string_view message`, using empty view as the no-message
+  sentinel.  Update the test that passes `nullptr` to pass an empty
+  string view.
+- Tests: existing kill-file tests.
+
+#### CSTR-193 - Directory Article Filename Parse
+
+- Files: `libtrn/bits.cpp`.
+- Kind: C-string numeric parsing from a filesystem filename.
+- Function: directory scan in article existence checking.
+- Change: replace `std::sscanf(filename.c_str(), "%ld%c", ...)` with
+  `std::from_chars` over the `std::string` filename and require the parse
+  to stop at the end of the string.
+- Tests: article existence or local-spool tests if practical.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-194 - Newsgroup Name Setter View
+
+- Files: `libtrn/trn.cpp`, `libtrn/include/trn/trn.h`, direct callers.
+- Kind: read-only newsgroup-name parameter.
+- Function: `set_newsgroup_name`.
+- Change: accept `std::string_view what` and use empty view as the clear
+  sentinel if clearing is still needed.  Update callers that currently
+  pass `c_str()` from owned strings.
+- Tests: existing data-source and newsgroup-selection tests.
+
+#### CSTR-195 - Get Newsgroup View
+
+- Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`,
+  `libtrn/addng.cpp`, `libtrn/rt-select.cpp`, `libtrn/trn.cpp`,
+  `tests/test_rcstuff.cpp`.
+- Kind: read-only newsgroup-name parameter with local parsing.
+- Function: `get_newsgroup`.
+- Depends on: `CSTR-194`.
+- Change: accept `std::string_view what`, replace `strchr` with view
+  search, and pass the view directly to `set_newsgroup_name`.  Keep any
+  fuzzy-match replacement as an owned or global-backed string view.
+- Tests: existing rcstuff tests.
+
+#### CSTR-196 - Terminal Default Command View
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`, direct callers.
+- Kind: read-only default command parameter plus command-buffer output.
+- Function: `set_def`.
+- Change: keep the command buffer parameter raw because `get_cmd` still
+  writes into it, but change the default command parameter to
+  `std::string_view`.  Update single-character callers to pass explicit
+  one-character views instead of raw character addresses.
+- Tests: terminal prompt and selector prompt tests if practical.
+
+#### CSTR-197 - Terminal Prompt View
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  prompt callers.
+- Kind: read-only prompt and default parameters.
+- Function: `in_char`.
+- Depends on: `CSTR-196`.
+- Change: accept `std::string_view` for the prompt and default command,
+  count newlines with algorithms, print with `fmt`, and pass the default
+  view to `set_def`.
+- Tests: terminal prompt and selector prompt tests if practical.
+
+#### CSTR-198 - Terminal Answer Prompt View
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  answer-prompt callers.
+- Kind: read-only prompt parameter.
+- Function: `in_answer`.
+- Change: accept `std::string_view prompt` and print with `fmt` or
+  `fwrite` by extent instead of `std::fputs`.
+- Tests: terminal answer prompt tests if practical.
+
+#### CSTR-199 - Universal Group Visitor View
+
+- Files: `libtrn/univ.cpp`, `libtrn/rt-select.cpp`,
+  `libtrn/include/trn/univ.h`, `libtrn/include/trn/rt-select.h`,
+  `tests/test_univ.cpp`.
+- Kind: internal callback parameter.
+- Function: `UniversalGroupVisitor`, `univ_visit_group`,
+  `univ_virt_pass`.
+- Change: make the visitor callback accept `std::string_view`, pass the
+  stored virtual-group string directly, and remove `c_str()` from the
+  visitor call path.
+- Tests: existing universal selector virtual-pass tests.
+
+#### CSTR-200 - UTF Output Cursor Constness
+
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `libtrn/art.cpp`, `libtrn/terminal.cpp`.
+- Kind: read-only UTF cursor helper.
+- Function: `put_char_adv`.
+- Change: make the cursor parameter const-correct, either by accepting
+  `const char **` or by adding a const-friendly helper used by display
+  code.  The helper only advances the pointer and never mutates text.
+- Tests: existing UTF tests and article/terminal display tests.
+
+#### CSTR-201 - Paged Text Display View
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`, display
+  callers.
+- Kind: read-only display text parameter.
+- Function: `print_lines`.
+- Depends on: `CSTR-200`.
+- Change: accept `std::string_view` and remove caller `c_str()` uses for
+  owned strings and `fmt::format` temporaries.  Keep bounded iteration so
+  the implementation does not rely on a null terminator.
+- Tests: help, terminal paging, and version/source display tests.
+
+#### CSTR-202 - NNTP Line Reader String API
+
+- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
+  NNTP tests.
+- Kind: buffer-plus-size output API.
+- Function: `nntp_gets`.
+- Change: add or migrate to a string-output API that returns line text
+  without requiring a caller-provided `char *` buffer.  Preserve
+  full-line, partial-line, and error behavior until caller slices prove
+  the fixed-size truncation is arbitrary.
+- Tests: NNTP line-reader tests, including long line behavior.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
+#### CSTR-203 - Article Date Line Local Storage
+
+- Files: `libtrn/art.cpp`.
+- Kind: local display string built in a global article buffer.
+- Function: `do_article`.
+- Change: build the rewritten Date header in local `std::string`
+  storage, reserving `LINE_BUF_LEN`, and point the display cursor at
+  that string for the remainder of the current line rendering.  Preserve
+  the current `LOCALTIMEFMT` behavior.
+- Tests: article display Date-header coverage if practical.
+
+#### CSTR-204 - Score Command View
+
+- Files: `libtrn/score.cpp`, `libtrn/include/trn/score.h`,
+  `libtrn/ng.cpp`, `libtrn/sacmd.cpp`.
+- Kind: read-only command parser input.
+- Function: `sc_score_cmd`.
+- Change: accept `std::string_view line`, keep the owned easy-command
+  fallback in local storage, and use view slicing for the optional edit
+  filename argument.
+- Tests: score command tests if practical.
+
+#### CSTR-205 - Switch Decoder View
+
+- Files: `libtrn/sw.cpp`, `libtrn/include/trn/sw.h`, `libtrn/opt.cpp`.
+- Kind: read-only command-line switch parser input.
+- Function: `decode_switch`.
+- Change: accept `std::string_view`, trim leading spaces by view, and
+  avoid round-tripping switch tokens through `c_str()`.
+- Tests: option and switch parsing tests.
+
+#### CSTR-206 - Active Line Numeric Parsing
+
+- Files: `libtrn/addng.cpp`, `libtrn/ngdata.cpp`.
+- Kind: C-string numeric parsing from owned active-file lines.
+- Function: new-group and newsgroup-data active-line parsing.
+- Change: replace `std::sscanf` on `active_line.c_str()` with
+  `std::string_view` tokenization plus `std::from_chars` for high, low,
+  and status character fields.
+- Tests: active-file, add-newsgroup, and newsgroup-data tests.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-207 - Nntplist Line Reader Caller
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: NNTP line-reader caller and plain output.
+- Function: `main`.
+- Depends on: `CSTR-202`.
+- Change: read NNTP list lines into owned string storage, pass views to
+  `nntp_at_list_end`, and write list output without `std::fputs`.
+- Tests: nntplist action tests.
+
+#### CSTR-208 - Trn-artchk Line Reader Callers
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: NNTP line-reader callers and generated file output.
+- Function: `main`.
+- Depends on: `CSTR-202`.
+- Change: read NNTP active and newsgroups responses into owned strings,
+  pass views to `nntp_at_list_end`, and write generated output from
+  strings.
+- Tests: trn-artchk tests.
+
+#### CSTR-209 - Inews Post Response Line
+
+- Files: `inews/inews.cpp`.
+- Kind: NNTP post-response line reader.
+- Function: post command response handling in `main`.
+- Depends on: `CSTR-202`.
+- Change: read the post response into owned string storage and parse the
+  status through views instead of `g_ser_line`.
+- Tests: inews posting tests.
+
+#### CSTR-210 - Libtrn NNTP List Callers
+
+- Files: `libtrn/addng.cpp`, `libtrn/bits.cpp`, `libtrn/datasrc.cpp`,
+  `libtrn/head.cpp`, `libtrn/nntp.cpp`, `libtrn/rcstuff.cpp`,
+  `libtrn/rt-ov.cpp`.
+- Kind: NNTP line-reader callers feeding shared buffers.
+- Depends on: `CSTR-202`.
+- Change: migrate one caller function at a time from `nntp_gets(char *,
+  int)` to the string line-reader API.  Keep protocol status text in
+  `g_ser_line` only where callers still need the global status value.
+- Tests: NNTP, active-file, header, newsrc, and overview tests.
 
 ### Tier 4 - Broad Shared Buffers
 
