@@ -244,6 +244,19 @@ TEST_F(MimeSubHeaderTest, parsesFoldedHeaders)
     EXPECT_EQ("part.bin", *m_mime_section.m_filename);
 }
 
+TEST_F(MimeSubHeaderTest, parsesContentNameHeader)
+{
+    constexpr std::string_view header{"Content-Name: (legacy name) part.txt\n"
+                                      "\n"};
+    ASSERT_EQ(header.size(), std::fwrite(header.data(), sizeof(char), header.size(), m_input));
+    std::rewind(m_input);
+
+    mime_parse_sub_header(m_input, nullptr);
+
+    ASSERT_TRUE(m_mime_section.m_filename);
+    EXPECT_EQ("part.txt", *m_mime_section.m_filename);
+}
+
 namespace
 {
 

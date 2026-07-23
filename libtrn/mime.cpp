@@ -82,7 +82,6 @@ static std::string mime_parse_entry_value(std::string_view text);
 static int         mime_getc(std::FILE *fp);
 static void        mime_init_sections();
 static bool        mime_pop_section();
-static char       *mime_skip_whitespace(char *s);
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
 static char       *tag_action(char *t, const char *word, bool opening_tag);
 static char *output_prep(char *t);
@@ -815,9 +814,12 @@ void mime_parse_sub_header(std::FILE *ifp, const char *next_line)
             break;
 
         case CONT_NAME_LINE:
-            s = mime_skip_whitespace(s+1);
-            g_mime_section->m_filename = s;
+        {
+            const std::string_view content_name = header_line.substr(colon + 1);
+            g_mime_section->m_filename =
+                std::string{content_name.substr(mime_skip_whitespace(content_name, 0))};
             break;
+        }
         }
     }
     g_mime_state = g_mime_section->m_type;
@@ -968,51 +970,6 @@ MimeParamViews mime_parse_params(std::string_view text)
         result.params.emplace_back(text.substr(param_begin, param_end - param_begin));
     }
     return result;
-}
-
-// Skip whitespace and RFC-822 comments.
-
-static char *mime_skip_whitespace(char *s)
-{
-    int comment_level = 0;
-
-    while (*s)
-    {
-        if (*s == '(')
-        {
-            s++;
-            comment_level++;
-            while (comment_level)
-            {
-                switch (*s++)
-                {
-                case '\0':
-                    return s-1;
-
-                case '\\':
-                    s++;
-                    break;
-
-                case '(':
-                    comment_level++;
-                    break;
-
-                case ')':
-                    comment_level--;
-                    break;
-                }
-            }
-        }
-        else if (!std::isspace(*s))
-        {
-            break;
-        }
-        else
-        {
-            s++;
-        }
-    }
-    return s;
 }
 
 void mime_decode_article(bool view)

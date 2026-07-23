@@ -570,16 +570,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-154 - MIME Header Name Whitespace View
-
-- Files: `libtrn/mime.cpp`.
-- Kind: remaining mutable whitespace helper call.
-- Function: `mime_parse_sub_header`.
-- Change: change the `Content-Name` branch to use a view from the text
-  after the colon and the view-based whitespace helper.  Remove the
-  `char *` `mime_skip_whitespace` overload once no callers remain.
-- Tests: MIME sub-header tests covering `Content-Name`.
-
 #### CSTR-155 - MIME HTML Attribute Views
 
 - Files: `libtrn/mime.cpp`.
