@@ -575,18 +575,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-159 - NNTPLIST Local File Line Storage
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: tool-local fixed line input through the global NNTP buffer.
-- Function: `main`.
-- Change: read local active/subscription/overview input with owned
-  `std::string` line storage instead of `g_ser_line`.  After
-  `CSTR-156`, apply the wildcard filter to a view of the group name
-  without temporarily writing NUL into the line.
-- Tests: nntplist tests for local file listing with and without
-  wildcard filtering.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

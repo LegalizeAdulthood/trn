@@ -17,6 +17,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <string>
 #include <string_view>
 
@@ -189,23 +190,29 @@ int main(int argc, char *argv[])
             fmt::print(stderr, "Don't know how to list `{}' from your local system.\n", action);
             exit(1);
         }
-        std::FILE *in_fp{std::fopen(file_exp(local_file).c_str(), "r")};
-        if (in_fp == nullptr)
+        std::ifstream input{file_exp(local_file)};
+        if (!input)
         {
             fmt::print(stderr, "Unable to open `{}'.\n", local_file);
             std::exit(1);
         }
-        while (std::fgets(g_ser_line, sizeof g_ser_line, in_fp))
+        std::string line;
+        while (std::getline(input, line))
         {
+            const bool had_newline = !input.eof();
             if (!wildarg.empty())
             {
-                const std::string_view line{g_ser_line};
-                if (!wildcard_match(line.substr(0, line.find_first_of(" \f\n\r\t\v")), wildarg))
+                const std::string_view line_view{line};
+                if (!wildcard_match(line_view.substr(0, line_view.find_first_of(" \f\n\r\t\v")), wildarg))
                 {
                     continue;
                 }
             }
-            std::fputs(g_ser_line, out_fp);
+            fmt::print(out_fp, "{}", line);
+            if (had_newline)
+            {
+                fmt::print(out_fp, "\n");
+            }
         }
     }
     return 0;
