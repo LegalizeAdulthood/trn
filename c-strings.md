@@ -597,17 +597,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-208 - Trn-artchk Line Reader Callers
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: NNTP line-reader callers and generated file output.
-- Function: `main`.
-- Depends on: `CSTR-202`.
-- Change: read NNTP active and newsgroups responses into owned strings,
-  pass views to `nntp_at_list_end`, and write generated output from
-  strings.
-- Tests: trn-artchk tests.
-
 #### CSTR-209 - Inews Post Response Line
 
 - Files: `inews/inews.cpp`.

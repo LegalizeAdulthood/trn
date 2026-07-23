@@ -250,6 +250,7 @@ int main(int argc, char *argv[])
     }
     if (!newsgroups.empty() && (check_ng || check_active))
     {
+        line.reserve(NNTP_STRLEN);
         int ngleft;
         // Print a note about each newsgroup
         fmt::print("\nYour article's newsgroup{}:\n", plural(static_cast<int>(newsgroups.size())));
@@ -298,9 +299,9 @@ int main(int argc, char *argv[])
                     }
                     if (nntp_check() > 0)
                     {
-                        while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0)
+                        while (nntp_gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {
-                            if (nntp_at_list_end(g_ser_line))
+                            if (nntp_at_list_end(line))
                             {
                                 break;
                             }
@@ -343,13 +344,13 @@ int main(int argc, char *argv[])
                     // TODO: use list newsgroups if this fails...?
                     if (nntp_check() > 0)
                     {
-                        while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0)
+                        while (nntp_gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {
-                            if (nntp_at_list_end(g_ser_line))
+                            if (nntp_at_list_end(line))
                             {
                                 break;
                             }
-                            generated_newsgroups << g_ser_line << '\n';
+                            generated_newsgroups << line << '\n';
                         }
                     }
                 }
