@@ -1806,7 +1806,7 @@ static char *tag_action(char *t, const char *word, bool opening_tag)
     int   num;
     char  ch;
     bool match = false;
-    const char *roman_letters;
+    std::string_view roman_letters;
     std::vector<HtmlBlock> &blks = g_mime_section->m_html_blocks;
 
     const char *tmp;

@@ -576,16 +576,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-188 - MIME Roman List Labels
-
-- Files: `libtrn/mime.cpp`.
-- Kind: local literal pointer table selected by branch.
-- Function: `tag_action`.
-- Change: replace `const char *roman_letters` with `std::string_view`
-  literals for lower- and upper-case roman digits, preserving the
-  existing list-label algorithm.
-- Tests: MIME HTML list rendering tests.
-
 #### CSTR-189 - Spinner Character State
 
 - Files: `libtrn/rt-util.cpp`.
