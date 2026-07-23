@@ -80,7 +80,7 @@ static void display_page_title(bool home_only);
 static void display_article(const Article *ap, int ix, int sel);
 static void display_subject(const Subject *subj, int ix, int sel);
 static void display_universal(const UniversalItem *ui);
-static void display_group(DataSource *dp, const char *group, int len, int max_len);
+static void display_group(DataSource *dp, std::string_view group, int max_len);
 
 /// @brief Sets the selector mode based on the provided character.
 ///
@@ -2197,7 +2197,7 @@ start_of_loop:
                 maybe_eol();
                 output_sel(g_sel_page_item_cnt, sel, false);
                 std::printf("%5ld ", (long) np->m_to_read);
-                display_group(np->m_rc->data_source, np->rc_line_c_str(), np->m_num_offset - 1, max_len);
+                display_group(np->m_rc->data_source, np->rc_name(), max_len);
             }
             else if (np->m_num_offset >= max_len)
             {
@@ -2272,7 +2272,7 @@ start_of_loop:
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
             std::printf("%5ld ", (long)gp->m_to_read.value_of());
-            display_group(gp->m_data_src, gp->m_name.c_str(), static_cast<int>(gp->m_name.size()), max_len);
+            display_group(gp->m_data_src, gp->m_name, max_len);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt)
@@ -2944,11 +2944,11 @@ static void display_universal(const UniversalItem *ui)
     }
 }
 
-static void display_group(DataSource *dp, const char *group, int len, int max_len)
+static void display_group(DataSource *dp, std::string_view group, int max_len)
 {
     if (current_group_display_mode() == 's')
     {
-        std::fputs(group, stdout);
+        fmt::print("{}", group);
     }
     else
     {
@@ -2970,22 +2970,16 @@ static void display_group(DataSource *dp, const char *group, int len, int max_le
             description.resize(end);
             if (current_group_display_mode() == 'm')
             {
-                std::fputs(description.c_str(), stdout);
+                fmt::print("{}", description);
             }
             else
             {
-                int i = max_len - len;
-                std::fputs(group, stdout);
-                do
-                {
-                    std::putchar(' ');
-                } while (--i > 0);
-                std::fputs(description.c_str(), stdout);
+                fmt::print("{:<{}}{}", group, std::max(max_len, static_cast<int>(group.size()) + 1), description);
             }
         }
         else
         {
-            std::fputs(group, stdout);
+            fmt::print("{}", group);
         }
     }
     newline();

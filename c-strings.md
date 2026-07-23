@@ -539,7 +539,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Search and length: `strchr` 47, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
-- C text I/O roots: `fgets` 22, `fputs` 184, `printf` 356,
+- C text I/O roots: `fgets` 22, `fputs` 179, `printf` 356,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -570,17 +570,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-183 - Newsgroup Display Names
-
-- Files: `libtrn/rt-page.cpp`.
-- Kind: pointer-plus-size display parameter.
-- Function: `display_group`.
-- Change: replace `const char *group, int len` with
-  `std::string_view group`.  Pass a sliced view for newsrc lines and the
-  existing string for group names, then use the view for description
-  lookup and output.
-- Tests: newsgroup page display tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
