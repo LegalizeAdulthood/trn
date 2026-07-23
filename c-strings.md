@@ -575,19 +575,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-169 - INEWS Signature Line Storage
-
-- Files: `inews/inews.cpp`.
-- Kind: tool-local fixed line input through the global NNTP buffer.
-- Function: `append_signature`.
-- Change: read `.signature` with owned `std::string` line storage
-  instead of `g_ser_line`, `std::fgets`, manual newline stripping, and
-  `std::strlen`.  Preserve the `MAX_SIGNATURE` line limit and emitted
-  CRLF line endings.
-- Tests: add a local-posting or helper-level inews signature test before
-  refactoring if feasible; otherwise document why executable-level
-  coverage is not currently practical.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

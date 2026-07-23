@@ -19,14 +19,11 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <fstream>
 #include <string>
 #include <string_view>
 
-enum
-{
-    MAX_SIGNATURE = 4
-};
+constexpr int MAX_SIGNATURE{4};
 
 int new_connection{};
 std::string g_server_name;
@@ -400,10 +397,8 @@ int valid_header(std::string_view h)
 //
 void append_signature()
 {
-    char* cp;
-    std::FILE* fp;
-    int count = 0;
-    std::string output_line;
+    int         count = 0;
+    std::string line;
 
 #ifdef NO_INEWS_DOTDIR
     g_dot_dir = g_home_dir;
@@ -413,35 +408,26 @@ void append_signature()
         return;
     }
 
-    fp = std::fopen(file_exp(SIGNATURE_FILE).c_str(), "r");
-    if (fp == nullptr)
+    std::ifstream signature{file_exp(SIGNATURE_FILE)};
+    if (!signature)
     {
         return;
     }
 
-    output_line.reserve(LINE_BUF_LEN + 1);
+    line.reserve(NNTP_STRLEN);
     inews_fputs("-- \r\n");
-    while (std::fgets(g_ser_line, sizeof g_ser_line, fp))
+    while (std::getline(signature, line))
     {
         count++;
         if (count > MAX_SIGNATURE)
         {
-            std::fprintf(stderr,"Warning: .signature files should be no longer than %d lines.\n",
-                    MAX_SIGNATURE);
-            std::fprintf(stderr,"(Only %d lines of your .signature were posted.)\n",
-                    MAX_SIGNATURE);
+            fmt::print(stderr, "Warning: .signature files should be no longer than {} lines.\n", MAX_SIGNATURE);
+            fmt::print(stderr, "(Only {} lines of your .signature were posted.)\n", MAX_SIGNATURE);
             break;
         }
-        // Strip trailing newline
-        cp = g_ser_line + std::strlen(g_ser_line) - 1;
-        if (cp >= g_ser_line && *cp == '\n')
-        {
-            *cp = '\0';
-        }
-        output_line = fmt::format("{}\r\n", g_ser_line);
-        inews_fputs(output_line);
+        line += "\r\n";
+        inews_fputs(line);
     }
-    (void) std::fclose(fp);
 }
 
 int nntp_handle_timeout()
