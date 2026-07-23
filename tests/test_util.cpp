@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -325,6 +326,48 @@ TEST_F(EnvInitTest, usesConfiguredPostingHostNameDefault)
     (void) env_init(true);
 
     EXPECT_EQ(std::string{POSTING_HOSTNAME} + ".UNKNOWN.HOST", g_p_host_name);
+}
+
+TEST(TextToSecsTest, returnsSentinelValues)
+{
+    constexpr std::time_t default_secs{3660};
+
+    EXPECT_EQ(0, text_to_secs("", default_secs));
+    EXPECT_EQ(0, text_to_secs("never", default_secs));
+    EXPECT_EQ(2, text_to_secs("missing", default_secs));
+    EXPECT_EQ(default_secs, text_to_secs("yes", default_secs));
+}
+
+TEST(TextToSecsTest, parsesMinutesByDefault)
+{
+    EXPECT_EQ(300, text_to_secs("5", 999));
+}
+
+TEST(TextToSecsTest, parsesCompositeIntervals)
+{
+    EXPECT_EQ(93780, text_to_secs("1d, 2h 3m", 999));
+}
+
+TEST(TextToSecsTest, parsesSeparatedNumberAndUnit)
+{
+    EXPECT_EQ(7200, text_to_secs("2 h", 999));
+}
+
+TEST(TextToSecsTest, stopsAtNonNumericText)
+{
+    EXPECT_EQ(7200, text_to_secs("2h bananas", 999));
+}
+
+TEST(TextToSecsTest, rejectsUnknownUnits)
+{
+    EXPECT_EQ(0, text_to_secs("2 bananas", 999));
+}
+
+TEST(TextToSecsTest, respectsStringViewExtent)
+{
+    constexpr std::string_view text{"1h2m", 2};
+
+    EXPECT_EQ(3600, text_to_secs(text, 999));
 }
 
 TEST(SecsToTextTest, returnsSentinelText)

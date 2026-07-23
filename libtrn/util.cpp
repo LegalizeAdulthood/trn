@@ -39,6 +39,7 @@
 #endif
 
 #include <algorithm>
+#include <charconv>
 #include <cctype>
 #include <chrono>
 #include <cstdio>
@@ -457,55 +458,77 @@ double current_time()
     return static_cast<double>(result) / 1000.0;
 }
 
-std::time_t text_to_secs(const char *s, std::time_t defSecs)
+std::time_t text_to_secs(std::string_view text, std::time_t defSecs)
 {
-    std::time_t secs = 0;
+    const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)) != 0; };
+    const auto is_space = [](char ch) { return std::isspace(static_cast<unsigned char>(ch)) != 0; };
+    const auto is_alpha = [](char ch) { return std::isalpha(static_cast<unsigned char>(ch)) != 0; };
 
-    if (!std::isdigit(*s))
+    const auto skip_spaces = [&is_space](std::string_view &s)
     {
-        if (*s == 'm' || *s == 'M')     // "missing"
+        const std::string_view::const_iterator start = std::find_if_not(s.begin(), s.end(), is_space);
+        s.remove_prefix(static_cast<std::size_t>(start - s.begin()));
+    };
+    const auto skip_alphas = [&is_alpha](std::string_view &s)
+    {
+        const std::string_view::const_iterator start = std::find_if_not(s.begin(), s.end(), is_alpha);
+        s.remove_prefix(static_cast<std::size_t>(start - s.begin()));
+    };
+
+    std::string_view s = text;
+    std::time_t      secs = 0;
+
+    if (s.empty() || !is_digit(s.front()))
+    {
+        if (!s.empty() && (s.front() == 'm' || s.front() == 'M')) // "missing"
         {
             return 2;
         }
-        if (*s == 'y' || *s == 'Y')     // "yes"
+        if (!s.empty() && (s.front() == 'y' || s.front() == 'Y')) // "yes"
         {
             return defSecs;
         }
-        return secs;                    // "never"
+        return secs; // "never"
     }
     do
     {
-        std::time_t item = std::atol(s);
-        s = skip_digits(s);
-        s = skip_space(s);
-        if (std::isalpha(*s))
+        std::time_t                  item = 0;
+        const char                  *start = s.data();
+        const char                  *end = s.data() + s.size();
+        const std::from_chars_result result = std::from_chars(start, end, item);
+        s.remove_prefix(static_cast<std::size_t>(result.ptr - start));
+        skip_spaces(s);
+        if (!s.empty() && is_alpha(s.front()))
         {
-            switch (*s)
+            switch (s.front())
             {
-            case 'd': case 'D':
+            case 'd':
+            case 'D':
                 item *= 24 * 60L;
                 break;
 
-            case 'h': case 'H':
+            case 'h':
+            case 'H':
                 item *= 60L;
                 break;
 
-            case 'm': case 'M':
+            case 'm':
+            case 'M':
                 break;
 
             default:
                 item = 0;
                 break;
             }
-            s = skip_alpha(s);
-            if (*s == ',')
+            skip_alphas(s);
+            if (!s.empty() && s.front() == ',')
             {
-                s++;
+                s.remove_prefix(1);
             }
-            s = skip_space(s);
+            skip_spaces(s);
         }
         secs += item;
-    } while (std::isdigit(*s));
+    } while (!s.empty() && is_digit(s.front()));
 
     return secs * 60;
 }

@@ -519,7 +519,7 @@ tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
-- New helper and leaf candidates found by this scan are `text_to_secs`,
+- New helper and leaf candidates found by this scan are
   `MimeSection::mime_parse_encoding`, MIME HTML `find_attr`, and
   `wildcard_match`.
 
@@ -570,18 +570,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-152 - Refetch Interval Parser View API
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `libtrn/datasrc.cpp`, `libtrn/opt.cpp`.
-- Kind: read-only parser parameter that makes callers allocate.
-- Function: `text_to_secs`.
-- Change: accept `std::string_view`, parse with view indices or view
-  prefix removal, and update callers that currently build a temporary
-  `std::string` only to call `c_str()`.
-- Tests: add focused tests for `text_to_secs` current behavior before
-  changing the implementation.
 
 #### CSTR-153 - MIME Encoding Parser View API
 

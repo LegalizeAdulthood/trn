@@ -56,7 +56,7 @@ void safe_link(const std::filesystem::path &old_name, const std::filesystem::pat
 #endif
 void        verify_sig();
 double      current_time();
-std::time_t text_to_secs(const char *s, std::time_t defSecs);
+std::time_t text_to_secs(std::string_view text, std::time_t defSecs);
 std::string secs_to_text(std::time_t secs);
 std::string temp_filename();
 std::string get_auth_user();

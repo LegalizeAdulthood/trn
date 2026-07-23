@@ -270,7 +270,7 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
         const std::optional<std::string_view> active_file_refetch = config.active_file_refetch();
         if (active_file_refetch && !active_file_refetch->empty())
         {
-            dp->m_act_sf.m_refetch_secs = text_to_secs(std::string{*active_file_refetch}.c_str(), g_def_refetch_secs);
+            dp->m_act_sf.m_refetch_secs = text_to_secs(*active_file_refetch, g_def_refetch_secs);
         }
         else if (!active_file)
         {
@@ -320,7 +320,7 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
         const std::optional<std::string_view> group_desc_refetch = config.group_desc_refetch();
         if (group_desc_refetch && !group_desc_refetch->empty())
         {
-            dp->m_desc_sf.m_refetch_secs = text_to_secs(std::string{*group_desc_refetch}.c_str(), g_def_refetch_secs);
+            dp->m_desc_sf.m_refetch_secs = text_to_secs(*group_desc_refetch, g_def_refetch_secs);
         }
         else if (dp->m_group_desc.empty())
         {
