@@ -47,6 +47,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <iterator>
 #include <string>
 #include <string_view>
 
@@ -218,25 +219,35 @@ DoArticleResult do_article()
 
                 int selected = (g_curr_artp->m_flags & AF_SEL);
                 int unseen = article_unread(g_art) ? 1 : 0;
-                std::sprintf(g_art_line,"%s%s #%ld",g_newsgroup_name.c_str(),g_moderated.c_str(), g_art.value_of());
+                std::string title_line;
+                bool        has_title_suffix = false;
+                title_line.reserve(LINE_BUF_LEN);
+                fmt::format_to(std::back_inserter(title_line), "{}{} #{}", g_newsgroup_name, g_moderated,
+                               g_art.value_of());
                 if (g_selected_only)
                 {
                     value_of(i) = g_selected_count - (unseen && selected);
-                    std::sprintf(g_art_line+std::strlen(g_art_line)," (%ld + %ld more)",
-                            i.value_of(),(long)g_newsgroup_ptr->m_to_read - g_selected_count
-                                        - (!selected && unseen));
+                    const long unread_count = static_cast<long>(g_newsgroup_ptr->m_to_read) - g_selected_count //
+                                              - (!selected && unseen);
+                    fmt::format_to(std::back_inserter(title_line), " ({} + {} more", i.value_of(), unread_count);
+                    has_title_suffix = true;
                 }
                 else if ((i = ArticleNum{g_newsgroup_ptr->m_to_read - unseen}) != 0 //
                          || (!g_threaded_group && g_dm_count))
                 {
-                    std::sprintf(g_art_line+std::strlen(g_art_line),
-                            " (%ld more)", i.value_of());
+                    fmt::format_to(std::back_inserter(title_line), " ({} more", i.value_of());
+                    has_title_suffix = true;
                 }
                 if (!g_threaded_group && g_dm_count)
                 {
-                    std::sprintf(g_art_line + std::strlen(g_art_line) - 1, " + %ld Marked to return)", (long) g_dm_count);
+                    fmt::format_to(std::back_inserter(title_line), " + {} Marked to return",
+                                   static_cast<long>(g_dm_count));
                 }
-                line_num += tree_puts(g_art_line,line_num+g_top_line,0);
+                if (has_title_suffix)
+                {
+                    title_line += ')';
+                }
+                line_num += tree_puts(title_line, line_num + g_top_line, 0);
             }
             start_header(g_art);
             g_force_last = false;        // we will have our day in court

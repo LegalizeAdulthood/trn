@@ -537,8 +537,8 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Copy and concatenation: `strcpy` 11, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 6, `strncmp` 12.
 - Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
-  `strlen` 43.
-- Formatting into C buffers: `sprintf` 6, `snprintf` 2.
+  `strlen` 40.
+- Formatting into C buffers: `sprintf` 2, `snprintf` 2.
 - C text I/O roots: `fgets` 24, `fputs` 192, `printf` 378,
   `fprintf` 41.
 - Character byte operations: `memcpy` 4, `memset` 6, `memcmp` 1.
@@ -565,17 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-160 - Article First-page Title Line
-
-- Files: `libtrn/art.cpp`.
-- Kind: local formatted string built through the global article buffer.
-- Function: article page rendering first-page title branch.
-- Change: build the title line as a local `std::string` with `fmt`, then
-  pass it to `tree_puts`.  Do not write this title through
-  `g_art_line`; reserve the old line buffer size before appending.
-- Tests: article rendering tests should be added first if no existing
-  test covers the first-page title output.
 
 ### Tier 1 - Helper And API Foundations
 
