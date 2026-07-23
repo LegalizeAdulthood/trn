@@ -17,6 +17,7 @@
 #include <fmt/format.h>
 
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -75,7 +76,6 @@ int main(int argc, char *argv[])
     bool        has_pathline;
     bool        found_nl;
     bool        had_nl;
-    char       *cp;
     int         i;
     std::string article_header;
     std::string input_line;
@@ -333,18 +333,21 @@ int main(int argc, char *argv[])
         if (std::atoi(g_ser_line) == NNTP_POSTFAIL_VAL)
         {
             fmt::print(stderr, "Article not accepted by server; not posted:\n");
-            for (cp = g_ser_line + 4; *cp && *cp != '\r'; cp++)
+            std::string_view server_message{g_ser_line};
+            server_message = server_message.size() > 4 ? server_message.substr(4) : std::string_view{};
+            if (const std::size_t carriage_return = server_message.find('\r');
+                carriage_return != std::string_view::npos)
             {
-                if (*cp == '\\')
-                {
-                    std::fputc('\n',stderr);
-                }
-                else
-                {
-                    std::fputc(*cp,stderr);
-                }
+                server_message = server_message.substr(0, carriage_return);
             }
-            std::fputc('\n', stderr);
+
+            std::string post_failure;
+            post_failure.reserve(server_message.size());
+            for (const char ch : server_message)
+            {
+                post_failure += ch == '\\' ? '\n' : ch;
+            }
+            fmt::print(stderr, "{}\n", post_failure);
         }
         else
         {

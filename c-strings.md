@@ -566,16 +566,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-180 - Inews Post Failure Text
-
-- Files: `inews/inews.cpp`.
-- Kind: pointer walking over protocol text for display.
-- Function: `main`.
-- Change: replace the local `char *cp` scan over `g_ser_line + 4` with
-  string-view iteration or splitting, preserving the existing backslash
-  to newline translation and the original order of checks.
-- Tests: inews post-failure output coverage if available.
-
 #### CSTR-181 - NNTP Verbose Output
 
 - Files: `nntp/nntpclient.cpp`.
