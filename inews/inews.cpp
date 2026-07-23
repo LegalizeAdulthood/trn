@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
         if (i == EOF)
         {
             // Still in header after EOF?  Hmm...
-            std::fprintf(stderr, "Article was all header -- no body.\n");
+            fmt::print(stderr, "Article was all header -- no body.\n");
             std::exit(1);
         }
         input_line.clear();
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
             i = valid_header(input_line);
             if (i == 0)
             {
-                std::fprintf(stderr, "Invalid header:\n%s", input_line.c_str());
+                fmt::print(stderr, "Invalid header:\n{}", input_line);
                 std::exit(1);
             }
             if (i == 2)
@@ -221,8 +221,8 @@ int main(int argc, char *argv[])
 #ifndef LAX_INEWS
     if (!env_init(false))
     {
-        fprintf(stderr, "Can't get %s information. Please contact your system adminstrator.\n",
-                (!g_login_name.empty() || g_real_name.empty()) ? "user" : "host");
+        fmt::print(stderr, "Can't get {} information. Please contact your system adminstrator.\n",
+                   (!g_login_name.empty() || g_real_name.empty()) ? "user" : "host");
         exit(1);
     }
 #endif
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
             {
                 nntp_close(true);
             }
-            std::fprintf(stderr,"Sorry, you can't post from this machine.\n");
+            fmt::print(stderr, "Sorry, you can't post from this machine.\n");
             std::exit(1);
         }
     }
@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
         inews_wr_fp = popen(output_line.c_str(),"w");
         if (!inews_wr_fp)
         {
-            std::fprintf(stderr,"Unable to execute inews for local posting.\n");
+            fmt::print(stderr, "Unable to execute inews for local posting.\n");
             std::exit(1);
         }
     }
@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
     {
         if (std::atoi(g_ser_line) == NNTP_POSTFAIL_VAL)
         {
-            std::fprintf(stderr,"Article not accepted by server; not posted:\n");
+            fmt::print(stderr, "Article not accepted by server; not posted:\n");
             for (cp = g_ser_line + 4; *cp && *cp != '\r'; cp++)
             {
                 if (*cp == '\\')
@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            std::fprintf(stderr, "Remote error: %s\n", g_ser_line);
+            fmt::print(stderr, "Remote error: {}\n", g_ser_line);
         }
         if (new_connection)
         {

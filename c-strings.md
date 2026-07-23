@@ -565,18 +565,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-165 - INEWS Main Error Output
-
-- Files: `inews/inews.cpp`.
-- Kind: leaf formatted C stdio output.
-- Function: `main`.
-- Change: replace local `std::fprintf` and `fprintf` error output with
-  `fmt::print(stderr, ...)`.  Do not change article/body output flow or
-  `inews_fputs` in this slice.
-- Tests: existing `inews-invalid-header` and `inews-all-header` cover
-  two error paths.  Add focused coverage first for any other branch that
-  needs behavior verification.
-
 #### CSTR-166 - UTIL2 File-expansion Diagnostics
 
 - Files: `util/util2.cpp`.
