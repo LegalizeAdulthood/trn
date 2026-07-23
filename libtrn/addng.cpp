@@ -37,6 +37,13 @@
 
 namespace fs = std::filesystem;
 
+struct ActiveLineFields
+{
+    long high{};
+    long low{1};
+    char status{'y'};
+};
+
 AddGroup *g_first_add_group{};
 AddGroup *g_last_add_group{};
 AddGroup *g_sel_page_gp{};
@@ -51,6 +58,7 @@ static int  build_add_group_list(int key_len, HashDatum *data, int extra);
 static void process_list(GetNewsgroupFlags flag);
 static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
+static ActiveLineFields parse_active_line_fields(std::string_view fields);
 static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch);
 static int  list_groups(int key_len, HashDatum *data, int add_matching);
 static void scan_active_line(std::string_view active_line, bool add_matching);
@@ -63,6 +71,47 @@ static int add_newsgroup_cmp(std::string_view key, HashDatum data)
     const auto *group = (AddGroup *) data.dat_ptr;
 
     return key.compare(group->m_name);
+}
+
+static void skip_active_field_space(std::string_view &text)
+{
+    const std::size_t non_space = text.find_first_not_of(" \f\n\r\t\v");
+    text.remove_prefix(non_space == std::string_view::npos ? text.size() : non_space);
+}
+
+static bool read_active_field_number(std::string_view &text, long &value)
+{
+    skip_active_field_space(text);
+    const char                  *first = text.data();
+    const char                  *last = first + text.size();
+    long                         parsed{};
+    const std::from_chars_result result = std::from_chars(first, last, parsed);
+    if (result.ec != std::errc{})
+    {
+        return false;
+    }
+    value = parsed;
+    text.remove_prefix(static_cast<std::size_t>(result.ptr - first));
+    return true;
+}
+
+static ActiveLineFields parse_active_line_fields(std::string_view fields)
+{
+    ActiveLineFields result;
+    if (!read_active_field_number(fields, result.high))
+    {
+        return result;
+    }
+    if (!read_active_field_number(fields, result.low))
+    {
+        return result;
+    }
+    skip_active_field_space(fields);
+    if (!fields.empty())
+    {
+        result.status = fields.front();
+    }
+    return result;
 }
 
 static int build_add_group_list(int key_len, HashDatum *data, int extra)
@@ -163,8 +212,6 @@ static void new_nntp_groups(DataSource *dp)
     char* s;
     int len;
     bool  found_something = false;
-    long  high;
-    long  low;
 
     set_data_source(dp);
 
@@ -182,8 +229,7 @@ static void new_nntp_groups(DataSource *dp)
 
     while (true)
     {
-        high = 0;
-        low = 1;
+        ActiveLineFields active_fields;
         if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
         {
             break;
@@ -225,16 +271,16 @@ static void new_nntp_groups(DataSource *dp)
             }
             else
             {
-                char ch = 'y';
                 if (s)
                 {
-                    std::sscanf(s + 1, "%ld %ld %c", &high, &low, &ch);
+                    active_fields = parse_active_line_fields(s + 1);
                 }
                 else
                 {
                     s = g_ser_line + len;
                 }
-                const std::string new_active_line = fmt::format("{} {:010} {:05} {}\n", group_name, high, low, ch);
+                const std::string new_active_line = fmt::format("{} {:010} {:05} {}\n", group_name, active_fields.high,
+                                                                active_fields.low, active_fields.status);
                 (void) dp->m_act_sf.append(new_active_line, len);
             }
         }
@@ -255,7 +301,7 @@ static void new_nntp_groups(DataSource *dp)
         {
             continue;
         }
-        add_to_hash(new_newsgroups, g_ser_line, high-low, auto_subscribe(g_ser_line));
+        add_to_hash(new_newsgroups, g_ser_line, active_fields.high - active_fields.low, auto_subscribe(g_ser_line));
     }
     if (found_something)
     {
@@ -301,11 +347,9 @@ static void new_local_groups(DataSource *dp)
         {
             continue;
         }
-        long high;
-        long low;
-        char ch;
-        std::sscanf(active_line.c_str() + (s - g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
-        if (ch == 'x' || ch == '=')
+        const std::string_view fields = std::string_view{active_line}.substr(static_cast<std::size_t>(s - g_buf) + 1);
+        const ActiveLineFields active_fields = parse_active_line_fields(fields);
+        if (active_fields.status == 'x' || active_fields.status == '=')
         {
             continue;
         }
@@ -314,7 +358,7 @@ static void new_local_groups(DataSource *dp)
         {
             continue;
         }
-        add_to_hash(new_newsgroups, g_buf, high-low, auto_subscribe(g_buf));
+        add_to_hash(new_newsgroups, g_buf, active_fields.high - active_fields.low, auto_subscribe(g_buf));
     }
     std::fclose(fp);
 
@@ -481,42 +525,8 @@ static void scan_active_line(std::string_view active_line, bool add_matching)
 
     const std::string_view group_name = active_line.substr(0, name_end);
     std::string_view       fields = active_line.substr(name_end + 1);
-    const auto             skip_space = [](std::string_view &text)
-    {
-        const std::size_t non_space = text.find_first_not_of(" \f\n\r\t\v");
-        text.remove_prefix(non_space == std::string_view::npos ? text.size() : non_space);
-    };
-    const auto read_number = [&skip_space](std::string_view &text, long &value)
-    {
-        skip_space(text);
-        const char                  *first = text.data();
-        const char                  *last = first + text.size();
-        long                         parsed{};
-        const std::from_chars_result result = std::from_chars(first, last, parsed);
-        if (result.ec != std::errc{})
-        {
-            return false;
-        }
-        value = parsed;
-        text.remove_prefix(static_cast<std::size_t>(result.ptr - first));
-        return true;
-    };
-
-    long high;
-    long low;
-    char ch;
-    high = 0;
-    low = 1;
-    ch = 'y';
-    if (read_number(fields, high) && read_number(fields, low))
-    {
-        skip_space(fields);
-        if (!fields.empty())
-        {
-            ch = fields.front();
-        }
-    }
-    if (ch == 'x' || (group_name.size() >= 3 && group_name.substr(0, 3) == "to."))
+    const ActiveLineFields active_fields = parse_active_line_fields(fields);
+    if (active_fields.status == 'x' || (group_name.size() >= 3 && group_name.substr(0, 3) == "to."))
     {
         return;
     }
@@ -532,7 +542,7 @@ static void scan_active_line(std::string_view active_line, bool add_matching)
     if (add_matching || np)
     {
         // it's not in a newsrc
-        add_to_list(group_name, high-low, 0);
+        add_to_list(group_name, active_fields.high - active_fields.low, 0);
     }
     else
     {

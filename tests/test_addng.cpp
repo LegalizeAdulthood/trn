@@ -221,6 +221,21 @@ protected:
         m_newsrc.flags = RF_ADD_NEW_GROUPS | RF_ACTIVE;
     }
 
+    void add_local_active_source(std::string_view active_line, std::string_view active_times_line)
+    {
+        const fs::path source_path = m_output_dir / ("active-" + std::to_string(g_data_sources.size()));
+        const fs::path active_times_path = m_output_dir / ("active-times-" + std::to_string(g_data_sources.size()));
+        std::ofstream{source_path} << active_line;
+        std::ofstream{active_times_path} << active_times_line;
+        g_data_sources.emplace_back();
+        DataSource &source = g_data_sources.back();
+        source.m_flags = DF_OPEN;
+        source.m_extra_name = active_times_path.generic_string();
+        ASSERT_EQ(1, source.m_act_sf.open(source_path, "", ""));
+        m_newsrc.data_source = &source;
+        m_newsrc.flags = RF_ADD_NEW_GROUPS | RF_ACTIVE;
+    }
+
     fs::path                m_output_dir;
     std::vector<DataSource> m_saved_data_sources;
     DataSource             *m_old_data_source{};
@@ -341,4 +356,18 @@ TEST_F(ScanActiveTest, remoteNewGroupsAppendExcludedGroupToActiveFile)
     ASSERT_EQ(1U, source.m_act_sf.m_lines.size());
     EXPECT_EQ("comp.lang.apl 0000000042 00007 x\n", source.m_act_sf.m_lines[0]);
     EXPECT_EQ(86400L, source.m_last_new_group);
+}
+
+TEST_F(ScanActiveTest, localNewGroupsIgnoreExcludedActiveGroup)
+{
+    add_local_active_source("comp.lang.apl 42 7 x\n", "comp.lang.apl 200\n");
+    DataSource &source = g_data_sources.back();
+    const long  active_times_size = static_cast<long>(fs::file_size(source.m_extra_name));
+
+    const bool changed = find_new_groups();
+
+    EXPECT_FALSE(changed);
+    EXPECT_EQ(nullptr, g_first_add_group);
+    EXPECT_EQ(201L, source.m_last_new_group);
+    EXPECT_EQ(active_times_size, source.m_act_sf.m_recent_cnt);
 }

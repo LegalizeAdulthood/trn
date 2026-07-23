@@ -592,16 +592,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-206 - Active Line Numeric Parsing
-
-- Files: `libtrn/addng.cpp`, `libtrn/ngdata.cpp`.
-- Kind: C-string numeric parsing from owned active-file lines.
-- Function: new-group and newsgroup-data active-line parsing.
-- Change: replace `std::sscanf` on `active_line.c_str()` with
-  `std::string_view` tokenization plus `std::from_chars` for high, low,
-  and status character fields.
-- Tests: active-file, add-newsgroup, and newsgroup-data tests.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

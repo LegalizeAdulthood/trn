@@ -34,12 +34,21 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <charconv>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
+
+struct ActiveLineFields
+{
+    long high{};
+    long low{1};
+    char status{'y'};
+};
 
 std::vector<NewsgroupData>   g_newsgroup_data;           // all newsgroup data
 std::vector<NewsgroupData *> g_newsgroup_order;          // current newsgroup order
@@ -70,6 +79,7 @@ bool           g_in_ng{};                  // true if in a newsgroup
 static int  newsgroup_order_number(const NewsgroupData *np1, const NewsgroupData *np2);
 static int  newsgroup_order_group_name(const NewsgroupData *np1, const NewsgroupData *np2);
 static int  newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *np2);
+static ActiveLineFields parse_active_line_fields(std::string_view fields, bool has_low_field);
 static void renumber_newsgroup_order();
 
 void newsgroup_data_init()
@@ -497,12 +507,16 @@ ArticleNum NewsgroupData::get_newsgroup_size()
         return ArticleNum{TR_BOGUS};
     }
 
+    const std::string_view fields = std::string_view{active_line}.substr(static_cast<std::size_t>(len) + 1);
 #ifdef ANCIENT_NEWS
-    std::sscanf(active_line.c_str() + len + 1, "%ld %c", &last, &ch);
+    const ActiveLineFields active_fields = parse_active_line_fields(fields, false);
     first = 1;
 #else
-    std::sscanf(active_line.c_str() + len + 1, "%ld %ld %c", &last, &first, &ch);
+    const ActiveLineFields active_fields = parse_active_line_fields(fields, true);
+    first = active_fields.low;
 #endif
+    last = active_fields.high;
+    ch = active_fields.status;
     if (!m_abs_first)
     {
         m_abs_first = ArticleNum{first};
@@ -553,4 +567,45 @@ ArticleNum NewsgroupData::get_newsgroup_size()
         return m_ng_max;
     }
     return m_ng_max = ArticleNum{last};
+}
+
+static void skip_active_field_space(std::string_view &text)
+{
+    const std::size_t non_space = text.find_first_not_of(" \f\n\r\t\v");
+    text.remove_prefix(non_space == std::string_view::npos ? text.size() : non_space);
+}
+
+static bool read_active_field_number(std::string_view &text, long &value)
+{
+    skip_active_field_space(text);
+    const char                  *first = text.data();
+    const char                  *last = first + text.size();
+    long                         parsed{};
+    const std::from_chars_result result = std::from_chars(first, last, parsed);
+    if (result.ec != std::errc{})
+    {
+        return false;
+    }
+    value = parsed;
+    text.remove_prefix(static_cast<std::size_t>(result.ptr - first));
+    return true;
+}
+
+static ActiveLineFields parse_active_line_fields(std::string_view fields, bool has_low_field)
+{
+    ActiveLineFields result;
+    if (!read_active_field_number(fields, result.high))
+    {
+        return result;
+    }
+    if (has_low_field && !read_active_field_number(fields, result.low))
+    {
+        return result;
+    }
+    skip_active_field_space(fields);
+    if (!fields.empty())
+    {
+        result.status = fields.front();
+    }
+    return result;
 }
