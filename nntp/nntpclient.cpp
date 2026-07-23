@@ -44,7 +44,7 @@ try_to_connect:
 #endif
     if (verbose)
     {
-        std::printf("Connecting to %s...",machine);
+        fmt::print("Connecting to {}...", machine);
         std::fflush(stdout);
     }
     switch (response = server_init(machine))
@@ -54,7 +54,7 @@ try_to_connect:
         {
             if (verbose)
             {
-                std::printf("failed: %s\n",&g_ser_line[4]);
+                fmt::print("failed: {}\n", &g_ser_line[4]);
             }
             else
             {
@@ -67,7 +67,7 @@ try_to_connect:
     case -1:
         if (verbose)
         {
-            std::printf("failed.\n");
+            fmt::print("failed.\n");
         }
         else
         {
@@ -79,7 +79,7 @@ try_to_connect:
     case NNTP_ACCESS_VAL:
         if (verbose)
         {
-            std::printf("access denied.\n");
+            fmt::print("access denied.\n");
         }
         else
         {
@@ -91,7 +91,7 @@ try_to_connect:
     case NNTP_NOPOSTOK_VAL:
         if (verbose)
         {
-            std::printf("Done (but no posting).\n\n");
+            fmt::print("Done (but no posting).\n\n");
         }
         response = 1;
         break;
@@ -99,7 +99,7 @@ try_to_connect:
     case NNTP_POSTOK_VAL:
         if (verbose)
         {
-            std::printf("Done.\n");
+            fmt::print("Done.\n");
         }
         response = 1;
         break;
@@ -107,7 +107,7 @@ try_to_connect:
     default:
         if (verbose)
         {
-            std::printf("unknown response: %d.\n",response);
+            fmt::print("unknown response: {}.\n", response);
         }
         else
         {

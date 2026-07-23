@@ -539,7 +539,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Search and length: `strchr` 47, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
-- C text I/O roots: `fgets` 22, `fputs` 184, `printf` 363,
+- C text I/O roots: `fgets` 22, `fputs` 184, `printf` 356,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -565,15 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-181 - NNTP Verbose Output
-
-- Files: `nntp/nntpclient.cpp`.
-- Kind: C text output.
-- Function: `nntp_connect`.
-- Change: replace verbose-branch `std::printf` calls with `fmt::print`
-  while preserving message text and newline behavior.
-- Tests: NNTP client tests or build if the verbose path is not covered.
 
 ### Tier 1 - Helper And API Foundations
 
