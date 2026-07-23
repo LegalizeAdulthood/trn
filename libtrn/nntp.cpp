@@ -94,13 +94,15 @@ int nntp_list(std::string_view type, std::string_view arg)
 void nntp_finish_list()
 {
     NNTPGetsResult ret;
+    std::string    line;
+    line.reserve(NNTP_STRLEN);
     do
     {
-        while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)
+        while ((ret = nntp_gets(line, NNTP_STRLEN)) == NGSR_PARTIAL_LINE)
         {
             // A line w/o a newline is too long to be the end of the
             // list, so grab the rest of this line and try again.
-            while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)
+            while ((ret = nntp_gets(line, NNTP_STRLEN)) == NGSR_PARTIAL_LINE)
             {
             }
             if (ret < 0)
@@ -108,7 +110,7 @@ void nntp_finish_list()
                 return;
             }
         }
-    } while (ret > 0 && !nntp_at_list_end(g_ser_line));
+    } while (ret > 0 && !nntp_at_list_end(line));
 }
 
 // try to access the specified group

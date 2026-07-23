@@ -521,8 +521,8 @@ tree.
   `inews::main`, `new_nntp_groups`, `find_new_groups`, `check_first`,
   `DataSource::open`, `DataSource::find_group_desc`,
   `SourceFile::open`, `parse_header`, `nntp_list`,
-  `nntp_finish_list`, `nntp_copy_body`, `open_newsrc`, and `ov_init`.
-  Keep the C wrapper until those callers move.
+  `nntp_copy_body`, `open_newsrc`, and `ov_init`.  Keep the C wrapper
+  until those callers move.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -590,17 +590,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-210 - NNTP List Drain Helper
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: NNTP list-drain helper.
-- Function: `nntp_finish_list`.
-- Depends on: `CSTR-202`.
-- Change: drain response lines into local `std::string` storage and
-  pass views to `nntp_at_list_end` instead of reading through
-  `g_ser_line`.
-- Tests: NNTP tests.
-
 #### CSTR-211 - NNTP Body Copy Line Reader
 
 - Files: `libtrn/nntp.cpp`.
@@ -648,7 +637,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/datasrc.cpp`.
 - Kind: NNTP description-list reader.
 - Function: `DataSource::find_group_desc`.
-- Depends on: `CSTR-210`.
+- Depends on: none.
 - Change: read the `XGTITLE` response into local `std::string` storage,
   check the terminator from the string, and append the description from
   owned text.
@@ -681,7 +670,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/rcstuff.cpp`.
 - Kind: NNTP subscriptions-list reader and generated newsrc output.
 - Function: `open_newsrc`.
-- Depends on: `CSTR-210`.
+- Depends on: none.
 - Change: preserve the existing pre-read output behavior, then read
   later subscription lines through the string `nntp_gets` API and write
   subscription lines without `std::fputs`.
@@ -692,7 +681,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/rt-ov.cpp`.
 - Kind: NNTP overview-format reader.
 - Function: `ov_init`.
-- Depends on: `CSTR-210`.
+- Depends on: none.
 - Change: read remote `overview.fmt` lines into local `std::string`
   storage and parse fields from views instead of `g_buf`.
 - Tests: overview format tests.
@@ -718,7 +707,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/datasrc.cpp`.
 - Kind: NNTP fetched-file reader using `g_buf`.
 - Function: `SourceFile::open`.
-- Depends on: `CSTR-210`, `CSTR-217`, `CSTR-218`.
+- Depends on: `CSTR-217`, `CSTR-218`.
 - Change: replace remote fetch line storage with local `std::string`
   storage and remove reliance on stale `g_buf` contents when
   `use_buffered_nntp_gets` is true.

@@ -1,4 +1,5 @@
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #include <nntp/nntpclient.h>
 #include <nntp/nntpinit.h>
 
@@ -338,6 +339,38 @@ TEST_F(NNTPGetStringTest, string_error_leaves_line_unchanged)
 
     EXPECT_EQ(NGSR_ERROR, result);
     EXPECT_EQ("junk", line);
+}
+
+TEST_F(NNTPGetStringTest, finishListDrainsUntilTerminator)
+{
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("comp.lang.apl 2 1 y"))
+        .WillOnce(Return("comp.lang.c++ 2 1 y"))
+        .WillOnce(Return("."));
+
+    nntp_finish_list();
+}
+
+TEST_F(NNTPGetStringTest, finishListDrainsLongLinesUntilTerminator)
+{
+    const std::string long_line(static_cast<std::size_t>(NNTP_STRLEN) + 8, 'x');
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return(long_line)).WillOnce(Return("."));
+
+    nntp_finish_list();
+}
+
+TEST_F(NNTPGetStringTest, finishListStopsOnReadError)
+{
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("comp.lang.apl 2 1 y"))
+        .WillOnce(Invoke(
+            [](error_code_t &ec)
+            {
+                ec = boost::asio::error::eof;
+                return "ignored";
+            }));
+
+    nntp_finish_list();
 }
 
 TEST_F(NNTPGetStringTest, statFormatsArticleNumberCommand)
