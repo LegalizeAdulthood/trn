@@ -304,19 +304,10 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
 
     while (pos > s_body_end || !had_nl)
     {
-        line.resize(static_cast<std::size_t>(limit));
-        const int result = nntp_gets(line.data(), limit);
+        const NNTPGetsResult result = nntp_gets(line, limit);
         if (result == NGSR_ERROR)
         {
             line = ".";
-        }
-        else
-        {
-            const std::size_t end = line.find('\0');
-            if (end != std::string::npos)
-            {
-                line.resize(end);
-            }
         }
         if (had_nl)
         {

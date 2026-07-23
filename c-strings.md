@@ -521,8 +521,8 @@ tree.
   `inews::main`, `new_nntp_groups`, `find_new_groups`, `check_first`,
   `DataSource::open`, `DataSource::find_group_desc`,
   `SourceFile::open`, `parse_header`, `nntp_list`,
-  `nntp_copy_body`, `open_newsrc`, and `ov_init`.  Keep the C wrapper
-  until those callers move.
+  `open_newsrc`, and `ov_init`.  Keep the C wrapper until those callers
+  move.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -589,17 +589,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-211 - NNTP Body Copy Line Reader
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: NNTP article-body reader helper.
-- Function: `nntp_copy_body`.
-- Depends on: `CSTR-202`.
-- Change: read body lines through the string `nntp_gets` API instead of
-  resizing a string and passing `data()` as a writable C buffer.
-  Preserve the `"."` fallback on read error.
-- Tests: NNTP article body tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -718,7 +707,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/head.cpp`.
 - Kind: NNTP header reader using `g_head_buf`.
 - Function: `parse_header`.
-- Depends on: `CSTR-211`.
+- Depends on: none.
 - Change: read NNTP header lines through owned string storage before
   appending them to the growable header buffer.  Preserve dot-stuffed
   line handling and end-of-header detection.

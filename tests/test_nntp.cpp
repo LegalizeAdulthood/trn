@@ -478,6 +478,24 @@ TEST_F(NNTPBodyTest, unstuffsDotPrefixedBodyLines)
     EXPECT_EQ(nullptr, nntp_read_art(line, sizeof line));
 }
 
+TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("ARTICLE 7"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("220 7 <message@example.test> article follows"))
+        .WillOnce(Invoke(
+            [](error_code_t &ec)
+            {
+                ec = boost::asio::error::eof;
+                return "ignored";
+            }));
+
+    nntp_body(ArticleNum{7});
+
+    std::string line(NNTP_STRLEN, '\0');
+    EXPECT_EQ(nullptr, nntp_read_art(line.data(), static_cast<int>(line.size())));
+}
+
 TEST_F(NNTPBodyTest, requestsBodyWhenArticleHeaderIsParsed)
 {
     const std::string header{"Subject: cached\n\n"};
