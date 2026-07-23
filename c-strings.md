@@ -467,12 +467,11 @@ tree.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
   `g_art_line`, `g_head_buf`, terminal command-input
   scratch, `nntpinit` name scratch, and environment host/domain probe
-  scratch.  The `parsedate` lexer word buffer is a local string scratch
-  candidate, but inactive self-test buffers are not current production
-  work.  Tiny UTF byte scratch buffers, translation tables, MIME decode
-  tables, terminal pushback bytes, termcap storage, address conversion
-  scratch, and regex bytecode arrays are non-string protocol or parser
-  storage, not current local string slices.
+  scratch.  Inactive self-test buffers are not current production work.
+  Tiny UTF byte scratch buffers, translation tables, MIME decode tables,
+  terminal pushback bytes, termcap storage, address conversion scratch,
+  and regex bytecode arrays are non-string protocol or parser storage,
+  not current local string slices.
 - `g_art_buf` is now backed by owned `std::string` storage, with the
   global pointer kept as a compatibility view.  Remaining direct pointer
   writes in `read_art_buf` are read/decode/filter plumbing, not current
@@ -496,10 +495,9 @@ tree.
 - Scorefile parsing has no new leaf string slice in this pass.  Remaining
   scorefile C-string work is tied to shared header buffers, regex
   bytecode, or command text.
-- Author compression still has a string public result wrapped around
-  mutable character-pointer helpers.  The remaining in-place helper can
-  be replaced under existing `CompressNameTest` and `CompressFromTest`
-  coverage.  See `CSTR-146`.
+- Author compression already has string-view inputs and string results.
+  The remaining `rt-util` string work is pipe-delimited status text
+  assembly in `output_change`.
 - `scan_active_line` already accepts `std::string_view`; do not add a
   new slice for it.
 - `string_case_compare` production callers that already have strings or
@@ -519,8 +517,10 @@ tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
-- New helper and leaf candidates found by this scan are MIME HTML
-  `find_attr` and `wildcard_match`.
+- MIME HTML `find_attr` and `wildcard_match` are already view-based and
+  should not be re-added as slices.  New local leaves from this scan are
+  simple tool output functions, `inews` signature line storage, and
+  `rt-util` status-message helper parsing.
 
 ## Current `safe_copy` Inventory
 
@@ -534,11 +534,11 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 11, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 6, `strncmp` 12.
-- Search and length: `strchr` 54, `strrchr` 1, `strstr` 2,
-  `strlen` 40.
-- Formatting into C buffers: `sprintf` 2, `snprintf` 2.
-- C text I/O roots: `fgets` 24, `fputs` 192, `printf` 378,
+- Comparison: `strcmp` 1, `strncmp` 12.
+- Search and length: `strchr` 52, `strrchr` 1, `strstr` 2,
+  `strlen` 41.
+- Formatting into C buffers: `sprintf` 7, `snprintf` 2.
+- C text I/O roots: `fgets` 22, `fputs` 191, `printf` 378,
   `fprintf` 41.
 - Character byte operations: `memcpy` 4, `memset` 6, `memcmp` 1.
 
@@ -565,15 +565,112 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-162 - NNTPLIST Usage Output
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: leaf formatted C stdio output.
+- Function: `usage`.
+- Change: replace the multiline `std::fprintf(stderr, ...)` usage text
+  with `fmt::print(stderr, ...)`.
+- Tests: add a focused nntplist bad-argument CMake test first, then run
+  it before and after the refactor.
+
+#### CSTR-163 - NNTPLIST Timeout Output
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: leaf plain C stdio output.
+- Function: `nntp_handle_timeout`.
+- Change: replace `std::fputs` with `fmt::print(stderr, ...)`.
+- Tests: build-only unless a small timeout-path tool test is easy to
+  add without real network timing.
+
+#### CSTR-164 - TRN-ARTCHK Main Output
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: leaf formatted C stdio output.
+- Function: `main`.
+- Change: replace `std::printf`, `printf`, and `std::fprintf` output
+  with `fmt::print`.  Preserve `std::perror`-style behavior only where
+  a real C library diagnostic is being requested.
+- Tests: existing `trn-artchk-*` CMake tests cover valid output and two
+  warning paths.  Add focused coverage first if changing an uncovered
+  diagnostic branch.
+
+#### CSTR-165 - INEWS Main Error Output
+
+- Files: `inews/inews.cpp`.
+- Kind: leaf formatted C stdio output.
+- Function: `main`.
+- Change: replace local `std::fprintf` and `fprintf` error output with
+  `fmt::print(stderr, ...)`.  Do not change article/body output flow or
+  `inews_fputs` in this slice.
+- Tests: existing `inews-invalid-header` and `inews-all-header` cover
+  two error paths.  Add focused coverage first for any other branch that
+  needs behavior verification.
+
+#### CSTR-166 - UTIL2 File-expansion Diagnostics
+
+- Files: `util/util2.cpp`.
+- Kind: leaf formatted/plain C stdio output.
+- Function: `file_exp`.
+- Change: replace `std::printf` and `std::fputs` diagnostics with
+  `fmt::print`.  Do not change tilde or `$NAME` expansion behavior in
+  this slice.
+- Tests: existing file-expansion tests cover ordinary expansion.  Add
+  focused diagnostic coverage first if a reachable platform branch is
+  edited.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-167 - INEWS String Output Helper
+
+- Files: `inews/inews.cpp`,
+  `nntp/include/nntp/nntpclient.h`, `nntp/nntpinit.cpp`.
+- Kind: helper parameter and buffer plus size.
+- Function: `inews_fputs` and `INNTPConnection::write`.
+- Change: change `inews_fputs` to accept `std::string_view` and write
+  the exact view extent.  Update `INNTPConnection::write` to take a
+  `std::string_view` instead of `const char *` plus `size_t`, then use
+  `asio::buffer(view.data(), view.size())` at the implementation
+  boundary.  Update mocks and call sites in the same slice.
+- Tests: run NNTP tests and existing inews failure tests.  Add posting
+  output coverage first if the helper semantics are not already covered
+  by mocks.
+
+#### CSTR-168 - RT-UTIL Status Message Views
+
+- Files: `libtrn/rt-util.cpp`, `libtrn/include/trn/rt-util.h`.
+- Kind: helper pointer parsing over pipe-delimited literals.
+- Function: `append_until_pipe`, `output_change`, and
+  `perform_status_end`.
+- Change: replace `const char *` cursor walking for
+  pipe-delimited `modifier` and `action` text with `std::string_view`
+  slicing.  Use empty views for absent optional text when empty remains
+  an unambiguous sentinel.
+- Tests: add or extend selector/status tests before refactoring if the
+  exact status strings are not already covered.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-169 - INEWS Signature Line Storage
+
+- Files: `inews/inews.cpp`.
+- Kind: tool-local fixed line input through the global NNTP buffer.
+- Function: `append_signature`.
+- Depends on: `CSTR-167`.
+- Change: read `.signature` with owned `std::string` line storage
+  instead of `g_ser_line`, `std::fgets`, manual newline stripping, and
+  `std::strlen`.  Preserve the `MAX_SIGNATURE` line limit and emitted
+  CRLF line endings.
+- Tests: add a local-posting or helper-level inews signature test before
+  refactoring if feasible; otherwise document why executable-level
+  coverage is not currently practical.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
