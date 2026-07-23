@@ -1505,7 +1505,7 @@ void list_newsgroups()
                            np->rc_line_c_str());
         }
         np->hide_subscribe_char();
-        if (print_lines(line.c_str(), NO_MARKING) != 0)
+        if (print_lines(line, NO_MARKING) != 0)
         {
             break;
         }

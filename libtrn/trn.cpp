@@ -984,14 +984,13 @@ void trn_version()
 #else
                             "NNTP (plus individual local access).\n",
 #endif
-                            g_patch_level)
-                    .c_str(),
+                            g_patch_level),
                 NO_MARKING);
 
     if (g_multirc)
     {
         newline();
-        print_lines(fmt::format("News source group #{}:\n\n", g_multirc->m_num).c_str(), NO_MARKING);
+        print_lines(fmt::format("News source group #{}:\n\n", g_multirc->m_num), NO_MARKING);
         for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
             if (!(rp->flags & RF_ACTIVE))
@@ -999,10 +998,10 @@ void trn_version()
                 continue;
             }
             const DataSource &data_source = *rp->data_source;
-            print_lines(fmt::format("ID {}:\nNewsrc {}.\n", data_source.m_name, rp->name.generic_string()).c_str(), NO_MARKING);
+            print_lines(fmt::format("ID {}:\nNewsrc {}.\n", data_source.m_name, rp->name.generic_string()), NO_MARKING);
             if (data_source.m_flags & DF_REMOTE)
             {
-                print_lines(fmt::format("News from server {}.\n", data_source.m_news_id).c_str(), NO_MARKING);
+                print_lines(fmt::format("News from server {}.\n", data_source.m_news_id), NO_MARKING);
                 std::string active_file;
                 active_file.reserve(CMD_BUF_LEN);
                 if (data_source.m_act_sf.m_fp)
@@ -1031,13 +1030,12 @@ void trn_version()
                     }
                 }
                 active_file += ".\n";
-                print_lines(active_file.c_str(), NO_MARKING);
+                print_lines(active_file, NO_MARKING);
             }
             else
             {
                 print_lines(fmt::format("News from {}.\nLocal active file {}.\n", data_source.m_spool_dir,
-                                        data_source.m_news_id)
-                                .c_str(),
+                                        data_source.m_news_id),
                             NO_MARKING);
             }
             if (!data_source.m_group_desc.empty())
@@ -1066,13 +1064,12 @@ void trn_version()
                     }
                 }
                 group_desc += ".\n";
-                print_lines(group_desc.c_str(), NO_MARKING);
+                print_lines(group_desc, NO_MARKING);
             }
             if (data_source.m_flags & DF_TRY_OVERVIEW)
             {
                 print_lines(fmt::format("Overview files from {}.\n",
-                                        data_source.m_over_dir.empty() ? "the server" : data_source.m_over_dir)
-                                .c_str(),
+                                        data_source.m_over_dir.empty() ? "the server" : data_source.m_over_dir),
                             NO_MARKING);
             }
             print_lines("\n", NO_MARKING);

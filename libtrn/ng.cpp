@@ -2084,7 +2084,7 @@ bool output_subject(char *ptr, int flag)
         {
             g_page_line = 1;
         }
-        if (print_lines(subject_line.c_str(), NO_MARKING) != 0)
+        if (print_lines(subject_line, NO_MARKING) != 0)
         {
             return true;
         }

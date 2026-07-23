@@ -129,7 +129,7 @@ static void process_list(GetNewsgroupFlags flag)
                        "\n"
                        "Unsubscribed but mentioned in your current newsrc{}:\n",
                        g_multirc->m_first->next ? "s" : "");
-        print_lines(line.c_str(), STANDOUT);
+        print_lines(line, STANDOUT);
     }
     AddGroup* node = g_first_add_group;
     if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
@@ -143,7 +143,7 @@ static void process_list(GetNewsgroupFlags flag)
             std::string line;
             line.reserve(CMD_BUF_LEN);
             fmt::format_to(std::back_inserter(line), "{}\n", node->m_name);
-            print_lines(line.c_str(), NO_MARKING);
+            print_lines(line, NO_MARKING);
         }
         else if (!g_use_add_selector)
         {
@@ -538,7 +538,7 @@ static void scan_active_line(std::string_view active_line, bool add_matching)
     {
         std::string line{group_name};
         line += '\n';
-        print_lines(line.c_str(), NO_MARKING);
+        print_lines(line, NO_MARKING);
     }
 }
 

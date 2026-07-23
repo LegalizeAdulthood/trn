@@ -587,17 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-201 - Paged Text Display View
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`, display
-  callers.
-- Kind: read-only display text parameter.
-- Function: `print_lines`.
-- Change: accept `std::string_view` and remove caller `c_str()` uses for
-  owned strings and `fmt::format` temporaries.  Keep bounded iteration so
-  the implementation does not rely on a null terminator.
-- Tests: help, terminal paging, and version/source display tests.
-
 #### CSTR-202 - NNTP Line Reader String API
 
 - Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,

@@ -429,6 +429,18 @@ TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)
     EXPECT_EQ("<so>Macros:<se>\n^AA   result\n", output);
 }
 
+TEST_F(MacroDisplayTest, printLinesUsesStringViewExtent)
+{
+    const std::string text{"alpha\nbeta\nunused"};
+
+    testing::internal::CaptureStdout();
+    const int         cmd = print_lines(std::string_view{text.data(), 11}, NO_MARKING);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(0, cmd);
+    EXPECT_EQ("alpha\nbeta\n", output);
+}
+
 TEST_F(ChoiceInputTest, inChoiceCyclesToNextValue)
 {
     push_char('\n');

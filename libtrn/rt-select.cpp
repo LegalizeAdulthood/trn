@@ -2511,7 +2511,7 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
 
     if (g_error_occurred)
     {
-        print_lines(g_msg.c_str(), NO_MARKING);
+        print_lines(g_msg, NO_MARKING);
         s_clean_screen = false;
         g_error_occurred = false;
     }
@@ -2531,7 +2531,7 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
     }
     else if (s_disp_status_line == 1)
     {
-        print_lines(g_msg.c_str(), NO_MARKING);
+        print_lines(g_msg, NO_MARKING);
         s_disp_status_line = 0;
     }
 

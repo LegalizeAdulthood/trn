@@ -752,7 +752,7 @@ static void show_key_map(KeyMap *curmap, std::string &prefix)
             case KM_NOTHING:
             {
                 const std::string line{fmt::format("{}   {}\n", prefix, static_cast<char>(i))};
-                print_lines(line.c_str(), NO_MARKING);
+                print_lines(line, NO_MARKING);
                 break;
             }
 
@@ -763,14 +763,14 @@ static void show_key_map(KeyMap *curmap, std::string &prefix)
             case KM_STRING:
             {
                 const std::string line{fmt::format("{}   {}\n", prefix, curmap->km_str[i])};
-                print_lines(line.c_str(), NO_MARKING);
+                print_lines(line, NO_MARKING);
                 break;
             }
 
             case KM_BOGUS:
             {
                 const std::string line{fmt::format("{}   BOGUS\n", prefix)};
-                print_lines(line.c_str(), STANDOUT);
+                print_lines(line, STANDOUT);
                 break;
             }
             }
@@ -1859,9 +1859,17 @@ reinp_in_choice:
     return !s_screen_is_dirty;
 }
 
-int print_lines(const char *what_to_print, int hilite)
+int print_lines(std::string_view what_to_print, int hilite)
 {
-    for (const char *s = what_to_print; *s;)
+    if (what_to_print.empty())
+    {
+        return 0;
+    }
+
+    const char       *s = what_to_print.data();
+    const char *const end = s + what_to_print.size();
+
+    for (; s != end;)
     {
         int i = check_page_line();
         if (i)
@@ -1888,7 +1896,7 @@ int print_lines(const char *what_to_print, int hilite)
 #endif
             underline();
         }
-        for (i = 0; *s && i < g_tc_COLS;)
+        for (i = 0; s != end && i < g_tc_COLS;)
         {
             if (at_norm_char(s))
             {
