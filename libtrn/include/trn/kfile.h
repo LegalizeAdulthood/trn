@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <string_view>
 
 struct Article;
 
@@ -74,6 +75,6 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering);
 void update_thread_kill_file();
 void edit_kill_file();
 void open_kill_file(int local);
-void kill_file_append(const char *cmd, bool local);
+void kill_file_append(std::string_view cmd, bool local);
 
 #endif

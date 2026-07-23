@@ -582,17 +582,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-191 - Kill-file Append Command View
-
-- Files: `libtrn/kfile.cpp`, `libtrn/include/trn/kfile.h`,
-  `libtrn/artsrch.cpp`, `tests/test_kfile.cpp`.
-- Kind: read-only command parameter.
-- Function: `kill_file_append`.
-- Change: accept `std::string_view cmd` and write the view to the
-  append stream.  Update callers that currently pass `c_str()` from an
-  owned string to pass the string directly.
-- Tests: existing kill-file append tests.
-
 #### CSTR-192 - Kill-unwanted Message View
 
 - Files: `libtrn/kfile.cpp`, `libtrn/include/trn/kfile.h`,

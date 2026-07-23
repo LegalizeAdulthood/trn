@@ -428,7 +428,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             cmd_lst = "j";
         }
         salt_command += cmd_lst;
-        kill_file_append(salt_command.c_str(), salt_away == 2 ? KF_GLOBAL : KF_LOCAL);
+        kill_file_append(salt_command, salt_away == 2 ? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd)
     {
