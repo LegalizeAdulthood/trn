@@ -1338,7 +1338,7 @@ static int get_near_miss(const std::vector<std::string> &newsgroup_matches)
 
     const std::string prompt{g_verbose ? "Which of these would you like?" : "Which?"};
 reask:
-    in_char(prompt.c_str(), MM_ADD_NEWSGROUP_PROMPT, options.c_str());
+    in_char(prompt, MM_ADD_NEWSGROUP_PROMPT, options);
     print_cmd();
     std::putchar('\n');
     switch (*g_buf)

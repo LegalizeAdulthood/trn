@@ -1546,24 +1546,15 @@ int pause_get_cmd()
     return 0;
 }
 
-void in_char(const char *prompt, MinorMode newmode, const char *dflt)
+void in_char(std::string_view prompt, MinorMode newmode, std::string_view dflt)
 {
     MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
-    const char  *s;
-    int          newlines;
-
-    for (newlines = 0, s = prompt; *s; s++)
-    {
-        if (*s == '\n')
-        {
-            newlines++;
-        }
-    }
+    const int   newlines = static_cast<int>(std::count(prompt.begin(), prompt.end(), '\n'));
 
 reask_in_char:
     unflush_output();                   // disable any ^O in effect
-    std::printf("%s [%s] ", prompt, dflt);
+    fmt::print("{} [{}] ", prompt, dflt);
     std::fflush(stdout);
     term_down(newlines);
     eat_typeahead();

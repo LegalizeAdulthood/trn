@@ -1133,7 +1133,7 @@ check_fuzzy_match:
                 g_verbose ? fmt::format("\nNewsgroup {} not in .newsrc -- subscribe?", g_newsgroup_name)
                           : fmt::format("\nSubscribe {}?", g_newsgroup_name)};
 reask_add:
-            in_char(add_prompt.c_str(), MM_ADD_NEWSGROUP_PROMPT, "ynYN");
+            in_char(add_prompt, MM_ADD_NEWSGROUP_PROMPT, "ynYN");
             print_cmd();
             newline();
             if (*g_buf == 'h')
@@ -1220,7 +1220,7 @@ reask_add:
             g_verbose ? fmt::format("\nNewsgroup {} is unsubscribed -- resubscribe?", g_newsgroup_name)
                       : fmt::format("\nResubscribe {}?", g_newsgroup_name)};
 reask_unsub:
-        in_char(resubscribe_prompt.c_str(), MM_RESUBSCRIBE_PROMPT, "yn");
+        in_char(resubscribe_prompt, MM_RESUBSCRIBE_PROMPT, "yn");
         print_cmd();
         newline();
         if (*g_buf == 'h')

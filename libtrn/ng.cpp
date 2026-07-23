@@ -738,7 +738,7 @@ static ArticleSwitchResult art_switch()
             g_default_cmd = "+tsanq";
         }
 reask_unread:
-        in_char(u_prompt,MM_UNKILL_PROMPT,g_default_cmd.c_str());
+        in_char(u_prompt, MM_UNKILL_PROMPT, g_default_cmd);
         print_cmd();
         newline();
         if (*g_buf == 'h')
@@ -1907,7 +1907,7 @@ char ask_catchup()
 reask_catchup:
     const std::string prompt = g_verbose ? fmt::format("Mark everything in {} as read?", g_newsgroup_name)
                                          : fmt::format("Catchup {}?", g_newsgroup_name);
-    in_char(prompt.c_str(), MM_CONFIRM_CATCH_UP_PROMPT, "yn#h");
+    in_char(prompt, MM_CONFIRM_CATCH_UP_PROMPT, "yn#h");
     print_cmd();
     char ch = *g_buf;
     if (ch == 'h' || ch == 'H')
@@ -2126,7 +2126,7 @@ char ask_memorize(char_int ch)
     }
 reask_memorize:
     const std::string prompt = fmt::format("{}Memorize {} command:", global_save ? "Global-" : "", mode_string);
-    in_char(prompt.c_str(), MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
+    in_char(prompt, MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
     print_cmd();
     ch = *g_buf;
     if (!thread_cmd && ch == 'f')

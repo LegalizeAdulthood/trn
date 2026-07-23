@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cerrno>
 #include <string>
 #include <string_view>
 
@@ -34,20 +35,36 @@ class TerminalTest : public testing::Test
 protected:
     void SetUp() override
     {
+        m_old_errno = errno;
+        m_old_general_mode = g_general_mode;
+        m_old_mode = g_mode;
+        m_old_term_line = g_term_line;
+        m_old_term_col = g_term_col;
         m_old_s_default_cmd = g_s_default_cmd;
         m_old_univ_default_cmd = g_univ_default_cmd;
+        errno = 0;
         drain_macro_buffer();
     }
 
     void TearDown() override
     {
         drain_macro_buffer();
+        errno = m_old_errno;
+        g_general_mode = m_old_general_mode;
+        g_mode = m_old_mode;
+        g_term_line = m_old_term_line;
+        g_term_col = m_old_term_col;
         g_s_default_cmd = m_old_s_default_cmd;
         g_univ_default_cmd = m_old_univ_default_cmd;
     }
 
-    bool m_old_s_default_cmd{};
-    bool m_old_univ_default_cmd{};
+    int         m_old_errno{};
+    GeneralMode m_old_general_mode{};
+    MinorMode   m_old_mode{};
+    int         m_old_term_line{};
+    int         m_old_term_col{};
+    bool        m_old_s_default_cmd{};
+    bool        m_old_univ_default_cmd{};
 };
 
 class MacroDisplayTest : public testing::Test
@@ -348,6 +365,38 @@ TEST_F(TerminalTest, setDefExpandsControlDefaultCommand)
 
     EXPECT_EQ(Ctl('N'), g_buf[0]);
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
+}
+
+TEST_F(TerminalTest, inCharPrintsPromptDefaultAndStoresInput)
+{
+    const std::string prompt{"Continue?"};
+    const std::string dflt{"yn"};
+    push_char('y');
+
+    testing::internal::CaptureStdout();
+    in_char(prompt, MM_ADD_NEWSGROUP_PROMPT, dflt);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Continue? [yn] ", output);
+    EXPECT_EQ('y', g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+}
+
+TEST_F(TerminalTest, inCharCountsPromptNewlinesAndAppliesDefault)
+{
+    g_term_line = 4;
+    g_term_col = 12;
+    push_char(' ');
+
+    testing::internal::CaptureStdout();
+    in_char("First\nSecond", MM_ADD_NEWSGROUP_PROMPT, "^N");
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("First\nSecond [^N] ", output);
+    EXPECT_EQ(Ctl('N'), g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+    EXPECT_EQ(5, g_term_line);
+    EXPECT_EQ(0, g_term_col);
 }
 
 TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)

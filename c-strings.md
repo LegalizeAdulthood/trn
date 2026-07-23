@@ -587,18 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-197 - Terminal Prompt View
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  prompt callers.
-- Kind: read-only prompt and default parameters.
-- Function: `in_char`.
-- Depends on: `CSTR-196`.
-- Change: accept `std::string_view` for the prompt and default command,
-  count newlines with algorithms, print with `fmt`, and pass the default
-  view to `set_def`.
-- Tests: terminal prompt and selector prompt tests if practical.
-
 #### CSTR-198 - Terminal Answer Prompt View
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
