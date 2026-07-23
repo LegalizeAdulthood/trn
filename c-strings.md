@@ -597,16 +597,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-207 - Nntplist Line Reader Caller
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: NNTP line-reader caller and plain output.
-- Function: `main`.
-- Depends on: `CSTR-202`.
-- Change: read NNTP list lines into owned string storage, pass views to
-  `nntp_at_list_end`, and write list output without `std::fputs`.
-- Tests: nntplist action tests.
-
 #### CSTR-208 - Trn-artchk Line Reader Callers
 
 - Files: `trn-artchk/trn-artchk.cpp`.

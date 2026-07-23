@@ -146,14 +146,15 @@ int main(int argc, char *argv[])
             fmt::print(stderr, "Server said: {}\n", g_ser_line);
             finalize(1);
         }
-        while (nntp_gets(g_ser_line, sizeof g_ser_line) == 1)
+        std::string line;
+        line.reserve(NNTP_STRLEN);
+        while (nntp_gets(line, NNTP_STRLEN) == NGSR_FULL_LINE)
         {
-            if (nntp_at_list_end(g_ser_line))
+            if (nntp_at_list_end(line))
             {
                 break;
             }
-            std::fputs(g_ser_line, out_fp);
-            std::putc('\n', out_fp);
+            fmt::print(out_fp, "{}\n", line);
         }
 
 #ifdef HAS_SIGHOLD
