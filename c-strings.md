@@ -565,18 +565,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-164 - TRN-ARTCHK Main Output
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: leaf formatted C stdio output.
-- Function: `main`.
-- Change: replace `std::printf`, `printf`, and `std::fprintf` output
-  with `fmt::print`.  Preserve `std::perror`-style behavior only where
-  a real C library diagnostic is being requested.
-- Tests: existing `trn-artchk-*` CMake tests cover valid output and two
-  warning paths.  Add focused coverage first if changing an uncovered
-  diagnostic branch.
-
 #### CSTR-165 - INEWS Main Error Output
 
 - Files: `inews/inews.cpp`.

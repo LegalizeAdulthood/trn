@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 
     if (argc != 5 || !(max_col_len = std::atoi(argv[2])))
     {
-        std::fprintf(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
+        fmt::print(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
         std::exit(1);
     }
     const fs::path newsgroups_file{argv[3]};
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     std::ifstream article{argv[1]};
     if (!article)
     {
-        std::fprintf(stderr, "trn-artchk: unable to open article `%s'.\n", argv[1]);
+        fmt::print(stderr, "trn-artchk: unable to open article `{}'.\n", argv[1]);
         std::exit(1);
     }
 
@@ -110,14 +110,14 @@ int main(int argc, char *argv[])
         const std::size_t colon = line.find(':');
         if (colon == std::string::npos)
         {
-            std::printf("\nERROR: line %d is an invalid header line:\n%s\n", line_num, line.c_str());
+            fmt::print("\nERROR: line {} is an invalid header line:\n{}\n", line_num, line);
             break;
         }
         if (colon + 1 < line.size() && line[colon + 1] != ' ')
         {
-            std::printf("\n"
-                        "ERROR: header on line %d does not have a space after the colon:\n%s\n",
-                        line_num, line.c_str());
+            fmt::print("\n"
+                       "ERROR: header on line {} does not have a space after the colon:\n{}\n",
+                       line_num, line);
         }
         if (colon == 10 && line.compare(0, 10, "Newsgroups") == 0)
         {
@@ -129,10 +129,10 @@ int main(int argc, char *argv[])
             }
             if (group_names.find(' ') != std::string_view::npos)
             {
-                std::printf("\n"
-                            "ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n"
-                            "only allowable space is the one separating the colon (:) from the contents.\n"
-                            "Use a comma (,) to separate multiple newsgroup names.\n");
+                fmt::print("\n"
+                           "ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n"
+                           "only allowable space is the one separating the colon (:) from the contents.\n"
+                           "Use a comma (,) to separate multiple newsgroup names.\n");
                 continue;
             }
             while (!group_names.empty())
@@ -153,15 +153,15 @@ int main(int argc, char *argv[])
             }
             if (newsgroups.empty())
             {
-                std::printf("\n"
-                       "ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
+                fmt::print("\n"
+                           "ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
                 continue;
             }
         }
     }
     if (!found_newsgroups)
     {
-        printf("\nERROR: the \"Newsgroups:\" line is missing from the header.\n");
+        fmt::print("\nERROR: the \"Newsgroups:\" line is missing from the header.\n");
     }
 
     // Check the body of the article for long lines
@@ -170,9 +170,9 @@ int main(int argc, char *argv[])
         line_num++;
         if (article.eof())
         {
-            std::printf("\n"
-                        "Warning: line %d has no trailing newline character and may get lost.\n",
-                        line_num);
+            fmt::print("\n"
+                       "Warning: line {} has no trailing newline character and may get lost.\n",
+                       line_num);
         }
         int col = 0;
         for (const char ch : line)
@@ -188,9 +188,9 @@ int main(int argc, char *argv[])
         }
         if (col > max_col_len)
         {
-            std::printf("\n"
-                        "Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
-                        max_col_len, line_num, line.c_str());
+            fmt::print("\n"
+                       "Warning: posting exceeds {} columns.  Line {} is the first long one:\n{}\n",
+                       max_col_len, line_num, line);
             break;
         }
     }
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     {
         int ngleft;
         // Print a note about each newsgroup
-        std::printf("\nYour article's newsgroup%s:\n", plural(static_cast<int>(newsgroups.size())));
+        fmt::print("\nYour article's newsgroup{}:\n", plural(static_cast<int>(newsgroups.size())));
         if (!check_active)
         {
             for (ArticleNewsgroup &newsgroup : newsgroups)
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
                             {
                                 description = "[no description available]";
                             }
-                            std::printf("%-23s %s\n", newsgroup.name.c_str(), description.c_str());
+                            fmt::print("{:<23} {}\n", newsgroup.name, description);
                             newsgroup.found_description = true;
                             ngleft--;
                         }
@@ -398,11 +398,11 @@ int main(int argc, char *argv[])
         {
             if (!newsgroup.found_active)
             {
-                std::printf("%-23s ** invalid news group -- check spelling **\n", newsgroup.name.c_str());
+                fmt::print("{:<23} ** invalid news group -- check spelling **\n", newsgroup.name);
             }
             else if (!newsgroup.found_description)
             {
-                std::printf("%-23s [no description available]\n", newsgroup.name.c_str());
+                fmt::print("{:<23} [no description available]\n", newsgroup.name);
             }
         }
     }
