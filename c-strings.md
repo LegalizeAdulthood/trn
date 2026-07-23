@@ -519,8 +519,9 @@ tree.
   or compute lengths manually.
 - MIME HTML `find_attr` and `wildcard_match` are already view-based and
   should not be re-added as slices.  New local leaves from this scan are
-  simple tool output functions, `inews` signature line storage, and
-  `rt-util` status-message helper parsing.
+  dead NNTP socket code, simple timeout output functions, literal lookup
+  tables, pointer-and-length display signatures, and owner-local command
+  or spinner tables.
 
 ## Current `safe_copy` Inventory
 
@@ -534,12 +535,12 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 11, `strncpy` 3, `strcat` 0.
-- Comparison: `strcmp` 1, `strncmp` 12.
+- Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 52, `strrchr` 1, `strstr` 2,
-  `strlen` 41.
+  `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
-- C text I/O roots: `fgets` 22, `fputs` 191, `printf` 378,
-  `fprintf` 41.
+- C text I/O roots: `fgets` 22, `fputs` 187, `printf` 363,
+  `fprintf` 29.
 - Character byte operations: `memcpy` 4, `memset` 6, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -565,15 +566,207 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-170 - Remove Dead NNTP Socket Helper
+
+- Files: `nntp/nntpinit.cpp`.
+- Kind: unused static helper with fixed buffers and C string calls.
+- Function: `get_tcp_socket`.
+- Change: delete the declaration and definition.  The ASIO connection
+  factory is the only live connection path, and no production caller
+  references this helper.
+- Tests: build plus NNTP connection tests.
+
+#### CSTR-171 - Data Source Active File Sentinel
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: nullable literal selection.
+- Function: `data_source_init`.
+- Change: replace `const char *actname = nullptr` with a
+  `std::string_view` using empty as the sentinel, then call
+  `config.set_active_file` only when the view is non-empty.
+- Tests: data source initialization tests.
+
+#### CSTR-172 - Inews Timeout Output
+
+- Files: `inews/inews.cpp`.
+- Kind: C text output.
+- Function: `nntp_handle_timeout`.
+- Change: replace the direct `std::fputs` call with `fmt::print` while
+  preserving the return value and message text.
+- Tests: inews build or timeout-path coverage if available.
+
+#### CSTR-173 - Article Checker Timeout Output
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: C text output.
+- Function: `nntp_handle_timeout`.
+- Change: replace the direct `std::fputs` call with `fmt::print` while
+  preserving the return value and message text.
+- Tests: trn-artchk build or timeout-path coverage if available.
+
+#### CSTR-174 - Tool Nested NNTP Error Output
+
+- Files: `tool/util3.cpp`.
+- Kind: C text output.
+- Function: `nntp_handle_nested_lists`.
+- Change: replace the direct `std::fputs` call with `fmt::print`; add the
+  fmt dependency to the tool target only if the target does not already
+  link it.
+- Tests: tool build or nested-call coverage if available.
+
+#### CSTR-175 - Newsgroup Status Labels
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: local literal table.
+- Function: `list_newsgroups`.
+- Change: replace the local `static const char *status[]` table with a
+  `constexpr std::array<std::string_view, 5>` and pass views directly to
+  formatting/output code.
+- Tests: newsgroup listing tests.
+
+#### CSTR-176 - Decode Filename Character Sets
+
+- Files: `libtrn/decode.cpp`.
+- Kind: literal character-set tables and `strchr` membership tests.
+- Function: `decode_fix_filename`.
+- Change: replace `GOODCHARS` and `BADCHARS` C-string macros with
+  `constexpr std::string_view` tables and use `.find()` membership tests
+  while preserving the current `MSDOS` variation.
+- Tests: filename decode tests.
+
+#### CSTR-177 - Interpolation Hex Digit Lookup
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: local literal character-set table and `strchr` offset lookup.
+- Function: `interp_backslash`.
+- Change: use a `constexpr std::string_view` or direct digit conversion
+  instead of subtracting pointers returned by `std::strchr`.
+- Tests: interpolation escape tests.
+
+#### CSTR-178 - Interpolation Regexp Specials
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: file-scope literal pointer table and `strchr` membership test.
+- Function: `do_interp`.
+- Change: replace `s_regexp_specials` with a
+  `constexpr std::string_view` and use `.find()` for regexp quoting.
+- Tests: interpolation regexp quoting tests.
+
+#### CSTR-179 - Selector Special Command Letters
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: literal command table and `strchr` membership test.
+- Function: `another_command`.
+- Change: replace `SPECIAL_CMD_LETTERS` with a
+  `constexpr std::string_view` and use `.find()` for command
+  membership.
+- Tests: universal selector command tests.
+
+#### CSTR-180 - Inews Post Failure Text
+
+- Files: `inews/inews.cpp`.
+- Kind: pointer walking over protocol text for display.
+- Function: `main`.
+- Change: replace the local `char *cp` scan over `g_ser_line + 4` with
+  string-view iteration or splitting, preserving the existing backslash
+  to newline translation and the original order of checks.
+- Tests: inews post-failure output coverage if available.
+
+#### CSTR-181 - NNTP Verbose Output
+
+- Files: `nntp/nntpclient.cpp`.
+- Kind: C text output.
+- Function: `nntp_connect`.
+- Change: replace verbose-branch `std::printf` calls with `fmt::print`
+  while preserving message text and newline behavior.
+- Tests: NNTP client tests or build if the verbose path is not covered.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-182 - Selector Change Object Type
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: literal-only function parameter.
+- Function: `sel_perform_change`.
+- Change: promote `obj_type` from `const char *` to `std::string_view`.
+  Callers already pass string literals, and the callee passes the value
+  to `perform_status_end`, which accepts a view.
+- Tests: universal selector status tests.
+
+#### CSTR-183 - Newsgroup Display Names
+
+- Files: `libtrn/rt-page.cpp`.
+- Kind: pointer-plus-size display parameter.
+- Function: `display_group`.
+- Change: replace `const char *group, int len` with
+  `std::string_view group`.  Pass a sliced view for newsrc lines and the
+  existing string for group names, then use the view for description
+  lookup and output.
+- Tests: newsgroup page display tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-184 - Kill-file Thread Command Lookup
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: shared command-letter table and `strchr` offset lookup.
+- Function: `do_kill_file`.
+- Change: use a `std::string_view` over `s_thread_cmd_ltr` and `.find()`
+  to compute the matching command index for `s_thread_cmd_flag`.
+- Tests: kill-file thread command tests.
+
+#### CSTR-185 - Local Thread Command Output
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: shared command-letter table indexed as a C string.
+- Function: `write_local_thread_commands`.
+- Change: iterate the command-letter table by `std::string_view::size()`
+  instead of testing for a trailing NUL.
+- Tests: kill-file local thread command output tests.
+
+#### CSTR-186 - Global Thread Command Output
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: shared command-letter table indexed as a C string.
+- Function: `write_global_thread_commands`.
+- Change: iterate the command-letter table by `std::string_view::size()`
+  instead of testing for a trailing NUL.
+- Tests: kill-file global thread command output tests.
+
+#### CSTR-187 - Kill-file Edit Thread Command Lookup
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: shared command-letter table and `strchr` offset lookup.
+- Function: `edit_kill_file`.
+- Change: use a `std::string_view` over `s_thread_cmd_ltr` and `.find()`
+  to compute the matching command index for `s_thread_cmd_flag`.
+- Tests: kill-file editing tests.
+
+#### CSTR-188 - MIME Roman List Labels
+
+- Files: `libtrn/mime.cpp`.
+- Kind: local literal pointer table selected by branch.
+- Function: `tag_action`.
+- Change: replace `const char *roman_letters` with `std::string_view`
+  literals for lower- and upper-case roman digits, preserving the
+  existing list-label algorithm.
+- Tests: MIME HTML list rendering tests.
+
+#### CSTR-189 - Spinner Character State
+
+- Files: `libtrn/rt-util.cpp`.
+- Kind: file-scope literal pointer state.
+- Functions: `set_spin`, `spin`, `perform_status_init`,
+  `perform_status`.
+- Change: replace `s_spin_chars` with `std::string_view` and index the
+  view; keep the existing state machine and spinner literals.
+- Tests: perform status and spinner tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
