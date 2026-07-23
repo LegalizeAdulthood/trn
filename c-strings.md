@@ -576,16 +576,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-189 - Spinner Character State
-
-- Files: `libtrn/rt-util.cpp`.
-- Kind: file-scope literal pointer state.
-- Functions: `set_spin`, `spin`, `perform_status_init`,
-  `perform_status`.
-- Change: replace `s_spin_chars` with `std::string_view` and index the
-  view; keep the existing state machine and spinner literals.
-- Tests: perform status and spinner tests.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

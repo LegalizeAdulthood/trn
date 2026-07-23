@@ -720,7 +720,7 @@ std::string compress_subj(const Article *ap, int max)
 
 // Modified version of a spinner originally found in Clifford Adams' strn.
 
-static const char     *s_spin_chars{};
+static std::string_view s_spin_chars;
 static int             s_spin_level{}; // used to allow non-interfering nested spins
 static SpinMode        s_spin_mode{};
 static int             s_spin_place{}; // represents place in s_spinchars array
@@ -819,7 +819,7 @@ void spin(int count)
         }
         if (!(++g_spin_count % count))
         {
-            std::putchar(s_spin_chars[++s_spin_place % 4]);
+            std::putchar(s_spin_chars[++s_spin_place % s_spin_chars.size()]);
             backspace();
             std::fflush(stdout);
         }
@@ -851,7 +851,7 @@ void spin(int count)
         }
         else if (!(g_spin_count % count))
         {
-            std::putchar(s_spin_chars[++s_spin_place % 4]);
+            std::putchar(s_spin_chars[++s_spin_place % s_spin_chars.size()]);
             backspace();
             std::fflush(stdout);
         }
@@ -894,7 +894,7 @@ void perform_status(int cnt, int spin)
 {
     if (!(++g_spin_count % spin))
     {
-        std::putchar(s_spin_chars[++s_spin_place % 4]);
+        std::putchar(s_spin_chars[++s_spin_place % s_spin_chars.size()]);
         backspace();
         std::fflush(stdout);
     }

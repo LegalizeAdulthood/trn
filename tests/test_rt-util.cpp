@@ -381,6 +381,8 @@ protected:
         m_old_selected_count = g_selected_count;
         m_old_missing_count = g_missing_count;
         m_old_sel_mode = g_sel_mode;
+        m_old_spin_count = g_spin_count;
+        m_old_tc_BC = g_tc_BC;
     }
 
     void TearDown() override
@@ -394,6 +396,8 @@ protected:
         g_selected_count = m_old_selected_count;
         g_missing_count = m_old_missing_count;
         g_sel_mode = m_old_sel_mode;
+        g_spin_count = m_old_spin_count;
+        g_tc_BC = m_old_tc_BC;
     }
 
     void begin_status(int count, ArticleUnread selected_count = ArticleUnread{},
@@ -413,6 +417,8 @@ protected:
     ArticleUnread              m_old_selected_count{};
     ArticleUnread              m_old_missing_count{};
     SelectionMode              m_old_sel_mode{};
+    int                        m_old_spin_count{};
+    const char                *m_old_tc_BC{};
 };
 
 TEST_F(PerformStatusEndTest, reportsNoArticlesAffected)
@@ -471,6 +477,18 @@ TEST_F(PerformStatusEndTest, reportsMissingArticlesWithPluralModifier)
 
     EXPECT_EQ(2, result);
     EXPECT_EQ("2 articles killed(, 2  were missing).", g_msg);
+}
+
+TEST_F(PerformStatusEndTest, emitsSpinnerCharacters)
+{
+    begin_status(3);
+    g_tc_BC = "\b";
+
+    testing::internal::CaptureStdout();
+    perform_status(3, 1);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(">\b", output);
 }
 
 TEST(SubjectHasReTest, one)
