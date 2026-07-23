@@ -575,18 +575,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-157 - Environment Hostname Scratch Buffers
-
-- Files: `util/env.cpp`.
-- Kind: local fixed-size string scratch buffers.
-- Function: `env_init`.
-- Change: replace `std::array<char, TCBUF_SIZE + 1>` hostname scratch
-  with local `std::string` storage where the platform API allows a
-  mutable buffer.  Preserve the existing `TCBUF_SIZE` truncation where
-  it comes from platform API capacity, and use line input APIs that do
-  not require a fixed C string buffer for pipe output.
-- Tests: util environment tests.
-
 #### CSTR-158 - Parsedate Lexer Word Buffer
 
 - Files: `parsedate/parsedate.y`.

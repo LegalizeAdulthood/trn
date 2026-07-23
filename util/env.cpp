@@ -30,7 +30,6 @@
 #endif
 
 #include <algorithm>
-#include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -368,9 +367,10 @@ static bool set_p_host_name()
     WSADATA    data;
     WSAStartup(version, &data);
 #endif
-    std::array<char, TCBUF_SIZE + 1> host_buffer{};
+    std::string host_buffer(TCBUF_SIZE + 1, '\0');
     gethostname(host_buffer.data(), TCBUF_SIZE);
-    local_host_name = host_buffer.data();
+    host_buffer.resize(host_buffer.find('\0'));
+    local_host_name = host_buffer;
 #else
 # ifdef HAS_UNAME
     // get sysname
@@ -386,12 +386,9 @@ static bool set_p_host_name()
             fmt::print("Can't find hostname\n");
             finalize(1);
         }
-        std::array<char, TCBUF_SIZE + 1> host_buffer{};
-        std::fgets(host_buffer.data(), TCBUF_SIZE, pipefp);
-        local_host_name = host_buffer.data();
-        if (!local_host_name.empty() && local_host_name.back() == '\n')
+        for (int ch = std::fgetc(pipefp); ch != EOF && ch != '\n'; ch = std::fgetc(pipefp))
         {
-            local_host_name.pop_back();
+            local_host_name += static_cast<char>(ch);
         }
         pclose(pipefp);
     }
@@ -453,11 +450,12 @@ static bool set_p_host_name()
 #endif
 #ifdef HAS_GETDOMAINNAME
         {
-            std::array<char, LINE_BUF_LEN + 1> domain_name{};
-            std::string_view                   domain_name_text;
+            std::string      domain_name(LINE_BUF_LEN + 1, '\0');
+            std::string_view domain_name_text;
             if (getdomainname(domain_name.data(), LINE_BUF_LEN) == 0)
             {
-                domain_name_text = domain_name.data();
+                domain_name.resize(domain_name.find('\0'));
+                domain_name_text = domain_name;
             }
             if (!domain_name_text.empty() && domain_name_text != "(none)")
             {
