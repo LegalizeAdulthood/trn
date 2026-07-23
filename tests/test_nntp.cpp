@@ -14,6 +14,8 @@
 
 #include <test_config.h>
 
+#include "MockNNTPConnection.h"
+
 #include <boost/asio/error.hpp>
 
 #include <gmock/gmock.h>
@@ -29,17 +31,6 @@
 namespace fs = std::filesystem;
 
 using namespace testing;
-
-class MockNNTPConnection : public INNTPConnection
-{
-public:
-    ~MockNNTPConnection() override = default;
-
-    MOCK_METHOD(std::string, read_line, (error_code_t &), (override));
-    MOCK_METHOD(void, write_line, (const std::string &, error_code_t &), (override));
-    MOCK_METHOD(void, write, (std::string_view, error_code_t &), (override));
-    MOCK_METHOD(size_t, read, (char *, size_t, error_code_t &), (override));
-};
 
 using MockNNTPConnectionFactory =
     StrictMock<MockFunction<ConnectionPtr(const char *machine, int port, const char *service)>>;

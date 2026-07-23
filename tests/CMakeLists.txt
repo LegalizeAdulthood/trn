@@ -8,6 +8,7 @@ include(ConfigureTrnTestData)
 configure_trn_test_data()
 
 add_executable(trn-test
+    MockNNTPConnection.h
     mock_env.h
     test_addng.cpp
     test_autosub.cpp

@@ -23,6 +23,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "MockNNTPConnection.h"
+
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -36,17 +38,6 @@ namespace
 namespace fs = std::filesystem;
 
 constexpr ArticleNum TEST_ARTICLE_NUM{1};
-
-class MockNNTPConnection : public INNTPConnection
-{
-public:
-    ~MockNNTPConnection() override = default;
-
-    MOCK_METHOD(std::string, read_line, (error_code_t &), (override));
-    MOCK_METHOD(void, write_line, (const std::string &, error_code_t &), (override));
-    MOCK_METHOD(void, write, (std::string_view, error_code_t &), (override));
-    MOCK_METHOD(size_t, read, (char *, size_t, error_code_t &), (override));
-};
 
 class OverviewTest : public testing::Test
 {

@@ -10,6 +10,7 @@
 #include <test_config.h>
 
 #include "mock_env.h"
+#include "MockNNTPConnection.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -27,17 +28,6 @@ namespace
 {
 
 namespace fs = std::filesystem;
-
-class MockNNTPConnection : public INNTPConnection
-{
-public:
-    ~MockNNTPConnection() override = default;
-
-    MOCK_METHOD(std::string, read_line, (error_code_t &), (override));
-    MOCK_METHOD(void, write_line, (const std::string &, error_code_t &), (override));
-    MOCK_METHOD(void, write, (std::string_view, error_code_t &), (override));
-    MOCK_METHOD(std::size_t, read, (char *, std::size_t, error_code_t &), (override));
-};
 
 class SourceFileOwner
 {
