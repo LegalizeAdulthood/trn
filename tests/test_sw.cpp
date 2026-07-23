@@ -103,6 +103,17 @@ struct SwitchFlagRestorer
     }
 };
 
+struct OptionValueRestorer
+{
+    OptionIndex option;
+    std::string value;
+
+    ~OptionValueRestorer()
+    {
+        set_option(option, value);
+    }
+};
+
 class EnvironmentSwitchTest : public testing::Test
 {
 protected:
@@ -225,7 +236,7 @@ TEST(SwitchTest, writeInitEnvironmentWritesSavedExports)
     for (int i = 0; i < 35; i++)
     {
         const std::string command{"-ETRN_SW_INIT_ENV_" + std::to_string(i) + "=value" + std::to_string(i)};
-        decode_switch(command.c_str());
+        decode_switch(command);
     }
 
     std::FILE *fp = std::fopen(output_path.string().c_str(), "w");
@@ -247,7 +258,7 @@ TEST_F(EnvironmentSwitchTest, decodeEnvironmentSwitchSetsValue)
     command.append(VALUE_ENV_VAR);
     command += "=value";
 
-    decode_switch(command.c_str());
+    decode_switch(command);
 
     EXPECT_EQ("value", get_env_var(VALUE_ENV_VAR));
 }
@@ -257,7 +268,7 @@ TEST_F(EnvironmentSwitchTest, decodeEnvironmentSwitchSetsEmptyValue)
     std::string command{"-E="};
     command.append(EMPTY_ENV_VAR);
 
-    decode_switch(command.c_str());
+    decode_switch(command);
 
     EXPECT_TRUE(get_env_var(EMPTY_ENV_VAR).empty());
 }
@@ -268,7 +279,7 @@ TEST_F(EnvironmentSwitchTest, decodeEnvironmentSwitchPreservesEqualsInValue)
     command.append(EQUALS_ENV_VAR);
     command += "=left=right";
 
-    decode_switch(command.c_str());
+    decode_switch(command);
 
     EXPECT_EQ("left=right", get_env_var(EQUALS_ENV_VAR));
 }
@@ -282,6 +293,16 @@ TEST_F(EnvironmentSwitchTest, switchListPreservesQuotedEnvironmentValue)
     sw_list(switches);
 
     EXPECT_EQ("left right", get_env_var(VALUE_ENV_VAR));
+}
+
+TEST(SwitchTest, decodeSwitchTrimsLeadingSpaceBeforeSuffixOption)
+{
+    OptionValueRestorer restore{OI_CITED_TEXT_STRING, option_value(OI_CITED_TEXT_STRING)};
+    const std::string   command{" \t-F>>ignored"};
+
+    decode_switch(std::string_view{command}.substr(0, 6));
+
+    EXPECT_EQ(">>", option_value(OI_CITED_TEXT_STRING));
 }
 
 TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)

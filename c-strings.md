@@ -592,15 +592,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-205 - Switch Decoder View
-
-- Files: `libtrn/sw.cpp`, `libtrn/include/trn/sw.h`, `libtrn/opt.cpp`.
-- Kind: read-only command-line switch parser input.
-- Function: `decode_switch`.
-- Change: accept `std::string_view`, trim leading spaces by view, and
-  avoid round-tripping switch tokens through `c_str()`.
-- Tests: option and switch parsing tests.
-
 #### CSTR-206 - Active Line Numeric Parsing
 
 - Files: `libtrn/addng.cpp`, `libtrn/ngdata.cpp`.

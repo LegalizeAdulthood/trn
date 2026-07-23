@@ -10,7 +10,7 @@
 
 void sw_file(std::string_view filename);
 void sw_list(std::string_view switches);
-void decode_switch(const char *s);
+void decode_switch(std::string_view s);
 void write_init_environment(std::FILE *fp);
 
 #endif
