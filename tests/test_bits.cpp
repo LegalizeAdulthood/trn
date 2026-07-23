@@ -14,8 +14,12 @@
 #include <trn/rthread.h>
 #include <trn/trn.h>
 
+#include <nntp/nntpclient.h>
 #include <test_config.h>
 
+#include "MockNNTPConnection.h"
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cstddef>
@@ -31,6 +35,9 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+using MockConnection = testing::StrictMock<MockNNTPConnection>;
+using MockConnectionPtr = std::shared_ptr<MockConnection>;
 
 int compare_newsgroup_name(std::string_view key, HashDatum data)
 {
@@ -137,6 +144,9 @@ protected:
         m_old_last_cached = g_last_cached;
         m_old_first_subject = g_first_subject;
         m_old_cached_all_in_range = g_cached_all_in_range;
+        m_old_nntp_link = g_nntp_link;
+        m_old_last_command = g_last_command;
+        nntp_gets_clear_buffer();
 
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
         std::error_code error;
@@ -157,6 +167,9 @@ protected:
         g_last_cached = ArticleNum{};
         g_first_subject = nullptr;
         g_cached_all_in_range = false;
+        g_nntp_link.connection.reset();
+        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_last_command.clear();
 
         m_data_source.m_flags = DF_NONE;
         m_group.m_abs_first = ArticleNum{1};
@@ -184,6 +197,9 @@ protected:
         g_last_cached = m_old_last_cached;
         g_first_subject = m_old_first_subject;
         g_cached_all_in_range = m_old_cached_all_in_range;
+        nntp_gets_clear_buffer();
+        g_nntp_link = m_old_nntp_link;
+        g_last_command = m_old_last_command;
     }
 
     void write_file(std::string_view name)
@@ -194,6 +210,14 @@ protected:
     bool article_exists(long num) const
     {
         return g_article_list.at(ArticleNum{num}).m_flags & AF_EXISTS;
+    }
+
+    void use_remote_connection()
+    {
+        m_data_source.m_flags = DF_REMOTE;
+        m_connection = std::make_shared<MockConnection>();
+        g_nntp_link.connection = m_connection;
+        g_nntp_link.flags = NNTP_NEW_CMD_OK;
     }
 
     fs::path                      m_old_current_path;
@@ -208,8 +232,11 @@ protected:
     ArticleNum                    m_old_last_cached{};
     Subject                      *m_old_first_subject{};
     bool                          m_old_cached_all_in_range{};
+    NNTPLink                      m_old_nntp_link{};
+    std::string                   m_old_last_command;
     DataSource                    m_data_source{};
     NewsgroupData                 m_group{};
+    MockConnectionPtr             m_connection;
 };
 
 class XrefChaseTest : public testing::Test
@@ -425,6 +452,26 @@ TEST_F(FindExistingArticlesTest, scansOnlyPlainNumericArticleFilenames)
     EXPECT_EQ(ArticleNum{3}, g_last_art);
     EXPECT_EQ(ArticleNum{1}, m_group.m_abs_first);
     EXPECT_EQ(ArticleNum{3}, m_group.m_ng_max);
+}
+
+TEST_F(FindExistingArticlesTest, remoteListgroupMarksReturnedArticleNumbers)
+{
+    use_remote_connection();
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LISTGROUP"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("211 list of article numbers follows"))
+        .WillOnce(testing::Return("0"))
+        .WillOnce(testing::Return("2"))
+        .WillOnce(testing::Return("4"))
+        .WillOnce(testing::Return("."));
+
+    find_existing_articles();
+
+    EXPECT_FALSE(article_exists(1));
+    EXPECT_TRUE(article_exists(2));
+    EXPECT_FALSE(article_exists(3));
+    EXPECT_TRUE(article_exists(4));
+    EXPECT_FALSE(article_exists(5));
 }
 
 TEST_F(XrefChaseTest, markAsReadChasesXrefToOtherGroup)

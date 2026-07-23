@@ -518,7 +518,7 @@ tree.
   slice for it.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
-  callers are `new_nntp_groups`, `find_new_groups`, `check_first`,
+  callers are `new_nntp_groups`, `find_new_groups`,
   `DataSource::open`, `DataSource::find_group_desc`,
   `SourceFile::open`, `parse_header`, `nntp_list`, `open_newsrc`, and
   `ov_init`.  Keep the C wrapper until those callers move.
@@ -598,17 +598,6 @@ them before broad global-buffer work and before removing helpers.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-212 - Bits LISTGROUP Response Lines
-
-- Files: `libtrn/bits.cpp`.
-- Kind: NNTP article-number list reader.
-- Function: `check_first`.
-- Depends on: `CSTR-202`.
-- Change: read `LISTGROUP` response lines into local `std::string`
-  storage, check the terminator from the string, and parse article
-  numbers from the owned line text.
-- Tests: article existence and NNTP tests.
 
 #### CSTR-213 - Datasrc XGTITLE Description Line
 

@@ -307,6 +307,8 @@ void find_existing_articles()
         // Parse the LISTGROUP output and remember everything we find
         if (nntp_art_nums())
         {
+            std::string list_line;
+            list_line.reserve(NNTP_STRLEN);
             for (ap = article_ptr(article_first(g_abs_first));
                  ap && ap->article_num() <= g_last_art;
                  ap = article_nextp(ap))
@@ -315,15 +317,17 @@ void find_existing_articles()
             }
             while (true)
             {
-                if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
+                if (nntp_gets(list_line, NNTP_STRLEN) == NGSR_ERROR)
                 {
                     break;
                 }
-                if (nntp_at_list_end(g_ser_line))
+                if (nntp_at_list_end(list_line))
                 {
                     break;
                 }
-                an = ArticleNum{std::atol(g_ser_line)};
+                long article_number{};
+                std::from_chars(list_line.data(), list_line.data() + list_line.size(), article_number);
+                an = ArticleNum{article_number};
                 if (an < g_abs_first)
                 {
                     continue;   // Ignore some whacked-out NNTP servers
