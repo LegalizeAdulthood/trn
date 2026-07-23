@@ -536,7 +536,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 10, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 48, `strrchr` 1, `strstr` 2,
+- Search and length: `strchr` 47, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
 - C text I/O roots: `fgets` 22, `fputs` 184, `printf` 363,
@@ -565,16 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-179 - Selector Special Command Letters
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: literal command table and `strchr` membership test.
-- Function: `another_command`.
-- Change: replace `SPECIAL_CMD_LETTERS` with a
-  `constexpr std::string_view` and use `.find()` for command
-  membership.
-- Tests: universal selector command tests.
 
 #### CSTR-180 - Inews Post Failure Text
 

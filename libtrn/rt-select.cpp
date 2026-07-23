@@ -2540,7 +2540,8 @@ static bool sel_perform_change(long cnt, const char *obj_type)
     return false;
 }
 
-static constexpr const char *SPECIAL_CMD_LETTERS{"<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033;"};
+static constexpr std::string_view SPECIAL_CMD_LETTERS{R"(<+>^$!?&:/\hDEJLNOPqQRSUXYZ)"
+                                                      "\n\r\t\033;"};
 
 /// @brief Handles additional command input for the selector loop.
 ///
@@ -2578,7 +2579,7 @@ static char another_command(char_int ch)
         {
             // try to optimize the screen update for some commands.
             if (g_sel_chars.find(static_cast<char>(ch)) == std::string::npos //
-                && (std::strchr(SPECIAL_CMD_LETTERS, ch) || ch == Ctl('k')))
+                && (SPECIAL_CMD_LETTERS.find(static_cast<char>(ch)) != std::string_view::npos || ch == Ctl('k')))
             {
                 s_sel_ret = ch;
                 return ch;
