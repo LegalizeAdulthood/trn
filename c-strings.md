@@ -582,17 +582,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-190 - Article MORE Prompt Storage
-
-- Files: `libtrn/art.cpp`.
-- Kind: formatting-only global buffer use.
-- Function: `do_article`.
-- Change: build the pager MORE prompt in a local `std::string` with
-  `fmt::format`, use its size for `out_pos`, and pass it directly to
-  `color_string`.  Do not touch command-input uses of `g_buf`.
-- Tests: article pager or display tests if practical; otherwise run the
-  existing article/display coverage.
-
 #### CSTR-191 - Kill-file Append Command View
 
 - Files: `libtrn/kfile.cpp`, `libtrn/include/trn/kfile.h`,

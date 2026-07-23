@@ -775,11 +775,11 @@ reask_pager:
         {
             const std::string percent =
                 g_art_size < 0 ? "?" : std::to_string(g_art_pos.value_of() * 100 / g_art_size.value_of());
-            *fmt::format_to_n(g_buf, sizeof g_buf - 1, "{}--MORE--({}%)", current_char_subst(), percent).out = '\0';
+            const std::string more_prompt = fmt::format("{}--MORE--({}%)", current_char_subst(), percent);
+            out_pos = g_term_col + static_cast<int>(more_prompt.size());
+            draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? out_pos + 5 : 0), true);
+            color_string(COLOR_MORE, more_prompt);
         }
-        out_pos = g_term_col + std::strlen(g_buf);
-        draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES-1? out_pos+5 : 0), true);
-        color_string(COLOR_MORE,g_buf);
         std::fflush(stdout);
         g_term_col = out_pos;
         eat_typeahead();
