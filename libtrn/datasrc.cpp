@@ -95,7 +95,7 @@ static std::string                read_data_sources(std::string_view filename);
 ///
 void data_source_init()
 {
-    const char *actname = nullptr;
+    std::string_view active_file;
 
     g_data_sources.clear();
     g_data_sources.reserve(20);
@@ -135,16 +135,16 @@ void data_source_init()
         if (server_name == "local")
         {
             server_name.clear();
-            actname = ACTIVE;
+            active_file = ACTIVE;
         }
         DataSourceConfig config;
         if (!server_name.empty())
         {
             config.set_nntp_server(server_name);
         }
-        if (actname != nullptr)
+        if (!active_file.empty())
         {
-            config.set_active_file(actname);
+            config.set_active_file(active_file);
         }
         config.set_spool_dir(NEWS_SPOOL);
         config.set_overview_dir(OVERVIEW_DIR);

@@ -566,16 +566,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-171 - Data Source Active File Sentinel
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: nullable literal selection.
-- Function: `data_source_init`.
-- Change: replace `const char *actname = nullptr` with a
-  `std::string_view` using empty as the sentinel, then call
-  `config.set_active_file` only when the view is non-empty.
-- Tests: data source initialization tests.
-
 #### CSTR-172 - Inews Timeout Output
 
 - Files: `inews/inews.cpp`.
