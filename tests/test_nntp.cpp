@@ -275,6 +275,21 @@ TEST_F(NNTPGetStringTest, partial_line)
     EXPECT_EQ("this", std::string(buffer));
 }
 
+TEST_F(NNTPGetStringTest, partial_line_continues_from_saved_text)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
+    char buffer[5];
+
+    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(buffer, sizeof(buffer)));
+    EXPECT_EQ("this", std::string(buffer));
+    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(buffer, sizeof(buffer)));
+    EXPECT_EQ("does", std::string(buffer));
+    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(buffer, sizeof(buffer)));
+    EXPECT_EQ("not ", std::string(buffer));
+    EXPECT_EQ(NGSR_FULL_LINE, nntp_gets(buffer, sizeof(buffer)));
+    EXPECT_EQ("it", std::string(buffer));
+}
+
 TEST_F(NNTPGetStringTest, error)
 {
     m_ec = boost::asio::error::eof;
@@ -285,6 +300,44 @@ TEST_F(NNTPGetStringTest, error)
 
     EXPECT_EQ(NGSR_ERROR, result);
     EXPECT_EQ("junk", std::string(buffer));
+}
+
+TEST_F(NNTPGetStringTest, string_line_fits)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits")));
+    std::string line{"junk"};
+
+    const NNTPGetsResult result = nntp_gets(line, 1024);
+
+    EXPECT_EQ(NGSR_FULL_LINE, result);
+    EXPECT_EQ("this fits", line);
+}
+
+TEST_F(NNTPGetStringTest, string_partial_line_continues_from_saved_text)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
+    std::string line;
+
+    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ("this", line);
+    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ("does", line);
+    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ("not ", line);
+    EXPECT_EQ(NGSR_FULL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ("it", line);
+}
+
+TEST_F(NNTPGetStringTest, string_error_leaves_line_unchanged)
+{
+    m_ec = boost::asio::error::eof;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
+    std::string line{"junk"};
+
+    const NNTPGetsResult result = nntp_gets(line, 1024);
+
+    EXPECT_EQ(NGSR_ERROR, result);
+    EXPECT_EQ("junk", line);
 }
 
 TEST_F(NNTPGetStringTest, statFormatsArticleNumberCommand)

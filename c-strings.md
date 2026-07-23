@@ -587,18 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-202 - NNTP Line Reader String API
-
-- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
-  NNTP tests.
-- Kind: buffer-plus-size output API.
-- Function: `nntp_gets`.
-- Change: add or migrate to a string-output API that returns line text
-  without requiring a caller-provided `char *` buffer.  Preserve
-  full-line, partial-line, and error behavior until caller slices prove
-  the fixed-size truncation is arbitrary.
-- Tests: NNTP line-reader tests, including long line behavior.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish

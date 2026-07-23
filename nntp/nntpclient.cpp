@@ -322,7 +322,7 @@ static std::string s_nntp_gets_line;
 // the null-terminator, and we need room for our "\r\n"-stripping code
 // to work right, so "len" MUST be at least 3.
 //
-NNTPGetsResult nntp_gets(char *bp, int len)
+NNTPGetsResult nntp_gets(std::string &line, int len)
 {
     SigIntHolder holder;
 
@@ -336,17 +336,28 @@ NNTPGetsResult nntp_gets(char *bp, int len)
         }
     }
 
-    std::strncpy(bp, s_nntp_gets_line.c_str(), len-1);
     if (len >= static_cast<int>(s_nntp_gets_line.length()))
     {
-        bp[s_nntp_gets_line.length()] = '\0';
+        line = s_nntp_gets_line;
         s_nntp_gets_line.clear();
         return NGSR_FULL_LINE;
     }
 
-    bp[len-1] = '\0';
+    line.assign(s_nntp_gets_line, 0, static_cast<std::size_t>(len - 1));
     s_nntp_gets_line = s_nntp_gets_line.substr(len);
     return NGSR_PARTIAL_LINE;
+}
+
+NNTPGetsResult nntp_gets(char *bp, int len)
+{
+    std::string          line;
+    const NNTPGetsResult result = nntp_gets(line, len);
+    if (result != NGSR_ERROR)
+    {
+        const std::size_t copied = line.copy(bp, static_cast<std::size_t>(len - 1));
+        bp[copied] = '\0';
+    }
+    return result;
 }
 
 void nntp_gets_clear_buffer()
