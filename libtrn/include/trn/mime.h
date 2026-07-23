@@ -80,7 +80,7 @@ struct MimeSection
     void mime_clear_struct();
     void mime_parse_type(std::string_view text);
     void mime_parse_disposition(std::string_view text);
-    void mime_parse_encoding(char *s);
+    void mime_parse_encoding(std::string_view text);
     std::string mime_description() const;
 
     MimeSection     *m_prev;

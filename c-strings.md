@@ -519,9 +519,8 @@ tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
-- New helper and leaf candidates found by this scan are
-  `MimeSection::mime_parse_encoding`, MIME HTML `find_attr`, and
-  `wildcard_match`.
+- New helper and leaf candidates found by this scan are MIME HTML
+  `find_attr` and `wildcard_match`.
 
 ## Current `safe_copy` Inventory
 
@@ -570,17 +569,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-153 - MIME Encoding Parser View API
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
-- Kind: mutable pointer parameter that is only read.
-- Function: `MimeSection::mime_parse_encoding`.
-- Change: accept `std::string_view` and use the existing view-based
-  MIME whitespace helper.  Update callers to pass strings or views
-  directly instead of `data()` or pointer offsets.
-- Tests: existing MIME sub-header tests cover the base64 branch; add
-  focused tests first if changing other encoding branches.
 
 #### CSTR-154 - MIME Header Name Whitespace View
 

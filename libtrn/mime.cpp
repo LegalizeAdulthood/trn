@@ -541,7 +541,7 @@ void mime_set_article()
     if (g_is_mime)
     {
         std::string s = fetch_lines(g_art, CONT_XFER_LINE);
-        g_mime_section->mime_parse_encoding(s.data());
+        g_mime_section->mime_parse_encoding(s);
 
         s = fetch_lines(g_art, CONT_DISP_LINE);
         g_mime_section->mime_parse_disposition(s);
@@ -690,52 +690,56 @@ void MimeSection::mime_parse_disposition(std::string_view text)
 }
 
 // Use the Content-Transfer-Encoding to set values in the mime structure
-void MimeSection::mime_parse_encoding(char *s)
+void MimeSection::mime_parse_encoding(std::string_view text)
 {
-    s = mime_skip_whitespace(s);
-    if (!*s)
+    const std::size_t token_begin = mime_skip_whitespace(text, 0);
+    std::string_view  token = text.substr(token_begin);
+    const auto        consume_token = [&token](std::string_view prefix)
+    {
+        if (token.size() < prefix.size() || !string_case_equal(token.substr(0, prefix.size()), prefix))
+        {
+            return false;
+        }
+        token.remove_prefix(prefix.size());
+        return true;
+    };
+    if (token.empty())
     {
         m_encoding = MENCODE_NONE;
         return;
     }
-    if (*s == '7' || *s == '8')
+    if (token.front() == '7' || token.front() == '8')
     {
-        if (string_case_equal(s + 1, "bit", 3))
+        if (token.size() >= 4 && string_case_equal(token.substr(1, 3), "bit"))
         {
-            s += 4;
+            token.remove_prefix(4);
             m_encoding = MENCODE_NONE;
         }
     }
-    else if (string_case_equal(s, "quoted-printable", 16))
+    else if (consume_token("quoted-printable"))
     {
-        s += 16;
         m_encoding = MENCODE_QPRINT;
     }
-    else if (string_case_equal(s, "binary", 6))
+    else if (consume_token("binary"))
     {
-        s += 6;
         m_encoding = MENCODE_NONE;
     }
-    else if (string_case_equal(s, "base64", 6))
+    else if (consume_token("base64"))
     {
-        s += 6;
         m_encoding = MENCODE_BASE64;
     }
-    else if (string_case_equal(s, "x-uue", 5))
+    else if (consume_token("x-uue"))
     {
-        s += 5;
         m_encoding = MENCODE_UUE;
-        if (string_case_equal(s, "ncode", 5))
-        {
-            s += 5;
-        }
+        consume_token("ncode");
     }
     else
     {
         m_encoding = MENCODE_UNHANDLED;
         return;
     }
-    if (*s != '\0' && !isspace(*s) && *s != ';' && *s != '(')
+    if (!token.empty() && !std::isspace(static_cast<unsigned char>(token.front())) && token.front() != ';' &&
+        token.front() != '(')
     {
         m_encoding = MENCODE_UNHANDLED;
     }
@@ -787,13 +791,15 @@ void mime_parse_sub_header(std::FILE *ifp, const char *next_line)
                 break;
             }
         }
-        char *s = std::strchr(line.data(), ':');
-        if (s == nullptr)
+        const std::string_view header_line{line.data()};
+        const std::size_t      colon = header_line.find(':');
+        if (colon == std::string_view::npos)
         {
             break;
         }
 
-        int linetype = set_line_type(std::string_view{line.data(), static_cast<std::size_t>(s - line.data())});
+        char *s = line.data() + colon;
+        int   linetype = set_line_type(header_line.substr(0, colon));
         switch (linetype)
         {
         case CONT_TYPE_LINE:
@@ -801,7 +807,7 @@ void mime_parse_sub_header(std::FILE *ifp, const char *next_line)
             break;
 
         case CONT_XFER_LINE:
-            g_mime_section->mime_parse_encoding(s+1);
+            g_mime_section->mime_parse_encoding(header_line.substr(colon + 1));
             break;
 
         case CONT_DISP_LINE:

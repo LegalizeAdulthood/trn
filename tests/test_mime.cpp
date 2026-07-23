@@ -142,6 +142,51 @@ TEST(MimeDescriptionTest, describesTypeAndNormalizedFilename)
 namespace
 {
 
+MimeEncoding parse_encoding_for_test(std::string_view text)
+{
+    MimeSection section{};
+    section.m_encoding = MENCODE_UNHANDLED;
+
+    section.mime_parse_encoding(text);
+
+    return section.m_encoding;
+}
+
+} // namespace
+
+TEST(MimeParseEncodingTest, parsesNoEncodingValues)
+{
+    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test(""));
+    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test(" \t"));
+    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test("7bit"));
+    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test("8BIT"));
+    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test("binary"));
+}
+
+TEST(MimeParseEncodingTest, parsesTransferEncodings)
+{
+    EXPECT_EQ(MENCODE_QPRINT, parse_encoding_for_test("quoted-printable"));
+    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64"));
+    EXPECT_EQ(MENCODE_UUE, parse_encoding_for_test("x-uue"));
+    EXPECT_EQ(MENCODE_UUE, parse_encoding_for_test("x-uuencode"));
+}
+
+TEST(MimeParseEncodingTest, permitsTokenTerminators)
+{
+    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64; charset=utf-8"));
+    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64 (comment)"));
+    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64 extra"));
+}
+
+TEST(MimeParseEncodingTest, rejectsUnknownEncodingsAndSuffixes)
+{
+    EXPECT_EQ(MENCODE_UNHANDLED, parse_encoding_for_test("rot13"));
+    EXPECT_EQ(MENCODE_UNHANDLED, parse_encoding_for_test("base64x"));
+}
+
+namespace
+{
+
 struct MimeSubHeaderTest : Test
 {
 protected:
