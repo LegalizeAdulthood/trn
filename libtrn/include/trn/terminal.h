@@ -194,7 +194,7 @@ void push_string(const char *str, char_int bits);
 int  get_anything();
 int  pause_get_cmd();
 void in_char(std::string_view prompt, MinorMode newmode, std::string_view dflt);
-void in_answer(const char *prompt, MinorMode newmode);
+void in_answer(std::string_view prompt, MinorMode newmode);
 bool in_choice(std::string_view prompt, std::string_view value, std::string_view choices, MinorMode newmode);
 int  print_lines(const char *what_to_print, int hilite);
 int  check_page_line();

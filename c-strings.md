@@ -587,16 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-198 - Terminal Answer Prompt View
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  answer-prompt callers.
-- Kind: read-only prompt parameter.
-- Function: `in_answer`.
-- Change: accept `std::string_view prompt` and print with `fmt` or
-  `fwrite` by extent instead of `std::fputs`.
-- Tests: terminal answer prompt tests if practical.
-
 #### CSTR-199 - Universal Group Visitor View
 
 - Files: `libtrn/univ.cpp`, `libtrn/rt-select.cpp`,

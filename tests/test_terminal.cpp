@@ -399,6 +399,25 @@ TEST_F(TerminalTest, inCharCountsPromptNewlinesAndAppliesDefault)
     EXPECT_EQ(0, g_term_col);
 }
 
+TEST_F(TerminalTest, inAnswerPrintsPromptAndStoresCommand)
+{
+    g_term_line = 4;
+    g_term_col = 12;
+    const std::string prompt{"Really? "};
+    push_char('\n');
+    push_char('y');
+
+    testing::internal::CaptureStdout();
+    in_answer(prompt, MM_FOLLOWUP_NEW_TOPIC_PROMPT);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Really? y\n", output);
+    EXPECT_EQ('y', g_buf[0]);
+    EXPECT_EQ('\0', g_buf[1]);
+    EXPECT_EQ(5, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
 TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)
 {
     set_macro("\001A", "result");

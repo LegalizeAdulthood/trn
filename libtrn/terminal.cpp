@@ -1569,14 +1569,14 @@ reask_in_char:
     set_mode(gmode_save,mode_save);
 }
 
-void in_answer(const char *prompt, MinorMode newmode)
+void in_answer(std::string_view prompt, MinorMode newmode)
 {
     MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
 
 reask_in_answer:
     unflush_output();                   // disable any ^O in effect
-    std::fputs(prompt,stdout);
+    fmt::print("{}", prompt);
     std::fflush(stdout);
     eat_typeahead();
     set_mode(GM_INPUT,newmode);
