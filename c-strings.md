@@ -587,16 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-194 - Newsgroup Name Setter View
-
-- Files: `libtrn/trn.cpp`, `libtrn/include/trn/trn.h`, direct callers.
-- Kind: read-only newsgroup-name parameter.
-- Function: `set_newsgroup_name`.
-- Change: accept `std::string_view what` and use empty view as the clear
-  sentinel if clearing is still needed.  Update callers that currently
-  pass `c_str()` from owned strings.
-- Tests: existing data-source and newsgroup-selection tests.
-
 #### CSTR-195 - Get Newsgroup View
 
 - Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`,

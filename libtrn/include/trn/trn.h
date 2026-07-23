@@ -5,6 +5,7 @@
 #define TRN_TRN_H
 
 #include <string>
+#include <string_view>
 
 enum InputNewsgroupResult
 {
@@ -37,7 +38,7 @@ void                 do_multirc();
 InputNewsgroupResult input_newsgroup();
 void                 check_active_refetch(bool force);
 void                 trn_version();
-void                 set_newsgroup_name(const char *what);
+void                 set_newsgroup_name(std::string_view what);
 int                  trn_main(int argc, char *argv[]);
 
 #endif

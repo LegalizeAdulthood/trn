@@ -1259,7 +1259,7 @@ int find_close_match()
         {
             fmt::print("(Using {})\n", match);
         }
-        set_newsgroup_name(match.c_str());
+        set_newsgroup_name(match);
         ret = 1;
         break;
     }
@@ -1372,7 +1372,7 @@ reask:
             const std::size_t pos = options.find(*g_buf);
             if (pos < newsgroup_matches.size())
             {
-                set_newsgroup_name(newsgroup_matches[pos].c_str());
+                set_newsgroup_name(newsgroup_matches[pos]);
                 return 1;
             }
         }

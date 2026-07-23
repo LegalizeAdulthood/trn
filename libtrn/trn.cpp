@@ -222,7 +222,7 @@ restart:
                 }
                 else
                 {
-                    set_newsgroup_name(g_last_newsgroup_name.c_str());
+                    set_newsgroup_name(g_last_newsgroup_name);
                     g_newsgroup_ptr->set_to_read(ST_LAX);
                     if (g_newsgroup_ptr->m_to_read <= TR_NONE)
                     {
@@ -1084,18 +1084,15 @@ void trn_version()
                 NO_MARKING);
 }
 
-void set_newsgroup_name(const char *what)
+void set_newsgroup_name(std::string_view what)
 {
-    if (what != nullptr)
-    {
-        if (g_newsgroup_name != what)
-        {
-            g_newsgroup_name = what;
-        }
-    }
-    else
+    if (what.empty())
     {
         g_newsgroup_name.clear();
+    }
+    else if (std::string_view{g_newsgroup_name} != what)
+    {
+        g_newsgroup_name.assign(what);
     }
 
     g_newsgroup_dir = get_newsgroup_dir(g_newsgroup_name);

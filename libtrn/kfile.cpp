@@ -208,7 +208,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             }
             if (!std::strchr(include_name.c_str(), '/'))
             {
-                set_newsgroup_name(include_name.c_str());
+                set_newsgroup_name(include_name);
                 include_name = file_exp(get_env_var("KILLLOCAL", s_kill_local));
                 set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
             }
