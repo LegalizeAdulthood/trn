@@ -233,9 +233,8 @@ TEST(UTFVisualAdvanceWidthTest, nullptr)
 
 TEST(UTFVisualAdvanceWidthTest, ascii)
 {
-    char sp0[80];
-    std::strcpy(sp0, ARBITRARY_ASCII);
-    char *sp = sp0;
+    const char *sp0 = ARBITRARY_ASCII;
+    const char *sp = sp0;
 
     int retval = put_char_adv(&sp, true);
 
@@ -245,9 +244,8 @@ TEST(UTFVisualAdvanceWidthTest, ascii)
 
 TEST(UTFVisualAdvanceWidthTest, iso8859_1)
 {
-    char sp0[80];
-    std::strcpy(sp0, ARBITRARY_ISO8859D1_1);
-    char *sp = sp0;
+    const char *sp0 = ARBITRARY_ISO8859D1_1;
+    const char *sp = sp0;
 
     int retval = put_char_adv(&sp, true);
 
@@ -257,9 +255,8 @@ TEST(UTFVisualAdvanceWidthTest, iso8859_1)
 
 TEST(UTFVisualAdvanceWidthTest, cjk_basic)
 {
-    char sp0[80];
-    std::strcpy(sp0, ARBITRARY_CJK_BASIC);
-    char *sp = sp0;
+    const char *sp0 = ARBITRARY_CJK_BASIC;
+    const char *sp = sp0;
 
     int retval = put_char_adv(&sp, true);
 

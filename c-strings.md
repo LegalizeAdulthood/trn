@@ -587,24 +587,12 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-200 - UTF Output Cursor Constness
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `libtrn/art.cpp`, `libtrn/terminal.cpp`.
-- Kind: read-only UTF cursor helper.
-- Function: `put_char_adv`.
-- Change: make the cursor parameter const-correct, either by accepting
-  `const char **` or by adding a const-friendly helper used by display
-  code.  The helper only advances the pointer and never mutates text.
-- Tests: existing UTF tests and article/terminal display tests.
-
 #### CSTR-201 - Paged Text Display View
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`, display
   callers.
 - Kind: read-only display text parameter.
 - Function: `print_lines`.
-- Depends on: `CSTR-200`.
 - Change: accept `std::string_view` and remove caller `c_str()` uses for
   owned strings and `fmt::format` temporaries.  Keep bounded iteration so
   the implementation does not rely on a null terminator.

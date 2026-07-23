@@ -538,7 +538,9 @@ DoArticleResult do_article()
                                 out_pos = 0;
                                 ++line_num;
                             }
-                            i = put_char_adv(&buf_ptr, output_ok);
+                            const char *next_buf_ptr = buf_ptr;
+                            i = put_char_adv(&next_buf_ptr, output_ok);
+                            buf_ptr += next_buf_ptr - buf_ptr;
                             buf_ptr--;
 #else // !USE_UTF_HACK
                             i = putsubstchar(*bufptr, g_tc_COLS - out_pos, outputok);

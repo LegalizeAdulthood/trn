@@ -486,7 +486,7 @@ bool at_norm_char(const char *s)
     return it;
 }
 
-int put_char_adv(char **strptr, bool outputok)
+int put_char_adv(const char **strptr, bool outputok)
 {
     int it;
     if (strptr == nullptr)
@@ -495,7 +495,7 @@ int put_char_adv(char **strptr, bool outputok)
     }
     else
     {
-        char *s = *strptr;
+        const char *s = *strptr;
         if (s_gs.in == CHARSET_UTF8 || (*s >= ' ' && *s < 0x7F))
         {
             int w = byte_length_at(s);

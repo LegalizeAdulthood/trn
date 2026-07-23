@@ -46,7 +46,7 @@ enum : CodePoint
 };
 CodePoint code_point_at(const char *s);
 
-int put_char_adv(char **strptr, bool outputok);
+int put_char_adv(const char **strptr, bool outputok);
 
 std::string create_utf8_copy(const char *s);
 
