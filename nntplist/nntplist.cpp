@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     if (server_name.empty())
     {
         server_name = file_exp(SERVER_NAME);
-        if (!server_name.empty() && FILE_REF(server_name.c_str()))
+        if (!server_name.empty() && file_ref(server_name))
         {
             server_name = nntp_server_name(server_name);
         }

@@ -484,9 +484,9 @@ tree.
   `interp_backslash`, and `normalize_refs` APIs are gone.
 - Unused overload/wrapper scan: `safe_copy` has no production callers.
   Keep `nntp_init_error`, `string_case_compare`, `string_case_equal`,
-  `Tgetstr`, `line_ptr`, `line_offset`, `file_ref`, `yes_or_no`,
-  `empty`, `plural`, `force_me`, and `at_grey_space`; they still have
-  production/source callers or platform/API boundary use.
+  `Tgetstr`, `line_ptr`, `line_offset`, `yes_or_no`, `empty`, `plural`,
+  `force_me`, and `at_grey_space`; they still have production/source
+  callers or platform/API boundary use.
 - Filename storage: newsrc fields, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving already use
   modern path or view signatures.  Score file shortcut strings,
@@ -519,9 +519,9 @@ tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
-- New helper and leaf candidates found by this scan are `file_ref`,
-  `text_to_secs`, `MimeSection::mime_parse_encoding`, MIME HTML
-  `find_attr`, and `wildcard_match`.
+- New helper and leaf candidates found by this scan are `text_to_secs`,
+  `MimeSection::mime_parse_encoding`, MIME HTML `find_attr`, and
+  `wildcard_match`.
 
 ## Current `safe_copy` Inventory
 
@@ -570,18 +570,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-151 - File Reference Helper View API
-
-- Files: `config/include/config/config2.h`,
-  `config/include/config/msdos.h`, call sites using `FILE_REF`.
-- Kind: path spelling helper that forces `c_str()` at call sites.
-- Function: `file_ref` and the `FILE_REF` macro.
-- Change: change `file_ref` to accept `std::string_view` and guard
-  length before indexing.  Update call sites that already hold
-  `std::string` or `std::string_view` to pass the object directly.
-- Tests: config/header standalone tests and any path option tests that
-  exercise absolute path detection.
 
 #### CSTR-152 - Refetch Interval Parser View API
 

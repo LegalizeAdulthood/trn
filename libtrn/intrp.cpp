@@ -989,7 +989,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
 #endif
                     const std::string org_file = file_exp(env_value);
-                    if (FILE_REF(org_file.c_str()))
+                    if (file_ref(org_file))
                     {
                         std::ifstream input{org_file};
                         if (input)

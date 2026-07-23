@@ -405,8 +405,8 @@ static bool set_p_host_name()
     // Build the host name that goes in postings
 
     std::string posting_host_name;
-    const char *filename{POSTING_HOSTNAME};
-    if (FILE_REF(filename) || filename[0] == '~')
+    std::string_view filename{POSTING_HOSTNAME};
+    if (file_ref(filename) || filename[0] == '~')
     {
         std::ifstream input{file_exp(filename)};
         if (!input)

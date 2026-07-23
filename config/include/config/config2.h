@@ -23,6 +23,7 @@
 #endif
 
 #include <string.h>
+#include <string_view>
 
 #ifndef S_ISDIR
 #   define S_ISDIR(m)  ( ((m) & S_IFMT) == S_IFDIR )
@@ -48,12 +49,11 @@ constexpr char Ctl(char ch)
     return ch & 037;
 }
 
-#ifndef FILE_REF
-inline bool file_ref(const char *s)
+#ifndef MSDOS
+inline bool file_ref(std::string_view s)
 {
-    return s[0] == '/';
+    return !s.empty() && s.front() == '/';
 }
-#   define FILE_REF(s) file_ref(s)
 #endif
 
 #endif

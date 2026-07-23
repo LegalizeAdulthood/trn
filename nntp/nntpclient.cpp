@@ -131,7 +131,7 @@ try_to_connect:
 std::string nntp_server_name(std::string_view name)
 {
     std::string result{name};
-    if (!FILE_REF(result.c_str()))
+    if (!file_ref(result))
     {
         return result;
     }

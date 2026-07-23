@@ -167,7 +167,7 @@ SaveResult save_article()
         }
         custom_extract = has_extract_command;
 
-        if (!FILE_REF(destination.c_str())) // relative path?
+        if (!file_ref(destination)) // relative path?
         {
             std::string save_directory = file_exp(get_env_var("SAVEDIR", SAVEDIR));
             save_directory.reserve(LINE_BUF_LEN);
@@ -184,7 +184,7 @@ SaveResult save_article()
                 destination = save_directory;
             }
         }
-        if (!FILE_REF(destination.c_str())) // path still relative?
+        if (!file_ref(destination)) // path still relative?
         {
             destination = (fs::path{g_priv_dir} / destination).generic_string();
         }
@@ -348,7 +348,7 @@ SaveResult save_article()
             // skip spaces
         }
         std::string destination = file_exp(s);
-        if (!FILE_REF(destination.c_str()))
+        if (!file_ref(destination))
         {
             std::string save_directory = file_exp(get_env_var("SAVEDIR", SAVEDIR));
             if (make_dir(save_directory, MD_DIR)) // ensure directory exists
@@ -371,7 +371,7 @@ SaveResult save_article()
             destination = (fs::path{destination} / file_exp(i ? "News" : savename)).generic_string();
         }
         make_dir(destination, MD_FILE);
-        if (!FILE_REF(destination.c_str())) // relative path?
+        if (!file_ref(destination)) // relative path?
         {
             destination = (fs::path{g_priv_dir} / destination).generic_string();
         }
