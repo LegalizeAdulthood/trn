@@ -384,8 +384,6 @@ void find_existing_articles()
         ArticleNum first{article_after(g_last_art)};
         ArticleNum last{};
         fs::path cwd(".");
-        char ch;
-        long l_num;
 
         fs::directory_iterator entries(cwd);
         if (fs::directory_iterator() == entries)
@@ -403,10 +401,13 @@ void find_existing_articles()
 
         for (const fs::directory_entry &entry : entries)
         {
-            std::string filename{entry.path().filename().string()};
-            if (std::sscanf(filename.c_str(), "%ld%c", &l_num, &ch) == 1)
+            std::string            filename{entry.path().filename().string()};
+            long                   article_number{};
+            const char            *filename_end = filename.data() + filename.size();
+            std::from_chars_result result = std::from_chars(filename.data(), filename_end, article_number);
+            if (result.ec == std::errc{} && result.ptr == filename_end)
             {
-                an = ArticleNum{l_num};
+                an = ArticleNum{article_number};
                 if (an <= g_last_art && an >= g_abs_first)
                 {
                     first = std::min(an, first);

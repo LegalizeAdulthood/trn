@@ -14,16 +14,23 @@
 #include <trn/rthread.h>
 #include <trn/trn.h>
 
+#include <test_config.h>
+
 #include <gtest/gtest.h>
 
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <map>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 
 namespace
 {
+
+namespace fs = std::filesystem;
 
 int compare_newsgroup_name(std::string_view key, HashDatum data)
 {
@@ -110,6 +117,99 @@ protected:
     ArticleNum                    m_old_abs_first{};
     ArticleNum                    m_old_first_art{};
     ArticleNum                    m_old_last_art{};
+};
+
+class FindExistingArticlesTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+
+        m_old_current_path = fs::current_path();
+        m_old_article_list = std::move(g_article_list);
+        m_old_newsgroup_ptr = g_newsgroup_ptr;
+        m_old_data_source = g_data_source;
+        m_old_abs_first = g_abs_first;
+        m_old_first_art = g_first_art;
+        m_old_last_art = g_last_art;
+        m_old_first_cached = g_first_cached;
+        m_old_last_cached = g_last_cached;
+        m_old_first_subject = g_first_subject;
+        m_old_cached_all_in_range = g_cached_all_in_range;
+
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        ASSERT_FALSE(error);
+        fs::create_directories(m_output_dir, error);
+        ASSERT_FALSE(error);
+        fs::current_path(m_output_dir, error);
+        ASSERT_FALSE(error);
+
+        g_article_list.clear();
+        g_newsgroup_ptr = &m_group;
+        g_data_source = &m_data_source;
+        g_abs_first = ArticleNum{1};
+        g_first_art = ArticleNum{1};
+        g_last_art = ArticleNum{5};
+        g_first_cached = ArticleNum{1};
+        g_last_cached = ArticleNum{};
+        g_first_subject = nullptr;
+        g_cached_all_in_range = false;
+
+        m_data_source.m_flags = DF_NONE;
+        m_group.m_abs_first = ArticleNum{1};
+        m_group.m_ng_max = ArticleNum{5};
+
+        for (long num = 1; num <= 5; ++num)
+        {
+            article_ptr(ArticleNum{num})->m_flags = AF_EXISTS;
+        }
+    }
+
+    void TearDown() override
+    {
+        std::error_code error;
+        fs::current_path(m_old_current_path, error);
+        fs::remove_all(m_output_dir, error);
+
+        g_article_list = std::move(m_old_article_list);
+        g_newsgroup_ptr = m_old_newsgroup_ptr;
+        g_data_source = m_old_data_source;
+        g_abs_first = m_old_abs_first;
+        g_first_art = m_old_first_art;
+        g_last_art = m_old_last_art;
+        g_first_cached = m_old_first_cached;
+        g_last_cached = m_old_last_cached;
+        g_first_subject = m_old_first_subject;
+        g_cached_all_in_range = m_old_cached_all_in_range;
+    }
+
+    void write_file(std::string_view name)
+    {
+        std::ofstream{m_output_dir / name} << "article\n";
+    }
+
+    bool article_exists(long num) const
+    {
+        return g_article_list.at(ArticleNum{num}).m_flags & AF_EXISTS;
+    }
+
+    fs::path                      m_old_current_path;
+    fs::path                      m_output_dir;
+    std::map<ArticleNum, Article> m_old_article_list;
+    NewsgroupData                *m_old_newsgroup_ptr{};
+    DataSource                   *m_old_data_source{};
+    ArticleNum                    m_old_abs_first{};
+    ArticleNum                    m_old_first_art{};
+    ArticleNum                    m_old_last_art{};
+    ArticleNum                    m_old_first_cached{};
+    ArticleNum                    m_old_last_cached{};
+    Subject                      *m_old_first_subject{};
+    bool                          m_old_cached_all_in_range{};
+    DataSource                    m_data_source{};
+    NewsgroupData                 m_group{};
 };
 
 class XrefChaseTest : public testing::Test
@@ -305,6 +405,26 @@ TEST_F(BitsToRcTest, reconstructsUnsubscribedLineAndKeepsItInvisible)
     EXPECT_EQ('\0', m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)]);
     EXPECT_EQ(TR_UNSUB, m_group.m_to_read);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_F(FindExistingArticlesTest, scansOnlyPlainNumericArticleFilenames)
+{
+    write_file("1");
+    write_file("3");
+    write_file("4.txt");
+    write_file("5x");
+
+    find_existing_articles();
+
+    EXPECT_TRUE(article_exists(1));
+    EXPECT_FALSE(article_exists(2));
+    EXPECT_TRUE(article_exists(3));
+    EXPECT_FALSE(article_exists(4));
+    EXPECT_FALSE(article_exists(5));
+    EXPECT_EQ(ArticleNum{1}, g_abs_first);
+    EXPECT_EQ(ArticleNum{3}, g_last_art);
+    EXPECT_EQ(ArticleNum{1}, m_group.m_abs_first);
+    EXPECT_EQ(ArticleNum{3}, m_group.m_ng_max);
 }
 
 TEST_F(XrefChaseTest, markAsReadChasesXrefToOtherGroup)

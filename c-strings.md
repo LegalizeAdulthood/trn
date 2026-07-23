@@ -582,16 +582,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-193 - Directory Article Filename Parse
-
-- Files: `libtrn/bits.cpp`.
-- Kind: C-string numeric parsing from a filesystem filename.
-- Function: directory scan in article existence checking.
-- Change: replace `std::sscanf(filename.c_str(), "%ld%c", ...)` with
-  `std::from_chars` over the `std::string` filename and require the parse
-  to stop at the end of the string.
-- Tests: article existence or local-spool tests if practical.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
