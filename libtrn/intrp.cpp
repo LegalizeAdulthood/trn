@@ -1520,9 +1520,9 @@ char interp_backslash(std::string_view &pattern)
             int i = 0;
             while (i < 01000 && !pattern.empty() && std::isxdigit(static_cast<unsigned char>(pattern.front())))
             {
-                static constexpr char hex_digits[]{"0123456789ABCDEF"};
+                const unsigned char ch = static_cast<unsigned char>(pattern.front());
                 i <<= 4;
-                i += std::strchr(hex_digits, std::toupper(static_cast<unsigned char>(pattern.front()))) - hex_digits;
+                i += std::isdigit(ch) ? ch - '0' : std::toupper(ch) - 'A' + 10;
                 pattern.remove_prefix(1);
             }
             return static_cast<char>(i & 0377);

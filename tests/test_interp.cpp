@@ -260,6 +260,30 @@ TEST_F(InterpolatorTest, noEscapes)
     ASSERT_EQ(pattern, buffer());
 }
 
+TEST(InterpBackslashTest, decodesHexEscape)
+{
+    std::string_view pattern{"x41!"};
+
+    EXPECT_EQ('A', interp_backslash(pattern));
+    EXPECT_EQ("!", pattern);
+}
+
+TEST(InterpBackslashTest, decodesLowercaseHexEscape)
+{
+    std::string_view pattern{"x7a."};
+
+    EXPECT_EQ('z', interp_backslash(pattern));
+    EXPECT_EQ(".", pattern);
+}
+
+TEST(InterpBackslashTest, leavesHexEscapeWithoutDigits)
+{
+    std::string_view pattern{"xq"};
+
+    EXPECT_EQ('x', interp_backslash(pattern));
+    EXPECT_EQ("q", pattern);
+}
+
 TEST_F(InterpolatorTest, stringDoInterpReturnsInterpolatedText)
 {
     EXPECT_EQ("this string contains no escapes", do_interp("this string contains no escapes"));

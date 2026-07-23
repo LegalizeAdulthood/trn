@@ -536,7 +536,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 10, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 50, `strrchr` 1, `strstr` 2,
+- Search and length: `strchr` 49, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
 - C text I/O roots: `fgets` 22, `fputs` 184, `printf` 363,
@@ -565,15 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-177 - Interpolation Hex Digit Lookup
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: local literal character-set table and `strchr` offset lookup.
-- Function: `interp_backslash`.
-- Change: use a `constexpr std::string_view` or direct digit conversion
-  instead of subtracting pointers returned by `std::strchr`.
-- Tests: interpolation escape tests.
 
 #### CSTR-178 - Interpolation Regexp Specials
 
