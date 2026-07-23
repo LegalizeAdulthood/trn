@@ -295,10 +295,7 @@ char *safe_realloc(char *where, MemorySize size)
 // effective access
 
 #ifdef SETUIDGID
-int
-eaccess(filename, mod)
-char* filename;
-int mod;
+int eaccess(const char *filename, int mod)
 {
     int protection, euid;
 

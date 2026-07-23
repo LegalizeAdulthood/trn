@@ -519,10 +519,9 @@ tree.
   status labels, MIME entity mappings, and transliteration tables.  The
   useful current targets are tables whose users already operate on views
   or compute lengths manually.
-- New helper and leaf candidates found by this scan are `eaccess`,
-  `s_finish_cmd`, `file_ref`, `text_to_secs`,
-  `MimeSection::mime_parse_encoding`, MIME HTML `find_attr`, and
-  `wildcard_match`.
+- New helper and leaf candidates found by this scan are `s_finish_cmd`,
+  `file_ref`, `text_to_secs`, `MimeSection::mime_parse_encoding`,
+  MIME HTML `find_attr`, and `wildcard_match`.
 
 ## Current `safe_copy` Inventory
 
@@ -566,17 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-149 - SETUIDGID Effective Access Path
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`.
-- Kind: mutable C-string parameter that is only read.
-- Function: `eaccess`.
-- Change: change the `SETUIDGID` implementation and declaration from
-  `char *` to `const char *`.  Keep the compatibility macro path alone
-  when `eaccess` maps directly to `access`.
-- Tests: build all supported configurations that compile the
-  `SETUIDGID` branch, if available.
 
 #### CSTR-150 - Scan Command Prompt Text
 

@@ -44,7 +44,7 @@ char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);
 #endif
 #ifdef SETUIDGID
-int eaccess(char *, int);
+int eaccess(const char *, int);
 #endif
 std::string trn_getwd();
 std::string get_a_line(std::FILE *fp);
