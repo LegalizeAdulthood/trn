@@ -10,6 +10,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -51,7 +53,7 @@ std::string do_interp(std::string_view pattern)
 
 int nntp_handle_nested_lists()
 {
-    std::fputs("Programming error! Nested NNTP calls detected.\n",stderr);
+    fmt::print(stderr, "Programming error! Nested NNTP calls detected.\n");
     return -1;
 }
 

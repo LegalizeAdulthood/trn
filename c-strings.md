@@ -539,7 +539,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Search and length: `strchr` 52, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
-- C text I/O roots: `fgets` 22, `fputs` 185, `printf` 363,
+- C text I/O roots: `fgets` 22, `fputs` 184, `printf` 363,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -565,16 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-174 - Tool Nested NNTP Error Output
-
-- Files: `tool/util3.cpp`.
-- Kind: C text output.
-- Function: `nntp_handle_nested_lists`.
-- Change: replace the direct `std::fputs` call with `fmt::print`; add the
-  fmt dependency to the tool target only if the target does not already
-  link it.
-- Tests: tool build or nested-call coverage if available.
 
 #### CSTR-175 - Newsgroup Status Labels
 

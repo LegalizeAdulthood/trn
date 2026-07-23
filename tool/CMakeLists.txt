@@ -3,7 +3,7 @@ add_library(tool
 )
 target_include_directories(tool PUBLIC include)
 target_include_directories(tool PRIVATE ../libtrn/include)
-target_link_libraries(tool PUBLIC nntp)
+target_link_libraries(tool PUBLIC nntp PRIVATE fmt::fmt)
 target_folder(tool "Libraries")
 
 if(BUILD_TESTING)
