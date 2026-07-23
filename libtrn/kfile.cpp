@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -338,11 +339,12 @@ static int do_kill_file(std::FILE *kfp, int entering)
                     {
                         thread_cmd.remove_prefix(1);
                     }
-                    const char *thread_cmd_match =
-                        thread_cmd.empty() ? nullptr : std::strchr(s_thread_cmd_ltr, thread_cmd.front());
-                    if (thread_cmd_match != nullptr)
+                    const std::size_t thread_cmd_index =
+                        thread_cmd.empty() ? std::string_view::npos
+                                           : std::string_view{s_thread_cmd_ltr}.find(thread_cmd.front());
+                    if (thread_cmd_index != std::string_view::npos)
                     {
-                        ap->m_auto_flags = s_thread_cmd_flag[thread_cmd_match - s_thread_cmd_ltr];
+                        ap->m_auto_flags = s_thread_cmd_flag[thread_cmd_index];
                         if (ap->m_auto_flags & AUTO_KILL_MASK)
                         {
                             thread_kill_cnt++;

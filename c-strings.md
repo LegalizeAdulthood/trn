@@ -536,7 +536,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 10, `strncpy` 3, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 47, `strrchr` 1, `strstr` 2,
+- Search and length: `strchr` 46, `strrchr` 1, `strstr` 2,
   `strlen` 40.
 - Formatting into C buffers: `sprintf` 7, `snprintf` 2.
 - C text I/O roots: `fgets` 22, `fputs` 179, `printf` 356,
@@ -575,15 +575,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-184 - Kill-file Thread Command Lookup
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: shared command-letter table and `strchr` offset lookup.
-- Function: `do_kill_file`.
-- Change: use a `std::string_view` over `s_thread_cmd_ltr` and `.find()`
-  to compute the matching command index for `s_thread_cmd_flag`.
-- Tests: kill-file thread command tests.
 
 #### CSTR-185 - Local Thread Command Output
 
