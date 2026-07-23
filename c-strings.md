@@ -587,19 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-195 - Get Newsgroup View
-
-- Files: `libtrn/rcstuff.cpp`, `libtrn/include/trn/rcstuff.h`,
-  `libtrn/addng.cpp`, `libtrn/rt-select.cpp`, `libtrn/trn.cpp`,
-  `tests/test_rcstuff.cpp`.
-- Kind: read-only newsgroup-name parameter with local parsing.
-- Function: `get_newsgroup`.
-- Depends on: `CSTR-194`.
-- Change: accept `std::string_view what`, replace `strchr` with view
-  search, and pass the view directly to `set_newsgroup_name`.  Keep any
-  fuzzy-match replacement as an owned or global-backed string view.
-- Tests: existing rcstuff tests.
-
 #### CSTR-196 - Terminal Default Command View
 
 - Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`, direct callers.

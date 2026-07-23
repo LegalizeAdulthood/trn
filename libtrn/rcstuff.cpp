@@ -1026,7 +1026,7 @@ void NewsgroupData::abandon_newsgroup()
 // returns true if found or added, false if not.
 // assumes that we are chdir'ed to NEWS_SPOOL
 
-bool get_newsgroup(const char *what, GetNewsgroupFlags flags)
+bool get_newsgroup(std::string_view what, GetNewsgroupFlags flags)
 {
     const char *n_to_forget;
 
@@ -1038,7 +1038,7 @@ bool get_newsgroup(const char *what, GetNewsgroupFlags flags)
     {
         n_to_forget = "n to forget it.\n";
     }
-    if (std::strchr(what, '/'))
+    if (what.find('/') != std::string_view::npos)
     {
         dingaling();
         std::printf("\nBad newsgroup name.\n");
@@ -1049,7 +1049,7 @@ check_fuzzy_match:
             flags &= ~GNG_FUZZY;
             if (find_close_match())
             {
-                what = g_newsgroup_name.c_str();
+                what = g_newsgroup_name;
             }
             else
             {

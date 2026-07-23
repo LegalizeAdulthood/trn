@@ -629,7 +629,7 @@ do_command:
             }
         }
         // try to find newsgroup
-        if (!get_newsgroup(g_newsgroup_name.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
+        if (!get_newsgroup(g_newsgroup_name, (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
         {
             g_newsgroup_ptr = g_current_newsgroup;     // if not found, go nowhere
         }

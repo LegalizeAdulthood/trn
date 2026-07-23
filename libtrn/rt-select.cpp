@@ -749,7 +749,7 @@ sel_restart:
             if (gp->m_flags & AGF_SEL)
             {
                 gp->m_flags &= ~AGF_SEL;
-                get_newsgroup(gp->m_name.c_str(), flags);
+                get_newsgroup(gp->m_name, flags);
             }
         }
         g_add_new_by_default = ADDNEW_ASK;

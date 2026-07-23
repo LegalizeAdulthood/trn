@@ -102,7 +102,7 @@ extern bool                 g_append_unsub;       // -I
 bool           rcstuff_init();
 void           rcstuff_final();
 void           unuse_multirc(Multirc *mptr);
-bool           get_newsgroup(const char *what, GetNewsgroupFlags flags);
+bool           get_newsgroup(std::string_view what, GetNewsgroupFlags flags);
 void           list_newsgroups();
 NewsgroupData *find_newsgroup(std::string_view ngnam);
 void           cleanup_newsrc(Newsrc *rp);

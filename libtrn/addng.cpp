@@ -147,7 +147,7 @@ static void process_list(GetNewsgroupFlags flag)
         }
         else if (!g_use_add_selector)
         {
-            get_newsgroup(node->m_name.c_str(), flag); // add newsgroup -- maybe
+            get_newsgroup(node->m_name, flag); // add newsgroup -- maybe
         }
         AddGroup *prev_node = node;
         node = node->m_next;
