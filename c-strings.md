@@ -576,15 +576,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-186 - Global Thread Command Output
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: shared command-letter table indexed as a C string.
-- Function: `write_global_thread_commands`.
-- Change: iterate the command-letter table by `std::string_view::size()`
-  instead of testing for a trailing NUL.
-- Tests: kill-file global thread command output tests.
-
 #### CSTR-187 - Kill-file Edit Thread Command Lookup
 
 - Files: `libtrn/kfile.cpp`.

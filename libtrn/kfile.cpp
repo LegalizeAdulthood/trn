@@ -648,12 +648,14 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
         msgid = ap->msg_id_view();
     }
 
+    const std::string_view thread_cmd_letters{s_thread_cmd_ltr, sizeof(s_thread_cmd_ltr) - 1};
+
     // The arrays are in priority order, so find highest priority bit.
-    for (int i = 0; s_thread_cmd_ltr[i]; i++)
+    for (std::size_t i = 0; i < thread_cmd_letters.size(); i++)
     {
         if (autofl & s_thread_cmd_flag[i])
         {
-            ch = s_thread_cmd_ltr[i];
+            ch = thread_cmd_letters[i];
             break;
         }
     }

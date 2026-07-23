@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -39,6 +40,8 @@ protected:
     {
         m_old_in_ng = g_in_ng;
         m_old_kf_state = g_kf_state;
+        m_old_kfs_thread_change_set = g_kfs_thread_change_set;
+        m_old_kf_change_thread_cnt = g_kf_change_thread_cnt;
         m_old_local_kfp = g_local_kfp;
         m_old_msg_id_hash = g_msg_id_hash;
         m_old_article_list = g_article_list;
@@ -63,6 +66,8 @@ protected:
 
         g_in_ng = false;
         g_kf_state = KFS_NONE;
+        g_kfs_thread_change_set = KFS_NONE;
+        g_kf_change_thread_cnt = 0;
         g_local_kfp = nullptr;
         g_msg_id_hash = hash_create(17, msg_id_cmp);
         g_article_list.clear();
@@ -90,6 +95,8 @@ protected:
 
         g_in_ng = m_old_in_ng;
         g_kf_state = m_old_kf_state;
+        g_kfs_thread_change_set = m_old_kfs_thread_change_set;
+        g_kf_change_thread_cnt = m_old_kf_change_thread_cnt;
         g_local_kfp = m_old_local_kfp;
         g_msg_id_hash = m_old_msg_id_hash;
         g_article_list = m_old_article_list;
@@ -120,6 +127,8 @@ protected:
     fs::path                      m_output_dir;
     bool                          m_old_in_ng{};
     KillFileStateFlags            m_old_kf_state{};
+    KillFileStateFlags            m_old_kfs_thread_change_set{};
+    int                           m_old_kf_change_thread_cnt{};
     std::FILE                    *m_old_local_kfp{};
     HashTable                    *m_old_msg_id_hash{};
     std::map<ArticleNum, Article> m_old_article_list;
@@ -212,4 +221,26 @@ TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
     (void) testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("THRU news.example 42\n<case@example.com> T+\n", file_contents(kill_file));
+}
+
+TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
+{
+    const fs::path    kill_file = m_output_dir / "global-thread" / "KILLTHREADS";
+    const std::string kill_file_name = kill_file.generic_string();
+    const long        day_num = static_cast<long>(std::time(nullptr)) / 86400 - 10490;
+
+    fs::create_directories(kill_file.parent_path());
+    std::ofstream{kill_file} << "<case@example.com> + " << day_num << "\n";
+
+    hash_destroy(g_msg_id_hash);
+    g_msg_id_hash = nullptr;
+
+    m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
+    kill_file_init();
+    g_kf_change_thread_cnt = 1;
+    g_kf_state |= KFS_THREAD_CHANGES;
+
+    update_thread_kill_file();
+
+    EXPECT_EQ("<case@example.com> + " + std::to_string(day_num) + "\n", file_contents(kill_file));
 }
