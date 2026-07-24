@@ -1425,22 +1425,23 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
         }
     }
 
+    std::string line(LINE_BUF_LEN + 1, '\0');
     if (ifp)
     {
-        while (std::fgets(g_buf, sizeof g_buf, ifp))
+        while (std::fgets(line.data(), static_cast<int>(line.size()), ifp))
         {
-            std::fputs(g_buf, ofp);
+            fmt::print(ofp, "{}", line.c_str());
         }
     }
     else
     {
-        while (read_art(g_buf, sizeof g_buf))
+        while (read_art(line.data(), static_cast<int>(line.size())))
         {
-            if (mime_end_of_section(g_buf))
+            if (mime_end_of_section(line.data()))
             {
                 break;
             }
-            std::fputs(g_buf, ofp);
+            fmt::print(ofp, "{}", line.c_str());
         }
     }
 

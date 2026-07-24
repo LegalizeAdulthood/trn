@@ -9,6 +9,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <file_contents.h>
+#include <test_config.h>
 #include <test_mime.h>
 
 #include <gmock/gmock.h>
@@ -17,13 +19,17 @@
 #include <array>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 using namespace testing;
 
 namespace
 {
+
+namespace fs = std::filesystem;
 
 struct MimeTest : Test
 {
@@ -324,6 +330,82 @@ TEST_F(MimeExecTest, rejectsUnterminatedParameterEscape)
     EXPECT_CALL(m_exec, Call(_, _)).Times(0);
 
     EXPECT_EQ(-1, mime_exec("viewer %{name"));
+}
+
+namespace
+{
+
+struct CatDecodeTest : MimeTest
+{
+protected:
+    void SetUp() override
+    {
+        MimeTest::SetUp();
+        m_old_current_path = fs::current_path();
+        m_old_mime_section = g_mime_section;
+        m_old_no_wait_fork = g_no_wait_fork;
+        m_old_decode_filename = g_decode_filename;
+
+        const TestInfo *test_info = UnitTest::GetInstance()->current_test_info();
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::current_path(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+
+        m_input = std::tmpfile();
+        ASSERT_NE(nullptr, m_input);
+
+        g_mime_section = &m_mime_section;
+        g_no_wait_fork = true;
+        m_mime_section.m_filename = "cat-output.txt";
+    }
+
+    void TearDown() override
+    {
+        if (m_input != nullptr)
+        {
+            std::fclose(m_input);
+        }
+        std::error_code error;
+        fs::current_path(m_old_current_path, error);
+        g_mime_section = m_old_mime_section;
+        g_no_wait_fork = m_old_no_wait_fork;
+        g_decode_filename = m_old_decode_filename;
+        MimeTest::TearDown();
+    }
+
+    void write_input(std::string_view text)
+    {
+        ASSERT_EQ(text.size(), std::fwrite(text.data(), sizeof(char), text.size(), m_input));
+        std::rewind(m_input);
+    }
+
+    fs::path     m_old_current_path;
+    fs::path     m_output_dir;
+    MimeSection *m_old_mime_section{};
+    bool         m_old_no_wait_fork{};
+    std::string  m_old_decode_filename;
+    MimeSection  m_mime_section{};
+    std::FILE   *m_input{};
+};
+
+} // namespace
+
+TEST_F(CatDecodeTest, copiesFileInputToDecodedFile)
+{
+    write_input("first line\nsecond line\n");
+
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(DECODE_MAYBE_DONE, cat_decode(m_input, DECODE_START));
+    EXPECT_EQ(DECODE_DONE, cat_decode(m_input, DECODE_DONE));
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Decoding cat-outputtxt", output);
+    EXPECT_EQ("first line\nsecond line\n", file_contents(m_output_dir / "cat-outputtxt"));
 }
 
 namespace
