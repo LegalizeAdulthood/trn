@@ -341,6 +341,22 @@ TEST_F(NNTPGetStringTest, statFormatsArticleNumberCommand)
     EXPECT_EQ(1, nntp_stat(ArticleNum{123}));
 }
 
+TEST_F(NNTPGetStringTest, statIdParsesArticleNumber)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("STAT <message@example.test>"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 123 <message@example.test>"));
+
+    EXPECT_EQ(ArticleNum{123}, nntp_stat_id("<message@example.test>"));
+}
+
+TEST_F(NNTPGetStringTest, statIdReturnsZeroForMalformedArticleNumber)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("STAT <message@example.test>"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 <message@example.test>"));
+
+    EXPECT_EQ(ArticleNum{}, nntp_stat_id("<message@example.test>"));
+}
+
 TEST_F(NNTPGetStringTest, headerFormatsArticleNumberCommand)
 {
     EXPECT_CALL(*m_connection, write_line(StrEq("HEAD 123"), _));

@@ -26,6 +26,7 @@
 #include <cstring>
 #include <ctime>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -222,9 +223,12 @@ ArticleNum nntp_stat_id(std::string_view msg_id)
         return ArticleNum{-2};
     }
     long art_num{nntp_check()};
-    if (art_num > 0 && std::sscanf(g_ser_line, "%*d%ld", &art_num) != 1)
+    if (art_num > 0)
     {
-        art_num = 0;
+        std::istringstream response{std::string{g_ser_line}};
+        long               status{};
+        long               parsed_article_num{};
+        art_num = response >> status >> parsed_article_num ? parsed_article_num : 0;
     }
     return ArticleNum{art_num};
 }
