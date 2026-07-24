@@ -1751,6 +1751,10 @@ void InterpolatorNewsgroupTest::SetUp()
     g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
     g_last_art = ArticleNum{TRN_TEST_NEWSGROUP_HIGH};
     g_newsgroup_ptr = g_first_newsgroup;
+    ASSERT_NE(nullptr, g_data_source);
+    g_data_source->m_flags &= ~DF_REMOTE;
+    g_data_source->m_spool_dir = TRN_TEST_LOCAL_SPOOL_DIR;
+    g_newsgroup_dir = TRN_TEST_NEWSGROUP_SUBDIR;
     m_curdir.push(TRN_TEST_NEWSGROUP_DIR);
     build_cache();
 }

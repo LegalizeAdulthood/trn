@@ -410,19 +410,20 @@ DoArticleResult do_article()
                 }
                 else
                 {
-                    int length = std::strlen(buf_ptr+1);
-                    notes_files = in_string(std::string_view{&buf_ptr[length - 10]}, " - (nf", true);
+                    std::string_view subject_text{buf_ptr};
+                    notes_files = subject_text.size() >= 10 &&
+                                  in_string(subject_text.substr(subject_text.size() - 10), " - (nf", true);
                     ++g_art_line_num;
                     if (cached_subj.empty())
                     {
-                        buf_ptr += (s_continuation ? 0 : 9);
+                        subject_text.remove_prefix(s_continuation ? 0 : 9);
                     }
                     else
                     {
-                        buf_ptr = s;
+                        subject_text = cached_subj;
                     }
                     // tree_puts(, ,1) underlines subject
-                    line_num += line_before(tree_puts(buf_ptr, line_num + g_top_line, 1));
+                    line_num += line_before(tree_puts(subject_text, line_num + g_top_line, 1));
                 }
             }
             else if (hide_this_line && g_do_hiding)     // do not print line?
