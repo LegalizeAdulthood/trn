@@ -519,7 +519,11 @@ tree.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
   callers are `DataSource::open`, `SourceFile::open`, `parse_header`,
-  and `nntp_list`.  Keep the C wrapper until those callers move.
+  and `nntp_list`.  Keep the C wrapper until those callers move, then
+  remove it.
+- Overview format parsing no longer uses raw buffer storage for remote
+  NNTP lines.  The local `overview.fmt` file branch still reads through
+  `g_buf` and is a current leaf slice.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -551,11 +555,11 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 10, `strncpy` 1, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
-- Search and length: `strchr` 44, `strrchr` 1, `strstr` 2,
-  `strlen` 37.
+- Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
+  `strlen` 35.
 - Formatting into C buffers: `sprintf` 1, `snprintf` 2.
 - C text parsing: `sscanf` 4.
-- C text I/O roots: `fgets` 22, `fputs` 176, `printf` 351,
+- C text I/O roots: `fgets` 21, `fputs` 175, `printf` 347,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -563,10 +567,10 @@ The scan found no current production hits for `strncat`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
 `memmove`, or `memchr`.
 
-High-count functions are not self-deferred.  They are grouped into
-owner slices below because most calls sit on shared buffers such as
-`g_buf`, `g_msg`, `g_ser_line`, article storage, terminal
-storage, and parser workspaces.
+`fmt::sprintf` calls are not counted as C `sprintf` sites.  High-count
+functions are not self-deferred.  They are grouped into owner slices
+below because most calls sit on shared buffers such as `g_buf`, `g_msg`,
+`g_ser_line`, article storage, terminal storage, and parser workspaces.
 
 ## Refactoring Slices
 
@@ -587,20 +591,38 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-220 - Header Parser NNTP Lines
+
+- Files: `libtrn/head.cpp`.
+- Kind: NNTP header reader using `g_head_buf`.
+- Function: `parse_header`.
+- Depends on: none.
+- Change: read NNTP header lines through owned string storage before
+  appending them to the growable header buffer.  Preserve dot-stuffed
+  line handling and end-of-header detection.
+- Tests: header parsing and NNTP article tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
+#### CSTR-222 - Overview Format File Lines
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: local overview format file reader using `g_buf`.
+- Function: `ov_init`.
+- Depends on: none.
+- Change: in the local `overview.fmt` branch, replace
+  `std::fopen`/`std::fgets(g_buf)` with `std::ifstream` and
+  `std::string` line storage.  Keep the existing remote NNTP string path
+  and preserve comment skipping and field parsing.
+- Tests: overview format tests.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-### Tier 4 - Broad Shared Buffers
-
-These slices should wait until earlier tiers have reduced direct callers
-and clarified ownership at the edges.
 
 #### CSTR-218 - Datasrc Active Control Probe
 
@@ -624,17 +646,6 @@ and clarified ownership at the edges.
   `use_buffered_nntp_gets` is true.
 - Tests: active-file, newsgroups-file, and overview fetch tests.
 
-#### CSTR-220 - Header Parser NNTP Lines
-
-- Files: `libtrn/head.cpp`.
-- Kind: NNTP header reader using `g_head_buf`.
-- Function: `parse_header`.
-- Depends on: none.
-- Change: read NNTP header lines through owned string storage before
-  appending them to the growable header buffer.  Preserve dot-stuffed
-  line handling and end-of-header detection.
-- Tests: header parsing and NNTP article tests.
-
 #### CSTR-221 - NNTP List First Response Line
 
 - Files: `libtrn/nntp.cpp`.
@@ -645,6 +656,11 @@ and clarified ownership at the edges.
   Return or otherwise hand the first line to callers with owned string
   storage after callers no longer consume the global side effect.
 - Tests: NNTP list, active-list, subscription, and overview tests.
+
+### Tier 4 - Broad Shared Buffers
+
+These slices should wait until earlier tiers have reduced direct callers
+and clarified ownership at the edges.
 
 Global command buffer work must be split by function.  Prefer
 formatting-only leaves first, because they do not affect command input,
@@ -717,5 +733,16 @@ with their owner slices unless a local use is clearly formatting-only.
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
-owned strings or owner-specific storage.  No slices remain in this tier
-after the current scan.
+owned strings or owner-specific storage.
+
+#### CSTR-223 - NNTP Gets C Buffer Wrapper Removal
+
+- Files: `nntp/nntpclient.cpp`,
+  `nntp/include/nntp/nntpclient.h`.
+- Kind: obsolete raw-buffer wrapper.
+- Function: `nntp_gets(char *, int)`.
+- Depends on: `CSTR-218`, `CSTR-219`, `CSTR-220`, and `CSTR-221`.
+- Change: remove the C-buffer overload after every production caller
+  uses the `std::string` overload.  Update stale tests or header checks
+  that only preserve compatibility with the removed wrapper.
+- Tests: NNTP client, list, active-file, and header tests.
