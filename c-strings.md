@@ -468,13 +468,12 @@ tree.
 - Direct environment C-string reads now remain only inside the
   environment wrapper implementation.
 - Fixed raw buffers: current candidates include `g_buf`, `g_ser_line`,
-  `g_art_line`, `g_head_buf`, terminal command-input
-  scratch, and environment host/domain probe scratch.  Inactive
-  self-test buffers are not current production work.
-  Tiny UTF byte scratch buffers, translation tables, MIME decode tables,
-  terminal pushback bytes, termcap storage, address conversion scratch,
-  and regex bytecode arrays are non-string protocol or parser storage,
-  not current local string slices.
+  `g_art_line`, `g_head_buf`, and terminal command-input scratch.
+  Inactive `wildmat` self-test buffers are not current production work.
+  NNTP CRLF trailer scratch, tiny UTF byte scratch buffers, translation
+  tables, MIME decode tables, terminal pushback bytes, termcap storage,
+  address conversion scratch, and regex bytecode arrays are non-string
+  protocol or parser storage, not current local string slices.
 - `g_art_buf` is now backed by owned `std::string` storage, with the
   global pointer kept as a compatibility view.  Remaining direct pointer
   writes in `read_art_buf` are read/decode/filter plumbing, not current
@@ -527,17 +526,18 @@ tree.
   NNTP lines or local `overview.fmt` lines.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
-  visitor callback still expose pointer-shaped text APIs even though
-  callers already have strings, views, or literals.
+  visitor callback already use `std::string_view`.  Current small
+  pointer-shaped APIs include `push_string`, NNTP server-name helpers,
+  `eaccess`, and UTF cursor helpers.  `read_art`, `read_art_buf`, and
+  `article_walk` remain tied to shared article storage.
 - Remaining literal tables include color object names, signal names,
   MIME entity mappings, and transliteration tables.  The useful current
   targets are tables whose users already operate on views or compute
   lengths manually.
 - MIME HTML `find_attr` and `wildcard_match` are already view-based and
-  should not be re-added as slices.  New local leaves from this scan are
-  dead NNTP socket code, simple timeout output functions, literal lookup
-  tables, pointer-and-length display signatures, and owner-local command
-  or spinner tables.
+  should not be re-added as slices.  Current local leaves from this scan
+  are NNTP debug output calls and pointer-and-length display output in
+  selector and option code.
 - The article pager still has one formatting-only `g_buf` use for the
   MORE prompt.  This is a leaf of `CSTR-161`, not command input.
 - `do_article` still formats a rewritten Date header into
@@ -557,10 +557,10 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Copy and concatenation: `strcpy` 7, `strncpy` 1, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 11.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
-  `strlen` 34.
+  `strlen` 33.
 - Formatting into C buffers: `sprintf` 1, `snprintf` 2.
 - C text parsing: `sscanf` 4.
-- C text I/O roots: `fgets` 20, `fputs` 175, `printf` 346,
+- C text I/O roots: `fgets` 20, `fputs` 175, `printf` 345,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -587,10 +587,150 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-223 - NNTP Gets C Buffer Wrapper Removal
+
+- Files: `nntp/nntpclient.cpp`,
+  `nntp/include/nntp/nntpclient.h`, `tests/test_nntp.cpp`.
+- Kind: obsolete raw-buffer wrapper.
+- Function: `nntp_gets(char *, int)`.
+- Depends on: none.
+- Change: remove the C-buffer overload.  Production callers already use
+  the `std::string` overload; update stale tests that only preserve the
+  old wrapper contract.
+- Tests: NNTP client tests.
+
+#### CSTR-224 - NNTP Command Debug Output
+
+- Files: `nntp/nntpclient.cpp`.
+- Kind: formatted output leaf.
+- Function: `nntp_command`.
+- Depends on: none.
+- Change: replace the DEBUG/FLUSH command echo `std::printf` with
+  `fmt::print`.  Do not change `g_last_command` ownership or command
+  formatting in this slice.
+- Tests: NNTP command tests; build coverage for DEBUG/FLUSH if present.
+
+#### CSTR-225 - NNTP Check Debug Output
+
+- Files: `nntp/nntpclient.cpp`.
+- Kind: formatted output leaf.
+- Function: `nntp_check`.
+- Depends on: none.
+- Change: replace the DEBUG/FLUSH server-line echo `std::printf` with
+  `fmt::print`.  Do not change `g_ser_line` trimming or status storage
+  in this slice.
+- Tests: NNTP client tests; build coverage for DEBUG/FLUSH if present.
+
+#### CSTR-226 - Selector Option Prompt Output
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: pointer-and-length formatted output leaf.
+- Function: `select_option`.
+- Depends on: none.
+- Change: replace the `std::printf` `%.*s` string-view output with
+  `fmt::print` using the existing `name` and `help` views directly.
+- Tests: selector option edit tests if present.
+
+#### CSTR-227 - Selector Option Row Output
+
+- Files: `libtrn/rt-page.cpp`.
+- Kind: pointer-and-length formatted output leaf.
+- Function: `display_option`.
+- Depends on: none.
+- Change: replace the `std::printf` `%.*s` string-view output with
+  `fmt::print`.  Preserve the existing 39-character value truncation as
+  display layout behavior.
+- Tests: selector page display tests if present.
+
+#### CSTR-228 - Option File Save String-view Output
+
+- Files: `libtrn/opt.cpp`.
+- Kind: pointer-and-length file output leaf.
+- Function: `save_options`.
+- Depends on: none.
+- Change: replace the `std::fprintf` `%.*s` option-name output with
+  `fmt::print(fp_out, ...)` using the existing `name` views directly.
+  Keep unrelated save-file flow unchanged.
+- Tests: option save tests if present.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-229 - Terminal Push String View
+
+- Files: `libtrn/terminal.cpp`,
+  `libtrn/include/trn/terminal.h`.
+- Kind: read-only helper API.
+- Function: `push_string`.
+- Depends on: none.
+- Change: change the input from `const char *` to `std::string_view`,
+  remove the null-pointer assertion, and pass the view to `do_interp`.
+  Update callers that currently use `.data()` or `.c_str()` only to
+  satisfy the raw pointer signature.
+- Tests: terminal pushback and macro tests.
+
+#### CSTR-230 - NNTP Connection Constructor Server Name
+
+- Files: `nntp/nntpinit.cpp`.
+- Kind: read-only helper API.
+- Function: `NNTPConnection::NNTPConnection`.
+- Depends on: none.
+- Change: accept the server name as `std::string_view` and materialize
+  owned `std::string` storage only for `m_server`.  Keep socket connect
+  behavior unchanged.
+- Tests: NNTP connection factory tests.
+
+#### CSTR-231 - NNTP Connection Factory Server Name
+
+- Files: `nntp/nntpinit.cpp`, `nntp/include/nntp/nntpclient.h`,
+  `tests/test_nntp.cpp`.
+- Kind: read-only helper API.
+- Function: `create_nntp_connection`.
+- Depends on: `CSTR-230`.
+- Change: pass server and service names as `std::string_view` through
+  the connection factory boundary.  Materialize `std::string` only where
+  Boost.Asio needs a null-terminated service or host name.
+- Tests: NNTP connection factory tests.
+
+#### CSTR-232 - NNTP Server Init Server Name
+
+- Files: `nntp/nntpinit.cpp`, `nntp/include/nntp/nntpinit.h`,
+  `tests/test_nntp.cpp`.
+- Kind: read-only helper API.
+- Function: `server_init`.
+- Depends on: `CSTR-231`.
+- Change: change the server-name parameter to `std::string_view` and
+  forward it to the modern connection factory.  Do not change
+  `g_ser_line` status storage in this slice.
+- Tests: NNTP server-init tests.
+
+#### CSTR-233 - NNTP Connect Server Name
+
+- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
+  NNTP callers in `libtrn`, `inews`, `nntplist`, and `trn-artchk`.
+- Kind: read-only public API.
+- Function: `nntp_connect`.
+- Depends on: `CSTR-232`.
+- Change: change the server-name parameter to `std::string_view` and
+  update callers to pass `std::string` values directly instead of
+  `.c_str()`.  Keep status parsing and `g_ser_line` ownership unchanged.
+- Tests: NNTP client tests plus caller smoke tests where present.
+
+#### CSTR-234 - Effective Access Path Argument
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `libtrn/ngdata.cpp`, `libtrn/opt.cpp`.
+- Kind: filename helper API.
+- Function: `eaccess`.
+- Depends on: none.
+- Change: replace the filename `const char *` parameter with a path
+  shape so callers stop passing `.c_str()` for filesystem names.  Keep
+  the POSIX `stat` boundary inside the helper and preserve
+  `SETUIDGID` behavior.
+- Tests: build coverage for `SETUIDGID`; targeted path/access tests if
+  that configuration is easy to exercise.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -679,15 +819,3 @@ with their owner slices unless a local use is clearly formatting-only.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
-
-#### CSTR-223 - NNTP Gets C Buffer Wrapper Removal
-
-- Files: `nntp/nntpclient.cpp`,
-  `nntp/include/nntp/nntpclient.h`.
-- Kind: obsolete raw-buffer wrapper.
-- Function: `nntp_gets(char *, int)`.
-- Depends on: none.
-- Change: remove the C-buffer overload after every production caller
-  uses the `std::string` overload.  Update stale tests or header checks
-  that only preserve compatibility with the removed wrapper.
-- Tests: NNTP client, list, active-file, and header tests.
