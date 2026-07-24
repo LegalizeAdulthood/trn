@@ -587,17 +587,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-227 - Selector Option Row Output
-
-- Files: `libtrn/rt-page.cpp`.
-- Kind: pointer-and-length formatted output leaf.
-- Function: `display_option`.
-- Depends on: none.
-- Change: replace the `std::printf` `%.*s` string-view output with
-  `fmt::print`.  Preserve the existing 39-character value truncation as
-  display layout behavior.
-- Tests: selector page display tests if present.
-
 #### CSTR-228 - Option File Save String-view Output
 
 - Files: `libtrn/opt.cpp`.

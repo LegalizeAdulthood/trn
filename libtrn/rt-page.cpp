@@ -2879,9 +2879,7 @@ void display_option(int op, int item_index)
     }
     post = post.substr(len);
     output_sel(item_index, g_sel_items[item_index].sel, false);
-    std::printf(" %.*s%.*s%.*s %.*s\n", static_cast<int>(pre.size()), pre.data(), static_cast<int>(item.size()),
-                item.data(), static_cast<int>(post.size()), post.data(), std::min(39, static_cast<int>(val.size())),
-                val.data());
+    fmt::print(" {}{}{} {}\n", pre, item, post, val.substr(0, 39));
     term_down(1);
 }
 
