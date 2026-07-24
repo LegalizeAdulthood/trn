@@ -41,6 +41,34 @@ emit it.
 Result: code guarded by `#ifdef SUPPORT_XTHREAD` is disabled even though
 CMake appears to enable it.
 
+Current news-server support also argues against restoring `XTHREAD` as
+the main threading data path. `OVER` overview here means capability
+discovery, `OVER`, and `LIST OVERVIEW.FMT`. `HDR` refs means retrieving
+`References` with `HDR` or old `XHDR`.
+
+| Rank | Method | Current server fit |
+| --- | --- | --- |
+| 1 | `OVER` overview | Best standard path |
+| 2 | `XOVER` overview | Common compatibility path |
+| 3 | `HDR` refs | Standard sparse-overview fallback |
+| 4 | `XROVER` refs | Legacy shortcut |
+| 5 | `HEAD` | Available but expensive |
+| 6 | `XTHREAD` | Historic TRN binary format |
+
+Current trn support for those same ranked methods is:
+
+| Rank | Method | Current trn support |
+| --- | --- | --- |
+| 1 | `OVER` overview | Partial: fmt yes; caps/`OVER` no |
+| 2 | `XOVER` overview | Yes |
+| 3 | `HDR` refs | Partial: `XHDR` yes; `HDR` no |
+| 4 | `XROVER` refs | No |
+| 5 | `HEAD` | Yes |
+| 6 | `XTHREAD` | Dead guard; no generated define |
+
+Result: the current `SUPPORT_XTHREAD` mismatch is not a modern server
+support gap. It is either a delete target or a legacy-only opt-in.
+
 ### `sgtty.h`
 
 CMake probes `sgtty.h` into `I_SGTTY`, and terminal code still checks
