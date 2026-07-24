@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     {
         if (!g_nntp_link.connection)
         {
-            if (init_nntp() < 0 || !nntp_connect(g_server_name.c_str(),false))
+            if (init_nntp() < 0 || !nntp_connect(g_server_name, false))
             {
                 std::exit(1);
             }
@@ -440,7 +440,7 @@ int nntp_handle_timeout()
         }
         handling_timeout = true;
         nntp_close(false);
-        if (init_nntp() < 0 || nntp_connect(g_server_name.c_str(),false) <= 0)
+        if (init_nntp() < 0 || nntp_connect(g_server_name, false) <= 0)
         {
             std::exit(1);
         }

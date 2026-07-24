@@ -422,7 +422,7 @@ int server_connection()
     static int server_stat = 0;
     if (!server_stat)
     {
-        if (nntp_connect(g_server_name.c_str(),false) > 0)
+        if (nntp_connect(g_server_name, false) > 0)
         {
             server_stat = 1;
         }

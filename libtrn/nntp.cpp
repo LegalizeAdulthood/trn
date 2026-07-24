@@ -638,7 +638,7 @@ int nntp_handle_timeout()
     const std::string last_command_save{g_last_command};
     nntp_close(false);
     g_data_source->m_nntp_link = g_nntp_link;
-    if (nntp_connect(g_data_source->m_news_id.c_str(), false) <= 0)
+    if (nntp_connect(g_data_source->m_news_id, false) <= 0)
     {
         return -2;
     }

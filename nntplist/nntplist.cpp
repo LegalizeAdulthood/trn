@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     if (!s_server_name.empty())
     {
         if (init_nntp() < 0 //
-            || nntp_connect(s_server_name.c_str(), false) <= 0)
+            || nntp_connect(s_server_name, false) <= 0)
         {
             std::exit(1);
         }

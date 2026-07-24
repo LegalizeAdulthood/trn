@@ -25,7 +25,7 @@ std::string g_last_command;
 
 static std::time_t s_last_command_diff{};
 
-int nntp_connect(const char *machine, bool verbose)
+int nntp_connect(std::string_view machine, bool verbose)
 {
     int response;
 

@@ -592,18 +592,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-233 - NNTP Connect Server Name
-
-- Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,
-  NNTP callers in `libtrn`, `inews`, `nntplist`, and `trn-artchk`.
-- Kind: read-only public API.
-- Function: `nntp_connect`.
-- Depends on: `CSTR-232`.
-- Change: change the server-name parameter to `std::string_view` and
-  update callers to pass `std::string` values directly instead of
-  `.c_str()`.  Keep status parsing and `g_ser_line` ownership unchanged.
-- Tests: NNTP client tests plus caller smoke tests where present.
-
 #### CSTR-234 - Effective Access Path Argument
 
 - Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,

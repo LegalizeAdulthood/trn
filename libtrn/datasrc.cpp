@@ -435,7 +435,7 @@ bool DataSource::open()
     }
     if (m_flags & DF_REMOTE)
     {
-        if (nntp_connect(m_news_id.c_str(), true) <= 0)
+        if (nntp_connect(m_news_id, true) <= 0)
         {
             m_flags |= DF_UNAVAILABLE;
             return false;

@@ -98,7 +98,7 @@ inline std::string nntp_get_a_line()
 }
 
 void  set_nntp_connection_factory(ConnectionFactory factory);
-int   nntp_connect(const char *machine, bool verbose);
+int   nntp_connect(std::string_view machine, bool verbose);
 std::string nntp_server_name(std::string_view name);
 int   nntp_command(std::string_view bp);
 int   nntp_xgtitle(std::string_view groupname);
