@@ -819,12 +819,17 @@ try_xgtitle:
         set_data_source(this);
         if (nntp_xgtitle(group_name) > 0)
         {
-            nntp_gets(g_ser_line, sizeof g_ser_line - 1); // TODO: check return value?
-            if (nntp_at_list_end(g_ser_line))
+            std::string description_line;
+            description_line.reserve(NNTP_STRLEN);
+            if (nntp_gets(description_line, NNTP_STRLEN - 1) == NGSR_ERROR)
+            {
+                description_line = g_ser_line;
+            }
+            if (nntp_at_list_end(description_line))
             {
                 return m_desc_sf.append(fmt::format("{} \n", group_name), grouplen).substr(grouplen + 1);
             }
-            const std::string description_line{fmt::format("{}\n", g_ser_line)};
+            description_line += '\n';
             nntp_finish_list();
             return m_desc_sf.append(description_line, grouplen).substr(grouplen + 1);
         }

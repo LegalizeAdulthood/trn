@@ -519,9 +519,9 @@ tree.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
   callers are `new_nntp_groups`, `find_new_groups`,
-  `DataSource::open`, `DataSource::find_group_desc`,
-  `SourceFile::open`, `parse_header`, `nntp_list`, `open_newsrc`, and
-  `ov_init`.  Keep the C wrapper until those callers move.
+  `DataSource::open`, `SourceFile::open`, `parse_header`,
+  `nntp_list`, `open_newsrc`, and `ov_init`.  Keep the C wrapper until
+  those callers move.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -598,17 +598,6 @@ them before broad global-buffer work and before removing helpers.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-213 - Datasrc XGTITLE Description Line
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: NNTP description-list reader.
-- Function: `DataSource::find_group_desc`.
-- Depends on: none.
-- Change: read the `XGTITLE` response into local `std::string` storage,
-  check the terminator from the string, and append the description from
-  owned text.
-- Tests: data-source group description tests.
 
 #### CSTR-214 - Addng New NNTP Groups Response Lines
 
@@ -696,8 +685,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/nntp.cpp`.
 - Kind: NNTP list helper with first-line side effect.
 - Function: `nntp_list`.
-- Depends on: `CSTR-213`, `CSTR-215`, `CSTR-216`, `CSTR-217`,
-  `CSTR-219`.
+- Depends on: `CSTR-215`, `CSTR-216`, `CSTR-217`, `CSTR-219`.
 - Change: stop exposing the first list response through `g_ser_line`.
   Return or otherwise hand the first line to callers with owned string
   storage after callers no longer consume the global side effect.
