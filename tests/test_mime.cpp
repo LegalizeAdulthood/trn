@@ -476,8 +476,8 @@ TEST_F(CatDecodeTest, copiesFileInputToDecodedFile)
     EXPECT_EQ(DECODE_DONE, cat_decode(m_input, DECODE_DONE));
     const std::string output = testing::internal::GetCapturedStdout();
 
-    EXPECT_EQ("Decoding cat-outputtxt", output);
-    EXPECT_EQ("first line\nsecond line\n", file_contents(m_output_dir / "cat-outputtxt"));
+    EXPECT_EQ("Decoding cat-output.txt", output);
+    EXPECT_EQ("first line\nsecond line\n", file_contents(m_output_dir / "cat-output.txt"));
 }
 
 namespace

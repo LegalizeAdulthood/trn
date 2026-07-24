@@ -32,9 +32,7 @@
 namespace fs = std::filesystem;
 
 #ifdef MSDOS
-static constexpr std::string_view s_good_chars{"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                               "abcdefghijklmnopqrstuvwxyz"
-                                               "0123456789-_^#%"};
+static constexpr std::string_view s_bad_chars{"<>:\"/\\|?* \t"};
 #else
 static constexpr std::string_view s_bad_chars{"!$&*()|'\";<>[]{}?/`\\ \t"};
 #endif
@@ -59,17 +57,17 @@ std::string decode_fix_filename(std::string_view text)
     filename.reserve(path.size());
     for (const char ch : fs::path{path}.filename().string())
     {
-        if (std::isprint(static_cast<unsigned char>(ch))
-#ifdef MSDOS
-            && s_good_chars.find(ch) != std::string_view::npos
-#else
-            && s_bad_chars.find(ch) == std::string_view::npos
-#endif
-        )
+        if (std::isprint(static_cast<unsigned char>(ch)) && s_bad_chars.find(ch) == std::string_view::npos)
         {
             filename.push_back(ch);
         }
     }
+#ifdef MSDOS
+    while (!filename.empty() && (filename.back() == ' ' || filename.back() == '.'))
+    {
+        filename.pop_back();
+    }
+#endif
     if (filename.empty() || bad_filename(filename))
     {
         filename = "x";
@@ -81,20 +79,27 @@ std::string decode_fix_filename(std::string_view text)
 static bool bad_filename(std::string_view filename)
 {
 #ifdef MSDOS
-    if (filename.size() == 3)
+    if (filename == "." || filename == "..")
     {
-        if (string_case_equal(filename, "aux") || string_case_equal(filename, "con") //
-            || string_case_equal(filename, "nul") || string_case_equal(filename, "prn"))
+        return true;
+    }
+
+    const std::size_t      dot = filename.find('.');
+    const std::string_view device_name = dot == std::string_view::npos ? filename : filename.substr(0, dot);
+    if (device_name.size() == 3)
+    {
+        if (string_case_equal(device_name, "aux") || string_case_equal(device_name, "con") //
+            || string_case_equal(device_name, "nul") || string_case_equal(device_name, "prn"))
         {
             return true;
         }
     }
-    else if (filename.size() == 4)
+    else if (device_name.size() == 4)
     {
-        if (string_case_equal(filename, "com1") || string_case_equal(filename, "com2")    //
-            || string_case_equal(filename, "com3") || string_case_equal(filename, "com4") //
-            || string_case_equal(filename, "lpt1") || string_case_equal(filename, "lpt2") //
-            || string_case_equal(filename, "lpt3"))
+        if (string_case_equal(device_name, "com1") || string_case_equal(device_name, "com2")    //
+            || string_case_equal(device_name, "com3") || string_case_equal(device_name, "com4") //
+            || string_case_equal(device_name, "lpt1") || string_case_equal(device_name, "lpt2") //
+            || string_case_equal(device_name, "lpt3"))
         {
             return true;
         }

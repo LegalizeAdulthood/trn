@@ -3,6 +3,7 @@
 
 #include <trn/decode.h>
 
+#include <config/common.h>
 #include <file_contents.h>
 
 #include <trn/artio.h>
@@ -180,9 +181,14 @@ TEST(DecodeFixFilenameTest, usesWindowsBasename)
     EXPECT_EQ("file_txt", decode_fix_filename("C:\\tmp\\path\\file_txt"));
 }
 
+TEST(DecodeFixFilenameTest, preservesFileExtension)
+{
+    EXPECT_EQ("file.txt", decode_fix_filename("file.txt"));
+}
+
 TEST(DecodeFixFilenameTest, filtersBadCharactersFromBasename)
 {
-    EXPECT_EQ("abc", decode_fix_filename("/tmp/a b;c"));
+    EXPECT_EQ("abc", decode_fix_filename("/tmp/a<b>c"));
 }
 
 TEST(DecodeFixFilenameTest, fallsBackForEmptyBasename)
@@ -194,3 +200,25 @@ TEST(DecodeFixFilenameTest, fallsBackForBadBasename)
 {
     EXPECT_EQ("x", decode_fix_filename("/tmp/.."));
 }
+
+#ifdef MSDOS
+TEST(DecodeFixFilenameTest, preservesWindowsLongFilenameCharacters)
+{
+    EXPECT_EQ("a!#$%&'()+,;=@[]^_`{}~.txt", decode_fix_filename("a!#$%&'()+,;=@[]^_`{}~.txt"));
+}
+
+TEST(DecodeFixFilenameTest, filtersWindowsForbiddenFilenameCharacters)
+{
+    EXPECT_EQ("ab", decode_fix_filename("a<>:\"|?* \tb"));
+}
+
+TEST(DecodeFixFilenameTest, stripsWindowsTrailingDotsAndSpaces)
+{
+    EXPECT_EQ("file", decode_fix_filename("file. "));
+}
+
+TEST(DecodeFixFilenameTest, rejectsWindowsDeviceNameWithExtension)
+{
+    EXPECT_EQ("x", decode_fix_filename("con.txt"));
+}
+#endif
