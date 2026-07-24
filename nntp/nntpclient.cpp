@@ -348,18 +348,6 @@ NNTPGetsResult nntp_gets(std::string &line, int len)
     return NGSR_PARTIAL_LINE;
 }
 
-NNTPGetsResult nntp_gets(char *bp, int len)
-{
-    std::string          line;
-    const NNTPGetsResult result = nntp_gets(line, len);
-    if (result != NGSR_ERROR)
-    {
-        const std::size_t copied = line.copy(bp, static_cast<std::size_t>(len - 1));
-        bp[copied] = '\0';
-    }
-    return result;
-}
-
 void nntp_gets_clear_buffer()
 {
     s_nntp_gets_line.clear();

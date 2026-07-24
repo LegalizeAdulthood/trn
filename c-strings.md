@@ -587,18 +587,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-223 - NNTP Gets C Buffer Wrapper Removal
-
-- Files: `nntp/nntpclient.cpp`,
-  `nntp/include/nntp/nntpclient.h`, `tests/test_nntp.cpp`.
-- Kind: obsolete raw-buffer wrapper.
-- Function: `nntp_gets(char *, int)`.
-- Depends on: none.
-- Change: remove the C-buffer overload.  Production callers already use
-  the `std::string` overload; update stale tests that only preserve the
-  old wrapper contract.
-- Tests: NNTP client tests.
-
 #### CSTR-224 - NNTP Command Debug Output
 
 - Files: `nntp/nntpclient.cpp`.

@@ -252,17 +252,6 @@ protected:
     NNTPFlags                                       m_saved_nntp_flags{};
 };
 
-TEST_F(NNTPGetStringTest, line_fits)
-{
-    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits")));
-    char buffer[1024];
-
-    const NNTPGetsResult result = nntp_gets(buffer, sizeof(buffer));
-
-    EXPECT_EQ(NGSR_FULL_LINE, result);
-    EXPECT_EQ("this fits", std::string(buffer));
-}
-
 TEST_F(NNTPGetStringTest, getALineReturnsServerLine)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("server line")));
@@ -270,44 +259,6 @@ TEST_F(NNTPGetStringTest, getALineReturnsServerLine)
     const std::string line = nntp_get_a_line();
 
     EXPECT_EQ("server line", line);
-}
-
-TEST_F(NNTPGetStringTest, partial_line)
-{
-    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
-    char buffer[5];
-
-    const NNTPGetsResult result = nntp_gets(buffer, sizeof(buffer));
-
-    EXPECT_EQ(NGSR_PARTIAL_LINE, result);
-    EXPECT_EQ("this", std::string(buffer));
-}
-
-TEST_F(NNTPGetStringTest, partial_line_continues_from_saved_text)
-{
-    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
-    char buffer[5];
-
-    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(buffer, sizeof(buffer)));
-    EXPECT_EQ("this", std::string(buffer));
-    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(buffer, sizeof(buffer)));
-    EXPECT_EQ("does", std::string(buffer));
-    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(buffer, sizeof(buffer)));
-    EXPECT_EQ("not ", std::string(buffer));
-    EXPECT_EQ(NGSR_FULL_LINE, nntp_gets(buffer, sizeof(buffer)));
-    EXPECT_EQ("it", std::string(buffer));
-}
-
-TEST_F(NNTPGetStringTest, error)
-{
-    m_ec = boost::asio::error::eof;
-    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
-    char buffer[1024]{"junk"};
-
-    const NNTPGetsResult result = nntp_gets(buffer, sizeof(buffer));
-
-    EXPECT_EQ(NGSR_ERROR, result);
-    EXPECT_EQ("junk", std::string(buffer));
 }
 
 TEST_F(NNTPGetStringTest, string_line_fits)

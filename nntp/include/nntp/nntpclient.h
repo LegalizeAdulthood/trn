@@ -112,7 +112,6 @@ enum NNTPGetsResult
     NGSR_FULL_LINE = 1,
 };
 NNTPGetsResult nntp_gets(std::string &line, int len);
-NNTPGetsResult nntp_gets(char *bp, int len);
 void           nntp_gets_clear_buffer();
 void           nntp_close(bool send_quit);
 
