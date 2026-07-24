@@ -2052,8 +2052,7 @@ static bool select_option(OptionIndex i)
     const OptionIndex      option = catalog.option(row);
     const std::string_view name = catalog.name(row);
     const std::string_view help = catalog.help(option);
-    std::printf("Change `%.*s' (%.*s)", static_cast<int>(name.size()), name.data(), static_cast<int>(help.size()),
-                help.data());
+    fmt::print("Change `{}' ({})", name, help);
     color_pop();        // of COLOR_CMD
     newline();
     *g_buf = '\0';
