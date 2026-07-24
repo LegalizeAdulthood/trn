@@ -31,7 +31,7 @@ using error_code_t = boost::system::error_code;
 class NNTPConnection : public INNTPConnection
 {
 public:
-    NNTPConnection(const char *server, const resolver_results &results)
+    NNTPConnection(std::string_view server, const resolver_results &results)
         : m_server(server)
     {
         error_code_t ec;

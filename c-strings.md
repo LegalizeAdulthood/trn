@@ -592,17 +592,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-230 - NNTP Connection Constructor Server Name
-
-- Files: `nntp/nntpinit.cpp`.
-- Kind: read-only helper API.
-- Function: `NNTPConnection::NNTPConnection`.
-- Depends on: none.
-- Change: accept the server name as `std::string_view` and materialize
-  owned `std::string` storage only for `m_server`.  Keep socket connect
-  behavior unchanged.
-- Tests: NNTP connection factory tests.
-
 #### CSTR-231 - NNTP Connection Factory Server Name
 
 - Files: `nntp/nntpinit.cpp`, `nntp/include/nntp/nntpclient.h`,
