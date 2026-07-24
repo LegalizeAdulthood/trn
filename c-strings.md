@@ -498,12 +498,12 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 7, `strncpy` 1, `strcat` 0.
-- Comparison: `strcmp` 0, `strncmp` 10.
+- Comparison: `strcmp` 0, `strncmp` 5.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
-  `strlen` 33.
+  `strlen` 29.
 - Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
-- C text I/O roots: `fgets` 20, `fputs` 173, `printf` 345,
+- C text I/O roots: `fgets` 21, `fputs` 173, `printf` 345,
   `fprintf` 18.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -542,20 +542,7 @@ No active slices.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-241 - UUDecode Local Line Storage
-
-- Files: `libtrn/uudecode.cpp`.
-- Kind: local use of shared fixed buffer.
-- Functions: uuencode decode input loop and helpers in the same file.
-- Dependencies: none.
-- Current shape: the decoder uses `g_buf` as line scratch storage and
-  then applies `std::strlen`, `std::strncmp`, and `std::strchr` to it.
-- Change: use local `std::string` line storage, reserving the previous
-  fixed capacity.  Preserve meaningful uuencode line-length checks,
-  carriage-return removal, and `begin`/`end` detection.  Replace
-  read-only C scans with string/view operations.
-- Tests: cover current uudecode success and malformed-line behavior
-  before refactoring if the existing tests do not already do so.
+No active slices.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -624,7 +611,7 @@ with their owner slices unless a local use is clearly formatting-only.
   command prompt/input users across `libtrn`.
 - Kind: global general-purpose command and line buffer.
 - Function: storage-centered `g_buf`.
-- Dependencies: CSTR-241 and CSTR-242 should be completed first.
+- Dependencies: CSTR-242 should be completed first.
 - Change: split command input, prompt formatting, scratch line input, and
   file-copy uses into owned strings or owner-specific buffers.  Work
   bottom-up by function; do not replace `g_buf` with one global string
@@ -666,13 +653,13 @@ with their owner slices unless a local use is clearly formatting-only.
 #### CSTR-077 - Article Display Line Buffer
 
 - Files: `libtrn/art.cpp`, `libtrn/include/trn/art.h`,
-  `libtrn/respond.cpp`, `libtrn/decode.cpp`, `libtrn/uudecode.cpp`.
+  `libtrn/respond.cpp`, `libtrn/decode.cpp`.
 - Kind: global fixed article display/input buffer.
 - Function: storage-centered `g_art_line`.
 - Dependencies: complete CSTR-243 before replacing this shared owner.
 - Change: replace article display line storage with owned string or view
-  based data flow after local decode/respond/uudecode buffer slices have
-  reduced direct mutation.
+  based data flow after local decode/respond buffer slices have reduced
+  direct mutation.
 - Tests: article display, MIME decode, response, and uudecode tests.
 
 #### CSTR-119 - Terminal Command Input Buffers

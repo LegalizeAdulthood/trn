@@ -195,3 +195,27 @@ TEST_F(UudecodeTest, decodesSavedShortLineBeforeEnd)
     EXPECT_EQ("Cat", file_contents(m_output_dir / "cats_txt"));
     EXPECT_EQ("cats_txt", g_decode_filename);
 }
+
+TEST_F(UudecodeTest, decodesLinesWithCarriageReturns)
+{
+    const DecodeState state = decode_text("begin 644 cats_txt\r\n"
+                                          "#0V%T\r\n"
+                                          "`\r\n"
+                                          "end\r\n");
+
+    EXPECT_EQ(DECODE_MAYBE_DONE, state);
+    EXPECT_EQ("Cat", file_contents(m_output_dir / "cats_txt"));
+    EXPECT_EQ("cats_txt", g_decode_filename);
+}
+
+TEST_F(UudecodeTest, returnsInactiveWhenDataIsInterruptedBeforeEnd)
+{
+    const DecodeState state = decode_text("begin 644 cats_txt\n"
+                                          "#0V%T\n"
+                                          "bogus\n");
+
+    EXPECT_EQ(DECODE_INACTIVE, state);
+    uudecode(nullptr, DECODE_DONE);
+    EXPECT_TRUE(fs::exists(m_output_dir / "cats_txt"));
+    EXPECT_TRUE(file_contents(m_output_dir / "cats_txt").empty());
+}

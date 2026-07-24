@@ -8,18 +8,18 @@
 #include <config/common.h>
 #include <trn/artio.h>
 #include <trn/mime.h>
-#include <trn/string-algos.h>
 #include <trn/terminal.h>
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cctype>
 #include <charconv>
 #include <cstdio>
-#include <cstring>
 #include <string>
 #include <string_view>
 
-static void uudecode_line(char *line, std::FILE *ofp);
+static void uudecode_line(std::string_view line, std::FILE *ofp);
 
 int uue_prescan(std::string_view text, std::string &filename, int *partp, int *totalp)
 {
@@ -237,9 +237,29 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
 DecodeState uudecode(std::FILE *ifp, DecodeState state)
 {
     static std::FILE *ofp = nullptr;
-    static int   line_length;
+    static int        line_length;
     std::string       lastline;
     lastline.reserve(UU_LENGTH + 1);
+    std::string line;
+    line.reserve(LINE_BUF_LEN + 1);
+    const auto read_line = [ifp, &line]()
+    {
+        line.resize(LINE_BUF_LEN + 1);
+        char *const input = line.data();
+        if ((ifp != nullptr ? std::fgets(input, LINE_BUF_LEN + 1, ifp) : read_art(input, LINE_BUF_LEN + 1)) == nullptr)
+        {
+            line.clear();
+            return false;
+        }
+        const std::size_t end = line.find('\0');
+        if (end != std::string::npos)
+        {
+            line.resize(end);
+        }
+        return true;
+    };
+    constexpr std::string_view whitespace{" \f\n\r\t\v"};
+    constexpr std::string_view filename_end_chars{"\f\n\r\t\v"};
 
     if (state == DECODE_DONE)
     {
@@ -252,37 +272,42 @@ all_done:
         return state;
     }
 
-    while (ifp ? std::fgets(g_buf, sizeof g_buf, ifp) : read_art(g_buf, sizeof g_buf))
+    while (read_line())
     {
-        if (!ifp && mime_end_of_section(g_buf))
+        if (!ifp && mime_end_of_section(line))
         {
             break;
         }
-        char *p = std::strchr(g_buf, '\r');
-        if (p)
+        const std::size_t cr = line.find('\r');
+        if (cr != std::string::npos)
         {
-            p[0] = '\n';
-            p[1] = '\0';
+            line.resize(cr + 1);
+            line[cr] = '\n';
         }
+        const std::string_view line_text{line};
+        const char             first_char = line_text.empty() ? '\0' : line_text.front();
         switch (state)
         {
-        case DECODE_START:    // Looking for start of uuencoded file
+        case DECODE_START: // Looking for start of uuencoded file
         case DECODE_MAYBE_DONE:
         {
-            if (std::strncmp(g_buf, "begin ", 6) != 0)
+            if (line_text.substr(0, 6) != "begin ")
             {
                 break;
             }
             // skip mode
-            p = skip_non_space(g_buf + 6);
-            p = skip_space(p);
-            char *filename = p;
-            while (*p && (!std::isspace(*p) || *p == ' '))
-            {
-                p++;
-            }
-            *p = '\0';
-            if (!*filename)
+            const std::string_view begin_text = line_text.substr(6);
+            const std::size_t      mode_end = begin_text.find_first_of(whitespace);
+            const std::size_t      filename_start = mode_end == std::string_view::npos
+                                                        ? std::string_view::npos
+                                                        : begin_text.find_first_not_of(whitespace, mode_end);
+            const std::size_t      filename_end = filename_start == std::string_view::npos
+                                                      ? std::string_view::npos
+                                                      : begin_text.find_first_of(filename_end_chars, filename_start);
+            const std::string_view filename = filename_start == std::string_view::npos
+                                                  ? std::string_view{}
+                                                  : begin_text.substr(filename_start, filename_end - filename_start);
+            if (filename.empty())
             {
                 return DECODE_ERROR;
             }
@@ -295,16 +320,16 @@ all_done:
             {
                 return DECODE_ERROR;
             }
-            std::printf("Decoding %s\n", decode_filename.c_str());
+            fmt::print("Decoding {}\n", decode_filename);
             term_down(1);
             state = DECODE_SET_LEN;
             break;
         }
 
         case DECODE_INACTIVE: // Looking for uuencoded data to resume
-            if (*g_buf != 'M' || std::strlen(g_buf) != line_length)
+            if (first_char != 'M' || line_text.size() != static_cast<std::size_t>(line_length))
             {
-                if (*g_buf == 'B' && !std::strncmp(g_buf, "BEGIN", 5))
+                if (first_char == 'B' && line_text.substr(0, 5) == "BEGIN")
                 {
                     state = DECODE_ACTIVE;
                 }
@@ -314,29 +339,29 @@ all_done:
             // FALL THROUGH
 
         case DECODE_SET_LEN:
-            line_length = std::strlen(g_buf);
+            line_length = static_cast<int>(line_text.size());
             state = DECODE_ACTIVE;
             // FALL THROUGH
 
-        case DECODE_ACTIVE:   // Decoding data
-            if (*g_buf == 'M' && std::strlen(g_buf) == line_length)
+        case DECODE_ACTIVE: // Decoding data
+            if (first_char == 'M' && line_text.size() == static_cast<std::size_t>(line_length))
             {
-                uudecode_line(g_buf, ofp);
+                uudecode_line(line_text, ofp);
                 break;
             }
-            if ((int)std::strlen(g_buf) > line_length)
+            if (line_text.size() > static_cast<std::size_t>(line_length))
             {
                 state = DECODE_INACTIVE;
                 break;
             }
             // May be nearing end of file, so save this line
-            lastline = g_buf;
+            lastline = line;
             // some encoders put the end line right after the last M line
-            if (!std::strncmp(g_buf, "end", 3))
+            if (line_text.substr(0, 3) == "end")
             {
                 goto end;
             }
-            else if (*g_buf == ' ' || *g_buf == '`')
+            else if (first_char == ' ' || first_char == '`')
             {
                 state = DECODE_LAST;
             }
@@ -346,12 +371,12 @@ all_done:
             }
             break;
 
-        case DECODE_NEXT_TO_LAST:// May be nearing end of file
-            if (!std::strncmp(g_buf, "end", 3))
+        case DECODE_NEXT_TO_LAST: // May be nearing end of file
+            if (line_text.substr(0, 3) == "end")
             {
                 goto end;
             }
-            else if (*g_buf == ' ' || *g_buf == '`')
+            else if (first_char == ' ' || first_char == '`')
             {
                 state = DECODE_LAST;
             }
@@ -361,14 +386,15 @@ all_done:
             }
             break;
 
-        case DECODE_LAST:     // Should be at end of file
-            if (!std::strncmp(g_buf, "end", 3) && std::isspace(g_buf[3]))
+        case DECODE_LAST: // Should be at end of file
+            if (line_text.substr(0, 3) == "end" && line_text.size() > 3 &&
+                std::isspace(static_cast<unsigned char>(line_text[3])))
             {
                 // Handle that last line we saved
-                lastline.resize(std::max(lastline.size(), static_cast<std::string::size_type>(UU_LENGTH + 1)), '\0');
-                uudecode_line(lastline.data(), ofp);
+                uudecode_line(lastline, ofp);
                 lastline.clear();
-end:            if (ofp)
+end:
+                if (ofp)
                 {
                     std::fclose(ofp);
                     ofp = nullptr;
@@ -397,32 +423,38 @@ end:            if (ofp)
 #define DEC(c)  (((c) - ' ') & 077)
 
 // Decode a uuencoded line to 'ofp'
-static void uudecode_line(char *line, std::FILE *ofp)
+static void uudecode_line(std::string_view line, std::FILE *ofp)
 {
-    // Calculate expected length and pad if necessary
-    int len = ((DEC(line[0]) + 2) / 3) * 4;
-    len = std::min(len, static_cast<int>(UU_LENGTH));
-    for (int c = std::strlen(line) - 1; c <= len; c++)
+    const auto char_at = [line](std::size_t index)
     {
-        line[c] = ' ';
+        if (index >= line.size() || line[index] == '\0' || line[index] == '\n')
+        {
+            return ' ';
+        }
+        return line[index];
+    };
+    if (line.empty())
+    {
+        return;
     }
 
-    len = DEC(*line++);
+    std::size_t index = 1;
+    int         len = DEC(line.front());
     while (len)
     {
-        int c = DEC(*line) << 2 | DEC(line[1]) >> 4;
+        int c = DEC(char_at(index)) << 2 | DEC(char_at(index + 1)) >> 4;
         std::putc(c, ofp);
         if (--len)
         {
-            c = DEC(line[1]) << 4 | DEC(line[2]) >> 2;
+            c = DEC(char_at(index + 1)) << 4 | DEC(char_at(index + 2)) >> 2;
             std::putc(c, ofp);
             if (--len)
             {
-                c = DEC(line[2]) << 6 | DEC(line[3]);
+                c = DEC(char_at(index + 2)) << 6 | DEC(char_at(index + 3));
                 std::putc(c, ofp);
                 len--;
             }
         }
-        line += 4;
+        index += 4;
     }
 }
