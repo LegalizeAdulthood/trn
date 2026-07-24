@@ -518,8 +518,8 @@ tree.
   slice for it.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
-  callers are `DataSource::open`, `SourceFile::open`, and `nntp_list`.
-  Keep the C wrapper until those callers move, then remove it.
+  callers are `SourceFile::open` and `nntp_list`.  Keep the C wrapper
+  until those callers move, then remove it.
 - Overview format parsing no longer uses raw buffer storage for remote
   NNTP lines or local `overview.fmt` lines.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
@@ -551,8 +551,8 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 8, `strncpy` 1, `strcat` 0.
-- Comparison: `strcmp` 0, `strncmp` 12.
+- Copy and concatenation: `strcpy` 7, `strncpy` 1, `strcat` 0.
+- Comparison: `strcmp` 0, `strncmp` 11.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
   `strlen` 34.
 - Formatting into C buffers: `sprintf` 1, `snprintf` 2.
@@ -599,23 +599,12 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-218 - Datasrc Active Control Probe
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: NNTP active-list probe using shared status and command buffers.
-- Function: `DataSource::open`.
-- Depends on: none.
-- Change: replace the one-line remote active probe with local
-  `std::string` storage while preserving the fallback that copies the
-  first server line into the active-file path.
-- Tests: data-source active-file tests.
-
 #### CSTR-219 - SourceFile Remote Fetch Lines
 
 - Files: `libtrn/datasrc.cpp`.
 - Kind: NNTP fetched-file reader using `g_buf`.
 - Function: `SourceFile::open`.
-- Depends on: `CSTR-218`.
+- Depends on: none.
 - Change: replace remote fetch line storage with local `std::string`
   storage and remove reliance on stale `g_buf` contents when
   `use_buffered_nntp_gets` is true.
@@ -716,7 +705,7 @@ owned strings or owner-specific storage.
   `nntp/include/nntp/nntpclient.h`.
 - Kind: obsolete raw-buffer wrapper.
 - Function: `nntp_gets(char *, int)`.
-- Depends on: `CSTR-218`, `CSTR-219`, and `CSTR-221`.
+- Depends on: `CSTR-219` and `CSTR-221`.
 - Change: remove the C-buffer overload after every production caller
   uses the `std::string` overload.  Update stale tests or header checks
   that only preserve compatibility with the removed wrapper.

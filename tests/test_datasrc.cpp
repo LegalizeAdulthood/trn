@@ -137,6 +137,51 @@ protected:
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
 };
 
+class DataSourceOpenTest : public SourceFileTest
+{
+protected:
+    void SetUp() override
+    {
+        SourceFileTest::SetUp();
+        m_old_data_source = g_data_source;
+        m_old_nntp_link = g_nntp_link;
+        m_old_net_speed = g_net_speed;
+        m_old_nntp_allow_timeout = g_nntp_allow_timeout;
+        g_data_source = nullptr;
+        nntp_gets_clear_buffer();
+
+        m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+        g_net_speed = 1;
+
+        m_data_source.m_flags = DF_REMOTE;
+        m_data_source.m_news_id = "news.example";
+        m_data_source.m_extra_name = (m_output_dir / "active").generic_string();
+        m_data_source.m_act_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
+        m_data_source.m_nntp_link.connection = m_connection;
+        m_data_source.m_nntp_link.flags = NNTP_NEW_CMD_OK;
+    }
+
+    void TearDown() override
+    {
+        g_nntp_link.connection.reset();
+        m_data_source.m_nntp_link.connection.reset();
+        m_data_source.close();
+        g_data_source = m_old_data_source;
+        g_nntp_link = m_old_nntp_link;
+        g_net_speed = m_old_net_speed;
+        g_nntp_allow_timeout = m_old_nntp_allow_timeout;
+        nntp_gets_clear_buffer();
+        SourceFileTest::TearDown();
+    }
+
+    DataSource                                               m_data_source{};
+    DataSource                                              *m_old_data_source{};
+    NNTPLink                                                 m_old_nntp_link{};
+    int                                                      m_old_net_speed{};
+    bool                                                     m_old_nntp_allow_timeout{};
+    std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
+};
+
 class FindCloseMatchTest : public SourceFileTest
 {
 protected:
@@ -417,6 +462,26 @@ TEST_F(DataSourceFindGroupDescTest, storesEmptyDescriptionForEmptyServerList)
     const std::string_view description = m_data_source.find_group_desc("comp.lang.apl");
 
     EXPECT_EQ("\n\n", description);
+}
+
+TEST_F(DataSourceOpenTest, importsActiveListWhenServerIgnoresControlPattern)
+{
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST active control"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 list follows"))
+        .WillOnce(testing::Return("comp.lang.apl 10 1 y"))
+        .WillOnce(testing::Return("comp.lang.c++ 20 1 y"))
+        .WillOnce(testing::Return("."));
+
+    testing::internal::CaptureStdout();
+    const bool result = m_data_source.open();
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(m_data_source.m_flags & DF_OPEN);
+    ASSERT_EQ(2U, m_data_source.m_act_sf.m_lines.size());
+    EXPECT_EQ("comp.lang.apl 10 1 y\n", m_data_source.m_act_sf.m_lines[0]);
+    EXPECT_EQ("comp.lang.c++ 20 1 y\n", m_data_source.m_act_sf.m_lines[1]);
 }
 
 TEST_F(DataSourceInitTest, createsDefaultRemoteSourceFromNntpServer)

@@ -444,24 +444,31 @@ bool DataSource::open()
         m_nntp_link = g_nntp_link;
         if (m_act_sf.m_refetch_secs)
         {
+            constexpr std::string_view control_group_prefix{"control "};
             switch (nntp_list("active", "control"))
             {
             case 1:
-                if (std::strncmp(g_ser_line, "control ", 8) != 0)
+            {
+                const std::string active_line{g_ser_line};
+                if (std::string_view{active_line}.substr(0, control_group_prefix.size()) != control_group_prefix)
                 {
-                    std::strcpy(g_buf, g_ser_line);
+                    const std::size_t copied = active_line.copy(g_buf, LINE_BUF_LEN);
+                    g_buf[copied] = '\0';
                     m_act_sf.m_last_fetch = 0;
                     success = active_file_hash();
                     break;
                 }
-                if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_FULL_LINE //
-                    && !nntp_at_list_end(g_buf))
+                std::string next_active_line;
+                next_active_line.reserve(LINE_BUF_LEN);
+                if (nntp_gets(next_active_line, LINE_BUF_LEN) == NGSR_FULL_LINE //
+                    && !nntp_at_list_end(next_active_line))
                 {
                     nntp_finish_list();
                     success = active_file_hash();
                     break;
                 }
                 // FALL THROUGH
+            }
 
             case 0:
                 m_flags |= DF_USE_LIST_ACTIVE;
