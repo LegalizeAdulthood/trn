@@ -33,18 +33,12 @@ but are not set by `configure_trn.cmake`:
 Relevant consumers include terminal input polling, signal masking, NNTP
 signal handling, and wait-status decoding.
 
-### XTHREAD Support
+### Remote Threading Methods
 
-`configure_trn.cmake` sets `SUPPORT_XTHREAD`, but `config.h.in` does not
-emit it.
-
-Result: code guarded by `#ifdef SUPPORT_XTHREAD` is disabled even though
-CMake appears to enable it.
-
-Current news-server support also argues against restoring `XTHREAD` as
-the main threading data path. `OVER` overview here means capability
-discovery, `OVER`, and `LIST OVERVIEW.FMT`. `HDR` refs means retrieving
-`References` with `HDR` or old `XHDR`.
+Current news-server support favors overview and header-based threading
+data. `OVER` overview here means capability discovery, `OVER`, and
+`LIST OVERVIEW.FMT`. `HDR` refs means retrieving `References` with `HDR`
+or old `XHDR`.
 
 | Rank | Method | Current server fit |
 | --- | --- | --- |
@@ -53,7 +47,6 @@ discovery, `OVER`, and `LIST OVERVIEW.FMT`. `HDR` refs means retrieving
 | 3 | `HDR` refs | Standard sparse-overview fallback |
 | 4 | `XROVER` refs | Legacy shortcut |
 | 5 | `HEAD` | Available but expensive |
-| 6 | `XTHREAD` | Historic TRN binary format |
 
 Current trn support for those same ranked methods is:
 
@@ -64,10 +57,9 @@ Current trn support for those same ranked methods is:
 | 3 | `HDR` refs | Partial: `XHDR` yes; `HDR` no |
 | 4 | `XROVER` refs | No |
 | 5 | `HEAD` | Yes |
-| 6 | `XTHREAD` | Dead guard; no generated define |
 
-Result: the current `SUPPORT_XTHREAD` mismatch is not a modern server
-support gap. It is either a delete target or a legacy-only opt-in.
+Result: remaining remote-threading work is modernizing the overview path
+to prefer `CAPABILITIES` and `OVER` before falling back to `XOVER`.
 
 ### `sgtty.h`
 

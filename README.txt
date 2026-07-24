@@ -62,11 +62,11 @@ available too.  You can do this in a variety of way, but I recommend that
 you send the database from the server to the client via NNTP.  To do this
 you either need to use INN or a modified reference NNTP -- version 1.5.11-t5
 is the latest as of this writing.  See ftp.uu.net:networking/news/nntp for
-the file nntp-t5.tar.gz. This version supports the XOVER command (to send
-overview files), the XTHREAD command (to send thread files), and the XINDEX
-command (though trn doesn't support using it).  The alternative is to either
-mount the disk containing your database via NFS, or build it locally.  See
-the mthreads package for details on how to do this.
+the file nntp-t5.tar.gz.  Remote access uses XOVER overview data and builds
+threads on the client.  The old XTHREAD thread-file command is no longer
+used.  The alternative is to either mount the disk containing your database
+via NFS, or build it locally.  See the mthreads package for details on how
+to do this.
 
 Note that trn is based on rn, and so it does a great job of pretending to
 be rn for those people that simply don't like to change their newsreading

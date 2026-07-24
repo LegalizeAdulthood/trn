@@ -13,8 +13,8 @@
 # and "Spool Dir".
 #   Specify "none" for "Overview Dir" and/or "Thread Dir" to disable support
 # for that database type, omit or leave blank for the default access (either
-# "Spool Dir" for local or XOVER/XTHREAD for remote), or enter a custom
-# hierarchy path name.
+# "Spool Dir" for local or XOVER for remote), or enter a custom hierarchy
+# path name.
 #   Specify "none" for "Active Times" if the host has no new-group support,
 # leave it blank for the default (either active + ".times" for local access
 # or the NEWGROUPS command for remote), or enter a custom file name for your

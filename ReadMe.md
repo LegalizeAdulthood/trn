@@ -29,17 +29,20 @@ may void your warranty. `:-)`
 
 # Version 5.0
 
-This is a version of trn-4.0-test77 with patches by [acli](https://github.com/aclu)
-to display UTF-8 reasonably correctly.  However, the original “character set”
-conversions are currently disabled.  Bugs that have nothing to do with UTF-8
-support are also being worked on.
-(As acli says, "yes, I’ve tried tin and nn, and [no, tin is not easier and nn is not better](https://github.com/acli/trn/wiki/Project-whiteboard)").
+This is a version of trn-4.0-test77 with patches by
+[acli](https://github.com/aclu) to display UTF-8 reasonably correctly.
+However, the original "character set" conversions are currently disabled.
+Bugs that have nothing to do with UTF-8 support are also being worked on.
+(As acli says, "yes, I've tried tin and nn, and
+[no, tin is not easier and nn is not better][acli-whiteboard]".)
+
+[acli-whiteboard]: https://github.com/acli/trn/wiki/Project-whiteboard
 
 Posting is half-working, with Content-Transfer-Encoding declared as 8bit.
 A more proper fix is the next step.
 
-Further along, the original conversions need to be put back in,
-but in a way that wouldn’t corrupt UTF-8.
+Further along, the original conversions need to be put back in, but in a
+way that wouldn't corrupt UTF-8.
 
 
 # Where to send bug reports
@@ -77,11 +80,10 @@ opt for remote access you will probably want to make the adjunct database
 available too.  You can do this in a variety of way, but I recommend that
 you send the database from the server to the client via NNTP.
 
-This version supports the XOVER command (to send
-overview files), the XTHREAD command (to send thread files), and the XINDEX
-command (though trn doesn't support using it).  The alternative is to either
-mount the disk containing your database via NFS, or build it locally.  See
-the mthreads package for details on how to do this.
+Remote access uses XOVER overview data and builds threads on the client.
+The old XTHREAD thread-file command is no longer used.  The alternative is
+to either mount the disk containing your database via NFS, or build it
+locally.  See the mthreads package for details on how to do this.
 
 Note that trn is based on rn, and so it does a great job of pretending to
 be rn for those people that simply don't like to change their newsreading

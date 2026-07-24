@@ -30,16 +30,9 @@
 
 static ArticleNum nntp_next_art();
 static int        nntp_copy_body(std::string &line, int limit, ArticlePosition pos);
-#ifdef SUPPORT_XTHREAD
-static long nntp_read_check();
-static long nntp_read(char *buf, long n);
-#endif
 
 static ArticlePosition s_body_pos{-1};
 static ArticlePosition s_body_end{};
-#ifdef SUPPORT_XTHREAD
-static long s_raw_bytes{-1}; // bytes remaining to be transferred
-#endif
 
 int nntp_list(std::string_view type, std::string_view arg)
 {
@@ -658,7 +651,7 @@ int nntp_handle_timeout()
 
 void DataSource::nntp_server_died()
 {
-    Multirc * mp = g_multirc;
+    Multirc *mp = g_multirc;
     close();
     m_flags |= DF_UNAVAILABLE;
     unuse_multirc(mp);
@@ -666,81 +659,6 @@ void DataSource::nntp_server_died()
     {
         g_multirc = nullptr;
     }
-    std::fprintf(stderr,"\n%s\n", g_ser_line);
+    std::fprintf(stderr, "\n%s\n", g_ser_line);
     get_anything();
 }
-
-// nntp_read_check -- get a line of text from the server, interpreting
-// it as a status message for a binary command.  Call this once
-// before calling nntp_read() for the actual data transfer.
-//
-#ifdef SUPPORT_XTHREAD
-static long nntp_read_check()
-{
-    // try to get the status line and the status code
-    switch (nntp_check())
-    {
-    case -2:
-        return -2;
-
-    case -1:
-    case 0:
-        return s_raw_bytes = -1;
-    }
-
-    // try to get the number of bytes being transferred
-    if (std::sscanf(g_ser_line, "%*d%ld", &s_raw_bytes) != 1)
-    {
-        return s_raw_bytes = -1;
-    }
-    return s_raw_bytes;
-}
-#endif
-
-// nntp_read -- read data from the server in binary format.  This call must
-// be preceded by an appropriate binary command and an nntp_read_check call.
-//
-#ifdef SUPPORT_XTHREAD
-static long nntp_read(char *buf, long n)
-{
-    // if no bytes to read, then just return EOF
-    if (s_raw_bytes < 0)
-    {
-        return 0;
-    }
-
-#ifdef HAS_SIGHOLD
-    sighold(SIGINT);
-#endif
-
-    // try to read some data from the server
-    if (s_raw_bytes)
-    {
-        boost::system::error_code ec;
-        n = g_nntplink.connection->read(buf, n > s_raw_bytes ? s_raw_bytes : n, ec);
-        s_raw_bytes -= n;
-    }
-    else
-    {
-        n = 0;
-    }
-
-    // if no more left, then fetch the end-of-command signature
-    if (s_raw_bytes == 0)
-    {
-        char buf[5];    // "\r\n.\r\n"
-
-        boost::system::error_code ec;
-        int num_remaining = 5;
-        while (num_remaining > 0)
-        {
-            num_remaining -= g_nntplink.connection->read(buf, num_remaining, ec);
-        }
-        s_raw_bytes = -1;
-    }
-#ifdef HAS_SIGHOLD
-    sigrelse(SIGINT);
-#endif
-    return n;
-}
-#endif // SUPPORT_XTHREAD
