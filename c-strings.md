@@ -587,17 +587,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-225 - NNTP Check Debug Output
-
-- Files: `nntp/nntpclient.cpp`.
-- Kind: formatted output leaf.
-- Function: `nntp_check`.
-- Depends on: none.
-- Change: replace the DEBUG/FLUSH server-line echo `std::printf` with
-  `fmt::print`.  Do not change `g_ser_line` trimming or status storage
-  in this slice.
-- Tests: NNTP client tests; build coverage for DEBUG/FLUSH if present.
-
 #### CSTR-226 - Selector Option Prompt Output
 
 - Files: `libtrn/rt-select.cpp`.

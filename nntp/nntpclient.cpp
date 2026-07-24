@@ -273,7 +273,7 @@ read_it:
 #if defined(DEBUG) && defined(FLUSH)
     if (g_debug & DEB_NNTP)
     {
-        std::printf("<%s\n", g_ser_line);
+        fmt::print("<{}\n", g_ser_line);
     }
 #endif
     if (std::atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL)
