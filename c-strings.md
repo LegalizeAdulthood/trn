@@ -587,17 +587,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-224 - NNTP Command Debug Output
-
-- Files: `nntp/nntpclient.cpp`.
-- Kind: formatted output leaf.
-- Function: `nntp_command`.
-- Depends on: none.
-- Change: replace the DEBUG/FLUSH command echo `std::printf` with
-  `fmt::print`.  Do not change `g_last_command` ownership or command
-  formatting in this slice.
-- Tests: NNTP command tests; build coverage for DEBUG/FLUSH if present.
-
 #### CSTR-225 - NNTP Check Debug Output
 
 - Files: `nntp/nntpclient.cpp`.

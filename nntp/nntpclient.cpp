@@ -161,7 +161,7 @@ int nntp_command(std::string_view bp)
 #if defined(DEBUG) && defined(FLUSH)
     if (g_debug & DEB_NNTP)
     {
-        std::printf(">%s\n", command.c_str());
+        fmt::print(">{}\n", command);
     }
 #endif
     g_last_command = command;
