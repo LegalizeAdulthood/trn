@@ -519,8 +519,7 @@ tree.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
   callers are `DataSource::open`, `SourceFile::open`, `parse_header`,
-  `nntp_list`, and `ov_init`.  Keep the C wrapper until those callers
-  move.
+  and `nntp_list`.  Keep the C wrapper until those callers move.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -598,16 +597,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-217 - Overview Format Response Lines
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: NNTP overview-format reader.
-- Function: `ov_init`.
-- Depends on: none.
-- Change: read remote `overview.fmt` lines into local `std::string`
-  storage and parse fields from views instead of `g_buf`.
-- Tests: overview format tests.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers
@@ -629,7 +618,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/datasrc.cpp`.
 - Kind: NNTP fetched-file reader using `g_buf`.
 - Function: `SourceFile::open`.
-- Depends on: `CSTR-217`, `CSTR-218`.
+- Depends on: `CSTR-218`.
 - Change: replace remote fetch line storage with local `std::string`
   storage and remove reliance on stale `g_buf` contents when
   `use_buffered_nntp_gets` is true.
@@ -651,7 +640,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/nntp.cpp`.
 - Kind: NNTP list helper with first-line side effect.
 - Function: `nntp_list`.
-- Depends on: `CSTR-217`, `CSTR-219`.
+- Depends on: `CSTR-219`.
 - Change: stop exposing the first list response through `g_ser_line`.
   Return or otherwise hand the first line to callers with owned string
   storage after callers no longer consume the global side effect.

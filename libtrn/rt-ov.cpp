@@ -98,31 +98,38 @@ bool ov_init()
         int i;
         fieldnum[0] = OV_NUM;
         fieldflags[OV_NUM] = FF_HAS_FIELD;
+        std::string overview_line;
+        overview_line.reserve(NNTP_STRLEN);
         for (i = 1;;)
         {
+            std::string_view line;
             if (g_data_source->m_over_dir.empty())
             {
-                if (nntp_gets(g_buf, sizeof g_buf) == NGSR_ERROR)
+                if (nntp_gets(overview_line, NNTP_STRLEN) == NGSR_ERROR)
                 {
                     break;
                 }
-                if (nntp_at_list_end(g_buf))
+                if (nntp_at_list_end(overview_line))
                 {
                     break;
                 }
+                line = overview_line;
             }
-            else if (!std::fgets(g_buf, sizeof g_buf, overview))
+            else
             {
-                std::fclose(overview);
-                break;
+                if (!std::fgets(g_buf, sizeof g_buf, overview))
+                {
+                    std::fclose(overview);
+                    break;
+                }
+                line = g_buf;
             }
-            if (*g_buf == '#')
+            if (!line.empty() && line.front() == '#')
             {
                 continue;
             }
             if (i < OV_MAX_FIELDS)
             {
-                const std::string_view line{g_buf};
                 const std::size_t      colon = line.find(':');
                 const OverviewFieldNum field = ov_num(line.substr(0, colon));
                 fieldnum[i] = field;

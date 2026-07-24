@@ -106,6 +106,7 @@ protected:
         g_sentinel_art_ptr = nullptr;
         g_nntp_link.connection.reset();
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        nntp_gets_clear_buffer();
 
         head_init();
 
@@ -146,6 +147,7 @@ protected:
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
         g_nntp_link.connection = std::move(m_old_nntp_connection);
         g_nntp_link.flags = m_old_nntp_flags;
+        nntp_gets_clear_buffer();
 
         fs::remove_all(m_output_dir, error);
 
@@ -245,6 +247,50 @@ TEST_F(OverviewTest, remoteOverviewRequestsXoverRange)
     Article *article = article_ptr(TEST_ARTICLE_NUM);
     EXPECT_TRUE(article->m_flags & AF_CACHED);
     EXPECT_EQ("Re: Overview Subject", article->get_cached_line_text(SUBJ_LINE, false));
+}
+
+TEST_F(OverviewTest, initMapsRemoteOverviewFormatFields)
+{
+    const std::shared_ptr<testing::StrictMock<MockNNTPConnection>> connection =
+        std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link.connection = connection;
+    m_data_source.m_over_dir.clear();
+    m_data_source.m_flags |= DF_REMOTE;
+    for (int i = 0; i < OV_MAX_FIELDS; ++i)
+    {
+        m_data_source.m_field_num[i] = OV_NUM;
+        m_data_source.m_field_flags[i] = FF_NONE;
+    }
+
+    testing::InSequence sequence;
+    EXPECT_CALL(*connection, write_line(testing::StrEq("XOVER"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_))
+        .WillOnce(testing::Return("224 Overview follows"))
+        .WillOnce(testing::Return("."));
+    EXPECT_CALL(*connection, write_line(testing::StrEq("LIST overview.fmt"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 information follows"))
+        .WillOnce(testing::Return("Subject:"))
+        .WillOnce(testing::Return("From:"))
+        .WillOnce(testing::Return("Date:"))
+        .WillOnce(testing::Return("Message-ID:"))
+        .WillOnce(testing::Return("Bytes:full"))
+        .WillOnce(testing::Return("Lines:"))
+        .WillOnce(testing::Return("Xref:full"))
+        .WillOnce(testing::Return("."));
+
+    EXPECT_TRUE(ov_init());
+
+    EXPECT_EQ(OV_NUM, m_data_source.m_field_num[0]);
+    EXPECT_EQ(OV_SUBJ, m_data_source.m_field_num[1]);
+    EXPECT_EQ(OV_FROM, m_data_source.m_field_num[2]);
+    EXPECT_EQ(OV_DATE, m_data_source.m_field_num[3]);
+    EXPECT_EQ(OV_MSG_ID, m_data_source.m_field_num[4]);
+    EXPECT_EQ(OV_BYTES, m_data_source.m_field_num[5]);
+    EXPECT_EQ(OV_LINES, m_data_source.m_field_num[6]);
+    EXPECT_EQ(OV_XREF, m_data_source.m_field_num[7]);
+    EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_BYTES]);
+    EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_XREF]);
 }
 
 TEST_F(OverviewTest, initMapsOverviewFormatFields)
