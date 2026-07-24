@@ -242,9 +242,12 @@ static ArticleNum nntp_next_art()
         return ArticleNum{-2};
     }
     artnum = nntp_check();
-    if (artnum > 0 && std::sscanf(g_ser_line, "%*d %ld", &artnum) != 1)
+    if (artnum > 0)
     {
-        artnum = 0;
+        std::istringstream response{std::string{g_ser_line}};
+        long               status{};
+        long               parsed_artnum{};
+        artnum = response >> status >> parsed_artnum ? parsed_artnum : 0;
     }
     return ArticleNum{artnum};
 }

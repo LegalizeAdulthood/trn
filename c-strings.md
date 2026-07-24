@@ -480,9 +480,9 @@ tree.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers or nullable `const char *` sentinels.
-- NNTP response handling still parses `g_ser_line` with `sscanf` at
-  three protocol sites.  Those parser slices should precede replacing
-  the server line buffer itself.
+- NNTP response parsing no longer uses `sscanf`.  The shared
+  `g_ser_line` owner remains and can now be handled as buffer storage
+  instead of being blocked by reply parser call sites.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
 - Filename storage already uses modern path or view signatures for
@@ -502,7 +502,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
   `strlen` 33.
 - Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
-- C text parsing: `sscanf` 1.
+- C text parsing: `sscanf` 0.
 - C text I/O roots: `fgets` 20, `fputs` 173, `printf` 345,
   `fprintf` 18.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
@@ -534,19 +534,6 @@ No active slices.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-239 - NNTP NEXT Reply Parsing
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: C text parsing.
-- Function: `nntp_next_art`.
-- Dependencies: none.
-- Current shape: the function parses `g_ser_line` with
-  `std::sscanf("%*d %ld", ...)`.
-- Change: parse a `std::string_view` reply with token splitting and
-  `std::from_chars`.  Preserve current behavior when no article number
-  is present.
-- Tests: add focused NEXT reply coverage before refactoring.
 
 #### CSTR-240 - MIME Subheader First-Line View
 
@@ -681,7 +668,7 @@ with their owner slices unless a local use is clearly formatting-only.
   `trn-artchk/trn-artchk.cpp`.
 - Kind: global fixed protocol/status buffer.
 - Function: storage-centered `g_ser_line`.
-- Dependencies: complete CSTR-239 first.
+- Dependencies: no active NNTP reply parser prerequisites remain.
 - Change: separate NNTP status text from protocol line input/output so
   callers do not format commands or cache responses through one shared
   `char[NNTP_STRLEN]` buffer.  Preserve protocol truncation only if it is

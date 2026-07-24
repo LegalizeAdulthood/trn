@@ -237,6 +237,8 @@ protected:
         Test::SetUp();
         nntp_gets_clear_buffer();
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
+        m_old_abs_first = g_abs_first;
+        m_old_last_cached = g_last_cached;
         m_saved_nntp_flags = g_nntp_link.flags;
         g_nntp_link.connection = m_connection;
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
@@ -247,10 +249,14 @@ protected:
         Test::TearDown();
         g_nntp_link.connection.reset();
         g_nntp_link.flags = m_saved_nntp_flags;
+        g_abs_first = m_old_abs_first;
+        g_last_cached = m_old_last_cached;
     }
 
     std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;
     boost::system::error_code                       m_ec;
+    ArticleNum                                      m_old_abs_first{};
+    ArticleNum                                      m_old_last_cached{};
     NNTPFlags                                       m_saved_nntp_flags{};
 };
 
@@ -355,6 +361,32 @@ TEST_F(NNTPGetStringTest, statIdReturnsZeroForMalformedArticleNumber)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 <message@example.test>"));
 
     EXPECT_EQ(ArticleNum{}, nntp_stat_id("<message@example.test>"));
+}
+
+TEST_F(NNTPGetStringTest, findRealArticleParsesNextArticleNumber)
+{
+    InSequence sequence;
+    g_abs_first = ArticleNum{1};
+    g_last_cached = ArticleNum{100};
+    EXPECT_CALL(*m_connection, write_line(StrEq("STAT 100"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 100 <cached@example.test>"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("NEXT"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 123 <next@example.test>"));
+
+    EXPECT_EQ(ArticleNum{123}, nntp_find_real_art(ArticleNum{100}));
+}
+
+TEST_F(NNTPGetStringTest, findRealArticleReturnsZeroForMalformedNextArticleNumber)
+{
+    InSequence sequence;
+    g_abs_first = ArticleNum{1};
+    g_last_cached = ArticleNum{100};
+    EXPECT_CALL(*m_connection, write_line(StrEq("STAT 100"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 100 <cached@example.test>"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("NEXT"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 <next@example.test>"));
+
+    EXPECT_EQ(ArticleNum{}, nntp_find_real_art(ArticleNum{100}));
 }
 
 TEST_F(NNTPGetStringTest, headerFormatsArticleNumberCommand)
