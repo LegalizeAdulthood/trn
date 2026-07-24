@@ -518,9 +518,8 @@ tree.
   slice for it.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
-  callers are `DataSource::open`, `SourceFile::open`, `parse_header`,
-  and `nntp_list`.  Keep the C wrapper until those callers move, then
-  remove it.
+  callers are `DataSource::open`, `SourceFile::open`, and `nntp_list`.
+  Keep the C wrapper until those callers move, then remove it.
 - Overview format parsing no longer uses raw buffer storage for remote
   NNTP lines.  The local `overview.fmt` file branch still reads through
   `g_buf` and is a current leaf slice.
@@ -553,10 +552,10 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 10, `strncpy` 1, `strcat` 0.
+- Copy and concatenation: `strcpy` 8, `strncpy` 1, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 12.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
-  `strlen` 35.
+  `strlen` 34.
 - Formatting into C buffers: `sprintf` 1, `snprintf` 2.
 - C text parsing: `sscanf` 4.
 - C text I/O roots: `fgets` 21, `fputs` 175, `printf` 347,
@@ -590,17 +589,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-220 - Header Parser NNTP Lines
-
-- Files: `libtrn/head.cpp`.
-- Kind: NNTP header reader using `g_head_buf`.
-- Function: `parse_header`.
-- Depends on: none.
-- Change: read NNTP header lines through owned string storage before
-  appending them to the growable header buffer.  Preserve dot-stuffed
-  line handling and end-of-header detection.
-- Tests: header parsing and NNTP article tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -741,7 +729,7 @@ owned strings or owner-specific storage.
   `nntp/include/nntp/nntpclient.h`.
 - Kind: obsolete raw-buffer wrapper.
 - Function: `nntp_gets(char *, int)`.
-- Depends on: `CSTR-218`, `CSTR-219`, `CSTR-220`, and `CSTR-221`.
+- Depends on: `CSTR-218`, `CSTR-219`, and `CSTR-221`.
 - Change: remove the C-buffer overload after every production caller
   uses the `std::string` overload.  Update stale tests or header checks
   that only preserve compatibility with the removed wrapper.

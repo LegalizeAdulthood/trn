@@ -446,6 +446,11 @@ bool parse_header(ArticleNum art_num)
     start_header(art_num);
     g_art_pos = ArticlePosition{};
     char *bp = g_head_buf;
+    std::string nntp_header_line;
+    if (s_reading_nntp_header)
+    {
+        nntp_header_line.reserve(LINE_BUF_LEN);
+    }
     while (g_in_header)
     {
         if (s_head_buf_size < g_art_pos.value_of() + LINE_BUF_LEN)
@@ -457,21 +462,23 @@ bool parse_header(ArticleNum art_num)
         }
         if (s_reading_nntp_header)
         {
-            found_nl = nntp_gets(bp,LINE_BUF_LEN) == NGSR_FULL_LINE;
-            if (found_nl < 0)
+            const NNTPGetsResult result = nntp_gets(nntp_header_line, LINE_BUF_LEN);
+            found_nl = result == NGSR_FULL_LINE;
+            if (result == NGSR_ERROR)
             {
-                std::strcpy(bp, ".");
+                nntp_header_line = ".";
             }
-            if (had_nl && *bp == '.')
+            if (had_nl && !nntp_header_line.empty() && nntp_header_line.front() == '.')
             {
-                if (!bp[1])
+                if (nntp_header_line.size() == 1)
                 {
                     *bp++ = '\n';       // tag the end with an empty line
                     break;
                 }
-                std::strcpy(bp,bp+1);
+                nntp_header_line.erase(0, 1);
             }
-            len = std::strlen(bp);
+            len = static_cast<int>(nntp_header_line.size());
+            std::copy(nntp_header_line.begin(), nntp_header_line.end(), bp);
             if (found_nl)
             {
                 bp[len++] = '\n';
