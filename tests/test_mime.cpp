@@ -294,7 +294,7 @@ TEST_F(MimeSubHeaderTest, parsesFoldedHeaders)
     ASSERT_EQ(header.size(), std::fwrite(header.data(), sizeof(char), header.size(), m_input));
     std::rewind(m_input);
 
-    mime_parse_sub_header(m_input, nullptr);
+    mime_parse_sub_header(m_input, {});
 
     EXPECT_EQ(MULTIPART_MIME, m_mime_section.m_type);
     EXPECT_EQ(MENCODE_BASE64, m_mime_section.m_encoding);
@@ -307,6 +307,21 @@ TEST_F(MimeSubHeaderTest, parsesFoldedHeaders)
     EXPECT_EQ("part.bin", *m_mime_section.m_filename);
 }
 
+TEST_F(MimeSubHeaderTest, parsesSuppliedFirstHeaderLine)
+{
+    constexpr std::string_view header{"Content-Transfer-Encoding: base64\n"
+                                      "\n"};
+    ASSERT_EQ(header.size(), std::fwrite(header.data(), sizeof(char), header.size(), m_input));
+    std::rewind(m_input);
+
+    mime_parse_sub_header(m_input, "Content-Type: text/html\n");
+
+    EXPECT_EQ(HTML_TEXT_MIME, m_mime_section.m_type);
+    EXPECT_EQ(MENCODE_BASE64, m_mime_section.m_encoding);
+    ASSERT_TRUE(m_mime_section.m_type_name);
+    EXPECT_EQ("text/html", *m_mime_section.m_type_name);
+}
+
 TEST_F(MimeSubHeaderTest, parsesContentNameHeader)
 {
     constexpr std::string_view header{"Content-Name: (legacy name) part.txt\n"
@@ -314,7 +329,7 @@ TEST_F(MimeSubHeaderTest, parsesContentNameHeader)
     ASSERT_EQ(header.size(), std::fwrite(header.data(), sizeof(char), header.size(), m_input));
     std::rewind(m_input);
 
-    mime_parse_sub_header(m_input, nullptr);
+    mime_parse_sub_header(m_input, {});
 
     ASSERT_TRUE(m_mime_section.m_filename);
     EXPECT_EQ("part.txt", *m_mime_section.m_filename);

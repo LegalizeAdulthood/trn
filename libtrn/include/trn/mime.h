@@ -176,7 +176,7 @@ bool          mime_types_match(std::string_view ct, std::string_view pat);
 int            mime_exec(std::string_view cmd);
 void          mime_push_section();
 void          mime_set_article();
-void          mime_parse_sub_header(std::FILE *ifp, const char *next_line);
+void           mime_parse_sub_header(std::FILE *ifp, std::string_view first_line);
 void          mime_set_state(char *bp);
 int            mime_end_of_section(std::string_view bp);
 MimeParamViews mime_parse_params(std::string_view text);

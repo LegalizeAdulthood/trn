@@ -479,7 +479,7 @@ tree.
   platform/API boundary use.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
-  mutable pointers or nullable `const char *` sentinels.
+  mutable pointers.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` owner remains and can now be handled as buffer storage
   instead of being blocked by reply parser call sites.
@@ -535,19 +535,7 @@ No active slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-240 - MIME Subheader First-Line View
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
-- Kind: nullable C string sentinel.
-- Function: `mime_parse_sub_header`.
-- Dependencies: none.
-- Current shape: the optional first line is passed as nullable
-  `const char *`.
-- Change: pass `std::string_view first_line` and use an empty view for
-  no first line if an empty header line has no distinct valid meaning
-  here.  If that distinction matters, ask before using `optional`.
-- Tests: cover the no-first-line and supplied-first-line paths before
-  the signature change.
+No active slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

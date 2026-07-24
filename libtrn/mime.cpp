@@ -746,14 +746,11 @@ void MimeSection::mime_parse_encoding(std::string_view text)
 
 // Parse a multipart mime header and affect the *g_mime_section structure
 
-void mime_parse_sub_header(std::FILE *ifp, const char *next_line)
+void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
 {
     std::string line;
     line.reserve(2 * LINE_BUF_LEN);
-    if (next_line != nullptr)
-    {
-        line = next_line;
-    }
+    line.assign(first_line);
     std::size_t next_pos = 0;
 
     g_mime_section->mime_clear_struct();
@@ -848,7 +845,7 @@ void mime_set_state(char *bp)
     while (g_mime_state == MESSAGE_MIME)
     {
         mime_push_section();
-        mime_parse_sub_header(nullptr, *bp ? bp : nullptr);
+        mime_parse_sub_header(nullptr, bp);
         *bp = '\0';
     }
 
