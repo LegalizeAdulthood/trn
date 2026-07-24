@@ -1394,7 +1394,7 @@ tryagain:
             break;
 
         case KM_STRING:               // a string?
-            push_string(curmap->km_str[g_last_char].c_str(),0200);
+            push_string(curmap->km_str[g_last_char],0200);
             if (++times > 20)           // loop?
             {
                 std::fputs("\nmacro loop?\n",stdout);
@@ -1429,9 +1429,8 @@ got_canonical:
 #endif
 }
 
-void push_string(const char *str, char_int bits)
+void push_string(std::string_view str, char_int bits)
 {
-    TRN_ASSERT(str != nullptr);
     const std::string expanded = do_interp(str);
     for (std::string::const_reverse_iterator ch = expanded.rbegin(); ch != expanded.rend(); ++ch)
     {
@@ -2629,7 +2628,7 @@ bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 std::fflush(stdout);
                 if (btn == 3 && x > 0 && x < display.width)
                 {
-                    push_string(button.command.c_str(), 0);
+                    push_string(button.command, 0);
                 }
                 break;
             }

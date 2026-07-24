@@ -302,7 +302,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             else
             {
                 hide_pending();
-                push_string(start_command->data(), 0);
+                push_string(*start_command, 0);
             }
             start_command.reset();
             if (input_pending())

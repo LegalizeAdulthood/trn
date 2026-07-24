@@ -592,19 +592,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-229 - Terminal Push String View
-
-- Files: `libtrn/terminal.cpp`,
-  `libtrn/include/trn/terminal.h`.
-- Kind: read-only helper API.
-- Function: `push_string`.
-- Depends on: none.
-- Change: change the input from `const char *` to `std::string_view`,
-  remove the null-pointer assertion, and pass the view to `do_interp`.
-  Update callers that currently use `.data()` or `.c_str()` only to
-  satisfy the raw pointer signature.
-- Tests: terminal pushback and macro tests.
-
 #### CSTR-230 - NNTP Connection Constructor Server Name
 
 - Files: `nntp/nntpinit.cpp`.
