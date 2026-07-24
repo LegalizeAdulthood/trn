@@ -6,6 +6,7 @@
 #include <trn/cache.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
+#include <trn/opt.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-process.h>
 #include <trn/rthread.h>
@@ -51,9 +52,15 @@ protected:
         m_old_force_last = g_force_last;
         m_old_general_mode = g_general_mode;
         m_old_mode = g_mode;
+        m_old_background_threading = option_value(OI_BACKGROUND_THREADING);
         m_old_first_subject = g_first_subject;
         m_old_verbose = g_verbose;
         m_old_novice_delays = g_novice_delays;
+        m_old_tc_cr = g_tc_CR;
+        m_old_tc_cd = g_tc_CD;
+        m_old_tc_ho = g_tc_HO;
+        m_old_tc_cm = g_tc_CM;
+        m_old_tc_lines = g_tc_LINES;
         m_old_term_line = g_term_line;
         m_old_term_col = g_term_col;
         m_old_term_scrolled = g_term_scrolled;
@@ -80,6 +87,11 @@ protected:
         g_first_subject = nullptr;
         g_verbose = false;
         g_novice_delays = false;
+        g_tc_CR = "\r";
+        g_tc_CD = nullptr;
+        g_tc_HO = "";
+        g_tc_CM = "";
+        g_tc_LINES = 0;
     }
 
     void TearDown() override
@@ -106,9 +118,15 @@ protected:
         g_force_last = m_old_force_last;
         g_general_mode = m_old_general_mode;
         g_mode = m_old_mode;
+        set_option(OI_BACKGROUND_THREADING, m_old_background_threading);
         g_first_subject = m_old_first_subject;
         g_verbose = m_old_verbose;
         g_novice_delays = m_old_novice_delays;
+        g_tc_CR = m_old_tc_cr;
+        g_tc_CD = m_old_tc_cd;
+        g_tc_HO = m_old_tc_ho;
+        g_tc_CM = m_old_tc_cm;
+        g_tc_LINES = m_old_tc_lines;
         g_term_line = m_old_term_line;
         g_term_col = m_old_term_col;
         g_term_scrolled = m_old_term_scrolled;
@@ -138,9 +156,15 @@ protected:
     bool                          m_old_force_last{};
     GeneralMode                   m_old_general_mode{};
     MinorMode                     m_old_mode{};
+    std::string                   m_old_background_threading;
     Subject                      *m_old_first_subject{};
     bool                          m_old_verbose{};
     bool                          m_old_novice_delays{};
+    const char                   *m_old_tc_cr{};
+    const char                   *m_old_tc_cd{};
+    const char                   *m_old_tc_ho{};
+    const char                   *m_old_tc_cm{};
+    int                           m_old_tc_lines{};
     int                           m_old_term_line{};
     int                           m_old_term_col{};
     int                           m_old_term_scrolled{};
@@ -244,6 +268,31 @@ TEST_F(KillFileEditTest, editLocalKillFileAppliesThreadCommand)
     (void) testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE((article->m_auto_flags & AUTO_SEL_THD) != 0);
+}
+
+TEST_F(KillFileEditTest, leadingSpaceSwitchCommandAppliesSwitch)
+{
+    const fs::path    kill_file = m_output_dir / "local-switch" / "KILL";
+    const std::string kill_file_name = kill_file.generic_string();
+    const fs::path    global_kill_file = m_output_dir / "global-switch" / "KILL";
+    const std::string global_kill_file_name = global_kill_file.generic_string();
+
+    fs::create_directories(kill_file.parent_path());
+    std::ofstream{kill_file} << "   &-a\n";
+
+    NewsgroupData newsgroup{};
+    g_newsgroup_ptr = &newsgroup;
+    set_option(OI_BACKGROUND_THREADING, "yes");
+
+    m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
+    m_env.expect_env_repeatedly("KILLGLOBAL", global_kill_file_name.c_str());
+    open_kill_file(KF_LOCAL);
+
+    testing::internal::CaptureStdout();
+    kill_unwanted(ArticleNum{1}, "", true);
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("no", option_value(OI_BACKGROUND_THREADING));
 }
 
 TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)

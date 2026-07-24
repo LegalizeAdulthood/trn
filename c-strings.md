@@ -497,7 +497,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 7, `strncpy` 1, `strcat` 0.
+- Copy and concatenation: `strcpy` 6, `strncpy` 1, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 5.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
   `strlen` 29.
@@ -549,21 +549,6 @@ No active slices.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-242 - Kill File Command Scratch Line
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: caller-owned command scratch storage.
-- Functions: kill-file command processing around the `g_buf` copy.
-- Dependencies: complete any parser leaf work that consumes the copied
-  command line.
-- Current shape: command text is copied into `g_buf` with `std::strcpy`
-  before dispatching to search and switcheroo handling.
-- Change: split this command text into local `std::string` storage if it
-  does not escape.  If a callee stores a pointer to the data, stop and
-  move that callee first.
-- Tests: cover the affected kill-file command behavior before changing
-  the command storage.
-
 #### CSTR-243 - Article Copy Output Lines
 
 - Files: `libtrn/respond.cpp`, `libtrn/artio.cpp`.
@@ -611,7 +596,7 @@ with their owner slices unless a local use is clearly formatting-only.
   command prompt/input users across `libtrn`.
 - Kind: global general-purpose command and line buffer.
 - Function: storage-centered `g_buf`.
-- Dependencies: CSTR-242 should be completed first.
+- Dependencies: no active local kill-file prerequisite remains.
 - Change: split command input, prompt formatting, scratch line input, and
   file-copy uses into owned strings or owner-specific buffers.  Work
   bottom-up by function; do not replace `g_buf` with one global string

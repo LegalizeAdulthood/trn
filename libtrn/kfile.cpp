@@ -237,17 +237,16 @@ static int do_kill_file(std::FILE *kfp, int entering)
         {
             continue;
         }
+        std::string command{bp};
 
-        if (*bp == '&')
+        if (!command.empty() && command.front() == '&')
         {
-            mention(bp);
-            if (bp > g_buf)
-            {
-                std::strcpy(g_buf, bp);
-            }
+            mention(command);
+            std::copy(command.begin(), command.end(), g_buf);
+            g_buf[command.size()] = '\0';
             switcheroo();
         }
-        else if (*bp == '/')
+        else if (!command.empty() && command.front() == '/')
         {
             g_kf_state |= KFS_NORMAL_LINES;
             if (g_first_art > g_last_art)
@@ -266,9 +265,9 @@ static int do_kill_file(std::FILE *kfp, int entering)
             }
             perform_status_init(g_newsgroup_ptr->m_to_read);
             last_kill_type = '/';
-            mention(bp);
+            mention(command);
             s_kill_mentioned = true;
-            switch (art_search(bp, (sizeof g_buf) - (bp - g_buf), false))
+            switch (art_search(command.data(), static_cast<int>(command.size() + 1), false))
             {
             case SRCH_ABORT:
                 continue;
