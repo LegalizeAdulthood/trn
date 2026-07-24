@@ -12,10 +12,14 @@
 
 #include <test_config.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include "MockNNTPConnection.h"
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -66,6 +70,7 @@ protected:
         m_old_ng_go_newsgroup_ptr = g_ng_go_newsgroup_ptr;
         m_old_multirc = g_multirc;
         m_old_data_source = g_data_source;
+        m_old_nntp_link = g_nntp_link;
         m_old_newsrc_hash = g_newsrc_hash;
         m_old_sel_sort = g_sel_sort;
         m_old_sel_newsgroup_sort = g_sel_newsgroup_sort;
@@ -114,6 +119,7 @@ protected:
         g_ng_go_newsgroup_ptr = nullptr;
         g_multirc = nullptr;
         g_data_source = nullptr;
+        nntp_gets_clear_buffer();
         g_newsrc_hash = nullptr;
         g_check_flag = false;
         g_add_new_by_default = ADDNEW_ASK;
@@ -165,6 +171,8 @@ protected:
         g_ng_go_newsgroup_ptr = m_old_ng_go_newsgroup_ptr;
         g_multirc = m_old_multirc;
         g_data_source = m_old_data_source;
+        g_nntp_link = m_old_nntp_link;
+        nntp_gets_clear_buffer();
         g_newsrc_hash = m_old_newsrc_hash;
         g_sel_sort = m_old_sel_sort;
         g_sel_newsgroup_sort = m_old_sel_newsgroup_sort;
@@ -225,6 +233,7 @@ protected:
     NewsgroupData               *m_old_ng_go_newsgroup_ptr{};
     Multirc                     *m_old_multirc{};
     DataSource                  *m_old_data_source{};
+    NNTPLink                     m_old_nntp_link{};
     HashTable                   *m_old_newsrc_hash{};
     SelectionSortMode            m_old_sel_sort{};
     SelectionSortMode            m_old_sel_newsgroup_sort{};
@@ -247,6 +256,7 @@ protected:
     bool                         m_old_tc_am{};
     char                         m_empty_tc_so[1]{};
     char                         m_empty_tc_se[1]{};
+    std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
 };
 
 } // namespace
@@ -321,6 +331,40 @@ TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
     ASSERT_EQ(1, g_newsgroup_order.size());
     EXPECT_EQ(options_line, g_newsgroup_order[0]->m_rc_line);
     EXPECT_EQ(TR_JUNK, g_newsgroup_order[0]->m_to_read);
+    unuse_multirc(&multirc);
+}
+
+TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromRemoteSubscriptions)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "215 0000000001 0000000001 y\n"
+                                  "comp.lang.apl 0000000042 0000000007 y\n"
+                                  "comp.lang.c++ 0000000200 0000000100 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_path, "", ""));
+
+    m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    m_data_source.m_flags = DF_REMOTE | DF_OPEN;
+    m_data_source.m_nntp_link.connection = m_connection;
+    m_data_source.m_nntp_link.flags = NNTP_NEW_CMD_OK;
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+
+    testing::InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST SUBSCRIPTIONS"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 subscriptions follow"))
+        .WillOnce(testing::Return("comp.lang.apl:"))
+        .WillOnce(testing::Return("comp.lang.c++!"))
+        .WillOnce(testing::Return("."));
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("QUIT"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("205 closing"));
+
+    ASSERT_TRUE(multirc.use_multirc());
+
+    EXPECT_EQ((std::vector<std::string>{"215: ", "comp.lang.apl: 1-6", "comp.lang.c++!"}),
+              read_lines(newsrc.name));
     unuse_multirc(&multirc);
 }
 

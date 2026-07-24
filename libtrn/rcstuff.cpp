@@ -730,15 +730,15 @@ static bool open_newsrc(Newsrc *rp)
         if ((rp->data_source->m_flags & DF_REMOTE) //
             && nntp_list("SUBSCRIPTIONS", "") == 1)
         {
+            std::string subscription_line{g_ser_line};
             do
             {
-                std::fputs(g_ser_line,rcfp);
-                std::fputc('\n',rcfp);
-                if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
+                fmt::print(rcfp, "{}\n", subscription_line);
+                if (nntp_gets(subscription_line, NNTP_STRLEN) == NGSR_ERROR)
                 {
                     break;
                 }
-            } while (!nntp_at_list_end(g_ser_line));
+            } while (!nntp_at_list_end(subscription_line));
         }
         else if (*some_buf)
         {
