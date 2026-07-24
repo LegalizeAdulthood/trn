@@ -518,9 +518,9 @@ tree.
   slice for it.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
-  callers are `find_new_groups`, `DataSource::open`, `SourceFile::open`,
-  `parse_header`, `nntp_list`, `open_newsrc`, and `ov_init`.  Keep the C
-  wrapper until those callers move.
+  callers are `DataSource::open`, `SourceFile::open`, `parse_header`,
+  `nntp_list`, `open_newsrc`, and `ov_init`.  Keep the C wrapper until
+  those callers move.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -598,17 +598,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-215 - Addng Find New Groups Active Lines
-
-- Files: `libtrn/addng.cpp`.
-- Kind: NNTP active-list reader.
-- Function: `find_new_groups`.
-- Depends on: none.
-- Change: copy the initial `nntp_list` response line into local
-  `std::string` storage, then read later lines through the string
-  `nntp_gets` API and pass views to `scan_active_line`.
-- Tests: add-newsgroup and active-list tests.
-
 #### CSTR-216 - Rcstuff Subscriptions Response Lines
 
 - Files: `libtrn/rcstuff.cpp`.
@@ -640,7 +629,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/datasrc.cpp`.
 - Kind: NNTP active-list probe using shared status and command buffers.
 - Function: `DataSource::open`.
-- Depends on: `CSTR-215`.
+- Depends on: none.
 - Change: replace the one-line remote active probe with local
   `std::string` storage while preserving the fallback that copies the
   first server line into the active-file path.
@@ -673,7 +662,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/nntp.cpp`.
 - Kind: NNTP list helper with first-line side effect.
 - Function: `nntp_list`.
-- Depends on: `CSTR-215`, `CSTR-216`, `CSTR-217`, `CSTR-219`.
+- Depends on: `CSTR-216`, `CSTR-217`, `CSTR-219`.
 - Change: stop exposing the first list response through `g_ser_line`.
   Return or otherwise hand the first line to callers with owned string
   storage after callers no longer consume the global side effect.

@@ -221,6 +221,15 @@ protected:
         m_newsrc.flags = RF_ADD_NEW_GROUPS | RF_ACTIVE;
     }
 
+    void add_uncached_remote_source()
+    {
+        g_data_sources.emplace_back();
+        DataSource &source = g_data_sources.back();
+        source.m_flags = DF_OPEN | DF_REMOTE;
+        source.m_nntp_link.connection = m_connection;
+        source.m_nntp_link.flags = NNTP_NEW_CMD_OK;
+    }
+
     void add_local_active_source(std::string_view active_line, std::string_view active_times_line)
     {
         const fs::path source_path = m_output_dir / ("active-" + std::to_string(g_data_sources.size()));
@@ -334,6 +343,28 @@ TEST_F(ScanActiveTest, reportsCachedActiveFileGroups)
     EXPECT_FALSE(changed);
     EXPECT_NE(std::string::npos, output.find("Completely unsubscribed newsgroups:\n"));
     EXPECT_NE(std::string::npos, output.find("comp.lang.apl\n"));
+}
+
+TEST_F(ScanActiveTest, reportsRemoteActiveGroups)
+{
+    add_uncached_remote_source();
+
+    testing::InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST active *"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 list of newsgroups follows"))
+        .WillOnce(testing::Return("comp.lang.apl 42 7 y"))
+        .WillOnce(testing::Return("comp.lang.c++ 200 100 x"))
+        .WillOnce(testing::Return("."));
+
+    testing::internal::CaptureStdout();
+    const bool        changed = scan_active(false);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(changed);
+    EXPECT_NE(std::string::npos, output.find("Completely unsubscribed newsgroups:\n"));
+    EXPECT_NE(std::string::npos, output.find("comp.lang.apl\n"));
+    EXPECT_EQ(std::string::npos, output.find("comp.lang.c++\n"));
 }
 
 TEST_F(ScanActiveTest, remoteNewGroupsAppendExcludedGroupToActiveFile)
