@@ -430,12 +430,10 @@ bool Multirc::use_multirc()
         return false;
     }
     g_multirc = this;
-#ifdef NO_FILELINKS
     if (!write_newsrcs(g_multirc))
     {
         get_anything();
     }
-#endif
     return true;
 }
 
@@ -774,9 +772,14 @@ static bool open_newsrc(Newsrc *rp)
         // unlink backup file name and backup current name
         std::error_code error;
         fs::remove(rp->old_name, error);
-#ifndef NO_FILELINKS
-        safe_link(rp->name, rp->old_name);
-#endif
+        error.clear();
+        fs::copy_file(rp->name, rp->old_name, fs::copy_options::overwrite_existing, error);
+        if (error)
+        {
+            fmt::print("Can't copy backup ({}) from .newsrc ({})\n", rp->old_name.string(), rp->name.string());
+            finalize(1);
+            return false;
+        }
     }
 
     if (g_newsrc_hash == nullptr)
@@ -888,13 +891,6 @@ static bool open_newsrc(Newsrc *rp)
         set_hash(np);
     }
     std::fclose(rcfp);                       // close .newsrc
-#ifdef NO_FILELINKS
-    std::error_code error;
-    fs::remove(rp->old_name, error);
-    error.clear();
-    fs::rename(rp->name, rp->old_name, error);
-    rp->flags |= RF_RC_CHANGED;
-#endif
     if (!rp->info_name.empty())
     {
         std::FILE *info = std::fopen(rp->info_name.string().c_str(), "r");

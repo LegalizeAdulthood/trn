@@ -30,7 +30,6 @@ inline bool file_ref(std::string_view s)
 #define B50     50
 
 #define RESTORE_ORIGDIR
-#define NO_FILELINKS
 #define LAX_INEWS
 
 #define sleep(secs_) _sleep(secs_)

@@ -410,24 +410,6 @@ void set_def(char *buffer, std::string_view dflt)
     }
 }
 
-#ifndef NO_FILELINKS
-void safe_link(const fs::path &old_name, const fs::path &new_name)
-{
-    if (link(old_name.string().c_str(), new_name.string().c_str()))
-    {
-        fmt::print("Can't link backup ({}) to .newsrc ({})\n", old_name.string(), new_name.string());
-// Debug
-#if 0
-        if (errno>0 && errno<sys_nerr)
-        {
-            std::printf("%s\n", sys_errlist[errno]);
-        }
-#endif
-        finalize(1);
-    }
-}
-#endif
-
 // attempts to verify a cryptographic signature.
 void verify_sig()
 {
