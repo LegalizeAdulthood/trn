@@ -49,6 +49,13 @@ protected:
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
     }
 
+    void TearDown() override
+    {
+        g_nntp_link.connection.reset();
+        nntp_gets_clear_buffer();
+        init_nntp();
+    }
+
     void configure_factory_create(ConnectionPtr result)
     {
         EXPECT_CALL(m_factory, Call(StrEq(m_machine), _, StrEq("nntp"))).WillOnce(Return(std::move(result)));

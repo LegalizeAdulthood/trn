@@ -216,14 +216,15 @@ bool ov_data(ArticleNum first, ArticleNum last, bool cheating)
     ArticleNum  an;
     std::string line;
     bool success = true;
-    ArticleNum real_first = first;
-    ArticleNum real_last = last;
-    int line_cnt;
-    int ov_chunk_size = cheating? OV_CHUNK_SIZE : OV_CHUNK_SIZE * 8;
+    ArticleNum  real_first = first;
+    ArticleNum  real_last = last;
+    int         line_cnt{};
+    int         ov_chunk_size = cheating ? OV_CHUNK_SIZE : OV_CHUNK_SIZE * 8;
     std::time_t started_request;
     bool        remote = g_data_source->m_over_dir.empty();
 
 beginning:
+    line_cnt = 0;
     while (true)
     {
         artnum = article_first(first);

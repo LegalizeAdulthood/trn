@@ -363,8 +363,7 @@ TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromRemoteSubscriptions)
 
     ASSERT_TRUE(multirc.use_multirc());
 
-    EXPECT_EQ((std::vector<std::string>{"215: ", "comp.lang.apl: 1-6", "comp.lang.c++!"}),
-              read_lines(newsrc.name));
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1-6", "comp.lang.c++!"}), read_lines(newsrc.name));
     unuse_multirc(&multirc);
 }
 

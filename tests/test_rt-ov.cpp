@@ -231,6 +231,7 @@ TEST_F(OverviewTest, remoteOverviewRequestsXoverRange)
         std::make_shared<testing::StrictMock<MockNNTPConnection>>();
     const std::string date{"Tue, 01 Jan 2019 00:00:00 GMT"};
     g_nntp_link.connection = connection;
+    m_data_source.m_nntp_link = g_nntp_link;
     m_data_source.m_over_dir.clear();
     m_data_source.m_flags |= DF_REMOTE;
 
@@ -254,6 +255,7 @@ TEST_F(OverviewTest, initMapsRemoteOverviewFormatFields)
     const std::shared_ptr<testing::StrictMock<MockNNTPConnection>> connection =
         std::make_shared<testing::StrictMock<MockNNTPConnection>>();
     g_nntp_link.connection = connection;
+    m_data_source.m_nntp_link = g_nntp_link;
     m_data_source.m_over_dir.clear();
     m_data_source.m_flags |= DF_REMOTE;
     for (int i = 0; i < OV_MAX_FIELDS; ++i)
