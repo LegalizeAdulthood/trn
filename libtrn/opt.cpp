@@ -908,13 +908,13 @@ void save_options(const fs::path &filename_path)
         if (catalog.is_group(row))
         {
             const std::string_view name = catalog.name(row);
-            std::fprintf(fp_out, "# ==%.*s========\n", static_cast<int>(name.size()), name.data());
+            fmt::print(fp_out, "# =={}========\n", name);
         }
         else
         {
             const OptionIndex      option = catalog.option(row);
             const std::string_view name = catalog.name(row);
-            std::fprintf(fp_out, "%.*s = ", static_cast<int>(name.size()), name.data());
+            fmt::print(fp_out, "{} = ", name);
             if (!g_option_def_vals[option])
             {
                 std::fputs("#default of ", fp_out);

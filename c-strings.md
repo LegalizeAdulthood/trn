@@ -587,17 +587,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-228 - Option File Save String-view Output
-
-- Files: `libtrn/opt.cpp`.
-- Kind: pointer-and-length file output leaf.
-- Function: `save_options`.
-- Depends on: none.
-- Change: replace the `std::fprintf` `%.*s` option-name output with
-  `fmt::print(fp_out, ...)` using the existing `name` views directly.
-  Keep unrelated save-file flow unchanged.
-- Tests: option save tests if present.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
