@@ -209,9 +209,7 @@ static void process_list(GetNewsgroupFlags flag)
 
 static void new_nntp_groups(DataSource *dp)
 {
-    char* s;
-    int len;
-    bool  found_something = false;
+    bool found_something = false;
 
     set_data_source(dp);
 
@@ -225,44 +223,42 @@ static void new_nntp_groups(DataSource *dp)
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
-    HashTable *new_newsgroups = hash_create(33, add_newsgroup_cmp);
+    HashTable  *new_newsgroups = hash_create(33, add_newsgroup_cmp);
+    std::string new_group_line;
+    new_group_line.reserve(NNTP_STRLEN);
 
     while (true)
     {
         ActiveLineFields active_fields;
-        if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
+        if (nntp_gets(new_group_line, NNTP_STRLEN) == NGSR_ERROR)
         {
             break;
         }
 #ifdef DEBUG
         if (g_debug & DEB_NNTP)
         {
-            std::printf("<%s\n", g_ser_line);
+            std::printf("<%s\n", new_group_line.c_str());
         }
 #endif
-        if (nntp_at_list_end(g_ser_line))
+        if (nntp_at_list_end(new_group_line))
         {
             break;
         }
         found_something = true;
-        s = std::strchr(g_ser_line, ' ');
-        if (s != nullptr)
-        {
-            len = s - g_ser_line;
-        }
-        else
-        {
-            len = std::strlen(g_ser_line);
-        }
+        const std::string_view line{new_group_line};
+        const std::size_t      name_end = line.find(' ');
+        const std::string_view group_name = line.substr(0, name_end);
+        const bool             has_fields = name_end != std::string_view::npos;
+        const std::string_view fields = has_fields ? line.substr(name_end + 1) : std::string_view{};
         if (dp->m_act_sf.m_fp)
         {
-            const std::string_view group_name{g_ser_line, static_cast<std::size_t>(len)};
-            const std::string      active_line = dp->find_active_group(group_name, ArticleNum{});
+            const std::string active_line = dp->find_active_group(group_name, ArticleNum{});
             if (!active_line.empty())
             {
-                if (!s)
+                if (!has_fields)
                 {
-                    const std::size_t status = active_line.find_first_not_of("0123456789 \f\n\r\t\v", len + 1);
+                    const std::size_t status =
+                        active_line.find_first_not_of("0123456789 \f\n\r\t\v", group_name.size() + 1);
                     if (status != std::string::npos && (active_line[status] == 'x' || active_line[status] == '='))
                     {
                         continue;
@@ -271,37 +267,29 @@ static void new_nntp_groups(DataSource *dp)
             }
             else
             {
-                if (s)
+                if (has_fields)
                 {
-                    active_fields = parse_active_line_fields(s + 1);
-                }
-                else
-                {
-                    s = g_ser_line + len;
+                    active_fields = parse_active_line_fields(fields);
                 }
                 const std::string new_active_line = fmt::format("{} {:010} {:05} {}\n", group_name, active_fields.high,
                                                                 active_fields.low, active_fields.status);
-                (void) dp->m_act_sf.append(new_active_line, len);
+                (void) dp->m_act_sf.append(new_active_line, static_cast<int>(group_name.size()));
             }
         }
-        if (s)
+        if (has_fields)
         {
-            *s++ = '\0';
-            while (std::isdigit(*s) || std::isspace(*s))
-            {
-                s++;
-            }
-            if (*s == 'x' || *s == '=')
+            const std::size_t status = fields.find_first_not_of("0123456789 \f\n\r\t\v");
+            if (status != std::string_view::npos && (fields[status] == 'x' || fields[status] == '='))
             {
                 continue;
             }
         }
-        NewsgroupData *np = find_newsgroup(g_ser_line);
+        NewsgroupData *np = find_newsgroup(group_name);
         if (np != nullptr && np->m_to_read > TR_UNSUB)
         {
             continue;
         }
-        add_to_hash(new_newsgroups, g_ser_line, active_fields.high - active_fields.low, auto_subscribe(g_ser_line));
+        add_to_hash(new_newsgroups, group_name, active_fields.high - active_fields.low, auto_subscribe(group_name));
     }
     if (found_something)
     {
