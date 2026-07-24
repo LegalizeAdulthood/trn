@@ -592,18 +592,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-232 - NNTP Server Init Server Name
-
-- Files: `nntp/nntpinit.cpp`, `nntp/include/nntp/nntpinit.h`,
-  `tests/test_nntp.cpp`.
-- Kind: read-only helper API.
-- Function: `server_init`.
-- Depends on: `CSTR-231`.
-- Change: change the server-name parameter to `std::string_view` and
-  forward it to the modern connection factory.  Do not change
-  `g_ser_line` status storage in this slice.
-- Tests: NNTP server-init tests.
-
 #### CSTR-233 - NNTP Connect Server Name
 
 - Files: `nntp/nntpclient.cpp`, `nntp/include/nntp/nntpclient.h`,

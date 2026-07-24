@@ -125,7 +125,7 @@ int init_nntp()
     return 1;
 }
 
-int server_init(const char *machine)
+int server_init(std::string_view machine)
 {
     g_nntp_link.connection = s_nntp_connection_factory(machine, g_nntp_link.port_number, "nntp");
     if (g_nntp_link.connection == nullptr)

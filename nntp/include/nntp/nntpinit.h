@@ -5,8 +5,10 @@
 #ifndef TRN_NNTPINIT_H
 #define TRN_NNTPINIT_H
 
+#include <string_view>
+
 int init_nntp();
-int server_init(const char *machine);
+int server_init(std::string_view machine);
 void cleanup_nntp();
 
 #endif
