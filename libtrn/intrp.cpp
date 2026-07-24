@@ -32,6 +32,7 @@
 #include <util/util2.h>
 
 #include <fmt/format.h>
+#include <fmt/printf.h>
 
 #ifdef HAS_UNAME
 #include <sys/utsname.h>
@@ -382,19 +383,8 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 transform_text.assign(value);
                 return transform_text.data();
             };
-            const auto format_value = [](const char *format, std::string_view text)
-            {
-                const std::string input{text};
-                const int         size = std::snprintf(nullptr, 0, format, input.c_str());
-                if (size < 0)
-                {
-                    return std::string{};
-                }
-                std::string result_text(static_cast<std::size_t>(size) + 1, '\0');
-                std::snprintf(result_text.data(), result_text.size(), format, input.c_str());
-                result_text.resize(static_cast<std::size_t>(size));
-                return result_text;
-            };
+            const auto format_value = [](std::string_view format, std::string_view text)
+            { return fmt::sprintf(fmt::string_view{format.data(), format.size()}, text); };
             while (!has_value)
             {
                 if (pattern.empty() || pattern.front() == '\0')
@@ -1309,7 +1299,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
             }
             if (proc_sprintf)
             {
-                set_owned_value(format_value(format_spec.c_str(), value));
+                set_owned_value(format_value(format_spec, value));
             }
             if (!pattern.empty() && pattern.front() != '\0')
             {

@@ -501,7 +501,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Comparison: `strcmp` 0, `strncmp` 11.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
   `strlen` 33.
-- Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 2.
+- Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
 - C text parsing: `sscanf` 3.
 - C text I/O roots: `fgets` 20, `fputs` 173, `printf` 345,
   `fprintf` 18.
@@ -528,19 +528,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-235 - Interpolator Printf Formatter
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: local formatted string construction.
-- Function: `do_interp`.
-- Dependencies: none.
-- Current shape: the local `format_value` lambda sizes and fills a
-  `std::string` through `std::snprintf`.
-- Change: produce the owned result with a printf-style fmt formatter.
-  Preserve runtime `%` formatting semantics; do not translate the
-  pattern to fmt brace syntax.
-- Tests: add or run focused interpolation tests for printf-style
-  formatting before the refactor if existing coverage is unclear.
+No active slices.
 
 ### Tier 1 - Helper And API Foundations
 
