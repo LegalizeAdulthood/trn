@@ -521,8 +521,7 @@ tree.
   callers are `DataSource::open`, `SourceFile::open`, and `nntp_list`.
   Keep the C wrapper until those callers move, then remove it.
 - Overview format parsing no longer uses raw buffer storage for remote
-  NNTP lines.  The local `overview.fmt` file branch still reads through
-  `g_buf` and is a current leaf slice.
+  NNTP lines or local `overview.fmt` lines.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
   `kill_file_append`, `in_char`, `in_answer`, and the universal group
   visitor callback still expose pointer-shaped text APIs even though
@@ -558,7 +557,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `strlen` 34.
 - Formatting into C buffers: `sprintf` 1, `snprintf` 2.
 - C text parsing: `sscanf` 4.
-- C text I/O roots: `fgets` 21, `fputs` 175, `printf` 347,
+- C text I/O roots: `fgets` 20, `fputs` 175, `printf` 347,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -594,18 +593,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-222 - Overview Format File Lines
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: local overview format file reader using `g_buf`.
-- Function: `ov_init`.
-- Depends on: none.
-- Change: in the local `overview.fmt` branch, replace
-  `std::fopen`/`std::fgets(g_buf)` with `std::ifstream` and
-  `std::string` line storage.  Keep the existing remote NNTP string path
-  and preserve comment skipping and field parsing.
-- Tests: overview format tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 

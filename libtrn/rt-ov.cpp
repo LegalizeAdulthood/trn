@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <fstream>
 #include <string>
 #include <string_view>
 
@@ -59,7 +60,7 @@ bool ov_init()
     OverviewFieldNum *fieldnum = g_data_source->m_field_num;
     FieldFlags  *fieldflags = g_data_source->m_field_flags;
     g_data_source->m_flags &= ~DF_TRY_OVERVIEW;
-    std::FILE *overview;
+    std::ifstream overview;
     if (g_data_source->m_over_dir.empty())
     {
         // Check if the server is XOVER compliant
@@ -89,8 +90,11 @@ bool ov_init()
     }
     else
     {
-        has_overview_fmt = !g_data_source->m_over_fmt.empty() &&
-                           (overview = std::fopen(g_data_source->m_over_fmt.c_str(), "r")) != nullptr;
+        if (!g_data_source->m_over_fmt.empty())
+        {
+            overview.open(g_data_source->m_over_fmt);
+        }
+        has_overview_fmt = overview.is_open();
     }
 
     if (has_overview_fmt)
@@ -117,12 +121,11 @@ bool ov_init()
             }
             else
             {
-                if (!std::fgets(g_buf, sizeof g_buf, overview))
+                if (!std::getline(overview, overview_line))
                 {
-                    std::fclose(overview);
                     break;
                 }
-                line = g_buf;
+                line = overview_line;
             }
             if (!line.empty() && line.front() == '#')
             {
