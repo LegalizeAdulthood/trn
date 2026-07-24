@@ -21,12 +21,14 @@
 
 #include <fmt/format.h>
 
+#include <charconv>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 static ArticleNum nntp_next_art();
 static int        nntp_copy_body(std::string &line, int limit, ArticlePosition pos);
@@ -148,11 +150,44 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
     }
     if (gp)
     {
-        long count;
-        long first;
-        long last;
+        const auto next_token = [](std::string_view &text)
+        {
+            const std::size_t start = text.find_first_not_of(" \t\r\n");
+            if (start == std::string_view::npos)
+            {
+                text = {};
+                return std::string_view{};
+            }
+            text.remove_prefix(start);
+            const std::size_t      end = text.find_first_of(" \t\r\n");
+            const std::string_view token = text.substr(0, end);
+            text.remove_prefix(end == std::string_view::npos ? text.size() : end);
+            return token;
+        };
+        const auto parse_long = [](std::string_view text, long &value)
+        {
+            if (text.empty())
+            {
+                return;
+            }
+            long                         parsed{};
+            const char                  *begin = text.data();
+            const char                  *end = begin + text.size();
+            const std::from_chars_result result = std::from_chars(begin, end, parsed);
+            if (result.ec == std::errc{} && result.ptr == end)
+            {
+                value = parsed;
+            }
+        };
+        std::string_view response{g_ser_line};
+        long             count{};
+        long             first{};
+        long             last{};
 
-        (void) std::sscanf(g_ser_line,"%*d%ld%ld%ld",&count,&first,&last);
+        (void) next_token(response);
+        parse_long(next_token(response), count);
+        parse_long(next_token(response), first);
+        parse_long(next_token(response), last);
         // NNTP mangles the high/low values when no articles are present.
         if (!count)
         {

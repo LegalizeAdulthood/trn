@@ -349,6 +349,29 @@ TEST_F(NNTPGetStringTest, headerFormatsArticleNumberCommand)
     EXPECT_EQ(1, nntp_header(ArticleNum{123}));
 }
 
+TEST_F(NNTPGetStringTest, groupParsesArticleRange)
+{
+    NewsgroupData group{};
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("211 3 10 12 comp.lang.apl"));
+
+    EXPECT_EQ(1, nntp_group("comp.lang.apl", &group));
+    EXPECT_EQ(ArticleNum{10}, group.m_abs_first);
+    EXPECT_EQ(ArticleNum{12}, group.m_ng_max);
+}
+
+TEST_F(NNTPGetStringTest, groupEmptyUsesArticleAfterPreviousMaximum)
+{
+    NewsgroupData group{};
+    group.m_ng_max = ArticleNum{123};
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.empty"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("211 0 0 0 comp.empty"));
+
+    EXPECT_EQ(1, nntp_group("comp.empty", &group));
+    EXPECT_EQ(ArticleNum{124}, group.m_abs_first);
+    EXPECT_EQ(ArticleNum{123}, group.m_ng_max);
+}
+
 TEST_F(NNTPGetStringTest, newGroupsFormatsGmtTimestampCommand)
 {
     EXPECT_CALL(*m_connection, write_line(StrEq("NEWGROUPS 700101 000000 GMT"), _));

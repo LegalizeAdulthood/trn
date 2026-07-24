@@ -502,7 +502,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
   `strlen` 33.
 - Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
-- C text parsing: `sscanf` 3.
+- C text parsing: `sscanf` 2.
 - C text I/O roots: `fgets` 20, `fputs` 173, `printf` 345,
   `fprintf` 18.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
@@ -534,20 +534,6 @@ No active slices.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-237 - NNTP GROUP Reply Parsing
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: C text parsing.
-- Function: `nntp_group`.
-- Dependencies: none.
-- Current shape: the function parses `g_ser_line` with
-  `std::sscanf("%*d%ld%ld%ld", ...)`.
-- Change: parse a `std::string_view` reply with token splitting and
-  `std::from_chars`.  Preserve current behavior for missing fields and
-  zero article counts.
-- Tests: add or run focused NNTP GROUP reply tests before refactoring if
-  coverage is incomplete.
 
 #### CSTR-238 - NNTP STAT Reply Parsing
 
@@ -709,7 +695,7 @@ with their owner slices unless a local use is clearly formatting-only.
   `trn-artchk/trn-artchk.cpp`.
 - Kind: global fixed protocol/status buffer.
 - Function: storage-centered `g_ser_line`.
-- Dependencies: complete CSTR-237, CSTR-238, and CSTR-239 first.
+- Dependencies: complete CSTR-238 and CSTR-239 first.
 - Change: separate NNTP status text from protocol line input/output so
   callers do not format commands or cache responses through one shared
   `char[NNTP_STRLEN]` buffer.  Preserve protocol truncation only if it is
