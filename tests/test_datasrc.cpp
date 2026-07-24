@@ -99,6 +99,36 @@ protected:
     DataSource m_data_source{};
 };
 
+class SourceFileRemoteOpenTest : public SourceFileTest
+{
+protected:
+    void SetUp() override
+    {
+        SourceFileTest::SetUp();
+        m_old_nntp_link = g_nntp_link;
+        m_old_net_speed = g_net_speed;
+        nntp_gets_clear_buffer();
+
+        m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+        g_nntp_link.connection = m_connection;
+        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_net_speed = 1;
+    }
+
+    void TearDown() override
+    {
+        g_nntp_link.connection.reset();
+        g_nntp_link = m_old_nntp_link;
+        g_net_speed = m_old_net_speed;
+        nntp_gets_clear_buffer();
+        SourceFileTest::TearDown();
+    }
+
+    NNTPLink                                                 m_old_nntp_link{};
+    int                                                      m_old_net_speed{};
+    std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
+};
+
 class DataSourceFindGroupDescTest : public SourceFileTest
 {
 protected:
@@ -347,6 +377,29 @@ TEST_F(SourceFileTest, openPreservesLongLocalLine)
     ASSERT_EQ(1U, source_file.m_lines.size());
     EXPECT_EQ("comp.lang.apl " + description + '\n', source_file.m_lines[0]);
     EXPECT_EQ(0L, source_file.m_line_positions[0]);
+}
+
+TEST_F(SourceFileRemoteOpenTest, openFetchesRemoteLinesFromServer)
+{
+    const fs::path  source_path = m_output_dir / "active";
+    SourceFileOwner source_file_owner;
+    SourceFile     &source_file = source_file_owner.get();
+    source_file.m_refetch_secs = DEFAULT_REFETCH_SECS;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 list follows"))
+        .WillOnce(testing::Return("comp.lang.apl 10 1 y"))
+        .WillOnce(testing::Return("comp.lang.c++ 20 1 y"))
+        .WillOnce(testing::Return("."));
+
+    testing::internal::CaptureStdout();
+    const int result = source_file.open(source_path, "active", "news.example");
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(2, result);
+    ASSERT_EQ(2U, source_file.m_lines.size());
+    EXPECT_EQ("comp.lang.apl 10 1 y\n", source_file.m_lines[0]);
+    EXPECT_EQ("comp.lang.c++ 20 1 y\n", source_file.m_lines[1]);
 }
 
 TEST_F(SourceFileTest, endAppendUpdatesCachedFileTimestamp)

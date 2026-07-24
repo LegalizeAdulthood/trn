@@ -518,8 +518,10 @@ tree.
   slice for it.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
   `inews::main` use it directly.  Remaining production raw-buffer
-  callers are `SourceFile::open` and `nntp_list`.  Keep the C wrapper
-  until those callers move, then remove it.
+  caller is `nntp_list`.  Keep the C wrapper until that caller moves,
+  then remove it.
+- Source-file fetching no longer uses `g_buf` for remote active or
+  newsgroups lines.
 - Overview format parsing no longer uses raw buffer storage for remote
   NNTP lines or local `overview.fmt` lines.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
@@ -599,23 +601,12 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-219 - SourceFile Remote Fetch Lines
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: NNTP fetched-file reader using `g_buf`.
-- Function: `SourceFile::open`.
-- Depends on: none.
-- Change: replace remote fetch line storage with local `std::string`
-  storage and remove reliance on stale `g_buf` contents when
-  `use_buffered_nntp_gets` is true.
-- Tests: active-file, newsgroups-file, and overview fetch tests.
-
 #### CSTR-221 - NNTP List First Response Line
 
 - Files: `libtrn/nntp.cpp`.
 - Kind: NNTP list helper with first-line side effect.
 - Function: `nntp_list`.
-- Depends on: `CSTR-219`.
+- Depends on: none.
 - Change: stop exposing the first list response through `g_ser_line`.
   Return or otherwise hand the first line to callers with owned string
   storage after callers no longer consume the global side effect.
@@ -705,7 +696,7 @@ owned strings or owner-specific storage.
   `nntp/include/nntp/nntpclient.h`.
 - Kind: obsolete raw-buffer wrapper.
 - Function: `nntp_gets(char *, int)`.
-- Depends on: `CSTR-219` and `CSTR-221`.
+- Depends on: `CSTR-221`.
 - Change: remove the C-buffer overload after every production caller
   uses the `std::string` overload.  Update stale tests or header checks
   that only preserve compatibility with the removed wrapper.

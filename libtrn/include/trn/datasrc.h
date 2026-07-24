@@ -27,7 +27,8 @@ struct HashTable;
 
 struct SourceFile
 {
-    int              open(const std::filesystem::path &filename, std::string_view fetch_cmd, std::string_view server);
+    int              open(const std::filesystem::path &filename, std::string_view fetch_cmd, std::string_view server,
+                          std::string_view first_line = {});
     std::string_view append(std::string_view line, int key_len);
     void             end_append(const std::filesystem::path &filename);
     void             close();
@@ -76,7 +77,7 @@ struct DataSource
 {
     bool             open();
     void             close();
-    bool             active_file_hash();
+    bool             active_file_hash(std::string_view first_line = {});
     std::string      find_active_group(std::string_view name, ArticleNum high);
     std::string_view find_group_desc(std::string_view group_name);
     inline NNTPFlags nntp_flags() const;

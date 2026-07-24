@@ -452,10 +452,8 @@ bool DataSource::open()
                 const std::string active_line{g_ser_line};
                 if (std::string_view{active_line}.substr(0, control_group_prefix.size()) != control_group_prefix)
                 {
-                    const std::size_t copied = active_line.copy(g_buf, LINE_BUF_LEN);
-                    g_buf[copied] = '\0';
                     m_act_sf.m_last_fetch = 0;
-                    success = active_file_hash();
+                    success = active_file_hash(active_line);
                     break;
                 }
                 std::string next_active_line;
@@ -610,7 +608,7 @@ void DataSource ::close()
     }
 }
 
-bool DataSource::active_file_hash()
+bool DataSource::active_file_hash(std::string_view first_line)
 {
     int ret;
     if (m_flags & DF_REMOTE)
@@ -618,7 +616,7 @@ bool DataSource::active_file_hash()
         DataSource *save_datasrc = g_data_source;
         set_data_source(this);
         g_spin_todo = m_act_sf.m_recent_cnt;
-        ret = m_act_sf.open(m_extra_name, "active", m_news_id);
+        ret = m_act_sf.open(m_extra_name, "active", m_news_id, first_line);
         if (g_spin_count > 0)
         {
             m_act_sf.m_recent_cnt = g_spin_count;
@@ -881,12 +879,13 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
     return s;
 }
 
-int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::string_view server)
+int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::string_view server,
+                     std::string_view first_line)
 {
     long              pos = 0;
     std::FILE        *fp;
     std::time_t       now = std::time(nullptr);
-    bool              use_buffered_nntp_gets = false;
+    bool              use_first_line = false;
     const bool        has_filename = !filename.empty();
     bool              use_server = !server.empty();
 
@@ -912,7 +911,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
                 // tell server we want the file
                 if (!(g_nntp_link.flags & NNTP_NEW_CMD_OK))
                 {
-                    use_buffered_nntp_gets = true;
+                    use_first_line = !first_line.empty();
                 }
                 else if (nntp_list(fetch_cmd, "") < 0)
                 {
@@ -971,16 +970,18 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
 
     std::string line;
     line.reserve(LINE_BUF_LEN);
+    std::string remote_line{first_line};
+    remote_line.reserve(LINE_BUF_LEN);
     for (;;)
     {
         line.clear();
         if (use_server)
         {
-            if (use_buffered_nntp_gets)
+            if (use_first_line)
             {
-                use_buffered_nntp_gets = false;
+                use_first_line = false;
             }
-            else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR)
+            else if (nntp_gets(remote_line, LINE_BUF_LEN) == NGSR_ERROR)
             {
                 fmt::print("\nError getting {} file.\n", fetch_cmd);
                 term_down(2);
@@ -988,11 +989,11 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
                 set_spin(SPIN_OFF);
                 return 0;
             }
-            if (nntp_at_list_end(g_buf))
+            if (nntp_at_list_end(remote_line))
             {
                 break;
             }
-            line = g_buf;
+            line = remote_line;
             line += '\n';
             fmt::print(fp, "{}", line);
             spin(200 * g_net_speed);
