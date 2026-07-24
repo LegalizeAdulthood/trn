@@ -295,13 +295,13 @@ char *safe_realloc(char *where, MemorySize size)
 
 // effective access
 
-#ifdef SETUIDGID
-int eaccess(const char *filename, int mod)
+int eaccess(const fs::path &filename, int mod)
 {
+#ifdef SETUIDGID
     int protection, euid;
 
     mod &= 7;                           // remove extraneous garbage
-    if (stat(filename, &g_filestat) < 0)
+    if (stat(filename.string().c_str(), &g_filestat) < 0)
     {
         return -1;
     }
@@ -318,8 +318,10 @@ int eaccess(const char *filename, int mod)
     }
     errno = EACCES;
     return -1;
-}
+#else
+    return access(filename.string().c_str(), mod);
 #endif
+}
 
 //
 // Get working directory

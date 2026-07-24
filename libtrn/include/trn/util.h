@@ -43,9 +43,7 @@ int  do_shell(const char *shell, const char *cmd);
 char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);
 #endif
-#ifdef SETUIDGID
-int eaccess(const char *, int);
-#endif
+int         eaccess(const std::filesystem::path &filename, int mode);
 std::string trn_getwd();
 std::string get_a_line(std::FILE *fp);
 bool  make_dir(const std::filesystem::path &dirname, MakeDirNameType nametype);

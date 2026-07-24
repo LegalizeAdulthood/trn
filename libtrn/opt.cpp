@@ -1670,7 +1670,7 @@ void cwd_check()
         std::printf("Cannot determine current working directory!\n");
         finalize(1);
     }
-    if (eaccess(save_dir.c_str(), 2))
+    if (eaccess(save_dir, 2))
     {
         if (g_verbose)
         {

@@ -270,9 +270,9 @@ int access_newsgroup()
     }
     else
     {
-        if (eaccess(g_newsgroup_dir.c_str(),5))                 // directory read protected?
+        if (eaccess(g_newsgroup_dir, 5))                 // directory read protected?
         {
-            if (eaccess(g_newsgroup_dir.c_str(), 0))
+            if (eaccess(g_newsgroup_dir, 0))
             {
                 if (g_verbose)
                 {

@@ -244,10 +244,6 @@ enum
 
 // some dependencies among options
 
-#ifndef SETUIDGID
-#   define eaccess access
-#endif
-
 #ifdef NDEBUG
 #define TRN_ASSERT(ex)
 #else

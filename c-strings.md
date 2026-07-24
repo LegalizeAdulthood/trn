@@ -592,20 +592,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-234 - Effective Access Path Argument
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `libtrn/ngdata.cpp`, `libtrn/opt.cpp`.
-- Kind: filename helper API.
-- Function: `eaccess`.
-- Depends on: none.
-- Change: replace the filename `const char *` parameter with a path
-  shape so callers stop passing `.c_str()` for filesystem names.  Keep
-  the POSIX `stat` boundary inside the helper and preserve
-  `SETUIDGID` behavior.
-- Tests: build coverage for `SETUIDGID`; targeted path/access tests if
-  that configuration is easy to exercise.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
