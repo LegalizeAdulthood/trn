@@ -517,11 +517,12 @@ tree.
 - `nntp_at_list_end` already accepts `std::string_view`; do not add a
   slice for it.
 - `nntp_gets` now has a string API.  `nntplist`, `trn-artchk`, and
-  `inews::main` use it directly.  Remaining production raw-buffer
-  caller is `nntp_list`.  Keep the C wrapper until that caller moves,
-  then remove it.
+  `inews::main` use it directly.  No production raw-buffer callers
+  remain, so the C wrapper is ready for removal.
 - Source-file fetching no longer uses `g_buf` for remote active or
   newsgroups lines.
+- NNTP list item prefetching now returns through caller-owned
+  `std::string` storage instead of `g_ser_line`.
 - Overview format parsing no longer uses raw buffer storage for remote
   NNTP lines or local `overview.fmt` lines.
 - `set_newsgroup_name`, `get_newsgroup`, `kill_unwanted`,
@@ -559,7 +560,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `strlen` 34.
 - Formatting into C buffers: `sprintf` 1, `snprintf` 2.
 - C text parsing: `sscanf` 4.
-- C text I/O roots: `fgets` 20, `fputs` 175, `printf` 347,
+- C text I/O roots: `fgets` 20, `fputs` 175, `printf` 346,
   `fprintf` 20.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -600,17 +601,6 @@ them before broad global-buffer work and before removing helpers.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-221 - NNTP List First Response Line
-
-- Files: `libtrn/nntp.cpp`.
-- Kind: NNTP list helper with first-line side effect.
-- Function: `nntp_list`.
-- Depends on: none.
-- Change: stop exposing the first list response through `g_ser_line`.
-  Return or otherwise hand the first line to callers with owned string
-  storage after callers no longer consume the global side effect.
-- Tests: NNTP list, active-list, subscription, and overview tests.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -696,7 +686,7 @@ owned strings or owner-specific storage.
   `nntp/include/nntp/nntpclient.h`.
 - Kind: obsolete raw-buffer wrapper.
 - Function: `nntp_gets(char *, int)`.
-- Depends on: `CSTR-221`.
+- Depends on: none.
 - Change: remove the C-buffer overload after every production caller
   uses the `std::string` overload.  Update stale tests or header checks
   that only preserve compatibility with the removed wrapper.

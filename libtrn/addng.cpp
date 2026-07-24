@@ -471,17 +471,19 @@ bool scan_active(bool add_matching)
         {
             hash_walk(dp->m_act_sf.m_hp, list_groups, add_matching);
         }
-        else if (nntp_list("active", active_list_pattern()) == 1)
+        else
         {
             std::string active_line;
             active_line.reserve(NNTP_STRLEN);
-            active_line = g_ser_line;
-            while (!nntp_at_list_end(active_line))
+            if (nntp_list("active", active_list_pattern(), active_line) == 1)
             {
-                scan_active_line(active_line, add_matching);
-                if (nntp_gets(active_line, NNTP_STRLEN) == NGSR_ERROR)
+                while (!nntp_at_list_end(active_line))
                 {
-                    break;
+                    scan_active_line(active_line, add_matching);
+                    if (nntp_gets(active_line, NNTP_STRLEN) == NGSR_ERROR)
+                    {
+                        break;
+                    }
                 }
             }
         }

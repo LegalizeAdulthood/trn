@@ -29,6 +29,7 @@ enum
 };
 
 int             nntp_list(std::string_view type, std::string_view arg);
+int             nntp_list(std::string_view type, std::string_view arg, std::string &first_line);
 void            nntp_finish_list();
 int             nntp_group(std::string_view group, NewsgroupData *gp);
 int             nntp_stat(ArticleNum art_num);

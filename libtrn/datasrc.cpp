@@ -445,11 +445,12 @@ bool DataSource::open()
         if (m_act_sf.m_refetch_secs)
         {
             constexpr std::string_view control_group_prefix{"control "};
-            switch (nntp_list("active", "control"))
+            std::string                active_line;
+            active_line.reserve(NNTP_STRLEN);
+            switch (nntp_list("active", "control", active_line))
             {
             case 1:
             {
-                const std::string active_line{g_ser_line};
                 if (std::string_view{active_line}.substr(0, control_group_prefix.size()) != control_group_prefix)
                 {
                     m_act_sf.m_last_fetch = 0;
@@ -651,14 +652,13 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
     {
         DataSource *save_datasrc = g_data_source;
         set_data_source(this);
-        switch (nntp_list("active", name))
+        switch (nntp_list("active", name, active_line))
         {
         case 0:
             set_data_source(save_datasrc);
             return {};
 
         case 1:
-            active_line = g_ser_line;
             active_line += '\n';
             nntp_finish_list();
             break;

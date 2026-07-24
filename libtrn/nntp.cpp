@@ -43,9 +43,16 @@ static long s_raw_bytes{-1}; // bytes remaining to be transferred
 
 int nntp_list(std::string_view type, std::string_view arg)
 {
+    std::string first_line;
+    return nntp_list(type, arg, first_line);
+}
+
+int nntp_list(std::string_view type, std::string_view arg, std::string &first_line)
+{
     int               ret;
     const std::string type_name{type};
     const bool        is_active = string_case_equal(type, "active");
+    first_line.clear();
 #ifdef DEBUG
     if (!arg.empty() && (g_debug & 1) && is_active)
     {
@@ -74,17 +81,17 @@ int nntp_list(std::string_view type, std::string_view arg)
     {
         return 1;
     }
-    if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
+    if (nntp_gets(first_line, NNTP_STRLEN) == NGSR_ERROR)
     {
         return -1;
     }
 #if defined(DEBUG) && defined(FLUSH)
     if (g_debug & DEB_NNTP)
     {
-        std::printf("<%s\n", g_ser_line);
+        fmt::print("<{}\n", first_line);
     }
 #endif
-    if (nntp_at_list_end(g_ser_line))
+    if (nntp_at_list_end(first_line))
     {
         return 0;
     }

@@ -84,6 +84,10 @@ protected:
     void SetUp() override
     {
         SourceFileTest::SetUp();
+        m_old_data_source = g_data_source;
+        m_old_nntp_link = g_nntp_link;
+        g_data_source = nullptr;
+        nntp_gets_clear_buffer();
         m_source_path = m_output_dir / "active";
         std::ofstream{m_source_path} << "comp.lang.apl 0000000001 0000000001 y\n";
         ASSERT_EQ(1, m_data_source.m_act_sf.open(m_source_path, "", ""));
@@ -92,11 +96,17 @@ protected:
     void TearDown() override
     {
         m_data_source.m_act_sf.close();
+        g_data_source = m_old_data_source;
+        g_nntp_link = m_old_nntp_link;
+        nntp_gets_clear_buffer();
         SourceFileTest::TearDown();
     }
 
-    fs::path   m_source_path;
-    DataSource m_data_source{};
+    fs::path                                                 m_source_path;
+    DataSource                                               m_data_source{};
+    DataSource                                              *m_old_data_source{};
+    NNTPLink                                                 m_old_nntp_link{};
+    std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
 };
 
 class SourceFileRemoteOpenTest : public SourceFileTest
@@ -479,6 +489,28 @@ TEST_F(DataSourceFindActiveGroupTest, updatesCachedHighWaterMark)
 
     EXPECT_EQ("comp.lang.apl 0000000042 0000000001 y\n", active_line);
     EXPECT_EQ("comp.lang.apl 0000000042 0000000001 y\n", m_data_source.m_act_sf.m_lines[0]);
+}
+
+TEST_F(DataSourceFindActiveGroupTest, fetchesActiveLineFromServerList)
+{
+    std::fclose(m_data_source.m_act_sf.m_fp);
+    m_data_source.m_act_sf.m_fp = std::fopen(m_source_path.string().c_str(), "r+");
+    ASSERT_NE(nullptr, m_data_source.m_act_sf.m_fp);
+    m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    m_data_source.m_flags = DF_REMOTE | DF_USE_LIST_ACTIVE;
+    m_data_source.m_act_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
+    m_data_source.m_nntp_link.connection = m_connection;
+    m_data_source.m_nntp_link.flags = NNTP_NEW_CMD_OK;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST active comp.lang.apl"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 list follows"))
+        .WillOnce(testing::Return("comp.lang.apl 0000000042 0000000007 y"))
+        .WillOnce(testing::Return("."));
+
+    const std::string active_line = m_data_source.find_active_group("comp.lang.apl", ArticleNum{});
+
+    EXPECT_EQ("comp.lang.apl 0000000042 0000000007 y\n", active_line);
+    EXPECT_EQ("comp.lang.apl 0000000042 0000000007 y\n", m_data_source.m_act_sf.m_lines[0]);
 }
 
 TEST_F(DataSourceFindGroupDescTest, fetchesDescriptionFromServer)
