@@ -193,6 +193,63 @@ TEST(MimeParseEncodingTest, rejectsUnknownEncodingsAndSuffixes)
 namespace
 {
 
+struct MimeBoundaryTest : Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_mime_section = g_mime_section;
+        m_parent.m_boundary = "part-boundary";
+        m_parent.m_boundary_len = static_cast<short>(m_parent.m_boundary->size());
+        m_current.m_prev = &m_parent;
+        g_mime_section = &m_current;
+    }
+
+    void TearDown() override
+    {
+        g_mime_section = m_old_mime_section;
+    }
+
+    int end_of_section(std::string_view line)
+    {
+        return mime_end_of_section(line);
+    }
+
+    MimeSection  m_parent{};
+    MimeSection  m_current{};
+    MimeSection *m_old_mime_section{};
+};
+
+} // namespace
+
+TEST_F(MimeBoundaryTest, detectsBoundaryLine)
+{
+    EXPECT_EQ(1, end_of_section("--part-boundary\n"));
+}
+
+TEST_F(MimeBoundaryTest, detectsBoundaryAtEndOfString)
+{
+    EXPECT_EQ(1, end_of_section("--part-boundary"));
+}
+
+TEST_F(MimeBoundaryTest, detectsFinalBoundaryLine)
+{
+    EXPECT_EQ(2, end_of_section("--part-boundary--\n"));
+}
+
+TEST_F(MimeBoundaryTest, rejectsBoundaryPrefix)
+{
+    EXPECT_EQ(0, end_of_section("--part-boundary-extra\n"));
+}
+
+TEST_F(MimeBoundaryTest, rejectsBodyLine)
+{
+    EXPECT_EQ(0, end_of_section("body\n"));
+}
+
+namespace
+{
+
 struct MimeSubHeaderTest : Test
 {
 protected:

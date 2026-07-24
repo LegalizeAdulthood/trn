@@ -883,9 +883,9 @@ void mime_set_state(char *bp)
     }
 }
 
-int mime_end_of_section(char *bp)
+int mime_end_of_section(std::string_view bp)
 {
-    MimeSection* mp = g_mime_section->m_prev;
+    MimeSection *mp = g_mime_section->m_prev;
     while (mp && !mp->m_boundary_len)
     {
         mp = mp->m_prev;
@@ -893,17 +893,17 @@ int mime_end_of_section(char *bp)
     if (mp)
     {
         // have we read all the data in this part?
-        if (bp[0] == '-' && bp[1] == '-' //
-            && !std::strncmp(bp + 2, mp->m_boundary->c_str(), mp->m_boundary_len))
+        const std::string_view boundary{*mp->m_boundary};
+        const std::size_t      marker_len = 2 + boundary.size();
+        if (bp.size() >= marker_len && bp[0] == '-' && bp[1] == '-' && bp.substr(2, boundary.size()) == boundary)
         {
-            int len = 2 + mp->m_boundary_len;
+            const std::string_view rest = bp.substr(marker_len);
             // have we found the last boundary?
-            if (bp[len] == '-' && bp[len+1] == '-'
-             && (bp[len+2] == '\n' || bp[len+2] == '\0'))
+            if (rest.size() >= 2 && rest[0] == '-' && rest[1] == '-' && (rest.size() == 2 || rest[2] == '\n'))
             {
                 return 2;
             }
-            return bp[len] == '\n' || bp[len] == '\0';
+            return rest.empty() || rest[0] == '\n';
         }
     }
     return 0;
@@ -1430,18 +1430,19 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
     {
         while (std::fgets(line.data(), static_cast<int>(line.size()), ifp))
         {
-            fmt::print(ofp, "{}", line.c_str());
+            fmt::print(ofp, "{}", std::string_view{line.c_str()});
         }
     }
     else
     {
         while (read_art(line.data(), static_cast<int>(line.size())))
         {
-            if (mime_end_of_section(line.data()))
+            const std::string_view line_text{line.c_str()};
+            if (mime_end_of_section(line_text))
             {
                 break;
             }
-            fmt::print(ofp, "{}", line.c_str());
+            fmt::print(ofp, "{}", line_text);
         }
     }
 

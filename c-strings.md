@@ -498,7 +498,7 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 7, `strncpy` 1, `strcat` 0.
-- Comparison: `strcmp` 0, `strncmp` 11.
+- Comparison: `strcmp` 0, `strncmp` 10.
 - Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
   `strlen` 33.
 - Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
@@ -534,20 +534,6 @@ No active slices.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-236 - MIME Boundary View Argument
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`.
-- Kind: read-only parser argument.
-- Function: `mime_end_of_section`.
-- Dependencies: none.
-- Current shape: the function takes `char *bp` even though it only reads
-  the candidate line and compares it with the current MIME boundary.
-- Change: change the parameter to `std::string_view` and replace the
-  `std::strncmp`/indexing logic with view operations.  Callers should
-  pass their existing string or line view instead of `line.data()`.
-- Tests: use existing MIME decode/boundary coverage or add a focused
-  boundary test before changing the signature.
 
 #### CSTR-237 - NNTP GROUP Reply Parsing
 
