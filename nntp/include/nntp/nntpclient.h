@@ -40,7 +40,7 @@ struct INNTPConnection
 // use a shared_ptr to allow copying of NNTPLink structure like a value.
 using ConnectionPtr = std::shared_ptr<INNTPConnection>;
 
-using ConnectionFactory = std::function<ConnectionPtr(const char *machine, int pot, const char *service)>;
+using ConnectionFactory = std::function<ConnectionPtr(std::string_view machine, int port, std::string_view service)>;
 
 struct NNTPLink
 {

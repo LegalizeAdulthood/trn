@@ -592,18 +592,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-231 - NNTP Connection Factory Server Name
-
-- Files: `nntp/nntpinit.cpp`, `nntp/include/nntp/nntpclient.h`,
-  `tests/test_nntp.cpp`.
-- Kind: read-only helper API.
-- Function: `create_nntp_connection`.
-- Depends on: `CSTR-230`.
-- Change: pass server and service names as `std::string_view` through
-  the connection factory boundary.  Materialize `std::string` only where
-  Boost.Asio needs a null-terminated service or host name.
-- Tests: NNTP connection factory tests.
-
 #### CSTR-232 - NNTP Server Init Server Name
 
 - Files: `nntp/nntpinit.cpp`, `nntp/include/nntp/nntpinit.h`,

@@ -17,6 +17,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace asio = boost::asio;
@@ -85,16 +86,17 @@ size_t NNTPConnection::read(char *buf, size_t size, error_code_t &ec)
     return asio::read(m_socket, asio::buffer(buf, size), ec);
 }
 
-static ConnectionPtr create_nntp_connection(const char *machine, int port, const char *service)
+static ConnectionPtr create_nntp_connection(std::string_view machine, int port, std::string_view service)
 {
+    std::string server_name{machine};
     std::string service_name{service};
-    if (g_nntp_link.port_number)
+    if (port)
     {
-        service_name = std::to_string(g_nntp_link.port_number);
+        service_name = std::to_string(port);
     }
 
-    error_code_t ec;
-    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(machine, service_name, ec);
+    error_code_t                          ec;
+    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(server_name, service_name, ec);
     if (ec)
     {
         return nullptr;
@@ -103,7 +105,7 @@ static ConnectionPtr create_nntp_connection(const char *machine, int port, const
     ConnectionPtr connection{};
     try
     {
-        connection = std::make_shared<NNTPConnection>(machine, results);
+        connection = std::make_shared<NNTPConnection>(server_name, results);
     }
     catch (...)
     {

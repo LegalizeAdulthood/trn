@@ -26,6 +26,7 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 
@@ -34,7 +35,7 @@ namespace fs = std::filesystem;
 using namespace testing;
 
 using MockNNTPConnectionFactory =
-    StrictMock<MockFunction<ConnectionPtr(const char *machine, int port, const char *service)>>;
+    StrictMock<MockFunction<ConnectionPtr(std::string_view machine, int port, std::string_view service)>>;
 
 class NNTPTest : public Test
 {
@@ -58,7 +59,8 @@ protected:
 
     void configure_factory_create(ConnectionPtr result)
     {
-        EXPECT_CALL(m_factory, Call(StrEq(m_machine), _, StrEq("nntp"))).WillOnce(Return(std::move(result)));
+        EXPECT_CALL(m_factory, Call(std::string_view{m_machine}, _, std::string_view{"nntp"}))
+            .WillOnce(Return(std::move(result)));
     }
 
     const char *const                               m_machine{"news.gmane.io"};
