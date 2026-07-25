@@ -812,8 +812,9 @@ static bool open_newsrc(Newsrc *rp)
             line.pop_back(); // wipe out newline
         }
         np->m_rc_line = std::move(line);
-        if (is_hor_space(*np->rc_line_c_str())               //
-            || !std::strncmp(np->rc_line_c_str(), "options", 7)) // non-useful line?
+        if (const std::string_view rc_line{np->m_rc_line}; //
+            is_hor_space(rc_line.front())                  //
+            || rc_line.substr(0, 7) == "options")          // non-useful line?
         {
             np->m_to_read = TR_JUNK;
             np->m_subscribe_char = ' ';

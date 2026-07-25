@@ -162,7 +162,7 @@ void Article::check_poster()
                 user = from_text.substr(bang + 1);
             }
 
-            if (user == std::string_view{g_login_name.data(), g_login_name.size()})
+            if (user == std::string_view{g_login_name})
             {
                 if (in_string(host, g_host_name, false))
                 {

@@ -389,6 +389,28 @@ Keep call sites simple.  If a function argument can be implicitly
 converted to the parameter type, pass the argument directly instead of
 explicitly constructing a temporary of that parameter type.
 
+When a full `std::string` is converted to `std::string_view`, construct
+the view directly from the string.  Do not write
+`std::string_view{text.data(), text.size()}` or
+`std::string_view{text.c_str(), text.size()}` unless the view is
+intentionally a substring or a non-string extent.  Simplify full-string
+cases as soon as they are encountered; do not wait for a separate slice.
+
+Do not convert `std::string_view` to `fmt::string_view` just to call a
+fmt API that already accepts `std::string_view`.  Pass the
+`std::string_view` directly and remove any helper lambda whose only
+purpose was the conversion.
+
+When a one-line lambda has degenerated into delegating to one function
+call, inline the delegated call at the use site.  Keep a small lambda
+only when it is used repeatedly and its name captures a local parsing
+rule or lifetime contract.
+
+Prefer `operator=` over `std::string::assign` when the right-hand side is
+already a suitable string value or string view and the assignment
+preserves the same extent.  Use `assign` only when its explicit range,
+count, or iterator overload is doing real work.
+
 When replacing a nullable C-string result with an owned `std::string`,
 map `nullptr` failure to an empty string.  Callers that need to branch on
 failure must check `empty()` instead of comparing to `nullptr`.  Pass
@@ -530,18 +552,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-245 - Newsrc Options Prefix Check
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: string-backed prefix comparison.
-- Function: `open_newsrc`.
-- Dependencies: none.
-- Change: replace the `std::strncmp` check for `options` with a
-  `std::string_view` or direct string prefix comparison over
-  `np->m_rc_line`.  Preserve the existing whitespace-line classification
-  and do not change `parse_rcline`.
-- Tests: newsrc parsing and startup tests.
 
 #### CSTR-246 - Old Newsrc Restore Prefix Check
 

@@ -743,7 +743,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 # ifdef VALIDATE_XREF_SITE
 static bool valid_xref_site(ArticleNum art_num, std::string_view site)
 {
-    if (s_inews_site && std::string_view{s_inews_site->data(), s_inews_site->size()} == site)
+    if (s_inews_site && std::string_view{*s_inews_site} == site)
         return true;
 
 #ifndef ANCIENT_NEWS
@@ -781,7 +781,7 @@ static bool valid_xref_site(ArticleNum art_num, std::string_view site)
     }
 #endif // ANCIENT_NEWS
 
-    if (std::string_view{s_inews_site->data(), s_inews_site->size()} == site)
+    if (std::string_view{*s_inews_site} == site)
     {
         return true;
     }

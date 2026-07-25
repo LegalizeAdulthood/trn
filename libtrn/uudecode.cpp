@@ -45,8 +45,6 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
             std::from_chars(value.data() + offset, value.data() + value.size(), number)};
         return result.ec == std::errc{} ? static_cast<std::size_t>(result.ptr - value.data()) : std::string_view::npos;
     };
-    const auto store_filename = [&filename](std::string_view value) { filename.assign(value); };
-
     if (starts_with(text, "begin ") && text.size() > 9 && is_digit(text[6]) && is_digit(text[7]) && is_digit(text[8]) &&
         (text[9] == ' ' || (text.size() > 10 && text[6] == '0' && is_digit(text[9]) && text[10] == ' ')))
     {
@@ -80,7 +78,7 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
             {
                 return 0;
             }
-            store_filename(text.substr(filename_start, filename_end - filename_start));
+            filename = text.substr(filename_start, filename_end - filename_start);
             *partp = tmppart;
             *totalp = 0;
             return 1;
@@ -105,7 +103,7 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
             {
                 return 0;
             }
-            store_filename(text.substr(filename_start, filename_end - filename_start));
+            filename = text.substr(filename_start, filename_end - filename_start);
             *partp = tmppart;
             *totalp = tmptotal;
             return 1;
@@ -137,7 +135,7 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
         {
             return 0;
         }
-        store_filename(text.substr(filename_start, filename_end - filename_start));
+        filename = text.substr(filename_start, filename_end - filename_start);
         *partp = tmppart;
         *totalp = tmptotal;
         return 1;
@@ -162,7 +160,7 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
         {
             return 0;
         }
-        store_filename(text.substr(filename_start, filename_end - filename_start));
+        filename = text.substr(filename_start, filename_end - filename_start);
         *partp = tmppart;
         *totalp = tmptotal;
         return 1;
@@ -193,7 +191,7 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
         {
             return 0;
         }
-        store_filename(text.substr(filename_start, filename_end - filename_start));
+        filename = text.substr(filename_start, filename_end - filename_start);
         *partp = tmppart;
         *totalp = tmptotal;
         return 1;
@@ -210,7 +208,7 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
     if (starts_with_ignore_case(text, "x-file-name: "))
     {
         const std::size_t filename_end = text.find_first_of(" \f\n\r\t\v", 13);
-        store_filename(text.substr(13, filename_end - 13));
+        filename = text.substr(13, filename_end - 13);
         return 0;
     }
     if (starts_with_ignore_case(text, "x-part: "))

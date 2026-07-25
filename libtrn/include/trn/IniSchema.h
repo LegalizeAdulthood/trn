@@ -70,12 +70,12 @@ inline int IniField::id() const
 
 inline std::string_view IniField::name() const
 {
-    return std::string_view{m_name.data(), m_name.size()};
+    return m_name;
 }
 
 inline std::string_view IniField::help() const
 {
-    return std::string_view{m_help.data(), m_help.size()};
+    return m_help;
 }
 
 inline IniField::Kind IniField::kind() const
@@ -95,7 +95,7 @@ inline bool IniField::is_group() const
 
 inline std::string_view IniSchema::section_name() const
 {
-    return std::string_view{m_section_name.data(), m_section_name.size()};
+    return m_section_name;
 }
 
 inline const IniSchema::Fields &IniSchema::fields() const

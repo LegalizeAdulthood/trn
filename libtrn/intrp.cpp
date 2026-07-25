@@ -383,8 +383,6 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 transform_text.assign(value);
                 return transform_text.data();
             };
-            const auto format_value = [](std::string_view format, std::string_view text)
-            { return fmt::sprintf(fmt::string_view{format.data(), format.size()}, text); };
             while (!has_value)
             {
                 if (pattern.empty() || pattern.front() == '\0')
@@ -1299,7 +1297,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
             }
             if (proc_sprintf)
             {
-                set_owned_value(format_value(format_spec, value));
+                set_owned_value(fmt::sprintf(format_spec, value));
             }
             if (!pattern.empty() && pattern.front() != '\0')
             {

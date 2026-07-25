@@ -10,16 +10,6 @@
 
 void apply_global_option(OptionIndex option, std::string_view value);
 
-namespace
-{
-
-std::string_view to_view(const std::string &value)
-{
-    return {value.data(), value.size()};
-}
-
-} // namespace
-
 OptionApplier::OptionApplier() :
     OptionApplier(apply_global_option)
 {
@@ -60,7 +50,7 @@ void OptionApplier::apply(const OptionDraft &draft) const
     {
         const std::optional<std::string_view> value = draft.value(i);
         if (value.has_value() && !g_option_saved_vals.empty() && g_option_saved_vals[i] //
-            && to_view(*g_option_saved_vals[i]) == *value)
+            && std::string_view{*g_option_saved_vals[i]} == *value)
         {
             g_option_saved_vals[i].reset();
         }
