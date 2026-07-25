@@ -2064,12 +2064,13 @@ TEST_F(InterpolatorNewsgroupTest, forwardWritesInterpolatedHeaderMessageAndArtic
 
     testing::internal::CaptureStdout();
     forward();
-    testing::internal::GetCapturedStdout();
+    const std::string output = testing::internal::GetCapturedStdout();
 
     const std::string expected_header = "Subject: forward " TRN_TEST_HEADER_MESSAGE_ID "\n"
                                         "X-Long: " +
                                         long_header_value + "\n\n";
     const std::string written = file_contents(head_file);
+    EXPECT_THAT(output, HasSubstr("- "));
     EXPECT_THAT(written, StartsWith(expected_header + "Forwarded " TRN_TEST_HEADER_MESSAGE_ID "\n"));
     EXPECT_THAT(written, HasSubstr("Path: " TRN_TEST_HEADER_PATH "\n"));
     EXPECT_THAT(written, HasSubstr(TRN_TEST_BODY));

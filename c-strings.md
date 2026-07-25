@@ -568,19 +568,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-251 - Forward Article Body Output
-
-- Files: `libtrn/respond.cpp`.
-- Kind: workflow-local article line buffer and C output.
-- Function: `forward`.
-- Dependencies: none.
-- Change: replace the body-copy loop's `g_buf` use with local string
-  storage or views.  Preserve dash escaping when there is no MIME
-  boundary and keep the MIME closing boundary behavior.  Replace touched
-  `std::putchar`/`std::fprintf` output with `fmt`.
-- Tests: forward-message output tests; add coverage first if the copied
-  body or MIME boundary behavior is not already covered.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers

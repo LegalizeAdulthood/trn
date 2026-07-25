@@ -1024,18 +1024,22 @@ void forward()
         }
         parse_header(g_art);
         seek_art((ArticlePosition)0);
-        while (read_art(g_buf, sizeof g_buf) != nullptr)
+        std::string article_line(LINE_BUF_LEN + 1, '\0');
+        while (read_art(article_line.data(), LINE_BUF_LEN + 1) != nullptr)
         {
-            if (!mime_boundary && *g_buf == '-')
+            const std::size_t line_end = article_line.find('\0');
+            article_line.resize(line_end == std::string::npos ? article_line.size() : line_end);
+            const std::string_view line_text{article_line};
+            if (!mime_boundary && !line_text.empty() && line_text.front() == '-')
             {
-                std::putchar('-');
-                std::putchar(' ');
+                fmt::print(stdout, "- ");
             }
-            std::fprintf(header,"%s",g_buf);
+            fmt::print(header, "{}", line_text);
+            article_line.resize(LINE_BUF_LEN + 1);
         }
         if (mime_boundary)
         {
-            std::fprintf(header, "\n--%s--\n", mime_boundary);
+            fmt::print(header, "\n--{}--\n", mime_boundary);
         }
         else
         {
