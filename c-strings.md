@@ -503,7 +503,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `strlen` 29.
 - Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
-- C text I/O roots: `fgets` 21, `fputs` 173, `printf` 345,
+- C text I/O roots: `fgets` 21, `fputs` 172, `printf` 345,
   `fprintf` 18.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
@@ -548,20 +548,6 @@ No active slices.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-243 - Article Copy Output Lines
-
-- Files: `libtrn/respond.cpp`, `libtrn/artio.cpp`.
-- Kind: caller boundary around article line reading.
-- Functions: article copy and response output loops.
-- Dependencies: keep before `g_art_line` owner conversion, after any
-  leaf output-formatting slices.
-- Current shape: loops read raw article lines, compare prefixes with
-  `std::strncmp`, and emit through C stdio.
-- Change: move one output loop to local `std::string` line storage and
-  fmt output while preserving the order of operations exactly.  Do not
-  change subject/header detection without covering tests.
-- Tests: output-file tests must use isolated output directories.
 
 #### CSTR-244 - Newsrc Companion Path Formatting
 
