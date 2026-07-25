@@ -588,7 +588,7 @@ SaveResult view_article()
 
         // Scan subject for filename and part number information
         std::string filename = decode_subject(g_art, &part, &total);
-        for (g_art_pos = g_save_from; read_art(g_art_line) != nullptr; g_art_pos = tell_art())
+        for (g_art_pos = g_save_from; read_art(g_art_line); g_art_pos = tell_art())
         {
             if (g_art_line.empty() || g_art_line.front() <= ' ')
             {

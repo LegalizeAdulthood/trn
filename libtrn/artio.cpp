@@ -159,7 +159,7 @@ char *read_art(char *s, int limit)
     return std::fgets(s,limit,g_art_fp);
 }
 
-char *read_art(std::string &line)
+bool read_art(std::string &line)
 {
     line.clear();
     line.reserve(LINE_BUF_LEN);
@@ -171,14 +171,14 @@ char *read_art(std::string &line)
         if (read_art(input, LINE_BUF_LEN) == nullptr)
         {
             line.resize(old_size);
-            return line.empty() ? nullptr : line.data();
+            return !line.empty();
         }
 
         const std::size_t terminator = line.find('\0', old_size);
         line.resize(terminator == std::string::npos ? line.size() : terminator);
         if (line.empty() || line.back() == '\n' || line.size() - old_size < LINE_BUF_LEN - 1)
         {
-            return line.data();
+            return true;
         }
     }
 }
@@ -236,7 +236,11 @@ char *read_art_buf(bool view_inline)
 
     if (!g_do_hiding)
     {
-        bp = read_art(g_art_line);
+        if (!read_art(g_art_line))
+        {
+            return nullptr;
+        }
+        bp = g_art_line.data();
         const ArticlePosition art_pos = tell_art() - g_header_type[PAST_HEADER].min_pos;
         g_art_buf_seek = art_pos;
         g_art_buf_pos = art_pos;

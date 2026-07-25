@@ -570,20 +570,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-263 - Boolean Article String Reads
-
-- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`, direct
-  one-argument `read_art` callers.
-- Kind: stale C-string return from a string-owning API.
-- Function: `read_art(std::string &)`.
-- Dependencies: none.
-- Change: change `read_art(std::string &line)` to return `bool`
-  instead of `char *`.  Return `false` only when no line was read.
-  Update boolean callers directly.  In `read_art_buf`, return
-  `g_art_line.data()` only after a successful string read.
-- Truncation: keep the existing full-line assembly behavior.
-- Tests: article read, MIME decode, and article display tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -594,7 +580,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/head.cpp`.
 - Kind: local string buffer passed through C output API.
 - Function: `parse_header`.
-- Dependencies: CSTR-263.
+- Dependencies: none.
 - Change: replace the local `article_line.data(), LINE_BUF_LEN`
   `read_art` call with the string-reading API.  Use `article_line.size()`
   for the length, check `back() == '\n'` for newline detection, and
@@ -608,7 +594,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/mime.cpp`.
 - Kind: mixed file/article fixed line input into owned string storage.
 - Function: `mime_parse_sub_header`.
-- Dependencies: CSTR-263.
+- Dependencies: none.
 - Change: remove the `line.data() + pos` C-buffer append path.  Read
   file input with `get_a_line(ifp)` and article input with
   `read_art(article_line)`, then append the returned text to `line`.
@@ -621,7 +607,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/mime.cpp`.
 - Kind: mixed file/article fixed line input into owned string storage.
 - Function: `cat_decode`.
-- Dependencies: CSTR-263.
+- Dependencies: none.
 - Change: replace `std::fgets(line.data(), ...)` and
   `read_art(line.data(), ...)` with string line input.  Use
   `get_a_line(ifp)` for file input and `read_art(line)` for article
@@ -634,7 +620,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/uudecode.cpp`.
 - Kind: mixed file/article fixed line input into owned string storage.
 - Function: `uudecode`.
-- Dependencies: CSTR-263.
+- Dependencies: none.
 - Change: simplify the local `read_line` lambda so file input uses
   `get_a_line(ifp)` and article input uses `read_art(line)`.  Drop the
   temporary `char *input`, manual resize, and NUL search.
@@ -651,7 +637,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/respond.cpp`.
 - Kind: local string buffer passed through C output API.
 - Function: `save_article`.
-- Dependencies: CSTR-263.
+- Dependencies: none.
 - Change: replace both local `article_line.data(), LINE_BUF_LEN`
   `read_art` loops with the string-reading API.  Use direct
   `std::string_view` views of the resulting string and remove the manual
@@ -664,7 +650,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/respond.cpp`.
 - Kind: local string buffer passed through C output API.
 - Function: `supersede_article`.
-- Dependencies: CSTR-263.
+- Dependencies: none.
 - Change: replace the body-copy `article_line.data(), LINE_BUF_LEN`
   read loop with the string-reading API and print the resulting string
   directly.
@@ -676,7 +662,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/respond.cpp`.
 - Kind: local string buffer passed through C output API.
 - Function: `forward`.
-- Dependencies: CSTR-263.
+- Dependencies: none.
 - Change: replace the body-copy `article_line.data(), LINE_BUF_LEN + 1`
   read loop with the string-reading API.  Preserve MIME-boundary dash
   escaping and multipart trailer output.
