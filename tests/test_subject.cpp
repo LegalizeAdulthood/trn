@@ -177,6 +177,30 @@ TEST_F(SubjectStorageTest, setSubjectLineStripsReplyPrefixAndSharesSubject)
     EXPECT_EQ(1, g_subject_count);
 }
 
+TEST_F(SubjectStorageTest, setSubjectLineStoresPlainSubject)
+{
+    Article *article = article_ptr(ArticleNum{1});
+
+    article->set_subj_line("Plain Topic");
+
+    ASSERT_NE(nullptr, article->m_subj);
+    EXPECT_EQ("Plain Topic", article->get_cached_line_text(SUBJ_LINE, false));
+    EXPECT_EQ("Plain Topic", article->m_subj->stripped_view());
+    EXPECT_FALSE(article->m_flags & AF_HAS_RE);
+}
+
+TEST_F(SubjectStorageTest, setSubjectLineDecodesEncodedReplyPrefix)
+{
+    Article *article = article_ptr(ArticleNum{1});
+
+    article->set_subj_line("=?US-ASCII?B?UmU6IEVuY29kZWQgVG9waWM=?=");
+
+    ASSERT_NE(nullptr, article->m_subj);
+    EXPECT_EQ("Re: Encoded Topic", article->get_cached_line_text(SUBJ_LINE, false));
+    EXPECT_EQ("Encoded Topic", article->m_subj->stripped_view());
+    EXPECT_TRUE(article->m_flags & AF_HAS_RE);
+}
+
 TEST_F(SubjectStorageTest, replacingSubjectUpdatesHashKey)
 {
     Article *first = article_ptr(ArticleNum{1});

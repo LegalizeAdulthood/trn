@@ -420,27 +420,19 @@ void Article::set_subj_line(std::string_view subj)
     {
         m_flags |= AF_HAS_RE;
     }
-    int size = static_cast<int>(subj_start.size());
-
-    std::string new_subj(static_cast<std::size_t>(size) + 4 + 1, '\0');
-    std::copy_n("Re: ", 4, new_subj.data());
-    size = decode_header(new_subj.data() + 4, subj_start);
+    std::string      decoded_subject = decode_header(subj_start);
+    std::string_view stripped_subject{decoded_subject};
 
     // Do the Re:-stripping over again, just in case it was encoded.
-    const std::string_view decoded_subject{new_subj.data() + 4, static_cast<std::size_t>(size)};
-    if (subject_has_re(decoded_subject, subj_start))
+    if (subject_has_re(decoded_subject, stripped_subject))
     {
         m_flags |= AF_HAS_RE;
     }
-    const std::size_t prefix_size = decoded_subject.size() - subj_start.size();
-    size = static_cast<int>(subj_start.size());
-    if (prefix_size != 0)
-    {
-        new_subj.erase(4, prefix_size);
-    }
-    new_subj.resize(static_cast<std::size_t>(size) + 4);
 
-    const std::string_view new_key{new_subj.c_str() + 4, static_cast<std::size_t>(size)};
+    std::string new_subj{"Re: "};
+    new_subj += stripped_subject;
+
+    const std::string_view new_key = std::string_view{new_subj}.substr(4);
     if (m_subj && m_subj->stripped_view() == new_key)
     {
         return;

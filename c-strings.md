@@ -564,19 +564,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-253 - Article Subject Header Decode
-
-- Files: `libtrn/cache.cpp`.
-- Kind: caller migration to string-returning helper.
-- Function: `Article::set_subj_line`.
-- Dependencies: string-returning `decode_header` API is present.
-- Change: use the string-returning `decode_header` API and simplify the
-  `new_subj` construction around the `"Re: "` prefix.  Preserve the
-  second `Re:` stripping pass, `AF_HAS_RE`, and subject hash key
-  behavior.
-- Tests: subject-line cache tests that cover encoded and unencoded
-  subjects before and after the refactor.
-
 #### CSTR-254 - Interpolation Address Header Decode
 
 - Files: `libtrn/intrp.cpp`.
@@ -748,7 +735,7 @@ owned strings or owner-specific storage.
 - Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`.
 - Kind: obsolete C-style helper overload.
 - Function: `decode_header`.
-- Dependencies: CSTR-253, CSTR-254, and CSTR-255.
+- Dependencies: CSTR-254 and CSTR-255.
 - Change: remove the raw output-buffer `decode_header` API after all
   production callers use the string-returning API.  Keep only the
   `std::string decode_header(std::string_view)` form.
