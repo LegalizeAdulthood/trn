@@ -564,19 +564,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-255 - Tree Header Decode Buffer
-
-- Files: `libtrn/rt-wumpus.cpp`.
-- Kind: caller migration to string-returning helper.
-- Function: `tree_puts`.
-- Dependencies: string-returning `decode_header` API is present.
-- Change: use the string-returning `decode_header` API for hidden header
-  display so `line_buffer.data()` is not used as a caller-owned output
-  buffer.  Keep existing tree wrapping and character substitution
-  behavior unchanged.
-- Tests: article tree/header display tests that cover hidden-header
-  decode behavior.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -721,7 +708,7 @@ owned strings or owner-specific storage.
 - Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`.
 - Kind: obsolete C-style helper overload.
 - Function: `decode_header`.
-- Dependencies: CSTR-255.
+- Dependencies: none.
 - Change: remove the raw output-buffer `decode_header` API after all
   production callers use the string-returning API.  Keep only the
   `std::string decode_header(std::string_view)` form.

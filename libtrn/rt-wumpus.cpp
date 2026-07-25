@@ -423,27 +423,26 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     char       *cp;
     std::string substituted_line;
     const std::string_view line_text = orig_line.substr(0, orig_line.find('\n'));
-    const int              len = static_cast<int>(line_text.size());
 
     // Make a modifiable copy of the line
     // Copy line, filtering encoded and control characters.
     std::string line_buffer;
-    line_buffer.reserve(static_cast<std::size_t>(len) + 2);
-    line_buffer.resize(static_cast<std::size_t>(len) + 2);
-    line = line_buffer.data();
+    line_buffer.reserve(line_text.size() + 2);
     if (g_do_hiding)
     {
-        end = line + decode_header(line, line_text);
+        line_buffer = decode_header(line_text);
     }
     else
     {
-        if (!line_text.empty())
-        {
-            std::memcpy(line, line_text.data(), line_text.size());
-        }
-        line[line_text.size()] = '\0';
+        line_buffer.assign(line_text);
+    }
+    const std::size_t line_size = line_buffer.size();
+    line_buffer.resize(line_size + 2, '\0');
+    line = line_buffer.data();
+    end = line + line_size;
+    if (!g_do_hiding)
+    {
         dectrl(line);
-        end = line + len;
     }
     if (header_conv())
     {

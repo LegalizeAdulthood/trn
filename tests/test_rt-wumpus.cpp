@@ -137,6 +137,20 @@ TEST_F(TreeRenderingTest, normalHeaderKeywordIsSplitFromValue)
     EXPECT_EQ(ArticleLine{1}, lines);
 }
 
+TEST_F(TreeRenderingTest, hiddenHeaderDecodesEncodedWords)
+{
+    g_curr_artp = nullptr;
+    g_do_hiding = true;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts("From: =?US-ASCII?B?Qm96byB0aGUgQ2xvd24=?=\nignored", ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: Bozo the Clown\n", output);
+    EXPECT_EQ(ArticleLine{1}, lines);
+}
+
 TEST_F(TreeRenderingTest, siblingBranchesAreRenderedOnSeparateLines)
 {
     Article sibling{};
