@@ -72,12 +72,12 @@ bool ov_init()
         {
             return false;
         }
-        if (std::atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
+        if (nntp_response_code(g_ser_line) == NNTP_BAD_COMMAND_VAL)
         {
             return false;
         }
         // Just in case...
-        if (*g_ser_line == NNTP_CLASS_OK)
+        if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_OK)
         {
             nntp_finish_list();
         }

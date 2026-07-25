@@ -485,7 +485,7 @@ bool DataSource::open()
                 break;
 
             case -2:
-                std::printf("Failed to open news server %s:\n%s\n", m_news_id.c_str(), g_ser_line);
+                fmt::print("Failed to open news server {}:\n{}\n", m_news_id, g_ser_line);
                 term_down(2);
                 success = false;
                 break;

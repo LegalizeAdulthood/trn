@@ -220,7 +220,7 @@ static void new_nntp_groups(DataSource *dp)
     }
     if (nntp_new_groups(dp->m_last_new_group) < 1)
     {
-        std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
+        fmt::print("Can't get new groups from server:\n{}\n", g_ser_line);
         return;
     }
     HashTable  *new_newsgroups = hash_create(33, add_newsgroup_cmp);

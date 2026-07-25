@@ -269,6 +269,26 @@ TEST_F(NNTPGetStringTest, getALineReturnsServerLine)
     EXPECT_EQ("server line", line);
 }
 
+TEST_F(NNTPGetStringTest, checkStoresStatusLineWithoutCrlf)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 ready\r\n"));
+
+    EXPECT_EQ(1, nntp_check());
+
+    EXPECT_EQ("200 ready", g_ser_line);
+}
+
+TEST_F(NNTPGetStringTest, checkStoresFullStatusLine)
+{
+    const std::string detail(static_cast<std::size_t>(NNTP_STRLEN) + 8, 'x');
+    const std::string status_line{"200 " + detail};
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return(status_line));
+
+    EXPECT_EQ(1, nntp_check());
+
+    EXPECT_EQ(status_line, g_ser_line);
+}
+
 TEST_F(NNTPGetStringTest, string_line_fits)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits")));

@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
                             newsgroup.found_active = true;
                         }
                     }
-                    else if (*g_ser_line == NNTP_CLASS_FATAL)
+                    else if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_FATAL)
                     {
                         listactive_works = false;
                         i--;

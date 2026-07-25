@@ -799,7 +799,7 @@ static void follow_it_up()
     {
         int ret;
         if ((g_data_source->m_flags & DF_REMOTE) &&
-            (nntp_date() <= 0 || (nntp_check() < 0 && std::atoi(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
+            (nntp_date() <= 0 || (nntp_check() < 0 && nntp_response_code(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
         {
             ret = 1;
         }

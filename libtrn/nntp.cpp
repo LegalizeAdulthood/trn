@@ -23,7 +23,6 @@
 
 #include <charconv>
 #include <cstdio>
-#include <cstring>
 #include <ctime>
 #include <iterator>
 #include <sstream>
@@ -134,15 +133,14 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
     case -1:
     case 0:
     {
-        int ser_int = std::atoi(g_ser_line);
-          if (ser_int != NNTP_NOSUCHGROUP_VAL //
-              && ser_int != NNTP_SYNTAX_VAL)
-          {
-              if (ser_int != NNTP_AUTH_NEEDED_VAL && ser_int != NNTP_ACCESS_VAL //
-                  && ser_int != NNTP_AUTH_REJECT_VAL)
-              {
-                std::fprintf(stderr, "\nServer's response to GROUP %s:\n%s\n",
-                        group_name.c_str(), g_ser_line);
+        const int ser_int = nntp_response_code(g_ser_line);
+        if (ser_int != NNTP_NOSUCHGROUP_VAL //
+            && ser_int != NNTP_SYNTAX_VAL)
+        {
+            if (ser_int != NNTP_AUTH_NEEDED_VAL && ser_int != NNTP_ACCESS_VAL //
+                && ser_int != NNTP_AUTH_REJECT_VAL)
+            {
+                fmt::print(stderr, "\nServer's response to GROUP {}:\n{}\n", group_name, g_ser_line);
                 return -1;
             }
         }
@@ -225,7 +223,7 @@ ArticleNum nntp_stat_id(std::string_view msg_id)
     long art_num{nntp_check()};
     if (art_num > 0)
     {
-        std::istringstream response{std::string{g_ser_line}};
+        std::istringstream response{g_ser_line};
         long               status{};
         long               parsed_article_num{};
         art_num = response >> status >> parsed_article_num ? parsed_article_num : 0;
@@ -244,7 +242,7 @@ static ArticleNum nntp_next_art()
     artnum = nntp_check();
     if (artnum > 0)
     {
-        std::istringstream response{std::string{g_ser_line}};
+        std::istringstream response{g_ser_line};
         long               status{};
         long               parsed_artnum{};
         artnum = response >> status >> parsed_artnum ? parsed_artnum : 0;
@@ -501,14 +499,28 @@ std::time_t nntp_time()
         return std::time(nullptr);
     }
 
-    char * s = std::strrchr(g_ser_line, ' ') + 1;
-    int    month = (s[4] - '0') * 10 + (s[5] - '0');
-    int    day = (s[6] - '0') * 10 + (s[7] - '0');
-    int    hh = (s[8] - '0') * 10 + (s[9] - '0');
-    int    mm = (s[10] - '0') * 10 + (s[11] - '0');
-    std::time_t ss = (s[12] - '0') * 10 + (s[13] - '0');
-    s[4] = '\0';
-    int year = std::atoi(s);
+    const std::string_view response{g_ser_line};
+    const std::size_t      date_start = response.find_last_of(' ');
+    const std::string_view date_text =
+        date_start == std::string_view::npos ? response : response.substr(date_start + 1);
+    if (date_text.size() < 14)
+    {
+        return std::time(nullptr);
+    }
+    const auto parse_int = [](std::string_view text)
+    {
+        int                          result{};
+        const char                  *begin = text.data();
+        const char                  *end = begin + text.size();
+        const std::from_chars_result parse_result = std::from_chars(begin, end, result);
+        return parse_result.ec == std::errc{} ? result : 0;
+    };
+    int         month = parse_int(date_text.substr(4, 2));
+    int         day = parse_int(date_text.substr(6, 2));
+    const int   hh = parse_int(date_text.substr(8, 2));
+    const int   mm = parse_int(date_text.substr(10, 2));
+    std::time_t ss = parse_int(date_text.substr(12, 2));
+    const int   year = parse_int(date_text.substr(0, 4));
 
     // This simple algorithm will be valid until the year 2100
     if (year % 4)
@@ -701,6 +713,6 @@ void DataSource::nntp_server_died()
     {
         g_multirc = nullptr;
     }
-    std::fprintf(stderr, "\n%s\n", g_ser_line);
+    fmt::print(stderr, "\n{}\n", g_ser_line);
     get_anything();
 }

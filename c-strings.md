@@ -103,8 +103,8 @@ Existing good precedents:
 Most raw string pointers are not local cleanup targets yet.  They are
 owned buffers, caller-owned mutable buffers, struct fields, termcap and
 NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
-`g_buf`, `g_ser_line`, `Article` and `Subject` fields,
-`HashDatum` payloads, `parse_string`, and `push_string`.
+`g_buf`, `Article` and `Subject` fields, `HashDatum` payloads,
+`parse_string`, and `push_string`.
 `CompiledRegex::m_exp_buf` and `m_alternatives` are regex bytecode and
 internal cursors, not ordinary string storage.
 
@@ -485,11 +485,11 @@ tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  `g_ser_line`, `g_art_line`, and terminal command input.  NNTP CRLF
-  trailer scratch, tiny UTF byte scratch buffers, translation tables,
-  MIME decode tables, terminal pushback bytes, termcap storage, address
-  conversion scratch, and regex bytecode arrays are non-string protocol
-  or parser storage.
+  `g_art_line`, and terminal command input.  NNTP status lines now use
+  owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
+  scratch buffers, translation tables, MIME decode tables, terminal
+  pushback bytes, termcap storage, address conversion scratch, and regex
+  bytecode arrays are non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -503,15 +503,15 @@ tree.
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
 - NNTP response parsing no longer uses `sscanf`.  The shared
-  `g_ser_line` owner remains and can now be handled as buffer storage
-  instead of being blocked by reply parser call sites.
+  `g_ser_line` status owner is now `std::string`; remaining NNTP line
+  storage is protocol/body input rather than status-text storage.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
 - Current local candidates are explicit slices in Tier 5: raw
   `decode_header` wrapper removal.
-- Direct `strcpy`, `strncpy`, and `std::sprintf` hits are accounted for
-  by owner slices: `g_ser_line` in CSTR-076, `g_art_line` in CSTR-077,
-  and `g_buf` in CSTR-161.
+- Remaining direct `strcpy` hits are accounted for by owner slices:
+  `g_art_line` in CSTR-077 and `g_buf` in CSTR-161.  No `strncpy` or
+  `std::sprintf` production hits remain in this scan.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
@@ -523,16 +523,16 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 5, `strncpy` 1, `strcat` 0.
-- Comparison: `strcmp` 0, `strncmp` 0.
-- Search and length: `strchr` 42, `strrchr` 1, `strstr` 2,
-  `strlen` 27.
-- Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
+- Copy and concatenation: `strcpy` 2, `strncpy` 0, `strcat` 0.
+- Comparison: `strcmp` 1, `strncmp` 0.
+- Search and length: `strchr` 42, `strrchr` 0, `strstr` 2,
+  `strlen` 24.
+- Formatting into C buffers: `std::sprintf` 0, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
-- C text I/O roots: `fgets` 20, `fputs` 170, `std::printf` 323,
-  `std::fprintf` 16.
+- C text I/O roots: `fgets` 20, `fputs` 170, `std::printf` 321,
+  `std::fprintf` 14.
 - Character output: `std::putchar` 76, `puts` 0.
-- Character byte operations: `memcpy` 2, `memset` 4, `memcmp` 1.
+- Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
@@ -580,21 +580,6 @@ formatting-only leaves first, because they do not affect command input,
 typeahead, article reading, or protocol line ownership.  Terminal
 command input remains in `CSTR-119`; file and protocol read buffers stay
 with their owner slices unless a local use is clearly formatting-only.
-
-#### CSTR-076 - NNTP Server Line Buffer
-
-- Files: `nntp/nntpclient.cpp`, `nntp/nntpinit.cpp`,
-  `nntp/include/nntp/nntpclient.h`, `libtrn/nntp.cpp`,
-  `inews/inews.cpp`, `nntplist/nntplist.cpp`,
-  `trn-artchk/trn-artchk.cpp`.
-- Kind: global fixed protocol/status buffer.
-- Function: storage-centered `g_ser_line`.
-- Dependencies: no active NNTP reply parser prerequisites remain.
-- Change: separate NNTP status text from protocol line input/output so
-  callers do not format commands or cache responses through one shared
-  `char[NNTP_STRLEN]` buffer.  Preserve protocol truncation only if it is
-  meaningful; otherwise remove the arbitrary output limit.
-- Tests: NNTP, inews, nntplist, and trn-artchk tests.
 
 #### CSTR-077 - Article Display Line Buffer
 

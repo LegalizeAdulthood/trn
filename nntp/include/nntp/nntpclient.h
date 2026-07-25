@@ -87,7 +87,7 @@ enum
 
 extern NNTPLink g_nntp_link; // the current server's file handles
 extern bool     g_nntp_allow_timeout;
-extern char     g_ser_line[NNTP_STRLEN];
+extern std::string g_ser_line;
 extern std::string g_last_command;
 
 inline std::string nntp_get_a_line()
@@ -97,12 +97,13 @@ inline std::string nntp_get_a_line()
     return g_nntp_link.connection->read_line(ec);
 }
 
-void  set_nntp_connection_factory(ConnectionFactory factory);
-int   nntp_connect(std::string_view machine, bool verbose);
+void        set_nntp_connection_factory(ConnectionFactory factory);
+int         nntp_connect(std::string_view machine, bool verbose);
 std::string nntp_server_name(std::string_view name);
-int   nntp_command(std::string_view bp);
-int   nntp_xgtitle(std::string_view groupname);
-int   nntp_check();
+int         nntp_command(std::string_view bp);
+int         nntp_xgtitle(std::string_view groupname);
+int         nntp_check();
+int         nntp_response_code(std::string_view response);
 bool        nntp_at_list_end(std::string_view s);
 enum NNTPGetsResult
 {

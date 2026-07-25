@@ -12,18 +12,33 @@
 
 #include <fmt/format.h>
 
+#include <charconv>
 #include <cstdio>
-#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <string>
+#include <system_error>
 
-NNTPLink g_nntp_link{}; // the current server's file handles
-bool     g_nntp_allow_timeout{};
-char     g_ser_line[NNTP_STRLEN]{};
+NNTPLink    g_nntp_link{}; // the current server's file handles
+bool        g_nntp_allow_timeout{};
+std::string g_ser_line;
 std::string g_last_command;
 
 static std::time_t s_last_command_diff{};
+
+static std::string_view nntp_response_text()
+{
+    return g_ser_line.size() > 4 ? std::string_view{g_ser_line}.substr(4) : std::string_view{};
+}
+
+int nntp_response_code(std::string_view response)
+{
+    int                          code{};
+    const char                  *begin = response.data();
+    const char                  *end = begin + response.size();
+    const std::from_chars_result result = std::from_chars(begin, end, code);
+    return result.ec == std::errc{} ? code : 0;
+}
 
 int nntp_connect(std::string_view machine, bool verbose)
 {
@@ -50,15 +65,15 @@ try_to_connect:
     switch (response = server_init(machine))
     {
     case NNTP_GOODBYE_VAL:
-        if (atoi(g_ser_line) == response)
+        if (nntp_response_code(g_ser_line) == response)
         {
             if (verbose)
             {
-                fmt::print("failed: {}\n", &g_ser_line[4]);
+                fmt::print("failed: {}\n", nntp_response_text());
             }
             else
             {
-                fmt::print("News server \"{}\" is unavailable: {}\n", machine, &g_ser_line[4]);
+                fmt::print("News server \"{}\" is unavailable: {}\n", machine, nntp_response_text());
             }
             response = 0;
             break;
@@ -207,7 +222,7 @@ int nntp_xgtitle(std::string_view groupname)
 
 int nntp_check()
 {
-    int len = 0;
+    bool retried_timeout{};
 
 read_it:
 #ifdef HAS_SIGHOLD
@@ -215,8 +230,7 @@ read_it:
 #endif
     errno = 0;
     error_code_t ec;
-    std::string line = g_nntp_link.connection->read_line(ec);
-    std::strncpy(g_ser_line, line.c_str(), sizeof g_ser_line);
+    g_ser_line = g_nntp_link.connection->read_line(ec);
     int ret = ec ? -2 : 0;
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
@@ -227,37 +241,37 @@ read_it:
         {
             goto read_it;
         }
-        std::strcpy(g_ser_line, "503 Server closed connection.");
+        g_ser_line = "503 Server closed connection.";
     }
-    if (len == 0 && std::atoi(g_ser_line) == NNTP_TMPERR_VAL //
+    if (!retried_timeout && nntp_response_code(g_ser_line) == NNTP_TMPERR_VAL //
         && g_nntp_allow_timeout && s_last_command_diff > 60)
     {
         ret = nntp_handle_timeout();
         switch (ret)
         {
         case 1:
-            len = 1;
+            retried_timeout = true;
             goto read_it;
 
-        case 0:         // We're quitting, so pretend it's OK
-            std::strcpy(g_ser_line, "205 Ok");
+        case 0: // We're quitting, so pretend it's OK
+            g_ser_line = "205 Ok";
             break;
 
         default:
             break;
         }
     }
-    else if (*g_ser_line <= NNTP_CLASS_CONT && *g_ser_line >= NNTP_CLASS_INF)
+    else if (!g_ser_line.empty() && g_ser_line.front() <= NNTP_CLASS_CONT && g_ser_line.front() >= NNTP_CLASS_INF)
     {
-        ret = 1;                        // (this includes NNTP_CLASS_OK)
+        ret = 1; // (this includes NNTP_CLASS_OK)
     }
-    else if (*g_ser_line == NNTP_CLASS_FATAL)
+    else if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_FATAL)
     {
         ret = -1;
     }
     // Even though the following check doesn't catch all possible lists, the
     // bit will get set right when the caller checks nntp_at_list_end().
-    if (std::atoi(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
+    if (nntp_response_code(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
     {
         g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
     }
@@ -265,10 +279,10 @@ read_it:
     {
         g_nntp_link.flags |= NNTP_NEW_CMD_OK;
     }
-    len = std::strlen(g_ser_line);
-    if (len >= 2 && g_ser_line[len-1] == '\n' && g_ser_line[len-2] == '\r')
+    const std::size_t len = g_ser_line.size();
+    if (len >= 2 && g_ser_line[len - 1] == '\n' && g_ser_line[len - 2] == '\r')
     {
-        g_ser_line[len-2] = '\0';
+        g_ser_line.erase(len - 2);
     }
 #if defined(DEBUG) && defined(FLUSH)
     if (g_debug & DEB_NNTP)
@@ -276,7 +290,7 @@ read_it:
         fmt::print("<{}\n", g_ser_line);
     }
 #endif
-    if (std::atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL)
+    if (nntp_response_code(g_ser_line) == NNTP_AUTH_NEEDED_VAL)
     {
         ret = nntp_handle_auth_err();
         if (ret > 0)

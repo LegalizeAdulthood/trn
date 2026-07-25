@@ -9,11 +9,10 @@
 #include <config/fdio.h>
 #include <nntp/nntpclient.h>
 
+#include <fmt/format.h>
+
 #include <boost/asio.hpp>
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <map>
 #include <string>
@@ -136,21 +135,21 @@ int server_init(std::string_view machine)
     // Now get the server's signon message
     nntp_check();
 
-    if (*g_ser_line == NNTP_CLASS_OK)
+    if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_OK)
     {
         const std::string save_line{g_ser_line};
         // Try MODE READER just in case we're talking to innd.
         // If it is not an invalid command, use the new reply.
         if (nntp_command("MODE READER") <= 0)
         {
-            std::sprintf(g_ser_line, "%d failed to send MODE READER\n", NNTP_ACCESS_VAL);
+            g_ser_line = fmt::format("{} failed to send MODE READER\n", static_cast<int>(NNTP_ACCESS_VAL));
         }
-        else if (nntp_check() <= 0 && atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
+        else if (nntp_check() <= 0 && nntp_response_code(g_ser_line) == NNTP_BAD_COMMAND_VAL)
         {
-            std::strcpy(g_ser_line, save_line.c_str());
+            g_ser_line = save_line;
         }
     }
-    return std::atoi(g_ser_line);
+    return nntp_response_code(g_ser_line);
 }
 
 void cleanup_nntp()
