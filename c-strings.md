@@ -507,13 +507,18 @@ tree.
   instead of being blocked by reply parser call sites.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
-- Current local candidates are explicit slices in Tiers 0-3:
-  `rcstuff` string-backed prefix comparisons, `head` header-line text
-  extraction, MIME line accumulation, MIME cat decoding, and article
-  save/forward output loops.
-- Filename storage already uses modern path or view signatures for
-  newsrc fields, newsrc companion paths, `make_dir`, `safe_link`,
-  `SourceFile::open`, option-file loading, and option saving.
+- Current local candidates are explicit slices in Tiers 1-3:
+  `decode_header` output-buffer removal, `SourceFile::append` line
+  normalization, `decode_subject` parser cursors, and
+  `input_newsgroup` target text.
+- Direct `strcpy`, `strncpy`, and `std::sprintf` hits are accounted for
+  by owner slices: `g_ser_line` in CSTR-076, `g_art_line` in CSTR-077,
+  and `g_buf` in CSTR-161 plus the narrower CSTR-258 caller slice.
+- Filename storage already uses modern path or view signatures for most
+  owners.  The remaining raw filename-shaped local in this scan is the
+  `decode_subject` parser token covered by CSTR-257; other filename
+  strings are already `std::string`/`fs::path` values or cross C
+  `FILE*` APIs.
 
 ## Current C String Function Inventory
 
@@ -523,13 +528,14 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 6, `strncpy` 1, `strcat` 0.
-- Comparison: `strcmp` 0, `strncmp` 5.
-- Search and length: `strchr` 43, `strrchr` 1, `strstr` 2,
-  `strlen` 29.
+- Comparison: `strcmp` 0, `strncmp` 0.
+- Search and length: `strchr` 42, `strrchr` 1, `strstr` 2,
+  `strlen` 28.
 - Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
-- C text I/O roots: `fgets` 21, `fputs` 172, `printf` 345,
-  `fprintf` 18.
+- C text I/O roots: `fgets` 20, `fputs` 170, `std::printf` 323,
+  `std::fprintf` 16.
+- Character output: `std::putchar` 76, `puts` 0.
 - Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -558,15 +564,111 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-252 - Decode Header String Result
+
+- Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`,
+  `tests/test_cache.cpp`.
+- Kind: caller output buffer to string result.
+- Function: `decode_header`.
+- Dependencies: none.
+- Change: add direct tests for current encoded-word, newline-stripping,
+  whitespace, and control-character behavior, run them, then change the
+  primary API to return `std::string` from `std::string_view`.  Reserve
+  the input size before appending decoded bytes.  Keep any temporary raw
+  output-buffer wrapper only while existing callers are being migrated,
+  and migrate `Article::set_cached_line` in this slice so the new API is
+  used immediately.
+- Tests: focused `DecodeHeaderTest` cases before and after the refactor.
+
+#### CSTR-253 - Article Subject Header Decode
+
+- Files: `libtrn/cache.cpp`.
+- Kind: caller migration to string-returning helper.
+- Function: `Article::set_subj_line`.
+- Dependencies: CSTR-252.
+- Change: use the string-returning `decode_header` API and simplify the
+  `new_subj` construction around the `"Re: "` prefix.  Preserve the
+  second `Re:` stripping pass, `AF_HAS_RE`, and subject hash key
+  behavior.
+- Tests: subject-line cache tests that cover encoded and unencoded
+  subjects before and after the refactor.
+
+#### CSTR-254 - Interpolation Address Header Decode
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: caller migration to string-returning helper.
+- Function: `do_interp`.
+- Dependencies: CSTR-252.
+- Change: use the returned decoded string for address and comment parse
+  paths instead of creating a mutable C buffer for `decode_header`.
+  Prefer `std::string`/`std::string_view` search and slice operations
+  over `std::strchr` pointer walking where the local flow allows it.  Do
+  not let addresses of local string storage escape the function.
+- Tests: interpolation tests for decoded From-style address and comment
+  values.
+
+#### CSTR-255 - Tree Header Decode Buffer
+
+- Files: `libtrn/rt-wumpus.cpp`.
+- Kind: caller migration to string-returning helper.
+- Function: `tree_puts`.
+- Dependencies: CSTR-252.
+- Change: use the string-returning `decode_header` API for hidden header
+  display so `line_buffer.data()` is not used as a caller-owned output
+  buffer.  Keep existing tree wrapping and character substitution
+  behavior unchanged.
+- Tests: article tree/header display tests that cover hidden-header
+  decode behavior.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
+#### CSTR-256 - SourceFile Append Line Normalization
+
+- Files: `libtrn/datasrc.cpp`.
+- Kind: string-owned line parser still using mutable pointer cursors.
+- Function: `SourceFile::append`.
+- Dependencies: none.
+- Change: replace `line_start`, `s`, and
+  `adv_then_find_next_nl_and_dectrl` with string indices or views over
+  `stored_line`.  Normalize grey-space characters in the owned string
+  without returning raw pointers, then remove the now-unused helper.
+- Tests: data-source description/source-file append tests before and
+  after the refactor.
+
+#### CSTR-257 - Decode Subject Parser Cursors
+
+- Files: `libtrn/decode.cpp`, `libtrn/include/trn/decode.h`,
+  `tests/test_decode.cpp`.
+- Kind: local owned string parsed through mutable C pointers.
+- Function: `decode_subject`.
+- Dependencies: none.
+- Change: add behavior tests for current subject filename and part/total
+  extraction, run them, then parse with `std::string_view` positions
+  instead of mutating the fetched subject text with `'\0'` sentinels.
+  Keep the empty-string failure sentinel and existing caller contract.
+- Tests: focused `DecodeSubjectTest` cases before and after the
+  refactor.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-258 - Input Newsgroup Target Text
+
+- Files: `libtrn/trn.cpp`.
+- Kind: command-buffer caller using C-string mutation for local parse.
+- Function: `input_newsgroup`.
+- Dependencies: none.
+- Change: replace the `std::strcpy` of `g_newsgroup_name` into `g_buf`
+  with a local `std::string` or `std::string_view` target used by the
+  `g`/`m` command parser.  Preserve numeric group selection, fuzzy group
+  lookup, and the `m` command's current-newsgroup fallback.
+- Tests: newsgroup command tests for explicit group names, numeric group
+  selection, and `m` fallback behavior.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -578,22 +680,6 @@ formatting-only leaves first, because they do not affect command input,
 typeahead, article reading, or protocol line ownership.  Terminal
 command input remains in `CSTR-119`; file and protocol read buffers stay
 with their owner slices unless a local use is clearly formatting-only.
-
-#### CSTR-161 - General Command Buffer Storage
-
-- Files: `config/common.cpp`, `config/include/config/common.h`,
-  command prompt/input users across `libtrn`.
-- Kind: global general-purpose command and line buffer.
-- Function: storage-centered `g_buf`.
-- Dependencies: no active local kill-file prerequisite remains.
-- Change: split command input, prompt formatting, scratch line input, and
-  file-copy uses into owned strings or owner-specific buffers.  Work
-  bottom-up by function; do not replace `g_buf` with one global string
-  that preserves the same hidden shared state.  Do not localize
-  `get_cmd(g_buf)` call sites until `get_cmd` no longer treats `g_buf`
-  specially for macro expansion.
-- Tests: terminal command, option, kill-file, score, newsrc, and
-  newsgroup workflow tests.
 
 #### CSTR-058 - Header Buffer Storage
 
@@ -651,9 +737,36 @@ with their owner slices unless a local use is clearly formatting-only.
   behavior.
 - Tests: terminal input, option editing, and selector tests.
 
+#### CSTR-161 - General Command Buffer Storage
+
+- Files: `config/common.cpp`, `config/include/config/common.h`,
+  command prompt/input users across `libtrn`.
+- Kind: global general-purpose command and line buffer.
+- Function: storage-centered `g_buf`.
+- Dependencies: complete CSTR-258 and terminal command-input foundations
+  before attempting the shared owner.
+- Change: split command input, prompt formatting, scratch line input, and
+  file-copy uses into owned strings or owner-specific buffers.  Work
+  bottom-up by function; do not replace `g_buf` with one global string
+  that preserves the same hidden shared state.  Do not localize
+  `get_cmd(g_buf)` call sites until `get_cmd` no longer treats `g_buf`
+  specially for macro expansion.
+- Tests: terminal command, option, kill-file, score, newsrc, and
+  newsgroup workflow tests.
+
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-No active slices.
+#### CSTR-259 - Raw Decode Header Wrapper Removal
+
+- Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`.
+- Kind: obsolete C-style helper overload.
+- Function: `decode_header`.
+- Dependencies: CSTR-253, CSTR-254, and CSTR-255.
+- Change: remove the raw output-buffer `decode_header` API after all
+  production callers use the string-returning API.  Keep only the
+  `std::string decode_header(std::string_view)` form.
+- Tests: decode-header, subject cache, interpolation, and tree/header
+  tests.
