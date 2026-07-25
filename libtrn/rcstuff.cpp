@@ -979,7 +979,8 @@ void NewsgroupData::abandon_newsgroup()
     std::FILE *rcfp = std::fopen(m_rc->old_name.string().c_str(), "r");
     if (rcfp != nullptr)
     {
-        int length = m_num_offset - 1;
+        const std::string_view group_name = rc_name();
+        const std::size_t      separator = group_name.size();
 
         while (!(some_buf = get_a_line(rcfp)).empty())
         {
@@ -987,10 +988,10 @@ void NewsgroupData::abandon_newsgroup()
             {
                 some_buf.pop_back(); // wipe out newline
             }
-            if (some_buf.size() > static_cast<std::size_t>(length) &&
-                (some_buf[static_cast<std::size_t>(length)] == ':' ||
-                 some_buf[static_cast<std::size_t>(length)] == UNSUBSCRIBED_CHAR) &&
-                !std::strncmp(rc_line_c_str(), some_buf.c_str(), length))
+            const std::string_view old_line{some_buf};
+            if (old_line.size() > separator &&
+                (old_line[separator] == ':' || old_line[separator] == UNSUBSCRIBED_CHAR) &&
+                old_line.substr(0, separator) == group_name)
             {
                 break;
             }

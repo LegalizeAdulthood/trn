@@ -553,17 +553,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-246 - Old Newsrc Restore Prefix Check
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: string-backed prefix comparison.
-- Function: `NewsgroupData::abandon_newsgroup`.
-- Dependencies: none.
-- Change: replace the `std::strncmp` comparison between the current
-  group name and an old-newsrc line with a `std::string_view` comparison.
-  Keep the existing separator checks and fallback behavior.
-- Tests: newsrc restore/abandon tests.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts

@@ -354,6 +354,32 @@ TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
     unuse_multirc(&multirc);
 }
 
+TEST_F(NewsrcRotationTest, abandonNewsgroupRestoresMatchingOldNewsrcLine)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000099 0000000001 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_path, "", ""));
+
+    Newsrc            newsrc = make_newsrc();
+    const std::string group_name{"comp.lang.apl"};
+    std::ofstream{newsrc.old_name} << "comp.lang.apl.extra: 1\n"
+                                   << "comp.lang.apl: 2-9\n";
+
+    NewsgroupData group{};
+    group.m_rc = &newsrc;
+    group.m_rc_line = group_name + ": 99";
+    group.m_num_offset = static_cast<int>(group_name.size() + 1);
+    group.m_subscribe_char = ':';
+    group.m_abs_first = ArticleNum{42};
+
+    group.abandon_newsgroup();
+
+    group.show_subscribe_char();
+    EXPECT_EQ("comp.lang.apl: 2-9", group.m_rc_line);
+    EXPECT_EQ(':', group.m_subscribe_char);
+    EXPECT_EQ(ArticleNum{42}, group.m_abs_first);
+}
+
 TEST_F(NewsrcRotationTest, rcstuffInitCreatesCompanionPathsFromNewsrcName)
 {
     const fs::path newsrc_path = m_output_dir / "custom.newsrc";
