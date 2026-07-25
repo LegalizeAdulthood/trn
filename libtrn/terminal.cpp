@@ -1323,7 +1323,7 @@ void no_ul_fire()
 
 // get a character into a buffer
 
-void get_cmd(char *whatbuf)
+static std::size_t get_cmd_into(char *whatbuf, bool allow_macros, bool mark_finished)
 {
     int times = 0;                      // loop detector
 
@@ -1337,7 +1337,6 @@ void get_cmd(char *whatbuf)
 
 tryagain:
     KeyMap *curmap = s_top_map;
-    bool no_macros = (whatbuf != g_buf && !s_xmouse_is_on);
     while (true)
     {
         g_int_count = 0;
@@ -1358,13 +1357,13 @@ tryagain:
 #ifdef SIGALRM
                 (void) alarm(0);
 #endif
-                return;
+                return 0;
             }
             std::perror(s_read_err);
             sig_catcher(0);
         }
         g_last_char = *(Uchar*)whatbuf;
-        if (g_last_char & 0200 || no_macros)
+        if (g_last_char & 0200 || !allow_macros)
         {
             *whatbuf &= 0177;
             goto got_canonical;
@@ -1401,7 +1400,6 @@ tryagain:
                 term_down(2);
                 settle_down();
             }
-            no_macros = false;
             goto tryagain;
         }
     }
@@ -1420,13 +1418,40 @@ got_canonical:
         *whatbuf = '\n';
     }
 #endif
-    if (whatbuf == g_buf)
+    if (mark_finished)
     {
         whatbuf[1] = FINISH_CMD;         // tell finish_command to work
     }
 #ifdef SIGALRM
     (void) alarm(0);
 #endif
+    return mark_finished ? 2 : 1;
+}
+
+std::string get_cmd()
+{
+    std::string command(LINE_BUF_LEN + 1, '\0');
+    command.resize(get_cmd_into(command.data(), true, true));
+    return command;
+}
+
+void get_cmd(char *whatbuf)
+{
+    get_cmd_into(whatbuf, whatbuf == g_buf || s_xmouse_is_on, whatbuf == g_buf);
+}
+
+static char get_any_key()
+{
+    std::string command(LINE_BUF_LEN + 1, '\0');
+    command.resize(get_cmd_into(command.data(), s_xmouse_is_on, false));
+    return command.empty() ? '\0' : command.front();
+}
+
+static void store_command(std::string_view command)
+{
+    TRN_ASSERT(command.size() <= LINE_BUF_LEN);
+    std::copy(command.begin(), command.end(), g_buf);
+    g_buf[command.size()] = '\0';
 }
 
 void push_string(std::string_view str, char_int bits)
@@ -1440,7 +1465,6 @@ void push_string(std::string_view str, char_int bits)
 
 int get_anything()
 {
-    char tmpbuf[64];
     MinorMode mode_save = g_mode;
 
 reask_anything:
@@ -1463,14 +1487,14 @@ reask_anything:
     }
     cache_until_key();
     set_mode(g_general_mode, MM_ANY_KEY_PROMPT);
-    get_cmd(tmpbuf);
+    const char command = get_any_key();
     set_mode(g_general_mode,mode_save);
-    if (errno || *tmpbuf == '\f')
+    if (errno || command == '\f')
     {
         newline();                      // if return from stop signal
         goto reask_anything;            // give them a prompt again
     }
-    if (*tmpbuf == 'h')
+    if (command == 'h')
     {
         if (g_verbose)
         {
@@ -1483,12 +1507,12 @@ reask_anything:
         term_down(2);
         goto reask_anything;
     }
-    else if (*tmpbuf != ' ' && *tmpbuf != '\n')
+    else if (command != ' ' && command != '\n')
     {
         erase_line(false);      // erase the prompt
-        return *tmpbuf == 'q' ? -1 : *tmpbuf;
+        return command == 'q' ? -1 : command;
     }
-    if (*tmpbuf == '\n')
+    if (command == '\n')
     {
         g_page_line = g_tc_LINES - 1;
         erase_line(false);
@@ -1531,7 +1555,7 @@ int pause_get_cmd()
     }
     cache_until_key();
     set_mode(g_general_mode,MM_ANY_KEY_PROMPT);
-    get_cmd(g_buf);
+    store_command(get_cmd());
     set_mode(g_general_mode,mode_save);
     if (errno || *g_buf == '\f')
     {
@@ -1558,7 +1582,7 @@ reask_in_char:
     term_down(newlines);
     eat_typeahead();
     set_mode(GM_PROMPT,newmode);
-    get_cmd(g_buf);
+    store_command(get_cmd());
     if (errno || *g_buf == '\f')
     {
         newline();                      // if return from stop signal
@@ -1580,7 +1604,7 @@ reask_in_answer:
     eat_typeahead();
     set_mode(GM_INPUT,newmode);
 reinp_in_answer:
-    get_cmd(g_buf);
+    store_command(get_cmd());
     if (errno || *g_buf == '\f')
     {
         newline();                      // if return from stop signal

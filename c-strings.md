@@ -590,10 +590,11 @@ with their owner slices unless a local use is clearly formatting-only.
 - Function: `get_cmd`, `get_anything`, `in_char`, and related callers.
 - Dependencies: separate capability byte storage from command text
   before changing terminal signatures.
-- Change: replace terminal command input output buffers with owned string
-  results after smaller terminal macro and push-string slices are
-  complete.  Preserve typeahead, macro expansion, and mouse input
-  behavior.
+- Change: migrate remaining command-input callers toward the
+  string-returning `get_cmd()` API.  Keep the C-buffer `get_cmd(char *)`
+  wrapper only while command-loop code still uses `g_buf` as the shared
+  edit buffer and `FINISH_CMD` sentinel.  Preserve typeahead, macro
+  expansion, and mouse input behavior.
 - Tests: terminal input, option editing, and selector tests.
 
 #### CSTR-161 - General Command Buffer Storage

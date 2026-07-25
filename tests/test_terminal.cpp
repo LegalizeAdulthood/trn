@@ -305,10 +305,11 @@ TEST_F(TerminalTest, getCommandExpandsMacroString)
     set_macro("~", "z");
 
     push_char('~');
-    get_cmd(g_buf);
+    const std::string command = get_cmd();
 
-    EXPECT_EQ('z', g_buf[0]);
-    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+    ASSERT_EQ(2, command.size());
+    EXPECT_EQ('z', command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
 }
 
 #ifdef MSDOS

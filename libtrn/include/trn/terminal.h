@@ -189,7 +189,8 @@ void under_print(const char *s);
 void no_so_fire();
 void no_ul_fire();
 #endif
-void get_cmd(char *whatbuf);
+std::string get_cmd();
+void        get_cmd(char *whatbuf);
 void push_string(std::string_view str, char_int bits);
 int  get_anything();
 int  pause_get_cmd();

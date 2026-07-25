@@ -763,12 +763,13 @@ bool check_ini_cond(std::string_view cond)
 // Ask for a single character (improve the prompt?)
 char menu_get_char()
 {
-    std::printf("Enter your choice: ");
+    fmt::print("Enter your choice: ");
     std::fflush(stdout);
     eat_typeahead();
-    get_cmd(g_buf);
-    std::printf("%c\n",*g_buf);
-    return(*g_buf);
+    const std::string command = get_cmd();
+    const char        ch = command.empty() ? '\0' : command.front();
+    fmt::print("{}\n", ch);
+    return ch;
 }
 
 // NOTE: kfile.c uses its own editor function
