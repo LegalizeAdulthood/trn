@@ -174,41 +174,38 @@ bool wildcard_match(std::string_view text, std::string_view pattern)
 }
 
 #ifdef  TEST
-#include <stdio.h>
+#include <iostream>
+#include <string>
 
 int main()
 {
-    // Yes, we use gets not fgets.  Sue me.
-    extern char* gets();
-    char         p[80];
-    char         text[80];
+    std::string pattern;
+    std::string text;
 
-    printf("Wildmat tester.  Enter pattern, then strings to test.\n");
-    printf("A blank line gets prompts for a new pattern; a blank pattern\n");
-    printf("exits the program.\n");
+    std::cout << "Wildmat tester.  Enter pattern, then strings to test.\n";
+    std::cout << "A blank line gets prompts for a new pattern; a blank pattern\n";
+    std::cout << "exits the program.\n";
 
     while (true)
     {
-        printf("\nEnter pattern:  ");
-        (void)fflush(stdout);
-        if (gets(p) == nullptr || p[0] == '\0')
+        std::cout << "\nEnter pattern:  " << std::flush;
+        if (!std::getline(std::cin, pattern) || pattern.empty())
         {
             break;
         }
         while (true)
         {
-            printf("Enter text:  ");
-            (void)fflush(stdout);
-            if (gets(text) == nullptr)
+            std::cout << "Enter text:  " << std::flush;
+            if (!std::getline(std::cin, text))
             {
-                exit(0);
+                return 0;
             }
-            if (text[0] == '\0')
+            if (text.empty())
             {
                 // Blank line; go back and get a new pattern.
                 break;
             }
-            printf("      %s\n", wildmat(text, p) ? "YES" : "NO");
+            std::cout << "      " << (wildcard_match(text, pattern) ? "YES" : "NO") << '\n';
         }
     }
 

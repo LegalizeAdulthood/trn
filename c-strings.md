@@ -484,12 +484,12 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  terminal command input, and inactive `#ifdef TEST` input drivers in
-  `wildmat` and `parsedate`.  NNTP status lines and article display
-  lines now use owned string storage.  NNTP CRLF trailer scratch, tiny
-  UTF byte scratch buffers, translation tables, MIME decode tables,
-  terminal pushback bytes, termcap storage, address conversion scratch,
-  and regex bytecode arrays are non-string protocol or parser storage.
+  terminal command input, and the inactive `parsedate` `#ifdef TEST`
+  input driver.  NNTP status lines and article display lines now use
+  owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
+  scratch buffers, translation tables, MIME decode tables, terminal
+  pushback bytes, termcap storage, address conversion scratch, and regex
+  bytecode arrays are non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -540,8 +540,8 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `strlen` 24.
 - Formatting into C buffers: `std::sprintf` 0, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
-- C text I/O roots: `fgets` 20, `gets` 4, `fputs` 169,
-  `printf`/`std::printf` 335, `fprintf`/`std::fprintf` 14.
+- C text I/O roots: `fgets` 20, `gets` 1, `fputs` 169,
+  `printf`/`std::printf` 334, `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77, `puts` 0.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
@@ -565,20 +565,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-260 - Wildmat TEST Driver Input Buffers
-
-- Files: `wildmat/wildmat.cpp`.
-- Kind: inactive fixed local input buffers and `gets`.
-- Function: `main` under `#ifdef TEST`.
-- Dependencies: none.
-- Change: replace `char p[80]`, `char text[80]`, and `gets` with
-  `std::string` plus line input.  Preserve the interactive tester
-  prompts and blank-pattern exit behavior.  Use fmt or iostream output
-  consistently within the inactive driver; do not touch `wildmat`
-  matching logic.
-- Truncation: arbitrary legacy input limit; remove it.
-- Tests: no current build coverage unless the TEST driver is enabled.
 
 #### CSTR-261 - Parsedate TEST Driver Input Buffer
 
