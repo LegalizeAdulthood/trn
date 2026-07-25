@@ -568,20 +568,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-250 - Save Article Line Handling
-
-- Files: `libtrn/respond.cpp`.
-- Kind: workflow-local article line buffers.
-- Function: `save_article`.
-- Dependencies: none.
-- Change: replace direct use of `g_art_line` and `g_buf` for local
-  `read_art` loops with owned string storage or views inside
-  `save_article`.  Preserve attachment detection, `From ` quoting,
-  mailbox separators, and write order.  Use `fmt` for touched formatted
-  output.
-- Tests: save-article output tests; add coverage first if a touched path
-  is not already covered.
-
 #### CSTR-251 - Forward Article Body Output
 
 - Files: `libtrn/respond.cpp`.

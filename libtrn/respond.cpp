@@ -229,22 +229,27 @@ SaveResult save_article()
             {
                 total = totalOpt;
             }
-            for (g_art_pos = g_save_from; read_art(g_art_line, sizeof g_art_line) != nullptr; g_art_pos = tell_art())
+            std::string article_line(LINE_BUF_LEN, '\0');
+            for (g_art_pos = g_save_from; read_art(article_line.data(), LINE_BUF_LEN) != nullptr;
+                 g_art_pos = tell_art(), article_line.resize(LINE_BUF_LEN))
             {
-                if (*g_art_line <= ' ')
+                const std::size_t line_end = article_line.find('\0');
+                article_line.resize(line_end == std::string::npos ? article_line.size() : line_end);
+                const std::string_view line_text{article_line};
+                if (line_text.empty() || line_text.front() <= ' ')
                 {
                     continue; // Ignore empty or initially-whitespace lines
                 }
-                if ((*g_art_line == '#' || *g_art_line == ':')            //
-                    && (!std::strncmp(g_art_line + 1, "! /bin/sh", 9)     //
-                        || !std::strncmp(g_art_line + 1, "!/bin/sh", 8)   //
-                        || !std::strncmp(g_art_line + 2, "This is ", 8))) //
+                if ((line_text.front() == '#' || line_text.front() == ':')                  //
+                    && (line_text.substr(1, 9) == "! /bin/sh"                               //
+                        || line_text.substr(1, 8) == "!/bin/sh"                             //
+                        || (line_text.size() > 1 && line_text.substr(2, 8) == "This is "))) //
                 {
                     g_save_from = g_art_pos;
                     decode_type = 1;
                     break;
                 }
-                if (uue_prescan(g_art_line, filename, &part, &total))
+                if (uue_prescan(line_text, filename, &part, &total))
                 {
                     g_save_from = g_art_pos;
                     seek_art(g_save_from);
@@ -505,15 +510,20 @@ reask_save:
                 fmt::print(s_tmp_fp, "Article: {} of {}\n", g_art.value_of(), g_newsgroup_name);
             }
             seek_art(g_save_from);
-            while (read_art(g_buf, LINE_BUF_LEN) != nullptr)
+            std::string article_line(LINE_BUF_LEN, '\0');
+            while (read_art(article_line.data(), LINE_BUF_LEN) != nullptr)
             {
-                if (quote_From && string_case_equal(g_buf, "from ",5))
+                const std::size_t line_end = article_line.find('\0');
+                article_line.resize(line_end == std::string::npos ? article_line.size() : line_end);
+                const std::string_view line_text{article_line};
+                if (quote_From && string_case_equal(line_text.substr(0, 5), "from "))
                 {
-                    std::putc('>', s_tmp_fp);
+                    fmt::print(s_tmp_fp, ">");
                 }
-                std::fputs(g_buf, s_tmp_fp);
+                fmt::print(s_tmp_fp, "{}", line_text);
+                article_line.resize(LINE_BUF_LEN);
             }
-            std::fputs("\n\n", s_tmp_fp);
+            fmt::print(s_tmp_fp, "\n\n");
 #if MBOX_CHAR == '\001'
             if (mailbox)
             {

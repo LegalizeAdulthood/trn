@@ -1824,6 +1824,41 @@ TEST_F(InterpolatorNewsgroupTest, normalSaveWritesArticleToRelativeDestination)
     EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
 }
 
+TEST_F(InterpolatorNewsgroupTest, mailboxSaveQuotesFromBodyLine)
+{
+    const std::string output_path = m_output.path();
+    const fs::path    article_file = fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM);
+    std::ofstream{article_file} << "Path: " TRN_TEST_HEADER_PATH "\n"
+                                << "From: " TRN_TEST_HEADER_FROM "\n"
+                                << "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"
+                                << "Subject: " TRN_TEST_HEADER_SUBJECT "\n"
+                                << "Date: " TRN_TEST_HEADER_DATE "\n"
+                                << "Message-Id: " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                << "\n"
+                                << "From body sender\n"
+                                << "plain body\n";
+    PushDir                 output_dir{output_path.c_str()};
+    ValueSaver<std::string> private_dir(g_priv_dir, output_path);
+    ValueSaver<bool>        mailbox_always(g_mbox_always, true);
+    m_env.expect_no_envar("SAVENAME");
+    m_env.expect_env("SAVEDIR", output_path.c_str());
+    m_env.expect_no_envar("MBOXSAVER");
+    const std::string command{"s saved-mailbox"};
+    ASSERT_LE(command.size(), LINE_BUF_LEN);
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    testing::internal::CaptureStdout();
+    const SaveResult  result = save_article();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    const fs::path saved_article = fs::path{output_path} / "saved-mailbox";
+    EXPECT_EQ(SAVE_DONE, result);
+    EXPECT_EQ(saved_article.generic_string(), g_save_dest);
+    EXPECT_EQ("Saved to mailbox " + saved_article.generic_string(), output);
+    EXPECT_THAT(file_contents(saved_article), HasSubstr("\n>From body sender\n"));
+}
+
 TEST_F(InterpolatorNewsgroupTest, extractCreatesRelativeDestinationDirectory)
 {
     ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
