@@ -4,6 +4,7 @@
 
 #include <config/common.h>
 #include <trn/artio.h>
+#include <trn/datasrc.h>
 #include <trn/head.h>
 #include <trn/terminal.h>
 #include <trn/util.h>
@@ -414,7 +415,9 @@ protected:
     {
         MimeTest::SetUp();
         m_old_current_path = fs::current_path();
+        m_old_art_fp = g_art_fp;
         m_old_mime_section = g_mime_section;
+        m_old_data_source = g_data_source;
         m_old_no_wait_fork = g_no_wait_fork;
         m_old_decode_filename = g_decode_filename;
 
@@ -432,19 +435,27 @@ protected:
         ASSERT_NE(nullptr, m_input);
 
         g_mime_section = &m_mime_section;
+        g_data_source = &m_data_source;
+        g_art_fp = nullptr;
         g_no_wait_fork = true;
         m_mime_section.m_filename = "cat-output.txt";
     }
 
     void TearDown() override
     {
+        if (g_art_fp == m_input)
+        {
+            g_art_fp = nullptr;
+        }
         if (m_input != nullptr)
         {
             std::fclose(m_input);
         }
         std::error_code error;
         fs::current_path(m_old_current_path, error);
+        g_art_fp = m_old_art_fp;
         g_mime_section = m_old_mime_section;
+        g_data_source = m_old_data_source;
         g_no_wait_fork = m_old_no_wait_fork;
         g_decode_filename = m_old_decode_filename;
         MimeTest::TearDown();
@@ -458,9 +469,12 @@ protected:
 
     fs::path     m_old_current_path;
     fs::path     m_output_dir;
+    std::FILE   *m_old_art_fp{};
     MimeSection *m_old_mime_section{};
+    DataSource  *m_old_data_source{};
     bool         m_old_no_wait_fork{};
     std::string  m_old_decode_filename;
+    DataSource   m_data_source{};
     MimeSection  m_mime_section{};
     std::FILE   *m_input{};
 };
@@ -478,6 +492,25 @@ TEST_F(CatDecodeTest, copiesFileInputToDecodedFile)
 
     EXPECT_EQ("Decoding cat-output.txt", output);
     EXPECT_EQ("first line\nsecond line\n", file_contents(m_output_dir / "cat-output.txt"));
+}
+
+TEST_F(CatDecodeTest, copiesArticleInputToDecodedFileUntilBoundary)
+{
+    write_input("first line\n--part\nsecond line\n");
+    g_art_fp = m_input;
+
+    MimeSection parent;
+    parent.m_boundary = "part";
+    parent.m_boundary_len = 4;
+    m_mime_section.m_prev = &parent;
+
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(DECODE_MAYBE_DONE, cat_decode(nullptr, DECODE_START));
+    EXPECT_EQ(DECODE_DONE, cat_decode(nullptr, DECODE_DONE));
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Decoding cat-output.txt", output);
+    EXPECT_EQ("first line\n", file_contents(m_output_dir / "cat-output.txt"));
 }
 
 namespace

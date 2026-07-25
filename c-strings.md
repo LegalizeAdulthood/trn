@@ -563,18 +563,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-249 - MIME Cat Decode Line Storage
-
-- Files: `libtrn/mime.cpp`.
-- Kind: local fixed line buffer and C output.
-- Function: `cat_decode`.
-- Dependencies: none.
-- Change: keep one local `std::string` line owner for file and article
-  input, remove C-style view construction from `line.c_str()` where the
-  string extent is already known, and replace the local `std::printf`
-  status output with `fmt`.
-- Tests: MIME decode tests.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

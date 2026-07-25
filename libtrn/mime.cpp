@@ -26,6 +26,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -1412,7 +1413,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
         {
             return DECODE_ERROR;
         }
-        std::printf("Decoding %s", filename.c_str());
+        fmt::print("Decoding {}", filename);
         if (g_no_wait_fork)
         {
             std::fflush(stdout);
@@ -1428,19 +1429,22 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
     {
         while (std::fgets(line.data(), static_cast<int>(line.size()), ifp))
         {
-            fmt::print(ofp, "{}", std::string_view{line.c_str()});
+            line.resize(std::min(line.find('\0'), line.size()));
+            fmt::print(ofp, "{}", line);
+            line.resize(LINE_BUF_LEN + 1);
         }
     }
     else
     {
         while (read_art(line.data(), static_cast<int>(line.size())))
         {
-            const std::string_view line_text{line.c_str()};
-            if (mime_end_of_section(line_text))
+            line.resize(std::min(line.find('\0'), line.size()));
+            if (mime_end_of_section(line))
             {
                 break;
             }
-            fmt::print(ofp, "{}", line_text);
+            fmt::print(ofp, "{}", line);
+            line.resize(LINE_BUF_LEN + 1);
         }
     }
 
