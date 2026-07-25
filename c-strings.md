@@ -563,18 +563,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-248 - MIME Sub-header Line Accumulation
-
-- Files: `libtrn/mime.cpp`.
-- Kind: owned string with residual C length discovery.
-- Function: `mime_parse_sub_header`.
-- Dependencies: none.
-- Change: keep the local `std::string` storage, but replace
-  `std::strlen(input)` after `fgets`/`read_art` with string operations
-  over the owned buffer.  Preserve continuation-line handling and do not
-  alter documented MIME header normalization.
-- Tests: MIME parameter and sub-header tests.
-
 #### CSTR-249 - MIME Cat Decode Line Storage
 
 - Files: `libtrn/mime.cpp`.

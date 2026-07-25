@@ -770,7 +770,8 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
                     line.resize(pos);
                     break;
                 }
-                line.resize(pos + std::strlen(input));
+                const std::size_t input_end = line.find('\0', pos);
+                line.resize(input_end == std::string::npos ? line.size() : input_end);
                 if (line.size() == pos)
                 {
                     continue;
