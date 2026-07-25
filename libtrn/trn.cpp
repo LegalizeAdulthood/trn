@@ -72,7 +72,7 @@
 
 #include <fmt/format.h>
 
-#include <cstring>
+#include <charconv>
 #include <ctime>
 #include <filesystem>
 #include <iterator>
@@ -595,21 +595,23 @@ do_command:
         {
             return ING_INPUT;
         }
-        s = skip_eq(g_buf+1, ' '); // skip leading spaces
-        if (!*s && *g_buf == 'm' && !g_newsgroup_name.empty() && g_newsgroup_ptr)
         {
-            std::strcpy(s,g_newsgroup_name.c_str());
-        }
-        {
-            char* _s = skip_digits(s);
-            if (*_s)
+            std::string_view  target{g_buf + 1};
+            const std::size_t target_start = target.find_first_not_of(' ');
+            target.remove_prefix(target_start == std::string_view::npos ? target.size() : target_start);
+            if (target.empty() && *g_buf == 'm' && !g_newsgroup_name.empty() && g_newsgroup_ptr)
+            {
+                target = g_newsgroup_name;
+            }
+            if (target.find_first_not_of("0123456789") != std::string_view::npos)
             {
                 // found non-digit before hitting end
-                set_newsgroup_name(s);
+                set_newsgroup_name(target);
             }
             else
             {
-                int rcnum = std::atoi(s);
+                int rcnum{};
+                std::from_chars(target.data(), target.data() + target.size(), rcnum);
                 for (g_newsgroup_ptr = newsgroup_first(); g_newsgroup_ptr;
                      g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
                 {

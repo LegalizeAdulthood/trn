@@ -507,12 +507,11 @@ tree.
   instead of being blocked by reply parser call sites.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
-- Current local candidates are explicit slices in Tiers 3 and 5:
-  `input_newsgroup` target text and raw `decode_header` wrapper
-  removal.
+- Current local candidates are explicit slices in Tier 5: raw
+  `decode_header` wrapper removal.
 - Direct `strcpy`, `strncpy`, and `std::sprintf` hits are accounted for
   by owner slices: `g_ser_line` in CSTR-076, `g_art_line` in CSTR-077,
-  and `g_buf` in CSTR-161 plus the narrower CSTR-258 caller slice.
+  and `g_buf` in CSTR-161.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
@@ -524,7 +523,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 6, `strncpy` 1, `strcat` 0.
+- Copy and concatenation: `strcpy` 5, `strncpy` 1, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 0.
 - Search and length: `strchr` 42, `strrchr` 1, `strstr` 2,
   `strlen` 28.
@@ -570,19 +569,6 @@ them before broad global-buffer work and before removing helpers.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-258 - Input Newsgroup Target Text
-
-- Files: `libtrn/trn.cpp`.
-- Kind: command-buffer caller using C-string mutation for local parse.
-- Function: `input_newsgroup`.
-- Dependencies: none.
-- Change: replace the `std::strcpy` of `g_newsgroup_name` into `g_buf`
-  with a local `std::string` or `std::string_view` target used by the
-  `g`/`m` command parser.  Preserve numeric group selection, fuzzy group
-  lookup, and the `m` command's current-newsgroup fallback.
-- Tests: newsgroup command tests for explicit group names, numeric group
-  selection, and `m` fallback behavior.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -657,8 +643,8 @@ with their owner slices unless a local use is clearly formatting-only.
   command prompt/input users across `libtrn`.
 - Kind: global general-purpose command and line buffer.
 - Function: storage-centered `g_buf`.
-- Dependencies: complete CSTR-258 and terminal command-input foundations
-  before attempting the shared owner.
+- Dependencies: complete terminal command-input foundations before
+  attempting the shared owner.
 - Change: split command input, prompt formatting, scratch line input, and
   file-copy uses into owned strings or owner-specific buffers.  Work
   bottom-up by function; do not replace `g_buf` with one global string
