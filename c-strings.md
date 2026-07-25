@@ -486,9 +486,8 @@ tree.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
 - Filename storage already uses modern path or view signatures for
-  newsrc fields, `make_dir`, `safe_link`, `SourceFile::open`,
-  option-file loading, and option saving.  The remaining path-shaped
-  issue is newsrc companion path formatting through printf templates.
+  newsrc fields, newsrc companion paths, `make_dir`, `safe_link`,
+  `SourceFile::open`, option-file loading, and option saving.
 
 ## Current C String Function Inventory
 
@@ -549,21 +548,7 @@ No active slices.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-244 - Newsrc Companion Path Formatting
-
-- Files: `libtrn/rcstuff.cpp`, `config/include/config/common.h`.
-- Kind: filename string construction.
-- Functions: newsrc companion path creation.
-- Dependencies: none.
-- Current shape: `RCNAME_OLD`, `RCNAME_NEW`, `RCNAME_LOCK`, and
-  `RCNAME_INFO` are printf-style path templates formatted from
-  `rp->name.generic_string()`.
-- Change: first verify whether these macros must remain configurable
-  printf templates.  If they are only suffix names, replace the runtime
-  formatting with direct `std::filesystem::path` or `std::string`
-  construction.  If template configurability matters, leave the printf
-  formatting in place.
-- Tests: cover generated companion path names before changing the shape.
+No active slices.
 
 ### Tier 4 - Broad Shared Buffers
 

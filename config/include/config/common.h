@@ -404,26 +404,6 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 # endif
 #endif
 
-// temporary newsrc file in case we crash while writing out
-#ifndef RCNAME_NEW
-#   define RCNAME_NEW "%s.new"
-#endif
-
-// newsrc file at the beginning of this session
-#ifndef RCNAME_OLD
-#   define RCNAME_OLD "%s.old"
-#endif
-
-// lockfile for each newsrc that is not ~/.newsrc (which uses .rnlock)
-#ifndef RCNAME_LOCK
-#   define RCNAME_LOCK "%s.LOCK"
-#endif
-
-// news source info for each newsrc that is not ~/.newsrc (.rnlast)
-#ifndef RCNAME_INFO
-#   define RCNAME_INFO "%s.info"
-#endif
-
 // if existent, contains process number of current or crashed trn
 #ifndef LOCKNAME        // % and ~
 # ifdef LIMITED_FILENAMES

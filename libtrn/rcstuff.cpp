@@ -35,7 +35,6 @@
 #include <util/util2.h>
 
 #include <fmt/format.h>
-#include <fmt/printf.h>
 
 #include <algorithm>
 #include <array>
@@ -376,8 +375,10 @@ static Newsrc *new_newsrc(const RcGroupConfig &config)
     Newsrc *rp = new Newsrc{};
     rp->data_source = dp;
     rp->name = file_exp(newsrc);
-    rp->old_name = fmt::sprintf(RCNAME_OLD, rp->name.generic_string().c_str());
-    rp->new_name = fmt::sprintf(RCNAME_NEW, rp->name.generic_string().c_str());
+    rp->old_name = rp->name;
+    rp->old_name += ".old";
+    rp->new_name = rp->name;
+    rp->new_name += ".new";
 
     switch (add_ok.empty() ? 'y' : add_ok.front())
     {
@@ -564,8 +565,10 @@ static bool lock_newsrc(Newsrc *rp)
     }
     else
     {
-        rp->info_name = fmt::sprintf(RCNAME_INFO, rp->name.generic_string().c_str());
-        rp->lock_name = fmt::sprintf(RCNAME_LOCK, rp->name.generic_string().c_str());
+        rp->info_name = rp->name;
+        rp->info_name += ".info";
+        rp->lock_name = rp->name;
+        rp->lock_name += ".LOCK";
     }
 
     char *s;

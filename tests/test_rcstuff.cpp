@@ -69,7 +69,11 @@ protected:
         m_old_sel_next_np = g_sel_next_np;
         m_old_ng_go_newsgroup_ptr = g_ng_go_newsgroup_ptr;
         m_old_multirc = g_multirc;
+        m_saved_multircs.swap(g_multircs);
         m_old_data_source = g_data_source;
+        m_saved_data_sources.swap(g_data_sources);
+        m_old_trn_access_text = g_trn_access_text;
+        m_old_use_newsrc_selector = g_use_newsrc_selector;
         m_old_nntp_link = g_nntp_link;
         m_old_newsrc_hash = g_newsrc_hash;
         m_old_sel_sort = g_sel_sort;
@@ -118,6 +122,10 @@ protected:
         g_sel_next_np = nullptr;
         g_ng_go_newsgroup_ptr = nullptr;
         g_multirc = nullptr;
+        g_multircs.clear();
+        g_data_sources.clear();
+        g_trn_access_text.clear();
+        g_use_newsrc_selector = false;
         g_data_source = nullptr;
         nntp_gets_clear_buffer();
         g_newsrc_hash = nullptr;
@@ -170,6 +178,12 @@ protected:
         g_sel_next_np = m_old_sel_next_np;
         g_ng_go_newsgroup_ptr = m_old_ng_go_newsgroup_ptr;
         g_multirc = m_old_multirc;
+        g_multircs.clear();
+        m_saved_multircs.swap(g_multircs);
+        g_data_sources.clear();
+        m_saved_data_sources.swap(g_data_sources);
+        g_trn_access_text = m_old_trn_access_text;
+        g_use_newsrc_selector = m_old_use_newsrc_selector;
         g_data_source = m_old_data_source;
         g_nntp_link = m_old_nntp_link;
         nntp_gets_clear_buffer();
@@ -232,7 +246,11 @@ protected:
     NewsgroupData               *m_old_sel_next_np{};
     NewsgroupData               *m_old_ng_go_newsgroup_ptr{};
     Multirc                     *m_old_multirc{};
+    std::vector<Multirc>         m_saved_multircs;
     DataSource                  *m_old_data_source{};
+    std::vector<DataSource>      m_saved_data_sources;
+    std::string                  m_old_trn_access_text;
+    bool                         m_old_use_newsrc_selector{};
     NNTPLink                     m_old_nntp_link{};
     HashTable                   *m_old_newsrc_hash{};
     SelectionSortMode            m_old_sel_sort{};
@@ -307,6 +325,8 @@ TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)
     ASSERT_TRUE(multirc.use_multirc());
     const fs::path lock_path{newsrc.lock_name};
 
+    EXPECT_EQ(fs::path{newsrc.name.generic_string() + ".LOCK"}, newsrc.lock_name);
+    EXPECT_EQ(fs::path{newsrc.name.generic_string() + ".info"}, newsrc.info_name);
     EXPECT_TRUE(fs::exists(lock_path));
     EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1"}), read_lines(newsrc.old_name));
     unuse_multirc(&multirc);
@@ -332,6 +352,28 @@ TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
     EXPECT_EQ(options_line, g_newsgroup_order[0]->m_rc_line);
     EXPECT_EQ(TR_JUNK, g_newsgroup_order[0]->m_to_read);
     unuse_multirc(&multirc);
+}
+
+TEST_F(NewsrcRotationTest, rcstuffInitCreatesCompanionPathsFromNewsrcName)
+{
+    const fs::path newsrc_path = m_output_dir / "custom.newsrc";
+    g_use_newsrc_selector = true;
+    g_data_sources.emplace_back();
+    DataSource &source = g_data_sources.back();
+    source.m_name = "default";
+    g_trn_access_text = "[Group 1]\n"
+                        "ID = default\n"
+                        "Newsrc = " +
+                        newsrc_path.generic_string() + "\n";
+
+    ASSERT_TRUE(rcstuff_init());
+
+    Multirc *multirc = multirc_ptr(1);
+    ASSERT_NE(nullptr, multirc);
+    ASSERT_NE(nullptr, multirc->m_first);
+    EXPECT_EQ(newsrc_path, multirc->m_first->name);
+    EXPECT_EQ(fs::path{newsrc_path.generic_string() + ".old"}, multirc->m_first->old_name);
+    EXPECT_EQ(fs::path{newsrc_path.generic_string() + ".new"}, multirc->m_first->new_name);
 }
 
 TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromRemoteSubscriptions)
