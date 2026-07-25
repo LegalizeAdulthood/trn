@@ -507,18 +507,15 @@ tree.
   instead of being blocked by reply parser call sites.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
-- Current local candidates are explicit slices in Tiers 1-3:
-  remaining `decode_header` caller migrations, `SourceFile::append`
-  line normalization, `decode_subject` parser cursors, and
-  `input_newsgroup` target text.
+- Current local candidates are explicit slices in Tiers 3 and 5:
+  `input_newsgroup` target text and raw `decode_header` wrapper
+  removal.
 - Direct `strcpy`, `strncpy`, and `std::sprintf` hits are accounted for
   by owner slices: `g_ser_line` in CSTR-076, `g_art_line` in CSTR-077,
   and `g_buf` in CSTR-161 plus the narrower CSTR-258 caller slice.
 - Filename storage already uses modern path or view signatures for most
-  owners.  The remaining raw filename-shaped local in this scan is the
-  `decode_subject` parser token covered by CSTR-257; other filename
-  strings are already `std::string`/`fs::path` values or cross C
-  `FILE*` APIs.
+  owners.  Other filename strings are already `std::string`/`fs::path`
+  values or cross C `FILE*` APIs.
 
 ## Current C String Function Inventory
 
@@ -568,20 +565,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-257 - Decode Subject Parser Cursors
-
-- Files: `libtrn/decode.cpp`, `libtrn/include/trn/decode.h`,
-  `tests/test_decode.cpp`.
-- Kind: local owned string parsed through mutable C pointers.
-- Function: `decode_subject`.
-- Dependencies: none.
-- Change: add behavior tests for current subject filename and part/total
-  extraction, run them, then parse with `std::string_view` positions
-  instead of mutating the fetched subject text with `'\0'` sentinels.
-  Keep the empty-string failure sentinel and existing caller contract.
-- Tests: focused `DecodeSubjectTest` cases before and after the
-  refactor.
 
 ### Tier 3 - Workflow Callers And Path Owners
 

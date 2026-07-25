@@ -6,11 +6,15 @@
 #include <config/common.h>
 #include <file_contents.h>
 
+#include <trn/Article.h>
 #include <trn/artio.h>
 #include <trn/artstate.h>
+#include <trn/cache.h>
 #include <trn/datasrc.h>
+#include <trn/head.h>
 #include <trn/mime-internal.h>
 #include <trn/mime.h>
+#include <trn/Subject.h>
 #include <trn/util.h>
 #include <util/env.h>
 
@@ -20,6 +24,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <map>
 #include <string>
 #include <system_error>
 
@@ -27,6 +32,51 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+class DecodeSubjectTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_article_list = std::move(g_article_list);
+        m_old_data_source = g_data_source;
+        m_old_last_art = g_last_art;
+        m_old_parsed_art = g_parsed_art;
+
+        g_article_list.clear();
+        g_data_source = &m_data_source;
+        g_last_art = s_article_num;
+        g_parsed_art = ArticleNum{};
+
+        m_data_source.m_flags = DF_NONE;
+    }
+
+    void TearDown() override
+    {
+        g_article_list = std::move(m_old_article_list);
+        g_data_source = m_old_data_source;
+        g_last_art = m_old_last_art;
+        g_parsed_art = m_old_parsed_art;
+    }
+
+    void cache_subject(std::string_view subject)
+    {
+        Article *article = article_ptr(s_article_num);
+        article->m_flags |= AF_EXISTS;
+        article->m_subj = &m_subject;
+        m_subject.m_str = "Re: ";
+        m_subject.m_str += subject;
+    }
+
+    static constexpr ArticleNum s_article_num{1};
+
+    DataSource                    m_data_source{};
+    Subject                       m_subject{};
+    std::map<ArticleNum, Article> m_old_article_list;
+    DataSource                   *m_old_data_source{};
+    ArticleNum                    m_old_last_art{};
+    ArticleNum                    m_old_parsed_art{};
+};
 
 class DecodePieceDirectoryTest : public testing::Test
 {
@@ -135,6 +185,45 @@ protected:
 };
 
 } // namespace
+
+TEST_F(DecodeSubjectTest, extractsFilenameAndSlashPartTotal)
+{
+    cache_subject("archive.zip (2/5)");
+    int part = 0;
+    int total = 0;
+
+    const std::string filename = decode_subject(s_article_num, &part, &total);
+
+    EXPECT_EQ("archive.zip", filename);
+    EXPECT_EQ(2, part);
+    EXPECT_EQ(5, total);
+}
+
+TEST_F(DecodeSubjectTest, skipsRepostAndVolumeBeforeLaterDottedFilename)
+{
+    cache_subject("Repost: v1: plain words archive.tar.gz part 3 of 4");
+    int part = 0;
+    int total = 0;
+
+    const std::string filename = decode_subject(s_article_num, &part, &total);
+
+    EXPECT_EQ("archive.tar.gz", filename);
+    EXPECT_EQ(3, part);
+    EXPECT_EQ(4, total);
+}
+
+TEST_F(DecodeSubjectTest, returnsEmptyWhenPartExceedsTotal)
+{
+    cache_subject("archive.zip (7/3)");
+    int part = 0;
+    int total = 0;
+
+    const std::string filename = decode_subject(s_article_num, &part, &total);
+
+    EXPECT_TRUE(filename.empty());
+    EXPECT_EQ(-1, part);
+    EXPECT_EQ(0, total);
+}
 
 TEST_F(DecodePieceDirectoryTest, createsUsesAndRemovesPieceDirectory)
 {

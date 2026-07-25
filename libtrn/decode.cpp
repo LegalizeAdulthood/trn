@@ -25,7 +25,8 @@
 #include <fmt/format.h>
 
 #include <algorithm>
-#include <cstring>
+#include <cctype>
+#include <cstdlib>
 #include <filesystem>
 #include <system_error>
 
@@ -119,37 +120,82 @@ static bool bad_filename(std::string_view filename)
 // Parse the subject looking for filename and part number information.
 std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
 {
-    char *filename;
-    char *t;
-    int   part = -1;
-    int   total = 0;
-    int   hasdot = 0;
+    int  part = -1;
+    int  total = 0;
+    bool hasdot = false;
 
     *partp = part;
     *totalp = total;
-    std::string subject = fetch_subj_copy(art_num);
-    if (subject.empty())
+    std::string subject_storage = fetch_subj_copy(art_num);
+    if (subject_storage.empty())
     {
         return {};
     }
 
-    // Skip leading whitespace and other garbage
-    char *subject_text = subject.data();
-    char *s = subject_text;
-    while (is_hor_space(*s) || *s == '-')
+    std::string_view  subject{subject_storage};
+    const std::size_t nul = subject.find('\0');
+    if (nul != std::string_view::npos)
     {
-        s++;
+        subject = subject.substr(0, nul);
     }
-    if (string_case_equal(s, "repost", 6))
+    const std::size_t newline = subject.find('\n');
+    if (newline != std::string_view::npos)
     {
-        for (s += 6; is_hor_space(*s) || *s == ':' || *s == '-'; s++)
+        subject = subject.substr(0, newline);
+    }
+
+    const auto char_at = [&subject](std::size_t pos) { return pos < subject.size() ? subject[pos] : '\0'; };
+    const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)) != 0; };
+    const auto is_alnum = [](char ch) { return std::isalnum(static_cast<unsigned char>(ch)) != 0; };
+    const auto is_filename_char = [&is_alnum](char ch)
+    { return is_alnum(ch) || ch == '-' || ch == '+' || ch == '&' || ch == '_' || ch == '.'; };
+    const auto skip_space_pos = [&subject](std::size_t pos)
+    {
+        while (pos < subject.size() && std::isspace(static_cast<unsigned char>(subject[pos])))
         {
+            ++pos;
+        }
+        return pos;
+    };
+    const auto skip_digits_pos = [&subject, &is_digit](std::size_t pos)
+    {
+        while (pos < subject.size() && is_digit(subject[pos]))
+        {
+            ++pos;
+        }
+        return pos;
+    };
+    const auto starts_case = [&subject](std::size_t pos, std::string_view text)
+    { return pos + text.size() <= subject.size() && string_case_equal(subject.substr(pos, text.size()), text); };
+    const auto parse_number = [&subject, &is_digit](std::size_t pos)
+    {
+        int value = 0;
+        while (pos < subject.size() && is_digit(subject[pos]))
+        {
+            value = value * 10 + subject[pos] - '0';
+            ++pos;
+        }
+        return value;
+    };
+
+    // Skip leading whitespace and other garbage
+    std::size_t pos = 0;
+    while (is_hor_space(char_at(pos)) || char_at(pos) == '-')
+    {
+        ++pos;
+    }
+    if (starts_case(pos, "repost"))
+    {
+        pos += 6;
+        while (is_hor_space(char_at(pos)) || char_at(pos) == ':' || char_at(pos) == '-')
+        {
+            ++pos;
         }
     }
 
-    while (string_case_equal(s, "re:", 3))
+    while (starts_case(pos, "re:"))
     {
-        s = skip_space(s + 3);
+        pos = skip_space_pos(pos + 3);
     }
 
     // Get filename
@@ -158,126 +204,146 @@ std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
     // prefix "v<digit>" ending in ":", since that is a popular volume/issue
     // representation syntax
     //
-    char *end = s + std::strlen(s);
+    std::size_t filename_begin = pos;
+    std::size_t filename_end = pos;
     do
     {
-        while (*s && !std::isalnum(*s) && *s != '_')
+        while (pos < subject.size() && !is_alnum(subject[pos]) && subject[pos] != '_')
         {
-            s++;
+            ++pos;
         }
-        filename = s;
-        t = s;
-        while (std::isalnum(*s) || *s == '-' || *s == '+' || *s == '&' //
-               || *s == '_' || *s == '.')
+        filename_begin = pos;
+        filename_end = pos;
+        while (is_filename_char(char_at(pos)))
         {
-            if (*s++ == '.')
+            if (subject[pos++] == '.')
             {
-                hasdot = 1;
+                hasdot = true;
             }
         }
-        if (!*s || *s == '\n')
+        filename_end = pos;
+        if (pos >= subject.size())
         {
             return {};
         }
-    } while (t == s || (t[0] == 'v' && std::isdigit(t[1]) && *s == ':'));
-    *s++ = '\0';
+    } while (filename_begin == filename_end ||
+             (char_at(filename_begin) == 'v' && is_digit(char_at(filename_begin + 1)) && char_at(pos) == ':'));
+    ++pos;
 
     // Try looking for a filename with a "." in it later in the subject line.
     // Exclude <digit>.<digit>, since that is usually a version number.
     //
     if (!hasdot)
     {
-        while (*(t = s) != '\0' && *s != '\n')
+        std::size_t scan = pos;
+        while (scan < subject.size())
         {
-            t = skip_space(t);
-            for (s = t; std::isalnum(*s) || *s == '-' || *s == '+' || *s == '&' || *s == '_' || *s == '.'; s++)
+            std::size_t token_begin = skip_space_pos(scan);
+            std::size_t token_end = token_begin;
+            bool        token_hasdot = false;
+            while (is_filename_char(char_at(token_end)))
             {
-                if (*s == '.' && (!std::isdigit(s[-1]) || !std::isdigit(s[1])))
+                const bool prior_is_digit = token_end != 0 && is_digit(char_at(token_end - 1));
+                if (subject[token_end] == '.' && (!prior_is_digit || !is_digit(char_at(token_end + 1))))
                 {
-                    hasdot = 1;
+                    token_hasdot = true;
                 }
+                ++token_end;
             }
-            if (hasdot && s > t)
+            if (token_hasdot && token_end > token_begin)
             {
-                filename = t;
-                *s++ = '\0';
+                filename_begin = token_begin;
+                filename_end = token_end;
                 break;
             }
-            while (*s && *s != '\n' && !std::isalnum(*s))
+            scan = token_end;
+            while (scan < subject.size() && !is_alnum(subject[scan]))
             {
-                s++;
+                ++scan;
             }
         }
-        s = filename + std::strlen(filename) + 1;
+        pos = filename_end + 1;
     }
 
-    if (s >= end)
+    if (pos >= subject.size())
     {
         return {};
     }
 
     // Get part number
-    while (*s && *s != '\n')
+    while (pos < subject.size())
     {
         // skip over versioning
-        if (*s == 'v' && std::isdigit(s[1]))
+        if (char_at(pos) == 'v' && is_digit(char_at(pos + 1)))
         {
-            s++;
-            s = skip_digits(s);
+            ++pos;
+            pos = skip_digits_pos(pos);
         }
         // look for "1/6" or "1 / 6" or "1 of 6" or "1-of-6" or "1o6"
-        if (std::isdigit(*s)                                   //
-            && (s[1] == '/'                                    //
-                || (s[1] == ' ' && s[2] == '/')                //
-                || (s[1] == ' ' && s[2] == 'o' && s[3] == 'f') //
-                || (s[1] == '-' && s[2] == 'o' && s[3] == 'f') //
-                || (s[1] == 'o' && std::isdigit(s[2]))))
+        if (is_digit(char_at(pos))                                       //
+            && (char_at(pos + 1) == '/'                                  //
+                || (char_at(pos + 1) == ' ' && char_at(pos + 2) == '/')  //
+                || (char_at(pos + 1) == ' ' && char_at(pos + 2) == 'o' && char_at(pos + 3) == 'f') //
+                || (char_at(pos + 1) == '-' && char_at(pos + 2) == 'o' && char_at(pos + 3) == 'f') //
+                || (char_at(pos + 1) == 'o' && is_digit(char_at(pos + 2)))))
         {
-            for (t = s; std::isdigit(t[-1]); t--)
+            std::size_t part_begin = pos;
+            while (part_begin != 0 && is_digit(char_at(part_begin - 1)))
             {
+                --part_begin;
             }
-            part = std::atoi(t);
-            while (*++s != '\0' && *s != '\n' && !std::isdigit(*s))
+            part = parse_number(part_begin);
+            ++pos;
+            while (pos < subject.size() && !is_digit(char_at(pos)))
             {
+                ++pos;
             }
-            total = std::isdigit(*s) ? std::atoi(s) : 0;
-            s = skip_digits(s);
+            total = is_digit(char_at(pos)) ? parse_number(pos) : 0;
+            pos = skip_digits_pos(pos);
             // We don't break here because we want the last item on the line
         }
 
         // look for "6 parts" or "part 1"
-        if (string_case_equal("part", s, 4))
+        if (starts_case(pos, "part"))
         {
-            if (s[4] == 's')
+            if (char_at(pos + 4) == 's')
             {
-                for (t = s; t >= subject_text && !std::isdigit(*t); t--)
+                std::size_t digit_pos = pos;
+                while (digit_pos != 0 && !is_digit(char_at(digit_pos)))
                 {
+                    --digit_pos;
                 }
-                if (t > subject_text)
+                if (digit_pos != 0 && is_digit(char_at(digit_pos)))
                 {
-                    while (t > subject_text && std::isdigit(t[-1]))
+                    std::size_t total_begin = digit_pos;
+                    while (total_begin != 0 && is_digit(char_at(total_begin - 1)))
                     {
-                        t--;
+                        --total_begin;
                     }
-                    total = std::atoi(t);
+                    total = parse_number(total_begin);
                 }
             }
             else
             {
-                while (*s && *s != '\n' && !std::isdigit(*s))
+                std::size_t part_pos = pos;
+                while (part_pos < subject.size() && !is_digit(char_at(part_pos)))
                 {
-                    s++;
+                    ++part_pos;
                 }
-                if (std::isdigit(*s))
+                if (is_digit(char_at(part_pos)))
                 {
-                    part = std::atoi(s);
+                    part = parse_number(part_pos);
+                    pos = part_pos == 0 ? 0 : part_pos - 1;
                 }
-                s--;
+                else
+                {
+                    pos = subject.size();
+                }
             }
         }
-        if (*s)
+        if (pos < subject.size())
         {
-            s++;
+            ++pos;
         }
     }
 
@@ -287,7 +353,7 @@ std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
     }
     *partp = part;
     *totalp = total;
-    return filename;
+    return std::string{subject.substr(filename_begin, filename_end - filename_begin)};
 }
 
 //
