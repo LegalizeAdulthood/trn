@@ -507,14 +507,16 @@ bool parse_header(ArticleNum art_num)
     return true;
 }
 
-static std::string header_line_text(char *line, int size)
+static std::string header_line_text(std::string_view line)
 {
-    if (size <= 1)
+    if (line.size() <= 1)
     {
         return {};
     }
-    const char *line_end = std::find(line, line + size - 1, '\0');
-    return std::string(line, static_cast<std::string::size_type>(line_end - line));
+
+    line.remove_suffix(1);
+    const std::size_t line_end = line.find('\0');
+    return std::string{line.substr(0, line_end)};
 }
 
 static bool header_line_span(HeaderLineType which_line, char *&line, int &size)
@@ -556,7 +558,7 @@ static std::string current_header_line_text(HeaderLineType which_line)
         return {};
     }
 
-    return header_line_text(line, size);
+    return header_line_text(std::string_view{line, static_cast<std::size_t>(std::max(size, 0))});
 }
 
 static void append_header_line(std::string &text, const char *line)
@@ -603,7 +605,7 @@ std::string fetch_lines(ArticleNum art_num, HeaderLineType which_line)
     {
         return {};
     }
-    return header_line_text(line, size);
+    return header_line_text(std::string_view{line, static_cast<std::size_t>(std::max(size, 0))});
 }
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)

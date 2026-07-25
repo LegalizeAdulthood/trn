@@ -558,17 +558,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-247 - Header Line Text View
-
-- Files: `libtrn/head.cpp`.
-- Kind: mutable pointer parameter to read-only text view.
-- Function: `header_line_text`.
-- Dependencies: none.
-- Change: make `header_line_text` accept `std::string_view` instead of
-  `char *` plus size.  Build the view at `header_line_span` call sites
-  and keep `header_line_span` itself unchanged for this slice.
-- Tests: header parsing, cache, and article display tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
