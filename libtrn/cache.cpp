@@ -474,18 +474,17 @@ void Article::set_subj_line(std::string_view subj)
     }
 }
 
-static std::string decode_header_impl(std::string_view from, int &legacy_size)
+static std::string decode_header_impl(std::string_view from)
 {
     bool        pass2_needed = false;
     std::size_t cursor = 0;
     std::string result;
+    int         decoded_size = static_cast<int>(from.size());
 
-    legacy_size = static_cast<int>(from.size());
     result.reserve(from.size());
 
     if (from.empty())
     {
-        legacy_size = 0;
         return {};
     }
 
@@ -517,7 +516,7 @@ static std::string decode_header_impl(std::string_view from, int &legacy_size)
                     int         len = static_cast<int>(e - cursor + 2);
                     std::string encoded{from.substr(q + 3, e - q - 3)};
                     std::string decoded(encoded.size() + 1, '\0');
-                    legacy_size -= len;
+                    decoded_size -= len;
                     cursor = e + 2;
                     if (ch == 'q' || ch == 'Q')
                     {
@@ -534,7 +533,7 @@ static std::string decode_header_impl(std::string_view from, int &legacy_size)
 #endif
                     decoded.resize(static_cast<std::size_t>(len));
                     result += decoded;
-                    legacy_size += len;
+                    decoded_size += len;
                     // If the next character is whitespace we should eat it now
                     while (cursor < from.size() && is_hor_space(from[cursor]))
                     {
@@ -561,14 +560,14 @@ static std::string decode_header_impl(std::string_view from, int &legacy_size)
         else
         {
             ++cursor;
-            --legacy_size;
+            --decoded_size;
         }
         pass2_needed = true;
     }
-    while (legacy_size > 1 && !result.empty() && result.back() == ' ')
+    while (decoded_size > 1 && !result.empty() && result.back() == ' ')
     {
         result.pop_back();
-        --legacy_size;
+        --decoded_size;
     }
 
     // Pass 2 to clear out "control" characters
@@ -581,18 +580,7 @@ static std::string decode_header_impl(std::string_view from, int &legacy_size)
 
 std::string decode_header(std::string_view from)
 {
-    int legacy_size;
-    return decode_header_impl(from, legacy_size);
-}
-
-int decode_header(char *to, std::string_view from)
-{
-    int         legacy_size;
-    std::string decoded = decode_header_impl(from, legacy_size);
-
-    std::copy(decoded.begin(), decoded.end(), to);
-    to[decoded.size()] = '\0';
-    return legacy_size;
+    return decode_header_impl(from);
 }
 
 void dectrl(char *str)

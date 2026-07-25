@@ -508,8 +508,8 @@ tree.
 - Article display/copy paths now use `std::string` for the shared
   article line.  The low-level `read_art(char *, int)` API remains for
   protocol/body buffers and local fixed-size output loops.
-- Current local candidates are explicit slices in Tier 5: raw
-  `decode_header` wrapper removal.
+- No current leaf helper-removal slices remain.  The remaining open
+  slices are broad shared terminal and command-buffer owners.
 - The remaining direct `strcpy` hit is accounted for by `g_buf` in
   CSTR-161.  No `strncpy` or `std::sprintf` production hits remain in
   this scan.
@@ -617,15 +617,3 @@ with their owner slices unless a local use is clearly formatting-only.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
-
-#### CSTR-259 - Raw Decode Header Wrapper Removal
-
-- Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`.
-- Kind: obsolete C-style helper overload.
-- Function: `decode_header`.
-- Dependencies: none.
-- Change: remove the raw output-buffer `decode_header` API after all
-  production callers use the string-returning API.  Keep only the
-  `std::string decode_header(std::string_view)` form.
-- Tests: decode-header, subject cache, interpolation, and tree/header
-  tests.
