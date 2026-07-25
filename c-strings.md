@@ -485,6 +485,10 @@ tree.
   instead of being blocked by reply parser call sites.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
+- Current local candidates are explicit slices in Tiers 0-3:
+  `rcstuff` string-backed prefix comparisons, `head` header-line text
+  extraction, MIME line accumulation, MIME cat decoding, and article
+  save/forward output loops.
 - Filename storage already uses modern path or view signatures for
   newsrc fields, newsrc companion paths, `make_dir`, `safe_link`,
   `SourceFile::open`, option-file loading, and option saving.
@@ -527,28 +531,105 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No active slices.
+#### CSTR-245 - Newsrc Options Prefix Check
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: string-backed prefix comparison.
+- Function: `open_newsrc`.
+- Dependencies: none.
+- Change: replace the `std::strncmp` check for `options` with a
+  `std::string_view` or direct string prefix comparison over
+  `np->m_rc_line`.  Preserve the existing whitespace-line classification
+  and do not change `parse_rcline`.
+- Tests: newsrc parsing and startup tests.
+
+#### CSTR-246 - Old Newsrc Restore Prefix Check
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: string-backed prefix comparison.
+- Function: `NewsgroupData::abandon_newsgroup`.
+- Dependencies: none.
+- Change: replace the `std::strncmp` comparison between the current
+  group name and an old-newsrc line with a `std::string_view` comparison.
+  Keep the existing separator checks and fallback behavior.
+- Tests: newsrc restore/abandon tests.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-No active slices.
+#### CSTR-247 - Header Line Text View
+
+- Files: `libtrn/head.cpp`.
+- Kind: mutable pointer parameter to read-only text view.
+- Function: `header_line_text`.
+- Dependencies: none.
+- Change: make `header_line_text` accept `std::string_view` instead of
+  `char *` plus size.  Build the view at `header_line_span` call sites
+  and keep `header_line_span` itself unchanged for this slice.
+- Tests: header parsing, cache, and article display tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-No active slices.
+#### CSTR-248 - MIME Sub-header Line Accumulation
+
+- Files: `libtrn/mime.cpp`.
+- Kind: owned string with residual C length discovery.
+- Function: `mime_parse_sub_header`.
+- Dependencies: none.
+- Change: keep the local `std::string` storage, but replace
+  `std::strlen(input)` after `fgets`/`read_art` with string operations
+  over the owned buffer.  Preserve continuation-line handling and do not
+  alter documented MIME header normalization.
+- Tests: MIME parameter and sub-header tests.
+
+#### CSTR-249 - MIME Cat Decode Line Storage
+
+- Files: `libtrn/mime.cpp`.
+- Kind: local fixed line buffer and C output.
+- Function: `cat_decode`.
+- Dependencies: none.
+- Change: keep one local `std::string` line owner for file and article
+  input, remove C-style view construction from `line.c_str()` where the
+  string extent is already known, and replace the local `std::printf`
+  status output with `fmt`.
+- Tests: MIME decode tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-No active slices.
+#### CSTR-250 - Save Article Line Handling
+
+- Files: `libtrn/respond.cpp`.
+- Kind: workflow-local article line buffers.
+- Function: `save_article`.
+- Dependencies: none.
+- Change: replace direct use of `g_art_line` and `g_buf` for local
+  `read_art` loops with owned string storage or views inside
+  `save_article`.  Preserve attachment detection, `From ` quoting,
+  mailbox separators, and write order.  Use `fmt` for touched formatted
+  output.
+- Tests: save-article output tests; add coverage first if a touched path
+  is not already covered.
+
+#### CSTR-251 - Forward Article Body Output
+
+- Files: `libtrn/respond.cpp`.
+- Kind: workflow-local article line buffer and C output.
+- Function: `forward`.
+- Dependencies: none.
+- Change: replace the body-copy loop's `g_buf` use with local string
+  storage or views.  Preserve dash escaping when there is no MIME
+  boundary and keep the MIME closing boundary behavior.  Replace touched
+  `std::putchar`/`std::fprintf` output with `fmt`.
+- Tests: forward-message output tests; add coverage first if the copied
+  body or MIME boundary behavior is not already covered.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -612,7 +693,8 @@ with their owner slices unless a local use is clearly formatting-only.
   `libtrn/respond.cpp`, `libtrn/decode.cpp`.
 - Kind: global fixed article display/input buffer.
 - Function: storage-centered `g_art_line`.
-- Dependencies: complete CSTR-243 before replacing this shared owner.
+- Dependencies: complete CSTR-250 and CSTR-251 before replacing this
+  shared owner.
 - Change: replace article display line storage with owned string or view
   based data flow after local decode/respond buffer slices have reduced
   direct mutation.
