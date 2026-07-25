@@ -484,9 +484,9 @@ tree.
   allocation helpers.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: current string candidates include `g_buf`,
-  `g_art_line`, and terminal command input.  NNTP status lines now use
-  owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
+- Fixed raw buffers: current string candidates include `g_buf` and
+  terminal command input.  NNTP status lines and article display lines
+  now use owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
   scratch buffers, translation tables, MIME decode tables, terminal
   pushback bytes, termcap storage, address conversion scratch, and regex
   bytecode arrays are non-string protocol or parser storage.
@@ -505,13 +505,14 @@ tree.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
-- Article display/copy paths still have raw line-buffer ownership around
-  `read_art`, `g_art_line`, and fixed-size output loops.
+- Article display/copy paths now use `std::string` for the shared
+  article line.  The low-level `read_art(char *, int)` API remains for
+  protocol/body buffers and local fixed-size output loops.
 - Current local candidates are explicit slices in Tier 5: raw
   `decode_header` wrapper removal.
-- Remaining direct `strcpy` hits are accounted for by owner slices:
-  `g_art_line` in CSTR-077 and `g_buf` in CSTR-161.  No `strncpy` or
-  `std::sprintf` production hits remain in this scan.
+- The remaining direct `strcpy` hit is accounted for by `g_buf` in
+  CSTR-161.  No `strncpy` or `std::sprintf` production hits remain in
+  this scan.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
@@ -523,13 +524,13 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 2, `strncpy` 0, `strcat` 0.
+- Copy and concatenation: `strcpy` 1, `strncpy` 0, `strcat` 0.
 - Comparison: `strcmp` 1, `strncmp` 0.
 - Search and length: `strchr` 42, `strrchr` 0, `strstr` 2,
   `strlen` 24.
 - Formatting into C buffers: `std::sprintf` 0, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
-- C text I/O roots: `fgets` 20, `fputs` 170, `std::printf` 321,
+- C text I/O roots: `fgets` 20, `fputs` 169, `std::printf` 321,
   `std::fprintf` 14.
 - Character output: `std::putchar` 76, `puts` 0.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
@@ -580,19 +581,6 @@ formatting-only leaves first, because they do not affect command input,
 typeahead, article reading, or protocol line ownership.  Terminal
 command input remains in `CSTR-119`; file and protocol read buffers stay
 with their owner slices unless a local use is clearly formatting-only.
-
-#### CSTR-077 - Article Display Line Buffer
-
-- Files: `libtrn/art.cpp`, `libtrn/include/trn/art.h`,
-  `libtrn/respond.cpp`, `libtrn/decode.cpp`.
-- Kind: global fixed article display/input buffer.
-- Function: storage-centered `g_art_line`.
-- Dependencies: complete CSTR-250 and CSTR-251 before replacing this
-  shared owner.
-- Change: replace article display line storage with owned string or view
-  based data flow after local decode/respond buffer slices have reduced
-  direct mutation.
-- Tests: article display, MIME decode, response, and uudecode tests.
 
 #### CSTR-119 - Terminal Command Input Buffers
 

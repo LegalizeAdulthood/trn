@@ -55,7 +55,7 @@ ArticleLine     g_highlight{-1};          // next line to be highlighted
 ArticleLine     g_first_view{};           //
 ArticlePosition g_raw_art_size{};         // size in bytes of raw article
 ArticlePosition g_art_size{};             // size in bytes of article
-char            g_art_line[LINE_BUF_LEN]; // place for article lines
+std::string     g_art_line;               // place for article lines
 int             g_g_line{};               // TODO: ArticleLine?
 ArticlePosition g_inner_search{};         // g_art_pos of end of line we want to visit
 ArticleLine     g_inner_light{};          // highlight position for g_inner_search or 0
@@ -118,7 +118,7 @@ DoArticleResult do_article()
     char* s;
     bool hide_this_line = false; // hidden header line?
     bool under_lining = false;   // are we underlining a word?
-    char* buf_ptr = g_art_line;   // pointer to input buffer
+    char* buf_ptr = g_art_line.data(); // pointer to input buffer
     std::string from_line;
     std::string date_line;
     int out_pos;                  // column position of output
@@ -861,7 +861,7 @@ reask_pager:
 
 static bool maybe_set_color(const char *cp, bool back_search)
 {
-    const char ch = (cp == g_art_buf || cp == g_art_line? 0 : cp[-1]);
+    const char ch = (cp == g_art_buf || cp == g_art_line.data() ? 0 : cp[-1]);
     if (ch == '\001')
     {
         color_object(COLOR_MIME_DESC, false);

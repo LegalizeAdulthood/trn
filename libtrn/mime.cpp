@@ -882,6 +882,18 @@ void mime_set_state(char *bp)
     }
 }
 
+void mime_set_state(std::string &bp)
+{
+    if (bp.empty())
+    {
+        bp.resize(1);
+        bp[0] = '\0';
+    }
+    mime_set_state(bp.data());
+    const std::size_t terminator = bp.find('\0');
+    bp.resize(terminator == std::string::npos ? bp.size() : terminator);
+}
+
 int mime_end_of_section(std::string_view bp)
 {
     MimeSection *mp = g_mime_section->m_prev;
@@ -976,13 +988,13 @@ void mime_decode_article(bool view)
     MimeCapEntry* mcp = nullptr;
 
     seek_art(g_save_from);
-    *g_art_line = '\0';
+    g_art_line.clear();
 
     while (true)
     {
         if (g_mime_state != MESSAGE_MIME || !g_mime_section->m_total)
         {
-            if (!read_art(g_art_line,sizeof g_art_line))
+            if (!read_art(g_art_line))
             {
                 break;
             }
@@ -1027,7 +1039,7 @@ void mime_decode_article(bool view)
                 }
             }
             g_mime_state = DECODE_MIME;
-            if (decode_piece(mcp, *g_art_line == '\n' ? nullptr : g_art_line))
+            if (decode_piece(mcp, g_art_line.empty() || g_art_line.front() == '\n' ? nullptr : g_art_line.data()))
             {
                 mime_set_state(g_art_line);
                 if (g_mime_state == DECODE_MIME)
@@ -1376,7 +1388,7 @@ static int mime_getc(std::FILE *fp)
 
     if (!g_mime_getc_line || !*g_mime_getc_line)
     {
-        g_mime_getc_line = read_art(g_art_line,sizeof g_art_line);
+        g_mime_getc_line = read_art(g_art_line);
         if (mime_end_of_section(g_art_line))
         {
             return EOF;

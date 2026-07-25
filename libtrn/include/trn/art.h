@@ -8,6 +8,8 @@
 #include <config/common.h>
 #include <config/typedef.h>
 
+#include <string>
+
 // do_article() return values
 enum DoArticleResult
 {
@@ -21,7 +23,7 @@ extern ArticleLine     g_highlight;         // next line to be highlighted
 extern ArticleLine     g_first_view;        //
 extern ArticlePosition g_raw_art_size;      // size in bytes of raw article
 extern ArticlePosition g_art_size;          // size in bytes of article
-extern char            g_art_line[LINE_BUF_LEN]; // place for article lines
+extern std::string     g_art_line;          // place for article lines
 
 extern int             g_g_line;
 extern ArticlePosition g_inner_search;    // g_art_pos of end of line we want to visit

@@ -159,6 +159,30 @@ char *read_art(char *s, int limit)
     return std::fgets(s,limit,g_art_fp);
 }
 
+char *read_art(std::string &line)
+{
+    line.clear();
+    line.reserve(LINE_BUF_LEN);
+    while (true)
+    {
+        const std::size_t old_size = line.size();
+        line.resize(old_size + LINE_BUF_LEN);
+        char *const input = line.data() + old_size;
+        if (read_art(input, LINE_BUF_LEN) == nullptr)
+        {
+            line.resize(old_size);
+            return line.empty() ? nullptr : line.data();
+        }
+
+        const std::size_t terminator = line.find('\0', old_size);
+        line.resize(terminator == std::string::npos ? line.size() : terminator);
+        if (line.empty() || line.back() == '\n' || line.size() - old_size < LINE_BUF_LEN - 1)
+        {
+            return line.data();
+        }
+    }
+}
+
 void clear_art_buf()
 {
     *g_art_buf = '\0';
@@ -212,7 +236,7 @@ char *read_art_buf(bool view_inline)
 
     if (!g_do_hiding)
     {
-        bp = read_art(g_art_line, (sizeof g_art_line) - 1);
+        bp = read_art(g_art_line);
         const ArticlePosition art_pos = tell_art() - g_header_type[PAST_HEADER].min_pos;
         g_art_buf_seek = art_pos;
         g_art_buf_pos = art_pos;
@@ -386,8 +410,15 @@ mime_switch:
             color_object(COLOR_MIME_DESC, true);
             if (decode_piece(mcp, bp))
             {
-                bp = g_art_buf + g_art_buf_pos.value_of();
-                std::strcpy(bp, g_art_line);
+                const std::size_t destination = static_cast<std::size_t>(g_art_buf_pos.value_of());
+                if (s_art_buf.size() <= destination + g_art_line.size())
+                {
+                    s_art_buf.resize(destination + g_art_line.size() + 1);
+                    g_art_buf = s_art_buf.data();
+                }
+                bp = g_art_buf + destination;
+                g_art_line.copy(bp, g_art_line.size());
+                bp[g_art_line.size()] = '\0';
                 mime_set_state(bp);
                 if (g_mime_state == DECODE_MIME)
                 {

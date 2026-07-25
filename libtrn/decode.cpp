@@ -426,15 +426,15 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
             g_msg = "Failed.";
             return false;
         }
-        while (read_art(g_art_line, sizeof g_art_line))
+        while (read_art(g_art_line))
         {
             if (mime_end_of_section(g_art_line))
             {
                 break;
             }
-            std::fputs(g_art_line,fp);
-            if (total == 0 && *g_art_line == 'e' && g_art_line[1] == 'n' //
-                && g_art_line[2] == 'd' && std::isspace(g_art_line[3]))
+            fmt::print(fp, "{}", g_art_line);
+            if (total == 0 && g_art_line.size() > 3 && g_art_line[0] == 'e' && g_art_line[1] == 'n' //
+                && g_art_line[2] == 'd' && std::isspace(static_cast<unsigned char>(g_art_line[3])))
             {
                 // This is the last part. Remember the fact
                 total = part;

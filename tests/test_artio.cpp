@@ -180,6 +180,34 @@ TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
     EXPECT_EQ(nullptr, read_art_buf(false));
 }
 
+TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsArticleLine)
+{
+    g_do_hiding = false;
+    open_article_text("alpha\nbeta\n");
+
+    char *first = read_art_buf(false);
+
+    ASSERT_NE(nullptr, first);
+    EXPECT_STREQ("alpha\n", first);
+
+    char *second = read_art_buf(false);
+
+    ASSERT_NE(nullptr, second);
+    EXPECT_STREQ("beta\n", second);
+}
+
+TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsLongArticleLine)
+{
+    g_do_hiding = false;
+    const std::string line(static_cast<std::size_t>(LINE_BUF_LEN) + 20, 'x');
+    open_article_text(line + "\n");
+
+    char *first = read_art_buf(false);
+
+    ASSERT_NE(nullptr, first);
+    EXPECT_EQ(line + "\n", std::string{first});
+}
+
 TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
 {
     m_mime_section.m_type = MULTIPART_MIME;
