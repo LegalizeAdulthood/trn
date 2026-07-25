@@ -569,19 +569,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-256 - SourceFile Append Line Normalization
-
-- Files: `libtrn/datasrc.cpp`.
-- Kind: string-owned line parser still using mutable pointer cursors.
-- Function: `SourceFile::append`.
-- Dependencies: none.
-- Change: replace `line_start`, `s`, and
-  `adv_then_find_next_nl_and_dectrl` with string indices or views over
-  `stored_line`.  Normalize grey-space characters in the owned string
-  without returning raw pointers, then remove the now-unused helper.
-- Tests: data-source description/source-file append tests before and
-  after the refactor.
-
 #### CSTR-257 - Decode Subject Parser Cursors
 
 - Files: `libtrn/decode.cpp`, `libtrn/include/trn/decode.h`,

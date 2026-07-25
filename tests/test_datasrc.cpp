@@ -341,6 +341,20 @@ TEST(SourceFileAppendTest, storesNormalizedLineAndReturnsStoredStorage)
     EXPECT_EQ("C++ language discussion\n", std::string_view{stored_line.data() + key_len + 1});
 }
 
+TEST(SourceFileAppendTest, normalizesGreySpaceInDescription)
+{
+    SourceFileOwner source_file_owner;
+    SourceFile     &source_file = source_file_owner.get();
+    char            line[] = "comp.lang.apl APL\tdiscussion";
+    const int       key_len = static_cast<int>(std::strlen("comp.lang.apl"));
+
+    const std::string_view stored_line = source_file.append(line, key_len);
+
+    ASSERT_EQ(1U, source_file.m_lines.size());
+    EXPECT_EQ("comp.lang.apl APL discussion\n", stored_line);
+    EXPECT_EQ("comp.lang.apl APL discussion\n", source_file.m_lines.back());
+}
+
 TEST_F(SourceFileTest, openReadsLinesFromLocalFile)
 {
     const fs::path source_path = m_output_dir / "active";

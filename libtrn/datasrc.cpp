@@ -852,33 +852,6 @@ try_xgtitle:
     return {};
 }
 
-// NOTE: This was factored from srcfile_open and srcfile_append and is
-// basically same as dectrl() except the s++, *s != '\n' and return s.
-// Because we need to keep track of s we can't really reuse dectrl()
-// from cache.c; if we want to factor further we need a new function.
-//
-static char *adv_then_find_next_nl_and_dectrl(char *s)
-{
-    if (s == nullptr)
-    {
-        return s;
-    }
-
-    for (s++; *s && *s != '\n';)
-    {
-        int w = byte_length_at(s);
-        if (at_grey_space(s))
-        {
-            for (int i = 0; i < w; i += 1)
-            {
-                s[i] = ' ';
-            }
-        }
-        s += w;
-    }
-    return s;
-}
-
 int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::string_view server,
                      std::string_view first_line)
 {
@@ -1080,35 +1053,43 @@ std::string_view SourceFile::append(std::string_view line, int key_len)
     const long pos = m_lines.empty() ? 0 : m_line_positions.back() + static_cast<long>(m_lines.back().size());
 
     std::string stored_line{line};
-    char       *line_start = stored_line.data();
-    char       *s = line_start + key_len + 1;
-    if (m_fp && m_refetch_secs && *s != '\n')
+    const std::size_t content_pos = static_cast<std::size_t>(key_len + 1);
+    const char        content_start = content_pos < stored_line.size() ? stored_line[content_pos] : '\0';
+    if (m_fp && m_refetch_secs && content_start != '\n')
     {
         std::fseek(m_fp, 0, 2);
         std::fwrite(line.data(), 1, line.size(), m_fp);
     }
 
-    if (*s != '\n' && std::isspace(*s))
+    if (content_start != '\n' && std::isspace(static_cast<unsigned char>(content_start)))
     {
-        while (*++s != '\n' && std::isspace(*s))
+        std::size_t value_begin = content_pos + 1;
+        while (value_begin < stored_line.size() && stored_line[value_begin] != '\n' &&
+               std::isspace(static_cast<unsigned char>(stored_line[value_begin])))
         {
+            ++value_begin;
         }
-        const std::size_t content_pos = static_cast<std::size_t>(key_len + 1);
-        stored_line.erase(content_pos, static_cast<std::size_t>(s - (line_start + content_pos)));
-        line_start = stored_line.data();
-        s = line_start + content_pos;
+        stored_line.erase(content_pos, value_begin - content_pos);
     }
-    s = adv_then_find_next_nl_and_dectrl(s);
-    const std::size_t linelen = static_cast<std::size_t>(s - line_start + 1);
-    if (*s != '\n')
+
+    std::size_t line_end = std::min(content_pos + 1, stored_line.size());
+    while (line_end < stored_line.size() && stored_line[line_end] != '\0' && stored_line[line_end] != '\n')
     {
-        stored_line.resize(linelen - 1);
+        const std::size_t width = static_cast<std::size_t>(byte_length_at(stored_line.data() + line_end));
+        if (at_grey_space(stored_line.data() + line_end))
+        {
+            std::fill_n(stored_line.begin() + line_end, width, ' ');
+        }
+        line_end += width;
+    }
+
+    const bool has_newline = line_end < stored_line.size() && stored_line[line_end] == '\n';
+    stored_line.resize(line_end + (has_newline ? 1 : 0));
+    if (!has_newline)
+    {
         stored_line.push_back('\n');
     }
-    else
-    {
-        stored_line.resize(linelen);
-    }
+
     const std::size_t index = m_lines.size();
     m_line_positions.push_back(pos);
     m_lines.push_back(std::move(stored_line));
