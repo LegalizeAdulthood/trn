@@ -316,7 +316,7 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
     const std::string &head = s_sf_extra_headers[hnum];
     int                len = static_cast<int>(head.size());
 
-    for (const char *s = g_head_buf; s && *s && *s != '\n'; s++)
+    for (const char *s = g_head_buf.c_str(); *s && *s != '\n'; s++)
     {
         if (string_case_equal(head, std::string_view{s, static_cast<std::size_t>(len)}))
         {

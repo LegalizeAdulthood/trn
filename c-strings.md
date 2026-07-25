@@ -478,18 +478,18 @@ tree.
 
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: no production hits remain in the current tree.
-- `safe_malloc` and `safe_realloc`: the remaining string-shaped owner is
-  `g_head_buf`.  Non-string owners include AddGroup scratch storage,
+- `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
+  tracked here.  Non-string owners include AddGroup scratch storage,
   hash-table internals, regex bytecode, option flags, and generic
   allocation helpers.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  `g_ser_line`, `g_art_line`, `g_head_buf`, and terminal command input.
-  NNTP CRLF trailer scratch, tiny UTF byte scratch buffers, translation
-  tables, MIME decode tables, terminal pushback bytes, termcap storage,
-  address conversion scratch, and regex bytecode arrays are non-string
-  protocol or parser storage.
+  `g_ser_line`, `g_art_line`, and terminal command input.  NNTP CRLF
+  trailer scratch, tiny UTF byte scratch buffers, translation tables,
+  MIME decode tables, terminal pushback bytes, termcap storage, address
+  conversion scratch, and regex bytecode arrays are non-string protocol
+  or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -526,7 +526,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Copy and concatenation: `strcpy` 5, `strncpy` 1, `strcat` 0.
 - Comparison: `strcmp` 0, `strncmp` 0.
 - Search and length: `strchr` 42, `strrchr` 1, `strstr` 2,
-  `strlen` 28.
+  `strlen` 27.
 - Formatting into C buffers: `std::sprintf` 1, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
 - C text I/O roots: `fgets` 20, `fputs` 170, `std::printf` 323,
@@ -580,20 +580,6 @@ formatting-only leaves first, because they do not affect command input,
 typeahead, article reading, or protocol line ownership.  Terminal
 command input remains in `CSTR-119`; file and protocol read buffers stay
 with their owner slices unless a local use is clearly formatting-only.
-
-#### CSTR-058 - Header Buffer Storage
-
-- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`,
-  `libtrn/art.cpp`, `libtrn/artsrch.cpp`, `libtrn/nntp.cpp`,
-  `libtrn/scorefile.cpp`.
-- Kind: global growable header text buffer.
-- Function: storage-centered; main writer is `parse_header`.
-- Dependencies: complete header-line sentinel checks before replacing the
-  shared owner.
-- Change: replace `g_head_buf` plus `s_head_buf_size` with owned string
-  storage while preserving header offset metadata.  Update direct pointer
-  arithmetic users in the same owner slice.
-- Tests: header parsing, article display, score-file, and NNTP tests.
 
 #### CSTR-076 - NNTP Server Line Buffer
 

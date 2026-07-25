@@ -530,9 +530,7 @@ TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)
 TEST_F(NNTPBodyTest, requestsBodyWhenArticleHeaderIsParsed)
 {
     const std::string header{"Subject: cached\n\n"};
-    ASSERT_NE(nullptr, g_head_buf);
-    header.copy(g_head_buf, header.size());
-    g_head_buf[header.size()] = '\0';
+    g_head_buf = header;
     g_parsed_art = ArticleNum{7};
 
     EXPECT_CALL(*m_connection, write_line(StrEq("BODY 7"), _));

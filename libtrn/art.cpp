@@ -282,7 +282,7 @@ DoArticleResult do_article()
                     maybe_set_color(buf_ptr, true);
                 }
             }
-            else if (g_in_header && *(buf_ptr = g_head_buf + g_art_pos.value_of()))
+            else if (g_in_header && *(buf_ptr = g_head_buf.data() + g_art_pos.value_of()))
             {
                 s_continuation = is_hor_space(*buf_ptr);
             }
@@ -719,7 +719,8 @@ skip_put:
             }
             else if (g_in_header)
             {
-                g_art_pos = ArticlePosition{std::strchr(g_head_buf + g_art_pos.value_of(), '\n') - g_head_buf + 1};
+                const char *head = g_head_buf.c_str();
+                g_art_pos = ArticlePosition{std::strchr(head + g_art_pos.value_of(), '\n') - head + 1};
             }
             else
             {

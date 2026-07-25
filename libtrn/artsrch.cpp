@@ -582,7 +582,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
                 return false;
             }
             // see if it's in the header
-            if (compex->execute(g_head_buf))      // does it match?
+            if (compex->execute(g_head_buf.c_str())) // does it match?
             {
                 return true;                    // say, "Eureka!"
             }

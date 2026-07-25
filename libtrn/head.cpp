@@ -96,10 +96,9 @@ int                         g_user_header_type_count{};
 int                         g_user_header_type_max{};
 ArticleNum                  g_parsed_art{}; // the article number we've parsed
 HeaderLineType              g_in_header{};  // are we decoding the header?
-char                       *g_head_buf;
+std::string                 g_head_buf;
 
 static Article       *s_parsed_artp{}; // the article ptr we've parsed
-static long           s_head_buf_size;
 static bool           s_first_one; // is this the 1st occurrence of this header line?
 static bool           s_reading_nntp_header;
 static HeaderLineType s_htypeix[26]{};
@@ -120,13 +119,14 @@ void head_init()
     g_user_header_type.resize(g_user_header_type_max);
     g_user_header_type[g_user_header_type_count++].name = "*";
 
-    s_head_buf_size = LINE_BUF_LEN * 8;
-    g_head_buf = safe_malloc(s_head_buf_size);
+    g_head_buf.clear();
+    g_head_buf.reserve(LINE_BUF_LEN * 8);
 }
 
 void head_final()
 {
-    safe_free0(g_head_buf);
+    g_head_buf.clear();
+    g_head_buf.shrink_to_fit();
     g_user_header_type.clear();
     g_user_header_type.shrink_to_fit();
     g_user_header_type_count = 0;
@@ -222,33 +222,37 @@ HeaderLineType get_header_num(std::string_view header_name)
         g_header_type[CUSTOM_LINE].flags = g_header_type[i].flags;
         g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{-1};
         g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{};
-        for (char *bp = g_head_buf, *line_end = nullptr; *bp; bp = line_end)
+        if (!g_head_buf.empty())
         {
-            if (!(line_end = std::strchr(bp, '\n')) || line_end == bp)
+            char *head = g_head_buf.data();
+            for (char *bp = head, *line_end = nullptr; *bp; bp = line_end)
             {
-                break;
-            }
-            char ch = *++line_end;
-            *line_end = '\0';
-            char *colon = std::strchr(bp, ':');
-            *line_end = ch;
-            if (!colon
-                || (i = set_line_type(std::string_view{bp, static_cast<std::size_t>(colon - bp)})) != CUSTOM_LINE)
-            {
-                continue;
-            }
-            g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{bp - g_head_buf};
-            while (is_hor_space(*line_end))
-            {
-                if (!(line_end = std::strchr(line_end, '\n')))
+                if (!(line_end = std::strchr(bp, '\n')) || line_end == bp)
                 {
-                    line_end = bp + std::strlen(bp);
                     break;
                 }
-                line_end++;
+                char ch = *++line_end;
+                *line_end = '\0';
+                char *colon = std::strchr(bp, ':');
+                *line_end = ch;
+                if (!colon
+                    || (i = set_line_type(std::string_view{bp, static_cast<std::size_t>(colon - bp)})) != CUSTOM_LINE)
+                {
+                    continue;
+                }
+                g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{bp - head};
+                while (is_hor_space(*line_end))
+                {
+                    if (!(line_end = std::strchr(line_end, '\n')))
+                    {
+                        line_end = bp + std::strlen(bp);
+                        break;
+                    }
+                    line_end++;
+                }
+                g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{line_end - head};
+                break;
             }
-            g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{line_end - g_head_buf};
-            break;
         }
         i = CUSTOM_LINE;
     }
@@ -297,12 +301,12 @@ static void end_header_line()
                     const std::size_t subj_size =
                             size > 0 ? static_cast<std::size_t>(size - 1) : 0;
                     s_parsed_artp->set_subj_line(
-                            std::string_view{g_head_buf + start, subj_size});
+                            std::string_view{g_head_buf.data() + start, subj_size});
                 }
                 else
                 {
                     const std::size_t line_size = size > 0 ? static_cast<std::size_t>(size - 1) : 0;
-                    s_parsed_artp->set_cached_line(g_in_header, std::string_view{g_head_buf + start, line_size});
+                    s_parsed_artp->set_cached_line(g_in_header, std::string_view{g_head_buf.data() + start, line_size});
                 }
             }
         }
@@ -445,21 +449,17 @@ bool parse_header(ArticleNum art_num)
 
     start_header(art_num);
     g_art_pos = ArticlePosition{};
-    char *bp = g_head_buf;
+    g_head_buf.clear();
+    g_head_buf.reserve(LINE_BUF_LEN * 8);
     std::string nntp_header_line;
+    std::string article_line(LINE_BUF_LEN, '\0');
     if (s_reading_nntp_header)
     {
         nntp_header_line.reserve(LINE_BUF_LEN);
     }
     while (g_in_header)
     {
-        if (s_head_buf_size < g_art_pos.value_of() + LINE_BUF_LEN)
-        {
-            len = bp - g_head_buf;
-            s_head_buf_size += LINE_BUF_LEN * 4;
-            g_head_buf = safe_realloc(g_head_buf,s_head_buf_size);
-            bp = g_head_buf + len;
-        }
+        const std::size_t line_start = g_head_buf.size();
         if (s_reading_nntp_header)
         {
             const NNTPGetsResult result = nntp_gets(nntp_header_line, LINE_BUF_LEN);
@@ -472,37 +472,37 @@ bool parse_header(ArticleNum art_num)
             {
                 if (nntp_header_line.size() == 1)
                 {
-                    *bp++ = '\n';       // tag the end with an empty line
+                    g_head_buf.push_back('\n'); // tag the end with an empty line
                     break;
                 }
                 nntp_header_line.erase(0, 1);
             }
             len = static_cast<int>(nntp_header_line.size());
-            std::copy(nntp_header_line.begin(), nntp_header_line.end(), bp);
+            g_head_buf.append(nntp_header_line);
             if (found_nl)
             {
-                bp[len++] = '\n';
+                g_head_buf.push_back('\n');
+                len++;
             }
-            bp[len] = '\0';
         }
         else
         {
-            if (read_art(bp,LINE_BUF_LEN) == nullptr)
+            if (read_art(article_line.data(), LINE_BUF_LEN) == nullptr)
             {
                 break;
             }
-            len = std::strlen(bp);
-            found_nl = (bp[len-1] == '\n');
+            len = static_cast<int>(std::strlen(article_line.c_str()));
+            found_nl = (len > 0 && article_line[static_cast<std::size_t>(len - 1)] == '\n');
+            g_head_buf.append(article_line.data(), static_cast<std::size_t>(len));
         }
         if (had_nl)
         {
+            char *bp = g_head_buf.data() + line_start;
             parse_line(bp, false, false);
         }
         had_nl = found_nl;
         g_art_pos += ArticlePosition{len};
-        bp += len;
     }
-    *bp = '\0';
     end_header();
     return true;
 }
@@ -532,7 +532,7 @@ static bool header_line_span(HeaderLineType which_line, char *&line, int &size)
     firstpos += ArticlePosition{g_header_type[which_line].length + 1};
     ArticlePosition lastpos = g_header_type[which_line].max_pos;
     size = (lastpos - firstpos).value_of();
-    line = g_head_buf + firstpos.value_of();
+    line = g_head_buf.data() + firstpos.value_of();
     while (is_hor_space(*line))
     {
         line++;

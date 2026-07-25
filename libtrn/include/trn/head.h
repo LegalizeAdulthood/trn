@@ -90,7 +90,7 @@ extern int                         g_user_header_type_count;
 extern int                         g_user_header_type_max;
 extern ArticleNum                  g_parsed_art; // the article number we've parsed
 extern HeaderLineType              g_in_header;  // are we decoding the header?
-extern char                       *g_head_buf;
+extern std::string                 g_head_buf;
 
 enum
 {
