@@ -48,6 +48,7 @@ void        build_cache();
 void        close_cache();
 void        change_join_subject_len(int len);
 std::string fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache);
+std::string decode_header(std::string_view from);
 int         decode_header(char *to, std::string_view from);
 void        dectrl(char *str);
 #ifdef PENDING

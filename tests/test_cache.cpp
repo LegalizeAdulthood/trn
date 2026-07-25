@@ -12,6 +12,31 @@
 
 using namespace testing;
 
+TEST(DecodeHeaderTest, copiesPlainText)
+{
+    EXPECT_EQ("Plain header", decode_header("Plain header"));
+}
+
+TEST(DecodeHeaderTest, decodesBase64EncodedWord)
+{
+    EXPECT_EQ("Hello", decode_header("=?US-ASCII?B?SGVsbG8=?="));
+}
+
+TEST(DecodeHeaderTest, removesNewlines)
+{
+    EXPECT_EQ("helloworld", decode_header("hello\nworld\n"));
+}
+
+TEST(DecodeHeaderTest, trimsTrailingSpaces)
+{
+    EXPECT_EQ("hello", decode_header("hello  "));
+}
+
+TEST(DecodeHeaderTest, normalizesControlCharacters)
+{
+    EXPECT_EQ("a b c", decode_header("a\tb\fc"));
+}
+
 class DectrlTest : public Test
 {
 protected:
@@ -66,7 +91,7 @@ TEST_F(DectrlTest, ascii_some_nonprintable)
 
 TEST_F(DectrlTest, iso_8859_1)
 {
-    configure_unchanged("\302\253\302\240 La Libert\303\251 guidant le peuple. \302\240\302\273");
+    configure_unchanged("\302\253\302\240\240La Libert\303\251 guidant le peuple.\240\302\240\302\273");
 
     dectrl(m_buffer);
 
@@ -75,8 +100,8 @@ TEST_F(DectrlTest, iso_8859_1)
 
 TEST_F(DectrlTest, iso_8859_1_non_printable)
 {
-    configure_before_expected("\302\253\302\240 La Libert\303\251 guidant\tle peuple. \302\240\302\273",
-                              "\302\253\302\240 La Libert\303\251 guidant le peuple. \302\240\302\273");
+    configure_before_expected("\302\253\302\240\240La Libert\303\251 guidant\tle peuple.\240\302\240\302\273",
+                              "\302\253\302\240\240La Libert\303\251 guidant le peuple.\240\302\240\302\273");
 
     dectrl(m_buffer);
 

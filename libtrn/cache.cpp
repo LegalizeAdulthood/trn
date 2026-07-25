@@ -482,90 +482,76 @@ void Article::set_subj_line(std::string_view subj)
     }
 }
 
-int decode_header(char *to, std::string_view from)
+static std::string decode_header_impl(std::string_view from, int &legacy_size)
 {
-    char      *s = to; // save for pass 2
-    bool       pass2_needed = false;
-    int        size = static_cast<int>(from.size());
-    const char *cursor = from.data();
+    bool        pass2_needed = false;
+    std::size_t cursor = 0;
+    std::string result;
+
+    legacy_size = static_cast<int>(from.size());
+    result.reserve(from.size());
 
     if (from.empty())
     {
-        *to = '\0';
-        return 0;
+        legacy_size = 0;
+        return {};
     }
 
-    const char *const end = cursor + from.size();
-    const auto        find_char = [end](const char *start, char ch)
-    {
-        while (start < end)
-        {
-            if (*start == ch)
-            {
-                return start;
-            }
-            ++start;
-        }
-        return static_cast<const char *>(nullptr);
-    };
-    const auto skip_hor_space_in_view = [end](const char *start)
-    {
-        while (start < end && is_hor_space(*start))
-        {
-            ++start;
-        }
-        return start;
-    };
-
     // Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong)
-    while (cursor < end && *cursor)
+    while (cursor < from.size() && from[cursor])
     {
-        if (*cursor == '=' && cursor + 1 < end && cursor[1] == '?')
+        if (from[cursor] == '=' && cursor + 1 < from.size() && from[cursor + 1] == '?')
         {
-            const char *q = find_char(cursor + 2, '?');
-            char        ch = (q && q + 2 < end && q[2] == '?') ? q[1] : 0;
-            const char *e;
+            const std::size_t q = from.find('?', cursor + 2);
+            const char        ch =
+                (q != std::string_view::npos && q + 2 < from.size() && from[q + 2] == '?') ? from[q + 1] : 0;
+            std::size_t e;
 
             if (ch == 'q' || ch == 'Q' || ch == 'b' || ch == 'B')
             {
                 std::string_view old_ics = input_charset_name();
                 std::string_view old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
-                std::string charset{cursor + 2, q};
+                std::string charset{from.substr(cursor + 2, q - cursor - 2)};
                 utf_init(charset, CHARSET_NAME_UTF8); // FIXME
 #endif
                 e = q + 2;
                 do
                 {
-                    e = find_char(e + 1, '?');
-                } while (e && e + 1 < end && e[1] != '=');
-                if (e && e + 1 < end)
+                    e = from.find('?', e + 1);
+                } while (e != std::string_view::npos && e + 1 < from.size() && from[e + 1] != '=');
+                if (e != std::string_view::npos && e + 1 < from.size())
                 {
                     int         len = static_cast<int>(e - cursor + 2);
-                    std::string encoded{q + 3, e};
-                    size -= len;
+                    std::string encoded{from.substr(q + 3, e - q - 3)};
+                    std::string decoded(encoded.size() + 1, '\0');
+                    legacy_size -= len;
                     cursor = e + 2;
                     if (ch == 'q' || ch == 'Q')
                     {
-                        len = qp_decode_string(to, encoded.c_str(), true);
+                        len = qp_decode_string(decoded.data(), encoded.c_str(), true);
                     }
                     else
                     {
-                        len = b64_decode_string(to, encoded.c_str());
+                        len = b64_decode_string(decoded.data(), encoded.c_str());
                     }
 #ifdef USE_UTF_HACK
-                    std::string utf8_copy = create_utf8_copy(to);
+                    std::string utf8_copy = create_utf8_copy(decoded.data());
                     len = static_cast<int>(utf8_copy.size());
-                    std::memcpy(to, utf8_copy.c_str(), utf8_copy.size());
+                    decoded = std::move(utf8_copy);
 #endif
-                    to += len;
-                    size += len;
+                    decoded.resize(static_cast<std::size_t>(len));
+                    result += decoded;
+                    legacy_size += len;
                     // If the next character is whitespace we should eat it now
-                    cursor = skip_hor_space_in_view(cursor);
+                    while (cursor < from.size() && is_hor_space(from[cursor]))
+                    {
+                        ++cursor;
+                    }
                 }
                 else
                 {
-                    *to++ = *cursor++;
+                    result += from[cursor++];
                 }
 #ifdef USE_UTF_HACK
                 utf_init(old_ics, old_ocs);
@@ -573,33 +559,48 @@ int decode_header(char *to, std::string_view from)
             }
             else
             {
-                *to++ = *cursor++;
+                result += from[cursor++];
             }
         }
-        else if (*cursor != '\n')
+        else if (from[cursor] != '\n')
         {
-            *to++ = *cursor++;
+            result += from[cursor++];
         }
         else
         {
-            cursor++;
-            size--;
+            ++cursor;
+            --legacy_size;
         }
         pass2_needed = true;
     }
-    while (size > 1 && to[-1] == ' ')
+    while (legacy_size > 1 && !result.empty() && result.back() == ' ')
     {
-        to--;
-        size--;
+        result.pop_back();
+        --legacy_size;
     }
-    *to = '\0';
 
     // Pass 2 to clear out "control" characters
     if (pass2_needed)
     {
-        dectrl(s);
+        dectrl(result.data());
     }
-    return size;
+    return result;
+}
+
+std::string decode_header(std::string_view from)
+{
+    int legacy_size;
+    return decode_header_impl(from, legacy_size);
+}
+
+int decode_header(char *to, std::string_view from)
+{
+    int         legacy_size;
+    std::string decoded = decode_header_impl(from, legacy_size);
+
+    std::copy(decoded.begin(), decoded.end(), to);
+    to[decoded.size()] = '\0';
+    return legacy_size;
 }
 
 void dectrl(char *str)
@@ -1074,10 +1075,7 @@ void Article::set_cached_line(int which_line, std::string_view line)
     {
     case FROM_LINE:
     {
-        std::string decoded(line.size() + 1, '\0');
-        const int   size = decode_header(decoded.data(), line);
-        decoded.resize(static_cast<std::size_t>(size));
-        m_from = decoded;
+        m_from = decode_header(line);
         break;
     }
 

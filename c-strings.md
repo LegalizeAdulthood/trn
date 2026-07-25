@@ -508,8 +508,8 @@ tree.
 - Article display/copy paths still have raw line-buffer ownership around
   `read_art`, `g_art_line`, and fixed-size output loops.
 - Current local candidates are explicit slices in Tiers 1-3:
-  `decode_header` output-buffer removal, `SourceFile::append` line
-  normalization, `decode_subject` parser cursors, and
+  remaining `decode_header` caller migrations, `SourceFile::append`
+  line normalization, `decode_subject` parser cursors, and
   `input_newsgroup` target text.
 - Direct `strcpy`, `strncpy`, and `std::sprintf` hits are accounted for
   by owner slices: `g_ser_line` in CSTR-076, `g_art_line` in CSTR-077,
@@ -536,7 +536,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - C text I/O roots: `fgets` 20, `fputs` 170, `std::printf` 323,
   `std::fprintf` 16.
 - Character output: `std::putchar` 76, `puts` 0.
-- Character byte operations: `memcpy` 3, `memset` 4, `memcmp` 1.
+- Character byte operations: `memcpy` 2, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
@@ -564,28 +564,12 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-252 - Decode Header String Result
-
-- Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`,
-  `tests/test_cache.cpp`.
-- Kind: caller output buffer to string result.
-- Function: `decode_header`.
-- Dependencies: none.
-- Change: add direct tests for current encoded-word, newline-stripping,
-  whitespace, and control-character behavior, run them, then change the
-  primary API to return `std::string` from `std::string_view`.  Reserve
-  the input size before appending decoded bytes.  Keep any temporary raw
-  output-buffer wrapper only while existing callers are being migrated,
-  and migrate `Article::set_cached_line` in this slice so the new API is
-  used immediately.
-- Tests: focused `DecodeHeaderTest` cases before and after the refactor.
-
 #### CSTR-253 - Article Subject Header Decode
 
 - Files: `libtrn/cache.cpp`.
 - Kind: caller migration to string-returning helper.
 - Function: `Article::set_subj_line`.
-- Dependencies: CSTR-252.
+- Dependencies: string-returning `decode_header` API is present.
 - Change: use the string-returning `decode_header` API and simplify the
   `new_subj` construction around the `"Re: "` prefix.  Preserve the
   second `Re:` stripping pass, `AF_HAS_RE`, and subject hash key
@@ -598,7 +582,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/intrp.cpp`.
 - Kind: caller migration to string-returning helper.
 - Function: `do_interp`.
-- Dependencies: CSTR-252.
+- Dependencies: string-returning `decode_header` API is present.
 - Change: use the returned decoded string for address and comment parse
   paths instead of creating a mutable C buffer for `decode_header`.
   Prefer `std::string`/`std::string_view` search and slice operations
@@ -612,7 +596,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/rt-wumpus.cpp`.
 - Kind: caller migration to string-returning helper.
 - Function: `tree_puts`.
-- Dependencies: CSTR-252.
+- Dependencies: string-returning `decode_header` API is present.
 - Change: use the string-returning `decode_header` API for hidden header
   display so `line_buffer.data()` is not used as a caller-owned output
   buffer.  Keep existing tree wrapping and character substitution
