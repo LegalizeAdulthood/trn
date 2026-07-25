@@ -1479,9 +1479,31 @@ TEST_F(InterpolatorTest, addressModifier)
     ASSERT_EQ(TRN_TEST_HEADER_FROM_ADDRESS, buffer());
 }
 
+TEST_F(InterpolatorTest, addressModifierDecodesHeader)
+{
+    m_env.expect_env("FROM", "=?US-ASCII?B?Qm96byB0aGUgQ2xvd24=?= <bozo@clown-world.org>");
+    char pattern[]{"%>{FROM}"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_HEADER_FROM_ADDRESS, buffer());
+}
+
 TEST_F(InterpolatorTest, nameModifier)
 {
     char pattern[]{"%(" TRN_TEST_HEADER_FROM R"pat(=^\(.*\)$?%)0))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_HEADER_FROM_NAME, buffer());
+}
+
+TEST_F(InterpolatorTest, commentModifierDecodesHeader)
+{
+    m_env.expect_env("FROM", "bozo@clown-world.org (=?US-ASCII?B?Qm96byB0aGUgQ2xvd24=?=)");
+    char pattern[]{"%){FROM}"};
 
     const char *new_pattern = interpolate(pattern);
 

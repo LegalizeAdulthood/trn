@@ -42,7 +42,6 @@ struct utsname utsn;
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -359,6 +358,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
             std::string      search_command;
             std::string      owned_value;
             std::string      transform_text;
+            std::string      decoded_value;
             std::string_view value;
             bool             upper = false;
             bool             lastcomp = false;
@@ -1325,34 +1325,41 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
             // A maze of twisty little conditions, all alike...
             if (address_parse || comment_parse)
             {
-                char *mutable_s = make_mutable_text();
-                decode_header(mutable_s, mutable_s);
-                std::string_view parsed_value;
+                decoded_value = decode_header(value);
+                std::string_view parsed_value{decoded_value};
                 if (address_parse)
                 {
-                    char *start = mutable_s;
-                    char *h = std::strchr(mutable_s, '<');
-                    if (h != nullptr) // grab the good part
+                    const std::size_t address_begin = parsed_value.find('<');
+                    if (address_begin != std::string_view::npos) // grab the good part
                     {
-                        char *value_start = h + 1;
-                        start = value_start;
-                        if ((h = std::strchr(value_start, '>')) != nullptr)
+                        const std::size_t value_begin = address_begin + 1;
+                        const std::size_t value_end = parsed_value.find('>', value_begin);
+                        if (value_end == std::string_view::npos)
                         {
-                            *h = '\0';
+                            parsed_value.remove_prefix(value_begin);
+                        }
+                        else
+                        {
+                            parsed_value = parsed_value.substr(value_begin, value_end - value_begin);
                         }
                     }
-                    else if ((h = std::strchr(mutable_s, '(')) != nullptr)
+                    else
                     {
-                        while (h-- != start && *h == ' ')
+                        const std::size_t comment_begin = parsed_value.find('(');
+                        if (comment_begin != std::string_view::npos)
                         {
+                            std::size_t value_end = comment_begin;
+                            while (value_end != 0 && parsed_value[value_end - 1] == ' ')
+                            {
+                                --value_end;
+                            }
+                            parsed_value = parsed_value.substr(0, value_end);
                         }
-                        h[1] = '\0'; // or strip the comment
                     }
-                    parsed_value = start;
                 }
                 else
                 {
-                    parsed_value = extract_name(mutable_s);
+                    parsed_value = extract_name(parsed_value);
                 }
                 set_value(parsed_value);
             }

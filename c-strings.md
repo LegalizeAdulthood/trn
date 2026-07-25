@@ -564,20 +564,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-254 - Interpolation Address Header Decode
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: caller migration to string-returning helper.
-- Function: `do_interp`.
-- Dependencies: string-returning `decode_header` API is present.
-- Change: use the returned decoded string for address and comment parse
-  paths instead of creating a mutable C buffer for `decode_header`.
-  Prefer `std::string`/`std::string_view` search and slice operations
-  over `std::strchr` pointer walking where the local flow allows it.  Do
-  not let addresses of local string storage escape the function.
-- Tests: interpolation tests for decoded From-style address and comment
-  values.
-
 #### CSTR-255 - Tree Header Decode Buffer
 
 - Files: `libtrn/rt-wumpus.cpp`.
@@ -735,7 +721,7 @@ owned strings or owner-specific storage.
 - Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`.
 - Kind: obsolete C-style helper overload.
 - Function: `decode_header`.
-- Dependencies: CSTR-254 and CSTR-255.
+- Dependencies: CSTR-255.
 - Change: remove the raw output-buffer `decode_header` API after all
   production callers use the string-returning API.  Keep only the
   `std::string decode_header(std::string_view)` form.
