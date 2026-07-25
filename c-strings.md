@@ -58,8 +58,8 @@ Run every scan from the innermost lexical scope outward:
 - C string library calls.  Treat `strcpy`, `strncpy`, `strcat`,
   `strncat`, `strcmp`, `strncmp`, `strchr`, `strrchr`, `strstr`,
   `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`, `sprintf`,
-  `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `fgets`, `fputs`,
-  `puts`, `printf`, and `fprintf` as audit roots.
+  `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `fgets`, `gets`,
+  `fputs`, `puts`, `printf`, and `fprintf` as audit roots.
 - C byte library calls on character storage.  Treat `memcpy`, `memmove`,
   `memset`, `memcmp`, and `memchr` as audit roots when the destination
   or compared data is string-like `char` storage.  Non-string table
@@ -344,9 +344,9 @@ the storage:
 - `sscanf`: parsing from null-terminated text.  Prefer
   `std::string_view` tokenization and `std::from_chars` when the source
   is already a view or owned string.
-- `fgets`: fixed-size line input.  Prefer `std::string` line input when
-  truncation is arbitrary.  Keep fixed protocol buffers only when the
-  size is meaningful.
+- `fgets` and `gets`: fixed-size line input.  Prefer `std::string` line
+  input when truncation is arbitrary.  Keep fixed protocol buffers only
+  when the size is meaningful.
 - `fputs`, `puts`, `printf`, and `fprintf`: C string output or
   printf-format output.  Prefer `fmt::print` for formatted output and
   keep `fputs` only when plain C-string output is simpler and does not
@@ -470,11 +470,10 @@ the C-style string buffer itself is refactored.
 
 ## Current Audit Summary
 
-The current scan covers production code under `config`, `libtrn`,
-`util`, `nntp`, `inews`, `nntplist`, `trn-artchk`, `tool`,
-`wildmat`, `parsedate`, and `main.cpp`.  It does not include tests,
-generated files, legacy Configure scripts, or the vendored `vcpkg`
-tree.
+The current scan covers source code under `config`, `libtrn`, `util`,
+`nntp`, `inews`, `nntplist`, `trn-artchk`, `tool`, `wildmat`,
+`parsedate`, and `main.cpp`.  It does not include tests, generated
+files, legacy Configure scripts, or the vendored `vcpkg` tree.
 
 - `save_str`: no production hits remain in the current tree.
 - `safe_copy`: no production hits remain in the current tree.
@@ -484,17 +483,29 @@ tree.
   allocation helpers.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: current string candidates include `g_buf` and
-  terminal command input.  NNTP status lines and article display lines
-  now use owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
-  scratch buffers, translation tables, MIME decode tables, terminal
-  pushback bytes, termcap storage, address conversion scratch, and regex
-  bytecode arrays are non-string protocol or parser storage.
+- Fixed raw buffers: current string candidates include `g_buf`,
+  terminal command input, and inactive `#ifdef TEST` input drivers in
+  `wildmat` and `parsedate`.  NNTP status lines and article display
+  lines now use owned string storage.  NNTP CRLF trailer scratch, tiny
+  UTF byte scratch buffers, translation tables, MIME decode tables,
+  terminal pushback bytes, termcap storage, address conversion scratch,
+  and regex bytecode arrays are non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
-- Unused overload/wrapper scan: no current C-style string overload group
-  is ready for removal.  Keep `nntp_init_error`,
+- Article input scan: several functions still allocate local
+  `std::string` line storage, pass `data()` plus `LINE_BUF_LEN` to
+  `read_art(char *, int)`, then search for the first NUL byte.  These
+  callers should migrate to the existing string-reading API after the
+  MIME cursor no longer depends on the returned pointer.
+- MIME cursor scan: `g_mime_getc_line` is a global `char *` cursor into
+  either the first decoded line or `g_art_line`.  It blocks converting
+  `read_art(std::string &)` from a pointer-returning API to a boolean
+  line-read API.
+- Unused overload/wrapper scan: `read_art(char *, int)` is not ready for
+  removal because production callers remain.  After those callers move
+  to string line input it can leave the public header and become an
+  implementation detail.  Keep `nntp_init_error`,
   `string_case_compare`, `string_case_equal`, `Tgetstr`, `line_ptr`,
   `line_offset`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
@@ -508,31 +519,30 @@ tree.
 - Article display/copy paths now use `std::string` for the shared
   article line.  The low-level `read_art(char *, int)` API remains for
   protocol/body buffers and local fixed-size output loops.
-- No current leaf helper-removal slices remain.  The remaining open
-  slices are broad shared terminal and command-buffer owners.
 - The remaining direct `strcpy` hit is accounted for by `g_buf` in
-  CSTR-161.  No `strncpy` or `std::sprintf` production hits remain in
-  this scan.
+  CSTR-161.  No active `strncpy`, `strcmp`, or `std::sprintf`
+  production hits remain in this scan.  The one lexical `strcmp` hit is
+  in the inactive `parsedate` `#ifdef TEST` driver.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
 
 ## Current C String Function Inventory
 
-The current scan covers the production roots listed above.  Counts below
+The current scan covers the source roots listed above.  Counts below
 are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 1, `strncpy` 0, `strcat` 0.
 - Comparison: `strcmp` 1, `strncmp` 0.
-- Search and length: `strchr` 42, `strrchr` 0, `strstr` 2,
+- Search and length: `strchr` 39, `strrchr` 0, `strstr` 2,
   `strlen` 24.
 - Formatting into C buffers: `std::sprintf` 0, `std::snprintf` 0.
 - C text parsing: `sscanf` 0.
-- C text I/O roots: `fgets` 20, `fputs` 169, `std::printf` 321,
-  `std::fprintf` 14.
-- Character output: `std::putchar` 76, `puts` 0.
+- C text I/O roots: `fgets` 20, `gets` 4, `fputs` 169,
+  `printf`/`std::printf` 335, `fprintf`/`std::fprintf` 14.
+- Character output: `putchar`/`std::putchar` 77, `puts` 0.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strncat`, `strspn`,
@@ -556,20 +566,168 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-260 - Wildmat TEST Driver Input Buffers
+
+- Files: `wildmat/wildmat.cpp`.
+- Kind: inactive fixed local input buffers and `gets`.
+- Function: `main` under `#ifdef TEST`.
+- Dependencies: none.
+- Change: replace `char p[80]`, `char text[80]`, and `gets` with
+  `std::string` plus line input.  Preserve the interactive tester
+  prompts and blank-pattern exit behavior.  Use fmt or iostream output
+  consistently within the inactive driver; do not touch `wildmat`
+  matching logic.
+- Truncation: arbitrary legacy input limit; remove it.
+- Tests: no current build coverage unless the TEST driver is enabled.
+
+#### CSTR-261 - Parsedate TEST Driver Input Buffer
+
+- Files: `parsedate/parsedate.y`.
+- Kind: inactive fixed local input buffer, `gets`, and `strcmp`.
+- Function: `main` under `#ifdef TEST`.
+- Dependencies: none.
+- Change: replace `char buff[128]`, `gets`, and the debug-command
+  `strcmp` with `std::string` line input and direct string comparison.
+  Pass `line.c_str()` only to the legacy `parsedate` parser call.  Keep
+  this scoped to the inactive tester code generated into
+  `parsedate.cpp`.
+- Truncation: arbitrary legacy input limit; remove it.
+- Tests: no current build coverage unless the TEST driver is enabled.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-262 - MIME Decode Cursor Views
+
+- Files: `libtrn/decode.cpp`, `libtrn/include/trn/decode.h`,
+  `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`, direct
+  `decode_piece` callers.
+- Kind: global mutable C-string cursor and nullable input parameter.
+- Functions: `decode_piece`, `mime_getc`.
+- Dependencies: none.
+- Change: change `decode_piece` to accept `std::string_view first_line`
+  and use an empty view as the no-first-line sentinel.  Replace
+  `g_mime_getc_line` with a `std::string_view` cursor, consume it with
+  `front()` and `remove_prefix(1)`, and set it to `g_art_line` after
+  article reads.  Update callers to pass `std::string_view{}` instead
+  of `nullptr` and to pass existing strings/views directly.
+- Truncation: none; this is cursor ownership cleanup.
+- Tests: MIME decode and attachment tests.
+
+#### CSTR-263 - Boolean Article String Reads
+
+- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`, direct
+  one-argument `read_art` callers.
+- Kind: stale C-string return from a string-owning API.
+- Function: `read_art(std::string &)`.
+- Dependencies: CSTR-262.
+- Change: change `read_art(std::string &line)` to return `bool`
+  instead of `char *`.  Return `false` only when no line was read.
+  Update boolean callers directly.  In `read_art_buf`, return
+  `g_art_line.data()` only after a successful string read.
+- Truncation: keep the existing full-line assembly behavior.
+- Tests: article read, MIME decode, and article display tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
+#### CSTR-264 - Header Parser Article Line Input
+
+- Files: `libtrn/head.cpp`.
+- Kind: local string buffer passed through C output API.
+- Function: `parse_header`.
+- Dependencies: CSTR-263.
+- Change: replace the local `article_line.data(), LINE_BUF_LEN`
+  `read_art` call with the string-reading API.  Use `article_line.size()`
+  for the length, check `back() == '\n'` for newline detection, and
+  append the string directly to `g_head_buf`.
+- Truncation: arbitrary fixed read limit; remove it through the string
+  `read_art` API while preserving NUL truncation behavior.
+- Tests: header parsing and cache tests.
+
+#### CSTR-268 - MIME Sub-header Line Input
+
+- Files: `libtrn/mime.cpp`.
+- Kind: mixed file/article fixed line input into owned string storage.
+- Function: `mime_parse_sub_header`.
+- Dependencies: CSTR-263.
+- Change: remove the `line.data() + pos` C-buffer append path.  Read
+  file input with `get_a_line(ifp)` and article input with
+  `read_art(article_line)`, then append the returned text to `line`.
+  Preserve folded-header parsing and `next_pos` behavior.
+- Truncation: arbitrary fixed read limit; remove it.
+- Tests: MIME header parsing and nested message tests.
+
+#### CSTR-269 - MIME Cat Decode Line Input
+
+- Files: `libtrn/mime.cpp`.
+- Kind: mixed file/article fixed line input into owned string storage.
+- Function: `cat_decode`.
+- Dependencies: CSTR-263.
+- Change: replace `std::fgets(line.data(), ...)` and
+  `read_art(line.data(), ...)` with string line input.  Use
+  `get_a_line(ifp)` for file input and `read_art(line)` for article
+  input, then write the line with fmt.
+- Truncation: arbitrary fixed read limit; remove it.
+- Tests: MIME cat decode tests.
+
+#### CSTR-270 - Uudecode Line Input
+
+- Files: `libtrn/uudecode.cpp`.
+- Kind: mixed file/article fixed line input into owned string storage.
+- Function: `uudecode`.
+- Dependencies: CSTR-263.
+- Change: simplify the local `read_line` lambda so file input uses
+  `get_a_line(ifp)` and article input uses `read_art(line)`.  Drop the
+  temporary `char *input`, manual resize, and NUL search.
+- Truncation: arbitrary fixed read limit; remove it.
+- Tests: uuencode/decode attachment tests.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-265 - Save Article Local Line Reads
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local string buffer passed through C output API.
+- Function: `save_article`.
+- Dependencies: CSTR-263.
+- Change: replace both local `article_line.data(), LINE_BUF_LEN`
+  `read_art` loops with the string-reading API.  Use direct
+  `std::string_view` views of the resulting string and remove the manual
+  NUL search and resize cycle.
+- Truncation: arbitrary fixed read limit; remove it.
+- Tests: save article, extract, and mailbox tests.
+
+#### CSTR-266 - Supersede Body Copy Line Reads
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local string buffer passed through C output API.
+- Function: `supersede_article`.
+- Dependencies: CSTR-263.
+- Change: replace the body-copy `article_line.data(), LINE_BUF_LEN`
+  read loop with the string-reading API and print the resulting string
+  directly.
+- Truncation: arbitrary fixed read limit; remove it.
+- Tests: supersede article tests.
+
+#### CSTR-267 - Forward Body Copy Line Reads
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local string buffer passed through C output API.
+- Function: `forward`.
+- Dependencies: CSTR-263.
+- Change: replace the body-copy `article_line.data(), LINE_BUF_LEN + 1`
+  read loop with the string-reading API.  Preserve MIME-boundary dash
+  escaping and multipart trailer output.
+- Truncation: arbitrary fixed read limit; remove it.
+- Tests: forward article tests.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -618,3 +776,18 @@ with their owner slices unless a local use is clearly formatting-only.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
+
+#### CSTR-271 - Hide Raw Article Buffer Reads
+
+- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`.
+- Kind: obsolete public C-buffer overload.
+- Function: `read_art(char *, int)`.
+- Dependencies: CSTR-264, CSTR-265, CSTR-266, CSTR-267, CSTR-268,
+  CSTR-269, CSTR-270.
+- Change: remove the raw `read_art(char *, int)` declaration from the
+  header after all external callers use string line input.  Keep the raw
+  buffer reader only as a private `artio.cpp` implementation detail for
+  the string reader and article-buffer fill code.
+- Truncation: private protocol/body buffer limits remain with the
+  low-level article-buffer implementation.
+- Tests: full article, MIME, decode, and save workflows.
