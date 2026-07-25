@@ -149,7 +149,7 @@ extern MimeSection *g_mime_section;
 extern MimeState    g_mime_state;
 extern std::string  g_multipart_separator;
 extern bool         g_auto_view_inline;
-extern char        *g_mime_getc_line;
+extern std::string_view g_mime_getc_line;
 
 enum MimeCapFlags : std::uint8_t
 {

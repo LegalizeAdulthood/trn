@@ -110,7 +110,7 @@ protected:
         g_data_source = &m_data_source;
         g_art_fp = m_input;
         g_mime_section = &m_section;
-        g_mime_getc_line = nullptr;
+        g_mime_getc_line = {};
         g_is_mime = false;
         g_no_wait_fork = true;
 
@@ -178,7 +178,7 @@ protected:
     DataSource  *m_old_data_source{};
     std::FILE   *m_old_art_fp{};
     MimeSection *m_old_mime_section{};
-    char        *m_old_mime_getc_line{};
+    std::string_view m_old_mime_getc_line;
     bool         m_old_is_mime{};
     bool         m_old_no_wait_fork{};
     std::string  m_old_decode_filename;
@@ -231,7 +231,7 @@ TEST_F(DecodePieceDirectoryTest, createsUsesAndRemovesPieceDirectory)
     mime_cap.command = "viewer %s";
     testing::internal::CaptureStdout();
 
-    const bool        result = decode_piece(&mime_cap, nullptr);
+    const bool        result = decode_piece(&mime_cap, {});
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE(result);
@@ -250,7 +250,7 @@ TEST_F(DecodePieceDirectoryTest, savesMultipartPieceInPieceDirectory)
     std::rewind(m_input);
 
     testing::internal::CaptureStdout();
-    const bool        result = decode_piece(nullptr, nullptr);
+    const bool        result = decode_piece(nullptr, {});
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE(result);

@@ -483,10 +483,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   allocation helpers.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: current string candidates include `g_buf`,
-  terminal command input, and the inactive `parsedate` `#ifdef TEST`
-  input driver.  NNTP status lines and article display lines now use
-  owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
+- Fixed raw buffers: current string candidates include `g_buf` and
+  terminal command input.  NNTP status lines and article display lines
+  now use owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
   scratch buffers, translation tables, MIME decode tables, terminal
   pushback bytes, termcap storage, address conversion scratch, and regex
   bytecode arrays are non-string protocol or parser storage.
@@ -496,12 +495,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Article input scan: several functions still allocate local
   `std::string` line storage, pass `data()` plus `LINE_BUF_LEN` to
   `read_art(char *, int)`, then search for the first NUL byte.  These
-  callers should migrate to the existing string-reading API after the
-  MIME cursor no longer depends on the returned pointer.
-- MIME cursor scan: `g_mime_getc_line` is a global `char *` cursor into
-  either the first decoded line or `g_art_line`.  It blocks converting
-  `read_art(std::string &)` from a pointer-returning API to a boolean
-  line-read API.
+  callers should migrate to the existing string-reading API now that the
+  MIME decode cursor is a view and no longer depends on the returned
+  pointer.
 - Unused overload/wrapper scan: `read_art(char *, int)` is not ready for
   removal because production callers remain.  After those callers move
   to string line input it can leave the public header and become an
@@ -523,6 +519,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   CSTR-161.  No active `strncpy`, `strcmp`, or `std::sprintf`
   production hits remain in this scan.  The one lexical `strcmp` hit is
   in the inactive `parsedate` `#ifdef TEST` driver.
+- The inactive `parsedate` `#ifdef TEST` harness still uses `gets`,
+  `strcmp`, and a fixed input buffer.  It is intentionally skipped; do
+  not modernize that harness as part of this audit.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
@@ -566,41 +565,10 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-261 - Parsedate TEST Driver Input Buffer
-
-- Files: `parsedate/parsedate.y`.
-- Kind: inactive fixed local input buffer, `gets`, and `strcmp`.
-- Function: `main` under `#ifdef TEST`.
-- Dependencies: none.
-- Change: replace `char buff[128]`, `gets`, and the debug-command
-  `strcmp` with `std::string` line input and direct string comparison.
-  Pass `line.c_str()` only to the legacy `parsedate` parser call.  Keep
-  this scoped to the inactive tester code generated into
-  `parsedate.cpp`.
-- Truncation: arbitrary legacy input limit; remove it.
-- Tests: no current build coverage unless the TEST driver is enabled.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-262 - MIME Decode Cursor Views
-
-- Files: `libtrn/decode.cpp`, `libtrn/include/trn/decode.h`,
-  `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`, direct
-  `decode_piece` callers.
-- Kind: global mutable C-string cursor and nullable input parameter.
-- Functions: `decode_piece`, `mime_getc`.
-- Dependencies: none.
-- Change: change `decode_piece` to accept `std::string_view first_line`
-  and use an empty view as the no-first-line sentinel.  Replace
-  `g_mime_getc_line` with a `std::string_view` cursor, consume it with
-  `front()` and `remove_prefix(1)`, and set it to `g_art_line` after
-  article reads.  Update callers to pass `std::string_view{}` instead
-  of `nullptr` and to pass existing strings/views directly.
-- Truncation: none; this is cursor ownership cleanup.
-- Tests: MIME decode and attachment tests.
 
 #### CSTR-263 - Boolean Article String Reads
 
@@ -608,7 +576,7 @@ that later caller slices can consume directly.
   one-argument `read_art` callers.
 - Kind: stale C-string return from a string-owning API.
 - Function: `read_art(std::string &)`.
-- Dependencies: CSTR-262.
+- Dependencies: none.
 - Change: change `read_art(std::string &line)` to return `bool`
   instead of `char *`.  Return `false` only when no line was read.
   Update boolean callers directly.  In `read_art_buf`, return

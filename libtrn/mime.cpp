@@ -42,7 +42,7 @@ MimeSection *g_mime_section{&g_mime_article};
 MimeState    g_mime_state{};
 std::string  g_multipart_separator{"-=-=-=-=-=-"};
 bool         g_auto_view_inline{};
-char        *g_mime_getc_line{};
+std::string_view g_mime_getc_line;
 
 #ifdef USE_UTF_HACK
 #define CODE_POINT_MAX  0x7FFFFFFFL
@@ -1039,7 +1039,10 @@ void mime_decode_article(bool view)
                 }
             }
             g_mime_state = DECODE_MIME;
-            if (decode_piece(mcp, g_art_line.empty() || g_art_line.front() == '\n' ? nullptr : g_art_line.data()))
+            if (decode_piece(mcp,
+                             g_art_line.empty() || g_art_line.front() == '\n'
+                                 ? std::string_view{}
+                                 : std::string_view{g_art_line}))
             {
                 mime_set_state(g_art_line);
                 if (g_mime_state == DECODE_MIME)
@@ -1386,19 +1389,21 @@ static int mime_getc(std::FILE *fp)
         return std::fgetc(fp);
     }
 
-    if (!g_mime_getc_line || !*g_mime_getc_line)
+    if (g_mime_getc_line.empty())
     {
-        g_mime_getc_line = read_art(g_art_line);
+        if (!read_art(g_art_line))
+        {
+            return EOF;
+        }
         if (mime_end_of_section(g_art_line))
         {
             return EOF;
         }
-        if (!g_mime_getc_line)
-        {
-            return EOF;
-        }
+        g_mime_getc_line = g_art_line;
     }
-    return *g_mime_getc_line++;
+    const char ch = g_mime_getc_line.front();
+    g_mime_getc_line.remove_prefix(1);
+    return ch;
 }
 
 DecodeState cat_decode(std::FILE *ifp, DecodeState state)

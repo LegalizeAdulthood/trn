@@ -359,7 +359,7 @@ std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
 //
 // Handle a piece of a split file.
 //
-bool decode_piece(MimeCapEntry *mcp, char *first_line)
+bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
 {
     g_msg.clear();
     const auto open_path = [](const fs::path &path, const char *mode)
@@ -492,8 +492,8 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     if (g_mime_section->m_type == MESSAGE_MIME)
     {
         mime_push_section();
-        mime_parse_sub_header(fp, first_line != nullptr ? first_line : "");
-        first_line = nullptr;
+        mime_parse_sub_header(fp, first_line);
+        first_line = {};
     }
     g_mime_getc_line = first_line;
     DecodeFunc decoder = decode_function(g_mime_section->m_encoding);
