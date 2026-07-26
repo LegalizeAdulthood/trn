@@ -1105,24 +1105,6 @@ echo_it:
     return cursor + 1;
 }
 
-bool finish_dbl_char()
-{
-    if (g_buf[1] != FINISH_CMD)
-    {
-        return true;
-    }
-
-    int               not_echoing_save = s_not_echoing;
-    const std::string command = finish_dbl_char(std::string_view{g_buf, 1});
-    s_not_echoing = not_echoing_save;
-    if (command.empty())
-    {
-        return false;
-    }
-    store_command(command);
-    return true;
-}
-
 std::string finish_dbl_char(std::string_view command)
 {
     const int         not_echoing_save = s_not_echoing;
@@ -1500,11 +1482,6 @@ static std::string read_command(bool allow_macros, bool mark_finished)
 std::string get_cmd()
 {
     return read_command(true, true);
-}
-
-void get_cmd(char *whatbuf)
-{
-    get_cmd_into(whatbuf, whatbuf == g_buf || s_xmouse_is_on, whatbuf == g_buf);
 }
 
 static char get_any_key()

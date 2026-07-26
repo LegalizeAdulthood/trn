@@ -179,7 +179,6 @@ void        hide_pending();
 bool        finput_pending(bool check_term);
 bool        finish_command(int donewline);
 std::string finish_command(std::string_view command, bool donewline);
-bool        finish_dbl_char();
 std::string finish_dbl_char(std::string_view command);
 void        eat_typeahead();
 void        save_typeahead(char *buf, int len);
@@ -192,7 +191,6 @@ void no_so_fire();
 void no_ul_fire();
 #endif
 std::string get_cmd();
-void        get_cmd(char *whatbuf);
 void push_string(std::string_view str, char_int bits);
 int  get_anything();
 int  pause_get_cmd();

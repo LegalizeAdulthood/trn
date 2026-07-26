@@ -454,10 +454,10 @@ TEST_F(TerminalTest, macLineParsesExpandedKey)
     mac_line(line);
 
     push_char('\002');
-    get_cmd(g_buf);
+    const std::string command = get_cmd();
 
-    EXPECT_EQ('q', g_buf[0]);
-    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+    EXPECT_EQ('q', command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
 }
 
 TEST_F(MacroFileInitTest, termSetLoadsMacroFile)
@@ -471,10 +471,10 @@ TEST_F(MacroFileInitTest, termSetLoadsMacroFile)
     term_set(tcbuf.data());
 
     push_char('\004');
-    get_cmd(g_buf);
+    const std::string command = get_cmd();
 
-    EXPECT_EQ('y', g_buf[0]);
-    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+    EXPECT_EQ('y', command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
 }
 
 TEST_F(TerminalTest, pushStringExpandsInInputOrderWithMacroBits)

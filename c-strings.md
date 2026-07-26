@@ -498,11 +498,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   string-reading API.  The raw `read_art(char *, int)` helper is already
   private to `artio.cpp`; it remains only inside the string reader and
   article-buffer fill code.
-- Unused overload/wrapper scan: `get_cmd(char *)` and
-  `finish_dbl_char()` have no production callers.  `set_def(char *)`
-  has one production caller in `respond.cpp`.  `finish_command(int)`
-  still has production callers that read or store command text through
-  `g_buf`.  Keep `nntp_init_error`, `string_case_compare`,
+- Unused overload/wrapper scan: `set_def(char *)` has one production
+  caller in `respond.cpp`.  `finish_command(int)` still has production
+  callers that read or store command text through `g_buf`.  Keep
+  `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
   they still have production/source callers or platform/API boundary
@@ -581,20 +580,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-302 - Remove Raw Command Input Wrappers
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  `tests/test_ngstuff.cpp`, `tests/test_terminal.cpp`.
-- Kind: unused C-style overload cleanup.
-- Function: `get_cmd(char *)` and `finish_dbl_char()`.
-- Dependencies: none.
-- Change: delete the raw buffer `get_cmd(char *)` overload and the
-  unused raw `finish_dbl_char()` wrapper.  Update tests that still call
-  `get_cmd(g_buf)` to use the string-returning API or remove stale
-  compatibility checks.
-- Tests: terminal command input tests and command-dispatch tests that
-  currently seed input through `g_buf`.
 
 #### CSTR-305 - Remove Raw `set_def` Wrapper
 
