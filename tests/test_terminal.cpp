@@ -40,9 +40,19 @@ protected:
         m_old_mode = g_mode;
         m_old_term_line = g_term_line;
         m_old_term_col = g_term_col;
+        m_old_int_count = g_int_count;
+        m_old_tc_cr = g_tc_CR;
+        m_old_tc_ce = g_tc_CE;
+        m_old_tc_so = g_tc_SO;
+        m_old_tc_se = g_tc_SE;
         m_old_s_default_cmd = g_s_default_cmd;
         m_old_univ_default_cmd = g_univ_default_cmd;
         errno = 0;
+        g_int_count = 0;
+        g_tc_CR = m_carriage_return;
+        g_tc_CE = m_erase_line;
+        g_tc_SO = m_standout_start;
+        g_tc_SE = m_standout_end;
         drain_macro_buffer();
     }
 
@@ -54,15 +64,30 @@ protected:
         g_mode = m_old_mode;
         g_term_line = m_old_term_line;
         g_term_col = m_old_term_col;
+        g_int_count = m_old_int_count;
+        g_tc_CR = m_old_tc_cr;
+        g_tc_CE = m_old_tc_ce;
+        g_tc_SO = m_old_tc_so;
+        g_tc_SE = m_old_tc_se;
         g_s_default_cmd = m_old_s_default_cmd;
         g_univ_default_cmd = m_old_univ_default_cmd;
     }
+
+    char m_carriage_return[1]{};
+    char m_erase_line[1]{};
+    char m_standout_start[1]{};
+    char m_standout_end[1]{};
 
     int         m_old_errno{};
     GeneralMode m_old_general_mode{};
     MinorMode   m_old_mode{};
     int         m_old_term_line{};
     int         m_old_term_col{};
+    char        m_old_int_count{};
+    const char *m_old_tc_cr{};
+    const char *m_old_tc_ce{};
+    const char *m_old_tc_so{};
+    const char *m_old_tc_se{};
     bool        m_old_s_default_cmd{};
     bool        m_old_univ_default_cmd{};
 };
@@ -342,6 +367,17 @@ TEST_F(TerminalTest, pushStringExpandsInInputOrderWithMacroBits)
 
     read_tty(&command, 1);
     EXPECT_EQ(static_cast<unsigned char>('\002' ^ 0200), static_cast<unsigned char>(command));
+}
+
+TEST_F(TerminalTest, pauseGetCommandReturnsPushedCommand)
+{
+    push_char('x');
+
+    testing::internal::CaptureStdout();
+    const int command = pause_get_cmd();
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ('x', command);
 }
 
 TEST_F(TerminalTest, setDefUsesDefaultCommandForBlankInput)

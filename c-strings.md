@@ -598,14 +598,16 @@ with their owner slices unless a local use is clearly formatting-only.
 - Files: `libtrn/terminal.cpp`,
   `libtrn/include/trn/terminal.h`, command-input callers.
 - Kind: caller-owned fixed command buffers.
-- Function: `get_cmd`, `get_anything`, `in_char`, and related callers.
+- Function: `get_cmd`, `in_char`, `in_answer`, and related callers.
 - Dependencies: separate capability byte storage from command text
   before changing terminal signatures.
 - Change: migrate remaining command-input callers toward the
   string-returning `get_cmd()` API.  Keep the C-buffer `get_cmd(char *)`
   wrapper only while command-loop code still uses `g_buf` as the shared
   edit buffer and `FINISH_CMD` sentinel.  Preserve typeahead, macro
-  expansion, and mouse input behavior.
+  expansion, and mouse input behavior.  Do not include `pause_get_cmd`;
+  it keeps the `get_cmd()` string local and returns the command
+  character without writing through `g_buf`.
 - Tests: terminal input, option editing, and selector tests.
 
 #### CSTR-161 - General Command Buffer Storage

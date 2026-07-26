@@ -1555,16 +1555,17 @@ int pause_get_cmd()
     }
     cache_until_key();
     set_mode(g_general_mode,MM_ANY_KEY_PROMPT);
-    store_command(get_cmd());
+    const std::string command = get_cmd();
+    const char        command_char = command.empty() ? '\0' : command.front();
     set_mode(g_general_mode,mode_save);
-    if (errno || *g_buf == '\f')
+    if (errno || command_char == '\f')
     {
         return 0;                       // if return from stop signal
     }
-    if (*g_buf != ' ')
+    if (command_char != ' ')
     {
         erase_line(false);      // erase the prompt
-        return *g_buf;
+        return command_char;
     }
     return 0;
 }
