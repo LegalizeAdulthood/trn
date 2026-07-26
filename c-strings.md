@@ -83,6 +83,10 @@ string ownership, a fixed buffer, a raw return, or path storage, keep the
 candidate visible as a slice until it is completed or the user explicitly
 says to defer or remove it.
 
+When updating the C string function inventory, keep only nonzero counts
+in the bullet list.  Move every zero-count function name into the
+`The scan found no current production hits` sentence below the bullets.
+
 Existing good precedents:
 
 - `libtrn/univ.cpp`, `univ_add_text_file`: accepts a legacy C string at
@@ -533,20 +537,18 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 1, `strncpy` 0, `strcat` 0.
-- Comparison: `strcmp` 1, `strncmp` 0.
-- Search and length: `strchr` 39, `strrchr` 0, `strstr` 2,
-  `strlen` 24.
-- Formatting into C buffers: `std::sprintf` 0, `std::snprintf` 0.
-- C text parsing: `sscanf` 0.
+- Copy and concatenation: `strcpy` 1.
+- Comparison: `strcmp` 1.
+- Search and length: `strchr` 39, `strstr` 2, `strlen` 24.
 - C text I/O roots: `fgets` 20, `gets` 1, `fputs` 169,
   `printf`/`std::printf` 334, `fprintf`/`std::fprintf` 14.
-- Character output: `putchar`/`std::putchar` 77, `puts` 0.
+- Character output: `putchar`/`std::putchar` 77.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
-The scan found no current production hits for `strncat`, `strspn`,
-`strcspn`, `strpbrk`, `strtok`, `vsprintf`, `vsnprintf`, `puts`,
-`memmove`, or `memchr`.
+The scan found no current production hits for `strncpy`, `strcat`,
+`strncat`, `strncmp`, `strrchr`, `strspn`, `strcspn`, `strpbrk`,
+`strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`,
+`puts`, `memmove`, or `memchr`.
 
 `fmt::sprintf` calls are not C buffer writes.  They are tracked only
 where the format template itself should be modernized.
@@ -574,19 +576,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-269 - MIME Cat Decode Line Input
-
-- Files: `libtrn/mime.cpp`.
-- Kind: mixed file/article fixed line input into owned string storage.
-- Function: `cat_decode`.
-- Dependencies: none.
-- Change: replace `std::fgets(line.data(), ...)` and
-  `read_art(line.data(), ...)` with string line input.  Use
-  `get_a_line(ifp)` for file input and `read_art(line)` for article
-  input, then write the line with fmt.
-- Truncation: arbitrary fixed read limit; remove it.
-- Tests: MIME cat decode tests.
 
 #### CSTR-270 - Uudecode Line Input
 

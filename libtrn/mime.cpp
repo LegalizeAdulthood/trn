@@ -1450,27 +1450,25 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
         }
     }
 
-    std::string line(LINE_BUF_LEN + 1, '\0');
+    std::string line;
+    line.reserve(LINE_BUF_LEN);
     if (ifp)
     {
-        while (std::fgets(line.data(), static_cast<int>(line.size()), ifp))
+        while (!(line = get_a_line(ifp)).empty())
         {
             line.resize(std::min(line.find('\0'), line.size()));
             fmt::print(ofp, "{}", line);
-            line.resize(LINE_BUF_LEN + 1);
         }
     }
     else
     {
-        while (read_art(line.data(), static_cast<int>(line.size())))
+        while (read_art(line))
         {
-            line.resize(std::min(line.find('\0'), line.size()));
             if (mime_end_of_section(line))
             {
                 break;
             }
             fmt::print(ofp, "{}", line);
-            line.resize(LINE_BUF_LEN + 1);
         }
     }
 
