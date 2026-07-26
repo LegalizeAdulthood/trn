@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-343 - Article Check Newsgroup Name Assignment
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `main`.
-- Dependencies: none.
-- Change: assign `group_name` directly to `newsgroup.name` instead of
-  copying through `group_name.data(), group_name.size()`.
-- Tests: article-check parser tests if existing coverage is easy.
-
 #### CSTR-344 - Color Default Capability Assignment
 
 - Files: `libtrn/color.cpp`.

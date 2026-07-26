@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
                 if (newsgroups.size() < static_cast<std::size_t>(MAX_NGS))
                 {
                     ArticleNewsgroup &newsgroup = newsgroups.emplace_back();
-                    newsgroup.name.assign(group_name.data(), group_name.size());
+                    newsgroup.name = group_name;
                 }
                 if (comma == std::string_view::npos)
                 {
