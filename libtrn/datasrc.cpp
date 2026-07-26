@@ -23,9 +23,11 @@
 #include <trn/rcstuff.h>
 #include <trn/rt-ov.h>
 #include <trn/rt-util.h>
+#include <trn/smisc.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
+#include <trn/univ.h>
 #include <trn/util.h>
 #include <util/env.h>
 #include <util/util2.h>
@@ -1331,49 +1333,104 @@ static int get_near_miss(const std::vector<std::string> &newsgroup_matches)
     options += 'n';
 
     const std::string prompt{g_verbose ? "Which of these would you like?" : "Which?"};
-reask:
-    in_char(prompt, MM_ADD_NEWSGROUP_PROMPT, options);
-    print_cmd();
-    std::putchar('\n');
-    switch (*g_buf)
+    while (true)
     {
-    case 'n':
-    case 'N':
-    case 'q':
-    case 'Q':
-    case 'x':
-    case 'X':
-        return 0;
+        MinorMode   mode_save = g_mode;
+        GeneralMode gmode_save = g_general_mode;
+        const int   newlines = static_cast<int>(std::count(prompt.begin(), prompt.end(), '\n'));
+        std::string command;
+        char        command_char{};
 
-    case 'h':
-    case 'H':
-        if (g_verbose)
+        while (true)
         {
-            std::fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n"
-                    "  matches.  If you want one of these, then enter its number.  Otherwise\n"
-                    "  just say 'n'.\n",
-                    stdout);
-        }
-        else
-        {
-            std::fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
-        }
-        goto reask;
-
-    default:
-        if (std::isdigit(*g_buf))
-        {
-            const std::size_t pos = options.find(*g_buf);
-            if (pos < newsgroup_matches.size())
+            unflush_output();
+            fmt::print("{} [{}] ", prompt, options);
+            std::fflush(stdout);
+            term_down(newlines);
+            eat_typeahead();
+            set_mode(GM_PROMPT, MM_ADD_NEWSGROUP_PROMPT);
+            command = get_cmd();
+            command_char = command.empty() ? '\0' : command.front();
+            if (!errno && command_char != '\f')
             {
-                set_newsgroup_name(newsgroup_matches[pos]);
-                return 1;
+                break;
             }
+            newline();
         }
-        std::fputs("Type h for help.\n", stdout);
-        break;
-    }
+        g_s_default_cmd = false;
+        g_univ_default_cmd = false;
+        bool use_default = command_char == ' ';
+#ifndef STRICT_CR
+        use_default = use_default || command_char == '\n' || command_char == '\r';
+#endif
+        if (use_default)
+        {
+            g_s_default_cmd = true;
+            g_univ_default_cmd = true;
+            command.clear();
+            command.push_back(options.empty() ? '\0' : options.front());
+            command.push_back(FINISH_CMD);
+            command_char = command.front();
+        }
+        set_mode(gmode_save, mode_save);
+        if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
+        {
+            char command_text[2]{command_char, '\0'};
+            if (!at_norm_char(command_text))
+            {
+                std::putchar('^');
+                std::putchar((command_char & 0x7F) | 64);
+                backspace();
+                backspace();
+            }
+            else
+            {
+                std::putchar(command_char);
+                backspace();
+            }
+            std::fflush(stdout);
+        }
 
-    settle_down();
-    goto reask;
+        std::putchar('\n');
+        switch (command_char)
+        {
+        case 'n':
+        case 'N':
+        case 'q':
+        case 'Q':
+        case 'x':
+        case 'X':
+            return 0;
+
+        case 'h':
+        case 'H':
+            if (g_verbose)
+            {
+                std::fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n"
+                           "  matches.  If you want one of these, then enter its number.  Otherwise\n"
+                           "  just say 'n'.\n",
+                           stdout);
+            }
+            else
+            {
+                std::fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
+            }
+            continue;
+
+        default:
+            if (std::isdigit(static_cast<unsigned char>(command_char)))
+            {
+                const std::size_t pos = options.find(command_char);
+                if (pos < newsgroup_matches.size())
+                {
+                    set_newsgroup_name(newsgroup_matches[pos]);
+                    return 1;
+                }
+            }
+            std::fputs("Type h for help.\n", stdout);
+            break;
+        }
+
+        settle_down();
+    }
 }

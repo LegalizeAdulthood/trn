@@ -4,6 +4,7 @@
 
 #include <config/common.h>
 #include <trn/hash.h>
+#include <trn/terminal.h>
 #include <trn/trn.h>
 #include <util/env.h>
 
@@ -681,4 +682,21 @@ TEST_F(FindCloseMatchTest, leavesNameUnchangedWhenNoMatchExists)
     EXPECT_EQ(0, result);
     EXPECT_EQ("alt.binaries.example", g_newsgroup_name);
     EXPECT_TRUE(output.empty());
+}
+
+TEST_F(FindCloseMatchTest, promptsForMultipleCloseMatches)
+{
+    add_active_source("comp.lang.apl 10 1 y\n"
+                      "comp.lang.apm 10 1 y\n");
+    set_newsgroup_name("comp.lang.apx");
+    push_char('2');
+    testing::internal::CaptureStdout();
+
+    const int         result = find_close_match();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(1, result);
+    EXPECT_EQ("comp.lang.apm", g_newsgroup_name);
+    EXPECT_NE(std::string::npos, output.find("  1.  comp.lang.apl\n"));
+    EXPECT_NE(std::string::npos, output.find("  2.  comp.lang.apm\n"));
 }

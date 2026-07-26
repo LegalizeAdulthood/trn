@@ -590,20 +590,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-300 - Miscellaneous Line Input Buffers
-
-- Files: `libtrn/cache.cpp`, `libtrn/datasrc.cpp`.
-- Kind: shared line/scratch buffer.
-- Function: cache stdin read path and data-source option command
-  handling.
-- Dependencies: none.
-- Change: replace remaining local line reads or option probes that use
-  `g_buf` with local strings or fixed owner-specific buffers.  Preserve
-  any meaningful truncation; otherwise remove arbitrary `LINE_BUF_LEN`
-  limits.
-- Tests: cache/data-source tests if focused coverage exists; otherwise
-  add current behavior coverage first.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
@@ -737,7 +723,7 @@ owned strings or owner-specific storage.
 - Kind: final global storage removal.
 - Function: `g_buf`.
 - Dependencies: CSTR-290 through CSTR-292 and CSTR-294 through
-  CSTR-300.
+  CSTR-299.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

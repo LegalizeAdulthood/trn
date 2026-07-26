@@ -660,10 +660,11 @@ void look_ahead()
 #ifdef DEBUG
         if (g_debug & DEB_SEARCH_AHEAD)
         {
-            std::fputs("(hit CR)",stdout);
+            std::fputs("(hit CR)", stdout);
             std::fflush(stdout);
-            std::fgets(g_buf+128, sizeof g_buf-128, stdin);
-            std::printf("\npattern = %s\n",pattern.c_str());
+            std::string pause_line(LINE_BUF_LEN - 128, '\0');
+            std::fgets(pause_line.data(), static_cast<int>(pause_line.size()), stdin);
+            std::printf("\npattern = %s\n", pattern.c_str());
             term_down(2);
         }
 #endif
