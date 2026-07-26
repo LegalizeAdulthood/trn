@@ -485,7 +485,7 @@ TEST_F(NewsrcRotationTest, relocateNewsgroupMovesToPromptedNumber)
     add_newsgroup(newsrc, "comp.lang.python: 1");
     NewsgroupData *group = g_newsgroup_order[2];
 
-    push_string("0\n", 0200);
+    push_string("0junk\n", 0200);
     testing::internal::CaptureStdout();
     const bool        relocated = group->relocate_newsgroup(NewsgroupNum{-1});
     const std::string output = testing::internal::GetCapturedStdout();

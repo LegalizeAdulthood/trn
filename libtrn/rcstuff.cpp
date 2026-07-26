@@ -1531,7 +1531,9 @@ reinp_reloc:
             {
                 goto reinp_reloc;
             }
-            newnum = NewsgroupNum{std::atol(full_command.c_str())};
+            long command_number{};
+            (void) std::from_chars(full_command.data(), full_command.data() + full_command.size(), command_number);
+            newnum = NewsgroupNum{command_number};
             newnum = std::max(newnum, NewsgroupNum{});
             if (newnum >= g_newsgroup_count)
             {

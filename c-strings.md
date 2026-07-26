@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-325 - Relocation Command Number Parse
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `relocate_newsgroup`.
-- Dependencies: none.
-- Change: parse `full_command` with `std::from_chars` instead of
-  `std::atol(full_command.c_str())`.
-- Tests: newsgroup relocation command tests.
-
 #### CSTR-326 - Overview Article Number Parse
 
 - Files: `libtrn/rt-ov.cpp`.
