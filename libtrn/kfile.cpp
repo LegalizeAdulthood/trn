@@ -542,7 +542,6 @@ static void rewrite_kill_file(ArticleNum thru)
     bool needs_newline = false;
     const fs::path killname{file_exp(get_env_var("KILLLOCAL", s_kill_local))};
     std::error_code error;
-    char* bp;
 
     if (g_local_kfp)
     {
@@ -558,43 +557,42 @@ static void rewrite_kill_file(ArticleNum thru)
     if (s_new_kill_file_fp != nullptr)
     {
         fmt::print(s_new_kill_file_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
-        while (g_local_kfp && std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
+        for (std::string kill_line = g_local_kfp ? get_a_line(g_local_kfp) : std::string{}; !kill_line.empty();
+             kill_line = get_a_line(g_local_kfp))
         {
-            const std::string_view line{g_buf};
+            const std::string_view line{kill_line};
             if (line.substr(0, 4) == "THRU")
             {
-                char* cp = g_buf+4;
                 const std::string rc_name = g_newsgroup_ptr->m_rc->name.generic_string();
                 const std::size_t len = rc_name.size();
-                cp = skip_space(cp);
-                if (std::isdigit(*cp))
+                const std::string_view thru_args = skip_leading_space(line.substr(4));
+                if (!thru_args.empty() && std::isdigit(static_cast<unsigned char>(thru_args.front())))
                 {
                     continue;
                 }
-                const std::string_view thru_args{cp};
                 if (thru_args.size() < len || thru_args.substr(0, len) != rc_name ||
                     (thru_args.size() > len && !std::isspace(static_cast<unsigned char>(thru_args[len]))))
                 {
-                    std::fputs(g_buf,s_new_kill_file_fp);
-                    needs_newline = !std::strchr(g_buf,'\n');
+                    fmt::print(s_new_kill_file_fp, "{}", kill_line);
+                    needs_newline = kill_line.back() != '\n';
                 }
                 continue;
             }
-            bp = skip_space(g_buf);
+            const std::string_view line_text = skip_leading_space(kill_line);
             // Leave out any outdated thread commands
-            if (*bp == 'T' || *bp == '<')
+            if (!line_text.empty() && (line_text.front() == 'T' || line_text.front() == '<'))
             {
                 continue;
             }
             // Write star commands after other kill commands
-            if (*bp == '*')
+            if (!line_text.empty() && line_text.front() == '*')
             {
                 has_star_commands = true;
             }
             else
             {
-                std::fputs(g_buf,s_new_kill_file_fp);
-                needs_newline = !std::strchr(bp,'\n');
+                fmt::print(s_new_kill_file_fp, "{}", kill_line);
+                needs_newline = kill_line.back() != '\n';
             }
             has_content = true;
         }
@@ -605,13 +603,18 @@ static void rewrite_kill_file(ArticleNum thru)
         if (has_star_commands)
         {
             std::fseek(g_local_kfp,0L,0);                     // rewind file
-            while (std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
+            while (true)
             {
-                bp = skip_space(g_buf);
-                if (*bp == '*')
+                const std::string kill_line = get_a_line(g_local_kfp);
+                if (kill_line.empty())
                 {
-                    std::fputs(g_buf,s_new_kill_file_fp);
-                    needs_newline = !std::strchr(bp,'\n');
+                    break;
+                }
+                const std::string_view line_text = skip_leading_space(kill_line);
+                if (!line_text.empty() && line_text.front() == '*')
+                {
+                    fmt::print(s_new_kill_file_fp, "{}", kill_line);
+                    needs_newline = kill_line.back() != '\n';
                 }
             }
             if (needs_newline)
