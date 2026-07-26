@@ -40,12 +40,11 @@ Run every scan from the innermost lexical scope outward:
   `std::string_view` API already exists nearby.  Check whether
   production code calls them.  If only tests call them, decide whether
   the tests preserve a real public API or only stale compatibility.
-- `char *` storage populated from `save_str` or `safe_copy` that can
-  become owned `std::string` storage without pointer escape.
+- Owned `char *` storage that can become `std::string` storage without
+  pointer escape.
 - `char *` results from functions that return owned raw strings from
-  `save_str`, `safe_malloc`, `safe_realloc`, or another owning helper.
-  Summarize the return ownership, then trace callers that store, use, and
-  free the result locally.
+  allocation helpers.  Summarize the return ownership, then trace callers
+  that store, use, and free the result locally.
 - Arrays of `T` where `T` is not `char` and the array is resized with
   `safe_realloc`.  Classify element ownership, then convert the owning
   array storage to `std::vector<T>` when the array is local to one
@@ -183,20 +182,20 @@ slice and migrate its callers bottom-up.  Do not keep an overload solely
 because a test still calls it; update or remove stale compatibility
 tests when the production API no longer exists.
 
-### `save_str` or `safe_copy` to `std::string`
+### Owned `char *` Storage To `std::string`
 
 Select when a raw pointer owns retained text, the same owner frees or
 overwrites it, and callers only need read-only C-string access or local
 mutable parsing.  Reject memory-pool strings and `char **` output
 allocation APIs until that lifetime model changes.  Include struct/class
-members that are assigned from `save_str`, `safe_malloc`, or an owning
+members that are assigned from owning allocation helpers or an owning
 raw-string return and destroyed by the same owner.
 
 Refactor by replacing the owning `char *` with `std::string` or
 `std::optional<std::string>` when null and empty are distinct.  Replace
-`save_str`, `safe_malloc`, `safe_copy`, and matching `free` paths with
-direct string assignment.  Use `c_str()` for legacy read-only APIs and
-`data()` only for local mutable parsing with no pointer escape.
+allocation, copy, and matching `free` paths with direct string
+assignment.  Use `c_str()` for legacy read-only APIs and `data()` only
+for local mutable parsing with no pointer escape.
 
 Favor an empty `std::string` sentinel over `std::optional<std::string>`
 when an empty string has no valid meaning for the result.  This is the
@@ -213,11 +212,11 @@ empty string has a valid meaning.  If it does not, use plain
 ### Owning Raw-string Returns
 
 Select when a function returns a `char *` that is owned by the caller.
-Examples include direct returns from `save_str`, `safe_malloc`,
-`safe_realloc`, or a helper already classified as returning owned raw
-string storage.  Record whether the function always returns owned
-storage, conditionally returns owned storage, returns pooled storage,
-returns borrowed/static storage, or mixes ownership modes.
+Examples include direct returns from allocation helpers or a helper
+already classified as returning owned raw string storage.  Record
+whether the function always returns owned storage, conditionally returns
+owned storage, returns pooled storage, returns borrowed/static storage,
+or mixes ownership modes.
 
 Refactor bottom-up.  For callers with local acquire/use/free flow,
 replace the local `char *` with `std::string` and remove the `free`.
@@ -237,8 +236,8 @@ rather than preserving the hidden ownership branch.
 
 Refactor by changing the parameter to `std::string_view` when the callee
 only reads or copies the text.  If the callee needs ownership, take
-`std::string`.  Update callers in the same slice so `save_str` is not
-used just to satisfy the old parameter contract.
+`std::string`.  Update callers in the same slice so they do not allocate
+just to satisfy the old parameter contract.
 
 ### Borrowed Static-buffer Returns
 
@@ -332,11 +331,11 @@ Select every C string function call as an audit root, even when no raw
 `char *` declaration is nearby.  Classify by what the call proves about
 the storage:
 
-- `strcpy`, `strncpy`, `strcat`, `strncat`, `safe_copy`, `safe_cat`,
-  `sprintf`, `snprintf`, `vsprintf`, and `vsnprintf`: construction into
-  a C string buffer.  Prefer `std::string` or `fmt` when the destination
-  is owned local storage.  Move with the owning storage when the
-  destination is global, static, struct storage, or caller output.
+- `strcpy`, `strncpy`, `strcat`, `strncat`, `sprintf`, `snprintf`,
+  `vsprintf`, and `vsnprintf`: construction into a C string buffer.
+  Prefer `std::string` or `fmt` when the destination is owned local
+  storage.  Move with the owning storage when the destination is global,
+  static, struct storage, or caller output.
 - `strcmp` and `strncmp`: comparison of null-terminated text.  Prefer
   direct `std::string` or `std::string_view` comparison when the inputs
   are already strings or can be viewed by extent.
@@ -429,23 +428,16 @@ Do not hide work in a self-chosen deferral list.  Record candidates as
 slices even when they need owner judgment.  Add a deferred item only when
 the user explicitly says that exact item should be deferred.
 
-Do not replace a `fetch_lines` local with `std::string` by copying the
-owned raw result and then freeing it; that turns one heap allocation into
-two.  Either change the producer to build the `std::string` directly in
-the same slice, or leave the local raw ownership alone.
-
 For owned raw-return helpers, prefer changing the producer to return
 `std::string` and updating all direct callers in the same slice.  Do not
 add caller-only copies or wrapper APIs when the producer can construct
 the owned string directly.
 
 When converting an owned global or file-scope `char *` to `std::string`,
-replace `save_str`, `safe_malloc`, and `safe_copy` storage updates with
-direct string assignment.  Do not keep a `safe_copy` call that writes to
-string storage, and do not allocate first and then assign to a string.
-Use `c_str()` for legacy read-only C APIs.  Use `data()` only for local
-mutable parsing while the `std::string` object remains alive and no
-pointer escapes.
+replace allocation/copy storage updates with direct string assignment.
+Do not allocate first and then assign to a string.  Use `c_str()` for
+legacy read-only C APIs.  Use `data()` only for local mutable parsing
+while the `std::string` object remains alive and no pointer escapes.
 
 Before refactoring a slice, check whether tests cover the behavior being
 changed.  If coverage is missing, first add tests for the current
@@ -479,8 +471,6 @@ The current scan covers source code under `config`, `libtrn`, `util`,
 `parsedate`, and `main.cpp`.  It does not include tests, generated
 files, legacy Configure scripts, or the vendored `vcpkg` tree.
 
-- `save_str`: no production hits remain in the current tree.
-- `safe_copy`: no production hits remain in the current tree.
 - `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
   tracked here.  Non-string owners include AddGroup scratch storage,
   hash-table internals, regex bytecode, option flags, and generic
@@ -533,11 +523,11 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 25, `strstr` 2, `strlen` 20.
+- Search and length: `strchr` 23, `strstr` 2, `strlen` 20.
 - C line input: `fgets` 5.
-- C text output: `fputs` 165, `printf`/`std::printf` 327,
+- C text output: `fputs` 165, `printf`/`std::printf` 325,
   `fprintf`/`std::fprintf` 14.
-- Character output: `putchar`/`std::putchar` 77.
+- Character output: `putchar`/`std::putchar` 83.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
@@ -585,10 +575,73 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-302 - Terminal Seeded Command Completion
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `libtrn/scorefile.cpp`, `tests/test_terminal.cpp`,
+  `tests/test_scorefile.cpp`.
+- Kind: terminal command-completion owner.
+- Function: `finish_command` and first seeded-command caller
+  `sf_missing_score`.
+- Dependencies: none.
+- Change: add a string-owning command-completion API that accepts seeded
+  command text and returns completed text without writing through
+  `g_buf`.  Migrate `sf_missing_score` in the same slice so the new
+  helper is not an unused wrapper.
+- Tests: terminal command completion and missing-score scorefile entry
+  behavior.
+
+#### CSTR-303 - Score Append String View API
+
+- Files: `libtrn/score.cpp`, `libtrn/include/trn/score.h`,
+  `libtrn/ng.cpp`, `libtrn/sacmd.cpp`.
+- Kind: C-string API promotion.
+- Function: `sc_append`.
+- Dependencies: none.
+- Change: change `sc_append(char *)` to `std::string_view`, update direct
+  callers, and replace the empty `g_buf` staging in `sc_score_cmd` with
+  a direct empty view.
+- Tests: score command and scorefile append tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-304 - Score Easy Command Completion
+
+- Files: `libtrn/score-easy.cpp`, `tests/test_score-easy.cpp`.
+- Kind: owner-local command buffer.
+- Function: `sc_easy_append`.
+- Dependencies: CSTR-302.
+- Change: use the string-owning command-completion API for the free-form
+  scorefile line and score amount prompts instead of seeding `g_buf`.
+  Parse the score amount from the owned command text.
+- Tests: score easy append tests for command line, score amount, and
+  abort paths.
+
+#### CSTR-305 - Article Pager Command Completion
+
+- Files: `libtrn/art.cpp`, `tests/test_art.cpp`.
+- Kind: owner-local command buffer.
+- Function: `finish_pager_command`, `finish_pager_dbl_command`, and
+  pager debug pause input.
+- Dependencies: CSTR-302.
+- Change: complete pager commands in owned strings instead of staging
+  through `g_buf`.  Replace the DEBUG-only pause read with local string
+  storage.
+- Tests: pager command tests for command completion and double-character
+  commands.
+
+#### CSTR-308 - Newsrc Relocation Command Completion
+
+- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
+- Kind: owner-local command buffer.
+- Function: `stage_relocation_command` and `finish_relocation_command`.
+- Dependencies: CSTR-302.
+- Change: use the string-owning command-completion API for relocation
+  commands instead of copying the command into `g_buf`.
+- Tests: newsrc relocation prompt tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -605,6 +658,29 @@ are available.  Keep the listed order inside dependent families.
   preserving erase, kill, range, and goto-number semantics.  Keep the
   slice limited to the continuation path.
 - Tests: selector numeric selection, ranges, erase, and kill behavior.
+
+#### CSTR-306 - Selector Secondary Prompt Input
+
+- Files: `libtrn/rt-select.cpp`, `tests/test_rt-select.cpp`.
+- Kind: selector prompt command buffer caller.
+- Function: selector mode, sort, search, and escaped command prompts.
+- Dependencies: CSTR-291.
+- Change: replace remaining selector prompt reads that use `in_char`,
+  `read_tty(g_buf, 1)`, or search APIs fed by `g_buf` with local command
+  text.  Leave full command-dispatch staging for CSTR-298.
+- Tests: selector mode/sort prompt behavior, escaped command input, and
+  selector search prompts.
+
+#### CSTR-307 - Newsrc Management Prompt Input
+
+- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
+- Kind: prompt command buffer caller.
+- Function: add-newsgroup, resubscribe, current-sort, and bogus-group
+  deletion prompts.
+- Dependencies: none.
+- Change: replace `in_char` prompt calls and following `g_buf` reads with
+  local command text while preserving default-command and help behavior.
+- Tests: add/resubscribe/delete prompt tests.
 
 #### CSTR-292 - Scan Selector Command Loop Input
 
@@ -654,8 +730,8 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-291 through CSTR-292 and CSTR-294 through
-  CSTR-295.
+- Dependencies: CSTR-291 through CSTR-292, CSTR-294 through CSTR-295,
+  and CSTR-302 through CSTR-308.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -664,10 +740,11 @@ and clarified ownership at the edges.
 
 #### CSTR-297 - Search Pattern Buffer Owners
 
-- Files: `libtrn/artsrch.cpp`, `libtrn/ngsrch.cpp`.
+- Files: `libtrn/artsrch.cpp`, `libtrn/ngsrch.cpp`, `libtrn/ng.cpp`,
+  `libtrn/rt-select.cpp`, `libtrn/trn.cpp`.
 - Kind: shared command/search buffer owner.
 - Function: article and newsgroup search command parsing.
-- Dependencies: CSTR-294 through CSTR-295.
+- Dependencies: CSTR-294 through CSTR-295, CSTR-302, and CSTR-306.
 - Change: replace search APIs that accept `g_buf` plus a buffer size
   with local `std::string` storage and `std::string_view` parsing.
   Preserve command-line completion and default search behavior.
@@ -676,11 +753,12 @@ and clarified ownership at the edges.
 #### CSTR-298 - Command Dispatch Scratch Buffer
 
 - Files: `libtrn/ngstuff.cpp`, `libtrn/kfile.cpp`,
-  `libtrn/scorefile.cpp`.
+  `libtrn/rt-select.cpp`, `libtrn/score.cpp`, `libtrn/scorefile.cpp`.
 - Kind: shared command scratch buffer.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
-- Dependencies: CSTR-292 through CSTR-297.
+- Dependencies: CSTR-292 through CSTR-297 and CSTR-302 through
+  CSTR-308.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -710,8 +788,8 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-291 through CSTR-292 and CSTR-294 through
-  CSTR-299.
+- Dependencies: CSTR-291 through CSTR-299 and CSTR-302 through
+  CSTR-308.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
