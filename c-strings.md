@@ -575,19 +575,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-268 - MIME Sub-header Line Input
-
-- Files: `libtrn/mime.cpp`.
-- Kind: mixed file/article fixed line input into owned string storage.
-- Function: `mime_parse_sub_header`.
-- Dependencies: none.
-- Change: remove the `line.data() + pos` C-buffer append path.  Read
-  file input with `get_a_line(ifp)` and article input with
-  `read_art(article_line)`, then append the returned text to `line`.
-  Preserve folded-header parsing and `next_pos` behavior.
-- Truncation: arbitrary fixed read limit; remove it.
-- Tests: MIME header parsing and nested message tests.
-
 #### CSTR-269 - MIME Cat Decode Line Input
 
 - Files: `libtrn/mime.cpp`.

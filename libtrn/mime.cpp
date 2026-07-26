@@ -752,6 +752,8 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
     std::string line;
     line.reserve(2 * LINE_BUF_LEN);
     line.assign(first_line);
+    std::string input_line;
+    input_line.reserve(LINE_BUF_LEN);
     std::size_t next_pos = 0;
 
     g_mime_section->mime_clear_struct();
@@ -760,48 +762,55 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
     {
         line.erase(0, next_pos);
         next_pos = std::string::npos;
+        std::size_t header_end = std::string::npos;
         for (std::size_t pos = 0;; pos = line.size())
         {
             if (pos == line.size())
             {
-                line.resize(pos + LINE_BUF_LEN);
-                char *const input = line.data() + pos;
-                if ((ifp != nullptr ? std::fgets(input, LINE_BUF_LEN, ifp) : read_art(input, LINE_BUF_LEN)) == nullptr)
+                input_line.clear();
+                if (ifp != nullptr)
                 {
-                    line.resize(pos);
+                    input_line = get_a_line(ifp);
+                    if (input_line.empty())
+                    {
+                        break;
+                    }
+                }
+                else if (!read_art(input_line))
+                {
                     break;
                 }
-                const std::size_t input_end = line.find('\0', pos);
-                line.resize(input_end == std::string::npos ? line.size() : input_end);
-                if (line.size() == pos)
+                const std::size_t input_end = input_line.find('\0');
+                input_line.resize(input_end == std::string::npos ? input_line.size() : input_end);
+                if (input_line.empty())
                 {
                     continue;
                 }
+                line += input_line;
             }
-            if (line[0] == '\n')
+            if (line.front() == '\n')
             {
                 break;
             }
             if (pos && !is_hor_space(line[pos]))
             {
                 next_pos = pos;
-                line[pos - 1] = '\0';
+                header_end = pos - 1;
                 break;
             }
         }
-        const std::string_view header_line{line.data()};
+        const std::string_view header_line{line.data(), header_end == std::string::npos ? line.size() : header_end};
         const std::size_t      colon = header_line.find(':');
         if (colon == std::string_view::npos)
         {
             break;
         }
 
-        char *s = line.data() + colon;
-        int   linetype = set_line_type(header_line.substr(0, colon));
+        int linetype = set_line_type(header_line.substr(0, colon));
         switch (linetype)
         {
         case CONT_TYPE_LINE:
-            g_mime_section->mime_parse_type(s+1);
+            g_mime_section->mime_parse_type(header_line.substr(colon + 1));
             break;
 
         case CONT_XFER_LINE:
@@ -809,7 +818,7 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
             break;
 
         case CONT_DISP_LINE:
-            g_mime_section->mime_parse_disposition(s+1);
+            g_mime_section->mime_parse_disposition(header_line.substr(colon + 1));
             break;
 
         case CONT_NAME_LINE:
