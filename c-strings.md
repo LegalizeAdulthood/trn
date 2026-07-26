@@ -582,18 +582,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-266 - Supersede Body Copy Line Reads
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local string buffer passed through C output API.
-- Function: `supersede_article`.
-- Dependencies: none.
-- Change: replace the body-copy `article_line.data(), LINE_BUF_LEN`
-  read loop with the string-reading API and print the resulting string
-  directly.
-- Truncation: arbitrary fixed read limit; remove it.
-- Tests: supersede article tests.
-
 #### CSTR-267 - Forward Body Copy Line Reads
 
 - Files: `libtrn/respond.cpp`.

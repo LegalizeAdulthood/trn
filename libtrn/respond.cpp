@@ -760,18 +760,8 @@ int supersede_article()         // Supersedes:
             seek_art(g_header_type[PAST_HEADER].min_pos);
             std::string article_line;
             article_line.reserve(LINE_BUF_LEN);
-            while (true)
+            while (read_art(article_line))
             {
-                article_line.resize(LINE_BUF_LEN);
-                if (read_art(article_line.data(), LINE_BUF_LEN) == nullptr)
-                {
-                    break;
-                }
-                const std::string::size_type terminator = article_line.find('\0');
-                if (terminator != std::string::npos)
-                {
-                    article_line.resize(terminator);
-                }
                 fmt::print(header, "{}", article_line);
             }
         }
