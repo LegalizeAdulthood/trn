@@ -63,6 +63,10 @@ Run every scan from the innermost lexical scope outward:
   `memset`, `memcmp`, and `memchr` as audit roots when the destination
   or compared data is string-like `char` storage.  Non-string table
   clearing or raw byte protocol work is a non-string buffer finding.
+- C numeric conversion calls that consume C strings.  Treat `atoi`,
+  `atol`, `atof`, `strtol`, `strtoul`, and `strtod` as audit roots
+  when the source text is already a `std::string`,
+  `std::string_view`, or sliced C string.
 
 When `next` finds no remaining slices, rerun the audit against the
 current source and look for new opportunities before treating the plan
@@ -83,8 +87,9 @@ name only remaining blockers.  If a completed slice was part of a range,
 rewrite the range or list so it only names incomplete slices.
 
 When removing a completed slice empties a dependency tier, rerun the
-audit against the current source and prioritize any new slices by
-dependency tier before continuing with the next tier.
+full audit across all audit criteria against the current source.  Do not
+only look for new slices in the tier that was emptied.  Prioritize any
+new slices by dependency tier before continuing with the next tier.
 
 Do not self-defer findings.  If source still contains matching raw
 string ownership, a fixed buffer, a raw return, or path storage, keep the
@@ -368,6 +373,19 @@ the storage:
   storage with its owner; ignore non-string table initialization and
   binary buffers.
 
+### C Numeric Conversion Calls
+
+Select when code parses numbers by passing `c_str()`, `data() + n`, or a
+temporary string to `std::atoi`, `std::atol`, or another C numeric
+conversion.  This is especially useful when the source text is already a
+`std::string_view` or a full `std::string`.
+
+Refactor to `std::from_chars` over the known string extent.  Preserve
+documented or tested leading-space behavior explicitly when the old
+`atoi`/`atol` call relied on it.  Keep pointer-based conversions inside
+mutable parser buffers until the owning parser slice converts the
+buffer.
+
 ## General Refactoring Rules
 
 Do not promote simple output-only helper parameters when the only local
@@ -482,19 +500,14 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 
 - `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
   tracked here.  Non-string owners include AddGroup scratch storage,
-  hash-table internals, regex bytecode, option flags, and generic
-  allocation helpers.  `safe_copy` and `safe_cat` have no current
-  production hits.
+  hash-table internals, regex bytecode, and generic allocation helpers.
+  No string-copy allocation helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: current string candidates include `g_buf`,
-  terminal command input, the macro-file input line, and owner-local
-  parser scratch uses listed in the slices.  NNTP status lines and
-  article display lines now use owned string storage.  NNTP CRLF trailer
-  scratch, tiny UTF byte scratch buffers, translation tables, MIME
-  decode tables, terminal pushback bytes, termcap storage, keymap type
-  bytes, address conversion scratch, and regex bytecode arrays are
-  non-string protocol or parser storage.
+- Fixed raw buffers: the current string-shaped fixed-buffer candidate is
+  `g_buf`.  Tiny UTF byte scratch buffers, translation tables, terminal
+  pushback bytes, termcap storage, keymap type bytes, and regex bytecode
+  arrays are non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -513,7 +526,12 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` command APIs with raw-buffer compatibility wrappers
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
-- Literal-only local pointer scan has no current production hits.
+- Literal-only local pointer scan found local message selections in
+  `do_newsgroup`, `s_search`, and `sa_refresh_bot`.
+- C numeric conversion scan found `std::atoi` and `std::atol` calls that
+  still convert strings or views back to C pointers.  Simple bounded
+  parse sites are Tier 0 or Tier 1 slices; mutable parser-buffer sites
+  are grouped with their owning parser slices.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -541,15 +559,17 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Search and length: `strchr` 23, `strstr` 2, `strlen` 19.
 - C line input: `fgets` 4.
-- C text output: `fputs` 164, `printf`/`std::printf` 320,
-  `fprintf`/`std::fprintf` 14.
+- C text output: `fputs` 164, `printf`/`std::printf` 313,
+  `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
+- C numeric conversion calls: `std::atoi` 29 and `std::atol` 19.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
-`vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, or `memchr`.
+`vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, `memchr`,
+`std::atof`, `std::strtol`, `std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -586,15 +606,337 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-308 - Perform Command Membership View
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: C string library call cleanup.
+- Function: `perform`.
+- Dependencies: none.
+- Change: replace `std::strchr("!&sSwWae|", ch)` with a
+  `std::string_view` membership check.
+- Tests: perform command dispatch tests.
+
+#### CSTR-309 - Selector Search Error Message View
+
+- Files: `libtrn/scmd.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `s_search`.
+- Dependencies: none.
+- Change: replace `error_msg` with `std::string_view` and use `fmt` for
+  the touched no-match output.
+- Tests: selector search no-match tests.
+
+#### CSTR-310 - Score Display Order View
+
+- Files: `libtrn/sadisp.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `sa_refresh_bot`.
+- Dependencies: none.
+- Change: replace `order` with `std::string_view` and use `fmt` for the
+  touched order output.
+- Tests: score display refresh tests.
+
+#### CSTR-311 - Newsgroup Unread Prompt Views
+
+- Files: `libtrn/ng.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `do_newsgroup`.
+- Dependencies: none.
+- Change: replace `u_prompt` and `u_help_thread` with
+  `std::string_view`, use `empty()` for thread-help presence, and use
+  `fmt` for the touched help output.
+- Tests: article-mode unread and newsgroup unread prompt tests.
+
+#### CSTR-312 - Article Check Column Parse
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `main`.
+- Dependencies: none.
+- Change: parse `argv[2]` through a bounded view and `std::from_chars`
+  instead of `std::atoi`.
+- Tests: trn-artchk command-line validation tests.
+
+#### CSTR-313 - Article Check Server Port Parse
+
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `main`.
+- Dependencies: none.
+- Change: parse the port view after `;` or `:` with
+  `std::from_chars`; use the already built `server_name`/string storage
+  instead of making a C-string pointer.
+- Tests: trn-artchk server configuration tests.
+
+#### CSTR-314 - Inews Server Port Parse
+
+- Files: `inews/inews.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `main`.
+- Dependencies: none.
+- Change: parse the port view after `;` with `std::from_chars` instead
+  of `std::atoi(g_server_name.c_str() + separator + 1)`.
+- Tests: inews server configuration tests.
+
+#### CSTR-315 - NNTP List Server Port Parse
+
+- Files: `nntplist/nntplist.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `main`.
+- Dependencies: none.
+- Change: parse the port view after `;` or `:` with
+  `std::from_chars` instead of
+  `std::atoi(s_server_name.c_str() + separator + 1)`.
+- Tests: nntplist server configuration tests.
+
+#### CSTR-316 - Environment Net Speed Parse
+
+- Files: `util/env.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `env_init`.
+- Dependencies: none.
+- Change: parse `NETSPEED` with `std::from_chars` over
+  `net_speed` instead of `std::atoi(net_speed.c_str())`, preserving the
+  `f` and `s` shortcuts.
+- Tests: environment configuration tests.
+
+#### CSTR-317 - INI Condition Numeric Parse
+
+- Files: `libtrn/util.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `check_ini_cond`.
+- Dependencies: none.
+- Change: parse numeric operands from `condition_text` and
+  `cond_cursor` with `std::from_chars`; remove the temporary string made
+  only for `std::atoi`.
+- Tests: INI condition tests.
+
+#### CSTR-318 - Local Active Times Parse
+
+- Files: `libtrn/addng.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `new_local_groups`.
+- Dependencies: none.
+- Change: parse the timestamp from
+  `active_times_view.substr(name_end + 1)` with `std::from_chars`
+  instead of `std::atol(active_times_line.c_str() + name_end + 1)`.
+- Tests: local newsgroup discovery tests.
+
+#### CSTR-319 - Killfile Thread Age Parse
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `kill_file_init`.
+- Dependencies: none.
+- Change: parse the thread command age from `command.substr(1)` with
+  `std::from_chars`; remove `command.data() + 1` and `std::atol`.
+- Tests: kill-file thread command aging tests.
+
+#### CSTR-320 - Killfile THRU Article Parse
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `do_kill_file`.
+- Dependencies: none.
+- Change: parse the THRU article number from a bounded view after the rc
+  name with `std::from_chars`; remove pointer-offset `std::atol`.
+- Tests: kill-file THRU tests.
+
+#### CSTR-321 - Cache Header Counts Parse
+
+- Files: `libtrn/cache.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `Article::set_cached_line`.
+- Dependencies: none.
+- Change: parse line and byte counts directly from the `line` view with
+  `std::from_chars`; remove `std::string{line}.c_str()` temporaries.
+- Tests: article cache header tests.
+
+#### CSTR-322 - URL Port Parse
+
+- Files: `libtrn/url.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `parse_url`.
+- Dependencies: none.
+- Change: parse the port from `rest.substr(0, port_len)` with
+  `std::from_chars`; remove the single-use `std::string port`.
+- Tests: URL parsing tests.
+
+#### CSTR-323 - INI Group Index Parse
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `parse_newsrc_ini`.
+- Dependencies: none.
+- Change: parse `section_name.substr(6)` with `std::from_chars` instead
+  of constructing a temporary string for `std::atoi`.
+- Tests: newsrc INI group parsing tests.
+
+#### CSTR-324 - Newsrc Lock PID Parse
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `set_lock`.
+- Dependencies: none.
+- Change: parse `pid_line` with `std::from_chars` instead of
+  `std::atol(pid_line.c_str())`.
+- Tests: newsrc lock-file tests.
+
+#### CSTR-325 - Relocation Command Number Parse
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `relocate_newsgroup`.
+- Dependencies: none.
+- Change: parse `full_command` with `std::from_chars` instead of
+  `std::atol(full_command.c_str())`.
+- Tests: newsgroup relocation command tests.
+
+#### CSTR-326 - Overview Article Number Parse
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `ov_data`.
+- Dependencies: none.
+- Change: parse the overview article number from the line view with
+  `std::from_chars` instead of `std::atol(line.c_str())`.
+- Tests: overview data parsing tests.
+
+#### CSTR-327 - Decode Piece Total Parse
+
+- Files: `libtrn/decode.cpp`.
+- Kind: C numeric conversion cleanup.
+- Function: `decode_piece`.
+- Dependencies: none.
+- Change: parse `total_line` with `std::from_chars` instead of
+  `std::atoi(total_line.c_str())`; keep the existing non-negative
+  clamp.
+- Tests: split decode piece tests.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-328 - MIME Content Type View Parser
+
+- Files: `libtrn/mime.cpp`.
+- Kind: local C-string parser cleanup.
+- Function: `MimeSection::mime_parse_type`.
+- Dependencies: none.
+- Change: keep the parsed MIME type as a `std::string_view` while
+  checking prefixes and suffixes, and parse `number` and `total`
+  parameters with `std::from_chars`.
+- Tests: MIME content-type and partial-message tests.
+
+#### CSTR-329 - Header Custom Line View Scan
+
+- Files: `libtrn/head.cpp`.
+- Kind: C string library call cleanup.
+- Function: `get_header_num`.
+- Dependencies: none.
+- Change: scan `g_head_buf` as string-view lines and remove temporary
+  NUL mutation, `strchr`, and `strlen`.
+- Tests: custom header detection tests.
+
+#### CSTR-330 - Score Extra Header View Scan
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: C string library call cleanup.
+- Function: `sf_get_extra_header`.
+- Dependencies: none.
+- Change: iterate `g_head_buf` as string-view lines and use
+  `find`/`substr` instead of `const char *` cursors and `strchr`.
+- Tests: score extra-header matching tests.
+
+#### CSTR-331 - Remote XHDR Line View Parser
+
+- Files: `libtrn/head.cpp`.
+- Kind: local C-string parser cleanup.
+- Function: `prefetch_remote_lines`.
+- Dependencies: none.
+- Change: parse NNTP XHDR response lines with views, remove CR
+  trimming by NUL mutation, and parse the leading article number with
+  `std::from_chars`.
+- Tests: remote header prefetch tests.
+
+#### CSTR-332 - Global Option Value View Parser
+
+- Files: `libtrn/opt.cpp`.
+- Kind: local C-string parser cleanup.
+- Function: `apply_global_option`.
+- Dependencies: none.
+- Change: remove the local `value_text.c_str()` staging variable where
+  callees already accept views or strings, and replace numeric
+  `std::atoi` uses with bounded parsing.
+- Tests: option parsing tests.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-333 - RC Numbers To Bits View Parser
+
+- Files: `libtrn/bits.cpp`.
+- Kind: owner-local parser cleanup.
+- Function: `rc_to_bits`.
+- Dependencies: none.
+- Change: parse newsrc number ranges with `std::string_view` and
+  `std::from_chars`; remove comma-to-NUL mutation, `strchr`, and
+  `std::atol` from the local copy.
+- Tests: rc-to-bits and range parsing tests.
+
+#### CSTR-334 - Add Read Article View Parser
+
+- Files: `libtrn/rcln.cpp`.
+- Kind: owner-local parser cleanup.
+- Function: `add_art_num`.
+- Dependencies: none.
+- Change: parse the rc-number list with views and `std::from_chars`
+  while keeping the existing rc-line rewrite semantics.
+- Tests: mark-read and xref-chase tests.
+
+#### CSTR-335 - Remove Read Article View Parser
+
+- Files: `libtrn/rcln.cpp`.
+- Kind: owner-local parser cleanup.
+- Function: `sub_art_num`.
+- Dependencies: none.
+- Change: parse the rc-number list with views and `std::from_chars`
+  while keeping the existing unread and range-splitting semantics.
+- Tests: unmark-read and xref-chase tests.
+
+#### CSTR-336 - Expired Article Range View Rewrite
+
+- Files: `libtrn/rcln.cpp`.
+- Kind: owner-local parser cleanup.
+- Function: `NewsgroupData::check_expired`.
+- Dependencies: none.
+- Change: parse and rewrite remaining rc ranges with bounded views
+  instead of `char *` cursors, `strchr`, `strlen`, and `std::atol`.
+- Tests: expired-article rc-line rewrite tests.
+
+#### CSTR-337 - Newsgroup Read-state View Query
+
+- Files: `libtrn/rcln.cpp`.
+- Kind: owner-local parser cleanup.
+- Function: `was_read_group`.
+- Dependencies: none.
+- Change: query rc ranges with `std::string_view` and
+  `std::from_chars` instead of borrowed C-string cursors and
+  `std::atol`.
+- Tests: read-state query and xref-chase tests.
+
+#### CSTR-338 - Score Save Line View Parser
+
+- Files: `libtrn/scoresave.cpp`.
+- Kind: owner-local parser cleanup.
+- Function: `sc_sv_use_line`.
+- Dependencies: none.
+- Change: parse score-save command runs with string-view cursors and
+  `std::from_chars`; remove temporary NUL mutation and `std::atoi`.
+- Tests: score-save load tests.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
