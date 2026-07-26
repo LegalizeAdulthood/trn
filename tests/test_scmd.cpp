@@ -13,8 +13,11 @@
 #include <trn/score.h>
 #include <trn/smisc.h>
 #include <trn/Subject.h>
+#include <trn/terminal.h>
 
 #include <gtest/gtest.h>
+
+#include <string>
 
 namespace
 {
@@ -29,6 +32,15 @@ protected:
         g_last_art = ArticleNum{1};
         g_s_cur_type = S_ART;
         g_s_status_cols = 3;
+        m_old_s_ptr_page_line = g_s_ptr_page_line;
+        m_old_s_bot_ent = g_s_bot_ent;
+        m_old_s_ref_bot = g_s_ref_bot;
+        m_old_s_bot_lines = g_s_bot_lines;
+        m_old_tc_lines = g_tc_LINES;
+        m_old_tc_bc = g_tc_BC;
+        m_old_tc_ce = g_tc_CE;
+        m_old_tc_cm = g_tc_CM;
+        m_old_erase_char = g_erase_char;
         g_sa_ents.assign(2, ScanArticleEntryData{});
 
         g_sa_ents[1].artnum = ArticleNum{1};
@@ -44,10 +56,29 @@ protected:
         g_sa_mode_desc_subject = false;
         g_sa_mode_desc_summary = false;
         g_sa_mode_desc_keyw = false;
+
+        g_s_ptr_page_line = 0;
+        g_s_bot_ent = 11;
+        g_s_ref_bot = false;
+        g_s_bot_lines = 1;
+        g_tc_LINES = 24;
+        g_tc_BC = "\b";
+        g_tc_CE = "";
+        g_tc_CM = "\033[%d;%dH";
+        g_erase_char = '\b';
     }
 
     void TearDown() override
     {
+        g_s_ptr_page_line = m_old_s_ptr_page_line;
+        g_s_bot_ent = m_old_s_bot_ent;
+        g_s_ref_bot = m_old_s_ref_bot;
+        g_s_bot_lines = m_old_s_bot_lines;
+        g_tc_LINES = m_old_tc_lines;
+        g_tc_BC = m_old_tc_bc;
+        g_tc_CE = m_old_tc_ce;
+        g_tc_CM = m_old_tc_cm;
+        g_erase_char = m_old_erase_char;
         g_article_list.clear();
         g_sa_ents.clear();
         g_char_subst = nullptr;
@@ -58,6 +89,15 @@ protected:
 
     char                 m_author[64]{"Casey Mixed <case@example.com>"};
     Subject              m_subject{};
+    short                m_old_s_ptr_page_line{};
+    long                 m_old_s_bot_ent{};
+    bool                 m_old_s_ref_bot{};
+    short                m_old_s_bot_lines{};
+    int                  m_old_tc_lines{};
+    const char          *m_old_tc_bc{};
+    const char          *m_old_tc_ce{};
+    const char          *m_old_tc_cm{};
+    char                 m_old_erase_char{};
 };
 
 } // namespace
@@ -67,6 +107,31 @@ TEST_F(ScanCommandTest, descriptionSearchMatchesIgnoringCase)
     EXPECT_TRUE(scmd_match_description_for_test(1, "mixed"));
     EXPECT_TRUE(scmd_match_description_for_test(1, "CASEY"));
     EXPECT_FALSE(scmd_match_description_for_test(1, "missing"));
+}
+
+TEST_F(ScanCommandTest, jumpNumberReadsSecondDigit)
+{
+    push_char('2');
+
+    testing::internal::CaptureStdout();
+    scmd_jump_num_for_test('1');
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(11, g_s_ptr_page_line);
+}
+
+TEST_F(ScanCommandTest, jumpNumberPushesBackCommandAfterFirstDigit)
+{
+    push_char('x');
+
+    testing::internal::CaptureStdout();
+    scmd_jump_num_for_test('1');
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(0, g_s_ptr_page_line);
+    const std::string command = get_cmd();
+    ASSERT_FALSE(command.empty());
+    EXPECT_EQ('x', command.front());
 }
 
 TEST_F(ScanCommandTest, subjectDescriptionShortensReplyPrefix)

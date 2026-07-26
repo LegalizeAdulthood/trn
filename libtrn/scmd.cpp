@@ -351,6 +351,11 @@ bool scmd_match_description_for_test(long ent, std::string_view search_text)
     return s_match_description(ent);
 }
 
+void scmd_jump_num_for_test(char_int firstchar)
+{
+    s_jump_num(firstchar);
+}
+
 static void s_set_search_text(std::string_view search_text)
 {
     s_search_text = search_text;
@@ -541,28 +546,29 @@ static void s_jump_num(char_int firstchar)
     {
         s_go_bot();
         g_s_ref_bot = true;
-        std::printf("Jump to item: %c",firstchar);
+        fmt::print("Jump to item: {}", static_cast<char>(firstchar));
         std::fflush(stdout);
     }
-    get_cmd(g_buf);
-    if (*g_buf == g_erase_char)
+    const std::string command = get_cmd();
+    const char        command_char = command.empty() ? '\0' : command.front();
+    if (command_char == g_erase_char)
     {
         return;
     }
-    switch (*g_buf)
+    switch (command_char)
     {
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
         if (jump_verbose)
         {
-            std::printf("%c",*g_buf);
+            fmt::print("{}", command_char);
             std::fflush(stdout);
         }
-        value = value*10 + (*g_buf - '0');
+        value = value*10 + (command_char - '0');
         break;
 
     default:
-        push_char(*g_buf);
+        push_char(command_char);
         break;
     }
     if (value == 0 || value > g_s_bot_ent+1)

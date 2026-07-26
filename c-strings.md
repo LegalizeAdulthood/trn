@@ -578,19 +578,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-287 - Selector Jump Digit Input
-
-- Files: `libtrn/scmd.cpp`.
-- Kind: terminal command buffer caller.
-- Function: `s_jump_num`.
-- Dependencies: none.
-- Change: use the string-returning `get_cmd()` and a local command
-  character for the optional second jump digit instead of writing the
-  digit through `g_buf`.
-- Truncation: none.
-- Tests: selector jump tests if focused coverage exists; otherwise add
-  current behavior coverage first.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers

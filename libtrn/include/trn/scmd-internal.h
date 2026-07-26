@@ -10,5 +10,6 @@
 // Internal entry points for testing purposes.
 
 bool scmd_match_description_for_test(long ent, std::string_view search_text);
+void scmd_jump_num_for_test(char_int firstchar);
 
 #endif
