@@ -82,6 +82,10 @@ When removing a completed slice, also remove that slice ID from the
 name only remaining blockers.  If a completed slice was part of a range,
 rewrite the range or list so it only names incomplete slices.
 
+When removing a completed slice empties a dependency tier, rerun the
+audit against the current source and prioritize any new slices by
+dependency tier before continuing with the next tier.
+
 Do not self-defer findings.  If source still contains matching raw
 string ownership, a fixed buffer, a raw return, or path storage, keep the
 candidate visible as a slice until it is completed or the user explicitly
