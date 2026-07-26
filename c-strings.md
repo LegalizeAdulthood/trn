@@ -533,7 +533,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 29, `strstr` 2, `strlen` 20.
+- Search and length: `strchr` 28, `strstr` 2, `strlen` 20.
 - C line input: `fgets` 7.
 - C text output: `fputs` 165, `printf`/`std::printf` 327,
   `fprintf`/`std::fprintf` 14.
@@ -562,18 +562,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-280 - Article Citation Character Set
-
-- Files: `libtrn/art.cpp`.
-- Kind: string-literal search.
-- Function: `maybe_set_color`.
-- Dependencies: none.
-- Change: replace `std::strchr` over the citation character literal with
-  `std::string_view` membership.
-- Truncation: none.
-- Tests: article display/color tests if focused coverage exists;
-  otherwise add current behavior coverage first.
 
 #### CSTR-281 - Pager Leave Command Sets
 

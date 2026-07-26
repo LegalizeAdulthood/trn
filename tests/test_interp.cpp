@@ -2229,6 +2229,55 @@ TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
     EXPECT_EQ(std::string::npos, output.find("Newsgroups: " TRN_TEST_NEWSGROUP));
 }
 
+TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
+{
+    const std::string output_path = m_output.path();
+    const fs::path    article_file = fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM);
+    std::ofstream{article_file} << "Path: " TRN_TEST_HEADER_PATH "\n"
+                                << "From: " TRN_TEST_HEADER_FROM "\n"
+                                << "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"
+                                << "Article: " << TRN_TEST_ARTICLE_NUM << "\n"
+                                << "Subject: " TRN_TEST_HEADER_SUBJECT "\n"
+                                << "Date: " TRN_TEST_HEADER_DATE "\n"
+                                << "Message-Id: " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                << "Lines: 2\n\n"
+                                << "> cited text\n"
+                                << "plain text\n";
+    struct CitedTextAttribute
+    {
+        CitedTextAttribute()
+        {
+            color_rc_attribute("cited text", "s");
+        }
+        ~CitedTextAttribute()
+        {
+            color_rc_attribute("cited text", "-");
+            color_default();
+        }
+    } cited_text_attribute;
+    PushDir                  output_dir{output_path.c_str()};
+    ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<const char *> standout_start(g_tc_SO, "<so>");
+    ValueSaver<const char *> standout_end(g_tc_SE, "<se>");
+    ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    g_char_subst = g_charsets.c_str();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_no_envar("LOCALTIMEFMT");
+    ASSERT_TRUE(parse_header(g_art));
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_NORM, result);
+    EXPECT_THAT(output, HasSubstr("<so>> cited text\n<se>plain text\n"));
+}
+
 TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);

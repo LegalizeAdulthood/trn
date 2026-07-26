@@ -885,7 +885,7 @@ static bool maybe_set_color(const char *cp, bool back_search)
     else
     {
         cp = skip_hor_space(cp);
-        if (std::strchr(">}]#!:|", *cp))
+        if (std::string_view{">}]#!:|"}.find(*cp) != std::string_view::npos)
         {
             color_object(COLOR_CITE_DTEXT, false);
         }
