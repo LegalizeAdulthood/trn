@@ -479,17 +479,18 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
   tracked here.  Non-string owners include AddGroup scratch storage,
   hash-table internals, regex bytecode, option flags, and generic
-  allocation helpers.
+  allocation helpers.  `safe_copy` and `safe_cat` have no current
+  production hits.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  terminal command input, the macro-file input line, and owner-local
-  parser scratch uses listed in the slices.  NNTP status lines and
-  article display lines now use owned string storage.  NNTP CRLF trailer
-  scratch, tiny UTF byte scratch buffers, translation tables, MIME
-  decode tables, terminal pushback bytes, termcap storage, address
-  conversion scratch, and regex bytecode arrays are non-string protocol
-  or parser storage.
+  terminal command input, three one-character command adapters passed to
+  `at_norm_char`, the macro-file input line, and owner-local parser
+  scratch uses listed in the slices.  NNTP status lines and article
+  display lines now use owned string storage.  NNTP CRLF trailer scratch,
+  tiny UTF byte scratch buffers, translation tables, MIME decode tables,
+  terminal pushback bytes, termcap storage, address conversion scratch,
+  and regex bytecode arrays are non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -497,12 +498,18 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   string-reading API.  The raw `read_art(char *, int)` helper is already
   private to `artio.cpp`; it remains only inside the string reader and
   article-buffer fill code.
-- Unused overload/wrapper scan: no unused production C-string overloads
-  are ready to remove in this scan.  Keep `nntp_init_error`,
-  `string_case_compare`, `string_case_equal`, `Tgetstr`, `line_ptr`,
-  `line_offset`, `yes_or_no`, `empty`, `plural`, `force_me`, and
-  `at_grey_space`; they still have production/source callers or
-  platform/API boundary use.
+- Unused overload/wrapper scan: `get_cmd(char *)` and
+  `finish_dbl_char()` have no production callers.  `set_def(char *)`
+  has one production caller in `respond.cpp`.  `finish_command(int)`
+  still has production callers that read or store command text through
+  `g_buf`.  Keep `nntp_init_error`, `string_case_compare`,
+  `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
+  `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
+  they still have production/source callers or platform/API boundary
+  use.
+- Search API scan: article and newsgroup search still take mutable
+  command buffers.  Several callers now build local `std::string`
+  commands and then create writable buffers only to call those APIs.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -529,10 +536,10 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Search and length: `strchr` 23, `strstr` 2, `strlen` 20.
-- C line input: `fgets` 5.
-- C text output: `fputs` 165, `printf`/`std::printf` 325,
+- C line input: `fgets` 4.
+- C text output: `fputs` 164, `printf`/`std::printf` 322,
   `fprintf`/`std::fprintf` 14.
-- Character output: `putchar`/`std::putchar` 83.
+- Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
@@ -575,10 +582,81 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-302 - Remove Raw Command Input Wrappers
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `tests/test_ngstuff.cpp`, `tests/test_terminal.cpp`.
+- Kind: unused C-style overload cleanup.
+- Function: `get_cmd(char *)` and `finish_dbl_char()`.
+- Dependencies: none.
+- Change: delete the raw buffer `get_cmd(char *)` overload and the
+  unused raw `finish_dbl_char()` wrapper.  Update tests that still call
+  `get_cmd(g_buf)` to use the string-returning API or remove stale
+  compatibility checks.
+- Tests: terminal command input tests and command-dispatch tests that
+  currently seed input through `g_buf`.
+
+#### CSTR-305 - Remove Raw `set_def` Wrapper
+
+- Files: `libtrn/respond.cpp`, `libtrn/util.cpp`,
+  `libtrn/include/trn/util.h`, `tests/test_terminal.cpp`.
+- Kind: one-caller C-style overload cleanup.
+- Function: `set_def(char *, std::string_view)`.
+- Dependencies: none.
+- Change: in `followup`, keep the answer text in a local `std::string`
+  returned by `set_def(std::string_view, std::string_view)` and branch
+  on that string instead of modifying `g_buf` through the raw wrapper.
+  Then remove the `set_def(char *)` overload.
+- Tests: terminal default-command tests and response/followup behavior
+  tests if a focused test already covers the prompt.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-303 - Normal Character Classification Views
+
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `libtrn/datasrc.cpp`, `libtrn/rcstuff.cpp`,
+  `libtrn/rt-select.cpp`, `tests/test_utf.cpp`.
+- Kind: C-string helper signature cleanup.
+- Function: `at_norm_char`.
+- Dependencies: none.
+- Change: add or migrate to an `std::string_view` entry point for normal
+  character classification, with empty view replacing the old null or
+  empty C-string failure case.  Remove the local `char command_text[2]`
+  adapters by passing a one-character view.  Keep a C-string wrapper
+  only for pointer-walking callers that have not yet been migrated.
+- Tests: existing UTF character classification tests.
+
+#### CSTR-297 - Article Search String API
+
+- Files: `libtrn/artsrch.cpp`, `libtrn/include/trn/artsrch.h`,
+  `tests/test_artsrch.cpp`, `tests/test_interp.cpp`.
+- Kind: search helper API foundation.
+- Function: `art_search`.
+- Dependencies: none.
+- Change: replace the mutable `char *` plus buffer-size API with a
+  `std::string_view` command API.  If the caller requests command
+  completion, finish the command into an owned string instead of writing
+  into `g_buf`.  Preserve the meaningful generated-pattern truncation
+  for notes search and remove staging buffers whose only purpose is
+  satisfying the old signature.
+- Tests: article search tests and interpolation tests that invoke
+  article search.
+
+#### CSTR-304 - Newsgroup Search String API
+
+- Files: `libtrn/ngsrch.cpp`, `libtrn/include/trn/ngsrch.h`,
+  `tests/test_ngsrch.cpp`.
+- Kind: search helper API foundation.
+- Function: `newsgroup_search`.
+- Dependencies: none.
+- Change: replace the mutable `char *` API with a `std::string_view`
+  command API.  If the caller requests command completion, finish the
+  command into an owned string instead of writing into `g_buf`.
+- Tests: newsgroup search tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -595,17 +673,31 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-297 - Search Pattern Buffer Owners
+#### CSTR-306 - Article Search Callers
 
-- Files: `libtrn/artsrch.cpp`, `libtrn/ngsrch.cpp`, `libtrn/ng.cpp`,
-  `libtrn/rt-select.cpp`, `libtrn/trn.cpp`.
-- Kind: shared command/search buffer owner.
-- Function: article and newsgroup search command parsing.
-- Dependencies: none.
-- Change: replace search APIs that accept `g_buf` plus a buffer size
-  with local `std::string` storage and `std::string_view` parsing.
-  Preserve command-line completion and default search behavior.
-- Tests: article search and newsgroup search tests.
+- Files: `libtrn/ng.cpp`, `libtrn/kfile.cpp`, `libtrn/rt-select.cpp`.
+- Kind: shared command/search buffer caller.
+- Function: article search command callers.
+- Dependencies: CSTR-297.
+- Change: update direct callers to pass strings or views to
+  `art_search`.  Remove local writable staging buffers and the
+  `stage_legacy_article_command` path when each caller no longer needs
+  `g_buf` to fake an article search command.
+- Tests: article search, kill-file command, and article-mode command
+  tests.
+
+#### CSTR-307 - Newsgroup Search Callers
+
+- Files: `libtrn/trn.cpp`, `libtrn/rt-select.cpp`.
+- Kind: shared command/search buffer caller.
+- Function: newsgroup search command callers.
+- Dependencies: CSTR-304.
+- Change: update direct callers to pass strings or views to
+  `newsgroup_search`.  Remove the local `trn.cpp` writable staging
+  wrapper and any selector staging that only existed for the old mutable
+  search API.
+- Tests: newsgroup search, selector search, and top-level newsgroup
+  command tests.
 
 #### CSTR-298 - Command Dispatch Scratch Buffer
 
@@ -614,7 +706,7 @@ and clarified ownership at the edges.
 - Kind: shared command scratch buffer.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
-- Dependencies: CSTR-297.
+- Dependencies: CSTR-306, CSTR-307.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -627,7 +719,7 @@ and clarified ownership at the edges.
 - Kind: shared command and file-copy buffer.
 - Function: response command handling and temporary header/body copy
   paths.
-- Dependencies: CSTR-298.
+- Dependencies: CSTR-298, CSTR-305.
 - Change: separate response command text from file-copy line storage.
   Use owned strings for command parsing and owner-specific buffers for
   file copy paths; do not store either in `g_buf`.
@@ -644,7 +736,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-297 through CSTR-299.
+- Dependencies: CSTR-298, CSTR-299, CSTR-306, CSTR-307.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
