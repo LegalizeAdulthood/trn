@@ -91,31 +91,35 @@ void kill_file_init()
         if (fp != nullptr)
         {
             g_msg_id_hash = hash_create(1999, msg_id_cmp);
-            while (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
+            for (std::string thread_line = get_a_line(fp); !thread_line.empty(); thread_line = get_a_line(fp))
             {
-                if (*g_buf == '<')
+                const std::string_view line{thread_line};
+                if (line.front() == '<')
                 {
-                    char* split = std::strchr(g_buf,' ');
-                    const char *cmd = ",";
-                    if (split)
+                    std::string_view  message_id = line;
+                    std::string_view  command{","};
+                    const std::size_t split = line.find(' ');
+                    if (split != std::string_view::npos)
                     {
-                        *split++ = '\0';
-                        cmd = split;
+                        message_id = line.substr(0, split);
+                        command = line.substr(split + 1);
                     }
-                    int age = s_kill_file_day_num - std::atol(cmd + 1);
+                    const char  command_char = command.empty() ? '\0' : command.front();
+                    const char *age_text = command.empty() ? "" : command.data() + 1;
+                    int         age = s_kill_file_day_num - std::atol(age_text);
                     if (age > KF_MAX_DAYS)
                     {
                         g_kf_change_thread_cnt++;
                         continue;
                     }
-                    const char *thread_cmd = std::strchr(s_thread_cmd_ltr, *cmd);
-                    if (thread_cmd != nullptr)
+                    const std::size_t thread_cmd = std::string_view{s_thread_cmd_ltr}.find(command_char);
+                    if (thread_cmd != std::string_view::npos)
                     {
-                        int auto_flag = s_thread_cmd_flag[thread_cmd - s_thread_cmd_ltr];
-                        HashDatum data = hash_fetch(g_msg_id_hash, g_buf);
+                        int       auto_flag = s_thread_cmd_flag[thread_cmd];
+                        HashDatum data = hash_fetch(g_msg_id_hash, message_id);
                         if (!data.dat_ptr)
                         {
-                            data = make_pending_msg_id(g_buf, auto_flag | age);
+                            data = make_pending_msg_id(message_id, auto_flag | age);
                         }
                         else
                         {
