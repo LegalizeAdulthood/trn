@@ -582,18 +582,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-267 - Forward Body Copy Line Reads
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local string buffer passed through C output API.
-- Function: `forward`.
-- Dependencies: none.
-- Change: replace the body-copy `article_line.data(), LINE_BUF_LEN + 1`
-  read loop with the string-reading API.  Preserve MIME-boundary dash
-  escaping and multipart trailer output.
-- Truncation: arbitrary fixed read limit; remove it.
-- Tests: forward article tests.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers
@@ -647,8 +635,7 @@ owned strings or owner-specific storage.
 - Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`.
 - Kind: obsolete public C-buffer overload.
 - Function: `read_art(char *, int)`.
-- Dependencies: CSTR-264, CSTR-265, CSTR-266, CSTR-267, CSTR-268,
-  CSTR-269, CSTR-270.
+- Dependencies: none.
 - Change: remove the raw `read_art(char *, int)` declaration from the
   header after all external callers use string line input.  Keep the raw
   buffer reader only as a private `artio.cpp` implementation detail for
