@@ -514,7 +514,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
 - Literal-only local pointer scan: simple remaining candidates are in
-  `do_newsgroup`, `save_options`,
+  `save_options`,
   `NewsgroupData::relocate_newsgroup`, and `save_article`.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
@@ -587,17 +587,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-311 - Newsgroup Prompt Label Views
-
-- Files: `libtrn/ng.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `do_newsgroup`.
-- Dependencies: none.
-- Change: replace literal-only local prompt and relationship labels with
-  `std::string_view` values.  Use fmt for any touched formatted output
-  so views are not converted back to C strings only for printf.
-- Tests: article-mode prompt and navigation tests.
 
 #### CSTR-312 - Save Options Thread Prefix View
 

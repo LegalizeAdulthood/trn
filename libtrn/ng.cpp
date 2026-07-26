@@ -218,7 +218,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 {
     MinorMode mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
-    const char*whatnext = "%s%sWhat next? [%s]";
+    constexpr std::string_view whatnext{"%s%sWhat next? [%s]"};
     bool ng_virtual = false;
 
     set_data_source(g_newsgroup_ptr->m_rc->data_source);
@@ -905,14 +905,14 @@ reask_unread:
           {
               if (!find_parent(command_ch == '{'))
               {
-                const char* cp = (command_ch == '[' ? "parent" : "root");
+                const std::string_view cp = (command_ch == '[' ? "parent" : "root");
                 if (g_verbose)
                 {
-                    std::printf("\nThere is no %s article prior to this one.\n", cp);
+                    fmt::print("\nThere is no {} article prior to this one.\n", cp);
                 }
                 else
                 {
-                    std::printf("\nNo prior %s.\n", cp);
+                    fmt::print("\nNo prior {}.\n", cp);
                 }
                 term_down(2);
                 return AS_ASK;
@@ -981,14 +981,14 @@ not_threaded:
         {
             if (!(command_ch == '(' ? find_prev_sib() : find_next_sib()))
             {
-                const char* cp = (command_ch == '(' ? "previous" : "next");
+                const std::string_view cp = (command_ch == '(' ? "previous" : "next");
                 if (g_verbose)
                 {
-                    std::printf("\nThis article has no %s sibling.\n", cp);
+                    fmt::print("\nThis article has no {} sibling.\n", cp);
                 }
                 else
                 {
-                    std::printf("\nNo %s sibling.\n", cp);
+                    fmt::print("\nNo {} sibling.\n", cp);
                 }
                 term_down(2);
                 return AS_ASK;
