@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-344 - Color Default Capability Assignment
-
-- Files: `libtrn/color.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `color_init`.
-- Dependencies: none.
-- Change: assign `fg` and `bg` views directly to `obj.fg` and `obj.bg`
-  instead of copying through `data(), size()`.
-- Tests: color configuration tests if existing coverage is easy.
-
 #### CSTR-345 - User Header Name Assignment
 
 - Files: `libtrn/opt.cpp`.

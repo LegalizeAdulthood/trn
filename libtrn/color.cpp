@@ -126,11 +126,11 @@ void color_init()
         {
             if (obj.fg.empty())
             {
-                obj.fg.assign(fg.data(), fg.size());
+                obj.fg = fg;
             }
             if (obj.bg.empty())
             {
-                obj.bg.assign(bg.data(), bg.size());
+                obj.bg = bg;
             }
         }
     }
