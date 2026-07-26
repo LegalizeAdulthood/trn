@@ -63,6 +63,7 @@
 #include <trn/rcstuff.h>
 #include <trn/rt-select.h>
 #include <trn/string-algos.h>
+#include <trn/smisc.h>
 #include <trn/sw.h>
 #include <trn/terminal.h>
 #include <trn/univ.h>
@@ -72,7 +73,9 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <charconv>
+#include <cctype>
 #include <ctime>
 #include <filesystem>
 #include <iterator>
@@ -436,29 +439,138 @@ bug_out:
     set_mode(gmode_save,mode_save);
 }
 
+static char newsgroup_command_char(std::string_view command)
+{
+    return command.empty() ? '\0' : command.front();
+}
+
+static bool is_default_newsgroup_command(char ch)
+{
+    if (ch == ' ')
+    {
+        return true;
+    }
+#ifndef STRICT_CR
+    if (ch == '\n' || ch == '\r')
+    {
+        return true;
+    }
+#endif
+    return false;
+}
+
+static std::string apply_newsgroup_default_command(std::string command)
+{
+    g_s_default_cmd = false;
+    g_univ_default_cmd = false;
+    if (is_default_newsgroup_command(newsgroup_command_char(command)))
+    {
+        g_s_default_cmd = true;
+        g_univ_default_cmd = true;
+        if (g_default_cmd.size() > 1 && g_default_cmd.front() == '^' &&
+            std::isupper(static_cast<unsigned char>(g_default_cmd[1])))
+        {
+            push_char(Ctl(g_default_cmd[1]));
+        }
+        else
+        {
+            push_char(g_default_cmd.empty() ? '\0' : g_default_cmd.front());
+        }
+        command = get_cmd();
+    }
+    return command;
+}
+
+static void set_newsgroup_command_char(std::string &command, char ch)
+{
+    if (command.empty())
+    {
+        command += ch;
+    }
+    else
+    {
+        command[0] = ch;
+    }
+}
+
+static void stage_legacy_newsgroup_command(std::string_view command)
+{
+    const std::size_t command_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN));
+    std::copy_n(command.data(), command_size, g_buf);
+    g_buf[command_size] = '\0';
+}
+
+static std::string finish_newsgroup_command(std::string_view command, bool donewline)
+{
+    if (command.size() <= 1 || command[1] != FINISH_CMD)
+    {
+        return std::string{command};
+    }
+    return finish_command(command.substr(0, 1), donewline);
+}
+
+static NewsgroupSearchResult newsgroup_search(std::string_view command)
+{
+    std::string buffer;
+    buffer.reserve(LINE_BUF_LEN + 1);
+    buffer = command.substr(0, std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN)));
+    buffer.resize(LINE_BUF_LEN + 1, '\0');
+    return newsgroup_search(buffer.data(), false);
+}
+
+static std::string command_with_typeahead(char ch)
+{
+    std::string command(LINE_BUF_LEN + 1, '\0');
+    command[0] = ch;
+    save_typeahead(command.data() + 1, LINE_BUF_LEN);
+    const std::size_t end = command.find('\0');
+    command.resize(end == std::string::npos ? command.size() : end);
+    return command;
+}
+
+static std::string_view command_argument(std::string_view command)
+{
+    if (command.empty())
+    {
+        return {};
+    }
+    command.remove_prefix(1);
+    return command;
+}
+
+static std::string_view trim_leading_spaces(std::string_view text)
+{
+    const std::size_t start = text.find_first_not_of(' ');
+    text.remove_prefix(start == std::string_view::npos ? text.size() : start);
+    return text;
+}
+
 InputNewsgroupResult input_newsgroup()
 {
-    char                      *s;
     std::optional<std::string> start_command;
+    char                       command_ch;
 
     eat_typeahead();
-    get_cmd(g_buf);
-    if (errno || *g_buf == '\f')
+    std::string command = get_cmd();
+    if (errno || newsgroup_command_char(command) == '\f')
     {
         newline();              // if return from stop signal
         return ING_ASK;
     }
-    g_buf[2] = *g_buf;
-    set_def(g_buf, g_default_cmd);
+    const char original_command_ch = newsgroup_command_char(command);
+    command = apply_newsgroup_default_command(command);
+    stage_legacy_newsgroup_command(command);
     print_cmd();
     if (g_newsgroup_ptr != nullptr)
     {
-        *g_buf = g_buf[2];
+        set_newsgroup_command_char(command, original_command_ch);
+        stage_legacy_newsgroup_command(command);
     }
 
 do_command:
+    command_ch = newsgroup_command_char(command);
     s_go_forward = true;                // default to forward motion
-    switch (*g_buf)
+    switch (command_ch)
     {
     case 'P':                           // goto previous newsgroup
     case 'p':                           // find previous unread newsgroup
@@ -471,7 +583,7 @@ do_command:
             g_newsgroup_ptr = newsgroup_prev(g_newsgroup_ptr);
         }
         s_go_forward = false;           // go backward in the newsrc
-        if (*g_buf == 'P')
+        if (command_ch == 'P')
         {
             return ING_SPECIAL;
         }
@@ -523,7 +635,7 @@ do_command:
             return ING_BREAK;
         }
         g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr);
-        if (*g_buf == 'N')
+        if (command_ch == 'N')
         {
             return ING_SPECIAL;
         }
@@ -542,7 +654,13 @@ do_command:
         return ING_ASK;
 
     case '/': case '?':       // scan for newsgroup pattern
-        switch (newsgroup_search(g_buf,true))
+        command = finish_newsgroup_command(command, false);
+        if (command.empty())
+        {
+            set_newsgroup(g_current_newsgroup);
+            return ING_INPUT;
+        }
+        switch (newsgroup_search(command))
         {
         case NGS_ERROR:
             set_newsgroup(g_current_newsgroup);
@@ -591,15 +709,14 @@ do_command:
         break;
 
     case 'g': // goto named newsgroup
-        if (!finish_command(false))
+        command = finish_newsgroup_command(command, false);
+        if (command.empty())
         {
             return ING_INPUT;
         }
         {
-            std::string_view  target{g_buf + 1};
-            const std::size_t target_start = target.find_first_not_of(' ');
-            target.remove_prefix(target_start == std::string_view::npos ? target.size() : target_start);
-            if (target.empty() && *g_buf == 'm' && !g_newsgroup_name.empty() && g_newsgroup_ptr)
+            std::string_view target = trim_leading_spaces(command_argument(command));
+            if (target.empty() && command_ch == 'm' && !g_newsgroup_name.empty() && g_newsgroup_ptr)
             {
                 target = g_newsgroup_name;
             }
@@ -631,7 +748,7 @@ do_command:
             }
         }
         // try to find newsgroup
-        if (!get_newsgroup(g_newsgroup_name, (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
+        if (!get_newsgroup(g_newsgroup_name, (command_ch == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
         {
             g_newsgroup_ptr = g_current_newsgroup;     // if not found, go nowhere
         }
@@ -644,6 +761,7 @@ do_command:
 #endif
 
     case '!':                 // shell escape
+        stage_legacy_newsgroup_command(command);
         if (escapade())         // do command
         {
             return ING_INPUT;
@@ -778,17 +896,19 @@ reask_abandon:
     case 'o':
     case 'O':
     {
-        bool doscan = (*g_buf == 'a');
-        if (!finish_command(true)) // get rest of command
+        bool doscan = (command_ch == 'a');
+        command = finish_newsgroup_command(command, true);
+        if (command.empty()) // get rest of command
         {
             return ING_INPUT;
         }
         g_msg.clear();
         end_only();
-        if (g_buf[1])
+        std::string_view switches = command_argument(command);
+        if (!switches.empty())
         {
-            bool minusd = in_string(std::string_view{g_buf + 1}, "-d", true);
-            sw_list(g_buf+1);
+            bool minusd = in_string(switches, "-d", true);
+            sw_list(switches);
             if (minusd)
             {
                 cwd_check();
@@ -797,7 +917,7 @@ reask_abandon:
             {
                 scan_active(true);
             }
-            g_newsgroup_min_to_read = *g_buf == g_empty_only_char && g_max_newsgroup_to_do ? TR_NONE : TR_ONE;
+            g_newsgroup_min_to_read = command_ch == g_empty_only_char && g_max_newsgroup_to_do ? TR_NONE : TR_ONE;
         }
         g_newsgroup_ptr = newsgroup_first(); // simulate ^
         if (!g_msg.empty() && !g_max_newsgroup_to_do)
@@ -808,6 +928,7 @@ reask_abandon:
     }
 
     case '&':
+        stage_legacy_newsgroup_command(command);
         if (switcheroo())       // get rest of command
         {
             return ING_INPUT;   // if rubbed out, try something else
@@ -816,15 +937,16 @@ reask_abandon:
 
     case 'l':                 // list other newsgroups
     {
-        if (!finish_command(true)) // get rest of command
+        command = finish_newsgroup_command(command, true);
+        if (command.empty()) // get rest of command
         {
             return ING_INPUT;   // if rubbed out, try something else
         }
-        s = skip_eq(g_buf+1, ' '); // skip leading spaces
+        std::string_view switches = trim_leading_spaces(command_argument(command));
         push_only();
-        if (*s)
+        if (!switches.empty())
         {
-            sw_list(s);
+            sw_list(switches);
         }
         page_start();
         scan_active(false);
@@ -874,21 +996,20 @@ ng_start_sel:
         // Just to be safe, make sure it is legal.
         //
         start_command = std::string{};
-        if (*g_buf == '.') // start command?
+        if (command_ch == '.') // start command?
         {
-            if (!finish_command(false)) // get rest of command
+            command = finish_newsgroup_command(command, false);
+            if (command.empty()) // get rest of command
             {
                 return ING_INPUT;
             }
-            start_command = g_buf + 1;
+            start_command = command_argument(command);
         }
-        else if (*g_buf == '+' || *g_buf == 'U' || *g_buf == '=' || *g_buf == ';')
+        else if (command_ch == '+' || command_ch == 'U' || command_ch == '=' || command_ch == ';')
         {
-            *g_buf = g_last_char; // restore 0200 if from a macro
-            save_typeahead(g_buf + 1, sizeof g_buf - 1);
-            start_command = g_buf;
+            start_command = command_with_typeahead(static_cast<char>(g_last_char));
         }
-        else if (*g_buf == ' ' || *g_buf == '\r' || *g_buf == '\n')
+        else if (command_ch == ' ' || command_ch == '\r' || command_ch == '\n')
         {
             start_command = std::string{};
         }
@@ -910,11 +1031,11 @@ redo_newsgroup:
             return ING_ASK;
 
         case NG_SEL_PRIOR:
-            *g_buf = 'p';
+            command = "p";
             goto do_command;
 
         case NG_SEL_NEXT:
-            *g_buf = 'n';
+            command = "n";
             goto do_command;
 
         case NG_MINUS:
@@ -935,6 +1056,7 @@ redo_newsgroup:
         break;
 
     case ':':         // execute command on selected groups
+        stage_legacy_newsgroup_command(command);
         if (!newsgroup_sel_perform())
         {
             return ING_INPUT;
@@ -950,7 +1072,7 @@ redo_newsgroup:
         return ING_ASK;
 
     default:
-        if (*g_buf == g_erase_char || *g_buf == g_kill_char)
+        if (command_ch == g_erase_char || command_ch == g_kill_char)
         {
             return ING_ERASE;
         }

@@ -507,3 +507,17 @@ TEST_F(InputNewsgroupTest, gotoNumericGroup)
     EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
     EXPECT_EQ("comp.lang.cpp", g_newsgroup_name);
 }
+
+TEST_F(InputNewsgroupTest, searchFindsNamedGroup)
+{
+    add_test_newsgroups();
+    set_current_newsgroup(0);
+    push_command("/cpp\n");
+
+    testing::internal::CaptureStdout();
+    const InputNewsgroupResult result = input_newsgroup();
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+}
