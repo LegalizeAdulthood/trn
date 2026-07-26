@@ -41,6 +41,7 @@ extern bool           g_art_do_read;      // search read articles?
 extern bool           g_kill_thru_kludge; // -k
 
 void            art_search_init();
+ArtSearchResult art_search(std::string_view command, bool get_cmd);
 ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd);
 
 #endif

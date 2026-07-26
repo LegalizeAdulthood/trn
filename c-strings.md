@@ -505,9 +505,11 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
   they still have production/source callers or platform/API boundary
   use.
-- Search API scan: article and newsgroup search still take mutable
-  command buffers.  Several callers now build local `std::string`
-  commands and then create writable buffers only to call those APIs.
+- Search API scan: article search now has a `std::string_view` command
+  API with a raw-buffer compatibility wrapper for remaining callers.
+  Newsgroup search still takes a mutable command buffer.  Several
+  callers now build local `std::string` commands and then create
+  writable buffers only to call those APIs.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -585,22 +587,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-297 - Article Search String API
-
-- Files: `libtrn/artsrch.cpp`, `libtrn/include/trn/artsrch.h`,
-  `tests/test_artsrch.cpp`, `tests/test_interp.cpp`.
-- Kind: search helper API foundation.
-- Function: `art_search`.
-- Dependencies: none.
-- Change: replace the mutable `char *` plus buffer-size API with a
-  `std::string_view` command API.  If the caller requests command
-  completion, finish the command into an owned string instead of writing
-  into `g_buf`.  Preserve the meaningful generated-pattern truncation
-  for notes search and remove staging buffers whose only purpose is
-  satisfying the old signature.
-- Tests: article search tests and interpolation tests that invoke
-  article search.
-
 #### CSTR-304 - Newsgroup Search String API
 
 - Files: `libtrn/ngsrch.cpp`, `libtrn/include/trn/ngsrch.h`,
@@ -633,11 +619,12 @@ and clarified ownership at the edges.
 - Files: `libtrn/ng.cpp`, `libtrn/kfile.cpp`, `libtrn/rt-select.cpp`.
 - Kind: shared command/search buffer caller.
 - Function: article search command callers.
-- Dependencies: CSTR-297.
+- Dependencies: none.
 - Change: update direct callers to pass strings or views to
   `art_search`.  Remove local writable staging buffers and the
   `stage_legacy_article_command` path when each caller no longer needs
-  `g_buf` to fake an article search command.
+  `g_buf` to fake an article search command.  Delete the temporary raw
+  `art_search` compatibility wrapper after callers have moved.
 - Tests: article search, kill-file command, and article-mode command
   tests.
 

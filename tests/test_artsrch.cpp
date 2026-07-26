@@ -140,9 +140,7 @@ TEST_F(ArticleSearchTest, serializesLocalSubjectKillCommand)
     const std::string kill_file_name = kill_file.generic_string();
     m_env.expect_env("KILLLOCAL", kill_file_name.c_str());
 
-    char command[]{"/one\\/two/K:j"};
-
-    EXPECT_EQ(SRCH_DONE, art_search(command, sizeof command, false));
+    EXPECT_EQ(SRCH_DONE, art_search("/one\\/two/K:j", false));
     EXPECT_EQ((std::vector<std::string>{"/one\\/two/:j"}), read_lines(kill_file));
 }
 
@@ -152,8 +150,6 @@ TEST_F(ArticleSearchTest, serializesHeaderKillCommand)
     const std::string kill_file_name = kill_file.generic_string();
     m_env.expect_env("KILLLOCAL", kill_file_name.c_str());
 
-    char command[]{"/Casey/KHFrom:+"};
-
-    EXPECT_EQ(SRCH_DONE, art_search(command, sizeof command, false));
+    EXPECT_EQ(SRCH_DONE, art_search("/Casey/KHFrom:+", false));
     EXPECT_EQ((std::vector<std::string>{"/Casey/Hfrom:+"}), read_lines(kill_file));
 }

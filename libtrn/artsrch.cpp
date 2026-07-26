@@ -34,6 +34,8 @@
 static CompiledRegex s_sub_compex{}; // last compiled subject search
 static CompiledRegex s_art_compex{}; // last compiled normal search
 
+static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd, std::string *generated_pattern);
+static void            truncate_notes_pattern(std::string &pattern_text, std::size_t text_start);
 static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
 std::string    g_last_pat;                  // last search pattern
@@ -52,13 +54,34 @@ void art_search_init()
 
 // search for an article containing some pattern
 
-// if patbuf != g_buf, get_cmd must be set to false!!!
+ArtSearchResult art_search(std::string_view command, bool get_cmd)
+{
+    return art_search_impl(command, get_cmd, nullptr);
+}
+
 ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 {
-    const char* pattern;                 // unparsed pattern
-    char cmd_chr = *pat_buf;             // what kind of search?
-    bool backward = cmd_chr == '?' || cmd_chr == Ctl('p');
-                                        // direction of search
+    if (pat_buf == nullptr || pat_buf_siz <= 0)
+    {
+        return SRCH_ABORT;
+    }
+
+    std::string           generated_pattern;
+    const ArtSearchResult result = art_search_impl(pat_buf, get_cmd, &generated_pattern);
+    if (*pat_buf != '/' && *pat_buf != '?' && pat_buf_siz > 1)
+    {
+        const std::size_t copy_size = std::min(generated_pattern.size(), static_cast<std::size_t>(pat_buf_siz - 2));
+        std::copy_n(generated_pattern.data(), copy_size, pat_buf + 1);
+        pat_buf[copy_size + 1] = '\0';
+    }
+    return result;
+}
+
+static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd, std::string *generated_pattern)
+{
+    std::string completed_command;
+    char        cmd_chr = command.empty() ? '\0' : command.front(); // what kind of search?
+    bool backward = cmd_chr == '?' || cmd_chr == Ctl('p');          // direction of search
     CompiledRegex* compex;               // which compiled expression
     std::string     cmd_lst;             // list of commands to do
     std::string     pattern_text;
@@ -74,17 +97,24 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     ArticleNum search_first;
 
     g_int_count = 0;
+    if (command.empty())
+    {
+        return SRCH_ABORT;
+    }
     if (cmd_chr == '/' || cmd_chr == '?') // normal search?
     {
-        if (get_cmd && g_buf == pat_buf)
+        if (get_cmd)
         {
-            if (!finish_command(false)) // get rest of command
+            completed_command = finish_command(command.substr(0, 1), false); // get rest of command
+            if (completed_command.empty())
             {
                 return SRCH_ABORT;
             }
+            command = completed_command;
         }
         compex = &s_art_compex;
-        if (pat_buf[1])
+        const std::string_view search_text = command.substr(1);
+        if (!search_text.empty())
         {
             how_much = ARTSCOPE_SUBJECT;
             search_header = SOME_LINE;
@@ -96,7 +126,6 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             search_header = g_art_srch_hdr;
             do_read = g_art_do_read;
         }
-        const std::string_view search_text{pat_buf + 1};
         pattern_text.reserve(search_text.size());
         std::size_t tail_start{};
         while (tail_start < search_text.size())
@@ -113,7 +142,6 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             pattern_text += search_text[tail_start];
             ++tail_start;
         }
-        pattern = pattern_text.c_str();
         if (!pattern_text.empty())
         {
             g_last_pat = pattern_text;
@@ -224,7 +252,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             {
                 do_read = true;
             }
-            cmd_lst.assign(modifier_tail.data(), modifier_tail.size());
+            cmd_lst = modifier_tail;
             if (cmd_lst[0] == 'k') // grandfather clause
             {
                 cmd_lst[0] = 'j';
@@ -241,10 +269,10 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
     else
     {
-        int salt_mode = pat_buf[2] == 'g'? 2 : 1;
-        const char *finding_str = pat_buf[1] == 'f' ? "author" : "subject";
+        int         salt_mode = command.size() > 2 && command[2] == 'g' ? 2 : 1;
+        const char *finding_str = command.size() > 1 && command[1] == 'f' ? "author" : "subject";
 
-        how_much = pat_buf[1] == 'f'? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
+        how_much = command.size() > 1 && command[1] == 'f' ? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
         search_header = SOME_LINE;
         do_read = (cmd_chr == Ctl('p'));
         if (cmd_chr == Ctl('n'))
@@ -252,21 +280,18 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             ret = SRCH_SUBJ_DONE;
         }
         compex = &s_sub_compex;
-        char *generated_pattern = pat_buf + 1;
-        pattern = generated_pattern;
-        const std::size_t pattern_capacity = static_cast<std::size_t>(pat_buf_siz - 2);
-        char             *h;
+        std::size_t finding_start{};
         if (how_much == ARTSCOPE_SUBJECT)
         {
             constexpr std::string_view prefix{": *"};
-            *fmt::format_to_n(generated_pattern, pattern_capacity, "{}{}", prefix, do_interp("%\\s")).out = '\0';
-            h = generated_pattern + prefix.size();
+            pattern_text = fmt::format("{}{}", prefix, do_interp("%\\s"));
+            finding_start = prefix.size();
         }
         else
         {
-            h = generated_pattern;
             // TODO: if using thread files, make this "%\\)f"
-            *fmt::format_to_n(generated_pattern, pattern_capacity, "{}", do_interp("%\\>f")).out = '\0';
+            pattern_text = do_interp("%\\>f");
+            finding_start = 0;
         }
         if (cmd_chr == 'k' || cmd_chr == 'K' || cmd_chr == ',' //
             || cmd_chr == '+' || cmd_chr == '.' || cmd_chr == 's')
@@ -294,7 +319,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             }
             else if (cmd_chr == 's')
             {
-                cmd_lst = pat_buf;
+                cmd_lst = cmd_chr + pattern_text;
             }
             else
             {
@@ -308,7 +333,9 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                 }
                 article_ptr(g_art)->mark_as_read();       // this article needs to die
             }
-            if (!*h)
+            const std::string_view finding_text{pattern_text.c_str() + finding_start,
+                                                pattern_text.size() - finding_start};
+            if (finding_text.empty())
             {
                 if (g_verbose)
                 {
@@ -326,11 +353,11 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             {
                 if (cmd_chr != '+' && cmd_chr != '.')
                 {
-                    std::printf("\nMarking %s \"%s\" as read.\n", finding_str, h);
+                    fmt::print("\nMarking {} \"{}\" as read.\n", finding_str, finding_text);
                 }
                 else
                 {
-                    std::printf("\nSelecting %s \"%s\".\n", finding_str, h);
+                    fmt::print("\nSelecting {} \"{}\".\n", finding_str, finding_text);
                 }
                 term_down(2);
             }
@@ -340,26 +367,21 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             g_search_ahead = ArticleNum{-1};
         }
 
-        {                       // compensate for notes files
-            for (int i = 24; *h && i--; h++)
-            {
-                if (*h == '\\')
-                {
-                    h++;
-                }
-            }
-            *h = '\0';
+        truncate_notes_pattern(pattern_text, finding_start);
+        if (generated_pattern != nullptr)
+        {
+            *generated_pattern = pattern_text;
         }
 #ifdef DEBUG
         if (g_debug)
         {
-            std::printf("\npattern = %s\n",pattern);
+            std::printf("\npattern = %s\n", pattern_text.c_str());
             term_down(2);
         }
 #endif
     }
     {
-        const char *s = compex->compile(pattern, true, fold_case);
+        const char *s = compex->compile(pattern_text.c_str(), true, fold_case);
         if (s != nullptr)
         {
             // compile regular expression
@@ -389,17 +411,16 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
     if (salt_away)
     {
-        const char *f = pattern;
         std::string salt_command;
         salt_command.reserve(LINE_BUF_LEN);
         salt_command += '/';
-        while (*f)
+        for (const char ch : pattern_text)
         {
-            if (*f == '/')
+            if (ch == '/')
             {
                 salt_command += '\\';
             }
-            salt_command += *f++;
+            salt_command += ch;
         }
         salt_command += '/';
         if (do_read)
@@ -525,6 +546,19 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
 exit:
     return ret;
+}
+
+static void truncate_notes_pattern(std::string &pattern_text, std::size_t text_start)
+{
+    std::size_t pattern_pos = text_start;
+    for (int i = 24; pattern_pos < pattern_text.size() && i--; ++pattern_pos)
+    {
+        if (pattern_text[pattern_pos] == '\\' && pattern_pos + 1 < pattern_text.size())
+        {
+            ++pattern_pos;
+        }
+    }
+    pattern_text.resize(pattern_pos);
 }
 
 // determine if article fits pattern
