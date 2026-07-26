@@ -452,7 +452,8 @@ bool parse_header(ArticleNum art_num)
     g_head_buf.clear();
     g_head_buf.reserve(LINE_BUF_LEN * 8);
     std::string nntp_header_line;
-    std::string article_line(LINE_BUF_LEN, '\0');
+    std::string article_line;
+    article_line.reserve(LINE_BUF_LEN);
     if (s_reading_nntp_header)
     {
         nntp_header_line.reserve(LINE_BUF_LEN);
@@ -487,13 +488,13 @@ bool parse_header(ArticleNum art_num)
         }
         else
         {
-            if (read_art(article_line.data(), LINE_BUF_LEN) == nullptr)
+            if (!read_art(article_line))
             {
                 break;
             }
-            len = static_cast<int>(std::strlen(article_line.c_str()));
-            found_nl = (len > 0 && article_line[static_cast<std::size_t>(len - 1)] == '\n');
-            g_head_buf.append(article_line.data(), static_cast<std::size_t>(len));
+            len = static_cast<int>(article_line.size());
+            found_nl = (!article_line.empty() && article_line.back() == '\n');
+            g_head_buf.append(article_line);
         }
         if (had_nl)
         {

@@ -575,20 +575,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-264 - Header Parser Article Line Input
-
-- Files: `libtrn/head.cpp`.
-- Kind: local string buffer passed through C output API.
-- Function: `parse_header`.
-- Dependencies: none.
-- Change: replace the local `article_line.data(), LINE_BUF_LEN`
-  `read_art` call with the string-reading API.  Use `article_line.size()`
-  for the length, check `back() == '\n'` for newline detection, and
-  append the string directly to `g_head_buf`.
-- Truncation: arbitrary fixed read limit; remove it through the string
-  `read_art` API while preserving NUL truncation behavior.
-- Tests: header parsing and cache tests.
-
 #### CSTR-268 - MIME Sub-header Line Input
 
 - Files: `libtrn/mime.cpp`.
