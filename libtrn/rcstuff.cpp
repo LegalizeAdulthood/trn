@@ -89,6 +89,9 @@ static void           rebuild_newsgroup_hash();
 static std::ptrdiff_t newsgroup_pointer_index(NewsgroupData *base, std::size_t count, NewsgroupData *np);
 static NewsgroupData *newsgroup_pointer_from_index(NewsgroupData *base, std::ptrdiff_t index);
 static int            rcline_cmp(std::string_view key, HashDatum data);
+static char           command_char(std::string_view command);
+static std::string    read_newsrc_prompt_command(std::string_view prompt, MinorMode newmode, std::string_view dflt);
+static void           print_prompt_command(std::string_view command);
 
 static void print_cant_recreate(const fs::path &name)
 {
@@ -1141,10 +1144,11 @@ check_fuzzy_match:
                 g_verbose ? fmt::format("\nNewsgroup {} not in .newsrc -- subscribe?", g_newsgroup_name)
                           : fmt::format("\nSubscribe {}?", g_newsgroup_name)};
 reask_add:
-            in_char(add_prompt, MM_ADD_NEWSGROUP_PROMPT, "ynYN");
-            print_cmd();
+            const std::string command = read_newsrc_prompt_command(add_prompt, MM_ADD_NEWSGROUP_PROMPT, "ynYN");
+            print_prompt_command(command);
             newline();
-            if (*g_buf == 'h')
+            const char command_ch = command_char(command);
+            if (command_ch == 'h')
             {
                 if (g_verbose)
                 {
@@ -1164,7 +1168,7 @@ reask_add:
                 term_down(1);
                 goto reask_add;
             }
-            else if (*g_buf == 'n' || *g_buf == 'q')
+            else if (command_ch == 'n' || command_ch == 'q')
             {
                 if (g_append_unsub)
                 {
@@ -1172,12 +1176,12 @@ reask_add:
                 }
                 return false;
             }
-            else if (*g_buf == 'y')
+            else if (command_ch == 'y')
             {
                 g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), ':');
                 flags |= GNG_RELOC;
             }
-            else if (*g_buf == 'Y')
+            else if (command_ch == 'Y')
             {
                 g_add_new_by_default = ADDNEW_SUB;
                 if (g_append_unsub)
@@ -1192,7 +1196,7 @@ reask_add:
                 g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), ':');
                 flags &= ~GNG_RELOC;
             }
-            else if (*g_buf == 'N')
+            else if (command_ch == 'N')
             {
                 g_add_new_by_default = ADDNEW_UNSUB;
                 if (g_append_unsub)
@@ -1228,10 +1232,11 @@ reask_add:
             g_verbose ? fmt::format("\nNewsgroup {} is unsubscribed -- resubscribe?", g_newsgroup_name)
                       : fmt::format("\nResubscribe {}?", g_newsgroup_name)};
 reask_unsub:
-        in_char(resubscribe_prompt, MM_RESUBSCRIBE_PROMPT, "yn");
-        print_cmd();
+        const std::string command = read_newsrc_prompt_command(resubscribe_prompt, MM_RESUBSCRIBE_PROMPT, "yn");
+        print_prompt_command(command);
         newline();
-        if (*g_buf == 'h')
+        const char command_ch = command_char(command);
+        if (command_ch == 'h')
         {
             if (g_verbose)
             {
@@ -1245,11 +1250,11 @@ reask_unsub:
             term_down(2);
             goto reask_unsub;
         }
-        else if (*g_buf == 'n' || *g_buf == 'q')
+        else if (command_ch == 'n' || command_ch == 'q')
         {
             return false;
         }
-        else if (*g_buf == 'y')
+        else if (command_ch == 'y')
         {
             char *cp = g_newsgroup_ptr->rc_numbers_data();
             g_newsgroup_ptr->m_flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : NF_NONE);
@@ -1303,6 +1308,58 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
     return np;
 }
 
+static char command_char(std::string_view command)
+{
+    return command.empty() ? '\0' : command.front();
+}
+
+static std::string read_newsrc_prompt_command(std::string_view prompt, MinorMode newmode, std::string_view dflt)
+{
+    MinorMode   mode_save = g_mode;
+    GeneralMode gmode_save = g_general_mode;
+    const int   newlines = static_cast<int>(std::count(prompt.begin(), prompt.end(), '\n'));
+
+    while (true)
+    {
+        unflush_output();
+        fmt::print("{} [{}] ", prompt, dflt);
+        std::fflush(stdout);
+        term_down(newlines);
+        eat_typeahead();
+        set_mode(GM_PROMPT, newmode);
+        std::string command = get_cmd();
+        if (errno || command_char(command) == '\f')
+        {
+            newline();
+            continue;
+        }
+
+        g_s_default_cmd = false;
+        g_univ_default_cmd = false;
+        const char command_ch = command_char(command);
+        if (command_ch == ' '                           //
+#ifndef STRICT_CR                                       //
+            || command_ch == '\n' || command_ch == '\r' //
+#endif                                                  //
+        )
+        {
+            g_s_default_cmd = true;
+            g_univ_default_cmd = true;
+            if (dflt.size() > 1 && dflt.front() == '^' && std::isupper(static_cast<unsigned char>(dflt[1])))
+            {
+                push_char(Ctl(dflt[1]));
+            }
+            else
+            {
+                push_char(dflt.empty() ? '\0' : dflt.front());
+            }
+            command = get_cmd();
+        }
+        set_mode(gmode_save, mode_save);
+        return command;
+    }
+}
+
 static bool relocation_command_needs_completion(std::string_view command)
 {
     return command.size() > 1 && command[1] == FINISH_CMD;
@@ -1317,7 +1374,7 @@ static std::string finish_relocation_command(std::string_view command)
     return finish_command(command.substr(0, 1), true);
 }
 
-static void print_relocation_command(std::string_view command)
+static void print_prompt_command(std::string_view command)
 {
     if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
     {
@@ -1348,10 +1405,11 @@ bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
         if (newnum < 0)
         {
             // ask if they want to keep the current order
-            in_char("Sort newsrc(s) using current sort order?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); // TODO: !'D'
-            print_cmd();
+            const std::string command = read_newsrc_prompt_command(
+                "Sort newsrc(s) using current sort order?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); // TODO: !'D'
+            print_prompt_command(command);
             newline();
-            if (*g_buf == 'y')
+            if (command_char(command) == 'y')
             {
                 set_selector(SM_NEWSGROUP, SS_NATURAL);
             }
@@ -1410,7 +1468,7 @@ reinp_reloc:
             command.push_back(FINISH_CMD);
             command_char = command.empty() ? '\0' : command.front();
         }
-        print_relocation_command(command);
+        print_prompt_command(command);
         if (command_char == 'h')
         {
             if (g_verbose)
@@ -1637,10 +1695,12 @@ void cleanup_newsrc(Newsrc *rp)
         }
         rp->flags |= RF_RC_CHANGED;
 reask_bogus:
-        in_char("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
-        print_cmd();
+        const std::string command =
+            read_newsrc_prompt_command("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
+        print_prompt_command(command);
         newline();
-        if (*g_buf == 'h')
+        const char command_ch = command_char(command);
+        if (command_ch == 'h')
         {
             if (g_verbose)
             {
@@ -1656,10 +1716,10 @@ reask_bogus:
             }
             goto reask_bogus;
         }
-        else if (*g_buf == 'n' || *g_buf == 'q')
+        else if (command_ch == 'n' || command_ch == 'q')
         {
         }
-        else if (*g_buf == 'y')
+        else if (command_ch == 'y')
         {
             while ((np = newsgroup_last()) != nullptr && np->m_to_read == TR_BOGUS)
             {

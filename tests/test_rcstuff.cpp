@@ -600,6 +600,29 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForMissingNewsrcGroup)
     EXPECT_EQ("\nNewsgroup comp.lang.apl not in .newsrc -- subscribe? [ynYN] \n", output);
 }
 
+TEST_F(NewsrcRotationTest, getNewsgroupPromptsForUnsubscribedGroup)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl! 1\n";
+    ASSERT_TRUE(multirc.use_multirc());
+
+    push_char('n');
+    testing::internal::CaptureStdout();
+    const bool        found = get_newsgroup("comp.lang.apl", GNG_NONE);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(found);
+    EXPECT_NE(std::string::npos, output.find("\nNewsgroup comp.lang.apl is unsubscribed -- resubscribe? [yn] \n"));
+    unuse_multirc(&multirc);
+}
+
 TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)
 {
     Newsrc newsrc = make_newsrc();
