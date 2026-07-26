@@ -557,7 +557,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 22, `strstr` 2, `strlen` 19.
+- Search and length: `strchr` 21, `strstr` 2, `strlen` 19.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 306,
   `fprintf`/`std::fprintf` 13.
@@ -605,18 +605,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-341 - Response Pipe Destination View Parse
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local C-string parser cleanup.
-- Function: `save_article`, pipe-command branch.
-- Dependencies: none.
-- Change: find the pipe separator in a command `std::string_view`, trim
-  spaces after the separator with view operations, and pass the
-  destination view to `file_exp`; remove `std::strchr` and `skip_eq`
-  from this branch.
-- Tests: pipe-save response tests.
 
 #### CSTR-342 - Article Header Newline View Lookup
 

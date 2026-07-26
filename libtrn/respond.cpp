@@ -66,7 +66,7 @@ static bool extract_option_digit(char ch)
     return std::isdigit(static_cast<unsigned char>(ch)) != 0;
 }
 
-static std::string_view skip_extract_spaces(std::string_view text)
+static std::string_view skip_response_spaces(std::string_view text)
 {
     const std::size_t non_space = text.find_first_not_of(' ');
     if (non_space == std::string_view::npos)
@@ -85,7 +85,7 @@ static std::string_view parse_extract_number(std::string_view text, int &value)
 
 static std::string_view parse_extract_options(std::string_view command_text, int &part_opt, int &total_opt)
 {
-    std::string_view destination = skip_extract_spaces(command_text);
+    std::string_view destination = skip_response_spaces(command_text);
     if (destination.size() >= 2 && destination.front() == '-' && extract_option_digit(destination[1]))
     {
         destination.remove_prefix(1);
@@ -95,7 +95,7 @@ static std::string_view parse_extract_options(std::string_view command_text, int
             destination.remove_prefix(1);
             total_opt = 0;
             destination = parse_extract_number(destination, total_opt);
-            destination = skip_extract_spaces(destination);
+            destination = skip_response_spaces(destination);
         }
         else
         {
@@ -329,11 +329,10 @@ SaveResult save_article()
             }
         } // if
     }
-    else if ((s = std::strchr(g_buf,'|')) != nullptr)   // is it a pipe command?
+    else if (const std::string_view::size_type pipe_separator = std::string_view{g_buf}.find('|');
+             pipe_separator != std::string_view::npos) // is it a pipe command?
     {
-        s++;                    // skip the |
-        s = skip_eq(s, ' ');
-        g_save_dest = file_exp(s);
+        g_save_dest = file_exp(skip_response_spaces(std::string_view{g_buf}.substr(pipe_separator + 1)));
         if (g_data_source->m_flags & DF_REMOTE)
         {
             nntp_finish_body(FB_SILENT);
