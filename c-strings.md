@@ -484,13 +484,13 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  terminal command input, the macro-file input line, and owner-local
-  parser scratch uses listed in the slices.  NNTP status lines and
-  article display lines now use owned string storage.  NNTP CRLF trailer
-  scratch, tiny UTF byte scratch buffers, translation tables, MIME
-  decode tables, terminal pushback bytes, termcap storage, address
-  conversion scratch, and regex bytecode arrays are non-string protocol
-  or parser storage.
+  the `Tgetstr` empty-string fallback, terminal command input, the
+  macro-file input line, and owner-local parser scratch uses listed in
+  the slices.  NNTP status lines and article display lines now use owned
+  string storage.  NNTP CRLF trailer scratch, tiny UTF byte scratch
+  buffers, translation tables, MIME decode tables, terminal pushback
+  bytes, termcap storage, keymap type bytes, address conversion scratch,
+  and regex bytecode arrays are non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -509,6 +509,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` command APIs with raw-buffer compatibility wrappers
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
+- Literal-only local pointer scan: simple remaining candidates are in
+  `art_search_impl`, `do_interp`, `do_newsgroup`, `save_options`,
+  `NewsgroupData::relocate_newsgroup`, and `save_article`.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -534,9 +537,9 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 23, `strstr` 2, `strlen` 20.
+- Search and length: `strchr` 23, `strstr` 2, `strlen` 19.
 - C line input: `fgets` 4.
-- C text output: `fputs` 164, `printf`/`std::printf` 322,
+- C text output: `fputs` 164, `printf`/`std::printf` 320,
   `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
@@ -580,6 +583,81 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
+
+#### CSTR-308 - `Tgetstr` Empty Fallback
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: fixed static C buffer cleanup.
+- Function: `Tgetstr`.
+- Dependencies: none.
+- Change: replace the mutable `static char s_empty[1]{}` fallback with
+  an immutable empty string literal return.  Keep the `const char *`
+  return type because this helper is a termcap boundary.
+- Tests: terminal tests or build coverage.
+
+#### CSTR-309 - Article Search Finding Label View
+
+- Files: `libtrn/artsrch.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `art_search_impl`.
+- Dependencies: none.
+- Change: replace the local `const char *` finding label with
+  `std::string_view`; pass the view directly to fmt calls.
+- Tests: article search tests and interpolation tests that invoke
+  article search.
+
+#### CSTR-310 - Interpolator Noname Fallback View
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `do_interp`.
+- Dependencies: none.
+- Change: replace the local `const char *` `noname_text` fallback with
+  `constexpr std::string_view` and assign it directly to the author
+  view.
+- Tests: interpolation tests.
+
+#### CSTR-311 - Newsgroup Prompt Label Views
+
+- Files: `libtrn/ng.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `do_newsgroup`.
+- Dependencies: none.
+- Change: replace literal-only local prompt and relationship labels with
+  `std::string_view` values.  Use fmt for any touched formatted output
+  so views are not converted back to C strings only for printf.
+- Tests: article-mode prompt and navigation tests.
+
+#### CSTR-312 - Save Options Thread Prefix View
+
+- Files: `libtrn/opt.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `save_options`.
+- Dependencies: none.
+- Change: replace the `const char *` thread-prefix local with
+  `std::string_view` and use fmt for the touched first-save message.
+- Tests: option save tests.
+
+#### CSTR-313 - Relocate Newsgroup Default View
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `NewsgroupData::relocate_newsgroup`.
+- Dependencies: none.
+- Change: replace the relocation default-command `const char *` with
+  `std::string_view`; use fmt for touched prompt output and
+  `empty()`/`front()` for default command selection.
+- Tests: newsrc relocation tests.
+
+#### CSTR-314 - Save Article Mailbox Default View
+
+- Files: `libtrn/respond.cpp`.
+- Kind: literal-only local pointer cleanup.
+- Function: `save_article`.
+- Dependencies: none.
+- Change: replace the mailbox-format default-command `const char *`
+  with `std::string_view` before passing it to `in_char`.
+- Tests: save-article prompt tests.
 
 ### Tier 1 - Helper And API Foundations
 
