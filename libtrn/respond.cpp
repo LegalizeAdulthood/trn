@@ -1052,12 +1052,13 @@ void followup()
     {
         term_down(2);
         in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
-        set_def(g_buf,"y");
-        if (*g_buf == 'q')  // TODO: need to add 'h' also
+        const std::string answer = set_def(std::string_view{g_buf}, "y");
+        const char        answer_char = answer.empty() ? '\0' : answer.front();
+        if (answer_char == 'q') // TODO: need to add 'h' also
         {
             return;
         }
-        if (*g_buf != 'n')
+        if (answer_char != 'n')
         {
             g_art = article_after(g_last_art);
         }

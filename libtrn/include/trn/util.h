@@ -49,7 +49,6 @@ std::string get_a_line(std::FILE *fp);
 bool        make_dir(const std::filesystem::path &dirname, MakeDirNameType nametype);
 void        not_incl(std::string_view feature);
 std::string set_def(std::string_view command, std::string_view dflt);
-void        set_def(char *buffer, std::string_view dflt);
 void        verify_sig();
 double      current_time();
 std::time_t text_to_secs(std::string_view text, std::time_t defSecs);

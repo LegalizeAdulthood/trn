@@ -413,14 +413,6 @@ std::string set_def(std::string_view command, std::string_view dflt)
     return std::string{command};
 }
 
-void set_def(char *buffer, std::string_view dflt)
-{
-    const std::string command = set_def(std::string_view{buffer}, dflt);
-    TRN_ASSERT(command.size() <= LINE_BUF_LEN);
-    std::copy(command.begin(), command.end(), buffer);
-    buffer[command.size()] = '\0';
-}
-
 // attempts to verify a cryptographic signature.
 void verify_sig()
 {

@@ -498,10 +498,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   string-reading API.  The raw `read_art(char *, int)` helper is already
   private to `artio.cpp`; it remains only inside the string reader and
   article-buffer fill code.
-- Unused overload/wrapper scan: `set_def(char *)` has one production
-  caller in `respond.cpp`.  `finish_command(int)` still has production
-  callers that read or store command text through `g_buf`.  Keep
-  `nntp_init_error`, `string_case_compare`,
+- Unused overload/wrapper scan: `finish_command(int)` still has
+  production callers that read or store command text through `g_buf`.
+  Keep `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
   they still have production/source callers or platform/API boundary
@@ -580,20 +579,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-305 - Remove Raw `set_def` Wrapper
-
-- Files: `libtrn/respond.cpp`, `libtrn/util.cpp`,
-  `libtrn/include/trn/util.h`, `tests/test_terminal.cpp`.
-- Kind: one-caller C-style overload cleanup.
-- Function: `set_def(char *, std::string_view)`.
-- Dependencies: none.
-- Change: in `followup`, keep the answer text in a local `std::string`
-  returned by `set_def(std::string_view, std::string_view)` and branch
-  on that string instead of modifying `g_buf` through the raw wrapper.
-  Then remove the `set_def(char *)` overload.
-- Tests: terminal default-command tests and response/followup behavior
-  tests if a focused test already covers the prompt.
 
 ### Tier 1 - Helper And API Foundations
 
@@ -704,7 +689,7 @@ and clarified ownership at the edges.
 - Kind: shared command and file-copy buffer.
 - Function: response command handling and temporary header/body copy
   paths.
-- Dependencies: CSTR-298, CSTR-305.
+- Dependencies: CSTR-298.
 - Change: separate response command text from file-copy line storage.
   Use owned strings for command parsing and owner-specific buffers for
   file copy paths; do not store either in `g_buf`.
