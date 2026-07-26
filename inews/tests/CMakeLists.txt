@@ -19,9 +19,12 @@ set(inews_failure_runner
 
 file(MAKE_DIRECTORY "${inews_test_dir}")
 file(WRITE "${inews_failure_runner}"
-"execute_process(
+"if(NOT DEFINED INEWS_NNTPSERVER)
+    set(INEWS_NNTPSERVER local)
+endif()
+execute_process(
     COMMAND \"${CMAKE_COMMAND}\" -E env
-        \"NNTPSERVER=local\"
+        \"NNTPSERVER=\${INEWS_NNTPSERVER}\"
         \"HOME=\${INEWS_TEST_HOME}\"
         \"DOTDIR=\${INEWS_TEST_HOME}\"
         \"\${INEWS_EXE}\"
@@ -58,6 +61,19 @@ add_test(NAME inews-invalid-header
         -P "${inews_failure_runner}"
 )
 set_tests_properties(inews-invalid-header PROPERTIES
+    LABELS trn
+)
+
+add_test(NAME inews-invalid-header-remote-port
+    COMMAND ${CMAKE_COMMAND}
+        "-DINEWS_EXE=$<TARGET_FILE:inews>"
+        "-DINEWS_ARTICLE=${inews_invalid_header_article}"
+        "-DINEWS_TEST_HOME=${inews_test_dir}"
+        "-DINEWS_NNTPSERVER=news.example\;119"
+        "-DINEWS_EXPECTED=Invalid header:"
+        -P "${inews_failure_runner}"
+)
+set_tests_properties(inews-invalid-header-remote-port PROPERTIES
     LABELS trn
 )
 
