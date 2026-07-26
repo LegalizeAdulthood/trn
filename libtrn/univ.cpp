@@ -653,7 +653,7 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     s_univ_begin_label.clear();
     if (!label.empty())
     {
-        s_univ_begin_label.assign(label.data(), label.size());
+        s_univ_begin_label = label;
     }
     std::ifstream input{file_exp(open_name)};
     if (!input)

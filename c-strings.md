@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-348 - Universal Use File Label Assignment
-
-- Files: `libtrn/univ.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `univ_use_file`.
-- Dependencies: none.
-- Change: assign `label` directly to `s_univ_begin_label` instead of
-  copying through `label.data(), label.size()`.
-- Tests: universal-selector file include tests if existing coverage is
-  easy.
-
 #### CSTR-349 - Universal Include Filename Assignment
 
 - Files: `libtrn/univ.cpp`.
