@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -58,6 +59,7 @@ static void rewrite_kill_file(ArticleNum thru);
 static int  write_local_thread_commands(int keylen, HashDatum *data, int extra);
 static int  write_global_thread_commands(int keylen, HashDatum *data, int appending);
 static int  age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
+static std::string_view skip_leading_space(std::string_view text);
 
 static std::FILE         *s_global_kill_file_fp{};                // global article killer file
 static KillFileStateFlags s_kill_file_state_local_change_clear{}; // bits to clear local changes
@@ -104,9 +106,12 @@ void kill_file_init()
                         message_id = line.substr(0, split);
                         command = line.substr(split + 1);
                     }
-                    const char  command_char = command.empty() ? '\0' : command.front();
-                    const char *age_text = command.empty() ? "" : command.data() + 1;
-                    int         age = s_kill_file_day_num - std::atol(age_text);
+                    const char       command_char = command.empty() ? '\0' : command.front();
+                    std::string_view age_text = command.empty() ? std::string_view{} : command.substr(1);
+                    age_text = skip_leading_space(age_text);
+                    long command_day{};
+                    (void) std::from_chars(age_text.data(), age_text.data() + age_text.size(), command_day);
+                    const int age = static_cast<int>(s_kill_file_day_num - command_day);
                     if (age > KF_MAX_DAYS)
                     {
                         g_kf_change_thread_cnt++;

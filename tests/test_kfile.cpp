@@ -315,3 +315,25 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
 
     EXPECT_EQ("<case@example.com> + " + std::to_string(day_num) + "\n", file_contents(kill_file));
 }
+
+TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileAllowsTrailingAgeText)
+{
+    const fs::path    kill_file = m_output_dir / "global-thread-age-text" / "KILLTHREADS";
+    const std::string kill_file_name = kill_file.generic_string();
+    const long        day_num = static_cast<long>(std::time(nullptr)) / 86400 - 10490;
+
+    fs::create_directories(kill_file.parent_path());
+    std::ofstream{kill_file} << "<case@example.com> + " << day_num << "junk\n";
+
+    hash_destroy(g_msg_id_hash);
+    g_msg_id_hash = nullptr;
+
+    m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
+    kill_file_init();
+    g_kf_change_thread_cnt = 1;
+    g_kf_state |= KFS_THREAD_CHANGES;
+
+    update_thread_kill_file();
+
+    EXPECT_EQ("<case@example.com> + " + std::to_string(day_num) + "\n", file_contents(kill_file));
+}
