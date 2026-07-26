@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-324 - Newsrc Lock PID Parse
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `set_lock`.
-- Dependencies: none.
-- Change: parse `pid_line` with `std::from_chars` instead of
-  `std::atol(pid_line.c_str())`.
-- Tests: newsrc lock-file tests.
-
 #### CSTR-325 - Relocation Command Number Parse
 
 - Files: `libtrn/rcstuff.cpp`.

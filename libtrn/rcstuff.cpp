@@ -589,7 +589,11 @@ static bool lock_newsrc(Newsrc *rp)
         const std::string pid_line = get_a_line(fp);
         if (!pid_line.empty())
         {
-            processnum = std::atol(pid_line.c_str());
+            std::string_view                       pid_text{pid_line};
+            const std::string_view::const_iterator pid_text_start = std::find_if_not(
+                pid_text.begin(), pid_text.end(), [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+            pid_text.remove_prefix(static_cast<std::size_t>(pid_text_start - pid_text.begin()));
+            (void) std::from_chars(pid_text.data(), pid_text.data() + pid_text.size(), processnum);
             runninghost = get_a_line(fp);
             if (!runninghost.empty() && runninghost.back() == '\n')
             {

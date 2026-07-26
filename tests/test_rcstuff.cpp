@@ -391,7 +391,7 @@ TEST_F(NewsrcRotationTest, useMultircRejectsLockHeldByThisProcess)
     newsrc.flags = RF_NONE;
     std::ofstream{newsrc.name} << "comp.lang.apl: 1\n";
     const fs::path lock_path{newsrc.name.generic_string() + ".LOCK"};
-    std::ofstream{lock_path} << g_our_pid << '\n' << g_local_host << '\n';
+    std::ofstream{lock_path} << "  " << g_our_pid << "junk\n" << g_local_host << '\n';
 
     push_char('\n');
     testing::internal::CaptureStdout();
