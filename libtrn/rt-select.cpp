@@ -141,6 +141,7 @@ void set_selector_commands(std::string &commands, std::string_view value)
 
 static std::string read_selector_command(char page_command, char end_command, bool at_end);
 static char        read_selector_escaped_command();
+static char        read_selector_numeric_continuation();
 
 char selector_end_command(std::string_view commands)
 {
@@ -160,6 +161,11 @@ std::string read_selector_command_for_test(char page_command, char end_command, 
 char read_selector_escaped_command_for_test()
 {
     return read_selector_escaped_command();
+}
+
+char read_selector_numeric_continuation_for_test()
+{
+    return read_selector_numeric_continuation();
 }
 
 namespace
@@ -1397,9 +1403,8 @@ reinp_selector:
         // Consider cache_until_key() here.  The middle of typing a
         // number is a lousy time to delay, however.
         //
-        get_cmd(g_buf);
-        ch = *g_buf;
-        if (s_disp_status_line == 2)    // status was printed
+        ch = read_selector_numeric_continuation();
+        if (s_disp_status_line == 2) // status was printed
         {
             if (g_can_home)
             {
@@ -2562,6 +2567,12 @@ static std::string read_selector_command(char page_command, char end_command, bo
 }
 
 static char read_selector_escaped_command()
+{
+    const std::string command = get_cmd();
+    return command.empty() ? '\0' : command.front();
+}
+
+static char read_selector_numeric_continuation()
 {
     const std::string command = get_cmd();
     return command.empty() ? '\0' : command.front();

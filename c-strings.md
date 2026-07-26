@@ -590,23 +590,12 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-291 - Selector Numeric Continuation Input
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: terminal command buffer caller.
-- Function: second digit/range continuation in `display_selector`.
-- Dependencies: none.
-- Change: use local command text for the second selector key while
-  preserving erase, kill, range, and goto-number semantics.  Keep the
-  slice limited to the continuation path.
-- Tests: selector numeric selection, ranges, erase, and kill behavior.
-
 #### CSTR-306 - Selector Secondary Prompt Input
 
 - Files: `libtrn/rt-select.cpp`, `tests/test_rt-select.cpp`.
 - Kind: selector prompt command buffer caller.
 - Function: selector mode, sort, search, and escaped command prompts.
-- Dependencies: CSTR-291.
+- Dependencies: none.
 - Change: replace remaining selector prompt reads that use `in_char`,
   `read_tty(g_buf, 1)`, or search APIs fed by `g_buf` with local command
   text.  Leave full command-dispatch staging for CSTR-298.
@@ -672,8 +661,8 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-291 through CSTR-292, CSTR-294 through CSTR-295,
-  and CSTR-306 through CSTR-307.
+- Dependencies: CSTR-292, CSTR-294 through CSTR-295, and CSTR-306
+  through CSTR-307.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -730,8 +719,8 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-291 through CSTR-292, CSTR-294 through CSTR-299,
-  and CSTR-306 through CSTR-307.
+- Dependencies: CSTR-292, CSTR-294 through CSTR-299, and CSTR-306
+  through CSTR-307.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
