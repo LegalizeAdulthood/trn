@@ -488,22 +488,22 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  terminal command input, and owner-local file-line scratch uses listed
-  in the slices.  NNTP status lines and article display lines now use
-  owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
-  scratch buffers, translation tables, MIME decode tables, terminal
-  pushback bytes, termcap storage, address conversion scratch, and regex
-  bytecode arrays are non-string protocol or parser storage.
+  terminal command input, the macro-file input line, and owner-local
+  parser scratch uses listed in the slices.  NNTP status lines and
+  article display lines now use owned string storage.  NNTP CRLF trailer
+  scratch, tiny UTF byte scratch buffers, translation tables, MIME
+  decode tables, terminal pushback bytes, termcap storage, address
+  conversion scratch, and regex bytecode arrays are non-string protocol
+  or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
-- Article input scan: all production callers outside `artio.cpp` now use
-  the string-reading API.  The raw `read_art(char *, int)` helper remains
-  only inside the string reader and article-buffer fill code, so it can
-  leave the public header and become a private implementation detail.
-- Unused overload/wrapper scan: `read_art(char *, int)` is ready to hide
-  because no production caller outside `artio.cpp` remains.  Keep
-  `nntp_init_error`,
+- Article input scan: all production callers outside `artio.cpp` use the
+  string-reading API.  The raw `read_art(char *, int)` helper is already
+  private to `artio.cpp`; it remains only inside the string reader and
+  article-buffer fill code.
+- Unused overload/wrapper scan: no unused production C-string overloads
+  are ready to remove in this scan.  Keep `nntp_init_error`,
   `string_case_compare`, `string_case_equal`, `Tgetstr`, `line_ptr`,
   `line_offset`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
@@ -519,6 +519,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   protocol/body buffers and local fixed-size output loops.
 - No active `strcpy`, `strncpy`, `strcmp`, `std::sprintf`, or `gets`
   production hits remain in this scan.
+- The two `strstr` hits are in an inactive `#ifdef UNDEF` block in
+  `sacmd.cpp`; they remain in the lexical inventory but are not active
+  slices.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
@@ -560,20 +563,122 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-280 - Article Citation Character Set
+
+- Files: `libtrn/art.cpp`.
+- Kind: string-literal search.
+- Function: `maybe_set_color`.
+- Dependencies: none.
+- Change: replace `std::strchr` over the citation character literal with
+  `std::string_view` membership.
+- Truncation: none.
+- Tests: article display/color tests if focused coverage exists;
+  otherwise add current behavior coverage first.
+
+#### CSTR-281 - Pager Leave Command Sets
+
+- Files: `libtrn/art.cpp`.
+- Kind: string-literal search.
+- Function: `page_switch`.
+- Dependencies: none.
+- Change: replace the two literal command-set `std::strchr` checks with
+  `std::string_view` membership.
+- Truncation: none.
+- Tests: pager command tests if focused coverage exists; otherwise add
+  current behavior coverage first.
+
+#### CSTR-282 - Numeric Range Command Sets
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: string-literal search.
+- Function: `num_num`.
+- Dependencies: none.
+- Change: replace literal character-set `std::strchr` checks with
+  `std::string_view` membership.  Do not change the range parser in this
+  slice.
+- Truncation: none.
+- Tests: numeric range command tests if focused coverage exists;
+  otherwise add current behavior coverage first.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-283 - Macro Line View
+
+- Files: `libtrn/terminal.cpp`,
+  `libtrn/include/trn/terminal.h`, macro tests.
+- Kind: read-only C-string parameter.
+- Function: `mac_line`.
+- Dependencies: none.
+- Change: change `mac_line` to take `std::string_view`, since it only
+  views and slices the caller's text.  Update direct callers and tests.
+- Truncation: none.
+- Tests: macro parsing tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
+#### CSTR-284 - Macro File Lines
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `mac_init`.
+- Dependencies: CSTR-283.
+- Change: read macro-file lines into `std::string` and pass views to
+  `mac_line`, removing the `tcbuf` file-line role from macro loading.
+- Truncation: the old `TCBUF_SIZE` limit is arbitrary macro-file line
+  truncation; `get_a_line` removes it.
+- Tests: macro-file initialization coverage if focused tests exist;
+  otherwise add current behavior coverage first.
+
+#### CSTR-285 - Interpolator Prompt Input Line
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: owner-local prompt-input scratch buffer.
+- Function: `do_interp`.
+- Dependencies: none.
+- Change: replace the local `read_scratch_line` `fgets` path for quoted
+  prompt interpolation with string line input, preserving the current
+  trailing-newline removal.
+- Truncation: the old 8192-byte scratch limit is arbitrary prompt-input
+  truncation.
+- Tests: interpolation prompt input tests if focused coverage exists;
+  otherwise add current behavior coverage first.
+
+#### CSTR-286 - Numeric Range Local Parser
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: local mutable parser copy.
+- Function: `num_num`.
+- Dependencies: CSTR-282.
+- Change: parse the local `ranges` string with `std::string_view`
+  splitting instead of `std::strchr` plus inserted NUL terminators.
+  Preserve command-list detection and range semantics.
+- Truncation: none; `ranges` is already owned string storage.
+- Tests: numeric range command tests if focused coverage exists;
+  otherwise add current behavior coverage first.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-287 - Selector Jump Digit Input
+
+- Files: `libtrn/scmd.cpp`.
+- Kind: terminal command buffer caller.
+- Function: `s_jump_num`.
+- Dependencies: none.
+- Change: use the string-returning `get_cmd()` and a local command
+  character for the optional second jump digit instead of writing the
+  digit through `g_buf`.
+- Truncation: none.
+- Tests: selector jump tests if focused coverage exists; otherwise add
+  current behavior coverage first.
 
 ### Tier 4 - Broad Shared Buffers
 
