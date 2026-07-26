@@ -1,6 +1,7 @@
 /* trn/artio.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_ARTIO_H
 #define TRN_ARTIO_H
 
@@ -37,7 +38,6 @@ void art_close();
 int seek_art(ArticlePosition pos);
 ArticlePosition tell_art();
 ArticlePosition ftell_art();
-char *read_art(char *s, int limit);
 bool read_art(std::string &line);
 void clear_art_buf();
 int seek_art_buf(ArticlePosition pos);

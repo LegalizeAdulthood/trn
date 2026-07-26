@@ -562,21 +562,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-271 - Hide Raw Article Buffer Reads
-
-- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`.
-- Kind: obsolete public C-buffer overload.
-- Function: `read_art(char *, int)`.
-- Dependencies: production callers outside `artio.cpp` already use
-  `read_art(std::string &)`.
-- Change: remove the raw `read_art(char *, int)` declaration from the
-  header and make the helper private to `artio.cpp`.  Keep the raw
-  buffer read as an implementation detail for the string reader and
-  article-buffer fill code.
-- Truncation: private protocol/body buffer limits remain with the
-  low-level article-buffer implementation.
-- Tests: full article, MIME, decode, and save workflows.
-
 #### CSTR-272 - Newsgroup Fake Command Copy
 
 - Files: `libtrn/ng.cpp`.

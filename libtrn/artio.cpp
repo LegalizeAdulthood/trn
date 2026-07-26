@@ -45,6 +45,8 @@ static constexpr std::size_t ART_BUF_GROWTH{LINE_BUF_LEN * 4};
 
 static std::string s_art_buf;
 
+static char *read_art(char *s, int limit);
+
 void art_io_init()
 {
     s_art_buf.assign(INITIAL_ART_BUF_SIZE, '\0');
@@ -150,13 +152,13 @@ ArticlePosition tell_art()
     return ftell_art();
 }
 
-char *read_art(char *s, int limit)
+static char *read_art(char *s, int limit)
 {
     if (g_data_source->m_flags & DF_REMOTE)
     {
         return nntp_read_art(s, limit);
     }
-    return std::fgets(s,limit,g_art_fp);
+    return std::fgets(s, limit, g_art_fp);
 }
 
 bool read_art(std::string &line)
