@@ -582,19 +582,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-265 - Save Article Local Line Reads
-
-- Files: `libtrn/respond.cpp`.
-- Kind: local string buffer passed through C output API.
-- Function: `save_article`.
-- Dependencies: none.
-- Change: replace both local `article_line.data(), LINE_BUF_LEN`
-  `read_art` loops with the string-reading API.  Use direct
-  `std::string_view` views of the resulting string and remove the manual
-  NUL search and resize cycle.
-- Truncation: arbitrary fixed read limit; remove it.
-- Tests: save article, extract, and mailbox tests.
-
 #### CSTR-266 - Supersede Body Copy Line Reads
 
 - Files: `libtrn/respond.cpp`.

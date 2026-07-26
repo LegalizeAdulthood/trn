@@ -229,12 +229,10 @@ SaveResult save_article()
             {
                 total = totalOpt;
             }
-            std::string article_line(LINE_BUF_LEN, '\0');
-            for (g_art_pos = g_save_from; read_art(article_line.data(), LINE_BUF_LEN) != nullptr;
-                 g_art_pos = tell_art(), article_line.resize(LINE_BUF_LEN))
+            std::string article_line;
+            article_line.reserve(LINE_BUF_LEN);
+            for (g_art_pos = g_save_from; read_art(article_line); g_art_pos = tell_art())
             {
-                const std::size_t line_end = article_line.find('\0');
-                article_line.resize(line_end == std::string::npos ? article_line.size() : line_end);
                 const std::string_view line_text{article_line};
                 if (line_text.empty() || line_text.front() <= ' ')
                 {
@@ -510,18 +508,16 @@ reask_save:
                 fmt::print(s_tmp_fp, "Article: {} of {}\n", g_art.value_of(), g_newsgroup_name);
             }
             seek_art(g_save_from);
-            std::string article_line(LINE_BUF_LEN, '\0');
-            while (read_art(article_line.data(), LINE_BUF_LEN) != nullptr)
+            std::string article_line;
+            article_line.reserve(LINE_BUF_LEN);
+            while (read_art(article_line))
             {
-                const std::size_t line_end = article_line.find('\0');
-                article_line.resize(line_end == std::string::npos ? article_line.size() : line_end);
                 const std::string_view line_text{article_line};
                 if (quote_From && string_case_equal(line_text.substr(0, 5), "from "))
                 {
                     fmt::print(s_tmp_fp, ">");
                 }
                 fmt::print(s_tmp_fp, "{}", line_text);
-                article_line.resize(LINE_BUF_LEN);
             }
             fmt::print(s_tmp_fp, "\n\n");
 #if MBOX_CHAR == '\001'
