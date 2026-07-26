@@ -557,7 +557,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 21, `strstr` 2, `strlen` 19.
+- Search and length: `strchr` 20, `strstr` 2, `strlen` 20.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 306,
   `fprintf`/`std::fprintf` 13.
@@ -606,17 +606,99 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-342 - Article Header Newline View Lookup
+#### CSTR-343 - Article Check Newsgroup Name Assignment
 
-- Files: `libtrn/art.cpp`.
-- Kind: C string library call cleanup.
-- Function: `do_article`.
+- Files: `trn-artchk/trn-artchk.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `main`.
 - Dependencies: none.
-- Change: use `std::string_view::find` on `g_head_buf` to locate the
-  next header newline for `g_art_pos` instead of taking `c_str()` and
-  calling `std::strchr`.
-- Tests: article display or pager position tests if existing coverage
-  is easy to extend.
+- Change: assign `group_name` directly to `newsgroup.name` instead of
+  copying through `group_name.data(), group_name.size()`.
+- Tests: article-check parser tests if existing coverage is easy.
+
+#### CSTR-344 - Color Default Capability Assignment
+
+- Files: `libtrn/color.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `color_init`.
+- Dependencies: none.
+- Change: assign `fg` and `bg` views directly to `obj.fg` and `obj.bg`
+  instead of copying through `data(), size()`.
+- Tests: color configuration tests if existing coverage is easy.
+
+#### CSTR-345 - User Header Name Assignment
+
+- Files: `libtrn/opt.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `set_header_list`.
+- Dependencies: none.
+- Change: assign `s` directly to `g_user_header_type[add_at].name`
+  instead of copying through `s.data(), s.size()`.
+- Tests: option header-list tests if existing coverage is easy.
+
+#### CSTR-346 - Macro Definition Assignment
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `install_macro`.
+- Dependencies: none.
+- Change: assign `definition` directly to `curmap->km_str[ch]` instead
+  of copying through `definition.data(), definition.size()`.
+- Tests: macro definition tests if existing coverage is easy.
+
+#### CSTR-347 - Universal Config File Assignment
+
+- Files: `libtrn/univ.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `univ_add_file`.
+- Dependencies: none.
+- Change: assign `fname` directly to `config_file.fname` instead of
+  copying through `fname.data(), fname.size()`.
+- Tests: universal-selector config-file tests if existing coverage is
+  easy.
+
+#### CSTR-348 - Universal Use File Label Assignment
+
+- Files: `libtrn/univ.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `univ_use_file`.
+- Dependencies: none.
+- Change: assign `label` directly to `s_univ_begin_label` instead of
+  copying through `label.data(), label.size()`.
+- Tests: universal-selector file include tests if existing coverage is
+  easy.
+
+#### CSTR-349 - Universal Include Filename Assignment
+
+- Files: `libtrn/univ.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `univ_include_file`.
+- Dependencies: none.
+- Change: assign `fname` directly to `g_univ_fname` instead of copying
+  through `fname.data(), fname.size()`.
+- Tests: universal-selector include tests if existing coverage is easy.
+
+#### CSTR-350 - Universal File Load Assignment
+
+- Files: `libtrn/univ.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `univ_file_load`.
+- Dependencies: none.
+- Change: assign `fname`, `title`, and `label` directly to the matching
+  global strings instead of copying through `data(), size()`.
+- Tests: universal-selector file load tests if existing coverage is
+  easy.
+
+#### CSTR-351 - Universal Mask Load Title Assignment
+
+- Files: `libtrn/univ.cpp`.
+- Kind: string-view assignment cleanup.
+- Function: `univ_mask_load`.
+- Dependencies: none.
+- Change: assign `title` directly to `g_univ_title` instead of copying
+  through `title.data(), title.size()`.
+- Tests: universal-selector mask load tests if existing coverage is
+  easy.
 
 ### Tier 1 - Helper And API Foundations
 

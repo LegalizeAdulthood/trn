@@ -722,8 +722,9 @@ skip_put:
             }
             else if (g_in_header)
             {
-                const char *head = g_head_buf.c_str();
-                g_art_pos = ArticlePosition{std::strchr(head + g_art_pos.value_of(), '\n') - head + 1};
+                const std::string_view::size_type line_end = std::string_view{g_head_buf}.find(
+                    '\n', static_cast<std::string_view::size_type>(g_art_pos.value_of()));
+                g_art_pos = ArticlePosition{static_cast<long>(line_end + 1)};
             }
             else
             {
