@@ -487,25 +487,23 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   allocation helpers.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: current string candidates include `g_buf` and
-  terminal command input.  NNTP status lines and article display lines
-  now use owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
+- Fixed raw buffers: current string candidates include `g_buf`,
+  terminal command input, and owner-local file-line scratch uses listed
+  in the slices.  NNTP status lines and article display lines now use
+  owned string storage.  NNTP CRLF trailer scratch, tiny UTF byte
   scratch buffers, translation tables, MIME decode tables, terminal
   pushback bytes, termcap storage, address conversion scratch, and regex
   bytecode arrays are non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
-- Article input scan: several functions still allocate local
-  `std::string` line storage, pass `data()` plus `LINE_BUF_LEN` to
-  `read_art(char *, int)`, then search for the first NUL byte.  These
-  callers should migrate to the existing string-reading API now that the
-  MIME decode cursor is a view and no longer depends on the returned
-  pointer.
-- Unused overload/wrapper scan: `read_art(char *, int)` is not ready for
-  removal because production callers remain.  After those callers move
-  to string line input it can leave the public header and become an
-  implementation detail.  Keep `nntp_init_error`,
+- Article input scan: all production callers outside `artio.cpp` now use
+  the string-reading API.  The raw `read_art(char *, int)` helper remains
+  only inside the string reader and article-buffer fill code, so it can
+  leave the public header and become a private implementation detail.
+- Unused overload/wrapper scan: `read_art(char *, int)` is ready to hide
+  because no production caller outside `artio.cpp` remains.  Keep
+  `nntp_init_error`,
   `string_case_compare`, `string_case_equal`, `Tgetstr`, `line_ptr`,
   `line_offset`, `yes_or_no`, `empty`, `plural`, `force_me`, and
   `at_grey_space`; they still have production/source callers or
@@ -519,13 +517,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Article display/copy paths now use `std::string` for the shared
   article line.  The low-level `read_art(char *, int)` API remains for
   protocol/body buffers and local fixed-size output loops.
-- The remaining direct `strcpy` hit is accounted for by `g_buf` in
-  CSTR-161.  No active `strncpy`, `strcmp`, or `std::sprintf`
-  production hits remain in this scan.  The one lexical `strcmp` hit is
-  in the inactive `parsedate` `#ifdef TEST` driver.
-- The inactive `parsedate` `#ifdef TEST` harness still uses `gets`,
-  `strcmp`, and a fixed input buffer.  It is intentionally skipped; do
-  not modernize that harness as part of this audit.
+- The remaining direct `strcpy` hit is the `do_newsgroup` fake-command
+  update tracked by CSTR-272.  No active `strncpy`, `strcmp`,
+  `std::sprintf`, or `gets` production hits remain in this scan.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
@@ -538,20 +532,21 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Copy and concatenation: `strcpy` 1.
-- Comparison: `strcmp` 1.
-- Search and length: `strchr` 39, `strstr` 2, `strlen` 24.
-- C text I/O roots: `fgets` 20, `gets` 1, `fputs` 169,
-  `printf`/`std::printf` 334, `fprintf`/`std::fprintf` 14.
+- Search and length: `strchr` 39, `strstr` 2, `strlen` 23.
+- C line input: `fgets` 17.
+- C text output: `fputs` 169, `printf`/`std::printf` 329,
+  `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strncpy`, `strcat`,
-`strncat`, `strncmp`, `strrchr`, `strspn`, `strcspn`, `strpbrk`,
-`strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`,
-`puts`, `memmove`, or `memchr`.
+`strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`, `strcspn`,
+`strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`,
+`vsnprintf`, `gets`, `puts`, `memmove`, or `memchr`.
 
-`fmt::sprintf` calls are not C buffer writes.  They are tracked only
-where the format template itself should be modernized.
+`fmt::sprintf` appears three times.  These calls are not C buffer
+writes.  They are tracked only where the format template itself should
+be modernized.
 
 ## Refactoring Slices
 
@@ -567,6 +562,34 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-271 - Hide Raw Article Buffer Reads
+
+- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`.
+- Kind: obsolete public C-buffer overload.
+- Function: `read_art(char *, int)`.
+- Dependencies: production callers outside `artio.cpp` already use
+  `read_art(std::string &)`.
+- Change: remove the raw `read_art(char *, int)` declaration from the
+  header and make the helper private to `artio.cpp`.  Keep the raw
+  buffer read as an implementation detail for the string reader and
+  article-buffer fill code.
+- Truncation: private protocol/body buffer limits remain with the
+  low-level article-buffer implementation.
+- Tests: full article, MIME, decode, and save workflows.
+
+#### CSTR-272 - Newsgroup Fake Command Copy
+
+- Files: `libtrn/ng.cpp`.
+- Kind: direct C string copy into shared command buffer.
+- Function: `do_newsgroup`.
+- Dependencies: none.
+- Change: replace `std::strcpy(g_buf, "+")` with explicit command-byte
+  setup, or use a local command value if the nearby control flow already
+  supports it.  Preserve the selected-only end-of-group branch and do not
+  reorder the jump into `article_level`.
+- Tests: newsgroup selected-only/end-of-group behavior; add current
+  behavior coverage first if no focused coverage exists.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
@@ -576,6 +599,108 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-273 - Active-times Line Parsing
+
+- Files: `libtrn/addng.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `new_local_groups`.
+- Dependencies: none.
+- Change: read `active.times` lines into a local `std::string` with
+  `get_a_line`, slice the group name with `std::string_view`, and use
+  that view for `find_active_group`, `find_newsgroup`, and `add_to_hash`.
+  Drop the `g_buf`/`fgets`/`strchr` parsing path.
+- Truncation: the old `LINE_BUF_LEN` limit is arbitrary file-line
+  truncation; `get_a_line` removes it.
+- Tests: add-newsgroup/local active-times behavior if focused coverage
+  exists; otherwise add current behavior coverage first.
+
+#### CSTR-274 - Newsrc Lock File Lines
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `lock_newsrc`.
+- Dependencies: none.
+- Change: read the pid and host lines into local `std::string` values
+  with `get_a_line`, trim the host newline locally, and compare/print the
+  owned host string instead of storing a pointer into `g_buf`.
+- Truncation: the old `LINE_BUF_LEN` limit is arbitrary lock-file line
+  truncation; `get_a_line` removes it.
+- Tests: newsrc lock handling if focused coverage exists; otherwise add
+  current behavior coverage first.
+
+#### CSTR-275 - Newsrc Subscription And Info Lines
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `open_newsrc`.
+- Dependencies: none.
+- Change: copy subscription seed files with local `std::string` lines
+  instead of `fgets(g_buf)`, and parse the `.info` first line from an
+  owned string using view operations.  Drop the `g_buf`/`strlen`/`strchr`
+  path for those file lines.
+- Truncation: the old `sizeof g_buf` limit is arbitrary file-line
+  truncation; `get_a_line` removes it.
+- Tests: new newsrc creation and `.info` restore behavior if focused
+  coverage exists; otherwise add current behavior coverage first.
+
+#### CSTR-276 - Global Thread Kill File Lines
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `kill_file_init`.
+- Dependencies: none.
+- Change: read `KILLTHREADS` lines into a local `std::string`, parse
+  message id and command fields with `std::string_view`, and store only
+  owned message-id text in the hash path.  Drop the
+  `g_buf`/`fgets`/`strchr` mutation path.
+- Truncation: the old `sizeof g_buf` limit is arbitrary file-line
+  truncation; `get_a_line` removes it.
+- Tests: global thread kill-file initialization if focused coverage
+  exists; otherwise add current behavior coverage first.
+
+#### CSTR-277 - Kill File Command Lines
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `do_kill_file`.
+- Dependencies: none.
+- Change: read kill-file lines into a local `std::string`, remove the
+  trailing newline from the owned string, and parse `THRU`, include, and
+  command lines with `std::string_view` operations instead of mutating
+  `g_buf`.
+- Truncation: the old `LINE_BUF_LEN` limit is arbitrary file-line
+  truncation; `get_a_line` removes it.
+- Tests: kill-file processing if focused coverage exists; otherwise add
+  current behavior coverage first.
+
+#### CSTR-278 - Local Kill File Rewrite Lines
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `rewrite_kill_file`.
+- Dependencies: none.
+- Change: read local kill-file lines into `std::string`, preserve whether
+  each source line had a newline, and write the owned line text with
+  `fmt`/string output instead of reusing `g_buf` and `std::fputs`.
+- Truncation: the old `LINE_BUF_LEN` limit is arbitrary file-line
+  truncation; `get_a_line` removes it.
+- Tests: local kill-file rewrite behavior if focused coverage exists;
+  otherwise add current behavior coverage first.
+
+#### CSTR-279 - Edited Kill File Lines
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: owner-local file-line scratch buffer.
+- Function: `edit_kill_file`.
+- Dependencies: none.
+- Change: after the editor returns, read local kill-file lines into
+  `std::string` and parse normal/thread command lines with
+  `std::string_view` instead of `g_buf`, `skip_space`, and `strchr`.
+- Truncation: the old `LINE_BUF_LEN` limit is arbitrary file-line
+  truncation; `get_a_line` removes it.
+- Tests: edited kill-file reload behavior if focused coverage exists;
+  otherwise add current behavior coverage first.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -631,17 +756,3 @@ with their owner slices unless a local use is clearly formatting-only.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
-
-#### CSTR-271 - Hide Raw Article Buffer Reads
-
-- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`.
-- Kind: obsolete public C-buffer overload.
-- Function: `read_art(char *, int)`.
-- Dependencies: none.
-- Change: remove the raw `read_art(char *, int)` declaration from the
-  header after all external callers use string line input.  Keep the raw
-  buffer reader only as a private `artio.cpp` implementation detail for
-  the string reader and article-buffer fill code.
-- Truncation: private protocol/body buffer limits remain with the
-  low-level article-buffer implementation.
-- Tests: full article, MIME, decode, and save workflows.
