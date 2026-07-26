@@ -346,7 +346,7 @@ TEST_F(TerminalTest, tgotoStringFormatsDosCursorMotion)
 
 TEST_F(TerminalTest, macLineParsesExpandedKey)
 {
-    char line[] = "^B q\n";
+    const std::string_view line{"^B q\n"};
 
     mac_line(line);
 

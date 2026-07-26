@@ -597,13 +597,13 @@ static void mac_init(char *tcbuf)
     }
 }
 
-void mac_line(char *line)
+void mac_line(std::string_view line)
 {
     if (s_top_map == nullptr)
     {
         s_top_map = new_key_map();
     }
-    std::string_view pattern{line};
+    std::string_view pattern = line;
     if (pattern.empty() || pattern.front() == '#' || pattern.front() == '\n')
     {
         return;

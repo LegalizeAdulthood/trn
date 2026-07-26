@@ -568,18 +568,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-283 - Macro Line View
-
-- Files: `libtrn/terminal.cpp`,
-  `libtrn/include/trn/terminal.h`, macro tests.
-- Kind: read-only C-string parameter.
-- Function: `mac_line`.
-- Dependencies: none.
-- Change: change `mac_line` to take `std::string_view`, since it only
-  views and slices the caller's text.  Update direct callers and tests.
-- Truncation: none.
-- Tests: macro parsing tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -590,7 +578,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/terminal.cpp`.
 - Kind: owner-local file-line scratch buffer.
 - Function: `mac_init`.
-- Dependencies: CSTR-283.
+- Dependencies: none.
 - Change: read macro-file lines into `std::string` and pass views to
   `mac_line`, removing the `tcbuf` file-line role from macro loading.
 - Truncation: the old `TCBUF_SIZE` limit is arbitrary macro-file line
