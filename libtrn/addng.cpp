@@ -329,7 +329,11 @@ static void new_local_groups(DataSource *dp)
         {
             continue;
         }
-        last_one = std::atol(active_times_line.c_str() + name_end + 1);
+        std::string_view active_time = active_times_view.substr(name_end + 1);
+        skip_active_field_space(active_time);
+        std::time_t parsed_time{};
+        (void) std::from_chars(active_time.data(), active_time.data() + active_time.size(), parsed_time);
+        last_one = parsed_time;
         if (last_one < dp->m_last_new_group)
         {
             continue;

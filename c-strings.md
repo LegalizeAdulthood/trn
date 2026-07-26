@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-318 - Local Active Times Parse
-
-- Files: `libtrn/addng.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `new_local_groups`.
-- Dependencies: none.
-- Change: parse the timestamp from
-  `active_times_view.substr(name_end + 1)` with `std::from_chars`
-  instead of `std::atol(active_times_line.c_str() + name_end + 1)`.
-- Tests: local newsgroup discovery tests.
-
 #### CSTR-319 - Killfile Thread Age Parse
 
 - Files: `libtrn/kfile.cpp`.
