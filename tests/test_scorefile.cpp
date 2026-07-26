@@ -375,6 +375,28 @@ TEST_F(ScoreFileTest, appendSubjectShortcutWritesSubjectRule)
     EXPECT_EQ((std::vector<std::string>{"10 subject: compact subject"}), read_lines(score_file));
 }
 
+TEST_F(ScoreFileTest, appendMissingScoreUsesTypedScore)
+{
+    const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-append-missing-score"};
+    const fs::path    score_file{score_dir + "/comp.lang.apl"};
+
+    std::error_code error;
+    fs::remove_all(score_dir, error);
+    g_newsgroup_name = "comp.lang.apl";
+
+    trn::testing::MockEnvironment env;
+    env.expect_env("SCOREDIR", score_dir.c_str());
+
+    push_string("7\n", 0);
+
+    testing::internal::CaptureStdout();
+    char line[]{"\" subject: compact subject"};
+    sf_append(line);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ((std::vector<std::string>{"7 subject: compact subject"}), read_lines(score_file));
+}
+
 TEST_F(ScoreFileTest, appendAbbreviationWritesConfiguredFile)
 {
     const std::string score_dir{TRN_TEST_TMP_DIR "/scorefile-append-abbreviation"};

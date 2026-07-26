@@ -404,6 +404,18 @@ TEST_F(TerminalTest, getCommandExpandsMacroString)
     EXPECT_EQ(FINISH_CMD, command[1]);
 }
 
+TEST_F(TerminalTest, finishCommandReturnsCompletedSeededCommand)
+{
+    push_string("7\n", 0);
+
+    testing::internal::CaptureStdout();
+    const std::string command = finish_command(":", true);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(":7", command);
+    EXPECT_EQ(":7\n", output);
+}
+
 #ifdef MSDOS
 TEST_F(TerminalTest, tgotoStringFormatsDosCursorMotion)
 {

@@ -575,22 +575,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-302 - Terminal Seeded Command Completion
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  `libtrn/scorefile.cpp`, `tests/test_terminal.cpp`,
-  `tests/test_scorefile.cpp`.
-- Kind: terminal command-completion owner.
-- Function: `finish_command` and first seeded-command caller
-  `sf_missing_score`.
-- Dependencies: none.
-- Change: add a string-owning command-completion API that accepts seeded
-  command text and returns completed text without writing through
-  `g_buf`.  Migrate `sf_missing_score` in the same slice so the new
-  helper is not an unused wrapper.
-- Tests: terminal command completion and missing-score scorefile entry
-  behavior.
-
 #### CSTR-303 - Score Append String View API
 
 - Files: `libtrn/score.cpp`, `libtrn/include/trn/score.h`,

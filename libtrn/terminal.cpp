@@ -187,6 +187,7 @@ static void    mac_init();
 static KeyMap *new_key_map();
 static void    reprint();
 static void    show_key_map(KeyMap *curmap, std::string &prefix);
+static void    store_command(std::string_view command);
 static int     echo_char(char_int ch);
 static void    line_col_calcs();
 static void    mouse_input(const char *cp);
@@ -910,6 +911,28 @@ bool finish_command(int donewline)
 
     set_mode(gmode_save,g_mode);
     return true;                        // retrn success
+}
+
+std::string finish_command(std::string_view command, bool donewline)
+{
+    TRN_ASSERT(command.size() == 1);
+    if (command.empty())
+    {
+        return {};
+    }
+
+    std::string staged_command;
+    staged_command.reserve(2);
+    staged_command += command.front();
+    staged_command += static_cast<char>(FINISH_CMD);
+    store_command(staged_command);
+
+    if (!finish_command(donewline))
+    {
+        return {};
+    }
+
+    return g_buf;
 }
 
 static int echo_char(char_int ch)

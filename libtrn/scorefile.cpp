@@ -911,15 +911,14 @@ static std::string sf_missing_score(std::string_view line)
 {
     // save line since it is probably pointing at (the TRN-global) g_buf
     std::string saved_line{line};
-    std::printf("Possibly missing score.\n"
-           "Type a score now or delete the colon to abort this entry:\n");
-    g_buf[0] = ':';
-    g_buf[1] = FINISH_CMD;
-    if (!finish_command(true)) // print the CR
+    fmt::print("Possibly missing score.\n"
+               "Type a score now or delete the colon to abort this entry:\n");
+    const std::string command = finish_command(":", true); // print the CR
+    if (command.empty())
     {
         return {}; // there was no score
     }
-    std::string result{g_buf + 1};
+    std::string result = command.substr(1);
     result += ' ';
     result += saved_line;
     return result;
