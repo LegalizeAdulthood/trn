@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-321 - Cache Header Counts Parse
-
-- Files: `libtrn/cache.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `Article::set_cached_line`.
-- Dependencies: none.
-- Change: parse line and byte counts directly from the `line` view with
-  `std::from_chars`; remove `std::string{line}.c_str()` temporaries.
-- Tests: article cache header tests.
-
 #### CSTR-322 - URL Port Parse
 
 - Files: `libtrn/url.cpp`.

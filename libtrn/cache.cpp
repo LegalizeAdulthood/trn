@@ -35,7 +35,8 @@
 #include <util/util2.h>
 
 #include <algorithm>
-#include <cstdlib>
+#include <cctype>
+#include <charconv>
 #include <cstring>
 #include <ctime>
 #include <map>
@@ -1051,6 +1052,20 @@ bool cache_range(ArticleNum first, ArticleNum last)
 
 void Article::set_cached_line(int which_line, std::string_view line)
 {
+    const auto parse_count = [](std::string_view text)
+    {
+        const std::string_view::const_iterator first = std::find_if_not(
+            text.begin(), text.end(), [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+        text.remove_prefix(static_cast<std::size_t>(first - text.begin()));
+
+        long value{};
+        if (!text.empty())
+        {
+            (void) std::from_chars(text.data(), text.data() + text.size(), value);
+        }
+        return value;
+    };
+
     // SUBJ_LINE is handled specially above
     switch (which_line)
     {
@@ -1080,11 +1095,11 @@ void Article::set_cached_line(int which_line, std::string_view line)
         break;
 
     case LINES_LINE:
-        m_lines = std::atol(std::string{line}.c_str());
+        m_lines = parse_count(line);
         break;
 
     case BYTES_LINE:
-        m_bytes = std::atol(std::string{line}.c_str());
+        m_bytes = parse_count(line);
         break;
     }
 }

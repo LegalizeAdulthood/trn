@@ -6,6 +6,8 @@
 
 #include <config/common.h>
 
+#include <trn/head.h>
+
 #include <gtest/gtest.h>
 
 #include <string.h>
@@ -35,6 +37,24 @@ TEST(DecodeHeaderTest, trimsTrailingSpaces)
 TEST(DecodeHeaderTest, normalizesControlCharacters)
 {
     EXPECT_EQ("a b c", decode_header("a\tb\fc"));
+}
+
+TEST(ArticleCacheTest, setCachedLineParsesLineCount)
+{
+    Article article{};
+
+    article.set_cached_line(LINES_LINE, "42junk");
+
+    EXPECT_EQ(42, article.m_lines);
+}
+
+TEST(ArticleCacheTest, setCachedLineParsesByteCount)
+{
+    Article article{};
+
+    article.set_cached_line(BYTES_LINE, "1234junk");
+
+    EXPECT_EQ(1234, article.m_bytes);
 }
 
 class DectrlTest : public Test
