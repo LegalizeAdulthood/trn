@@ -183,7 +183,7 @@ static int circfill();
 static char   *edit_buf(char *s, const char *cmd);
 static void    install_macro(std::string_view sequence, std::string_view definition,
                              bool report_overrides);
-static void    mac_init(char *tcbuf);
+static void    mac_init();
 static KeyMap *new_key_map();
 static void    reprint();
 static void    show_key_map(KeyMap *curmap, std::string &prefix);
@@ -458,7 +458,7 @@ void term_set(char *tcbuf)
     set_env_var("LINES", std::to_string(g_tc_LINES));
     set_env_var("COLUMNS", std::to_string(g_tc_COLS));
 
-    mac_init(tcbuf);
+    mac_init();
 }
 
 void set_macro(std::string_view seq, std::string_view def)
@@ -576,7 +576,7 @@ void arrow_macros()
 #endif
 }
 
-static void mac_init(char *tcbuf)
+static void mac_init()
 {
     if (g_auto_arrow_macros)
     {
@@ -589,9 +589,9 @@ static void mac_init(char *tcbuf)
     }
     if (macros)
     {
-        while (std::fgets(tcbuf,TCBUF_SIZE,macros) != nullptr)
+        for (std::string macro_line = get_a_line(macros); !macro_line.empty(); macro_line = get_a_line(macros))
         {
-            mac_line(tcbuf);
+            mac_line(macro_line);
         }
         std::fclose(macros);
     }

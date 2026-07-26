@@ -6,20 +6,29 @@
 #include <config/env.h>
 #include <trn/artsrch.h>
 #include <trn/final.h>
+#include <trn/init.h>
 #include <trn/ng.h>
 #include <trn/opt.h>
 #include <trn/smisc.h>
 #include <trn/univ.h>
 #include <trn/util.h>
 
+#include <test_config.h>
+
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cerrno>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 namespace
 {
+
+namespace fs = std::filesystem;
 
 void drain_macro_buffer()
 {
@@ -323,6 +332,64 @@ private:
     std::string m_old_xterm_mouse;
 };
 
+class MacroFileInitTest : public TerminalTest
+{
+protected:
+    void SetUp() override
+    {
+        TerminalTest::SetUp();
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        fs::create_directories(m_output_dir);
+
+        m_old_use_threads = g_use_threads;
+        m_old_auto_arrow_macros = g_auto_arrow_macros;
+        m_old_rnmacro = get_env_var("RNMACRO");
+        m_old_trnmacro = get_env_var("TRNMACRO");
+
+        g_use_threads = false;
+        g_auto_arrow_macros = 0;
+        unset_env_var("TRNMACRO");
+    }
+
+    void TearDown() override
+    {
+        drain_macro_buffer();
+        if (g_bizarre)
+        {
+            reset_tty();
+        }
+        restore_env("RNMACRO", m_old_rnmacro);
+        restore_env("TRNMACRO", m_old_trnmacro);
+        g_use_threads = m_old_use_threads;
+        g_auto_arrow_macros = m_old_auto_arrow_macros;
+
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        TerminalTest::TearDown();
+    }
+
+    static void restore_env(std::string_view name, const std::string &value)
+    {
+        if (value.empty())
+        {
+            unset_env_var(name);
+        }
+        else
+        {
+            set_env_var(name, value);
+        }
+    }
+
+    fs::path    m_output_dir;
+    bool        m_old_use_threads{};
+    int         m_old_auto_arrow_macros{};
+    std::string m_old_rnmacro;
+    std::string m_old_trnmacro;
+};
+
 } // namespace
 
 TEST_F(TerminalTest, getCommandExpandsMacroString)
@@ -354,6 +421,23 @@ TEST_F(TerminalTest, macLineParsesExpandedKey)
     get_cmd(g_buf);
 
     EXPECT_EQ('q', g_buf[0]);
+    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+}
+
+TEST_F(MacroFileInitTest, termSetLoadsMacroFile)
+{
+    const fs::path macro_file = m_output_dir / "rnmacro";
+    std::ofstream{macro_file} << "^D y\n";
+    set_env_var("RNMACRO", macro_file.generic_string());
+
+    std::array<char, TCBUF_SIZE> tcbuf{};
+    term_init();
+    term_set(tcbuf.data());
+
+    push_char('\004');
+    get_cmd(g_buf);
+
+    EXPECT_EQ('y', g_buf[0]);
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }
 

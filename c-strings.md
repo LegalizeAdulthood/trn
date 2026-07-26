@@ -534,7 +534,7 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Search and length: `strchr` 25, `strstr` 2, `strlen` 20.
-- C line input: `fgets` 7.
+- C line input: `fgets` 6.
 - C text output: `fputs` 165, `printf`/`std::printf` 327,
   `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77.
@@ -572,19 +572,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-284 - Macro File Lines
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: owner-local file-line scratch buffer.
-- Function: `mac_init`.
-- Dependencies: none.
-- Change: read macro-file lines into `std::string` and pass views to
-  `mac_line`, removing the `tcbuf` file-line role from macro loading.
-- Truncation: the old `TCBUF_SIZE` limit is arbitrary macro-file line
-  truncation; `get_a_line` removes it.
-- Tests: macro-file initialization coverage if focused tests exist;
-  otherwise add current behavior coverage first.
 
 #### CSTR-285 - Interpolator Prompt Input Line
 
