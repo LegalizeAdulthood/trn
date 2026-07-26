@@ -24,8 +24,10 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <map>
 #include <string>
+#include <string_view>
 #include <system_error>
 
 namespace
@@ -164,6 +166,21 @@ protected:
         return {};
     }
 
+    void set_article_text(std::string_view text)
+    {
+        std::FILE *input = std::tmpfile();
+        ASSERT_NE(nullptr, input);
+        ASSERT_EQ(text.size(), std::fwrite(text.data(), 1, text.size(), input));
+        std::rewind(input);
+
+        if (m_input != nullptr)
+        {
+            std::fclose(m_input);
+        }
+        m_input = input;
+        g_art_fp = m_input;
+    }
+
     DataSource  m_data_source{};
     MimeSection m_section{};
     std::FILE  *m_input{};
@@ -258,6 +275,39 @@ TEST_F(DecodePieceDirectoryTest, savesMultipartPieceInPieceDirectory)
     const fs::path piece = find_file_named("1");
     ASSERT_FALSE(piece.empty());
     EXPECT_EQ("line one\nline two\n", file_contents(piece));
+}
+
+TEST_F(DecodePieceDirectoryTest, completesMultipartDecodeUsingSavedTotal)
+{
+    m_section.m_part = 2;
+    m_section.m_total = 0;
+    set_article_text("second\nend payload\n");
+
+    testing::internal::CaptureStdout();
+    const bool        last_part_result = decode_piece(nullptr, {});
+    const std::string last_part_output = testing::internal::GetCapturedStdout();
+
+    ASSERT_TRUE(last_part_result);
+    EXPECT_EQ("Saving part 2 payload_bin", last_part_output);
+    const fs::path total_file = find_file_named("CT");
+    ASSERT_FALSE(total_file.empty());
+    EXPECT_EQ("2\n", file_contents(total_file));
+
+    std::ofstream{total_file} << "2 extra\n";
+    m_section.m_part = 1;
+    set_article_text("first\n");
+    std::error_code error;
+    fs::current_path(m_output_dir, error);
+    ASSERT_FALSE(error) << error.message();
+
+    testing::internal::CaptureStdout();
+    const bool        result = decode_piece(nullptr, {});
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(result);
+    EXPECT_EQ("Saving part 1 payload_binDecoding payload_bin", output);
+    EXPECT_EQ("first\nsecond\nend payload\n", file_contents(m_output_dir / "payload_bin"));
+    EXPECT_FALSE(fs::exists(total_file));
 }
 
 TEST(DecodeFixFilenameTest, usesUnixBasename)

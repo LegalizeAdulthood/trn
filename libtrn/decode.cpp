@@ -26,7 +26,7 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstdlib>
+#include <charconv>
 #include <filesystem>
 #include <system_error>
 
@@ -456,7 +456,7 @@ bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
                 const std::string total_line = get_a_line(fp);
                 if (!total_line.empty())
                 {
-                    total = std::atoi(total_line.c_str());
+                    (void) std::from_chars(total_line.data(), total_line.data() + total_line.size(), total);
                     total = std::max(total, 0);
                 }
                 std::fclose(fp);

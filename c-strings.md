@@ -528,10 +528,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   commands and then create writable buffers only to call those APIs.
 - Literal-only local pointer scan found local message selections in
   `do_newsgroup`, `s_search`, and `sa_refresh_bot`.
-- C numeric conversion scan found `std::atoi` and `std::atol` calls that
-  still convert strings or views back to C pointers.  Simple bounded
-  parse sites are Tier 0 or Tier 1 slices; mutable parser-buffer sites
-  are grouped with their owning parser slices.
+- C numeric conversion scan found `atoi` and `atol` calls that still
+  convert strings or views back to C pointers.  Simple bounded parse
+  sites are Tier 0 or Tier 1 slices; mutable parser-buffer sites are
+  grouped with their owning parser slices.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -557,13 +557,13 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 23, `strstr` 2, `strlen` 19.
+- Search and length: `strchr` 22, `strstr` 2, `strlen` 19.
 - C line input: `fgets` 4.
-- C text output: `fputs` 164, `printf`/`std::printf` 313,
+- C text output: `fputs` 158, `printf`/`std::printf` 306,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `std::atoi` 29 and `std::atol` 19.
+- C numeric conversion calls: `atoi`/`std::atoi` 21 and `std::atol` 11.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
@@ -606,16 +606,30 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-327 - Decode Piece Total Parse
+#### CSTR-339 - Catchup Leave-unread Count Parse
 
-- Files: `libtrn/decode.cpp`.
+- Files: `libtrn/ng.cpp`.
 - Kind: C numeric conversion cleanup.
-- Function: `decode_piece`.
+- Function: `ask_catchup`.
 - Dependencies: none.
-- Change: parse `total_line` with `std::from_chars` instead of
-  `std::atoi(total_line.c_str())`; keep the existing non-negative
-  clamp.
-- Tests: split decode piece tests.
+- Change: parse the completed leave-unread count from `g_buf` with
+  `std::from_chars` instead of unqualified `atoi`; keep the existing
+  zero fallback when no number is parsed.
+- Tests: catchup prompt tests if existing coverage is easy to extend;
+  otherwise add focused coverage before refactoring.
+
+#### CSTR-340 - Extract Part Option View Parse
+
+- Files: `libtrn/respond.cpp`.
+- Kind: local C-string parser cleanup.
+- Function: `save_article`, extract-command branch.
+- Dependencies: none.
+- Change: parse the optional `-part[/total]` prefix from a
+  `std::string_view` with `std::from_chars`, advance the destination
+  view without mutating or walking `char *`, and pass the view to
+  `file_exp`.
+- Tests: response extract-command tests if existing coverage is easy to
+  extend; otherwise add focused coverage before refactoring.
 
 ### Tier 1 - Helper And API Foundations
 
