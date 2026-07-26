@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <charconv>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -281,7 +282,13 @@ static Multirc *rcstuff_init_data()
             {
                 continue;
             }
-            int i = std::atoi(std::string{section_name.substr(6)}.c_str());
+            std::string_view                       group_index = section_name.substr(6);
+            const std::string_view::const_iterator group_index_start =
+                std::find_if_not(group_index.begin(), group_index.end(),
+                                 [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+            group_index.remove_prefix(static_cast<std::size_t>(group_index_start - group_index.begin()));
+            int i{};
+            (void) std::from_chars(group_index.data(), group_index.data() + group_index.size(), i);
             i = std::max(i, 0);
             parse_ini_section(section, RcGroupConfig::schema(), values);
             Newsrc *rp = new_newsrc(RcGroupConfig::from(values));

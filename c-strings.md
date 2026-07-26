@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-323 - INI Group Index Parse
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `parse_newsrc_ini`.
-- Dependencies: none.
-- Change: parse `section_name.substr(6)` with `std::from_chars` instead
-  of constructing a temporary string for `std::atoi`.
-- Tests: newsrc INI group parsing tests.
-
 #### CSTR-324 - Newsrc Lock PID Parse
 
 - Files: `libtrn/rcstuff.cpp`.

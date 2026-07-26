@@ -544,6 +544,26 @@ TEST_F(NewsrcRotationTest, rcstuffInitCreatesCompanionPathsFromNewsrcName)
     EXPECT_EQ(fs::path{newsrc_path.generic_string() + ".new"}, multirc->m_first->new_name);
 }
 
+TEST_F(NewsrcRotationTest, rcstuffInitParsesTolerantGroupIndex)
+{
+    const fs::path newsrc_path = m_output_dir / "custom.newsrc";
+    g_use_newsrc_selector = true;
+    g_data_sources.emplace_back();
+    DataSource &source = g_data_sources.back();
+    source.m_name = "default";
+    g_trn_access_text = "[Group  2junk]\n"
+                        "ID = default\n"
+                        "Newsrc = " +
+                        newsrc_path.generic_string() + "\n";
+
+    ASSERT_TRUE(rcstuff_init());
+
+    Multirc *multirc = multirc_ptr(2);
+    ASSERT_NE(nullptr, multirc);
+    ASSERT_NE(nullptr, multirc->m_first);
+    EXPECT_EQ(newsrc_path, multirc->m_first->name);
+}
+
 TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromRemoteSubscriptions)
 {
     const fs::path active_path = m_output_dir / "active";
