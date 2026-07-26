@@ -2345,6 +2345,31 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
     EXPECT_THAT(output, HasSubstr("<needle?> End of article "));
 }
 
+TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
+{
+    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<std::string> mail_call(g_mail_call, std::string{"<%/> "});
+    g_last_pat = "needle";
+    g_art_do_read = false;
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{2};
+    g_tc_LINES = 4;
+    g_tc_COLS = 80;
+    g_char_subst = g_charsets.c_str();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    ASSERT_TRUE(parse_header(g_art));
+    push_char('n');
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_RAISE, result);
+    EXPECT_EQ(std::string::npos, output.find("<needle?> End of article "));
+}
+
 TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
 {
     char pattern[]{"%D"};

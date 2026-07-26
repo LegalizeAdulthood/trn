@@ -1299,8 +1299,8 @@ refresh_screen:
     case '\b': case '\177':
 leave_pager:
         g_reread = false;
-        if (std::strchr("nNpP\016\020", *g_buf) == nullptr //
-            && std::strchr("wWsSe:!&|/?123456789.", *g_buf) != nullptr)
+        if (std::string_view{"nNpP\016\020"}.find(*g_buf) == std::string_view::npos //
+            && std::string_view{"wWsSe:!&|/?123456789."}.find(*g_buf) != std::string_view::npos)
         {
             set_default_cmd();
             color_object(COLOR_CMD, true);
