@@ -484,13 +484,13 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  the `Tgetstr` empty-string fallback, terminal command input, the
-  macro-file input line, and owner-local parser scratch uses listed in
-  the slices.  NNTP status lines and article display lines now use owned
-  string storage.  NNTP CRLF trailer scratch, tiny UTF byte scratch
-  buffers, translation tables, MIME decode tables, terminal pushback
-  bytes, termcap storage, keymap type bytes, address conversion scratch,
-  and regex bytecode arrays are non-string protocol or parser storage.
+  terminal command input, the macro-file input line, and owner-local
+  parser scratch uses listed in the slices.  NNTP status lines and
+  article display lines now use owned string storage.  NNTP CRLF trailer
+  scratch, tiny UTF byte scratch buffers, translation tables, MIME
+  decode tables, terminal pushback bytes, termcap storage, keymap type
+  bytes, address conversion scratch, and regex bytecode arrays are
+  non-string protocol or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -583,17 +583,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-308 - `Tgetstr` Empty Fallback
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: fixed static C buffer cleanup.
-- Function: `Tgetstr`.
-- Dependencies: none.
-- Change: replace the mutable `static char s_empty[1]{}` fallback with
-  an immutable empty string literal return.  Keep the `const char *`
-  return type because this helper is a termcap boundary.
-- Tests: terminal tests or build coverage.
 
 #### CSTR-309 - Article Search Finding Label View
 

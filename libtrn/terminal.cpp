@@ -261,8 +261,7 @@ inline const char *Tgetstr(const char *key)
 {
     char *tmpaddr{};
     char *temp = tgetstr(key, &tmpaddr);
-    static char s_empty[1]{};
-    return temp ? temp : s_empty;
+    return temp ? temp : "";
 }
 #endif
 #endif
