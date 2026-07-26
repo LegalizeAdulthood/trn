@@ -138,6 +138,23 @@ set_tests_properties(trn-artchk-valid-newsgroups PROPERTIES
         "Your article's newsgroups:[\r\n]+comp.lang.apl[ ]+APL discussion[\r\n]+comp.lang.c\\+\\+[ ]+C\\+\\+ discussion"
 )
 
+add_test(NAME trn-artchk-server-port-newsgroups
+    COMMAND ${CMAKE_COMMAND} -E env
+        "NNTPSERVER=news.example:119"
+        "HOME=${trn_artchk_test_dir}"
+        "DOTDIR=${trn_artchk_test_dir}"
+        $<TARGET_FILE:trn-artchk>
+        "${trn_artchk_article}"
+        79
+        "${trn_artchk_newsgroups}"
+        "${trn_artchk_active}"
+)
+set_tests_properties(trn-artchk-server-port-newsgroups PROPERTIES
+    LABELS trn
+    PASS_REGULAR_EXPRESSION
+        "Your article's newsgroups:[\r\n]+comp.lang.apl[ ]+APL discussion[\r\n]+comp.lang.c\\+\\+[ ]+C\\+\\+ discussion"
+)
+
 add_test(NAME trn-artchk-long-body-warning
     COMMAND ${CMAKE_COMMAND} -E env
         "NNTPSERVER=local"

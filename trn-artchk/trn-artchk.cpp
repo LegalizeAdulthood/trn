@@ -215,12 +215,13 @@ int main(int argc, char *argv[])
     }
     if (!server_name.empty() && server_name != "local")
     {
-        g_server_name = server_name;
-        if (const auto separator = g_server_name.find_first_of(";:"); separator != std::string::npos)
+        if (const std::string::size_type separator = server_name.find_first_of(";:"); separator != std::string::npos)
         {
-            g_nntp_link.port_number = std::atoi(g_server_name.c_str() + separator + 1);
-            g_server_name.resize(separator);
+            const std::string_view port_text{server_name.data() + separator + 1, server_name.size() - separator - 1};
+            (void) std::from_chars(port_text.data(), port_text.data() + port_text.size(), g_nntp_link.port_number);
+            server_name.resize(separator);
         }
+        g_server_name = server_name;
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         const std::string force_auth = get_env_var("NNTP_FORCE_AUTH");
         if (!force_auth.empty() && (force_auth.front() == 'y' || force_auth.front() == 'Y'))

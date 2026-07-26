@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-313 - Article Check Server Port Parse
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `main`.
-- Dependencies: none.
-- Change: parse the port view after `;` or `:` with
-  `std::from_chars`; use the already built `server_name`/string storage
-  instead of making a C-string pointer.
-- Tests: trn-artchk server configuration tests.
-
 #### CSTR-314 - Inews Server Port Parse
 
 - Files: `inews/inews.cpp`.
