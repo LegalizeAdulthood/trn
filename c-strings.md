@@ -530,8 +530,8 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 35, `strstr` 2, `strlen` 21.
-- C line input: `fgets` 11.
+- Search and length: `strchr` 33, `strstr` 2, `strlen` 20.
+- C line input: `fgets` 10.
 - C text output: `fputs` 168, `printf`/`std::printf` 327,
   `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77.
@@ -569,21 +569,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-277 - Kill File Command Lines
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: owner-local file-line scratch buffer.
-- Function: `do_kill_file`.
-- Dependencies: none.
-- Change: read kill-file lines into a local `std::string`, remove the
-  trailing newline from the owned string, and parse `THRU`, include, and
-  command lines with `std::string_view` operations instead of mutating
-  `g_buf`.
-- Truncation: the old `LINE_BUF_LEN` limit is arbitrary file-line
-  truncation; `get_a_line` removes it.
-- Tests: kill-file processing if focused coverage exists; otherwise add
-  current behavior coverage first.
 
 #### CSTR-278 - Local Kill File Rewrite Lines
 

@@ -158,32 +158,47 @@ static void mention(std::string_view str)
     std::fflush(stdout);
 }
 
+static bool is_space(char ch)
+{
+    return std::isspace(static_cast<unsigned char>(ch));
+}
+
+static std::string_view skip_leading_space(std::string_view text)
+{
+    const std::string_view::const_iterator first = std::find_if_not(text.begin(), text.end(), is_space);
+    text.remove_prefix(static_cast<std::size_t>(first - text.begin()));
+    return text;
+}
+
+static std::string_view skip_non_space_prefix(std::string_view text)
+{
+    const std::string_view::const_iterator first = std::find_if(text.begin(), text.end(), is_space);
+    text.remove_prefix(static_cast<std::size_t>(first - text.begin()));
+    return text;
+}
+
 static int do_kill_file(std::FILE *kfp, int entering)
 {
     bool first_time = (entering && !g_kill_first);
     char last_kill_type = '\0';
-    int thread_kill_cnt = 0;
-    int thread_select_cnt = 0;
-    char* cp;
-    char* bp;
+    int  thread_kill_cnt = 0;
+    int  thread_select_cnt = 0;
 
     g_art = article_after(g_last_art);
     g_kill_first = g_first_art;
     std::fseek(kfp,0L,0);                    // rewind file
-    while (std::fgets(g_buf, LINE_BUF_LEN, kfp) != nullptr)
+    for (std::string kill_line = get_a_line(kfp); !kill_line.empty(); kill_line = get_a_line(kfp))
     {
-        if (*(cp = g_buf + std::strlen(g_buf) - 1) == '\n')
+        if (kill_line.back() == '\n')
         {
-            *cp = '\0';
+            kill_line.pop_back();
         }
-        bp = skip_space(g_buf);
-        const std::string_view line{bp};
+        const std::string_view line = skip_leading_space(kill_line);
         if (line.size() >= 4 && line.substr(0, 4) == "THRU")
         {
-            const std::string rc_name = g_newsgroup_ptr->m_rc->name.generic_string();
-            const std::size_t len = rc_name.size();
-            cp = skip_space(bp + 4);
-            const std::string_view thru_args{cp};
+            const std::string      rc_name = g_newsgroup_ptr->m_rc->name.generic_string();
+            const std::size_t      len = rc_name.size();
+            const std::string_view thru_args = skip_leading_space(line.substr(4));
             if (thru_args.size() <= len || thru_args.substr(0, len) != rc_name ||
                 !std::isspace(static_cast<unsigned char>(thru_args[len])))
             {
@@ -197,20 +212,19 @@ static int do_kill_file(std::FILE *kfp, int entering)
             }
             continue;
         }
-        if (*bp == 'I')
+        if (!line.empty() && line.front() == 'I')
         {
-            cp = skip_non_space(bp + 1);
-            cp = skip_space(cp);
-            if (!*cp)
+            const std::string_view include_text = skip_leading_space(skip_non_space_prefix(line.substr(1)));
+            if (include_text.empty())
             {
                 continue;
             }
-            std::string include_name = file_exp(cp);
+            std::string include_name = file_exp(include_text);
             if (include_name.empty())
             {
                 continue;
             }
-            if (!std::strchr(include_name.c_str(), '/'))
+            if (include_name.find('/') == std::string::npos)
             {
                 set_newsgroup_name(include_name);
                 include_name = file_exp(get_env_var("KILLLOCAL", s_kill_local));
@@ -228,20 +242,21 @@ static int do_kill_file(std::FILE *kfp, int entering)
             }
             continue;
         }
-        if (*bp == 'X')                 // exit command?
+        std::string_view command_view = line;
+        if (!command_view.empty() && command_view.front() == 'X') // exit command?
         {
             if (entering)
             {
                 s_exit_cmds = true;
                 continue;
             }
-            bp++;
+            command_view.remove_prefix(1);
         }
         else if (!entering)
         {
             continue;
         }
-        std::string command{bp};
+        std::string command{command_view};
 
         if (!command.empty() && command.front() == '&')
         {
@@ -307,7 +322,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 break;
             }
         }
-        else if (first_time && *bp == '<')
+        else if (first_time && !command.empty() && command.front() == '<')
         {
             if (last_kill_type != '<')
             {
@@ -324,13 +339,14 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 perform_status_init(g_newsgroup_ptr->m_to_read);
                 last_kill_type = '<';
             }
-            std::string_view msg_id{bp};
-            std::string_view cmd{"T,"};
-            char *split = std::strchr(bp,' ');
-            if (split)
+            const std::string_view command_text{command};
+            std::string_view       msg_id{command_text};
+            std::string_view       cmd{"T,"};
+            const std::size_t      split = command_text.find(' ');
+            if (split != std::string_view::npos)
             {
-                msg_id = {bp, static_cast<std::size_t>(split - bp)};
-                cmd = split + 1;
+                msg_id = command_text.substr(0, split);
+                cmd = command_text.substr(split + 1);
             }
             Article *ap = get_article(msg_id);
             if (ap != nullptr)
@@ -376,14 +392,14 @@ static int do_kill_file(std::FILE *kfp, int entering)
             g_art = article_after(g_last_art);
             g_kf_state |= KFS_THREAD_LINES;
         }
-        else if (*bp == '<')
+        else if (!command.empty() && command.front() == '<')
         {
             g_kf_state |= KFS_THREAD_LINES;
         }
-        else if (*bp == '*')
+        else if (!command.empty() && command.front() == '*')
         {
             int killmask = AF_UNREAD;
-            switch (bp[1])
+            switch (command.size() > 1 ? command[1] : '\0')
             {
             case 'X':
                 killmask |= g_sel_mask; // don't kill selected articles
