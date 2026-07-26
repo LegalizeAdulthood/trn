@@ -259,6 +259,20 @@ TEST_F(NumNumTest, rejectsOpenEndedRange)
     EXPECT_EQ(ArticleNum{1}, g_art);
 }
 
+TEST_F(NumNumTest, rejectsOpenEndedRangeAfterComma)
+{
+    const std::string command{"5,7-"};
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+
+    testing::internal::CaptureStdout();
+    const NumNumResult result = num_num();
+    const std::string  output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(NN_ASK, result);
+    EXPECT_NE(std::string::npos, output.find("\nBad range\n"));
+}
+
 TEST_F(SwitcherooMacroTest, definesMacroFromCommandText)
 {
     const std::string command{"&&~ z"};

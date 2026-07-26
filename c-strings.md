@@ -573,19 +573,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-286 - Numeric Range Local Parser
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: local mutable parser copy.
-- Function: `num_num`.
-- Dependencies: CSTR-282.
-- Change: parse the local `ranges` string with `std::string_view`
-  splitting instead of `std::strchr` plus inserted NUL terminators.
-  Preserve command-list detection and range semantics.
-- Truncation: none; `ranges` is already owned string storage.
-- Tests: numeric range command tests if focused coverage exists;
-  otherwise add current behavior coverage first.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

@@ -38,6 +38,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstring>
 #include <filesystem>
 #include <string>
@@ -208,13 +209,31 @@ NumNumResult num_num()
     ArticleNum min;
     ArticleNum max;
     std::string cmdlst;
-    std::string ranges;
-    char* s;
-    char* c;
+    std::string_view ranges;
+    const char *s;
     ArticleNum oldart = g_art;
     bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool justone = true;                // assume only one article
-    ranges.reserve(LINE_BUF_LEN);
+    const auto parse_article_num = [](std::string_view text)
+    {
+        std::size_t index{};
+        while (index < text.size() && std::isspace(static_cast<unsigned char>(text[index])))
+        {
+            ++index;
+        }
+        const bool negative = index < text.size() && text[index] == '-';
+        if (index < text.size() && (text[index] == '-' || text[index] == '+'))
+        {
+            ++index;
+        }
+        long value{};
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])))
+        {
+            value = value * 10 + text[index] - '0';
+            ++index;
+        }
+        return ArticleNum{negative ? -value : value};
+    };
 
     if (!finish_command(true))  // get rest of command
     {
@@ -232,9 +251,11 @@ NumNumResult num_num()
 
     perform_status_init(g_newsgroup_ptr->m_to_read);
 
-    for (s = g_buf; *s && (std::isdigit(*s) || std::string_view{" ,-.$"}.find(*s) != std::string_view::npos); s++)
+    for (s = g_buf; *s && (std::isdigit(static_cast<unsigned char>(*s)) ||
+                           std::string_view{" ,-.$"}.find(*s) != std::string_view::npos);
+         s++)
     {
-        if (!std::isdigit(*s))
+        if (!std::isdigit(static_cast<unsigned char>(*s)))
         {
             justone = false;
         }
@@ -248,24 +269,28 @@ NumNumResult num_num()
     {
         cmdlst = "m";
     }
-    *s++ = ',';
-    *s = '\0';
-    ranges = g_buf;
+    ranges = std::string_view{g_buf, static_cast<std::size_t>(s - g_buf)};
     if (!output_level && !justone)
     {
         std::printf("Processing...");
         std::fflush(stdout);
     }
-    for (char *t = ranges.data(); (c = std::strchr(t, ',')) != nullptr; t = ++c)
+    for (bool have_range = true; have_range;)
     {
-        *c = '\0';
-        if (*t == '.')
+        const std::size_t comma = ranges.find(',');
+        const std::string_view range =
+            comma == std::string_view::npos ? ranges : ranges.substr(0, comma);
+        have_range = comma != std::string_view::npos;
+
+        const std::size_t dash = range.find('-');
+        const std::string_view min_text = dash == std::string_view::npos ? range : range.substr(0, dash);
+        if (!min_text.empty() && min_text.front() == '.')
         {
             min = oldart;
         }
         else
         {
-            min = ArticleNum{std::atol(t)};
+            min = parse_article_num(min_text);
         }
         if (min < g_abs_first)
         {
@@ -273,20 +298,20 @@ NumNumResult num_num()
             g_msg = fmt::format("(First article is {})", g_abs_first.value_of());
             warn_msg(g_msg);
         }
-        if ((t = std::strchr(t, '-')) != nullptr)
+        if (dash != std::string_view::npos)
         {
-            t++;
-            if (*t == '$')
+            const std::string_view max_text = range.substr(dash + 1);
+            if (!max_text.empty() && max_text.front() == '$')
             {
                 max = g_last_art;
             }
-            else if (*t == '.')
+            else if (!max_text.empty() && max_text.front() == '.')
             {
                 max = oldart;
             }
             else
             {
-                max = ArticleNum{std::atol(t)};
+                max = parse_article_num(max_text);
             }
         }
         else
@@ -330,6 +355,10 @@ NumNumResult num_num()
             {
                 perform_status(g_newsgroup_ptr->m_to_read, 50);
             }
+        }
+        if (have_range)
+        {
+            ranges.remove_prefix(comma + 1);
         }
     }
     g_art = oldart;
