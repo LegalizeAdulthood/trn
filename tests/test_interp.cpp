@@ -1,6 +1,6 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
-#include <file_contents.h>
+#include <trn/intrp.h>
 
 #include <config/common.h>
 #include <trn/addng.h>
@@ -14,9 +14,9 @@
 #include <trn/charsubst.h>
 #include <trn/color.h>
 #include <trn/datasrc.h>
+#include <trn/file-contents.h>
 #include <trn/head.h>
 #include <trn/init.h>
-#include <trn/intrp.h>
 #include <trn/kfile.h>
 #include <trn/last.h>
 #include <trn/mime.h>

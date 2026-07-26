@@ -5,10 +5,9 @@
 
 #include <trn/sw.h>
 
-#include <file_contents.h>
-
 #include <config/common.h>
 #include <config/env.h>
+#include <trn/file-contents.h>
 #include <trn/head.h>
 #include <trn/intrp.h>
 #include <trn/ng.h>

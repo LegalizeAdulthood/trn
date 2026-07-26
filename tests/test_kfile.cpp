@@ -4,6 +4,7 @@
 #include <trn/kfile.h>
 
 #include <trn/cache.h>
+#include <trn/file-contents.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/opt.h>
@@ -16,8 +17,6 @@
 #include <test_config.h>
 
 #include "mock_env.h"
-
-#include <file_contents.h>
 
 #include <gtest/gtest.h>
 

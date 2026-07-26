@@ -6,8 +6,6 @@
 
 #include <trn/datasrc.h>
 
-#include <file_contents.h>
-
 #include <config/common.h>
 #include <config/env.h>
 #include <config/fdio.h>
@@ -15,6 +13,7 @@
 #include <nntp/nntpclient.h>
 #include <trn/DataSourceConfig.h>
 #include <trn/edit_dist.h>
+#include <trn/file-contents.h>
 #include <trn/hash.h>
 #include <trn/IniDocument.h>
 #include <trn/IniSectionValues.h>

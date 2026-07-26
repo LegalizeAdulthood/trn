@@ -2,8 +2,7 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/IniDocument.h>
 
-#include <file_contents.h>
-
+#include <trn/file-contents.h>
 #include <trn/IniSchema.h>
 #include <trn/IniSectionValues.h>
 #include <trn/util.h>

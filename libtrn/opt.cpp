@@ -5,8 +5,6 @@
 
 #include <trn/opt.h>
 
-#include <file_contents.h>
-
 #include <config/common.h>
 #include <config/env.h>
 #include <config/fdio.h>
@@ -19,6 +17,7 @@
 #include <trn/charsubst.h>
 #include <trn/color.h>
 #include <trn/datasrc.h>
+#include <trn/file-contents.h>
 #include <trn/final.h>
 #include <trn/head.h>
 #include <trn/IniDocument.h>

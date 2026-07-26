@@ -3,7 +3,7 @@
 
 #include <trn/url.h>
 
-#include <file_contents.h>
+#include <trn/file-contents.h>
 
 #include <test_config.h>
 

@@ -17,7 +17,7 @@ add_library(libtrn
     decode.cpp include/trn/decode.h
     edit_dist.cpp include/trn/edit_dist.h
     include/trn/enum-flags.h
-    include/file_contents.h
+    include/trn/file-contents.h
     final.cpp include/trn/final.h
     hash.cpp include/trn/hash.h
     head.cpp include/trn/head.h

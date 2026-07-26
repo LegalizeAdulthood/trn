@@ -4,13 +4,13 @@
 #include <trn/decode.h>
 
 #include <config/common.h>
-#include <file_contents.h>
 
 #include <trn/Article.h>
 #include <trn/artio.h>
 #include <trn/artstate.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
+#include <trn/file-contents.h>
 #include <trn/head.h>
 #include <trn/mime-internal.h>
 #include <trn/mime.h>

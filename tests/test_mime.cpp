@@ -5,12 +5,12 @@
 #include <config/common.h>
 #include <trn/artio.h>
 #include <trn/datasrc.h>
+#include <trn/file-contents.h>
 #include <trn/head.h>
 #include <trn/terminal.h>
 #include <trn/util.h>
 #include <util/util2.h>
 
-#include <file_contents.h>
 #include <test_config.h>
 #include <test_mime.h>
 

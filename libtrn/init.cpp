@@ -5,8 +5,6 @@
 
 #include <trn/init.h>
 
-#include <file_contents.h>
-
 #include <config/common.h>
 #include <nntp/nntpinit.h>
 #include <trn/addng.h>
@@ -19,6 +17,7 @@
 #include <trn/color.h>
 #include <trn/datasrc.h>
 #include <trn/decode.h>
+#include <trn/file-contents.h>
 #include <trn/final.h>
 #include <trn/head.h>
 #include <trn/help.h>
