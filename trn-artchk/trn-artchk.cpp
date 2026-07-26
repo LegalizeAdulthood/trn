@@ -20,6 +20,7 @@
 
 #include <fmt/format.h>
 
+#include <charconv>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -60,7 +61,7 @@ int main(int argc, char *argv[])
     bool                          check_ng = false;
     std::vector<ArticleNewsgroup> newsgroups;
     std::string                   line;
-    int                           max_col_len;
+    int                           max_col_len{};
     int                           line_num = 0;
     int                           found_newsgroups = 0;
 
@@ -79,7 +80,16 @@ int main(int argc, char *argv[])
         g_dot_dir = g_home_dir;
     }
 
-    if (argc != 5 || !(max_col_len = std::atoi(argv[2])))
+    if (argc != 5)
+    {
+        fmt::print(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
+        std::exit(1);
+    }
+    const std::string_view       max_col_text{argv[2]};
+    const std::from_chars_result max_col_parse =
+        std::from_chars(max_col_text.data(), max_col_text.data() + max_col_text.size(), max_col_len);
+    if (max_col_parse.ec != std::errc{} || max_col_parse.ptr != max_col_text.data() + max_col_text.size() ||
+        max_col_len == 0)
     {
         fmt::print(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
         std::exit(1);

@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-312 - Article Check Column Parse
-
-- Files: `trn-artchk/trn-artchk.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `main`.
-- Dependencies: none.
-- Change: parse `argv[2]` through a bounded view and `std::from_chars`
-  instead of `std::atoi`.
-- Tests: trn-artchk command-line validation tests.
-
 #### CSTR-313 - Article Check Server Port Parse
 
 - Files: `trn-artchk/trn-artchk.cpp`.

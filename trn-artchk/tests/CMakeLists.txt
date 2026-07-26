@@ -88,6 +88,39 @@ file(WRITE "${trn_artchk_newsgroups}"
 comp.lang.c++ C++ discussion
 ")
 
+add_test(NAME trn-artchk-invalid-max-line-length
+    COMMAND ${CMAKE_COMMAND}
+        "-DTEST_COMMAND=$<TARGET_FILE:trn-artchk>"
+        "-DTEST_ARGS=${trn_artchk_article};not-a-number;${trn_artchk_newsgroups};${trn_artchk_active}"
+        "-DTEST_REGEX=Usage: trn-artchk"
+        -P "${CMAKE_SOURCE_DIR}/tests/cmake/ExpectFailure.cmake"
+)
+set_tests_properties(trn-artchk-invalid-max-line-length PROPERTIES
+    LABELS trn
+)
+
+add_test(NAME trn-artchk-zero-max-line-length
+    COMMAND ${CMAKE_COMMAND}
+        "-DTEST_COMMAND=$<TARGET_FILE:trn-artchk>"
+        "-DTEST_ARGS=${trn_artchk_article};0;${trn_artchk_newsgroups};${trn_artchk_active}"
+        "-DTEST_REGEX=Usage: trn-artchk"
+        -P "${CMAKE_SOURCE_DIR}/tests/cmake/ExpectFailure.cmake"
+)
+set_tests_properties(trn-artchk-zero-max-line-length PROPERTIES
+    LABELS trn
+)
+
+add_test(NAME trn-artchk-trailing-max-line-length
+    COMMAND ${CMAKE_COMMAND}
+        "-DTEST_COMMAND=$<TARGET_FILE:trn-artchk>"
+        "-DTEST_ARGS=${trn_artchk_article};79x;${trn_artchk_newsgroups};${trn_artchk_active}"
+        "-DTEST_REGEX=Usage: trn-artchk"
+        -P "${CMAKE_SOURCE_DIR}/tests/cmake/ExpectFailure.cmake"
+)
+set_tests_properties(trn-artchk-trailing-max-line-length PROPERTIES
+    LABELS trn
+)
+
 add_test(NAME trn-artchk-valid-newsgroups
     COMMAND ${CMAKE_COMMAND} -E env
         "NNTPSERVER=local"
