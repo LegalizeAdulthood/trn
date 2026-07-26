@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-308 - Perform Command Membership View
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: C string library call cleanup.
-- Function: `perform`.
-- Dependencies: none.
-- Change: replace `std::strchr("!&sSwWae|", ch)` with a
-  `std::string_view` membership check.
-- Tests: perform command dispatch tests.
-
 #### CSTR-309 - Selector Search Error Message View
 
 - Files: `libtrn/scmd.cpp`.

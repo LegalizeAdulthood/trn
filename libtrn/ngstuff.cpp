@@ -726,7 +726,7 @@ int perform(std::string_view cmdlst_view, int output_level)
                 return -1;
             }
         }
-        else if (std::strchr("!&sSwWae|", ch))
+        else if (std::string_view{"!&sSwWae|"}.find(ch) != std::string_view::npos)
         {
             std::string_view command_text{cmdlst};
             std::string      command_storage;
