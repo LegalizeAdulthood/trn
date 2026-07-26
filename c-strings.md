@@ -514,8 +514,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
 - Literal-only local pointer scan: simple remaining candidates are in
-  `save_options`,
-  `NewsgroupData::relocate_newsgroup`, and `save_article`.
+  `NewsgroupData::relocate_newsgroup` and `save_article`.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -587,16 +586,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-312 - Save Options Thread Prefix View
-
-- Files: `libtrn/opt.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `save_options`.
-- Dependencies: none.
-- Change: replace the `const char *` thread-prefix local with
-  `std::string_view` and use fmt for the touched first-save message.
-- Tests: option save tests.
 
 #### CSTR-313 - Relocate Newsgroup Default View
 

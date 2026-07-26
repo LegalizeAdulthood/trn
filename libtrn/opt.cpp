@@ -887,18 +887,18 @@ void save_options(const fs::path &filename_path)
     }
     else
     {
-        const char *t = g_use_threads? "T" : "";
-        std::printf("\n"
-               "This is the first save of the option file, %s.\n"
-               "By default this file overrides your %sRNINIT variable, but if you\n"
-               "want to continue to use an old-style init file (that overrides the\n"
-               "settings in the option file), edit the option file and change the\n"
-               "line that sets %sRNINIT.\n",
-               g_ini_file.c_str(), t, t);
+        const std::string_view t = g_use_threads ? "T" : "";
+        fmt::print("\n"
+                   "This is the first save of the option file, {}.\n"
+                   "By default this file overrides your {}RNINIT variable, but if you\n"
+                   "want to continue to use an old-style init file (that overrides the\n"
+                   "settings in the option file), edit the option file and change the\n"
+                   "line that sets {}RNINIT.\n",
+                   g_ini_file, t, t);
         get_anything();
         std::fprintf(fp_out, "# trnrc file auto-generated\n[environment]\n");
         write_init_environment(fp_out);
-        std::fprintf(fp_out, "%sRNINIT = ''\n\n", t);
+        fmt::print(fp_out, "{}RNINIT = ''\n\n", t);
     }
     std::fprintf(fp_out,"[options]\n");
     const OptionCatalog catalog;
