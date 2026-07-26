@@ -7,8 +7,11 @@
 
 #include <trn/rt-select.h>
 
+#include <string>
+
 // Internal entry points for testing purposes.
 
-char read_selector_escaped_command_for_test();
+std::string read_selector_command_for_test(char page_command, char end_command, bool at_end);
+char        read_selector_escaped_command_for_test();
 
 #endif

@@ -30,6 +30,7 @@
 #include <trn/rt-page.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
+#include <trn/smisc.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -138,7 +139,8 @@ void set_selector_commands(std::string &commands, std::string_view value)
     }
 }
 
-static char read_selector_escaped_command();
+static std::string read_selector_command(char page_command, char end_command, bool at_end);
+static char        read_selector_escaped_command();
 
 char selector_end_command(std::string_view commands)
 {
@@ -148,6 +150,11 @@ char selector_end_command(std::string_view commands)
 char selector_page_command(std::string_view commands)
 {
     return commands.size() > 1 ? commands[1] : '\0';
+}
+
+std::string read_selector_command_for_test(char page_command, char end_command, bool at_end)
+{
+    return read_selector_command(page_command, end_command, at_end);
 }
 
 char read_selector_escaped_command_for_test()
@@ -1268,13 +1275,8 @@ reinp_selector:
     {
         g_spin_char = g_sel_chars[g_sel_item_index];
     }
-    cache_until_key();
-    get_cmd(g_buf);
-    if (*g_buf == ' ')
-    {
-        set_def(g_buf, g_sel_at_end ? std::string_view{&s_end_char, 1} : std::string_view{&s_page_char, 1});
-    }
-    int ch = *g_buf;
+    const std::string command = read_selector_command(s_page_char, s_end_char, g_sel_at_end);
+    int               ch = command.empty() ? '\0' : command.front();
     if (errno)
     {
         ch = Ctl('l');
@@ -2543,6 +2545,20 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
     init_pages(PRESERVE_PAGE);
 
     return false;
+}
+
+static std::string read_selector_command(char page_command, char end_command, bool at_end)
+{
+    cache_until_key();
+    std::string command = get_cmd();
+    if (!command.empty() && command.front() == ' ')
+    {
+        g_s_default_cmd = true;
+        g_univ_default_cmd = true;
+        push_char(at_end ? end_command : page_command);
+        command = get_cmd();
+    }
+    return command;
 }
 
 static char read_selector_escaped_command()

@@ -595,24 +595,12 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-290 - Selector Primary Command Input
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: terminal command buffer caller.
-- Function: primary command read in `display_selector`.
-- Dependencies: none.
-- Change: read the selector command into local storage and pass the
-  command character or command text through selector dispatch instead of
-  having downstream code read `g_buf`.  Split further if the existing
-  selector dispatch contract forces paired helper changes.
-- Tests: selector navigation and default-command behavior.
-
 #### CSTR-291 - Selector Numeric Continuation Input
 
 - Files: `libtrn/rt-select.cpp`.
 - Kind: terminal command buffer caller.
 - Function: second digit/range continuation in `display_selector`.
-- Dependencies: CSTR-290.
+- Dependencies: none.
 - Change: use local command text for the second selector key while
   preserving erase, kill, range, and goto-number semantics.  Keep the
   slice limited to the continuation path.
@@ -623,7 +611,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/scmd.cpp`, `libtrn/sacmd.cpp`.
 - Kind: terminal command buffer caller and command dispatcher.
 - Function: `s_cmd_loop`, `s_do_cmd`, and `sa_do_cmd`.
-- Dependencies: CSTR-290.
+- Dependencies: none.
 - Change: move the scan selector command loop from shared `g_buf`
   command state to a local command string or command character.  Update
   `s_do_cmd` and `sa_do_cmd` together only if their shared contract
@@ -666,7 +654,7 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-290 through CSTR-292 and CSTR-294 through
+- Dependencies: CSTR-291 through CSTR-292 and CSTR-294 through
   CSTR-295.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
@@ -722,7 +710,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-290 through CSTR-292 and CSTR-294 through
+- Dependencies: CSTR-291 through CSTR-292 and CSTR-294 through
   CSTR-299.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
