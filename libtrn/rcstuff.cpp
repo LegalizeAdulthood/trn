@@ -1303,21 +1303,18 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
     return np;
 }
 
-static void stage_relocation_command(std::string_view command)
+static bool relocation_command_needs_completion(std::string_view command)
 {
-    const std::size_t copy_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN - 1));
-    std::copy_n(command.begin(), copy_size, g_buf);
-    g_buf[copy_size] = '\0';
+    return command.size() > 1 && command[1] == FINISH_CMD;
 }
 
 static std::string finish_relocation_command(std::string_view command)
 {
-    stage_relocation_command(command);
-    if (!finish_command(true))
+    if (!relocation_command_needs_completion(command))
     {
-        return {};
+        return std::string{command};
     }
-    return g_buf;
+    return finish_command(command.substr(0, 1), true);
 }
 
 static void print_relocation_command(std::string_view command)

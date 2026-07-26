@@ -585,16 +585,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-308 - Newsrc Relocation Command Completion
-
-- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
-- Kind: owner-local command buffer.
-- Function: `stage_relocation_command` and `finish_relocation_command`.
-- Dependencies: none.
-- Change: use the string-owning command-completion API for relocation
-  commands instead of copying the command into `g_buf`.
-- Tests: newsrc relocation prompt tests.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
@@ -683,7 +673,7 @@ and clarified ownership at the edges.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
 - Dependencies: CSTR-291 through CSTR-292, CSTR-294 through CSTR-295,
-  and CSTR-306 through CSTR-308.
+  and CSTR-306 through CSTR-307.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -710,7 +700,7 @@ and clarified ownership at the edges.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
 - Dependencies: CSTR-292, CSTR-294 through CSTR-297, and CSTR-306
-  through CSTR-308.
+  through CSTR-307.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -741,7 +731,7 @@ owned strings or owner-specific storage.
 - Kind: final global storage removal.
 - Function: `g_buf`.
 - Dependencies: CSTR-291 through CSTR-292, CSTR-294 through CSTR-299,
-  and CSTR-306 through CSTR-308.
+  and CSTR-306 through CSTR-307.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
