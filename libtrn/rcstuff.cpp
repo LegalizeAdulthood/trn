@@ -1396,7 +1396,7 @@ static void print_prompt_command(std::string_view command)
 
 bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
 {
-    const char       *dflt = (this != g_current_newsgroup ? "$^.Lq" : "$^Lq");
+    const std::string_view dflt = (this != g_current_newsgroup ? "$^.Lq" : "$^Lq");
     SelectionSortMode save_sort = g_sel_sort;
 
     if (g_sel_newsgroup_sort != SS_NATURAL)
@@ -1440,11 +1440,11 @@ reask_reloc:
         unflush_output();               // disable any ^O in effect
         if (g_verbose)
         {
-            std::printf("\nPut newsgroup where? [%s] ", dflt);
+            fmt::print("\nPut newsgroup where? [{}] ", dflt);
         }
         else
         {
-            std::printf("\nPut where? [%s] ", dflt);
+            fmt::print("\nPut where? [{}] ", dflt);
         }
         std::fflush(stdout);
         term_down(1);
@@ -1463,7 +1463,7 @@ reinp_reloc:
             g_s_default_cmd = true;
             g_univ_default_cmd = true;
             command.clear();
-            command.push_back(*dflt ? *dflt : '\0');
+            command.push_back(dflt.empty() ? '\0' : dflt.front());
             command.push_back(FINISH_CMD);
             command_char = command.empty() ? '\0' : command.front();
         }

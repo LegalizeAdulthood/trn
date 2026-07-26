@@ -513,8 +513,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` command APIs with raw-buffer compatibility wrappers
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
-- Literal-only local pointer scan: simple remaining candidates are in
-  `NewsgroupData::relocate_newsgroup` and `save_article`.
+- Literal-only local pointer scan: simple remaining candidate is in
+  `save_article`.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -586,17 +586,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-313 - Relocate Newsgroup Default View
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `NewsgroupData::relocate_newsgroup`.
-- Dependencies: none.
-- Change: replace the relocation default-command `const char *` with
-  `std::string_view`; use fmt for touched prompt output and
-  `empty()`/`front()` for default command selection.
-- Tests: newsrc relocation tests.
 
 #### CSTR-314 - Save Article Mailbox Default View
 
