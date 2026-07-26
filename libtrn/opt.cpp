@@ -1442,7 +1442,7 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
             }
             g_user_header_type[add_at].length = len;
             g_user_header_type[add_at].flags = setit? flag : 0;
-            g_user_header_type[add_at].name.assign(s.data(), s.size());
+            g_user_header_type[add_at].name = s;
             for (char &c : g_user_header_type[add_at].name)
             {
                 if (std::isupper(c))

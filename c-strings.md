@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-345 - User Header Name Assignment
-
-- Files: `libtrn/opt.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `set_header_list`.
-- Dependencies: none.
-- Change: assign `s` directly to `g_user_header_type[add_at].name`
-  instead of copying through `s.data(), s.size()`.
-- Tests: option header-list tests if existing coverage is easy.
-
 #### CSTR-346 - Macro Definition Assignment
 
 - Files: `libtrn/terminal.cpp`.
