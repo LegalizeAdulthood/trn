@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-346 - Macro Definition Assignment
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `install_macro`.
-- Dependencies: none.
-- Change: assign `definition` directly to `curmap->km_str[ch]` instead
-  of copying through `definition.data(), definition.size()`.
-- Tests: macro definition tests if existing coverage is easy.
-
 #### CSTR-347 - Universal Config File Assignment
 
 - Files: `libtrn/univ.cpp`.

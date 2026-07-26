@@ -687,7 +687,7 @@ static void install_macro(std::string_view sequence, std::string_view definition
                 }
                 else
                 {
-                    curmap->km_str[ch].assign(definition.data(), definition.size());
+                    curmap->km_str[ch] = definition;
                 }
             }
         }
