@@ -3,7 +3,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
-#include <trn/rt-select.h>
+#include <trn/rt-select-internal.h>
 
 #include <config/common.h>
 #include <trn/addng.h>
@@ -138,6 +138,8 @@ void set_selector_commands(std::string &commands, std::string_view value)
     }
 }
 
+static char read_selector_escaped_command();
+
 char selector_end_command(std::string_view commands)
 {
     return commands.empty() ? '\0' : commands[0];
@@ -146,6 +148,11 @@ char selector_end_command(std::string_view commands)
 char selector_page_command(std::string_view commands)
 {
     return commands.size() > 1 ? commands[1] : '\0';
+}
+
+char read_selector_escaped_command_for_test()
+{
+    return read_selector_escaped_command();
 }
 
 namespace
@@ -2422,14 +2429,13 @@ do_command:
             std::fputs("Cmd: ", stdout);
         }
         std::fflush(stdout);
-        get_cmd(g_buf);
-        if (*g_buf == '\\')
+        ch = read_selector_escaped_command();
+        if (ch == '\\')
         {
             goto the_default;
         }
-        if (*g_buf != ' ' && *g_buf != '\n' && *g_buf != '\r')
+        if (ch != ' ' && ch != '\n' && ch != '\r')
         {
-            ch = *g_buf;
             goto do_command;
         }
         if (s_clean_screen)
@@ -2537,6 +2543,12 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
     init_pages(PRESERVE_PAGE);
 
     return false;
+}
+
+static char read_selector_escaped_command()
+{
+    const std::string command = get_cmd();
+    return command.empty() ? '\0' : command.front();
 }
 
 static constexpr std::string_view SPECIAL_CMD_LETTERS{R"(<+>^$!?&:/\hDEJLNOPqQRSUXYZ)"

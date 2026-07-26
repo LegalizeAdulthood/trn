@@ -52,6 +52,7 @@ add_executable(trn-headers-test
     test_rt-ov.cpp
     test_rt-page.cpp
     test_rt-process.cpp
+    test_rt-select-internal.cpp
     test_rt-select.cpp
     test_rt-util.cpp
     test_rt-wumpus.cpp

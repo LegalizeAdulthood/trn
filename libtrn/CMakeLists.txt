@@ -50,7 +50,7 @@ add_library(libtrn
     rt-ov.cpp include/trn/rt-ov.h
     rt-page.cpp include/trn/rt-page.h
     rt-process.cpp include/trn/rt-process.h
-    rt-select.cpp include/trn/rt-select.h
+    rt-select.cpp include/trn/rt-select.h include/trn/rt-select-internal.h
     rt-util.cpp include/trn/rt-util.h
     rt-wumpus.cpp include/trn/rt-wumpus.h
     rthread.cpp include/trn/rthread.h

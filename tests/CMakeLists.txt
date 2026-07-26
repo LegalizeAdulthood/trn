@@ -54,6 +54,7 @@ add_executable(trn-test
     test_rt-page.cpp
     test_rt-ov.cpp
     test_rt-process.cpp
+    test_rt-select.cpp
     test_rt-util.cpp
     test_rt-wumpus.cpp
     test_score-easy.cpp

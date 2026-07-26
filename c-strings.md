@@ -580,19 +580,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-288 - Selector Escaped Command Prompt
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: terminal command buffer caller.
-- Function: escaped command branch in `display_selector`.
-- Dependencies: none.
-- Change: use string-returning `get_cmd()` for the command after `\`.
-  Store only the local first command character needed by this branch.
-  Preserve the default-command path when the user enters `\`, blank, or
-  whitespace.
-- Tests: focused selector command test if practical; otherwise add a
-  small internal test seam before refactoring.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
@@ -653,7 +640,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/rt-select.cpp`.
 - Kind: terminal command buffer caller.
 - Function: primary command read in `display_selector`.
-- Dependencies: CSTR-288.
+- Dependencies: none.
 - Change: read the selector command into local storage and pass the
   command character or command text through selector dispatch instead of
   having downstream code read `g_buf`.  Split further if the existing
@@ -719,7 +706,7 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-288 through CSTR-295.
+- Dependencies: CSTR-289 through CSTR-295.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -774,7 +761,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-288 through CSTR-300.
+- Dependencies: CSTR-289 through CSTR-300.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
