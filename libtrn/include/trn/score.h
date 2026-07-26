@@ -34,7 +34,7 @@ int  sc_score_art(ArticleNum a, bool now);
 void sc_fill_score_list(ArticleNum first, ArticleNum last);
 void sc_look_ahead(bool flag, bool nowait);
 int  sc_percent_scored();
-void sc_append(char *line);
+void sc_append(std::string_view line);
 void sc_rescore();
 void sc_score_cmd(std::string_view line);
 void sc_kill_threshold(int thresh);

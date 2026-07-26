@@ -575,18 +575,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-303 - Score Append String View API
-
-- Files: `libtrn/score.cpp`, `libtrn/include/trn/score.h`,
-  `libtrn/ng.cpp`, `libtrn/sacmd.cpp`.
-- Kind: C-string API promotion.
-- Function: `sc_append`.
-- Dependencies: none.
-- Change: change `sc_append(char *)` to `std::string_view`, update direct
-  callers, and replace the empty `g_buf` staging in `sc_score_cmd` with
-  a direct empty view.
-- Tests: score command and scorefile append tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish

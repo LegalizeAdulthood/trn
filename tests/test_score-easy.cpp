@@ -42,12 +42,14 @@ class ScoreCommandTest : public testing::Test
 protected:
     void SetUp() override
     {
+        drain_macro_buffer();
         m_old_sc_initialized = g_sc_initialized;
         g_sc_initialized = true;
     }
 
     void TearDown() override
     {
+        drain_macro_buffer();
         g_sc_initialized = m_old_sc_initialized;
     }
 
@@ -163,4 +165,35 @@ TEST_F(ScoreCommandTest, unknownCommandReportsCommandText)
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("Unknown scoring command |x|\n", output);
+}
+
+TEST_F(ScoreCommandTest, easyAppendCommandRunsAppendMenu)
+{
+    push_char('0');
+    push_char('1');
+
+    testing::internal::CaptureStdout();
+    sc_score_cmd({});
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("\n"
+              "Scoring easy command mode.\n"
+              "0) Exit.\n"
+              "1) Add something to a scorefile.\n"
+              "2) Rescore the articles in the current newsgroup.\n"
+              "3) Explain the current article's score.\n"
+              "   (show the rules that matched this article)\n"
+              "4) Edit this newsgroup's scoring rule file.\n"
+              "5) Continue scoring unscored articles.\n"
+              "Enter your choice: 1\n"
+              "\n"
+              "Scorefile easy append mode.\n"
+              "0) Exit.\n"
+              "1) List the current scorefile abbreviations.\n"
+              "2) Add an entry to the global scorefile.\n"
+              "3) Add an entry to this newsgroup's scorefile.\n"
+              "4) Add an entry to another scorefile.\n"
+              "5) Use a temporary scoring rule.\n"
+              "Enter your choice: 0\n",
+              output);
 }

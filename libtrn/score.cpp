@@ -479,13 +479,8 @@ static void sc_rescore_arts()
 
 // Wrapper to isolate scorefile functions from the rest of the world
 // corrupted (:-) for online rescoring
-void sc_append(char *line)
+void sc_append(std::string_view line)
 {
-    if (!line)          // empty line
-    {
-        return;
-    }
-
     if (!g_sc_initialized)
     {
         if (g_sc_delay)
@@ -507,16 +502,16 @@ void sc_append(char *line)
         return;
     }
     std::string easy_line;
-    if (!*line)
+    if (line.empty())
     {
         easy_line = sc_easy_append();
         if (easy_line.empty())
         {
-            return;             // do nothing with empty string
+            return; // do nothing with empty string
         }
-        line = easy_line.data();
+        line = easy_line;
     }
-    char filechar = *line; // first char
+    char filechar = line.front(); // first char
     sf_append(line);
     if (filechar == '!')
     {
@@ -576,12 +571,11 @@ void sc_score_cmd(std::string_view line)
         easy_command = sc_easy_command();
         if (easy_command.empty())
         {
-            return;             // do nothing with empty string
+            return; // do nothing with empty string
         }
         if (easy_command == "\"")
         {
-            g_buf[0] = '\0';
-            sc_append(g_buf);
+            sc_append({});
             return;
         }
         line = easy_command;
