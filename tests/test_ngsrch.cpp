@@ -94,9 +94,7 @@ protected:
 
 TEST_F(NewsgroupSearchTest, selectsAddGroupWithEscapedDelimiterAndCommand)
 {
-    char command[]{"/comp\\/lang/:+"};
-
-    EXPECT_EQ(NGS_DONE, newsgroup_search(command, false));
+    EXPECT_EQ(NGS_DONE, newsgroup_search("/comp\\/lang/:+", false));
     EXPECT_EQ(AGF_SEL, m_group.m_flags & AGF_SEL);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     EXPECT_EQ(1, g_perform_count);
@@ -104,11 +102,8 @@ TEST_F(NewsgroupSearchTest, selectsAddGroupWithEscapedDelimiterAndCommand)
 
 TEST_F(NewsgroupSearchTest, emptyPatternReusesPreviousSearch)
 {
-    char first_command[]{"/comp\\/lang/"};
-    char retry_command[]{"//"};
-
     testing::internal::CaptureStdout();
-    EXPECT_EQ(NGS_FOUND, newsgroup_search(first_command, false));
-    EXPECT_EQ(NGS_FOUND, newsgroup_search(retry_command, false));
+    EXPECT_EQ(NGS_FOUND, newsgroup_search("/comp\\/lang/", false));
+    EXPECT_EQ(NGS_FOUND, newsgroup_search("//", false));
     (void) testing::internal::GetCapturedStdout();
 }

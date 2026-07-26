@@ -505,11 +505,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
   they still have production/source callers or platform/API boundary
   use.
-- Search API scan: article search now has a `std::string_view` command
-  API with a raw-buffer compatibility wrapper for remaining callers.
-  Newsgroup search still takes a mutable command buffer.  Several
-  callers now build local `std::string` commands and then create
-  writable buffers only to call those APIs.
+- Search API scan: article and newsgroup search now have
+  `std::string_view` command APIs with raw-buffer compatibility wrappers
+  for remaining callers.  Several callers now build local `std::string`
+  commands and then create writable buffers only to call those APIs.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -587,18 +586,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-304 - Newsgroup Search String API
-
-- Files: `libtrn/ngsrch.cpp`, `libtrn/include/trn/ngsrch.h`,
-  `tests/test_ngsrch.cpp`.
-- Kind: search helper API foundation.
-- Function: `newsgroup_search`.
-- Dependencies: none.
-- Change: replace the mutable `char *` API with a `std::string_view`
-  command API.  If the caller requests command completion, finish the
-  command into an owned string instead of writing into `g_buf`.
-- Tests: newsgroup search tests.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -633,11 +620,12 @@ and clarified ownership at the edges.
 - Files: `libtrn/trn.cpp`, `libtrn/rt-select.cpp`.
 - Kind: shared command/search buffer caller.
 - Function: newsgroup search command callers.
-- Dependencies: CSTR-304.
+- Dependencies: none.
 - Change: update direct callers to pass strings or views to
   `newsgroup_search`.  Remove the local `trn.cpp` writable staging
   wrapper and any selector staging that only existed for the old mutable
-  search API.
+  search API.  Delete the temporary raw `newsgroup_search`
+  compatibility wrapper after callers have moved.
 - Tests: newsgroup search, selector search, and top-level newsgroup
   command tests.
 

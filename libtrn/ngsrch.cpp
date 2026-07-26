@@ -33,22 +33,37 @@ void newsgroup_search_init()
     s_newsgroup_compex.init_compex();
 }
 
-// patbuf   if patbuf != g_buf, get_cmd must */
-// get_cmd  be set to false!!! */
 NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
 {
-    g_int_count = 0;
-    if (get_cmd && g_buf == patbuf)
+    if (patbuf == nullptr)
     {
-        if (!finish_command(false)) // get rest of command
+        return NGS_ABORT;
+    }
+    return newsgroup_search(std::string_view{patbuf}, get_cmd);
+}
+
+NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
+{
+    g_int_count = 0;
+    if (command.empty())
+    {
+        return NGS_ABORT;
+    }
+
+    std::string completed_command;
+    if (get_cmd)
+    {
+        completed_command = finish_command(command.substr(0, 1), false); // get rest of command
+        if (completed_command.empty())
         {
             return NGS_ABORT;
         }
+        command = completed_command;
     }
 
     perform_status_init(g_newsgroup_to_read.value_of());
-    const char             cmdchr = *patbuf; // what kind of search?
-    const std::string_view search_text{patbuf + 1};
+    const char             cmdchr = command.front(); // what kind of search?
+    const std::string_view search_text = command.substr(1);
     std::string            pattern_text;
     pattern_text.reserve(search_text.size());
     std::size_t tail_start{};
@@ -105,7 +120,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     std::string cmdlst; // list of commands to do
     if (!modifier_tail.empty())
     {
-        cmdlst.assign(modifier_tail.data(), modifier_tail.size());
+        cmdlst = modifier_tail;
     }
     else if (g_general_mode == GM_SELECTOR)
     {
