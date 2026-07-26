@@ -50,7 +50,10 @@ protected:
         m_old_term_line = g_term_line;
         m_old_term_col = g_term_col;
         m_old_int_count = g_int_count;
+        m_old_erase_char = g_erase_char;
+        m_old_kill_char = g_kill_char;
         m_old_tc_cr = g_tc_CR;
+        m_old_tc_bc = g_tc_BC;
         m_old_tc_ce = g_tc_CE;
         m_old_tc_so = g_tc_SO;
         m_old_tc_se = g_tc_SE;
@@ -58,7 +61,10 @@ protected:
         m_old_univ_default_cmd = g_univ_default_cmd;
         errno = 0;
         g_int_count = 0;
+        g_erase_char = '\b';
+        g_kill_char = Ctl('U');
         g_tc_CR = m_carriage_return;
+        g_tc_BC = m_backspace;
         g_tc_CE = m_erase_line;
         g_tc_SO = m_standout_start;
         g_tc_SE = m_standout_end;
@@ -74,7 +80,10 @@ protected:
         g_term_line = m_old_term_line;
         g_term_col = m_old_term_col;
         g_int_count = m_old_int_count;
+        g_erase_char = m_old_erase_char;
+        g_kill_char = m_old_kill_char;
         g_tc_CR = m_old_tc_cr;
+        g_tc_BC = m_old_tc_bc;
         g_tc_CE = m_old_tc_ce;
         g_tc_SO = m_old_tc_so;
         g_tc_SE = m_old_tc_se;
@@ -83,6 +92,7 @@ protected:
     }
 
     char m_carriage_return[1]{};
+    char m_backspace[2]{"\b"};
     char m_erase_line[1]{};
     char m_standout_start[1]{};
     char m_standout_end[1]{};
@@ -93,7 +103,10 @@ protected:
     int         m_old_term_line{};
     int         m_old_term_col{};
     char        m_old_int_count{};
+    char        m_old_erase_char{};
+    char        m_old_kill_char{};
     const char *m_old_tc_cr{};
+    const char *m_old_tc_bc{};
     const char *m_old_tc_ce{};
     const char *m_old_tc_so{};
     const char *m_old_tc_se{};
@@ -416,6 +429,17 @@ TEST_F(TerminalTest, finishCommandReturnsCompletedSeededCommand)
     EXPECT_EQ(":7\n", output);
 }
 
+TEST_F(TerminalTest, finishCommandAppliesEraseCharacter)
+{
+    push_string("ab\b\n", 0);
+
+    testing::internal::CaptureStdout();
+    const std::string command = finish_command(":", true);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(":a", command);
+}
+
 #ifdef MSDOS
 TEST_F(TerminalTest, tgotoStringFormatsDosCursorMotion)
 {
@@ -478,26 +502,20 @@ TEST_F(TerminalTest, pauseGetCommandReturnsPushedCommand)
 
 TEST_F(TerminalTest, setDefUsesDefaultCommandForBlankInput)
 {
-    g_buf[0] = ' ';
-    g_buf[1] = '\0';
+    const std::string command = set_def(std::string_view{" "}, "n");
 
-    set_def(g_buf, "n");
-
-    EXPECT_EQ('n', g_buf[0]);
-    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+    EXPECT_EQ('n', command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
     EXPECT_TRUE(g_s_default_cmd);
     EXPECT_TRUE(g_univ_default_cmd);
 }
 
 TEST_F(TerminalTest, setDefExpandsControlDefaultCommand)
 {
-    g_buf[0] = ' ';
-    g_buf[1] = '\0';
+    const std::string command = set_def(std::string_view{" "}, "^N");
 
-    set_def(g_buf, "^N");
-
-    EXPECT_EQ(Ctl('N'), g_buf[0]);
-    EXPECT_EQ(FINISH_CMD, g_buf[1]);
+    EXPECT_EQ(Ctl('N'), command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
 }
 
 TEST_F(TerminalTest, inCharPrintsPromptDefaultAndStoresInput)

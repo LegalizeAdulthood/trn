@@ -180,12 +180,14 @@ static Signal_t alarm_catcher(int signo);
 static int circfill();
 #endif
 #endif
-static char   *edit_buf(char *s, const char *cmd);
+static std::size_t edit_buffer(std::string &buffer, std::size_t cursor,
+                               std::string_view command, bool &quote_one);
 static void    install_macro(std::string_view sequence, std::string_view definition,
                              bool report_overrides);
 static void    mac_init();
 static KeyMap *new_key_map();
-static void    reprint();
+static std::string read_command(bool allow_macros, bool mark_finished);
+static void    reprint(std::string_view text);
 static void    show_key_map(KeyMap *curmap, std::string &prefix);
 static void    store_command(std::string_view command);
 static int     echo_char(char_int ch);
@@ -864,56 +866,21 @@ static int s_buff_limit = LINE_BUF_LEN;
 
 bool finish_command(int donewline)
 {
-    char *s = g_buf;
-    if (s[1] != FINISH_CMD)              // someone faking up a command?
+    if (g_buf[1] != FINISH_CMD) // someone faking up a command?
     {
         return true;
     }
 
-    GeneralMode gmode_save = g_general_mode;
-    set_mode(GM_INPUT,g_mode);
-    if (s_not_echoing)
+    const std::string command = finish_command(std::string_view{g_buf, 1}, donewline);
+    if (command.empty())
     {
-        s_not_echoing = 2;
+        return false;
     }
-    do
-    {
-        s = edit_buf(s, g_buf);
-        if (s == g_buf)                         // entire string gone?
-        {
-            std::fflush(stdout);             // return to single char command mode
-            set_mode(gmode_save,g_mode);
-            return false;
-        }
-        if (s - g_buf == s_buff_limit)
-        {
-            break;
-        }
-        std::fflush(stdout);
-        get_cmd(s);
-        if (errno || *s == '\f')
-        {
-            *s = Ctl('r');              // force rewrite on CONT
-        }
-    } while (*s != '\r' && *s != '\n'); // until CR or NL (not echoed)
-    g_mouse_is_down = false;
-
-    while (s[-1] == ' ')
-    {
-        s--;
-    }
-    *s = '\0';                          // terminate the string nicely
-
-    if (donewline)
-    {
-        newline();
-    }
-
-    set_mode(gmode_save,g_mode);
-    return true;                        // retrn success
+    store_command(command);
+    return true;
 }
 
-std::string finish_command(std::string_view command, bool donewline)
+static std::string finish_command_text(std::string_view command, bool donewline, int buffer_limit)
 {
     TRN_ASSERT(command.size() == 1);
     if (command.empty())
@@ -921,18 +888,63 @@ std::string finish_command(std::string_view command, bool donewline)
         return {};
     }
 
-    std::string staged_command;
-    staged_command.reserve(2);
-    staged_command += command.front();
-    staged_command += static_cast<char>(FINISH_CMD);
-    store_command(staged_command);
+    std::string buffer{command};
+    buffer.reserve(LINE_BUF_LEN + 1);
 
-    if (!finish_command(donewline))
+    GeneralMode gmode_save = g_general_mode;
+    set_mode(GM_INPUT, g_mode);
+    if (s_not_echoing)
     {
-        return {};
+        s_not_echoing = 2;
+    }
+    bool        quote_one{};
+    std::size_t cursor{};
+    do
+    {
+        cursor = edit_buffer(buffer, cursor, buffer, quote_one);
+        if (cursor == 0) // entire string gone?
+        {
+            std::fflush(stdout); // return to single char command mode
+            set_mode(gmode_save, g_mode);
+            return {};
+        }
+        if (cursor == static_cast<std::size_t>(buffer_limit))
+        {
+            break;
+        }
+        std::fflush(stdout);
+        const std::string input = read_command(s_xmouse_is_on, false);
+        char              input_char = input.empty() ? '\0' : input.front();
+        if (errno || input_char == '\f')
+        {
+            input_char = Ctl('r'); // force rewrite on CONT
+        }
+        buffer.resize(cursor);
+        buffer.push_back(input_char);
+    } while (buffer[cursor] != '\r' && buffer[cursor] != '\n'); // until CR or NL (not echoed)
+    g_mouse_is_down = false;
+
+    if (!buffer.empty() && (buffer.back() == '\r' || buffer.back() == '\n'))
+    {
+        buffer.pop_back();
+    }
+    while (!buffer.empty() && buffer.back() == ' ')
+    {
+        buffer.pop_back();
     }
 
-    return g_buf;
+    if (donewline)
+    {
+        newline();
+    }
+
+    set_mode(gmode_save, g_mode);
+    return buffer; // retrn success
+}
+
+std::string finish_command(std::string_view command, bool donewline)
+{
+    return finish_command_text(command, donewline, s_buff_limit);
 }
 
 static int echo_char(char_int ch)
@@ -955,163 +967,168 @@ static int echo_char(char_int ch)
 
 static bool s_screen_is_dirty{}; // TODO: remove this?
 
-// Process the character *s in the buffer g_buf returning the new 's'
+// Process the character at cursor in the buffer, returning the new cursor.
 
-static char *edit_buf(char *s, const char *cmd)
+static std::size_t edit_buffer(std::string &buffer, std::size_t cursor, std::string_view command, bool &quote_one)
 {
-    static bool quoteone = false;
-    if (quoteone)
+    if (quote_one)
     {
-        quoteone = false;
-        if (s != g_buf)
+        quote_one = false;
+        if (cursor != 0)
         {
             goto echo_it;
         }
     }
-    if (*s == '\033')           // substitution desired?
+    char ch = buffer[cursor];
+    if (ch == '\033') // substitution desired?
     {
-        std::string            substitution{"% "};
-        const std::string_view command = cmd != nullptr ? std::string_view{cmd} : std::string_view{};
+        std::string       substitution{"% "};
+        const std::string command_text{command};
 
-        read_tty(substitution.data() + 1,1);
+        read_tty(substitution.data() + 1, 1);
 #ifdef RAWONLY
         substitution[1] &= 0177;
 #endif
         if (substitution[1] == 'h')
         {
             (void) help_subs();
-            *s = '\0';
-            reprint();
+            buffer.resize(cursor);
+            reprint(buffer);
         }
         else if (substitution[1] == '\033')
         {
-            *s = '\0';
-            const std::string cpybuf{g_buf};
-            const std::string expanded = interp_search(cpybuf, command);
+            const std::string cpybuf = buffer.substr(0, cursor);
+            const std::string expanded = interp_search(cpybuf, command_text);
             const std::size_t copy_size = std::min(expanded.size(), static_cast<std::size_t>(LINE_BUF_LEN - 1));
-            std::copy_n(expanded.begin(), copy_size, g_buf);
-            g_buf[copy_size] = '\0';
-            s = g_buf + copy_size;
-            reprint();
+            buffer = expanded.substr(0, copy_size);
+            cursor = copy_size;
+            reprint(buffer);
         }
         else
         {
-            const std::string expanded = interp_search(substitution, command);
-            const std::size_t remaining = static_cast<std::size_t>(LINE_BUF_LEN - (s - g_buf));
+            const std::string expanded = interp_search(substitution, command_text);
+            const std::size_t remaining = static_cast<std::size_t>(LINE_BUF_LEN) - cursor;
             TRN_ASSERT(remaining > 0);
             const std::size_t copy_size = std::min(expanded.size(), remaining - 1);
-            std::copy_n(expanded.begin(), copy_size, s);
-            s[copy_size] = '\0';
-            std::fputs(s,stdout);
-            s += copy_size;
+            buffer.resize(cursor);
+            buffer.append(expanded, 0, copy_size);
+            fmt::print("{}", std::string_view{buffer}.substr(cursor));
+            cursor += copy_size;
         }
-        return s;
+        return cursor;
     }
-    if (*s == g_erase_char)                // they want to rubout a char?
+    if (ch == g_erase_char) // they want to rubout a char?
     {
-        if (s != g_buf)
+        if (cursor != 0)
         {
             rubout();
-            s--;                        // discount the char rubbed out
-            if (!at_norm_char(s))
+            cursor--; // discount the char rubbed out
+            if (!at_norm_char(&buffer[cursor]))
+            {
+                rubout();
+            }
+            buffer.resize(cursor);
+        }
+        else
+        {
+            buffer.clear();
+        }
+        return cursor;
+    }
+    if (ch == g_kill_char) // wipe out the whole line?
+    {
+        while (cursor != 0) // emulate that many ERASEs
+        {
+            rubout();
+            cursor--;
+            if (!at_norm_char(&buffer[cursor]))
             {
                 rubout();
             }
         }
-        return s;
+        buffer.clear();
+        return cursor;
     }
-    if (*s == g_kill_char)                 // wipe out the whole line?
+    if (ch == Ctl('w')) // wipe out one word?
     {
-        while (s != g_buf)              // emulate that many ERASEs
+        if (cursor == 0)
+        {
+            buffer.clear();
+            return cursor;
+        }
+        buffer.resize(cursor + 1);
+        buffer[cursor] = ' ';
+        cursor--;
+        while (!std::isspace(static_cast<unsigned char>(buffer[cursor])) ||
+               std::isspace(static_cast<unsigned char>(buffer[cursor + 1])))
         {
             rubout();
-            s--;
-            if (!at_norm_char(s))
+            if (!at_norm_char(&buffer[cursor]))
             {
                 rubout();
             }
-        }
-        return s;
-    }
-    if (*s == Ctl('w'))            // wipe out one word?
-    {
-        if (s == g_buf)
-        {
-            return s;
-        }
-        *s-- = ' ';
-        while (!std::isspace(*s) || std::isspace(s[1]))
-        {
-            rubout();
-            if (!at_norm_char(s))
+            if (cursor == 0)
             {
-                rubout();
+                buffer.clear();
+                return cursor;
             }
-            if (s == g_buf)
-            {
-                return g_buf;
-            }
-            s--;
+            cursor--;
         }
-        return s+1;
+        cursor++;
+        buffer.resize(cursor);
+        return cursor;
     }
-    if (*s == Ctl('r'))
+    if (ch == Ctl('r'))
     {
-        *s = '\0';
-        reprint();
-        return s;
+        buffer.resize(cursor);
+        reprint(buffer);
+        return cursor;
     }
-    if (*s == Ctl('v'))
+    if (ch == Ctl('v'))
     {
         std::putchar('^');
         backspace();
         std::fflush(stdout);
-        get_cmd(s);
+        const std::string input = read_command(s_xmouse_is_on, false);
+        buffer[cursor] = input.empty() ? '\0' : input.front();
     }
-    else if (*s == '\\')
+    else if (ch == '\\')
     {
-        quoteone = true;
+        quote_one = true;
     }
 
 echo_it:
     if (!s_not_echoing)
     {
-        echo_char(*s);
+        echo_char(buffer[cursor]);
     }
-    return s + 1;
+    return cursor + 1;
 }
 
 bool finish_dbl_char()
 {
-    int buflimit_save = s_buff_limit;
-    int not_echoing_save = s_not_echoing;
-    s_buff_limit = 2;
-    bool ret = finish_command(false);
-    s_buff_limit = buflimit_save;
+    if (g_buf[1] != FINISH_CMD)
+    {
+        return true;
+    }
+
+    int               not_echoing_save = s_not_echoing;
+    const std::string command = finish_dbl_char(std::string_view{g_buf, 1});
     s_not_echoing = not_echoing_save;
-    return ret;
+    if (command.empty())
+    {
+        return false;
+    }
+    store_command(command);
+    return true;
 }
 
 std::string finish_dbl_char(std::string_view command)
 {
-    TRN_ASSERT(command.size() == 1);
-    if (command.empty())
-    {
-        return {};
-    }
-
-    std::string staged_command;
-    staged_command.reserve(2);
-    staged_command += command.front();
-    staged_command += static_cast<char>(FINISH_CMD);
-    store_command(staged_command);
-
-    if (!finish_dbl_char())
-    {
-        return {};
-    }
-
-    return g_buf;
+    const int         not_echoing_save = s_not_echoing;
+    const std::string result = finish_command_text(command, false, 2);
+    s_not_echoing = not_echoing_save;
+    return result;
 }
 
 // discard any characters typed ahead
@@ -1473,11 +1490,16 @@ got_canonical:
     return mark_finished ? 2 : 1;
 }
 
-std::string get_cmd()
+static std::string read_command(bool allow_macros, bool mark_finished)
 {
     std::string command(LINE_BUF_LEN + 1, '\0');
-    command.resize(get_cmd_into(command.data(), true, true));
+    command.resize(get_cmd_into(command.data(), allow_macros, mark_finished));
     return command;
+}
+
+std::string get_cmd()
+{
+    return read_command(true, true);
 }
 
 void get_cmd(char *whatbuf)
@@ -1487,8 +1509,7 @@ void get_cmd(char *whatbuf)
 
 static char get_any_key()
 {
-    std::string command(LINE_BUF_LEN + 1, '\0');
-    command.resize(get_cmd_into(command.data(), s_xmouse_is_on, false));
+    const std::string command = read_command(s_xmouse_is_on, false);
     return command.empty() ? '\0' : command.front();
 }
 
@@ -1622,20 +1643,21 @@ void in_char(std::string_view prompt, MinorMode newmode, std::string_view dflt)
     const int   newlines = static_cast<int>(std::count(prompt.begin(), prompt.end(), '\n'));
 
 reask_in_char:
-    unflush_output();                   // disable any ^O in effect
+    unflush_output(); // disable any ^O in effect
     fmt::print("{} [{}] ", prompt, dflt);
     std::fflush(stdout);
     term_down(newlines);
     eat_typeahead();
-    set_mode(GM_PROMPT,newmode);
-    store_command(get_cmd());
-    if (errno || *g_buf == '\f')
+    set_mode(GM_PROMPT, newmode);
+    std::string command = get_cmd();
+    if (errno || (!command.empty() && command.front() == '\f'))
     {
-        newline();                      // if return from stop signal
-        goto reask_in_char;             // give them a prompt again
+        newline();          // if return from stop signal
+        goto reask_in_char; // give them a prompt again
     }
-    set_def(g_buf,dflt);
-    set_mode(gmode_save,mode_save);
+    command = set_def(command, dflt);
+    store_command(command);
+    set_mode(gmode_save, mode_save);
 }
 
 void in_answer(std::string_view prompt, MinorMode newmode)
@@ -1644,35 +1666,38 @@ void in_answer(std::string_view prompt, MinorMode newmode)
     GeneralMode gmode_save = g_general_mode;
 
 reask_in_answer:
-    unflush_output();                   // disable any ^O in effect
+    unflush_output(); // disable any ^O in effect
     fmt::print("{}", prompt);
     std::fflush(stdout);
     eat_typeahead();
-    set_mode(GM_INPUT,newmode);
+    set_mode(GM_INPUT, newmode);
 reinp_in_answer:
-    store_command(get_cmd());
-    if (errno || *g_buf == '\f')
+    std::string command = get_cmd();
+    const char  command_char = command.empty() ? '\0' : command.front();
+    if (errno || command_char == '\f')
     {
-        newline();                      // if return from stop signal
-        goto reask_in_answer;           // give them a prompt again
+        newline();            // if return from stop signal
+        goto reask_in_answer; // give them a prompt again
     }
-    if (*g_buf == g_erase_char)
+    if (command_char == g_erase_char)
     {
         goto reinp_in_answer;
     }
-    if (*g_buf != '\n' && *g_buf != ' ')
+    if (command_char != '\n' && command_char != ' ')
     {
-        if (!finish_command(false))
+        command = finish_command(command.substr(0, 1), false);
+        if (command.empty())
         {
             goto reinp_in_answer;
         }
     }
     else
     {
-        g_buf[1] = '\0';
+        command.resize(command.empty() ? 0 : 1);
     }
     newline();
-    set_mode(gmode_save,mode_save);
+    store_command(command);
+    set_mode(gmode_save, mode_save);
 }
 
 // If this takes more than one line, return false
@@ -1681,12 +1706,13 @@ bool in_choice(std::string_view prompt, std::string_view value, std::string_view
 {
     MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
+    std::string buffer{value};
+    buffer.reserve(LINE_BUF_LEN + 1);
 
-    const auto set_buffer = [](std::string_view text)
+    const auto set_buffer = [&buffer](std::string_view text)
     {
         TRN_ASSERT(text.size() <= LINE_BUF_LEN);
-        std::copy(text.begin(), text.end(), g_buf);
-        g_buf[text.size()] = '\0';
+        buffer = text;
     };
 
     unflush_output(); // disable any ^O in effect
@@ -1736,22 +1762,22 @@ bool in_choice(std::string_view prompt, std::string_view value, std::string_view
         }
     }
     choice_values.push_back(choices.substr(choice_start));
-    set_buffer(value);
 
     bool        value_changed;
     int         number_was = -1;
     std::size_t prefix_index = prefixes.size();
     std::size_t choice_index = choice_values.size();
+    bool        quote_one{};
 reask_in_choice:
-    const std::string_view buffer{g_buf};
-    std::string_view       match = buffer;
+    const std::string_view buffer_view{buffer};
+    std::string_view       match = buffer_view;
     if (!prefixes.empty())
     {
         const std::size_t previous_prefix = prefix_index;
         prefix_index = prefixes.size();
         for (std::size_t i = 0; i < prefixes.size(); ++i)
         {
-            if (!prefixes[i].empty() && !buffer.empty() && prefixes[i].front() == buffer.front())
+            if (!prefixes[i].empty() && !buffer_view.empty() && prefixes[i].front() == buffer_view.front())
             {
                 prefix_index = i;
                 break;
@@ -1759,8 +1785,8 @@ reask_in_choice:
         }
         if (prefix_index != prefixes.size())
         {
-            const std::size_t separator = buffer.find(' ');
-            match = separator == std::string_view::npos ? std::string_view{} : buffer.substr(separator + 1);
+            const std::size_t separator = buffer_view.find(' ');
+            match = separator == std::string_view::npos ? std::string_view{} : buffer_view.substr(separator + 1);
             while (!match.empty() && match.front() == ' ')
             {
                 match.remove_prefix(1);
@@ -1782,8 +1808,8 @@ reask_in_choice:
         }
         const std::string_view choice = choice_values[choice_index];
         if (!choice.empty() && choice.front() == '<' &&
-            ((!buffer.empty() && buffer.front() == '<') || choice.size() < 2 || choice[1] != '#' ||
-             (!buffer.empty() && std::isdigit(static_cast<unsigned char>(buffer.front()))) ||
+            ((!buffer_view.empty() && buffer_view.front() == '<') || choice.size() < 2 || choice[1] != '#' ||
+             (!buffer_view.empty() && std::isdigit(static_cast<unsigned char>(buffer_view.front()))) ||
              previous_choice == choice_values.size()))
         {
             prefix_index = prefixes.size();
@@ -1804,7 +1830,7 @@ reask_in_choice:
             }
             break;
         }
-        const std::size_t compare_size = any_value_allowed ? buffer.size() : 1;
+        const std::size_t compare_size = any_value_allowed ? buffer_view.size() : 1;
         if (match.empty() || choice.substr(0, compare_size) == match.substr(0, compare_size))
         {
             break;
@@ -1814,7 +1840,7 @@ reask_in_choice:
     const std::string_view choice = choice_values[choice_index];
     if (!choice.empty() && choice.front() == '<')
     {
-        if ((!buffer.empty() && buffer.front() == '<') || (choice.size() > 1 && choice[1] == '#'))
+        if ((!buffer_view.empty() && buffer_view.front() == '<') || (choice.size() > 1 && choice[1] == '#'))
         {
             if (number_was >= 0)
             {
@@ -1822,8 +1848,8 @@ reask_in_choice:
             }
             else
             {
-                const std::size_t digit_count = buffer.find_first_not_of("0123456789");
-                g_buf[digit_count == std::string_view::npos ? buffer.size() : digit_count] = '\0';
+                const std::size_t digit_count = buffer_view.find_first_not_of("0123456789");
+                buffer.resize(digit_count == std::string_view::npos ? buffer.size() : digit_count);
             }
         }
     }
@@ -1838,56 +1864,58 @@ reask_in_choice:
             set_buffer(choice);
         }
     }
-    char *input = g_buf + std::string_view{g_buf}.size();
+    std::size_t input = buffer.size();
     carriage_return();
     erase_line(false);
-    fmt::print("{}{}", prompt, std::string_view{g_buf});
+    fmt::print("{}{}", prompt, buffer);
     number_was = -1;
 
 reinp_in_choice:
-    if ((input - g_buf) + prompt.size() >= g_tc_COLS)
+    if (input + prompt.size() >= static_cast<std::size_t>(g_tc_COLS))
     {
         s_screen_is_dirty = true;
     }
     std::fflush(stdout);
-    get_cmd(input);
-    if (errno || *input == '\f') // if return from stop signal
+    const std::string input_command = read_command(s_xmouse_is_on, false);
+    char              ch = input_command.empty() ? '\0' : input_command.front();
+    if (errno || ch == '\f') // if return from stop signal
     {
-        *input = '\n';
+        ch = '\n';
     }
-    if (*input != '\n')
+    buffer.resize(input);
+    buffer.push_back(ch);
+    if (ch != '\n')
     {
-        char ch = *input;
-        if (!choice.empty() && choice.front() == '<' && ch != '\t' && (ch != ' ' || g_buf != input))
+        if (!choice.empty() && choice.front() == '<' && ch != '\t' && (ch != ' ' || input != 0))
         {
             if (choice.size() > 1 && choice[1] == '#')
             {
-                input = edit_buf(input, nullptr);
-                if (input != g_buf)
+                input = edit_buffer(buffer, input, {}, quote_one);
+                if (input != 0)
                 {
-                    if (std::isdigit(static_cast<unsigned char>(input[-1])))
+                    if (std::isdigit(static_cast<unsigned char>(buffer[input - 1])))
                     {
                         goto reinp_in_choice;
                     }
                     else
                     {
-                        std::from_chars(g_buf, input, number_was);
+                        std::from_chars(buffer.data(), buffer.data() + input, number_was);
                     }
                 }
             }
             else
             {
-                input = edit_buf(input, nullptr);
+                input = edit_buffer(buffer, input, {}, quote_one);
                 goto reinp_in_choice;
             }
         }
-        *input = '\0';
-        const std::string_view edited_buffer{g_buf};
+        buffer.resize(input);
+        const std::string_view edited_buffer{buffer};
         const std::size_t      separator = edited_buffer.find(' ');
-        char *value_start = separator == std::string_view::npos ? g_buf + edited_buffer.size() : g_buf + separator + 1;
+        std::size_t            value_start = separator == std::string_view::npos ? edited_buffer.size() : separator + 1;
         if (separator != std::string_view::npos)
         {
-            while (*value_start == ' ')
+            while (value_start < edited_buffer.size() && edited_buffer[value_start] == ' ')
             {
                 ++value_start;
             }
@@ -1896,33 +1924,34 @@ reinp_in_choice:
         {
             if (prefix_index != prefixes.size())
             {
-                *value_start = '\0';
+                buffer.resize(value_start);
             }
             else
             {
-                *g_buf = '\0';
+                buffer.clear();
             }
         }
         else
         {
-            char ch1 = g_buf[0];
+            char ch1 = buffer.empty() ? '\0' : buffer.front();
             if (prefix_index != prefixes.size())
             {
                 if (ch == ch1)
                 {
-                    ch = *value_start;
+                    ch = value_start < buffer.size() ? buffer[value_start] : '\0';
                 }
                 else
                 {
                     ch1 = ch;
-                    ch = g_buf[0];
+                    ch = buffer.empty() ? '\0' : buffer.front();
                 }
             }
             set_buffer(fmt::format("{} {}", ch == g_erase_char || ch == g_kill_char ? '<' : ch, ch1));
         }
         goto reask_in_choice;
     }
-    *input = '\0';
+    buffer.resize(input);
+    store_command(buffer);
 
     set_mode(gmode_save, mode_save);
     return !s_screen_is_dirty;
@@ -2114,13 +2143,13 @@ void rubout()
     backspace();                        // backspace trick
 }
 
-static void reprint()
+static void reprint(std::string_view text)
 {
     std::fputs("^R\n",stdout);
     term_down(1);
-    for (char *s = g_buf; *s; s++)
+    for (const char ch : text)
     {
-        echo_char(*s);
+        echo_char(ch);
     }
     s_screen_is_dirty = true;
 }

@@ -388,14 +388,14 @@ void not_incl(std::string_view feature)
     fmt::print("\nNo room for feature \"{}\" on this machine.\n", feature);
 }
 
-void set_def(char *buffer, std::string_view dflt)
+std::string set_def(std::string_view command, std::string_view dflt)
 {
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
-    if (*buffer == ' '                        //
-#ifndef STRICT_CR                             //
-        || *buffer == '\n' || *buffer == '\r' //
-#endif                                        //
+    if ((!command.empty() && command.front() == ' ')                                                      //
+#ifndef STRICT_CR                                                                                         //
+        || (!command.empty() && command.front() == '\n') || (!command.empty() && command.front() == '\r') //
+#endif                                                                                                    //
     )
     {
         g_s_default_cmd = true;
@@ -408,8 +408,17 @@ void set_def(char *buffer, std::string_view dflt)
         {
             push_char(dflt.empty() ? '\0' : dflt.front());
         }
-        get_cmd(buffer);
+        return get_cmd();
     }
+    return std::string{command};
+}
+
+void set_def(char *buffer, std::string_view dflt)
+{
+    const std::string command = set_def(std::string_view{buffer}, dflt);
+    TRN_ASSERT(command.size() <= LINE_BUF_LEN);
+    std::copy(command.begin(), command.end(), buffer);
+    buffer[command.size()] = '\0';
 }
 
 // attempts to verify a cryptographic signature.
