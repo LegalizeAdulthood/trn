@@ -33,11 +33,17 @@ protected:
         m_old_univ_default_cmd = g_univ_default_cmd;
         m_old_erase_char = g_erase_char;
         m_old_kill_char = g_kill_char;
+        m_old_general_mode = g_general_mode;
+        m_old_mode = g_mode;
+        m_old_verify = g_verify;
         errno = 0;
         g_s_default_cmd = false;
         g_univ_default_cmd = false;
         g_erase_char = '\b';
         g_kill_char = Ctl('u');
+        g_general_mode = GM_READ;
+        g_mode = MM_NONE;
+        g_verify = false;
         drain_input();
     }
 
@@ -49,13 +55,19 @@ protected:
         g_univ_default_cmd = m_old_univ_default_cmd;
         g_erase_char = m_old_erase_char;
         g_kill_char = m_old_kill_char;
+        g_general_mode = m_old_general_mode;
+        g_mode = m_old_mode;
+        g_verify = m_old_verify;
     }
 
-    int  m_old_errno{};
-    bool m_old_s_default_cmd{};
-    bool m_old_univ_default_cmd{};
-    char m_old_erase_char{};
-    char m_old_kill_char{};
+    int         m_old_errno{};
+    bool        m_old_s_default_cmd{};
+    bool        m_old_univ_default_cmd{};
+    char        m_old_erase_char{};
+    char        m_old_kill_char{};
+    GeneralMode m_old_general_mode{};
+    MinorMode   m_old_mode{};
+    bool        m_old_verify{};
 };
 
 } // namespace
@@ -139,4 +151,52 @@ TEST_F(SelectorCommandInputTest, readsNumericContinuationKillCharacter)
     push_char(g_kill_char);
 
     EXPECT_EQ(g_kill_char, read_selector_numeric_continuation_for_test());
+}
+
+TEST_F(SelectorCommandInputTest, readsPromptCommandText)
+{
+    push_char('s');
+
+    testing::internal::CaptureStdout();
+    const std::string command =
+        read_selector_prompt_command_for_test("Selector mode?", MM_SELECTOR_ORDER_PROMPT, "tsa");
+    testing::internal::GetCapturedStdout();
+
+    ASSERT_EQ(2, command.size());
+    EXPECT_EQ('s', command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+}
+
+TEST_F(SelectorCommandInputTest, readsPromptDefaultCommand)
+{
+    push_char(' ');
+
+    testing::internal::CaptureStdout();
+    const std::string command =
+        read_selector_prompt_command_for_test("Selector mode?", MM_SELECTOR_ORDER_PROMPT, "tsa");
+    testing::internal::GetCapturedStdout();
+
+    ASSERT_EQ(2, command.size());
+    EXPECT_EQ('t', command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+}
+
+TEST_F(SelectorCommandInputTest, readsFollowupCommandText)
+{
+    push_char('x');
+
+    EXPECT_EQ('x', read_selector_followup_command_for_test(2));
+}
+
+TEST_F(SelectorCommandInputTest, finishesSelectorCommandText)
+{
+    push_string("topic\n", 0200);
+
+    const std::string command = finish_selector_command_for_test('/', false);
+
+    EXPECT_EQ("/topic", command);
 }

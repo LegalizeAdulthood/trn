@@ -40,6 +40,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
@@ -142,6 +143,11 @@ void set_selector_commands(std::string &commands, std::string_view value)
 static std::string read_selector_command(char page_command, char end_command, bool at_end);
 static char        read_selector_escaped_command();
 static char        read_selector_numeric_continuation();
+static std::string read_selector_prompt_command(std::string_view prompt, MinorMode newmode, std::string_view dflt);
+static char        read_selector_followup_command(char_int ch);
+static std::string finish_selector_command(char_int ch, bool donewline);
+static char        selector_command_char(std::string_view command);
+static void        print_selector_command(std::string_view command);
 
 char selector_end_command(std::string_view commands)
 {
@@ -166,6 +172,21 @@ char read_selector_escaped_command_for_test()
 char read_selector_numeric_continuation_for_test()
 {
     return read_selector_numeric_continuation();
+}
+
+std::string read_selector_prompt_command_for_test(std::string_view prompt, MinorMode newmode, std::string_view dflt)
+{
+    return read_selector_prompt_command(prompt, newmode, dflt);
+}
+
+char read_selector_followup_command_for_test(char_int ch)
+{
+    return read_selector_followup_command(ch);
+}
+
+std::string finish_selector_command_for_test(char_int ch, bool donewline)
+{
+    return finish_selector_command(ch, donewline);
 }
 
 namespace
@@ -2578,6 +2599,97 @@ static char read_selector_numeric_continuation()
     return command.empty() ? '\0' : command.front();
 }
 
+static std::string read_selector_prompt_command(std::string_view prompt, MinorMode newmode, std::string_view dflt)
+{
+    MinorMode   mode_save = g_mode;
+    GeneralMode gmode_save = g_general_mode;
+    const int   newlines = static_cast<int>(std::count(prompt.begin(), prompt.end(), '\n'));
+
+    while (true)
+    {
+        unflush_output();
+        fmt::print("{} [{}] ", prompt, dflt);
+        std::fflush(stdout);
+        term_down(newlines);
+        eat_typeahead();
+        set_mode(GM_PROMPT, newmode);
+        std::string command = get_cmd();
+        if (errno || selector_command_char(command) == '\f')
+        {
+            newline();
+            continue;
+        }
+
+        g_s_default_cmd = false;
+        g_univ_default_cmd = false;
+        const char command_char = selector_command_char(command);
+        if (command_char == ' ' //
+#ifndef STRICT_CR
+            || command_char == '\n' || command_char == '\r' //
+#endif
+        )
+        {
+            g_s_default_cmd = true;
+            g_univ_default_cmd = true;
+            if (dflt.size() > 1 && dflt.front() == '^' && std::isupper(static_cast<unsigned char>(dflt[1])))
+            {
+                push_char(Ctl(dflt[1]));
+            }
+            else
+            {
+                push_char(dflt.empty() ? '\0' : dflt.front());
+            }
+            command = get_cmd();
+        }
+        set_mode(gmode_save, mode_save);
+        print_selector_command(command);
+        return command;
+    }
+}
+
+static char read_selector_followup_command(char_int ch)
+{
+    if (ch > 1)
+    {
+        char command{};
+        read_tty(&command, 1);
+        return command;
+    }
+    return pause_get_cmd();
+}
+
+static std::string finish_selector_command(char_int ch, bool donewline)
+{
+    const char command = static_cast<char>(ch);
+    return finish_command(std::string_view{&command, 1}, donewline);
+}
+
+static char selector_command_char(std::string_view command)
+{
+    return command.empty() ? '\0' : command.front();
+}
+
+static void print_selector_command(std::string_view command)
+{
+    if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
+    {
+        const char command_text[2]{command.front(), '\0'};
+        if (!at_norm_char(command_text))
+        {
+            std::putchar('^');
+            std::putchar((command.front() & 0x7F) | 64);
+            backspace();
+            backspace();
+        }
+        else
+        {
+            std::putchar(command.front());
+            backspace();
+        }
+        std::fflush(stdout);
+    }
+}
+
 static constexpr std::string_view SPECIAL_CMD_LETTERS{R"(<+>^$!?&:/\hDEJLNOPqQRSUXYZ)"
                                                       "\n\r\t\033;"};
 
@@ -2602,15 +2714,7 @@ static char another_command(char_int ch)
     {
         return 0;
     }
-    if (ch > 1)
-    {
-        read_tty(g_buf,1);
-        ch = *g_buf;
-    }
-    else
-    {
-        ch = pause_get_cmd();
-    }
+    ch = read_selector_followup_command(ch);
     if (ch != 0 && ch != '\n' && ch != '\r' && (!skip_q || ch != 'q'))
     {
         if (ch > 0)
@@ -2730,6 +2834,7 @@ static DisplayState article_commands(char_int ch)
         return DS_DISPLAY;
 
     case 'S':
+    {
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2737,9 +2842,10 @@ static DisplayState article_commands(char_int ch)
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
 reask_output:
-        in_char("Selector mode:  Threads, Subjects, Articles?", MM_SELECTOR_ORDER_PROMPT, "tsa");
-        print_cmd();
-        if (*g_buf == 'h' || *g_buf == 'H')
+        const std::string command = read_selector_prompt_command("Selector mode:  Threads, Subjects, Articles?",
+                                                                 MM_SELECTOR_ORDER_PROMPT, "tsa");
+        char              command_char = selector_command_char(command);
+        if (command_char == 'h' || command_char == 'H')
         {
             if (g_verbose)
             {
@@ -2762,7 +2868,7 @@ reask_output:
             s_clean_screen = false;
             goto reask_output;
         }
-        else if (*g_buf == 'q')
+        else if (command_char == 'q')
         {
             if (g_can_home)
             {
@@ -2770,16 +2876,18 @@ reask_output:
             }
             return DS_ASK;
         }
-        if (std::isupper(*g_buf))
+        if (std::isupper(static_cast<unsigned char>(command_char)))
         {
-            *g_buf = std::tolower(*g_buf);
+            command_char = static_cast<char>(std::tolower(static_cast<unsigned char>(command_char)));
         }
-        set_sel_mode(*g_buf);
+        set_sel_mode(command_char);
         count_subjects(CS_NORM);
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
+    }
 
     case 'O':
+    {
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2787,19 +2895,20 @@ reask_output:
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
 reask_sort:
+        std::string command;
         if (g_sel_mode == SM_ARTICLE)
         {
-            in_char(
+            command = read_selector_prompt_command(
                 "Order by Date,Subject,Author,Number,subj-date Groups,Points?",
                 MM_Q, "dsangpDSANGP");
         }
         else
         {
-            in_char("Order by Date, Subject, Count, Lines, or Points?",
-                    MM_Q, "dsclpDSCLP");
+            command = read_selector_prompt_command(
+                "Order by Date, Subject, Count, Lines, or Points?", MM_Q, "dsclpDSCLP");
         }
-        print_cmd();
-        if (*g_buf == 'h' || *g_buf == 'H')
+        const char command_char = selector_command_char(command);
+        if (command_char == 'h' || command_char == 'H')
         {
             if (g_verbose)
             {
@@ -2848,7 +2957,7 @@ reask_sort:
             s_clean_screen = false;
             goto reask_sort;
         }
-        else if (*g_buf == 'q')
+        else if (command_char == 'q')
         {
             if (g_can_home)
             {
@@ -2856,12 +2965,13 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode,*g_buf);
+        set_sel_sort(g_sel_mode, command_char);
         count_subjects(CS_NORM);
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
+    }
 
     case 'R':
         if (!g_sel_rereading)
@@ -3070,9 +3180,21 @@ reask_sort:
         // FALL THROUGH
 
     case '/':
+    {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
-        if (!finish_command(true))      // get rest of command
+        std::string search_command;
+        bool        command_finished{};
+        if (ch == ':')
+        {
+            command_finished = finish_command(true);
+        }
+        else
+        {
+            search_command = finish_selector_command(ch, true);
+            command_finished = !search_command.empty();
+        }
+        if (!command_finished) // get rest of command
         {
             if (s_clean_screen)
             {
@@ -3107,9 +3229,9 @@ reask_sort:
             {
                 // Force the search to begin at g_absfirst or g_firstart,
                 // depending upon whether they specified the 'r' option.
-               //
+                //
                 g_art = article_after(g_last_art);
-                switch (art_search(g_buf, sizeof g_buf, false))
+                switch (art_search(search_command.data(), static_cast<int>(search_command.size() + 1), false))
                 {
                 case SRCH_ERROR:
                 case SRCH_ABORT:
@@ -3147,6 +3269,7 @@ reask_sort:
             return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
+    }
 
     case 'c':
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
@@ -3309,6 +3432,7 @@ static DisplayState newsgroup_commands(char_int ch)
     }
 
     case 'O':
+    {
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3316,15 +3440,16 @@ static DisplayState newsgroup_commands(char_int ch)
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
 reask_sort:
-        in_char("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
-        print_cmd();
-        switch (*g_buf)
+        const std::string command =
+            read_selector_prompt_command("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
+        char command_char = selector_command_char(command);
+        switch (command_char)
         {
         case 'n': case 'N':
             break;
 
         case 'g': case 'G':
-            *g_buf += 's' - 'g';                // Group name == SS_STRING
+            command_char += 's' - 'g'; // Group name == SS_STRING
             break;
 
         case 'c': case 'C':
@@ -3361,10 +3486,11 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode,*g_buf);
+        set_sel_sort(g_sel_mode, command_char);
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
+    }
 
     case 'R':
         if (!g_sel_rereading)
@@ -3391,9 +3517,21 @@ reask_sort:
         // FALL THROUGH
 
     case '/':
+    {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
-        if (!finish_command(true))      // get rest of command
+        std::string search_command;
+        bool        command_finished{};
+        if (ch == ':')
+        {
+            command_finished = finish_command(true);
+        }
+        else
+        {
+            search_command = finish_selector_command(ch, true);
+            command_finished = !search_command.empty();
+        }
+        if (!command_finished) // get rest of command
         {
             if (s_clean_screen)
             {
@@ -3409,7 +3547,7 @@ reask_sort:
             else
             {
                 g_newsgroup_ptr = nullptr;
-                switch (newsgroup_search(g_buf, false))
+                switch (newsgroup_search(search_command.data(), false))
                 {
                 case NGS_ERROR:
                 case NGS_ABORT:
@@ -3442,6 +3580,7 @@ reask_sort:
             return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
+    }
 
     case 'c':
         if (g_sel_item_index < g_sel_page_item_cnt)
@@ -3630,6 +3769,7 @@ static DisplayState add_group_commands(char_int ch)
     switch (ch)
     {
     case 'O':
+    {
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3637,15 +3777,16 @@ static DisplayState add_group_commands(char_int ch)
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
 reask_sort:
-        in_char("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
-        print_cmd();
-        switch (*g_buf)
+        const std::string command =
+            read_selector_prompt_command("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
+        char command_char = selector_command_char(command);
+        switch (command_char)
         {
         case 'n': case 'N':
             break;
 
         case 'g': case 'G':
-            *g_buf += 's' - 'g';                // Group name == SS_STRING
+            command_char += 's' - 'g'; // Group name == SS_STRING
             break;
 
         case 'c': case 'C':
@@ -3682,10 +3823,11 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode,*g_buf);
+        set_sel_sort(g_sel_mode, command_char);
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
+    }
 
     case 'U':
         sel_cleanup();
@@ -3774,9 +3916,21 @@ reask_sort:
 
     case ':':
     case '/':
+    {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
-        if (!finish_command(true))      // get rest of command
+        std::string search_command;
+        bool        command_finished{};
+        if (ch == ':')
+        {
+            command_finished = finish_command(true);
+        }
+        else
+        {
+            search_command = finish_selector_command(ch, true);
+            command_finished = !search_command.empty();
+        }
+        if (!command_finished) // get rest of command
         {
             if (s_clean_screen)
             {
@@ -3791,7 +3945,7 @@ reask_sort:
             }
             else
             {
-                switch (newsgroup_search(g_buf,false))
+                switch (newsgroup_search(search_command.data(), false))
                 {
                 case NGS_ERROR:
                 case NGS_ABORT:
@@ -3823,6 +3977,7 @@ reask_sort:
             return DS_DO_COMMAND;
         }
         return DS_DISPLAY;
+    }
 
     case 'h':
     case '?':
@@ -3946,17 +4101,20 @@ static DisplayState option_commands(char_int ch)
     case '/':
     {
         Selection u;
-        char*     pattern;
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
-        if (!finish_command(true))      // get rest of command
+        const std::string search_command = finish_selector_command(ch, true);
+        if (search_command.empty()) // get rest of command
         {
             break;
         }
-        for (pattern = g_buf; *pattern == ' '; pattern++)
+        std::string_view pattern{search_command};
+        while (!pattern.empty() && pattern.front() == ' ')
         {
+            pattern.remove_prefix(1);
         }
-        const char *compile_error = g_opt_compex.compile(pattern, true, true);
+        const std::string pattern_text{pattern};
+        const char       *compile_error = g_opt_compex.compile(pattern_text, true, true);
         if (compile_error != nullptr)
         {
             g_msg = compile_error;
@@ -4084,6 +4242,7 @@ static DisplayState universal_commands(char_int ch)
         return DS_DISPLAY;
 
     case 'O':
+    {
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -4091,9 +4250,10 @@ static DisplayState universal_commands(char_int ch)
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
 reask_sort:
-        in_char("Order by Natural, or score Points?", MM_Q, "npNP");
-        print_cmd();
-        if (*g_buf == 'h' || *g_buf == 'H')
+        const std::string command =
+            read_selector_prompt_command("Order by Natural, or score Points?", MM_Q, "npNP");
+        const char command_char = selector_command_char(command);
+        if (command_char == 'h' || command_char == 'H')
         {
             if (g_verbose)
             {
@@ -4116,7 +4276,9 @@ reask_sort:
             s_clean_screen = false;
             goto reask_sort;
         }
-        else if (*g_buf == 'q' || (std::tolower(*g_buf) != 'n' && std::tolower(*g_buf) != 'p'))
+        else if (command_char == 'q'
+                 || (std::tolower(static_cast<unsigned char>(command_char)) != 'n'
+                     && std::tolower(static_cast<unsigned char>(command_char)) != 'p'))
         {
             if (g_can_home)
             {
@@ -4124,10 +4286,11 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode,*g_buf);
+        set_sel_sort(g_sel_mode, command_char);
         g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
+    }
 
     case '~':
         univ_virt_pass();
