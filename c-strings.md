@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-326 - Overview Article Number Parse
-
-- Files: `libtrn/rt-ov.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `ov_data`.
-- Dependencies: none.
-- Change: parse the overview article number from the line view with
-  `std::from_chars` instead of `std::atol(line.c_str())`.
-- Tests: overview data parsing tests.
-
 #### CSTR-327 - Decode Piece Total Parse
 
 - Files: `libtrn/decode.cpp`.

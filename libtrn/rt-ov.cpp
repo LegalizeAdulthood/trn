@@ -31,8 +31,9 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <fstream>
@@ -318,7 +319,14 @@ beginning:
             break;
         }
 
-        an = ArticleNum{std::atol(line.c_str())};
+        std::string_view                       article_text{line};
+        const std::string_view::const_iterator article_start =
+            std::find_if_not(article_text.begin(), article_text.end(),
+                             [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+        article_text.remove_prefix(static_cast<std::size_t>(article_start - article_text.begin()));
+        long article_number{};
+        (void) std::from_chars(article_text.data(), article_text.data() + article_text.size(), article_number);
+        an = ArticleNum{article_number};
         if (an < first)
         {
             continue;

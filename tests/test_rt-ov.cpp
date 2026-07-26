@@ -205,7 +205,7 @@ TEST_F(OverviewTest, localOverviewLinePopulatesArticleFields)
     const fs::path file{overview_file()};
     fs::create_directories(file.parent_path());
     const std::string date{"Tue, 01 Jan 2019 00:00:00 GMT"};
-    std::ofstream{file} << "1\tRe: Overview Subject\tAlice <alice@example.com>\t" << date
+    std::ofstream{file} << "1junk\tRe: Overview Subject\tAlice <alice@example.com>\t" << date
                         << "\t<child@example.com>\t<parent@example.com>\t"
                            "1234\t56\tcomp.lang.apl:1 comp.lang.cpp:5\n";
 
