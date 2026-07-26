@@ -24,6 +24,7 @@
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
+#include <trn/respond-internal.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -35,8 +36,8 @@
 #include <fmt/format.h>
 
 #include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -59,6 +60,55 @@ static std::FILE *s_tmp_fp{};
 
 static void follow_it_up();
 static int  invoke(const char *cmd, const char *dir);
+
+static bool extract_option_digit(char ch)
+{
+    return std::isdigit(static_cast<unsigned char>(ch)) != 0;
+}
+
+static std::string_view skip_extract_spaces(std::string_view text)
+{
+    const std::size_t non_space = text.find_first_not_of(' ');
+    if (non_space == std::string_view::npos)
+    {
+        return {};
+    }
+    return text.substr(non_space);
+}
+
+static std::string_view parse_extract_number(std::string_view text, int &value)
+{
+    const char            *first = text.data();
+    std::from_chars_result result = std::from_chars(first, first + text.size(), value);
+    return text.substr(static_cast<std::string_view::size_type>(result.ptr - first));
+}
+
+static std::string_view parse_extract_options(std::string_view command_text, int &part_opt, int &total_opt)
+{
+    std::string_view destination = skip_extract_spaces(command_text);
+    if (destination.size() >= 2 && destination.front() == '-' && extract_option_digit(destination[1]))
+    {
+        destination.remove_prefix(1);
+        destination = parse_extract_number(destination, part_opt);
+        if (!destination.empty() && destination.front() == '/')
+        {
+            destination.remove_prefix(1);
+            total_opt = 0;
+            destination = parse_extract_number(destination, total_opt);
+            destination = skip_extract_spaces(destination);
+        }
+        else
+        {
+            total_opt = part_opt;
+        }
+    }
+    return destination;
+}
+
+std::string_view respond_parse_extract_options_for_test(std::string_view command_text, int &part_opt, int &total_opt)
+{
+    return parse_extract_options(command_text, part_opt, total_opt);
+}
 
 void respond_init()
 {
@@ -109,28 +159,7 @@ SaveResult save_article()
         int         partOpt = 0;
         int         totalOpt = 0;
 
-        s = g_buf+1;            // skip e
-        s = skip_eq(s, ' ');    // skip leading spaces
-        if (*s == '-' && std::isdigit(s[1]))
-        {
-            partOpt = std::atoi(s+1);
-            do
-            {
-                s++;
-            } while (std::isdigit(*s));
-            if (*s == '/')
-            {
-                ++s;
-                totalOpt = std::atoi(s);
-                s = skip_digits(s);
-                s = skip_eq(s, ' ');
-            }
-            else
-            {
-                totalOpt = partOpt;
-            }
-        }
-        std::string destination = file_exp(s);
+        std::string destination = file_exp(parse_extract_options(std::string_view{g_buf}.substr(1), partOpt, totalOpt));
         destination.reserve(CMD_BUF_LEN);
         bool has_extract_command = custom_extract;
         if (!destination.empty())

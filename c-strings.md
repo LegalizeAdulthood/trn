@@ -563,7 +563,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 20 and `std::atol` 11.
+- C numeric conversion calls: `atoi`/`std::atoi` 18 and `std::atol` 11.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
@@ -606,18 +606,29 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-340 - Extract Part Option View Parse
+#### CSTR-341 - Response Pipe Destination View Parse
 
 - Files: `libtrn/respond.cpp`.
 - Kind: local C-string parser cleanup.
-- Function: `save_article`, extract-command branch.
+- Function: `save_article`, pipe-command branch.
 - Dependencies: none.
-- Change: parse the optional `-part[/total]` prefix from a
-  `std::string_view` with `std::from_chars`, advance the destination
-  view without mutating or walking `char *`, and pass the view to
-  `file_exp`.
-- Tests: response extract-command tests if existing coverage is easy to
-  extend; otherwise add focused coverage before refactoring.
+- Change: find the pipe separator in a command `std::string_view`, trim
+  spaces after the separator with view operations, and pass the
+  destination view to `file_exp`; remove `std::strchr` and `skip_eq`
+  from this branch.
+- Tests: pipe-save response tests.
+
+#### CSTR-342 - Article Header Newline View Lookup
+
+- Files: `libtrn/art.cpp`.
+- Kind: C string library call cleanup.
+- Function: `do_article`.
+- Dependencies: none.
+- Change: use `std::string_view::find` on `g_head_buf` to locate the
+  next header newline for `g_art_pos` instead of taking `c_str()` and
+  calling `std::strchr`.
+- Tests: article display or pager position tests if existing coverage
+  is easy to extend.
 
 ### Tier 1 - Helper And API Foundations
 

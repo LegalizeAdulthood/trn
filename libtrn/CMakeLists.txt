@@ -46,7 +46,7 @@ add_library(libtrn
     rcln.cpp include/trn/rcln.h
     RcGroupConfig.cpp include/trn/RcGroupConfig.h
     rcstuff.cpp include/trn/rcstuff.h
-    respond.cpp include/trn/respond.h
+    respond.cpp include/trn/respond.h include/trn/respond-internal.h
     rt-ov.cpp include/trn/rt-ov.h
     rt-page.cpp include/trn/rt-page.h
     rt-process.cpp include/trn/rt-process.h

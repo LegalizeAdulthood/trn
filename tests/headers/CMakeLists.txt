@@ -50,6 +50,7 @@ add_executable(trn-headers-test
     test_rcln.cpp
     test_RcGroupConfig.cpp
     test_rcstuff.cpp
+    test_respond-internal.cpp
     test_respond.cpp
     test_rt-ov.cpp
     test_rt-page.cpp
