@@ -510,7 +510,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
 - Literal-only local pointer scan: simple remaining candidates are in
-  `art_search_impl`, `do_interp`, `do_newsgroup`, `save_options`,
+  `do_interp`, `do_newsgroup`, `save_options`,
   `NewsgroupData::relocate_newsgroup`, and `save_article`.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
@@ -583,17 +583,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-309 - Article Search Finding Label View
-
-- Files: `libtrn/artsrch.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `art_search_impl`.
-- Dependencies: none.
-- Change: replace the local `const char *` finding label with
-  `std::string_view`; pass the view directly to fmt calls.
-- Tests: article search tests and interpolation tests that invoke
-  article search.
 
 #### CSTR-310 - Interpolator Noname Fallback View
 

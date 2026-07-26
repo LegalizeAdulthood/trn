@@ -269,8 +269,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd, s
     }
     else
     {
-        int         salt_mode = command.size() > 2 && command[2] == 'g' ? 2 : 1;
-        const char *finding_str = command.size() > 1 && command[1] == 'f' ? "author" : "subject";
+        int salt_mode = command.size() > 2 && command[2] == 'g' ? 2 : 1;
+        const std::string_view finding_str =
+            command.size() > 1 && command[1] == 'f' ? "author" : "subject";
 
         how_much = command.size() > 1 && command[1] == 'f' ? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
         search_header = SOME_LINE;
