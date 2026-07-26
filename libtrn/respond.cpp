@@ -392,7 +392,7 @@ SaveResult save_article()
             }
             else
             {
-                const char *dflt = (in_string(savename, "%a", true) ? "nyq" : "ynq");
+                const std::string_view dflt = (in_string(savename, "%a", true) ? "nyq" : "ynq");
 
 reask_save:
                 in_char(fmt::format("\nFile {} doesn't exist--\n        use mailbox format?", destination),

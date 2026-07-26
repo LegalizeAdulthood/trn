@@ -1846,6 +1846,30 @@ TEST_F(InterpolatorNewsgroupTest, normalSaveWritesArticleToRelativeDestination)
     EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
 }
 
+TEST_F(InterpolatorNewsgroupTest, normalSaveCanRejectMailboxPrompt)
+{
+    ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    m_env.expect_no_envar("SAVENAME");
+    m_env.expect_env("SAVEDIR", m_output.path().c_str());
+    m_env.expect_no_envar("NORMSAVER");
+    const std::string command{"s prompted-save"};
+    ASSERT_LE(command.size(), LINE_BUF_LEN);
+    command.copy(g_buf, command.size());
+    g_buf[command.size()] = '\0';
+    push_string("n\n", 0200);
+
+    testing::internal::CaptureStdout();
+    const SaveResult  result = save_article();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    const fs::path saved_article = fs::path{m_output.path()} / "prompted-save";
+    EXPECT_EQ(SAVE_DONE, result);
+    EXPECT_THAT(output, HasSubstr("use mailbox format? [ynq] "));
+    EXPECT_THAT(output, HasSubstr("Saved to file " + saved_article.generic_string()));
+    EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
+}
+
 TEST_F(InterpolatorNewsgroupTest, mailboxSaveQuotesFromBodyLine)
 {
     const std::string output_path = m_output.path();

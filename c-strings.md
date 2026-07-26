@@ -513,8 +513,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` command APIs with raw-buffer compatibility wrappers
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
-- Literal-only local pointer scan: simple remaining candidate is in
-  `save_article`.
+- Literal-only local pointer scan has no current production hits.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -586,16 +585,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-314 - Save Article Mailbox Default View
-
-- Files: `libtrn/respond.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `save_article`.
-- Dependencies: none.
-- Change: replace the mailbox-format default-command `const char *`
-  with `std::string_view` before passing it to `in_char`.
-- Tests: save-article prompt tests.
 
 ### Tier 1 - Helper And API Foundations
 
