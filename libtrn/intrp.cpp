@@ -332,22 +332,6 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
         }
         return text;
     };
-    const auto read_scratch_line = [&scratch](std::FILE *fp) -> bool
-    {
-        scratch.assign(scratch_size, '\0');
-        if (std::fgets(scratch.data(), static_cast<int>(scratch.size()), fp) == nullptr)
-        {
-            scratch.clear();
-            return false;
-        }
-        const std::size_t end = scratch.find('\0');
-        if (end != std::string::npos)
-        {
-            scratch.resize(end);
-        }
-        return true;
-    };
-
     while (!pattern.empty() && pattern.front() != '\0' && !at_skip_stopper(pattern, stoppers))
     {
         if (pattern.front() == '%' && pattern.size() > 1 && pattern[1] != '\0')
@@ -674,7 +658,12 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     scratch = do_interp(pattern, "\"", cmd);
                     fmt::print("{}", scratch);
                     reset_tty();
-                    read_scratch_line(stdin);
+                    scratch = get_a_line(stdin);
+                    const std::size_t nul = scratch.find('\0');
+                    if (nul != std::string::npos)
+                    {
+                        scratch.resize(nul);
+                    }
                     no_echo();
                     cr_mode();
                     if (!scratch.empty() && scratch.back() == '\n')

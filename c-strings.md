@@ -534,7 +534,7 @@ unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Search and length: `strchr` 25, `strstr` 2, `strlen` 20.
-- C line input: `fgets` 6.
+- C line input: `fgets` 5.
 - C text output: `fputs` 165, `printf`/`std::printf` 327,
   `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77.
@@ -572,20 +572,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-285 - Interpolator Prompt Input Line
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: owner-local prompt-input scratch buffer.
-- Function: `do_interp`.
-- Dependencies: none.
-- Change: replace the local `read_scratch_line` `fgets` path for quoted
-  prompt interpolation with string line input, preserving the current
-  trailing-newline removal.
-- Truncation: the old 8192-byte scratch limit is arbitrary prompt-input
-  truncation.
-- Tests: interpolation prompt input tests if focused coverage exists;
-  otherwise add current behavior coverage first.
 
 #### CSTR-286 - Numeric Range Local Parser
 
