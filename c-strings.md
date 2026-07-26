@@ -533,7 +533,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 26, `strstr` 2, `strlen` 20.
+- Search and length: `strchr` 25, `strstr` 2, `strlen` 20.
 - C line input: `fgets` 7.
 - C text output: `fputs` 165, `printf`/`std::printf` 327,
   `fprintf`/`std::fprintf` 14.
@@ -562,19 +562,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-282 - Numeric Range Command Sets
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: string-literal search.
-- Function: `num_num`.
-- Dependencies: none.
-- Change: replace literal character-set `std::strchr` checks with
-  `std::string_view` membership.  Do not change the range parser in this
-  slice.
-- Truncation: none.
-- Tests: numeric range command tests if focused coverage exists;
-  otherwise add current behavior coverage first.
 
 ### Tier 1 - Helper And API Foundations
 

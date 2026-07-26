@@ -232,7 +232,7 @@ NumNumResult num_num()
 
     perform_status_init(g_newsgroup_ptr->m_to_read);
 
-    for (s=g_buf; *s && (std::isdigit(*s) || std::strchr(" ,-.$",*s)); s++)
+    for (s = g_buf; *s && (std::isdigit(*s) || std::string_view{" ,-.$"}.find(*s) != std::string_view::npos); s++)
     {
         if (!std::isdigit(*s))
         {
