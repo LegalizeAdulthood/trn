@@ -577,18 +577,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-270 - Uudecode Line Input
-
-- Files: `libtrn/uudecode.cpp`.
-- Kind: mixed file/article fixed line input into owned string storage.
-- Function: `uudecode`.
-- Dependencies: none.
-- Change: simplify the local `read_line` lambda so file input uses
-  `get_a_line(ifp)` and article input uses `read_art(line)`.  Drop the
-  temporary `char *input`, manual resize, and NUL search.
-- Truncation: arbitrary fixed read limit; remove it.
-- Tests: uuencode/decode attachment tests.
-
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies

@@ -9,6 +9,7 @@
 #include <trn/artio.h>
 #include <trn/mime.h>
 #include <trn/terminal.h>
+#include <trn/util.h>
 
 #include <fmt/format.h>
 
@@ -242,19 +243,12 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
     line.reserve(LINE_BUF_LEN + 1);
     const auto read_line = [ifp, &line]()
     {
-        line.resize(LINE_BUF_LEN + 1);
-        char *const input = line.data();
-        if ((ifp != nullptr ? std::fgets(input, LINE_BUF_LEN + 1, ifp) : read_art(input, LINE_BUF_LEN + 1)) == nullptr)
+        if (ifp != nullptr)
         {
-            line.clear();
-            return false;
+            line = get_a_line(ifp);
+            return !line.empty();
         }
-        const std::size_t end = line.find('\0');
-        if (end != std::string::npos)
-        {
-            line.resize(end);
-        }
-        return true;
+        return read_art(line);
     };
     constexpr std::string_view whitespace{" \f\n\r\t\v"};
     constexpr std::string_view filename_end_chars{"\f\n\r\t\v"};
