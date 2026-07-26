@@ -47,6 +47,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <iostream>
 #include <iterator>
 #include <string>
 #include <string_view>
@@ -95,11 +96,11 @@ static CompiledRegex   s_gcompex{};         // in article search pattern
 static bool            s_first_page{};      // is this the 1st page of article?
 static bool            s_continuation{};    // this line/header is being continued
 
-static std::string      finish_pager_command(std::string_view command, bool donewline);
-static std::string      finish_pager_dbl_command(std::string_view command);
-static bool             maybe_set_color(const char *cp, bool back_search);
-static bool             inner_more();
-static void             stage_pager_command(std::string_view command);
+static std::string finish_pager_command(std::string_view command, bool donewline);
+static std::string finish_pager_dbl_command(std::string_view command);
+static bool        maybe_set_color(const char *cp, bool back_search);
+static bool        inner_more();
+static bool        pager_command_needs_completion(std::string_view command);
 
 void art_init()
 {
@@ -893,31 +894,27 @@ static bool maybe_set_color(const char *cp, bool back_search)
 
 // process pager commands
 
-static void stage_pager_command(std::string_view command)
+static bool pager_command_needs_completion(std::string_view command)
 {
-    const std::size_t copy_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN - 1));
-    std::copy_n(command.begin(), copy_size, g_buf);
-    g_buf[copy_size] = '\0';
+    return command.size() > 1 && command[1] == FINISH_CMD;
 }
 
 static std::string finish_pager_command(std::string_view command, bool donewline)
 {
-    stage_pager_command(command);
-    if (!finish_command(donewline))
+    if (!pager_command_needs_completion(command))
     {
-        return {};
+        return std::string{command};
     }
-    return g_buf;
+    return finish_command(command.substr(0, 1), donewline);
 }
 
 static std::string finish_pager_dbl_command(std::string_view command)
 {
-    stage_pager_command(command);
-    if (!finish_dbl_char())
+    if (!pager_command_needs_completion(command))
     {
-        return {};
+        return std::string{command};
     }
-    return g_buf;
+    return finish_dbl_char(command.substr(0, 1));
 }
 
 PageSwitchResult page_switch(std::string_view command)
@@ -1116,8 +1113,9 @@ refresh_screen:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("Topline = %d",g_top_line.value_of());
-            std::fgets(g_buf, sizeof g_buf, stdin);
+            std::printf("Topline = %d", g_top_line.value_of());
+            std::string debug_pause;
+            std::getline(std::cin, debug_pause);
         }
 #endif
         clear();

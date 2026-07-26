@@ -180,6 +180,7 @@ bool        finput_pending(bool check_term);
 bool        finish_command(int donewline);
 std::string finish_command(std::string_view command, bool donewline);
 bool        finish_dbl_char();
+std::string finish_dbl_char(std::string_view command);
 void        eat_typeahead();
 void        save_typeahead(char *buf, int len);
 void  settle_down();

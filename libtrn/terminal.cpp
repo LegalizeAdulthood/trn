@@ -1078,7 +1078,7 @@ echo_it:
     {
         echo_char(*s);
     }
-    return s+1;
+    return s + 1;
 }
 
 bool finish_dbl_char()
@@ -1090,6 +1090,28 @@ bool finish_dbl_char()
     s_buff_limit = buflimit_save;
     s_not_echoing = not_echoing_save;
     return ret;
+}
+
+std::string finish_dbl_char(std::string_view command)
+{
+    TRN_ASSERT(command.size() == 1);
+    if (command.empty())
+    {
+        return {};
+    }
+
+    std::string staged_command;
+    staged_command.reserve(2);
+    staged_command += command.front();
+    staged_command += static_cast<char>(FINISH_CMD);
+    store_command(staged_command);
+
+    if (!finish_dbl_char())
+    {
+        return {};
+    }
+
+    return g_buf;
 }
 
 // discard any characters typed ahead
