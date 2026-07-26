@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-316 - Environment Net Speed Parse
-
-- Files: `util/env.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `env_init`.
-- Dependencies: none.
-- Change: parse `NETSPEED` with `std::from_chars` over
-  `net_speed` instead of `std::atoi(net_speed.c_str())`, preserving the
-  `f` and `s` shortcuts.
-- Tests: environment configuration tests.
-
 #### CSTR-317 - INI Condition Numeric Parse
 
 - Files: `libtrn/util.cpp`.

@@ -168,6 +168,19 @@ protected:
 #endif
     }
 
+    void expect_basic_environment(const char *net_speed)
+    {
+        const std::string home = m_home.generic_string();
+        const std::string tmp = m_tmp.generic_string();
+        const std::string trn = m_trn.generic_string();
+        m_env.expect_env("HOME", home.c_str());
+        m_env.expect_env("TMPDIR", tmp.c_str());
+        expect_login_environment();
+        m_env.expect_env("DOTDIR", home.c_str());
+        m_env.expect_env("TRNDIR", trn.c_str());
+        m_env.expect_env("NETSPEED", net_speed);
+    }
+
     trn::testing::MockEnvironment m_env;
     fs::path                      m_root;
     fs::path                      m_home;
@@ -326,6 +339,42 @@ TEST_F(EnvInitTest, usesConfiguredPostingHostNameDefault)
     (void) env_init(true);
 
     EXPECT_EQ(std::string{POSTING_HOSTNAME} + ".UNKNOWN.HOST", g_p_host_name);
+}
+
+TEST_F(EnvInitTest, readsNumericNetSpeed)
+{
+    expect_basic_environment("42");
+
+    (void) env_init(true);
+
+    EXPECT_EQ(42, g_net_speed);
+}
+
+TEST_F(EnvInitTest, readsFastNetSpeedShortcut)
+{
+    expect_basic_environment("fast");
+
+    (void) env_init(true);
+
+    EXPECT_EQ(10, g_net_speed);
+}
+
+TEST_F(EnvInitTest, readsSlowNetSpeedShortcut)
+{
+    expect_basic_environment("slow");
+
+    (void) env_init(true);
+
+    EXPECT_EQ(1, g_net_speed);
+}
+
+TEST_F(EnvInitTest, clampsInvalidNetSpeed)
+{
+    expect_basic_environment("not-a-number");
+
+    (void) env_init(true);
+
+    EXPECT_EQ(1, g_net_speed);
 }
 
 TEST(TextToSecsTest, returnsSentinelValues)

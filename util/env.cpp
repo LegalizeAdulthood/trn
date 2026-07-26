@@ -30,6 +30,7 @@
 #endif
 
 #include <algorithm>
+#include <charconv>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -166,7 +167,9 @@ bool env_init(bool lax, const std::function<bool()> &set_user_name_fn, const std
         }
         else
         {
-            g_net_speed = std::atoi(net_speed.c_str());
+            int parsed_net_speed{};
+            (void) std::from_chars(net_speed.data(), net_speed.data() + net_speed.size(), parsed_net_speed);
+            g_net_speed = parsed_net_speed;
             g_net_speed = std::max(g_net_speed, 1);
         }
     }
