@@ -557,79 +557,224 @@ dependency tier: finish earlier tiers first so later caller and
 shared-buffer slices have cleaner helper and ownership contracts to
 build on.
 
+Global command buffer work must be split by function.  Prefer leaves
+that only use the first command character before command loops that pass
+the full buffer into downstream dispatch.  Treat terminal command input
+and global scratch-buffer storage as criteria, not implementation
+slices.
+
+The terminal command-input slices remove direct `get_cmd(g_buf)`
+callers.  Do not replace a read with `get_cmd()` plus an immediate copy
+back to `g_buf` unless the copy is temporary scaffolding for a following
+slice.  When the called command dispatcher still reads `g_buf`, first
+move that dispatcher to accept command text or a command character.
+
+The global scratch-buffer slices remove other uses of `g_buf` as scratch
+storage.  Do not replace `g_buf` with one global `std::string`.  Move
+storage to the owning function, parser, or data object.  Re-evaluate
+every slice after each scan; old deferrals are not binding.
+
 ### Tier 0 - Leaf Cleanup
 
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-288 - Selector Escaped Command Prompt
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: terminal command buffer caller.
+- Function: escaped command branch in `display_selector`.
+- Dependencies: none.
+- Change: use string-returning `get_cmd()` for the command after `\`.
+  Store only the local first command character needed by this branch.
+  Preserve the default-command path when the user enters `\`, blank, or
+  whitespace.
+- Tests: focused selector command test if practical; otherwise add a
+  small internal test seam before refactoring.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
+
+#### CSTR-293 - Article Pager Command Input
+
+- Files: `libtrn/art.cpp`.
+- Kind: terminal command buffer caller and command dispatcher.
+- Function: pager input loop and `page_switch`.
+- Dependencies: none.
+- Change: read pager commands into local command text and pass that text
+  to `page_switch` instead of having `page_switch` read `g_buf`.
+  Preserve fake commands from `g_inner_search`, interrupt refresh, and
+  full-command paths that call `finish_command`.
+- Tests: pager command tests if focused coverage exists; otherwise add
+  current behavior coverage first.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
+#### CSTR-289 - Newsgroup Relocation Prompt Input
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: terminal command buffer caller and local parser.
+- Function: `NewsgroupData::relocate_newsgroup`.
+- Dependencies: none.
+- Change: read relocation input into a local `std::string`, apply the
+  default command locally, and parse the result without relying on
+  `g_buf`.  Convert numeric parsing and `+`/`-` newsgroup lookup to use
+  views into that local string.
+- Tests: newsrc relocation tests if focused coverage exists; otherwise
+  add current behavior coverage first.
+
+#### CSTR-300 - Miscellaneous Line Input Buffers
+
+- Files: `libtrn/cache.cpp`, `libtrn/datasrc.cpp`.
+- Kind: shared line/scratch buffer.
+- Function: cache stdin read path and data-source option command
+  handling.
+- Dependencies: none.
+- Change: replace remaining local line reads or option probes that use
+  `g_buf` with local strings or fixed owner-specific buffers.  Preserve
+  any meaningful truncation; otherwise remove arbitrary `LINE_BUF_LEN`
+  limits.
+- Tests: cache/data-source tests if focused coverage exists; otherwise
+  add current behavior coverage first.
+
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-290 - Selector Primary Command Input
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: terminal command buffer caller.
+- Function: primary command read in `display_selector`.
+- Dependencies: CSTR-288.
+- Change: read the selector command into local storage and pass the
+  command character or command text through selector dispatch instead of
+  having downstream code read `g_buf`.  Split further if the existing
+  selector dispatch contract forces paired helper changes.
+- Tests: selector navigation and default-command behavior.
+
+#### CSTR-291 - Selector Numeric Continuation Input
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: terminal command buffer caller.
+- Function: second digit/range continuation in `display_selector`.
+- Dependencies: CSTR-290.
+- Change: use local command text for the second selector key while
+  preserving erase, kill, range, and goto-number semantics.  Keep the
+  slice limited to the continuation path.
+- Tests: selector numeric selection, ranges, erase, and kill behavior.
+
+#### CSTR-292 - Scan Selector Command Loop Input
+
+- Files: `libtrn/scmd.cpp`, `libtrn/sacmd.cpp`.
+- Kind: terminal command buffer caller and command dispatcher.
+- Function: `s_cmd_loop`, `s_do_cmd`, and `sa_do_cmd`.
+- Dependencies: CSTR-290.
+- Change: move the scan selector command loop from shared `g_buf`
+  command state to a local command string or command character.  Update
+  `s_do_cmd` and `sa_do_cmd` together only if their shared contract
+  requires it.
+- Tests: scan selector command tests, including resize refresh and
+  article selector delegation.
+
+#### CSTR-294 - Newsgroup Article Command Input
+
+- Files: `libtrn/ng.cpp`.
+- Kind: terminal command buffer caller and command dispatcher.
+- Function: article-level command loop in `do_newsgroup`.
+- Dependencies: CSTR-293.
+- Change: read article-level commands into local storage, carry the
+  command through default handling, article search, selector entry, and
+  start-command creation without treating `g_buf` as the owner.
+- Tests: article command loop, default command, selector entry, and
+  search command behavior.
+
+#### CSTR-295 - Top-level Newsgroup Command Input
+
+- Files: `libtrn/trn.cpp`.
+- Kind: terminal command buffer caller and command dispatcher.
+- Function: `input_newsgroup`.
+- Dependencies: CSTR-294.
+- Change: read the top-level newsgroup command into local storage and
+  move defaulting, fuzzy search, switch parsing, typeahead saving, and
+  start-command construction off `g_buf`.
+- Tests: top-level newsgroup command tests, including search, switch
+  commands, selector start commands, and typeahead preservation.
 
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-Global command buffer work must be split by function.  Prefer
-formatting-only leaves first, because they do not affect command input,
-typeahead, article reading, or protocol line ownership.  Terminal
-command input remains in `CSTR-119`; file and protocol read buffers stay
-with their owner slices unless a local use is clearly formatting-only.
+#### CSTR-296 - Terminal Editor Internal Buffer
 
-#### CSTR-119 - Terminal Command Input Buffers
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
+- Kind: terminal input owner.
+- Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
+  `in_char`, `in_answer`, and `in_choice`.
+- Dependencies: CSTR-288 through CSTR-295.
+- Change: split terminal editing storage from `g_buf`.  Keep macro
+  expansion, mouse input, `FINISH_CMD`, and default-command behavior
+  intact while making the string-returning API the real owner.
+- Tests: terminal input, defaults, edit keys, macro expansion, mouse
+  command input, and option editing.
 
-- Files: `libtrn/terminal.cpp`,
-  `libtrn/include/trn/terminal.h`, command-input callers.
-- Kind: caller-owned fixed command buffers.
-- Function: `get_cmd`, `in_char`, `in_answer`, and related callers.
-- Dependencies: separate capability byte storage from command text
-  before changing terminal signatures.
-- Change: migrate remaining command-input callers toward the
-  string-returning `get_cmd()` API.  Keep the C-buffer `get_cmd(char *)`
-  wrapper only while command-loop code still uses `g_buf` as the shared
-  edit buffer and `FINISH_CMD` sentinel.  Preserve typeahead, macro
-  expansion, and mouse input behavior.  Do not include `pause_get_cmd`;
-  it keeps the `get_cmd()` string local and returns the command
-  character without writing through `g_buf`.
-- Current direct shared-buffer callers are in `art.cpp`, `ng.cpp`,
-  `rcstuff.cpp`, `rt-select.cpp`, `scmd.cpp`, and `trn.cpp`.  Treat each
-  function as its own slice unless the caller contract forces a paired
-  edit.
-- Other C-buffer callers remain inside `terminal.cpp` command editing
-  and `util.cpp` default-command handling.
-- Tests: terminal input, option editing, and selector tests.
+#### CSTR-297 - Search Pattern Buffer Owners
 
-#### CSTR-161 - General Command Buffer Storage
+- Files: `libtrn/artsrch.cpp`, `libtrn/ngsrch.cpp`.
+- Kind: shared command/search buffer owner.
+- Function: article and newsgroup search command parsing.
+- Dependencies: CSTR-293 through CSTR-295.
+- Change: replace search APIs that accept `g_buf` plus a buffer size
+  with local `std::string` storage and `std::string_view` parsing.
+  Preserve command-line completion and default search behavior.
+- Tests: article search and newsgroup search tests.
 
-- Files: `config/common.cpp`, `config/include/config/common.h`,
-  command prompt/input users across `libtrn`.
-- Kind: global general-purpose command and line buffer.
-- Function: storage-centered `g_buf`.
-- Dependencies: complete terminal command-input foundations before
-  attempting the shared owner.
-- Change: split command input, prompt formatting, scratch line input, and
-  file-copy uses into owned strings or owner-specific buffers.  Work
-  bottom-up by function; do not replace `g_buf` with one global string
-  that preserves the same hidden shared state.  Do not localize
-  `get_cmd(g_buf)` call sites until `get_cmd` no longer treats `g_buf`
-  specially for macro expansion.
-- Tests: terminal command, option, kill-file, score, newsrc, and
-  newsgroup workflow tests.
+#### CSTR-298 - Command Dispatch Scratch Buffer
+
+- Files: `libtrn/ngstuff.cpp`, `libtrn/kfile.cpp`,
+  `libtrn/scorefile.cpp`.
+- Kind: shared command scratch buffer.
+- Function: `perform`, kill-file command dispatch, and score command
+  dispatch.
+- Dependencies: CSTR-292 through CSTR-297.
+- Change: stop copying command text into `g_buf` for dispatch.  Pass
+  owned strings or string views through the call chain and keep any
+  fallback copy local to the function being migrated.
+- Tests: perform command tests, kill-file command tests, and score
+  command tests.
+
+#### CSTR-299 - Response Command And File Scratch Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: shared command and file-copy buffer.
+- Function: response command handling and temporary header/body copy
+  paths.
+- Dependencies: CSTR-298.
+- Change: separate response command text from file-copy line storage.
+  Use owned strings for command parsing and owner-specific buffers for
+  file copy paths; do not store either in `g_buf`.
+- Tests: response command tests and saved-header/body output tests.
 
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
+
+#### CSTR-301 - Remove Global `g_buf`
+
+- Files: `config/common.cpp`, `config/include/config/common.h`, all
+  remaining production users.
+- Kind: final global storage removal.
+- Function: `g_buf`.
+- Dependencies: CSTR-288 through CSTR-300.
+- Change: delete the global command buffer after all remaining users own
+  their storage locally.  Do not replace it with another global string.
+- Tests: full build and full test workflow.
