@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-320 - Killfile THRU Article Parse
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `do_kill_file`.
-- Dependencies: none.
-- Change: parse the THRU article number from a bounded view after the rc
-  name with `std::from_chars`; remove pointer-offset `std::atol`.
-- Tests: kill-file THRU tests.
-
 #### CSTR-321 - Cache Header Counts Parse
 
 - Files: `libtrn/cache.cpp`.

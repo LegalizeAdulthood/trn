@@ -209,7 +209,10 @@ static int do_kill_file(std::FILE *kfp, int entering)
             {
                 continue;
             }
-            g_kill_first = ArticleNum{std::atol(thru_args.data() + len + 1) + 1};
+            const std::string_view article_text = skip_leading_space(thru_args.substr(len));
+            long                   article_num{};
+            (void) std::from_chars(article_text.data(), article_text.data() + article_text.size(), article_num);
+            g_kill_first = ArticleNum{article_num + 1};
             g_kill_first = std::max(g_kill_first, g_first_art);
             if (g_kill_first > g_last_art)
             {

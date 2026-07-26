@@ -46,6 +46,7 @@ protected:
         m_old_msg_id_hash = g_msg_id_hash;
         m_old_article_list = g_article_list;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
+        m_old_kill_first = g_kill_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
         m_old_force_last = g_force_last;
@@ -78,6 +79,7 @@ protected:
         g_msg_id_hash = hash_create(17, msg_id_cmp);
         g_article_list.clear();
         g_newsgroup_ptr = nullptr;
+        g_kill_first = ArticleNum{};
         g_first_art = ArticleNum{};
         g_last_art = ArticleNum{};
         g_force_last = false;
@@ -112,6 +114,7 @@ protected:
         g_msg_id_hash = m_old_msg_id_hash;
         g_article_list = m_old_article_list;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
+        g_kill_first = m_old_kill_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
         g_force_last = m_old_force_last;
@@ -150,6 +153,7 @@ protected:
     HashTable                    *m_old_msg_id_hash{};
     std::map<ArticleNum, Article> m_old_article_list;
     NewsgroupData                *m_old_newsgroup_ptr{};
+    ArticleNum                    m_old_kill_first{};
     ArticleNum                    m_old_first_art{};
     ArticleNum                    m_old_last_art{};
     bool                          m_old_force_last{};
@@ -244,6 +248,36 @@ TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
     (void) testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("THRU news.example 42\n<case@example.com> T+\n", file_contents(kill_file));
+}
+
+TEST_F(KillFileEditTest, enteringLocalKillFileParsesThruArticleNumber)
+{
+    const fs::path    kill_file = m_output_dir / "local-thru" / "KILL";
+    const std::string kill_file_name = kill_file.generic_string();
+    const fs::path    global_kill_file = m_output_dir / "global-thru" / "KILL";
+    const std::string global_kill_file_name = global_kill_file.generic_string();
+
+    fs::create_directories(kill_file.parent_path());
+    std::ofstream{kill_file} << "THRU news.example  12junk\n";
+
+    Newsrc newsrc{};
+    newsrc.name = "news.example";
+    NewsgroupData newsgroup{};
+    newsgroup.m_rc = &newsrc;
+    newsgroup.m_to_read = ArticleUnread{1};
+    g_newsgroup_ptr = &newsgroup;
+    g_first_art = ArticleNum{1};
+    g_last_art = ArticleNum{42};
+
+    m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
+    m_env.expect_env_repeatedly("KILLGLOBAL", global_kill_file_name.c_str());
+    open_kill_file(KF_LOCAL);
+
+    testing::internal::CaptureStdout();
+    kill_unwanted(ArticleNum{1}, "", true);
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(13, g_kill_first.value_of());
 }
 
 TEST_F(KillFileEditTest, editLocalKillFileAppliesThreadCommand)
