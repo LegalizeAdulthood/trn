@@ -725,11 +725,25 @@ bool check_ini_cond(std::string_view cond)
         cond_cursor.remove_prefix(1);
     }
     cond_cursor.remove_prefix(std::min(cond_cursor.find_first_not_of(" \t\n\r\f\v"), cond_cursor.size()));
+    const auto parse_condition_number = [](std::string_view number_text)
+    {
+        number_text.remove_prefix(std::min(number_text.find_first_not_of(" \t\n\r\f\v"), number_text.size()));
+        if (!number_text.empty() && number_text.front() == '+')
+        {
+            if (number_text.size() == 1 || !std::isdigit(static_cast<unsigned char>(number_text[1])))
+            {
+                return 0;
+            }
+            number_text.remove_prefix(1);
+        }
+        int value{};
+        (void) std::from_chars(number_text.data(), number_text.data() + number_text.size(), value);
+        return value;
+    };
     if (upordown)
     {
-        const std::string right_text{cond_cursor};
-        const int         num = std::atoi(right_text.c_str()) - std::atoi(condition_text.c_str());
-        const bool        comparison = (equal && num == 0) || (upordown * num < 0);
+        const int  num = parse_condition_number(cond_cursor) - parse_condition_number(condition_text);
+        const bool comparison = (equal && num == 0) || (upordown * num < 0);
         if (comparison == negate)
         {
             return false;

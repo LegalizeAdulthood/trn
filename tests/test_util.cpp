@@ -431,3 +431,22 @@ TEST(SecsToTextTest, formatsCompositeIntervals)
     EXPECT_EQ(std::string{"1 day, 2 hours, 3 minutes"}, secs_to_text(93780));
     EXPECT_EQ(std::string{"2 days, 1 hour"}, secs_to_text(176400));
 }
+
+TEST(CheckIniCondTest, comparesNumbers)
+{
+    EXPECT_TRUE(check_ini_cond("5 > 3"));
+    EXPECT_FALSE(check_ini_cond("5 < 3"));
+    EXPECT_TRUE(check_ini_cond("5 >= 5"));
+}
+
+TEST(CheckIniCondTest, handlesNegatedNumericCompare)
+{
+    EXPECT_TRUE(check_ini_cond("5!<3"));
+    EXPECT_FALSE(check_ini_cond("5!>3"));
+}
+
+TEST(CheckIniCondTest, keepsAtoiStyleNumericLenience)
+{
+    EXPECT_TRUE(check_ini_cond(" 5 > 3junk"));
+    EXPECT_TRUE(check_ini_cond("+5 > 3"));
+}

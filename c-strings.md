@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-317 - INI Condition Numeric Parse
-
-- Files: `libtrn/util.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `check_ini_cond`.
-- Dependencies: none.
-- Change: parse numeric operands from `condition_text` and
-  `cond_cursor` with `std::from_chars`; remove the temporary string made
-  only for `std::atoi`.
-- Tests: INI condition tests.
-
 #### CSTR-318 - Local Active Times Parse
 
 - Files: `libtrn/addng.cpp`.
