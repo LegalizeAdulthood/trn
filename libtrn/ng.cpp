@@ -321,7 +321,8 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             {
                 g_art = g_curr_art;
                 g_artp = g_curr_artp;
-                std::strcpy(g_buf, "+");
+                g_buf[0] = '+';
+                g_buf[1] = '\0';
                 goto article_level;
             }
             count_subjects(CS_RETAIN);

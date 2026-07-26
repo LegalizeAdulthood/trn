@@ -517,9 +517,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Article display/copy paths now use `std::string` for the shared
   article line.  The low-level `read_art(char *, int)` API remains for
   protocol/body buffers and local fixed-size output loops.
-- The remaining direct `strcpy` hit is the `do_newsgroup` fake-command
-  update tracked by CSTR-272.  No active `strncpy`, `strcmp`,
-  `std::sprintf`, or `gets` production hits remain in this scan.
+- No active `strcpy`, `strncpy`, `strcmp`, `std::sprintf`, or `gets`
+  production hits remain in this scan.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
   values or cross C `FILE*` APIs.
@@ -531,7 +530,6 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Copy and concatenation: `strcpy` 1.
 - Search and length: `strchr` 39, `strstr` 2, `strlen` 23.
 - C line input: `fgets` 17.
 - C text output: `fputs` 169, `printf`/`std::printf` 329,
@@ -539,10 +537,10 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 - Character output: `putchar`/`std::putchar` 77.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
-The scan found no current production hits for `strncpy`, `strcat`,
-`strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`, `strcspn`,
-`strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`,
-`vsnprintf`, `gets`, `puts`, `memmove`, or `memchr`.
+The scan found no current production hits for `strcpy`, `strncpy`,
+`strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
+`strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
+`vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, or `memchr`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -561,19 +559,6 @@ build on.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-272 - Newsgroup Fake Command Copy
-
-- Files: `libtrn/ng.cpp`.
-- Kind: direct C string copy into shared command buffer.
-- Function: `do_newsgroup`.
-- Dependencies: none.
-- Change: replace `std::strcpy(g_buf, "+")` with explicit command-byte
-  setup, or use a local command value if the nearby control flow already
-  supports it.  Preserve the selected-only end-of-group branch and do not
-  reorder the jump into `article_level`.
-- Tests: newsgroup selected-only/end-of-group behavior; add current
-  behavior coverage first if no focused coverage exists.
 
 ### Tier 1 - Helper And API Foundations
 
