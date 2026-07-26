@@ -53,6 +53,16 @@ std::vector<std::string> read_lines(const fs::path &path)
     return lines;
 }
 
+std::vector<std::string> ordered_newsgroup_names()
+{
+    std::vector<std::string> names;
+    for (NewsgroupData *group : g_newsgroup_order)
+    {
+        names.emplace_back(group->rc_name());
+    }
+    return names;
+}
+
 class NewsrcRotationTest : public testing::Test
 {
 protected:
@@ -247,6 +257,12 @@ protected:
         NewsgroupData &group = g_newsgroup_data.emplace_back();
         group.m_rc = &newsrc;
         group.m_rc_line = std::move(line);
+        const std::size_t delimiter = group.m_rc_line.find_first_of(":!");
+        if (delimiter != std::string::npos)
+        {
+            group.m_num_offset = static_cast<int>(delimiter + 1);
+            group.m_subscribe_char = group.m_rc_line[delimiter];
+        }
         append_newsgroup_order(&group);
         g_newsgroup_count = NewsgroupNum{static_cast<long>(g_newsgroup_data.size())};
     }
@@ -457,6 +473,53 @@ TEST_F(NewsrcRotationTest, abandonNewsgroupRestoresMatchingOldNewsrcLine)
     EXPECT_EQ("comp.lang.apl: 2-9", group.m_rc_line);
     EXPECT_EQ(':', group.m_subscribe_char);
     EXPECT_EQ(ArticleNum{42}, group.m_abs_first);
+}
+
+TEST_F(NewsrcRotationTest, relocateNewsgroupMovesToPromptedNumber)
+{
+    Newsrc newsrc = make_newsrc();
+    g_newsgroup_data.reserve(3);
+    g_newsgroup_order.reserve(3);
+    add_newsgroup(newsrc, "comp.lang.apl: 1-3");
+    add_newsgroup(newsrc, "comp.lang.c++: 1-2");
+    add_newsgroup(newsrc, "comp.lang.python: 1");
+    NewsgroupData *group = g_newsgroup_order[2];
+
+    push_string("0\n", 0200);
+    testing::internal::CaptureStdout();
+    const bool        relocated = group->relocate_newsgroup(NewsgroupNum{-1});
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(relocated);
+    EXPECT_THAT(ordered_newsgroup_names(), testing::ElementsAre("comp.lang.python", "comp.lang.apl", "comp.lang.c++"));
+    EXPECT_NE(std::string::npos, output.find("\nPut newsgroup where? [$^.Lq] 0"));
+}
+
+TEST_F(NewsrcRotationTest, relocateNewsgroupMovesAfterNamedGroup)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path};
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl: 1-3\n"
+                               << "comp.lang.c++: 1-2\n"
+                               << "comp.lang.python: 1\n";
+    ASSERT_TRUE(multirc.use_multirc());
+
+    NewsgroupData *group = g_newsgroup_order[0];
+    push_string("+comp.lang.c++\n", 0200);
+    testing::internal::CaptureStdout();
+    const bool        relocated = group->relocate_newsgroup(NewsgroupNum{-1});
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(relocated);
+    EXPECT_THAT(ordered_newsgroup_names(), testing::ElementsAre("comp.lang.c++", "comp.lang.apl", "comp.lang.python"));
+    EXPECT_NE(std::string::npos, output.find("\nPut newsgroup where? [$^.Lq] +comp.lang.c++"));
+    unuse_multirc(&multirc);
 }
 
 TEST_F(NewsrcRotationTest, rcstuffInitCreatesCompanionPathsFromNewsrcName)

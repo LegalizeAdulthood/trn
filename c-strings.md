@@ -590,19 +590,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-289 - Newsgroup Relocation Prompt Input
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: terminal command buffer caller and local parser.
-- Function: `NewsgroupData::relocate_newsgroup`.
-- Dependencies: none.
-- Change: read relocation input into a local `std::string`, apply the
-  default command locally, and parse the result without relying on
-  `g_buf`.  Convert numeric parsing and `+`/`-` newsgroup lookup to use
-  views into that local string.
-- Tests: newsrc relocation tests if focused coverage exists; otherwise
-  add current behavior coverage first.
-
 #### CSTR-300 - Miscellaneous Line Input Buffers
 
 - Files: `libtrn/cache.cpp`, `libtrn/datasrc.cpp`.
@@ -693,7 +680,7 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-289 through CSTR-292 and CSTR-294 through
+- Dependencies: CSTR-290 through CSTR-292 and CSTR-294 through
   CSTR-295.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
@@ -749,7 +736,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-289 through CSTR-292 and CSTR-294 through
+- Dependencies: CSTR-290 through CSTR-292 and CSTR-294 through
   CSTR-300.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.

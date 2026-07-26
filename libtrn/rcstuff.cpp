@@ -27,9 +27,11 @@
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/size_cast.h>
+#include <trn/smisc.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
+#include <trn/univ.h>
 #include <trn/util.h>
 #include <util/env.h>
 #include <util/util2.h>
@@ -1301,9 +1303,46 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
     return np;
 }
 
+static void stage_relocation_command(std::string_view command)
+{
+    const std::size_t copy_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN - 1));
+    std::copy_n(command.begin(), copy_size, g_buf);
+    g_buf[copy_size] = '\0';
+}
+
+static std::string finish_relocation_command(std::string_view command)
+{
+    stage_relocation_command(command);
+    if (!finish_command(true))
+    {
+        return {};
+    }
+    return g_buf;
+}
+
+static void print_relocation_command(std::string_view command)
+{
+    if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
+    {
+        char command_text[2]{command.front(), '\0'};
+        if (!at_norm_char(command_text))
+        {
+            std::putchar('^');
+            std::putchar((command.front() & 0x7F) | 64);
+            backspace();
+            backspace();
+        }
+        else
+        {
+            std::putchar(command.front());
+            backspace();
+        }
+        std::fflush(stdout);
+    }
+}
+
 bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
 {
-    NewsgroupData    *np;
     const char       *dflt = (this != g_current_newsgroup ? "$^.Lq" : "$^Lq");
     SelectionSortMode save_sort = g_sel_sort;
 
@@ -1357,14 +1396,25 @@ reask_reloc:
         term_down(1);
 reinp_reloc:
         eat_typeahead();
-        get_cmd(g_buf);
-        if (errno || *g_buf == '\f')    // if return from stop signal
+        std::string command = get_cmd();
+        char        command_char = command.empty() ? '\0' : command.front();
+        if (errno || command_char == '\f')    // if return from stop signal
         {
             goto reask_reloc;           // give them a prompt again
         }
-        set_def(g_buf,dflt);
-        print_cmd();
-        if (*g_buf == 'h')
+        g_s_default_cmd = false;
+        g_univ_default_cmd = false;
+        if (command_char == ' ' || command_char == '\n' || command_char == '\r')
+        {
+            g_s_default_cmd = true;
+            g_univ_default_cmd = true;
+            command.clear();
+            command.push_back(*dflt ? *dflt : '\0');
+            command.push_back(FINISH_CMD);
+            command_char = command.empty() ? '\0' : command.front();
+        }
+        print_relocation_command(command);
+        if (command_char == 'h')
         {
             if (g_verbose)
             {
@@ -1399,57 +1449,61 @@ reinp_reloc:
             term_down(10);
             goto reask_reloc;
         }
-        else if (*g_buf == 'q')
+        else if (command_char == 'q')
         {
             return false;
         }
-        else if (*g_buf == 'L')
+        else if (command_char == 'L')
         {
             newline();
             list_newsgroups();
             goto reask_reloc;
         }
-        else if (std::isdigit(*g_buf))
+        else if (std::isdigit(static_cast<unsigned char>(command_char)))
         {
-            if (!finish_command(true))  // get rest of command
+            const std::string full_command = finish_relocation_command(command);
+            if (full_command.empty()) // get rest of command
             {
                 goto reinp_reloc;
             }
-            newnum = NewsgroupNum{std::atol(g_buf)};
+            newnum = NewsgroupNum{std::atol(full_command.c_str())};
             newnum = std::max(newnum, NewsgroupNum{});
             if (newnum >= g_newsgroup_count)
             {
                 newnum = newsgroup_before(g_newsgroup_count);
             }
         }
-        else if (*g_buf == '^')
+        else if (command_char == '^')
         {
             newline();
             newnum = NewsgroupNum{};
         }
-        else if (*g_buf == '$')
+        else if (command_char == '$')
         {
             newnum = newsgroup_before(g_newsgroup_count);
         }
-        else if (*g_buf == '.')
+        else if (command_char == '.')
         {
             newline();
             newnum = g_current_newsgroup->m_num;
         }
-        else if (*g_buf == '-' || *g_buf == '+')
+        else if (command_char == '-' || command_char == '+')
         {
-            if (!finish_command(true))  // get rest of command
+            const std::string full_command = finish_relocation_command(command);
+            if (full_command.empty()) // get rest of command
             {
                 goto reinp_reloc;
             }
-            np = find_newsgroup(g_buf+1);
+            std::string_view group_name{full_command};
+            group_name.remove_prefix(1);
+            NewsgroupData *np = find_newsgroup(group_name);
             if (np == nullptr)
             {
                 std::fputs("Not found.",stdout);
                 goto reask_reloc;
             }
             newnum = np->m_num;
-            if (*g_buf == '+')
+            if (command_char == '+')
             {
                 ++newnum;
             }
