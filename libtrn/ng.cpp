@@ -569,7 +569,6 @@ article_level:
                 goto cleanup;
 
             case SA_FAKE:
-                g_last_char = g_buf[0];  // needed for fake to work
                 break;                  // fall through to art_switch
             }
         }

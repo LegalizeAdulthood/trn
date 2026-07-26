@@ -134,6 +134,17 @@ TEST_F(ScanCommandTest, jumpNumberPushesBackCommandAfterFirstDigit)
     EXPECT_EQ('x', command.front());
 }
 
+TEST_F(ScanCommandTest, finishCommandCompletesCommandText)
+{
+    push_string("topic\n", 0200);
+
+    testing::internal::CaptureStdout();
+    const std::string command = s_finish_cmd("", "/");
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("/topic", command);
+}
+
 TEST_F(ScanCommandTest, subjectDescriptionShortensReplyPrefix)
 {
     Article *article = article_ptr(ArticleNum{1});

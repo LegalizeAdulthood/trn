@@ -9,10 +9,11 @@
 
 #include <config/config2.h>
 
+#include <string>
 #include <string_view>
 
 void s_go_bot();
-int s_finish_cmd(std::string_view prompt);
+std::string s_finish_cmd(std::string_view prompt, std::string_view command);
 int s_cmd_loop();
 
 #endif

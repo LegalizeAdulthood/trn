@@ -28,26 +28,77 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <cctype>
+#include <charconv>
 #include <cstdio>
 #include <cstring>
-static void sa_art_cmd_prim(SaCommand cmd, long a);
-static int  sa_art_cmd(int multiple, SaCommand cmd, long a);
-static long sa_wrap_next_author(long a);
+#include <string>
+#include <string_view>
+
+static char             sa_command_char(std::string_view command);
+static std::string_view sa_command_argument(std::string_view command);
+static int              sa_parse_int_argument(std::string_view argument);
+static bool             sa_argument_is_zero(std::string_view argument);
+static void             sa_art_cmd_prim(SaCommand cmd, long a);
+static int              sa_art_cmd(int multiple, SaCommand cmd, long a);
+static long             sa_wrap_next_author(long a);
+
+static char sa_command_char(std::string_view command)
+{
+    return command.empty() ? '\0' : command.front();
+}
+
+static std::string_view sa_command_argument(std::string_view command)
+{
+    if (command.size() < 2)
+    {
+        return {};
+    }
+    return command.substr(1);
+}
+
+static bool sa_argument_is_zero(std::string_view argument)
+{
+    if (argument.empty())
+    {
+        return false;
+    }
+    return argument.front() == '0' ||
+           ((argument.front() == '+' || argument.front() == '-') && argument.size() > 1 && argument[1] == '0');
+}
+
+static int sa_parse_int_argument(std::string_view argument)
+{
+    std::string_view text = argument;
+    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.front())))
+    {
+        text.remove_prefix(1);
+    }
+    if (!text.empty() && text.front() == '+')
+    {
+        text.remove_prefix(1);
+    }
+
+    int value{};
+    std::from_chars(text.data(), text.data() + text.size(), value);
+    return value;
+}
 
 // several basic commands are already done by s_docmd (Scan level)
-// interprets command in g_buf, returning 0 to continue looping,
+// interprets command, returning 0 to continue looping,
 // a condition code (negative #s) or an art# to read.  Also responsible
 // for setting refresh flags if necessary.
 //
-int sa_do_cmd()
+int sa_do_cmd(std::string_view command)
 {
     long    b; // misc. artnum
     int     i; // for misc. purposes
 
     long    a = (long)g_page_ents[g_s_ptr_page_line].ent_num;
     ArticleNum artnum = g_sa_ents[a].artnum;
+    const char command_ch = sa_command_char(command);
 
-    switch (*g_buf)
+    switch (command_ch)
     {
     case '+': // enter thread selector
         if (!g_threaded_group)
@@ -55,25 +106,24 @@ int sa_do_cmd()
             s_beep();
             return 0;
         }
-        g_buf[0] = '+'; // fake up command for return
-        g_buf[1] = '\0';
+        g_last_char = '+';
         g_sa_art = artnum; // give it somewhere to point
         s_save_context();       // for possible later changes
         return SA_FAKE; // fake up the command.
 
     case 'K': // kill below a threshold
-        *g_buf = ' ';                           // for finish_cmd()
-        if (!s_finish_cmd("Kill below or equal score:"))
+    {
+        const std::string full_command = s_finish_cmd("Kill below or equal score:", " ");
+        if (full_command.empty())
         {
             break;
         }
+        const std::string_view argument = sa_command_argument(full_command);
         // make **sure** that there is a number here
-        i = std::atoi(g_buf+1);
+        i = sa_parse_int_argument(argument);
         if (i == 0)
         {
-            // it might not be a number
-            char *s = g_buf + 1;
-            if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0'))
+            if (!sa_argument_is_zero(argument))
             {
                 // text was not a numeric 0
                 s_beep();
@@ -84,6 +134,7 @@ int sa_do_cmd()
         g_s_refill = true;
         g_s_ref_top = true;     // refresh # of articles
         break;
+    }
 
     case 'D': // kill unmarked "on" page
         for (int j = 0; j <= g_s_bot_ent; j++)
@@ -132,12 +183,14 @@ int sa_do_cmd()
         break;
 
     case 'X': // kill unmarked (basic-eligible) in group
-        *g_buf = '?';                           // for finish_cmd()
-        if (!s_finish_cmd("Junk all unmarked articles"))
+    {
+        const std::string full_command = s_finish_cmd("Junk all unmarked articles", "?");
+        if (full_command.empty())
         {
             break;
         }
-        if ((g_buf[1] != 'Y') && (g_buf[1] != 'y'))
+        const std::string_view argument = sa_command_argument(full_command);
+        if (argument.empty() || (argument.front() != 'Y' && argument.front() != 'y'))
         {
             break;
         }
@@ -190,6 +243,7 @@ int sa_do_cmd()
         g_s_refill = true;
         g_s_ref_top = true;     // refresh # of articles
         break;
+    }
 
     case 'c': // catchup
         s_go_bot();
@@ -469,18 +523,18 @@ int sa_do_cmd()
         break;
 
     case 'G': // go to article number
-        *g_buf = ' ';                           // for finish_cmd()
-        if (!s_finish_cmd("Goto article:"))
+    {
+        const std::string full_command = s_finish_cmd("Goto article:", " ");
+        if (full_command.empty())
         {
             break;
         }
+        const std::string_view argument = sa_command_argument(full_command);
         // make **sure** that there is a number here
-        i = std::atoi(g_buf+1);
+        i = sa_parse_int_argument(argument);
         if (i == 0)
         {
-            // it might not be a number
-            char *s = g_buf + 1;
-            if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0'))
+            if (!sa_argument_is_zero(argument))
             {
                 // text was not a numeric 0
                 s_beep();
@@ -489,6 +543,7 @@ int sa_do_cmd()
         }
         g_sa_art = ArticleNum{i};
         return SA_READ;                 // special code to really return
+    }
 
     case 'N': // next newsgroup
         return SA_NEXT;
@@ -524,7 +579,7 @@ int sa_do_cmd()
     case 'm': // toggle mark on one article
     case 'M': // toggle mark on thread
         s_rub_ptr();
-        (void)sa_art_cmd((*g_buf == 'M'),SA_MARK,a);
+        (void)sa_art_cmd((command_ch == 'M'),SA_MARK,a);
         if (!g_sa_mark_stay)
         {
             // go to next art on page or top of page if at bottom
@@ -545,7 +600,7 @@ int sa_do_cmd()
         {
             s_rub_ptr();
         }
-        (void)sa_art_cmd((*g_buf == 'S'),SA_SELECT,a);
+        (void)sa_art_cmd((command_ch == 'S'),SA_SELECT,a);
         // if in zoom mode, selection will remove article(s) from the
         // page, so that moving the cursor down is unnecessary
         if (!g_sa_mark_stay && !g_sa_mode_zoom)
@@ -566,39 +621,41 @@ int sa_do_cmd()
         break;
 
     case '"':                 // append to local SCORE file
+    {
         s_go_bot();
         g_s_ref_all = true;
         std::printf("Enter score append command or type RETURN for a menu\n");
-        g_buf[0] = ':';
-        g_buf[1] = FINISH_CMD;
-        if (!finish_command(false))
+        const std::string full_command = finish_command(":", false);
+        if (full_command.empty())
         {
             break;
         }
         std::printf("\n");
         sa_go_art(artnum);
-        sc_append(g_buf+1);
+        sc_append(sa_command_argument(full_command));
         (void)get_anything();
         eat_typeahead();
         break;
+    }
 
     case '\'':                        // execute scoring command
+    {
         s_go_bot();
         g_s_ref_all = true;
         std::printf("\nEnter scoring command or type RETURN for a menu\n");
-        g_buf[0] = ':';
-        g_buf[1] = FINISH_CMD;
-        if (!finish_command(false))
+        const std::string full_command = finish_command(":", false);
+        if (full_command.empty())
         {
             break;
         }
         std::printf("\n");
         sa_go_art(artnum);
-        sc_score_cmd(g_buf+1);
+        sc_score_cmd(sa_command_argument(full_command));
         g_s_ref_all = true;
         (void)get_anything();
         eat_typeahead();
         break;
+    }
 
     default:
         s_beep();

@@ -7,6 +7,8 @@
 #ifndef TRN_SACMD_H
 #define TRN_SACMD_H
 
+#include <string_view>
+
 enum SaCommand
 {
     SA_KILL = 1,
@@ -16,6 +18,6 @@ enum SaCommand
     SA_KILL_MARKED = 5
 };
 
-int sa_do_cmd();
+int sa_do_cmd(std::string_view command);
 
 #endif

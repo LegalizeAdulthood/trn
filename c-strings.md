@@ -590,19 +590,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-292 - Scan Selector Command Loop Input
-
-- Files: `libtrn/scmd.cpp`, `libtrn/sacmd.cpp`.
-- Kind: terminal command buffer caller and command dispatcher.
-- Function: `s_cmd_loop`, `s_do_cmd`, and `sa_do_cmd`.
-- Dependencies: none.
-- Change: move the scan selector command loop from shared `g_buf`
-  command state to a local command string or command character.  Update
-  `s_do_cmd` and `sa_do_cmd` together only if their shared contract
-  requires it.
-- Tests: scan selector command tests, including resize refresh and
-  article selector delegation.
-
 #### CSTR-294 - Newsgroup Article Command Input
 
 - Files: `libtrn/ng.cpp`.
@@ -638,7 +625,7 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-292 and CSTR-294 through CSTR-295.
+- Dependencies: CSTR-294 through CSTR-295.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -664,7 +651,7 @@ and clarified ownership at the edges.
 - Kind: shared command scratch buffer.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
-- Dependencies: CSTR-292 and CSTR-294 through CSTR-297.
+- Dependencies: CSTR-294 through CSTR-297.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -694,7 +681,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-292 and CSTR-294 through CSTR-299.
+- Dependencies: CSTR-294 through CSTR-299.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

@@ -20,7 +20,6 @@
 #include <trn/smisc.h>
 #include <trn/sorder.h>
 #include <trn/spage.h>
-#include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/univ.h>
 
@@ -31,14 +30,16 @@
 #include <string>
 #include <string_view>
 
-static void s_look_ahead();
-static int  s_do_cmd();
-static void s_set_search_text(std::string_view search_text);
-static bool s_match_description(long ent);
-static long s_forward_search(long ent);
-static long s_backward_search(long ent);
-static void s_search();
-static void s_jump_num(char_int firstchar);
+static void             s_look_ahead();
+static int              s_do_cmd(std::string_view command);
+static char             s_command_char(std::string_view command);
+static std::string_view s_command_argument(std::string_view command);
+static void             s_set_search_text(std::string_view search_text);
+static bool             s_match_description(long ent);
+static long             s_forward_search(long ent);
+static long             s_backward_search(long ent);
+static void             s_search(std::string_view command);
+static void             s_jump_num(char_int firstchar);
 
 void s_go_bot()
 {
@@ -50,7 +51,7 @@ void s_go_bot()
 
 // finishes a command on the bottom line...
 // returns true if command entered, false if wiped out...
-int s_finish_cmd(std::string_view prompt)
+std::string s_finish_cmd(std::string_view prompt, std::string_view command)
 {
     s_go_bot();
     if (!prompt.empty())
@@ -58,8 +59,11 @@ int s_finish_cmd(std::string_view prompt)
         fmt::print("{}", prompt);
         std::fflush(stdout);
     }
-    g_buf[1] = FINISH_CMD;
-    return finish_command(false);       // do not echo newline
+    if (command.empty())
+    {
+        return {};
+    }
+    return finish_command(command.substr(0, 1), false); // do not echo newline
 }
 
 // returns an entry # selected, S_QUIT, or S_ERR
@@ -76,31 +80,29 @@ int s_cmd_loop()
         s_place_ptr();          // place article pointer
         g_bos_on_stop = true;
         s_look_ahead();          // do something useful while waiting
-        get_cmd(g_buf);
+        std::string command = get_cmd();
         g_bos_on_stop = false;
         eat_typeahead();        // stay in control.
         // check for window resizing and refresh
         // if window is resized, refill and redraw
         if (g_s_resized)
         {
-            char ch = *g_buf;
             i = s_fill_page();
             if (i == -1 || i == 0)      // can't fillpage
             {
                 return S_QUIT;
             }
-            *g_buf = Ctl('l');
-            (void)s_do_cmd();
-            *g_buf = ch;
+            const char refresh_command = Ctl('l');
+            (void)s_do_cmd(std::string_view{&refresh_command, 1});
             g_s_resized = false;                // dealt with
         }
-        i = s_do_cmd();
+        i = s_do_cmd(command);
         if (i == S_NOT_FOUND)    // command not in common set
         {
             switch (g_s_cur_type)
             {
             case S_ART:
-                i = sa_do_cmd();
+                i = sa_do_cmd(command);
                 break;
 
             default:
@@ -138,20 +140,21 @@ static void s_look_ahead()
 }
 
 // Do some simple, common Scan commands for any mode
-// Interprets command in g_buf, returning 0 to continue looping or
+// Interprets command, returning 0 to continue looping or
 // a condition code (negative #s).  Responsible for setting refresh flags
 // if necessary.
 //
-static int s_do_cmd()
+static int s_do_cmd(std::string_view command)
 {
     bool flag; // misc
 
     long a = g_page_ents[g_s_ptr_page_line].ent_num;
-    if (*g_buf == '\f') // map form feed to ^l
+    char command_ch = s_command_char(command);
+    if (command_ch == '\f') // map form feed to ^l
     {
-        *g_buf = Ctl('l');
+        command_ch = Ctl('l');
     }
-    switch (*g_buf)
+    switch (command_ch)
     {
     case 'j':         // vi mode
         if (!g_s_mode_vi)
@@ -310,12 +313,12 @@ static int s_do_cmd()
     case '/':
     case '?':
     case 'g':         // goto (search for) group
-        s_search();
+        s_search(command);
         break;
 
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-        s_jump_num(*g_buf);
+        s_jump_num(command_ch);
         break;
 
     case '#':         // Toggle item numbers
@@ -344,6 +347,20 @@ static int s_do_cmd()
 
 static std::string s_search_text;
 static bool        s_search_init{};
+
+static char s_command_char(std::string_view command)
+{
+    return command.empty() ? '\0' : command.front();
+}
+
+static std::string_view s_command_argument(std::string_view command)
+{
+    if (command.size() < 2)
+    {
+        return {};
+    }
+    return command.substr(1);
+}
 
 bool scmd_match_description_for_test(long ent, std::string_view search_text)
 {
@@ -431,10 +448,11 @@ static long s_backward_search(long ent)
 }
 
 // perhaps later have a wraparound search?
-static void s_search()
+static void s_search(std::string_view command)
 {
     int         fill_type; // 0: forward, 1: backward
     const char *error_msg;
+    const char  command_ch = s_command_char(command);
 
     if (!s_search_init)
     {
@@ -442,17 +460,22 @@ static void s_search()
         s_search_text.clear();
     }
     s_rub_ptr();
-    g_buf[1] = '\0';
-    if (!s_finish_cmd(""))
+    const std::string full_command = s_finish_cmd("", std::string_view{&command_ch, 1});
+    if (full_command.empty())
     {
         return;
     }
-    if (g_buf[1])       // new text
+    const std::string_view argument = s_command_argument(full_command);
+    if (!argument.empty()) // new text
     {
         // make leading space skip an option later?
         // (it isn't too important because substring matching is used)
-        char *s = skip_eq(g_buf + 1, ' '); // skip leading spaces
-        s_set_search_text(s);
+        std::string_view search_text = argument;
+        while (!search_text.empty() && search_text.front() == ' ')
+        {
+            search_text.remove_prefix(1);
+        }
+        s_set_search_text(search_text);
     }
     if (s_search_text.empty())
     {
@@ -466,7 +489,7 @@ static void s_search()
     std::printf("Searching for %s",s_search_text.c_str());
     std::fflush(stdout);
     long ent = g_page_ents[g_s_ptr_page_line].ent_num;
-    switch (*g_buf)
+    switch (command_ch)
     {
     case '/':
         error_msg = "No matches forward from current point.";
