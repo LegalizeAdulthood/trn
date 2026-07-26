@@ -725,7 +725,7 @@ static bool open_newsrc(Newsrc *rp)
             term_down(2);
             return false;
         }
-        const char *some_buf = SUBSCRIPTIONS;
+        constexpr std::string_view subscriptions{SUBSCRIPTIONS};
         if ((rp->data_source->m_flags & DF_REMOTE) //
             && nntp_list("SUBSCRIPTIONS", "") == 1)
         {
@@ -739,13 +739,14 @@ static bool open_newsrc(Newsrc *rp)
                 fmt::print(rcfp, "{}\n", subscription_line);
             }
         }
-        else if (*some_buf)
+        else if (!subscriptions.empty())
         {
-            if (std::FILE *fp = std::fopen(file_exp(some_buf).c_str(), "r"))
+            if (std::FILE *fp = std::fopen(file_exp(subscriptions).c_str(), "r"))
             {
-                while (std::fgets(g_buf, sizeof g_buf, fp))
+                for (std::string subscription_line = get_a_line(fp); !subscription_line.empty();
+                     subscription_line = get_a_line(fp))
                 {
-                    std::fputs(g_buf, rcfp);
+                    fmt::print(rcfp, "{}", subscription_line);
                 }
                 std::fclose(fp);
             }
@@ -898,15 +899,21 @@ static bool open_newsrc(Newsrc *rp)
         std::FILE *info = std::fopen(rp->info_name.string().c_str(), "r");
         if (info != nullptr)
         {
-            if (std::fgets(g_buf, sizeof g_buf, info) != nullptr)
+            const std::string info_line = get_a_line(info);
+            if (!info_line.empty())
             {
-                long actnum;
-                long descnum;
-                g_buf[std::strlen(g_buf)-1] = '\0';
-                char *s = std::strchr(g_buf, ':');
-                if (s != nullptr && s[1] == ' ' && s[2])
+                long             actnum;
+                long             descnum;
+                std::string_view last_group_line{info_line};
+                if (last_group_line.back() == '\n')
                 {
-                    g_last_newsgroup_name = s+2;
+                    last_group_line.remove_suffix(1);
+                }
+                const std::size_t separator = last_group_line.find(':');
+                if (separator != std::string_view::npos && separator + 2 < last_group_line.size() &&
+                    last_group_line[separator + 1] == ' ')
+                {
+                    g_last_newsgroup_name = last_group_line.substr(separator + 2);
                 }
                 if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
                                 &g_last_new_time, &actnum, &descnum) == 3)

@@ -6,6 +6,7 @@
 #include <trn/final.h>
 #include <trn/hash.h>
 #include <trn/init.h>
+#include <trn/last.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
@@ -89,6 +90,10 @@ protected:
         m_old_verify = g_verify;
         m_old_pid = g_our_pid;
         m_old_local_host = g_local_host;
+        m_old_last_newsgroup_name = g_last_newsgroup_name;
+        m_old_last_new_time = g_last_new_time;
+        m_old_last_active_size = g_last_active_size;
+        m_old_last_extra_num = g_last_extra_num;
         m_old_general_mode = g_general_mode;
         m_old_mode = g_mode;
         m_old_check_flag = g_check_flag;
@@ -142,6 +147,10 @@ protected:
         g_verify = false;
         g_our_pid = 2468;
         g_local_host = "test-host";
+        g_last_newsgroup_name.clear();
+        g_last_new_time = 0;
+        g_last_active_size = 0;
+        g_last_extra_num = 0;
         g_general_mode = GM_READ;
         g_mode = MM_NONE;
         g_int_count = 0;
@@ -205,6 +214,10 @@ protected:
         g_verify = m_old_verify;
         g_our_pid = m_old_pid;
         g_local_host = m_old_local_host;
+        g_last_newsgroup_name = m_old_last_newsgroup_name;
+        g_last_new_time = m_old_last_new_time;
+        g_last_active_size = m_old_last_active_size;
+        g_last_extra_num = m_old_last_extra_num;
         g_general_mode = m_old_general_mode;
         g_mode = m_old_mode;
         g_check_flag = m_old_check_flag;
@@ -272,6 +285,10 @@ protected:
     bool                         m_old_verify{};
     long                         m_old_pid{};
     std::string                  m_old_local_host;
+    std::string                  m_old_last_newsgroup_name;
+    long                         m_old_last_new_time{};
+    long                         m_old_last_active_size{};
+    long                         m_old_last_extra_num{};
     GeneralMode                  m_old_general_mode{};
     MinorMode                    m_old_mode{};
     bool                         m_old_check_flag{};
@@ -390,6 +407,29 @@ TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
     ASSERT_EQ(1, g_newsgroup_order.size());
     EXPECT_EQ(options_line, g_newsgroup_order[0]->m_rc_line);
     EXPECT_EQ(TR_JUNK, g_newsgroup_order[0]->m_to_read);
+    unuse_multirc(&multirc);
+}
+
+TEST_F(NewsrcRotationTest, useMultircRestoresStateFromInfoFile)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl: 1\n";
+    std::ofstream{newsrc.info_name} << "Last-Group: comp.lang.apl\n"
+                                    << "New-Group-State: 111,222,333\n";
+
+    ASSERT_TRUE(multirc.use_multirc());
+
+    EXPECT_EQ("comp.lang.apl", g_last_newsgroup_name);
+    EXPECT_EQ(111L, m_data_source.m_last_new_group);
+    EXPECT_EQ(222L, m_data_source.m_act_sf.m_recent_cnt);
+    EXPECT_EQ(333L, m_data_source.m_desc_sf.m_recent_cnt);
     unuse_multirc(&multirc);
 }
 
