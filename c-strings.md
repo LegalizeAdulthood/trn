@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-315 - NNTP List Server Port Parse
-
-- Files: `nntplist/nntplist.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `main`.
-- Dependencies: none.
-- Change: parse the port view after `;` or `:` with
-  `std::from_chars` instead of
-  `std::atoi(s_server_name.c_str() + separator + 1)`.
-- Tests: nntplist server configuration tests.
-
 #### CSTR-316 - Environment Net Speed Parse
 
 - Files: `util/env.cpp`.
