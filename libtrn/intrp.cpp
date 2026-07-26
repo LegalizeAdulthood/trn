@@ -308,7 +308,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
     static constexpr std::string_view search_cmd_tail_chars{"/?"};
     std::string                       result;
     std::string                       scratch;
-    const char                       *noname_text = "noname";
+    constexpr std::string_view        noname_text{"noname"};
     int                               metabit = 0;
 
     result.reserve(CMD_BUF_LEN);
