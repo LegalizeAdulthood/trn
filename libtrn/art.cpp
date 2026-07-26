@@ -4,7 +4,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
-#include <trn/art.h>
+#include <trn/art-internal.h>
 
 #include <config/common.h>
 #include <config/env.h>
@@ -85,15 +85,6 @@ inline ArticlePosition line_offset(char *ptr)
     return ArticlePosition{ptr - g_art_buf} + g_header_type[PAST_HEADER].min_pos;
 }
 
-// page_switch() return values
-enum PageSwitchResult
-{
-    PS_NORM = 0,
-    PS_ASK = 1,
-    PS_RAISE = 2,
-    PS_TO_END = 3
-};
-
 static bool            s_special{};         // is next page special length?
 static int             s_special_lines{};   // how long to make page when special
 static ArticlePosition s_restart{};         // if nonzero, the place where last line left off on line split
@@ -104,9 +95,11 @@ static CompiledRegex   s_gcompex{};         // in article search pattern
 static bool            s_first_page{};      // is this the 1st page of article?
 static bool            s_continuation{};    // this line/header is being continued
 
-static PageSwitchResult page_switch();
+static std::string      finish_pager_command(std::string_view command, bool donewline);
+static std::string      finish_pager_dbl_command(std::string_view command);
 static bool             maybe_set_color(const char *cp, bool back_search);
 static bool             inner_more();
+static void             stage_pager_command(std::string_view command);
 
 void art_init()
 {
@@ -121,6 +114,7 @@ DoArticleResult do_article()
     char* buf_ptr = g_art_line.data(); // pointer to input buffer
     std::string from_line;
     std::string date_line;
+    std::string pager_command;
     int out_pos;                  // column position of output
     bool notes_files = false;     // might there be notes files junk?
     MinorMode old_mode = g_mode;
@@ -732,7 +726,7 @@ skip_put:
         g_inner_search = ArticlePosition{};
         if (g_hide_everything)
         {
-            *g_buf = g_hide_everything;
+            pager_command = g_hide_everything;
             g_hide_everything = 0;
             goto fake_command;
         }
@@ -816,16 +810,16 @@ reask_pager:
             goto recheck_pager;
         }
         set_mode(g_general_mode,MM_PAGER);
-        get_cmd(g_buf);
+        pager_command = get_cmd();
         if (errno)
         {
             if (g_tc_LINES < 100 && !g_int_count)
             {
-                *g_buf = '\f'; // on CONT fake up refresh
+                pager_command = '\f'; // on CONT fake up refresh
             }
             else
             {
-                *g_buf = 'q';   // on INTR or paper just quit
+                pager_command = 'q';   // on INTR or paper just quit
             }
         }
         erase_line(g_erase_screen && g_erase_each_line);
@@ -840,7 +834,7 @@ reask_pager:
         {
             clear_rest();
         }
-        switch (page_switch())
+        switch (page_switch(pager_command))
         {
         case PS_ASK:  // reprompt "--MORE--..."
             goto reask_pager;
@@ -899,11 +893,45 @@ static bool maybe_set_color(const char *cp, bool back_search)
 
 // process pager commands
 
-static PageSwitchResult page_switch()
+static void stage_pager_command(std::string_view command)
+{
+    const std::size_t copy_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN - 1));
+    std::copy_n(command.begin(), copy_size, g_buf);
+    g_buf[copy_size] = '\0';
+}
+
+static std::string finish_pager_command(std::string_view command, bool donewline)
+{
+    stage_pager_command(command);
+    if (!finish_command(donewline))
+    {
+        return {};
+    }
+    return g_buf;
+}
+
+static std::string finish_pager_dbl_command(std::string_view command)
+{
+    stage_pager_command(command);
+    if (!finish_dbl_char())
+    {
+        return {};
+    }
+    return g_buf;
+}
+
+PageSwitchResult page_switch(std::string_view command)
 {
     char* s;
+    std::string default_command;
+    if (command.empty() || command.front() == '\0')
+    {
+        default_command = "n";
+        command = default_command;
+    }
+    const char command_char = command.front();
 
-    switch (*g_buf)
+    switch (command_char)
     {
     case '!':                 // shell escape
         escapade();
@@ -945,16 +973,19 @@ static PageSwitchResult page_switch()
 
     case 'g':         // in-article search
     {
-        if (!finish_command(false))// get rest of command
+        const std::string full_command = finish_pager_command(command, false);
+        if (full_command.empty())// get rest of command
         {
             return PS_ASK;
         }
-        s = g_buf+1;
-        if (std::isspace(*s))
+        std::string_view pattern{full_command};
+        pattern.remove_prefix(1);
+        if (!pattern.empty() && std::isspace(static_cast<unsigned char>(pattern.front())))
         {
-            s++;
+            pattern.remove_prefix(1);
         }
-        const char *compile_error = s_gcompex.compile(s, true, true);
+        const std::string search_pattern{pattern};
+        const char       *compile_error = s_gcompex.compile(search_pattern.c_str(), true, true);
         if (compile_error != nullptr)
         {
                             // compile regular expression
@@ -985,7 +1016,7 @@ caseG:
             term_down(1);
         }
 #endif
-        if (*g_buf == Ctl('i') || g_top_line + ArticleLine{g_g_line + 1} >= g_art_line_num)
+        if (command_char == Ctl('i') || g_top_line + ArticleLine{g_g_line + 1} >= g_art_line_num)
         {
             start_where = g_art_pos;
                         // in case we had a line wrap
@@ -1061,9 +1092,8 @@ caseG:
 #endif
             g_top_line = g_highlight - ArticleLine{g_g_line};
             g_top_line = std::max(g_top_line, ArticleLine{-1});
-            *g_buf = '\f';              // fake up a refresh
             g_inner_search = ArticlePosition{};
-            return page_switch();
+            return page_switch("\f");
         }
         g_do_fseek = true;              // who knows how many lines it is?
         g_hide_everything = '\f';
@@ -1184,7 +1214,7 @@ refresh_screen:
         }
 
         g_do_fseek = true;      // reposition article file
-        if (*g_buf == 'B')
+        if (command_char == 'B')
         {
             target = line_before(g_top_line);
         }
@@ -1222,11 +1252,15 @@ refresh_screen:
         return PS_ASK;
 
     case '_':
-        if (!finish_dbl_char())
+    {
+        const std::string full_command = finish_pager_dbl_command(command);
+        if (full_command.empty())
         {
             return PS_ASK;
         }
-        switch (g_buf[1] & 0177)
+        const char second_char =
+            full_command.size() > 1 ? static_cast<char>(static_cast<unsigned char>(full_command[1]) & 0177) : '\0';
+        switch (second_char)
         {
         case 'C':
             if (!*(++g_char_subst))
@@ -1239,10 +1273,7 @@ refresh_screen:
             break;
         }
         goto leave_pager;
-
-    case '\0':                // treat break as 'n'
-        *g_buf = 'n';
-        // FALL THROUGH
+    }
 
     case 'a': case 'A':
     case 'e':
@@ -1299,12 +1330,12 @@ refresh_screen:
     case '\b': case '\177':
 leave_pager:
         g_reread = false;
-        if (std::string_view{"nNpP\016\020"}.find(*g_buf) == std::string_view::npos //
-            && std::string_view{"wWsSe:!&|/?123456789."}.find(*g_buf) != std::string_view::npos)
+        if (std::string_view{"nNpP\016\020"}.find(command_char) == std::string_view::npos //
+            && std::string_view{"wWsSe:!&|/?123456789."}.find(command_char) != std::string_view::npos)
         {
             set_default_cmd();
             color_object(COLOR_CMD, true);
-            const std::string mail_call = interp_search(g_mail_call, g_buf);
+            const std::string mail_call = interp_search(g_mail_call, command);
             std::printf(g_prompt.c_str(), mail_call.c_str(), current_char_subst().c_str(),
                         g_default_cmd.c_str()); // print prompt, whatever it is
             color_pop();                        // of COLOR_CMD
@@ -1349,7 +1380,7 @@ go_forward:
             (g_page_stop.empty() || s_continuation || !g_page_compex.execute(line_ptr(s_a_line_begin))))
           {
               if (!s_special //
-                  || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
+                  || (g_marking && (command_char != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
               {
                 s_restart = s_a_line_begin;
                 --g_art_line_num;     // restart this line

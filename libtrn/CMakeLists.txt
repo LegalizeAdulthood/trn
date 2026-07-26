@@ -1,6 +1,6 @@
 add_library(libtrn
     addng.cpp include/trn/addng.h include/trn/addng-internal.h
-    art.cpp include/trn/art.h
+    art.cpp include/trn/art.h include/trn/art-internal.h
     Article.cpp include/trn/Article.h
     artio.cpp include/trn/artio.h
     artsrch.cpp include/trn/artsrch.h

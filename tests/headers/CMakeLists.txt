@@ -1,6 +1,7 @@
 add_executable(trn-headers-test
     test_addng-internal.cpp
     test_addng.cpp
+    test_art-internal.cpp
     test_art.cpp
     test_artio.cpp
     test_artsrch.cpp

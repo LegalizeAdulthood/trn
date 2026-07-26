@@ -11,6 +11,7 @@ add_executable(trn-test
     MockNNTPConnection.h
     mock_env.h
     test_addng.cpp
+    test_art.cpp
     test_autosub.cpp
     test_artsrch.cpp
     test_artio.cpp

@@ -585,19 +585,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-293 - Article Pager Command Input
-
-- Files: `libtrn/art.cpp`.
-- Kind: terminal command buffer caller and command dispatcher.
-- Function: pager input loop and `page_switch`.
-- Dependencies: none.
-- Change: read pager commands into local command text and pass that text
-  to `page_switch` instead of having `page_switch` read `g_buf`.
-  Preserve fake commands from `g_inner_search`, interrupt refresh, and
-  full-command paths that call `finish_command`.
-- Tests: pager command tests if focused coverage exists; otherwise add
-  current behavior coverage first.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -676,7 +663,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/ng.cpp`.
 - Kind: terminal command buffer caller and command dispatcher.
 - Function: article-level command loop in `do_newsgroup`.
-- Dependencies: CSTR-293.
+- Dependencies: none.
 - Change: read article-level commands into local storage, carry the
   command through default handling, article search, selector entry, and
   start-command creation without treating `g_buf` as the owner.
@@ -706,7 +693,8 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-289 through CSTR-295.
+- Dependencies: CSTR-289 through CSTR-292 and CSTR-294 through
+  CSTR-295.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -718,7 +706,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/artsrch.cpp`, `libtrn/ngsrch.cpp`.
 - Kind: shared command/search buffer owner.
 - Function: article and newsgroup search command parsing.
-- Dependencies: CSTR-293 through CSTR-295.
+- Dependencies: CSTR-294 through CSTR-295.
 - Change: replace search APIs that accept `g_buf` plus a buffer size
   with local `std::string` storage and `std::string_view` parsing.
   Preserve command-line completion and default search behavior.
@@ -761,7 +749,8 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-289 through CSTR-300.
+- Dependencies: CSTR-289 through CSTR-292 and CSTR-294 through
+  CSTR-300.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
