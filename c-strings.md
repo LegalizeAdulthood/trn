@@ -563,7 +563,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 21 and `std::atol` 11.
+- C numeric conversion calls: `atoi`/`std::atoi` 20 and `std::atol` 11.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
@@ -605,18 +605,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-339 - Catchup Leave-unread Count Parse
-
-- Files: `libtrn/ng.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `ask_catchup`.
-- Dependencies: none.
-- Change: parse the completed leave-unread count from `g_buf` with
-  `std::from_chars` instead of unqualified `atoi`; keep the existing
-  zero fallback when no number is parsed.
-- Tests: catchup prompt tests if existing coverage is easy to extend;
-  otherwise add focused coverage before refactoring.
 
 #### CSTR-340 - Extract Part Option View Parse
 

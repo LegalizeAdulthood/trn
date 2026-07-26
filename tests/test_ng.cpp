@@ -34,3 +34,13 @@ TEST(NewsgroupUnreadPromptTest, usesThreadHelpWithCurrentArticle)
               "s to mark subthread unread.\n",
               std::string{ng_unread_thread_help_for_test(true, false)});
 }
+
+TEST(CatchupLeaveUnreadCountTest, parsesNumericPrefix)
+{
+    EXPECT_EQ(3, ng_catchup_leave_unread_count_for_test("3abc"));
+}
+
+TEST(CatchupLeaveUnreadCountTest, returnsZeroWithoutNumericPrefix)
+{
+    EXPECT_EQ(0, ng_catchup_leave_unread_count_for_test("abc"));
+}

@@ -11,5 +11,6 @@
 
 std::string_view ng_unread_prompt_for_test(bool has_current_article, bool verbose);
 std::string_view ng_unread_thread_help_for_test(bool has_current_article, bool verbose);
+int              ng_catchup_leave_unread_count_for_test(std::string_view command_text);
 
 #endif

@@ -53,8 +53,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <string>
@@ -135,6 +135,18 @@ std::string_view ng_unread_prompt_for_test(bool has_current_article, bool verbos
 std::string_view ng_unread_thread_help_for_test(bool has_current_article, bool verbose)
 {
     return unread_thread_help(has_current_article, verbose);
+}
+
+static int catchup_leave_unread_count(std::string_view command_text)
+{
+    int leave_unread{};
+    (void) std::from_chars(command_text.data(), command_text.data() + command_text.size(), leave_unread);
+    return leave_unread;
+}
+
+int ng_catchup_leave_unread_count_for_test(std::string_view command_text)
+{
+    return catchup_leave_unread_count(command_text);
 }
 
 void ng_init()
@@ -2068,7 +2080,7 @@ reask_catchup:
         }
         else
         {
-            leave_unread = atoi(g_buf);
+            leave_unread = catchup_leave_unread_count(g_buf);
             ch = 'y';
         }
     }
