@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-322 - URL Port Parse
-
-- Files: `libtrn/url.cpp`.
-- Kind: C numeric conversion cleanup.
-- Function: `parse_url`.
-- Dependencies: none.
-- Change: parse the port from `rest.substr(0, port_len)` with
-  `std::from_chars`; remove the single-use `std::string port`.
-- Tests: URL parsing tests.
-
 #### CSTR-323 - INI Group Index Parse
 
 - Files: `libtrn/rcstuff.cpp`.

@@ -19,8 +19,8 @@
 
 #include <array>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <filesystem>
 #include <iterator>
 #include <string>
@@ -208,8 +208,8 @@ static UrlParts parse_url(std::string_view url)
             {
                 port_len++;
             }
-            const std::string port{rest.substr(0, port_len)};
-            parts.port = std::atoi(port.c_str());
+            const std::string_view port_text = rest.substr(0, port_len);
+            (void) std::from_chars(port_text.data(), port_text.data() + port_text.size(), parts.port);
             rest.remove_prefix(port_len);
         }
     }
