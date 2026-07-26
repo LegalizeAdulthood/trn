@@ -60,6 +60,7 @@ add_executable(trn-headers-test
     test_rthread.cpp
     test_sacmd.cpp
     test_sadesc.cpp
+    test_sadisp-internal.cpp
     test_sadisp.cpp
     test_samain.cpp
     test_samisc.cpp

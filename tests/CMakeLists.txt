@@ -61,6 +61,7 @@ add_executable(trn-test
     test_score-easy.cpp
     test_scorefile.cpp
     test_scoresave.cpp
+    test_sadisp.cpp
     test_scmd.cpp
     test_sorder.cpp
     test_string-algos.cpp

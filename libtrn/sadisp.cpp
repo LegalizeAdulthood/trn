@@ -6,6 +6,8 @@
 
 #include <trn/sadisp.h>
 
+#include <trn/sadisp-internal.h>
+
 #include <config/common.h>
 #include <trn/color.h>
 #include <trn/samain.h>
@@ -17,7 +19,35 @@
 #include <trn/terminal.h>
 #include <trn/trn.h>
 
+#include <fmt/format.h>
+
+#include <string_view>
+
 #include <cstdio>
+
+static std::string_view sa_order_text()
+{
+    switch (g_sa_mode_order)
+    {
+    case SA_ORDER_ARRIVAL:
+        return "arrival";
+
+    case SA_ORDER_DESCENDING:
+        if (g_score_new_first)
+        {
+            return "score (new>old)";
+        }
+        return "score (old>new)";
+
+    default:
+        return "unknown";
+    }
+}
+
+std::string_view sa_order_text_for_test()
+{
+    return sa_order_text();
+}
 
 void sa_refresh_top()
 {
@@ -53,35 +83,10 @@ void sa_refresh_top()
 
 void sa_refresh_bot()
 {
-    const char *order;
-
     color_object(COLOR_SCORE, true);
     s_mail_and_place();
-    std::printf("(");
-    switch (g_sa_mode_order)
-    {
-    case SA_ORDER_ARRIVAL:
-        order = "arrival";
-        break;
-
-    case SA_ORDER_DESCENDING:
-        if (g_score_new_first)
-        {
-            order = "score (new>old)";
-        }
-        else
-        {
-            order = "score (old>new)";
-        }
-        break;
-
-    default:
-        order = "unknown";
-        break;
-    }
-    std::printf("%s order", order);
-    std::printf(", %d%% scored",sc_percent_scored());
-    std::printf(")");
+    const std::string_view order = sa_order_text();
+    fmt::print("({} order, {}% scored)", order, sc_percent_scored());
     color_pop();        // of COLOR_SCORE
     std::fflush(stdout);
 }

@@ -56,7 +56,7 @@ add_library(libtrn
     rthread.cpp include/trn/rthread.h
     sacmd.cpp include/trn/sacmd.h
     sadesc.cpp include/trn/sadesc.h
-    sadisp.cpp include/trn/sadisp.h
+    sadisp.cpp include/trn/sadisp.h include/trn/sadisp-internal.h
     samain.cpp include/trn/samain.h
     samisc.cpp include/trn/samisc.h
     sathread.cpp include/trn/sathread.h

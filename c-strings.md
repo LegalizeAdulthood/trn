@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-310 - Score Display Order View
-
-- Files: `libtrn/sadisp.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `sa_refresh_bot`.
-- Dependencies: none.
-- Change: replace `order` with `std::string_view` and use `fmt` for the
-  touched order output.
-- Tests: score display refresh tests.
-
 #### CSTR-311 - Newsgroup Unread Prompt Views
 
 - Files: `libtrn/ng.cpp`.
