@@ -75,9 +75,9 @@ std::string sc_easy_append()
         fmt::print("Type the (single character) abbreviation of the scorefile:");
         std::fflush(stdout);
         eat_typeahead();
-        get_cmd(g_buf);
-        fmt::print("{}\n", *g_buf);
-        filechar = *g_buf;
+        const std::string command = get_cmd();
+        filechar = command.empty() ? '\0' : command.front();
+        fmt::print("{}\n", filechar);
         // If error checking is done later, then an error should set
         // filechar to '\0' and continue the while loop.
     }

@@ -77,6 +77,39 @@ TEST_F(ScoreEasyTest, appendExitReturnsEmptyString)
               output);
 }
 
+TEST_F(ScoreEasyTest, appendOtherScorefileReadsSingleCharacterAbbreviation)
+{
+    push_char('0');
+    push_char('x');
+    push_char('4');
+
+    testing::internal::CaptureStdout();
+    const std::string line = sc_easy_append();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(line.empty());
+    EXPECT_EQ("\n"
+              "Scorefile easy append mode.\n"
+              "0) Exit.\n"
+              "1) List the current scorefile abbreviations.\n"
+              "2) Add an entry to the global scorefile.\n"
+              "3) Add an entry to this newsgroup's scorefile.\n"
+              "4) Add an entry to another scorefile.\n"
+              "5) Use a temporary scoring rule.\n"
+              "Enter your choice: 4\n"
+              "Type the (single character) abbreviation of the scorefile:x\n"
+              "What type of line do you want to add?\n"
+              "0) Exit.\n"
+              "1) A scoring rule line.\n"
+              "   (for the current article's author/subject)\n"
+              "2) A command, comment, or other kind of line.\n"
+              "   (use this for any other kind of line)\n"
+              "\n"
+              "[Other line formats will be supported later.]\n"
+              "Enter your choice: 0\n",
+              output);
+}
+
 TEST_F(ScoreEasyTest, commandExitReturnsEmptyString)
 {
     push_char('0');

@@ -601,6 +601,12 @@ with their owner slices unless a local use is clearly formatting-only.
   expansion, and mouse input behavior.  Do not include `pause_get_cmd`;
   it keeps the `get_cmd()` string local and returns the command
   character without writing through `g_buf`.
+- Current direct shared-buffer callers are in `art.cpp`, `ng.cpp`,
+  `rcstuff.cpp`, `rt-select.cpp`, `scmd.cpp`, and `trn.cpp`.  Treat each
+  function as its own slice unless the caller contract forces a paired
+  edit.
+- Other C-buffer callers remain inside `terminal.cpp` command editing
+  and `util.cpp` default-command handling.
 - Tests: terminal input, option editing, and selector tests.
 
 #### CSTR-161 - General Command Buffer Storage
