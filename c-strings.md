@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-347 - Universal Config File Assignment
-
-- Files: `libtrn/univ.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `univ_add_file`.
-- Dependencies: none.
-- Change: assign `fname` directly to `config_file.fname` instead of
-  copying through `fname.data(), fname.size()`.
-- Tests: universal-selector config-file tests if existing coverage is
-  easy.
-
 #### CSTR-348 - Universal Use File Label Assignment
 
 - Files: `libtrn/univ.cpp`.

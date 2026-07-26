@@ -379,7 +379,7 @@ static void univ_add_file(std::string_view desc, std::string_view fname, std::st
     UniversalItem           *ui = univ_add(UniversalConfigFileData{}, desc);
     UniversalConfigFileData &config_file = ui->config_file();
     config_file.title.assign(desc);
-    config_file.fname.assign(fname.data(), fname.size());
+    config_file.fname = fname;
     if (!label.empty())
     {
         config_file.label.assign(label);
