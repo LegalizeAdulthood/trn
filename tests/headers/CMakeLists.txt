@@ -34,6 +34,7 @@ add_executable(trn-headers-test
     test_last.cpp
     test_mime-internal.cpp
     test_mime.cpp
+    test_ng-internal.cpp
     test_ng.cpp
     test_ngdata.cpp
     test_ngsrch.cpp

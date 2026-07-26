@@ -25,6 +25,7 @@
 #include <trn/intrp.h>
 #include <trn/kfile.h>
 #include <trn/mime.h>
+#include <trn/ng-internal.h>
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
 #include <trn/nntp.h>
@@ -101,6 +102,40 @@ static ArticleSwitchResult art_switch(std::string command);
 
 static DoNewsgroupResult s_exit_code{NG_NORM};
 static bool              s_art_sel_lock{};
+
+static std::string_view unread_prompt(bool has_current_article, bool verbose)
+{
+    if (!has_current_article)
+    {
+        return verbose ? "\nUnkill: +select or all?" : "\nUnkill?";
+    }
+    return verbose ? "\nUnkill: +select, thread, subthread, or all?" : "\nUnkill?";
+}
+
+static std::string_view unread_thread_help(bool has_current_article, bool verbose)
+{
+    if (!has_current_article)
+    {
+        return {};
+    }
+    if (verbose)
+    {
+        return "Type t or SP to mark this thread's articles as unread.\n"
+               "Type s to mark the current article and its descendants as unread.\n";
+    }
+    return "t or SP to mark thread unread.\n"
+           "s to mark subthread unread.\n";
+}
+
+std::string_view ng_unread_prompt_for_test(bool has_current_article, bool verbose)
+{
+    return unread_prompt(has_current_article, verbose);
+}
+
+std::string_view ng_unread_thread_help_for_test(bool has_current_article, bool verbose)
+{
+    return unread_thread_help(has_current_article, verbose);
+}
 
 void ng_init()
 {
@@ -791,40 +826,10 @@ static ArticleSwitchResult art_switch(std::string command)
 
     case 'U':                 // unread some articles
     {
-        const char* u_prompt;
-        const char* u_help_thread;
-
-        if (!g_artp)
-        {
-            u_help_thread = "";
-            if (g_verbose)
-            {
-                u_prompt = "\nUnkill: +select or all?";
-            }
-            else
-            {
-                u_prompt = "\nUnkill?";
-            }
-            g_default_cmd = "+anq";
-        }
-        else
-        {
-            if (g_verbose)
-            {
-                u_prompt = "\n"
-                           "Unkill: +select, thread, subthread, or all?";
-                u_help_thread = "Type t or SP to mark this thread's articles as unread.\n"
-                                "Type s to mark the current article and its descendants as unread.\n";
-            }
-            else
-            {
-                u_prompt = "\n"
-                           "Unkill?";
-                u_help_thread = "t or SP to mark thread unread.\n"
-                                "s to mark subthread unread.\n";
-            }
-            g_default_cmd = "+tsanq";
-        }
+        const bool             has_current_article = g_artp != nullptr;
+        const std::string_view u_prompt = unread_prompt(has_current_article, g_verbose);
+        const std::string_view u_help_thread = unread_thread_help(has_current_article, g_verbose);
+        g_default_cmd = has_current_article ? "+tsanq" : "+anq";
 reask_unread:
         in_char(u_prompt, MM_UNKILL_PROMPT, g_default_cmd);
         print_cmd();
@@ -833,22 +838,21 @@ reask_unread:
         {
             if (g_verbose)
             {
-                std::fputs("Type + to enter select thread mode using all the already-read articles.\n"
-                      "(The selected threads will be marked as unread and displayed as usual.)\n",
-                      stdout);
-                std::fputs(u_help_thread, stdout);
-                std::fputs("Type a to mark all articles in this group as unread.\n"
-                      "Type n or q to change nothing.\n",
-                      stdout);
+                fmt::print("Type + to enter select thread mode using all the already-read articles.\n"
+                           "(The selected threads will be marked as unread and displayed as usual.)\n"
+                           "{}"
+                           "Type a to mark all articles in this group as unread.\n"
+                           "Type n or q to change nothing.\n",
+                           u_help_thread);
                 term_down(6);
             }
             else
             {
-                std::fputs("+ to select threads from the unread.\n",stdout);
-                std::fputs(u_help_thread,stdout);
-                std::fputs("a to mark all articles unread.\n"
-                      "n or q to change nothing.\n",
-                      stdout);
+                fmt::print("+ to select threads from the unread.\n"
+                           "{}"
+                           "a to mark all articles unread.\n"
+                           "n or q to change nothing.\n",
+                           u_help_thread);
                 term_down(5);
             }
             goto reask_unread;
@@ -857,7 +861,7 @@ reask_unread:
         {
             return AS_ASK;
         }
-        else if (*g_buf == 't' && *u_help_thread)
+        else if (*g_buf == 't' && !u_help_thread.empty())
         {
             if (g_artp->m_subj->m_thread)
             {
@@ -873,7 +877,7 @@ reask_unread:
                 g_art = g_artp->article_num();
             }
         }
-        else if (*g_buf == 's' && *u_help_thread)
+        else if (*g_buf == 's' && !u_help_thread.empty())
         {
             unkill_sub_thread(g_artp);
         }

@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-311 - Newsgroup Unread Prompt Views
-
-- Files: `libtrn/ng.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `do_newsgroup`.
-- Dependencies: none.
-- Change: replace `u_prompt` and `u_help_thread` with
-  `std::string_view`, use `empty()` for thread-help presence, and use
-  `fmt` for the touched help output.
-- Tests: article-mode unread and newsgroup unread prompt tests.
-
 #### CSTR-312 - Article Check Column Parse
 
 - Files: `trn-artchk/trn-artchk.cpp`.

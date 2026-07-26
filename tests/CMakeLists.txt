@@ -41,6 +41,7 @@ add_executable(trn-test
     test_makedir.cpp
     test_mime.cpp
     test_nntp.cpp
+    test_ng.cpp
     test_ngsrch.cpp
     test_ngdata.cpp
     test_ngstuff.cpp

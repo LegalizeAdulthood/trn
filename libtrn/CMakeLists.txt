@@ -32,7 +32,7 @@ add_library(libtrn
     kfile.cpp include/trn/kfile.h
     last.cpp include/trn/last.h
     mime.cpp include/trn/mime.h include/trn/mime-internal.h
-    ng.cpp include/trn/ng.h
+    ng.cpp include/trn/ng.h include/trn/ng-internal.h
     ngdata.cpp include/trn/ngdata.h
     ngsrch.cpp include/trn/ngsrch.h
     ngstuff.cpp include/trn/ngstuff.h include/trn/ngstuff-internal.h
