@@ -530,8 +530,8 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 30, `strstr` 2, `strlen` 20.
-- C line input: `fgets` 8.
+- Search and length: `strchr` 29, `strstr` 2, `strlen` 20.
+- C line input: `fgets` 7.
 - C text output: `fputs` 165, `printf`/`std::printf` 327,
   `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77.
@@ -569,20 +569,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-279 - Edited Kill File Lines
-
-- Files: `libtrn/kfile.cpp`.
-- Kind: owner-local file-line scratch buffer.
-- Function: `edit_kill_file`.
-- Dependencies: none.
-- Change: after the editor returns, read local kill-file lines into
-  `std::string` and parse normal/thread command lines with
-  `std::string_view` instead of `g_buf`, `skip_space`, and `strchr`.
-- Truncation: the old `LINE_BUF_LEN` limit is arbitrary file-line
-  truncation; `get_a_line` removes it.
-- Tests: edited kill-file reload behavior if focused coverage exists;
-  otherwise add current behavior coverage first.
 
 ### Tier 3 - Workflow Callers And Path Owners
 

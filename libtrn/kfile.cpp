@@ -765,7 +765,6 @@ void update_thread_kill_file()
 
 void edit_kill_file()
 {
-    char* bp;
     fs::path kill_file;
 
     if (g_in_ng)
@@ -805,22 +804,23 @@ void edit_kill_file()
         {
             std::fseek(g_local_kfp,0L,0);     // rewind file
             g_kf_state &= ~KFS_NORMAL_LINES;
-            while (std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
+            for (std::string kill_line = get_a_line(g_local_kfp); !kill_line.empty();
+                 kill_line = get_a_line(g_local_kfp))
             {
-                bp = skip_space(g_buf);
-                if (*bp == '/' || *bp == '*')
+                const std::string_view line = skip_leading_space(kill_line);
+                if (!line.empty() && (line.front() == '/' || line.front() == '*'))
                 {
                     g_kf_state |= KFS_NORMAL_LINES;
                 }
-                else if (*bp == '<')
+                else if (!line.empty() && line.front() == '<')
                 {
-                    std::string_view msg_id{bp};
-                    std::string_view cmd{","};
-                    char *split = std::strchr(bp,' ');
-                    if (split)
+                    std::string_view  msg_id{line};
+                    std::string_view  cmd{","};
+                    const std::size_t split = line.find(' ');
+                    if (split != std::string_view::npos)
                     {
-                        msg_id = {bp, static_cast<std::size_t>(split - bp)};
-                        cmd = split + 1;
+                        msg_id = line.substr(0, split);
+                        cmd = line.substr(split + 1);
                     }
                     Article *ap = get_article(msg_id);
                     if (ap != nullptr)
