@@ -530,8 +530,8 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 39, `strstr` 2, `strlen` 23.
-- C line input: `fgets` 17.
+- Search and length: `strchr` 38, `strstr` 2, `strlen` 23.
+- C line input: `fgets` 16.
 - C text output: `fputs` 169, `printf`/`std::printf` 329,
   `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77.
@@ -569,21 +569,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-273 - Active-times Line Parsing
-
-- Files: `libtrn/addng.cpp`.
-- Kind: owner-local file-line scratch buffer.
-- Function: `new_local_groups`.
-- Dependencies: none.
-- Change: read `active.times` lines into a local `std::string` with
-  `get_a_line`, slice the group name with `std::string_view`, and use
-  that view for `find_active_group`, `find_newsgroup`, and `add_to_hash`.
-  Drop the `g_buf`/`fgets`/`strchr` parsing path.
-- Truncation: the old `LINE_BUF_LEN` limit is arbitrary file-line
-  truncation; `get_a_line` removes it.
-- Tests: add-newsgroup/local active-times behavior if focused coverage
-  exists; otherwise add current behavior coverage first.
 
 #### CSTR-274 - Newsrc Lock File Lines
 

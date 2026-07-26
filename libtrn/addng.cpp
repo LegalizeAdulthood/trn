@@ -321,32 +321,37 @@ static void new_local_groups(DataSource *dp)
     std::time_t last_one = std::time(nullptr) - 24L * 60 * 60 - 1;
     HashTable *new_newsgroups = hash_create(33, add_newsgroup_cmp);
 
-    while (std::fgets(g_buf, LINE_BUF_LEN, fp) != nullptr)
+    for (std::string active_times_line = get_a_line(fp); !active_times_line.empty(); active_times_line = get_a_line(fp))
     {
-        char *s;
-        if ((s = std::strchr(g_buf, ' ')) == nullptr || (last_one = std::atol(s + 1)) < dp->m_last_new_group)
+        const std::string_view active_times_view{active_times_line};
+        const std::size_t      name_end = active_times_view.find(' ');
+        if (name_end == std::string_view::npos)
         {
             continue;
         }
-        *s = '\0';
-        const std::string active_line = g_data_source->find_active_group(
-            std::string_view{g_buf, static_cast<std::size_t>(s - g_buf)}, ArticleNum{});
+        last_one = std::atol(active_times_line.c_str() + name_end + 1);
+        if (last_one < dp->m_last_new_group)
+        {
+            continue;
+        }
+        const std::string_view group_name = active_times_view.substr(0, name_end);
+        const std::string      active_line = g_data_source->find_active_group(group_name, ArticleNum{});
         if (active_line.empty())
         {
             continue;
         }
-        const std::string_view fields = std::string_view{active_line}.substr(static_cast<std::size_t>(s - g_buf) + 1);
+        const std::string_view fields = std::string_view{active_line}.substr(group_name.size() + 1);
         const ActiveLineFields active_fields = parse_active_line_fields(fields);
         if (active_fields.status == 'x' || active_fields.status == '=')
         {
             continue;
         }
-        NewsgroupData *np = find_newsgroup(g_buf);
+        NewsgroupData *np = find_newsgroup(group_name);
         if (np != nullptr)
         {
             continue;
         }
-        add_to_hash(new_newsgroups, g_buf, active_fields.high - active_fields.low, auto_subscribe(g_buf));
+        add_to_hash(new_newsgroups, group_name, active_fields.high - active_fields.low, auto_subscribe(group_name));
     }
     std::fclose(fp);
 
