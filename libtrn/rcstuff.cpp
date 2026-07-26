@@ -571,18 +571,17 @@ static bool lock_newsrc(Newsrc *rp)
         rp->lock_name += ".LOCK";
     }
 
-    char *s;
-    char *runninghost;
+    std::string runninghost;
     if (std::FILE *fp = std::fopen(rp->lock_name.string().c_str(), "r"))
     {
-        if (std::fgets(g_buf, LINE_BUF_LEN, fp))
+        const std::string pid_line = get_a_line(fp);
+        if (!pid_line.empty())
         {
-            processnum = std::atol(g_buf);
-            if (std::fgets(g_buf, LINE_BUF_LEN, fp) && *g_buf //
-                && *(s = g_buf + std::strlen(g_buf) - 1) == '\n')
+            processnum = std::atol(pid_line.c_str());
+            runninghost = get_a_line(fp);
+            if (!runninghost.empty() && runninghost.back() == '\n')
             {
-                *s = '\0';
-                runninghost = g_buf;
+                runninghost.pop_back();
             }
         }
         std::fclose(fp);
@@ -592,12 +591,11 @@ static bool lock_newsrc(Newsrc *rp)
 #ifndef MSDOS
         if (g_verbose)
         {
-            std::printf("\nThe requested newsrc is locked by process %ld on host %s.\n",
-                   processnum, runninghost);
+            fmt::print("\nThe requested newsrc is locked by process {} on host {}.\n", processnum, runninghost);
         }
         else
         {
-            std::printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost);
+            fmt::print("\nNewsrc locked by {} on host {}.\n", processnum, runninghost);
         }
         term_down(2);
         if (g_local_host != runninghost)

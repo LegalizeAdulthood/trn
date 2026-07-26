@@ -530,9 +530,9 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 38, `strstr` 2, `strlen` 23.
-- C line input: `fgets` 16.
-- C text output: `fputs` 169, `printf`/`std::printf` 329,
+- Search and length: `strchr` 38, `strstr` 2, `strlen` 22.
+- C line input: `fgets` 14.
+- C text output: `fputs` 169, `printf`/`std::printf` 327,
   `fprintf`/`std::fprintf` 14.
 - Character output: `putchar`/`std::putchar` 77.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
@@ -569,20 +569,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-274 - Newsrc Lock File Lines
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: owner-local file-line scratch buffer.
-- Function: `lock_newsrc`.
-- Dependencies: none.
-- Change: read the pid and host lines into local `std::string` values
-  with `get_a_line`, trim the host newline locally, and compare/print the
-  owned host string instead of storing a pointer into `g_buf`.
-- Truncation: the old `LINE_BUF_LEN` limit is arbitrary lock-file line
-  truncation; `get_a_line` removes it.
-- Tests: newsrc lock handling if focused coverage exists; otherwise add
-  current behavior coverage first.
 
 #### CSTR-275 - Newsrc Subscription And Info Lines
 

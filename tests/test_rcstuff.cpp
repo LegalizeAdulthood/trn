@@ -5,10 +5,12 @@
 #include <trn/datasrc.h>
 #include <trn/final.h>
 #include <trn/hash.h>
+#include <trn/init.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
+#include <util/env.h>
 
 #include <test_config.h>
 
@@ -85,6 +87,8 @@ protected:
         m_old_novice_delays = g_novice_delays;
         m_old_verbose = g_verbose;
         m_old_verify = g_verify;
+        m_old_pid = g_our_pid;
+        m_old_local_host = g_local_host;
         m_old_general_mode = g_general_mode;
         m_old_mode = g_mode;
         m_old_check_flag = g_check_flag;
@@ -136,6 +140,8 @@ protected:
         g_novice_delays = false;
         g_verbose = true;
         g_verify = false;
+        g_our_pid = 2468;
+        g_local_host = "test-host";
         g_general_mode = GM_READ;
         g_mode = MM_NONE;
         g_int_count = 0;
@@ -197,6 +203,8 @@ protected:
         g_novice_delays = m_old_novice_delays;
         g_verbose = m_old_verbose;
         g_verify = m_old_verify;
+        g_our_pid = m_old_pid;
+        g_local_host = m_old_local_host;
         g_general_mode = m_old_general_mode;
         g_mode = m_old_mode;
         g_check_flag = m_old_check_flag;
@@ -262,6 +270,8 @@ protected:
     bool                         m_old_novice_delays{};
     bool                         m_old_verbose{};
     bool                         m_old_verify{};
+    long                         m_old_pid{};
+    std::string                  m_old_local_host;
     GeneralMode                  m_old_general_mode{};
     MinorMode                    m_old_mode{};
     bool                         m_old_check_flag{};
@@ -331,6 +341,35 @@ TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)
     EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1"}), read_lines(newsrc.old_name));
     unuse_multirc(&multirc);
     EXPECT_FALSE(fs::exists(lock_path));
+}
+
+TEST_F(NewsrcRotationTest, useMultircRejectsLockHeldByThisProcess)
+{
+#ifdef MSDOS
+    GTEST_SKIP() << "MSDOS lock handling overwrites existing lock files";
+#else
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl: 1\n";
+    const fs::path lock_path{newsrc.name.generic_string() + ".LOCK"};
+    std::ofstream{lock_path} << g_our_pid << '\n' << g_local_host << '\n';
+
+    push_char('\n');
+    testing::internal::CaptureStdout();
+    const bool        opened = multirc.use_multirc();
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(opened);
+    EXPECT_FALSE(fs::exists(lock_path));
+    EXPECT_NE(std::string::npos, output.find("locked by process 2468 on host test-host.\n"));
+    EXPECT_NE(std::string::npos, output.find("Hey, that *my* pid!"));
+#endif
 }
 
 TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
