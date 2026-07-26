@@ -590,24 +590,12 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-294 - Newsgroup Article Command Input
-
-- Files: `libtrn/ng.cpp`.
-- Kind: terminal command buffer caller and command dispatcher.
-- Function: article-level command loop in `do_newsgroup`.
-- Dependencies: none.
-- Change: read article-level commands into local storage, carry the
-  command through default handling, article search, selector entry, and
-  start-command creation without treating `g_buf` as the owner.
-- Tests: article command loop, default command, selector entry, and
-  search command behavior.
-
 #### CSTR-295 - Top-level Newsgroup Command Input
 
 - Files: `libtrn/trn.cpp`.
 - Kind: terminal command buffer caller and command dispatcher.
 - Function: `input_newsgroup`.
-- Dependencies: CSTR-294.
+- Dependencies: none.
 - Change: read the top-level newsgroup command into local storage and
   move defaulting, fuzzy search, switch parsing, typeahead saving, and
   start-command construction off `g_buf`.
@@ -625,7 +613,7 @@ and clarified ownership at the edges.
 - Kind: terminal input owner.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
-- Dependencies: CSTR-294 through CSTR-295.
+- Dependencies: CSTR-295.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -638,7 +626,7 @@ and clarified ownership at the edges.
   `libtrn/rt-select.cpp`, `libtrn/trn.cpp`.
 - Kind: shared command/search buffer owner.
 - Function: article and newsgroup search command parsing.
-- Dependencies: CSTR-294 through CSTR-295.
+- Dependencies: CSTR-295.
 - Change: replace search APIs that accept `g_buf` plus a buffer size
   with local `std::string` storage and `std::string_view` parsing.
   Preserve command-line completion and default search behavior.
@@ -651,7 +639,7 @@ and clarified ownership at the edges.
 - Kind: shared command scratch buffer.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
-- Dependencies: CSTR-294 through CSTR-297.
+- Dependencies: CSTR-295 through CSTR-297.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -681,7 +669,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-294 through CSTR-299.
+- Dependencies: CSTR-295 through CSTR-299.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

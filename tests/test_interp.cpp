@@ -2336,12 +2336,16 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
     g_artp = g_curr_artp;
     ASSERT_TRUE(parse_header(g_art));
     push_char('?');
+    std::string article_command;
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = do_article(article_command);
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_RAISE, result);
+    ASSERT_EQ(2, article_command.size());
+    EXPECT_EQ('?', article_command[0]);
+    EXPECT_EQ(static_cast<char>(FINISH_CMD), article_command[1]);
     EXPECT_THAT(output, HasSubstr("<needle?> End of article "));
 }
 
@@ -2361,12 +2365,16 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
     g_artp = g_curr_artp;
     ASSERT_TRUE(parse_header(g_art));
     push_char('n');
+    std::string article_command;
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = do_article(article_command);
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_RAISE, result);
+    ASSERT_EQ(2, article_command.size());
+    EXPECT_EQ('n', article_command[0]);
+    EXPECT_EQ(static_cast<char>(FINISH_CMD), article_command[1]);
     EXPECT_EQ(std::string::npos, output.find("<needle?> End of article "));
 }
 

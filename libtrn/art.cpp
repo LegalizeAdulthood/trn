@@ -109,6 +109,12 @@ void art_init()
 
 DoArticleResult do_article()
 {
+    std::string article_command;
+    return do_article(article_command);
+}
+
+DoArticleResult do_article(std::string &article_command)
+{
     char* s;
     bool hide_this_line = false; // hidden header line?
     bool under_lining = false;   // are we underlining a word?
@@ -120,6 +126,8 @@ DoArticleResult do_article()
     bool notes_files = false;     // might there be notes files junk?
     MinorMode old_mode = g_mode;
     bool output_ok = true;
+
+    article_command.clear();
 
     if (g_data_source->m_flags & DF_REMOTE)
     {
@@ -841,6 +849,7 @@ reask_pager:
             goto reask_pager;
 
         case PS_RAISE:        // reparse on article level
+            article_command = pager_command;
             set_mode(g_general_mode,old_mode);
             return DA_RAISE;
 

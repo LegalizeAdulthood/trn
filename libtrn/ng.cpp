@@ -51,6 +51,7 @@
 #include <fmt/printf.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -96,7 +97,7 @@ static bool mark_all_unread(char *ptr, int arg);
 #ifdef DEBUG
 static bool debug_article_output(char *ptr, int arg);
 #endif
-static ArticleSwitchResult art_switch();
+static ArticleSwitchResult art_switch(std::string command);
 
 static DoNewsgroupResult s_exit_code{NG_NORM};
 static bool              s_art_sel_lock{};
@@ -108,6 +109,82 @@ void ng_init()
     open_kill_file(KF_GLOBAL);
     g_hide_compex.init_compex();
     g_page_compex.init_compex();
+}
+
+static char article_command_char(std::string_view command)
+{
+    return command.empty() ? '\0' : command.front();
+}
+
+static bool is_default_article_command(char ch)
+{
+    if (ch == ' ')
+    {
+        return true;
+    }
+#ifndef STRICT_CR
+    if (ch == '\n' || ch == '\r')
+    {
+        return true;
+    }
+#endif
+    return false;
+}
+
+static std::string apply_article_default_command(std::string command)
+{
+    g_s_default_cmd = false;
+    g_univ_default_cmd = false;
+    if (is_default_article_command(article_command_char(command)))
+    {
+        g_s_default_cmd = true;
+        g_univ_default_cmd = true;
+        if (g_default_cmd.size() > 1 && g_default_cmd.front() == '^' &&
+            std::isupper(static_cast<unsigned char>(g_default_cmd[1])))
+        {
+            push_char(Ctl(g_default_cmd[1]));
+        }
+        else
+        {
+            push_char(g_default_cmd.empty() ? '\0' : g_default_cmd.front());
+        }
+        command = get_cmd();
+    }
+    return command;
+}
+
+static void stage_legacy_article_command(std::string_view command)
+{
+    const std::size_t command_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN));
+    std::copy_n(command.data(), command_size, g_buf);
+    g_buf[command_size] = '\0';
+}
+
+static std::string finish_article_command(std::string_view command, bool donewline)
+{
+    if (command.size() <= 1 || command[1] != FINISH_CMD)
+    {
+        return std::string{command};
+    }
+    return finish_command(command.substr(0, 1), donewline);
+}
+
+static std::string finish_article_dbl_command(std::string_view command)
+{
+    if (command.size() <= 1 || command[1] != FINISH_CMD)
+    {
+        return std::string{command};
+    }
+    return finish_dbl_char(command.substr(0, 1));
+}
+
+static ArtSearchResult article_search(std::string_view command)
+{
+    std::string buffer;
+    buffer.reserve(LINE_BUF_LEN + 1);
+    buffer = command.substr(0, std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN)));
+    buffer.resize(LINE_BUF_LEN + 1, '\0');
+    return art_search(buffer.data(), static_cast<int>(buffer.size()), false);
 }
 
 // do newsgroup pointed to by g_ngptr with name g_ngname
@@ -253,6 +330,8 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     g_do_fseek = false;                 // start 1st article at top
     while (g_art <= article_after(g_last_art))     // for each article
     {
+        std::string article_command;
+
         set_mode(GM_READ,MM_ARTICLE);
 
         // do we need to "grow" the newsgroup?
@@ -321,8 +400,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             {
                 g_art = g_curr_art;
                 g_artp = g_curr_artp;
-                g_buf[0] = '+';
-                g_buf[1] = '\0';
+                article_command = "+";
                 goto article_level;
             }
             count_subjects(CS_RETAIN);
@@ -450,8 +528,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 message += ": article is not available.";
                 if (g_artp && !(g_artp->m_flags & AF_CACHED))
                 {
-                    if (g_abs_first < g_first_cached || g_last_cached < g_last_art
-                     || !g_cached_all_in_range)
+                    if (g_abs_first < g_first_cached || g_last_cached < g_last_art || !g_cached_all_in_range)
                     {
                         message = g_newsgroup_name;
                         message += ": article may show up in a moment.";
@@ -465,7 +542,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             else                        // found it, so print it
             {
-                switch (do_article())
+                switch (do_article(article_command))
                 {
                 case DA_CLEAN:          // quit newsgroup
                     goto cleanup;
@@ -525,12 +602,12 @@ reinp_article:
 #endif
         g_art = g_curr_art;
         g_artp = g_curr_artp;
-        get_cmd(g_buf);
-        if (errno || *g_buf == '\f')
+        article_command = get_cmd();
+        if (errno || article_command_char(article_command) == '\f')
         {
             if (g_tc_LINES < 100 && !g_int_count)
             {
-                *g_buf = '\f';          // on CONT fake up refresh
+                article_command = "\f"; // on CONT fake up refresh
             }
             else
             {
@@ -569,13 +646,14 @@ article_level:
                 goto cleanup;
 
             case SA_FAKE:
+                article_command = g_buf;
                 break;                  // fall through to art_switch
             }
         }
 
         // parse and process article level command
 
-        switch (art_switch())
+        switch (art_switch(article_command))
         {
         case AS_INP:                  // multichar command rubbed out
             goto reinp_article;
@@ -653,13 +731,21 @@ cleanup2:
 
 // decide what to do at the end of an article
 
-static ArticleSwitchResult art_switch()
+static ArticleSwitchResult art_switch(std::string command)
 {
-    set_def(g_buf, g_default_cmd);
+    command = apply_article_default_command(command);
+    stage_legacy_article_command(command);
     print_cmd();
 
-    g_buf[2] = '\0';
-    switch (*g_buf)
+    if (command.size() > 2)
+    {
+        command.resize(2);
+    }
+    stage_legacy_article_command(command);
+
+    const char command_ch = article_command_char(command);
+    char       selector_command = command_ch;
+    switch (command_ch)
     {
     case Ctl('v'):            // verify signature
         verify_sig();
@@ -670,28 +756,30 @@ static ArticleSwitchResult art_switch()
         return AS_SA;
 
     case '"':                 // append to local SCORE file
-        g_buf[0] = ':';         // enter command on next line
-        g_buf[1] = FINISH_CMD;
-        std::printf("\nEnter score append command or type RETURN for a menu\n");
+    {
+        fmt::print("\nEnter score append command or type RETURN for a menu\n");
         term_down(2);
         std::fflush(stdout);
-        if (finish_command(true))       // command entered successfully
+        const std::string full_command = finish_command(":", true);
+        if (!full_command.empty())       // command entered successfully
         {
-            sc_append(g_buf + 1);
+            sc_append(std::string_view{full_command}.substr(1));
         }
         return AS_ASK;
+    }
 
     case '\'':                // execute scoring command
-        g_buf[0] = ':';
-        g_buf[1] = FINISH_CMD;
-        std::printf("\nEnter scoring command or type RETURN for a menu\n");
+    {
+        fmt::print("\nEnter scoring command or type RETURN for a menu\n");
         term_down(2);
         std::fflush(stdout);
-        if (finish_command(true))       // command entered successfully
+        const std::string full_command = finish_command(":", true);
+        if (!full_command.empty())       // command entered successfully
         {
-            sc_score_cmd(g_buf + 1);
+            sc_score_cmd(std::string_view{full_command}.substr(1));
         }
         return AS_ASK;
+    }
 
     case '<':                 // goto previous subject/thread
         visit_prev_thread();
@@ -798,7 +886,7 @@ reask_unread:
         }
         else if (*g_buf == '+')
         {
-            *g_buf = 'U';
+            selector_command = 'U';
             goto run_the_selector;
         }
         else
@@ -815,9 +903,9 @@ reask_unread:
     case '{':                 // goto thread's root article
           if (g_artp && g_threaded_group)
           {
-              if (!find_parent(*g_buf == '{'))
+              if (!find_parent(command_ch == '{'))
               {
-                const char* cp = (*g_buf=='['?"parent":"root");
+                const char* cp = (command_ch == '[' ? "parent" : "root");
                 if (g_verbose)
                 {
                     std::printf("\nThere is no %s article prior to this one.\n", cp);
@@ -863,7 +951,7 @@ not_threaded:
     case '}':                 // goto thread's leaf article
         if (g_artp && g_threaded_group)
         {
-            if (!find_leaf(*g_buf == '}'))
+            if (!find_leaf(command_ch == '}'))
             {
                 if (g_verbose)
                 {
@@ -891,9 +979,9 @@ not_threaded:
     case ')':                     // goto next sibling
         if (g_artp && g_threaded_group)
         {
-            if (!(*g_buf == '(' ? find_prev_sib() : find_next_sib()))
+            if (!(command_ch == '(' ? find_prev_sib() : find_next_sib()))
             {
-                const char* cp = (*g_buf == '(' ? "previous" : "next");
+                const char* cp = (command_ch == '(' ? "previous" : "next");
                 if (g_verbose)
                 {
                     std::printf("\nThis article has no %s sibling.\n", cp);
@@ -924,7 +1012,7 @@ not_threaded:
         {
             goto not_threaded;
         }
-        switch (ask_memorize(*g_buf))
+        switch (ask_memorize(command_ch))
         {
         case ',':  case 'J': case 'K': case 'j':
             return AS_NORM;
@@ -937,7 +1025,7 @@ not_threaded:
             goto not_threaded;
         }
         // first, write kill-subject command
-        (void)art_search(g_buf, (sizeof g_buf), true);
+        (void)article_search(command);
         g_art = g_curr_art;
         g_artp = g_curr_artp;
         g_artp->m_subj->kill_subject(AFFECT_ALL);// take care of any prior subjects
@@ -990,7 +1078,7 @@ not_threaded:
         g_artp->m_subj->kill_subject(AFFECT_ALL);
         if (!g_threaded_group || g_last_cached < g_last_art)
         {
-            *g_buf = 'k';
+            command = "k";
             goto normal_search;
         }
         if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
@@ -1044,14 +1132,14 @@ check_dec_art:
             if (g_verbose)
             {
                 std::printf("\nThere are no%s%s articles prior to this one.\n",
-                       *g_buf=='P'?"":" unread",
-                       g_selected_only?" selected":"");
+                       command_ch == 'P' ? "" : " unread",
+                       g_selected_only ? " selected" : "");
             }
             else
             {
                 std::printf("\nNo previous%s%s articles\n",
-                       *g_buf=='P'?"":" unread",
-                       g_selected_only?" selected":"");
+                       command_ch == 'P' ? "" : " unread",
+                       g_selected_only ? " selected" : "");
             }
             term_down(2);
             g_art = g_curr_art;
@@ -1109,7 +1197,7 @@ check_dec_art:
         }
         else if (g_scan_on && !g_threaded_group && g_search_ahead)
         {
-            *g_buf = Ctl('n');
+            command = std::string{static_cast<char>(Ctl('n'))};
             if (!next_article_with_subj())
             {
                 goto normal_search;
@@ -1267,12 +1355,12 @@ check_dec_art:
 
     case Ctl('n'):    // search for next article with same subject
     case Ctl('p'):    // search for previous article with same subject
-        if (g_sa_in && g_s_default_cmd && *g_buf == Ctl('n') && !(g_sa_follow || g_s_follow_temp))
+        if (g_sa_in && g_s_default_cmd && command_ch == Ctl('n') && !(g_sa_follow || g_s_follow_temp))
         {
             return AS_SA;
         }
-        if (g_univ_read_virt_flag && g_univ_default_cmd && (*g_buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
-            !(g_univ_follow || g_univ_follow_temp))
+        if (g_univ_read_virt_flag && g_univ_default_cmd && command_ch == Ctl('n') &&
+            !(g_sa_in && (g_sa_follow || g_s_follow_temp)) && !(g_univ_follow || g_univ_follow_temp))
         {
             s_exit_code = NG_NEXT;
             return AS_CLEAN;
@@ -1285,7 +1373,7 @@ check_dec_art:
         {
             g_s_follow_temp = true;     // keep going until change req.
         }
-        if (*g_buf == Ctl('n')? next_article_with_subj() : prev_article_with_subj())
+        if (command_ch == Ctl('n') ? next_article_with_subj() : prev_article_with_subj())
         {
             return AS_NORM;
         }
@@ -1294,11 +1382,19 @@ check_dec_art:
     case '/': case '?':
 normal_search:
     {         // search for article by pattern
-        char cmd = *g_buf;
+        const char cmd = article_command_char(command);
 
         g_reread = true;                // assume this
         g_page_line = 1;
-        switch (art_search(g_buf, (sizeof g_buf), true))
+        if (cmd == '/' || cmd == '?')
+        {
+            command = finish_article_command(command, false);
+            if (command.empty())
+            {
+                return AS_INP;
+            }
+        }
+        switch (article_search(command))
         {
         case SRCH_ERROR:
             g_art = g_curr_art;
@@ -1481,9 +1577,9 @@ run_the_selector:
         g_s_follow_temp = true;
         g_univ_follow_temp = true;
         s_art_sel_lock = true;
-        *g_buf = article_selector(*g_buf);
+        selector_command = article_selector(selector_command);
         s_art_sel_lock = false;
-        switch (*g_buf)
+        switch (selector_command)
         {
         case '+':
             newline();
@@ -1640,7 +1736,7 @@ refresh_screen:
             g_reread = true;
             clear();
             g_do_fseek = true;
-            if (*g_buf == 'B')
+            if (command_ch == 'B')
             {
                 target = line_before(g_top_line);
             }
@@ -1735,11 +1831,14 @@ refresh_screen:
 #endif
 
     case '_':
-        if (!finish_dbl_char())
+    {
+        const std::string full_command = finish_article_dbl_command(command);
+        if (full_command.empty())
         {
             return AS_INP;
         }
-        switch (g_buf[1] & 0177)
+        const char second_command = full_command.size() > 1 ? full_command[1] & 0177 : '\0';
+        switch (second_command)
         {
         case 'P':
             --g_art;
@@ -1814,7 +1913,7 @@ refresh_screen:
             goto refresh_screen;
 
         case 'a':  case 's':  case 't':  case 'T':
-            *g_buf = g_buf[1];
+            selector_command = second_command;
             goto run_the_selector;
 
         case 'm':
@@ -1834,6 +1933,7 @@ refresh_screen:
             return AS_NORM;
         }
         // FALL THROUGH
+    }
 
     default:
         std::fputs("\nType h for help.\n", stdout);
