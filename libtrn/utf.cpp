@@ -460,9 +460,32 @@ int insert_unicode_at(char *s, CodePoint c)
     return it;
 }
 
+bool at_norm_char(std::string_view s)
+{
+    bool it = !s.empty();
+    if (it)
+    {
+        const char ch = s.front();
+        if (s_gs.in == CHARSET_UTF8)
+        {
+            const std::string text{s};
+            it = at_norm_char(text.c_str());
+        }
+        else if (U(ch) < 0x80)
+        {
+            it = (U(ch) >= ' ' && U(ch) < 0x7F);
+        }
+        else if (s_gs.himap_in != nullptr)
+        {
+            it = s_gs.himap_in[U(ch) & 0x7F] != INVALID_CODE_POINT;
+        }
+    }
+    return it;
+}
+
 bool at_norm_char(const char *s)
 {
-    int it = s != nullptr;
+    bool it = s != nullptr;
     if (it)
     {
         it = *s != 0;
@@ -474,13 +497,9 @@ bool at_norm_char(const char *s)
             CodePoint c = code_point_at(s);
             it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
         }
-        else if (U(*s) < 0x80)
+        else
         {
-            it = (U(*s) >= ' ' && U(*s) < 0x7F);
-        }
-        else if (s_gs.himap_in != nullptr)
-        {
-            it = s_gs.himap_in[U(*s) & 0x7F] != INVALID_CODE_POINT;
+            it = at_norm_char(std::string_view{s, 1});
         }
     }
     return it;

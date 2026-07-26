@@ -1374,8 +1374,7 @@ static int get_near_miss(const std::vector<std::string> &newsgroup_matches)
         set_mode(gmode_save, mode_save);
         if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
         {
-            char command_text[2]{command_char, '\0'};
-            if (!at_norm_char(command_text))
+            if (!at_norm_char(std::string_view{&command_char, 1}))
             {
                 std::putchar('^');
                 std::putchar((command_char & 0x7F) | 64);

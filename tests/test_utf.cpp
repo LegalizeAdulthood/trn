@@ -194,9 +194,19 @@ TEST(UTFAtNormalCharacterTest, nullptr)
     ASSERT_FALSE(at_norm_char(nullptr));
 }
 
+TEST(UTFAtNormalCharacterTest, emptyView)
+{
+    ASSERT_FALSE(at_norm_char(std::string_view{}));
+}
+
 TEST(UTFAtNormalCharacterTest, SOH)
 {
     ASSERT_FALSE(at_norm_char(ASCII_SOH));
+}
+
+TEST(UTFAtNormalCharacterTest, oneCharacterView)
+{
+    ASSERT_TRUE(at_norm_char(std::string_view{ASCII_SPACE, 1}));
 }
 
 TEST(UTFAtNormalCharacterTest, space)

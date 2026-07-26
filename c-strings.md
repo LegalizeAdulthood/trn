@@ -484,13 +484,13 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string candidates include `g_buf`,
-  terminal command input, three one-character command adapters passed to
-  `at_norm_char`, the macro-file input line, and owner-local parser
-  scratch uses listed in the slices.  NNTP status lines and article
-  display lines now use owned string storage.  NNTP CRLF trailer scratch,
-  tiny UTF byte scratch buffers, translation tables, MIME decode tables,
-  terminal pushback bytes, termcap storage, address conversion scratch,
-  and regex bytecode arrays are non-string protocol or parser storage.
+  terminal command input, the macro-file input line, and owner-local
+  parser scratch uses listed in the slices.  NNTP status lines and
+  article display lines now use owned string storage.  NNTP CRLF trailer
+  scratch, tiny UTF byte scratch buffers, translation tables, MIME
+  decode tables, terminal pushback bytes, termcap storage, address
+  conversion scratch, and regex bytecode arrays are non-string protocol
+  or parser storage.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -584,21 +584,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-303 - Normal Character Classification Views
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `libtrn/datasrc.cpp`, `libtrn/rcstuff.cpp`,
-  `libtrn/rt-select.cpp`, `tests/test_utf.cpp`.
-- Kind: C-string helper signature cleanup.
-- Function: `at_norm_char`.
-- Dependencies: none.
-- Change: add or migrate to an `std::string_view` entry point for normal
-  character classification, with empty view replacing the old null or
-  empty C-string failure case.  Remove the local `char command_text[2]`
-  adapters by passing a one-character view.  Keep a C-string wrapper
-  only for pointer-walking callers that have not yet been migrated.
-- Tests: existing UTF character classification tests.
 
 #### CSTR-297 - Article Search String API
 

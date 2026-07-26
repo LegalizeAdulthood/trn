@@ -1378,8 +1378,7 @@ static void print_prompt_command(std::string_view command)
 {
     if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
     {
-        char command_text[2]{command.front(), '\0'};
-        if (!at_norm_char(command_text))
+        if (!at_norm_char(command.substr(0, 1)))
         {
             std::putchar('^');
             std::putchar((command.front() & 0x7F) | 64);
