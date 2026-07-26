@@ -362,10 +362,33 @@ static std::string_view s_command_argument(std::string_view command)
     return command.substr(1);
 }
 
+static std::string_view s_search_error_message(char command_ch, bool repeated_current)
+{
+    switch (command_ch)
+    {
+    case '/':
+        return "No matches forward from current point.";
+
+    case '?':
+        return "No matches backward from current point.";
+
+    case 'g':
+        return repeated_current ? "No other entry matches." : "No matches.";
+
+    default:
+        return "Internal error in s_search()";
+    }
+}
+
 bool scmd_match_description_for_test(long ent, std::string_view search_text)
 {
     s_set_search_text(search_text);
     return s_match_description(ent);
+}
+
+std::string_view scmd_search_error_message_for_test(char command_ch, bool repeated_current)
+{
+    return s_search_error_message(command_ch, repeated_current);
 }
 
 void scmd_jump_num_for_test(char_int firstchar)
@@ -450,9 +473,9 @@ static long s_backward_search(long ent)
 // perhaps later have a wraparound search?
 static void s_search(std::string_view command)
 {
-    int         fill_type; // 0: forward, 1: backward
-    const char *error_msg;
-    const char  command_ch = s_command_char(command);
+    int              fill_type; // 0: forward, 1: backward
+    std::string_view error_msg;
+    const char       command_ch = s_command_char(command);
 
     if (!s_search_init)
     {
@@ -480,25 +503,26 @@ static void s_search(std::string_view command)
     if (s_search_text.empty())
     {
         s_beep();
-        std::printf("\nNo previous search string.\n");
+        fmt::print("\nNo previous search string.\n");
         (void)get_anything();
         g_s_ref_all = true;
         return;
     }
     s_go_bot();
-    std::printf("Searching for %s",s_search_text.c_str());
+    fmt::print("Searching for {}", s_search_text);
     std::fflush(stdout);
-    long ent = g_page_ents[g_s_ptr_page_line].ent_num;
+    const long current_ent = g_page_ents[g_s_ptr_page_line].ent_num;
+    long       ent = current_ent;
     switch (command_ch)
     {
     case '/':
-        error_msg = "No matches forward from current point.";
+        error_msg = s_search_error_message(command_ch, false);
         ent = s_forward_search(ent);
         fill_type = 0;          // forwards fill
         break;
 
     case '?':
-        error_msg = "No matches backward from current point.";
+        error_msg = s_search_error_message(command_ch, false);
         ent = s_backward_search(ent);
         fill_type = 1;          // backwards fill
         break;
@@ -509,14 +533,11 @@ static void s_search(std::string_view command)
         {
             ent = s_forward_search(0);  // from top
             // did we just loop around?
-            if (ent == g_page_ents[g_s_ptr_page_line].ent_num)
+            const bool repeated_current = ent == current_ent;
+            error_msg = s_search_error_message(command_ch, repeated_current);
+            if (repeated_current)
             {
                 ent = 0;
-                error_msg = "No other entry matches.";
-            }
-            else
-            {
-                error_msg = "No matches.";
             }
         }
         fill_type = 0;          // forwards fill
@@ -524,13 +545,13 @@ static void s_search(std::string_view command)
 
     default:
         fill_type = 0;
-        error_msg = "Internal error in s_search()";
+        error_msg = s_search_error_message(command_ch, false);
         break;
     }
     if (!ent)
     {
         s_beep();
-        std::printf("\n%s\n", error_msg);
+        fmt::print("\n{}\n", error_msg);
         (void)get_anything();
         g_s_ref_all = true;
         return;

@@ -145,6 +145,18 @@ TEST_F(ScanCommandTest, finishCommandCompletesCommandText)
     EXPECT_EQ("/topic", command);
 }
 
+TEST(ScanCommandSearchTest, searchNoMatchMessages)
+{
+    EXPECT_EQ("No matches forward from current point.",
+              std::string{scmd_search_error_message_for_test('/', false)});
+    EXPECT_EQ("No matches backward from current point.",
+              std::string{scmd_search_error_message_for_test('?', false)});
+    EXPECT_EQ("No matches.",
+              std::string{scmd_search_error_message_for_test('g', false)});
+    EXPECT_EQ("No other entry matches.",
+              std::string{scmd_search_error_message_for_test('g', true)});
+}
+
 TEST_F(ScanCommandTest, subjectDescriptionShortensReplyPrefix)
 {
     Article *article = article_ptr(ArticleNum{1});

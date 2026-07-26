@@ -10,6 +10,7 @@
 // Internal entry points for testing purposes.
 
 bool scmd_match_description_for_test(long ent, std::string_view search_text);
+std::string_view scmd_search_error_message_for_test(char command_ch, bool repeated_current);
 void scmd_jump_num_for_test(char_int firstchar);
 
 #endif

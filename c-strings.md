@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-309 - Selector Search Error Message View
-
-- Files: `libtrn/scmd.cpp`.
-- Kind: literal-only local pointer cleanup.
-- Function: `s_search`.
-- Dependencies: none.
-- Change: replace `error_msg` with `std::string_view` and use `fmt` for
-  the touched no-match output.
-- Tests: selector search no-match tests.
-
 #### CSTR-310 - Score Display Order View
 
 - Files: `libtrn/sadisp.cpp`.
