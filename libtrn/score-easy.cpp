@@ -13,9 +13,12 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <string>
+#include <string_view>
+#include <system_error>
 
 // returns new string or empty string to abort.
 std::string sc_easy_append()
@@ -104,18 +107,21 @@ std::string sc_easy_append()
             break;
 
         case '2':
+        {
             fmt::print("Enter the line below:\n");
             std::fflush(stdout);
-            g_buf[0] = '>';
-            g_buf[1] = FINISH_CMD;
-            if (finish_command(true))
+            const std::string command = finish_command(">", true);
+            if (!command.empty())
             {
-                line += g_buf + 1;
+                std::string_view command_text{command};
+                command_text.remove_prefix(1);
+                line += command_text;
                 return line;
             }
             fmt::print("\n");
             q_done = false;
             break;
+        }
 
         case 'h':
             fmt::print("No help available (yet).\n");
@@ -132,17 +138,31 @@ std::string sc_easy_append()
     {
         fmt::print("Enter a score amount (like 10 or -6):");
         std::fflush(stdout);
-        g_buf[0] = ' ';
-        g_buf[1] = FINISH_CMD;
-        if (finish_command(true))
+        const std::string command = finish_command(" ", true);
+        if (!command.empty())
         {
-            long score = std::atoi(g_buf + 1);
-            if (score == 0)
+            std::string_view score_text{command};
+            score_text.remove_prefix(1);
+            score_text.remove_prefix(std::min(score_text.find_first_not_of(" \t"), score_text.size()));
+            if (score_text.empty())
             {
-                if (g_buf[1] != '0')
+                continue; // the while loop
+            }
+            std::string_view parse_text{score_text};
+            if (parse_text.front() == '+')
+            {
+                parse_text.remove_prefix(1);
+                if (parse_text.empty())
                 {
-                    continue;   // the while loop
+                    continue; // the while loop
                 }
+            }
+            long                         score{};
+            const std::from_chars_result result =
+                std::from_chars(parse_text.data(), parse_text.data() + parse_text.size(), score);
+            if (result.ec != std::errc{} || (score == 0 && score_text.front() != '0'))
+            {
+                continue; // the while loop
             }
             line += std::to_string(score);
             line += ' ';

@@ -112,6 +112,39 @@ TEST_F(ScoreEasyTest, appendOtherScorefileReadsSingleCharacterAbbreviation)
               output);
 }
 
+TEST_F(ScoreEasyTest, appendOtherLineReturnsTypedLine)
+{
+    push_string("32!note\n", 0);
+
+    testing::internal::CaptureStdout();
+    const std::string line = sc_easy_append();
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("\" !note", line);
+}
+
+TEST_F(ScoreEasyTest, appendRuleRetriesInvalidScoreAmount)
+{
+    push_string("31bogus\n10\n1", 0);
+
+    testing::internal::CaptureStdout();
+    const std::string line = sc_easy_append();
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("\" 10 S", line);
+}
+
+TEST_F(ScoreEasyTest, appendRuleDestinationExitReturnsEmptyString)
+{
+    push_string("3110\n0", 0);
+
+    testing::internal::CaptureStdout();
+    const std::string line = sc_easy_append();
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(line.empty());
+}
+
 TEST_F(ScoreEasyTest, commandExitReturnsEmptyString)
 {
     push_char('0');

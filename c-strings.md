@@ -77,6 +77,11 @@ Record durable rules, current findings, and open slices.  When a slice is
 completed, remove it from the slice list instead of moving it into
 `Findings`.
 
+When removing a completed slice, also remove that slice ID from the
+`Dependencies` lists of all remaining slices.  Dependency lists should
+name only remaining blockers.  If a completed slice was part of a range,
+rewrite the range or list so it only names incomplete slices.
+
 Do not self-defer findings.  If source still contains matching raw
 string ownership, a fixed buffer, a raw return, or path storage, keep the
 candidate visible as a slice until it is completed or the user explicitly
@@ -580,25 +585,13 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-304 - Score Easy Command Completion
-
-- Files: `libtrn/score-easy.cpp`, `tests/test_score-easy.cpp`.
-- Kind: owner-local command buffer.
-- Function: `sc_easy_append`.
-- Dependencies: CSTR-302.
-- Change: use the string-owning command-completion API for the free-form
-  scorefile line and score amount prompts instead of seeding `g_buf`.
-  Parse the score amount from the owned command text.
-- Tests: score easy append tests for command line, score amount, and
-  abort paths.
-
 #### CSTR-305 - Article Pager Command Completion
 
 - Files: `libtrn/art.cpp`, `tests/test_art.cpp`.
 - Kind: owner-local command buffer.
 - Function: `finish_pager_command`, `finish_pager_dbl_command`, and
   pager debug pause input.
-- Dependencies: CSTR-302.
+- Dependencies: none.
 - Change: complete pager commands in owned strings instead of staging
   through `g_buf`.  Replace the DEBUG-only pause read with local string
   storage.
@@ -610,7 +603,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
 - Kind: owner-local command buffer.
 - Function: `stage_relocation_command` and `finish_relocation_command`.
-- Dependencies: CSTR-302.
+- Dependencies: none.
 - Change: use the string-owning command-completion API for relocation
   commands instead of copying the command into `g_buf`.
 - Tests: newsrc relocation prompt tests.
@@ -703,7 +696,7 @@ and clarified ownership at the edges.
 - Function: `get_cmd_into`, `edit_buf`, macro expansion, `set_def`,
   `in_char`, `in_answer`, and `in_choice`.
 - Dependencies: CSTR-291 through CSTR-292, CSTR-294 through CSTR-295,
-  and CSTR-302 through CSTR-308.
+  and CSTR-305 through CSTR-308.
 - Change: split terminal editing storage from `g_buf`.  Keep macro
   expansion, mouse input, `FINISH_CMD`, and default-command behavior
   intact while making the string-returning API the real owner.
@@ -716,7 +709,7 @@ and clarified ownership at the edges.
   `libtrn/rt-select.cpp`, `libtrn/trn.cpp`.
 - Kind: shared command/search buffer owner.
 - Function: article and newsgroup search command parsing.
-- Dependencies: CSTR-294 through CSTR-295, CSTR-302, and CSTR-306.
+- Dependencies: CSTR-294 through CSTR-295 and CSTR-306.
 - Change: replace search APIs that accept `g_buf` plus a buffer size
   with local `std::string` storage and `std::string_view` parsing.
   Preserve command-line completion and default search behavior.
@@ -729,8 +722,8 @@ and clarified ownership at the edges.
 - Kind: shared command scratch buffer.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
-- Dependencies: CSTR-292 through CSTR-297 and CSTR-302 through
-  CSTR-308.
+- Dependencies: CSTR-292, CSTR-294 through CSTR-297, and CSTR-305
+  through CSTR-308.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -760,8 +753,8 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-291 through CSTR-299 and CSTR-302 through
-  CSTR-308.
+- Dependencies: CSTR-291 through CSTR-292, CSTR-294 through CSTR-299,
+  and CSTR-305 through CSTR-308.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
