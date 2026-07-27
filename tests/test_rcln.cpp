@@ -271,6 +271,26 @@ TEST_F(AddArtNumTest, splitsRange)
     EXPECT_EQ(ArticleUnread{11}, m_group.m_to_read);
 }
 
+TEST_F(AddArtNumTest, removesFirstArticleFromRange)
+{
+    set_numbers("1-7");
+
+    remove_article(ArticleNum{1});
+
+    EXPECT_EQ("comp.lang.apl: 2-7", visible_rc_line());
+    EXPECT_EQ(ArticleUnread{11}, m_group.m_to_read);
+}
+
+TEST_F(AddArtNumTest, removesLastArticleFromRange)
+{
+    set_numbers("1-7");
+
+    remove_article(ArticleNum{7});
+
+    EXPECT_EQ("comp.lang.apl: 1-6", visible_rc_line());
+    EXPECT_EQ(ArticleUnread{11}, m_group.m_to_read);
+}
+
 TEST_F(AddArtNumTest, removesStandaloneFromMiddle)
 {
     set_numbers("1,3,5");

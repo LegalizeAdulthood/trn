@@ -565,13 +565,13 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 9, `strstr` 2, `strlen` 17.
+- Search and length: `strchr` 9, `strstr` 2, `strlen` 11.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 306,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 6.
+- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 3.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
@@ -627,16 +627,6 @@ No current slices.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-335 - Remove Read Article View Parser
-
-- Files: `libtrn/rcln.cpp`.
-- Kind: owner-local parser cleanup.
-- Function: `sub_art_num`.
-- Dependencies: none.
-- Change: parse the rc-number list with views and `std::from_chars`
-  while keeping the existing unread and range-splitting semantics.
-- Tests: unmark-read and xref-chase tests.
 
 #### CSTR-336 - Expired Article Range View Rewrite
 

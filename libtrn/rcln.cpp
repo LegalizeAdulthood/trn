@@ -323,22 +323,47 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
     }
 #endif
     np->show_subscribe_char();
-    char *rc_line = np->rc_line_data();
-    char *s = skip_eq(np->rc_numbers_data(), ' '); // skip spaces
+    std::string_view rc_line = np->m_rc_line;
+    const auto       is_digit_at = [rc_line](std::size_t offset)
+    { return offset < rc_line.size() && std::isdigit(static_cast<unsigned char>(rc_line[offset])); };
+    const auto digits_end = [rc_line](std::size_t offset)
+    {
+        const std::size_t end = rc_line.find_first_not_of("0123456789", offset);
+        return end == std::string_view::npos ? rc_line.size() : end;
+    };
+    const auto next_digit = [rc_line](std::size_t offset)
+    {
+        const std::size_t next = rc_line.find_first_of("0123456789", offset);
+        return next == std::string_view::npos ? rc_line.size() : next;
+    };
+    const auto parse_article_num = [rc_line](std::size_t offset)
+    {
+        long                   value{};
+        const std::string_view text = rc_line.substr(offset);
+        std::from_chars(text.data(), text.data() + text.size(), value);
+        return ArticleNum{value};
+    };
+
+    const std::size_t numbers_offset = static_cast<std::size_t>(np->m_num_offset);
+    std::size_t       s_offset = rc_line.find_first_not_of(' ', numbers_offset);
+    if (s_offset == std::string_view::npos)
+    {
+        s_offset = rc_line.size();
+    }
 
     // a little optimization, since it is almost always the last number
 
-    char *t = s + std::strlen(s); // find end of string
-    char *last_number = t;
-    while (last_number != s && std::isdigit(static_cast<unsigned char>(last_number[-1])))
+    std::size_t t_offset = rc_line.size(); // find end of string
+    std::size_t last_number = t_offset;
+    while (last_number != s_offset && std::isdigit(static_cast<unsigned char>(rc_line[last_number - 1])))
     {
         --last_number;
     }
-    if (last_number != s && last_number[-1] == ',' && ArticleNum{std::atol(last_number)} == art_num)
+    if (last_number != s_offset && rc_line[last_number - 1] == ',' && parse_article_num(last_number) == art_num)
     {
         std::string new_rc_line;
-        new_rc_line.reserve(std::strlen(rc_line));
-        new_rc_line.assign(rc_line, static_cast<std::size_t>(last_number - 1 - rc_line));
+        new_rc_line.reserve(rc_line.size());
+        new_rc_line = rc_line.substr(0, last_number - 1);
 #ifdef DEBUG
         if (g_debug & DEB_XREF_MARKER)
         {
@@ -357,15 +382,15 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
     // not the last number, oh well, we may need the length anyway
 
     ArticleNum min{};
-    while (std::isdigit(static_cast<unsigned char>(*s)) && art_num >= (min = ArticleNum{std::atol(s)}))
+    while (is_digit_at(s_offset) && art_num >= (min = parse_article_num(s_offset)))
     {
         // while it might have been read
-        t = skip_digits(s); // skip number
-        if (*t == '-')      // is it a range?
+        t_offset = digits_end(s_offset);                           // skip number
+        if (t_offset < rc_line.size() && rc_line[t_offset] == '-') // is it a range?
         {
-            ++t; // skip to next number
-            ArticleNum max{std::atol(t)};
-            t = skip_digits(t); // skip second number
+            ++t_offset; // skip to next number
+            ArticleNum max = parse_article_num(t_offset);
+            t_offset = digits_end(t_offset); // skip second number
             if (art_num <= max)
             {
                 // it is in range => already read
@@ -382,8 +407,8 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
                 }
 
                 std::string new_rc_line;
-                new_rc_line.reserve(std::strlen(rc_line) + (split_num ? (MAX_DIGITS + 1) * 2 + 1 : 2));
-                new_rc_line.assign(rc_line, static_cast<std::size_t>(s - rc_line));
+                new_rc_line.reserve(rc_line.size() + (split_num ? (MAX_DIGITS + 1) * 2 + 1 : 2));
+                new_rc_line = rc_line.substr(0, s_offset);
                 if (split_num) // split into two ranges?
                 {
                     new_rc_line += fmt::format("{}-{},{}-{}", min.value_of(), article_before(split_num).value_of(),
@@ -397,7 +422,7 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
                 {
                     new_rc_line += fmt::format("{}-{}", min.value_of(), max.value_of());
                 }
-                new_rc_line += t; // copy remainder over
+                new_rc_line += rc_line.substr(t_offset); // copy remainder over
 #ifdef DEBUG
                 if (g_debug & DEB_XREF_MARKER)
                 {
@@ -415,25 +440,25 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
         }
         else if (art_num == min) // explicitly a read article?
         {
-            char *remove_start = s;
-            char *remove_end = t;
-            if (*remove_end == ',') // pick a comma, any comma
+            std::size_t remove_start = s_offset;
+            std::size_t remove_end = t_offset;
+            if (remove_end < rc_line.size() && rc_line[remove_end] == ',') // pick a comma, any comma
             {
                 ++remove_end;
             }
-            else if (remove_start > rc_line && remove_start[-1] == ',')
+            else if (remove_start > 0 && rc_line[remove_start - 1] == ',')
             {
                 --remove_start;
             }
-            else if (remove_start - rc_line >= 2 && remove_start[-2] == ',') // (in case of space)
+            else if (remove_start >= 2 && rc_line[remove_start - 2] == ',') // (in case of space)
             {
                 remove_start -= 2;
             }
 
             std::string new_rc_line;
-            new_rc_line.reserve(std::strlen(rc_line));
-            new_rc_line.assign(rc_line, static_cast<std::size_t>(remove_start - rc_line));
-            new_rc_line += remove_end;
+            new_rc_line.reserve(rc_line.size());
+            new_rc_line = rc_line.substr(0, remove_start);
+            new_rc_line += rc_line.substr(remove_end);
 #ifdef DEBUG
             if (g_debug & DEB_XREF_MARKER)
             {
@@ -448,11 +473,8 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
             }
             return;
         }
-        while (*t && !std::isdigit(static_cast<unsigned char>(*t))) // skip comma and any spaces
-        {
-            ++t;
-        }
-        s = t;
+        t_offset = next_digit(t_offset); // skip comma and any spaces
+        s_offset = t_offset;
     }
     np->hide_subscribe_char();
 }
