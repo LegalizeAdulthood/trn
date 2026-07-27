@@ -574,7 +574,7 @@ static std::string decode_header_impl(std::string_view from)
     // Pass 2 to clear out "control" characters
     if (pass2_needed)
     {
-        dectrl(result.data());
+        dectrl(result);
     }
     return result;
 }
@@ -584,24 +584,26 @@ std::string decode_header(std::string_view from)
     return decode_header_impl(from);
 }
 
-void dectrl(char *str)
+void dectrl(std::string &str)
 {
-    if (str == nullptr)
+    for (std::size_t pos = 0; pos < str.size();)
     {
-        return;
-    }
-
-    while (*str)
-    {
-        int w = byte_length_at(str);
-        if (at_grey_space(str))
+        std::string_view text{str.data() + pos, str.size() - pos};
+        const int        w = byte_length_at(text);
+        if (w <= 0)
         {
-            for (int i = 0; i < w; i += 1)
+            break;
+        }
+
+        const std::size_t byte_count = static_cast<std::size_t>(w);
+        if (!at_norm_char(text) || text.front() == ' ')
+        {
+            for (std::size_t i = 0; i < byte_count; i += 1)
             {
-                str[i] = ' ';
+                str[pos + i] = ' ';
             }
         }
-        str += w;
+        pos += byte_count;
     }
 }
 

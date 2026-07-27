@@ -442,7 +442,7 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     end = line + line_size;
     if (!g_do_hiding)
     {
-        dectrl(line);
+        dectrl(line_buffer);
     }
     if (header_conv())
     {

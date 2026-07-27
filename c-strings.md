@@ -726,20 +726,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-424 - Header Control Cleanup String API
-
-- Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`,
-  `libtrn/rt-wumpus.cpp`, `tests/test_cache.cpp`.
-- Kind: mutable C-string helper API.
-- Function: `dectrl(char *)`.
-- Dependencies: none.
-- Change: replace the raw pointer API with a `std::string &` API that
-  mutates owned string storage.  Preserve the current replacement of
-  non-printing characters with spaces and use an empty string in place
-  of the former null-pointer no-op.
-- Tests: update existing `DectrlTest` cases to operate on
-  `std::string`.
-
 #### CSTR-425 - Shell Command Helper View API
 
 - Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
@@ -925,7 +911,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/rt-wumpus.cpp`, `tests/test_rt-wumpus.cpp`.
 - Kind: local cursor aliases into owned string storage.
 - Function: `tree_puts(std::string_view, ArticleLine, int)`.
-- Dependencies: CSTR-424.
+- Dependencies: none.
 - Change: replace local `char *line`, `char *end`, and `char *cp`
   cursor processing with `std::string`/`std::string_view` slices and
   indexes.  Remove the temporary embedded-NUL splitting and

@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#include <string.h>
+#include <string>
 
 using namespace testing;
 
@@ -60,35 +60,26 @@ TEST(ArticleCacheTest, setCachedLineParsesByteCount)
 class DectrlTest : public Test
 {
 protected:
-    void TearDown() override
-    {
-        if (m_buffer != nullptr)
-        {
-            free(m_buffer);
-        }
-    }
-
     void configure_unchanged(const char *before)
     {
-        m_before = before;
-        m_buffer = strdup(m_before);
+        m_buffer = before;
         m_expected = before;
     }
     void configure_before_expected(const char *before, const char *expected)
     {
-        m_before = before;
-        m_buffer = strdup(m_before);
+        m_buffer = before;
         m_expected = expected;
     }
 
-    const char *m_before{};
-    char *m_buffer{};
-    const char *m_expected{};
+    std::string m_buffer;
+    std::string m_expected;
 };
 
-TEST_F(DectrlTest, nullptr)
+TEST_F(DectrlTest, empty)
 {
-    dectrl(nullptr);
+    dectrl(m_buffer);
+
+    ASSERT_TRUE(m_buffer.empty());
 }
 
 TEST_F(DectrlTest, ascii_all_printable)
@@ -97,7 +88,7 @@ TEST_F(DectrlTest, ascii_all_printable)
 
     dectrl(m_buffer);
 
-    ASSERT_STREQ(m_expected, m_buffer) << "dectrl changed an ASCII string with all-printable characters";
+    ASSERT_EQ(m_expected, m_buffer) << "dectrl changed an ASCII string with all-printable characters";
 }
 
 TEST_F(DectrlTest, ascii_some_nonprintable)
@@ -106,7 +97,7 @@ TEST_F(DectrlTest, ascii_some_nonprintable)
 
     dectrl(m_buffer);
 
-    ASSERT_STREQ(m_expected, m_buffer) << "dectrl did not change an ASCII string with some non-printable characters";
+    ASSERT_EQ(m_expected, m_buffer) << "dectrl did not change an ASCII string with some non-printable characters";
 }
 
 TEST_F(DectrlTest, iso_8859_1)
@@ -115,7 +106,7 @@ TEST_F(DectrlTest, iso_8859_1)
 
     dectrl(m_buffer);
 
-    ASSERT_STREQ(m_expected, m_buffer) << "dectrl changed an ISO8859-1 string with all-printable characters";
+    ASSERT_EQ(m_expected, m_buffer) << "dectrl changed an ISO8859-1 string with all-printable characters";
 }
 
 TEST_F(DectrlTest, iso_8859_1_non_printable)
@@ -125,7 +116,7 @@ TEST_F(DectrlTest, iso_8859_1_non_printable)
 
     dectrl(m_buffer);
 
-    ASSERT_STREQ(m_expected, m_buffer) << "dectrl did not change an ISO8859-1 string with non-printable characters";
+    ASSERT_EQ(m_expected, m_buffer) << "dectrl did not change an ISO8859-1 string with non-printable characters";
 }
 
 TEST_F(DectrlTest, cjk_basic)
@@ -135,7 +126,7 @@ TEST_F(DectrlTest, cjk_basic)
 
     dectrl(m_buffer);
 
-    ASSERT_STREQ(m_expected, m_buffer) << "dectrl changed a CJK string with all-printable characters";
+    ASSERT_EQ(m_expected, m_buffer) << "dectrl changed a CJK string with all-printable characters";
 }
 
 TEST_F(DectrlTest, cjk_basic_non_printable)
@@ -147,5 +138,5 @@ TEST_F(DectrlTest, cjk_basic_non_printable)
 
     dectrl(m_buffer);
 
-    ASSERT_STREQ(m_expected, m_buffer) << "dectrl did not change a CJK string with non-printable characters";
+    ASSERT_EQ(m_expected, m_buffer) << "dectrl did not change a CJK string with non-printable characters";
 }
