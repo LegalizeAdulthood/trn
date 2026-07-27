@@ -621,17 +621,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-328 - MIME Content Type View Parser
-
-- Files: `libtrn/mime.cpp`.
-- Kind: local C-string parser cleanup.
-- Function: `MimeSection::mime_parse_type`.
-- Dependencies: none.
-- Change: keep the parsed MIME type as a `std::string_view` while
-  checking prefixes and suffixes, and parse `number` and `total`
-  parameters with `std::from_chars`.
-- Tests: MIME content-type and partial-message tests.
-
 #### CSTR-329 - Header Custom Line View Scan
 
 - Files: `libtrn/head.cpp`.

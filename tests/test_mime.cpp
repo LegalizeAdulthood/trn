@@ -135,6 +135,30 @@ TEST(MimeParseParamsTest, decodesEscapedQuotedValueWhenConsumed)
     section.mime_clear_struct();
 }
 
+TEST(MimeParseTypeTest, parsesMessagePartialParameters)
+{
+    MimeSection section{};
+
+    section.mime_parse_type("message/partial; id=\"part-id\"; number=2; total=4");
+
+    EXPECT_EQ(MESSAGE_MIME, section.m_type);
+    ASSERT_TRUE(section.m_filename);
+    EXPECT_EQ("part-id", *section.m_filename);
+    EXPECT_EQ(2, section.m_part);
+    EXPECT_EQ(4, section.m_total);
+}
+
+TEST(MimeParseTypeTest, preservesPrefixNumberParsing)
+{
+    MimeSection section{};
+
+    section.mime_parse_type("message/partial; id=part-id; number=2x; total=4x");
+
+    EXPECT_EQ(MESSAGE_MIME, section.m_type);
+    EXPECT_EQ(2, section.m_part);
+    EXPECT_EQ(4, section.m_total);
+}
+
 TEST(MimeDescriptionTest, describesTypeAndNormalizedFilename)
 {
     MimeSection section{};

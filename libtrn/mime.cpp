@@ -28,8 +28,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -577,42 +577,54 @@ void MimeSection::mime_parse_type(std::string_view text)
         return;
     }
     m_type_name = parsed.value;
-    const char *s = m_type_name->c_str();
-    std::string t = mime_find_param(m_type_params, "name");
+    const std::string_view type_name{*m_type_name};
+    std::string            t = mime_find_param(m_type_params, "name");
     if (!t.empty())
     {
         m_filename = t;
     }
 
-    if (string_case_equal(s, "text", 4))
+    if (string_case_equal(type_name.substr(0, 4), "text"))
     {
         m_type = TEXT_MIME;
-        s += 4;
-        if (*s++ != '/')
+        std::string_view sub_type = type_name.substr(4);
+        if (sub_type.empty() || sub_type.front() != '/')
         {
             return;
         }
+        sub_type.remove_prefix(1);
 #ifdef USE_UTF_HACK
         t = mime_find_param(m_type_params, "charset");
         utf_init(t, CHARSET_NAME_UTF8); // FIXME
 #endif
-        if (string_case_equal(s, "html", 4))
+        if (string_case_equal(sub_type.substr(0, 4), "html"))
         {
             m_type = HTML_TEXT_MIME;
         }
-        else if (string_case_equal(s, "x-vcard", 7))
+        else if (string_case_equal(sub_type.substr(0, 7), "x-vcard"))
         {
             m_type = UNHANDLED_MIME;
         }
         return;
     }
 
-    if (string_case_equal(s, "message/", 8))
+    if (string_case_equal(type_name.substr(0, 8), "message/"))
     {
-        s += 8;
+        const std::string_view sub_type = type_name.substr(8);
         m_type = MESSAGE_MIME;
-        if (string_case_equal(s, "partial"))
+        if (string_case_equal(sub_type, "partial"))
         {
+            const auto parse_part_number = [](std::string_view value)
+            {
+                int                          number{};
+                const std::from_chars_result result =
+                    std::from_chars(value.data(), value.data() + value.size(), number);
+                if (result.ec != std::errc{})
+                {
+                    return short{};
+                }
+                return static_cast<short>(number);
+            };
             t = mime_find_param(m_type_params, "id");
             if (t.empty())
             {
@@ -622,12 +634,12 @@ void MimeSection::mime_parse_type(std::string_view text)
             t = mime_find_param(m_type_params, "number");
             if (!t.empty())
             {
-                m_part = (short) std::atoi(t.c_str());
+                m_part = parse_part_number(t);
             }
             t = mime_find_param(m_type_params, "total");
             if (!t.empty())
             {
-                m_total = (short) std::atoi(t.c_str());
+                m_total = parse_part_number(t);
             }
             if (!m_total)
             {
@@ -639,16 +651,16 @@ void MimeSection::mime_parse_type(std::string_view text)
         return;
     }
 
-    if (string_case_equal(s, "multipart/", 10))
+    if (string_case_equal(type_name.substr(0, 10), "multipart/"))
     {
-        s += 10;
+        const std::string_view sub_type = type_name.substr(10);
         t = mime_find_param(m_type_params, "boundary");
         if (t.empty())
         {
             m_type = UNHANDLED_MIME;
             return;
         }
-        if (string_case_equal(s, "alternative", 11))
+        if (string_case_equal(sub_type.substr(0, 11), "alternative"))
         {
             m_flags |= MSF_ALTERNATIVE;
         }
@@ -658,13 +670,13 @@ void MimeSection::mime_parse_type(std::string_view text)
         return;
     }
 
-    if (string_case_equal(s, "image/", 6))
+    if (string_case_equal(type_name.substr(0, 6), "image/"))
     {
         m_type = IMAGE_MIME;
         return;
     }
 
-    if (string_case_equal(s, "audio/", 6))
+    if (string_case_equal(type_name.substr(0, 6), "audio/"))
     {
         m_type = AUDIO_MIME;
         return;
