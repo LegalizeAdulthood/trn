@@ -532,11 +532,11 @@ void arrow_macros()
     // want to redefine them.  (The tvi912c defines kl as ^H)
     //
 #ifdef MSDOS
-    const char *seq = "\035\110";
+    std::string_view seq = "\035\110";
 #else
-    const char *seq = Tgetstr("ku"); // up
+    std::string_view seq = Tgetstr("ku"); // up
 #endif
-    if ((int) std::strlen(seq) > 1)
+    if (seq.size() > 1)
     {
         set_macro(seq, s_up[g_auto_arrow_macros]);
     }
@@ -546,7 +546,7 @@ void arrow_macros()
 #else
     seq = Tgetstr("kd"); // down
 #endif
-    if ((int) std::strlen(seq) > 1)
+    if (seq.size() > 1)
     {
         set_macro(seq, s_down[g_auto_arrow_macros]);
     }
@@ -556,7 +556,7 @@ void arrow_macros()
 #else
     seq = Tgetstr("kl"); // left
 #endif
-    if ((int) std::strlen(seq) > 1)
+    if (seq.size() > 1)
     {
         set_macro(seq, s_left[g_auto_arrow_macros]);
     }
@@ -566,12 +566,12 @@ void arrow_macros()
 #else
     seq = Tgetstr("kr"); // right
 #endif
-    if ((int) std::strlen(seq) > 1)
+    if (seq.size() > 1)
     {
         set_macro(seq, s_right[g_auto_arrow_macros]);
     }
 
-    if (*seq == '\033')
+    if (!seq.empty() && seq.front() == '\033')
     {
         set_macro("\033\033", "\033");
     }

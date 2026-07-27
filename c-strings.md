@@ -660,9 +660,9 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strcmp` 1, `strchr` 3, `strstr` 2, `strlen` 8.
+- Search and length: `strcmp` 1, `strchr` 3, `strstr` 2, `strlen` 2.
 - C line input: `fgets` 4, `gets` 1.
-- C text output: `fputs` 155, `printf`/`std::printf` 293,
+- C text output: `fputs` 154, `printf`/`std::printf` 293,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 4, `memcmp` 1.
@@ -680,8 +680,9 @@ be modernized.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness.
 The `strstr` hits are in a disabled `#ifdef UNDEF` selector branch.
-The remaining `strchr` hits are inside the raw article-buffer reader and
-are covered by the `read_art_buf` removal slice.
+The remaining `strchr` and `strlen` hits are inside the raw
+article-buffer reader and are covered by the `read_art_buf` removal
+slice.
 
 ## Refactoring Slices
 
@@ -717,17 +718,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-438 - Arrow Macro Sequence Views
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: local read-only C string selected from literals or termcap.
-- Function: `arrow_macros`.
-- Dependencies: none.
-- Change: replace the local `const char *seq` cursor with
-  `std::string_view` and use `size`, `empty`, and `front` instead of
-  `std::strlen` and `*seq` checks.
-- Tests: build coverage is sufficient; this preserves calls through the
-  existing `set_macro(std::string_view, std::string_view)` API.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 
