@@ -601,10 +601,6 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `parse_line` moved to `std::string_view`.  Remaining raw input
   parameters are covered by existing add-newsgroup, shell, UTF, article
   display, regex-bytecode, or platform/API boundary buckets.
-- Local cursor scan: `tree_puts` already accepts `std::string_view`, but
-  still creates local `char *` aliases into `std::string` storage,
-  temporarily writes NULs, uses `std::strchr`, and walks pointers for
-  wrapping and output.
 - Additional local cursor scan: `perform`, `print_lines`, and
   `do_article` still walk local raw pointers over owned string storage
   or internal article storage.
@@ -633,7 +629,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   automatically string-storage slices.  Add explicit slices when an
   output call is tied to owned string construction, cursor cleanup, or
   audited runtime formatting; current cursor/output work is captured by
-  `CSTR-417` and `CSTR-430`.
+  `CSTR-430`.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -736,22 +732,6 @@ No current slices.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
-
-#### CSTR-417 - Tree Output Local Cursor Rewrite
-
-- Files: `libtrn/rt-wumpus.cpp`, `tests/test_rt-wumpus.cpp`.
-- Kind: local cursor aliases into owned string storage.
-- Function: `tree_puts(std::string_view, ArticleLine, int)`.
-- Dependencies: none.
-- Change: replace local `char *line`, `char *end`, and `char *cp`
-  cursor processing with `std::string`/`std::string_view` slices and
-  indexes.  Remove the temporary embedded-NUL splitting and
-  `std::strchr` scan where possible.  Preserve subject prefix output,
-  continuation indentation, wrapping, tree padding, color behavior, and
-  `virtual_write` backpager updates.
-- Tests: use existing `tree_puts` coverage in `test_rt-wumpus.cpp`; add
-  focused cases first if keyword splitting, continuation indentation, or
-  wrap-point behavior is not covered.
 
 #### CSTR-430 - Article Display Cursor
 

@@ -29,7 +29,6 @@
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
-#include <cstring>
 #include <limits>
 #include <string>
 #include <string_view>
@@ -414,18 +413,13 @@ static void print_tree_line(std::string_view tree_line)
 // Does automatic wrapping of lines that are too long.
 ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int is_subject)
 {
-    char       *line;
-    char       *end;
-    int         wrap_at;
-    ArticleLine start_line = header_line;
-    int         i;
-    char        ch;
-    char       *cp;
-    std::string substituted_line;
+    int                    wrap_at;
+    ArticleLine            start_line = header_line;
+    int                    i;
+    std::string            substituted_line;
+    std::string            blank_line;
     const std::string_view line_text = orig_line.substr(0, orig_line.find('\n'));
 
-    // Make a modifiable copy of the line
-    // Copy line, filtering encoded and control characters.
     std::string line_buffer;
     line_buffer.reserve(line_text.size() + 2);
     if (g_do_hiding)
@@ -436,77 +430,62 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     {
         line_buffer.assign(line_text);
     }
-    const std::size_t line_size = line_buffer.size();
-    line_buffer.resize(line_size + 2, '\0');
-    line = line_buffer.data();
-    end = line + line_size;
     if (!g_do_hiding)
     {
         dectrl(line_buffer);
     }
+    std::string_view line = line_buffer;
     if (header_conv())
     {
         substituted_line = str_char_subst(line, *g_char_subst);
-        line = substituted_line.data();
-        end = line + substituted_line.size();
+        line = substituted_line;
     }
 
-    if (!*line)
+    if (line.empty())
     {
-        if (header_conv())
-        {
-            substituted_line = " ";
-            line = substituted_line.data();
-        }
-        else
-        {
-            line[0] = ' ';
-            line[1] = '\0';
-        }
-        end = line + 1;
+        blank_line = " ";
+        line = blank_line;
     }
 
     color_object(COLOR_HEADER, true);
     // If this is the first subject line, output it with a preceding [1]
-    if (is_subject && !std::isspace(*line))
+    if (is_subject && !std::isspace(static_cast<unsigned char>(line.front())))
     {
         if (g_threaded_group)
         {
             color_object(COLOR_TREE_MARK, true);
-            std::putchar('[');
-            std::putchar(g_curr_artp->thread_letter());
-            std::putchar(']');
+            fmt::print("[{}]", g_curr_artp->thread_letter());
             color_pop();
-            std::putchar(' ');
+            fmt::print(" ");
             s_header_indent = 4;
         }
         else
         {
-            std::fputs("Subject: ", stdout);
+            fmt::print("Subject: ");
             s_header_indent = 9;
         }
         i = 0;
     }
     else
     {
-        if (*line != ' ')
+        if (line.front() != ' ')
         {
             // A "normal" header line -- output keyword and set s_header_indent
             // _except_ for the first line, which is a non-standard header.
-            if (!header_line || !(cp = std::strchr(line, ':')) || *++cp != ' ')
+            const std::size_t colon = line.find(':');
+            if (!header_line || colon == std::string_view::npos || colon + 1 == line.size() || line[colon + 1] != ' ')
             {
                 s_header_indent = 0;
             }
             else
             {
-                *cp = '\0';
-                std::fputs(line, stdout);
-                std::putchar(' ');
-                s_header_indent = ++cp - line;
-                line = cp;
-                if (!*line)
+                fmt::print("{} ", line.substr(0, colon + 1));
+                s_header_indent = static_cast<int>(colon + 2);
+                line.remove_prefix(colon + 2);
+                if (line.empty())
                 {
-                    *--line = ' ';
+                    blank_line = " ";
+                    line = blank_line;
                 }
             }
             i = 0;
@@ -514,24 +493,21 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
         else
         {
             // Skip whitespace of continuation lines and prepare to indent
-            line = skip_eq(++line, ' ');
+            line.remove_prefix(1);
+            line = skip_eq(line, ' ');
             i = s_header_indent;
         }
     }
-    for (; *line; i = s_header_indent)
+    for (; !line.empty(); i = s_header_indent)
     {
         maybe_eol();
         if (i)
         {
-            std::putchar('+');
-            while (--i)
-            {
-                std::putchar(' ');
-            }
+            fmt::print("+{}", std::string(static_cast<std::size_t>(i - 1), ' '));
         }
         g_term_col = s_header_indent;
         // If no (more) tree lines, wrap at g_tc_COLS-1
-        if (s_max_line < 0 || header_line > s_max_line+1)
+        if (s_max_line < 0 || header_line > s_max_line + 1)
         {
             wrap_at = g_tc_COLS - 1;
         }
@@ -540,62 +516,61 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             wrap_at = g_tc_COLS - s_max_depth - 3;
         }
         // Figure padding between header and tree output, wrapping long lines
-        int pad_cnt = wrap_at - (end - line + s_header_indent);
+        int              pad_cnt = wrap_at - (static_cast<int>(line.size()) + s_header_indent);
+        std::string_view output_text = line;
+        std::size_t      next_offset = line.size();
         if (pad_cnt <= 0)
         {
-            cp = line + (int)(wrap_at - s_header_indent - 1);
+            const int   soft_limit = std::max(wrap_at - s_header_indent - 1, 0);
+            const int   hard_limit = std::max(wrap_at - s_header_indent, 0);
+            std::size_t split = std::min(static_cast<std::size_t>(soft_limit), line.size());
             pad_cnt = 1;
-            while (cp > line && *cp != ' ')
+            while (split > 0 && line[split] != ' ')
             {
-                if (*--cp == ',' || *cp == '.' || *cp == '-' || *cp == '!')
+                --split;
+                if (line[split] == ',' || line[split] == '.' || line[split] == '-' || line[split] == '!')
                 {
-                    cp++;
+                    ++split;
                     break;
                 }
                 pad_cnt++;
             }
-            if (cp == line)
+            if (split == 0)
             {
-                cp += wrap_at - s_header_indent;
+                split = std::min(static_cast<std::size_t>(hard_limit), line.size());
                 pad_cnt = 0;
             }
-            ch = *cp;
-            *cp = '\0';
+            output_text = line.substr(0, split);
+            next_offset = split;
             // keep rn's backpager happy
             virtual_write(g_art_line_num, virtual_read(line_before(g_art_line_num)));
             ++g_art_line_num;
         }
-        else
-        {
-            cp = end;
-            ch = '\0';
-        }
         if (is_subject)
         {
-            color_string(COLOR_SUBJECT, line);
+            color_string(COLOR_SUBJECT, output_text);
         }
-        else if (s_header_indent == 0 && *line != '+')
+        else if (s_header_indent == 0 && !output_text.empty() && output_text.front() != '+')
         {
-            color_string(COLOR_ART_LINE1, line);
+            color_string(COLOR_ART_LINE1, output_text);
         }
         else
         {
-            std::fputs(line, stdout);
+            fmt::print("{}", output_text);
         }
-        *cp = ch;
         // Skip whitespace in wrapped line
-        while (*cp == ' ')
+        while (next_offset < line.size() && line[next_offset] == ' ')
         {
-            cp++;
+            ++next_offset;
         }
-        line = cp;
+        line.remove_prefix(next_offset);
         // Check if we've got any tree lines to output
         if (wrap_at != g_tc_COLS - 1 && header_line <= s_max_line)
         {
-            do
+            for (int pad = pad_cnt; pad >= 0; --pad)
             {
-                std::putchar(' ');
-            } while (pad_cnt--);
+                fmt::print(" ");
+            }
             g_term_col = wrap_at;
             // Check string for the '*' flagging our current node
             // and the '@' flagging our prior node.
@@ -605,12 +580,12 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
                 print_tree_line(s_tree_lines[header_line.value_of()]);
             }
             color_pop(); // of COLOR_TREE
-        }// if
+        } // if
         newline();
         ++header_line;
-    }// for remainder of line
+    } // for remainder of line
 
-    color_pop();        // of COLOR_HEADER
+    color_pop(); // of COLOR_HEADER
     // return number of lines displayed
     return header_line - start_line;
 }
@@ -626,7 +601,7 @@ ArticleLine finish_tree(ArticleLine last_line)
     {
         ++g_art_line_num;
         last_line += tree_puts("+", last_line, 0);
-        virtual_write(g_art_line_num, g_art_pos);    // keep rn's backpager happy
+        virtual_write(g_art_line_num, g_art_pos); // keep rn's backpager happy
     }
     return last_line - start_line;
 }

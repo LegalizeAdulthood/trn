@@ -7,6 +7,7 @@
 #include <trn/artstate.h>
 #include <trn/charsubst.h>
 #include <trn/ng.h>
+#include <trn/ngdata.h>
 #include <trn/rt-select.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
@@ -29,6 +30,7 @@ protected:
         m_old_do_hiding = g_do_hiding;
         m_old_char_subst = g_char_subst;
         m_old_max_tree_lines = g_max_tree_lines;
+        m_old_threaded_group = g_threaded_group;
         m_old_tc_cols = g_tc_COLS;
         m_old_tc_so = g_tc_SO;
         m_old_tc_se = g_tc_SE;
@@ -74,6 +76,7 @@ protected:
         g_do_hiding = m_old_do_hiding;
         g_char_subst = m_old_char_subst;
         g_max_tree_lines = m_old_max_tree_lines;
+        g_threaded_group = m_old_threaded_group;
         g_tc_COLS = m_old_tc_cols;
         g_tc_SO = m_old_tc_so;
         g_tc_SE = m_old_tc_se;
@@ -97,6 +100,7 @@ protected:
     bool        m_old_do_hiding{};
     const char *m_old_char_subst{};
     int         m_old_max_tree_lines{};
+    bool        m_old_threaded_group{};
     int         m_old_tc_cols{};
     const char *m_old_tc_so{};
     const char *m_old_tc_se{};
@@ -148,6 +152,49 @@ TEST_F(TreeRenderingTest, hiddenHeaderDecodesEncodedWords)
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("From: Bozo the Clown\n", output);
+    EXPECT_EQ(ArticleLine{1}, lines);
+}
+
+TEST_F(TreeRenderingTest, continuationLineUsesPreviousHeaderIndent)
+{
+    g_curr_artp = nullptr;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine first_lines = tree_puts("From: Tester", ArticleLine{1}, 0);
+    const ArticleLine second_lines = tree_puts(" continuation", ArticleLine{2}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: Tester\n+     continuation\n", output);
+    EXPECT_EQ(ArticleLine{1}, first_lines);
+    EXPECT_EQ(ArticleLine{1}, second_lines);
+}
+
+TEST_F(TreeRenderingTest, longHeaderValueWrapsAtWordBoundary)
+{
+    g_curr_artp = nullptr;
+    g_tc_COLS = 20;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts("From: alpha beta gamma delta", ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: alpha beta\n+     gamma delta\n", output);
+    EXPECT_EQ(ArticleLine{2}, lines);
+}
+
+TEST_F(TreeRenderingTest, subjectLineGetsSubjectPrefixWhenUnthreaded)
+{
+    g_curr_artp = nullptr;
+    g_threaded_group = false;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts("Thread title", ArticleLine{1}, 1);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Subject: Thread title\n", output);
     EXPECT_EQ(ArticleLine{1}, lines);
 }
 
