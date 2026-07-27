@@ -544,10 +544,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   can be moved bottom-up to the same owned line API.
 - Numeric command scan: `num_num` now accepts command text directly and
   parses numeric range text from that view instead of `g_buf`.
-- Terminal input scan: `finish_command(int)`, `store_command`, and
-  typeahead cleanup still preserve command/input text in `g_buf` for
-  legacy callers.  `in_choice` now returns edited choice text through
-  caller-owned string storage.
+- Terminal input scan: `finish_command(int)` and `store_command` still
+  preserve command/input text in `g_buf` for legacy callers.  `in_choice`
+  now returns edited choice text through caller-owned string storage, and
+  typeahead cleanup now uses owner-local scratch storage.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
@@ -663,17 +663,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-407 - Typeahead Scratch Buffer
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: terminal scratch buffer.
-- Function: `eat_typeahead`.
-- Dependencies: none.
-- Change: replace temporary typeahead reads into `g_buf` with local
-  storage and pass the resulting text view to `push_string`.
-- Tests: terminal typeahead tests if available; otherwise focused
-  terminal command tests.
-
 #### CSTR-408 - Finish Command Legacy Wrapper
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
@@ -710,7 +699,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-407, CSTR-408.
+- Dependencies: CSTR-408.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

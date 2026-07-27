@@ -1137,12 +1137,16 @@ void eat_typeahead()
     {
 #ifdef PENDING
         KeyMap*curmap = s_top_map;
+        std::string typeahead;
+        typeahead.reserve(LINE_BUF_LEN + 1);
         int    j;
         for (j = 0; input_pending();)
         {
             errno = 0;
-            if (read_tty(&g_buf[j], 1) < 0)
+            typeahead.resize(static_cast<std::size_t>(j) + 1);
+            if (read_tty(&typeahead[static_cast<std::size_t>(j)], 1) < 0)
             {
+                typeahead.resize(static_cast<std::size_t>(j));
                 if (errno && errno != EINTR)
                 {
                     std::perror(s_read_err);
@@ -1150,11 +1154,12 @@ void eat_typeahead()
                 }
                 continue;
             }
-            Uchar lc = *(Uchar*)g_buf;
+            Uchar lc = static_cast<Uchar>(typeahead.front());
             if ((lc & 0200) || curmap == nullptr)
             {
                 curmap = s_top_map;
                 j = 0;
+                typeahead.clear();
                 continue;
             }
             j++;
@@ -1164,7 +1169,8 @@ void eat_typeahead()
                 {
                     goto dbl_break;
                 }
-                read_tty(&g_buf[j++],1);
+                typeahead.resize(static_cast<std::size_t>(j) + 1);
+                read_tty(&typeahead[static_cast<std::size_t>(j++)],1);
             }
 
             switch (curmap->km_type[lc] & KM_TMASK)
@@ -1173,6 +1179,7 @@ void eat_typeahead()
             case KM_NOTHING:           // no entry?
                 curmap = s_top_map;
                 j = 0;
+                typeahead.clear();
                 continue;
 
             case KM_KEYMAP:           // another keymap?
@@ -1184,8 +1191,8 @@ dbl_break:
         if (j)
         {
             // Don't delete a partial macro sequence
-            g_buf[j] = '\0';
-            push_string(g_buf,0);
+            typeahead.resize(static_cast<std::size_t>(j));
+            push_string(typeahead,0);
         }
 #else // this is probably v7
 #ifdef I_TERMIOS
