@@ -605,9 +605,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   temporarily writes NULs, uses `std::strchr`, and walks pointers for
   wrapping and output.
 - Additional local cursor scan: `perform`, `print_lines`, `do_article`,
-  `parse_rcline`, `set_to_read`, and `write_newsrcs` still walk local
-  raw pointers over owned string storage or internal `.newsrc` line
-  storage.
+  `set_to_read`, and `write_newsrcs` still walk local raw pointers over
+  owned string storage or internal `.newsrc` line storage.
 - UTF helper scan: `byte_length_at`, `code_point_at`,
   `visual_width_at`, `put_char_adv`, and `dectrl` still expose or depend
   on raw C-string cursor APIs.  These should be refactored bottom-up so
@@ -733,21 +732,6 @@ No current slices.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-426 - Newsrc Line Parser Cursor
-
-- Files: `libtrn/rcstuff.cpp`, `libtrn/ngdata.cpp`,
-  `libtrn/include/trn/ngdata.h`, `tests/test_rcstuff.cpp`,
-  `tests/test_rcln.cpp`.
-- Kind: local cursor aliases into owned string storage.
-- Function: `parse_rcline`.
-- Dependencies: none.
-- Change: replace local `char *` walking over `NewsgroupData::m_rc_line`
-  with indexes and `std::string_view` slices.  Preserve malformed-line
-  repair, unthreaded flag detection, subscribe-character storage,
-  `m_num_offset`, and the hidden-subscribe-character behavior.
-- Tests: use existing newsrc parsing tests; add focused coverage first
-  if malformed-line repair or unthreaded flag conversion is not covered.
-
 #### CSTR-433 - Newsrc Add Newsgroup Name View
 
 - Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
@@ -769,7 +753,7 @@ them before broad global-buffer work and before removing helpers.
   `tests/test_bits.cpp`, `tests/test_rcln.cpp`.
 - Kind: raw string return helper.
 - Function: `NewsgroupData::rc_numbers_c_str`.
-- Dependencies: CSTR-426.
+- Dependencies: none.
 - Change: replace the read-only numbers accessor with a
   `std::string_view` return and update callers to use view operations or
   `fmt` output.  Keep mutable `rc_numbers_data` only for slices that
@@ -784,7 +768,7 @@ them before broad global-buffer work and before removing helpers.
   `libtrn/bits.cpp`, `libtrn/trn.cpp`, `libtrn/univ.cpp`.
 - Kind: raw string return helper.
 - Function: `NewsgroupData::rc_line_c_str`.
-- Dependencies: CSTR-426.
+- Dependencies: none.
 - Change: replace the read-only line accessor with a
   `std::string_view` return and update output, matching, hashing, and
   newsgroup-name callers to consume the view directly.  Do not alter
@@ -811,7 +795,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
 - Kind: mutable cursor into owned `.newsrc` line storage.
 - Function: `write_newsrcs`.
-- Dependencies: CSTR-426, CSTR-428.
+- Dependencies: CSTR-428.
 - Change: replace the local `char *delim` cursor into `m_rc_line` with
   index-based edits or an owner-local helper.  Preserve
   `show_subscribe_char`/`hide_subscribe_char`, unthreaded `:0` output

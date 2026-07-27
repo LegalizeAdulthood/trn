@@ -426,6 +426,55 @@ TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
     unuse_multirc(&multirc);
 }
 
+TEST_F(NewsrcRotationTest, useMultircRepairsMissingNewsrcDelimiter)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl\n";
+
+    ASSERT_TRUE(multirc.use_multirc());
+
+    ASSERT_EQ(1, g_newsgroup_order.size());
+    NewsgroupData *group = g_newsgroup_order[0];
+    EXPECT_EQ("comp.lang.apl", group->rc_name());
+    EXPECT_EQ(':', group->m_subscribe_char);
+    EXPECT_EQ(static_cast<int>(std::string_view{"comp.lang.apl"}.size() + 1), group->m_num_offset);
+    group->show_subscribe_char();
+    EXPECT_EQ("comp.lang.apl: ", group->m_rc_line);
+    group->hide_subscribe_char();
+    unuse_multirc(&multirc);
+}
+
+TEST_F(NewsrcRotationTest, useMultircDetectsUnthreadedNewsrcLine)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl: 0\n";
+
+    ASSERT_TRUE(multirc.use_multirc());
+
+    ASSERT_EQ(1, g_newsgroup_order.size());
+    NewsgroupData *group = g_newsgroup_order[0];
+    EXPECT_EQ(NF_UNTHREADED, group->m_flags & NF_UNTHREADED);
+    EXPECT_EQ(':', group->m_subscribe_char);
+    group->show_subscribe_char();
+    EXPECT_EQ("comp.lang.apl: 1", group->m_rc_line);
+    group->hide_subscribe_char();
+    unuse_multirc(&multirc);
+}
+
 TEST_F(NewsrcRotationTest, useMultircRestoresStateFromInfoFile)
 {
     const fs::path active_path = m_output_dir / "active";

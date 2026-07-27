@@ -966,29 +966,27 @@ static bool open_newsrc(Newsrc *rp)
 
 static void parse_rcline(NewsgroupData *np)
 {
-    char* s;
-
-    char *rc_line = np->rc_line_data();
-    for (s=rc_line; *s && *s!=':' && *s!=UNSUBSCRIBED_CHAR && !std::isspace(*s); s++)
+    std::string                &rc_line = np->m_rc_line;
+    const std::string::iterator delimiter =
+        std::find_if(rc_line.begin(), rc_line.end(),
+                     [](unsigned char ch) { return ch == ':' || ch == UNSUBSCRIBED_CHAR || std::isspace(ch); });
+    const std::size_t delimiter_pos = static_cast<std::size_t>(std::distance(rc_line.begin(), delimiter));
+    if ((delimiter == rc_line.end() || std::isspace(static_cast<unsigned char>(*delimiter))) && !g_check_flag)
     {
+        rc_line.resize(delimiter_pos);
+        rc_line += ": ";
     }
-    int len = s - rc_line;
-    if ((!*s || std::isspace(*s)) && !g_check_flag)
-    {
-        np->m_rc_line.resize(static_cast<std::size_t>(len));
-        np->m_rc_line += ": ";
-        s = np->rc_line_data() + len;
-    }
-    if (static_cast<std::size_t>(len + 2) < np->m_rc_line.size() && *s == ':' && s[1] && s[2] == '0')
+    if (delimiter_pos + 2 < rc_line.size() && rc_line[delimiter_pos] == ':' && rc_line[delimiter_pos + 1] &&
+        rc_line[delimiter_pos + 2] == '0')
     {
         np->m_flags |= NF_UNTHREADED;
-        s[2] = '1';
+        rc_line[delimiter_pos + 2] = '1';
     }
-    np->m_subscribe_char = *s;         // salt away the : or !
-    np->m_num_offset = len + 1;        // remember where the numbers are
-    if (static_cast<std::size_t>(len) < np->m_rc_line.size())
+    np->m_subscribe_char = delimiter_pos < rc_line.size() ? rc_line[delimiter_pos] : '\0'; // salt away the : or !
+    np->m_num_offset = static_cast<int>(delimiter_pos + 1); // remember where the numbers are
+    if (delimiter_pos < rc_line.size())
     {
-        *s = '\0';                      // null terminate newsgroup name
+        rc_line[delimiter_pos] = '\0'; // null terminate newsgroup name
     }
 }
 
