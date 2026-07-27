@@ -741,6 +741,32 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForUnsubscribedGroup)
     unuse_multirc(&multirc);
 }
 
+TEST_F(NewsrcRotationTest, getNewsgroupResubscribeRestoresUnthreadedFlag)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    m_data_source.m_news_id = active_path.generic_string();
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    newsrc.flags = RF_NONE;
+    std::ofstream{newsrc.name} << "comp.lang.apl! 0-3\n";
+    ASSERT_TRUE(multirc.use_multirc());
+
+    push_char('y');
+    testing::internal::CaptureStdout();
+    const bool found = get_newsgroup("comp.lang.apl", GNG_NONE);
+    (void) testing::internal::GetCapturedStdout();
+
+    ASSERT_TRUE(found);
+    ASSERT_NE(nullptr, g_newsgroup_ptr);
+    EXPECT_EQ(':', g_newsgroup_ptr->m_subscribe_char);
+    EXPECT_EQ(NF_UNTHREADED, g_newsgroup_ptr->m_flags & NF_UNTHREADED);
+    EXPECT_EQ(RF_RC_CHANGED, newsrc.flags & RF_RC_CHANGED);
+    unuse_multirc(&multirc);
+}
+
 TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)
 {
     Newsrc newsrc = make_newsrc();

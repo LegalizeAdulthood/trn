@@ -615,11 +615,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Shell helper scan: `do_shell` still takes raw C strings and forces
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
-- Newsgroup data scan: `rc_numbers_data` has one remaining production
-  caller in the `get_newsgroup` resubscribe path, where only a
-  read-only view is needed.  `rc_line_data` has no production callers.
-  After the resubscribe path uses `rc_numbers`, both mutable raw
-  accessors can be removed.
+- Newsgroup data scan: `rc_line_data` and `rc_numbers_data` have no
+  production callers.  Both mutable raw accessors can be removed.
 - Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
   callers pass owned `std::string` storage directly.
 - Non-zero C function dataflow scan: remaining search/length hits are
@@ -719,18 +716,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-435 - Newsrc Resubscribe Numbers View
-
-- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
-- Kind: read-only cursor into owned `.newsrc` line storage.
-- Function: `get_newsgroup`.
-- Dependencies: none.
-- Change: replace the local `char *cp` from `rc_numbers_data()` with a
-  `std::string_view` from `rc_numbers()`.  Preserve the existing
-  unthreaded detection that checks for the saved `0` marker when a user
-  resubscribes to an unsubscribed group.
-- Tests: add focused coverage first if no existing resubscribe test
-  covers an unthreaded marker.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 
@@ -798,7 +784,7 @@ owned strings or owner-specific storage.
 - Kind: unused mutable raw accessors.
 - Functions: `NewsgroupData::rc_line_data`,
   `NewsgroupData::rc_numbers_data`.
-- Dependencies: CSTR-435.
+- Dependencies: none.
 - Change: remove the mutable raw `.newsrc` line accessors after all
   production callers use `rc_line()` and `rc_numbers()` views or owner
   operations on `m_rc_line`.

@@ -1265,8 +1265,9 @@ reask_unsub:
         }
         else if (command_ch == 'y')
         {
-            char *cp = g_newsgroup_ptr->rc_numbers_data();
-            g_newsgroup_ptr->m_flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : NF_NONE);
+            const std::string_view numbers = g_newsgroup_ptr->rc_numbers();
+            g_newsgroup_ptr->m_flags =
+                (numbers.size() > 1 && numbers[0] != '\0' && numbers[1] == '0' ? NF_UNTHREADED : NF_NONE);
             g_newsgroup_ptr->m_subscribe_char = ':';
             g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
             flags &= ~GNG_RELOC;
