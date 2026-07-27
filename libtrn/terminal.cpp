@@ -1931,10 +1931,9 @@ int print_lines(std::string_view what_to_print, int hilite)
         return 0;
     }
 
-    const char       *s = what_to_print.data();
-    const char *const end = s + what_to_print.size();
+    std::string_view text = what_to_print;
 
-    for (; s != end;)
+    for (; !text.empty();)
     {
         int i = check_page_line();
         if (i)
@@ -1961,28 +1960,28 @@ int print_lines(std::string_view what_to_print, int hilite)
 #endif
             underline();
         }
-        for (i = 0; s != end && i < g_tc_COLS;)
+        for (i = 0; !text.empty() && i < g_tc_COLS;)
         {
-            if (at_norm_char(s))
+            if (at_norm_char(text))
             {
-                i += put_char_adv(&s, true);
+                i += put_char_adv(text, true);
             }
-            else if (*s == '\t')
+            else if (text.front() == '\t')
             {
-                std::putchar(*s);
-                s++;
+                std::putchar(text.front());
+                text.remove_prefix(1);
                 i = ((i+8) & ~7);
             }
-            else if (*s == '\n')
+            else if (text.front() == '\n')
             {
-                s++;
+                text.remove_prefix(1);
                 i = 32000;
             }
             else
             {
                 std::putchar('^');
-                std::putchar(*s + 64);
-                s++;
+                std::putchar(text.front() + 64);
+                text.remove_prefix(1);
                 i += 2;
             }
         }

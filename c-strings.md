@@ -639,7 +639,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   automatically string-storage slices.  Add explicit slices when an
   output call is tied to owned string construction, cursor cleanup, or
   audited runtime formatting; current cursor/output work is captured by
-  `CSTR-417`, `CSTR-429`, and `CSTR-430`.
+  `CSTR-417` and `CSTR-430`.
 - MIME content-decoding paths now own local string storage for decoded
   lines except for the three helper signatures listed above.
 - NNTP response parsing no longer uses `sscanf`.  The shared
@@ -725,19 +725,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-423 - UTF Advancing Output Cursor
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `libtrn/art.cpp`, `libtrn/terminal.cpp`, `tests/test_utf.cpp`.
-- Kind: C-string cursor helper API.
-- Function: `put_char_adv(const char **, bool)`.
-- Dependencies: none.
-- Change: replace the pointer-to-pointer API with a
-  `std::string_view &` cursor that removes the consumed prefix.  Keep
-  output and width behavior unchanged.
-- Tests: update existing `put_char_adv` tests to validate cursor
-  advancement through a view.
 
 #### CSTR-424 - Header Control Cleanup String API
 
@@ -949,26 +936,12 @@ are available.  Keep the listed order inside dependent families.
   focused cases first if keyword splitting, continuation indentation, or
   wrap-point behavior is not covered.
 
-#### CSTR-429 - Terminal Print Lines Cursor
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  `tests/test_terminal.cpp`.
-- Kind: local cursor alias into borrowed string view.
-- Function: `print_lines(std::string_view, int)`.
-- Dependencies: CSTR-423.
-- Change: replace local `const char *s`/`end` cursor walking with a
-  `std::string_view` cursor.  Preserve page-stop behavior, highlighting,
-  tab expansion, caret output for control characters, and newline
-  handling.
-- Tests: use existing `print_lines` tests and add focused coverage first
-  if tab/control/highlight branches are not covered.
-
 #### CSTR-430 - Article Display Cursor
 
 - Files: `libtrn/art.cpp`, `tests/test_art.cpp`.
 - Kind: local cursor alias into owned article line storage.
 - Function: `do_article`.
-- Dependencies: CSTR-416, CSTR-423.
+- Dependencies: CSTR-416.
 - Change: replace `buf_ptr`/`buf_begin` pointer walking over
   `g_art_line` with view/index state for display output.  Preserve
   underline handling, ROT13, UTF output, page-stop searches, header

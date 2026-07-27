@@ -510,8 +510,8 @@ bool at_norm_char(std::string_view s)
         const char ch = s.front();
         if (s_gs.in == CHARSET_UTF8)
         {
-            const std::string text{s};
-            it = at_norm_char(text.c_str());
+            CodePoint c = code_point_at(s);
+            it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
         }
         else if (U(ch) < 0x80)
         {
@@ -547,41 +547,35 @@ bool at_norm_char(const char *s)
     return it;
 }
 
-int put_char_adv(const char **strptr, bool outputok)
+int put_char_adv(std::string_view &text, bool outputok)
 {
-    int it;
-    if (strptr == nullptr)
+    int it = 0;
+    if (!text.empty())
     {
-        it = 0;
-    }
-    else
-    {
-        const char *s = *strptr;
-        if (s_gs.in == CHARSET_UTF8 || (*s >= ' ' && *s < 0x7F))
+        const char ch = text.front();
+        if (s_gs.in == CHARSET_UTF8 || (ch >= ' ' && ch < 0x7F))
         {
-            int w = byte_length_at(s);
-            it = visual_width_at(s);
+            const int w = byte_length_at(text);
+            it = visual_width_at(text);
             if (outputok)
             {
                 for (int i = 0; i < w; i += 1)
                 {
-                    std::putchar(*s);
-                    s++;
+                    std::putchar(text[static_cast<std::size_t>(i)]);
                 }
             }
-            *strptr = s;
+            text.remove_prefix(static_cast<std::size_t>(w));
         }
         else if (s_gs.himap_in)
         {
             char buf[7];
-            int w = insert_utf8_at(buf, s_gs.himap_in[U(*s) & 0x7F]);
+            int w = insert_utf8_at(buf, s_gs.himap_in[U(ch) & 0x7F]);
             for (int i = 0; i < w; i += 1)
             {
                 std::putchar(buf[i]);
             }
             it = 1;
-            s++;
-            *strptr = s;
+            text.remove_prefix(1);
         }
     }
     return it;

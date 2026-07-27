@@ -556,9 +556,10 @@ DoArticleResult do_article(std::string &article_command)
                                 out_pos = 0;
                                 ++line_num;
                             }
-                            const char *next_buf_ptr = buf_ptr;
-                            i = put_char_adv(&next_buf_ptr, output_ok);
-                            buf_ptr += next_buf_ptr - buf_ptr;
+                            std::string_view text{buf_ptr};
+                            const std::size_t old_size = text.size();
+                            i = put_char_adv(text, output_ok);
+                            buf_ptr += old_size - text.size();
                             buf_ptr--;
 #else // !USE_UTF_HACK
                             i = putsubstchar(*bufptr, g_tc_COLS - out_pos, outputok);

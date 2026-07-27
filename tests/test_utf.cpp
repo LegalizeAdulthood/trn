@@ -267,43 +267,52 @@ TEST(UTFVisualWidthTest, boundedCjkView)
     ASSERT_EQ(0, visual_width_at(std::string_view{ARBITRARY_CJK_BASIC, 2}));
 }
 
-TEST(UTFVisualAdvanceWidthTest, nullptr)
+TEST(UTFVisualAdvanceWidthTest, emptyView)
 {
-    ASSERT_EQ(0, put_char_adv(nullptr, false));
-    ASSERT_EQ(0, put_char_adv(nullptr, true));
+    std::string_view text;
+
+    ASSERT_EQ(0, put_char_adv(text, false));
+    ASSERT_TRUE(text.empty());
 }
 
 TEST(UTFVisualAdvanceWidthTest, ascii)
 {
-    const char *sp0 = ARBITRARY_ASCII;
-    const char *sp = sp0;
+    std::string_view text{ARBITRARY_ASCII};
 
-    int retval = put_char_adv(&sp, true);
+    int retval = put_char_adv(text, true);
 
-    ASSERT_EQ(1, retval) << "put_char_adv(" << sp0 << ")";
-    ASSERT_EQ(1, sp - sp0) << "put_char_adv(" << sp0 << ")";
+    ASSERT_EQ(1, retval) << "put_char_adv(" << ARBITRARY_ASCII << ")";
+    ASSERT_TRUE(text.empty()) << "put_char_adv(" << ARBITRARY_ASCII << ")";
 }
 
 TEST(UTFVisualAdvanceWidthTest, iso8859_1)
 {
-    const char *sp0 = ARBITRARY_ISO8859D1_1;
-    const char *sp = sp0;
+    std::string_view text{ARBITRARY_ISO8859D1_1};
 
-    int retval = put_char_adv(&sp, true);
+    int retval = put_char_adv(text, true);
 
-    ASSERT_EQ(1, retval) << "put_char_adv(" << sp0 << ")";
-    ASSERT_EQ(2, sp - sp0) << "put_char_adv(" << sp0 << ")";
+    ASSERT_EQ(1, retval) << "put_char_adv(" << ARBITRARY_ISO8859D1_1 << ")";
+    ASSERT_TRUE(text.empty()) << "put_char_adv(" << ARBITRARY_ISO8859D1_1 << ")";
 }
 
 TEST(UTFVisualAdvanceWidthTest, cjk_basic)
 {
-    const char *sp0 = ARBITRARY_CJK_BASIC;
-    const char *sp = sp0;
+    std::string_view text{ARBITRARY_CJK_BASIC};
 
-    int retval = put_char_adv(&sp, true);
+    int retval = put_char_adv(text, true);
 
-    ASSERT_EQ(2, retval) << "put_char_adv(" << sp0 << ")";
-    ASSERT_EQ(3, sp - sp0) << "put_char_adv(" << sp0 << ")";
+    ASSERT_EQ(2, retval) << "put_char_adv(" << ARBITRARY_CJK_BASIC << ")";
+    ASSERT_TRUE(text.empty()) << "put_char_adv(" << ARBITRARY_CJK_BASIC << ")";
+}
+
+TEST(UTFVisualAdvanceWidthTest, boundedCjkView)
+{
+    std::string_view text{ARBITRARY_CJK_BASIC, 3};
+
+    int retval = put_char_adv(text, true);
+
+    ASSERT_EQ(2, retval) << "put_char_adv(" << ARBITRARY_CJK_BASIC << ")";
+    ASSERT_TRUE(text.empty()) << "put_char_adv(" << ARBITRARY_CJK_BASIC << ")";
 }
 
 // code point decoding
