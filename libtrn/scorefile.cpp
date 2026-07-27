@@ -328,7 +328,7 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
         if (colon != std::string_view::npos && string_case_equal(line.substr(0, colon), head))
         {
             std::string_view text = line.substr(colon + 1);
-            text.remove_prefix(std::min(text.find_first_not_of(" \t"), text.size()));
+            text = skip_hor_space(text);
             return text;
         }
         line_start = line_end + 1;
@@ -464,7 +464,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
             return true;
         }
         std::string_view argument{arguments};
-        argument.remove_prefix(std::min(argument.find_first_not_of(" \t"), argument.size()));
+        argument = skip_hor_space(argument);
         if (argument.empty())
         {
             fmt::print("Bad {} command (missing filename)\n", command);
@@ -508,7 +508,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
             return true;
         }
         std::string_view argument{arguments};
-        argument.remove_prefix(std::min(argument.find_first_not_of(" \t"), argument.size()));
+        argument = skip_hor_space(argument);
         if (argument.empty())
         {
             fmt::print("Bad file command (missing parameters)\n");
@@ -516,7 +516,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
         }
         const char abbreviation = argument.front();
         argument.remove_prefix(1);
-        argument.remove_prefix(std::min(argument.find_first_not_of(" \t"), argument.size()));
+        argument = skip_hor_space(argument);
         if (argument.empty())
         {
             fmt::print("Bad file command (missing parameters)\n");
@@ -540,7 +540,7 @@ static std::string_view sf_freeform(std::string_view keyword, std::string_view r
     if (keyword == "pattern")
     {
         s_sf_pattern_status = true;
-        remaining.remove_prefix(std::min(remaining.find_first_not_of(" \t"), remaining.size()));
+        remaining = skip_hor_space(remaining);
         return remaining;
     }
     fmt::print("Scorefile freeform: unknown key: |{}|\n", keyword);
@@ -583,7 +583,7 @@ static bool sf_do_line(std::string_view line, bool check)
     }
 
     // skip whitespace
-    line.remove_prefix(std::min(line.find_first_not_of(" \t"), line.size()));
+    line = skip_hor_space(line);
     if (line.empty() || line.front() == '#')
     {
         return true; // line was whitespace or comment after whitespace
@@ -648,7 +648,7 @@ static bool sf_do_line(std::string_view line, bool check)
         {
             header = keyword.substr(0, keyword.size() - 1);
             pattern = keyword_end == std::string_view::npos ? std::string_view{} : line_rest.substr(keyword_end);
-            pattern.remove_prefix(std::min(pattern.find_first_not_of(" \t"), pattern.size()));
+            pattern = skip_hor_space(pattern);
             break; // go to set header routine
         }
         const std::string_view remaining =
@@ -949,7 +949,7 @@ void sf_append(std::string_view line)
 
     // skip whitespace after filechar
     std::string_view scoreline = line.substr(1);
-    scoreline.remove_prefix(std::min(scoreline.find_first_not_of(" \t"), scoreline.size()));
+    scoreline = skip_hor_space(scoreline);
     std::string missing_scoreline;
 
     const char ch = scoreline.empty() ? '\0' : scoreline.front(); // first non-whitespace after filechar

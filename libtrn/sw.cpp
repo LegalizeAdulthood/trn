@@ -15,6 +15,7 @@
 #include <trn/only.h>
 #include <trn/opt.h>
 #include <trn/rcstuff.h>
+#include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/util.h>
@@ -165,13 +166,6 @@ void decode_switch(std::string_view s)
         }
         return text;
     };
-    const auto skip_digits_view = [is_digit](std::string_view text)
-    {
-        const std::string_view::const_iterator first_non_digit = std::find_if_not(text.begin(), text.end(), is_digit);
-        text.remove_prefix(static_cast<std::size_t>(first_non_digit - text.begin()));
-        return text;
-    };
-
 #ifdef DEBUG
     if (g_debug)
     {
@@ -510,7 +504,7 @@ void decode_switch(std::string_view s)
             if (!rest.empty() && is_digit(rest.front()))
             {
                 set_option(OI_ARTICLE_TREE_LINES, rest);
-                rest = skip_digits_view(rest);
+                rest = skip_digits(rest);
             }
             if (!rest.empty())
             {
@@ -527,7 +521,7 @@ void decode_switch(std::string_view s)
             if (!rest.empty() && is_digit(rest.front()))
             {
                 set_option(OI_USE_NEWS_SEL, rest);
-                rest = skip_digits_view(rest);
+                rest = skip_digits(rest);
             }
             else
             {

@@ -51,6 +51,10 @@ Run every scan from the innermost lexical scope outward:
   `std::string_view` API already exists nearby.  Check whether
   production code calls them.  If only tests call them, decide whether
   the tests preserve a real public API or only stale compatibility.
+- When a reusable helper already expresses the string operation, prefer
+  adding `std::string_view` overloads to that helper before rewriting
+  call sites.  Do not inline helper behavior with ad hoc local scans or
+  loops just because a caller has moved from C strings to views.
 - Exported and internal helpers that take caller-provided `char *`
   output buffers paired with `const char *` input and return a byte
   count or string length.  Treat these as candidates for a

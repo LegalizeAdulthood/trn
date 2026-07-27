@@ -8,6 +8,7 @@
 #include <trn/score-easy.h>
 
 #include <config/common.h>
+#include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/util.h>
 
@@ -143,7 +144,7 @@ std::string sc_easy_append()
         {
             std::string_view score_text{command};
             score_text.remove_prefix(1);
-            score_text.remove_prefix(std::min(score_text.find_first_not_of(" \t"), score_text.size()));
+            score_text = skip_hor_space(score_text);
             if (score_text.empty())
             {
                 continue; // the while loop

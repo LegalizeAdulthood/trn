@@ -67,12 +67,11 @@ void rc_to_bits()
     Article*ap;
     const auto parse_article_num = [](std::string_view text)
     {
-        const std::size_t first = text.find_first_not_of(" \f\n\r\t\v");
-        if (first == std::string_view::npos)
+        text = skip_space(text);
+        if (text.empty())
         {
             return ArticleNum{};
         }
-        text.remove_prefix(first);
         if (!text.empty() && text.front() == '+')
         {
             text.remove_prefix(1);
@@ -86,10 +85,8 @@ void rc_to_bits()
     // modify the article flags to reflect what has already been read
 
     // find numbers in rc line
-    std::string_view  numbers = g_newsgroup_ptr->rc_numbers();
-    const std::size_t first_non_space = numbers.find_first_not_of(' ');
-    numbers.remove_prefix(first_non_space == std::string_view::npos ? numbers.size() : first_non_space);
-    bool more_ranges = !numbers.empty();
+    std::string_view numbers = skip_eq(g_newsgroup_ptr->rc_numbers(), ' ');
+    bool             more_ranges = !numbers.empty();
     if (set_first_art(numbers))
     {
         const std::size_t comma = numbers.find(',');
@@ -220,13 +217,12 @@ void rc_to_bits()
 
 bool set_first_art(std::string_view s)
 {
-    const std::size_t first = s.find_first_not_of(' ');
-    if (first == std::string_view::npos)
+    s = skip_eq(s, ' ');
+    if (s.empty())
     {
         g_first_art = g_abs_first;
         return false;
     }
-    s.remove_prefix(first);
     if (s.substr(0, 2) == std::string_view{"1-"}) // can we save some time here?
     {
         long first_unread{};

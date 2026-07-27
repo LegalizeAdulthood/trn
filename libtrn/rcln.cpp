@@ -527,12 +527,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
     ranges.reserve(std::max<std::size_t>(64, nums.size() + MAX_DIGITS + 1));
     ranges.append(nums.data(), nums.size());
     ranges += ',';
-    std::string_view  s{ranges};
-    const std::size_t first_range = s.find_first_not_of(" \f\n\r\t\v");
-    if (first_range > 0 && first_range != std::string_view::npos)
-    {
-        s.remove_prefix(first_range);
-    }
+    std::string_view s = skip_space(ranges);
     for (std::size_t comma = s.find(','); comma != std::string_view::npos; comma = s.find(',')) // for each range
     {
         const std::string_view range = s.substr(0, comma);
@@ -702,26 +697,18 @@ bool was_read_group(ArticleNum artnum, std::string_view ngnam)
     {
         return false; // probably doesn't exist, however
     }
-    std::string_view  numbers = np->rc_numbers();
-    const std::size_t first_non_space = numbers.find_first_not_of(' ');
-    numbers.remove_prefix(first_non_space == std::string_view::npos ? numbers.size() : first_non_space);
-    const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)); };
-    const auto parse_article_num = [](std::string_view text)
+    std::string_view numbers = skip_eq(np->rc_numbers(), ' ');
+    const auto       is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)); };
+    const auto       parse_article_num = [](std::string_view text)
     {
         long value{};
         std::from_chars(text.data(), text.data() + text.size(), value);
         return ArticleNum{value};
     };
-    const auto skip_digits = [](std::string_view text)
-    {
-        const std::size_t end = text.find_first_not_of("0123456789");
-        return end == std::string_view::npos ? text.size() : end;
-    };
-
     while (!numbers.empty() && is_digit(numbers.front()) && artnum >= (min = parse_article_num(numbers)))
     {
         // while it might have been read
-        numbers.remove_prefix(skip_digits(numbers));    // skip number
+        numbers = skip_digits(numbers);                 // skip number
         if (!numbers.empty() && numbers.front() == '-') // is it a range?
         {
             numbers.remove_prefix(1); // skip to next number
@@ -729,7 +716,7 @@ bool was_read_group(ArticleNum artnum, std::string_view ngnam)
             {
                 return true; // it is in range => already read
             }
-            numbers.remove_prefix(skip_digits(numbers)); // skip second number
+            numbers = skip_digits(numbers); // skip second number
         }
         else
         {

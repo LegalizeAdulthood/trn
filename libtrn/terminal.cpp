@@ -620,7 +620,7 @@ void mac_line(std::string_view line)
     {
         return;
     }
-    cursor.remove_prefix(std::min(cursor.find_first_not_of(" \t"), cursor.size()));
+    cursor = skip_hor_space(cursor);
     install_macro(macro_sequence, cursor, true);
 }
 

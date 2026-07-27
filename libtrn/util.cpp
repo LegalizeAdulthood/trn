@@ -443,19 +443,6 @@ double current_time()
 std::time_t text_to_secs(std::string_view text, std::time_t defSecs)
 {
     const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)) != 0; };
-    const auto is_space = [](char ch) { return std::isspace(static_cast<unsigned char>(ch)) != 0; };
-    const auto is_alpha = [](char ch) { return std::isalpha(static_cast<unsigned char>(ch)) != 0; };
-
-    const auto skip_spaces = [&is_space](std::string_view &s)
-    {
-        const std::string_view::const_iterator start = std::find_if_not(s.begin(), s.end(), is_space);
-        s.remove_prefix(static_cast<std::size_t>(start - s.begin()));
-    };
-    const auto skip_alphas = [&is_alpha](std::string_view &s)
-    {
-        const std::string_view::const_iterator start = std::find_if_not(s.begin(), s.end(), is_alpha);
-        s.remove_prefix(static_cast<std::size_t>(start - s.begin()));
-    };
 
     std::string_view s = text;
     std::time_t      secs = 0;
@@ -479,8 +466,8 @@ std::time_t text_to_secs(std::string_view text, std::time_t defSecs)
         const char                  *end = s.data() + s.size();
         const std::from_chars_result result = std::from_chars(start, end, item);
         s.remove_prefix(static_cast<std::size_t>(result.ptr - start));
-        skip_spaces(s);
-        if (!s.empty() && is_alpha(s.front()))
+        s = skip_space(s);
+        if (!s.empty() && std::isalpha(static_cast<unsigned char>(s.front())))
         {
             switch (s.front())
             {
@@ -502,12 +489,12 @@ std::time_t text_to_secs(std::string_view text, std::time_t defSecs)
                 item = 0;
                 break;
             }
-            skip_alphas(s);
+            s = skip_alpha(s);
             if (!s.empty() && s.front() == ',')
             {
                 s.remove_prefix(1);
             }
-            skip_spaces(s);
+            s = skip_space(s);
         }
         secs += item;
     } while (!s.empty() && is_digit(s.front()));
@@ -721,10 +708,10 @@ bool check_ini_cond(std::string_view cond)
     {
         cond_cursor.remove_prefix(1);
     }
-    cond_cursor.remove_prefix(std::min(cond_cursor.find_first_not_of(" \t\n\r\f\v"), cond_cursor.size()));
+    cond_cursor = skip_space(cond_cursor);
     const auto parse_condition_number = [](std::string_view number_text)
     {
-        number_text.remove_prefix(std::min(number_text.find_first_not_of(" \t\n\r\f\v"), number_text.size()));
+        number_text = skip_space(number_text);
         if (!number_text.empty() && number_text.front() == '+')
         {
             if (number_text.size() == 1 || !std::isdigit(static_cast<unsigned char>(number_text[1])))

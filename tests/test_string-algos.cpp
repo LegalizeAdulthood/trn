@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <string_view>
 
 using namespace testing;
 
@@ -63,42 +64,19 @@ TEST_F(StringAlgosTest, skipEqEnd)
     ASSERT_STREQ(m_after, pos);
 }
 
-TEST_F(StringAlgosTest, skipNeNullPtr)
+TEST_F(StringAlgosTest, skipEqStringView)
 {
-    const char *buffer{};
+    std::string_view text{"   This is a test."};
 
-    const char *pos = skip_ne(buffer, ' ');
-
-    ASSERT_EQ(nullptr, pos);
+    ASSERT_EQ(std::string_view{"This is a test."}, skip_eq(text, ' '));
 }
 
-TEST_F(StringAlgosTest, skipNeNoChange)
+TEST_F(StringAlgosTest, skipNeStringView)
 {
-    configure_before_after("No change.", "No change.");
+    std::string_view text{"This is a test."};
 
-    const char *pos = skip_ne(m_buffer, 'N');
-
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(std::string_view{" is a test."}, skip_ne(text, ' '));
 }
-
-TEST_F(StringAlgosTest, skipNeMiddle)
-{
-    configure_before_after("   This is a test.", "This is a test.");
-
-    const char *pos = skip_ne(m_buffer, 'T');
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipNeEnd)
-{
-    configure_before_after("This text contains no exclamation point.", "");
-
-    const char *pos = skip_ne(m_buffer, '!');
-
-    ASSERT_STREQ(m_after, pos);
-}
-
 
 TEST_F(StringAlgosTest, emptyNullPtr)
 {
@@ -115,157 +93,39 @@ TEST_F(StringAlgosTest, emptyChars)
     ASSERT_FALSE(empty("There be chars here!"));
 }
 
-TEST_F(StringAlgosTest, skipDigitsNullPtr)
+TEST_F(StringAlgosTest, skipDigitsStringView)
 {
-    char *p{};
+    std::string_view text{"1965 was a good year for television."};
 
-    ASSERT_EQ(nullptr, skip_digits(p));
+    ASSERT_EQ(std::string_view{" was a good year for television."}, skip_digits(text));
 }
 
-TEST_F(StringAlgosTest, skipDigitsNoChange)
+TEST_F(StringAlgosTest, skipSpaceStringView)
 {
-    configure_before_after("No change.", "No change.");
+    std::string_view text{" \t\f\v\r\nThere's plenty of space in here."};
 
-    const char *pos = skip_digits(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(std::string_view{"There's plenty of space in here."}, skip_space(text));
 }
 
-TEST_F(StringAlgosTest, skipDigitsMiddle)
+TEST_F(StringAlgosTest, skipNonSpaceStringView)
 {
-    configure_before_after("1965 was a good year for television.", " was a good year for television.");
+    std::string_view text{"Hello, world!"};
 
-    const char *pos = skip_digits(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(std::string_view{" world!"}, skip_non_space(text));
 }
 
-TEST_F(StringAlgosTest, skipDigitsEnd)
+TEST_F(StringAlgosTest, skipAlphaStringView)
 {
-    configure_before_after("1965", "");
+    std::string_view text{"Hello, world!"};
 
-    const char *pos = skip_digits(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(std::string_view{", world!"}, skip_alpha(text));
 }
 
-TEST_F(StringAlgosTest, skipConstDigitsEnd)
+TEST_F(StringAlgosTest, skipNonAlphaStringView)
 {
-    configure_before_after("1965", "");
-    const char *buffer = m_buffer;
+    std::string_view text{"123 Hello, world!"};
 
-    const char *pos = skip_digits(buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipMutableDigitsEnd)
-{
-    configure_before_after("1965", "");
-
-    char *pos = skip_digits(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipSpaceNullPtr)
-{
-    const char *buffer{};
-
-    ASSERT_EQ(nullptr, skip_space(buffer));
-}
-
-TEST_F(StringAlgosTest, skipSpaceNoChange)
-{
-    configure_before_after("No change.", "No change.");
-
-    const char *pos = skip_space(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipSpaceMiddle)
-{
-    configure_before_after(" \t\f\v\r\nThere's plenty of space in here.", "There's plenty of space in here.");
-
-    const char *pos = skip_space(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipNonSpaceNullPtr)
-{
-    const char *buffer{};
-
-    ASSERT_EQ(nullptr, skip_non_space(buffer));
-}
-
-TEST_F(StringAlgosTest, skipNonSpaceNoChange)
-{
-    configure_before_after(" No change.", " No change.");
-
-    const char *pos = skip_non_space(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipNonSpaceMiddle)
-{
-    configure_before_after("Hello, world!", " world!");
-
-    const char *pos = skip_non_space(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipAlphaNullPtr)
-{
-    const char *buffer{};
-
-    ASSERT_EQ(nullptr, skip_alpha(buffer));
-}
-
-TEST_F(StringAlgosTest, skipAlphaNoChange)
-{
-    configure_before_after("123 No change.", "123 No change.");
-
-    const char *pos = skip_alpha(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipAlphaMiddle)
-{
-    configure_before_after("Hello, world!", ", world!");
-
-    const char *pos = skip_alpha(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipNonAlphaNullPtr)
-{
-    const char *buffer{};
-
-    ASSERT_EQ(nullptr, skip_non_alpha(buffer));
-}
-
-TEST_F(StringAlgosTest, skipNonAlphaNoChange)
-{
-    configure_before_after("No change.", "No change.");
-
-    const char *pos = skip_non_alpha(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
-}
-
-TEST_F(StringAlgosTest, skipNonAlphaMiddle)
-{
-    configure_before_after("123 Hello, world!", "Hello, world!");
-
-    const char *pos = skip_non_alpha(m_buffer);
-
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(std::string_view{"Hello, world!"}, skip_non_alpha(text));
 }
 
 TEST_F(StringAlgosTest, skipHorSpaceNullPtr)
@@ -300,6 +160,13 @@ TEST_F(StringAlgosTest, skipHorSpaceMiddleSpace)
     const char *pos = skip_hor_space(m_buffer);
 
     ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(StringAlgosTest, skipHorSpaceStringView)
+{
+    std::string_view text{" \t\tHello, world!"};
+
+    ASSERT_EQ(std::string_view{"Hello, world!"}, skip_hor_space(text));
 }
 
 TEST_F(StringAlgosTest, isHorSpaceNul)
