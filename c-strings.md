@@ -593,14 +593,13 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   prior local message-selection cases.
 - C numeric conversion scan found no current production hits.
 - Caller-output helper signature scan found no remaining public
-  production helper signatures.  The HTML filter still has file-local
-  transitional pointer-output internals; those are tracked by
-  `CSTR-434`.
+  production helper signatures.  The HTML filter file-local output
+  cursor has been migrated to owned string storage; remaining
+  caller-output buffers are lower-level I/O or protocol boundaries.
 - Mutable input parameter scan found no new leaf slice after
   `parse_line` moved to `std::string_view`.  Remaining raw input
   parameters are covered by existing add-newsgroup, shell, UTF, article
-  display, HTML-filter-internal, regex-bytecode, or platform/API
-  boundary buckets.
+  display, regex-bytecode, or platform/API boundary buckets.
 - Local cursor scan: `tree_puts` already accepts `std::string_view`, but
   still creates local `char *` aliases into `std::string` storage,
   temporarily writes NULs, uses `std::strchr`, and walks pointers for
@@ -641,8 +640,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   audited runtime formatting; current cursor/output work is captured by
   `CSTR-417` and `CSTR-430`.
 - MIME content-decoding paths now own local string storage for decoded
-  lines.  HTML filtering has an owned public API, with file-local
-  transitional pointer-output internals tracked by `CSTR-434`.
+  lines.  HTML filtering has an owned public API and owned file-local
+  output storage.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
@@ -733,22 +732,6 @@ No current slices.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-434 - HTML Filter Internal Output Cursor
-
-- Files: `libtrn/mime.cpp`, `tests/test_mime.cpp`.
-- Kind: file-local caller-output helper internals.
-- Function: `filter_html_into(char *, const char *)`.
-- Dependencies: none.
-- Change: replace the file-local output-buffer core with owner-local
-  `std::string` storage and indexes/views.  Work bottom-up through the
-  local HTML helpers as needed, but keep each helper change reviewable.
-  Preserve `MimeSection` HTML state, entity decoding, list rendering,
-  tag carry-over between calls, line wrapping, and
-  `m_html_line_start` offset behavior.
-- Tests: use the existing `HtmlFilterTest` cases, including
-  `wrapsLongPlainTextAtWhitespace`; add focused cases first for any
-  helper branch whose behavior is not already covered.
 
 #### CSTR-426 - Newsrc Line Parser Cursor
 

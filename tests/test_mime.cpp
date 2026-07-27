@@ -17,7 +17,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <array>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -546,12 +545,10 @@ protected:
     void SetUp() override
     {
         m_old_mime_section = g_mime_section;
-        m_old_art_buf = g_art_buf;
         m_old_cols = g_tc_COLS;
         m_old_word_wrap_offset = g_word_wrap_offset;
 
         g_mime_section = &m_mime_section;
-        g_art_buf = m_output.data();
         g_tc_COLS = 200;
         g_word_wrap_offset = 0;
     }
@@ -560,7 +557,6 @@ protected:
     {
         m_mime_section.mime_clear_struct();
         g_mime_section = m_old_mime_section;
-        g_art_buf = m_old_art_buf;
         g_tc_COLS = m_old_cols;
         g_word_wrap_offset = m_old_word_wrap_offset;
     }
@@ -578,10 +574,8 @@ protected:
 
     MimeSection                    m_mime_section{};
     MimeSection                   *m_old_mime_section{};
-    char                          *m_old_art_buf{};
     int                            m_old_cols{};
     int                            m_old_word_wrap_offset{};
-    std::array<char, LINE_BUF_LEN> m_output{};
 };
 
 } // namespace
@@ -638,6 +632,16 @@ TEST_F(HtmlFilterTest, rendersDecimalListMarkersPastTwoDigits)
 TEST_F(HtmlFilterTest, rendersImageMarker)
 {
     EXPECT_EQ("Before [Image] after", filter("Before <img src=x>after"));
+}
+
+TEST_F(HtmlFilterTest, rendersHorizontalRule)
+{
+    EXPECT_EQ("Before\n--\nAfter", filter("Before<hr>After"));
+}
+
+TEST_F(HtmlFilterTest, preservesPreformattedWhitespace)
+{
+    EXPECT_EQ("Before\n\n  a\n b\n\nAfter", filter("Before<pre>  a\n b</pre>After"));
 }
 
 TEST_F(HtmlFilterTest, rendersNamedEntities)
