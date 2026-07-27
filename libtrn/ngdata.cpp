@@ -93,21 +93,11 @@ std::string_view NewsgroupData::rc_line() const
     return rc_line.substr(0, rc_line.find('\0'));
 }
 
-char *NewsgroupData::rc_line_data()
-{
-    return m_rc_line.data();
-}
-
 std::string_view NewsgroupData::rc_numbers() const
 {
     const std::string_view rc_line = m_rc_line;
     const std::size_t      offset = static_cast<std::size_t>(m_num_offset);
     return rc_line.substr(std::min(offset, rc_line.size()));
-}
-
-char *NewsgroupData::rc_numbers_data()
-{
-    return m_rc_line.data() + m_num_offset;
 }
 
 std::string_view NewsgroupData::rc_name() const

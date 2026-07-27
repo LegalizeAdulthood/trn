@@ -753,18 +753,6 @@ No current slices.
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-#### CSTR-436 - Remove Mutable Newsrc Line Accessors
-
-- Files: `libtrn/ngdata.cpp`, `libtrn/include/trn/ngdata.h`.
-- Kind: unused mutable raw accessors.
-- Functions: `NewsgroupData::rc_line_data`,
-  `NewsgroupData::rc_numbers_data`.
-- Dependencies: none.
-- Change: remove the mutable raw `.newsrc` line accessors after all
-  production callers use `rc_line()` and `rc_numbers()` views or owner
-  operations on `m_rc_line`.
-- Tests: covered by the callers migrated in the dependency slice.
-
 #### CSTR-412 - Remove Public Raw Article Buffer API
 
 - Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`,

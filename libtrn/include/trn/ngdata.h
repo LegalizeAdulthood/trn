@@ -37,9 +37,7 @@ struct NewsgroupData
     void       abandon_newsgroup();
     bool             relocate_newsgroup(NewsgroupNum newnum);
     std::string_view rc_line() const;
-    char            *rc_line_data();
     std::string_view rc_numbers() const;
-    char            *rc_numbers_data();
     std::string_view rc_name() const;
     void hide_subscribe_char();
     void show_subscribe_char();
