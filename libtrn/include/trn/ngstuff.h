@@ -28,7 +28,7 @@ bool         switcheroo();
 bool         switcheroo(std::string_view command);
 NumNumResult num_num(std::string_view command);
 int thread_perform(std::string_view command);
-int perform(std::string_view cmdlst, int output_level);
+int perform(std::string_view command_list, int output_level);
 int newsgroup_sel_perform(std::string_view command);
 int newsgroup_perform(std::string_view cmdlst, int output_level);
 int add_group_sel_perform(std::string_view command);

@@ -555,14 +555,9 @@ break_out:
     return 1;
 }
 
-int perform(std::string_view cmdlst_view, int output_level)
+int perform(std::string_view command_list, int output_level)
 {
-    int ch;
     int savemode = 0;
-
-    // Avoid invalidating the command cursor when interpolation recurses.
-    std::string cmdlst_copy{cmdlst_view};
-    char       *cmdlst = cmdlst_copy.data();
 
     if (output_level == 1)
     {
@@ -571,9 +566,10 @@ int perform(std::string_view cmdlst_view, int output_level)
     }
 
     g_perform_count++;
-    for (; (ch = *cmdlst) != 0; cmdlst++)
+    for (std::size_t command_pos{}; command_pos < command_list.size(); ++command_pos)
     {
-        if (std::isspace(ch) || ch == ':')
+        const char ch = command_list[command_pos];
+        if (std::isspace(static_cast<unsigned char>(ch)) || ch == ':')
         {
             continue;
         }
@@ -599,7 +595,9 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else if (ch == '+')
         {
-            if (savemode || cmdlst[1] == '+')
+            const bool doubled_plus =
+                command_pos + 1 < command_list.size() && command_list[command_pos + 1] == '+';
+            if (savemode || doubled_plus)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
@@ -609,9 +607,9 @@ int perform(std::string_view cmdlst_view, int output_level)
                 {
                     g_artp->select_articles_subject(savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
                 }
-                if (cmdlst[1] == '+')
+                if (doubled_plus)
                 {
-                    cmdlst++;
+                    ++command_pos;
                 }
             }
             else
@@ -629,7 +627,9 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else if (ch == '-')
         {
-            if (cmdlst[1] == '-')
+            const bool doubled_minus =
+                command_pos + 1 < command_list.size() && command_list[command_pos + 1] == '-';
+            if (doubled_minus)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
@@ -639,7 +639,7 @@ int perform(std::string_view cmdlst_view, int output_level)
                 {
                     g_artp->deselect_articles_subject();
                 }
-                cmdlst++;
+                ++command_pos;
             }
             else
             {
@@ -736,14 +736,14 @@ int perform(std::string_view cmdlst_view, int output_level)
 
             if (g_one_command)
             {
-                expanded_command = do_interp(cmdlst);
+                expanded_command = do_interp(command_list.substr(command_pos));
             }
             else
             {
-                char *cmd_start = cmdlst;
-                const std::size_t command_size = skip_interp(cmd_start, ":");
-                expanded_command = do_interp(std::string_view{cmd_start, command_size});
-                cmdlst = cmd_start + command_size - 1;
+                const std::string_view command_text = command_list.substr(command_pos);
+                const std::size_t      command_size = skip_interp(command_text, ":");
+                expanded_command = do_interp(command_text.substr(0, command_size));
+                command_pos += command_size - 1;
             }
             g_perform_count--;
             if (perform(expanded_command, output_level ? 2 : 0) < 0)
@@ -753,7 +753,7 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else if (std::string_view{"!&sSwWae|"}.find(ch) != std::string_view::npos)
         {
-            std::string_view command_text{cmdlst};
+            std::string_view command_text = command_list.substr(command_pos);
             std::string      command_storage;
             if (!g_one_command)
             {
@@ -776,7 +776,7 @@ int perform(std::string_view cmdlst_view, int output_level)
                 command_text = command_storage;
                 if (command_size != 0)
                 {
-                    cmdlst += command_size - 1;
+                    command_pos += command_size - 1;
                 }
             }
             if (ch == '!')
@@ -819,7 +819,7 @@ int perform(std::string_view cmdlst_view, int output_level)
         }
         else
         {
-            g_msg = fmt::format("Unknown command: {}", cmdlst);
+            g_msg = fmt::format("Unknown command: {}", command_list.substr(command_pos));
             error_msg(g_msg);
             return -1;
         }

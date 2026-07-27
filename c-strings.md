@@ -721,19 +721,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-419 - Perform Command List Cursor
-
-- Files: `libtrn/ngstuff.cpp`, `tests/test_ngstuff.cpp`.
-- Kind: local cursor alias into owned string storage.
-- Function: `perform(std::string_view, int)`.
-- Dependencies: none.
-- Change: replace the copied command-list buffer and `char *cmdlst`
-  cursor with index or `std::string_view` iteration.  Preserve recursive
-  interpolation safety, whitespace/colon skipping, doubled `+` handling,
-  and command lookahead semantics.
-- Tests: use existing `NgstuffTest` `perform` cases; add focused cases
-  first if command lookahead is not covered.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
