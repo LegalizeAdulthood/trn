@@ -621,17 +621,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-331 - Remote XHDR Line View Parser
-
-- Files: `libtrn/head.cpp`.
-- Kind: local C-string parser cleanup.
-- Function: `prefetch_remote_lines`.
-- Dependencies: none.
-- Change: parse NNTP XHDR response lines with views, remove CR
-  trimming by NUL mutation, and parse the leading article number with
-  `std::from_chars`.
-- Tests: remote header prefetch tests.
-
 #### CSTR-332 - Global Option Value View Parser
 
 - Files: `libtrn/opt.cpp`.

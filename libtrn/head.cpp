@@ -26,8 +26,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <limits>
@@ -564,12 +564,8 @@ static std::string current_header_line_text(HeaderLineType which_line)
     return header_line_text(std::string_view{line, static_cast<std::size_t>(std::max(size, 0))});
 }
 
-static void append_header_line(std::string &text, const char *line)
+static void append_header_line(std::string &text, std::string_view line)
 {
-    if (line == nullptr)
-    {
-        return;
-    }
     if (!text.empty())
     {
         text.push_back(' ');
@@ -668,18 +664,27 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             {
                 break;
             }
-            char *line_data = line.data();
-            char *t = std::strchr(line_data, '\r');
-            if (t != nullptr)
+            std::string_view  line_text{line};
+            const std::size_t cr = line_text.find('\r');
+            if (cr != std::string_view::npos)
             {
-                *t = '\0';
+                line_text = line_text.substr(0, cr);
             }
-            if (!(t = std::strchr(line_data, ' ')))
+            const std::size_t space = line_text.find(' ');
+            if (space == std::string_view::npos)
             {
                 continue;
             }
-            t++;
-            num = ArticleNum{std::atol(line_data)};
+            const std::string_view       number_text = line_text.substr(0, space);
+            long                         article_number{};
+            const std::from_chars_result result =
+                std::from_chars(number_text.data(), number_text.data() + number_text.size(), article_number);
+            if (result.ec != std::errc{})
+            {
+                continue;
+            }
+            const std::string_view header_line = line_text.substr(space + 1);
+            num = ArticleNum{article_number};
             if (num < art_num || num > lastnum)
             {
                 continue;
@@ -694,17 +699,17 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             ap = article_find(num);
             if (which_line == SUBJ_LINE)
             {
-                ap->set_subj_line(t);
+                ap->set_subj_line(header_line);
             }
             else if (cached)
             {
-                ap->set_cached_line(which_line, t);
+                ap->set_cached_line(which_line, header_line);
             }
             if (num == art_num)
             {
                 if (owned_result != nullptr)
                 {
-                    append_header_line(*owned_result, t);
+                    append_header_line(*owned_result, header_line);
                 }
             }
         }
