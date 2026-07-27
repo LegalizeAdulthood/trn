@@ -85,8 +85,10 @@ void rc_to_bits()
 
     // modify the article flags to reflect what has already been read
 
-    std::string_view numbers = skip_eq(g_newsgroup_ptr->rc_numbers_c_str(), ' ');
-                                        // find numbers in rc line
+    // find numbers in rc line
+    std::string_view  numbers = g_newsgroup_ptr->rc_numbers();
+    const std::size_t first_non_space = numbers.find_first_not_of(' ');
+    numbers.remove_prefix(first_non_space == std::string_view::npos ? numbers.size() : first_non_space);
     bool more_ranges = !numbers.empty();
     if (set_first_art(numbers))
     {
@@ -291,7 +293,7 @@ void bits_to_rc()
 #ifdef DEBUG
     if ((g_debug & DEB_NEWSRC_LINE) && !g_panic)
     {
-        fmt::print("{}: {}\n", g_newsgroup_ptr->rc_line_c_str(), g_newsgroup_ptr->rc_numbers_c_str());
+        fmt::print("{}: {}\n", g_newsgroup_ptr->rc_line_c_str(), g_newsgroup_ptr->rc_numbers());
         fmt::print("{}\n", rc_line);
         term_down(2);
     }

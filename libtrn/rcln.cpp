@@ -143,8 +143,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("%ld->\n%s%c%s\n",art_num.value_of(),np->rc_line_c_str(), np->m_subscribe_char,
-          np->rc_numbers_c_str());
+        fmt::print("{}->\n{}{}{}\n", art_num.value_of(), np->rc_line_c_str(), np->m_subscribe_char, np->rc_numbers());
     }
 #endif
     std::string_view rc_line = np->m_rc_line;
@@ -318,8 +317,7 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("%ld<-\n%s%c%s\n", art_num.value_of(), np->rc_line_c_str(), np->m_subscribe_char,
-                    np->rc_numbers_c_str());
+        fmt::print("{}<-\n{}{}{}\n", art_num.value_of(), np->rc_line_c_str(), np->m_subscribe_char, np->rc_numbers());
     }
 #endif
     np->show_subscribe_char();
@@ -507,7 +505,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
     if (virgin_ng)
     {
         const std::string all_read = fmt::format(" 1-{}", ngsize.value_of());
-        if (all_read != rc_numbers_c_str())
+        if (std::string_view{all_read} != rc_numbers())
         {
             check_expired(m_abs_first); // this might realloc rcline
         }
@@ -524,7 +522,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
         std::from_chars(first, last, value);
         return ArticleNum{value};
     };
-    const std::string_view nums = rc_numbers_c_str();
+    const std::string_view nums = rc_numbers();
     std::string            ranges;
     ranges.reserve(std::max<std::size_t>(64, nums.size() + MAX_DIGITS + 1));
     ranges.append(nums.data(), nums.size());
@@ -616,8 +614,7 @@ void NewsgroupData::check_expired(ArticleNum first)
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("1-%ld->\n%s%c%s\n",first.value_of()-1,rc_line_c_str(),m_subscribe_char,
-          rc_numbers_c_str());
+        fmt::print("1-{}->\n{}{}{}\n", first.value_of() - 1, rc_line_c_str(), m_subscribe_char, rc_numbers());
     }
 #endif
     std::string_view       rc_line = m_rc_line;
@@ -672,8 +669,7 @@ void NewsgroupData::check_expired(ArticleNum first)
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        std::printf("%s%c%s\n",rc_line_c_str(),m_subscribe_char,
-          rc_numbers_c_str());
+        fmt::print("{}{}{}\n", rc_line_c_str(), m_subscribe_char, rc_numbers());
     }
 #endif
 }
@@ -706,7 +702,7 @@ bool was_read_group(ArticleNum artnum, std::string_view ngnam)
     {
         return false; // probably doesn't exist, however
     }
-    std::string_view  numbers = np->rc_numbers_c_str();
+    std::string_view  numbers = np->rc_numbers();
     const std::size_t first_non_space = numbers.find_first_not_of(' ');
     numbers.remove_prefix(first_non_space == std::string_view::npos ? numbers.size() : first_non_space);
     const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)); };

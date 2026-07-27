@@ -615,9 +615,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
 - Newsgroup data scan: `NewsgroupData` still exposes `m_rc_line`
-  through raw `rc_line_c_str`, `rc_numbers_c_str`, `rc_line_data`, and
-  `rc_numbers_data` accessors.  The mutable accessors are tied to the
-  old delimiter/NUL poking mechanism and should be reduced after local
+  through raw `rc_line_c_str`, `rc_line_data`, and `rc_numbers_data`
+  accessors.  The read-only numbers accessor now returns
+  `std::string_view`.  The mutable accessors are tied to the old
+  delimiter/NUL poking mechanism and should be reduced after local
   parser/writer slices.
 - Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
   callers pass owned `std::string` storage directly.
@@ -668,7 +669,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Search and length: `strcmp` 1, `strchr` 4, `strstr` 2, `strlen` 8.
 - C line input: `fgets` 4.
-- C text output: `fputs` 158, `printf`/`std::printf` 307,
+- C text output: `fputs` 158, `printf`/`std::printf` 298,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 89.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
@@ -730,20 +731,6 @@ No current slices.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-427 - Newsrc Numbers View
-
-- Files: `libtrn/ngdata.cpp`, `libtrn/include/trn/ngdata.h`,
-  `libtrn/bits.cpp`, `libtrn/cache.cpp`, `libtrn/rcln.cpp`,
-  `tests/test_bits.cpp`, `tests/test_rcln.cpp`.
-- Kind: raw string return helper.
-- Function: `NewsgroupData::rc_numbers_c_str`.
-- Dependencies: none.
-- Change: replace the read-only numbers accessor with a
-  `std::string_view` return and update callers to use view operations or
-  `fmt` output.  Keep mutable `rc_numbers_data` only for slices that
-  still deliberately edit `m_rc_line`.
-- Tests: use existing bits/rcln tests for read-count and range handling.
-
 #### CSTR-428 - Newsrc Line View
 
 - Files: `libtrn/ngdata.cpp`, `libtrn/include/trn/ngdata.h`,
@@ -765,7 +752,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/rcln.cpp`, `tests/test_rcln.cpp`.
 - Kind: mutable cursor into owned `.newsrc` line storage.
 - Function: `NewsgroupData::set_to_read`.
-- Dependencies: CSTR-427.
+- Dependencies: none.
 - Change: replace `*rc_numbers_data() = '\0'` with an owner-local
   operation on `m_rc_line` or a small `NewsgroupData` helper that clears
   the numbers region without exposing mutable raw string storage.

@@ -97,9 +97,11 @@ char *NewsgroupData::rc_line_data()
     return m_rc_line.data();
 }
 
-const char *NewsgroupData::rc_numbers_c_str() const
+std::string_view NewsgroupData::rc_numbers() const
 {
-    return m_rc_line.c_str() + m_num_offset;
+    const std::string_view rc_line = m_rc_line;
+    const std::size_t      offset = static_cast<std::size_t>(m_num_offset);
+    return rc_line.substr(std::min(offset, rc_line.size()));
 }
 
 char *NewsgroupData::rc_numbers_data()
