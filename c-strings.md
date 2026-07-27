@@ -536,10 +536,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   save/view path no longer stages command text in `g_buf`, and mailbox
   format detection uses owner-local string storage.
 - Response wrapper scan: no no-argument response wrappers remain.
-- Article body quote scan: `followup` still uses raw `read_art_buf`,
-  `std::strchr`, and temporary NUL insertion while quoting included
-  article bodies.  `reply` now uses owned line storage from the article
-  I/O boundary.
+- Article body quote scan: response quoting now uses owned line storage
+  from the article I/O boundary instead of mutating raw article buffers.
+  `artsrch.cpp` and `art.cpp` still have raw article-buffer callers that
+  can be moved bottom-up to the same owned line API.
 - Numeric command scan: `num_num` still parses numeric range text from
   `g_buf`; callers now have command text available.
 - Terminal input scan: `finish_command(int)`, `store_command`,
@@ -582,7 +582,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 9, `strstr` 2, `strlen` 12.
+- Search and length: `strchr` 7, `strstr` 2, `strlen` 11.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 302,
   `fprintf`/`std::fprintf` 13.
@@ -605,7 +605,7 @@ be modernized.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-410`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-413`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -634,16 +634,17 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-403 - Followup Quoted Body Buffer
+#### CSTR-410 - Article Search Body Buffer
 
-- Files: `libtrn/respond.cpp`.
+- Files: `libtrn/artsrch.cpp`.
 - Kind: C-string article body cursor.
-- Function: `followup(std::string_view)`.
+- Function: `wanted`.
 - Dependencies: none.
-- Change: replace `read_art_buf`, `std::strchr`, and temporary NUL
-  insertion with owned `std::string` line reading while preserving
-  attribution, indentation, and character substitution.
-- Tests: `InterpolatorNewsgroupTest` followup quoted-body case.
+- Change: use `read_art_buf(std::string &, bool)` and local owned line
+  storage for article body search.  Preserve signature detection and the
+  existing search extent, including the terminating newline when present.
+- Tests: add or use `ArticleSearchTest` body-search coverage before the
+  refactor.
 
 ### Tier 1 - Helper And API Foundations
 
@@ -727,6 +728,20 @@ and clarified ownership at the edges.
   reads and writes command text through `g_buf`.
 - Tests: `TerminalTest` finish-command cases and caller-focused tests.
 
+#### CSTR-411 - Article Pager Body Buffer
+
+- Files: `libtrn/art.cpp`.
+- Kind: shared article body cursor.
+- Function: `do_article`.
+- Dependencies: none.
+- Change: replace raw `read_art_buf` article-line cursors in article
+  display, inner search, notes-file skipping, and one-line scroll paths
+  with owned line storage or offsets that do not expose mutable C string
+  buffers outside the local operation.  Preserve color, wrapping,
+  virtual-line, and `g_art_buf_pos` behavior.
+- Tests: add or use article pager tests covering display, inner search,
+  and one-line scroll behavior before the refactor.
+
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
@@ -742,3 +757,16 @@ owned strings or owner-specific storage.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
+
+#### CSTR-412 - Remove Public Raw Article Buffer API
+
+- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`,
+  `tests/test_artio.cpp`.
+- Kind: raw string return helper.
+- Function: `read_art_buf(bool)`.
+- Dependencies: CSTR-410, CSTR-411.
+- Change: after production callers use owned line storage, remove the
+  public `char *` article-buffer overload or make it file-local
+  implementation detail.  Keep `read_art_buf(std::string &, bool)` as
+  the caller-facing API and update tests to validate the string result.
+- Tests: `ArticleIoTest` read-buffer cases.
