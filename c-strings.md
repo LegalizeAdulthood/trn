@@ -514,14 +514,13 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
-- Article input scan: production callers outside `art.cpp` and
-  `artio.cpp` use the string-reading API.  The raw `read_art(char *,
-  int)` helper is already private to `artio.cpp`; it remains only inside
-  the string reader and article-buffer fill code.  Raw
-  `read_art_buf(bool)` calls remain in the article pager and in the
-  implementation of the string reader.
-- Unused overload/wrapper scan: `finish_command(int)` still has
-  production callers that read or store command text through `g_buf`.
+- Article input scan: production callers outside `artio.cpp` use the
+  string-reading API.  The raw `read_art(char *, int)` helper is already
+  private to `artio.cpp`; it remains only inside the string reader and
+  article-buffer fill code.  Raw `read_art_buf(bool)` calls remain only
+  in `artio.cpp` internals and in the implementation of the string
+  reader.
+- Unused overload/wrapper scan: no `finish_command(int)` wrapper remains.
   Keep `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
   `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
@@ -538,16 +537,16 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   save/view path no longer stages command text in `g_buf`, and mailbox
   format detection uses owner-local string storage.
 - Response wrapper scan: no no-argument response wrappers remain.
-- Article body scan: response quoting and article search now use owned
-  line storage from the article I/O boundary instead of mutating raw
-  article buffers.  `art.cpp` still has raw article-buffer callers that
-  can be moved bottom-up to the same owned line API.
+- Article body scan: response quoting, article search, and article pager
+  display/scroll paths now use owned line storage from the article I/O
+  boundary instead of mutating raw article buffers.
 - Numeric command scan: `num_num` now accepts command text directly and
   parses numeric range text from that view instead of `g_buf`.
-- Terminal input scan: `finish_command(int)` and `store_command` still
-  preserve command/input text in `g_buf` for legacy callers.  `in_choice`
-  now returns edited choice text through caller-owned string storage, and
-  typeahead cleanup now uses owner-local scratch storage.
+- Terminal input scan: `store_command` still preserves command/input
+  text in `g_buf` for legacy input helpers.  `finish_command` callers
+  pass command text directly, `in_choice` returns edited choice text
+  through caller-owned string storage, and typeahead cleanup now uses
+  owner-local scratch storage.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
@@ -585,11 +584,11 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 6, `strstr` 2, `strlen` 12.
+- Search and length: `strchr` 5, `strstr` 2, `strlen` 11.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 302,
-  `fprintf`/`std::fprintf` 12.
-- Character output: `putchar`/`std::putchar` 86.
+  `fprintf`/`std::fprintf` 13.
+- Character output: `putchar`/`std::putchar` 89.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
@@ -663,24 +662,25 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-411 - Article Pager Body Buffer
-
-- Files: `libtrn/art.cpp`.
-- Kind: shared article body cursor.
-- Function: `do_article`.
-- Dependencies: none.
-- Change: replace raw `read_art_buf` article-line cursors in article
-  display, inner search, notes-file skipping, and one-line scroll paths
-  with owned line storage or offsets that do not expose mutable C string
-  buffers outside the local operation.  Preserve color, wrapping,
-  virtual-line, and `g_art_buf_pos` behavior.
-- Tests: add or use article pager tests covering display, inner search,
-  and one-line scroll behavior before the refactor.
+No current slices.
 
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
+
+#### CSTR-412 - Remove Public Raw Article Buffer API
+
+- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`,
+  `tests/test_artio.cpp`.
+- Kind: raw string return helper.
+- Function: `read_art_buf(bool)`.
+- Dependencies: none.
+- Change: after production callers use owned line storage, remove the
+  public `char *` article-buffer overload or make it file-local
+  implementation detail.  Keep `read_art_buf(std::string &, bool)` as
+  the caller-facing API and update tests to validate the string result.
+- Tests: `ArticleIoTest` read-buffer cases.
 
 #### CSTR-409 - Remove Global `g_buf`
 
@@ -692,16 +692,3 @@ owned strings or owner-specific storage.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
-
-#### CSTR-412 - Remove Public Raw Article Buffer API
-
-- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`,
-  `tests/test_artio.cpp`.
-- Kind: raw string return helper.
-- Function: `read_art_buf(bool)`.
-- Dependencies: CSTR-411.
-- Change: after production callers use owned line storage, remove the
-  public `char *` article-buffer overload or make it file-local
-  implementation detail.  Keep `read_art_buf(std::string &, bool)` as
-  the caller-facing API and update tests to validate the string result.
-- Tests: `ArticleIoTest` read-buffer cases.
