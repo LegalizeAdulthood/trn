@@ -188,6 +188,27 @@ TEST_F(ExpiredArticleTest, extendsReadRangeToFirstAvailableArticle)
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
 }
 
+TEST_F(ExpiredArticleTest, leavesExistingRangeStartingAtFirstArticle)
+{
+    set_numbers("1-20,25");
+
+    m_group.check_expired(ArticleNum{10});
+
+    EXPECT_EQ("comp.lang.apl: 1-20,25", visible_rc_line());
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_F(ExpiredArticleTest, extendsReadRangeWithoutUnreadSuffix)
+{
+    set_numbers("1-5");
+
+    m_group.check_expired(ArticleNum{8});
+
+    EXPECT_EQ("comp.lang.apl: 1-7", visible_rc_line());
+    EXPECT_EQ('\0', m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)]);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
 TEST_F(SetToReadTest, countsUnreadArticlesFromLongReadList)
 {
     set_numbers("1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,"

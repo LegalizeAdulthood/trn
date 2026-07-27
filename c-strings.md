@@ -565,13 +565,13 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 9, `strstr` 2, `strlen` 11.
+- Search and length: `strchr` 9, `strstr` 2, `strlen` 10.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 306,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 3.
+- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 2.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
@@ -627,16 +627,6 @@ No current slices.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-336 - Expired Article Range View Rewrite
-
-- Files: `libtrn/rcln.cpp`.
-- Kind: owner-local parser cleanup.
-- Function: `NewsgroupData::check_expired`.
-- Dependencies: none.
-- Change: parse and rewrite remaining rc ranges with bounded views
-  instead of `char *` cursors, `strchr`, `strlen`, and `std::atol`.
-- Tests: expired-article rc-line rewrite tests.
 
 #### CSTR-337 - Newsgroup Read-state View Query
 
