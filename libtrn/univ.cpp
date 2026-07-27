@@ -991,12 +991,12 @@ bool univ_file_load(std::string_view fname, std::string_view title, std::string_
 
     if (!fname.empty())
     {
-        g_univ_fname.assign(fname.data(), fname.size());
+        g_univ_fname = fname;
     }
-    g_univ_title.assign(title.data(), title.size());
+    g_univ_title = title;
     if (!label.empty())
     {
-        g_univ_label.assign(label.data(), label.size());
+        g_univ_label = label;
     }
     bool flag = !fname.empty() && univ_use_file(fname, label);
     if (!flag)

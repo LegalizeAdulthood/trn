@@ -606,17 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-350 - Universal File Load Assignment
-
-- Files: `libtrn/univ.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `univ_file_load`.
-- Dependencies: none.
-- Change: assign `fname`, `title`, and `label` directly to the matching
-  global strings instead of copying through `data(), size()`.
-- Tests: universal-selector file load tests if existing coverage is
-  easy.
-
 #### CSTR-351 - Universal Mask Load Title Assignment
 
 - Files: `libtrn/univ.cpp`.

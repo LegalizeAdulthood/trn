@@ -264,6 +264,25 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
     EXPECT_EQ("alt.test !alt.noise", item->group_mask().mask_list);
 }
 
+TEST_F(UnivTest, fileLoadStoresCurrentFileTitleAndLabel)
+{
+    const fs::path  temp_dir = fs::path{TRN_TEST_TMP_DIR} / "UnivTest" / "fileLoadStoresCurrentFileTitleAndLabel";
+    std::error_code error;
+    fs::remove_all(temp_dir, error);
+    fs::create_directories(temp_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    const fs::path selector_file = temp_dir / "selector.univ";
+    std::ofstream{selector_file} << ">:chapter\n\"Filter\" alt.test !alt.noise\n";
+    const std::string file_name = selector_file.generic_string();
+
+    ASSERT_TRUE(univ_file_load(file_name, "Top", "chapter"));
+
+    EXPECT_EQ(file_name, g_univ_fname);
+    EXPECT_EQ("Top", g_univ_title);
+    EXPECT_EQ("chapter", g_univ_label);
+    fs::remove_all(temp_dir, error);
+}
+
 TEST_F(UnivTest, fileLoadAllowsEscapedQuoteInDescription)
 {
     const fs::path  temp_dir = fs::path{TRN_TEST_TMP_DIR} / "UnivTest" / "fileLoadAllowsEscapedQuoteInDescription";
