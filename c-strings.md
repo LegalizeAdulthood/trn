@@ -30,16 +30,32 @@ Run every scan from the innermost lexical scope outward:
 
 - `char *` values that can become `const char *` because the local code
   never writes through the pointer.
+- Mutable-looking `char *` function parameters that are only read,
+  parsed, sliced, compared, or forwarded to read-only callees.  Treat
+  these as `std::string_view` candidates even when the parameter is the
+  only string parameter and is not paired with a caller output buffer.
+- Local `char *` cursor aliases into owned `std::string` storage.  Treat
+  these as local string-processing candidates when the function walks the
+  pointer, writes temporary NULs, or uses C string library calls after
+  copying input into owned storage.
 - `char *` and `const char *` struct/class/union members.  Classify the
   member as owned, borrowed, interior, output, pooled, or static/global
   storage before deciding whether it is a string candidate.
 - `const char *` values that can become `std::string_view` because the
   local code only reads, slices, compares, or forwards text by extent.
+  Include helper parameters that feed any non-zero C string or byte
+  function family and then influence owned `std::string` storage, cursor
+  slicing, parsing decisions, or downstream output.
 - C-style overloads, wrappers, and helpers that take or return
   `char *` or `const char *` when a `std::string` or
   `std::string_view` API already exists nearby.  Check whether
   production code calls them.  If only tests call them, decide whether
   the tests preserve a real public API or only stale compatibility.
+- Exported and internal helpers that take caller-provided `char *`
+  output buffers paired with `const char *` input and return a byte
+  count or string length.  Treat these as candidates for a
+  `std::string`-returning API unless callers truly require in-place
+  decode into a protocol buffer.
 - Owned `char *` storage that can become `std::string` storage without
   pointer escape.
 - `char *` results from functions that return owned raw strings from
@@ -59,6 +75,10 @@ Run every scan from the innermost lexical scope outward:
   `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`, `sprintf`,
   `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `fgets`, `gets`,
   `fputs`, `puts`, `printf`, and `fprintf` as audit roots.
+  For every function family with a non-zero count, inspect representative
+  hits until each storage/dataflow shape is classified as an active
+  slice, an existing slice dependency, inactive preprocessor code, a
+  platform/API boundary, or non-string byte/protocol storage.
 - C byte library calls on character storage.  Treat `memcpy`, `memmove`,
   `memset`, `memcmp`, and `memchr` as audit roots when the destination
   or compared data is string-like `char` storage.  Non-string table
@@ -345,6 +365,14 @@ Select every C string function call as an audit root, even when no raw
 `char *` declaration is nearby.  Classify by what the call proves about
 the storage:
 
+For every C string or byte function family with a non-zero count, trace
+each distinct dataflow shape backward to the storage origin and forward
+to how the result is used.  The audit result for that family must say
+which hits become explicit slices and which are inactive code,
+platform/API boundaries, terminal/protocol byte storage, non-string data,
+or already covered by another open slice.  Do not leave a non-zero count
+as an unexplained inventory item.
+
 - `strcpy`, `strncpy`, `strcat`, `strncat`, `sprintf`, `snprintf`,
   `vsprintf`, and `vsnprintf`: construction into a C string buffer.
   Prefer `std::string` or `fmt` when the destination is owned local
@@ -358,6 +386,11 @@ the storage:
   Prefer `std::string_view` operations when the code does not need to
   mutate the source.  Preserve mutable parsing only when the function
   intentionally edits a caller buffer.
+  If the argument is a `const char *` parameter or local C-string pointer
+  that is parsed, sliced, measured, copied into, assigned to, or used to
+  size owned `std::string` storage, make it an explicit
+  `std::string_view` slice.  Check whether callers are passing
+  `std::string::c_str()` only to satisfy the old signature.
 - `sscanf`: parsing from null-terminated text.  Prefer
   `std::string_view` tokenization and `std::from_chars` when the source
   is already a view or owned string.
@@ -551,14 +584,64 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
   no longer pass `.c_str()`.
+- String-to-pointer-to-view scan: `artsrch.cpp` still builds one
+  `std::string_view` from `pattern_text.c_str() + offset`; this is a
+  simple `substr` cleanup.
 - Literal-only local pointer scan found no current Tier 0 leaf slices.
   `do_newsgroup`, `s_search`, and `sa_refresh_bot` now use
   `std::string_view`, `std::string`, or direct `fmt` output for the
   prior local message-selection cases.
 - C numeric conversion scan found no current production hits.
+- Caller-output helper signature scan: `b64_decode_string`,
+  `qp_decode_string`, and `filter_html` still expose caller-provided
+  `char *` output buffers with C-string inputs and integer byte counts.
+  The base64 and quoted-printable helpers can become string-returning
+  decode APIs first; the HTML filter is stateful and tied to article
+  buffer line-wrap offsets, so it is a larger helper-contract slice.
+- Mutable input parameter scan: `parse_line(char *, int, int)` reads and
+  parses the header line without writing through the pointer.  It should
+  accept `std::string_view` and use view/string operations internally.
+- Local cursor scan: `tree_puts` already accepts `std::string_view`, but
+  still creates local `char *` aliases into `std::string` storage,
+  temporarily writes NULs, uses `std::strchr`, and walks pointers for
+  wrapping and output.
+- Additional local cursor scan: `perform`, `print_lines`, `do_article`,
+  `parse_rcline`, `set_to_read`, and `write_newsrcs` still walk local
+  raw pointers over owned string storage or internal `.newsrc` line
+  storage.
+- UTF helper scan: `byte_length_at`, `code_point_at`,
+  `visual_width_at`, `put_char_adv`, and `dectrl` still expose or depend
+  on raw C-string cursor APIs.  These should be refactored bottom-up so
+  display loops can consume `std::string_view` cursors.
+- Shell helper scan: `do_shell` still takes raw C strings and forces
+  many callers to pass `.c_str()` even when they already own
+  `std::string` command text.
+- Newsgroup data scan: `NewsgroupData` still exposes `m_rc_line`
+  through raw `rc_line_c_str`, `rc_numbers_c_str`, `rc_line_data`, and
+  `rc_numbers_data` accessors.  The mutable accessors are tied to the
+  old delimiter/NUL poking mechanism and should be reduced after local
+  parser/writer slices.
+- Newsgroup add scan: `add_newsgroup` still takes `const char *`,
+  measures it with `std::strlen`, and copies it into `m_rc_line` even
+  though callers already have `std::string` storage.
+- Non-zero C function dataflow scan: remaining search/length hits are
+  either covered by open slices, inactive preprocessor code, termcap
+  capability strings, UTF code-point work, or comment text.  The only
+  helper-parameter copy-to-string case is `add_newsgroup`, tracked by
+  `CSTR-433`.
+- Non-zero line-input, byte, and allocation-helper scans: `fgets`
+  remains in low-level article/NNTP input or a fixed stdin pause prompt;
+  `memcpy` is MIME parser compaction; `memset` and `memcmp` are hash or
+  header-index table operations; `safe_malloc` and `safe_realloc` are
+  hash, AddGroup pointer table, regex bytecode, or generic allocator
+  internals.
+- Non-zero C output calls remain output-modernization work, not
+  automatically string-storage slices.  Add explicit slices when an
+  output call is tied to owned string construction, cursor cleanup, or
+  audited runtime formatting; current cursor/output work is captured by
+  `CSTR-417`, `CSTR-429`, and `CSTR-430`.
 - MIME content-decoding paths now own local string storage for decoded
-  lines.  Remaining MIME work is in parser helpers that still expose
-  mutable pointers.
+  lines except for the three helper signatures listed above.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
@@ -574,8 +657,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `parsedate.y`; they remain in the lexical inventory but are not active
   slices.
 - Filename storage already uses modern path or view signatures for most
-  owners.  Other filename strings are already `std::string`/`fs::path`
-  values or cross C `FILE*` APIs.
+  owners.  `ScoreFile::fname` remains `std::string` because it is a
+  score-file cache key that can hold a URL as well as a local path.
+  Other filename strings are already `std::string`/`fs::path` values or
+  cross C `FILE*` APIs.
 
 ## Current C String Function Inventory
 
@@ -607,7 +692,7 @@ be modernized.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-413`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-434`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -636,26 +721,325 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-418 - Article Search Finding View
+
+- Files: `libtrn/artsrch.cpp`.
+- Kind: string-to-pointer-to-view cleanup.
+- Function: `art_search`.
+- Dependencies: none.
+- Change: replace the local `std::string_view` construction from
+  `pattern_text.c_str() + finding_start` with `pattern_text.substr`.
+  Preserve the current empty-finding behavior and search message text.
+- Tests: existing article-search tests are sufficient unless the local
+  change exposes an uncovered branch.
+
+#### CSTR-419 - Perform Command List Cursor
+
+- Files: `libtrn/ngstuff.cpp`, `tests/test_ngstuff.cpp`.
+- Kind: local cursor alias into owned string storage.
+- Function: `perform(std::string_view, int)`.
+- Dependencies: none.
+- Change: replace the copied command-list buffer and `char *cmdlst`
+  cursor with index or `std::string_view` iteration.  Preserve recursive
+  interpolation safety, whitespace/colon skipping, doubled `+` handling,
+  and command lookahead semantics.
+- Tests: use existing `NgstuffTest` `perform` cases; add focused cases
+  first if command lookahead is not covered.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-No current slices.
+#### CSTR-420 - UTF Byte Length View API
+
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `tests/test_utf.cpp`.
+- Kind: C-string helper API.
+- Function: `byte_length_at(const char *)`.
+- Dependencies: none.
+- Change: make the primary API accept `std::string_view` and compute the
+  byte length without relying on a NUL terminator.  Preserve empty and
+  former-null behavior as zero length, and update callers that already
+  have a view plus offset to pass `text.substr(offset)`.
+- Tests: update existing byte-length tests to cover empty views and
+  bounded non-NUL-terminated views.
+
+#### CSTR-421 - UTF Code Point View API
+
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `tests/test_utf.cpp`.
+- Kind: C-string helper API.
+- Function: `code_point_at(const char *)`.
+- Dependencies: CSTR-420.
+- Change: make the primary API accept `std::string_view` and decode
+  only within the supplied view.  Preserve invalid/empty behavior by
+  returning `INVALID_CODE_POINT`.
+- Tests: update existing code-point tests to cover empty views and
+  bounded non-NUL-terminated views.
+
+#### CSTR-422 - UTF Visual Width View API
+
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `tests/test_utf.cpp`.
+- Kind: C-string helper API.
+- Function: `visual_width_at(const char *)`.
+- Dependencies: CSTR-421.
+- Change: make the primary API accept `std::string_view` and use the
+  view-based code-point helper.  Update callers that currently pass
+  `data() + offset`.
+- Tests: update existing visual-width tests to cover empty views and
+  bounded non-NUL-terminated views.
+
+#### CSTR-423 - UTF Advancing Output Cursor
+
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `libtrn/art.cpp`, `libtrn/terminal.cpp`, `tests/test_utf.cpp`.
+- Kind: C-string cursor helper API.
+- Function: `put_char_adv(const char **, bool)`.
+- Dependencies: CSTR-420, CSTR-422.
+- Change: replace the pointer-to-pointer API with a
+  `std::string_view &` cursor that removes the consumed prefix.  Keep
+  output and width behavior unchanged.
+- Tests: update existing `put_char_adv` tests to validate cursor
+  advancement through a view.
+
+#### CSTR-424 - Header Control Cleanup String API
+
+- Files: `libtrn/cache.cpp`, `libtrn/include/trn/cache.h`,
+  `libtrn/rt-wumpus.cpp`, `tests/test_cache.cpp`.
+- Kind: mutable C-string helper API.
+- Function: `dectrl(char *)`.
+- Dependencies: CSTR-420.
+- Change: replace the raw pointer API with a `std::string &` API that
+  mutates owned string storage.  Preserve the current replacement of
+  non-printing characters with spaces and use an empty string in place
+  of the former null-pointer no-op.
+- Tests: update existing `DectrlTest` cases to operate on
+  `std::string`.
+
+#### CSTR-425 - Shell Command Helper View API
+
+- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
+  `tool/util3.cpp`, `tool/include/tool/util3.h`, production callers,
+  `tests/test_interp.cpp`.
+- Kind: C-string helper API.
+- Function: `do_shell(const char *, const char *)`.
+- Dependencies: none.
+- Change: change the helper to take command text as `std::string_view`
+  and use an empty shell view as the default-shell sentinel.  Build local
+  NUL-terminated strings only at the `system`, `spawnl`, and `execl`
+  boundaries.  Remove caller `.c_str()` calls where the caller already
+  owns a `std::string`.
+- Tests: update existing shell interpolation tests.
+
+#### CSTR-413 - Base64 String Decode Helper
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`,
+  `libtrn/cache.cpp`, `libtrn/artio.cpp`, `tests/test_cache.cpp`,
+  `tests/test_artio.cpp`.
+- Kind: caller output buffer helper.
+- Function: `b64_decode_string(char *, const char *)`.
+- Dependencies: none.
+- Change: replace the caller-provided output buffer API with a
+  `std::string b64_decode_string(std::string_view)` API.  Migrate header
+  decoding to append the returned string directly.  In article buffer
+  decoding, copy the returned decoded string back into the existing
+  article buffer only at the boundary that still requires that storage,
+  then use the decoded size for `len`.
+- Tests: keep `DecodeHeaderTest.decodesBase64EncodedWord`; add or update
+  article I/O MIME base64 coverage before the refactor if no existing
+  test exercises that production path.
+
+#### CSTR-414 - Quoted-Printable String Decode Helper
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`,
+  `libtrn/cache.cpp`, `libtrn/artio.cpp`, `tests/test_cache.cpp`,
+  `tests/test_artio.cpp`.
+- Kind: caller output buffer helper.
+- Function: `qp_decode_string(char *, const char *, bool)`.
+- Dependencies: none.
+- Change: replace the caller-provided output buffer API with a
+  `std::string qp_decode_string(std::string_view, bool)` API.  Preserve
+  header underscore handling, soft line breaks, malformed escapes, and
+  carriage-return dropping.  In article buffer decoding, copy the
+  returned decoded string back into the existing article buffer only at
+  the boundary that still requires that storage, then use the decoded
+  size for `len`.
+- Tests: add quoted-printable header and article-body tests before the
+  refactor, because current direct coverage only identifies
+  quoted-printable transfer encoding.
+
+#### CSTR-415 - HTML Filter Output Helper
+
+- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`,
+  `libtrn/artio.cpp`, `tests/test_mime.cpp`.
+- Kind: caller output buffer helper.
+- Function: `filter_html(char *, const char *)`.
+- Dependencies: none.
+- Change: replace the caller-provided output buffer API with an owned
+  string-producing API while preserving `MimeSection` HTML state,
+  line-wrap behavior, entity decoding, and `m_html_line_start` offset
+  semantics.  Keep any unavoidable copy back into the article buffer at
+  the `artio.cpp` boundary until article-buffer storage is removed.
+- Tests: use the existing `HtmlFilterTest` cases and add focused cases
+  first if line-wrap or `m_html_line_start` behavior is not covered.
+
+#### CSTR-416 - Header Line Parser Input View
+
+- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`,
+  `libtrn/art.cpp`, `tests/test_head.cpp`, `tests/test_interp.cpp`.
+- Kind: mutable-looking read-only input parameter.
+- Function: `parse_line(char *, int, int)`.
+- Dependencies: none.
+- Change: change `parse_line` to accept `std::string_view` and replace
+  `std::strchr`/pointer arithmetic with view operations.  Preserve
+  continuation-line handling, malformed NNTP header handling,
+  `set_line_type`, `parsedate`, and `DEBUG` header dumping behavior.  If
+  `parsedate` still needs a NUL-terminated string, create the smallest
+  local string needed for that call.
+- Tests: use existing `parse_header` coverage in `test_head.cpp` and
+  interpolation tests; add a focused parse-header case first only if the
+  affected continuation, malformed-header, or date paths are not covered.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-No current slices.
+#### CSTR-426 - Newsrc Line Parser Cursor
+
+- Files: `libtrn/rcstuff.cpp`, `libtrn/ngdata.cpp`,
+  `libtrn/include/trn/ngdata.h`, `tests/test_rcstuff.cpp`,
+  `tests/test_rcln.cpp`.
+- Kind: local cursor aliases into owned string storage.
+- Function: `parse_rcline`.
+- Dependencies: none.
+- Change: replace local `char *` walking over `NewsgroupData::m_rc_line`
+  with indexes and `std::string_view` slices.  Preserve malformed-line
+  repair, unthreaded flag detection, subscribe-character storage,
+  `m_num_offset`, and the hidden-subscribe-character behavior.
+- Tests: use existing newsrc parsing tests; add focused coverage first
+  if malformed-line repair or unthreaded flag conversion is not covered.
+
+#### CSTR-433 - Newsrc Add Newsgroup Name View
+
+- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
+- Kind: read-only C-string helper parameter.
+- Function: `add_newsgroup(Newsrc *, const char *, char_int)`.
+- Dependencies: none.
+- Change: change the newsgroup-name parameter to `std::string_view`,
+  replace `std::strlen` with `size`, and update callers to pass
+  `g_newsgroup_name` directly.  Preserve `m_num_offset`, embedded
+  subscribe-character placeholder storage, hash insertion, unread-count
+  updates, and rc-changed behavior.
+- Tests: use existing new-newsgroup subscription tests; add focused
+  coverage first if append-unsubscribed behavior is not covered.
+
+#### CSTR-427 - Newsrc Numbers View
+
+- Files: `libtrn/ngdata.cpp`, `libtrn/include/trn/ngdata.h`,
+  `libtrn/bits.cpp`, `libtrn/cache.cpp`, `libtrn/rcln.cpp`,
+  `tests/test_bits.cpp`, `tests/test_rcln.cpp`.
+- Kind: raw string return helper.
+- Function: `NewsgroupData::rc_numbers_c_str`.
+- Dependencies: CSTR-426.
+- Change: replace the read-only numbers accessor with a
+  `std::string_view` return and update callers to use view operations or
+  `fmt` output.  Keep mutable `rc_numbers_data` only for slices that
+  still deliberately edit `m_rc_line`.
+- Tests: use existing bits/rcln tests for read-count and range handling.
+
+#### CSTR-428 - Newsrc Line View
+
+- Files: `libtrn/ngdata.cpp`, `libtrn/include/trn/ngdata.h`,
+  `libtrn/rcstuff.cpp`, `libtrn/rcln.cpp`, `libtrn/ngsrch.cpp`,
+  `libtrn/kfile.cpp`, `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,
+  `libtrn/bits.cpp`, `libtrn/trn.cpp`, `libtrn/univ.cpp`.
+- Kind: raw string return helper.
+- Function: `NewsgroupData::rc_line_c_str`.
+- Dependencies: CSTR-426.
+- Change: replace the read-only line accessor with a
+  `std::string_view` return and update output, matching, hashing, and
+  newsgroup-name callers to consume the view directly.  Do not alter
+  mutable `rc_line_data` callers in this slice.
+- Tests: use existing rcstuff, trn, and universal selector tests; add
+  focused coverage first for any caller branch without coverage.
+
+#### CSTR-431 - Newsrc Reset Numbers Storage
+
+- Files: `libtrn/rcln.cpp`, `tests/test_rcln.cpp`.
+- Kind: mutable cursor into owned `.newsrc` line storage.
+- Function: `NewsgroupData::set_to_read`.
+- Dependencies: CSTR-427.
+- Change: replace `*rc_numbers_data() = '\0'` with an owner-local
+  operation on `m_rc_line` or a small `NewsgroupData` helper that clears
+  the numbers region without exposing mutable raw string storage.
+  Preserve reset detection, paranoid mode, unread counts, and rc-changed
+  flag behavior.
+- Tests: use existing reset/newsrc range tests; add focused coverage
+  first if the reset branch is not covered.
+
+#### CSTR-432 - Newsrc Writer Delimiter Cursor
+
+- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
+- Kind: mutable cursor into owned `.newsrc` line storage.
+- Function: `write_newsrcs`.
+- Dependencies: CSTR-426, CSTR-428.
+- Change: replace the local `char *delim` cursor into `m_rc_line` with
+  index-based edits or an owner-local helper.  Preserve
+  `show_subscribe_char`/`hide_subscribe_char`, unthreaded `:0` output
+  conversion, debug output, and file write behavior.
+- Tests: use existing rcstuff write-newsrc tests; add focused coverage
+  first for unthreaded conversion if it is not covered.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-No current slices.
+#### CSTR-417 - Tree Output Local Cursor Rewrite
+
+- Files: `libtrn/rt-wumpus.cpp`, `tests/test_rt-wumpus.cpp`.
+- Kind: local cursor aliases into owned string storage.
+- Function: `tree_puts(std::string_view, ArticleLine, int)`.
+- Dependencies: CSTR-424.
+- Change: replace local `char *line`, `char *end`, and `char *cp`
+  cursor processing with `std::string`/`std::string_view` slices and
+  indexes.  Remove the temporary embedded-NUL splitting and
+  `std::strchr` scan where possible.  Preserve subject prefix output,
+  continuation indentation, wrapping, tree padding, color behavior, and
+  `virtual_write` backpager updates.
+- Tests: use existing `tree_puts` coverage in `test_rt-wumpus.cpp`; add
+  focused cases first if keyword splitting, continuation indentation, or
+  wrap-point behavior is not covered.
+
+#### CSTR-429 - Terminal Print Lines Cursor
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `tests/test_terminal.cpp`.
+- Kind: local cursor alias into borrowed string view.
+- Function: `print_lines(std::string_view, int)`.
+- Dependencies: CSTR-423.
+- Change: replace local `const char *s`/`end` cursor walking with a
+  `std::string_view` cursor.  Preserve page-stop behavior, highlighting,
+  tab expansion, caret output for control characters, and newline
+  handling.
+- Tests: use existing `print_lines` tests and add focused coverage first
+  if tab/control/highlight branches are not covered.
+
+#### CSTR-430 - Article Display Cursor
+
+- Files: `libtrn/art.cpp`, `tests/test_art.cpp`.
+- Kind: local cursor alias into owned article line storage.
+- Function: `do_article`.
+- Dependencies: CSTR-416, CSTR-423.
+- Change: replace `buf_ptr`/`buf_begin` pointer walking over
+  `g_art_line` with view/index state for display output.  Preserve
+  underline handling, ROT13, UTF output, page-stop searches, header
+  parsing, hiding, and backpager behavior.
+- Tests: add or update article display tests before the refactor if the
+  affected output branches are not already covered.
 
 ### Tier 4 - Broad Shared Buffers
 
@@ -675,7 +1059,7 @@ owned strings or owner-specific storage.
   `tests/test_artio.cpp`.
 - Kind: raw string return helper.
 - Function: `read_art_buf(bool)`.
-- Dependencies: none.
+- Dependencies: CSTR-413, CSTR-414, CSTR-415.
 - Change: after production callers use owned line storage, remove the
   public `char *` article-buffer overload or make it file-local
   implementation detail.  Keep `read_art_buf(std::string &, bool)` as
