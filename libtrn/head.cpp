@@ -224,33 +224,35 @@ HeaderLineType get_header_num(std::string_view header_name)
         g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{};
         if (!g_head_buf.empty())
         {
-            char *head = g_head_buf.data();
-            for (char *bp = head, *line_end = nullptr; *bp; bp = line_end)
+            const std::string_view header_text{g_head_buf};
+            for (std::size_t line_start{}; line_start < header_text.size();)
             {
-                if (!(line_end = std::strchr(bp, '\n')) || line_end == bp)
+                const std::size_t line_end = header_text.find('\n', line_start);
+                if (line_end == std::string_view::npos || line_end == line_start)
                 {
                     break;
                 }
-                char ch = *++line_end;
-                *line_end = '\0';
-                char *colon = std::strchr(bp, ':');
-                *line_end = ch;
-                if (!colon
-                    || (i = set_line_type(std::string_view{bp, static_cast<std::size_t>(colon - bp)})) != CUSTOM_LINE)
+                const std::string_view line = header_text.substr(line_start, line_end - line_start);
+                const std::size_t      colon = line.find(':');
+                const std::size_t      next_line_start = line_end + 1;
+                if (colon == std::string_view::npos || set_line_type(line.substr(0, colon)) != CUSTOM_LINE)
                 {
+                    line_start = next_line_start;
                     continue;
                 }
-                g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{bp - head};
-                while (is_hor_space(*line_end))
+                g_header_type[CUSTOM_LINE].min_pos = ArticlePosition{static_cast<long>(line_start)};
+                std::size_t header_end = next_line_start;
+                while (header_end < header_text.size() && is_hor_space(header_text[header_end]))
                 {
-                    if (!(line_end = std::strchr(line_end, '\n')))
+                    const std::size_t continuation_end = header_text.find('\n', header_end);
+                    if (continuation_end == std::string_view::npos)
                     {
-                        line_end = bp + std::strlen(bp);
+                        header_end = header_text.size();
                         break;
                     }
-                    line_end++;
+                    header_end = continuation_end + 1;
                 }
-                g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{line_end - head};
+                g_header_type[CUSTOM_LINE].max_pos = ArticlePosition{static_cast<long>(header_end)};
                 break;
             }
         }

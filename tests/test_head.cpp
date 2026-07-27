@@ -169,6 +169,25 @@ TEST_F(HeaderLineTypeLookupTest, recordsCustomHeaderNameInLowerCase)
     EXPECT_EQ("x-strange-thing", g_header_type[CUSTOM_LINE].name);
 }
 
+TEST_F(HeaderLineTypeLookupTest, recordsCustomHeaderOffsetsIncludingContinuation)
+{
+    g_head_buf = "From: writer@example.test\n"
+                 "X-Strange-Thing: first\n"
+                 " continuation\n"
+                 "Subject: later\n";
+    const std::string            original_header = g_head_buf;
+    const std::string::size_type custom_start = g_head_buf.find("X-Strange-Thing:");
+    const std::string::size_type custom_end = g_head_buf.find("Subject:");
+    ASSERT_NE(std::string::npos, custom_start);
+    ASSERT_NE(std::string::npos, custom_end);
+
+    EXPECT_EQ(CUSTOM_LINE, get_header_num("X-Strange-Thing"));
+
+    EXPECT_EQ(ArticlePosition{static_cast<long>(custom_start)}, g_header_type[CUSTOM_LINE].min_pos);
+    EXPECT_EQ(ArticlePosition{static_cast<long>(custom_end)}, g_header_type[CUSTOM_LINE].max_pos);
+    EXPECT_EQ(original_header, g_head_buf);
+}
+
 TEST_F(HeaderParseTest, preservesHeaderOffsetsAcrossBufferGrowth)
 {
     const std::string subject(LINE_BUF_LEN * 9, 'x');

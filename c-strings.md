@@ -621,16 +621,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-329 - Header Custom Line View Scan
-
-- Files: `libtrn/head.cpp`.
-- Kind: C string library call cleanup.
-- Function: `get_header_num`.
-- Dependencies: none.
-- Change: scan `g_head_buf` as string-view lines and remove temporary
-  NUL mutation, `strchr`, and `strlen`.
-- Tests: custom header detection tests.
-
 #### CSTR-330 - Score Extra Header View Scan
 
 - Files: `libtrn/scorefile.cpp`.
