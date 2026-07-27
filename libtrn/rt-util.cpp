@@ -156,7 +156,7 @@ static std::size_t next_character(std::string_view text, std::size_t pos)
         return text.size();
     }
 #ifdef USE_UTF_HACK
-    const int width = byte_length_at(text.data() + pos);
+    const int width = byte_length_at(text.substr(pos));
     if (width > 0)
     {
         const std::size_t next = pos + static_cast<std::size_t>(width);
@@ -189,7 +189,7 @@ static std::string truncate_visible(std::string_view text, int max)
     int         width = 0;
     for (std::size_t pos = 0; pos < text.size();)
     {
-        const int char_bytes = byte_length_at(text.data() + pos);
+        const int char_bytes = byte_length_at(text.substr(pos));
         const int char_width = visual_width_at(text.data() + pos);
         if (char_bytes <= 0 || char_width < 0 || width + char_width > max)
         {

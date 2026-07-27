@@ -198,34 +198,43 @@ std::string_view output_charset_name()
     return find_charset_desc(s_gs.out)->name;
 }
 
-int byte_length_at(const char *s)
+static bool is_utf8_continuation(std::string_view text, std::size_t index)
 {
-    int it = s != nullptr; // correct for ASCII
+    return index < text.size() && (U(text[index]) & 0xC0) == 0x80;
+}
+
+int byte_length_at(std::string_view text)
+{
+    int it = !text.empty(); // correct for ASCII
     if (!it)
     {
     }
     else if (IS_UTF8(s_gs.in))
     {
-        if ((*s & 0x80) == 0)
+        const Uchar first = U(text.front());
+        if ((first & 0x80) == 0)
         {
         }
-        else if ((*s & 0xE0) == 0xC0 && OK(s + 1))
+        else if ((first & 0xE0) == 0xC0 && is_utf8_continuation(text, 1))
         {
             it = 2;
         }
-        else if ((*s & 0xF0) == 0xE0 && OK(s + 1) && OK(s + 2))
+        else if ((first & 0xF0) == 0xE0 && is_utf8_continuation(text, 1) && is_utf8_continuation(text, 2))
         {
             it = 3;
         }
-        else if ((*s & 0xF8) == 0xF0 && OK(s + 1) && OK(s + 2) && OK(s + 3))
+        else if ((first & 0xF8) == 0xF0 && is_utf8_continuation(text, 1) && is_utf8_continuation(text, 2) &&
+                 is_utf8_continuation(text, 3))
         {
             it = 4;
         }
-        else if ((*s & 0xFC) == 0xF8 && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4))
+        else if ((first & 0xFC) == 0xF8 && is_utf8_continuation(text, 1) && is_utf8_continuation(text, 2) &&
+                 is_utf8_continuation(text, 3) && is_utf8_continuation(text, 4))
         {
             it = 5;
         }
-        else if ((*s & 0xFE) == 0xFC && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4) && OK(s + 5))
+        else if ((first & 0xFE) == 0xFC && is_utf8_continuation(text, 1) && is_utf8_continuation(text, 2) &&
+                 is_utf8_continuation(text, 3) && is_utf8_continuation(text, 4) && is_utf8_continuation(text, 5))
         {
             it = 6;
         }
@@ -239,12 +248,21 @@ int byte_length_at(const char *s)
     }
     else if (IS_DOUBLE_BYTE(s_gs.in))
     {
-        if (*s & 0x80)
+        if ((U(text.front()) & 0x80) != 0 && text.size() > 1)
         {
             it = 2;
         }
     }
     return it;
+}
+
+int byte_length_at(const char *s)
+{
+    if (s == nullptr)
+    {
+        return 0;
+    }
+    return byte_length_at(std::string_view{s});
 }
 
 // NOTE: correctness is not guaranteed; this is only a rough generalization

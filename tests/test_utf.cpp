@@ -173,6 +173,11 @@ TEST(UTFByteLengthTest, length_at_null)
     ASSERT_EQ(0, byte_length_at(nullptr));
 }
 
+TEST(UTFByteLengthTest, length_at_empty_view)
+{
+    ASSERT_EQ(0, byte_length_at(std::string_view{}));
+}
+
 TEST(UTFByteLengthTest, length_at_ascii)
 {
     ASSERT_EQ(1, byte_length_at(ARBITRARY_ASCII));
@@ -187,6 +192,12 @@ TEST(UTFByteLengthTest, length_at_iso8859_1)
 TEST(UTFByteLengthTest, byte_length_at_cjk_basic)
 {
     ASSERT_EQ(3, byte_length_at(ARBITRARY_CJK_BASIC));
+}
+
+TEST(UTFByteLengthTest, byte_length_at_bounded_cjk_view)
+{
+    ASSERT_EQ(3, byte_length_at(std::string_view{ARBITRARY_CJK_BASIC, 3}));
+    ASSERT_EQ(1, byte_length_at(std::string_view{ARBITRARY_CJK_BASIC, 2}));
 }
 
 TEST(UTFAtNormalCharacterTest, nullptr)

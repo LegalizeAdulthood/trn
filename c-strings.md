@@ -726,27 +726,13 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-420 - UTF Byte Length View API
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `tests/test_utf.cpp`.
-- Kind: C-string helper API.
-- Function: `byte_length_at(const char *)`.
-- Dependencies: none.
-- Change: make the primary API accept `std::string_view` and compute the
-  byte length without relying on a NUL terminator.  Preserve empty and
-  former-null behavior as zero length, and update callers that already
-  have a view plus offset to pass `text.substr(offset)`.
-- Tests: update existing byte-length tests to cover empty views and
-  bounded non-NUL-terminated views.
-
 #### CSTR-421 - UTF Code Point View API
 
 - Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
   `tests/test_utf.cpp`.
 - Kind: C-string helper API.
 - Function: `code_point_at(const char *)`.
-- Dependencies: CSTR-420.
+- Dependencies: none.
 - Change: make the primary API accept `std::string_view` and decode
   only within the supplied view.  Preserve invalid/empty behavior by
   returning `INVALID_CODE_POINT`.
@@ -772,7 +758,7 @@ that later caller slices can consume directly.
   `libtrn/art.cpp`, `libtrn/terminal.cpp`, `tests/test_utf.cpp`.
 - Kind: C-string cursor helper API.
 - Function: `put_char_adv(const char **, bool)`.
-- Dependencies: CSTR-420, CSTR-422.
+- Dependencies: CSTR-422.
 - Change: replace the pointer-to-pointer API with a
   `std::string_view &` cursor that removes the consumed prefix.  Keep
   output and width behavior unchanged.
@@ -785,7 +771,7 @@ that later caller slices can consume directly.
   `libtrn/rt-wumpus.cpp`, `tests/test_cache.cpp`.
 - Kind: mutable C-string helper API.
 - Function: `dectrl(char *)`.
-- Dependencies: CSTR-420.
+- Dependencies: none.
 - Change: replace the raw pointer API with a `std::string &` API that
   mutates owned string storage.  Preserve the current replacement of
   non-printing characters with spaces and use an empty string in place
