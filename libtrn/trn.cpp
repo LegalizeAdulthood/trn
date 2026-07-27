@@ -509,15 +509,6 @@ static std::string finish_newsgroup_command(std::string_view command, bool donew
     return finish_command(command.substr(0, 1), donewline);
 }
 
-static NewsgroupSearchResult newsgroup_search(std::string_view command)
-{
-    std::string buffer;
-    buffer.reserve(LINE_BUF_LEN + 1);
-    buffer = command.substr(0, std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN)));
-    buffer.resize(LINE_BUF_LEN + 1, '\0');
-    return newsgroup_search(buffer.data(), false);
-}
-
 static std::string command_with_typeahead(char ch)
 {
     std::string command(LINE_BUF_LEN + 1, '\0');
@@ -660,7 +651,7 @@ do_command:
             set_newsgroup(g_current_newsgroup);
             return ING_INPUT;
         }
-        switch (newsgroup_search(command))
+        switch (newsgroup_search(command, false))
         {
         case NGS_ERROR:
             set_newsgroup(g_current_newsgroup);

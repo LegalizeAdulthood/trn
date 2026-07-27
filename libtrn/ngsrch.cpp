@@ -33,15 +33,6 @@ void newsgroup_search_init()
     s_newsgroup_compex.init_compex();
 }
 
-NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
-{
-    if (patbuf == nullptr)
-    {
-        return NGS_ABORT;
-    }
-    return newsgroup_search(std::string_view{patbuf}, get_cmd);
-}
-
 NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
 {
     g_int_count = 0;

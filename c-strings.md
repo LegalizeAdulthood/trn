@@ -525,10 +525,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
   they still have production/source callers or platform/API boundary
   use.
-- Search API scan: article search now uses its `std::string_view`
-  command API directly and its raw-buffer compatibility wrapper is gone.
-  Newsgroup search still has a raw-buffer compatibility wrapper for
-  remaining callers.
+- Search API scan: article and newsgroup search now use their
+  `std::string_view` command APIs directly.  Their raw-buffer
+  compatibility wrappers are gone.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
@@ -572,6 +571,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
+
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
@@ -642,20 +642,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-307 - Newsgroup Search Callers
-
-- Files: `libtrn/trn.cpp`, `libtrn/rt-select.cpp`.
-- Kind: shared command/search buffer caller.
-- Function: newsgroup search command callers.
-- Dependencies: none.
-- Change: update direct callers to pass strings or views to
-  `newsgroup_search`.  Remove the local `trn.cpp` writable staging
-  wrapper and any selector staging that only existed for the old mutable
-  search API.  Delete the temporary raw `newsgroup_search`
-  compatibility wrapper after callers have moved.
-- Tests: newsgroup search, selector search, and top-level newsgroup
-  command tests.
-
 #### CSTR-298 - Command Dispatch Scratch Buffer
 
 - Files: `libtrn/ngstuff.cpp`, `libtrn/kfile.cpp`,
@@ -663,7 +649,7 @@ and clarified ownership at the edges.
 - Kind: shared command scratch buffer.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
-- Dependencies: CSTR-307.
+- Dependencies: none.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -693,7 +679,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-298, CSTR-299, CSTR-307.
+- Dependencies: CSTR-298, CSTR-299.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

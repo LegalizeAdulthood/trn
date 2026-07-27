@@ -3546,7 +3546,7 @@ reask_sort:
             else
             {
                 g_newsgroup_ptr = nullptr;
-                switch (newsgroup_search(search_command.data(), false))
+                switch (newsgroup_search(search_command, false))
                 {
                 case NGS_ERROR:
                 case NGS_ABORT:
@@ -3944,7 +3944,7 @@ reask_sort:
             }
             else
             {
-                switch (newsgroup_search(search_command.data(), false))
+                switch (newsgroup_search(search_command, false))
                 {
                 case NGS_ERROR:
                 case NGS_ABORT:

@@ -22,7 +22,6 @@ enum NewsgroupSearchResult
 
 void newsgroup_search_init();
 NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd);
-NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd);
 const char *newsgroup_comp(CompiledRegex *compex, std::string_view pattern, bool re, bool fold);
 
 #endif
