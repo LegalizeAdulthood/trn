@@ -56,6 +56,14 @@ std::string g_save_dir;      // -d
 //
 static bool s_option_sel_lock{};
 
+static std::string_view trim_command_spaces(std::string_view text)
+{
+    const std::string_view::const_iterator first = std::find_if_not(
+        text.begin(), text.end(), [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+    text.remove_prefix(static_cast<std::size_t>(first - text.begin()));
+    return text;
+}
+
 void newsgroup_stuff_init()
 {
     s_option_sel_lock = false;
@@ -65,18 +73,29 @@ void newsgroup_stuff_init()
 
 bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
 {
-    bool interactive = (g_buf[1] == FINISH_CMD);
-    fs::path where_i_am;
+    return escapade_with_shell_runner(shell_runner, std::string_view{g_buf});
+}
 
-    if (!finish_command(interactive))   // get remainder of command
+bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner, std::string_view command)
+{
+    bool interactive = command.size() > 1 && command[1] == FINISH_CMD;
+    fs::path where_i_am;
+    std::string completed_command;
+
+    if (interactive)
     {
-        return true;
+        completed_command = finish_command(command.substr(0, 1), true);
+        if (completed_command.empty())
+        {
+            return true;
+        }
+        command = completed_command;
     }
-    char *s = g_buf + 1;
-    bool  do_cd = *s != '!';
+    std::string_view command_text = command.size() > 1 ? command.substr(1) : std::string_view{};
+    bool             do_cd = command_text.empty() || command_text.front() != '!';
     if (!do_cd)
     {
-        s++;
+        command_text.remove_prefix(1);
     }
     else
     {
@@ -93,10 +112,10 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
             sig_catcher(0);
         }
     }
-    s = skip_eq(s, ' ');                // skip leading spaces
-    const std::string command = do_interp(s);
+    command_text = trim_command_spaces(command_text);
+    const std::string shell_command = do_interp(command_text);
     reset_tty();                          // make sure tty is friendly
-    shell_runner(nullptr, command.c_str()); // invoke the shell
+    shell_runner(nullptr, shell_command.c_str()); // invoke the shell
     no_echo();                           // and make terminal
     cr_mode();                           // unfriendly again
     if (do_cd)
@@ -115,23 +134,39 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
 
 bool escapade()
 {
-    return escapade_with_shell_runner(do_shell);
+    return escapade(std::string_view{g_buf});
+}
+
+bool escapade(std::string_view command)
+{
+    return escapade_with_shell_runner(do_shell, command);
 }
 
 // process & command
 
 bool switcheroo()
 {
-    if (!finish_command(true)) // get rest of command
+    return switcheroo(std::string_view{g_buf});
+}
+
+bool switcheroo(std::string_view command)
+{
+    std::string completed_command;
+    if (command.size() > 1 && command[1] == FINISH_CMD)
     {
-        return true;      // if rubbed out, try something else
+        completed_command = finish_command(command.substr(0, 1), true);
+        if (completed_command.empty())
+        {
+            return true;      // if rubbed out, try something else
+        }
+        command = completed_command;
     }
-    if (!g_buf[1])
+    std::string_view command_text = command.size() > 1 ? command.substr(1) : std::string_view{};
+    if (command_text.empty())
     {
         const std::string prior_save_dir = g_save_dir;
         if (s_option_sel_lock)
         {
-            g_buf[1] = '\0';
             return false;
         }
         s_option_sel_lock = true;
@@ -144,24 +179,23 @@ bool switcheroo()
         {
             cwd_check();
         }
-        g_buf[1] = '\0';
     }
-    else if (g_buf[1] == '&')
+    else if (command_text.front() == '&')
     {
-        if (!g_buf[2])
+        command_text.remove_prefix(1);
+        if (command_text.empty())
         {
             page_start();
             show_macros();
         }
         else
         {
-            char *s = skip_space(g_buf + 2);
-            mac_line(s);
+            mac_line(trim_command_spaces(command_text));
         }
     }
     else
     {
-        bool     do_cd = in_string(std::string_view{g_buf}, "-d", true);
+        bool     do_cd = in_string(command, "-d", true);
         fs::path where_am_i;
 
         if (do_cd)
@@ -174,13 +208,13 @@ bool switcheroo()
                 finalize(1);
             }
         }
-        if (g_buf[1] == '-' || g_buf[1] == '+')
+        if (command_text.front() == '-' || command_text.front() == '+')
         {
-            sw_list(g_buf + 1);
+            sw_list(command_text);
         }
         else
         {
-            IniDocument document{fmt::format("[options]\n{}\n", g_buf + 1), "'&' input"};
+            IniDocument document{fmt::format("[options]\n{}\n", command_text), "'&' input"};
             for (const IniSection section : document)
             {
                 IniSectionValues values;
@@ -365,7 +399,7 @@ NumNumResult num_num()
     return NN_NORM;
 }
 
-int thread_perform()
+int thread_perform(std::string_view command)
 {
     Subject*sp;
     Article*ap;
@@ -373,16 +407,12 @@ int thread_perform()
     bool    output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool    one_thread = false;
 
-    if (!finish_command(true))  // get rest of command
-    {
-        return 0;
-    }
-    if (!g_buf[1])
+    if (command.size() <= 1)
     {
         return -1;
     }
     int len = 1;
-    if (g_buf[1] == ':')
+    if (command[1] == ':')
     {
         bits = 0;
         len++;
@@ -391,7 +421,7 @@ int thread_perform()
     {
         bits = SF_VISIT;
     }
-    if (g_buf[len] == '.')
+    if (len < static_cast<int>(command.size()) && command[static_cast<std::size_t>(len)] == '.')
     {
         if (!g_artp)
         {
@@ -400,7 +430,7 @@ int thread_perform()
         one_thread = true;
         len++;
     }
-    std::string cmdstr{g_buf + len};
+    std::string cmdstr{command.substr(static_cast<std::size_t>(len))};
     bool        want_unread = !g_sel_rereading && (cmdstr.empty() || cmdstr[0] != 'm');
 
     perform_status_init(g_newsgroup_ptr->m_to_read);
@@ -535,7 +565,7 @@ int perform(std::string_view cmdlst_view, int output_level)
     int ch;
     int savemode = 0;
 
-    // A quick fix to avoid reuse of g_buf and cmdlst by shell commands.
+    // Avoid invalidating the command cursor when interpolation recurses.
     std::string cmdlst_copy{cmdlst_view};
     char       *cmdlst = cmdlst_copy.data();
 
@@ -754,13 +784,9 @@ int perform(std::string_view cmdlst_view, int output_level)
                     cmdlst += command_size - 1;
                 }
             }
-            const std::size_t command_size = std::min(command_text.size(), static_cast<std::size_t>(LINE_BUF_LEN));
-            command_text.copy(g_buf, command_size);
-            g_buf[command_size] = '\0';
-            // we now have the command in g_buf
             if (ch == '!')
             {
-                escapade();
+                escapade(command_text);
                 if (output_level && g_verbose)
                 {
                     std::fputs("\tShell escaped", stdout);
@@ -768,10 +794,10 @@ int perform(std::string_view cmdlst_view, int output_level)
             }
             else if (ch == '&')
             {
-                switcheroo();
+                switcheroo(command_text);
                 if (output_level && g_verbose)
                 {
-                    if (g_buf[1] && g_buf[1] != '&')
+                    if (command_text.size() > 1 && command_text[1] != '&')
                     {
                         std::fputs("\tSwitched", stdout);
                     }
@@ -779,6 +805,9 @@ int perform(std::string_view cmdlst_view, int output_level)
             }
             else
             {
+                const std::size_t command_size = std::min(command_text.size(), static_cast<std::size_t>(LINE_BUF_LEN));
+                command_text.copy(g_buf, command_size);
+                g_buf[command_size] = '\0';
                 if (output_level != 1)
                 {
                     erase_line(false);
@@ -823,21 +852,17 @@ int perform(std::string_view cmdlst_view, int output_level)
     return 1;
 }
 
-int newsgroup_sel_perform()
+int newsgroup_sel_perform(std::string_view command)
 {
     NewsgroupFlags bits;
     bool one_group = false;
 
-    if (!finish_command(true))  // get rest of command
-    {
-        return 0;
-    }
-    if (!g_buf[1])
+    if (command.size() <= 1)
     {
         return -1;
     }
     int len = 1;
-    if (g_buf[1] == ':')
+    if (command[1] == ':')
     {
         bits = NF_NONE;
         len++;
@@ -846,7 +871,7 @@ int newsgroup_sel_perform()
     {
         bits = NF_INCLUDED;
     }
-    if (g_buf[len] == '.')
+    if (len < static_cast<int>(command.size()) && command[static_cast<std::size_t>(len)] == '.')
     {
         if (!g_newsgroup_ptr)
         {
@@ -855,7 +880,7 @@ int newsgroup_sel_perform()
         one_group = true;
         len++;
     }
-    std::string cmdstr{g_buf + len};
+    std::string cmdstr{command.substr(static_cast<std::size_t>(len))};
 
     perform_status_init(g_newsgroup_to_read.value_of());
 
@@ -970,21 +995,17 @@ deselect:
     return 1;
 }
 
-int add_group_sel_perform()
+int add_group_sel_perform(std::string_view command)
 {
     int bits;
     bool one_group = false;
 
-    if (!finish_command(true))  // get rest of command
-    {
-        return 0;
-    }
-    if (!g_buf[1])
+    if (command.size() <= 1)
     {
         return -1;
     }
     int len = 1;
-    if (g_buf[1] == ':')
+    if (command[1] == ':')
     {
         bits = 0;
         len++;
@@ -993,7 +1014,7 @@ int add_group_sel_perform()
     {
         bits = g_sel_mask;
     }
-    if (g_buf[len] == '.')
+    if (len < static_cast<int>(command.size()) && command[static_cast<std::size_t>(len)] == '.')
     {
         if (g_first_add_group)
         {
@@ -1002,7 +1023,7 @@ int add_group_sel_perform()
         one_group = true;
         len++;
     }
-    std::string cmdstr{g_buf + len};
+    std::string cmdstr{command.substr(static_cast<std::size_t>(len))};
 
     perform_status_init(g_newsgroup_to_read.value_of());
 

@@ -2398,9 +2398,11 @@ do_command:
         return DS_DISPLAY;
 
     case '&':  case '!':
+    {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
-        if (!finish_command(true))      // get rest of command
+        const std::string command = finish_selector_command(ch, true);
+        if (command.empty())      // get rest of command
         {
             if (s_clean_screen)
             {
@@ -2411,7 +2413,7 @@ do_command:
         {
             PUSH_SELECTOR();
             g_one_command = true;
-            perform(g_buf, false);
+            perform(command, false);
             g_one_command = false;
             if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
             {
@@ -2434,6 +2436,7 @@ do_command:
             goto do_command;
         }
         return DS_DISPLAY;
+    }
 
     case 'v':
         newline();
@@ -3186,7 +3189,8 @@ reask_sort:
         bool        command_finished{};
         if (ch == ':')
         {
-            command_finished = finish_command(true);
+            search_command = finish_selector_command(ch, true);
+            command_finished = !search_command.empty();
         }
         else
         {
@@ -3204,7 +3208,7 @@ reask_sort:
         {
             if (ch == ':')
             {
-                thread_perform();
+                thread_perform(search_command);
                 if (!g_sel_rereading)
                 {
                     for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
@@ -3523,7 +3527,8 @@ reask_sort:
         bool        command_finished{};
         if (ch == ':')
         {
-            command_finished = finish_command(true);
+            search_command = finish_selector_command(ch, true);
+            command_finished = !search_command.empty();
         }
         else
         {
@@ -3541,7 +3546,7 @@ reask_sort:
         {
             if (ch == ':')
             {
-                newsgroup_sel_perform();
+                newsgroup_sel_perform(search_command);
             }
             else
             {
@@ -3922,7 +3927,8 @@ reask_sort:
         bool        command_finished{};
         if (ch == ':')
         {
-            command_finished = finish_command(true);
+            search_command = finish_selector_command(ch, true);
+            command_finished = !search_command.empty();
         }
         else
         {
@@ -3940,7 +3946,7 @@ reask_sort:
         {
             if (ch == ':')
             {
-                add_group_sel_perform();
+                add_group_sel_perform(search_command);
             }
             else
             {

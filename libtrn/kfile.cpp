@@ -269,9 +269,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
         if (!command.empty() && command.front() == '&')
         {
             mention(command);
-            std::copy(command.begin(), command.end(), g_buf);
-            g_buf[command.size()] = '\0';
-            switcheroo();
+            switcheroo(command);
         }
         else if (!command.empty() && command.front() == '/')
         {

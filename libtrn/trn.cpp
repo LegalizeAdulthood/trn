@@ -1047,8 +1047,9 @@ redo_newsgroup:
         break;
 
     case ':':         // execute command on selected groups
-        stage_legacy_newsgroup_command(command);
-        if (!newsgroup_sel_perform())
+    {
+        const std::string full_command = finish_newsgroup_command(command, true);
+        if (full_command.empty() || !newsgroup_sel_perform(full_command))
         {
             return ING_INPUT;
         }
@@ -1056,6 +1057,7 @@ redo_newsgroup:
         newline();
         set_newsgroup(g_current_newsgroup);
         return ING_ASK;
+    }
 
     case 'v':
         newline();

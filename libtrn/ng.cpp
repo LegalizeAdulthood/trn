@@ -1101,8 +1101,10 @@ not_threaded:
         return AS_ASK;
 
     case ':':                 // execute command on selected articles
+    {
         g_page_line = 1;
-        if (!thread_perform())
+        const std::string full_command = finish_article_command(command, true);
+        if (full_command.empty() || !thread_perform(full_command))
         {
             return AS_INP;
         }
@@ -1113,6 +1115,7 @@ not_threaded:
         g_art = g_curr_art;
         g_artp = g_curr_artp;
         return AS_ASK;
+    }
 
     case 'p':                 // find previous unread article
         g_s_follow_temp = true; // keep going until change req.

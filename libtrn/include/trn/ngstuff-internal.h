@@ -13,5 +13,6 @@
 
 using NgstuffShellRunner = std::function<int(const char *shell, const char *cmd)>;
 bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner);
+bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner, std::string_view command);
 
 #endif
