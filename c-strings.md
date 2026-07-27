@@ -508,6 +508,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `g_buf`.  Tiny UTF byte scratch buffers, translation tables, terminal
   pushback bytes, termcap storage, keymap type bytes, and regex bytecode
   arrays are non-string protocol or parser storage.
+- Direct `assign(data(), size())` and whole-string
+  `std::string_view{data(), size()}` scans have no remaining production
+  hits.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
@@ -526,12 +529,14 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` command APIs with raw-buffer compatibility wrappers
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
-- Literal-only local pointer scan found local message selections in
-  `do_newsgroup`, `s_search`, and `sa_refresh_bot`.
+- Literal-only local pointer scan found no current Tier 0 leaf slices.
+  `do_newsgroup`, `s_search`, and `sa_refresh_bot` now use
+  `std::string_view`, `std::string`, or direct `fmt` output for the
+  prior local message-selection cases.
 - C numeric conversion scan found `atoi` and `atol` calls that still
   convert strings or views back to C pointers.  Simple bounded parse
-  sites are Tier 0 or Tier 1 slices; mutable parser-buffer sites are
-  grouped with their owning parser slices.
+  sites are Tier 1 slices; mutable parser-buffer sites are grouped with
+  their owning parser slices.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -541,10 +546,13 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Article display/copy paths now use `std::string` for the shared
   article line.  The low-level `read_art(char *, int)` API remains for
   protocol/body buffers and local fixed-size output loops.
-- No active `strcpy`, `strncpy`, `strcmp`, `std::sprintf`, or `gets`
-  production hits remain in this scan.
+- No active `strcpy`, `strncpy`, `std::sprintf`, or `gets` production
+  hits remain in this scan.
 - The two `strstr` hits are in an inactive `#ifdef UNDEF` block in
   `sacmd.cpp`; they remain in the lexical inventory but are not active
+  slices.
+- The `strcmp` and `gets` hits are in an inactive `#ifdef TEST` block in
+  `parsedate.y`; they remain in the lexical inventory but are not active
   slices.
 - Filename storage already uses modern path or view signatures for most
   owners.  Other filename strings are already `std::string`/`fs::path`
@@ -557,19 +565,19 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 20, `strstr` 2, `strlen` 20.
-- C line input: `fgets` 4.
-- C text output: `fputs` 158, `printf`/`std::printf` 306,
+- Search and length: `strcmp` 1, `strchr` 23, `strstr` 2, `strlen` 20.
+- C line input: `fgets` 4, `gets` 1.
+- C text output: `fputs` 158, `printf`/`std::printf` 320,
   `fprintf`/`std::fprintf` 13.
-- Character output: `putchar`/`std::putchar` 86.
+- Character output: `putchar`/`std::putchar` 88.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 - C numeric conversion calls: `atoi`/`std::atoi` 18 and `std::atol` 11.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
-`strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
-`strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
-`vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, `memchr`,
-`std::atof`, `std::strtol`, `std::strtoul`, or `std::strtod`.
+`strcat`, `strncat`, `strncmp`, `strrchr`, `strspn`, `strcspn`,
+`strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`,
+`vsnprintf`, `puts`, `memmove`, `memchr`, `std::atof`, `std::strtol`,
+`std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -606,16 +614,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-351 - Universal Mask Load Title Assignment
-
-- Files: `libtrn/univ.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `univ_mask_load`.
-- Dependencies: none.
-- Change: assign `title` directly to `g_univ_title` instead of copying
-  through `title.data(), title.size()`.
-- Tests: universal-selector mask load tests if existing coverage is
-  easy.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 
