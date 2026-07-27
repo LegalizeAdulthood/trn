@@ -153,11 +153,28 @@ const char *CompiledRegex::get_bracket(int n)
 
 // Compile the given regular expression into a [secret] internal format
 //
-const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
+const char *CompiledRegex::compile(std::string_view pattern, bool re, bool fold)
 {
     char  bracket[NBRA];
     char**alt = m_alternatives;
     const char *retmes = "Badly formed search string";
+    std::string_view::size_type pattern_pos{};
+    const auto                  next_pattern_char = [&pattern, &pattern_pos]()
+    {
+        if (pattern_pos == pattern.size())
+        {
+            return 0;
+        }
+        return static_cast<int>(static_cast<unsigned char>(pattern[pattern_pos++]));
+    };
+    const auto peek_pattern_char = [&pattern, &pattern_pos](std::string_view::size_type offset = 0)
+    {
+        if (offset >= pattern.size() - pattern_pos)
+        {
+            return 0;
+        }
+        return static_cast<int>(static_cast<unsigned char>(pattern[pattern_pos + offset]));
+    };
 
     case_fold(m_do_folding = fold);
     if (!m_eb_len)
@@ -168,7 +185,7 @@ const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
     char *ep = m_exp_buf; // point at expression buffer
     *alt++ = ep;               // first alternative starts here
     char *bracketp = bracket;  // first bracket goes here
-    if (*strp == 0)            // nothing to compile?
+    if (pattern.empty() || pattern.front() == '\0') // nothing to compile?
     {
         if (*ep == 0)          // nothing there yet?
         {
@@ -184,7 +201,7 @@ const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
         {
             ep = grow_eb(ep, alt);
         }
-        int c = *strp++;               // fetch next char of pattern
+        int c = next_pattern_char();   // fetch next char of pattern
         if (c == 0)                    // end of pattern?
         {
             if (bracketp != bracket)   // balanced brackets?
@@ -210,7 +227,7 @@ const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
             switch (c)
             {
             case '\\':              // meta something
-                switch (c = *strp++)
+                switch (c = next_pattern_char())
                 {
                 case '(':
                     if (m_num_brackets >= NBRA)
@@ -304,7 +321,8 @@ const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
                 continue;
 
             case '$':
-                if (*strp != 0 && (*strp != '\\' || strp[1] != '|'))
+                if (peek_pattern_char() != 0 //
+                    && (peek_pattern_char() != '\\' || peek_pattern_char(1) != '|'))
                 {
                     goto defchar;
                 }
@@ -323,10 +341,10 @@ const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
                     ep[i] = 0;
                 }
 
-                c = *strp++;
+                c = next_pattern_char();
                 if (c == '^')
                 {
-                    c = *strp++;
+                    c = next_pattern_char();
                     *ep++ = NCCL;   // negated
                 }
                 else
@@ -342,9 +360,17 @@ const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
                         retmes = "Missing ]";
                         goto cerror;
                     }
-                    if (*strp == '-' && *(++strp) != ']' && *strp)
+                    if (peek_pattern_char() == '-')
                     {
-                        i = *strp++;
+                        ++pattern_pos;
+                        if (peek_pattern_char() != ']' && peek_pattern_char() != 0)
+                        {
+                            i = next_pattern_char();
+                        }
+                        else
+                        {
+                            i = c;
+                        }
                     }
                     else
                     {
@@ -361,7 +387,7 @@ const char *CompiledRegex::compile(const char *strp, bool re, bool fold)
                         }
                         c++;
                     }
-                } while ((c = *strp++) != ']');
+                } while ((c = next_pattern_char()) != ']');
                 ep += BMAPSIZ;
                 continue;
             }

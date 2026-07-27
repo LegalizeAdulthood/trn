@@ -6,6 +6,7 @@
 #define TRN_SEARCH_H
 
 #include <string>
+#include <string_view>
 
 #ifndef NBRA
 #define NBRA    10              // the maximum number of meta-brackets in an
@@ -18,10 +19,14 @@ struct CompiledRegex
     void        init_compex();
     void        free_compex();
     const char *get_bracket(int n);
-    const char *compile(const char *strp, bool re, bool fold);
+    const char *compile(std::string_view strp, bool re, bool fold);
+    const char *compile(const char *strp, bool re, bool fold)
+    {
+        return compile(std::string_view{strp}, re, fold);
+    }
     const char *compile(const std::string &strp, bool re, bool fold)
     {
-        return compile(strp.c_str(), re, fold);
+        return compile(std::string_view{strp}, re, fold);
     }
     char       *grow_eb(char *epp, char **alt);
     const char *execute(const char *addr);

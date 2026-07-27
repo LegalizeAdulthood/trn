@@ -621,19 +621,7 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-339 - Compiled Regex Pattern View Parser
-
-- Files: `libtrn/search.cpp`, `libtrn/include/trn/search.h`.
-- Kind: helper API foundation.
-- Function: `CompiledRegex::compile`.
-- Dependencies: none.
-- Change: make the primary compile API accept `std::string_view` and
-  parse the pattern by extent instead of relying on a NUL-terminated
-  `const char *`; keep the empty-pattern "reuse previous expression"
-  behavior.  Keep any temporary C-string overload as a delegating wrapper
-  only while production callers remain.
-- Tests: regex/search callers and existing search tests; add focused
-  regex compile tests first if no direct coverage exists.
+No current slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -714,7 +702,7 @@ are available.  Keep the listed order inside dependent families.
   `libtrn/scorefile.cpp`, `libtrn/util.cpp`.
 - Kind: helper caller cleanup.
 - Function: regex compile call sites.
-- Dependencies: CSTR-339.
+- Dependencies: none.
 - Change: pass existing `std::string` or `std::string_view` pattern
   values directly to `CompiledRegex::compile` and remove the temporary
   C-string overload after production callers are gone.
