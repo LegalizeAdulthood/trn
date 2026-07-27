@@ -721,18 +721,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-418 - Article Search Finding View
-
-- Files: `libtrn/artsrch.cpp`.
-- Kind: string-to-pointer-to-view cleanup.
-- Function: `art_search`.
-- Dependencies: none.
-- Change: replace the local `std::string_view` construction from
-  `pattern_text.c_str() + finding_start` with `pattern_text.substr`.
-  Preserve the current empty-finding behavior and search message text.
-- Tests: existing article-search tests are sufficient unless the local
-  change exposes an uncovered branch.
-
 #### CSTR-419 - Perform Command List Cursor
 
 - Files: `libtrn/ngstuff.cpp`, `tests/test_ngstuff.cpp`.

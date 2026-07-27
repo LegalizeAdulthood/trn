@@ -315,8 +315,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
                 }
                 article_ptr(g_art)->mark_as_read();       // this article needs to die
             }
-            const std::string_view finding_text{pattern_text.c_str() + finding_start,
-                                                pattern_text.size() - finding_start};
+            const std::string finding_text = pattern_text.substr(finding_start);
             if (finding_text.empty())
             {
                 if (g_verbose)
