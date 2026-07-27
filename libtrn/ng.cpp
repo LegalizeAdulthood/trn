@@ -1331,33 +1331,40 @@ check_dec_art:
     case '4': case '5': case '6':     // or do something with a range
     case '7': case '8': case '9': case '.':
         g_force_last = true;
-        switch (num_num())
         {
-        case NN_INP:
-            return AS_INP;
-
-        case NN_ASK:
-            return AS_ASK;
-
-        case NN_REREAD:
-            g_reread = true;
-            if (g_search_ahead)
+            const std::string full_command = finish_article_command(command, true);
+            if (full_command.empty())
             {
-                g_search_ahead = ArticleNum{-1};
+                return AS_INP;
             }
-            break;
-
-        case NN_NORM:
-            if (g_use_threads)
+            switch (num_num(full_command))
             {
-                erase_line(false);
-                perform_status_end(g_newsgroup_ptr->m_to_read, "article");
-                std::fputs(g_msg.c_str(), stdout);
+            case NN_INP:
+                return AS_INP;
+
+            case NN_ASK:
+                return AS_ASK;
+
+            case NN_REREAD:
+                g_reread = true;
+                if (g_search_ahead)
+                {
+                    g_search_ahead = ArticleNum{-1};
+                }
+                break;
+
+            case NN_NORM:
+                if (g_use_threads)
+                {
+                    erase_line(false);
+                    perform_status_end(g_newsgroup_ptr->m_to_read, "article");
+                    std::fputs(g_msg.c_str(), stdout);
+                }
+                newline();
+                return AS_ASK;
             }
-            newline();
-            return AS_ASK;
+            return AS_NORM;
         }
-        return AS_NORM;
 
     case Ctl('k'):
         edit_kill_file();

@@ -542,8 +542,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   line storage from the article I/O boundary instead of mutating raw
   article buffers.  `art.cpp` still has raw article-buffer callers that
   can be moved bottom-up to the same owned line API.
-- Numeric command scan: `num_num` still parses numeric range text from
-  `g_buf`; callers now have command text available.
+- Numeric command scan: `num_num` now accepts command text directly and
+  parses numeric range text from that view instead of `g_buf`.
 - Terminal input scan: `finish_command(int)`, `store_command`,
   `in_choice`, and typeahead cleanup still preserve command/input text
   in `g_buf` for legacy callers.
@@ -641,18 +641,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-404 - Numeric Range Command View
-
-- Files: `libtrn/ngstuff.cpp`, `libtrn/include/trn/ngstuff.h`,
-  `libtrn/ng.cpp`, `tests/test_ngstuff.cpp`.
-- Kind: global command-buffer parser.
-- Function: `num_num`.
-- Dependencies: none.
-- Change: add `num_num(std::string_view command)` and move numeric
-  range parsing from `g_buf` to the command view.  Keep the old wrapper
-  only if a production caller still needs it during the slice.
-- Tests: `NumNumTest`.
-
 #### CSTR-405 - Choice Input Result
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
@@ -689,7 +677,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/ng.cpp`.
 - Kind: global command-buffer staging.
 - Function: `art_switch`.
-- Dependencies: CSTR-404.
+- Dependencies: none.
 - Change: remove `stage_legacy_article_command` use from article-level
   dispatch by passing command text or prompt answers directly to callees.
   Keep prompt input in local strings instead of reading answers from
@@ -712,7 +700,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
 - Kind: global command-buffer wrapper.
 - Function: `finish_command(int)`.
-- Dependencies: CSTR-404, CSTR-406.
+- Dependencies: CSTR-406.
 - Change: migrate remaining production callers to
   `finish_command(std::string_view, bool)`, then delete the wrapper that
   reads and writes command text through `g_buf`.
@@ -743,7 +731,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-404, CSTR-405, CSTR-406, CSTR-407, CSTR-408.
+- Dependencies: CSTR-405, CSTR-406, CSTR-407, CSTR-408.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

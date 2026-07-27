@@ -238,17 +238,16 @@ bool switcheroo(std::string_view command)
 
 // process range commands
 
-NumNumResult num_num()
+NumNumResult num_num(std::string_view command)
 {
-    ArticleNum min;
-    ArticleNum max;
-    std::string cmdlst;
+    ArticleNum       min;
+    ArticleNum       max;
+    std::string      cmdlst;
     std::string_view ranges;
-    const char *s;
-    ArticleNum oldart = g_art;
-    bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
-    bool justone = true;                // assume only one article
-    const auto parse_article_num = [](std::string_view text)
+    ArticleNum       oldart = g_art;
+    bool             output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
+    bool             justone = true; // assume only one article
+    const auto       parse_article_num = [](std::string_view text)
     {
         std::size_t index{};
         while (index < text.size() && std::isspace(static_cast<unsigned char>(text[index])))
@@ -269,10 +268,6 @@ NumNumResult num_num()
         return ArticleNum{negative ? -value : value};
     };
 
-    if (!finish_command(true))  // get rest of command
-    {
-        return NN_INP;
-    }
     if (g_last_art < 1)
     {
         error_msg("No articles");
@@ -285,25 +280,26 @@ NumNumResult num_num()
 
     perform_status_init(g_newsgroup_ptr->m_to_read);
 
-    for (s = g_buf; *s && (std::isdigit(static_cast<unsigned char>(*s)) ||
-                           std::string_view{" ,-.$"}.find(*s) != std::string_view::npos);
-         s++)
+    std::size_t range_end{};
+    for (; range_end < command.size() && (std::isdigit(static_cast<unsigned char>(command[range_end])) ||
+                                          std::string_view{" ,-.$"}.find(command[range_end]) != std::string_view::npos);
+         ++range_end)
     {
-        if (!std::isdigit(static_cast<unsigned char>(*s)))
+        if (!std::isdigit(static_cast<unsigned char>(command[range_end])))
         {
             justone = false;
         }
     }
-    if (*s)
+    if (range_end < command.size())
     {
-        cmdlst = s;
+        cmdlst = command.substr(range_end);
         justone = false;
     }
     else if (!justone)
     {
         cmdlst = "m";
     }
-    ranges = std::string_view{g_buf, static_cast<std::size_t>(s - g_buf)};
+    ranges = command.substr(0, range_end);
     if (!output_level && !justone)
     {
         std::printf("Processing...");
@@ -311,9 +307,8 @@ NumNumResult num_num()
     }
     for (bool have_range = true; have_range;)
     {
-        const std::size_t comma = ranges.find(',');
-        const std::string_view range =
-            comma == std::string_view::npos ? ranges : ranges.substr(0, comma);
+        const std::size_t      comma = ranges.find(',');
+        const std::string_view range = comma == std::string_view::npos ? ranges : ranges.substr(0, comma);
         have_range = comma != std::string_view::npos;
 
         const std::size_t dash = range.find('-');

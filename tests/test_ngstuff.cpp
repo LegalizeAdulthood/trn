@@ -113,7 +113,6 @@ protected:
         m_old_art = g_art;
         m_old_search_ahead = g_search_ahead;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
-        std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
 
         g_abs_first = ArticleNum{1};
         g_last_art = ArticleNum{10};
@@ -130,16 +129,14 @@ protected:
         g_art = m_old_art;
         g_search_ahead = m_old_search_ahead;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
-        std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
     }
 
-    ArticleNum                         m_old_abs_first;
-    ArticleNum                         m_old_last_art;
-    ArticleNum                         m_old_art;
-    ArticleNum                         m_old_search_ahead;
-    NewsgroupData                     *m_old_newsgroup_ptr{};
-    NewsgroupData                      m_newsgroup{};
-    std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
+    ArticleNum     m_old_abs_first;
+    ArticleNum     m_old_last_art;
+    ArticleNum     m_old_art;
+    ArticleNum     m_old_search_ahead;
+    NewsgroupData *m_old_newsgroup_ptr{};
+    NewsgroupData  m_newsgroup{};
 };
 
 class SwitcherooMacroTest : public testing::Test
@@ -234,11 +231,7 @@ TEST_F(EscapadeTest, restoresCurrentDirectoryAfterSaveDirectorySwitch)
 
 TEST_F(NumNumTest, selectsSingleArticle)
 {
-    const std::string command{"5"};
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
-
-    const NumNumResult result = num_num();
+    const NumNumResult result = num_num("5");
 
     EXPECT_EQ(NN_REREAD, result);
     EXPECT_EQ(ArticleNum{5}, g_art);
@@ -246,12 +239,8 @@ TEST_F(NumNumTest, selectsSingleArticle)
 
 TEST_F(NumNumTest, rejectsOpenEndedRange)
 {
-    const std::string command{"5-"};
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
-
     testing::internal::CaptureStdout();
-    const NumNumResult result = num_num();
+    const NumNumResult result = num_num("5-");
     const std::string  output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(NN_ASK, result);
@@ -261,12 +250,8 @@ TEST_F(NumNumTest, rejectsOpenEndedRange)
 
 TEST_F(NumNumTest, rejectsOpenEndedRangeAfterComma)
 {
-    const std::string command{"5,7-"};
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
-
     testing::internal::CaptureStdout();
-    const NumNumResult result = num_num();
+    const NumNumResult result = num_num("5,7-");
     const std::string  output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(NN_ASK, result);
