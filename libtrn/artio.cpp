@@ -642,3 +642,15 @@ done:
 
     return bp;
 }
+
+bool read_art_buf(std::string &line, bool view_inline)
+{
+    const char *const buffer = read_art_buf(view_inline);
+    if (buffer == nullptr)
+    {
+        line.clear();
+        return false;
+    }
+    line = buffer;
+    return true;
+}

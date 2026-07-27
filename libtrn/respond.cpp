@@ -903,7 +903,8 @@ void reply(std::string_view command)
     }
     if (incl_body && g_art_fp != nullptr)
     {
-        char* s;
+        std::string article_line;
+        article_line.reserve(LINE_BUF_LEN);
         const std::string introduction = do_interp(get_env_var("YOUSAID", YOU_SAID));
         fmt::print(header, "{}\n", introduction);
         parse_header(g_art);
@@ -911,18 +912,13 @@ void reply(std::string_view command)
         clear_art_buf();
         seek_art(g_header_type[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
-        while ((s = read_art_buf(false)) != nullptr)
+        while (read_art_buf(article_line, false))
         {
-            char *t = std::strchr(s, '\n');
-            if (t != nullptr)
+            if (!article_line.empty() && article_line.back() == '\n')
             {
-                *t = '\0';
+                article_line.pop_back();
             }
-            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(s, *g_char_subst));
-            if (t)
-            {
-                *t = '\0';
-            }
+            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(article_line, *g_char_subst));
         }
         fmt::print(header, "\n");
         g_wrapped_nl = WRAPPED_NL;

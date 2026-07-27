@@ -42,5 +42,6 @@ bool read_art(std::string &line);
 void clear_art_buf();
 int seek_art_buf(ArticlePosition pos);
 char *read_art_buf(bool view_inline);
+bool read_art_buf(std::string &line, bool view_inline);
 
 #endif

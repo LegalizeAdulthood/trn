@@ -536,9 +536,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   save/view path no longer stages command text in `g_buf`, and mailbox
   format detection uses owner-local string storage.
 - Response wrapper scan: no no-argument response wrappers remain.
-- Article body quote scan: `reply` and `followup` still use
-  `read_art_buf`, `std::strchr`, and temporary NUL insertion while
-  quoting included article bodies.
+- Article body quote scan: `followup` still uses raw `read_art_buf`,
+  `std::strchr`, and temporary NUL insertion while quoting included
+  article bodies.  `reply` now uses owned line storage from the article
+  I/O boundary.
 - Numeric command scan: `num_num` still parses numeric range text from
   `g_buf`; callers now have command text available.
 - Terminal input scan: `finish_command(int)`, `store_command`,
@@ -632,17 +633,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-402 - Reply Quoted Body Buffer
-
-- Files: `libtrn/respond.cpp`.
-- Kind: C-string article body cursor.
-- Function: `reply(std::string_view)`.
-- Dependencies: none.
-- Change: replace `read_art_buf`, `std::strchr`, and temporary NUL
-  insertion with owned `std::string` line reading while preserving
-  indentation and character substitution.
-- Tests: `InterpolatorNewsgroupTest` reply quoted-body case.
 
 #### CSTR-403 - Followup Quoted Body Buffer
 
