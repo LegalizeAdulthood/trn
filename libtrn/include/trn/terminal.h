@@ -177,7 +177,6 @@ void  set_mode(GeneralMode new_gmode, MinorMode new_mode);
 int   put_char(char_int ch);
 void        hide_pending();
 bool        finput_pending(bool check_term);
-bool        finish_command(int donewline);
 std::string finish_command(std::string_view command, bool donewline);
 std::string finish_dbl_char(std::string_view command);
 void        eat_typeahead();

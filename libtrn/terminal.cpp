@@ -863,22 +863,6 @@ bool finput_pending(bool check_term)
 
 static int s_buff_limit = LINE_BUF_LEN;
 
-bool finish_command(int donewline)
-{
-    if (g_buf[1] != FINISH_CMD) // someone faking up a command?
-    {
-        return true;
-    }
-
-    const std::string command = finish_command(std::string_view{g_buf, 1}, donewline);
-    if (command.empty())
-    {
-        return false;
-    }
-    store_command(command);
-    return true;
-}
-
 static std::string finish_command_text(std::string_view command, bool donewline, int buffer_limit)
 {
     TRN_ASSERT(command.size() == 1);

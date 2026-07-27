@@ -663,17 +663,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-408 - Finish Command Legacy Wrapper
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
-- Kind: global command-buffer wrapper.
-- Function: `finish_command(int)`.
-- Dependencies: none.
-- Change: migrate remaining production callers to
-  `finish_command(std::string_view, bool)`, then delete the wrapper that
-  reads and writes command text through `g_buf`.
-- Tests: `TerminalTest` finish-command cases and caller-focused tests.
-
 #### CSTR-411 - Article Pager Body Buffer
 
 - Files: `libtrn/art.cpp`.
@@ -699,7 +688,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-408.
+- Dependencies: none.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

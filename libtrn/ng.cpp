@@ -2108,8 +2108,8 @@ reask_catchup:
     }
     if (isdigit(ch))
     {
-        g_buf[1] = FINISH_CMD;
-        if (!finish_command(false))
+        const std::string full_command = finish_command(std::string{ch}, false);
+        if (full_command.empty())
         {
             use_one_line = false;
             newline();
@@ -2117,7 +2117,7 @@ reask_catchup:
         }
         else
         {
-            leave_unread = catchup_leave_unread_count(g_buf);
+            leave_unread = catchup_leave_unread_count(full_command);
             ch = 'y';
         }
     }
