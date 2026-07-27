@@ -2,6 +2,8 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/OptionApplier.h>
 
+#include <trn/art.h>
+#include <trn/artio.h>
 #include <trn/IniSectionValues.h>
 #include <trn/ng.h>
 #include <trn/opt.h>
@@ -35,6 +37,18 @@ struct OptionValueRestorer
         g_option_def_vals = def_vals;
         g_option_saved_vals = saved_vals;
         g_use_threads = use_threads;
+    }
+};
+
+struct NumericOptionRestorer
+{
+    int goto_line;
+    int word_wrap_offset;
+
+    ~NumericOptionRestorer()
+    {
+        g_g_line = goto_line;
+        g_word_wrap_offset = word_wrap_offset;
     }
 };
 
@@ -125,4 +139,24 @@ TEST_F(OptionApplierTest, clearsSavedValueWhenDraftRestoresSavedValue)
 
     EXPECT_FALSE(g_option_saved_vals[OI_USE_THREADS]);
     EXPECT_TRUE(g_use_threads);
+}
+
+TEST_F(OptionApplierTest, appliesNumericOptionWithinStringViewExtent)
+{
+    NumericOptionRestorer restore{g_g_line, g_word_wrap_offset};
+    const std::string     text{"42ignored"};
+
+    OptionApplier{}.apply(OI_GOTO_LINE_NUM, std::string_view{text.data(), 2});
+
+    EXPECT_EQ(41, g_g_line);
+}
+
+TEST_F(OptionApplierTest, appliesEmptyWordWrapMarginAsDisabled)
+{
+    NumericOptionRestorer restore{g_g_line, g_word_wrap_offset};
+    g_word_wrap_offset = 8;
+
+    OptionApplier{}.apply(OI_WORD_WRAP_MARGIN, "");
+
+    EXPECT_EQ(-1, g_word_wrap_offset);
 }

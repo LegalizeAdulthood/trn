@@ -565,19 +565,19 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strcmp` 1, `strchr` 23, `strstr` 2, `strlen` 20.
-- C line input: `fgets` 4, `gets` 1.
-- C text output: `fputs` 158, `printf`/`std::printf` 320,
+- Search and length: `strchr` 12, `strstr` 2, `strlen` 19.
+- C line input: `fgets` 4.
+- C text output: `fputs` 158, `printf`/`std::printf` 306,
   `fprintf`/`std::fprintf` 13.
-- Character output: `putchar`/`std::putchar` 88.
+- Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 18 and `std::atol` 11.
+- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 10.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
-`strcat`, `strncat`, `strncmp`, `strrchr`, `strspn`, `strcspn`,
-`strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`,
-`vsnprintf`, `puts`, `memmove`, `memchr`, `std::atof`, `std::strtol`,
-`std::strtoul`, or `std::strtod`.
+`strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
+`strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
+`vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, `memchr`,
+`std::atof`, `std::strtol`, `std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -621,16 +621,19 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-332 - Global Option Value View Parser
+#### CSTR-339 - Compiled Regex Pattern View Parser
 
-- Files: `libtrn/opt.cpp`.
-- Kind: local C-string parser cleanup.
-- Function: `apply_global_option`.
+- Files: `libtrn/search.cpp`, `libtrn/include/trn/search.h`.
+- Kind: helper API foundation.
+- Function: `CompiledRegex::compile`.
 - Dependencies: none.
-- Change: remove the local `value_text.c_str()` staging variable where
-  callees already accept views or strings, and replace numeric
-  `std::atoi` uses with bounded parsing.
-- Tests: option parsing tests.
+- Change: make the primary compile API accept `std::string_view` and
+  parse the pattern by extent instead of relying on a NUL-terminated
+  `const char *`; keep the empty-pattern "reuse previous expression"
+  behavior.  Keep any temporary C-string overload as a delegating wrapper
+  only while production callers remain.
+- Tests: regex/search callers and existing search tests; add focused
+  regex compile tests first if no direct coverage exists.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -703,6 +706,20 @@ them before broad global-buffer work and before removing helpers.
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
+
+#### CSTR-340 - Compiled Regex Compile Callers
+
+- Files: `libtrn/art.cpp`, `libtrn/artsrch.cpp`,
+  `libtrn/intrp.cpp`, `libtrn/ngsrch.cpp`, `libtrn/only.cpp`,
+  `libtrn/scorefile.cpp`, `libtrn/util.cpp`.
+- Kind: helper caller cleanup.
+- Function: regex compile call sites.
+- Dependencies: CSTR-339.
+- Change: pass existing `std::string` or `std::string_view` pattern
+  values directly to `CompiledRegex::compile` and remove the temporary
+  C-string overload after production callers are gone.
+- Tests: existing search, interpolation, score, and newsgroup-search
+  tests.
 
 ### Tier 4 - Broad Shared Buffers
 

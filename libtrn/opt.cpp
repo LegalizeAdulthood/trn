@@ -54,8 +54,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -271,8 +271,30 @@ void set_option(OptionIndex num, std::string_view s)
 
 void apply_global_option(OptionIndex num, std::string_view value)
 {
-    const std::string value_text{value};
-    const char       *s = value_text.c_str();
+    const char first_char = value.empty() ? '\0' : value.front();
+    const auto is_digit_start = [](std::string_view text)
+    { return !text.empty() && std::isdigit(static_cast<unsigned char>(text.front())); };
+    const auto parse_int = [](std::string_view text)
+    {
+        const std::size_t first = text.find_first_not_of(" \f\n\r\t\v");
+        if (first == std::string_view::npos)
+        {
+            return 0;
+        }
+        text.remove_prefix(first);
+        if (!text.empty() && text.front() == '+')
+        {
+            text.remove_prefix(1);
+        }
+
+        int                          result{};
+        const std::from_chars_result converted = std::from_chars(text.data(), text.data() + text.size(), result);
+        if (converted.ec != std::errc{})
+        {
+            return 0;
+        }
+        return result;
+    };
 
     if (!g_option_saved_vals.empty())
     {
@@ -308,7 +330,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_MOUSE_MODES:
-        g_mouse_modes = s;
+        g_mouse_modes = value;
         break;
 
     case OI_USE_UNIV_SEL:
@@ -316,15 +338,15 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_UNIV_SEL_CMDS:
-        set_selector_commands(s_univ_sel_cmds, s);
+        set_selector_commands(s_univ_sel_cmds, value);
         break;
 
     case OI_UNIV_SEL_BTNS:
-        g_univ_sel_btns = parse_mouse_buttons(s);
+        g_univ_sel_btns = parse_mouse_buttons(value);
         break;
 
     case OI_UNIV_SEL_ORDER:
-        set_sel_order(SM_UNIVERSAL,s);
+        set_sel_order(SM_UNIVERSAL,value);
         break;
 
     case OI_UNIV_FOLLOW:
@@ -336,11 +358,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_NEWSRC_SEL_CMDS:
-        set_selector_commands(g_newsrc_sel_cmds, s);
+        set_selector_commands(g_newsrc_sel_cmds, value);
         break;
 
     case OI_NEWSRC_SEL_BTNS:
-        g_newsrc_sel_btns = parse_mouse_buttons(s);
+        g_newsrc_sel_btns = parse_mouse_buttons(value);
         break;
 
     case OI_USE_ADD_SEL:
@@ -348,11 +370,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_ADD_SEL_CMDS:
-        set_selector_commands(g_add_sel_cmds, s);
+        set_selector_commands(g_add_sel_cmds, value);
         break;
 
     case OI_ADD_SEL_BTNS:
-        g_add_sel_btns = parse_mouse_buttons(s);
+        g_add_sel_btns = parse_mouse_buttons(value);
         break;
 
     case OI_USE_NEWSGROUP_SEL:
@@ -360,26 +382,26 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_NEWSGROUP_SEL_ORDER:
-        set_sel_order(SM_NEWSGROUP,s);
+        set_sel_order(SM_NEWSGROUP,value);
         break;
 
     case OI_NEWSGROUP_SEL_CMDS:
-        set_selector_commands(g_newsgroup_sel_cmds, s);
+        set_selector_commands(g_newsgroup_sel_cmds, value);
         break;
 
     case OI_NEWSGROUP_SEL_BTNS:
-        g_newsgroup_sel_btns = parse_mouse_buttons(s);
+        g_newsgroup_sel_btns = parse_mouse_buttons(value);
         break;
 
     case OI_NEWSGROUP_SEL_STYLES:
-        g_sel_grp_display_mode = s;
+        g_sel_grp_display_mode = value;
         g_sel_grp_display_mode_index = 0;
         break;
 
     case OI_USE_NEWS_SEL:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            g_use_news_selector = std::atoi(s);
+            g_use_news_selector = parse_int(value);
         }
         else
         {
@@ -390,7 +412,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
     case OI_NEWS_SEL_MODE:
     {
         const SelectionMode save_sel_mode = g_sel_mode;
-        set_sel_mode(*s);
+        set_sel_mode(first_char);
         if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT //
             && save_sel_mode != SM_THREAD)
         {
@@ -401,28 +423,28 @@ void apply_global_option(OptionIndex num, std::string_view value)
     }
 
     case OI_NEWS_SEL_ORDER:
-        set_sel_order(g_sel_default_mode,s);
+        set_sel_order(g_sel_default_mode,value);
         break;
 
     case OI_NEWS_SEL_CMDS:
-        set_selector_commands(g_news_sel_cmds, s);
+        set_selector_commands(g_news_sel_cmds, value);
         break;
 
     case OI_NEWS_SEL_BTNS:
-        g_news_sel_btns = parse_mouse_buttons(s);
+        g_news_sel_btns = parse_mouse_buttons(value);
         break;
 
     case OI_NEWS_SEL_STYLES:
-        g_sel_art_display_mode = s;
+        g_sel_art_display_mode = value;
         g_sel_art_display_mode_index = 0;
         break;
 
     case OI_OPTION_SEL_CMDS:
-        set_selector_commands(g_option_sel_cmds, s);
+        set_selector_commands(g_option_sel_cmds, value);
         break;
 
     case OI_OPTION_SEL_BTNS:
-        g_option_sel_btns = parse_mouse_buttons(s);
+        g_option_sel_btns = parse_mouse_buttons(value);
         break;
 
     case OI_AUTO_SAVE_NAME:
@@ -449,7 +471,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
     case OI_AUTO_ARROW_MACROS:
     {
         int prev = g_auto_arrow_macros;
-        if (is_yes(value) || *s == 'r' || *s == 'R')
+        if (is_yes(value) || first_char == 'r' || first_char == 'R')
         {
             g_auto_arrow_macros = 2;
         }
@@ -473,18 +495,18 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_CHECKPOINT_NEWSRC_FREQUENCY:
-        g_do_check_when = std::atoi(s);
+        g_do_check_when = parse_int(value);
         break;
 
     case OI_SAVE_DIR:
         if (!g_check_flag)
         {
-            g_save_dir = s;
+            g_save_dir = value;
             if (!g_priv_dir.empty())
             {
                 change_dir(g_priv_dir);
             }
-            g_priv_dir = file_exp(s);
+            g_priv_dir = file_exp(value);
         }
         break;
 
@@ -497,11 +519,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_CITED_TEXT_STRING:
-        g_indent_string = s;
+        g_indent_string = value;
         break;
 
     case OI_GOTO_LINE_NUM:
-        g_g_line = std::atoi(s)-1;
+        g_g_line = parse_int(value) - 1;
         break;
 
     case OI_FUZZY_NEWSGROUP_NAMES:
@@ -511,16 +533,16 @@ void apply_global_option(OptionIndex num, std::string_view value)
     case OI_HEADER_MAGIC:
         if (!g_check_flag)
         {
-            set_header_list(HT_MAGIC, HT_DEF_MAGIC, s);
+            set_header_list(HT_MAGIC, HT_DEF_MAGIC, value);
         }
         break;
 
     case OI_HEADER_HIDING:
-        set_header_list(HT_HIDE, HT_DEF_HIDE, s);
+        set_header_list(HT_HIDE, HT_DEF_HIDE, value);
         break;
 
     case OI_INITIAL_ARTICLE_LINES:
-        g_init_lines = ArticleLine{std::atoi(s)};
+        g_init_lines = ArticleLine{parse_int(value)};
         break;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:
@@ -532,9 +554,9 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_JOIN_SUBJECT_LINES:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            change_join_subject_len(std::atoi(s));
+            change_join_subject_len(parse_int(value));
         }
         else
         {
@@ -559,14 +581,14 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_SAVE_FILE_TYPE:
-        g_mbox_always = (*s == 'm' || *s == 'M');
-        g_norm_always = (*s == 'n' || *s == 'N');
+        g_mbox_always = (first_char == 'm' || first_char == 'M');
+        g_norm_always = (first_char == 'n' || first_char == 'N');
         break;
 
     case OI_PAGER_LINE_MARKING:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            g_marking_areas = static_cast<MarkingAreas>(std::atoi(s));
+            g_marking_areas = static_cast<MarkingAreas>(parse_int(value));
         }
         else
         {
@@ -576,7 +598,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         {
             g_marking = NO_MARKING;
         }
-        else if (*s == 'u')
+        else if (first_char == 'u')
         {
             g_marking = UNDERLINE;
         }
@@ -587,9 +609,9 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_OLD_MTHREADS_DATABASE:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            g_olden_days = std::atoi(s);
+            g_olden_days = parse_int(value);
         }
         else
         {
@@ -604,7 +626,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         }
         else
         {
-            switch (*s)
+            switch (first_char)
             {
             case 't':
                 g_auto_select_postings = '+';
@@ -622,7 +644,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_MULTIPART_SEPARATOR:
-        g_multipart_separator = s;
+        g_multipart_separator = value;
         break;
 
     case OI_AUTO_VIEW_INLINE:
@@ -638,13 +660,13 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_CHARSET:
-        g_charsets = s;
+        g_charsets = value;
         break;
 
     case OI_INITIAL_GROUP_LIST:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            g_countdown = std::atoi(s);
+            g_countdown = parse_int(value);
             g_suppress_cn = (g_countdown == 0);
         }
         else
@@ -662,9 +684,9 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_SCAN_MODE_COUNT:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            g_scan_on = std::atoi(s);
+            g_scan_on = parse_int(value);
         }
         else
         {
@@ -693,9 +715,9 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_ARTICLE_TREE_LINES:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            g_max_tree_lines = std::atoi(s);
+            g_max_tree_lines = parse_int(value);
             g_max_tree_lines = std::min(g_max_tree_lines, 11);
         }
         else
@@ -705,9 +727,9 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_WORD_WRAP_MARGIN:
-        if (std::isdigit(*s))
+        if (is_digit_start(value))
         {
-            g_word_wrap_offset = std::atoi(s);
+            g_word_wrap_offset = parse_int(value);
         }
         else if (is_yes(value))
         {
@@ -720,11 +742,11 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_DEFAULT_REFETCH_TIME:
-        g_def_refetch_secs = text_to_secs(s, DEFAULT_REFETCH_SECS);
+        g_def_refetch_secs = text_to_secs(value, DEFAULT_REFETCH_SECS);
         break;
 
     case OI_ART_PAGER_BTNS:
-        g_art_pager_btns = parse_mouse_buttons(s);
+        g_art_pager_btns = parse_mouse_buttons(value);
         break;
 
     case OI_SCAN_ITEM_NUM:
