@@ -48,7 +48,7 @@ protected:
         mime_final();
     }
 
-    StrictMock<MockFunction<int(const char *shell, const char *cmd)>> m_exec;
+    StrictMock<MockFunction<int(std::string_view shell, std::string_view cmd)>> m_exec;
 };
 
 } // namespace

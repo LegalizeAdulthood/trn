@@ -136,7 +136,7 @@ static bool fetch_ftp(std::string_view host, std::string_view path, const fs::pa
     fmt::print("ftpgrab command:\n|{}|\n", command);
 #endif
 
-    do_shell(nullptr, command.c_str());
+    do_shell({}, command);
     return true;
 #else
     fmt::print("\nThis copy of trn does not have URL:ftp support.\n");

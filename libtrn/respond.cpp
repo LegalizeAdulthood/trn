@@ -363,12 +363,12 @@ SaveResult save_article(std::string_view command)
         reset_tty();              // restore tty state
         if (use_pref)           // use preferred shell?
         {
-            do_shell(nullptr, saver_command.c_str());
+            do_shell({}, saver_command);
                                 // do command with it
         }
         else
         {
-            do_shell(SH, saver_command.c_str()); // do command with sh
+            do_shell(SH, saver_command); // do command with sh
         }
         no_echo();               // and stop echoing
         cr_mode();               // and start cbreaking
@@ -530,7 +530,7 @@ reask_save:
             }
             termlib_reset();
             reset_tty();          // make terminal behave
-            i = do_shell(use_pref ? nullptr : SH, file_exp(saver).c_str());
+            i = do_shell(use_pref ? "" : SH, file_exp(saver));
             termlib_init();
             no_echo();           // make terminal do what we want
             cr_mode();
@@ -736,7 +736,7 @@ int cancel_article()
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
         term_down(2);
-        r = do_shell(SH, file_exp(get_env_var("CANCEL", CALL_INEWS)).c_str());
+        r = do_shell(SH, file_exp(get_env_var("CANCEL", CALL_INEWS)));
     }
 done:
     return r;
@@ -1176,7 +1176,7 @@ static int invoke(const char *cmd, const char *dir)
     set_mode(g_general_mode,MM_EXECUTE);
     termlib_reset();
     reset_tty();                  // make terminal well-behaved
-    ret = do_shell(SH,cmd);      // do the command
+    ret = do_shell(SH, cmd);      // do the command
     no_echo();                   // set no echo
     cr_mode();                   // and cbreak mode
     termlib_init();

@@ -38,7 +38,7 @@ class IniSectionValues;
 
 void util_init();
 void util_final();
-int  do_shell(const char *shell, const char *cmd);
+int  do_shell(std::string_view shell, std::string_view cmd);
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_malloc(MemorySize size);
 char *safe_realloc(char *where, MemorySize size);

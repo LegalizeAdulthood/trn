@@ -10,7 +10,7 @@
 
 extern std::string g_home_dir;
 
-int do_shell(const char *shell, const char *cmd);
+int do_shell(std::string_view shell, std::string_view cmd);
 [[noreturn]] void finalize(int num);
 std::string do_interp(std::string_view pattern);
 int   nntp_handle_nested_lists();

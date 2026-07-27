@@ -19,9 +19,10 @@
 
 static std::string    s_nntp_password;
 
-int do_shell(const char *shell, const char *cmd)
+int do_shell(std::string_view, std::string_view cmd)
 {
-    return std::system(cmd);
+    const std::string command{cmd};
+    return std::system(command.c_str());
 }
 
 [[noreturn]] void finalize(int num)

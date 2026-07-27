@@ -115,7 +115,7 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner, std::str
     command_text = trim_command_spaces(command_text);
     const std::string shell_command = do_interp(command_text);
     reset_tty();                          // make sure tty is friendly
-    shell_runner(nullptr, shell_command.c_str()); // invoke the shell
+    shell_runner({}, shell_command);      // invoke the shell
     no_echo();                           // and make terminal
     cr_mode();                           // unfriendly again
     if (do_cd)

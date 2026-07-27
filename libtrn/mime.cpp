@@ -471,7 +471,7 @@ int mime_exec(std::string_view cmd)
         }
     }
 
-    return s_executor(SH, command.c_str());
+    return s_executor(SH, command);
 }
 
 static void mime_init_sections()

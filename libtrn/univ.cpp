@@ -1119,7 +1119,7 @@ void univ_page_file(const fs::path &fname)
                                             file_exp(fname.generic_string()));
     term_down(3);
     reset_tty();                  // make sure tty is friendly
-    do_shell(SH, command.c_str()); // invoke the shell
+    do_shell(SH, command);        // invoke the shell
     no_echo();                   // and make terminal
     cr_mode();                   // unfriendly again
     // later: consider something else that will return the key, and

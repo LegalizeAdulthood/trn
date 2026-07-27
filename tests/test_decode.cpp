@@ -123,7 +123,7 @@ protected:
         m_section.m_total = 1;
 
         mime_set_executor(
-            [this](const char *, const char *command)
+            [this](std::string_view, std::string_view command)
             {
                 m_command = command;
                 m_piece_dir = fs::current_path();

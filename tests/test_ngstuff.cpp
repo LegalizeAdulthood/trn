@@ -199,10 +199,10 @@ TEST_F(EscapadeTest, restoresCurrentDirectoryAfterShellCommand)
     g_buf[command.size()] = '\0';
 
     bool result = escapade_with_shell_runner(
-        [&](const char *shell, const char *cmd)
+        [&](std::string_view shell, std::string_view cmd)
         {
-            EXPECT_EQ(nullptr, shell);
-            EXPECT_STREQ("echo cwd", cmd);
+            EXPECT_TRUE(shell.empty());
+            EXPECT_EQ("echo cwd", cmd);
             shell_cwd = fs::current_path();
             ran_shell = true;
             return 0;

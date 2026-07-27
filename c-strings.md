@@ -726,21 +726,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-425 - Shell Command Helper View API
-
-- Files: `libtrn/util.cpp`, `libtrn/include/trn/util.h`,
-  `tool/util3.cpp`, `tool/include/tool/util3.h`, production callers,
-  `tests/test_interp.cpp`.
-- Kind: C-string helper API.
-- Function: `do_shell(const char *, const char *)`.
-- Dependencies: none.
-- Change: change the helper to take command text as `std::string_view`
-  and use an empty shell view as the default-shell sentinel.  Build local
-  NUL-terminated strings only at the `system`, `spawnl`, and `execl`
-  boundaries.  Remove caller `.c_str()` calls where the caller already
-  owns a `std::string`.
-- Tests: update existing shell interpolation tests.
-
 #### CSTR-413 - Base64 String Decode Helper
 
 - Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`,

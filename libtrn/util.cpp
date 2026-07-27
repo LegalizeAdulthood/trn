@@ -96,13 +96,14 @@ void util_final()
 
 // fork and exec a shell command
 
-int do_shell(const char *shell, const char *cmd)
+int do_shell(std::string_view shell, std::string_view cmd)
 {
 #ifndef MSDOS
     WaitStatus status;
     pid_t pid, w;
 #endif
     int ret = 0;
+    const std::string command_text{cmd};
 
     xmouse_off();
 
@@ -175,15 +176,11 @@ int do_shell(const char *shell, const char *cmd)
     const std::string quotechars = do_interp("%I");
     TRN_ASSERT(quotechars.size() >= 2);
     set_env_var(s_quotechars_env, quotechars.substr(1, quotechars.size() - 2));
-    std::string shell_text;
-    if (shell == nullptr)
-    {
-        shell_text = get_env_var("SHELL", PREF_SHELL);
-        shell = shell_text.c_str();
-    }
+    const std::string shell_text = shell.empty() ? get_env_var("SHELL", PREF_SHELL) : std::string{shell};
+    const char *const shell_path = shell_text.c_str();
     termlib_reset();
 #ifdef MSDOS
-    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", cmd, nullptr);
+    intptr_t status = spawnl(P_WAIT, shell_path, shell_path, "/c", command_text.c_str(), nullptr);
 #else
     pid = vfork();
     if (pid == 0)
@@ -195,13 +192,13 @@ int do_shell(const char *shell, const char *cmd)
             dup(open("/dev/null",1));
         }
 
-        if (*cmd)
+        if (!command_text.empty())
         {
-            execl(shell, shell, "-c", cmd, nullptr);
+            execl(shell_path, shell_path, "-c", command_text.c_str(), nullptr);
         }
         else
         {
-            execl(shell, shell, nullptr, nullptr, nullptr);
+            execl(shell_path, shell_path, nullptr, nullptr, nullptr);
         }
         _exit(127);
     }
@@ -418,18 +415,18 @@ void verify_sig()
 {
     std::printf("\n");
     // RIPEM
-    int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A").c_str());
+    int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i)     // found RIPEM
     {
-        i = do_shell(SH, file_exp(get_env_var("VERIFY_RIPEM", VERIFY_RIPEM)).c_str());
+        i = do_shell(SH, file_exp(get_env_var("VERIFY_RIPEM", VERIFY_RIPEM)));
         std::printf("\nReturned value: %d\n",i);
         return;
     }
     // PGP
-    i = do_shell(SH, file_exp("grep -s \"BEGIN PGP\" %A").c_str());
+    i = do_shell(SH, file_exp("grep -s \"BEGIN PGP\" %A"));
     if (!i)     // found PGP
     {
-        i = do_shell(SH, file_exp(get_env_var("VERIFY_PGP", VERIFY_PGP)).c_str());
+        i = do_shell(SH, file_exp(get_env_var("VERIFY_PGP", VERIFY_PGP)));
         std::printf("\nReturned value: %d\n",i);
         return;
     }
@@ -802,7 +799,7 @@ int edit_file(std::string_view fname)
         "{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), file_exp(fname));
     term_down(3);
     reset_tty();                  // make sure tty is friendly
-    r = do_shell(SH, command.c_str());  // invoke the shell
+    r = do_shell(SH, command);          // invoke the shell
     no_echo();                   // and make terminal
     cr_mode();                   // unfriendly again
     return r;

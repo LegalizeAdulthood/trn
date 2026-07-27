@@ -802,7 +802,7 @@ void edit_kill_file()
         fmt::print("\nEditing {} KILL file:\n{}\n", g_in_ng ? "local" : "global", command);
         term_down(3);
         reset_tty();                      // make sure tty is friendly
-        do_shell(SH, command.c_str());   // invoke the shell
+        do_shell(SH, command);            // invoke the shell
         no_echo();                       // and make terminal
         cr_mode();                       // unfriendly again
         open_kill_file(g_in_ng);
