@@ -74,8 +74,14 @@ protected:
 
         m_old_newsgroup_min_to_read = g_newsgroup_min_to_read;
         m_old_to_read_quiet = g_to_read_quiet;
+        m_old_paranoid = g_paranoid;
+        m_old_newsgroup_to_read = g_newsgroup_to_read;
+        m_old_missing_count = g_missing_count;
         g_newsgroup_min_to_read = TR_ONE;
         g_to_read_quiet = true;
+        g_paranoid = false;
+        g_newsgroup_to_read = NewsgroupNum{};
+        g_missing_count = ArticleUnread{};
 
         m_active_path = m_output_dir / "active";
         std::ofstream{m_active_path} << "comp.lang.apl 100 1 y\n";
@@ -94,6 +100,9 @@ protected:
         m_data_source.m_act_sf.close();
         g_newsgroup_min_to_read = m_old_newsgroup_min_to_read;
         g_to_read_quiet = m_old_to_read_quiet;
+        g_paranoid = m_old_paranoid;
+        g_newsgroup_to_read = m_old_newsgroup_to_read;
+        g_missing_count = m_old_missing_count;
 
         std::error_code error;
         fs::remove_all(m_output_dir, error);
@@ -110,6 +119,9 @@ protected:
     fs::path      m_active_path;
     ArticleUnread m_old_newsgroup_min_to_read{};
     bool          m_old_to_read_quiet{};
+    bool          m_old_paranoid{};
+    NewsgroupNum  m_old_newsgroup_to_read{};
+    ArticleUnread m_old_missing_count{};
     DataSource    m_data_source{};
     Newsrc        m_newsrc{};
     NewsgroupData m_group{};
@@ -268,6 +280,22 @@ TEST_F(SetToReadTest, countsUnreadArticlesFromLongReadList)
     EXPECT_EQ(ArticleUnread{70}, m_group.m_to_read);
     EXPECT_EQ(ArticleNum{100}, m_group.m_ng_max);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_F(SetToReadTest, clearsReadRangesWhenNewsrcExceedsActiveHighWater)
+{
+    set_numbers("1-125");
+
+    m_group.set_to_read(ST_STRICT);
+    m_group.show_subscribe_char();
+
+    EXPECT_EQ("comp.lang.apl:", std::string{m_group.m_rc_line.c_str()});
+    EXPECT_TRUE(g_paranoid);
+    EXPECT_EQ(ArticleUnread{100}, m_group.m_to_read);
+    EXPECT_EQ(ArticleNum{100}, m_group.m_ng_max);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_missing_count);
 }
 
 TEST_F(AddArtNumTest, insertsStandaloneArticleBeforeLaterRange)

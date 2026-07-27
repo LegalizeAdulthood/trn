@@ -564,7 +564,8 @@ void NewsgroupData::set_to_read(bool lax_high_check)
         {
             fmt::print("\nSomebody reset {} -- assuming nothing read.\n", rc_line());
         }
-        *rc_numbers_data() = '\0';
+        const std::size_t numbers_offset = std::min(static_cast<std::size_t>(m_num_offset), m_rc_line.size());
+        m_rc_line.erase(numbers_offset);
         g_paranoid = true; // enough to make a guy paranoid
         m_rc->flags |= RF_RC_CHANGED;
     }

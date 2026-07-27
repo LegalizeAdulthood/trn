@@ -735,20 +735,6 @@ No current slices.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-431 - Newsrc Reset Numbers Storage
-
-- Files: `libtrn/rcln.cpp`, `tests/test_rcln.cpp`.
-- Kind: mutable cursor into owned `.newsrc` line storage.
-- Function: `NewsgroupData::set_to_read`.
-- Dependencies: none.
-- Change: replace `*rc_numbers_data() = '\0'` with an owner-local
-  operation on `m_rc_line` or a small `NewsgroupData` helper that clears
-  the numbers region without exposing mutable raw string storage.
-  Preserve reset detection, paranoid mode, unread counts, and rc-changed
-  flag behavior.
-- Tests: use existing reset/newsrc range tests; add focused coverage
-  first if the reset branch is not covered.
-
 #### CSTR-432 - Newsrc Writer Delimiter Cursor
 
 - Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
