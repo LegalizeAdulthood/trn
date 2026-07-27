@@ -499,9 +499,9 @@ The current scan covers source code under `config`, `libtrn`, `util`,
 files, legacy Configure scripts, or the vendored `vcpkg` tree.
 
 - `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
-  tracked here.  Non-string owners include AddGroup scratch storage,
-  hash-table internals, regex bytecode, and generic allocation helpers.
-  No string-copy allocation helpers are present in production roots.
+  tracked here.  Non-string owners include hash-table internals, regex
+  bytecode, and generic allocation helpers.  No string-copy allocation
+  helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: the current string-shaped fixed-buffer candidate is
@@ -530,8 +530,22 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   compatibility wrappers are gone.
 - Command dispatch scan: selector perform helpers, shell escape dispatch,
   option-switch dispatch, and kill-file switch commands now pass command
-  text as strings or views.  The remaining `perform` bridge to `g_buf`
-  is the response save/view handoff tracked by `CSTR-299`.
+  text as strings or views.
+- Response command scan: save, reply, followup, and supersede operations
+  now have `std::string_view` command entry points.  The perform
+  save/view path no longer stages command text in `g_buf`, and mailbox
+  format detection uses owner-local string storage.
+- Response wrapper scan: the no-argument `save_article`,
+  `supersede_article`, `reply`, and `followup` wrappers now only bridge
+  legacy `g_buf` callers or tests to the command-view APIs.
+- Article body quote scan: `reply` and `followup` still use
+  `read_art_buf`, `std::strchr`, and temporary NUL insertion while
+  quoting included article bodies.
+- Numeric command scan: `num_num` still parses numeric range text from
+  `g_buf`; callers now have command text available.
+- Terminal input scan: `finish_command(int)`, `store_command`,
+  `in_choice`, and typeahead cleanup still preserve command/input text
+  in `g_buf` for legacy callers.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
@@ -569,9 +583,9 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 9, `strstr` 2, `strlen` 10.
+- Search and length: `strchr` 9, `strstr` 2, `strlen` 12.
 - C line input: `fgets` 4.
-- C text output: `fputs` 158, `printf`/`std::printf` 304,
+- C text output: `fputs` 158, `printf`/`std::printf` 302,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
@@ -618,14 +632,104 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-302 - Remove `save_article` Wrapper
+
+- Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
+  `tests/test_interp.cpp`.
+- Kind: unused global-buffer wrapper.
+- Function: `save_article()`.
+- Dependencies: none.
+- Change: delete the no-argument wrapper and declaration.  Update tests
+  and any remaining callers to pass command text to
+  `save_article(std::string_view)`.
+- Tests: `InterpolatorNewsgroupTest` save, pipe, and extract cases.
+
+#### CSTR-303 - Remove `supersede_article` Wrapper
+
+- Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
+  `tests/test_interp.cpp`.
+- Kind: unused global-buffer wrapper.
+- Function: `supersede_article()`.
+- Dependencies: none.
+- Change: delete the no-argument wrapper and declaration.  Update tests
+  and any remaining callers to pass command text to
+  `supersede_article(std::string_view)`.
+- Tests: `InterpolatorNewsgroupTest` supersede cases.
+
+#### CSTR-304 - Remove `reply` Wrapper
+
+- Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
+  `tests/test_interp.cpp`.
+- Kind: unused global-buffer wrapper.
+- Function: `reply()`.
+- Dependencies: none.
+- Change: delete the no-argument wrapper and declaration.  Update tests
+  and any remaining callers to pass command text to
+  `reply(std::string_view)`.
+- Tests: `InterpolatorNewsgroupTest` reply cases.
+
+#### CSTR-305 - Remove `followup` Wrapper
+
+- Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
+  `tests/test_interp.cpp`.
+- Kind: unused global-buffer wrapper.
+- Function: `followup()`.
+- Dependencies: none.
+- Change: delete the no-argument wrapper and declaration.  Update tests
+  and any remaining callers to pass command text to
+  `followup(std::string_view)`.
+- Tests: `InterpolatorNewsgroupTest` followup cases.
+
+#### CSTR-306 - Reply Quoted Body Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: C-string article body cursor.
+- Function: `reply(std::string_view)`.
+- Dependencies: none.
+- Change: replace `read_art_buf`, `std::strchr`, and temporary NUL
+  insertion with owned `std::string` line reading while preserving
+  indentation and character substitution.
+- Tests: `InterpolatorNewsgroupTest` reply quoted-body case.
+
+#### CSTR-307 - Followup Quoted Body Buffer
+
+- Files: `libtrn/respond.cpp`.
+- Kind: C-string article body cursor.
+- Function: `followup(std::string_view)`.
+- Dependencies: none.
+- Change: replace `read_art_buf`, `std::strchr`, and temporary NUL
+  insertion with owned `std::string` line reading while preserving
+  attribution, indentation, and character substitution.
+- Tests: `InterpolatorNewsgroupTest` followup quoted-body case.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-No current slices.
+#### CSTR-308 - Numeric Range Command View
+
+- Files: `libtrn/ngstuff.cpp`, `libtrn/include/trn/ngstuff.h`,
+  `libtrn/ng.cpp`, `tests/test_ngstuff.cpp`.
+- Kind: global command-buffer parser.
+- Function: `num_num`.
+- Dependencies: none.
+- Change: add `num_num(std::string_view command)` and move numeric
+  range parsing from `g_buf` to the command view.  Keep the old wrapper
+  only if a production caller still needs it during the slice.
+- Tests: `NumNumTest`.
+
+#### CSTR-309 - Choice Input Result
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
+  `libtrn/rt-select.cpp`.
+- Kind: terminal input result buffer.
+- Function: `in_choice`.
+- Dependencies: none.
+- Change: make `in_choice` return the edited string result directly, or
+  update an output `std::string` supplied by the caller, instead of
+  storing the edited value through `store_command` and `g_buf`.
+- Tests: option selector edit tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -646,17 +750,39 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-299 - Response Command And File Scratch Buffer
+#### CSTR-310 - Article Command Staging
 
-- Files: `libtrn/respond.cpp`.
-- Kind: shared command and file-copy buffer.
-- Function: response command handling and temporary header/body copy
-  paths.
+- Files: `libtrn/ng.cpp`.
+- Kind: global command-buffer staging.
+- Function: `art_switch`.
+- Dependencies: CSTR-302, CSTR-303, CSTR-304, CSTR-305, CSTR-308.
+- Change: remove `stage_legacy_article_command` use from article-level
+  dispatch by passing command text or prompt answers directly to callees.
+  Keep prompt input in local strings instead of reading answers from
+  `g_buf`.
+- Tests: article command tests and response command tests.
+
+#### CSTR-311 - Typeahead Scratch Buffer
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: terminal scratch buffer.
+- Function: `eat_typeahead`.
 - Dependencies: none.
-- Change: separate response command text from file-copy line storage.
-  Use owned strings for command parsing and owner-specific buffers for
-  file copy paths; do not store either in `g_buf`.
-- Tests: response command tests and saved-header/body output tests.
+- Change: replace temporary typeahead reads into `g_buf` with local
+  storage and pass the resulting text view to `push_string`.
+- Tests: terminal typeahead tests if available; otherwise focused
+  terminal command tests.
+
+#### CSTR-312 - Finish Command Legacy Wrapper
+
+- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
+- Kind: global command-buffer wrapper.
+- Function: `finish_command(int)`.
+- Dependencies: CSTR-308, CSTR-310.
+- Change: migrate remaining production callers to
+  `finish_command(std::string_view, bool)`, then delete the wrapper that
+  reads and writes command text through `g_buf`.
+- Tests: `TerminalTest` finish-command cases and caller-focused tests.
 
 ### Tier 5 - Helper Removal
 
@@ -669,7 +795,8 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-299.
+- Dependencies: CSTR-302, CSTR-303, CSTR-304, CSTR-305, CSTR-308,
+  CSTR-309, CSTR-310, CSTR-311, CSTR-312.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

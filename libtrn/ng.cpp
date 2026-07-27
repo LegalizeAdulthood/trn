@@ -1785,20 +1785,20 @@ refresh_screen:
 
     case 'Z':
     case 'z':
-        supersede_article();    // supersedes
+        supersede_article(command);     // supersedes
         return AS_ASK;
 
     case 'R':
     case 'r':                 // reply?
     {
-        reply();
+        reply(command);
         return AS_ASK;
     }
 
     case 'F':
     case 'f':                 // followup command
     {
-        followup();
+        followup(command);
         g_force_grow = true;             // recalculate g_lastart
         return AS_ASK;
     }
@@ -1813,7 +1813,7 @@ refresh_screen:
     case 'w': case 'W':
     case 's': case 'S':       // save command
     case 'e':                 // extract command
-        if (save_article() == SAVE_ABORT)
+        if (save_article(command) == SAVE_ABORT)
         {
             return AS_INP;
         }

@@ -8,6 +8,7 @@
 #include <config/typedef.h>
 
 #include <string>
+#include <string_view>
 
 extern std::string     g_save_dest;     // value of %b
 extern std::string     g_extract_dest;  // value of %E
@@ -26,11 +27,15 @@ enum SaveResult
 
 void       respond_init();
 SaveResult save_article();
+SaveResult save_article(std::string_view command);
 SaveResult view_article();
 int        cancel_article();
 int        supersede_article();
+int        supersede_article(std::string_view command);
 void       reply();
+void       reply(std::string_view command);
 void       forward();
 void       followup();
+void       followup(std::string_view command);
 
 #endif

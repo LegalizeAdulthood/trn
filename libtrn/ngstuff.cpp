@@ -482,7 +482,7 @@ int thread_perform(std::string_view command)
     {
         ArticleNum oldart = g_art;
         g_art = article_after(g_last_art);
-        followup();
+        followup("f");
         g_force_grow = true;
         g_art = oldart;
         g_page_line++;
@@ -805,9 +805,6 @@ int perform(std::string_view cmdlst_view, int output_level)
             }
             else
             {
-                const std::size_t command_size = std::min(command_text.size(), static_cast<std::size_t>(LINE_BUF_LEN));
-                command_text.copy(g_buf, command_size);
-                g_buf[command_size] = '\0';
                 if (output_level != 1)
                 {
                     erase_line(false);
@@ -819,7 +816,7 @@ int perform(std::string_view cmdlst_view, int output_level)
                 }
                 else
                 {
-                    save_article();
+                    save_article(command_text);
                 }
                 newline();
                 output_level = 0;

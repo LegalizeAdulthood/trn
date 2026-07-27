@@ -35,6 +35,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cctype>
 #include <charconv>
 #include <cstdio>
@@ -61,6 +62,11 @@ static std::FILE *s_tmp_fp{};
 static void follow_it_up();
 static int  invoke(const char *cmd, const char *dir);
 
+static char response_command_char(std::string_view command)
+{
+    return command.empty() ? '\0' : command.front();
+}
+
 static bool extract_option_digit(char ch)
 {
     return std::isdigit(static_cast<unsigned char>(ch)) != 0;
@@ -74,6 +80,14 @@ static std::string_view skip_response_spaces(std::string_view text)
         return {};
     }
     return text.substr(non_space);
+}
+
+static std::string_view skip_response_whitespace(std::string_view text)
+{
+    const std::string_view::const_iterator first = std::find_if_not(
+        text.begin(), text.end(), [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+    text.remove_prefix(static_cast<std::size_t>(first - text.begin()));
+    return text;
 }
 
 static std::string_view parse_extract_number(std::string_view text, int &value)
@@ -118,23 +132,34 @@ void respond_init()
 
 SaveResult save_article()
 {
-    char* s;
-    bool interactive = (g_buf[1] == FINISH_CMD);
-    char cmd = *g_buf;
+    return save_article(std::string_view{g_buf});
+}
 
-    if (!finish_command(interactive))   // get rest of command
+SaveResult save_article(std::string_view command)
+{
+    std::string completed_command;
+    bool        interactive = command.size() > 1 && command[1] == FINISH_CMD;
+    char        cmd = response_command_char(command);
+
+    if (interactive)
     {
-        return SAVE_ABORT;
+        completed_command = finish_command(command.substr(0, 1), true);
+        if (completed_command.empty())
+        {
+            return SAVE_ABORT;
+        }
+        command = completed_command;
     }
-    bool use_pref = std::isupper(cmd);
+    std::string_view command_text = command.size() > 1 ? command.substr(1) : std::string_view{};
+    bool             use_pref = std::isupper(static_cast<unsigned char>(cmd)) != 0;
     if (use_pref != 0)
     {
-        cmd = std::tolower(cmd);
+        cmd = static_cast<char>(std::tolower(static_cast<unsigned char>(cmd)));
     }
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
-    g_save_from = (cmd == 'w' || cmd == 'e')? g_header_type[PAST_HEADER].min_pos : ArticlePosition{};
+    g_save_from = (cmd == 'w' || cmd == 'e') ? g_header_type[PAST_HEADER].min_pos : ArticlePosition{};
     if (art_open(g_art, g_save_from) == nullptr)
     {
         if (g_verbose)
@@ -159,7 +184,7 @@ SaveResult save_article()
         int         partOpt = 0;
         int         totalOpt = 0;
 
-        std::string destination = file_exp(parse_extract_options(std::string_view{g_buf}.substr(1), partOpt, totalOpt));
+        std::string destination = file_exp(parse_extract_options(command_text, partOpt, totalOpt));
         destination.reserve(CMD_BUF_LEN);
         bool has_extract_command = custom_extract;
         if (!destination.empty())
@@ -232,8 +257,8 @@ SaveResult save_article()
         {
             fmt::print("Extracting article into {} using {}\n", fs::current_path().generic_string(), g_extract_prog);
             term_down(1);
-            const std::string command = do_interp(get_env_var("CUSTOMSAVER", CUSTOM_SAVER));
-            invoke(command.c_str(), nullptr);
+            const std::string saver_command = do_interp(get_env_var("CUSTOMSAVER", CUSTOM_SAVER));
+            invoke(saver_command.c_str(), nullptr);
         }
         else if (g_is_mime)
         {
@@ -294,8 +319,8 @@ SaveResult save_article()
                 fmt::print("Extracting shar into {}:\n", fs::current_path().generic_string());
                 term_down(1);
                 {
-                    const std::string command = do_interp(get_env_var("SHARSAVER", SHAR_SAVER));
-                    invoke(command.c_str(), nullptr);
+                    const std::string saver_command = do_interp(get_env_var("SHARSAVER", SHAR_SAVER));
+                    invoke(saver_command.c_str(), nullptr);
                 }
                 break;
 
@@ -329,26 +354,26 @@ SaveResult save_article()
             }
         } // if
     }
-    else if (const std::string_view::size_type pipe_separator = std::string_view{g_buf}.find('|');
+    else if (const std::string_view::size_type pipe_separator = command.find('|');
              pipe_separator != std::string_view::npos) // is it a pipe command?
     {
-        g_save_dest = file_exp(skip_response_spaces(std::string_view{g_buf}.substr(pipe_separator + 1)));
+        g_save_dest = file_exp(skip_response_spaces(command.substr(pipe_separator + 1)));
         if (g_data_source->m_flags & DF_REMOTE)
         {
             nntp_finish_body(FB_SILENT);
         }
-        const std::string command = do_interp(get_env_var("PIPESAVER", PIPE_SAVER));
+        const std::string saver_command = do_interp(get_env_var("PIPESAVER", PIPE_SAVER));
         // then set up for command
         termlib_reset();
         reset_tty();              // restore tty state
         if (use_pref)           // use preferred shell?
         {
-            do_shell(nullptr, command.c_str());
+            do_shell(nullptr, saver_command.c_str());
                                 // do command with it
         }
         else
         {
-            do_shell(SH, command.c_str());  // do command with sh
+            do_shell(SH, saver_command.c_str()); // do command with sh
         }
         no_echo();               // and stop echoing
         cr_mode();               // and start cbreaking
@@ -360,8 +385,7 @@ SaveResult save_article()
         bool  mailbox;
         const std::string savename = get_env_var("SAVENAME", SAVENAME);
 
-        s = g_buf+1;            // skip s or S
-        if (*s == '-')          // if they are confused, skip - also
+        if (!command_text.empty() && command_text.front() == '-') // if they are confused, skip - also
         {
             if (g_verbose)
             {
@@ -372,13 +396,9 @@ SaveResult save_article()
                 std::fputs("'-' ignored.\n", stdout);
             }
             term_down(1);
-            s++;
+            command_text.remove_prefix(1);
         }
-        for (; *s == ' '; s++)
-        {
-            // skip spaces
-        }
-        std::string destination = file_exp(s);
+        std::string destination = file_exp(skip_response_spaces(command_text));
         if (!file_ref(destination))
         {
             std::string save_directory = file_exp(get_env_var("SAVEDIR", SAVEDIR));
@@ -482,14 +502,17 @@ reask_save:
             }
             else
             {
-                if (std::fread(g_buf, 1, LINE_BUF_LEN, s_tmp_fp))
+                std::string first_line(LINE_BUF_LEN, '\0');
+                const std::size_t bytes_read = std::fread(first_line.data(), 1, first_line.size(), s_tmp_fp);
+                if (bytes_read != 0)
                 {
-                    char *first = g_buf;
-                    if (!std::isspace(MBOX_CHAR))   // if non-zero,
+                    first_line.resize(bytes_read);
+                    std::string_view first = first_line;
+                    if (!std::isspace(static_cast<unsigned char>(MBOX_CHAR))) // if non-zero,
                     {
-                        first = skip_space(first); // check the first character
+                        first = skip_response_whitespace(first); // check the first character
                     }
-                    mailbox = (*first == MBOX_CHAR);
+                    mailbox = (!first.empty() && first.front() == MBOX_CHAR);
                 }
                 else
                 {
@@ -724,11 +747,16 @@ done:
     return r;
 }
 
-int supersede_article()         // Supersedes:
+int supersede_article()
+{
+    return supersede_article(std::string_view{g_buf});
+}
+
+int supersede_article(std::string_view command) // Supersedes:
 {
     int  myuid = current_user_id();
     int  r = -1;
-    bool incl_body = (*g_buf == 'Z');
+    bool incl_body = (response_command_char(command) == 'Z');
 
     if (art_open(g_art, (ArticlePosition) 0) == nullptr)
     {
@@ -858,7 +886,12 @@ static void follow_it_up()
 
 void reply()
 {
-    bool incl_body = (*g_buf == 'R' && g_art);
+    reply(std::string_view{g_buf});
+}
+
+void reply(std::string_view command)
+{
+    bool incl_body = (response_command_char(command) == 'R' && g_art);
     const std::string mail_doer = get_env_var("MAILPOSTER", MAIL_POSTER);
 
     art_open(g_art,(ArticlePosition)0);
@@ -869,16 +902,17 @@ void reply()
         term_down(1);
         return;
     }
-    std::fputs(do_interp(get_env_var("MAILHEADER", MAIL_HEADER)).c_str(), header);
+    const std::string header_text = do_interp(get_env_var("MAILHEADER", MAIL_HEADER));
+    std::fputs(header_text.c_str(), header);
     if (!in_string(mail_doer, "%h", true))
     {
         if (g_verbose)
         {
-            std::printf("\n%s\n(Above lines saved in file %s)\n", g_buf, g_head_name.c_str());
+            fmt::print("\n{}\n(Above lines saved in file {})\n", header_text, g_head_name);
         }
         else
         {
-            std::printf("\n%s\n(Header in %s)\n", g_buf, g_head_name.c_str());
+            fmt::print("\n{}\n(Header in {})\n", header_text, g_head_name);
         }
         term_down(3);
     }
@@ -1073,7 +1107,12 @@ done:
 
 void followup()
 {
-    bool incl_body = (*g_buf == 'F' && g_art);
+    followup(std::string_view{g_buf});
+}
+
+void followup(std::string_view command)
+{
+    bool       incl_body = (response_command_char(command) == 'F' && g_art);
     ArticleNum oldart = g_art;
 
     if (!incl_body && g_art <= g_last_art)
