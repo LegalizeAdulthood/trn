@@ -514,10 +514,12 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - The legacy C-buffer `do_interp`, `interp`, `interp_search`,
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
-- Article input scan: all production callers outside `artio.cpp` use the
-  string-reading API.  The raw `read_art(char *, int)` helper is already
-  private to `artio.cpp`; it remains only inside the string reader and
-  article-buffer fill code.
+- Article input scan: production callers outside `art.cpp` and
+  `artio.cpp` use the string-reading API.  The raw `read_art(char *,
+  int)` helper is already private to `artio.cpp`; it remains only inside
+  the string reader and article-buffer fill code.  Raw
+  `read_art_buf(bool)` calls remain in the article pager and in the
+  implementation of the string reader.
 - Unused overload/wrapper scan: `finish_command(int)` still has
   production callers that read or store command text through `g_buf`.
   Keep `nntp_init_error`, `string_case_compare`,
@@ -536,9 +538,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   save/view path no longer stages command text in `g_buf`, and mailbox
   format detection uses owner-local string storage.
 - Response wrapper scan: no no-argument response wrappers remain.
-- Article body quote scan: response quoting now uses owned line storage
-  from the article I/O boundary instead of mutating raw article buffers.
-  `artsrch.cpp` and `art.cpp` still have raw article-buffer callers that
+- Article body scan: response quoting and article search now use owned
+  line storage from the article I/O boundary instead of mutating raw
+  article buffers.  `art.cpp` still has raw article-buffer callers that
   can be moved bottom-up to the same owned line API.
 - Numeric command scan: `num_num` still parses numeric range text from
   `g_buf`; callers now have command text available.
@@ -582,7 +584,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 7, `strstr` 2, `strlen` 11.
+- Search and length: `strchr` 6, `strstr` 2, `strlen` 11.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 302,
   `fprintf`/`std::fprintf` 13.
@@ -633,18 +635,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-410 - Article Search Body Buffer
-
-- Files: `libtrn/artsrch.cpp`.
-- Kind: C-string article body cursor.
-- Function: `wanted`.
-- Dependencies: none.
-- Change: use `read_art_buf(std::string &, bool)` and local owned line
-  storage for article body search.  Preserve signature detection and the
-  existing search extent, including the terminating newline when present.
-- Tests: add or use `ArticleSearchTest` body-search coverage before the
-  refactor.
 
 ### Tier 1 - Helper And API Foundations
 
@@ -764,7 +754,7 @@ owned strings or owner-specific storage.
   `tests/test_artio.cpp`.
 - Kind: raw string return helper.
 - Function: `read_art_buf(bool)`.
-- Dependencies: CSTR-410, CSTR-411.
+- Dependencies: CSTR-411.
 - Change: after production callers use owned line storage, remove the
   public `char *` article-buffer overload or make it file-local
   implementation detail.  Keep `read_art_buf(std::string &, bool)` as

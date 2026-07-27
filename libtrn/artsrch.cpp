@@ -27,7 +27,6 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
-#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -584,10 +583,9 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
 
     default:
     {
-        char*s;
-        char ch;
-        bool success = false;
-        bool in_sig = false;
+        std::string article_line;
+        bool        success = false;
+        bool        in_sig = false;
         if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NO_SIG)
         {
             if (!parse_header(art_num))
@@ -597,7 +595,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
             // see if it's in the header
             if (compex->execute(g_head_buf.c_str())) // does it match?
             {
-                return true;                    // say, "Eureka!"
+                return true; // say, "Eureka!"
             }
             if (scope < ARTSCOPE_ARTICLE)
             {
@@ -606,14 +604,14 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         }
         if (g_parsed_art == art_num)
         {
-            if (!art_open(art_num,g_header_type[PAST_HEADER].min_pos))
+            if (!art_open(art_num, g_header_type[PAST_HEADER].min_pos))
             {
                 return false;
             }
         }
         else
         {
-            if (!art_open(art_num,(ArticlePosition)0))
+            if (!art_open(art_num, (ArticlePosition) 0))
             {
                 return false;
             }
@@ -624,10 +622,13 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         }
         // loop through each line of the article
         seek_art_buf(g_header_type[PAST_HEADER].min_pos);
-        while ((s = read_art_buf(false)) != nullptr)
+        article_line.reserve(LINE_BUF_LEN);
+        while (read_art_buf(article_line, false))
         {
-            if (scope == ARTSCOPE_BODY_NO_SIG && *s == '-' && s[1] == '-' //
-                && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n')))
+            if (scope == ARTSCOPE_BODY_NO_SIG && article_line.size() >= 3 && article_line[0] == '-' &&
+                article_line[1] == '-' &&
+                (article_line[2] == '\n' ||
+                 (article_line[2] == ' ' && article_line.size() >= 4 && article_line[3] == '\n')))
             {
                 if (in_sig && success)
                 {
@@ -635,23 +636,18 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
                 }
                 in_sig = true;
             }
-            char *nl_ptr = std::strchr(s, '\n');
-            if (nl_ptr != nullptr)
+            const std::size_t newline_pos = article_line.find('\n');
+            if (newline_pos != std::string::npos)
             {
-                ch = *++nl_ptr;
-                *nl_ptr = '\0';
+                article_line.resize(newline_pos + 1);
             }
-            success = success || compex->execute(s) != nullptr;
-            if (nl_ptr)
+            success = success || compex->execute(article_line.c_str()) != nullptr;
+            if (success && !in_sig) // does it match?
             {
-                *nl_ptr = ch;
-            }
-            if (success && !in_sig)             // does it match?
-            {
-                return true;                    // say, "Eureka!"
+                return true; // say, "Eureka!"
             }
         }
-        return false;                           // out of article, so no match
+        return false; // out of article, so no match
     }
     }
     return compex->execute(search_text.c_str()) != nullptr;
