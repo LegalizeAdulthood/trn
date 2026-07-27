@@ -717,18 +717,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-437 - Terminal Capability Lengths
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: local read-only C string length checks.
-- Function: `term_set`.
-- Dependencies: none.
-- Change: replace the local `std::strlen` calls that measure terminal
-  capability strings with `std::string_view` size checks.
-- Tests: build coverage is sufficient; this only changes local length
-  measurement after the code has already dereferenced the same
-  capability pointers.
-
 #### CSTR-438 - Arrow Macro Sequence Views
 
 - Files: `libtrn/terminal.cpp`.

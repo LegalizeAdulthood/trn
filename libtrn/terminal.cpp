@@ -448,8 +448,8 @@ void term_set(char *tcbuf)
     {
         s_tc_CL = nullptr;
     }
-    s_left_cost = std::strlen(g_tc_BC);
-    s_up_cost = std::strlen(g_tc_UP);
+    s_left_cost = std::string_view{g_tc_BC}.size();
+    s_up_cost = std::string_view{g_tc_UP}.size();
 #else // !HAS_TERMLIB
     ..."Don't know how to set the terminal!"
 #endif // !HAS_TERMLIB
