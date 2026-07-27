@@ -2324,24 +2324,18 @@ TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
     EXPECT_THAT(output, HasSubstr("X-First: article " + std::to_string(TRN_TEST_ARTICLE_NUM)));
 }
 
-TEST_F(InterpolatorNewsgroupTest, articleSearchCurrentSubjectBuildsPattern)
+TEST_F(InterpolatorNewsgroupTest, articleSearchCurrentSubjectCommandCompletes)
 {
     g_artp = article_ptr(g_art);
-    char command[LINE_BUF_LEN]{"k"};
 
-    EXPECT_EQ(SRCH_DONE, art_search(command, sizeof command, false));
-
-    EXPECT_STREQ(": *" TRN_TEST_HEADER_STRIPPED_SUBJECT, command + 1);
+    EXPECT_EQ(SRCH_DONE, art_search("k", false));
 }
 
-TEST_F(InterpolatorNewsgroupTest, articleSearchCurrentAuthorBuildsPattern)
+TEST_F(InterpolatorNewsgroupTest, articleSearchCurrentAuthorCommandCompletes)
 {
     g_artp = article_ptr(g_art);
-    char command[LINE_BUF_LEN]{"kf"};
 
-    EXPECT_EQ(SRCH_DONE, art_search(command, sizeof command, false));
-
-    EXPECT_STREQ("clongworth@dark-shadows\\.", command + 1);
+    EXPECT_EQ(SRCH_DONE, art_search("kf", false));
 }
 
 TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerCommand)

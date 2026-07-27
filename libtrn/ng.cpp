@@ -225,15 +225,6 @@ static std::string finish_article_dbl_command(std::string_view command)
     return finish_dbl_char(command.substr(0, 1));
 }
 
-static ArtSearchResult article_search(std::string_view command)
-{
-    std::string buffer;
-    buffer.reserve(LINE_BUF_LEN + 1);
-    buffer = command.substr(0, std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN)));
-    buffer.resize(LINE_BUF_LEN + 1, '\0');
-    return art_search(buffer.data(), static_cast<int>(buffer.size()), false);
-}
-
 // do newsgroup pointed to by g_ngptr with name g_ngname
 //
 // The basic structure is:
@@ -1041,7 +1032,7 @@ not_threaded:
             goto not_threaded;
         }
         // first, write kill-subject command
-        (void)article_search(command);
+        (void)art_search(command, false);
         g_art = g_curr_art;
         g_artp = g_curr_artp;
         g_artp->m_subj->kill_subject(AFFECT_ALL);// take care of any prior subjects
@@ -1410,7 +1401,7 @@ normal_search:
                 return AS_INP;
             }
         }
-        switch (article_search(command))
+        switch (art_search(command, false))
         {
         case SRCH_ERROR:
             g_art = g_curr_art;
@@ -2323,16 +2314,19 @@ reask_memorize:
         newline();
         return 'q';
     }
+    std::string article_search_command;
     if (!thread_cmd)
     {
-        g_buf[1] = mode_string.front() == 'a' ? 'f' : 's';
-        g_buf[2] = global_save ? 'g' : 'l';
+        article_search_command.reserve(3);
+        article_search_command += static_cast<char>(ch);
+        article_search_command += mode_string.front() == 'a' ? 'f' : 's';
+        article_search_command += global_save ? 'g' : 'l';
     }
     if (ch == '+')
     {
         if (!thread_cmd)
         {
-            (void)art_search(g_buf, (sizeof g_buf), true);
+            (void)art_search(article_search_command, true);
             g_art = art_hold;
             g_artp = artp_hold;
             ch = '.';
@@ -2362,7 +2356,7 @@ reask_memorize:
     {
         if (!thread_cmd)
         {
-            (void)art_search(g_buf, (sizeof g_buf), true);
+            (void)art_search(article_search_command, true);
             g_art = art_hold;
             g_artp = artp_hold;
         }
@@ -2394,8 +2388,8 @@ reask_memorize:
     {
         if (!thread_cmd)
         {
-            *g_buf = 'K';
-            (void)art_search(g_buf, (sizeof g_buf), true);
+            article_search_command[0] = 'K';
+            (void)art_search(article_search_command, true);
             g_art = art_hold;
             g_artp = artp_hold;
         }
@@ -2435,7 +2429,7 @@ reask_memorize:
     {
         if (!thread_cmd)
         {
-            (void)art_search(g_buf, (sizeof g_buf), true);
+            (void)art_search(article_search_command, true);
             g_art = art_hold;
             g_artp = artp_hold;
         }

@@ -294,7 +294,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             last_kill_type = '/';
             mention(command);
             s_kill_mentioned = true;
-            switch (art_search(command.data(), static_cast<int>(command.size() + 1), false))
+            switch (art_search(command, false))
             {
             case SRCH_ABORT:
                 continue;

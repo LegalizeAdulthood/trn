@@ -34,7 +34,7 @@
 static CompiledRegex s_sub_compex{}; // last compiled subject search
 static CompiledRegex s_art_compex{}; // last compiled normal search
 
-static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd, std::string *generated_pattern);
+static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd);
 static void            truncate_notes_pattern(std::string &pattern_text, std::size_t text_start);
 static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
@@ -56,28 +56,10 @@ void art_search_init()
 
 ArtSearchResult art_search(std::string_view command, bool get_cmd)
 {
-    return art_search_impl(command, get_cmd, nullptr);
+    return art_search_impl(command, get_cmd);
 }
 
-ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
-{
-    if (pat_buf == nullptr || pat_buf_siz <= 0)
-    {
-        return SRCH_ABORT;
-    }
-
-    std::string           generated_pattern;
-    const ArtSearchResult result = art_search_impl(pat_buf, get_cmd, &generated_pattern);
-    if (*pat_buf != '/' && *pat_buf != '?' && pat_buf_siz > 1)
-    {
-        const std::size_t copy_size = std::min(generated_pattern.size(), static_cast<std::size_t>(pat_buf_siz - 2));
-        std::copy_n(generated_pattern.data(), copy_size, pat_buf + 1);
-        pat_buf[copy_size + 1] = '\0';
-    }
-    return result;
-}
-
-static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd, std::string *generated_pattern)
+static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
 {
     std::string completed_command;
     char        cmd_chr = command.empty() ? '\0' : command.front(); // what kind of search?
@@ -369,10 +351,6 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd, s
         }
 
         truncate_notes_pattern(pattern_text, finding_start);
-        if (generated_pattern != nullptr)
-        {
-            *generated_pattern = pattern_text;
-        }
 #ifdef DEBUG
         if (g_debug)
         {

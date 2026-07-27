@@ -525,10 +525,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
   they still have production/source callers or platform/API boundary
   use.
-- Search API scan: article and newsgroup search now have
-  `std::string_view` command APIs with raw-buffer compatibility wrappers
-  for remaining callers.  Several callers now build local `std::string`
-  commands and then create writable buffers only to call those APIs.
+- Search API scan: article search now uses its `std::string_view`
+  command API directly and its raw-buffer compatibility wrapper is gone.
+  Newsgroup search still has a raw-buffer compatibility wrapper for
+  remaining callers.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
@@ -642,20 +642,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-306 - Article Search Callers
-
-- Files: `libtrn/ng.cpp`, `libtrn/kfile.cpp`, `libtrn/rt-select.cpp`.
-- Kind: shared command/search buffer caller.
-- Function: article search command callers.
-- Dependencies: none.
-- Change: update direct callers to pass strings or views to
-  `art_search`.  Remove local writable staging buffers and the
-  `stage_legacy_article_command` path when each caller no longer needs
-  `g_buf` to fake an article search command.  Delete the temporary raw
-  `art_search` compatibility wrapper after callers have moved.
-- Tests: article search, kill-file command, and article-mode command
-  tests.
-
 #### CSTR-307 - Newsgroup Search Callers
 
 - Files: `libtrn/trn.cpp`, `libtrn/rt-select.cpp`.
@@ -677,7 +663,7 @@ and clarified ownership at the edges.
 - Kind: shared command scratch buffer.
 - Function: `perform`, kill-file command dispatch, and score command
   dispatch.
-- Dependencies: CSTR-306, CSTR-307.
+- Dependencies: CSTR-307.
 - Change: stop copying command text into `g_buf` for dispatch.  Pass
   owned strings or string views through the call chain and keep any
   fallback copy local to the function being migrated.
@@ -707,7 +693,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-298, CSTR-299, CSTR-306, CSTR-307.
+- Dependencies: CSTR-298, CSTR-299, CSTR-307.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

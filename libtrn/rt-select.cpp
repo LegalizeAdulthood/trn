@@ -3230,7 +3230,7 @@ reask_sort:
                 // depending upon whether they specified the 'r' option.
                 //
                 g_art = article_after(g_last_art);
-                switch (art_search(search_command.data(), static_cast<int>(search_command.size() + 1), false))
+                switch (art_search(search_command, false))
                 {
                 case SRCH_ERROR:
                 case SRCH_ABORT:
