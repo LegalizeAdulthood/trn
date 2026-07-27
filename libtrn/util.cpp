@@ -754,7 +754,7 @@ bool check_ini_cond(std::string_view cond)
         CompiledRegex condcompex;
         condcompex.init_compex();
         const std::string regex_text{cond_cursor};
-        const char       *compile_error = condcompex.compile(regex_text.c_str(), true, true);
+        const char       *compile_error = condcompex.compile(regex_text, true, true);
         if (compile_error != nullptr)
         {
             // warning(s)

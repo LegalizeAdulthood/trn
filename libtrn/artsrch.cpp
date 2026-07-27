@@ -382,7 +382,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd, s
 #endif
     }
     {
-        const char *s = compex->compile(pattern_text.c_str(), true, fold_case);
+        const char *s = compex->compile(pattern_text, true, fold_case);
         if (s != nullptr)
         {
             // compile regular expression

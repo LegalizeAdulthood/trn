@@ -529,6 +529,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` command APIs with raw-buffer compatibility wrappers
   for remaining callers.  Several callers now build local `std::string`
   commands and then create writable buffers only to call those APIs.
+- Regex API scan: `CompiledRegex::compile` now accepts
+  `std::string_view` directly.  The C-string and `std::string`
+  compatibility overloads are gone, and production regex compile callers
+  no longer pass `.c_str()`.
 - Literal-only local pointer scan found no current Tier 0 leaf slices.
   `do_newsgroup`, `s_search`, and `sa_refresh_bot` now use
   `std::string_view`, `std::string`, or direct `fmt` output for the
@@ -564,7 +568,7 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
 - Search and length: `strchr` 9, `strstr` 2, `strlen` 10.
 - C line input: `fgets` 4.
-- C text output: `fputs` 158, `printf`/`std::printf` 306,
+- C text output: `fputs` 158, `printf`/`std::printf` 304,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
@@ -631,19 +635,7 @@ No current slices.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-340 - Compiled Regex Compile Callers
-
-- Files: `libtrn/art.cpp`, `libtrn/artsrch.cpp`,
-  `libtrn/intrp.cpp`, `libtrn/ngsrch.cpp`, `libtrn/only.cpp`,
-  `libtrn/scorefile.cpp`, `libtrn/util.cpp`.
-- Kind: helper caller cleanup.
-- Function: regex compile call sites.
-- Dependencies: none.
-- Change: pass existing `std::string` or `std::string_view` pattern
-  values directly to `CompiledRegex::compile` and remove the temporary
-  C-string overload after production callers are gone.
-- Tests: existing search, interpolation, score, and newsgroup-search
-  tests.
+No current slices.
 
 ### Tier 4 - Broad Shared Buffers
 

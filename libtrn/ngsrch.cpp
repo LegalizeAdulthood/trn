@@ -298,5 +298,5 @@ const char *newsgroup_comp(CompiledRegex *compex, std::string_view pattern, bool
             ng_pattern.push_back(ch);
         }
     }
-    return compex->compile(ng_pattern.c_str(), re, fold);
+    return compex->compile(ng_pattern, re, fold);
 }

@@ -969,7 +969,7 @@ PageSwitchResult page_switch(std::string_view command)
             }
         }
         const std::string search_pattern = fmt::format("^[^{}\n]", *s);
-        s_gcompex.compile(search_pattern.c_str(), true, true);
+        s_gcompex.compile(search_pattern, true, true);
         goto caseG;
     }
 
@@ -991,8 +991,7 @@ PageSwitchResult page_switch(std::string_view command)
         {
             pattern.remove_prefix(1);
         }
-        const std::string search_pattern{pattern};
-        const char       *compile_error = s_gcompex.compile(search_pattern.c_str(), true, true);
+        const char       *compile_error = s_gcompex.compile(pattern, true, true);
         if (compile_error != nullptr)
         {
                             // compile regular expression
