@@ -286,9 +286,9 @@ restart:
                 bool shoe_fits; // newsgroup matches restriction?
 
                 set_mode(GM_READ,MM_NEWSGROUP_LIST);
-                if (g_newsgroup_ptr->m_to_read >= TR_NONE)         // recalc toread?
+                if (g_newsgroup_ptr->m_to_read >= TR_NONE) // recalc toread?
                 {
-                    set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
+                    set_newsgroup_name(g_newsgroup_ptr->rc_line());
                     shoe_fits = in_list(g_newsgroup_name.c_str());
                     if (shoe_fits)
                     {
@@ -584,7 +584,7 @@ do_command:
         g_newsgroup_ptr = g_recent_newsgroup;          // recall previous newsgroup
         if (g_newsgroup_ptr)
         {
-            if (!get_newsgroup(g_newsgroup_ptr->rc_line_c_str(),GNG_NONE))
+            if (!get_newsgroup(g_newsgroup_ptr->rc_line(), GNG_NONE))
             {
                 set_newsgroup(g_current_newsgroup);
             }
@@ -735,7 +735,7 @@ do_command:
                     term_down(2);
                     return ING_ASK;
                 }
-                set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
+                set_newsgroup_name(g_newsgroup_ptr->rc_line());
             }
         }
         // try to find newsgroup
@@ -817,7 +817,7 @@ display_multirc:
         {
             bool read_unthreaded = !(g_newsgroup_ptr->m_flags & NF_UNTHREADED);
             g_newsgroup_ptr->m_flags ^= NF_UNTHREADED;
-            std::printf("\n\n%s will be read %sthreaded.\n", g_newsgroup_ptr->rc_line_c_str(), read_unthreaded ? "un" : "");
+            fmt::print("\n\n{} will be read {}threaded.\n", g_newsgroup_ptr->rc_line(), read_unthreaded ? "un" : "");
             g_newsgroup_ptr->set_to_read(ST_LAX);
         }
         term_down(3);

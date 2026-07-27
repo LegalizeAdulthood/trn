@@ -289,7 +289,7 @@ void bits_to_rc()
 #ifdef DEBUG
     if ((g_debug & DEB_NEWSRC_LINE) && !g_panic)
     {
-        fmt::print("{}: {}\n", g_newsgroup_ptr->rc_line_c_str(), g_newsgroup_ptr->rc_numbers());
+        fmt::print("{}: {}\n", g_newsgroup_ptr->rc_line(), g_newsgroup_ptr->rc_numbers());
         fmt::print("{}\n", rc_line);
         term_down(2);
     }

@@ -236,7 +236,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             {
                 set_newsgroup_name(include_name);
                 include_name = file_exp(get_env_var("KILLLOCAL", s_kill_local));
-                set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
+                set_newsgroup_name(g_newsgroup_ptr->rc_line());
             }
             std::FILE *incfile = std::fopen(include_name.c_str(), "r");
             if (incfile != nullptr)

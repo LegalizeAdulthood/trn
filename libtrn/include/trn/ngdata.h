@@ -35,9 +35,9 @@ struct NewsgroupData
     void       set_to_read(bool lax_high_check);
     void       check_expired(ArticleNum first);
     void       abandon_newsgroup();
-    bool       relocate_newsgroup(NewsgroupNum newnum);
-    const char *rc_line_c_str() const;
-    char       *rc_line_data();
+    bool             relocate_newsgroup(NewsgroupNum newnum);
+    std::string_view rc_line() const;
+    char            *rc_line_data();
     std::string_view rc_numbers() const;
     char            *rc_numbers_data();
     std::string_view rc_name() const;

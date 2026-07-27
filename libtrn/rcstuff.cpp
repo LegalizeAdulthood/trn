@@ -853,39 +853,39 @@ static bool open_newsrc(Newsrc *rp)
 
         // now find out how much there is to read
 
-        if (!in_list(np->rc_line_c_str()) || (g_suppress_cn && s_found_any && !g_paranoid))
+        if (!in_list(np->rc_line()) || (g_suppress_cn && s_found_any && !g_paranoid))
         {
-            np->m_to_read = TR_NONE;       // no need to calculate now
+            np->m_to_read = TR_NONE; // no need to calculate now
         }
         else
         {
             np->set_to_read(ST_LAX);
         }
-        if (np->m_to_read > TR_NONE)       // anything unread?
+        if (np->m_to_read > TR_NONE) // anything unread?
         {
             if (!s_found_any)
             {
                 g_start_here = np;
-                s_found_any = true;      // remember that fact
+                s_found_any = true; // remember that fact
             }
-            if (g_suppress_cn)          // if no listing desired
+            if (g_suppress_cn) // if no listing desired
             {
-                if (g_check_flag)        // if that is all they wanted
+                if (g_check_flag) // if that is all they wanted
                 {
-                    finalize(1);        // then bomb out
+                    finalize(1); // then bomb out
                 }
             }
             else
             {
                 if (g_verbose)
                 {
-                    std::printf("Unread news in %-40s %5ld article%s\n",
-                        np->rc_line_c_str(),(long)np->m_to_read,plural(np->m_to_read));
+                    fmt::print("Unread news in {:<40} {:5} article{}\n", np->rc_line(),
+                               static_cast<long>(np->m_to_read), plural(np->m_to_read));
                 }
                 else
                 {
-                    std::printf("%s: %ld article%s\n",
-                        np->rc_line_c_str(),(long)np->m_to_read,plural(np->m_to_read));
+                    fmt::print("{}: {} article{}\n", np->rc_line(), static_cast<long>(np->m_to_read),
+                               plural(np->m_to_read));
                 }
                 term_down(1);
                 if (g_int_count)
@@ -1621,13 +1621,12 @@ void list_newsgroups()
         line.clear();
         if (np->m_to_read > 0)
         {
-            fmt::format_to(std::back_inserter(line), "{:3} {:6}   {}", i.value_of(), np->m_to_read,
-                           np->rc_line_c_str());
+            fmt::format_to(std::back_inserter(line), "{:3} {:6}   {}", i.value_of(), np->m_to_read, np->rc_line());
         }
         else
         {
             fmt::format_to(std::back_inserter(line), "{:3} {:>7}  {}", i.value_of(), status[-np->m_to_read],
-                           np->rc_line_c_str());
+                           np->rc_line());
         }
         np->hide_subscribe_char();
         if (print_lines(line, NO_MARKING) != 0)
@@ -1802,7 +1801,7 @@ static void rebuild_newsgroup_hash()
 static int rcline_cmp(std::string_view key, HashDatum data)
 {
     const auto            *newsgroup = (NewsgroupData *) data.dat_ptr;
-    const std::string_view rc_line{newsgroup->rc_line_c_str(), key.size()};
+    const std::string_view rc_line = newsgroup->rc_line().substr(0, key.size());
 
     return key.compare(rc_line);
 }
@@ -1936,14 +1935,14 @@ bool write_newsrcs(Multirc *mptr)
 #ifdef DEBUG
             if (g_debug & DEB_NEWSRC_LINE)
             {
-                fmt::print("{}\n", np->rc_line_c_str());
+                fmt::print("{}\n", np->rc_line());
                 term_down(1);
             }
 #endif
-            fmt::print(rcfp, "{}\n", np->rc_line_c_str());
+            fmt::print(rcfp, "{}\n", np->rc_line());
             if (std::ferror(rcfp))
             {
-                std::fclose(rcfp);           // close new newsrc
+                std::fclose(rcfp); // close new newsrc
                 goto write_error;
             }
             if (delim)

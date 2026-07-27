@@ -301,7 +301,7 @@ protected:
     {
         g_newsgroup_ptr = &g_newsgroup_data[index];
         g_current_newsgroup = g_newsgroup_ptr;
-        set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
+        set_newsgroup_name(g_newsgroup_ptr->rc_line());
     }
 
     static void push_command(std::string_view command)

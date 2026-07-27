@@ -2454,7 +2454,7 @@ do_command:
         s_removed_prompt = RP_ALL;
         if (g_sel_mode == SM_NEWSGROUP)
         {
-            std::printf("[%s] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line_c_str() : "*End*");
+            fmt::print("[{}] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line() : std::string_view{"*End*"});
         }
         else
         {
@@ -3645,9 +3645,9 @@ reask_sort:
         PUSH_SELECTOR();
         if (!(s_removed_prompt & RP_NEWLINE))
         {
-            erase_line(g_mouse_bar_cnt > 0);     // erase the prompt
+            erase_line(g_mouse_bar_cnt > 0); // erase the prompt
             s_removed_prompt = RP_ALL;
-            std::printf("[%s] Cmd: ", g_newsgroup_ptr? g_newsgroup_ptr->rc_line_c_str() : "*End*");
+            fmt::print("[{}] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line() : std::string_view{"*End*"});
             std::fflush(stdout);
         }
         g_default_cmd = "\\";

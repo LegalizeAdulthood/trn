@@ -46,8 +46,7 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
         {
             if (g_verbose)
             {
-                std::printf("\nMarking all but %d articles in %s as read.\n",
-                      leave_count,rc_line_c_str());
+                fmt::print("\nMarking all but {} articles in {} as read.\n", leave_count, rc_line());
             }
             else
             {
@@ -63,17 +62,17 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
         {
             if (g_verbose)
             {
-                std::printf("\nMarking %s as all read.\n", rc_line_c_str());
+                fmt::print("\nMarking {} as all read.\n", rc_line());
             }
             else
             {
                 std::fputs("\nMarked read\n", stdout);
             }
         }
-        std::string rc_line{rc_line_c_str()};
-        rc_line += ": 1-";
-        rc_line += std::to_string(get_newsgroup_size().value_of());
-        m_rc_line = rc_line;
+        std::string line{rc_line()};
+        line += ": 1-";
+        line += std::to_string(get_newsgroup_size().value_of());
+        m_rc_line = line;
         hide_subscribe_char();
         if (g_newsgroup_min_to_read > TR_NONE && m_to_read > TR_NONE)
         {
@@ -143,7 +142,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        fmt::print("{}->\n{}{}{}\n", art_num.value_of(), np->rc_line_c_str(), np->m_subscribe_char, np->rc_numbers());
+        fmt::print("{}->\n{}{}{}\n", art_num.value_of(), np->rc_line(), np->m_subscribe_char, np->rc_numbers());
     }
 #endif
     std::string_view rc_line = np->m_rc_line;
@@ -317,7 +316,7 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        fmt::print("{}<-\n{}{}{}\n", art_num.value_of(), np->rc_line_c_str(), np->m_subscribe_char, np->rc_numbers());
+        fmt::print("{}<-\n{}{}{}\n", art_num.value_of(), np->rc_line(), np->m_subscribe_char, np->rc_numbers());
     }
 #endif
     np->show_subscribe_char();
@@ -491,7 +490,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
     {
         if (!g_to_read_quiet)
         {
-            std::printf("\nInvalid (bogus) newsgroup found: %s\n", rc_line_c_str());
+            fmt::print("\nInvalid (bogus) newsgroup found: {}\n", rc_line());
         }
         g_paranoid = true;
         if (virgin_ng || m_to_read >= g_newsgroup_min_to_read)
@@ -563,7 +562,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
         unread = ngsize; // assume nothing carried over
         if (!g_to_read_quiet)
         {
-            std::printf("\nSomebody reset %s -- assuming nothing read.\n", rc_line_c_str());
+            fmt::print("\nSomebody reset {} -- assuming nothing read.\n", rc_line());
         }
         *rc_numbers_data() = '\0';
         g_paranoid = true; // enough to make a guy paranoid
@@ -609,7 +608,7 @@ void NewsgroupData::check_expired(ArticleNum first)
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        fmt::print("1-{}->\n{}{}{}\n", first.value_of() - 1, rc_line_c_str(), m_subscribe_char, rc_numbers());
+        fmt::print("1-{}->\n{}{}{}\n", first.value_of() - 1, rc_line(), m_subscribe_char, rc_numbers());
     }
 #endif
     std::string_view       rc_line = m_rc_line;
@@ -664,7 +663,7 @@ void NewsgroupData::check_expired(ArticleNum first)
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        fmt::print("{}{}{}\n", rc_line_c_str(), m_subscribe_char, rc_numbers());
+        fmt::print("{}{}{}\n", this->rc_line(), m_subscribe_char, rc_numbers());
     }
 #endif
 }

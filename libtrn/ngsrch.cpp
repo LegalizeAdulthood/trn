@@ -18,6 +18,8 @@
 #include <trn/search.h>
 #include <trn/terminal.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -235,7 +237,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             }
             if (output_level && cmdlst.empty())
             {
-                std::printf("\n[0 unread in %s -- skipping]",g_newsgroup_ptr->rc_line_c_str());
+                fmt::print("\n[0 unread in {} -- skipping]", g_newsgroup_ptr->rc_line());
                 std::fflush(stdout);
             }
         }
@@ -253,7 +255,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
 
 bool NewsgroupData::newsgroup_wanted()
 {
-    return s_newsgroup_compex.execute(rc_line_c_str()) != nullptr;
+    return s_newsgroup_compex.execute(m_rc_line.c_str()) != nullptr;
 }
 
 const char *newsgroup_comp(CompiledRegex *compex, std::string_view pattern, bool re, bool fold)

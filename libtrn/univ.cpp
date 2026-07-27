@@ -571,9 +571,9 @@ static void univ_use_pattern(std::string_view pattern, int type)
         case 0:
             for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
-                if (univ_do_match(np->rc_line_c_str(), pattern))
+                if (univ_do_match(np->rc_line(), pattern))
                 {
-                    univ_add_group(np->rc_line_c_str(), np->rc_line_c_str());
+                    univ_add_group(np->rc_line(), np->rc_line());
                 }
             }
             break;
@@ -581,9 +581,9 @@ static void univ_use_pattern(std::string_view pattern, int type)
         case 1:
             for (np = newsgroup_first(); np; np = newsgroup_next(np))
             {
-                if (univ_do_match(np->rc_line_c_str(), pattern))
+                if (univ_do_match(np->rc_line(), pattern))
                 {
-                    univ_add_virtual_group(np->rc_line_c_str());
+                    univ_add_virtual_group(np->rc_line());
                 }
             }
             break;

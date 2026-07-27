@@ -570,7 +570,7 @@ try_again:
             {
                 continue;
             }
-            if (!in_list(np->rc_line_c_str()))
+            if (!in_list(np->rc_line()))
             {
                 continue;
             }

@@ -618,12 +618,12 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Shell helper scan: `do_shell` still takes raw C strings and forces
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
-- Newsgroup data scan: `NewsgroupData` still exposes `m_rc_line`
-  through raw `rc_line_c_str`, `rc_line_data`, and `rc_numbers_data`
-  accessors.  The read-only numbers accessor now returns
-  `std::string_view`.  The mutable accessors are tied to the old
-  delimiter/NUL poking mechanism and should be reduced after local
-  parser/writer slices.
+- Newsgroup data scan: `NewsgroupData` still exposes mutable
+  `m_rc_line` storage through raw `rc_line_data` and
+  `rc_numbers_data` accessors.  The read-only line and numbers
+  accessors now return `std::string_view`.  The mutable accessors are
+  tied to the old delimiter/NUL poking mechanism and should be reduced
+  after local parser/writer slices.
 - Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
   callers pass owned `std::string` storage directly.
 - Non-zero C function dataflow scan: remaining search/length hits are
@@ -735,22 +735,6 @@ No current slices.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-428 - Newsrc Line View
-
-- Files: `libtrn/ngdata.cpp`, `libtrn/include/trn/ngdata.h`,
-  `libtrn/rcstuff.cpp`, `libtrn/rcln.cpp`, `libtrn/ngsrch.cpp`,
-  `libtrn/kfile.cpp`, `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`,
-  `libtrn/bits.cpp`, `libtrn/trn.cpp`, `libtrn/univ.cpp`.
-- Kind: raw string return helper.
-- Function: `NewsgroupData::rc_line_c_str`.
-- Dependencies: none.
-- Change: replace the read-only line accessor with a
-  `std::string_view` return and update output, matching, hashing, and
-  newsgroup-name callers to consume the view directly.  Do not alter
-  mutable `rc_line_data` callers in this slice.
-- Tests: use existing rcstuff, trn, and universal selector tests; add
-  focused coverage first for any caller branch without coverage.
-
 #### CSTR-431 - Newsrc Reset Numbers Storage
 
 - Files: `libtrn/rcln.cpp`, `tests/test_rcln.cpp`.
@@ -770,7 +754,7 @@ them before broad global-buffer work and before removing helpers.
 - Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
 - Kind: mutable cursor into owned `.newsrc` line storage.
 - Function: `write_newsrcs`.
-- Dependencies: CSTR-428.
+- Dependencies: none.
 - Change: replace the local `char *delim` cursor into `m_rc_line` with
   index-based edits or an owner-local helper.  Preserve
   `show_subscribe_char`/`hide_subscribe_char`, unthreaded `:0` output

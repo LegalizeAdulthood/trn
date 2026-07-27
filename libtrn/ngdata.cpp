@@ -87,9 +87,10 @@ void newsgroup_data_init()
     g_newsgroup_order.clear();
 }
 
-const char *NewsgroupData::rc_line_c_str() const
+std::string_view NewsgroupData::rc_line() const
 {
-    return m_rc_line.c_str();
+    const std::string_view rc_line = m_rc_line;
+    return rc_line.substr(0, rc_line.find('\0'));
 }
 
 char *NewsgroupData::rc_line_data()
@@ -239,7 +240,7 @@ void set_newsgroup(NewsgroupData *np)
     g_newsgroup_ptr = np;
     if (g_newsgroup_ptr)
     {
-        set_newsgroup_name(g_newsgroup_ptr->rc_line_c_str());
+        set_newsgroup_name(g_newsgroup_ptr->rc_line());
     }
 }
 
