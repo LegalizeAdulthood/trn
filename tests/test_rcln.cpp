@@ -240,6 +240,16 @@ TEST_F(AddArtNumTest, bridgesAdjacentRanges)
     EXPECT_EQ(ArticleUnread{9}, m_group.m_to_read);
 }
 
+TEST_F(AddArtNumTest, appendsAfterLastReadRange)
+{
+    set_numbers("1-3");
+
+    add_article(ArticleNum{5});
+
+    EXPECT_EQ("comp.lang.apl: 1-3,5", visible_rc_line());
+    EXPECT_EQ(ArticleUnread{9}, m_group.m_to_read);
+}
+
 #ifdef MCHASE
 TEST_F(AddArtNumTest, removesTrailingSingleton)
 {

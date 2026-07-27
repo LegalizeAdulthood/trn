@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 #include <utility>
 
 enum
@@ -91,13 +92,9 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
 
 int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_name)
 {
-    char*   s;
-    char*   t;
-    char*   maxt = nullptr;
     ArticleNum min{};
     ArticleNum max{-1};
     ArticleNum lastnum{};
-    bool    morenum;
 
     if (!art_num)
     {
@@ -150,66 +147,90 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
           np->rc_numbers_c_str());
     }
 #endif
-    s = skip_eq(np->rc_numbers_data(), ' '); // skip spaces
-    t = s;
-    while (std::isdigit(*s) && art_num >= (min = ArticleNum{std::atol(s)}))
+    std::string_view rc_line = np->m_rc_line;
+    const auto       is_digit_at = [rc_line](std::size_t offset)
+    { return offset < rc_line.size() && std::isdigit(static_cast<unsigned char>(rc_line[offset])); };
+    const auto digits_end = [rc_line](std::size_t offset)
     {
-                                        // while it might have been read
-        t = skip_digits(s);             // skip number
-        if (*t == '-')                  // is it a range?
+        const std::size_t end = rc_line.find_first_not_of("0123456789", offset);
+        return end == std::string_view::npos ? rc_line.size() : end;
+    };
+    const auto next_digit = [rc_line](std::size_t offset)
+    {
+        const std::size_t next = rc_line.find_first_of("0123456789", offset);
+        return next == std::string_view::npos ? rc_line.size() : next;
+    };
+    const auto parse_article_num = [rc_line](std::size_t offset)
+    {
+        long                   value{};
+        const std::string_view text = rc_line.substr(offset);
+        std::from_chars(text.data(), text.data() + text.size(), value);
+        return ArticleNum{value};
+    };
+
+    const std::size_t numbers_offset = static_cast<std::size_t>(np->m_num_offset);
+    std::size_t       s_offset = rc_line.find_first_not_of(' ', numbers_offset);
+    if (s_offset == std::string_view::npos)
+    {
+        s_offset = rc_line.size();
+    }
+    std::size_t t_offset = s_offset;
+    std::size_t max_offset = std::string_view::npos;
+    while (is_digit_at(s_offset) && art_num >= (min = parse_article_num(s_offset)))
+    {
+        // while it might have been read
+        t_offset = digits_end(s_offset);                           // skip number
+        if (t_offset < rc_line.size() && rc_line[t_offset] == '-') // is it a range?
         {
-            t++;                        // skip to next number
-            if (art_num <= (max = ArticleNum{std::atol(t)}))
+            ++t_offset; // skip to next number
+            if (art_num <= (max = parse_article_num(t_offset)))
             {
-                return 0;               // it is in range => already read
+                return 0; // it is in range => already read
             }
-            lastnum = max;              // remember it
-            maxt = t;                   // remember position in case we
-                                        // want to overwrite the max
-            t = skip_digits(t);         // skip second number
+            lastnum = max;                   // remember it
+            max_offset = t_offset;           // remember position in case we
+                                             // want to overwrite the max
+            t_offset = digits_end(t_offset); // skip second number
         }
         else
         {
-            if (art_num == min)          // explicitly a read article?
+            if (art_num == min) // explicitly a read article?
             {
                 return 0;
             }
-            lastnum = min;              // remember what the number was
-            maxt = nullptr;             // last one was not a range
+            lastnum = min;                       // remember what the number was
+            max_offset = std::string_view::npos; // last one was not a range
         }
-        while (*t && !std::isdigit(*t))
-        {
-            t++;                        // skip comma and any spaces
-        }
-        s = t;
+        t_offset = next_digit(t_offset); // skip comma and any spaces
+        s_offset = t_offset;
     }
 
     // we have not read it, so insert the article number before s
 
-    morenum = std::isdigit(*s); // will it need a comma after?
+    const bool morenum = is_digit_at(s_offset); // will it need a comma after?
     np->show_subscribe_char();
-    char       *rc_line = np->rc_line_data();
     std::string new_rc_line;
-    new_rc_line.reserve(std::strlen(rc_line) + MAX_DIGITS + 2);
-    new_rc_line = rc_line; // make new rc line
+    new_rc_line.reserve(rc_line.size() + MAX_DIGITS + 2);
+    new_rc_line = np->m_rc_line; // make new rc line
     std::size_t write_offset{};
     std::string insert_text;
-    if (maxt && lastnum && art_num == article_after(lastnum)) // can we just extend last range?
+    // Can we just extend last range?
+    if (max_offset != std::string_view::npos && lastnum && art_num == article_after(lastnum))
     {
         // then overwrite previous max
-        write_offset = static_cast<std::size_t>(maxt - rc_line);
+        write_offset = max_offset;
     }
     else
     {
         // point t into new line instead
-        write_offset = static_cast<std::size_t>(t - rc_line);
+        write_offset = t_offset;
         if (lastnum) // have we parsed any line?
         {
             if (!morenum) // are we adding to the tail?
             {
                 insert_text = ","; // supply comma before
             }
-            if (!maxt && art_num == article_after(lastnum)) // adjacent singletons?
+            if (max_offset == std::string_view::npos && art_num == article_after(lastnum)) // adjacent singletons?
             {
                 if (morenum && write_offset > 0 && new_rc_line[write_offset - 1] == ',')
                 {
@@ -226,9 +247,9 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
     {
         if (min == article_after(art_num)) // can we consolidate further?
         {
-            bool  range_before = (write_offset > 0 && new_rc_line[write_offset - 1] == '-');
-            char *nextmax = skip_digits(s);
-            bool  range_after = *nextmax++ == '-';
+            bool        range_before = (write_offset > 0 && new_rc_line[write_offset - 1] == '-');
+            std::size_t nextmax = digits_end(s_offset);
+            bool        range_after = (nextmax < rc_line.size() && rc_line[nextmax] == '-');
 
             if (!range_before)
             {
@@ -238,7 +259,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
 
             if (range_after)
             {
-                s = nextmax; // *s is redundant
+                s_offset = nextmax + 1; // current range min is redundant
             }
         }
         else
@@ -254,7 +275,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
     }
     new_rc_line.erase(write_offset);
     new_rc_line += insert_text;
-    new_rc_line += s; // copy remainder of line
+    new_rc_line += rc_line.substr(s_offset); // copy remainder of line
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
