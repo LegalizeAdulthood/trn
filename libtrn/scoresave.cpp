@@ -412,8 +412,14 @@ void sc_load_scores()
         switch (line.front())
         {
         case ':':
-            a = ArticleNum{std::atoi(line.c_str() + 1)}; // set the article #
+        {
+            long             value{};
+            std::string_view text{line};
+            text.remove_prefix(1);
+            std::from_chars(text.data(), text.data() + text.size(), value);
+            a = ArticleNum{value}; // set the article #
             break;
+        }
 
         case '.': // longer score line
             a = sc_sv_use_line(std::string_view{line}.substr(1), a);

@@ -181,3 +181,24 @@ TEST_F(ScoreSaveTest, loadScoresReadsEncodedScoreLines)
     EXPECT_TRUE(article_scored(ArticleNum{5}));
     EXPECT_EQ(4, g_sc_loaded_count);
 }
+
+TEST_F(ScoreSaveTest, loadScoresUsesSavedStartingArticleNumber)
+{
+    g_abs_first = ArticleNum{3};
+    g_first_art = ArticleNum{3};
+    g_last_art = ArticleNum{6};
+    add_scored_article(ArticleNum{3}, 7);
+    add_scored_article(ArticleNum{5}, -2);
+    sc_save_scores();
+    clear_article_scores(g_first_art, g_last_art);
+
+    sc_load_scores();
+
+    EXPECT_EQ(7, article_ptr(ArticleNum{3})->m_score);
+    EXPECT_TRUE(article_scored(ArticleNum{3}));
+    EXPECT_FALSE(article_scored(ArticleNum{4}));
+    EXPECT_EQ(-2, article_ptr(ArticleNum{5})->m_score);
+    EXPECT_TRUE(article_scored(ArticleNum{5}));
+    EXPECT_FALSE(article_scored(ArticleNum{6}));
+    EXPECT_EQ(2, g_sc_loaded_count);
+}

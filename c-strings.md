@@ -533,10 +533,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `do_newsgroup`, `s_search`, and `sa_refresh_bot` now use
   `std::string_view`, `std::string`, or direct `fmt` output for the
   prior local message-selection cases.
-- C numeric conversion scan found one remaining `atoi` call that still
-  converts string storage back to a C pointer.  Simple bounded parse
-  sites are Tier 1 slices; mutable parser-buffer sites are grouped with
-  their owning parser slices.
+- C numeric conversion scan found no current production hits.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  Remaining MIME work is in parser helpers that still expose
   mutable pointers.
@@ -571,14 +568,12 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 1.
-
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
 `vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, `memchr`,
-`atol`, `std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
-`std::strtod`.
+`atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
+`std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -622,15 +617,7 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-341 - Score Save Article Number Parser
-
-- Files: `libtrn/scoresave.cpp`.
-- Kind: owner-local parser cleanup.
-- Function: `sc_load_scores`.
-- Dependencies: none.
-- Change: parse `:` article-number records with `std::string_view` and
-  `std::from_chars` instead of `std::atoi(line.c_str() + 1)`.
-- Tests: score-save load tests.
+No current slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
