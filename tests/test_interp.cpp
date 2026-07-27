@@ -2040,9 +2040,8 @@ TEST_F(InterpolatorNewsgroupTest, replyWritesInterpolatedHeaderAndQuotedBody)
     m_env.expect_env("MAILPOSTER", "exit 0 %h");
     m_env.expect_env("MAILHEADER", mail_header.c_str());
     m_env.expect_env("YOUSAID", "said %i:");
-    g_buf[0] = 'R';
 
-    reply();
+    reply("R");
 
     const std::string expected_header = "To: tester@example.org\n"
                                         "In-Reply-To: " TRN_TEST_HEADER_MESSAGE_ID "\n"
@@ -2062,11 +2061,9 @@ TEST_F(InterpolatorNewsgroupTest, replyDisplaysHeaderFileWhenMailerDoesNotAccept
     ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
     m_env.expect_env("MAILPOSTER", "exit 0");
     m_env.expect_env("MAILHEADER", "To: tester@example.org\n\n");
-    g_buf[0] = 'r';
-    g_buf[1] = '\0';
 
     testing::internal::CaptureStdout();
-    reply();
+    reply("r");
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_THAT(output, HasSubstr("(Above lines saved in file " + head_file.generic_string() + ")"));

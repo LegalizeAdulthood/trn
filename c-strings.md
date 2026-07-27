@@ -535,9 +535,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   now have `std::string_view` command entry points.  The perform
   save/view path no longer stages command text in `g_buf`, and mailbox
   format detection uses owner-local string storage.
-- Response wrapper scan: the no-argument `reply` and `followup`
-  wrappers now only bridge legacy `g_buf` callers or tests to the
-  command-view APIs.
+- Response wrapper scan: the no-argument `followup` wrapper now only
+  bridges legacy `g_buf` callers or tests to the command-view API.
 - Article body quote scan: `reply` and `followup` still use
   `read_art_buf`, `std::strchr`, and temporary NUL insertion while
   quoting included article bodies.
@@ -635,18 +634,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-400 - Remove `reply` Wrapper
-
-- Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
-  `tests/test_interp.cpp`.
-- Kind: unused global-buffer wrapper.
-- Function: `reply()`.
-- Dependencies: none.
-- Change: delete the no-argument wrapper and declaration.  Update tests
-  and any remaining callers to pass command text to
-  `reply(std::string_view)`.
-- Tests: `InterpolatorNewsgroupTest` reply cases.
-
 #### CSTR-401 - Remove `followup` Wrapper
 
 - Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
@@ -734,7 +721,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/ng.cpp`.
 - Kind: global command-buffer staging.
 - Function: `art_switch`.
-- Dependencies: CSTR-400, CSTR-401, CSTR-404.
+- Dependencies: CSTR-401, CSTR-404.
 - Change: remove `stage_legacy_article_command` use from article-level
   dispatch by passing command text or prompt answers directly to callees.
   Keep prompt input in local strings instead of reading answers from
@@ -774,8 +761,8 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-400, CSTR-401, CSTR-404, CSTR-405, CSTR-406,
-  CSTR-407, CSTR-408.
+- Dependencies: CSTR-401, CSTR-404, CSTR-405, CSTR-406, CSTR-407,
+  CSTR-408.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

@@ -874,11 +874,6 @@ static void follow_it_up()
     }
 }
 
-void reply()
-{
-    reply(std::string_view{g_buf});
-}
-
 void reply(std::string_view command)
 {
     bool incl_body = (response_command_char(command) == 'R' && g_art);
