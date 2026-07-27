@@ -1812,11 +1812,8 @@ TEST_F(InterpolatorNewsgroupTest, pipeSaveRetainsExpandedDestination)
     ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
     m_env.expect_env("PIPESAVER", "");
     const std::string command{"s | pipe destination"};
-    ASSERT_LE(command.size(), LINE_BUF_LEN);
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
-    const SaveResult result = save_article();
+    const SaveResult result = save_article(command);
 
     EXPECT_EQ(SAVE_DONE, result);
     EXPECT_EQ("pipe destination", g_save_dest);
@@ -1831,12 +1828,9 @@ TEST_F(InterpolatorNewsgroupTest, normalSaveWritesArticleToRelativeDestination)
     m_env.expect_env("SAVEDIR", m_output.path().c_str());
     m_env.expect_no_envar("NORMSAVER");
     const std::string command{"s saved-article"};
-    ASSERT_LE(command.size(), LINE_BUF_LEN);
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
     testing::internal::CaptureStdout();
-    const SaveResult  result = save_article();
+    const SaveResult  result = save_article(command);
     const std::string output = testing::internal::GetCapturedStdout();
 
     const fs::path saved_article = fs::path{m_output.path()} / "saved-article";
@@ -1854,13 +1848,10 @@ TEST_F(InterpolatorNewsgroupTest, normalSaveCanRejectMailboxPrompt)
     m_env.expect_env("SAVEDIR", m_output.path().c_str());
     m_env.expect_no_envar("NORMSAVER");
     const std::string command{"s prompted-save"};
-    ASSERT_LE(command.size(), LINE_BUF_LEN);
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
     push_string("n\n", 0200);
 
     testing::internal::CaptureStdout();
-    const SaveResult  result = save_article();
+    const SaveResult  result = save_article(command);
     const std::string output = testing::internal::GetCapturedStdout();
 
     const fs::path saved_article = fs::path{m_output.path()} / "prompted-save";
@@ -1890,12 +1881,9 @@ TEST_F(InterpolatorNewsgroupTest, mailboxSaveQuotesFromBodyLine)
     m_env.expect_env("SAVEDIR", output_path.c_str());
     m_env.expect_no_envar("MBOXSAVER");
     const std::string command{"s saved-mailbox"};
-    ASSERT_LE(command.size(), LINE_BUF_LEN);
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
     testing::internal::CaptureStdout();
-    const SaveResult  result = save_article();
+    const SaveResult  result = save_article(command);
     const std::string output = testing::internal::GetCapturedStdout();
 
     const fs::path saved_article = fs::path{output_path} / "saved-mailbox";
@@ -1911,12 +1899,9 @@ TEST_F(InterpolatorNewsgroupTest, extractCreatesRelativeDestinationDirectory)
     ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
     m_env.expect_no_envar("SAVEDIR");
     const std::string command{"e extracted"};
-    ASSERT_LE(command.size(), LINE_BUF_LEN);
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
     testing::internal::CaptureStdout();
-    const SaveResult  result = save_article();
+    const SaveResult  result = save_article(command);
     const std::string output = testing::internal::GetCapturedStdout();
 
     const fs::path expected = fs::path{m_output.path()} / "extracted";
@@ -1933,12 +1918,9 @@ TEST_F(InterpolatorNewsgroupTest, extractUsesCustomCommand)
     m_env.expect_no_envar("SAVEDIR");
     m_env.expect_env("CUSTOMSAVER", ":");
     const std::string command{"e custom-extract | custom extractor --flag"};
-    ASSERT_LE(command.size(), LINE_BUF_LEN);
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
     testing::internal::CaptureStdout();
-    const SaveResult  result = save_article();
+    const SaveResult  result = save_article(command);
     const std::string output = testing::internal::GetCapturedStdout();
 
     const fs::path    expected = fs::path{m_output.path()} / "custom-extract";

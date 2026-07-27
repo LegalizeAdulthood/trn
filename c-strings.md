@@ -535,9 +535,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   now have `std::string_view` command entry points.  The perform
   save/view path no longer stages command text in `g_buf`, and mailbox
   format detection uses owner-local string storage.
-- Response wrapper scan: the no-argument `save_article`,
-  `supersede_article`, `reply`, and `followup` wrappers now only bridge
-  legacy `g_buf` callers or tests to the command-view APIs.
+- Response wrapper scan: the no-argument `supersede_article`, `reply`,
+  and `followup` wrappers now only bridge legacy `g_buf` callers or
+  tests to the command-view APIs.
 - Article body quote scan: `reply` and `followup` still use
   `read_art_buf`, `std::strchr`, and temporary NUL insertion while
   quoting included article bodies.
@@ -631,18 +631,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-302 - Remove `save_article` Wrapper
-
-- Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
-  `tests/test_interp.cpp`.
-- Kind: unused global-buffer wrapper.
-- Function: `save_article()`.
-- Dependencies: none.
-- Change: delete the no-argument wrapper and declaration.  Update tests
-  and any remaining callers to pass command text to
-  `save_article(std::string_view)`.
-- Tests: `InterpolatorNewsgroupTest` save, pipe, and extract cases.
 
 #### CSTR-303 - Remove `supersede_article` Wrapper
 
@@ -755,7 +743,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/ng.cpp`.
 - Kind: global command-buffer staging.
 - Function: `art_switch`.
-- Dependencies: CSTR-302, CSTR-303, CSTR-304, CSTR-305, CSTR-308.
+- Dependencies: CSTR-303, CSTR-304, CSTR-305, CSTR-308.
 - Change: remove `stage_legacy_article_command` use from article-level
   dispatch by passing command text or prompt answers directly to callees.
   Keep prompt input in local strings instead of reading answers from
@@ -795,8 +783,8 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-302, CSTR-303, CSTR-304, CSTR-305, CSTR-308,
-  CSTR-309, CSTR-310, CSTR-311, CSTR-312.
+- Dependencies: CSTR-303, CSTR-304, CSTR-305, CSTR-308, CSTR-309,
+  CSTR-310, CSTR-311, CSTR-312.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

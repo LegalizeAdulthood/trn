@@ -130,11 +130,6 @@ void respond_init()
     g_extract_dest.clear();
 }
 
-SaveResult save_article()
-{
-    return save_article(std::string_view{g_buf});
-}
-
 SaveResult save_article(std::string_view command)
 {
     std::string completed_command;
