@@ -187,6 +187,6 @@ DecodeState   qp_decode(std::FILE *ifp, DecodeState state);
 std::string    b64_decode_string(std::string_view f);
 DecodeState   b64_decode(std::FILE *ifp, DecodeState state);
 DecodeState   cat_decode(std::FILE *ifp, DecodeState state);
-int           filter_html(char *t, const char *f);
+std::string    filter_html(std::string_view f, std::string_view prefix = {}, int base_offset = 0);
 
 #endif

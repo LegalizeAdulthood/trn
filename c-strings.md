@@ -592,10 +592,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view`, `std::string`, or direct `fmt` output for the
   prior local message-selection cases.
 - C numeric conversion scan found no current production hits.
-- Caller-output helper signature scan: `filter_html` still exposes a
-  caller-provided `char *` output buffer with C-string input and an
-  integer byte count.  The HTML filter is stateful and tied to article
-  buffer line-wrap offsets, so it is a larger helper-contract slice.
+- Caller-output helper signature scan found no remaining public
+  production helper signatures.  The HTML filter still has file-local
+  transitional pointer-output internals and should be re-evaluated by
+  the ordinary local/static pointer scans.
 - Mutable input parameter scan: `parse_line(char *, int, int)` reads and
   parses the header line without writing through the pointer.  It should
   accept `std::string_view` and use view/string operations internally.
@@ -723,21 +723,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-415 - HTML Filter Output Helper
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`,
-  `libtrn/artio.cpp`, `tests/test_mime.cpp`.
-- Kind: caller output buffer helper.
-- Function: `filter_html(char *, const char *)`.
-- Dependencies: none.
-- Change: replace the caller-provided output buffer API with an owned
-  string-producing API while preserving `MimeSection` HTML state,
-  line-wrap behavior, entity decoding, and `m_html_line_start` offset
-  semantics.  Keep any unavoidable copy back into the article buffer at
-  the `artio.cpp` boundary until article-buffer storage is removed.
-- Tests: use the existing `HtmlFilterTest` cases and add focused cases
-  first if line-wrap or `m_html_line_start` behavior is not covered.
 
 #### CSTR-416 - Header Line Parser Input View
 
@@ -899,7 +884,7 @@ owned strings or owner-specific storage.
   `tests/test_artio.cpp`.
 - Kind: raw string return helper.
 - Function: `read_art_buf(bool)`.
-- Dependencies: CSTR-415.
+- Dependencies: none.
 - Change: after production callers use owned line storage, remove the
   public `char *` article-buffer overload or make it file-local
   implementation detail.  Keep `read_art_buf(std::string &, bool)` as

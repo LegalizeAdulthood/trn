@@ -567,19 +567,13 @@ protected:
 
     std::string filter(std::string_view text)
     {
-        const std::string input{text};
-        const int         length = filter_html(m_output.data(), input.c_str());
-        return {m_output.data(), static_cast<std::size_t>(length)};
+        return filter_html(text);
     }
 
     std::string filter(std::string_view first, std::string_view second)
     {
-        char       *output = m_output.data();
-        std::string input{first};
-        output += filter_html(output, input.c_str());
-        input = std::string{second};
-        output += filter_html(output, input.c_str());
-        return {m_output.data(), static_cast<std::size_t>(output - m_output.data())};
+        std::string output = filter_html(first);
+        return filter_html(second, output);
     }
 
     MimeSection                    m_mime_section{};
@@ -649,6 +643,14 @@ TEST_F(HtmlFilterTest, rendersImageMarker)
 TEST_F(HtmlFilterTest, rendersNamedEntities)
 {
     EXPECT_EQ("Tom & Jerry <tag>", filter("Tom &amp; Jerry &lt;tag&gt;"));
+}
+
+TEST_F(HtmlFilterTest, wrapsLongPlainTextAtWhitespace)
+{
+    g_tc_COLS = 30;
+
+    EXPECT_EQ("alpha beta gamma delta epsilon\nzeta eta", //
+              filter("alpha beta gamma delta epsilon zeta eta"));
 }
 
 TEST_F(HtmlFilterTest, keepsPartialTagNameAcrossCalls)

@@ -389,7 +389,13 @@ mime_switch:
             break;
         }
         o = filter_offset + extra_offset;
-        len = filter_html(bp+filter_offset, bp+o) + filter_offset;
+        {
+            std::string filtered = filter_html(bp + o, std::string_view{bp, static_cast<std::size_t>(filter_offset)},
+                                               static_cast<int>(g_art_buf_pos.value_of()));
+            filtered.copy(bp, filtered.size());
+            bp[filtered.size()] = '\0';
+            len = static_cast<int>(filtered.size());
+        }
         if (len == filter_offset || (s = std::strchr(bp, '\n')) == nullptr)
         {
             if (read_something >= 0)

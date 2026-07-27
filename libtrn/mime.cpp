@@ -1553,7 +1553,7 @@ static bool named_entity_matches(const char *text, std::string_view name)
     return true;
 }
 
-int filter_html(char *t, const char *f)
+static int filter_html_into(char *t, const char *f)
 {
     char        *bp;
     char        *cp;
@@ -1833,6 +1833,32 @@ int filter_html(char *t, const char *f)
     *t = '\0';
 
     return t - bp;
+}
+
+std::string filter_html(std::string_view f, std::string_view prefix, int base_offset)
+{
+    std::string       input{f};
+    std::string       output{prefix};
+    const std::size_t output_offset = output.size();
+    output.resize(output_offset + input.size() + LINE_BUF_LEN);
+
+    char *const old_art_buf = g_art_buf;
+    if (g_mime_section->m_html_line_start >= base_offset)
+    {
+        g_mime_section->m_html_line_start -= base_offset;
+    }
+    else
+    {
+        g_mime_section->m_html_line_start = 0;
+    }
+
+    g_art_buf = output.data();
+    const int length = filter_html_into(output.data() + output_offset, input.c_str());
+    g_art_buf = old_art_buf;
+    g_mime_section->m_html_line_start += base_offset;
+
+    output.resize(output_offset + static_cast<std::size_t>(length));
+    return output;
 }
 #undef XX
 
