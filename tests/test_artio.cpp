@@ -223,6 +223,21 @@ TEST_F(ArticleIoTest, readArtBufDecodesBase64MimeText)
     EXPECT_EQ(nullptr, read_art_buf(false));
 }
 
+TEST_F(ArticleIoTest, readArtBufDecodesQuotedPrintableMimeText)
+{
+    m_mime_section.m_encoding = MENCODE_QPRINT;
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    open_article_text("Hello=20world=21\n");
+
+    char *first = read_art_buf(false);
+
+    ASSERT_NE(nullptr, first);
+    EXPECT_STREQ("Hello world!\n", first);
+    EXPECT_EQ(nullptr, read_art_buf(false));
+}
+
 TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
 {
     m_mime_section.m_type = MULTIPART_MIME;

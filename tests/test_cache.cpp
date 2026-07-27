@@ -2,6 +2,7 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #include <trn/cache.h>
 
 #include <config/common.h>
@@ -22,6 +23,11 @@ TEST(DecodeHeaderTest, copiesPlainText)
 TEST(DecodeHeaderTest, decodesBase64EncodedWord)
 {
     EXPECT_EQ("Hello", decode_header("=?US-ASCII?B?SGVsbG8=?="));
+}
+
+TEST(DecodeHeaderTest, decodesQuotedPrintableEncodedWord)
+{
+    EXPECT_EQ("Hello World!", decode_header("=?US-ASCII?Q?Hello_World=21?="));
 }
 
 TEST(DecodeHeaderTest, removesNewlines)

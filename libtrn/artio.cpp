@@ -344,7 +344,10 @@ mime_switch:
         if (g_mime_section->m_encoding == MENCODE_QPRINT)
         {
             o = line_offset + extra_offset;
-            len = qp_decode_string(bp+o, bp+o, false) + line_offset;
+            std::string decoded = qp_decode_string(bp + o, false);
+            decoded.copy(bp + o, decoded.size());
+            bp[o + decoded.size()] = '\0';
+            len = static_cast<int>(decoded.size()) + line_offset;
             if (len == line_offset || bp[len + extra_offset - 1] != '\n')
             {
                 if (read_something >= 0)

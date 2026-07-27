@@ -1112,50 +1112,52 @@ static Uchar s_index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 
-int qp_decode_string(char *t, const char *f, bool in_header)
+std::string qp_decode_string(std::string_view f, bool in_header)
 {
-    char* save_t = t;
-    while (*f)
+    std::string result;
+    result.reserve(f.size());
+    for (std::size_t pos = 0; pos < f.size() && f[pos] != '\0';)
     {
-        switch (*f)
+        switch (f[pos])
         {
         case '_':
             if (in_header)
             {
-                *t++ = ' ';
-                f++;
+                result.push_back(' ');
+                ++pos;
             }
             else
             {
-                *t++ = *f++;
+                result.push_back(f[pos++]);
             }
             break;
 
-        case '=':     // decode a hex-value
-            if (f[1] == '\n')
+        case '=': // decode a hex-value
+            if (pos + 1 < f.size() && f[pos + 1] == '\n')
             {
-                f += 2;
+                pos += 2;
                 break;
             }
-            if (s_index_hex[(Uchar) f[1]] != XX && s_index_hex[(Uchar) f[2]] != XX)
+            if (pos + 2 < f.size() && s_index_hex[static_cast<Uchar>(f[pos + 1])] != XX &&
+                s_index_hex[static_cast<Uchar>(f[pos + 2])] != XX)
             {
-                *t = (s_index_hex[(Uchar)f[1]] << 4) + s_index_hex[(Uchar)f[2]];
-                f += 3;
-                if (*t != '\r')
+                const char ch = static_cast<char>((s_index_hex[static_cast<Uchar>(f[pos + 1])] << 4) +
+                                                  s_index_hex[static_cast<Uchar>(f[pos + 2])]);
+                pos += 3;
+                if (ch != '\r')
                 {
-                    t++;
+                    result.push_back(ch);
                 }
                 break;
             }
             // FALL THROUGH
 
         default:
-            *t++ = *f++;
+            result.push_back(f[pos++]);
             break;
         }
     }
-    *t = '\0';
-    return t - save_t;
+    return result;
 }
 
 DecodeState qp_decode(std::FILE *ifp, DecodeState state)

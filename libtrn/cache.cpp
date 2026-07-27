@@ -521,9 +521,8 @@ static std::string decode_header_impl(std::string_view from)
                     cursor = e + 2;
                     if (ch == 'q' || ch == 'Q')
                     {
-                        decoded.resize(encoded.size() + 1);
-                        len = qp_decode_string(decoded.data(), encoded.c_str(), true);
-                        decoded.resize(static_cast<std::size_t>(len));
+                        decoded = qp_decode_string(encoded, true);
+                        len = static_cast<int>(decoded.size());
                     }
                     else
                     {
