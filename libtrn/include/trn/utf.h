@@ -46,6 +46,7 @@ enum : CodePoint
 {
     INVALID_CODE_POINT = static_cast<CodePoint>(~0L)
 };
+CodePoint code_point_at(std::string_view s);
 CodePoint code_point_at(const char *s);
 
 int put_char_adv(const char **strptr, bool outputok);

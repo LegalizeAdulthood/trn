@@ -291,6 +291,11 @@ TEST(UTFCodePointDecodingTest, nullptr)
     ASSERT_EQ(INVALID_CODE_POINT, code_point_at(nullptr));
 }
 
+TEST(UTFCodePointDecodingTest, emptyView)
+{
+    ASSERT_EQ(INVALID_CODE_POINT, code_point_at(std::string_view{}));
+}
+
 constexpr CodePoint ASCII_SPACE_CODE_POINT = 0x20;
 constexpr CodePoint ASCII_5_CODE_POINT = 0x35;
 constexpr CodePoint ISO8859D1_ETH_CODE_POINT = 0xF0;
@@ -316,6 +321,14 @@ TEST(UTFCodePointDecodingTest, eth)
 TEST(UTFCodePointDecodingTest, shin)
 {
     ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at("\327\251"));
+}
+
+TEST(UTFCodePointDecodingTest, boundedShinView)
+{
+    const char text[]{'\327', '\251'};
+
+    ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at(std::string_view{text, sizeof text}));
+    ASSERT_EQ(INVALID_CODE_POINT, code_point_at(std::string_view{text, 1}));
 }
 
 TEST(UTFCodePointDecodingTest, oy)

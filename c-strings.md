@@ -726,26 +726,13 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-421 - UTF Code Point View API
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `tests/test_utf.cpp`.
-- Kind: C-string helper API.
-- Function: `code_point_at(const char *)`.
-- Dependencies: none.
-- Change: make the primary API accept `std::string_view` and decode
-  only within the supplied view.  Preserve invalid/empty behavior by
-  returning `INVALID_CODE_POINT`.
-- Tests: update existing code-point tests to cover empty views and
-  bounded non-NUL-terminated views.
-
 #### CSTR-422 - UTF Visual Width View API
 
 - Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
   `tests/test_utf.cpp`.
 - Kind: C-string helper API.
 - Function: `visual_width_at(const char *)`.
-- Dependencies: CSTR-421.
+- Dependencies: none.
 - Change: make the primary API accept `std::string_view` and use the
   view-based code-point helper.  Update callers that currently pass
   `data() + offset`.

@@ -13,19 +13,11 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <string>
 #include <string_view>
 
 // OK - valid second and subsequent bytes in UTF-8
-#define OK(s) ((*(s) & 0xC0) == 0x80)
 #define U(c) (((Uchar)(c)) & 0xFF)
-
-// LEAD - decode leading byte in UTF-8 at (char *)s, bitmask mask, shift width bits
-// NEXT - decode second and subsequent bytes with byte value (char)s_i, shift width bits
-//
-#define LEAD(s, mask, bits) ((*(s) & (mask)) << (bits))
-#define NEXT(s_i, bits) (((s_i) & 0x3F) << (bits))
 
 #define IS_UTF8(cs)             ((cs) & 0x8000)
 #define IS_SINGLE_BYTE(cs)      ((cs) & 0x4000)
@@ -203,6 +195,16 @@ static bool is_utf8_continuation(std::string_view text, std::size_t index)
     return index < text.size() && (U(text[index]) & 0xC0) == 0x80;
 }
 
+static CodePoint utf8_lead(Uchar first, Uchar mask, int bits)
+{
+    return static_cast<CodePoint>(first & mask) << bits;
+}
+
+static CodePoint utf8_next(std::string_view text, std::size_t index, int bits)
+{
+    return static_cast<CodePoint>(U(text[index]) & 0x3F) << bits;
+}
+
 int byte_length_at(std::string_view text)
 {
     int it = !text.empty(); // correct for ASCII
@@ -341,37 +343,45 @@ int visual_length_between(const char *s1, const char *s2)
     return it;
 }
 
-CodePoint code_point_at(const char *s)
+CodePoint code_point_at(std::string_view text)
 {
-    CodePoint it;
-    if (s != nullptr)
+    CodePoint it = INVALID_CODE_POINT;
+    if (!text.empty())
     {
         if (IS_UTF8(s_gs.in))
         {
-            size_t n = std::strlen(s);
-            if (n > 0 && (*s & 0x80) == 0)
+            const Uchar first = U(text.front());
+            if ((first & 0x80) == 0)
             {
-                it = *s;
+                it = first;
             }
-            else if (n > 1 && (*s & 0xE0) == 0xC0 && OK(s + 1))
+            else if (text.size() > 1 && (first & 0xE0) == 0xC0 && is_utf8_continuation(text, 1))
             {
-                it = LEAD(s, 0x1F, 6) | NEXT(s[1], 0);
+                it = utf8_lead(first, 0x1F, 6) | utf8_next(text, 1, 0);
             }
-            else if (n > 2 && (*s & 0xF0) == 0xE0 && OK(s + 1) && OK(s + 2))
+            else if (text.size() > 2 && (first & 0xF0) == 0xE0 && is_utf8_continuation(text, 1) &&
+                     is_utf8_continuation(text, 2))
             {
-                it = LEAD(s, 0x0F, 12) | NEXT(s[1], 6) | NEXT(s[2], 0);
+                it = utf8_lead(first, 0x0F, 12) | utf8_next(text, 1, 6) | utf8_next(text, 2, 0);
             }
-            else if (n > 3 && (*s & 0xF8) == 0xF0 && OK(s + 1) && OK(s + 2) && OK(s + 3))
+            else if (text.size() > 3 && (first & 0xF8) == 0xF0 && is_utf8_continuation(text, 1) &&
+                     is_utf8_continuation(text, 2) && is_utf8_continuation(text, 3))
             {
-                it = LEAD(s, 0x07, 18) | NEXT(s[1], 12) | NEXT(s[2], 6) | NEXT(s[3], 0);
+                it =
+                    utf8_lead(first, 0x07, 18) | utf8_next(text, 1, 12) | utf8_next(text, 2, 6) | utf8_next(text, 3, 0);
             }
-            else if (n > 4 && (*s & 0xFC) == 0xF8 && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4))
+            else if (text.size() > 4 && (first & 0xFC) == 0xF8 && is_utf8_continuation(text, 1) &&
+                     is_utf8_continuation(text, 2) && is_utf8_continuation(text, 3) && is_utf8_continuation(text, 4))
             {
-                it = LEAD(s, 0x03, 24) | NEXT(s[1], 18) | NEXT(s[2], 12) | NEXT(s[3], 6) | NEXT(s[4], 0);
+                it = utf8_lead(first, 0x03, 24) | utf8_next(text, 1, 18) | utf8_next(text, 2, 12) |
+                     utf8_next(text, 3, 6) | utf8_next(text, 4, 0);
             }
-            else if (n > 5 && (*s & 0xFE) == 0xFC && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4) && OK(s + 5))
+            else if (text.size() > 5 && (first & 0xFE) == 0xFC && is_utf8_continuation(text, 1) &&
+                     is_utf8_continuation(text, 2) && is_utf8_continuation(text, 3) && is_utf8_continuation(text, 4) &&
+                     is_utf8_continuation(text, 5))
             {
-                it = LEAD(s, 0x01, 30) | NEXT(s[1], 24) | NEXT(s[2], 18) | NEXT(s[3], 12) | NEXT(s[4], 6) | NEXT(s[5], 0);
+                it = utf8_lead(first, 0x01, 30) | utf8_next(text, 1, 24) | utf8_next(text, 2, 18) |
+                     utf8_next(text, 3, 12) | utf8_next(text, 4, 6) | utf8_next(text, 5, 0);
             }
             else
             {
@@ -380,22 +390,27 @@ CodePoint code_point_at(const char *s)
         }
         else if (s_gs.in == CHARSET_ASCII)
         {
-            it = *s & 0x7F;
+            it = U(text.front()) & 0x7F;
         }
         else if (s_gs.himap_in != nullptr)
         {
-            it = *s & 0xFF; // I hate signed/unsigned conversions
+            it = U(text.front());
             if (it & 0x80)
             {
                 it = s_gs.himap_in[it & 0x7F];
             }
         }
     }
-    else
-    {
-        it = INVALID_CODE_POINT;
-    }
     return it;
+}
+
+CodePoint code_point_at(const char *s)
+{
+    if (s == nullptr)
+    {
+        return INVALID_CODE_POINT;
+    }
+    return code_point_at(std::string_view{s});
 }
 
 static int insert_utf8_at(char *s, CodePoint c)
