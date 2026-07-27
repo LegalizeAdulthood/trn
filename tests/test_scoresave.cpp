@@ -90,6 +90,17 @@ protected:
         sc_set_score(num, score);
     }
 
+    void clear_article_scores(ArticleNum first, ArticleNum last)
+    {
+        for (ArticleNum num = first; num <= last; num = article_next(num))
+        {
+            Article *article = article_ptr(num);
+            article->m_flags = AF_EXISTS | AF_UNREAD;
+            article->m_score = 0;
+            article->m_score_flags = SFLAG_NONE;
+        }
+    }
+
     trn::testing::MockEnvironment m_env;
     std::string                   m_score_file_name;
     fs::path                      m_output_dir;
@@ -145,4 +156,28 @@ TEST_F(ScoreSaveTest, saveFileWritesEncodedScoreLines)
                   ".K2r2sG",
               }),
               read_lines(m_score_file));
+}
+
+TEST_F(ScoreSaveTest, loadScoresReadsEncodedScoreLines)
+{
+    g_last_art = ArticleNum{5};
+    add_scored_article(ArticleNum{1}, 12);
+    add_scored_article(ArticleNum{2}, 12);
+    add_scored_article(ArticleNum{3}, 12);
+    add_scored_article(ArticleNum{5}, -3);
+    sc_save_scores();
+    clear_article_scores(g_first_art, g_last_art);
+
+    sc_load_scores();
+
+    EXPECT_EQ(12, article_ptr(ArticleNum{1})->m_score);
+    EXPECT_TRUE(article_scored(ArticleNum{1}));
+    EXPECT_EQ(12, article_ptr(ArticleNum{2})->m_score);
+    EXPECT_TRUE(article_scored(ArticleNum{2}));
+    EXPECT_EQ(12, article_ptr(ArticleNum{3})->m_score);
+    EXPECT_TRUE(article_scored(ArticleNum{3}));
+    EXPECT_FALSE(article_scored(ArticleNum{4}));
+    EXPECT_EQ(-3, article_ptr(ArticleNum{5})->m_score);
+    EXPECT_TRUE(article_scored(ArticleNum{5}));
+    EXPECT_EQ(4, g_sc_loaded_count);
 }

@@ -21,7 +21,7 @@
 
 #include <fmt/format.h>
 
-#include <cctype>
+#include <charconv>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -35,17 +35,17 @@ namespace fs = std::filesystem;
 
 int g_sc_loaded_count{}; // how many articles were loaded?
 
-static long       s_sc_save_new{}; // new articles (unloaded)
+static long                     s_sc_save_new{}; // new articles (unloaded)
 static std::vector<std::string> s_lines;
-static int        s_loaded{};
-static int        s_used{};
-static int        s_saved{};
-static ArticleNum s_last{};
+static int                      s_loaded{};
+static int                      s_used{};
+static int                      s_saved{};
+static ArticleNum               s_last{};
 
 static void       sc_sv_add(std::string_view str);
 static void       sc_sv_del_group(std::string_view gname);
 static void       sc_sv_get_file();
-static ArticleNum sc_sv_use_line(char *line, ArticleNum a);
+static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a);
 static ArticleNum sc_sv_make_line(ArticleNum a);
 
 static void sc_sv_add(std::string_view str)
@@ -148,116 +148,127 @@ void sc_sv_save_file()
 }
 
 // returns the next article number (after the last one used)
-//ART_NUM a;    // art number to start with
-static ArticleNum sc_sv_use_line(char *line, ArticleNum a)
+// ART_NUM a;    // art number to start with
+static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
 {
-    char *p;
-    char  c1;
-    char  c2;
-    int  x;
+    int        score = 0; // get rid of warning
+    const auto digit_count = [](std::string_view text)
+    {
+        const std::size_t end = text.find_first_not_of("0123456789");
+        return end == std::string_view::npos ? text.size() : end;
+    };
+    const auto parse_int = [](std::string_view text)
+    {
+        int value{};
+        std::from_chars(text.data(), text.data() + text.size(), value);
+        return value;
+    };
 
-    int   score = 0; // get rid of warning
-    char *s = line;
-    if (!s)
+    while (!line.empty())
     {
-        return a;
-    }
-    while (*s)
-    {
-        switch (*s)
+        const char command = line.front();
+        switch (command)
         {
-        case 'A': case 'B': case 'C': case 'D': case 'E':
-        case 'F': case 'G': case 'H': case 'I':
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+        case 'E':
+        case 'F':
+        case 'G':
+        case 'H':
+        case 'I':
             // negative starting digit
-            p = s;
-            c1 = *s;
-            *s = '0' + ('J' - *s);      // convert to first digit
-            s++;
-            s = skip_digits(s);
-            c2 = *s;
-            *s = '\0';
-            score = 0 - std::atoi(p);
-            *p = c1;
-            *s = c2;
-            s_loaded++;
-            if (is_available(a) && article_unread(a))
             {
-                sc_set_score(a,score);
-                s_used++;
+                const std::size_t score_length = 1 + digit_count(line.substr(1));
+                std::string       score_text{line.substr(0, score_length)};
+                score_text.front() = static_cast<char>('0' + ('J' - command)); // convert to first digit
+                score = -parse_int(score_text);
+                line.remove_prefix(score_length);
+                s_loaded++;
+                if (is_available(a) && article_unread(a))
+                {
+                    sc_set_score(a, score);
+                    s_used++;
+                }
+                ++a;
+                break;
             }
-            ++a;
-            break;
 
-        case 'J': case 'K': case 'L': case 'M': case 'N':
-        case 'O': case 'P': case 'Q': case 'R': case 'S':
+        case 'J':
+        case 'K':
+        case 'L':
+        case 'M':
+        case 'N':
+        case 'O':
+        case 'P':
+        case 'Q':
+        case 'R':
+        case 'S':
             // positive starting digit
-            p = s;
-            c1 = *s;
-            *s = '0' + (*s - 'J');      // convert to first digit
-            s++;
-            s = skip_digits(s);
-            c2 = *s;
-            *s = '\0';
-            score = std::atoi(p);
-            *p = c1;
-            *s = c2;
-            s_loaded++;
-            if (is_available(a) && article_unread(a))
             {
-                sc_set_score(a,score);
-                s_used++;
+                const std::size_t score_length = 1 + digit_count(line.substr(1));
+                std::string       score_text{line.substr(0, score_length)};
+                score_text.front() = static_cast<char>('0' + (command - 'J')); // convert to first digit
+                score = parse_int(score_text);
+                line.remove_prefix(score_length);
+                s_loaded++;
+                if (is_available(a) && article_unread(a))
+                {
+                    sc_set_score(a, score);
+                    s_used++;
+                }
+                ++a;
+                break;
             }
-            ++a;
-            break;
 
-        case 'r':     // repeat
-            s++;
-            p = s;
-            if (!std::isdigit(*s))
+        case 'r': // repeat
+        {
+            line.remove_prefix(1);
+            const std::size_t repeat_digits = digit_count(line);
+            int               repeat_count{};
+            if (repeat_digits == 0)
             {
                 // simple case, just "r"
-                x = 1;
+                repeat_count = 1;
             }
             else
             {
-                s++;
-                s = skip_digits(s);
-                c1 = *s;
-                *s = '\0';
-                x = std::atoi(p);
-                *s = c1;
+                repeat_count = parse_int(line.substr(0, repeat_digits));
+                line.remove_prefix(repeat_digits);
             }
-            for (; x; x--)
+            for (; repeat_count; repeat_count--)
             {
                 s_loaded++;
                 if (is_available(a) && article_unread(a))
                 {
-                    sc_set_score(a,score);
+                    sc_set_score(a, score);
                     s_used++;
                 }
                 ++a;
             }
             break;
+        }
 
-        case 's':     // skip
-            s++;
-            p = s;
-            if (!std::isdigit(*s))
+        case 's': // skip
+        {
+            line.remove_prefix(1);
+            const std::size_t skip_digits = digit_count(line);
+            if (skip_digits == 0)
             {
                 // simple case, just "s"
                 ++a;
             }
             else
             {
-                s++;
-                s = skip_digits(s);
-                c1 = *s;
-                *s = '\0';
-                x = std::atoi(p);
-                *s = c1;
-                a += ArticleNum{x};
+                a += ArticleNum{parse_int(line.substr(0, skip_digits))};
+                line.remove_prefix(skip_digits);
             }
             break;
+        }
+
+        default:
+            return a;
         } // switch
     } // while
     return a;
@@ -401,19 +412,19 @@ void sc_load_scores()
         switch (line.front())
         {
         case ':':
-            a = ArticleNum{std::atoi(line.c_str()+1)};         // set the article #
+            a = ArticleNum{std::atoi(line.c_str() + 1)}; // set the article #
             break;
 
-        case '.':                       // longer score line
-            a = sc_sv_use_line(line.data()+1,a);
+        case '.': // longer score line
+            a = sc_sv_use_line(std::string_view{line}.substr(1), a);
             break;
 
-        case '!':                       // group of shared file
+        case '!': // group of shared file
             i = s_lines.size();
             break;
 
-        case 'v':                       // version number
-            break;                      // not used now
+        case 'v':  // version number
+            break; // not used now
 
         case '\0':                      // empty string
         case '#':                       // comment
