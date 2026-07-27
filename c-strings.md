@@ -726,26 +726,13 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-422 - UTF Visual Width View API
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `tests/test_utf.cpp`.
-- Kind: C-string helper API.
-- Function: `visual_width_at(const char *)`.
-- Dependencies: none.
-- Change: make the primary API accept `std::string_view` and use the
-  view-based code-point helper.  Update callers that currently pass
-  `data() + offset`.
-- Tests: update existing visual-width tests to cover empty views and
-  bounded non-NUL-terminated views.
-
 #### CSTR-423 - UTF Advancing Output Cursor
 
 - Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
   `libtrn/art.cpp`, `libtrn/terminal.cpp`, `tests/test_utf.cpp`.
 - Kind: C-string cursor helper API.
 - Function: `put_char_adv(const char **, bool)`.
-- Dependencies: CSTR-422.
+- Dependencies: none.
 - Change: replace the pointer-to-pointer API with a
   `std::string_view &` cursor that removes the consumed prefix.  Keep
   output and width behavior unchanged.

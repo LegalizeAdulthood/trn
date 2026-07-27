@@ -190,7 +190,7 @@ static std::string truncate_visible(std::string_view text, int max)
     for (std::size_t pos = 0; pos < text.size();)
     {
         const int char_bytes = byte_length_at(text.substr(pos));
-        const int char_width = visual_width_at(text.data() + pos);
+        const int char_width = visual_width_at(text.substr(pos));
         if (char_bytes <= 0 || char_width < 0 || width + char_width > max)
         {
             break;

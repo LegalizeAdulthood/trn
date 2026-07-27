@@ -246,6 +246,27 @@ TEST(UTFAtNormalCharacterTest, cjk_basic)
     ASSERT_TRUE(at_norm_char(ARBITRARY_CJK_BASIC));
 }
 
+TEST(UTFVisualWidthTest, nullptr)
+{
+    ASSERT_EQ(0, visual_width_at(nullptr));
+}
+
+TEST(UTFVisualWidthTest, emptyView)
+{
+    ASSERT_EQ(0, visual_width_at(std::string_view{}));
+}
+
+TEST(UTFVisualWidthTest, ascii)
+{
+    ASSERT_EQ(1, visual_width_at(ARBITRARY_ASCII));
+}
+
+TEST(UTFVisualWidthTest, boundedCjkView)
+{
+    ASSERT_EQ(2, visual_width_at(std::string_view{ARBITRARY_CJK_BASIC, 3}));
+    ASSERT_EQ(0, visual_width_at(std::string_view{ARBITRARY_CJK_BASIC, 2}));
+}
+
 TEST(UTFVisualAdvanceWidthTest, nullptr)
 {
     ASSERT_EQ(0, put_char_adv(nullptr, false));

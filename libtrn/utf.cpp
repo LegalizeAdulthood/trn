@@ -268,9 +268,9 @@ int byte_length_at(const char *s)
 }
 
 // NOTE: correctness is not guaranteed; this is only a rough generalization
-int visual_width_at(const char *s)
+int visual_width_at(std::string_view text)
 {
-    CodePoint c = code_point_at(s);
+    CodePoint c = code_point_at(text);
     int it = 1;
     if (c == INVALID_CODE_POINT)
     {
@@ -303,6 +303,15 @@ int visual_width_at(const char *s)
         it = 2;
     }
     return it;
+}
+
+int visual_width_at(const char *s)
+{
+    if (s == nullptr)
+    {
+        return 0;
+    }
+    return visual_width_at(std::string_view{s});
 }
 
 int visual_length_of(const char *s)
