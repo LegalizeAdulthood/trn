@@ -594,11 +594,13 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - C numeric conversion scan found no current production hits.
 - Caller-output helper signature scan found no remaining public
   production helper signatures.  The HTML filter still has file-local
-  transitional pointer-output internals and should be re-evaluated by
-  the ordinary local/static pointer scans.
-- Mutable input parameter scan: `parse_line(char *, int, int)` reads and
-  parses the header line without writing through the pointer.  It should
-  accept `std::string_view` and use view/string operations internally.
+  transitional pointer-output internals; those are tracked by
+  `CSTR-434`.
+- Mutable input parameter scan found no new leaf slice after
+  `parse_line` moved to `std::string_view`.  Remaining raw input
+  parameters are covered by existing add-newsgroup, shell, UTF, article
+  display, HTML-filter-internal, regex-bytecode, or platform/API
+  boundary buckets.
 - Local cursor scan: `tree_puts` already accepts `std::string_view`, but
   still creates local `char *` aliases into `std::string` storage,
   temporarily writes NULs, uses `std::strchr`, and walks pointers for
@@ -639,7 +641,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   audited runtime formatting; current cursor/output work is captured by
   `CSTR-417` and `CSTR-430`.
 - MIME content-decoding paths now own local string storage for decoded
-  lines except for the three helper signatures listed above.
+  lines.  HTML filtering has an owned public API, with file-local
+  transitional pointer-output internals tracked by `CSTR-434`.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
@@ -667,17 +670,17 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 5, `strstr` 2, `strlen` 11.
+- Search and length: `strcmp` 1, `strchr` 4, `strstr` 2, `strlen` 11.
 - C line input: `fgets` 4.
-- C text output: `fputs` 158, `printf`/`std::printf` 302,
+- C text output: `fputs` 158, `printf`/`std::printf` 307,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 89.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
-`strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
+`strcat`, `strncat`, `strncmp`, `strrchr`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
-`vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, `memchr`,
+`vsprintf`, `vsnprintf`, `puts`, `memmove`, `memchr`,
 `atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
 `std::strtoul`, or `std::strtod`.
 
@@ -690,7 +693,7 @@ be modernized.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-434`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-435`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -724,27 +727,28 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-416 - Header Line Parser Input View
-
-- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`,
-  `libtrn/art.cpp`, `tests/test_head.cpp`, `tests/test_interp.cpp`.
-- Kind: mutable-looking read-only input parameter.
-- Function: `parse_line(char *, int, int)`.
-- Dependencies: none.
-- Change: change `parse_line` to accept `std::string_view` and replace
-  `std::strchr`/pointer arithmetic with view operations.  Preserve
-  continuation-line handling, malformed NNTP header handling,
-  `set_line_type`, `parsedate`, and `DEBUG` header dumping behavior.  If
-  `parsedate` still needs a NUL-terminated string, create the smallest
-  local string needed for that call.
-- Tests: use existing `parse_header` coverage in `test_head.cpp` and
-  interpolation tests; add a focused parse-header case first only if the
-  affected continuation, malformed-header, or date paths are not covered.
+No current slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
+
+#### CSTR-434 - HTML Filter Internal Output Cursor
+
+- Files: `libtrn/mime.cpp`, `tests/test_mime.cpp`.
+- Kind: file-local caller-output helper internals.
+- Function: `filter_html_into(char *, const char *)`.
+- Dependencies: none.
+- Change: replace the file-local output-buffer core with owner-local
+  `std::string` storage and indexes/views.  Work bottom-up through the
+  local HTML helpers as needed, but keep each helper change reviewable.
+  Preserve `MimeSection` HTML state, entity decoding, list rendering,
+  tag carry-over between calls, line wrapping, and
+  `m_html_line_start` offset behavior.
+- Tests: use the existing `HtmlFilterTest` cases, including
+  `wrapsLongPlainTextAtWhitespace`; add focused cases first for any
+  helper branch whose behavior is not already covered.
 
 #### CSTR-426 - Newsrc Line Parser Cursor
 
@@ -858,7 +862,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/art.cpp`, `tests/test_art.cpp`.
 - Kind: local cursor alias into owned article line storage.
 - Function: `do_article`.
-- Dependencies: CSTR-416.
+- Dependencies: none.
 - Change: replace `buf_ptr`/`buf_begin` pointer walking over
   `g_art_line` with view/index state for display output.  Preserve
   underline handling, ROT13, UTF output, page-stop searches, header

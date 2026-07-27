@@ -315,50 +315,53 @@ static void end_header_line()
     }
 }
 
-bool parse_line(char *art_buf, int new_hide, int old_hide)
+bool parse_line(std::string_view art_buf, int new_hide, int old_hide)
 {
-    if (is_hor_space(*art_buf)) // continuation line?
+    if (!art_buf.empty() && is_hor_space(art_buf.front())) // continuation line?
     {
         return old_hide;
     }
 
     end_header_line();
-    char *s = std::strchr(art_buf, ':');
-    if (s == nullptr)   // is it the end of the header?
+    const std::size_t colon = art_buf.find(':');
+    if (colon == std::string_view::npos) // is it the end of the header?
     {
-            // Did NNTP ship us a mal-formed header line?
-            if (s_reading_nntp_header && *art_buf && *art_buf != '\n')
-            {
-                g_in_header = SOME_LINE;
-                return new_hide;
-            }
-            g_in_header = PAST_HEADER;
+        // Did NNTP ship us a mal-formed header line?
+        if (s_reading_nntp_header && !art_buf.empty() && art_buf.front() != '\n')
+        {
+            g_in_header = SOME_LINE;
+            return new_hide;
+        }
+        g_in_header = PAST_HEADER;
     }
-    else                // it is a new header line
+    else // it is a new header line
     {
-            g_in_header = set_line_type(std::string_view{art_buf, static_cast<std::size_t>(s - art_buf)});
-            s_first_one = (g_header_type[g_in_header].min_pos < ArticlePosition{});
-            if (s_first_one)
+        g_in_header = set_line_type(art_buf.substr(0, colon));
+        s_first_one = (g_header_type[g_in_header].min_pos < ArticlePosition{});
+        if (s_first_one)
+        {
+            g_header_type[g_in_header].min_pos = g_art_pos;
+            if (g_in_header == DATE_LINE)
             {
-                g_header_type[g_in_header].min_pos = g_art_pos;
-                if (g_in_header == DATE_LINE)
+                if (!s_parsed_artp->m_date)
                 {
-                    if (!s_parsed_artp->m_date)
-                    {
-                        s_parsed_artp->m_date = parsedate(art_buf + 6);
-                    }
+                    const std::size_t date_start = std::min<std::size_t>(6, art_buf.size());
+                    const std::string date_text{art_buf.substr(date_start)};
+                    s_parsed_artp->m_date = parsedate(date_text.c_str());
                 }
             }
+        }
 #ifdef DEBUG
-            if (g_debug & DEB_HEADER)
-            {
-                dump_header(art_buf);
-            }
+        if (g_debug & DEB_HEADER)
+        {
+            std::string header_text{art_buf};
+            dump_header(header_text.data());
+        }
 #endif
-            if (g_header_type[g_in_header].flags & HT_HIDE)
-            {
-                return new_hide;
-            }
+        if (g_header_type[g_in_header].flags & HT_HIDE)
+        {
+            return new_hide;
+        }
     }
     return false;                       // don't hide this line
 }
@@ -500,8 +503,7 @@ bool parse_header(ArticleNum art_num)
         }
         if (had_nl)
         {
-            char *bp = g_head_buf.data() + line_start;
-            parse_line(bp, false, false);
+            parse_line(std::string_view{g_head_buf.data() + line_start, g_head_buf.size() - line_start}, false, false);
         }
         had_nl = found_nl;
         g_art_pos += ArticlePosition{len};

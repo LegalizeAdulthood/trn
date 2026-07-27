@@ -319,7 +319,7 @@ DoArticleResult do_article(std::string &article_command)
             restart_color = false;
             if (g_in_header)
             {
-                hide_this_line = parse_line(buf_ptr,g_do_hiding,hide_this_line);
+                hide_this_line = parse_line(std::string_view{buf_ptr}, g_do_hiding, hide_this_line);
                 if (!g_in_header)
                 {
                     line_num += finish_tree(line_num+g_top_line);

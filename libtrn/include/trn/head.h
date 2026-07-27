@@ -106,7 +106,7 @@ void dumpheader(char *where);
 HeaderLineType set_line_type(std::string_view header_name);
 HeaderLineType get_header_num(std::string_view header_name);
 void           start_header(ArticleNum artnum);
-bool           parse_line(char *art_buf, int new_hide, int old_hide);
+bool           parse_line(std::string_view art_buf, int new_hide, int old_hide);
 void           end_header();
 bool           parse_header(ArticleNum art_num);
 std::string    fetch_lines(ArticleNum art_num, HeaderLineType which_line);
