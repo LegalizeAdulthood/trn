@@ -196,7 +196,7 @@ int  get_anything();
 int  pause_get_cmd();
 void in_char(std::string_view prompt, MinorMode newmode, std::string_view dflt);
 void in_answer(std::string_view prompt, MinorMode newmode);
-bool in_choice(std::string_view prompt, std::string_view value, std::string_view choices, MinorMode newmode);
+bool in_choice(std::string_view prompt, std::string &value, std::string_view choices, MinorMode newmode);
 int  print_lines(std::string_view what_to_print, int hilite);
 int  check_page_line();
 void page_start();

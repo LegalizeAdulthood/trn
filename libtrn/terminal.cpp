@@ -1678,7 +1678,7 @@ reinp_in_answer:
 
 // If this takes more than one line, return false
 
-bool in_choice(std::string_view prompt, std::string_view value, std::string_view choices, MinorMode newmode)
+bool in_choice(std::string_view prompt, std::string &value, std::string_view choices, MinorMode newmode)
 {
     MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
@@ -1927,7 +1927,7 @@ reinp_in_choice:
         goto reask_in_choice;
     }
     buffer.resize(input);
-    store_command(buffer);
+    value = buffer;
 
     set_mode(gmode_save, mode_save);
     return !s_screen_is_dirty;

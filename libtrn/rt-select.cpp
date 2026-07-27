@@ -2098,13 +2098,14 @@ static bool select_option(OptionIndex i)
     {
         const std::optional<std::string_view> draft_value = g_option_draft->value(option);
         TRN_ASSERT(draft_value.has_value());
-        val.assign(draft_value->data(), draft_value->size());
+        val = *draft_value;
     }
+    const std::string initial_value{val};
     s_clean_screen = in_choice("> ", val, help, MM_OPTION_EDIT_PROMPT);
-    if (val != g_buf)
+    if (val != initial_value)
     {
         std::string      parsed_value;
-        std::string_view edit_text{g_buf};
+        std::string_view edit_text{val};
         parse_string(parsed_value, edit_text);
         changed = true;
         if (had_draft)

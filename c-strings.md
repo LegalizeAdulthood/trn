@@ -544,9 +544,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   can be moved bottom-up to the same owned line API.
 - Numeric command scan: `num_num` now accepts command text directly and
   parses numeric range text from that view instead of `g_buf`.
-- Terminal input scan: `finish_command(int)`, `store_command`,
-  `in_choice`, and typeahead cleanup still preserve command/input text
-  in `g_buf` for legacy callers.
+- Terminal input scan: `finish_command(int)`, `store_command`, and
+  typeahead cleanup still preserve command/input text in `g_buf` for
+  legacy callers.  `in_choice` now returns edited choice text through
+  caller-owned string storage.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
@@ -584,10 +585,10 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 6, `strstr` 2, `strlen` 11.
+- Search and length: `strchr` 6, `strstr` 2, `strlen` 12.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 302,
-  `fprintf`/`std::fprintf` 13.
+  `fprintf`/`std::fprintf` 12.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
 
@@ -641,17 +642,7 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-405 - Choice Input Result
-
-- Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
-  `libtrn/rt-select.cpp`.
-- Kind: terminal input result buffer.
-- Function: `in_choice`.
-- Dependencies: none.
-- Change: make `in_choice` return the edited string result directly, or
-  update an output `std::string` supplied by the caller, instead of
-  storing the edited value through `store_command` and `g_buf`.
-- Tests: option selector edit tests.
+No current slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -731,7 +722,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-405, CSTR-406, CSTR-407, CSTR-408.
+- Dependencies: CSTR-406, CSTR-407, CSTR-408.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

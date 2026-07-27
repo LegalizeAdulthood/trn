@@ -598,11 +598,12 @@ TEST_F(ChoiceInputTest, inChoiceCyclesToNextValue)
     push_char(' ');
 
     testing::internal::CaptureStdout();
-    const bool        clean_screen = in_choice("> ", "yes", "yes/no", MM_OPTION_EDIT_PROMPT);
+    std::string       value{"yes"};
+    const bool        clean_screen = in_choice("> ", value, "yes/no", MM_OPTION_EDIT_PROMPT);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE(clean_screen);
-    EXPECT_STREQ("no", g_buf);
+    EXPECT_EQ("no", value);
     EXPECT_EQ("<cr><cr><ce><cr>> yes<cr><cr><ce><cr>> no", output);
 }
 
@@ -612,12 +613,13 @@ TEST_F(ChoiceInputTest, inChoiceCyclesValueWithinPrefix)
     push_char(' ');
 
     testing::internal::CaptureStdout();
-    const bool clean_screen =
-        in_choice("> ", "reverse date", "[reverse] date/subject/author/groups/cnt/points", MM_OPTION_EDIT_PROMPT);
+    std::string value{"reverse date"};
+    const bool  clean_screen =
+        in_choice("> ", value, "[reverse] date/subject/author/groups/cnt/points", MM_OPTION_EDIT_PROMPT);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE(clean_screen);
-    EXPECT_STREQ("reverse subject", g_buf);
+    EXPECT_EQ("reverse subject", value);
     EXPECT_EQ("<cr><cr><ce><cr>> reverse date<cr><cr><ce><cr>> reverse subject", output);
 }
 
@@ -626,11 +628,12 @@ TEST_F(ChoiceInputTest, inChoicePreservesNumericValue)
     push_char('\n');
 
     testing::internal::CaptureStdout();
-    const bool        clean_screen = in_choice("> ", "12", "no/<# lines>", MM_OPTION_EDIT_PROMPT);
+    std::string       value{"12"};
+    const bool        clean_screen = in_choice("> ", value, "no/<# lines>", MM_OPTION_EDIT_PROMPT);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE(clean_screen);
-    EXPECT_STREQ("12", g_buf);
+    EXPECT_EQ("12", value);
     EXPECT_EQ("<cr><cr><ce><cr>> 12", output);
 }
 
@@ -639,11 +642,12 @@ TEST_F(ChoiceInputTest, inChoiceDoesNotSplitSlashInsideFreeFormValue)
     push_char('\n');
 
     testing::internal::CaptureStdout();
-    const bool        clean_screen = in_choice("> ", "a/b", "<e.g. a/b>", MM_OPTION_EDIT_PROMPT);
+    std::string       value{"a/b"};
+    const bool        clean_screen = in_choice("> ", value, "<e.g. a/b>", MM_OPTION_EDIT_PROMPT);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE(clean_screen);
-    EXPECT_STREQ("a/b", g_buf);
+    EXPECT_EQ("a/b", value);
     EXPECT_EQ("<cr><cr><ce><cr>> a/b", output);
 }
 
@@ -657,10 +661,11 @@ TEST_F(ChoiceInputTest, inChoiceEscapeEscapeInterpolatesWholeBuffer)
     push_char('\033');
 
     testing::internal::CaptureStdout();
-    in_choice("> ", "%/", "<search>", MM_OPTION_EDIT_PROMPT);
+    std::string value{"%/"};
+    in_choice("> ", value, "<search>", MM_OPTION_EDIT_PROMPT);
     testing::internal::GetCapturedStdout();
 
-    EXPECT_STREQ("/needle/", g_buf);
+    EXPECT_EQ("/needle/", value);
 }
 
 TEST_F(ChoiceInputTest, inChoiceEscapeSlashInsertsSearchPattern)
@@ -673,11 +678,12 @@ TEST_F(ChoiceInputTest, inChoiceEscapeSlashInsertsSearchPattern)
     push_char('\033');
 
     testing::internal::CaptureStdout();
-    const bool clean_screen = in_choice("> ", "prefix", "<search>", MM_OPTION_EDIT_PROMPT);
+    std::string value{"prefix"};
+    const bool  clean_screen = in_choice("> ", value, "<search>", MM_OPTION_EDIT_PROMPT);
     testing::internal::GetCapturedStdout();
 
     EXPECT_TRUE(clean_screen);
-    EXPECT_STREQ("prefix/needle/", g_buf);
+    EXPECT_EQ("prefix/needle/", value);
 }
 
 TEST_F(MouseBarTest, checkMouseBarPushesClickedButtonCommand)
