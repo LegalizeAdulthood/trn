@@ -1252,49 +1252,49 @@ static Uchar s_index_b64[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 
-int b64_decode_string(char *t, const char *f)
+std::string b64_decode_string(std::string_view f)
 {
-    char* save_t = t;
-    Uchar ch2;
+    std::string result;
+    result.reserve(f.size());
+    Uchar       ch2;
+    std::size_t pos = 0;
 
-    while (*f && *f != '=')
+    while (pos < f.size() && f[pos] != '\0' && f[pos] != '=')
     {
-        Uchar ch1 = s_index_b64[(Uchar)*f++];
+        Uchar ch1 = s_index_b64[static_cast<Uchar>(f[pos++])];
         if (ch1 == XX)
         {
             continue;
         }
         do
         {
-            if (!*f || *f == '=')
+            if (pos == f.size() || f[pos] == '\0' || f[pos] == '=')
             {
-                goto dbl_break;
+                return result;
             }
-            ch2 = s_index_b64[(Uchar)*f++];
+            ch2 = s_index_b64[static_cast<Uchar>(f[pos++])];
         } while (ch2 == XX);
-        *t++ = ch1 << 2 | ch2 >> 4;
+        result.push_back(static_cast<char>(ch1 << 2 | ch2 >> 4));
         do
         {
-            if (!*f || *f == '=')
+            if (pos == f.size() || f[pos] == '\0' || f[pos] == '=')
             {
-                goto dbl_break;
+                return result;
             }
-            ch1 = s_index_b64[(Uchar)*f++];
+            ch1 = s_index_b64[static_cast<Uchar>(f[pos++])];
         } while (ch1 == XX);
-        *t++ = (ch2 & 0x0f) << 4 | ch1 >> 2;
+        result.push_back(static_cast<char>((ch2 & 0x0f) << 4 | ch1 >> 2));
         do
         {
-            if (!*f || *f == '=')
+            if (pos == f.size() || f[pos] == '\0' || f[pos] == '=')
             {
-                goto dbl_break;
+                return result;
             }
-            ch2 = s_index_b64[(Uchar)*f++];
+            ch2 = s_index_b64[static_cast<Uchar>(f[pos++])];
         } while (ch2 == XX);
-        *t++ = (ch1 & 0x03) << 6 | ch2;
+        result.push_back(static_cast<char>((ch1 & 0x03) << 6 | ch2));
     }
-dbl_break:
-    *t = '\0';
-    return t - save_t;
+    return result;
 }
 
 DecodeState b64_decode(std::FILE *ifp, DecodeState state)

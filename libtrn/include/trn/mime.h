@@ -184,7 +184,7 @@ MimeParamViews mime_parse_params(std::string_view text);
 void          mime_decode_article(bool view);
 int           qp_decode_string(char *t, const char *f, bool in_header);
 DecodeState   qp_decode(std::FILE *ifp, DecodeState state);
-int           b64_decode_string(char *t, const char *f);
+std::string    b64_decode_string(std::string_view f);
 DecodeState   b64_decode(std::FILE *ifp, DecodeState state);
 DecodeState   cat_decode(std::FILE *ifp, DecodeState state);
 int           filter_html(char *t, const char *f);

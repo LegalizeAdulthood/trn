@@ -516,23 +516,25 @@ static std::string decode_header_impl(std::string_view from)
                 {
                     int         len = static_cast<int>(e - cursor + 2);
                     std::string encoded{from.substr(q + 3, e - q - 3)};
-                    std::string decoded(encoded.size() + 1, '\0');
+                    std::string decoded;
                     decoded_size -= len;
                     cursor = e + 2;
                     if (ch == 'q' || ch == 'Q')
                     {
+                        decoded.resize(encoded.size() + 1);
                         len = qp_decode_string(decoded.data(), encoded.c_str(), true);
+                        decoded.resize(static_cast<std::size_t>(len));
                     }
                     else
                     {
-                        len = b64_decode_string(decoded.data(), encoded.c_str());
+                        decoded = b64_decode_string(encoded);
+                        len = static_cast<int>(decoded.size());
                     }
 #ifdef USE_UTF_HACK
-                    std::string utf8_copy = create_utf8_copy(decoded.data());
+                    std::string utf8_copy = create_utf8_copy(decoded.c_str());
                     len = static_cast<int>(utf8_copy.size());
                     decoded = std::move(utf8_copy);
 #endif
-                    decoded.resize(static_cast<std::size_t>(len));
                     result += decoded;
                     decoded_size += len;
                     // If the next character is whitespace we should eat it now

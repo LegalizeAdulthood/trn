@@ -592,12 +592,12 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view`, `std::string`, or direct `fmt` output for the
   prior local message-selection cases.
 - C numeric conversion scan found no current production hits.
-- Caller-output helper signature scan: `b64_decode_string`,
-  `qp_decode_string`, and `filter_html` still expose caller-provided
-  `char *` output buffers with C-string inputs and integer byte counts.
-  The base64 and quoted-printable helpers can become string-returning
-  decode APIs first; the HTML filter is stateful and tied to article
-  buffer line-wrap offsets, so it is a larger helper-contract slice.
+- Caller-output helper signature scan: `qp_decode_string` and
+  `filter_html` still expose caller-provided `char *` output buffers with
+  C-string inputs and integer byte counts.  The quoted-printable helper
+  can become a string-returning decode API first; the HTML filter is
+  stateful and tied to article buffer line-wrap offsets, so it is a
+  larger helper-contract slice.
 - Mutable input parameter scan: `parse_line(char *, int, int)` reads and
   parses the header line without writing through the pointer.  It should
   accept `std::string_view` and use view/string operations internally.
@@ -725,24 +725,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-413 - Base64 String Decode Helper
-
-- Files: `libtrn/mime.cpp`, `libtrn/include/trn/mime.h`,
-  `libtrn/cache.cpp`, `libtrn/artio.cpp`, `tests/test_cache.cpp`,
-  `tests/test_artio.cpp`.
-- Kind: caller output buffer helper.
-- Function: `b64_decode_string(char *, const char *)`.
-- Dependencies: none.
-- Change: replace the caller-provided output buffer API with a
-  `std::string b64_decode_string(std::string_view)` API.  Migrate header
-  decoding to append the returned string directly.  In article buffer
-  decoding, copy the returned decoded string back into the existing
-  article buffer only at the boundary that still requires that storage,
-  then use the decoded size for `len`.
-- Tests: keep `DecodeHeaderTest.decodesBase64EncodedWord`; add or update
-  article I/O MIME base64 coverage before the refactor if no existing
-  test exercises that production path.
 
 #### CSTR-414 - Quoted-Printable String Decode Helper
 
@@ -938,7 +920,7 @@ owned strings or owner-specific storage.
   `tests/test_artio.cpp`.
 - Kind: raw string return helper.
 - Function: `read_art_buf(bool)`.
-- Dependencies: CSTR-413, CSTR-414, CSTR-415.
+- Dependencies: CSTR-414, CSTR-415.
 - Change: after production callers use owned line storage, remove the
   public `char *` article-buffer overload or make it file-local
   implementation detail.  Keep `read_art_buf(std::string &, bool)` as

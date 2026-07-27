@@ -359,7 +359,10 @@ mime_switch:
         else if (g_mime_section->m_encoding == MENCODE_BASE64)
         {
             o = line_offset + extra_offset;
-            len = b64_decode_string(bp+o, bp+o) + line_offset;
+            std::string decoded = b64_decode_string(bp + o);
+            decoded.copy(bp + o, decoded.size());
+            bp[o + decoded.size()] = '\0';
+            len = static_cast<int>(decoded.size()) + line_offset;
             s = std::strchr(bp + o, '\n');
             if (s == nullptr)
             {

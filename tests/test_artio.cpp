@@ -208,6 +208,21 @@ TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsLongArticleLine)
     EXPECT_EQ(line + "\n", std::string{first});
 }
 
+TEST_F(ArticleIoTest, readArtBufDecodesBase64MimeText)
+{
+    m_mime_section.m_encoding = MENCODE_BASE64;
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    open_article_text("SGVsbG8=\n");
+
+    char *first = read_art_buf(false);
+
+    ASSERT_NE(nullptr, first);
+    EXPECT_STREQ("Hello\n", first);
+    EXPECT_EQ(nullptr, read_art_buf(false));
+}
+
 TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
 {
     m_mime_section.m_type = MULTIPART_MIME;
