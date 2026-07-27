@@ -739,18 +739,7 @@ No current slices.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-439 - Page Switch Article Buffer Views
-
-- Files: `libtrn/art.cpp`.
-- Kind: borrowed raw pointer view into the article buffer.
-- Function: `page_switch`.
-- Dependencies: none.
-- Change: replace `line_ptr` use in `page_switch` with
-  `std::string_view` where the code only inspects the current article
-  buffer line.  Keep owned `std::string` storage only for lines read via
-  `read_art_buf(std::string &, bool)` and for regex calls that need a
-  null terminator.
-- Tests: run focused pager/search tests before and after the refactor.
+No current slices.
 
 ### Tier 4 - Broad Shared Buffers
 

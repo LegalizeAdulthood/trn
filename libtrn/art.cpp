@@ -77,7 +77,7 @@ CompiledRegex   g_hide_compex{};          //
 CompiledRegex   g_page_compex{};          //
 bool            g_dont_filter_control{};  // -j
 
-inline char *line_ptr(ArticlePosition pos)
+inline std::string_view line_view(ArticlePosition pos)
 {
     return g_art_buf + (pos - g_header_type[PAST_HEADER].min_pos).value_of();
 }
@@ -949,8 +949,9 @@ static std::string finish_pager_dbl_command(std::string_view command)
 
 PageSwitchResult page_switch(std::string_view command)
 {
-    std::string pager_line;
-    std::string default_command;
+    std::string      pager_line_storage;
+    std::string_view pager_line;
+    std::string      default_command;
     if (command.empty() || command.front() == '\0')
     {
         default_command = "n";
@@ -968,7 +969,7 @@ PageSwitchResult page_switch(std::string_view command)
     {
         ArticleLine i = g_art_line_num;
         g_g_line = 3;
-        pager_line = line_ptr(s_a_line_begin);
+        pager_line = line_view(s_a_line_begin);
         while (!pager_line.empty() && at_nl(pager_line.front()) && i >= g_top_line)
         {
             ArticlePosition pos = virtual_read(--i);
@@ -981,11 +982,12 @@ PageSwitchResult page_switch(std::string_view command)
                 break;
             }
             seek_art_buf(pos);
-            if (!read_art_buf(pager_line, false))
+            if (!read_art_buf(pager_line_storage, false))
             {
-                pager_line = line_ptr(s_a_line_begin);
+                pager_line = line_view(s_a_line_begin);
                 break;
             }
+            pager_line = pager_line_storage;
         }
         const char        search_char = pager_line.empty() ? '\0' : pager_line.front();
         const std::string search_pattern = fmt::format("^[^{}\n]", search_char);
@@ -1057,11 +1059,11 @@ caseG:
         seek_art_buf(start_where);
         g_inner_light = ArticleLine{};
         g_inner_search = ArticlePosition{}; // assume not found
-        while (read_art_buf(pager_line, false))
+        while (read_art_buf(pager_line_storage, false))
         {
-            const std::string::size_type newline = pager_line.find('\n');
+            const std::string::size_type newline = pager_line_storage.find('\n');
             const std::string            search_line =
-                newline == std::string::npos ? pager_line : pager_line.substr(0, newline + 1);
+                newline == std::string::npos ? pager_line_storage : pager_line_storage.substr(0, newline + 1);
 #ifdef DEBUG
             if (g_debug & DEB_INNERSRCH)
             {
@@ -1182,14 +1184,14 @@ refresh_screen:
             if (pos >= g_header_type[PAST_HEADER].min_pos)
             {
                 seek_art_buf(pos);
-                if (read_art_buf(pager_line, false))
+                if (read_art_buf(pager_line_storage, false))
                 {
                     g_art_pos = virtual_read(g_top_line);
                     if (g_art_pos < 0)
                     {
                         g_art_pos = -g_art_pos;
                     }
-                    const char *line = pager_line.c_str();
+                    const char *line = pager_line_storage.c_str();
                     maybe_set_color(line, line, true);
                     for (pos = g_art_pos - pos; pos-- && !at_nl(*line); line++)
                     {
@@ -1370,7 +1372,7 @@ leave_pager:
         if (g_tc_LINES > 2 && (g_tc_LINES & 1) &&
             g_art_line_num % ArticleLine{g_tc_LINES - 2} >= ArticleLine{g_tc_LINES / 2 - 1})
         {
-            s_special_lines++;
+                s_special_lines++;
         }
         goto go_forward;
 
@@ -1394,9 +1396,9 @@ leave_pager:
             s_special_lines = g_tc_LINES;
         }
 go_forward:
-        pager_line = line_ptr(s_a_line_begin);
+        pager_line = line_view(s_a_line_begin);
         if ((pager_line.empty() || pager_line.front() != '\f') &&
-            (g_page_stop.empty() || s_continuation || !g_page_compex.execute(pager_line.c_str())))
+            (g_page_stop.empty() || s_continuation || !g_page_compex.execute(pager_line.data())))
           {
               if (!s_special //
                   || (g_marking && (command_char != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
