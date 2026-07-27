@@ -32,7 +32,6 @@ int        cancel_article();
 int        supersede_article(std::string_view command);
 void       reply(std::string_view command);
 void       forward();
-void       followup();
 void       followup(std::string_view command);
 
 #endif

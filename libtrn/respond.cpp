@@ -1090,11 +1090,6 @@ done:
     return;
 }
 
-void followup()
-{
-    followup(std::string_view{g_buf});
-}
-
 void followup(std::string_view command)
 {
     bool       incl_body = (response_command_char(command) == 'F' && g_art);

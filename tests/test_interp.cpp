@@ -2142,10 +2142,9 @@ TEST_F(InterpolatorNewsgroupTest, followupWritesInterpolatedHeaderAndQuotedBody)
     m_env.expect_env("NEWSPOSTER", "exit 0");
     m_env.expect_env("NEWSHEADER", news_header.c_str());
     m_env.expect_env("ATTRIBUTION", "In article %i:");
-    g_buf[0] = 'F';
 
     testing::internal::CaptureStdout();
-    followup();
+    followup("F");
     testing::internal::GetCapturedStdout();
 
     const std::string expected_header = "Newsgroups: " TRN_TEST_HEADER_FOLLOWUP_TO "\n"
@@ -2166,11 +2165,10 @@ TEST_F(InterpolatorNewsgroupTest, followupPromptDefaultStartsNewTopic)
     ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
     m_env.expect_env("NEWSPOSTER", "exit 0");
     m_env.expect_env("NEWSHEADER", "Message-Id: %i\n\n");
-    g_buf[0] = 'f';
     push_char('\n');
 
     testing::internal::CaptureStdout();
-    followup();
+    followup("f");
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_THAT(output, HasSubstr("Are you starting an unrelated topic? [ynq]"));
