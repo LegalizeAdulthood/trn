@@ -691,7 +691,7 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
 static bool univ_include_file(std::string_view fname)
 {
     const std::string old_univ_fname = g_univ_fname;
-    g_univ_fname.assign(fname.data(), fname.size());
+    g_univ_fname = fname;
     bool retval = univ_use_file(g_univ_fname, {});
     g_univ_fname = old_univ_fname;
     return retval;

@@ -606,16 +606,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-349 - Universal Include Filename Assignment
-
-- Files: `libtrn/univ.cpp`.
-- Kind: string-view assignment cleanup.
-- Function: `univ_include_file`.
-- Dependencies: none.
-- Change: assign `fname` directly to `g_univ_fname` instead of copying
-  through `fname.data(), fname.size()`.
-- Tests: universal-selector include tests if existing coverage is easy.
-
 #### CSTR-350 - Universal File Load Assignment
 
 - Files: `libtrn/univ.cpp`.
