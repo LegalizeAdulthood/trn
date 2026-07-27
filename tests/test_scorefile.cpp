@@ -150,6 +150,21 @@ TEST_F(ScoreFileTest, extraHeaderLookupIsCaseInsensitive)
     EXPECT_EQ(1, g_sf_num_entries);
 }
 
+TEST_F(ScoreFileTest, extraHeaderScoringReadsParsedHeaderBuffer)
+{
+    char header[]{"!header X-Custom-Score:"};
+    sf_append(header);
+    char rule[]{"!10 X-Custom-Score: magic value"};
+    sf_append(rule);
+    g_parsed_art = TEST_ARTICLE_NUM;
+    g_head_buf = "From: writer@example.test\n"
+                 "X-Custom-Score:  Magic Value\n"
+                 "Subject: Compact Subject\n"
+                 "\n";
+
+    EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
+}
+
 TEST_F(ScoreFileTest, fromWildcardMatchesBothPiecesInOrder)
 {
     DataSource        data_source{};

@@ -311,35 +311,27 @@ static void sf_add_extra_header(std::string_view head)
 //int hnum;             // header number: offset into s_sf_extra_headers
 static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 {
-    parse_header(art);   // fast if already parsed
+    parse_header(art); // fast if already parsed
 
-    const std::string &head = s_sf_extra_headers[hnum];
-    int                len = static_cast<int>(head.size());
+    const std::string     &head = s_sf_extra_headers[hnum];
+    const std::string_view header_text{g_head_buf};
 
-    for (const char *s = g_head_buf.c_str(); *s && *s != '\n'; s++)
+    for (std::size_t line_start{}; line_start < header_text.size();)
     {
-        if (string_case_equal(head, std::string_view{s, static_cast<std::size_t>(len)}))
+        const std::size_t line_end = header_text.find('\n', line_start);
+        if (line_end == std::string_view::npos || line_end == line_start)
         {
-            s = std::strchr(s,':');
-            if (!s)
-            {
-                return {};
-            }
-            s++;        // skip the colon
-            s = skip_hor_space(s);
-            if (!*s)
-            {
-                return {};
-            }
-            const char *text = s;
-            s = std::strchr(s,'\n');
-            if (!s)
-            {
-                return {};
-            }
-            return {text, static_cast<std::size_t>(s - text)};
+            break;
         }
-        s = std::strchr(s,'\n');     // '\n' will be skipped on loop increment
+        const std::string_view line = header_text.substr(line_start, line_end - line_start);
+        const std::size_t      colon = line.find(':');
+        if (colon != std::string_view::npos && string_case_equal(line.substr(0, colon), head))
+        {
+            std::string_view text = line.substr(colon + 1);
+            text.remove_prefix(std::min(text.find_first_not_of(" \t"), text.size()));
+            return text;
+        }
+        line_start = line_end + 1;
     }
     return {};
 }

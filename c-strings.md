@@ -621,16 +621,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-330 - Score Extra Header View Scan
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: C string library call cleanup.
-- Function: `sf_get_extra_header`.
-- Dependencies: none.
-- Change: iterate `g_head_buf` as string-view lines and use
-  `find`/`substr` instead of `const char *` cursors and `strchr`.
-- Tests: score extra-header matching tests.
-
 #### CSTR-331 - Remote XHDR Line View Parser
 
 - Files: `libtrn/head.cpp`.
