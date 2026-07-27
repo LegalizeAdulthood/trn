@@ -29,7 +29,6 @@ void       respond_init();
 SaveResult save_article(std::string_view command);
 SaveResult view_article();
 int        cancel_article();
-int        supersede_article();
 int        supersede_article(std::string_view command);
 void       reply();
 void       reply(std::string_view command);

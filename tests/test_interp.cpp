@@ -1973,9 +1973,8 @@ TEST_F(InterpolatorNewsgroupTest, supersedeArticleWritesInterpolatedHeaderAndBod
     m_env.expect_env("FROM", TRN_TEST_HEADER_FROM);
     m_env.expect_env("SUPERSEDEHEADER", supersede_header.c_str());
     m_env.expect_env("NEWSPOSTER", "exit 0");
-    g_buf[0] = 'Z';
 
-    supersede_article();
+    supersede_article("Z");
 
     const std::string expected_header = "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"
                                         "Supersedes: " TRN_TEST_HEADER_MESSAGE_ID "\n"
@@ -2012,10 +2011,9 @@ TEST_F(InterpolatorNewsgroupTest, failedPostAppendsHeaderToDeadArticle)
     m_env.expect_env("SUPERSEDEHEADER", supersede_header.c_str());
     m_env.expect_env("NEWSPOSTER", "exit 42");
     std::ofstream{dead_article} << existing_dead_article;
-    g_buf[0] = 'z';
 
     testing::internal::CaptureStdout();
-    supersede_article();
+    supersede_article("z");
     const std::string output = testing::internal::GetCapturedStdout();
 
     const std::string expected_header = "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"

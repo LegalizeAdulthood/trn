@@ -535,9 +535,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   now have `std::string_view` command entry points.  The perform
   save/view path no longer stages command text in `g_buf`, and mailbox
   format detection uses owner-local string storage.
-- Response wrapper scan: the no-argument `supersede_article`, `reply`,
-  and `followup` wrappers now only bridge legacy `g_buf` callers or
-  tests to the command-view APIs.
+- Response wrapper scan: the no-argument `reply` and `followup`
+  wrappers now only bridge legacy `g_buf` callers or tests to the
+  command-view APIs.
 - Article body quote scan: `reply` and `followup` still use
   `read_art_buf`, `std::strchr`, and temporary NUL insertion while
   quoting included article bodies.
@@ -604,10 +604,13 @@ be modernized.
 ## Refactoring Slices
 
 Slices are stable.  Do not renumber remaining slices when one is
-completed; remove the completed slice.  The physical order is grouped by
-dependency tier: finish earlier tiers first so later caller and
-shared-buffer slices have cleaner helper and ownership contracts to
-build on.
+completed; remove the completed slice.  Slice IDs are also monotonic:
+never reuse a completed ID, even if that ID is no longer visible in this
+file.  The next new slice ID is `CSTR-410`.  When adding slices, assign
+IDs starting there and then update this allocator line past the highest
+new ID.  The physical order is grouped by dependency tier: finish
+earlier tiers first so later caller and shared-buffer slices have
+cleaner helper and ownership contracts to build on.
 
 Global command buffer work must be split by function.  Prefer leaves
 that only use the first command character before command loops that pass
@@ -632,19 +635,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-303 - Remove `supersede_article` Wrapper
-
-- Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
-  `tests/test_interp.cpp`.
-- Kind: unused global-buffer wrapper.
-- Function: `supersede_article()`.
-- Dependencies: none.
-- Change: delete the no-argument wrapper and declaration.  Update tests
-  and any remaining callers to pass command text to
-  `supersede_article(std::string_view)`.
-- Tests: `InterpolatorNewsgroupTest` supersede cases.
-
-#### CSTR-304 - Remove `reply` Wrapper
+#### CSTR-400 - Remove `reply` Wrapper
 
 - Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
   `tests/test_interp.cpp`.
@@ -656,7 +647,7 @@ owner.
   `reply(std::string_view)`.
 - Tests: `InterpolatorNewsgroupTest` reply cases.
 
-#### CSTR-305 - Remove `followup` Wrapper
+#### CSTR-401 - Remove `followup` Wrapper
 
 - Files: `libtrn/respond.cpp`, `libtrn/include/trn/respond.h`,
   `tests/test_interp.cpp`.
@@ -668,7 +659,7 @@ owner.
   `followup(std::string_view)`.
 - Tests: `InterpolatorNewsgroupTest` followup cases.
 
-#### CSTR-306 - Reply Quoted Body Buffer
+#### CSTR-402 - Reply Quoted Body Buffer
 
 - Files: `libtrn/respond.cpp`.
 - Kind: C-string article body cursor.
@@ -679,7 +670,7 @@ owner.
   indentation and character substitution.
 - Tests: `InterpolatorNewsgroupTest` reply quoted-body case.
 
-#### CSTR-307 - Followup Quoted Body Buffer
+#### CSTR-403 - Followup Quoted Body Buffer
 
 - Files: `libtrn/respond.cpp`.
 - Kind: C-string article body cursor.
@@ -695,7 +686,7 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-308 - Numeric Range Command View
+#### CSTR-404 - Numeric Range Command View
 
 - Files: `libtrn/ngstuff.cpp`, `libtrn/include/trn/ngstuff.h`,
   `libtrn/ng.cpp`, `tests/test_ngstuff.cpp`.
@@ -707,7 +698,7 @@ that later caller slices can consume directly.
   only if a production caller still needs it during the slice.
 - Tests: `NumNumTest`.
 
-#### CSTR-309 - Choice Input Result
+#### CSTR-405 - Choice Input Result
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`,
   `libtrn/rt-select.cpp`.
@@ -738,19 +729,19 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-310 - Article Command Staging
+#### CSTR-406 - Article Command Staging
 
 - Files: `libtrn/ng.cpp`.
 - Kind: global command-buffer staging.
 - Function: `art_switch`.
-- Dependencies: CSTR-303, CSTR-304, CSTR-305, CSTR-308.
+- Dependencies: CSTR-400, CSTR-401, CSTR-404.
 - Change: remove `stage_legacy_article_command` use from article-level
   dispatch by passing command text or prompt answers directly to callees.
   Keep prompt input in local strings instead of reading answers from
   `g_buf`.
 - Tests: article command tests and response command tests.
 
-#### CSTR-311 - Typeahead Scratch Buffer
+#### CSTR-407 - Typeahead Scratch Buffer
 
 - Files: `libtrn/terminal.cpp`.
 - Kind: terminal scratch buffer.
@@ -761,12 +752,12 @@ and clarified ownership at the edges.
 - Tests: terminal typeahead tests if available; otherwise focused
   terminal command tests.
 
-#### CSTR-312 - Finish Command Legacy Wrapper
+#### CSTR-408 - Finish Command Legacy Wrapper
 
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
 - Kind: global command-buffer wrapper.
 - Function: `finish_command(int)`.
-- Dependencies: CSTR-308, CSTR-310.
+- Dependencies: CSTR-404, CSTR-406.
 - Change: migrate remaining production callers to
   `finish_command(std::string_view, bool)`, then delete the wrapper that
   reads and writes command text through `g_buf`.
@@ -777,14 +768,14 @@ and clarified ownership at the edges.
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-#### CSTR-301 - Remove Global `g_buf`
+#### CSTR-409 - Remove Global `g_buf`
 
 - Files: `config/common.cpp`, `config/include/config/common.h`, all
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-303, CSTR-304, CSTR-305, CSTR-308, CSTR-309,
-  CSTR-310, CSTR-311, CSTR-312.
+- Dependencies: CSTR-400, CSTR-401, CSTR-404, CSTR-405, CSTR-406,
+  CSTR-407, CSTR-408.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

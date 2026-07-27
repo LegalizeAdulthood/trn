@@ -742,11 +742,6 @@ done:
     return r;
 }
 
-int supersede_article()
-{
-    return supersede_article(std::string_view{g_buf});
-}
-
 int supersede_article(std::string_view command) // Supersedes:
 {
     int  myuid = current_user_id();
