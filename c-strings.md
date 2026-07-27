@@ -619,14 +619,12 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `rc_numbers_data` accessors.  The mutable accessors are tied to the
   old delimiter/NUL poking mechanism and should be reduced after local
   parser/writer slices.
-- Newsgroup add scan: `add_newsgroup` still takes `const char *`,
-  measures it with `std::strlen`, and copies it into `m_rc_line` even
-  though callers already have `std::string` storage.
+- Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
+  callers pass owned `std::string` storage directly.
 - Non-zero C function dataflow scan: remaining search/length hits are
   either covered by open slices, inactive preprocessor code, termcap
-  capability strings, UTF code-point work, or comment text.  The only
-  helper-parameter copy-to-string case is `add_newsgroup`, tracked by
-  `CSTR-433`.
+  capability strings, UTF code-point work, or comment text.  No current
+  helper-parameter copy-to-string leaf slice remains.
 - Non-zero line-input, byte, and allocation-helper scans: `fgets`
   remains in low-level article/NNTP input or a fixed stdin pause prompt;
   `memcpy` is MIME parser compaction; `memset` and `memcmp` are hash or
@@ -668,7 +666,7 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strcmp` 1, `strchr` 4, `strstr` 2, `strlen` 11.
+- Search and length: `strcmp` 1, `strchr` 4, `strstr` 2, `strlen` 8.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 307,
   `fprintf`/`std::fprintf` 13.
@@ -731,20 +729,6 @@ No current slices.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-433 - Newsrc Add Newsgroup Name View
-
-- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
-- Kind: read-only C-string helper parameter.
-- Function: `add_newsgroup(Newsrc *, const char *, char_int)`.
-- Dependencies: none.
-- Change: change the newsgroup-name parameter to `std::string_view`,
-  replace `std::strlen` with `size`, and update callers to pass
-  `g_newsgroup_name` directly.  Preserve `m_num_offset`, embedded
-  subscribe-character placeholder storage, hash insertion, unread-count
-  updates, and rc-changed behavior.
-- Tests: use existing new-newsgroup subscription tests; add focused
-  coverage first if append-unsubscribed behavior is not covered.
 
 #### CSTR-427 - Newsrc Numbers View
 

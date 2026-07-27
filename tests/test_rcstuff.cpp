@@ -669,6 +669,37 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForMissingNewsrcGroup)
     EXPECT_EQ("\nNewsgroup comp.lang.apl not in .newsrc -- subscribe? [ynYN] \n", output);
 }
 
+TEST_F(NewsrcRotationTest, getNewsgroupAppendsUnsubscribedMissingGroup)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_path, "", ""));
+
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    newsrc.flags = RF_ADD_GROUPS | RF_ACTIVE;
+    multirc.m_first = &newsrc;
+    g_multirc = &multirc;
+    g_newsrc_hash = hash_create(3001, nullptr);
+    g_append_unsub = true;
+
+    push_char('n');
+    testing::internal::CaptureStdout();
+    const bool found = get_newsgroup("comp.lang.apl", GNG_NONE);
+    (void) testing::internal::GetCapturedStdout();
+    g_multirc = nullptr;
+
+    EXPECT_FALSE(found);
+    ASSERT_EQ(1, g_newsgroup_order.size());
+    NewsgroupData *group = g_newsgroup_order[0];
+    EXPECT_EQ("comp.lang.apl", group->rc_name());
+    EXPECT_EQ(UNSUBSCRIBED_CHAR, group->m_subscribe_char);
+    EXPECT_EQ(static_cast<int>(std::string_view{"comp.lang.apl"}.size() + 1), group->m_num_offset);
+    group->show_subscribe_char();
+    EXPECT_EQ("comp.lang.apl! ", group->m_rc_line);
+    group->hide_subscribe_char();
+}
+
 TEST_F(NewsrcRotationTest, getNewsgroupPromptsForUnsubscribedGroup)
 {
     const fs::path active_path = m_output_dir / "active";

@@ -84,7 +84,7 @@ static void           unlock_newsrc(Newsrc *rp);
 static bool           open_newsrc(Newsrc *rp);
 static void           parse_rcline(NewsgroupData *np);
 static void           reserve_newsgroup_data(Multirc *mptr);
-static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c);
+static NewsgroupData *add_newsgroup(Newsrc *rp, std::string_view ngn, char_int c);
 static void           set_hash(NewsgroupData *np);
 static void           rebuild_newsgroup_hash();
 static std::ptrdiff_t newsgroup_pointer_index(NewsgroupData *base, std::size_t count, NewsgroupData *np);
@@ -1128,7 +1128,7 @@ check_fuzzy_match:
                 fmt::print("(Adding {} to end of your .newsrc {}subscribed)\n", g_newsgroup_name,
                            autosub == ADDNEW_SUB ? "" : "un");
                 term_down(1);
-                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), autosub);
+                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name, autosub);
             }
             else
             {
@@ -1136,7 +1136,7 @@ check_fuzzy_match:
                 {
                     fmt::print("(Subscribing to {})\n", g_newsgroup_name);
                     term_down(1);
-                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), autosub);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name, autosub);
                 }
                 else
                 {
@@ -1181,13 +1181,13 @@ reask_add:
             {
                 if (g_append_unsub)
                 {
-                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), UNSUBSCRIBED_CHAR);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name, UNSUBSCRIBED_CHAR);
                 }
                 return false;
             }
             else if (command_ch == 'y')
             {
-                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), ':');
+                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name, ':');
                 flags |= GNG_RELOC;
             }
             else if (command_ch == 'Y')
@@ -1202,7 +1202,7 @@ reask_add:
                     fmt::print("(Subscribing to {})\n", g_newsgroup_name);
                 }
                 term_down(1);
-                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), ':');
+                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name, ':');
                 flags &= ~GNG_RELOC;
             }
             else if (command_ch == 'N')
@@ -1212,7 +1212,7 @@ reask_add:
                 {
                     fmt::print("(Adding {} to end of your .newsrc unsubscribed)\n", g_newsgroup_name);
                     term_down(1);
-                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), UNSUBSCRIBED_CHAR);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name, UNSUBSCRIBED_CHAR);
                     flags &= ~GNG_RELOC;
                 }
                 else
@@ -1295,14 +1295,14 @@ reask_unsub:
 
 // add a newsgroup to the newsrc file (eventually)
 
-static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
+static NewsgroupData *add_newsgroup(Newsrc *rp, std::string_view ngn, char_int c)
 {
     NewsgroupData *np = append_newsgroup_data();
     append_newsgroup_order(np);
     ++g_newsgroup_count;
 
     np->m_rc = rp;
-    np->m_num_offset = std::strlen(ngn) + 1;
+    np->m_num_offset = static_cast<int>(ngn.size() + 1);
     np->m_rc_line = ngn;
     np->m_rc_line.push_back('\0');
     np->m_rc_line.push_back(' ');
