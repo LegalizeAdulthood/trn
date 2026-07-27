@@ -1793,6 +1793,19 @@ void InterpolatorNewsgroupTest::TearDown()
     InterpolatorTest::TearDown();
 }
 
+void write_article_body(const fs::path &article_file, std::string_view body)
+{
+    std::ofstream{article_file} << "Path: " TRN_TEST_HEADER_PATH "\n"
+                                << "From: " TRN_TEST_HEADER_FROM "\n"
+                                << "Newsgroups: " TRN_TEST_HEADER_NEWSGROUPS "\n"
+                                << "Article: " << TRN_TEST_ARTICLE_NUM << "\n"
+                                << "Subject: " TRN_TEST_HEADER_SUBJECT "\n"
+                                << "Date: " TRN_TEST_HEADER_DATE "\n"
+                                << "Message-Id: " TRN_TEST_HEADER_MESSAGE_ID "\n"
+                                << "Lines: 1\n\n"
+                                << body;
+}
+
 } // namespace
 
 TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
@@ -2275,6 +2288,63 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
 
     EXPECT_EQ(DA_NORM, result);
     EXPECT_THAT(output, HasSubstr("<so>> cited text\n<se>plain text\n"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, rotatesArticleBodyText)
+{
+    const std::string output_path = m_output.path();
+    const fs::path    article_file = fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM);
+    write_article_body(article_file, "uryyb Jbeyq\n");
+    PushDir                 output_dir{output_path.c_str()};
+    ValueSaver<bool>        rotate(g_rotate, true);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
+    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    g_char_subst = g_charsets.c_str();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_no_envar("LOCALTIMEFMT");
+    ASSERT_TRUE(parse_header(g_art));
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_NORM, result);
+    EXPECT_THAT(output, HasSubstr("hello World\n"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
+{
+    const std::string output_path = m_output.path();
+    const fs::path    article_file = fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM);
+    write_article_body(article_file, "_\bU text\n");
+    PushDir                  output_dir{output_path.c_str()};
+    ValueSaver<const char *> underline_start(g_tc_US, "<ul>");
+    ValueSaver<const char *> underline_end(g_tc_UE, "</ul>");
+    ValueSaver<const char *> underchar(g_tc_UC, "");
+    ValueSaver<bool>         underline_glitch(g_tc_UG, false);
+    ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
+    ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    g_char_subst = g_charsets.c_str();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_no_envar("LOCALTIMEFMT");
+    ASSERT_TRUE(parse_header(g_art));
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_NORM, result);
+    EXPECT_THAT(output, HasSubstr("<ul>U</ul> text\n"));
 }
 
 TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)

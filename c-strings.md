@@ -660,17 +660,17 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strcmp` 1, `strchr` 4, `strstr` 2, `strlen` 8.
-- C line input: `fgets` 4.
-- C text output: `fputs` 158, `printf`/`std::printf` 298,
+- Search and length: `strcmp` 1, `strchr` 3, `strstr` 2, `strlen` 8.
+- C line input: `fgets` 4, `gets` 1.
+- C text output: `fputs` 155, `printf`/`std::printf` 293,
   `fprintf`/`std::fprintf` 13.
-- Character output: `putchar`/`std::putchar` 89.
-- Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
+- Character output: `putchar`/`std::putchar` 81.
+- Character byte operations: `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strncmp`, `strrchr`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
-`vsprintf`, `vsnprintf`, `puts`, `memmove`, `memchr`,
+`vsprintf`, `vsnprintf`, `puts`, `memcpy`, `memmove`, `memchr`,
 `atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
 `std::strtoul`, or `std::strtod`.
 
@@ -678,12 +678,17 @@ The scan found no current production hits for `strcpy`, `strncpy`,
 writes.  They are tracked only where the format template itself should
 be modernized.
 
+The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness.
+The `strstr` hits are in a disabled `#ifdef UNDEF` selector branch.
+The remaining `strchr` hits are inside the raw article-buffer reader and
+are covered by the `read_art_buf` removal slice.
+
 ## Refactoring Slices
 
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-437`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-440`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -712,7 +717,29 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-437 - Terminal Capability Lengths
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: local read-only C string length checks.
+- Function: `term_set`.
+- Dependencies: none.
+- Change: replace the local `std::strlen` calls that measure terminal
+  capability strings with `std::string_view` size checks.
+- Tests: build coverage is sufficient; this only changes local length
+  measurement after the code has already dereferenced the same
+  capability pointers.
+
+#### CSTR-438 - Arrow Macro Sequence Views
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: local read-only C string selected from literals or termcap.
+- Function: `arrow_macros`.
+- Dependencies: none.
+- Change: replace the local `const char *seq` cursor with
+  `std::string_view` and use `size`, `empty`, and `front` instead of
+  `std::strlen` and `*seq` checks.
+- Tests: build coverage is sufficient; this preserves calls through the
+  existing `set_macro(std::string_view, std::string_view)` API.
 
 ### Tier 1 - Helper And API Foundations
 
@@ -733,18 +760,18 @@ No current slices.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-430 - Article Display Cursor
+#### CSTR-439 - Page Switch Article Buffer Views
 
-- Files: `libtrn/art.cpp`, `tests/test_art.cpp`.
-- Kind: local cursor alias into owned article line storage.
-- Function: `do_article`.
+- Files: `libtrn/art.cpp`.
+- Kind: borrowed raw pointer view into the article buffer.
+- Function: `page_switch`.
 - Dependencies: none.
-- Change: replace `buf_ptr`/`buf_begin` pointer walking over
-  `g_art_line` with view/index state for display output.  Preserve
-  underline handling, ROT13, UTF output, page-stop searches, header
-  parsing, hiding, and backpager behavior.
-- Tests: add or update article display tests before the refactor if the
-  affected output branches are not already covered.
+- Change: replace `line_ptr` use in `page_switch` with
+  `std::string_view` where the code only inspects the current article
+  buffer line.  Keep owned `std::string` storage only for lines read via
+  `read_art_buf(std::string &, bool)` and for regex calls that need a
+  null terminator.
+- Tests: run focused pager/search tests before and after the refactor.
 
 ### Tier 4 - Broad Shared Buffers
 
