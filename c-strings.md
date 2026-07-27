@@ -530,9 +530,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Search API scan: article and newsgroup search now use their
   `std::string_view` command APIs directly.  Their raw-buffer
   compatibility wrappers are gone.
-- Command dispatch scan: selector perform helpers, shell escape dispatch,
-  option-switch dispatch, and kill-file switch commands now pass command
-  text as strings or views.
+- Command dispatch scan: selector perform helpers, article shell escape
+  and switcheroo dispatch, option-switch dispatch, and kill-file switch
+  commands now pass command text as strings or views.
 - Response command scan: save, reply, followup, and supersede operations
   now have `std::string_view` command entry points.  The perform
   save/view path no longer stages command text in `g_buf`, and mailbox
@@ -663,18 +663,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-406 - Article Command Staging
-
-- Files: `libtrn/ng.cpp`.
-- Kind: global command-buffer staging.
-- Function: `art_switch`.
-- Dependencies: none.
-- Change: remove `stage_legacy_article_command` use from article-level
-  dispatch by passing command text or prompt answers directly to callees.
-  Keep prompt input in local strings instead of reading answers from
-  `g_buf`.
-- Tests: article command tests and response command tests.
-
 #### CSTR-407 - Typeahead Scratch Buffer
 
 - Files: `libtrn/terminal.cpp`.
@@ -691,7 +679,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/terminal.cpp`, `libtrn/include/trn/terminal.h`.
 - Kind: global command-buffer wrapper.
 - Function: `finish_command(int)`.
-- Dependencies: CSTR-406.
+- Dependencies: none.
 - Change: migrate remaining production callers to
   `finish_command(std::string_view, bool)`, then delete the wrapper that
   reads and writes command text through `g_buf`.
@@ -722,7 +710,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: CSTR-406, CSTR-407, CSTR-408.
+- Dependencies: CSTR-407, CSTR-408.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

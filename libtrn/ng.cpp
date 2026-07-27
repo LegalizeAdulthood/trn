@@ -56,7 +56,6 @@
 #include <charconv>
 #include <cstdio>
 #include <cstring>
-#include <iterator>
 #include <string>
 #include <string_view>
 
@@ -178,6 +177,26 @@ static bool is_default_article_command(char ch)
     return false;
 }
 
+static void print_article_command(std::string_view command)
+{
+    if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
+    {
+        if (!at_norm_char(command.substr(0, 1)))
+        {
+            std::putchar('^');
+            std::putchar((command.front() & 0x7F) | 64);
+            backspace();
+            backspace();
+        }
+        else
+        {
+            std::putchar(command.front());
+            backspace();
+        }
+        std::fflush(stdout);
+    }
+}
+
 static std::string apply_article_default_command(std::string command)
 {
     g_s_default_cmd = false;
@@ -200,11 +219,29 @@ static std::string apply_article_default_command(std::string command)
     return command;
 }
 
-static void stage_legacy_article_command(std::string_view command)
+static std::string read_article_prompt_command(std::string_view prompt, MinorMode newmode, std::string_view dflt)
 {
-    const std::size_t command_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN));
-    std::copy_n(command.data(), command_size, g_buf);
-    g_buf[command_size] = '\0';
+    MinorMode   mode_save = g_mode;
+    GeneralMode gmode_save = g_general_mode;
+    const int   newlines = static_cast<int>(std::count(prompt.begin(), prompt.end(), '\n'));
+
+    while (true)
+    {
+        unflush_output();
+        fmt::print("{} [{}] ", prompt, dflt);
+        std::fflush(stdout);
+        term_down(newlines);
+        eat_typeahead();
+        set_mode(GM_PROMPT, newmode);
+        std::string command = get_cmd();
+        if (errno || (!command.empty() && command.front() == '\f'))
+        {
+            newline();
+            continue;
+        }
+        set_mode(gmode_save, mode_save);
+        return set_def(command, dflt);
+    }
 }
 
 static std::string finish_article_command(std::string_view command, bool donewline)
@@ -772,14 +809,12 @@ cleanup2:
 static ArticleSwitchResult art_switch(std::string command)
 {
     command = apply_article_default_command(command);
-    stage_legacy_article_command(command);
-    print_cmd();
+    print_article_command(command);
 
     if (command.size() > 2)
     {
         command.resize(2);
     }
-    stage_legacy_article_command(command);
 
     const char command_ch = article_command_char(command);
     char       selector_command = command_ch;
@@ -834,10 +869,11 @@ static ArticleSwitchResult art_switch(std::string command)
         const std::string_view u_help_thread = unread_thread_help(has_current_article, g_verbose);
         g_default_cmd = has_current_article ? "+tsanq" : "+anq";
 reask_unread:
-        in_char(u_prompt, MM_UNKILL_PROMPT, g_default_cmd);
-        print_cmd();
+        const std::string unread_command = read_article_prompt_command(u_prompt, MM_UNKILL_PROMPT, g_default_cmd);
+        print_article_command(unread_command);
         newline();
-        if (*g_buf == 'h')
+        const char unread_ch = article_command_char(unread_command);
+        if (unread_ch == 'h')
         {
             if (g_verbose)
             {
@@ -860,11 +896,11 @@ reask_unread:
             }
             goto reask_unread;
         }
-        else if (*g_buf == 'n' || *g_buf == 'q')
+        else if (unread_ch == 'n' || unread_ch == 'q')
         {
             return AS_ASK;
         }
-        else if (*g_buf == 't' && !u_help_thread.empty())
+        else if (unread_ch == 't' && !u_help_thread.empty())
         {
             if (g_artp->m_subj->m_thread)
             {
@@ -880,18 +916,18 @@ reask_unread:
                 g_art = g_artp->article_num();
             }
         }
-        else if (*g_buf == 's' && !u_help_thread.empty())
+        else if (unread_ch == 's' && !u_help_thread.empty())
         {
             unkill_sub_thread(g_artp);
         }
-        else if (*g_buf == 'a')
+        else if (unread_ch == 'a')
         {
             check_first(g_abs_first);
             article_walk(mark_all_unread, 0);
             count_subjects(CS_NORM);
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
         }
-        else if (*g_buf == '+')
+        else if (unread_ch == '+')
         {
             selector_command = 'U';
             goto run_the_selector;
@@ -1562,7 +1598,7 @@ normal_search:
         return AS_ASK;
 
     case '&':
-        if (switcheroo()) // get rest of command
+        if (switcheroo(command)) // get rest of command
         {
             return AS_INP;      // if rubbed out, try something else
         }
@@ -1780,7 +1816,7 @@ refresh_screen:
         return AS_NORM;
 
     case '!':                 // shell escape
-        if (escapade())
+        if (escapade(command))
         {
             return AS_INP;
         }
