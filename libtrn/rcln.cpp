@@ -682,21 +682,18 @@ void NewsgroupData::check_expired(ArticleNum first)
 // could use a better name
 bool was_read_group(ArticleNum artnum, std::string_view ngnam)
 {
-    const char* s;
-    const char* t;
     ArticleNum min{};
-    ArticleNum max{-1};
 
     if (!artnum)
     {
         return true;
     }
     NewsgroupData *np = find_newsgroup(ngnam);
-    if (np == nullptr)          // not found in newsrc?
+    if (np == nullptr) // not found in newsrc?
     {
         return true;
     }
-    if (!np->m_num_offset)         // no numbers on line
+    if (!np->m_num_offset) // no numbers on line
     {
         return false;
     }
@@ -707,42 +704,46 @@ bool was_read_group(ArticleNum artnum, std::string_view ngnam)
     }
     if (artnum > np->m_ng_max)
     {
-        return false;           // probably doesn't exist, however
+        return false; // probably doesn't exist, however
     }
-    s = skip_eq(np->rc_numbers_c_str(), ' '); // skip spaces
-    t = s;
-    while (std::isdigit(*s) && artnum >= (min = ArticleNum{std::atol(s)}))
+    std::string_view  numbers = np->rc_numbers_c_str();
+    const std::size_t first_non_space = numbers.find_first_not_of(' ');
+    numbers.remove_prefix(first_non_space == std::string_view::npos ? numbers.size() : first_non_space);
+    const auto is_digit = [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)); };
+    const auto parse_article_num = [](std::string_view text)
     {
-        const char* maxt = nullptr;
-        ArticleNum lastnum{};
+        long value{};
+        std::from_chars(text.data(), text.data() + text.size(), value);
+        return ArticleNum{value};
+    };
+    const auto skip_digits = [](std::string_view text)
+    {
+        const std::size_t end = text.find_first_not_of("0123456789");
+        return end == std::string_view::npos ? text.size() : end;
+    };
+
+    while (!numbers.empty() && is_digit(numbers.front()) && artnum >= (min = parse_article_num(numbers)))
+    {
         // while it might have been read
-        t = skip_digits(s);             // skip number
-        if (*t == '-')                  // is it a range?
+        numbers.remove_prefix(skip_digits(numbers));    // skip number
+        if (!numbers.empty() && numbers.front() == '-') // is it a range?
         {
-            t++;                        // skip to next number
-            if (artnum <= (max = ArticleNum{std::atol(t)}))
+            numbers.remove_prefix(1); // skip to next number
+            if (artnum <= parse_article_num(numbers))
             {
-                return true;            // it is in range => already read
+                return true; // it is in range => already read
             }
-            lastnum = max;              // remember it
-            maxt = t;                   // remember position in case we
-                                        // want to overwrite the max
-            t = skip_digits(t);         // skip second number
+            numbers.remove_prefix(skip_digits(numbers)); // skip second number
         }
         else
         {
-            if (artnum == min)          // explicitly a read article?
+            if (artnum == min) // explicitly a read article?
             {
                 return true;
             }
-            lastnum = min;              // remember what the number was
-            maxt = nullptr;             // last one was not a range
         }
-        while (*t && !std::isdigit(*t))
-        {
-            t++;                        // skip comma and any spaces
-        }
-        s = t;
+        const std::string_view::const_iterator next_digit = std::find_if(numbers.begin(), numbers.end(), is_digit);
+        numbers.remove_prefix(static_cast<std::size_t>(next_digit - numbers.begin()));
     }
 
     // we have not read it, so return false

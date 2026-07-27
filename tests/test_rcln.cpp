@@ -175,6 +175,55 @@ protected:
     NewsgroupData m_group{};
 };
 
+class WasReadGroupTest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_newsrc_hash = g_newsrc_hash;
+        g_newsrc_hash = hash_create(17, compare_newsgroup_name);
+
+        m_newsrc.flags = RF_NONE;
+        m_group.m_rc = &m_newsrc;
+        m_group.m_ng_max = ArticleNum{20};
+        m_group.m_to_read = ArticleUnread{10};
+        m_group.m_subscribe_char = ':';
+    }
+
+    void TearDown() override
+    {
+        hash_destroy(g_newsrc_hash);
+        g_newsrc_hash = m_old_newsrc_hash;
+    }
+
+    void set_numbers(const std::string &numbers)
+    {
+        m_group.m_rc_line = "comp.lang.apl: " + numbers;
+        m_group.m_num_offset = static_cast<int>(std::string{"comp.lang.apl"}.size()) + 1;
+        m_group.hide_subscribe_char();
+        register_group();
+    }
+
+    void set_without_numbers()
+    {
+        m_group.m_rc_line = "comp.lang.apl";
+        m_group.m_num_offset = 0;
+        register_group();
+    }
+
+    void register_group()
+    {
+        HashDatum data{};
+        data.dat_ptr = reinterpret_cast<char *>(&m_group);
+        data.dat_len = static_cast<unsigned>(m_group.rc_name().size());
+        hash_store(g_newsrc_hash, m_group.rc_name(), data);
+    }
+
+    HashTable    *m_old_newsrc_hash{};
+    Newsrc        m_newsrc{};
+    NewsgroupData m_group{};
+};
+
 } // namespace
 
 TEST_F(ExpiredArticleTest, extendsReadRangeToFirstAvailableArticle)
@@ -322,6 +371,39 @@ TEST_F(AddArtNumTest, removesStandaloneFromMiddle)
     EXPECT_EQ(ArticleUnread{11}, m_group.m_to_read);
 }
 #endif
+
+TEST_F(WasReadGroupTest, findsReadArticleInExplicitList)
+{
+    set_numbers("1,3,5");
+
+    EXPECT_TRUE(was_read_group(ArticleNum{3}, "comp.lang.apl"));
+}
+
+TEST_F(WasReadGroupTest, findsReadArticleInRange)
+{
+    set_numbers("1-5,9");
+
+    EXPECT_TRUE(was_read_group(ArticleNum{4}, "comp.lang.apl"));
+}
+
+TEST_F(WasReadGroupTest, reportsUnreadArticleBetweenRanges)
+{
+    set_numbers("1-3,7");
+
+    EXPECT_FALSE(was_read_group(ArticleNum{5}, "comp.lang.apl"));
+}
+
+TEST_F(WasReadGroupTest, unknownGroupIsTreatedAsRead)
+{
+    EXPECT_TRUE(was_read_group(ArticleNum{5}, "comp.lang.apl"));
+}
+
+TEST_F(WasReadGroupTest, lineWithoutNumbersIsUnread)
+{
+    set_without_numbers();
+
+    EXPECT_FALSE(was_read_group(ArticleNum{5}, "comp.lang.apl"));
+}
 
 TEST_F(ExpiredArticleTest, removesExpiredRangesAndKeepsUnreadSuffix)
 {

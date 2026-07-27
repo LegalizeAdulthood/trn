@@ -571,13 +571,14 @@ scripts, and `vcpkg`, but it does not preprocess conditional blocks.
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 2.
+- C numeric conversion calls: `atoi`/`std::atoi` 5.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
 `vsprintf`, `vsnprintf`, `gets`, `puts`, `memmove`, `memchr`,
-`std::atof`, `std::strtol`, `std::strtoul`, or `std::strtod`.
+`atol`, `std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
+`std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -627,17 +628,6 @@ No current slices.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-337 - Newsgroup Read-state View Query
-
-- Files: `libtrn/rcln.cpp`.
-- Kind: owner-local parser cleanup.
-- Function: `was_read_group`.
-- Dependencies: none.
-- Change: query rc ranges with `std::string_view` and
-  `std::from_chars` instead of borrowed C-string cursors and
-  `std::atol`.
-- Tests: read-state query and xref-chase tests.
 
 #### CSTR-338 - Score Save Line View Parser
 
