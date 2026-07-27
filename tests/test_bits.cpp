@@ -382,6 +382,23 @@ TEST_F(BitsToRcTest, decodesLeadingReadRangeIntoFirstUnreadArticle)
     EXPECT_EQ(ArticleUnread{4}, m_group.m_to_read);
 }
 
+TEST_F(BitsToRcTest, ignoresReversedReadRange)
+{
+    set_rc_line("comp.lang.apl: 4-2");
+    add_existing_articles(1, 7);
+
+    rc_to_bits();
+
+    expect_unread(1, true);
+    expect_unread(2, true);
+    expect_unread(3, true);
+    expect_unread(4, true);
+    expect_unread(5, true);
+    expect_unread(6, true);
+    expect_unread(7, true);
+    EXPECT_EQ(ArticleUnread{7}, m_group.m_to_read);
+}
+
 TEST_F(BitsToRcTest, setFirstArtSkipsLeadingReadRange)
 {
     EXPECT_TRUE(set_first_art(" 1-2,4"));

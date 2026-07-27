@@ -565,13 +565,13 @@ are lexical, identifier-aware source counts for `std::` calls and
 unqualified C calls.  The scan excludes test trees, legacy Configure
 scripts, and `vcpkg`, but it does not preprocess conditional blocks.
 
-- Search and length: `strchr` 12, `strstr` 2, `strlen` 19.
+- Search and length: `strchr` 9, `strstr` 2, `strlen` 18.
 - C line input: `fgets` 4.
 - C text output: `fputs` 158, `printf`/`std::printf` 306,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 86.
 - Character byte operations: `memcpy` 1, `memset` 4, `memcmp` 1.
-- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 10.
+- C numeric conversion calls: `atoi`/`std::atoi` 5 and `std::atol` 8.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strcmp`, `strncmp`, `strrchr`, `strspn`,
@@ -627,17 +627,6 @@ No current slices.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-333 - RC Numbers To Bits View Parser
-
-- Files: `libtrn/bits.cpp`.
-- Kind: owner-local parser cleanup.
-- Function: `rc_to_bits`.
-- Dependencies: none.
-- Change: parse newsrc number ranges with `std::string_view` and
-  `std::from_chars`; remove comma-to-NUL mutation, `strchr`, and
-  `std::atol` from the local copy.
-- Tests: rc-to-bits and range parsing tests.
 
 #### CSTR-334 - Add Read Article View Parser
 

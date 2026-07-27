@@ -33,7 +33,6 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <filesystem>
 #include <iostream>
 #include <iterator>
@@ -64,27 +63,36 @@ void bits_init()
 
 void rc_to_bits()
 {
-    char*   c;
-    char*   h;
     ArticleNum unread;
     Article*ap;
+    const auto parse_article_num = [](std::string_view text)
+    {
+        const std::size_t first = text.find_first_not_of(" \f\n\r\t\v");
+        if (first == std::string_view::npos)
+        {
+            return ArticleNum{};
+        }
+        text.remove_prefix(first);
+        if (!text.empty() && text.front() == '+')
+        {
+            text.remove_prefix(1);
+        }
+
+        long value{};
+        std::from_chars(text.data(), text.data() + text.size(), value);
+        return ArticleNum{value};
+    };
 
     // modify the article flags to reflect what has already been read
 
-    const char *numbers = skip_eq(g_newsgroup_ptr->rc_numbers_c_str(), ' ');
+    std::string_view numbers = skip_eq(g_newsgroup_ptr->rc_numbers_c_str(), ' ');
                                         // find numbers in rc line
-    std::string numbers_buf;
-    numbers_buf.reserve(
-        std::max<std::size_t>(LINE_BUF_LEN, std::strlen(numbers) + 1));
-    numbers_buf = numbers;
-    if (!numbers_buf.empty())
+    bool more_ranges = !numbers.empty();
+    if (set_first_art(numbers))
     {
-        numbers_buf.push_back(',');      // put extra comma on the end
-    }
-    char *s = numbers_buf.data();        // initialize the for loop below
-    if (set_first_art(s))
-    {
-        s = std::strchr(s,',') + 1;
+        const std::size_t comma = numbers.find(',');
+        more_ranges = comma != std::string_view::npos;
+        numbers = comma == std::string_view::npos ? std::string_view{} : numbers.substr(comma + 1);
         ArticleNum n;
         for (n = article_first(g_abs_first); n < g_first_art; n = article_next(n))
         {
@@ -100,7 +108,7 @@ void rc_to_bits()
 #ifdef DEBUG
     if (g_debug & DEB_CTLAREA_BITMAP)
     {
-        std::printf("\n%s\n",numbers_buf.c_str());
+        fmt::print(stdout, "\n{}\n", numbers);
         term_down(2);
         for (ArticleNum i = article_first(g_abs_first); i < g_first_art; i = article_next(i))
         {
@@ -112,12 +120,15 @@ void rc_to_bits()
     }
 #endif
     ArticleNum n = g_first_art;
-    for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c)    // for each range
+    while (more_ranges) // for each range
     {
-        ArticleNum max;
-        *c = '\0';                      // do not let index see past comma
-        h = std::strchr(s,'-');
-        ArticleNum min{std::atol(s)};
+        const std::size_t      comma = numbers.find(',');
+        const std::string_view range = numbers.substr(0, comma);
+        more_ranges = comma != std::string_view::npos;
+        numbers.remove_prefix(more_ranges ? comma + 1 : numbers.size());
+        const std::size_t      hyphen = range.find('-');
+        const std::string_view min_text = range.substr(0, hyphen);
+        ArticleNum             min = parse_article_num(min_text);
         min = std::max(min, g_first_art);    // make sure range is in range
         if (min > g_last_art)
         {
@@ -143,11 +154,12 @@ void rc_to_bits()
                 }
             }
         }
-        if (!h)
+        ArticleNum max;
+        if (hyphen == std::string_view::npos)
         {
             max = min;
         }
-        else if ((max = ArticleNum{std::atol(h + 1)}) < min)
+        else if ((max = parse_article_num(range.substr(hyphen + 1))) < min)
         {
             max = article_before(min);
         }
@@ -160,7 +172,7 @@ void rc_to_bits()
 #ifdef DEBUG
         if (g_debug & DEB_CTLAREA_BITMAP)
         {
-            std::printf("\n%s\n",s);
+            fmt::print(stdout, "\n{}\n", range);
             term_down(2);
             for (ArticleNum a = g_abs_first; a <= g_last_art; a++)
             {
