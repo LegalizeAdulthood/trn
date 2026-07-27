@@ -1914,7 +1914,6 @@ bool write_newsrcs(Multirc *mptr)
 
         for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
         {
-            char *delim;
             if (np->m_rc != rp)
             {
                 continue;
@@ -1922,36 +1921,33 @@ bool write_newsrcs(Multirc *mptr)
             if (np->m_num_offset)
             {
                 np->show_subscribe_char();
-                delim = np->rc_line_data() + np->m_num_offset - 1;
-                if ((np->m_flags & NF_UNTHREADED) && delim[2] == '1')
-                {
-                    delim[2] = '0';
-                }
             }
-            else
+            std::string line{np->rc_line()};
+            if (np->m_num_offset)
             {
-                delim = nullptr;
+                const std::size_t delimiter = static_cast<std::size_t>(np->m_num_offset - 1);
+                const std::size_t marker = delimiter + 2;
+                if ((np->m_flags & NF_UNTHREADED) && marker < line.size() && line[marker] == '1')
+                {
+                    line[marker] = '0';
+                }
             }
 #ifdef DEBUG
             if (g_debug & DEB_NEWSRC_LINE)
             {
-                fmt::print("{}\n", np->rc_line());
+                fmt::print("{}\n", line);
                 term_down(1);
             }
 #endif
-            fmt::print(rcfp, "{}\n", np->rc_line());
+            fmt::print(rcfp, "{}\n", line);
             if (std::ferror(rcfp))
             {
                 std::fclose(rcfp); // close new newsrc
                 goto write_error;
             }
-            if (delim)
+            if (np->m_num_offset)
             {
-                np->hide_subscribe_char();          // might still need this line
-                if ((np->m_flags & NF_UNTHREADED) && delim[2] == '0')
-                {
-                    delim[2] = '1';
-                }
+                np->hide_subscribe_char(); // might still need this line
             }
         }
         std::fflush(rcfp);

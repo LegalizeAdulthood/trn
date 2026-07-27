@@ -588,9 +588,6 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
   no longer pass `.c_str()`.
-- String-to-pointer-to-view scan: `artsrch.cpp` still builds one
-  `std::string_view` from `pattern_text.c_str() + offset`; this is a
-  simple `substr` cleanup.
 - Literal-only local pointer scan found no current Tier 0 leaf slices.
   `do_newsgroup`, `s_search`, and `sa_refresh_bot` now use
   `std::string_view`, `std::string`, or direct `fmt` output for the
@@ -608,9 +605,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   still creates local `char *` aliases into `std::string` storage,
   temporarily writes NULs, uses `std::strchr`, and walks pointers for
   wrapping and output.
-- Additional local cursor scan: `perform`, `print_lines`, `do_article`,
-  `set_to_read`, and `write_newsrcs` still walk local raw pointers over
-  owned string storage or internal `.newsrc` line storage.
+- Additional local cursor scan: `perform`, `print_lines`, and
+  `do_article` still walk local raw pointers over owned string storage
+  or internal article storage.
 - UTF helper scan: `byte_length_at`, `code_point_at`,
   `visual_width_at`, `put_char_adv`, and `dectrl` still expose or depend
   on raw C-string cursor APIs.  These should be refactored bottom-up so
@@ -618,12 +615,11 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Shell helper scan: `do_shell` still takes raw C strings and forces
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
-- Newsgroup data scan: `NewsgroupData` still exposes mutable
-  `m_rc_line` storage through raw `rc_line_data` and
-  `rc_numbers_data` accessors.  The read-only line and numbers
-  accessors now return `std::string_view`.  The mutable accessors are
-  tied to the old delimiter/NUL poking mechanism and should be reduced
-  after local parser/writer slices.
+- Newsgroup data scan: `rc_numbers_data` has one remaining production
+  caller in the `get_newsgroup` resubscribe path, where only a
+  read-only view is needed.  `rc_line_data` has no production callers.
+  After the resubscribe path uses `rc_numbers`, both mutable raw
+  accessors can be removed.
 - Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
   callers pass owned `std::string` storage directly.
 - Non-zero C function dataflow scan: remaining search/length hits are
@@ -694,7 +690,7 @@ be modernized.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-435`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-437`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -723,6 +719,19 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-435 - Newsrc Resubscribe Numbers View
+
+- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
+- Kind: read-only cursor into owned `.newsrc` line storage.
+- Function: `get_newsgroup`.
+- Dependencies: none.
+- Change: replace the local `char *cp` from `rc_numbers_data()` with a
+  `std::string_view` from `rc_numbers()`.  Preserve the existing
+  unthreaded detection that checks for the saved `0` marker when a user
+  resubscribes to an unsubscribed group.
+- Tests: add focused coverage first if no existing resubscribe test
+  covers an unthreaded marker.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
@@ -735,18 +744,7 @@ No current slices.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-432 - Newsrc Writer Delimiter Cursor
-
-- Files: `libtrn/rcstuff.cpp`, `tests/test_rcstuff.cpp`.
-- Kind: mutable cursor into owned `.newsrc` line storage.
-- Function: `write_newsrcs`.
-- Dependencies: none.
-- Change: replace the local `char *delim` cursor into `m_rc_line` with
-  index-based edits or an owner-local helper.  Preserve
-  `show_subscribe_char`/`hide_subscribe_char`, unthreaded `:0` output
-  conversion, debug output, and file write behavior.
-- Tests: use existing rcstuff write-newsrc tests; add focused coverage
-  first for unthreaded conversion if it is not covered.
+No current slices.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -793,6 +791,18 @@ No current slices.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
+
+#### CSTR-436 - Remove Mutable Newsrc Line Accessors
+
+- Files: `libtrn/ngdata.cpp`, `libtrn/include/trn/ngdata.h`.
+- Kind: unused mutable raw accessors.
+- Functions: `NewsgroupData::rc_line_data`,
+  `NewsgroupData::rc_numbers_data`.
+- Dependencies: CSTR-435.
+- Change: remove the mutable raw `.newsrc` line accessors after all
+  production callers use `rc_line()` and `rc_numbers()` views or owner
+  operations on `m_rc_line`.
+- Tests: covered by the callers migrated in the dependency slice.
 
 #### CSTR-412 - Remove Public Raw Article Buffer API
 

@@ -336,6 +336,24 @@ TEST_F(NewsrcRotationTest, writeNewsrcsReplacesNewsrcWithNewFile)
     EXPECT_FALSE(fs::exists(newsrc.new_name));
 }
 
+TEST_F(NewsrcRotationTest, writeNewsrcsConvertsUnthreadedMarkerOnlyInOutput)
+{
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    add_newsgroup(newsrc, "comp.lang.apl: 1-3");
+    NewsgroupData &group = *g_newsgroup_order[0];
+    group.m_flags |= NF_UNTHREADED;
+    std::ofstream{newsrc.name} << "old contents\n";
+
+    ASSERT_TRUE(write_newsrcs(&multirc));
+
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 0-3"}), read_lines(newsrc.name));
+    EXPECT_EQ('\0', group.m_rc_line[static_cast<std::size_t>(group.m_num_offset - 1)]);
+    group.show_subscribe_char();
+    EXPECT_EQ("comp.lang.apl: 1-3", group.m_rc_line);
+}
+
 TEST_F(NewsrcRotationTest, getOldNewsrcsRestoresBackupFile)
 {
     Newsrc  newsrc = make_newsrc();
