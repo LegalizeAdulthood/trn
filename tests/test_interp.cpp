@@ -1541,41 +1541,36 @@ class PushDir
 {
 public:
     PushDir() :
-        m_old_dir{}
+        m_old_dir{fs::current_path()}
     {
-        getcwd(m_old_dir, sizeof(m_old_dir));
     }
-    PushDir(const char *new_dir) :
+    explicit PushDir(const fs::path &new_dir) :
         PushDir()
     {
-        chdir(new_dir);
+        push(new_dir);
     }
     ~PushDir()
     {
         pop();
     }
 
-    void push(const char *new_dir)
+    void push(const fs::path &new_dir)
     {
-        chdir(new_dir);
-    }
-
-    void push(const std::string &new_dir)
-    {
-        push(new_dir.c_str());
+        fs::current_path(new_dir);
     }
 
     void pop()
     {
-        if (m_old_dir[0] != '\0')
+        if (!m_old_dir.empty())
         {
-            chdir(m_old_dir);
-            m_old_dir[0] = '\0';
+            std::error_code error;
+            fs::current_path(m_old_dir, error);
+            m_old_dir.clear();
         }
     }
 
 private:
-    char m_old_dir[TCBUF_SIZE];
+    fs::path m_old_dir;
 };
 
 struct InterpolatorNewsgroupTest : InterpolatorTest
@@ -1707,7 +1702,7 @@ TEST_F(InterpolatorNewsgroupTest, mailboxSaveQuotesFromBodyLine)
                                 << "\n"
                                 << "From body sender\n"
                                 << "plain body\n";
-    PushDir                 output_dir{output_path.c_str()};
+    PushDir                 output_dir{output_path};
     ValueSaver<std::string> private_dir(g_priv_dir, output_path);
     ValueSaver<bool>        mailbox_always(g_mbox_always, true);
     m_env.expect_no_envar("SAVENAME");
@@ -2087,7 +2082,7 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
             color_default();
         }
     } cited_text_attribute;
-    PushDir                  output_dir{output_path.c_str()};
+    PushDir                  output_dir{output_path};
     ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);
     ValueSaver<const char *> standout_start(g_tc_SO, "<so>");
     ValueSaver<const char *> standout_end(g_tc_SE, "<se>");
@@ -2115,7 +2110,7 @@ TEST_F(InterpolatorNewsgroupTest, rotatesArticleBodyText)
     const std::string output_path = m_output.path();
     const fs::path    article_file = fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM);
     write_article_body(article_file, "uryyb Jbeyq\n");
-    PushDir                 output_dir{output_path.c_str()};
+    PushDir                 output_dir{output_path};
     ValueSaver<bool>        rotate(g_rotate, true);
     ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
@@ -2142,7 +2137,7 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
     const std::string output_path = m_output.path();
     const fs::path    article_file = fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM);
     write_article_body(article_file, "_\bU text\n");
-    PushDir                  output_dir{output_path.c_str()};
+    PushDir                  output_dir{output_path};
     ValueSaver<const char *> underline_start(g_tc_US, "<ul>");
     ValueSaver<const char *> underline_end(g_tc_UE, "</ul>");
     ValueSaver<const char *> underchar(g_tc_UC, "");

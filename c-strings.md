@@ -547,9 +547,8 @@ Configure scripts, and the vendored `vcpkg` tree.
   helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  `PushDir::m_old_dir` covered by `CSTR-466` and `g_buf` covered by
-  `CSTR-409`.  The local `opt_init` `argv` shim in
+- Fixed raw buffers: the current string-shaped fixed-buffer candidate is
+  `g_buf` covered by `CSTR-409`.  The local `opt_init` `argv` shim in
   `tests/test_interp.cpp` remains an API-boundary fixture because
   `opt_init` still accepts `char *argv[]`.  Translation tables,
   terminal pushback bytes, termcap storage, keymap type bytes, regex
@@ -767,17 +766,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-466 - Store Interpolator PushDir State As Path
-
-- Files: `tests/test_interp.cpp`.
-- Kind: fixed-size path buffer in test helper storage.
-- Functions: `PushDir`.
-- Dependencies: none.
-- Change: replace `m_old_dir[TCBUF_SIZE]`, `getcwd`, and `chdir`
-  state restoration with `fs::path` storage and `fs::current_path`.
-  Keep constructor and push call sites simple, using the existing `fs`
-  namespace alias.
-- Tests: `InterpolatorTest` and `InterpolatorNewsgroupTest`.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 
