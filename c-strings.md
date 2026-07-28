@@ -622,11 +622,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   covered by `CSTR-442`, exempt by user direction, or are comment text.
   No current helper-parameter copy-to-string leaf slice remains.
 - Non-zero line-input, byte, and allocation-helper scans: `fgets`
-  remains in low-level article/NNTP input, covered by `CSTR-441`, or in
-  inactive debug code, covered by `CSTR-448`; `memset` and `memcmp` are
-  covered by `CSTR-443` and `CSTR-444`; `safe_malloc` and
-  `safe_realloc` are hash, AddGroup pointer table, regex bytecode, or
-  generic allocator internals.
+  remains in low-level article/NNTP input covered by `CSTR-441`;
+  `memset` and `memcmp` are covered by `CSTR-443` and `CSTR-444`;
+  `safe_malloc` and `safe_realloc` are hash, AddGroup pointer table,
+  regex bytecode, or generic allocator internals.
 - Non-zero C output calls are now covered by explicit source-map slices:
   `CSTR-445`, `CSTR-446`, and `CSTR-447`.  Split those coverage slices
   into one-function implementation slices before editing source.
@@ -641,9 +640,7 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   protocol/body buffers and local fixed-size output loops.
 - No active `strcpy`, `strncpy`, `std::sprintf`, or `gets` production
   hits remain in this scan.
-- The `fgets` hit in `cache.cpp` is inside inactive
-  `#ifdef PENDING`/`DEBUG` code.  This is covered by `CSTR-448`.
-  The `strcmp` and `gets` hits in `parsedate.y` are exempt from
+- The `strcmp` and `gets` hits in `parsedate.y` are exempt from
   modernization by user direction.
 - The remaining `strchr` and `strlen` hits are inside `read_art_buf` and
   are covered by `CSTR-442`.  The `strlen` spellings in
@@ -663,8 +660,8 @@ trees, legacy Configure scripts, and `vcpkg`, but it does not preprocess
 conditional blocks.
 
 - Search and length: `strcmp` 1, `strchr` 3, `strlen` 2.
-- C line input: `fgets` 4, `gets` 1.
-- C text output: `fputs` 155, `printf`/`std::printf` 293,
+- C line input: `fgets` 3, `gets` 1.
+- C text output: `fputs` 154, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 4, `memcmp` 1.
@@ -694,8 +691,7 @@ article-buffer reader and are covered by `CSTR-442`.
 - `strlen`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
   `CSTR-442`.  The extra `charsubst.cpp` scan hits are comment text.
 - `fgets`: `libtrn/artio.cpp`, file-local `read_art`;
-  `libtrn/nntp.cpp`, `nntp_read_art`; `libtrn/cache.cpp`, inactive
-  `look_ahead` debug pause.  Covered by `CSTR-441` and `CSTR-448`.
+  `libtrn/nntp.cpp`, `nntp_read_art`.  Covered by `CSTR-441`.
 - `gets`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
   modernization by user direction.
 - `memset`: `libtrn/hash.cpp`, `hash_create`; `libtrn/opt.cpp`,
@@ -703,7 +699,7 @@ article-buffer reader and are covered by `CSTR-442`.
   reset.  Covered by `CSTR-443` and `CSTR-444`.
 - `memcmp`: `libtrn/hash.cpp`, `default_cmp`.  Covered by `CSTR-443`.
 - `fputs`: `libtrn/Article.cpp` 2, `art.cpp` 3, `artsrch.cpp` 1,
-  `cache.cpp` 2, `color.cpp` 5, `datasrc.cpp` 3, `hash.cpp` 1,
+  `cache.cpp` 1, `color.cpp` 5, `datasrc.cpp` 3, `hash.cpp` 1,
   `kfile.cpp` 6, `mime.cpp` 1, `ng.cpp` 19, `ngdata.cpp` 2,
   `ngsrch.cpp` 1, `ngstuff.cpp` 6, `opt.cpp` 1, `rcln.cpp` 1,
   `rcstuff.cpp` 21, `respond.cpp` 27, `rt-page.cpp` 2,
@@ -712,7 +708,7 @@ article-buffer reader and are covered by `CSTR-442`.
   `CSTR-446`.
 - `printf`/`std::printf`: `addng.cpp` 1, `art.cpp` 13,
   `artsrch.cpp` 2, `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3,
-  `cache.cpp` 5, `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3,
+  `cache.cpp` 4, `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3,
   `intrp.cpp` 1, `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35,
   `ngdata.cpp` 6, `ngstuff.cpp` 8, `nntp.cpp` 2, `only.cpp` 1,
   `opt.cpp` 9, `rcln.cpp` 2, `rcstuff.cpp` 14, `respond.cpp` 7,
@@ -768,18 +764,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-448 - Clean Up Inactive Cache Debug Branch
-
-- Files: `libtrn/cache.cpp`.
-- Kind: inactive preprocessor code.
-- Function: `look_ahead`.
-- Dependencies: none.
-- Change: modernize the inactive `PENDING`/`DEBUG` pause branch in place
-  so its remaining `fgets` and C output calls no longer appear in the
-  lexical C function inventory.  Do not delete the branch merely to
-  remove the audit hit.
-- Tests: build with default configuration; add targeted build coverage
-  only if the inactive branch is re-enabled.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 

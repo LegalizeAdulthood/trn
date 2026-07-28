@@ -34,11 +34,14 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cctype>
 #include <charconv>
 #include <cstring>
 #include <ctime>
+#include <iostream>
 #include <map>
 #include <string>
 #include <string_view>
@@ -664,11 +667,11 @@ void look_ahead()
 #ifdef DEBUG
         if (g_debug & DEB_SEARCH_AHEAD)
         {
-            std::fputs("(hit CR)", stdout);
+            fmt::print("(hit CR)");
             std::fflush(stdout);
-            std::string pause_line(LINE_BUF_LEN - 128, '\0');
-            std::fgets(pause_line.data(), static_cast<int>(pause_line.size()), stdin);
-            std::printf("\npattern = %s\n", pattern.c_str());
+            std::string pause_line;
+            std::getline(std::cin, pause_line);
+            fmt::print("\npattern = {}\n", pattern);
             term_down(2);
         }
 #endif
