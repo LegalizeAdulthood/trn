@@ -548,7 +548,7 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  test input fixtures covered by `CSTR-459` through `CSTR-460` and
+  test input fixtures covered by `CSTR-460` and
   `g_buf` covered by `CSTR-409`.  Translation tables, terminal
   pushback bytes, termcap storage, keymap type bytes, regex bytecode
   arrays, bounded UTF byte sequences, and terminal-capability fixture
@@ -764,17 +764,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-459 - Modernize UTF String Test Fixtures
-
-- Files: `tests/test_utf.cpp`.
-- Kind: local NUL-terminated `char[]` strings passed to
-  string-view-ready APIs.
-- Functions: `transliteratesLatin1ToAscii`,
-  `transliteratesLatin1ToMonospacedAscii`.
-- Dependencies: none.
-- Change: use `std::string_view` for the transliteration inputs.  Keep
-  the bounded UTF byte-sequence array in `boundedShinView`.
-- Tests: `CharSubstTest`.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 

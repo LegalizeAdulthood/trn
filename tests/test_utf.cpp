@@ -146,14 +146,14 @@ TEST(CharSubstTest, copiesThroughFirstNewline)
 
 TEST(CharSubstTest, transliteratesLatin1ToAscii)
 {
-    const char input[]{"\304\326\334\337"};
+    constexpr std::string_view input{"\304\326\334\337"};
 
     EXPECT_EQ("AeOeUess", str_char_subst(input, 'a'));
 }
 
 TEST(CharSubstTest, transliteratesLatin1ToMonospacedAscii)
 {
-    const char input[]{"\304\326\334\337"};
+    constexpr std::string_view input{"\304\326\334\337"};
 
     EXPECT_EQ("AOUs", str_char_subst(input, 'm'));
 }
