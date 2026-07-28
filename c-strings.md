@@ -616,20 +616,17 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
   callers pass owned `std::string` storage directly.
 - Non-zero C function dataflow scan: remaining search/length hits are
-  either covered by open slices, inactive preprocessor code, termcap
-  capability strings, UTF code-point work, or comment text.  No current
-  helper-parameter copy-to-string leaf slice remains.
+  covered by `CSTR-441`, `CSTR-442`, or `CSTR-440`, or are comment text.
+  No current helper-parameter copy-to-string leaf slice remains.
 - Non-zero line-input, byte, and allocation-helper scans: `fgets`
-  remains in low-level article/NNTP input or a fixed stdin pause prompt;
-  `memcpy` is MIME parser compaction; `memset` and `memcmp` are hash or
-  header-index table operations; `safe_malloc` and `safe_realloc` are
-  hash, AddGroup pointer table, regex bytecode, or generic allocator
-  internals.
-- Non-zero C output calls remain output-modernization work, not
-  automatically string-storage slices.  Add explicit slices when an
-  output call is tied to owned string construction, cursor cleanup, or
-  audited runtime formatting; current cursor/output work is captured by
-  `CSTR-430`.
+  remains in low-level article/NNTP input, covered by `CSTR-441`, or in
+  inactive debug code, covered by `CSTR-440`; `memset` and `memcmp` are
+  covered by `CSTR-443` and `CSTR-444`; `safe_malloc` and
+  `safe_realloc` are hash, AddGroup pointer table, regex bytecode, or
+  generic allocator internals.
+- Non-zero C output calls are now covered by explicit source-map slices:
+  `CSTR-445`, `CSTR-446`, and `CSTR-447`.  Split those coverage slices
+  into one-function implementation slices before editing source.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -642,11 +639,14 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - No active `strcpy`, `strncpy`, `std::sprintf`, or `gets` production
   hits remain in this scan.
 - The two `strstr` hits are in an inactive `#ifdef UNDEF` block in
-  `sacmd.cpp`; they remain in the lexical inventory but are not active
-  slices.
-- The `strcmp` and `gets` hits are in an inactive `#ifdef TEST` block in
-  `parsedate.y`; they remain in the lexical inventory but are not active
-  slices.
+  `sacmd.cpp`; the `fgets` hit in `cache.cpp` is inside inactive
+  `#ifdef PENDING`/`DEBUG` code.  These are covered by `CSTR-440` and
+  `CSTR-448`.
+  The `strcmp` and `gets` hits in `parsedate.y` are exempt from
+  modernization by user direction.
+- The remaining `strchr` and `strlen` hits are inside `read_art_buf` and
+  are covered by `CSTR-442`.  The `strlen` spellings in
+  `charsubst.cpp` are comment examples, not calls.
 - Filename storage already uses modern path or view signatures for most
   owners.  `ScoreFile::fname` remains `std::string` because it is a
   score-file cache key that can hold a URL as well as a local path.
@@ -656,13 +656,14 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 ## Current C String Function Inventory
 
 The current scan covers the source roots listed above.  Counts below
-are lexical, identifier-aware source counts for `std::` calls and
-unqualified C calls.  The scan excludes test trees, legacy Configure
-scripts, and `vcpkg`, but it does not preprocess conditional blocks.
+are identifier-aware call counts for `std::` calls and unqualified C
+calls.  Comment text is excluded by inspection.  The scan excludes test
+trees, legacy Configure scripts, and `vcpkg`, but it does not preprocess
+conditional blocks.
 
 - Search and length: `strcmp` 1, `strchr` 3, `strstr` 2, `strlen` 2.
 - C line input: `fgets` 4, `gets` 1.
-- C text output: `fputs` 154, `printf`/`std::printf` 293,
+- C text output: `fputs` 155, `printf`/`std::printf` 293,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 4, `memcmp` 1.
@@ -678,18 +679,69 @@ The scan found no current production hits for `strcpy`, `strncpy`,
 writes.  They are tracked only where the format template itself should
 be modernized.
 
-The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness.
+The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
+and is exempt from modernization by user direction.
 The `strstr` hits are in a disabled `#ifdef UNDEF` selector branch.
 The remaining `strchr` and `strlen` hits are inside the raw
-article-buffer reader and are covered by the `read_art_buf` removal
-slice.
+article-buffer reader and are covered by `CSTR-442`.
+
+## Current C Function Source Map
+
+- `strcmp`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
+  modernization by user direction.
+- `strchr`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
+  `CSTR-442`.
+- `strstr`: `libtrn/sacmd.cpp` `#ifdef UNDEF` branch.  Covered by
+  `CSTR-440`.
+- `strlen`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
+  `CSTR-442`.  The extra `charsubst.cpp` scan hits are comment text.
+- `fgets`: `libtrn/artio.cpp`, file-local `read_art`;
+  `libtrn/nntp.cpp`, `nntp_read_art`; `libtrn/cache.cpp`, inactive
+  `look_ahead` debug pause.  Covered by `CSTR-441` and `CSTR-448`.
+- `gets`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
+  modernization by user direction.
+- `memset`: `libtrn/hash.cpp`, `hash_create`; `libtrn/opt.cpp`,
+  user-header index rebuild paths; `libtrn/sw.cpp`, user-header index
+  reset.  Covered by `CSTR-443` and `CSTR-444`.
+- `memcmp`: `libtrn/hash.cpp`, `default_cmp`.  Covered by `CSTR-443`.
+- `fputs`: `libtrn/Article.cpp` 2, `art.cpp` 3, `artsrch.cpp` 1,
+  `cache.cpp` 2, `color.cpp` 5, `datasrc.cpp` 3, `hash.cpp` 1,
+  `kfile.cpp` 6, `mime.cpp` 1, `ng.cpp` 19, `ngdata.cpp` 2,
+  `ngsrch.cpp` 1, `ngstuff.cpp` 6, `opt.cpp` 1, `rcln.cpp` 1,
+  `rcstuff.cpp` 21, `respond.cpp` 27, `rt-page.cpp` 2,
+  `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
+  `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Covered by
+  `CSTR-446`.
+- `printf`/`std::printf`: `addng.cpp` 1, `art.cpp` 13,
+  `artsrch.cpp` 2, `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3,
+  `cache.cpp` 5, `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3,
+  `intrp.cpp` 1, `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35,
+  `ngdata.cpp` 6, `ngstuff.cpp` 8, `nntp.cpp` 2, `only.cpp` 1,
+  `opt.cpp` 9, `rcln.cpp` 2, `rcstuff.cpp` 14, `respond.cpp` 7,
+  `rt-ov.cpp` 2, `rt-page.cpp` 14, `rt-select.cpp` 9,
+  `rt-util.cpp` 4, `rt-wumpus.cpp` 2, `sacmd.cpp` 5,
+  `sadesc.cpp` 1, `sadisp.cpp` 8, `scan.cpp` 3, `scmd.cpp` 2,
+  `score.cpp` 18, `scorefile.cpp` 20,
+  `scoresave.cpp` 6, `sdisp.cpp` 10, `smisc.cpp` 1, `spage.cpp` 4,
+  `terminal.cpp` 3, `trn.cpp` 12, `univ.cpp` 9, and `util.cpp` 6.
+  Covered by `CSTR-445`.  `parsedate/parsedate.y` has 5 exempt hits.
+- `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
+  `libtrn/color.cpp` 2, `decode.cpp` 1, `head.cpp` 1, `nntp.cpp` 1,
+  `opt.cpp` 2, `respond.cpp` 2, `scoresave.cpp` 1, `terminal.cpp` 1,
+  and `univ.cpp` 1.  Covered by `CSTR-445`.
+- `putchar`/`std::putchar`: `libtrn/include/trn/terminal.h` 1,
+  `art.cpp` 12, `charsubst.cpp` 5, `color.cpp` 1, `datasrc.cpp` 4,
+  `final.cpp` 1, `init.cpp` 1, `kfile.cpp` 1, `ng.cpp` 4,
+  `rcstuff.cpp` 3, `rt-page.cpp` 8, `rt-select.cpp` 5,
+  `rt-util.cpp` 6, `score.cpp` 2, `sdisp.cpp` 3, `smisc.cpp` 1,
+  `terminal.cpp` 21, and `utf.cpp` 2.  Covered by `CSTR-447`.
 
 ## Refactoring Slices
 
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-440`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-449`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -718,14 +770,87 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-440 - Clean Up Inactive Selector Branch
+
+- Files: `libtrn/sacmd.cpp`.
+- Kind: inactive preprocessor code.
+- Function: `sacmd.cpp` `UNDEF` branch.
+- Dependencies: none.
+- Change: either remove obsolete inactive blocks or modernize their
+  remaining `strstr` and C output calls so they no longer appear in the
+  lexical C function inventory.  Preserve only inactive code that still
+  has documented value.  Do not modernize `parsedate.y`.
+- Tests: build with default configuration; add targeted build coverage
+  only if an inactive block is re-enabled.
+
+#### CSTR-448 - Clean Up Inactive Cache Debug Branch
+
+- Files: `libtrn/cache.cpp`.
+- Kind: inactive preprocessor code.
+- Function: `look_ahead`.
+- Dependencies: none.
+- Change: either remove the inactive `PENDING`/`DEBUG` pause branch or
+  modernize its remaining `fgets` and C output calls so they no longer
+  appear in the lexical C function inventory.  Preserve only inactive
+  code that still has documented value.
+- Tests: build with default configuration; add targeted build coverage
+  only if the inactive branch is re-enabled.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-No current slices.
+#### CSTR-441 - Return Low-level Article Input Lines As Strings
+
+- Files: `libtrn/artio.cpp`, `libtrn/nntp.cpp`,
+  `libtrn/include/trn/nntp.h`.
+- Kind: C line input buffer boundary.
+- Function: `nntp_read_art`, file-local `read_art`, and
+  `read_art(std::string &)`.
+- Dependencies: none.
+- Change: move the article and NNTP line-input boundary toward owned
+  `std::string` lines so callers do not provide writable `char *`
+  buffers.  Keep the raw `FILE *`/protocol read at the lowest boundary
+  only if it is still required after the string API is in place.
+- Tests: article I/O tests and NNTP body-read coverage.
+
+#### CSTR-442 - Remove Raw Search And Length From `read_art_buf`
+
+- Files: `libtrn/artio.cpp`.
+- Kind: raw article-buffer parser.
+- Function: `read_art_buf(bool)`.
+- Dependencies: `CSTR-441`.
+- Change: replace the remaining `std::strchr` and `std::strlen` cursor
+  work with string or view operations after article input lines have an
+  owned string boundary.  Preserve hiding, MIME, filtering, and
+  word-wrap behavior with tests before refactoring.
+- Tests: article I/O and article display tests.
+
+#### CSTR-443 - Replace Hash Default Byte Compare
+
+- Files: `libtrn/hash.cpp`, `libtrn/include/trn/hash.h`.
+- Kind: byte operation on hash payload text.
+- Function: `default_cmp`.
+- Dependencies: none.
+- Change: classify `HashDatum` payload ownership and replace the
+  `std::memcmp` text comparison with a view comparison when the default
+  hash comparer is text-only.  Do not change non-text hash payload
+  users without a storage/API slice.
+- Tests: `tests/test_hash.cpp`.
+
+#### CSTR-444 - Replace User Header Index Raw Clears
+
+- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`,
+  `libtrn/opt.cpp`, `libtrn/sw.cpp`.
+- Kind: non-string byte operation on table storage.
+- Function: user-header index reset and rebuild paths.
+- Dependencies: none.
+- Change: replace `std::memset` clearing of
+  `g_user_header_type_index` with type-aware table initialization such
+  as `std::fill`.  Preserve the current index semantics and inspect the
+  existing `sw.cpp` byte count before changing behavior.
+- Tests: option/header tests.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -746,7 +871,41 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-No current slices.
+#### CSTR-445 - Split Remaining Formatted Output Calls
+
+- Files: see `printf` and `fprintf` source map above.
+- Kind: formatted C output.
+- Function: multiple functions; split before implementation.
+- Dependencies: none.
+- Change: replace this coverage slice with one-function slices that
+  convert formatted `printf`/`fprintf` calls to `fmt::print` or
+  `fmt::format` where the format string is static or audited.  Leave
+  runtime format strings visible until their source is classified.
+- Tests: source-specific tests or full output workflow checks.
+
+#### CSTR-446 - Split Remaining Plain Text Output Calls
+
+- Files: see `fputs` source map above.
+- Kind: plain C string output.
+- Function: multiple functions; split before implementation.
+- Dependencies: none.
+- Change: replace this coverage slice with one-function slices that
+  convert `fputs` only when doing so simplifies string construction,
+  removes C-string staging, or aligns nearby formatted output with fmt.
+  Keep plain C output if it remains the simplest boundary call.
+- Tests: source-specific tests or full output workflow checks.
+
+#### CSTR-447 - Split Remaining Character Output Calls
+
+- Files: see `putchar` source map above.
+- Kind: character output.
+- Function: multiple functions; split before implementation.
+- Dependencies: none.
+- Change: replace this coverage slice with one-function slices that
+  modernize `putchar` loops only when the loop is already moving to
+  string/view output or a terminal helper API.  Treat UTF and terminal
+  cursor helpers as lower-level dependencies when they own the loop.
+- Tests: terminal, UTF, and display tests as appropriate.
 
 ### Tier 5 - Helper Removal
 
@@ -759,7 +918,7 @@ owned strings or owner-specific storage.
   `tests/test_artio.cpp`.
 - Kind: raw string return helper.
 - Function: `read_art_buf(bool)`.
-- Dependencies: none.
+- Dependencies: `CSTR-442`.
 - Change: after production callers use owned line storage, remove the
   public `char *` article-buffer overload or make it file-local
   implementation detail.  Keep `read_art_buf(std::string &, bool)` as
