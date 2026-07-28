@@ -819,7 +819,7 @@ reask_pager:
 #ifdef DEBUG
         if (g_debug & DEB_CHECKPOINTING)
         {
-            std::printf("(%d %d %d)",g_check_count,line_num.value_of(),g_art_line_num.value_of());
+            fmt::print("({} {} {})", g_check_count, line_num.value_of(), g_art_line_num.value_of());
             std::fflush(stdout);
         }
 #endif
