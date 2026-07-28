@@ -350,9 +350,7 @@ TEST_F(InterpolatorTest, articleSearchPattern)
     g_last_pat = "needle";
     g_art_do_read = false;
     g_art_how_much = ARTSCOPE_SUBJECT;
-    char pattern[]{"%/"};
-
-    interpolate(pattern);
+    interpolate("%/");
 
     EXPECT_EQ("/needle/", buffer());
 }
@@ -363,9 +361,7 @@ TEST_F(InterpolatorTest, articleSearchPatternForOneHeader)
     g_art_do_read = true;
     g_art_how_much = ARTSCOPE_ONE_HDR;
     g_art_srch_hdr = SUBJ_LINE;
-    char pattern[]{"%/"};
-
-    interpolate(pattern);
+    interpolate("%/");
 
     EXPECT_EQ("/needle/rHsubject", buffer());
 }
@@ -422,283 +418,249 @@ TEST_F(InterpolatorTest, stopCharactersNotFoundReturnsEnd)
 
 TEST_F(InterpolatorTest, tilde)
 {
-    char pattern[]{"%~"};
+    const std::string_view new_pattern = interpolate("%~");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HOME_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, dotDir)
 {
-    char pattern[]{"%."};
+    const std::string_view new_pattern = interpolate("%.");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_DOT_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, processId)
 {
-    char pattern[]{"%$"};
+    const std::string_view new_pattern = interpolate("%$");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::to_string(m_test_pid), buffer());
 }
 
 TEST_F(InterpolatorTest, environmentVarValue)
 {
     m_env.expect_env("FOO", "value");
-    char pattern[]{"%{FOO}"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%{FOO}");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("value", buffer());
 }
 
 TEST_F(InterpolatorTest, environmentVarValueDefault)
 {
     m_env.expect_no_envar("FOO");
-    char pattern[]{"%{FOO-not set}"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%{FOO-not set}");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("not set", buffer());
 }
 
 TEST_F(InterpolatorTest, articleNumberOutsideNewsgroupIsEmpty)
 {
-    char pattern[]{"%a"};
+    const std::string_view new_pattern = interpolate("%a");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
 {
-    char pattern[]{"%a"};
     g_in_ng = true;
     g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%a");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::to_string(TRN_TEST_ARTICLE_NUM), buffer());
 }
 
 TEST_F(InterpolatorTest, articleNameOutsideNewsgroup)
 {
-    char pattern[]{"%A"};
+    const std::string_view new_pattern = interpolate("%A");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, articleNameInsideLocalNewsgroupArticleClosed)
 {
-    char pattern[]{"%A"};
     g_in_ng = true;
     g_newsgroup_dir = TRN_TEST_NEWSGROUP_SUBDIR;
     g_last_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
     g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%A");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_ARTICLE_FILE, buffer());
 }
 
 TEST_F(InterpolatorTest, saveDestinationNotSet)
 {
-    char pattern[]{"%b"};
+    const std::string_view new_pattern = interpolate("%b");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, saveDestinationSet)
 {
     g_save_dest = "/tmp/frob";
-    char pattern[]{"%b"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%b");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("/tmp/frob", buffer());
 }
 
 TEST_F(InterpolatorTest, relativeNewsgroupDir)
 {
     g_newsgroup_dir = "comp/arch";
-    char pattern[]{"%c"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%c");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("comp/arch", buffer());
 }
 
 TEST_F(InterpolatorTest, relativeNewsgroupDirNotSet)
 {
     g_newsgroup_dir.clear();
-    char pattern[]{"%c"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%c");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsgroupNameNotSet)
 {
     g_newsgroup_name.clear();
-    char pattern[]{"%C"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%C");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsgroupNameSet)
 {
     g_newsgroup_name = "comp.arch";
-    char pattern[]{"%C"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%C");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("comp.arch", buffer());
 }
 
 TEST_F(InterpolatorTest, absoluteNewsgroupDirNotSet)
 {
     g_newsgroup_dir.clear();
-    char pattern[]{"%d"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%d");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
 {
     g_in_ng = false;
-    char pattern[]{"%D"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%D");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, extractProgramNotSet)
 {
     g_extract_prog.clear();
-    char pattern[]{"%e"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%e");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("-", buffer());
 }
 
 TEST_F(InterpolatorTest, extractProgramSet)
 {
     g_extract_prog = "uudecode";
-    char pattern[]{"%e"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%e");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("uudecode", buffer());
 }
 
 TEST_F(InterpolatorTest, extractDestinationNotSet)
 {
     g_extract_dest.clear();
-    char pattern[]{"%E"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%E");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, extractDestinationSet)
 {
     g_extract_dest = "/home/users/foo";
-    char pattern[]{"%E"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%E");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("/home/users/foo", buffer());
 }
 
 TEST_F(InterpolatorTest, fromLineNotInNewsgroup)
 {
     g_in_ng = false;
-    char pattern[]{"%f"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%f");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, followupNotInNewsgroup)
 {
     g_in_ng = false;
-    char pattern[]{"%F"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%F");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, generalMode)
 {
     g_general_mode = GM_PROMPT;
-    char pattern[]{"%g"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%g");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("p", buffer());
 }
 
 TEST_F(InterpolatorTest, headerFileName)
 {
-    char pattern[]{"%h"};
+    const std::string_view new_pattern = interpolate("%h");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::string{TRN_TEST_DOT_DIR} + "/.rnhead." + std::to_string(m_test_pid), buffer());
 }
 
 TEST_F(InterpolatorTest, hostName)
 {
-    char pattern[]{"%H"};
+    const std::string_view new_pattern = interpolate("%H");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_P_HOST_NAME, buffer());
 }
 

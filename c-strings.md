@@ -548,7 +548,7 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  test input fixtures covered by `CSTR-462` through `CSTR-465` and
+  test input fixtures covered by `CSTR-463` through `CSTR-465` and
   `g_buf` covered by `CSTR-409`.  Translation tables, terminal
   pushback bytes, termcap storage, keymap type bytes, regex bytecode
   arrays, bounded UTF byte sequences, and terminal-capability fixture
@@ -770,16 +770,6 @@ No current slices.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-462 - Modernize Early Interpolator Scalar Patterns
-
-- Files: `tests/test_interp.cpp`.
-- Kind: local `pattern[]` buffers for simple percent escapes.
-- Functions: `articleSearchPattern` through `hostMatchName`.
-- Dependencies: none.
-- Change: migrate one-shot local pattern buffers to direct
-  `std::string_view` inputs and remaining views.
-- Tests: listed `InterpTest` cases.
 
 #### CSTR-463 - Modernize Interpolator Field Patterns
 
