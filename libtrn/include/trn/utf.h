@@ -39,9 +39,9 @@ int byte_length_at(std::string_view s);
 int byte_length_at(const char *s);
 int visual_width_at(std::string_view s);
 int visual_width_at(const char *s);
-int visual_length_of(const char *s);
-int visual_length_between(const char *s1, const char *s2);
-int insert_unicode_at(char *s, CodePoint c);
+int         visual_length_of(const char *s);
+int         visual_length_between(const char *s1, const char *s2);
+std::string insert_unicode_at(CodePoint c);
 
 enum : CodePoint
 {

@@ -1694,8 +1694,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             {
                 if (ncr)
                 {
-                    char unicode[8]{};
-                    output.append(unicode, static_cast<std::size_t>(insert_unicode_at(unicode, ncr)));
+                    output += insert_unicode_at(ncr);
                 }
                 pos += static_cast<std::size_t>(ncr_found);
             }

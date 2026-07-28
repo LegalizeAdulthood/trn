@@ -394,45 +394,33 @@ TEST(UTFVisualLengthTest, cjk)
     ASSERT_EQ(4, visual_length_of("\350\211\257\345\277\203"));
 }
 
-TEST(UTFInsertUnicodeAtTest, null)
+class UTFInsertUnicodeAtTest : public Test
 {
-    ASSERT_EQ(0, insert_unicode_at(nullptr, 0x40));
+protected:
+    void SetUp() override
+    {
+        utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
+    }
+};
+
+TEST_F(UTFInsertUnicodeAtTest, ascii)
+{
+    ASSERT_EQ(std::string{"d"}, insert_unicode_at(0x64));
 }
 
-TEST(UTFInsertUnicodeAtTest, ascii)
+TEST_F(UTFInsertUnicodeAtTest, iso_8859_1)
 {
-    char buf[8]{};
-
-    ASSERT_EQ(1, insert_unicode_at(buf, 0x64));
-
-    ASSERT_EQ(std::string{"d"}, buf);
+    ASSERT_EQ(std::string{"\303\244"}, insert_unicode_at(0xE4));
 }
 
-TEST(UTFInsertUnicodeAtTest, iso_8859_1)
+TEST_F(UTFInsertUnicodeAtTest, cjk_basic)
 {
-    char buf[8]{};
-
-    ASSERT_EQ(2, insert_unicode_at(buf, 0xE4));
-
-    ASSERT_EQ(std::string{"\303\244"}, buf);
+    ASSERT_EQ(std::string{"\344\270\200"}, insert_unicode_at(0x4E00));
 }
 
-TEST(UTFInsertUnicodeAtTest, cjk_basic)
+TEST_F(UTFInsertUnicodeAtTest, kissing_face_with_closed_eyes)
 {
-    char buf[8]{};
-
-    ASSERT_EQ(3, insert_unicode_at(buf, 0x4E00));
-
-    ASSERT_EQ(std::string{"\344\270\200"}, buf);
-}
-
-TEST(UTFInsertUnicodeAtTest, kissing_face_with_closed_eyes)
-{
-    char buf[8]{};
-
-    ASSERT_EQ(4, insert_unicode_at(buf, KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT));
-
-    ASSERT_EQ(std::string{"\360\237\230\232"}, buf);
+    ASSERT_EQ(std::string{"\360\237\230\232"}, insert_unicode_at(KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT));
 }
 
 // create copy of string converted to utf8

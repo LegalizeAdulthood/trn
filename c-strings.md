@@ -547,11 +547,11 @@ Configure scripts, and the vendored `vcpkg` tree.
   helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  `g_buf` and the UTF code-point output buffer behind
-  `insert_unicode_at`, covered by `CSTR-449`.  Translation tables,
-  terminal pushback bytes, termcap storage, keymap type bytes, and regex
-  bytecode arrays are non-string protocol or parser storage.
+- Fixed raw buffers: the current string-shaped fixed-buffer candidate is
+  `g_buf`.  The UTF code-point output helper now returns
+  `std::string`.  Translation tables, terminal pushback bytes, termcap
+  storage, keymap type bytes, and regex bytecode arrays are non-string
+  protocol or parser storage.
 - Direct `assign(data(), size())` and whole-string
   `std::string_view{data(), size()}` scans have no remaining production
   hits.
@@ -663,20 +663,20 @@ C calls.  Comment text is excluded by inspection.  The scan excludes
 legacy Configure scripts and `vcpkg`, but it does not preprocess
 conditional blocks.
 
-- Search and length: `strcmp` 1.
+- Search and length: `strcmp` 2, `strlen` 3.
+- C string copy: `strcpy` 2, `strncpy` 1.
 - C line input: `fgets` 2, `gets` 1.
-- C text output: `fputs` 154, `printf`/`std::printf` 292,
+- C text output: `fputs` 156, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
 
-The scan found no current production hits for `strcpy`, `strncpy`,
-`strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`,
-`strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`, `sprintf`,
-`snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `puts`, `memcpy`,
-`memmove`, `memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`,
-`std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
-`std::strtod`.
+The scan found no current active source/test hits for `strcat`,
+`strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`, `strspn`,
+`strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
+`vsprintf`, `vsnprintf`, `puts`, `memcpy`, `memmove`, `memcmp`,
+`memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`,
+`std::strtol`, `std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -684,12 +684,16 @@ be modernized.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
 and is exempt from modernization by user direction.
-The `strlen` spelling in `charsubst.cpp` is comment text.
+The `strlen` spellings in `charsubst.cpp` are comment text.
 
 ## Current C Function Source Map
 
-- `strcmp`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
-  modernization by user direction.
+- `strcpy`: `tests/test_utf.cpp` 2.  Covered by `CSTR-451`.
+- `strncpy`: `tests/test_string-algos.cpp` 1.  Covered by `CSTR-451`.
+- `strcmp`: `tests/test_final.cpp` 1, covered by `CSTR-452`.
+  `parsedate/parsedate.y` has 1 exempt `#ifdef TEST` harness hit.
+- `strlen`: `tests/test_datasrc.cpp` 2 and `tests/test_rt-util.cpp` 1.
+  Covered by `CSTR-450`.
 - `fgets`: `libtrn/artio.cpp`, `read_art_chunk`; `libtrn/nntp.cpp`,
   `read_art_file_chunk`.  These are internal `FILE *` boundaries behind
   string-returning APIs.
@@ -703,8 +707,9 @@ The `strlen` spelling in `charsubst.cpp` is comment text.
   `ngsrch.cpp` 1, `ngstuff.cpp` 6, `opt.cpp` 1, `rcln.cpp` 1,
   `rcstuff.cpp` 21, `respond.cpp` 27, `rt-page.cpp` 2,
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
-  `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Covered by
-  `CSTR-446`.
+  `terminal.cpp` 14, `trn.cpp` 11, `util.cpp` 2,
+  `tests/test_decode.cpp` 1, and `tests/test_uudecode.cpp` 1.  Covered
+  by `CSTR-446`; the test-only hits are covered by `CSTR-453`.
 - `printf`/`std::printf`: `addng.cpp` 1, `art.cpp` 13,
   `artsrch.cpp` 2, `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3,
   `cache.cpp` 4, `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3,
@@ -734,7 +739,7 @@ The `strlen` spelling in `charsubst.cpp` is comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-450`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-454`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -763,27 +768,55 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-450 - Remove Test Literal Length Calls
+
+- Files: `tests/test_datasrc.cpp`, `tests/test_rt-util.cpp`.
+- Kind: test-local C string length.
+- Function: `std::strlen`.
+- Dependencies: none.
+- Change: replace `std::strlen` with `std::string_view::size()` or an
+  existing string size.  Use `size_cast` when the result must remain an
+  `int`.
+- Tests: affected `DataSource` and `rt-util` tests.
+
+#### CSTR-451 - Replace Test C String Copy Setup
+
+- Files: `tests/test_string-algos.cpp`, `tests/test_utf.cpp`.
+- Kind: test-local C string copy.
+- Function: `std::strcpy`, `std::strncpy`.
+- Dependencies: none.
+- Change: replace C copy calls used for test setup with modern storage or
+  copy helpers that match the API under test.  Do not skip test code
+  merely because it is test code.
+- Tests: affected string algorithm and UTF tests.
+
+#### CSTR-452 - Replace Test Environment Name Comparison
+
+- Files: `tests/test_final.cpp`.
+- Kind: test-local C string comparison.
+- Function: `std::strcmp`.
+- Dependencies: none.
+- Change: compare the requested environment variable name with
+  `std::string_view` or another modern string comparison while preserving
+  the mock environment contract.
+- Tests: affected finalization tests.
+
+#### CSTR-453 - Replace Test File Writes
+
+- Files: `tests/test_decode.cpp`, `tests/test_uudecode.cpp`.
+- Kind: test-local plain C string output.
+- Function: `std::fputs`.
+- Dependencies: none.
+- Change: use fmt or another existing owned-string write path for test
+  input setup instead of direct C string output.
+- Tests: affected decode and uudecode tests.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-449 - Return Encoded Unicode Text From UTF Helper
-
-- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
-  `libtrn/mime.cpp`.
-- Kind: caller-owned output buffer helper.
-- Function: `insert_unicode_at(char *, CodePoint)`.
-- Dependencies: none.
-- Change: add or replace with a `std::string`-returning helper that
-  returns the encoded bytes for one code point.  Update MIME numeric
-  character reference handling to append the returned string directly
-  and remove the local `char[8]` buffer.  Keep a raw-buffer wrapper only
-  if production callers remain; otherwise remove the raw declaration.
-- Tests: MIME numeric character reference tests and UTF helper tests if
-  present.
+No current slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

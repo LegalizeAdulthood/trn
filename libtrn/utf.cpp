@@ -422,84 +422,68 @@ CodePoint code_point_at(const char *s)
     return code_point_at(std::string_view{s});
 }
 
-static int insert_utf8_at(char *s, CodePoint c)
+static std::string utf8_text(CodePoint c)
 {
-    int it;
-    // FIXME - should we check if s has enough space?
-    if (s == nullptr)
+    std::string text;
+    text.reserve(6);
+
+    if (c <= 0x0000007F)
     {
-        it = 0;
-    }
-    else if (c <= 0x0000007F)
-    {
-        s[0] = (char)c;
-        it = 1;
+        text.push_back(static_cast<char>(c));
     }
     else if (c <= 0x000007FF)
     {
-        s[0] = ((char)(c >>  6) & 0x1F) | 0xC0;
-        s[1] = ((char) c        & 0x3F) | 0x80;
-        it = 2;
+        text.push_back(static_cast<char>(((c >> 6) & 0x1F) | 0xC0));
+        text.push_back(static_cast<char>((c & 0x3F) | 0x80));
     }
     else if (c <= 0x0000FFFF)
     {
-        s[0] = ((char)(c >> 12) & 0x1F) | 0xE0;
-        s[1] = ((char)(c >>  6) & 0x3F) | 0x80;
-        s[2] = ((char) c        & 0x3F) | 0x80;
-        it = 3;
+        text.push_back(static_cast<char>(((c >> 12) & 0x1F) | 0xE0));
+        text.push_back(static_cast<char>(((c >> 6) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>((c & 0x3F) | 0x80));
     }
     else if (c <= 0x001FFFFF)
     {
-        s[0] = ((char)(c >> 18) & 0x1F) | 0xF0;
-        s[1] = ((char)(c >> 12) & 0x3F) | 0x80;
-        s[2] = ((char)(c >>  6) & 0x3F) | 0x80;
-        s[3] = ((char) c        & 0x3F) | 0x80;
-        it = 4;
+        text.push_back(static_cast<char>(((c >> 18) & 0x1F) | 0xF0));
+        text.push_back(static_cast<char>(((c >> 12) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>(((c >> 6) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>((c & 0x3F) | 0x80));
     }
     else if (c <= 0x03FFFFFF)
     {
-        s[0] = ((char)(c >> 24) & 0x1F) | 0xF8;
-        s[1] = ((char)(c >> 18) & 0x3F) | 0x80;
-        s[2] = ((char)(c >> 12) & 0x3F) | 0x80;
-        s[3] = ((char)(c >>  6) & 0x3F) | 0x80;
-        s[4] = ((char) c        & 0x3F) | 0x80;
-        it = 5;
+        text.push_back(static_cast<char>(((c >> 24) & 0x1F) | 0xF8));
+        text.push_back(static_cast<char>(((c >> 18) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>(((c >> 12) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>(((c >> 6) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>((c & 0x3F) | 0x80));
     }
     else if (c <= 0x7FFFFFFF)
     {
-        s[0] = ((char)(c >> 30) & 0x1F) | 0xFC;
-        s[1] = ((char)(c >> 24) & 0x3F) | 0x80;
-        s[2] = ((char)(c >> 18) & 0x3F) | 0x80;
-        s[3] = ((char)(c >> 12) & 0x3F) | 0x80;
-        s[3] = ((char)(c >>  6) & 0x3F) | 0x80;
-        s[4] = ((char) c        & 0x3F) | 0x80;
-        it = 6;
+        text.push_back(static_cast<char>(((c >> 30) & 0x1F) | 0xFC));
+        text.push_back(static_cast<char>(((c >> 24) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>(((c >> 18) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>(((c >> 12) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>(((c >> 6) & 0x3F) | 0x80));
+        text.push_back(static_cast<char>((c & 0x3F) | 0x80));
     }
-    return it;
+    return text;
 }
 
-int insert_unicode_at(char *s, CodePoint c)
+std::string insert_unicode_at(CodePoint c)
 {
-    int it;
-    // FIXME - should we check if s has enough space?
-    if (s == nullptr)
+    if (IS_UTF8(s_gs.in))
     {
-        it = 0;
+        return utf8_text(c);
     }
-    else if (IS_UTF8(s_gs.in))
+    if (c <= 0x7F)
     {
-        it = insert_utf8_at(s, c);
+        return std::string(1, static_cast<char>(c));
     }
-    else if (c <= 0x7F)
+    if (s_gs.himap_in != nullptr)
     {
-        s[0] = (char)c;
-        it = 1;
+        return utf8_text(s_gs.himap_in[c & 0x7F]);
     }
-    else if (s_gs.himap_in != nullptr)
-    {
-        it = insert_utf8_at(s, s_gs.himap_in[c & 0x7F]);
-    }
-    return it;
+    return {};
 }
 
 bool at_norm_char(std::string_view s)
@@ -568,11 +552,10 @@ int put_char_adv(std::string_view &text, bool outputok)
         }
         else if (s_gs.himap_in)
         {
-            char buf[7];
-            int w = insert_utf8_at(buf, s_gs.himap_in[U(ch) & 0x7F]);
-            for (int i = 0; i < w; i += 1)
+            std::string encoded_text = utf8_text(s_gs.himap_in[U(ch) & 0x7F]);
+            for (char byte : encoded_text)
             {
-                std::putchar(buf[i]);
+                std::putchar(byte);
             }
             it = 1;
             text.remove_prefix(1);
@@ -589,17 +572,14 @@ std::string create_utf8_copy(const char *s)
         return result;
     }
 
-    int  slen;
-    int  tlen;
-    char buf[7];
-
     // Precalculate size of required space
-    for (slen = tlen = 0; s[slen];)
+    std::size_t tlen = 0;
+    for (int slen = 0; s[slen];)
     {
-        int sw = byte_length_at(s + slen);
-        int tw = insert_utf8_at(buf, code_point_at(s + slen));
+        const int         sw = byte_length_at(s + slen);
+        const std::string encoded_text = utf8_text(code_point_at(s + slen));
         slen += sw;
-        tlen += tw;
+        tlen += encoded_text.size();
     }
 
     result.reserve(tlen);
@@ -607,8 +587,7 @@ std::string create_utf8_copy(const char *s)
     // Create the actual copy
     for (int i = 0; s[i];)
     {
-        int tw = insert_utf8_at(buf, code_point_at(s + i));
-        result.append(buf, tw);
+        result += utf8_text(code_point_at(s + i));
         i += byte_length_at(s + i);
     }
     return result;
