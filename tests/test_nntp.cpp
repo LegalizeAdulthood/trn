@@ -521,12 +521,9 @@ TEST_F(NNTPBodyTest, unstuffsDotPrefixedBodyLines)
 
     nntp_body(ArticleNum{7});
 
-    char line[NNTP_STRLEN]{};
-    ASSERT_EQ(line, nntp_read_art(line, sizeof line));
-    EXPECT_STREQ("plain\n", line);
-    ASSERT_EQ(line, nntp_read_art(line, sizeof line));
-    EXPECT_STREQ(".dot-stuffed\n", line);
-    EXPECT_EQ(nullptr, nntp_read_art(line, sizeof line));
+    EXPECT_EQ("plain\n", nntp_read_art(NNTP_STRLEN));
+    EXPECT_EQ(".dot-stuffed\n", nntp_read_art(NNTP_STRLEN));
+    EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
 }
 
 TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)
@@ -543,8 +540,7 @@ TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)
 
     nntp_body(ArticleNum{7});
 
-    std::string line(NNTP_STRLEN, '\0');
-    EXPECT_EQ(nullptr, nntp_read_art(line.data(), static_cast<int>(line.size())));
+    EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
 }
 
 TEST_F(NNTPBodyTest, requestsBodyWhenArticleHeaderIsParsed)

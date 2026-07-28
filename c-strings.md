@@ -621,11 +621,12 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Non-zero C function dataflow scan: remaining search/length hits are
   covered by `CSTR-442`, exempt by user direction, or are comment text.
   No current helper-parameter copy-to-string leaf slice remains.
-- Non-zero line-input, byte, and allocation-helper scans: `fgets`
-  remains in low-level article/NNTP input covered by `CSTR-441`;
-  `memset` and `memcmp` are covered by `CSTR-443` and `CSTR-444`;
-  `safe_malloc` and `safe_realloc` are hash, AddGroup pointer table,
-  regex bytecode, or generic allocator internals.
+- Non-zero line-input, byte, and allocation-helper scans: the remaining
+  `fgets` calls are low-level `FILE *` input boundaries behind
+  string-returning article input APIs; `memset` and `memcmp` are covered
+  by `CSTR-443` and `CSTR-444`; `safe_malloc` and `safe_realloc` are
+  hash, AddGroup pointer table, regex bytecode, or generic allocator
+  internals.
 - Non-zero C output calls are now covered by explicit source-map slices:
   `CSTR-445`, `CSTR-446`, and `CSTR-447`.  Split those coverage slices
   into one-function implementation slices before editing source.
@@ -636,8 +637,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
 - Article display/copy paths now use `std::string` for the shared
-  article line.  The low-level `read_art(char *, int)` API remains for
-  protocol/body buffers and local fixed-size output loops.
+  article line.  Low-level article input APIs now return
+  `std::string`; the remaining `fgets` calls are internal `FILE *`
+  boundaries.
 - No active `strcpy`, `strncpy`, `std::sprintf`, or `gets` production
   hits remain in this scan.
 - The `strcmp` and `gets` hits in `parsedate.y` are exempt from
@@ -659,8 +661,8 @@ calls.  Comment text is excluded by inspection.  The scan excludes test
 trees, legacy Configure scripts, and `vcpkg`, but it does not preprocess
 conditional blocks.
 
-- Search and length: `strcmp` 1, `strchr` 3, `strlen` 2.
-- C line input: `fgets` 3, `gets` 1.
+- Search and length: `strcmp` 1, `strchr` 3, `strlen` 1.
+- C line input: `fgets` 2, `gets` 1.
 - C text output: `fputs` 154, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
@@ -690,8 +692,9 @@ article-buffer reader and are covered by `CSTR-442`.
   `CSTR-442`.
 - `strlen`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
   `CSTR-442`.  The extra `charsubst.cpp` scan hits are comment text.
-- `fgets`: `libtrn/artio.cpp`, file-local `read_art`;
-  `libtrn/nntp.cpp`, `nntp_read_art`.  Covered by `CSTR-441`.
+- `fgets`: `libtrn/artio.cpp`, `read_art_chunk`; `libtrn/nntp.cpp`,
+  `read_art_file_chunk`.  These are internal `FILE *` boundaries behind
+  string-returning APIs.
 - `gets`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
   modernization by user direction.
 - `memset`: `libtrn/hash.cpp`, `hash_create`; `libtrn/opt.cpp`,
@@ -771,26 +774,12 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-441 - Return Low-level Article Input Lines As Strings
-
-- Files: `libtrn/artio.cpp`, `libtrn/nntp.cpp`,
-  `libtrn/include/trn/nntp.h`.
-- Kind: C line input buffer boundary.
-- Function: `nntp_read_art`, file-local `read_art`, and
-  `read_art(std::string &)`.
-- Dependencies: none.
-- Change: move the article and NNTP line-input boundary toward owned
-  `std::string` lines so callers do not provide writable `char *`
-  buffers.  Keep the raw `FILE *`/protocol read at the lowest boundary
-  only if it is still required after the string API is in place.
-- Tests: article I/O tests and NNTP body-read coverage.
-
 #### CSTR-442 - Remove Raw Search And Length From `read_art_buf`
 
 - Files: `libtrn/artio.cpp`.
 - Kind: raw article-buffer parser.
 - Function: `read_art_buf(bool)`.
-- Dependencies: `CSTR-441`.
+- Dependencies: none.
 - Change: replace the remaining `std::strchr` and `std::strlen` cursor
   work with string or view operations after article input lines have an
   owned string boundary.  Preserve hiding, MIME, filtering, and

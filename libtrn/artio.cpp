@@ -45,8 +45,6 @@ static constexpr std::size_t ART_BUF_GROWTH{LINE_BUF_LEN * 4};
 
 static std::string s_art_buf;
 
-static char *read_art(char *s, int limit);
-
 void art_io_init()
 {
     s_art_buf.assign(INITIAL_ART_BUF_SIZE, '\0');
@@ -152,13 +150,26 @@ ArticlePosition tell_art()
     return ftell_art();
 }
 
-static char *read_art(char *s, int limit)
+static std::string read_art_chunk(int limit)
 {
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        return nntp_read_art(s, limit);
+        return nntp_read_art(limit);
     }
-    return std::fgets(s, limit, g_art_fp);
+
+    if (limit <= 1)
+    {
+        return {};
+    }
+
+    std::string line(static_cast<std::size_t>(limit), '\0');
+    if (std::fgets(line.data(), limit, g_art_fp) == nullptr)
+    {
+        return {};
+    }
+    const std::size_t terminator = line.find('\0');
+    line.resize(terminator == std::string::npos ? line.size() : terminator);
+    return line;
 }
 
 bool read_art(std::string &line)
@@ -167,18 +178,14 @@ bool read_art(std::string &line)
     line.reserve(LINE_BUF_LEN);
     while (true)
     {
-        const std::size_t old_size = line.size();
-        line.resize(old_size + LINE_BUF_LEN);
-        char *const input = line.data() + old_size;
-        if (read_art(input, LINE_BUF_LEN) == nullptr)
+        const std::string chunk = read_art_chunk(LINE_BUF_LEN);
+        if (chunk.empty())
         {
-            line.resize(old_size);
             return !line.empty();
         }
 
-        const std::size_t terminator = line.find('\0', old_size);
-        line.resize(terminator == std::string::npos ? line.size() : terminator);
-        if (line.empty() || line.back() == '\n' || line.size() - old_size < LINE_BUF_LEN - 1)
+        line += chunk;
+        if (line.back() == '\n' || chunk.size() < LINE_BUF_LEN - 1)
         {
             return true;
         }
@@ -297,7 +304,9 @@ read_more:
     default:
         read_something = 1;
         // The -1 leaves room for appending a newline, if needed
-        if (!read_art(bp + o, static_cast<int>(s_art_buf.size() - g_art_buf_pos.value_of() - o - 1)))
+        const int         read_limit = static_cast<int>(s_art_buf.size() - g_art_buf_pos.value_of() - o - 1);
+        const std::string chunk = read_art_chunk(read_limit);
+        if (chunk.empty())
         {
             if (!read_offset)
             {
@@ -308,8 +317,14 @@ read_more:
             }
             write_newline(static_cast<std::size_t>(bp + o - g_art_buf));
             read_something = -1;
+            len = read_offset + 1;
         }
-        len = std::strlen(bp+o) + read_offset;
+        else
+        {
+            chunk.copy(bp + o, chunk.size());
+            bp[o + chunk.size()] = '\0';
+            len = static_cast<int>(chunk.size()) + read_offset;
+        }
         if (bp[len + extra_offset - 1] != '\n')
         {
             if (read_something >= 0)

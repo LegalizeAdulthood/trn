@@ -30,8 +30,9 @@
 #include <string_view>
 #include <system_error>
 
-static ArticleNum nntp_next_art();
-static int        nntp_copy_body(std::string &line, int limit, ArticlePosition pos);
+static ArticleNum  nntp_next_art();
+static int         nntp_copy_body(std::string &line, int limit, ArticlePosition pos);
+static std::string read_art_file_chunk(int limit);
 
 static ArticlePosition s_body_pos{-1};
 static ArticlePosition s_body_end{};
@@ -453,8 +454,30 @@ ArticlePosition nntp_tell_art()
     return s_body_pos < 0 ? ftell_art() : s_body_pos;
 }
 
-char *nntp_read_art(char *s, int limit)
+static std::string read_art_file_chunk(int limit)
 {
+    if (limit <= 1)
+    {
+        return {};
+    }
+
+    std::string line(static_cast<std::size_t>(limit), '\0');
+    if (std::fgets(line.data(), limit, g_art_fp) == nullptr)
+    {
+        return {};
+    }
+    const std::size_t terminator = line.find('\0');
+    line.resize(terminator == std::string::npos ? line.size() : terminator);
+    return line;
+}
+
+std::string nntp_read_art(int limit)
+{
+    if (limit <= 1)
+    {
+        return {};
+    }
+
     if (s_body_pos >= 0)
     {
         if (s_body_pos == s_body_end)
@@ -463,26 +486,28 @@ char *nntp_read_art(char *s, int limit)
             line.reserve(static_cast<std::size_t>(limit));
             if (nntp_copy_body(line, limit, s_body_pos + ArticlePosition{1}) <= 0)
             {
-                return nullptr;
+                return {};
             }
             if (s_body_end - s_body_pos < ArticlePosition{limit})
             {
-                const std::size_t line_size = line.copy(s, static_cast<std::size_t>(limit - 1));
-                s[line_size] = '\0';
                 s_body_pos = s_body_end;
-                return s;
+                return line;
             }
             std::fseek(g_art_fp, s_body_pos.value_of(), 0);
         }
-        s = std::fgets(s, limit, g_art_fp);
+        std::string line = read_art_file_chunk(limit);
+        if (line.empty())
+        {
+            return {};
+        }
         s_body_pos = ftell_art();
         if (s_body_pos == s_body_end)
         {
             std::fseek(g_art_fp, s_body_pos.value_of(), 0); // Prepare for coming write
         }
-        return s;
+        return line;
     }
-    return std::fgets(s, limit, g_art_fp);
+    return read_art_file_chunk(limit);
 }
 
 // This is a 1-relative list

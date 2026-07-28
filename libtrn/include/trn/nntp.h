@@ -40,7 +40,7 @@ ArticlePosition nntp_art_size();
 int             nntp_finish_body(FinishBodyMode bmode);
 int             nntp_seek_art(ArticlePosition pos);
 ArticlePosition nntp_tell_art();
-char           *nntp_read_art(char *s, int limit);
+std::string     nntp_read_art(int limit);
 std::time_t     nntp_time();
 int             nntp_new_groups(std::time_t t);
 int             nntp_art_nums();
