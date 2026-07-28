@@ -237,7 +237,7 @@ static void new_nntp_groups(DataSource *dp)
 #ifdef DEBUG
         if (g_debug & DEB_NNTP)
         {
-            std::printf("<%s\n", new_group_line.c_str());
+            fmt::print("<{}\n", new_group_line);
         }
 #endif
         if (nntp_at_list_end(new_group_line))

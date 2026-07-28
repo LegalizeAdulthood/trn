@@ -668,7 +668,7 @@ conditional blocks.
 
 - Search and length: `strcmp` 1.
 - C line input: `fgets` 2, `gets` 1.
-- C text output: `fputs` 154, `printf`/`std::printf` 292,
+- C text output: `fputs` 154, `printf`/`std::printf` 291,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
@@ -708,16 +708,16 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
   `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Covered by
   `CSTR-446`.
-- `printf`/`std::printf`: `addng.cpp` 1, `art.cpp` 13,
-  `artsrch.cpp` 2, `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3,
-  `cache.cpp` 4, `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3,
-  `intrp.cpp` 1, `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35,
-  `ngdata.cpp` 6, `ngstuff.cpp` 8, `nntp.cpp` 2, `only.cpp` 1,
-  `opt.cpp` 9, `rcln.cpp` 2, `rcstuff.cpp` 14, `respond.cpp` 7,
-  `rt-ov.cpp` 2, `rt-page.cpp` 14, `rt-select.cpp` 9,
-  `rt-util.cpp` 4, `rt-wumpus.cpp` 2, `sacmd.cpp` 5,
-  `sadesc.cpp` 1, `sadisp.cpp` 8, `scan.cpp` 3, `scmd.cpp` 2,
-  `score.cpp` 18, `scorefile.cpp` 20,
+- `printf`/`std::printf`: `art.cpp` 13, `artsrch.cpp` 2,
+  `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3, `cache.cpp` 4,
+  `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3, `intrp.cpp` 1,
+  `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35, `ngdata.cpp` 6,
+  `ngstuff.cpp` 8, `nntp.cpp` 2, `only.cpp` 1, `opt.cpp` 9,
+  `rcln.cpp` 2, `rcstuff.cpp` 14, `respond.cpp` 7, `rt-ov.cpp` 2,
+  `rt-page.cpp` 14, `rt-select.cpp` 9, `rt-util.cpp` 4,
+  `rt-wumpus.cpp` 2, `sacmd.cpp` 5, `sadesc.cpp` 1,
+  `sadisp.cpp` 8, `scan.cpp` 3, `scmd.cpp` 2, `score.cpp` 18,
+  `scorefile.cpp` 20,
   `scoresave.cpp` 6, `sdisp.cpp` 10, `smisc.cpp` 1, `spage.cpp` 4,
   `terminal.cpp` 3, `trn.cpp` 12, `univ.cpp` 9, and `util.cpp` 6.
   Covered by `CSTR-445`.  `parsedate/parsedate.y` has 5 exempt hits.
