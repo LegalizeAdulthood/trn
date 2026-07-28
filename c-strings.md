@@ -664,20 +664,19 @@ legacy Configure scripts and `vcpkg`, but it does not preprocess
 conditional blocks.
 
 - Search and length: `strcmp` 2.
-- C string copy: `strcpy` 2, `strncpy` 1.
 - C line input: `fgets` 2, `gets` 1.
 - C text output: `fputs` 156, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
 
-The scan found no current active source/test hits for `strcat`,
-`strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`, `strlen`,
-`strspn`,
-`strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
-`vsprintf`, `vsnprintf`, `puts`, `memcpy`, `memmove`, `memcmp`,
-`memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`,
-`std::strtol`, `std::strtoul`, or `std::strtod`.
+The scan found no current active source/test hits for `strcpy`,
+`strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`,
+`strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`,
+`sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `puts`,
+`memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`,
+`std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
+`std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -689,8 +688,6 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 
 ## Current C Function Source Map
 
-- `strcpy`: `tests/test_utf.cpp` 2.  Covered by `CSTR-451`.
-- `strncpy`: `tests/test_string-algos.cpp` 1.  Covered by `CSTR-451`.
 - `strcmp`: `tests/test_final.cpp` 1, covered by `CSTR-452`.
   `parsedate/parsedate.y` has 1 exempt `#ifdef TEST` harness hit.
 - `fgets`: `libtrn/artio.cpp`, `read_art_chunk`; `libtrn/nntp.cpp`,
@@ -766,17 +763,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-451 - Replace Test C String Copy Setup
-
-- Files: `tests/test_string-algos.cpp`, `tests/test_utf.cpp`.
-- Kind: test-local C string copy.
-- Function: `std::strcpy`, `std::strncpy`.
-- Dependencies: none.
-- Change: replace C copy calls used for test setup with modern storage or
-  copy helpers that match the API under test.  Do not skip test code
-  merely because it is test code.
-- Tests: affected string algorithm and UTF tests.
 
 #### CSTR-452 - Replace Test Environment Name Comparison
 

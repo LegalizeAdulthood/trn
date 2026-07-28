@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
+#include <string>
 #include <string_view>
 
 using namespace testing;
@@ -16,14 +16,14 @@ namespace
 struct StringAlgosTest : Test
 {
 protected:
-    void configure_before_after(const char *before, const char *after)
+    void configure_before_after(std::string_view before, std::string_view after)
     {
-        std::strncpy(m_buffer, before, LINE_BUF_LEN);
+        m_buffer = before;
         m_after = after;
     }
 
-    char        m_buffer[LINE_BUF_LEN]{};
-    const char *m_after{};
+    std::string m_buffer;
+    std::string m_after;
 };
 
 } // namespace
@@ -41,27 +41,27 @@ TEST_F(StringAlgosTest, skipEqNoChange)
 {
     configure_before_after("No change.", "No change.");
 
-    const char *pos = skip_eq(m_buffer, ' ');
+    const char *pos = skip_eq(m_buffer.data(), ' ');
 
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(m_after, std::string_view{pos});
 }
 
 TEST_F(StringAlgosTest, skipEqMiddle)
 {
     configure_before_after("   This is a test.", "This is a test.");
 
-    const char *pos = skip_eq(m_buffer, ' ');
+    const char *pos = skip_eq(m_buffer.data(), ' ');
 
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(m_after, std::string_view{pos});
 }
 
 TEST_F(StringAlgosTest, skipEqEnd)
 {
     configure_before_after("       ", "");
 
-    const char *pos = skip_eq(m_buffer, ' ');
+    const char *pos = skip_eq(m_buffer.data(), ' ');
 
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(m_after, std::string_view{pos});
 }
 
 TEST_F(StringAlgosTest, skipEqStringView)
@@ -139,27 +139,27 @@ TEST_F(StringAlgosTest, skipHorSpaceNoChange)
 {
     configure_before_after("No change.", "No change.");
 
-    const char *pos = skip_hor_space(m_buffer);
+    const char *pos = skip_hor_space(m_buffer.data());
 
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(m_after, std::string_view{pos});
 }
 
 TEST_F(StringAlgosTest, skipHorSpaceMiddleTab)
 {
     configure_before_after("\t\t\tHello, world!", "Hello, world!");
 
-    const char *pos = skip_hor_space(m_buffer);
+    const char *pos = skip_hor_space(m_buffer.data());
 
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(m_after, std::string_view{pos});
 }
 
 TEST_F(StringAlgosTest, skipHorSpaceMiddleSpace)
 {
     configure_before_after("   Hello, world!", "Hello, world!");
 
-    const char *pos = skip_hor_space(m_buffer);
+    const char *pos = skip_hor_space(m_buffer.data());
 
-    ASSERT_STREQ(m_after, pos);
+    ASSERT_EQ(m_after, std::string_view{pos});
 }
 
 TEST_F(StringAlgosTest, skipHorSpaceStringView)

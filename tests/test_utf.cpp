@@ -12,7 +12,6 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -435,7 +434,7 @@ protected:
         Test::TearDown();
     }
 
-    char        m_before[80]{};
+    std::string m_before;
     std::string m_after;
 };
 
@@ -446,20 +445,20 @@ TEST_F(CreateUTF8CopyTest, nullptr)
 
 TEST_F(CreateUTF8CopyTest, ascii)
 {
-    std::strcpy(m_before, "Lorem ipsum");
+    m_before = "Lorem ipsum";
 
-    m_after = create_utf8_copy(m_before);
+    m_after = create_utf8_copy(m_before.c_str());
 
     ASSERT_EQ(m_before, m_after) << "create_utf8_copy of ASCII string did not create an identical copy";
 }
 
 TEST_F(CreateUTF8CopyTest, iso8859_1)
 {
-    std::strcpy(m_before, "Quoi, le biblioth\350que est ferm\351\240!");
+    m_before = "Quoi, le biblioth\350que est ferm\351\240!";
     const char *expected = "Quoi, le biblioth\303\250que est ferm\303\251\302\240!";
     utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_UTF8);
 
-    m_after = create_utf8_copy(m_before);
+    m_after = create_utf8_copy(m_before.c_str());
 
     ASSERT_EQ(expected, m_after) << "create_utf8_copy of ISO-8859-1 string did not create a corresponding UTF-8 copy";
 }
