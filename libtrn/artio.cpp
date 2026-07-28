@@ -381,8 +381,8 @@ mime_switch:
             decoded.copy(bp + o, decoded.size());
             bp[o + decoded.size()] = '\0';
             len = static_cast<int>(decoded.size()) + line_offset;
-            s = std::strchr(bp + o, '\n');
-            if (s == nullptr)
+            const std::size_t newline_pos = decoded.find('\n');
+            if (newline_pos == std::string::npos)
             {
                 if (read_something >= 0)
                 {
@@ -395,7 +395,7 @@ mime_switch:
             else
             {
                 extra_chars += len;
-                len = s - bp - extra_offset + 1;
+                len = line_offset + static_cast<int>(newline_pos) + 1;
                 extra_chars -= len;
             }
         }
@@ -410,24 +410,25 @@ mime_switch:
             filtered.copy(bp, filtered.size());
             bp[filtered.size()] = '\0';
             len = static_cast<int>(filtered.size());
-        }
-        if (len == filter_offset || (s = std::strchr(bp, '\n')) == nullptr)
-        {
-            if (read_something >= 0)
+            const std::size_t newline_pos = filtered.find('\n');
+            if (len == filter_offset || newline_pos == std::string::npos)
             {
-                read_offset = len;
-                line_offset = len;
-                filter_offset = len;
-                goto read_more;
+                if (read_something >= 0)
+                {
+                    read_offset = len;
+                    line_offset = len;
+                    filter_offset = len;
+                    goto read_more;
+                }
+                write_newline(static_cast<std::size_t>(bp + len++ - g_art_buf));
+                extra_chars = 0;
             }
-            write_newline(static_cast<std::size_t>(bp + len++ - g_art_buf));
-            extra_chars = 0;
-        }
-        else
-        {
-            extra_chars = len;
-            len = s - bp + 1;
-            extra_chars -= len;
+            else
+            {
+                extra_chars = len;
+                len = static_cast<int>(newline_pos) + 1;
+                extra_chars -= len;
+            }
         }
         break;
 
@@ -555,8 +556,12 @@ mime_switch:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         ++g_art_buf_pos;
-        *fmt::format_to(bp, "[Alternative: {}]\n", *g_mime_section->m_type_name) = '\0';
-        len = std::strlen(bp);
+        {
+            const std::string alternative = fmt::format("[Alternative: {}]\n", *g_mime_section->m_type_name);
+            alternative.copy(bp, alternative.size());
+            bp[alternative.size()] = '\0';
+            len = static_cast<int>(alternative.size());
+        }
         break;
 
     case IMAGE_MIME:
@@ -606,8 +611,16 @@ done:
     word_wrap = g_tc_COLS - g_word_wrap_offset;
     if (read_something && g_word_wrap_offset >= 0 && word_wrap > 20 && bp)
     {
-        for (char *cp = bp; *cp && (s = std::strchr(cp, '\n')) != nullptr; cp = s + 1)
+        for (char *cp = bp; *cp; cp = s + 1)
         {
+            const std::size_t cp_offset = static_cast<std::size_t>(cp - g_art_buf);
+            const std::size_t newline_pos = s_art_buf.find('\n', cp_offset);
+            const std::size_t nul_pos = s_art_buf.find('\0', cp_offset);
+            if (newline_pos == std::string::npos || (nul_pos != std::string::npos && nul_pos < newline_pos))
+            {
+                break;
+            }
+            s = g_art_buf + newline_pos;
             if (s - cp > g_tc_COLS)
             {
                 char* t;

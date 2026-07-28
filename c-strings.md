@@ -618,9 +618,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   production callers.  Both mutable raw accessors can be removed.
 - Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
   callers pass owned `std::string` storage directly.
-- Non-zero C function dataflow scan: remaining search/length hits are
-  covered by `CSTR-442`, exempt by user direction, or are comment text.
-  No current helper-parameter copy-to-string leaf slice remains.
+- Non-zero C function dataflow scan: the remaining search/length
+  production hit is exempt by user direction.  The only other `strlen`
+  spelling is comment text.  No current helper-parameter copy-to-string
+  leaf slice remains.
 - Non-zero line-input, byte, and allocation-helper scans: the remaining
   `fgets` calls are low-level `FILE *` input boundaries behind
   string-returning article input APIs; `memset` and `memcmp` are covered
@@ -644,9 +645,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   hits remain in this scan.
 - The `strcmp` and `gets` hits in `parsedate.y` are exempt from
   modernization by user direction.
-- The remaining `strchr` and `strlen` hits are inside `read_art_buf` and
-  are covered by `CSTR-442`.  The `strlen` spellings in
-  `charsubst.cpp` are comment examples, not calls.
+- No active `strchr` or `strlen` production hits remain.  The `strlen`
+  spelling in `charsubst.cpp` is comment text, not a call.
 - Filename storage already uses modern path or view signatures for most
   owners.  `ScoreFile::fname` remains `std::string` because it is a
   score-file cache key that can hold a URL as well as a local path.
@@ -661,7 +661,7 @@ calls.  Comment text is excluded by inspection.  The scan excludes test
 trees, legacy Configure scripts, and `vcpkg`, but it does not preprocess
 conditional blocks.
 
-- Search and length: `strcmp` 1, `strchr` 3, `strlen` 1.
+- Search and length: `strcmp` 1.
 - C line input: `fgets` 2, `gets` 1.
 - C text output: `fputs` 154, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
@@ -669,11 +669,11 @@ conditional blocks.
 - Character byte operations: `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
-`strcat`, `strncat`, `strncmp`, `strrchr`, `strstr`, `strspn`,
-`strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
-`vsprintf`, `vsnprintf`, `puts`, `memcpy`, `memmove`, `memchr`,
-`atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
-`std::strtoul`, or `std::strtod`.
+`strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`,
+`strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`, `sprintf`,
+`snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `puts`, `memcpy`,
+`memmove`, `memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`,
+`std::atol`, `std::strtol`, `std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -681,17 +681,12 @@ be modernized.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
 and is exempt from modernization by user direction.
-The remaining `strchr` and `strlen` hits are inside the raw
-article-buffer reader and are covered by `CSTR-442`.
+The `strlen` spelling in `charsubst.cpp` is comment text.
 
 ## Current C Function Source Map
 
 - `strcmp`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
   modernization by user direction.
-- `strchr`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
-  `CSTR-442`.
-- `strlen`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
-  `CSTR-442`.  The extra `charsubst.cpp` scan hits are comment text.
 - `fgets`: `libtrn/artio.cpp`, `read_art_chunk`; `libtrn/nntp.cpp`,
   `read_art_file_chunk`.  These are internal `FILE *` boundaries behind
   string-returning APIs.
@@ -773,18 +768,6 @@ No current slices.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-442 - Remove Raw Search And Length From `read_art_buf`
-
-- Files: `libtrn/artio.cpp`.
-- Kind: raw article-buffer parser.
-- Function: `read_art_buf(bool)`.
-- Dependencies: none.
-- Change: replace the remaining `std::strchr` and `std::strlen` cursor
-  work with string or view operations after article input lines have an
-  owned string boundary.  Preserve hiding, MIME, filtering, and
-  word-wrap behavior with tests before refactoring.
-- Tests: article I/O and article display tests.
 
 #### CSTR-443 - Replace Hash Default Byte Compare
 
@@ -877,7 +860,7 @@ owned strings or owner-specific storage.
   `tests/test_artio.cpp`.
 - Kind: raw string return helper.
 - Function: `read_art_buf(bool)`.
-- Dependencies: `CSTR-442`.
+- Dependencies: none.
 - Change: after production callers use owned line storage, remove the
   public `char *` article-buffer overload or make it file-local
   implementation detail.  Keep `read_art_buf(std::string &, bool)` as
