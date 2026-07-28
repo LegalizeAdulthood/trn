@@ -547,11 +547,12 @@ Configure scripts, and the vendored `vcpkg` tree.
   helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: the current string-shaped fixed-buffer candidate is
-  `g_buf`.  The UTF code-point output helper now returns
-  `std::string`.  Translation tables, terminal pushback bytes, termcap
-  storage, keymap type bytes, and regex bytecode arrays are non-string
-  protocol or parser storage.
+- Fixed raw buffers: current string-shaped fixed-buffer candidates are
+  test input fixtures covered by `CSTR-455` through `CSTR-460` and
+  `g_buf` covered by `CSTR-409`.  Translation tables, terminal
+  pushback bytes, termcap storage, keymap type bytes, regex bytecode
+  arrays, bounded UTF byte sequences, and terminal-capability fixture
+  storage are non-string protocol, parser, or global-boundary storage.
 - Direct `assign(data(), size())` and whole-string
   `std::string_view{data(), size()}` scans have no remaining production
   hits.
@@ -665,7 +666,7 @@ conditional blocks.
 
 - Search and length: `strcmp` 1.
 - C line input: `fgets` 2, `gets` 1.
-- C text output: `fputs` 156, `printf`/`std::printf` 292,
+- C text output: `fputs` 154, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
@@ -703,9 +704,8 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `ngsrch.cpp` 1, `ngstuff.cpp` 6, `opt.cpp` 1, `rcln.cpp` 1,
   `rcstuff.cpp` 21, `respond.cpp` 27, `rt-page.cpp` 2,
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
-  `terminal.cpp` 14, `trn.cpp` 11, `util.cpp` 2,
-  `tests/test_decode.cpp` 1, and `tests/test_uudecode.cpp` 1.  Covered
-  by `CSTR-446`; the test-only hits are covered by `CSTR-453`.
+  `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Covered by
+  `CSTR-446`.
 - `printf`/`std::printf`: `addng.cpp` 1, `art.cpp` 13,
   `artsrch.cpp` 2, `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3,
   `cache.cpp` 4, `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3,
@@ -735,7 +735,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-454`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-461`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -764,22 +764,82 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-453 - Replace Test File Writes
+#### CSTR-455 - Modernize IniSectionValues Test Fixtures
 
-- Files: `tests/test_decode.cpp`, `tests/test_uudecode.cpp`.
-- Kind: test-local plain C string output.
-- Function: `std::fputs`.
+- Files: `tests/test_IniSectionValues.cpp`.
+- Kind: mutable local `char[]` values used as copied setting text.
+- Functions: `storesOwnedValuesByFieldId` and
+  `resetClearsValuesWithoutTouchingInputText`.
 - Dependencies: none.
-- Change: use fmt or another existing owned-string write path for test
-  input setup instead of direct C string output.
-- Tests: affected decode and uudecode tests.
+- Change: use `std::string` for the mutable caller-owned values and keep
+  the alias checks against the string storage.
+- Tests: `IniSectionValuesTest`.
+
+#### CSTR-456 - Modernize Message-id Test Fixtures
+
+- Files: `tests/test_rt-process.cpp`.
+- Kind: local message-id `char[]` values passed to string-view APIs.
+- Functions: `getArticlePromotesPendingMessageIdToFakeArticle`,
+  `fixMsgIdLowercasesOnlyDomain`.
+- Dependencies: none.
+- Change: replace stale C arrays with `std::string` or direct
+  `std::string_view` input.  Keep the bounded-view test that proves
+  `get_article` uses the supplied length.
+- Tests: `MessageIdHashTest`, `MessageIdTest`.
+
+#### CSTR-457 - Modernize Scorefile Test Rule Fixtures
+
+- Files: `tests/test_scorefile.cpp`.
+- Kind: local scorefile rule `char[]` values passed to
+  `sf_append(std::string_view)`.
+- Functions: every `ScoreFileTest` case that only creates a rule buffer
+  to pass once to `sf_append`.
+- Dependencies: none.
+- Change: pass string literals directly, or use `std::string` only where
+  the test mutates or reuses the text.
+- Tests: `ScoreFileTest`.
+
+#### CSTR-458 - Modernize Scan-command Author Fixture
+
+- Files: `tests/test_scmd.cpp`.
+- Kind: fixed-size author buffer stored into `Article::m_from`.
+- Functions: `ScanCommandTest` fixture setup.
+- Dependencies: none.
+- Change: replace the fixture buffer with `std::string` and assign the
+  Article optional string from it.
+- Tests: `ScanCommandTest`, `ScanCommandSearchTest`.
+
+#### CSTR-459 - Modernize UTF String Test Fixtures
+
+- Files: `tests/test_utf.cpp`.
+- Kind: local NUL-terminated `char[]` strings passed to
+  string-view-ready APIs.
+- Functions: `transliteratesLatin1ToAscii`,
+  `transliteratesLatin1ToMonospacedAscii`.
+- Dependencies: none.
+- Change: use `std::string_view` for the transliteration inputs.  Keep
+  the bounded UTF byte-sequence array in `boundedShinView`.
+- Tests: `CharSubstTest`.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-No current slices.
+#### CSTR-460 - Split Interpolator Test Pattern Buffers
+
+- Files: `tests/test_interp.cpp`.
+- Kind: mutable local `pattern[]` buffers used only because the test
+  helper still exposes a C-string cursor shape.
+- Functions: `InterpTest::interpolate` and the individual test cases
+  that call it.
+- Dependencies: none.
+- Change: split this coverage slice before implementation.  Prefer
+  making the helper accept `std::string_view` and return the remaining
+  `std::string_view`, then convert call sites in small groups from
+  `char pattern[]` locals to direct string literals or
+  `std::string_view` values.
+- Tests: `InterpTest`.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

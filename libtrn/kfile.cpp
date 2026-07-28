@@ -66,13 +66,13 @@ static KillFileStateFlags s_kill_file_state_local_change_clear{}; // bits to cle
 static int                s_kill_file_thread_cnt{};               // # entries in the thread kfile
 static long               s_kill_file_day_num{};                  // day number for thread killfile
 static bool               s_exit_cmds{};
-static constexpr char     s_thread_cmd_ltr[] = "JK,j+S.m";
-static AutoKillFlags      s_thread_cmd_flag[]{
+static constexpr std::string_view s_thread_cmd_ltr{"JK,j+S.m"};
+static AutoKillFlags              s_thread_cmd_flag[]{
     AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
 };
-static constexpr char s_kill_global[] = KILL_GLOBAL;
-static constexpr char s_kill_local[] = KILL_LOCAL;
-static constexpr char s_kill_threads[] = KILL_THREADS;
+static constexpr std::string_view s_kill_global{KILL_GLOBAL};
+static constexpr std::string_view s_kill_local{KILL_LOCAL};
+static constexpr std::string_view s_kill_threads{KILL_THREADS};
 static bool       s_kill_mentioned;
 static std::FILE *s_new_kill_file_fp{};
 
@@ -117,7 +117,7 @@ void kill_file_init()
                         g_kf_change_thread_cnt++;
                         continue;
                     }
-                    const std::size_t thread_cmd = std::string_view{s_thread_cmd_ltr}.find(command_char);
+                    const std::size_t thread_cmd = s_thread_cmd_ltr.find(command_char);
                     if (thread_cmd != std::string_view::npos)
                     {
                         int       auto_flag = s_thread_cmd_flag[thread_cmd];
@@ -365,8 +365,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                         thread_cmd.remove_prefix(1);
                     }
                     const std::size_t thread_cmd_index =
-                        thread_cmd.empty() ? std::string_view::npos
-                                           : std::string_view{s_thread_cmd_ltr}.find(thread_cmd.front());
+                        thread_cmd.empty() ? std::string_view::npos : s_thread_cmd_ltr.find(thread_cmd.front());
                     if (thread_cmd_index != std::string_view::npos)
                     {
                         ap->m_auto_flags = s_thread_cmd_flag[thread_cmd_index];
@@ -518,20 +517,18 @@ void kill_unwanted(ArticleNum starting, std::string_view message, int entering)
 
 static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
 {
-    Article* ap = (Article*)data->dat_ptr;
-    int autofl = ap->m_auto_flags;
-    char ch;
+    Article *ap = (Article *) data->dat_ptr;
+    int      autofl = ap->m_auto_flags;
+    char     ch;
 
     if (autofl && ((ap->m_flags & AF_EXISTS) || ap->m_child1))
     {
-        const std::string_view thread_cmd_letters{s_thread_cmd_ltr, sizeof(s_thread_cmd_ltr) - 1};
-
         // The arrays are in priority order, so find highest priority bit.
-        for (std::size_t i = 0; i < thread_cmd_letters.size(); i++)
+        for (std::size_t i = 0; i < s_thread_cmd_ltr.size(); i++)
         {
             if (autofl & s_thread_cmd_flag[i])
             {
-                ch = thread_cmd_letters[i];
+                ch = s_thread_cmd_ltr[i];
                 break;
             }
         }
@@ -676,14 +673,12 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
         msgid = ap->msg_id_view();
     }
 
-    const std::string_view thread_cmd_letters{s_thread_cmd_ltr, sizeof(s_thread_cmd_ltr) - 1};
-
     // The arrays are in priority order, so find highest priority bit.
-    for (std::size_t i = 0; i < thread_cmd_letters.size(); i++)
+    for (std::size_t i = 0; i < s_thread_cmd_ltr.size(); i++)
     {
         if (autofl & s_thread_cmd_flag[i])
         {
-            ch = thread_cmd_letters[i];
+            ch = s_thread_cmd_ltr[i];
             break;
         }
     }
@@ -838,8 +833,7 @@ void edit_kill_file()
                         }
                         const std::size_t thread_cmd_index =
                             thread_cmd.empty() ? std::string_view::npos
-                                               : std::string_view{s_thread_cmd_ltr, sizeof(s_thread_cmd_ltr) - 1}.find(
-                                                     thread_cmd.front());
+                                               : s_thread_cmd_ltr.find(thread_cmd.front());
                         if (thread_cmd_index != std::string_view::npos)
                         {
                             ap->m_auto_flags |= s_thread_cmd_flag[thread_cmd_index];

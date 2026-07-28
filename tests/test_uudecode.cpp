@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <system_error>
 
 namespace
@@ -55,9 +56,10 @@ protected:
         fs::remove_all(m_output_dir, error);
     }
 
-    DecodeState decode_text(const char *text)
+    DecodeState decode_text(std::string_view text)
     {
-        std::fputs(text, m_input);
+        const std::size_t bytes_written = std::fwrite(text.data(), 1, text.size(), m_input);
+        EXPECT_EQ(text.size(), bytes_written);
         std::rewind(m_input);
         testing::internal::CaptureStdout();
         const DecodeState state = uudecode(m_input, DECODE_START);

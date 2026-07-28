@@ -263,8 +263,7 @@ TEST_F(DecodePieceDirectoryTest, savesMultipartPieceInPieceDirectory)
 {
     m_section.m_part = 1;
     m_section.m_total = 2;
-    std::fputs("line one\nline two\n", m_input);
-    std::rewind(m_input);
+    set_article_text("line one\nline two\n");
 
     testing::internal::CaptureStdout();
     const bool        result = decode_piece(nullptr, {});
