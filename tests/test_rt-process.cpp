@@ -51,12 +51,12 @@ TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
     HashDatum data = make_pending_msg_id("<case@example.com>", AUTO_SEL_THD | 1);
     hash_store(g_msg_id_hash, "<case@example.com>", data);
 
-    char lookup[] = "<case@EXAMPLE.COM>";
+    constexpr std::string_view lookup{"<case@EXAMPLE.COM>"};
 
     Article *article = get_article(lookup);
 
     ASSERT_NE(nullptr, article);
-    EXPECT_STREQ("<case@EXAMPLE.COM>", lookup);
+    EXPECT_EQ("<case@EXAMPLE.COM>", lookup);
     ASSERT_TRUE(article->m_msg_id);
     EXPECT_EQ("<case@example.com>", *article->m_msg_id);
     EXPECT_TRUE((article->m_flags & AF_FAKE) != 0);
@@ -92,9 +92,8 @@ TEST_F(MessageIdHashTest, getArticleUsesOnlyTheProvidedView)
 
 TEST(MessageIdTest, fixMsgIdLowercasesOnlyDomain)
 {
-    const char  lookup[] = "<Case@EXAMPLE.COM>";
-    std::string normalized = fix_msg_id(lookup);
+    constexpr std::string_view lookup{"<Case@EXAMPLE.COM>"};
+    std::string                normalized = fix_msg_id(lookup);
 
     EXPECT_EQ("<Case@example.com>", normalized);
-    EXPECT_STREQ("<Case@EXAMPLE.COM>", lookup);
 }

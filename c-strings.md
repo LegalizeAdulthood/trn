@@ -548,7 +548,7 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  test input fixtures covered by `CSTR-456` through `CSTR-460` and
+  test input fixtures covered by `CSTR-457` through `CSTR-460` and
   `g_buf` covered by `CSTR-409`.  Translation tables, terminal
   pushback bytes, termcap storage, keymap type bytes, regex bytecode
   arrays, bounded UTF byte sequences, and terminal-capability fixture
@@ -763,18 +763,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-456 - Modernize Message-id Test Fixtures
-
-- Files: `tests/test_rt-process.cpp`.
-- Kind: local message-id `char[]` values passed to string-view APIs.
-- Functions: `getArticlePromotesPendingMessageIdToFakeArticle`,
-  `fixMsgIdLowercasesOnlyDomain`.
-- Dependencies: none.
-- Change: replace stale C arrays with `std::string` or direct
-  `std::string_view` input.  Keep the bounded-view test that proves
-  `get_article` uses the supplied length.
-- Tests: `MessageIdHashTest`, `MessageIdTest`.
 
 #### CSTR-457 - Modernize Scorefile Test Rule Fixtures
 
