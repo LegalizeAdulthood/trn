@@ -1017,7 +1017,7 @@ PageSwitchResult page_switch(std::string_view command)
         if (compile_error != nullptr)
         {
                             // compile regular expression
-            std::printf("\n%s\n", compile_error);
+            fmt::print("\n{}\n", compile_error);
             term_down(2);
             return PS_ASK;
         }
