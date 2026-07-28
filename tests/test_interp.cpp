@@ -1424,141 +1424,113 @@ TEST_F(InterpolatorTest, formatModifierRightJustified)
 
 TEST_F(InterpolatorTest, bell)
 {
-    char pattern[]{R"pat(\a)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\a)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\a", buffer());
 }
 
 TEST_F(InterpolatorTest, backspace)
 {
-    char pattern[]{R"pat(\b)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\b)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\b", buffer());
 }
 
 TEST_F(InterpolatorTest, formFeed)
 {
-    char pattern[]{R"pat(\f)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\f)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\f", buffer());
 }
 
 TEST_F(InterpolatorTest, newline)
 {
-    char pattern[]{R"pat(\n)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\n)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\n", buffer());
 }
 
 TEST_F(InterpolatorTest, carriageReturn)
 {
-    char pattern[]{R"pat(\r)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\r)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\r", buffer());
 }
 
 TEST_F(InterpolatorTest, horizontalTab)
 {
-    char pattern[]{R"pat(\t)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\t)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\t", buffer());
 }
 
 TEST_F(InterpolatorTest, verticalTab)
 {
-    char pattern[]{R"pat(\v)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\v)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\v", buffer());
 }
 
 TEST_F(InterpolatorTest, octalEscape)
 {
-    char pattern[]{R"pat(\122)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\122)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\122", buffer());
 }
 
 TEST_F(InterpolatorTest, octalEscapeOutOfRangeDigits)
 {
-    char pattern[]{R"pat(\4189)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\4189)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("!89", buffer());
 }
 
 TEST_F(InterpolatorTest, hexEscapeLowerCase)
 {
-    char pattern[]{R"pat(\x4a)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\x4a)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\x4a", buffer());
 }
 
 TEST_F(InterpolatorTest, hexEscapeUpperCase)
 {
-    char pattern[]{R"pat(\x4A)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\x4A)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\x4A", buffer());
 }
 
 TEST_F(InterpolatorTest, hexEscapeOutOfRangeDigits)
 {
-    char pattern[]{R"pat(\x4G)pat"};
+    const std::string_view new_pattern = interpolate(R"pat(\x4G)pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\x4G", buffer());
 }
 
 TEST_F(InterpolatorTest, caretEscapeUpperCase)
 {
-    char pattern[]{"^G"};
+    const std::string_view new_pattern = interpolate("^G");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\a", buffer());
 }
 
 TEST_F(InterpolatorTest, caretEscapeLowerCase)
 {
-    char pattern[]{"^g"};
+    const std::string_view new_pattern = interpolate("^g");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("\a", buffer());
 }
 
@@ -1660,11 +1632,10 @@ void write_article_body(const fs::path &article_file, std::string_view body)
 TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
 {
     g_newsgroup_dir = TRN_TEST_NEWSGROUP_SUBDIR;
-    char pattern[]{"%d"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%d");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_NEWSGROUP_DIR, buffer());
 }
 
@@ -2292,105 +2263,89 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
 
 TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
 {
-    char pattern[]{"%D"};
+    const std::string_view new_pattern = interpolate("%D");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_DISTRIBUTION, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
 {
     g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
-    char pattern[]{"%f"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%f");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FROM, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupWithReplyTo)
 {
-    char pattern[]{"%f"};
+    const std::string_view new_pattern = interpolate("%f");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_REPLY_TO, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
 {
-    char pattern[]{"%F"};
+    const std::string_view new_pattern = interpolate("%F");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FOLLOWUP_TO, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
 {
     g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
-    char pattern[]{"%F"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%F");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_NEWSGROUP, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
 {
-    char pattern[]{"%i"};
+    const std::string_view new_pattern = interpolate("%i");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_MESSAGE_ID, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, messageIdAddsAngleBrackets)
 {
     g_art = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
-    char pattern[]{"%i"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%i");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::string{"<"} + TRN_TEST_HEADER_BARE_MESSAGE_ID + ">", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, newsgroupsLineInNewsgroup)
 {
-    char pattern[]{"%n"};
+    const std::string_view new_pattern = interpolate("%n");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_NEWSGROUPS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroup)
 {
-    char pattern[]{"%r"};
+    const std::string_view new_pattern = interpolate("%r");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_LAST_REFERENCE, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroupNoArticleIsEmpty)
 {
     g_art = ArticleNum{};
-    char pattern[]{"%r"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%r");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
@@ -2401,44 +2356,39 @@ TEST(NormalizeReferencesTest, normalize)
 
 TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
 {
-    char pattern[]{"%R"};
+    const std::string_view new_pattern = interpolate("%R");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_REFERENCES " " TRN_TEST_HEADER_MESSAGE_ID, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, newReferencesAddsMessageIdAngleBrackets)
 {
     g_art = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
-    char pattern[]{"%R"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%R");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::string{TRN_TEST_HEADER_REFERENCES} + " <" + TRN_TEST_HEADER_BARE_MESSAGE_ID + ">", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroupNoArticleIsEmpty)
 {
     g_art = ArticleNum{};
-    char pattern[]{"%s"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%s");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
 {
     g_artp = article_ptr(g_art);
-    char pattern[]{"%s"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%s");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, buffer());
 }
 
@@ -2446,104 +2396,88 @@ TEST_F(InterpolatorNewsgroupTest, strippedSubjectDropsNotesFileSuffix)
 {
     g_art = ArticleNum{TRN_TEST_ARTICLE_NOTES_FILE_SUBJECT_NUM};
     g_artp = article_ptr(g_art);
-    char pattern[]{"%s"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%s");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::string{TRN_TEST_HEADER_STRIPPED_SUBJECT} + " ", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, oneReStrippedSubjectInNewsgroup)
 {
     g_artp = article_ptr(g_art);
-    char pattern[]{"%S"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%S");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_ONE_RE_SUBJECT, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, toFromReplyToInNewsgroup)
 {
-    char pattern[]{"%t"};
+    const std::string_view new_pattern = interpolate("%t");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_REPLY_TO_ADDRESS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, toFromFromInNewsgroup)
 {
     g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
-    char pattern[]{"%t"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%t");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FROM_ADDRESS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, toFromPathInNewsgroup)
 {
-    char pattern[]{"%T"};
+    const std::string_view new_pattern = interpolate("%T");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_PATH, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, toFromPathTrimsPostingHostPrefix)
 {
     g_p_host_name = "foo";
-    char pattern[]{"%T"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%T");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("bar!goink!not-for-mail", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesInNewsgroup)
 {
-    char pattern[]{"%u"};
+    const std::string_view new_pattern = interpolate("%u");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::to_string(TRN_TEST_NEWSGROUP_HIGH - TRN_TEST_NEWSGROUP_LOW + 1), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesExceptCurrentInNewsgroup)
 {
-    char pattern[]{"%U"};
+    const std::string_view new_pattern = interpolate("%U");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::to_string(TRN_TEST_NEWSGROUP_HIGH - TRN_TEST_NEWSGROUP_LOW), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
 {
-    char pattern[]{"%v"};
+    const std::string_view new_pattern = interpolate("%v");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::to_string(TRN_TEST_NEWSGROUP_HIGH - TRN_TEST_NEWSGROUP_LOW), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, shortenedFromInNewsgroup)
 {
-    char pattern[]{"%y"};
+    const std::string_view new_pattern = interpolate("%y");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FROM, buffer());
 }
 
@@ -2551,11 +2485,10 @@ TEST_F(InterpolatorNewsgroupTest, shortenedFromShortensMultiPartDomain)
 {
     article_ptr(g_art)->set_cached_line(FROM_LINE, "casey@host.news.example.test (Casey)");
     g_parsed_art = ArticleNum{};
-    char pattern[]{"%y"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%y");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("casey@*.example.test (Casey)", buffer());
 }
 
@@ -2563,41 +2496,35 @@ TEST_F(InterpolatorNewsgroupTest, articleSizeInNewsgroup)
 {
     std::ostringstream str;
     str << std::setw(5) << TRN_TEST_ARTICLE_SIZE;
-    char pattern[]{"%z"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%z");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(str.str(), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numSelectedThreadsInNewsgroupEmpty)
 {
     ValueSaver<ArticleUnread> saver(g_selected_count, 66);
-    char pattern[]{"%Z"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%Z");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("66", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, headerFieldInNewsgroup)
 {
-    char pattern[]{"%[X-Boogie-Nights]"};
+    const std::string_view new_pattern = interpolate("%[X-Boogie-Nights]");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_X_BOOGIE_NIGHTS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, missingHeaderFieldInNewsgroupIsEmpty)
 {
-    char pattern[]{"%[X-Missing-Header]"};
+    const std::string_view new_pattern = interpolate("%[X-Missing-Header]");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }

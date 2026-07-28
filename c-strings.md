@@ -548,11 +548,14 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  test input fixtures covered by `CSTR-465` and
-  `g_buf` covered by `CSTR-409`.  Translation tables, terminal
-  pushback bytes, termcap storage, keymap type bytes, regex bytecode
-  arrays, bounded UTF byte sequences, and terminal-capability fixture
-  storage are non-string protocol, parser, or global-boundary storage.
+  `PushDir::m_old_dir` covered by `CSTR-466` and `g_buf` covered by
+  `CSTR-409`.  The local `opt_init` `argv` shim in
+  `tests/test_interp.cpp` remains an API-boundary fixture because
+  `opt_init` still accepts `char *argv[]`.  Translation tables,
+  terminal pushback bytes, termcap storage, keymap type bytes, regex
+  bytecode arrays, bounded UTF byte sequences, and terminal-capability
+  fixture storage are non-string protocol, parser, or global-boundary
+  storage.
 - Direct `assign(data(), size())` and whole-string
   `std::string_view{data(), size()}` scans have no remaining production
   hits.
@@ -735,7 +738,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-466`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-467`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -764,24 +767,24 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-466 - Store Interpolator PushDir State As Path
+
+- Files: `tests/test_interp.cpp`.
+- Kind: fixed-size path buffer in test helper storage.
+- Functions: `PushDir`.
+- Dependencies: none.
+- Change: replace `m_old_dir[TCBUF_SIZE]`, `getcwd`, and `chdir`
+  state restoration with `fs::path` storage and `fs::current_path`.
+  Keep constructor and push call sites simple, using the existing `fs`
+  namespace alias.
+- Tests: `InterpolatorTest` and `InterpolatorNewsgroupTest`.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-465 - Modernize Interpolator Escape Patterns
-
-- Files: `tests/test_interp.cpp`.
-- Kind: local `pattern[]` buffers for backslash escape cases and later
-  interpolator call sites.
-- Functions: `bell` through the remaining `InterpolatorTest` pattern
-  cases.
-- Dependencies: none.
-- Change: migrate one-shot local pattern buffers to direct
-  `std::string_view` inputs and remaining views.
-- Tests: listed `InterpTest` cases.
+No current slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
