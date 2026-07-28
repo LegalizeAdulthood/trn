@@ -1358,7 +1358,7 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::
         {
             g_user_header_type[--g_user_header_type_count].name.clear();
         }
-        std::memset((char*)g_user_header_type_index,0,sizeof g_user_header_type_index);
+        g_user_header_type_index.fill(0);
     }
 
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
@@ -1488,7 +1488,7 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
             }
             g_user_header_type_count = killed;
         }
-        std::memset((char*)g_user_header_type_index,0,sizeof g_user_header_type_index);
+        g_user_header_type_index.fill(0);
         for (int i = 1; i < g_user_header_type_count; i++)
         {
             g_user_header_type_index[g_user_header_type[i].name[0] - 'a'] = i;

@@ -204,10 +204,7 @@ protected:
             m_old_header_type[static_cast<std::size_t>(i)] = g_header_type[i];
         }
         m_old_user_header_type = g_user_header_type;
-        for (int i = 0; i < 26; ++i)
-        {
-            m_old_user_header_type_index[static_cast<std::size_t>(i)] = g_user_header_type_index[i];
-        }
+        m_old_user_header_type_index = g_user_header_type_index;
         m_old_user_header_type_count = g_user_header_type_count;
         m_old_user_header_type_max = g_user_header_type_max;
 
@@ -223,10 +220,7 @@ protected:
             g_header_type[i] = m_old_header_type[static_cast<std::size_t>(i)];
         }
         g_user_header_type = m_old_user_header_type;
-        for (int i = 0; i < 26; ++i)
-        {
-            g_user_header_type_index[i] = m_old_user_header_type_index[static_cast<std::size_t>(i)];
-        }
+        g_user_header_type_index = m_old_user_header_type_index;
         g_user_header_type_count = m_old_user_header_type_count;
         g_user_header_type_max = m_old_user_header_type_max;
     }
@@ -243,14 +237,11 @@ private:
         g_user_header_type.assign(static_cast<std::size_t>(g_user_header_type_max), UserHeaderType{});
         g_user_header_type_count = 1;
         g_user_header_type[0].name = "*";
-        for (short &index : g_user_header_type_index)
-        {
-            index = 0;
-        }
+        g_user_header_type_index.fill(0);
     }
 
     std::array<HeaderType, HEAD_LAST> m_old_header_type;
-    std::array<short, 26>             m_old_user_header_type_index;
+    std::array<int, 26>               m_old_user_header_type_index;
     std::vector<UserHeaderType>       m_old_user_header_type;
     int                               m_old_user_header_type_count{};
     int                               m_old_user_header_type_max{};

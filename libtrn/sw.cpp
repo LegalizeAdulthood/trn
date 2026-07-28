@@ -326,7 +326,7 @@ void decode_switch(std::string_view s)
                 {
                     g_user_header_type[--g_user_header_type_count].name.clear();
                 }
-                std::memset(g_user_header_type_index,0,26);
+                g_user_header_type_index.fill(0);
             }
             // FALL THROUGH
 

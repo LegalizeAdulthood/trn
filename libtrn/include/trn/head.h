@@ -8,6 +8,7 @@
 #include <config/typedef.h>
 #include <trn/enum-flags.h>
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -85,7 +86,7 @@ struct UserHeaderType
 
 extern HeaderType                  g_header_type[HEAD_LAST];
 extern std::vector<UserHeaderType> g_user_header_type;
-extern short                       g_user_header_type_index[26];
+extern std::array<int, 26>         g_user_header_type_index;
 extern int                         g_user_header_type_count;
 extern int                         g_user_header_type_max;
 extern ArticleNum                  g_parsed_art; // the article number we've parsed

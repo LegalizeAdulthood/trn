@@ -91,7 +91,7 @@ HeaderType g_header_type[HEAD_LAST] = {
 #undef XREF_CACHED
 
 std::vector<UserHeaderType> g_user_header_type;
-short                       g_user_header_type_index[26];
+std::array<int, 26>         g_user_header_type_index;
 int                         g_user_header_type_count{};
 int                         g_user_header_type_max{};
 ArticleNum                  g_parsed_art{}; // the article number we've parsed

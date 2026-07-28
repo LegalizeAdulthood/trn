@@ -4,10 +4,12 @@
 
 ## Scope
 
-Audited project C and C++ sources under the source root, excluding the
-vendored `vcpkg` tree.  The audit looked for local raw C string pointers
-and function parameters that can become `std::string_view` or
-`std::string` without changing ownership boundaries.
+Audited project C and C++ sources under the source root, including test
+code, and excluding the vendored `vcpkg` tree.  Test code is held to the
+same modernization standard as production code.  The audit looked for
+local raw C string pointers and function parameters that can become
+`std::string_view` or `std::string` without changing ownership
+boundaries.
 
 Follow-up passes also look for fixed-length `char name[N]` buffers in
 all storage classes and for functions that hide owned string allocation
@@ -49,8 +51,9 @@ Run every scan from the innermost lexical scope outward:
 - C-style overloads, wrappers, and helpers that take or return
   `char *` or `const char *` when a `std::string` or
   `std::string_view` API already exists nearby.  Check whether
-  production code calls them.  If only tests call them, decide whether
-  the tests preserve a real public API or only stale compatibility.
+  production code calls them.  If only tests call them, update the tests
+  to the modern API unless the wrapper preserves a real public API or
+  deliberate compatibility boundary.
 - When a reusable helper already expresses the string operation, prefer
   adding `std::string_view` overloads to that helper before rewriting
   call sites.  Do not inline helper behavior with ad hoc local scans or
@@ -533,10 +536,10 @@ the C-style string buffer itself is refactored.
 
 ## Current Audit Summary
 
-The current scan covers source code under `config`, `libtrn`, `util`,
-`nntp`, `inews`, `nntplist`, `trn-artchk`, `tool`, `wildmat`,
-`parsedate`, and `main.cpp`.  It does not include tests, generated
-files, legacy Configure scripts, or the vendored `vcpkg` tree.
+The current scan covers source and test code under `config`, `libtrn`,
+`util`, `nntp`, `inews`, `nntplist`, `trn-artchk`, `tool`, `wildmat`,
+`parsedate`, and `main.cpp`.  It excludes generated files, legacy
+Configure scripts, and the vendored `vcpkg` tree.
 
 - `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
   tracked here.  Non-string owners include hash-table internals, regex
@@ -544,10 +547,11 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: the current string-shaped fixed-buffer candidate is
-  `g_buf`.  Tiny UTF byte scratch buffers, translation tables, terminal
-  pushback bytes, termcap storage, keymap type bytes, and regex bytecode
-  arrays are non-string protocol or parser storage.
+- Fixed raw buffers: current string-shaped fixed-buffer candidates are
+  `g_buf` and the UTF code-point output buffer behind
+  `insert_unicode_at`, covered by `CSTR-449`.  Translation tables,
+  terminal pushback bytes, termcap storage, keymap type bytes, and regex
+  bytecode arrays are non-string protocol or parser storage.
 - Direct `assign(data(), size())` and whole-string
   `std::string_view{data(), size()}` scans have no remaining production
   hits.
@@ -555,11 +559,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   `interp_backslash`, `normalize_refs`, and raw-buffer `nntp_gets`
   overloads are gone.
 - Article input scan: production callers outside `artio.cpp` use the
-  string-reading API.  The raw `read_art(char *, int)` helper is already
-  private to `artio.cpp`; it remains only inside the string reader and
-  article-buffer fill code.  Raw `read_art_buf(bool)` calls remain only
-  in `artio.cpp` internals and in the implementation of the string
-  reader.
+  string-reading API.  Low-level article chunk readers now own
+  `std::string` chunks.  Raw `read_art_buf(bool)` calls remain only in
+  `artio.cpp` internals and in the implementation of the string reader.
 - Unused overload/wrapper scan: no `finish_command(int)` wrapper remains.
   Keep `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
@@ -624,9 +626,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   leaf slice remains.
 - Non-zero line-input, byte, and allocation-helper scans: the remaining
   `fgets` calls are low-level `FILE *` input boundaries behind
-  string-returning article input APIs; `memset` is covered by
-  `CSTR-444`; `safe_malloc` and `safe_realloc` are hash, AddGroup
-  pointer table, regex bytecode, or generic allocator internals.
+  string-returning article input APIs; the remaining `memset` is hash
+  allocation-table initialization; `safe_malloc` and `safe_realloc` are
+  hash, AddGroup pointer table, regex bytecode, or generic allocator
+  internals.
 - Non-zero C output calls are now covered by explicit source-map slices:
   `CSTR-445`, `CSTR-446`, and `CSTR-447`.  Split those coverage slices
   into one-function implementation slices before editing source.
@@ -654,10 +657,10 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 
 ## Current C String Function Inventory
 
-The current scan covers the source roots listed above.  Counts below
-are identifier-aware call counts for `std::` calls and unqualified C
-calls.  Comment text is excluded by inspection.  The scan excludes test
-trees, legacy Configure scripts, and `vcpkg`, but it does not preprocess
+The current scan covers the source and test roots listed above.  Counts
+below are identifier-aware call counts for `std::` calls and unqualified
+C calls.  Comment text is excluded by inspection.  The scan excludes
+legacy Configure scripts and `vcpkg`, but it does not preprocess
 conditional blocks.
 
 - Search and length: `strcmp` 1.
@@ -665,7 +668,7 @@ conditional blocks.
 - C text output: `fputs` 154, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
-- Character byte operations: `memset` 4.
+- Character byte operations: `memset` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`,
@@ -692,9 +695,8 @@ The `strlen` spelling in `charsubst.cpp` is comment text.
   string-returning APIs.
 - `gets`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
   modernization by user direction.
-- `memset`: `libtrn/hash.cpp`, `hash_create`; `libtrn/opt.cpp`,
-  user-header index rebuild paths; `libtrn/sw.cpp`, user-header index
-  reset.  Covered by `CSTR-444`.
+- `memset`: `libtrn/hash.cpp`, `hash_create`.  This is hash
+  allocation-table initialization.
 - `fputs`: `libtrn/Article.cpp` 2, `art.cpp` 3, `artsrch.cpp` 1,
   `cache.cpp` 1, `color.cpp` 5, `datasrc.cpp` 3, `hash.cpp` 1,
   `kfile.cpp` 6, `mime.cpp` 1, `ng.cpp` 19, `ngdata.cpp` 2,
@@ -732,7 +734,7 @@ The `strlen` spelling in `charsubst.cpp` is comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-449`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-450`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -768,18 +770,20 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-444 - Replace User Header Index Raw Clears
+#### CSTR-449 - Return Encoded Unicode Text From UTF Helper
 
-- Files: `libtrn/head.cpp`, `libtrn/include/trn/head.h`,
-  `libtrn/opt.cpp`, `libtrn/sw.cpp`.
-- Kind: non-string byte operation on table storage.
-- Function: user-header index reset and rebuild paths.
+- Files: `libtrn/utf.cpp`, `libtrn/include/trn/utf.h`,
+  `libtrn/mime.cpp`.
+- Kind: caller-owned output buffer helper.
+- Function: `insert_unicode_at(char *, CodePoint)`.
 - Dependencies: none.
-- Change: replace `std::memset` clearing of
-  `g_user_header_type_index` with type-aware table initialization such
-  as `std::fill`.  Preserve the current index semantics and inspect the
-  existing `sw.cpp` byte count before changing behavior.
-- Tests: option/header tests.
+- Change: add or replace with a `std::string`-returning helper that
+  returns the encoded bytes for one code point.  Update MIME numeric
+  character reference handling to append the returned string directly
+  and remove the local `char[8]` buffer.  Keep a raw-buffer wrapper only
+  if production callers remain; otherwise remove the raw declaration.
+- Tests: MIME numeric character reference tests and UTF helper tests if
+  present.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

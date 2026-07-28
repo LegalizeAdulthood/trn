@@ -20,7 +20,6 @@
 
 #include <array>
 #include <cstdio>
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -156,7 +155,7 @@ struct HeaderListRestorer
 {
     std::array<HeaderTypeFlags, HEAD_LAST> flags;
     std::vector<UserHeaderType>            user_header_type;
-    short                                  user_header_type_index[26];
+    std::array<int, 26>                    user_header_type_index;
     int                                    user_header_type_count;
     int                                    user_header_type_max;
 
@@ -167,7 +166,7 @@ struct HeaderListRestorer
             flags[static_cast<std::size_t>(i)] = g_header_type[i].flags;
         }
         user_header_type = g_user_header_type;
-        std::memcpy(user_header_type_index, g_user_header_type_index, sizeof user_header_type_index);
+        user_header_type_index = g_user_header_type_index;
         user_header_type_count = g_user_header_type_count;
         user_header_type_max = g_user_header_type_max;
     }
@@ -179,7 +178,7 @@ struct HeaderListRestorer
             g_header_type[i].flags = flags[static_cast<std::size_t>(i)];
         }
         g_user_header_type = user_header_type;
-        std::memcpy(g_user_header_type_index, user_header_type_index, sizeof user_header_type_index);
+        g_user_header_type_index = user_header_type_index;
         g_user_header_type_count = user_header_type_count;
         g_user_header_type_max = user_header_type_max;
     }
