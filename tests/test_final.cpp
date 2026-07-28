@@ -15,10 +15,10 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <system_error>
 
 namespace
@@ -113,8 +113,11 @@ TEST_F(FinalizeTest, removesTemporaryFiles)
             set_environment(
                 [saved_score_file](const char *name) -> char *
                 {
-                    return std::strcmp(name, "SAVESCOREFILE") == 0 ? const_cast<char *>(saved_score_file.c_str())
-                                                                   : nullptr;
+                    if (std::string_view{name} == "SAVESCOREFILE")
+                    {
+                        return const_cast<char *>(saved_score_file.c_str());
+                    }
+                    return nullptr;
                 });
             finalize(0);
         },

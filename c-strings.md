@@ -663,7 +663,7 @@ C calls.  Comment text is excluded by inspection.  The scan excludes
 legacy Configure scripts and `vcpkg`, but it does not preprocess
 conditional blocks.
 
-- Search and length: `strcmp` 2.
+- Search and length: `strcmp` 1.
 - C line input: `fgets` 2, `gets` 1.
 - C text output: `fputs` 156, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
@@ -688,8 +688,8 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 
 ## Current C Function Source Map
 
-- `strcmp`: `tests/test_final.cpp` 1, covered by `CSTR-452`.
-  `parsedate/parsedate.y` has 1 exempt `#ifdef TEST` harness hit.
+- `strcmp`: `parsedate/parsedate.y` has 1 exempt `#ifdef TEST`
+  harness hit.
 - `fgets`: `libtrn/artio.cpp`, `read_art_chunk`; `libtrn/nntp.cpp`,
   `read_art_file_chunk`.  These are internal `FILE *` boundaries behind
   string-returning APIs.
@@ -763,17 +763,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-452 - Replace Test Environment Name Comparison
-
-- Files: `tests/test_final.cpp`.
-- Kind: test-local C string comparison.
-- Function: `std::strcmp`.
-- Dependencies: none.
-- Change: compare the requested environment variable name with
-  `std::string_view` or another modern string comparison while preserving
-  the mock environment contract.
-- Tests: affected finalization tests.
 
 #### CSTR-453 - Replace Test File Writes
 
