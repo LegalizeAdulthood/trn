@@ -1045,37 +1045,33 @@ TEST_F(InterpolatorTest, unknownEscapePreservesMetabit)
 TEST_F(InterpolatorTest, performCount)
 {
     ValueSaver<int> saved(g_perform_count, 86);
-    char pattern[]{"%#"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%#");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::to_string(g_perform_count), buffer());
 }
 
 TEST_F(InterpolatorTest, modifiedPerformCountNotZero)
 {
-    char pattern[]{"%^#"};
+    const std::string_view new_pattern = interpolate("%^#");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_NE("0", buffer());
 }
 
 TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
 {
     ValueSaver<int> saved(g_perform_count, 86);
-    char pattern[]{"%^#,%^#"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%^#,%^#");
     std::istringstream str{buffer()};
     int value1;
     int value2;
     char comma;
     str >> value1 >> comma >> value2;
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(str.eof());
     ASSERT_EQ(',', comma);
     ASSERT_GT(value2, value1);
@@ -1083,115 +1079,108 @@ TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
 
 TEST_F(InterpolatorTest, loginNamecCapitalized)
 {
-    char pattern[]{"%^L"};
+    const std::string_view new_pattern = interpolate("%^L");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(!std::isupper(TRN_TEST_LOGIN_NAME[0]));
     ASSERT_EQ(static_cast<char>(std::toupper(TRN_TEST_LOGIN_NAME[0])), buffer()[0]);
 }
 
 TEST_F(InterpolatorTest, equalTriviallyTrue)
 {
-    char pattern[]{"%(x=x?true:false)"};
+    const std::string_view new_pattern = interpolate("%(x=x?true:false)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("true", buffer());
 }
 
 TEST_F(InterpolatorTest, equalTriviallyFalse)
 {
-    char pattern[]{"%(x=y?true:false)"};
+    const std::string_view new_pattern = interpolate("%(x=y?true:false)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("false", buffer());
 }
 
 TEST_F(InterpolatorTest, interpolatedTestEqualTrue)
 {
     g_general_mode = GM_PROMPT;
-    char pattern[]{"%(%g=p?true:false)"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%(%g=p?true:false)");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("true", buffer());
 }
 
 TEST_F(InterpolatorTest, interpolatedTestEqualFalse)
 {
     g_general_mode = GM_INIT;
-    char pattern[]{"%(%g=p?true:false)"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%(%g=p?true:false)");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("false", buffer());
 }
 
 TEST_F(InterpolatorTest, equalInterpolatedTrue)
 {
     g_general_mode = GM_PROMPT;
-    char pattern[]{"%(x=x?%g:false)"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%(x=x?%g:false)");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("p", buffer());
 }
 
 TEST_F(InterpolatorTest, equalInterpolatedFalse)
 {
     g_general_mode = GM_PROMPT;
-    char pattern[]{"%(x=y?true:%g)"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%(x=y?true:%g)");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("p", buffer());
 }
 
 TEST_F(InterpolatorTest, conditionalTrueBranchStopsBeforeOuterStopper)
 {
-    char pattern[]{"%(x=x?true:false)|tail"};
+    constexpr std::string_view pattern{"%(x=x?true:false)|tail"};
 
-    const char       *new_pattern = interpolate(pattern, "|");
-    const std::size_t stopper = std::string_view{pattern}.find('|');
+    const std::string_view new_pattern = interpolate(pattern, "|");
+    const std::size_t stopper = pattern.find('|');
 
-    ASSERT_EQ('|', *new_pattern);
-    ASSERT_EQ(stopper, static_cast<std::size_t>(new_pattern - pattern));
-    ASSERT_EQ("|tail", std::string_view{new_pattern});
+    ASSERT_FALSE(new_pattern.empty());
+    ASSERT_EQ('|', new_pattern.front());
+    ASSERT_EQ(stopper, pattern.size() - new_pattern.size());
+    ASSERT_EQ("|tail", new_pattern);
     ASSERT_EQ("true", buffer());
 }
 
 TEST_F(InterpolatorTest, conditionalFalseBranchStopsBeforeOuterStopper)
 {
-    char pattern[]{"%(x=y?true:false)|tail"};
+    constexpr std::string_view pattern{"%(x=y?true:false)|tail"};
 
-    const char       *new_pattern = interpolate(pattern, "|");
-    const std::size_t stopper = std::string_view{pattern}.find('|');
+    const std::string_view new_pattern = interpolate(pattern, "|");
+    const std::size_t stopper = pattern.find('|');
 
-    ASSERT_EQ('|', *new_pattern);
-    ASSERT_EQ(stopper, static_cast<std::size_t>(new_pattern - pattern));
-    ASSERT_EQ("|tail", std::string_view{new_pattern});
+    ASSERT_FALSE(new_pattern.empty());
+    ASSERT_EQ('|', new_pattern.front());
+    ASSERT_EQ(stopper, pattern.size() - new_pattern.size());
+    ASSERT_EQ("|tail", new_pattern);
     ASSERT_EQ("false", buffer());
 }
 
 TEST_F(InterpolatorTest, conditionalSkipsNestedUnusedBranch)
 {
-    char pattern[]{"%(x=y?%(a=a?wrong:wrong):right)|tail"};
+    constexpr std::string_view pattern{"%(x=y?%(a=a?wrong:wrong):right)|tail"};
 
-    const char       *new_pattern = interpolate(pattern, "|");
-    const std::size_t stopper = std::string_view{pattern}.find('|');
+    const std::string_view new_pattern = interpolate(pattern, "|");
+    const std::size_t stopper = pattern.find('|');
 
-    ASSERT_EQ('|', *new_pattern);
-    ASSERT_EQ(stopper, static_cast<std::size_t>(new_pattern - pattern));
-    ASSERT_EQ("|tail", std::string_view{new_pattern});
+    ASSERT_FALSE(new_pattern.empty());
+    ASSERT_EQ('|', new_pattern.front());
+    ASSERT_EQ(stopper, pattern.size() - new_pattern.size());
+    ASSERT_EQ("|tail", new_pattern);
     ASSERT_EQ("right", buffer());
 }
 
@@ -1218,92 +1207,75 @@ TEST_F(InterpolatorTest, skipInterpSkipsPromptText)
 
 TEST_F(InterpolatorTest, notEqualTriviallyTrue)
 {
-    char pattern[]{"%(x!=y?true:false)"};
+    const std::string_view new_pattern = interpolate("%(x!=y?true:false)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("true", buffer());
 }
 
 TEST_F(InterpolatorTest, notEqualTriviallyFalse)
 {
-    char pattern[]{"%(x!=x?true:false)"};
+    const std::string_view new_pattern = interpolate("%(x!=x?true:false)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("false", buffer());
 }
 
 TEST_F(InterpolatorTest, regexMatched)
 {
     g_general_mode = GM_PROMPT;
-    char pattern[]{"%(%g=^p$?true:false)"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%(%g=^p$?true:false)");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("true", buffer());
 }
 
 TEST_F(InterpolatorTest, triviallyTrueNoElse)
 {
-    char pattern[]{"%(x=x?true)"};
+    const std::string_view new_pattern = interpolate("%(x=x?true)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("true", buffer());
 }
 
 TEST_F(InterpolatorTest, triviallyFalseNoElseIsEmpty)
 {
-    char pattern[]{"%(x=y?true)"};
+    const std::string_view new_pattern = interpolate("%(x=y?true)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, escapedPercent)
 {
-    char pattern[]{R"(\%g)"};
+    const std::string_view new_pattern = interpolate(R"(\%g)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("%g", buffer());
 }
 
 TEST_F(InterpolatorTest, headerFieldNotInNewsgroupEmpty)
 {
-    char pattern[]{"%[X-Boogie-Nights]"};
+    const std::string_view new_pattern = interpolate("%[X-Boogie-Nights]");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, homeDirectoryCapitalized)
 {
-    char pattern[]{"%_~"};
+    const std::string_view new_pattern = interpolate("%_~");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HOME_DIR_CAPITALIZED, buffer());
 }
 
 TEST_F(InterpolatorTest, spaceForShortLine)
 {
-    char pattern[]{"%?"};
+    const std::string_view new_pattern = interpolate("%?");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(" ", buffer());
 }
 
@@ -1319,22 +1291,18 @@ TEST_F(InterpolatorTest, spaceForShortLine)
 #define TRN_TEST_79_SPACES TRN_TEST_70_SPACES TRN_TEST_09_SPACES
 TEST_F(InterpolatorTest, newlineFor79CharsLine)
 {
-    char pattern[]{TRN_TEST_79_SPACES "%?"};
+    const std::string_view new_pattern = interpolate(TRN_TEST_79_SPACES "%?");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_79_SPACES "\n", buffer());
 }
 
 #define TRN_TEST_80_SPACES TRN_TEST_40_SPACES TRN_TEST_40_SPACES
 TEST_F(InterpolatorTest, newlineForLongerThan79CharsLine)
 {
-    char pattern[]{TRN_TEST_80_SPACES "%?"};
+    const std::string_view new_pattern = interpolate(TRN_TEST_80_SPACES "%?");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_80_SPACES "\n", buffer());
 }
 #undef TRN_TEST_80_SPACES
@@ -1351,125 +1319,106 @@ TEST_F(InterpolatorTest, newlineForLongerThan79CharsLine)
 
 TEST_F(InterpolatorTest, regexCapture)
 {
-    char pattern[]{R"pat(%(Abracadabra=^\(Ab\(.*\)bra\)$?0=%0, 1=%1, 2=%2:false))pat"};
+    const std::string_view new_pattern = interpolate(R"pat(%(Abracadabra=^\(Ab\(.*\)bra\)$?0=%0, 1=%1, 2=%2:false))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("0=Abracadabra, 1=Abracadabra, 2=racada", buffer());
 }
 
 TEST_F(InterpolatorTest, escapeSpecialsModifier)
 {
-    char pattern[]{R"pat(%(Regex .* and percent \%p specials.=^\(.*\)$?%\0))pat"};
+    const std::string_view new_pattern = interpolate(R"pat(%(Regex .* and percent \%p specials.=^\(.*\)$?%\0))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(R"text(Regex \.\* and percent \%p specials\.)text", buffer());
 }
 
 TEST_F(InterpolatorTest, addressModifier)
 {
-    char pattern[]{"%(" TRN_TEST_HEADER_FROM R"pat(=^\(.*\)$?%>0))pat"};
+    const std::string_view new_pattern = interpolate("%(" TRN_TEST_HEADER_FROM R"pat(=^\(.*\)$?%>0))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FROM_ADDRESS, buffer());
 }
 
 TEST_F(InterpolatorTest, addressModifierDecodesHeader)
 {
     m_env.expect_env("FROM", "=?US-ASCII?B?Qm96byB0aGUgQ2xvd24=?= <bozo@clown-world.org>");
-    char pattern[]{"%>{FROM}"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%>{FROM}");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FROM_ADDRESS, buffer());
 }
 
 TEST_F(InterpolatorTest, nameModifier)
 {
-    char pattern[]{"%(" TRN_TEST_HEADER_FROM R"pat(=^\(.*\)$?%)0))pat"};
+    const std::string_view new_pattern = interpolate("%(" TRN_TEST_HEADER_FROM R"pat(=^\(.*\)$?%)0))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FROM_NAME, buffer());
 }
 
 TEST_F(InterpolatorTest, commentModifierDecodesHeader)
 {
     m_env.expect_env("FROM", "bozo@clown-world.org (=?US-ASCII?B?Qm96byB0aGUgQ2xvd24=?=)");
-    char pattern[]{"%){FROM}"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%){FROM}");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_HEADER_FROM_NAME, buffer());
 }
 
 TEST_F(InterpolatorTest, nameModifierFromParenValue)
 {
-    char pattern[]{R"pat(%(\(Bob the Builder\) <bob@example.org>=^\(.*\)$?%)0))pat"};
+    const std::string_view new_pattern = interpolate(R"pat(%(\(Bob the Builder\) <bob@example.org>=^\(.*\)$?%)0))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("(Bob the Builder)", buffer());
 }
 
 TEST_F(InterpolatorTest, nameModifierFromQuotedValue)
 {
-    char pattern[]{R"pat(%("Bob the Builder" <bob@example.org>=^\(.*\)$?%)0))pat"};
+    const std::string_view new_pattern = interpolate(R"pat(%("Bob the Builder" <bob@example.org>=^\(.*\)$?%)0))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("Bob the Builder", buffer());
 }
 
 TEST_F(InterpolatorTest, nameModifierFromQuotedValueStripsTrailingWhitespace)
 {
-    char pattern[]{R"pat(%("Bob the Builder    " <bob@example.org>=^\(.*\)$?%)0))pat"};
+    const std::string_view new_pattern =
+        interpolate(R"pat(%("Bob the Builder    " <bob@example.org>=^\(.*\)$?%)0))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("Bob the Builder", buffer());
 }
 
 TEST_F(InterpolatorTest, tickModifier)
 {
-    char pattern[]{R"pat(%(Isn't this interesting?=^\(.*\)$?'%'0'))pat"};
+    const std::string_view new_pattern = interpolate(R"pat(%(Isn't this interesting?=^\(.*\)$?'%'0'))pat");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(R"text('Isn'\''t this interesting?')text", buffer());
 }
 
 TEST_F(InterpolatorTest, formatModifierLeftJustified)
 {
     g_general_mode = GM_PROMPT;
-    char pattern[]{"%:-10g"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%:-10g");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("p         ", buffer());
 }
 
 TEST_F(InterpolatorTest, formatModifierRightJustified)
 {
     g_general_mode = GM_PROMPT;
-    char pattern[]{"%:10g"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%:10g");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("         p", buffer());
 }
 
