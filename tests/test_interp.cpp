@@ -675,21 +675,17 @@ TEST_F(InterpolatorTest, hostMatchName)
 
 TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
 {
-    char pattern[]{"%i"};
+    const std::string_view new_pattern = interpolate("%i");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, indentString)
 {
-    char pattern[]{"%I"};
+    const std::string_view new_pattern = interpolate("%I");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("'>'", buffer());
 }
 
@@ -700,166 +696,145 @@ TEST_F(InterpolatorTest, doShellPassesQuotecharsFromIndentString)
 
 TEST_F(InterpolatorTest, approximateBaudRate)
 {
-    char pattern[]{"%j"};
+    const std::string_view new_pattern = interpolate("%j");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::to_string(g_just_a_sec*10), buffer());
 }
 
 #ifndef HAS_NEWS_ADMIN
 TEST_F(InterpolatorTest, noNewsAdmin)
 {
-    char pattern[]{"%l"};
+    const std::string_view new_pattern = interpolate("%l");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("???", buffer());
 }
 #endif
 
 TEST_F(InterpolatorTest, loginName)
 {
-    char pattern[]{"%L"};
+    const std::string_view new_pattern = interpolate("%L");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_LOGIN_NAME, buffer());
 }
 
 TEST_F(InterpolatorTest, minorMode)
 {
     g_mode = MM_DELETE_BOGUS_NEWSGROUPS_PROMPT;
-    char pattern[]{"%m"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%m");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("D", buffer());
 }
 
 TEST_F(InterpolatorTest, markCount)
 {
-    char pattern[]{"%M"};
     g_dm_count = 96;
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%M");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("96", buffer());
 }
 
 TEST_F(InterpolatorTest, newsgroupsLineNotInNewsgroup)
 {
-    char pattern[]{"%n"};
+    const std::string_view new_pattern = interpolate("%n");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, realName)
 {
-    char pattern[]{"%N"};
     m_env.expect_no_envar("NAME");
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%N");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_REAL_NAME, buffer());
 }
 
 TEST_F(InterpolatorTest, realNameFromNAME)
 {
-    char pattern[]{"%N"};
     m_env.expect_env("NAME", "John Yeager");
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%N");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("John Yeager", buffer());
 }
 
 TEST_F(InterpolatorTest, newsOrgFromConfiguration)
 {
-    char pattern[]{"%o"};
     m_env.expect_no_envar("NEWSORG");
     m_env.expect_no_envar("ORGANIZATION");
     // TODO: configure %X/organization contents
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%o");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
 {
-    char pattern[]{"%o"};
     m_env.expect_env("NEWSORG", TRN_TEST_ORGANIZATION);
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%o");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
 }
 
 TEST_F(InterpolatorTest, newsOrgFromNEWSORGFile)
 {
-    char pattern[]{"%o"};
     m_env.expect_env("NEWSORG", TRN_TEST_ORGFILE);
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%o");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
 }
 
 TEST_F(InterpolatorTest, newsOrgFromORGANIZATION)
 {
-    char pattern[]{"%o"};
     m_env.expect_no_envar("NEWSORG");
     m_env.expect_env("ORGANIZATION", TRN_TEST_ORGANIZATION);
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%o");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
 }
 
 TEST_F(InterpolatorTest, newsOrgFromORGANIZATIONFile)
 {
-    char pattern[]{"%o"};
     m_env.expect_no_envar("NEWSORG");
     m_env.expect_env("ORGANIZATION", TRN_TEST_ORGFILE);
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%o");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
 }
 
 TEST_F(InterpolatorTest, originalDirectory)
 {
-    char pattern[]{"%O"};
+    const std::string_view new_pattern = interpolate("%O");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(g_orig_dir, buffer());
 }
 
 TEST_F(InterpolatorTest, privateNewsDirectory)
 {
-    char pattern[]{"%p"};
+    const std::string_view new_pattern = interpolate("%p");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(g_priv_dir, buffer());
 }
 
@@ -891,221 +866,178 @@ private:
 TEST_F(InterpolatorTest, newsSpoolDirectoryNoDataSource)
 {
     ValueSaver<DataSource *> datasrc(g_data_source, nullptr);
-    char                   pattern[]{"%P"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate("%P");
 
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsSpoolDirectory)
 {
-    char pattern[]{"%P"};
+    const std::string_view new_pattern = interpolate("%P");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(g_data_source->m_spool_dir, buffer());
 }
 
 TEST_F(InterpolatorTest, lastInputStringInitiallyEmpty)
 {
-    char pattern[]{"%q"};
+    const std::string_view new_pattern = interpolate("%q");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, lastReferenceNotInNewsgroupEmpty)
 {
-    char pattern[]{"%r"};
+    const std::string_view new_pattern = interpolate("%r");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newReferencesNotInNewsgroupEmpty)
 {
-    char pattern[]{"%R"};
+    const std::string_view new_pattern = interpolate("%R");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, strippedSubjectNotInNewsgroupEmpty)
 {
-    char pattern[]{"%s"};
+    const std::string_view new_pattern = interpolate("%s");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, subjectNotInNewsgroupEmpty)
 {
-    char pattern[]{"%S"};
+    const std::string_view new_pattern = interpolate("%S");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, toFromFromReplyToNotInNewsgroupEmpty)
 {
-    char pattern[]{"%t"};
+    const std::string_view new_pattern = interpolate("%t");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, toFromPathNotInNewsgroupEmpty)
 {
-    char pattern[]{"%T"};
+    const std::string_view new_pattern = interpolate("%T");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numUnreadArticlesNotInNewsgroupEmpty)
 {
-    char pattern[]{"%u"};
+    const std::string_view new_pattern = interpolate("%u");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numUnreadArticlesExceptCurrentNotInNewsgroupEmpty)
 {
-    char pattern[]{"%U"};
+    const std::string_view new_pattern = interpolate("%U");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentNotInNewsgroupEmpty)
 {
-    char pattern[]{"%v"};
+    const std::string_view new_pattern = interpolate("%v");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, patchLevel)
 {
-    char pattern[]{"%V"};
+    const std::string_view new_pattern = interpolate("%V");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(std::string{PATCHLEVEL}, buffer());
 }
 
 TEST_F(InterpolatorTest, libDir)
 {
-    char pattern[]{"%x"};
+    const std::string_view new_pattern = interpolate("%x");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_LIB_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, rnLibDir)
 {
-    char pattern[]{"%X"};
+    const std::string_view new_pattern = interpolate("%X");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(TRN_TEST_RN_LIB_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, shortenedFromNotInNewsgroupEmpty)
 {
-    char pattern[]{"%y"};
+    const std::string_view new_pattern = interpolate("%y");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, tmpDir)
 {
-    char pattern[]{"%Y"};
+    const std::string_view new_pattern = interpolate("%Y");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(m_output.path(), buffer());
 }
 
 TEST_F(InterpolatorTest, articleSizeNotInNewsgroupEmpty)
 {
-    char pattern[]{"%z"};
+    const std::string_view new_pattern = interpolate("%z");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numSelectedThreadsNotInNewsgroupEmpty)
 {
-    char pattern[]{"%Z"};
+    const std::string_view new_pattern = interpolate("%Z");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, trailingPercentRemains)
 {
-    char pattern[]{"%"};
+    const std::string_view new_pattern = interpolate("%");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("%", buffer());
 }
 
 TEST_F(InterpolatorTest, unknownEscapeIsLiteral)
 {
-    char pattern[]{"%!"};
+    const std::string_view new_pattern = interpolate("%!");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("!", buffer());
 }
 
 TEST_F(InterpolatorTest, unknownEscapePreservesMetabit)
 {
-    char pattern[]{"^(%!^)"};
+    const std::string_view new_pattern = interpolate("^(%!^)");
 
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ(0200 | '!', static_cast<unsigned char>(m_buffer[0]));
     ASSERT_EQ(std::size_t{1}, m_buffer.size());
 }
