@@ -87,7 +87,7 @@ protected:
         g_s_status_cols = 0;
     }
 
-    char                 m_author[64]{"Casey Mixed <case@example.com>"};
+    std::string          m_author{"Casey Mixed <case@example.com>"};
     Subject              m_subject{};
     short                m_old_s_ptr_page_line{};
     long                 m_old_s_bot_ent{};
