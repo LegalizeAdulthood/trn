@@ -1038,7 +1038,7 @@ caseG:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("Start here? %d  >=? %d\n",g_top_line.value_of() + g_g_line + 1,g_art_line_num.value_of());
+            fmt::print("Start here? {}  >=? {}\n", g_top_line.value_of() + g_g_line + 1, g_art_line_num.value_of());
             term_down(1);
         }
 #endif

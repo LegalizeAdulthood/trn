@@ -548,7 +548,7 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: the current string-shaped fixed-buffer candidate is
-  `g_buf` covered by `CSTR-409`.  The local `opt_init` `argv` shim in
+  `g_buf` covered by `CSTR-486`.  The local `opt_init` `argv` shim in
   `tests/test_interp.cpp` remains an API-boundary fixture because
   `opt_init` still accepts `char *argv[]`.  Translation tables,
   terminal pushback bytes, termcap storage, keymap type bytes, regex
@@ -633,9 +633,9 @@ Configure scripts, and the vendored `vcpkg` tree.
   allocation-table initialization; `safe_malloc` and `safe_realloc` are
   hash, AddGroup pointer table, regex bytecode, or generic allocator
   internals.
-- Non-zero C output calls are now covered by explicit source-map slices:
-  `CSTR-445`, `CSTR-446`, and `CSTR-447`.  Split those coverage slices
-  into one-function implementation slices before editing source.
+- Non-zero C output calls are inventory until each source location is
+  promoted to an explicit function-level slice.  Do not add broad
+  coverage slices for output-call families.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -668,7 +668,7 @@ conditional blocks.
 
 - Search and length: `strcmp` 1.
 - C line input: `fgets` 2, `gets` 1.
-- C text output: `fputs` 154, `printf`/`std::printf` 288,
+- C text output: `fputs` 154, `printf`/`std::printf` 287,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
@@ -706,9 +706,9 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `ngsrch.cpp` 1, `ngstuff.cpp` 6, `opt.cpp` 1, `rcln.cpp` 1,
   `rcstuff.cpp` 21, `respond.cpp` 27, `rt-page.cpp` 2,
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
-  `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Covered by
-  `CSTR-446`.
-- `printf`/`std::printf`: `art.cpp` 10, `artsrch.cpp` 2,
+  `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Promote concrete
+  source locations to explicit function-level slices before editing.
+- `printf`/`std::printf`: `art.cpp` 9, `artsrch.cpp` 2,
   `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3, `cache.cpp` 4,
   `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3, `intrp.cpp` 1,
   `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35, `ngdata.cpp` 6,
@@ -720,24 +720,26 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `scorefile.cpp` 20,
   `scoresave.cpp` 6, `sdisp.cpp` 10, `smisc.cpp` 1, `spage.cpp` 4,
   `terminal.cpp` 3, `trn.cpp` 12, `univ.cpp` 9, and `util.cpp` 6.
-  Covered by `CSTR-445`.  `parsedate/parsedate.y` has 5 exempt hits.
+  `art.cpp` hits are covered by `CSTR-467` through `CSTR-470`.
+  `parsedate/parsedate.y` has 5 exempt hits.
 - `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
   `libtrn/color.cpp` 2, `decode.cpp` 1, `head.cpp` 1, `nntp.cpp` 1,
   `opt.cpp` 2, `respond.cpp` 2, `scoresave.cpp` 1, `terminal.cpp` 1,
-  and `univ.cpp` 1.  Covered by `CSTR-445`.
+  and `univ.cpp` 1.  Split into explicit slices before editing.
 - `putchar`/`std::putchar`: `libtrn/include/trn/terminal.h` 1,
   `art.cpp` 12, `charsubst.cpp` 5, `color.cpp` 1, `datasrc.cpp` 4,
   `final.cpp` 1, `init.cpp` 1, `kfile.cpp` 1, `ng.cpp` 4,
   `rcstuff.cpp` 3, `rt-page.cpp` 8, `rt-select.cpp` 5,
   `rt-util.cpp` 6, `score.cpp` 2, `sdisp.cpp` 3, `smisc.cpp` 1,
-  `terminal.cpp` 21, and `utf.cpp` 2.  Covered by `CSTR-447`.
+  `terminal.cpp` 21, and `utf.cpp` 2.  Promote concrete source
+  locations to explicit function-level slices before editing.
 
 ## Refactoring Slices
 
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-467`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-487`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -766,7 +768,46 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-467 - Convert Page Switch Debug Output
+
+- Files: `libtrn/art.cpp`.
+- Kind: formatted C output.
+- Function: `page_switch`.
+- Dependencies: none.
+- Change: convert the remaining static `DEBUG` inner-search
+  `std::printf` diagnostics in `page_switch` to `fmt::print`.
+- Tests: `ArticlePagerCommandTest` and `ArticleSearchTest`.
+
+#### CSTR-468 - Classify Page Switch Prompt Output
+
+- Files: `libtrn/art.cpp`.
+- Kind: runtime-format C output.
+- Function: `page_switch`.
+- Dependencies: none.
+- Change: audit the `g_prompt.c_str()` `std::printf` call, classify the
+  runtime format source, and convert it only if the format string is
+  static enough for `fmt`; otherwise leave it visible with rationale.
+- Tests: `ArticlePagerCommandTest` and interpolator prompt tests.
+
+#### CSTR-469 - Convert Page Switch Auto-view Output
+
+- Files: `libtrn/art.cpp`.
+- Kind: formatted C output.
+- Function: `page_switch`.
+- Dependencies: none.
+- Change: convert the auto-view status `std::printf` to `fmt::print`
+  without changing the toggle behavior or terminal movement.
+- Tests: `ArticlePagerCommandTest`.
+
+#### CSTR-470 - Convert Inner More Debug Output
+
+- Files: `libtrn/art.cpp`.
+- Kind: formatted C output.
+- Function: `inner_more`.
+- Dependencies: none.
+- Change: convert the remaining static `DEBUG` inner-search
+  `std::printf` diagnostics in `inner_more` to `fmt::print`.
+- Tests: `ArticlePagerCommandTest` and `ArticleSearchTest`.
 
 ### Tier 1 - Helper And API Foundations
 
@@ -794,41 +835,156 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-445 - Split Remaining Formatted Output Calls
+#### CSTR-471 - Remove `g_buf` From Terminal Command Storage
 
-- Files: see `printf` and `fprintf` source map above.
-- Kind: formatted C output.
-- Function: multiple functions; split before implementation.
+- Files: `libtrn/terminal.cpp`.
+- Kind: global command buffer write.
+- Function: `store_command`.
 - Dependencies: none.
-- Change: replace this coverage slice with one-function slices that
-  convert formatted `printf`/`fprintf` calls to `fmt::print` or
-  `fmt::format` where the format string is static or audited.  Leave
-  runtime format strings visible until their source is classified.
-- Tests: source-specific tests or full output workflow checks.
+- Change: make command storage caller-owned instead of copying command
+  text into `g_buf`.
+- Tests: `TerminalTest` command storage and echo cases.
 
-#### CSTR-446 - Split Remaining Plain Text Output Calls
+#### CSTR-472 - Remove `g_buf` From Terminal Command Echo
 
-- Files: see `fputs` source map above.
-- Kind: plain C string output.
-- Function: multiple functions; split before implementation.
+- Files: `libtrn/terminal.cpp`.
+- Kind: global command buffer read.
+- Function: `print_cmd`.
+- Dependencies: `CSTR-471`.
+- Change: pass the command text to echo logic explicitly instead of
+  reading the command bytes from `g_buf`.
+- Tests: `TerminalTest` command echo cases.
+
+#### CSTR-473 - Remove `g_buf` From Legacy Newsgroup Command Staging
+
+- Files: `libtrn/trn.cpp`.
+- Kind: global command buffer write.
+- Function: `stage_legacy_newsgroup_command`.
+- Dependencies: `CSTR-471`.
+- Change: return or forward caller-owned command text instead of staging
+  it in `g_buf`.
+- Tests: newsgroup command input tests.
+
+#### CSTR-474 - Remove `g_buf` From Newsgroup Input
+
+- Files: `libtrn/trn.cpp`.
+- Kind: global command buffer read.
+- Function: `input_newsgroup`.
+- Dependencies: `CSTR-473`.
+- Change: consume command text through local storage or parameters
+  instead of testing `*g_buf`.
+- Tests: newsgroup command input tests.
+
+#### CSTR-475 - Remove `g_buf` From Escapade Shell Runner
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: global command buffer read.
+- Function: `escapade_with_shell_runner`.
 - Dependencies: none.
-- Change: replace this coverage slice with one-function slices that
-  convert `fputs` only when doing so simplifies string construction,
-  removes C-string staging, or aligns nearby formatted output with fmt.
-  Keep plain C output if it remains the simplest boundary call.
-- Tests: source-specific tests or full output workflow checks.
+- Change: accept the command text from callers and pass that view to the
+  shell runner instead of reading `g_buf`.
+- Tests: `NgstuffTest` escapade shell-runner cases.
 
-#### CSTR-447 - Split Remaining Character Output Calls
+#### CSTR-476 - Remove `g_buf` From Escapade
 
-- Files: see `putchar` source map above.
-- Kind: character output.
-- Function: multiple functions; split before implementation.
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: global command buffer read.
+- Function: `escapade`.
+- Dependencies: `CSTR-475`.
+- Change: accept command text explicitly and delegate to
+  `escapade_with_shell_runner` without global storage.
+- Tests: `NgstuffTest` escapade cases.
+
+#### CSTR-477 - Remove `g_buf` From Switcheroo
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: global command buffer read.
+- Function: `switcheroo`.
 - Dependencies: none.
-- Change: replace this coverage slice with one-function slices that
-  modernize `putchar` loops only when the loop is already moving to
-  string/view output or a terminal helper API.  Treat UTF and terminal
-  cursor helpers as lower-level dependencies when they own the loop.
-- Tests: terminal, UTF, and display tests as appropriate.
+- Change: accept command text explicitly instead of constructing a
+  string view over `g_buf`.
+- Tests: `NgstuffTest` switcheroo cases.
+
+#### CSTR-478 - Remove `g_buf` From Newsgroup Dispatcher
+
+- Files: `libtrn/ng.cpp`.
+- Kind: global command buffer read.
+- Function: `do_newsgroup`.
+- Dependencies: `CSTR-475`, `CSTR-476`, `CSTR-477`.
+- Change: keep article command text in owned local storage and pass it
+  through to downstream command handlers instead of copying from
+  `g_buf`.
+- Tests: newsgroup command and article command tests.
+
+#### CSTR-479 - Remove `g_buf` From Catchup Prompt
+
+- Files: `libtrn/ng.cpp`.
+- Kind: global command buffer read.
+- Function: `ask_catchup`.
+- Dependencies: none.
+- Change: use the prompt result directly instead of branching on
+  `*g_buf`.
+- Tests: catchup prompt tests.
+
+#### CSTR-480 - Remove `g_buf` From Save Workflow
+
+- Files: `libtrn/respond.cpp`.
+- Kind: global command buffer read.
+- Function: `save_article`.
+- Dependencies: none.
+- Change: use local command/prompt text for save confirmations instead
+  of testing `*g_buf`.
+- Tests: response save workflow tests.
+
+#### CSTR-481 - Remove `g_buf` From Followup Workflow
+
+- Files: `libtrn/respond.cpp`.
+- Kind: global command buffer read.
+- Function: `followup`.
+- Dependencies: none.
+- Change: use local prompt text when choosing the default response
+  instead of constructing a view over `g_buf`.
+- Tests: followup response workflow tests.
+
+#### CSTR-482 - Remove `g_buf` From Selector Option Editing
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: global command buffer write.
+- Function: `select_option`.
+- Dependencies: none.
+- Change: keep option edit command state local instead of clearing
+  `g_buf`.
+- Tests: selector option editing tests.
+
+#### CSTR-483 - Remove `g_buf` From Selector Command Dispatch
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: global command buffer write.
+- Function: `sel_command`.
+- Dependencies: `CSTR-482`.
+- Change: pass synthesized selector commands through local storage
+  instead of writing `g_buf[0]` and `g_buf[1]`.
+- Tests: selector command tests.
+
+#### CSTR-484 - Remove `g_buf` From Ngstuff Test Fixtures
+
+- Files: `tests/test_ngstuff.cpp`.
+- Kind: test fixture global buffer dependency.
+- Function: `NgstuffTest` fixture and cases.
+- Dependencies: `CSTR-475`, `CSTR-476`, `CSTR-477`.
+- Change: update tests to provide command text through modern APIs
+  instead of saving and restoring `g_buf`.
+- Tests: `NgstuffTest`.
+
+#### CSTR-485 - Remove `g_buf` From Terminal Tests
+
+- Files: `tests/test_terminal.cpp`.
+- Kind: test assertion global buffer dependency.
+- Function: terminal command storage tests.
+- Dependencies: `CSTR-471`, `CSTR-472`.
+- Change: assert returned or echoed command text instead of inspecting
+  `g_buf` bytes directly.
+- Tests: `TerminalTest`.
 
 ### Tier 5 - Helper Removal
 
@@ -848,13 +1004,13 @@ owned strings or owner-specific storage.
   the caller-facing API and update tests to validate the string result.
 - Tests: `ArticleIoTest` read-buffer cases.
 
-#### CSTR-409 - Remove Global `g_buf`
+#### CSTR-486 - Remove Global `g_buf`
 
 - Files: `config/common.cpp`, `config/include/config/common.h`, all
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: none.
+- Dependencies: `CSTR-471` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
