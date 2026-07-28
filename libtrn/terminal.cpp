@@ -959,7 +959,11 @@ static std::size_t edit_buffer(std::string &buffer, std::size_t cursor, std::str
         quote_one = false;
         if (cursor != 0)
         {
-            goto echo_it;
+            if (!s_not_echoing)
+            {
+                echo_char(buffer[cursor]);
+            }
+            return cursor + 1;
         }
     }
     char ch = buffer[cursor];
@@ -1080,7 +1084,6 @@ static std::size_t edit_buffer(std::string &buffer, std::size_t cursor, std::str
         quote_one = true;
     }
 
-echo_it:
     if (!s_not_echoing)
     {
         echo_char(buffer[cursor]);
