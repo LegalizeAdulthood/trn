@@ -256,7 +256,7 @@ static unsigned hash(std::string_view key)
 static int default_cmp(std::string_view key, HashDatum data)
 {
     // We already know that the lengths are equal, just compare the strings
-    return std::memcmp(key.data(), data.dat_ptr, key.size());
+    return key.compare(std::string_view{data.dat_ptr, key.size()});
 }
 
 // allocate a hash entry

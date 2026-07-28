@@ -624,10 +624,9 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   leaf slice remains.
 - Non-zero line-input, byte, and allocation-helper scans: the remaining
   `fgets` calls are low-level `FILE *` input boundaries behind
-  string-returning article input APIs; `memset` and `memcmp` are covered
-  by `CSTR-443` and `CSTR-444`; `safe_malloc` and `safe_realloc` are
-  hash, AddGroup pointer table, regex bytecode, or generic allocator
-  internals.
+  string-returning article input APIs; `memset` is covered by
+  `CSTR-444`; `safe_malloc` and `safe_realloc` are hash, AddGroup
+  pointer table, regex bytecode, or generic allocator internals.
 - Non-zero C output calls are now covered by explicit source-map slices:
   `CSTR-445`, `CSTR-446`, and `CSTR-447`.  Split those coverage slices
   into one-function implementation slices before editing source.
@@ -666,14 +665,15 @@ conditional blocks.
 - C text output: `fputs` 154, `printf`/`std::printf` 292,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
-- Character byte operations: `memset` 4, `memcmp` 1.
+- Character byte operations: `memset` 4.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
 `strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`,
 `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`, `sprintf`,
 `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `puts`, `memcpy`,
-`memmove`, `memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`,
-`std::atol`, `std::strtol`, `std::strtoul`, or `std::strtod`.
+`memmove`, `memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`,
+`std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
+`std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -694,8 +694,7 @@ The `strlen` spelling in `charsubst.cpp` is comment text.
   modernization by user direction.
 - `memset`: `libtrn/hash.cpp`, `hash_create`; `libtrn/opt.cpp`,
   user-header index rebuild paths; `libtrn/sw.cpp`, user-header index
-  reset.  Covered by `CSTR-443` and `CSTR-444`.
-- `memcmp`: `libtrn/hash.cpp`, `default_cmp`.  Covered by `CSTR-443`.
+  reset.  Covered by `CSTR-444`.
 - `fputs`: `libtrn/Article.cpp` 2, `art.cpp` 3, `artsrch.cpp` 1,
   `cache.cpp` 1, `color.cpp` 5, `datasrc.cpp` 3, `hash.cpp` 1,
   `kfile.cpp` 6, `mime.cpp` 1, `ng.cpp` 19, `ngdata.cpp` 2,
@@ -768,18 +767,6 @@ No current slices.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-443 - Replace Hash Default Byte Compare
-
-- Files: `libtrn/hash.cpp`, `libtrn/include/trn/hash.h`.
-- Kind: byte operation on hash payload text.
-- Function: `default_cmp`.
-- Dependencies: none.
-- Change: classify `HashDatum` payload ownership and replace the
-  `std::memcmp` text comparison with a view comparison when the default
-  hash comparer is text-only.  Do not change non-text hash payload
-  users without a storage/API slice.
-- Tests: `tests/test_hash.cpp`.
 
 #### CSTR-444 - Replace User Header Index Raw Clears
 
