@@ -109,11 +109,17 @@ protected:
     void SetUp() override;
     void TearDown() override;
 
+    std::string_view interpolate(std::string_view pattern, std::string_view stoppers = {})
+    {
+        std::string_view cursor{pattern};
+        m_buffer = do_interp(cursor, stoppers, {});
+        return cursor;
+    }
+
     const char *interpolate(char *pattern, std::string_view stoppers = {})
     {
         const std::string_view input{pattern};
-        std::string_view       cursor{input};
-        m_buffer = do_interp(cursor, stoppers, {});
+        const std::string_view cursor = interpolate(input, stoppers);
         return pattern + (input.size() - cursor.size());
     }
 
@@ -252,12 +258,12 @@ void InterpolatorTest::TearDown()
 
 TEST_F(InterpolatorTest, noEscapes)
 {
-    char pattern[]{"this string contains no escapes"};
+    constexpr std::string_view pattern{"this string contains no escapes"};
 
-    const char *new_pattern = interpolate(pattern);
+    const std::string_view new_pattern = interpolate(pattern);
 
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(pattern, buffer());
+    ASSERT_TRUE(new_pattern.empty());
+    ASSERT_EQ("this string contains no escapes", buffer());
 }
 
 TEST(InterpBackslashTest, decodesHexEscape)
@@ -366,51 +372,51 @@ TEST_F(InterpolatorTest, articleSearchPatternForOneHeader)
 
 TEST_F(InterpolatorTest, firstStopCharacter)
 {
-    char pattern[]{"this string contains no escapes [but contains stop characters]"};
+    constexpr std::string_view pattern{"this string contains no escapes [but contains stop characters]"};
 
-    const char *new_pattern = interpolate(pattern, "[]");
+    const std::string_view new_pattern = interpolate(pattern, "[]");
 
-    ASSERT_EQ('[', *new_pattern);
-    ASSERT_EQ(std::string_view{"this string contains no escapes "}.size(),
-              static_cast<std::size_t>(new_pattern - pattern));
-    ASSERT_EQ("[but contains stop characters]", std::string_view{new_pattern});
+    ASSERT_FALSE(new_pattern.empty());
+    ASSERT_EQ('[', new_pattern.front());
+    ASSERT_EQ(std::string_view{"this string contains no escapes "}.size(), pattern.size() - new_pattern.size());
+    ASSERT_EQ("[but contains stop characters]", new_pattern);
     ASSERT_EQ("this string contains no escapes ", buffer());
 }
 
 TEST_F(InterpolatorTest, subsequentStopCharacter)
 {
-    char pattern[]{"this string contains no escapes [but contains stop characters]"};
+    constexpr std::string_view pattern{"this string contains no escapes [but contains stop characters]"};
 
-    const char *new_pattern = interpolate(pattern, "()[]");
+    const std::string_view new_pattern = interpolate(pattern, "()[]");
 
-    ASSERT_EQ('[', *new_pattern);
-    ASSERT_EQ(std::string_view{"this string contains no escapes "}.size(),
-              static_cast<std::size_t>(new_pattern - pattern));
-    ASSERT_EQ("[but contains stop characters]", std::string_view{new_pattern});
+    ASSERT_FALSE(new_pattern.empty());
+    ASSERT_EQ('[', new_pattern.front());
+    ASSERT_EQ(std::string_view{"this string contains no escapes "}.size(), pattern.size() - new_pattern.size());
+    ASSERT_EQ("[but contains stop characters]", new_pattern);
     ASSERT_EQ("this string contains no escapes ", buffer());
 }
 
 TEST_F(InterpolatorTest, escapedStopCharacterDoesNotStop)
 {
-    char pattern[]{R"(this string contains an escaped \[ stop [but contains stop characters])"};
+    constexpr std::string_view pattern{R"(this string contains an escaped \[ stop [but contains stop characters])"};
 
-    const char *new_pattern = interpolate(pattern, "[]");
+    const std::string_view new_pattern = interpolate(pattern, "[]");
 
-    ASSERT_EQ('[', *new_pattern);
+    ASSERT_FALSE(new_pattern.empty());
+    ASSERT_EQ('[', new_pattern.front());
     ASSERT_EQ(std::string_view{R"(this string contains an escaped \[ stop )"}.size(),
-              static_cast<std::size_t>(new_pattern - pattern));
-    ASSERT_EQ("[but contains stop characters]", std::string_view{new_pattern});
+              pattern.size() - new_pattern.size());
+    ASSERT_EQ("[but contains stop characters]", new_pattern);
     ASSERT_EQ("this string contains an escaped [ stop ", buffer());
 }
 
 TEST_F(InterpolatorTest, stopCharactersNotFoundReturnsEnd)
 {
-    char pattern[]{"this string contains no stop characters"};
+    constexpr std::string_view pattern{"this string contains no stop characters"};
 
-    const char *new_pattern = interpolate(pattern, "[]");
+    const std::string_view new_pattern = interpolate(pattern, "[]");
 
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string_view{pattern}.size(), static_cast<std::size_t>(new_pattern - pattern));
+    ASSERT_TRUE(new_pattern.empty());
     ASSERT_EQ("this string contains no stop characters", buffer());
 }
 

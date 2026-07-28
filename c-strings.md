@@ -548,7 +548,7 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  test input fixtures covered by `CSTR-460` and
+  test input fixtures covered by `CSTR-462` through `CSTR-465` and
   `g_buf` covered by `CSTR-409`.  Translation tables, terminal
   pushback bytes, termcap storage, keymap type bytes, regex bytecode
   arrays, bounded UTF byte sequences, and terminal-capability fixture
@@ -735,7 +735,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-461`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-466`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -771,20 +771,49 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-460 - Split Interpolator Test Pattern Buffers
+#### CSTR-462 - Modernize Early Interpolator Scalar Patterns
 
 - Files: `tests/test_interp.cpp`.
-- Kind: mutable local `pattern[]` buffers used only because the test
-  helper still exposes a C-string cursor shape.
-- Functions: `InterpTest::interpolate` and the individual test cases
-  that call it.
+- Kind: local `pattern[]` buffers for simple percent escapes.
+- Functions: `articleSearchPattern` through `hostMatchName`.
 - Dependencies: none.
-- Change: split this coverage slice before implementation.  Prefer
-  making the helper accept `std::string_view` and return the remaining
-  `std::string_view`, then convert call sites in small groups from
-  `char pattern[]` locals to direct string literals or
-  `std::string_view` values.
-- Tests: `InterpTest`.
+- Change: migrate one-shot local pattern buffers to direct
+  `std::string_view` inputs and remaining views.
+- Tests: listed `InterpTest` cases.
+
+#### CSTR-463 - Modernize Interpolator Field Patterns
+
+- Files: `tests/test_interp.cpp`.
+- Kind: local `pattern[]` buffers for data-backed fields.
+- Functions: `messageIdNotInNewsgroup` through
+  `unknownEscapePreservesMetabit`.
+- Dependencies: none.
+- Change: migrate one-shot local pattern buffers to direct
+  `std::string_view` inputs and remaining views.
+- Tests: listed `InterpTest` cases.
+
+#### CSTR-464 - Modernize Interpolator Conditional Patterns
+
+- Files: `tests/test_interp.cpp`.
+- Kind: local `pattern[]` buffers for conditionals, captures, and
+  modifiers.
+- Functions: `performCount` through `formatModifierRightJustified`.
+- Dependencies: none.
+- Change: migrate one-shot local pattern buffers to direct
+  `std::string_view` inputs and remaining views.
+- Tests: listed `InterpTest` cases.
+
+#### CSTR-465 - Modernize Interpolator Escape Patterns
+
+- Files: `tests/test_interp.cpp`.
+- Kind: local `pattern[]` buffers for backslash escape cases and later
+  interpolator call sites.
+- Functions: `bell` through the remaining `InterpolatorTest` pattern
+  cases.
+- Dependencies: none.
+- Change: migrate one-shot local pattern buffers to direct
+  `std::string_view` inputs and remaining views.
+- Tests: listed `InterpTest` cases.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
