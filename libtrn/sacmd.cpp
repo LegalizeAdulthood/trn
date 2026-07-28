@@ -12,6 +12,7 @@
 #include <trn/cache.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h> // for g_threaded_group
+#include <trn/rt-util.h>
 #include <trn/samain.h>
 #include <trn/samisc.h>
 #include <trn/sathread.h>
@@ -31,7 +32,6 @@
 #include <cctype>
 #include <charconv>
 #include <cstdio>
-#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -744,41 +744,40 @@ static int sa_art_cmd(int multiple, SaCommand cmd, long a)
     return 0;
 }
 
+#ifdef UNDEF
+static std::string sa_author_key(long entry)
+{
+    return compress_from(article_ptr(g_sa_ents[entry].artnum)->from_view(), 20);
+}
+#endif
+
 // XXX this needs a good long thinking session before re-activating
 static long sa_wrap_next_author(long a)
 {
 #ifdef UNDEF
-    long b;
-    char* s;
-    char* s2;
-
-    s = (char*)sa_desc_author(a,20);    // 20 characters should be enough
-    for (b = s_next_elig(a); b; b = s_next_elig(b))
+    const std::string author = sa_author_key(a);
+    for (long b = s_next_elig(a); b; b = s_next_elig(b))
     {
-        if (std::strstr(get_from_line(b),s))
+        if (sa_author_key(b) == author)
         {
-            break;      // out of the for loop
+            return b;
         }
     }
-    if (b)      // found it
-    {
-        return b;
-    }
-    // search from first article (maybe return original art)
-    b = s_first();
+
+    long b = s_first();
     if (!sa_eligible(b))
     {
         b = s_next_elig(b);
     }
-    for ( ; b; b = s_next_elig(b))
+    for (; b; b = s_next_elig(b))
     {
-        if (std::strstr(get_from_line(b),s))
+        if (sa_author_key(b) == author)
         {
-            break;      // out of the for loop
+            return b;
         }
     }
     return b;
 #else
-    return a;           // feature is disabled
+    return a; // feature is disabled
 #endif
 }

@@ -376,6 +376,9 @@ which hits become explicit slices and which are inactive code,
 platform/API boundaries, terminal/protocol byte storage, non-string data,
 or already covered by another open slice.  Do not leave a non-zero count
 as an unexplained inventory item.
+Inactive preprocessor blocks are still source.  Unless the user
+explicitly exempts the file, fix or modernize inactive blocks in place
+instead of deleting them merely to remove an audit hit.
 
 - `strcpy`, `strncpy`, `strcat`, `strncat`, `sprintf`, `snprintf`,
   `vsprintf`, and `vsnprintf`: construction into a C string buffer.
@@ -616,11 +619,11 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
 - Newsgroup add scan: `add_newsgroup` now takes `std::string_view` and
   callers pass owned `std::string` storage directly.
 - Non-zero C function dataflow scan: remaining search/length hits are
-  covered by `CSTR-441`, `CSTR-442`, or `CSTR-440`, or are comment text.
+  covered by `CSTR-442`, exempt by user direction, or are comment text.
   No current helper-parameter copy-to-string leaf slice remains.
 - Non-zero line-input, byte, and allocation-helper scans: `fgets`
   remains in low-level article/NNTP input, covered by `CSTR-441`, or in
-  inactive debug code, covered by `CSTR-440`; `memset` and `memcmp` are
+  inactive debug code, covered by `CSTR-448`; `memset` and `memcmp` are
   covered by `CSTR-443` and `CSTR-444`; `safe_malloc` and
   `safe_realloc` are hash, AddGroup pointer table, regex bytecode, or
   generic allocator internals.
@@ -638,10 +641,8 @@ files, legacy Configure scripts, or the vendored `vcpkg` tree.
   protocol/body buffers and local fixed-size output loops.
 - No active `strcpy`, `strncpy`, `std::sprintf`, or `gets` production
   hits remain in this scan.
-- The two `strstr` hits are in an inactive `#ifdef UNDEF` block in
-  `sacmd.cpp`; the `fgets` hit in `cache.cpp` is inside inactive
-  `#ifdef PENDING`/`DEBUG` code.  These are covered by `CSTR-440` and
-  `CSTR-448`.
+- The `fgets` hit in `cache.cpp` is inside inactive
+  `#ifdef PENDING`/`DEBUG` code.  This is covered by `CSTR-448`.
   The `strcmp` and `gets` hits in `parsedate.y` are exempt from
   modernization by user direction.
 - The remaining `strchr` and `strlen` hits are inside `read_art_buf` and
@@ -661,7 +662,7 @@ calls.  Comment text is excluded by inspection.  The scan excludes test
 trees, legacy Configure scripts, and `vcpkg`, but it does not preprocess
 conditional blocks.
 
-- Search and length: `strcmp` 1, `strchr` 3, `strstr` 2, `strlen` 2.
+- Search and length: `strcmp` 1, `strchr` 3, `strlen` 2.
 - C line input: `fgets` 4, `gets` 1.
 - C text output: `fputs` 155, `printf`/`std::printf` 293,
   `fprintf`/`std::fprintf` 13.
@@ -669,7 +670,7 @@ conditional blocks.
 - Character byte operations: `memset` 4, `memcmp` 1.
 
 The scan found no current production hits for `strcpy`, `strncpy`,
-`strcat`, `strncat`, `strncmp`, `strrchr`, `strspn`,
+`strcat`, `strncat`, `strncmp`, `strrchr`, `strstr`, `strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
 `vsprintf`, `vsnprintf`, `puts`, `memcpy`, `memmove`, `memchr`,
 `atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
@@ -681,7 +682,6 @@ be modernized.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
 and is exempt from modernization by user direction.
-The `strstr` hits are in a disabled `#ifdef UNDEF` selector branch.
 The remaining `strchr` and `strlen` hits are inside the raw
 article-buffer reader and are covered by `CSTR-442`.
 
@@ -691,8 +691,6 @@ article-buffer reader and are covered by `CSTR-442`.
   modernization by user direction.
 - `strchr`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
   `CSTR-442`.
-- `strstr`: `libtrn/sacmd.cpp` `#ifdef UNDEF` branch.  Covered by
-  `CSTR-440`.
 - `strlen`: `libtrn/artio.cpp`, `read_art_buf`.  Covered by
   `CSTR-442`.  The extra `charsubst.cpp` scan hits are comment text.
 - `fgets`: `libtrn/artio.cpp`, file-local `read_art`;
@@ -770,29 +768,16 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-440 - Clean Up Inactive Selector Branch
-
-- Files: `libtrn/sacmd.cpp`.
-- Kind: inactive preprocessor code.
-- Function: `sacmd.cpp` `UNDEF` branch.
-- Dependencies: none.
-- Change: either remove obsolete inactive blocks or modernize their
-  remaining `strstr` and C output calls so they no longer appear in the
-  lexical C function inventory.  Preserve only inactive code that still
-  has documented value.  Do not modernize `parsedate.y`.
-- Tests: build with default configuration; add targeted build coverage
-  only if an inactive block is re-enabled.
-
 #### CSTR-448 - Clean Up Inactive Cache Debug Branch
 
 - Files: `libtrn/cache.cpp`.
 - Kind: inactive preprocessor code.
 - Function: `look_ahead`.
 - Dependencies: none.
-- Change: either remove the inactive `PENDING`/`DEBUG` pause branch or
-  modernize its remaining `fgets` and C output calls so they no longer
-  appear in the lexical C function inventory.  Preserve only inactive
-  code that still has documented value.
+- Change: modernize the inactive `PENDING`/`DEBUG` pause branch in place
+  so its remaining `fgets` and C output calls no longer appear in the
+  lexical C function inventory.  Do not delete the branch merely to
+  remove the audit hit.
 - Tests: build with default configuration; add targeted build coverage
   only if the inactive branch is re-enabled.
 
