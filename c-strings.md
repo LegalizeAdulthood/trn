@@ -548,7 +548,7 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  test input fixtures covered by `CSTR-455` through `CSTR-460` and
+  test input fixtures covered by `CSTR-456` through `CSTR-460` and
   `g_buf` covered by `CSTR-409`.  Translation tables, terminal
   pushback bytes, termcap storage, keymap type bytes, regex bytecode
   arrays, bounded UTF byte sequences, and terminal-capability fixture
@@ -763,17 +763,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-455 - Modernize IniSectionValues Test Fixtures
-
-- Files: `tests/test_IniSectionValues.cpp`.
-- Kind: mutable local `char[]` values used as copied setting text.
-- Functions: `storesOwnedValuesByFieldId` and
-  `resetClearsValuesWithoutTouchingInputText`.
-- Dependencies: none.
-- Change: use `std::string` for the mutable caller-owned values and keep
-  the alias checks against the string storage.
-- Tests: `IniSectionValuesTest`.
 
 #### CSTR-456 - Modernize Message-id Test Fixtures
 

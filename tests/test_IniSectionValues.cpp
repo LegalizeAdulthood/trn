@@ -32,7 +32,7 @@ IniSchema make_schema()
 TEST(IniSectionValuesTest, storesOwnedValuesByFieldId)
 {
     const IniSchema  schema = make_schema();
-    char             alpha[]{"alpha"};
+    std::string      alpha{"alpha"};
     IniSectionValues values;
     const IniField  *alpha_field = schema.find("Alpha Key");
 
@@ -43,7 +43,7 @@ TEST(IniSectionValuesTest, storesOwnedValuesByFieldId)
     const std::optional<std::string_view> value = values.value(TF_ALPHA);
     ASSERT_TRUE(value.has_value());
     EXPECT_EQ(std::string_view{"alpha"}, *value);
-    EXPECT_NE(alpha, value->data());
+    EXPECT_NE(alpha.data(), value->data());
     EXPECT_TRUE(values.contains(TF_ALPHA));
     EXPECT_FALSE(values.contains(TF_BETA));
     EXPECT_FALSE(values.value(TF_BETA).has_value());
@@ -52,8 +52,8 @@ TEST(IniSectionValuesTest, storesOwnedValuesByFieldId)
 TEST(IniSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
 {
     const IniSchema  schema = make_schema();
-    char             alpha[]{"alpha"};
-    char             beta[]{"beta"};
+    std::string      alpha{"alpha"};
+    std::string      beta{"beta"};
     IniSectionValues values;
     const IniField  *alpha_field = schema.find("Alpha Key");
     const IniField  *beta_field = schema.find("Beta Key");
@@ -63,7 +63,7 @@ TEST(IniSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
     ASSERT_TRUE(values.set(*alpha_field, alpha));
     values.reset();
 
-    EXPECT_EQ(std::string_view{"alpha"}, std::string_view{alpha});
+    EXPECT_EQ(std::string_view{"alpha"}, alpha);
     EXPECT_FALSE(values.value(TF_ALPHA).has_value());
     EXPECT_EQ(0U, values.size());
 
@@ -71,7 +71,7 @@ TEST(IniSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
     const std::optional<std::string_view> value = values.value(TF_BETA);
     ASSERT_TRUE(value.has_value());
     EXPECT_EQ(std::string_view{"beta"}, *value);
-    EXPECT_NE(beta, value->data());
+    EXPECT_NE(beta.data(), value->data());
 }
 
 TEST(IniSectionValuesTest, displayGroupsAreNotValues)
