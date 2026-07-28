@@ -139,23 +139,19 @@ protected:
 
 TEST_F(ScoreFileTest, extraHeaderLookupIsCaseInsensitive)
 {
-    char header[]{"!header X-Custom-Score:"};
-    sf_append(header);
+    sf_append("!header X-Custom-Score:");
 
     EXPECT_EQ(0, g_sf_num_entries);
 
-    char rule[]{"!10 X-CUSTOM-SCORE: value"};
-    sf_append(rule);
+    sf_append("!10 X-CUSTOM-SCORE: value");
 
     EXPECT_EQ(1, g_sf_num_entries);
 }
 
 TEST_F(ScoreFileTest, extraHeaderScoringReadsParsedHeaderBuffer)
 {
-    char header[]{"!header X-Custom-Score:"};
-    sf_append(header);
-    char rule[]{"!10 X-Custom-Score: magic value"};
-    sf_append(rule);
+    sf_append("!header X-Custom-Score:");
+    sf_append("!10 X-Custom-Score: magic value");
     g_parsed_art = TEST_ARTICLE_NUM;
     g_head_buf = "From: writer@example.test\n"
                  "X-Custom-Score:  Magic Value\n"
@@ -171,10 +167,8 @@ TEST_F(ScoreFileTest, fromWildcardMatchesBothPiecesInOrder)
     DataSource *const old_data_source = g_data_source;
     g_data_source = &data_source;
 
-    char matching_rule[]{"!10 from: casey@*.example.test"};
-    sf_append(matching_rule);
-    char nonmatching_rule[]{"!20 from: example*casey@"};
-    sf_append(nonmatching_rule);
+    sf_append("!10 from: casey@*.example.test");
+    sf_append("!20 from: example*casey@");
 
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 
@@ -183,16 +177,14 @@ TEST_F(ScoreFileTest, fromWildcardMatchesBothPiecesInOrder)
 
 TEST_F(ScoreFileTest, patternKeywordMatchesWithRegularExpression)
 {
-    char pattern_rule[]{"!10 pattern subject: compact.*subject"};
-    sf_append(pattern_rule);
+    sf_append("!10 pattern subject: compact.*subject");
 
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 }
 
 TEST_F(ScoreFileTest, verboseScoringPrintsMatchedPatternRule)
 {
-    char pattern_rule[]{"!10 pattern subject: compact.*subject"};
-    sf_append(pattern_rule);
+    sf_append("!10 pattern subject: compact.*subject");
     g_sf_score_verbose = 1;
 
     testing::internal::CaptureStdout();
@@ -204,16 +196,14 @@ TEST_F(ScoreFileTest, verboseScoringPrintsMatchedPatternRule)
 
 TEST_F(ScoreFileTest, killThresholdCommandAcceptsSpaceSeparator)
 {
-    char kill_threshold[]{"!killthreshold -11"};
-    sf_append(kill_threshold);
+    sf_append("!killthreshold -11");
 
     EXPECT_EQ(1, g_sf_num_entries);
 }
 
 TEST_F(ScoreFileTest, newAuthorCommandAcceptsAssignmentSeparator)
 {
-    char new_author[]{"!newauthor=7"};
-    sf_append(new_author);
+    sf_append("!newauthor=7");
 
     EXPECT_EQ(1, g_sf_num_entries);
 }
@@ -222,8 +212,7 @@ TEST_F(ScoreFileTest, saveScoresOffDisablesScoreSaving)
 {
     const bool old_save_scores = g_sc_saves_cores;
     g_sc_saves_cores = true;
-    char off[]{"!savescores off"};
-    sf_append(off);
+    sf_append("!savescores off");
 
     EXPECT_FALSE(g_sc_saves_cores);
     g_sc_saves_cores = old_save_scores;
@@ -233,8 +222,7 @@ TEST_F(ScoreFileTest, saveScoresOtherArgumentEnablesScoreSaving)
 {
     const bool old_save_scores = g_sc_saves_cores;
     g_sc_saves_cores = false;
-    char on[]{"!savescores on"};
-    sf_append(on);
+    sf_append("!savescores on");
 
     EXPECT_TRUE(g_sc_saves_cores);
     g_sc_saves_cores = old_save_scores;
@@ -246,8 +234,7 @@ TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)
     g_fetched_outfile.clear();
     sf_set_url_getter_for_test(fetch_score_url);
 
-    char include[]{"!include URL:http://example.test/scores"};
-    sf_append(include);
+    sf_append("!include URL:http://example.test/scores");
 
     EXPECT_EQ("http://example.test/scores", g_fetched_url);
     EXPECT_FALSE(g_fetched_outfile.empty());
@@ -263,10 +250,8 @@ TEST_F(ScoreFileTest, subjectScoringKeepsLineBufferCap)
     m_long_subject = "Re: " + subject_text;
     m_subject.m_str = m_long_subject;
 
-    char inside_rule[]{"!10 subject: inside"};
-    sf_append(inside_rule);
-    char outside_rule[]{"!20 subject: outside"};
-    sf_append(outside_rule);
+    sf_append("!10 subject: inside");
+    sf_append("!20 subject: outside");
 
     EXPECT_EQ(10, sf_score(TEST_ARTICLE_NUM));
 }
@@ -366,8 +351,7 @@ TEST_F(ScoreFileTest, appendFromShortcutWritesShortenedFromRule)
     trn::testing::MockEnvironment env;
     env.expect_env("SCOREDIR", score_dir.c_str());
 
-    char line[]{"\" 10 F"};
-    sf_append(line);
+    sf_append(R"(" 10 F)");
 
     EXPECT_EQ((std::vector<std::string>{"10 from: casey@*.example.test"}), read_lines(score_file));
 }
@@ -384,8 +368,7 @@ TEST_F(ScoreFileTest, appendSubjectShortcutWritesSubjectRule)
     trn::testing::MockEnvironment env;
     env.expect_env("SCOREDIR", score_dir.c_str());
 
-    char line[]{"\" 10 S"};
-    sf_append(line);
+    sf_append(R"(" 10 S)");
 
     EXPECT_EQ((std::vector<std::string>{"10 subject: compact subject"}), read_lines(score_file));
 }
@@ -405,8 +388,7 @@ TEST_F(ScoreFileTest, appendMissingScoreUsesTypedScore)
     push_string("7\n", 0);
 
     testing::internal::CaptureStdout();
-    char line[]{"\" subject: compact subject"};
-    sf_append(line);
+    sf_append(R"(" subject: compact subject)");
     testing::internal::GetCapturedStdout();
 
     EXPECT_EQ((std::vector<std::string>{"7 subject: compact subject"}), read_lines(score_file));
@@ -426,10 +408,8 @@ TEST_F(ScoreFileTest, appendAbbreviationWritesConfiguredFile)
     env.expect_env("SCOREDIR", score_dir.c_str());
     sf_init();
 
-    char abbreviation[]{"!file @ abbr-score"};
-    sf_append(abbreviation);
-    char line[]{"@ 10 subject: abbreviated"};
-    sf_append(line);
+    sf_append("!file @ abbr-score");
+    sf_append("@ 10 subject: abbreviated");
 
     EXPECT_EQ((std::vector<std::string>{"10 subject: abbreviated"}), read_lines(score_file));
 }

@@ -548,7 +548,7 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: current string-shaped fixed-buffer candidates are
-  test input fixtures covered by `CSTR-457` through `CSTR-460` and
+  test input fixtures covered by `CSTR-458` through `CSTR-460` and
   `g_buf` covered by `CSTR-409`.  Translation tables, terminal
   pushback bytes, termcap storage, keymap type bytes, regex bytecode
   arrays, bounded UTF byte sequences, and terminal-capability fixture
@@ -763,18 +763,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-457 - Modernize Scorefile Test Rule Fixtures
-
-- Files: `tests/test_scorefile.cpp`.
-- Kind: local scorefile rule `char[]` values passed to
-  `sf_append(std::string_view)`.
-- Functions: every `ScoreFileTest` case that only creates a rule buffer
-  to pass once to `sf_append`.
-- Dependencies: none.
-- Change: pass string literals directly, or use `std::string` only where
-  the test mutates or reuses the text.
-- Tests: `ScoreFileTest`.
 
 #### CSTR-458 - Modernize Scan-command Author Fixture
 
