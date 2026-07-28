@@ -663,7 +663,7 @@ C calls.  Comment text is excluded by inspection.  The scan excludes
 legacy Configure scripts and `vcpkg`, but it does not preprocess
 conditional blocks.
 
-- Search and length: `strcmp` 2, `strlen` 3.
+- Search and length: `strcmp` 2.
 - C string copy: `strcpy` 2, `strncpy` 1.
 - C line input: `fgets` 2, `gets` 1.
 - C text output: `fputs` 156, `printf`/`std::printf` 292,
@@ -672,7 +672,8 @@ conditional blocks.
 - Character byte operations: `memset` 1.
 
 The scan found no current active source/test hits for `strcat`,
-`strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`, `strspn`,
+`strncat`, `strncmp`, `strchr`, `strrchr`, `strstr`, `strlen`,
+`strspn`,
 `strcspn`, `strpbrk`, `strtok`, `sprintf`, `snprintf`, `sscanf`,
 `vsprintf`, `vsnprintf`, `puts`, `memcpy`, `memmove`, `memcmp`,
 `memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`, `std::atol`,
@@ -692,8 +693,6 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 - `strncpy`: `tests/test_string-algos.cpp` 1.  Covered by `CSTR-451`.
 - `strcmp`: `tests/test_final.cpp` 1, covered by `CSTR-452`.
   `parsedate/parsedate.y` has 1 exempt `#ifdef TEST` harness hit.
-- `strlen`: `tests/test_datasrc.cpp` 2 and `tests/test_rt-util.cpp` 1.
-  Covered by `CSTR-450`.
 - `fgets`: `libtrn/artio.cpp`, `read_art_chunk`; `libtrn/nntp.cpp`,
   `read_art_file_chunk`.  These are internal `FILE *` boundaries behind
   string-returning APIs.
@@ -767,17 +766,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-450 - Remove Test Literal Length Calls
-
-- Files: `tests/test_datasrc.cpp`, `tests/test_rt-util.cpp`.
-- Kind: test-local C string length.
-- Function: `std::strlen`.
-- Dependencies: none.
-- Change: replace `std::strlen` with `std::string_view::size()` or an
-  existing string size.  Use `size_cast` when the result must remain an
-  `int`.
-- Tests: affected `DataSource` and `rt-util` tests.
 
 #### CSTR-451 - Replace Test C String Copy Setup
 

@@ -20,10 +20,10 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 
 using namespace testing;
 
@@ -57,19 +57,19 @@ TEST(ExtractNameTest, returnsEmptyWhenNoDisplayNameExists)
 class CompressNameTest : public Test
 {
 protected:
-    void configure_before_expected(const char *before, const char *expected)
+    void configure_before_expected(std::string_view before, std::string expected)
     {
         m_before = before;
-        m_expected = expected;
+        m_expected = std::move(expected);
     }
 
     std::string run_compress_name()
     {
-        return compress_name(m_before, std::strlen(m_expected) + 1);
+        return compress_name(m_before, static_cast<int>(m_expected.size()) + 1);
     }
 
-    const char *m_before{};
-    const char *m_expected{};
+    std::string_view m_before;
+    std::string      m_expected;
 };
 
 TEST_F(CompressNameTest, dropTrailingJunkComma)

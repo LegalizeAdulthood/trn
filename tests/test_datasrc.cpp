@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -328,10 +327,10 @@ protected:
 
 TEST(SourceFileAppendTest, storesNormalizedLineAndReturnsStoredStorage)
 {
-    SourceFileOwner source_file_owner;
-    SourceFile     &source_file = source_file_owner.get();
-    char            line[] = "comp.lang.c++     C++ language discussion";
-    const int       key_len = static_cast<int>(std::strlen("comp.lang.c++"));
+    SourceFileOwner            source_file_owner;
+    SourceFile                &source_file = source_file_owner.get();
+    constexpr std::string_view line{"comp.lang.c++     C++ language discussion"};
+    const int                  key_len = static_cast<int>(line.find(' '));
 
     const std::string_view stored_line = source_file.append(line, key_len);
 
@@ -344,10 +343,10 @@ TEST(SourceFileAppendTest, storesNormalizedLineAndReturnsStoredStorage)
 
 TEST(SourceFileAppendTest, normalizesGreySpaceInDescription)
 {
-    SourceFileOwner source_file_owner;
-    SourceFile     &source_file = source_file_owner.get();
-    char            line[] = "comp.lang.apl APL\tdiscussion";
-    const int       key_len = static_cast<int>(std::strlen("comp.lang.apl"));
+    SourceFileOwner            source_file_owner;
+    SourceFile                &source_file = source_file_owner.get();
+    constexpr std::string_view line{"comp.lang.apl APL\tdiscussion"};
+    const int                  key_len = static_cast<int>(line.find(' '));
 
     const std::string_view stored_line = source_file.append(line, key_len);
 
