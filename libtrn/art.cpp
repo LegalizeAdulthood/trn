@@ -599,7 +599,7 @@ DoArticleResult do_article(std::string &article_command)
                         if (g_debug & DEB_INNERSRCH && out_pos < g_tc_COLS - 6)
                         {
                             standout();
-                            std::printf("%4d",g_art_line_num.value_of());
+                            fmt::print("{:4}", g_art_line_num.value_of());
                             un_standout();
                         }
 #endif

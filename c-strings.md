@@ -668,7 +668,7 @@ conditional blocks.
 
 - Search and length: `strcmp` 1.
 - C line input: `fgets` 2, `gets` 1.
-- C text output: `fputs` 154, `printf`/`std::printf` 291,
+- C text output: `fputs` 154, `printf`/`std::printf` 290,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
@@ -708,7 +708,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
   `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Covered by
   `CSTR-446`.
-- `printf`/`std::printf`: `art.cpp` 13, `artsrch.cpp` 2,
+- `printf`/`std::printf`: `art.cpp` 12, `artsrch.cpp` 2,
   `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3, `cache.cpp` 4,
   `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3, `intrp.cpp` 1,
   `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35, `ngdata.cpp` 6,
