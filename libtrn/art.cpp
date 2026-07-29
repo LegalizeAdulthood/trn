@@ -1455,7 +1455,7 @@ static bool inner_more()
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("Not on page %ld < %ld\n",g_art_pos.value_of(),g_inner_search.value_of());
+            fmt::print("Not on page {} < {}\n", g_art_pos.value_of(), g_inner_search.value_of());
         }
 #endif
         return true;
@@ -1474,8 +1474,8 @@ static bool inner_more()
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("There it is %ld = %ld, %d @ %d\n",g_art_pos.value_of(),
-                g_inner_search.value_of(),g_hide_everything,g_highlight.value_of());
+            fmt::print("There it is {} = {}, {} @ {}\n", g_art_pos.value_of(), g_inner_search.value_of(),
+                       g_hide_everything, g_highlight.value_of());
             term_down(1);
         }
 #endif
@@ -1488,7 +1488,7 @@ static bool inner_more()
 #ifdef DEBUG
     if (g_debug & DEB_INNERSRCH)
     {
-        std::printf("Not far enough? %d <? %d + %d\n",g_art_line_num.value_of(),s_i_search_line.value_of(),g_g_line);
+        fmt::print("Not far enough? {} <? {} + {}\n", g_art_line_num.value_of(), s_i_search_line.value_of(), g_g_line);
         term_down(1);
     }
 #endif

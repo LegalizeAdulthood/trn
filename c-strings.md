@@ -664,22 +664,22 @@ The current scan covers the source and test roots listed above.  Counts
 below are identifier-aware call counts for `std::` calls and unqualified
 C calls.  Comment text is excluded by inspection.  The scan excludes
 legacy Configure scripts and `vcpkg`, but it does not preprocess
-conditional blocks.
+conditional blocks.  Exempt `parsedate.y` hits are listed in the source
+map but are not included in the active counts below.
 
-- Search and length: `strcmp` 1.
-- C line input: `fgets` 2, `gets` 1.
-- C text output: `fputs` 154, `printf`/`std::printf` 287,
+- C line input: `fgets` 2.
+- C text output: `fputs` 150, `printf`/`std::printf` 273,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
 
-The scan found no current active source/test hits for `strcpy`,
-`strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`,
-`strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`,
-`sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `puts`,
-`memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`,
-`std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
-`std::strtod`.
+The scan found no current active source/test hits for `strcmp`,
+`strcpy`, `strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`,
+`strrchr`, `strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`,
+`strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`,
+`gets`, `puts`, `memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`,
+`atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
+`std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -701,15 +701,15 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 - `memset`: `libtrn/hash.cpp`, `hash_create`.  This is hash
   allocation-table initialization.
 - `fputs`: `libtrn/Article.cpp` 2, `art.cpp` 3, `artsrch.cpp` 1,
-  `cache.cpp` 1, `color.cpp` 5, `datasrc.cpp` 3, `hash.cpp` 1,
-  `kfile.cpp` 6, `mime.cpp` 1, `ng.cpp` 19, `ngdata.cpp` 2,
+  `cache.cpp` 1, `color.cpp` 4, `datasrc.cpp` 3, `hash.cpp` 1,
+  `kfile.cpp` 3, `mime.cpp` 1, `ng.cpp` 19, `ngdata.cpp` 2,
   `ngsrch.cpp` 1, `ngstuff.cpp` 6, `opt.cpp` 1, `rcln.cpp` 1,
   `rcstuff.cpp` 21, `respond.cpp` 27, `rt-page.cpp` 2,
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
   `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Promote concrete
   source locations to explicit function-level slices before editing.
-- `printf`/`std::printf`: `art.cpp` 3, `artsrch.cpp` 2,
-  `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3, `cache.cpp` 4,
+- `printf`/`std::printf`: `artsrch.cpp` 2, `autosub.cpp` 1,
+  `backpage.cpp` 3, `bits.cpp` 3, `cache.cpp` 4,
   `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3, `intrp.cpp` 1,
   `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35, `ngdata.cpp` 6,
   `ngstuff.cpp` 8, `nntp.cpp` 2, `only.cpp` 1, `opt.cpp` 9,
@@ -717,10 +717,9 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `rt-page.cpp` 14, `rt-select.cpp` 9, `rt-util.cpp` 4,
   `rt-wumpus.cpp` 2, `sacmd.cpp` 5, `sadesc.cpp` 1,
   `sadisp.cpp` 8, `scan.cpp` 3, `scmd.cpp` 2, `score.cpp` 18,
-  `scorefile.cpp` 20,
-  `scoresave.cpp` 6, `sdisp.cpp` 10, `smisc.cpp` 1, `spage.cpp` 4,
-  `terminal.cpp` 3, `trn.cpp` 12, `univ.cpp` 9, and `util.cpp` 6.
-  `art.cpp` hits are covered by `CSTR-470`.
+  `scorefile.cpp` 20, `scoresave.cpp` 6, `sdisp.cpp` 10,
+  `smisc.cpp` 1, `spage.cpp` 4, `terminal.cpp` 3, `trn.cpp` 12,
+  `univ.cpp` 9, and `util.cpp` 6.
   `parsedate/parsedate.y` has 5 exempt hits.
 - `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
   `libtrn/color.cpp` 2, `decode.cpp` 1, `head.cpp` 1, `nntp.cpp` 1,
@@ -739,7 +738,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-487`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-494`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -768,15 +767,78 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-470 - Convert Inner More Debug Output
+#### CSTR-487 - Convert Selector Eligibility Diagnostic Output
+
+- Files: `libtrn/smisc.cpp`.
+- Kind: literal C output.
+- Function: `s_eligible`.
+- Dependencies: none.
+- Change: convert the bad-selector-state diagnostic from `std::printf`
+  to `fmt::print`.
+- Tests: build compile coverage; no direct behavior test exists for this
+  unexpected-state diagnostic.
+
+#### CSTR-488 - Convert Status Character Inactive Debug Output
+
+- Files: `libtrn/sadesc.cpp`.
+- Kind: inactive debug C output.
+- Function: `sa_get_stat_chars`.
+- Dependencies: none.
+- Change: update the `#if 0` debug `std::printf` to `fmt::print`
+  without removing the inactive block.
+- Tests: `ScmdTest` status-character cases.
+
+#### CSTR-489 - Convert Page Switch Literal Messages
 
 - Files: `libtrn/art.cpp`.
-- Kind: formatted C output.
-- Function: `inner_more`.
+- Kind: literal C output.
+- Function: `page_switch`.
 - Dependencies: none.
-- Change: convert the remaining static `DEBUG` inner-search
-  `std::printf` diagnostics in `inner_more` to `fmt::print`.
+- Change: convert the `"(Not found)"` and help text `std::fputs`
+  calls to `fmt::print`, preserving terminal column and movement logic.
 - Tests: `ArticlePagerCommandTest` and `ArticleSearchTest`.
+
+#### CSTR-490 - Convert Article Form-feed Marker Output
+
+- Files: `libtrn/art.cpp`.
+- Kind: literal C output.
+- Function: `do_article`.
+- Dependencies: none.
+- Change: convert the form-feed marker `std::fputs` call to
+  `fmt::print` without changing article rendering flow.
+- Tests: article display tests if present; otherwise build compile
+  coverage.
+
+#### CSTR-491 - Convert Only Pattern Compile Error Output
+
+- Files: `libtrn/only.cpp`.
+- Kind: error C output.
+- Function: `set_newsgroup_to_do`.
+- Dependencies: none.
+- Change: convert the pattern compile error `std::printf` to
+  `fmt::print`, passing the returned error string directly.
+- Tests: build compile coverage; no direct `only.cpp` tests exist.
+
+#### CSTR-492 - Convert Autosubscribe Pattern Error Output
+
+- Files: `libtrn/autosub.cpp`.
+- Kind: error C output.
+- Function: `match_list`.
+- Dependencies: none.
+- Change: convert the pattern compile error `std::printf` to
+  `fmt::print`, passing the returned error string directly.
+- Tests: `AutosubscribeTest`.
+
+#### CSTR-493 - Convert Interpolator Skip Debug Output
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: string-view debug C output.
+- Function: `skip_interp_cursor`.
+- Dependencies: none.
+- Change: convert the `DEBUG` `std::printf` that prints `pattern` and
+  `stoppers` through pointer-and-length arguments to `fmt::print` using
+  the existing `std::string_view` values directly.
+- Tests: `InterpolatorTest`.
 
 ### Tier 1 - Helper And API Foundations
 
