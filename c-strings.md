@@ -86,6 +86,8 @@ Run every scan from the innermost lexical scope outward:
   hits until each storage/dataflow shape is classified as an active
   slice, an existing slice dependency, inactive preprocessor code, a
   platform/API boundary, or non-string byte/protocol storage.
+  Do not treat `putchar` or `std::putchar` as C-string audit roots:
+  they accept a single character, not a C string.
 - C byte library calls on character storage.  Treat `memcpy`, `memmove`,
   `memset`, `memcmp`, and `memchr` as audit roots when the destination
   or compared data is string-like `char` storage.  Non-string table
@@ -651,8 +653,7 @@ Configure scripts, and the vendored `vcpkg` tree.
   `in_answer` still actively touch `g_buf`; score-file comment text and
   the declaration/definition remain until those users are removed.
 - C text output scan: no active C `printf`, `fprintf`, or `fputs`
-  calls remain.  The remaining live output family is character output
-  through `putchar`, now split into explicit slices.
+  calls remain.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -685,7 +686,6 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `fgets` 2.
-- Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
 
 The scan found no current active source/test hits for `strcmp`,
@@ -700,6 +700,9 @@ The scan found no current active source/test hits for `strcmp`,
 `fmt::printf` appears twice and `fmt::sprintf` appears three times.
 These calls are not C buffer writes.  They are tracked only where the
 format template itself should be modernized.
+
+`putchar` and `std::putchar` are intentionally excluded from this audit:
+they accept a single character, not a C string.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
 and is exempt from modernization by user direction.
@@ -721,13 +724,6 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   allocation-table initialization.
 - `printf`/`std::printf`: `parsedate/parsedate.y` has 5 exempt
   `#ifdef TEST` harness hits.
-- `putchar`/`std::putchar`: `libtrn/include/trn/terminal.h` 1,
-  `art.cpp` 12, `charsubst.cpp` 5, `color.cpp` 1, `datasrc.cpp` 4,
-  `final.cpp` 1, `init.cpp` 1, `kfile.cpp` 1, `ng.cpp` 4,
-  `rcstuff.cpp` 3, `rt-page.cpp` 8, `rt-select.cpp` 5,
-  `rt-util.cpp` 6, `score.cpp` 2, `sdisp.cpp` 3, `smisc.cpp` 1,
-  `terminal.cpp` 21, and `utf.cpp` 2.  Covered by `CSTR-533` through
-  `CSTR-540`.
 
 ## Refactoring Slices
 
@@ -762,86 +758,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-533 - Convert Leaf `putchar` Output
-
-- Files: `libtrn/include/trn/terminal.h`, `libtrn/color.cpp`,
-  `libtrn/final.cpp`, `libtrn/init.cpp`, `libtrn/kfile.cpp`,
-  `libtrn/score.cpp`, `libtrn/sdisp.cpp`, and `libtrn/smisc.cpp`.
-- Kind: character output.
-- Functions: small newline, prompt marker, and bell output sites with no
-  string dataflow.
-- Dependencies: none.
-- Change: replace simple `putchar`/`std::putchar` calls with `fmt`
-  output.  Preserve exact character output.
-- Tests: focused tests for the touched file where available, then full
-  build.
-
-#### CSTR-534 - Convert Character Substitution `putchar` Output
-
-- Files: `libtrn/charsubst.cpp`.
-- Kind: character output.
-- Functions: character-substitution table output.
-- Dependencies: none.
-- Change: replace `std::putchar` calls with `fmt` output without
-  changing table traversal or emitted text.
-- Tests: character-substitution tests and full build.
-
-#### CSTR-535 - Convert Command Echo `putchar` Output
-
-- Files: `libtrn/datasrc.cpp`, `libtrn/ng.cpp`, and
-  `libtrn/rcstuff.cpp`.
-- Kind: character output.
-- Functions: command echo paths that render control characters.
-- Dependencies: none.
-- Change: replace `std::putchar` calls with `fmt` output.  Keep control
-  character calculations unchanged.
-- Tests: command prompt and command echo tests where available, then
-  full build.
-
-#### CSTR-536 - Convert Article Pager `putchar` Output
-
-- Files: `libtrn/art.cpp`.
-- Kind: character output.
-- Functions: article display, ROT13 display, control-character display,
-  and prompt spacing.
-- Dependencies: none.
-- Change: replace `std::putchar` calls with `fmt` output.  Do not
-  change display ordering or current-character evaluation.
-- Tests: article display and pager tests, then full build.
-
-#### CSTR-537 - Convert Selector Page `putchar` Output
-
-- Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`, and
-  `libtrn/rt-util.cpp`.
-- Kind: character output.
-- Functions: selector page rendering, command echo, and spinner/progress
-  output.
-- Dependencies: none.
-- Change: replace `std::putchar` calls with `fmt` output.  Keep selector
-  character and spinner state calculations unchanged.
-- Tests: selector and page rendering tests, then full build.
-
-#### CSTR-538 - Convert Terminal Core `putchar` Output
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: character output.
-- Functions: terminal character output, control-character rendering,
-  padding, macro echo, and prompt spacing.
-- Dependencies: none.
-- Change: replace `std::putchar` calls with `fmt` output.  Preserve
-  terminal side effects and emitted character order.
-- Tests: `TerminalTest` plus full build.
-
-#### CSTR-539 - Convert UTF `putchar` Output
-
-- Files: `libtrn/utf.cpp`.
-- Kind: character output.
-- Functions: UTF byte emission helpers.
-- Dependencies: none.
-- Change: replace `std::putchar` calls with `fmt` output only where it
-  preserves byte-for-byte output.
-- Tests: UTF output tests and full build.
 
 #### CSTR-540 - Review Runtime `fmt::printf`/`fmt::sprintf` Sites
 
