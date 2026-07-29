@@ -784,16 +784,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-480 - Remove `g_buf` From Save Workflow
-
-- Files: `libtrn/respond.cpp`.
-- Kind: global command buffer read.
-- Function: `save_article`.
-- Dependencies: none.
-- Change: use local command/prompt text for save confirmations instead
-  of testing `*g_buf`.
-- Tests: response save workflow tests.
-
 #### CSTR-481 - Remove `g_buf` From Followup Workflow
 
 - Files: `libtrn/respond.cpp`.
@@ -868,7 +858,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-480` through `CSTR-485`.
+- Dependencies: `CSTR-481` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

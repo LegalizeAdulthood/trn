@@ -443,7 +443,7 @@ reask_save:
                             MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
                 newline();
                 print_cmd(command);
-                if (*g_buf == 'h')
+                if (const char answer = command.front(); answer == 'h')
                 {
                     if (g_verbose)
                     {
@@ -463,15 +463,15 @@ reask_save:
                     term_down(4);
                     goto reask_save;
                 }
-                else if (*g_buf == 'n')
+                else if (answer == 'n')
                 {
                     mailbox = false;
                 }
-                else if (*g_buf == 'y')
+                else if (answer == 'y')
                 {
                     mailbox = true;
                 }
-                else if (*g_buf == 'q')
+                else if (answer == 'q')
                 {
                     goto s_bomb;
                 }
