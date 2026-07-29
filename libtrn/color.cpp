@@ -107,13 +107,13 @@ void color_init()
         const char *fg_capability = tc_color_capability("fg default");
         if (fg_capability == nullptr)
         {
-            std::fprintf(stderr, "trn: you need a 'fg default' definition in the [termcap] section.\n");
+            fmt::print(stderr, "trn: you need a 'fg default' definition in the [termcap] section.\n");
             finalize(1);
         }
         const char *bg_capability = tc_color_capability("bg default");
         if (bg_capability == nullptr)
         {
-            std::fprintf(stderr, "trn: you need a 'bg default' definition in the [termcap] section.\n");
+            fmt::print(stderr, "trn: you need a 'bg default' definition in the [termcap] section.\n");
             finalize(1);
         }
         std::string_view fg{fg_capability};

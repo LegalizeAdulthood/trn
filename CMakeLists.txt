@@ -31,9 +31,9 @@ set(trn_text_files
     README.txt
 )
 add_executable(trn main.cpp
-    "AsyncPlan.md"
+    "docs/AsyncPlan.md"
     "ReadMe.md"
-    "StructureFunctions.md"
+    "docs/StructureFunctions.md"
     vcpkg.json
     ${trn_text_files}
     cmake/Findpdcurses.cmake
@@ -43,9 +43,9 @@ source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("VcPkg Files" FILES vcpkg.json)
 source_group("Text Files" FILES ${trn_text_files})
 source_group("Markdown Files" FILES
-    "AsyncPlan.md"
+    "docs/AsyncPlan.md"
     "ReadMe.md"
-    "StructureFunctions.md"
+    "docs/StructureFunctions.md"
 )
 target_link_libraries(trn PUBLIC libtrn)
 install(TARGETS trn DESTINATION ${CMAKE_INSTALL_BINDIR})

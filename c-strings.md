@@ -650,9 +650,9 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Global command buffer scan: only `ask_memorize`, `in_char`, and
   `in_answer` still actively touch `g_buf`; score-file comment text and
   the declaration/definition remain until those users are removed.
-- Non-zero C output calls are inventory until each source location is
-  promoted to an explicit function-level slice.  Do not add broad
-  coverage slices for output-call families.
+- C text output scan: no active C `printf`, `fprintf`, or `fputs`
+  calls remain.  The remaining live output family is character output
+  through `putchar`, now split into explicit slices.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -685,7 +685,6 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `fgets` 2.
-- C text output: `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
 
@@ -693,17 +692,20 @@ The scan found no current active source/test hits for `strcmp`,
 `strcpy`, `strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`,
 `strrchr`, `strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`,
 `strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`,
-`gets`, `fputs`, `puts`, `printf`, `std::printf`, `memcpy`, `memmove`,
-`memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`,
-`std::atol`, `std::strtol`, `std::strtoul`, or `std::strtod`.
+`gets`, `fputs`, `puts`, `printf`, `std::printf`, `fprintf`,
+`std::fprintf`, `memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`,
+`atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
+`std::strtoul`, or `std::strtod`.
 
-`fmt::sprintf` appears three times.  These calls are not C buffer
-writes.  They are tracked only where the format template itself should
-be modernized.
+`fmt::printf` appears twice and `fmt::sprintf` appears three times.
+These calls are not C buffer writes.  They are tracked only where the
+format template itself should be modernized.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
 and is exempt from modernization by user direction.
-The `fputs` spellings in `kfile.cpp` are comment text.
+The `fputs` spellings in `inews.cpp` are the local helper name
+`inews_fputs`; the spellings in `color.cpp` and `kfile.cpp` are comment
+text.
 The `strlen` spellings in `charsubst.cpp` are comment text.
 
 ## Current C Function Source Map
@@ -719,24 +721,20 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   allocation-table initialization.
 - `printf`/`std::printf`: `parsedate/parsedate.y` has 5 exempt
   `#ifdef TEST` harness hits.
-- `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
-  `libtrn/color.cpp` 2, `decode.cpp` 1, `head.cpp` 1, `nntp.cpp` 1,
-  `opt.cpp` 2, `respond.cpp` 2, `scoresave.cpp` 1, `terminal.cpp` 1,
-  and `univ.cpp` 1.  Split into explicit slices before editing.
 - `putchar`/`std::putchar`: `libtrn/include/trn/terminal.h` 1,
   `art.cpp` 12, `charsubst.cpp` 5, `color.cpp` 1, `datasrc.cpp` 4,
   `final.cpp` 1, `init.cpp` 1, `kfile.cpp` 1, `ng.cpp` 4,
   `rcstuff.cpp` 3, `rt-page.cpp` 8, `rt-select.cpp` 5,
   `rt-util.cpp` 6, `score.cpp` 2, `sdisp.cpp` 3, `smisc.cpp` 1,
-  `terminal.cpp` 21, and `utf.cpp` 2.  Promote concrete source
-  locations to explicit function-level slices before editing.
+  `terminal.cpp` 21, and `utf.cpp` 2.  Covered by `CSTR-533` through
+  `CSTR-540`.
 
 ## Refactoring Slices
 
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-533`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-541`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -765,21 +763,99 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-529 - Convert Remaining Small `std::fprintf` Calls
+#### CSTR-533 - Convert Leaf `putchar` Output
 
-- Files: `config/include/config/common.h`, `libtrn/color.cpp`,
-  `libtrn/decode.cpp`, `libtrn/head.cpp`, `libtrn/nntp.cpp`,
-  `libtrn/opt.cpp`, `libtrn/respond.cpp`, `libtrn/scoresave.cpp`,
-  `libtrn/terminal.cpp`, `libtrn/univ.cpp`.
-- Kind: C text output.
-- Functions: assertion reporting, color validation, decode total output,
-  NNTP diagnostics, option save headers, mailbox separators, score-save
-  line output, color-limit diagnostics, and universal selector header
+- Files: `libtrn/include/trn/terminal.h`, `libtrn/color.cpp`,
+  `libtrn/final.cpp`, `libtrn/init.cpp`, `libtrn/kfile.cpp`,
+  `libtrn/score.cpp`, `libtrn/sdisp.cpp`, and `libtrn/smisc.cpp`.
+- Kind: character output.
+- Functions: small newline, prompt marker, and bell output sites with no
+  string dataflow.
+- Dependencies: none.
+- Change: replace simple `putchar`/`std::putchar` calls with `fmt`
+  output.  Preserve exact character output.
+- Tests: focused tests for the touched file where available, then full
+  build.
+
+#### CSTR-534 - Convert Character Substitution `putchar` Output
+
+- Files: `libtrn/charsubst.cpp`.
+- Kind: character output.
+- Functions: character-substitution table output.
+- Dependencies: none.
+- Change: replace `std::putchar` calls with `fmt` output without
+  changing table traversal or emitted text.
+- Tests: character-substitution tests and full build.
+
+#### CSTR-535 - Convert Command Echo `putchar` Output
+
+- Files: `libtrn/datasrc.cpp`, `libtrn/ng.cpp`, and
+  `libtrn/rcstuff.cpp`.
+- Kind: character output.
+- Functions: command echo paths that render control characters.
+- Dependencies: none.
+- Change: replace `std::putchar` calls with `fmt` output.  Keep control
+  character calculations unchanged.
+- Tests: command prompt and command echo tests where available, then
+  full build.
+
+#### CSTR-536 - Convert Article Pager `putchar` Output
+
+- Files: `libtrn/art.cpp`.
+- Kind: character output.
+- Functions: article display, ROT13 display, control-character display,
+  and prompt spacing.
+- Dependencies: none.
+- Change: replace `std::putchar` calls with `fmt` output.  Do not
+  change display ordering or current-character evaluation.
+- Tests: article display and pager tests, then full build.
+
+#### CSTR-537 - Convert Selector Page `putchar` Output
+
+- Files: `libtrn/rt-page.cpp`, `libtrn/rt-select.cpp`, and
+  `libtrn/rt-util.cpp`.
+- Kind: character output.
+- Functions: selector page rendering, command echo, and spinner/progress
   output.
 - Dependencies: none.
-- Change: replace live `std::fprintf` calls with `fmt` output.  Preserve
-  target streams and literal output text.
-- Tests: full build and affected focused tests where available.
+- Change: replace `std::putchar` calls with `fmt` output.  Keep selector
+  character and spinner state calculations unchanged.
+- Tests: selector and page rendering tests, then full build.
+
+#### CSTR-538 - Convert Terminal Core `putchar` Output
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: character output.
+- Functions: terminal character output, control-character rendering,
+  padding, macro echo, and prompt spacing.
+- Dependencies: none.
+- Change: replace `std::putchar` calls with `fmt` output.  Preserve
+  terminal side effects and emitted character order.
+- Tests: `TerminalTest` plus full build.
+
+#### CSTR-539 - Convert UTF `putchar` Output
+
+- Files: `libtrn/utf.cpp`.
+- Kind: character output.
+- Functions: UTF byte emission helpers.
+- Dependencies: none.
+- Change: replace `std::putchar` calls with `fmt` output only where it
+  preserves byte-for-byte output.
+- Tests: UTF output tests and full build.
+
+#### CSTR-540 - Review Runtime `fmt::printf`/`fmt::sprintf` Sites
+
+- Files: `libtrn/art.cpp`, `libtrn/intrp.cpp`, `libtrn/ng.cpp`, and
+  `libtrn/terminal.cpp`.
+- Kind: printf-style fmt formatting.
+- Functions: runtime prompt and terminal format templates.
+- Dependencies: none.
+- Change: review each runtime printf-style template.  Keep `fmt::printf`
+  or `fmt::sprintf` where the format string is intentionally a runtime
+  printf-style value; otherwise migrate to direct `fmt::print` or
+  `fmt::format`.
+- Tests: focused prompt/interpolation/terminal tests where available,
+  then full build.
 
 ### Tier 1 - Helper And API Foundations
 

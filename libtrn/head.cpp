@@ -721,7 +721,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
         lastnum = art_num;
         if (!parse_header(art_num))
         {
-            std::fprintf(stderr, "\nBad NNTP response.\n");
+            fmt::print(stderr, "\nBad NNTP response.\n");
             finalize(1);
         }
         if (owned_result != nullptr)

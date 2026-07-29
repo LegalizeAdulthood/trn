@@ -1073,7 +1073,7 @@ static std::string univ_edit_new_user_file()
         (void) get_anything();
         return g_univ_fname;
     }
-    std::fprintf(fp, "# User Toplevel (Universal Selector)\n");
+    fmt::print(fp, "# User Toplevel (Universal Selector)\n");
     std::fclose(fp);
     fmt::print("New User Toplevel file created.\n");
     fmt::print("After editing this file, exit and restart trn to use it.\n");

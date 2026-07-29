@@ -918,11 +918,11 @@ void save_options(const fs::path &filename_path)
                    "line that sets {}RNINIT.\n",
                    g_ini_file, t, t);
         get_anything();
-        std::fprintf(fp_out, "# trnrc file auto-generated\n[environment]\n");
+        fmt::print(fp_out, "# trnrc file auto-generated\n[environment]\n");
         write_init_environment(fp_out);
         fmt::print(fp_out, "{}RNINIT = ''\n\n", t);
     }
-    std::fprintf(fp_out,"[options]\n");
+    fmt::print(fp_out, "[options]\n");
     const OptionCatalog catalog;
     for (int row = catalog.first_row(); row <= catalog.row_count(); row++)
     {

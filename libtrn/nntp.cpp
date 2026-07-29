@@ -690,7 +690,7 @@ int nntp_handle_nested_lists()
     {
         return 1;
     }
-    std::fprintf(stderr,"Programming error! Nested NNTP calls detected.\n");
+    fmt::print(stderr, "Programming error! Nested NNTP calls detected.\n");
     return -1;
 }
 

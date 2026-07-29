@@ -2744,8 +2744,8 @@ void add_tc_string(std::string_view capability, std::string_view value)
     {
         if (s_tc_string_cnt == TC_STRINGS)
         {
-            std::fprintf(stderr,"trn: too many colors in [termcap] section (max is %d).\n",
-                    TC_STRINGS);
+            fmt::print(stderr, "trn: too many colors in [termcap] section (max is {}).\n",
+                       static_cast<int>(TC_STRINGS));
             finalize(1);
         }
         s_tc_string_cnt++;

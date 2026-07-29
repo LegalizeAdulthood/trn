@@ -538,11 +538,11 @@ reask_save:
         else if (s_tmp_fp != nullptr || (s_tmp_fp = std::fopen(g_save_dest.c_str(), "a")) != nullptr)
         {
             bool quote_From = false;
-            std::fseek(s_tmp_fp,0,2);
+            std::fseek(s_tmp_fp, 0, 2);
             if (mailbox)
             {
 #if MBOX_CHAR == '\001'
-                std::fprintf(s_tmpfp,"\001\001\001\001\n");
+                fmt::print(s_tmp_fp, "\001\001\001\001\n");
 #else
                 const std::string from_line = do_interp("From %t %`LANG= date`\n");
                 fmt::print(s_tmp_fp, "{}", from_line);
@@ -569,7 +569,7 @@ reask_save:
 #if MBOX_CHAR == '\001'
             if (mailbox)
             {
-                std::fprintf(s_tmpfp,"\001\001\001\001\n");
+                fmt::print(s_tmp_fp, "\001\001\001\001\n");
             }
 #endif
             std::fclose(s_tmp_fp);

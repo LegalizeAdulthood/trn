@@ -440,7 +440,7 @@ bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
                 total = part;
                 if (std::FILE *total_fp = open_path(dir / "CT", "w"))
                 {
-                    std::fprintf(total_fp, "%d\n", total);
+                    fmt::print(total_fp, "{}\n", total);
                     std::fclose(total_fp);
                 }
             }

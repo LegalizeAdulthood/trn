@@ -126,7 +126,7 @@ void sc_sv_save_file()
     }
     for (const std::string &line : s_lines)
     {
-        std::fprintf(tmpfp, "%s\n", line.c_str());
+        fmt::print(tmpfp, "{}\n", line);
         if (std::ferror(tmpfp))
         {
             std::fclose(tmpfp);
