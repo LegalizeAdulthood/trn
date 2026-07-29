@@ -784,16 +784,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-481 - Remove `g_buf` From Followup Workflow
-
-- Files: `libtrn/respond.cpp`.
-- Kind: global command buffer read.
-- Function: `followup`.
-- Dependencies: none.
-- Change: use local prompt text when choosing the default response
-  instead of constructing a view over `g_buf`.
-- Tests: followup response workflow tests.
-
 #### CSTR-482 - Remove `g_buf` From Selector Option Editing
 
 - Files: `libtrn/rt-select.cpp`.
@@ -858,7 +848,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-481` through `CSTR-485`.
+- Dependencies: `CSTR-482` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

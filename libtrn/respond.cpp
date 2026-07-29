@@ -1094,8 +1094,9 @@ void followup(std::string_view command)
     if (!incl_body && g_art <= g_last_art)
     {
         term_down(2);
-        in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
-        const std::string answer = set_def(std::string_view{g_buf}, "y");
+        const std::string prompt_answer =
+            in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
+        const std::string answer = set_def(prompt_answer, "y");
         const char        answer_char = answer.empty() ? '\0' : answer.front();
         if (answer_char == 'q') // TODO: need to add 'h' also
         {
