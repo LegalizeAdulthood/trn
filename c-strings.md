@@ -578,9 +578,8 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Unused overload/wrapper scan: no `finish_command(int)` wrapper remains.
   Keep `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
-  `yes_or_no`, `empty`, `plural`, `force_me`, and `at_grey_space`;
-  they still have production/source callers or platform/API boundary
-  use.
+  `yes_or_no`, `empty`, `plural`, and `force_me`; they still have
+  production/source callers or platform/API boundary use.
 - Search API scan: article and newsgroup search now use their
   `std::string_view` command APIs directly.  Their raw-buffer
   compatibility wrappers are gone.
@@ -621,11 +620,11 @@ Configure scripts, and the vendored `vcpkg` tree.
   `std::string_view` APIs.  `do_article` still has C-string bridge
   lambdas for color and regex helpers.
 - UTF helper scan: `put_char_adv` now consumes `std::string_view &`.
-  `at_grey_space`, `visual_length_of`, `create_utf8_copy`, and the raw
-  single-position overloads for `at_norm_char`, `byte_length_at`,
-  `visual_width_at`, and `code_point_at` still expose C-string APIs.
-  These should be refactored bottom-up so display loops consume views
-  directly and stale wrappers can be deleted.
+  `visual_length_of`, `create_utf8_copy`, and the raw single-position
+  overloads for `at_norm_char`, `byte_length_at`, `visual_width_at`, and
+  `code_point_at` still expose C-string APIs.  These should be
+  refactored bottom-up so display loops consume views directly and stale
+  wrappers can be deleted.
 - Shell helper scan: `do_shell` still takes raw C strings and forces
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
@@ -758,18 +757,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-543 - Make `at_grey_space` A View Helper
-
-- Type: helper parameter from `const char *` to `std::string_view`.
-- Files: `libtrn/include/trn/util.h`, `libtrn/datasrc.cpp`,
-  `libtrn/mime.cpp`, `libtrn/rt-util.cpp`.
-- Function: `at_grey_space`.
-- Dependencies: none.
-- Instructions: change the helper to accept a view and use
-  `at_norm_char(std::string_view)`.  Update callers that currently pass
-  `.data() + offset` or cursor pointers to pass the existing view or a
-  `substr` view.
-
 #### CSTR-544 - Make `visual_length_of` View-based
 
 - Type: helper parameter from `const char *` to `std::string_view`.
@@ -851,7 +838,7 @@ them before broad global-buffer work and before removing helpers.
 - Functions: `at_norm_char(const char *)`,
   `byte_length_at(const char *)`, `visual_width_at(const char *)`,
   `code_point_at(const char *)`.
-- Dependencies: `CSTR-543`, `CSTR-544`, `CSTR-545`, `CSTR-549`.
+- Dependencies: `CSTR-544`, `CSTR-545`, `CSTR-549`.
 - Instructions: update remaining production and test callers to pass
   views, then delete the raw overloads.  Use empty views for the old
   null-sentinel test cases where empty text has the same meaning.

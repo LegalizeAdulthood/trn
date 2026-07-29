@@ -19,9 +19,9 @@
 extern bool g_waiting; // waiting for subprocess (in doshell)?
 extern bool g_no_wait_fork;
 
-inline bool at_grey_space(const char *s)
+inline bool at_grey_space(std::string_view text)
 {
-    return ((s) && ((!at_norm_char(s)) || ((*s) && (*s) == ' ')));
+    return !text.empty() && (!at_norm_char(text) || text.front() == ' ');
 }
 
 // is the string for makedir a directory name or a filename?

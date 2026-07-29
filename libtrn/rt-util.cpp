@@ -585,7 +585,7 @@ bool strip_one_re(std::string_view subject, std::string_view &remaining)
 {
     bool        has_re = false;
     std::size_t pos = 0;
-    while (pos < subject.size() && at_grey_space(subject.data() + pos))
+    while (pos < subject.size() && at_grey_space(subject.substr(pos)))
     {
         pos++;
     }
@@ -604,7 +604,7 @@ bool strip_one_re(std::string_view subject, std::string_view &remaining)
         if (end < subject.size() && subject[end] == ':')
         {
             end++;
-            while (end < subject.size() && at_grey_space(subject.data() + end))
+            while (end < subject.size() && at_grey_space(subject.substr(end)))
             {
                 end++;
             }

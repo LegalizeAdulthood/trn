@@ -1011,9 +1011,9 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
         }
         for (std::size_t offset = std::min(value_offset + 1, line_end); offset < line_end;)
         {
-            const std::size_t width =
-                static_cast<std::size_t>(byte_length_at(std::string_view{line}.substr(offset, line_end - offset)));
-            if (at_grey_space(line.data() + offset))
+            const std::string_view text = std::string_view{line}.substr(offset, line_end - offset);
+            const std::size_t      width = static_cast<std::size_t>(byte_length_at(text));
+            if (at_grey_space(text))
             {
                 std::fill_n(line.begin() + offset, width, ' ');
             }
@@ -1077,9 +1077,9 @@ std::string_view SourceFile::append(std::string_view line, int key_len)
     std::size_t line_end = std::min(content_pos + 1, stored_line.size());
     while (line_end < stored_line.size() && stored_line[line_end] != '\0' && stored_line[line_end] != '\n')
     {
-        const std::size_t width =
-            static_cast<std::size_t>(byte_length_at(std::string_view{stored_line}.substr(line_end)));
-        if (at_grey_space(stored_line.data() + line_end))
+        const std::string_view text = std::string_view{stored_line}.substr(line_end);
+        const std::size_t      width = static_cast<std::size_t>(byte_length_at(text));
+        if (at_grey_space(text))
         {
             std::fill_n(stored_line.begin() + line_end, width, ' ');
         }

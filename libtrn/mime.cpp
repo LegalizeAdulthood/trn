@@ -1555,9 +1555,10 @@ static bool named_entity_matches(const char *text, std::string_view name)
 
 static void filter_html_into(std::string &output, std::string_view input)
 {
-    const std::size_t terminator = input.find('\0');
-    const std::string text{input.substr(0, terminator)};
-    std::string      &tag_word = g_mime_section->m_html_tag_word;
+    const std::size_t      terminator = input.find('\0');
+    const std::string      text{input.substr(0, terminator)};
+    const std::string_view text_view{text};
+    std::string           &tag_word = g_mime_section->m_html_tag_word;
 
     if (g_word_wrap_offset < 0)
     {
@@ -1586,8 +1587,9 @@ static void filter_html_into(std::string &output, std::string_view input)
 
     for (std::size_t pos = 0; pos < text.size(); pos++)
     {
-        const char *cursor = text.c_str() + pos;
-        const char  current = *cursor;
+        const std::string_view cursor_text = text_view.substr(pos);
+        const char            *cursor = cursor_text.data();
+        const char             current = cursor_text.front();
         if (g_mime_section->m_html & HF_IN_DQUOTE)
         {
             if (current == '"')
@@ -1640,7 +1642,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             }
             else
             {
-                tag_word += at_grey_space(cursor) ? ' ' : current;
+                tag_word += at_grey_space(cursor_text) ? ' ' : current;
             }
         }
         else if (g_mime_section->m_html & HF_IN_COMMENT)
@@ -1740,7 +1742,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             }
             g_mime_section->m_html |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
         }
-        else if ((current == ' ' || at_grey_space(cursor)) && !(g_mime_section->m_html & HF_IN_PRE))
+        else if ((current == ' ' || at_grey_space(cursor_text)) && !(g_mime_section->m_html & HF_IN_PRE))
         {
             // We don't want to call output_prep() here.
             if (current == ' ' || (g_mime_section->m_html & HF_SPACE_OK))
@@ -1751,13 +1753,22 @@ static void filter_html_into(std::string &output, std::string_view input)
             // In non-PRE mode spaces should be collapsed
             while (true)
             {
-                int w = byte_length_at(cursor);
-                if (w == 0 || cursor[w] == '\0' || !(cursor[w] == ' ' || at_grey_space(cursor + w)))
+                const int w = byte_length_at(text_view.substr(pos));
+                if (w == 0)
                 {
                     break;
                 }
-                pos += static_cast<std::size_t>(w);
-                cursor += w;
+                const std::size_t next_pos = pos + static_cast<std::size_t>(w);
+                if (next_pos >= text_view.size())
+                {
+                    break;
+                }
+                const std::string_view next_text = text_view.substr(next_pos);
+                if (!(next_text.front() == ' ' || at_grey_space(next_text)))
+                {
+                    break;
+                }
+                pos = next_pos;
             }
         }
         else if (current == '\n') // Handle the HF_IN_PRE case

@@ -25,6 +25,15 @@ namespace
 
 namespace fs = std::filesystem;
 
+TEST(AtGreySpaceTest, classifiesWhitespaceControlAndNormalCharacters)
+{
+    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
+
+    EXPECT_TRUE(at_grey_space(" "));
+    EXPECT_TRUE(at_grey_space("\001"));
+    EXPECT_FALSE(at_grey_space("A"));
+}
+
 class TempFilenameTest : public testing::Test
 {
 protected:
