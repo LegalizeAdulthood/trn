@@ -721,8 +721,8 @@ article_level:
                 goto cleanup;
 
             case SA_FAKE:
-                article_command = g_buf;
-                break;                  // fall through to art_switch
+                article_command = "+";
+                break; // fall through to art_switch
             }
         }
 
