@@ -269,11 +269,11 @@ int access_newsgroup()
             {
                 if (g_verbose)
                 {
-                    std::printf("\nNewsgroup %s does not have a spool directory!\n", g_newsgroup_name.c_str());
+                    fmt::print("\nNewsgroup {} does not have a spool directory!\n", g_newsgroup_name);
                 }
                 else
                 {
-                    std::printf("\nNo spool for %s!\n", g_newsgroup_name.c_str());
+                    fmt::print("\nNo spool for {}!\n", g_newsgroup_name);
                 }
                 term_down(2);
             }
@@ -281,11 +281,11 @@ int access_newsgroup()
             {
                 if (g_verbose)
                 {
-                    std::printf("\nNewsgroup %s is not currently accessible.\n", g_newsgroup_name.c_str());
+                    fmt::print("\nNewsgroup {} is not currently accessible.\n", g_newsgroup_name);
                 }
                 else
                 {
-                    std::printf("\n%s not readable.\n", g_newsgroup_name.c_str());
+                    fmt::print("\n{} not readable.\n", g_newsgroup_name);
                 }
                 term_down(2);
             }
@@ -460,11 +460,11 @@ void newsgroup_skip()
             clear();
             if (g_verbose)
             {
-                std::printf("\n(Article %ld exists but is unreadable.)\n", (long) g_art.value_of());
+                fmt::print("\n(Article {} exists but is unreadable.)\n", g_art.value_of());
             }
             else
             {
-                std::printf("\n(%ld unreadable.)\n", (long) g_art.value_of());
+                fmt::print("\n({} unreadable.)\n", g_art.value_of());
             }
             term_down(2);
             if (g_novice_delays)

@@ -677,7 +677,7 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `fgets` 2.
-- C text output: `fputs` 150, `printf`/`std::printf` 219,
+- C text output: `fputs` 150, `printf`/`std::printf` 213,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
@@ -718,9 +718,9 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Promote concrete
   source locations to explicit function-level slices before editing.
 - `printf`/`std::printf`: `edit_dist.cpp` 10, `mime.cpp` 18,
-  `ng.cpp` 35, `ngdata.cpp` 6, `ngstuff.cpp` 8, `opt.cpp` 9,
-  `rcstuff.cpp` 14, `respond.cpp` 7, `rt-page.cpp` 14,
-  `rt-select.cpp` 9, `sadisp.cpp` 8, `score.cpp` 18,
+  `ng.cpp` 35, `ngstuff.cpp` 8, `opt.cpp` 9, `rcstuff.cpp` 14,
+  `respond.cpp` 7, `rt-page.cpp` 14, `rt-select.cpp` 9,
+  `sadisp.cpp` 8, `score.cpp` 18,
   `scorefile.cpp` 20, `scoresave.cpp` 6, `sdisp.cpp` 10,
   `trn.cpp` 12, `univ.cpp` 9, and `util.cpp` 6.
   `parsedate/parsedate.y` has 5 exempt hits.
@@ -769,17 +769,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-511 - Convert printf Output In ngdata.cpp
-
-- Files: `libtrn/ngdata.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 6.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `NgdataTest`.
 
 #### CSTR-512 - Convert printf Output In scoresave.cpp
 
