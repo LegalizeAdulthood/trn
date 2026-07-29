@@ -12,6 +12,8 @@
 #include <trn/final.h>
 #include <trn/util.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -220,12 +222,12 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 //
 static HashEntry **hash_find(HashTable *tbl, std::string_view key)
 {
-    HashEntry* prevhp = nullptr;
-    const int key_len = static_cast<int>(key.size());
+    HashEntry *prevhp = nullptr;
+    const int  key_len = static_cast<int>(key.size());
 
     if (BADTBL(tbl))
     {
-        std::fputs("Hash table is invalid.",stderr);
+        fmt::print(stderr, "Hash table is invalid.");
         finalize(1);
     }
     unsigned size = tbl->ht_size;

@@ -284,7 +284,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 {
                     s_kill_mentioned = true;
                     carriage_return();
-                    std::fputs(g_msg.c_str(), stdout);
+                    fmt::print("{}", g_msg);
                     newline();
                 }
             }
@@ -338,7 +338,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                     {
                         s_kill_mentioned = true;
                         carriage_return();
-                        std::fputs(g_msg.c_str(), stdout);
+                        fmt::print("{}", g_msg);
                         newline();
                     }
                 }
@@ -433,7 +433,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
         {
             s_kill_mentioned = true;
             carriage_return();
-            std::fputs(g_msg.c_str(), stdout);
+            fmt::print("{}", g_msg);
             newline();
         }
     }

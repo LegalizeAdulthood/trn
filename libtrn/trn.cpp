@@ -143,9 +143,8 @@ int trn_main(int argc, char *argv[])
     {
         if (g_verbose)
         {
-            std::fputs("No unread news in subscribed-to newsgroups.  To subscribe to a new\n"
-                       "newsgroup use the g<newsgroup> command.\n",
-                       stdout);
+            fmt::print("No unread news in subscribed-to newsgroups.  To subscribe to a new\n"
+                       "newsgroup use the g<newsgroup> command.\n");
             term_down(2);
         }
         g_start_here = newsgroup_last();
@@ -259,7 +258,7 @@ restart:
                         }
                         else
                         {
-                            std::fputs("\n(\"Only\" mode.)\n", stdout);
+                            fmt::print("\n(\"Only\" mode.)\n");
                         }
                         term_down(2);
                     }
@@ -267,11 +266,11 @@ restart:
                     {
                         if (g_verbose)
                         {
-                            std::fputs("\nNo articles under restriction.", stdout);
+                            fmt::print("\nNo articles under restriction.");
                         }
                         else
                         {
-                            std::fputs("\nNo \"only\" articles.", stdout);
+                            fmt::print("\nNo \"only\" articles.");
                         }
                         term_down(2);
                         end_only(); // release the restriction
@@ -382,7 +381,7 @@ reinp_newsgroup:
                 goto reinp_newsgroup;
 
             case ING_ERROR:
-                std::fputs("\nType h for help.\n", stdout);
+                fmt::print("\nType h for help.\n");
                 term_down(2);
                 settle_down();
                 goto reask_newsgroup;
@@ -663,11 +662,11 @@ do_command:
         case NGS_INTR:
             if (g_verbose)
             {
-                std::fputs("\n(Interrupted)\n",stdout);
+                fmt::print("\n(Interrupted)\n");
             }
             else
             {
-                std::fputs("\n(Intr)\n",stdout);
+                fmt::print("\n(Intr)\n");
             }
             term_down(2);
             set_newsgroup(g_current_newsgroup);
@@ -679,12 +678,11 @@ do_command:
         case NGS_NOT_FOUND:
             if (g_verbose)
             {
-                std::fputs("\n\nNot found -- use a or g to add newsgroups\n",
-                      stdout);
+                fmt::print("\n\nNot found -- use a or g to add newsgroups\n");
             }
             else
             {
-                std::fputs("\n\nNot found\n",stdout);
+                fmt::print("\n\nNot found\n");
             }
             term_down(3);
             return ING_ASK;
@@ -869,7 +867,7 @@ reask_abandon:
         }
         else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q')
         {
-            std::fputs("Type h for help.\n", stdout);
+            fmt::print("Type h for help.\n");
             term_down(1);
             settle_down();
             goto reask_abandon;
@@ -977,7 +975,7 @@ ng_start_sel:
     case ' ': case '\r': case '\n':
         if (!g_newsgroup_ptr)
         {
-            std::fputs("\nNot on a newsgroup.",stdout);
+            fmt::print("\nNot on a newsgroup.");
             term_down(1);
             return ING_ASK;
         }

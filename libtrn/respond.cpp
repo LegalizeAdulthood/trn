@@ -159,11 +159,11 @@ SaveResult save_article(std::string_view command)
     {
         if (g_verbose)
         {
-            std::fputs("\nCan't save an empty article.\n", stdout);
+            fmt::print("\nCan't save an empty article.\n");
         }
         else
         {
-            std::fputs(s_empty_article, stdout);
+            fmt::print("{}", s_empty_article);
         }
         term_down(2);
         return SAVE_DONE;
@@ -337,7 +337,7 @@ SaveResult save_article(std::string_view command)
                 if (!decode_piece(nullptr, {}) && !g_msg.empty())
                 {
                     newline();
-                    std::fputs(g_msg.c_str(),stdout);
+                    fmt::print("{}", g_msg);
                 }
                 newline();
                 break;
@@ -384,11 +384,11 @@ SaveResult save_article(std::string_view command)
         {
             if (g_verbose)
             {
-                std::fputs("Warning: '-' ignored.  This isn't readnews.\n", stdout);
+                fmt::print("Warning: '-' ignored.  This isn't readnews.\n");
             }
             else
             {
-                std::fputs("'-' ignored.\n", stdout);
+                fmt::print("'-' ignored.\n");
             }
             term_down(1);
             command_text.remove_prefix(1);
@@ -454,11 +454,10 @@ reask_save:
                     }
                     else
                     {
-                        std::fputs("\n"
-                              "y to create mailbox.\n"
-                              "n to create normal file.\n"
-                              "q to abort.\n",
-                              stdout);
+                        fmt::print("\n"
+                                   "y to create mailbox.\n"
+                                   "n to create normal file.\n"
+                                   "q to abort.\n");
                     }
                     term_down(4);
                     goto reask_save;
@@ -477,7 +476,7 @@ reask_save:
                 }
                 else
                 {
-                    std::fputs("Type h for help.\n", stdout);
+                    fmt::print("Type h for help.\n");
                     term_down(1);
                     settle_down();
                     goto reask_save;
@@ -545,7 +544,7 @@ reask_save:
                 std::fprintf(s_tmpfp,"\001\001\001\001\n");
 #else
                 const std::string from_line = do_interp("From %t %`LANG= date`\n");
-                std::fputs(from_line.c_str(), s_tmp_fp);
+                fmt::print(s_tmp_fp, "{}", from_line);
                 quote_From = true;
 #endif
             }
@@ -581,7 +580,7 @@ reask_save:
         }
         if (i)
         {
-            std::fputs("Not saved", stdout);
+            fmt::print("Not saved");
         }
         else
         {
@@ -607,11 +606,11 @@ SaveResult view_article()
     {
         if (g_verbose)
         {
-            std::fputs("\nNo attatchments on an empty article.\n", stdout);
+            fmt::print("\nNo attatchments on an empty article.\n");
         }
         else
         {
-            std::fputs(s_empty_article, stdout);
+            fmt::print("{}", s_empty_article);
         }
         term_down(2);
         return SAVE_DONE;
@@ -656,7 +655,7 @@ SaveResult view_article()
                 if (mc && !decode_piece(mc, {}) && !g_msg.empty())
                 {
                     newline();
-                    std::fputs(g_msg.c_str(), stdout);
+                    fmt::print("{}", g_msg);
                 }
                 newline();
                 cnt = 0;
@@ -685,11 +684,11 @@ int cancel_article()
     {
         if (g_verbose)
         {
-            std::fputs("\nCan't cancel an empty article.\n", stdout);
+            fmt::print("\nCan't cancel an empty article.\n");
         }
         else
         {
-            std::fputs(s_empty_article, stdout);
+            fmt::print("{}", s_empty_article);
         }
         term_down(2);
         return r;
@@ -715,26 +714,26 @@ int cancel_article()
 #endif
         if (g_verbose)
         {
-            std::fputs("\nYou can't cancel someone else's article\n", stdout);
+            fmt::print("\nYou can't cancel someone else's article\n");
         }
         else
         {
-            std::fputs("\nNot your article\n", stdout);
+            fmt::print("\nNot your article\n");
         }
         term_down(2);
     }
     else
     {
-        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   // open header file
+        std::FILE *header = std::fopen(g_head_name.c_str(), "w"); // open header file
         if (header == nullptr)
         {
             fmt::print("Can't create {}\n", g_head_name);
             term_down(1);
             goto done;
         }
-        std::fputs(do_interp(get_env_var("CANCELHEADER", CANCEL_HEADER)).c_str(), header);
+        fmt::print(header, "{}", do_interp(get_env_var("CANCELHEADER", CANCEL_HEADER)));
         std::fclose(header);
-        std::fputs("\nCanceling...\n",stdout);
+        fmt::print("\nCanceling...\n");
         term_down(2);
         r = do_shell(SH, file_exp(get_env_var("CANCEL", CALL_INEWS)));
     }
@@ -752,23 +751,23 @@ int supersede_article(std::string_view command) // Supersedes:
     {
         if (g_verbose)
         {
-            std::fputs("\nCan't supersede an empty article.\n", stdout);
+            fmt::print("\nCan't supersede an empty article.\n");
         }
         else
         {
-            std::fputs(s_empty_article, stdout);
+            fmt::print("{}", s_empty_article);
         }
         term_down(2);
         return r;
     }
     std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
     std::string from_buf = fetch_lines(g_art, FROM_LINE);
-    if (!string_case_equal(get_env_var("FROM"), from_buf)                    //
-        && (!in_string(from_buf, g_host_name, false)                         //
-            || (!in_string(from_buf, g_login_name, true)                     //
-                && !in_string(reply_buf, g_login_name, true)                 //
-#ifdef HAS_NEWS_ADMIN                                                //
-                && myuid != g_news_uid                                //
+    if (!string_case_equal(get_env_var("FROM"), from_buf)    //
+        && (!in_string(from_buf, g_host_name, false)         //
+            || (!in_string(from_buf, g_login_name, true)     //
+                && !in_string(reply_buf, g_login_name, true) //
+#ifdef HAS_NEWS_ADMIN                                        //
+                && myuid != g_news_uid                       //
 #endif
                 && myuid != ROOT_UID)))
     {
@@ -782,24 +781,24 @@ int supersede_article(std::string_view command) // Supersedes:
 #endif
         if (g_verbose)
         {
-            std::fputs("\nYou can't supersede someone else's article\n", stdout);
+            fmt::print("\nYou can't supersede someone else's article\n");
         }
         else
         {
-            std::fputs("\nNot your article\n", stdout);
+            fmt::print("\nNot your article\n");
         }
         term_down(2);
     }
     else
     {
-        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   // open header file
+        std::FILE *header = std::fopen(g_head_name.c_str(), "w"); // open header file
         if (header == nullptr)
         {
             fmt::print("Can't create {}\n", g_head_name);
             term_down(1);
             goto done;
         }
-        std::fputs(do_interp(get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER)).c_str(), header);
+        fmt::print(header, "{}", do_interp(get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER)));
         if (incl_body && g_art_fp != nullptr)
         {
             parse_header(g_art);
@@ -888,7 +887,7 @@ void reply(std::string_view command)
         return;
     }
     const std::string header_text = do_interp(get_env_var("MAILHEADER", MAIL_HEADER));
-    std::fputs(header_text.c_str(), header);
+    fmt::print(header, "{}", header_text);
     if (!in_string(mail_doer, "%h", true))
     {
         if (g_verbose)
@@ -936,15 +935,15 @@ void forward()
 #else
     constexpr std::string_view content_type_prefix{"Content-Type: multipart/"};
     constexpr std::string_view boundary_prefix{"boundary=\""};
-    std::string mime_boundary_storage;
+    std::string                mime_boundary_storage;
 #endif
     const char *mime_boundary;
 
 #ifdef REGEX_WORKS_RIGHT
     mime_compex.init_compex();
 #endif
-    art_open(g_art,(ArticlePosition)0);
-    std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
+    art_open(g_art, (ArticlePosition) 0);
+    std::FILE *header = std::fopen(g_head_name.c_str(), "w"); // open header file
     if (header == nullptr)
     {
         fmt::print("Can't create {}\n", g_head_name);
@@ -952,7 +951,7 @@ void forward()
         goto done;
     }
     header_text = do_interp(get_env_var("FORWARDHEADER", FORWARD_HEADER));
-    std::fputs(header_text.c_str(),header);
+    fmt::print(header, "{}", header_text);
 #ifdef REGEX_WORKS_RIGHT
     if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
         && mime_compex.execute(header_text.c_str()) != nullptr)
@@ -1115,17 +1114,16 @@ void followup(std::string_view command)
         g_art = oldart;
         return;
     }
-    std::fputs(do_interp(get_env_var("NEWSHEADER", NEWS_HEADER)).c_str(), header);
+    fmt::print(header, "{}", do_interp(get_env_var("NEWSHEADER", NEWS_HEADER)));
     if (incl_body && g_art_fp != nullptr)
     {
         std::string article_line;
         article_line.reserve(LINE_BUF_LEN);
         if (g_verbose)
         {
-            std::fputs("\n"
-                  "(Be sure to double-check the attribution against the signature, and\n"
-                  "trim the quoted article down as much as possible.)\n",
-                  stdout);
+            fmt::print("\n"
+                       "(Be sure to double-check the attribution against the signature, and\n"
+                       "trim the quoted article down as much as possible.)\n");
         }
         const std::string attribution = do_interp(get_env_var("ATTRIBUTION", ATTRIBUTION));
         fmt::print(header, "{}\n", attribution);

@@ -655,7 +655,7 @@ static void install_macro(std::string_view sequence, std::string_view definition
             {
                 if (report_overrides)
                 {
-                    std::fputs(OVERRIDE,stdout);
+                    fmt::print("{}", OVERRIDE);
                     term_down(2);
                 }
                 curmap->km_str[ch].clear();
@@ -671,7 +671,7 @@ static void install_macro(std::string_view sequence, std::string_view definition
         {
             if (report_overrides && (curmap->km_type[ch] & KM_TMASK) == KM_KEYMAP)
             {
-                std::fputs(OVERRIDE,stdout);
+                fmt::print("{}", OVERRIDE);
                 term_down(2);
             }
             else
@@ -1284,7 +1284,7 @@ void push_char(char_int c)
     }
     if (s_next_out == s_next_in)
     {
-        std::fputs("\npushback buffer overflow\n",stdout);
+        fmt::print("\npushback buffer overflow\n");
         sig_catcher(0);
     }
     s_circle_buf[s_next_out] = c;
@@ -1429,11 +1429,11 @@ tryagain:
             TRN_ASSERT(curmap != nullptr);
             break;
 
-        case KM_STRING:               // a string?
-            push_string(curmap->km_str[g_last_char],0200);
-            if (++times > 20)           // loop?
+        case KM_STRING: // a string?
+            push_string(curmap->km_str[g_last_char], 0200);
+            if (++times > 20) // loop?
             {
-                std::fputs("\nmacro loop?\n",stdout);
+                fmt::print("\nmacro loop?\n");
                 term_down(2);
                 settle_down();
             }
@@ -1504,17 +1504,17 @@ int get_anything()
     MinorMode mode_save = g_mode;
 
 reask_anything:
-    unflush_output();                   // disable any ^O in effect
+    unflush_output(); // disable any ^O in effect
     color_object(COLOR_MORE, true);
     if (g_verbose)
     {
-        std::fputs("[Type space to continue] ",stdout);
+        fmt::print("[Type space to continue] ");
     }
     else
     {
-        std::fputs("[MORE] ",stdout);
+        fmt::print("[MORE] ");
     }
-    color_pop();        // of COLOR_MORE
+    color_pop(); // of COLOR_MORE
     std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
@@ -1524,21 +1524,21 @@ reask_anything:
     cache_until_key();
     set_mode(g_general_mode, MM_ANY_KEY_PROMPT);
     const char command = get_any_key();
-    set_mode(g_general_mode,mode_save);
+    set_mode(g_general_mode, mode_save);
     if (errno || command == '\f')
     {
-        newline();                      // if return from stop signal
-        goto reask_anything;            // give them a prompt again
+        newline();           // if return from stop signal
+        goto reask_anything; // give them a prompt again
     }
     if (command == 'h')
     {
         if (g_verbose)
         {
-            std::fputs("\nType q to quit or space to continue.\n",stdout);
+            fmt::print("\nType q to quit or space to continue.\n");
         }
         else
         {
-            std::fputs("\nq to quit, space to continue.\n",stdout);
+            fmt::print("\nq to quit, space to continue.\n");
         }
         term_down(2);
         goto reask_anything;
@@ -1572,17 +1572,17 @@ int pause_get_cmd()
 {
     MinorMode mode_save = g_mode;
 
-    unflush_output();                   // disable any ^O in effect
+    unflush_output(); // disable any ^O in effect
     color_object(COLOR_CMD, true);
     if (g_verbose)
     {
-        std::fputs("[Type space or a command] ",stdout);
+        fmt::print("[Type space or a command] ");
     }
     else
     {
-        std::fputs("[CMD] ",stdout);
+        fmt::print("[CMD] ");
     }
-    color_pop();        // of COLOR_CMD
+    color_pop(); // of COLOR_CMD
     std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
@@ -2114,7 +2114,7 @@ void rubout()
 
 static void reprint(std::string_view text)
 {
-    std::fputs("^R\n",stdout);
+    fmt::print("^R\n");
     term_down(1);
     for (const char ch : text)
     {
@@ -2165,13 +2165,13 @@ void clear()
 
 void home_cursor()
 {
-    if (!*g_tc_HO)              // no home sequence?
+    if (!*g_tc_HO) // no home sequence?
     {
-        if (!*g_tc_CM)                  // no cursor motion either?
+        if (!*g_tc_CM) // no cursor motion either?
         {
-            std::fputs("\n\n\n", stdout);
+            fmt::print("\n\n\n");
             term_down(3);
-            return;             // forget it.
+            return; // forget it.
         }
         tputs(tgoto_string(g_tc_CM, 0, 0).c_str(), 1, put_char); // go to home via CM
     }
@@ -2557,7 +2557,7 @@ static void xmouse_on()
     if (!s_xmouse_is_on)
     {
         // save old highlight mouse tracking and enable mouse tracking
-        std::fputs("\033[?1001s\033[?1000h",stdout);
+        fmt::print("\033[?1001s\033[?1000h");
         std::fflush(stdout);
         s_xmouse_is_on = true;
     }
@@ -2568,7 +2568,7 @@ void xmouse_off()
     if (s_xmouse_is_on)
     {
         // disable mouse tracking and restore old highlight mouse tracking
-        std::fputs("\033[?1000l\033[?1001r",stdout);
+        fmt::print("\033[?1000l\033[?1001r");
         std::fflush(stdout);
         s_xmouse_is_on = false;
     }

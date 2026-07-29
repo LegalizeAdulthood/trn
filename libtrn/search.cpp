@@ -28,6 +28,8 @@
 #include <config/common.h>
 #include <trn/util.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -590,7 +592,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             i = *ep++;
             if (m_bracket_end_list[i] == nullptr)
             {
-                std::fputs("bad braces\n",stdout);
+                fmt::print("bad braces\n");
                 s_err = true;
                 return false;
             }
@@ -605,7 +607,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             i = *ep++;
             if (m_bracket_end_list[i] == nullptr)
             {
-                std::fputs("bad braces\n",stdout);
+                fmt::print("bad braces\n");
                 s_err = true;
                 return false;
             }
@@ -647,7 +649,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
 
         case CCHR | STAR:
             curlp = lp;
-            while (*lp++ && trt[*(Uchar*)(lp-1)] == trt[*(Uchar*)ep])
+            while (*lp++ && trt[*(Uchar *) (lp - 1)] == trt[*(Uchar *) ep])
             {
             }
             ep++;
@@ -674,7 +676,7 @@ star:
             return false;
 
         default:
-            std::fputs("Badly compiled pattern\n",stdout);
+            fmt::print("Badly compiled pattern\n");
             s_err = true;
             return false;
         }

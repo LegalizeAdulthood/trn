@@ -1406,14 +1406,13 @@ static int get_near_miss(const std::vector<std::string> &newsgroup_matches)
         case 'H':
             if (g_verbose)
             {
-                std::fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n"
+                fmt::print("  You entered an illegal newsgroup name, and these are the nearest possible\n"
                            "  matches.  If you want one of these, then enter its number.  Otherwise\n"
-                           "  just say 'n'.\n",
-                           stdout);
+                           "  just say 'n'.\n");
             }
             else
             {
-                std::fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
+                fmt::print("Illegal newsgroup, enter a number or 'n'.\n");
             }
             continue;
 
@@ -1427,7 +1426,7 @@ static int get_near_miss(const std::vector<std::string> &newsgroup_matches)
                     return 1;
                 }
             }
-            std::fputs("Type h for help.\n", stdout);
+            fmt::print("Type h for help.\n");
             break;
         }
 

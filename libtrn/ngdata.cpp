@@ -422,11 +422,11 @@ void newsgroup_skip()
         clear();
         if (g_verbose)
         {
-            std::fputs("Skipping unavailable article\n", stdout);
+            fmt::print("Skipping unavailable article\n");
         }
         else
         {
-            std::fputs("Skipping\n", stdout);
+            fmt::print("Skipping\n");
         }
         term_down(1);
         if (g_novice_delays)

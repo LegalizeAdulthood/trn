@@ -1211,7 +1211,7 @@ static void sel_display()
     if (s_disp_status_line == 1)
     {
         newline();
-        std::fputs(g_msg.c_str(), stdout);
+        fmt::print("{}", g_msg);
         g_term_col = static_cast<int>(g_msg.size());
         s_disp_status_line = 2;
     }
@@ -1635,7 +1635,7 @@ reinp_selector:
             if (s_disp_status_line == 1)
             {
                 newline();
-                std::fputs(g_msg.c_str(),stdout);
+                fmt::print("{}", g_msg);
                 g_term_col = static_cast<int>(g_msg.size());
                 if (s_removed_prompt & RP_MOUSE_BAR)
                 {
@@ -2456,7 +2456,7 @@ do_command:
         }
         else
         {
-            std::fputs("Cmd: ", stdout);
+            fmt::print("Cmd: ");
         }
         std::fflush(stdout);
         ch = read_selector_escaped_command();
@@ -2850,21 +2850,19 @@ reask_output:
         {
             if (g_verbose)
             {
-                std::fputs("\n"
-                      "Type t or SP to display/select thread groups (threads the group, if needed).\n"
-                      "Type s to display/select subject groups.\n"
-                      "Type a to display/select individual articles.\n"
-                      "Type q to leave things as they are.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "Type t or SP to display/select thread groups (threads the group, if needed).\n"
+                           "Type s to display/select subject groups.\n"
+                           "Type a to display/select individual articles.\n"
+                           "Type q to leave things as they are.\n\n");
             }
             else
             {
-                std::fputs("\n"
-                      "t or SP selects thread groups (threads the group too).\n"
-                      "s selects subject groups.\n"
-                      "a selects individual articles.\n"
-                      "q does nothing.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "t or SP selects thread groups (threads the group too).\n"
+                           "s selects subject groups.\n"
+                           "a selects individual articles.\n"
+                           "q does nothing.\n\n");
             }
             s_clean_screen = false;
             goto reask_output;
@@ -2913,47 +2911,41 @@ reask_sort:
         {
             if (g_verbose)
             {
-                std::fputs("\n"
-                      "Type d or SP to order the displayed items by date.\n"
-                      "Type s to order the items by subject.\n"
-                      "Type p to order the items by score points.\n",
-                      stdout);
+                fmt::print("\n"
+                           "Type d or SP to order the displayed items by date.\n"
+                           "Type s to order the items by subject.\n"
+                           "Type p to order the items by score points.\n");
                 if (g_sel_mode == SM_ARTICLE)
                 {
-                    std::fputs("Type a to order the items by author.\n"
-                          "Type n to order the items by number.\n"
-                          "Type g to order the items in subject-groups by date.\n",
-                          stdout);
+                    fmt::print("Type a to order the items by author.\n"
+                               "Type n to order the items by number.\n"
+                               "Type g to order the items in subject-groups by date.\n");
                 }
                 else
                 {
-                    std::fputs("Type c to order the items by count.\n", stdout);
+                    fmt::print("Type c to order the items by count.\n");
                 }
-                std::fputs("Typing your selection in upper case it will reverse the selected order.\n"
-                      "Type q to leave things as they are.\n\n",
-                      stdout);
+                fmt::print("Typing your selection in upper case it will reverse the selected order.\n"
+                           "Type q to leave things as they are.\n\n");
             }
             else
             {
-                std::fputs("\n"
-                      "d or SP sorts by date.\n"
-                      "s sorts by subject.\n"
-                      "p sorts by points.\n",
-                      stdout);
+                fmt::print("\n"
+                           "d or SP sorts by date.\n"
+                           "s sorts by subject.\n"
+                           "p sorts by points.\n");
                 if (g_sel_mode == SM_ARTICLE)
                 {
-                    std::fputs("a sorts by author.\n"
-                          "g sorts in subject-groups by date.\n",
-                          stdout);
+                    fmt::print("a sorts by author.\n"
+                               "g sorts in subject-groups by date.\n");
                 }
                 else
                 {
-                    std::fputs("c sorts by count.\n", stdout);
+                    fmt::print("c sorts by count.\n");
                 }
-                std::fputs("Upper case reverses the sort.\n"
-                      "q does nothing.\n"
-                      "\n",
-                      stdout);
+                fmt::print("Upper case reverses the sort.\n"
+                           "q does nothing.\n"
+                           "\n");
             }
             s_clean_screen = false;
             goto reask_sort;
@@ -3460,23 +3452,21 @@ reask_sort:
         case 'h': case 'H':
             if (g_verbose)
             {
-                std::fputs("\n"
-                      "Type n or SP to order the newsgroups in the .newsrc order.\n"
-                      "Type g to order the items by group name.\n"
-                      "Type c to order the items by count.\n"
-                      "Typing your selection in upper case it will reverse the selected order.\n"
-                      "Type q to leave things as they are.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "Type n or SP to order the newsgroups in the .newsrc order.\n"
+                           "Type g to order the items by group name.\n"
+                           "Type c to order the items by count.\n"
+                           "Typing your selection in upper case it will reverse the selected order.\n"
+                           "Type q to leave things as they are.\n\n");
             }
             else
             {
-                std::fputs("\n"
-                      "n or SP sorts by .newsrc.\n"
-                      "g sorts by group name.\n"
-                      "c sorts by count.\n"
-                      "Upper case reverses the sort.\n"
-                      "q does nothing.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "n or SP sorts by .newsrc.\n"
+                           "g sorts by group name.\n"
+                           "c sorts by count.\n"
+                           "Upper case reverses the sort.\n"
+                           "q does nothing.\n\n");
             }
             s_clean_screen = false;
             goto reask_sort;
@@ -3798,23 +3788,21 @@ reask_sort:
         case 'h': case 'H':
             if (g_verbose)
             {
-                std::fputs("\n"
-                      "Type n or SP to order the items in their naturally occurring order.\n"
-                      "Type g to order the items by newsgroup name.\n"
-                      "Type c to order the items by article count.\n"
-                      "Typing your selection in upper case it will reverse the selected order.\n"
-                      "Type q to leave things as they are.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "Type n or SP to order the items in their naturally occurring order.\n"
+                           "Type g to order the items by newsgroup name.\n"
+                           "Type c to order the items by article count.\n"
+                           "Typing your selection in upper case it will reverse the selected order.\n"
+                           "Type q to leave things as they are.\n\n");
             }
             else
             {
-                std::fputs("\n"
-                      "n or SP sorts by natural order.\n"
-                      "g sorts by newsgroup name.\n"
-                      "c sorts by article count.\n"
-                      "Upper case reverses the sort.\n"
-                      "q does nothing.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "n or SP sorts by natural order.\n"
+                           "g sorts by newsgroup name.\n"
+                           "c sorts by article count.\n"
+                           "Upper case reverses the sort.\n"
+                           "q does nothing.\n\n");
             }
             s_clean_screen = false;
             goto reask_sort;
@@ -4261,28 +4249,25 @@ reask_sort:
         {
             if (g_verbose)
             {
-                std::fputs("\n"
-                      "Type n or SP to order the items in the natural order.\n"
-                      "Type p to order the items by score points.\n"
-                      "Typing your selection in upper case it will reverse the selected order.\n"
-                      "Type q to leave things as they are.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "Type n or SP to order the items in the natural order.\n"
+                           "Type p to order the items by score points.\n"
+                           "Typing your selection in upper case it will reverse the selected order.\n"
+                           "Type q to leave things as they are.\n\n");
             }
             else
             {
-                std::fputs("\n"
-                      "n or SP sorts by natural order.\n"
-                      "p sorts by score.\n"
-                      "Upper case reverses the sort.\n"
-                      "q does nothing.\n\n",
-                      stdout);
+                fmt::print("\n"
+                           "n or SP sorts by natural order.\n"
+                           "p sorts by score.\n"
+                           "Upper case reverses the sort.\n"
+                           "q does nothing.\n\n");
             }
             s_clean_screen = false;
             goto reask_sort;
         }
-        else if (command_char == 'q'
-                 || (std::tolower(static_cast<unsigned char>(command_char)) != 'n'
-                     && std::tolower(static_cast<unsigned char>(command_char)) != 'p'))
+        else if (command_char == 'q' || (std::tolower(static_cast<unsigned char>(command_char)) != 'n' &&
+                                         std::tolower(static_cast<unsigned char>(command_char)) != 'p'))
         {
             if (g_can_home)
             {

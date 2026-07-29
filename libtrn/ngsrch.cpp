@@ -133,7 +133,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     }
     if (cmdlst.empty())
     {
-        std::fputs("\nSearching...", stdout); // give them something to read
+        fmt::print("\nSearching..."); // give them something to read
         std::fflush(stdout);
     }
 

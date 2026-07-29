@@ -1076,7 +1076,7 @@ void mime_decode_article(bool view)
                 if (!g_msg.empty())
                 {
                     newline();
-                    std::fputs(g_msg.c_str(),stdout);
+                    fmt::print("{}", g_msg);
                 }
                 g_mime_state = SKIP_MIME;
             }

@@ -256,10 +256,10 @@ int do_shell(std::string_view shell, std::string_view cmd)
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_malloc(MemorySize size)
 {
-    char *ptr = (char*)std::malloc(size ? size : (MemorySize)1);
+    char *ptr = (char *) std::malloc(size ? size : (MemorySize) 1);
     if (!ptr)
     {
-        std::fputs(s_no_memory,stdout);
+        fmt::print("{}", s_no_memory);
         sig_catcher(0);
     }
     return ptr;
@@ -271,19 +271,19 @@ char *safe_malloc(MemorySize size)
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_realloc(char *where, MemorySize size)
 {
-    char* ptr;
+    char *ptr;
 
     if (!where)
     {
-        ptr = (char*) std::malloc(size ? size : (MemorySize)1);
+        ptr = (char *) std::malloc(size ? size : (MemorySize) 1);
     }
     else
     {
-        ptr = (char*) std::realloc(where, size ? size : (MemorySize)1);
+        ptr = (char *) std::realloc(where, size ? size : (MemorySize) 1);
     }
     if (!ptr)
     {
-        std::fputs(s_no_memory,stdout);
+        fmt::print("{}", s_no_memory);
         sig_catcher(0);
     }
     return ptr;

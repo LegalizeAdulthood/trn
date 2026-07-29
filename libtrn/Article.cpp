@@ -20,6 +20,8 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -474,7 +476,7 @@ void Article::select_article(AutoKillFlags auto_flags)
             g_selected_count++;
             if (g_verbose && echo && g_general_mode != GM_SELECTOR)
             {
-                std::fputs("\tSelected", stdout);
+                fmt::print("\tSelected");
             }
         }
         m_flags = (m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel_mask);
@@ -489,7 +491,7 @@ void Article::select_article(AutoKillFlags auto_flags)
         {
             g_selected_subj_cnt++;
         }
-        m_subj->m_flags = (m_subj->m_flags&~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
+        m_subj->m_flags = (m_subj->m_flags & ~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
     }
     g_selected_only = (g_selected_only || g_selected_count != 0);
 }
@@ -549,7 +551,7 @@ void Article::deselect_article(AutoKillFlags auto_flags)
         }
         if (g_verbose && echo && g_general_mode != GM_SELECTOR)
         {
-            std::fputs("\tDeselected", stdout);
+            fmt::print("\tDeselected");
         }
     }
     if (g_sel_rereading && g_sel_mode == SM_ARTICLE)

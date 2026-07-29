@@ -639,7 +639,7 @@ DoArticleResult do_article(std::string &article_command)
                         }
                         if (output_ok)
                         {
-                            std::fputs("^L", stdout);
+                            fmt::print("^L");
                         }
                         if (line_pos == 0 && g_highlight != g_art_line_num)
                         {
@@ -1081,7 +1081,7 @@ caseG:
         if (!g_inner_search)
         {
             seek_art_buf(g_art_pos);
-            std::fputs("(Not found)", stdout);
+            fmt::print("(Not found)");
             g_term_col = 11;
             return PS_ASK;
         }
@@ -1440,7 +1440,7 @@ go_forward:
         return PS_TO_END;
 
     default:
-        std::fputs("Type h for help.\n", stdout);
+        fmt::print("Type h for help.\n");
         term_down(1);
         settle_down();
         return PS_ASK;

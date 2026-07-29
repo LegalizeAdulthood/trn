@@ -694,7 +694,7 @@ void look_ahead()
 #ifdef DEBUG
                     if (g_debug)
                     {
-                        std::fputs("(not found)",stdout);
+                        fmt::print("(not found)");
                     }
 #endif
                     break;

@@ -677,7 +677,7 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `fgets` 2.
-- C text output: `fputs` 150, `fprintf`/`std::fprintf` 13.
+- C text output: `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
 
@@ -685,7 +685,7 @@ The scan found no current active source/test hits for `strcmp`,
 `strcpy`, `strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`,
 `strrchr`, `strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`,
 `strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`,
-`gets`, `puts`, `printf`, `std::printf`, `memcpy`, `memmove`,
+`gets`, `fputs`, `puts`, `printf`, `std::printf`, `memcpy`, `memmove`,
 `memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`,
 `std::atol`, `std::strtol`, `std::strtoul`, or `std::strtod`.
 
@@ -695,6 +695,7 @@ be modernized.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
 and is exempt from modernization by user direction.
+The `fputs` spellings in `color.cpp` and `kfile.cpp` are comment text.
 The `strlen` spellings in `charsubst.cpp` are comment text.
 
 ## Current C Function Source Map
@@ -708,14 +709,6 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   modernization by user direction.
 - `memset`: `libtrn/hash.cpp`, `hash_create`.  This is hash
   allocation-table initialization.
-- `fputs`: `libtrn/Article.cpp` 2, `art.cpp` 3, `artsrch.cpp` 1,
-  `cache.cpp` 1, `color.cpp` 4, `datasrc.cpp` 3, `hash.cpp` 1,
-  `kfile.cpp` 3, `mime.cpp` 1, `ng.cpp` 19, `ngdata.cpp` 2,
-  `ngsrch.cpp` 1, `ngstuff.cpp` 6, `opt.cpp` 1, `rcln.cpp` 1,
-  `rcstuff.cpp` 21, `respond.cpp` 27, `rt-page.cpp` 2,
-  `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
-  `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Promote concrete
-  source locations to explicit function-level slices before editing.
 - `printf`/`std::printf`: `parsedate/parsedate.y` has 5 exempt
   `#ifdef TEST` harness hits.
 - `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
@@ -763,27 +756,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-489 - Convert Page Switch Literal Messages
-
-- Files: `libtrn/art.cpp`.
-- Kind: literal C output.
-- Function: `page_switch`.
-- Dependencies: none.
-- Change: convert the `"(Not found)"` and help text `std::fputs`
-  calls to `fmt::print`, preserving terminal column and movement logic.
-- Tests: `ArticlePagerCommandTest` and `ArticleSearchTest`.
-
-#### CSTR-490 - Convert Article Form-feed Marker Output
-
-- Files: `libtrn/art.cpp`.
-- Kind: literal C output.
-- Function: `do_article`.
-- Dependencies: none.
-- Change: convert the form-feed marker `std::fputs` call to
-  `fmt::print` without changing article rendering flow.
-- Tests: article display tests if present; otherwise build compile
-  coverage.
 
 ### Tier 1 - Helper And API Foundations
 

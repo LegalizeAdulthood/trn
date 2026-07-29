@@ -616,11 +616,11 @@ void entire_tree(Article* ap)
     {
         if (g_verbose)
         {
-            std::fputs("\nNo article tree to display.\n", stdout);
+            fmt::print("\nNo article tree to display.\n");
         }
         else
         {
-            std::fputs("\nNo tree.\n", stdout);
+            fmt::print("\nNo tree.\n");
         }
         term_down(2);
         return;

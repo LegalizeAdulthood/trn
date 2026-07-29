@@ -938,7 +938,7 @@ void save_options(const fs::path &filename_path)
             fmt::print(fp_out, "{} = ", name);
             if (!g_option_def_vals[option])
             {
-                std::fputs("#default of ", fp_out);
+                fmt::print(fp_out, "#default of ");
             }
             fmt::print(fp_out, "{}\n", quote_string(option_value(option)));
             if (g_option_saved_vals[option])

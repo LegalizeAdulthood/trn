@@ -367,8 +367,8 @@ static void output_color()
         {
             prior.fg = s_objects[COLOR_DEFAULT].fg;
             prior.bg = s_objects[COLOR_DEFAULT].bg;
-            std::fputs(prior.fg.c_str(), stdout);
-            std::fputs(prior.bg.c_str(), stdout);
+            fmt::print("{}", prior.fg);
+            fmt::print("{}", prior.bg);
         }
     }
     switch (prior.attr)
@@ -391,12 +391,12 @@ static void output_color()
         if (op->fg != prior.fg)
         {
             prior.fg = op->fg;
-            std::fputs(prior.fg.c_str(), stdout);
+            fmt::print("{}", prior.fg);
         }
         if (op->bg != prior.bg)
         {
             prior.bg = op->bg;
-            std::fputs(prior.bg.c_str(), stdout);
+            fmt::print("{}", prior.bg);
         }
     }
 

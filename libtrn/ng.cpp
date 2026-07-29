@@ -497,11 +497,11 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             if (g_erase_screen)
             {
-                clear();                        // clear the screen
+                clear(); // clear the screen
             }
             else
             {
-                std::fputs("\n\n", stdout);
+                fmt::print("\n\n");
                 term_down(2);
             }
             if (g_verbose)
@@ -539,12 +539,12 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             else if (!g_obj_count && !g_force_last)
             {
-                goto cleanup;               // actually exit newsgroup
+                goto cleanup; // actually exit newsgroup
             }
-            set_mode(g_general_mode,MM_ARTICLE_END);
+            set_mode(g_general_mode, MM_ARTICLE_END);
             g_prompt = whatnext;
-            g_search_ahead = ArticleNum{};                // no more subject search mode
-            std::fputs("\n\n",stdout);
+            g_search_ahead = ArticleNum{}; // no more subject search mode
+            fmt::print("\n\n");
             term_down(2);
         }
         else if (!g_reread && (was_read(g_art) //
@@ -934,7 +934,7 @@ reask_unread:
         }
         else
         {
-            std::fputs("Type h for help.\n", stdout);
+            fmt::print("Type h for help.\n");
             term_down(1);
             settle_down();
             goto reask_unread;
@@ -942,12 +942,12 @@ reask_unread:
         return AS_NORM;
     }
 
-    case '[':                 // goto parent article
-    case '{':                 // goto thread's root article
-          if (g_artp && g_threaded_group)
-          {
-              if (!find_parent(command_ch == '{'))
-              {
+    case '[': // goto parent article
+    case '{': // goto thread's root article
+        if (g_artp && g_threaded_group)
+        {
+            if (!find_parent(command_ch == '{'))
+            {
                 const std::string_view cp = (command_ch == '[' ? "parent" : "root");
                 if (g_verbose)
                 {
@@ -970,43 +970,41 @@ not_threaded:
         {
             if (g_verbose)
             {
-                std::fputs("\nYou're at the end of the group.\n", stdout);
+                fmt::print("\nYou're at the end of the group.\n");
             }
             else
             {
-                std::fputs("\nEnd of group.\n", stdout);
+                fmt::print("\nEnd of group.\n");
             }
             term_down(2);
             return AS_ASK;
         }
         if (g_verbose)
         {
-            std::fputs("\nThis group is not threaded.\n", stdout);
+            fmt::print("\nThis group is not threaded.\n");
         }
         else
         {
-            std::fputs("\nUnthreaded group.\n", stdout);
+            fmt::print("\nUnthreaded group.\n");
         }
         term_down(2);
         return AS_ASK;
 
-    case ']':                 // goto child article
-    case '}':                 // goto thread's leaf article
+    case ']': // goto child article
+    case '}': // goto thread's leaf article
         if (g_artp && g_threaded_group)
         {
             if (!find_leaf(command_ch == '}'))
             {
                 if (g_verbose)
                 {
-                    std::fputs("\n"
-                          "This is the last leaf in this tree.\n",
-                          stdout);
+                    fmt::print("\n"
+                               "This is the last leaf in this tree.\n");
                 }
                 else
                 {
-                    std::fputs("\n"
-                          "Last leaf.\n",
-                          stdout);
+                    fmt::print("\n"
+                               "Last leaf.\n");
                 }
                 term_down(2);
                 return AS_ASK;
@@ -1146,7 +1144,7 @@ not_threaded:
         }
         carriage_return();
         perform_status_end(g_newsgroup_ptr->m_to_read, "article");
-        std::fputs(g_msg.c_str(), stdout);
+        fmt::print("{}", g_msg);
         newline();
         g_art = g_curr_art;
         g_artp = g_curr_artp;
@@ -1392,7 +1390,7 @@ check_dec_art:
                 {
                     erase_line(false);
                     perform_status_end(g_newsgroup_ptr->m_to_read, "article");
-                    std::fputs(g_msg.c_str(), stdout);
+                    fmt::print("{}", g_msg);
                 }
                 newline();
                 return AS_ASK;
@@ -1477,10 +1475,10 @@ normal_search:
             }
             else
             {
-                std::fputs("done\n", stdout);
+                fmt::print("done\n");
             }
             term_down(1);
-            pad(g_just_a_sec/3);        // 1/3 second
+            pad(g_just_a_sec / 3); // 1/3 second
             if (!g_search_ahead)
             {
                 g_art = g_curr_art;
@@ -1500,9 +1498,9 @@ normal_search:
             return AS_NORM;
 
         case SRCH_NOT_FOUND:
-            std::fputs("\n\n\n\nNot found.\n",stdout);
+            fmt::print("\n\n\n\nNot found.");
             term_down(5);
-            g_art = g_curr_art;  // restore to current article
+            g_art = g_curr_art; // restore to current article
             if (g_sa_in)
             {
                 return AS_SA;
@@ -1883,7 +1881,7 @@ normal_search:
 #ifdef STRICT_CR
         case '\n':
         case '\r':
-            std::fputs("\nUnnecessary CR ignored.\n", stdout);
+            fmt::print("\nUnnecessary CR ignored.\n");
             return AS_ASK;
 #endif
 
@@ -1996,7 +1994,7 @@ normal_search:
         }
 
         default:
-            std::fputs("\nType h for help.\n", stdout);
+            fmt::print("\nType h for help.\n");
             term_down(2);
             settle_down();
             break;
@@ -2075,21 +2073,19 @@ reask_catchup:
         use_one_line = false;
         if (g_verbose)
         {
-            std::fputs("\n"
-                 "Type y or SP to mark all articles as read.\n"
-                 "Type n to leave articles marked as they are.\n"
-                 "The # means enter a number to mark all but the last # articles as read.\n"
-                 "Type u to mark everything read and unsubscribe.\n\n",
-                 stdout);
+            fmt::print("\n"
+                       "Type y or SP to mark all articles as read.\n"
+                       "Type n to leave articles marked as they are.\n"
+                       "The # means enter a number to mark all but the last # articles as read.\n"
+                       "Type u to mark everything read and unsubscribe.\n\n");
         }
         else
         {
-            std::fputs("\n"
-                 "y or SP to mark all read.\n"
-                 "n to forget it.\n"
-                 "# means enter a number to leave unread.\n"
-                 "u to mark all and unsubscribe.\n\n",
-                 stdout);
+            fmt::print("\n"
+                       "y or SP to mark all read.\n"
+                       "n to forget it.\n"
+                       "# means enter a number to leave unread.\n"
+                       "u to mark all and unsubscribe.\n\n");
         }
         term_down(6);
         goto reask_catchup;
@@ -2131,7 +2127,7 @@ reask_catchup:
     if (ch != 'y' && ch != 'u')
     {
         use_one_line = false;
-        std::fputs("\nType h for help.\n\n", stdout);
+        fmt::print("\nType h for help.\n\n");
         term_down(3);
         settle_down();
         goto reask_catchup;
@@ -2508,7 +2504,7 @@ reask_memorize:
     else
     {
         use_one_line = false;
-        std::fputs("\nType h for help.\n\n", stdout);
+        fmt::print("\nType h for help.\n\n");
         term_down(3);
         settle_down();
         goto reask_memorize;

@@ -585,7 +585,7 @@ int perform(std::string_view command_list, int output_level)
                 g_artp->mark_as_read();
                 if (output_level && g_verbose)
                 {
-                    std::fputs("\tJunked", stdout);
+                    fmt::print("\tJunked");
                 }
             }
             if (g_sel_rereading)
@@ -672,7 +672,7 @@ int perform(std::string_view command_list, int output_level)
                 g_artp->one_less();
                 if (output_level && g_verbose)
                 {
-                    std::fputs("\tKilled", stdout);
+                    fmt::print("\tKilled");
                 }
             }
             if (g_sel_rereading)
@@ -703,7 +703,7 @@ int perform(std::string_view command_list, int output_level)
                 g_artp->unmark_as_read();
                 if (output_level && g_verbose)
                 {
-                    std::fputs("\tMarked unread", stdout);
+                    fmt::print("\tMarked unread");
                 }
             }
         }
@@ -713,7 +713,7 @@ int perform(std::string_view command_list, int output_level)
             g_artp->one_less();
             if (output_level && g_verbose)
             {
-                std::fputs("\tWill return", stdout);
+                fmt::print("\tWill return");
             }
         }
         else if (ch == '=')
@@ -784,7 +784,7 @@ int perform(std::string_view command_list, int output_level)
                 escapade(command_text);
                 if (output_level && g_verbose)
                 {
-                    std::fputs("\tShell escaped", stdout);
+                    fmt::print("\tShell escaped");
                 }
             }
             else if (ch == '&')
@@ -794,7 +794,7 @@ int perform(std::string_view command_list, int output_level)
                 {
                     if (command_text.size() > 1 && command_text[1] != '&')
                     {
-                        std::fputs("\tSwitched", stdout);
+                        fmt::print("\tSwitched");
                     }
                 }
             }

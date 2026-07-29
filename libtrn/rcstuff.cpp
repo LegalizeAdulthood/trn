@@ -225,14 +225,14 @@ static std::ptrdiff_t newsgroup_pointer_index(NewsgroupData *base, std::size_t c
     }
     if (base == nullptr || count == 0)
     {
-        std::fputs("Newsgroup pointer outside data storage.\n", stdout);
+        fmt::print("Newsgroup pointer outside data storage.\n");
         finalize(1);
     }
 
     std::ptrdiff_t index = np - base;
     if (index < 0 || static_cast<std::size_t>(index) >= count)
     {
-        std::fputs("Newsgroup pointer outside data storage.\n", stdout);
+        fmt::print("Newsgroup pointer outside data storage.\n");
         finalize(1);
     }
     return index;
@@ -657,15 +657,14 @@ static bool lock_newsrc(Newsrc *rp)
             sleep(2);
             if (g_verbose)
             {
-                std::fputs("\n"
+                fmt::print("\n"
                            "That process does not seem to exist anymore.  The count of read articles\n"
                            "may be incorrect in the last newsgroup accessed by that other (defunct)\n"
-                           "process.\n\n",
-                           stdout);
+                           "process.\n\n");
             }
             else
             {
-                std::fputs("\nProcess crashed.\n", stdout);
+                fmt::print("\nProcess crashed.\n");
             }
             if (!g_last_newsgroup_name.empty())
             {
@@ -896,7 +895,7 @@ static bool open_newsrc(Newsrc *rp)
                 {
                     if (!--g_countdown)
                     {
-                        std::fputs("etc.\n",stdout);
+                        fmt::print("etc.\n");
                         if (g_check_flag)
                         {
                             finalize(1);
@@ -1168,11 +1167,10 @@ reask_add:
                 }
                 else
                 {
-                    std::fputs("y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
-                          stdout);
+                    fmt::print("y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n");
                     term_down(1);
                 }
-                std::fputs(n_to_forget,stdout);
+                fmt::print("{}", n_to_forget);
                 term_down(1);
                 goto reask_add;
             }
@@ -1223,18 +1221,18 @@ reask_add:
             }
             else
             {
-                std::fputs("Type h for help.\n", stdout);
+                fmt::print("Type h for help.\n");
                 term_down(1);
                 settle_down();
                 goto reask_add;
             }
         }
     }
-    else if (g_mode == MM_INITIALIZING)         // adding new groups during init?
+    else if (g_mode == MM_INITIALIZING) // adding new groups during init?
     {
         return false;
     }
-    else if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR)  // unsubscribed?
+    else if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR) // unsubscribed?
     {
         const std::string resubscribe_prompt{
             g_verbose ? fmt::format("\nNewsgroup {} is unsubscribed -- resubscribe?", g_newsgroup_name)
@@ -1252,9 +1250,9 @@ reask_unsub:
             }
             else
             {
-                std::fputs("y or SP to resubscribe.\n", stdout);
+                fmt::print("y or SP to resubscribe.\n");
             }
-            std::fputs(n_to_forget,stdout);
+            fmt::print("{}", n_to_forget);
             term_down(2);
             goto reask_unsub;
         }
@@ -1273,7 +1271,7 @@ reask_unsub:
         }
         else
         {
-            std::fputs("Type h for help.\n", stdout);
+            fmt::print("Type h for help.\n");
             term_down(1);
             settle_down();
             goto reask_unsub;
@@ -1564,7 +1562,7 @@ reinp_reloc:
             NewsgroupData *np = find_newsgroup(group_name);
             if (np == nullptr)
             {
-                std::fputs("Not found.",stdout);
+                fmt::print("Not found.");
                 goto reask_reloc;
             }
             newnum = np->m_num;
@@ -1575,7 +1573,7 @@ reinp_reloc:
         }
         else
         {
-            std::fputs("\nType h for help.\n", stdout);
+            fmt::print("\nType h for help.\n");
             term_down(2);
             settle_down();
             goto reask_reloc;
@@ -1676,10 +1674,8 @@ void cleanup_newsrc(Newsrc *rp)
     }
     if (g_newsgroup_count > 5 && bogosity > g_newsgroup_count / NewsgroupNum{2})
     {
-        std::fputs("It looks like the active file is messed up.  Contact your news administrator,\n",
-              stdout);
-        std::fputs("leave the \"bogus\" groups alone, and they may come back to normal.  Maybe.\n",
-              stdout);
+        fmt::print("It looks like the active file is messed up.  Contact your news administrator,\n");
+        fmt::print("leave the \"bogus\" groups alone, and they may come back to normal.  Maybe.\n");
         term_down(2);
     }
     else if (bogosity)
@@ -1690,7 +1686,7 @@ void cleanup_newsrc(Newsrc *rp)
         }
         else
         {
-            std::fputs("Moving boguses to the end.\n", stdout);
+            fmt::print("Moving boguses to the end.\n");
         }
         term_down(1);
         while (np)
@@ -1713,14 +1709,13 @@ reask_bogus:
         {
             if (g_verbose)
             {
-                std::fputs("Type y to delete bogus newsgroups.\n"
-                           "Type n or SP to leave them at the end in case they return.\n",
-                           stdout);
+                fmt::print("Type y to delete bogus newsgroups.\n"
+                           "Type n or SP to leave them at the end in case they return.\n");
                 term_down(2);
             }
             else
             {
-                std::fputs("y to delete, n to keep\n", stdout);
+                fmt::print("y to delete, n to keep\n");
                 term_down(1);
             }
             goto reask_bogus;
@@ -1761,7 +1756,7 @@ reask_bogus:
         }
         else
         {
-            std::fputs("Type h for help.\n", stdout);
+            fmt::print("Type h for help.\n");
             term_down(1);
             settle_down();
             goto reask_bogus;
@@ -1813,13 +1808,13 @@ void checkpoint_newsrcs()
 #ifdef DEBUG
     if (g_debug & DEB_CHECKPOINTING)
     {
-        std::fputs("(ckpt)",stdout);
+        fmt::print("(ckpt)");
         std::fflush(stdout);
     }
 #endif
     if (g_doing_ng)
     {
-        bits_to_rc();                   // do not restore M articles
+        bits_to_rc(); // do not restore M articles
     }
     if (!write_newsrcs(g_multirc))
     {
@@ -1828,7 +1823,7 @@ void checkpoint_newsrcs()
 #ifdef DEBUG
     if (g_debug & DEB_CHECKPOINTING)
     {
-        std::fputs("(done)",stdout);
+        fmt::print("(done)");
         std::fflush(stdout);
     }
 #endif

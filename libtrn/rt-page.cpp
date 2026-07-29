@@ -633,7 +633,7 @@ try_again:
             if (g_max_newsgroup_to_do)
             {
                 end_only();
-                std::fputs(g_msg.c_str(), stdout);
+                fmt::print("{}", g_msg);
                 newline();
                 if (fill_last_page)
                 {
@@ -2028,7 +2028,7 @@ static void display_page_title(bool home_only)
         {
             fmt::print(" out of {}", g_obj_count.value_of());
         }
-        std::fputs(g_moderated.c_str(), stdout);
+        fmt::print("{}", g_moderated);
     }
     else
     {

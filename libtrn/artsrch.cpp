@@ -436,10 +436,10 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
         }
         else
         {
-            std::fputs("\nSearching...\n",stdout);
+            fmt::print("\nSearching...\n");
             term_down(2);
         }
-                                        // give them something to read
+        // give them something to read
     }
     if (ignore_thru == 0 && g_kill_thru_kludge && !cmd_lst.empty() //
         && (cmd_lst[0] == '+' || cmd_lst[0] == '.'))

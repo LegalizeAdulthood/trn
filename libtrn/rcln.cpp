@@ -66,7 +66,7 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
             }
             else
             {
-                std::fputs("\nMarked read\n", stdout);
+                fmt::print("\nMarked read\n");
             }
         }
         std::string line{rc_line()};
