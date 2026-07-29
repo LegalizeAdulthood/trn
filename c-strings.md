@@ -118,11 +118,11 @@ full audit across all audit criteria against the current source.  Do not
 only look for new slices in the tier that was emptied.  Prioritize any
 new slices by dependency tier before continuing with the next tier.
 
-Do not create one-call output-only slices when a source-file or
-function-level output cleanup can be reviewed coherently.  Group simple
-`printf`/`fputs`/`putchar` conversions by source file or tightly related
-function area unless dataflow, ownership, or control-flow risk argues
-for a smaller slice.
+For `printf`/`std::printf` conversion, create one slice per source file.
+Do not split file-level printf conversion into one-call slices.  Convert
+all remaining printf output in the named source file in that slice.  If a
+source file is too broad or risky to convert as one slice, ask before
+splitting it.
 
 Do not self-defer findings.  If source still contains matching raw
 string ownership, a fixed buffer, a raw return, or path storage, keep the
@@ -744,7 +744,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-494`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-529`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -773,6 +773,428 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-491 - Convert printf Output In only.cpp
+
+- Files: `libtrn/only.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 1.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.  Prefer `fmt::print` for static formats and
+  `fmt::printf` only for runtime printf-style formats.
+- Tests: build compile coverage; no direct `only.cpp` tests exist.
+
+#### CSTR-492 - Convert printf Output In autosub.cpp
+
+- Files: `libtrn/autosub.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 1.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.  Prefer `fmt::print` for static formats and
+  `fmt::printf` only for runtime printf-style formats.
+- Tests: `AutosubscribeTest`.
+
+#### CSTR-493 - Convert printf Output In intrp.cpp
+
+- Files: `libtrn/intrp.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 1.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.  Prefer `fmt::print` for static formats and
+  `fmt::printf` only for runtime printf-style formats.
+- Tests: `InterpolatorTest`.
+
+#### CSTR-494 - Convert printf Output In artsrch.cpp
+
+- Files: `libtrn/artsrch.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 2.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `ArticleSearchTest`.
+
+#### CSTR-495 - Convert printf Output In kfile.cpp
+
+- Files: `libtrn/kfile.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 2.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `KfileTest`.
+
+#### CSTR-496 - Convert printf Output In nntp.cpp
+
+- Files: `libtrn/nntp.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 2.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: NNTP tests.
+
+#### CSTR-497 - Convert printf Output In rcln.cpp
+
+- Files: `libtrn/rcln.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 2.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `RclnTest`.
+
+#### CSTR-498 - Convert printf Output In rt-ov.cpp
+
+- Files: `libtrn/rt-ov.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 2.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `RtOverviewTest` if present; otherwise build compile coverage.
+
+#### CSTR-499 - Convert printf Output In rt-wumpus.cpp
+
+- Files: `libtrn/rt-wumpus.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 2.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `RtWumpusTest`.
+
+#### CSTR-500 - Convert printf Output In scmd.cpp
+
+- Files: `libtrn/scmd.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 2.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: scan command tests.
+
+#### CSTR-501 - Convert printf Output In backpage.cpp
+
+- Files: `libtrn/backpage.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 3.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: backpage tests if present; otherwise build compile coverage.
+
+#### CSTR-502 - Convert printf Output In bits.cpp
+
+- Files: `libtrn/bits.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 3.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `BitsTest`.
+
+#### CSTR-503 - Convert printf Output In final.cpp
+
+- Files: `libtrn/final.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 3.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `FinalTest`.
+
+#### CSTR-504 - Convert printf Output In head.cpp
+
+- Files: `libtrn/head.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 3.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `HeadTest`.
+
+#### CSTR-505 - Convert printf Output In scan.cpp
+
+- Files: `libtrn/scan.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 3.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: scan tests.
+
+#### CSTR-506 - Convert printf Output In terminal.cpp
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 3.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `TerminalTest`.
+
+#### CSTR-507 - Convert printf Output In cache.cpp
+
+- Files: `libtrn/cache.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 4.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `CacheTest`.
+
+#### CSTR-508 - Convert printf Output In rt-util.cpp
+
+- Files: `libtrn/rt-util.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 4.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `RtUtilTest`.
+
+#### CSTR-509 - Convert printf Output In spage.cpp
+
+- Files: `libtrn/spage.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 4.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: scan page tests if present; otherwise build compile coverage.
+
+#### CSTR-510 - Convert printf Output In sacmd.cpp
+
+- Files: `libtrn/sacmd.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 5.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: scan-art command tests.
+
+#### CSTR-511 - Convert printf Output In ngdata.cpp
+
+- Files: `libtrn/ngdata.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 6.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `NgdataTest`.
+
+#### CSTR-512 - Convert printf Output In scoresave.cpp
+
+- Files: `libtrn/scoresave.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 6.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `ScoresaveTest`.
+
+#### CSTR-513 - Convert printf Output In util.cpp
+
+- Files: `libtrn/util.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 6.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `UtilTest`.
+
+#### CSTR-514 - Convert printf Output In respond.cpp
+
+- Files: `libtrn/respond.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 7.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: response workflow tests.
+
+#### CSTR-515 - Convert printf Output In ngstuff.cpp
+
+- Files: `libtrn/ngstuff.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 8.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `NgstuffTest`.
+
+#### CSTR-516 - Convert printf Output In sadisp.cpp
+
+- Files: `libtrn/sadisp.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 8.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: scan-art display tests.
+
+#### CSTR-517 - Convert printf Output In opt.cpp
+
+- Files: `libtrn/opt.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 9.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `OptTest`.
+
+#### CSTR-518 - Convert printf Output In rt-select.cpp
+
+- Files: `libtrn/rt-select.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 9.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: selector tests.
+
+#### CSTR-519 - Convert printf Output In univ.cpp
+
+- Files: `libtrn/univ.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 9.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `UniversalSelectorTest`.
+
+#### CSTR-520 - Convert printf Output In edit_dist.cpp
+
+- Files: `libtrn/edit_dist.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 10.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: edit-distance tests if present; otherwise build compile
+  coverage.
+
+#### CSTR-521 - Convert printf Output In sdisp.cpp
+
+- Files: `libtrn/sdisp.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 10.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: scan display tests.
+
+#### CSTR-522 - Convert printf Output In trn.cpp
+
+- Files: `libtrn/trn.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 12.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `TrnTest`.
+
+#### CSTR-523 - Convert printf Output In rcstuff.cpp
+
+- Files: `libtrn/rcstuff.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 14.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `RcstuffTest`.
+
+#### CSTR-524 - Convert printf Output In rt-page.cpp
+
+- Files: `libtrn/rt-page.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 14.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `RtPageTest`.
+
+#### CSTR-525 - Convert printf Output In mime.cpp
+
+- Files: `libtrn/mime.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 18.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `MimeTest`.
+
+#### CSTR-526 - Convert printf Output In score.cpp
+
+- Files: `libtrn/score.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 18.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: score tests.
+
+#### CSTR-527 - Convert printf Output In scorefile.cpp
+
+- Files: `libtrn/scorefile.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 20.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: `ScorefileTest`.
+
+#### CSTR-528 - Convert printf Output In ng.cpp
+
+- Files: `libtrn/ng.cpp`.
+- Kind: file-level printf output.
+- Functions: all remaining printf call sites in this file; current count
+  is 35.
+- Dependencies: none.
+- Change: convert all remaining `printf`/`std::printf` output in this
+  file to fmt.
+- Tests: newsgroup workflow tests.
+
 #### CSTR-489 - Convert Page Switch Literal Messages
 
 - Files: `libtrn/art.cpp`.
@@ -793,37 +1215,6 @@ owner.
   `fmt::print` without changing article rendering flow.
 - Tests: article display tests if present; otherwise build compile
   coverage.
-
-#### CSTR-491 - Convert Only Pattern Compile Error Output
-
-- Files: `libtrn/only.cpp`.
-- Kind: error C output.
-- Function: `set_newsgroup_to_do`.
-- Dependencies: none.
-- Change: convert the pattern compile error `std::printf` to
-  `fmt::print`, passing the returned error string directly.
-- Tests: build compile coverage; no direct `only.cpp` tests exist.
-
-#### CSTR-492 - Convert Autosubscribe Pattern Error Output
-
-- Files: `libtrn/autosub.cpp`.
-- Kind: error C output.
-- Function: `match_list`.
-- Dependencies: none.
-- Change: convert the pattern compile error `std::printf` to
-  `fmt::print`, passing the returned error string directly.
-- Tests: `AutosubscribeTest`.
-
-#### CSTR-493 - Convert Interpolator Skip Debug Output
-
-- Files: `libtrn/intrp.cpp`.
-- Kind: string-view debug C output.
-- Function: `skip_interp_cursor`.
-- Dependencies: none.
-- Change: convert the `DEBUG` `std::printf` that prints `pattern` and
-  `stoppers` through pointer-and-length arguments to `fmt::print` using
-  the existing `std::string_view` values directly.
-- Tests: `InterpolatorTest`.
 
 ### Tier 1 - Helper And API Foundations
 
