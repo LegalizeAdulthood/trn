@@ -596,8 +596,9 @@ Configure scripts, and the vendored `vcpkg` tree.
   boundary instead of mutating raw article buffers.
 - Numeric command scan: `num_num` now accepts command text directly and
   parses numeric range text from that view instead of `g_buf`.
-- Terminal input scan: `store_command` still preserves command/input
-  text in `g_buf` for legacy input helpers.  `finish_command` callers
+- Terminal input scan: `in_char` and `in_answer` return caller-owned
+  command strings while still staging `g_buf` for legacy callers.
+  `store_command` no longer writes `g_buf`, `finish_command` callers
   pass command text directly, `in_choice` returns edited choice text
   through caller-owned string storage, and typeahead cleanup now uses
   owner-local scratch storage.
@@ -783,22 +784,12 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-471 - Remove `g_buf` From Terminal Command Storage
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: global command buffer write.
-- Function: `store_command`.
-- Dependencies: none.
-- Change: make command storage caller-owned instead of copying command
-  text into `g_buf`.
-- Tests: `TerminalTest` command storage and echo cases.
-
 #### CSTR-472 - Remove `g_buf` From Terminal Command Echo
 
 - Files: `libtrn/terminal.cpp`.
 - Kind: global command buffer read.
 - Function: `print_cmd`.
-- Dependencies: `CSTR-471`.
+- Dependencies: none.
 - Change: pass the command text to echo logic explicitly instead of
   reading the command bytes from `g_buf`.
 - Tests: `TerminalTest` command echo cases.
@@ -808,7 +799,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/trn.cpp`.
 - Kind: global command buffer write.
 - Function: `stage_legacy_newsgroup_command`.
-- Dependencies: `CSTR-471`.
+- Dependencies: none.
 - Change: return or forward caller-owned command text instead of staging
   it in `g_buf`.
 - Tests: newsgroup command input tests.
@@ -929,7 +920,7 @@ and clarified ownership at the edges.
 - Files: `tests/test_terminal.cpp`.
 - Kind: test assertion global buffer dependency.
 - Function: terminal command storage tests.
-- Dependencies: `CSTR-471`, `CSTR-472`.
+- Dependencies: `CSTR-472`.
 - Change: assert returned or echoed command text instead of inspecting
   `g_buf` bytes directly.
 - Tests: `TerminalTest`.
@@ -958,7 +949,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-471` through `CSTR-485`.
+- Dependencies: `CSTR-472` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

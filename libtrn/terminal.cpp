@@ -185,14 +185,14 @@ static std::size_t edit_buffer(std::string &buffer, std::size_t cursor,
 static void    install_macro(std::string_view sequence, std::string_view definition,
                              bool report_overrides);
 static void    mac_init();
-static KeyMap *new_key_map();
+static KeyMap     *new_key_map();
 static std::string read_command(bool allow_macros, bool mark_finished);
-static void    reprint(std::string_view text);
-static void    show_key_map(KeyMap *curmap, std::string &prefix);
-static void    store_command(std::string_view command);
-static int     echo_char(char_int ch);
-static void    line_col_calcs();
-static void    mouse_input(const char *cp);
+static void        reprint(std::string_view text);
+static void        show_key_map(KeyMap *curmap, std::string &prefix);
+static std::string store_command(std::string_view command);
+static int         echo_char(char_int ch);
+static void        line_col_calcs();
+static void        mouse_input(const char *cp);
 static void    xmouse_on();
 
 // terminal initialization
@@ -1483,11 +1483,10 @@ static char get_any_key()
     return command.empty() ? '\0' : command.front();
 }
 
-static void store_command(std::string_view command)
+static std::string store_command(std::string_view command)
 {
     TRN_ASSERT(command.size() <= LINE_BUF_LEN);
-    std::copy(command.begin(), command.end(), g_buf);
-    g_buf[command.size()] = '\0';
+    return std::string{command};
 }
 
 void push_string(std::string_view str, char_int bits)
@@ -1606,7 +1605,7 @@ int pause_get_cmd()
     return 0;
 }
 
-void in_char(std::string_view prompt, MinorMode newmode, std::string_view dflt)
+std::string in_char(std::string_view prompt, MinorMode newmode, std::string_view dflt)
 {
     MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
@@ -1626,11 +1625,15 @@ reask_in_char:
         goto reask_in_char; // give them a prompt again
     }
     command = set_def(command, dflt);
-    store_command(command);
+    const std::string stored_command = store_command(command);
+    // Keep legacy callers working until command dispatch is fully string-owned.
+    std::copy(stored_command.begin(), stored_command.end(), g_buf);
+    g_buf[stored_command.size()] = '\0';
     set_mode(gmode_save, mode_save);
+    return stored_command;
 }
 
-void in_answer(std::string_view prompt, MinorMode newmode)
+std::string in_answer(std::string_view prompt, MinorMode newmode)
 {
     MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
@@ -1666,8 +1669,12 @@ reinp_in_answer:
         command.resize(command.empty() ? 0 : 1);
     }
     newline();
-    store_command(command);
+    const std::string stored_command = store_command(command);
+    // Keep legacy callers working until command dispatch is fully string-owned.
+    std::copy(stored_command.begin(), stored_command.end(), g_buf);
+    g_buf[stored_command.size()] = '\0';
     set_mode(gmode_save, mode_save);
+    return stored_command;
 }
 
 // If this takes more than one line, return false

@@ -525,10 +525,13 @@ TEST_F(TerminalTest, inCharPrintsPromptDefaultAndStoresInput)
     push_char('y');
 
     testing::internal::CaptureStdout();
-    in_char(prompt, MM_ADD_NEWSGROUP_PROMPT, dflt);
+    const std::string command = in_char(prompt, MM_ADD_NEWSGROUP_PROMPT, dflt);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("Continue? [yn] ", output);
+    ASSERT_EQ(2, command.size());
+    EXPECT_EQ('y', command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
     EXPECT_EQ('y', g_buf[0]);
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }
@@ -540,10 +543,13 @@ TEST_F(TerminalTest, inCharCountsPromptNewlinesAndAppliesDefault)
     push_char(' ');
 
     testing::internal::CaptureStdout();
-    in_char("First\nSecond", MM_ADD_NEWSGROUP_PROMPT, "^N");
+    const std::string command = in_char("First\nSecond", MM_ADD_NEWSGROUP_PROMPT, "^N");
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("First\nSecond [^N] ", output);
+    ASSERT_EQ(2, command.size());
+    EXPECT_EQ(Ctl('N'), command[0]);
+    EXPECT_EQ(FINISH_CMD, command[1]);
     EXPECT_EQ(Ctl('N'), g_buf[0]);
     EXPECT_EQ(FINISH_CMD, g_buf[1]);
     EXPECT_EQ(5, g_term_line);
@@ -559,10 +565,12 @@ TEST_F(TerminalTest, inAnswerPrintsPromptAndStoresCommand)
     push_char('y');
 
     testing::internal::CaptureStdout();
-    in_answer(prompt, MM_FOLLOWUP_NEW_TOPIC_PROMPT);
+    const std::string command = in_answer(prompt, MM_FOLLOWUP_NEW_TOPIC_PROMPT);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("Really? y\n", output);
+    ASSERT_EQ(1, command.size());
+    EXPECT_EQ('y', command[0]);
     EXPECT_EQ('y', g_buf[0]);
     EXPECT_EQ('\0', g_buf[1]);
     EXPECT_EQ(5, g_term_line);
