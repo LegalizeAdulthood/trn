@@ -2289,7 +2289,6 @@ static bool mark_del_as_read(char *ptr, int arg)
 /// - `g_term_scrolled`
 /// - `g_page_line`
 /// - `g_newsgroup_ptr` (may be set to `nullptr` when no newsgroup selected)
-/// - `g_buf` (first two bytes are written: `g_buf[0] = ch; g_buf[1] = FINISH_CMD`)
 /// - `g_output_chase_phrase`
 /// - `g_sel_item_index`
 /// - `s_removed_prompt`
@@ -2319,8 +2318,6 @@ static DisplayState sel_command(char_int ch)
         }
     }
 do_command:
-    *g_buf = ch;
-    g_buf[1] = FINISH_CMD;
     g_output_chase_phrase = true;
     switch (ch)
     {

@@ -784,16 +784,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-483 - Remove `g_buf` From Selector Command Dispatch
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: global command buffer write.
-- Function: `sel_command`.
-- Dependencies: none.
-- Change: pass synthesized selector commands through local storage
-  instead of writing `g_buf[0]` and `g_buf[1]`.
-- Tests: selector command tests.
-
 #### CSTR-484 - Remove `g_buf` From Ngstuff Test Fixtures
 
 - Files: `tests/test_ngstuff.cpp`.
@@ -838,7 +828,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-483` through `CSTR-485`.
+- Dependencies: `CSTR-484` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
