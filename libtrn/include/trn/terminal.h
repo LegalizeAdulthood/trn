@@ -199,11 +199,11 @@ bool in_choice(std::string_view prompt, std::string &value, std::string_view cho
 int  print_lines(std::string_view what_to_print, int hilite);
 int  check_page_line();
 void page_start();
-void error_msg(std::string_view str);
-void warn_msg(std::string_view str);
-void pad(int num);
-void print_cmd();
-void rubout();
+void        error_msg(std::string_view str);
+void        warn_msg(std::string_view str);
+void        pad(int num);
+void        print_cmd(std::string_view command);
+void        rubout();
 void erase_line(bool to_eos);
 void clear();
 void home_cursor();

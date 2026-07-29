@@ -549,7 +549,7 @@ InputNewsgroupResult input_newsgroup()
     const char original_command_ch = newsgroup_command_char(command);
     command = apply_newsgroup_default_command(command);
     stage_legacy_newsgroup_command(command);
-    print_cmd();
+    print_cmd(command);
     if (g_newsgroup_ptr != nullptr)
     {
         set_newsgroup_command_char(command, original_command_ch);
@@ -843,111 +843,109 @@ display_multirc:
         return ING_ASK;
 
     case 'A':
+    {
         if (!g_newsgroup_ptr)
         {
             break;
         }
-reask_abandon:
-        if (g_verbose)
-        {
-            in_char("\nAbandon changes to current newsgroup?", MM_CONFIRM_ABANDON_PROMPT, "yn");
-        }
-        else
-        {
-            in_char("\nAbandon?", MM_CONFIRM_ABANDON_PROMPT, "ynh");
-        }
-        print_cmd();
-        newline();
-        if (*g_buf == 'h')
-        {
-            fmt::print("Type y or SP to abandon the changes to this group since you started trn.\n");
-            fmt::print("Type n to leave the group as it is.\n");
-            term_down(2);
-            goto reask_abandon;
-        }
-        else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q')
-        {
-            fmt::print("Type h for help.\n");
-            term_down(1);
-            settle_down();
-            goto reask_abandon;
-        }
-        else if (*g_buf == 'y')
-        {
-            g_newsgroup_ptr->abandon_newsgroup();
-        }
-        return ING_SPECIAL;
-
-    case 'a':
-        // FALL THROUGH
-
-    case 'o':
-    case 'O':
-    {
-        bool doscan = (command_ch == 'a');
-        command = finish_newsgroup_command(command, true);
-        if (command.empty()) // get rest of command
-        {
-            return ING_INPUT;
-        }
-        g_msg.clear();
-        end_only();
-        std::string_view switches = command_argument(command);
-        if (!switches.empty())
-        {
-            bool minusd = in_string(switches, "-d", true);
-            sw_list(switches);
-            if (minusd)
-            {
-                cwd_check();
+        reask_abandon:
+                const std::string abandon_command =
+                    g_verbose ? in_char("\nAbandon changes to current newsgroup?", MM_CONFIRM_ABANDON_PROMPT, "yn")
+                              : in_char("\nAbandon?", MM_CONFIRM_ABANDON_PROMPT, "ynh");
+                print_cmd(abandon_command);
+                newline();
+                if (*g_buf == 'h')
+                {
+                    fmt::print("Type y or SP to abandon the changes to this group since you started trn.\n");
+                    fmt::print("Type n to leave the group as it is.\n");
+                    term_down(2);
+                    goto reask_abandon;
+                }
+                else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q')
+                {
+                    fmt::print("Type h for help.\n");
+                    term_down(1);
+                    settle_down();
+                    goto reask_abandon;
+                }
+                else if (*g_buf == 'y')
+                {
+                    g_newsgroup_ptr->abandon_newsgroup();
+                }
+                return ING_SPECIAL;
             }
-            if (doscan && g_max_newsgroup_to_do)
+
+            case 'a':
+                // FALL THROUGH
+
+            case 'o':
+            case 'O':
             {
-                scan_active(true);
+                bool doscan = (command_ch == 'a');
+                command = finish_newsgroup_command(command, true);
+                if (command.empty()) // get rest of command
+                {
+                    return ING_INPUT;
+                }
+                g_msg.clear();
+                end_only();
+                std::string_view switches = command_argument(command);
+                if (!switches.empty())
+                {
+                    bool minusd = in_string(switches, "-d", true);
+                    sw_list(switches);
+                    if (minusd)
+                    {
+                        cwd_check();
+                    }
+                    if (doscan && g_max_newsgroup_to_do)
+                    {
+                        scan_active(true);
+                    }
+                    g_newsgroup_min_to_read =
+                        command_ch == g_empty_only_char && g_max_newsgroup_to_do ? TR_NONE : TR_ONE;
+                }
+                g_newsgroup_ptr = newsgroup_first(); // simulate ^
+                if (!g_msg.empty() && !g_max_newsgroup_to_do)
+                {
+                    return ING_MESSAGE;
+                }
+                return ING_DISPLAY;
             }
-            g_newsgroup_min_to_read = command_ch == g_empty_only_char && g_max_newsgroup_to_do ? TR_NONE : TR_ONE;
-        }
-        g_newsgroup_ptr = newsgroup_first(); // simulate ^
-        if (!g_msg.empty() && !g_max_newsgroup_to_do)
-        {
-            return ING_MESSAGE;
-        }
-        return ING_DISPLAY;
-    }
 
-    case '&':
-        stage_legacy_newsgroup_command(command);
-        if (switcheroo())       // get rest of command
-        {
-            return ING_INPUT;   // if rubbed out, try something else
-        }
-        return ING_ASK;
+            case '&':
+                stage_legacy_newsgroup_command(command);
+                if (switcheroo()) // get rest of command
+                {
+                    return ING_INPUT; // if rubbed out, try something else
+                }
+                return ING_ASK;
 
-    case 'l':                 // list other newsgroups
-    {
-        command = finish_newsgroup_command(command, true);
-        if (command.empty()) // get rest of command
-        {
-            return ING_INPUT;   // if rubbed out, try something else
-        }
-        std::string_view switches = trim_leading_spaces(command_argument(command));
-        push_only();
-        if (!switches.empty())
-        {
-            sw_list(switches);
-        }
-        page_start();
-        scan_active(false);
-        pop_only();
-        return ING_ASK;
-    }
+            case 'l': // list other newsgroups
+            {
+                command = finish_newsgroup_command(command, true);
+                if (command.empty()) // get rest of command
+                {
+                    return ING_INPUT; // if rubbed out, try something else
+                }
+                std::string_view switches = trim_leading_spaces(command_argument(command));
+                push_only();
+                if (!switches.empty())
+                {
+                    sw_list(switches);
+                }
+                page_start();
+                scan_active(false);
+                pop_only();
+                return ING_ASK;
+            }
 
-    case '`':
-    case '\\':
-        if (g_general_mode == GM_SELECTOR)
-        {
-            return ING_ERASE;
-        }
+            case '`':
+            case '\\':
+                if (g_general_mode == GM_SELECTOR)
+                {
+                    return ING_ERASE;
+                }
 ng_start_sel:
         g_use_newsgroup_selector = true;
         switch (newsgroup_selector())

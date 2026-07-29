@@ -59,6 +59,7 @@ protected:
         m_old_tc_se = g_tc_SE;
         m_old_s_default_cmd = g_s_default_cmd;
         m_old_univ_default_cmd = g_univ_default_cmd;
+        m_old_verify = g_verify;
         errno = 0;
         g_int_count = 0;
         g_erase_char = '\b';
@@ -89,6 +90,7 @@ protected:
         g_tc_SE = m_old_tc_se;
         g_s_default_cmd = m_old_s_default_cmd;
         g_univ_default_cmd = m_old_univ_default_cmd;
+        g_verify = m_old_verify;
     }
 
     char m_carriage_return[1]{};
@@ -112,6 +114,7 @@ protected:
     const char *m_old_tc_se{};
     bool        m_old_s_default_cmd{};
     bool        m_old_univ_default_cmd{};
+    bool        m_old_verify{};
 };
 
 class MacroDisplayTest : public testing::Test
@@ -575,6 +578,33 @@ TEST_F(TerminalTest, inAnswerPrintsPromptAndStoresCommand)
     EXPECT_EQ('\0', g_buf[1]);
     EXPECT_EQ(5, g_term_line);
     EXPECT_EQ(0, g_term_col);
+}
+
+TEST_F(TerminalTest, printCmdEchoesNormalFinishedCommand)
+{
+    g_verify = true;
+    std::string command{"y"};
+    command.push_back(FINISH_CMD);
+
+    testing::internal::CaptureStdout();
+    print_cmd(command);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("y\b", output);
+}
+
+TEST_F(TerminalTest, printCmdEchoesControlFinishedCommand)
+{
+    g_verify = true;
+    std::string command;
+    command.push_back(Ctl('N'));
+    command.push_back(FINISH_CMD);
+
+    testing::internal::CaptureStdout();
+    print_cmd(command);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("^N\b\b", output);
 }
 
 TEST_F(MacroDisplayTest, showMacrosFormatsNestedControlKey)

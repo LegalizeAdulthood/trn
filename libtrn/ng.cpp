@@ -2065,8 +2065,8 @@ char ask_catchup()
 reask_catchup:
     const std::string prompt = g_verbose ? fmt::format("Mark everything in {} as read?", g_newsgroup_name)
                                          : fmt::format("Catchup {}?", g_newsgroup_name);
-    in_char(prompt, MM_CONFIRM_CATCH_UP_PROMPT, "yn#h");
-    print_cmd();
+    const std::string command = in_char(prompt, MM_CONFIRM_CATCH_UP_PROMPT, "yn#h");
+    print_cmd(command);
     char ch = *g_buf;
     if (ch == 'h' || ch == 'H')
     {
@@ -2282,8 +2282,8 @@ char ask_memorize(char_int ch)
     }
 reask_memorize:
     const std::string prompt = fmt::format("{}Memorize {} command:", global_save ? "Global-" : "", mode_string);
-    in_char(prompt, MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
-    print_cmd();
+    const std::string command = in_char(prompt, MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
+    print_cmd(command);
     ch = *g_buf;
     if (!thread_cmd && ch == 'f')
     {

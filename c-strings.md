@@ -784,16 +784,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-472 - Remove `g_buf` From Terminal Command Echo
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: global command buffer read.
-- Function: `print_cmd`.
-- Dependencies: none.
-- Change: pass the command text to echo logic explicitly instead of
-  reading the command bytes from `g_buf`.
-- Tests: `TerminalTest` command echo cases.
-
 #### CSTR-473 - Remove `g_buf` From Legacy Newsgroup Command Staging
 
 - Files: `libtrn/trn.cpp`.
@@ -920,7 +910,7 @@ and clarified ownership at the edges.
 - Files: `tests/test_terminal.cpp`.
 - Kind: test assertion global buffer dependency.
 - Function: terminal command storage tests.
-- Dependencies: `CSTR-472`.
+- Dependencies: none.
 - Change: assert returned or echoed command text instead of inspecting
   `g_buf` bytes directly.
 - Tests: `TerminalTest`.
@@ -949,7 +939,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-472` through `CSTR-485`.
+- Dependencies: `CSTR-473` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

@@ -2092,20 +2092,20 @@ void pad(int num)
 
 // echo the command just typed
 
-void print_cmd()
+void print_cmd(std::string_view command)
 {
-    if (g_verify && g_buf[1] == FINISH_CMD)
+    if (g_verify && command.size() > 1 && command[1] == FINISH_CMD)
     {
-        if (!at_norm_char(g_buf))
+        if (!at_norm_char(command))
         {
             std::putchar('^');
-            std::putchar((*g_buf & 0x7F) | 64);
+            std::putchar((command.front() & 0x7F) | 64);
             backspace();
             backspace();
         }
         else
         {
-            std::putchar(*g_buf);
+            std::putchar(command.front());
             backspace();
         }
         std::fflush(stdout);

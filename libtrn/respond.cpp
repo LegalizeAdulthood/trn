@@ -438,10 +438,11 @@ SaveResult save_article(std::string_view command)
                 const std::string_view dflt = (in_string(savename, "%a", true) ? "nyq" : "ynq");
 
 reask_save:
-                in_char(fmt::format("\nFile {} doesn't exist--\n        use mailbox format?", destination),
-                        MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
+                const std::string command =
+                    in_char(fmt::format("\nFile {} doesn't exist--\n        use mailbox format?", destination),
+                            MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
                 newline();
-                print_cmd();
+                print_cmd(command);
                 if (*g_buf == 'h')
                 {
                     if (g_verbose)
