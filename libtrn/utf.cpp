@@ -330,28 +330,6 @@ int visual_length_of(const char *s)
     return it;
 }
 
-int visual_length_between(const char *s1, const char *s2)
-{
-    int it = 0;
-    if (s1 && s2)
-    {
-        if (s1 > s2)
-        {
-            const char *t = s1;
-            s1 = s2;
-            s2 = t;
-        }
-        while (*s1 && s1 < s2)
-        {
-            int w = byte_length_at(s1);
-            int v = visual_width_at(s1);
-            it += v;
-            s1 += w;
-        }
-    }
-    return it;
-}
-
 CodePoint code_point_at(std::string_view text)
 {
     CodePoint it = INVALID_CODE_POINT;

@@ -751,15 +751,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-541 - Remove Unused UTF Visual-range Helper
-
-- Type: unused C-style public helper.
-- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`.
-- Function: `visual_length_between`.
-- Dependencies: none.
-- Instructions: delete the declaration and definition.  The scan found
-  no production or test callers.
-
 #### CSTR-542 - Remove Unused UTF Mutable Terminator
 
 - Type: unused mutable C-string public helper.
@@ -794,7 +785,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
   `libtrn/rt-util.cpp`, `tests/test_utf.cpp`.
 - Function: `visual_length_of`.
-- Dependencies: `CSTR-541`.
+- Dependencies: none.
 - Instructions: rewrite the loop to consume a local view and
   `remove_prefix`.  Treat the old null-input test as the empty-view
   case rather than preserving a C-string sentinel.
