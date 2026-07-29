@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 ArticlePosition g_art_pos{};              // byte position in article file
 ArticleLine     g_art_line_num{};         // current line number in article file
@@ -44,6 +45,8 @@ static constexpr std::size_t INITIAL_ART_BUF_SIZE{8 * 1024};
 static constexpr std::size_t ART_BUF_GROWTH{LINE_BUF_LEN * 4};
 
 static std::string s_art_buf;
+
+static char *read_art_buf_raw(bool view_inline);
 
 void art_io_init()
 {
@@ -212,7 +215,7 @@ int seek_art_buf(ArticlePosition pos)
 
     while (g_art_buf_pos < pos)
     {
-        if (!read_art_buf(false))
+        if (!read_art_buf_raw(false))
         {
             return -1;
         }
@@ -223,11 +226,11 @@ int seek_art_buf(ArticlePosition pos)
     return 0;
 }
 
-char *read_art_buf(bool view_inline)
+static char *read_art_buf_raw(bool view_inline)
 {
-    char* bp;
-    char *s;
-    int   read_offset;
+    char       *bp;
+    char       *s;
+    int         read_offset;
     int   line_offset;
     int   filter_offset;
     int   extra_offset;
@@ -685,12 +688,14 @@ done:
 
 bool read_art_buf(std::string &line, bool view_inline)
 {
-    const char *const buffer = read_art_buf(view_inline);
+    const char *const buffer = read_art_buf_raw(view_inline);
     if (buffer == nullptr)
     {
         line.clear();
         return false;
     }
-    line = buffer;
+    const std::string_view text{buffer};
+    const std::size_t      line_end = text.find_first_of(std::string_view{"\n\003", 2});
+    line = line_end == std::string_view::npos ? text : text.substr(0, line_end + 1);
     return true;
 }

@@ -153,31 +153,33 @@ TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
 {
     open_article_text("alpha beta gamma delta     epsilon zeta eta\n");
 
-    char *first = read_art_buf(false);
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
 
-    ASSERT_NE(nullptr, first);
-    EXPECT_EQ("alpha beta gamma delta", std::string_view(first, 22));
-    EXPECT_EQ(WRAPPED_NL, first[22]);
+    std::string expected_first{"alpha beta gamma delta"};
+    expected_first += WRAPPED_NL;
+    EXPECT_EQ(expected_first, first);
     EXPECT_EQ(23, g_art_buf_pos.value_of());
 
-    char *second = read_art_buf(false);
+    std::string second;
+    ASSERT_TRUE(read_art_buf(second, false));
 
-    ASSERT_NE(nullptr, second);
-    EXPECT_STREQ("epsilon zeta eta\n", second);
+    EXPECT_EQ("epsilon zeta eta\n", second);
 }
 
 TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
 {
     open_article_text("alpha");
 
-    char *first = read_art_buf(false);
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
 
-    ASSERT_NE(nullptr, first);
-    EXPECT_STREQ("alpha\n", first);
+    EXPECT_EQ("alpha\n", first);
     EXPECT_EQ(6, g_art_buf_pos.value_of());
     EXPECT_EQ(6, g_art_buf_len.value_of());
 
-    EXPECT_EQ(nullptr, read_art_buf(false));
+    EXPECT_FALSE(read_art_buf(first, false));
+    EXPECT_TRUE(first.empty());
 }
 
 TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsArticleLine)
@@ -185,15 +187,15 @@ TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsArticleLine)
     g_do_hiding = false;
     open_article_text("alpha\nbeta\n");
 
-    char *first = read_art_buf(false);
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
 
-    ASSERT_NE(nullptr, first);
-    EXPECT_STREQ("alpha\n", first);
+    EXPECT_EQ("alpha\n", first);
 
-    char *second = read_art_buf(false);
+    std::string second;
+    ASSERT_TRUE(read_art_buf(second, false));
 
-    ASSERT_NE(nullptr, second);
-    EXPECT_STREQ("beta\n", second);
+    EXPECT_EQ("beta\n", second);
 }
 
 TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsLongArticleLine)
@@ -202,10 +204,10 @@ TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsLongArticleLine)
     const std::string line(static_cast<std::size_t>(LINE_BUF_LEN) + 20, 'x');
     open_article_text(line + "\n");
 
-    char *first = read_art_buf(false);
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
 
-    ASSERT_NE(nullptr, first);
-    EXPECT_EQ(line + "\n", std::string{first});
+    EXPECT_EQ(line + "\n", first);
 }
 
 TEST_F(ArticleIoTest, readArtBufDecodesBase64MimeText)
@@ -216,11 +218,12 @@ TEST_F(ArticleIoTest, readArtBufDecodesBase64MimeText)
     g_is_mime = true;
     open_article_text("SGVsbG8=\n");
 
-    char *first = read_art_buf(false);
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
 
-    ASSERT_NE(nullptr, first);
-    EXPECT_STREQ("Hello\n", first);
-    EXPECT_EQ(nullptr, read_art_buf(false));
+    EXPECT_EQ("Hello\n", first);
+    EXPECT_FALSE(read_art_buf(first, false));
+    EXPECT_TRUE(first.empty());
 }
 
 TEST_F(ArticleIoTest, readArtBufDecodesQuotedPrintableMimeText)
@@ -231,11 +234,12 @@ TEST_F(ArticleIoTest, readArtBufDecodesQuotedPrintableMimeText)
     g_is_mime = true;
     open_article_text("Hello=20world=21\n");
 
-    char *first = read_art_buf(false);
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
 
-    ASSERT_NE(nullptr, first);
-    EXPECT_STREQ("Hello world!\n", first);
-    EXPECT_EQ(nullptr, read_art_buf(false));
+    EXPECT_EQ("Hello world!\n", first);
+    EXPECT_FALSE(read_art_buf(first, false));
+    EXPECT_TRUE(first.empty());
 }
 
 TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
@@ -250,9 +254,8 @@ TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
     g_multipart_separator = "part separator";
     open_article_text("--part\nContent-Type: text/plain\n\nbody\n");
 
-    char *first = read_art_buf(false);
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
 
-    ASSERT_NE(nullptr, first);
-    EXPECT_EQ('\002', first[-1]);
-    EXPECT_STREQ("part separator\n", first);
+    EXPECT_EQ("part separator\n", first);
 }

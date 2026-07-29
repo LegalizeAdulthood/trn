@@ -573,8 +573,8 @@ Configure scripts, and the vendored `vcpkg` tree.
   overloads are gone.
 - Article input scan: production callers outside `artio.cpp` use the
   string-reading API.  Low-level article chunk readers now own
-  `std::string` chunks.  Raw `read_art_buf(bool)` calls remain only in
-  `artio.cpp` internals and in the implementation of the string reader.
+  `std::string` chunks.  The public article-buffer API returns text
+  through caller-owned `std::string` storage.
 - Unused overload/wrapper scan: no `finish_command(int)` wrapper remains.
   Keep `nntp_init_error`, `string_case_compare`,
   `string_case_equal`, `Tgetstr`, `line_ptr`, `line_offset`,
@@ -617,13 +617,15 @@ Configure scripts, and the vendored `vcpkg` tree.
   `parse_line` moved to `std::string_view`.  Remaining raw input
   parameters are covered by existing add-newsgroup, shell, UTF, article
   display, regex-bytecode, or platform/API boundary buckets.
-- Additional local cursor scan: `perform`, `print_lines`, and
-  `do_article` still walk local raw pointers over owned string storage
-  or internal article storage.
-- UTF helper scan: `byte_length_at`, `code_point_at`,
-  `visual_width_at`, `put_char_adv`, and `dectrl` still expose or depend
-  on raw C-string cursor APIs.  These should be refactored bottom-up so
-  display loops can consume `std::string_view` cursors.
+- Additional local cursor scan: `perform` and `print_lines` now use
+  `std::string_view` APIs.  `do_article` still has C-string bridge
+  lambdas for color and regex helpers.
+- UTF helper scan: `put_char_adv` now consumes `std::string_view &`.
+  `at_grey_space`, `visual_length_of`, `create_utf8_copy`, and the raw
+  single-position overloads for `at_norm_char`, `byte_length_at`,
+  `visual_width_at`, and `code_point_at` still expose C-string APIs.
+  These should be refactored bottom-up so display loops consume views
+  directly and stale wrappers can be deleted.
 - Shell helper scan: `do_shell` still takes raw C strings and forces
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
@@ -642,12 +644,21 @@ Configure scripts, and the vendored `vcpkg` tree.
   hash, AddGroup pointer table, regex bytecode, or generic allocator
   internals.
 - Fixed-size buffer scan: the remaining `char name[N]` hits are
-  immutable labels, termcap test/API shims, lookup tables, regex
-  bytecode, or non-string byte arrays.  No new fixed-string-buffer slice
-  is active from this pass.
+  immutable labels, termcap test/API shims, lookup tables, regex parser
+  state, or non-string byte arrays.  No new fixed-string-buffer slice is
+  active from this pass.
 - Global command buffer scan: no current active source/test hits remain.
 - C text output scan: no active C `printf`, `fprintf`, or `fputs`
   calls remain.
+- Article buffer scan: the public raw `read_art_buf(bool)` API is gone,
+  but `g_art_buf` and its companion position globals are still public
+  shared article-buffer state used by `art.cpp`, `ng.cpp`, and tests.
+  That is a broad owner/encapsulation problem rather than a leaf
+  C-string call-site cleanup.
+- Regex scan: `CompiledRegex::execute` still accepts a C string and
+  returns a raw pointer even though production callers use it as a
+  boolean match.  `CompiledRegex::get_bracket` returns a pointer into a
+  file-scope string used only to hand out bracket text.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -691,7 +702,7 @@ The scan found no current active source/test hits for `strcmp`,
 `atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
 `std::strtoul`, or `std::strtod`.
 
-`fmt::printf` appears twice and `fmt::sprintf` appears three times.
+`fmt::printf` appears three times and `fmt::sprintf` appears three times.
 These calls are not C buffer writes.  They are intentionally retained
 where the format template is runtime printf-style text: article and
 newsgroup prompts, terminal capability shims, and interpolation width
@@ -726,7 +737,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-541`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-555`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -740,21 +751,152 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-541 - Remove Unused UTF Visual-range Helper
+
+- Type: unused C-style public helper.
+- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`.
+- Function: `visual_length_between`.
+- Dependencies: none.
+- Instructions: delete the declaration and definition.  The scan found
+  no production or test callers.
+
+#### CSTR-542 - Remove Unused UTF Mutable Terminator
+
+- Type: unused mutable C-string public helper.
+- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
+  `tests/test_utf.cpp`.
+- Function: `terminate_string_at_visual_index`.
+- Dependencies: none.
+- Instructions: delete the declaration and definition.  Remove the
+  tests that only preserve this unused C API; do not replace it with a
+  new mutable string helper unless a production caller appears.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-No current slices.
+#### CSTR-543 - Make `at_grey_space` A View Helper
+
+- Type: helper parameter from `const char *` to `std::string_view`.
+- Files: `libtrn/include/trn/util.h`, `libtrn/datasrc.cpp`,
+  `libtrn/mime.cpp`, `libtrn/rt-util.cpp`.
+- Function: `at_grey_space`.
+- Dependencies: none.
+- Instructions: change the helper to accept a view and use
+  `at_norm_char(std::string_view)`.  Update callers that currently pass
+  `.data() + offset` or cursor pointers to pass the existing view or a
+  `substr` view.
+
+#### CSTR-544 - Make `visual_length_of` View-based
+
+- Type: helper parameter from `const char *` to `std::string_view`.
+- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
+  `libtrn/rt-util.cpp`, `tests/test_utf.cpp`.
+- Function: `visual_length_of`.
+- Dependencies: `CSTR-541`.
+- Instructions: rewrite the loop to consume a local view and
+  `remove_prefix`.  Treat the old null-input test as the empty-view
+  case rather than preserving a C-string sentinel.
+
+#### CSTR-545 - Make `create_utf8_copy` View-based
+
+- Type: helper parameter from `const char *` to `std::string_view`.
+- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
+  `libtrn/cache.cpp`, `tests/test_utf.cpp`.
+- Function: `create_utf8_copy`.
+- Dependencies: none.
+- Instructions: consume a view in both sizing and copy passes.  Callers
+  that already own `std::string` storage pass the string directly.
+  Treat the old null-input test as the empty-view case.
+
+#### CSTR-546 - Make Article Color State Use Views
+
+- Type: file-local helper parameters from C-string begin/current
+  pointers to view plus offset.
+- Files: `libtrn/art.cpp`.
+- Function: `maybe_set_color`.
+- Dependencies: none.
+- Instructions: pass the full line view and current offset instead of
+  `line_begin_c_str()` and `tail_c_str()`.  Use the existing
+  `skip_hor_space(std::string_view)` helper and avoid pointer walking.
+
+#### CSTR-547 - Remove Regex Bracket Static Storage
+
+- Type: borrowed static-buffer return to view/value API.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
+  `libtrn/intrp.cpp`, `libtrn/respond.cpp`.
+- Functions: `CompiledRegex::get_bracket`, new
+  `CompiledRegex::has_brackets`.
+- Dependencies: none.
+- Instructions: remove `s_gbr_str`.  Return bracket text as a
+  `std::string_view` into `CompiledRegex::m_bracket_str` and add an
+  explicit `has_brackets` query for the old null-sentinel check.
+
+#### CSTR-548 - Add A Regex View Match API
+
+- Type: helper parameter from `const char *` to `std::string_view`.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
+  `tests/test_search.cpp`.
+- Function: `CompiledRegex::execute`.
+- Dependencies: `CSTR-547`.
+- Instructions: introduce the view-based boolean match API as the
+  implementation owner.  Keep any old C-string wrapper only as a
+  temporary delegating compatibility path for the caller migration
+  slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-No current slices.
+#### CSTR-549 - Convert Terminal Normal-character Checks To Views
+
+- Type: local cursor aliases from C strings to views.
+- Files: `libtrn/terminal.cpp`.
+- Functions: `finish_command_text`, `under_print`, `under_char`.
+- Dependencies: none.
+- Instructions: replace `at_norm_char(&buffer[cursor])` and other raw
+  cursor checks with view slices over the existing string or input text.
+  Do not modernize `std::putchar`; it is character output, not a
+  C-string API.
+
+#### CSTR-550 - Remove Raw UTF Point Overloads
+
+- Type: unused C-style overload removal after caller migration.
+- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
+  `tests/test_utf.cpp`.
+- Functions: `at_norm_char(const char *)`,
+  `byte_length_at(const char *)`, `visual_width_at(const char *)`,
+  `code_point_at(const char *)`.
+- Dependencies: `CSTR-542`, `CSTR-543`, `CSTR-544`, `CSTR-545`,
+  `CSTR-549`.
+- Instructions: update remaining production and test callers to pass
+  views, then delete the raw overloads.  Use empty views for the old
+  null-sentinel test cases where empty text has the same meaning.
+
+#### CSTR-551 - Migrate Non-article Regex Callers To Views
+
+- Type: caller migration from C-string regex bridge to view match API.
+- Files: `libtrn/autosub.cpp`, `libtrn/intrp.cpp`,
+  `libtrn/ngsrch.cpp`, `libtrn/respond.cpp`,
+  `libtrn/rt-select.cpp`, `libtrn/util.cpp`.
+- Function family: `CompiledRegex::execute` callers outside
+  `libtrn/art.cpp`.
+- Dependencies: `CSTR-548`.
+- Instructions: pass existing `std::string` or `std::string_view`
+  values directly to the new match API.  Update inactive preprocessor
+  blocks so they still build.
+
+#### CSTR-552 - Migrate Article Regex Callers To Views
+
+- Type: caller migration from C-string regex bridge to view match API.
+- Files: `libtrn/art.cpp`.
+- Function: `do_article`.
+- Dependencies: `CSTR-546`, `CSTR-548`.
+- Instructions: replace `tail_c_str()`, `search_line.c_str()`, and
+  `pager_line.data()` regex calls with view inputs.  Remove C-string
+  bridge lambdas that no longer have callers.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -768,23 +910,30 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-No current slices.
+#### CSTR-553 - Encapsulate Public Article Buffer State
+
+- Type: public global raw buffer ownership.
+- Files: `libtrn/include/trn/artio.h`, `libtrn/artio.cpp`,
+  `libtrn/art.cpp`, `libtrn/ng.cpp`, article-buffer tests.
+- Globals: `g_art_buf`, `g_art_buf_pos`, `g_art_buf_seek`,
+  `g_art_buf_len`.
+- Dependencies: `CSTR-552`.
+- Instructions: replace direct public access to article-buffer storage
+  with owned accessors or owner-local state in `artio.cpp`.  Preserve
+  existing behavior with tests before changing the storage shape.
 
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-#### CSTR-412 - Remove Public Raw Article Buffer API
+#### CSTR-554 - Remove Regex C-string Match Wrapper
 
-- Files: `libtrn/artio.cpp`, `libtrn/include/trn/artio.h`,
-  `tests/test_artio.cpp`.
-- Kind: raw string return helper.
-- Function: `read_art_buf(bool)`.
-- Dependencies: none.
-- Change: after production callers use owned line storage, remove the
-  public `char *` article-buffer overload or make it file-local
-  implementation detail.  Keep `read_art_buf(std::string &, bool)` as
-  the caller-facing API and update tests to validate the string result.
-- Tests: `ArticleIoTest` read-buffer cases.
+- Type: obsolete C-style wrapper removal.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`.
+- Function: old `CompiledRegex::execute(const char *)` wrapper, if kept
+  during `CSTR-548`.
+- Dependencies: `CSTR-551`, `CSTR-552`.
+- Instructions: delete the raw wrapper after every caller uses the
+  view-based match API.  Keep the regex bytecode internals out of scope.
 
