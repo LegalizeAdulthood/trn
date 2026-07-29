@@ -698,8 +698,10 @@ The scan found no current active source/test hits for `strcmp`,
 `std::strtoul`, or `std::strtod`.
 
 `fmt::printf` appears twice and `fmt::sprintf` appears three times.
-These calls are not C buffer writes.  They are tracked only where the
-format template itself should be modernized.
+These calls are not C buffer writes.  They are intentionally retained
+where the format template is runtime printf-style text: article and
+newsgroup prompts, terminal capability shims, and interpolation width
+specifiers.
 
 `putchar` and `std::putchar` are intentionally excluded from this audit:
 they accept a single character, not a C string.
@@ -759,19 +761,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-540 - Review Runtime `fmt::printf`/`fmt::sprintf` Sites
-
-- Files: `libtrn/art.cpp`, `libtrn/intrp.cpp`, `libtrn/ng.cpp`, and
-  `libtrn/terminal.cpp`.
-- Kind: printf-style fmt formatting.
-- Functions: runtime prompt and terminal format templates.
-- Dependencies: none.
-- Change: review each runtime printf-style template.  Keep `fmt::printf`
-  or `fmt::sprintf` where the format string is intentionally a runtime
-  printf-style value; otherwise migrate to direct `fmt::print` or
-  `fmt::format`.
-- Tests: focused prompt/interpolation/terminal tests where available,
-  then full build.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 
