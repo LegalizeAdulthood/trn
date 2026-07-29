@@ -521,7 +521,7 @@ TEST_F(TerminalTest, setDefExpandsControlDefaultCommand)
     EXPECT_EQ(FINISH_CMD, command[1]);
 }
 
-TEST_F(TerminalTest, inCharPrintsPromptDefaultAndStoresInput)
+TEST_F(TerminalTest, inCharPrintsPromptDefaultAndReturnsInput)
 {
     const std::string prompt{"Continue?"};
     const std::string dflt{"yn"};
@@ -535,8 +535,6 @@ TEST_F(TerminalTest, inCharPrintsPromptDefaultAndStoresInput)
     ASSERT_EQ(2, command.size());
     EXPECT_EQ('y', command[0]);
     EXPECT_EQ(FINISH_CMD, command[1]);
-    EXPECT_EQ('y', g_buf[0]);
-    EXPECT_EQ(FINISH_CMD, g_buf[1]);
 }
 
 TEST_F(TerminalTest, inCharCountsPromptNewlinesAndAppliesDefault)
@@ -553,13 +551,11 @@ TEST_F(TerminalTest, inCharCountsPromptNewlinesAndAppliesDefault)
     ASSERT_EQ(2, command.size());
     EXPECT_EQ(Ctl('N'), command[0]);
     EXPECT_EQ(FINISH_CMD, command[1]);
-    EXPECT_EQ(Ctl('N'), g_buf[0]);
-    EXPECT_EQ(FINISH_CMD, g_buf[1]);
     EXPECT_EQ(5, g_term_line);
     EXPECT_EQ(0, g_term_col);
 }
 
-TEST_F(TerminalTest, inAnswerPrintsPromptAndStoresCommand)
+TEST_F(TerminalTest, inAnswerPrintsPromptAndReturnsCommand)
 {
     g_term_line = 4;
     g_term_col = 12;
@@ -574,8 +570,6 @@ TEST_F(TerminalTest, inAnswerPrintsPromptAndStoresCommand)
     EXPECT_EQ("Really? y\n", output);
     ASSERT_EQ(1, command.size());
     EXPECT_EQ('y', command[0]);
-    EXPECT_EQ('y', g_buf[0]);
-    EXPECT_EQ('\0', g_buf[1]);
     EXPECT_EQ(5, g_term_line);
     EXPECT_EQ(0, g_term_col);
 }

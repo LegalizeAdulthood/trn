@@ -643,6 +643,13 @@ Configure scripts, and the vendored `vcpkg` tree.
   allocation-table initialization; `safe_malloc` and `safe_realloc` are
   hash, AddGroup pointer table, regex bytecode, or generic allocator
   internals.
+- Fixed-size buffer scan: the remaining `char name[N]` hits are
+  immutable labels, termcap test/API shims, lookup tables, regex
+  bytecode, or non-string byte arrays.  No new fixed-string-buffer slice
+  is active from this pass.
+- Global command buffer scan: only `ask_memorize`, `in_char`, and
+  `in_answer` still actively touch `g_buf`; score-file comment text and
+  the declaration/definition remain until those users are removed.
 - Non-zero C output calls are inventory until each source location is
   promoted to an explicit function-level slice.  Do not add broad
   coverage slices for output-call families.
@@ -696,7 +703,7 @@ be modernized.
 
 The `gets` hit is in the inactive `parsedate.y` `#ifdef TEST` harness
 and is exempt from modernization by user direction.
-The `fputs` spellings in `color.cpp` and `kfile.cpp` are comment text.
+The `fputs` spellings in `kfile.cpp` are comment text.
 The `strlen` spellings in `charsubst.cpp` are comment text.
 
 ## Current C Function Source Map
@@ -729,7 +736,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-529`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-533`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -758,6 +765,22 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
+#### CSTR-529 - Convert Remaining Small `std::fprintf` Calls
+
+- Files: `config/include/config/common.h`, `libtrn/color.cpp`,
+  `libtrn/decode.cpp`, `libtrn/head.cpp`, `libtrn/nntp.cpp`,
+  `libtrn/opt.cpp`, `libtrn/respond.cpp`, `libtrn/scoresave.cpp`,
+  `libtrn/terminal.cpp`, `libtrn/univ.cpp`.
+- Kind: C text output.
+- Functions: assertion reporting, color validation, decode total output,
+  NNTP diagnostics, option save headers, mailbox separators, score-save
+  line output, color-limit diagnostics, and universal selector header
+  output.
+- Dependencies: none.
+- Change: replace live `std::fprintf` calls with `fmt` output.  Preserve
+  target streams and literal output text.
+- Tests: full build and affected focused tests where available.
+
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
@@ -784,15 +807,35 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-485 - Remove `g_buf` From Terminal Tests
+#### CSTR-530 - Remove `g_buf` From Memorize Prompt
 
-- Files: `tests/test_terminal.cpp`.
-- Kind: test assertion global buffer dependency.
-- Function: terminal command storage tests.
+- Files: `libtrn/ng.cpp`.
+- Kind: global command buffer read.
+- Function: `ask_memorize`.
 - Dependencies: none.
-- Change: assert returned or echoed command text instead of inspecting
-  `g_buf` bytes directly.
-- Tests: `TerminalTest`.
+- Change: use the string returned by `in_char` for the selected command
+  character instead of reading `*g_buf`.
+- Tests: memorize-thread and memorize-subject prompt tests.
+
+#### CSTR-531 - Stop Mirroring `in_char` Into `g_buf`
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: global command buffer write.
+- Function: `in_char`.
+- Dependencies: `CSTR-530`.
+- Change: return the stored command string without copying it into the
+  global command buffer.
+- Tests: `TerminalTest` in-char cases and full command-input tests.
+
+#### CSTR-532 - Stop Mirroring `in_answer` Into `g_buf`
+
+- Files: `libtrn/terminal.cpp`.
+- Kind: global command buffer write.
+- Function: `in_answer`.
+- Dependencies: none.
+- Change: return the stored command string without copying it into the
+  global command buffer.
+- Tests: `TerminalTest` in-answer cases and followup prompt tests.
 
 ### Tier 5 - Helper Removal
 
@@ -818,7 +861,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-485`.
+- Dependencies: `CSTR-530` through `CSTR-532`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
