@@ -1432,7 +1432,7 @@ go_forward:
         {
             g_first_view = ArticleLine{};
         }
-        std::printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
+        fmt::print("\nAuto-View inlined mime is {}\n", g_auto_view_inline ? "on" : "off");
         term_down(2);
         break;
 
