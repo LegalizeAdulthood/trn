@@ -12,16 +12,23 @@
 #include <trn/rcstuff.h>
 #include <trn/terminal.h>
 
+#include <test_config.h>
+
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
 namespace
 {
+
+namespace fs = std::filesystem;
 
 void drain_macro_buffer()
 {
@@ -146,6 +153,15 @@ protected:
         m_old_tc_uc = g_tc_UC;
         m_old_tc_am = g_tc_AM;
 
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+        m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        fs::create_directories(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+
         drain_macro_buffer();
         g_newsgroup_data.clear();
         g_newsgroup_order.clear();
@@ -209,6 +225,8 @@ protected:
     void TearDown() override
     {
         drain_macro_buffer();
+        std::error_code error;
+        fs::remove_all(m_output_dir, error);
         m_data_source.close();
         if (g_newsrc_hash != nullptr && g_newsrc_hash != m_old_newsrc_hash)
         {
@@ -315,6 +333,7 @@ protected:
     DataSource                   m_data_source{};
     Newsrc                       m_newsrc{};
     Multirc                      m_multirc{};
+    fs::path                     m_output_dir;
     std::vector<NewsgroupData>   m_old_newsgroup_data;
     std::vector<NewsgroupData *> m_old_newsgroup_order;
     NewsgroupNum                 m_old_newsgroup_count{};
@@ -520,4 +539,32 @@ TEST_F(InputNewsgroupTest, searchFindsNamedGroup)
 
     EXPECT_EQ(ING_SPECIAL, result);
     EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+}
+
+TEST_F(InputNewsgroupTest, exitAbandonConfirmationQuits)
+{
+    push_command("xy");
+
+    testing::internal::CaptureStdout();
+    const InputNewsgroupResult result = input_newsgroup();
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(ING_QUIT, result);
+}
+
+TEST_F(InputNewsgroupTest, abandonCurrentNewsgroupConfirmed)
+{
+    add_test_newsgroups();
+    set_current_newsgroup(0);
+    m_newsrc.old_name = m_output_dir / "old-newsrc";
+    std::ofstream{m_newsrc.old_name} << "comp.lang.apl: 2-3\n";
+    push_command("Ay");
+
+    testing::internal::CaptureStdout();
+    const InputNewsgroupResult result = input_newsgroup();
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ("comp.lang.apl", std::string{g_newsgroup_data[0].rc_name()});
+    EXPECT_EQ(" 2-3", std::string{g_newsgroup_data[0].rc_numbers()});
 }

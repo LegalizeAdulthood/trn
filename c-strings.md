@@ -784,16 +784,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-474 - Remove `g_buf` From Newsgroup Input
-
-- Files: `libtrn/trn.cpp`.
-- Kind: global command buffer read.
-- Function: `input_newsgroup`.
-- Dependencies: none.
-- Change: consume command text through local storage or parameters
-  instead of testing `*g_buf`.
-- Tests: newsgroup command input tests.
-
 #### CSTR-475 - Remove `g_buf` From Escapade Shell Runner
 
 - Files: `libtrn/ngstuff.cpp`.
@@ -929,7 +919,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-474` through `CSTR-485`.
+- Dependencies: `CSTR-475` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

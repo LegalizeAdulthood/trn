@@ -582,10 +582,12 @@ do_command:
         return ING_SPECIAL;
 
     case 'x':
+    {
         newline();
-        in_char("Confirm: exit and abandon newsrc changes?", MM_ADD_NEWSGROUP_PROMPT, "yn");
+        const std::string exit_command =
+            in_char("Confirm: exit and abandon newsrc changes?", MM_ADD_NEWSGROUP_PROMPT, "yn");
         newline();
-        if (*g_buf != 'y')
+        if (newsgroup_command_char(exit_command) != 'y')
         {
             break;
         }
@@ -593,6 +595,7 @@ do_command:
         term_down(2);
         s_restore_old_newsrc = true;
         return ING_QUIT;
+    }
 
     case 'q':
     case 'Q': // quit?
@@ -844,21 +847,21 @@ display_multirc:
                               : in_char("\nAbandon?", MM_CONFIRM_ABANDON_PROMPT, "ynh");
                 print_cmd(abandon_command);
                 newline();
-                if (*g_buf == 'h')
+                if (const char ch = newsgroup_command_char(abandon_command); ch == 'h')
                 {
                     fmt::print("Type y or SP to abandon the changes to this group since you started trn.\n");
                     fmt::print("Type n to leave the group as it is.\n");
                     term_down(2);
                     goto reask_abandon;
                 }
-                else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q')
+                else if (ch != 'y' && ch != 'n' && ch != 'q')
                 {
                     fmt::print("Type h for help.\n");
                     term_down(1);
                     settle_down();
                     goto reask_abandon;
                 }
-                else if (*g_buf == 'y')
+                else if (ch == 'y')
                 {
                     g_newsgroup_ptr->abandon_newsgroup();
                 }
