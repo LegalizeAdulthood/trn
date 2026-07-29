@@ -491,13 +491,6 @@ static void set_newsgroup_command_char(std::string &command, char ch)
     }
 }
 
-static void stage_legacy_newsgroup_command(std::string_view command)
-{
-    const std::size_t command_size = std::min(command.size(), static_cast<std::size_t>(LINE_BUF_LEN));
-    std::copy_n(command.data(), command_size, g_buf);
-    g_buf[command_size] = '\0';
-}
-
 static std::string finish_newsgroup_command(std::string_view command, bool donewline)
 {
     if (command.size() <= 1 || command[1] != FINISH_CMD)
@@ -548,21 +541,19 @@ InputNewsgroupResult input_newsgroup()
     }
     const char original_command_ch = newsgroup_command_char(command);
     command = apply_newsgroup_default_command(command);
-    stage_legacy_newsgroup_command(command);
     print_cmd(command);
     if (g_newsgroup_ptr != nullptr)
     {
         set_newsgroup_command_char(command, original_command_ch);
-        stage_legacy_newsgroup_command(command);
     }
 
 do_command:
     command_ch = newsgroup_command_char(command);
-    s_go_forward = true;                // default to forward motion
+    s_go_forward = true; // default to forward motion
     switch (command_ch)
     {
-    case 'P':                           // goto previous newsgroup
-    case 'p':                           // find previous unread newsgroup
+    case 'P': // goto previous newsgroup
+    case 'p': // find previous unread newsgroup
         if (!g_newsgroup_ptr)
         {
             g_newsgroup_ptr = newsgroup_last();
@@ -749,18 +740,17 @@ do_command:
 #endif
 
     case '!':                 // shell escape
-        stage_legacy_newsgroup_command(command);
-        if (escapade())         // do command
+        if (escapade(command)) // do command
         {
             return ING_INPUT;
         }
         return ING_ASK;
 
-    case Ctl('k'):            // edit global KILL file
+    case Ctl('k'): // edit global KILL file
         edit_kill_file();
         return ING_ASK;
 
-    case Ctl('n'):            // next newsrc list
+    case Ctl('n'): // next newsrc list
         end_only();
         newline();
         g_multirc->use_next_multirc();
@@ -914,8 +904,7 @@ display_multirc:
             }
 
             case '&':
-                stage_legacy_newsgroup_command(command);
-                if (switcheroo()) // get rest of command
+                if (switcheroo(command)) // get rest of command
                 {
                     return ING_INPUT; // if rubbed out, try something else
                 }

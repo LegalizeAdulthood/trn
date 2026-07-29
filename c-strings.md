@@ -784,22 +784,12 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-473 - Remove `g_buf` From Legacy Newsgroup Command Staging
-
-- Files: `libtrn/trn.cpp`.
-- Kind: global command buffer write.
-- Function: `stage_legacy_newsgroup_command`.
-- Dependencies: none.
-- Change: return or forward caller-owned command text instead of staging
-  it in `g_buf`.
-- Tests: newsgroup command input tests.
-
 #### CSTR-474 - Remove `g_buf` From Newsgroup Input
 
 - Files: `libtrn/trn.cpp`.
 - Kind: global command buffer read.
 - Function: `input_newsgroup`.
-- Dependencies: `CSTR-473`.
+- Dependencies: none.
 - Change: consume command text through local storage or parameters
   instead of testing `*g_buf`.
 - Tests: newsgroup command input tests.
@@ -939,7 +929,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-473` through `CSTR-485`.
+- Dependencies: `CSTR-474` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
