@@ -3,6 +3,7 @@
  * Lots of misc. stuff.
  */
 // This file is Copyright 1993 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/smisc.h>
 
@@ -10,6 +11,8 @@
 #include <trn/sadesc.h>
 #include <trn/samisc.h>
 #include <trn/scan.h>
+
+#include <fmt/format.h>
 
 #include <cstdio>
 
@@ -24,7 +27,7 @@ bool s_eligible(long ent)
         return sa_eligible(ent);
 
     default:
-        std::printf("s_eligible: current type is bad!\n");
+        fmt::print("s_eligible: current type is bad!\n");
         return false;
     }
 }

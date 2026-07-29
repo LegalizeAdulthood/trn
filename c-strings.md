@@ -668,7 +668,7 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `fgets` 2.
-- C text output: `fputs` 150, `printf`/`std::printf` 273,
+- C text output: `fputs` 150, `printf`/`std::printf` 272,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
@@ -718,8 +718,8 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `rt-wumpus.cpp` 2, `sacmd.cpp` 5, `sadesc.cpp` 1,
   `sadisp.cpp` 8, `scan.cpp` 3, `scmd.cpp` 2, `score.cpp` 18,
   `scorefile.cpp` 20, `scoresave.cpp` 6, `sdisp.cpp` 10,
-  `smisc.cpp` 1, `spage.cpp` 4, `terminal.cpp` 3, `trn.cpp` 12,
-  `univ.cpp` 9, and `util.cpp` 6.
+  `spage.cpp` 4, `terminal.cpp` 3, `trn.cpp` 12, `univ.cpp` 9,
+  and `util.cpp` 6.
   `parsedate/parsedate.y` has 5 exempt hits.
 - `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
   `libtrn/color.cpp` 2, `decode.cpp` 1, `head.cpp` 1, `nntp.cpp` 1,
@@ -766,17 +766,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-487 - Convert Selector Eligibility Diagnostic Output
-
-- Files: `libtrn/smisc.cpp`.
-- Kind: literal C output.
-- Function: `s_eligible`.
-- Dependencies: none.
-- Change: convert the bad-selector-state diagnostic from `std::printf`
-  to `fmt::print`.
-- Tests: build compile coverage; no direct behavior test exists for this
-  unexpected-state diagnostic.
 
 #### CSTR-488 - Convert Status Character Inactive Debug Output
 
