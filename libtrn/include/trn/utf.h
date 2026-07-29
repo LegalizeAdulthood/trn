@@ -53,6 +53,4 @@ int put_char_adv(std::string_view &text, bool outputok);
 
 std::string create_utf8_copy(const char *s);
 
-void terminate_string_at_visual_index(char *s, int i);
-
 #endif

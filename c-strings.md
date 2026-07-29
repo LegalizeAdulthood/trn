@@ -751,16 +751,7 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-542 - Remove Unused UTF Mutable Terminator
-
-- Type: unused mutable C-string public helper.
-- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
-  `tests/test_utf.cpp`.
-- Function: `terminate_string_at_visual_index`.
-- Dependencies: none.
-- Instructions: delete the declaration and definition.  Remove the
-  tests that only preserve this unused C API; do not replace it with a
-  new mutable string helper unless a production caller appears.
+No current slices.
 
 ### Tier 1 - Helper And API Foundations
 
@@ -860,8 +851,7 @@ them before broad global-buffer work and before removing helpers.
 - Functions: `at_norm_char(const char *)`,
   `byte_length_at(const char *)`, `visual_width_at(const char *)`,
   `code_point_at(const char *)`.
-- Dependencies: `CSTR-542`, `CSTR-543`, `CSTR-544`, `CSTR-545`,
-  `CSTR-549`.
+- Dependencies: `CSTR-543`, `CSTR-544`, `CSTR-545`, `CSTR-549`.
 - Instructions: update remaining production and test callers to pass
   views, then delete the raw overloads.  Use empty views for the old
   null-sentinel test cases where empty text has the same meaning.
