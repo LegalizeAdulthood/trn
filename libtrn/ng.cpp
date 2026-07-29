@@ -2067,7 +2067,7 @@ reask_catchup:
                                          : fmt::format("Catchup {}?", g_newsgroup_name);
     const std::string command = in_char(prompt, MM_CONFIRM_CATCH_UP_PROMPT, "yn#h");
     print_cmd(command);
-    char ch = *g_buf;
+    char ch = command.front();
     if (ch == 'h' || ch == 'H')
     {
         use_one_line = false;
@@ -2102,8 +2102,9 @@ reask_catchup:
     if (ch == '#')
     {
         use_one_line = false;
-        in_char("\nEnter approx. number of articles to leave unread: ", MM_CONFIRM_CATCH_UP_PROMPT, "0");
-        ch = *g_buf;
+        const std::string leave_command =
+            in_char("\nEnter approx. number of articles to leave unread: ", MM_CONFIRM_CATCH_UP_PROMPT, "0");
+        ch = leave_command.front();
         if (ch == '0')
         {
             ch = 'y';
