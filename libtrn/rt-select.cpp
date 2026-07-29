@@ -2053,7 +2053,6 @@ static bool deselect_item(Selection u)
 /// - OptionCatalog: Used to retrieve the available options and their properties.
 /// - g_option_flags: Updated to reflect the selection state of the option.
 /// - g_selected_count: Incremented or decremented based on the selection state of the option.
-/// - g_buf: Used to store user input during the modification process.
 /// - g_sel_last_line: Used to position the cursor for displaying prompts.
 /// - s_clean_screen: Updated to indicate whether the screen should be cleared after input.
 ///
@@ -2088,7 +2087,6 @@ static bool select_option(OptionIndex i)
     fmt::print("Change `{}' ({})", name, help);
     color_pop();        // of COLOR_CMD
     newline();
-    *g_buf = '\0';
     const std::string oldval = quote_string(option_value(option));
     const bool had_draft = g_option_draft->contains(option);
     std::string val{oldval};
