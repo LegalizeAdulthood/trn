@@ -1626,9 +1626,6 @@ reask_in_char:
     }
     command = set_def(command, dflt);
     const std::string stored_command = store_command(command);
-    // Keep legacy callers working until command dispatch is fully string-owned.
-    std::copy(stored_command.begin(), stored_command.end(), g_buf);
-    g_buf[stored_command.size()] = '\0';
     set_mode(gmode_save, mode_save);
     return stored_command;
 }
@@ -1670,9 +1667,6 @@ reinp_in_answer:
     }
     newline();
     const std::string stored_command = store_command(command);
-    // Keep legacy callers working until command dispatch is fully string-owned.
-    std::copy(stored_command.begin(), stored_command.end(), g_buf);
-    g_buf[stored_command.size()] = '\0';
     set_mode(gmode_save, mode_save);
     return stored_command;
 }

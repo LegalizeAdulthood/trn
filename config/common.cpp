@@ -11,10 +11,9 @@
 
 // GLOBAL THINGS
 
-// various things of type char
+// Global message text.
 
-std::string g_msg;                   // general purpose message text
-char        g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
+std::string g_msg; // general purpose message text
 
 #ifndef NDEBUG
 [[noreturn]]

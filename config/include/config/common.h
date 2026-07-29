@@ -622,10 +622,9 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 
 // GLOBAL THINGS
 
-// various things of type char
+// Global message text.
 
-extern std::string g_msg;                   // general purpose message text
-extern char g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
+extern std::string g_msg; // general purpose message text
 
 #ifdef DEBUG
 extern int g_debug; // -D

@@ -901,7 +901,7 @@ int sf_score(ArticleNum a)
 // returns changed score line or empty if no changes
 static std::string sf_missing_score(std::string_view line)
 {
-    // save line since it is probably pointing at (the TRN-global) g_buf
+    // Keep an owned copy while finish_command reads new input.
     std::string saved_line{line};
     fmt::print("Possibly missing score.\n"
                "Type a score now or delete the colon to abort this entry:\n");

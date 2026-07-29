@@ -158,8 +158,8 @@ Existing good precedents:
 Most raw string pointers are not local cleanup targets yet.  They are
 owned buffers, caller-owned mutable buffers, struct fields, termcap and
 NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
-`g_buf`, `Article` and `Subject` fields, `HashDatum` payloads,
-`parse_string`, and `push_string`.
+`Article` and `Subject` fields, `HashDatum` payloads, `parse_string`,
+and `push_string`.
 `CompiledRegex::m_exp_buf` and `m_alternatives` are regex bytecode and
 internal cursors, not ordinary string storage.
 
@@ -558,8 +558,7 @@ Configure scripts, and the vendored `vcpkg` tree.
   helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
-- Fixed raw buffers: the current string-shaped fixed-buffer candidate is
-  `g_buf` covered by `CSTR-486`.  The local `opt_init` `argv` shim in
+- Fixed raw buffers: the local `opt_init` `argv` shim in
   `tests/test_interp.cpp` remains an API-boundary fixture because
   `opt_init` still accepts `char *argv[]`.  Translation tables,
   terminal pushback bytes, termcap storage, keymap type bytes, regex
@@ -589,21 +588,18 @@ Configure scripts, and the vendored `vcpkg` tree.
   and switcheroo dispatch, option-switch dispatch, and kill-file switch
   commands now pass command text as strings or views.
 - Response command scan: save, reply, followup, and supersede operations
-  now have `std::string_view` command entry points.  The perform
-  save/view path no longer stages command text in `g_buf`, and mailbox
-  format detection uses owner-local string storage.
+  now have `std::string_view` command entry points, and mailbox format
+  detection uses owner-local string storage.
 - Response wrapper scan: no no-argument response wrappers remain.
 - Article body scan: response quoting, article search, and article pager
   display/scroll paths now use owned line storage from the article I/O
   boundary instead of mutating raw article buffers.
-- Numeric command scan: `num_num` now accepts command text directly and
-  parses numeric range text from that view instead of `g_buf`.
+- Numeric command scan: `num_num` accepts command text directly and
+  parses numeric range text from that view.
 - Terminal input scan: `in_char` and `in_answer` return caller-owned
-  command strings while still staging `g_buf` for legacy callers.
-  `store_command` no longer writes `g_buf`, `finish_command` callers
-  pass command text directly, `in_choice` returns edited choice text
-  through caller-owned string storage, and typeahead cleanup now uses
-  owner-local scratch storage.
+  command strings.  `finish_command` callers pass command text directly,
+  `in_choice` returns edited choice text through caller-owned string
+  storage, and typeahead cleanup now uses owner-local scratch storage.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
@@ -649,9 +645,7 @@ Configure scripts, and the vendored `vcpkg` tree.
   immutable labels, termcap test/API shims, lookup tables, regex
   bytecode, or non-string byte arrays.  No new fixed-string-buffer slice
   is active from this pass.
-- Global command buffer scan: only `ask_memorize`, `in_char`, and
-  `in_answer` still actively touch `g_buf`; score-file comment text and
-  the declaration/definition remain until those users are removed.
+- Global command buffer scan: no current active source/test hits remain.
 - C text output scan: no active C `printf`, `fprintf`, or `fputs`
   calls remain.
 - MIME content-decoding paths now own local string storage for decoded
@@ -738,22 +732,7 @@ new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
 cleaner helper and ownership contracts to build on.
 
-Global command buffer work must be split by function.  Prefer leaves
-that only use the first command character before command loops that pass
-the full buffer into downstream dispatch.  Treat terminal command input
-and global scratch-buffer storage as criteria, not implementation
-slices.
-
-The terminal command-input slices remove direct `get_cmd(g_buf)`
-callers.  Do not replace a read with `get_cmd()` plus an immediate copy
-back to `g_buf` unless the copy is temporary scaffolding for a following
-slice.  When the called command dispatcher still reads `g_buf`, first
-move that dispatcher to accept command text or a command character.
-
-The global scratch-buffer slices remove other uses of `g_buf` as scratch
-storage.  Do not replace `g_buf` with one global `std::string`.  Move
-storage to the owning function, parser, or data object.  Re-evaluate
-every slice after each scan; old deferrals are not binding.
+Re-evaluate every slice after each scan; old deferrals are not binding.
 
 ### Tier 0 - Leaf Cleanup
 
@@ -789,35 +768,7 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-530 - Remove `g_buf` From Memorize Prompt
-
-- Files: `libtrn/ng.cpp`.
-- Kind: global command buffer read.
-- Function: `ask_memorize`.
-- Dependencies: none.
-- Change: use the string returned by `in_char` for the selected command
-  character instead of reading `*g_buf`.
-- Tests: memorize-thread and memorize-subject prompt tests.
-
-#### CSTR-531 - Stop Mirroring `in_char` Into `g_buf`
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: global command buffer write.
-- Function: `in_char`.
-- Dependencies: `CSTR-530`.
-- Change: return the stored command string without copying it into the
-  global command buffer.
-- Tests: `TerminalTest` in-char cases and full command-input tests.
-
-#### CSTR-532 - Stop Mirroring `in_answer` Into `g_buf`
-
-- Files: `libtrn/terminal.cpp`.
-- Kind: global command buffer write.
-- Function: `in_answer`.
-- Dependencies: none.
-- Change: return the stored command string without copying it into the
-  global command buffer.
-- Tests: `TerminalTest` in-answer cases and followup prompt tests.
+No current slices.
 
 ### Tier 5 - Helper Removal
 
@@ -837,13 +788,3 @@ owned strings or owner-specific storage.
   the caller-facing API and update tests to validate the string result.
 - Tests: `ArticleIoTest` read-buffer cases.
 
-#### CSTR-486 - Remove Global `g_buf`
-
-- Files: `config/common.cpp`, `config/include/config/common.h`, all
-  remaining production users.
-- Kind: final global storage removal.
-- Function: `g_buf`.
-- Dependencies: `CSTR-530` through `CSTR-532`.
-- Change: delete the global command buffer after all remaining users own
-  their storage locally.  Do not replace it with another global string.
-- Tests: full build and full test workflow.

@@ -2285,7 +2285,7 @@ reask_memorize:
     const std::string prompt = fmt::format("{}Memorize {} command:", global_save ? "Global-" : "", mode_string);
     const std::string command = in_char(prompt, MM_MEMORIZE_THREAD_PROMPT, thread_cmd ? "+S.mJK,jcC" : "+S.mJK,jcCfg");
     print_cmd(command);
-    ch = *g_buf;
+    ch = command.empty() ? '\0' : command.front();
     if (!thread_cmd && ch == 'f')
     {
         mode_string = mode_string.front() == 'a' ? "subject" : "author";
