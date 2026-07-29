@@ -41,6 +41,7 @@
 #include <util/util2.h>
 
 #include <fmt/format.h>
+#include <fmt/printf.h>
 
 #include <algorithm>
 #include <cctype>
@@ -1356,8 +1357,7 @@ leave_pager:
             set_default_cmd();
             color_object(COLOR_CMD, true);
             const std::string mail_call = interp_search(g_mail_call, command);
-            std::printf(g_prompt.c_str(), mail_call.c_str(), current_char_subst().c_str(),
-                        g_default_cmd.c_str()); // print prompt, whatever it is
+            fmt::printf(g_prompt, mail_call, current_char_subst(), g_default_cmd); // print prompt, whatever it is
             color_pop();                        // of COLOR_CMD
             std::putchar(' ');
             std::fflush(stdout);
