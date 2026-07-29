@@ -113,7 +113,7 @@ void rc_to_bits()
         {
             if (article_unread(i))
             {
-                std::printf("%ld ", i.value_of());
+                fmt::print("{} ", i.value_of());
             }
         }
     }
@@ -177,7 +177,7 @@ void rc_to_bits()
             {
                 if (!was_read(a))
                 {
-                    std::printf("%ld ",a.value_of());
+                    fmt::print("{} ", a.value_of());
                 }
             }
         }
@@ -546,8 +546,7 @@ void yank_back()
         }
         else
         {
-            std::printf("\nReturning %ld Marked article%s...\n",(long)g_dm_count,
-                plural(g_dm_count));
+            fmt::print("\nReturning {} Marked article{}...\n", g_dm_count, plural(g_dm_count));
             term_down(2);
         }
         article_walk(yank_article, 0);

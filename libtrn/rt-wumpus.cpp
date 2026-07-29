@@ -629,12 +629,12 @@ void entire_tree(Article* ap)
     if (!g_threaded_group)
     {
         g_threaded_group = true;
-        std::printf("Threading the group. ");
+        fmt::print("Threading the group. ");
         std::fflush(stdout);
         thread_open();
         if (!g_threaded_group)
         {
-            std::printf("*failed*\n");
+            fmt::print("*failed*\n");
             term_down(1);
             return;
         }

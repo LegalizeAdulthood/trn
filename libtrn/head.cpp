@@ -135,13 +135,12 @@ void head_final()
 #ifdef DEBUG
 static void dump_header(const char *where)
 {
-    std::printf("header: %ld %s", g_parsed_art.value_of(), where);
+    fmt::print("header: {} {}", g_parsed_art.value_of(), where);
 
     for (int i = HEAD_FIRST - 1; i < HEAD_LAST; i++)
     {
-        std::printf("%15s %4ld %4ld %03o\n",g_header_type[i].name.c_str(),
-               g_header_type[i].min_pos.value_of(), g_header_type[i].max_pos.value_of(),
-               g_header_type[i].flags);
+        fmt::print("{:>15} {:4} {:4} {:03o}\n", g_header_type[i].name, g_header_type[i].min_pos.value_of(),
+                   g_header_type[i].max_pos.value_of(), static_cast<unsigned>(g_header_type[i].flags));
     }
 }
 #endif
@@ -660,7 +659,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             std::string line = nntp_get_a_line();
 #ifdef DEBUG
             if (g_debug & DEB_NNTP)
-                std::printf("<%s", line.empty() ? "<EOF>" : line.c_str());
+                fmt::print("<{}", line.empty() ? "<EOF>" : line);
 #endif
             if (nntp_at_list_end(line))
             {

@@ -21,6 +21,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <cstdio>
 #include <ctime>
@@ -753,9 +755,9 @@ void set_spin(SpinMode mode)
         {
             if (s_spin_mode != SPIN_BAR_GRAPH)
             {
-                s_spin_marks = (g_verbose? 25 : 10);
-                std::printf(" [%*s]", s_spin_marks, "");
-                for (int i = s_spin_marks + 1; i--; )
+                s_spin_marks = (g_verbose ? 25 : 10);
+                fmt::print(" [{:>{}}]", "", s_spin_marks);
+                for (int i = s_spin_marks + 1; i--;)
                 {
                     backspace();
                 }
@@ -923,18 +925,17 @@ void perform_status(int cnt, int spin)
     }
 
     carriage_return();
-    if (g_perform_count != sels  && g_perform_count != -sels
-     && g_perform_count != kills && g_perform_count != -kills)
+    if (g_perform_count != sels && g_perform_count != -sels && g_perform_count != kills && g_perform_count != -kills)
     {
-        std::printf("M:%d ", g_perform_count);
+        fmt::print("M:{} ", g_perform_count);
     }
     if (kills)
     {
-        std::printf("K:%ld ", kills);
+        fmt::print("K:{} ", kills);
     }
     if (sels)
     {
-        std::printf("S:%ld ", sels);
+        fmt::print("S:{} ", sels);
     }
     erase_eol();
     std::fflush(stdout);

@@ -300,11 +300,11 @@ static int do_kill_file(std::FILE *kfp, int entering)
             case SRCH_INTR:
                 if (g_verbose)
                 {
-                    std::printf("\n(Interrupted at article %ld)\n", g_art.value_of());
+                    fmt::print("\n(Interrupted at article {})\n", g_art.value_of());
                 }
                 else
                 {
-                    std::printf("\n(Intr at %ld)\n", g_art.value_of());
+                    fmt::print("\n(Intr at {})\n", g_art.value_of());
                 }
                 term_down(2);
                 return -1;

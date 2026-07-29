@@ -629,7 +629,7 @@ void look_ahead()
 #ifdef DEBUG
     if (g_debug && g_srchahead)
     {
-        std::printf("(%ld)",(long)g_srchahead);
+        fmt::print("({})", g_srchahead);
         std::fflush(stdout);
     }
 #endif
@@ -678,8 +678,8 @@ void look_ahead()
         const char *compile_error = s_srchcompex.compile(pattern, true, true);
         if (compile_error != nullptr)
         {
-                                    // compile regular expression
-            std::printf("\n%s\n",compile_error);
+            // compile regular expression
+            fmt::print("\n{}\n", compile_error);
             term_down(2);
             g_srchahead = 0;
         }
@@ -702,11 +702,11 @@ void look_ahead()
                 if (!was_read(g_srchahead) && //
                     wanted(&s_srchcompex, g_srchahead, 0))
                 {
-                                    // does the shoe fit?
+                    // does the shoe fit?
 #ifdef DEBUG
                     if (g_debug)
                     {
-                        std::printf("(%ld)",(long)g_srchahead);
+                        fmt::print("({})", g_srchahead);
                     }
 #endif
                     parseheader(g_srchahead);
@@ -1024,8 +1024,8 @@ bool cache_range(ArticleNum first, ArticleNum last)
     }
     g_spin_estimate = count.value_of();
 
-    std::printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
-           count.value_of(), plural(count.value_of()));
+    fmt::print("\n{}ing {} article{}.", g_threaded_group ? "Thread" : "Cach", count.value_of(),
+               plural(count.value_of()));
     term_down(1);
 
     set_spin(SPIN_FOREGROUND);

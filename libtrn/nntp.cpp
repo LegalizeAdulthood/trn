@@ -389,11 +389,11 @@ int nntp_finish_body(FinishBodyMode bmode)
     {
         if (g_verbose)
         {
-            std::printf("Receiving the rest of the article...");
+            fmt::print("Receiving the rest of the article...");
         }
         else
         {
-            std::printf("Receiving...");
+            fmt::print("Receiving...");
         }
         std::fflush(stdout);
     }

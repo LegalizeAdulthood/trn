@@ -18,6 +18,8 @@
 #include <trn/smisc.h>
 #include <trn/sorder.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstdio>
 
@@ -29,12 +31,12 @@ bool s_fill_page_backward(long end)
 {
     int  i;
     long a;             // misc entry number
-    int page_lines;     // lines available on page
-    int line_on;        // line # currently on: 0=line after top status bar
+    int  page_lines;    // lines available on page
+    int  line_on;       // line # currently on: 0=line after top status bar
 
 // Debug
 #if 0
-    std::printf("entry: s_fillpage_backward(%d)\n",end);
+    fmt::print("entry: s_fillpage_backward({})\n", end);
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
@@ -139,12 +141,12 @@ bool s_fill_page_forward(long start)
 {
     int i;
     long a;
-    int page_lines;     // lines available on page
-    int line_on;        // line # currently on (0: line after top status bar
+    int  page_lines; // lines available on page
+    int  line_on;    // line # currently on (0: line after top status bar
 
 // Debug
 #if 0
-    std::printf("entry: s_fillpage_forward(%d)\n",start);
+    fmt::print("entry: s_fillpage_forward({})\n", start);
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
@@ -245,12 +247,12 @@ bool s_refill_page()
     int  i;
     int  j;
     long a;
-    int page_lines;     // lines available on page
-    int line_on;        // line # currently on: 0=line after top status bar
+    int  page_lines; // lines available on page
+    int  line_on;    // line # currently on: 0=line after top status bar
 
 // Debug
 #if 0
-    std::printf("entry: s_refillpage\n");
+    fmt::print("entry: s_refillpage\n");
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
@@ -436,7 +438,7 @@ bool s_go_top_ents()
     g_s_top_ent = s_first();
     if (!g_s_top_ent)
     {
-        std::printf("s_go_top_ents(): no first entry\n");
+        fmt::print("s_go_top_ents(): no first entry\n");
     }
     TRN_ASSERT(g_s_top_ent);    // be nicer later
     if (!s_eligible(g_s_top_ent))       // this may save a redraw...

@@ -24,6 +24,8 @@
 #include <trn/util.h>
 #include <util/env.h>
 
+#include <fmt/format.h>
+
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
@@ -172,45 +174,46 @@ Signal_t int_catcher(int dummy)
 
 Signal_t sig_catcher(int signo)
 {
-    static const char *signame[]{
-        "",
-        "HUP",
-        "INT",
-        "QUIT",
-        "ILL",
-        "TRAP",
-        "IOT",
-        "EMT",
-        "FPE",
-        "KILL",
-        "BUS",
-        "SEGV",
-        "SYS",
-        "PIPE",
-        "ALRM",
-        "TERM",
-        "???"
+    static const char *signame[]{"",
+                                 "HUP",
+                                 "INT",
+                                 "QUIT",
+                                 "ILL",
+                                 "TRAP",
+                                 "IOT",
+                                 "EMT",
+                                 "FPE",
+                                 "KILL",
+                                 "BUS",
+                                 "SEGV",
+                                 "SYS",
+                                 "PIPE",
+                                 "ALRM",
+                                 "TERM",
+                                 "???"
 #ifdef SIGTSTP
-        ,"STOP",
-        "TSTP",
-        "CONT",
-        "CHLD",
-        "TTIN",
-        "TTOU",
-        "TINT",
-        "XCPU",
-        "XFSZ"
+                                 ,
+                                 "STOP",
+                                 "TSTP",
+                                 "CONT",
+                                 "CHLD",
+                                 "TTIN",
+                                 "TTOU",
+                                 "TINT",
+                                 "XCPU",
+                                 "XFSZ"
 #ifdef SIGPROF
-        ,"VTALARM",
-        "PROF"
+                                 ,
+                                 "VTALARM",
+                                 "PROF"
 #endif
 #endif
-        };
+    };
 
 #ifdef DEBUG
     if (g_debug)
     {
-        std::printf("\nSIG%s--.newsrc not restored in debug\n",signame[signo]);
+        fmt::print("\nSIG{}--.newsrc not restored in debug\n", signame[signo]);
         finalize(-1);
     }
 #endif
@@ -241,11 +244,11 @@ Signal_t sig_catcher(int signo)
     {
         if (g_verbose)
         {
-            std::printf("\nCaught %s%s--.newsrc restored\n", signo ? "a SIG" : "an internal error", signame[signo]);
+            fmt::print("\nCaught {}{}--.newsrc restored\n", signo ? "a SIG" : "an internal error", signame[signo]);
         }
         else
         {
-            std::printf("\nSignal %d--bye bye\n", signo);
+            fmt::print("\nSignal {}--bye bye\n", signo);
         }
     }
     switch (signo)

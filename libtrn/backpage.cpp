@@ -44,13 +44,13 @@ void back_page_init()
 
 ArticlePosition virtual_read(ArticleLine index)
 {
-    int sub_index;
+    int  sub_index;
     long offset;
 
 #ifdef DEBUG
     if (index > s_max_index)
     {
-        std::printf("vrdary(%ld) > %ld\n",(long)index.value_of(), (long)s_max_index);
+        fmt::print("vrdary({}) > {}\n", index.value_of(), s_max_index);
         return ArticlePosition{};
     }
 #endif
@@ -65,13 +65,13 @@ ArticlePosition virtual_read(ArticleLine index)
         if (s_old_offset >= 0)
         {
 #ifndef lint
-            (void)lseek(s_vary_fd,s_old_offset,0);
-            write(s_vary_fd, (char*)s_vary_buf,sizeof(s_vary_buf));
+            (void) lseek(s_vary_fd, s_old_offset, 0);
+            write(s_vary_fd, (char *) s_vary_buf, sizeof(s_vary_buf));
 #endif // lint
         }
 #ifndef lint
-        (void)lseek(s_vary_fd,offset,0);
-        read(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
+        (void) lseek(s_vary_fd, offset, 0);
+        read(s_vary_fd, (char *) s_vary_buf, sizeof(s_vary_buf));
 #endif // lint
         s_old_offset = offset;
     }
@@ -81,13 +81,13 @@ ArticlePosition virtual_read(ArticleLine index)
 // write to virtual array
 void virtual_write(ArticleLine index, ArticlePosition value)
 {
-    int sub_index;
+    int  sub_index;
     long offset;
 
 #ifdef DEBUG
     if (index < 0)
     {
-        std::printf("vwtary(%ld)\n",(long)index.value_of());
+        fmt::print("vwtary({})\n", index.value_of());
     }
     if (!index)
     {
@@ -97,7 +97,7 @@ void virtual_write(ArticleLine index, ArticlePosition value)
     {
         if (index != s_max_index + 1)
         {
-            std::printf("index skipped %d-%d\n",s_max_index+1,index.value_of()-1);
+            fmt::print("index skipped {}-{}\n", s_max_index + 1, index.value_of() - 1);
         }
         s_max_index = index.value_of();
     }

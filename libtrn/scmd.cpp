@@ -292,8 +292,8 @@ static int s_do_cmd(std::string_view command)
             break;
 
         default:
-            std::printf("No help available for this mode (yet).\n");
-            std::printf("Press any key to continue.\n");
+            fmt::print("No help available for this mode (yet).\n");
+            fmt::print("Press any key to continue.\n");
             break;
         }
         (void)get_anything();

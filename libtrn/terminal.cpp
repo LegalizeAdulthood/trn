@@ -286,10 +286,10 @@ void term_set(char *tcbuf)
     devtty = fileno(stdin);
     if (isatty(devtty))
     {
-        devtty = open("/dev/tty",0);
+        devtty = open("/dev/tty", 0);
         if (devtty < 0)
         {
-            std::printf(cantopen,"/dev/tty");
+            fmt::printf(cantopen, "/dev/tty");
             finalize(1);
         }
         fcntl(devtty,F_SETFL,O_NDELAY);
@@ -323,10 +323,10 @@ void term_set(char *tcbuf)
     g_tc_AM = true;
 #else
     const std::string term = get_env_var("TERM", "dumb");
-    status = tgetent(tcbuf, term.c_str());      // get termcap entry
+    status = tgetent(tcbuf, term.c_str()); // get termcap entry
     if (status < 1)
     {
-        std::printf("No termcap %s found.\n", status ? "file" : "entry");
+        fmt::print("No termcap {} found.\n", status ? "file" : "entry");
         finalize(1);
     }
     tmpaddr = s_termcap_area;           // set up strange tgetstr pointer
@@ -2764,7 +2764,7 @@ const char *tc_color_capability(std::string_view capability)
 #ifdef MSDOS
 int tputs(const char *str, int num, int (*func)(int))
 {
-    std::printf(str,num);
+    fmt::printf(str, num);
     return 0;
 }
 #endif

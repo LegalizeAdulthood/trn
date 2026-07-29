@@ -269,7 +269,7 @@ beginning:
         }
         if (g_verbose && !g_first_subject && !g_data_source->m_ov_opened)
         {
-            std::printf("\nGetting overview file.");
+            fmt::print("\nGetting overview file.");
             std::fflush(stdout);
         }
     }
@@ -283,7 +283,7 @@ beginning:
         }
         if (g_verbose && !g_first_subject)
         {
-            std::printf("\nReading overview file.");
+            fmt::print("\nReading overview file.");
             std::fflush(stdout);
         }
     }

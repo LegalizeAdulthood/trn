@@ -29,6 +29,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <charconv>
 #include <cstdio>
@@ -301,8 +303,8 @@ int sa_do_cmd(std::string_view command)
         }
         // clear to end of screen
         clear_rest();
-        g_s_ref_all = true;     // refresh everything
-        std::printf("\nRescoring articles...\n");
+        g_s_ref_all = true; // refresh everything
+        fmt::print("\nRescoring articles...\n");
         sc_rescore();
         s_sort();
         s_go_top_ents();
@@ -624,31 +626,31 @@ int sa_do_cmd(std::string_view command)
     {
         s_go_bot();
         g_s_ref_all = true;
-        std::printf("Enter score append command or type RETURN for a menu\n");
+        fmt::print("Enter score append command or type RETURN for a menu\n");
         const std::string full_command = finish_command(":", false);
         if (full_command.empty())
         {
             break;
         }
-        std::printf("\n");
+        fmt::print("\n");
         sa_go_art(artnum);
         sc_append(sa_command_argument(full_command));
-        (void)get_anything();
+        (void) get_anything();
         eat_typeahead();
         break;
     }
 
-    case '\'':                        // execute scoring command
+    case '\'': // execute scoring command
     {
         s_go_bot();
         g_s_ref_all = true;
-        std::printf("\nEnter scoring command or type RETURN for a menu\n");
+        fmt::print("\nEnter scoring command or type RETURN for a menu\n");
         const std::string full_command = finish_command(":", false);
         if (full_command.empty())
         {
             break;
         }
-        std::printf("\n");
+        fmt::print("\n");
         sa_go_art(artnum);
         sc_score_cmd(sa_command_argument(full_command));
         g_s_ref_all = true;

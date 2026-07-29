@@ -50,7 +50,7 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
             }
             else
             {
-                std::printf("\nAll but %d marked as read.\n", leave_count);
+                fmt::print("\nAll but {} marked as read.\n", leave_count);
             }
         }
         check_expired(get_newsgroup_size() - ArticleNum{leave_count + 1});
@@ -104,13 +104,13 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
     {
         return 0;
     }
-    if (dp != np->m_rc->data_source)          // punt on cross-host xrefs
+    if (dp != np->m_rc->data_source) // punt on cross-host xrefs
     {
 #ifdef DEBUG
         if (g_debug & DEB_XREF_MARKER)
         {
             const std::string group_name{newsgroup_name};
-            std::printf("Cross-host xref to group %s ignored.\n", group_name.c_str());
+            fmt::print("Cross-host xref to group {} ignored.\n", group_name);
         }
 #endif
         return 0;

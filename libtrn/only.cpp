@@ -15,7 +15,6 @@
 
 #include <fmt/format.h>
 
-#include <cstdio>
 #include <string>
 #include <string_view>
 
@@ -48,7 +47,7 @@ void set_newsgroup_to_do(std::string_view pat)
         const char *err = newsgroup_comp(s_compex_to_do[i], pat, true, true);
         if (err != nullptr)
         {
-            std::printf("\n%s\n",err);
+            fmt::print("\n{}\n", err);
             finalize(1);
         }
         g_max_newsgroup_to_do++;

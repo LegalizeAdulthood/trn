@@ -161,9 +161,7 @@ static void skip_interp_cursor(std::string_view &pattern, std::string_view stopp
 #ifdef DEBUG
     if (g_debug & DEB_INTRP)
     {
-        std::printf("skipinterp %.*s (till %.*s)\n", static_cast<int>(pattern.size()),
-                    pattern.empty() ? "" : pattern.data(), static_cast<int>(stoppers.size()),
-                    stoppers.empty() ? "" : stoppers.data());
+        fmt::print("skipinterp {} (till {})\n", pattern, stoppers);
     }
 #endif
 

@@ -11,7 +11,8 @@
 #include <trn/ngsrch.h>
 #include <trn/search.h>
 
-#include <cstdio>
+#include <fmt/format.h>
+
 #include <string>
 #include <string_view>
 
@@ -41,8 +42,8 @@ static bool match_list(std::string_view pat_list, std::string_view s)
     CompiledRegex il_compex;
 
     const std::string candidate{s};
-    bool             result = false;
-    std::string_view patterns = pat_list;
+    bool              result = false;
+    std::string_view  patterns = pat_list;
     il_compex.init_compex();
     while (!patterns.empty())
     {
@@ -61,7 +62,7 @@ static bool match_list(std::string_view pat_list, std::string_view s)
 
         if (err != nullptr)
         {
-            std::printf("\n%s\n", err);
+            fmt::print("\n{}\n", err);
             finalize(1);
         }
 

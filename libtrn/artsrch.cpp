@@ -352,7 +352,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
 #ifdef DEBUG
         if (g_debug)
         {
-            std::printf("\npattern = %s\n", pattern_text.c_str());
+            fmt::print("\npattern = {}\n", pattern_text);
             term_down(2);
         }
 #endif
@@ -512,7 +512,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
             }
             else if (output_level && cmd_lst.empty() && !(g_art % ArticleNum{50}))
             {
-                std::printf("...%ld", g_art.value_of());
+                fmt::print("...{}", g_art.value_of());
                 std::fflush(stdout);
             }
         }

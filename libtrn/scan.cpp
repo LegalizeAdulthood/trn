@@ -11,6 +11,8 @@
 #include <trn/size_cast.h>
 #include <trn/sorder.h>
 
+#include <fmt/format.h>
+
 #include <cstdio>
 
 // TODO: make a scontext file for the scan context stuff.
@@ -53,7 +55,7 @@ static void s_init_context(int cnum, ScanContextType type)
 {
     if (cnum < 0 || cnum >= size_cast<int>(g_s_contexts))
     {
-        std::printf("s_init_context: illegal context number %d!\n",cnum);
+        fmt::print("s_init_context: illegal context number {}!\n", cnum);
         TRN_ASSERT(false);
     }
     ScanContext *p = &g_s_contexts[cnum];
@@ -141,13 +143,12 @@ void s_save_context()
     p->flags = g_s_flags;
 }
 
-
 // int newcontext;                      // context number to activate
 void s_change_context(int newcontext)
 {
     if (newcontext < 0 || newcontext >= size_cast<int>(g_s_contexts))
     {
-        std::printf("s_change_context: bad context number %d!\n",newcontext);
+        fmt::print("s_change_context: bad context number {}!\n", newcontext);
         TRN_ASSERT(false);
     }
     g_s_cur_context = newcontext;
@@ -183,12 +184,12 @@ static void s_clean_contexts()
 {
 }
 
-//int cnum;             // context number to delete
+// int cnum;             // context number to delete
 void s_delete_context(int cnum)
 {
     if (cnum < 0 || cnum >= size_cast<int>(g_s_contexts))
     {
-        std::printf("s_delete_context: illegal context number %d!\n",cnum);
+        fmt::print("s_delete_context: illegal context number {}!\n", cnum);
         TRN_ASSERT(false);
     }
     if (cnum == g_s_cur_context)
