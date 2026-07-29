@@ -118,6 +118,12 @@ full audit across all audit criteria against the current source.  Do not
 only look for new slices in the tier that was emptied.  Prioritize any
 new slices by dependency tier before continuing with the next tier.
 
+Do not create one-call output-only slices when a source-file or
+function-level output cleanup can be reviewed coherently.  Group simple
+`printf`/`fputs`/`putchar` conversions by source file or tightly related
+function area unless dataflow, ownership, or control-flow risk argues
+for a smaller slice.
+
 Do not self-defer findings.  If source still contains matching raw
 string ownership, a fixed buffer, a raw return, or path storage, keep the
 candidate visible as a slice until it is completed or the user explicitly
@@ -668,7 +674,7 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `fgets` 2.
-- C text output: `fputs` 150, `printf`/`std::printf` 272,
+- C text output: `fputs` 150, `printf`/`std::printf` 271,
   `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
@@ -715,8 +721,8 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `ngstuff.cpp` 8, `nntp.cpp` 2, `only.cpp` 1, `opt.cpp` 9,
   `rcln.cpp` 2, `rcstuff.cpp` 14, `respond.cpp` 7, `rt-ov.cpp` 2,
   `rt-page.cpp` 14, `rt-select.cpp` 9, `rt-util.cpp` 4,
-  `rt-wumpus.cpp` 2, `sacmd.cpp` 5, `sadesc.cpp` 1,
-  `sadisp.cpp` 8, `scan.cpp` 3, `scmd.cpp` 2, `score.cpp` 18,
+  `rt-wumpus.cpp` 2, `sacmd.cpp` 5, `sadisp.cpp` 8,
+  `scan.cpp` 3, `scmd.cpp` 2, `score.cpp` 18,
   `scorefile.cpp` 20, `scoresave.cpp` 6, `sdisp.cpp` 10,
   `spage.cpp` 4, `terminal.cpp` 3, `trn.cpp` 12, `univ.cpp` 9,
   and `util.cpp` 6.
@@ -766,16 +772,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-488 - Convert Status Character Inactive Debug Output
-
-- Files: `libtrn/sadesc.cpp`.
-- Kind: inactive debug C output.
-- Function: `sa_get_stat_chars`.
-- Dependencies: none.
-- Change: update the `#if 0` debug `std::printf` to `fmt::print`
-  without removing the inactive block.
-- Tests: `ScmdTest` status-character cases.
 
 #### CSTR-489 - Convert Page Switch Literal Messages
 

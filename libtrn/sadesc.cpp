@@ -19,7 +19,6 @@
 
 #include <fmt/format.h>
 
-#include <cstdio>
 #include <iterator>
 #include <string>
 
@@ -29,7 +28,7 @@ std::string sa_get_stat_chars(long a, int line)
 {
 // Debug
 #if 0
-    std::printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line);
+    fmt::print("entry: sa_get_statchars({},{})\n", static_cast<int>(a), line);
 #endif
 
     switch (line)
