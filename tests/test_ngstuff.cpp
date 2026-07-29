@@ -17,8 +17,6 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
-#include <array>
 #include <filesystem>
 #include <string>
 #include <system_error>
@@ -47,7 +45,6 @@ protected:
         m_old_save_dir = g_save_dir;
         m_old_bizarre = g_bizarre;
         m_old_check_flag = g_check_flag;
-        std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_root = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -73,7 +70,6 @@ protected:
 
     void TearDown() override
     {
-        std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
         g_priv_dir = m_old_priv_dir;
         g_save_dir = m_old_save_dir;
         g_bizarre = m_old_bizarre;
@@ -98,7 +94,6 @@ protected:
     fs::path                           m_save;
     std::string                        m_old_priv_dir;
     std::string                        m_old_save_dir;
-    std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
     bool                               m_old_bizarre{};
     bool                               m_old_check_flag{};
 };
@@ -145,16 +140,12 @@ protected:
     void SetUp() override
     {
         drain_macro_buffer();
-        std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
     }
 
     void TearDown() override
     {
         drain_macro_buffer();
-        std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
     }
-
-    std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
 };
 
 class PerformExpansionTest : public testing::Test
@@ -165,7 +156,6 @@ protected:
         m_old_one_command = g_one_command;
         m_old_perform_count = g_perform_count;
         m_old_msg = g_msg;
-        std::copy_n(g_buf, m_old_buf.size(), m_old_buf.begin());
         drain_macro_buffer();
 
         g_one_command = false;
@@ -178,13 +168,11 @@ protected:
         g_perform_count = m_old_perform_count;
         g_msg = m_old_msg;
         drain_macro_buffer();
-        std::copy(m_old_buf.begin(), m_old_buf.end(), g_buf);
     }
 
-    std::string                        m_old_msg;
-    std::array<char, LINE_BUF_LEN + 1> m_old_buf{};
-    bool                               m_old_one_command{};
-    int                                m_old_perform_count{};
+    std::string m_old_msg;
+    bool        m_old_one_command{};
+    int         m_old_perform_count{};
 };
 
 } // namespace

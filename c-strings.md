@@ -784,16 +784,6 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-484 - Remove `g_buf` From Ngstuff Test Fixtures
-
-- Files: `tests/test_ngstuff.cpp`.
-- Kind: test fixture global buffer dependency.
-- Function: `NgstuffTest` fixture and cases.
-- Dependencies: none.
-- Change: update tests to provide command text through modern APIs
-  instead of saving and restoring `g_buf`.
-- Tests: `NgstuffTest`.
-
 #### CSTR-485 - Remove `g_buf` From Terminal Tests
 
 - Files: `tests/test_terminal.cpp`.
@@ -828,7 +818,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-484` through `CSTR-485`.
+- Dependencies: `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.
