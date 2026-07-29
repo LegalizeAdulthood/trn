@@ -22,7 +22,6 @@ extern bool        g_one_command; // no ':' processing in perform()
 extern std::string g_save_dir;    // -d
 
 void         newsgroup_stuff_init();
-bool         escapade();
 bool         escapade(std::string_view command);
 bool         switcheroo();
 bool         switcheroo(std::string_view command);

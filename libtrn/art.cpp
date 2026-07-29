@@ -962,8 +962,8 @@ PageSwitchResult page_switch(std::string_view command)
 
     switch (command_char)
     {
-    case '!':                 // shell escape
-        escapade();
+    case '!': // shell escape
+        escapade(command);
         return PS_ASK;
 
     case Ctl('i'):

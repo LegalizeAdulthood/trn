@@ -302,10 +302,10 @@ static int s_do_cmd(std::string_view command)
 
     case '!': // shell command
         s_go_bot();
-        g_s_ref_all = true;                     // will need refresh
-        if (!escapade())
+        g_s_ref_all = true; // will need refresh
+        if (!escapade(command))
         {
-            (void)get_anything();
+            (void) get_anything();
         }
         eat_typeahead();
         break;

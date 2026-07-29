@@ -122,14 +122,9 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner, std::str
         }
     }
 #ifdef MAIL_CALL
-    g_mail_count = 0;                    // force recheck
+    g_mail_count = 0; // force recheck
 #endif
     return false;
-}
-
-bool escapade()
-{
-    return escapade(std::string_view{g_buf});
 }
 
 bool escapade(std::string_view command)
