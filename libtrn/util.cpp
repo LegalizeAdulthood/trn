@@ -329,7 +329,7 @@ std::string trn_getwd()
     std::string     cwd = fs::current_path(ec).string();
     if (ec)
     {
-        std::printf("Cannot determine current working directory!\n");
+        fmt::print("Cannot determine current working directory!\n");
         finalize(1);
     }
 #ifdef _WIN32
@@ -413,24 +413,24 @@ std::string set_def(std::string_view command, std::string_view dflt)
 // attempts to verify a cryptographic signature.
 void verify_sig()
 {
-    std::printf("\n");
+    fmt::print("\n");
     // RIPEM
     int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
-    if (!i)     // found RIPEM
+    if (!i) // found RIPEM
     {
         i = do_shell(SH, file_exp(get_env_var("VERIFY_RIPEM", VERIFY_RIPEM)));
-        std::printf("\nReturned value: %d\n",i);
+        fmt::print("\nReturned value: {}\n", i);
         return;
     }
     // PGP
     i = do_shell(SH, file_exp("grep -s \"BEGIN PGP\" %A"));
-    if (!i)     // found PGP
+    if (!i) // found PGP
     {
         i = do_shell(SH, file_exp(get_env_var("VERIFY_PGP", VERIFY_PGP)));
-        std::printf("\nReturned value: %d\n",i);
+        fmt::print("\nReturned value: {}\n", i);
         return;
     }
-    std::printf("No PGP/RIPEM signatures detected.\n");
+    fmt::print("No PGP/RIPEM signatures detected.\n");
 }
 
 double current_time()
@@ -650,7 +650,7 @@ void parse_string(std::string &to, std::string_view &from)
 #if 0
     if (inquote)
     {
-        std::printf("Unbalanced quotes.\n");
+        fmt::print("Unbalanced quotes.\n");
     }
 #endif
 

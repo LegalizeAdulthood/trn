@@ -677,8 +677,7 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `fgets` 2.
-- C text output: `fputs` 150, `printf`/`std::printf` 213,
-  `fprintf`/`std::fprintf` 13.
+- C text output: `fputs` 150, `fprintf`/`std::fprintf` 13.
 - Character output: `putchar`/`std::putchar` 81.
 - Character byte operations: `memset` 1.
 
@@ -686,9 +685,9 @@ The scan found no current active source/test hits for `strcmp`,
 `strcpy`, `strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`,
 `strrchr`, `strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`,
 `strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`,
-`gets`, `puts`, `memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`,
-`atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
-`std::strtoul`, or `std::strtod`.
+`gets`, `puts`, `printf`, `std::printf`, `memcpy`, `memmove`,
+`memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`, `std::atof`,
+`std::atol`, `std::strtol`, `std::strtoul`, or `std::strtod`.
 
 `fmt::sprintf` appears three times.  These calls are not C buffer
 writes.  They are tracked only where the format template itself should
@@ -717,13 +716,8 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
   `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Promote concrete
   source locations to explicit function-level slices before editing.
-- `printf`/`std::printf`: `edit_dist.cpp` 10, `mime.cpp` 18,
-  `ng.cpp` 35, `ngstuff.cpp` 8, `opt.cpp` 9, `rcstuff.cpp` 14,
-  `respond.cpp` 7, `rt-page.cpp` 14, `rt-select.cpp` 9,
-  `sadisp.cpp` 8, `score.cpp` 18,
-  `scorefile.cpp` 20, `scoresave.cpp` 6, `sdisp.cpp` 10,
-  `trn.cpp` 12, `univ.cpp` 9, and `util.cpp` 6.
-  `parsedate/parsedate.y` has 5 exempt hits.
+- `printf`/`std::printf`: `parsedate/parsedate.y` has 5 exempt
+  `#ifdef TEST` harness hits.
 - `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
   `libtrn/color.cpp` 2, `decode.cpp` 1, `head.cpp` 1, `nntp.cpp` 1,
   `opt.cpp` 2, `respond.cpp` 2, `scoresave.cpp` 1, `terminal.cpp` 1,
@@ -769,194 +763,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-512 - Convert printf Output In scoresave.cpp
-
-- Files: `libtrn/scoresave.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 6.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `ScoresaveTest`.
-
-#### CSTR-513 - Convert printf Output In util.cpp
-
-- Files: `libtrn/util.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 6.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `UtilTest`.
-
-#### CSTR-514 - Convert printf Output In respond.cpp
-
-- Files: `libtrn/respond.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 7.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: response workflow tests.
-
-#### CSTR-515 - Convert printf Output In ngstuff.cpp
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 8.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `NgstuffTest`.
-
-#### CSTR-516 - Convert printf Output In sadisp.cpp
-
-- Files: `libtrn/sadisp.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 8.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: scan-art display tests.
-
-#### CSTR-517 - Convert printf Output In opt.cpp
-
-- Files: `libtrn/opt.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 9.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `OptTest`.
-
-#### CSTR-518 - Convert printf Output In rt-select.cpp
-
-- Files: `libtrn/rt-select.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 9.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: selector tests.
-
-#### CSTR-519 - Convert printf Output In univ.cpp
-
-- Files: `libtrn/univ.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 9.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `UniversalSelectorTest`.
-
-#### CSTR-520 - Convert printf Output In edit_dist.cpp
-
-- Files: `libtrn/edit_dist.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 10.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: edit-distance tests if present; otherwise build compile
-  coverage.
-
-#### CSTR-521 - Convert printf Output In sdisp.cpp
-
-- Files: `libtrn/sdisp.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 10.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: scan display tests.
-
-#### CSTR-522 - Convert printf Output In trn.cpp
-
-- Files: `libtrn/trn.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 12.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `TrnTest`.
-
-#### CSTR-523 - Convert printf Output In rcstuff.cpp
-
-- Files: `libtrn/rcstuff.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 14.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `RcstuffTest`.
-
-#### CSTR-524 - Convert printf Output In rt-page.cpp
-
-- Files: `libtrn/rt-page.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 14.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `RtPageTest`.
-
-#### CSTR-525 - Convert printf Output In mime.cpp
-
-- Files: `libtrn/mime.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 18.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `MimeTest`.
-
-#### CSTR-526 - Convert printf Output In score.cpp
-
-- Files: `libtrn/score.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 18.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: score tests.
-
-#### CSTR-527 - Convert printf Output In scorefile.cpp
-
-- Files: `libtrn/scorefile.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 20.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: `ScorefileTest`.
-
-#### CSTR-528 - Convert printf Output In ng.cpp
-
-- Files: `libtrn/ng.cpp`.
-- Kind: file-level printf output.
-- Functions: all remaining printf call sites in this file; current count
-  is 35.
-- Dependencies: none.
-- Change: convert all remaining `printf`/`std::printf` output in this
-  file to fmt.
-- Tests: newsgroup workflow tests.
 
 #### CSTR-489 - Convert Page Switch Literal Messages
 

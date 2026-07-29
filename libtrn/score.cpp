@@ -55,35 +55,35 @@ void sc_init(bool pend_wait)
     {
 // Debug
 #if 0
-        std::printf("No articles exist to be scored.\n");
+        fmt::print("No articles exist to be scored.\n");
 #endif
         return;
     }
-    s_sc_sf_force_init = true;          // generally force initialization
-    if (g_sc_delay)                     // requested delay?
+    s_sc_sf_force_init = true; // generally force initialization
+    if (g_sc_delay)            // requested delay?
     {
         return;
     }
     s_sc_sf_delay = false;
 
-// Consider the relationships between scoring and article scan mode.
-// Should one be able to initialize the other?  How much can they depend on
-// each other when both are #defined?
-// Consider this especially in a later redesign or porting these systems
-// to other newsreaders.
-//
-    g_kill_thresh_active = false;  // kill thresholds are generic
+    // Consider the relationships between scoring and article scan mode.
+    // Should one be able to initialize the other?  How much can they depend on
+    // each other when both are #defined?
+    // Consider this especially in a later redesign or porting these systems
+    // to other newsreaders.
+    //
+    g_kill_thresh_active = false; // kill thresholds are generic
     // July 24, 1993: changed default of g_sc_savescores to true
     g_sc_saves_cores = true;
 
-// CONSIDER: (for sc_init callers) is g_lastart properly set yet?
+    // CONSIDER: (for sc_init callers) is g_lastart properly set yet?
     g_sc_fill_max = article_before(g_abs_first);
     g_sc_fill_read = g_sa_mode_read_elig || g_first_art > g_last_art;
 
     if (g_sf_verbose)
     {
-        std::printf("\nScoring articles...");
-        std::fflush(stdout);         // print it *now*
+        fmt::print("\nScoring articles...");
+        std::fflush(stdout); // print it *now*
     }
 
     g_sc_initialized = true;    // little white lie for lookahead
@@ -143,11 +143,11 @@ void sc_init(bool pend_wait)
                 break;
             }
         }
-        if (a < g_abs_first)             // no articles scored
+        if (a < g_abs_first) // no articles scored
         {
             if (g_sf_verbose)
             {
-                std::printf("\nNo articles available for scoring\n");
+                fmt::print("\nNo articles available for scoring\n");
             }
             sc_cleanup();
             return;
@@ -161,7 +161,7 @@ void sc_init(bool pend_wait)
         // score everything really fast
         for (ArticleNum art = article_last(g_last_art); art >= g_abs_first; art = article_prev(art))
         {
-            sc_score_art(art,true);
+            sc_score_art(art, true);
         }
     }
     if (pend_wait)
@@ -170,9 +170,9 @@ void sc_init(bool pend_wait)
         if (g_sf_verbose && waitflag)
         {
 #ifdef PENDING
-            std::printf("(press key to start reading)");
+            fmt::print("(press key to start reading)");
 #else
-            std::printf("(interrupt to start reading)");
+            fmt::print("(interrupt to start reading)");
 #endif
             std::fflush(stdout);
         }
@@ -211,19 +211,19 @@ void sc_cleanup()
 
     if (g_sf_verbose)
     {
-        std::printf("\nCleaning up scoring...");
+        fmt::print("\nCleaning up scoring...");
         std::fflush(stdout);
     }
 
     if (!s_sc_sf_delay)
     {
-        sf_clean();     // let the scorefile do whatever cleaning it needs
+        sf_clean(); // let the scorefile do whatever cleaning it needs
     }
     g_sc_initialized = false;
 
     if (g_sf_verbose)
     {
-        std::printf("Done.\n");
+        fmt::print("Done.\n");
     }
 }
 
@@ -266,9 +266,9 @@ int sc_score_art(ArticleNum a, bool now)
     {
 // Debug
 #if 0
-         std::printf("\nsc_score_art: illegal article# %d\n",a);
+        fmt::print("\nsc_score_art: illegal article# {}\n", a.value_of());
 #endif
-        return LOW_SCORE;                // definitely unavailable
+        return LOW_SCORE; // definitely unavailable
     }
     if (is_unavailable(a))
     {
@@ -453,18 +453,18 @@ static void sc_rescore_arts()
     }
     if (!g_sc_initialized)
     {
-        std::printf("\nScoring is not initialized, aborting command.\n");
+        fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
     }
     // I think s_sc_do_spin will always be false, but why take chances?
     bool old_spin = s_sc_do_spin;
     set_spin(SPIN_FOREGROUND);
-    s_sc_do_spin = true;                                // amuse the user
+    s_sc_do_spin = true; // amuse the user
     for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
         if (article_exists(a))
         {
-            sc_score_art_basic(a);              // rescore it then
+            sc_score_art_basic(a); // rescore it then
         }
     }
     s_sc_do_spin = old_spin;
@@ -473,7 +473,7 @@ static void sc_rescore_arts()
     {
         g_s_ref_all = true;
         g_s_refill = true;
-        g_s_top_ent = 0;                // make sure the refill starts from top
+        g_s_top_ent = 0; // make sure the refill starts from top
     }
 }
 
@@ -498,7 +498,7 @@ void sc_append(std::string_view line)
     }
     if (!g_sc_initialized)
     {
-        std::printf("\nScoring is not initialized, aborting command.\n");
+        fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
     }
     std::string easy_line;
@@ -515,10 +515,10 @@ void sc_append(std::string_view line)
     sf_append(line);
     if (filechar == '!')
     {
-        std::printf("\nRescoring articles...");
+        fmt::print("\nRescoring articles...");
         std::fflush(stdout);
         sc_rescore_arts();
-        std::printf("Done.\n");
+        fmt::print("Done.\n");
         if (g_sa_initialized)
         {
             g_s_top_ent = -1;           // reset top of page
@@ -563,7 +563,7 @@ void sc_score_cmd(std::string_view line)
     }
     if (!g_sc_initialized)
     {
-        std::printf("\nScoring is not initialized, aborting command.\n");
+        fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
     }
     if (line.empty())
@@ -583,11 +583,11 @@ void sc_score_cmd(std::string_view line)
     switch (line.front())
     {
     case 'f': // fill (useful when PENDING is unavailable)
-        std::printf("Scoring more articles...");
+        fmt::print("Scoring more articles...");
         std::fflush(stdout); // print it now
         set_spin(SPIN_FOREGROUND);
         s_sc_do_spin = true;
-        sc_look_ahead(true,false);
+        sc_look_ahead(true, false);
         s_sc_do_spin = false;
         set_spin(SPIN_POP);
         // consider a "done" message later,
@@ -596,25 +596,25 @@ void sc_score_cmd(std::string_view line)
         break;
 
     case 'r': // rescore
-        std::printf("Rescoring articles...\n");
+        fmt::print("Rescoring articles...\n");
         sc_rescore();
         break;
 
     case 's': // verbose score for this article
         // XXX CONSIDER: A VERBOSE-SCORE ROUTINE (instead of this hack)
-        i = 0;  // total score
+        i = 0; // total score
         g_sf_score_verbose = true;
         j = sf_score(g_art);
         g_sf_score_verbose = false;
-        std::printf("Scorefile total score: %ld\n",j);
+        fmt::print("Scorefile total score: {}\n", j);
         i += j;
-        j = sc_score_art(g_art,true);
+        j = sc_score_art(g_art, true);
         if (i != j)
         {
             // Consider resubmitting article to filter?
-            std::printf("Other scoring total: %ld\n", j - i);
+            fmt::print("Other scoring total: {}\n", j - i);
         }
-        std::printf("Total score is %ld\n",i);
+        fmt::print("Total score is {}\n", i);
         break;
 
     case 'e': // edit scorefile or other file

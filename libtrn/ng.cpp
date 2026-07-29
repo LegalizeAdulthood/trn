@@ -501,39 +501,39 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             else
             {
-                std::fputs("\n\n",stdout);
+                std::fputs("\n\n", stdout);
                 term_down(2);
             }
             if (g_verbose)
             {
-                std::printf("End of newsgroup %s.",g_newsgroup_name.c_str());
-                                        // print pseudo-article
+                fmt::print("End of newsgroup {}.", g_newsgroup_name);
+                // print pseudo-article
             }
             else
             {
-                std::printf("End of %s", g_newsgroup_name.c_str());
+                fmt::print("End of {}", g_newsgroup_name);
             }
             if (g_obj_count)
             {
                 if (g_selected_only)
                 {
-                    std::printf("  (%ld + %ld articles still unread)", (long) g_selected_count,
-                           g_obj_count.value_of() - g_selected_count);
+                    fmt::print("  ({} + {} articles still unread)", static_cast<long>(g_selected_count),
+                               g_obj_count.value_of() - g_selected_count);
                 }
                 else
                 {
-                    std::printf("  (%ld article%s still unread)", (long) g_obj_count.value_of(), plural(g_obj_count.value_of()));
+                    fmt::print("  ({} article{} still unread)", g_obj_count.value_of(), plural(g_obj_count.value_of()));
                 }
             }
             if (g_redirected)
             {
                 if (g_redirected_to.empty())
                 {
-                    std::printf("\n\n** This group has been disabled by your news admin **");
+                    fmt::print("\n\n** This group has been disabled by your news admin **");
                 }
                 else
                 {
-                    std::printf("\n\n** Please start using %s **", g_redirected_to.c_str());
+                    fmt::print("\n\n** Please start using {} **", g_redirected_to);
                 }
                 term_down(2);
             }
@@ -1177,15 +1177,13 @@ check_dec_art:
         {
             if (g_verbose)
             {
-                std::printf("\nThere are no%s%s articles prior to this one.\n",
-                       command_ch == 'P' ? "" : " unread",
-                       g_selected_only ? " selected" : "");
+                fmt::print("\nThere are no{}{} articles prior to this one.\n", command_ch == 'P' ? "" : " unread",
+                           g_selected_only ? " selected" : "");
             }
             else
             {
-                std::printf("\nNo previous%s%s articles\n",
-                       command_ch == 'P' ? "" : " unread",
-                       g_selected_only ? " selected" : "");
+                fmt::print("\nNo previous{}{} articles\n", command_ch == 'P' ? "" : " unread",
+                           g_selected_only ? " selected" : "");
             }
             term_down(2);
             g_art = g_curr_art;
@@ -1460,14 +1458,14 @@ normal_search:
         case SRCH_INTR:
             if (g_verbose)
             {
-                std::printf("\n(Interrupted at article %ld)\n",(long)g_art.value_of());
+                fmt::print("\n(Interrupted at article {})\n", g_art.value_of());
             }
             else
             {
-                std::printf("\n(Intr at %ld)\n",(long)g_art.value_of());
+                fmt::print("\n(Intr at {})\n", g_art.value_of());
             }
             term_down(2);
-            g_art = g_curr_art;     // restore to current article
+            g_art = g_curr_art; // restore to current article
             return AS_ASK;
 
         case SRCH_DONE:
@@ -1475,11 +1473,11 @@ normal_search:
             {
                 erase_line(false);
                 perform_status_end(g_newsgroup_ptr->m_to_read, "article");
-                std::printf("%s\n", g_msg.c_str());
+                fmt::print("{}\n", g_msg);
             }
             else
             {
-                std::fputs("done\n",stdout);
+                std::fputs("done\n", stdout);
             }
             term_down(1);
             pad(g_just_a_sec/3);        // 1/3 second
@@ -1536,7 +1534,7 @@ normal_search:
         {
             g_artp->delay_unmark();
             g_artp->one_less();
-            std::printf("\nArticle %ld will return.\n", g_art.value_of());
+            fmt::print("\nArticle {} will return.\n", g_art.value_of());
             term_down(2);
         }
         return AS_ASK;
@@ -1545,12 +1543,12 @@ normal_search:
         if (g_art >= g_abs_first && g_art <= g_last_art)
         {
             g_artp->unmark_as_read();
-            std::printf("\nArticle %ld marked as still unread.\n", g_art.value_of());
+            fmt::print("\nArticle {} marked as still unread.\n", g_art.value_of());
             term_down(2);
         }
         return AS_ASK;
 
-    case 'c':                 // catch up
+    case 'c': // catch up
         switch (ask_catchup())
         {
         case 'n':
@@ -1563,11 +1561,12 @@ normal_search:
         g_force_last = false;
         return AS_NORM;
 
-    case 'Q':  case '`':
+    case 'Q':
+    case '`':
         s_exit_code = NG_ASK;
         return AS_CLEAN;
 
-    case 'q':                 // go back up to newsgroup level?
+    case 'q': // go back up to newsgroup level?
         s_exit_code = NG_NEXT;
         return AS_CLEAN;
 
@@ -1577,7 +1576,7 @@ normal_search:
         {
             g_first_view = ArticleLine{};
         }
-        std::printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
+        fmt::print("\nAuto-View inlined mime is {}\n", g_auto_view_inline ? "on" : "off");
         term_down(2);
         break;
 
@@ -1593,409 +1592,417 @@ normal_search:
         univ_help(UHELP_ART);
         return AS_ASK;
 
-    case 'H':                 // help?
+    case 'H': // help?
         help_art();
         return AS_ASK;
 
     case '&':
         if (switcheroo(command)) // get rest of command
         {
-            return AS_INP;      // if rubbed out, try something else
+            return AS_INP; // if rubbed out, try something else
         }
         return AS_ASK;
 
     case '#':
         if (g_verbose)
         {
-            std::printf("\nThe last article is %ld.\n",(long)g_last_art.value_of());
+            fmt::print("\nThe last article is {}.\n", g_last_art.value_of());
         }
         else
         {
-            std::printf("\n%ld\n",(long)g_last_art.value_of());
+            fmt::print("\n{}\n", g_last_art.value_of());
         }
         term_down(2);
         return AS_ASK;
 
-    case '+':                 // enter selection mode
-run_the_selector:
-        if (s_art_sel_lock)
-        {
-            std::printf("\nAlready inside article selector!\n");
-            term_down(2);
-            return AS_ASK;
-        }
-        // modes do not mix very well, so turn off the SA mode
-        g_sa_in = false;
-        // turn on temporary follow
-        g_s_follow_temp = true;
-        g_univ_follow_temp = true;
-        s_art_sel_lock = true;
-        selector_command = article_selector(selector_command);
-        s_art_sel_lock = false;
-        switch (selector_command)
-        {
-        case '+':
-            newline();
-            g_term_scrolled = g_tc_LINES;
-            g_term_line = g_tc_LINES-1;
-            return AS_ASK;
-
-        case 'Q':
-            s_exit_code = NG_ASK;
-            break;
-
-        case 'q':
-            s_exit_code = NG_NEXT;
-            break;
-
-        case 'N':
-            s_exit_code = NG_SEL_NEXT;
-            break;
-
-        case 'P':
-            s_exit_code = NG_SEL_PRIOR;
-            break;
-
-        case ';':
-            g_sa_do_sel_threads = true;
-            g_sa_go_explicit = true;
-            return AS_SA;
-
-        default:
-            if (g_newsgroup_ptr->m_to_read)
+    case '+': // enter selection mode
+    run_the_selector:
+            if (s_art_sel_lock)
             {
-                return AS_NORM;
+                fmt::print("\nAlready inside article selector!\n");
+                term_down(2);
+                return AS_ASK;
             }
-            break;
+            // modes do not mix very well, so turn off the SA mode
+            g_sa_in = false;
+            // turn on temporary follow
+            g_s_follow_temp = true;
+            g_univ_follow_temp = true;
+            s_art_sel_lock = true;
+            selector_command = article_selector(selector_command);
+            s_art_sel_lock = false;
+            switch (selector_command)
+            {
+            case '+':
+                newline();
+                g_term_scrolled = g_tc_LINES;
+                g_term_line = g_tc_LINES - 1;
+                return AS_ASK;
+
+            case 'Q':
+                s_exit_code = NG_ASK;
+                break;
+
+            case 'q':
+                s_exit_code = NG_NEXT;
+                break;
+
+            case 'N':
+                s_exit_code = NG_SEL_NEXT;
+                break;
+
+            case 'P':
+                s_exit_code = NG_SEL_PRIOR;
+                break;
+
+            case ';':
+                g_sa_do_sel_threads = true;
+                g_sa_go_explicit = true;
+                return AS_SA;
+
+            default:
+                if (g_newsgroup_ptr->m_to_read)
+                {
+                    return AS_NORM;
+                }
+                break;
+            }
+            return AS_CLEAN;
+
+        case '=': // list subjects
+        {
+            ArticleNum oldart = g_art;
+            page_start();
+            article_walk(output_subject, AF_UNREAD);
+            g_int_count = 0;
+            g_subj_line = std::nullopt;
+            g_art = oldart;
+            return AS_ASK;
         }
-        return AS_CLEAN;
 
-    case '=':                 // list subjects
-    {
-        ArticleNum oldart = g_art;
-        page_start();
-        article_walk(output_subject, AF_UNREAD);
-        g_int_count = 0;
-        g_subj_line = std::nullopt;
-        g_art = oldart;
-        return AS_ASK;
-    }
-
-    case '^':
-        top_article();
-        g_search_ahead = ArticleNum{};
-        return AS_NORM;
+        case '^':
+            top_article();
+            g_search_ahead = ArticleNum{};
+            return AS_NORM;
 
 #ifdef DEBUG
-    case 'D':
-        std::printf("\nFirst article: %ld\n",g_first_art.value_of());
-        term_down(2);
-        article_walk(debug_article_output, 0);
-        g_int_count = 0;
-        return AS_ASK;
+        case 'D':
+            fmt::print("\nFirst article: {}\n", g_first_art.value_of());
+            term_down(2);
+            article_walk(debug_article_output, 0);
+            g_int_count = 0;
+            return AS_ASK;
 #endif
 
-    case 'v':
-        if (g_art <= g_last_art)
-        {
-            g_reread = true;
-            g_do_hiding = false;
-        }
-        return AS_NORM;
-
-    case Ctl('r'):
-        g_do_hiding = true;
-        g_rotate = false;
-        if (g_art <= g_last_art)
-        {
-            g_reread = true;
-        }
-        else
-        {
-            g_force_last = true;
-        }
-        return AS_NORM;
-
-    case 'x':
-    case Ctl('x'):
-        // In the future the behavior of 'x' may change back to a
-        // filter-select mechanism.
-        // Currently, both keys do ROT-13 translation.
-        //
-        g_rotate = true;
-        if (g_art <= g_last_art)
-        {
-            g_reread = true;
-        }
-        else
-        {
-            g_force_last = true;
-        }
-        return AS_NORM;
-
-    case 'X':
-        g_rotate = !g_rotate;
-        // FALL THROUGH
-
-    case 'l': case Ctl('l'):          // refresh screen
-refresh_screen:
-        if (g_art <= g_last_art)
-        {
-            g_reread = true;
-            clear();
-            g_do_fseek = true;
-            g_art_line_num = g_top_line;
-            g_art_line_num = std::max(g_art_line_num, ArticleLine{});
-        }
-        return AS_NORM;
-
-    case Ctl('^'):
-        erase_line(false);              // erase the prompt
-#ifdef MAIL_CALL
-        set_mail(true);          // force a mail check
-#endif
-        return AS_ASK;
-
-    case Ctl('e'):
-        if (g_art <= g_last_art)
-        {
-            if (g_art_size < 0)
+        case 'v':
+            if (g_art <= g_last_art)
             {
-                nntp_finish_body(FB_OUTPUT);
-                g_raw_art_size = nntp_art_size();
-                g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+                g_reread = true;
+                g_do_hiding = false;
             }
-            if (g_do_hiding)
-            {
-                seek_art_buf(g_art_size);
-                seek_art_buf(g_art_pos);
-            }
-            g_reread = true;
-            g_do_fseek = true;
-            g_top_line = g_art_line_num;
-            g_inner_light = line_before(g_art_line_num);
-            g_inner_search = g_art_size;
-            g_g_line = 0;
-            g_hide_everything = 'b';
-        }
-        return AS_NORM;
+            return AS_NORM;
 
-    case 'B':                         // back up one line
-    case 'b': case Ctl('b'):          // back up a page
-        if (g_art <= g_last_art)
-        {
-            ArticleLine target;
-
-            g_reread = true;
-            clear();
-            g_do_fseek = true;
-            if (command_ch == 'B')
-            {
-                target = line_before(g_top_line);
-            }
-            else
-            {
-                target = g_top_line - ArticleLine{g_tc_LINES - 2};
-                if (g_marking && (g_marking_areas & BACK_PAGE_MARKING))
-                {
-                    g_highlight = g_top_line;
-                }
-            }
-            g_art_line_num = g_top_line;
-            if (g_art_line_num >= 0)
-            {
-                do
-                {
-                    g_art_line_num--;
-                } while (g_art_line_num >= 0 && g_art_line_num > target &&
-                         virtual_read(line_before(g_art_line_num)) >= 0);
-            }
-            g_top_line = g_art_line_num;
-            g_art_line_num = std::max(g_art_line_num, ArticleLine{});
-        }
-        return AS_NORM;
-
-    case '!':                 // shell escape
-        if (escapade(command))
-        {
-            return AS_INP;
-        }
-        return AS_ASK;
-
-    case 'C':
-        cancel_article();
-        return AS_ASK;
-
-    case 'Z':
-    case 'z':
-        supersede_article(command);     // supersedes
-        return AS_ASK;
-
-    case 'R':
-    case 'r':                 // reply?
-    {
-        reply(command);
-        return AS_ASK;
-    }
-
-    case 'F':
-    case 'f':                 // followup command
-    {
-        followup(command);
-        g_force_grow = true;             // recalculate g_lastart
-        return AS_ASK;
-    }
-
-    case Ctl('f'):                    // forward?
-    {
-        forward();
-        return AS_ASK;
-    }
-
-    case '|':
-    case 'w': case 'W':
-    case 's': case 'S':       // save command
-    case 'e':                 // extract command
-        if (save_article(command) == SAVE_ABORT)
-        {
-            return AS_INP;
-        }
-        g_int_count = 0;
-        return AS_ASK;
-
-    case 'a':                 // attachment-view command
-        newline();
-        if (view_article() == SAVE_ABORT)
-        {
-            return AS_INP;
-        }
-        g_int_count = 0;
-        return AS_ASK;
-
-    case 'Y':                         // yank back M articles
-        yank_back();
-        top_article();                  // from the beginning
-        return AS_NORM;                 // pretend nothing happened
-
-#ifdef STRICT_CR
-    case '\n':   case '\r':
-        std::fputs("\nUnnecessary CR ignored.\n",stdout);
-        return AS_ASK;
-#endif
-
-    case '_':
-    {
-        const std::string full_command = finish_article_dbl_command(command);
-        if (full_command.empty())
-        {
-            return AS_INP;
-        }
-        const char second_command = full_command.size() > 1 ? full_command[1] & 0177 : '\0';
-        switch (second_command)
-        {
-        case 'P':
-            --g_art;
-            goto check_dec_art;
-
-        case 'N':
-            if (g_art > g_last_art)
-            {
-                g_art = g_abs_first;
-            }
-            else
-            {
-                ++g_art;
-            }
+        case Ctl('r'):
+            g_do_hiding = true;
+            g_rotate = false;
             if (g_art <= g_last_art)
             {
                 g_reread = true;
             }
-            g_search_ahead = ArticleNum{};
+            else
+            {
+                g_force_last = true;
+            }
             return AS_NORM;
 
-        case '+':
-            if (!g_artp)
+        case 'x':
+        case Ctl('x'):
+            // In the future the behavior of 'x' may change back to a
+            // filter-select mechanism.
+            // Currently, both keys do ROT-13 translation.
+            //
+            g_rotate = true;
+            if (g_art <= g_last_art)
             {
-                goto not_threaded;
-            }
-            if (g_threaded_group)
-            {
-                g_artp->select_articles_thread(AUTO_KILL_NONE);
-                std::printf("\nSelected all articles in this thread.\n");
+                g_reread = true;
             }
             else
             {
-                g_artp->select_articles_subject(AUTO_KILL_NONE);
-                std::printf("\nSelected all articles in this subject.\n");
+                g_force_last = true;
             }
-            term_down(2);
-            g_artp = g_artp->m_subj->first_art();
-            if (g_artp != nullptr)
+            return AS_NORM;
+
+        case 'X':
+            g_rotate = !g_rotate;
+            // FALL THROUGH
+
+        case 'l':
+        case Ctl('l'): // refresh screen
+    refresh_screen:
+            if (g_art <= g_last_art)
             {
-                if (g_art == g_artp->article_num())
+                g_reread = true;
+                clear();
+                g_do_fseek = true;
+                g_art_line_num = g_top_line;
+                g_art_line_num = std::max(g_art_line_num, ArticleLine{});
+            }
+            return AS_NORM;
+
+        case Ctl('^'):
+            erase_line(false); // erase the prompt
+#ifdef MAIL_CALL
+            set_mail(true); // force a mail check
+#endif
+            return AS_ASK;
+
+        case Ctl('e'):
+            if (g_art <= g_last_art)
+            {
+                if (g_art_size < 0)
                 {
-                    return AS_ASK;
+                    nntp_finish_body(FB_OUTPUT);
+                    g_raw_art_size = nntp_art_size();
+                    g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
                 }
-                g_art = g_artp->article_num();
+                if (g_do_hiding)
+                {
+                    seek_art_buf(g_art_size);
+                    seek_art_buf(g_art_pos);
+                }
+                g_reread = true;
+                g_do_fseek = true;
+                g_top_line = g_art_line_num;
+                g_inner_light = line_before(g_art_line_num);
+                g_inner_search = g_art_size;
+                g_g_line = 0;
+                g_hide_everything = 'b';
             }
             return AS_NORM;
 
-        case '-':
-            if (!g_artp)
+        case 'B': // back up one line
+        case 'b':
+        case Ctl('b'): // back up a page
+            if (g_art <= g_last_art)
             {
-                goto not_threaded;
+                ArticleLine target;
+
+                g_reread = true;
+                clear();
+                g_do_fseek = true;
+                if (command_ch == 'B')
+                {
+                    target = line_before(g_top_line);
+                }
+                else
+                {
+                    target = g_top_line - ArticleLine{g_tc_LINES - 2};
+                    if (g_marking && (g_marking_areas & BACK_PAGE_MARKING))
+                    {
+                        g_highlight = g_top_line;
+                    }
+                }
+                g_art_line_num = g_top_line;
+                if (g_art_line_num >= 0)
+                {
+                    do
+                    {
+                        g_art_line_num--;
+                    } while (g_art_line_num >= 0 && g_art_line_num > target &&
+                             virtual_read(line_before(g_art_line_num)) >= 0);
+                }
+                g_top_line = g_art_line_num;
+                g_art_line_num = std::max(g_art_line_num, ArticleLine{});
             }
-            if (g_sel_mode == SM_THREAD)
+            return AS_NORM;
+
+        case '!': // shell escape
+            if (escapade(command))
             {
-                g_artp->deselect_articles_thread();
-                std::printf("\nDeselected all articles in this thread.\n");
+                return AS_INP;
             }
-            else
-            {
-                g_artp->deselect_articles_subject();
-                std::printf("\nDeselected all articles in this subject.\n");
-            }
-            term_down(2);
             return AS_ASK;
 
         case 'C':
-            if (!*(++g_char_subst))
-            {
-                g_char_subst = g_charsets.c_str();
-            }
-            goto refresh_screen;
+            cancel_article();
+            return AS_ASK;
 
-        case 'a':  case 's':  case 't':  case 'T':
-            selector_command = second_command;
-            goto run_the_selector;
+        case 'Z':
+        case 'z':
+            supersede_article(command); // supersedes
+            return AS_ASK;
 
-        case 'm':
-            if (!g_artp)
-            {
-                goto not_threaded;
-            }
-            kill_sub_thread(g_artp, SET_TO_RETURN | AFFECT_ALL);
-            return AS_NORM;
-
-        case 'M':
-            if (!g_artp)
-            {
-                goto not_threaded;
-            }
-            g_artp->kill_articles_thread(SET_TO_RETURN | AFFECT_ALL);
-            return AS_NORM;
+        case 'R':
+        case 'r': // reply?
+        {
+            reply(command);
+            return AS_ASK;
         }
-        // FALL THROUGH
-    }
 
-    default:
-        std::fputs("\nType h for help.\n", stdout);
-        term_down(2);
-        settle_down();
-        break;
+        case 'F':
+        case 'f': // followup command
+        {
+            followup(command);
+            g_force_grow = true; // recalculate g_lastart
+            return AS_ASK;
+        }
+
+        case Ctl('f'): // forward?
+        {
+            forward();
+            return AS_ASK;
+        }
+
+        case '|':
+        case 'w':
+        case 'W':
+        case 's':
+        case 'S': // save command
+        case 'e': // extract command
+            if (save_article(command) == SAVE_ABORT)
+            {
+                return AS_INP;
+            }
+            g_int_count = 0;
+            return AS_ASK;
+
+        case 'a': // attachment-view command
+            newline();
+            if (view_article() == SAVE_ABORT)
+            {
+                return AS_INP;
+            }
+            g_int_count = 0;
+            return AS_ASK;
+
+        case 'Y': // yank back M articles
+            yank_back();
+            top_article();  // from the beginning
+            return AS_NORM; // pretend nothing happened
+
+#ifdef STRICT_CR
+        case '\n':
+        case '\r':
+            std::fputs("\nUnnecessary CR ignored.\n", stdout);
+            return AS_ASK;
+#endif
+
+        case '_':
+        {
+            const std::string full_command = finish_article_dbl_command(command);
+            if (full_command.empty())
+            {
+                return AS_INP;
+            }
+            const char second_command = full_command.size() > 1 ? full_command[1] & 0177 : '\0';
+            switch (second_command)
+            {
+            case 'P':
+                --g_art;
+                goto check_dec_art;
+
+            case 'N':
+                if (g_art > g_last_art)
+                {
+                    g_art = g_abs_first;
+                }
+                else
+                {
+                    ++g_art;
+                }
+                if (g_art <= g_last_art)
+                {
+                    g_reread = true;
+                }
+                g_search_ahead = ArticleNum{};
+                return AS_NORM;
+
+            case '+':
+                if (!g_artp)
+                {
+                    goto not_threaded;
+                }
+                if (g_threaded_group)
+                {
+                    g_artp->select_articles_thread(AUTO_KILL_NONE);
+                    fmt::print("\nSelected all articles in this thread.\n");
+                }
+                else
+                {
+                    g_artp->select_articles_subject(AUTO_KILL_NONE);
+                    fmt::print("\nSelected all articles in this subject.\n");
+                }
+                term_down(2);
+                g_artp = g_artp->m_subj->first_art();
+                if (g_artp != nullptr)
+                {
+                    if (g_art == g_artp->article_num())
+                    {
+                        return AS_ASK;
+                    }
+                    g_art = g_artp->article_num();
+                }
+                return AS_NORM;
+
+            case '-':
+                if (!g_artp)
+                {
+                    goto not_threaded;
+                }
+                if (g_sel_mode == SM_THREAD)
+                {
+                    g_artp->deselect_articles_thread();
+                    fmt::print("\nDeselected all articles in this thread.\n");
+                }
+                else
+                {
+                    g_artp->deselect_articles_subject();
+                    fmt::print("\nDeselected all articles in this subject.\n");
+                }
+                term_down(2);
+                return AS_ASK;
+
+            case 'C':
+                if (!*(++g_char_subst))
+                {
+                    g_char_subst = g_charsets.c_str();
+                }
+                goto refresh_screen;
+
+            case 'a':
+            case 's':
+            case 't':
+            case 'T':
+                selector_command = second_command;
+                goto run_the_selector;
+
+            case 'm':
+                if (!g_artp)
+                {
+                    goto not_threaded;
+                }
+                kill_sub_thread(g_artp, SET_TO_RETURN | AFFECT_ALL);
+                return AS_NORM;
+
+            case 'M':
+                if (!g_artp)
+                {
+                    goto not_threaded;
+                }
+                g_artp->kill_articles_thread(SET_TO_RETURN | AFFECT_ALL);
+                return AS_NORM;
+            }
+            // FALL THROUGH
+        }
+
+        default:
+            std::fputs("\nType h for help.\n", stdout);
+            term_down(2);
+            settle_down();
+            break;
+        }
+        return AS_ASK;
     }
-    return AS_ASK;
-}
 
 // see if there is any mail
 
@@ -2162,7 +2169,7 @@ reask_catchup:
         --g_newsgroup_to_read;
         newline();
         fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_name);
-        std::printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
+        fmt::print("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
         term_down(2);
     }
     return ch;
@@ -2299,51 +2306,45 @@ reask_memorize:
         use_one_line = false;
         if (g_verbose)
         {
-            std::printf("\n"
-                        "Type + or SP to auto-select this %.*s (i.e. includes future articles).\n"
-                        "Type S to auto-select the current subject.\n"
-                        "Type . to auto-select %.*s.\n"
-                        "Type m to auto-select the current article.\n"
-                        "Type J to auto-kill (junk) this %.*s.\n"
-                        "Type K to auto-kill the current subject.\n"
-                        "Type , to auto-kill %.*s.\n"
-                        "Type j to auto-kill the current article.\n"
-                        "Type C to clear all selection/killing on %.*s.\n"
-                        "Type c to clear all selection/killing on this %.*s.\n"
-                        "Type q to abort the operation.\n",
-                        static_cast<int>(mode_string.size()), mode_string.data(), static_cast<int>(mode_phrase.size()),
-                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data(),
-                        static_cast<int>(mode_phrase.size()), mode_phrase.data(), static_cast<int>(mode_phrase.size()),
-                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data());
+            fmt::print("\n"
+                       "Type + or SP to auto-select this {} (i.e. includes future articles).\n"
+                       "Type S to auto-select the current subject.\n"
+                       "Type . to auto-select {}.\n"
+                       "Type m to auto-select the current article.\n"
+                       "Type J to auto-kill (junk) this {}.\n"
+                       "Type K to auto-kill the current subject.\n"
+                       "Type , to auto-kill {}.\n"
+                       "Type j to auto-kill the current article.\n"
+                       "Type C to clear all selection/killing on {}.\n"
+                       "Type c to clear all selection/killing on this {}.\n"
+                       "Type q to abort the operation.\n",
+                       mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
             if (!thread_cmd)
             {
-                std::printf("Type f to toggle author (from-line) searching.\n"
-                            "Type g to toggle global memorization.\n");
+                fmt::print("Type f to toggle author (from-line) searching.\n"
+                           "Type g to toggle global memorization.\n");
                 term_down(2);
             }
         }
         else
         {
-            std::printf("\n"
-                        "+ or SP auto-selects this %.*s.\n"
-                        "S auto-selects the subject.\n"
-                        ". auto-selects %.*s.\n"
-                        "m auto-selects this article.\n"
-                        "J auto-kills this %.*s.\n"
-                        "K auto-kills the subject.\n"
-                        ", auto-kills %.*s.\n"
-                        "j auto-kills the current article.\n"
-                        "C clears auto-commands for %.*s.\n"
-                        "c clears auto-commands for this %.*s.\n"
-                        "q aborts.\n",
-                        static_cast<int>(mode_string.size()), mode_string.data(), static_cast<int>(mode_phrase.size()),
-                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data(),
-                        static_cast<int>(mode_phrase.size()), mode_phrase.data(), static_cast<int>(mode_phrase.size()),
-                        mode_phrase.data(), static_cast<int>(mode_string.size()), mode_string.data());
+            fmt::print("\n"
+                       "+ or SP auto-selects this {}.\n"
+                       "S auto-selects the subject.\n"
+                       ". auto-selects {}.\n"
+                       "m auto-selects this article.\n"
+                       "J auto-kills this {}.\n"
+                       "K auto-kills the subject.\n"
+                       ", auto-kills {}.\n"
+                       "j auto-kills the current article.\n"
+                       "C clears auto-commands for {}.\n"
+                       "c clears auto-commands for this {}.\n"
+                       "q aborts.\n",
+                       mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
             if (!thread_cmd)
             {
-                std::printf("f toggles author (from) mode.\n"
-                            "g toggles global memorization.\n");
+                fmt::print("f toggles author (from) mode.\n"
+                           "g toggles global memorization.\n");
                 term_down(2);
             }
         }
@@ -2384,17 +2385,17 @@ reask_memorize:
         }
         if (g_general_mode != GM_SELECTOR)
         {
-            std::printf("\nSelection memorized.\n");
+            fmt::print("\nSelection memorized.\n");
             term_down(2);
         }
     }
     else if (ch == 'S')
     {
         g_artp->select_articles_subject(AUTO_SEL_SBJ);
-        ch = (use_one_line? '+' : '.');
+        ch = (use_one_line ? '+' : '.');
         if (g_general_mode != GM_SELECTOR)
         {
-            std::printf("\nSelection memorized.\n");
+            fmt::print("\nSelection memorized.\n");
             term_down(2);
         }
     }
@@ -2402,18 +2403,18 @@ reask_memorize:
     {
         if (!thread_cmd)
         {
-            (void)art_search(article_search_command, true);
+            (void) art_search(article_search_command, true);
             g_art = art_hold;
             g_artp = artp_hold;
         }
         else
         {
             select_sub_thread(g_artp, AUTO_SEL_FOL);
-            ch = (use_one_line? '+' : '.');
+            ch = (use_one_line ? '+' : '.');
         }
         if (g_general_mode != GM_SELECTOR)
         {
-            std::printf("\nSelection memorized.\n");
+            fmt::print("\nSelection memorized.\n");
             term_down(2);
         }
     }
@@ -2422,10 +2423,10 @@ reask_memorize:
         if (g_artp)
         {
             g_artp->change_auto_flags(AUTO_SEL_1);
-            ch = (use_one_line? '+' : '.');
+            ch = (use_one_line ? '+' : '.');
             if (g_general_mode != GM_SELECTOR)
             {
-                std::printf("\nSelection memorized.\n");
+                fmt::print("\nSelection memorized.\n");
                 term_down(2);
             }
         }
@@ -2435,7 +2436,7 @@ reask_memorize:
         if (!thread_cmd)
         {
             article_search_command[0] = 'K';
-            (void)art_search(article_search_command, true);
+            (void) art_search(article_search_command, true);
             g_art = art_hold;
             g_artp = artp_hold;
         }
@@ -2445,7 +2446,7 @@ reask_memorize:
         }
         if (g_general_mode != GM_SELECTOR)
         {
-            std::printf("\nKill memorized.\n");
+            fmt::print("\nKill memorized.\n");
             term_down(2);
         }
     }
@@ -2457,17 +2458,17 @@ reask_memorize:
             g_artp->change_auto_flags(AUTO_KILL_1);
             if (g_general_mode != GM_SELECTOR)
             {
-                std::printf("\nKill memorized.\n");
+                fmt::print("\nKill memorized.\n");
                 term_down(2);
             }
         }
     }
     else if (ch == 'K')
     {
-        g_artp->m_subj->kill_subject(AFFECT_ALL|AUTO_KILL_SBJ);
+        g_artp->m_subj->kill_subject(AFFECT_ALL | AUTO_KILL_SBJ);
         if (g_general_mode != GM_SELECTOR)
         {
-            std::printf("\nKill memorized.\n");
+            fmt::print("\nKill memorized.\n");
             term_down(2);
         }
     }
@@ -2475,7 +2476,7 @@ reask_memorize:
     {
         if (!thread_cmd)
         {
-            (void)art_search(article_search_command, true);
+            (void) art_search(article_search_command, true);
             g_art = art_hold;
             g_artp = artp_hold;
         }
@@ -2485,7 +2486,7 @@ reask_memorize:
         }
         if (g_general_mode != GM_SELECTOR)
         {
-            std::printf("\nKill memorized.\n");
+            fmt::print("\nKill memorized.\n");
             term_down(2);
         }
     }

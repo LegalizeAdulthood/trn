@@ -1186,7 +1186,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
             return DECODE_ERROR;
         }
         erase_line(false);
-        std::printf("Decoding %s", filename.c_str());
+        fmt::print("Decoding {}", filename);
         if (g_no_wait_fork)
         {
             std::fflush(stdout);
@@ -1328,7 +1328,7 @@ all_done:
         {
             return DECODE_ERROR;
         }
-        std::printf("Decoding %s", filename.c_str());
+        fmt::print("Decoding {}", filename);
         if (g_no_wait_fork)
         {
             std::fflush(stdout);
@@ -2154,22 +2154,36 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
     }
 
 #ifdef DEBUGGING
-                                                std::printf("%*s %% -> ", 4 + 25, "");
-    if (g_mime_section->m_html == 0)              std::printf("0 ");
-    if (g_mime_section->m_html & HF_IN_TAG)       std::printf("HF_IN_TAG ");
-    if (g_mime_section->m_html & HF_IN_COMMENT)   std::printf("HF_IN_COMMENT ");
-    if (g_mime_section->m_html & HF_IN_HIDING)    std::printf("HF_IN_HIDING ");
-    if (g_mime_section->m_html & HF_IN_PRE)       std::printf("HF_IN_PRE ");
-    if (g_mime_section->m_html & HF_IN_DQUOTE)    std::printf("HF_IN_DQUOTE ");
-    if (g_mime_section->m_html & HF_IN_SQUOTE)    std::printf("HF_IN_SQUOTE ");
-    if (g_mime_section->m_html & HF_QUEUED_P)     std::printf("HF_QUEUED_P ");
-    if (g_mime_section->m_html & HF_P_OK)         std::printf("HF_P_OK ");
-    if (g_mime_section->m_html & HF_QUEUED_NL)    std::printf("HF_QUEUED_NL ");
-    if (g_mime_section->m_html & HF_NL_OK)        std::printf("HF_NL_OK ");
-    if (g_mime_section->m_html & HF_NEED_INDENT)  std::printf("HF_NEED_INDENT ");
-    if (g_mime_section->m_html & HF_SPACE_OK)     std::printf("HF_SPACE_OK ");
-    if (g_mime_section->m_html & HF_COMPACT)      std::printf("HF_COMPACT ");
-    std::printf("\n");
+    fmt::print("{:>{}} % -> ", "", 4 + 25);
+    if (g_mime_section->m_html == 0)
+        fmt::print("0 ");
+    if (g_mime_section->m_html & HF_IN_TAG)
+        fmt::print("HF_IN_TAG ");
+    if (g_mime_section->m_html & HF_IN_COMMENT)
+        fmt::print("HF_IN_COMMENT ");
+    if (g_mime_section->m_html & HF_IN_HIDING)
+        fmt::print("HF_IN_HIDING ");
+    if (g_mime_section->m_html & HF_IN_PRE)
+        fmt::print("HF_IN_PRE ");
+    if (g_mime_section->m_html & HF_IN_DQUOTE)
+        fmt::print("HF_IN_DQUOTE ");
+    if (g_mime_section->m_html & HF_IN_SQUOTE)
+        fmt::print("HF_IN_SQUOTE ");
+    if (g_mime_section->m_html & HF_QUEUED_P)
+        fmt::print("HF_QUEUED_P ");
+    if (g_mime_section->m_html & HF_P_OK)
+        fmt::print("HF_P_OK ");
+    if (g_mime_section->m_html & HF_QUEUED_NL)
+        fmt::print("HF_QUEUED_NL ");
+    if (g_mime_section->m_html & HF_NL_OK)
+        fmt::print("HF_NL_OK ");
+    if (g_mime_section->m_html & HF_NEED_INDENT)
+        fmt::print("HF_NEED_INDENT ");
+    if (g_mime_section->m_html & HF_SPACE_OK)
+        fmt::print("HF_SPACE_OK ");
+    if (g_mime_section->m_html & HF_COMPACT)
+        fmt::print("HF_COMPACT ");
+    fmt::print("\n");
 #endif
 }
 

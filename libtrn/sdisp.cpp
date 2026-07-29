@@ -53,19 +53,19 @@ void s_mail_and_place()
     next = (0 != s_next_elig(g_page_ents[g_s_bot_ent].ent_num));
     if (previous && next)
     {
-        std::printf("-MIDDLE-");             // middle of entries
+        fmt::print("-MIDDLE-"); // middle of entries
     }
     else if (next && !previous)
     {
-        std::printf("-TOP-");
+        fmt::print("-TOP-");
     }
     else if (previous && !next)
     {
-        std::printf("-BOTTOM-");
+        fmt::print("-BOTTOM-");
     }
-    else        // !previous && !next
+    else // !previous && !next
     {
-        std::printf("-ALL-");
+        fmt::print("-ALL-");
     }
 }
 
@@ -163,20 +163,20 @@ static void s_refresh_description(int line)
         // allow flexible format later?
         if (g_s_item_num_cols)
         {
-            if (i == 1)         // first description line
+            if (i == 1) // first description line
             {
                 if (line < 99)
                 {
-                    std::printf("%2d ",line+1);
+                    fmt::print("{:2} ", line + 1);
                 }
                 else
                 {
-                    std::printf("** ");      // too big
+                    fmt::print("** "); // too big
                 }
             }
             else
             {
-                std::printf("   ");
+                fmt::print("   ");
             }
         }
         fmt::print("{}", s_get_desc(ent, i, true));
@@ -202,20 +202,20 @@ static void s_ref_entry(int line, int jump)
         fmt::print("{}  ", s_get_statchars(ent, i));
         if (g_s_item_num_cols)
         {
-            if (i == 1)         // first description line
+            if (i == 1) // first description line
             {
                 if (line < 99)
                 {
-                    std::printf("%2d ",line+1);
+                    fmt::print("{:2} ", line + 1);
                 }
                 else
                 {
-                    std::printf("** ");      // too big
+                    fmt::print("** "); // too big
                 }
             }
             else
             {
-                std::printf("   ");
+                fmt::print("   ");
             }
         }
         fmt::print("{}", s_get_desc(ent, i, true));

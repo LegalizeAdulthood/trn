@@ -120,7 +120,7 @@ bool set_sel_mode(char_int ch)
             {
                 g_first_art = g_abs_first;
             }
-            std::printf("\nThreading the group. ");
+            fmt::print("\nThreading the group. ");
             std::fflush(stdout);
             term_down(1);
             thread_open();
@@ -1968,8 +1968,7 @@ static void display_page_title(bool home_only)
     else if (g_sel_mode == SM_UNIVERSAL)
     {
         color_object(COLOR_HEADING, true);
-        std::printf("[%d] %s",g_univ_level,
-               g_univ_title.empty() ? "Universal Selector" : g_univ_title.c_str());
+        fmt::print("[{}] {}", g_univ_level, g_univ_title.empty() ? "Universal Selector" : g_univ_title.c_str());
         color_pop();
     }
     else if (g_in_ng)
@@ -1982,12 +1981,12 @@ static void display_page_title(bool home_only)
     }
     else
     {
-        Newsrc* rp;
+        Newsrc     *rp;
         std::string news_sources;
         news_sources.reserve(34);
         std::size_t len = 0;
         color_object(COLOR_HEADING, true);
-        std::printf("Newsgroups");
+        fmt::print("Newsgroups");
         for (rp = g_multirc->m_first; rp && len < 34; rp = rp->next)
         {
             if (rp->flags & RF_ACTIVE)
@@ -2005,7 +2004,7 @@ static void display_page_title(bool home_only)
         {
             fmt::print(" (group #{}: {})", g_multirc->m_num, news_sources);
         }
-        color_pop();    // of COLOR_HEADING
+        color_pop(); // of COLOR_HEADING
     }
     if (home_only || (g_erase_screen && g_erase_each_line))
     {
@@ -2019,30 +2018,29 @@ static void display_page_title(bool home_only)
     }
     else if (g_sel_mode == SM_OPTIONS)
     {
-        std::printf("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
+        fmt::print("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
     }
     else if (g_in_ng)
     {
-        std::printf("          %ld %sarticle%s", (long)g_sel_total_obj_cnt,
-               g_sel_rereading? "read " : "",
-               g_sel_total_obj_cnt == 1 ? "" : "s");
+        fmt::print("          {} {}article{}", g_sel_total_obj_cnt, g_sel_rereading ? "read " : "",
+                   g_sel_total_obj_cnt == 1 ? "" : "s");
         if (g_sel_exclusive)
         {
-            std::printf(" out of %ld", (long) g_obj_count.value_of());
+            fmt::print(" out of {}", g_obj_count.value_of());
         }
-        std::fputs(g_moderated.c_str(),stdout);
+        std::fputs(g_moderated.c_str(), stdout);
     }
     else
     {
-        std::printf("       %s%ld group%s",s_group_init_done? "" : "~",
-            (long)g_sel_total_obj_cnt, plural(g_sel_total_obj_cnt));
+        fmt::print("       {}{} group{}", s_group_init_done ? "" : "~", g_sel_total_obj_cnt,
+                   plural(g_sel_total_obj_cnt));
         if (g_sel_exclusive)
         {
-            std::printf(" out of %ld", (long) g_obj_count.value_of());
+            fmt::print(" out of {}", g_obj_count.value_of());
         }
         if (g_max_newsgroup_to_do)
         {
-            std::printf(" (Restriction)");
+            fmt::print(" (Restriction)");
         }
     }
     home_cursor();
@@ -2050,7 +2048,7 @@ static void display_page_title(bool home_only)
     maybe_eol();
     if (g_in_ng && g_redirected && !g_redirected_to.empty())
     {
-        std::printf("\t** Please start using %s **", g_redirected_to.c_str());
+        fmt::print("\t** Please start using {} **", g_redirected_to);
     }
     newline();
 }
@@ -2196,7 +2194,7 @@ start_of_loop:
 
                 maybe_eol();
                 output_sel(g_sel_page_item_cnt, sel, false);
-                std::printf("%5ld ", (long) np->m_to_read);
+                fmt::print("{:5} ", static_cast<long>(np->m_to_read));
                 display_group(np->m_rc->data_source, np->rc_name(), max_len);
             }
             else if (np->m_num_offset >= max_len)
@@ -2271,7 +2269,7 @@ start_of_loop:
 
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
-            std::printf("%5ld ", (long)gp->m_to_read.value_of());
+            fmt::print("{:5} ", gp->m_to_read.value_of());
             display_group(gp->m_data_src, gp->m_name, max_len);
             g_sel_page_item_cnt++;
         }
@@ -2472,7 +2470,7 @@ start_of_loop:
             }
             if (etc)
             {
-                std::printf("     ... etc. [%d lines total]", etc);
+                fmt::print("     ... etc. [{} lines total]", etc);
             }
         }
         if (!g_sel_page_obj_cnt)
@@ -2588,7 +2586,7 @@ void output_sel(int ix, int sel, bool update)
     if (g_use_sel_num)
     {
         // later consider no-leading-zero option
-        std::printf("%02d",ix+1);
+        fmt::print("{:02}", ix + 1);
     }
     else
     {

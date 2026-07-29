@@ -475,7 +475,7 @@ do_group:
             g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
-        std::printf("Entering %s:", g_newsgroup_name.c_str());
+        fmt::print("Entering {}:", g_newsgroup_name);
         if (s_sel_ret == ';')
         {
             ret = do_newsgroup(std::string{";"});
@@ -897,17 +897,17 @@ static UniversalReadResult univ_read(UniversalItem *ui)
     g_univ_follow_temp = false;
     if (!ui)
     {
-        std::printf("nullptr UI passed to reader!\n");
+        fmt::print("nullptr UI passed to reader!\n");
         sleep(5);
         return exit_code;
     }
-    std::printf("\n");                 // prepare for output msgs...
+    fmt::print("\n"); // prepare for output msgs...
     if (const UniversalDebugData *debug_data = std::get_if<UniversalDebugData>(&ui->m_data))
     {
         const std::string &s = debug_data->text;
         if (!s.empty())
         {
-            std::printf("Not implemented yet (%s)\n",s.c_str());
+            fmt::print("Not implemented yet ({})\n", s);
             sleep(5);
             return exit_code;
         }
@@ -929,14 +929,13 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         }
         if (article->ng.empty())
         {
-            return exit_code;           // XXX whine
+            return exit_code; // XXX whine
         }
         NewsgroupData *np = find_newsgroup(article->ng.c_str());
 
         if (!np)
         {
-            std::printf("Universal: newsgroup %s not found!",
-                   article->ng.c_str());
+            fmt::print("Universal: newsgroup {} not found!", article->ng);
             sleep(5);
             return exit_code;
         }
@@ -947,7 +946,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
-        std::printf("Virtual: Entering %s:\n", g_newsgroup_name.c_str());
+        fmt::print("Virtual: Entering {}:\n", g_newsgroup_name);
         g_ng_go_art_num = article->num;
         g_univ_read_virt_flag = true;
         int ret = do_newsgroup(std::string{});
@@ -1027,8 +1026,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
         if (!np)
         {
-            std::printf("Universal: newsgroup %s not found!",
-                   group_name.c_str());
+            fmt::print("Universal: newsgroup {} not found!", group_name);
             sleep(5);
             return exit_code;
         }
@@ -1040,7 +1038,7 @@ do_group:
             g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
-        std::printf("Entering %s:", g_newsgroup_name.c_str());
+        fmt::print("Entering {}:", g_newsgroup_name);
         if (s_sel_ret == ';')
         {
             ret = do_newsgroup(std::string{";"});
@@ -2503,7 +2501,7 @@ the_default:
         {
             return DS_STATUS;
         }
-        std::printf("\n%s\n",g_msg.c_str());
+        fmt::print("\n{}\n", g_msg);
         ch = another_command(1);
         if (ch != '\0')
         {

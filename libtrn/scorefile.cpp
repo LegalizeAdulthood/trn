@@ -125,17 +125,17 @@ void sf_init()
 
     if (g_sf_verbose)
     {
-        std::printf("\nReading score files...\n");
+        fmt::print("\nReading score files...\n");
     }
     s_sf_file_level = 0;
     // find # of levels
     const std::string group_name = file_exp("%C");
-    int level = 0;
+    int               level = 0;
     for (char ch : group_name)
     {
         if (ch == '.')
         {
-            level++;            // count dots in group name
+            level++; // count dots in group name
         }
     }
     level++;
@@ -171,7 +171,7 @@ void sf_init()
             {
                 int j;
                 // rethink?
-                for (j = i+1; j < g_sf_num_entries; j++)
+                for (j = i + 1; j < g_sf_num_entries; j++)
                 {
                     if (s_sf_entries[j].head_type == SF_KILL_THRESHOLD)
                     {
@@ -180,7 +180,7 @@ void sf_init()
                 }
                 if (j == g_sf_num_entries) // no later thresholds
                 {
-                    std::printf("killthreshold %d\n",g_kill_thresh);
+                    fmt::print("killthreshold {}\n", g_kill_thresh);
                 }
             }
             break;
@@ -192,7 +192,7 @@ void sf_init()
             {
                 int j;
                 // rethink?
-                for (j = i+1; j < g_sf_num_entries; j++)
+                for (j = i + 1; j < g_sf_num_entries; j++)
                 {
                     if (s_sf_entries[j].head_type == SF_NEW_AUTHOR)
                     {
@@ -201,7 +201,7 @@ void sf_init()
                 }
                 if (j == g_sf_num_entries) // no later newauthors
                 {
-                    std::printf("New Author score: %d\n",s_new_author);
+                    fmt::print("New Author score: {}\n", s_new_author);
                 }
             }
             break;
@@ -213,7 +213,7 @@ void sf_init()
             {
                 int j;
                 // rethink?
-                for (j = i+1; j < g_sf_num_entries; j++)
+                for (j = i + 1; j < g_sf_num_entries; j++)
                 {
                     if (s_sf_entries[j].head_type == SF_REPLY)
                     {
@@ -222,7 +222,7 @@ void sf_init()
                 }
                 if (j == g_sf_num_entries) // no later reply rules
                 {
-                    std::printf("Reply score: %d\n",s_reply_score);
+                    fmt::print("Reply score: {}\n", s_reply_score);
                 }
             }
             break;
@@ -743,7 +743,7 @@ static void sf_do_file(std::string_view fname)
     {
         for (int i = 1; i < s_sf_file_level; i++)
         {
-            std::printf(".");                // maybe later putchar...
+            fmt::print("."); // maybe later putchar...
         }
         fmt::print("Score file: {}\n", filename);
     }
@@ -868,10 +868,10 @@ int sf_score(ArticleNum a)
     }
     if (s_new_author_active && !(article_ptr(a)->m_score_flags & SFLAG_AUTHOR))
     {
-        sum = sum+s_new_author;  // add new author bonus
+        sum = sum + s_new_author; // add new author bonus
         if (g_sf_score_verbose)
         {
-            std::printf("New Author: %d\n",s_new_author);
+            fmt::print("New Author: {}\n", s_new_author);
             // consider: print which file the bonus came from
         }
     }
@@ -884,10 +884,10 @@ int sf_score(ArticleNum a)
         {
             if (subject_has_re(reply_subject))
             {
-                sum = sum+s_reply_score;
+                sum = sum + s_reply_score;
                 if (g_sf_score_verbose)
                 {
-                    std::printf("Reply: %d\n",s_reply_score);
+                    fmt::print("Reply: {}\n", s_reply_score);
                     // consider: print which file the bonus came from
                 }
             }
@@ -934,16 +934,16 @@ void sf_append(std::string_view line)
 
     if (filechar == '?') // list known file abbreviations
     {
-        std::printf("List of abbreviation/file pairs\n");
+        fmt::print("List of abbreviation/file pairs\n");
         for (int i = 0; i < 256; i++)
         {
             if (!s_sf_abbr[i].empty())
             {
-                std::printf("%c %s\n", (char) i, s_sf_abbr[i].c_str());
+                fmt::print("{} {}\n", static_cast<char>(i), s_sf_abbr[i]);
             }
         }
-        std::printf("\" [The current newsgroup's score file]\n");
-        std::printf("* [The global score file]\n");
+        fmt::print("\" [The current newsgroup's score file]\n");
+        fmt::print("* [The global score file]\n");
         return;
     }
 
@@ -962,7 +962,7 @@ void sf_append(std::string_view line)
             missing_scoreline = sf_missing_score(scoreline);
             if (missing_scoreline.empty()) // no score typed
             {
-                std::printf("Score entry aborted.\n");
+                fmt::print("Score entry aborted.\n");
                 return;
             }
             scoreline = missing_scoreline;
@@ -992,7 +992,7 @@ void sf_append(std::string_view line)
             const std::string subject = fetch_cache(g_art, SUBJ_LINE, true);
             if (subject.empty())
             {
-                std::printf("No subject: score entry aborted.\n");
+                fmt::print("No subject: score entry aborted.\n");
                 return;
             }
             std::string_view subject_text{subject};
@@ -1019,7 +1019,7 @@ void sf_append(std::string_view line)
     // test the scoring line unless filechar is '!' (meaning do it now)
     if (!sf_do_line(scoreline, filechar != '!'))
     {
-        std::printf("Bad score line (ignored)\n");
+        fmt::print("Bad score line (ignored)\n");
         return;
     }
     if (filechar == '!')
@@ -1066,7 +1066,7 @@ void sf_append(std::string_view line)
         const std::string &abbreviation = s_sf_abbr[static_cast<unsigned char>(filechar)];
         if (abbreviation.empty())
         {
-            std::printf("\nBad file abbreviation: %c\n", filechar);
+            fmt::print("\nBad file abbreviation: {}\n", filechar);
             return;
         }
         filename = abbreviation;
@@ -1095,20 +1095,20 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
 
     if (h <= SOME_LINE)
     {
-        std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.value_of(),h);
-        std::printf("(Internal error: header number too low)\n");
+        fmt::print("sf_get_line({},{}): bad header type\n", a.value_of(), static_cast<int>(h));
+        fmt::print("(Internal error: header number too low)\n");
         return {};
     }
     if (h >= HEAD_LAST)
     {
         if (h - HEAD_LAST < size_cast<int>(s_sf_extra_headers))
         {
-            line = sf_get_extra_header(a,h-HEAD_LAST);
+            line = sf_get_extra_header(a, h - HEAD_LAST);
         }
         else
         {
-            std::printf("sf_get_line(%d,%d): bad header type\n",(int)a.value_of(),h);
-            std::printf("(Internal error: header number too high)\n");
+            fmt::print("sf_get_line({},{}): bad header type\n", a.value_of(), static_cast<int>(h));
+            fmt::print("(Internal error: header number too high)\n");
             return {};
         }
     }
@@ -1287,7 +1287,7 @@ void sf_edit_file(std::string_view filespec)
         const std::string &abbreviation = s_sf_abbr[static_cast<unsigned char>(filechar)];
         if (abbreviation.empty())
         {
-            std::printf("\nBad file abbreviation: %c\n",filechar);
+            fmt::print("\nBad file abbreviation: {}\n", filechar);
             return;
         }
         file_name = abbreviation;

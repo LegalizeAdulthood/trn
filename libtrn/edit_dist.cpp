@@ -11,6 +11,8 @@
 
 #include <config/common.h> // Declare MIN_DIST
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <string_view>
 #include <vector>
@@ -176,27 +178,27 @@ int edit_distn(std::string_view from, std::string_view to)
     index = 0;
 
 #ifdef DEBUG_EDITDIST
-    printf("      ");
+    fmt::print("      ");
     for (col = 0; col < from_len; col++)
     {
-        printf(" %c ", from[col]);
+        fmt::print(" {} ", from[col]);
     }
-    printf("\n   ");
+    fmt::print("\n   ");
 
     for (col = 0; col <= from_len; col++)
     {
-        printf("%2d ", col * del);
+        fmt::print("{:2} ", col * del);
     }
 #endif
 
-// Row 0 is handled implicitly; its value at a given column is   col*del.
-// The loop below computes the values for Row 1.  At this point we know the
-// strings are nonempty.  We also don't need to consider swap costs in row
-// 1.
-//
-// COMMENT:  the indices   row and col   below point into the STRING, so
-// the corresponding MATRIX indices are   row+1 and col+1.
-//
+    // Row 0 is handled implicitly; its value at a given column is   col*del.
+    // The loop below computes the values for Row 1.  At this point we know the
+    // strings are nonempty.  We also don't need to consider swap costs in row
+    // 1.
+    //
+    // COMMENT:  the indices   row and col   below point into the STRING, so
+    // the corresponding MATRIX indices are   row+1 and col+1.
+    //
 
     buffer[index++] = std::min(ins + del, (from[0] == to[0] ? 0 : ch));
 #ifdef TRN_SPEEDUP
@@ -204,47 +206,43 @@ int edit_distn(std::string_view from, std::string_view to)
 #endif
 
 #ifdef DEBUG_EDITDIST
-    printf("\n %c %2d %2d ", to[0], ins, buffer[index - 1]);
+    fmt::print("\n {} {:2} {:2} ", to[0], ins, buffer[index - 1]);
 #endif
 
     for (col = 1; col < from_len; col++)
     {
-        buffer[index] = min3(
-                col * del + ((from[col] == to[0]) ? 0 : ch),
-                (col + 1) * del + ins,
-                buffer[index - 1] + del);
+        buffer[index] =
+            min3(col * del + ((from[col] == to[0]) ? 0 : ch), (col + 1) * del + ins, buffer[index - 1] + del);
 #ifdef TRN_SPEEDUP
         low = std::min(buffer[index], low);
 #endif
         index++;
 
 #ifdef DEBUG_EDITDIST
-        printf("%2d ", buffer[index - 1]);
+        fmt::print("{:2} ", buffer[index - 1]);
 #endif
 
     } // for col = 1
 
 #ifdef DEBUG_EDITDIST
-    printf("\n %c %2d ", to[1], 2 * ins);
+    fmt::print("\n {} {:2} ", to[1], 2 * ins);
 #endif
 
-// Now handle the rest of the matrix
+    // Now handle the rest of the matrix
 
     for (row = 1; row < to_len; row++)
     {
         for (col = 0; col < from_len; col++)
         {
-            buffer[index] = min3(
-                    NW(row, col) + ((from[col] == to[row]) ? 0 : ch),
-                    N(row, col + 1) + ins,
-                    W(row + 1, col) + del);
+            buffer[index] =
+                min3(NW(row, col) + ((from[col] == to[row]) ? 0 : ch), N(row, col + 1) + ins, W(row + 1, col) + del);
             if (from[col] == to[row - 1] && col > 0 && from[col - 1] == to[row])
             {
                 buffer[index] = std::min(buffer[index], NNWW(row - 1, col - 1) + swap_cost);
             }
 
 #ifdef DEBUG_EDITDIST
-            printf("%2d ", buffer[index]);
+            fmt::print("{:2} ", buffer[index]);
 #endif
 #ifdef TRN_SPEEDUP
             if (buffer[index] < low || col == 0)
@@ -258,11 +256,11 @@ int edit_distn(std::string_view from, std::string_view to)
 #ifdef DEBUG_EDITDIST
         if (row < to_len - 1)
         {
-            printf("\n %c %2d ", to[row+1], (row + 2) * ins);
+            fmt::print("\n {} {:2} ", to[row + 1], (row + 2) * ins);
         }
         else
         {
-            printf("\n");
+            fmt::print("\n");
         }
 #endif
 #ifdef TRN_SPEEDUP

@@ -642,7 +642,7 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     }
     else if (!file_name.empty() && file_name.front() == ':') // relative to last file's directory
     {
-        std::printf("Colon filespec not supported for |%s|\n", open_name.c_str());
+        fmt::print("Colon filespec not supported for |{}|\n", open_name);
         have_open_name = false;
     }
     if (!have_open_name)
@@ -674,11 +674,11 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     }
     if (!s_univ_begin_found)
     {
-        std::printf("\"begin group\" not found.\n");
+        fmt::print("\"begin group\" not found.\n");
     }
     if (!s_univ_begin_label.empty())
     {
-        std::printf("label not found: %s\n",s_univ_begin_label.c_str());
+        fmt::print("label not found: {}\n", s_univ_begin_label);
     }
     if (s_univ_virt_pass_needed)
     {
@@ -1065,19 +1065,19 @@ static std::string univ_edit_new_user_file()
     std::error_code error;
     fs::create_directories(user_top.parent_path(), error);
 
-    fp = std::fopen(user_top.string().c_str(),"w");
+    fp = std::fopen(user_top.string().c_str(), "w");
     if (!fp)
     {
-        std::printf("Could not create new user file.\n");
-        std::printf("Editing current system file\n");
-        (void)get_anything();
+        fmt::print("Could not create new user file.\n");
+        fmt::print("Editing current system file\n");
+        (void) get_anything();
         return g_univ_fname;
     }
-    std::fprintf(fp,"# User Toplevel (Universal Selector)\n");
+    std::fprintf(fp, "# User Toplevel (Universal Selector)\n");
     std::fclose(fp);
-    std::printf("New User Toplevel file created.\n");
-    std::printf("After editing this file, exit and restart trn to use it.\n");
-    (void)get_anything();
+    fmt::print("New User Toplevel file created.\n");
+    fmt::print("After editing this file, exit and restart trn to use it.\n");
+    (void) get_anything();
     s_univ_user_top = true;               // do not overwrite this file
     return user_top.string();
 }
@@ -1209,7 +1209,7 @@ int univ_visit_group_main(std::string_view gname)
     NewsgroupData *np = find_newsgroup(gname);
     if (!np)
     {
-        std::printf("Univ/Virt: newsgroup %s not found!", group_name.c_str());
+        fmt::print("Univ/Virt: newsgroup {} not found!", group_name);
         return NG_ERROR;
     }
     // unsubscribed, bogus, etc. groups are not visited
@@ -1227,7 +1227,7 @@ int univ_visit_group_main(std::string_view gname)
     }
     bool old_threaded = g_threaded_group;
     g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
-    std::printf("\nScanning newsgroup %s\n", group_name.c_str());
+    fmt::print("\nScanning newsgroup {}\n", group_name);
     int ret = do_newsgroup(std::string{});
     g_threaded_group = old_threaded;
     return ret;

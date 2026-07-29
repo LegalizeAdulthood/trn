@@ -616,7 +616,7 @@ SaveResult view_article()
         term_down(2);
         return SAVE_DONE;
     }
-    std::printf("Processing attachments...\n");
+    fmt::print("Processing attachments...\n");
     term_down(1);
     if (g_is_mime)
     {
@@ -624,9 +624,9 @@ SaveResult view_article()
     }
     else
     {
-        int   part;
-        int   total;
-        int   cnt = 0;
+        int part;
+        int total;
+        int cnt = 0;
 
         // Scan subject for filename and part number information
         std::string filename = decode_subject(g_art, &part, &total);
@@ -668,7 +668,7 @@ SaveResult view_article()
         } // for
         if (cnt)
         {
-            std::printf("Unable to determine type of file.\n");
+            fmt::print("Unable to determine type of file.\n");
             term_down(1);
         }
     }
@@ -864,11 +864,11 @@ static void follow_it_up()
             }
             if (appended)
             {
-                std::printf("Article appended to %s\n", deadart.c_str());
+                fmt::print("Article appended to {}\n", deadart);
             }
             else
             {
-                std::printf("Unable to append article to %s\n", deadart.c_str());
+                fmt::print("Unable to append article to {}\n", deadart);
             }
         }
     }
@@ -1026,11 +1026,11 @@ void forward()
     {
         if (g_verbose)
         {
-            std::printf("\n%s\n(Above lines saved in file %s)\n", header_text.c_str(), g_head_name.c_str());
+            fmt::print("\n{}\n(Above lines saved in file {})\n", header_text, g_head_name);
         }
         else
         {
-            std::printf("\n%s\n(Header in %s)\n", header_text.c_str(), g_head_name.c_str());
+            fmt::print("\n{}\n(Header in {})\n", header_text, g_head_name);
         }
         term_down(3);
     }
@@ -1162,7 +1162,7 @@ static int invoke(const char *cmd, const char *dir)
 #ifdef DEBUG
     if (g_debug)
     {
-        std::printf("\nInvoking command: %s\n",cmd);
+        fmt::print("\nInvoking command: {}\n", cmd);
     }
 #endif
     if (dir)

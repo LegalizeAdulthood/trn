@@ -3,6 +3,7 @@
  * display stuff
  */
 // This file Copyright 1992 by Clifford A. Adams
+// Copyright (c) 2026, Richard Thomson
 
 #include <trn/sadisp.h>
 
@@ -52,33 +53,33 @@ std::string_view sa_order_text_for_test()
 void sa_refresh_top()
 {
     color_object(COLOR_SCORE, true);
-    std::printf("%s |",g_newsgroup_name.c_str());
-// # of articles might be optional later
-    std::printf(" %d",sa_number_arts());
+    fmt::print("{} |", g_newsgroup_name);
+    // # of articles might be optional later
+    fmt::print(" {}", sa_number_arts());
 
     if (g_sa_mode_read_elig)
     {
-        std::printf(" unread+read");
+        fmt::print(" unread+read");
     }
     else
     {
-        std::printf(" unread");
+        fmt::print(" unread");
     }
     if (g_sa_mode_zoom)
     {
-        std::printf(" zoom");
+        fmt::print(" zoom");
     }
     if (g_sa_mode_fold)
     {
-        std::printf(" Fold");
+        fmt::print(" Fold");
     }
     if (g_sa_follow)
     {
-        std::printf(" follow");
+        fmt::print(" follow");
     }
-    color_pop();        // of COLOR_SCORE
+    color_pop(); // of COLOR_SCORE
     erase_eol();
-    std::printf("\n");
+    fmt::print("\n");
 }
 
 void sa_refresh_bot()

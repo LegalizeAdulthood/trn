@@ -91,7 +91,7 @@ static void sc_sv_get_file()
     {
 // Debug
 #if 0
-        std::printf("Could not open score save file for reading.\n");
+        fmt::print("Could not open score save file for reading.\n");
 #endif
         return;
     }
@@ -110,7 +110,7 @@ void sc_sv_save_file()
         return;
     }
 
-    g_waiting = true;   // don't interrupt
+    g_waiting = true; // don't interrupt
     const fs::path savename{file_exp(get_env_var("SAVESCOREFILE", "%+/savedscores"))};
     fs::path       temp_name{savename};
     temp_name += ".tmp";
@@ -119,20 +119,19 @@ void sc_sv_save_file()
     {
 // Debug
 #if 0
-        std::printf("Could not open score save temp file %s for writing.\n",
-               s_lbuf);
+        fmt::print("Could not open score save temp file {} for writing.\n", temp_name.string());
 #endif
         g_waiting = false;
         return;
     }
     for (const std::string &line : s_lines)
     {
-        std::fprintf(tmpfp,"%s\n",line.c_str());
+        std::fprintf(tmpfp, "%s\n", line.c_str());
         if (std::ferror(tmpfp))
         {
             std::fclose(tmpfp);
-            std::printf("\nWrite error in temporary save file %s\n", temp_name.string().c_str());
-            std::printf("(keeping old saved scores)\n");
+            fmt::print("\nWrite error in temporary save file {}\n", temp_name.string());
+            fmt::print("(keeping old saved scores)\n");
             std::error_code error;
             fs::remove(temp_name, error);
             g_waiting = false;
@@ -399,7 +398,7 @@ void sc_load_scores()
 
     if (verbose)
     {
-        std::printf("\nLoading scores...");
+        fmt::print("\nLoading scores...");
         std::fflush(stdout);
     }
     while (i < s_lines.size())
@@ -432,8 +431,8 @@ void sc_load_scores()
         case 'v':  // version number
             break; // not used now
 
-        case '\0':                      // empty string
-        case '#':                       // comment
+        case '\0': // empty string
+        case '#':  // comment
             break;
 
         default:
@@ -470,11 +469,10 @@ void sc_load_scores()
     // sloppy plurals (:-)
     if (verbose)
     {
-        std::printf("(%d/%d/%d scores loaded/used/unscored)\n",
-               s_loaded,s_used,total-scored);
+        fmt::print("({}/{}/{} scores loaded/used/unscored)\n", s_loaded, s_used, total - scored);
     }
 
-    s_sc_save_new = total-scored;
+    s_sc_save_new = total - scored;
     if (g_sa_initialized)
     {
         g_s_top_ent = -1;       // reset top of page

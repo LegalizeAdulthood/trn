@@ -116,14 +116,14 @@ void opt_init(int argc, char *argv[], char *tcbuf)
 
     g_ini_file = file_exp(g_use_threads ? get_env_var("TRNRC", "%+/trnrc") : get_env_var("RNRC", "%+/rnrc"));
 
-    const fs::path trn_dir{file_exp("%+")};
+    const fs::path  trn_dir{file_exp("%+")};
     std::error_code error;
     if (!fs::is_directory(trn_dir, error))
     {
-        std::printf("Creating the directory %s.\n", trn_dir.string().c_str());
+        fmt::print("Creating the directory {}.\n", trn_dir.string());
         if (make_dir(trn_dir, MD_DIR))
         {
-            std::printf("Unable to create `%s'.\n", trn_dir.string().c_str());
+            fmt::print("Unable to create `{}'.\n", trn_dir.string());
             finalize(1);
         }
     }
@@ -813,7 +813,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     default:
-        std::printf("*** Internal error: Unknown Option ***\n");
+        fmt::print("*** Internal error: Unknown Option ***\n");
         break;
     }
 }
@@ -1300,7 +1300,7 @@ std::string option_value(OptionIndex num)
         return yes_or_no(g_sel_num_goto);
 
     default:
-        std::printf("*** Internal error: Unknown Option ***\n");
+        fmt::print("*** Internal error: Unknown Option ***\n");
         break;
     }
     return "<UNKNOWN>";
@@ -1669,17 +1669,17 @@ void cwd_check()
             change_dir(save_dir);
             if (g_verbose)
             {
-                std::printf("Cannot make directory %s--\n"
-                            "        articles will be saved to %s\n"
-                            "\n",
-                            g_priv_dir.c_str(), save_dir.c_str());
+                fmt::print("Cannot make directory {}--\n"
+                           "        articles will be saved to {}\n"
+                           "\n",
+                           g_priv_dir, save_dir);
             }
             else
             {
-                std::printf("Can't make %s--\n"
-                            "        using %s\n"
-                            "\n",
-                            g_priv_dir.c_str(), save_dir.c_str());
+                fmt::print("Can't make {}--\n"
+                           "        using {}\n"
+                           "\n",
+                           g_priv_dir, save_dir);
             }
         }
     }
@@ -1688,21 +1688,21 @@ void cwd_check()
     save_dir = fs::current_path(error).generic_string();
     if (error)
     {
-        std::printf("Cannot determine current working directory!\n");
+        fmt::print("Cannot determine current working directory!\n");
         finalize(1);
     }
     if (eaccess(save_dir, 2))
     {
         if (g_verbose)
         {
-            std::printf("Current directory %s is not writeable--\n"
-                        "        articles will be saved to home directory\n"
-                        "\n",
-                        save_dir.c_str());
+            fmt::print("Current directory {} is not writeable--\n"
+                       "        articles will be saved to home directory\n"
+                       "\n",
+                       save_dir);
         }
         else
         {
-            std::printf("%s not writeable--using ~\n\n", save_dir.c_str());
+            fmt::print("{} not writeable--using ~\n\n", save_dir);
         }
         save_dir = g_home_dir;
     }

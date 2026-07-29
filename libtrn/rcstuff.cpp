@@ -342,7 +342,7 @@ bool rcstuff_init()
         mptr->m_first = new_newsrc(config);
         if (!mptr->use_multirc())
         {
-            std::printf("Couldn't open any newsrc groups.  Is your access file ok?\n");
+            fmt::print("Couldn't open any newsrc groups.  Is your access file ok?\n");
             finalize(1);
         }
     }
@@ -640,13 +640,13 @@ static bool lock_newsrc(Newsrc *rp)
         {
             if (g_verbose)
             {
-                std::printf("\n"
-                       "Hey, that *my* pid!  Your access file is trying to use the same newsrc\n"
-                       "more than once.\n");
+                fmt::print("\n"
+                           "Hey, that *my* pid!  Your access file is trying to use the same newsrc\n"
+                           "more than once.\n");
             }
             else
             {
-                std::printf("\nAccess file error (our pid detected).\n");
+                fmt::print("\nAccess file error (our pid detected).\n");
             }
             term_down(2);
             return false;
@@ -658,25 +658,24 @@ static bool lock_newsrc(Newsrc *rp)
             if (g_verbose)
             {
                 std::fputs("\n"
-                      "That process does not seem to exist anymore.  The count of read articles\n"
-                      "may be incorrect in the last newsgroup accessed by that other (defunct)\n"
-                      "process.\n\n",
-                      stdout);
+                           "That process does not seem to exist anymore.  The count of read articles\n"
+                           "may be incorrect in the last newsgroup accessed by that other (defunct)\n"
+                           "process.\n\n",
+                           stdout);
             }
             else
             {
-                std::fputs("\nProcess crashed.\n",stdout);
+                std::fputs("\nProcess crashed.\n", stdout);
             }
             if (!g_last_newsgroup_name.empty())
             {
                 if (g_verbose)
                 {
-                    std::printf("(The last newsgroup accessed was %s.)\n\n",
-                           g_last_newsgroup_name.c_str());
+                    fmt::print("(The last newsgroup accessed was {}.)\n\n", g_last_newsgroup_name);
                 }
                 else
                 {
-                    std::printf("(In %s.)\n\n",g_last_newsgroup_name.c_str());
+                    fmt::print("(In {}.)\n\n", g_last_newsgroup_name);
                 }
             }
             term_down(2);
@@ -1061,7 +1060,7 @@ bool get_newsgroup(std::string_view what, GetNewsgroupFlags flags)
     if (what.find('/') != std::string_view::npos)
     {
         dingaling();
-        std::printf("\nBad newsgroup name.\n");
+        fmt::print("\nBad newsgroup name.\n");
         term_down(2);
 check_fuzzy_match:
         if (g_fuzzy_get && (flags & GNG_FUZZY))
@@ -1083,9 +1082,9 @@ check_fuzzy_match:
     }
     set_newsgroup_name(what);
     g_newsgroup_ptr = find_newsgroup(g_newsgroup_name);
-    if (g_newsgroup_ptr == nullptr)             // not in .newsrc?
+    if (g_newsgroup_ptr == nullptr) // not in .newsrc?
     {
-        Newsrc* rp;
+        Newsrc *rp;
         for (rp = g_multirc->m_first; rp; rp = rp->next)
         {
             if (!all_bits(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
@@ -1103,11 +1102,11 @@ check_fuzzy_match:
             dingaling();
             if (g_verbose)
             {
-                std::printf("\nNewsgroup %s does not exist!\n", g_newsgroup_name.c_str());
+                fmt::print("\nNewsgroup {} does not exist!\n", g_newsgroup_name);
             }
             else
             {
-                std::printf("\nNo %s!\n", g_newsgroup_name.c_str());
+                fmt::print("\nNo {}!\n", g_newsgroup_name);
             }
             term_down(2);
             if (g_novice_delays)
@@ -1161,10 +1160,10 @@ reask_add:
             {
                 if (g_verbose)
                 {
-                    std::printf("Type y or SP to subscribe to %s.\n"
-                           "Type Y to subscribe to this and all remaining new groups.\n"
-                           "Type N to leave all remaining new groups unsubscribed.\n",
-                           g_newsgroup_name.c_str());
+                    fmt::print("Type y or SP to subscribe to {}.\n"
+                               "Type Y to subscribe to this and all remaining new groups.\n"
+                               "Type N to leave all remaining new groups unsubscribed.\n",
+                               g_newsgroup_name);
                     term_down(3);
                 }
                 else
@@ -1482,33 +1481,33 @@ reinp_reloc:
         {
             if (g_verbose)
             {
-                std::printf("\n"
-                       "\n"
-                       "Type ^ to put the newsgroup first (position 0).\n"
-                       "Type $ to put the newsgroup last (position %d).\n",
-                       g_newsgroup_count.value_of() - 1);
-                std::printf("Type . to put it before the current newsgroup.\n"
-                       "Type -newsgroup name to put it before that newsgroup.\n"
-                       "Type +newsgroup name to put it after that newsgroup.\n"
-                       "Type a number between 0 and %d to put it at that position.\n",
-                       g_newsgroup_count.value_of() - 1);
-                std::printf("Type L for a listing of newsgroups and their positions.\n"
-                       "Type q to abort the current action.\n");
+                fmt::print("\n"
+                           "\n"
+                           "Type ^ to put the newsgroup first (position 0).\n"
+                           "Type $ to put the newsgroup last (position {}).\n",
+                           g_newsgroup_count.value_of() - 1);
+                fmt::print("Type . to put it before the current newsgroup.\n"
+                           "Type -newsgroup name to put it before that newsgroup.\n"
+                           "Type +newsgroup name to put it after that newsgroup.\n"
+                           "Type a number between 0 and {} to put it at that position.\n",
+                           g_newsgroup_count.value_of() - 1);
+                fmt::print("Type L for a listing of newsgroups and their positions.\n"
+                           "Type q to abort the current action.\n");
             }
             else
             {
-                std::printf("\n"
-                       "\n"
-                       "^ to put newsgroup first (pos 0).\n"
-                       "$ to put last (pos %d).\n",
-                       g_newsgroup_count.value_of() - 1);
-                std::printf(". to put before current newsgroup.\n"
-                       "-newsgroup to put before newsgroup.\n"
-                       "+newsgroup to put after.\n"
-                       "number in 0-%d to put at that pos.\n"
-                       "L for list of newsrc.\n"
-                       "q to abort\n",
-                       g_newsgroup_count.value_of() - 1);
+                fmt::print("\n"
+                           "\n"
+                           "^ to put newsgroup first (pos 0).\n"
+                           "$ to put last (pos {}).\n",
+                           g_newsgroup_count.value_of() - 1);
+                fmt::print(". to put before current newsgroup.\n"
+                           "-newsgroup to put before newsgroup.\n"
+                           "+newsgroup to put after.\n"
+                           "number in 0-{} to put at that pos.\n"
+                           "L for list of newsrc.\n"
+                           "q to abort\n",
+                           g_newsgroup_count.value_of() - 1);
             }
             term_down(10);
             goto reask_reloc;

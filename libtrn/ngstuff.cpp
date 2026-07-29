@@ -103,7 +103,7 @@ bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner, std::str
         where_i_am = fs::current_path(error);
         if (error)
         {
-            std::printf("Cannot determine current working directory!\n");
+            fmt::print("Cannot determine current working directory!\n");
             finalize(1);
         }
         if (change_dir(g_priv_dir))
@@ -302,7 +302,7 @@ NumNumResult num_num(std::string_view command)
     ranges = command.substr(0, range_end);
     if (!output_level && !justone)
     {
-        std::printf("Processing...");
+        fmt::print("Processing...");
         std::fflush(stdout);
     }
     for (bool have_range = true; have_range;)
@@ -433,7 +433,7 @@ int thread_perform(std::string_view command)
 
     if (!output_level && !one_thread)
     {
-        std::printf("Processing...");
+        fmt::print("Processing...");
         std::fflush(stdout);
     }
     // A few commands can just loop through the subjects.
@@ -561,7 +561,7 @@ int perform(std::string_view command_list, int output_level)
 
     if (output_level == 1)
     {
-        std::printf("%-6ld ",g_art.value_of());
+        fmt::print("{:<6} ", g_art.value_of());
         std::fflush(stdout);
     }
 
@@ -727,7 +727,7 @@ int perform(std::string_view command_list, int output_level)
             int ret = cancel_article();
             if (output_level && g_verbose)
             {
-                std::printf("\t%sanceled", ret ? "Not c" : "C");
+                fmt::print("\t{}anceled", ret ? "Not c" : "C");
             }
         }
         else if (ch == '%')
@@ -803,7 +803,7 @@ int perform(std::string_view command_list, int output_level)
                 if (output_level != 1)
                 {
                     erase_line(false);
-                    std::printf("%-6ld ",g_art.value_of());
+                    fmt::print("{:<6} ", g_art.value_of());
                 }
                 if (ch == 'a')
                 {
@@ -909,7 +909,7 @@ int newsgroup_perform(std::string_view cmdlst, int output_level)
 {
     if (output_level == 1)
     {
-        std::printf("%s ",g_newsgroup_name.c_str());
+        fmt::print("{} ", g_newsgroup_name);
         std::fflush(stdout);
     }
 
@@ -1044,7 +1044,7 @@ int AddGroup::add_group_perform(std::string_view cmdlst, int output_level)
 {
     if (output_level == 1)
     {
-        std::printf("%s ", m_name.c_str());
+        fmt::print("{} ", m_name);
         std::fflush(stdout);
     }
 

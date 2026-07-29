@@ -254,12 +254,12 @@ restart:
                     {
                         if (g_verbose)
                         {
-                            std::printf("\nRestriction %s%s still in effect.\n",
-                                   g_newsgroup_to_do[0].c_str(), g_max_newsgroup_to_do > 1 ? ", etc." : "");
+                            fmt::print("\nRestriction {}{} still in effect.\n", g_newsgroup_to_do[0],
+                                       g_max_newsgroup_to_do > 1 ? ", etc." : "");
                         }
                         else
                         {
-                            std::fputs("\n(\"Only\" mode.)\n",stdout);
+                            std::fputs("\n(\"Only\" mode.)\n", stdout);
                         }
                         term_down(2);
                     }
@@ -271,11 +271,11 @@ restart:
                         }
                         else
                         {
-                            std::fputs("\nNo \"only\" articles.",stdout);
+                            std::fputs("\nNo \"only\" articles.", stdout);
                         }
                         term_down(2);
-                        end_only();     // release the restriction
-                        std::printf("\n%s\n", g_msg.c_str());
+                        end_only(); // release the restriction
+                        fmt::print("\n{}\n", g_msg);
                         term_down(2);
                         retry = true;
                     }
@@ -333,37 +333,36 @@ restart:
             }
 reask_newsgroup:
             unflush_output();   // disable any ^O in effect
-                if (g_newsgroup_ptr == nullptr)
-                {
+            if (g_newsgroup_ptr == nullptr)
+            {
                 g_default_cmd = retry ? "npq" : "qnp";
                 if (g_verbose)
                 {
-                    std::printf("\n****** End of newsgroups -- what next? [%s] ",
-                           g_default_cmd.c_str());
+                    fmt::print("\n****** End of newsgroups -- what next? [{}] ", g_default_cmd);
                 }
                 else
                 {
-                    std::printf("\n**** End -- next? [%s] ", g_default_cmd.c_str());
+                    fmt::print("\n**** End -- next? [{}] ", g_default_cmd);
                 }
                 term_down(1);
             }
             else
             {
-                g_threaded_group = (g_use_threads && !(g_newsgroup_ptr->m_flags&NF_UNTHREADED));
+                g_threaded_group = (g_use_threads && !(g_newsgroup_ptr->m_flags & NF_UNTHREADED));
                 g_default_cmd =
-                    (g_use_news_selector >= 0 && g_newsgroup_ptr->m_to_read >= (ArticleUnread) g_use_news_selector ? "+ynq" : "ynq");
+                    (g_use_news_selector >= 0 && g_newsgroup_ptr->m_to_read >= (ArticleUnread) g_use_news_selector
+                         ? "+ynq"
+                         : "ynq");
                 if (g_verbose)
                 {
-                    std::printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
-                           g_threaded_group? "======" : "******",
-                           (long)g_newsgroup_ptr->m_to_read, plural(g_newsgroup_ptr->m_to_read),
-                           g_newsgroup_name.c_str(), g_default_cmd.c_str());
+                    fmt::print("\n{} {:3} unread article{} in {} -- read now? [{}] ",
+                               g_threaded_group ? "======" : "******", g_newsgroup_ptr->m_to_read,
+                               plural(g_newsgroup_ptr->m_to_read), g_newsgroup_name, g_default_cmd);
                 }
                 else
                 {
-                    std::printf("\n%s %3ld in %s -- read? [%s] ",
-                           g_threaded_group? "====" : "****",
-                           (long)g_newsgroup_ptr->m_to_read,g_newsgroup_name.c_str(),g_default_cmd.c_str());
+                    fmt::print("\n{} {:3} in {} -- read? [{}] ", g_threaded_group ? "====" : "****",
+                               g_newsgroup_ptr->m_to_read, g_newsgroup_name, g_default_cmd);
                 }
                 term_down(1);
             }
@@ -416,14 +415,14 @@ reinp_newsgroup:
                 break;
 
             case ING_MESSAGE:
-                std::printf("\n%s\n", g_msg.c_str());
+                fmt::print("\n{}\n", g_msg);
                 term_down(2);
                 break;
             }
         }
-    loop_break:;
+loop_break:;
         check_active_refetch(false);
-        }
+    }
 
 bug_out:
     // now write the newsrc(s) back out
@@ -600,13 +599,13 @@ do_command:
         {
             break;
         }
-        std::printf("\nThe abandoned changes are in %s.new.\n",
-               g_multirc->multirc_name().c_str());
+        fmt::print("\nThe abandoned changes are in {}.new.\n", g_multirc->multirc_name());
         term_down(2);
         s_restore_old_newsrc = true;
         return ING_QUIT;
 
-    case 'q': case 'Q':       // quit?
+    case 'q':
+    case 'Q': // quit?
         newline();
         return ING_QUIT;
 
@@ -731,7 +730,7 @@ do_command:
                 if (!g_newsgroup_ptr)
                 {
                     g_newsgroup_ptr = g_current_newsgroup;
-                    std::printf("\nOnly %d groups. Try again.\n", g_newsgroup_count.value_of());
+                    fmt::print("\nOnly {} groups. Try again.\n", g_newsgroup_count.value_of());
                     term_down(2);
                     return ING_ASK;
                 }
@@ -811,7 +810,7 @@ display_multirc:
     case 't':
         if (!g_use_threads)
         {
-            std::printf("\n\nNot running in thread mode.\n");
+            fmt::print("\n\nNot running in thread mode.\n");
         }
         else if (g_newsgroup_ptr && g_newsgroup_ptr->m_to_read >= TR_NONE)
         {
@@ -863,8 +862,8 @@ reask_abandon:
         newline();
         if (*g_buf == 'h')
         {
-            std::printf("Type y or SP to abandon the changes to this group since you started trn.\n");
-            std::printf("Type n to leave the group as it is.\n");
+            fmt::print("Type y or SP to abandon the changes to this group since you started trn.\n");
+            fmt::print("Type n to leave the group as it is.\n");
             term_down(2);
             goto reask_abandon;
         }
