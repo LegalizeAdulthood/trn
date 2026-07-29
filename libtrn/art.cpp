@@ -1067,7 +1067,7 @@ caseG:
 #ifdef DEBUG
             if (g_debug & DEB_INNERSRCH)
             {
-                std::printf("Test %s\n",search_line.c_str());
+                fmt::print("Test {}\n", search_line);
             }
 #endif
             success = s_gcompex.execute(search_line.c_str()) != nullptr;
@@ -1087,7 +1087,7 @@ caseG:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("On page? %ld <=? %ld\n",g_inner_search.value_of(),g_art_pos.value_of());
+            fmt::print("On page? {} <=? {}\n", g_inner_search.value_of(), g_art_pos.value_of());
             term_down(1);
         }
 #endif
@@ -1105,7 +1105,7 @@ caseG:
 #ifdef DEBUG
             if (g_debug & DEB_INNERSRCH)
             {
-                std::printf("@ %d\n",g_highlight.value_of());
+                fmt::print("@ {}\n", g_highlight.value_of());
                 term_down(1);
             }
 #endif
@@ -1135,7 +1135,7 @@ refresh_screen:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            std::printf("Topline = %d", g_top_line.value_of());
+            fmt::print("Topline = {}", g_top_line.value_of());
             std::string debug_pause;
             std::getline(std::cin, debug_pause);
         }

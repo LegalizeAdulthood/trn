@@ -708,7 +708,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `rt-select.cpp` 19, `rt-wumpus.cpp` 2, `search.cpp` 3,
   `terminal.cpp` 14, `trn.cpp` 11, and `util.cpp` 2.  Promote concrete
   source locations to explicit function-level slices before editing.
-- `printf`/`std::printf`: `art.cpp` 9, `artsrch.cpp` 2,
+- `printf`/`std::printf`: `art.cpp` 5, `artsrch.cpp` 2,
   `autosub.cpp` 1, `backpage.cpp` 3, `bits.cpp` 3, `cache.cpp` 4,
   `edit_dist.cpp` 10, `final.cpp` 3, `head.cpp` 3, `intrp.cpp` 1,
   `kfile.cpp` 2, `mime.cpp` 18, `ng.cpp` 35, `ngdata.cpp` 6,
@@ -720,7 +720,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   `scorefile.cpp` 20,
   `scoresave.cpp` 6, `sdisp.cpp` 10, `smisc.cpp` 1, `spage.cpp` 4,
   `terminal.cpp` 3, `trn.cpp` 12, `univ.cpp` 9, and `util.cpp` 6.
-  `art.cpp` hits are covered by `CSTR-467` through `CSTR-470`.
+  `art.cpp` hits are covered by `CSTR-468` through `CSTR-470`.
   `parsedate/parsedate.y` has 5 exempt hits.
 - `fprintf`/`std::fprintf`: `config/include/config/common.h` 1,
   `libtrn/color.cpp` 2, `decode.cpp` 1, `head.cpp` 1, `nntp.cpp` 1,
@@ -767,16 +767,6 @@ every slice after each scan; old deferrals are not binding.
 These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
-
-#### CSTR-467 - Convert Page Switch Debug Output
-
-- Files: `libtrn/art.cpp`.
-- Kind: formatted C output.
-- Function: `page_switch`.
-- Dependencies: none.
-- Change: convert the remaining static `DEBUG` inner-search
-  `std::printf` diagnostics in `page_switch` to `fmt::print`.
-- Tests: `ArticlePagerCommandTest` and `ArticleSearchTest`.
 
 #### CSTR-468 - Classify Page Switch Prompt Output
 
