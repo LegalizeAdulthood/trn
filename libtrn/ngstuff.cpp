@@ -71,15 +71,10 @@ void newsgroup_stuff_init()
 
 // do a shell escape
 
-bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner)
-{
-    return escapade_with_shell_runner(shell_runner, std::string_view{g_buf});
-}
-
 bool escapade_with_shell_runner(const NgstuffShellRunner &shell_runner, std::string_view command)
 {
-    bool interactive = command.size() > 1 && command[1] == FINISH_CMD;
-    fs::path where_i_am;
+    bool        interactive = command.size() > 1 && command[1] == FINISH_CMD;
+    fs::path    where_i_am;
     std::string completed_command;
 
     if (interactive)

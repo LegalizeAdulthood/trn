@@ -194,9 +194,6 @@ TEST_F(EscapadeTest, restoresCurrentDirectoryAfterShellCommand)
     bool              ran_shell{};
     fs::path          shell_cwd;
     const std::string command{"!echo cwd"};
-    ASSERT_LT(command.size(), m_old_buf.size());
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
     bool result = escapade_with_shell_runner(
         [&](std::string_view shell, std::string_view cmd)
@@ -206,7 +203,8 @@ TEST_F(EscapadeTest, restoresCurrentDirectoryAfterShellCommand)
             shell_cwd = fs::current_path();
             ran_shell = true;
             return 0;
-        });
+        },
+        command);
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(ran_shell);
