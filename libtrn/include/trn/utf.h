@@ -51,6 +51,6 @@ CodePoint code_point_at(const char *s);
 
 int put_char_adv(std::string_view &text, bool outputok);
 
-std::string create_utf8_copy(const char *s);
+std::string create_utf8_copy(std::string_view s);
 
 #endif

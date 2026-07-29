@@ -620,11 +620,10 @@ Configure scripts, and the vendored `vcpkg` tree.
   `std::string_view` APIs.  `do_article` still has C-string bridge
   lambdas for color and regex helpers.
 - UTF helper scan: `put_char_adv` now consumes `std::string_view &`.
-  `create_utf8_copy` and the raw single-position overloads for
-  `at_norm_char`, `byte_length_at`, `visual_width_at`, and
-  `code_point_at` still expose C-string APIs.  These should be refactored
-  bottom-up so display loops consume views directly and stale wrappers
-  can be deleted.
+  The raw single-position overloads for `at_norm_char`,
+  `byte_length_at`, `visual_width_at`, and `code_point_at` still expose
+  C-string APIs.  These should be refactored bottom-up so display loops
+  consume views directly and stale wrappers can be deleted.
 - Shell helper scan: `do_shell` still takes raw C strings and forces
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
@@ -757,17 +756,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-545 - Make `create_utf8_copy` View-based
-
-- Type: helper parameter from `const char *` to `std::string_view`.
-- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
-  `libtrn/cache.cpp`, `tests/test_utf.cpp`.
-- Function: `create_utf8_copy`.
-- Dependencies: none.
-- Instructions: consume a view in both sizing and copy passes.  Callers
-  that already own `std::string` storage pass the string directly.
-  Treat the old null-input test as the empty-view case.
-
 #### CSTR-546 - Make Article Color State Use Views
 
 - Type: file-local helper parameters from C-string begin/current
@@ -827,7 +815,7 @@ them before broad global-buffer work and before removing helpers.
 - Functions: `at_norm_char(const char *)`,
   `byte_length_at(const char *)`, `visual_width_at(const char *)`,
   `code_point_at(const char *)`.
-- Dependencies: `CSTR-545`, `CSTR-549`.
+- Dependencies: `CSTR-549`.
 - Instructions: update remaining production and test callers to pass
   views, then delete the raw overloads.  Use empty views for the old
   null-sentinel test cases where empty text has the same meaning.

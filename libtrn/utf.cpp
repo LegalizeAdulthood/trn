@@ -543,31 +543,36 @@ int put_char_adv(std::string_view &text, bool outputok)
     return it;
 }
 
-std::string create_utf8_copy(const char *s)
+std::string create_utf8_copy(std::string_view text)
 {
     std::string result;
-    if (s == nullptr)
-    {
-        return result;
-    }
 
     // Precalculate size of required space
     std::size_t tlen = 0;
-    for (int slen = 0; s[slen];)
+    for (std::string_view remaining = text; !remaining.empty();)
     {
-        const int         sw = byte_length_at(s + slen);
-        const std::string encoded_text = utf8_text(code_point_at(s + slen));
-        slen += sw;
+        const int sw = byte_length_at(remaining);
+        if (sw <= 0)
+        {
+            break;
+        }
+        const std::string encoded_text = utf8_text(code_point_at(remaining));
+        remaining.remove_prefix(static_cast<std::size_t>(sw));
         tlen += encoded_text.size();
     }
 
     result.reserve(tlen);
 
     // Create the actual copy
-    for (int i = 0; s[i];)
+    for (std::string_view remaining = text; !remaining.empty();)
     {
-        result += utf8_text(code_point_at(s + i));
-        i += byte_length_at(s + i);
+        const int sw = byte_length_at(remaining);
+        if (sw <= 0)
+        {
+            break;
+        }
+        result += utf8_text(code_point_at(remaining));
+        remaining.remove_prefix(static_cast<std::size_t>(sw));
     }
     return result;
 }

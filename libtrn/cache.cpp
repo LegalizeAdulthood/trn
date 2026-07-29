@@ -533,7 +533,7 @@ static std::string decode_header_impl(std::string_view from)
                         len = static_cast<int>(decoded.size());
                     }
 #ifdef USE_UTF_HACK
-                    std::string utf8_copy = create_utf8_copy(decoded.c_str());
+                    std::string utf8_copy = create_utf8_copy(decoded);
                     len = static_cast<int>(utf8_copy.size());
                     decoded = std::move(utf8_copy);
 #endif
