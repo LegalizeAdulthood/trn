@@ -35,11 +35,11 @@ std::string_view output_charset_name();
 bool at_norm_char(std::string_view s);
 bool at_norm_char(const char *s);
 
-int byte_length_at(std::string_view s);
-int byte_length_at(const char *s);
-int visual_width_at(std::string_view s);
-int visual_width_at(const char *s);
-int         visual_length_of(const char *s);
+int         byte_length_at(std::string_view s);
+int         byte_length_at(const char *s);
+int         visual_width_at(std::string_view s);
+int         visual_width_at(const char *s);
+int         visual_length_of(std::string_view s);
 std::string insert_unicode_at(CodePoint c);
 
 enum : CodePoint

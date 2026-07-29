@@ -314,18 +314,19 @@ int visual_width_at(const char *s)
     return visual_width_at(std::string_view{s});
 }
 
-int visual_length_of(const char *s)
+int visual_length_of(std::string_view text)
 {
     int it = 0;
-    if (s)
+    while (!text.empty())
     {
-        while (*s)
+        int w = byte_length_at(text);
+        int v = visual_width_at(text);
+        if (w <= 0)
         {
-            int w = byte_length_at(s);
-            int v = visual_width_at(s);
-            it += v;
-            s += w;
+            break;
         }
+        it += v;
+        text.remove_prefix(static_cast<std::size_t>(w));
     }
     return it;
 }

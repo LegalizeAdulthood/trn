@@ -139,8 +139,7 @@ static std::string trim_string(std::string_view text)
 static int visible_length(std::string_view text)
 {
 #ifdef USE_UTF_HACK
-    const std::string storage{text};
-    return visual_length_of(storage.c_str());
+    return visual_length_of(text);
 #else
     return static_cast<int>(text.size());
 #endif
@@ -559,7 +558,7 @@ std::string compress_from(std::string_view from, int size)
     std::size_t len = text.size();
     int         vis_len;
 #ifdef USE_UTF_HACK
-    vis_len = visual_length_of(text.c_str());
+    vis_len = visual_length_of(text);
 #else
     vis_len = static_cast<int>(len);
 #endif

@@ -370,9 +370,9 @@ TEST(UTFCodePointDecodingTest, kissing_face_with_closed_eyes)
     ASSERT_EQ(KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT, code_point_at("\360\237\230\232"));
 }
 
-TEST(UTFVisualLengthTest, nullptr)
+TEST(UTFVisualLengthTest, emptyView)
 {
-    ASSERT_EQ(0, visual_length_of(nullptr));
+    ASSERT_EQ(0, visual_length_of(std::string_view{}));
 }
 
 TEST(UTFVisualLengthTest, ascii)
