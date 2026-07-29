@@ -134,11 +134,6 @@ bool escapade(std::string_view command)
 
 // process & command
 
-bool switcheroo()
-{
-    return switcheroo(std::string_view{g_buf});
-}
-
 bool switcheroo(std::string_view command)
 {
     std::string completed_command;

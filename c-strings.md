@@ -784,22 +784,12 @@ No current slices.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-477 - Remove `g_buf` From Switcheroo
-
-- Files: `libtrn/ngstuff.cpp`.
-- Kind: global command buffer read.
-- Function: `switcheroo`.
-- Dependencies: none.
-- Change: accept command text explicitly instead of constructing a
-  string view over `g_buf`.
-- Tests: `NgstuffTest` switcheroo cases.
-
 #### CSTR-478 - Remove `g_buf` From Newsgroup Dispatcher
 
 - Files: `libtrn/ng.cpp`.
 - Kind: global command buffer read.
 - Function: `do_newsgroup`.
-- Dependencies: `CSTR-477`.
+- Dependencies: none.
 - Change: keep article command text in owned local storage and pass it
   through to downstream command handlers instead of copying from
   `g_buf`.
@@ -860,7 +850,7 @@ and clarified ownership at the edges.
 - Files: `tests/test_ngstuff.cpp`.
 - Kind: test fixture global buffer dependency.
 - Function: `NgstuffTest` fixture and cases.
-- Dependencies: `CSTR-477`.
+- Dependencies: none.
 - Change: update tests to provide command text through modern APIs
   instead of saving and restoring `g_buf`.
 - Tests: `NgstuffTest`.
@@ -899,7 +889,7 @@ owned strings or owner-specific storage.
   remaining production users.
 - Kind: final global storage removal.
 - Function: `g_buf`.
-- Dependencies: `CSTR-477` through `CSTR-485`.
+- Dependencies: `CSTR-478` through `CSTR-485`.
 - Change: delete the global command buffer after all remaining users own
   their storage locally.  Do not replace it with another global string.
 - Tests: full build and full test workflow.

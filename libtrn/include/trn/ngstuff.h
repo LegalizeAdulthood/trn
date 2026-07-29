@@ -23,7 +23,6 @@ extern std::string g_save_dir;    // -d
 
 void         newsgroup_stuff_init();
 bool         escapade(std::string_view command);
-bool         switcheroo();
 bool         switcheroo(std::string_view command);
 NumNumResult num_num(std::string_view command);
 int thread_perform(std::string_view command);

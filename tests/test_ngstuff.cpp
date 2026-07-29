@@ -215,11 +215,8 @@ TEST_F(EscapadeTest, restoresCurrentDirectoryAfterShellCommand)
 TEST_F(EscapadeTest, restoresCurrentDirectoryAfterSaveDirectorySwitch)
 {
     const std::string command = "&-d" + m_save.generic_string();
-    ASSERT_LT(command.size(), m_old_buf.size());
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
-    const bool result = switcheroo();
+    const bool result = switcheroo(command);
 
     EXPECT_FALSE(result);
     EXPECT_EQ(m_save.generic_string(), g_save_dir);
@@ -259,11 +256,8 @@ TEST_F(NumNumTest, rejectsOpenEndedRangeAfterComma)
 TEST_F(SwitcherooMacroTest, definesMacroFromCommandText)
 {
     const std::string command{"&&~ z"};
-    ASSERT_LT(command.size(), m_old_buf.size());
-    command.copy(g_buf, command.size());
-    g_buf[command.size()] = '\0';
 
-    const bool result = switcheroo();
+    const bool result = switcheroo(command);
 
     EXPECT_FALSE(result);
     push_char('~');
