@@ -53,7 +53,7 @@ int                g_kf_change_thread_cnt{};  // # entries changed from old to n
 ArticleNum         g_kill_first{};            // used as g_firstart when killing
 
 static void mention(std::string_view str);
-static bool kill_file_junk(char *ptr, int killmask);
+static bool kill_file_junk(Article &article, int killmask);
 static int  do_kill_file(std::FILE *kfp, int entering);
 static void rewrite_kill_file(ArticleNum thru);
 static int  write_local_thread_commands(int keylen, HashDatum *data, int extra);
@@ -440,16 +440,15 @@ static int do_kill_file(std::FILE *kfp, int entering)
     return 0;
 }
 
-static bool kill_file_junk(char *ptr, int killmask)
+static bool kill_file_junk(Article &article, int killmask)
 {
-    Article* ap = (Article*)ptr;
-    if ((ap->m_flags & killmask) == AF_UNREAD)
+    if ((article.m_flags & killmask) == AF_UNREAD)
     {
-        ap->set_read();
+        article.set_read();
     }
-    else if (ap->m_flags & g_sel_mask)
+    else if (article.m_flags & g_sel_mask)
     {
-        ap->m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+        article.m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         if (!g_selected_count--)
         {
             g_selected_count = 0;

@@ -91,12 +91,11 @@ enum ArticleSwitchResult
     AS_SV = 6
 };
 
-static bool count_uncached_article(char *ptr, int arg);
-static bool mark_all_read(char *ptr, int leave_unread);
-static bool mark_all_unread(char *ptr, int arg);
-static bool output_subject_callback(char *ptr, int flag);
+static bool count_uncached_article(Article &article, int arg);
+static bool mark_all_read(Article &article, int leave_unread);
+static bool mark_all_unread(Article &article, int arg);
 #ifdef DEBUG
-static bool debug_article_output(char *ptr, int arg);
+static bool debug_article_output(Article &article, int arg);
 #endif
 static ArticleSwitchResult art_switch(std::string command);
 
@@ -1672,7 +1671,7 @@ normal_search:
         {
             ArticleNum oldart = g_art;
             page_start();
-            article_walk(output_subject_callback, AF_UNREAD);
+            article_walk(output_subject, AF_UNREAD);
             g_int_count = 0;
             g_subj_line = std::nullopt;
             g_art = oldart;
@@ -2173,33 +2172,30 @@ reask_catchup:
     return ch;
 }
 
-static bool count_uncached_article(char *ptr, int arg)
+static bool count_uncached_article(Article &article, int arg)
 {
-    Article* ap = (Article*)ptr;
-    if ((ap->m_flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
+    if ((article.m_flags & (AF_UNREAD | AF_CACHED)) == AF_UNREAD)
     {
         ++g_obj_count;
     }
     return false;
 }
 
-static bool mark_all_read(char *ptr, int leave_unread)
+static bool mark_all_read(Article &article, int leave_unread)
 {
-    Article* ap = (Article*)ptr;
-    if (ap->article_num() > g_last_art - ArticleNum{leave_unread})
+    if (article.article_num() > g_last_art - ArticleNum{leave_unread})
     {
         return true;
     }
-    ap->m_flags &= ~(static_cast<ArticleFlags>(g_sel_mask) |AF_UNREAD);
+    article.m_flags &= ~(static_cast<ArticleFlags>(g_sel_mask) | AF_UNREAD);
     return false;
 }
 
-static bool mark_all_unread(char *ptr, int arg)
+static bool mark_all_unread(Article &article, int arg)
 {
-    Article* ap = (Article*)ptr;
-    if ((ap->m_flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
+    if ((article.m_flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
     {
-        ap->m_flags |= AF_UNREAD;         // mark as unread
+        article.m_flags |= AF_UNREAD;    // mark as unread
         ++g_obj_count;
     }
     return false;
@@ -2249,23 +2245,17 @@ bool output_subject(Article &article, int flag)
     return false;
 }
 
-static bool output_subject_callback(char *ptr, int flag)
-{
-    return output_subject(*reinterpret_cast<Article *>(ptr), flag);
-}
-
 #ifdef DEBUG
-static bool debug_article_output(char *ptr, int arg)
+static bool debug_article_output(Article &article, int arg)
 {
-    Article* ap = (Article*)ptr;
     if (g_int_count)
     {
         return true;
     }
-    if (ap->article_num() >= g_first_art && ap->m_subj)
+    if (article.article_num() >= g_first_art && article.m_subj)
     {
-        fmt::print("{:5} {} {}\n", ap->article_num().value_of(), (ap->m_flags & AF_UNREAD) ? 'y' : 'n',
-                   ap->m_subj->text());
+        fmt::print("{:5} {} {}\n", article.article_num().value_of(), (article.m_flags & AF_UNREAD) ? 'y' : 'n',
+                   article.m_subj->text());
         term_down(1);
     }
     return false;

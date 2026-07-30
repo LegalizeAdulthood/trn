@@ -104,11 +104,11 @@ Article *article_find(ArticleNum an)
     return it == g_article_list.end() ? nullptr : &it->second;
 }
 
-bool article_walk(bool (*callback)(char *, int), int arg)
+bool article_walk(bool (*callback)(Article &, int), int arg)
 {
     for (auto &[num, article] : g_article_list)
     {
-        if (callback(reinterpret_cast<char *>(&article), arg))
+        if (callback(article, arg))
         {
             return true;
         }
@@ -247,9 +247,9 @@ void close_cache()
     thread_close();
 
     article_walk(
-        [](char *cp, int)
+        [](Article &article, int)
         {
-            reinterpret_cast<Article *>(cp)->clear_article();
+            article.clear_article();
             return false;
         },
         0);

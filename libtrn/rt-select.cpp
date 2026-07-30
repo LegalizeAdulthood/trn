@@ -276,7 +276,7 @@ static bool                delay_return_item(Selection u);
 static bool                deselect_item(Selection u);
 static bool                select_option(OptionIndex i);
 static void                sel_cleanup();
-static bool                mark_del_as_read(char *ptr, int arg);
+static bool                mark_del_as_read(Article &article, int arg);
 static DisplayState        sel_command(char_int ch);
 static bool                sel_perform_change(long cnt, std::string_view obj_type);
 static char                another_command(char_int ch);
@@ -2261,13 +2261,12 @@ static void sel_cleanup()
     }
 }
 
-static bool mark_del_as_read(char *ptr, int arg)
+static bool mark_del_as_read(Article &article, int arg)
 {
-    Article* ap = (Article*)ptr;
-    if (ap->m_flags & AF_DEL)
+    if (article.m_flags & AF_DEL)
     {
-        ap->m_flags &= ~AF_DEL;
-        ap->set_read();
+        article.m_flags &= ~AF_DEL;
+        article.set_read();
     }
     return false;
 }

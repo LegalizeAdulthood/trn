@@ -72,7 +72,7 @@ inline Article **article_ptr_list_end()
 Article   *article_ptr(ArticleNum an);
 bool       article_hasdata(ArticleNum an);
 Article   *article_find(ArticleNum an);
-bool       article_walk(bool (*callback)(char *, int), int arg);
+bool       article_walk(bool (*callback)(Article &, int), int arg);
 ArticleNum article_first(ArticleNum an);
 ArticleNum article_next(ArticleNum an);
 ArticleNum article_last(ArticleNum an);

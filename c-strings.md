@@ -791,19 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-567 - Give article_walk A Typed Article Callback
-
-- Type: callback plumbing using `char *` as erased storage.
-- Files: `libtrn/include/trn/cache.h`, `libtrn/cache.cpp`,
-  `libtrn/bits.cpp`, `libtrn/kfile.cpp`, `libtrn/ng.cpp`,
-  `libtrn/rt-select.cpp`, article-walk tests.
-- Function: `article_walk`.
-- Dependencies: none.
-- Instructions: change `article_walk` to call callbacks as
-  `bool callback(Article &, int)`, then update the callback family to
-  accept `Article &` instead of `char *` and remove the internal casts.
-  Remove the temporary `output_subject_callback` adapter.
-
 #### CSTR-572 - Migrate Article-buffer mime_set_state Callers
 
 - Type: raw article-buffer pointer callers.

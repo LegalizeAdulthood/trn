@@ -50,8 +50,8 @@ static long s_chase_count{};
 static std::optional<std::string> s_inews_site;
 #endif
 
-static bool yank_article(char *ptr, int arg);
-static bool check_chase(char *ptr, int until_key);
+static bool yank_article(Article &article, int arg);
+static bool check_chase(Article &article, int until_key);
 static int chase_xref(ArticleNum art_num, bool mark_read);
 #ifdef VALIDATE_XREF_SITE
 static bool valid_xref_site(ArticleNum art_num, std::string_view site);
@@ -554,17 +554,16 @@ void yank_back()
     }
 }
 
-static bool yank_article(char *ptr, int arg)
+static bool yank_article(Article &article, int arg)
 {
-    Article* ap = (Article*)ptr;
-    if (ap->m_flags & AF_YANK_BACK)
+    if (article.m_flags & AF_YANK_BACK)
     {
-        ap->unmark_as_read();
+        article.unmark_as_read();
         if (g_selected_only)
         {
-            ap->select_article(AUTO_KILL_NONE);
+            article.select_article(AUTO_KILL_NONE);
         }
-        ap->m_flags &= ~AF_YANK_BACK;
+        article.m_flags &= ~AF_YANK_BACK;
     }
     return false;
 }
@@ -585,24 +584,22 @@ bool chase_xrefs(bool until_key)
     return true;
 }
 
-static bool check_chase(char *ptr, int until_key)
+static bool check_chase(Article &article, int until_key)
 {
-    Article* ap = (Article*)ptr;
-
-    if (ap->m_flags & AF_K_CHASE)
+    if (article.m_flags & AF_K_CHASE)
     {
-        chase_xref(ap->article_num(), true);
-        ap->m_flags &= ~AF_K_CHASE;
+        chase_xref(article.article_num(), true);
+        article.m_flags &= ~AF_K_CHASE;
         if (!--s_chase_count)
         {
             return true;
         }
     }
 #ifdef MCHASE
-    if (ap->m_flags & AF_M_CHASE)
+    if (article.m_flags & AF_M_CHASE)
     {
-        chase_xref(ap->article_num(), false);
-        ap->m_flags &= ~AF_M_CHASE;
+        chase_xref(article.article_num(), false);
+        article.m_flags &= ~AF_M_CHASE;
         if (!--s_chase_count)
         {
             return true;
