@@ -340,6 +340,17 @@ TEST_F(MimeSetStateTest, suppressesSubHeaderLineBetweenParts)
     EXPECT_EQ(HTML_TEXT_MIME, g_mime_state);
 }
 
+TEST_F(MimeSetStateTest, returnsSuppressionForSubHeaderLine)
+{
+    write_article_remainder("\n");
+    g_mime_state = BETWEEN_MIME;
+
+    EXPECT_TRUE(mime_set_state(std::string_view{"Content-Type: text/html\n"}));
+
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime_section->m_type);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime_state);
+}
+
 TEST_F(MimeSetStateTest, movesToBetweenMimeOnPartBoundary)
 {
     m_parent.m_boundary = "part-boundary";
@@ -350,6 +361,17 @@ TEST_F(MimeSetStateTest, movesToBetweenMimeOnPartBoundary)
     mime_set_state(line);
 
     EXPECT_EQ("--part-boundary\n", line);
+    EXPECT_EQ(BETWEEN_MIME, g_mime_state);
+}
+
+TEST_F(MimeSetStateTest, returnsNoSuppressionForPartBoundary)
+{
+    m_parent.m_boundary = "part-boundary";
+    m_parent.m_boundary_len = static_cast<short>(m_parent.m_boundary->size());
+    g_mime_state = SKIP_MIME;
+
+    EXPECT_FALSE(mime_set_state(std::string_view{"--part-boundary\n"}));
+
     EXPECT_EQ(BETWEEN_MIME, g_mime_state);
 }
 

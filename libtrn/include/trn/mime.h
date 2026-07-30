@@ -177,6 +177,7 @@ int            mime_exec(std::string_view cmd);
 void          mime_push_section();
 void          mime_set_article();
 void           mime_parse_sub_header(std::FILE *ifp, std::string_view first_line);
+bool           mime_set_state(std::string_view bp);
 void          mime_set_state(char *bp);
 void          mime_set_state(std::string &bp);
 int            mime_end_of_section(std::string_view bp);

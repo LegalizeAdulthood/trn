@@ -791,19 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-571 - Add A Non-mutating mime_set_state Core
-
-- Type: mutable C-string input used as output signal.
-- Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`,
-  `tests/test_mime.cpp`.
-- Function: `mime_set_state`.
-- Dependencies: none.
-- Instructions: implement a `std::string_view`-based state update path
-  that returns `true` when the old implementation would have written
-  `'\0'` to suppress the line, and `false` otherwise.  Keep temporary
-  legacy overloads only while existing callers still use them, and have
-  each wrapper delegate to the new behavior in the same slice.
-
 #### CSTR-560 - Add Character-substitution State Accessors
 
 - Type: borrowed global cursor access.
@@ -860,7 +847,7 @@ that later caller slices can consume directly.
 - Type: raw article-buffer pointer callers.
 - Files: `libtrn/artio.cpp`, article I/O MIME tests.
 - Function: `mime_set_state`.
-- Dependencies: CSTR-571.
+- Dependencies: none.
 - Instructions: update article-buffer callers to pass a line view to the
   non-mutating `mime_set_state` API and use the returned boolean instead
   of checking whether the first character was changed to `'\0'`.  Do not
@@ -871,7 +858,7 @@ that later caller slices can consume directly.
 - Type: mutable string overload callers.
 - Files: `libtrn/mime.cpp`, MIME decode tests.
 - Function: `mime_set_state`.
-- Dependencies: CSTR-571.
+- Dependencies: none.
 - Instructions: update `std::string` callers to pass a view and clear or
   skip the owned line explicitly when the returned boolean says the MIME
   state consumed it.  Remove dependence on `.data()` and NUL trimming.

@@ -849,12 +849,16 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
     }
 }
 
-void mime_set_state(char *bp)
+bool mime_set_state(std::string_view bp)
 {
+    bool             suppress_line = false;
+    std::string_view state_line = bp;
+
     if (g_mime_state == BETWEEN_MIME)
     {
-        mime_parse_sub_header(nullptr, bp);
-        *bp = '\0';
+        mime_parse_sub_header(nullptr, state_line);
+        suppress_line = true;
+        state_line = {};
         if (g_mime_section->m_prev->m_flags & MSF_ALTERNADONE)
         {
             g_mime_state = ALTERNATE_MIME;
@@ -868,8 +872,9 @@ void mime_set_state(char *bp)
     while (g_mime_state == MESSAGE_MIME)
     {
         mime_push_section();
-        mime_parse_sub_header(nullptr, bp);
-        *bp = '\0';
+        mime_parse_sub_header(nullptr, state_line);
+        suppress_line = true;
+        state_line = {};
     }
 
     if (g_mime_state == MULTIPART_MIME)
@@ -878,7 +883,7 @@ void mime_set_state(char *bp)
         g_mime_state = SKIP_MIME;               // Skip anything before 1st part
     }
 
-    int ret = mime_end_of_section(bp);
+    int ret = mime_end_of_section(state_line);
     switch (ret)
     {
     case 0:
@@ -901,18 +906,33 @@ void mime_set_state(char *bp)
         g_mime_state = END_OF_MIME;
         break;
     }
+    return suppress_line;
+}
+
+void mime_set_state(char *bp)
+{
+    if (mime_set_state(std::string_view{bp}))
+    {
+        *bp = '\0';
+    }
 }
 
 void mime_set_state(std::string &bp)
 {
-    if (bp.empty())
-    {
-        bp.resize(1);
-        bp[0] = '\0';
-    }
-    mime_set_state(bp.data());
+    std::string_view  line = bp;
     const std::size_t terminator = bp.find('\0');
-    bp.resize(terminator == std::string::npos ? bp.size() : terminator);
+    if (terminator != std::string::npos)
+    {
+        line = line.substr(0, terminator);
+    }
+    if (mime_set_state(line))
+    {
+        bp.clear();
+    }
+    else if (terminator != std::string::npos)
+    {
+        bp.resize(terminator);
+    }
 }
 
 int mime_end_of_section(std::string_view bp)
