@@ -622,11 +622,6 @@ Configure scripts, and the vendored `vcpkg` tree.
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
   no longer pass `.c_str()`.
-- Newsgroup pattern compile scan: `newsgroup_comp` still accepts a
-  nullable `CompiledRegex *` even though all callers pass a valid regex
-  object, and it returns a C-string error pointer with `nullptr` as
-  success.  Modernize this as a reference argument plus an
-  empty/non-empty `std::string_view` error result.
 - Literal-only local pointer scan found no current Tier 0 leaf slices.
   `do_newsgroup`, `s_search`, and `sa_refresh_bot` now use
   `std::string_view`, `std::string`, or direct `fmt` output for the
@@ -693,11 +688,11 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Public header declaration scan: all remaining `char *` declarations in
   `libtrn/include/trn` are now represented by slices.  Existing slices
   cover article buffers, regex internals, character substitution,
-  `interp_init`, `output_subject`, `article_walk`, `newsgroup_comp`, and
-  `mime_set_state`.  New slices cover hash payloads, `argv` entry
-  points, option and terminal scratch buffers, terminal capability
-  strings, terminal input/output helpers, allocation helpers, and
-  remaining small string helpers.
+  `interp_init`, `output_subject`, `article_walk`, and `mime_set_state`.
+  New slices cover hash payloads, `argv` entry points, option and
+  terminal scratch buffers, terminal capability strings, terminal
+  input/output helpers, allocation helpers, and remaining small string
+  helpers.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
@@ -795,19 +790,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-569 - Return newsgroup_comp Errors As Views
-
-- Type: C-string error-result contract.
-- Files: `libtrn/include/trn/ngsrch.h`, `libtrn/ngsrch.cpp`,
-  `libtrn/autosub.cpp`, `libtrn/only.cpp`.
-- Function: `newsgroup_comp`.
-- Dependencies: none.
-- Instructions: change `newsgroup_comp` to return `std::string_view`,
-  using an empty view for success and non-empty views for literal compile
-  errors.  Update callers to test `.empty()` instead of comparing
-  against `nullptr`; do not introduce `std::optional` because an empty
-  result has no error meaning.
 
 #### CSTR-570 - Cover mime_set_state Suppression Behavior
 

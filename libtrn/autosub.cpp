@@ -58,9 +58,9 @@ static bool match_list(std::string_view pat_list, std::string_view s)
         const std::string_view pattern_view = patterns.substr(0, comma);
 
         // compile regular expression
-        const char *err = newsgroup_comp(il_compex, pattern_view, true, true);
+        const std::string_view err = newsgroup_comp(il_compex, pattern_view, true, true);
 
-        if (err != nullptr)
+        if (!err.empty())
         {
             fmt::print("\n{}\n", err);
             finalize(1);

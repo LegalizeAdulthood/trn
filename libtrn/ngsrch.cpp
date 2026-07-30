@@ -124,8 +124,8 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     {
         ret = NGS_DONE;
     }
-    const char *err = newsgroup_comp(s_newsgroup_compex, pattern, true, true);
-    if (err != nullptr)
+    const std::string_view err = newsgroup_comp(s_newsgroup_compex, pattern, true, true);
+    if (!err.empty())
     {
                                         // compile regular expression
         error_msg(err);
@@ -258,7 +258,7 @@ bool NewsgroupData::newsgroup_wanted()
     return s_newsgroup_compex.execute(m_rc_line);
 }
 
-const char *newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool re, bool fold)
+std::string_view newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool re, bool fold)
 {
     if (pattern.empty())
     {
@@ -266,7 +266,7 @@ const char *newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool
         {
             return "No previous search pattern";
         }
-        return nullptr; // reuse old pattern
+        return {}; // reuse old pattern
     }
 
     std::string ng_pattern;
@@ -291,6 +291,5 @@ const char *newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool
             ng_pattern.push_back(ch);
         }
     }
-    const std::string_view compile_error = compex.compile(ng_pattern, re, fold);
-    return compile_error.empty() ? nullptr : compile_error.data();
+    return compex.compile(ng_pattern, re, fold);
 }

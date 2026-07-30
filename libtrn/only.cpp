@@ -44,8 +44,8 @@ void set_newsgroup_to_do(std::string_view pat)
         s_compex_to_do[i] = new CompiledRegex;
         s_compex_to_do[i]->init_compex();
         s_compex_to_do[i]->compile(g_newsgroup_to_do[i], true, true);
-        const char *err = newsgroup_comp(*s_compex_to_do[i], pat, true, true);
-        if (err != nullptr)
+        const std::string_view err = newsgroup_comp(*s_compex_to_do[i], pat, true, true);
+        if (!err.empty())
         {
             fmt::print("\n{}\n", err);
             finalize(1);
