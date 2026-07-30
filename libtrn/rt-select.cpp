@@ -2647,9 +2647,7 @@ static char read_selector_followup_command(char_int ch)
 {
     if (ch > 1)
     {
-        char command{};
-        read_tty(&command, 1);
-        return command;
+        return read_tty_char();
     }
     return pause_get_cmd();
 }

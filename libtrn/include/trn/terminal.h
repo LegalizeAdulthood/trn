@@ -183,7 +183,7 @@ std::string finish_dbl_char(std::string_view command);
 void        eat_typeahead();
 std::string save_typeahead();
 void  settle_down();
-int read_tty(char *addr, int size);
+char read_tty_char();
 void push_char(char_int c);
 void under_print(std::string_view text);
 #ifdef NO_FIREWORKS

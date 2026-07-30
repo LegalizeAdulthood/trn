@@ -187,6 +187,7 @@ static void    install_macro(std::string_view sequence, std::string_view definit
 static void    mac_init();
 static KeyMap     *new_key_map();
 static std::string read_command(bool allow_macros, bool mark_finished);
+static int         read_tty(char *addr, int size);
 static void        reprint(std::string_view text);
 static void        show_key_map(KeyMap *curmap, std::string &prefix);
 static std::string store_command(std::string_view command);
@@ -1232,7 +1233,7 @@ static Signal_t alarm_catcher(int signo)
 
 // read a character from the terminal, with multi-character pushback
 
-int read_tty(char *addr, int size)
+static int read_tty(char *addr, int size)
 {
     if (macro_pending())
     {
@@ -1255,6 +1256,13 @@ int read_tty(char *addr, int size)
 #endif
     s_got_a_char = true;
     return size;
+}
+
+char read_tty_char()
+{
+    char ch{};
+    (void) read_tty(&ch, 1);
+    return ch;
 }
 
 #ifdef PENDING

@@ -816,19 +816,6 @@ that later caller slices can consume directly.
   blocks, update the code so the blocks still build rather than deleting
   them.
 
-#### CSTR-583 - Hide The read_tty Output Buffer Boundary
-
-- Type: public caller-owned output buffer.
-- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
-  terminal and command-input tests.
-- Function: `read_tty`.
-- Dependencies: none.
-- Instructions: replace public `read_tty(char *addr, int size)` callers
-  with typed helpers for the observed use cases, especially single
-  character reads and owned string reads.  Keep the raw OS read buffer
-  local to `terminal.cpp`; do not expose local string storage addresses
-  through output parameters.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish

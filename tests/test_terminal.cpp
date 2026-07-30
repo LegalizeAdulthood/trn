@@ -33,8 +33,7 @@ void drain_macro_buffer()
 {
     while (macro_pending())
     {
-        char discarded{};
-        read_tty(&discarded, 1);
+        (void) read_tty_char();
     }
 }
 
@@ -483,11 +482,10 @@ TEST_F(TerminalTest, pushStringExpandsInInputOrderWithMacroBits)
 {
     push_string("a^B", 0200);
 
-    char command{};
-    read_tty(&command, 1);
+    char command = read_tty_char();
     EXPECT_EQ(static_cast<unsigned char>('a' ^ 0200), static_cast<unsigned char>(command));
 
-    read_tty(&command, 1);
+    command = read_tty_char();
     EXPECT_EQ(static_cast<unsigned char>('\002' ^ 0200), static_cast<unsigned char>(command));
 }
 
@@ -737,8 +735,7 @@ TEST_F(MouseBarTest, checkMouseBarPushesClickedButtonCommand)
     testing::internal::GetCapturedStdout();
 
     ASSERT_TRUE(macro_pending());
-    char command{};
-    read_tty(&command, 1);
+    const char command = read_tty_char();
 
     EXPECT_EQ('q', command);
 }

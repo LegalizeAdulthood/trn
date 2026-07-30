@@ -18,8 +18,7 @@ void drain_input()
 {
     while (macro_pending())
     {
-        char discarded{};
-        read_tty(&discarded, 1);
+        (void) read_tty_char();
     }
 }
 

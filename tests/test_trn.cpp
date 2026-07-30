@@ -34,8 +34,7 @@ void drain_macro_buffer()
 {
     while (macro_pending())
     {
-        char discarded{};
-        read_tty(&discarded, 1);
+        (void) read_tty_char();
     }
 }
 
