@@ -161,7 +161,10 @@ NNTP API boundaries, or cursor outputs such as `char **`.  Examples are
 `Article` and `Subject` fields, `HashDatum` payloads, `parse_string`,
 and `push_string`.
 `CompiledRegex::m_exp_buf` and `m_alternatives` are regex bytecode and
-internal cursors, not ordinary string storage.
+internal cursors, not ordinary string storage.  Modernize that code by
+hiding the engine internals, using view/string result contracts at the
+public boundary, and replacing growable bytecode storage with standard
+containers and offsets rather than treating bytecode as text.
 
 The useful local targets fall into five groups:
 
@@ -593,16 +596,37 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Article body scan: response quoting, article search, and article pager
   display/scroll paths now use owned line storage from the article I/O
   boundary instead of mutating raw article buffers.
+- Article-walk callback scan: `output_subject` still exposes the old
+  `char *` callback shape even though it immediately casts the argument
+  to `Article *`.  Direct production and test callers also cast
+  `Article *` to `char *` just to call it.  Modernize the typed
+  operation first, then update `article_walk` callback plumbing.
+- Character substitution scan: `g_char_subst` is a borrowed cursor into
+  mutable `g_charsets` storage.  Reset and cycle callers assign or
+  increment the raw pointer, while display callers dereference it to get
+  the current substitution mode.  Modernize this by exposing mode-state
+  helpers and replacing the pointer with an owned index into
+  `g_charsets`.
 - Numeric command scan: `num_num` accepts command text directly and
   parses numeric range text from that view.
 - Terminal input scan: `in_char` and `in_answer` return caller-owned
   command strings.  `finish_command` callers pass command text directly,
   `in_choice` returns edited choice text through caller-owned string
   storage, and typeahead cleanup now uses owner-local scratch storage.
+- Interpolator init scan: `interp_init` still accepts a mutable
+  termcap buffer plus size but immediately discards both arguments.
+  Production and test callers still need the same buffer for `opt_init`
+  and `term_set`, so the useful cleanup is limited to the
+  `interp_init` signature and call sites.
 - Regex API scan: `CompiledRegex::compile` now accepts
   `std::string_view` directly.  The C-string and `std::string`
   compatibility overloads are gone, and production regex compile callers
   no longer pass `.c_str()`.
+- Newsgroup pattern compile scan: `newsgroup_comp` still accepts a
+  nullable `CompiledRegex *` even though all callers pass a valid regex
+  object, and it returns a C-string error pointer with `nullptr` as
+  success.  Modernize this as a reference argument plus an
+  empty/non-empty `std::string_view` error result.
 - Literal-only local pointer scan found no current Tier 0 leaf slices.
   `do_newsgroup`, `s_search`, and `sa_refresh_bot` now use
   `std::string_view`, `std::string`, or direct `fmt` output for the
@@ -654,10 +678,26 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Regex scan: all production and test `CompiledRegex::execute` callers
   use the `std::string_view` boolean match API.  The old C-string
   wrapper is gone.  Bracket access returns `std::string_view` into match
-  storage; the old file-scope scratch string is gone.
+  storage; the old file-scope scratch string is gone.  The remaining raw
+  regex members and helper methods are internal engine storage that still
+  leaks through the public struct and are tracked as active slices.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
+- MIME state scan: `mime_set_state(char *bp)` still uses mutable
+  C-string input as a signaling mechanism by writing `'\0'` when the
+  current line is consumed.  The existing `std::string &` overload
+  delegates through `.data()` and then trims at the first NUL.  Replace
+  this with a `std::string_view` input and an explicit boolean result
+  that tells callers whether to suppress the line.
+- Public header declaration scan: all remaining `char *` declarations in
+  `libtrn/include/trn` are now represented by slices.  Existing slices
+  cover article buffers, regex internals, character substitution,
+  `interp_init`, `output_subject`, `article_walk`, `newsgroup_comp`, and
+  `mime_set_state`.  New slices cover hash payloads, `argv` entry
+  points, option and terminal scratch buffers, terminal capability
+  strings, terminal input/output helpers, allocation helpers, and
+  remaining small string helpers.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
@@ -676,9 +716,10 @@ Configure scripts, and the vendored `vcpkg` tree.
   score-file cache key that can hold a URL as well as a local path.
   Other filename strings are already `std::string`/`fs::path` values or
   cross C `FILE*` APIs.
-- A full audit after Tier 1 emptied found no new earlier-tier active
-  slices.  The remaining active slice is the broad public article-buffer
-  state in Tier 4.
+- A follow-up regex audit found that `CompiledRegex` still exposes
+  C-style helper methods and raw implementation storage even though the
+  direct match API is modern.  Those issues are tracked as Tier 1 and
+  Tier 2 slices.
 
 ## Current C String Function Inventory
 
@@ -736,7 +777,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-555`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-587`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -750,33 +791,381 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-No current slices.
+#### CSTR-575 - Return yes_or_no As A String View
+
+- Type: string-literal helper result.
+- Files: `libtrn/include/trn/opt.h`, option and switch callers.
+- Function: `yes_or_no`.
+- Dependencies: none.
+- Instructions: change `yes_or_no` to return `std::string_view` because
+  both possible results are string literals and callers should not need a
+  C-string result.  Update callers directly; avoid constructing
+  temporary `std::string` values unless a callee requires ownership.
+
+#### CSTR-584 - Modernize Small Terminal Text Helpers
+
+- Type: read-only string and single-character terminal helpers.
+- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
+  `libtrn/color.cpp`, terminal tests.
+- Functions: `under_print`, `force_me`.
+- Dependencies: none.
+- Instructions: change `under_print` to accept `std::string_view` and
+  update callers to pass owned strings or views directly.  Change
+  `force_me` to accept a character value rather than a `const char *`
+  pointer to one character, keeping the `TIOCSTI` address-taking local to
+  the helper.
 
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-No current slices.
+#### CSTR-555 - Encapsulate CompiledRegex Internals
+
+- Type: public struct implementation leak.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
+  regex tests.
+- Functions: `grow_eb`, `advance`, `back_ref`.
+- Dependencies: none.
+- Instructions: make only the lifecycle, compile, match, bracket, and
+  query operations public.  Move regex engine helpers and raw storage
+  members out of the public interface, either by making `CompiledRegex`
+  a class with private internals or by introducing private
+  implementation state.  Preserve the existing public behavior.
+
+#### CSTR-556 - Return Regex Compile Errors As Views
+
+- Type: public C-string result contract.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
+  regex compile callers, `tests/test_search.cpp`.
+- Function: `CompiledRegex::compile`.
+- Dependencies: CSTR-555.
+- Instructions: change `compile` to return `std::string_view`, using an
+  empty view for success and non-empty views for literal error messages.
+  Update callers to test `.empty()` instead of comparing against
+  `nullptr`; do not introduce `std::optional` because an empty result has
+  no error meaning.
+
+#### CSTR-568 - Pass newsgroup_comp Regex By Reference
+
+- Type: nullable pointer parameter that is always required.
+- Files: `libtrn/include/trn/ngsrch.h`, `libtrn/ngsrch.cpp`,
+  `libtrn/autosub.cpp`, `libtrn/only.cpp`.
+- Function: `newsgroup_comp`.
+- Dependencies: none.
+- Instructions: change the `CompiledRegex *compex` parameter to
+  `CompiledRegex &compex` and update callers to pass or dereference a
+  valid regex object.  Do not add null checks; the existing contract
+  already requires a valid compiled-regex owner.
+
+#### CSTR-569 - Return newsgroup_comp Errors As Views
+
+- Type: C-string error-result contract.
+- Files: `libtrn/include/trn/ngsrch.h`, `libtrn/ngsrch.cpp`,
+  `libtrn/autosub.cpp`, `libtrn/only.cpp`.
+- Function: `newsgroup_comp`.
+- Dependencies: CSTR-556, CSTR-568.
+- Instructions: change `newsgroup_comp` to return `std::string_view`,
+  using an empty view for success and non-empty views for literal compile
+  errors.  Update callers to test `.empty()` instead of comparing
+  against `nullptr`; do not introduce `std::optional` because an empty
+  result has no error meaning.
+
+#### CSTR-570 - Cover mime_set_state Suppression Behavior
+
+- Type: behavior coverage before API refactor.
+- Files: `tests/test_mime.cpp`, MIME test fixtures.
+- Function: `mime_set_state`.
+- Dependencies: none.
+- Instructions: add focused tests that cover the current behavior where
+  MIME sub-header or boundary processing suppresses a line.  Run the new
+  tests before changing the implementation, then use them to verify the
+  later string-view and boolean-result refactors preserve behavior.
+
+#### CSTR-571 - Add A Non-mutating mime_set_state Core
+
+- Type: mutable C-string input used as output signal.
+- Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`,
+  `tests/test_mime.cpp`.
+- Function: `mime_set_state`.
+- Dependencies: CSTR-570.
+- Instructions: implement a `std::string_view`-based state update path
+  that returns `true` when the old implementation would have written
+  `'\0'` to suppress the line, and `false` otherwise.  Keep temporary
+  legacy overloads only while existing callers still use them, and have
+  each wrapper delegate to the new behavior in the same slice.
+
+#### CSTR-560 - Add Character-substitution State Accessors
+
+- Type: borrowed global cursor access.
+- Files: `libtrn/include/trn/charsubst.h`, `libtrn/charsubst.cpp`,
+  character-substitution tests.
+- Globals: `g_char_subst`, `g_charsets`.
+- Dependencies: none.
+- Instructions: add named accessors for the current substitution mode,
+  resetting to the first configured mode, and cycling to the next mode.
+  Migrate `charsubst.cpp` itself to use those accessors instead of
+  dereferencing `g_char_subst` directly.  Do not add unused wrappers;
+  each new helper must have a caller in the same slice.
+
+#### CSTR-565 - Drop Unused interp_init Buffer Parameters
+
+- Type: stale buffer-plus-size signature.
+- Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`,
+  `libtrn/init.cpp`, `tests/test_interp.cpp`.
+- Function: `interp_init`.
+- Dependencies: none.
+- Instructions: remove the `char *tcbuf` and `int tcbuf_len` parameters
+  from `interp_init`, delete the `(void)` casts, and update the two
+  callers to call the no-argument initializer.  Keep the caller-owned
+  termcap buffers because `opt_init` and `term_set` still use them.
+
+#### CSTR-566 - Give output_subject A Typed Article Interface
+
+- Type: callback-shaped public function.
+- Files: `libtrn/include/trn/ng.h`, `libtrn/ng.cpp`,
+  `libtrn/ngstuff.cpp`, `tests/test_subject.cpp`.
+- Function: `output_subject`.
+- Dependencies: none.
+- Instructions: change the public `output_subject` operation to take an
+  `Article &` plus the existing flag.  Update direct production and test
+  callers to pass `Article` directly.  Keep any required `article_walk`
+  compatibility as a file-local callback adapter in `ng.cpp`, not as the
+  public API shape.
+
+#### CSTR-567 - Give article_walk A Typed Article Callback
+
+- Type: callback plumbing using `char *` as erased storage.
+- Files: `libtrn/include/trn/cache.h`, `libtrn/cache.cpp`,
+  `libtrn/bits.cpp`, `libtrn/kfile.cpp`, `libtrn/ng.cpp`,
+  `libtrn/rt-select.cpp`, article-walk tests.
+- Function: `article_walk`.
+- Dependencies: CSTR-566.
+- Instructions: change `article_walk` to call callbacks as
+  `bool callback(Article &, int)`, then update the callback family to
+  accept `Article &` instead of `char *` and remove the internal casts.
+  Remove the temporary `output_subject` callback adapter from CSTR-566.
+
+#### CSTR-572 - Migrate Article-buffer mime_set_state Callers
+
+- Type: raw article-buffer pointer callers.
+- Files: `libtrn/artio.cpp`, article I/O MIME tests.
+- Function: `mime_set_state`.
+- Dependencies: CSTR-571.
+- Instructions: update article-buffer callers to pass a line view to the
+  non-mutating `mime_set_state` API and use the returned boolean instead
+  of checking whether the first character was changed to `'\0'`.  Do not
+  preserve the old caller-visible buffer mutation.
+
+#### CSTR-573 - Migrate String mime_set_state Callers
+
+- Type: mutable string overload callers.
+- Files: `libtrn/mime.cpp`, MIME decode tests.
+- Function: `mime_set_state`.
+- Dependencies: CSTR-571.
+- Instructions: update `std::string` callers to pass a view and clear or
+  skip the owned line explicitly when the returned boolean says the MIME
+  state consumed it.  Remove dependence on `.data()` and NUL trimming.
+
+#### CSTR-576 - Introduce Program Argument Views
+
+- Type: public `argv` pointer arrays.
+- Files: `libtrn/include/trn/init.h`, `libtrn/include/trn/trn.h`,
+  `libtrn/include/trn/opt.h`, `libtrn/init.cpp`, `libtrn/trn.cpp`,
+  `libtrn/opt.cpp`, entry-point tests.
+- Functions: `initialize`, `trn_main`, `opt_init`.
+- Dependencies: none.
+- Instructions: add a small argument-view type or helper that represents
+  command-line arguments as `std::string_view` values after the C `main`
+  boundary.  Migrate `initialize`, `trn_main`, and the `argv` half of
+  `opt_init` to that typed view.  Keep the raw `main` boundary outside
+  the public libtrn headers.
+
+#### CSTR-577 - Replace Termcap Scratch Pointers With A Buffer Type
+
+- Type: mutable fixed-size scratch-buffer parameters.
+- Files: `libtrn/include/trn/opt.h`, `libtrn/include/trn/terminal.h`,
+  `libtrn/opt.cpp`, `libtrn/terminal.cpp`, `libtrn/init.cpp`,
+  interpolator and terminal tests.
+- Functions: `opt_init`, `term_set`.
+- Dependencies: CSTR-565.
+- Instructions: introduce a named termcap scratch-buffer type, such as
+  an alias around `std::array<char, TCBUF_SIZE>`, and pass it by
+  reference to `opt_init` and `term_set`.  Keep `.data()` calls local to
+  the termcap implementation boundary.
+
+#### CSTR-580 - Return Terminal Color Capabilities As Views
+
+- Type: borrowed terminal capability result.
+- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
+  `libtrn/color.cpp`, terminal/color tests.
+- Function: `tc_color_capability`.
+- Dependencies: CSTR-579.
+- Instructions: change `tc_color_capability` to return
+  `std::string_view`, using an empty view as the missing-capability
+  sentinel.  Update color callers to test `.empty()` and pass views
+  directly where possible.
+
+#### CSTR-581 - Use Views For Public Termcap String Arguments
+
+- Type: read-only termcap C-string parameters.
+- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
+  `libtrn/sdisp.cpp`, terminal tests.
+- Functions: `tgoto_string`, `tputs`.
+- Dependencies: CSTR-579.
+- Instructions: change trn-owned wrappers that consume termcap strings
+  to accept `std::string_view`.  Keep any required `.c_str()` conversion
+  local to calls into external termcap APIs.  For inactive `MSDOS`
+  blocks, update the code so the blocks still build rather than deleting
+  them.
+
+#### CSTR-582 - Make save_typeahead Consume A String View
+
+- Type: buffer-plus-size read-only input.
+- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
+  `libtrn/trn.cpp`, terminal tests.
+- Function: `save_typeahead`.
+- Dependencies: none.
+- Instructions: change `save_typeahead` to accept `std::string_view`
+  input.  At callers, pass the already-owned command suffix as a view
+  instead of passing `data()` plus an arbitrary buffer size.
+
+#### CSTR-583 - Hide The read_tty Output Buffer Boundary
+
+- Type: public caller-owned output buffer.
+- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
+  terminal and command-input tests.
+- Function: `read_tty`.
+- Dependencies: none.
+- Instructions: replace public `read_tty(char *addr, int size)` callers
+  with typed helpers for the observed use cases, especially single
+  character reads and owned string reads.  Keep the raw OS read buffer
+  local to `terminal.cpp`; do not expose local string storage addresses
+  through output parameters.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-No current slices.
+#### CSTR-557 - Use Standard Regex Fixed-size Bookkeeping
+
+- Type: fixed-size C arrays and narrow count storage.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
+  regex tests.
+- Variables: local `bracket`, `m_num_brackets`, fixed regex arrays that
+  are not yet replaced by later slices.
+- Dependencies: CSTR-555.
+- Instructions: replace fixed regex bookkeeping arrays with
+  `std::array` where the size is fixed by `NBRA` or `NALTS`, and use an
+  ordinary integer or size type for counts instead of `char`.  Do not
+  convert bytecode storage to `std::string`; it is not text.
+
+#### CSTR-558 - Store Regex Match Spans Without Raw Member Pointers
+
+- Type: raw pointer match-span storage.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
+  regex bracket tests.
+- Members: `m_bracket_start_list`, `m_bracket_end_list`,
+  `m_bracket_str`.
+- Dependencies: CSTR-555, CSTR-557.
+- Instructions: replace persistent raw start/end pointer member arrays
+  with span state that cannot outlive the matched text accidentally.
+  Prefer offsets or `std::string_view` values built during `execute`,
+  then have `get_bracket` return a view over owned match storage.
+  Reject any design that stores pointers into caller-local string data
+  after `execute` returns.
+
+#### CSTR-559 - Replace Regex Bytecode Reallocation With Vector Storage
+
+- Type: growable bytecode storage and pointer cursor cleanup.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
+  regex compile and match tests.
+- Members: `m_exp_buf`, `m_eb_len`, `m_alternatives`.
+- Functions: `compile`, `grow_eb`, `execute`, `advance`, `back_ref`.
+- Dependencies: CSTR-555, CSTR-556, CSTR-557, CSTR-558.
+- Instructions: replace manual `safe_malloc`/`safe_realloc` bytecode
+  storage with `std::vector<char>` and replace persistent alternative
+  pointers with offsets or indices.  Keep pointer walking local to the
+  regex VM only where it simplifies bytecode interpretation; no pointer
+  into vector storage may escape as public API or persistent caller
+  state.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-No current slices.
+#### CSTR-561 - Use Character-substitution Accessors At Read Sites
+
+- Type: raw global cursor reads.
+- Files: `libtrn/respond.cpp`, `libtrn/rt-util.cpp`,
+  `libtrn/rt-wumpus.cpp`, related tests.
+- Expressions: `*g_char_subst`, `g_char_subst[0]`.
+- Dependencies: CSTR-560.
+- Instructions: replace read-only uses of the substitution cursor with
+  the current-mode accessor.  Pass the returned character directly to
+  `str_char_subst`; do not construct a string or string view when a
+  single mode character is all the callee needs.
+
+#### CSTR-562 - Use Character-substitution Accessors At Cycle Sites
+
+- Type: raw global cursor mutation.
+- Files: `libtrn/art.cpp`, `libtrn/ng.cpp`, related tests.
+- Expressions: `g_char_subst = g_charsets.c_str()`,
+  `++g_char_subst`.
+- Dependencies: CSTR-560.
+- Instructions: replace manual reset and cycle logic with the
+  char-substitution state helpers.  Preserve the existing wrap behavior:
+  advancing past the end of `g_charsets` returns to the first configured
+  mode.
+
+#### CSTR-563 - Move Tests Off The Raw Character-substitution Pointer
+
+- Type: test global cursor manipulation.
+- Files: `tests/test_interp.cpp`, `tests/test_rt-util.cpp`,
+  `tests/test_rt-wumpus.cpp`, `tests/test_scmd.cpp`,
+  `tests/test_utf.cpp`.
+- Expressions: direct `g_char_subst` assignment and `ValueSaver`
+  storage.
+- Dependencies: CSTR-560, CSTR-561, CSTR-562.
+- Instructions: update tests to use the same state helpers as production
+  code.  Add a scoped test saver only if the helper API cannot express
+  the existing setup/teardown cleanly.  Test code is held to the same
+  standard as production code.
 
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
+
+#### CSTR-579 - Encapsulate Terminal Capability Globals
+
+- Type: public borrowed terminal capability strings.
+- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
+  terminal and color tests.
+- Globals: `g_tc_BC`, `g_tc_UP`, `g_tc_CR`, `g_tc_VB`, `g_tc_CE`,
+  `g_tc_CM`, `g_tc_HO`, `g_tc_IL`, `g_tc_CD`, `g_tc_SO`, `g_tc_SE`,
+  `g_tc_US`, `g_tc_UE`, `g_tc_UC`.
+- Dependencies: CSTR-577.
+- Instructions: hide terminal capability storage behind named accessors
+  or an owner object.  Public callers should consume `std::string_view`
+  or typed helpers instead of reading raw borrowed pointers.  Keep the
+  termcap-library pointer lifetime handling inside `terminal.cpp`.
+
+#### CSTR-564 - Replace g_char_subst With Owned Index State
+
+- Type: global borrowed pointer storage.
+- Files: `libtrn/include/trn/charsubst.h`, `libtrn/charsubst.cpp`,
+  `libtrn/opt.cpp`, character-substitution tests.
+- Globals: `g_char_subst`, `g_charsets`.
+- Dependencies: CSTR-560, CSTR-561, CSTR-562, CSTR-563.
+- Instructions: remove the exported `const char *g_char_subst` cursor
+  and store the current substitution as an owned index into
+  `g_charsets`.  When `g_charsets` is reassigned, normalize the index so
+  the current-mode accessor remains valid.  Use an empty current mode as
+  the sentinel if `g_charsets` is empty; do not retain pointer/null
+  semantics.
 
 #### CSTR-553 - Encapsulate Public Article Buffer State
 
@@ -790,10 +1179,55 @@ and clarified ownership at the edges.
   with owned accessors or owner-local state in `artio.cpp`.  Preserve
   existing behavior with tests before changing the storage shape.
 
+#### CSTR-585 - Replace HashDatum char Pointer Payloads
+
+- Type: generic hash payload stored as `char *`.
+- Files: `libtrn/include/trn/hash.h`, `libtrn/hash.cpp`, hash owners,
+  hash tests.
+- Members: `HashDatum::dat_ptr`, `HashDatum::dat_len`.
+- Dependencies: none.
+- Instructions: audit each `HashDatum` owner and replace the misleading
+  `char *` payload with typed owner-specific storage where practical.
+  If a generic hash payload remains necessary during migration, use an
+  explicitly type-erased pointer such as `void *` rather than a C-string
+  pointer, and keep conversions at owner boundaries.
+
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-No current slices.
+#### CSTR-578 - Remove Null-aware empty C-string Helper
+
+- Type: obsolete C-string algorithm helper.
+- Files: `libtrn/include/trn/string-algos.h`, `libtrn/terminal.cpp`,
+  `tests/test_string-algos.cpp`.
+- Function: `empty(const char *)`.
+- Dependencies: CSTR-579.
+- Instructions: after terminal capability access no longer exposes raw
+  nullable pointers, remove the null-aware `empty(const char *)` helper
+  and its tests.  Use ordinary `.empty()` checks on strings or views.
+
+#### CSTR-574 - Remove Legacy mime_set_state Overloads
+
+- Type: obsolete mutable C-string and mutable string overloads.
+- Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`, MIME tests.
+- Function: `mime_set_state`.
+- Dependencies: CSTR-572, CSTR-573.
+- Instructions: delete the `char *` and `std::string &` overloads after
+  all callers use the `std::string_view` boolean-result API directly.
+  Keep only the non-mutating public signature.
+
+#### CSTR-586 - Remove Public safe_malloc And safe_realloc Char APIs
+
+- Type: public raw allocation helpers returning `char *`.
+- Files: `libtrn/include/trn/util.h`, `libtrn/util.cpp`,
+  remaining allocation owners and tests.
+- Functions: `safe_malloc`, `safe_realloc`.
+- Dependencies: CSTR-559, CSTR-585.
+- Instructions: after regex bytecode and hash payload owners no longer
+  need raw byte allocation helpers, remove the public `char *`
+  allocation APIs.  Replace remaining fixed or dynamic arrays with
+  standard containers, or keep a typed file-local allocation helper only
+  where an external C API truly requires raw storage.
 
