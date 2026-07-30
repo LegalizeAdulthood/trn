@@ -791,20 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-576 - Introduce Program Argument Views
-
-- Type: public `argv` pointer arrays.
-- Files: `libtrn/include/trn/init.h`, `libtrn/include/trn/trn.h`,
-  `libtrn/include/trn/opt.h`, `libtrn/init.cpp`, `libtrn/trn.cpp`,
-  `libtrn/opt.cpp`, entry-point tests.
-- Functions: `initialize`, `trn_main`, `opt_init`.
-- Dependencies: none.
-- Instructions: add a small argument-view type or helper that represents
-  command-line arguments as `std::string_view` values after the C `main`
-  boundary.  Migrate `initialize`, `trn_main`, and the `argv` half of
-  `opt_init` to that typed view.  Keep the raw `main` boundary outside
-  the public libtrn headers.
-
 #### CSTR-577 - Replace Termcap Scratch Pointers With A Buffer Type
 
 - Type: mutable fixed-size scratch-buffer parameters.
