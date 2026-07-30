@@ -491,6 +491,16 @@ TEST_F(TerminalTest, pushStringExpandsInInputOrderWithMacroBits)
     EXPECT_EQ(static_cast<unsigned char>('\002' ^ 0200), static_cast<unsigned char>(command));
 }
 
+TEST_F(TerminalTest, saveTypeaheadCopiesPendingInput)
+{
+    push_string("bc", 0);
+
+    const std::string typeahead = save_typeahead();
+
+    EXPECT_EQ("bc", typeahead);
+    EXPECT_FALSE(macro_pending());
+}
+
 TEST_F(TerminalTest, pauseGetCommandReturnsPushedCommand)
 {
     push_char('x');

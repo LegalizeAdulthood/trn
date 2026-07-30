@@ -181,7 +181,7 @@ bool        finput_pending(bool check_term);
 std::string finish_command(std::string_view command, bool donewline);
 std::string finish_dbl_char(std::string_view command);
 void        eat_typeahead();
-void        save_typeahead(char *buf, int len);
+std::string save_typeahead();
 void  settle_down();
 int read_tty(char *addr, int size);
 void push_char(char_int c);

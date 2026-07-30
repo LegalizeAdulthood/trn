@@ -1191,15 +1191,21 @@ dbl_break:
     last_time = this_time;
 }
 
-void save_typeahead(char *buf, int len)
+std::string save_typeahead()
 {
-    while (input_pending())
+    std::string typeahead;
+    typeahead.reserve(LINE_BUF_LEN);
+    while (input_pending() && typeahead.size() < LINE_BUF_LEN)
     {
-        int cnt = read_tty(buf, len);
-        buf += cnt;
-        len -= cnt;
+        char      ch{};
+        const int count = read_tty(&ch, 1);
+        if (count <= 0)
+        {
+            break;
+        }
+        typeahead += ch;
     }
-    *buf = '\0';
+    return typeahead;
 }
 
 void settle_down()

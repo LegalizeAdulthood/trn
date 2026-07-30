@@ -502,9 +502,9 @@ static std::string finish_newsgroup_command(std::string_view command, bool donew
 
 static std::string command_with_typeahead(char ch)
 {
-    std::string command(LINE_BUF_LEN + 1, '\0');
-    command[0] = ch;
-    save_typeahead(command.data() + 1, LINE_BUF_LEN);
+    std::string command{ch};
+    command.reserve(LINE_BUF_LEN + 1);
+    command += save_typeahead();
     const std::size_t end = command.find('\0');
     command.resize(end == std::string::npos ? command.size() : end);
     return command;

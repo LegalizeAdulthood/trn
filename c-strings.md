@@ -816,17 +816,6 @@ that later caller slices can consume directly.
   blocks, update the code so the blocks still build rather than deleting
   them.
 
-#### CSTR-582 - Make save_typeahead Consume A String View
-
-- Type: buffer-plus-size read-only input.
-- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
-  `libtrn/trn.cpp`, terminal tests.
-- Function: `save_typeahead`.
-- Dependencies: none.
-- Instructions: change `save_typeahead` to accept `std::string_view`
-  input.  At callers, pass the already-owned command suffix as a view
-  instead of passing `data()` plus an arbitrary buffer size.
-
 #### CSTR-583 - Hide The read_tty Output Buffer Boundary
 
 - Type: public caller-owned output buffer.
