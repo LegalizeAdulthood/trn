@@ -23,7 +23,6 @@ struct CompiledRegex
     const char      *compile(std::string_view strp, bool re, bool fold);
     char            *grow_eb(char *epp, char **alt);
     bool             execute(std::string_view text);
-    const char      *execute(const char *addr);
     bool             advance(const char *lp, const char *ep);
     bool             back_ref(int i, const char *lp);
 

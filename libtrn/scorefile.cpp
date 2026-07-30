@@ -779,8 +779,7 @@ static int score_match(const std::string &text, int ind)
         if (s_sf_entries[ind].compex != nullptr)
         {
             // we have a good pattern
-            const char *s2 = s_sf_entries[ind].compex->execute(text.c_str());
-            if (s2 != nullptr)
+            if (s_sf_entries[ind].compex->execute(text))
             {
                 return true;
             }

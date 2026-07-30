@@ -592,7 +592,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
                 return false;
             }
             // see if it's in the header
-            if (compex->execute(g_head_buf.c_str())) // does it match?
+            if (compex->execute(g_head_buf)) // does it match?
             {
                 return true; // say, "Eureka!"
             }
@@ -640,7 +640,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
             {
                 article_line.resize(newline_pos + 1);
             }
-            success = success || compex->execute(article_line.c_str()) != nullptr;
+            success = success || compex->execute(article_line);
             if (success && !in_sig) // does it match?
             {
                 return true; // say, "Eureka!"
@@ -649,5 +649,5 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         return false; // out of article, so no match
     }
     }
-    return compex->execute(search_text.c_str()) != nullptr;
+    return compex->execute(search_text);
 }

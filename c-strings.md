@@ -653,9 +653,8 @@ Configure scripts, and the vendored `vcpkg` tree.
   C-string call-site cleanup.
 - Regex scan: all production and test `CompiledRegex::execute` callers
   use the `std::string_view` boolean match API.  The old C-string
-  wrapper is now unused and remains only as CSTR-554.  Bracket access
-  returns `std::string_view` into match storage; the old file-scope
-  scratch string is gone.
+  wrapper is gone.  Bracket access returns `std::string_view` into match
+  storage; the old file-scope scratch string is gone.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -677,6 +676,9 @@ Configure scripts, and the vendored `vcpkg` tree.
   score-file cache key that can hold a URL as well as a local path.
   Other filename strings are already `std::string`/`fs::path` values or
   cross C `FILE*` APIs.
+- A full audit after Tier 1 emptied found no new earlier-tier active
+  slices.  The remaining active slice is the broad public article-buffer
+  state in Tier 4.
 
 ## Current C String Function Inventory
 
@@ -755,15 +757,7 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-554 - Remove Regex C-string Match Wrapper
-
-- Type: obsolete C-style wrapper removal.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`.
-- Function: old `CompiledRegex::execute(const char *)` wrapper kept for
-  caller migration.
-- Dependencies: none.
-- Instructions: delete the raw wrapper after every caller uses the
-  view-based match API.  Keep the regex bytecode internals out of scope.
+No current slices.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

@@ -482,15 +482,6 @@ bool CompiledRegex::execute(std::string_view text)
     return false;
 }
 
-const char *CompiledRegex::execute(const char *addr)
-{
-    if (addr == nullptr)
-    {
-        return nullptr;
-    }
-    return execute(std::string_view{addr}) ? addr : nullptr;
-}
-
 // advance the match of the regular expression starting at ep along the
 // string lp, simulates an NDFSA
 bool CompiledRegex::advance(const char *lp, const char *ep)
