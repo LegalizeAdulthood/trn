@@ -4120,7 +4120,7 @@ static DisplayState option_commands(char_int ch)
             {
                 continue;
             }
-            if (g_opt_compex.execute(catalog.name(i).data()))
+            if (g_opt_compex.execute(catalog.name(i)))
             {
                 break;
             }

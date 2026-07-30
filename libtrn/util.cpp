@@ -746,7 +746,7 @@ bool check_ini_cond(std::string_view cond)
         }
         else
         {
-            equal = condcompex.execute(condition_text.c_str()) != nullptr;
+            equal = condcompex.execute(condition_text);
         }
         condcompex.free_compex();
         return equal;

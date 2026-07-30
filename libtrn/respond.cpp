@@ -955,7 +955,7 @@ void forward()
     fmt::print(header, "{}", header_text);
 #ifdef REGEX_WORKS_RIGHT
     if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"", true, true) &&
-        mime_compex.execute(header_text.c_str()) != nullptr)
+        mime_compex.execute(header_text))
     {
         mime_boundary_storage = mime_compex.get_bracket(1);
         mime_boundary = mime_boundary_storage.c_str();

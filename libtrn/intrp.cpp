@@ -582,7 +582,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         s_cond_compex.free_compex();
                         goto getout;
                     }
-                    matched = s_cond_compex.execute(condition_text.c_str()) != nullptr;
+                    matched = s_cond_compex.execute(condition_text);
                     if (s_cond_compex.has_brackets()) // were there brackets?
                     {
                         g_bra_compex = &s_cond_compex;

@@ -143,7 +143,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
         AddGroup *gp = g_first_add_group;
         do
         {
-            if (s_newsgroup_compex.execute(gp->m_name.c_str()) != nullptr)
+            if (s_newsgroup_compex.execute(gp->m_name))
             {
                 if (cmdlst.empty())
                 {
@@ -255,7 +255,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
 
 bool NewsgroupData::newsgroup_wanted()
 {
-    return s_newsgroup_compex.execute(m_rc_line.c_str()) != nullptr;
+    return s_newsgroup_compex.execute(m_rc_line);
 }
 
 const char *newsgroup_comp(CompiledRegex *compex, std::string_view pattern, bool re, bool fold)

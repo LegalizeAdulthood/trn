@@ -66,7 +66,7 @@ static bool match_list(std::string_view pat_list, std::string_view s)
             finalize(1);
         }
 
-        if (il_compex.execute(candidate.c_str()) != nullptr)
+        if (il_compex.execute(candidate))
         {
             result = tmp_result;
         }

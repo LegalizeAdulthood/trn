@@ -761,19 +761,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-551 - Migrate Non-article Regex Callers To Views
-
-- Type: caller migration from C-string regex bridge to view match API.
-- Files: `libtrn/autosub.cpp`, `libtrn/intrp.cpp`,
-  `libtrn/ngsrch.cpp`, `libtrn/respond.cpp`,
-  `libtrn/rt-select.cpp`, `libtrn/util.cpp`.
-- Function family: `CompiledRegex::execute` callers outside
-  `libtrn/art.cpp`.
-- Dependencies: none.
-- Instructions: pass existing `std::string` or `std::string_view`
-  values directly to the new match API.  Update inactive preprocessor
-  blocks so they still build.
-
 #### CSTR-552 - Migrate Article Regex Callers To Views
 
 - Type: caller migration from C-string regex bridge to view match API.
@@ -819,7 +806,7 @@ owned strings or owner-specific storage.
 - Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`.
 - Function: old `CompiledRegex::execute(const char *)` wrapper kept for
   caller migration.
-- Dependencies: `CSTR-551`, `CSTR-552`.
+- Dependencies: `CSTR-552`.
 - Instructions: delete the raw wrapper after every caller uses the
   view-based match API.  Keep the regex bytecode internals out of scope.
 
