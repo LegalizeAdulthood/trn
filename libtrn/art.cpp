@@ -95,7 +95,7 @@ static bool            s_continuation{};    // this line/header is being continu
 
 static std::string finish_pager_command(std::string_view command, bool donewline);
 static std::string finish_pager_dbl_command(std::string_view command);
-static bool        maybe_set_color(const char *line_begin, const char *cp, bool back_search);
+static bool        maybe_set_color(std::string_view line, std::size_t pos, bool back_search);
 static bool        inner_more();
 static bool        pager_command_needs_completion(std::string_view command);
 
@@ -133,7 +133,6 @@ DoArticleResult do_article(std::string &article_command)
         line_pos = std::min(pos, line_text.size());
     };
     auto line_tail = [&]() { return line_text.substr(line_pos); };
-    auto line_begin_c_str = [&]() { return line_text.empty() ? "" : line_text.data(); };
     auto tail_c_str = [&]() { return line_text.empty() ? "" : line_text.data() + line_pos; };
     auto current_char = [&]() { return line_pos < line_text.size() ? line_text[line_pos] : '\0'; };
     auto char_at = [&](std::size_t offset)
@@ -296,7 +295,7 @@ DoArticleResult do_article(std::string &article_command)
                 s_continuation = true;
                 if (restart_color && g_do_hiding && !g_in_header)
                 {
-                    maybe_set_color(line_begin_c_str(), tail_c_str(), true);
+                    maybe_set_color(line_text, line_pos, true);
                 }
             }
             else if (const std::size_t head_pos = static_cast<std::size_t>(g_art_pos.value_of());
@@ -319,7 +318,7 @@ DoArticleResult do_article(std::string &article_command)
                 set_line(body_line);
                 if (g_do_hiding && !g_in_header)
                 {
-                    s_continuation = maybe_set_color(line_begin_c_str(), tail_c_str(), restart_color);
+                    s_continuation = maybe_set_color(line_text, line_pos, restart_color);
                 }
                 else
                 {
@@ -885,9 +884,10 @@ reask_pager:
     } // end of page loop
 }
 
-static bool maybe_set_color(const char *line_begin, const char *cp, bool back_search)
+static bool maybe_set_color(std::string_view line, std::size_t pos, bool back_search)
 {
-    const char ch = (cp == line_begin ? 0 : cp[-1]);
+    pos = std::min(pos, line.size());
+    const char ch = (pos == 0 ? 0 : line[pos - 1]);
     if (ch == '\001')
     {
         color_object(COLOR_MIME_DESC, false);
@@ -900,18 +900,16 @@ static bool maybe_set_color(const char *line_begin, const char *cp, bool back_se
     {
         if (back_search)
         {
-            while (cp > line_begin && cp[-1] != '\n')
-            {
-                cp--;
-            }
-            maybe_set_color(line_begin, cp, false);
+            const std::size_t previous_line_pos = line.rfind('\n', pos - 1);
+            maybe_set_color(line, previous_line_pos == std::string_view::npos ? 0 : previous_line_pos + 1, false);
         }
         return true;
     }
     else
     {
-        cp = skip_hor_space(cp);
-        if (std::string_view{">}]#!:|"}.find(*cp) != std::string_view::npos)
+        std::string_view text = skip_hor_space(line.substr(pos));
+        const char       current = text.empty() ? '\0' : text.front();
+        if (std::string_view{">}]#!:|"}.find(current) != std::string_view::npos)
         {
             color_object(COLOR_CITE_DTEXT, false);
         }
@@ -1192,8 +1190,8 @@ refresh_screen:
                     {
                         g_art_pos = -g_art_pos;
                     }
+                    maybe_set_color(pager_line_storage, 0, true);
                     const char *line = pager_line_storage.c_str();
-                    maybe_set_color(line, line, true);
                     for (pos = g_art_pos - pos; pos-- && !at_nl(*line); line++)
                     {
                         std::putchar(*line);

@@ -756,17 +756,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-546 - Make Article Color State Use Views
-
-- Type: file-local helper parameters from C-string begin/current
-  pointers to view plus offset.
-- Files: `libtrn/art.cpp`.
-- Function: `maybe_set_color`.
-- Dependencies: none.
-- Instructions: pass the full line view and current offset instead of
-  `line_begin_c_str()` and `tail_c_str()`.  Use the existing
-  `skip_hor_space(std::string_view)` helper and avoid pointer walking.
-
 #### CSTR-547 - Remove Regex Bracket Static Storage
 
 - Type: borrowed static-buffer return to view/value API.
@@ -838,7 +827,7 @@ them before broad global-buffer work and before removing helpers.
 - Type: caller migration from C-string regex bridge to view match API.
 - Files: `libtrn/art.cpp`.
 - Function: `do_article`.
-- Dependencies: `CSTR-546`, `CSTR-548`.
+- Dependencies: `CSTR-548`.
 - Instructions: replace `tail_c_str()`, `search_line.c_str()`, and
   `pager_line.data()` regex calls with view inputs.  Remove C-string
   bridge lambdas that no longer have callers.
