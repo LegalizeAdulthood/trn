@@ -14,15 +14,18 @@
 #define NALTS   10              // the maximum number of \|'s
 #endif
 
-struct CompiledRegex
+class CompiledRegex
 {
+public:
     void             init_compex();
     void             free_compex();
     std::string_view get_bracket(int n) const;
     bool             has_brackets() const;
     const char      *compile(std::string_view strp, bool re, bool fold);
-    char            *grow_eb(char *epp, char **alt);
     bool             execute(std::string_view text);
+
+private:
+    char            *grow_eb(char *epp, char **alt);
     bool             advance(const char *lp, const char *ep);
     bool             back_ref(int i, const char *lp);
 

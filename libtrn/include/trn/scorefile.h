@@ -13,7 +13,7 @@
 #include <string_view>
 #include <vector>
 
-struct CompiledRegex;
+class CompiledRegex;
 
 #define DEFAULT_SCOREDIR "%+/scores"
 

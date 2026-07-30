@@ -796,26 +796,13 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-555 - Encapsulate CompiledRegex Internals
-
-- Type: public struct implementation leak.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
-  regex tests.
-- Functions: `grow_eb`, `advance`, `back_ref`.
-- Dependencies: none.
-- Instructions: make only the lifecycle, compile, match, bracket, and
-  query operations public.  Move regex engine helpers and raw storage
-  members out of the public interface, either by making `CompiledRegex`
-  a class with private internals or by introducing private
-  implementation state.  Preserve the existing public behavior.
-
 #### CSTR-556 - Return Regex Compile Errors As Views
 
 - Type: public C-string result contract.
 - Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
   regex compile callers, `tests/test_search.cpp`.
 - Function: `CompiledRegex::compile`.
-- Dependencies: CSTR-555.
+- Dependencies: none.
 - Instructions: change `compile` to return `std::string_view`, using an
   empty view for success and non-empty views for literal error messages.
   Update callers to test `.empty()` instead of comparing against
@@ -1031,7 +1018,7 @@ them before broad global-buffer work and before removing helpers.
   regex tests.
 - Variables: local `bracket`, `m_num_brackets`, fixed regex arrays that
   are not yet replaced by later slices.
-- Dependencies: CSTR-555.
+- Dependencies: none.
 - Instructions: replace fixed regex bookkeeping arrays with
   `std::array` where the size is fixed by `NBRA` or `NALTS`, and use an
   ordinary integer or size type for counts instead of `char`.  Do not
@@ -1044,7 +1031,7 @@ them before broad global-buffer work and before removing helpers.
   regex bracket tests.
 - Members: `m_bracket_start_list`, `m_bracket_end_list`,
   `m_bracket_str`.
-- Dependencies: CSTR-555, CSTR-557.
+- Dependencies: CSTR-557.
 - Instructions: replace persistent raw start/end pointer member arrays
   with span state that cannot outlive the matched text accidentally.
   Prefer offsets or `std::string_view` values built during `execute`,
@@ -1059,7 +1046,7 @@ them before broad global-buffer work and before removing helpers.
   regex compile and match tests.
 - Members: `m_exp_buf`, `m_eb_len`, `m_alternatives`.
 - Functions: `compile`, `grow_eb`, `execute`, `advance`, `back_ref`.
-- Dependencies: CSTR-555, CSTR-556, CSTR-557, CSTR-558.
+- Dependencies: CSTR-556, CSTR-557, CSTR-558.
 - Instructions: replace manual `safe_malloc`/`safe_realloc` bytecode
   storage with `std::vector<char>` and replace persistent alternative
   pointers with offsets or indices.  Keep pointer walking local to the

@@ -7,7 +7,7 @@
 
 #include <string_view>
 
-struct CompiledRegex;
+class CompiledRegex;
 struct NewsgroupData;
 
 enum NewsgroupSearchResult
