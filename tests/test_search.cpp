@@ -70,6 +70,19 @@ TEST_F(CompiledRegexTest, bracketTextIsAvailableAfterMatch)
     EXPECT_TRUE(m_regex.get_bracket(2).empty());
 }
 
+TEST_F(CompiledRegexTest, bracketTextDoesNotOutliveCallerView)
+{
+    ASSERT_TRUE(m_regex.compile(R"(\(needle\))", true, false).empty());
+    {
+        const std::string      text{"needle trailing"};
+        const std::string_view prefix{text.data(), 6};
+
+        ASSERT_TRUE(m_regex.execute(prefix));
+    }
+
+    EXPECT_EQ(std::string_view{"needle"}, m_regex.get_bracket(1));
+}
+
 TEST_F(CompiledRegexTest, matchViewDoesNotReadTrailingText)
 {
     const std::string      text{"haystack needle"};

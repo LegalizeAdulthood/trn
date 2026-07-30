@@ -821,21 +821,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-558 - Store Regex Match Spans Without Raw Member Pointers
-
-- Type: raw pointer match-span storage.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
-  regex bracket tests.
-- Members: `m_bracket_start_list`, `m_bracket_end_list`,
-  `m_bracket_str`.
-- Dependencies: none.
-- Instructions: replace persistent raw start/end pointer member arrays
-  with span state that cannot outlive the matched text accidentally.
-  Prefer offsets or `std::string_view` values built during `execute`,
-  then have `get_bracket` return a view over owned match storage.
-  Reject any design that stores pointers into caller-local string data
-  after `execute` returns.
-
 #### CSTR-559 - Replace Regex Bytecode Reallocation With Vector Storage
 
 - Type: growable bytecode storage and pointer cursor cleanup.
@@ -843,7 +828,7 @@ them before broad global-buffer work and before removing helpers.
   regex compile and match tests.
 - Members: `m_exp_buf`, `m_eb_len`, `m_alternatives`.
 - Functions: `compile`, `grow_eb`, `execute`, `advance`, `back_ref`.
-- Dependencies: CSTR-558.
+- Dependencies: none.
 - Instructions: replace manual `safe_malloc`/`safe_realloc` bytecode
   storage with `std::vector<char>` and replace persistent alternative
   pointers with offsets or indices.  Keep pointer walking local to the

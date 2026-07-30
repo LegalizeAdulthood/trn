@@ -123,6 +123,8 @@ void CompiledRegex::init_compex()
     // the following must start off zeroed
     m_eb_len = 0;
     m_bracket_str.clear();
+    m_bracket_start_offsets.fill(std::string::npos);
+    m_bracket_end_offsets.fill(std::string::npos);
 }
 
 void CompiledRegex::free_compex()
@@ -138,14 +140,13 @@ void CompiledRegex::free_compex()
 
 std::string_view CompiledRegex::get_bracket(int n) const
 {
-    if (!has_brackets() || n < 0 || n > m_num_brackets || m_bracket_start_list[n] == nullptr ||
-        m_bracket_end_list[n] == nullptr || m_bracket_end_list[n] < m_bracket_start_list[n])
+    if (!has_brackets() || n < 0 || n > m_num_brackets || m_bracket_start_offsets[n] == std::string::npos ||
+        m_bracket_end_offsets[n] == std::string::npos || m_bracket_end_offsets[n] < m_bracket_start_offsets[n])
     {
         return {};
     }
 
-    const std::ptrdiff_t length = m_bracket_end_list[n] - m_bracket_start_list[n];
-    return {m_bracket_start_list[n], static_cast<std::size_t>(length)};
+    return {m_bracket_str.data() + m_bracket_start_offsets[n], m_bracket_end_offsets[n] - m_bracket_start_offsets[n]};
 }
 
 bool CompiledRegex::has_brackets() const
@@ -438,11 +439,8 @@ bool CompiledRegex::execute(std::string_view text)
     const char *p1 = m_bracket_str.c_str();
     if (m_num_brackets) // any brackets?
     {
-        for (int i = 0; i <= m_num_brackets; i++)
-        {
-            m_bracket_start_list[i] = nullptr;
-            m_bracket_end_list[i] = nullptr;
-        }
+        m_bracket_start_offsets.fill(std::string::npos);
+        m_bracket_end_offsets.fill(std::string::npos);
     }
     case_fold(m_do_folding); // make sure table is correct
     s_first_character = p1;  // for ^ tests
@@ -489,6 +487,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
     const char* curlp;
     Uchar* trt = s_trans;
     int i;
+    std::ptrdiff_t length{};
 
     while (*lp || (*ep & (STAR | META_NULL)))
     {
@@ -578,43 +577,46 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             return false;
 
         case CBRA:
-            m_bracket_start_list[(unsigned char)*ep++] = lp;
+            m_bracket_start_offsets[static_cast<unsigned char>(*ep++)] =
+                static_cast<std::size_t>(lp - m_bracket_str.data());
             continue;
 
         case CKET:
             i = *ep++;
-            m_bracket_end_list[i] = lp;
-            m_bracket_end_list[0] = lp;
-            m_bracket_start_list[0] = m_bracket_start_list[i];
+            m_bracket_end_offsets[i] = static_cast<std::size_t>(lp - m_bracket_str.data());
+            m_bracket_end_offsets[0] = m_bracket_end_offsets[i];
+            m_bracket_start_offsets[0] = m_bracket_start_offsets[i];
             continue;
 
         case CBACK:
             i = *ep++;
-            if (m_bracket_end_list[i] == nullptr)
+            if (m_bracket_end_offsets[i] == std::string::npos)
             {
                 fmt::print("bad braces\n");
                 s_err = true;
                 return false;
             }
+            length = static_cast<std::ptrdiff_t>(get_bracket(i).size());
             if (back_ref(i, lp))
             {
-                lp += m_bracket_end_list[i] - m_bracket_start_list[i];
+                lp += length;
                 continue;
             }
             return false;
 
         case CBACK | STAR:
             i = *ep++;
-            if (m_bracket_end_list[i] == nullptr)
+            if (m_bracket_end_offsets[i] == std::string::npos)
             {
                 fmt::print("bad braces\n");
                 s_err = true;
                 return false;
             }
+            length = static_cast<std::ptrdiff_t>(get_bracket(i).size());
             curlp = lp;
             while (back_ref(i, lp))
             {
-                lp += m_bracket_end_list[i] - m_bracket_start_list[i];
+                lp += length;
             }
             while (lp >= curlp)
             {
@@ -622,7 +624,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
                 {
                     return true;
                 }
-                lp -= m_bracket_end_list[i] - m_bracket_start_list[i];
+                lp -= length;
             }
             continue;
 
@@ -686,15 +688,14 @@ star:
 
 bool CompiledRegex::back_ref(int i, const char *lp)
 {
-    const char *bp = m_bracket_start_list[i];
-    while (*lp && *bp == *lp)
+    std::string_view bracket = get_bracket(i);
+    for (const char ch : bracket)
     {
-        bp++;
-        lp++;
-        if (bp >= m_bracket_end_list[i])
+        if (*lp == '\0' || ch != *lp)
         {
-            return true;
+            return false;
         }
+        lp++;
     }
-    return false;
+    return true;
 }

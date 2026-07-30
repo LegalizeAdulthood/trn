@@ -6,6 +6,7 @@
 #define TRN_SEARCH_H
 
 #include <array>
+#include <cstddef>
 #include <string>
 #include <string_view>
 
@@ -33,8 +34,8 @@ private:
     char       *m_exp_buf;                  // The compiled search string
     int         m_eb_len;                   // Length of above buffer
     std::array<char *, NALTS + 1>      m_alternatives;        // The list of \| separated alternatives
-    std::array<const char *, NBRA + 1> m_bracket_start_list;  // RE meta-bracket start list
-    std::array<const char *, NBRA + 1> m_bracket_end_list;    // RE meta-bracket end list
+    std::array<std::size_t, NBRA + 1> m_bracket_start_offsets; // RE meta-bracket start offsets
+    std::array<std::size_t, NBRA + 1> m_bracket_end_offsets;   // RE meta-bracket end offsets
     std::string m_bracket_str;              // saved match string after execute()
     int         m_num_brackets;             // The number of meta-brackets int the most
                                             // recently compiled RE
