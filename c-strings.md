@@ -756,25 +756,13 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-547 - Remove Regex Bracket Static Storage
-
-- Type: borrowed static-buffer return to view/value API.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
-  `libtrn/intrp.cpp`, `libtrn/respond.cpp`.
-- Functions: `CompiledRegex::get_bracket`, new
-  `CompiledRegex::has_brackets`.
-- Dependencies: none.
-- Instructions: remove `s_gbr_str`.  Return bracket text as a
-  `std::string_view` into `CompiledRegex::m_bracket_str` and add an
-  explicit `has_brackets` query for the old null-sentinel check.
-
 #### CSTR-548 - Add A Regex View Match API
 
 - Type: helper parameter from `const char *` to `std::string_view`.
 - Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
   `tests/test_search.cpp`.
 - Function: `CompiledRegex::execute`.
-- Dependencies: `CSTR-547`.
+- Dependencies: none.
 - Instructions: introduce the view-based boolean match API as the
   implementation owner.  Keep any old C-string wrapper only as a
   temporary delegating compatibility path for the caller migration

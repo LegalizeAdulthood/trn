@@ -60,4 +60,14 @@ TEST_F(CompiledRegexTest, patternViewDoesNotReadTrailingText)
     EXPECT_EQ(nullptr, m_regex.execute("x"));
 }
 
+TEST_F(CompiledRegexTest, bracketTextIsAvailableAfterMatch)
+{
+    ASSERT_EQ(nullptr, m_regex.compile(R"(prefix \(needle\) suffix)", true, false));
+    ASSERT_NE(nullptr, m_regex.execute("prefix needle suffix"));
+
+    EXPECT_TRUE(m_regex.has_brackets());
+    EXPECT_EQ(std::string_view{"needle"}, m_regex.get_bracket(1));
+    EXPECT_TRUE(m_regex.get_bracket(2).empty());
+}
+
 } // namespace

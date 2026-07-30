@@ -583,7 +583,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         goto getout;
                     }
                     matched = s_cond_compex.execute(condition_text.c_str()) != nullptr;
-                    if (s_cond_compex.get_bracket(0)) // were there brackets?
+                    if (s_cond_compex.has_brackets()) // were there brackets?
                     {
                         g_bra_compex = &s_cond_compex;
                     }
@@ -716,8 +716,8 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case '8':
                 case '9':
                 {
-                    const char *bracket = g_bra_compex->get_bracket(pattern.front() - '0');
-                    set_value(bracket == nullptr ? std::string_view{} : std::string_view{bracket});
+                    const std::string_view bracket = g_bra_compex->get_bracket(pattern.front() - '0');
+                    set_value(bracket);
                     break;
                 }
 

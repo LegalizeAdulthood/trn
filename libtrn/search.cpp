@@ -77,7 +77,6 @@ static TranslationTable s_trans{};
 static bool             s_folding{};
 static int              s_err{};
 static const char      *s_first_character{};
-static std::string      s_gbr_str;
 
 static void case_fold(bool which)
 {
@@ -137,20 +136,21 @@ void CompiledRegex::free_compex()
     m_bracket_str.clear();
 }
 
-const char *CompiledRegex::get_bracket(int n)
+std::string_view CompiledRegex::get_bracket(int n) const
 {
-    int length = m_bracket_end_list[n] - m_bracket_start_list[n];
+    if (!has_brackets() || n < 0 || n > m_num_brackets || m_bracket_start_list[n] == nullptr ||
+        m_bracket_end_list[n] == nullptr || m_bracket_end_list[n] < m_bracket_start_list[n])
+    {
+        return {};
+    }
 
-    if (!m_num_brackets)
-    {
-        return nullptr;
-    }
-    if (n > m_num_brackets || !m_bracket_end_list[n] || length < 0)
-    {
-        return "";
-    }
-    s_gbr_str.assign(m_bracket_start_list[n], length);
-    return s_gbr_str.c_str();
+    const std::ptrdiff_t length = m_bracket_end_list[n] - m_bracket_start_list[n];
+    return {m_bracket_start_list[n], static_cast<std::size_t>(length)};
+}
+
+bool CompiledRegex::has_brackets() const
+{
+    return m_num_brackets != 0;
 }
 
 // Compile the given regular expression into a [secret] internal format

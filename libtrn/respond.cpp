@@ -931,12 +931,12 @@ void forward()
 {
     std::string       header_text;
     const std::string mail_doer = get_env_var("FORWARDPOSTER", FORWARD_POSTER);
+    std::string       mime_boundary_storage;
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
     constexpr std::string_view content_type_prefix{"Content-Type: multipart/"};
     constexpr std::string_view boundary_prefix{"boundary=\""};
-    std::string                mime_boundary_storage;
 #endif
     const char *mime_boundary;
 
@@ -954,10 +954,11 @@ void forward()
     header_text = do_interp(get_env_var("FORWARDHEADER", FORWARD_HEADER));
     fmt::print(header, "{}", header_text);
 #ifdef REGEX_WORKS_RIGHT
-    if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
-        && mime_compex.execute(header_text.c_str()) != nullptr)
+    if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"", true, true) &&
+        mime_compex.execute(header_text.c_str()) != nullptr)
     {
-        mime_boundary = mime_compex.get_bracket(1);
+        mime_boundary_storage = mime_compex.get_bracket(1);
+        mime_boundary = mime_boundary_storage.c_str();
     }
     else
     {
