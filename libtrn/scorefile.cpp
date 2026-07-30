@@ -698,8 +698,8 @@ static bool sf_do_line(std::string_view line, bool check)
         // 2nd is search string
         // 3rd should be true if the search string is a regex
         // 4th is true for case-insensitivity
-        const char *compile_error = s_sf_compex->compile(entry.str1, true, true);
-        if (compile_error != nullptr)
+        const std::string_view compile_error = s_sf_compex->compile(entry.str1, true, true);
+        if (!compile_error.empty())
         {
             fmt::print("Bad pattern : |{}|\n", pattern);
             fmt::print("Compex returns: |{}|\n", compile_error);

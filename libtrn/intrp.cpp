@@ -574,8 +574,8 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         std::string_view regex_cursor{format_spec};
                         regex_text = do_interp(regex_cursor, {}, cmd);
                     }
-                    const char *compile_error = s_cond_compex.compile(regex_text, true, true);
-                    if (compile_error != nullptr)
+                    const std::string_view compile_error = s_cond_compex.compile(regex_text, true, true);
+                    if (!compile_error.empty())
                     {
                         fmt::print("{}: {}\n", regex_text, compile_error);
                         pattern.remove_prefix(pattern.size());

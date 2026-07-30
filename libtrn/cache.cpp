@@ -675,8 +675,8 @@ void look_ahead()
             term_down(2);
         }
 #endif
-        const char *compile_error = s_srchcompex.compile(pattern, true, true);
-        if (compile_error != nullptr)
+        const std::string_view compile_error = s_srchcompex.compile(pattern, true, true);
+        if (!compile_error.empty())
         {
             // compile regular expression
             fmt::print("\n{}\n", compile_error);

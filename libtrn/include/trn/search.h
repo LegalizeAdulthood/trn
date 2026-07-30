@@ -21,7 +21,7 @@ public:
     void             free_compex();
     std::string_view get_bracket(int n) const;
     bool             has_brackets() const;
-    const char      *compile(std::string_view strp, bool re, bool fold);
+    std::string_view compile(std::string_view strp, bool re, bool fold);
     bool             execute(std::string_view text);
 
 private:

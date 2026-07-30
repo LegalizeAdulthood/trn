@@ -155,11 +155,11 @@ bool CompiledRegex::has_brackets() const
 
 // Compile the given regular expression into a [secret] internal format
 //
-const char *CompiledRegex::compile(std::string_view pattern, bool re, bool fold)
+std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool fold)
 {
     char  bracket[NBRA];
     char**alt = m_alternatives;
-    const char *retmes = "Badly formed search string";
+    std::string_view retmes = "Badly formed search string";
     std::string_view::size_type pattern_pos{};
     const auto                  next_pattern_char = [&pattern, &pattern_pos]()
     {
@@ -193,7 +193,7 @@ const char *CompiledRegex::compile(std::string_view pattern, bool re, bool fold)
         {
             return "Null search string";
         }
-        return nullptr;                 // just keep old expression
+        return {};                      // just keep old expression
     }
     m_num_brackets = 0;                   // no brackets yet
     char *lastep = nullptr;
@@ -213,7 +213,7 @@ const char *CompiledRegex::compile(std::string_view pattern, bool re, bool fold)
             }
             *ep++ = CEND;               // terminate expression
             *alt++ = nullptr;           // terminal alternative list
-            return nullptr;             // return success
+            return {};                  // return success
         }
         if (c != '*')
         {

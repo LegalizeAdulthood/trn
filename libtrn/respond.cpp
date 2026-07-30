@@ -954,7 +954,7 @@ void forward()
     header_text = do_interp(get_env_var("FORWARDHEADER", FORWARD_HEADER));
     fmt::print(header, "{}", header_text);
 #ifdef REGEX_WORKS_RIGHT
-    if (!mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"", true, true) &&
+    if (mime_compex.compile("Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"", true, true).empty() &&
         mime_compex.execute(header_text))
     {
         mime_boundary_storage = mime_compex.get_bracket(1);

@@ -358,11 +358,11 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
 #endif
     }
     {
-        const char *s = compex->compile(pattern_text, true, fold_case);
-        if (s != nullptr)
+        const std::string_view compile_error = compex->compile(pattern_text, true, fold_case);
+        if (!compile_error.empty())
         {
             // compile regular expression
-            error_msg(s);
+            error_msg(compile_error);
             ret = SRCH_ABORT;
             goto exit;
         }

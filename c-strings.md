@@ -796,19 +796,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-556 - Return Regex Compile Errors As Views
-
-- Type: public C-string result contract.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
-  regex compile callers, `tests/test_search.cpp`.
-- Function: `CompiledRegex::compile`.
-- Dependencies: none.
-- Instructions: change `compile` to return `std::string_view`, using an
-  empty view for success and non-empty views for literal error messages.
-  Update callers to test `.empty()` instead of comparing against
-  `nullptr`; do not introduce `std::optional` because an empty result has
-  no error meaning.
-
 #### CSTR-568 - Pass newsgroup_comp Regex By Reference
 
 - Type: nullable pointer parameter that is always required.
@@ -827,7 +814,7 @@ that later caller slices can consume directly.
 - Files: `libtrn/include/trn/ngsrch.h`, `libtrn/ngsrch.cpp`,
   `libtrn/autosub.cpp`, `libtrn/only.cpp`.
 - Function: `newsgroup_comp`.
-- Dependencies: CSTR-556, CSTR-568.
+- Dependencies: CSTR-568.
 - Instructions: change `newsgroup_comp` to return `std::string_view`,
   using an empty view for success and non-empty views for literal compile
   errors.  Update callers to test `.empty()` instead of comparing
@@ -1046,7 +1033,7 @@ them before broad global-buffer work and before removing helpers.
   regex compile and match tests.
 - Members: `m_exp_buf`, `m_eb_len`, `m_alternatives`.
 - Functions: `compile`, `grow_eb`, `execute`, `advance`, `back_ref`.
-- Dependencies: CSTR-556, CSTR-557, CSTR-558.
+- Dependencies: CSTR-557, CSTR-558.
 - Instructions: replace manual `safe_malloc`/`safe_realloc` bytecode
   storage with `std::vector<char>` and replace persistent alternative
   pointers with offsets or indices.  Keep pointer walking local to the

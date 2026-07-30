@@ -30,7 +30,7 @@ protected:
 
 TEST_F(CompiledRegexTest, literalPatternMatchesText)
 {
-    EXPECT_EQ(nullptr, m_regex.compile("needle", false, false));
+    EXPECT_TRUE(m_regex.compile("needle", false, false).empty());
 
     EXPECT_TRUE(m_regex.execute(std::string_view{"haystack needle"}));
     EXPECT_FALSE(m_regex.execute(std::string_view{"haystack"}));
@@ -38,15 +38,15 @@ TEST_F(CompiledRegexTest, literalPatternMatchesText)
 
 TEST_F(CompiledRegexTest, emptyPatternReusesPreviousExpression)
 {
-    ASSERT_EQ(nullptr, m_regex.compile("needle", false, false));
-    EXPECT_EQ(nullptr, m_regex.compile("", false, false));
+    ASSERT_TRUE(m_regex.compile("needle", false, false).empty());
+    EXPECT_TRUE(m_regex.compile("", false, false).empty());
 
     EXPECT_TRUE(m_regex.execute(std::string_view{"needle"}));
 }
 
 TEST_F(CompiledRegexTest, malformedCharacterClassReportsError)
 {
-    EXPECT_STREQ("Missing ]", m_regex.compile("[abc", true, false));
+    EXPECT_EQ(std::string_view{"Missing ]"}, m_regex.compile("[abc", true, false));
 }
 
 TEST_F(CompiledRegexTest, patternViewDoesNotReadTrailingText)
@@ -54,7 +54,7 @@ TEST_F(CompiledRegexTest, patternViewDoesNotReadTrailingText)
     const std::string      pattern{"[a]x"};
     const std::string_view prefix{pattern.data(), 3};
 
-    ASSERT_EQ(nullptr, m_regex.compile(prefix, true, false));
+    ASSERT_TRUE(m_regex.compile(prefix, true, false).empty());
 
     EXPECT_TRUE(m_regex.execute(std::string_view{"a"}));
     EXPECT_FALSE(m_regex.execute(std::string_view{"x"}));
@@ -62,7 +62,7 @@ TEST_F(CompiledRegexTest, patternViewDoesNotReadTrailingText)
 
 TEST_F(CompiledRegexTest, bracketTextIsAvailableAfterMatch)
 {
-    ASSERT_EQ(nullptr, m_regex.compile(R"(prefix \(needle\) suffix)", true, false));
+    ASSERT_TRUE(m_regex.compile(R"(prefix \(needle\) suffix)", true, false).empty());
     ASSERT_TRUE(m_regex.execute(std::string_view{"prefix needle suffix"}));
 
     EXPECT_TRUE(m_regex.has_brackets());
@@ -75,7 +75,7 @@ TEST_F(CompiledRegexTest, matchViewDoesNotReadTrailingText)
     const std::string      text{"haystack needle"};
     const std::string_view prefix{text.data(), 8};
 
-    ASSERT_EQ(nullptr, m_regex.compile("needle", false, false));
+    ASSERT_TRUE(m_regex.compile("needle", false, false).empty());
 
     EXPECT_FALSE(m_regex.execute(prefix));
     EXPECT_TRUE(m_regex.execute(text));

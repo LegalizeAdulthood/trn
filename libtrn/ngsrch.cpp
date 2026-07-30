@@ -262,7 +262,7 @@ const char *newsgroup_comp(CompiledRegex *compex, std::string_view pattern, bool
 {
     if (pattern.empty())
     {
-        if (compex->compile("", re, fold))
+        if (!compex->compile("", re, fold).empty())
         {
             return "No previous search pattern";
         }
@@ -291,5 +291,6 @@ const char *newsgroup_comp(CompiledRegex *compex, std::string_view pattern, bool
             ng_pattern.push_back(ch);
         }
     }
-    return compex->compile(ng_pattern, re, fold);
+    const std::string_view compile_error = compex->compile(ng_pattern, re, fold);
+    return compile_error.empty() ? nullptr : compile_error.data();
 }

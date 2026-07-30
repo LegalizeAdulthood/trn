@@ -4101,8 +4101,8 @@ static DisplayState option_commands(char_int ch)
             pattern.remove_prefix(1);
         }
         const std::string pattern_text{pattern};
-        const char       *compile_error = g_opt_compex.compile(pattern_text, true, true);
-        if (compile_error != nullptr)
+        const std::string_view compile_error = g_opt_compex.compile(pattern_text, true, true);
+        if (!compile_error.empty())
         {
             g_msg = compile_error;
             return DS_STATUS;

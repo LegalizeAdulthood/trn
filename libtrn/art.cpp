@@ -1011,8 +1011,8 @@ PageSwitchResult page_switch(std::string_view command)
         {
             pattern.remove_prefix(1);
         }
-        const char       *compile_error = s_gcompex.compile(pattern, true, true);
-        if (compile_error != nullptr)
+        const std::string_view compile_error = s_gcompex.compile(pattern, true, true);
+        if (!compile_error.empty())
         {
                             // compile regular expression
             fmt::print("\n{}\n", compile_error);
