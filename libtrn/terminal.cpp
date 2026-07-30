@@ -268,8 +268,7 @@ inline const char *Tgetstr(const char *key)
 
 // set terminal characteristics
 
-//char* tcbuf;          // temp area for "uncompiled" termcap entry
-void term_set(char *tcbuf)
+void term_set(TermCapScratchBuffer &tcbuf)
 {
     char* tmpaddr;                      // must not be register
     char* tmpstr;
@@ -323,7 +322,7 @@ void term_set(char *tcbuf)
     g_tc_AM = true;
 #else
     const std::string term = get_env_var("TERM", "dumb");
-    status = tgetent(tcbuf, term.c_str()); // get termcap entry
+    status = tgetent(tcbuf.data(), term.c_str()); // get termcap entry
     if (status < 1)
     {
         fmt::print("No termcap {} found.\n", status ? "file" : "entry");

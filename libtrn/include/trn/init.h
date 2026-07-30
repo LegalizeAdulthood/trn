@@ -5,10 +5,14 @@
 #ifndef TRN_INIT_H
 #define TRN_INIT_H
 
+#include <array>
+
 enum
 {
     TCBUF_SIZE = 1024
 };
+
+using TermCapScratchBuffer = std::array<char, TCBUF_SIZE>;
 
 extern long g_our_pid;
 

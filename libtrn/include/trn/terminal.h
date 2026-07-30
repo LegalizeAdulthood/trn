@@ -8,6 +8,7 @@
 #include <config/common.h>
 #include <config/config.h>
 #include <trn/enum-flags.h>
+#include <trn/init.h>
 
 #include <string>
 #include <string_view>
@@ -168,7 +169,7 @@ extern bool  g_mouse_is_down;
 extern int   g_auto_arrow_macros; // -A
 
 void  term_init();
-void  term_set(char *tcbuf);
+void  term_set(TermCapScratchBuffer &tcbuf);
 void  set_macro(std::string_view seq, std::string_view def);
 void  arrow_macros();
 void  mac_line(std::string_view line);

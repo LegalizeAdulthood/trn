@@ -7,6 +7,7 @@
 
 #include <trn/enum-flags.h>
 #include <trn/head.h>
+#include <trn/init.h>
 #include <trn/search.h>
 
 #include <filesystem>
@@ -150,7 +151,7 @@ extern OptionFlags  *g_option_flags;
 extern OptionDraft  *g_option_draft;
 extern int           g_sel_page_op;
 
-void        opt_init(int argc, char *argv[], char *tcbuf);
+void        opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf);
 void        opt_final();
 void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, std::string_view s);

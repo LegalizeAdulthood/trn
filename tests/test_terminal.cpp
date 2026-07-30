@@ -17,7 +17,6 @@
 
 #include <gtest/gtest.h>
 
-#include <array>
 #include <cerrno>
 #include <filesystem>
 #include <fstream>
@@ -469,9 +468,9 @@ TEST_F(MacroFileInitTest, termSetLoadsMacroFile)
     std::ofstream{macro_file} << "^D y\n";
     set_env_var("RNMACRO", macro_file.generic_string());
 
-    std::array<char, TCBUF_SIZE> tcbuf{};
+    TermCapScratchBuffer tcbuf{};
     term_init();
-    term_set(tcbuf.data());
+    term_set(tcbuf);
 
     push_char('\004');
     const std::string command = get_cmd();

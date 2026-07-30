@@ -47,7 +47,6 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <array>
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
@@ -140,7 +139,7 @@ protected:
 
     Environment                  m_env;
     TestOutputDirectory          m_output;
-    std::array<char, TCBUF_SIZE> m_tcbuf{};
+    TermCapScratchBuffer         m_tcbuf{};
     std::string                  m_buffer;
     long                         m_test_pid{6421};
 };
@@ -196,11 +195,11 @@ void InterpolatorTest::SetUp()
     head_init();
     char trn[]{"trn"};
     char *argv[]{trn};
-    opt_init(1,argv,m_tcbuf.data());
+    opt_init(1, argv, m_tcbuf);
     color_init();
     interp_init();
     cwd_check();
-    term_set(m_tcbuf.data());
+    term_set(m_tcbuf);
     last_init();
     univ_init();
     data_source_init();

@@ -48,7 +48,6 @@
 #include <process.h>
 #endif
 
-#include <array>
 #include <cstdio>
 #include <ctime>
 #include <string>
@@ -74,7 +73,7 @@ static void news_news_check();
 bool initialize(int argc, char *argv[])
 {
     // Temp buffer for termcap and other initialization stuff.
-    std::array<char, TCBUF_SIZE> tcbuf{};
+    TermCapScratchBuffer tcbuf{};
 
     g_our_pid = (long)getpid();
 
@@ -95,7 +94,7 @@ bool initialize(int argc, char *argv[])
 
     // decode switches
 
-    opt_init(argc,argv,tcbuf.data());   // must not do % interps!
+    opt_init(argc,argv,tcbuf);          // must not do % interps!
                                         // (but may mung environment)
     color_init();
 
@@ -123,7 +122,7 @@ bool initialize(int argc, char *argv[])
 
     if (!g_check_flag)
     {
-        term_set(tcbuf.data());
+        term_set(tcbuf);
     }
 
     // get info on last trn run, if any

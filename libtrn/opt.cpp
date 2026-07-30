@@ -83,7 +83,7 @@ static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std:
 static MouseButtonList parse_mouse_buttons(std::string_view btns);
 static std::string expand_mouse_buttons(const MouseButtonList &buttons);
 
-void opt_init(int argc, char *argv[], char *tcbuf)
+void opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf)
 {
     g_sel_grp_display_mode = "slm";
     g_sel_art_display_mode = "lmds";
@@ -105,7 +105,7 @@ void opt_init(int argc, char *argv[], char *tcbuf)
     }
     const std::string global_init_file = do_interp(GLOBAL_INIT);
     opt_file(global_init_file, false);
-    *tcbuf = '\0';
+    tcbuf[0] = '\0';
 
     const OptionCatalog catalog;
     const int            len = catalog.option_limit();

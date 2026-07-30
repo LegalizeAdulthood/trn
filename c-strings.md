@@ -791,19 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-577 - Replace Termcap Scratch Pointers With A Buffer Type
-
-- Type: mutable fixed-size scratch-buffer parameters.
-- Files: `libtrn/include/trn/opt.h`, `libtrn/include/trn/terminal.h`,
-  `libtrn/opt.cpp`, `libtrn/terminal.cpp`, `libtrn/init.cpp`,
-  interpolator and terminal tests.
-- Functions: `opt_init`, `term_set`.
-- Dependencies: none.
-- Instructions: introduce a named termcap scratch-buffer type, such as
-  an alias around `std::array<char, TCBUF_SIZE>`, and pass it by
-  reference to `opt_init` and `term_set`.  Keep `.data()` calls local to
-  the termcap implementation boundary.
-
 #### CSTR-580 - Return Terminal Color Capabilities As Views
 
 - Type: borrowed terminal capability result.
@@ -957,7 +944,7 @@ and clarified ownership at the edges.
 - Globals: `g_tc_BC`, `g_tc_UP`, `g_tc_CR`, `g_tc_VB`, `g_tc_CE`,
   `g_tc_CM`, `g_tc_HO`, `g_tc_IL`, `g_tc_CD`, `g_tc_SO`, `g_tc_SE`,
   `g_tc_US`, `g_tc_UE`, `g_tc_UC`.
-- Dependencies: CSTR-577.
+- Dependencies: none.
 - Instructions: hide terminal capability storage behind named accessors
   or an owner object.  Public callers should consume `std::string_view`
   or typed helpers instead of reading raw borrowed pointers.  Keep the
