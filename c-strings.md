@@ -616,14 +616,13 @@ Configure scripts, and the vendored `vcpkg` tree.
   `parse_line` moved to `std::string_view`.  Remaining raw input
   parameters are covered by existing add-newsgroup, shell, UTF, article
   display, regex-bytecode, or platform/API boundary buckets.
-- Additional local cursor scan: `perform` and `print_lines` now use
-  `std::string_view` APIs.  `do_article` still has C-string bridge
-  lambdas for color and regex helpers.
+- Additional local cursor scan: `perform`, `print_lines`, and
+  `do_article` now use `std::string_view` APIs for local cursor
+  processing.  The prior article color and regex C-string bridge
+  lambdas are gone.
 - UTF helper scan: `put_char_adv` now consumes `std::string_view &`.
   The raw single-position overloads for `at_norm_char`,
-  `byte_length_at`, `visual_width_at`, and `code_point_at` still expose
-  C-string APIs.  These should be refactored bottom-up so display loops
-  consume views directly and stale wrappers can be deleted.
+  `byte_length_at`, `visual_width_at`, and `code_point_at` are gone.
 - Shell helper scan: `do_shell` still takes raw C strings and forces
   many callers to pass `.c_str()` even when they already own
   `std::string` command text.
@@ -638,9 +637,8 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Non-zero line-input, byte, and allocation-helper scans: the remaining
   `fgets` calls are low-level `FILE *` input boundaries behind
   string-returning article input APIs; the remaining `memset` is hash
-  allocation-table initialization; `safe_malloc` and `safe_realloc` are
-  hash, AddGroup pointer table, regex bytecode, or generic allocator
-  internals.
+  allocation-table initialization; the active `safe_realloc` caller is
+  regex bytecode growth, not string storage.
 - Fixed-size buffer scan: the remaining `char name[N]` hits are
   immutable labels, termcap test/API shims, lookup tables, regex parser
   state, or non-string byte arrays.  No new fixed-string-buffer slice is
@@ -653,10 +651,11 @@ Configure scripts, and the vendored `vcpkg` tree.
   shared article-buffer state used by `art.cpp`, `ng.cpp`, and tests.
   That is a broad owner/encapsulation problem rather than a leaf
   C-string call-site cleanup.
-- Regex scan: `CompiledRegex::execute` still accepts a C string and
-  returns a raw pointer even though production callers use it as a
-  boolean match.  `CompiledRegex::get_bracket` returns a pointer into a
-  file-scope string used only to hand out bracket text.
+- Regex scan: all production and test `CompiledRegex::execute` callers
+  use the `std::string_view` boolean match API.  The old C-string
+  wrapper is now unused and remains only as CSTR-554.  Bracket access
+  returns `std::string_view` into match storage; the old file-scope
+  scratch string is gone.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -756,20 +755,22 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
+#### CSTR-554 - Remove Regex C-string Match Wrapper
+
+- Type: obsolete C-style wrapper removal.
+- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`.
+- Function: old `CompiledRegex::execute(const char *)` wrapper kept for
+  caller migration.
+- Dependencies: none.
+- Instructions: delete the raw wrapper after every caller uses the
+  view-based match API.  Keep the regex bytecode internals out of scope.
+
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-552 - Migrate Article Regex Callers To Views
-
-- Type: caller migration from C-string regex bridge to view match API.
-- Files: `libtrn/art.cpp`.
-- Function: `do_article`.
-- Dependencies: none.
-- Instructions: replace `tail_c_str()`, `search_line.c_str()`, and
-  `pager_line.data()` regex calls with view inputs.  Remove C-string
-  bridge lambdas that no longer have callers.
+No current slices.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -790,7 +791,7 @@ and clarified ownership at the edges.
   `libtrn/art.cpp`, `libtrn/ng.cpp`, article-buffer tests.
 - Globals: `g_art_buf`, `g_art_buf_pos`, `g_art_buf_seek`,
   `g_art_buf_len`.
-- Dependencies: `CSTR-552`.
+- Dependencies: none.
 - Instructions: replace direct public access to article-buffer storage
   with owned accessors or owner-local state in `artio.cpp`.  Preserve
   existing behavior with tests before changing the storage shape.
@@ -800,13 +801,5 @@ and clarified ownership at the edges.
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-#### CSTR-554 - Remove Regex C-string Match Wrapper
-
-- Type: obsolete C-style wrapper removal.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`.
-- Function: old `CompiledRegex::execute(const char *)` wrapper kept for
-  caller migration.
-- Dependencies: `CSTR-552`.
-- Instructions: delete the raw wrapper after every caller uses the
-  view-based match API.  Keep the regex bytecode internals out of scope.
+No current slices.
 

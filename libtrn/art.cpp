@@ -133,7 +133,6 @@ DoArticleResult do_article(std::string &article_command)
         line_pos = std::min(pos, line_text.size());
     };
     auto line_tail = [&]() { return line_text.substr(line_pos); };
-    auto tail_c_str = [&]() { return line_text.empty() ? "" : line_text.data() + line_pos; };
     auto current_char = [&]() { return line_pos < line_text.size() ? line_text[line_pos] : '\0'; };
     auto char_at = [&](std::size_t offset)
     {
@@ -360,7 +359,7 @@ DoArticleResult do_article(std::string &article_command)
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
-            if (!g_hide_line.empty() && !s_continuation && g_hide_compex.execute(tail_c_str()))
+            if (!g_hide_line.empty() && !s_continuation && g_hide_compex.execute(line_tail()))
             {
                 hide_this_line = true;
             }
@@ -496,7 +495,7 @@ DoArticleResult do_article(std::string &article_command)
                     }
                 }
                 output_ok = !g_hide_everything;
-                if (!g_page_stop.empty() && !s_continuation && g_page_compex.execute(tail_c_str()))
+                if (!g_page_stop.empty() && !s_continuation && g_page_compex.execute(line_tail()))
                 {
                     line_num = ArticleLine{32700};
                 }
@@ -1069,7 +1068,7 @@ caseG:
                 fmt::print("Test {}\n", search_line);
             }
 #endif
-            success = s_gcompex.execute(search_line.c_str()) != nullptr;
+            success = s_gcompex.execute(search_line);
             if (success)
             {
                 g_inner_search = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
@@ -1396,11 +1395,11 @@ leave_pager:
 go_forward:
         pager_line = line_view(s_a_line_begin);
         if ((pager_line.empty() || pager_line.front() != '\f') &&
-            (g_page_stop.empty() || s_continuation || !g_page_compex.execute(pager_line.data())))
-          {
-              if (!s_special //
-                  || (g_marking && (command_char != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
-              {
+            (g_page_stop.empty() || s_continuation || !g_page_compex.execute(pager_line)))
+        {
+            if (!s_special //
+                || (g_marking && (command_char != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
+            {
                 s_restart = s_a_line_begin;
                 --g_art_line_num;     // restart this line
                 g_art_pos = s_a_line_begin;
