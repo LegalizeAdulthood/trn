@@ -105,7 +105,7 @@ bool initialize(int argc, char *argv[])
 
     // start up file expansion and the % interpreter
 
-    interp_init(tcbuf.data(), TCBUF_SIZE);
+    interp_init();
 
     // now make sure we have a current working directory
 

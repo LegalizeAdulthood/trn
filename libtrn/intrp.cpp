@@ -68,7 +68,7 @@ static CompiledRegex s_cond_compex;
 static std::string   s_last_input;
 static int           s_interp_counter{};
 
-void interp_init(char *tcbuf, int tcbuf_len)
+void interp_init()
 {
     s_last_input.clear();
     s_cond_compex.init_compex();
@@ -103,8 +103,6 @@ void interp_init(char *tcbuf, int tcbuf_len)
     {
         return;                  // and we do not need it for -c
     }
-    (void) tcbuf;
-    (void) tcbuf_len;
     g_orig_dir = trn_getwd();     // find working directory name
 
     // name of header file (%h)

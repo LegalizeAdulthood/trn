@@ -791,18 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-565 - Drop Unused interp_init Buffer Parameters
-
-- Type: stale buffer-plus-size signature.
-- Files: `libtrn/include/trn/intrp.h`, `libtrn/intrp.cpp`,
-  `libtrn/init.cpp`, `tests/test_interp.cpp`.
-- Function: `interp_init`.
-- Dependencies: none.
-- Instructions: remove the `char *tcbuf` and `int tcbuf_len` parameters
-  from `interp_init`, delete the `(void)` casts, and update the two
-  callers to call the no-argument initializer.  Keep the caller-owned
-  termcap buffers because `opt_init` and `term_set` still use them.
-
 #### CSTR-566 - Give output_subject A Typed Article Interface
 
 - Type: callback-shaped public function.
@@ -871,7 +859,7 @@ that later caller slices can consume directly.
   `libtrn/opt.cpp`, `libtrn/terminal.cpp`, `libtrn/init.cpp`,
   interpolator and terminal tests.
 - Functions: `opt_init`, `term_set`.
-- Dependencies: CSTR-565.
+- Dependencies: none.
 - Instructions: introduce a named termcap scratch-buffer type, such as
   an alias around `std::array<char, TCBUF_SIZE>`, and pass it by
   reference to `opt_init` and `term_set`.  Keep `.data()` calls local to

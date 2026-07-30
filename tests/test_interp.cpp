@@ -198,7 +198,7 @@ void InterpolatorTest::SetUp()
     char *argv[]{trn};
     opt_init(1,argv,m_tcbuf.data());
     color_init();
-    interp_init(m_tcbuf.data(), TCBUF_SIZE);
+    interp_init();
     cwd_check();
     term_set(m_tcbuf.data());
     last_init();

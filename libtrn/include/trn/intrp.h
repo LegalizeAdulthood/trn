@@ -19,7 +19,7 @@ extern const std::string g_news_admin; // news administrator
 extern int g_news_uid;
 #endif
 
-void  interp_init(char *tcbuf, int tcbuf_len);
+void  interp_init();
 void  interp_final();
 std::string do_interp(std::string_view pattern);
 std::string do_interp(std::string_view &pattern, std::string_view stoppers, std::string_view cmd);
