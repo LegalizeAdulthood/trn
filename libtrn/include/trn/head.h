@@ -101,9 +101,6 @@ enum
 void head_init();
 void head_final();
 
-#ifdef DEBUG
-void dumpheader(char *where);
-#endif
 HeaderLineType set_line_type(std::string_view header_name);
 HeaderLineType get_header_num(std::string_view header_name);
 void           start_header(ArticleNum artnum);
