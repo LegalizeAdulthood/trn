@@ -314,22 +314,22 @@ constexpr CodePoint KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT = 0x1F61A;
 
 TEST(UTFCodePointDecodingTest, ascii_space)
 {
-    ASSERT_EQ(ASCII_SPACE_CODE_POINT, code_point_at(std::string_view{" "}));
+    ASSERT_EQ(ASCII_SPACE_CODE_POINT, code_point_at(" "));
 }
 
 TEST(UTFCodePointDecodingTest, ascii_5)
 {
-    ASSERT_EQ(ASCII_5_CODE_POINT, code_point_at(std::string_view{"5"}));
+    ASSERT_EQ(ASCII_5_CODE_POINT, code_point_at("5"));
 }
 
 TEST(UTFCodePointDecodingTest, eth)
 {
-    ASSERT_EQ(ISO8859D1_ETH_CODE_POINT, code_point_at(std::string_view{"\303\260"}));
+    ASSERT_EQ(ISO8859D1_ETH_CODE_POINT, code_point_at("\303\260"));
 }
 
 TEST(UTFCodePointDecodingTest, shin)
 {
-    ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at(std::string_view{"\327\251"}));
+    ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at("\327\251"));
 }
 
 TEST(UTFCodePointDecodingTest, boundedShinView)
@@ -342,12 +342,12 @@ TEST(UTFCodePointDecodingTest, boundedShinView)
 
 TEST(UTFCodePointDecodingTest, oy)
 {
-    ASSERT_EQ(OY_CODE_POINT, code_point_at(std::string_view{"\341\242\260"}));
+    ASSERT_EQ(OY_CODE_POINT, code_point_at("\341\242\260"));
 }
 
 TEST(UTFCodePointDecodingTest, kissing_face_with_closed_eyes)
 {
-    ASSERT_EQ(KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT, code_point_at(std::string_view{"\360\237\230\232"}));
+    ASSERT_EQ(KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT, code_point_at("\360\237\230\232"));
 }
 
 TEST(UTFVisualLengthTest, emptyView)
