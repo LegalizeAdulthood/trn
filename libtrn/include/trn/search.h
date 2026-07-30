@@ -5,6 +5,7 @@
 #ifndef TRN_SEARCH_H
 #define TRN_SEARCH_H
 
+#include <array>
 #include <string>
 #include <string_view>
 
@@ -31,11 +32,11 @@ private:
 
     char       *m_exp_buf;                  // The compiled search string
     int         m_eb_len;                   // Length of above buffer
-    char       *m_alternatives[NALTS + 1];  // The list of \| separated alternatives
-    const char *m_bracket_start_list[NBRA]; // RE meta-bracket start list
-    const char *m_bracket_end_list[NBRA];   // RE meta-bracket end list
+    std::array<char *, NALTS + 1>      m_alternatives;        // The list of \| separated alternatives
+    std::array<const char *, NBRA + 1> m_bracket_start_list;  // RE meta-bracket start list
+    std::array<const char *, NBRA + 1> m_bracket_end_list;    // RE meta-bracket end list
     std::string m_bracket_str;              // saved match string after execute()
-    char        m_num_brackets;             // The number of meta-brackets int the most
+    int         m_num_brackets;             // The number of meta-brackets int the most
                                             // recently compiled RE
     bool m_do_folding;                      // fold upper and lower case?
 };

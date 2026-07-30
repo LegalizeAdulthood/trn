@@ -157,8 +157,8 @@ bool CompiledRegex::has_brackets() const
 //
 std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool fold)
 {
-    char  bracket[NBRA];
-    char**alt = m_alternatives;
+    std::array<char, NBRA> bracket;
+    char**alt = m_alternatives.data();
     std::string_view retmes = "Badly formed search string";
     std::string_view::size_type pattern_pos{};
     const auto                  next_pattern_char = [&pattern, &pattern_pos]()
@@ -186,7 +186,7 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
     }
     char *ep = m_exp_buf; // point at expression buffer
     *alt++ = ep;               // first alternative starts here
-    char *bracketp = bracket;  // first bracket goes here
+    char *bracketp = bracket.data();  // first bracket goes here
     if (pattern.empty() || pattern.front() == '\0') // nothing to compile?
     {
         if (*ep == 0)          // nothing there yet?
@@ -206,7 +206,7 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
         int c = next_pattern_char();   // fetch next char of pattern
         if (c == 0)                    // end of pattern?
         {
-            if (bracketp != bracket)   // balanced brackets?
+            if (bracketp != bracket.data())   // balanced brackets?
             {
                 retmes = "Unbalanced parens";
                 goto cerror;
@@ -237,20 +237,20 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
                         retmes = "Too many parens";
                         goto cerror;
                     }
-                    *bracketp++ = ++m_num_brackets;
+                    *bracketp++ = static_cast<char>(++m_num_brackets);
                     *ep++ = CBRA;
-                    *ep++ = m_num_brackets;
+                    *ep++ = static_cast<char>(m_num_brackets);
                     break;
 
                 case '|':
-                    if (bracketp > bracket)
+                    if (bracketp > bracket.data())
                     {
                         retmes = "No \\| in parens";        // Alas!
                         goto cerror;
                     }
                     *ep++ = CEND;
                     *alt++ = ep;
-                    if (alt > m_alternatives + NALTS)
+                    if (alt > m_alternatives.data() + NALTS)
                     {
                             retmes = "Too many alternatives in reg ex";
                             goto cerror;
@@ -258,7 +258,7 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
                     break;
 
                 case ')':
-                    if (bracketp <= bracket)
+                    if (bracketp <= bracket.data())
                     {
                         retmes = "Unmatched right paren";
                         goto cerror;
@@ -410,7 +410,7 @@ cerror:
 char *CompiledRegex::grow_eb(char *epp, char **alt)
 {
     char  * oldbuf = m_exp_buf;
-    char** altlist = m_alternatives;
+    char** altlist = m_alternatives.data();
 
     m_eb_len += 80;
     m_exp_buf = safe_realloc(m_exp_buf, (MemorySize)m_eb_len + 4);
@@ -465,7 +465,7 @@ bool CompiledRegex::execute(std::string_view text)
     }
     do // regular algorithm
     {
-        char **alt = m_alternatives;
+        char **alt = m_alternatives.data();
         while (*alt)
         {
             if (advance(p1, *alt++))

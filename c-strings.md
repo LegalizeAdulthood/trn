@@ -821,19 +821,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-557 - Use Standard Regex Fixed-size Bookkeeping
-
-- Type: fixed-size C arrays and narrow count storage.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
-  regex tests.
-- Variables: local `bracket`, `m_num_brackets`, fixed regex arrays that
-  are not yet replaced by later slices.
-- Dependencies: none.
-- Instructions: replace fixed regex bookkeeping arrays with
-  `std::array` where the size is fixed by `NBRA` or `NALTS`, and use an
-  ordinary integer or size type for counts instead of `char`.  Do not
-  convert bytecode storage to `std::string`; it is not text.
-
 #### CSTR-558 - Store Regex Match Spans Without Raw Member Pointers
 
 - Type: raw pointer match-span storage.
@@ -841,7 +828,7 @@ them before broad global-buffer work and before removing helpers.
   regex bracket tests.
 - Members: `m_bracket_start_list`, `m_bracket_end_list`,
   `m_bracket_str`.
-- Dependencies: CSTR-557.
+- Dependencies: none.
 - Instructions: replace persistent raw start/end pointer member arrays
   with span state that cannot outlive the matched text accidentally.
   Prefer offsets or `std::string_view` values built during `execute`,
@@ -856,7 +843,7 @@ them before broad global-buffer work and before removing helpers.
   regex compile and match tests.
 - Members: `m_exp_buf`, `m_eb_len`, `m_alternatives`.
 - Functions: `compile`, `grow_eb`, `execute`, `advance`, `back_ref`.
-- Dependencies: CSTR-557, CSTR-558.
+- Dependencies: CSTR-558.
 - Instructions: replace manual `safe_malloc`/`safe_realloc` bytecode
   storage with `std::vector<char>` and replace persistent alternative
   pointers with offsets or indices.  Keep pointer walking local to the
