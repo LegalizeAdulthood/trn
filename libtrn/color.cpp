@@ -323,7 +323,7 @@ void color_string(int object, std::string_view str)
     if (!s_use_colors && *g_tc_UC && s_objects[object].attr == UNDERLINE)
     {
         const std::string text{str};
-        under_print(text.c_str()); // hack for stupid terminals
+        under_print(text); // hack for stupid terminals
     }
     else
     {

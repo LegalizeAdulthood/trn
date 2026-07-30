@@ -184,7 +184,7 @@ void        save_typeahead(char *buf, int len);
 void  settle_down();
 int read_tty(char *addr, int size);
 void push_char(char_int c);
-void under_print(const char *s);
+void under_print(std::string_view text);
 #ifdef NO_FIREWORKS
 void no_so_fire();
 void no_ul_fire();
@@ -326,12 +326,15 @@ inline void unflush_output()
 #endif // !MSDOS
 #endif // !I_TERMIOS
 
-inline void force_me(const char *c)
+#if defined(SIGTSTP) || (defined(SIGWINCH) && defined(TIOCGWINSZ))
+inline void request_refresh()
 {
 #ifdef TIOCSTI
-    ioctl(g_tty_ch, TIOCSTI, c); // pass character in " "
+    const char c{'\f'};
+    ioctl(g_tty_ch, TIOCSTI, &c); // pass character in c
 #endif
 }
+#endif
 
 // define a few handy macros
 inline void term_down(int x)

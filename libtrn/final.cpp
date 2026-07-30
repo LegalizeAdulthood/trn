@@ -308,9 +308,9 @@ Signal_t stop_catcher(int signo)
             if (!g_waiting)
             {
                 termlib_init();
-                no_echo();                       // set no echo
-                cr_mode();                       // set cbreak mode
-                force_me("\f");                  // cause a refresh
+                no_echo();                      // set no echo
+                cr_mode();                      // set cbreak mode
+                request_refresh();              // cause a refresh
                                                 // (defined only if TIOCSTI defined)
                 errno = 0;                      // needed for getcmd
             }

@@ -1292,12 +1292,11 @@ void push_char(char_int c)
 
 // print an underlined string, one way or another
 
-void under_print(const char *s)
+void under_print(std::string_view text)
 {
     TRN_ASSERT(g_tc_UC);
     if (*g_tc_UC) // char by char underline?
     {
-        std::string_view text{s};
         while (!text.empty())
         {
             const char ch = text.front();
@@ -1322,7 +1321,7 @@ void under_print(const char *s)
     else // start and stop underline
     {
         underline(); // start underlining
-        for (const char ch : std::string_view{s})
+        for (const char ch : text)
         {
             echo_char(ch);
         }
@@ -2343,7 +2342,7 @@ Signal_t winch_catcher(int dummy)
                 set_env_var("COLUMNS", std::to_string(g_tc_COLS));
                 if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p')
                 {
-                    force_me("\f");      // cause a refresh
+                    request_refresh();; // cause a refresh
                                         // (defined only if TIOCSTI defined)
                 }
             }

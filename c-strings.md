@@ -791,19 +791,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-584 - Modernize Small Terminal Text Helpers
-
-- Type: read-only string and single-character terminal helpers.
-- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
-  `libtrn/color.cpp`, terminal tests.
-- Functions: `under_print`, `force_me`.
-- Dependencies: none.
-- Instructions: change `under_print` to accept `std::string_view` and
-  update callers to pass owned strings or views directly.  Change
-  `force_me` to accept a character value rather than a `const char *`
-  pointer to one character, keeping the `TIOCSTI` address-taking local to
-  the helper.
-
 ### Tier 1 - Helper And API Foundations
 
 These slices change lower-level helper, parser, or storage contracts
