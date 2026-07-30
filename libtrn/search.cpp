@@ -425,35 +425,35 @@ char *CompiledRegex::grow_eb(char *epp, char **alt)
     return epp;
 }
 
-const char *CompiledRegex::execute(const char *addr)
+bool CompiledRegex::execute(std::string_view text)
 {
-    const char* p1 = addr;
-    Uchar* trt = s_trans;
+    Uchar *trt = s_trans;
 
-    if (addr == nullptr || m_exp_buf == nullptr)
+    if (m_exp_buf == nullptr)
     {
-        return nullptr;
+        return false;
     }
-    if (m_num_brackets)                   // any brackets?
+
+    m_bracket_str = text;
+    const char *p1 = m_bracket_str.c_str();
+    if (m_num_brackets) // any brackets?
     {
         for (int i = 0; i <= m_num_brackets; i++)
         {
             m_bracket_start_list[i] = nullptr;
             m_bracket_end_list[i] = nullptr;
         }
-        m_bracket_str = p1;             // in case p1 is not static
-        p1 = m_bracket_str.c_str();     // !
     }
-    case_fold(m_do_folding);      // make sure table is correct
-    s_first_character = p1;             // for ^ tests
+    case_fold(m_do_folding); // make sure table is correct
+    s_first_character = p1;  // for ^ tests
     if (m_exp_buf[0] == CCHR && !m_alternatives[1])
     {
-        int c = trt[*(Uchar*)(m_exp_buf + 1)]; // fast check for first char
+        int c = trt[*(Uchar *) (m_exp_buf + 1)]; // fast check for first char
         do
         {
-            if (trt[*(Uchar*)p1] == c && advance(p1, m_exp_buf))
+            if (trt[*(Uchar *) p1] == c && advance(p1, m_exp_buf))
             {
-                return p1;
+                return true;
             }
             p1++;
         } while (*p1 && !s_err);
@@ -461,16 +461,16 @@ const char *CompiledRegex::execute(const char *addr)
         {
             s_err = 0;
         }
-        return nullptr;
+        return false;
     }
-    do                                  // regular algorithm
+    do // regular algorithm
     {
-        char** alt = m_alternatives;
+        char **alt = m_alternatives;
         while (*alt)
         {
             if (advance(p1, *alt++))
             {
-                return p1;
+                return true;
             }
         }
         p1++;
@@ -479,7 +479,16 @@ const char *CompiledRegex::execute(const char *addr)
     {
         s_err = 0;
     }
-    return nullptr;
+    return false;
+}
+
+const char *CompiledRegex::execute(const char *addr)
+{
+    if (addr == nullptr)
+    {
+        return nullptr;
+    }
+    return execute(std::string_view{addr}) ? addr : nullptr;
 }
 
 // advance the match of the regular expression starting at ep along the

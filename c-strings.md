@@ -756,18 +756,6 @@ No current slices.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-548 - Add A Regex View Match API
-
-- Type: helper parameter from `const char *` to `std::string_view`.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
-  `tests/test_search.cpp`.
-- Function: `CompiledRegex::execute`.
-- Dependencies: none.
-- Instructions: introduce the view-based boolean match API as the
-  implementation owner.  Keep any old C-string wrapper only as a
-  temporary delegating compatibility path for the caller migration
-  slices.
-
 ### Tier 2 - Tool-local And Owner-local Storage
 
 These slices replace one parser or local owner of string storage.  Finish
@@ -805,7 +793,7 @@ them before broad global-buffer work and before removing helpers.
   `libtrn/rt-select.cpp`, `libtrn/util.cpp`.
 - Function family: `CompiledRegex::execute` callers outside
   `libtrn/art.cpp`.
-- Dependencies: `CSTR-548`.
+- Dependencies: none.
 - Instructions: pass existing `std::string` or `std::string_view`
   values directly to the new match API.  Update inactive preprocessor
   blocks so they still build.
@@ -815,7 +803,7 @@ them before broad global-buffer work and before removing helpers.
 - Type: caller migration from C-string regex bridge to view match API.
 - Files: `libtrn/art.cpp`.
 - Function: `do_article`.
-- Dependencies: `CSTR-548`.
+- Dependencies: none.
 - Instructions: replace `tail_c_str()`, `search_line.c_str()`, and
   `pager_line.data()` regex calls with view inputs.  Remove C-string
   bridge lambdas that no longer have callers.
@@ -853,8 +841,8 @@ owned strings or owner-specific storage.
 
 - Type: obsolete C-style wrapper removal.
 - Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`.
-- Function: old `CompiledRegex::execute(const char *)` wrapper, if kept
-  during `CSTR-548`.
+- Function: old `CompiledRegex::execute(const char *)` wrapper kept for
+  caller migration.
 - Dependencies: `CSTR-551`, `CSTR-552`.
 - Instructions: delete the raw wrapper after every caller uses the
   view-based match API.  Keep the regex bytecode internals out of scope.

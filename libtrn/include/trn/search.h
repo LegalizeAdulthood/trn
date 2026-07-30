@@ -22,9 +22,10 @@ struct CompiledRegex
     bool             has_brackets() const;
     const char      *compile(std::string_view strp, bool re, bool fold);
     char            *grow_eb(char *epp, char **alt);
-    const char *execute(const char *addr);
-    bool        advance(const char *lp, const char *ep);
-    bool        back_ref(int i, const char *lp);
+    bool             execute(std::string_view text);
+    const char      *execute(const char *addr);
+    bool             advance(const char *lp, const char *ep);
+    bool             back_ref(int i, const char *lp);
 
     char       *m_exp_buf;                  // The compiled search string
     int         m_eb_len;                   // Length of above buffer

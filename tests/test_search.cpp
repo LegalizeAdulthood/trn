@@ -32,8 +32,8 @@ TEST_F(CompiledRegexTest, literalPatternMatchesText)
 {
     EXPECT_EQ(nullptr, m_regex.compile("needle", false, false));
 
-    EXPECT_NE(nullptr, m_regex.execute("haystack needle"));
-    EXPECT_EQ(nullptr, m_regex.execute("haystack"));
+    EXPECT_TRUE(m_regex.execute(std::string_view{"haystack needle"}));
+    EXPECT_FALSE(m_regex.execute(std::string_view{"haystack"}));
 }
 
 TEST_F(CompiledRegexTest, emptyPatternReusesPreviousExpression)
@@ -41,7 +41,7 @@ TEST_F(CompiledRegexTest, emptyPatternReusesPreviousExpression)
     ASSERT_EQ(nullptr, m_regex.compile("needle", false, false));
     EXPECT_EQ(nullptr, m_regex.compile("", false, false));
 
-    EXPECT_NE(nullptr, m_regex.execute("needle"));
+    EXPECT_TRUE(m_regex.execute(std::string_view{"needle"}));
 }
 
 TEST_F(CompiledRegexTest, malformedCharacterClassReportsError)
@@ -56,18 +56,29 @@ TEST_F(CompiledRegexTest, patternViewDoesNotReadTrailingText)
 
     ASSERT_EQ(nullptr, m_regex.compile(prefix, true, false));
 
-    EXPECT_NE(nullptr, m_regex.execute("a"));
-    EXPECT_EQ(nullptr, m_regex.execute("x"));
+    EXPECT_TRUE(m_regex.execute(std::string_view{"a"}));
+    EXPECT_FALSE(m_regex.execute(std::string_view{"x"}));
 }
 
 TEST_F(CompiledRegexTest, bracketTextIsAvailableAfterMatch)
 {
     ASSERT_EQ(nullptr, m_regex.compile(R"(prefix \(needle\) suffix)", true, false));
-    ASSERT_NE(nullptr, m_regex.execute("prefix needle suffix"));
+    ASSERT_TRUE(m_regex.execute(std::string_view{"prefix needle suffix"}));
 
     EXPECT_TRUE(m_regex.has_brackets());
     EXPECT_EQ(std::string_view{"needle"}, m_regex.get_bracket(1));
     EXPECT_TRUE(m_regex.get_bracket(2).empty());
+}
+
+TEST_F(CompiledRegexTest, matchViewDoesNotReadTrailingText)
+{
+    const std::string      text{"haystack needle"};
+    const std::string_view prefix{text.data(), 8};
+
+    ASSERT_EQ(nullptr, m_regex.compile("needle", false, false));
+
+    EXPECT_FALSE(m_regex.execute(prefix));
+    EXPECT_TRUE(m_regex.execute(text));
 }
 
 } // namespace
