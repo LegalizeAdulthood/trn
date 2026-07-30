@@ -139,6 +139,40 @@ TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
     EXPECT_EQ("[T] ", current_char_subst());
 }
 
+TEST_F(CurrentCharSubstTest, returnsCurrentMode)
+{
+    g_char_subst = "a";
+
+    EXPECT_EQ('a', current_char_subst_mode());
+}
+
+TEST_F(CurrentCharSubstTest, resetsToFirstConfiguredMode)
+{
+    g_char_subst = g_charsets.c_str() + 2;
+
+    reset_char_subst_mode();
+
+    EXPECT_EQ(g_charsets.front(), current_char_subst_mode());
+}
+
+TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
+{
+    g_char_subst = g_charsets.c_str();
+
+    next_char_subst_mode();
+
+    EXPECT_EQ(g_charsets[1], current_char_subst_mode());
+}
+
+TEST_F(CurrentCharSubstTest, cyclesPastEndToFirstConfiguredMode)
+{
+    g_char_subst = g_charsets.c_str() + g_charsets.size() - 1;
+
+    next_char_subst_mode();
+
+    EXPECT_EQ(g_charsets.front(), current_char_subst_mode());
+}
+
 TEST(CharSubstTest, copiesThroughFirstNewline)
 {
     EXPECT_EQ("first\n", str_char_subst("first\nsecond", 'p'));

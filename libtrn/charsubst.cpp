@@ -53,11 +53,12 @@ static int put_subst_char(int c, int limit, bool output_ok)
     Uchar nc[5];
     int   t;
     int   i = 0;
-    switch (*g_char_subst)
+    const char subst = current_char_subst_mode();
+    switch (subst)
     {
     case 'm':
     case 'a':
-        t = *g_char_subst == 'm' ? 1 : 2;
+        t = subst == 'm' ? 1 : 2;
         oc[0] = (Uchar)c;
         oc[1] = '\0';
         i = latin1_to_ascii(nc, oc, sizeof nc, t);
@@ -147,6 +148,30 @@ static int put_subst_char(int c, int limit, bool output_ok)
     return i;
 }
 
+char current_char_subst_mode()
+{
+    return g_char_subst == nullptr ? '\0' : *g_char_subst;
+}
+
+void reset_char_subst_mode()
+{
+    g_char_subst = g_charsets.c_str();
+}
+
+void next_char_subst_mode()
+{
+    if (g_char_subst == nullptr)
+    {
+        reset_char_subst_mode();
+        return;
+    }
+    ++g_char_subst;
+    if (*g_char_subst == '\0')
+    {
+        reset_char_subst_mode();
+    }
+}
+
 std::string current_char_subst()
 {
 #ifdef USE_UTF_HACK
@@ -163,7 +188,7 @@ std::string current_char_subst()
 #else // !USE_UTF_HACK
     std::string_view show;
 
-    switch (*g_char_subst)
+    switch (current_char_subst_mode())
     {
     case 'm':
         show = g_verbose ? "[ISO->USmono] " : "[M] ";

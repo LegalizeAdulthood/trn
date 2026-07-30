@@ -791,19 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-560 - Add Character-substitution State Accessors
-
-- Type: borrowed global cursor access.
-- Files: `libtrn/include/trn/charsubst.h`, `libtrn/charsubst.cpp`,
-  character-substitution tests.
-- Globals: `g_char_subst`, `g_charsets`.
-- Dependencies: none.
-- Instructions: add named accessors for the current substitution mode,
-  resetting to the first configured mode, and cycling to the next mode.
-  Migrate `charsubst.cpp` itself to use those accessors instead of
-  dereferencing `g_char_subst` directly.  Do not add unused wrappers;
-  each new helper must have a caller in the same slice.
-
 #### CSTR-565 - Drop Unused interp_init Buffer Parameters
 
 - Type: stale buffer-plus-size signature.
@@ -998,7 +985,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/respond.cpp`, `libtrn/rt-util.cpp`,
   `libtrn/rt-wumpus.cpp`, related tests.
 - Expressions: `*g_char_subst`, `g_char_subst[0]`.
-- Dependencies: CSTR-560.
+- Dependencies: none.
 - Instructions: replace read-only uses of the substitution cursor with
   the current-mode accessor.  Pass the returned character directly to
   `str_char_subst`; do not construct a string or string view when a
@@ -1010,7 +997,7 @@ are available.  Keep the listed order inside dependent families.
 - Files: `libtrn/art.cpp`, `libtrn/ng.cpp`, related tests.
 - Expressions: `g_char_subst = g_charsets.c_str()`,
   `++g_char_subst`.
-- Dependencies: CSTR-560.
+- Dependencies: none.
 - Instructions: replace manual reset and cycle logic with the
   char-substitution state helpers.  Preserve the existing wrap behavior:
   advancing past the end of `g_charsets` returns to the first configured
@@ -1024,7 +1011,7 @@ are available.  Keep the listed order inside dependent families.
   `tests/test_utf.cpp`.
 - Expressions: direct `g_char_subst` assignment and `ValueSaver`
   storage.
-- Dependencies: CSTR-560, CSTR-561, CSTR-562.
+- Dependencies: CSTR-561, CSTR-562.
 - Instructions: update tests to use the same state helpers as production
   code.  Add a scoped test saver only if the helper API cannot express
   the existing setup/teardown cleanly.  Test code is held to the same
@@ -1055,7 +1042,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/include/trn/charsubst.h`, `libtrn/charsubst.cpp`,
   `libtrn/opt.cpp`, character-substitution tests.
 - Globals: `g_char_subst`, `g_charsets`.
-- Dependencies: CSTR-560, CSTR-561, CSTR-562, CSTR-563.
+- Dependencies: CSTR-561, CSTR-562, CSTR-563.
 - Instructions: remove the exported `const char *g_char_subst` cursor
   and store the current substitution as an owned index into
   `g_charsets`.  When `g_charsets` is reassigned, normalize the index so

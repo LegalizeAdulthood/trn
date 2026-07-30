@@ -24,6 +24,9 @@
 extern std::string g_charsets;
 extern const char* g_char_subst;
 
+char        current_char_subst_mode();
+void        reset_char_subst_mode();
+void        next_char_subst_mode();
 std::string current_char_subst();
 std::string str_char_subst(std::string_view input, char_int subst);
 
