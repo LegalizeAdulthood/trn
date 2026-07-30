@@ -791,17 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-572 - Migrate Article-buffer mime_set_state Callers
-
-- Type: raw article-buffer pointer callers.
-- Files: `libtrn/artio.cpp`, article I/O MIME tests.
-- Function: `mime_set_state`.
-- Dependencies: none.
-- Instructions: update article-buffer callers to pass a line view to the
-  non-mutating `mime_set_state` API and use the returned boolean instead
-  of checking whether the first character was changed to `'\0'`.  Do not
-  preserve the old caller-visible buffer mutation.
-
 #### CSTR-573 - Migrate String mime_set_state Callers
 
 - Type: mutable string overload callers.
@@ -1058,7 +1047,7 @@ owned strings or owner-specific storage.
 - Type: obsolete mutable C-string and mutable string overloads.
 - Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`, MIME tests.
 - Function: `mime_set_state`.
-- Dependencies: CSTR-572, CSTR-573.
+- Dependencies: CSTR-573.
 - Instructions: delete the `char *` and `std::string &` overloads after
   all callers use the `std::string_view` boolean-result API directly.
   Keep only the non-mutating public signature.

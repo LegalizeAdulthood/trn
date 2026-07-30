@@ -342,11 +342,10 @@ read_more:
             goto done;
         }
         o = line_offset + extra_offset;
-        mime_set_state(bp+o);
-        if (bp[o] == '\0')
+        if (mime_set_state(std::string_view{bp + o}))
         {
             write_newline(static_cast<std::size_t>(bp + o - g_art_buf));
-            len = line_offset+1;
+            len = line_offset + 1;
         }
         break;
     }
@@ -456,7 +455,7 @@ mime_switch:
                 bp = g_art_buf + destination;
                 g_art_line.copy(bp, g_art_line.size());
                 bp[g_art_line.size()] = '\0';
-                mime_set_state(bp);
+                (void) mime_set_state(std::string_view{bp});
                 if (g_mime_state == DECODE_MIME)
                 {
                     g_mime_state = SKIP_MIME;

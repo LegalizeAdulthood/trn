@@ -56,6 +56,7 @@ protected:
 
         g_art_fp = nullptr;
         g_art_buf = nullptr;
+        head_init();
         art_io_init();
         g_data_source = &m_data_source;
         g_do_hiding = true;
@@ -76,6 +77,7 @@ protected:
         }
         art_io_final();
         reset_mime_section();
+        head_final();
 
         g_art_fp = m_old_art_fp;
         g_art_buf = m_old_art_buf;
@@ -123,10 +125,12 @@ protected:
             delete g_mime_section;
             g_mime_section = previous;
         }
+        m_parent_mime_section.mime_clear_struct();
         m_mime_section.mime_clear_struct();
     }
 
     DataSource      m_data_source{};
+    MimeSection     m_parent_mime_section{};
     MimeSection     m_mime_section{};
     fs::path        m_output_dir;
     std::FILE      *m_old_art_fp{};
@@ -240,6 +244,22 @@ TEST_F(ArticleIoTest, readArtBufDecodesQuotedPrintableMimeText)
     EXPECT_EQ("Hello world!\n", first);
     EXPECT_FALSE(read_art_buf(first, false));
     EXPECT_TRUE(first.empty());
+}
+
+TEST_F(ArticleIoTest, readArtBufSuppressesMimeSubHeaderBetweenParts)
+{
+    m_mime_section.m_prev = &m_parent_mime_section;
+    g_mime_section = &m_mime_section;
+    g_mime_state = BETWEEN_MIME;
+    g_is_mime = true;
+    open_article_text("Content-Type: text/html\n\nbody\n");
+
+    std::string first;
+    ASSERT_TRUE(read_art_buf(first, false));
+
+    EXPECT_EQ("body \n", first);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime_section->m_type);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime_state);
 }
 
 TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
