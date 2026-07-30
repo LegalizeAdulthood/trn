@@ -761,17 +761,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-549 - Convert Terminal Normal-character Checks To Views
-
-- Type: local cursor aliases from C strings to views.
-- Files: `libtrn/terminal.cpp`.
-- Functions: `finish_command_text`, `under_print`, `under_char`.
-- Dependencies: none.
-- Instructions: replace `at_norm_char(&buffer[cursor])` and other raw
-  cursor checks with view slices over the existing string or input text.
-  Do not modernize `std::putchar`; it is character output, not a
-  C-string API.
-
 #### CSTR-550 - Remove Raw UTF Point Overloads
 
 - Type: unused C-style overload removal after caller migration.
@@ -780,7 +769,7 @@ them before broad global-buffer work and before removing helpers.
 - Functions: `at_norm_char(const char *)`,
   `byte_length_at(const char *)`, `visual_width_at(const char *)`,
   `code_point_at(const char *)`.
-- Dependencies: `CSTR-549`.
+- Dependencies: none.
 - Instructions: update remaining production and test callers to pass
   views, then delete the raw overloads.  Use empty views for the old
   null-sentinel test cases where empty text has the same meaning.

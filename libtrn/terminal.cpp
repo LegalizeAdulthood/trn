@@ -1010,7 +1010,7 @@ static std::size_t edit_buffer(std::string &buffer, std::size_t cursor, std::str
         {
             rubout();
             cursor--; // discount the char rubbed out
-            if (!at_norm_char(&buffer[cursor]))
+            if (!at_norm_char(std::string_view{buffer}.substr(cursor)))
             {
                 rubout();
             }
@@ -1028,7 +1028,7 @@ static std::size_t edit_buffer(std::string &buffer, std::size_t cursor, std::str
         {
             rubout();
             cursor--;
-            if (!at_norm_char(&buffer[cursor]))
+            if (!at_norm_char(std::string_view{buffer}.substr(cursor)))
             {
                 rubout();
             }
@@ -1050,7 +1050,7 @@ static std::size_t edit_buffer(std::string &buffer, std::size_t cursor, std::str
                std::isspace(static_cast<unsigned char>(buffer[cursor + 1])))
         {
             rubout();
-            if (!at_norm_char(&buffer[cursor]))
+            if (!at_norm_char(std::string_view{buffer}.substr(cursor)))
             {
                 rubout();
             }
@@ -1295,34 +1295,36 @@ void push_char(char_int c)
 void under_print(const char *s)
 {
     TRN_ASSERT(g_tc_UC);
-    if (*g_tc_UC)       // char by char underline?
+    if (*g_tc_UC) // char by char underline?
     {
-        while (*s)
+        std::string_view text{s};
+        while (!text.empty())
         {
-            if (!at_norm_char(s))
+            const char ch = text.front();
+            if (!at_norm_char(text))
             {
                 std::putchar('^');
-                backspace();// back up over it
-                underchar();// and do the underline
-                std::putchar((*s & 0x7F) | 64);
-                backspace();// back up over it
-                underchar();// and do the underline
+                backspace(); // back up over it
+                underchar(); // and do the underline
+                std::putchar((ch & 0x7F) | 64);
+                backspace(); // back up over it
+                underchar(); // and do the underline
             }
             else
             {
-                std::putchar(*s);
-                backspace();// back up over it
-                underchar();// and do the underline
+                std::putchar(ch);
+                backspace(); // back up over it
+                underchar(); // and do the underline
             }
-            s++;
+            text.remove_prefix(1);
         }
     }
-    else                // start and stop underline
+    else // start and stop underline
     {
-        underline();    // start underlining
-        while (*s)
+        underline(); // start underlining
+        for (const char ch : std::string_view{s})
         {
-            echo_char(*s++);
+            echo_char(ch);
         }
         un_underline(); // stop underlining
     }
