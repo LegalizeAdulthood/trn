@@ -227,7 +227,7 @@ TEST_F(SubjectStorageTest, outputSubjectPrintsArticleNumberAndSubject)
     article->set_subj_line("A Subject");
 
     testing::internal::CaptureStdout();
-    const bool        stopped = output_subject(reinterpret_cast<char *>(article), 0);
+    const bool        stopped = output_subject(*article, 0);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_FALSE(stopped);
@@ -243,7 +243,7 @@ TEST_F(SubjectStorageTest, outputSubjectPrintsCustomSubjectLine)
     g_artp = article;
 
     testing::internal::CaptureStdout();
-    const bool        stopped = output_subject(reinterpret_cast<char *>(article), 0);
+    const bool        stopped = output_subject(*article, 0);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_FALSE(stopped);
@@ -261,7 +261,7 @@ TEST_F(SubjectStorageTest, outputSubjectReadsCustomSubjectLineFromEnvironment)
     g_artp = article;
 
     testing::internal::CaptureStdout();
-    const bool        stopped = output_subject(reinterpret_cast<char *>(article), 0);
+    const bool        stopped = output_subject(*article, 0);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_FALSE(stopped);

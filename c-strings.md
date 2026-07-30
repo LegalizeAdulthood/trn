@@ -791,19 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-566 - Give output_subject A Typed Article Interface
-
-- Type: callback-shaped public function.
-- Files: `libtrn/include/trn/ng.h`, `libtrn/ng.cpp`,
-  `libtrn/ngstuff.cpp`, `tests/test_subject.cpp`.
-- Function: `output_subject`.
-- Dependencies: none.
-- Instructions: change the public `output_subject` operation to take an
-  `Article &` plus the existing flag.  Update direct production and test
-  callers to pass `Article` directly.  Keep any required `article_walk`
-  compatibility as a file-local callback adapter in `ng.cpp`, not as the
-  public API shape.
-
 #### CSTR-567 - Give article_walk A Typed Article Callback
 
 - Type: callback plumbing using `char *` as erased storage.
@@ -811,11 +798,11 @@ that later caller slices can consume directly.
   `libtrn/bits.cpp`, `libtrn/kfile.cpp`, `libtrn/ng.cpp`,
   `libtrn/rt-select.cpp`, article-walk tests.
 - Function: `article_walk`.
-- Dependencies: CSTR-566.
+- Dependencies: none.
 - Instructions: change `article_walk` to call callbacks as
   `bool callback(Article &, int)`, then update the callback family to
   accept `Article &` instead of `char *` and remove the internal casts.
-  Remove the temporary `output_subject` callback adapter from CSTR-566.
+  Remove the temporary `output_subject_callback` adapter.
 
 #### CSTR-572 - Migrate Article-buffer mime_set_state Callers
 

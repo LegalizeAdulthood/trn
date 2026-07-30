@@ -53,7 +53,7 @@ void set_mail(bool force);
 #endif
 void set_default_cmd();
 char ask_catchup();
-bool output_subject(char *ptr, int flag);
+bool output_subject(Article &article, int flag);
 char ask_memorize(char_int ch);
 
 #endif

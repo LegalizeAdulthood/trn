@@ -704,7 +704,7 @@ int perform(std::string_view command_list, int output_level)
         else if (ch == '=')
         {
             carriage_return();
-            output_subject((char*)g_artp,0);
+            output_subject(*g_artp, 0);
             output_level = 0;
         }
         else if (ch == 'C')

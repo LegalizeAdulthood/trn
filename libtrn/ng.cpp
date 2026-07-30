@@ -94,6 +94,7 @@ enum ArticleSwitchResult
 static bool count_uncached_article(char *ptr, int arg);
 static bool mark_all_read(char *ptr, int leave_unread);
 static bool mark_all_unread(char *ptr, int arg);
+static bool output_subject_callback(char *ptr, int flag);
 #ifdef DEBUG
 static bool debug_article_output(char *ptr, int arg);
 #endif
@@ -1671,7 +1672,7 @@ normal_search:
         {
             ArticleNum oldart = g_art;
             page_start();
-            article_walk(output_subject, AF_UNREAD);
+            article_walk(output_subject_callback, AF_UNREAD);
             g_int_count = 0;
             g_subj_line = std::nullopt;
             g_art = oldart;
@@ -2204,7 +2205,7 @@ static bool mark_all_unread(char *ptr, int arg)
     return false;
 }
 
-bool output_subject(char *ptr, int flag)
+bool output_subject(Article &article, int flag)
 {
     if (g_int_count)
     {
@@ -2216,12 +2217,11 @@ bool output_subject(char *ptr, int flag)
         g_subj_line = get_env_var("SUBJLINE");
     }
 
-    Article *ap = (Article*)ptr;
-    if (flag && !(ap->m_flags & flag))
+    if (flag && !(article.m_flags & flag))
     {
         return false;
     }
-    ArticleNum i = ap->article_num();
+    ArticleNum        i = article.article_num();
     const std::string subject = fetch_subj_copy(i);
     if (!subject.empty())
     {
@@ -2247,6 +2247,11 @@ bool output_subject(char *ptr, int flag)
         }
     }
     return false;
+}
+
+static bool output_subject_callback(char *ptr, int flag)
+{
+    return output_subject(*reinterpret_cast<Article *>(ptr), flag);
 }
 
 #ifdef DEBUG
