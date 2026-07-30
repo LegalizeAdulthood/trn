@@ -791,24 +791,13 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-570 - Cover mime_set_state Suppression Behavior
-
-- Type: behavior coverage before API refactor.
-- Files: `tests/test_mime.cpp`, MIME test fixtures.
-- Function: `mime_set_state`.
-- Dependencies: none.
-- Instructions: add focused tests that cover the current behavior where
-  MIME sub-header or boundary processing suppresses a line.  Run the new
-  tests before changing the implementation, then use them to verify the
-  later string-view and boolean-result refactors preserve behavior.
-
 #### CSTR-571 - Add A Non-mutating mime_set_state Core
 
 - Type: mutable C-string input used as output signal.
 - Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`,
   `tests/test_mime.cpp`.
 - Function: `mime_set_state`.
-- Dependencies: CSTR-570.
+- Dependencies: none.
 - Instructions: implement a `std::string_view`-based state update path
   that returns `true` when the old implementation would have written
   `'\0'` to suppress the line, and `false` otherwise.  Keep temporary

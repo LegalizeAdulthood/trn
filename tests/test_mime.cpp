@@ -274,6 +274,88 @@ TEST_F(MimeBoundaryTest, rejectsBodyLine)
 namespace
 {
 
+struct MimeSetStateTest : Test
+{
+protected:
+    void SetUp() override
+    {
+        m_old_art_fp = g_art_fp;
+        m_old_data_source = g_data_source;
+        m_old_mime_section = g_mime_section;
+        m_old_mime_state = g_mime_state;
+
+        head_init();
+        m_input = std::tmpfile();
+        ASSERT_NE(nullptr, m_input);
+
+        m_current.m_prev = &m_parent;
+        g_art_fp = m_input;
+        g_data_source = &m_data_source;
+        g_mime_section = &m_current;
+    }
+
+    void TearDown() override
+    {
+        if (m_input != nullptr)
+        {
+            std::fclose(m_input);
+        }
+        m_current.mime_clear_struct();
+        m_parent.mime_clear_struct();
+        g_art_fp = m_old_art_fp;
+        g_data_source = m_old_data_source;
+        g_mime_section = m_old_mime_section;
+        g_mime_state = m_old_mime_state;
+        head_final();
+    }
+
+    void write_article_remainder(std::string_view text)
+    {
+        ASSERT_EQ(text.size(), std::fwrite(text.data(), sizeof(char), text.size(), m_input));
+        std::rewind(m_input);
+    }
+
+    std::FILE   *m_old_art_fp{};
+    DataSource  *m_old_data_source{};
+    MimeSection *m_old_mime_section{};
+    MimeState    m_old_mime_state{};
+    std::FILE   *m_input{};
+    DataSource   m_data_source{};
+    MimeSection  m_parent{};
+    MimeSection  m_current{};
+};
+
+} // namespace
+
+TEST_F(MimeSetStateTest, suppressesSubHeaderLineBetweenParts)
+{
+    write_article_remainder("\n");
+    g_mime_state = BETWEEN_MIME;
+
+    std::string line{"Content-Type: text/html\n"};
+    mime_set_state(line);
+
+    EXPECT_TRUE(line.empty());
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime_section->m_type);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime_state);
+}
+
+TEST_F(MimeSetStateTest, movesToBetweenMimeOnPartBoundary)
+{
+    m_parent.m_boundary = "part-boundary";
+    m_parent.m_boundary_len = static_cast<short>(m_parent.m_boundary->size());
+    g_mime_state = SKIP_MIME;
+
+    std::string line{"--part-boundary\n"};
+    mime_set_state(line);
+
+    EXPECT_EQ("--part-boundary\n", line);
+    EXPECT_EQ(BETWEEN_MIME, g_mime_state);
+}
+
+namespace
+{
+
 struct MimeSubHeaderTest : Test
 {
 protected:
