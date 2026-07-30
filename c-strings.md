@@ -761,19 +761,6 @@ that later caller slices can consume directly.
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
 
-#### CSTR-550 - Remove Raw UTF Point Overloads
-
-- Type: unused C-style overload removal after caller migration.
-- Files: `libtrn/include/trn/utf.h`, `libtrn/utf.cpp`,
-  `tests/test_utf.cpp`.
-- Functions: `at_norm_char(const char *)`,
-  `byte_length_at(const char *)`, `visual_width_at(const char *)`,
-  `code_point_at(const char *)`.
-- Dependencies: none.
-- Instructions: update remaining production and test callers to pass
-  views, then delete the raw overloads.  Use empty views for the old
-  null-sentinel test cases where empty text has the same meaning.
-
 #### CSTR-551 - Migrate Non-article Regex Callers To Views
 
 - Type: caller migration from C-string regex bridge to view match API.

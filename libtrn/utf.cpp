@@ -258,20 +258,11 @@ int byte_length_at(std::string_view text)
     return it;
 }
 
-int byte_length_at(const char *s)
-{
-    if (s == nullptr)
-    {
-        return 0;
-    }
-    return byte_length_at(std::string_view{s});
-}
-
 // NOTE: correctness is not guaranteed; this is only a rough generalization
 int visual_width_at(std::string_view text)
 {
     CodePoint c = code_point_at(text);
-    int it = 1;
+    int       it = 1;
     if (c == INVALID_CODE_POINT)
     {
         it = 0;
@@ -282,7 +273,7 @@ int visual_width_at(std::string_view text)
     }
     else if (IS_DOUBLE_BYTE(s_gs.in))
     {
-        it = (c & 0x80)? 2: 1;
+        it = (c & 0x80) ? 2 : 1;
     }
     else if ((c >= 0x00300 && c <= 0x0036F)     // combining diacritics
              || (c >= 0x01AB0 && c <= 0x01AFF)  //
@@ -303,15 +294,6 @@ int visual_width_at(std::string_view text)
         it = 2;
     }
     return it;
-}
-
-int visual_width_at(const char *s)
-{
-    if (s == nullptr)
-    {
-        return 0;
-    }
-    return visual_width_at(std::string_view{s});
 }
 
 int visual_length_of(std::string_view text)
@@ -390,15 +372,6 @@ CodePoint code_point_at(std::string_view text)
         }
     }
     return it;
-}
-
-CodePoint code_point_at(const char *s)
-{
-    if (s == nullptr)
-    {
-        return INVALID_CODE_POINT;
-    }
-    return code_point_at(std::string_view{s});
 }
 
 static std::string utf8_text(CodePoint c)
@@ -483,28 +456,6 @@ bool at_norm_char(std::string_view s)
         else if (s_gs.himap_in != nullptr)
         {
             it = s_gs.himap_in[U(ch) & 0x7F] != INVALID_CODE_POINT;
-        }
-    }
-    return it;
-}
-
-bool at_norm_char(const char *s)
-{
-    bool it = s != nullptr;
-    if (it)
-    {
-        it = *s != 0;
-    }
-    if (it)
-    {
-        if (s_gs.in == CHARSET_UTF8)
-        {
-            CodePoint c = code_point_at(s);
-            it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
-        }
-        else
-        {
-            it = at_norm_char(std::string_view{s, 1});
         }
     }
     return it;

@@ -158,19 +158,14 @@ TEST(CharSubstTest, transliteratesLatin1ToMonospacedAscii)
     EXPECT_EQ("AOUs", str_char_subst(input, 'm'));
 }
 
-constexpr const char *const ARBITRARY_ASCII{"a"};
-constexpr const char *const ARBITRARY_ISO8859D1_1{"\303\241"};
-constexpr const char *const ARBITRARY_ISO8859D1_2{"\303\246"};
-constexpr const char *const ARBITRARY_CJK_BASIC{"\345\244\251"};
-constexpr const char *const ASCII_SOH{"\001"};
-constexpr const char *const ASCII_DEL{"\177"};
-constexpr const char *const ASCII_SPACE{" "};
-constexpr const char *const ASCII_TILDE{"~"};
-
-TEST(UTFByteLengthTest, length_at_null)
-{
-    ASSERT_EQ(0, byte_length_at(nullptr));
-}
+constexpr std::string_view ARBITRARY_ASCII{"a"};
+constexpr std::string_view ARBITRARY_ISO8859D1_1{"\303\241"};
+constexpr std::string_view ARBITRARY_ISO8859D1_2{"\303\246"};
+constexpr std::string_view ARBITRARY_CJK_BASIC{"\345\244\251"};
+constexpr std::string_view ASCII_SOH{"\001"};
+constexpr std::string_view ASCII_DEL{"\177"};
+constexpr std::string_view ASCII_SPACE{" "};
+constexpr std::string_view ASCII_TILDE{"~"};
 
 TEST(UTFByteLengthTest, length_at_empty_view)
 {
@@ -195,13 +190,8 @@ TEST(UTFByteLengthTest, byte_length_at_cjk_basic)
 
 TEST(UTFByteLengthTest, byte_length_at_bounded_cjk_view)
 {
-    ASSERT_EQ(3, byte_length_at(std::string_view{ARBITRARY_CJK_BASIC, 3}));
-    ASSERT_EQ(1, byte_length_at(std::string_view{ARBITRARY_CJK_BASIC, 2}));
-}
-
-TEST(UTFAtNormalCharacterTest, nullptr)
-{
-    ASSERT_FALSE(at_norm_char(nullptr));
+    ASSERT_EQ(3, byte_length_at(ARBITRARY_CJK_BASIC));
+    ASSERT_EQ(1, byte_length_at(std::string_view{ARBITRARY_CJK_BASIC.data(), 2}));
 }
 
 TEST(UTFAtNormalCharacterTest, emptyView)
@@ -216,7 +206,7 @@ TEST(UTFAtNormalCharacterTest, SOH)
 
 TEST(UTFAtNormalCharacterTest, oneCharacterView)
 {
-    ASSERT_TRUE(at_norm_char(std::string_view{ASCII_SPACE, 1}));
+    ASSERT_TRUE(at_norm_char(ASCII_SPACE.substr(0, 1)));
 }
 
 TEST(UTFAtNormalCharacterTest, space)
@@ -245,11 +235,6 @@ TEST(UTFAtNormalCharacterTest, cjk_basic)
     ASSERT_TRUE(at_norm_char(ARBITRARY_CJK_BASIC));
 }
 
-TEST(UTFVisualWidthTest, nullptr)
-{
-    ASSERT_EQ(0, visual_width_at(nullptr));
-}
-
 TEST(UTFVisualWidthTest, emptyView)
 {
     ASSERT_EQ(0, visual_width_at(std::string_view{}));
@@ -262,8 +247,8 @@ TEST(UTFVisualWidthTest, ascii)
 
 TEST(UTFVisualWidthTest, boundedCjkView)
 {
-    ASSERT_EQ(2, visual_width_at(std::string_view{ARBITRARY_CJK_BASIC, 3}));
-    ASSERT_EQ(0, visual_width_at(std::string_view{ARBITRARY_CJK_BASIC, 2}));
+    ASSERT_EQ(2, visual_width_at(ARBITRARY_CJK_BASIC));
+    ASSERT_EQ(0, visual_width_at(std::string_view{ARBITRARY_CJK_BASIC.data(), 2}));
 }
 
 TEST(UTFVisualAdvanceWidthTest, emptyView)
@@ -306,7 +291,7 @@ TEST(UTFVisualAdvanceWidthTest, cjk_basic)
 
 TEST(UTFVisualAdvanceWidthTest, boundedCjkView)
 {
-    std::string_view text{ARBITRARY_CJK_BASIC, 3};
+    std::string_view text{ARBITRARY_CJK_BASIC};
 
     int retval = put_char_adv(text, true);
 
@@ -315,11 +300,6 @@ TEST(UTFVisualAdvanceWidthTest, boundedCjkView)
 }
 
 // code point decoding
-TEST(UTFCodePointDecodingTest, nullptr)
-{
-    ASSERT_EQ(INVALID_CODE_POINT, code_point_at(nullptr));
-}
-
 TEST(UTFCodePointDecodingTest, emptyView)
 {
     ASSERT_EQ(INVALID_CODE_POINT, code_point_at(std::string_view{}));
@@ -334,22 +314,22 @@ constexpr CodePoint KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT = 0x1F61A;
 
 TEST(UTFCodePointDecodingTest, ascii_space)
 {
-    ASSERT_EQ(ASCII_SPACE_CODE_POINT, code_point_at(" "));
+    ASSERT_EQ(ASCII_SPACE_CODE_POINT, code_point_at(std::string_view{" "}));
 }
 
 TEST(UTFCodePointDecodingTest, ascii_5)
 {
-    ASSERT_EQ(ASCII_5_CODE_POINT, code_point_at("5"));
+    ASSERT_EQ(ASCII_5_CODE_POINT, code_point_at(std::string_view{"5"}));
 }
 
 TEST(UTFCodePointDecodingTest, eth)
 {
-    ASSERT_EQ(ISO8859D1_ETH_CODE_POINT, code_point_at("\303\260"));
+    ASSERT_EQ(ISO8859D1_ETH_CODE_POINT, code_point_at(std::string_view{"\303\260"}));
 }
 
 TEST(UTFCodePointDecodingTest, shin)
 {
-    ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at("\327\251"));
+    ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at(std::string_view{"\327\251"}));
 }
 
 TEST(UTFCodePointDecodingTest, boundedShinView)
@@ -362,12 +342,12 @@ TEST(UTFCodePointDecodingTest, boundedShinView)
 
 TEST(UTFCodePointDecodingTest, oy)
 {
-    ASSERT_EQ(OY_CODE_POINT, code_point_at("\341\242\260"));
+    ASSERT_EQ(OY_CODE_POINT, code_point_at(std::string_view{"\341\242\260"}));
 }
 
 TEST(UTFCodePointDecodingTest, kissing_face_with_closed_eyes)
 {
-    ASSERT_EQ(KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT, code_point_at("\360\237\230\232"));
+    ASSERT_EQ(KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT, code_point_at(std::string_view{"\360\237\230\232"}));
 }
 
 TEST(UTFVisualLengthTest, emptyView)

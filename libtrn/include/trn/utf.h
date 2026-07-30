@@ -33,12 +33,9 @@ std::string_view input_charset_name();
 std::string_view output_charset_name();
 
 bool at_norm_char(std::string_view s);
-bool at_norm_char(const char *s);
 
 int         byte_length_at(std::string_view s);
-int         byte_length_at(const char *s);
 int         visual_width_at(std::string_view s);
-int         visual_width_at(const char *s);
 int         visual_length_of(std::string_view s);
 std::string insert_unicode_at(CodePoint c);
 
@@ -47,7 +44,6 @@ enum : CodePoint
     INVALID_CODE_POINT = static_cast<CodePoint>(~0L)
 };
 CodePoint code_point_at(std::string_view s);
-CodePoint code_point_at(const char *s);
 
 int put_char_adv(std::string_view &text, bool outputok);
 
