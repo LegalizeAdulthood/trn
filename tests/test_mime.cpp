@@ -333,7 +333,10 @@ TEST_F(MimeSetStateTest, suppressesSubHeaderLineBetweenParts)
     g_mime_state = BETWEEN_MIME;
 
     std::string line{"Content-Type: text/html\n"};
-    mime_set_state(line);
+    if (mime_set_state(std::string_view{line}))
+    {
+        line.clear();
+    }
 
     EXPECT_TRUE(line.empty());
     EXPECT_EQ(HTML_TEXT_MIME, g_mime_section->m_type);
@@ -358,7 +361,10 @@ TEST_F(MimeSetStateTest, movesToBetweenMimeOnPartBoundary)
     g_mime_state = SKIP_MIME;
 
     std::string line{"--part-boundary\n"};
-    mime_set_state(line);
+    if (mime_set_state(std::string_view{line}))
+    {
+        line.clear();
+    }
 
     EXPECT_EQ("--part-boundary\n", line);
     EXPECT_EQ(BETWEEN_MIME, g_mime_state);

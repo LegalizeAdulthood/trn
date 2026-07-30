@@ -791,16 +791,6 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-573 - Migrate String mime_set_state Callers
-
-- Type: mutable string overload callers.
-- Files: `libtrn/mime.cpp`, MIME decode tests.
-- Function: `mime_set_state`.
-- Dependencies: none.
-- Instructions: update `std::string` callers to pass a view and clear or
-  skip the owned line explicitly when the returned boolean says the MIME
-  state consumed it.  Remove dependence on `.data()` and NUL trimming.
-
 #### CSTR-576 - Introduce Program Argument Views
 
 - Type: public `argv` pointer arrays.
@@ -1047,7 +1037,7 @@ owned strings or owner-specific storage.
 - Type: obsolete mutable C-string and mutable string overloads.
 - Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`, MIME tests.
 - Function: `mime_set_state`.
-- Dependencies: CSTR-573.
+- Dependencies: none.
 - Instructions: delete the `char *` and `std::string &` overloads after
   all callers use the `std::string_view` boolean-result API directly.
   Keep only the non-mutating public signature.

@@ -1039,7 +1039,10 @@ void mime_decode_article(bool view)
             {
                 break;
             }
-            mime_set_state(g_art_line);
+            if (mime_set_state(std::string_view{g_art_line}))
+            {
+                g_art_line.clear();
+            }
         }
         switch (g_mime_state)
         {
@@ -1085,7 +1088,10 @@ void mime_decode_article(bool view)
                                  ? std::string_view{}
                                  : std::string_view{g_art_line}))
             {
-                mime_set_state(g_art_line);
+                if (mime_set_state(std::string_view{g_art_line}))
+                {
+                    g_art_line.clear();
+                }
                 if (g_mime_state == DECODE_MIME)
                 {
                     g_mime_state = SKIP_MIME;
