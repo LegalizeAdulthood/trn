@@ -796,25 +796,13 @@ owner.
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
 
-#### CSTR-568 - Pass newsgroup_comp Regex By Reference
-
-- Type: nullable pointer parameter that is always required.
-- Files: `libtrn/include/trn/ngsrch.h`, `libtrn/ngsrch.cpp`,
-  `libtrn/autosub.cpp`, `libtrn/only.cpp`.
-- Function: `newsgroup_comp`.
-- Dependencies: none.
-- Instructions: change the `CompiledRegex *compex` parameter to
-  `CompiledRegex &compex` and update callers to pass or dereference a
-  valid regex object.  Do not add null checks; the existing contract
-  already requires a valid compiled-regex owner.
-
 #### CSTR-569 - Return newsgroup_comp Errors As Views
 
 - Type: C-string error-result contract.
 - Files: `libtrn/include/trn/ngsrch.h`, `libtrn/ngsrch.cpp`,
   `libtrn/autosub.cpp`, `libtrn/only.cpp`.
 - Function: `newsgroup_comp`.
-- Dependencies: CSTR-568.
+- Dependencies: none.
 - Instructions: change `newsgroup_comp` to return `std::string_view`,
   using an empty view for success and non-empty views for literal compile
   errors.  Update callers to test `.empty()` instead of comparing
