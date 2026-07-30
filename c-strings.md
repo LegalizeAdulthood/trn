@@ -791,17 +791,6 @@ These slices have no slice dependency.  They remove local C string
 construction, comparison, or display roots without changing a larger
 owner.
 
-#### CSTR-575 - Return yes_or_no As A String View
-
-- Type: string-literal helper result.
-- Files: `libtrn/include/trn/opt.h`, option and switch callers.
-- Function: `yes_or_no`.
-- Dependencies: none.
-- Instructions: change `yes_or_no` to return `std::string_view` because
-  both possible results are string literals and callers should not need a
-  C-string result.  Update callers directly; avoid constructing
-  temporary `std::string` values unless a callee requires ownership.
-
 #### CSTR-584 - Modernize Small Terminal Text Helpers
 
 - Type: read-only string and single-character terminal helpers.
