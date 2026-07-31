@@ -102,11 +102,11 @@ protected:
     int         m_old_max_tree_lines{};
     bool        m_old_threaded_group{};
     int         m_old_tc_cols{};
-    const char *m_old_tc_so{};
-    const char *m_old_tc_se{};
-    const char *m_old_tc_us{};
-    const char *m_old_tc_ue{};
-    const char *m_old_tc_uc{};
+    std::string_view m_old_tc_so;
+    std::string_view m_old_tc_se;
+    std::string_view m_old_tc_us;
+    std::string_view m_old_tc_ue;
+    std::string_view m_old_tc_uc;
     int         m_old_fire_is_out{};
     bool        m_old_erase_screen{};
 };

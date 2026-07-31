@@ -263,8 +263,8 @@ protected:
     int                     m_old_page_line{};
     int                     m_old_term_line{};
     int                     m_old_term_col{};
-    const char             *m_old_tc_so{};
-    const char             *m_old_tc_se{};
+    std::string_view         m_old_tc_so;
+    std::string_view         m_old_tc_se;
     Newsrc                  m_newsrc{};
     Multirc                 m_multirc{};
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;

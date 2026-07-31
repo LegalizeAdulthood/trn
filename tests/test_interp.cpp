@@ -2083,8 +2083,8 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
     } cited_text_attribute;
     PushDir                  output_dir{output_path};
     ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);
-    ValueSaver<const char *> standout_start(g_tc_SO, "<so>");
-    ValueSaver<const char *> standout_end(g_tc_SE, "<se>");
+    ValueSaver<std::string_view> standout_start(g_tc_SO, "<so>");
+    ValueSaver<std::string_view> standout_end(g_tc_SE, "<se>");
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
@@ -2137,9 +2137,9 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
     const fs::path    article_file = fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM);
     write_article_body(article_file, "_\bU text\n");
     PushDir                  output_dir{output_path};
-    ValueSaver<const char *> underline_start(g_tc_US, "<ul>");
-    ValueSaver<const char *> underline_end(g_tc_UE, "</ul>");
-    ValueSaver<const char *> underchar(g_tc_UC, "");
+    ValueSaver<std::string_view> underline_start(g_tc_US, "<ul>");
+    ValueSaver<std::string_view> underline_end(g_tc_UE, "</ul>");
+    ValueSaver<std::string_view> underchar(g_tc_UC, "");
     ValueSaver<bool>         underline_glitch(g_tc_UG, false);
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
     ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);

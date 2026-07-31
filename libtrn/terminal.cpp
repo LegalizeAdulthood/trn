@@ -86,20 +86,20 @@ GeneralMode   g_general_mode{GM_INIT};            // general mode of trn
 
 #ifdef HAS_TERMLIB
 bool  g_tc_GT{};              // hardware tabs
-const char *g_tc_BC{};        // backspace character
-const char *g_tc_UP{};        // move cursor up one line
-const char *g_tc_CR{};        // get to left margin, somehow
-const char *g_tc_VB{};        // visible bell
-const char *g_tc_CE{};        // clear to end of line
-const char *g_tc_CM{};        // cursor motion
-const char *g_tc_HO{};        // home cursor
-const char *g_tc_IL{};        // insert line
-const char *g_tc_CD{};        // clear to end of display
-const char *g_tc_SO{};        // begin standout mode
-const char *g_tc_SE{};        // end standout mode
-const char *g_tc_US{};        // start underline mode
-const char *g_tc_UE{};        // end underline mode
-const char *g_tc_UC{};        // underline a character, if that's how it's done
+std::string_view g_tc_BC;         // backspace character
+std::string_view g_tc_UP;         // move cursor up one line
+std::string_view g_tc_CR;         // get to left margin, somehow
+std::string_view g_tc_VB;         // visible bell
+std::string_view g_tc_CE;         // clear to end of line
+std::string_view g_tc_CM;         // cursor motion
+std::string_view g_tc_HO;         // home cursor
+std::string_view g_tc_IL;         // insert line
+std::string_view g_tc_CD;         // clear to end of display
+std::string_view g_tc_SO;         // begin standout mode
+std::string_view g_tc_SE;         // end standout mode
+std::string_view g_tc_US;         // start underline mode
+std::string_view g_tc_UE;         // end underline mode
+std::string_view g_tc_UC;         // underline a character, if that's how it's done
 bool  g_tc_UG{};              // blanks left by US and UE
 bool  g_tc_AM{};              // does terminal have automatic margins?
 bool  g_tc_XN{};              // does it eat 1st newline after automatic wrap?
@@ -134,6 +134,36 @@ static speed_t s_out_speed{}; // terminal output speed,
 #else
 static long s_out_speed{}; // for use by tputs()
 #endif
+
+bool has_underchar_capability()
+{
+    return !g_tc_UC.empty();
+}
+
+bool has_insert_line_capability()
+{
+    return !g_tc_IL.empty();
+}
+
+bool has_home_capability()
+{
+    return !g_tc_HO.empty();
+}
+
+std::string cursor_motion(int x, int y)
+{
+    return tgoto_string(g_tc_CM, x, y);
+}
+
+std::string_view standout_start()
+{
+    return g_tc_SO;
+}
+
+std::string_view standout_end()
+{
+    return g_tc_SE;
+}
 #endif
 
 struct KeyMap
@@ -335,10 +365,10 @@ void term_set(TermCapScratchBuffer &tcbuf)
     if (!tgetflag("bs"))                // is backspace not used?
     {
         g_tc_BC = Tgetstr("bc");        // find out what is
-        if (empty(g_tc_BC))             // terminfo grok's 'bs' but not 'bc'
+        if (g_tc_BC.empty())            // terminfo grok's 'bs' but not 'bc'
         {
             g_tc_BC = Tgetstr("le");
-            if (empty(g_tc_BC))
+            if (g_tc_BC.empty())
             {
                 g_tc_BC = "\b";         // better than nothing...
             }
@@ -359,7 +389,7 @@ void term_set(TermCapScratchBuffer &tcbuf)
     g_tc_IL = Tgetstr("al");            // insert (add) line
     g_tc_CM = Tgetstr("cm");            // cursor motion
     g_tc_CD = Tgetstr("cd");            // clear to end of display
-    if (!*g_tc_CE)
+    if (g_tc_CE.empty())
     {
         g_tc_CE = g_tc_CD;
     }
@@ -369,7 +399,7 @@ void term_set(TermCapScratchBuffer &tcbuf)
     g_tc_US = Tgetstr("us");            // start underline
     g_tc_UE = Tgetstr("ue");            // end underline
     g_tc_UG = tgetnum("ug") > 0;        // underline glitch
-    if (*g_tc_US)
+    if (!g_tc_US.empty())
     {
         g_tc_UC = "";           // UC must not be nullptr
     }
@@ -377,7 +407,7 @@ void term_set(TermCapScratchBuffer &tcbuf)
     {
         g_tc_UC = Tgetstr("uc");                // underline a character
     }
-    if (!*g_tc_US && !*g_tc_UC)                 // no underline mode?
+    if (g_tc_US.empty() && g_tc_UC.empty())     // no underline mode?
     {
         g_tc_US = g_tc_SO;                      // substitute standout mode
         g_tc_UE = g_tc_SE;
@@ -400,18 +430,18 @@ void term_set(TermCapScratchBuffer &tcbuf)
     g_tc_AM = tgetflag("am");           // terminal wraps automatically?
     g_tc_XN = tgetflag("xn");           // then eats next newline?
     g_tc_VB = Tgetstr("vb");
-    if (!*g_tc_VB)
+    if (g_tc_VB.empty())
     {
         g_tc_VB = "\007";
     }
     s_tc_CR_fallback.clear();
     g_tc_CR = Tgetstr("cr");
-    if (!*g_tc_CR)
+    if (g_tc_CR.empty())
     {
-        if (tgetflag("nc") && *g_tc_UP)
+        if (tgetflag("nc") && !g_tc_UP.empty())
         {
             s_tc_CR_fallback = fmt::format("{}\r", g_tc_UP);
-            g_tc_CR = s_tc_CR_fallback.c_str();
+            g_tc_CR = s_tc_CR_fallback;
         }
         else
         {
@@ -432,15 +462,15 @@ void term_set(TermCapScratchBuffer &tcbuf)
     }
 # endif
 #endif
-    if (!*g_tc_UP)                      // no UP string?
+    if (g_tc_UP.empty())                // no UP string?
     {
         g_marking = NO_MARKING;          // disable any marking
     }
-    if (*g_tc_CM || *g_tc_HO)
+    if (!g_tc_CM.empty() || !g_tc_HO.empty())
     {
         g_can_home = true;
     }
-    if (!*g_tc_CD || !g_can_home)               // can we CE, CD, and home?
+    if (g_tc_CD.empty() || !g_can_home)         // can we CE, CD, and home?
     {
         g_erase_each_line = false;      // no, so disable use of clear eol
     }
@@ -448,8 +478,8 @@ void term_set(TermCapScratchBuffer &tcbuf)
     {
         s_tc_CL = nullptr;
     }
-    s_left_cost = std::string_view{g_tc_BC}.size();
-    s_up_cost = std::string_view{g_tc_UP}.size();
+    s_left_cost = g_tc_BC.size();
+    s_up_cost = g_tc_UP.size();
 #else // !HAS_TERMLIB
     ..."Don't know how to set the terminal!"
 #endif // !HAS_TERMLIB
@@ -1307,8 +1337,7 @@ void push_char(char_int c)
 
 void under_print(std::string_view text)
 {
-    TRN_ASSERT(g_tc_UC);
-    if (*g_tc_UC) // char by char underline?
+    if (!g_tc_UC.empty()) // char by char underline?
     {
         while (!text.empty())
         {
@@ -1348,7 +1377,7 @@ void under_print(std::string_view text)
 void no_so_fire()
 {
     // should we disable fireworks?
-    if (!(g_fire_is_out & STANDOUT) && (g_term_line | g_term_col) == 0 && *g_tc_UP && *g_tc_SE)
+    if (!(g_fire_is_out & STANDOUT) && (g_term_line | g_term_col) == 0 && !g_tc_UP.empty() && !g_tc_SE.empty())
     {
         newline();
         un_standout();
@@ -1362,7 +1391,7 @@ void no_so_fire()
 void no_ul_fire()
 {
     // should we disable fireworks?
-    if (!(g_fire_is_out & UNDERLINE) && (g_term_line | g_term_col) == 0 && *g_tc_UP && *g_tc_US)
+    if (!(g_fire_is_out & UNDERLINE) && (g_term_line | g_term_col) == 0 && !g_tc_UP.empty() && !g_tc_US.empty())
     {
         newline();
         un_underline();
@@ -2162,10 +2191,10 @@ void clear()
     {
         tputs(s_tc_CL,g_tc_LINES,put_char);
     }
-    else if (g_tc_CD)
+    else if (!g_tc_CD.empty())
     {
         home_cursor();
-        tputs(g_tc_CD,g_tc_LINES,put_char);
+        tputs(g_tc_CD.data(),g_tc_LINES,put_char);
     }
     else
     {
@@ -2175,14 +2204,14 @@ void clear()
         }
         home_cursor();
     }
-    tputs(g_tc_CR,1,put_char);
+    tputs(g_tc_CR.data(),1,put_char);
 }
 
 void home_cursor()
 {
-    if (!*g_tc_HO) // no home sequence?
+    if (g_tc_HO.empty()) // no home sequence?
     {
-        if (!*g_tc_CM) // no cursor motion either?
+        if (g_tc_CM.empty()) // no cursor motion either?
         {
             fmt::print("\n\n\n");
             term_down(3);
@@ -2192,7 +2221,7 @@ void home_cursor()
     }
     else                        // we have home sequence
     {
-        tputs(g_tc_HO, 1, put_char);// home via HO
+        tputs(g_tc_HO.data(), 1, put_char);// home via HO
     }
     carriage_return();  // Resets kernel's tab column counter to 0
     g_term_line = 0;
@@ -2209,7 +2238,7 @@ void goto_xy(int to_col, int to_line)
     {
         return;
     }
-    if (*g_tc_CM && !g_muck_up_clear)
+    if (!g_tc_CM.empty() && !g_muck_up_clear)
     {
         motion = tgoto_string(g_tc_CM,to_col,to_line);
         str = motion.c_str();
@@ -2784,12 +2813,12 @@ int tputs(const char *str, int num, int (*func)(int))
 }
 #endif
 
-std::string tgoto_string(const char *str, int x, int y)
+std::string tgoto_string(std::string_view str, int x, int y)
 {
 #ifdef MSDOS
     return fmt::sprintf(str, y + 1, x + 1);
 #else
-    const char *result = tgoto(str, x, y);
+    const char *result = tgoto(str.data(), x, y);
     return result == nullptr ? std::string{} : result;
 #endif
 }

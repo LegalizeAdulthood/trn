@@ -320,7 +320,7 @@ void color_string(int object, std::string_view str)
     {
         str.remove_suffix(1);
     }
-    if (!s_use_colors && *g_tc_UC && s_objects[object].attr == UNDERLINE)
+    if (!s_use_colors && has_underchar_capability() && s_objects[object].attr == UNDERLINE)
     {
         const std::string text{str};
         under_print(text); // hack for stupid terminals

@@ -105,11 +105,11 @@ protected:
     char        m_old_int_count{};
     char        m_old_erase_char{};
     char        m_old_kill_char{};
-    const char *m_old_tc_cr{};
-    const char *m_old_tc_bc{};
-    const char *m_old_tc_ce{};
-    const char *m_old_tc_so{};
-    const char *m_old_tc_se{};
+    std::string_view m_old_tc_cr;
+    std::string_view m_old_tc_bc;
+    std::string_view m_old_tc_ce;
+    std::string_view m_old_tc_so;
+    std::string_view m_old_tc_se;
     bool        m_old_s_default_cmd{};
     bool        m_old_univ_default_cmd{};
     bool        m_old_verify{};
@@ -164,8 +164,8 @@ protected:
 
     char  m_old_int_count{};
     bool  m_old_erase_screen{};
-    const char *m_old_tc_so{};
-    const char *m_old_tc_se{};
+    std::string_view m_old_tc_so;
+    std::string_view m_old_tc_se;
     bool  m_old_tc_am{};
     int   m_old_fire_is_out{};
     int   m_old_tc_lines{};
@@ -209,8 +209,8 @@ protected:
     std::string m_old_last_pat;
     bool        m_old_art_do_read{};
     ArtScope    m_old_art_how_much{};
-    const char *m_old_tc_cr{};
-    const char *m_old_tc_ce{};
+    std::string_view m_old_tc_cr;
+    std::string_view m_old_tc_ce;
 };
 
 class MouseBarTest : public testing::Test
@@ -287,12 +287,12 @@ protected:
     int             m_old_tc_cols{};
     int             m_old_term_line{};
     int             m_old_term_col{};
-    const char     *m_old_tc_cm{};
-    const char     *m_old_tc_bc{};
-    const char     *m_old_tc_up{};
-    const char     *m_old_tc_cr{};
-    const char     *m_old_tc_so{};
-    const char     *m_old_tc_se{};
+    std::string_view m_old_tc_cm;
+    std::string_view m_old_tc_bc;
+    std::string_view m_old_tc_up;
+    std::string_view m_old_tc_cr;
+    std::string_view m_old_tc_so;
+    std::string_view m_old_tc_se;
     char            m_cursor_motion[1]{};
     char            m_backspace[1]{};
     char            m_cursor_up[1]{};

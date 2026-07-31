@@ -581,7 +581,8 @@ DoArticleResult do_article(std::string &article_command)
                             }
                             out_pos += i;
                         }
-                        if (*g_tc_UC && ((g_highlight == g_art_line_num && g_marking == STANDOUT) || under_lining))
+                        if (has_underchar_capability() &&
+                            ((g_highlight == g_art_line_num && g_marking == STANDOUT) || under_lining))
                         {
                             backspace();
                             underchar();
@@ -666,7 +667,8 @@ DoArticleResult do_article(std::string &article_command)
                             if (output_ok)
                             {
                                 std::putchar('^');
-                                if (g_highlight == g_art_line_num && *g_tc_UC && g_marking == STANDOUT)
+                                if (g_highlight == g_art_line_num && has_underchar_capability() &&
+                                    g_marking == STANDOUT)
                                 {
                                     backspace();
                                     underchar();
@@ -1169,7 +1171,7 @@ refresh_screen:
         {
             break;
         }
-        if (*g_tc_IL && *g_tc_HO)
+        if (has_insert_line_capability() && has_home_capability())
         {
             home_cursor();
             insert_line();

@@ -94,9 +94,9 @@ protected:
     bool                 m_old_s_ref_bot{};
     short                m_old_s_bot_lines{};
     int                  m_old_tc_lines{};
-    const char          *m_old_tc_bc{};
-    const char          *m_old_tc_ce{};
-    const char          *m_old_tc_cm{};
+    std::string_view     m_old_tc_bc;
+    std::string_view     m_old_tc_ce;
+    std::string_view     m_old_tc_cm;
     char                 m_old_erase_char{};
 };
 

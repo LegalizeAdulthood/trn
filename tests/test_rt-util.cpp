@@ -418,7 +418,7 @@ protected:
     ArticleUnread              m_old_missing_count{};
     SelectionMode              m_old_sel_mode{};
     int                        m_old_spin_count{};
-    const char                *m_old_tc_BC{};
+    std::string_view           m_old_tc_BC;
 };
 
 TEST_F(PerformStatusEndTest, reportsNoArticlesAffected)

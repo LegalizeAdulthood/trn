@@ -137,20 +137,20 @@ extern MarkingAreas g_marking_areas;
 //
 #ifdef HAS_TERMLIB
 extern bool  g_tc_GT; // hardware tabs
-extern const char *g_tc_BC; // backspace character
-extern const char *g_tc_UP; // move cursor up one line
-extern const char *g_tc_CR; // get to left margin, somehow
-extern const char *g_tc_VB; // visible bell
-extern const char *g_tc_CE; // clear to end of line
-extern const char *g_tc_CM; // cursor motion
-extern const char *g_tc_HO; // home cursor
-extern const char *g_tc_IL; // insert line
-extern const char *g_tc_CD; // clear to end of display
-extern const char *g_tc_SO; // begin standout mode
-extern const char *g_tc_SE; // end standout mode
-extern const char *g_tc_US; // start underline mode
-extern const char *g_tc_UE; // end underline mode
-extern const char *g_tc_UC; // underline a character, if that's how it's done
+extern std::string_view g_tc_BC; // backspace character
+extern std::string_view g_tc_UP; // move cursor up one line
+extern std::string_view g_tc_CR; // get to left margin, somehow
+extern std::string_view g_tc_VB; // visible bell
+extern std::string_view g_tc_CE; // clear to end of line
+extern std::string_view g_tc_CM; // cursor motion
+extern std::string_view g_tc_HO; // home cursor
+extern std::string_view g_tc_IL; // insert line
+extern std::string_view g_tc_CD; // clear to end of display
+extern std::string_view g_tc_SO; // begin standout mode
+extern std::string_view g_tc_SE; // end standout mode
+extern std::string_view g_tc_US; // start underline mode
+extern std::string_view g_tc_UE; // end underline mode
+extern std::string_view g_tc_UC; // underline a character, if that's how it's done
 extern bool  g_tc_UG; // blanks left by US and UE
 extern bool  g_tc_AM; // does terminal have automatic margins?
 extern bool  g_tc_XN; // does it eat 1st newline after automatic wrap?
@@ -219,9 +219,15 @@ void  xmouse_check();
 void  xmouse_off();
 void  draw_mouse_bar(int limit, bool restore_cursor);
 bool  check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
+bool has_underchar_capability();
+bool has_insert_line_capability();
+bool has_home_capability();
+std::string cursor_motion(int x, int y);
+std::string_view standout_start();
+std::string_view standout_end();
 void  add_tc_string(std::string_view capability, std::string_view value);
 const char *tc_color_capability(std::string_view capability);
-std::string tgoto_string(const char *str, int x, int y);
+std::string tgoto_string(std::string_view str, int x, int y);
 #ifdef MSDOS
 int   tputs(const char *str, int num, int (*func)(int));
 #endif
@@ -351,62 +357,62 @@ inline void newline()
 }
 inline void backspace()
 {
-    tputs(g_tc_BC, 0, put_char);
+    tputs(g_tc_BC.data(), 0, put_char);
 }
 inline void erase_eol()
 {
-    tputs(g_tc_CE, 1, put_char);
+    tputs(g_tc_CE.data(), 1, put_char);
 }
 inline void clear_rest()
 {
-    tputs(g_tc_CD, g_tc_LINES, put_char);
+    tputs(g_tc_CD.data(), g_tc_LINES, put_char);
 }
 inline void maybe_eol()
 {
     if (g_erase_screen && g_erase_each_line)
     {
-        tputs(g_tc_CE, 1, put_char);
+        tputs(g_tc_CE.data(), 1, put_char);
     }
 }
 inline void underline()
 {
-    tputs(g_tc_US, 1, put_char);
+    tputs(g_tc_US.data(), 1, put_char);
 }
 inline void un_underline()
 {
     g_fire_is_out |= UNDERLINE;
-    tputs(g_tc_UE, 1, put_char);
+    tputs(g_tc_UE.data(), 1, put_char);
 }
 inline void underchar()
 {
-    tputs(g_tc_UC, 0, put_char);
+    tputs(g_tc_UC.data(), 0, put_char);
 }
 inline void standout()
 {
-    tputs(g_tc_SO, 1, put_char);
+    tputs(g_tc_SO.data(), 1, put_char);
 }
 inline void un_standout()
 {
     g_fire_is_out |= STANDOUT;
-    tputs(g_tc_SE, 1, put_char);
+    tputs(g_tc_SE.data(), 1, put_char);
 }
 inline void up_line()
 {
     g_term_line--;
-    tputs(g_tc_UP, 1, put_char);
+    tputs(g_tc_UP.data(), 1, put_char);
 }
 inline void insert_line()
 {
-    tputs(g_tc_IL, 1, put_char);
+    tputs(g_tc_IL.data(), 1, put_char);
 }
 inline void carriage_return()
 {
     g_term_col = 0;
-    tputs(g_tc_CR, 1, put_char);
+    tputs(g_tc_CR.data(), 1, put_char);
 }
 inline void dingaling()
 {
-    tputs(g_tc_VB, 1, put_char);
+    tputs(g_tc_VB.data(), 1, put_char);
 }
 #else  // !HAS_TERMLIB
 //..."Don't know how to define the term macros!"

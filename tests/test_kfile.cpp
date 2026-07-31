@@ -89,7 +89,7 @@ protected:
         g_verbose = false;
         g_novice_delays = false;
         g_tc_CR = "\r";
-        g_tc_CD = nullptr;
+        g_tc_CD = {};
         g_tc_HO = "";
         g_tc_CM = "";
         g_tc_LINES = 0;
@@ -163,10 +163,10 @@ protected:
     Subject                      *m_old_first_subject{};
     bool                          m_old_verbose{};
     bool                          m_old_novice_delays{};
-    const char                   *m_old_tc_cr{};
-    const char                   *m_old_tc_cd{};
-    const char                   *m_old_tc_ho{};
-    const char                   *m_old_tc_cm{};
+    std::string_view              m_old_tc_cr;
+    std::string_view              m_old_tc_cd;
+    std::string_view              m_old_tc_ho;
+    std::string_view              m_old_tc_cm;
     int                           m_old_tc_lines{};
     int                           m_old_term_line{};
     int                           m_old_term_col{};

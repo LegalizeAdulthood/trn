@@ -797,24 +797,11 @@ that later caller slices can consume directly.
 - Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
   `libtrn/color.cpp`, terminal/color tests.
 - Function: `tc_color_capability`.
-- Dependencies: CSTR-579.
+- Dependencies: none.
 - Instructions: change `tc_color_capability` to return
   `std::string_view`, using an empty view as the missing-capability
   sentinel.  Update color callers to test `.empty()` and pass views
   directly where possible.
-
-#### CSTR-581 - Use Views For Public Termcap String Arguments
-
-- Type: read-only termcap C-string parameters.
-- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
-  `libtrn/sdisp.cpp`, terminal tests.
-- Functions: `tgoto_string`, `tputs`.
-- Dependencies: CSTR-579.
-- Instructions: change trn-owned wrappers that consume termcap strings
-  to accept `std::string_view`.  Keep any required `.c_str()` conversion
-  local to calls into external termcap APIs.  For inactive `MSDOS`
-  blocks, update the code so the blocks still build rather than deleting
-  them.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 
@@ -830,20 +817,6 @@ are available.  Keep the listed order inside dependent families.
 
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
-
-#### CSTR-579 - Encapsulate Terminal Capability Globals
-
-- Type: public borrowed terminal capability strings.
-- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
-  terminal and color tests.
-- Globals: `g_tc_BC`, `g_tc_UP`, `g_tc_CR`, `g_tc_VB`, `g_tc_CE`,
-  `g_tc_CM`, `g_tc_HO`, `g_tc_IL`, `g_tc_CD`, `g_tc_SO`, `g_tc_SE`,
-  `g_tc_US`, `g_tc_UE`, `g_tc_UC`.
-- Dependencies: none.
-- Instructions: hide terminal capability storage behind named accessors
-  or an owner object.  Public callers should consume `std::string_view`
-  or typed helpers instead of reading raw borrowed pointers.  Keep the
-  termcap-library pointer lifetime handling inside `terminal.cpp`.
 
 #### CSTR-564 - Replace g_char_subst With Owned Index State
 
@@ -895,10 +868,9 @@ owned strings or owner-specific storage.
 - Files: `libtrn/include/trn/string-algos.h`, `libtrn/terminal.cpp`,
   `tests/test_string-algos.cpp`.
 - Function: `empty(const char *)`.
-- Dependencies: CSTR-579.
-- Instructions: after terminal capability access no longer exposes raw
-  nullable pointers, remove the null-aware `empty(const char *)` helper
-  and its tests.  Use ordinary `.empty()` checks on strings or views.
+- Dependencies: none.
+- Instructions: remove the null-aware `empty(const char *)` helper and
+  its tests.  Use ordinary `.empty()` checks on strings or views.
 
 #### CSTR-574 - Remove Legacy mime_set_state Overloads
 

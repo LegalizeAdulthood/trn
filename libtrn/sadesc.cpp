@@ -139,7 +139,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                fmt::format_to(std::back_inserter(desc), "Summary: {}{}", g_tc_SO, s);
+                fmt::format_to(std::back_inserter(desc), "Summary: {}{}", standout_start(), s);
             }
             else
 #endif
@@ -174,7 +174,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                fmt::format_to(std::back_inserter(desc), "Keys: {}{}", g_tc_SO, s);
+                fmt::format_to(std::back_inserter(desc), "Keys: {}{}", standout_start(), s);
             }
             else
 #endif
@@ -197,7 +197,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
     if (use_standout)
     {
-        desc += g_tc_SE; // end standout mode
+        desc += standout_end(); // end standout mode
     }
 #endif
     // take out bad characters (replace with one space)
