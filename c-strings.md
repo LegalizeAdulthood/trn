@@ -799,19 +799,6 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-585 - Replace HashDatum char Pointer Payloads
-
-- Type: generic hash payload stored as `char *`.
-- Files: `libtrn/include/trn/hash.h`, `libtrn/hash.cpp`, hash owners,
-  hash tests.
-- Members: `HashDatum::dat_ptr`, `HashDatum::dat_len`.
-- Dependencies: none.
-- Instructions: audit each `HashDatum` owner and replace the misleading
-  `char *` payload with typed owner-specific storage where practical.
-  If a generic hash payload remains necessary during migration, use an
-  explicitly type-erased pointer such as `void *` rather than a C-string
-  pointer, and keep conversions at owner boundaries.
-
 ### Tier 5 - Helper Removal
 
 These slices remove helpers only after every direct caller has moved to
