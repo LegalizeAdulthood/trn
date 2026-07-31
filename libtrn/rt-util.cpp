@@ -543,7 +543,7 @@ std::string compress_from(std::string_view from, int size)
         return {};
     }
 
-    std::string      buffer = str_char_subst(from, *g_char_subst);
+    std::string      buffer = str_char_subst(from, current_char_subst_mode());
     std::string_view name = extract_name(buffer);
     std::string      text;
     if (!name.empty())
@@ -661,7 +661,7 @@ std::string compress_subj(const Article *ap, int max)
     {
         subject += '>';
     }
-    subject += str_char_subst(ap->m_subj->stripped_view(), *g_char_subst);
+    subject += str_char_subst(ap->m_subj->stripped_view(), current_char_subst_mode());
 
     // Remove "(was: oldsubject)", because we already know the old subjects.
     // Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.

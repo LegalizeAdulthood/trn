@@ -390,7 +390,8 @@ static Article *find_artp(Article *article, int x)
 
 inline bool header_conv()
 {
-    return g_char_subst[0] == 'a' || g_char_subst[0] == 'm';
+    const char mode = current_char_subst_mode();
+    return mode == 'a' || mode == 'm';
 }
 
 static void print_tree_line(std::string_view tree_line)
@@ -437,7 +438,7 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     std::string_view line = line_buffer;
     if (header_conv())
     {
-        substituted_line = str_char_subst(line, *g_char_subst);
+        substituted_line = str_char_subst(line, current_char_subst_mode());
         line = substituted_line;
     }
 

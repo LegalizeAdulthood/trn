@@ -918,7 +918,7 @@ void reply(std::string_view command)
             {
                 article_line.pop_back();
             }
-            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(article_line, *g_char_subst));
+            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(article_line, current_char_subst_mode()));
         }
         fmt::print(header, "\n");
         g_wrapped_nl = WRAPPED_NL;
@@ -1141,7 +1141,7 @@ void followup(std::string_view command)
             {
                 article_line.pop_back();
             }
-            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(article_line, *g_char_subst));
+            fmt::print(header, "{}{}\n", g_indent_string, str_char_subst(article_line, current_char_subst_mode()));
         }
         fmt::print(header, "\n");
         g_wrapped_nl = WRAPPED_NL;
