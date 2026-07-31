@@ -266,30 +266,6 @@ char *safe_malloc(MemorySize size)
 }
 #endif
 
-// paranoid version of realloc.  If where is nullptr, call malloc
-
-#ifndef USE_DEBUGGING_MALLOC
-char *safe_realloc(char *where, MemorySize size)
-{
-    char *ptr;
-
-    if (!where)
-    {
-        ptr = (char *) std::malloc(size ? size : (MemorySize) 1);
-    }
-    else
-    {
-        ptr = (char *) std::realloc(where, size ? size : (MemorySize) 1);
-    }
-    if (!ptr)
-    {
-        fmt::print("{}", s_no_memory);
-        sig_catcher(0);
-    }
-    return ptr;
-}
-#endif // !USE_DEBUGGING_MALLOC
-
 // effective access
 
 int eaccess(const fs::path &filename, int mod)
