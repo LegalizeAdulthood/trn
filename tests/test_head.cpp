@@ -61,10 +61,6 @@ protected:
         m_old_threaded_group = g_threaded_group;
         m_old_art_fp = g_art_fp;
         m_old_open_art = g_open_art;
-        m_old_art_buf = g_art_buf;
-        m_old_art_buf_pos = g_art_buf_pos;
-        m_old_art_buf_seek = g_art_buf_seek;
-        m_old_art_buf_len = g_art_buf_len;
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_current_path = fs::current_path();
@@ -78,7 +74,6 @@ protected:
 
         head_init();
         g_art_fp = nullptr;
-        g_art_buf = nullptr;
         art_io_init();
         g_article_list.clear();
         g_data_source = &m_data_source;
@@ -109,10 +104,6 @@ protected:
         g_threaded_group = m_old_threaded_group;
         g_art_fp = m_old_art_fp;
         g_open_art = m_old_open_art;
-        g_art_buf = m_old_art_buf;
-        g_art_buf_pos = m_old_art_buf_pos;
-        g_art_buf_seek = m_old_art_buf_seek;
-        g_art_buf_len = m_old_art_buf_len;
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
 
@@ -142,10 +133,6 @@ protected:
     bool                              m_old_threaded_group{};
     std::FILE                        *m_old_art_fp{};
     ArticleNum                        m_old_open_art{};
-    char                             *m_old_art_buf{};
-    ArticlePosition                   m_old_art_buf_pos{};
-    ArticlePosition                   m_old_art_buf_seek{};
-    ArticlePosition                   m_old_art_buf_len{};
     ArticlePosition                   m_old_raw_art_size{};
     ArticlePosition                   m_old_art_size{};
     fs::path                          m_old_current_path;

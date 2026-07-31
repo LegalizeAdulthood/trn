@@ -32,10 +32,6 @@ protected:
     void SetUp() override
     {
         m_old_art_fp = g_art_fp;
-        m_old_art_buf = g_art_buf;
-        m_old_art_buf_pos = g_art_buf_pos;
-        m_old_art_buf_seek = g_art_buf_seek;
-        m_old_art_buf_len = g_art_buf_len;
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_do_hiding = g_do_hiding;
@@ -55,7 +51,6 @@ protected:
         fs::create_directories(m_output_dir, error);
 
         g_art_fp = nullptr;
-        g_art_buf = nullptr;
         head_init();
         art_io_init();
         g_data_source = &m_data_source;
@@ -80,10 +75,6 @@ protected:
         head_final();
 
         g_art_fp = m_old_art_fp;
-        g_art_buf = m_old_art_buf;
-        g_art_buf_pos = m_old_art_buf_pos;
-        g_art_buf_seek = m_old_art_buf_seek;
-        g_art_buf_len = m_old_art_buf_len;
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
         g_do_hiding = m_old_do_hiding;
@@ -134,10 +125,6 @@ protected:
     MimeSection     m_mime_section{};
     fs::path        m_output_dir;
     std::FILE      *m_old_art_fp{};
-    char           *m_old_art_buf{};
-    ArticlePosition m_old_art_buf_pos{};
-    ArticlePosition m_old_art_buf_seek{};
-    ArticlePosition m_old_art_buf_len{};
     ArticlePosition m_old_raw_art_size{};
     ArticlePosition m_old_art_size{};
     bool            m_old_do_hiding{};
@@ -163,7 +150,7 @@ TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
     std::string expected_first{"alpha beta gamma delta"};
     expected_first += WRAPPED_NL;
     EXPECT_EQ(expected_first, first);
-    EXPECT_EQ(23, g_art_buf_pos.value_of());
+    EXPECT_EQ(23, art_buf_pos().value_of());
 
     std::string second;
     ASSERT_TRUE(read_art_buf(second, false));
@@ -179,8 +166,8 @@ TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
     ASSERT_TRUE(read_art_buf(first, false));
 
     EXPECT_EQ("alpha\n", first);
-    EXPECT_EQ(6, g_art_buf_pos.value_of());
-    EXPECT_EQ(6, g_art_buf_len.value_of());
+    EXPECT_EQ(6, art_buf_pos().value_of());
+    EXPECT_EQ(6, art_buf_len().value_of());
 
     EXPECT_FALSE(read_art_buf(first, false));
     EXPECT_TRUE(first.empty());

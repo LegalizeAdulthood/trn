@@ -34,24 +34,24 @@ ArticlePosition g_art_pos{};              // byte position in article file
 ArticleLine     g_art_line_num{};         // current line number in article file
 std::FILE      *g_art_fp{};               // current article file pointer
 ArticleNum      g_open_art{};             // the article number we have open
-char           *g_art_buf{};              //
-ArticlePosition g_art_buf_pos{};          //
-ArticlePosition g_art_buf_seek{};         // TODO: ArticlePosition
-ArticlePosition g_art_buf_len{};          //
 char            g_wrapped_nl{WRAPPED_NL}; //
 int             g_word_wrap_offset{8};    // right-hand column size (0 is off)
 
 static constexpr std::size_t INITIAL_ART_BUF_SIZE{8 * 1024};
 static constexpr std::size_t ART_BUF_GROWTH{LINE_BUF_LEN * 4};
 
-static std::string s_art_buf;
+static std::string     s_art_buf;
+static ArticlePosition s_art_buf_pos{};
+static ArticlePosition s_art_buf_seek{};
+static ArticlePosition s_art_buf_len{};
 
 static char *read_art_buf_raw(bool view_inline);
+static char *art_buf_data();
+static std::size_t art_buf_offset(const char *ptr);
 
 void art_io_init()
 {
     s_art_buf.assign(INITIAL_ART_BUF_SIZE, '\0');
-    g_art_buf = s_art_buf.data();
     clear_art_buf();
 }
 
@@ -59,7 +59,9 @@ void art_io_final()
 {
     s_art_buf.clear();
     s_art_buf.shrink_to_fit();
-    g_art_buf = nullptr;
+    s_art_buf_pos = ArticlePosition{};
+    s_art_buf_seek = ArticlePosition{};
+    s_art_buf_len = ArticlePosition{};
 }
 
 // open an article, unless it's already open
@@ -197,10 +199,69 @@ bool read_art(std::string &line)
 
 void clear_art_buf()
 {
-    *g_art_buf = '\0';
-    g_art_buf_len = ArticlePosition{};
-    g_art_buf_seek = ArticlePosition{};
-    g_art_buf_pos = ArticlePosition{};
+    if (!s_art_buf.empty())
+    {
+        s_art_buf.front() = '\0';
+    }
+    s_art_buf_len = ArticlePosition{};
+    s_art_buf_seek = ArticlePosition{};
+    s_art_buf_pos = ArticlePosition{};
+}
+
+bool art_buf_empty()
+{
+    return s_art_buf.empty() || s_art_buf.front() == '\0';
+}
+
+bool art_buf_at_end()
+{
+    return s_art_buf_pos == s_art_buf_len;
+}
+
+ArticlePosition art_buf_pos()
+{
+    return s_art_buf_pos;
+}
+
+ArticlePosition art_buf_len()
+{
+    return s_art_buf_len;
+}
+
+ArticlePosition art_buf_seek()
+{
+    return s_art_buf_seek;
+}
+
+void set_art_buf_seek(ArticlePosition pos)
+{
+    s_art_buf_seek = pos;
+}
+
+ArticlePosition art_buf_article_pos()
+{
+    return s_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
+}
+
+ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
+{
+    return raw_art_size - s_art_buf_seek + s_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+}
+
+std::string_view art_buf_view(ArticlePosition pos)
+{
+    const ArticlePosition offset = pos - g_header_type[PAST_HEADER].min_pos;
+    return art_buf_data() + offset.value_of();
+}
+
+static char *art_buf_data()
+{
+    return s_art_buf.data();
+}
+
+static std::size_t art_buf_offset(const char *ptr)
+{
+    return static_cast<std::size_t>(ptr - art_buf_data());
 }
 
 int seek_art_buf(ArticlePosition pos)
@@ -211,9 +272,9 @@ int seek_art_buf(ArticlePosition pos)
     }
 
     pos -= g_header_type[PAST_HEADER].min_pos;
-    g_art_buf_pos = g_art_buf_len;
+    s_art_buf_pos = s_art_buf_len;
 
-    while (g_art_buf_pos < pos)
+    while (s_art_buf_pos < pos)
     {
         if (!read_art_buf_raw(false))
         {
@@ -221,7 +282,7 @@ int seek_art_buf(ArticlePosition pos)
         }
     }
 
-    g_art_buf_pos = pos;
+    s_art_buf_pos = pos;
 
     return 0;
 }
@@ -254,19 +315,19 @@ static char *read_art_buf_raw(bool view_inline)
         }
         bp = g_art_line.data();
         const ArticlePosition art_pos = tell_art() - g_header_type[PAST_HEADER].min_pos;
-        g_art_buf_seek = art_pos;
-        g_art_buf_pos = art_pos;
+        s_art_buf_seek = art_pos;
+        s_art_buf_pos = art_pos;
         return bp;
     }
-    if (g_art_buf_pos == g_art_size - g_header_type[PAST_HEADER].min_pos)
+    if (s_art_buf_pos == g_art_size - g_header_type[PAST_HEADER].min_pos)
     {
         return nullptr;
     }
-    bp = g_art_buf + g_art_buf_pos.value_of();
+    bp = art_buf_data() + s_art_buf_pos.value_of();
     if (*bp == '\001' || *bp == '\002')
     {
         bp++;
-        ++g_art_buf_pos;
+        ++s_art_buf_pos;
     }
     if (*bp)
     {
@@ -292,11 +353,10 @@ static char *read_art_buf_raw(bool view_inline)
 read_more:
     extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
-    if (s_art_buf.size() < static_cast<std::size_t>(g_art_buf_pos.value_of() + o + LINE_BUF_LEN))
+    if (s_art_buf.size() < static_cast<std::size_t>(s_art_buf_pos.value_of() + o + LINE_BUF_LEN))
     {
         s_art_buf.resize(s_art_buf.size() + ART_BUF_GROWTH);
-        g_art_buf = s_art_buf.data();
-        bp = g_art_buf + g_art_buf_pos.value_of();
+        bp = art_buf_data() + s_art_buf_pos.value_of();
     }
     switch (g_mime_state)
     {
@@ -307,7 +367,7 @@ read_more:
     default:
         read_something = 1;
         // The -1 leaves room for appending a newline, if needed
-        const int         read_limit = static_cast<int>(s_art_buf.size() - g_art_buf_pos.value_of() - o - 1);
+        const int         read_limit = static_cast<int>(s_art_buf.size() - s_art_buf_pos.value_of() - o - 1);
         const std::string chunk = read_art_chunk(read_limit);
         if (chunk.empty())
         {
@@ -318,7 +378,7 @@ read_more:
                 bp = nullptr;
                 goto done;
             }
-            write_newline(static_cast<std::size_t>(bp + o - g_art_buf));
+            write_newline(art_buf_offset(bp + o));
             read_something = -1;
             len = read_offset + 1;
         }
@@ -335,7 +395,7 @@ read_more:
                 read_offset = len;
                 goto read_more;
             }
-            write_newline(static_cast<std::size_t>(bp + len++ + extra_offset - g_art_buf));
+            write_newline(art_buf_offset(bp + len++ + extra_offset));
         }
         if (!g_is_mime)
         {
@@ -344,7 +404,7 @@ read_more:
         o = line_offset + extra_offset;
         if (mime_set_state(std::string_view{bp + o}))
         {
-            write_newline(static_cast<std::size_t>(bp + o - g_art_buf));
+            write_newline(art_buf_offset(bp + o));
             len = line_offset + 1;
         }
         break;
@@ -373,7 +433,7 @@ mime_switch:
                     line_offset = len;
                     goto read_more;
                 }
-                write_newline(static_cast<std::size_t>(bp + len++ + extra_offset - g_art_buf));
+                write_newline(art_buf_offset(bp + len++ + extra_offset));
             }
         }
         else if (g_mime_section->m_encoding == MENCODE_BASE64)
@@ -392,7 +452,7 @@ mime_switch:
                     line_offset = len;
                     goto read_more;
                 }
-                write_newline(static_cast<std::size_t>(bp + len++ + extra_offset - g_art_buf));
+                write_newline(art_buf_offset(bp + len++ + extra_offset));
             }
             else
             {
@@ -408,7 +468,7 @@ mime_switch:
         o = filter_offset + extra_offset;
         {
             std::string filtered = filter_html(bp + o, std::string_view{bp, static_cast<std::size_t>(filter_offset)},
-                                               static_cast<int>(g_art_buf_pos.value_of()));
+                                               static_cast<int>(s_art_buf_pos.value_of()));
             filtered.copy(bp, filtered.size());
             bp[filtered.size()] = '\0';
             len = static_cast<int>(filtered.size());
@@ -422,7 +482,7 @@ mime_switch:
                     filter_offset = len;
                     goto read_more;
                 }
-                write_newline(static_cast<std::size_t>(bp + len++ - g_art_buf));
+                write_newline(art_buf_offset(bp + len++));
                 extra_chars = 0;
             }
             else
@@ -446,13 +506,12 @@ mime_switch:
             color_object(COLOR_MIME_DESC, true);
             if (decode_piece(mcp, bp))
             {
-                const std::size_t destination = static_cast<std::size_t>(g_art_buf_pos.value_of());
+                const std::size_t destination = static_cast<std::size_t>(s_art_buf_pos.value_of());
                 if (s_art_buf.size() <= destination + g_art_line.size())
                 {
                     s_art_buf.resize(destination + g_art_line.size() + 1);
-                    g_art_buf = s_art_buf.data();
                 }
-                bp = g_art_buf + destination;
+                bp = art_buf_data() + destination;
                 g_art_line.copy(bp, g_art_line.size());
                 bp[g_art_line.size()] = '\0';
                 (void) mime_set_state(std::string_view{bp});
@@ -487,8 +546,8 @@ mime_switch:
         }
         if (!mp)
         {
-            g_art_buf_len = g_art_buf_pos;
-            g_art_size = g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+            s_art_buf_len = s_art_buf_pos;
+            g_art_size = s_art_buf_len + g_header_type[PAST_HEADER].min_pos;
             read_something = 0;
             bp = nullptr;
         }
@@ -531,16 +590,16 @@ mime_switch:
             extra_chars = len + 1;
             len = read_offset + 1;
             o = read_offset + 1;
-            s_art_buf[static_cast<std::size_t>(bp + o - 1 - g_art_buf)] = '\n';
+            s_art_buf[art_buf_offset(bp + o - 1)] = '\n';
         }
         else
         {
             o = -1;
-            ++g_art_buf_pos;
+            ++s_art_buf_pos;
             bp++;
         }
         {
-            const std::size_t separator_offset = static_cast<std::size_t>(bp + o - g_art_buf);
+            const std::size_t separator_offset = art_buf_offset(bp + o);
             s_art_buf[separator_offset] = '\002';
             g_multipart_separator.copy(&s_art_buf[separator_offset + 1], g_multipart_separator.size());
             write_newline(separator_offset + g_multipart_separator.size() + 1);
@@ -550,14 +609,14 @@ mime_switch:
     case UNHANDLED_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
-        ++g_art_buf_pos;
+        ++s_art_buf_pos;
         description = g_mime_section->mime_description();
         break;
 
     case ALTERNATE_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
-        ++g_art_buf_pos;
+        ++s_art_buf_pos;
         {
             const std::string alternative = fmt::format("[Alternative: {}]\n", *g_mime_section->m_type_name);
             alternative.copy(bp, alternative.size());
@@ -585,7 +644,7 @@ mime_switch:
             g_mime_state = SKIP_MIME;
         }
         *bp++ = '\001';
-        ++g_art_buf_pos;
+        ++s_art_buf_pos;
         description = g_mime_section->mime_description();
         break;
     }
@@ -615,14 +674,14 @@ done:
     {
         for (char *cp = bp; *cp; cp = s + 1)
         {
-            const std::size_t cp_offset = static_cast<std::size_t>(cp - g_art_buf);
+            const std::size_t cp_offset = art_buf_offset(cp);
             const std::size_t newline_pos = s_art_buf.find('\n', cp_offset);
             const std::size_t nul_pos = s_art_buf.find('\0', cp_offset);
             if (newline_pos == std::string::npos || (nul_pos != std::string::npos && nul_pos < newline_pos))
             {
                 break;
             }
-            s = g_art_buf + newline_pos;
+            s = art_buf_data() + newline_pos;
             if (s - cp > g_tc_COLS)
             {
                 char* t;
@@ -655,8 +714,8 @@ done:
                         for (t++; *++t == ' ' || *t == '\t'; spaces++)
                         {
                         }
-                        const std::size_t source_offset = static_cast<std::size_t>(t - g_art_buf);
-                        const std::size_t dest_offset = static_cast<std::size_t>(t - spaces - g_art_buf);
+                        const std::size_t source_offset = art_buf_offset(t);
+                        const std::size_t dest_offset = art_buf_offset(t - spaces);
                         const std::size_t copy_limit = extra_chars > 0 ? static_cast<std::size_t>(extra_chars - 1) : 0;
                         const std::size_t source_end = source_offset + copy_limit;
                         const std::size_t nul_offset = s_art_buf.find('\0', source_offset);
@@ -671,14 +730,14 @@ done:
             }
         }
     }
-    g_art_buf_pos += ArticlePosition{len};
+    s_art_buf_pos += ArticlePosition{len};
     if (read_something)
     {
-        g_art_buf_seek = tell_art();
-        g_art_buf_len = g_art_buf_pos + ArticlePosition{extra_chars};
+        s_art_buf_seek = tell_art();
+        s_art_buf_len = s_art_buf_pos + ArticlePosition{extra_chars};
         if (g_art_size >= 0)
         {
-            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+            g_art_size = art_buf_size_from_raw(g_raw_art_size);
         }
     }
 

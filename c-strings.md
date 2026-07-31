@@ -659,11 +659,10 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Global command buffer scan: no current active source/test hits remain.
 - C text output scan: no active C `printf`, `fprintf`, or `fputs`
   calls remain.
-- Article buffer scan: the public raw `read_art_buf(bool)` API is gone,
-  but `g_art_buf` and its companion position globals are still public
-  shared article-buffer state used by `art.cpp`, `ng.cpp`, and tests.
-  That is a broad owner/encapsulation problem rather than a leaf
-  C-string call-site cleanup.
+- Article buffer scan: the public raw `read_art_buf(bool)` API and the
+  public article-buffer globals are gone.  `artio.cpp` owns the buffer
+  state and exposes small state accessors for article pager callers and
+  tests.
 - Regex scan: all production and test `CompiledRegex::execute` callers
   use the `std::string_view` boolean match API.  The old C-string
   wrapper is gone.  Bracket access returns `std::string_view` into match
@@ -799,18 +798,6 @@ are available.  Keep the listed order inside dependent families.
 
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
-
-#### CSTR-553 - Encapsulate Public Article Buffer State
-
-- Type: public global raw buffer ownership.
-- Files: `libtrn/include/trn/artio.h`, `libtrn/artio.cpp`,
-  `libtrn/art.cpp`, `libtrn/ng.cpp`, article-buffer tests.
-- Globals: `g_art_buf`, `g_art_buf_pos`, `g_art_buf_seek`,
-  `g_art_buf_len`.
-- Dependencies: none.
-- Instructions: replace direct public access to article-buffer storage
-  with owned accessors or owner-local state in `artio.cpp`.  Preserve
-  existing behavior with tests before changing the storage shape.
 
 #### CSTR-585 - Replace HashDatum char Pointer Payloads
 

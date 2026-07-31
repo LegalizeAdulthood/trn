@@ -56,10 +56,6 @@ protected:
         m_old_local_kfp = g_local_kfp;
         m_old_art_fp = g_art_fp;
         m_old_open_art = g_open_art;
-        m_old_art_buf = g_art_buf;
-        m_old_art_buf_pos = g_art_buf_pos;
-        m_old_art_buf_seek = g_art_buf_seek;
-        m_old_art_buf_len = g_art_buf_len;
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_do_hiding = g_do_hiding;
@@ -88,7 +84,6 @@ protected:
         g_novice_delays = false;
         g_local_kfp = nullptr;
         g_art_fp = nullptr;
-        g_art_buf = nullptr;
         g_open_art = ArticleNum{};
         g_data_source = &m_data_source;
         g_do_hiding = false;
@@ -128,10 +123,6 @@ protected:
         g_novice_delays = m_old_novice_delays;
         g_art_fp = m_old_art_fp;
         g_open_art = m_old_open_art;
-        g_art_buf = m_old_art_buf;
-        g_art_buf_pos = m_old_art_buf_pos;
-        g_art_buf_seek = m_old_art_buf_seek;
-        g_art_buf_len = m_old_art_buf_len;
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
         g_do_hiding = m_old_do_hiding;
@@ -199,10 +190,6 @@ protected:
     std::FILE                    *m_old_local_kfp{};
     std::FILE                    *m_old_art_fp{};
     ArticleNum                    m_old_open_art{};
-    char                         *m_old_art_buf{};
-    ArticlePosition               m_old_art_buf_pos{};
-    ArticlePosition               m_old_art_buf_seek{};
-    ArticlePosition               m_old_art_buf_len{};
     ArticlePosition               m_old_raw_art_size{};
     ArticlePosition               m_old_art_size{};
     bool                          m_old_do_hiding{};

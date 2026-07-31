@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include <string>
+#include <string_view>
 
 enum : char
 {
@@ -24,10 +25,6 @@ extern ArticlePosition g_art_pos;      // byte position in article file
 extern ArticleLine     g_art_line_num; // current line number in article file
 extern std::FILE      *g_art_fp;       // current article file pointer
 extern ArticleNum      g_open_art;     // the article number we have open
-extern char           *g_art_buf;
-extern ArticlePosition g_art_buf_pos;
-extern ArticlePosition g_art_buf_seek;
-extern ArticlePosition g_art_buf_len;
 extern char            g_wrapped_nl;
 extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 
@@ -42,5 +39,14 @@ bool            read_art(std::string &line);
 void            clear_art_buf();
 int             seek_art_buf(ArticlePosition pos);
 bool            read_art_buf(std::string &line, bool view_inline);
+bool            art_buf_empty();
+bool            art_buf_at_end();
+ArticlePosition art_buf_pos();
+ArticlePosition art_buf_len();
+ArticlePosition art_buf_seek();
+void            set_art_buf_seek(ArticlePosition pos);
+ArticlePosition art_buf_article_pos();
+ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size);
+std::string_view art_buf_view(ArticlePosition pos);
 
 #endif
