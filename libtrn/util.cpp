@@ -63,10 +63,6 @@ using WaitStatus = int;
 bool g_waiting{}; // waiting for subprocess (in doshell)?
 bool g_no_wait_fork{};
 
-#ifndef USE_DEBUGGING_MALLOC
-static constexpr char s_no_memory[] = "trn: out of memory!\n";
-#endif
-
 static constexpr std::string_view s_newsactive_env{"NEWSACTIVE"};
 static constexpr std::string_view s_newsdescriptions_env{"NEWSDESCRIPTIONS"};
 static constexpr std::string_view s_nntp_server_env{"NNTPSERVER"};
@@ -250,21 +246,6 @@ int do_shell(std::string_view shell, std::string_view cmd)
     }
     return ret;
 }
-
-// paranoid version of malloc
-
-#ifndef USE_DEBUGGING_MALLOC
-char *safe_malloc(MemorySize size)
-{
-    char *ptr = (char *) std::malloc(size ? size : (MemorySize) 1);
-    if (!ptr)
-    {
-        fmt::print("{}", s_no_memory);
-        sig_catcher(0);
-    }
-    return ptr;
-}
-#endif
 
 // effective access
 

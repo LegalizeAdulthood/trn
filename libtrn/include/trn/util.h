@@ -39,9 +39,6 @@ class IniSectionValues;
 void util_init();
 void util_final();
 int  do_shell(std::string_view shell, std::string_view cmd);
-#ifndef USE_DEBUGGING_MALLOC
-char *safe_malloc(MemorySize size);
-#endif
 int         eaccess(const std::filesystem::path &filename, int mode);
 std::string trn_getwd();
 std::string get_a_line(std::FILE *fp);

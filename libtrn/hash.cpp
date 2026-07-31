@@ -10,15 +10,14 @@
 
 #include <config/common.h>
 #include <trn/final.h>
-#include <trn/util.h>
 
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <string_view>
+#include <vector>
 
 #define BADTBL(tbl)     ((tbl) == nullptr || (tbl)->ht_magic != HASHMAG)
 
@@ -26,68 +25,30 @@
 
 struct HashEntry
 {
-    HashEntry *he_next; // in hash chain
-    HashDatum  he_data;
-    int        he_key_len; // to help verify a match
+    HashDatum he_data;
+    int       he_key_len; // to help verify a match
 };
 
 struct HashTable
 {
-    HashEntry     **ht_addr; // array of HASHENT pointers
-    unsigned        ht_size;
-    char            ht_magic;
-    HashCompareFunc ht_cmp;
+    std::vector<std::vector<HashEntry>> ht_addr;
+    char                                ht_magic;
+    HashCompareFunc                     ht_cmp;
 };
 
-static HashEntry **hash_find(HashTable *tbl, std::string_view key);
+static std::size_t hash_bucket_index(HashTable *tbl, std::string_view key);
+static std::size_t hash_find(HashTable *tbl, std::size_t bucket_index, std::string_view key);
 static unsigned    hash(std::string_view key);
 static int         default_cmp(std::string_view key, HashDatum data);
-static HashEntry  *hash_entry_alloc();
-static void        hash_entry_free(HashEntry *hp);
-
-// In the future it might be a good idea to preallocate a region
-// of hashents, since allocation overhead on some systems will be as
-// large as the structure itself.
-//
-// grab this many hashents at a time (under 1024 for malloc overhead)
-enum
-{
-    HASH_ENTRY_BLOCK_SIZE = 1000
-};
-
-// define the following if you actually want to free the hashents
-// You probably don't want to do this with the usual malloc...
-//
-// #define HASH_FREE_ENTRIES
-
-// increased from 600.  Each threaded article requires at least
-// one hashent, and various newsgroup hashes can easily get large.
-//
-// tunable parameters
-enum
-{
-    RETAIN = 1000 // retain & recycle this many HASHENTs
-};
-
-static HashEntry *s_hash_entry_reuse{};
-static int        s_reusables{};
 
 // size - a crude guide to size
 HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
 {
-    size = std::max(size, 1U);  // size < 1 is nonsense
-    struct alignalloc
-    {
-        HashTable ht;
-        HashEntry *hepa[1]; // longer than it looks
-    };
-    alignalloc *aap = (alignalloc *)safe_malloc(sizeof *aap + (size - 1) * sizeof(HashEntry *));
-    std::memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HashEntry*));
-    HashTable *tbl = &aap->ht;
-    tbl->ht_size = size;
+    size = std::max(size, 1U); // size < 1 is nonsense
+    HashTable *tbl = new HashTable{};
+    tbl->ht_addr.resize(size);
     tbl->ht_magic = HASHMAG;
     tbl->ht_cmp = cmp_func == nullptr ? default_cmp : cmp_func;
-    tbl->ht_addr = aap->hepa;
     return tbl;
 }
 
@@ -96,89 +57,73 @@ HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
 //
 void hash_destroy(HashTable *tbl)
 {
-    HashEntry* next;
-
     if (BADTBL(tbl))
     {
         return;
     }
-    int tblsize = tbl->ht_size;
-    HashEntry **hepp = tbl->ht_addr;
-    for (unsigned idx = 0; idx < tblsize; idx++)
-    {
-        for (HashEntry *hp = hepp[idx]; hp != nullptr; hp = next)
-        {
-            next = hp->he_next;
-            hp->he_next = nullptr;
-            hash_entry_free(hp);
-        }
-        hepp[idx] = nullptr;
-    }
-    tbl->ht_magic = 0;                  // de-certify this table
-    tbl->ht_addr = nullptr;
-    std::free((char*)tbl);
+    tbl->ht_magic = 0; // de-certify this table
+    delete tbl;
 }
 
 void hash_store(HashTable *tbl, std::string_view key, HashDatum data)
 {
-    const int key_len = static_cast<int>(key.size());
-    HashEntry **nextp = hash_find(tbl, key);
-    HashEntry *hp = *nextp;
-    if (hp == nullptr)              // absent; allocate an entry
+    const int               key_len = static_cast<int>(key.size());
+    const std::size_t       bucket_index = hash_bucket_index(tbl, key);
+    const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
+    std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
+    if (entry_index == bucket.size()) // absent; allocate an entry
     {
-        hp = hash_entry_alloc();
-        hp->he_next = nullptr;
-        hp->he_key_len = key_len;
-        *nextp = hp;                // append to hash chain
+        bucket.push_back({data, key_len});
+        return;
     }
-    hp->he_data = data;             // supersede any old data for this key
+    bucket[entry_index].he_data = data; // supersede any old data for this key
 }
 
 void hash_delete(HashTable *tbl, std::string_view key)
 {
-    HashEntry **nextp = hash_find(tbl, key);
-    HashEntry *hp = *nextp;
-    if (hp == nullptr)                  // absent
+    const std::size_t       bucket_index = hash_bucket_index(tbl, key);
+    const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
+    std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
+    if (entry_index == bucket.size()) // absent
     {
         return;
     }
-    *nextp = hp->he_next;               // skip this entry
-    hp->he_next = nullptr;
-    hp->he_data.dat_ptr = nullptr;
-    hash_entry_free(hp);
+    bucket.erase(bucket.begin() + static_cast<std::ptrdiff_t>(entry_index));
 }
 
-static HashEntry **s_slast_nextp{};
-static int       s_slast_keylen{};
+static HashTable  *s_slast_table{};
+static std::size_t s_slast_bucket{};
+static std::size_t s_slast_index{};
+static int         s_slast_keylen{};
 
 // data corresponding to key
 HashDatum hash_fetch(HashTable *tbl, std::string_view key)
 {
-    static HashDatum errdatum{nullptr, 0};
-    const int key_len = static_cast<int>(key.size());
+    const int               key_len = static_cast<int>(key.size());
+    const std::size_t       bucket_index = hash_bucket_index(tbl, key);
+    const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
+    std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
 
-    HashEntry **nextp = hash_find(tbl, key);
-    s_slast_nextp = nextp;
+    s_slast_table = tbl;
+    s_slast_bucket = bucket_index;
+    s_slast_index = entry_index;
     s_slast_keylen = key_len;
-    HashEntry *hp = *nextp;
-    if (hp == nullptr)                  // absent
+    if (entry_index == bucket.size()) // absent
     {
-        return errdatum;
+        return {nullptr, 0};
     }
-    return hp->he_data;
+    return bucket[entry_index].he_data;
 }
 
 void hash_store_last(HashDatum data)
 {
-    HashEntry *hp = *s_slast_nextp;
-    if (hp == nullptr)                          // absent; allocate an entry
+    std::vector<HashEntry> &bucket = s_slast_table->ht_addr[s_slast_bucket];
+    if (s_slast_index == bucket.size()) // absent; allocate an entry
     {
-        hp = hash_entry_alloc();
-        hp->he_next = nullptr;
-        hp->he_key_len = s_slast_keylen;
-        *s_slast_nextp = hp;              // append to hash chain
+        bucket.push_back({data, s_slast_keylen});
+        return;
     }
-    hp->he_data = data;         // supersede any old data for this key
+    bucket[s_slast_index].he_data = data; // supersede any old data for this key
 }
 
 // Visit each entry by calling nodefunc at each, with keylen, data,
@@ -186,61 +131,55 @@ void hash_store_last(HashDatum data)
 //
 void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 {
-    HashEntry* next;
-    HashEntry** hepp;
-
     if (BADTBL(tbl))
     {
         return;
     }
-    hepp = tbl->ht_addr;
-    int tblsize = tbl->ht_size;
-    for (unsigned idx = 0; idx < tblsize; idx++)
+    for (std::size_t bucket_index = 0; bucket_index < tbl->ht_addr.size(); ++bucket_index)
     {
-        s_slast_nextp = &hepp[idx];
-        for (HashEntry *hp = *s_slast_nextp; hp != nullptr; hp = next)
+        std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
+        for (std::size_t entry_index = 0; entry_index < bucket.size();)
         {
-            next = hp->he_next;
-            if ((*node_func)(hp->he_key_len, &hp->he_data, extra) < 0)
+            HashEntry &entry = bucket[entry_index];
+            s_slast_table = tbl;
+            s_slast_bucket = bucket_index;
+            s_slast_index = entry_index;
+            s_slast_keylen = entry.he_key_len;
+            if ((*node_func)(entry.he_key_len, &entry.he_data, extra) < 0)
             {
-                *s_slast_nextp = next;
-                hp->he_next = nullptr;
-                hash_entry_free(hp);
+                bucket.erase(bucket.begin() + static_cast<std::ptrdiff_t>(entry_index));
             }
             else
             {
-                s_slast_nextp = &hp->he_next;
+                ++entry_index;
             }
         }
     }
 }
 
-// The returned value is the address of the pointer that refers to the
-// found object.  Said pointer may be nullptr if the object was not found;
-// if so, this pointer should be updated with the address of the object
-// to be inserted, if insertion is desired.
-//
-static HashEntry **hash_find(HashTable *tbl, std::string_view key)
+static std::size_t hash_bucket_index(HashTable *tbl, std::string_view key)
 {
-    HashEntry *prevhp = nullptr;
-    const int  key_len = static_cast<int>(key.size());
-
     if (BADTBL(tbl))
     {
         fmt::print(stderr, "Hash table is invalid.");
         finalize(1);
     }
-    unsigned size = tbl->ht_size;
-    HashEntry **hepp = &tbl->ht_addr[hash(key) % size];
-    for (HashEntry *hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next)
+    return hash(key) % tbl->ht_addr.size();
+}
+
+static std::size_t hash_find(HashTable *tbl, std::size_t bucket_index, std::string_view key)
+{
+    const int               key_len = static_cast<int>(key.size());
+    std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
+    for (std::size_t entry_index = 0; entry_index < bucket.size(); ++entry_index)
     {
-        if (hp->he_key_len == key_len && !(*tbl->ht_cmp)(key, hp->he_data))
+        HashEntry &entry = bucket[entry_index];
+        if (entry.he_key_len == key_len && !(*tbl->ht_cmp)(key, entry.he_data))
         {
-            break;
+            return entry_index;
         }
     }
-    // TRN_ASSERT: *(returned value) == hp
-    return (prevhp == nullptr? hepp: &prevhp->he_next);
+    return bucket.size();
 }
 
 // not yet taken modulus table size
@@ -259,58 +198,6 @@ static int default_cmp(std::string_view key, HashDatum data)
 {
     // We already know that the lengths are equal, just compare the strings
     return key.compare(std::string_view{data.dat_ptr, key.size()});
-}
-
-// allocate a hash entry
-static HashEntry *hash_entry_alloc()
-{
-    HashEntry* hp;
-
-    if (s_hash_entry_reuse == nullptr)
-    {
-        int i;
-
-        // make a nice big block of hashents to play with
-        hp = (HashEntry*)safe_malloc(HASH_ENTRY_BLOCK_SIZE * sizeof (HashEntry));
-        // set up the pointers within the block
-        for (i = 0; i < HASH_ENTRY_BLOCK_SIZE-1; i++)
-        {
-            (hp + i)->he_next = hp + i + 1;
-        }
-        // The last block is the end of the list
-        (hp+i)->he_next = nullptr;
-        s_hash_entry_reuse = hp;         // start of list is the first item
-        s_reusables += HASH_ENTRY_BLOCK_SIZE;
-    }
-
-    // pull the first reusable one off the pile
-    hp = s_hash_entry_reuse;
-    s_hash_entry_reuse = s_hash_entry_reuse->he_next;
-    hp->he_next = nullptr;                      // prevent accidents
-    s_reusables--;
-    return hp;
-}
-
-// free a hash entry
-static void hash_entry_free(HashEntry *hp)
-{
-#ifdef HASH_FREE_ENTRIES
-    if (s_reusables >= RETAIN)          // compost heap is full?
-    {
-        std::free((char*)hp);                // yup, just pitch this one
-    }
-    else                                // no, just stash for reuse
-    {
-        ++s_reusables;
-        hp->he_next = s_hereuse;
-        s_hereuse = hp;
-    }
-#else
-    // always add to list
-    ++s_reusables;
-    hp->he_next = s_hash_entry_reuse;
-    s_hash_entry_reuse = hp;
-#endif
 }
 
 /*

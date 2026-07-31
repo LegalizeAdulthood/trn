@@ -68,10 +68,6 @@ Run every scan from the innermost lexical scope outward:
 - `char *` results from functions that return owned raw strings from
   allocation helpers.  Summarize the return ownership, then trace callers
   that store, use, and free the result locally.
-- Arrays of `T` where `T` is not `char` and the array is resized with
-  `safe_realloc`.  Classify element ownership, then convert the owning
-  array storage to `std::vector<T>` when the array is local to one
-  owner.
 - Fixed-length `char name[N]` buffers in local, static local,
   file-scope, global, and struct/class storage.  Do not limit the scan to
   local automatic variables.
@@ -300,20 +296,6 @@ Refactor by returning `std::string` for formatted text or by writing to a
 caller-provided output abstraction when the caller truly controls
 storage.  Convert immediate display callers to consume the string in the
 same expression or same local scope.
-
-### `safe_realloc` Arrays
-
-Select when code owns a growable array of `T` where `T` is not `char`,
-the array storage is resized with `safe_realloc`, and the array lifetime
-has a clear owner.  Include `char **` arrays because the element type is
-`char *`, not `char`.  Reject byte buffers, caller output storage, and
-arrays whose ownership or element lifetime is split across unrelated
-owners.
-
-Refactor by replacing the owning `T *` plus count and capacity fields
-with `std::vector<T>`.  When a slice promotes a member of a
-`safe_realloc`-grown struct array to a non-trivial C++ type, migrate the
-owning array to `std::vector` in the same slice.
 
 ### Fixed-length C Buffers
 
@@ -551,13 +533,12 @@ The current scan covers source and test code under `config`, `libtrn`,
 `parsedate`, and `main.cpp`.  It excludes generated files, legacy
 Configure scripts, and the vendored `vcpkg` tree.
 
-- `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
-  tracked here.  `sort_add_groups` now uses `std::vector<AddGroup *>`
-  and `std::sort` instead of a `safe_malloc` pointer array plus
-  `qsort`.  The remaining non-string owner is hash-table internal
-  storage, plus the generic allocation helper implementation itself.
-  Regex bytecode storage now uses `std::vector<char>`.  No string-copy
-  allocation helpers are present in production roots.
+- `safe_malloc` and `safe_realloc`: no remaining callers or public helper
+  APIs remain.  `sort_add_groups` now uses
+  `std::vector<AddGroup *>` and `std::sort` instead of a raw pointer
+  array plus `qsort`.  Hash-table internals now use vector bucket
+  storage.  Regex bytecode storage now uses `std::vector<char>`.  No
+  string-copy allocation helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: the local `opt_init` `argv` shim in
@@ -648,12 +629,10 @@ Configure scripts, and the vendored `vcpkg` tree.
   production hit is exempt by user direction.  The only other `strlen`
   spelling is comment text.  No current helper-parameter copy-to-string
   leaf slice remains.
-- Non-zero line-input, byte, and allocation-helper scans: the remaining
-  `fgets` calls are low-level `FILE *` input boundaries behind
-  string-returning article input APIs; the remaining `memset` is hash
-  allocation-table initialization.  No active `safe_realloc` callers
-  remain outside the helper implementation.  The remaining `safe_malloc`
-  callers allocate non-string hash storage.
+- Non-zero line-input scan: the remaining `fgets` calls are low-level
+  `FILE *` input boundaries behind string-returning article input APIs.
+  Byte and allocation-helper scans have no active production source/test
+  hits.
 - Fixed-size buffer scan: the remaining `char name[N]` hits are
   immutable labels, termcap test/API shims, lookup tables, regex parser
   state, or non-string byte arrays.  No new fixed-string-buffer slice is
@@ -714,16 +693,15 @@ conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
 - C line input: `std::fgets` 2.
-- Character byte operations: `std::memset` 1.
 
 The scan found no current active source/test hits for `strcmp`, `strcpy`,
 `strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`,
 `strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`,
 `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `gets`,
 `fputs`, `puts`, `printf`, `std::printf`, `fprintf`, `std::fprintf`,
-`memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`,
-`std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
-`std::strtod`.
+`memcpy`, `memmove`, `memset`, `memcmp`, `memchr`, `atoi`, `atol`,
+`std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
+`std::strtoul`, or `std::strtod`.
 
 `fmt::printf` appears three times and `fmt::sprintf` appears three times.
 These calls are not C buffer writes.  They are intentionally retained
@@ -750,8 +728,6 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
   string-returning APIs.
 - `gets`: `parsedate/parsedate.y` `#ifdef TEST` harness.  Exempt from
   modernization by user direction.
-- `memset`: `libtrn/hash.cpp`, `hash_create`.  This is hash
-  allocation-table initialization.
 - `printf`/`std::printf`: `parsedate/parsedate.y` has 5 exempt
   `#ifdef TEST` harness hits.
 
@@ -798,16 +774,3 @@ and clarified ownership at the edges.
 
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
-
-#### CSTR-586 - Remove Public safe_malloc And safe_realloc Char APIs
-
-- Type: public raw allocation helpers returning `char *`.
-- Files: `libtrn/include/trn/util.h`, `libtrn/util.cpp`,
-  remaining allocation owners and tests.
-- Functions: `safe_malloc`, `safe_realloc`.
-- Dependencies: none.
-- Instructions: after hash-table internals no longer need the public raw
-  byte allocation helper, remove the public `char *` allocation APIs.
-  Replace remaining fixed or dynamic arrays with standard containers, or
-  keep a typed file-local allocation helper only where an external C API
-  truly requires raw storage.
