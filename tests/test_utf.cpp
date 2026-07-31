@@ -109,23 +109,23 @@ class CurrentCharSubstTest : public Test
 protected:
     void SetUp() override
     {
-        m_previous_char_subst = g_char_subst;
+        m_previous_char_subst = current_char_subst_mode();
         m_previous_verbose = g_verbose;
     }
 
     void TearDown() override
     {
-        g_char_subst = m_previous_char_subst;
+        set_char_subst_mode(m_previous_char_subst);
         g_verbose = m_previous_verbose;
     }
 
-    const char *m_previous_char_subst{};
-    bool        m_previous_verbose{};
+    char m_previous_char_subst{};
+    bool m_previous_verbose{};
 };
 
 TEST_F(CurrentCharSubstTest, showsVerboseMonoSubstitutionStatus)
 {
-    g_char_subst = "m";
+    set_char_subst_mode('m');
     g_verbose = true;
 
     EXPECT_EQ("[ISO->USmono] ", current_char_subst());
@@ -133,7 +133,7 @@ TEST_F(CurrentCharSubstTest, showsVerboseMonoSubstitutionStatus)
 
 TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
 {
-    g_char_subst = "t";
+    set_char_subst_mode('t');
     g_verbose = false;
 
     EXPECT_EQ("[T] ", current_char_subst());
@@ -141,14 +141,14 @@ TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
 
 TEST_F(CurrentCharSubstTest, returnsCurrentMode)
 {
-    g_char_subst = "a";
+    set_char_subst_mode('a');
 
     EXPECT_EQ('a', current_char_subst_mode());
 }
 
 TEST_F(CurrentCharSubstTest, resetsToFirstConfiguredMode)
 {
-    g_char_subst = g_charsets.c_str() + 2;
+    set_char_subst_mode(g_charsets[2]);
 
     reset_char_subst_mode();
 
@@ -157,7 +157,7 @@ TEST_F(CurrentCharSubstTest, resetsToFirstConfiguredMode)
 
 TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
 {
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
 
     next_char_subst_mode();
 
@@ -166,7 +166,7 @@ TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
 
 TEST_F(CurrentCharSubstTest, cyclesPastEndToFirstConfiguredMode)
 {
-    g_char_subst = g_charsets.c_str() + g_charsets.size() - 1;
+    set_char_subst_mode(g_charsets.back());
 
     next_char_subst_mode();
 

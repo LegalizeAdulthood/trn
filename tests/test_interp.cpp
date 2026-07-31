@@ -1863,7 +1863,7 @@ TEST_F(InterpolatorNewsgroupTest, replyWritesInterpolatedHeaderAndQuotedBody)
     ValueSaver<std::string>  spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
     ValueSaver<std::string>  indent(g_indent_string, ">");
-    ValueSaver<const char *> char_subst(g_char_subst, g_charsets.c_str());
+    reset_char_subst_mode();
     m_env.expect_env("MAILPOSTER", "exit 0 %h");
     m_env.expect_env("MAILHEADER", mail_header.c_str());
     m_env.expect_env("YOUSAID", "said %i:");
@@ -1965,7 +1965,7 @@ TEST_F(InterpolatorNewsgroupTest, followupWritesInterpolatedHeaderAndQuotedBody)
     ValueSaver<std::string>  spool_dir(g_data_source->m_spool_dir, TRN_TEST_LOCAL_SPOOL_DIR);
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
     ValueSaver<std::string>  indent(g_indent_string, ">");
-    ValueSaver<const char *> char_subst(g_char_subst, g_charsets.c_str());
+    reset_char_subst_mode();
     m_env.expect_env("NEWSPOSTER", "exit 0");
     m_env.expect_env("NEWSHEADER", news_header.c_str());
     m_env.expect_env("ATTRIBUTION", "In article %i:");
@@ -2011,7 +2011,7 @@ TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     m_env.expect_no_envar("LOCALTIMEFMT");
@@ -2040,7 +2040,7 @@ TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     m_env.expect_no_envar("LOCALTIMEFMT");
@@ -2090,7 +2090,7 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     m_env.expect_no_envar("LOCALTIMEFMT");
@@ -2117,7 +2117,7 @@ TEST_F(InterpolatorNewsgroupTest, rotatesArticleBodyText)
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     m_env.expect_no_envar("LOCALTIMEFMT");
@@ -2147,7 +2147,7 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     m_env.expect_no_envar("LOCALTIMEFMT");
@@ -2169,7 +2169,7 @@ TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     m_env.expect_no_envar("LOCALTIMEFMT");
@@ -2208,7 +2208,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
     g_init_lines = ArticleLine{2};
     g_tc_LINES = 4;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     ASSERT_TRUE(parse_header(g_art));
@@ -2237,7 +2237,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
     g_init_lines = ArticleLine{2};
     g_tc_LINES = 4;
     g_tc_COLS = 80;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
     g_curr_artp = article_ptr(g_art);
     g_artp = g_curr_artp;
     ASSERT_TRUE(parse_header(g_art));

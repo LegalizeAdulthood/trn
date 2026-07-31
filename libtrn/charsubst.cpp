@@ -153,6 +153,24 @@ char current_char_subst_mode()
     return g_char_subst == nullptr ? '\0' : *g_char_subst;
 }
 
+void set_char_subst_mode(char mode)
+{
+    if (mode == '\0')
+    {
+        g_char_subst = nullptr;
+        return;
+    }
+
+    const std::string::size_type mode_pos = g_charsets.find(mode);
+    if (mode_pos == std::string::npos)
+    {
+        reset_char_subst_mode();
+        return;
+    }
+
+    g_char_subst = g_charsets.c_str() + mode_pos;
+}
+
 void reset_char_subst_mode()
 {
     g_char_subst = g_charsets.c_str();

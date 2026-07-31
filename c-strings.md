@@ -5,11 +5,11 @@
 ## Scope
 
 Audited project C and C++ sources under the source root, including test
-code, and excluding the vendored `vcpkg` tree.  Test code is held to the
-same modernization standard as production code.  The audit looked for
-local raw C string pointers and function parameters that can become
-`std::string_view` or `std::string` without changing ownership
-boundaries.
+code, and excluding the vendored `vcpkg` tree and files in `support`.
+Test code is held to the same modernization standard as production code.
+The audit looked for local raw C string pointers and function parameters
+that can become `std::string_view` or `std::string` without changing
+ownership boundaries.
 
 Follow-up passes also look for fixed-length `char name[N]` buffers in
 all storage classes and for functions that hide owned string allocation
@@ -603,10 +603,9 @@ Configure scripts, and the vendored `vcpkg` tree.
   operation first, then update `article_walk` callback plumbing.
 - Character substitution scan: `g_char_subst` is a borrowed cursor into
   mutable `g_charsets` storage.  Production reset, cycle, and display
-  callers now use the mode-state helpers.  Tests still manipulate the raw
-  pointer directly until the test slice moves them onto the same helper
-  API.  Finish this by replacing the pointer with an owned index into
-  `g_charsets`.
+  callers now use the mode-state helpers, and tests no longer manipulate
+  the raw pointer directly.  Finish this by replacing the pointer with
+  an owned index into `g_charsets`.
 - Numeric command scan: `num_num` accepts command text directly and
   parses numeric range text from that view.
 - Terminal input scan: `in_char` and `in_answer` return caller-owned
@@ -726,17 +725,17 @@ legacy Configure scripts and `vcpkg`, but it does not preprocess
 conditional blocks.  Exempt `parsedate.y` hits are listed in the source
 map but are not included in the active counts below.
 
-- C line input: `fgets` 2.
-- Character byte operations: `memset` 1.
+- C line input: `std::fgets` 2.
+- Character byte operations: `std::memset` 1.
 
-The scan found no current active source/test hits for `strcmp`,
-`strcpy`, `strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`,
-`strrchr`, `strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`,
-`strtok`, `sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`,
-`gets`, `fputs`, `puts`, `printf`, `std::printf`, `fprintf`,
-`std::fprintf`, `memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`,
-`atol`, `std::atoi`, `std::atof`, `std::atol`, `std::strtol`,
-`std::strtoul`, or `std::strtod`.
+The scan found no current active source/test hits for `strcmp`, `strcpy`,
+`strncpy`, `strcat`, `strncat`, `strncmp`, `strchr`, `strrchr`,
+`strstr`, `strlen`, `strspn`, `strcspn`, `strpbrk`, `strtok`,
+`sprintf`, `snprintf`, `sscanf`, `vsprintf`, `vsnprintf`, `gets`,
+`fputs`, `puts`, `printf`, `std::printf`, `fprintf`, `std::fprintf`,
+`memcpy`, `memmove`, `memcmp`, `memchr`, `atoi`, `atol`, `std::atoi`,
+`std::atof`, `std::atol`, `std::strtol`, `std::strtoul`, or
+`std::strtod`.
 
 `fmt::printf` appears three times and `fmt::sprintf` appears three times.
 These calls are not C buffer writes.  They are intentionally retained
@@ -773,7 +772,7 @@ The `strlen` spellings in `charsubst.cpp` are comment text.
 Slices are stable.  Do not renumber remaining slices when one is
 completed; remove the completed slice.  Slice IDs are also monotonic:
 never reuse a completed ID, even if that ID is no longer visible in this
-file.  The next new slice ID is `CSTR-587`.  When adding slices, assign
+file.  The next new slice ID is `CSTR-588`.  When adding slices, assign
 IDs starting there and then update this allocator line past the highest
 new ID.  The physical order is grouped by dependency tier: finish
 earlier tiers first so later caller and shared-buffer slices have
@@ -827,20 +826,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-563 - Move Tests Off The Raw Character-substitution Pointer
-
-- Type: test global cursor manipulation.
-- Files: `tests/test_interp.cpp`, `tests/test_rt-util.cpp`,
-  `tests/test_rt-wumpus.cpp`, `tests/test_scmd.cpp`,
-  `tests/test_utf.cpp`.
-- Expressions: direct `g_char_subst` assignment and `ValueSaver`
-  storage.
-- Dependencies: none.
-- Instructions: update tests to use the same state helpers as production
-  code.  Add a scoped test saver only if the helper API cannot express
-  the existing setup/teardown cleanly.  Test code is held to the same
-  standard as production code.
-
 ### Tier 4 - Broad Shared Buffers
 
 These slices should wait until earlier tiers have reduced direct callers
@@ -866,7 +851,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/include/trn/charsubst.h`, `libtrn/charsubst.cpp`,
   `libtrn/opt.cpp`, character-substitution tests.
 - Globals: `g_char_subst`, `g_charsets`.
-- Dependencies: CSTR-563.
+- Dependencies: none.
 - Instructions: remove the exported `const char *g_char_subst` cursor
   and store the current substitution as an owned index into
   `g_charsets`.  When `g_charsets` is reassigned, normalize the index so

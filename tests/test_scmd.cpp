@@ -28,7 +28,7 @@ protected:
     void SetUp() override
     {
         g_article_list.clear();
-        g_char_subst = g_charsets.c_str();
+        reset_char_subst_mode();
         g_last_art = ArticleNum{1};
         g_s_cur_type = S_ART;
         g_s_status_cols = 3;
@@ -81,7 +81,7 @@ protected:
         g_erase_char = m_old_erase_char;
         g_article_list.clear();
         g_sa_ents.clear();
-        g_char_subst = nullptr;
+        set_char_subst_mode('\0');
         g_last_art = ArticleNum{};
         g_s_cur_type = S_NONE;
         g_s_status_cols = 0;

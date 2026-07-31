@@ -230,16 +230,16 @@ class CompressFromTest : public Test
 protected:
     void SetUp() override
     {
-        m_previous_char_subst = g_char_subst;
-        g_char_subst = g_charsets.c_str();
+        m_previous_char_subst = current_char_subst_mode();
+        reset_char_subst_mode();
     }
 
     void TearDown() override
     {
-        g_char_subst = m_previous_char_subst;
+        set_char_subst_mode(m_previous_char_subst);
     }
 
-    const char *m_previous_char_subst{};
+    char m_previous_char_subst{};
 };
 
 static std::string padded(std::string text, std::size_t width)
@@ -296,12 +296,12 @@ class CompressSubjectTest : public Test
 protected:
     void SetUp() override
     {
-        m_previous_char_subst = g_char_subst;
+        m_previous_char_subst = current_char_subst_mode();
         m_previous_threaded_group = g_threaded_group;
         m_previous_sel_rereading = g_sel_rereading;
         m_previous_unbroken_subjects = g_unbroken_subjects;
 
-        g_char_subst = g_charsets.c_str();
+        reset_char_subst_mode();
         g_threaded_group = false;
         g_sel_rereading = false;
         g_unbroken_subjects = false;
@@ -315,7 +315,7 @@ protected:
 
     void TearDown() override
     {
-        g_char_subst = m_previous_char_subst;
+        set_char_subst_mode(m_previous_char_subst);
         g_threaded_group = m_previous_threaded_group;
         g_sel_rereading = m_previous_sel_rereading;
         g_unbroken_subjects = m_previous_unbroken_subjects;
@@ -328,7 +328,7 @@ protected:
 
     Subject     m_subject{};
     Article     m_article{};
-    const char *m_previous_char_subst{};
+    char        m_previous_char_subst{};
     bool        m_previous_threaded_group{};
     bool        m_previous_sel_rereading{};
     bool        m_previous_unbroken_subjects{};

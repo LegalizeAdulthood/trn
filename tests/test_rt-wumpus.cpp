@@ -28,7 +28,7 @@ protected:
         m_old_recent_artp = g_recent_artp;
         m_old_selected_only = g_selected_only;
         m_old_do_hiding = g_do_hiding;
-        m_old_char_subst = g_char_subst;
+        m_old_char_subst = current_char_subst_mode();
         m_old_max_tree_lines = g_max_tree_lines;
         m_old_threaded_group = g_threaded_group;
         m_old_tc_cols = g_tc_COLS;
@@ -53,7 +53,7 @@ protected:
         g_recent_artp = &m_recent;
         g_selected_only = false;
         g_do_hiding = false;
-        g_char_subst = "";
+        set_char_subst_mode('\0');
         g_max_tree_lines = 6;
         g_tc_COLS = 40;
         g_tc_SO = m_standout_start;
@@ -74,7 +74,7 @@ protected:
         g_recent_artp = m_old_recent_artp;
         g_selected_only = m_old_selected_only;
         g_do_hiding = m_old_do_hiding;
-        g_char_subst = m_old_char_subst;
+        set_char_subst_mode(m_old_char_subst);
         g_max_tree_lines = m_old_max_tree_lines;
         g_threaded_group = m_old_threaded_group;
         g_tc_COLS = m_old_tc_cols;
@@ -98,7 +98,7 @@ protected:
     Article    *m_old_recent_artp{};
     bool        m_old_selected_only{};
     bool        m_old_do_hiding{};
-    const char *m_old_char_subst{};
+    char        m_old_char_subst{};
     int         m_old_max_tree_lines{};
     bool        m_old_threaded_group{};
     int         m_old_tc_cols{};
