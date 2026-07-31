@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #ifndef NBRA
 #define NBRA    10              // the maximum number of meta-brackets in an
@@ -27,15 +28,14 @@ public:
     bool             execute(std::string_view text);
 
 private:
-    char            *grow_eb(char *epp, char **alt);
+    char            *grow_eb(char *epp);
     bool             advance(const char *lp, const char *ep);
     bool             back_ref(int i, const char *lp);
 
-    char       *m_exp_buf;                  // The compiled search string
-    int         m_eb_len;                   // Length of above buffer
-    std::array<char *, NALTS + 1>      m_alternatives;        // The list of \| separated alternatives
-    std::array<std::size_t, NBRA + 1> m_bracket_start_offsets; // RE meta-bracket start offsets
-    std::array<std::size_t, NBRA + 1> m_bracket_end_offsets;   // RE meta-bracket end offsets
+    std::vector<char>                  m_exp_buf;                  // The compiled search string
+    std::array<std::size_t, NALTS + 1> m_alternatives;             // The list of \| separated alternatives
+    std::array<std::size_t, NBRA + 1>  m_bracket_start_offsets;    // RE meta-bracket start offsets
+    std::array<std::size_t, NBRA + 1>  m_bracket_end_offsets;      // RE meta-bracket end offsets
     std::string m_bracket_str;              // saved match string after execute()
     int         m_num_brackets;             // The number of meta-brackets int the most
                                             // recently compiled RE

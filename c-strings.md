@@ -556,18 +556,18 @@ The current scan covers source and test code under `config`, `libtrn`,
 Configure scripts, and the vendored `vcpkg` tree.
 
 - `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
-  tracked here.  Non-string owners include hash-table internals, regex
-  bytecode, and generic allocation helpers.  No string-copy allocation
-  helpers are present in production roots.
+  tracked here.  Non-string owners include hash-table internals, the
+  add-newsgroup temporary pointer array, and generic allocation helpers.
+  Regex bytecode storage now uses `std::vector<char>`.  No string-copy
+  allocation helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
   wrapper implementation.
 - Fixed raw buffers: the local `opt_init` `argv` shim in
   `tests/test_interp.cpp` remains an API-boundary fixture because
   `opt_init` still accepts `char *argv[]`.  Translation tables,
-  terminal pushback bytes, termcap storage, keymap type bytes, regex
-  bytecode arrays, bounded UTF byte sequences, and terminal-capability
-  fixture storage are non-string protocol, parser, or global-boundary
-  storage.
+  terminal pushback bytes, termcap storage, keymap type bytes, bounded
+  UTF byte sequences, and terminal-capability fixture storage are
+  non-string protocol, parser, or global-boundary storage.
 - Direct `assign(data(), size())` and whole-string
   `std::string_view{data(), size()}` scans have no remaining production
   hits.
@@ -656,8 +656,9 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Non-zero line-input, byte, and allocation-helper scans: the remaining
   `fgets` calls are low-level `FILE *` input boundaries behind
   string-returning article input APIs; the remaining `memset` is hash
-  allocation-table initialization; the active `safe_realloc` caller is
-  regex bytecode growth, not string storage.
+  allocation-table initialization.  No active `safe_realloc` callers
+  remain outside the helper implementation.  The remaining `safe_malloc`
+  callers allocate non-string add-newsgroup or hash storage.
 - Fixed-size buffer scan: the remaining `char name[N]` hits are
   immutable labels, termcap test/API shims, lookup tables, regex parser
   state, or non-string byte arrays.  No new fixed-string-buffer slice is
@@ -673,9 +674,10 @@ Configure scripts, and the vendored `vcpkg` tree.
 - Regex scan: all production and test `CompiledRegex::execute` callers
   use the `std::string_view` boolean match API.  The old C-string
   wrapper is gone.  Bracket access returns `std::string_view` into match
-  storage; the old file-scope scratch string is gone.  The remaining raw
-  regex members and helper methods are internal engine storage that still
-  leaks through the public struct and are tracked as active slices.
+  storage.  Regex bytecode now uses `std::vector<char>`, alternatives are
+  offsets, and bracket spans are offsets into owned match text.  The
+  remaining private raw pointers are local regex VM cursors and do not
+  escape the implementation.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
@@ -686,13 +688,13 @@ Configure scripts, and the vendored `vcpkg` tree.
   this with a `std::string_view` input and an explicit boolean result
   that tells callers whether to suppress the line.
 - Public header declaration scan: all remaining `char *` declarations in
-  `libtrn/include/trn` are now represented by slices.  Existing slices
-  cover article buffers, regex internals, character substitution,
-  `interp_init`, `output_subject`, `article_walk`, and `mime_set_state`.
-  New slices cover hash payloads, `argv` entry points, option and
-  terminal scratch buffers, terminal capability strings, terminal
-  input/output helpers, allocation helpers, and remaining small string
-  helpers.
+  `libtrn/include/trn` are now represented by slices or by private regex
+  VM cursor helpers.  Existing slices cover article buffers, character
+  substitution, `interp_init`, `output_subject`, `article_walk`, and
+  `mime_set_state`.  New slices cover hash payloads, `argv` entry points,
+  option and terminal scratch buffers, terminal capability strings,
+  terminal input/output helpers, allocation helpers, and remaining small
+  string helpers.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
@@ -711,10 +713,9 @@ Configure scripts, and the vendored `vcpkg` tree.
   score-file cache key that can hold a URL as well as a local path.
   Other filename strings are already `std::string`/`fs::path` values or
   cross C `FILE*` APIs.
-- A follow-up regex audit found that `CompiledRegex` still exposes
-  C-style helper methods and raw implementation storage even though the
-  direct match API is modern.  Those issues are tracked as Tier 1 and
-  Tier 2 slices.
+- A follow-up regex audit found no remaining regex storage slice.  The
+  direct match API is modern, match and bytecode storage are owned, and
+  raw pointers are limited to private VM cursors.
 
 ## Current C String Function Inventory
 
@@ -820,21 +821,6 @@ that later caller slices can consume directly.
 
 These slices replace one parser or local owner of string storage.  Finish
 them before broad global-buffer work and before removing helpers.
-
-#### CSTR-559 - Replace Regex Bytecode Reallocation With Vector Storage
-
-- Type: growable bytecode storage and pointer cursor cleanup.
-- Files: `libtrn/include/trn/search.h`, `libtrn/search.cpp`,
-  regex compile and match tests.
-- Members: `m_exp_buf`, `m_eb_len`, `m_alternatives`.
-- Functions: `compile`, `grow_eb`, `execute`, `advance`, `back_ref`.
-- Dependencies: none.
-- Instructions: replace manual `safe_malloc`/`safe_realloc` bytecode
-  storage with `std::vector<char>` and replace persistent alternative
-  pointers with offsets or indices.  Keep pointer walking local to the
-  regex VM only where it simplifies bytecode interpretation; no pointer
-  into vector storage may escape as public API or persistent caller
-  state.
 
 ### Tier 3 - Workflow Callers And Path Owners
 
@@ -969,7 +955,7 @@ owned strings or owner-specific storage.
 - Files: `libtrn/include/trn/util.h`, `libtrn/util.cpp`,
   remaining allocation owners and tests.
 - Functions: `safe_malloc`, `safe_realloc`.
-- Dependencies: CSTR-559, CSTR-585.
+- Dependencies: CSTR-585.
 - Instructions: after regex bytecode and hash payload owners no longer
   need raw byte allocation helpers, remove the public `char *`
   allocation APIs.  Replace remaining fixed or dynamic arrays with

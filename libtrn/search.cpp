@@ -26,13 +26,11 @@
 #include <trn/search.h>
 
 #include <config/common.h>
-#include <trn/util.h>
 
 #include <fmt/format.h>
 
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
 #include <string>
 
 enum
@@ -121,7 +119,8 @@ void search_init()
 void CompiledRegex::init_compex()
 {
     // the following must start off zeroed
-    m_eb_len = 0;
+    m_exp_buf.clear();
+    m_alternatives.fill(std::string::npos);
     m_bracket_str.clear();
     m_bracket_start_offsets.fill(std::string::npos);
     m_bracket_end_offsets.fill(std::string::npos);
@@ -129,12 +128,9 @@ void CompiledRegex::init_compex()
 
 void CompiledRegex::free_compex()
 {
-    if (m_eb_len)
-    {
-        std::free(m_exp_buf);
-        m_exp_buf = nullptr;
-        m_eb_len = 0;
-    }
+    m_exp_buf.clear();
+    m_exp_buf.shrink_to_fit();
+    m_alternatives.fill(std::string::npos);
     m_bracket_str.clear();
 }
 
@@ -159,7 +155,7 @@ bool CompiledRegex::has_brackets() const
 std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool fold)
 {
     std::array<char, NBRA> bracket;
-    char**alt = m_alternatives.data();
+    std::size_t alt_index = 0;
     std::string_view retmes = "Badly formed search string";
     std::string_view::size_type pattern_pos{};
     const auto                  next_pattern_char = [&pattern, &pattern_pos]()
@@ -180,14 +176,18 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
     };
 
     case_fold(m_do_folding = fold);
-    if (!m_eb_len)
+    if (m_exp_buf.empty())
     {
-        m_exp_buf = safe_malloc(84);
-        m_eb_len = 80;
+        m_exp_buf.resize(84);
     }
-    char *ep = m_exp_buf; // point at expression buffer
-    *alt++ = ep;               // first alternative starts here
-    char *bracketp = bracket.data();  // first bracket goes here
+    const auto bytecode_limit = [this]() { return m_exp_buf.size() - 4; };
+    const auto bytecode_offset = [this](const char *ptr)
+    {
+        return static_cast<std::size_t>(ptr - m_exp_buf.data());
+    };
+    char      *ep = m_exp_buf.data();               // point at expression buffer
+    m_alternatives[alt_index++] = 0;                // first alternative starts here
+    char *bracketp = bracket.data();                // first bracket goes here
     if (pattern.empty() || pattern.front() == '\0') // nothing to compile?
     {
         if (*ep == 0)          // nothing there yet?
@@ -196,13 +196,16 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
         }
         return {};                      // just keep old expression
     }
-    m_num_brackets = 0;                   // no brackets yet
+    m_alternatives.fill(std::string::npos);
+    alt_index = 0;
+    m_alternatives[alt_index++] = 0; // first alternative starts here
+    m_num_brackets = 0;              // no brackets yet
     char *lastep = nullptr;
     while (true)
     {
-        if (ep + 4 - m_exp_buf >= m_eb_len)
+        if (bytecode_offset(ep) + 4 >= bytecode_limit())
         {
-            ep = grow_eb(ep, alt);
+            ep = grow_eb(ep);
         }
         int c = next_pattern_char();   // fetch next char of pattern
         if (c == 0)                    // end of pattern?
@@ -213,7 +216,7 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
                 goto cerror;
             }
             *ep++ = CEND;               // terminate expression
-            *alt++ = nullptr;           // terminal alternative list
+            m_alternatives[alt_index] = std::string::npos; // terminal alternative list
             return {};                  // return success
         }
         if (c != '*')
@@ -246,15 +249,15 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
                 case '|':
                     if (bracketp > bracket.data())
                     {
-                        retmes = "No \\| in parens";        // Alas!
+                        retmes = "No \\| in parens"; // Alas!
                         goto cerror;
                     }
                     *ep++ = CEND;
-                    *alt++ = ep;
-                    if (alt > m_alternatives.data() + NALTS)
+                    m_alternatives[alt_index++] = bytecode_offset(ep);
+                    if (alt_index > NALTS)
                     {
-                            retmes = "Too many alternatives in reg ex";
-                            goto cerror;
+                        retmes = "Too many alternatives in reg ex";
+                        goto cerror;
                     }
                     break;
 
@@ -316,7 +319,7 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
                 continue;
 
             case '^':
-                if (ep != m_exp_buf && ep[-1] != CEND)
+                if (ep != m_exp_buf.data() && ep[-1] != CEND)
                 {
                     goto defchar;
                 }
@@ -334,9 +337,9 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
 
             case '[':               // character class
             {
-                if (ep - m_exp_buf >= m_eb_len - BMAPSIZ)
+                if (bytecode_offset(ep) >= bytecode_limit() - BMAPSIZ)
                 {
-                    ep = grow_eb(ep, alt); // reserve bitmap
+                    ep = grow_eb(ep); // reserve bitmap
                 }
 
                 for (int i = BMAPSIZ; i; --i)
@@ -408,29 +411,18 @@ cerror:
     return retmes;
 }
 
-char *CompiledRegex::grow_eb(char *epp, char **alt)
+char *CompiledRegex::grow_eb(char *epp)
 {
-    char  * oldbuf = m_exp_buf;
-    char** altlist = m_alternatives.data();
-
-    m_eb_len += 80;
-    m_exp_buf = safe_realloc(m_exp_buf, (MemorySize)m_eb_len + 4);
-    if (m_exp_buf != oldbuf)       // realloc can change expbuf!
-    {
-        epp += m_exp_buf - oldbuf;
-        while (altlist != alt)
-        {
-            *altlist++ += m_exp_buf - oldbuf;
-        }
-    }
-    return epp;
+    const std::size_t offset = static_cast<std::size_t>(epp - m_exp_buf.data());
+    m_exp_buf.resize(m_exp_buf.size() + 80);
+    return m_exp_buf.data() + offset;
 }
 
 bool CompiledRegex::execute(std::string_view text)
 {
     Uchar *trt = s_trans;
 
-    if (m_exp_buf == nullptr)
+    if (m_exp_buf.empty())
     {
         return false;
     }
@@ -444,12 +436,13 @@ bool CompiledRegex::execute(std::string_view text)
     }
     case_fold(m_do_folding); // make sure table is correct
     s_first_character = p1;  // for ^ tests
-    if (m_exp_buf[0] == CCHR && !m_alternatives[1])
+    const char *expression = m_exp_buf.data();
+    if (expression[0] == CCHR && m_alternatives[1] == std::string::npos)
     {
-        int c = trt[*(Uchar *) (m_exp_buf + 1)]; // fast check for first char
+        int c = trt[*(Uchar *) (expression + 1)]; // fast check for first char
         do
         {
-            if (trt[*(Uchar *) p1] == c && advance(p1, m_exp_buf))
+            if (trt[*(Uchar *) p1] == c && advance(p1, expression))
             {
                 return true;
             }
@@ -463,10 +456,10 @@ bool CompiledRegex::execute(std::string_view text)
     }
     do // regular algorithm
     {
-        char **alt = m_alternatives.data();
-        while (*alt)
+        std::size_t alt_index = 0;
+        while (m_alternatives[alt_index] != std::string::npos)
         {
-            if (advance(p1, *alt++))
+            if (advance(p1, expression + m_alternatives[alt_index++]))
             {
                 return true;
             }
