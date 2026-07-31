@@ -552,8 +552,10 @@ The current scan covers source and test code under `config`, `libtrn`,
 Configure scripts, and the vendored `vcpkg` tree.
 
 - `safe_malloc` and `safe_realloc`: no remaining string-shaped owner is
-  tracked here.  Non-string owners include hash-table internals, the
-  add-newsgroup temporary pointer array, and generic allocation helpers.
+  tracked here.  `sort_add_groups` now uses `std::vector<AddGroup *>`
+  and `std::sort` instead of a `safe_malloc` pointer array plus
+  `qsort`.  The remaining non-string owner is hash-table internal
+  storage, plus the generic allocation helper implementation itself.
   Regex bytecode storage now uses `std::vector<char>`.  No string-copy
   allocation helpers are present in production roots.
 - Direct environment C-string reads remain only inside the environment
@@ -651,7 +653,7 @@ Configure scripts, and the vendored `vcpkg` tree.
   string-returning article input APIs; the remaining `memset` is hash
   allocation-table initialization.  No active `safe_realloc` callers
   remain outside the helper implementation.  The remaining `safe_malloc`
-  callers allocate non-string add-newsgroup or hash storage.
+  callers allocate non-string hash storage.
 - Fixed-size buffer scan: the remaining `char name[N]` hits are
   immutable labels, termcap test/API shims, lookup tables, regex parser
   state, or non-string byte arrays.  No new fixed-string-buffer slice is
@@ -804,8 +806,8 @@ owned strings or owner-specific storage.
   remaining allocation owners and tests.
 - Functions: `safe_malloc`, `safe_realloc`.
 - Dependencies: none.
-- Instructions: after regex bytecode and hash payload owners no longer
-  need raw byte allocation helpers, remove the public `char *`
-  allocation APIs.  Replace remaining fixed or dynamic arrays with
-  standard containers, or keep a typed file-local allocation helper only
-  where an external C API truly requires raw storage.
+- Instructions: after hash-table internals no longer need the public raw
+  byte allocation helper, remove the public `char *` allocation APIs.
+  Replace remaining fixed or dynamic arrays with standard containers, or
+  keep a typed file-local allocation helper only where an external C API
+  truly requires raw storage.

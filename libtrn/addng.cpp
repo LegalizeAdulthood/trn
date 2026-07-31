@@ -16,6 +16,7 @@
 #include <trn/only.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-select.h>
+#include <trn/size_cast.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/util.h>
@@ -23,10 +24,10 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <charconv>
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <iterator>
@@ -34,6 +35,7 @@
 #include <string_view>
 #include <system_error>
 #include <ctime>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -62,9 +64,9 @@ static ActiveLineFields parse_active_line_fields(std::string_view fields);
 static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch);
 static int  list_groups(int key_len, HashDatum *data, int add_matching);
 static void scan_active_line(std::string_view active_line, bool add_matching);
-static int  add_group_order_number(const AddGroup **app1, const AddGroup **app2);
-static int  add_group_order_group_name(const AddGroup **app1, const AddGroup **app2);
-static int  add_group_order_count(const AddGroup **app1, const AddGroup **app2);
+static int  add_group_order_number(const AddGroup *left, const AddGroup *right);
+static int  add_group_order_group_name(const AddGroup *left, const AddGroup *right);
+static int  add_group_order_count(const AddGroup *left, const AddGroup *right);
 
 static int add_newsgroup_cmp(std::string_view key, HashDatum data)
 {
@@ -554,33 +556,35 @@ static void scan_active_line(std::string_view active_line, bool add_matching)
     }
 }
 
-static int add_group_order_number(const AddGroup **app1, const AddGroup **app2)
+static int add_group_order_number(const AddGroup *left, const AddGroup *right)
 {
-    const NewsgroupNum eq = (*app1)->m_num - (*app2)->m_num;
-    return eq.value_of() > 0? g_sel_direction : -g_sel_direction;
+    const NewsgroupNum eq = left->m_num - right->m_num;
+    if (eq == 0)
+    {
+        return 0;
+    }
+    return eq.value_of() > 0 ? g_sel_direction : -g_sel_direction;
 }
 
-static int add_group_order_group_name(const AddGroup **app1, const AddGroup **app2)
+static int add_group_order_group_name(const AddGroup *left, const AddGroup *right)
 {
-    return string_case_compare((*app1)->m_name, (*app2)->m_name) * g_sel_direction;
+    return string_case_compare(left->m_name, right->m_name) * g_sel_direction;
 }
 
-static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)
+static int add_group_order_count(const AddGroup *left, const AddGroup *right)
 {
-    const ArticleNum eq = (*app1)->m_to_read - (*app2)->m_to_read;
+    const ArticleNum eq = left->m_to_read - right->m_to_read;
     if (eq != 0)
     {
         return eq > 0 ? g_sel_direction : -g_sel_direction;
     }
-    return add_group_order_group_name(app1, app2);
+    return add_group_order_group_name(left, right);
 }
 
 // Sort the newsgroups into the chosen order.
 void sort_add_groups()
 {
-    AddGroup* ap;
-    AddGroup** lp;
-    int (*sort_procedure)(const AddGroup**, const AddGroup**);
+    int (*sort_procedure)(const AddGroup *left, const AddGroup *right);
 
     switch (g_sel_sort)
     {
@@ -596,25 +600,24 @@ void sort_add_groups()
         break;
     }
 
-    AddGroup **ag_list = (AddGroup**)safe_malloc(s_add_group_count * sizeof(AddGroup*));
-    for (lp = ag_list, ap = g_first_add_group; ap; ap = ap->m_next)
+    std::vector<AddGroup *> ag_list;
+    ag_list.reserve(static_cast<std::size_t>(s_add_group_count));
+    for (AddGroup *ap = g_first_add_group; ap != nullptr; ap = ap->m_next)
     {
-        *lp++ = ap;
+        ag_list.push_back(ap);
     }
-    TRN_ASSERT(lp - ag_list == s_add_group_count);
+    TRN_ASSERT(size_cast<int>(ag_list) == s_add_group_count);
 
-    std::qsort(ag_list, s_add_group_count, sizeof(AddGroup*), (int(*)(const void *, const void *)) sort_procedure);
+    std::sort(ag_list.begin(), ag_list.end(),
+              [sort_procedure](const AddGroup *left, const AddGroup *right) { return sort_procedure(left, right) < 0; });
 
-    ap = ag_list[0];
-    g_first_add_group = ag_list[0];
-    ap->m_prev = nullptr;
-    lp = ag_list;
-    for (int i = s_add_group_count; --i; ++lp)
+    g_first_add_group = ag_list.front();
+    g_first_add_group->m_prev = nullptr;
+    for (std::size_t i = 1; i < ag_list.size(); ++i)
     {
-        lp[0]->m_next = lp[1];
-        lp[1]->m_prev = lp[0];
+        ag_list[i - 1]->m_next = ag_list[i];
+        ag_list[i]->m_prev = ag_list[i - 1];
     }
-    g_last_add_group = lp[0];
+    g_last_add_group = ag_list.back();
     g_last_add_group->m_next = nullptr;
-    std::free((char*)ag_list);
 }

@@ -8,6 +8,7 @@
 #include <trn/hash.h>
 #include <trn/only.h>
 #include <trn/rcstuff.h>
+#include <trn/rt-select.h>
 #include <trn/terminal.h>
 
 #include <gmock/gmock.h>
@@ -72,9 +73,13 @@ protected:
         m_old_first = g_first_add_group;
         m_old_last = g_last_add_group;
         m_old_data_source = g_data_source;
+        m_old_sel_sort = g_sel_sort;
+        m_old_sel_direction = g_sel_direction;
         g_first_add_group = nullptr;
         g_last_add_group = nullptr;
         g_data_source = nullptr;
+        g_sel_sort = SS_NATURAL;
+        g_sel_direction = 1;
     }
 
     void TearDown() override
@@ -88,11 +93,15 @@ protected:
         g_first_add_group = m_old_first;
         g_last_add_group = m_old_last;
         g_data_source = m_old_data_source;
+        g_sel_sort = m_old_sel_sort;
+        g_sel_direction = m_old_sel_direction;
     }
 
-    AddGroup   *m_old_first{};
-    AddGroup   *m_old_last{};
-    DataSource *m_old_data_source{};
+    AddGroup         *m_old_first{};
+    AddGroup         *m_old_last{};
+    DataSource       *m_old_data_source{};
+    SelectionSortMode m_old_sel_sort{};
+    int               m_old_sel_direction{};
 };
 
 class ScanActiveTest : public testing::Test
@@ -330,6 +339,30 @@ TEST_F(AddGroupStorageTest, storesNamesAndLinksWithoutAddingDuplicates)
     EXPECT_EQ(0, g_last_add_group->m_to_read.value_of());
     EXPECT_EQ(AGF_SEL, g_first_add_group->m_flags);
     EXPECT_EQ(AGF_DEL, g_last_add_group->m_flags);
+}
+
+TEST_F(AddGroupStorageTest, sortAddGroupsOrdersByUnreadCount)
+{
+    add_to_list("comp.lang.beta", 5, ':');
+    add_to_list("comp.lang.alpha", 3, ':');
+    add_to_list("comp.lang.gamma", 9, ':');
+    g_sel_sort = SS_COUNT;
+
+    sort_add_groups();
+
+    ASSERT_NE(nullptr, g_first_add_group);
+    AddGroup *second = g_first_add_group->m_next;
+    ASSERT_NE(nullptr, second);
+    AddGroup *third = second->m_next;
+    ASSERT_NE(nullptr, third);
+    EXPECT_EQ(nullptr, third->m_next);
+    EXPECT_EQ("comp.lang.alpha", std::string_view{g_first_add_group->m_name});
+    EXPECT_EQ("comp.lang.beta", std::string_view{second->m_name});
+    EXPECT_EQ("comp.lang.gamma", std::string_view{third->m_name});
+    EXPECT_EQ(nullptr, g_first_add_group->m_prev);
+    EXPECT_EQ(g_first_add_group, second->m_prev);
+    EXPECT_EQ(second, third->m_prev);
+    EXPECT_EQ(third, g_last_add_group);
 }
 
 TEST_F(ScanActiveTest, reportsCachedActiveFileGroups)
