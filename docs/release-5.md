@@ -66,6 +66,68 @@ Legacy build scripts are not runtime Windows porting targets:
 `config/legacy/hints/*.sh` should be retired from the active build path
 or kept only as historical reference.
 
+## Documentation Audit
+
+Markdown files are excluded from this audit.
+
+Non-markdown documentation sources audited:
+
+- top-level text: `README.txt`, `INSTALL.txt`, `INIT.txt`,
+  `HACKERSGUIDE.txt`, and `default_topic`;
+- man pages: `man/trn.1`, `man/strn.1`, `man/Pnews.1`, and
+  `man/Rnmail.1`;
+- online help files under `HelpFiles`;
+- generated data and help text: `config/data/access_def.in`,
+  `config/data/environment.in`, and `config/data/newsnews.in`;
+- compiled help and option labels in `libtrn/help.cpp`,
+  `libtrn/OptionCatalog.cpp`, and scoring help call sites.
+
+Documentation gaps and owning work items:
+
+- `README.txt`, `INSTALL.txt`, and `default_topic` still describe the
+  trn 4.0 `Configure` workflow, `MANIFEST`, `make install.full`,
+  `make install.strn`, and old `mthreads` distribution details.  Items
+  1, 3, and 7 reconcile or retire those paths.
+- `CMakeLists.txt` only installs the `trn` target.  Man pages,
+  `HelpFiles`, generated data files, generated helper files, and
+  release text files need an install/package decision in items 10 and
+  20.
+- `man/strn.1` documents version 4.0 and an entry point that CMake does
+  not currently build or install.  Items 8, 10, and 20 decide whether it
+  ships, becomes a compatibility alias, or is retired.
+- `man/Pnews.1` and `man/Rnmail.1` describe shell helpers before the
+  CMake helper migration.  `Rnmail` is still legacy-only, while `Pnews`
+  has current `User-Agent` and transfer-encoding behavior not reflected
+  there.  Items 9, 15, 16, and 19 own that drift.
+- `man/trn.1` and `config/data/environment.in` still document Unix shell
+  defaults such as `Rnmail`, `Pnews`, `tail`, and `/bin/sh`.  Item 19
+  owns the Windows-safe default policy and documentation fallout.
+- `man/trn.1`, `config/data/access_def.in`, and
+  `HelpFiles/samples/access` describe older NNTP behavior, including
+  `XGTITLE`, hostname-only `NNTPSERVER` wording, and no TLS or nntps
+  policy.  Items 26 through 30 own modern NNTP documentation updates.
+- `config/data/access_def.in` omits live access-schema fields such as
+  `Thread Dir`, `XHDR Broken`, and `Xrefs`, and contains the malformed
+  sample `Force Auth = [yes|no}`.  Items 8 and 10 own generated data
+  documentation sync.
+- Compiled option help in `libtrn/help.cpp` drifts from
+  `libtrn/OptionCatalog.cpp`: `Select My Postings` omits `thread`, and
+  `Active File Refetch Mins` does not match `Default Refetch Time`.
+  Item 23 owns help/catalog comparison.
+- Selector help still says add-group ordering and reverse ordering are
+  not working.  Item 23 must verify that text against current selector
+  behavior.
+- Scoring help paths still print "No help available (yet)."  Item 23
+  should classify these as documented, deferred, or obsolete.
+- The online help browser looks for `%X/sitehelp/top` and
+  `%X/HelpFiles/top`, but `HelpFiles` is not installed by current CMake.
+  Items 10, 20, and 23 own install and verification coverage.
+- Feature docs need updates as release work lands: posting transfer
+  encoding, UTF-8 and restored charset conversions, optional
+  `UTF-8 => ASCII`, yEnc extraction, TLS/nntps/auth policy, and
+  Windows/macOS platform status.  Items 16, 21, 22, and 26 through 34
+  own the matching feature-specific documentation.
+
 ## GitHub 5.0 Milestone
 
 The GitHub 5.0 milestone is the mandatory release scope.  Every issue on
@@ -161,6 +223,8 @@ Tasks:
   `ReadMe.md`.
 - Preserve packaging-status, build, release, standard, and license
   badges that still apply.
+- Remove stale current-release references to `MANIFEST`, `Configure`,
+  `mthreads`, and `HelpFiles/changelog`.
 - Remove the stale duplicate, or make any retained compatibility file a
   short pointer that cannot drift.
 
@@ -315,12 +379,15 @@ Depends on: 5, 6, and 10.
 Files likely touched:
 
 - `INSTALL.md`
+- non-markdown install and help references from the documentation audit
 
 Tasks:
 
 - Document the supported CMake cache variables from #19.
 - Document generated helper files from #31.
 - Document release-supported package and install layouts.
+- Document which top-level text, man pages, and online help files are
+  shipped, retired, or historical.
 - Add known limits for deferred non-milestone work.
 
 Acceptance:
@@ -347,6 +414,8 @@ Tasks:
 - List remaining `config/legacy/*.SH` runtime outputs.
 - Decide which helpers are installed, generated, or retired.
 - Identify helper substitutions still using metaconfig residue.
+- Sync generated data documentation with current schemas and defaults:
+  `access_def`, `environment`, and `newsnews`.
 
 Acceptance:
 
@@ -402,6 +471,8 @@ Tasks:
 - Install generated helpers with executable permissions on Unix.
 - Include generated helpers in packages.
 - Add tests that assert helper paths point at generated outputs.
+- Install or explicitly retire man pages, `HelpFiles`, and generated
+  data documentation.
 
 Acceptance:
 
@@ -546,7 +617,8 @@ Tasks:
 - Replace unconditional `Content-Transfer-Encoding: 8bit`.
 - Choose `7bit` for ASCII-only text.
 - Choose `8bit` only when the body needs it.
-- Update release docs that still call posting half-working.
+- Update `Pnews` documentation for `User-Agent`, transfer encoding, and
+  any remaining posting limits.
 
 Acceptance:
 
@@ -669,6 +741,8 @@ Files likely touched:
 Tasks:
 
 - Define install contents for binaries, data files, and helpers.
+- Include or explicitly omit man pages, `HelpFiles`, and top-level
+  release text files.
 - Add CPack or equivalent package presets.
 - Produce a Windows portable ZIP.
 - Produce a Windows installer if the packaging toolchain is available.
@@ -742,11 +816,16 @@ Tasks:
 - Mark each item as automated, manual, deferred, or obsolete.
 - Prioritize access files, KILL files, posting, command-line options,
   macros, `%` expansion, and extraction.
+- Compare compiled help, `HelpFiles`, man pages, `OptionCatalog`, the
+  switch parser, and access-schema fields.
+- Classify missing scoring help and stale selector help as documented,
+  deferred, or obsolete.
 
 Acceptance:
 
 - #33 has a tracked checklist tied to concrete tests or manual steps.
 - No high-risk checklist item is unclassified.
+- Option and access-file documentation drift is tracked or fixed.
 
 ### 24. Deterministic NNTP Fixtures
 
@@ -1243,5 +1322,7 @@ Release 5.0 can be cut when:
   that milestone in GitHub;
 - supported CI is green;
 - install/package artifacts contain the generated helpers;
+- non-markdown user documentation is synchronized with shipped
+  functionality or explicitly marked historical;
 - non-milestone P1/P2 work is either complete, documented as deferred,
   or tracked for a later release.
