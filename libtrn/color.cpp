@@ -104,20 +104,18 @@ void color_init()
     if (s_use_colors)
     {
         // Get default capabilities.
-        const char *fg_capability = tc_color_capability("fg default");
-        if (fg_capability == nullptr)
+        std::string_view fg = tc_color_capability("fg default");
+        if (fg.empty())
         {
             fmt::print(stderr, "trn: you need a 'fg default' definition in the [termcap] section.\n");
             finalize(1);
         }
-        const char *bg_capability = tc_color_capability("bg default");
-        if (bg_capability == nullptr)
+        std::string_view bg = tc_color_capability("bg default");
+        if (bg.empty())
         {
             fmt::print(stderr, "trn: you need a 'bg default' definition in the [termcap] section.\n");
             finalize(1);
         }
-        std::string_view fg{fg_capability};
-        std::string_view bg{bg_capability};
         if (fg == bg)
         {
             bg = "";
@@ -228,8 +226,8 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     else
     {
         const std::string capability = fmt::format("fg {}", color);
-        const char       *color_capability = tc_color_capability(capability);
-        if (color_capability == nullptr || *color_capability == '\0')
+        const std::string_view color_capability = tc_color_capability(capability);
+        if (color_capability.empty())
         {
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);
@@ -253,8 +251,8 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     else
     {
         const std::string capability = fmt::format("bg {}", color);
-        const char       *color_capability = tc_color_capability(capability);
-        if (color_capability == nullptr || *color_capability == '\0')
+        const std::string_view color_capability = tc_color_capability(capability);
+        if (color_capability.empty())
         {
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);

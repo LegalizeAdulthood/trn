@@ -97,10 +97,6 @@ Run every scan from the innermost lexical scope outward:
   when the source text is already a `std::string`,
   `std::string_view`, or sliced C string.
 
-When `next` finds no remaining slices, rerun the audit against the
-current source and look for new opportunities before treating the plan
-as empty.
-
 On every audit rerun, start from the current source and re-evaluate every
 prior concern that still exists in the tree.  Do not assume older
 judgments remain valid after code changes.
@@ -790,18 +786,6 @@ owner.
 
 These slices change lower-level helper, parser, or storage contracts
 that later caller slices can consume directly.
-
-#### CSTR-580 - Return Terminal Color Capabilities As Views
-
-- Type: borrowed terminal capability result.
-- Files: `libtrn/include/trn/terminal.h`, `libtrn/terminal.cpp`,
-  `libtrn/color.cpp`, terminal/color tests.
-- Function: `tc_color_capability`.
-- Dependencies: none.
-- Instructions: change `tc_color_capability` to return
-  `std::string_view`, using an empty view as the missing-capability
-  sentinel.  Update color callers to test `.empty()` and pass views
-  directly where possible.
 
 ### Tier 2 - Tool-local And Owner-local Storage
 

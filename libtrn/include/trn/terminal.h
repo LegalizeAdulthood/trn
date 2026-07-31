@@ -226,8 +226,8 @@ std::string cursor_motion(int x, int y);
 std::string_view standout_start();
 std::string_view standout_end();
 void  add_tc_string(std::string_view capability, std::string_view value);
-const char *tc_color_capability(std::string_view capability);
-std::string tgoto_string(std::string_view str, int x, int y);
+std::string_view tc_color_capability(std::string_view capability);
+std::string      tgoto_string(std::string_view str, int x, int y);
 #ifdef MSDOS
 int   tputs(const char *str, int num, int (*func)(int));
 #endif
