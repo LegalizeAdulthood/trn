@@ -1281,10 +1281,7 @@ refresh_screen:
         switch (second_char)
         {
         case 'C':
-            if (!*(++g_char_subst))
-            {
-                g_char_subst = g_charsets.c_str();
-            }
+            next_char_subst_mode();
             goto refresh_screen;
 
         default:

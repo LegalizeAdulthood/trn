@@ -602,10 +602,11 @@ Configure scripts, and the vendored `vcpkg` tree.
   `Article *` to `char *` just to call it.  Modernize the typed
   operation first, then update `article_walk` callback plumbing.
 - Character substitution scan: `g_char_subst` is a borrowed cursor into
-  mutable `g_charsets` storage.  Reset and cycle callers still assign or
-  increment the raw pointer, while display callers now use the
-  current-mode accessor.  Finish this by replacing the pointer with an
-  owned index into `g_charsets`.
+  mutable `g_charsets` storage.  Production reset, cycle, and display
+  callers now use the mode-state helpers.  Tests still manipulate the raw
+  pointer directly until the test slice moves them onto the same helper
+  API.  Finish this by replacing the pointer with an owned index into
+  `g_charsets`.
 - Numeric command scan: `num_num` accepts command text directly and
   parses numeric range text from that view.
 - Terminal input scan: `in_char` and `in_answer` return caller-owned
@@ -826,18 +827,6 @@ them before broad global-buffer work and before removing helpers.
 These slices clean up workflows after their helper/storage dependencies
 are available.  Keep the listed order inside dependent families.
 
-#### CSTR-562 - Use Character-substitution Accessors At Cycle Sites
-
-- Type: raw global cursor mutation.
-- Files: `libtrn/art.cpp`, `libtrn/ng.cpp`, related tests.
-- Expressions: `g_char_subst = g_charsets.c_str()`,
-  `++g_char_subst`.
-- Dependencies: none.
-- Instructions: replace manual reset and cycle logic with the
-  char-substitution state helpers.  Preserve the existing wrap behavior:
-  advancing past the end of `g_charsets` returns to the first configured
-  mode.
-
 #### CSTR-563 - Move Tests Off The Raw Character-substitution Pointer
 
 - Type: test global cursor manipulation.
@@ -846,7 +835,7 @@ are available.  Keep the listed order inside dependent families.
   `tests/test_utf.cpp`.
 - Expressions: direct `g_char_subst` assignment and `ValueSaver`
   storage.
-- Dependencies: CSTR-562.
+- Dependencies: none.
 - Instructions: update tests to use the same state helpers as production
   code.  Add a scoped test saver only if the helper API cannot express
   the existing setup/teardown cleanly.  Test code is held to the same
@@ -877,7 +866,7 @@ and clarified ownership at the edges.
 - Files: `libtrn/include/trn/charsubst.h`, `libtrn/charsubst.cpp`,
   `libtrn/opt.cpp`, character-substitution tests.
 - Globals: `g_char_subst`, `g_charsets`.
-- Dependencies: CSTR-562, CSTR-563.
+- Dependencies: CSTR-563.
 - Instructions: remove the exported `const char *g_char_subst` cursor
   and store the current substitution as an owned index into
   `g_charsets`.  When `g_charsets` is reassigned, normalize the index so

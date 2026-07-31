@@ -337,7 +337,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     g_recent_art = article_after(g_last_art);
     g_curr_art = article_after(g_last_art);
     g_prompt = whatnext;
-    g_char_subst = g_charsets.c_str();
+    reset_char_subst_mode();
 
     // see if there are any special searches to do
 
@@ -487,7 +487,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 g_curr_art = g_art;             // set current article #
                 g_recent_artp = g_curr_artp;
                 g_curr_artp = g_artp;
-                g_char_subst = g_charsets.c_str();
+                reset_char_subst_mode();
                 g_first_view = ArticleLine{};
             }
             if (g_sa_in)
@@ -568,7 +568,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 g_curr_art = g_art;             // set current article #
                 g_recent_artp = g_curr_artp;
                 g_curr_artp = g_artp;
-                g_char_subst = g_charsets.c_str();
+                reset_char_subst_mode();
                 g_first_view = ArticleLine{};
                 g_do_hiding = true;
                 g_rotate = false;
@@ -1961,10 +1961,7 @@ normal_search:
                 return AS_ASK;
 
             case 'C':
-                if (!*(++g_char_subst))
-                {
-                    g_char_subst = g_charsets.c_str();
-                }
+                next_char_subst_mode();
                 goto refresh_screen;
 
             case 'a':
