@@ -673,20 +673,13 @@ Configure scripts, and the vendored `vcpkg` tree.
 - MIME content-decoding paths now own local string storage for decoded
   lines.  HTML filtering has an owned public API and owned file-local
   output storage.
-- MIME state scan: `mime_set_state(char *bp)` still uses mutable
-  C-string input as a signaling mechanism by writing `'\0'` when the
-  current line is consumed.  The existing `std::string &` overload
-  delegates through `.data()` and then trims at the first NUL.  Replace
-  this with a `std::string_view` input and an explicit boolean result
-  that tells callers whether to suppress the line.
+- MIME state scan: `mime_set_state` now has only the non-mutating
+  `std::string_view` input and explicit boolean result that tells callers
+  whether to suppress the line.
 - Public header declaration scan: all remaining `char *` declarations in
   `libtrn/include/trn` are now represented by slices or by private regex
-  VM cursor helpers.  Existing slices cover article buffers, character
-  substitution, `interp_init`, `output_subject`, `article_walk`, and
-  `mime_set_state`.  New slices cover hash payloads, `argv` entry points,
-  option and terminal scratch buffers, terminal capability strings,
-  terminal input/output helpers, allocation helpers, and remaining small
-  string helpers.
+  VM cursor helpers.  Remaining slices cover hash payloads, allocation
+  helpers, and remaining small string helpers.
 - NNTP response parsing no longer uses `sscanf`.  The shared
   `g_ser_line` status owner is now `std::string`; remaining NNTP line
   storage is protocol/body input rather than status-text storage.
@@ -804,23 +797,13 @@ and clarified ownership at the edges.
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-#### CSTR-574 - Remove Legacy mime_set_state Overloads
-
-- Type: obsolete mutable C-string and mutable string overloads.
-- Files: `libtrn/include/trn/mime.h`, `libtrn/mime.cpp`, MIME tests.
-- Function: `mime_set_state`.
-- Dependencies: none.
-- Instructions: delete the `char *` and `std::string &` overloads after
-  all callers use the `std::string_view` boolean-result API directly.
-  Keep only the non-mutating public signature.
-
 #### CSTR-586 - Remove Public safe_malloc And safe_realloc Char APIs
 
 - Type: public raw allocation helpers returning `char *`.
 - Files: `libtrn/include/trn/util.h`, `libtrn/util.cpp`,
   remaining allocation owners and tests.
 - Functions: `safe_malloc`, `safe_realloc`.
-- Dependencies: CSTR-585.
+- Dependencies: none.
 - Instructions: after regex bytecode and hash payload owners no longer
   need raw byte allocation helpers, remove the public `char *`
   allocation APIs.  Replace remaining fixed or dynamic arrays with

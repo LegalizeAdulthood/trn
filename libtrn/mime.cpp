@@ -909,32 +909,6 @@ bool mime_set_state(std::string_view bp)
     return suppress_line;
 }
 
-void mime_set_state(char *bp)
-{
-    if (mime_set_state(std::string_view{bp}))
-    {
-        *bp = '\0';
-    }
-}
-
-void mime_set_state(std::string &bp)
-{
-    std::string_view  line = bp;
-    const std::size_t terminator = bp.find('\0');
-    if (terminator != std::string::npos)
-    {
-        line = line.substr(0, terminator);
-    }
-    if (mime_set_state(line))
-    {
-        bp.clear();
-    }
-    else if (terminator != std::string::npos)
-    {
-        bp.resize(terminator);
-    }
-}
-
 int mime_end_of_section(std::string_view bp)
 {
     MimeSection *mp = g_mime_section->m_prev;
