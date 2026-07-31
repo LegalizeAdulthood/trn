@@ -804,16 +804,6 @@ and clarified ownership at the edges.
 These slices remove helpers only after every direct caller has moved to
 owned strings or owner-specific storage.
 
-#### CSTR-578 - Remove Null-aware empty C-string Helper
-
-- Type: obsolete C-string algorithm helper.
-- Files: `libtrn/include/trn/string-algos.h`, `libtrn/terminal.cpp`,
-  `tests/test_string-algos.cpp`.
-- Function: `empty(const char *)`.
-- Dependencies: none.
-- Instructions: remove the null-aware `empty(const char *)` helper and
-  its tests.  Use ordinary `.empty()` checks on strings or views.
-
 #### CSTR-574 - Remove Legacy mime_set_state Overloads
 
 - Type: obsolete mutable C-string and mutable string overloads.

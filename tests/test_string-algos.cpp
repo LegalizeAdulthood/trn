@@ -78,21 +78,6 @@ TEST_F(StringAlgosTest, skipNeStringView)
     ASSERT_EQ(std::string_view{" is a test."}, skip_ne(text, ' '));
 }
 
-TEST_F(StringAlgosTest, emptyNullPtr)
-{
-    ASSERT_TRUE(empty(nullptr));
-}
-
-TEST_F(StringAlgosTest, emptyNoChars)
-{
-    ASSERT_TRUE(empty(""));
-}
-
-TEST_F(StringAlgosTest, emptyChars)
-{
-    ASSERT_FALSE(empty("There be chars here!"));
-}
-
 TEST_F(StringAlgosTest, skipDigitsStringView)
 {
     std::string_view text{"1965 was a good year for television."};

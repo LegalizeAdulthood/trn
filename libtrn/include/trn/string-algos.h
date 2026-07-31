@@ -20,11 +20,6 @@ std::string_view skip_while(std::string_view str, Predicate predicate)
 
 } // namespace string_algos_detail
 
-inline bool empty(const char *str)
-{
-    return str == nullptr || str[0] == '\0';
-}
-
 inline std::string_view skip_ne(std::string_view str, char delim)
 {
     return string_algos_detail::skip_while(str, [delim](char ch) { return ch != delim; });
