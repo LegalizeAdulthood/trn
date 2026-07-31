@@ -597,11 +597,9 @@ Configure scripts, and the vendored `vcpkg` tree.
   to `Article *`.  Direct production and test callers also cast
   `Article *` to `char *` just to call it.  Modernize the typed
   operation first, then update `article_walk` callback plumbing.
-- Character substitution scan: `g_char_subst` is a borrowed cursor into
-  mutable `g_charsets` storage.  Production reset, cycle, and display
-  callers now use the mode-state helpers, and tests no longer manipulate
-  the raw pointer directly.  Finish this by replacing the pointer with
-  an owned index into `g_charsets`.
+- Character substitution scan: the exported `g_char_subst` borrowed
+  cursor is gone.  Current substitution mode is tracked as an owned index
+  into `g_charsets` and normalized when the charset list changes.
 - Numeric command scan: `num_num` accepts command text directly and
   parses numeric range text from that view.
 - Terminal input scan: `in_char` and `in_answer` return caller-owned
@@ -802,20 +800,6 @@ are available.  Keep the listed order inside dependent families.
 These slices should wait until earlier tiers have reduced direct callers
 and clarified ownership at the edges.
 
-#### CSTR-564 - Replace g_char_subst With Owned Index State
-
-- Type: global borrowed pointer storage.
-- Files: `libtrn/include/trn/charsubst.h`, `libtrn/charsubst.cpp`,
-  `libtrn/opt.cpp`, character-substitution tests.
-- Globals: `g_char_subst`, `g_charsets`.
-- Dependencies: none.
-- Instructions: remove the exported `const char *g_char_subst` cursor
-  and store the current substitution as an owned index into
-  `g_charsets`.  When `g_charsets` is reassigned, normalize the index so
-  the current-mode accessor remains valid.  Use an empty current mode as
-  the sentinel if `g_charsets` is empty; do not retain pointer/null
-  semantics.
-
 #### CSTR-553 - Encapsulate Public Article Buffer State
 
 - Type: public global raw buffer ownership.
@@ -878,4 +862,3 @@ owned strings or owner-specific storage.
   allocation APIs.  Replace remaining fixed or dynamic arrays with
   standard containers, or keep a typed file-local allocation helper only
   where an external C API truly requires raw storage.
-

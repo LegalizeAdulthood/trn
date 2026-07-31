@@ -109,16 +109,19 @@ class CurrentCharSubstTest : public Test
 protected:
     void SetUp() override
     {
+        m_previous_charsets = g_charsets;
         m_previous_char_subst = current_char_subst_mode();
         m_previous_verbose = g_verbose;
     }
 
     void TearDown() override
     {
+        g_charsets = m_previous_charsets;
         set_char_subst_mode(m_previous_char_subst);
         g_verbose = m_previous_verbose;
     }
 
+    std::string m_previous_charsets;
     char m_previous_char_subst{};
     bool m_previous_verbose{};
 };
@@ -169,6 +172,27 @@ TEST_F(CurrentCharSubstTest, cyclesPastEndToFirstConfiguredMode)
     set_char_subst_mode(g_charsets.back());
 
     next_char_subst_mode();
+
+    EXPECT_EQ(g_charsets.front(), current_char_subst_mode());
+}
+
+TEST_F(CurrentCharSubstTest, emptyCharsetsHaveNoCurrentMode)
+{
+    g_charsets = "";
+    reset_char_subst_mode();
+
+    EXPECT_EQ('\0', current_char_subst_mode());
+
+    next_char_subst_mode();
+
+    EXPECT_EQ('\0', current_char_subst_mode());
+}
+
+TEST_F(CurrentCharSubstTest, reassigningCharsetsNormalizesOutOfRangeMode)
+{
+    set_char_subst_mode(g_charsets.back());
+
+    g_charsets = "pa";
 
     EXPECT_EQ(g_charsets.front(), current_char_subst_mode());
 }

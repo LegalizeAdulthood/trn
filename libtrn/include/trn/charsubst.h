@@ -22,7 +22,6 @@
 
 // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 extern std::string g_charsets;
-extern const char* g_char_subst;
 
 char        current_char_subst_mode();
 void        set_char_subst_mode(char mode);

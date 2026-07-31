@@ -28,7 +28,24 @@
 
 // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 std::string g_charsets{"patm"};
-const char *g_char_subst{};
+
+namespace
+{
+constexpr std::string::size_type NO_CHAR_SUBST = std::string::npos;
+std::string::size_type           s_char_subst_index{NO_CHAR_SUBST};
+
+void normalize_char_subst_mode()
+{
+    if (g_charsets.empty())
+    {
+        s_char_subst_index = NO_CHAR_SUBST;
+    }
+    else if (s_char_subst_index != NO_CHAR_SUBST && s_char_subst_index >= g_charsets.size())
+    {
+        s_char_subst_index = 0;
+    }
+}
+} // namespace
 
 // TeX encoding table - gives ISO char for "x (x=32..127)
 static Uchar s_tex_tbl[96] =
@@ -150,14 +167,15 @@ static int put_subst_char(int c, int limit, bool output_ok)
 
 char current_char_subst_mode()
 {
-    return g_char_subst == nullptr ? '\0' : *g_char_subst;
+    normalize_char_subst_mode();
+    return s_char_subst_index == NO_CHAR_SUBST ? '\0' : g_charsets[s_char_subst_index];
 }
 
 void set_char_subst_mode(char mode)
 {
-    if (mode == '\0')
+    if (mode == '\0' || g_charsets.empty())
     {
-        g_char_subst = nullptr;
+        s_char_subst_index = NO_CHAR_SUBST;
         return;
     }
 
@@ -168,23 +186,24 @@ void set_char_subst_mode(char mode)
         return;
     }
 
-    g_char_subst = g_charsets.c_str() + mode_pos;
+    s_char_subst_index = mode_pos;
 }
 
 void reset_char_subst_mode()
 {
-    g_char_subst = g_charsets.c_str();
+    s_char_subst_index = g_charsets.empty() ? NO_CHAR_SUBST : 0;
 }
 
 void next_char_subst_mode()
 {
-    if (g_char_subst == nullptr)
+    normalize_char_subst_mode();
+    if (s_char_subst_index == NO_CHAR_SUBST)
     {
         reset_char_subst_mode();
         return;
     }
-    ++g_char_subst;
-    if (*g_char_subst == '\0')
+    ++s_char_subst_index;
+    if (s_char_subst_index >= g_charsets.size())
     {
         reset_char_subst_mode();
     }
