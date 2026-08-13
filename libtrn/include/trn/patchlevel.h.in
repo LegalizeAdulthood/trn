@@ -1,0 +1,9 @@
+/* trn/patchlevel.h
+ */
+// This software is copyrighted as detailed in the LICENSE file.
+#ifndef TRN_PATCHLEVEL_H
+#define TRN_PATCHLEVEL_H
+
+#define PATCHLEVEL "@TRN_PATCHLEVEL@"
+
+#endif

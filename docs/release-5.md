@@ -197,7 +197,7 @@ release must not regress #2, #9, #11, #12, #20, #28, #32, #36, or #39.
 P0 is the GitHub 5.0 milestone.  No open P0 issue may be deferred to 5.1
 while it remains on that milestone.  Closed P0 issues must remain fixed.
 
-1. Fix release identity and install docs: #18.
+1. Fix install docs: #18.
 2. Finish CMake and generated-file migration: #19, #31.
 3. Fix mandatory crash and disabled-test issues: #24, #38.
 4. Ship Windows and macOS release support: #14, #23.
@@ -236,28 +236,6 @@ GitHub issue.  Closed milestone issues are not implementation items; they
 are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
-
-### 2. Runtime Release Identity
-
-Issues: none.
-
-Milestone status: P0 support.
-
-Files likely touched:
-
-- `CMakeLists.txt`
-- `libtrn/include/trn/patchlevel.h`
-
-Tasks:
-
-- Make CMake project version and runtime version reporting agree.
-- Set the release identity to `5.0.0`.
-- Remove stale release-facing references to `4.0-test77`.
-
-Acceptance:
-
-- Runtime version output and CMake package metadata agree.
-- No release-facing file presents 4.0-test77 as current.
 
 ### 3. Install Quickstart
 

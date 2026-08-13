@@ -4,6 +4,23 @@ set(TRN_PROJECT_NAME "trn" CACHE STRING "Project name for IDEs")
 
 project("${TRN_PROJECT_NAME}" VERSION 5.0.0 LANGUAGES C CXX)
 
+find_package(Git QUIET)
+set(TRN_HEAD_HASH "unknown")
+if(Git_FOUND)
+    execute_process(
+        COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        RESULT_VARIABLE TRN_GIT_RESULT
+        OUTPUT_VARIABLE TRN_GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(TRN_GIT_RESULT EQUAL 0 AND NOT TRN_GIT_HASH STREQUAL "")
+        set(TRN_HEAD_HASH "${TRN_GIT_HASH}")
+    endif()
+endif()
+set(TRN_PATCHLEVEL "${PROJECT_VERSION} (${TRN_HEAD_HASH})")
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(misc_target)
 include(set_cxx_standard)

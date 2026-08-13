@@ -14,7 +14,7 @@
 trn, version 5.0<br/>
 Copyright (c) 2023-2025, Richard Thomson
 
-Based on [trn, version 4.0-test77](https://sourceforge.net/projects/trn/)</br>
+Based on [trn 4.0](https://sourceforge.net/projects/trn/)</br>
 Copyright (c) 1995, Wayne Davison
 
 Based on rn, Version 4.4</br>
@@ -29,8 +29,8 @@ may void your warranty. `:-)`
 
 # Version 5.0
 
-This is a version of trn-4.0-test77 with patches by
-[acli](https://github.com/aclu) to display UTF-8 reasonably correctly.
+This release includes patches by [acli](https://github.com/aclu) to
+display UTF-8 reasonably correctly.
 However, the original "character set" conversions are currently disabled.
 Bugs that have nothing to do with UTF-8 support are also being worked on.
 (As acli says, "yes, I've tried tin and nn, and

@@ -42,7 +42,8 @@ add_library(libtrn
     OptionApplier.cpp include/trn/OptionApplier.h
     OptionCatalog.cpp include/trn/OptionCatalog.h
     OptionDraft.cpp include/trn/OptionDraft.h
-    include/trn/patchlevel.h
+    include/trn/patchlevel.h.in
+    "${CMAKE_CURRENT_BINARY_DIR}/include/trn/patchlevel.h"
     rcln.cpp include/trn/rcln.h
     RcGroupConfig.cpp include/trn/RcGroupConfig.h
     rcstuff.cpp include/trn/rcstuff.h
@@ -84,9 +85,11 @@ add_library(libtrn
     util.cpp include/trn/util.h
     uudecode.cpp include/trn/uudecode.h
 )
+configure_file(include/trn/patchlevel.h.in include/trn/patchlevel.h @ONLY)
 # We require <filesystem>
 target_compile_features(libtrn PUBLIC cxx_std_17)
 source_group("Header Files" REGULAR_EXPRESSION "^.*\\.h$")
-target_include_directories(libtrn PUBLIC include)
+source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
+target_include_directories(libtrn PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include" include)
 target_link_libraries(libtrn PUBLIC parsedate curses nntp PRIVATE fmt::fmt)
 target_folder(libtrn "Libraries")
