@@ -237,6 +237,34 @@ configure_file(
     @ONLY
 )
 
+set(TRNDIR "${DEFAULT_TRNDIR}")
+set(TRNMACRO "${DEFAULT_TRNMACRO}")
+set(RNMACRO "${DEFAULT_RNMACRO}")
+set(RCNAME "${DEFAULT_RCNAME}")
+set(LOCKNAME "${DEFAULT_LOCKNAME}")
+set(LASTNAME "${DEFAULT_LASTNAME}")
+set(SIGNATURE_FILE "${DEFAULT_SIGNATURE_FILE}")
+set(NNTP_AUTH_FILE "${DEFAULT_NNTP_AUTH_FILE}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    user_state_paths_default.h
+    @ONLY
+)
+
+set(TRNDIR "%./trn-test")
+set(TRNMACRO "%+/test-macros")
+set(RNMACRO "%./test-rnmac")
+set(RCNAME "%./test-newsrc")
+set(LOCKNAME "%./test-rnlock")
+set(LASTNAME "%./test-rnlast")
+set(SIGNATURE_FILE "%./test-signature")
+set(NNTP_AUTH_FILE "%./test-nntpauth")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    user_state_paths_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -249,5 +277,13 @@ set(BERKELEY_NAMES "${DEFAULT_BERKELEY_NAMES}")
 set(PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}")
 set(LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}")
 set(FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}")
+set(TRNDIR "${DEFAULT_TRNDIR}")
+set(TRNMACRO "${DEFAULT_TRNMACRO}")
+set(RNMACRO "${DEFAULT_RNMACRO}")
+set(RCNAME "${DEFAULT_RCNAME}")
+set(LOCKNAME "${DEFAULT_LOCKNAME}")
+set(LASTNAME "${DEFAULT_LASTNAME}")
+set(SIGNATURE_FILE "${DEFAULT_SIGNATURE_FILE}")
+set(NNTP_AUTH_FILE "${DEFAULT_NNTP_AUTH_FILE}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

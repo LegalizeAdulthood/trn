@@ -43,6 +43,22 @@ need semantic fixes, listed here rather than hidden in prose:
   default and emits the configured value directly.
 - `LOGIN_DIR_FIELD`: handled.  CMake owns the historical login-directory
   field number for password-file fallback lookup.
+- `TRNDIR`: handled.  CMake owns the historical long-filename default
+  and emits the configured value directly.
+- `TRNMACRO`: handled.  CMake owns the historical macro-file default and
+  emits the configured value directly.
+- `RNMACRO`: handled.  CMake owns the historical long-filename default
+  and emits the configured value directly.
+- `RCNAME`: handled.  CMake owns the historical long-filename default and
+  emits the configured value directly.
+- `LOCKNAME`: handled.  CMake owns the historical long-filename default
+  and emits the configured value directly.
+- `LASTNAME`: handled.  CMake owns the historical long-filename default
+  and emits the configured value directly.
+- `SIGNATURE_FILE`: handled.  CMake owns the historical long-filename
+  default and emits the configured value directly.
+- `NNTP_AUTH_FILE`: handled.  CMake owns the historical auth-file default
+  and emits the configured value directly.
 - `INSTALL_PREFIX`: handled.  It follows `CMAKE_INSTALL_PREFIX`.
 - `PREF_SHELL`: handled for Unix.  Windows-safe shell policy is owned by
   later Windows helper work.
@@ -108,8 +124,6 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
-- User-state files: `TRNDIR`, `TRNMACRO`, `RNMACRO`, `RCNAME`,
-  `LOCKNAME`, `LASTNAME`, `SIGNATURE_FILE`, and `NNTP_AUTH_FILE`.
 - Data and access files: `DEFACCESS`, `TRNACCESS`, and `NEWSNEWSNAME`.
 - Article storage and overview names: `OV_FILE_NAME`, `VARYNAME`,
   `HEADNAME`, `SAVEDIR`, and `SAVENAME`.
@@ -143,6 +157,8 @@ options unless a live source consumer is found:
 - `removed`: `config.sh`, `Policy.sh`, `.SH` extraction, generated
   Makefile policy, AFS install splitting, prototype generation, and
   typedef regeneration are legacy build mechanics.
+- `removed`: `LIMITED_FILENAMES` variants for user-state paths; CMake
+  retains the historical long-filename defaults.
 - `removed`: old scan/score memory-saving toggles and pre-ANSI compiler
   probes stay retired unless current source grows a concrete dependency.
 

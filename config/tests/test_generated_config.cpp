@@ -47,6 +47,13 @@ void expect_config_define(const char *filename, std::string_view name, bool defi
     expect_file_contains(filename, expected);
 }
 
+void expect_config_string(const char *filename, std::string_view name, std::string_view value)
+{
+    const std::string expected = std::string{"#define "} + std::string{name} + " \"" + std::string{value} + "\"";
+
+    expect_file_contains(filename, expected);
+}
+
 bool cmake_bool(std::string_view value)
 {
     return value == "1" || value == "ON" || value == "TRUE";
@@ -215,6 +222,30 @@ TEST(GeneratedConfigTest, accountNameFilesConfiguredValuesAreEmitted)
                          "#define PASSWORD_FILE \"/var/lib/trn/passwd\"");
     expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG, "#define LOGIN_DIR_FIELD 7");
     expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG, "#define FULLNAMEFILE \"%./profile-name\"");
+}
+
+TEST(GeneratedConfigTest, userStatePathsDefaultMatchHistoricalFallbacks)
+{
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "TRNDIR", TRN_TEST_DEFAULT_TRNDIR);
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "TRNMACRO", TRN_TEST_DEFAULT_TRNMACRO);
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "RNMACRO", TRN_TEST_DEFAULT_RNMACRO);
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "RCNAME", TRN_TEST_DEFAULT_RCNAME);
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "LOCKNAME", TRN_TEST_DEFAULT_LOCKNAME);
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "LASTNAME", TRN_TEST_DEFAULT_LASTNAME);
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "SIGNATURE_FILE", TRN_TEST_DEFAULT_SIGNATURE_FILE);
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "NNTP_AUTH_FILE", TRN_TEST_DEFAULT_NNTP_AUTH_FILE);
+}
+
+TEST(GeneratedConfigTest, userStatePathsConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "TRNDIR", "%./trn-test");
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "TRNMACRO", "%+/test-macros");
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "RNMACRO", "%./test-rnmac");
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "RCNAME", "%./test-newsrc");
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "LOCKNAME", "%./test-rnlock");
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "LASTNAME", "%./test-rnlast");
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "SIGNATURE_FILE", "%./test-signature");
+    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "NNTP_AUTH_FILE", "%./test-nntpauth");
 }
 
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)

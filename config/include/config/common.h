@@ -292,27 +292,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define DEFAULT_EDITOR "/usr/ucb/vi"
 #endif
 
-// the user's init files
-#ifndef TRNDIR
-# ifdef LIMITED_FILENAMES
-#   define TRNDIR "%./trn"
-# else
-#   define TRNDIR "%./.trn"
-# endif
-#endif
-
-// location of macro file for trn and rn modes
-#ifndef TRNMACRO
-#   define TRNMACRO "%+/macros"
-#endif
-#ifndef RNMACRO
-# ifdef LIMITED_FILENAMES
-#   define RNMACRO "%./rnmac"
-# else
-#   define RNMACRO "%./.rnmac"
-# endif
-#endif
-
 // The name to append to the directory name to read an overview file.
 #ifndef OV_FILE_NAME
 # ifdef LIMITED_FILENAMES
@@ -344,45 +323,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 // trn's access list
 #ifndef TRNACCESS
 #   define TRNACCESS "%+/access"
-#endif
-
-// location of newsrc file
-#ifndef RCNAME          // % and ~
-# ifdef LIMITED_FILENAMES
-#   define RCNAME "%./newsrc"
-# else
-#   define RCNAME "%./.newsrc"
-# endif
-#endif
-
-// if existent, contains process number of current or crashed trn
-#ifndef LOCKNAME        // % and ~
-# ifdef LIMITED_FILENAMES
-#   define LOCKNAME "%+/lock"
-# else
-#   define LOCKNAME "%./.rnlock"
-# endif
-#endif
-
-// information from last invocation of trn
-#ifndef LASTNAME        // % and ~
-# ifdef LIMITED_FILENAMES
-#   define LASTNAME "%+/rnlast"
-# else
-#   define LASTNAME "%./.rnlast"
-# endif
-#endif
-
-#ifndef SIGNATURE_FILE
-# ifdef LIMITED_FILENAMES
-#   define SIGNATURE_FILE "%./signatur"
-# else
-#   define SIGNATURE_FILE "%./.signature"
-# endif
-#endif
-
-#ifndef NNTP_AUTH_FILE
-# define NNTP_AUTH_FILE "%./.nntpauth"
 #endif
 
 // a motd-like file for trn

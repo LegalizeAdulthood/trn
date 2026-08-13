@@ -236,44 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.15 through 4.31 refine #19 into one variable or setting family
+Slices 4.16 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.15. User State Paths
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `TRNDIR`
-- `TRNMACRO`
-- `RNMACRO`
-- `RCNAME`
-- `LOCKNAME`
-- `LASTNAME`
-- `SIGNATURE_FILE`
-- `NNTP_AUTH_FILE`
-
-Tasks:
-
-- Move retained user-state path defaults from `common.h` into CMake.
-- Express retained limited-filename variants in CMake, or retire them.
-- Emit retained user-state paths directly from `config.h.in` and remove
-  their `common.h` fallbacks.
-- Add generated-config coverage for configured and default user-state
-  paths.
-
-Acceptance:
-
-- User-state path defaults are CMake-owned or explicitly retired.
-- Existing runtime tests continue to find the intended default paths.
-- No retained user-state path default relies on a `common.h` fallback.
-- Unit tests cover configured and default user-state paths.
 
 ### 4.16. Data File Paths
 
@@ -1872,7 +1839,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.15 through 4.31, 5, and 6.
+- #19: 4.16 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

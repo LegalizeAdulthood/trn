@@ -173,6 +173,46 @@
  */
 #define FULLNAMEFILE "@FULLNAMEFILE@"
 
+// TRNDIR:
+//      This symbol contains the user's private trn directory.
+//
+#define TRNDIR "@TRNDIR@"
+
+// TRNMACRO:
+//      This symbol contains the macro file for trn mode.
+//
+#define TRNMACRO "@TRNMACRO@"
+
+// RNMACRO:
+//      This symbol contains the macro file for rn mode.
+//
+#define RNMACRO "@RNMACRO@"
+
+// RCNAME:
+//      This symbol contains the default newsrc file path.
+//
+#define RCNAME "@RCNAME@"
+
+// LOCKNAME:
+//      This symbol contains the newsrc lock file path.
+//
+#define LOCKNAME "@LOCKNAME@"
+
+// LASTNAME:
+//      This symbol contains the last-run state file path.
+//
+#define LASTNAME "@LASTNAME@"
+
+// SIGNATURE_FILE:
+//      This symbol contains the signature file path.
+//
+#define SIGNATURE_FILE "@SIGNATURE_FILE@"
+
+// NNTP_AUTH_FILE:
+//      This symbol contains the NNTP authentication file path.
+//
+#define NNTP_AUTH_FILE "@NNTP_AUTH_FILE@"
+
 /* INSTALL_PREFIX:
  *      This symbol contains the name of the install prefix for this package.
  */
