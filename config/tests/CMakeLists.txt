@@ -46,6 +46,12 @@ set_tests_properties(
     ConfigCMakeTest.postingHostMatchSegmentsRejectsNegative
     PROPERTIES LABELS trn)
 
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    input_signal_probes.h
+    @ONLY
+)
+
 set(ACTIVE_TIMES "none")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"

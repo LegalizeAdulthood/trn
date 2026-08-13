@@ -41,10 +41,17 @@ void expect_config_define(const char *filename, std::string_view name, bool defi
 
 bool cmake_bool(std::string_view value)
 {
-    return value == "ON";
+    return value == "1" || value == "ON" || value == "TRUE";
 }
 
 } // namespace
+
+TEST(GeneratedConfigTest, inputAndSignalProbesMatchPlatformChecks)
+{
+    expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_RDCHK", cmake_bool(TRN_TEST_HAS_RDCHK));
+    expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGBLOCK", cmake_bool(TRN_TEST_HAS_SIGBLOCK));
+    expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGHOLD", cmake_bool(TRN_TEST_HAS_SIGHOLD));
+}
 
 TEST(GeneratedConfigTest, activeTimesDefaultIsNone)
 {

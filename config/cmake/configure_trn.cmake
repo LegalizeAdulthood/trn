@@ -35,6 +35,12 @@ function(configure_trn)
     check_include_file(utime.h      I_UTIME)
     check_include_file(vfork.h      I_VFORK)
 
+    if(I_UNISTD)
+        check_symbol_exists(rdchk "unistd.h" HAS_RDCHK)
+    endif()
+    check_symbol_exists(sigblock "signal.h" HAS_SIGBLOCK)
+    check_symbol_exists(sighold "signal.h" HAS_SIGHOLD)
+
     # Determine method used for file descriptor I/O
     if(I_FCNTL)
         check_symbol_exists(open "fcntl.h" HAS_FCNTL_OPEN)

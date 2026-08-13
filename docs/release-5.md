@@ -236,36 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.11 through 4.31 refine #19 into one variable or setting family
+Slices 4.12 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.11. Input And Signal Probes
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `HAS_RDCHK`
-- `HAS_SIGBLOCK`
-- `HAS_SIGHOLD`
-
-Tasks:
-
-- Decide whether each probe is retained for supported platforms.
-- Add CMake checks or remove the live source dependency.
-- Add generated-config coverage for the retained probes.
-
-Acceptance:
-
-- No retained `HAS_RDCHK`, `HAS_SIGBLOCK`, or `HAS_SIGHOLD` source path
-  lacks a CMake owner.
-- Retired probes have no live source dependency.
-- Generated-config unit tests cover each retained input or signal probe.
 
 ### 4.12. Wait Status Probes
 
@@ -844,7 +819,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.11 through 4.31.
+Depends on: 4.12 through 4.31.
 
 Files likely touched:
 
@@ -856,8 +831,7 @@ Files likely touched:
 Tasks:
 
 - Add CMake cache variables for the relevant retained options.
-- Configure or retire `HAS_RDCHK`, `HAS_SIGBLOCK`, `HAS_SIGHOLD`,
-  `UNION_WAIT`, and `USE_WIFSTAT`.
+- Configure or retire `UNION_WAIT` and `USE_WIFSTAT`.
 - Emit `I_SGTTY` only if source still needs it.
 
 Acceptance:
@@ -1976,7 +1950,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.11 through 4.31, 5, and 6.
+- #19: 4.12 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.
