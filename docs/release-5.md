@@ -236,35 +236,8 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.3 through 4.31 refine #19 into one variable or setting family
+Slices 4.4 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
-
-### 4.3. News Library Default
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `NEWS_LIB`
-
-Tasks:
-
-- Set the default news library path in CMake for each supported
-  platform.
-- Emit `NEWS_LIB` directly from `config.h.in` and remove its `common.h`
-  fallback.
-- Add generated-config coverage for configured and default news library
-  paths.
-
-Acceptance:
-
-- `NEWS_LIB` can be customized from CMake.
-- Default generated `NEWS_LIB` matches the retained platform default.
-- No retained `NEWS_LIB` fallback remains in `common.h`.
-- Generated-config unit tests cover configured and platform-default
-  `NEWS_LIB` values.
 
 ### 4.4. Active File Default
 
@@ -1042,7 +1015,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.3 through 4.31.
+Depends on: 4.4 through 4.31.
 
 Files likely touched:
 
@@ -2176,7 +2149,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.3 through 4.31, 5, and 6.
+- #19: 4.4 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

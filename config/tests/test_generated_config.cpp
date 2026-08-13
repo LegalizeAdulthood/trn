@@ -52,3 +52,15 @@ TEST(GeneratedConfigTest, mailFileConfiguredPathIsEmitted)
 {
     expect_file_contains(TRN_TEST_MAIL_FILE_CONFIGURED_CONFIG, "#define MAIL_FILE \"%./mailbox\"");
 }
+
+TEST(GeneratedConfigTest, newsLibDefaultMatchesPlatformDefault)
+{
+    const std::string expected = std::string{"#define NEWS_LIB \""} + TRN_TEST_DEFAULT_NEWS_LIB + "\"";
+
+    expect_file_contains(TRN_TEST_NEWS_LIB_DEFAULT_CONFIG, expected);
+}
+
+TEST(GeneratedConfigTest, newsLibConfiguredPathIsEmitted)
+{
+    expect_file_contains(TRN_TEST_NEWS_LIB_CONFIGURED_CONFIG, "#define NEWS_LIB \"/var/lib/trn/news\"");
+}

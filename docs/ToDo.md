@@ -9,6 +9,7 @@
 * Eliminate all MSDOS conditional branches
 * Review default setting of MAIL_FILE and entire "checking mail" mechanism
   on Windows
+* Review default setting of NEWS_LIB on Windows
 
 ## AddGroup
 

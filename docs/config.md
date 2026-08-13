@@ -55,8 +55,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `HAS_LOCAL_SPOOL`: handled.  Coupled local/NNTP defaults still need
   review with the news-source mode work below.
 - `MIMECAP`: handled.
-- `NEWS_LIB`: needed.  CMake owns the value, but the empty Unix default
-  bypasses the `common.h` fallback.
+- `NEWS_LIB`: handled.  CMake owns the retained platform default and
+  emits the configured value directly.
 - `EXTRA_INEWS`: handled.  It is still consumed by local posting.
 - `GROUP_DESC`: needed.  CMake owns the value, but the empty default
   bypasses the `common.h` fallback.
@@ -263,7 +263,6 @@ unconditionally emitted to `config.h`.
 
 Notable cases:
 
-- `NEWS_LIB`
 - `ACTIVE`
 - `GROUP_DESC`
 - `SUBSCRIPTIONS`
