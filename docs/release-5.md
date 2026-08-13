@@ -236,39 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.19 through 4.31 refine #19 into one variable or setting family
+Slices 4.20 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.19. Selection Policy
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `UNSUBSCRIBED_CHAR`
-- `SELECTION_CHARS`
-
-Tasks:
-
-- Add CMake cache variables for retained selection defaults using the
-  current `common.h` defaults.
-- Validate `UNSUBSCRIBED_CHAR` as a single character.
-- Emit retained selection defaults directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config and selection behavior coverage.
-
-Acceptance:
-
-- Selection defaults are configurable through CMake.
-- Invalid selection defaults fail configure with a clear diagnostic.
-- No retained selection default relies on a `common.h` fallback.
-- Unit tests cover configured selection characters and unsubscribe
-  marker behavior.
 
 ### 4.20. Shell Command Defaults
 
@@ -626,7 +598,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.19 through 4.31.
+Depends on: 4.20 through 4.31.
 
 Files likely touched:
 
@@ -1755,7 +1727,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.19 through 4.31, 5, and 6.
+- #19: 4.20 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

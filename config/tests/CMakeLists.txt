@@ -46,6 +46,31 @@ set_tests_properties(
     ConfigCMakeTest.postingHostMatchSegmentsRejectsNegative
     PROPERTIES LABELS trn)
 
+set(unsubscribed_char_validation_script
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_unsubscribed_char_validation.cmake")
+add_test(NAME ConfigCMakeTest.unsubscribedCharAcceptsSingleCharacter
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_UNSUBSCRIBED_CHAR=?"
+        -P "${unsubscribed_char_validation_script}")
+add_test(NAME ConfigCMakeTest.unsubscribedCharRejectsEmpty
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_UNSUBSCRIBED_CHAR="
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${unsubscribed_char_validation_script}")
+add_test(NAME ConfigCMakeTest.unsubscribedCharRejectsMultipleCharacters
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_UNSUBSCRIBED_CHAR=!!"
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${unsubscribed_char_validation_script}")
+set_tests_properties(
+    ConfigCMakeTest.unsubscribedCharAcceptsSingleCharacter
+    ConfigCMakeTest.unsubscribedCharRejectsEmpty
+    ConfigCMakeTest.unsubscribedCharRejectsMultipleCharacters
+    PROPERTIES LABELS trn)
+
 set(save_path_defaults_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_save_path_defaults.cmake")
 add_test(NAME ConfigCMakeTest.savePathDefaultsUseFlatMode
     COMMAND "${CMAKE_COMMAND}"
@@ -335,6 +360,22 @@ configure_file(
     @ONLY
 )
 
+set(UNSUBSCRIBED_CHAR "${DEFAULT_UNSUBSCRIBED_CHAR}")
+set(SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    selection_policy_default.h
+    @ONLY
+)
+
+set(UNSUBSCRIBED_CHAR "?")
+set(SELECTION_CHARS "xyz789")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    selection_policy_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -364,5 +405,7 @@ set(VARYNAME "${DEFAULT_VARYNAME}")
 set(HEADNAME "${DEFAULT_HEADNAME}")
 set(SAVEDIR "${DEFAULT_SAVEDIR}")
 set(SAVENAME "${DEFAULT_SAVENAME}")
+set(UNSUBSCRIBED_CHAR "${DEFAULT_UNSUBSCRIBED_CHAR}")
+set(SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

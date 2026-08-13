@@ -24,6 +24,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -50,6 +51,14 @@ std::vector<std::string> read_lines(const fs::path &path)
         lines.push_back(line);
     }
     return lines;
+}
+
+std::string unsubscribed_newsrc_line(std::string_view group_name, std::string_view suffix = {})
+{
+    std::string line{group_name};
+    line.push_back(UNSUBSCRIBED_CHAR);
+    line.append(suffix);
+    return line;
 }
 
 std::vector<std::string> ordered_newsgroup_names()
@@ -655,14 +664,15 @@ TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromRemoteSubscriptions)
     EXPECT_CALL(*m_connection, read_line(testing::_))
         .WillOnce(testing::Return("215 subscriptions follow"))
         .WillOnce(testing::Return("comp.lang.apl:"))
-        .WillOnce(testing::Return("comp.lang.c++!"))
+        .WillOnce(testing::Return(unsubscribed_newsrc_line("comp.lang.c++")))
         .WillOnce(testing::Return("."));
     EXPECT_CALL(*m_connection, write_line(testing::StrEq("QUIT"), testing::_));
     EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("205 closing"));
 
     ASSERT_TRUE(multirc.use_multirc());
 
-    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1-6", "comp.lang.c++!"}), read_lines(newsrc.name));
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1-6", unsubscribed_newsrc_line("comp.lang.c++")}),
+              read_lines(newsrc.name));
     unuse_multirc(&multirc);
 }
 
@@ -672,8 +682,7 @@ TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromDefaultSubscriptions)
     const fs::path subscriptions_path = m_output_dir / "subscriptions";
     std::ofstream{active_path} << "comp.lang.apl 0000000042 0000000007 y\n"
                                << "comp.lang.c++ 0000000200 0000000100 y\n";
-    std::ofstream{subscriptions_path} << "comp.lang.apl:\n"
-                                      << "comp.lang.c++!\n";
+    std::ofstream{subscriptions_path} << "comp.lang.apl:\n" << unsubscribed_newsrc_line("comp.lang.c++") << '\n';
 
     m_data_source.m_news_id = active_path.generic_string();
     g_lib = m_output_dir.generic_string();
@@ -683,7 +692,8 @@ TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromDefaultSubscriptions)
     multirc.m_first = &newsrc;
 
     ASSERT_TRUE(multirc.use_multirc());
-    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1-6", "comp.lang.c++!"}), read_lines(newsrc.name));
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1-6", unsubscribed_newsrc_line("comp.lang.c++")}),
+              read_lines(newsrc.name));
 
     unuse_multirc(&multirc);
 }
@@ -756,7 +766,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupAppendsUnsubscribedMissingGroup)
     EXPECT_EQ(UNSUBSCRIBED_CHAR, group->m_subscribe_char);
     EXPECT_EQ(static_cast<int>(std::string_view{"comp.lang.apl"}.size() + 1), group->m_num_offset);
     group->show_subscribe_char();
-    EXPECT_EQ("comp.lang.apl! ", group->m_rc_line);
+    EXPECT_EQ(unsubscribed_newsrc_line("comp.lang.apl", " "), group->m_rc_line);
     group->hide_subscribe_char();
 }
 
@@ -770,7 +780,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForUnsubscribedGroup)
     Multirc multirc{};
     multirc.m_first = &newsrc;
     newsrc.flags = RF_NONE;
-    std::ofstream{newsrc.name} << "comp.lang.apl! 1\n";
+    std::ofstream{newsrc.name} << unsubscribed_newsrc_line("comp.lang.apl", " 1") << '\n';
     ASSERT_TRUE(multirc.use_multirc());
 
     push_char('n');
@@ -793,7 +803,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupResubscribeRestoresUnthreadedFlag)
     Multirc multirc{};
     multirc.m_first = &newsrc;
     newsrc.flags = RF_NONE;
-    std::ofstream{newsrc.name} << "comp.lang.apl! 0-3\n";
+    std::ofstream{newsrc.name} << unsubscribed_newsrc_line("comp.lang.apl", " 0-3") << '\n';
     ASSERT_TRUE(multirc.use_multirc());
 
     push_char('y');
@@ -815,7 +825,7 @@ TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)
     g_newsgroup_data.reserve(2);
     g_newsgroup_order.reserve(2);
     add_newsgroup(newsrc, "comp.lang.apl: 1-3");
-    add_newsgroup(newsrc, "comp.lang.c++! 1-2");
+    add_newsgroup(newsrc, unsubscribed_newsrc_line("comp.lang.c++", " 1-2"));
     g_newsgroup_order[0]->m_to_read = ArticleUnread{-1};
     g_newsgroup_order[1]->m_to_read = ArticleUnread{-2};
 
@@ -823,7 +833,8 @@ TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)
     list_newsgroups();
     const std::string output = testing::internal::GetCapturedStdout();
 
-    EXPECT_EQ("\n  #  Status  Newsgroup\n  0 (UNSUB)  comp.lang.apl: 1-3\n"
-              "  1   (DUP)  comp.lang.c++! 1-2\n",
-              output);
+    const std::string expected = "\n  #  Status  Newsgroup\n  0 (UNSUB)  comp.lang.apl: 1-3\n"
+                                 "  1   (DUP)  " +
+                                 unsubscribed_newsrc_line("comp.lang.c++", " 1-2") + "\n";
+    EXPECT_EQ(expected, output);
 }

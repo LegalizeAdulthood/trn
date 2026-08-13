@@ -229,6 +229,11 @@
  */
 #define ROOT_UID @ROOT_UID@
 
+// UNSUBSCRIBED_CHAR:
+//      This character indicates an unsubscribed newsgroup.
+//
+#define UNSUBSCRIBED_CHAR '@UNSUBSCRIBED_CHAR@'
+
 /* ACTIVE:
  *      The name of the active file for the news system.  This file contains
  *      the list of active newsgroups.  The name may have ~ on the front.
@@ -327,6 +332,11 @@
  *      spooled.  The program must be prepared to do ~ expansion on it.
  */
 #define NEWS_SPOOL "@NEWS_SPOOL@"
+
+// SELECTION_CHARS:
+//      default characters to use in the selection menu
+//
+#define SELECTION_CHARS "@SELECTION_CHARS@"
 
 /* ORG_NAME:
  *      This symbol contains either the organization name or the full pathname

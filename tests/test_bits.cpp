@@ -445,7 +445,10 @@ TEST_F(BitsToRcTest, reconstructsUnsubscribedLineAndKeepsItInvisible)
 
     bits_to_rc();
 
-    EXPECT_EQ("comp.lang.apl! 1-2,4-5", visible_rc_line());
+    std::string expected{"comp.lang.apl"};
+    expected.push_back(UNSUBSCRIBED_CHAR);
+    expected += " 1-2,4-5";
+    EXPECT_EQ(expected, visible_rc_line());
     EXPECT_EQ('\0', m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)]);
     EXPECT_EQ(TR_UNSUB, m_group.m_to_read);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);

@@ -35,6 +35,8 @@ need semantic fixes, listed here rather than hidden in prose:
   emits the configured value directly.
 - `MBOX_CHAR`: handled.  CMake validates that the value is one
   character.
+- `UNSUBSCRIBED_CHAR`: handled.  CMake owns the newsrc unsubscribe marker
+  default and validates that it is one character.
 - `PASS_NAMES`: needed.  CMake owns the option, but current defaults do
   not match the old Linux hint.
 - `BERKELEY_NAMES`: needed.  CMake owns the option, but it does not
@@ -83,6 +85,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `SUBSCRIPTIONS`: needed.  CMake owns the value, but the empty default
   bypasses the intended source fallback.
 - `NEWS_SPOOL`: handled as the default local spool path.
+- `SELECTION_CHARS`: handled.  CMake owns the historical selection-menu
+  character default and emits the configured value directly.
 - `ORG_NAME`: handled.
 - `POSTING_HOSTNAME`: handled.
 - `POSTING_HOST_MATCH_SEGMENTS`: handled.  CMake owns the legacy
@@ -145,8 +149,6 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, and `USE_FTP`.
-- Selection and newsrc policy: `UNSUBSCRIBED_CHAR` and
-  `SELECTION_CHARS`.
 - Shell and command defaults: `SH`, `PIPE_SAVER`, `SHAR_SAVER`,
   `CUSTOM_SAVER`, `VERIFY_RIPEM`, and `VERIFY_PGP`.
 - Posting, mail, and forwarding text: `MAIL_HEADER`, `NEWS_HEADER`,

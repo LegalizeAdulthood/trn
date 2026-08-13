@@ -196,10 +196,6 @@ enum
 #   define sigignore(sig) signal(sig,SIG_IGN)
 #endif
 
-#ifndef UNSUBSCRIBED_CHAR
-#   define UNSUBSCRIBED_CHAR '!'
-#endif
-
 // Space conservation section
 
 // To save D space, cut down size of MAXNGTODO and VARYSIZE.
@@ -264,11 +260,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 // where to find news files
 #ifndef NEWS_SPOOL       // % and ~
 #   define NEWS_SPOOL "/usr/spool/news"
-#endif
-
-// default characters to use in the selection menu
-#ifndef SELECTION_CHARS
-#   define SELECTION_CHARS "abdefgijlorstuvwxyz1234567890BCFGIKVW"
 #endif
 
 // preferred shell for use in doshell routine

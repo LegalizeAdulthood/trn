@@ -61,6 +61,14 @@ void expect_config_string(const char *filename, std::string_view name, std::stri
     expect_file_contains(filename, expected);
 }
 
+void expect_config_char(const char *filename, std::string_view name, std::string_view value)
+{
+    ASSERT_EQ(1, value.size()) << name;
+    const std::string expected = std::string{"#define "} + std::string{name} + " '" + std::string{value} + "'";
+
+    expect_file_contains(filename, expected);
+}
+
 bool cmake_bool(std::string_view value)
 {
     return value == "1" || value == "ON" || value == "TRUE";
@@ -302,6 +310,19 @@ TEST(GeneratedConfigTest, savePathTemplatesConfiguredValuesAreEmitted)
 {
     expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVEDIR", "%p/test-save");
     expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVENAME", "test-%a");
+}
+
+TEST(GeneratedConfigTest, selectionPolicyDefaultMatchesHistoricalFallbacks)
+{
+    expect_config_char(TRN_TEST_SELECTION_POLICY_DEFAULT_CONFIG, "UNSUBSCRIBED_CHAR",
+                       TRN_TEST_DEFAULT_UNSUBSCRIBED_CHAR);
+    expect_config_string(TRN_TEST_SELECTION_POLICY_DEFAULT_CONFIG, "SELECTION_CHARS", TRN_TEST_DEFAULT_SELECTION_CHARS);
+}
+
+TEST(GeneratedConfigTest, selectionPolicyConfiguredValuesAreEmitted)
+{
+    expect_config_char(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "UNSUBSCRIBED_CHAR", "?");
+    expect_config_string(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "SELECTION_CHARS", "xyz789");
 }
 
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
