@@ -632,6 +632,39 @@ TEST_F(DataSourceInitTest, usesConfiguredGroupDescription)
     EXPECT_EQ(group_desc_path.generic_string(), source->m_group_desc);
 }
 
+TEST_F(DataSourceInitTest, usesRemoteOverviewForDefaultOverviewDirectory)
+{
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("default");
+    ASSERT_NE(nullptr, source);
+    EXPECT_TRUE(source->m_flags & DF_REMOTE);
+    EXPECT_TRUE(source->m_over_dir.empty());
+    EXPECT_TRUE(source->m_flags & DF_TRY_OVERVIEW);
+}
+
+TEST_F(DataSourceInitTest, usesConfiguredOverviewDirectory)
+{
+    const fs::path active_path = m_output_dir / "active";
+    const fs::path overview_path = m_output_dir / "configured-overview";
+    std::ofstream{active_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+    std::ofstream{m_output_dir / "access"} << "[test-configured]\n"
+                                           << "Active File = " << active_path.generic_string() << "\n"
+                                           << "Overview Dir = " << overview_path.generic_string() << "\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("test-configured");
+    ASSERT_NE(nullptr, source);
+    EXPECT_EQ(overview_path.generic_string(), source->m_over_dir);
+    EXPECT_TRUE(source->m_flags & DF_TRY_OVERVIEW);
+}
+
 TEST_F(DataSourceInitTest, readsForceAuthFromEnvironment)
 {
     m_env.expect_env("NNTPSERVER", "news.example");

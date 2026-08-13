@@ -97,4 +97,18 @@ configure_file(
     @ONLY
 )
 
+set(OVERVIEW_DIR "${DEFAULT_OVERVIEW_DIR}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    overview_dir_default.h
+    @ONLY
+)
+
+set(OVERVIEW_DIR "/var/spool/news/overview")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    overview_dir_configured.h
+    @ONLY
+)
+
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

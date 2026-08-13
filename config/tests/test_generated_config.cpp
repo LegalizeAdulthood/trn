@@ -101,3 +101,14 @@ TEST(GeneratedConfigTest, subscriptionsConfiguredPathIsEmitted)
     expect_file_contains(TRN_TEST_SUBSCRIPTIONS_CONFIGURED_CONFIG,
                          "#define SUBSCRIPTIONS \"/var/lib/trn/subscriptions\"");
 }
+
+TEST(GeneratedConfigTest, overviewDirDefaultUsesRemoteFallback)
+{
+    expect_file_contains(TRN_TEST_OVERVIEW_DIR_DEFAULT_CONFIG, "#define OVERVIEW_DIR    \"remote\"");
+}
+
+TEST(GeneratedConfigTest, overviewDirConfiguredPathIsEmitted)
+{
+    expect_file_contains(TRN_TEST_OVERVIEW_DIR_CONFIGURED_CONFIG,
+                         "#define OVERVIEW_DIR    \"/var/spool/news/overview\"");
+}
