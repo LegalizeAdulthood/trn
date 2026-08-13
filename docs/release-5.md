@@ -72,8 +72,7 @@ Markdown files are excluded from this audit.
 
 Non-markdown documentation sources audited:
 
-- top-level text: `INSTALL.txt`, `INIT.txt`, `HACKERSGUIDE.txt`, and
-  `default_topic`;
+- top-level text: `INIT.txt`, `HACKERSGUIDE.txt`, and `default_topic`;
 - man pages: `man/trn.1`, `man/strn.1`, `man/Pnews.1`, and
   `man/Rnmail.1`;
 - online help files under `HelpFiles`;
@@ -84,10 +83,10 @@ Non-markdown documentation sources audited:
 
 Documentation gaps and owning work items:
 
-- `INSTALL.txt` and `default_topic` still describe the trn 4.0
-  `Configure` workflow, `MANIFEST`, `make install.full`,
-  `make install.strn`, and old `mthreads` distribution details.  Items
-  3 and 7 reconcile or retire those paths.
+- `default_topic` still describes the trn 4.0 `Configure` workflow,
+  `MANIFEST`, `make install.full`, `make install.strn`, and old
+  `mthreads` distribution details.  Item 7 reconciles or retires those
+  paths.
 - `CMakeLists.txt` only installs the `trn` target.  Man pages,
   `HelpFiles`, generated data files, generated helper files, and
   release text files need an install/package decision in items 10 and
@@ -197,7 +196,7 @@ release must not regress #2, #9, #11, #12, #20, #28, #32, #36, or #39.
 P0 is the GitHub 5.0 milestone.  No open P0 issue may be deferred to 5.1
 while it remains on that milestone.  Closed P0 issues must remain fixed.
 
-1. Fix install docs: #18.
+1. Finish install docs: #18.
 2. Finish CMake and generated-file migration: #19, #31.
 3. Fix mandatory crash and disabled-test issues: #24, #38.
 4. Ship Windows and macOS release support: #14, #23.
@@ -236,33 +235,6 @@ GitHub issue.  Closed milestone issues are not implementation items; they
 are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
-
-### 3. Install Quickstart
-
-Issues: #18.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `INSTALL.txt`
-- `INSTALL.md`
-
-Tasks:
-
-- Migrate `INSTALL.txt` to `INSTALL.md` as the canonical install
-  document.
-- Replace stale trn 4.0 install text with CMake preset instructions.
-- Document required tools, submodules, and vcpkg bootstrap steps.
-- Document default configure, build, test, install, and package commands.
-- Leave `INSTALL.txt` only as a short pointer if compatibility needs it.
-- State which platforms are intended to work for 5.0.
-
-Acceptance:
-
-- `INSTALL.md` is the authoritative install document.
-- A fresh checkout can be built from the `INSTALL.md` quickstart alone.
-- No install document describes the old Configure workflow.
 
 ### 4. Configure Option Inventory
 

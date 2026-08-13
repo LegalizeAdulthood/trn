@@ -43,11 +43,11 @@ set(CMAKE_INSTALL_PREFIX "install")
 set(trn_text_files
     HACKERSGUIDE.txt
     INIT.txt
-    INSTALL.txt
     LICENSE.txt
 )
 add_executable(trn main.cpp
     "docs/AsyncPlan.md"
+    "INSTALL.md"
     "ReadMe.md"
     "docs/StructureFunctions.md"
     vcpkg.json
@@ -60,6 +60,7 @@ source_group("VcPkg Files" FILES vcpkg.json)
 source_group("Text Files" FILES ${trn_text_files})
 source_group("Markdown Files" FILES
     "docs/AsyncPlan.md"
+    "INSTALL.md"
     "ReadMe.md"
     "docs/StructureFunctions.md"
 )
@@ -85,7 +86,7 @@ misc_target(FILES
     "CMakePresets.json"
     "HACKERSGUIDE.txt"
     "INIT.txt"
-    "INSTALL.txt"
+    "INSTALL.md"
     "ReadMe.md"
 )
 misc_group_sources("CMake Scripts" FILES
