@@ -327,3 +327,23 @@ TEST_F(OverviewTest, initMapsOverviewFormatFields)
     EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_BYTES]);
     EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_XREF]);
 }
+
+TEST_F(OverviewTest, initUsesBuiltInFormatWithoutOverviewFormatFile)
+{
+    m_data_source.m_over_fmt.clear();
+    for (int i = 0; i < OV_MAX_FIELDS; ++i)
+    {
+        m_data_source.m_field_num[i] = OV_NUM;
+        m_data_source.m_field_flags[i] = FF_NONE;
+    }
+
+    EXPECT_TRUE(ov_init());
+
+    EXPECT_EQ(OV_NUM, m_data_source.m_field_num[0]);
+    EXPECT_EQ(OV_SUBJ, m_data_source.m_field_num[1]);
+    EXPECT_EQ(OV_FROM, m_data_source.m_field_num[2]);
+    EXPECT_EQ(OV_DATE, m_data_source.m_field_num[3]);
+    EXPECT_EQ(OV_MSG_ID, m_data_source.m_field_num[4]);
+    EXPECT_EQ(FF_HAS_FIELD, m_data_source.m_field_flags[OV_SUBJ]);
+    EXPECT_EQ(FF_CHECK_FOR_FIELD | FF_CHECK_FOR_HEADER, m_data_source.m_field_flags[OV_XREF]);
+}

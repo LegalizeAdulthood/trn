@@ -643,6 +643,7 @@ TEST_F(DataSourceInitTest, usesRemoteOverviewForDefaultOverviewDirectory)
     ASSERT_NE(nullptr, source);
     EXPECT_TRUE(source->m_flags & DF_REMOTE);
     EXPECT_TRUE(source->m_over_dir.empty());
+    EXPECT_TRUE(source->m_over_fmt.empty());
     EXPECT_TRUE(source->m_flags & DF_TRY_OVERVIEW);
 }
 

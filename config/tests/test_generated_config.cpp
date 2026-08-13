@@ -112,3 +112,14 @@ TEST(GeneratedConfigTest, overviewDirConfiguredPathIsEmitted)
     expect_file_contains(TRN_TEST_OVERVIEW_DIR_CONFIGURED_CONFIG,
                          "#define OVERVIEW_DIR    \"/var/spool/news/overview\"");
 }
+
+TEST(GeneratedConfigTest, overviewFmtDefaultDisablesLocalFormatFile)
+{
+    expect_file_contains(TRN_TEST_OVERVIEW_FMT_DEFAULT_CONFIG, "#define OVERVIEW_FMT    \"none\"");
+}
+
+TEST(GeneratedConfigTest, overviewFmtConfiguredPathIsEmitted)
+{
+    expect_file_contains(TRN_TEST_OVERVIEW_FMT_CONFIGURED_CONFIG,
+                         "#define OVERVIEW_FMT    \"/var/lib/trn/overview.fmt\"");
+}
