@@ -292,10 +292,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define SELECTION_CHARS "abdefgijlorstuvwxyz1234567890BCFGIKVW"
 #endif
 
-#ifndef GROUP_DESC
-#   define GROUP_DESC "%x/newsgroups"
-#endif
-
 // preferred shell for use in doshell routine
 // ksh or sh would be okay here
 #ifndef PREF_SHELL

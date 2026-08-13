@@ -280,6 +280,7 @@ protected:
         m_old_data_source = g_data_source;
         m_old_dot_dir = g_dot_dir;
         m_old_trn_dir = g_trn_dir;
+        m_old_lib = g_lib;
         m_old_rn_lib = g_rn_lib;
         m_old_tmp_dir = g_tmp_dir;
         m_old_trn_access_text = g_trn_access_text;
@@ -288,6 +289,7 @@ protected:
         g_data_source = nullptr;
         g_dot_dir = m_output_dir.generic_string();
         g_trn_dir = m_output_dir.generic_string();
+        g_lib = m_output_dir.generic_string();
         g_rn_lib = m_output_dir.generic_string();
         g_tmp_dir = m_output_dir.generic_string();
         g_trn_access_text.clear();
@@ -303,6 +305,7 @@ protected:
         g_data_source = m_old_data_source;
         g_dot_dir = m_old_dot_dir;
         g_trn_dir = m_old_trn_dir;
+        g_lib = m_old_lib;
         g_rn_lib = m_old_rn_lib;
         g_tmp_dir = m_old_tmp_dir;
         g_trn_access_text = m_old_trn_access_text;
@@ -316,6 +319,7 @@ protected:
     DataSource                   *m_old_data_source{};
     std::string                   m_old_dot_dir;
     std::string                   m_old_trn_dir;
+    std::string                   m_old_lib;
     std::string                   m_old_rn_lib;
     std::string                   m_old_tmp_dir;
     std::string                   m_old_trn_access_text;
@@ -596,6 +600,36 @@ TEST_F(DataSourceInitTest, createsDefaultRemoteSourceFromNntpServer)
     EXPECT_EQ("news.example", source.m_news_id);
     EXPECT_TRUE(source.m_flags & DF_DEFAULT);
     EXPECT_TRUE(source.m_flags & DF_REMOTE);
+}
+
+TEST_F(DataSourceInitTest, usesDefaultGroupDescription)
+{
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("default");
+    ASSERT_NE(nullptr, source);
+    EXPECT_EQ((m_output_dir / "newsgroups").generic_string(), source->m_group_desc);
+}
+
+TEST_F(DataSourceInitTest, usesConfiguredGroupDescription)
+{
+    const fs::path active_path = m_output_dir / "active";
+    const fs::path group_desc_path = m_output_dir / "configured-newsgroups";
+    std::ofstream{active_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+    std::ofstream{m_output_dir / "access"} << "[test-configured]\n"
+                                           << "Active File = " << active_path.generic_string() << "\n"
+                                           << "Group Desc = " << group_desc_path.generic_string() << "\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("test-configured");
+    ASSERT_NE(nullptr, source);
+    EXPECT_EQ(group_desc_path.generic_string(), source->m_group_desc);
 }
 
 TEST_F(DataSourceInitTest, readsForceAuthFromEnvironment)

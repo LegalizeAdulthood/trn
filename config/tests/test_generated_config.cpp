@@ -76,3 +76,15 @@ TEST(GeneratedConfigTest, newsLibConfiguredPathIsEmitted)
 {
     expect_file_contains(TRN_TEST_NEWS_LIB_CONFIGURED_CONFIG, "#define NEWS_LIB \"/var/lib/trn/news\"");
 }
+
+TEST(GeneratedConfigTest, groupDescDefaultMatchesHistoricalFallback)
+{
+    const std::string expected = std::string{"#define GROUP_DESC \""} + TRN_TEST_DEFAULT_GROUP_DESC + "\"";
+
+    expect_file_contains(TRN_TEST_GROUP_DESC_DEFAULT_CONFIG, expected);
+}
+
+TEST(GeneratedConfigTest, groupDescConfiguredPathIsEmitted)
+{
+    expect_file_contains(TRN_TEST_GROUP_DESC_CONFIGURED_CONFIG, "#define GROUP_DESC \"/var/lib/trn/newsgroups\"");
+}
