@@ -251,16 +251,17 @@ Configuration variables/settings:
 
 Tasks:
 
-- Decide whether `MAIL_FILE` remains a cache variable or falls back to
-  source defaults.
-- Stop an empty CMake default from overriding `common.h` fallback
-  behavior.
+- Default `MAIL_FILE` in CMake to the retained historical mail-file
+  path.
+- Emit `MAIL_FILE` directly from `config.h.in` and remove its
+  `common.h` fallback.
 - Add generated-config coverage for configured and default mail files.
 
 Acceptance:
 
 - `MAIL_FILE` can be customized from CMake.
-- The default mail-file path is not silently replaced by an empty string.
+- Default generated `MAIL_FILE` matches the old `common.h` fallback.
+- No retained `MAIL_FILE` fallback remains in `common.h`.
 - Generated-config unit tests cover configured and default `MAIL_FILE`
   values.
 
@@ -276,16 +277,18 @@ Configuration variables/settings:
 
 Tasks:
 
-- Decide the default news library path for each supported platform.
-- Stop the empty Unix CMake default from bypassing `common.h` fallback
-  behavior.
+- Set the default news library path in CMake for each supported
+  platform.
+- Emit `NEWS_LIB` directly from `config.h.in` and remove its `common.h`
+  fallback.
 - Add generated-config coverage for configured and default news library
   paths.
 
 Acceptance:
 
 - `NEWS_LIB` can be customized from CMake.
-- Unix defaults do not generate an empty news library path.
+- Default generated `NEWS_LIB` matches the retained platform default.
+- No retained `NEWS_LIB` fallback remains in `common.h`.
 - Generated-config unit tests cover configured and platform-default
   `NEWS_LIB` values.
 
@@ -301,14 +304,16 @@ Configuration variables/settings:
 
 Tasks:
 
-- Decide whether the active file default belongs in CMake or `common.h`.
-- Stop an empty CMake default from bypassing the fallback active file.
+- Default `ACTIVE` in CMake to the retained active-file path.
+- Emit `ACTIVE` directly from `config.h.in` and remove its `common.h`
+  fallback.
 - Add generated-config coverage for configured and default active files.
 
 Acceptance:
 
 - `ACTIVE` can be customized from CMake.
-- The default active file is not silently replaced by an empty string.
+- Default generated `ACTIVE` matches the old `common.h` fallback.
+- No retained `ACTIVE` fallback remains in `common.h`.
 - Generated-config unit tests cover configured and default `ACTIVE`
   values.
 
@@ -324,16 +329,17 @@ Configuration variables/settings:
 
 Tasks:
 
-- Decide whether the group-description default belongs in CMake or
-  source fallback policy.
-- Stop an empty CMake default from bypassing the fallback value.
+- Default `GROUP_DESC` in CMake to the retained group-description path.
+- Emit `GROUP_DESC` directly from `config.h.in` and remove its
+  `common.h` fallback.
 - Add generated-config coverage for configured and default group
   descriptions.
 
 Acceptance:
 
 - `GROUP_DESC` can be customized from CMake.
-- The default group-description path remains usable for local sources.
+- Default generated `GROUP_DESC` matches the old `common.h` fallback.
+- No retained `GROUP_DESC` fallback remains in `common.h`.
 - Generated-config and data-source unit tests cover configured and
   default `GROUP_DESC` values.
 
@@ -547,16 +553,19 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained account-name file policy.
-- Preserve source fallback behavior for unset values.
-- Add name-lookup coverage for configured and default paths.
+- Move retained account-name defaults from `common.h` into CMake.
+- Emit retained account-name values directly from `config.h.in` and
+  remove their `common.h` fallbacks.
+- Add generated-config and name-lookup coverage for configured and
+  default paths.
 
 Acceptance:
 
 - Account-name file settings have CMake owners or no live source use.
 - Default full-name lookup behavior remains explicit.
-- Name-lookup unit tests cover configured and default account-file
-  settings.
+- No retained account-name default relies on a `common.h` fallback.
+- Unit tests cover configured and default account-file settings in
+  generated config and name lookup.
 
 ### 4.15. User State Paths
 
@@ -577,9 +586,10 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained user-state path defaults.
-- Preserve limited-filename fallback behavior only if it remains
-  supported.
+- Move retained user-state path defaults from `common.h` into CMake.
+- Express retained limited-filename variants in CMake, or retire them.
+- Emit retained user-state paths directly from `config.h.in` and remove
+  their `common.h` fallbacks.
 - Add generated-config coverage for configured and default user-state
   paths.
 
@@ -587,6 +597,7 @@ Acceptance:
 
 - User-state path defaults are CMake-owned or explicitly retired.
 - Existing runtime tests continue to find the intended default paths.
+- No retained user-state path default relies on a `common.h` fallback.
 - Unit tests cover configured and default user-state paths.
 
 ### 4.16. Data File Paths
@@ -604,14 +615,18 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained data-file path defaults.
+- Add CMake cache variables for retained data-file path defaults using
+  the current `common.h` defaults.
 - Align defaults with generated data files and the install layout.
+- Emit retained data-file paths directly from `config.h.in` and remove
+  their `common.h` fallbacks.
 - Add generated-config coverage for configured and default paths.
 
 Acceptance:
 
 - Runtime data-file paths are CMake-owned and install-aware.
 - Defaults point at generated or installed files that exist.
+- No retained data-file path default relies on a `common.h` fallback.
 - Unit tests cover configured and default data-file path expansion.
 
 ### 4.17. Article Path Defaults
@@ -628,14 +643,18 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained article path templates.
-- Preserve or retire limited-filename variants explicitly.
+- Add CMake cache variables for retained article path templates using
+  the current `common.h` defaults.
+- Express retained limited-filename variants in CMake, or retire them.
+- Emit retained article path templates directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config coverage for configured and default templates.
 
 Acceptance:
 
 - Article path templates are CMake-owned or explicitly retired.
 - Runtime article and header paths keep current tested behavior.
+- No retained article path template relies on a `common.h` fallback.
 - Unit tests cover configured and default article path templates.
 
 ### 4.18. Save Path Defaults
@@ -652,13 +671,16 @@ Configuration variables/settings:
 Tasks:
 
 - Add CMake cache variables for retained save path templates.
-- Decide whether `MKDIRS` remains the owner of alternate defaults.
+- Express retained `MKDIRS` default selection in CMake.
+- Emit retained save path templates directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config and option behavior coverage.
 
 Acceptance:
 
 - Save path defaults are CMake-owned or explicitly source-owned.
 - Save-option toggles preserve current directory/name behavior.
+- No retained save path template relies on a `common.h` fallback.
 - Unit tests cover configured save defaults and both save-option modes.
 
 ### 4.19. Selection Policy
@@ -674,14 +696,18 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained selection defaults.
+- Add CMake cache variables for retained selection defaults using the
+  current `common.h` defaults.
 - Validate `UNSUBSCRIBED_CHAR` as a single character.
+- Emit retained selection defaults directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config and selection behavior coverage.
 
 Acceptance:
 
 - Selection defaults are configurable through CMake.
 - Invalid selection defaults fail configure with a clear diagnostic.
+- No retained selection default relies on a `common.h` fallback.
 - Unit tests cover configured selection characters and unsubscribe
   marker behavior.
 
@@ -700,8 +726,11 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained shell command defaults.
+- Add CMake cache variables for retained shell command defaults using
+  the current `common.h` defaults.
 - Decide platform-safe defaults for Windows and Unix.
+- Emit retained shell command defaults directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config coverage for configured and default commands.
 
 Acceptance:
@@ -709,6 +738,7 @@ Acceptance:
 - Shell command defaults are CMake-owned or unsupported by documented
   platform policy.
 - Windows defaults do not point at Unix-only shell commands.
+- No retained shell command default relies on a `common.h` fallback.
 - Unit tests cover configured shell command defaults and platform
   fallbacks.
 
@@ -725,15 +755,19 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained verification commands.
+- Add CMake cache variables for retained verification commands using
+  the current `common.h` defaults.
 - Decide whether missing tools disable verification or keep command
   strings as user-overridable defaults.
+- Emit retained verification commands directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config coverage for configured and default commands.
 
 Acceptance:
 
 - Verification command defaults are CMake-owned or explicitly retired.
 - Missing verifier tools do not produce misleading install defaults.
+- No retained verification command relies on a `common.h` fallback.
 - Unit tests cover configured verifier commands and disabled defaults.
 
 ### 4.22. Posting Header Templates
@@ -751,14 +785,18 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake ownership for retained header templates.
+- Move retained posting header template defaults from `common.h` into
+  CMake.
 - Keep multiline template escaping testable in generated config.
+- Emit retained posting header templates directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config coverage for default header text.
 
 Acceptance:
 
 - Posting header templates are CMake-owned or intentionally source-owned.
 - Generated headers preserve current template text exactly.
+- No retained posting header template relies on a `common.h` fallback.
 - Unit tests compare generated default header templates byte-for-byte.
 
 ### 4.23. Reply And Forward Templates
@@ -778,8 +816,10 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake ownership for retained reply and forward defaults.
+- Move retained reply and forward defaults from `common.h` into CMake.
 - Align `FORWARD_POSTER` with the mail poster migration.
+- Emit retained reply and forward defaults directly from `config.h.in`
+  and remove their `common.h` fallbacks.
 - Add generated-config coverage for default template text.
 
 Acceptance:
@@ -787,6 +827,7 @@ Acceptance:
 - Reply and forward templates are CMake-owned or intentionally
   source-owned.
 - Forwarding defaults stay consistent with mail poster defaults.
+- No retained reply or forward default relies on a `common.h` fallback.
 - Unit tests cover generated reply and forward template defaults.
 
 ### 4.24. Kill File Defaults
@@ -803,14 +844,18 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake cache variables for retained kill-file defaults.
+- Add CMake cache variables for retained kill-file defaults using the
+  current `common.h` defaults.
 - Preserve current `%` interpolation semantics.
+- Emit retained kill-file defaults directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config and kill-file path coverage.
 
 Acceptance:
 
 - Kill-file path defaults are CMake-owned.
 - Runtime kill-file lookup keeps current path behavior.
+- No retained kill-file path relies on a `common.h` fallback.
 - Unit tests cover configured and default kill-file paths.
 
 ### 4.25. Local Time Format
@@ -825,14 +870,18 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add a CMake cache variable for the default local time format.
+- Add a CMake cache variable for the default local time format using the
+  current `common.h` default.
 - Preserve runtime override through `LOCALTIMEFMT`.
+- Emit `LOCALTIME_FMT` directly from `config.h.in` and remove its
+  `common.h` fallback.
 - Add generated-config coverage for configured and default formats.
 
 Acceptance:
 
 - `LOCALTIME_FMT` is CMake-owned.
 - Runtime `LOCALTIMEFMT` still overrides the compiled default.
+- No retained `LOCALTIME_FMT` fallback remains in `common.h`.
 - Unit tests cover configured defaults and runtime override behavior.
 
 ### 4.26. Feature Policy Toggles
@@ -879,15 +928,19 @@ Configuration variables/settings:
 
 Tasks:
 
-- Add CMake ownership for the retained posting helper paths.
+- Add CMake ownership for retained posting helper paths using current
+  `common.h` defaults where they exist.
 - Align defaults with generated helper files and install layout.
 - Stop defaults from pointing at helpers CMake does not generate.
+- Emit retained posting helper paths directly from `config.h.in` and
+  remove their `common.h` fallbacks.
 - Add generated-config coverage for configured helper paths.
 
 Acceptance:
 
 - Posting helper defaults are CMake-owned and install-aware.
 - Default poster commands refer only to generated or installed helpers.
+- No retained posting helper path relies on a `common.h` fallback.
 - Unit tests cover configured poster commands and default helper paths.
 
 ### 4.28. Pnews Distribution Defaults
@@ -971,6 +1024,9 @@ Tasks:
 - Recreate or explicitly replace the old local, NNTP, and both-source
   mode validation.
 - Keep dependent defaults consistent when one news-source setting changes.
+- Move retained news-source path defaults from `common.h` into CMake.
+- Emit retained news-source path defaults directly from `config.h.in`
+  and remove their `common.h` fallbacks.
 - Add generated-config and data-source coverage for each retained mode.
 
 Acceptance:
@@ -978,6 +1034,7 @@ Acceptance:
 - CMake can express each supported news-source mode.
 - Invalid source-mode combinations fail configure with a clear
   diagnostic.
+- No retained news-source path default relies on a `common.h` fallback.
 - Data-source unit tests cover each supported news-source mode.
 
 ### 4.31. Thread Directory Defaults
