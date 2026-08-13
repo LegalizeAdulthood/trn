@@ -99,6 +99,12 @@ need semantic fixes, listed here rather than hidden in prose:
   and emits the configured value directly.
 - `NEWSNEWSNAME`: handled.  CMake owns the historical newsnews path and
   emits the configured value directly.
+- `OV_FILE_NAME`: handled.  CMake owns the historical long-filename
+  overview basename and emits the configured value directly.
+- `VARYNAME`: handled.  CMake owns the historical virtual-array file
+  template and emits the configured value directly.
+- `HEADNAME`: handled.  CMake owns the historical long-filename header
+  file template and emits the configured value directly.
 - `OVERVIEW_DIR`: needed.  CMake owns the value, but the empty default
   bypasses source fallback behavior.
 - `OVERVIEW_FMT`: needed.  CMake owns the value, but the empty default
@@ -132,8 +138,7 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
-- Article storage and overview names: `OV_FILE_NAME`, `VARYNAME`,
-  `HEADNAME`, `SAVEDIR`, and `SAVENAME`.
+- Save paths: `SAVEDIR` and `SAVENAME`.
 - Selection and newsrc policy: `UNSUBSCRIBED_CHAR` and
   `SELECTION_CHARS`.
 - Shell and command defaults: `SH`, `PIPE_SAVER`, `SHAR_SAVER`,
@@ -164,8 +169,8 @@ options unless a live source consumer is found:
 - `removed`: `config.sh`, `Policy.sh`, `.SH` extraction, generated
   Makefile policy, AFS install splitting, prototype generation, and
   typedef regeneration are legacy build mechanics.
-- `removed`: `LIMITED_FILENAMES` variants for user-state paths; CMake
-  retains the historical long-filename defaults.
+- `removed`: `LIMITED_FILENAMES` variants for user-state and article
+  paths; CMake retains the historical long-filename defaults.
 - `removed`: old scan/score memory-saving toggles and pre-ANSI compiler
   probes stay retired unless current source grows a concrete dependency.
 

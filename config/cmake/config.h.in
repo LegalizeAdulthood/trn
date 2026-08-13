@@ -381,6 +381,21 @@
 //
 #define NEWSNEWSNAME "@NEWSNEWSNAME@"
 
+// OV_FILE_NAME:
+//      The name to append to the directory name to read an overview file.
+//
+#define OV_FILE_NAME "@OV_FILE_NAME@"
+
+// VARYNAME:
+//      virtual array file name template
+//
+#define VARYNAME "@VARYNAME@"
+
+// HEADNAME:
+//      file to pass header to followup article poster
+//
+#define HEADNAME "@HEADNAME@"
+
 /* OVERVIEW_DIR:
  *      This symbol indicates where the overview files go.
  */

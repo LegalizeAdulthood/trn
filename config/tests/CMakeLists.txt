@@ -285,6 +285,24 @@ configure_file(
     @ONLY
 )
 
+set(OV_FILE_NAME "${DEFAULT_OV_FILE_NAME}")
+set(VARYNAME "${DEFAULT_VARYNAME}")
+set(HEADNAME "${DEFAULT_HEADNAME}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    article_path_templates_default.h
+    @ONLY
+)
+
+set(OV_FILE_NAME "/test-overview")
+set(VARYNAME "%Y/test-vary.%$")
+set(HEADNAME "%./test-head.%$")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    article_path_templates_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -309,5 +327,8 @@ set(GLOBAL_INIT "${DEFAULT_GLOBAL_INIT}")
 set(DEFACCESS "${DEFAULT_DEFACCESS}")
 set(TRNACCESS "${DEFAULT_TRNACCESS}")
 set(NEWSNEWSNAME "${DEFAULT_NEWSNEWSNAME}")
+set(OV_FILE_NAME "${DEFAULT_OV_FILE_NAME}")
+set(VARYNAME "${DEFAULT_VARYNAME}")
+set(HEADNAME "${DEFAULT_HEADNAME}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

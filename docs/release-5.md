@@ -236,39 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.17 through 4.31 refine #19 into one variable or setting family
+Slices 4.18 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.17. Article Path Defaults
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `OV_FILE_NAME`
-- `VARYNAME`
-- `HEADNAME`
-
-Tasks:
-
-- Add CMake cache variables for retained article path templates using
-  the current `common.h` defaults.
-- Express retained limited-filename variants in CMake, or retire them.
-- Emit retained article path templates directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config coverage for configured and default templates.
-
-Acceptance:
-
-- Article path templates are CMake-owned or explicitly retired.
-- Runtime article and header paths keep current tested behavior.
-- No retained article path template relies on a `common.h` fallback.
-- Unit tests cover configured and default article path templates.
 
 ### 4.18. Save Path Defaults
 
@@ -681,7 +653,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.17 through 4.31.
+Depends on: 4.18 through 4.31.
 
 Files likely touched:
 
@@ -1810,7 +1782,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.17 through 4.31, 5, and 6.
+- #19: 4.18 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

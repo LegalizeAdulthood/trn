@@ -278,6 +278,20 @@ TEST(GeneratedConfigTest, defaultDataFilesAreGenerated)
     expect_file_exists(TRN_TEST_GENERATED_NEWSNEWS_FILE);
 }
 
+TEST(GeneratedConfigTest, articlePathTemplatesDefaultMatchHistoricalFallbacks)
+{
+    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "OV_FILE_NAME", TRN_TEST_DEFAULT_OV_FILE_NAME);
+    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "VARYNAME", TRN_TEST_DEFAULT_VARYNAME);
+    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "HEADNAME", TRN_TEST_DEFAULT_HEADNAME);
+}
+
+TEST(GeneratedConfigTest, articlePathTemplatesConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG, "OV_FILE_NAME", "/test-overview");
+    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG, "VARYNAME", "%Y/test-vary.%$");
+    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG, "HEADNAME", "%./test-head.%$");
+}
+
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
 {
     const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";

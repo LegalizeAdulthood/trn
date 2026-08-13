@@ -287,29 +287,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define DEFAULT_EDITOR "/usr/ucb/vi"
 #endif
 
-// The name to append to the directory name to read an overview file.
-#ifndef OV_FILE_NAME
-# ifdef LIMITED_FILENAMES
-#   define OV_FILE_NAME "/overview"
-# else
-#   define OV_FILE_NAME "/.overview"
-# endif
-#endif
-
-// virtual array file name template
-#ifndef VARYNAME        // % and ~
-#   define VARYNAME "%Y/rnvary.%$"
-#endif
-
-// file to pass header to followup article poster
-#ifndef HEADNAME        // % and ~
-#   ifdef LIMITED_FILENAMES
-    #   define HEADNAME "%Y/tmpart.%$"
-#   else
-#       define HEADNAME "%./.rnhead.%$"
-#   endif
-#endif
-
 // command to send a reply
 #ifndef MAIL_POSTER      // % and ~
 #   define MAIL_POSTER "Rnmail -h %h"
