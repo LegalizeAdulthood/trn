@@ -1,0 +1,10 @@
+/* This software is copyrighted as detailed in the LICENSE file.
+ * Copyright (c) 2026, Richard Thomson
+ */
+#ifndef TRN_TEST_GENERATED_CONFIG_H
+#define TRN_TEST_GENERATED_CONFIG_H
+
+#define TRN_TEST_ACTIVE_TIMES_DEFAULT_CONFIG "@CMAKE_CURRENT_BINARY_DIR@/active_times_default.h"
+#define TRN_TEST_ACTIVE_TIMES_CONFIGURED_CONFIG "@CMAKE_CURRENT_BINARY_DIR@/active_times_configured.h"
+
+#endif

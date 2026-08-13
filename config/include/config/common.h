@@ -301,9 +301,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #ifndef ACTIVE          // % and ~
 #   define ACTIVE "%x/active"
 #endif
-#ifndef ACTIVE_TIMES
-#   define ACTIVE_TIMES "none"
-#endif
 #ifndef GROUP_DESC
 #   define GROUP_DESC "%x/newsgroups"
 #endif

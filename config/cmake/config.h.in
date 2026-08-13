@@ -185,7 +185,7 @@
  *      The name of the active.times file for the news system.
  */
 #define ACTIVE "@ACTIVE@"
-#define ACTIVE_TIMES "@ACT_TIMES@"
+#define ACTIVE_TIMES "@ACTIVE_TIMES@"
 
 /* HAS_GETHOSTNAME:
  *      This symbol, if defined, indicates that the C program may use the

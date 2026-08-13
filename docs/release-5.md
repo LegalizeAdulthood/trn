@@ -236,31 +236,8 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.1 through 4.31 refine #19 into one variable or setting family
+Slices 4.2 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
-
-### 4.1. Active Times Cache Wiring
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `ACTIVE_TIMES`
-
-Tasks:
-
-- Route the configured `ACTIVE_TIMES` cache value into `config.h`.
-- Add generated-config coverage for a non-empty active-times path.
-- Preserve the intended fallback when no active-times path is configured.
-
-Acceptance:
-
-- `ACTIVE_TIMES` in generated `config.h` matches the CMake cache value.
-- An unset active-times path still behaves like the historical fallback.
-- Generated-config unit tests cover configured and fallback
-  `ACTIVE_TIMES` values.
 
 ### 4.2. Mail File Default
 
@@ -1034,7 +1011,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.1 through 4.31.
+Depends on: 4.2 through 4.31.
 
 Files likely touched:
 
@@ -1046,7 +1023,6 @@ Files likely touched:
 Tasks:
 
 - Add CMake cache variables for the relevant retained options.
-- Route `ACTIVE_TIMES` into generated config.
 - Configure or retire `HAS_RDCHK`, `HAS_SIGBLOCK`, `HAS_SIGHOLD`,
   `UNION_WAIT`, and `USE_WIFSTAT`.
 - Emit `I_SGTTY` only if source still needs it.
@@ -2169,7 +2145,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.1 through 4.31, 5, and 6.
+- #19: 4.2 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

@@ -45,8 +45,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `ROOT_UID`: handled for POSIX policy.
 - `ACTIVE`: needed.  CMake owns the value, but the empty default bypasses
   the `common.h` fallback.
-- `ACTIVE_TIMES`: needed.  CMake owns `ACTIVE_TIMES`, but
-  `config.h.in` expands `@ACT_TIMES@`.
+- `ACTIVE_TIMES`: handled.  CMake owns `ACTIVE_TIMES`, defaults it to
+  `none`, and `config.h.in` emits the cache value directly.
 - `PIPE_HOST_CMD`: handled.  It remains an optional hostname fallback.
 - `HAS_TERMLIB`: handled.  It is now an explicit cache boolean while the
   target links through curses.
@@ -144,13 +144,6 @@ options unless a live source consumer is found:
   probes stay retired unless current source grows a concrete dependency.
 
 ## Real Gaps
-
-### Active Times
-
-`configure_trn.cmake` defines the cache variable `ACTIVE_TIMES`, but
-`config.h.in` expands `@ACT_TIMES@`.
-
-Result: configured `ACTIVE_TIMES` values do not reach `config.h`.
 
 ### Legacy Probes Still Used by Source
 
