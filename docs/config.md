@@ -91,6 +91,14 @@ need semantic fixes, listed here rather than hidden in prose:
 - `TRN_MARK_XREFS_UNREAD`: handled.  It is the CMake-facing owner for
   generated `MCHASE`.
 - `PRIVATE_LIB`: handled.
+- `GLOBAL_INIT`: handled.  CMake owns the historical system-wide init
+  file default and emits the configured value directly.
+- `DEFACCESS`: handled.  CMake owns the historical default access-list
+  path and emits the configured value directly.
+- `TRNACCESS`: handled.  CMake owns the historical user access-list path
+  and emits the configured value directly.
+- `NEWSNEWSNAME`: handled.  CMake owns the historical newsnews path and
+  emits the configured value directly.
 - `OVERVIEW_DIR`: needed.  CMake owns the value, but the empty default
   bypasses source fallback behavior.
 - `OVERVIEW_FMT`: needed.  CMake owns the value, but the empty default
@@ -124,7 +132,6 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
-- Data and access files: `DEFACCESS`, `TRNACCESS`, and `NEWSNEWSNAME`.
 - Article storage and overview names: `OV_FILE_NAME`, `VARYNAME`,
   `HEADNAME`, `SAVEDIR`, and `SAVENAME`.
 - Selection and newsrc policy: `UNSUBSCRIBED_CHAR` and

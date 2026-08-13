@@ -236,40 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.16 through 4.31 refine #19 into one variable or setting family
+Slices 4.17 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.16. Data File Paths
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `GLOBAL_INIT`
-- `DEFACCESS`
-- `TRNACCESS`
-- `NEWSNEWSNAME`
-
-Tasks:
-
-- Add CMake cache variables for retained data-file path defaults using
-  the current `common.h` defaults.
-- Align defaults with generated data files and the install layout.
-- Emit retained data-file paths directly from `config.h.in` and remove
-  their `common.h` fallbacks.
-- Add generated-config coverage for configured and default paths.
-
-Acceptance:
-
-- Runtime data-file paths are CMake-owned and install-aware.
-- Defaults point at generated or installed files that exist.
-- No retained data-file path default relies on a `common.h` fallback.
-- Unit tests cover configured and default data-file path expansion.
 
 ### 4.17. Article Path Defaults
 
@@ -710,7 +681,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.15 through 4.31.
+Depends on: 4.17 through 4.31.
 
 Files likely touched:
 
@@ -1839,7 +1810,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.16 through 4.31, 5, and 6.
+- #19: 4.17 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

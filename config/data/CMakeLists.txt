@@ -20,7 +20,8 @@ set(SPELL_PROGRAM "${spell_DEFAULT}" CACHE STRING "Program to use for spell chec
 # MMDF mailbox magic separator
 string(ASCII 1 CTRL_A)
 
-configure_file(access_def.in access_def @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../../INIT.txt" INIT COPYONLY)
+configure_file(access_def.in access.def @ONLY)
 configure_file(environment.in environment @ONLY)
 configure_file(filexp.in filexp @ONLY)
 configure_file(mbox.saver.in mbox.saver @ONLY)
@@ -31,6 +32,7 @@ configure_file(Pnews.header.in Pnews.header @ONLY)
 configure_file(Speller.in Speller @ONLY)
 
 add_library(data INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../INIT.txt"
     access_def.in
     environment.in
     filexp.in
@@ -40,7 +42,8 @@ add_library(data INTERFACE
     Pnews.in
     Pnews.header.in
     Speller.in
-    "${CMAKE_CURRENT_BINARY_DIR}/access_def"
+    "${CMAKE_CURRENT_BINARY_DIR}/INIT"
+    "${CMAKE_CURRENT_BINARY_DIR}/access.def"
     "${CMAKE_CURRENT_BINARY_DIR}/environment"
     "${CMAKE_CURRENT_BINARY_DIR}/filexp"
     "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver"

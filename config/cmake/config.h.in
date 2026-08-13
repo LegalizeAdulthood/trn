@@ -361,6 +361,26 @@
  */
 #define PRIVATE_LIB "@PRIVATE_LIB@"
 
+// GLOBAL_INIT:
+//      system-wide RNINIT switches
+//
+#define GLOBAL_INIT "@GLOBAL_INIT@"
+
+// DEFACCESS:
+//      trn's default access list
+//
+#define DEFACCESS "@DEFACCESS@"
+
+// TRNACCESS:
+//      trn's access list
+//
+#define TRNACCESS "@TRNACCESS@"
+
+// NEWSNEWSNAME:
+//      a motd-like file for trn
+//
+#define NEWSNEWSNAME "@NEWSNEWSNAME@"
+
 /* OVERVIEW_DIR:
  *      This symbol indicates where the overview files go.
  */

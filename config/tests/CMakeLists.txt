@@ -265,6 +265,26 @@ configure_file(
     @ONLY
 )
 
+set(GLOBAL_INIT "${DEFAULT_GLOBAL_INIT}")
+set(DEFACCESS "${DEFAULT_DEFACCESS}")
+set(TRNACCESS "${DEFAULT_TRNACCESS}")
+set(NEWSNEWSNAME "${DEFAULT_NEWSNEWSNAME}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    data_file_paths_default.h
+    @ONLY
+)
+
+set(GLOBAL_INIT "%X/test-INIT")
+set(DEFACCESS "%X/test-access.def")
+set(TRNACCESS "%+/test-access")
+set(NEWSNEWSNAME "%X/test-newsnews")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    data_file_paths_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -285,5 +305,9 @@ set(LOCKNAME "${DEFAULT_LOCKNAME}")
 set(LASTNAME "${DEFAULT_LASTNAME}")
 set(SIGNATURE_FILE "${DEFAULT_SIGNATURE_FILE}")
 set(NNTP_AUTH_FILE "${DEFAULT_NNTP_AUTH_FILE}")
+set(GLOBAL_INIT "${DEFAULT_GLOBAL_INIT}")
+set(DEFACCESS "${DEFAULT_DEFACCESS}")
+set(TRNACCESS "${DEFAULT_TRNACCESS}")
+set(NEWSNEWSNAME "${DEFAULT_NEWSNEWSNAME}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

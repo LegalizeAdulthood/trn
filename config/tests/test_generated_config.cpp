@@ -39,6 +39,13 @@ void expect_file_not_contains(const char *filename, std::string_view expected)
     EXPECT_EQ(std::string::npos, contents.find(expected)) << filename;
 }
 
+void expect_file_exists(const char *filename)
+{
+    std::ifstream file{filename, std::ios::binary};
+
+    EXPECT_TRUE(file.good()) << filename;
+}
+
 void expect_config_define(const char *filename, std::string_view name, bool defined)
 {
     const std::string expected =
@@ -246,6 +253,29 @@ TEST(GeneratedConfigTest, userStatePathsConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "LASTNAME", "%./test-rnlast");
     expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "SIGNATURE_FILE", "%./test-signature");
     expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "NNTP_AUTH_FILE", "%./test-nntpauth");
+}
+
+TEST(GeneratedConfigTest, dataFilePathsDefaultMatchHistoricalFallbacks)
+{
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "GLOBAL_INIT", TRN_TEST_DEFAULT_GLOBAL_INIT);
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "DEFACCESS", TRN_TEST_DEFAULT_DEFACCESS);
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "TRNACCESS", TRN_TEST_DEFAULT_TRNACCESS);
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "NEWSNEWSNAME", TRN_TEST_DEFAULT_NEWSNEWSNAME);
+}
+
+TEST(GeneratedConfigTest, dataFilePathsConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "GLOBAL_INIT", "%X/test-INIT");
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "DEFACCESS", "%X/test-access.def");
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "TRNACCESS", "%+/test-access");
+    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "NEWSNEWSNAME", "%X/test-newsnews");
+}
+
+TEST(GeneratedConfigTest, defaultDataFilesAreGenerated)
+{
+    expect_file_exists(TRN_TEST_GENERATED_GLOBAL_INIT_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_DEFACCESS_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_NEWSNEWS_FILE);
 }
 
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)

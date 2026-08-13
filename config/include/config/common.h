@@ -261,11 +261,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define PRIVATE_LIB "%x/trn"
 #endif
 
-// system-wide RNINIT switches
-#ifndef GLOBAL_INIT
-#   define GLOBAL_INIT "%X/INIT"
-#endif
-
 // where to find news files
 #ifndef NEWS_SPOOL       // % and ~
 #   define NEWS_SPOOL "/usr/spool/news"
@@ -313,21 +308,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   else
 #       define HEADNAME "%./.rnhead.%$"
 #   endif
-#endif
-
-// trn's default access list
-#ifndef DEFACCESS
-#   define DEFACCESS "%X/access.def"
-#endif
-
-// trn's access list
-#ifndef TRNACCESS
-#   define TRNACCESS "%+/access"
-#endif
-
-// a motd-like file for trn
-#ifndef NEWSNEWSNAME    // % and ~
-#   define NEWSNEWSNAME "%X/newsnews"
 #endif
 
 // command to send a reply

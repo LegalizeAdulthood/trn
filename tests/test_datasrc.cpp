@@ -614,6 +614,22 @@ TEST_F(DataSourceInitTest, usesDefaultGroupDescription)
     EXPECT_EQ((m_output_dir / "newsgroups").generic_string(), source->m_group_desc);
 }
 
+TEST_F(DataSourceInitTest, usesDefaultAccessFile)
+{
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream{active_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+    std::ofstream{m_output_dir / "access.def"} << "[test-default]\n"
+                                               << "Active File = " << active_path.generic_string() << "\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("test-default");
+    ASSERT_NE(nullptr, source);
+    EXPECT_EQ(active_path.generic_string(), source->m_news_id);
+}
+
 TEST_F(DataSourceInitTest, usesConfiguredGroupDescription)
 {
     const fs::path active_path = m_output_dir / "active";
