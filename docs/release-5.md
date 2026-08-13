@@ -125,8 +125,41 @@ Documentation gaps and owning work items:
 - Feature docs need updates as release work lands: posting transfer
   encoding, UTF-8 and restored charset conversions, optional
   `UTF-8 => ASCII`, yEnc extraction, TLS/nntps/auth policy, and
-  Windows/macOS platform status.  Items 16, 21, 22, and 26 through 34
+  Windows/macOS platform status.  Items 16, 21, 22, and 26 through 36
   own the matching feature-specific documentation.
+
+## Charset Analysis
+
+Plan source: `charset-handling.md`.
+
+The 5.0 charset work should establish a narrow pipeline invariant rather
+than attempting a full article-display rewrite:
+
+- stored or fetched article data remains raw and immutable;
+- transfer encodings are decoded before charset conversion;
+- human-readable text is converted to Unicode, then emitted as UTF-8;
+- character substitution consumes and produces Unicode text;
+- layout, wrapping, colors, cursor movement, and backward paging are
+  display concerns over final UTF-8;
+- decoder and substitution state belongs to an article, header, or MIME
+  presentation instance, not to process-global variables.
+
+The current code is functionally closer than its architecture suggests.
+RFC 2047 header decoding already handles Q and Base64 encoded words for
+the supported charset set: ASCII, UTF-8, Latin-1, Latin-9, and
+Windows-1252.  MIME structure, alternatives, transfer decoding, and HTML
+filtering are present.  The important gaps are that MIME body text is not
+consistently normalized into a UTF-8 buffer, charset conversion depends
+on global mutable state, `str_char_subst` is byte-oriented and corrupts
+UTF-8, and UTF-8 primitives still accept historical five- and six-byte
+forms.
+
+Release 5.0 should fix the mandatory #17 and #34 behavior by adding
+strict UTF-8 scalar operations, Unicode-aware substitution, explicit
+error policy, and tests for headers and MIME bodies that reach the same
+substitution engine.  The larger `ArticlePresentationView` and
+`PresentationBuffer` architecture can remain a follow-up unless it is the
+smallest way to make the release behavior correct.
 
 ## GitHub 5.0 Milestone
 
@@ -1031,7 +1064,7 @@ Acceptance:
 - Authentication respects the configured TLS policy.
 - #3 can close when command, STARTTLS, nntps, and auth paths pass.
 
-### 31. Legacy Charset Restoral
+### 31. Charset Pipeline Contract
 
 Issues: #17.
 
@@ -1039,31 +1072,118 @@ Milestone status: open mandatory 5.0 issue.
 
 Regression checks: #2.
 
+Plan source: `charset-handling.md`.
+
 Files likely touched:
 
-- `libtrn/charsubst.cpp`
-- `libtrn/mime.cpp`
-- `libtrn/art.cpp`
+- `libtrn/utf.cpp`
+- `libtrn/include/trn/utf.h`
 - encoding tests
 
 Tasks:
 
-- Restore original character-set conversions.
-- Keep restored conversions from corrupting UTF-8.
-- Cover old encodings and mixed UTF-8 paths with tests.
+- Define the release invariant: raw article bytes stay immutable,
+  decoded semantic text is UTF-8, and layout sees UTF-8 after
+  substitution.
+- Keep MIME transfer decoding before charset decoding.
+- Add strict UTF-8 scalar operations for modern one- through four-byte
+  UTF-8.
+- Define malformed-input policy for invalid continuation, truncated,
+  overlong, surrogate, and out-of-range input.
+- Keep validation independent of process-global charset state.
 
 Acceptance:
 
-- #17 behavior is restored.
-- Closed UTF-8 support from #2 remains fixed.
+- Valid ASCII and two-, three-, and four-byte UTF-8 round-trip in tests.
+- Invalid modern UTF-8 cases follow the explicit malformed-input policy.
+- 5.0 charset work has a tested pipeline contract before behavior is
+  moved.
 
-### 32. UTF-8 To ASCII Configuration
+### 32. Unicode Historical Substitution
+
+Issues: #17.
+
+Milestone status: open mandatory 5.0 issue.
+
+Regression checks: #2.
+
+Depends on: 31.
+
+Files likely touched:
+
+- `libtrn/charsubst.cpp`
+- `libtrn/utf.cpp`
+- `libtrn/rt-util.cpp`
+- `libtrn/rt-wumpus.cpp`
+- encoding tests
+
+Tasks:
+
+- Replace byte-oriented substitution for restored modes with a
+  Unicode-scalar transformation.
+- Treat the historical ISO conversion tables as mappings for Unicode
+  values U+00A0 through U+00FF, not raw bytes `0xA0` through `0xFF`.
+- Keep the identity or off profile preserving valid UTF-8 byte-for-byte.
+- Make TeX conversion state owned by a substitution instance.
+- Pass unmapped CJK, combining characters, emoji, and other Unicode
+  through unchanged.
+- Stop interpreting UTF-8 bytes such as `E2 80 99` as Latin-1 bytes.
+
+Acceptance:
+
+- Restored ISO-derived modes produce historical ASCII approximations for
+  Latin characters.
+- Valid UTF-8 is never split or corrupted by substitution.
+- TeX state does not leak between articles, headers, or tests.
+
+### 33. Header And MIME Charset State
+
+Issues: #17.
+
+Milestone status: open mandatory 5.0 issue.
+
+Regression checks: #2.
+
+Depends on: 31 and 32.
+
+Files likely touched:
+
+- `libtrn/cache.cpp`
+- `libtrn/mime.cpp`
+- `libtrn/artio.cpp`
+- `libtrn/art.cpp`
+- `libtrn/rt-wumpus.cpp`
+- encoding tests
+
+Tasks:
+
+- Make RFC 2047 encoded-word decoding use explicit charset state and
+  error policy.
+- Make MIME text sections retain a declared or fallback charset decoder.
+- Convert supported MIME text charsets to UTF-8 before display buffering
+  where release scope touches the path.
+- Ensure unknown charsets never inherit previous field, part, article, or
+  view state.
+- Keep `s_art_buf` as a cache for 5.0 if useful; do not require the full
+  article presentation rewrite.
+
+Acceptance:
+
+- Supported RFC 2047 and MIME body charsets decode to UTF-8 before
+  substitution on covered paths.
+- Unknown or malformed charset behavior is deterministic and tested.
+- #17 can close without mutable global decoder state in the restored
+  paths.
+
+### 34. UTF-8 To ASCII Configuration
 
 Issues: #34.
 
 Milestone status: open mandatory 5.0 issue.
 
 Regression checks: #2.
+
+Depends on: 31 and 32.
 
 Files likely touched:
 
@@ -1074,22 +1194,28 @@ Files likely touched:
 
 Tasks:
 
-- Add optional UTF-8 to ASCII substitution.
+- Add an optional Unicode-to-text substitution profile for issue #34.
+- Key user mappings by Unicode scalar values, not encoded byte
+  sequences.
+- Define config syntax for `U+2019`-style keys and escaped replacement
+  text.
+- Define whether user mappings overlay or replace built-in profiles.
 - Keep the substitution off by default.
-- Make the substitution table user supplied or configurable.
 
 Acceptance:
 
-- Users can opt into UTF-8 to ASCII conversion.
+- Users can opt into Unicode-to-ASCII conversion.
+- Single-byte examples such as `0x91` are documented as charset bytes
+  that must decode to Unicode before substitution.
 - Default UTF-8 display behavior does not change.
 
-### 33. UTF-8 To ASCII Mapping Tests
+### 35. UTF-8 To ASCII Mapping Tests
 
 Issues: #34.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 32.
+Depends on: 34.
 
 Files likely touched:
 
@@ -1099,7 +1225,11 @@ Files likely touched:
 Tasks:
 
 - Cover smart quotes, dashes, spaces, and issue-listed mappings.
-- Cover invalid or unknown code points.
+- Cover Windows-1252 source bytes after charset conversion.
+- Cover equivalent text from an RFC 2047 header and a MIME body.
+- Cover multi-character, escaped whitespace, newline, and empty
+  replacements if supported.
+- Cover malformed UTF-8 and unknown-code-point policy.
 - Document the shipped default mapping if one is provided.
 
 Acceptance:
@@ -1107,7 +1237,7 @@ Acceptance:
 - The #34 mapping table is deterministic and tested.
 - #34 can close without weakening UTF-8 baseline behavior.
 
-### 34. YEnc Decode
+### 36. YEnc Decode
 
 Issues: #5.
 
@@ -1132,7 +1262,7 @@ Acceptance:
 - `e` extraction recognizes yEnc articles.
 - Existing extraction tests still pass.
 
-### 35. UTF-8 Underline Display
+### 37. UTF-8 Underline Display
 
 Issues: #30.
 
@@ -1147,14 +1277,14 @@ Tasks:
 
 - Add a regression using the attached UTF-8 underline message.
 - Ensure decoded header display cannot leave terminal attributes active.
-- Defer if #17 and #34 do not naturally touch the display path.
+- Defer if 31 through 35 do not naturally touch the display path.
 
 Acceptance:
 
 - The underline repro no longer leaves terminal state dirty, or #30 is
   explicitly deferred outside 5.0.
 
-### 36. Moderators Support
+### 38. Moderators Support
 
 Issues: #25.
 
@@ -1180,7 +1310,7 @@ Acceptance:
 - Posting to moderated groups uses configured moderator routing.
 - This work is deferred unless it joins the 5.0 milestone.
 
-### 37. AddGroup Storage
+### 39. AddGroup Storage
 
 Issues: #15.
 
@@ -1206,13 +1336,13 @@ Acceptance:
 - AddGroup storage no longer leaks discarded duplicate nodes.
 - Object identity is separate from sorted traversal.
 
-### 38. Selector Sorting
+### 40. Selector Sorting
 
 Issues: #15.
 
 Milestone status: not on the 5.0 milestone.
 
-Depends on: 37.
+Depends on: 39.
 
 Files likely touched:
 
@@ -1232,7 +1362,7 @@ Acceptance:
 - Selector paging is index-based.
 - Unsubscribed newsgroup listings can be sorted.
 
-### 39. Archive.org Test Samples
+### 41. Archive.org Test Samples
 
 Issues: #35.
 
@@ -1270,24 +1400,28 @@ is not a 5.0 gate.  Use it where active numbered items already touch the
 code.
 
 The universal selector push/pop cleanup is not a 5.0 gate unless it is
-needed by 38.
+needed by 40.
+
+The full `ArticlePresentationView`, `PresentationBuffer`, and
+`DisplayView` architecture from `charset-handling.md` is not a 5.0 gate
+unless it is the smallest correct implementation for 31 through 35.
 
 ## Issue Map
 
 Mandatory open GitHub 5.0 milestone issues:
 
 - #3: 26 through 30.
-- #5: 34.
+- #5: 36.
 - #14: 18 and 20.
 - #16: 15 and 16.
-- #17: 31.
+- #17: 31 through 33.
 - #18: 3 and 7.
 - #19: 4 through 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.
 - #33: 23 through 25.
-- #34: 32 and 33.
+- #34: 34 and 35.
 - #38: 13.
 
 Mandatory closed GitHub 5.0 milestone regression checklist:
@@ -1305,12 +1439,12 @@ Mandatory closed GitHub 5.0 milestone regression checklist:
 Non-milestone supporting or follow-up issues:
 
 - #10: 14.
-- #15: 37 and 38.
-- #25: 36.
+- #15: 39 and 40.
+- #25: 38.
 - #27: 17.
 - #29: 19.
-- #30: 35.
-- #35: 39.
+- #30: 37.
+- #35: 41.
 
 ## Release Gate
 
