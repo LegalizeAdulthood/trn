@@ -396,6 +396,30 @@ configure_file(
     @ONLY
 )
 
+set(VERIFY_RIPEM "${DEFAULT_VERIFY_RIPEM}")
+set(VERIFY_PGP "${DEFAULT_VERIFY_PGP}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    verification_commands_default.h
+    @ONLY
+)
+
+set(VERIFY_RIPEM "")
+set(VERIFY_PGP "")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    verification_commands_disabled.h
+    @ONLY
+)
+
+set(VERIFY_RIPEM "test-ripem %A")
+set(VERIFY_PGP "test-pgp %A")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    verification_commands_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -431,5 +455,7 @@ set(SH "${DEFAULT_SH}")
 set(PIPE_SAVER "${DEFAULT_PIPE_SAVER}")
 set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")
 set(CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}")
+set(VERIFY_RIPEM "${DEFAULT_VERIFY_RIPEM}")
+set(VERIFY_PGP "${DEFAULT_VERIFY_PGP}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

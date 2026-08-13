@@ -441,6 +441,16 @@
 //
 #define CUSTOM_SAVER "@CUSTOM_SAVER@"
 
+// VERIFY_RIPEM:
+//      The shell command to verify a RIPEM signature.
+//
+#define VERIFY_RIPEM "@VERIFY_RIPEM@"
+
+// VERIFY_PGP:
+//      The shell command to verify a PGP signature.
+//
+#define VERIFY_PGP "@VERIFY_PGP@"
+
 /* OVERVIEW_DIR:
  *      This symbol indicates where the overview files go.
  */

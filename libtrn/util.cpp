@@ -364,6 +364,19 @@ std::string set_def(std::string_view command, std::string_view dflt)
     return std::string{command};
 }
 
+static void run_verifier(std::string_view environment_variable, std::string_view default_command,
+                         std::string_view signature)
+{
+    const std::string command = file_exp(get_env_var(environment_variable, default_command));
+    if (command.empty())
+    {
+        fmt::print("{} verification is not configured.\n", signature);
+        return;
+    }
+    const int i = do_shell(SH, command);
+    fmt::print("\nReturned value: {}\n", i);
+}
+
 // attempts to verify a cryptographic signature.
 void verify_sig()
 {
@@ -372,16 +385,14 @@ void verify_sig()
     int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) // found RIPEM
     {
-        i = do_shell(SH, file_exp(get_env_var("VERIFY_RIPEM", VERIFY_RIPEM)));
-        fmt::print("\nReturned value: {}\n", i);
+        run_verifier("VERIFY_RIPEM", VERIFY_RIPEM, "RIPEM");
         return;
     }
     // PGP
     i = do_shell(SH, file_exp("grep -s \"BEGIN PGP\" %A"));
     if (!i) // found PGP
     {
-        i = do_shell(SH, file_exp(get_env_var("VERIFY_PGP", VERIFY_PGP)));
-        fmt::print("\nReturned value: {}\n", i);
+        run_verifier("VERIFY_PGP", VERIFY_PGP, "PGP");
         return;
     }
     fmt::print("No PGP/RIPEM signatures detected.\n");

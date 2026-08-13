@@ -354,14 +354,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define ATTRIBUTION "In article %i,%?%)f <%>f> wrote:"
 #endif
 
-#ifndef VERIFY_RIPEM
-#   define VERIFY_RIPEM "ripem -d -Y fgs -i %A"
-#endif
-
-#ifndef VERIFY_PGP
-#   define VERIFY_PGP "pgp +batchmode -m %A"
-#endif
-
 #ifndef KILL_GLOBAL      // % and ~
 #   define KILL_GLOBAL "%p/KILL"
 #endif

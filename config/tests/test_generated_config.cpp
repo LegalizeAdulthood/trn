@@ -341,6 +341,24 @@ TEST(GeneratedConfigTest, shellCommandConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "CUSTOM_SAVER", "test-custom %A %e");
 }
 
+TEST(GeneratedConfigTest, verificationCommandDefaultsMatchToolDiscovery)
+{
+    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DEFAULT_CONFIG, "VERIFY_RIPEM", TRN_TEST_DEFAULT_VERIFY_RIPEM);
+    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DEFAULT_CONFIG, "VERIFY_PGP", TRN_TEST_DEFAULT_VERIFY_PGP);
+}
+
+TEST(GeneratedConfigTest, verificationCommandDisabledDefaultsAreEmitted)
+{
+    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DISABLED_CONFIG, "VERIFY_RIPEM", "");
+    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DISABLED_CONFIG, "VERIFY_PGP", "");
+}
+
+TEST(GeneratedConfigTest, verificationCommandConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG, "VERIFY_RIPEM", "test-ripem %A");
+    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG, "VERIFY_PGP", "test-pgp %A");
+}
+
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
 {
     const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";

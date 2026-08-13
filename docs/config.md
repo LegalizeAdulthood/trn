@@ -125,6 +125,10 @@ need semantic fixes, listed here rather than hidden in prose:
   directly.
 - `CUSTOM_SAVER`: handled.  CMake owns the historical Unix command and a
   Windows-safe command default, and emits the configured value directly.
+- `VERIFY_RIPEM`: handled.  CMake emits the historical verifier command
+  when `ripem` is found; otherwise the default command is disabled.
+- `VERIFY_PGP`: handled.  CMake emits the historical verifier command
+  when `pgp` is found; otherwise the default command is disabled.
 - `OVERVIEW_DIR`: needed.  CMake owns the value, but the empty default
   bypasses source fallback behavior.
 - `OVERVIEW_FMT`: needed.  CMake owns the value, but the empty default
@@ -158,7 +162,6 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, and `USE_FTP`.
-- Shell and command defaults: `VERIFY_RIPEM` and `VERIFY_PGP`.
 - Posting, mail, and forwarding text: `MAIL_HEADER`, `NEWS_HEADER`,
   `CANCEL_HEADER`, `SUPERSEDE_HEADER`, `YOU_SAID`, `ATTRIBUTION`,
   `FORWARD_POSTER`, `FORWARD_HEADER`, `FORWARD_MSG`, and
