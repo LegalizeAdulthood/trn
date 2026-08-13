@@ -36,9 +36,10 @@ class IniSchema;
 class IniSection;
 class IniSectionValues;
 
-void util_init();
-void util_final();
-int  do_shell(std::string_view shell, std::string_view cmd);
+void        util_init();
+void        util_final();
+int         do_shell(std::string_view shell, std::string_view cmd);
+int         shell_wait_status_exit_code(int status);
 int         eaccess(const std::filesystem::path &filename, int mode);
 std::string trn_getwd();
 std::string get_a_line(std::FILE *fp);

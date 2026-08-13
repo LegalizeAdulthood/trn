@@ -31,6 +31,14 @@ void expect_file_contains(const char *filename, std::string_view expected)
     EXPECT_NE(std::string::npos, contents.find(expected)) << filename;
 }
 
+void expect_file_not_contains(const char *filename, std::string_view expected)
+{
+    const std::string contents = file_contents(filename);
+
+    ASSERT_FALSE(contents.empty()) << filename;
+    EXPECT_EQ(std::string::npos, contents.find(expected)) << filename;
+}
+
 void expect_config_define(const char *filename, std::string_view name, bool defined)
 {
     const std::string expected =
@@ -51,6 +59,12 @@ TEST(GeneratedConfigTest, inputAndSignalProbesMatchPlatformChecks)
     expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_RDCHK", cmake_bool(TRN_TEST_HAS_RDCHK));
     expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGBLOCK", cmake_bool(TRN_TEST_HAS_SIGBLOCK));
     expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGHOLD", cmake_bool(TRN_TEST_HAS_SIGHOLD));
+}
+
+TEST(GeneratedConfigTest, waitStatusProbeMatchesPlatformCheck)
+{
+    expect_file_not_contains(TRN_TEST_WAIT_STATUS_PROBE_CONFIG, "UNION_WAIT");
+    expect_config_define(TRN_TEST_WAIT_STATUS_PROBE_CONFIG, "USE_WIFSTAT", cmake_bool(TRN_TEST_USE_WIFSTAT));
 }
 
 TEST(GeneratedConfigTest, activeTimesDefaultIsNone)

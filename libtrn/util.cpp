@@ -54,11 +54,7 @@
 
 namespace fs = std::filesystem;
 
-#ifdef UNION_WAIT
-using WaitStatus = union wait;
-#else
 using WaitStatus = int;
-#endif
 
 bool g_waiting{}; // waiting for subprocess (in doshell)?
 bool g_no_wait_fork{};
@@ -88,6 +84,15 @@ void util_final()
     {
         unset_env_var(name);
     }
+}
+
+int shell_wait_status_exit_code(int status)
+{
+#ifdef USE_WIFSTAT
+    return WEXITSTATUS(status);
+#else
+    return status;
+#endif
 }
 
 // fork and exec a shell command
@@ -216,15 +221,7 @@ int do_shell(std::string_view shell, std::string_view cmd)
     }
     else
     {
-#ifdef USE_WIFSTAT
-        ret = WEXITSTATUS(status);
-#else
-#ifdef UNION_WAIT
-        ret = status.w_status >> 8;
-#else
-        ret = status;
-#endif // UNION_WAIT
-#endif // USE_WIFSTAT
+        ret = shell_wait_status_exit_code(status);
     }
 #endif // !MSDOS
     termlib_init();

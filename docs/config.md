@@ -100,8 +100,7 @@ These symbols are consumed outside `config/include/config`, but no CMake
 cache variable or generated `config.h.in` owner exists for them.  Slice 5
 must either add a retained owner or explicitly retire each one.
 
-- Platform and signal probes: `UNION_WAIT`, `USE_WIFSTAT`, and
-  `I_SGTTY`.
+- Platform and signal probes: `I_SGTTY`.
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
 - Account and name defaults: `PASSWORD_FILE`, `LOGIN_DIR_FIELD`, and
@@ -148,13 +147,8 @@ options unless a live source consumer is found:
 
 ### Legacy Probes Still Used by Source
 
-These symbols are present in `config.h.in` and still gate source code,
-but are not set by `configure_trn.cmake`:
-
-- `UNION_WAIT`
-- `USE_WIFSTAT`
-
-Relevant consumers include wait-status decoding.
+The remaining source-used generated probe without CMake emission is
+`I_SGTTY`, covered below.
 
 ### Remote Threading Methods
 

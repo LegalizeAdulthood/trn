@@ -35,6 +35,15 @@ TEST(AtGreySpaceTest, classifiesWhitespaceControlAndNormalCharacters)
     EXPECT_FALSE(at_grey_space("A"));
 }
 
+TEST(ShellWaitStatusTest, decodesExitStatus)
+{
+#ifdef USE_WIFSTAT
+    EXPECT_EQ(42, shell_wait_status_exit_code(42 << 8));
+#else
+    EXPECT_EQ(42, shell_wait_status_exit_code(42));
+#endif
+}
+
 class TempFilenameTest : public testing::Test
 {
 protected:

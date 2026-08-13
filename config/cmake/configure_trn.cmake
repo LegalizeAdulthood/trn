@@ -119,8 +119,9 @@ function(configure_trn)
     if(NOT HAS_GETDOMAINNAME)
         check_symbol_exists(res_init "arpa/nameser.h;netinet/in.h;resolv.h" HAS_RES_INIT)
     endif()
-    # TODO: How to check for UNION_WAIT?
-    # TODO: Related: USE_WIFSTAT; seems antiquated.
+    if(I_SYS_WAIT)
+        check_symbol_exists(WEXITSTATUS "sys/wait.h" USE_WIFSTAT)
+    endif()
     if(WIN32)
         find_program(EDITOR_PATH "notepad")
     else()

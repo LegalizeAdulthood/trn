@@ -236,35 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.12 through 4.31 refine #19 into one variable or setting family
+Slices 4.13 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.12. Wait Status Probes
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `UNION_WAIT`
-- `USE_WIFSTAT`
-
-Tasks:
-
-- Decide whether union wait support remains relevant for 5.0 platforms.
-- Add CMake checks or remove the live source dependency.
-- Add generated-config coverage for any retained wait-status mode.
-
-Acceptance:
-
-- Wait-status handling has one documented CMake-owned mode per platform.
-- Retired wait-status macros have no live source dependency.
-- Unit tests cover retained wait-status decoding paths, or prove the
-  branches were retired.
 
 ### 4.13. Sgtty Header Probe
 
@@ -819,7 +795,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.12 through 4.31.
+Depends on: 4.13 through 4.31.
 
 Files likely touched:
 
@@ -831,7 +807,6 @@ Files likely touched:
 Tasks:
 
 - Add CMake cache variables for the relevant retained options.
-- Configure or retire `UNION_WAIT` and `USE_WIFSTAT`.
 - Emit `I_SGTTY` only if source still needs it.
 
 Acceptance:
@@ -1950,7 +1925,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.12 through 4.31, 5, and 6.
+- #19: 4.13 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

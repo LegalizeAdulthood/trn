@@ -40,14 +40,6 @@
  */
 #cmakedefine HAS_SIGHOLD
 
-/* UNION_WAIT:
- *      This symbol if defined indicates to the C program that the argument
- *      for the wait() system call should be declared as 'union wait status'
- *      instead of 'int status'. You probably need to include <sys/wait.h>
- *      in the former case (see I_SYSWAIT).
- */
-#cmakedefine UNION_WAIT
-
 /* HAS_VFORK:
  *      This symbol, if defined, indicates that vfork() exists.
  */
@@ -62,12 +54,8 @@
 #define Signal_t @SIGNAL_T@     // Signal handler's return type
 
 /* USE_WIFSTAT:
- *      This symbol, if defined, indicates to the C program that the argument
- *      for the WIFxxx set of macros such as WIFSIGNALED or WIFEXITED can
- *      be of the same kind as the one used to hold the wait() status. Should
- *      only matter on HP-UX, where the macros are incorrectly written and
- *      therefore cause programs using them with an 'union wait' variable
- *      to not compile properly. See also UNION_WAIT.
+ *      This symbol, if defined, indicates that WEXITSTATUS can decode the
+ *      status returned by wait().
  */
 #cmakedefine USE_WIFSTAT
 
