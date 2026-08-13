@@ -88,3 +88,16 @@ TEST(GeneratedConfigTest, groupDescConfiguredPathIsEmitted)
 {
     expect_file_contains(TRN_TEST_GROUP_DESC_CONFIGURED_CONFIG, "#define GROUP_DESC \"/var/lib/trn/newsgroups\"");
 }
+
+TEST(GeneratedConfigTest, subscriptionsDefaultMatchesHistoricalFallback)
+{
+    const std::string expected{std::string{"#define SUBSCRIPTIONS \""} + TRN_TEST_DEFAULT_SUBSCRIPTIONS + "\""};
+
+    expect_file_contains(TRN_TEST_SUBSCRIPTIONS_DEFAULT_CONFIG, expected);
+}
+
+TEST(GeneratedConfigTest, subscriptionsConfiguredPathIsEmitted)
+{
+    expect_file_contains(TRN_TEST_SUBSCRIPTIONS_CONFIGURED_CONFIG,
+                         "#define SUBSCRIPTIONS \"/var/lib/trn/subscriptions\"");
+}
