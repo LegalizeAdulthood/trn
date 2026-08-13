@@ -292,6 +292,18 @@ TEST(GeneratedConfigTest, articlePathTemplatesConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG, "HEADNAME", "%./test-head.%$");
 }
 
+TEST(GeneratedConfigTest, savePathTemplatesDefaultMatchCMakeSelection)
+{
+    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_DEFAULT_CONFIG, "SAVEDIR", TRN_TEST_DEFAULT_SAVEDIR);
+    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_DEFAULT_CONFIG, "SAVENAME", TRN_TEST_DEFAULT_SAVENAME);
+}
+
+TEST(GeneratedConfigTest, savePathTemplatesConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVEDIR", "%p/test-save");
+    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVENAME", "test-%a");
+}
+
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
 {
     const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";

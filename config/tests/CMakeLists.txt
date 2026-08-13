@@ -46,6 +46,22 @@ set_tests_properties(
     ConfigCMakeTest.postingHostMatchSegmentsRejectsNegative
     PROPERTIES LABELS trn)
 
+set(save_path_defaults_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_save_path_defaults.cmake")
+add_test(NAME ConfigCMakeTest.savePathDefaultsUseFlatMode
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_MAKE_SAVE_DIRECTORIES=OFF"
+        -P "${save_path_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.savePathDefaultsUseCategoryMode
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_MAKE_SAVE_DIRECTORIES=ON"
+        -P "${save_path_defaults_test_script}")
+set_tests_properties(
+    ConfigCMakeTest.savePathDefaultsUseFlatMode
+    ConfigCMakeTest.savePathDefaultsUseCategoryMode
+    PROPERTIES LABELS trn)
+
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     input_signal_probes.h
@@ -303,6 +319,22 @@ configure_file(
     @ONLY
 )
 
+set(SAVEDIR "${DEFAULT_SAVEDIR}")
+set(SAVENAME "${DEFAULT_SAVENAME}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    save_path_templates_default.h
+    @ONLY
+)
+
+set(SAVEDIR "%p/test-save")
+set(SAVENAME "test-%a")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    save_path_templates_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -330,5 +362,7 @@ set(NEWSNEWSNAME "${DEFAULT_NEWSNEWSNAME}")
 set(OV_FILE_NAME "${DEFAULT_OV_FILE_NAME}")
 set(VARYNAME "${DEFAULT_VARYNAME}")
 set(HEADNAME "${DEFAULT_HEADNAME}")
+set(SAVEDIR "${DEFAULT_SAVEDIR}")
+set(SAVENAME "${DEFAULT_SAVENAME}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

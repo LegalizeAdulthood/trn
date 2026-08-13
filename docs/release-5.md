@@ -236,37 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.18 through 4.31 refine #19 into one variable or setting family
+Slices 4.19 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.18. Save Path Defaults
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `SAVEDIR`
-- `SAVENAME`
-
-Tasks:
-
-- Add CMake cache variables for retained save path templates.
-- Express retained `MKDIRS` default selection in CMake.
-- Emit retained save path templates directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config and option behavior coverage.
-
-Acceptance:
-
-- Save path defaults are CMake-owned or explicitly source-owned.
-- Save-option toggles preserve current directory/name behavior.
-- No retained save path template relies on a `common.h` fallback.
-- Unit tests cover configured save defaults and both save-option modes.
 
 ### 4.19. Selection Policy
 
@@ -482,7 +456,6 @@ Configuration variables/settings:
 - `TILDE_NAME`
 - `VALIDATE_XREF_SITE`
 - `USE_FTP`
-- `MKDIRS`
 
 Tasks:
 
@@ -653,7 +626,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.18 through 4.31.
+Depends on: 4.19 through 4.31.
 
 Files likely touched:
 
@@ -1782,7 +1755,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.18 through 4.31, 5, and 6.
+- #19: 4.19 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

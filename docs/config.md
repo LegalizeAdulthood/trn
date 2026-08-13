@@ -105,6 +105,13 @@ need semantic fixes, listed here rather than hidden in prose:
   template and emits the configured value directly.
 - `HEADNAME`: handled.  CMake owns the historical long-filename header
   file template and emits the configured value directly.
+- `MKDIRS`: handled.  CMake expresses the old default save-layout
+  selection as `TRN_MAKE_SAVE_DIRECTORIES`, without emitting a source
+  macro.
+- `SAVEDIR`: handled.  CMake owns the historical save-directory defaults
+  and emits the configured value directly.
+- `SAVENAME`: handled.  CMake owns the historical save-file defaults and
+  emits the configured value directly.
 - `OVERVIEW_DIR`: needed.  CMake owns the value, but the empty default
   bypasses source fallback behavior.
 - `OVERVIEW_FMT`: needed.  CMake owns the value, but the empty default
@@ -137,8 +144,7 @@ cache variable or generated `config.h.in` owner exists for them.  Slice 5
 must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
-  `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
-- Save paths: `SAVEDIR` and `SAVENAME`.
+  `VALIDATE_XREF_SITE`, and `USE_FTP`.
 - Selection and newsrc policy: `UNSUBSCRIBED_CHAR` and
   `SELECTION_CHARS`.
 - Shell and command defaults: `SH`, `PIPE_SAVER`, `SHAR_SAVER`,

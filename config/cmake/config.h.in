@@ -396,6 +396,18 @@
 //
 #define HEADNAME "@HEADNAME@"
 
+// SAVEDIR:
+//      The name of the directory to save to, if the save command does not
+//      specify a directory name.
+//
+#define SAVEDIR "@SAVEDIR@"
+
+// SAVENAME:
+//      The name of the file to save to, if the save command contains only
+//      a directory name.
+//
+#define SAVENAME "@SAVENAME@"
+
 /* OVERVIEW_DIR:
  *      This symbol indicates where the overview files go.
  */

@@ -388,26 +388,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define VERIFY_PGP "pgp +batchmode -m %A"
 #endif
 
-#ifdef MKDIRS
-
-#   ifndef SAVEDIR      // % and ~
-#       define SAVEDIR "%p/%c"
-#   endif
-#   ifndef SAVENAME     // %
-#       define SAVENAME "%a"
-#   endif
-
-#else
-
-#   ifndef SAVEDIR      // % and ~
-#       define SAVEDIR "%p"
-#   endif
-#   ifndef SAVENAME     // %
-#       define SAVENAME "%^C"
-#   endif
-
-#endif
-
 #ifndef KILL_GLOBAL      // % and ~
 #   define KILL_GLOBAL "%p/KILL"
 #endif
