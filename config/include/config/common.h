@@ -292,10 +292,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define SELECTION_CHARS "abdefgijlorstuvwxyz1234567890BCFGIKVW"
 #endif
 
-// file containing list of active newsgroups and max article numbers
-#ifndef ACTIVE          // % and ~
-#   define ACTIVE "%x/active"
-#endif
 #ifndef GROUP_DESC
 #   define GROUP_DESC "%x/newsgroups"
 #endif

@@ -43,6 +43,18 @@ TEST(GeneratedConfigTest, activeTimesConfiguredPathIsEmitted)
     expect_file_contains(TRN_TEST_ACTIVE_TIMES_CONFIGURED_CONFIG, "#define ACTIVE_TIMES \"%x/active.times\"");
 }
 
+TEST(GeneratedConfigTest, activeDefaultMatchesHistoricalFallback)
+{
+    const std::string expected = std::string{"#define ACTIVE \""} + TRN_TEST_DEFAULT_ACTIVE + "\"";
+
+    expect_file_contains(TRN_TEST_ACTIVE_DEFAULT_CONFIG, expected);
+}
+
+TEST(GeneratedConfigTest, activeConfiguredPathIsEmitted)
+{
+    expect_file_contains(TRN_TEST_ACTIVE_CONFIGURED_CONFIG, "#define ACTIVE \"%x/test-active\"");
+}
+
 TEST(GeneratedConfigTest, mailFileDefaultMatchesHistoricalFallback)
 {
     expect_file_contains(TRN_TEST_MAIL_FILE_DEFAULT_CONFIG, "#define MAIL_FILE \"/usr/spool/mail/%L\"");

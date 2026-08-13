@@ -43,8 +43,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `PREF_SHELL`: handled for Unix.  Windows-safe shell policy is owned by
   later Windows helper work.
 - `ROOT_UID`: handled for POSIX policy.
-- `ACTIVE`: needed.  CMake owns the value, but the empty default bypasses
-  the `common.h` fallback.
+- `ACTIVE`: handled.  CMake owns the historical active-file default and
+  emits the configured value directly.
 - `ACTIVE_TIMES`: handled.  CMake owns `ACTIVE_TIMES`, defaults it to
   `none`, and `config.h.in` emits the cache value directly.
 - `PIPE_HOST_CMD`: handled.  It remains an optional hostname fallback.
@@ -263,7 +263,6 @@ unconditionally emitted to `config.h`.
 
 Notable cases:
 
-- `ACTIVE`
 - `GROUP_DESC`
 - `SUBSCRIPTIONS`
 - `OVERVIEW_DIR`

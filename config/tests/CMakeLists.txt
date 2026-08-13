@@ -27,6 +27,20 @@ configure_file(
     @ONLY
 )
 
+set(ACTIVE "${DEFAULT_ACTIVE}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    active_default.h
+    @ONLY
+)
+
+set(ACTIVE "%x/test-active")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    active_configured.h
+    @ONLY
+)
+
 set(MAIL_FILE "${DEFAULT_MAIL_FILE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
