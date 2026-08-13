@@ -152,8 +152,26 @@
  *      the /etc/passwd file in Berkeley format (name first thing, everything
  *      up to first comma, with & replaced by capitalized login id, yuck).
  */
-#cmakedefine PASS_NAMES // (undef to take name from ~/.fullname)
+#cmakedefine PASS_NAMES // (undef to take name from FULLNAMEFILE)
 #cmakedefine BERKELEY_NAMES // (that is, ":name,stuff:")
+
+/* PASSWORD_FILE:
+ *      This symbol contains the password file used for login-directory lookup
+ *      when getpwent() is unavailable.
+ */
+#define PASSWORD_FILE "@PASSWORD_FILE@"
+
+/* LOGIN_DIR_FIELD:
+ *      This symbol contains the one-based password-file field containing login
+ *      directories.
+ */
+#define LOGIN_DIR_FIELD @LOGIN_DIR_FIELD@
+
+/* FULLNAMEFILE:
+ *      This symbol contains the full-name file used when PASS_NAMES is
+ *      disabled.
+ */
+#define FULLNAMEFILE "@FULLNAMEFILE@"
 
 /* INSTALL_PREFIX:
  *      This symbol contains the name of the install prefix for this package.

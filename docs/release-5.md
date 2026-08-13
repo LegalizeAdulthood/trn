@@ -236,39 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.14 through 4.31 refine #19 into one variable or setting family
+Slices 4.15 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.14. Account Name Files
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `PASSWORD_FILE`
-- `LOGIN_DIR_FIELD`
-- `FULLNAMEFILE`
-
-Tasks:
-
-- Move retained account-name defaults from `common.h` into CMake.
-- Emit retained account-name values directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config and name-lookup coverage for configured and
-  default paths.
-
-Acceptance:
-
-- Account-name file settings have CMake owners or no live source use.
-- Default full-name lookup behavior remains explicit.
-- No retained account-name default relies on a `common.h` fallback.
-- Unit tests cover configured and default account-file settings in
-  generated config and name lookup.
 
 ### 4.15. User State Paths
 
@@ -771,7 +743,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.14 through 4.31.
+Depends on: 4.15 through 4.31.
 
 Files likely touched:
 
@@ -1900,7 +1872,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.14 through 4.31, 5, and 6.
+- #19: 4.15 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

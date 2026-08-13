@@ -340,12 +340,12 @@ TEST(PasswdFullNameTest, usgKeepsNameBetweenHyphenAndParen)
 #ifndef PASS_NAMES
 TEST_F(EnvInitTest, readsRealNameFromFullnameFile)
 {
-    std::ofstream{m_home / ".fullname"} << "Casey Writer\n";
-    std::ofstream{m_home / "fullname"} << "Casey Writer\n";
-
     const std::string home = m_home.generic_string();
     const std::string tmp = m_tmp.generic_string();
     const std::string trn = m_trn.generic_string();
+    g_dot_dir = home;
+    std::ofstream{file_exp(FULLNAMEFILE)} << "Casey Writer\n";
+    g_dot_dir.clear();
     m_env.expect_env("HOME", home.c_str());
     m_env.expect_env("TMPDIR", tmp.c_str());
     expect_login_environment();

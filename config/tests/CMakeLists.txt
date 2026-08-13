@@ -186,6 +186,9 @@ configure_file(
 
 set(PASS_NAMES "${DEFAULT_PASS_NAMES}")
 set(BERKELEY_NAMES "${DEFAULT_BERKELEY_NAMES}")
+set(PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}")
+set(LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}")
+set(FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     name_parsing_default.h
@@ -216,6 +219,24 @@ configure_file(
     @ONLY
 )
 
+set(PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}")
+set(LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}")
+set(FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    account_name_files_default.h
+    @ONLY
+)
+
+set(PASSWORD_FILE "/var/lib/trn/passwd")
+set(LOGIN_DIR_FIELD "7")
+set(FULLNAMEFILE "%./profile-name")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    account_name_files_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -225,5 +246,8 @@ configure_file(
 
 set(PASS_NAMES "${DEFAULT_PASS_NAMES}")
 set(BERKELEY_NAMES "${DEFAULT_BERKELEY_NAMES}")
+set(PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}")
+set(LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}")
+set(FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

@@ -155,6 +155,18 @@ function(configure_trn)
     if(BERKELEY_NAMES AND NOT PASS_NAMES)
         message(FATAL_ERROR "BERKELEY_NAMES requires PASS_NAMES.")
     endif()
+    set(DEFAULT_PASSWORD_FILE "/etc/passwd")
+    set(DEFAULT_PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}" PARENT_SCOPE)
+    set(PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}" CACHE STRING
+        "The password file used for login-directory lookup when getpwent is unavailable.")
+    set(DEFAULT_LOGIN_DIR_FIELD "6")
+    set(DEFAULT_LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}" PARENT_SCOPE)
+    set(LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}" CACHE STRING
+        "The one-based field containing login directories in PASSWORD_FILE.")
+    set(DEFAULT_FULLNAMEFILE "%./.fullname")
+    set(DEFAULT_FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}" PARENT_SCOPE)
+    set(FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}" CACHE STRING
+        "The file used for full-name lookup when PASS_NAMES is disabled.")
     set(INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE STRING
         "The name of the install prefix for this package, defaults to CMAKE_INSTALL_PREFIX.")
     if(WIN32)

@@ -29,7 +29,8 @@
   DIFF_PROGRAM, ED_PROGRAM, ISPELL_PROGRAM, ISPELL_OPTIONS, and
   SPELL_PROGRAM
 * Review default settings of Unix name and time policies on Windows:
-  PASS_NAMES, BERKELEY_NAMES, NAME_TYPE, and LOCALTIME_FMT
+  PASS_NAMES, BERKELEY_NAMES, NAME_TYPE, LOGIN_DIR_FIELD, and
+  LOCALTIME_FMT
 * Review name lookup defaults on modern Linux, BSD, and Windows,
   including PASS_NAMES, BERKELEY_NAMES, NAME_TYPE, and matching generated
   posting helper behavior

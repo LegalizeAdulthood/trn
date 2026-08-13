@@ -196,22 +196,6 @@ enum
 #   define sigignore(sig) signal(sig,SIG_IGN)
 #endif
 
-#ifndef PASSWORD_FILE
-#   ifdef LIMITED_FILENAMES
-#       define PASSWORD_FILE "%X/passwd"
-#   else
-#       define PASSWORD_FILE "/etc/passwd"
-#   endif
-#endif
-
-#ifndef LOGIN_DIR_FIELD
-#   define LOGIN_DIR_FIELD 6            // Which field (origin 1) is the
-                                        // login directory in /etc/passwd?
-                                        // (If it is not kept in passwd,
-                                        // but getpwnam() returns it,
-                                        // define the symbol HAS_GETPWENT)
-#endif
-
 #ifndef UNSUBSCRIBED_CHAR
 #   define UNSUBSCRIBED_CHAR '!'
 #endif
@@ -327,17 +311,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 # else
 #   define RNMACRO "%./.rnmac"
 # endif
-#endif
-
-// location of full name
-#ifndef FULLNAMEFILE
-#   ifndef PASS_NAMES
-#     ifdef LIMITED_FILENAMES
-#       define FULLNAMEFILE "%./fullname"
-#     else
-#       define FULLNAMEFILE "%./.fullname"
-#     endif
-#   endif
 #endif
 
 // The name to append to the directory name to read an overview file.

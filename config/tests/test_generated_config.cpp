@@ -198,6 +198,25 @@ TEST(GeneratedConfigTest, nameParsingCanUseBerkeleyPasswdFormat)
     expect_config_define(TRN_TEST_NAME_PARSING_BERKELEY_CONFIG, "BERKELEY_NAMES", true);
 }
 
+TEST(GeneratedConfigTest, accountNameFilesDefaultMatchesHistoricalFallback)
+{
+    const std::string password_file = std::string{"#define PASSWORD_FILE \""} + TRN_TEST_DEFAULT_PASSWORD_FILE + "\"";
+    const std::string login_dir_field = std::string{"#define LOGIN_DIR_FIELD "} + TRN_TEST_DEFAULT_LOGIN_DIR_FIELD;
+    const std::string fullname_file = std::string{"#define FULLNAMEFILE \""} + TRN_TEST_DEFAULT_FULLNAMEFILE + "\"";
+
+    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, password_file);
+    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, login_dir_field);
+    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, fullname_file);
+}
+
+TEST(GeneratedConfigTest, accountNameFilesConfiguredValuesAreEmitted)
+{
+    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG,
+                         "#define PASSWORD_FILE \"/var/lib/trn/passwd\"");
+    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG, "#define LOGIN_DIR_FIELD 7");
+    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG, "#define FULLNAMEFILE \"%./profile-name\"");
+}
+
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
 {
     const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";

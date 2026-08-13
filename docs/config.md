@@ -39,6 +39,10 @@ need semantic fixes, listed here rather than hidden in prose:
   not match the old Linux hint.
 - `BERKELEY_NAMES`: needed.  CMake owns the option, but it does not
   imply `PASS_NAMES`.
+- `PASSWORD_FILE`: handled.  CMake owns the historical password-file
+  default and emits the configured value directly.
+- `LOGIN_DIR_FIELD`: handled.  CMake owns the historical login-directory
+  field number for password-file fallback lookup.
 - `INSTALL_PREFIX`: handled.  It follows `CMAKE_INSTALL_PREFIX`.
 - `PREF_SHELL`: handled for Unix.  Windows-safe shell policy is owned by
   later Windows helper work.
@@ -83,6 +87,8 @@ need semantic fixes, listed here rather than hidden in prose:
   generated helpers and install layout are not complete.
 - `PAGER`: handled for generated help and runtime defaults.
 - `REPLYTO_POSTER_CHECKING`: handled.
+- `FULLNAMEFILE`: handled.  CMake owns the historical full-name file
+  default and emits the configured value directly.
 - `NAME_TYPE`: needed.  It feeds generated `Pnews`, whose template is not
   fully migrated.
 - `LOCAL_DIST`, `ORGANIZATION_DIST`, `CITY_DIST`, `STATE_DIST`,
@@ -102,8 +108,6 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
-- Account and name defaults: `PASSWORD_FILE`, `LOGIN_DIR_FIELD`, and
-  `FULLNAMEFILE`.
 - User-state files: `TRNDIR`, `TRNMACRO`, `RNMACRO`, `RCNAME`,
   `LOCKNAME`, `LASTNAME`, `SIGNATURE_FILE`, and `NNTP_AUTH_FILE`.
 - Data and access files: `DEFACCESS`, `TRNACCESS`, and `NEWSNEWSNAME`.
