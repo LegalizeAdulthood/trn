@@ -665,11 +665,27 @@ TEST_F(InterpolatorTest, hostName)
 
 TEST_F(InterpolatorTest, hostMatchName)
 {
-#if HOST_BITS != 0
-    ASSERT_EQ("example.org", g_host_name);
-#else
-    ASSERT_EQ(TRN_TEST_P_HOST_NAME, g_host_name);
-#endif
+    ASSERT_EQ(host_match_name(TRN_TEST_P_HOST_NAME, POSTING_HOST_MATCH_SEGMENTS), g_host_name);
+}
+
+TEST(HostMatchNameTest, zeroUsesWholeHostName)
+{
+    EXPECT_EQ("client.news.example.org", host_match_name("client.news.example.org", 0));
+}
+
+TEST(HostMatchNameTest, oneUsesTwoHostWords)
+{
+    EXPECT_EQ("example.org", host_match_name("client.news.example.org", 1));
+}
+
+TEST(HostMatchNameTest, twoUsesTwoHostWords)
+{
+    EXPECT_EQ("example.org", host_match_name("client.news.example.org", 2));
+}
+
+TEST(HostMatchNameTest, largerCountUsesRequestedHostWords)
+{
+    EXPECT_EQ("news.example.org", host_match_name("client.news.example.org", 3));
 }
 
 TEST_F(InterpolatorTest, messageIdNotInNewsgroup)

@@ -137,6 +137,20 @@ TEST(GeneratedConfigTest, overviewFmtConfiguredPathIsEmitted)
                          "#define OVERVIEW_FMT    \"/var/lib/trn/overview.fmt\"");
 }
 
+TEST(GeneratedConfigTest, postingHostMatchSegmentsDefaultMatchesHistoricalFallback)
+{
+    const std::string expected =
+        std::string{"#define POSTING_HOST_MATCH_SEGMENTS "} + TRN_TEST_DEFAULT_POSTING_HOST_MATCH_SEGMENTS;
+
+    expect_file_contains(TRN_TEST_POSTING_HOST_MATCH_SEGMENTS_DEFAULT_CONFIG, expected);
+}
+
+TEST(GeneratedConfigTest, postingHostMatchSegmentsConfiguredCountIsEmitted)
+{
+    expect_file_contains(TRN_TEST_POSTING_HOST_MATCH_SEGMENTS_CONFIGURED_CONFIG,
+                         "#define POSTING_HOST_MATCH_SEGMENTS 4");
+}
+
 TEST(GeneratedConfigTest, nameParsingDefaultMatchesPlatformPolicy)
 {
     expect_config_define(TRN_TEST_NAME_PARSING_DEFAULT_CONFIG, "PASS_NAMES", cmake_bool(TRN_TEST_DEFAULT_PASS_NAMES));

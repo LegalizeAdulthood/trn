@@ -8,6 +8,13 @@ function(configure_flavor_header name flavor)
         COPYONLY)
 endfunction()
 
+function(validate_posting_host_match_segments value)
+    if(NOT "${value}" MATCHES "^(0|[1-9][0-9]*)$")
+        message(FATAL_ERROR
+            "Option POSTING_HOST_MATCH_SEGMENTS ('${value}') must be a non-negative decimal integer.")
+    endif()
+endfunction()
+
 function(configure_trn)
     #
     # Perform inspections of the system and configure accordingly.
@@ -187,7 +194,11 @@ function(configure_trn)
         "Either the organization name or the full pathname of a file containing the organization name.")
     set(POSTING_HOSTNAME "%X/posting-hostname" CACHE STRING
         "This symbol contains the posting host's name or a file from which to read its name.")
-    option(HOST_BITS "Set to true if we should compare only the domain portion of the hostname when looking for local articles." ON)
+    set(DEFAULT_POSTING_HOST_MATCH_SEGMENTS "2")
+    set(DEFAULT_POSTING_HOST_MATCH_SEGMENTS "${DEFAULT_POSTING_HOST_MATCH_SEGMENTS}" PARENT_SCOPE)
+    set(POSTING_HOST_MATCH_SEGMENTS "${DEFAULT_POSTING_HOST_MATCH_SEGMENTS}" CACHE STRING
+        "The count of dot-separated hostname words to compare for local articles; 0 means all.")
+    validate_posting_host_match_segments("${POSTING_HOST_MATCH_SEGMENTS}")
     option(TRN_MARK_XREFS_UNREAD
         "If ON, unmark xrefed articles in other newsgroups when articles are unmarked." ON)
     set(MCHASE ${TRN_MARK_XREFS_UNREAD})

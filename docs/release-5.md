@@ -236,34 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.10 through 4.31 refine #19 into one variable or setting family
+Slices 4.11 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.10. Host Bits Count
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `HOST_BITS`
-
-Tasks:
-
-- Convert `HOST_BITS` from a CMake boolean to an integer count.
-- Validate the cache value at configure time.
-- Add generated-config and hostname-comparison coverage.
-
-Acceptance:
-
-- `HOST_BITS` can represent values greater than one.
-- Invalid host-bit values fail configure with a clear diagnostic.
-- Hostname-comparison unit tests cover zero, one, two, and larger
-  `HOST_BITS` counts.
 
 ### 4.11. Input And Signal Probes
 
@@ -867,7 +844,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.10 through 4.31.
+Depends on: 4.11 through 4.31.
 
 Files likely touched:
 
@@ -906,7 +883,6 @@ Files likely touched:
 
 Tasks:
 
-- Convert `HOST_BITS` from boolean to integer-count semantics.
 - Preserve fallback behavior for empty path and file defaults.
 - Revisit Linux name defaults such as `PASS_NAMES` and
   `BERKELEY_NAMES`.
@@ -914,11 +890,10 @@ Tasks:
 
 Acceptance:
 
-- `HOST_BITS` can represent values greater than one.
 - Empty defaults do not bypass intended source fallbacks.
 - BSD configure behavior from #28 remains fixed.
-- Unit tests cover host-bit counts, empty-default fallbacks, and BSD
-  feature-check decisions.
+- Unit tests cover empty-default fallbacks and BSD feature-check
+  decisions.
 
 ### 7. Install Option Documentation
 
@@ -2001,7 +1976,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.10 through 4.31, 5, and 6.
+- #19: 4.11 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

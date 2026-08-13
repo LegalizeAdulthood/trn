@@ -13,6 +13,39 @@ target_include_directories(config-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_folder(config-test "Tests")
 gtest_discover_tests(config-test PROPERTIES LABELS trn)
 
+set(posting_host_match_segments_validation_script
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_posting_host_match_segments_validation.cmake")
+set(posting_host_match_segments_configure_script
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/configure_trn.cmake")
+add_test(NAME ConfigCMakeTest.postingHostMatchSegmentsAcceptsZero
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_POSTING_HOST_MATCH_SEGMENTS=0"
+        -P "${posting_host_match_segments_validation_script}")
+add_test(NAME ConfigCMakeTest.postingHostMatchSegmentsAcceptsLargeCount
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_POSTING_HOST_MATCH_SEGMENTS=15"
+        -P "${posting_host_match_segments_validation_script}")
+add_test(NAME ConfigCMakeTest.postingHostMatchSegmentsRejectsText
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_POSTING_HOST_MATCH_SEGMENTS=bogus"
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${posting_host_match_segments_validation_script}")
+add_test(NAME ConfigCMakeTest.postingHostMatchSegmentsRejectsNegative
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_POSTING_HOST_MATCH_SEGMENTS=-1"
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${posting_host_match_segments_validation_script}")
+set_tests_properties(
+    ConfigCMakeTest.postingHostMatchSegmentsAcceptsZero
+    ConfigCMakeTest.postingHostMatchSegmentsAcceptsLargeCount
+    ConfigCMakeTest.postingHostMatchSegmentsRejectsText
+    ConfigCMakeTest.postingHostMatchSegmentsRejectsNegative
+    PROPERTIES LABELS trn)
+
 set(ACTIVE_TIMES "none")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
@@ -122,6 +155,20 @@ set(OVERVIEW_FMT "/var/lib/trn/overview.fmt")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     overview_fmt_configured.h
+    @ONLY
+)
+
+set(POSTING_HOST_MATCH_SEGMENTS "${DEFAULT_POSTING_HOST_MATCH_SEGMENTS}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    posting_host_match_segments_default.h
+    @ONLY
+)
+
+set(POSTING_HOST_MATCH_SEGMENTS "4")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    posting_host_match_segments_configured.h
     @ONLY
 )
 

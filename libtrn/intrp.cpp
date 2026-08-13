@@ -68,6 +68,32 @@ static CompiledRegex s_cond_compex;
 static std::string   s_last_input;
 static int           s_interp_counter{};
 
+std::string host_match_name(std::string_view host_name, int segments)
+{
+    std::string result{host_name};
+    if (segments == 0)
+    {
+        return result;
+    }
+
+    int         words = segments < 2 ? 2 : segments;
+    std::size_t suffix_start = result.size();
+    while (words != 0 && suffix_start != 0U)
+    {
+        suffix_start--;
+        if (result[suffix_start] == '.')
+        {
+            words--;
+        }
+    }
+    if (suffix_start < result.size() && result[suffix_start] == '.')
+    {
+        suffix_start++;
+    }
+    result.erase(0, suffix_start);
+    return result;
+}
+
 void interp_init()
 {
     s_last_input.clear();
@@ -109,27 +135,7 @@ void interp_init()
 
     g_head_name = file_exp(HEADNAME);
 
-    // the hostname to use in local-article comparisons
-#if HOST_BITS != 0
-    int i = (HOST_BITS < 2 ? 2 : HOST_BITS);
-    g_host_name = g_p_host_name;
-    std::size_t suffix_start = g_host_name.size();
-    while (i && suffix_start != 0U)
-    {
-        suffix_start--;
-        if (g_host_name[suffix_start] == '.')
-        {
-            i--;
-        }
-    }
-    if (suffix_start < g_host_name.size() && g_host_name[suffix_start] == '.')
-    {
-        suffix_start++;
-    }
-    g_host_name.erase(0, suffix_start);
-#else
-    g_host_name = g_p_host_name;
-#endif
+    g_host_name = host_match_name(g_p_host_name, POSTING_HOST_MATCH_SEGMENTS);
 }
 
 void interp_final()

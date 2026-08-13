@@ -289,11 +289,11 @@
  */
 #define POSTING_HOSTNAME "@POSTING_HOSTNAME@"
 
-/* HOST_BITS:
- *      Set to true if we should compare only the domain portion of the
- *      hostname when looking for local articles.
+/* POSTING_HOST_MATCH_SEGMENTS:
+ *      Count of dot-separated hostname words to compare when looking for
+ *      local articles.  Zero compares all hostname words.
  */
-#cmakedefine01 HOST_BITS
+#define POSTING_HOST_MATCH_SEGMENTS @POSTING_HOST_MATCH_SEGMENTS@
 
 /* MCHASE:
  *      This symbol, if defined, causes unmarking an article to also unmark

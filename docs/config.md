@@ -65,8 +65,9 @@ need semantic fixes, listed here rather than hidden in prose:
 - `NEWS_SPOOL`: handled as the default local spool path.
 - `ORG_NAME`: handled.
 - `POSTING_HOSTNAME`: handled.
-- `HOST_BITS`: needed.  Current CMake exposes a boolean, while source
-  still treats the value as a host-part count.
+- `POSTING_HOST_MATCH_SEGMENTS`: handled.  CMake owns the legacy
+  `hostbits` count under a name that reflects local-posting ownership
+  matching.
 - `TRN_MARK_XREFS_UNREAD`: handled.  It is the CMake-facing owner for
   generated `MCHASE`.
 - `PRIVATE_LIB`: handled.
@@ -272,13 +273,14 @@ The old source-side fallback defaults in `config/include/config/common.h`
 only apply when a symbol is not defined. Emitting an empty definition
 bypasses those fallbacks.
 
-### Host Bits
+### Posting Host Match Segments
 
 Legacy `hostbits` accepted an integer count: all host parts, two domain
-parts, three domain parts, and so on.
+parts, three domain parts, and so on.  CMake retains that behavior as
+`POSTING_HOST_MATCH_SEGMENTS`.
 
-Current CMake exposes `HOST_BITS` as a boolean option. The default still
-behaves like a count of two, but users cannot configure larger counts.
+The configured count controls the posting-host suffix used when checking
+whether an article belongs to the current login.
 
 ### Name Parsing Defaults
 
@@ -444,8 +446,8 @@ or message templates. They are runtime policy, not platform discovery:
   `CUSTOM_SAVER`, `VERIFY_RIPEM`, and `VERIFY_PGP`.
 - Kill-file defaults: `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`.
 - Startup behavior: `THREAD_INIT` and `SELECT_INIT`.
-- Host comparison policy: `HOST_BITS`. It is not a boolean platform
-  probe; current code treats values greater than one as a count.
+- Host comparison policy: `POSTING_HOST_MATCH_SEGMENTS`. It is not a
+  boolean platform probe; values greater than one are a count.
 
 `config/data/CMakeLists.txt` and `configure_trn.cmake` also own generated
 script/data policy that is not platform configuration:
