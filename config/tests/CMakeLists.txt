@@ -125,4 +125,46 @@ configure_file(
     @ONLY
 )
 
+set(PASS_NAMES "${DEFAULT_PASS_NAMES}")
+set(BERKELEY_NAMES "${DEFAULT_BERKELEY_NAMES}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    name_parsing_default.h
+    @ONLY
+)
+
+set(PASS_NAMES OFF)
+set(BERKELEY_NAMES OFF)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    name_parsing_fullname_file.h
+    @ONLY
+)
+
+set(PASS_NAMES ON)
+set(BERKELEY_NAMES OFF)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    name_parsing_usg.h
+    @ONLY
+)
+
+set(PASS_NAMES ON)
+set(BERKELEY_NAMES ON)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    name_parsing_berkeley.h
+    @ONLY
+)
+
+set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
+    pnews_name_type_default
+    @ONLY
+)
+
+set(PASS_NAMES "${DEFAULT_PASS_NAMES}")
+set(BERKELEY_NAMES "${DEFAULT_BERKELEY_NAMES}")
+
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

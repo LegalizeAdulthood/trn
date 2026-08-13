@@ -30,6 +30,9 @@
   SPELL_PROGRAM
 * Review default settings of Unix name and time policies on Windows:
   PASS_NAMES, BERKELEY_NAMES, NAME_TYPE, and LOCALTIME_FMT
+* Review name lookup defaults on modern Linux, BSD, and Windows,
+  including PASS_NAMES, BERKELEY_NAMES, NAME_TYPE, and matching generated
+  posting helper behavior
 
 ## AddGroup
 

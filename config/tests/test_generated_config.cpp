@@ -31,6 +31,19 @@ void expect_file_contains(const char *filename, std::string_view expected)
     EXPECT_NE(std::string::npos, contents.find(expected)) << filename;
 }
 
+void expect_config_define(const char *filename, std::string_view name, bool defined)
+{
+    const std::string expected =
+        defined ? std::string{"#define "} + std::string{name} : std::string{"/* #undef "} + std::string{name} + " */";
+
+    expect_file_contains(filename, expected);
+}
+
+bool cmake_bool(std::string_view value)
+{
+    return value == "ON";
+}
+
 } // namespace
 
 TEST(GeneratedConfigTest, activeTimesDefaultIsNone)
@@ -122,4 +135,36 @@ TEST(GeneratedConfigTest, overviewFmtConfiguredPathIsEmitted)
 {
     expect_file_contains(TRN_TEST_OVERVIEW_FMT_CONFIGURED_CONFIG,
                          "#define OVERVIEW_FMT    \"/var/lib/trn/overview.fmt\"");
+}
+
+TEST(GeneratedConfigTest, nameParsingDefaultMatchesPlatformPolicy)
+{
+    expect_config_define(TRN_TEST_NAME_PARSING_DEFAULT_CONFIG, "PASS_NAMES", cmake_bool(TRN_TEST_DEFAULT_PASS_NAMES));
+    expect_config_define(TRN_TEST_NAME_PARSING_DEFAULT_CONFIG, "BERKELEY_NAMES",
+                         cmake_bool(TRN_TEST_DEFAULT_BERKELEY_NAMES));
+}
+
+TEST(GeneratedConfigTest, nameParsingCanUseFullnameFile)
+{
+    expect_config_define(TRN_TEST_NAME_PARSING_FULLNAME_FILE_CONFIG, "PASS_NAMES", false);
+    expect_config_define(TRN_TEST_NAME_PARSING_FULLNAME_FILE_CONFIG, "BERKELEY_NAMES", false);
+}
+
+TEST(GeneratedConfigTest, nameParsingCanUseUsgPasswdFormat)
+{
+    expect_config_define(TRN_TEST_NAME_PARSING_USG_CONFIG, "PASS_NAMES", true);
+    expect_config_define(TRN_TEST_NAME_PARSING_USG_CONFIG, "BERKELEY_NAMES", false);
+}
+
+TEST(GeneratedConfigTest, nameParsingCanUseBerkeleyPasswdFormat)
+{
+    expect_config_define(TRN_TEST_NAME_PARSING_BERKELEY_CONFIG, "PASS_NAMES", true);
+    expect_config_define(TRN_TEST_NAME_PARSING_BERKELEY_CONFIG, "BERKELEY_NAMES", true);
+}
+
+TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
+{
+    const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";
+
+    expect_file_contains(TRN_TEST_PNEWS_NAME_TYPE_DEFAULT_SCRIPT, expected);
 }

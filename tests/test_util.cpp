@@ -4,6 +4,7 @@
 #include <trn/init.h>
 #include <trn/terminal.h>
 #include <trn/util.h>
+#include <util/env-internal.h>
 #include <util/env.h>
 #include <util/util2.h>
 
@@ -310,6 +311,24 @@ TEST_F(FileExpansionTest, expandsDotDirectory)
     EXPECT_EQ("C:/Users/tester/.trn/access", file_exp("%./access"));
 }
 
+TEST(PasswdFullNameTest, berkeleyKeepsNameBeforeDelimiters)
+{
+    EXPECT_EQ("Mister Guest User", passwd_full_name("Mister Guest User,Room 42", "guest", PasswdNameFormat::Berkeley));
+    EXPECT_EQ("Mister Guest User", passwd_full_name("Mister Guest User;Room 42", "guest", PasswdNameFormat::Berkeley));
+}
+
+TEST(PasswdFullNameTest, berkeleyExpandsAmpersandWithCapitalizedLogin)
+{
+    EXPECT_EQ("Guest User", passwd_full_name("& User", "guest", PasswdNameFormat::Berkeley));
+    EXPECT_EQ("& User", passwd_full_name(R"(\& User)", "guest", PasswdNameFormat::Berkeley));
+}
+
+TEST(PasswdFullNameTest, usgKeepsNameBetweenHyphenAndParen)
+{
+    EXPECT_EQ("Mister Guest User", passwd_full_name("000-Mister Guest User(000)", "guest", PasswdNameFormat::Usg));
+}
+
+#ifndef PASS_NAMES
 TEST_F(EnvInitTest, readsRealNameFromFullnameFile)
 {
     std::ofstream{m_home / ".fullname"} << "Casey Writer\n";
@@ -329,6 +348,7 @@ TEST_F(EnvInitTest, readsRealNameFromFullnameFile)
 
     EXPECT_EQ("Casey Writer", g_real_name);
 }
+#endif
 
 TEST_F(EnvInitTest, usesConfiguredPostingHostNameDefault)
 {

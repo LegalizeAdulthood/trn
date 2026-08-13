@@ -213,6 +213,60 @@ static void env_init2()
     g_rn_lib = file_exp(PRIVATE_LIB);
 }
 
+std::string passwd_full_name(std::string_view gecos, std::string_view login_name, PasswdNameFormat format)
+{
+    if (format == PasswdNameFormat::Berkeley)
+    {
+#ifdef BERKJUNK
+        while (!gecos.empty() && !std::isalnum(static_cast<unsigned char>(gecos.front())) && gecos.front() != '&')
+        {
+            gecos.remove_prefix(1);
+        }
+#endif
+        const std::string_view::size_type delimiter = gecos.find_first_of(",;");
+        if (delimiter != std::string_view::npos)
+        {
+            gecos = gecos.substr(0, delimiter);
+        }
+
+        std::string                 result;
+        std::string_view::size_type index = 0;
+        while (index < gecos.size())
+        {
+            if (gecos[index] == '\\' && index + 1 < gecos.size() && gecos[index + 1] == '&')
+            {
+                index++;
+            }
+            else if (gecos[index] == '&')
+            {
+                break;
+            }
+            result += gecos[index++];
+        }
+        if (index < gecos.size() && gecos[index] == '&')
+        {
+            const std::size_t login_pos = result.size();
+            result += login_name;
+            result.append(gecos.substr(index + 1));
+            if (login_pos < result.size() && std::islower(static_cast<unsigned char>(result[login_pos])))
+            {
+                result[login_pos] = static_cast<char>(std::toupper(static_cast<unsigned char>(result[login_pos])));
+            }
+        }
+        return result;
+    }
+
+    if (const std::string_view::size_type paren = gecos.find('('); paren != std::string_view::npos)
+    {
+        gecos = gecos.substr(0, paren);
+    }
+    if (const std::string_view::size_type hyphen = gecos.find('-'); hyphen != std::string_view::npos)
+    {
+        gecos.remove_prefix(hyphen + 1);
+    }
+    return std::string{gecos};
+}
+
 // Set g_login_name to the user's login name and g_real_name to the user's
 // real name.
 //
@@ -221,7 +275,7 @@ static bool set_user_name()
     const char *s{};
 
 #ifdef HAS_GETPWENT
-    passwd* pwd;
+    passwd *pwd;
 
     if (g_login_name.empty())
     {
@@ -247,57 +301,11 @@ static bool set_user_name()
 #endif
 #ifdef PASS_NAMES
 #ifdef BERKELEY_NAMES
-#ifdef BERKJUNK
-    std::string_view gecos{s};
-    while (!gecos.empty() && !isalnum(gecos.front()) && gecos.front() != '&')
-    {
-        gecos.remove_prefix(1);
-    }
+    constexpr PasswdNameFormat format = PasswdNameFormat::Berkeley;
 #else
-    std::string_view gecos{s};
+    constexpr PasswdNameFormat format = PasswdNameFormat::Usg;
 #endif
-    const std::string_view::size_type delimiter = gecos.find_first_of(",;");
-    if (delimiter != std::string_view::npos)
-    {
-        gecos = gecos.substr(0, delimiter);
-    }
-    g_real_name.clear();
-    std::string_view::size_type index = 0;
-    while (index < gecos.size())
-    {
-        if (gecos[index] == '\\' && index + 1 < gecos.size() && gecos[index + 1] == '&')
-        {
-            index++;
-        }
-        else if (gecos[index] == '&')
-        {
-            break;
-        }
-        g_real_name += gecos[index++];
-    }
-    if (index < gecos.size() && gecos[index] == '&') // whoever thought this one up was
-    {
-        const std::size_t login_pos = g_real_name.size(); // in the middle of the night
-        g_real_name += g_login_name;                      // before the morning after
-        g_real_name.append(gecos.substr(index + 1));
-        if (login_pos < g_real_name.size() && std::islower(static_cast<unsigned char>(g_real_name[login_pos])))
-        {
-            g_real_name[login_pos] = static_cast<char>(
-                std::toupper(static_cast<unsigned char>(g_real_name[login_pos]))); // gack and double gack
-        }
-    }
-#else // !BERKELEY_NAMES
-    std::string_view gecos{s};
-    if (const std::string_view::size_type paren = gecos.find('('); paren != std::string_view::npos)
-    {
-        gecos = gecos.substr(0, paren);
-    }
-    if (const std::string_view::size_type hyphen = gecos.find('-'); hyphen != std::string_view::npos)
-    {
-        gecos.remove_prefix(hyphen);
-    }
-    g_real_name = std::string{gecos};
-#endif // !BERKELEY_NAMES
+    g_real_name = passwd_full_name(s == nullptr ? std::string_view{} : std::string_view{s}, g_login_name, format);
 #endif
 #ifndef PASS_NAMES
     {
