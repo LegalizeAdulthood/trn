@@ -72,8 +72,8 @@ Markdown files are excluded from this audit.
 
 Non-markdown documentation sources audited:
 
-- top-level text: `README.txt`, `INSTALL.txt`, `INIT.txt`,
-  `HACKERSGUIDE.txt`, and `default_topic`;
+- top-level text: `INSTALL.txt`, `INIT.txt`, `HACKERSGUIDE.txt`, and
+  `default_topic`;
 - man pages: `man/trn.1`, `man/strn.1`, `man/Pnews.1`, and
   `man/Rnmail.1`;
 - online help files under `HelpFiles`;
@@ -84,10 +84,10 @@ Non-markdown documentation sources audited:
 
 Documentation gaps and owning work items:
 
-- `README.txt`, `INSTALL.txt`, and `default_topic` still describe the
-  trn 4.0 `Configure` workflow, `MANIFEST`, `make install.full`,
+- `INSTALL.txt` and `default_topic` still describe the trn 4.0
+  `Configure` workflow, `MANIFEST`, `make install.full`,
   `make install.strn`, and old `mthreads` distribution details.  Items
-  1, 3, and 7 reconcile or retire those paths.
+  3 and 7 reconcile or retire those paths.
 - `CMakeLists.txt` only installs the `trn` target.  Man pages,
   `HelpFiles`, generated data files, generated helper files, and
   release text files need an install/package decision in items 10 and
@@ -197,7 +197,7 @@ release must not regress #2, #9, #11, #12, #20, #28, #32, #36, or #39.
 P0 is the GitHub 5.0 milestone.  No open P0 issue may be deferred to 5.1
 while it remains on that milestone.  Closed P0 issues must remain fixed.
 
-1. Fix release identity, readme reconciliation, and install docs: #18.
+1. Fix release identity and install docs: #18.
 2. Finish CMake and generated-file migration: #19, #31.
 3. Fix mandatory crash and disabled-test issues: #24, #38.
 4. Ship Windows and macOS release support: #14, #23.
@@ -236,36 +236,6 @@ GitHub issue.  Closed milestone issues are not implementation items; they
 are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
-
-### 1. Readme Reconciliation
-
-Issues: none.
-
-Milestone status: P0 support; local files still diverge.
-
-Files likely touched:
-
-- `README.txt`
-- `ReadMe.md`
-
-Tasks:
-
-- Choose one canonical readme for the release.
-- Merge useful historical overview text from `README.txt`.
-- Preserve current CMake, CI, UTF-8, posting, and contribution text from
-  `ReadMe.md`.
-- Preserve packaging-status, build, release, standard, and license
-  badges that still apply.
-- Remove stale current-release references to `MANIFEST`, `Configure`,
-  `mthreads`, and `HelpFiles/changelog`.
-- Remove the stale duplicate, or make any retained compatibility file a
-  short pointer that cannot drift.
-
-Acceptance:
-
-- There is one authoritative readme for the release.
-- `README.txt` and `ReadMe.md` no longer contain divergent content.
-- The canonical readme includes the modern build and project overview.
 
 ### 2. Runtime Release Identity
 

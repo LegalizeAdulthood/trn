@@ -68,12 +68,11 @@ group looking for interesting articles.  You can even browse through the
 articles you've already read and select the one(s) you wish to read again.
 Other nice features include the extract commands for the source and binary
 groups, thread-oriented kill directives, a better newgroup finding strategy,
-and lots more.  See the change log for a list of the things that are new to
-trn from previous versions (either view the file [changelog](HelpFiles/changelog)
-or type `h` (help) from inside trn and select the "What's New?" entry).
+and lots more.
 
-To make trn work faster it uses an auxiliary news
-database with overview files, which are maintained by INN.
+To make trn work faster it can use an auxiliary news database that
+summarizes the available articles.  Current trn uses overview files,
+which are commonly maintained by INN.
 Trn supports local news groups and news accessed remotely via
 [NNTP](https://en.wikipedia.org/wiki/Network_News_Transfer_Protocol).  If you
 opt for remote access you will probably want to make the adjunct database
@@ -81,9 +80,8 @@ available too.  You can do this in a variety of way, but I recommend that
 you send the database from the server to the client via NNTP.
 
 Remote access uses XOVER overview data and builds threads on the client.
-The old XTHREAD thread-file command is no longer used.  The alternative is
-to either mount the disk containing your database via NFS, or build it
-locally.  See the mthreads package for details on how to do this.
+The old XTHREAD thread-file command is no longer used.  Local spool
+installations can read overview data beside the spool.
 
 Note that trn is based on rn, and so it does a great job of pretending to
 be rn for those people that simply don't like to change their newsreading

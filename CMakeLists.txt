@@ -28,7 +28,6 @@ set(trn_text_files
     INIT.txt
     INSTALL.txt
     LICENSE.txt
-    README.txt
 )
 add_executable(trn main.cpp
     "docs/AsyncPlan.md"
@@ -70,7 +69,6 @@ misc_target(FILES
     "HACKERSGUIDE.txt"
     "INIT.txt"
     "INSTALL.txt"
-    "README.txt"
     "ReadMe.md"
 )
 misc_group_sources("CMake Scripts" FILES
