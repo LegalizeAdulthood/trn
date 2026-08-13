@@ -81,6 +81,12 @@
 #cmakedefine I_SYS_IOCTL
 #cmakedefine I_SYS_FILIO
 
+/* I_SGTTY:
+ *      This symbol, if defined, indicates that <sgtty.h> exists and the
+ *      terminal input path should keep sgtty-era newline normalization.
+ */
+#cmakedefine I_SGTTY
+
 /* I_SYS_WAIT:
  *      This symbol, if defined, indicates to the C program that it should
  *      include <sys/wait.h>.

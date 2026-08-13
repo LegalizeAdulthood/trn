@@ -100,7 +100,6 @@ These symbols are consumed outside `config/include/config`, but no CMake
 cache variable or generated `config.h.in` owner exists for them.  Slice 5
 must either add a retained owner or explicitly retire each one.
 
-- Platform and signal probes: `I_SGTTY`.
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
 - Account and name defaults: `PASSWORD_FILE`, `LOGIN_DIR_FIELD`, and
@@ -145,11 +144,6 @@ options unless a live source consumer is found:
 
 ## Real Gaps
 
-### Legacy Probes Still Used by Source
-
-The remaining source-used generated probe without CMake emission is
-`I_SGTTY`, covered below.
-
 ### Remote Threading Methods
 
 Current news-server support favors overview and header-based threading
@@ -177,13 +171,6 @@ Current trn support for those same ranked methods is:
 
 Result: remaining remote-threading work is modernizing the overview path
 to prefer `CAPABILITIES` and `OVER` before falling back to `XOVER`.
-
-### `sgtty.h`
-
-CMake probes `sgtty.h` into `I_SGTTY`, and terminal code still checks
-`I_SGTTY`, but `config.h.in` does not emit the symbol.
-
-Result: any fallback behavior guarded by `I_SGTTY` is unreachable.
 
 ### News Source Mode
 
