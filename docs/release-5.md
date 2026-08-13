@@ -236,32 +236,797 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-### 4. Configure Option Inventory
+Slices 4.1 through 4.31 refine #19 into one variable or setting family
+per review unit.  Plan source: `docs/config.md`.
+
+### 4.1. Active Times Cache Wiring
 
 Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Plan source: `config.md`.
+Configuration variables/settings:
 
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- `config/cmake/config.h.in`
-- `config/include/config/common.h`
-- configure-option tests
+- `ACTIVE_TIMES`
 
 Tasks:
 
-- Compare old Configure options with current CMake inputs.
-- Classify each option as needed, obsolete, already handled, or removed.
-- Identify each source-consumed config symbol without a CMake owner.
-- Keep irrelevant 1990s portability probes retired.
+- Route the configured `ACTIVE_TIMES` cache value into `config.h`.
+- Add generated-config coverage for a non-empty active-times path.
+- Preserve the intended fallback when no active-times path is configured.
 
 Acceptance:
 
-- The remaining #19 work is explicit and testable.
-- No source-consumed config symbol is missing from the inventory.
+- `ACTIVE_TIMES` in generated `config.h` matches the CMake cache value.
+- An unset active-times path still behaves like the historical fallback.
+- Generated-config unit tests cover configured and fallback
+  `ACTIVE_TIMES` values.
+
+### 4.2. Mail File Default
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `MAIL_FILE`
+
+Tasks:
+
+- Decide whether `MAIL_FILE` remains a cache variable or falls back to
+  source defaults.
+- Stop an empty CMake default from overriding `common.h` fallback
+  behavior.
+- Add generated-config coverage for configured and default mail files.
+
+Acceptance:
+
+- `MAIL_FILE` can be customized from CMake.
+- The default mail-file path is not silently replaced by an empty string.
+- Generated-config unit tests cover configured and default `MAIL_FILE`
+  values.
+
+### 4.3. News Library Default
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `NEWS_LIB`
+
+Tasks:
+
+- Decide the default news library path for each supported platform.
+- Stop the empty Unix CMake default from bypassing `common.h` fallback
+  behavior.
+- Add generated-config coverage for configured and default news library
+  paths.
+
+Acceptance:
+
+- `NEWS_LIB` can be customized from CMake.
+- Unix defaults do not generate an empty news library path.
+- Generated-config unit tests cover configured and platform-default
+  `NEWS_LIB` values.
+
+### 4.4. Active File Default
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `ACTIVE`
+
+Tasks:
+
+- Decide whether the active file default belongs in CMake or `common.h`.
+- Stop an empty CMake default from bypassing the fallback active file.
+- Add generated-config coverage for configured and default active files.
+
+Acceptance:
+
+- `ACTIVE` can be customized from CMake.
+- The default active file is not silently replaced by an empty string.
+- Generated-config unit tests cover configured and default `ACTIVE`
+  values.
+
+### 4.5. Group Description Default
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `GROUP_DESC`
+
+Tasks:
+
+- Decide whether the group-description default belongs in CMake or
+  source fallback policy.
+- Stop an empty CMake default from bypassing the fallback value.
+- Add generated-config coverage for configured and default group
+  descriptions.
+
+Acceptance:
+
+- `GROUP_DESC` can be customized from CMake.
+- The default group-description path remains usable for local sources.
+- Generated-config and data-source unit tests cover configured and
+  default `GROUP_DESC` values.
+
+### 4.6. Subscriptions Default
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `SUBSCRIPTIONS`
+
+Tasks:
+
+- Decide whether an empty subscriptions path means no local file or use
+  the source fallback.
+- Generate the intended value without masking fallback behavior.
+- Add generated-config and data-source coverage for the default case.
+
+Acceptance:
+
+- `SUBSCRIPTIONS` can be customized from CMake.
+- The default subscriptions behavior is explicit and tested.
+- Data-source unit tests cover configured, absent, and default
+  `SUBSCRIPTIONS` behavior.
+
+### 4.7. Overview Directory Default
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `OVERVIEW_DIR`
+
+Tasks:
+
+- Decide whether an empty overview directory means disabled overview
+  files or source fallback.
+- Generate the intended value without masking fallback behavior.
+- Add generated-config coverage for configured and default overview
+  directories.
+
+Acceptance:
+
+- `OVERVIEW_DIR` can be customized from CMake.
+- Default overview-directory behavior is explicit and tested.
+- Data-source or overview unit tests cover configured and default
+  `OVERVIEW_DIR` behavior.
+
+### 4.8. Overview Format Default
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `OVERVIEW_FMT`
+
+Tasks:
+
+- Decide whether an empty overview format path means no file or source
+  fallback.
+- Generate the intended value without masking fallback behavior.
+- Add generated-config coverage for configured and default overview
+  format paths.
+
+Acceptance:
+
+- `OVERVIEW_FMT` can be customized from CMake.
+- Default overview-format behavior is explicit and tested.
+- Overview unit tests cover configured and default `OVERVIEW_FMT`
+  behavior.
+
+### 4.9. Name Parsing Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `PASS_NAMES`
+- `BERKELEY_NAMES`
+
+Tasks:
+
+- Decide supported CMake semantics for passwd full-name lookup.
+- Make Berkeley format imply the name-lookup behavior source expects, or
+  reject invalid combinations.
+- Restore or explicitly retire the old Linux hint default.
+- Add generated-config and name-lookup coverage.
+
+Acceptance:
+
+- CMake can express the retained name-parsing modes.
+- `%N` and posting-name defaults match the documented mode.
+- Name-lookup unit tests cover each retained `PASS_NAMES` and
+  `BERKELEY_NAMES` combination.
+
+### 4.10. Host Bits Count
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `HOST_BITS`
+
+Tasks:
+
+- Convert `HOST_BITS` from a CMake boolean to an integer count.
+- Validate the cache value at configure time.
+- Add generated-config and hostname-comparison coverage.
+
+Acceptance:
+
+- `HOST_BITS` can represent values greater than one.
+- Invalid host-bit values fail configure with a clear diagnostic.
+- Hostname-comparison unit tests cover zero, one, two, and larger
+  `HOST_BITS` counts.
+
+### 4.11. Input And Signal Probes
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `HAS_RDCHK`
+- `HAS_SIGBLOCK`
+- `HAS_SIGHOLD`
+
+Tasks:
+
+- Decide whether each probe is retained for supported platforms.
+- Add CMake checks or remove the live source dependency.
+- Add generated-config coverage for the retained probes.
+
+Acceptance:
+
+- No retained `HAS_RDCHK`, `HAS_SIGBLOCK`, or `HAS_SIGHOLD` source path
+  lacks a CMake owner.
+- Retired probes have no live source dependency.
+- Generated-config unit tests cover each retained input or signal probe.
+
+### 4.12. Wait Status Probes
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `UNION_WAIT`
+- `USE_WIFSTAT`
+
+Tasks:
+
+- Decide whether union wait support remains relevant for 5.0 platforms.
+- Add CMake checks or remove the live source dependency.
+- Add generated-config coverage for any retained wait-status mode.
+
+Acceptance:
+
+- Wait-status handling has one documented CMake-owned mode per platform.
+- Retired wait-status macros have no live source dependency.
+- Unit tests cover retained wait-status decoding paths, or prove the
+  branches were retired.
+
+### 4.13. Sgtty Header Probe
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `I_SGTTY`
+
+Tasks:
+
+- Decide whether `sgtty.h` fallback support remains relevant.
+- Emit `I_SGTTY` from generated `config.h` or remove the guarded source
+  path.
+- Add generated-config coverage for the retained decision.
+
+Acceptance:
+
+- `I_SGTTY` behavior is either generated by CMake or absent from source.
+- Terminal fallback behavior remains documented.
+- Generated-config or terminal unit tests cover the retained `I_SGTTY`
+  decision.
+
+### 4.14. Account Name Files
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `PASSWORD_FILE`
+- `LOGIN_DIR_FIELD`
+- `FULLNAMEFILE`
+
+Tasks:
+
+- Add CMake cache variables for retained account-name file policy.
+- Preserve source fallback behavior for unset values.
+- Add name-lookup coverage for configured and default paths.
+
+Acceptance:
+
+- Account-name file settings have CMake owners or no live source use.
+- Default full-name lookup behavior remains explicit.
+- Name-lookup unit tests cover configured and default account-file
+  settings.
+
+### 4.15. User State Paths
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `TRNDIR`
+- `TRNMACRO`
+- `RNMACRO`
+- `RCNAME`
+- `LOCKNAME`
+- `LASTNAME`
+- `SIGNATURE_FILE`
+- `NNTP_AUTH_FILE`
+
+Tasks:
+
+- Add CMake cache variables for retained user-state path defaults.
+- Preserve limited-filename fallback behavior only if it remains
+  supported.
+- Add generated-config coverage for configured and default user-state
+  paths.
+
+Acceptance:
+
+- User-state path defaults are CMake-owned or explicitly retired.
+- Existing runtime tests continue to find the intended default paths.
+- Unit tests cover configured and default user-state paths.
+
+### 4.16. Data File Paths
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `GLOBAL_INIT`
+- `DEFACCESS`
+- `TRNACCESS`
+- `NEWSNEWSNAME`
+
+Tasks:
+
+- Add CMake cache variables for retained data-file path defaults.
+- Align defaults with generated data files and the install layout.
+- Add generated-config coverage for configured and default paths.
+
+Acceptance:
+
+- Runtime data-file paths are CMake-owned and install-aware.
+- Defaults point at generated or installed files that exist.
+- Unit tests cover configured and default data-file path expansion.
+
+### 4.17. Article Path Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `OV_FILE_NAME`
+- `VARYNAME`
+- `HEADNAME`
+
+Tasks:
+
+- Add CMake cache variables for retained article path templates.
+- Preserve or retire limited-filename variants explicitly.
+- Add generated-config coverage for configured and default templates.
+
+Acceptance:
+
+- Article path templates are CMake-owned or explicitly retired.
+- Runtime article and header paths keep current tested behavior.
+- Unit tests cover configured and default article path templates.
+
+### 4.18. Save Path Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `SAVEDIR`
+- `SAVENAME`
+
+Tasks:
+
+- Add CMake cache variables for retained save path templates.
+- Decide whether `MKDIRS` remains the owner of alternate defaults.
+- Add generated-config and option behavior coverage.
+
+Acceptance:
+
+- Save path defaults are CMake-owned or explicitly source-owned.
+- Save-option toggles preserve current directory/name behavior.
+- Unit tests cover configured save defaults and both save-option modes.
+
+### 4.19. Selection Policy
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `UNSUBSCRIBED_CHAR`
+- `SELECTION_CHARS`
+
+Tasks:
+
+- Add CMake cache variables for retained selection defaults.
+- Validate `UNSUBSCRIBED_CHAR` as a single character.
+- Add generated-config and selection behavior coverage.
+
+Acceptance:
+
+- Selection defaults are configurable through CMake.
+- Invalid selection defaults fail configure with a clear diagnostic.
+- Unit tests cover configured selection characters and unsubscribe
+  marker behavior.
+
+### 4.20. Shell Command Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `SH`
+- `PIPE_SAVER`
+- `SHAR_SAVER`
+- `CUSTOM_SAVER`
+
+Tasks:
+
+- Add CMake cache variables for retained shell command defaults.
+- Decide platform-safe defaults for Windows and Unix.
+- Add generated-config coverage for configured and default commands.
+
+Acceptance:
+
+- Shell command defaults are CMake-owned or unsupported by documented
+  platform policy.
+- Windows defaults do not point at Unix-only shell commands.
+- Unit tests cover configured shell command defaults and platform
+  fallbacks.
+
+### 4.21. Verification Commands
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `VERIFY_RIPEM`
+- `VERIFY_PGP`
+
+Tasks:
+
+- Add CMake cache variables for retained verification commands.
+- Decide whether missing tools disable verification or keep command
+  strings as user-overridable defaults.
+- Add generated-config coverage for configured and default commands.
+
+Acceptance:
+
+- Verification command defaults are CMake-owned or explicitly retired.
+- Missing verifier tools do not produce misleading install defaults.
+- Unit tests cover configured verifier commands and disabled defaults.
+
+### 4.22. Posting Header Templates
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `MAIL_HEADER`
+- `NEWS_HEADER`
+- `CANCEL_HEADER`
+- `SUPERSEDE_HEADER`
+
+Tasks:
+
+- Add CMake ownership for retained header templates.
+- Keep multiline template escaping testable in generated config.
+- Add generated-config coverage for default header text.
+
+Acceptance:
+
+- Posting header templates are CMake-owned or intentionally source-owned.
+- Generated headers preserve current template text exactly.
+- Unit tests compare generated default header templates byte-for-byte.
+
+### 4.23. Reply And Forward Templates
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `YOU_SAID`
+- `ATTRIBUTION`
+- `FORWARD_POSTER`
+- `FORWARD_HEADER`
+- `FORWARD_MSG`
+- `FORWARD_MSG_END`
+
+Tasks:
+
+- Add CMake ownership for retained reply and forward defaults.
+- Align `FORWARD_POSTER` with the mail poster migration.
+- Add generated-config coverage for default template text.
+
+Acceptance:
+
+- Reply and forward templates are CMake-owned or intentionally
+  source-owned.
+- Forwarding defaults stay consistent with mail poster defaults.
+- Unit tests cover generated reply and forward template defaults.
+
+### 4.24. Kill File Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `KILL_GLOBAL`
+- `KILL_LOCAL`
+- `KILL_THREADS`
+
+Tasks:
+
+- Add CMake cache variables for retained kill-file defaults.
+- Preserve current `%` interpolation semantics.
+- Add generated-config and kill-file path coverage.
+
+Acceptance:
+
+- Kill-file path defaults are CMake-owned.
+- Runtime kill-file lookup keeps current path behavior.
+- Unit tests cover configured and default kill-file paths.
+
+### 4.25. Local Time Format
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `LOCALTIME_FMT`
+
+Tasks:
+
+- Add a CMake cache variable for the default local time format.
+- Preserve runtime override through `LOCALTIMEFMT`.
+- Add generated-config coverage for configured and default formats.
+
+Acceptance:
+
+- `LOCALTIME_FMT` is CMake-owned.
+- Runtime `LOCALTIMEFMT` still overrides the compiled default.
+- Unit tests cover configured defaults and runtime override behavior.
+
+### 4.26. Feature Policy Toggles
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `MAIL_CALL`
+- `NO_FIREWORKS`
+- `TILDE_NAME`
+- `VALIDATE_XREF_SITE`
+- `USE_FTP`
+- `MKDIRS`
+
+Tasks:
+
+- Decide which feature-policy macros remain configurable for 5.0.
+- Add CMake cache options for retained toggles.
+- Remove live source dependencies for retired toggles.
+- Add generated-config coverage for retained toggles.
+
+Acceptance:
+
+- Each feature-policy macro is CMake-owned or retired from source.
+- Retired toggles have no live preprocessor branch.
+- Unit tests cover each retained feature-policy toggle.
+
+### 4.27. Posting Helper Paths
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `USE_INEWS`
+- `BIN_DIR`
+- `CALL_INEWS`
+- `NEWS_POSTER`
+- `MAIL_POSTER`
+
+Tasks:
+
+- Add CMake ownership for the retained posting helper paths.
+- Align defaults with generated helper files and install layout.
+- Stop defaults from pointing at helpers CMake does not generate.
+- Add generated-config coverage for configured helper paths.
+
+Acceptance:
+
+- Posting helper defaults are CMake-owned and install-aware.
+- Default poster commands refer only to generated or installed helpers.
+- Unit tests cover configured poster commands and default helper paths.
+
+### 4.28. Pnews Distribution Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `NAME_TYPE`
+- `LOCAL_DIST`
+- `ORGANIZATION_DIST`
+- `CITY_DIST`
+- `STATE_DIST`
+- `MULTISTATE_DIST`
+- `COUNTRY_DIST`
+- `CONTINENT_DIST`
+
+Tasks:
+
+- Add validation for retained `Pnews` distribution settings.
+- Ensure generated `Pnews` consumes CMake variables without metaconfig
+  residue.
+- Add generated-helper coverage for configured and default values.
+
+Acceptance:
+
+- `Pnews` distribution settings are CMake-owned and validated.
+- Generated `Pnews` contains no legacy substitution syntax.
+- Generated-helper unit tests cover configured and default distribution
+  settings.
+
+### 4.29. Helper Tool Cache Variables
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `SHELL_START`
+- `DIFF_PROGRAM`
+- `ED_PROGRAM`
+- `ISPELL_PROGRAM`
+- `ISPELL_OPTIONS`
+- `SPELL_PROGRAM`
+
+Tasks:
+
+- Validate retained helper tool cache variables.
+- Replace old tool-variable references in helper templates with CMake
+  owners or literals.
+- Add generated-helper coverage for configured and default tools.
+
+Acceptance:
+
+- Helper tool settings are CMake-owned and used consistently.
+- Generated helper files contain no unresolved old tool variables.
+- Generated-helper unit tests cover configured and default tool settings.
+
+### 4.30. News Source Mode Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `SERVER_NAME`
+- `HAS_LOCAL_SPOOL`
+- `NEWS_SPOOL`
+- `ACTIVE`
+- `GROUP_DESC`
+- `SUBSCRIPTIONS`
+- `OVERVIEW_DIR`
+- `OVERVIEW_FMT`
+
+Tasks:
+
+- Recreate or explicitly replace the old local, NNTP, and both-source
+  mode validation.
+- Keep dependent defaults consistent when one news-source setting changes.
+- Add generated-config and data-source coverage for each retained mode.
+
+Acceptance:
+
+- CMake can express each supported news-source mode.
+- Invalid source-mode combinations fail configure with a clear
+  diagnostic.
+- Data-source unit tests cover each supported news-source mode.
+
+### 4.31. Thread Directory Defaults
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Configuration variables/settings:
+
+- `Thread Dir`
+
+Tasks:
+
+- Add a CMake cache variable for the default thread directory or retire
+  the default.
+- Add the generated access-file entry when the default is retained.
+- Add data-source coverage for configured and absent thread directory
+  defaults.
+
+Acceptance:
+
+- Thread-directory configuration is CMake-owned or explicitly retired.
+- Generated access defaults match the retained behavior.
+- Data-source unit tests cover configured and absent thread-directory
+  defaults.
 
 ### 5. CMake Cache Options
 
@@ -269,7 +1034,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.
+Depends on: 4.1 through 4.31.
 
 Files likely touched:
 
@@ -290,7 +1055,7 @@ Acceptance:
 
 - Each retained Configure option has a CMake cache variable.
 - Retired options have no live source dependency.
-- Generated config tests cover the new variables.
+- Generated-config unit tests cover every new or changed variable.
 
 ### 6. Configure Defaults And BSD Checks
 
@@ -320,6 +1085,8 @@ Acceptance:
 - `HOST_BITS` can represent values greater than one.
 - Empty defaults do not bypass intended source fallbacks.
 - BSD configure behavior from #28 remains fixed.
+- Unit tests cover host-bit counts, empty-default fallbacks, and BSD
+  feature-check decisions.
 
 ### 7. Install Option Documentation
 
@@ -347,6 +1114,8 @@ Acceptance:
 
 - `INSTALL.md` describes the CMake options needed to customize trn.
 - #18 can close after the quickstart and option reference are reviewed.
+- The documentation names the unit or CTest coverage for each documented
+  option, or explicitly marks the option as untested.
 
 ### 8. Generated Helper Inventory
 
@@ -374,6 +1143,8 @@ Acceptance:
 
 - Every legacy helper has an explicit 5.0 disposition.
 - The remaining #31 implementation list is small and reviewable.
+- The inventory names the unit or generated-file test required for each
+  helper that remains active.
 
 ### 9. Remaining Helper Generation
 
@@ -403,6 +1174,8 @@ Acceptance:
 
 - Runtime helper files are generated by CMake.
 - Installed defaults do not point at `config/legacy/*.SH`.
+- Generated-helper unit tests cover each produced helper and prove no
+  metaconfig variables remain.
 
 ### 10. Helper Install Rules
 
@@ -431,6 +1204,8 @@ Acceptance:
 
 - All files previously generated by Configure are generated by CMake.
 - Package and install trees contain the helper files needed at runtime.
+- Unit or CMake install tests assert helper paths, permissions, and
+  installed file presence.
 
 ### 11. Local Group Desc Crash Repro
 
@@ -454,6 +1229,7 @@ Acceptance:
 
 - The #24 access-file shape has a focused regression test.
 - The test fails or exposes a clear missing-path diagnostic before fix.
+- The repro is a unit test in the data-source test suite.
 
 ### 12. Local Group Desc Crash Fix
 
@@ -479,6 +1255,8 @@ Acceptance:
 
 - The #24 repro no longer crashes.
 - Local spool sources work with and without `Group Desc = none`.
+- Unit tests cover omitted, explicit `none`, and configured group
+  description cases.
 
 ### 13. Compress Name Contract
 
@@ -501,6 +1279,7 @@ Acceptance:
 
 - No `DISABLED_` tests remain for #38.
 - The test names describe the expected display-width behavior.
+- Focused unit tests cover each retained `compress_name` contract case.
 
 ### 14. Threaded Save Crash Triage
 
@@ -523,6 +1302,8 @@ Acceptance:
 
 - #10 has either a fixed repro or enough diagnostic data to defer.
 - This work does not block 5.0 unless the issue joins the milestone.
+- Any deterministic repro is checked in as a unit or regression test; a
+  deferred result names the missing test condition.
 
 ### 15. Posting Header Harness
 
@@ -548,6 +1329,8 @@ Acceptance:
 
 - Posted articles include the expected User-Agent header.
 - Header tests are in place before transfer-encoding changes.
+- Unit tests cover generated posting headers and #20 User-Agent
+  regression behavior.
 
 ### 16. Posting Transfer Encoding
 
@@ -578,6 +1361,8 @@ Acceptance:
 - ASCII-only posts are not declared as `8bit`.
 - Non-ASCII posts still get a valid transfer encoding.
 - #16 can close without regressing #20.
+- Posting unit tests cover ASCII, non-ASCII, and User-Agent regression
+  cases.
 
 ### 17. Platform Path Lists
 
@@ -603,6 +1388,8 @@ Acceptance:
 
 - Windows paths with drive letters do not break path-list parsing.
 - The helper can be reused by Windows release work.
+- Unit tests cover Unix separators, Windows separators, and Windows drive
+  letters.
 
 ### 18. Modern Windows Platform Policy
 
@@ -636,6 +1423,8 @@ Acceptance:
 - `MSDOS` no longer means modern Windows.
 - Remaining platform branches name their actual feature or policy.
 - Windows console and path behavior have focused tests.
+- Unit tests cover each renamed platform policy branch touched by the
+  slice.
 
 ### 19. Windows Helper Strategy
 
@@ -675,6 +1464,8 @@ Acceptance:
 - Windows defaults do not point at `/bin/sh`, Unix `tail`, or Unix-only
   helper scripts for supported features.
 - #14 packaging can depend on generated Windows-safe helpers.
+- Windows helper unit tests cover generated defaults and unsupported
+  helper diagnostics.
 
 ### 20. Windows Package Artifacts
 
@@ -704,6 +1495,8 @@ Acceptance:
 
 - Windows users can install or unpack without a Unix shell layer.
 - Package artifacts contain all files needed for normal use.
+- Unit or package tests cover install path computation and package
+  contents.
 
 ### 21. macOS Terminal Include Fix
 
@@ -727,6 +1520,7 @@ Acceptance:
 
 - macOS can compile the terminal sources.
 - The fix is covered by CI or a documented focused build.
+- Unit or compile tests cover the isolated terminal include boundary.
 
 ### 22. macOS CI Gate
 
@@ -751,6 +1545,8 @@ Acceptance:
 
 - macOS CI is green for the release branch.
 - #23 can close without weakening Unix coverage.
+- The macOS CI job runs the unit-test suite, not just configure and
+  build.
 
 ### 23. Manual Test Plan Inventory
 
@@ -779,6 +1575,8 @@ Acceptance:
 - #33 has a tracked checklist tied to concrete tests or manual steps.
 - No high-risk checklist item is unclassified.
 - Option and access-file documentation drift is tracked or fixed.
+- Every high-risk checklist item names its unit, integration, or manual
+  verification path.
 
 ### 24. Deterministic NNTP Fixtures
 
@@ -810,6 +1608,8 @@ Acceptance:
 
 - NNTP tests need no external server.
 - Protocol tests are deterministic under parallel test execution.
+- Unit tests cover mock expectation ordering and fixture server protocol
+  parsing.
 
 ### 25. Manual Check Automation Seed
 
@@ -836,6 +1636,8 @@ Acceptance:
 
 - The release checklist has automated coverage for critical paths.
 - Manual-only items are deliberate, named, and repeatable.
+- New automated checks are registered in CTest and grouped by unit or
+  integration scope.
 
 ### 26. NNTP Capability Model
 
@@ -867,6 +1669,8 @@ Acceptance:
 
 - Capability parsing is tested for advertised and missing features.
 - Overview performance behavior from #9 is not regressed.
+- NNTP unit tests cover capability refresh after `MODE READER` and
+  fallback behavior.
 
 ### 27. NNTP Modern Commands
 
@@ -898,6 +1702,8 @@ Acceptance:
 - Modern servers use advertised RFC 3977 commands.
 - Old servers still work through explicit fallback paths.
 - Overview retrieval does not regress #9.
+- NNTP unit tests cover command preference order and unsupported-command
+  caching.
 
 ### 28. NNTP STARTTLS
 
@@ -925,6 +1731,8 @@ Acceptance:
 
 - STARTTLS reading paths are covered by fixture tests.
 - Password auth can be protected by TLS policy.
+- Unit tests cover advertised STARTTLS, response `483`, failure, and TLS
+  policy cases.
 
 ### 29. NNTP Implicit TLS
 
@@ -955,6 +1763,7 @@ Acceptance:
 
 - `nntps` servers can be used for reading.
 - Direct SSL/nntps behavior from #32 remains covered.
+- Unit or fixture tests cover direct TLS without a cleartext greeting.
 
 ### 30. NNTP Auth Policy
 
@@ -983,6 +1792,8 @@ Acceptance:
 
 - Authentication respects the configured TLS policy.
 - #3 can close when command, STARTTLS, nntps, and auth paths pass.
+- NNTP auth unit tests cover advertised auth, compatibility mode, and
+  cleartext refusal.
 
 ### 31. Charset Pipeline Contract
 
@@ -1018,6 +1829,8 @@ Acceptance:
 - Invalid modern UTF-8 cases follow the explicit malformed-input policy.
 - 5.0 charset work has a tested pipeline contract before behavior is
   moved.
+- UTF-8 unit tests cover valid, malformed, boundary, and global-state
+  independence cases.
 
 ### 32. Unicode Historical Substitution
 
@@ -1055,6 +1868,8 @@ Acceptance:
   Latin characters.
 - Valid UTF-8 is never split or corrupted by substitution.
 - TeX state does not leak between articles, headers, or tests.
+- Substitution unit tests cover Latin mappings, pass-through Unicode, and
+  per-instance TeX state.
 
 ### 33. Header And MIME Charset State
 
@@ -1094,6 +1909,8 @@ Acceptance:
 - Unknown or malformed charset behavior is deterministic and tested.
 - #17 can close without mutable global decoder state in the restored
   paths.
+- Header and MIME unit tests cover known, unknown, malformed, and
+  repeated-article charset state.
 
 ### 34. UTF-8 To ASCII Configuration
 
@@ -1128,6 +1945,8 @@ Acceptance:
 - Single-byte examples such as `0x91` are documented as charset bytes
   that must decode to Unicode before substitution.
 - Default UTF-8 display behavior does not change.
+- Unit tests cover opt-in, opt-out, user mappings, and default-display
+  behavior.
 
 ### 35. UTF-8 To ASCII Mapping Tests
 
@@ -1156,6 +1975,8 @@ Acceptance:
 
 - The #34 mapping table is deterministic and tested.
 - #34 can close without weakening UTF-8 baseline behavior.
+- Unit tests cover smart punctuation, spaces, dashes, malformed UTF-8,
+  and equivalent header/body text.
 
 ### 36. YEnc Decode
 
@@ -1181,6 +2002,8 @@ Acceptance:
 
 - `e` extraction recognizes yEnc articles.
 - Existing extraction tests still pass.
+- Extraction unit tests cover single-part, multipart, filename policy,
+  and existing uuencode behavior.
 
 ### 37. UTF-8 Underline Display
 
@@ -1203,6 +2026,8 @@ Acceptance:
 
 - The underline repro no longer leaves terminal state dirty, or #30 is
   explicitly deferred outside 5.0.
+- Display unit tests cover the attached UTF-8 underline repro when the
+  fix is implemented.
 
 ### 38. Moderators Support
 
@@ -1229,6 +2054,8 @@ Acceptance:
 
 - Posting to moderated groups uses configured moderator routing.
 - This work is deferred unless it joins the 5.0 milestone.
+- Moderator unit tests cover local pattern matching, remote
+  `LIST MODERATORS`, and fallback behavior when implemented.
 
 ### 39. AddGroup Storage
 
@@ -1255,6 +2082,8 @@ Acceptance:
 
 - AddGroup storage no longer leaks discarded duplicate nodes.
 - Object identity is separate from sorted traversal.
+- AddGroup unit tests cover duplicate disposal, cursor identity, and
+  sorted traversal.
 
 ### 40. Selector Sorting
 
@@ -1281,6 +2110,8 @@ Acceptance:
 
 - Selector paging is index-based.
 - Unsubscribed newsgroup listings can be sorted.
+- Selector unit tests cover paging, sort order, reverse order, and glob
+  refinement.
 
 ### 41. Archive.org Test Samples
 
@@ -1305,6 +2136,8 @@ Acceptance:
 
 - Archive.org content is optional and not required for default CI.
 - Any imported sample has source, license, and reproduction notes.
+- Imported samples are exercised by optional unit or regression tests
+  with no network dependency.
 
 ## Deferred Cleanup
 
@@ -1336,7 +2169,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4 through 6.
+- #19: 4.1 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

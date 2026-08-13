@@ -10,6 +10,139 @@ variables in `config/cmake/configure_trn.cmake`, emits C/C++ symbols
 through `config/cmake/config.h.in`, and generates shell/data files from
 `config/data/*.in`.
 
+## Configure Option Inventory
+
+Status labels:
+
+- `handled`: CMake owns the setting or an intentional feature check.
+- `needed`: live source or generated files still need CMake migration.
+- `removed`: old Configure behavior is intentionally not a CMake option.
+- `obsolete`: old portability logic is displaced by modern build logic.
+
+Legacy source compared: `config/legacy/Configure`, especially the
+`config.sh` output block and the prompts that feed install paths, news
+source policy, posting policy, name policy, tool paths, and feature
+probes.
+
+### Current CMake Owners
+
+These legacy policy choices already have CMake cache owners.  Some still
+need semantic fixes, listed here rather than hidden in prose:
+
+- `DEFAULT_EDITOR`: handled.  CMake finds the default editor and emits
+  the configured value.
+- `MAIL_FILE`: needed.  CMake owns the value, but the empty default
+  bypasses the `common.h` fallback.
+- `MBOX_CHAR`: handled.  CMake validates that the value is one
+  character.
+- `PASS_NAMES`: needed.  CMake owns the option, but current defaults do
+  not match the old Linux hint.
+- `BERKELEY_NAMES`: needed.  CMake owns the option, but it does not
+  imply `PASS_NAMES`.
+- `INSTALL_PREFIX`: handled.  It follows `CMAKE_INSTALL_PREFIX`.
+- `PREF_SHELL`: handled for Unix.  Windows-safe shell policy is owned by
+  later Windows helper work.
+- `ROOT_UID`: handled for POSIX policy.
+- `ACTIVE`: needed.  CMake owns the value, but the empty default bypasses
+  the `common.h` fallback.
+- `ACTIVE_TIMES`: needed.  CMake owns `ACTIVE_TIMES`, but
+  `config.h.in` expands `@ACT_TIMES@`.
+- `PIPE_HOST_CMD`: handled.  It remains an optional hostname fallback.
+- `HAS_TERMLIB`: handled.  It is now an explicit cache boolean while the
+  target links through curses.
+- `IGNORE_ORG`: handled.  It still drives posting organization fallback.
+- `SERVER_NAME`: handled.  It replaces the old NNTP server prompt.
+- `HAS_LOCAL_SPOOL`: handled.  Coupled local/NNTP defaults still need
+  review with the news-source mode work below.
+- `MIMECAP`: handled.
+- `NEWS_LIB`: needed.  CMake owns the value, but the empty Unix default
+  bypasses the `common.h` fallback.
+- `EXTRA_INEWS`: handled.  It is still consumed by local posting.
+- `GROUP_DESC`: needed.  CMake owns the value, but the empty default
+  bypasses the `common.h` fallback.
+- `SUBSCRIPTIONS`: needed.  CMake owns the value, but the empty default
+  bypasses the intended source fallback.
+- `NEWS_SPOOL`: handled as the default local spool path.
+- `ORG_NAME`: handled.
+- `POSTING_HOSTNAME`: handled.
+- `HOST_BITS`: needed.  Current CMake exposes a boolean, while source
+  still treats the value as a host-part count.
+- `TRN_MARK_XREFS_UNREAD`: handled.  It is the CMake-facing owner for
+  generated `MCHASE`.
+- `PRIVATE_LIB`: handled.
+- `OVERVIEW_DIR`: needed.  CMake owns the value, but the empty default
+  bypasses source fallback behavior.
+- `OVERVIEW_FMT`: needed.  CMake owns the value, but the empty default
+  bypasses source fallback behavior.
+- `THREAD_INIT`: handled.
+- `SELECT_INIT`: handled.
+- `USE_INEWS`: needed.  CMake emits `CALL_INEWS`, but posting helper
+  generation and install layout are not complete.
+- `BIN_DIR`: needed.  CMake emits poster defaults through it, but
+  generated helpers and install layout are not complete.
+- `PAGER`: handled for generated help and runtime defaults.
+- `REPLYTO_POSTER_CHECKING`: handled.
+- `NAME_TYPE`: needed.  It feeds generated `Pnews`, whose template is not
+  fully migrated.
+- `LOCAL_DIST`, `ORGANIZATION_DIST`, `CITY_DIST`, `STATE_DIST`,
+  `MULTISTATE_DIST`, `COUNTRY_DIST`, and `CONTINENT_DIST`: needed.
+  They feed generated `Pnews`, whose template is not fully migrated.
+- `DEBUG`: handled.
+- `SHELL_START`, `DIFF_PROGRAM`, `ED_PROGRAM`, `ISPELL_PROGRAM`,
+  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: needed.  CMake owns them for
+  generated helper files, but the helper templates still contain
+  metaconfig residue.
+
+### Source Symbols Without CMake Owners
+
+These symbols are consumed outside `config/include/config`, but no CMake
+cache variable or generated `config.h.in` owner exists for them.  Slice 5
+must either add a retained owner or explicitly retire each one.
+
+- Platform and signal probes: `HAS_RDCHK`, `HAS_SIGBLOCK`,
+  `HAS_SIGHOLD`, `UNION_WAIT`, `USE_WIFSTAT`, and `I_SGTTY`.
+- Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
+  `VALIDATE_XREF_SITE`, `USE_FTP`, and `MKDIRS`.
+- Account and name defaults: `PASSWORD_FILE`, `LOGIN_DIR_FIELD`, and
+  `FULLNAMEFILE`.
+- User-state files: `TRNDIR`, `TRNMACRO`, `RNMACRO`, `RCNAME`,
+  `LOCKNAME`, `LASTNAME`, `SIGNATURE_FILE`, and `NNTP_AUTH_FILE`.
+- Data and access files: `DEFACCESS`, `TRNACCESS`, and `NEWSNEWSNAME`.
+- Article storage and overview names: `OV_FILE_NAME`, `VARYNAME`,
+  `HEADNAME`, `SAVEDIR`, and `SAVENAME`.
+- Selection and newsrc policy: `UNSUBSCRIBED_CHAR` and
+  `SELECTION_CHARS`.
+- Shell and command defaults: `SH`, `PIPE_SAVER`, `SHAR_SAVER`,
+  `CUSTOM_SAVER`, `VERIFY_RIPEM`, and `VERIFY_PGP`.
+- Posting, mail, and forwarding text: `MAIL_HEADER`, `NEWS_HEADER`,
+  `CANCEL_HEADER`, `SUPERSEDE_HEADER`, `YOU_SAID`, `ATTRIBUTION`,
+  `FORWARD_POSTER`, `FORWARD_HEADER`, `FORWARD_MSG`, and
+  `FORWARD_MSG_END`.
+- Kill-file defaults: `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`.
+- Formatting defaults: `LOCALTIME_FMT`.
+
+### Retired Configure Areas
+
+These legacy Configure variables are intentionally not CMake cache
+options unless a live source consumer is found:
+
+- `handled`: compiler, linker, build type, library search, executable
+  suffix, and object suffix settings are CMake target or generator
+  policy.
+- `handled`: `bison`, `yacc`, and parser generation are CMake target
+  logic.
+- `handled`: file descriptor I/O, pipe I/O, environment, string compare,
+  hostname, domain, vfork, and include-file checks are CMake feature
+  checks.
+- `obsolete`: `nm` extraction, C library path prompts, bundled
+  `strftime`, old `ndir` emulation, and Tk linkage are not 5.0
+  configure options.
+- `removed`: `config.sh`, `Policy.sh`, `.SH` extraction, generated
+  Makefile policy, AFS install splitting, prototype generation, and
+  typedef regeneration are legacy build mechanics.
+- `removed`: old scan/score memory-saving toggles and pre-ANSI compiler
+  probes stay retired unless current source grows a concrete dependency.
+
 ## Real Gaps
 
 ### Active Times
