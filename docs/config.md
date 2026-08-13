@@ -31,8 +31,8 @@ need semantic fixes, listed here rather than hidden in prose:
 
 - `DEFAULT_EDITOR`: handled.  CMake finds the default editor and emits
   the configured value.
-- `MAIL_FILE`: needed.  CMake owns the value, but the empty default
-  bypasses the `common.h` fallback.
+- `MAIL_FILE`: handled.  CMake owns the historical mail-file default and
+  emits the configured value directly.
 - `MBOX_CHAR`: handled.  CMake validates that the value is one
   character.
 - `PASS_NAMES`: needed.  CMake owns the option, but current defaults do
@@ -263,7 +263,6 @@ unconditionally emitted to `config.h`.
 
 Notable cases:
 
-- `MAIL_FILE`
 - `NEWS_LIB`
 - `ACTIVE`
 - `GROUP_DESC`

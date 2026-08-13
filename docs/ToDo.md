@@ -7,6 +7,8 @@
 * Eliminate the push/pop macro garbage in the universal selector
 * Inline Macro FILE_REF
 * Eliminate all MSDOS conditional branches
+* Review default setting of MAIL_FILE and entire "checking mail" mechanism
+  on Windows
 
 ## AddGroup
 

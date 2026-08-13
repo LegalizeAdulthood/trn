@@ -42,3 +42,13 @@ TEST(GeneratedConfigTest, activeTimesConfiguredPathIsEmitted)
 {
     expect_file_contains(TRN_TEST_ACTIVE_TIMES_CONFIGURED_CONFIG, "#define ACTIVE_TIMES \"%x/active.times\"");
 }
+
+TEST(GeneratedConfigTest, mailFileDefaultMatchesHistoricalFallback)
+{
+    expect_file_contains(TRN_TEST_MAIL_FILE_DEFAULT_CONFIG, "#define MAIL_FILE \"/usr/spool/mail/%L\"");
+}
+
+TEST(GeneratedConfigTest, mailFileConfiguredPathIsEmitted)
+{
+    expect_file_contains(TRN_TEST_MAIL_FILE_CONFIGURED_CONFIG, "#define MAIL_FILE \"%./mailbox\"");
+}

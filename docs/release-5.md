@@ -236,34 +236,8 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.2 through 4.31 refine #19 into one variable or setting family
+Slices 4.3 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
-
-### 4.2. Mail File Default
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `MAIL_FILE`
-
-Tasks:
-
-- Default `MAIL_FILE` in CMake to the retained historical mail-file
-  path.
-- Emit `MAIL_FILE` directly from `config.h.in` and remove its
-  `common.h` fallback.
-- Add generated-config coverage for configured and default mail files.
-
-Acceptance:
-
-- `MAIL_FILE` can be customized from CMake.
-- Default generated `MAIL_FILE` matches the old `common.h` fallback.
-- No retained `MAIL_FILE` fallback remains in `common.h`.
-- Generated-config unit tests cover configured and default `MAIL_FILE`
-  values.
 
 ### 4.3. News Library Default
 
@@ -1068,7 +1042,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.2 through 4.31.
+Depends on: 4.3 through 4.31.
 
 Files likely touched:
 
@@ -2202,7 +2176,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.2 through 4.31, 5, and 6.
+- #19: 4.3 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

@@ -606,11 +606,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define LOCALTIME_FMT "%a %b %d %X %Z %Y"
 #endif
 
-// where to find the mail file
-#ifndef MAIL_FILE
-#   define MAIL_FILE "/usr/spool/mail/%L"
-#endif
-
 #ifndef HAS_VFORK
 #   define vfork fork
 #endif
