@@ -236,42 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.20 through 4.31 refine #19 into one variable or setting family
+Slices 4.21 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.20. Shell Command Defaults
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `SH`
-- `PIPE_SAVER`
-- `SHAR_SAVER`
-- `CUSTOM_SAVER`
-
-Tasks:
-
-- Add CMake cache variables for retained shell command defaults using
-  the current `common.h` defaults.
-- Decide platform-safe defaults for Windows and Unix.
-- Emit retained shell command defaults directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config coverage for configured and default commands.
-
-Acceptance:
-
-- Shell command defaults are CMake-owned or unsupported by documented
-  platform policy.
-- Windows defaults do not point at Unix-only shell commands.
-- No retained shell command default relies on a `common.h` fallback.
-- Unit tests cover configured shell command defaults and platform
-  fallbacks.
 
 ### 4.21. Verification Commands
 
@@ -598,7 +567,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.20 through 4.31.
+Depends on: 4.21 through 4.31.
 
 Files likely touched:
 
@@ -1727,7 +1696,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.20 through 4.31, 5, and 6.
+- #19: 4.21 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

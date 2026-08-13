@@ -325,6 +325,22 @@ TEST(GeneratedConfigTest, selectionPolicyConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "SELECTION_CHARS", "xyz789");
 }
 
+TEST(GeneratedConfigTest, shellCommandDefaultsMatchPlatformFallbacks)
+{
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "SH", TRN_TEST_DEFAULT_SH);
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "PIPE_SAVER", TRN_TEST_DEFAULT_PIPE_SAVER);
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "SHAR_SAVER", TRN_TEST_DEFAULT_SHAR_SAVER);
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "CUSTOM_SAVER", TRN_TEST_DEFAULT_CUSTOM_SAVER);
+}
+
+TEST(GeneratedConfigTest, shellCommandConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "SH", "/test/sh");
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "PIPE_SAVER", "test-pipe %A %b");
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "SHAR_SAVER", "test-shar %A");
+    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "CUSTOM_SAVER", "test-custom %A %e");
+}
+
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
 {
     const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";

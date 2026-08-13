@@ -64,6 +64,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `INSTALL_PREFIX`: handled.  It follows `CMAKE_INSTALL_PREFIX`.
 - `PREF_SHELL`: handled for Unix.  Windows-safe shell policy is owned by
   later Windows helper work.
+- `SH`: handled.  CMake owns the shell used for command execution and
+  emits the configured value directly.
 - `ROOT_UID`: handled for POSIX policy.
 - `ACTIVE`: handled.  CMake owns the historical active-file default and
   emits the configured value directly.
@@ -116,6 +118,13 @@ need semantic fixes, listed here rather than hidden in prose:
   and emits the configured value directly.
 - `SAVENAME`: handled.  CMake owns the historical save-file defaults and
   emits the configured value directly.
+- `PIPE_SAVER`: handled.  CMake owns the historical Unix command and a
+  Windows-safe command default, and emits the configured value directly.
+- `SHAR_SAVER`: handled.  CMake owns the historical Unix command and an
+  unsupported Windows command default, and emits the configured value
+  directly.
+- `CUSTOM_SAVER`: handled.  CMake owns the historical Unix command and a
+  Windows-safe command default, and emits the configured value directly.
 - `OVERVIEW_DIR`: needed.  CMake owns the value, but the empty default
   bypasses source fallback behavior.
 - `OVERVIEW_FMT`: needed.  CMake owns the value, but the empty default
@@ -149,8 +158,7 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, and `USE_FTP`.
-- Shell and command defaults: `SH`, `PIPE_SAVER`, `SHAR_SAVER`,
-  `CUSTOM_SAVER`, `VERIFY_RIPEM`, and `VERIFY_PGP`.
+- Shell and command defaults: `VERIFY_RIPEM` and `VERIFY_PGP`.
 - Posting, mail, and forwarding text: `MAIL_HEADER`, `NEWS_HEADER`,
   `CANCEL_HEADER`, `SUPERSEDE_HEADER`, `YOU_SAID`, `ATTRIBUTION`,
   `FORWARD_POSTER`, `FORWARD_HEADER`, `FORWARD_MSG`, and

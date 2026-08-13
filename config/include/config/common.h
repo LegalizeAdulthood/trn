@@ -268,11 +268,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define PREF_SHELL "/bin/csh"
 #endif
 
-// path to fastest starting shell
-#ifndef SH
-#   define SH "/bin/sh"
-#endif
-
 // path to default editor
 #ifndef DEFAULT_EDITOR
 #   define DEFAULT_EDITOR "/usr/ucb/vi"
@@ -357,18 +352,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 
 #ifndef ATTRIBUTION     // %
 #   define ATTRIBUTION "In article %i,%?%)f <%>f> wrote:"
-#endif
-
-#ifndef PIPE_SAVER       // %
-#   define PIPE_SAVER "%(%B=^0$?<%A:tail +%Bc %A |) %b"
-#endif
-
-#ifndef SHAR_SAVER
-#   define SHAR_SAVER "tail +%Bc %A | /bin/sh"
-#endif
-
-#ifndef CUSTOM_SAVER
-#   define CUSTOM_SAVER "tail +%Bc %A | %e"
 #endif
 
 #ifndef VERIFY_RIPEM

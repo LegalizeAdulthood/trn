@@ -224,6 +224,11 @@
  */
 #define PREF_SHELL "@PREF_SHELL@"
 
+// SH:
+//      path to fastest starting shell
+//
+#define SH "@SH@"
+
 /* ROOT_UID:
  *      This symbol contains the uid of root, normally 0.
  */
@@ -417,6 +422,24 @@
 //      a directory name.
 //
 #define SAVENAME "@SAVENAME@"
+
+// PIPE_SAVER:
+//      The shell command to execute for a save to a pipe ("s | command"
+//      or "w | command").  The command typed by the user is substituted
+//      in as %b.
+//
+#define PIPE_SAVER "@PIPE_SAVER@"
+
+// SHAR_SAVER:
+//      The shell command to execute to extract a shell archive.
+//
+#define SHAR_SAVER "@SHAR_SAVER@"
+
+// CUSTOM_SAVER:
+//      The shell command to execute to extract data with a user-specified
+//      command.
+//
+#define CUSTOM_SAVER "@CUSTOM_SAVER@"
 
 /* OVERVIEW_DIR:
  *      This symbol indicates where the overview files go.

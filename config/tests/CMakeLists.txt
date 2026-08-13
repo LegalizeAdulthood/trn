@@ -376,6 +376,26 @@ configure_file(
     @ONLY
 )
 
+set(SH "${DEFAULT_SH}")
+set(PIPE_SAVER "${DEFAULT_PIPE_SAVER}")
+set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")
+set(CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    shell_command_defaults_default.h
+    @ONLY
+)
+
+set(SH "/test/sh")
+set(PIPE_SAVER "test-pipe %A %b")
+set(SHAR_SAVER "test-shar %A")
+set(CUSTOM_SAVER "test-custom %A %e")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    shell_command_defaults_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -407,5 +427,9 @@ set(SAVEDIR "${DEFAULT_SAVEDIR}")
 set(SAVENAME "${DEFAULT_SAVENAME}")
 set(UNSUBSCRIBED_CHAR "${DEFAULT_UNSUBSCRIBED_CHAR}")
 set(SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}")
+set(SH "${DEFAULT_SH}")
+set(PIPE_SAVER "${DEFAULT_PIPE_SAVER}")
+set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")
+set(CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)
