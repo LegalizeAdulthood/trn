@@ -78,8 +78,7 @@ Markdown files are excluded from this audit.
 Non-markdown documentation sources audited:
 
 - top-level text: `INIT.txt`, `HACKERSGUIDE.txt`, and `default_topic`;
-- man pages: `man/trn.1`, `man/strn.1`, `man/Pnews.1`, and
-  `man/Rnmail.1`;
+- man pages: `man/trn.1`, `man/Pnews.1`, and `man/Rnmail.1`;
 - online help files under `HelpFiles`;
 - generated data and help text: `config/data/access_def.in`,
   `config/data/environment.in`, and `config/data/newsnews.in`;
@@ -88,16 +87,9 @@ Non-markdown documentation sources audited:
 
 Documentation gaps and owning work items:
 
-- `default_topic` still describes the trn 4.0 `Configure` workflow,
-  `MANIFEST`, `make install.full`, `make install.strn`, and old
-  `mthreads` distribution details.  Item 7 reconciles or retires those
-  paths.
 - CMake installs `trn`, helper commands, generated helper/data files,
   `HelpFiles`, and supported man pages.  Top-level release text files
   still need a package decision in item 20.
-- `man/strn.1` documents version 4.0 and an entry point that CMake does
-  not currently build or install.  Items 8 and 20 decide whether it
-  ships, becomes a compatibility alias, or is retired.
 - `man/Pnews.1` and `man/Rnmail.1` describe shell helpers before the
   CMake helper migration.  `Pnews` has current `User-Agent` and
   transfer-encoding behavior not reflected there.  Items 15, 16, and 19
@@ -253,36 +245,6 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
-
-### 7. Install Option Documentation
-
-Issues: #18.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: #19 complete, and 10.
-
-Files likely touched:
-
-- `INSTALL.md`
-- non-markdown install and help references from the documentation audit
-
-Tasks:
-
-- Document the supported CMake cache variables from #19.
-- Document generated helper files from #31.
-- Document release-supported package and install layouts.
-- Document which top-level text, man pages, and online help files are
-  shipped, retired, or historical.
-- Add known limits for deferred non-milestone work.
-
-Acceptance:
-
-- `INSTALL.md` describes the CMake options needed to customize trn.
-- #18 can close after the quickstart and option reference are reviewed.
-- The documentation names the unit or CTest coverage for each documented
-  option, or explicitly marks the option as untested.
-- Commit description includes `fixes #18`.
 
 ### 11. Local Group Desc Crash Repro
 
@@ -1271,9 +1233,9 @@ Mandatory open GitHub 5.0 milestone issues:
 - #14: 18 and 20.
 - #16: 15 and 16.
 - #17: 31 through 33.
-- #18: 3 and 7.
+- #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must
-  include `fixes #19` before slice 7 is unblocked.
+  include `fixes #19`.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.

@@ -6,8 +6,8 @@
 #
 # 2.  Move this file ("default_topic") to the trn library directory
 #     (the same directory which contains the INIT and newsnews files).
-#     This will be done by "make install.full" or "make install.strn"
-#     if the library directory does not have a default_topic file.
+#     CMake does not install this file automatically; copy it after
+#     installation if your site wants a default topic file.
 #
 ## Users can override the default hierarchy by setting SCANGROUPS
 ## to point elsewhere, or by creating a ~/News/scangroups/top file.
