@@ -65,7 +65,7 @@ protected:
 
     std::string run_compress_name()
     {
-        return compress_name(m_before, static_cast<int>(m_expected.size()) + 1);
+        return compress_name(m_before, static_cast<int>(m_expected.size()));
     }
 
     std::string_view m_before;
@@ -153,7 +153,7 @@ TEST_F(CompressNameTest, dropMiddleName)
     EXPECT_EQ(m_expected, result);
 }
 
-TEST_F(CompressNameTest, DISABLED_firstMiddleInitials)
+TEST_F(CompressNameTest, firstAndMiddleInitialsFitDisplayWidth)
 {
     configure_before_expected("Ross Douglas Ridge", "R D Ridge");
 
@@ -171,7 +171,7 @@ TEST_F(CompressNameTest, firstInitial)
     EXPECT_EQ(m_expected, result);
 }
 
-TEST_F(CompressNameTest, DISABLED_truncated)
+TEST_F(CompressNameTest, truncatesLastNameToDisplayWidth)
 {
     configure_before_expected("Ross Douglas Ridge", "R Ridg");
 
@@ -180,7 +180,7 @@ TEST_F(CompressNameTest, DISABLED_truncated)
     EXPECT_EQ(m_expected, result);
 }
 
-TEST_F(CompressNameTest, DISABLED_firstInitialDropped)
+TEST_F(CompressNameTest, dropsFirstInitialWhenMiddleNameFitsDisplayWidth)
 {
     configure_before_expected("R. Douglas Ridge", "Douglas Ridge");
 
@@ -198,7 +198,7 @@ TEST_F(CompressNameTest, ddsDropped)
     EXPECT_EQ(m_expected, result);
 }
 
-TEST_F(CompressNameTest, DISABLED_quotedMiddleDropsQuotes)
+TEST_F(CompressNameTest, dropsMiddleQuotesToFitDisplayWidth)
 {
     configure_before_expected(R"(Ross "Douglas" Ridge)", "Ross Douglas Ridge");
 

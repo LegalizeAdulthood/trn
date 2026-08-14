@@ -246,30 +246,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 13. Compress Name Contract
-
-Issues: #38.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `tests/test_rt-util.cpp`
-- source file containing `compress_name`
-
-Tasks:
-
-- Re-enable the four disabled `CompressNameTest` cases.
-- Confirm whether `max` means display width instead of buffer size.
-- Fix implementation or tests so the contract is explicit.
-
-Acceptance:
-
-- No `DISABLED_` tests remain for #38.
-- The test names describe the expected display-width behavior.
-- Focused unit tests cover each retained `compress_name` contract case.
-- Commit description includes `fixes #38`.
-
 ### 14. Threaded Save Crash Triage
 
 Issues: #10.

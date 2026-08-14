@@ -380,19 +380,22 @@ static std::string compress_name_text(std::string_view name, int max)
     if (!middle.empty())
     {
         const bool middle_is_quoted = middle.size() >= 2 && middle.front() == '"' && middle.back() == '"';
-        if (visible_fits(join_name_parts(middle, {}, last), max) &&
-            ((is_initial(first) && !is_initial(middle)) || middle_is_quoted))
-        {
-            first = middle_is_quoted ? middle.substr(1, middle.size() - 2) : middle;
-            middle.clear();
-        }
-        else if (middle_is_quoted)
+        if (middle_is_quoted)
         {
             const std::string quoted{middle.substr(1, middle.size() - 2)};
+            const std::string unquoted = join_name_parts(first, quoted, last);
+            if (visible_fits(unquoted, max))
+            {
+                return unquoted;
+            }
             if (!visible_fits(quoted, max))
             {
                 return compress_name_text(quoted, max);
             }
+        }
+        else if (is_initial(first) && !is_initial(middle) && visible_fits(join_name_parts(middle, {}, last), max))
+        {
+            return join_name_parts(middle, {}, last);
         }
     }
 
@@ -425,6 +428,14 @@ static std::string compress_name_text(std::string_view name, int max)
 
     if (!first.empty())
     {
+        if (!middle.empty())
+        {
+            const std::string candidate = join_name_parts(first_character(first), middle, last);
+            if (visible_fits(candidate, max))
+            {
+                return candidate;
+            }
+        }
         const std::string candidate = join_name_parts(first_character(first), {}, last);
         if (visible_fits(candidate, max))
         {
