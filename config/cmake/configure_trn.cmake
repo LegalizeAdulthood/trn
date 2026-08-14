@@ -408,6 +408,39 @@ function(configure_trn)
     set(USE_INEWS "%x/inews" CACHE STRING "Full path to the inews to use for posting.")
     # TODO: How to properly configure BIN_DIR to work when developing and after installation?
     set(BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "Path of the bin directory where the package will be installed.")
+    set(DEFAULT_YOU_SAID "In article %i you write:")
+    set(DEFAULT_ATTRIBUTION "In article %i,%?%)f <%>f> wrote:")
+    set(DEFAULT_FORWARD_POSTER "${BIN_DIR}/Rnmail -h %h")
+    string(CONCAT DEFAULT_FORWARD_HEADER
+        [=[To: %\"\n]=]
+        [=[\n]=]
+        [=[To: \"\n]=]
+        [=[Subject: %(%i=^$?:%[subject] (fwd\\)\n]=]
+        [=[%(%{FROM}=^$?:From: %{FROM}\n)]=]
+        [=[%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)]=]
+        [=[X-Newsgroups: %n\n]=]
+        [=[In-Reply-To: %i)\n]=]
+        [=[%(%[references]=^$?:References: %[references]\n)]=]
+        [=[Organization: %o\n]=]
+        [=[Mime-Version: 1.0\n]=]
+        [=[Content-Type: multipart/mixed; boundary=\"=%$%^#=--\"\n]=]
+        [=[Cc: \n]=]
+        [=[Bcc: \n]=]
+        [=[\n]=])
+    set(DEFAULT_FORWARD_MSG "------- start of forwarded message -------")
+    set(DEFAULT_FORWARD_MSG_END "------- end of forwarded message -------")
+    set(DEFAULT_YOU_SAID "${DEFAULT_YOU_SAID}" PARENT_SCOPE)
+    set(DEFAULT_ATTRIBUTION "${DEFAULT_ATTRIBUTION}" PARENT_SCOPE)
+    set(DEFAULT_FORWARD_POSTER "${DEFAULT_FORWARD_POSTER}" PARENT_SCOPE)
+    set(DEFAULT_FORWARD_HEADER "${DEFAULT_FORWARD_HEADER}" PARENT_SCOPE)
+    set(DEFAULT_FORWARD_MSG "${DEFAULT_FORWARD_MSG}" PARENT_SCOPE)
+    set(DEFAULT_FORWARD_MSG_END "${DEFAULT_FORWARD_MSG_END}" PARENT_SCOPE)
+    set(YOU_SAID "${DEFAULT_YOU_SAID}" CACHE STRING "The reply-by-mail quoted-article introduction line.")
+    set(ATTRIBUTION "${DEFAULT_ATTRIBUTION}" CACHE STRING "The followup quoted-article attribution line.")
+    set(FORWARD_POSTER "${DEFAULT_FORWARD_POSTER}" CACHE STRING "The command used to edit and deliver forwarded articles.")
+    set(FORWARD_HEADER "${DEFAULT_FORWARD_HEADER}" CACHE STRING "The header template for forwarded articles.")
+    set(FORWARD_MSG "${DEFAULT_FORWARD_MSG}" CACHE STRING "The line marking the start of a forwarded article.")
+    set(FORWARD_MSG_END "${DEFAULT_FORWARD_MSG_END}" CACHE STRING "The line marking the end of a forwarded article.")
     set(PAGER "more" CACHE STRING "The name of the preferred pager on the system.")
     option(REPLYTO_POSTER_CHECKING "If ON, makes -p also check Reply-To (slow)" OFF)
     if(BERKELEY_NAMES)

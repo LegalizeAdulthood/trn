@@ -493,6 +493,53 @@
 #define NEWS_POSTER "@BIN_DIR@/Pnews -h %h"
 #define MAIL_POSTER "@BIN_DIR@/Rnmail -h %h"
 
+// YOU_SAID:
+//      Gives the format of the attribution line in front of the quoted
+//      article included by an R (reply-by-mail) command.
+//
+#define YOU_SAID "@YOU_SAID@"
+
+// ATTRIBUTION:
+//      Gives the format of the attribution line in front of the quoted
+//      article included by an F (followup) command.
+//
+#define ATTRIBUTION "@ATTRIBUTION@"
+
+// FORWARD_POSTER:
+//      The shell command to be used by the forward command (^F) in order
+//      to allow you to edit and deliver the file.  trn will not itself
+//      call upon an editor for replies -- this is a function of the
+//      program referenced by FORWARD_POSTER.  See also FORWARD_HEADER and
+//      MAIL_POSTER.
+//
+#define FORWARD_POSTER "@FORWARD_POSTER@"
+
+// FORWARD_HEADER:
+//      The format of the header file for forwarding messages.  If these
+//      headers contain a Content-Type header with a multipart/* type,
+//      Rnmail will attempt to forward the message MIME-encapsulated.
+//      This may fail if you are using a non-standard FORWARD_POSTER
+//      which does not pass on MIME headers properly.  See also
+//      FORWARD_POSTER.
+//
+#define FORWARD_HEADER "@FORWARD_HEADER@"
+
+// FORWARD_MSG:
+//      The line added to the message body when forwarding a message,
+//      signifying the beginning of the forwarded message.  This is only
+//      added if the message is not being forwarded as a MIME attachment
+//      (see FORWARD_HEADER).
+//
+#define FORWARD_MSG "@FORWARD_MSG@"
+
+// FORWARD_MSG_END:
+//      The line added to the message body when forwarding a message,
+//      signifying the end of the forwarded message.  This is only added
+//      if the message is not being forwarded as a MIME attachment (see
+//      FORWARD_HEADER).
+//
+#define FORWARD_MSG_END "@FORWARD_MSG_END@"
+
 /* MSDOS:
  *      This is defined if this is an MSDOS system.
  */

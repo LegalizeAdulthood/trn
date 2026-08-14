@@ -236,42 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.23 through 4.31 refine #19 into one variable or setting family
+Slices 4.24 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.23. Reply And Forward Templates
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `YOU_SAID`
-- `ATTRIBUTION`
-- `FORWARD_POSTER`
-- `FORWARD_HEADER`
-- `FORWARD_MSG`
-- `FORWARD_MSG_END`
-
-Tasks:
-
-- Move retained reply and forward defaults from `common.h` into CMake.
-- Align `FORWARD_POSTER` with the mail poster migration.
-- Emit retained reply and forward defaults directly from `config.h.in`
-  and remove their `common.h` fallbacks.
-- Add generated-config coverage for default template text.
-
-Acceptance:
-
-- Reply and forward templates are CMake-owned or intentionally
-  source-owned.
-- Forwarding defaults stay consistent with mail poster defaults.
-- No retained reply or forward default relies on a `common.h` fallback.
-- Unit tests cover generated reply and forward template defaults.
 
 ### 4.24. Kill File Defaults
 
@@ -510,7 +479,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.23 through 4.31.
+Depends on: 4.24 through 4.31.
 
 Files likely touched:
 
@@ -1639,7 +1608,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.23 through 4.31, 5, and 6.
+- #19: 4.24 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

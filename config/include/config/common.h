@@ -274,55 +274,17 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #endif
 
 // command to send a reply
-#ifndef MAIL_POSTER      // % and ~
-#   define MAIL_POSTER "Rnmail -h %h"
-#endif
-
-#ifndef YOU_SAID         // %
-#   define YOU_SAID "In article %i you write:"
-#endif
-
-// command to forward an article
-#define FORWARD_POSTER MAIL_POSTER
-
-#ifndef FORWARD_HEADER   // %
-#define FORWARD_HEADER                                                                                                  \
-    "To: %\"\n"                                                                                                        \
-    "\n"                                                                                                               \
-    "To: \"\n"                                                                                                         \
-    "Subject: %(%i=^$?:%[subject] (fwd\\)\n"                                                                           \
-    "%(%{FROM}=^$?:From: %{FROM}\n)"                                                                                   \
-    "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)"                                                                         \
-    "X-Newsgroups: %n\n"                                                                                               \
-    "In-Reply-To: %i)\n"                                                                                               \
-    "%(%[references]=^$?:References: %[references]\n)"                                                                 \
-    "Organization: %o\n"                                                                                               \
-    "Mime-Version: 1.0\n"                                                                                              \
-    "Content-Type: multipart/mixed; boundary=\"=%$%^#=--\"\n"                                                          \
-    "Cc: \n"                                                                                                           \
-    "Bcc: \n"                                                                                                          \
-    "\n"
-#endif
-
-#ifndef FORWARD_MSG      // %
-#   define FORWARD_MSG "------- start of forwarded message -------"
-#endif
-
-#ifndef FORWARD_MSG_END   // %
-#   define FORWARD_MSG_END "------- end of forwarded message -------"
+#ifndef MAIL_POSTER // % and ~
+#define MAIL_POSTER "Rnmail -h %h"
 #endif
 
 // command to submit a followup article
-#ifndef NEWS_POSTER      // % and ~
-#   define NEWS_POSTER "Pnews -h %h"
+#ifndef NEWS_POSTER // % and ~
+#define NEWS_POSTER "Pnews -h %h"
 #endif
 
-#ifndef ATTRIBUTION     // %
-#   define ATTRIBUTION "In article %i,%?%)f <%>f> wrote:"
-#endif
-
-#ifndef KILL_GLOBAL      // % and ~
-#   define KILL_GLOBAL "%p/KILL"
+#ifndef KILL_GLOBAL // % and ~
+#define KILL_GLOBAL "%p/KILL"
 #endif
 
 #ifndef KILL_LOCAL       // % and ~
