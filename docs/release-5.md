@@ -206,7 +206,6 @@ or stabilize P0 work.
 1. Keep the threaded-article save crash report deferred unless a
    deterministic article and command repro is supplied: #10.
 2. Replace remaining DOS-as-Windows platform decisions.
-3. Handle platform path lists correctly: #27.
 4. Complete Windows helper scripts when needed by Windows packaging: #29.
 5. Modernize core NNTP command selection when needed by #3.
 6. Add enough test automation to make #33 meaningful.
@@ -243,34 +242,6 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
-
-### 17. Platform Path Lists
-
-Issues: #27.
-
-Milestone status: not on the 5.0 milestone.
-
-Plan source: `msdos.md`.
-
-Files likely touched:
-
-- `libtrn/util.cpp`
-- `libtrn/rcstuff.cpp`
-- platform tests
-
-Tasks:
-
-- Add path-list helpers for Unix `:` and Windows `;` separators.
-- Apply the helpers to settings such as `MAILCAPS`.
-- Keep Windows drive letters from being parsed as list separators.
-
-Acceptance:
-
-- Windows paths with drive letters do not break path-list parsing.
-- The helper can be reused by Windows release work.
-- Unit tests cover Unix separators, Windows separators, and Windows drive
-  letters.
-- Commit description includes `fixes #27`.
 
 ### 18. Modern Windows Platform Policy
 
@@ -1097,7 +1068,6 @@ Non-milestone supporting or follow-up issues:
   reporter's spool state.
 - #15: 39 and 40.
 - #25: 38.
-- #27: 17.
 - #29: 19.
 - #30: 37.
 - #35: 41.

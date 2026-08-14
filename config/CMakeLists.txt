@@ -8,6 +8,7 @@ add_library(config
     common.cpp include/config/common.h
     include/config/config2.h
     include/config/msdos.h
+    include/config/path_list.h
     include/config/typedef.h
     include/config/user_id.h
     cmake/config.h.in
@@ -23,6 +24,7 @@ add_library(config
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/config.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/env.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/fdio.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/path_list.cpp"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/pipe_io.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config/string_case_compare.h" ${STRING_CASE_COMPARE_SOURCES}
 )

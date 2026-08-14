@@ -8,6 +8,7 @@
 
 #include <config/common.h>
 #include <config/env.h>
+#include <config/path_list.h>
 #include <config/string_case_compare.h>
 #include <trn/art.h>
 #include <trn/artio.h>
@@ -105,20 +106,9 @@ void mime_init()
     {
         mcname = get_env_var("MAILCAPS", MIMECAP);
     }
-    std::string_view mcname_list{mcname};
-    while (!mcname_list.empty())
+    for (std::string_view item : split_path_list(mcname))
     {
-        const std::size_t      next = mcname_list.find(':');
-        const std::string_view item = mcname_list.substr(0, next);
-        if (!item.empty())
-        {
-            mime_read_mimecap(item);
-        }
-        if (next == std::string_view::npos)
-        {
-            break;
-        }
-        mcname_list.remove_prefix(next + 1);
+        mime_read_mimecap(item);
     }
 }
 

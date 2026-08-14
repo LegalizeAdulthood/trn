@@ -6,6 +6,7 @@ add_executable(config-test
     test_env.cpp
     test_file_ref.cpp
     test_generated_config.cpp
+    test_path_list.cpp
     test_string_case_compare.cpp
 )
 target_link_libraries(config-test PUBLIC config GTest::gmock_main GTest::gtest)
@@ -484,6 +485,12 @@ set(MAIL_FILE "%./mailbox")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     mail_file_configured.h
+    @ONLY
+)
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    mimecap_default.h
     @ONLY
 )
 

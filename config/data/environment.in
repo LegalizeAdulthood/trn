@@ -327,9 +327,10 @@ The variables:
       Default: (Mail)
 
  MAILCAPS
-      A colon-separated search path for mailcap files.
+      A search path for mailcap files.  Use ':' as the separator on Unix
+      and ';' on Windows.
 
-      Default: %./.mimecap:~/.mailcap:@MIMECAP@
+      Default: @DEFAULT_MIMECAP@
 
  MAILFILE (~)
       Where to check for mail.

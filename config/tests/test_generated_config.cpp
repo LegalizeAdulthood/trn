@@ -218,6 +218,11 @@ TEST(GeneratedConfigTest, mailFileConfiguredPathIsEmitted)
     expect_file_contains(TRN_TEST_MAIL_FILE_CONFIGURED_CONFIG, "#define MAIL_FILE \"%./mailbox\"");
 }
 
+TEST(GeneratedConfigTest, mimecapDefaultMatchesPlatformPathList)
+{
+    expect_config_string(TRN_TEST_MIMECAP_DEFAULT_CONFIG, "MIMECAP", TRN_TEST_DEFAULT_MIMECAP);
+}
+
 TEST(GeneratedConfigTest, newsLibDefaultMatchesPlatformDefault)
 {
     const std::string expected = std::string{"#define NEWS_LIB \""} + TRN_TEST_DEFAULT_NEWS_LIB + "\"";
