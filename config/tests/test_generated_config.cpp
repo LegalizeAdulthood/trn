@@ -89,6 +89,12 @@ bool cmake_bool(std::string_view value)
     return value == "1" || value == "ON" || value == "TRUE";
 }
 
+void expect_name_parsing_policy(const char *filename, std::string_view name_type)
+{
+    expect_config_define(filename, "PASS_NAMES", name_type == "bsd" || name_type == "usg");
+    expect_config_define(filename, "BERKELEY_NAMES", name_type == "bsd");
+}
+
 } // namespace
 
 TEST(GeneratedConfigTest, inputAndSignalProbesMatchPlatformChecks)
@@ -198,27 +204,22 @@ TEST(GeneratedConfigTest, postingHostMatchSegmentsConfiguredCountIsEmitted)
 
 TEST(GeneratedConfigTest, nameParsingDefaultMatchesPlatformPolicy)
 {
-    expect_config_define(TRN_TEST_NAME_PARSING_DEFAULT_CONFIG, "PASS_NAMES", cmake_bool(TRN_TEST_DEFAULT_PASS_NAMES));
-    expect_config_define(TRN_TEST_NAME_PARSING_DEFAULT_CONFIG, "BERKELEY_NAMES",
-                         cmake_bool(TRN_TEST_DEFAULT_BERKELEY_NAMES));
+    expect_name_parsing_policy(TRN_TEST_NAME_PARSING_DEFAULT_CONFIG, TRN_TEST_DEFAULT_NAME_TYPE);
 }
 
 TEST(GeneratedConfigTest, nameParsingCanUseFullnameFile)
 {
-    expect_config_define(TRN_TEST_NAME_PARSING_FULLNAME_FILE_CONFIG, "PASS_NAMES", false);
-    expect_config_define(TRN_TEST_NAME_PARSING_FULLNAME_FILE_CONFIG, "BERKELEY_NAMES", false);
+    expect_name_parsing_policy(TRN_TEST_NAME_PARSING_FULLNAME_FILE_CONFIG, "other");
 }
 
 TEST(GeneratedConfigTest, nameParsingCanUseUsgPasswdFormat)
 {
-    expect_config_define(TRN_TEST_NAME_PARSING_USG_CONFIG, "PASS_NAMES", true);
-    expect_config_define(TRN_TEST_NAME_PARSING_USG_CONFIG, "BERKELEY_NAMES", false);
+    expect_name_parsing_policy(TRN_TEST_NAME_PARSING_USG_CONFIG, "usg");
 }
 
 TEST(GeneratedConfigTest, nameParsingCanUseBerkeleyPasswdFormat)
 {
-    expect_config_define(TRN_TEST_NAME_PARSING_BERKELEY_CONFIG, "PASS_NAMES", true);
-    expect_config_define(TRN_TEST_NAME_PARSING_BERKELEY_CONFIG, "BERKELEY_NAMES", true);
+    expect_name_parsing_policy(TRN_TEST_NAME_PARSING_BERKELEY_CONFIG, "bsd");
 }
 
 TEST(GeneratedConfigTest, accountNameFilesDefaultMatchesHistoricalFallback)

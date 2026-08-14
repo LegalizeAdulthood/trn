@@ -244,47 +244,6 @@ For migrated Configure Q&A, expose cache variables that represent the
 old user-facing answer or policy.  Translate that policy into non-cache
 implementation variables before generating configured files.
 
-### 5.1 Name Parsing Configure Dialog
-
-Issues: #19.
-
-Plan source: `config.md`, Name Parsing Defaults.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- `config/cmake/config.h.in`
-- generated-config tests
-- CMake validation tests
-
-Tasks:
-
-- Model the legacy two-question dialog as one user-facing cache policy:
-  `NAME_TYPE=bsd`, `NAME_TYPE=usg`, or `NAME_TYPE=other`.
-- Treat `NAME_TYPE=bsd` as the "Berkeley/V7 format for full name in
-  /etc/passwd?" yes answer.
-- Treat `NAME_TYPE=usg` as Berkeley/V7 no, then "USG format for full
-  name in /etc/passwd?" yes.
-- Treat `NAME_TYPE=other` as no to both legacy questions, meaning full
-  names come from the configured fullname file.
-- Translate `NAME_TYPE` into non-cache `PASS_NAMES` and
-  `BERKELEY_NAMES` variables before configuring `config.h`.
-- Remove `PASS_NAMES` and `BERKELEY_NAMES` as user-facing cache
-  variables.
-
-Acceptance:
-
-- `NAME_TYPE=bsd` emits both `PASS_NAMES` and `BERKELEY_NAMES` in the
-  generated config.
-- `NAME_TYPE=usg` emits `PASS_NAMES` but not `BERKELEY_NAMES` in the
-  generated config.
-- `NAME_TYPE=other` emits neither `PASS_NAMES` nor `BERKELEY_NAMES` in
-  the generated config.
-- CMake validation tests prove `PASS_NAMES` and `BERKELEY_NAMES` are
-  derived from `NAME_TYPE`, not held in the cache.
-
 ### 5.2 Name Parsing Dialog Defaults
 
 Issues: #19.
@@ -294,8 +253,6 @@ Plan source: `config.md`, Name Parsing Defaults.
 Milestone status: open mandatory 5.0 issue.
 
 Regression checks: #28.
-
-Depends on: 5.1.
 
 Files likely touched:
 
@@ -349,7 +306,7 @@ Issues: #18.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 5.1, 5.2, 6, and 10.
+Depends on: 5.2, 6, and 10.
 
 Files likely touched:
 

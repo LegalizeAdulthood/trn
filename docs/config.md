@@ -37,10 +37,10 @@ need semantic fixes, listed here rather than hidden in prose:
   character.
 - `UNSUBSCRIBED_CHAR`: handled.  CMake owns the newsrc unsubscribe marker
   default and validates that it is one character.
-- `PASS_NAMES`: needed.  CMake exposes this generated detail as a cache
-  option instead of deriving it from the name-parsing policy.
-- `BERKELEY_NAMES`: needed.  CMake exposes this generated detail as a
-  cache option instead of deriving it from the name-parsing policy.
+- `PASS_NAMES`: handled.  CMake derives this generated detail from the
+  `NAME_TYPE` policy before emitting `config.h`.
+- `BERKELEY_NAMES`: handled.  CMake derives this generated detail from
+  the `NAME_TYPE` policy before emitting `config.h`.
 - `PASSWORD_FILE`: handled.  CMake owns the historical password-file
   default and emits the configured value directly.
 - `LOGIN_DIR_FIELD`: handled.  CMake owns the historical login-directory
@@ -316,12 +316,11 @@ Berkeley/V7 format first.  If that answer was no, it asked whether
 `nametype=bsd`, `nametype=usg`, or `nametype=other`, then generated
 `PASS_NAMES`, `BERKELEY_NAMES`, and `d_usgnames` from that policy.
 
-Current CMake exposes `PASS_NAMES` and `BERKELEY_NAMES` as cache options
-alongside `NAME_TYPE`.  That makes generated details user-facing instead
-of deriving them from the selected name-parsing policy.
+Current CMake exposes `NAME_TYPE` as the cache policy and derives
+`PASS_NAMES` and `BERKELEY_NAMES` for the generated config.
 
-Result: `%N` and posting-name defaults can differ from the legacy
-configuration dialog.
+Result: remaining work is aligning the default `NAME_TYPE` selection
+with the legacy configuration dialog.
 
 ## Changed Semantics
 

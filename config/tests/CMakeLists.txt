@@ -73,6 +73,7 @@ set_tests_properties(
 
 set(pnews_distribution_validation_script
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_pnews_distribution_validation.cmake")
+set(name_parsing_policy_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_name_parsing_policy.cmake")
 add_test(NAME ConfigCMakeTest.nameTypeAcceptsBsd
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
@@ -94,6 +95,27 @@ add_test(NAME ConfigCMakeTest.nameTypeRejectsUnknown
         "-DTRN_TEST_NAME_TYPE=unknown"
         "-DTRN_TEST_EXPECT_FAILURE=ON"
         -P "${pnews_distribution_validation_script}")
+add_test(NAME ConfigCMakeTest.nameTypeBsdDerivesPassNames
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=bsd"
+        "-DTRN_TEST_EXPECT_PASS_NAMES=ON"
+        "-DTRN_TEST_EXPECT_BERKELEY_NAMES=ON"
+        -P "${name_parsing_policy_script}")
+add_test(NAME ConfigCMakeTest.nameTypeUsgDerivesPassNames
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=usg"
+        "-DTRN_TEST_EXPECT_PASS_NAMES=ON"
+        "-DTRN_TEST_EXPECT_BERKELEY_NAMES=OFF"
+        -P "${name_parsing_policy_script}")
+add_test(NAME ConfigCMakeTest.nameTypeOtherDerivesFullnameFile
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=other"
+        "-DTRN_TEST_EXPECT_PASS_NAMES=OFF"
+        "-DTRN_TEST_EXPECT_BERKELEY_NAMES=OFF"
+        -P "${name_parsing_policy_script}")
 add_test(NAME ConfigCMakeTest.pnewsDistributionCodeAcceptsNone
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
@@ -112,6 +134,9 @@ set_tests_properties(
     ConfigCMakeTest.nameTypeAcceptsUsg
     ConfigCMakeTest.nameTypeAcceptsOther
     ConfigCMakeTest.nameTypeRejectsUnknown
+    ConfigCMakeTest.nameTypeBsdDerivesPassNames
+    ConfigCMakeTest.nameTypeUsgDerivesPassNames
+    ConfigCMakeTest.nameTypeOtherDerivesFullnameFile
     ConfigCMakeTest.pnewsDistributionCodeAcceptsNone
     ConfigCMakeTest.pnewsDistributionCodeRejectsEmpty
     PROPERTIES LABELS trn)
@@ -339,8 +364,8 @@ configure_file(
     @ONLY
 )
 
-set(PASS_NAMES "${DEFAULT_PASS_NAMES}")
-set(BERKELEY_NAMES "${DEFAULT_BERKELEY_NAMES}")
+set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
+configure_name_parsing_policy("${NAME_TYPE}")
 set(PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}")
 set(LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}")
 set(FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}")
@@ -350,24 +375,24 @@ configure_file(
     @ONLY
 )
 
-set(PASS_NAMES OFF)
-set(BERKELEY_NAMES OFF)
+set(NAME_TYPE "other")
+configure_name_parsing_policy("${NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     name_parsing_fullname_file.h
     @ONLY
 )
 
-set(PASS_NAMES ON)
-set(BERKELEY_NAMES OFF)
+set(NAME_TYPE "usg")
+configure_name_parsing_policy("${NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     name_parsing_usg.h
     @ONLY
 )
 
-set(PASS_NAMES ON)
-set(BERKELEY_NAMES ON)
+set(NAME_TYPE "bsd")
+configure_name_parsing_policy("${NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     name_parsing_berkeley.h
@@ -693,8 +718,8 @@ configure_file(
     @ONLY
 )
 
-set(PASS_NAMES "${DEFAULT_PASS_NAMES}")
-set(BERKELEY_NAMES "${DEFAULT_BERKELEY_NAMES}")
+set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
+configure_name_parsing_policy("${NAME_TYPE}")
 set(PASSWORD_FILE "${DEFAULT_PASSWORD_FILE}")
 set(LOGIN_DIR_FIELD "${DEFAULT_LOGIN_DIR_FIELD}")
 set(FULLNAMEFILE "${DEFAULT_FULLNAMEFILE}")
