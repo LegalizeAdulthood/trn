@@ -246,58 +246,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 11. Local Group Desc Crash Repro
-
-Issues: #24.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `tests/test_datasrc.cpp`
-- access-file fixtures
-- source files found by the repro
-
-Tasks:
-
-- Add a local spool fixture without `Group Desc`.
-- Reproduce the 4.0-test77 crash path in the current typed INI flow.
-- Capture expected behavior when `Group Desc = none` is omitted.
-
-Acceptance:
-
-- The #24 access-file shape has a focused regression test.
-- The test fails or exposes a clear missing-path diagnostic before fix.
-- The repro is a unit test in the data-source test suite.
-
-### 12. Local Group Desc Crash Fix
-
-Issues: #24.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: 11.
-
-Files likely touched:
-
-- `libtrn/DataSourceConfig.*`
-- `libtrn/datasrc.cpp`
-- access-file tests
-
-Tasks:
-
-- Fix missing group-description handling for local spool sources.
-- Preserve explicit `Group Desc = none` behavior.
-- Make the default safe when no group-description source exists.
-
-Acceptance:
-
-- The #24 repro no longer crashes.
-- Local spool sources work with and without `Group Desc = none`.
-- Unit tests cover omitted, explicit `none`, and configured group
-  description cases.
-- Commit description includes `fixes #24`.
-
 ### 13. Compress Name Contract
 
 Issues: #38.

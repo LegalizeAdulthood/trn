@@ -658,6 +658,33 @@ TEST_F(DataSourceInitTest, usesLocalNewsSourceModeFromAccessFile)
     EXPECT_EQ(spool_path.generic_string(), source->m_spool_dir);
 }
 
+TEST_F(DataSourceInitTest, missingLocalGroupDescriptionClearsFallbackPath)
+{
+    const fs::path active_path = m_output_dir / "active";
+    const fs::path group_desc_path = m_output_dir / "newsgroups";
+    const fs::path spool_path = m_output_dir / "local-spool";
+    fs::create_directories(spool_path);
+    std::ofstream{active_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+    std::ofstream{m_output_dir / "access"} << "[test-local]\n"
+                                           << "Active File = " << active_path.generic_string() << "\n"
+                                           << "Spool Dir = " << spool_path.generic_string() << "\n";
+    ASSERT_FALSE(fs::exists(group_desc_path));
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    DataSource *source = get_data_source("test-local");
+    ASSERT_NE(nullptr, source);
+    EXPECT_FALSE(source->m_flags & DF_REMOTE);
+    EXPECT_EQ(group_desc_path.generic_string(), source->m_group_desc);
+
+    EXPECT_TRUE(source->find_group_desc("comp.lang.apl").empty());
+
+    EXPECT_TRUE(source->m_group_desc.empty());
+    EXPECT_FALSE(source->m_flags & DF_TMP_GROUP_DESC);
+}
+
 TEST_F(DataSourceInitTest, usesBothNewsSourceModeFromAccessFile)
 {
     const fs::path spool_path = m_output_dir / "local-spool";
