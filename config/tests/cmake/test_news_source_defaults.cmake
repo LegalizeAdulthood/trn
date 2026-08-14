@@ -9,6 +9,24 @@ function(expect_equal name actual expected)
     endif()
 endfunction()
 
+if("${TRN_TEST_SCENARIO}" STREQUAL "empty-default-fallback")
+    set(SERVER_NAME "news.example.org")
+    set(HAS_LOCAL_SPOOL OFF)
+    configure_news_source_defaults()
+    expect_equal("DEFAULT_SUBSCRIPTIONS" "${DEFAULT_SUBSCRIPTIONS}" "")
+
+    set(SUBSCRIPTIONS "%x/subscriptions" CACHE FILEPATH "Test subscriptions default." FORCE)
+    set_config_cache_default(SUBSCRIPTIONS "${DEFAULT_SUBSCRIPTIONS}" FILEPATH
+        "Test subscriptions default." "%x/subscriptions")
+    expect_equal("SUBSCRIPTIONS" "${SUBSCRIPTIONS}" "")
+
+    set(SUBSCRIPTIONS "/test/subscriptions" CACHE FILEPATH "Test subscriptions override." FORCE)
+    set_config_cache_default(SUBSCRIPTIONS "${DEFAULT_SUBSCRIPTIONS}" FILEPATH
+        "Test subscriptions default." "%x/subscriptions")
+    expect_equal("SUBSCRIPTIONS" "${SUBSCRIPTIONS}" "/test/subscriptions")
+    return()
+endif()
+
 if(TRN_TEST_EXPECT_FAILURE)
     execute_process(
         COMMAND "${CMAKE_COMMAND}"

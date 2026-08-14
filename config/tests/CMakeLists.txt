@@ -329,6 +329,11 @@ add_test(NAME ConfigCMakeTest.newsSourceDefaultsUseNntpMode
         "-DTRN_TEST_EXPECT_OVERVIEW_DIR=remote"
         "-DTRN_TEST_EXPECT_OVERVIEW_FMT=none"
         -P "${news_source_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.newsSourceEmptyDefaultReplacesLegacyPath
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_SCENARIO=empty-default-fallback"
+        -P "${news_source_defaults_test_script}")
 add_test(NAME ConfigCMakeTest.newsSourceDefaultsUseLocalMode
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
@@ -366,6 +371,7 @@ set_tests_properties(
     ConfigCMakeTest.newsSourceProbeDetectsBoth
     ConfigCMakeTest.newsSourceProbeUsesReleaseDefaultWithoutSources
     ConfigCMakeTest.newsSourceDefaultsUseNntpMode
+    ConfigCMakeTest.newsSourceEmptyDefaultReplacesLegacyPath
     ConfigCMakeTest.newsSourceDefaultsUseLocalMode
     ConfigCMakeTest.newsSourceDefaultsUseBothMode
     ConfigCMakeTest.newsSourceDefaultsRejectLocalWithoutSpool

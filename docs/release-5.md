@@ -251,27 +251,6 @@ Use `config/legacy/Configure` to understand historical defaults, special
 values, and compatibility expectations.  Do not copy its Q&A structure
 when CMake can determine the result directly.
 
-### 6. Configure Default Fallbacks
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- config tests
-
-Tasks:
-
-- Preserve fallback behavior for empty path and file defaults.
-
-Acceptance:
-
-- Empty defaults do not bypass intended source fallbacks.
-- Unit tests cover empty-default fallback behavior for each retained
-  default that has a source fallback.
-
 ### 7. Install Option Documentation
 
 Issues: #18.
