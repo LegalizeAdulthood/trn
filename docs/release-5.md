@@ -255,35 +255,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 8. Generated Helper Inventory
-
-Issues: #31.
-
-Milestone status: open mandatory 5.0 issue.
-
-Plan source: `config.md`.
-
-Files likely touched:
-
-- `config/legacy`
-- `config/data`
-- `config/data/CMakeLists.txt`
-
-Tasks:
-
-- List remaining `config/legacy/*.SH` runtime outputs.
-- Decide which helpers are installed, generated, or retired.
-- Identify helper substitutions still using metaconfig residue.
-- Sync generated data documentation with current schemas and defaults:
-  `access_def`, `environment`, and `newsnews`.
-
-Acceptance:
-
-- Every legacy helper has an explicit 5.0 disposition.
-- The remaining #31 implementation list is small and reviewable.
-- The inventory names the unit or generated-file test required for each
-  helper that remains active.
-
 ### 9. Remaining Helper Generation
 
 Issues: #31.

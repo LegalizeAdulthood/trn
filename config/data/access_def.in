@@ -38,8 +38,9 @@
 #Auth User =
 #Auth Password =
 #Auth Command =
-#Force Auth = [yes|no}
+#Force Auth = [yes|no]
 #XHDR Broken = [yes|no]
+#Xrefs = [yes|no]
 
 # This section tells trn what newsrc groups you want to use.  If you
 # define multiple entries with the same group number, all of the .newsrcs

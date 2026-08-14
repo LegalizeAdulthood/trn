@@ -285,40 +285,78 @@ That support has been retired: remote access uses XOVER overview data and
 builds threads on the client, and local spool thread databases are no
 longer supported.  `Thread Dir` is not a supported access-file setting.
 
-### `Rnmail`
+### Generated Helper Inventory
 
-`config.h.in` emits `MAIL_POSTER` as `Rnmail -h %h`, assuming `Rnmail`
-is available on the command path.  CMake does not generate `Rnmail`.
+Legacy `MANIFEST.txt` lists these runtime and data `.SH` outputs.  The
+5.0 disposition is explicit so issue #31 can be finished in reviewable
+pieces.
 
-The only `Rnmail` generator currently present is the legacy
-`config/legacy/Rnmail.SH`, which is listed as an interface source, not
-configured into a runnable script.
+Active generated helpers:
 
-Result: porting `Rnmail.SH` to CMake remains a later migration item.
+- `Pnews.SH`: CMake currently generates it from `config/data/Pnews.in`,
+  but the template is still only partly ported.  Slice 9 must remove the
+  `$spitshell` wrapper, malformed `USE_INEWS` substitution, and
+  `nidump`/`ypmatch` residue.  Required tests: generated `Pnews`
+  contains no metaconfig wrapper or unsupported lookup variables, and
+  posting tests cover the final header and User-Agent behavior.
+- `Speller.SH`: generated from `config/data/Speller.in`.  Keep it.
+  Existing tests cover tool probing and configured command values.
+  Required tests: generated `Speller` has no unresolved configure
+  tokens and preserves the current wrapper command flow.
+- `filexp.SH`: generated from `config/data/filexp.in`.  Keep it.
+  Required tests: generated `filexp` exists and covers `~`, `~~`, and
+  named-user expansion using the configured install prefix.
+- `mbox_saver.SH`: generated from `config/data/mbox.saver.in`.  Keep it.
+  The template now uses the standard `sed` command directly.  Existing
+  tests cover removal of the old `$sed` metaconfig token.  Required
+  tests: generated `mbox.saver` preserves mailbox `From` escaping.
+- `norm_saver.SH`: generated from `config/data/norm.saver.in`.  Keep it.
+  Required tests: generated `norm.saver` preserves normal-file save
+  behavior from the requested byte offset.
 
-### `Pnews` Template Migration
+Active helper still generated only by legacy code:
 
-`config/data/Pnews.in` is only partly converted from the old `.SH`
-template form.
+- `Rnmail.SH`: still active.  Current CMake defaults assume `Rnmail` is
+  available, but CMake does not generate it yet.  Slice 9 ports it to
+  `config/data/Rnmail.in`.  Required tests: generated `Rnmail` exists
+  and the mail/forward poster defaults still configure to
+  `Rnmail -h %h`.
 
-Observed leftovers:
+Active generated data files:
 
-- It still starts with `$spitshell >Pnews <<!GROK!THIS!`.
-- `inews=${@USE_INEWS@-inews}` is malformed for CMake substitution.
-- It still leaves old shell variables such as `nidump` and `ypmatch`.
+- `access_def.SH`: generated from `config/data/access_def.in`.  Keep it
+  synced with `DataSourceConfig` and `RcGroupConfig`.  Required tests:
+  generated `access.def` names every schema field and preserves the
+  configured defaults for active, spool, overview, description, and auth
+  settings.
+- `environment.SH`: generated from `config/data/environment.in`.  Keep
+  it.  Required tests: generated `environment` documents the configured
+  poster, saver, pager, editor, shell, and spell-checker defaults.
+- `newsnews.SH`: generated from `config/data/newsnews.in`.  Keep it.
+  Required tests: generated `newsnews` contains the configured project
+  version and current project URL.
 
-Result: generated `Pnews` may contain metaconfig residue or broken shell
-syntax.
+Retired legacy build helpers:
 
-### `mbox.saver`
+- `Makefile.SH`: retired.  CMake owns build file generation.
+- `Policy_sh.SH`: retired.  CMake cache and configured headers own local
+  policy.
+- `config_h.SH`: retired.  CMake configures `config.h`.
+- `makedepend.SH`: retired.  CMake owns dependency discovery.
+- `makedir.SH`: retired.  Runtime directory creation uses the C++
+  `make_dir` implementation; install-time directory creation belongs to
+  CMake.
+- `mkpro.SH`: retired.  Prototypes are not generated in the CMake build.
+- `mktd.SH`: retired.  `typedef.h` is not regenerated in the CMake build.
+- `myinstall.SH`: retired.  CMake install rules will own installation.
 
-`config/data/mbox.saver.in` still uses the old `$sed` metaconfig
-variable.  The CMake migration should use the standard `sed` command
-directly for Unix-like helpers, not add a CMake search or cache variable
-for it.
+Remaining #31 work:
 
-Result: generated `mbox.saver` can call an empty command at the `From`
-line escaping step until the old variable reference is removed.
+- Finish the active helper template ports listed above.
+- Add generated-helper tests for every active helper.
+- Add generated-data content tests for `access.def`, `environment`, and
+  `newsnews`.
+- Add install rules after helper generation is complete.
 
 ### Posting Host Match Segments
 
