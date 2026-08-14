@@ -293,12 +293,11 @@ pieces.
 
 Active generated helpers:
 
-- `Pnews.SH`: CMake currently generates it from `config/data/Pnews.in`,
-  but the template is still only partly ported.  Slice 9 must remove the
-  `$spitshell` wrapper, malformed `USE_INEWS` substitution, and
-  `nidump`/`ypmatch` residue.  Required tests: generated `Pnews`
-  contains no metaconfig wrapper or unsupported lookup variables, and
-  posting tests cover the final header and User-Agent behavior.
+- `Pnews.SH`: generated from `config/data/Pnews.in`.  Keep it.
+  Required tests: generated `Pnews` and `Pnews.header` exist and contain
+  no metaconfig wrapper, obsolete substitutions, or unsupported lookup
+  variables; posting tests cover the final header and User-Agent
+  behavior.
 - `Speller.SH`: generated from `config/data/Speller.in`.  Keep it.
   Existing tests cover tool probing and configured command values.
   Required tests: generated `Speller` has no unresolved configure
@@ -313,14 +312,10 @@ Active generated helpers:
 - `norm_saver.SH`: generated from `config/data/norm.saver.in`.  Keep it.
   Required tests: generated `norm.saver` preserves normal-file save
   behavior from the requested byte offset.
-
-Active helper still generated only by legacy code:
-
-- `Rnmail.SH`: still active.  Current CMake defaults assume `Rnmail` is
-  available, but CMake does not generate it yet.  Slice 9 ports it to
-  `config/data/Rnmail.in`.  Required tests: generated `Rnmail` exists
-  and the mail/forward poster defaults still configure to
-  `Rnmail -h %h`.
+- `Rnmail.SH`: generated from `config/data/Rnmail.in`.  Keep it.
+  Required tests: generated `Rnmail` exists, contains no metaconfig
+  wrapper or obsolete substitutions, and the mail/forward poster defaults
+  still configure to `Rnmail -h %h`.
 
 Active generated data files:
 
@@ -352,8 +347,6 @@ Retired legacy build helpers:
 
 Remaining #31 work:
 
-- Finish the active helper template ports listed above.
-- Add generated-helper tests for every active helper.
 - Add generated-data content tests for `access.def`, `environment`, and
   `newsnews`.
 - Add install rules after helper generation is complete.
@@ -538,7 +531,7 @@ script/data policy that is not platform configuration:
   `ISPELL_PROGRAM`, `ISPELL_OPTIONS`, and `SPELL_PROGRAM`.
 - Posting script data: `NAME_TYPE`, `LOCAL_DIST`, `ORGANIZATION_DIST`,
   `CITY_DIST`, `STATE_DIST`, `MULTISTATE_DIST`, `COUNTRY_DIST`,
-  `CONTINENT_DIST`, and `PNEWS_ORG_NAME`.
+  `CONTINENT_DIST`, and `POSTING_ORG_NAME`.
 
 ### Globals And Utilities
 

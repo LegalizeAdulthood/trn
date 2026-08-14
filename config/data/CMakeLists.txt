@@ -26,6 +26,7 @@ configure_file(newsnews.in newsnews @ONLY)
 configure_file(norm.saver.in norm.saver @ONLY)
 configure_file(Pnews.in Pnews @ONLY)
 configure_file(Pnews.header.in Pnews.header @ONLY)
+configure_file(Rnmail.in Rnmail @ONLY)
 configure_file(Speller.in Speller @ONLY)
 
 add_library(data INTERFACE
@@ -39,6 +40,7 @@ add_library(data INTERFACE
     norm.saver.in
     Pnews.in
     Pnews.header.in
+    Rnmail.in
     Speller.in
     "${CMAKE_CURRENT_BINARY_DIR}/INIT"
     "${CMAKE_CURRENT_BINARY_DIR}/access.def"
@@ -49,6 +51,7 @@ add_library(data INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/norm.saver"
     "${CMAKE_CURRENT_BINARY_DIR}/Pnews"
     "${CMAKE_CURRENT_BINARY_DIR}/Pnews.header"
+    "${CMAKE_CURRENT_BINARY_DIR}/Rnmail"
     "${CMAKE_CURRENT_BINARY_DIR}/Speller"
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION ".*\\.cmake$")

@@ -158,14 +158,7 @@ case $logname in
 esac
 case ${NAME-$nametype} in
 bsd)
-	if test "X$ypmatch" != X; then
-		fullname=`$ypmatch $logname passwd 2>/dev/null | sed -e "s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^,:;]*\).*"'$'"/\1/"`
-	elif test "X$nidump" != X; then
-		fullname=`$nidump passwd / | sed -e "/^$logname:/{s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^,:;]*\).*"'$'"/\1/" -e "q" -e "}" -e "d"`
-	fi
-	if test "X$fullname" = X; then
-		fullname=`sed </etc/passwd -e "/^$logname:/{s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^,:;]*\).*"'$'"/\1/" -e "q" -e "}" -e "d"`
-	fi
+    fullname=`sed </etc/passwd -e "/^$logname:/{s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^,:;]*\).*"'$'"/\1/" -e "q" -e "}" -e "d"`
     case $fullname in
     *'&'*) : GACK
 	lname=`echo $logname | tr 'a-z' 'A-Z'`
@@ -175,12 +168,7 @@ bsd)
     esac
     ;;
 usg)
-    if test "X$ypmatch" != X; then
-	fullname=`$ypmatch $logname passwd 2>/dev/null | sed -e "s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^(:]*\).*"'$'"/\1/" -e "s/^.*-//" -e "q"`
-    fi
-    if test "X$fullname" = X; then
-	fullname=`sed </etc/passwd -e "/^$logname:/{s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^(:]*\).*"'$'"/\1/" -e "s/^.*-//" -e "q" -e "}" -e "d"`
-    fi
+    fullname=`sed </etc/passwd -e "/^$logname:/{s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^(:]*\).*"'$'"/\1/" -e "s/^.*-//" -e "q" -e "}" -e "d"`
     ;;
 *)
     fullname=${NAME-`cat $dotdir/.fullname`}

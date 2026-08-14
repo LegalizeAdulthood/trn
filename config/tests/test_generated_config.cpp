@@ -46,6 +46,57 @@ void expect_file_exists(const char *filename)
     EXPECT_TRUE(file.good()) << filename;
 }
 
+void expect_helper_has_no_metaconfig_residue(const char *filename)
+{
+    static constexpr std::string_view residues[] = {
+        "@SHELL_START@",
+        "@DIFF_PROGRAM@",
+        "@ED_PROGRAM@",
+        "@ISPELL_PROGRAM@",
+        "@ISPELL_OPTIONS@",
+        "@SPELL_PROGRAM@",
+        "@PAGER@",
+        "@NEWS_LIB@",
+        "@PRIVATE_LIB@",
+        "@BIN_DIR@",
+        "@USE_INEWS@",
+        "@DEFAULT_EDITOR@",
+        "@NAME_TYPE@",
+        "@ORG_NAME@",
+        "@PNEWS_ORG_NAME@",
+        "@POSTING_ORG_NAME@",
+        "@LOCAL_DIST@",
+        "@ORGANIZATION_DIST@",
+        "@MULTISTATE_DIST@",
+        "@CITY_DIST@",
+        "@STATE_DIST@",
+        "@COUNTRY_DIST@",
+        "@CONTINENT_DIST@",
+        "spitshell",
+        "GROK",
+        "NO!SUBS",
+        "eunicefix",
+        "nidump",
+        "ypmatch",
+        "${mailer-",
+        "$test ",
+        "$sed ",
+        "$echo ",
+        "$cat ",
+        "$grep ",
+        "$egrep ",
+        "$cp ",
+        "$rm ",
+        "$sleep ",
+        "$who ",
+    };
+
+    for (const std::string_view residue : residues)
+    {
+        expect_file_not_contains(filename, residue);
+    }
+}
+
 void expect_config_define(const char *filename, std::string_view name, bool defined)
 {
     const std::string expected =
@@ -299,6 +350,17 @@ TEST(GeneratedConfigTest, defaultDataFilesAreGenerated)
     expect_file_exists(TRN_TEST_GENERATED_GLOBAL_INIT_FILE);
     expect_file_exists(TRN_TEST_GENERATED_DEFACCESS_FILE);
     expect_file_exists(TRN_TEST_GENERATED_NEWSNEWS_FILE);
+}
+
+TEST(GeneratedConfigTest, runtimeHelperFilesAreGenerated)
+{
+    expect_file_exists(TRN_TEST_GENERATED_FILEXP_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_NORM_SAVER_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_PNEWS_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_RNMAIL_FILE);
+    expect_file_exists(TRN_TEST_GENERATED_SPELLER_FILE);
 }
 
 TEST(GeneratedConfigTest, articlePathTemplatesDefaultMatchHistoricalFallbacks)
@@ -572,6 +634,17 @@ TEST(GeneratedConfigTest, helperFilesDoNotContainOldToolVariables)
     expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@ISPELL_OPTIONS@");
     expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@SPELL_PROGRAM@");
     expect_file_not_contains(TRN_TEST_GENERATED_MBOX_SAVER_FILE, "$sed");
+}
+
+TEST(GeneratedConfigTest, runtimeHelperFilesDoNotContainMetaconfigResidue)
+{
+    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_FILEXP_FILE);
+    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
+    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_NORM_SAVER_FILE);
+    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_FILE);
+    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
+    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_RNMAIL_FILE);
+    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_SPELLER_FILE);
 }
 
 TEST(GeneratedConfigTest, pnewsDistributionDefaultsMatchHistoricalFallbacks)
