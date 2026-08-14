@@ -513,6 +513,29 @@ TEST(GeneratedConfigTest, postingHelpersUseInstalledHelperPaths)
     expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER", bin_dir + "/Rnmail -h %h");
 }
 
+TEST(GeneratedConfigTest, generatedPnewsHeaderContainsPostingFields)
+{
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_HEADER_FILE, "Newsgroups: $ng");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_HEADER_FILE, "Subject: $title");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_HEADER_FILE, "Distribution: $dist");
+}
+
+TEST(GeneratedConfigTest, generatedPnewsSendFilterReplacesOldUserAgent)
+{
+    const std::string user_agent = std::string{"user_agent=\"trn/"} + TRN_TEST_PROJECT_VERSION + "\"";
+
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, user_agent);
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "/^User-Agent:/d;");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "User-Agent: '\"$user_agent\"'");
+}
+
+TEST(GeneratedConfigTest, generatedPnewsSendFilterAddsMimeHeaders)
+{
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Mime-Version: 1.0");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Content-Type: text/plain; charset=\"'\"$charset\"'\"");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Content-Transfer-Encoding: 8bit");
+}
+
 TEST(GeneratedConfigTest, postingHeaderTemplatesDefaultMatchHistoricalFallbacks)
 {
     constexpr std::string_view mail_header = "To: %t\\n"

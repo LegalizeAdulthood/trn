@@ -247,33 +247,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 15. Posting Header Harness
-
-Issues: #16.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #20.
-
-Files likely touched:
-
-- `config/data/Pnews.in`
-- `config/data/Pnews.header.in`
-- posting tests
-
-Tasks:
-
-- Add tests around generated posting headers.
-- Preserve MIME header generation already present in `Pnews`.
-- Preserve User-Agent generation from #20.
-
-Acceptance:
-
-- Posted articles include the expected User-Agent header.
-- Header tests are in place before transfer-encoding changes.
-- Unit tests cover generated posting headers and #20 User-Agent
-  regression behavior.
-
 ### 16. Posting Transfer Encoding
 
 Issues: #16.
@@ -1130,7 +1103,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #3: 26 through 30.
 - #5: 36.
 - #14: 18 and 20.
-- #16: 15 and 16.
+- #16: 16.
 - #17: 31 through 33.
 - #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must
