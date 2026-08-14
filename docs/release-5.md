@@ -251,37 +251,6 @@ Use `config/legacy/Configure` to understand historical defaults, special
 values, and compatibility expectations.  Do not copy its Q&A structure
 when CMake can determine the result directly.
 
-### 5.6 Prompt-Derived Runtime Policy Cleanup
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- config tests
-
-Tasks:
-
-- Review already implemented prompt-derived settings that are runtime
-  policy rather than feature support: save layout, distribution codes,
-  posting-host match segments, reply-to checking, and selection
-  characters.
-- Keep these settings as cache variables only where they are real user
-  policy or release policy that CMake cannot discover.
-- Move any derived implementation details out of the cache before
-  generating configured files.
-
-Acceptance:
-
-- Each retained cache variable in this group has a documented reason it
-  is policy rather than a discoverable feature.
-- Generated-config tests cover the default and override behavior for
-  each retained policy setting.
-- No derived implementation detail from this group remains as a cache
-  variable.
-
 ### 6. Configure Default Fallbacks
 
 Issues: #19.

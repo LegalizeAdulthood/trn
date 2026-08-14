@@ -321,6 +321,12 @@ TEST(GeneratedConfigTest, savePathTemplatesDefaultMatchCMakeSelection)
     expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_DEFAULT_CONFIG, "SAVENAME", TRN_TEST_DEFAULT_SAVENAME);
 }
 
+TEST(GeneratedConfigTest, savePathTemplatesCanUseCategoryPolicy)
+{
+    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CATEGORY_CONFIG, "SAVEDIR", "%p/%c");
+    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CATEGORY_CONFIG, "SAVENAME", "%a");
+}
+
 TEST(GeneratedConfigTest, savePathTemplatesConfiguredValuesAreEmitted)
 {
     expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVEDIR", "%p/test-save");
@@ -373,6 +379,8 @@ TEST(GeneratedConfigTest, featurePolicyDefaultsMatchHistoricalFallbacks)
     expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "VALIDATE_XREF_SITE",
                          cmake_bool(TRN_TEST_DEFAULT_VALIDATE_XREF_SITE));
     expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "USE_FTP", cmake_bool(TRN_TEST_DEFAULT_USE_FTP));
+    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "REPLYTO_POSTER_CHECKING",
+                         cmake_bool(TRN_TEST_DEFAULT_REPLYTO_POSTER_CHECKING));
 }
 
 TEST(GeneratedConfigTest, featurePolicyConfiguredValuesAreEmitted)
@@ -382,6 +390,7 @@ TEST(GeneratedConfigTest, featurePolicyConfiguredValuesAreEmitted)
     expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "TILDE_NAME", false);
     expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "VALIDATE_XREF_SITE", true);
     expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "USE_FTP", false);
+    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "REPLYTO_POSTER_CHECKING", true);
 }
 
 TEST(GeneratedConfigTest, shellCommandDefaultsMatchPlatformFallbacks)

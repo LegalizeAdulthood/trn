@@ -806,7 +806,10 @@ function(configure_trn)
     set(DEFAULT_PAGER "${DEFAULT_PAGER}" PARENT_SCOPE)
     set_config_cache_default(PAGER "${DEFAULT_PAGER}" STRING
         "The path of the preferred pager on the system; empty disables the default command.")
-    option(REPLYTO_POSTER_CHECKING "If ON, makes -p also check Reply-To (slow)" OFF)
+    set(DEFAULT_REPLYTO_POSTER_CHECKING OFF)
+    set(DEFAULT_REPLYTO_POSTER_CHECKING "${DEFAULT_REPLYTO_POSTER_CHECKING}" PARENT_SCOPE)
+    option(REPLYTO_POSTER_CHECKING
+        "If ON, makes -p also check Reply-To (slow)" ${DEFAULT_REPLYTO_POSTER_CHECKING})
     probe_name_type_default("${HAS_GETPWENT}")
     configure_name_parsing_default("${HAS_GETPWENT}" "${PROBED_NAME_TYPE}")
     set(DEFAULT_NAME_TYPE "${DEFAULT_NAME_TYPE}" PARENT_SCOPE)

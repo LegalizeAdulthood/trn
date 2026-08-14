@@ -91,13 +91,14 @@ need semantic fixes, listed here rather than hidden in prose:
   or overridden news-source mode and emits the configured value directly.
 - `NEWS_SPOOL`: handled.  CMake derives the default from the probed or
   overridden news-source mode and emits the configured value directly.
-- `SELECTION_CHARS`: handled.  CMake owns the historical selection-menu
-  character default and emits the configured value directly.
+- `SELECTION_CHARS`: handled.  This is user interface policy, not a
+  host feature.  CMake owns the historical selection-menu character
+  default and emits the configured value directly.
 - `ORG_NAME`: handled.
 - `POSTING_HOSTNAME`: handled.
-- `POSTING_HOST_MATCH_SEGMENTS`: handled.  CMake owns the legacy
-  `hostbits` count under a name that reflects local-posting ownership
-  matching.
+- `POSTING_HOST_MATCH_SEGMENTS`: handled.  This is posting identity
+  matching policy, not a host feature.  CMake owns the legacy `hostbits`
+  count under a name that reflects local-posting ownership matching.
 - `TRN_MARK_XREFS_UNREAD`: handled.  It is the CMake-facing owner for
   generated `MCHASE`.
 - `PRIVATE_LIB`: handled.
@@ -115,12 +116,14 @@ need semantic fixes, listed here rather than hidden in prose:
   template and emits the configured value directly.
 - `HEADNAME`: handled.  CMake owns the historical long-filename header
   file template and emits the configured value directly.
-- `MKDIRS`: handled.  CMake expresses the old default save-layout
-  selection as `TRN_MAKE_SAVE_DIRECTORIES`, without emitting a source
-  macro.
-- `SAVEDIR`: handled.  CMake owns the historical save-directory defaults
-  and emits the configured value directly.
-- `SAVENAME`: handled.  CMake owns the historical save-file defaults and
+- `MKDIRS`: handled.  Save layout is user policy, not a host feature.
+  CMake expresses the old default save-layout selection as
+  `TRN_MAKE_SAVE_DIRECTORIES`, without emitting a source macro.
+- `SAVEDIR`: handled.  This is a user-overridable save path template.
+  CMake derives its default from the retained save-layout policy and
+  emits the configured value directly.
+- `SAVENAME`: handled.  This is a user-overridable save name template.
+  CMake derives its default from the retained save-layout policy and
   emits the configured value directly.
 - `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`: handled.  CMake owns
   the historical kill-file path defaults and emits the configured values
@@ -155,7 +158,8 @@ need semantic fixes, listed here rather than hidden in prose:
   directly.
 - `PAGER`: handled.  CMake probes the pager used by generated help and
   helper scripts; the cache value remains an explicit override.
-- `REPLYTO_POSTER_CHECKING`: handled.
+- `REPLYTO_POSTER_CHECKING`: handled.  This is posting identity checking
+  policy, not a host feature.
 - `FULLNAMEFILE`: handled.  CMake owns the historical full-name file
   default and emits the configured value directly.
 - `NAME_TYPE`: handled.  CMake probes the default name-parsing policy,
@@ -163,7 +167,8 @@ need semantic fixes, listed here rather than hidden in prose:
   generated `Pnews` default.
 - `LOCAL_DIST`, `ORGANIZATION_DIST`, `CITY_DIST`, `STATE_DIST`,
   `MULTISTATE_DIST`, `COUNTRY_DIST`, and `CONTINENT_DIST`: handled for
-  generated `Pnews` distribution defaults.
+  generated `Pnews` distribution defaults.  These are posting policy
+  values and cannot be discovered reliably.
 - `DEBUG`: handled.
 - `SHELL_START`, `DIFF_PROGRAM`, `ED_PROGRAM`, `ISPELL_PROGRAM`,
   `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: handled.  CMake probes helper

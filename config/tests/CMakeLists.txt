@@ -650,6 +650,16 @@ configure_file(
     @ONLY
 )
 
+configure_save_path_defaults(ON)
+set(SAVEDIR "${DEFAULT_SAVEDIR}")
+set(SAVENAME "${DEFAULT_SAVENAME}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    save_path_templates_category.h
+    @ONLY
+)
+configure_save_path_defaults("${TRN_MAKE_SAVE_DIRECTORIES}")
+
 set(SAVEDIR "%p/test-save")
 set(SAVENAME "test-%a")
 configure_file(
@@ -711,6 +721,7 @@ set(NO_FIREWORKS "${DEFAULT_NO_FIREWORKS}")
 set(TILDE_NAME "${DEFAULT_TILDE_NAME}")
 set(VALIDATE_XREF_SITE "${DEFAULT_VALIDATE_XREF_SITE}")
 set(USE_FTP "${DEFAULT_USE_FTP}")
+set(REPLYTO_POSTER_CHECKING "${DEFAULT_REPLYTO_POSTER_CHECKING}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     feature_policy_default.h
@@ -722,6 +733,7 @@ set(NO_FIREWORKS OFF)
 set(TILDE_NAME OFF)
 set(VALIDATE_XREF_SITE ON)
 set(USE_FTP OFF)
+set(REPLYTO_POSTER_CHECKING ON)
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     feature_policy_configured.h
@@ -912,6 +924,7 @@ set(NO_FIREWORKS "${DEFAULT_NO_FIREWORKS}")
 set(TILDE_NAME "${DEFAULT_TILDE_NAME}")
 set(VALIDATE_XREF_SITE "${DEFAULT_VALIDATE_XREF_SITE}")
 set(USE_FTP "${DEFAULT_USE_FTP}")
+set(REPLYTO_POSTER_CHECKING "${DEFAULT_REPLYTO_POSTER_CHECKING}")
 set(SH "${DEFAULT_SH}")
 set(PIPE_SAVER "${DEFAULT_PIPE_SAVER}")
 set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")
