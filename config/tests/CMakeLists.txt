@@ -116,6 +116,35 @@ set_tests_properties(
     ConfigCMakeTest.pnewsDistributionCodeRejectsEmpty
     PROPERTIES LABELS trn)
 
+set(helper_tool_validation_script
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_helper_tool_validation.cmake")
+set(helper_tool_configure_data_script
+    "${CMAKE_CURRENT_SOURCE_DIR}/../data/configure_data.cmake")
+add_test(NAME ConfigCMakeTest.helperToolValueAcceptsProgramName
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_DATA_CMAKE:FILEPATH=${helper_tool_configure_data_script}"
+        "-DTRN_TEST_HELPER_TOOL_NAME=DIFF_PROGRAM"
+        "-DTRN_TEST_HELPER_TOOL_VALUE=diff"
+        -P "${helper_tool_validation_script}")
+add_test(NAME ConfigCMakeTest.helperToolValueAcceptsNone
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_DATA_CMAKE:FILEPATH=${helper_tool_configure_data_script}"
+        "-DTRN_TEST_HELPER_TOOL_NAME=ISPELL_PROGRAM"
+        "-DTRN_TEST_HELPER_TOOL_VALUE=none"
+        -P "${helper_tool_validation_script}")
+add_test(NAME ConfigCMakeTest.helperToolValueRejectsEmpty
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_DATA_CMAKE:FILEPATH=${helper_tool_configure_data_script}"
+        "-DTRN_TEST_HELPER_TOOL_NAME=SHELL_START"
+        "-DTRN_TEST_HELPER_TOOL_VALUE="
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${helper_tool_validation_script}")
+set_tests_properties(
+    ConfigCMakeTest.helperToolValueAcceptsProgramName
+    ConfigCMakeTest.helperToolValueAcceptsNone
+    ConfigCMakeTest.helperToolValueRejectsEmpty
+    PROPERTIES LABELS trn)
+
 set(save_path_defaults_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_save_path_defaults.cmake")
 add_test(NAME ConfigCMakeTest.savePathDefaultsUseFlatMode
     COMMAND "${CMAKE_COMMAND}"
@@ -572,6 +601,30 @@ configure_file(
     @ONLY
 )
 
+set(SHELL_START "${DEFAULT_SHELL_START}")
+set(DIFF_PROGRAM "${DEFAULT_DIFF_PROGRAM}")
+set(ED_PROGRAM "${DEFAULT_ED_PROGRAM}")
+set(ISPELL_PROGRAM "${DEFAULT_ISPELL_PROGRAM}")
+set(ISPELL_OPTIONS "${DEFAULT_ISPELL_OPTIONS}")
+set(SPELL_PROGRAM "${DEFAULT_SPELL_PROGRAM}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../data/Speller.in"
+    helper_tools_default
+    @ONLY
+)
+
+set(SHELL_START "#!/test/sh")
+set(DIFF_PROGRAM "/test/bin/diff")
+set(ED_PROGRAM "/test/bin/ed")
+set(ISPELL_PROGRAM "/test/bin/ispell")
+set(ISPELL_OPTIONS "-x -Tlatin1")
+set(SPELL_PROGRAM "/test/bin/spell")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../data/Speller.in"
+    helper_tools_configured
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 set(LOCAL_DIST "${DEFAULT_LOCAL_DIST}")
 set(ORGANIZATION_DIST "${DEFAULT_ORGANIZATION_DIST}")
@@ -660,5 +713,11 @@ set(STATE_DIST "${DEFAULT_STATE_DIST}")
 set(MULTISTATE_DIST "${DEFAULT_MULTISTATE_DIST}")
 set(COUNTRY_DIST "${DEFAULT_COUNTRY_DIST}")
 set(CONTINENT_DIST "${DEFAULT_CONTINENT_DIST}")
+set(SHELL_START "${DEFAULT_SHELL_START}")
+set(DIFF_PROGRAM "${DEFAULT_DIFF_PROGRAM}")
+set(ED_PROGRAM "${DEFAULT_ED_PROGRAM}")
+set(ISPELL_PROGRAM "${DEFAULT_ISPELL_PROGRAM}")
+set(ISPELL_OPTIONS "${DEFAULT_ISPELL_OPTIONS}")
+set(SPELL_PROGRAM "${DEFAULT_SPELL_PROGRAM}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

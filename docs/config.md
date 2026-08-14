@@ -159,9 +159,8 @@ need semantic fixes, listed here rather than hidden in prose:
   generated `Pnews` distribution defaults.
 - `DEBUG`: handled.
 - `SHELL_START`, `DIFF_PROGRAM`, `ED_PROGRAM`, `ISPELL_PROGRAM`,
-  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: needed.  CMake owns them for
-  generated helper files, but the helper templates still contain
-  metaconfig residue.
+  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: handled.  CMake owns them for
+  generated helper files and validates the retained non-empty values.
 - `MAIL_HEADER`, `NEWS_HEADER`, `CANCEL_HEADER`, and
   `SUPERSEDE_HEADER`: handled.  CMake owns the retained posting header
   templates and emits them directly.
@@ -366,8 +365,8 @@ Current CMake only exposes a small subset for generated scripts:
 - `DEFAULT_EDITOR`
 - `PREF_SHELL`
 
-This is mostly reasonable, but templates that still refer to old tool
-variables need either fixed literals, CMake variables, or removal.
+This is mostly reasonable. Generated helper templates use CMake variables
+for retained tools and literals for fixed helper commands.
 
 ## Mostly Replaced by CMake or Modern Code
 

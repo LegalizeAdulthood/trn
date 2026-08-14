@@ -236,39 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.29 through 4.31 refine #19 into one variable or setting family
+Slices 4.30 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.29. Helper Tool Cache Variables
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `SHELL_START`
-- `DIFF_PROGRAM`
-- `ED_PROGRAM`
-- `ISPELL_PROGRAM`
-- `ISPELL_OPTIONS`
-- `SPELL_PROGRAM`
-
-Tasks:
-
-- Validate retained helper tool cache variables.
-- Replace old tool-variable references in helper templates with CMake
-  owners or literals.
-- Add generated-helper coverage for configured and default tools.
-
-Acceptance:
-
-- Helper tool settings are CMake-owned and used consistently.
-- Generated helper files contain no unresolved old tool variables.
-- Generated-helper unit tests cover configured and default tool settings.
 
 ### 4.30. News Source Mode Defaults
 
@@ -336,7 +308,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.29 through 4.31.
+Depends on: 4.30 through 4.31.
 
 Files likely touched:
 
@@ -1465,7 +1437,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.29 through 4.31, 5, and 6.
+- #19: 4.30 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

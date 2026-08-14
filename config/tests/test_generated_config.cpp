@@ -514,6 +514,39 @@ TEST(GeneratedConfigTest, replyAndForwardTemplatesDefaultMatchHistoricalFallback
                          "------- end of forwarded message -------");
 }
 
+TEST(GeneratedConfigTest, helperToolDefaultsMatchHistoricalFallbacks)
+{
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, TRN_TEST_DEFAULT_SHELL_START);
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                         std::string{"ispell="} + TRN_TEST_DEFAULT_ISPELL_PROGRAM);
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                         std::string{"ispell_options="} + TRN_TEST_DEFAULT_ISPELL_OPTIONS);
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"diff="} + TRN_TEST_DEFAULT_DIFF_PROGRAM);
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"ed="} + TRN_TEST_DEFAULT_ED_PROGRAM);
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"spell="} + TRN_TEST_DEFAULT_SPELL_PROGRAM);
+}
+
+TEST(GeneratedConfigTest, helperToolConfiguredValuesAreEmitted)
+{
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "#!/test/sh");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell=/test/bin/ispell");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell_options=-x -Tlatin1");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "diff=/test/bin/diff");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ed=/test/bin/ed");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "spell=/test/bin/spell");
+}
+
+TEST(GeneratedConfigTest, helperFilesDoNotContainOldToolVariables)
+{
+    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@SHELL_START@");
+    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@DIFF_PROGRAM@");
+    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@ED_PROGRAM@");
+    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@ISPELL_PROGRAM@");
+    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@ISPELL_OPTIONS@");
+    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@SPELL_PROGRAM@");
+    expect_file_not_contains(TRN_TEST_GENERATED_MBOX_SAVER_FILE, "$sed");
+}
+
 TEST(GeneratedConfigTest, pnewsDistributionDefaultsMatchHistoricalFallbacks)
 {
     const std::string name_type = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";
