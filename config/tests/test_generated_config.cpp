@@ -69,6 +69,21 @@ void expect_config_char(const char *filename, std::string_view name, std::string
     expect_file_contains(filename, expected);
 }
 
+void expect_news_source_defaults(const char *filename, bool has_local_spool, std::string_view server_name,
+                                 std::string_view active, std::string_view group_desc, std::string_view subscriptions,
+                                 std::string_view news_spool, std::string_view overview_dir,
+                                 std::string_view overview_fmt)
+{
+    expect_config_string(filename, "SERVER_NAME", server_name);
+    expect_config_define(filename, "HAS_LOCAL_SPOOL", has_local_spool);
+    expect_config_string(filename, "ACTIVE", active);
+    expect_config_string(filename, "GROUP_DESC", group_desc);
+    expect_config_string(filename, "SUBSCRIPTIONS", subscriptions);
+    expect_config_string(filename, "NEWS_SPOOL", news_spool);
+    expect_config_string(filename, "OVERVIEW_DIR", overview_dir);
+    expect_config_string(filename, "OVERVIEW_FMT", overview_fmt);
+}
+
 bool cmake_bool(std::string_view value)
 {
     return value == "1" || value == "ON" || value == "TRUE";
@@ -100,11 +115,22 @@ TEST(GeneratedConfigTest, activeTimesConfiguredPathIsEmitted)
     expect_file_contains(TRN_TEST_ACTIVE_TIMES_CONFIGURED_CONFIG, "#define ACTIVE_TIMES \"%x/active.times\"");
 }
 
-TEST(GeneratedConfigTest, activeDefaultMatchesHistoricalFallback)
+TEST(GeneratedConfigTest, newsSourceNntpModeDefaultsAreEmitted)
 {
-    const std::string expected = std::string{"#define ACTIVE \""} + TRN_TEST_DEFAULT_ACTIVE + "\"";
+    expect_news_source_defaults(TRN_TEST_NEWS_SOURCE_NNTP_CONFIG, false, "news.example.org", "remote", "none", "",
+                                "none", "remote", "none");
+}
 
-    expect_file_contains(TRN_TEST_ACTIVE_DEFAULT_CONFIG, expected);
+TEST(GeneratedConfigTest, newsSourceLocalModeDefaultsAreEmitted)
+{
+    expect_news_source_defaults(TRN_TEST_NEWS_SOURCE_LOCAL_CONFIG, true, "local", "%x/active", "%x/newsgroups",
+                                "%x/subscriptions", "/usr/spool/news", "/usr/spool/news", "%x/overview.fmt");
+}
+
+TEST(GeneratedConfigTest, newsSourceBothModeDefaultsAreEmitted)
+{
+    expect_news_source_defaults(TRN_TEST_NEWS_SOURCE_BOTH_CONFIG, true, "news.example.org", "remote", "none", "",
+                                "none", "remote", "none");
 }
 
 TEST(GeneratedConfigTest, activeConfiguredPathIsEmitted)
@@ -134,23 +160,9 @@ TEST(GeneratedConfigTest, newsLibConfiguredPathIsEmitted)
     expect_file_contains(TRN_TEST_NEWS_LIB_CONFIGURED_CONFIG, "#define NEWS_LIB \"/var/lib/trn/news\"");
 }
 
-TEST(GeneratedConfigTest, groupDescDefaultMatchesHistoricalFallback)
-{
-    const std::string expected = std::string{"#define GROUP_DESC \""} + TRN_TEST_DEFAULT_GROUP_DESC + "\"";
-
-    expect_file_contains(TRN_TEST_GROUP_DESC_DEFAULT_CONFIG, expected);
-}
-
 TEST(GeneratedConfigTest, groupDescConfiguredPathIsEmitted)
 {
     expect_file_contains(TRN_TEST_GROUP_DESC_CONFIGURED_CONFIG, "#define GROUP_DESC \"/var/lib/trn/newsgroups\"");
-}
-
-TEST(GeneratedConfigTest, subscriptionsDefaultMatchesHistoricalFallback)
-{
-    const std::string expected{std::string{"#define SUBSCRIPTIONS \""} + TRN_TEST_DEFAULT_SUBSCRIPTIONS + "\""};
-
-    expect_file_contains(TRN_TEST_SUBSCRIPTIONS_DEFAULT_CONFIG, expected);
 }
 
 TEST(GeneratedConfigTest, subscriptionsConfiguredPathIsEmitted)
@@ -159,26 +171,15 @@ TEST(GeneratedConfigTest, subscriptionsConfiguredPathIsEmitted)
                          "#define SUBSCRIPTIONS \"/var/lib/trn/subscriptions\"");
 }
 
-TEST(GeneratedConfigTest, overviewDirDefaultUsesRemoteFallback)
-{
-    expect_file_contains(TRN_TEST_OVERVIEW_DIR_DEFAULT_CONFIG, "#define OVERVIEW_DIR    \"remote\"");
-}
-
 TEST(GeneratedConfigTest, overviewDirConfiguredPathIsEmitted)
 {
-    expect_file_contains(TRN_TEST_OVERVIEW_DIR_CONFIGURED_CONFIG,
-                         "#define OVERVIEW_DIR    \"/var/spool/news/overview\"");
-}
-
-TEST(GeneratedConfigTest, overviewFmtDefaultDisablesLocalFormatFile)
-{
-    expect_file_contains(TRN_TEST_OVERVIEW_FMT_DEFAULT_CONFIG, "#define OVERVIEW_FMT    \"none\"");
+    expect_file_contains(TRN_TEST_OVERVIEW_DIR_CONFIGURED_CONFIG, "#define OVERVIEW_DIR \"/var/spool/news/overview\"");
 }
 
 TEST(GeneratedConfigTest, overviewFmtConfiguredPathIsEmitted)
 {
     expect_file_contains(TRN_TEST_OVERVIEW_FMT_CONFIGURED_CONFIG,
-                         "#define OVERVIEW_FMT    \"/var/lib/trn/overview.fmt\"");
+                         "#define OVERVIEW_FMT \"/var/lib/trn/overview.fmt\"");
 }
 
 TEST(GeneratedConfigTest, postingHostMatchSegmentsDefaultMatchesHistoricalFallback)

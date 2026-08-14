@@ -239,14 +239,15 @@
 //
 #define UNSUBSCRIBED_CHAR '@UNSUBSCRIBED_CHAR@'
 
-/* ACTIVE:
- *      The name of the active file for the news system.  This file contains
- *      the list of active newsgroups.  The name may have ~ on the front.
- */
-/* ACTIVE_TIMES:
- *      The name of the active.times file for the news system.
- */
+// ACTIVE:
+//      The name of the active file for the news system.  This file contains
+//      the list of active newsgroups.  The name may have ~ on the front.
+//
 #define ACTIVE "@ACTIVE@"
+
+// ACTIVE_TIMES:
+//      The name of the active.times file for the news system.
+//
 #define ACTIVE_TIMES "@ACTIVE_TIMES@"
 
 /* HAS_GETHOSTNAME:
@@ -290,15 +291,16 @@
  */
 #cmakedefine IGNORE_ORG
 
-/* SERVER_NAME:
- *      When using NNTP, this symbol indicates the server name or a
- *      file to open to read the server name.
- */
-/* HAS_LOCAL_SPOOL:
- *      This symbol, if defined, indicates that there's a local spool
- *      directory configured into trn.
- */
+// SERVER_NAME:
+//      When using NNTP, this symbol indicates the server name or a
+//      file to open to read the server name.
+//
 #define SERVER_NAME "@SERVER_NAME@"
+
+// HAS_LOCAL_SPOOL:
+//      This symbol, if defined, indicates that there's a local spool
+//      directory configured into trn.
+//
 #cmakedefine HAS_LOCAL_SPOOL
 
 /* MIMECAP:
@@ -320,22 +322,22 @@
  */
 #define EXTRA_INEWS "@EXTRA_INEWS@"
 
-/* GROUP_DESC:
- *      Contains the full path and filename of the "newsgroups" file for
- *      group descriptions, or nothing.
- */
+// GROUP_DESC:
+//      Contains the full path and filename of the "newsgroups" file for
+//      group descriptions, or nothing.
+//
 #define GROUP_DESC "@GROUP_DESC@"
 
-/* SUBSCRIPTIONS:
- *      Contains the full path and filename of the list of default
- *      subscriptions, or nothing.
- */
+// SUBSCRIPTIONS:
+//      Contains the full path and filename of the list of default
+//      subscriptions, or nothing.
+//
 #define SUBSCRIPTIONS "@SUBSCRIPTIONS@"
 
-/* NEWS_SPOOL:
- *      This symbol contains the directory name where news articles are
- *      spooled.  The program must be prepared to do ~ expansion on it.
- */
+// NEWS_SPOOL:
+//      This symbol contains the directory name where news articles are
+//      spooled.  The program must be prepared to do ~ expansion on it.
+//
 #define NEWS_SPOOL "@NEWS_SPOOL@"
 
 // SELECTION_CHARS:
@@ -523,14 +525,15 @@
 //
 #define SUPERSEDE_HEADER "@SUPERSEDE_HEADER@"
 
-/* OVERVIEW_DIR:
- *      This symbol indicates where the overview files go.
- */
-/* OVERVIEW_FMT:
- *      The overview.fmt file.
- */
-#define OVERVIEW_DIR    "@OVERVIEW_DIR@"
-#define OVERVIEW_FMT    "@OVERVIEW_FMT@"
+// OVERVIEW_DIR:
+//      This symbol indicates where the overview files go.
+//
+#define OVERVIEW_DIR "@OVERVIEW_DIR@"
+
+// OVERVIEW_FMT:
+//      The overview.fmt file.
+//
+#define OVERVIEW_FMT "@OVERVIEW_FMT@"
 
 /* THREAD_INIT:
  *      This symbol indicates we act like trn no matter what our name is.

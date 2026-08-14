@@ -242,11 +242,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define PRIVATE_LIB "%x/trn"
 #endif
 
-// where to find news files
-#ifndef NEWS_SPOOL       // % and ~
-#   define NEWS_SPOOL "/usr/spool/news"
-#endif
-
 // preferred shell for use in doshell routine
 // ksh or sh would be okay here
 #ifndef PREF_SHELL

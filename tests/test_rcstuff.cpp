@@ -676,32 +676,13 @@ TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromRemoteSubscriptions)
     unuse_multirc(&multirc);
 }
 
-TEST_F(NewsrcRotationTest, useMultircCreatesNewsrcFromDefaultSubscriptions)
+TEST_F(NewsrcRotationTest, useMultircIgnoresDefaultSubscriptionsFileWhenDisabled)
 {
     const fs::path active_path = m_output_dir / "active";
     const fs::path subscriptions_path = m_output_dir / "subscriptions";
     std::ofstream{active_path} << "comp.lang.apl 0000000042 0000000007 y\n"
                                << "comp.lang.c++ 0000000200 0000000100 y\n";
     std::ofstream{subscriptions_path} << "comp.lang.apl:\n" << unsubscribed_newsrc_line("comp.lang.c++") << '\n';
-
-    m_data_source.m_news_id = active_path.generic_string();
-    g_lib = m_output_dir.generic_string();
-
-    Newsrc  newsrc = make_newsrc();
-    Multirc multirc{};
-    multirc.m_first = &newsrc;
-
-    ASSERT_TRUE(multirc.use_multirc());
-    EXPECT_EQ((std::vector<std::string>{"comp.lang.apl: 1-6", unsubscribed_newsrc_line("comp.lang.c++")}),
-              read_lines(newsrc.name));
-
-    unuse_multirc(&multirc);
-}
-
-TEST_F(NewsrcRotationTest, useMultircCreatesEmptyNewsrcWhenDefaultSubscriptionsFileIsAbsent)
-{
-    const fs::path active_path = m_output_dir / "active";
-    std::ofstream{active_path} << "comp.lang.apl 0000000042 0000000007 y\n";
 
     m_data_source.m_news_id = active_path.generic_string();
     g_lib = m_output_dir.generic_string();

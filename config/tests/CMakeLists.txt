@@ -161,6 +161,57 @@ set_tests_properties(
     ConfigCMakeTest.savePathDefaultsUseCategoryMode
     PROPERTIES LABELS trn)
 
+set(news_source_defaults_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_news_source_defaults.cmake")
+add_test(NAME ConfigCMakeTest.newsSourceDefaultsUseNntpMode
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_SERVER_NAME=news.example.org"
+        "-DTRN_TEST_HAS_LOCAL_SPOOL=OFF"
+        "-DTRN_TEST_EXPECT_ACTIVE=remote"
+        "-DTRN_TEST_EXPECT_GROUP_DESC=none"
+        "-DTRN_TEST_EXPECT_SUBSCRIPTIONS="
+        "-DTRN_TEST_EXPECT_NEWS_SPOOL=none"
+        "-DTRN_TEST_EXPECT_OVERVIEW_DIR=remote"
+        "-DTRN_TEST_EXPECT_OVERVIEW_FMT=none"
+        -P "${news_source_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.newsSourceDefaultsUseLocalMode
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_SERVER_NAME=local"
+        "-DTRN_TEST_HAS_LOCAL_SPOOL=ON"
+        "-DTRN_TEST_EXPECT_ACTIVE=%x/active"
+        "-DTRN_TEST_EXPECT_GROUP_DESC=%x/newsgroups"
+        "-DTRN_TEST_EXPECT_SUBSCRIPTIONS=%x/subscriptions"
+        "-DTRN_TEST_EXPECT_NEWS_SPOOL=/usr/spool/news"
+        "-DTRN_TEST_EXPECT_OVERVIEW_DIR=/usr/spool/news"
+        "-DTRN_TEST_EXPECT_OVERVIEW_FMT=%x/overview.fmt"
+        -P "${news_source_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.newsSourceDefaultsUseBothMode
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_SERVER_NAME=news.example.org"
+        "-DTRN_TEST_HAS_LOCAL_SPOOL=ON"
+        "-DTRN_TEST_EXPECT_ACTIVE=remote"
+        "-DTRN_TEST_EXPECT_GROUP_DESC=none"
+        "-DTRN_TEST_EXPECT_SUBSCRIPTIONS="
+        "-DTRN_TEST_EXPECT_NEWS_SPOOL=none"
+        "-DTRN_TEST_EXPECT_OVERVIEW_DIR=remote"
+        "-DTRN_TEST_EXPECT_OVERVIEW_FMT=none"
+        -P "${news_source_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.newsSourceDefaultsRejectLocalWithoutSpool
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_SERVER_NAME=local"
+        "-DTRN_TEST_HAS_LOCAL_SPOOL=OFF"
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${news_source_defaults_test_script}")
+set_tests_properties(
+    ConfigCMakeTest.newsSourceDefaultsUseNntpMode
+    ConfigCMakeTest.newsSourceDefaultsUseLocalMode
+    ConfigCMakeTest.newsSourceDefaultsUseBothMode
+    ConfigCMakeTest.newsSourceDefaultsRejectLocalWithoutSpool
+    PROPERTIES LABELS trn)
+
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     input_signal_probes.h
@@ -173,6 +224,30 @@ configure_file(
     @ONLY
 )
 
+function(configure_news_source_config output server_name has_local_spool)
+    set(SERVER_NAME "${server_name}")
+    set(HAS_LOCAL_SPOOL "${has_local_spool}")
+    set(ACTIVE_TIMES "none")
+    configure_news_source_defaults()
+    set(ACTIVE "${DEFAULT_ACTIVE}")
+    set(GROUP_DESC "${DEFAULT_GROUP_DESC}")
+    set(SUBSCRIPTIONS "${DEFAULT_SUBSCRIPTIONS}")
+    set(NEWS_SPOOL "${DEFAULT_NEWS_SPOOL}")
+    configure_news_overview_dir_default()
+    set(OVERVIEW_DIR "${DEFAULT_OVERVIEW_DIR}")
+    configure_news_overview_format_default()
+    set(OVERVIEW_FMT "${DEFAULT_OVERVIEW_FMT}")
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+        "${output}"
+        @ONLY
+    )
+endfunction()
+
+configure_news_source_config(news_source_nntp.h "news.example.org" OFF)
+configure_news_source_config(news_source_local.h "local" ON)
+configure_news_source_config(news_source_both.h "news.example.org" ON)
+
 set(ACTIVE_TIMES "none")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
@@ -184,13 +259,6 @@ set(ACTIVE_TIMES "%x/active.times")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     active_times_configured.h
-    @ONLY
-)
-
-set(ACTIVE "${DEFAULT_ACTIVE}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
-    active_default.h
     @ONLY
 )
 
@@ -229,24 +297,10 @@ configure_file(
     @ONLY
 )
 
-set(GROUP_DESC "${DEFAULT_GROUP_DESC}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
-    group_desc_default.h
-    @ONLY
-)
-
 set(GROUP_DESC "/var/lib/trn/newsgroups")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     group_desc_configured.h
-    @ONLY
-)
-
-set(SUBSCRIPTIONS "${DEFAULT_SUBSCRIPTIONS}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
-    subscriptions_default.h
     @ONLY
 )
 
@@ -257,24 +311,10 @@ configure_file(
     @ONLY
 )
 
-set(OVERVIEW_DIR "${DEFAULT_OVERVIEW_DIR}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
-    overview_dir_default.h
-    @ONLY
-)
-
 set(OVERVIEW_DIR "/var/spool/news/overview")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     overview_dir_configured.h
-    @ONLY
-)
-
-set(OVERVIEW_FMT "${DEFAULT_OVERVIEW_FMT}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
-    overview_fmt_default.h
     @ONLY
 )
 

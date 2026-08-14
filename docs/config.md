@@ -67,26 +67,28 @@ need semantic fixes, listed here rather than hidden in prose:
 - `SH`: handled.  CMake owns the shell used for command execution and
   emits the configured value directly.
 - `ROOT_UID`: handled for POSIX policy.
-- `ACTIVE`: handled.  CMake owns the historical active-file default and
-  emits the configured value directly.
+- `ACTIVE`: handled.  CMake owns the source-mode active-file default
+  and emits the configured value directly.
 - `ACTIVE_TIMES`: handled.  CMake owns `ACTIVE_TIMES`, defaults it to
   `none`, and `config.h.in` emits the cache value directly.
 - `PIPE_HOST_CMD`: handled.  It remains an optional hostname fallback.
 - `HAS_TERMLIB`: handled.  It is now an explicit cache boolean while the
   target links through curses.
 - `IGNORE_ORG`: handled.  It still drives posting organization fallback.
-- `SERVER_NAME`: handled.  It replaces the old NNTP server prompt.
-- `HAS_LOCAL_SPOOL`: handled.  Coupled local/NNTP defaults still need
-  review with the news-source mode work below.
+- `SERVER_NAME`: handled.  It selects the default news-source mode with
+  `HAS_LOCAL_SPOOL`.
+- `HAS_LOCAL_SPOOL`: handled.  CMake validates that `SERVER_NAME=local`
+  has local-spool support enabled.
 - `MIMECAP`: handled.
 - `NEWS_LIB`: handled.  CMake owns the retained platform default and
   emits the configured value directly.
 - `EXTRA_INEWS`: handled.  It is still consumed by local posting.
-- `GROUP_DESC`: needed.  CMake owns the value, but the empty default
-  bypasses the `common.h` fallback.
-- `SUBSCRIPTIONS`: needed.  CMake owns the value, but the empty default
-  bypasses the intended source fallback.
-- `NEWS_SPOOL`: handled as the default local spool path.
+- `GROUP_DESC`: handled.  CMake owns the source-mode default and emits
+  the configured value directly.
+- `SUBSCRIPTIONS`: handled.  CMake owns the source-mode default and
+  emits the configured value directly.
+- `NEWS_SPOOL`: handled.  CMake owns the source-mode spool default and
+  emits the configured value directly.
 - `SELECTION_CHARS`: handled.  CMake owns the historical selection-menu
   character default and emits the configured value directly.
 - `ORG_NAME`: handled.
@@ -137,10 +139,10 @@ need semantic fixes, listed here rather than hidden in prose:
   when `ripem` is found; otherwise the default command is disabled.
 - `VERIFY_PGP`: handled.  CMake emits the historical verifier command
   when `pgp` is found; otherwise the default command is disabled.
-- `OVERVIEW_DIR`: needed.  CMake owns the value, but the empty default
-  bypasses source fallback behavior.
-- `OVERVIEW_FMT`: needed.  CMake owns the value, but the empty default
-  bypasses source fallback behavior.
+- `OVERVIEW_DIR`: handled.  CMake owns the source-mode overview
+  default and emits the configured value directly.
+- `OVERVIEW_FMT`: handled.  CMake owns the overview format-file default
+  and emits the configured value directly.
 - `THREAD_INIT`: handled.
 - `SELECT_INIT`: handled.
 - `USE_INEWS` and `BIN_DIR`: handled as CMake cache variables for
@@ -244,9 +246,17 @@ The CMake setup exposes separate pieces:
 - `OVERVIEW_DIR`
 - `OVERVIEW_FMT`
 
-This covers most data, but it does not reproduce the old coupled
-defaults, resets, or validation. Changing one side no longer clears or
-recomputes the dependent values.
+The CMake setup keeps those pieces separate, but derives their defaults
+from the selected default source:
+
+- `SERVER_NAME=local` with `HAS_LOCAL_SPOOL=ON` gives a local default
+  source.
+- A server name or server-name file with `HAS_LOCAL_SPOOL=OFF` gives an
+  NNTP default source.
+- A server name or server-name file with `HAS_LOCAL_SPOOL=ON` keeps NNTP
+  as the default source while retaining local-spool support.
+
+`SERVER_NAME=local` with `HAS_LOCAL_SPOOL=OFF` fails configure.
 
 ### Thread Directory
 
@@ -289,22 +299,6 @@ or substitute that variable.
 
 Result: generated `mbox.saver` can call an empty command at the `From`
 line escaping step.
-
-### Empty Cache Defaults Override Fallbacks
-
-Several CMake cache variables default to empty strings and are then
-unconditionally emitted to `config.h`.
-
-Notable cases:
-
-- `GROUP_DESC`
-- `SUBSCRIPTIONS`
-- `OVERVIEW_DIR`
-- `OVERVIEW_FMT`
-
-The old source-side fallback defaults in `config/include/config/common.h`
-only apply when a symbol is not defined. Emitting an empty definition
-bypasses those fallbacks.
 
 ### Posting Host Match Segments
 

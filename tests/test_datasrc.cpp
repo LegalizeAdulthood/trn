@@ -602,7 +602,7 @@ TEST_F(DataSourceInitTest, createsDefaultRemoteSourceFromNntpServer)
     EXPECT_TRUE(source.m_flags & DF_REMOTE);
 }
 
-TEST_F(DataSourceInitTest, usesDefaultGroupDescription)
+TEST_F(DataSourceInitTest, usesDefaultNntpNewsSourceMode)
 {
     m_env.expect_no_envar("NNTPSERVER");
     m_env.expect_no_envar("NNTP_FORCE_AUTH");
@@ -611,7 +611,14 @@ TEST_F(DataSourceInitTest, usesDefaultGroupDescription)
 
     const DataSource *source = get_data_source("default");
     ASSERT_NE(nullptr, source);
-    EXPECT_EQ((m_output_dir / "newsgroups").generic_string(), source->m_group_desc);
+    EXPECT_EQ("news.gmane.io", source->m_news_id);
+    EXPECT_TRUE(source->m_flags & DF_DEFAULT);
+    EXPECT_TRUE(source->m_flags & DF_REMOTE);
+    EXPECT_TRUE(source->m_flags & DF_TMP_ACTIVE_FILE);
+    EXPECT_TRUE(source->m_flags & DF_TMP_GROUP_DESC);
+    EXPECT_EQ(m_output_dir, fs::path{source->m_spool_dir});
+    EXPECT_EQ(m_output_dir, fs::path{source->m_extra_name}.parent_path());
+    EXPECT_EQ(m_output_dir, fs::path{source->m_group_desc}.parent_path());
 }
 
 TEST_F(DataSourceInitTest, usesDefaultAccessFile)
@@ -628,6 +635,47 @@ TEST_F(DataSourceInitTest, usesDefaultAccessFile)
     const DataSource *source = get_data_source("test-default");
     ASSERT_NE(nullptr, source);
     EXPECT_EQ(active_path.generic_string(), source->m_news_id);
+}
+
+TEST_F(DataSourceInitTest, usesLocalNewsSourceModeFromAccessFile)
+{
+    const fs::path active_path = m_output_dir / "active";
+    const fs::path spool_path = m_output_dir / "local-spool";
+    fs::create_directories(spool_path);
+    std::ofstream{active_path} << "comp.lang.apl 0000000001 0000000001 y\n";
+    std::ofstream{m_output_dir / "access"} << "[test-local]\n"
+                                           << "Active File = " << active_path.generic_string() << "\n"
+                                           << "Spool Dir = " << spool_path.generic_string() << "\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("test-local");
+    ASSERT_NE(nullptr, source);
+    EXPECT_FALSE(source->m_flags & DF_REMOTE);
+    EXPECT_EQ(active_path.generic_string(), source->m_news_id);
+    EXPECT_EQ(spool_path.generic_string(), source->m_spool_dir);
+}
+
+TEST_F(DataSourceInitTest, usesBothNewsSourceModeFromAccessFile)
+{
+    const fs::path spool_path = m_output_dir / "local-spool";
+    fs::create_directories(spool_path);
+    std::ofstream{m_output_dir / "access"} << "[test-both]\n"
+                                           << "NNTP Server = news.example\n"
+                                           << "Spool Dir = " << spool_path.generic_string() << "\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("test-both");
+    ASSERT_NE(nullptr, source);
+    EXPECT_TRUE(source->m_flags & DF_REMOTE);
+    EXPECT_TRUE(source->m_flags & DF_TMP_ACTIVE_FILE);
+    EXPECT_EQ("news.example", source->m_news_id);
+    EXPECT_EQ(spool_path.generic_string(), source->m_spool_dir);
 }
 
 TEST_F(DataSourceInitTest, usesConfiguredGroupDescription)
