@@ -251,34 +251,9 @@ Use `config/legacy/Configure` to understand historical defaults, special
 values, and compatibility expectations.  Do not copy its Q&A structure
 when CMake can determine the result directly.
 
-### 7. Install Option Documentation
-
-Issues: #18.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: 6 and 10.
-
-Files likely touched:
-
-- `INSTALL.md`
-- non-markdown install and help references from the documentation audit
-
-Tasks:
-
-- Document the supported CMake cache variables from #19.
-- Document generated helper files from #31.
-- Document release-supported package and install layouts.
-- Document which top-level text, man pages, and online help files are
-  shipped, retired, or historical.
-- Add known limits for deferred non-milestone work.
-
-Acceptance:
-
-- `INSTALL.md` describes the CMake options needed to customize trn.
-- #18 can close after the quickstart and option reference are reviewed.
-- The documentation names the unit or CTest coverage for each documented
-  option, or explicitly marks the option as untested.
+When a slice is the final active slice for an open GitHub issue, its
+commit description must include `fixes #nnn`.  If a slice can either fix
+or defer an issue, use `fixes` only when the issue is actually resolved.
 
 ### 8. Generated Helper Inventory
 
@@ -372,6 +347,37 @@ Acceptance:
 - Package and install trees contain the helper files needed at runtime.
 - Unit or CMake install tests assert helper paths, permissions, and
   installed file presence.
+- Commit description includes `fixes #31`.
+
+### 7. Install Option Documentation
+
+Issues: #18.
+
+Milestone status: open mandatory 5.0 issue.
+
+Depends on: #19 complete, and 10.
+
+Files likely touched:
+
+- `INSTALL.md`
+- non-markdown install and help references from the documentation audit
+
+Tasks:
+
+- Document the supported CMake cache variables from #19.
+- Document generated helper files from #31.
+- Document release-supported package and install layouts.
+- Document which top-level text, man pages, and online help files are
+  shipped, retired, or historical.
+- Add known limits for deferred non-milestone work.
+
+Acceptance:
+
+- `INSTALL.md` describes the CMake options needed to customize trn.
+- #18 can close after the quickstart and option reference are reviewed.
+- The documentation names the unit or CTest coverage for each documented
+  option, or explicitly marks the option as untested.
+- Commit description includes `fixes #18`.
 
 ### 11. Local Group Desc Crash Repro
 
@@ -423,6 +429,7 @@ Acceptance:
 - Local spool sources work with and without `Group Desc = none`.
 - Unit tests cover omitted, explicit `none`, and configured group
   description cases.
+- Commit description includes `fixes #24`.
 
 ### 13. Compress Name Contract
 
@@ -446,6 +453,7 @@ Acceptance:
 - No `DISABLED_` tests remain for #38.
 - The test names describe the expected display-width behavior.
 - Focused unit tests cover each retained `compress_name` contract case.
+- Commit description includes `fixes #38`.
 
 ### 14. Threaded Save Crash Triage
 
@@ -470,6 +478,8 @@ Acceptance:
 - This work does not block 5.0 unless the issue joins the milestone.
 - Any deterministic repro is checked in as a unit or regression test; a
   deferred result names the missing test condition.
+- If this slice fixes #10 instead of deferring it, commit description
+  includes `fixes #10`.
 
 ### 15. Posting Header Harness
 
@@ -529,6 +539,7 @@ Acceptance:
 - #16 can close without regressing #20.
 - Posting unit tests cover ASCII, non-ASCII, and User-Agent regression
   cases.
+- Commit description includes `fixes #16`.
 
 ### 17. Platform Path Lists
 
@@ -556,6 +567,7 @@ Acceptance:
 - The helper can be reused by Windows release work.
 - Unit tests cover Unix separators, Windows separators, and Windows drive
   letters.
+- Commit description includes `fixes #27`.
 
 ### 18. Modern Windows Platform Policy
 
@@ -632,6 +644,7 @@ Acceptance:
 - #14 packaging can depend on generated Windows-safe helpers.
 - Windows helper unit tests cover generated defaults and unsupported
   helper diagnostics.
+- Commit description includes `fixes #29`.
 
 ### 20. Windows Package Artifacts
 
@@ -663,6 +676,7 @@ Acceptance:
 - Package artifacts contain all files needed for normal use.
 - Unit or package tests cover install path computation and package
   contents.
+- Commit description includes `fixes #14`.
 
 ### 21. macOS Terminal Include Fix
 
@@ -713,6 +727,7 @@ Acceptance:
 - #23 can close without weakening Unix coverage.
 - The macOS CI job runs the unit-test suite, not just configure and
   build.
+- Commit description includes `fixes #23`.
 
 ### 23. Manual Test Plan Inventory
 
@@ -804,6 +819,7 @@ Acceptance:
 - Manual-only items are deliberate, named, and repeatable.
 - New automated checks are registered in CTest and grouped by unit or
   integration scope.
+- Commit description includes `fixes #33`.
 
 ### 26. NNTP Capability Model
 
@@ -937,7 +953,7 @@ Issues: #3.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 28 and 29.
+Depends on: 27, 28, and 29.
 
 Files likely touched:
 
@@ -960,6 +976,7 @@ Acceptance:
 - #3 can close when command, STARTTLS, nntps, and auth paths pass.
 - NNTP auth unit tests cover advertised auth, compatibility mode, and
   cleartext refusal.
+- Commit description includes `fixes #3`.
 
 ### 31. Charset Pipeline Contract
 
@@ -1077,6 +1094,7 @@ Acceptance:
   paths.
 - Header and MIME unit tests cover known, unknown, malformed, and
   repeated-article charset state.
+- Commit description includes `fixes #17`.
 
 ### 34. UTF-8 To ASCII Configuration
 
@@ -1120,7 +1138,7 @@ Issues: #34.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 34.
+Depends on: 33 and 34.
 
 Files likely touched:
 
@@ -1143,12 +1161,15 @@ Acceptance:
 - #34 can close without weakening UTF-8 baseline behavior.
 - Unit tests cover smart punctuation, spaces, dashes, malformed UTF-8,
   and equivalent header/body text.
+- Commit description includes `fixes #34`.
 
 ### 36. YEnc Decode
 
 Issues: #5.
 
 Milestone status: open mandatory 5.0 issue.
+
+Depends on: 18.
 
 Files likely touched:
 
@@ -1170,12 +1191,15 @@ Acceptance:
 - Existing extraction tests still pass.
 - Extraction unit tests cover single-part, multipart, filename policy,
   and existing uuencode behavior.
+- Commit description includes `fixes #5`.
 
 ### 37. UTF-8 Underline Display
 
 Issues: #30.
 
 Milestone status: not on the 5.0 milestone.
+
+Depends on: 31 through 35.
 
 Files likely touched:
 
@@ -1194,12 +1218,16 @@ Acceptance:
   explicitly deferred outside 5.0.
 - Display unit tests cover the attached UTF-8 underline repro when the
   fix is implemented.
+- If this slice fixes #30 instead of deferring it, commit description
+  includes `fixes #30`.
 
 ### 38. Moderators Support
 
 Issues: #25.
 
 Milestone status: not on the 5.0 milestone.
+
+Depends on: 26 and 27.
 
 Files likely touched:
 
@@ -1222,6 +1250,8 @@ Acceptance:
 - This work is deferred unless it joins the 5.0 milestone.
 - Moderator unit tests cover local pattern matching, remote
   `LIST MODERATORS`, and fallback behavior when implemented.
+- If this slice implements #25 instead of deferring it, commit
+  description includes `fixes #25`.
 
 ### 39. AddGroup Storage
 
@@ -1278,6 +1308,7 @@ Acceptance:
 - Unsubscribed newsgroup listings can be sorted.
 - Selector unit tests cover paging, sort order, reverse order, and glob
   refinement.
+- Commit description includes `fixes #15`.
 
 ### 41. Archive.org Test Samples
 
@@ -1304,6 +1335,7 @@ Acceptance:
 - Any imported sample has source, license, and reproduction notes.
 - Imported samples are exercised by optional unit or regression tests
   with no network dependency.
+- Commit description includes `fixes #35`.
 
 ## Deferred Cleanup
 
@@ -1335,7 +1367,8 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 5 and 6.
+- #19: completed by removed slices 5 and 6; the closing commit must
+  include `fixes #19` before slice 7 is unblocked.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.
