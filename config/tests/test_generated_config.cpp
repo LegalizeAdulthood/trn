@@ -111,6 +111,11 @@ TEST(GeneratedConfigTest, waitStatusProbeMatchesPlatformCheck)
     expect_config_define(TRN_TEST_WAIT_STATUS_PROBE_CONFIG, "USE_WIFSTAT", cmake_bool(TRN_TEST_USE_WIFSTAT));
 }
 
+TEST(GeneratedConfigTest, termlibProbeMatchesPlatformCheck)
+{
+    expect_config_define(TRN_TEST_TERMLIB_PROBE_CONFIG, "HAS_TERMLIB", cmake_bool(TRN_TEST_DEFAULT_HAS_TERMLIB));
+}
+
 TEST(GeneratedConfigTest, activeTimesDefaultIsNone)
 {
     expect_file_contains(TRN_TEST_ACTIVE_TIMES_DEFAULT_CONFIG, "#define ACTIVE_TIMES \"none\"");

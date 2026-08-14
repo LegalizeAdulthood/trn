@@ -1,5 +1,7 @@
+include(CheckCXXSourceCompiles)
 include(CheckIncludeFile)
 include(CheckSymbolExists)
+include(CMakePushCheckState)
 
 function(configure_flavor_header name flavor)
     configure_file(
@@ -180,6 +182,49 @@ function(configure_save_path_defaults make_save_directories)
         set(DEFAULT_SAVEDIR "%p" PARENT_SCOPE)
         set(DEFAULT_SAVENAME "%^C" PARENT_SCOPE)
     endif()
+endfunction()
+
+function(configure_termlib_default probed_has_termlib)
+    if(probed_has_termlib)
+        set(DEFAULT_HAS_TERMLIB ON PARENT_SCOPE)
+    else()
+        set(DEFAULT_HAS_TERMLIB OFF PARENT_SCOPE)
+    endif()
+endfunction()
+
+function(configure_termlib_cache_default)
+    set_config_cache_default(HAS_TERMLIB "${DEFAULT_HAS_TERMLIB}" BOOL
+        "Indicates that termlib-style routines are available")
+endfunction()
+
+function(probe_termlib_default)
+    if(WIN32)
+        configure_termlib_default(ON)
+        set(DEFAULT_HAS_TERMLIB "${DEFAULT_HAS_TERMLIB}" PARENT_SCOPE)
+        return()
+    endif()
+
+    if(TARGET curses)
+        cmake_push_check_state()
+        set(CMAKE_REQUIRED_LIBRARIES curses)
+        check_cxx_source_compiles([=[
+extern "C" int tputs(const char *, int, int (*)(int));
+int putchr(int ch)
+{
+    return ch;
+}
+int main()
+{
+    return tputs("", 1, putchr);
+}
+]=] TRN_HAS_TERMLIB_TPUTS)
+        cmake_pop_check_state()
+    else()
+        set(TRN_HAS_TERMLIB_TPUTS OFF)
+    endif()
+
+    configure_termlib_default("${TRN_HAS_TERMLIB_TPUTS}")
+    set(DEFAULT_HAS_TERMLIB "${DEFAULT_HAS_TERMLIB}" PARENT_SCOPE)
 endfunction()
 
 function(read_default_nntp_server_file output)
@@ -591,7 +636,9 @@ function(configure_trn)
         "%x/active" "remote")
     set(ACTIVE_TIMES "none" CACHE STRING "The name of the active.times file for the news system.")
     set(PIPE_HOST_CMD "" CACHE STRING "A command to feed to the popen() routine to derive the host name.")
-    set(HAS_TERMLIB ON CACHE BOOL "Indicates that termlib-style routines are available")
+    probe_termlib_default()
+    set(DEFAULT_HAS_TERMLIB "${DEFAULT_HAS_TERMLIB}" PARENT_SCOPE)
+    configure_termlib_cache_default()
     option(IGNORE_ORG "Indicates that the ORGANIZATION environment variable does not contain an organization name." OFF)
     set(MIMECAP "/etc/mailcap" CACHE STRING
         "The pathname of the mimecap file, which controls what programs get run when handling mime articles.")

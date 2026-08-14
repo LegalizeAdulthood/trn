@@ -72,8 +72,9 @@ need semantic fixes, listed here rather than hidden in prose:
 - `ACTIVE_TIMES`: handled.  CMake owns `ACTIVE_TIMES`, defaults it to
   `none`, and `config.h.in` emits the cache value directly.
 - `PIPE_HOST_CMD`: handled.  It remains an optional hostname fallback.
-- `HAS_TERMLIB`: handled.  It is now an explicit cache boolean while the
-  target links through curses.
+- `HAS_TERMLIB`: handled.  CMake probes termlib-style support from the
+  configured terminal path, keeps the cache variable as an explicit
+  override, and still links `libtrn` through the `curses` target.
 - `IGNORE_ORG`: handled.  It still drives posting organization fallback.
 - `SERVER_NAME`: handled.  CMake probes default NNTP server sources and
   keeps the cache variable as an explicit override.
@@ -332,14 +333,6 @@ available, and derives `PASS_NAMES` and `BERKELEY_NAMES` for the
 generated config.
 
 ## Changed Semantics
-
-### Termlib
-
-Legacy `Configure` tried to detect termlib routines and libraries.
-
-Current CMake exposes `HAS_TERMLIB` as a cache boolean defaulting to on,
-while the build links `libtrn` to the `curses` target. This is probably
-intentional, but it is not the same probe model.
 
 ### Tool Paths
 

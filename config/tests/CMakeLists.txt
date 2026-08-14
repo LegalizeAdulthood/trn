@@ -227,6 +227,40 @@ set_tests_properties(
     ConfigCMakeTest.savePathDefaultsUseCategoryMode
     PROPERTIES LABELS trn)
 
+set(termlib_default_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_termlib_default.cmake")
+add_test(NAME ConfigCMakeTest.termlibDefaultUsesFoundProbe
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_PROBED_HAS_TERMLIB=ON"
+        "-DTRN_TEST_EXPECT_HAS_TERMLIB=ON"
+        -P "${termlib_default_test_script}")
+add_test(NAME ConfigCMakeTest.termlibDefaultUsesMissingProbe
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_PROBED_HAS_TERMLIB=OFF"
+        "-DTRN_TEST_EXPECT_HAS_TERMLIB=OFF"
+        -P "${termlib_default_test_script}")
+add_test(NAME ConfigCMakeTest.termlibOverrideCanEnableMissingProbe
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_DEFAULT_HAS_TERMLIB=OFF"
+        "-DTRN_TEST_HAS_TERMLIB_OVERRIDE=ON"
+        "-DTRN_TEST_EXPECT_HAS_TERMLIB=ON"
+        -P "${termlib_default_test_script}")
+add_test(NAME ConfigCMakeTest.termlibOverrideCanDisableFoundProbe
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_DEFAULT_HAS_TERMLIB=ON"
+        "-DTRN_TEST_HAS_TERMLIB_OVERRIDE=OFF"
+        "-DTRN_TEST_EXPECT_HAS_TERMLIB=OFF"
+        -P "${termlib_default_test_script}")
+set_tests_properties(
+    ConfigCMakeTest.termlibDefaultUsesFoundProbe
+    ConfigCMakeTest.termlibDefaultUsesMissingProbe
+    ConfigCMakeTest.termlibOverrideCanEnableMissingProbe
+    ConfigCMakeTest.termlibOverrideCanDisableFoundProbe
+    PROPERTIES LABELS trn)
+
 set(news_source_defaults_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_news_source_defaults.cmake")
 add_test(NAME ConfigCMakeTest.newsSourceProbeDetectsLocalOnly
     COMMAND "${CMAKE_COMMAND}"
@@ -347,6 +381,13 @@ configure_file(
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     wait_status_probe.h
+    @ONLY
+)
+
+set(HAS_TERMLIB "${DEFAULT_HAS_TERMLIB}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    termlib_probe.h
     @ONLY
 )
 

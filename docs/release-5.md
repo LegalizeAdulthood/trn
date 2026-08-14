@@ -246,35 +246,6 @@ Use `config/legacy/Configure` to understand historical defaults, special
 values, and compatibility expectations.  Do not copy its Q&A structure
 when CMake can determine the result directly.
 
-### 5.4 Termlib Feature Probe Retrofit
-
-Issues: #19.
-
-Plan source: `config.md`, Termlib.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- config tests
-
-Tasks:
-
-- Replace the current `HAS_TERMLIB` default with a CMake feature probe
-  for the terminal-library capability actually used by the build.
-- Keep a cache override only if it is needed to support unusual terminal
-  libraries or toolchains.
-- Make the generated `HAS_TERMLIB` value follow the probed or explicitly
-  overridden result.
-
-Acceptance:
-
-- Configure tests cover found, missing, and explicitly overridden
-  terminal-library capability cases.
-- Generated-config tests prove `HAS_TERMLIB` follows the probe result.
-- The build still links through the CMake terminal library target.
-
 ### 5.5 Tool Path Probe Retrofit
 
 Issues: #19.
