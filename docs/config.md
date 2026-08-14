@@ -307,11 +307,13 @@ syntax.
 
 ### `mbox.saver`
 
-`config/data/mbox.saver.in` still uses `$sed`, but CMake does not define
-or substitute that variable.
+`config/data/mbox.saver.in` still uses the old `$sed` metaconfig
+variable.  The CMake migration should use the standard `sed` command
+directly for Unix-like helpers, not add a CMake search or cache variable
+for it.
 
 Result: generated `mbox.saver` can call an empty command at the `From`
-line escaping step.
+line escaping step until the old variable reference is removed.
 
 ### Posting Host Match Segments
 
@@ -370,6 +372,10 @@ runtime defaults:
 Those retained defaults are probed with CMake.  Missing optional tools
 default to empty values, except `ISPELL_PROGRAM` uses `none`, and cache
 variables remain explicit overrides.
+
+Do not add CMake probes or cache variables for standard modern POSIX
+tools such as `awk`, `cat`, `egrep`, `grep`, `mail`, or `sed` merely
+because legacy Configure located them.
 
 ## Mostly Replaced by CMake or Modern Code
 

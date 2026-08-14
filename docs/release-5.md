@@ -61,6 +61,11 @@ defaults where the feature is supported: `NEWSPOSTER`, `MAILPOSTER`,
 `MBOXSAVER`, `NORMSAVER`, `CANCEL`, `EXSAVER`, `PIPESAVER`, `UNSHAR`,
 `PREF_SHELL`, and `SHAR_SAVER`.
 
+On Unix-like systems, assume standard modern POSIX tools are present.
+Do not add CMake search or cache configuration for `awk`, `cat`,
+`egrep`, `grep`, `mail`, or `sed` merely because legacy Configure
+located them.
+
 Legacy build scripts are not runtime Windows porting targets:
 `config/legacy/Configure`, `config/legacy/Makefile.SH`, and
 `config/legacy/hints/*.sh` should be retired from the active build path
@@ -378,6 +383,9 @@ Tasks:
 - Add a generated `Rnmail` replacement.
 - Finish `mbox.saver`, `norm.saver`, `filexp`, and `Speller`.
 - Remove leftover `nidump`, `ypmatch`, and obsolete substitutions.
+- Use literal modern POSIX tool names for standard Unix helpers instead
+  of adding CMake probes or cache variables for legacy Configure tool
+  lookups.
 - Keep Unix helper behavior compatible where it still matters.
 
 Acceptance:
