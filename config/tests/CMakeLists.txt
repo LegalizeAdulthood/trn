@@ -377,6 +377,20 @@ set_tests_properties(
     ConfigCMakeTest.newsSourceDefaultsRejectLocalWithoutSpool
     PROPERTIES LABELS trn)
 
+add_test(NAME ConfigCMakeTest.installLayoutContainsRuntimeHelpers
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_TEST_BUILD_DIR=${PROJECT_BINARY_DIR}"
+        "-DTRN_TEST_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/install-layout"
+        "-DTRN_TEST_CONFIG=$<CONFIG>"
+        "-DTRN_TEST_BINDIR=${CMAKE_INSTALL_BINDIR}"
+        "-DTRN_TEST_PRIVATE_LIBDIR=${TRN_INSTALL_PRIVATE_LIBDIR}"
+        "-DTRN_TEST_MANDIR=${CMAKE_INSTALL_MANDIR}"
+        "-DTRN_TEST_EXECUTABLE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_install_layout.cmake")
+set_tests_properties(
+    ConfigCMakeTest.installLayoutContainsRuntimeHelpers
+    PROPERTIES LABELS trn)
+
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     input_signal_probes.h

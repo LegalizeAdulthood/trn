@@ -343,13 +343,7 @@ Retired legacy build helpers:
   CMake.
 - `mkpro.SH`: retired.  Prototypes are not generated in the CMake build.
 - `mktd.SH`: retired.  `typedef.h` is not regenerated in the CMake build.
-- `myinstall.SH`: retired.  CMake install rules will own installation.
-
-Remaining #31 work:
-
-- Add generated-data content tests for `access.def`, `environment`, and
-  `newsnews`.
-- Add install rules after helper generation is complete.
+- `myinstall.SH`: retired.  CMake install rules own installation.
 
 ### Posting Host Match Segments
 

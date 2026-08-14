@@ -83,11 +83,16 @@ cmake --install ../build-default --config Debug
 Add `--prefix <directory>` to stage the install tree somewhere other than
 the configured install prefix.
 
+The install tree includes the built commands, generated posting helpers,
+generated private helper/data files, `HelpFiles`, and the supported man
+pages for `trn`, `Pnews`, and `Rnmail`.  `strn.1` is not installed because
+CMake does not build a `strn` entry point.
+
 ## Package
 
 No package preset or CPack target is defined yet.  Until the 5.0 package
-work lands, there is no supported default package command.  Use the
-install command above to stage files from a fresh checkout.
+work lands, there is no supported default package command.  Future package
+presets should use the install contents staged by the command above.
 
 ## Runtime Setup
 
@@ -98,9 +103,8 @@ That choice still belongs in runtime configuration:
 - Overview data normally comes from the server or local spool.
 - Groups can be read unthreaded when no overview data is available, with
   slower startup.
-- Posting helpers and install layout are finished by later 5.0 release
-  work.
+- Posting helpers and site data are installed by CMake.
 
 After installation, run `trn` and use the online options editor to save
 personal defaults in `.trn/trnrc`.  Site defaults belong in the installed
-INIT file once the install layout work is complete.
+INIT file.

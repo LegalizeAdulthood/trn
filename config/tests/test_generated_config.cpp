@@ -503,6 +503,16 @@ TEST(GeneratedConfigTest, postingHelperPathConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG, "MAIL_POSTER", "/test/bin/Rnmail -h %h");
 }
 
+TEST(GeneratedConfigTest, postingHelpersUseInstalledHelperPaths)
+{
+    const std::string bin_dir = TRN_TEST_BIN_DIR;
+
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"artcheck="} + bin_dir + "/trn-artchk");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"nntplist="} + bin_dir + "/nntplist");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"inews=\""} + bin_dir + "/inews\"");
+    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER", bin_dir + "/Rnmail -h %h");
+}
+
 TEST(GeneratedConfigTest, postingHeaderTemplatesDefaultMatchHistoricalFallbacks)
 {
     constexpr std::string_view mail_header = "To: %t\\n"

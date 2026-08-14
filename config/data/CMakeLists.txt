@@ -17,6 +17,16 @@ configure_helper_tool_cache_defaults()
 # MMDF mailbox magic separator
 string(ASCII 1 CTRL_A)
 
+set(trn_private_lib_install_dir "${PRIVATE_LIB}")
+foreach(_iteration RANGE 1 2)
+    string(REPLACE "%x" "${NEWS_LIB}" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
+    string(REPLACE "%X" "${PRIVATE_LIB}" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
+endforeach()
+string(REPLACE "\\" "/" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
+string(REGEX REPLACE "^[A-Za-z]:/" "" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
+string(REGEX REPLACE "^/+" "" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
+set(TRN_INSTALL_PRIVATE_LIBDIR "${trn_private_lib_install_dir}" PARENT_SCOPE)
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../../INIT.txt" INIT COPYONLY)
 configure_file(access_def.in access.def @ONLY)
 configure_file(environment.in environment @ONLY)
@@ -58,3 +68,23 @@ source_group("CMake Scripts" REGULAR_EXPRESSION ".*\\.cmake$")
 source_group("CMake Templates" REGULAR_EXPRESSION ".*\\.in$")
 source_group("Data Files" REGULAR_EXPRESSION "${CMAKE_CURRENT_BINARY_DIR}/.*")
 target_folder(data "Libraries")
+
+install(PROGRAMS
+    "${CMAKE_CURRENT_BINARY_DIR}/Pnews"
+    "${CMAKE_CURRENT_BINARY_DIR}/Rnmail"
+    DESTINATION "${CMAKE_INSTALL_BINDIR}")
+install(PROGRAMS
+    "${CMAKE_CURRENT_BINARY_DIR}/filexp"
+    "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver"
+    "${CMAKE_CURRENT_BINARY_DIR}/norm.saver"
+    "${CMAKE_CURRENT_BINARY_DIR}/Speller"
+    DESTINATION "${trn_private_lib_install_dir}")
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/INIT"
+    "${CMAKE_CURRENT_BINARY_DIR}/access.def"
+    "${CMAKE_CURRENT_BINARY_DIR}/environment"
+    "${CMAKE_CURRENT_BINARY_DIR}/newsnews"
+    "${CMAKE_CURRENT_BINARY_DIR}/Pnews.header"
+    DESTINATION "${trn_private_lib_install_dir}")
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/HelpFiles"
+    DESTINATION "${trn_private_lib_install_dir}")

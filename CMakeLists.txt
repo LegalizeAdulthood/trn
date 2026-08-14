@@ -66,6 +66,11 @@ source_group("Markdown Files" FILES
 )
 target_link_libraries(trn PUBLIC libtrn)
 install(TARGETS trn DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES
+    man/trn.1
+    man/Pnews.1
+    man/Rnmail.1
+    DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
 vs_startup_project(trn)
 
 add_subdirectory(config)

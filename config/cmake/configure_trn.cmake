@@ -756,9 +756,14 @@ function(configure_trn)
         "none" "%x/overview.fmt")
     option(THREAD_INIT "If ON, indicates we act like trn no matter what our name is." OFF)
     option(SELECT_INIT "If ON, indicates we default to the selector for group entry." OFF)
-    set(USE_INEWS "%x/inews" CACHE STRING "Full path to the inews to use for posting.")
-    # TODO: How to properly configure BIN_DIR to work when developing and after installation?
-    set(BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "Path of the bin directory where the package will be installed.")
+    if(NOT CMAKE_INSTALL_BINDIR)
+        set(CMAKE_INSTALL_BINDIR "bin")
+    endif()
+    set_config_cache_default(BIN_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" STRING
+        "Path of the bin directory where the package will be installed."
+        "${CMAKE_INSTALL_PREFIX}/bin")
+    set_config_cache_default(USE_INEWS "${BIN_DIR}/inews" STRING
+        "Full path to the inews to use for posting." "%x/inews")
     set(DEFAULT_CALL_INEWS "inews -h <%h")
     set(DEFAULT_CALL_INEWS "${DEFAULT_CALL_INEWS}" PARENT_SCOPE)
     set(CALL_INEWS "${DEFAULT_CALL_INEWS}" CACHE STRING "The command used to cancel articles through inews.")
