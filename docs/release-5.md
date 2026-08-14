@@ -236,40 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.22 through 4.31 refine #19 into one variable or setting family
+Slices 4.23 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.22. Posting Header Templates
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `MAIL_HEADER`
-- `NEWS_HEADER`
-- `CANCEL_HEADER`
-- `SUPERSEDE_HEADER`
-
-Tasks:
-
-- Move retained posting header template defaults from `common.h` into
-  CMake.
-- Keep multiline template escaping testable in generated config.
-- Emit retained posting header templates directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config coverage for default header text.
-
-Acceptance:
-
-- Posting header templates are CMake-owned or intentionally source-owned.
-- Generated headers preserve current template text exactly.
-- No retained posting header template relies on a `common.h` fallback.
-- Unit tests compare generated default header templates byte-for-byte.
 
 ### 4.23. Reply And Forward Templates
 
@@ -539,7 +510,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.22 through 4.31.
+Depends on: 4.23 through 4.31.
 
 Files likely touched:
 
@@ -1668,7 +1639,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.22 through 4.31, 5, and 6.
+- #19: 4.23 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

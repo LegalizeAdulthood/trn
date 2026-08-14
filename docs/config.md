@@ -153,6 +153,9 @@ need semantic fixes, listed here rather than hidden in prose:
   `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: needed.  CMake owns them for
   generated helper files, but the helper templates still contain
   metaconfig residue.
+- `MAIL_HEADER`, `NEWS_HEADER`, `CANCEL_HEADER`, and
+  `SUPERSEDE_HEADER`: handled.  CMake owns the retained posting header
+  templates and emits them directly.
 
 ### Source Symbols Without CMake Owners
 
@@ -162,8 +165,7 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, and `USE_FTP`.
-- Posting, mail, and forwarding text: `MAIL_HEADER`, `NEWS_HEADER`,
-  `CANCEL_HEADER`, `SUPERSEDE_HEADER`, `YOU_SAID`, `ATTRIBUTION`,
+- Posting, mail, and forwarding text: `YOU_SAID`, `ATTRIBUTION`,
   `FORWARD_POSTER`, `FORWARD_HEADER`, `FORWARD_MSG`, and
   `FORWARD_MSG_END`.
 - Kill-file defaults: `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`.

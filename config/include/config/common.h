@@ -278,21 +278,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define MAIL_POSTER "Rnmail -h %h"
 #endif
 
-#ifndef MAIL_HEADER      // %
-#   define MAIL_HEADER \
-        "To: %t\n" \
-        "Subject: %(%i=^$?:Re: %S\n" \
-        "X-Newsgroups: %n\n" \
-        "In-Reply-To: %i)\n" \
-        "%(%{FROM}=^$?:From: %{FROM}\n)" \
-        "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)" \
-        "%(%[references]=^$?:References: %[references]\n)" \
-        "Organization: %o\n" \
-        "Cc: \n" \
-        "Bcc: \n" \
-        "\n"
-#endif
-
 #ifndef YOU_SAID         // %
 #   define YOU_SAID "In article %i you write:"
 #endif
@@ -332,24 +317,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define NEWS_POSTER "Pnews -h %h"
 #endif
 
-#ifndef NEWS_HEADER      // %
-#   define NEWS_HEADER "%(%[followup-to]=^$?:%(%[followup-to]=^%n$?:X-ORIGINAL-NEWSGROUPS: %n\n))" \
-        "Newsgroups: %(%F=^$?%C:%F)\n" \
-        "Subject: %(%S=^$?%\"\n\nSubject: \":Re: %S)\n" \
-        "Summary: \n" \
-        "Expires: \n" \
-        "%(%R=^$?:References: %R\n)" \
-        "Sender: \n" \
-        "Followup-To: \n" \
-        "%(%{FROM}=^$?:From: %{FROM}\n)" \
-        "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)" \
-        "Distribution: %(%i=^$?%\"Distribution: \":%D)\n" \
-        "Organization: %o\n" \
-        "Keywords: %[keywords]\n" \
-        "Cc: %(%F=poster?%t:%(%F!=@?:%F))\n" \
-        "\n"
-#endif
-
 #ifndef ATTRIBUTION     // %
 #   define ATTRIBUTION "In article %i,%?%)f <%>f> wrote:"
 #endif
@@ -373,36 +340,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   else
 #       define CALL_INEWS "inews -h <%h"
 #   endif
-#endif
-
-// how to cancel an article, continued
-#ifndef CANCEL_HEADER
-#   define CANCEL_HEADER "Newsgroups: %n\n" \
-        "Subject: cancel\n" \
-        "%(%{FROM}=^$?:From: %{FROM}\n)" \
-        "Control: cancel %i\n" \
-        "Distribution: %D\n" \
-        "\n" \
-        "%i was cancelled from within trn.\n"
-#endif
-
-// how to supersede an article
-#ifndef SUPERSEDE_HEADER
-#   define SUPERSEDE_HEADER "Newsgroups: %n\n" \
-        "Subject: %[subject]\n" \
-        "%(%{FROM}=^$?:From: %{FROM}\n)" \
-        "Summary: %[summary]\n" \
-        "Expires: %[expires]\n" \
-        "References: %[references]\n" \
-        "From: %[from]\n" \
-        "Reply-To: %[reply-to]\n" \
-        "Supersedes: %i\n" \
-        "Sender: %[sender]\n" \
-        "Followup-To: %[followup-to]\n" \
-        "Distribution: %D\n" \
-        "Organization: %o\n" \
-        "Keywords: %[keywords]\n" \
-        "\n"
 #endif
 
 #ifndef LOCALTIME_FMT

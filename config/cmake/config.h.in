@@ -451,6 +451,26 @@
 //
 #define VERIFY_PGP "@VERIFY_PGP@"
 
+// MAIL_HEADER:
+//      The header template used when mailing a reply.
+//
+#define MAIL_HEADER "@MAIL_HEADER@"
+
+// NEWS_HEADER:
+//      The header template used when posting a followup article.
+//
+#define NEWS_HEADER "@NEWS_HEADER@"
+
+// CANCEL_HEADER:
+//      The header template used when canceling an article.
+//
+#define CANCEL_HEADER "@CANCEL_HEADER@"
+
+// SUPERSEDE_HEADER:
+//      The header template used when superseding an article.
+//
+#define SUPERSEDE_HEADER "@SUPERSEDE_HEADER@"
+
 /* OVERVIEW_DIR:
  *      This symbol indicates where the overview files go.
  */

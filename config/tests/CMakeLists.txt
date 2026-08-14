@@ -420,6 +420,26 @@ configure_file(
     @ONLY
 )
 
+set(MAIL_HEADER "${DEFAULT_MAIL_HEADER}")
+set(NEWS_HEADER "${DEFAULT_NEWS_HEADER}")
+set(CANCEL_HEADER "${DEFAULT_CANCEL_HEADER}")
+set(SUPERSEDE_HEADER "${DEFAULT_SUPERSEDE_HEADER}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    posting_header_templates_default.h
+    @ONLY
+)
+
+set(MAIL_HEADER [=[test-mail\n]=])
+set(NEWS_HEADER [=[test-news\n]=])
+set(CANCEL_HEADER [=[test-cancel\n]=])
+set(SUPERSEDE_HEADER [=[test-supersede\n]=])
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    posting_header_templates_configured.h
+    @ONLY
+)
+
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
@@ -457,5 +477,9 @@ set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")
 set(CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}")
 set(VERIFY_RIPEM "${DEFAULT_VERIFY_RIPEM}")
 set(VERIFY_PGP "${DEFAULT_VERIFY_PGP}")
+set(MAIL_HEADER "${DEFAULT_MAIL_HEADER}")
+set(NEWS_HEADER "${DEFAULT_NEWS_HEADER}")
+set(CANCEL_HEADER "${DEFAULT_CANCEL_HEADER}")
+set(SUPERSEDE_HEADER "${DEFAULT_SUPERSEDE_HEADER}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)

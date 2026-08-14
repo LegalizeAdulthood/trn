@@ -359,6 +359,72 @@ TEST(GeneratedConfigTest, verificationCommandConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG, "VERIFY_PGP", "test-pgp %A");
 }
 
+TEST(GeneratedConfigTest, postingHeaderTemplatesDefaultMatchHistoricalFallbacks)
+{
+    constexpr std::string_view mail_header = "To: %t\\n"
+                                             "Subject: %(%i=^$?:Re: %S\\n"
+                                             "X-Newsgroups: %n\\n"
+                                             "In-Reply-To: %i)\\n"
+                                             "%(%{FROM}=^$?:From: %{FROM}\\n)"
+                                             "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\\n)"
+                                             "%(%[references]=^$?:References: %[references]\\n)"
+                                             "Organization: %o\\n"
+                                             "Cc: \\n"
+                                             "Bcc: \\n"
+                                             "\\n";
+    constexpr std::string_view news_header = "%(%[followup-to]=^$?:%(%[followup-to]=^%n$?:"
+                                             "X-ORIGINAL-NEWSGROUPS: %n\\n))"
+                                             "Newsgroups: %(%F=^$?%C:%F)\\n"
+                                             "Subject: %(%S=^$?%\\\"\\n\\nSubject: \\\":Re: %S)\\n"
+                                             "Summary: \\n"
+                                             "Expires: \\n"
+                                             "%(%R=^$?:References: %R\\n)"
+                                             "Sender: \\n"
+                                             "Followup-To: \\n"
+                                             "%(%{FROM}=^$?:From: %{FROM}\\n)"
+                                             "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\\n)"
+                                             "Distribution: %(%i=^$?%\\\"Distribution: \\\":%D)\\n"
+                                             "Organization: %o\\n"
+                                             "Keywords: %[keywords]\\n"
+                                             "Cc: %(%F=poster?%t:%(%F!=@?:%F))\\n"
+                                             "\\n";
+    constexpr std::string_view cancel_header = "Newsgroups: %n\\n"
+                                               "Subject: cancel\\n"
+                                               "%(%{FROM}=^$?:From: %{FROM}\\n)"
+                                               "Control: cancel %i\\n"
+                                               "Distribution: %D\\n"
+                                               "\\n"
+                                               "%i was cancelled from within trn.\\n";
+    constexpr std::string_view supersede_header = "Newsgroups: %n\\n"
+                                                  "Subject: %[subject]\\n"
+                                                  "%(%{FROM}=^$?:From: %{FROM}\\n)"
+                                                  "Summary: %[summary]\\n"
+                                                  "Expires: %[expires]\\n"
+                                                  "References: %[references]\\n"
+                                                  "From: %[from]\\n"
+                                                  "Reply-To: %[reply-to]\\n"
+                                                  "Supersedes: %i\\n"
+                                                  "Sender: %[sender]\\n"
+                                                  "Followup-To: %[followup-to]\\n"
+                                                  "Distribution: %D\\n"
+                                                  "Organization: %o\\n"
+                                                  "Keywords: %[keywords]\\n"
+                                                  "\\n";
+
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_DEFAULT_CONFIG, "MAIL_HEADER", mail_header);
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_DEFAULT_CONFIG, "NEWS_HEADER", news_header);
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_DEFAULT_CONFIG, "CANCEL_HEADER", cancel_header);
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_DEFAULT_CONFIG, "SUPERSEDE_HEADER", supersede_header);
+}
+
+TEST(GeneratedConfigTest, postingHeaderTemplateConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_CONFIGURED_CONFIG, "MAIL_HEADER", "test-mail\\n");
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_CONFIGURED_CONFIG, "NEWS_HEADER", "test-news\\n");
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_CONFIGURED_CONFIG, "CANCEL_HEADER", "test-cancel\\n");
+    expect_config_string(TRN_TEST_POSTING_HEADER_TEMPLATES_CONFIGURED_CONFIG, "SUPERSEDE_HEADER", "test-supersede\\n");
+}
+
 TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
 {
     const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";

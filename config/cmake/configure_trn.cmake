@@ -264,6 +264,66 @@ function(configure_trn)
         "The shell command used to verify RIPEM signatures; empty disables the default command.")
     set(VERIFY_PGP "${DEFAULT_VERIFY_PGP}" CACHE STRING
         "The shell command used to verify PGP signatures; empty disables the default command.")
+    string(CONCAT DEFAULT_MAIL_HEADER
+        [=[To: %t\n]=]
+        [=[Subject: %(%i=^$?:Re: %S\n]=]
+        [=[X-Newsgroups: %n\n]=]
+        [=[In-Reply-To: %i)\n]=]
+        [=[%(%{FROM}=^$?:From: %{FROM}\n)]=]
+        [=[%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)]=]
+        [=[%(%[references]=^$?:References: %[references]\n)]=]
+        [=[Organization: %o\n]=]
+        [=[Cc: \n]=]
+        [=[Bcc: \n]=]
+        [=[\n]=])
+    string(CONCAT DEFAULT_NEWS_HEADER
+        [=[%(%[followup-to]=^$?:%(%[followup-to]=^%n$?:X-ORIGINAL-NEWSGROUPS: %n\n))]=]
+        [=[Newsgroups: %(%F=^$?%C:%F)\n]=]
+        [=[Subject: %(%S=^$?%\"\n\nSubject: \":Re: %S)\n]=]
+        [=[Summary: \n]=]
+        [=[Expires: \n]=]
+        [=[%(%R=^$?:References: %R\n)]=]
+        [=[Sender: \n]=]
+        [=[Followup-To: \n]=]
+        [=[%(%{FROM}=^$?:From: %{FROM}\n)]=]
+        [=[%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)]=]
+        [=[Distribution: %(%i=^$?%\"Distribution: \":%D)\n]=]
+        [=[Organization: %o\n]=]
+        [=[Keywords: %[keywords]\n]=]
+        [=[Cc: %(%F=poster?%t:%(%F!=@?:%F))\n]=]
+        [=[\n]=])
+    string(CONCAT DEFAULT_CANCEL_HEADER
+        [=[Newsgroups: %n\n]=]
+        [=[Subject: cancel\n]=]
+        [=[%(%{FROM}=^$?:From: %{FROM}\n)]=]
+        [=[Control: cancel %i\n]=]
+        [=[Distribution: %D\n]=]
+        [=[\n]=]
+        [=[%i was cancelled from within trn.\n]=])
+    string(CONCAT DEFAULT_SUPERSEDE_HEADER
+        [=[Newsgroups: %n\n]=]
+        [=[Subject: %[subject]\n]=]
+        [=[%(%{FROM}=^$?:From: %{FROM}\n)]=]
+        [=[Summary: %[summary]\n]=]
+        [=[Expires: %[expires]\n]=]
+        [=[References: %[references]\n]=]
+        [=[From: %[from]\n]=]
+        [=[Reply-To: %[reply-to]\n]=]
+        [=[Supersedes: %i\n]=]
+        [=[Sender: %[sender]\n]=]
+        [=[Followup-To: %[followup-to]\n]=]
+        [=[Distribution: %D\n]=]
+        [=[Organization: %o\n]=]
+        [=[Keywords: %[keywords]\n]=]
+        [=[\n]=])
+    set(DEFAULT_MAIL_HEADER "${DEFAULT_MAIL_HEADER}" PARENT_SCOPE)
+    set(DEFAULT_NEWS_HEADER "${DEFAULT_NEWS_HEADER}" PARENT_SCOPE)
+    set(DEFAULT_CANCEL_HEADER "${DEFAULT_CANCEL_HEADER}" PARENT_SCOPE)
+    set(DEFAULT_SUPERSEDE_HEADER "${DEFAULT_SUPERSEDE_HEADER}" PARENT_SCOPE)
+    set(MAIL_HEADER "${DEFAULT_MAIL_HEADER}" CACHE STRING "The header template for mail replies.")
+    set(NEWS_HEADER "${DEFAULT_NEWS_HEADER}" CACHE STRING "The header template for followup articles.")
+    set(CANCEL_HEADER "${DEFAULT_CANCEL_HEADER}" CACHE STRING "The header template for article cancellations.")
+    set(SUPERSEDE_HEADER "${DEFAULT_SUPERSEDE_HEADER}" CACHE STRING "The header template for superseding articles.")
     set(ROOT_UID "0" CACHE STRING "On POSIX systems, the uid of root, normally 0.")
     set(DEFAULT_ACTIVE "%x/active")
     set(DEFAULT_ACTIVE "${DEFAULT_ACTIVE}" PARENT_SCOPE)
