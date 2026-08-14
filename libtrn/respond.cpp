@@ -141,6 +141,7 @@ SaveResult save_article(std::string_view command)
         completed_command = finish_command(command.substr(0, 1), true);
         if (completed_command.empty())
         {
+            g_msg = fmt::format("Save aborted at article {}", g_art.value_of());
             return SAVE_ABORT;
         }
         command = completed_command;

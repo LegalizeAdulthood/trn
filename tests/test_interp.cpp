@@ -1708,6 +1708,34 @@ TEST_F(InterpolatorNewsgroupTest, normalSaveCanRejectMailboxPrompt)
     EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
 }
 
+TEST_F(InterpolatorNewsgroupTest, interactiveSaveAbortRecordsArticleReason)
+{
+    std::string command{"s"};
+    command.push_back(FINISH_CMD);
+    push_char('\b');
+
+    testing::internal::CaptureStdout();
+    const SaveResult result = save_article(command);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(SAVE_ABORT, result);
+    EXPECT_EQ("Save aborted at article " + std::to_string(TRN_TEST_ARTICLE_NUM), g_msg);
+}
+
+TEST_F(InterpolatorNewsgroupTest, performPropagatesInteractiveSaveAbort)
+{
+    std::string command{"s"};
+    command.push_back(FINISH_CMD);
+    push_char('\b');
+
+    testing::internal::CaptureStdout();
+    const int result = perform(command, 0);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_LT(result, 0);
+    EXPECT_EQ("Save aborted at article " + std::to_string(TRN_TEST_ARTICLE_NUM), g_msg);
+}
+
 TEST_F(InterpolatorNewsgroupTest, mailboxSaveQuotesFromBodyLine)
 {
     const std::string output_path = m_output.path();

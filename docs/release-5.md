@@ -206,7 +206,8 @@ while it remains on that milestone.  Closed P0 issues must remain fixed.
 P1 work is not itself on the 5.0 milestone, but may be needed to finish
 or stabilize P0 work.
 
-1. Investigate the threaded-article save crash report: #10.
+1. Keep the threaded-article save crash report deferred unless a
+   deterministic article and command repro is supplied: #10.
 2. Replace remaining DOS-as-Windows platform decisions.
 3. Handle platform path lists correctly: #27.
 4. Complete Windows helper scripts when needed by Windows packaging: #29.
@@ -245,32 +246,6 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
-
-### 14. Threaded Save Crash Triage
-
-Issues: #10.
-
-Milestone status: not on the 5.0 milestone.
-
-Files likely touched:
-
-- threaded article save tests
-- source files found by the repro
-
-Tasks:
-
-- Try to reproduce save-threaded-articles exiting with no error.
-- Add diagnostics that preserve the prompt escape reason.
-- Fix the crash if the repro can be made deterministic.
-
-Acceptance:
-
-- #10 has either a fixed repro or enough diagnostic data to defer.
-- This work does not block 5.0 unless the issue joins the milestone.
-- Any deterministic repro is checked in as a unit or regression test; a
-  deferred result names the missing test condition.
-- If this slice fixes #10 instead of deferring it, commit description
-  includes `fixes #10`.
 
 ### 15. Posting Header Harness
 
@@ -1181,7 +1156,8 @@ Mandatory closed GitHub 5.0 milestone regression checklist:
 
 Non-milestone supporting or follow-up issues:
 
-- #10: 14.
+- #10: deferred pending a deterministic article and command repro from the
+  reporter's spool state.
 - #15: 39 and 40.
 - #25: 38.
 - #27: 17.

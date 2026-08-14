@@ -56,6 +56,9 @@ std::string g_save_dir;      // -d
 //
 static bool s_option_sel_lock{};
 
+static constexpr int s_perform_failed = -1;
+static constexpr int s_perform_aborted = -2;
+
 static std::string_view trim_command_spaces(std::string_view text)
 {
     const std::string_view::const_iterator first = std::find_if_not(
@@ -352,17 +355,23 @@ NumNumResult num_num(std::string_view command)
         for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art))
         {
             g_artp = article_ptr(g_art);
-            if (perform(cmdlst, output_level && g_page_line == 1) < 0)
+            const int result = perform(cmdlst, output_level && g_page_line == 1);
+            if (result < 0)
             {
-                if (g_verbose)
+                if (result == s_perform_aborted && !g_msg.empty())
+                {
+                    error_msg(g_msg);
+                }
+                else if (g_verbose)
                 {
                     g_msg = fmt::format("(Interrupted at article {})", g_art.value_of());
+                    error_msg(g_msg);
                 }
                 else
                 {
                     g_msg = fmt::format("(Intr at {})", g_art.value_of());
+                    error_msg(g_msg);
                 }
-                error_msg(g_msg);
                 return NN_ASK;
             }
             if (!output_level)
@@ -446,9 +455,10 @@ int thread_perform(std::string_view command)
             if (g_artp)
             {
                 g_art = g_artp->article_num();
-                if (perform(cmdstr, 0) < 0)
+                const int result = perform(cmdstr, 0);
+                if (result < 0)
                 {
-                    error_msg("Interrupted");
+                    error_msg(result == s_perform_aborted && !g_msg.empty() ? g_msg : "Interrupted");
                     goto break_out;
                 }
             }
@@ -487,9 +497,10 @@ int thread_perform(std::string_view command)
                 {
                     g_art = ap->article_num();
                     g_artp = ap;
-                    if (perform(cmdstr, output_level && g_page_line == 1) < 0)
+                    const int result = perform(cmdstr, output_level && g_page_line == 1);
+                    if (result < 0)
                     {
-                        error_msg("Interrupted");
+                        error_msg(result == s_perform_aborted && !g_msg.empty() ? g_msg : "Interrupted");
                         goto break_out;
                     }
                 }
@@ -518,9 +529,10 @@ int thread_perform(std::string_view command)
                     {
                         g_art = ap->article_num();
                         g_artp = ap;
-                        if (perform(cmdstr, output_level && g_page_line == 1) < 0)
+                        const int result = perform(cmdstr, output_level && g_page_line == 1);
+                        if (result < 0)
                         {
-                            error_msg("Interrupted");
+                            error_msg(result == s_perform_aborted && !g_msg.empty() ? g_msg : "Interrupted");
                             goto break_out;
                         }
                     }
@@ -731,9 +743,10 @@ int perform(std::string_view command_list, int output_level)
                 command_pos += command_size - 1;
             }
             g_perform_count--;
-            if (perform(expanded_command, output_level ? 2 : 0) < 0)
+            const int result = perform(expanded_command, output_level ? 2 : 0);
+            if (result < 0)
             {
-                return -1;
+                return result;
             }
         }
         else if (std::string_view{"!&sSwWae|"}.find(ch) != std::string_view::npos)
@@ -796,7 +809,15 @@ int perform(std::string_view command_list, int output_level)
                 }
                 else
                 {
-                    save_article(command_text);
+                    const SaveResult save_result = save_article(command_text);
+                    if (save_result == SAVE_ABORT)
+                    {
+                        if (g_msg.empty())
+                        {
+                            g_msg = fmt::format("Save aborted at article {}", g_art.value_of());
+                        }
+                        return s_perform_aborted;
+                    }
                 }
                 newline();
                 output_level = 0;
@@ -806,7 +827,7 @@ int perform(std::string_view command_list, int output_level)
         {
             g_msg = fmt::format("Unknown command: {}", command_list.substr(command_pos));
             error_msg(g_msg);
-            return -1;
+            return s_perform_failed;
         }
         if (output_level && g_verbose)
         {
@@ -824,7 +845,7 @@ int perform(std::string_view command_list, int output_level)
     if (g_int_count)
     {
         g_int_count = 0;
-        return -1;
+        return s_perform_failed;
     }
     return 1;
 }
