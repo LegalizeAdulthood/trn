@@ -67,28 +67,29 @@ need semantic fixes, listed here rather than hidden in prose:
 - `SH`: handled.  CMake owns the shell used for command execution and
   emits the configured value directly.
 - `ROOT_UID`: handled for POSIX policy.
-- `ACTIVE`: handled.  CMake owns the source-mode active-file default
-  and emits the configured value directly.
+- `ACTIVE`: handled.  CMake derives the default from the probed or
+  overridden news-source mode and emits the configured value directly.
 - `ACTIVE_TIMES`: handled.  CMake owns `ACTIVE_TIMES`, defaults it to
   `none`, and `config.h.in` emits the cache value directly.
 - `PIPE_HOST_CMD`: handled.  It remains an optional hostname fallback.
 - `HAS_TERMLIB`: handled.  It is now an explicit cache boolean while the
   target links through curses.
 - `IGNORE_ORG`: handled.  It still drives posting organization fallback.
-- `SERVER_NAME`: handled.  It selects the default news-source mode with
-  `HAS_LOCAL_SPOOL`.
-- `HAS_LOCAL_SPOOL`: handled.  CMake validates that `SERVER_NAME=local`
-  has local-spool support enabled.
+- `SERVER_NAME`: handled.  CMake probes default NNTP server sources and
+  keeps the cache variable as an explicit override.
+- `HAS_LOCAL_SPOOL`: handled.  CMake probes local active-file and spool
+  paths, keeps the cache variable as an explicit override, and validates
+  that `SERVER_NAME=local` has local-spool support enabled.
 - `MIMECAP`: handled.
 - `NEWS_LIB`: handled.  CMake owns the retained platform default and
   emits the configured value directly.
 - `EXTRA_INEWS`: handled.  It is still consumed by local posting.
-- `GROUP_DESC`: handled.  CMake owns the source-mode default and emits
-  the configured value directly.
-- `SUBSCRIPTIONS`: handled.  CMake owns the source-mode default and
-  emits the configured value directly.
-- `NEWS_SPOOL`: handled.  CMake owns the source-mode spool default and
-  emits the configured value directly.
+- `GROUP_DESC`: handled.  CMake derives the default from the probed or
+  overridden news-source mode and emits the configured value directly.
+- `SUBSCRIPTIONS`: handled.  CMake derives the default from the probed
+  or overridden news-source mode and emits the configured value directly.
+- `NEWS_SPOOL`: handled.  CMake derives the default from the probed or
+  overridden news-source mode and emits the configured value directly.
 - `SELECTION_CHARS`: handled.  CMake owns the historical selection-menu
   character default and emits the configured value directly.
 - `ORG_NAME`: handled.
@@ -139,10 +140,10 @@ need semantic fixes, listed here rather than hidden in prose:
   when `ripem` is found; otherwise the default command is disabled.
 - `VERIFY_PGP`: handled.  CMake emits the historical verifier command
   when `pgp` is found; otherwise the default command is disabled.
-- `OVERVIEW_DIR`: handled.  CMake owns the source-mode overview
-  default and emits the configured value directly.
-- `OVERVIEW_FMT`: handled.  CMake owns the overview format-file default
-  and emits the configured value directly.
+- `OVERVIEW_DIR`: handled.  CMake derives the default from the probed or
+  overridden news-source mode and emits the configured value directly.
+- `OVERVIEW_FMT`: handled.  CMake derives the overview format-file
+  default from `OVERVIEW_DIR` and emits the configured value directly.
 - `THREAD_INIT`: handled.
 - `SELECT_INIT`: handled.
 - `USE_INEWS` and `BIN_DIR`: handled as CMake cache variables for
@@ -238,7 +239,7 @@ to prefer `CAPABILITIES` and `OVER` before falling back to `XOVER`.
 Legacy `Configure` had one coordinated prompt for news source support:
 `local`, `nntp`, or `both`.
 
-The CMake setup exposes separate pieces:
+The CMake setup exposes separate cache override pieces:
 
 - `SERVER_NAME`
 - `HAS_LOCAL_SPOOL`
@@ -250,14 +251,21 @@ The CMake setup exposes separate pieces:
 - `OVERVIEW_FMT`
 
 The CMake setup keeps those pieces separate, but derives their defaults
-from the selected default source:
+from probed system features before applying user overrides:
 
-- `SERVER_NAME=local` with `HAS_LOCAL_SPOOL=ON` gives a local default
+- `NNTPSERVER` or a standard server-name file selects an NNTP default
   source.
-- A server name or server-name file with `HAS_LOCAL_SPOOL=OFF` gives an
-  NNTP default source.
-- A server name or server-name file with `HAS_LOCAL_SPOOL=ON` keeps NNTP
-  as the default source while retaining local-spool support.
+- A local active file plus a local spool directory enables local-spool
+  support.
+- If local-spool support is found without an NNTP source, the default
+  source is local.
+- If both are found, NNTP remains the default source while retaining
+  local-spool support.
+- If neither is found, the release fallback is `news.gmane.io` with no
+  local-spool support.
+
+Explicit `SERVER_NAME` and `HAS_LOCAL_SPOOL` cache values override the
+probed defaults.
 
 `SERVER_NAME=local` with `HAS_LOCAL_SPOOL=OFF` fails configure.
 
@@ -452,10 +460,10 @@ or message templates. They are runtime policy, not platform discovery:
   `BERKELEY_NAMES`, `PASSWORD_FILE`, `LOGIN_DIR_FIELD`, and `ROOT_UID`.
 - Install and tool defaults: `INSTALL_PREFIX`, `DEFAULT_EDITOR`,
   `PREF_SHELL`, `SH`, `BIN_DIR`, and `PAGER`.
-- News-source defaults: `SERVER_NAME`, `HAS_LOCAL_SPOOL`, `NEWS_LIB`,
-  `PRIVATE_LIB`, `ACTIVE`, `ACTIVE_TIMES`, `GROUP_DESC`,
-  `SUBSCRIPTIONS`, `NEWS_SPOOL`, `OVERVIEW_DIR`, `OVERVIEW_FMT`, and
-  `EXTRA_INEWS`.
+- News-source defaults derived from probes or overrides: `SERVER_NAME`,
+  `HAS_LOCAL_SPOOL`, `NEWS_LIB`, `PRIVATE_LIB`, `ACTIVE`,
+  `ACTIVE_TIMES`, `GROUP_DESC`, `SUBSCRIPTIONS`, `NEWS_SPOOL`,
+  `OVERVIEW_DIR`, `OVERVIEW_FMT`, and `EXTRA_INEWS`.
 - User-state files: `TRNDIR`, `TRNMACRO`, `RNMACRO`, `FULLNAMEFILE`,
   `RCNAME`, `LOCKNAME`, `LASTNAME`, `SIGNATURE_FILE`, and
   `NNTP_AUTH_FILE`.

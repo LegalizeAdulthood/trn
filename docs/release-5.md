@@ -246,41 +246,6 @@ Use `config/legacy/Configure` to understand historical defaults, special
 values, and compatibility expectations.  Do not copy its Q&A structure
 when CMake can determine the result directly.
 
-### 5.3 News Source Probe Retrofit
-
-Issues: #19.
-
-Plan source: `config.md`, News Source Mode.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- config tests
-
-Tasks:
-
-- Replace the inherited local/nntp/both prompt model with default
-  detection from local-spool files, local-spool directories, and default
-  NNTP server sources that CMake can inspect.
-- Keep `SERVER_NAME` and `HAS_LOCAL_SPOOL` as explicit overrides, not as
-  required Configure-style answers.
-- Derive `ACTIVE`, `GROUP_DESC`, `SUBSCRIPTIONS`, `NEWS_SPOOL`,
-  `OVERVIEW_DIR`, and `OVERVIEW_FMT` from the detected or overridden
-  source mode.
-- Keep invalid override combinations rejected.
-
-Acceptance:
-
-- CMake tests cover local-only, NNTP-only, both, and neither-detected
-  default cases.
-- CMake tests cover explicit `SERVER_NAME` and `HAS_LOCAL_SPOOL`
-  overrides.
-- Generated-config tests prove source-mode details are derived from the
-  detected or overridden mode.
-- Unit tests cover rejection of unsupported override combinations.
-
 ### 5.4 Termlib Feature Probe Retrofit
 
 Issues: #19.

@@ -228,6 +228,62 @@ set_tests_properties(
     PROPERTIES LABELS trn)
 
 set(news_source_defaults_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_news_source_defaults.cmake")
+add_test(NAME ConfigCMakeTest.newsSourceProbeDetectsLocalOnly
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_PROBE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/news-source-probe-local"
+        "-DTRN_TEST_CREATE_LOCAL_SPOOL=ON"
+        "-DTRN_TEST_EXPECT_SERVER_NAME=local"
+        "-DTRN_TEST_EXPECT_HAS_LOCAL_SPOOL=ON"
+        "-DTRN_TEST_EXPECT_ACTIVE=%x/active"
+        "-DTRN_TEST_EXPECT_GROUP_DESC=%x/newsgroups"
+        "-DTRN_TEST_EXPECT_SUBSCRIPTIONS=%x/subscriptions"
+        "-DTRN_TEST_EXPECT_NEWS_SPOOL=/usr/spool/news"
+        "-DTRN_TEST_EXPECT_OVERVIEW_DIR=/usr/spool/news"
+        "-DTRN_TEST_EXPECT_OVERVIEW_FMT=%x/overview.fmt"
+        -P "${news_source_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.newsSourceProbeDetectsNntpOnly
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_PROBE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/news-source-probe-nntp"
+        "-DTRN_TEST_CREATE_NNTP_SOURCE=ON"
+        "-DTRN_TEST_EXPECT_SERVER_NAME=news.example.org"
+        "-DTRN_TEST_EXPECT_HAS_LOCAL_SPOOL=OFF"
+        "-DTRN_TEST_EXPECT_ACTIVE=remote"
+        "-DTRN_TEST_EXPECT_GROUP_DESC=none"
+        "-DTRN_TEST_EXPECT_SUBSCRIPTIONS="
+        "-DTRN_TEST_EXPECT_NEWS_SPOOL=none"
+        "-DTRN_TEST_EXPECT_OVERVIEW_DIR=remote"
+        "-DTRN_TEST_EXPECT_OVERVIEW_FMT=none"
+        -P "${news_source_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.newsSourceProbeDetectsBoth
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_PROBE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/news-source-probe-both"
+        "-DTRN_TEST_CREATE_LOCAL_SPOOL=ON"
+        "-DTRN_TEST_CREATE_NNTP_SOURCE=ON"
+        "-DTRN_TEST_EXPECT_SERVER_NAME=news.example.org"
+        "-DTRN_TEST_EXPECT_HAS_LOCAL_SPOOL=ON"
+        "-DTRN_TEST_EXPECT_ACTIVE=remote"
+        "-DTRN_TEST_EXPECT_GROUP_DESC=none"
+        "-DTRN_TEST_EXPECT_SUBSCRIPTIONS="
+        "-DTRN_TEST_EXPECT_NEWS_SPOOL=none"
+        "-DTRN_TEST_EXPECT_OVERVIEW_DIR=remote"
+        "-DTRN_TEST_EXPECT_OVERVIEW_FMT=none"
+        -P "${news_source_defaults_test_script}")
+add_test(NAME ConfigCMakeTest.newsSourceProbeUsesReleaseDefaultWithoutSources
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_PROBE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/news-source-probe-none"
+        "-DTRN_TEST_EXPECT_SERVER_NAME=news.gmane.io"
+        "-DTRN_TEST_EXPECT_HAS_LOCAL_SPOOL=OFF"
+        "-DTRN_TEST_EXPECT_ACTIVE=remote"
+        "-DTRN_TEST_EXPECT_GROUP_DESC=none"
+        "-DTRN_TEST_EXPECT_SUBSCRIPTIONS="
+        "-DTRN_TEST_EXPECT_NEWS_SPOOL=none"
+        "-DTRN_TEST_EXPECT_OVERVIEW_DIR=remote"
+        "-DTRN_TEST_EXPECT_OVERVIEW_FMT=none"
+        -P "${news_source_defaults_test_script}")
 add_test(NAME ConfigCMakeTest.newsSourceDefaultsUseNntpMode
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
@@ -272,6 +328,10 @@ add_test(NAME ConfigCMakeTest.newsSourceDefaultsRejectLocalWithoutSpool
         "-DTRN_TEST_EXPECT_FAILURE=ON"
         -P "${news_source_defaults_test_script}")
 set_tests_properties(
+    ConfigCMakeTest.newsSourceProbeDetectsLocalOnly
+    ConfigCMakeTest.newsSourceProbeDetectsNntpOnly
+    ConfigCMakeTest.newsSourceProbeDetectsBoth
+    ConfigCMakeTest.newsSourceProbeUsesReleaseDefaultWithoutSources
     ConfigCMakeTest.newsSourceDefaultsUseNntpMode
     ConfigCMakeTest.newsSourceDefaultsUseLocalMode
     ConfigCMakeTest.newsSourceDefaultsUseBothMode
@@ -287,6 +347,24 @@ configure_file(
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
     wait_status_probe.h
+    @ONLY
+)
+
+set(SERVER_NAME "${DEFAULT_SERVER_NAME}")
+set(HAS_LOCAL_SPOOL "${DEFAULT_HAS_LOCAL_SPOOL}")
+set(ACTIVE_TIMES "none")
+configure_news_source_defaults()
+set(ACTIVE "${DEFAULT_ACTIVE}")
+set(GROUP_DESC "${DEFAULT_GROUP_DESC}")
+set(SUBSCRIPTIONS "${DEFAULT_SUBSCRIPTIONS}")
+set(NEWS_SPOOL "${DEFAULT_NEWS_SPOOL}")
+configure_news_overview_dir_default()
+set(OVERVIEW_DIR "${DEFAULT_OVERVIEW_DIR}")
+configure_news_overview_format_default()
+set(OVERVIEW_FMT "${DEFAULT_OVERVIEW_FMT}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    news_source_default.h
     @ONLY
 )
 

@@ -121,6 +121,14 @@ TEST(GeneratedConfigTest, activeTimesConfiguredPathIsEmitted)
     expect_file_contains(TRN_TEST_ACTIVE_TIMES_CONFIGURED_CONFIG, "#define ACTIVE_TIMES \"%x/active.times\"");
 }
 
+TEST(GeneratedConfigTest, newsSourceDetectedDefaultsAreEmitted)
+{
+    expect_news_source_defaults(TRN_TEST_NEWS_SOURCE_DEFAULT_CONFIG, cmake_bool(TRN_TEST_DEFAULT_HAS_LOCAL_SPOOL),
+                                TRN_TEST_DEFAULT_SERVER_NAME, TRN_TEST_DEFAULT_ACTIVE, TRN_TEST_DEFAULT_GROUP_DESC,
+                                TRN_TEST_DEFAULT_SUBSCRIPTIONS, TRN_TEST_DEFAULT_NEWS_SPOOL,
+                                TRN_TEST_DEFAULT_OVERVIEW_DIR, TRN_TEST_DEFAULT_OVERVIEW_FMT);
+}
+
 TEST(GeneratedConfigTest, newsSourceNntpModeDefaultsAreEmitted)
 {
     expect_news_source_defaults(TRN_TEST_NEWS_SOURCE_NNTP_CONFIG, false, "news.example.org", "remote", "none", "",
