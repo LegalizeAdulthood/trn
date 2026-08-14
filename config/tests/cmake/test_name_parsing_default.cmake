@@ -42,12 +42,10 @@ endif()
 
 configure_name_parsing_default(
     "${TRN_TEST_HAS_GETPWENT}"
-    "${TRN_TEST_SYSTEM_NAME}"
-    "${TRN_TEST_HAS_SIGTSTP}"
-    "${TRN_TEST_HAS_TERMIOS}")
+    "${TRN_TEST_PROBED_NAME_TYPE}")
 
 if(NOT "${DEFAULT_NAME_TYPE}" STREQUAL "${TRN_TEST_EXPECT_NAME_TYPE}")
-    message(FATAL_ERROR "DEFAULT_NAME_TYPE did not match the legacy dialog order.")
+    message(FATAL_ERROR "DEFAULT_NAME_TYPE did not match the probed name type.")
 endif()
 
 if("${TRN_TEST_EXPECT_NAME_TYPE}" STREQUAL "bsd")

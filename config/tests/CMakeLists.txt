@@ -117,49 +117,32 @@ add_test(NAME ConfigCMakeTest.nameTypeOtherDerivesFullnameFile
         "-DTRN_TEST_EXPECT_PASS_NAMES=OFF"
         "-DTRN_TEST_EXPECT_BERKELEY_NAMES=OFF"
         -P "${name_parsing_policy_script}")
-add_test(NAME ConfigCMakeTest.nameTypeDefaultPrefersBerkeley
+add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesBsdProbe
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
         "-DTRN_TEST_HAS_GETPWENT=ON"
-        "-DTRN_TEST_SYSTEM_NAME=Generic"
-        "-DTRN_TEST_HAS_SIGTSTP=ON"
-        "-DTRN_TEST_HAS_TERMIOS=ON"
+        "-DTRN_TEST_PROBED_NAME_TYPE=bsd"
         "-DTRN_TEST_EXPECT_NAME_TYPE=bsd"
         -P "${name_parsing_default_script}")
-add_test(NAME ConfigCMakeTest.nameTypeDefaultTreatsXenixAsBerkeley
+add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesUsgProbe
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
         "-DTRN_TEST_HAS_GETPWENT=ON"
-        "-DTRN_TEST_SYSTEM_NAME=Xenix"
-        "-DTRN_TEST_HAS_SIGTSTP=OFF"
-        "-DTRN_TEST_HAS_TERMIOS=ON"
-        "-DTRN_TEST_EXPECT_NAME_TYPE=bsd"
-        -P "${name_parsing_default_script}")
-add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesUsgSecond
-    COMMAND "${CMAKE_COMMAND}"
-        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
-        "-DTRN_TEST_HAS_GETPWENT=ON"
-        "-DTRN_TEST_SYSTEM_NAME=Generic"
-        "-DTRN_TEST_HAS_SIGTSTP=OFF"
-        "-DTRN_TEST_HAS_TERMIOS=ON"
+        "-DTRN_TEST_PROBED_NAME_TYPE=usg"
         "-DTRN_TEST_EXPECT_NAME_TYPE=usg"
         -P "${name_parsing_default_script}")
-add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutProbe
+add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesOtherProbe
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
         "-DTRN_TEST_HAS_GETPWENT=ON"
-        "-DTRN_TEST_SYSTEM_NAME=Generic"
-        "-DTRN_TEST_HAS_SIGTSTP=OFF"
-        "-DTRN_TEST_HAS_TERMIOS=OFF"
+        "-DTRN_TEST_PROBED_NAME_TYPE=other"
         "-DTRN_TEST_EXPECT_NAME_TYPE=other"
         -P "${name_parsing_default_script}")
 add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutGetpwent
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
         "-DTRN_TEST_HAS_GETPWENT=OFF"
-        "-DTRN_TEST_SYSTEM_NAME=Linux"
-        "-DTRN_TEST_HAS_SIGTSTP=ON"
-        "-DTRN_TEST_HAS_TERMIOS=ON"
+        "-DTRN_TEST_PROBED_NAME_TYPE=bsd"
         "-DTRN_TEST_EXPECT_NAME_TYPE=other"
         -P "${name_parsing_default_script}")
 add_test(NAME ConfigCMakeTest.nameTypeRejectsBsdWithoutGetpwent
@@ -190,10 +173,9 @@ set_tests_properties(
     ConfigCMakeTest.nameTypeBsdDerivesPassNames
     ConfigCMakeTest.nameTypeUsgDerivesPassNames
     ConfigCMakeTest.nameTypeOtherDerivesFullnameFile
-    ConfigCMakeTest.nameTypeDefaultPrefersBerkeley
-    ConfigCMakeTest.nameTypeDefaultTreatsXenixAsBerkeley
-    ConfigCMakeTest.nameTypeDefaultUsesUsgSecond
-    ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutProbe
+    ConfigCMakeTest.nameTypeDefaultUsesBsdProbe
+    ConfigCMakeTest.nameTypeDefaultUsesUsgProbe
+    ConfigCMakeTest.nameTypeDefaultUsesOtherProbe
     ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutGetpwent
     ConfigCMakeTest.nameTypeRejectsBsdWithoutGetpwent
     ConfigCMakeTest.pnewsDistributionCodeAcceptsNone

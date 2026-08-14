@@ -155,8 +155,9 @@ need semantic fixes, listed here rather than hidden in prose:
 - `REPLYTO_POSTER_CHECKING`: handled.
 - `FULLNAMEFILE`: handled.  CMake owns the historical full-name file
   default and emits the configured value directly.
-- `NAME_TYPE`: handled.  CMake owns the name-parsing policy, derives the
-  generated details, and emits the generated `Pnews` default.
+- `NAME_TYPE`: handled.  CMake probes the default name-parsing policy,
+  keeps it overrideable, derives the generated details, and emits the
+  generated `Pnews` default.
 - `LOCAL_DIST`, `ORGANIZATION_DIST`, `CITY_DIST`, `STATE_DIST`,
   `MULTISTATE_DIST`, `COUNTRY_DIST`, and `CONTINENT_DIST`: handled for
   generated `Pnews` distribution defaults.
@@ -317,9 +318,10 @@ Berkeley/V7 format first.  If that answer was no, it asked whether
 `nametype=bsd`, `nametype=usg`, or `nametype=other`, then generated
 `PASS_NAMES`, `BERKELEY_NAMES`, and `d_usgnames` from that policy.
 
-Current CMake exposes `NAME_TYPE` as the cache policy, derives
-`PASS_NAMES` and `BERKELEY_NAMES` for the generated config, and selects
-the default policy in the legacy Berkeley/V7, Xenix, then USG order.
+Current CMake exposes `NAME_TYPE` as an overrideable cache variable,
+probes the default from local passwd GECOS data when `getpwent()` is
+available, and derives `PASS_NAMES` and `BERKELEY_NAMES` for the
+generated config.
 
 ## Changed Semantics
 

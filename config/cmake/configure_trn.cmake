@@ -68,16 +68,92 @@ function(configure_name_parsing_policy name_type)
     endif()
 endfunction()
 
-function(configure_name_parsing_default has_getpwent system_name has_sigtstp has_termios)
+function(configure_name_parsing_default has_getpwent probed_name_type)
     if(NOT has_getpwent)
         set(DEFAULT_NAME_TYPE "other" PARENT_SCOPE)
-    elseif(has_sigtstp OR "${system_name}" STREQUAL "Linux" OR "${system_name}" STREQUAL "Xenix")
-        set(DEFAULT_NAME_TYPE "bsd" PARENT_SCOPE)
-    elseif(has_termios)
-        set(DEFAULT_NAME_TYPE "usg" PARENT_SCOPE)
+    elseif("${probed_name_type}" MATCHES "^(bsd|usg|other)$")
+        set(DEFAULT_NAME_TYPE "${probed_name_type}" PARENT_SCOPE)
     else()
         set(DEFAULT_NAME_TYPE "other" PARENT_SCOPE)
     endif()
+endfunction()
+
+function(probe_name_type_default has_getpwent)
+    if(NOT has_getpwent OR CMAKE_CROSSCOMPILING)
+        set(PROBED_NAME_TYPE "other" PARENT_SCOPE)
+        return()
+    endif()
+
+    set(probe_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/name_type_probe")
+    set(probe_source "${probe_dir}/name_type_probe.c")
+    file(MAKE_DIRECTORY "${probe_dir}")
+    file(WRITE "${probe_source}" [=[
+#include <pwd.h>
+#include <stdio.h>
+#include <string.h>
+
+static int has_name_text(const char *gecos)
+{
+    if (gecos == 0)
+    {
+        return 0;
+    }
+    for (; *gecos != '\0'; ++gecos)
+    {
+        if (*gecos != ' ' && *gecos != '\t' && *gecos != ','
+            && *gecos != ':' && *gecos != ';')
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int looks_usg(const char *gecos)
+{
+    const char *hyphen = strchr(gecos, '-');
+    const char *paren = strchr(gecos, '(');
+
+    return hyphen != 0 && paren != 0 && hyphen < paren;
+}
+
+int main(void)
+{
+    struct passwd *pwd;
+
+    while ((pwd = getpwent()) != 0)
+    {
+        if (!has_name_text(pwd->pw_gecos))
+        {
+            continue;
+        }
+        if (looks_usg(pwd->pw_gecos))
+        {
+            puts("usg");
+        }
+        else
+        {
+            puts("bsd");
+        }
+        endpwent();
+        return 0;
+    }
+    endpwent();
+    puts("other");
+    return 0;
+}
+]=])
+    try_run(NAME_TYPE_PROBE_RUN_RESULT NAME_TYPE_PROBE_COMPILE_RESULT
+        "${probe_dir}"
+        "${probe_source}"
+        RUN_OUTPUT_VARIABLE NAME_TYPE_PROBE_OUTPUT)
+    if(NAME_TYPE_PROBE_COMPILE_RESULT AND NAME_TYPE_PROBE_RUN_RESULT EQUAL 0)
+        string(STRIP "${NAME_TYPE_PROBE_OUTPUT}" PROBED_NAME_TYPE)
+    else()
+        set(PROBED_NAME_TYPE "other")
+    endif()
+    configure_name_parsing_default("${has_getpwent}" "${PROBED_NAME_TYPE}")
+    set(PROBED_NAME_TYPE "${DEFAULT_NAME_TYPE}" PARENT_SCOPE)
 endfunction()
 
 function(validate_name_parsing_support name_type has_getpwent)
@@ -167,7 +243,6 @@ function(configure_trn)
     endif()
     check_symbol_exists(sigblock "signal.h" HAS_SIGBLOCK)
     check_symbol_exists(sighold "signal.h" HAS_SIGHOLD)
-    check_symbol_exists(SIGTSTP "signal.h" HAS_SIGTSTP)
 
     # Determine method used for file descriptor I/O
     if(I_FCNTL)
@@ -592,11 +667,8 @@ function(configure_trn)
     set(FORWARD_MSG_END "${DEFAULT_FORWARD_MSG_END}" CACHE STRING "The line marking the end of a forwarded article.")
     set(PAGER "more" CACHE STRING "The name of the preferred pager on the system.")
     option(REPLYTO_POSTER_CHECKING "If ON, makes -p also check Reply-To (slow)" OFF)
-    configure_name_parsing_default(
-        "${HAS_GETPWENT}"
-        "${CMAKE_SYSTEM_NAME}"
-        "${HAS_SIGTSTP}"
-        "${I_TERMIOS}")
+    probe_name_type_default("${HAS_GETPWENT}")
+    configure_name_parsing_default("${HAS_GETPWENT}" "${PROBED_NAME_TYPE}")
     set(DEFAULT_NAME_TYPE "${DEFAULT_NAME_TYPE}" PARENT_SCOPE)
     set_config_cache_default(NAME_TYPE "${DEFAULT_NAME_TYPE}" STRING
         "The way full names are stored in the password file (bsd, usg or other).")
