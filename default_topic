@@ -40,6 +40,3 @@ news.announce.newusers
 
 ##This entry will point to the user's hotlist.strn file.
 "Personal Hotlist" @%p/hotlist.strn
-
-#Uncomment the following for WWW stuff (not fully supported yet).
-#"Strn WWW home page." URL:http://www.digex.net/~caadams/strn/strn.top
