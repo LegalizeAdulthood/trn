@@ -236,13 +236,142 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-For each remaining configuration-variable slice, verify the prior default
-and special values against `config/legacy/Configure`; preserve that
-behavior unless the slice explicitly calls for a change.
+For each remaining configuration-variable slice, use standard CMake
+feature discovery first: probe the build or target system when CMake can
+determine the answer, and make generated details non-cache variables.
+Keep a cache variable only for a real user override, install-time path,
+or release policy that cannot be discovered reliably.
 
-For migrated Configure Q&A, expose cache variables that represent the
-old user-facing answer or policy.  Translate that policy into non-cache
-implementation variables before generating configured files.
+Use `config/legacy/Configure` to understand historical defaults, special
+values, and compatibility expectations.  Do not copy its Q&A structure
+when CMake can determine the result directly.
+
+### 5.3 News Source Probe Retrofit
+
+Issues: #19.
+
+Plan source: `config.md`, News Source Mode.
+
+Milestone status: open mandatory 5.0 issue.
+
+Files likely touched:
+
+- `config/cmake/configure_trn.cmake`
+- config tests
+
+Tasks:
+
+- Replace the inherited local/nntp/both prompt model with default
+  detection from local-spool files, local-spool directories, and default
+  NNTP server sources that CMake can inspect.
+- Keep `SERVER_NAME` and `HAS_LOCAL_SPOOL` as explicit overrides, not as
+  required Configure-style answers.
+- Derive `ACTIVE`, `GROUP_DESC`, `SUBSCRIPTIONS`, `NEWS_SPOOL`,
+  `OVERVIEW_DIR`, and `OVERVIEW_FMT` from the detected or overridden
+  source mode.
+- Keep invalid override combinations rejected.
+
+Acceptance:
+
+- CMake tests cover local-only, NNTP-only, both, and neither-detected
+  default cases.
+- CMake tests cover explicit `SERVER_NAME` and `HAS_LOCAL_SPOOL`
+  overrides.
+- Generated-config tests prove source-mode details are derived from the
+  detected or overridden mode.
+- Unit tests cover rejection of unsupported override combinations.
+
+### 5.4 Termlib Feature Probe Retrofit
+
+Issues: #19.
+
+Plan source: `config.md`, Termlib.
+
+Milestone status: open mandatory 5.0 issue.
+
+Files likely touched:
+
+- `config/cmake/configure_trn.cmake`
+- config tests
+
+Tasks:
+
+- Replace the current `HAS_TERMLIB` default with a CMake feature probe
+  for the terminal-library capability actually used by the build.
+- Keep a cache override only if it is needed to support unusual terminal
+  libraries or toolchains.
+- Make the generated `HAS_TERMLIB` value follow the probed or explicitly
+  overridden result.
+
+Acceptance:
+
+- Configure tests cover found, missing, and explicitly overridden
+  terminal-library capability cases.
+- Generated-config tests prove `HAS_TERMLIB` follows the probe result.
+- The build still links through the CMake terminal library target.
+
+### 5.5 Tool Path Probe Retrofit
+
+Issues: #19.
+
+Plan source: `config.md`, Tool Paths.
+
+Milestone status: open mandatory 5.0 issue.
+
+Files likely touched:
+
+- `config/cmake/configure_trn.cmake`
+- config tests
+
+Tasks:
+
+- Use CMake tool discovery for implemented external-tool defaults such
+  as editor, pager, diff, ed, spell, ispell, RIPEM, and PGP commands.
+- Keep cache variables as explicit path overrides.
+- Disable or diagnose helper paths when a required external tool cannot
+  be found instead of silently inheriting a Unix Configure answer.
+- Keep generated helper templates driven by the probed or overridden
+  tool paths.
+
+Acceptance:
+
+- CMake tests cover found, missing, and overridden tool defaults without
+  depending on host-installed optional tools.
+- Generated helper tests prove configured scripts use the probed or
+  overridden paths.
+- Windows defaults do not point at Unix-only tools unless the tool was
+  found or explicitly overridden.
+
+### 5.6 Prompt-Derived Runtime Policy Cleanup
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
+
+Files likely touched:
+
+- `config/cmake/configure_trn.cmake`
+- config tests
+
+Tasks:
+
+- Review already implemented prompt-derived settings that are runtime
+  policy rather than feature support: save layout, distribution codes,
+  posting-host match segments, reply-to checking, and selection
+  characters.
+- Keep these settings as cache variables only where they are real user
+  policy or release policy that CMake cannot discover.
+- Move any derived implementation details out of the cache before
+  generating configured files.
+
+Acceptance:
+
+- Each retained cache variable in this group has a documented reason it
+  is policy rather than a discoverable feature.
+- Generated-config tests cover the default and override behavior for
+  each retained policy setting.
+- No derived implementation detail from this group remains as a cache
+  variable.
 
 ### 6. Configure Default Fallbacks
 
