@@ -258,25 +258,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   define DEFAULT_EDITOR "/usr/ucb/vi"
 #endif
 
-// command to send a reply
-#ifndef MAIL_POSTER // % and ~
-#define MAIL_POSTER "Rnmail -h %h"
-#endif
-
-// command to submit a followup article
-#ifndef NEWS_POSTER // % and ~
-#define NEWS_POSTER "Pnews -h %h"
-#endif
-
-// how to cancel an article
-#ifndef CALL_INEWS
-#   ifdef BNEWS
-#       define CALL_INEWS "%x/inews -h <%h"
-#   else
-#       define CALL_INEWS "inews -h <%h"
-#   endif
-#endif
-
 #ifndef HAS_VFORK
 #   define vfork fork
 #endif

@@ -474,6 +474,27 @@ configure_file(
     @ONLY
 )
 
+set(CALL_INEWS "${DEFAULT_CALL_INEWS}")
+set(NEWS_POSTER "${DEFAULT_NEWS_POSTER}")
+set(MAIL_POSTER "${DEFAULT_MAIL_POSTER}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    posting_helper_paths_default.h
+    @ONLY
+)
+
+set(CALL_INEWS "/test/bin/inews -h <%h")
+set(NEWS_POSTER "/test/bin/Pnews -h %h")
+set(MAIL_POSTER "/test/bin/Rnmail -h %h")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    posting_helper_paths_configured.h
+    @ONLY
+)
+
+set(CALL_INEWS "${DEFAULT_CALL_INEWS}")
+set(NEWS_POSTER "${DEFAULT_NEWS_POSTER}")
+set(MAIL_POSTER "${DEFAULT_MAIL_POSTER}")
 set(MAIL_HEADER "${DEFAULT_MAIL_HEADER}")
 set(NEWS_HEADER "${DEFAULT_NEWS_HEADER}")
 set(CANCEL_HEADER "${DEFAULT_CANCEL_HEADER}")
@@ -552,6 +573,9 @@ set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")
 set(CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}")
 set(VERIFY_RIPEM "${DEFAULT_VERIFY_RIPEM}")
 set(VERIFY_PGP "${DEFAULT_VERIFY_PGP}")
+set(CALL_INEWS "${DEFAULT_CALL_INEWS}")
+set(NEWS_POSTER "${DEFAULT_NEWS_POSTER}")
+set(MAIL_POSTER "${DEFAULT_MAIL_POSTER}")
 set(MAIL_HEADER "${DEFAULT_MAIL_HEADER}")
 set(NEWS_HEADER "${DEFAULT_NEWS_HEADER}")
 set(CANCEL_HEADER "${DEFAULT_CANCEL_HEADER}")

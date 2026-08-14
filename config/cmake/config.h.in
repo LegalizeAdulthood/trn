@@ -541,9 +541,20 @@
 #cmakedefine01 THREAD_INIT
 #cmakedefine01 SELECT_INIT
 
-#define CALL_INEWS "@USE_INEWS@ -h <%h"
-#define NEWS_POSTER "@BIN_DIR@/Pnews -h %h"
-#define MAIL_POSTER "@BIN_DIR@/Rnmail -h %h"
+// CALL_INEWS:
+//      how to cancel an article
+//
+#define CALL_INEWS "@CALL_INEWS@"
+
+// NEWS_POSTER:
+//      command to submit a followup article
+//
+#define NEWS_POSTER "@NEWS_POSTER@"
+
+// MAIL_POSTER:
+//      command to send a reply
+//
+#define MAIL_POSTER "@MAIL_POSTER@"
 
 // YOU_SAID:
 //      Gives the format of the attribution line in front of the quoted

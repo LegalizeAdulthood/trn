@@ -403,6 +403,20 @@ TEST(GeneratedConfigTest, verificationCommandConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG, "VERIFY_PGP", "test-pgp %A");
 }
 
+TEST(GeneratedConfigTest, postingHelperPathsDefaultMatchHistoricalFallbacks)
+{
+    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "CALL_INEWS", TRN_TEST_DEFAULT_CALL_INEWS);
+    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "NEWS_POSTER", TRN_TEST_DEFAULT_NEWS_POSTER);
+    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "MAIL_POSTER", TRN_TEST_DEFAULT_MAIL_POSTER);
+}
+
+TEST(GeneratedConfigTest, postingHelperPathConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG, "CALL_INEWS", "/test/bin/inews -h <%h");
+    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG, "NEWS_POSTER", "/test/bin/Pnews -h %h");
+    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG, "MAIL_POSTER", "/test/bin/Rnmail -h %h");
+}
+
 TEST(GeneratedConfigTest, postingHeaderTemplatesDefaultMatchHistoricalFallbacks)
 {
     constexpr std::string_view mail_header = "To: %t\\n"
@@ -490,8 +504,7 @@ TEST(GeneratedConfigTest, replyAndForwardTemplatesDefaultMatchHistoricalFallback
     expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "YOU_SAID", "In article %i you write:");
     expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "ATTRIBUTION",
                          "In article %i,%?%)f <%>f> wrote:");
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "MAIL_POSTER",
-                         TRN_TEST_DEFAULT_FORWARD_POSTER);
+    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "MAIL_POSTER", TRN_TEST_DEFAULT_MAIL_POSTER);
     expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER",
                          TRN_TEST_DEFAULT_FORWARD_POSTER);
     expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_HEADER", forward_header);

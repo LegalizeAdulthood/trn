@@ -236,42 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.27 through 4.31 refine #19 into one variable or setting family
+Slices 4.28 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.27. Posting Helper Paths
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `USE_INEWS`
-- `BIN_DIR`
-- `CALL_INEWS`
-- `NEWS_POSTER`
-- `MAIL_POSTER`
-
-Tasks:
-
-- Add CMake ownership for retained posting helper paths using current
-  `common.h` defaults where they exist.
-- Align defaults with generated helper files and install layout.
-- Stop defaults from pointing at helpers CMake does not generate.
-- Emit retained posting helper paths directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config coverage for configured helper paths.
-
-Acceptance:
-
-- Posting helper defaults are CMake-owned and install-aware.
-- Default poster commands refer only to generated or installed helpers.
-- No retained posting helper path relies on a `common.h` fallback.
-- Unit tests cover configured poster commands and default helper paths.
 
 ### 4.28. Pnews Distribution Defaults
 
@@ -398,7 +367,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.27 through 4.31.
+Depends on: 4.28 through 4.31.
 
 Files likely touched:
 
@@ -1527,7 +1496,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.27 through 4.31, 5, and 6.
+- #19: 4.28 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

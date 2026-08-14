@@ -143,10 +143,12 @@ need semantic fixes, listed here rather than hidden in prose:
   bypasses source fallback behavior.
 - `THREAD_INIT`: handled.
 - `SELECT_INIT`: handled.
-- `USE_INEWS`: needed.  CMake emits `CALL_INEWS`, but posting helper
-  generation and install layout are not complete.
-- `BIN_DIR`: needed.  CMake emits poster defaults through it, but
-  generated helpers and install layout are not complete.
+- `USE_INEWS` and `BIN_DIR`: handled as CMake cache variables for
+  generated helpers; remaining helper template migration is tracked
+  below.
+- `CALL_INEWS`, `NEWS_POSTER`, and `MAIL_POSTER`: handled.  CMake owns
+  the retained posting helper defaults and emits configured commands
+  directly.
 - `PAGER`: handled for generated help and runtime defaults.
 - `REPLYTO_POSTER_CHECKING`: handled.
 - `FULLNAMEFILE`: handled.  CMake owns the historical full-name file
@@ -259,14 +261,14 @@ Result: thread-directory configuration is only partially migrated.
 
 ### `Rnmail`
 
-`config.h.in` emits `MAIL_POSTER` as `@BIN_DIR@/Rnmail -h %h`, but
-CMake does not generate `Rnmail`.
+`config.h.in` emits `MAIL_POSTER` as `Rnmail -h %h`, assuming `Rnmail`
+is available on the command path.  CMake does not generate `Rnmail`.
 
 The only `Rnmail` generator currently present is the legacy
 `config/legacy/Rnmail.SH`, which is listed as an interface source, not
 configured into a runnable script.
 
-Result: the compiled default mail poster can point at a missing file.
+Result: porting `Rnmail.SH` to CMake remains a later migration item.
 
 ### `Pnews` Template Migration
 
