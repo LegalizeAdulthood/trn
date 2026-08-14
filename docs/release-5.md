@@ -236,38 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.26 through 4.31 refine #19 into one variable or setting family
+Slices 4.27 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.26. Feature Policy Toggles
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `MAIL_CALL`
-- `NO_FIREWORKS`
-- `TILDE_NAME`
-- `VALIDATE_XREF_SITE`
-- `USE_FTP`
-
-Tasks:
-
-- Decide which feature-policy macros remain configurable for 5.0.
-- Add CMake cache options for retained toggles.
-- Remove live source dependencies for retired toggles.
-- Add generated-config coverage for retained toggles.
-
-Acceptance:
-
-- Each feature-policy macro is CMake-owned or retired from source.
-- Retired toggles have no live preprocessor branch.
-- Unit tests cover each retained feature-policy toggle.
 
 ### 4.27. Posting Helper Paths
 
@@ -425,7 +398,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.26 through 4.31.
+Depends on: 4.27 through 4.31.
 
 Files likely touched:
 
@@ -1554,7 +1527,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.26 through 4.31, 5, and 6.
+- #19: 4.27 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

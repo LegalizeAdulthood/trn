@@ -349,6 +349,26 @@ TEST(GeneratedConfigTest, localTimeFormatConfiguredValueIsEmitted)
     expect_config_string(TRN_TEST_LOCAL_TIME_FORMAT_CONFIGURED_CONFIG, "LOCALTIME_FMT", "test %Y");
 }
 
+TEST(GeneratedConfigTest, featurePolicyDefaultsMatchHistoricalFallbacks)
+{
+    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "MAIL_CALL", cmake_bool(TRN_TEST_DEFAULT_MAIL_CALL));
+    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "NO_FIREWORKS",
+                         cmake_bool(TRN_TEST_DEFAULT_NO_FIREWORKS));
+    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "TILDE_NAME", cmake_bool(TRN_TEST_DEFAULT_TILDE_NAME));
+    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "VALIDATE_XREF_SITE",
+                         cmake_bool(TRN_TEST_DEFAULT_VALIDATE_XREF_SITE));
+    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "USE_FTP", cmake_bool(TRN_TEST_DEFAULT_USE_FTP));
+}
+
+TEST(GeneratedConfigTest, featurePolicyConfiguredValuesAreEmitted)
+{
+    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "MAIL_CALL", false);
+    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "NO_FIREWORKS", false);
+    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "TILDE_NAME", false);
+    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "VALIDATE_XREF_SITE", true);
+    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "USE_FTP", false);
+}
+
 TEST(GeneratedConfigTest, shellCommandDefaultsMatchPlatformFallbacks)
 {
     expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "SH", TRN_TEST_DEFAULT_SH);

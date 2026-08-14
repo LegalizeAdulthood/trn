@@ -205,21 +205,6 @@ enum
                     // (used by virtual array routines)
 };
 
-// Undefine any of the following features to save both I and D space
-// In general, earlier ones are easier to get along without
-#define MAIL_CALL         // check periodically for mail
-#define NO_FIREWORKS      // keep whole screen from flashing on certain
-                          // terminals such as older Televideos
-#define TILDE_NAME        // allow ~logname expansion
-#undef M_CHASE            // unmark xrefed articles on m or M
-#undef VALIDATE_XREF_SITE // are xrefs possibly invalid?
-
-/* if USEFTP is defined, trn will use the ftpgrab script for ftp: URLs
- * USEFTP is not very well tested, and the ftpgrab script is not
- * installed with make install.  May go away later
- */
-#define USE_FTP  /**/
-
 // some dependencies among options
 
 #ifdef NDEBUG

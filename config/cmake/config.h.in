@@ -349,6 +349,34 @@
 //
 #define LOCALTIME_FMT "@LOCALTIME_FMT@"
 
+// MAIL_CALL:
+//      check periodically for mail
+//
+#cmakedefine MAIL_CALL
+
+// NO_FIREWORKS:
+//      keep whole screen from flashing on certain
+//      terminals such as older Televideos
+//
+#cmakedefine NO_FIREWORKS
+
+// TILDE_NAME:
+//      allow ~logname expansion
+//
+#cmakedefine TILDE_NAME
+
+// VALIDATE_XREF_SITE:
+//      are xrefs possibly invalid?
+//
+#cmakedefine VALIDATE_XREF_SITE
+
+// USE_FTP:
+//      if USEFTP is defined, trn will use the ftpgrab script for ftp: URLs
+//      USEFTP is not very well tested, and the ftpgrab script is not
+//      installed with make install.  May go away later
+//
+#cmakedefine USE_FTP
+
 /* ORG_NAME:
  *      This symbol contains either the organization name or the full pathname
  *      of a file containing the organization name, which the program must

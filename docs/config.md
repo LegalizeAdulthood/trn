@@ -123,6 +123,9 @@ need semantic fixes, listed here rather than hidden in prose:
   directly.
 - `LOCALTIME_FMT`: handled.  CMake owns the historical local-time format
   default and emits the configured value directly.
+- `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`, `VALIDATE_XREF_SITE`, and
+  `USE_FTP`: handled.  CMake owns the retained feature-policy defaults
+  and emits configured definitions directly.
 - `PIPE_SAVER`: handled.  CMake owns the historical Unix command and a
   Windows-safe command default, and emits the configured value directly.
 - `SHAR_SAVER`: handled.  CMake owns the historical Unix command and an
@@ -170,9 +173,6 @@ need semantic fixes, listed here rather than hidden in prose:
 These symbols are consumed outside `config/include/config`, but no CMake
 cache variable or generated `config.h.in` owner exists for them.  Slice 5
 must either add a retained owner or explicitly retire each one.
-
-- Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
-  `VALIDATE_XREF_SITE`, and `USE_FTP`.
 
 ### Retired Configure Areas
 
@@ -437,12 +437,9 @@ These are compile-time product choices, not platform probes:
 
 - `MAIL_CALL`: mail polling.
 - `NO_FIREWORKS`: conservative terminal repaint behavior.
-- `TILDE_NAME`: tilde-login expansion; currently defined but no current
-  consumer found.
+- `TILDE_NAME`: tilde-login expansion.
 - `MCHASE`: generated xref-unmarking option used by article and newsrc
   logic.
-- `M_CHASE`: stale common-header spelling. It is only undefined in
-  `common.h`; current consumers use `MCHASE`.
 - `VALIDATE_XREF_SITE`: optional xref validation.
 - `USE_FTP`: URL ftpgrab support.
 - `REPLYTO_POSTER_CHECKING`: posting identity check behavior.
