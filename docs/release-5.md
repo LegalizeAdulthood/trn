@@ -244,41 +244,6 @@ For migrated Configure Q&A, expose cache variables that represent the
 old user-facing answer or policy.  Translate that policy into non-cache
 implementation variables before generating configured files.
 
-### 5.2 Name Parsing Dialog Defaults
-
-Issues: #19.
-
-Plan source: `config.md`, Name Parsing Defaults.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #28.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- config tests
-
-Tasks:
-
-- Preserve the legacy default-answer order: default the Berkeley/V7
-  question first, and only use the USG default if Berkeley/V7 is not the
-  selected policy.
-- Derive the default `NAME_TYPE` policy from the same intent as the old
-  `bsd`, `xenix`, and `usg` probes, using current CMake feature checks.
-- Keep unsupported passwd-name choices rejected when `getpwent()` is not
-  available.
-
-Acceptance:
-
-- Default `NAME_TYPE` values match the legacy Configure dialog result
-  for Berkeley/V7, USG, and no-passwd-name cases.
-- Generated-config tests prove the default `NAME_TYPE` policy derives
-  the expected non-cache `PASS_NAMES` and `BERKELEY_NAMES` values.
-- BSD configure behavior from #28 remains fixed.
-- CMake validation tests cover each default-policy case and the
-  missing-`getpwent()` rejection.
-
 ### 6. Configure Default Fallbacks
 
 Issues: #19.
@@ -306,7 +271,7 @@ Issues: #18.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 5.2, 6, and 10.
+Depends on: 6 and 10.
 
 Files likely touched:
 

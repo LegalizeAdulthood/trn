@@ -74,6 +74,7 @@ set_tests_properties(
 set(pnews_distribution_validation_script
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_pnews_distribution_validation.cmake")
 set(name_parsing_policy_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_name_parsing_policy.cmake")
+set(name_parsing_default_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_name_parsing_default.cmake")
 add_test(NAME ConfigCMakeTest.nameTypeAcceptsBsd
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
@@ -116,6 +117,58 @@ add_test(NAME ConfigCMakeTest.nameTypeOtherDerivesFullnameFile
         "-DTRN_TEST_EXPECT_PASS_NAMES=OFF"
         "-DTRN_TEST_EXPECT_BERKELEY_NAMES=OFF"
         -P "${name_parsing_policy_script}")
+add_test(NAME ConfigCMakeTest.nameTypeDefaultPrefersBerkeley
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_HAS_GETPWENT=ON"
+        "-DTRN_TEST_SYSTEM_NAME=Generic"
+        "-DTRN_TEST_HAS_SIGTSTP=ON"
+        "-DTRN_TEST_HAS_TERMIOS=ON"
+        "-DTRN_TEST_EXPECT_NAME_TYPE=bsd"
+        -P "${name_parsing_default_script}")
+add_test(NAME ConfigCMakeTest.nameTypeDefaultTreatsXenixAsBerkeley
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_HAS_GETPWENT=ON"
+        "-DTRN_TEST_SYSTEM_NAME=Xenix"
+        "-DTRN_TEST_HAS_SIGTSTP=OFF"
+        "-DTRN_TEST_HAS_TERMIOS=ON"
+        "-DTRN_TEST_EXPECT_NAME_TYPE=bsd"
+        -P "${name_parsing_default_script}")
+add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesUsgSecond
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_HAS_GETPWENT=ON"
+        "-DTRN_TEST_SYSTEM_NAME=Generic"
+        "-DTRN_TEST_HAS_SIGTSTP=OFF"
+        "-DTRN_TEST_HAS_TERMIOS=ON"
+        "-DTRN_TEST_EXPECT_NAME_TYPE=usg"
+        -P "${name_parsing_default_script}")
+add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutProbe
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_HAS_GETPWENT=ON"
+        "-DTRN_TEST_SYSTEM_NAME=Generic"
+        "-DTRN_TEST_HAS_SIGTSTP=OFF"
+        "-DTRN_TEST_HAS_TERMIOS=OFF"
+        "-DTRN_TEST_EXPECT_NAME_TYPE=other"
+        -P "${name_parsing_default_script}")
+add_test(NAME ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutGetpwent
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_HAS_GETPWENT=OFF"
+        "-DTRN_TEST_SYSTEM_NAME=Linux"
+        "-DTRN_TEST_HAS_SIGTSTP=ON"
+        "-DTRN_TEST_HAS_TERMIOS=ON"
+        "-DTRN_TEST_EXPECT_NAME_TYPE=other"
+        -P "${name_parsing_default_script}")
+add_test(NAME ConfigCMakeTest.nameTypeRejectsBsdWithoutGetpwent
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=bsd"
+        "-DTRN_TEST_HAS_GETPWENT=OFF"
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${name_parsing_default_script}")
 add_test(NAME ConfigCMakeTest.pnewsDistributionCodeAcceptsNone
     COMMAND "${CMAKE_COMMAND}"
         "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
@@ -137,6 +190,12 @@ set_tests_properties(
     ConfigCMakeTest.nameTypeBsdDerivesPassNames
     ConfigCMakeTest.nameTypeUsgDerivesPassNames
     ConfigCMakeTest.nameTypeOtherDerivesFullnameFile
+    ConfigCMakeTest.nameTypeDefaultPrefersBerkeley
+    ConfigCMakeTest.nameTypeDefaultTreatsXenixAsBerkeley
+    ConfigCMakeTest.nameTypeDefaultUsesUsgSecond
+    ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutProbe
+    ConfigCMakeTest.nameTypeDefaultUsesOtherWithoutGetpwent
+    ConfigCMakeTest.nameTypeRejectsBsdWithoutGetpwent
     ConfigCMakeTest.pnewsDistributionCodeAcceptsNone
     ConfigCMakeTest.pnewsDistributionCodeRejectsEmpty
     PROPERTIES LABELS trn)
