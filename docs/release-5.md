@@ -240,9 +240,15 @@ For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
 
-### 5. CMake Cache Options
+For migrated Configure Q&A, expose cache variables that represent the
+old user-facing answer or policy.  Translate that policy into non-cache
+implementation variables before generating configured files.
+
+### 5.1 Name Parsing Configure Dialog
 
 Issues: #19.
+
+Plan source: `config.md`, Name Parsing Defaults.
 
 Milestone status: open mandatory 5.0 issue.
 
@@ -250,28 +256,77 @@ Files likely touched:
 
 - `config/cmake/configure_trn.cmake`
 - `config/cmake/config.h.in`
-- `config/include/config/common.h`
-- config tests
+- generated-config tests
+- CMake validation tests
 
 Tasks:
 
-- Add CMake cache variables for the relevant retained options.
+- Model the legacy two-question dialog as one user-facing cache policy:
+  `NAME_TYPE=bsd`, `NAME_TYPE=usg`, or `NAME_TYPE=other`.
+- Treat `NAME_TYPE=bsd` as the "Berkeley/V7 format for full name in
+  /etc/passwd?" yes answer.
+- Treat `NAME_TYPE=usg` as Berkeley/V7 no, then "USG format for full
+  name in /etc/passwd?" yes.
+- Treat `NAME_TYPE=other` as no to both legacy questions, meaning full
+  names come from the configured fullname file.
+- Translate `NAME_TYPE` into non-cache `PASS_NAMES` and
+  `BERKELEY_NAMES` variables before configuring `config.h`.
+- Remove `PASS_NAMES` and `BERKELEY_NAMES` as user-facing cache
+  variables.
 
 Acceptance:
 
-- Each retained Configure option has a CMake cache variable.
-- Retired options have no live source dependency.
-- Generated-config unit tests cover every new or changed variable.
+- `NAME_TYPE=bsd` emits both `PASS_NAMES` and `BERKELEY_NAMES` in the
+  generated config.
+- `NAME_TYPE=usg` emits `PASS_NAMES` but not `BERKELEY_NAMES` in the
+  generated config.
+- `NAME_TYPE=other` emits neither `PASS_NAMES` nor `BERKELEY_NAMES` in
+  the generated config.
+- CMake validation tests prove `PASS_NAMES` and `BERKELEY_NAMES` are
+  derived from `NAME_TYPE`, not held in the cache.
 
-### 6. Configure Defaults And BSD Checks
+### 5.2 Name Parsing Dialog Defaults
 
 Issues: #19.
+
+Plan source: `config.md`, Name Parsing Defaults.
 
 Milestone status: open mandatory 5.0 issue.
 
 Regression checks: #28.
 
-Depends on: 5.
+Depends on: 5.1.
+
+Files likely touched:
+
+- `config/cmake/configure_trn.cmake`
+- config tests
+
+Tasks:
+
+- Preserve the legacy default-answer order: default the Berkeley/V7
+  question first, and only use the USG default if Berkeley/V7 is not the
+  selected policy.
+- Derive the default `NAME_TYPE` policy from the same intent as the old
+  `bsd`, `xenix`, and `usg` probes, using current CMake feature checks.
+- Keep unsupported passwd-name choices rejected when `getpwent()` is not
+  available.
+
+Acceptance:
+
+- Default `NAME_TYPE` values match the legacy Configure dialog result
+  for Berkeley/V7, USG, and no-passwd-name cases.
+- Generated-config tests prove the default `NAME_TYPE` policy derives
+  the expected non-cache `PASS_NAMES` and `BERKELEY_NAMES` values.
+- BSD configure behavior from #28 remains fixed.
+- CMake validation tests cover each default-policy case and the
+  missing-`getpwent()` rejection.
+
+### 6. Configure Default Fallbacks
+
+Issues: #19.
+
+Milestone status: open mandatory 5.0 issue.
 
 Files likely touched:
 
@@ -281,16 +336,12 @@ Files likely touched:
 Tasks:
 
 - Preserve fallback behavior for empty path and file defaults.
-- Revisit Linux name defaults such as `PASS_NAMES` and
-  `BERKELEY_NAMES`.
-- Keep BSD behavior based on feature checks instead of host-name checks.
 
 Acceptance:
 
 - Empty defaults do not bypass intended source fallbacks.
-- BSD configure behavior from #28 remains fixed.
-- Unit tests cover empty-default fallbacks and BSD feature-check
-  decisions.
+- Unit tests cover empty-default fallback behavior for each retained
+  default that has a source fallback.
 
 ### 7. Install Option Documentation
 
@@ -298,7 +349,7 @@ Issues: #18.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 5, 6, and 10.
+Depends on: 5.1, 5.2, 6, and 10.
 
 Files likely touched:
 

@@ -37,10 +37,10 @@ need semantic fixes, listed here rather than hidden in prose:
   character.
 - `UNSUBSCRIBED_CHAR`: handled.  CMake owns the newsrc unsubscribe marker
   default and validates that it is one character.
-- `PASS_NAMES`: needed.  CMake owns the option, but current defaults do
-  not match the old Linux hint.
-- `BERKELEY_NAMES`: needed.  CMake owns the option, but it does not
-  imply `PASS_NAMES`.
+- `PASS_NAMES`: needed.  CMake exposes this generated detail as a cache
+  option instead of deriving it from the name-parsing policy.
+- `BERKELEY_NAMES`: needed.  CMake exposes this generated detail as a
+  cache option instead of deriving it from the name-parsing policy.
 - `PASSWORD_FILE`: handled.  CMake owns the historical password-file
   default and emits the configured value directly.
 - `LOGIN_DIR_FIELD`: handled.  CMake owns the historical login-directory
@@ -173,8 +173,9 @@ need semantic fixes, listed here rather than hidden in prose:
 ### Source Symbols Without CMake Owners
 
 These symbols are consumed outside `config/include/config`, but no CMake
-cache variable or generated `config.h.in` owner exists for them.  Slice 5
-must either add a retained owner or explicitly retire each one.
+cache variable or generated `config.h.in` owner exists for them.  If this
+section gains entries, add a concrete release-plan slice to either add a
+retained owner or explicitly retire each one.
 
 ### Retired Configure Areas
 
@@ -309,14 +310,18 @@ whether an article belongs to the current login.
 
 ### Name Parsing Defaults
 
-The old Linux hint selected Berkeley-style passwd full-name parsing.
+Legacy `Configure` asked whether `/etc/passwd` stored full names in
+Berkeley/V7 format first.  If that answer was no, it asked whether
+`/etc/passwd` stored full names in USG format.  Those answers selected
+`nametype=bsd`, `nametype=usg`, or `nametype=other`, then generated
+`PASS_NAMES`, `BERKELEY_NAMES`, and `d_usgnames` from that policy.
 
-Current defaults leave both `PASS_NAMES` and `BERKELEY_NAMES` off. Also,
-`BERKELEY_NAMES` does not imply `PASS_NAMES`, so selecting Berkeley format
-alone has no effect on the C++ name lookup path.
+Current CMake exposes `PASS_NAMES` and `BERKELEY_NAMES` as cache options
+alongside `NAME_TYPE`.  That makes generated details user-facing instead
+of deriving them from the selected name-parsing policy.
 
-Result: `%N` and posting-name defaults can differ from the legacy Linux
-configuration.
+Result: `%N` and posting-name defaults can differ from the legacy
+configuration dialog.
 
 ## Changed Semantics
 
