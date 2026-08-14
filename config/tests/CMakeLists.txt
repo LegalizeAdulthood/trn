@@ -394,6 +394,20 @@ configure_file(
     @ONLY
 )
 
+set(LOCALTIME_FMT "${DEFAULT_LOCALTIME_FMT}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    local_time_format_default.h
+    @ONLY
+)
+
+set(LOCALTIME_FMT "test %Y")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    local_time_format_configured.h
+    @ONLY
+)
+
 set(SH "${DEFAULT_SH}")
 set(PIPE_SAVER "${DEFAULT_PIPE_SAVER}")
 set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")
@@ -504,6 +518,7 @@ set(KILL_LOCAL "${DEFAULT_KILL_LOCAL}")
 set(KILL_THREADS "${DEFAULT_KILL_THREADS}")
 set(UNSUBSCRIBED_CHAR "${DEFAULT_UNSUBSCRIBED_CHAR}")
 set(SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}")
+set(LOCALTIME_FMT "${DEFAULT_LOCALTIME_FMT}")
 set(SH "${DEFAULT_SH}")
 set(PIPE_SAVER "${DEFAULT_PIPE_SAVER}")
 set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}")

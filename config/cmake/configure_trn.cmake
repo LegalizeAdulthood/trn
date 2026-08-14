@@ -356,6 +356,10 @@ function(configure_trn)
     set(DEFAULT_SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}" PARENT_SCOPE)
     set(SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}" CACHE STRING
         "The default characters to use in the selection menu.")
+    set(DEFAULT_LOCALTIME_FMT "%a %b %d %X %Z %Y")
+    set(DEFAULT_LOCALTIME_FMT "${DEFAULT_LOCALTIME_FMT}" PARENT_SCOPE)
+    set(LOCALTIME_FMT "${DEFAULT_LOCALTIME_FMT}" CACHE STRING
+        "The strftime format used for local-time Date headers.")
     set(ORG_NAME "%X/organization" CACHE STRING
         "Either the organization name or the full pathname of a file containing the organization name.")
     set(POSTING_HOSTNAME "%X/posting-hostname" CACHE STRING

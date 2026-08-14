@@ -292,10 +292,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #   endif
 #endif
 
-#ifndef LOCALTIME_FMT
-#   define LOCALTIME_FMT "%a %b %d %X %Z %Y"
-#endif
-
 #ifndef HAS_VFORK
 #   define vfork fork
 #endif

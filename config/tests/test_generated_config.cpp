@@ -339,6 +339,16 @@ TEST(GeneratedConfigTest, selectionPolicyConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "SELECTION_CHARS", "xyz789");
 }
 
+TEST(GeneratedConfigTest, localTimeFormatDefaultMatchesHistoricalFallback)
+{
+    expect_config_string(TRN_TEST_LOCAL_TIME_FORMAT_DEFAULT_CONFIG, "LOCALTIME_FMT", TRN_TEST_DEFAULT_LOCALTIME_FMT);
+}
+
+TEST(GeneratedConfigTest, localTimeFormatConfiguredValueIsEmitted)
+{
+    expect_config_string(TRN_TEST_LOCAL_TIME_FORMAT_CONFIGURED_CONFIG, "LOCALTIME_FMT", "test %Y");
+}
+
 TEST(GeneratedConfigTest, shellCommandDefaultsMatchPlatformFallbacks)
 {
     expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "SH", TRN_TEST_DEFAULT_SH);

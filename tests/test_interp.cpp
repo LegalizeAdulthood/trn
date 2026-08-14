@@ -2050,6 +2050,28 @@ TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
               g_prompt);
 }
 
+TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
+{
+    ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
+    g_header_type[DATE_LINE].flags |= HT_MAGIC;
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    reset_char_subst_mode();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_env("LOCALTIMEFMT", "%Y");
+    ASSERT_TRUE(parse_header(g_art));
+
+    testing::internal::CaptureStdout();
+    const DoArticleResult result = do_article();
+    const std::string     output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DA_NORM, result);
+    EXPECT_THAT(output, HasSubstr("Date: 2003\n"));
+}
+
 TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);

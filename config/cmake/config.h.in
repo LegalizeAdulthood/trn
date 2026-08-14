@@ -343,6 +343,12 @@
 //
 #define SELECTION_CHARS "@SELECTION_CHARS@"
 
+// LOCALTIME_FMT:
+//      The format used by strftime() to print the local time.  The Date
+//      line is only displayed in local time if the group is threaded.
+//
+#define LOCALTIME_FMT "@LOCALTIME_FMT@"
+
 /* ORG_NAME:
  *      This symbol contains either the organization name or the full pathname
  *      of a file containing the organization name, which the program must

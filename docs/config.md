@@ -121,6 +121,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`: handled.  CMake owns
   the historical kill-file path defaults and emits the configured values
   directly.
+- `LOCALTIME_FMT`: handled.  CMake owns the historical local-time format
+  default and emits the configured value directly.
 - `PIPE_SAVER`: handled.  CMake owns the historical Unix command and a
   Windows-safe command default, and emits the configured value directly.
 - `SHAR_SAVER`: handled.  CMake owns the historical Unix command and an
@@ -171,7 +173,6 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, and `USE_FTP`.
-- Formatting defaults: `LOCALTIME_FMT`.
 
 ### Retired Configure Areas
 
