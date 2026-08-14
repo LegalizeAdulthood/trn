@@ -28,6 +28,16 @@ elif [ -n "$LANG" ]; then
 	esac
 fi
 
+# Posting MIME transfer encoding.  Pnews does not recode the body; it
+# declares 8bit only when the article body contains bytes above ASCII.
+set_transfer_encoding() {
+	transfer_encoding=7bit
+	if sed -e '1,/^[	 ]*$/ d' "$1" | LC_ALL=C tr -d '\000-\177' |
+		LC_ALL=C grep . >/dev/null 2>&1; then
+		transfer_encoding=8bit
+	fi
+}
+
 # System dependencies
 
 mailer="${RNMAILER-/bin/mail}"
@@ -593,6 +603,7 @@ EOH
 	case $# in
 	2)
 	    state=success
+	    set_transfer_encoding $tmpart
 	    headerstrip='1,/^[	 ]*$/{/^[A-Z][-A-Za-z0-9]*:[	 ]*$/d;
 		/^X-ORIGINAL-NEWSGROUPS:/d;
 		/^[Cc][Cc]:/d;
@@ -608,7 +619,7 @@ Mime-Version: 1.0
 		/^[	 ]*$/i\
 Content-Type: text/plain; charset="'"$charset"'"
 		/^[	 ]*$/i\
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: '"$transfer_encoding"'
 		}'
 	    case "$NNTPSERVER" in
 	    local|'') share_connection=no;;

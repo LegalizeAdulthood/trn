@@ -90,10 +90,8 @@ Documentation gaps and owning work items:
 - CMake installs `trn`, helper commands, generated helper/data files,
   `HelpFiles`, and supported man pages.  Top-level release text files
   still need a package decision in item 20.
-- `man/Pnews.1` and `man/Rnmail.1` describe shell helpers before the
-  CMake helper migration.  `Pnews` has current `User-Agent` and
-  transfer-encoding behavior not reflected there.  Items 15, 16, and 19
-  own that drift.
+- `man/Rnmail.1` describes shell helpers before the CMake helper
+  migration.  Item 19 owns that remaining drift.
 - `man/trn.1` and `config/data/environment.in` still document Unix shell
   defaults such as `Rnmail`, `Pnews`, `tail`, and `/bin/sh`.  Item 19
   owns the Windows-safe default policy and documentation fallout.
@@ -117,11 +115,10 @@ Documentation gaps and owning work items:
 - The online help browser looks for `%X/sitehelp/top` and
   `%X/HelpFiles/top`; CMake installs `HelpFiles` under the private
   library.  Items 20 and 23 own package and verification coverage.
-- Feature docs need updates as release work lands: posting transfer
-  encoding, UTF-8 and restored charset conversions, optional
-  `UTF-8 => ASCII`, yEnc extraction, TLS/nntps/auth policy, and
-  Windows/macOS platform status.  Items 16, 21, 22, and 26 through 36
-  own the matching feature-specific documentation.
+- Feature docs need updates as release work lands: UTF-8 and restored
+  charset conversions, optional `UTF-8 => ASCII`, yEnc extraction,
+  TLS/nntps/auth policy, and Windows/macOS platform status.  Items 21,
+  22, and 26 through 36 own the matching feature-specific documentation.
 
 ## Charset Analysis
 
@@ -246,39 +243,6 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
-
-### 16. Posting Transfer Encoding
-
-Issues: #16.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #20.
-
-Depends on: 15.
-
-Files likely touched:
-
-- `config/data/Pnews.in`
-- `inews`
-- posting tests
-
-Tasks:
-
-- Replace unconditional `Content-Transfer-Encoding: 8bit`.
-- Choose `7bit` for ASCII-only text.
-- Choose `8bit` only when the body needs it.
-- Update `Pnews` documentation for `User-Agent`, transfer encoding, and
-  any remaining posting limits.
-
-Acceptance:
-
-- ASCII-only posts are not declared as `8bit`.
-- Non-ASCII posts still get a valid transfer encoding.
-- #16 can close without regressing #20.
-- Posting unit tests cover ASCII, non-ASCII, and User-Agent regression
-  cases.
-- Commit description includes `fixes #16`.
 
 ### 17. Platform Path Lists
 
@@ -1103,7 +1067,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #3: 26 through 30.
 - #5: 36.
 - #14: 18 and 20.
-- #16: 16.
+- #16: completed by removed slices 15 and 16.
 - #17: 31 through 33.
 - #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must

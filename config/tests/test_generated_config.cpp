@@ -533,7 +533,21 @@ TEST(GeneratedConfigTest, generatedPnewsSendFilterAddsMimeHeaders)
 {
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Mime-Version: 1.0");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Content-Type: text/plain; charset=\"'\"$charset\"'\"");
-    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Content-Transfer-Encoding: 8bit");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Content-Transfer-Encoding: '\"$transfer_encoding\"'");
+}
+
+TEST(GeneratedConfigTest, generatedPnewsTransferEncodingDefaultsAsciiBodiesTo7Bit)
+{
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "set_transfer_encoding() {");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "transfer_encoding=7bit");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "set_transfer_encoding $tmpart");
+}
+
+TEST(GeneratedConfigTest, generatedPnewsTransferEncodingMarksNonAsciiBodiesAs8Bit)
+{
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "LC_ALL=C tr -d '\\000-\\177'");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "LC_ALL=C grep .");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "transfer_encoding=8bit");
 }
 
 TEST(GeneratedConfigTest, postingHeaderTemplatesDefaultMatchHistoricalFallbacks)

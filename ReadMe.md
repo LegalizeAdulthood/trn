@@ -38,8 +38,9 @@ Bugs that have nothing to do with UTF-8 support are also being worked on.
 
 [acli-whiteboard]: https://github.com/acli/trn/wiki/Project-whiteboard
 
-Posting is half-working, with Content-Transfer-Encoding declared as 8bit.
-A more proper fix is the next step.
+Posting adds a User-Agent header and declares Content-Transfer-Encoding
+as 7bit for ASCII-only article bodies or 8bit when the body contains
+non-ASCII bytes.
 
 Further along, the original conversions need to be put back in, but in a
 way that wouldn't corrupt UTF-8.

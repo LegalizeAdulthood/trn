@@ -75,6 +75,15 @@ You can also modify the the NEWSHEADER environment variable to change the
 header file that
 .I [t]rn
 passes to Pnews.
+.PP
+Before handing an article to inews(1),
+.I Pnews
+adds User-Agent, MIME-Version, Content-Type, and Content-Transfer-Encoding
+headers.
+ASCII-only bodies are declared as 7bit; bodies containing non-ASCII bytes
+are declared as 8bit.
+.I Pnews
+does not otherwise recode the body.
 .SH ENVIRONMENT
 .IP AUTHORCOPY 8
 If defined, contains the name of a file to which the finished article will
