@@ -153,11 +153,10 @@ need semantic fixes, listed here rather than hidden in prose:
 - `REPLYTO_POSTER_CHECKING`: handled.
 - `FULLNAMEFILE`: handled.  CMake owns the historical full-name file
   default and emits the configured value directly.
-- `NAME_TYPE`: needed.  It feeds generated `Pnews`, whose template is not
-  fully migrated.
+- `NAME_TYPE`: handled for generated `Pnews` distribution defaults.
 - `LOCAL_DIST`, `ORGANIZATION_DIST`, `CITY_DIST`, `STATE_DIST`,
-  `MULTISTATE_DIST`, `COUNTRY_DIST`, and `CONTINENT_DIST`: needed.
-  They feed generated `Pnews`, whose template is not fully migrated.
+  `MULTISTATE_DIST`, `COUNTRY_DIST`, and `CONTINENT_DIST`: handled for
+  generated `Pnews` distribution defaults.
 - `DEBUG`: handled.
 - `SHELL_START`, `DIFF_PROGRAM`, `ED_PROGRAM`, `ISPELL_PROGRAM`,
   `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: needed.  CMake owns them for

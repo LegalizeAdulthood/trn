@@ -514,9 +514,35 @@ TEST(GeneratedConfigTest, replyAndForwardTemplatesDefaultMatchHistoricalFallback
                          "------- end of forwarded message -------");
 }
 
-TEST(GeneratedConfigTest, pnewsNameTypeDefaultMatchesNameParsingMode)
+TEST(GeneratedConfigTest, pnewsDistributionDefaultsMatchHistoricalFallbacks)
 {
-    const std::string expected = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";
+    const std::string name_type = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";
+    const std::string local_dist = std::string{"loc=\""} + TRN_TEST_DEFAULT_LOCAL_DIST + "\"";
+    const std::string organization_dist = std::string{"org=\""} + TRN_TEST_DEFAULT_ORGANIZATION_DIST + "\"";
+    const std::string city_dist = std::string{"city=\""} + TRN_TEST_DEFAULT_CITY_DIST + "\"";
+    const std::string state_dist = std::string{"state=\""} + TRN_TEST_DEFAULT_STATE_DIST + "\"";
+    const std::string multistate_dist = std::string{"multistate=\""} + TRN_TEST_DEFAULT_MULTISTATE_DIST + "\"";
+    const std::string country_dist = std::string{"cntry=\""} + TRN_TEST_DEFAULT_COUNTRY_DIST + "\"";
+    const std::string continent_dist = std::string{"cont=\""} + TRN_TEST_DEFAULT_CONTINENT_DIST + "\"";
 
-    expect_file_contains(TRN_TEST_PNEWS_NAME_TYPE_DEFAULT_SCRIPT, expected);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, name_type);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, local_dist);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, organization_dist);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, city_dist);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, state_dist);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, multistate_dist);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, country_dist);
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, continent_dist);
+}
+
+TEST(GeneratedConfigTest, pnewsDistributionConfiguredValuesAreEmitted)
+{
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "nametype=\"bsd\"");
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "loc=\"local-test\"");
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "org=\"org-test\"");
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "city=\"city-test\"");
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "state=\"state-test\"");
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "multistate=\"multi-test\"");
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "cntry=\"country-test\"");
+    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "cont=\"continent-test\"");
 }

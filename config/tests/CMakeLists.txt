@@ -71,6 +71,51 @@ set_tests_properties(
     ConfigCMakeTest.unsubscribedCharRejectsMultipleCharacters
     PROPERTIES LABELS trn)
 
+set(pnews_distribution_validation_script
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_pnews_distribution_validation.cmake")
+add_test(NAME ConfigCMakeTest.nameTypeAcceptsBsd
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=bsd"
+        -P "${pnews_distribution_validation_script}")
+add_test(NAME ConfigCMakeTest.nameTypeAcceptsUsg
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=usg"
+        -P "${pnews_distribution_validation_script}")
+add_test(NAME ConfigCMakeTest.nameTypeAcceptsOther
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=other"
+        -P "${pnews_distribution_validation_script}")
+add_test(NAME ConfigCMakeTest.nameTypeRejectsUnknown
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_NAME_TYPE=unknown"
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${pnews_distribution_validation_script}")
+add_test(NAME ConfigCMakeTest.pnewsDistributionCodeAcceptsNone
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_DISTRIBUTION_NAME=LOCAL_DIST"
+        "-DTRN_TEST_DISTRIBUTION_VALUE=none"
+        -P "${pnews_distribution_validation_script}")
+add_test(NAME ConfigCMakeTest.pnewsDistributionCodeRejectsEmpty
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTRN_CONFIGURE_TRN_CMAKE:FILEPATH=${posting_host_match_segments_configure_script}"
+        "-DTRN_TEST_DISTRIBUTION_NAME=LOCAL_DIST"
+        "-DTRN_TEST_DISTRIBUTION_VALUE="
+        "-DTRN_TEST_EXPECT_FAILURE=ON"
+        -P "${pnews_distribution_validation_script}")
+set_tests_properties(
+    ConfigCMakeTest.nameTypeAcceptsBsd
+    ConfigCMakeTest.nameTypeAcceptsUsg
+    ConfigCMakeTest.nameTypeAcceptsOther
+    ConfigCMakeTest.nameTypeRejectsUnknown
+    ConfigCMakeTest.pnewsDistributionCodeAcceptsNone
+    ConfigCMakeTest.pnewsDistributionCodeRejectsEmpty
+    PROPERTIES LABELS trn)
+
 set(save_path_defaults_test_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_save_path_defaults.cmake")
 add_test(NAME ConfigCMakeTest.savePathDefaultsUseFlatMode
     COMMAND "${CMAKE_COMMAND}"
@@ -528,9 +573,30 @@ configure_file(
 )
 
 set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
+set(LOCAL_DIST "${DEFAULT_LOCAL_DIST}")
+set(ORGANIZATION_DIST "${DEFAULT_ORGANIZATION_DIST}")
+set(CITY_DIST "${DEFAULT_CITY_DIST}")
+set(STATE_DIST "${DEFAULT_STATE_DIST}")
+set(MULTISTATE_DIST "${DEFAULT_MULTISTATE_DIST}")
+set(COUNTRY_DIST "${DEFAULT_COUNTRY_DIST}")
+set(CONTINENT_DIST "${DEFAULT_CONTINENT_DIST}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
-    pnews_name_type_default
+    pnews_distribution_defaults
+    @ONLY
+)
+
+set(NAME_TYPE "bsd")
+set(LOCAL_DIST "local-test")
+set(ORGANIZATION_DIST "org-test")
+set(CITY_DIST "city-test")
+set(STATE_DIST "state-test")
+set(MULTISTATE_DIST "multi-test")
+set(COUNTRY_DIST "country-test")
+set(CONTINENT_DIST "continent-test")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../data/Pnews.in"
+    pnews_distribution_configured
     @ONLY
 )
 
@@ -586,5 +652,13 @@ set(FORWARD_POSTER "${DEFAULT_FORWARD_POSTER}")
 set(FORWARD_HEADER "${DEFAULT_FORWARD_HEADER}")
 set(FORWARD_MSG "${DEFAULT_FORWARD_MSG}")
 set(FORWARD_MSG_END "${DEFAULT_FORWARD_MSG_END}")
+set(NAME_TYPE "${DEFAULT_NAME_TYPE}")
+set(LOCAL_DIST "${DEFAULT_LOCAL_DIST}")
+set(ORGANIZATION_DIST "${DEFAULT_ORGANIZATION_DIST}")
+set(CITY_DIST "${DEFAULT_CITY_DIST}")
+set(STATE_DIST "${DEFAULT_STATE_DIST}")
+set(MULTISTATE_DIST "${DEFAULT_MULTISTATE_DIST}")
+set(COUNTRY_DIST "${DEFAULT_COUNTRY_DIST}")
+set(CONTINENT_DIST "${DEFAULT_CONTINENT_DIST}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)
