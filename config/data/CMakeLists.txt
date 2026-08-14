@@ -4,29 +4,16 @@ find_program_default(diff DEFAULT_DIFF_PROGRAM)
 find_program_default(ed DEFAULT_ED_PROGRAM)
 configure_ispell_defaults()
 find_program_default(spell DEFAULT_SPELL_PROGRAM)
+find_program(sh_path "sh" NO_CACHE)
+configure_shell_start_default("${sh_path}")
 
-set(DEFAULT_SHELL_START "#!/bin/sh")
 set(DEFAULT_SHELL_START "${DEFAULT_SHELL_START}" PARENT_SCOPE)
 set(DEFAULT_DIFF_PROGRAM "${DEFAULT_DIFF_PROGRAM}" PARENT_SCOPE)
 set(DEFAULT_ED_PROGRAM "${DEFAULT_ED_PROGRAM}" PARENT_SCOPE)
 set(DEFAULT_ISPELL_PROGRAM "${DEFAULT_ISPELL_PROGRAM}" PARENT_SCOPE)
 set(DEFAULT_ISPELL_OPTIONS "${DEFAULT_ISPELL_OPTIONS}" PARENT_SCOPE)
 set(DEFAULT_SPELL_PROGRAM "${DEFAULT_SPELL_PROGRAM}" PARENT_SCOPE)
-set(SHELL_START "${DEFAULT_SHELL_START}" CACHE STRING
-    "Text to use for the first line bash shell scripts.")
-set(DIFF_PROGRAM "${DEFAULT_DIFF_PROGRAM}" CACHE STRING "Program to use for differencing files.")
-set(ED_PROGRAM "${DEFAULT_ED_PROGRAM}" CACHE STRING "Program to use for automated line editing.")
-set(ISPELL_PROGRAM "${DEFAULT_ISPELL_PROGRAM}" CACHE STRING
-    "ispell program to use for spell checking, or none.")
-set(ISPELL_OPTIONS "${DEFAULT_ISPELL_OPTIONS}" CACHE STRING
-    "Options to pass to ISPELL_PROGRAM for spell checking.")
-set(SPELL_PROGRAM "${DEFAULT_SPELL_PROGRAM}" CACHE STRING
-    "Program to use for spell checking if ispell not found.")
-validate_helper_tool_value("SHELL_START" "${SHELL_START}")
-validate_helper_tool_value("DIFF_PROGRAM" "${DIFF_PROGRAM}")
-validate_helper_tool_value("ED_PROGRAM" "${ED_PROGRAM}")
-validate_helper_tool_value("ISPELL_PROGRAM" "${ISPELL_PROGRAM}")
-validate_helper_tool_value("SPELL_PROGRAM" "${SPELL_PROGRAM}")
+configure_helper_tool_cache_defaults()
 # MMDF mailbox magic separator
 string(ASCII 1 CTRL_A)
 

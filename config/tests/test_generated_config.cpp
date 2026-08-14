@@ -529,9 +529,11 @@ TEST(GeneratedConfigTest, replyAndForwardTemplatesDefaultMatchHistoricalFallback
                          "------- end of forwarded message -------");
 }
 
-TEST(GeneratedConfigTest, helperToolDefaultsMatchHistoricalFallbacks)
+TEST(GeneratedConfigTest, helperToolDefaultsMatchToolDiscovery)
 {
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, TRN_TEST_DEFAULT_SHELL_START);
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                         std::string{"pager=\"${PAGER-"} + TRN_TEST_DEFAULT_PAGER + "}\"");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
                          std::string{"ispell="} + TRN_TEST_DEFAULT_ISPELL_PROGRAM);
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
@@ -544,6 +546,7 @@ TEST(GeneratedConfigTest, helperToolDefaultsMatchHistoricalFallbacks)
 TEST(GeneratedConfigTest, helperToolConfiguredValuesAreEmitted)
 {
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "#!/test/sh");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "pager=\"${PAGER-/test/bin/more}\"");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell=/test/bin/ispell");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell_options=-x -Tlatin1");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "diff=/test/bin/diff");

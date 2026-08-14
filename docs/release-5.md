@@ -246,38 +246,6 @@ Use `config/legacy/Configure` to understand historical defaults, special
 values, and compatibility expectations.  Do not copy its Q&A structure
 when CMake can determine the result directly.
 
-### 5.5 Tool Path Probe Retrofit
-
-Issues: #19.
-
-Plan source: `config.md`, Tool Paths.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- config tests
-
-Tasks:
-
-- Use CMake tool discovery for implemented external-tool defaults such
-  as editor, pager, diff, ed, spell, ispell, RIPEM, and PGP commands.
-- Keep cache variables as explicit path overrides.
-- Disable or diagnose helper paths when a required external tool cannot
-  be found instead of silently inheriting a Unix Configure answer.
-- Keep generated helper templates driven by the probed or overridden
-  tool paths.
-
-Acceptance:
-
-- CMake tests cover found, missing, and overridden tool defaults without
-  depending on host-installed optional tools.
-- Generated helper tests prove configured scripts use the probed or
-  overridden paths.
-- Windows defaults do not point at Unix-only tools unless the tool was
-  found or explicitly overridden.
-
 ### 5.6 Prompt-Derived Runtime Policy Cleanup
 
 Issues: #19.

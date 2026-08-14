@@ -29,7 +29,7 @@ probes.
 These legacy policy choices already have CMake cache owners.  Some still
 need semantic fixes, listed here rather than hidden in prose:
 
-- `DEFAULT_EDITOR`: handled.  CMake finds the default editor and emits
+- `DEFAULT_EDITOR`: handled.  CMake probes the default editor and emits
   the configured value.
 - `MAIL_FILE`: handled.  CMake owns the historical mail-file default and
   emits the configured value directly.
@@ -137,10 +137,10 @@ need semantic fixes, listed here rather than hidden in prose:
   directly.
 - `CUSTOM_SAVER`: handled.  CMake owns the historical Unix command and a
   Windows-safe command default, and emits the configured value directly.
-- `VERIFY_RIPEM`: handled.  CMake emits the historical verifier command
-  when `ripem` is found; otherwise the default command is disabled.
-- `VERIFY_PGP`: handled.  CMake emits the historical verifier command
-  when `pgp` is found; otherwise the default command is disabled.
+- `VERIFY_RIPEM`: handled.  CMake emits a verifier command using the
+  found `ripem` path; otherwise the default command is disabled.
+- `VERIFY_PGP`: handled.  CMake emits a verifier command using the found
+  `pgp` path; otherwise the default command is disabled.
 - `OVERVIEW_DIR`: handled.  CMake derives the default from the probed or
   overridden news-source mode and emits the configured value directly.
 - `OVERVIEW_FMT`: handled.  CMake derives the overview format-file
@@ -153,7 +153,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `CALL_INEWS`, `NEWS_POSTER`, and `MAIL_POSTER`: handled.  CMake owns
   the retained posting helper defaults and emits configured commands
   directly.
-- `PAGER`: handled for generated help and runtime defaults.
+- `PAGER`: handled.  CMake probes the pager used by generated help and
+  helper scripts; the cache value remains an explicit override.
 - `REPLYTO_POSTER_CHECKING`: handled.
 - `FULLNAMEFILE`: handled.  CMake owns the historical full-name file
   default and emits the configured value directly.
@@ -165,8 +166,10 @@ need semantic fixes, listed here rather than hidden in prose:
   generated `Pnews` distribution defaults.
 - `DEBUG`: handled.
 - `SHELL_START`, `DIFF_PROGRAM`, `ED_PROGRAM`, `ISPELL_PROGRAM`,
-  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: handled.  CMake owns them for
-  generated helper files and validates the retained non-empty values.
+  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: handled.  CMake probes helper
+  tool defaults for generated helper files.  Missing optional tools are
+  disabled with empty values, except `ISPELL_PROGRAM` uses `none`, and
+  cache variables remain explicit overrides.
 - `MAIL_HEADER`, `NEWS_HEADER`, `CANCEL_HEADER`, and
   `SUPERSEDE_HEADER`: handled.  CMake owns the retained posting header
   templates and emits them directly.
@@ -352,7 +355,8 @@ Legacy located many tools directly:
 - `spell`
 - `vi`
 
-Current CMake only exposes a small subset for generated scripts:
+Current CMake retains only the tool paths used by generated files and
+runtime defaults:
 
 - `DIFF_PROGRAM`
 - `ED_PROGRAM`
@@ -363,8 +367,9 @@ Current CMake only exposes a small subset for generated scripts:
 - `DEFAULT_EDITOR`
 - `PREF_SHELL`
 
-This is mostly reasonable. Generated helper templates use CMake variables
-for retained tools and literals for fixed helper commands.
+Those retained defaults are probed with CMake.  Missing optional tools
+default to empty values, except `ISPELL_PROGRAM` uses `none`, and cache
+variables remain explicit overrides.
 
 ## Mostly Replaced by CMake or Modern Code
 
