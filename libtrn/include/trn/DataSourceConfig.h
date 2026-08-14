@@ -18,7 +18,6 @@ enum class DataSourceConfigField
     ActiveFile,
     ActiveFileRefetch,
     SpoolDir,
-    ThreadDir,
     OverviewDir,
     ActiveTimes,
     GroupDesc,
@@ -42,7 +41,6 @@ public:
     std::optional<std::string_view> active_file() const;
     std::optional<std::string_view> active_file_refetch() const;
     std::optional<std::string_view> spool_dir() const;
-    std::optional<std::string_view> thread_dir() const;
     std::optional<std::string_view> overview_dir() const;
     std::optional<std::string_view> active_times() const;
     std::optional<std::string_view> group_desc() const;
@@ -59,7 +57,6 @@ public:
     void set_active_file(std::string_view value);
     void set_active_file_refetch(std::string_view value);
     void set_spool_dir(std::string_view value);
-    void set_thread_dir(std::string_view value);
     void set_overview_dir(std::string_view value);
     void set_active_times(std::string_view value);
     void set_group_desc(std::string_view value);
@@ -80,7 +77,6 @@ private:
     std::optional<std::string> m_active_file;
     std::optional<std::string> m_active_file_refetch;
     std::optional<std::string> m_spool_dir;
-    std::optional<std::string> m_thread_dir;
     std::optional<std::string> m_overview_dir;
     std::optional<std::string> m_active_times;
     std::optional<std::string> m_group_desc;
@@ -121,11 +117,6 @@ inline std::optional<std::string_view> DataSourceConfig::active_file_refetch() c
 inline std::optional<std::string_view> DataSourceConfig::spool_dir() const
 {
     return view(m_spool_dir);
-}
-
-inline std::optional<std::string_view> DataSourceConfig::thread_dir() const
-{
-    return view(m_thread_dir);
 }
 
 inline std::optional<std::string_view> DataSourceConfig::overview_dir() const
@@ -201,11 +192,6 @@ inline void DataSourceConfig::set_active_file_refetch(std::string_view value)
 inline void DataSourceConfig::set_spool_dir(std::string_view value)
 {
     set_value(m_spool_dir, value);
-}
-
-inline void DataSourceConfig::set_thread_dir(std::string_view value)
-{
-    set_value(m_thread_dir, value);
 }
 
 inline void DataSourceConfig::set_overview_dir(std::string_view value)

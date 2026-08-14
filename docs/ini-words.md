@@ -99,9 +99,6 @@ Typed representation of one access-file data source section.
 - Applies defaults from environment and compiled paths.
 - Builds `DataSource` objects.
 
-The `Thread Dir` alignment issue is represented explicitly, even if the
-field remains unused.
-
 ### `RcGroupConfig`
 
 Typed representation of one `Group N` access-file section.
@@ -128,8 +125,6 @@ This keeps rcgroup parsing independent of data-source parsing.
 - Parsed config values and selector-owned strings share one global array.
 - `rcstuff_init_data` frees `vals` directly instead of unpreparing the
   table.
-- `s_datasrc_ini` contains `Thread Dir`, but `DataSourceIniIndex` skips
-  that slot.
 - `OptionIndex` values depend on invisible table rows and section headers.
 
 ## Slices

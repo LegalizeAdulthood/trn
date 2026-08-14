@@ -106,8 +106,8 @@ Documentation gaps and owning work items:
   `XGTITLE`, hostname-only `NNTPSERVER` wording, and no TLS or nntps
   policy.  Items 26 through 30 own modern NNTP documentation updates.
 - `config/data/access_def.in` omits live access-schema fields such as
-  `Thread Dir`, `XHDR Broken`, and `Xrefs`, and contains the malformed
-  sample `Force Auth = [yes|no}`.  Items 8 and 10 own generated data
+  `XHDR Broken` and `Xrefs`, and contains the malformed sample
+  `Force Auth = [yes|no}`.  Items 8 and 10 own generated data
   documentation sync.
 - Compiled option help in `libtrn/help.cpp` drifts from
   `libtrn/OptionCatalog.cpp`: `Select My Postings` omits `thread`, and
@@ -236,44 +236,15 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slice 4.31 refines #19 into one variable or setting family per review
-unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.31. Thread Directory Defaults
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `Thread Dir`
-
-Tasks:
-
-- Add a CMake cache variable for the default thread directory or retire
-  the default.
-- Add the generated access-file entry when the default is retained.
-- Add data-source coverage for configured and absent thread directory
-  defaults.
-
-Acceptance:
-
-- Thread-directory configuration is CMake-owned or explicitly retired.
-- Generated access defaults match the retained behavior.
-- Data-source unit tests cover configured and absent thread-directory
-  defaults.
 
 ### 5. CMake Cache Options
 
 Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
-
-Depends on: 4.31.
 
 Files likely touched:
 
@@ -1402,7 +1373,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.31, 5, and 6.
+- #19: 5 and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

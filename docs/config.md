@@ -260,12 +260,10 @@ from the selected default source:
 
 ### Thread Directory
 
-Legacy configured a thread directory. Current code parses a `Thread Dir`
-field in `DataSourceConfig`, but there is no CMake cache variable, no
-sample entry in `access_def.in`, and no consumer found that applies it to
-the default data source.
-
-Result: thread-directory configuration is only partially migrated.
+Legacy configured a thread directory for `.thread`/XTHREAD database files.
+That support has been retired: remote access uses XOVER overview data and
+builds threads on the client, and local spool thread databases are no
+longer supported.  `Thread Dir` is not a supported access-file setting.
 
 ### `Rnmail`
 

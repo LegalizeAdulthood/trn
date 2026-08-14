@@ -53,9 +53,8 @@ TEST_F(DataSourceConfigTest, schemaRecognizesDataSourceFields)
     const IniSchema &schema = DataSourceConfig::schema();
 
     ASSERT_NE(nullptr, schema.find("NNTP Server"));
-    ASSERT_NE(nullptr, schema.find("Thread Dir"));
     ASSERT_NE(nullptr, schema.find("Overview Format File"));
-    EXPECT_EQ(static_cast<int>(DataSourceConfigField::ThreadDir), schema.find("Thread Dir")->id());
+    EXPECT_EQ(nullptr, schema.find("Thread Dir"));
 }
 
 TEST_F(DataSourceConfigTest, parsesValuesIntoNamedFields)
@@ -65,7 +64,6 @@ TEST_F(DataSourceConfigTest, parsesValuesIntoNamedFields)
                                           "Active File = active.cache\n"
                                           "Active File Refetch = 1 day\n"
                                           "Spool Dir = /var/spool/news\n"
-                                          "Thread Dir = /var/threads\n"
                                           "Overview Dir = /var/overview\n"
                                           "Active Times = active.times\n"
                                           "Group Desc = newsgroups\n"
@@ -82,7 +80,6 @@ TEST_F(DataSourceConfigTest, parsesValuesIntoNamedFields)
     expect_value("active.cache", config.active_file());
     expect_value("1 day", config.active_file_refetch());
     expect_value("/var/spool/news", config.spool_dir());
-    expect_value("/var/threads", config.thread_dir());
     expect_value("/var/overview", config.overview_dir());
     expect_value("active.times", config.active_times());
     expect_value("newsgroups", config.group_desc());
@@ -103,5 +100,4 @@ TEST_F(DataSourceConfigTest, missingValuesRemainAbsent)
     expect_value("active", config.active_file());
     EXPECT_FALSE(config.nntp_server().has_value());
     EXPECT_FALSE(config.spool_dir().has_value());
-    EXPECT_FALSE(config.thread_dir().has_value());
 }

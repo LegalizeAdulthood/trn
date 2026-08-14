@@ -36,7 +36,6 @@ const IniSchema s_schema{
         IniField::value(field_id(DataSourceConfigField::ActiveFile), "Active File"),
         IniField::value(field_id(DataSourceConfigField::ActiveFileRefetch), "Active File Refetch"),
         IniField::value(field_id(DataSourceConfigField::SpoolDir), "Spool Dir"),
-        IniField::value(field_id(DataSourceConfigField::ThreadDir), "Thread Dir"),
         IniField::value(field_id(DataSourceConfigField::OverviewDir), "Overview Dir"),
         IniField::value(field_id(DataSourceConfigField::ActiveTimes), "Active Times"),
         IniField::value(field_id(DataSourceConfigField::GroupDesc), "Group Desc"),
@@ -69,7 +68,6 @@ DataSourceConfig DataSourceConfig::from(const IniSectionValues &values)
     config.m_active_file = value_or_null(values, DataSourceConfigField::ActiveFile);
     config.m_active_file_refetch = value_or_null(values, DataSourceConfigField::ActiveFileRefetch);
     config.m_spool_dir = value_or_null(values, DataSourceConfigField::SpoolDir);
-    config.m_thread_dir = value_or_null(values, DataSourceConfigField::ThreadDir);
     config.m_overview_dir = value_or_null(values, DataSourceConfigField::OverviewDir);
     config.m_active_times = value_or_null(values, DataSourceConfigField::ActiveTimes);
     config.m_group_desc = value_or_null(values, DataSourceConfigField::GroupDesc);

@@ -11,10 +11,9 @@
 # to the appropriate interval (e.g. "1 day, 5 hours, 3 minutes").
 #   When defining a local news source (even NFS mounted), set "Active File"
 # and "Spool Dir".
-#   Specify "none" for "Overview Dir" and/or "Thread Dir" to disable support
-# for that database type, omit or leave blank for the default access (either
-# "Spool Dir" for local or XOVER for remote), or enter a custom hierarchy
-# path name.
+#   Specify "none" for "Overview Dir" to disable support for the overview
+# database, omit or leave blank for the default access (either "Spool Dir"
+# for local or XOVER for remote), or enter a custom hierarchy path name.
 #   Specify "none" for "Active Times" if the host has no new-group support,
 # leave it blank for the default (either active + ".times" for local access
 # or the NEWGROUPS command for remote), or enter a custom file name for your
@@ -39,7 +38,6 @@
 #Active File =
 #Active File Refetch =
 #Spool Dir =
-#Thread Dir =
 #Overview Dir =
 #Overview Format File =
 #Active Times =
@@ -58,12 +56,10 @@ Spool Dir = /usr/spool/news
 [local2]
 Active File = /usr/lib/news/active
 Spool Dir = /usr/spool/news
-Thread Dir = none
 
 [local3]
 Active File = /usr/lib/news/active
 Spool Dir = /usr/spool/news
-Thread Dir = none
 Overview Dir = /usr/spool/news/.nov
 Overview Format File = /usr/lib/news/overview.fmt
 Active Times = /usr/lib/news/acttimes.custom
@@ -83,7 +79,6 @@ NNTP Server = rem.ote.com
 Spool Dir = /usr/tmp
 Active File = /client/lib/active
 Active File Refetch = 12 hours
-Thread Dir = /client/threads
 Overview Dir = none
 Active Times = /client/lib/active.times
 Group Desc = /client/lib/newsgroups
