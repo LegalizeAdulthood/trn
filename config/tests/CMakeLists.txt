@@ -360,6 +360,24 @@ configure_file(
     @ONLY
 )
 
+set(KILL_GLOBAL "${DEFAULT_KILL_GLOBAL}")
+set(KILL_LOCAL "${DEFAULT_KILL_LOCAL}")
+set(KILL_THREADS "${DEFAULT_KILL_THREADS}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    kill_file_paths_default.h
+    @ONLY
+)
+
+set(KILL_GLOBAL "%p/test-global-kill")
+set(KILL_LOCAL "%p/%c/test-local-kill")
+set(KILL_THREADS "%+/test-thread-kill")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    kill_file_paths_configured.h
+    @ONLY
+)
+
 set(UNSUBSCRIBED_CHAR "${DEFAULT_UNSUBSCRIBED_CHAR}")
 set(SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}")
 configure_file(
@@ -481,6 +499,9 @@ set(VARYNAME "${DEFAULT_VARYNAME}")
 set(HEADNAME "${DEFAULT_HEADNAME}")
 set(SAVEDIR "${DEFAULT_SAVEDIR}")
 set(SAVENAME "${DEFAULT_SAVENAME}")
+set(KILL_GLOBAL "${DEFAULT_KILL_GLOBAL}")
+set(KILL_LOCAL "${DEFAULT_KILL_LOCAL}")
+set(KILL_THREADS "${DEFAULT_KILL_THREADS}")
 set(UNSUBSCRIBED_CHAR "${DEFAULT_UNSUBSCRIBED_CHAR}")
 set(SELECTION_CHARS "${DEFAULT_SELECTION_CHARS}")
 set(SH "${DEFAULT_SH}")

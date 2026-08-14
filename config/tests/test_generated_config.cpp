@@ -312,6 +312,20 @@ TEST(GeneratedConfigTest, savePathTemplatesConfiguredValuesAreEmitted)
     expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVENAME", "test-%a");
 }
 
+TEST(GeneratedConfigTest, killFilePathsDefaultMatchHistoricalFallbacks)
+{
+    expect_config_string(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_GLOBAL", TRN_TEST_DEFAULT_KILL_GLOBAL);
+    expect_config_string(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_LOCAL", TRN_TEST_DEFAULT_KILL_LOCAL);
+    expect_config_string(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_THREADS", TRN_TEST_DEFAULT_KILL_THREADS);
+}
+
+TEST(GeneratedConfigTest, killFilePathsConfiguredValuesAreEmitted)
+{
+    expect_config_string(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_GLOBAL", "%p/test-global-kill");
+    expect_config_string(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_LOCAL", "%p/%c/test-local-kill");
+    expect_config_string(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_THREADS", "%+/test-thread-kill");
+}
+
 TEST(GeneratedConfigTest, selectionPolicyDefaultMatchesHistoricalFallbacks)
 {
     expect_config_char(TRN_TEST_SELECTION_POLICY_DEFAULT_CONFIG, "UNSUBSCRIBED_CHAR",

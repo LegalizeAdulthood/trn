@@ -236,39 +236,11 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
-Slices 4.24 through 4.31 refine #19 into one variable or setting family
+Slices 4.25 through 4.31 refine #19 into one variable or setting family
 per review unit.  Plan source: `docs/config.md`.
 For each remaining configuration-variable slice, verify the prior default
 and special values against `config/legacy/Configure`; preserve that
 behavior unless the slice explicitly calls for a change.
-
-### 4.24. Kill File Defaults
-
-Issues: #19.
-
-Milestone status: open mandatory 5.0 issue.
-
-Configuration variables/settings:
-
-- `KILL_GLOBAL`
-- `KILL_LOCAL`
-- `KILL_THREADS`
-
-Tasks:
-
-- Add CMake cache variables for retained kill-file defaults using the
-  current `common.h` defaults.
-- Preserve current `%` interpolation semantics.
-- Emit retained kill-file defaults directly from `config.h.in` and
-  remove their `common.h` fallbacks.
-- Add generated-config and kill-file path coverage.
-
-Acceptance:
-
-- Kill-file path defaults are CMake-owned.
-- Runtime kill-file lookup keeps current path behavior.
-- No retained kill-file path relies on a `common.h` fallback.
-- Unit tests cover configured and default kill-file paths.
 
 ### 4.25. Local Time Format
 
@@ -479,7 +451,7 @@ Issues: #19.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 4.24 through 4.31.
+Depends on: 4.25 through 4.31.
 
 Files likely touched:
 
@@ -1608,7 +1580,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #16: 15 and 16.
 - #17: 31 through 33.
 - #18: 3 and 7.
-- #19: 4.24 through 4.31, 5, and 6.
+- #19: 4.25 through 4.31, 5, and 6.
 - #23: 21 and 22.
 - #24: 11 and 12.
 - #31: 8 through 10.

@@ -118,6 +118,9 @@ need semantic fixes, listed here rather than hidden in prose:
   and emits the configured value directly.
 - `SAVENAME`: handled.  CMake owns the historical save-file defaults and
   emits the configured value directly.
+- `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`: handled.  CMake owns
+  the historical kill-file path defaults and emits the configured values
+  directly.
 - `PIPE_SAVER`: handled.  CMake owns the historical Unix command and a
   Windows-safe command default, and emits the configured value directly.
 - `SHAR_SAVER`: handled.  CMake owns the historical Unix command and an
@@ -168,7 +171,6 @@ must either add a retained owner or explicitly retire each one.
 
 - Feature policy: `MAIL_CALL`, `NO_FIREWORKS`, `TILDE_NAME`,
   `VALIDATE_XREF_SITE`, and `USE_FTP`.
-- Kill-file defaults: `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`.
 - Formatting defaults: `LOCALTIME_FMT`.
 
 ### Retired Configure Areas

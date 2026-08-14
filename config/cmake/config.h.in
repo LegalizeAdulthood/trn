@@ -423,6 +423,24 @@
 //
 #define SAVENAME "@SAVENAME@"
 
+// KILL_GLOBAL:
+//      Where to find the KILL file to apply to every newsgroup.  See
+//      the ^K command at the newsgroup-selection level.
+//
+#define KILL_GLOBAL "@KILL_GLOBAL@"
+
+// KILL_LOCAL:
+//      Where to find the KILL file for the current newsgroup.  See
+//      the commands K and ^K at the article selection level, and the
+//      search modifier K.
+//
+#define KILL_LOCAL "@KILL_LOCAL@"
+
+// KILL_THREADS:
+//      Where to find the global thread kill file.
+//
+#define KILL_THREADS "@KILL_THREADS@"
+
 // PIPE_SAVER:
 //      The shell command to execute for a save to a pipe ("s | command"
 //      or "w | command").  The command typed by the user is substituted

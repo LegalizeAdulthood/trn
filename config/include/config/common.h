@@ -283,18 +283,6 @@ void report_assertion(const char *expr, const char *file, unsigned int line);
 #define NEWS_POSTER "Pnews -h %h"
 #endif
 
-#ifndef KILL_GLOBAL // % and ~
-#define KILL_GLOBAL "%p/KILL"
-#endif
-
-#ifndef KILL_LOCAL       // % and ~
-#   define KILL_LOCAL "%p/%c/KILL"
-#endif
-
-#ifndef KILL_THREADS     // % and ~
-#   define KILL_THREADS "%+/Kill/Threads"
-#endif
-
 // how to cancel an article
 #ifndef CALL_INEWS
 #   ifdef BNEWS

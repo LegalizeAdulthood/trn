@@ -9,10 +9,12 @@
 #include <trn/ngdata.h>
 #include <trn/opt.h>
 #include <trn/rcstuff.h>
+#include <trn/respond.h>
 #include <trn/rt-process.h>
 #include <trn/rthread.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
+#include <util/env.h>
 
 #include <test_config.h>
 
@@ -46,6 +48,9 @@ protected:
         m_old_msg_id_hash = g_msg_id_hash;
         m_old_article_list = g_article_list;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
+        m_old_priv_dir = g_priv_dir;
+        m_old_trn_dir = g_trn_dir;
+        m_old_newsgroup_dir = g_newsgroup_dir;
         m_old_kill_first = g_kill_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
@@ -79,6 +84,9 @@ protected:
         g_msg_id_hash = hash_create(17, msg_id_cmp);
         g_article_list.clear();
         g_newsgroup_ptr = nullptr;
+        g_priv_dir.clear();
+        g_trn_dir.clear();
+        g_newsgroup_dir.clear();
         g_kill_first = ArticleNum{};
         g_first_art = ArticleNum{};
         g_last_art = ArticleNum{};
@@ -114,6 +122,9 @@ protected:
         g_msg_id_hash = m_old_msg_id_hash;
         g_article_list = m_old_article_list;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
+        g_priv_dir = m_old_priv_dir;
+        g_trn_dir = m_old_trn_dir;
+        g_newsgroup_dir = m_old_newsgroup_dir;
         g_kill_first = m_old_kill_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
@@ -153,6 +164,9 @@ protected:
     HashTable                    *m_old_msg_id_hash{};
     std::map<ArticleNum, Article> m_old_article_list;
     NewsgroupData                *m_old_newsgroup_ptr{};
+    std::string                   m_old_priv_dir;
+    std::string                   m_old_trn_dir;
+    std::string                   m_old_newsgroup_dir;
     ArticleNum                    m_old_kill_first{};
     ArticleNum                    m_old_first_art{};
     ArticleNum                    m_old_last_art{};
@@ -189,6 +203,24 @@ TEST_F(KillFileEditTest, createsLocalKillFileDirectory)
     EXPECT_TRUE(fs::exists(kill_file.parent_path()));
 }
 
+TEST_F(KillFileEditTest, defaultLocalKillFileUsesPrivateNewsgroupDirectory)
+{
+    using ::testing::Return;
+    using ::testing::StrEq;
+
+    g_in_ng = true;
+    g_priv_dir = (m_output_dir / "News").generic_string();
+    g_newsgroup_dir = "comp/lang/cpp";
+    const fs::path kill_file = fs::path{g_priv_dir} / "comp" / "lang" / "cpp" / "KILL";
+
+    EXPECT_CALL(m_env.getter, Call(StrEq("KILLLOCAL"))).WillRepeatedly(Return(nullptr));
+    expect_editor();
+
+    edit_kill_file();
+
+    EXPECT_TRUE(fs::exists(kill_file.parent_path()));
+}
+
 TEST_F(KillFileEditTest, createsGlobalKillFileDirectory)
 {
     const fs::path    kill_file = m_output_dir / "global" / "KILL";
@@ -196,6 +228,23 @@ TEST_F(KillFileEditTest, createsGlobalKillFileDirectory)
 
     g_in_ng = false;
     m_env.expect_env_repeatedly("KILLGLOBAL", kill_file_name.c_str());
+    expect_editor();
+
+    edit_kill_file();
+
+    EXPECT_TRUE(fs::exists(kill_file.parent_path()));
+}
+
+TEST_F(KillFileEditTest, defaultGlobalKillFileUsesPrivateDirectory)
+{
+    using ::testing::Return;
+    using ::testing::StrEq;
+
+    g_in_ng = false;
+    g_priv_dir = (m_output_dir / "News").generic_string();
+    const fs::path kill_file = fs::path{g_priv_dir} / "KILL";
+
+    EXPECT_CALL(m_env.getter, Call(StrEq("KILLGLOBAL"))).WillRepeatedly(Return(nullptr));
     expect_editor();
 
     edit_kill_file();
@@ -342,6 +391,31 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
 
     m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
     kill_file_init();
+    g_kf_change_thread_cnt = 1;
+    g_kf_state |= KFS_THREAD_CHANGES;
+
+    update_thread_kill_file();
+
+    EXPECT_EQ("<case@example.com> + " + std::to_string(day_num) + "\n", file_contents(kill_file));
+}
+
+TEST_F(KillFileEditTest, defaultThreadKillFileUsesTrnDirectory)
+{
+    using ::testing::Return;
+    using ::testing::StrEq;
+
+    const fs::path kill_file = m_output_dir / "trn" / "Kill" / "Threads";
+    const long     day_num = static_cast<long>(std::time(nullptr)) / 86400 - 10490;
+
+    g_trn_dir = (m_output_dir / "trn").generic_string();
+    EXPECT_CALL(m_env.getter, Call(StrEq("KILLTHREADS"))).WillRepeatedly(Return(nullptr));
+    kill_file_init();
+
+    Article *article = article_ptr(ArticleNum{1});
+    article->m_msg_id = "<case@example.com>";
+    article->m_flags = AF_EXISTS;
+    article->m_auto_flags = AUTO_SEL_THD;
+    hash_store(g_msg_id_hash, article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
     g_kf_change_thread_cnt = 1;
     g_kf_state |= KFS_THREAD_CHANGES;
 
