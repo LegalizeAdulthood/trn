@@ -117,7 +117,7 @@ private:
 } // namespace testing
 } // namespace trn
 
-#ifdef MSDOS
+#ifdef USE_WINDOWS_ENVIRONMENT_NAMES
 #define HOMEDRIVE "HOMEDRIVE"
 #define HOMEPATH "HOMEPATH"
 #define USERNAME "USERNAME"

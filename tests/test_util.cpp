@@ -182,7 +182,7 @@ protected:
         m_env.expect_no_envar("USER");
         m_env.expect_no_envar("LOGNAME");
 
-#ifdef MSDOS
+#ifdef USE_WINDOWS_ENVIRONMENT_NAMES
         m_env.expect_env("USERNAME", "casey");
 #endif
     }

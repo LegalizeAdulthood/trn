@@ -411,6 +411,12 @@ configure_file(
     @ONLY
 )
 
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.in"
+    platform_policy_default.h
+    @ONLY
+)
+
 set(SERVER_NAME "${DEFAULT_SERVER_NAME}")
 set(HAS_LOCAL_SPOOL "${DEFAULT_HAS_LOCAL_SPOOL}")
 set(ACTIVE_TIMES "none")

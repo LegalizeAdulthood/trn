@@ -31,7 +31,7 @@
 #include <fmt/format.h>
 #include <fmt/printf.h>
 
-#ifdef MSDOS
+#ifdef USE_CONIO_TERMINAL_INPUT
 #include <conio.h>
 #endif
 
@@ -52,6 +52,51 @@
 
 #undef  USETITE         // use terminal init/exit sequences (not recommended)
 #undef  USEKSKE         // use keypad start/end sequences
+
+#if defined(USE_BUILTIN_TERMINAL_CAPABILITIES) && !defined(I_TERMIOS)
+#ifndef B19200
+#define B19200 19200
+#endif
+#ifndef B9600
+#define B9600 9600
+#endif
+#ifndef B4800
+#define B4800 4800
+#endif
+#ifndef B2400
+#define B2400 2400
+#endif
+#ifndef B1800
+#define B1800 1800
+#endif
+#ifndef B1200
+#define B1200 1200
+#endif
+#ifndef B600
+#define B600 600
+#endif
+#ifndef B300
+#define B300 300
+#endif
+#ifndef B200
+#define B200 200
+#endif
+#ifndef B150
+#define B150 150
+#endif
+#ifndef B134
+#define B134 134
+#endif
+#ifndef B110
+#define B110 110
+#endif
+#ifndef B75
+#define B75 75
+#endif
+#ifndef B50
+#define B50 50
+#endif
+#endif
 
 #ifdef I_TERMIOS
 termios g_tty;
@@ -126,7 +171,7 @@ static const char *s_tc_TE{}; // reset terminal
 static const char *s_tc_KS{}; // enter `keypad transmit' mode
 static const char *s_tc_KE{}; // exit `keypad transmit' mode
 static char  s_tc_PC{}; // pad character for use by tputs()
-#ifndef MSDOS
+#ifndef USE_BUILTIN_TERMINAL_CAPABILITIES
 static std::string s_tc_CR_fallback;
 #endif
 #ifdef _POSIX_SOURCE
@@ -194,7 +239,7 @@ static int         s_next_in{};
 static int         s_next_out{};
 static const char *s_read_err{"rn read error"};
 
-#ifndef MSDOS
+#ifndef USE_BUILTIN_TERMINAL_CAPABILITIES
 static char s_termcap_area[TC_SIZE]; // area for "compiled" termcap strings
 #endif
 static KeyMap *s_top_map{};
@@ -206,7 +251,7 @@ static bool    s_got_a_char{}; // true if we got a char since eating
 static Signal_t alarm_catcher(int signo);
 #endif
 #ifdef PENDING
-#if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
+#if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(USE_CONIO_TERMINAL_INPUT)
 static int circfill();
 #endif
 #endif
@@ -237,14 +282,14 @@ void term_init()
     g_erase_char = g_tty.c_cc[VERASE]; // for finish_command()
     g_kill_char = g_tty.c_cc[VKILL];   // for finish_command()
 #else // !I_TERMIOS
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
     s_out_speed = B19200;
     g_erase_char = '\b';
     g_kill_char = Ctl('u');
     g_tc_GT = true;
 #else
     ..."Don't know how to initialize the terminal!"
-#endif // !MSDOS
+#endif // !USE_BUILTIN_TERMINAL_CAPABILITIES
 #endif // !I_TERMIOS
 
     // The following could be a table but I can't be sure that there isn't
@@ -279,13 +324,13 @@ void term_init()
 }
 
 #ifdef PENDING
-# if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
+# if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(USE_CONIO_TERMINAL_INPUT)
 int devtty;
 # endif
 #endif
 
 #ifdef HAS_TERMLIB
-#ifndef MSDOS
+#ifndef USE_BUILTIN_TERMINAL_CAPABILITIES
 // guarantee capability pointer != nullptr
 // (I believe terminfo will ignore the &tmpaddr argument.)
 inline const char *Tgetstr(const char *key)
@@ -310,7 +355,7 @@ void term_set(TermCapScratchBuffer &tcbuf)
 #endif
 
 #ifdef PENDING
-#if !defined (FIONREAD) && !defined (HAS_RDCHK) && !defined(MSDOS)
+#if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(USE_CONIO_TERMINAL_INPUT)
     // do no delay reads on something that always gets closed on exit
 
     devtty = fileno(stdin);
@@ -330,7 +375,7 @@ void term_set(TermCapScratchBuffer &tcbuf)
     // get all that good termcap stuff
 
 #ifdef HAS_TERMLIB
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
     g_tc_BC = "\b";
     g_tc_UP = "\033[A";
     g_tc_CR = "\r";
@@ -561,7 +606,7 @@ void arrow_macros()
     // If arrows are defined as single keys, we probably don't
     // want to redefine them.  (The tvi912c defines kl as ^H)
     //
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
     std::string_view seq = "\035\110";
 #else
     std::string_view seq = Tgetstr("ku"); // up
@@ -571,7 +616,7 @@ void arrow_macros()
         set_macro(seq, s_up[g_auto_arrow_macros]);
     }
 
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
     seq = "\035\120";
 #else
     seq = Tgetstr("kd"); // down
@@ -581,7 +626,7 @@ void arrow_macros()
         set_macro(seq, s_down[g_auto_arrow_macros]);
     }
 
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
     seq = "\035\113";
 #else
     seq = Tgetstr("kl"); // left
@@ -591,7 +636,7 @@ void arrow_macros()
         set_macro(seq, s_left[g_auto_arrow_macros]);
     }
 
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
     seq = "\035\115";
 #else
     seq = Tgetstr("kr"); // right
@@ -876,11 +921,11 @@ bool finput_pending(bool check_term)
 #  ifdef HAS_RDCHK
         return rdchk(0);
 #  else // !HAS_RDCHK
-#   ifdef MSDOS
-        return kbhit();
-#   else // !MSDOS
+#   ifdef USE_CONIO_TERMINAL_INPUT
+        return _kbhit();
+#   else // !USE_CONIO_TERMINAL_INPUT
         return circfill();
-#   endif // !MSDOS
+#   endif // !USE_CONIO_TERMINAL_INPUT
 #  endif // !HAS_RDCHK
 #  endif // !FIONREAD
     }
@@ -1271,8 +1316,8 @@ static int read_tty(char *addr, int size)
         s_next_out %= PUSH_SIZE;
         return 1;
     }
-#ifdef MSDOS
-    *addr = getch();
+#ifdef USE_CONIO_TERMINAL_INPUT
+    *addr = static_cast<char>(_getch());
     if (*addr == '\0')
     {
         *addr = Ctl('\035');
@@ -1296,7 +1341,7 @@ char read_tty_char()
 }
 
 #ifdef PENDING
-# if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
+# if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(USE_CONIO_TERMINAL_INPUT)
 static int circfill()
 {
     int Howmany;
@@ -2805,7 +2850,7 @@ std::string_view tc_color_capability(std::string_view capability)
     return {};
 }
 
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
 int tputs(const char *str, int num, int (*func)(int))
 {
     fmt::printf(str, num);
@@ -2815,7 +2860,7 @@ int tputs(const char *str, int num, int (*func)(int))
 
 std::string tgoto_string(std::string_view str, int x, int y)
 {
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
     return fmt::sprintf(str, y + 1, x + 1);
 #else
     const char *result = tgoto(str.data(), x, y);

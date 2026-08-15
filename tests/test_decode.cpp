@@ -339,7 +339,7 @@ TEST(DecodeFixFilenameTest, fallsBackForBadBasename)
     EXPECT_EQ("x", decode_fix_filename("/tmp/.."));
 }
 
-#ifdef MSDOS
+#ifdef USE_WINDOWS_FILENAME_RULES
 TEST(DecodeFixFilenameTest, preservesWindowsLongFilenameCharacters)
 {
     EXPECT_EQ("a!#$%&'()+,;=@[]^_`{}~.txt", decode_fix_filename("a!#$%&'()+,;=@[]^_`{}~.txt"));

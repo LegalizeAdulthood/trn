@@ -57,8 +57,12 @@ enum
 #   define BERKELEY // include job control signals?
 #endif
 
-#if defined(FIONREAD) || defined(HAS_RDCHK) || defined(O_NDELAY) || defined(MSDOS)
+#if defined(FIONREAD) || defined(HAS_RDCHK) || defined(O_NDELAY) || defined(USE_CONIO_TERMINAL_INPUT)
 #   define PENDING
+#endif
+
+#ifdef USE_UNDERSCORE_SLEEP
+#   define sleep(secs_) _sleep(secs_)
 #endif
 
 /* Valid substitutions for strings marked with % comment are:

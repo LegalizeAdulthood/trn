@@ -407,8 +407,8 @@ TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)
 
 TEST_F(NewsrcRotationTest, useMultircRejectsLockHeldByThisProcess)
 {
-#ifdef MSDOS
-    GTEST_SKIP() << "MSDOS lock handling overwrites existing lock files";
+#ifndef CHECK_NEWSRC_LOCK_PROCESS
+    GTEST_SKIP() << "newsrc lock process checks are not available";
 #else
     const fs::path active_path = m_output_dir / "active";
     std::ofstream{active_path} << "comp.lang.apl 0000000003 0000000001 y\n";

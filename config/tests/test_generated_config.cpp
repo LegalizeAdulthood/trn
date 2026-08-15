@@ -167,6 +167,29 @@ TEST(GeneratedConfigTest, termlibProbeMatchesPlatformCheck)
     expect_config_define(TRN_TEST_TERMLIB_PROBE_CONFIG, "HAS_TERMLIB", cmake_bool(TRN_TEST_DEFAULT_HAS_TERMLIB));
 }
 
+TEST(GeneratedConfigTest, platformPolicyDefaultsMatchFeatureProbes)
+{
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "MSDOS", false);
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_CONIO_TERMINAL_INPUT",
+                         cmake_bool(TRN_TEST_USE_CONIO_TERMINAL_INPUT));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_BUILTIN_TERMINAL_CAPABILITIES",
+                         cmake_bool(TRN_TEST_USE_BUILTIN_TERMINAL_CAPABILITIES));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_SPAWN_SHELL",
+                         cmake_bool(TRN_TEST_USE_SPAWN_SHELL));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_UNDERSCORE_SLEEP",
+                         cmake_bool(TRN_TEST_USE_UNDERSCORE_SLEEP));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_WINDOWS_ENVIRONMENT_NAMES",
+                         cmake_bool(TRN_TEST_USE_WINDOWS_ENVIRONMENT_NAMES));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_WINDOWS_FILENAME_RULES",
+                         cmake_bool(TRN_TEST_USE_WINDOWS_FILENAME_RULES));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "CHECK_NEWSRC_LOCK_PROCESS",
+                         cmake_bool(TRN_TEST_CHECK_NEWSRC_LOCK_PROCESS));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "SET_ARTICLE_TEMP_FILE_PERMISSIONS",
+                         cmake_bool(TRN_TEST_SET_ARTICLE_TEMP_FILE_PERMISSIONS));
+    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "PRESERVE_NEWSRC_FILE_PERMISSIONS",
+                         cmake_bool(TRN_TEST_PRESERVE_NEWSRC_FILE_PERMISSIONS));
+}
+
 TEST(GeneratedConfigTest, activeTimesDefaultIsNone)
 {
     expect_file_contains(TRN_TEST_ACTIVE_TIMES_DEFAULT_CONFIG, "#define ACTIVE_TIMES \"none\"");

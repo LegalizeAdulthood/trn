@@ -243,41 +243,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 18. Modern Windows Platform Policy
-
-Issues: #14.
-
-Milestone status: open mandatory 5.0 issue.
-
-Plan source: `msdos.md`.
-
-Depends on: 17.
-
-Files likely touched:
-
-- `config/cmake/configure_trn.cmake`
-- `config/include/config/msdos.h`
-- `config/include/config/config2.h`
-- `libtrn/terminal.cpp`
-- `libtrn/util.cpp`
-- platform tests
-
-Tasks:
-
-- Stop defining `MSDOS` merely because `WIN32` is true.
-- Replace console input branches with named console-input capability.
-- Replace terminal-mode branches with named terminal capability.
-- Replace shell launch branches with a process-launch service.
-- Replace filename and permission behavior with platform policy.
-
-Acceptance:
-
-- `MSDOS` no longer means modern Windows.
-- Remaining platform branches name their actual feature or policy.
-- Windows console and path behavior have focused tests.
-- Unit tests cover each renamed platform policy branch touched by the
-  slice.
-
 ### 19. Windows Helper Strategy
 
 Issues: #29.
@@ -1037,7 +1002,7 @@ Mandatory open GitHub 5.0 milestone issues:
 
 - #3: 26 through 30.
 - #5: 36.
-- #14: 18 and 20.
+- #14: 20.
 - #16: completed by removed slices 15 and 16.
 - #17: 31 through 33.
 - #18: completed by removed slices 3 and 7.

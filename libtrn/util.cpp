@@ -31,7 +31,7 @@
 #ifdef I_SYS_WAIT
 #include <sys/wait.h>
 #endif
-#ifdef MSDOS
+#ifdef USE_SPAWN_SHELL
 #include <process.h>
 #endif
 #ifdef _WIN32
@@ -95,15 +95,59 @@ int shell_wait_status_exit_code(int status)
 #endif
 }
 
-// fork and exec a shell command
+static int launch_shell(const char *shell_path, const std::string &command_text)
+{
+#ifdef USE_SPAWN_SHELL
+    std::string native_shell_path = fs::path{shell_path}.make_preferred().string();
+    return static_cast<int>(
+        _spawnl(_P_WAIT, native_shell_path.c_str(), native_shell_path.c_str(), "/c", command_text.c_str(), nullptr));
+#else
+    WaitStatus status;
+    pid_t      pid = vfork();
+    if (pid == 0)
+    {
+        if (g_no_wait_fork)
+        {
+            close(1);
+            close(2);
+            dup(open("/dev/null",1));
+        }
+
+        if (!command_text.empty())
+        {
+            execl(shell_path, shell_path, "-c", command_text.c_str(), nullptr);
+        }
+        else
+        {
+            execl(shell_path, shell_path, nullptr, nullptr, nullptr);
+        }
+        _exit(127);
+    }
+    sigignore(SIGINT);
+#ifdef SIGQUIT
+    sigignore(SIGQUIT);
+#endif
+    g_waiting = true;
+    pid_t w{};
+    while ((w = wait(&status)) != pid)
+    {
+        if (w == -1 && errno != EINTR)
+        {
+            break;
+        }
+    }
+    if (w == -1)
+    {
+        return -1;
+    }
+    return shell_wait_status_exit_code(status);
+#endif
+}
+
+// launch a shell command
 
 int do_shell(std::string_view shell, std::string_view cmd)
 {
-#ifndef MSDOS
-    WaitStatus status;
-    pid_t pid, w;
-#endif
-    int ret = 0;
     const std::string command_text{cmd};
 
     xmouse_off();
@@ -180,50 +224,7 @@ int do_shell(std::string_view shell, std::string_view cmd)
     const std::string shell_text = shell.empty() ? get_env_var("SHELL", PREF_SHELL) : std::string{shell};
     const char *const shell_path = shell_text.c_str();
     termlib_reset();
-#ifdef MSDOS
-    intptr_t status = spawnl(P_WAIT, shell_path, shell_path, "/c", command_text.c_str(), nullptr);
-#else
-    pid = vfork();
-    if (pid == 0)
-    {
-        if (g_no_wait_fork)
-        {
-            close(1);
-            close(2);
-            dup(open("/dev/null",1));
-        }
-
-        if (!command_text.empty())
-        {
-            execl(shell_path, shell_path, "-c", command_text.c_str(), nullptr);
-        }
-        else
-        {
-            execl(shell_path, shell_path, nullptr, nullptr, nullptr);
-        }
-        _exit(127);
-    }
-    sigignore(SIGINT);
-#ifdef SIGQUIT
-    sigignore(SIGQUIT);
-#endif
-    g_waiting = true;
-    while ((w = wait(&status)) != pid)
-    {
-        if (w == -1 && errno != EINTR)
-        {
-            break;
-        }
-    }
-    if (w == -1)
-    {
-        ret = -1;
-    }
-    else
-    {
-        ret = shell_wait_status_exit_code(status);
-    }
-#endif // !MSDOS
+    const int ret = launch_shell(shell_path, command_text);
     termlib_init();
     xmouse_check();
     g_waiting = false;

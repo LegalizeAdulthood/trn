@@ -22,6 +22,7 @@
 #   define safe_realloc realloc
 #endif
 
+#include <filesystem>
 #include <string.h>
 #include <string_view>
 
@@ -49,11 +50,9 @@ constexpr char Ctl(char ch)
     return ch & 037;
 }
 
-#ifndef MSDOS
 inline bool file_ref(std::string_view s)
 {
-    return !s.empty() && s.front() == '/';
+    return std::filesystem::path{s}.is_absolute();
 }
-#endif
 
 #endif

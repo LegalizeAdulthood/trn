@@ -136,7 +136,7 @@ TEST_F(InitTest, loginNameFromLOGNAME)
     ASSERT_EQ(login_name, g_login_name);
 }
 
-#ifdef MSDOS
+#ifdef USE_WINDOWS_ENVIRONMENT_NAMES
 TEST_F(InitTest, loginNameFromUSERNAME)
 {
     const char *login_name{TRN_TEST_LOGIN_NAME};

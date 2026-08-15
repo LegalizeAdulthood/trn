@@ -611,6 +611,60 @@
  */
 #cmakedefine MSDOS
 
+// USE_CONIO_TERMINAL_INPUT:
+//      This symbol, if defined, indicates that terminal input should use
+//      the conio kbhit() and getch() routines.
+//
+#cmakedefine USE_CONIO_TERMINAL_INPUT
+
+// USE_BUILTIN_TERMINAL_CAPABILITIES:
+//      This symbol, if defined, indicates that trn should use built-in
+//      terminal capability strings instead of reading termcap entries.
+//
+#cmakedefine USE_BUILTIN_TERMINAL_CAPABILITIES
+
+// USE_SPAWN_SHELL:
+//      This symbol, if defined, indicates that shell commands should be
+//      launched with a spawn-style wait call.
+//
+#cmakedefine USE_SPAWN_SHELL
+
+// USE_UNDERSCORE_SLEEP:
+//      This symbol, if defined, indicates that sleep() should use the
+//      C runtime _sleep() routine.
+//
+#cmakedefine USE_UNDERSCORE_SLEEP
+
+// USE_WINDOWS_ENVIRONMENT_NAMES:
+//      This symbol, if defined, indicates that Windows environment names
+//      should be used for login and home-directory fallback lookup.
+//
+#cmakedefine USE_WINDOWS_ENVIRONMENT_NAMES
+
+// USE_WINDOWS_FILENAME_RULES:
+//      This symbol, if defined, indicates that decoded filenames should
+//      follow Windows filename restrictions.
+//
+#cmakedefine USE_WINDOWS_FILENAME_RULES
+
+// CHECK_NEWSRC_LOCK_PROCESS:
+//      This symbol, if defined, indicates that stale newsrc locks can be
+//      checked against live process IDs.
+//
+#cmakedefine CHECK_NEWSRC_LOCK_PROCESS
+
+// SET_ARTICLE_TEMP_FILE_PERMISSIONS:
+//      This symbol, if defined, indicates that fetched article temporary
+//      files should be made private with file permissions.
+//
+#cmakedefine SET_ARTICLE_TEMP_FILE_PERMISSIONS
+
+// PRESERVE_NEWSRC_FILE_PERMISSIONS:
+//      This symbol, if defined, indicates that rewritten newsrc files
+//      should preserve the old file's mode and ownership.
+//
+#cmakedefine PRESERVE_NEWSRC_FILE_PERMISSIONS
+
 /* REPLYTO_POSTER_CHECKING:
  *      Makes -p also check Reply-To (slow)
  */

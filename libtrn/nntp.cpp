@@ -288,7 +288,7 @@ void nntp_body(ArticleNum art_num)
         fmt::print(stderr, "\nUnable to write temporary file: '{}'.\n", artname);
         finalize(1);
     }
-#ifndef MSDOS
+#ifdef SET_ARTICLE_TEMP_FILE_PERMISSIONS
     chmod(artname.c_str(), 0600);
 #endif
     if (nntp_command(fmt::format("{} {}", g_parsed_art == art_num ? "BODY" : "ARTICLE", art_num.value_of())) <= 0)

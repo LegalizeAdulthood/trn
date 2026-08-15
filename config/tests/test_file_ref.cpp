@@ -5,11 +5,17 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <string>
 #include <string_view>
 
-TEST(FileRefTest, slashPathIsAbsolute)
+namespace fs = std::filesystem;
+
+TEST(FileRefTest, absolutePathIsAbsolute)
 {
-    EXPECT_TRUE(file_ref("/var/spool/news"));
+    const std::string path = fs::absolute("var/spool/news").string();
+
+    EXPECT_TRUE(file_ref(path));
 }
 
 TEST(FileRefTest, relativePathIsNotAbsolute)
@@ -29,26 +35,10 @@ TEST(FileRefTest, emptyStringViewIsNotAbsolute)
 
 TEST(FileRefTest, acceptsStringView)
 {
-    constexpr std::string_view path{"/var/spool/news:ignored", 15};
+    constexpr std::string_view suffix{":ignored"};
+    const std::string          absolute_path = fs::absolute("var/spool/news").string();
+    const std::string          storage = absolute_path + std::string{suffix};
+    const std::string_view     path{storage.data(), absolute_path.size()};
 
     EXPECT_TRUE(file_ref(path));
 }
-
-#ifdef MSDOS
-TEST(FileRefTest, drivePathIsAbsolute)
-{
-    EXPECT_TRUE(file_ref("c:/news"));
-}
-
-TEST(FileRefTest, acceptsDrivePathStringView)
-{
-    constexpr std::string_view path{"c:/news:ignored", 7};
-
-    EXPECT_TRUE(file_ref(path));
-}
-#else
-TEST(FileRefTest, drivePathIsNotAbsolute)
-{
-    EXPECT_FALSE(file_ref("c:/news"));
-}
-#endif

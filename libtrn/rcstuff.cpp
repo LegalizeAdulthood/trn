@@ -604,7 +604,7 @@ static bool lock_newsrc(Newsrc *rp)
     }
     if (processnum)
     {
-#ifndef MSDOS
+#ifdef CHECK_NEWSRC_LOCK_PROCESS
         if (g_verbose)
         {
             fmt::print("\nThe requested newsrc is locked by process {} on host {}.\n", processnum, runninghost);
@@ -1897,12 +1897,12 @@ bool write_newsrcs(Multirc *mptr)
             total_success = false;
             continue;
         }
-#ifndef MSDOS
+#ifdef PRESERVE_NEWSRC_FILE_PERMISSIONS
         stat_t perms;
-        if (stat(rp->name.string().c_str(),&perms)>=0)   // preserve permissions
+        if (stat(rp->name.string().c_str(), &perms) >= 0) // preserve permissions
         {
-            chmod(rp->new_name.string().c_str(),perms.st_mode&0666);
-            chown(rp->new_name.string().c_str(),perms.st_uid,perms.st_gid);
+            chmod(rp->new_name.string().c_str(), perms.st_mode & 0666);
+            chown(rp->new_name.string().c_str(), perms.st_uid, perms.st_gid);
         }
 #endif
         // write out each line

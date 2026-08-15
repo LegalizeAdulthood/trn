@@ -706,8 +706,9 @@ TEST_F(InterpolatorTest, indentString)
 
 TEST_F(InterpolatorTest, doShellPassesQuotecharsFromIndentString)
 {
-#ifdef MSDOS
-    EXPECT_EQ(0, do_shell(SH, "if not \"%QUOTECHARS%\" == \">\" exit 1"));
+#ifdef USE_SPAWN_SHELL
+    EXPECT_EQ(0, do_shell(SH, "if not defined QUOTECHARS exit 1"));
+    EXPECT_EQ(">", get_env_var("QUOTECHARS"));
 #else
     EXPECT_EQ(0, do_shell(SH, "test \"$QUOTECHARS\" = '>'"));
 #endif

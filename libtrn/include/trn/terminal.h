@@ -228,7 +228,7 @@ std::string_view standout_end();
 void  add_tc_string(std::string_view capability, std::string_view value);
 std::string_view tc_color_capability(std::string_view capability);
 std::string      tgoto_string(std::string_view str, int x, int y);
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
 int   tputs(const char *str, int num, int (*func)(int));
 #endif
 
@@ -292,7 +292,7 @@ inline void unflush_output()
 }
 
 #else // !I_TERMIOS
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
 
 inline void cr_mode()
 {
@@ -328,9 +328,9 @@ inline void reset_tty()
 inline void unflush_output()
 {
 }
-#else  // !MSDOS
+#else  // !USE_BUILTIN_TERMINAL_CAPABILITIES
 // ..."Don't know how to define the term macros!"
-#endif // !MSDOS
+#endif // !USE_BUILTIN_TERMINAL_CAPABILITIES
 #endif // !I_TERMIOS
 
 #if defined(SIGTSTP) || (defined(SIGWINCH) && defined(TIOCGWINSZ))

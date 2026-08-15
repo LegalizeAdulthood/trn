@@ -112,7 +112,7 @@ bool env_init(bool lax, const std::function<bool()> &set_user_name_fn, const std
             g_login_name  = login_name;
         }
     }
-#ifndef MSDOS
+#ifndef USE_WINDOWS_ENVIRONMENT_NAMES
     if (!lax || g_login_name.empty())
     {
         if (const char *login = getlogin())
@@ -121,7 +121,7 @@ bool env_init(bool lax, const std::function<bool()> &set_user_name_fn, const std
         }
     }
 #endif
-#ifdef MSDOS
+#ifdef USE_WINDOWS_ENVIRONMENT_NAMES
     if (g_login_name.empty())
     {
         if (const char *user_name = s_getenv_fn("USERNAME"))

@@ -191,12 +191,7 @@ protected:
 
     std::string file_ref_name(const fs::path &path) const
     {
-        std::string name = path.generic_string();
-        if (name.size() > 1 && name[1] == ':')
-        {
-            name.erase(0, 2);
-        }
-        return name;
+        return path.string();
     }
 
     fs::path m_output_dir;

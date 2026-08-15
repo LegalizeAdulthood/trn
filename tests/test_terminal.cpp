@@ -441,7 +441,7 @@ TEST_F(TerminalTest, finishCommandAppliesEraseCharacter)
     EXPECT_EQ(":a", command);
 }
 
-#ifdef MSDOS
+#ifdef USE_BUILTIN_TERMINAL_CAPABILITIES
 TEST_F(TerminalTest, tgotoStringFormatsDosCursorMotion)
 {
     EXPECT_EQ("\033[8;4H", tgoto_string("\033[%d;%dH", 3, 7));

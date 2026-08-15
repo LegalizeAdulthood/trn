@@ -32,7 +32,7 @@
 
 namespace fs = std::filesystem;
 
-#ifdef MSDOS
+#ifdef USE_WINDOWS_FILENAME_RULES
 static constexpr std::string_view s_bad_chars{"<>:\"/\\|?* \t"};
 #else
 static constexpr std::string_view s_bad_chars{"!$&*()|'\";<>[]{}?/`\\ \t"};
@@ -63,7 +63,7 @@ std::string decode_fix_filename(std::string_view text)
             filename.push_back(ch);
         }
     }
-#ifdef MSDOS
+#ifdef USE_WINDOWS_FILENAME_RULES
     while (!filename.empty() && (filename.back() == ' ' || filename.back() == '.'))
     {
         filename.pop_back();
@@ -79,7 +79,7 @@ std::string decode_fix_filename(std::string_view text)
 // Returns true if "filename" is a bad choice
 static bool bad_filename(std::string_view filename)
 {
-#ifdef MSDOS
+#ifdef USE_WINDOWS_FILENAME_RULES
     if (filename == "." || filename == "..")
     {
         return true;
@@ -597,7 +597,7 @@ static fs::path decode_mkdir(std::string_view filename)
 {
     fs::path dir;
 
-#ifdef MSDOS
+#ifdef USE_WINDOWS_FILENAME_RULES
     dir = file_exp("%Y/parts/");
 #else
     dir = file_exp("%Y/m-prts-%L/");

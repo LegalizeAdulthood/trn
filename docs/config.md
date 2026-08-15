@@ -451,8 +451,8 @@ configurable but are not platform probes. These are common because
 
 - `char_int`: command-character type.
 - `Ctl`: control-character helper.
-- `file_ref`: absolute-path classifier. Its implementation varies for
-  MSDOS, but the API is a trn path helper, not a platform setting.
+- `file_ref`: absolute-path classifier using
+  `std::filesystem::path::is_absolute()`.
 - `safe_malloc` and `safe_realloc`: debug-allocator aliases under
   `USE_DEBUGGING_MALLOC`.
 

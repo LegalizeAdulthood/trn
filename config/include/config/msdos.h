@@ -4,15 +4,7 @@
 #ifndef TRN_MSDOS_H
 #define TRN_MSDOS_H
 
-#include <cctype>
 #include <stdio.h>
-#include <string_view>
-
-inline bool file_ref(std::string_view s)
-{
-    return !s.empty() &&
-           (s.front() == '/' || (s.size() > 1 && std::isalpha(static_cast<unsigned char>(s.front())) && s[1] == ':'));
-}
 
 #define B19200  19200
 #define B9600   9600

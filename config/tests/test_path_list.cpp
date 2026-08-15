@@ -12,7 +12,7 @@
 
 TEST(PathListTest, splitsSelectedPathListSeparator)
 {
-#ifdef MSDOS
+#ifdef _WIN32
     const std::vector<std::string_view> expected{"one", "two", "three"};
 
     EXPECT_EQ(expected, split_path_list("one;two;;three;"));
@@ -23,7 +23,7 @@ TEST(PathListTest, splitsSelectedPathListSeparator)
 #endif
 }
 
-#ifdef MSDOS
+#ifdef _WIN32
 TEST(PathListTest, keepsWindowsDriveLettersInPathItems)
 {
     const std::vector<std::string_view> expected{"C:/one", "D:/two", R"(E:\three)"};
