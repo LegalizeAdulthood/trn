@@ -1,0 +1,6 @@
+@rem This software is copyrighted as detailed in the LICENSE file.
+@rem Copyright (c) 2026, Richard Thomson
+@echo off
+
+echo filexp is not supported on Windows in this release. 1>&2
+exit /b 1

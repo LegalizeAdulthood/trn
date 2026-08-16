@@ -570,7 +570,7 @@ int main()
     if(WIN32)
         set(DEFAULT_SH "${DEFAULT_PREF_SHELL_PATH}")
         set(DEFAULT_PIPE_SAVER "type %A | %b")
-        set(DEFAULT_SHAR_SAVER "echo SHARSAVER is unsupported on Windows")
+        set(DEFAULT_SHAR_SAVER "echo SHARSAVER is unsupported on Windows 1>&2 & exit /b 1")
         set(DEFAULT_CUSTOM_SAVER "type %A | %e")
     else()
         set(DEFAULT_SH "/bin/sh")
@@ -582,10 +582,16 @@ int main()
     set(DEFAULT_PIPE_SAVER "${DEFAULT_PIPE_SAVER}" PARENT_SCOPE)
     set(DEFAULT_SHAR_SAVER "${DEFAULT_SHAR_SAVER}" PARENT_SCOPE)
     set(DEFAULT_CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}" PARENT_SCOPE)
-    set(SH "${DEFAULT_SH}" CACHE STRING "The path to the fast shell for command execution.")
-    set(PIPE_SAVER "${DEFAULT_PIPE_SAVER}" CACHE STRING "The shell command used for save-to-pipe.")
-    set(SHAR_SAVER "${DEFAULT_SHAR_SAVER}" CACHE STRING "The shell command used to extract shell archives.")
-    set(CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}" CACHE STRING "The shell command used for custom extraction.")
+    set_config_cache_default(SH "${DEFAULT_SH}" STRING
+        "The path to the fast shell for command execution." "/bin/sh")
+    set_config_cache_default(PIPE_SAVER "${DEFAULT_PIPE_SAVER}" STRING
+        "The shell command used for save-to-pipe."
+        "%(%B=^0$?<%A:tail +%Bc %A |) %b")
+    set_config_cache_default(SHAR_SAVER "${DEFAULT_SHAR_SAVER}" STRING
+        "The shell command used to extract shell archives."
+        "echo SHARSAVER is unsupported on Windows" "tail +%Bc %A | /bin/sh")
+    set_config_cache_default(CUSTOM_SAVER "${DEFAULT_CUSTOM_SAVER}" STRING
+        "The shell command used for custom extraction." "tail +%Bc %A | %e")
     find_program(DEFAULT_RIPEM_COMMAND "ripem" NO_CACHE)
     configure_trn_verification_command_default(
         "${DEFAULT_RIPEM_COMMAND}" "-d -Y fgs -i %A" DEFAULT_VERIFY_RIPEM)
@@ -797,18 +803,31 @@ int main()
         "${CMAKE_INSTALL_PREFIX}/bin")
     set_config_cache_default(USE_INEWS "${BIN_DIR}/inews" STRING
         "Full path to the inews to use for posting." "%x/inews")
-    set(DEFAULT_CALL_INEWS "inews -h <%h")
+    if(WIN32)
+        set(DEFAULT_CALL_INEWS "inews${CMAKE_EXECUTABLE_SUFFIX} -h <%h")
+        set(DEFAULT_NEWS_POSTER "Pnews.cmd -h %h")
+        set(DEFAULT_MAIL_POSTER "Rnmail.cmd -h %h")
+    else()
+        set(DEFAULT_CALL_INEWS "inews -h <%h")
+        set(DEFAULT_NEWS_POSTER "Pnews -h %h")
+        set(DEFAULT_MAIL_POSTER "Rnmail -h %h")
+    endif()
     set(DEFAULT_CALL_INEWS "${DEFAULT_CALL_INEWS}" PARENT_SCOPE)
-    set(CALL_INEWS "${DEFAULT_CALL_INEWS}" CACHE STRING "The command used to cancel articles through inews.")
-    set(DEFAULT_NEWS_POSTER "Pnews -h %h")
+    set_config_cache_default(CALL_INEWS "${DEFAULT_CALL_INEWS}" STRING
+        "The command used to cancel articles through inews." "inews -h <%h")
     set(DEFAULT_NEWS_POSTER "${DEFAULT_NEWS_POSTER}" PARENT_SCOPE)
-    set(NEWS_POSTER "${DEFAULT_NEWS_POSTER}" CACHE STRING "The command used to edit and submit followup articles.")
-    set(DEFAULT_MAIL_POSTER "Rnmail -h %h")
+    set_config_cache_default(NEWS_POSTER "${DEFAULT_NEWS_POSTER}" STRING
+        "The command used to edit and submit followup articles." "Pnews -h %h")
     set(DEFAULT_MAIL_POSTER "${DEFAULT_MAIL_POSTER}" PARENT_SCOPE)
-    set(MAIL_POSTER "${DEFAULT_MAIL_POSTER}" CACHE STRING "The command used to edit and deliver mail replies.")
+    set_config_cache_default(MAIL_POSTER "${DEFAULT_MAIL_POSTER}" STRING
+        "The command used to edit and deliver mail replies." "Rnmail -h %h")
     set(DEFAULT_YOU_SAID "In article %i you write:")
     set(DEFAULT_ATTRIBUTION "In article %i,%?%)f <%>f> wrote:")
-    set(DEFAULT_FORWARD_POSTER "${BIN_DIR}/Rnmail -h %h")
+    if(WIN32)
+        set(DEFAULT_FORWARD_POSTER "${BIN_DIR}/Rnmail.cmd -h %h")
+    else()
+        set(DEFAULT_FORWARD_POSTER "${BIN_DIR}/Rnmail -h %h")
+    endif()
     string(CONCAT DEFAULT_FORWARD_HEADER
         [=[To: %\"\n]=]
         [=[\n]=]
@@ -835,7 +854,9 @@ int main()
     set(DEFAULT_FORWARD_MSG_END "${DEFAULT_FORWARD_MSG_END}" PARENT_SCOPE)
     set(YOU_SAID "${DEFAULT_YOU_SAID}" CACHE STRING "The reply-by-mail quoted-article introduction line.")
     set(ATTRIBUTION "${DEFAULT_ATTRIBUTION}" CACHE STRING "The followup quoted-article attribution line.")
-    set(FORWARD_POSTER "${DEFAULT_FORWARD_POSTER}" CACHE STRING "The command used to edit and deliver forwarded articles.")
+    set_config_cache_default(FORWARD_POSTER "${DEFAULT_FORWARD_POSTER}" STRING
+        "The command used to edit and deliver forwarded articles."
+        "${BIN_DIR}/Rnmail -h %h")
     set(FORWARD_HEADER "${DEFAULT_FORWARD_HEADER}" CACHE STRING "The header template for forwarded articles.")
     set(FORWARD_MSG "${DEFAULT_FORWARD_MSG}" CACHE STRING "The line marking the start of a forwarded article.")
     set(FORWARD_MSG_END "${DEFAULT_FORWARD_MSG_END}" CACHE STRING "The line marking the end of a forwarded article.")

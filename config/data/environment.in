@@ -153,7 +153,7 @@ The variables:
  CANCEL (~)
       The shell command used to cancel an article.
 
-      Default: inews -h < %h
+      Default: @CALL_INEWS@
 
  CANCELHEADER (%)
       The format of the file to pass to the CANCEL command in order to
@@ -181,9 +181,9 @@ The variables:
 
  EXSAVER (%)
       The shell command to execute in order to extract data to either
-      /bin/sh or a user-specified command.
+      the configured shell archive handler or a user-specified command.
 
-      Default: tail +%Bc %A | %e
+      Default: @CUSTOM_SAVER@
 
  FIRSTLINE (%)
       Controls the format of the line displayed at the top of an article.
@@ -240,7 +240,7 @@ The variables:
       of the program referenced by FORWARDPOSTER.  See also
       FORWARDHEADER and MAILPOSTER.
 
-      Default: Rnmail -h %h
+      Default: @FORWARD_POSTER@
 
  FROM (%)
       What to put in the From: header of your posts, email replies,
@@ -360,12 +360,12 @@ The variables:
       not itself call upon an editor for replies -- this is a function
       of the program referenced by MAILPOSTER.  See also MAILHEADER.
 
-      Default: Rnmail -h %h
+      Default: @MAIL_POSTER@
 
  MBOXSAVER (~)
       The shell command to save an article in mailbox format.
 
-      Default: %X/mbox.saver %A %P %c %a %B %C "%b" "From %t %`date`"
+      Default: unset; trn saves mailbox articles internally.
 
       Explanation: the first seven arguments are the same as for
       NORMSAVER.  The eighth argument to the shell script is the new
@@ -419,7 +419,7 @@ The variables:
       not set, trn handles  the whole process and calls inews directly.
       See also NEWSHEADER.
 
-      Default: Pnews -h %h
+      Default: @NEWS_POSTER@
 
  NEWSSIGNATURE
       A signature file used by Pnews when generating news articles.
@@ -454,7 +454,7 @@ The variables:
       The shell command to save an article in the normal (non-mailbox)
       format.
 
-      Default: %X/norm.saver %A %P %c %a %B %C "%b"
+      Default: unset; trn saves normal articles internally.
 
  ORGANIZATION
       Either the name of your organization, or the name of a file
@@ -491,10 +491,10 @@ The variables:
       ("s | command" or "w | command").  The command typed by the user is
       substituted in as %b.
 
-      Default: %(%B=^0$?<%A:tail +%Bc %A |) %b
+      Default: @PIPE_SAVER@
 
-      Explanation: if %B is 0, the command is "<%A  %b", otherwise the
-      command is "tail +%Bc %A | %b".
+      Explanation: the command normally passes the current article file
+      to the user command supplied after the pipe.
 
  REPLYTO
       The value of the "Reply-To:" header, if needed.
@@ -623,7 +623,7 @@ The variables:
       The shell command to execute in order to accomplish the unshar'ing of
       a shell archive.
 
-      Default: /bin/sh
+      Default: @SHAR_SAVER@
 
  USER
       Your login name.  May be interpolated using "%L".

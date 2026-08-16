@@ -62,8 +62,8 @@ need semantic fixes, listed here rather than hidden in prose:
 - `NNTP_AUTH_FILE`: handled.  CMake owns the historical auth-file default
   and emits the configured value directly.
 - `INSTALL_PREFIX`: handled.  It follows `CMAKE_INSTALL_PREFIX`.
-- `PREF_SHELL`: handled for Unix.  Windows-safe shell policy is owned by
-  later Windows helper work.
+- `PREF_SHELL`: handled.  CMake probes a platform shell and uses `cmd`
+  for Windows command execution.
 - `SH`: handled.  CMake owns the shell used for command execution and
   emits the configured value directly.
 - `ROOT_UID`: handled for POSIX policy.
@@ -155,7 +155,8 @@ need semantic fixes, listed here rather than hidden in prose:
   below.
 - `CALL_INEWS`, `NEWS_POSTER`, and `MAIL_POSTER`: handled.  CMake owns
   the retained posting helper defaults and emits configured commands
-  directly.
+  directly.  Windows defaults use `inews.exe`, `Pnews.cmd`, and
+  `Rnmail.cmd`.
 - `PAGER`: handled.  CMake probes the pager used by generated help and
   helper scripts; the cache value remains an explicit override.
 - `REPLYTO_POSTER_CHECKING`: handled.  This is posting identity checking
@@ -293,29 +294,43 @@ pieces.
 
 Active generated helpers:
 
-- `Pnews.SH`: generated from `config/data/Pnews.in`.  Keep it.
-  Required tests: generated `Pnews` and `Pnews.header` exist and contain
-  no metaconfig wrapper, obsolete substitutions, or unsupported lookup
-  variables; posting tests cover the final header and User-Agent
-  behavior.
-- `Speller.SH`: generated from `config/data/Speller.in`.  Keep it.
-  Existing tests cover tool probing and configured command values.
-  Required tests: generated `Speller` has no unresolved configure
-  tokens and preserves the current wrapper command flow.
-- `filexp.SH`: generated from `config/data/filexp.in`.  Keep it.
-  Required tests: generated `filexp` exists and covers `~`, `~~`, and
-  named-user expansion using the configured install prefix.
-- `mbox_saver.SH`: generated from `config/data/mbox.saver.in`.  Keep it.
-  The template now uses the standard `sed` command directly.  Existing
-  tests cover removal of the old `$sed` metaconfig token.  Required
-  tests: generated `mbox.saver` preserves mailbox `From` escaping.
-- `norm_saver.SH`: generated from `config/data/norm.saver.in`.  Keep it.
-  Required tests: generated `norm.saver` preserves normal-file save
-  behavior from the requested byte offset.
-- `Rnmail.SH`: generated from `config/data/Rnmail.in`.  Keep it.
-  Required tests: generated `Rnmail` exists, contains no metaconfig
-  wrapper or obsolete substitutions, and the mail/forward poster defaults
-  still configure to `Rnmail -h %h`.
+- `Pnews.SH`: generated from `config/data/Pnews.in` on POSIX.  Windows
+  generates `Pnews.cmd`, an unsupported diagnostic helper for 5.0, and
+  does not install a separate `Pnews.header` file because that policy is
+  folded into the Windows `Pnews` replacement strategy.  Required tests:
+  generated POSIX `Pnews` and `Pnews.header` exist and contain no
+  metaconfig wrapper, obsolete substitutions, or unsupported lookup
+  variables; Windows `Pnews.cmd` reports that posting is unsupported.
+- `Speller.SH`: generated from `config/data/Speller.in` on POSIX.
+  Windows generates `Speller.cmd`, an unsupported diagnostic helper for
+  5.0.  Existing tests cover tool probing and configured command values.
+  Required tests: generated POSIX `Speller` has no unresolved configure
+  tokens and preserves the current wrapper command flow; Windows
+  `Speller.cmd` reports that spell checking is unsupported.
+- `filexp.SH`: generated from `config/data/filexp.in` on POSIX.  Windows
+  generates `filexp.cmd`, an unsupported diagnostic helper for 5.0.
+  Required tests: generated POSIX `filexp` exists and covers `~`, `~~`,
+  and named-user expansion using the configured install prefix; Windows
+  `filexp.cmd` reports that the helper is unsupported.
+- `mbox_saver.SH`: generated from `config/data/mbox.saver.in` on POSIX.
+  Windows generates `mbox.saver.cmd`, an unsupported diagnostic helper
+  for 5.0; the normal Windows default is to leave `MBOXSAVER` unset so
+  trn uses its built-in article saver.  Required tests: generated POSIX
+  `mbox.saver` preserves mailbox `From` escaping; Windows
+  `mbox.saver.cmd` reports that the helper is unsupported.
+- `norm_saver.SH`: generated from `config/data/norm.saver.in` on POSIX.
+  Windows generates `norm.saver.cmd`, an unsupported diagnostic helper
+  for 5.0; the normal Windows default is to leave `NORMSAVER` unset so
+  trn uses its built-in article saver.  Required tests: generated POSIX
+  `norm.saver` preserves normal-file save behavior from the requested
+  byte offset; Windows `norm.saver.cmd` reports that the helper is
+  unsupported.
+- `Rnmail.SH`: generated from `config/data/Rnmail.in` on POSIX.  Windows
+  generates `Rnmail.cmd`, an unsupported diagnostic helper for 5.0.
+  Required tests: generated POSIX `Rnmail` exists, contains no
+  metaconfig wrapper or obsolete substitutions, and the mail/forward
+  poster defaults still configure to `Rnmail -h %h`; Windows
+  `Rnmail.cmd` reports that reply mail is unsupported.
 
 Active generated data files:
 

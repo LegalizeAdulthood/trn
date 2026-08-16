@@ -215,7 +215,9 @@ Untested: `MIMECAP`.
 - `DEFAULT_EDITOR`, `PREF_SHELL`, `SH`, and `PAGER`: editor, shell, and
   pager defaults.
 - `SHELL_START`, `DIFF_PROGRAM`, `ED_PROGRAM`, `ISPELL_PROGRAM`,
-  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: generated helper tool defaults.
+  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: POSIX generated helper tool
+  defaults.  Windows generates diagnostic `.cmd` helpers for the 5.0
+  helper entry points that do not yet have native implementations.
 - `PIPE_SAVER`, `SHAR_SAVER`, and `CUSTOM_SAVER`: save and extraction
   commands.
 - `VERIFY_RIPEM` and `VERIFY_PGP`: optional verifier commands.
@@ -235,7 +237,9 @@ Untested: `PREF_SHELL`.
 ### Posting And Reply Variables
 
 - `USE_INEWS`, `CALL_INEWS`, `NEWS_POSTER`, and `MAIL_POSTER`: posting
-  helper command defaults.
+  helper command defaults.  On Windows, `NEWS_POSTER` and `MAIL_POSTER`
+  default to generated `.cmd` helpers that report unsupported posting and
+  mail workflows for 5.0.
 - `MAIL_HEADER`, `NEWS_HEADER`, `CANCEL_HEADER`, and `SUPERSEDE_HEADER`:
   posting header templates.
 - `YOU_SAID`, `ATTRIBUTION`, `FORWARD_POSTER`, `FORWARD_HEADER`,
@@ -297,7 +301,7 @@ The install tree includes the built commands, generated posting helpers,
 generated private helper/data files, `HelpFiles`, and the supported man
 pages for `trn`, `Pnews`, and `Rnmail`.
 
-The supported runtime layout is:
+The supported POSIX runtime layout is:
 
 - `${prefix}/${bindir}`: `trn`, `inews`, `nntplist`, `trn-artchk`,
   `Pnews`, and `Rnmail`.
@@ -305,6 +309,12 @@ The supported runtime layout is:
   `Speller`, `Pnews.header`, `INIT`, `access.def`, `environment`,
   `newsnews`, and `HelpFiles`.
 - `${prefix}/${mandir}/man1`: `trn.1`, `Pnews.1`, and `Rnmail.1`.
+
+On Windows, the helper entry points are installed as `Pnews.cmd`,
+`Rnmail.cmd`, `filexp.cmd`, `mbox.saver.cmd`, `norm.saver.cmd`, and
+`Speller.cmd`.  They fail with explicit unsupported-feature diagnostics
+until native replacements exist.  `Pnews.header` is not installed on
+Windows because the `Pnews` replacement owns that policy.
 
 `strn.1` was a stale historical stub and is retired.  `default_topic` is
 a source-distribution sample for sites that want a default scan-mode topic

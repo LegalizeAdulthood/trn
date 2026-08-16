@@ -243,48 +243,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 19. Windows Helper Strategy
-
-Issues: #29.
-
-Milestone status: not on the 5.0 milestone.
-
-Depends on: 9.
-
-Files likely touched:
-
-- `config/data`
-- `config/data/CMakeLists.txt`
-- `config/cmake/config.h.in`
-- Windows helper tests
-- package support files
-
-Tasks:
-
-- Define Windows equivalents or native replacements for `Pnews`,
-  `Rnmail`, `Speller`, `filexp`, `mbox.saver`, and `norm.saver`.
-- Fold `Pnews.header` into the `Pnews` replacement strategy.
-- Decide whether each entry point is `.cmd`, `.ps1`, native C++, or
-  unsupported on Windows for 5.0.
-- Give Windows-safe defaults for `NEWSPOSTER`, `MAILPOSTER`,
-  `MBOXSAVER`, `NORMSAVER`, `CANCEL`, `EXSAVER`, `PIPESAVER`,
-  `UNSHAR`, `PREF_SHELL`, and `SHAR_SAVER`.
-- Keep generated data files as data: `newsnews`, `access_def`, and
-  `environment`.
-- Avoid requiring a Unix shell compatibility layer for normal use.
-- Preserve `EDITOR` and `VISUAL` behavior where practical.
-
-Acceptance:
-
-- Windows helper policy is explicit.
-- Every runtime shell template in the audit has a Windows disposition.
-- Windows defaults do not point at `/bin/sh`, Unix `tail`, or Unix-only
-  helper scripts for supported features.
-- #14 packaging can depend on generated Windows-safe helpers.
-- Windows helper unit tests cover generated defaults and unsupported
-  helper diagnostics.
-- Commit description includes `fixes #29`.
-
 ### 20. Windows Package Artifacts
 
 Issues: #14.

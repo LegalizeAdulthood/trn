@@ -140,6 +140,16 @@ bool cmake_bool(std::string_view value)
     return value == "1" || value == "ON" || value == "TRUE";
 }
 
+bool windows_generated_helpers()
+{
+    return cmake_bool(TRN_TEST_GENERATED_WINDOWS_HELPERS);
+}
+
+bool generated_pnews_header()
+{
+    return std::string_view{TRN_TEST_GENERATED_PNEWS_HEADER_FILE}.empty() == false;
+}
+
 void expect_name_parsing_policy(const char *filename, std::string_view name_type)
 {
     expect_config_define(filename, "PASS_NAMES", name_type == "bsd" || name_type == "usg");
@@ -386,7 +396,10 @@ TEST(GeneratedConfigTest, runtimeHelperFilesAreGenerated)
     expect_file_exists(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
     expect_file_exists(TRN_TEST_GENERATED_NORM_SAVER_FILE);
     expect_file_exists(TRN_TEST_GENERATED_PNEWS_FILE);
-    expect_file_exists(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
+    if (generated_pnews_header())
+    {
+        expect_file_exists(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
+    }
     expect_file_exists(TRN_TEST_GENERATED_RNMAIL_FILE);
     expect_file_exists(TRN_TEST_GENERATED_SPELLER_FILE);
 }
@@ -535,14 +548,41 @@ TEST(GeneratedConfigTest, postingHelpersUseInstalledHelperPaths)
 {
     const std::string bin_dir = TRN_TEST_BIN_DIR;
 
+    if (windows_generated_helpers())
+    {
+        expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER",
+                             bin_dir + "/Rnmail.cmd -h %h");
+        return;
+    }
+
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"artcheck="} + bin_dir + "/trn-artchk");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"nntplist="} + bin_dir + "/nntplist");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"inews=\""} + bin_dir + "/inews\"");
     expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER", bin_dir + "/Rnmail -h %h");
 }
 
+TEST(GeneratedConfigTest, windowsHelpersReportUnsupportedFeatures)
+{
+    if (!windows_generated_helpers())
+    {
+        GTEST_SKIP() << "Windows helper diagnostics are only generated on Windows.";
+    }
+
+    expect_file_contains(TRN_TEST_GENERATED_FILEXP_FILE, "filexp is not supported on Windows");
+    expect_file_contains(TRN_TEST_GENERATED_MBOX_SAVER_FILE, "mbox.saver is not supported on Windows");
+    expect_file_contains(TRN_TEST_GENERATED_NORM_SAVER_FILE, "norm.saver is not supported on Windows");
+    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Pnews is not supported on Windows");
+    expect_file_contains(TRN_TEST_GENERATED_RNMAIL_FILE, "Rnmail is not supported on Windows");
+    expect_file_contains(TRN_TEST_GENERATED_SPELLER_FILE, "Speller is not supported on Windows");
+}
+
 TEST(GeneratedConfigTest, generatedPnewsHeaderContainsPostingFields)
 {
+    if (!generated_pnews_header())
+    {
+        GTEST_SKIP() << "Pnews.header is folded into the Windows helper strategy.";
+    }
+
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_HEADER_FILE, "Newsgroups: $ng");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_HEADER_FILE, "Subject: $title");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_HEADER_FILE, "Distribution: $dist");
@@ -550,6 +590,11 @@ TEST(GeneratedConfigTest, generatedPnewsHeaderContainsPostingFields)
 
 TEST(GeneratedConfigTest, generatedPnewsSendFilterReplacesOldUserAgent)
 {
+    if (windows_generated_helpers())
+    {
+        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+    }
+
     const std::string user_agent = std::string{"user_agent=\"trn/"} + TRN_TEST_PROJECT_VERSION + "\"";
 
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, user_agent);
@@ -559,6 +604,11 @@ TEST(GeneratedConfigTest, generatedPnewsSendFilterReplacesOldUserAgent)
 
 TEST(GeneratedConfigTest, generatedPnewsSendFilterAddsMimeHeaders)
 {
+    if (windows_generated_helpers())
+    {
+        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+    }
+
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Mime-Version: 1.0");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Content-Type: text/plain; charset=\"'\"$charset\"'\"");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Content-Transfer-Encoding: '\"$transfer_encoding\"'");
@@ -566,6 +616,11 @@ TEST(GeneratedConfigTest, generatedPnewsSendFilterAddsMimeHeaders)
 
 TEST(GeneratedConfigTest, generatedPnewsTransferEncodingDefaultsAsciiBodiesTo7Bit)
 {
+    if (windows_generated_helpers())
+    {
+        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+    }
+
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "set_transfer_encoding() {");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "transfer_encoding=7bit");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "set_transfer_encoding $tmpart");
@@ -573,6 +628,11 @@ TEST(GeneratedConfigTest, generatedPnewsTransferEncodingDefaultsAsciiBodiesTo7Bi
 
 TEST(GeneratedConfigTest, generatedPnewsTransferEncodingMarksNonAsciiBodiesAs8Bit)
 {
+    if (windows_generated_helpers())
+    {
+        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+    }
+
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "LC_ALL=C tr -d '\\000-\\177'");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "LC_ALL=C grep .");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "transfer_encoding=8bit");
@@ -717,7 +777,10 @@ TEST(GeneratedConfigTest, runtimeHelperFilesDoNotContainMetaconfigResidue)
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_NORM_SAVER_FILE);
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_FILE);
-    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
+    if (generated_pnews_header())
+    {
+        expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
+    }
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_RNMAIL_FILE);
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_SPELLER_FILE);
 }
