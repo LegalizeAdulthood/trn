@@ -229,6 +229,15 @@ are captured in the regression checklist.  A large open issue can span
 several numbered items; close it only after its final acceptance line is
 met.
 
+Slice tasks are ordered requirements, not suggestions.  Do not implement
+a later task until earlier reproduction, audit, probe, or verification
+tasks have concrete evidence recorded in the work.  If the first task
+cannot be completed with available local, CI, issue, or user-provided
+evidence, stop and report the blocker; do not substitute source
+inspection, plausible diagnosis, or a guessed fix.  Do not remove a slice
+from this plan until every task and acceptance line has been satisfied by
+that evidence.
+
 For each remaining configuration-variable slice, use standard CMake
 feature discovery first: probe the build or target system when CMake can
 determine the answer, and make generated details non-cache variables.
