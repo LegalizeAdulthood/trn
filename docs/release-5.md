@@ -252,36 +252,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 23. Manual Test Plan Inventory
-
-Issues: #33.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- test plan docs
-- tests
-
-Tasks:
-
-- Convert the #33 checklist into a release verification matrix.
-- Mark each item as automated, manual, deferred, or obsolete.
-- Prioritize access files, KILL files, posting, command-line options,
-  macros, `%` expansion, and extraction.
-- Compare compiled help, `HelpFiles`, man pages, `OptionCatalog`, the
-  switch parser, and access-schema fields.
-- Classify missing scoring help and stale selector help as documented,
-  deferred, or obsolete.
-
-Acceptance:
-
-- #33 has a tracked checklist tied to concrete tests or manual steps.
-- No high-risk checklist item is unclassified.
-- Option and access-file documentation drift is tracked or fixed.
-- Every high-risk checklist item names its unit, integration, or manual
-  verification path.
-
 ### 24. Deterministic NNTP Fixtures
 
 Issues: #33.
@@ -895,7 +865,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #23: completed by removed slices 21 and 22.
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.
-- #33: 23 through 25.
+- #33: see `docs/release-5-test-plan.md`; 24 and 25 remain.
 - #34: 34 and 35.
 - #38: 13.
 
