@@ -252,38 +252,21 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 21. macOS Build Failure Reproduction
-
-Issues: #23.
-
-Milestone status: open mandatory 5.0 issue.
-
-Files likely touched:
-
-- `.github/workflows`
-- `CMakePresets.json`
-
-Tasks:
-
-- Re-enable a macOS configure and build job in the workflow.
-- Run the macOS job to get the current failed build log.
-- Record the failed run URL or relevant compiler diagnostics before any
-  fix work starts.
-- Do not include a guessed terminal, curses, or CMake fix in this slice.
-
-Acceptance:
-
-- GitHub Actions attempts a macOS configure and build.
-- The failure log identifies the first concrete macOS build failure.
-- The recorded log is sufficient input for the next slice.
-
 ### 22. macOS Terminal Fix And CI Gate
 
 Issues: #23.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 21.
+Reproduction evidence from removed slice 21:
+
+- GitHub Actions run 31927181015, job 95116465508,
+  `build (macos-latest)`, failed on 2026-08-16 during the build step.
+- First concrete diagnostic:
+  `libtrn/include/trn/terminal.h:423:12: error: use of`
+  `undeclared identifier 'finput_pending'`.
+- The same compile reports missing `finput_pending`, `print_lines`, and
+  `term_down` while building `libtrn/addng.cpp`.
 
 Files likely touched:
 
@@ -294,7 +277,7 @@ Files likely touched:
 
 Tasks:
 
-- Analyze the failed macOS log from slice 21.
+- Analyze the reproduced macOS failure evidence above.
 - Fix the logged macOS build failure with the smallest source or CMake
   change that addresses that diagnostic.
 - Isolate curses and terminal includes behind stable headers only if the
@@ -953,7 +936,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must
   include `fixes #19`.
-- #23: 21 and 22.
+- #23: 22; reproduction completed by removed slice 21.
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.
 - #33: 23 through 25.
