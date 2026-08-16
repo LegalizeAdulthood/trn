@@ -252,50 +252,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 22. macOS Terminal Fix And CI Gate
-
-Issues: #23.
-
-Milestone status: open mandatory 5.0 issue.
-
-Reproduction evidence from removed slice 21:
-
-- GitHub Actions run 31927181015, job 95116465508,
-  `build (macos-latest)`, failed on 2026-08-16 during the build step.
-- First concrete diagnostic:
-  `libtrn/include/trn/terminal.h:423:12: error: use of`
-  `undeclared identifier 'finput_pending'`.
-- The same compile reports missing `finput_pending`, `print_lines`, and
-  `term_down` while building `libtrn/addng.cpp`.
-
-Files likely touched:
-
-- `libtrn/terminal.cpp`
-- terminal headers
-- `.github/workflows`
-- `CMakePresets.json`
-
-Tasks:
-
-- Analyze the reproduced macOS failure evidence above.
-- Fix the logged macOS build failure with the smallest source or CMake
-  change that addresses that diagnostic.
-- Isolate curses and terminal includes behind stable headers only if the
-  failed log proves that boundary is the failure.
-- Keep Unix terminal behavior unchanged.
-- Keep macOS configure, build, and tests in the supported matrix.
-- Document any macOS package limitation that remains for 5.0.
-
-Acceptance:
-
-- The fix cites the exact failed macOS log or diagnostic it resolves.
-- macOS CI is green for the release branch.
-- #23 can close without weakening Unix coverage.
-- The macOS CI job runs the unit-test suite, not just configure and
-  build.
-- Unit or compile tests cover the fixed boundary or failure mode.
-- Commit description includes `fixes #23`.
-
 ### 23. Manual Test Plan Inventory
 
 Issues: #33.
@@ -936,7 +892,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must
   include `fixes #19`.
-- #23: 22; reproduction completed by removed slice 21.
+- #23: completed by removed slices 21 and 22.
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.
 - #33: 23 through 25.
