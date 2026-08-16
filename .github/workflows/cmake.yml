@@ -15,14 +15,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-2022 ]
-        # Disabled until <curses.h> can be safely included without conflict in terminal.h
-        # os: [ ubuntu-latest, windows-2022, macos-latest ]
+        os: [ ubuntu-latest, windows-2022, macos-latest ]
         include:
           - os: ubuntu-latest
             cmake-preset: ci-linux
           - os: windows-2022
             cmake-preset: default
+          - os: macos-latest
+            cmake-preset: ci-linux
 
     runs-on: ${{matrix.os}}
 
