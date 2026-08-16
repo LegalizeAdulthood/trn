@@ -252,7 +252,7 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 21. macOS Terminal Include Fix
+### 21. macOS Build Failure Reproduction
 
 Issues: #23.
 
@@ -260,23 +260,24 @@ Milestone status: open mandatory 5.0 issue.
 
 Files likely touched:
 
-- `libtrn/terminal.cpp`
-- terminal headers
-- macOS configure or CI files
+- `.github/workflows`
+- `CMakePresets.json`
 
 Tasks:
 
-- Reproduce the old macOS `<curses.h>` include conflict.
-- Isolate curses and terminal includes behind stable headers.
-- Keep Unix terminal behavior unchanged.
+- Re-enable a macOS configure and build job in the workflow.
+- Run the macOS job to get the current failed build log.
+- Record the failed run URL or relevant compiler diagnostics before any
+  fix work starts.
+- Do not include a guessed terminal, curses, or CMake fix in this slice.
 
 Acceptance:
 
-- macOS can compile the terminal sources.
-- The fix is covered by CI or a documented focused build.
-- Unit or compile tests cover the isolated terminal include boundary.
+- GitHub Actions attempts a macOS configure and build.
+- The failure log identifies the first concrete macOS build failure.
+- The recorded log is sufficient input for the next slice.
 
-### 22. macOS CI Gate
+### 22. macOS Terminal Fix And CI Gate
 
 Issues: #23.
 
@@ -286,21 +287,30 @@ Depends on: 21.
 
 Files likely touched:
 
+- `libtrn/terminal.cpp`
+- terminal headers
 - `.github/workflows`
 - `CMakePresets.json`
 
 Tasks:
 
-- Re-enable macOS CI after the terminal include fix.
+- Analyze the failed macOS log from slice 21.
+- Fix the logged macOS build failure with the smallest source or CMake
+  change that addresses that diagnostic.
+- Isolate curses and terminal includes behind stable headers only if the
+  failed log proves that boundary is the failure.
+- Keep Unix terminal behavior unchanged.
 - Keep macOS configure, build, and tests in the supported matrix.
 - Document any macOS package limitation that remains for 5.0.
 
 Acceptance:
 
+- The fix cites the exact failed macOS log or diagnostic it resolves.
 - macOS CI is green for the release branch.
 - #23 can close without weakening Unix coverage.
 - The macOS CI job runs the unit-test suite, not just configure and
   build.
+- Unit or compile tests cover the fixed boundary or failure mode.
 - Commit description includes `fixes #23`.
 
 ### 23. Manual Test Plan Inventory
