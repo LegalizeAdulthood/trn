@@ -71,6 +71,12 @@ install(FILES
     man/Pnews.1
     man/Rnmail.1
     DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
+install(FILES
+    ReadMe.md
+    INSTALL.md
+    LICENSE.txt
+    HACKERSGUIDE.txt
+    DESTINATION ".")
 vs_startup_project(trn)
 
 add_subdirectory(config)
@@ -112,3 +118,26 @@ misc_group_sources("GitHub" FILES
     "LICENSE.txt")
 misc_group_sources("VcPkg" FILES
     "vcpkg.json")
+
+set(CPACK_PACKAGE_NAME "trn")
+set(CPACK_PACKAGE_VENDOR "Richard Thomson")
+set(CPACK_PACKAGE_CONTACT "https://github.com/LegalizeAdulthood/trn")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Threaded newsreader")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "trn ${PROJECT_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME
+    "${CPACK_PACKAGE_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+set(CPACK_VERBATIM_VARIABLES YES)
+if(WIN32)
+    set(CPACK_GENERATOR "ZIP")
+    find_program(TRN_NSIS_MAKENSIS makensis NO_CACHE)
+    if(TRN_NSIS_MAKENSIS)
+        list(APPEND CPACK_GENERATOR NSIS)
+    endif()
+    set(CPACK_NSIS_DISPLAY_NAME "trn ${PROJECT_VERSION}")
+    set(CPACK_NSIS_PACKAGE_NAME "trn ${PROJECT_VERSION}")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+else()
+    set(CPACK_GENERATOR "TGZ")
+endif()
+include(CPack)

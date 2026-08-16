@@ -322,12 +322,27 @@ file; CMake does not install it automatically.
 
 ## Package
 
-No package preset or CPack target is defined yet.  Until the 5.0 package
-work lands, there is no supported default package command.  Future package
-presets should use the install contents staged by the command above.
-Release archives should include the top-level source and release text,
-including `ReadMe.md`, `INSTALL.md`, `LICENSE.txt`, `INIT.txt`,
-`HACKERSGUIDE.txt`, and `default_topic`.
+Build first, then create the default package artifacts:
+
+```console
+cpack --preset default
+```
+
+On Windows, the default package includes a portable ZIP.  If CPack can
+find the NSIS packaging toolchain, the default package command also emits
+a Windows installer.  The portable ZIP can be built explicitly with:
+
+```console
+cpack --preset windows-zip
+```
+
+Packages use the same CMake install rules as `cmake --install`: built
+commands, generated helper and data files, `HelpFiles`, and supported man
+pages are taken from the install tree.  Package roots include
+`ReadMe.md`, `INSTALL.md`, `LICENSE.txt`, and `HACKERSGUIDE.txt`.
+Top-level `INIT.txt` is intentionally omitted because the runtime `INIT`
+is installed in the private library.  `default_topic` remains a
+source-distribution sample and is not packaged.
 
 ## Runtime Setup
 

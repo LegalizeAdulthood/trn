@@ -74,6 +74,28 @@
       }
     }
   ],
+  "packagePresets": [
+    {
+      "name": "default",
+      "displayName": "Package with default settings",
+      "configurePreset": "default",
+      "configurations": [ "Debug" ],
+      "packageDirectory": "${sourceParentDir}/packages/${presetName}"
+    },
+    {
+      "name": "windows-zip",
+      "displayName": "Package Windows portable ZIP",
+      "configurePreset": "default",
+      "generators": [ "ZIP" ],
+      "configurations": [ "Debug" ],
+      "packageDirectory": "${sourceParentDir}/packages/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
   "workflowPresets": [
     {
       "name": "default",

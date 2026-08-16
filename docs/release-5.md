@@ -88,8 +88,8 @@ Non-markdown documentation sources audited:
 Documentation gaps and owning work items:
 
 - CMake installs `trn`, helper commands, generated helper/data files,
-  `HelpFiles`, and supported man pages.  Top-level release text files
-  still need a package decision in item 20.
+  `HelpFiles`, supported man pages, and selected top-level release text
+  files.
 - `man/Rnmail.1` describes shell helpers before the CMake helper
   migration.  Item 19 owns that remaining drift.
 - `man/trn.1` and `config/data/environment.in` still document Unix shell
@@ -242,38 +242,6 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
-
-### 20. Windows Package Artifacts
-
-Issues: #14.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: 2, 7, 10, 18, and 19.
-
-Files likely touched:
-
-- `CMakeLists.txt`
-- `CMakePresets.json`
-- package support files
-- CI workflow files
-
-Tasks:
-
-- Use the CMake install contents for binaries, data files, helpers,
-  supported man pages, and `HelpFiles`.
-- Include or explicitly omit top-level release text files.
-- Add CPack or equivalent package presets.
-- Produce a Windows portable ZIP.
-- Produce a Windows installer if the packaging toolchain is available.
-
-Acceptance:
-
-- Windows users can install or unpack without a Unix shell layer.
-- Package artifacts contain all files needed for normal use.
-- Unit or package tests cover install path computation and package
-  contents.
-- Commit description includes `fixes #14`.
 
 ### 21. macOS Terminal Include Fix
 
@@ -960,7 +928,7 @@ Mandatory open GitHub 5.0 milestone issues:
 
 - #3: 26 through 30.
 - #5: 36.
-- #14: 20.
+- #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.
 - #17: 31 through 33.
 - #18: completed by removed slices 3 and 7.
