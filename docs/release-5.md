@@ -252,47 +252,13 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
-### 25. Nntplist Remote List Automation
-
-Issues: #33.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: completed slices 23 and 24.
-
-Manual check automated:
-
-- `docs/release-5-test-plan.md` remote source listing through
-  `nntplist`.
-
-Files likely touched:
-
-- `tests/support/MockNntpServer.*`
-- `nntplist` tests
-- release checklist docs
-
-Tasks:
-
-- Add only the mock command expectation support needed for `MODE READER`
-  and one multiline `LIST` response.
-- Add one end-to-end `nntplist` test that connects to the C++ mock and
-  verifies listed groups.
-- Update the release checklist matrix for this manual check.
-
-Acceptance:
-
-- The `nntplist` remote-list check is registered in CTest and needs no
-  external server.
-- New mock command support is covered by unit tests.
-- No other #33 manual check is automated in this slice.
-
 ### 25a. Trn Remote Read Automation
 
 Issues: #33.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 25.
+Depends on: completed slice 25.
 
 Manual check automated:
 
@@ -911,7 +877,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #23: completed by removed slices 21 and 22.
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.
-- #33: see `docs/release-5-test-plan.md`; 25 and 25a remain.
+- #33: see `docs/release-5-test-plan.md`; 25a remains.
 - #34: 34 and 35.
 - #38: 13.
 

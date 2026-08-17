@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class MockNntpServer
 {
@@ -15,6 +16,9 @@ public:
     MockNntpServer(const MockNntpServer &) = delete;
     MockNntpServer &operator=(const MockNntpServer &) = delete;
 
+    void expect_list(std::vector<std::string> lines);
+    void expect_mode_reader();
+    void expect_quit();
     void set_welcome_banner(std::string line);
     void start();
     int  port() const;
@@ -22,9 +26,13 @@ public:
     void verify();
 
 private:
+    struct ExpectedCommand;
     struct Impl;
 
     bool build_welcome_banner(std::string &line);
+    void consume_expected_command();
+    void expect_command(std::string command, std::vector<std::string> response_lines);
+    bool next_expected_command(ExpectedCommand &command) const;
     void record_failure(std::string message);
     void run();
     bool stopping() const;

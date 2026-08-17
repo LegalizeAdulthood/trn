@@ -9,6 +9,7 @@
 #include <boost/asio.hpp>
 
 #include <string>
+#include <string_view>
 
 namespace
 {
@@ -16,15 +17,33 @@ namespace
 namespace asio = boost::asio;
 using tcp = asio::ip::tcp;
 
-std::string read_one_line_from_loopback(int port)
+tcp::socket connect_to_loopback(asio::io_context &context, int port)
 {
-    asio::io_context context;
-    tcp::socket      socket{context};
+    tcp::socket socket{context};
     socket.connect({asio::ip::address_v4::loopback(), static_cast<unsigned short>(port)});
+    return socket;
+}
 
+std::string read_line(tcp::socket &socket)
+{
     std::string line;
     read_until(socket, asio::dynamic_buffer(line), "\r\n");
     return line;
+}
+
+std::string read_one_line_from_loopback(int port)
+{
+    asio::io_context context;
+    tcp::socket      socket = connect_to_loopback(context, port);
+
+    return read_line(socket);
+}
+
+void write_line(tcp::socket &socket, std::string_view line)
+{
+    std::string buffer{line};
+    buffer += "\r\n";
+    write(socket, asio::buffer(buffer));
 }
 
 } // namespace
@@ -55,6 +74,55 @@ TEST(MockNntpServerTest, sendsConfiguredWelcomeBanner)
 
     EXPECT_EQ("201 trn-test NNTP server ready\r\n", read_one_line_from_loopback(server.port()));
     server.verify();
+}
+
+TEST(MockNntpServerTest, sendsExpectedListResponse)
+{
+    MockNntpServer server;
+    server.expect_mode_reader();
+    server.expect_list({"comp.lang.apl 2 1 y", "comp.lang.c++ 3 1 y"});
+    server.expect_quit();
+    server.start();
+
+    asio::io_context context;
+    tcp::socket      socket = connect_to_loopback(context, server.port());
+
+    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket));
+    write_line(socket, "MODE READER");
+    EXPECT_EQ("200 trn-test reader mode\r\n", read_line(socket));
+    write_line(socket, "LIST");
+    EXPECT_EQ("215 list follows\r\n", read_line(socket));
+    EXPECT_EQ("comp.lang.apl 2 1 y\r\n", read_line(socket));
+    EXPECT_EQ("comp.lang.c++ 3 1 y\r\n", read_line(socket));
+    EXPECT_EQ(".\r\n", read_line(socket));
+    write_line(socket, "QUIT");
+    EXPECT_EQ("205 closing connection\r\n", read_line(socket));
+    server.verify();
+}
+
+TEST(MockNntpServerTest, verifyReportsUnexpectedCommand)
+{
+    MockNntpServer server;
+    server.expect_mode_reader();
+    server.start();
+
+    asio::io_context context;
+    tcp::socket      socket = connect_to_loopback(context, server.port());
+
+    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket));
+    write_line(socket, "LIST");
+    EXPECT_EQ("500 unexpected command\r\n", read_line(socket));
+
+    EXPECT_NONFATAL_FAILURE(server.verify(), "expected NNTP command `MODE READER`, got `LIST`");
+}
+
+TEST(MockNntpServerTest, verifyReportsMissingCommand)
+{
+    MockNntpServer server;
+    server.expect_mode_reader();
+    server.start();
+
+    EXPECT_NONFATAL_FAILURE(server.verify(), "expected NNTP command was not received: MODE READER");
 }
 
 TEST(MockNntpServerTest, verifyReportsWorkerThreadFailure)

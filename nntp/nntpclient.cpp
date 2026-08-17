@@ -348,6 +348,11 @@ NNTPGetsResult nntp_gets(std::string &line, int len)
         {
             return NGSR_ERROR;
         }
+        if (const std::size_t line_len = s_nntp_gets_line.size();
+            line_len >= 2 && s_nntp_gets_line[line_len - 2] == '\r' && s_nntp_gets_line[line_len - 1] == '\n')
+        {
+            s_nntp_gets_line.erase(line_len - 2);
+        }
     }
 
     if (len >= static_cast<int>(s_nntp_gets_line.length()))

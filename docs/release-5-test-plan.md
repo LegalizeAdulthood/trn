@@ -121,8 +121,8 @@ named runtime test for behavior.
   `config/tests/test_generated_config.cpp`, followup behavior in
   `tests/test_interp.cpp`, and `man/Pnews.1`.
 - `NNTPSERVER`: Automated plus fixture work.  Verify current source
-  selection in `tests/test_datasrc.cpp`; deterministic remote-list and
-  read-one-article coverage are slices 25 and 25a.
+  selection and remote-list coverage in `tests/test_datasrc.cpp`, and
+  read-one-article coverage in slice 25a.
 - `NOPOSTRING`: Manual plus runtime coverage.  Verify no-posting group text
   through `tests/test_datasrc.cpp` data-source setup and one manual group
   display check.

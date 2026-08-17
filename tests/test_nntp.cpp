@@ -295,6 +295,17 @@ TEST_F(NNTPGetStringTest, string_line_fits)
     EXPECT_EQ("this fits", line);
 }
 
+TEST_F(NNTPGetStringTest, string_line_strips_crlf)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits\r\n")));
+    std::string line{"junk"};
+
+    const NNTPGetsResult result = nntp_gets(line, 1024);
+
+    EXPECT_EQ(NGSR_FULL_LINE, result);
+    EXPECT_EQ("this fits", line);
+}
+
 TEST_F(NNTPGetStringTest, string_partial_line_continues_from_saved_text)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));

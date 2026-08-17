@@ -1,5 +1,6 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
+#include <nntp/nntpinit.h>
 #include <trn/datasrc.h>
 
 #include <config/common.h>
@@ -12,6 +13,7 @@
 
 #include "mock_env.h"
 #include "MockNNTPConnection.h"
+#include "support/MockNntpServer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -428,6 +430,38 @@ TEST_F(SourceFileRemoteOpenTest, openFetchesRemoteLinesFromServer)
     ASSERT_EQ(2U, source_file.m_lines.size());
     EXPECT_EQ("comp.lang.apl 10 1 y\n", source_file.m_lines[0]);
     EXPECT_EQ("comp.lang.c++ 20 1 y\n", source_file.m_lines[1]);
+}
+
+TEST_F(SourceFileRemoteOpenTest, openFetchesRemoteLinesFromMockServer)
+{
+    const fs::path  source_path = m_output_dir / "active";
+    SourceFileOwner source_file_owner;
+    SourceFile     &source_file = source_file_owner.get();
+    source_file.m_refetch_secs = DEFAULT_REFETCH_SECS;
+
+    MockNntpServer server;
+    server.expect_mode_reader();
+    server.expect_list({"comp.lang.apl 10 1 y", "comp.lang.c++ 20 1 y"});
+    server.expect_quit();
+    server.start();
+
+    init_nntp();
+    g_nntp_link.connection.reset();
+    g_nntp_link.port_number = server.port();
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+
+    ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
+    testing::internal::CaptureStdout();
+    const int result = source_file.open(source_path, "active", "127.0.0.1");
+    (void) testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(2, result);
+    ASSERT_EQ(2U, source_file.m_lines.size());
+    EXPECT_EQ("comp.lang.apl 10 1 y\n", source_file.m_lines[0]);
+    EXPECT_EQ("comp.lang.c++ 20 1 y\n", source_file.m_lines[1]);
+
+    nntp_close(true);
+    server.verify();
 }
 
 TEST_F(SourceFileTest, endAppendUpdatesCachedFileTimestamp)

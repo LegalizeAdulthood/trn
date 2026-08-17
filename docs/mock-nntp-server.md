@@ -8,17 +8,18 @@ Add an in-process NNTP mock server for end-to-end tests that need the
 real TCP client path and deterministic validation at the end of each test
 case.
 
-The server is a test utility, not a production NNTP daemon.  It should
-start as a connect-only fixture that sends a configurable NNTP welcome
-banner.  Command expectations and helper builders should be added only
-with the tests that need those protocol details.
+The server is a test utility, not a production NNTP daemon.  It sends a
+configurable NNTP welcome banner and runs explicit command expectations.
+Helper builders should be added only with the tests that need those
+protocol details.
 
 ## Direction
 
 Implement a C++ RAII fixture in the test tree.  Each test owns one
 server instance.  The server binds `127.0.0.1` on port `0`, records the
 chosen port, runs on a worker thread, accepts a client connection, sends
-the configured welcome banner, and then waits for stop or disconnect.
+the configured welcome banner, and then drains queued command
+expectations.
 
 Parallel test execution is safe because every fixture binds its own
 ephemeral port and owns its own thread, socket, and state.
@@ -42,8 +43,6 @@ server.verify();
 
 ## Public API
 
-Keep the first API small.
-
 ```cpp
 class MockNntpServer
 {
@@ -51,6 +50,9 @@ public:
     MockNntpServer();
     ~MockNntpServer();
 
+    void expect_list(std::vector<std::string> lines);
+    void expect_mode_reader();
+    void expect_quit();
     void set_welcome_banner(std::string line);
     void start();
     int port() const;
@@ -59,9 +61,7 @@ public:
 };
 ```
 
-Do not add command expectation APIs to the initial implementation.  Add
-the primitive command/reply API with the first test that needs to script a
-command.  Add helpers such as `expect_group()`, `expect_article()`, and
+Add helpers such as `expect_group()`, `expect_article()`, and
 `expect_xover()` only with tests that use those helpers.
 
 Helper methods should remain thin builders over the primitive
@@ -70,20 +70,17 @@ command/reply API.  They should not become a data-backed NNTP server.
 ## Protocol Rules
 
 - Send the configured welcome banner immediately after accept.
-- The initial implementation does not read or match commands.
+- Read commands as CRLF-terminated lines.
+- Match commands exactly unless a later test needs an explicit matcher
+  type.
+- Send `MODE READER`, multiline `LIST`, and `QUIT` replies through thin
+  expectation helpers.
 - Stop after connection close, server stop, or fatal I/O error.
 
 Future command scripting should be added incrementally:
 
-- Read commands as CRLF-terminated lines.
-- Match commands exactly unless a later test needs an explicit matcher
-  type.
-- Send single-line replies as one status line.
-- Send multiline replies as status line, payload lines, and final `.`.
 - Dot-stuff payload lines that begin with `.`.
 - Treat `QUIT` specially only when no explicit expectation was queued.
-- Return `500 unexpected command` for unexpected input, then record a
-  failure.
 - Add posting input capture only with a posting test.
 
 ## Threading Model
@@ -98,10 +95,9 @@ The server should use one worker thread per fixture.
 - Destructor calls `stop()`.
 - `verify()` calls `stop()` first, then reports recorded failures.
 
-Use timeouts for accept and write operations so a failed test does not
-hang the suite.  Add read timeouts when command scripting is introduced.
-Prefer short fixture-level defaults and allow tests to override them when
-needed.
+Close the acceptor and client socket from `stop()` so a failed test does
+not hang the suite.  Add explicit read or write timeouts only when a
+later test proves socket shutdown is not enough.
 
 ## Files
 
@@ -113,34 +109,15 @@ Add:
 
 Update:
 
-- `tests/CMakeLists.txt`
+- `tests/test_datasrc.cpp`
 
 ## Implementation Slices
 
-### Slice 2: First Command Expectation
-
-- Add this only when a test needs a command/reply interaction.
-- Add the expectation queue.
-- Read one command line at a time.
-- Match exact command strings.
-- Send single-line replies.
-- Record unexpected commands and unconsumed expectations.
-- Add tests for success, unexpected input, and missing input.
-
-### Slice 3: Multiline Replies
-
-- Add this only when a test needs a multiline NNTP response.
-- Add `reply_list()`.
-- Emit NNTP multiline replies with dot-stuffing and final `.`.
-- Add tests for ordinary payloads, empty payloads, and payload lines that
-  begin with `.`.
-
 ### Slice 4: Client Integration
 
-- Use the fixture in `tests/test_nntp.cpp`.
-- Add a test that drives `server_init()` through the real TCP path.
-- Add tests for `MODE READER`, posting allowed, posting prohibited, and
-  unavailable server greetings.
+- Use the fixture in `tests/test_datasrc.cpp`.
+- Add a test that drives `SourceFile::open()` remote active-list import
+  through the real TCP path.
 
 ### Slice 5: Group And Article Helpers
 
