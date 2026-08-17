@@ -249,38 +249,78 @@ values, and compatibility expectations.  Do not copy its Q&A structure
 when CMake can determine the result directly.
 
 When a slice is the final active slice for an open GitHub issue, its
-commit description must include `fixes #nnn`.  If a slice can either fix
-or defer an issue, use `fixes` only when the issue is actually resolved.
+commit description must include `Fixes #nnn`.  If a slice can either fix
+or defer an issue, use `Fixes` only when the issue is actually resolved.
 
-### 25. Manual Check Automation Seed
+### 25. Nntplist Remote List Automation
 
 Issues: #33.
 
 Milestone status: open mandatory 5.0 issue.
 
-Depends on: 23 and 24.
+Depends on: completed slices 23 and 24.
+
+Manual check automated:
+
+- `docs/release-5-test-plan.md` remote source listing through
+  `nntplist`.
 
 Files likely touched:
 
-- tests
+- `tests/support/MockNntpServer.*`
+- `nntplist` tests
+- release checklist docs
+
+Tasks:
+
+- Add only the mock command expectation support needed for `MODE READER`
+  and one multiline `LIST` response.
+- Add one end-to-end `nntplist` test that connects to the C++ mock and
+  verifies listed groups.
+- Update the release checklist matrix for this manual check.
+
+Acceptance:
+
+- The `nntplist` remote-list check is registered in CTest and needs no
+  external server.
+- New mock command support is covered by unit tests.
+- No other #33 manual check is automated in this slice.
+
+### 25a. Trn Remote Read Automation
+
+Issues: #33.
+
+Milestone status: open mandatory 5.0 issue.
+
+Depends on: 25.
+
+Manual check automated:
+
+- `docs/release-5-test-plan.md` remote `trn` read-one-article smoke test.
+
+Files likely touched:
+
+- `tests/support/MockNntpServer.*`
+- scripted `trn` integration tests
 - test data
 - release checklist docs
 
 Tasks:
 
-- Automate the highest-risk #33 manual checks.
-- Add one short scripted `trn` read-one-article test.
-- Add one short end-to-end `nntplist` test.
-- Add only the C++ mock expectation helpers needed by those tests.
+- Add only the mock command expectation support needed for remote group
+  selection and one article retrieval.
+- Add one short scripted `trn` run that selects the remote source, opens
+  one group, reads one article, and quits.
+- Update the release checklist matrix for this manual check.
 - Leave lower-risk manual checks visible in the release checklist.
 
 Acceptance:
 
-- The release checklist has automated coverage for critical paths.
+- The `trn` read-one-article check is registered in CTest and needs no
+  external server.
 - Manual-only items are deliberate, named, and repeatable.
-- New automated checks are registered in CTest and grouped by unit or
-  integration scope.
-- Commit description includes `fixes #33`.
+- No other #33 manual check is automated in this slice.
+- Commit description includes `Fixes #33`.
 
 ### 26. NNTP Capability Model
 
@@ -871,7 +911,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #23: completed by removed slices 21 and 22.
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.
-- #33: see `docs/release-5-test-plan.md`; 25 remains.
+- #33: see `docs/release-5-test-plan.md`; 25 and 25a remain.
 - #34: 34 and 35.
 - #38: 13.
 
