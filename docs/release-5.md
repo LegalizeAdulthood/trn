@@ -252,38 +252,39 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 24. Deterministic NNTP Fixtures
+### 24. Mock NNTP Server
 
 Issues: #33.
 
 Milestone status: open mandatory 5.0 issue.
 
-Plan sources:
+Plan source:
 
 - `mock-nntp-server.md`
-- `nntp-test-server.md`
 
 Files likely touched:
 
 - `tests/support/MockNntpServer.*`
-- `tests/support/nntp_test_server.py`
-- `tests/support/run_nntp_fixture.py`
+- `tests/test_MockNntpServer.cpp`
+- `tests/test_nntp.cpp`
 - `tests/CMakeLists.txt`
-- test data files
 
 Tasks:
 
 - Add a C++ loopback mock with ordered expectations.
-- Add a Python fixture server with JSON config and port-file output.
 - Cover `LIST`, `GROUP`, `LISTGROUP`, article retrieval, overview,
-  headers, posting capture, and dot-stuffing.
+  headers, posting capture, and dot-stuffing through scripted
+  expectations or thin helpers.
+- Use the mock server for NNTP tests that need the real TCP client path.
+- Prefer the C++ mock for new NNTP coverage because it is integrated with
+  gtest and reports failures through the existing unit-test flow.
 
 Acceptance:
 
 - NNTP tests need no external server.
 - Protocol tests are deterministic under parallel test execution.
-- Unit tests cover mock expectation ordering and fixture server protocol
-  parsing.
+- Unit tests cover expectation ordering, unexpected commands, missing
+  commands, multiline replies, dot-stuffing, and posting capture.
 
 ### 25. Manual Check Automation Seed
 
@@ -829,6 +830,44 @@ Acceptance:
 - Imported samples are exercised by optional unit or regression tests
   with no network dependency.
 - Commit description includes `fixes #35`.
+
+## Deferred Slices
+
+### Deferred. Python NNTP Fixture Server
+
+Issues: #33.
+
+Milestone status: deferred until a checked release test needs a
+data-backed NNTP server or runtime CTest orchestration that the preferred
+C++ gtest mock cannot cover directly.
+
+Plan source:
+
+- `nntp-test-server.md`
+
+Files likely touched:
+
+- `tests/support/nntp_test_server.py`
+- `tests/support/run_nntp_fixture.py`
+- `tests/CMakeLists.txt`
+- test data files
+
+Tasks:
+
+- Add a Python fixture server with JSON config and port-file output.
+- Add a wrapper that starts the server, writes runtime access files or
+  environment, runs the child test command, and stops the server.
+- Cover data-backed `LIST`, `GROUP`, `LISTGROUP`, article retrieval,
+  overview, headers, posting capture, and dot-stuffing.
+
+Acceptance:
+
+- The Python fixture is introduced only with a consumer test that needs
+  data-backed server behavior or runtime CTest orchestration.
+- The fixture needs no external server and is deterministic under
+  parallel test execution.
+- Server config parsing, port-file behavior, and unsupported-command
+  handling are tested.
 
 ## Deferred Cleanup
 
