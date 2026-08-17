@@ -252,42 +252,6 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 24. Mock NNTP Welcome Server
-
-Issues: #33.
-
-Milestone status: open mandatory 5.0 issue.
-
-Plan source:
-
-- `mock-nntp-server.md`
-
-Files likely touched:
-
-- `tests/support/MockNntpServer.*`
-- `tests/test_MockNntpServer.cpp`
-- `tests/test_nntp.cpp`
-- `tests/CMakeLists.txt`
-
-Tasks:
-
-- Add a C++ loopback mock that accepts a client and sends a configured
-  NNTP welcome banner.
-- Keep the initial API limited to start, stop, port lookup, welcome-banner
-  configuration, and verification.
-- Add a raw-socket smoke test for the welcome banner.
-- Prefer the C++ mock for new NNTP coverage because it is integrated with
-  gtest and reports failures through the existing unit-test flow.
-- Add command expectations and helper methods later, only with tests that
-  need the specific NNTP behavior.
-
-Acceptance:
-
-- The welcome-banner test needs no external server.
-- The fixture is deterministic under parallel test execution.
-- Unit tests cover loopback bind, start, stop, configured welcome banner,
-  and verification of worker-thread failures.
-
 ### 25. Manual Check Automation Seed
 
 Issues: #33.
@@ -907,7 +871,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #23: completed by removed slices 21 and 22.
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.
-- #33: see `docs/release-5-test-plan.md`; 24 and 25 remain.
+- #33: see `docs/release-5-test-plan.md`; 25 remains.
 - #34: 34 and 35.
 - #38: 13.
 

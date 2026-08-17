@@ -10,6 +10,8 @@ configure_trn_test_data()
 add_executable(trn-test
     MockNNTPConnection.h
     mock_env.h
+    support/MockNntpServer.cpp
+    support/MockNntpServer.h
     test_addng.cpp
     test_art.cpp
     test_autosub.cpp
@@ -40,6 +42,7 @@ add_executable(trn-test
     test_last.cpp
     test_makedir.cpp
     test_mime.cpp
+    test_MockNntpServer.cpp
     test_nntp.cpp
     test_ng.cpp
     test_ngsrch.cpp

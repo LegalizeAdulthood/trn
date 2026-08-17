@@ -117,14 +117,6 @@ Update:
 
 ## Implementation Slices
 
-### Slice 1: Welcome Banner
-
-- Add the RAII fixture class and CMake wiring.
-- Bind loopback on an ephemeral port.
-- Start and stop the worker thread.
-- Send a configurable welcome banner.
-- Add a smoke test that connects with a raw socket and reads the banner.
-
 ### Slice 2: First Command Expectation
 
 - Add this only when a test needs a command/reply interaction.
