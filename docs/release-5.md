@@ -252,7 +252,7 @@ When a slice is the final active slice for an open GitHub issue, its
 commit description must include `fixes #nnn`.  If a slice can either fix
 or defer an issue, use `fixes` only when the issue is actually resolved.
 
-### 24. Mock NNTP Server
+### 24. Mock NNTP Welcome Server
 
 Issues: #33.
 
@@ -271,20 +271,22 @@ Files likely touched:
 
 Tasks:
 
-- Add a C++ loopback mock with ordered expectations.
-- Cover `LIST`, `GROUP`, `LISTGROUP`, article retrieval, overview,
-  headers, posting capture, and dot-stuffing through scripted
-  expectations or thin helpers.
-- Use the mock server for NNTP tests that need the real TCP client path.
+- Add a C++ loopback mock that accepts a client and sends a configured
+  NNTP welcome banner.
+- Keep the initial API limited to start, stop, port lookup, welcome-banner
+  configuration, and verification.
+- Add a raw-socket smoke test for the welcome banner.
 - Prefer the C++ mock for new NNTP coverage because it is integrated with
   gtest and reports failures through the existing unit-test flow.
+- Add command expectations and helper methods later, only with tests that
+  need the specific NNTP behavior.
 
 Acceptance:
 
-- NNTP tests need no external server.
-- Protocol tests are deterministic under parallel test execution.
-- Unit tests cover expectation ordering, unexpected commands, missing
-  commands, multiline replies, dot-stuffing, and posting capture.
+- The welcome-banner test needs no external server.
+- The fixture is deterministic under parallel test execution.
+- Unit tests cover loopback bind, start, stop, configured welcome banner,
+  and verification of worker-thread failures.
 
 ### 25. Manual Check Automation Seed
 
@@ -305,6 +307,7 @@ Tasks:
 - Automate the highest-risk #33 manual checks.
 - Add one short scripted `trn` read-one-article test.
 - Add one short end-to-end `nntplist` test.
+- Add only the C++ mock expectation helpers needed by those tests.
 - Leave lower-risk manual checks visible in the release checklist.
 
 Acceptance:
