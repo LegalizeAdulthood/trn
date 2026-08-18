@@ -16,7 +16,11 @@ public:
     MockNntpServer(const MockNntpServer &) = delete;
     MockNntpServer &operator=(const MockNntpServer &) = delete;
 
+    void expect_body(long article_number, std::vector<std::string> lines);
+    void expect_group(std::string group_name, long count, long first, long last);
+    void expect_head(long article_number, std::vector<std::string> lines);
     void expect_list(std::vector<std::string> lines);
+    void expect_listgroup(std::vector<long> article_numbers);
     void expect_mode_reader();
     void expect_quit();
     void set_welcome_banner(std::string line);

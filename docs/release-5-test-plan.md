@@ -120,9 +120,9 @@ named runtime test for behavior.
 - `NEWSPOSTER`: Automated plus manual.  Verify generated defaults in
   `config/tests/test_generated_config.cpp`, followup behavior in
   `tests/test_interp.cpp`, and `man/Pnews.1`.
-- `NNTPSERVER`: Automated plus fixture work.  Verify current source
-  selection and remote-list coverage in `tests/test_datasrc.cpp`, and
-  read-one-article coverage in slice 25a.
+- `NNTPSERVER`: Automated.  Verify current source selection and
+  remote-list coverage in `tests/test_datasrc.cpp`, and remote
+  read-one-article coverage in `tests/test_trn.cpp`.
 - `NOPOSTRING`: Manual plus runtime coverage.  Verify no-posting group text
   through `tests/test_datasrc.cpp` data-source setup and one manual group
   display check.

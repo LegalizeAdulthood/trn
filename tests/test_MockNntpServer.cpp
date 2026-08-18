@@ -100,6 +100,40 @@ TEST(MockNntpServerTest, sendsExpectedListResponse)
     server.verify();
 }
 
+TEST(MockNntpServerTest, sendsExpectedGroupAndArticleReadResponses)
+{
+    MockNntpServer server;
+    server.expect_group("comp.lang.apl", 1, 623, 623);
+    server.expect_listgroup({623});
+    server.expect_head(623, {"From: reader@example.test", "Subject: hello"});
+    server.expect_body(623, {"body line"});
+    server.expect_quit();
+    server.start();
+
+    asio::io_context context;
+    tcp::socket      socket = connect_to_loopback(context, server.port());
+
+    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket));
+    write_line(socket, "GROUP comp.lang.apl");
+    EXPECT_EQ("211 1 623 623 comp.lang.apl\r\n", read_line(socket));
+    write_line(socket, "LISTGROUP");
+    EXPECT_EQ("211 list follows\r\n", read_line(socket));
+    EXPECT_EQ("623\r\n", read_line(socket));
+    EXPECT_EQ(".\r\n", read_line(socket));
+    write_line(socket, "HEAD 623");
+    EXPECT_EQ("221 623 <message@example.test> header follows\r\n", read_line(socket));
+    EXPECT_EQ("From: reader@example.test\r\n", read_line(socket));
+    EXPECT_EQ("Subject: hello\r\n", read_line(socket));
+    EXPECT_EQ(".\r\n", read_line(socket));
+    write_line(socket, "BODY 623");
+    EXPECT_EQ("222 623 <message@example.test> body follows\r\n", read_line(socket));
+    EXPECT_EQ("body line\r\n", read_line(socket));
+    EXPECT_EQ(".\r\n", read_line(socket));
+    write_line(socket, "QUIT");
+    EXPECT_EQ("205 closing connection\r\n", read_line(socket));
+    server.verify();
+}
+
 TEST(MockNntpServerTest, verifyReportsUnexpectedCommand)
 {
     MockNntpServer server;

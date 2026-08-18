@@ -23,6 +23,19 @@ using tcp = asio::ip::tcp;
 
 constexpr const char *DEFAULT_WELCOME_BANNER = "200 trn-test NNTP server ready";
 
+std::vector<std::string> multiline_response(std::string status_line, std::vector<std::string> lines)
+{
+    std::vector<std::string> response_lines;
+    response_lines.reserve(lines.size() + 2);
+    response_lines.push_back(std::move(status_line));
+    for (std::string &line : lines)
+    {
+        response_lines.push_back(std::move(line));
+    }
+    response_lines.emplace_back(".");
+    return response_lines;
+}
+
 bool has_line_endings(std::string_view line)
 {
     return line.find_first_of("\r\n") != std::string_view::npos;
@@ -60,17 +73,42 @@ MockNntpServer::~MockNntpServer()
     stop();
 }
 
+void MockNntpServer::expect_body(long article_number, std::vector<std::string> lines)
+{
+    expect_command("BODY " + std::to_string(article_number),
+                   multiline_response("222 " + std::to_string(article_number) + " <message@example.test> body follows",
+                                      std::move(lines)));
+}
+
+void MockNntpServer::expect_group(std::string group_name, long count, long first, long last)
+{
+    const std::string command = "GROUP " + group_name;
+    expect_command(std::move(command), {"211 " + std::to_string(count) + " " + std::to_string(first) + " " +
+                                        std::to_string(last) + " " + std::move(group_name)});
+}
+
+void MockNntpServer::expect_head(long article_number, std::vector<std::string> lines)
+{
+    expect_command(
+        "HEAD " + std::to_string(article_number),
+        multiline_response("221 " + std::to_string(article_number) + " <message@example.test> header follows",
+                           std::move(lines)));
+}
+
 void MockNntpServer::expect_list(std::vector<std::string> lines)
 {
-    std::vector<std::string> response_lines;
-    response_lines.reserve(lines.size() + 2);
-    response_lines.emplace_back("215 list follows");
-    for (std::string &line : lines)
+    expect_command("LIST", multiline_response("215 list follows", std::move(lines)));
+}
+
+void MockNntpServer::expect_listgroup(std::vector<long> article_numbers)
+{
+    std::vector<std::string> lines;
+    lines.reserve(article_numbers.size());
+    for (const long article_number : article_numbers)
     {
-        response_lines.push_back(std::move(line));
+        lines.push_back(std::to_string(article_number));
     }
-    response_lines.emplace_back(".");
-    expect_command("LIST", std::move(response_lines));
+    expect_command("LISTGROUP", multiline_response("211 list follows", std::move(lines)));
 }
 
 void MockNntpServer::expect_mode_reader()

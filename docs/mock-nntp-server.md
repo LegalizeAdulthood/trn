@@ -50,7 +50,11 @@ public:
     MockNntpServer();
     ~MockNntpServer();
 
+    void expect_body(long article_number, std::vector<std::string> lines);
+    void expect_group(std::string group_name, long count, long first, long last);
+    void expect_head(long article_number, std::vector<std::string> lines);
     void expect_list(std::vector<std::string> lines);
+    void expect_listgroup(std::vector<long> article_numbers);
     void expect_mode_reader();
     void expect_quit();
     void set_welcome_banner(std::string line);
@@ -61,8 +65,8 @@ public:
 };
 ```
 
-Add helpers such as `expect_group()`, `expect_article()`, and
-`expect_xover()` only with tests that use those helpers.
+Add helpers such as `expect_article()` and `expect_xover()` only with
+tests that use those helpers.
 
 Helper methods should remain thin builders over the primitive
 command/reply API.  They should not become a data-backed NNTP server.
@@ -73,8 +77,8 @@ command/reply API.  They should not become a data-backed NNTP server.
 - Read commands as CRLF-terminated lines.
 - Match commands exactly unless a later test needs an explicit matcher
   type.
-- Send `MODE READER`, multiline `LIST`, and `QUIT` replies through thin
-  expectation helpers.
+- Send `MODE READER`, `GROUP`, multiline `LIST`, `LISTGROUP`, `HEAD`,
+  `BODY`, and `QUIT` replies through thin expectation helpers.
 - Stop after connection close, server stop, or fatal I/O error.
 
 Future command scripting should be added incrementally:
@@ -122,7 +126,7 @@ Update:
 ### Slice 5: Group And Article Helpers
 
 - Add small helpers only when tests need common NNTP flows.
-- Cover `GROUP`, `STAT`, `HEAD`, `BODY`, and `ARTICLE`.
+- Cover `GROUP`, `LISTGROUP`, `HEAD`, and `BODY`.
 - Keep helpers as thin expectation builders, not data-backed server
   behavior.
 - Add an integration test for reading one article through `libtrn` NNTP
