@@ -251,8 +251,22 @@ ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
 
 std::string_view art_buf_view(ArticlePosition pos)
 {
+    if (pos < 0)
+    {
+        return {};
+    }
+    if (pos < g_header_type[PAST_HEADER].min_pos)
+    {
+        const std::size_t offset = static_cast<std::size_t>(pos.value_of());
+        return offset < g_head_buf.size() ? std::string_view{g_head_buf}.substr(offset) : std::string_view{};
+    }
     const ArticlePosition offset = pos - g_header_type[PAST_HEADER].min_pos;
-    return art_buf_data() + offset.value_of();
+    if (offset >= s_art_buf_len)
+    {
+        return {};
+    }
+    return std::string_view{s_art_buf}.substr(static_cast<std::size_t>(offset.value_of()),
+                                              static_cast<std::size_t>((s_art_buf_len - offset).value_of()));
 }
 
 static char *art_buf_data()

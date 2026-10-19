@@ -109,7 +109,7 @@ protected:
     {
         const fs::path article_file = m_output_dir / "article";
         {
-            std::ofstream output{article_file};
+            std::ofstream output{article_file, std::ios::binary};
             output << text;
         }
 
@@ -190,6 +190,45 @@ TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
 
     EXPECT_FALSE(read_art_buf(first, false));
     EXPECT_TRUE(first.empty());
+}
+
+TEST_F(ArticleIoTest, viewReturnsHeaderBeforeBodyStart)
+{
+    g_head_buf = "Subject: example\n\n";
+    g_header_type[PAST_HEADER].min_pos = ArticlePosition{static_cast<long>(g_head_buf.size())};
+
+    EXPECT_EQ(g_head_buf, art_buf_view(ArticlePosition{}));
+    EXPECT_EQ("example\n\n", art_buf_view(ArticlePosition{9}));
+    EXPECT_EQ("\n", art_buf_view(g_header_type[PAST_HEADER].min_pos - ArticlePosition{1}));
+}
+
+TEST_F(ArticleIoTest, viewReturnsBufferedBodyAfterHeader)
+{
+    g_head_buf = "Subject: example\n\n";
+    const ArticlePosition body_start{static_cast<long>(g_head_buf.size())};
+    g_header_type[PAST_HEADER].min_pos = body_start;
+    open_article_text(g_head_buf + "alpha\nbeta\n");
+    ASSERT_EQ(0, seek_art(body_start));
+    set_art_buf_seek(body_start);
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_TRUE(read_art_buf(line, false));
+
+    EXPECT_EQ("alpha\nbeta\n", art_buf_view(body_start));
+    EXPECT_EQ("beta\n", art_buf_view(body_start + ArticlePosition{6}));
+    EXPECT_TRUE(art_buf_view(body_start + art_buf_len()).empty());
+    EXPECT_TRUE(art_buf_view(body_start + art_buf_len() + ArticlePosition{1}).empty());
+    EXPECT_TRUE(art_buf_view(ArticlePosition{-1}).empty());
+}
+
+TEST_F(ArticleIoTest, viewExcludesClearedBodyText)
+{
+    open_article_text("alpha\n");
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    clear_art_buf();
+
+    EXPECT_TRUE(art_buf_view(ArticlePosition{1}).empty());
 }
 
 TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsArticleLine)
