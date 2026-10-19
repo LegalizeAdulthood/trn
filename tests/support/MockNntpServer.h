@@ -24,6 +24,7 @@ public:
     void expect_listgroup(std::vector<long> article_numbers);
     void expect_mode_reader();
     void expect_quit();
+    void expect_starttls(bool handshake_failure = false);
     void set_welcome_banner(std::string line);
     void start();
     int  port() const;

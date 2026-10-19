@@ -9,6 +9,7 @@
       "default-features": false
     },
     "gtest",
+    "openssl",
     {
       "name": "ncurses",
       "platform": "!windows"

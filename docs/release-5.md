@@ -30,13 +30,35 @@ Source uses `file_ref`, and the config target has direct tests for it.
 Those two areas should be treated as release verification only, not as
 active feature slices.
 
-NNTP capability discovery and modern command selection are implemented.
-`NNTPLink` retains capabilities and a sorted vector of rejected commands.
-Focused validation passed 109 tests with `cmake --workflow temp`, including
-reader-mode selection, modern and legacy request order, rejection caching,
-empty HDR values, and batched overview retrieval.  TLS and authentication
-policy remain active slices.  The full `cmake --workflow rt-default` run
-passed 1385 tests with six skips.
+NNTP capability discovery, modern commands, and STARTTLS are implemented.
+`NNTPLink` retains capabilities, a sorted vector of rejected commands,
+transport security state, and group/article selection.  STARTTLS verifies
+certificates and host names, refreshes capabilities, and restores reading
+state.  Data-source policy can require TLS before authentication or POST.
+Implicit TLS and capability-aware authentication remain active slices.
+
+OpenSSL 3.2 or newer is now required.  The Windows ZIP currently contains
+no runtime DLLs; collecting required DLLs remains an install/package
+release gate.
+
+Slice 28 test-first evidence, using `cmake --workflow temp` throughout:
+
+- The first six tests failed for missing policy fields, STARTTLS startup,
+  failure handling, and `483` retry.  The same six passed after those
+  paths were implemented.
+- Expanded coverage failed six of 14 tests for transport, policy, and
+  forced-auth ordering.  Those 14 passed after implementation; a new
+  selection-restoration test then failed as intended.
+- The broader run failed five of 140 tests for selection restoration,
+  short policy values, and startup conversations.  All 140 passed after
+  implementing the fixes and updating the startup expectations.
+- A final discovery-auth regression failed with duplicate `AUTHINFO USER`
+  requests.  Clearing pending forced auth made all 141 tests pass.
+
+The final `cmake --workflow rt-default` run passed 1402 tests with six
+skips.  Coverage includes encrypted loopback article reads, certificate
+rejection, TLS policy, reader-mode selection, legacy fallback, rejection
+caching, empty HDR values, and batched overview retrieval.
 
 ## Script Audit
 
@@ -273,35 +295,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 28. NNTP STARTTLS
-
-Issues: #3.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: 26.
-
-Files likely touched:
-
-- `nntp`
-- `libtrn/DataSourceConfig.*`
-- `libtrn/datasrc.cpp`
-- NNTP tests
-
-Tasks:
-
-- Add cleartext and STARTTLS session state.
-- Parse the `STARTTLS` capability.
-- Handle response `483` by attempting TLS when allowed.
-- Add config policy for requiring TLS before auth or posting.
-
-Acceptance:
-
-- STARTTLS reading paths are covered by fixture tests.
-- Password auth can be protected by TLS policy.
-- Unit tests cover advertised STARTTLS, response `483`, failure, and TLS
-  policy cases.
 
 ### 29. NNTP Implicit TLS
 
@@ -786,7 +779,7 @@ unless it is the smallest correct implementation for 31 through 35.
 
 Mandatory open GitHub 5.0 milestone issues:
 
-- #3: 28 through 30; capability discovery and command selection are
+- #3: 29 and 30; capability discovery, command selection, and STARTTLS are
   implemented.
 - #5: 36.
 - #14: completed by removed slice 20.
@@ -834,6 +827,7 @@ Release 5.0 can be cut when:
   that milestone in GitHub;
 - supported CI is green;
 - install/package artifacts contain the generated helpers;
+- install/package artifacts contain required runtime libraries;
 - non-markdown user documentation is synchronized with shipped
   functionality or explicitly marked historical;
 - non-milestone P1/P2 work is either complete, documented as deferred,

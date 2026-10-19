@@ -101,3 +101,11 @@ TEST_F(DataSourceConfigTest, missingValuesRemainAbsent)
     EXPECT_FALSE(config.nntp_server().has_value());
     EXPECT_FALSE(config.spool_dir().has_value());
 }
+
+TEST_F(DataSourceConfigTest, recognizesStartTlsPolicyFields)
+{
+    for (const char *name : {"STARTTLS", "Require TLS For Auth", "Require TLS For Posting"})
+    {
+        EXPECT_NE(nullptr, DataSourceConfig::schema().find(name)) << name;
+    }
+}

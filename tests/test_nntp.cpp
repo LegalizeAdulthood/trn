@@ -17,12 +17,14 @@
 
 #include "MockNNTPConnection.h"
 #include "support/MockNntpServer.h"
+#include "support/NntpTestCertificate.h"
 
 #include <boost/asio/error.hpp>
 
 #include <gmock/gmock.h>
 
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -182,6 +184,102 @@ protected:
     }
 };
 
+TEST_F(NNTPConnectedTest, upgradesAdvertisedStartTlsBeforeReading)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "XOLD", "."});
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "OVER", "."});
+
+    EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
+    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("XOLD"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+}
+
+TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsHandshakeFails)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_))
+        .WillOnce([](error_code_t &ec) { ec = boost::asio::error::connection_reset; });
+
+    EXPECT_EQ(-1, server_init(m_machine));
+    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+}
+
+TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsIsUnavailable)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
+    expect_reply("STARTTLS", {"502 command unavailable"});
+
+    EXPECT_EQ(-1, server_init(m_machine));
+    EXPECT_FALSE(g_nntp_link.connection);
+}
+
+TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsCannotNegotiate)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
+    expect_reply("STARTTLS", {"580 cannot initiate TLS negotiation"});
+
+    EXPECT_EQ(-1, server_init(m_machine));
+    EXPECT_FALSE(g_nntp_link.connection);
+}
+
+TEST_F(NNTPConnectedTest, defersForcedAuthUntilAfterStartTlsDiscovery)
+{
+    DataSource source;
+    source.m_auth_user = "reader";
+    source.m_auth_pass = "secret";
+    DataSource *const saved_source = g_data_source;
+    g_data_source = &source;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK | NNTP_FORCE_AUTH_NOW;
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+
+    const int result = server_init(m_machine);
+    g_data_source = saved_source;
+
+    EXPECT_EQ(200, result);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_TRUE(g_nntp_link.flags & NNTP_FORCE_AUTH_NOW);
+}
+
+TEST_F(NNTPConnectedTest, handlesAuthChallengeDuringStartTlsDiscovery)
+{
+    DataSource source;
+    source.m_auth_user = "reader";
+    source.m_auth_pass = "secret";
+    DataSource *const saved_source = g_data_source;
+    g_data_source = &source;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK | NNTP_FORCE_AUTH_NOW;
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"480 authentication required"});
+    expect_reply("AUTHINFO USER reader", {"381 password required"});
+    expect_reply("AUTHINFO PASS secret", {"281 authentication accepted"});
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+
+    const int result = server_init(m_machine);
+    g_data_source = saved_source;
+
+    EXPECT_EQ(200, result);
+    EXPECT_FALSE(g_nntp_link.flags & NNTP_FORCE_AUTH_NOW);
+}
+
 TEST_F(NNTPConnectedTest, server_init_ok)
 {
     EXPECT_CALL(*m_connection, read_line(_))
@@ -215,6 +313,7 @@ TEST_F(NNTPConnectedTest, server_init_posting_prohibited)
 
 TEST_F(NNTPConnectedTest, refreshesCapabilitiesAfterReaderMode)
 {
+    g_nntp_link.allow_starttls = false;
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "STARTTLS", "."});
@@ -239,15 +338,20 @@ TEST_F(NNTPConnectedTest, discoversCapabilitiesOnlyAvailableInReaderMode)
     expect_reply("CAPABILITIES", {"500 unknown command"});
     expect_reply("MODE READER", {"200 reader ready"});
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "STARTTLS", "."});
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "."});
 
     EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
     EXPECT_EQ("200 reader ready", g_ser_line);
     EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_TRUE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
 }
 
 TEST_F(NNTPConnectedTest, clearsCapabilitiesWhenReaderModeDoesNotSupportDiscovery)
 {
+    g_nntp_link.allow_starttls = false;
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "STARTTLS", "."});
@@ -482,6 +586,210 @@ protected:
     ArticleNum                                      m_old_last_cached{};
     NNTPLink                                        m_saved_nntp_link;
 };
+
+TEST_F(NNTPGetStringTest, retriesEncryptionRequiredCommandAfterStartTls)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("483 encryption required"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("STARTTLS"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("382 continue with TLS negotiation"));
+    EXPECT_CALL(*m_connection, start_tls(_));
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("101 capabilities follow"))
+        .WillOnce(Return("READER"))
+        .WillOnce(Return("."));
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("211 1 1 1 comp.lang.apl"));
+
+    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ("211 1 1 1 comp.lang.apl", g_ser_line);
+}
+
+TEST_F(NNTPGetStringTest, requiresTlsBeforeAuthAndPosting)
+{
+    g_nntp_link.allow_starttls = false;
+    g_nntp_link.require_tls_for_auth = true;
+    g_nntp_link.require_tls_for_posting = true;
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    EXPECT_LT(nntp_command("AUTHINFO USER reader"), 0);
+    EXPECT_LT(nntp_command("AUTHINFO PASS secret"), 0);
+    EXPECT_LT(nntp_command("post"), 0);
+}
+
+TEST_F(NNTPGetStringTest, restoresSelectedGroupAndArticleAfterStartTls)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("211 2 1 2 comp.lang.apl"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("STAT 2"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 2 <two@example.test>"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("BODY"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("483 encryption required"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("STARTTLS"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("382 continue with TLS negotiation"));
+    EXPECT_CALL(*m_connection, start_tls(_));
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("101 capabilities follow"))
+        .WillOnce(Return("READER"))
+        .WillOnce(Return("."));
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("211 2 1 2 comp.lang.apl"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("STAT 2"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 2 <two@example.test>"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("BODY"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("222 2 <two@example.test>"));
+
+    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, nntp_command("STAT 2"));
+    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, nntp_command("BODY"));
+    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ(222, nntp_response_code(g_ser_line));
+}
+
+TEST_F(NNTPGetStringTest, protectsPostingWithStartTlsBeforeSendingPost)
+{
+    g_nntp_link.require_tls_for_posting = true;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("STARTTLS");
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(StrEq("STARTTLS"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("382 continue with TLS negotiation"));
+    EXPECT_CALL(*m_connection, start_tls(_));
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("101 capabilities follow"))
+        .WillOnce(Return("POST"))
+        .WillOnce(Return("."));
+    EXPECT_CALL(*m_connection, write_line(StrEq("POST"), _));
+
+    EXPECT_EQ(1, nntp_command("POST"));
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+}
+
+TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
+{
+    DataSource source;
+    source.m_auth_user = "reader";
+    source.m_auth_pass = "secret";
+    DataSource *const saved_source = g_data_source;
+    g_data_source = &source;
+    g_nntp_link.allow_starttls = false;
+    g_nntp_link.require_tls_for_auth = true;
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("480 authentication required"));
+
+    const int sent = nntp_command("GROUP comp.lang.apl");
+    const int result = nntp_check();
+    g_data_source = saved_source;
+
+    EXPECT_EQ(1, sent);
+    EXPECT_LT(result, 0);
+    EXPECT_EQ(483, nntp_response_code(g_ser_line));
+}
+
+class NntpTlsLoopbackTest : public NNTPTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void set_ca_file(const std::string &value);
+
+    fs::path    m_certificate;
+    std::string m_old_ca_file;
+};
+
+void NntpTlsLoopbackTest::set_ca_file(const std::string &value)
+{
+#ifdef _WIN32
+    ASSERT_EQ(0, _putenv_s("SSL_CERT_FILE", value.c_str()));
+#else
+    ASSERT_EQ(0, value.empty() ? unsetenv("SSL_CERT_FILE") : setenv("SSL_CERT_FILE", value.c_str(), 1));
+#endif
+}
+
+void NntpTlsLoopbackTest::SetUp()
+{
+    NNTPTest::SetUp();
+    init_nntp();
+    const char *old_value = std::getenv("SSL_CERT_FILE");
+    m_old_ca_file = old_value ? old_value : "";
+    m_certificate = fs::path{TRN_TEST_TMP_DIR} / "NntpTlsLoopbackTest" /
+                    testing::UnitTest::GetInstance()->current_test_info()->name() / "ca.pem";
+    fs::create_directories(m_certificate.parent_path());
+    std::ofstream{m_certificate} << NNTP_TEST_CERTIFICATE;
+    set_ca_file(m_certificate.string());
+}
+
+void NntpTlsLoopbackTest::TearDown()
+{
+    nntp_close(false);
+    set_ca_file(m_old_ca_file);
+    std::error_code ec;
+    fs::remove_all(m_certificate.parent_path(), ec);
+    NNTPTest::TearDown();
+}
+
+TEST_F(NntpTlsLoopbackTest, readsArticleThroughStartTls)
+{
+    MockNntpServer server;
+    server.expect_capabilities({"READER", "STARTTLS"});
+    server.expect_starttls();
+    server.expect_capabilities({"READER"});
+    server.expect_group("comp.lang.apl", 1, 1, 1);
+    server.expect_body(1, {"encrypted article", "second line"});
+    server.expect_quit();
+    server.start();
+    g_nntp_link.port_number = server.port();
+
+    ASSERT_EQ(1, nntp_connect("localhost", false));
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, nntp_command("BODY 1"));
+    ASSERT_EQ(1, nntp_check());
+    std::string line;
+    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    EXPECT_EQ("encrypted article", line);
+    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    EXPECT_EQ("second line", line);
+    nntp_finish_list();
+    nntp_close(true);
+    server.verify();
+}
+
+TEST_F(NntpTlsLoopbackTest, rejectsUntrustedStartTlsCertificate)
+{
+    set_ca_file((m_certificate.parent_path() / "absent.pem").string());
+    MockNntpServer server;
+    server.expect_capabilities({"READER", "STARTTLS"});
+    server.expect_starttls(true);
+    server.start();
+    g_nntp_link.port_number = server.port();
+
+    EXPECT_EQ(0, nntp_connect("localhost", false));
+    EXPECT_FALSE(g_nntp_link.connection);
+    server.verify();
+}
+
+TEST_F(NntpTlsLoopbackTest, rejectsStartTlsCertificateForAnotherHost)
+{
+    MockNntpServer server;
+    server.expect_capabilities({"READER", "STARTTLS"});
+    server.expect_starttls(true);
+    server.start();
+    g_nntp_link.port_number = server.port();
+
+    EXPECT_EQ(0, nntp_connect("127.0.0.1", false));
+    EXPECT_FALSE(g_nntp_link.connection);
+    server.verify();
+}
 
 struct NntpCommandCase
 {

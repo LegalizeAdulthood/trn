@@ -1,6 +1,7 @@
 include(GoogleTest)
 
 find_package(GTest CONFIG REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(ConfigureTrnTestData)
@@ -12,6 +13,7 @@ add_executable(trn-test
     mock_env.h
     support/MockNntpServer.cpp
     support/MockNntpServer.h
+    support/NntpTestCertificate.h
     test_addng.cpp
     test_art.cpp
     test_autosub.cpp
@@ -108,6 +110,7 @@ source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
 target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" .)
 target_link_libraries(trn-test PUBLIC libtrn GTest::gmock_main GTest::gtest)
+target_link_libraries(trn-test PRIVATE OpenSSL::SSL)
 target_folder(trn-test "Tests")
 gtest_discover_tests(trn-test PROPERTIES LABELS trn)
 

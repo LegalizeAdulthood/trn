@@ -1,10 +1,12 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 #include "support/MockNntpServer.h"
+#include "support/NntpTestCertificate.h"
 
 #include <gtest/gtest.h>
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/system/error_code.hpp>
 
 #include <deque>
@@ -47,11 +49,14 @@ struct MockNntpServer::ExpectedCommand
 {
     std::string              command;
     std::vector<std::string> response_lines;
+    bool                     starttls{};
+    bool                     handshake_failure{};
 };
 
 struct MockNntpServer::Impl
 {
     asio::io_context             context;
+    asio::ssl::context           tls_context{asio::ssl::context::tls_server};
     tcp::acceptor                acceptor{context};
     std::unique_ptr<tcp::socket> socket;
     std::thread                  worker;
@@ -124,6 +129,16 @@ void MockNntpServer::expect_mode_reader()
 void MockNntpServer::expect_quit()
 {
     expect_command("QUIT", {"205 closing connection"});
+}
+
+void MockNntpServer::expect_starttls(bool handshake_failure)
+{
+    m_impl->tls_context.use_certificate(asio::buffer(NNTP_TEST_CERTIFICATE, sizeof(NNTP_TEST_CERTIFICATE) - 1),
+                                        asio::ssl::context::pem);
+    m_impl->tls_context.use_private_key(asio::buffer(NNTP_TEST_PRIVATE_KEY, sizeof(NNTP_TEST_PRIVATE_KEY) - 1),
+                                        asio::ssl::context::pem);
+    std::lock_guard guard{m_impl->mutex};
+    m_impl->expected_commands.push_back({"STARTTLS", {"382 continue with TLS negotiation"}, true, handshake_failure});
 }
 
 void MockNntpServer::set_welcome_banner(std::string line)
@@ -317,11 +332,13 @@ void MockNntpServer::run()
         return;
     }
 
-    auto read_command = [&socket, this](std::string &command)
+    std::unique_ptr<asio::ssl::stream<tcp::socket &>> tls;
+    std::string                                       buffer;
+    auto read_command = [&socket, &tls, &buffer, this](std::string &command)
     {
         error_code  read_ec;
-        std::string line;
-        asio::read_until(*socket, asio::dynamic_buffer(line), "\r\n", read_ec);
+        const std::size_t size = tls ? asio::read_until(*tls, asio::dynamic_buffer(buffer), "\r\n", read_ec)
+                                     : asio::read_until(*socket, asio::dynamic_buffer(buffer), "\r\n", read_ec);
         if (read_ec)
         {
             if (!stopping())
@@ -330,15 +347,12 @@ void MockNntpServer::run()
             }
             return false;
         }
-        if (line.size() >= 2 && line.compare(line.size() - 2, 2, "\r\n") == 0)
-        {
-            line.resize(line.size() - 2);
-        }
-        command = std::move(line);
+        command = buffer.substr(0, size - 2);
+        buffer.erase(0, size);
         return true;
     };
 
-    auto write_line = [&socket, this](std::string_view line)
+    auto write_line = [&socket, &tls, this](std::string_view line)
     {
         if (has_line_endings(line))
         {
@@ -349,7 +363,14 @@ void MockNntpServer::run()
         error_code  write_ec;
         std::string response{line};
         response += "\r\n";
-        asio::write(*socket, asio::buffer(response), write_ec);
+        if (tls)
+        {
+            asio::write(*tls, asio::buffer(response), write_ec);
+        }
+        else
+        {
+            asio::write(*socket, asio::buffer(response), write_ec);
+        }
         if (write_ec && !stopping())
         {
             record_failure("write failed: " + write_ec.message());
@@ -378,6 +399,24 @@ void MockNntpServer::run()
             if (!write_line(response_line))
             {
                 return;
+            }
+        }
+        if (expected.starttls)
+        {
+            tls = std::make_unique<asio::ssl::stream<tcp::socket &>>(*socket, m_impl->tls_context);
+            tls->handshake(asio::ssl::stream_base::server, ec);
+            if (ec)
+            {
+                if (!expected.handshake_failure)
+                {
+                    record_failure("TLS handshake failed: " + ec.message());
+                }
+                consume_expected_command();
+                return;
+            }
+            if (expected.handshake_failure)
+            {
+                record_failure("TLS handshake unexpectedly succeeded");
             }
         }
         consume_expected_command();

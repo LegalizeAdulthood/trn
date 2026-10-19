@@ -37,6 +37,7 @@ struct INNTPConnection
     virtual void        write_line(const std::string &line, error_code_t &ec) = 0;
     virtual void        write(std::string_view buffer, error_code_t &ec) = 0;
     virtual size_t      read(char *buf, size_t size, error_code_t &ec) = 0;
+    virtual void        start_tls(error_code_t &ec) = 0;
 };
 
 // use a shared_ptr to allow copying of NNTPLink structure like a value.
@@ -58,6 +59,12 @@ private:
     std::map<std::string, std::vector<std::string>> m_entries;
 };
 
+enum class NntpSecurity
+{
+    Cleartext,
+    StartTls
+};
+
 struct NNTPLink
 {
     ConnectionPtr connection;
@@ -68,6 +75,13 @@ struct NNTPLink
     NntpCapabilities capabilities;
     // Sorted command names rejected by this session.
     std::vector<std::string> unsupported_commands;
+    NntpSecurity             security{NntpSecurity::Cleartext};
+    bool                     allow_starttls{true};
+    bool                     require_tls_for_auth{};
+    bool                     require_tls_for_posting{};
+    bool                     tls_attempted{};
+    std::string              selected_group;
+    long                     selected_article{};
 };
 
 // RFC 977 defines these, so don't change them
@@ -82,22 +96,24 @@ enum
 
 enum
 {
-    NNTP_CAPABILITIES_VAL = 101, // Capability list follows
-    NNTP_POSTOK_VAL = 200,       // Hello -- you can post
-    NNTP_NOPOSTOK_VAL = 201,     // Hello -- you can't post
-    NNTP_LIST_FOLLOWS_VAL = 215, // There's a list a-comin' next
-    NNTP_GOODBYE_VAL = 400,      // Have to hang up for some reason
-    NNTP_NOSUCHGROUP_VAL = 411,  // No such newsgroup
-    NNTP_NONEXT_VAL = 421,       // No next article
-    NNTP_NOPREV_VAL = 422,       // No previous article
-    NNTP_POSTFAIL_VAL = 441,     // Posting failed
-    NNTP_AUTH_NEEDED_VAL = 480,  // Authorization Failed
-    NNTP_AUTH_REJECT_VAL = 482,  // Authorization data rejected
-    NNTP_BAD_COMMAND_VAL = 500,  // Command not recognized
-    NNTP_SYNTAX_VAL = 501,       // Command syntax error
-    NNTP_ACCESS_VAL = 502,       // Access to server denied
-    NNTP_TMPERR_VAL = 503,       // Program fault, command not performed
-    NNTP_AUTH_BAD_VAL = 580      // Authorization Failed
+    NNTP_CAPABILITIES_VAL = 101,        // Capability list follows
+    NNTP_POSTOK_VAL = 200,              // Hello -- you can post
+    NNTP_NOPOSTOK_VAL = 201,            // Hello -- you can't post
+    NNTP_STARTTLS_VAL = 382,            // Continue with TLS negotiation
+    NNTP_LIST_FOLLOWS_VAL = 215,        // There's a list a-comin' next
+    NNTP_GOODBYE_VAL = 400,             // Have to hang up for some reason
+    NNTP_NOSUCHGROUP_VAL = 411,         // No such newsgroup
+    NNTP_NONEXT_VAL = 421,              // No next article
+    NNTP_NOPREV_VAL = 422,              // No previous article
+    NNTP_POSTFAIL_VAL = 441,            // Posting failed
+    NNTP_AUTH_NEEDED_VAL = 480,         // Authorization Failed
+    NNTP_AUTH_REJECT_VAL = 482,         // Authorization data rejected
+    NNTP_ENCRYPTION_REQUIRED_VAL = 483, // Encryption required
+    NNTP_BAD_COMMAND_VAL = 500,         // Command not recognized
+    NNTP_SYNTAX_VAL = 501,              // Command syntax error
+    NNTP_ACCESS_VAL = 502,              // Access to server denied
+    NNTP_TMPERR_VAL = 503,              // Program fault, command not performed
+    NNTP_AUTH_BAD_VAL = 580             // Authorization Failed
 };
 
 enum
@@ -128,6 +144,8 @@ int         nntp_header_values(std::string_view header, std::string_view range);
 int         nntp_group_description(std::string_view group);
 int         nntp_group_descriptions(std::string_view pattern);
 int         nntp_check();
+int         nntp_start_tls();
+int         nntp_require_tls();
 // Returns 1 for a complete list, 0 for legacy servers, and -1 on failure.
 int         nntp_refresh_capabilities();
 int         nntp_response_code(std::string_view response);

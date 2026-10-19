@@ -345,6 +345,11 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
             }
         }
     }
+    const auto yes = [](std::optional<std::string_view> value, bool default_value)
+    { return value && !value->empty() ? value->front() == 'y' || value->front() == 'Y' : default_value; };
+    dp->m_nntp_link.allow_starttls = yes(config.starttls(), true);
+    dp->m_nntp_link.require_tls_for_auth = yes(config.require_tls_for_auth(), false);
+    dp->m_nntp_link.require_tls_for_posting = yes(config.require_tls_for_posting(), false);
     if (const std::optional<std::string_view> force_auth = config.force_auth();
         force_auth && !force_auth->empty() && (force_auth->front() == 'y' || force_auth->front() == 'Y'))
     {

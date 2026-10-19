@@ -20,6 +20,7 @@ public:
     MOCK_METHOD(void, write_line, (const std::string &, error_code_t &), (override));
     MOCK_METHOD(void, write, (std::string_view, error_code_t &), (override));
     MOCK_METHOD(std::size_t, read, (char *, std::size_t, error_code_t &), (override));
+    MOCK_METHOD(void, start_tls, (error_code_t &), (override));
 };
 
 #endif

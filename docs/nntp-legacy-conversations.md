@@ -140,9 +140,12 @@ Current code:
 
 - `nntp/nntpauth.cpp` reacts to auth failures by sending
   `AUTHINFO USER` and `AUTHINFO PASS`.
-- It does not consult `CAPABILITIES`.
+- It does not select `AUTHINFO` variants from capabilities.
 - It has no SASL support.
-- It has no TLS requirement before password authentication.
+- Password exchange honors the data source's TLS policy before obtaining
+  credentials or sending `AUTHINFO`.
+- Forced authentication waits until startup discovery and advertised
+  STARTTLS negotiation are complete.
 
 Modern concern:
 
@@ -156,16 +159,32 @@ Modern concern:
 
 Current code:
 
-- No production NNTP code sends `STARTTLS`.
-- No production NNTP code handles response `483`, which signals that a
-  secure or encrypted connection is required.
+- The NNTP transport upgrades its existing socket with Boost.Asio and
+  OpenSSL after a `382` STARTTLS response.
+- Startup attempts advertised STARTTLS unless disabled.  A `483` reply
+  also attempts TLS when allowed, then retries the original command.
+- Successful negotiation discards old capabilities and command
+  rejections, refreshes capabilities, and restores any selected group
+  and article before retrying a read.
+- Failed negotiation closes the connection.  Certificate chains and
+  host names are verified; the minimum TLS version is 1.2.
+- OpenSSL trust paths and `SSL_CERT_FILE` supply CA certificates.  Windows
+  also uses the system ROOT certificate store.
 - There is no implicit TLS port handling.
+
+Data-source policy options:
+
+- `STARTTLS = yes` is the default; `no` disables upgrades.
+- `Require TLS For Auth = yes` protects password authentication.
+- `Require TLS For Posting = yes` protects the `POST` command.
+- The two requirements default to `no` for legacy compatibility.  Values
+  also accept `y` and `n`, without regard to case.
 
 Modern concern:
 
 - RFC 4642 defines `STARTTLS`.
 - RFC 8143 updates NNTP TLS handling to current TLS best practices.
-- Authentication and posting should be able to require TLS by policy.
+- Implicit TLS and capability-aware authentication remain release work.
 
 ### STAT With Empty Message-ID
 

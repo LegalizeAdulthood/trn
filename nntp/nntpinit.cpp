@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <iostream>
 #include <map>
@@ -47,16 +48,26 @@ public:
     void        write_line(const std::string &line, error_code_t &ec) override;
     void        write(std::string_view buffer, error_code_t &ec) override;
     size_t      read(char *buf, size_t size, error_code_t &ec) override;
+    void        start_tls(error_code_t &ec) override;
 
 private:
     std::string           m_server;
     asio::ip::tcp::socket m_socket{s_context};
     asio::streambuf       m_buffer;
+    std::unique_ptr<asio::ssl::context>                         m_tls_context;
+    std::unique_ptr<asio::ssl::stream<asio::ip::tcp::socket &>> m_tls;
 };
 
 std::string NNTPConnection::read_line(error_code_t &ec)
 {
-    read_until(m_socket, m_buffer, "\r\n", ec);
+    if (m_tls)
+    {
+        asio::read_until(*m_tls, m_buffer, "\r\n", ec);
+    }
+    else
+    {
+        asio::read_until(m_socket, m_buffer, "\r\n", ec);
+    }
     if (ec)
     {
         return {};
@@ -77,12 +88,56 @@ void NNTPConnection::write_line(const std::string &line, error_code_t &ec)
 
 void NNTPConnection::write(std::string_view buffer, error_code_t &ec)
 {
-    asio::write(m_socket, asio::buffer(buffer.data(), buffer.size()), ec);
+    if (m_tls)
+    {
+        asio::write(*m_tls, asio::buffer(buffer.data(), buffer.size()), ec);
+    }
+    else
+    {
+        asio::write(m_socket, asio::buffer(buffer.data(), buffer.size()), ec);
+    }
 }
 
 size_t NNTPConnection::read(char *buf, size_t size, error_code_t &ec)
 {
-    return asio::read(m_socket, asio::buffer(buf, size), ec);
+    return m_tls ? asio::read(*m_tls, asio::buffer(buf, size), ec) : asio::read(m_socket, asio::buffer(buf, size), ec);
+}
+
+void NNTPConnection::start_tls(error_code_t &ec)
+{
+    try
+    {
+        m_tls_context = std::make_unique<asio::ssl::context>(asio::ssl::context::tls_client);
+        m_tls_context->set_default_verify_paths();
+        if (SSL_CTX_set_min_proto_version(m_tls_context->native_handle(), TLS1_2_VERSION) != 1)
+        {
+            ec.assign(static_cast<int>(ERR_get_error()), asio::error::get_ssl_category());
+            return;
+        }
+#ifdef _WIN32
+        if (SSL_CTX_load_verify_store(m_tls_context->native_handle(), "org.openssl.winstore:") != 1)
+        {
+            ec.assign(static_cast<int>(ERR_get_error()), asio::error::get_ssl_category());
+            return;
+        }
+#endif
+        m_tls = std::make_unique<asio::ssl::stream<asio::ip::tcp::socket &>>(m_socket, *m_tls_context);
+        m_tls->set_verify_mode(asio::ssl::verify_peer);
+        m_tls->set_verify_callback(asio::ssl::host_name_verification(m_server));
+        error_code_t address_error;
+        asio::ip::make_address(m_server, address_error);
+        if (address_error && SSL_set_tlsext_host_name(m_tls->native_handle(), m_server.c_str()) != 1)
+        {
+            ec.assign(static_cast<int>(ERR_get_error()), asio::error::get_ssl_category());
+            return;
+        }
+        m_buffer.consume(m_buffer.size());
+        m_tls->handshake(asio::ssl::stream_base::client, ec);
+    }
+    catch (const boost::system::system_error &error)
+    {
+        ec = error.code();
+    }
 }
 
 static ConnectionPtr create_nntp_connection(std::string_view machine, int port, std::string_view service)
@@ -126,6 +181,10 @@ int init_nntp()
 
 int server_init(std::string_view machine)
 {
+    g_nntp_link.security = NntpSecurity::Cleartext;
+    g_nntp_link.tls_attempted = false;
+    g_nntp_link.selected_group.clear();
+    g_nntp_link.selected_article = 0;
     g_nntp_link.capabilities = {};
     g_nntp_link.unsupported_commands.clear();
     g_nntp_link.connection = s_nntp_connection_factory(machine, g_nntp_link.port_number, "nntp");
@@ -143,6 +202,10 @@ int server_init(std::string_view machine)
         if (nntp_refresh_capabilities() < 0)
         {
             nntp_close(false);
+            return -1;
+        }
+        if (g_nntp_link.allow_starttls && g_nntp_link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
+        {
             return -1;
         }
         if (g_nntp_link.capabilities.available && !g_nntp_link.capabilities.has("MODE-READER"))
@@ -167,6 +230,11 @@ int server_init(std::string_view machine)
             if (nntp_refresh_capabilities() < 0)
             {
                 nntp_close(false);
+                return -1;
+            }
+            if (g_nntp_link.security == NntpSecurity::Cleartext && g_nntp_link.allow_starttls &&
+                g_nntp_link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
+            {
                 return -1;
             }
             g_ser_line = reader_line;

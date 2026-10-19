@@ -1,0 +1,27 @@
+// This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
+#ifndef TRN_TESTS_SUPPORT_NNTPTESTCERTIFICATE_H
+#define TRN_TESTS_SUPPORT_NNTPTESTCERTIFICATE_H
+
+// Public test-only credentials for localhost.  Valid through 2126.
+inline constexpr char NNTP_TEST_CERTIFICATE[] = R"(-----BEGIN CERTIFICATE-----
+MIIBljCCATugAwIBAgIULcDprQnvLKdc/reT/w/0WH1oDzkwCgYIKoZIzj0EAwIw
+FDESMBAGA1UEAwwJbG9jYWxob3N0MCAXDTI2MTAxOTAwNTUxMVoYDzIxMjYwOTI1
+MDA1NTExWjAUMRIwEAYDVQQDDAlsb2NhbGhvc3QwWTATBgcqhkjOPQIBBggqhkjO
+PQMBBwNCAATzJTdhDiQngtbQA3+53P42Dwm1xq7JbmCyzO9/Ckf+AxggAKvr4n+r
+BdK4md97CZKnBsYpNdsuxNQkua/rtDaJo2kwZzAdBgNVHQ4EFgQUf0NKtrw4+DFN
+GHmRMxKPYj5p1WEwHwYDVR0jBBgwFoAUf0NKtrw4+DFNGHmRMxKPYj5p1WEwDwYD
+VR0TAQH/BAUwAwEB/zAUBgNVHREEDTALgglsb2NhbGhvc3QwCgYIKoZIzj0EAwID
+SQAwRgIhAPe0ehkUbawaZOaEyHY4e9SkPW85MslZwAU9chLxrS85AiEA9u79nbyD
+ANMrKvP1+91tl7rcWNYZCMWZ8S5RcLw3eKM=
+-----END CERTIFICATE-----
+)";
+
+inline constexpr char NNTP_TEST_PRIVATE_KEY[] = R"(-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg2YLPcwwY2j+wxDp3
+gcLTouz75/cWomDcyg6PV9J7Z9yhRANCAATzJTdhDiQngtbQA3+53P42Dwm1xq7J
+bmCyzO9/Ckf+AxggAKvr4n+rBdK4md97CZKnBsYpNdsuxNQkua/rtDaJ
+-----END PRIVATE KEY-----
+)";
+
+#endif

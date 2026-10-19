@@ -17,7 +17,12 @@ int nntp_handle_auth_err()
 {
     // save previous command
     const std::string last_command_save{g_last_command};
+    g_nntp_link.flags &= ~NNTP_FORCE_AUTH_NOW;
 
+    if (g_nntp_link.require_tls_for_auth && nntp_require_tls() < 0)
+    {
+        return -2;
+    }
     const std::string auth_user = get_auth_user();
     const std::string auth_pass = get_auth_pass();
     if (auth_user.empty() || auth_pass.empty())

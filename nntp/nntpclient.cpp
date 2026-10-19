@@ -6,6 +6,7 @@
 #include <nntp/nntpclient.h>
 
 #include <config/common.h>
+#include <config/string_case_compare.h>
 #include <nntp/nntpauth.h>
 #include <nntp/nntpinit.h>
 #include <trn/nntp.h>
@@ -235,7 +236,16 @@ int nntp_command(std::string_view bp)
     {
         return nntp_handle_timeout();
     }
-    if (g_nntp_link.flags & NNTP_FORCE_AUTH_NOW)
+    const std::string_view verb = bp.substr(0, bp.find(' '));
+    if (((g_nntp_link.require_tls_for_auth && string_case_equal(verb, "AUTHINFO")) ||
+         (g_nntp_link.require_tls_for_posting && string_case_equal(verb, "POST"))) &&
+        nntp_require_tls() < 0)
+    {
+        return -2;
+    }
+    g_last_command = command;
+    const bool setup_command = command == "CAPABILITIES" || command == "MODE READER" || command == "STARTTLS";
+    if ((g_nntp_link.flags & NNTP_FORCE_AUTH_NOW) && !setup_command)
     {
         g_nntp_link.flags &= ~NNTP_FORCE_AUTH_NOW;
         return nntp_handle_auth_err();
@@ -348,9 +358,101 @@ int nntp_group_descriptions(std::string_view pattern)
     return cached_command("LIST NEWSGROUPS", pattern, true);
 }
 
+int nntp_require_tls()
+{
+    if (g_nntp_link.security == NntpSecurity::StartTls)
+    {
+        return 1;
+    }
+    if (!g_nntp_link.allow_starttls ||
+        (g_nntp_link.capabilities.available && !g_nntp_link.capabilities.has("STARTTLS")))
+    {
+        g_ser_line = "483 TLS is required by policy.";
+        return -2;
+    }
+    return nntp_start_tls();
+}
+
+int nntp_start_tls()
+{
+    if (g_nntp_link.security == NntpSecurity::StartTls)
+    {
+        return 1;
+    }
+    if (!g_nntp_link.allow_starttls || g_nntp_link.tls_attempted || !g_nntp_link.connection ||
+        !(g_nntp_link.flags & NNTP_NEW_CMD_OK))
+    {
+        return -1;
+    }
+    const std::string selected_group = g_nntp_link.selected_group;
+    const long        selected_article = g_nntp_link.selected_article;
+    g_nntp_link.tls_attempted = true;
+    const NNTPFlags force_auth = g_nntp_link.flags & NNTP_FORCE_AUTH_NOW;
+    g_nntp_link.flags &= ~NNTP_FORCE_AUTH_NOW;
+    if (nntp_command("STARTTLS") <= 0 || nntp_check() <= 0 || nntp_response_code(g_ser_line) != NNTP_STARTTLS_VAL)
+    {
+        nntp_close(false);
+        return -1;
+    }
+    error_code_t ec;
+    g_nntp_link.connection->start_tls(ec);
+    if (ec)
+    {
+        g_ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
+        nntp_close(false);
+        return -1;
+    }
+    g_nntp_link.security = NntpSecurity::StartTls;
+    g_nntp_link.selected_group.clear();
+    g_nntp_link.selected_article = 0;
+    g_nntp_link.trailing_cr = false;
+    nntp_gets_clear_buffer();
+    if (nntp_refresh_capabilities() < 0)
+    {
+        nntp_close(false);
+        return -1;
+    }
+    if (!selected_group.empty() &&
+        (nntp_command(fmt::format("GROUP {}", selected_group)) <= 0 || nntp_check() <= 0 ||
+         (selected_article > 0 && (nntp_command(fmt::format("STAT {}", selected_article)) <= 0 || nntp_check() <= 0))))
+    {
+        nntp_close(false);
+        return -1;
+    }
+    g_nntp_link.flags |= force_auth;
+    return 1;
+}
+
+static void remember_selection()
+{
+    const std::string_view command{g_last_command};
+    const int              code = nntp_response_code(g_ser_line);
+    std::istringstream     response{g_ser_line};
+    int                    status{};
+    if (code == 211 && string_case_equal(command.substr(0, command.find(' ')), "GROUP"))
+    {
+        long        count{}, first{}, last{};
+        std::string group;
+        if (response >> status >> count >> first >> last >> group)
+        {
+            g_nntp_link.selected_group = std::move(group);
+            g_nntp_link.selected_article = count > 0 ? first : 0;
+        }
+    }
+    else if (code >= 220 && code <= 223 && command.find('<') == std::string_view::npos)
+    {
+        long article{};
+        if (response >> status >> article)
+        {
+            g_nntp_link.selected_article = article;
+        }
+    }
+}
+
 int nntp_check()
 {
     bool retried_timeout{};
+    bool retried_tls{};
 
 read_it:
 #ifdef HAS_SIGHOLD
@@ -419,13 +521,28 @@ read_it:
         fmt::print("<{}\n", g_ser_line);
     }
 #endif
-    if (nntp_response_code(g_ser_line) == NNTP_AUTH_NEEDED_VAL)
+    if (!retried_tls && nntp_response_code(g_ser_line) == NNTP_ENCRYPTION_REQUIRED_VAL &&
+        g_nntp_link.security == NntpSecurity::Cleartext && g_nntp_link.allow_starttls && !g_nntp_link.tls_attempted)
+    {
+        const std::string command = g_last_command;
+        if (nntp_start_tls() < 0 || nntp_command(command) <= 0)
+        {
+            return -2;
+        }
+        retried_tls = true;
+        goto read_it;
+    }
+    if (nntp_response_code(g_ser_line) == NNTP_AUTH_NEEDED_VAL && g_last_command != "STARTTLS")
     {
         ret = nntp_handle_auth_err();
         if (ret > 0)
         {
             goto read_it;
         }
+    }
+    if (ret > 0)
+    {
+        remember_selection();
     }
     return ret;
 }
@@ -554,4 +671,8 @@ void nntp_close(bool send_quit)
     g_nntp_link.capabilities = {};
     g_nntp_link.unsupported_commands.clear();
     g_nntp_link.flags |= NNTP_NEW_CMD_OK;
+    g_nntp_link.security = NntpSecurity::Cleartext;
+    g_nntp_link.tls_attempted = false;
+    g_nntp_link.selected_group.clear();
+    g_nntp_link.selected_article = 0;
 }

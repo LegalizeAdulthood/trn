@@ -28,7 +28,10 @@ enum class DataSourceConfigField
     XhdrBroken,
     Xrefs,
     OverviewFormatFile,
-    ForceAuth
+    ForceAuth,
+    StartTls,
+    RequireTlsForAuth,
+    RequireTlsForPosting
 };
 
 class DataSourceConfig
@@ -52,6 +55,9 @@ public:
     std::optional<std::string_view> xrefs() const;
     std::optional<std::string_view> overview_format_file() const;
     std::optional<std::string_view> force_auth() const;
+    std::optional<std::string_view> starttls() const;
+    std::optional<std::string_view> require_tls_for_auth() const;
+    std::optional<std::string_view> require_tls_for_posting() const;
 
     void set_nntp_server(std::string_view value);
     void set_active_file(std::string_view value);
@@ -68,6 +74,9 @@ public:
     void set_xrefs(std::string_view value);
     void set_overview_format_file(std::string_view value);
     void set_force_auth(std::string_view value);
+    void set_starttls(std::string_view value);
+    void set_require_tls_for_auth(std::string_view value);
+    void set_require_tls_for_posting(std::string_view value);
 
 private:
     static std::optional<std::string_view> view(const std::optional<std::string> &value);
@@ -88,6 +97,9 @@ private:
     std::optional<std::string> m_xrefs;
     std::optional<std::string> m_overview_format_file;
     std::optional<std::string> m_force_auth;
+    std::optional<std::string> m_starttls;
+    std::optional<std::string> m_require_tls_for_auth;
+    std::optional<std::string> m_require_tls_for_posting;
 };
 
 inline std::optional<std::string_view> DataSourceConfig::view(const std::optional<std::string> &value)
@@ -247,6 +259,36 @@ inline void DataSourceConfig::set_overview_format_file(std::string_view value)
 inline void DataSourceConfig::set_force_auth(std::string_view value)
 {
     set_value(m_force_auth, value);
+}
+
+inline std::optional<std::string_view> DataSourceConfig::starttls() const
+{
+    return view(m_starttls);
+}
+
+inline std::optional<std::string_view> DataSourceConfig::require_tls_for_auth() const
+{
+    return view(m_require_tls_for_auth);
+}
+
+inline std::optional<std::string_view> DataSourceConfig::require_tls_for_posting() const
+{
+    return view(m_require_tls_for_posting);
+}
+
+inline void DataSourceConfig::set_starttls(std::string_view value)
+{
+    set_value(m_starttls, value);
+}
+
+inline void DataSourceConfig::set_require_tls_for_auth(std::string_view value)
+{
+    set_value(m_require_tls_for_auth, value);
+}
+
+inline void DataSourceConfig::set_require_tls_for_posting(std::string_view value)
+{
+    set_value(m_require_tls_for_posting, value);
 }
 
 #endif

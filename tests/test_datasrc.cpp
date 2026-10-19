@@ -836,6 +836,44 @@ TEST_F(DataSourceInitTest, readsForceAuthFromEnvironment)
     EXPECT_TRUE(source.m_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED);
 }
 
+TEST_F(DataSourceInitTest, readsTlsPolicyFromAccessFile)
+{
+    std::ofstream{m_output_dir / "access"} << "[tls-policy]\n"
+                                              "NNTP Server = news.example\n"
+                                              "STARTTLS = no\n"
+                                              "Require TLS For Auth = yes\n"
+                                              "Require TLS For Posting = yes\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("tls-policy");
+    ASSERT_NE(nullptr, source);
+    EXPECT_FALSE(source->m_nntp_link.allow_starttls);
+    EXPECT_TRUE(source->m_nntp_link.require_tls_for_auth);
+    EXPECT_TRUE(source->m_nntp_link.require_tls_for_posting);
+}
+
+TEST_F(DataSourceInitTest, readsShortTlsPolicyValues)
+{
+    std::ofstream{m_output_dir / "access"} << "[tls-policy]\n"
+                                              "NNTP Server = news.example\n"
+                                              "STARTTLS = n\n"
+                                              "Require TLS For Auth = Y\n"
+                                              "Require TLS For Posting = y\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("tls-policy");
+    ASSERT_NE(nullptr, source);
+    EXPECT_FALSE(source->m_nntp_link.allow_starttls);
+    EXPECT_TRUE(source->m_nntp_link.require_tls_for_auth);
+    EXPECT_TRUE(source->m_nntp_link.require_tls_for_posting);
+}
+
 TEST_F(DataSourceInitTest, readsNntpAuthFileForRemoteSource)
 {
     std::ofstream{m_output_dir / ".nntpauth"} << "reader\n"
