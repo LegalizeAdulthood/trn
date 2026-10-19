@@ -371,7 +371,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
         break;
 
     case SM_ADD_GROUP:
-        g_sel_mode_string = "a newsgroup to add";
+        g_sel_mode_string = g_sel_group_listing ? "unsubscribed newsgroups" : "a newsgroup to add";
         s_sel_add_group_sort = ssort;
         break;
 
@@ -423,7 +423,7 @@ thread_subj_sort:
         break;
 
     case SS_STRING:
-        g_sel_sort_string = "subject";
+        g_sel_sort_string = g_sel_mode == SM_ADD_GROUP ? "group name" : "subject";
         break;
 
     case SS_AUTHOR:
@@ -476,6 +476,14 @@ static void sel_page_init()
 {
     s_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50? 6 : 5);
     g_sel_chars = get_env_var("SELECTCHARS", SELECTION_CHARS);
+    if (g_sel_group_listing)
+    {
+        g_sel_chars.erase(std::remove(g_sel_chars.begin(), g_sel_chars.end(), 'l'), g_sel_chars.end());
+        if (g_sel_chars.empty())
+        {
+            g_sel_chars = "1234567890";
+        }
+    }
     // The numeric option of up to 99 lines will require many adaptations
     // to be able to switch from a large numeric page (more than
     // g_sel_chars.size() lines) to an alphanumeric page. XXX
@@ -1972,6 +1980,10 @@ static void display_page_title(bool home_only)
         fmt::print("[{}] {}", g_univ_level, g_univ_title.empty() ? "Universal Selector" : g_univ_title.c_str());
         color_pop();
     }
+    else if (g_sel_group_listing)
+    {
+        color_string(COLOR_HEADING, "Unsubscribed newsgroups");
+    }
     else if (g_in_ng)
     {
         color_string(COLOR_NG_NAME, g_newsgroup_name.c_str());
@@ -2021,7 +2033,7 @@ static void display_page_title(bool home_only)
     {
         fmt::print("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
     }
-    else if (g_in_ng)
+    else if (g_in_ng && !g_sel_group_listing)
     {
         fmt::print("          {} {}article{}", g_sel_total_obj_cnt, g_sel_rereading ? "read " : "",
                    g_sel_total_obj_cnt == 1 ? "" : "s");
@@ -2047,6 +2059,10 @@ static void display_page_title(bool home_only)
     home_cursor();
     newline();
     maybe_eol();
+    if (g_sel_group_listing)
+    {
+        fmt::print("Glob: {:.{}}  O:order R:reverse l:glob q:quit", active_list_pattern(), std::max(g_tc_COLS - 48, 0));
+    }
     if (g_in_ng && g_redirected && !g_redirected_to.empty())
     {
         fmt::print("\t** Please start using {} **", g_redirected_to);

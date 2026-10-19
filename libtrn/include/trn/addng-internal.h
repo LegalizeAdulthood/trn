@@ -13,7 +13,6 @@
 
 // Internal entry points for testing purposes.
 
-std::string active_list_pattern();
 AddGroupIndex add_to_list(std::string_view name, int to_read, char_int ch);
 void          new_nntp_groups(DataSource *source);
 void          new_local_groups(DataSource *source);

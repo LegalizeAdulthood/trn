@@ -54,6 +54,7 @@ extern std::string_view  g_sel_sort_string;
 extern int               g_sel_direction;
 extern bool              g_sel_exclusive;
 extern AddGroupFlags     g_sel_mask;
+extern bool              g_sel_group_listing;
 extern bool              g_selected_only;
 extern ArticleUnread     g_selected_count;
 extern int               g_selected_subj_cnt;

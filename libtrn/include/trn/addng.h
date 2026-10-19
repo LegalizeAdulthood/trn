@@ -91,6 +91,8 @@ extern bool      g_use_add_selector; //
 void add_ng_init();
 bool find_new_groups();
 bool scan_active(bool add_matching);
+std::string active_list_pattern();
+std::string refine_add_group_list(std::string_view pattern);
 void sort_add_groups();
 
 #endif

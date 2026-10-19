@@ -6,6 +6,7 @@
 
 #include <config/common.h>
 #include <trn/ngdata.h>
+#include <trn/rt-select.h>
 #include <trn/terminal.h>
 
 #include <array>
@@ -336,6 +337,21 @@ int help_newsgroup_selector()
 
 int help_add_group_selector()
 {
+    if (g_sel_group_listing)
+    {
+        constexpr std::array<MarkedText, 3> page{MarkedText{"The Unsubscribed-Newsgroups Listing:\n", STANDOUT},
+                                                 {"\n"
+                                                  "O       Order by natural order, group name, or article count.\n"
+                                                  "        Upper case reverses the chosen order.\n"
+                                                  "R       Reverse the current sort order.\n"
+                                                  "l glob  Replace the source glob and rescan newsgroups.\n"
+                                                  "        An empty glob or * lists all unsubscribed groups.\n"},
+                                                 {"<, >    Go to the previous/next page.\n"
+                                                  "^, $    Go to the first/last page.\n"
+                                                  "H       This help message.\n"
+                                                  "q, CR   Leave the listing without subscribing to groups.\n"}};
+        return print_page(page);
+    }
     constexpr std::array<MarkedText, 7> page{
         MarkedText{"The Add-Newsgroups Selector:\n", STANDOUT},
         {"\n"

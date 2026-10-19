@@ -12,10 +12,12 @@
 #include <trn/datasrc.h>
 #include <trn/hash.h>
 #include <trn/ngdata.h>
+#include <trn/ngsrch.h>
 #include <trn/nntp.h>
 #include <trn/only.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-select.h>
+#include <trn/search.h>
 #include <trn/size_cast.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
@@ -55,7 +57,7 @@ bool      g_use_add_selector{true}; //
 static void process_list(GetNewsgroupFlags flag);
 static ActiveLineFields parse_active_line_fields(std::string_view fields);
 static int  list_groups(int key_len, HashDatum *data, int add_matching);
-static void scan_active_line(std::string_view active_line, bool add_matching);
+static void             scan_active_line(std::string_view active_line);
 static int  add_group_order_number(const AddGroup *left, const AddGroup *right);
 static int  add_group_order_group_name(const AddGroup *left, const AddGroup *right);
 static int  add_group_order_count(const AddGroup *left, const AddGroup *right);
@@ -205,24 +207,18 @@ bool find_new_groups()
 
 static void process_list(GetNewsgroupFlags flag)
 {
-    if (flag == GNG_NONE)
-    {
-        std::string line;
-        line.reserve(CMD_BUF_LEN);
-        fmt::format_to(std::back_inserter(line),
-                       "\n"
-                       "Unsubscribed but mentioned in your current newsrc{}:\n",
-                       g_multirc->m_first->next ? "s" : "");
-        print_lines(line, STANDOUT);
-    }
-    if (!g_add_groups.empty() && flag != GNG_NONE && g_use_add_selector)
+    if (g_use_add_selector && (flag == GNG_NONE || !g_add_groups.empty()))
     {
         add_group_selector(flag);
+    }
+    else if (flag == GNG_NONE)
+    {
+        print_lines("Unsubscribed newsgroups:\n", STANDOUT);
     }
     for (AddGroupIndex index : g_add_groups.indices())
     {
         const AddGroup &group = g_add_groups[index];
-        if (flag == GNG_NONE)
+        if (flag == GNG_NONE && !g_use_add_selector)
         {
             std::string line;
             line.reserve(CMD_BUF_LEN);
@@ -403,7 +399,7 @@ std::string active_list_pattern()
         return "*";
     }
 
-    const std::string_view restriction{g_newsgroup_to_do[0]};
+    const std::string_view restriction = newsgroup_restriction(0);
     std::string            pattern;
     pattern.reserve(LINE_BUF_LEN);
     if (!restriction.empty() && restriction.front() == '^')
@@ -424,14 +420,11 @@ std::string active_list_pattern()
     return pattern;
 }
 
-bool scan_active(bool add_matching)
+static void collect_active_groups()
 {
-    const NewsgroupNum old_count = g_newsgroup_count;      // remember # of newsgroups
-
-    if (!add_matching)
-    {
-        print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
-    }
+    g_add_groups.clear();
+    g_sel_page_gp = AddGroupIndex::None;
+    g_sel_next_gp = AddGroupIndex::None;
 
     for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {
@@ -442,7 +435,7 @@ bool scan_active(bool add_matching)
         set_data_source(dp);
         if (dp->m_act_sf.m_fp)
         {
-            hash_walk(dp->m_act_sf.m_hp, list_groups, add_matching);
+            hash_walk(dp->m_act_sf.m_hp, list_groups, 0);
         }
         else
         {
@@ -452,7 +445,7 @@ bool scan_active(bool add_matching)
             {
                 while (!nntp_at_list_end(active_line))
                 {
-                    scan_active_line(active_line, add_matching);
+                    scan_active_line(active_line);
                     if (nntp_gets(active_line, NNTP_STRLEN) == NGSR_ERROR)
                     {
                         break;
@@ -461,7 +454,36 @@ bool scan_active(bool add_matching)
             }
         }
     }
+}
 
+std::string refine_add_group_list(std::string_view pattern)
+{
+    const std::string replacement{pattern};
+    if (!replacement.empty())
+    {
+        CompiledRegex compiled;
+        compiled.init_compex();
+        const std::string_view error = newsgroup_comp(compiled, replacement, true, true);
+        if (!error.empty())
+        {
+            return std::string{error};
+        }
+    }
+    const ArticleUnread old_min_to_read = g_newsgroup_min_to_read;
+    end_only();
+    g_newsgroup_min_to_read = old_min_to_read;
+    if (!replacement.empty() && replacement != "*")
+    {
+        set_newsgroup_to_do(replacement);
+    }
+    collect_active_groups();
+    return {};
+}
+
+bool scan_active(bool add_matching)
+{
+    const NewsgroupNum old_count = g_newsgroup_count;
+    collect_active_groups();
     process_list(add_matching ? GNG_RELOC : GNG_NONE);
 
     if (g_in_ng)
@@ -475,13 +497,14 @@ bool scan_active(bool add_matching)
 static int list_groups(int key_len, HashDatum *data, int add_matching)
 {
     (void) key_len;
+    (void) add_matching;
     SourceFile        *source_file = reinterpret_cast<SourceFile *>(data->dat_ptr);
     const std::string &line = source_file->m_lines[data->dat_len];
-    scan_active_line(line, add_matching != 0);
+    scan_active_line(line);
     return 0;
 }
 
-static void scan_active_line(std::string_view active_line, bool add_matching)
+static void scan_active_line(std::string_view active_line)
 {
     const std::size_t name_end = active_line.find(' ');
     if (name_end == std::string_view::npos)
@@ -505,17 +528,7 @@ static void scan_active_line(std::string_view active_line, bool add_matching)
     {
         return;
     }
-    if (add_matching || np)
-    {
-        // it's not in a newsrc
-        add_to_list(group_name, active_fields.high - active_fields.low, 0);
-    }
-    else
-    {
-        std::string line{group_name};
-        line += '\n';
-        print_lines(line, NO_MARKING);
-    }
+    add_to_list(group_name, active_fields.high - active_fields.low, 0);
 }
 
 static int add_group_order_number(const AddGroup *left, const AddGroup *right)

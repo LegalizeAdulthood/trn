@@ -54,6 +54,11 @@ void set_newsgroup_to_do(std::string_view pat)
     }
 }
 
+std::string_view newsgroup_restriction(int index)
+{
+    return g_newsgroup_to_do[s_save_max_newsgroup_to_do + index];
+}
+
 // if command line list is non-null, is this newsgroup wanted?
 
 bool in_list(std::string_view newsgroup_name)

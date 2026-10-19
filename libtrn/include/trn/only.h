@@ -25,6 +25,7 @@ extern char g_empty_only_char;
 
 void only_init();
 void set_newsgroup_to_do(std::string_view pat);
+std::string_view newsgroup_restriction(int index);
 bool in_list(std::string_view newsgroup_name);
 void end_only();
 void push_only();

@@ -6,10 +6,13 @@
 #include <trn/datasrc.h>
 #include <trn/final.h>
 #include <trn/hash.h>
+#include <trn/ngdata.h>
 #include <trn/only.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
+#include <trn/search.h>
+#include <trn/smisc.h>
 #include <trn/terminal.h>
 
 #include <gmock/gmock.h>
@@ -20,6 +23,7 @@
 #include "MockNNTPConnection.h"
 
 #include <array>
+#include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <initializer_list>
@@ -40,6 +44,7 @@ class ActiveListPatternTest : public testing::Test
 protected:
     void SetUp() override
     {
+        search_init();
         m_old_newsgroup_to_do = g_newsgroup_to_do;
         m_old_max_newsgroup_to_do = g_max_newsgroup_to_do;
 
@@ -107,6 +112,7 @@ class ScanActiveTest : public testing::Test
 protected:
     void SetUp() override
     {
+        search_init();
         m_saved_data_sources.swap(g_data_sources);
         m_old_data_source = g_data_source;
         m_old_newsrc_hash = g_newsrc_hash;
@@ -128,6 +134,11 @@ protected:
         m_old_term_col = g_term_col;
         m_old_tc_so = g_tc_SO;
         m_old_tc_se = g_tc_SE;
+        m_old_tc_cr = g_tc_CR;
+        m_old_tc_ho = g_tc_HO;
+        m_old_tc_ce = g_tc_CE;
+        m_old_tc_up = g_tc_UP;
+        m_old_tc_bc = g_tc_BC;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -139,6 +150,7 @@ protected:
         ASSERT_FALSE(error) << error.message();
 
         g_data_sources.clear();
+        g_data_sources.reserve(4);
         g_data_source = nullptr;
         g_newsrc_hash = hash_create(17, nullptr);
         nntp_gets_clear_buffer();
@@ -155,6 +167,11 @@ protected:
         g_term_col = 0;
         g_tc_SO = "";
         g_tc_SE = "";
+        g_tc_CR = "\r";
+        g_tc_HO = "\033[H";
+        g_tc_CE = "";
+        g_tc_UP = "\033[A";
+        g_tc_BC = "\b";
 
         m_newsrc.data_source = nullptr;
         m_newsrc.flags = RF_NONE;
@@ -195,6 +212,11 @@ protected:
         g_term_col = m_old_term_col;
         g_tc_SO = m_old_tc_so;
         g_tc_SE = m_old_tc_se;
+        g_tc_CR = m_old_tc_cr;
+        g_tc_HO = m_old_tc_ho;
+        g_tc_CE = m_old_tc_ce;
+        g_tc_UP = m_old_tc_up;
+        g_tc_BC = m_old_tc_bc;
 
         std::error_code error;
         fs::remove_all(m_output_dir, error);
@@ -274,9 +296,124 @@ protected:
     int                     m_old_term_col{};
     std::string_view         m_old_tc_so;
     std::string_view         m_old_tc_se;
+    std::string_view                                         m_old_tc_cr;
+    std::string_view                                         m_old_tc_ho;
+    std::string_view                                         m_old_tc_ce;
+    std::string_view                                         m_old_tc_up;
+    std::string_view                                         m_old_tc_bc;
     Newsrc                  m_newsrc{};
     Multirc                 m_multirc{};
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
+};
+
+class SelectorGroupListingTest : public ScanActiveTest
+{
+protected:
+    void SetUp() override
+    {
+        ScanActiveTest::SetUp();
+        m_old_errno = errno;
+        m_old_sel_mode = g_sel_mode;
+        m_old_sel_sort = g_sel_sort;
+        m_old_sel_direction = g_sel_direction;
+        m_old_sel_sort_string = g_sel_sort_string;
+        m_old_sel_mode_string = g_sel_mode_string;
+        m_old_sel_rereading = g_sel_rereading;
+        m_old_sel_exclusive = g_sel_exclusive;
+        m_old_selected_count = g_selected_count;
+        m_old_sel_mask = g_sel_mask;
+        m_old_display_mode = g_sel_grp_display_mode;
+        m_old_display_index = g_sel_grp_display_mode_index;
+        m_old_use_sel_num = g_use_sel_num;
+        m_old_in_ng = g_in_ng;
+        m_old_min_to_read = g_newsgroup_min_to_read;
+        push_only();
+        g_use_add_selector = true;
+        g_sel_grp_display_mode = "s";
+        g_sel_grp_display_mode_index = 0;
+        g_use_sel_num = true;
+        g_in_ng = false;
+        g_tc_LINES = 8;
+        set_selector(SM_ADD_GROUP, SS_NATURAL);
+    }
+
+    void TearDown() override
+    {
+        pop_only();
+        drain_input();
+        errno = m_old_errno;
+        set_selector(SM_ADD_GROUP, SS_NATURAL);
+        g_sel_mode = m_old_sel_mode;
+        g_sel_sort = m_old_sel_sort;
+        g_sel_direction = m_old_sel_direction;
+        g_sel_sort_string = m_old_sel_sort_string;
+        g_sel_mode_string = m_old_sel_mode_string;
+        g_sel_rereading = m_old_sel_rereading;
+        g_sel_exclusive = m_old_sel_exclusive;
+        g_selected_count = m_old_selected_count;
+        g_sel_mask = m_old_sel_mask;
+        g_sel_grp_display_mode = m_old_display_mode;
+        g_sel_grp_display_mode_index = m_old_display_index;
+        g_use_sel_num = m_old_use_sel_num;
+        g_in_ng = m_old_in_ng;
+        g_newsgroup_min_to_read = m_old_min_to_read;
+        ScanActiveTest::TearDown();
+    }
+
+    static void drain_input()
+    {
+        while (macro_pending())
+        {
+            (void) read_tty_char();
+        }
+    }
+
+    std::string run_listing(std::string_view commands)
+    {
+        const NewsgroupNum old_count = g_newsgroup_count;
+        drain_input();
+        push_string(commands, 0200);
+        errno = 0;
+        testing::internal::CaptureStdout();
+        const bool        changed = scan_active(false);
+        const std::string output = testing::internal::GetCapturedStdout();
+        drain_input();
+        EXPECT_FALSE(changed);
+        EXPECT_EQ(old_count, g_newsgroup_count);
+        EXPECT_TRUE(g_add_groups.empty());
+        EXPECT_EQ(AddGroupIndex::None, g_sel_page_gp);
+        EXPECT_EQ(AddGroupIndex::None, g_sel_next_gp);
+        return output;
+    }
+
+    static std::string last_display(const std::string &output)
+    {
+        const std::size_t start = output.rfind("Unsubscribed newsgroups");
+        EXPECT_NE(std::string::npos, start);
+        return start == std::string::npos ? std::string{} : output.substr(start);
+    }
+
+    void add_seven_groups()
+    {
+        add_active_source("test.g 1 1 y\ntest.c 5 1 y\ntest.f 2 1 y\ntest.a 7 1 y\n"
+                          "test.e 3 1 y\ntest.b 6 1 y\ntest.d 4 1 y\n");
+    }
+
+    int               m_old_errno{};
+    SelectionMode     m_old_sel_mode{};
+    SelectionSortMode m_old_sel_sort{};
+    int               m_old_sel_direction{};
+    std::string_view  m_old_sel_sort_string;
+    std::string_view  m_old_sel_mode_string;
+    bool              m_old_sel_rereading{};
+    bool              m_old_sel_exclusive{};
+    ArticleUnread     m_old_selected_count{};
+    AddGroupFlags     m_old_sel_mask{};
+    std::string       m_old_display_mode;
+    std::size_t       m_old_display_index{};
+    bool              m_old_use_sel_num{};
+    bool              m_old_in_ng{};
+    ArticleUnread     m_old_min_to_read{};
 };
 
 } // namespace
@@ -319,6 +456,20 @@ TEST_F(ActiveListPatternTest, leadingCaretWithTrailingDollarMatchesExactPrefix)
     set_restrictions({"^comp.lang$"});
 
     EXPECT_EQ("comp.lang", active_list_pattern());
+}
+
+TEST_F(ActiveListPatternTest, usesCurrentRestrictionInsideSavedOuterRestrictions)
+{
+    set_newsgroup_to_do("parent.*");
+    push_only();
+    set_newsgroup_to_do("news.*");
+
+    EXPECT_EQ("*news.**", active_list_pattern());
+
+    pop_only();
+    EXPECT_TRUE(in_list("parent.group"));
+    EXPECT_FALSE(in_list("news.test"));
+    end_only();
 }
 
 TEST_F(AddGroupStorageTest, storesNamesWithoutAddingDuplicates)
@@ -453,8 +604,31 @@ TEST_F(ScanActiveTest, reportsCachedActiveFileGroups)
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_FALSE(changed);
-    EXPECT_NE(std::string::npos, output.find("Completely unsubscribed newsgroups:\n"));
+    EXPECT_NE(std::string::npos, output.find("Unsubscribed newsgroups:\n"));
     EXPECT_NE(std::string::npos, output.find("comp.lang.apl\n"));
+}
+
+TEST_F(ScanActiveTest, showsUnsubscribedResultsInSortableSelector)
+{
+    add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
+    g_use_add_selector = true;
+    push_string("q", 0200);
+    errno = 0;
+
+    testing::internal::CaptureStdout();
+    const bool        changed = scan_active(false);
+    const std::string output = testing::internal::GetCapturedStdout();
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+
+    EXPECT_FALSE(changed);
+    EXPECT_NE(std::string::npos, output.find("Unsubscribed newsgroups"));
+    EXPECT_NE(std::string::npos, output.find("natural order"));
+    EXPECT_NE(std::string::npos, output.find("comp.lang.apl"));
+    EXPECT_NE(std::string::npos, output.find("news.test"));
+    EXPECT_TRUE(g_add_groups.empty());
 }
 
 TEST_F(ScanActiveTest, reportsRemoteActiveGroups)
@@ -474,7 +648,7 @@ TEST_F(ScanActiveTest, reportsRemoteActiveGroups)
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_FALSE(changed);
-    EXPECT_NE(std::string::npos, output.find("Completely unsubscribed newsgroups:\n"));
+    EXPECT_NE(std::string::npos, output.find("Unsubscribed newsgroups:\n"));
     EXPECT_NE(std::string::npos, output.find("comp.lang.apl\n"));
     EXPECT_EQ(std::string::npos, output.find("comp.lang.c++\n"));
 }
@@ -553,4 +727,239 @@ TEST_F(ScanActiveTest, localNewGroupsDiscardDuplicatesAcrossSources)
     ASSERT_EQ(1U, g_add_groups.size());
     EXPECT_EQ(apl, g_add_groups.first());
     EXPECT_EQ(35, g_add_groups[apl].m_to_read.value_of());
+}
+
+TEST_F(SelectorGroupListingTest, sortsResultsByGroupName)
+{
+    add_active_source("test.z 7 1 y\ntest.a 2 1 y\ntest.m 4 1 y\n");
+
+    const std::string output = last_display(run_listing("Ogq"));
+
+    EXPECT_LT(output.find("test.a"), output.find("test.m"));
+    EXPECT_LT(output.find("test.m"), output.find("test.z"));
+    EXPECT_NE(std::string::npos, output.find("group name order"));
+}
+
+TEST_F(SelectorGroupListingTest, sortsResultsByArticleCount)
+{
+    add_active_source("test.z 7 1 y\ntest.a 2 1 y\ntest.m 4 1 y\n");
+
+    const std::string output = last_display(run_listing("Ocq"));
+
+    EXPECT_LT(output.find("test.a"), output.find("test.m"));
+    EXPECT_LT(output.find("test.m"), output.find("test.z"));
+    EXPECT_NE(std::string::npos, output.find("count order"));
+}
+
+TEST_F(SelectorGroupListingTest, reversesCurrentOrder)
+{
+    add_active_source("test.z 7 1 y\ntest.a 2 1 y\ntest.m 4 1 y\n");
+
+    const std::string output = last_display(run_listing("OgRq"));
+
+    EXPECT_LT(output.find("test.z"), output.find("test.m"));
+    EXPECT_LT(output.find("test.m"), output.find("test.a"));
+    EXPECT_NE(std::string::npos, output.find("reverse group name order"));
+}
+
+TEST_F(SelectorGroupListingTest, nextPageFollowsSortedIndices)
+{
+    add_seven_groups();
+
+    const std::string output = last_display(run_listing("Og>q"));
+
+    EXPECT_LT(output.find("test.d"), output.find("test.e"));
+    EXPECT_LT(output.find("test.e"), output.find("test.f"));
+    EXPECT_EQ(std::string::npos, output.find("test.a"));
+    EXPECT_EQ(std::string::npos, output.find("test.g"));
+}
+
+TEST_F(SelectorGroupListingTest, previousPageFollowsSortedIndices)
+{
+    add_seven_groups();
+
+    const std::string output = last_display(run_listing("Og><q"));
+
+    EXPECT_LT(output.find("test.a"), output.find("test.b"));
+    EXPECT_LT(output.find("test.b"), output.find("test.c"));
+    EXPECT_EQ(std::string::npos, output.find("test.d"));
+}
+
+TEST_F(SelectorGroupListingTest, lastPageFillsFromEndOfSortedIndices)
+{
+    add_seven_groups();
+
+    const std::string output = last_display(run_listing("Og$q"));
+
+    EXPECT_LT(output.find("test.e"), output.find("test.f"));
+    EXPECT_LT(output.find("test.f"), output.find("test.g"));
+    EXPECT_EQ(std::string::npos, output.find("test.d"));
+}
+
+TEST_F(SelectorGroupListingTest, changingOrderResetsLaterPageToFirstMatch)
+{
+    add_seven_groups();
+
+    const std::string output = last_display(run_listing("Og>Ocq"));
+
+    EXPECT_LT(output.find("test.g"), output.find("test.f"));
+    EXPECT_LT(output.find("test.f"), output.find("test.e"));
+    EXPECT_EQ(std::string::npos, output.find("test.d"));
+}
+
+TEST_F(SelectorGroupListingTest, narrowsSourceGlob)
+{
+    add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
+
+    const std::string output = last_display(run_listing("lnews.*\nq"));
+
+    EXPECT_NE(std::string::npos, output.find("news.test"));
+    EXPECT_EQ(std::string::npos, output.find("comp.lang.apl")) << output;
+}
+
+TEST_F(SelectorGroupListingTest, broadensSourceGlobByRescanning)
+{
+    add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
+    set_newsgroup_to_do("comp.*");
+
+    const std::string output = last_display(run_listing("l*\nq"));
+
+    EXPECT_NE(std::string::npos, output.find("comp.lang.apl"));
+    EXPECT_NE(std::string::npos, output.find("news.test"));
+}
+
+TEST_F(SelectorGroupListingTest, emptyResultsAllowAnotherGlob)
+{
+    add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
+
+    const std::string output = run_listing("lmissing.*\nlnews.*\nq");
+
+    EXPECT_NE(std::string::npos, output.find("0 groups"));
+    EXPECT_NE(std::string::npos, last_display(output).find("news.test"));
+    EXPECT_EQ(std::string::npos, last_display(output).find("comp.lang.apl"));
+}
+
+TEST_F(SelectorGroupListingTest, invalidGlobKeepsCurrentResults)
+{
+    add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
+
+    const std::string output = last_display(run_listing("l[\nq"));
+
+    EXPECT_NE(std::string::npos, output.find("comp.lang.apl"));
+    EXPECT_NE(std::string::npos, output.find("news.test"));
+    EXPECT_EQ(0, g_max_newsgroup_to_do);
+}
+
+TEST_F(SelectorGroupListingTest, returnLeavesListingWithoutSubscribing)
+{
+    add_active_source("comp.lang.apl 42 7 y\n");
+
+    const std::string output = run_listing("\n");
+
+    EXPECT_NE(std::string::npos, output.find("Unsubscribed newsgroups"));
+    EXPECT_NE(std::string::npos, output.find("comp.lang.apl"));
+}
+
+TEST_F(SelectorGroupListingTest, remoteGlobRefinementRescansServer)
+{
+    add_uncached_remote_source();
+    testing::InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST active *"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 list of newsgroups follows"))
+        .WillOnce(testing::Return("comp.lang.apl 42 7 y"))
+        .WillOnce(testing::Return("."));
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST active *news.**"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 list of newsgroups follows"))
+        .WillOnce(testing::Return("news.test 3 1 y"))
+        .WillOnce(testing::Return("comp.lang.apl 42 7 y"))
+        .WillOnce(testing::Return("."));
+
+    const std::string output = last_display(run_listing("lnews.*\nq"));
+
+    EXPECT_NE(std::string::npos, output.find("news.test"));
+    EXPECT_EQ(std::string::npos, output.find("comp.lang.apl"));
+}
+
+TEST_F(SelectorGroupListingTest, mergesDuplicateGroupsFromMultipleSources)
+{
+    add_active_source("comp.lang.apl 42 7 y\n");
+    add_active_source("comp.lang.apl 99 7 y\nnews.test 3 1 y\n");
+
+    const std::string output = last_display(run_listing("q"));
+    const std::size_t apl = output.find("comp.lang.apl");
+
+    ASSERT_NE(std::string::npos, apl);
+    EXPECT_EQ(std::string::npos, output.find("comp.lang.apl", apl + 1));
+    EXPECT_NE(std::string::npos, output.find("2 groups"));
+}
+
+TEST_F(SelectorGroupListingTest, includesUnsubscribedNewsrcEntriesAndOmitsSubscribedGroups)
+{
+    add_active_source("comp.subscribed 7 1 y\ncomp.unsubscribed 4 1 y\nnews.test 3 1 y\n");
+    hash_destroy(g_newsrc_hash);
+    g_newsrc_hash = hash_create(17, [](std::string_view key, HashDatum data)
+                                { return key.compare(reinterpret_cast<NewsgroupData *>(data.dat_ptr)->m_rc_line); });
+    NewsgroupData subscribed{};
+    subscribed.m_rc_line = "comp.subscribed";
+    subscribed.m_to_read = TR_ONE;
+    NewsgroupData unsubscribed{};
+    unsubscribed.m_rc_line = "comp.unsubscribed";
+    unsubscribed.m_to_read = TR_UNSUB;
+    hash_store(g_newsrc_hash, subscribed.m_rc_line, {reinterpret_cast<char *>(&subscribed), 0});
+    hash_store(g_newsrc_hash, unsubscribed.m_rc_line, {reinterpret_cast<char *>(&unsubscribed), 0});
+
+    const std::string output = last_display(run_listing("Ogq"));
+
+    EXPECT_EQ(std::string::npos, output.find("comp.subscribed"));
+    EXPECT_NE(std::string::npos, output.find("comp.unsubscribed"));
+    EXPECT_NE(std::string::npos, output.find("news.test"));
+    EXPECT_EQ(TR_ONE, subscribed.m_to_read);
+    EXPECT_EQ(TR_UNSUB, unsubscribed.m_to_read);
+}
+
+TEST_F(SelectorGroupListingTest, helpExplainsSortingAndGlobRefinement)
+{
+    add_active_source("news.test 3 1 y\n");
+    g_tc_LINES = 100;
+
+    const std::string output = run_listing("Hqq");
+
+    EXPECT_NE(std::string::npos, output.find("l glob"));
+    EXPECT_NE(std::string::npos, output.find("Reverse the current sort order"));
+    EXPECT_EQ(std::string::npos, output.find("NOT WORKING YET"));
+}
+
+TEST_F(SelectorGroupListingTest, globCommandWorksWithAlphabeticSelectionKeys)
+{
+    add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
+    g_use_sel_num = false;
+
+    const std::string output = last_display(run_listing("lnews.*\nq"));
+
+    EXPECT_NE(std::string::npos, output.find("news.test"));
+    EXPECT_EQ(std::string::npos, output.find("comp.lang.apl"));
+}
+
+TEST_F(SelectorGroupListingTest, initiallyEmptyResultsAllowAnotherGlob)
+{
+    add_active_source("news.test 3 1 y\n");
+    set_newsgroup_to_do("missing.*");
+
+    const std::string output = run_listing("lnews.*\nq");
+
+    EXPECT_NE(std::string::npos, output.find("0 groups"));
+    EXPECT_NE(std::string::npos, last_display(output).find("news.test"));
+}
+
+TEST_F(SelectorGroupListingTest, globRefinementPreservesUnreadThreshold)
+{
+    add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
+    set_newsgroup_to_do("comp.*");
+    g_newsgroup_min_to_read = TR_NONE;
+
+    (void) run_listing("lnews.*\nq");
+
+    EXPECT_EQ(TR_NONE, g_newsgroup_min_to_read);
 }

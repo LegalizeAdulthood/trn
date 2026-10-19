@@ -463,8 +463,32 @@ Slice 39 test-first evidence, using `cmake --workflow temp` throughout:
   after growth, natural/name/count sorting, ties, and reverse traversal.
 
 The final slice 39 `cmake --workflow rt-default` run passed 1661 tests
-with six skips and no failures.  Issue #15 still requires the
-unsubscribed-list selector work in slice 40.
+with six skips and no failures.  The unsubscribed-list selector work was
+left for slice 40.
+
+Unsubscribed groups now use an index-based selector.  `O` chooses natural,
+group-name, or article-count order; `R` reverses it.  `l glob` replaces the
+source restriction and rescans local and NNTP sources.  Empty results
+remain interactive, invalid globs retain the previous list, and leaving
+the view does not subscribe to groups.  Existing outer restrictions and
+the unread threshold are preserved.  Disabling the add selector retains
+a plain listing.
+
+Slice 40 test-first evidence, using `cmake --workflow temp` throughout:
+
+- The initial 37-test run failed the new listing regression because raw
+  output had no selector title or sort controls.
+- Expanded coverage failed 19 of 53 tests before implementation.  The
+  failures covered the listing, sorting, paging, glob rescans, membership,
+  duplicate results, help, and leaving without subscriptions.
+- After wiring the selector and initializing the terminal/search test
+  fixture, four of 57 tests still failed: saved restriction lookup,
+  alphabetic-key conflicts, initially empty results, and unread-threshold
+  preservation.  Fixing those paths made the same 57 tests pass.
+
+The final slice 40 `cmake --workflow rt-default` run passed 1682 tests
+with six skips and no failures.  Issue #15 is implemented locally; its
+closing commit must include `Fixes #15`.
 
 ## GitHub 5.0 Milestone
 
@@ -533,8 +557,7 @@ or stabilize P0 work.
 P2 work should not delay 5.0 unless it is moved onto the GitHub 5.0
 milestone.
 
-1. Refactor AddGroup storage and sort unsubscribed-group listings: #15.
-2. Use archive.org as additional test content: #35.
+1. Use archive.org as additional test content: #35.
 
 ## Implementation Rules
 
@@ -580,34 +603,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 40. Selector Sorting
-
-Issues: #15.
-
-Milestone status: not on the 5.0 milestone.
-
-Depends on: 39.
-
-Files likely touched:
-
-- `libtrn/rt-page.cpp`
-- `libtrn/rt-select.cpp`
-- `libtrn/ngsrch.cpp`
-- tests
-
-Tasks:
-
-- Add a sortable selector view for unsubscribed newsgroup results.
-- Let users change sort order and refine the source glob.
-
-Acceptance:
-
-- Selector paging is index-based.
-- Unsubscribed newsgroup listings can be sorted.
-- Selector unit tests cover paging, sort order, reverse order, and glob
-  refinement.
-- Commit description includes `fixes #15`.
 
 ### 41. Archive.org Test Samples
 
@@ -734,7 +729,8 @@ Non-milestone supporting or follow-up issues:
 
 - #10: deferred pending a deterministic article and command repro from the
   reporter's spool state.
-- #15: 40 (storage work in 39 is complete).
+- #15: completed by removed slices 39 and 40; the closing commit must
+  include `Fixes #15`.
 - #29: 19.
 - #30: completed by removed slice 37; the closing commit must include
   `Fixes #30`.

@@ -83,6 +83,7 @@ std::string_view  g_sel_sort_string{};
 int               g_sel_direction{1};
 bool              g_sel_exclusive{};
 AddGroupFlags     g_sel_mask{AGF_SEL};
+bool              g_sel_group_listing{};
 bool              g_selected_only{};
 ArticleUnread     g_selected_count{};
 int               g_selected_subj_cnt{};
@@ -195,9 +196,10 @@ namespace
 class PushSelectorModes
 {
 public:
-    PushSelectorModes(MinorMode new_mode) :
+    PushSelectorModes(MinorMode new_mode, bool group_listing = false) :
         m_save_mode(g_mode),
-        m_save_gmode(g_general_mode)
+        m_save_gmode(g_general_mode),
+        m_save_group_listing(std::exchange(g_sel_group_listing, group_listing))
     {
         g_bos_on_stop = true;
         set_mode(GM_SELECTOR, new_mode);
@@ -205,12 +207,14 @@ public:
     ~PushSelectorModes()
     {
         g_bos_on_stop = false;
+        g_sel_group_listing = m_save_group_listing;
         set_mode(m_save_gmode, m_save_mode);
     }
 
 private:
     MinorMode   m_save_mode;
     GeneralMode m_save_gmode;
+    bool        m_save_group_listing;
 };
 
 }
@@ -283,6 +287,7 @@ static char                another_command(char_int ch);
 static DisplayState        article_commands(char_int ch);
 static DisplayState        newsgroup_commands(char_int ch);
 static DisplayState        add_group_commands(char_int ch);
+static DisplayState        unsubscribed_group_commands(char_int ch);
 static DisplayState        multirc_commands(char_int ch);
 static DisplayState        option_commands(char_int ch);
 static DisplayState        universal_commands(char_int ch);
@@ -726,7 +731,7 @@ sel_restart:
 ///
 char add_group_selector(GetNewsgroupFlags flags)
 {
-    PushSelectorModes saver(MM_ADD_GROUP_SELECTOR);
+    PushSelectorModes saver(MM_ADD_GROUP_SELECTOR, flags == GNG_NONE);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -750,8 +755,8 @@ sel_restart:
         }
     }
 
-    s_end_char = selector_end_command(g_add_sel_cmds);
-    s_page_char = selector_page_command(g_add_sel_cmds);
+    s_end_char = g_sel_group_listing ? 'q' : selector_end_command(g_add_sel_cmds);
+    s_page_char = g_sel_group_listing ? '>' : selector_page_command(g_add_sel_cmds);
     // Setup for selecting articles to read or set unread
     if (g_sel_rereading)
     {
@@ -762,7 +767,7 @@ sel_restart:
         g_sel_mask = AGF_SEL;
     }
     g_sel_page_gp = AddGroupIndex::None;
-    s_extra_commands = add_group_commands;
+    s_extra_commands = g_sel_group_listing ? unsubscribed_group_commands : add_group_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_item_index = 0;
@@ -780,7 +785,7 @@ sel_restart:
         clear_rest();
     }
 
-    if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t')
+    if (!g_sel_group_listing && (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t'))
     {
         g_add_new_by_default = ADDNEW_SUB;
         for (AddGroupIndex index : g_add_groups.indices())
@@ -1812,7 +1817,10 @@ static void sel_prompt()
                           s_page_char, s_end_char);
     const std::string mail_call = do_interp(g_mail_call);
     const std::string prompt =
-        fmt::format("{}-- {} {} ({}{} order) -- {}", mail_call, g_sel_exclusive && g_in_ng ? "SELECTED" : "Select",
+        fmt::format("{}-- {} {} ({}{} order) -- {}", mail_call,
+                    g_sel_group_listing          ? "Browse"
+                    : g_sel_exclusive && g_in_ng ? "SELECTED"
+                                                 : "Select",
                     g_sel_mode_string, g_sel_direction < 0 ? "reverse " : "", g_sel_sort_string, page_prompt);
     color_string(COLOR_CMD, prompt);
     g_term_col = static_cast<int>(prompt.size());
@@ -3808,7 +3816,8 @@ reask_sort:
             return DS_ASK;
         }
         set_sel_sort(g_sel_mode, command_char);
-        g_sel_page_np = nullptr;
+        g_sel_page_gp = AddGroupIndex::None;
+        g_sel_next_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
@@ -3982,6 +3991,60 @@ reask_sort:
         return DS_ERROR;
     }
     return DS_ASK;
+}
+
+static DisplayState unsubscribed_group_commands(char_int ch)
+{
+    switch (ch)
+    {
+    case 'O':
+    case 'R':
+        return add_group_commands(ch);
+
+    case 'l':
+    {
+        erase_line(g_mouse_bar_cnt > 0);
+        s_removed_prompt = RP_ALL;
+        fmt::print("Newsgroup glob: ");
+        const std::string command = finish_selector_command(ch, true);
+        if (command.empty())
+        {
+            return DS_DISPLAY;
+        }
+        std::string_view pattern{command};
+        pattern.remove_prefix(1);
+        while (!pattern.empty() && std::isspace(static_cast<unsigned char>(pattern.front())))
+        {
+            pattern.remove_prefix(1);
+        }
+        while (!pattern.empty() && std::isspace(static_cast<unsigned char>(pattern.back())))
+        {
+            pattern.remove_suffix(1);
+        }
+        const std::string error = refine_add_group_list(pattern);
+        if (!error.empty())
+        {
+            error_msg(error);
+            return DS_DISPLAY;
+        }
+        g_sel_item_index = 0;
+        init_pages(FILL_LAST_PAGE);
+        return DS_DISPLAY;
+    }
+
+    case 'H':
+    case 'h':
+    case '?':
+        newline();
+        if (another_command(help_add_group_selector()))
+        {
+            return DS_DO_COMMAND;
+        }
+        return DS_DISPLAY;
+
+    default:
+        return DS_ERROR;
+    }
 }
 
 /// @brief Handles selector commands specific to the multirc selection mode.
