@@ -229,7 +229,7 @@ milestone.
 3. Refactor AddGroup storage and sort unsubscribed-group listings: #15.
 4. Use archive.org as additional test content: #35.
 
-## Implementation Slices
+## Implementation Rules
 
 Use these as review units.  Each numbered item owns at most one open
 GitHub issue.  Closed milestone issues are not implementation items; they
@@ -246,6 +246,18 @@ inspection, plausible diagnosis, or a guessed fix.  Do not remove a slice
 from this plan until every task and acceptance line has been satisfied by
 that evidence.
 
+Use strict test-driven development for all changes in this plan:
+
+1. Write a test for the required change.  Run it before changing the
+   implementation and verify that it fails for the intended reason.
+2. Implement the change.
+3. Rerun the previously failing test and verify that it now passes.
+
+Repeat this sequence for every change.  Record the failing and passing
+test commands and results as slice evidence.  Tests added only after the
+implementation do not satisfy this requirement.  Do not remove a slice
+until its test-first evidence and all acceptance checks are complete.
+
 For each remaining configuration-variable slice, use standard CMake
 feature discovery first: probe the build or target system when CMake can
 determine the answer, and make generated details non-cache variables.
@@ -259,6 +271,8 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
+
+## Implementation Slices
 
 ### 28. NNTP STARTTLS
 
