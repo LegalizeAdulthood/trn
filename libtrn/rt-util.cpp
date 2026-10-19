@@ -139,7 +139,7 @@ static std::string trim_string(std::string_view text)
 static int visible_length(std::string_view text)
 {
 #ifdef USE_UTF_HACK
-    return visual_length_of(text);
+    return utf8_visual_length(text);
 #else
     return static_cast<int>(text.size());
 #endif
@@ -157,7 +157,7 @@ static std::size_t next_character(std::string_view text, std::size_t pos)
         return text.size();
     }
 #ifdef USE_UTF_HACK
-    const int width = byte_length_at(text.substr(pos));
+    const int width = static_cast<int>(decode_utf8_scalar(text.substr(pos)).byte_count);
     if (width > 0)
     {
         const std::size_t next = pos + static_cast<std::size_t>(width);
@@ -190,8 +190,8 @@ static std::string truncate_visible(std::string_view text, int max)
     int         width = 0;
     for (std::size_t pos = 0; pos < text.size();)
     {
-        const int char_bytes = byte_length_at(text.substr(pos));
-        const int char_width = visual_width_at(text.substr(pos));
+        const int char_bytes = static_cast<int>(decode_utf8_scalar(text.substr(pos)).byte_count);
+        const int char_width = utf8_visual_width_at(text.substr(pos));
         if (char_bytes <= 0 || char_width < 0 || width + char_width > max)
         {
             break;
@@ -569,7 +569,7 @@ std::string compress_from(std::string_view from, int size)
     std::size_t len = text.size();
     int         vis_len;
 #ifdef USE_UTF_HACK
-    vis_len = visual_length_of(text);
+    vis_len = utf8_visual_length(text);
 #else
     vis_len = static_cast<int>(len);
 #endif
@@ -698,7 +698,7 @@ std::string compress_subj(const Article *ap, int max)
             break;
         }
     }
-    int len = static_cast<int>(subject.size());
+    int len = visible_length(subject);
     if (!g_unbroken_subjects && len > max)
     {
         // Try to include the last two words on the line while trimming
@@ -710,22 +710,23 @@ std::string compress_subj(const Article *ap, int max)
             const int         keep_threshold = len - max + 3 + 10 - 1;
             if (next_to_last != std::string::npos)
             {
-                if (static_cast<int>(next_to_last) >= keep_threshold)
+                if (visible_length(std::string_view{subject}.substr(0, next_to_last)) >= keep_threshold)
                 {
                     keep_from = next_to_last;
                 }
             }
-            if (static_cast<int>(keep_from) >= keep_threshold)
+            const int keep_columns = visible_length(std::string_view{subject}.substr(0, keep_from));
+            if (keep_columns >= keep_threshold)
             {
-                const std::size_t prefix_len = static_cast<std::size_t>(max - (len - static_cast<int>(keep_from) + 3));
-                subject = subject.substr(0, prefix_len) + "..." + subject.substr(keep_from + 1);
+                const int prefix_columns = max - (len - keep_columns + 3);
+                subject = truncate_visible(subject, prefix_columns) + "..." + subject.substr(keep_from + 1);
                 len = max;
             }
         }
     }
     if (len > max)
     {
-        subject.resize(static_cast<std::size_t>(max));
+        subject = truncate_visible(subject, max);
     }
     return subject;
 }

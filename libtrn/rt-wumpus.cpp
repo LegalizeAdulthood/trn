@@ -21,6 +21,7 @@
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
+#include <trn/utf.h>
 #include <trn/util.h>
 
 #include <fmt/format.h>
@@ -388,6 +389,24 @@ static Article *find_artp(Article *article, int x)
     return nullptr;
 }
 
+static std::size_t utf8_prefix_size(std::string_view text, int columns)
+{
+    std::size_t bytes = 0;
+    int         width = 0;
+    while (bytes < text.size())
+    {
+        const std::string_view tail = text.substr(bytes);
+        const int              next_width = utf8_visual_width_at(tail);
+        if (width + next_width > columns)
+        {
+            break;
+        }
+        width += next_width;
+        bytes += decode_utf8_scalar(tail).byte_count;
+    }
+    return bytes;
+}
+
 inline bool header_conv()
 {
     const char mode = current_char_subst_mode();
@@ -517,14 +536,14 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             wrap_at = g_tc_COLS - s_max_depth - 3;
         }
         // Figure padding between header and tree output, wrapping long lines
-        int              pad_cnt = wrap_at - (static_cast<int>(line.size()) + s_header_indent);
+        int              pad_cnt = wrap_at - (utf8_visual_length(line) + s_header_indent);
         std::string_view output_text = line;
         std::size_t      next_offset = line.size();
         if (pad_cnt <= 0)
         {
             const int   soft_limit = std::max(wrap_at - s_header_indent - 1, 0);
             const int   hard_limit = std::max(wrap_at - s_header_indent, 0);
-            std::size_t split = std::min(static_cast<std::size_t>(soft_limit), line.size());
+            std::size_t split = utf8_prefix_size(line, soft_limit);
             pad_cnt = 1;
             while (split > 0 && line[split] != ' ')
             {
@@ -538,9 +557,13 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             }
             if (split == 0)
             {
-                split = std::min(static_cast<std::size_t>(hard_limit), line.size());
-                pad_cnt = 0;
+                split = utf8_prefix_size(line, hard_limit);
+                if (split == 0)
+                {
+                    split = decode_utf8_scalar(line).byte_count;
+                }
             }
+            pad_cnt = std::max(wrap_at - s_header_indent - utf8_visual_length(line.substr(0, split)), 0);
             output_text = line.substr(0, split);
             next_offset = split;
             // keep rn's backpager happy

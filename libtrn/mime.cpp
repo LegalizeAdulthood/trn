@@ -502,6 +502,8 @@ void MimeSection::mime_clear_struct()
     m_type_name.reset();
     m_type_params.clear();
     m_boundary.reset();
+    m_decoder = CharsetDecoder{};
+    m_decoder_pending.clear();
     m_html_blocks.clear();
     m_html_tag_word.clear();
     m_type = NOT_MIME;
@@ -554,6 +556,8 @@ void MimeSection::mime_parse_type(std::string_view text)
 {
     m_type_name.reset();
     m_type_params.clear();
+    m_decoder = CharsetDecoder{};
+    m_decoder_pending.clear();
 
     const MimeParamViews parsed = mime_parse_params(text);
     m_type_params.reserve(parsed.params.size());
@@ -583,10 +587,8 @@ void MimeSection::mime_parse_type(std::string_view text)
             return;
         }
         sub_type.remove_prefix(1);
-#ifdef USE_UTF_HACK
         t = mime_find_param(m_type_params, "charset");
-        utf_init(t, CHARSET_NAME_UTF8); // FIXME
-#endif
+        m_decoder = CharsetDecoder{t.empty() ? CHARSET_NAME_UTF8 : std::string_view{t}};
         if (string_case_equal(sub_type.substr(0, 4), "html"))
         {
             m_type = HTML_TEXT_MIME;
@@ -673,6 +675,38 @@ void MimeSection::mime_parse_type(std::string_view text)
     }
 
     m_type = UNHANDLED_MIME;
+}
+
+std::string MimeSection::decode_text_chunk(std::string_view bytes, bool final)
+{
+    std::string text = std::move(m_decoder_pending);
+    m_decoder_pending.clear();
+    text += bytes;
+    if (!final && (m_decoder.charset() == CHARSET_UTF8 || m_decoder.charset() == CHARSET_UNKNOWN))
+    {
+        for (std::size_t pos = 0; pos < text.size();)
+        {
+            const std::string_view remaining{std::string_view{text}.substr(pos)};
+            const Utf8Scalar       scalar = decode_utf8_scalar(remaining);
+            if (scalar.code_point == INVALID_CODE_POINT)
+            {
+                const unsigned char lead = static_cast<unsigned char>(remaining.front());
+                const std::size_t   width = lead >= 0xC2 && lead <= 0xDF   ? 2
+                                            : lead >= 0xE0 && lead <= 0xEF ? 3
+                                            : lead >= 0xF0 && lead <= 0xF4 ? 4
+                                                                           : 1;
+                if (remaining.size() < width && std::all_of(remaining.begin() + 1, remaining.end(),
+                                                            [](unsigned char c) { return (c & 0xC0) == 0x80; }))
+                {
+                    m_decoder_pending = remaining;
+                    text.resize(pos);
+                    break;
+                }
+            }
+            pos += scalar.byte_count;
+        }
+    }
+    return m_decoder.decode(text);
 }
 
 // Use the Content-Disposition to set values in the mime structure
@@ -1543,6 +1577,12 @@ static bool named_entity_matches(const char *text, std::string_view name)
     return true;
 }
 
+static bool at_utf8_grey_space(std::string_view text)
+{
+    const CodePoint scalar = decode_utf8_scalar(text).code_point;
+    return scalar <= 0x20 || (scalar >= 0x7F && scalar < 0xA0) || scalar == 0x2028 || scalar == 0x2029;
+}
+
 static void filter_html_into(std::string &output, std::string_view input)
 {
     const std::size_t      terminator = input.find('\0');
@@ -1632,7 +1672,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             }
             else
             {
-                tag_word += at_grey_space(cursor_text) ? ' ' : current;
+                tag_word += at_utf8_grey_space(cursor_text) ? ' ' : current;
             }
         }
         else if (g_mime_section->m_html & HF_IN_COMMENT)
@@ -1732,7 +1772,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             }
             g_mime_section->m_html |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
         }
-        else if ((current == ' ' || at_grey_space(cursor_text)) && !(g_mime_section->m_html & HF_IN_PRE))
+        else if (at_utf8_grey_space(cursor_text) && !(g_mime_section->m_html & HF_IN_PRE))
         {
             // We don't want to call output_prep() here.
             if (current == ' ' || (g_mime_section->m_html & HF_SPACE_OK))
@@ -1743,7 +1783,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             // In non-PRE mode spaces should be collapsed
             while (true)
             {
-                const int w = byte_length_at(text_view.substr(pos));
+                const int w = static_cast<int>(decode_utf8_scalar(text_view.substr(pos)).byte_count);
                 if (w == 0)
                 {
                     break;
@@ -1754,7 +1794,7 @@ static void filter_html_into(std::string &output, std::string_view input)
                     break;
                 }
                 const std::string_view next_text = text_view.substr(next_pos);
-                if (!(next_text.front() == ' ' || at_grey_space(next_text)))
+                if (!at_utf8_grey_space(next_text))
                 {
                     break;
                 }
@@ -1769,7 +1809,7 @@ static void filter_html_into(std::string &output, std::string_view input)
         }
         else
         {
-            const int w = byte_length_at(cursor);
+            const int w = static_cast<int>(decode_utf8_scalar(cursor_text).byte_count);
             output_prep(output);
             output.append(cursor, static_cast<std::size_t>(w));
             pos += static_cast<std::size_t>(w - 1);

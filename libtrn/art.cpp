@@ -561,7 +561,7 @@ DoArticleResult do_article(std::string &article_command)
                         {
                             int i;
 #ifdef USE_UTF_HACK
-                            if (out_pos + visual_width_at(line_tail()) > g_tc_COLS)   // will line overflow?
+                            if (out_pos + utf8_visual_width_at(line_tail()) > g_tc_COLS) // will line overflow?
                             {
                                 newline();
                                 out_pos = 0;
@@ -569,7 +569,7 @@ DoArticleResult do_article(std::string &article_command)
                             }
                             std::string_view  text = line_tail();
                             const std::size_t old_size = text.size();
-                            i = put_char_adv(text, output_ok);
+                            i = put_utf8_char_adv(text, output_ok);
                             line_pos += old_size - text.size();
 #else // !USE_UTF_HACK
                             i = putsubstchar(*bufptr, g_tc_COLS - out_pos, outputok);
@@ -1284,6 +1284,8 @@ refresh_screen:
         {
         case 'C':
             next_char_subst_mode();
+            clear_art_buf();
+            g_top_line = ArticleLine{-1};
             goto refresh_screen;
 
         default:

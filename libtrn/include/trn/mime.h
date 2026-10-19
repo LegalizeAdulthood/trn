@@ -6,6 +6,7 @@
 
 #include <trn/decode.h>
 #include <trn/enum-flags.h>
+#include <trn/utf.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -81,12 +82,15 @@ struct MimeSection
     void mime_parse_type(std::string_view text);
     void mime_parse_disposition(std::string_view text);
     void mime_parse_encoding(std::string_view text);
+    std::string decode_text_chunk(std::string_view bytes, bool final = false);
     std::string mime_description() const;
 
     MimeSection     *m_prev;
     std::optional<std::string> m_filename;
     std::optional<std::string> m_type_name;
     std::vector<std::string>   m_type_params;
+    CharsetDecoder             m_decoder{};
+    std::string                m_decoder_pending;
     std::optional<std::string> m_boundary;
     int                        m_html_line_start;
     std::vector<HtmlBlock>     m_html_blocks;

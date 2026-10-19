@@ -188,6 +188,36 @@ TEST_F(TreeRenderingTest, texConversionDoesNotLeakBetweenHeaders)
     EXPECT_EQ("From: \xC3\x84\nOther: \"\nFrom: A\n", output);
 }
 
+TEST_F(TreeRenderingTest, headerWrapMeasuresUtf8Columns)
+{
+    g_curr_artp = nullptr;
+    g_do_hiding = true;
+    g_tc_COLS = 10;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts("From: =?Latin1?Q?=C4=C4=C4?=", ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: \xC3\x84\xC3\x84\xC3\x84\n", output);
+    EXPECT_EQ(ArticleLine{1}, lines);
+}
+
+TEST_F(TreeRenderingTest, headerHardWrapRetainsWholeUnicodeScalars)
+{
+    g_curr_artp = nullptr;
+    g_do_hiding = true;
+    g_tc_COLS = 8;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts("From: =?Latin1?Q?=C4=C4?=", ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: \xC3\x84\n+     \xC3\x84\n", output);
+    EXPECT_EQ(ArticleLine{2}, lines);
+}
+
 TEST_F(TreeRenderingTest, continuationLineUsesPreviousHeaderIndent)
 {
     g_curr_artp = nullptr;

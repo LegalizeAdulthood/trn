@@ -59,6 +59,26 @@ Utf8Scalar decode_utf8_scalar(std::string_view text) noexcept;
 // Invalid scalars (surrogates or values above U+10FFFF) return no bytes.
 std::string encode_utf8_scalar(CodePoint scalar);
 
+// Unknown or missing charset names use strict UTF-8. Invalid bytes become U+FFFD.
+class CharsetDecoder
+{
+public:
+    explicit CharsetDecoder(std::string_view charset = CHARSET_NAME_UTF8);
+    CharsetType charset() const
+    {
+        return m_charset;
+    }
+    std::string decode(std::string_view text) const;
+
+private:
+    CharsetType m_charset;
+};
+
+// Presentation operations consume UTF-8 independently of legacy charset state.
+int utf8_visual_width_at(std::string_view text);
+int utf8_visual_length(std::string_view text);
+int put_utf8_char_adv(std::string_view &text, bool output_ok);
+
 int put_char_adv(std::string_view &text, bool outputok);
 
 std::string create_utf8_copy(std::string_view s);

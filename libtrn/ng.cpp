@@ -1962,6 +1962,8 @@ normal_search:
 
             case 'C':
                 next_char_subst_mode();
+                clear_art_buf();
+                g_top_line = ArticleLine{-1};
                 goto refresh_screen;
 
             case 'a':

@@ -593,6 +593,106 @@ TEST_F(Utf8ScalarTest, substitutionIgnoresGlobalCharsetState)
     }
 }
 
+class CharsetDecoderTest : public Utf8ScalarTest
+{
+};
+
+TEST_F(CharsetDecoderTest, decodesSupportedSingleByteCharsets)
+{
+    EXPECT_EQ("\xC3\xA9\xC2\xAD\xC2\x80", CharsetDecoder{"ISO-8859-1"}.decode("\xE9\xAD\x80"));
+    EXPECT_EQ("\xE2\x82\xAC\xC5\xA0\xC5\xA1\xC5\xBD\xC5\xBE\xC5\x92\xC5\x93\xC5\xB8",
+              CharsetDecoder{"iso8859-15"}.decode("\xA4\xA6\xA8\xB4\xB8\xBC\xBD\xBE"));
+    EXPECT_EQ("\xE2\x80\x99\xE2\x82\xAC\xEF\xBF\xBD", CharsetDecoder{"WINDOWS-1252"}.decode("\x92\x80\x81"));
+    EXPECT_EQ("A\xEF\xBF\xBD", CharsetDecoder{"us-ascii"}.decode("A\x80"));
+}
+
+TEST_F(CharsetDecoderTest, recognizesAllLegacyAliasesWithoutChangingGlobalState)
+{
+    utf_init(CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_ASCII);
+    for (const CharsetParam &param : charsets)
+    {
+        const CharsetDecoder decoder{param.value};
+        const CharsetDecoder canonical{param.name};
+        EXPECT_EQ(canonical.charset(), decoder.charset());
+        EXPECT_EQ("abc", decoder.decode("abc"));
+    }
+    EXPECT_EQ(CHARSET_NAME_WINDOWS_1252, input_charset_name());
+    EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
+}
+
+TEST_F(CharsetDecoderTest, unknownAndMissingNamesUseStrictUtf8Fallback)
+{
+    utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_ISO8859_1);
+    for (const std::string_view name : {"unknown", "", "UTF-8"})
+    {
+        const CharsetDecoder decoder{name};
+        EXPECT_EQ("\xC3\xA9\xEF\xBF\xBD", decoder.decode("\xC3\xA9\xFF"));
+    }
+    EXPECT_EQ(CHARSET_UNKNOWN, CharsetDecoder{"unknown"}.charset());
+    EXPECT_EQ(CHARSET_UTF8, CharsetDecoder{}.charset());
+}
+
+TEST_F(CharsetDecoderTest, malformedUtf8NeverSwallowsFollowingAscii)
+{
+    const CharsetDecoder decoder{"UTF-8"};
+    for (const InvalidUtf8Case &value : INVALID_UTF8)
+    {
+        SCOPED_TRACE(value.name);
+        std::string expected;
+        for (std::string_view remaining = value.bytes; !remaining.empty();)
+        {
+            const Utf8Scalar scalar = decode_utf8_scalar(remaining);
+            expected += encode_utf8_scalar(scalar.code_point == INVALID_CODE_POINT ? 0xFFFD : scalar.code_point);
+            remaining.remove_prefix(scalar.byte_count);
+        }
+        EXPECT_EQ(expected + "X", decoder.decode(std::string{value.bytes} + "X"));
+    }
+}
+
+TEST_F(CharsetDecoderTest, preservesNulAndValidUtf8Scalars)
+{
+    const CharsetDecoder decoder;
+    EXPECT_TRUE(decoder.decode({}).empty());
+    for (const Utf8ScalarCase &value : UTF8_SCALARS)
+    {
+        EXPECT_EQ(value.bytes, decoder.decode(value.bytes));
+    }
+    EXPECT_EQ(std::string("a\0b", 3), CharsetDecoder{"Latin1"}.decode({"a\0b", 3}));
+}
+
+TEST_F(CharsetDecoderTest, interleavedDecodersKeepTheirInterpretations)
+{
+    const CharsetDecoder latin{"Latin1"};
+    const CharsetDecoder unicode{"UTF-8"};
+    const CharsetDecoder unknown{"unknown"};
+
+    EXPECT_EQ("\xC3\xA9", latin.decode("\xE9"));
+    EXPECT_EQ("\xEF\xBF\xBD", unicode.decode("\xE9"));
+    EXPECT_EQ("\xEF\xBF\xBD", unknown.decode("\xE9"));
+    EXPECT_EQ("\xC3\xA9", latin.decode("\xE9"));
+}
+
+TEST_F(CharsetDecoderTest, utf8TerminalOutputIgnoresLegacyCharsetState)
+{
+    utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_ASCII);
+    std::string_view text{"\xC3\xA9\xE5\xA4\xA9"
+                          "e\xCC\x81"};
+    EXPECT_EQ(4, utf8_visual_length(text));
+    EXPECT_EQ(1, utf8_visual_width_at(text));
+
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(1, put_utf8_char_adv(text, true));
+    EXPECT_EQ(2, put_utf8_char_adv(text, true));
+    EXPECT_EQ(1, put_utf8_char_adv(text, false));
+    EXPECT_EQ(0, put_utf8_char_adv(text, true));
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("\xC3\xA9\xE5\xA4\xA9\xCC\x81", output);
+    EXPECT_TRUE(text.empty());
+    EXPECT_EQ(CHARSET_NAME_ISO8859_1, input_charset_name());
+    EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
+}
+
 constexpr std::string_view ARBITRARY_ASCII{"a"};
 constexpr std::string_view ARBITRARY_ISO8859D1_1{"\303\241"};
 constexpr std::string_view ARBITRARY_ISO8859D1_2{"\303\246"};

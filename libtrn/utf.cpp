@@ -259,21 +259,12 @@ int byte_length_at(std::string_view text)
 }
 
 // NOTE: correctness is not guaranteed; this is only a rough generalization
-int visual_width_at(std::string_view text)
+static int scalar_visual_width(CodePoint c)
 {
-    CodePoint c = code_point_at(text);
     int       it = 1;
     if (c == INVALID_CODE_POINT)
     {
         it = 0;
-    }
-    else if (IS_SINGLE_BYTE(s_gs.in))
-    {
-        it = 1;
-    }
-    else if (IS_DOUBLE_BYTE(s_gs.in))
-    {
-        it = (c & 0x80) ? 2 : 1;
     }
     else if ((c >= 0x00300 && c <= 0x0036F)     // combining diacritics
              || (c >= 0x01AB0 && c <= 0x01AFF)  //
@@ -294,6 +285,24 @@ int visual_width_at(std::string_view text)
         it = 2;
     }
     return it;
+}
+
+int visual_width_at(std::string_view text)
+{
+    const CodePoint scalar = code_point_at(text);
+    if (scalar == INVALID_CODE_POINT)
+    {
+        return 0;
+    }
+    if (IS_SINGLE_BYTE(s_gs.in))
+    {
+        return 1;
+    }
+    if (IS_DOUBLE_BYTE(s_gs.in))
+    {
+        return (scalar & 0x80) ? 2 : 1;
+    }
+    return scalar_visual_width(scalar);
 }
 
 int visual_length_of(std::string_view text)
@@ -503,6 +512,84 @@ Utf8Scalar decode_utf8_scalar(std::string_view text) noexcept
 std::string encode_utf8_scalar(CodePoint scalar)
 {
     return is_unicode_scalar(scalar) ? utf8_text(scalar) : std::string{};
+}
+
+CharsetDecoder::CharsetDecoder(std::string_view charset) :
+    m_charset{find_charset(charset)}
+{
+}
+
+std::string CharsetDecoder::decode(std::string_view text) const
+{
+    std::string result;
+    result.reserve(text.size());
+    while (!text.empty())
+    {
+        CodePoint   scalar = static_cast<unsigned char>(text.front());
+        std::size_t count = 1;
+        if (m_charset == CHARSET_UTF8 || m_charset == CHARSET_UNKNOWN)
+        {
+            const Utf8Scalar decoded = decode_utf8_scalar(text);
+            scalar = decoded.code_point;
+            count = decoded.byte_count;
+        }
+        else if (m_charset == CHARSET_ASCII && scalar >= 0x80)
+        {
+            scalar = INVALID_CODE_POINT;
+        }
+        else if (m_charset == CHARSET_ISO8859_15 && scalar >= 0xA0 && scalar != 0xAD)
+        {
+            scalar = s_iso8859_15_himap[scalar - 0x80];
+        }
+        else if (m_charset == CHARSET_WINDOWS_1252 && scalar >= 0x80)
+        {
+            scalar = s_cp1252_himap[scalar - 0x80];
+        }
+        result += encode_utf8_scalar(scalar == INVALID_CODE_POINT ? 0xFFFD : scalar);
+        text.remove_prefix(count);
+    }
+    return result;
+}
+
+int utf8_visual_width_at(std::string_view text)
+{
+    if (text.empty())
+    {
+        return 0;
+    }
+    const CodePoint scalar = decode_utf8_scalar(text).code_point;
+    return scalar_visual_width(scalar == INVALID_CODE_POINT ? 0xFFFD : scalar);
+}
+
+int utf8_visual_length(std::string_view text)
+{
+    int width = 0;
+    while (!text.empty())
+    {
+        width += utf8_visual_width_at(text);
+        text.remove_prefix(decode_utf8_scalar(text).byte_count);
+    }
+    return width;
+}
+
+int put_utf8_char_adv(std::string_view &text, bool output_ok)
+{
+    if (text.empty())
+    {
+        return 0;
+    }
+    const Utf8Scalar decoded = decode_utf8_scalar(text);
+    const int        width = utf8_visual_width_at(text);
+    if (output_ok)
+    {
+        const std::string_view bytes = text.substr(0, decoded.byte_count);
+        const std::string      replacement =
+            decoded.code_point == INVALID_CODE_POINT ? encode_utf8_scalar(0xFFFD) : std::string{};
+        const std::string_view output = replacement.empty() ? bytes : std::string_view{replacement};
+        std::fwrite(output.data(), 1, output.size(), stdout);
+    }
+    text.remove_prefix(decoded.byte_count);
+    return width;
 }
 
 bool at_norm_char(std::string_view s)

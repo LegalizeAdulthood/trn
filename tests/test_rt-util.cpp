@@ -390,6 +390,15 @@ TEST_F(CompressSubjectTest, substitutesUnicodeBeforeTruncation)
     EXPECT_EQ("Aex", compress(&m_article, 3));
 }
 
+TEST_F(CompressSubjectTest, texTruncationKeepsUnicodeScalars)
+{
+    set_char_subst_mode('t');
+    m_subject.m_str = "    \"Axyz";
+
+    EXPECT_EQ("\xC3\x84", compress(&m_article, 1));
+    EXPECT_EQ("\xC3\x84x", compress(&m_article, 2));
+}
+
 class PerformStatusEndTest : public Test
 {
 protected:

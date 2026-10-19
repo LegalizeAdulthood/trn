@@ -61,6 +61,48 @@ consuming it.  The primitive keeps no partial-sequence state.
 The accepted byte forms follow
 [RFC 3629](https://www.rfc-editor.org/rfc/rfc3629.html#section-4).
 
+## Charset Decoding
+
+`CharsetDecoder(name)` retains its own charset selection.  Supported
+names and aliases cover ASCII, UTF-8, ISO-8859-1, ISO-8859-15, and
+Windows-1252.  `decode(bytes)` returns UTF-8 without changing global
+charset selection.  Views are complete inputs; embedded NUL is retained.
+
+The default decoder uses UTF-8.  Unknown or empty names also use strict
+UTF-8 as a deterministic fallback, while `charset()` reports
+`CHARSET_UNKNOWN`.  Invalid UTF-8 bytes, bytes above 0x7F in ASCII, and
+undefined Windows-1252 bytes become U+FFFD.  Latin-1 decodes all byte
+values, including soft hyphen and C1 controls, to their Unicode values.
+Control filtering is a later presentation operation.
+
+Each RFC 2047 word selects a decoder after transfer decoding.  Ordinary
+header text uses the UTF-8 fallback.  Incomplete encoded words remain
+literal text.  Whitespace is suppressed only between complete encoded
+words; spaces before ordinary text remain visible.
+
+Each MIME section retains a decoder and resets it when its content type
+is parsed or cleared.  A missing charset uses the default UTF-8 decoder;
+an unknown charset cannot reuse an earlier part's selection.  Body text
+is transfer-decoded and converted before HTML filtering, substitution,
+and layout.  The presentation cache stores UTF-8; raw article reads
+continue to return the original bytes.
+
+`MimeSection::decode_text_chunk` retains an incomplete trailing UTF-8
+scalar between transfer-decoded chunks.  Finalizing a section replaces
+unfinished bytes before its boundary marker is cached.  EOF also
+finalizes pending text.  Clearing or reparsing a section discards its
+pending bytes and selects a fresh decoder.  Complete cached lines are
+already UTF-8 and are not decoded again during backward paging.
+
+Substitution waits for complete presentation lines, so a cached partial
+line cannot be transformed twice.  Changing the substitution mode clears
+the presentation cache and restarts display from the article's first
+page; expanded text can have different offsets and line breaks.
+
+`utf8_visual_width_at`, `utf8_visual_length`, and `put_utf8_char_adv`
+measure or output presentation text independently of legacy charset
+selection.  Terminal output does not decode that text a second time.
+
 ## Historical Substitution
 
 `CharSubstitution(mode)` consumes complete UTF-8 views and returns UTF-8.
@@ -103,3 +145,12 @@ embedded NUL, malformed recovery, first-line bounds, and independent TeX
 instances across calls and article lifetimes.  `CompressFromTest`,
 `CompressSubjectTest`, and `TreeRenderingTest` cover substitution before
 compression and decoded header display, including repeated headers.
+
+`CharsetDecoderTest` covers aliases, supported mappings, undefined bytes,
+strict UTF-8 fallback, interleaved decoders, and terminal output under a
+different legacy charset selection.  `HeaderCharsetTest` covers per-word
+selection, malformed and unknown words, whitespace, control filtering,
+and name compression without global decoder state.  `ArticleIoTest`
+covers transfer/charset ordering, raw-byte retention, cache rereads and
+growth, split scalars, MIME boundaries, repeated articles, HTML, and
+cache invalidation when conversion mode changes.

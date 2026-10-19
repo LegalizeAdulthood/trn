@@ -9,6 +9,7 @@
 #include <trn/art.h>
 #include <trn/artstate.h>
 #include <trn/cache.h>
+#include <trn/charsubst.h>
 #include <trn/color.h>
 #include <trn/datasrc.h>
 #include <trn/decode.h>
@@ -287,6 +288,33 @@ int seek_art_buf(ArticlePosition pos)
     return 0;
 }
 
+static void store_art_text(char *&buffer, std::size_t offset, std::string_view text)
+{
+    const std::size_t base = art_buf_offset(buffer);
+    const std::size_t required = base + offset + text.size() + 2;
+    if (s_art_buf.size() < required)
+    {
+        s_art_buf.resize(required + ART_BUF_GROWTH);
+        buffer = art_buf_data() + base;
+    }
+    text.copy(buffer + offset, text.size());
+    buffer[offset + text.size()] = '\0';
+}
+
+static std::string substitute_art_text(std::string_view text)
+{
+    const std::size_t last_newline = text.rfind('\n');
+    if (last_newline == std::string_view::npos)
+    {
+        return std::string{text};
+    }
+    CharSubstitution substitution{current_char_subst_mode()};
+    std::string      result = substitution.substitute(text.substr(0, last_newline + 1));
+    result += substitution.finish();
+    result += text.substr(last_newline + 1);
+    return result;
+}
+
 static char *read_art_buf_raw(bool view_inline)
 {
     char       *bp;
@@ -300,6 +328,7 @@ static char *read_art_buf_raw(bool view_inline)
     int   word_wrap;
     int   extra_chars = 0;
     int read_something = 0;
+    int         converted_offset = 0;
     std::string description;
     const auto  write_newline = [](std::size_t offset)
     {
@@ -319,7 +348,7 @@ static char *read_art_buf_raw(bool view_inline)
         s_art_buf_pos = art_pos;
         return bp;
     }
-    if (s_art_buf_pos == g_art_size - g_header_type[PAST_HEADER].min_pos)
+    if (s_art_buf_pos == g_art_size - g_header_type[PAST_HEADER].min_pos && g_mime_section->m_decoder_pending.empty())
     {
         return nullptr;
     }
@@ -342,6 +371,7 @@ static char *read_art_buf_raw(bool view_inline)
         read_offset = s - bp;
         line_offset = s - bp;
         filter_offset = s - bp;
+        converted_offset = read_offset;
     }
     else
     {
@@ -371,7 +401,7 @@ read_more:
         const std::string chunk = read_art_chunk(read_limit);
         if (chunk.empty())
         {
-            if (!read_offset)
+            if (!read_offset && g_mime_section->m_decoder_pending.empty())
             {
                 *bp = '\0';
                 len = 0;
@@ -399,11 +429,40 @@ read_more:
         }
         if (!g_is_mime)
         {
-            goto done;
+            goto mime_switch;
         }
         o = line_offset + extra_offset;
+        if (mime_end_of_section(std::string_view{bp + o}) &&
+            (read_offset || !g_mime_section->m_decoder_pending.empty()))
+        {
+            const std::string boundary{bp + o};
+            const std::size_t source = static_cast<std::size_t>(converted_offset + extra_offset);
+            const std::string decoded = g_mime_section->decode_text_chunk(
+                {bp + source, static_cast<std::size_t>(read_offset - converted_offset)}, true);
+            std::string tail = g_mime_state == HTML_TEXT_MIME
+                                   ? filter_html(decoded, {bp, static_cast<std::size_t>(filter_offset)},
+                                                 static_cast<int>(s_art_buf_pos.value_of()))
+                                   : std::string{bp, static_cast<std::size_t>(converted_offset)} + decoded;
+            tail += '\n';
+            tail = substitute_art_text(tail);
+            const std::string separator = std::string(1, '\002') + g_multipart_separator + '\n';
+            (void) mime_set_state(boundary);
+            store_art_text(bp, 0, tail + separator);
+            len = static_cast<int>(tail.size());
+            extra_chars = static_cast<int>(separator.size());
+            goto done;
+        }
         if (mime_set_state(std::string_view{bp + o}))
         {
+            if (g_mime_state == TEXT_MIME || g_mime_state == HTML_TEXT_MIME || g_mime_state == ISO_TEXT_MIME)
+            {
+                read_offset = 0;
+                line_offset = 0;
+                filter_offset = 0;
+                converted_offset = 0;
+                *bp = '\0';
+                goto read_more;
+            }
             write_newline(art_buf_offset(bp + o));
             len = line_offset + 1;
         }
@@ -416,6 +475,7 @@ mime_switch:
         g_mime_state = TEXT_MIME;
         // FALL THROUGH
 
+    case NOT_MIME:
     case TEXT_MIME:
     case HTML_TEXT_MIME:
         if (g_mime_section->m_encoding == MENCODE_QPRINT)
@@ -461,8 +521,19 @@ mime_switch:
                 extra_chars -= len;
             }
         }
+        {
+            const std::size_t source = static_cast<std::size_t>(converted_offset + extra_offset);
+            const std::string decoded = g_mime_section->decode_text_chunk(bp + source);
+            store_art_text(bp, source, decoded);
+            len = converted_offset + static_cast<int>(decoded.size());
+        }
         if (g_mime_state != HTML_TEXT_MIME)
         {
+            const std::string presented = substitute_art_text(std::string_view{bp, static_cast<std::size_t>(len)});
+            store_art_text(bp, 0, presented);
+            const std::size_t newline = presented.find('\n');
+            len = static_cast<int>(newline == std::string::npos ? presented.size() : newline + 1);
+            extra_chars = static_cast<int>(presented.size()) - len;
             break;
         }
         o = filter_offset + extra_offset;
@@ -480,16 +551,21 @@ mime_switch:
                     read_offset = len;
                     line_offset = len;
                     filter_offset = len;
+                    converted_offset = len;
                     goto read_more;
                 }
-                write_newline(art_buf_offset(bp + len++));
+                filtered += '\n';
+                const std::string presented = substitute_art_text(filtered);
+                store_art_text(bp, 0, presented);
+                len = static_cast<int>(presented.size());
                 extra_chars = 0;
             }
             else
             {
-                extra_chars = len;
-                len = static_cast<int>(newline_pos) + 1;
-                extra_chars -= len;
+                const std::string presented = substitute_art_text(filtered);
+                store_art_text(bp, 0, presented);
+                len = static_cast<int>(presented.find('\n')) + 1;
+                extra_chars = static_cast<int>(presented.size()) - len;
             }
         }
         break;

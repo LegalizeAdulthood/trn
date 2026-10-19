@@ -211,14 +211,14 @@ The release contract is defined in
 - decoder and substitution state belongs to an article, header, or MIME
   presentation instance, not to process-global variables.
 
-The current code is functionally closer than its architecture suggests.
-RFC 2047 header decoding already handles Q and Base64 encoded words for
-the supported charset set: ASCII, UTF-8, Latin-1, Latin-9, and
-Windows-1252.  MIME structure, alternatives, transfer decoding, and HTML
-filtering are present.  The important gaps are that MIME body text is not
-consistently normalized into a UTF-8 buffer, charset conversion depends
-on global mutable state, and legacy charset-dependent helpers still
-accept historical five- and six-byte forms.
+RFC 2047 words and MIME text sections now retain explicit charset
+selection for ASCII, UTF-8, Latin-1, Latin-9, and Windows-1252.  Unknown
+or missing charsets use deterministic UTF-8 fallback; malformed bytes
+become U+FFFD.  Transfer decoding precedes charset conversion, and the
+presentation cache contains UTF-8.  Raw article bytes remain unchanged.
+Legacy charset helpers remain for compatibility; the restored decoding,
+HTML scanning, and terminal output paths do not depend on their mutable
+global selection.
 
 The new `decode_utf8_scalar` and `encode_utf8_scalar` operations enforce
 modern Unicode scalar boundaries without global charset state.  Invalid
@@ -230,8 +230,8 @@ UTF-8, and keeps TeX prefixes in a `CharSubstitution` instance.  Each
 header or compression call uses fresh substitution state.  Malformed
 bytes become U+FFFD without consuming subsequent valid characters.
 
-Remaining #17 and #34 work adds explicit header/MIME charset state and
-configurable Unicode substitution profiles.  The larger
+Remaining #34 work adds configurable Unicode substitution profiles.
+The larger
 `ArticlePresentationView` and `PresentationBuffer` architecture can
 remain a follow-up unless it is the smallest correct release change.
 
@@ -275,6 +275,34 @@ The final slice 32 `cmake --workflow rt-default` run passed 1522 tests
 with six skips and no failures.  The UTF-8, MIME, header, and display
 regression coverage for #2 remains green.
 
+Slice 33 test-first evidence, using `cmake --workflow temp` for all
+focused runs:
+
+- The first run failed 11 of 29 tests for stale charset selection,
+  malformed recovery, global control filtering, whitespace handling,
+  and MIME body bytes reaching the presentation cache undecoded.
+- Seven decoder and terminal tests then failed to compile because the
+  explicit APIs were missing.  Implementing per-word and per-section
+  decoders, UTF-8 buffering, and terminal operations made all 36 pass.
+- The expanded 94-test run failed eight tests for cached split scalars,
+  unfinished MIME text, repeated TeX conversion, global HTML/name state,
+  and header/subject truncation splitting UTF-8.  Retaining partial bytes
+  per section and using scalar-aware layout left one boundary test
+  failing because suppressed subheaders produced an extra blank line.
+- Adding final-HTML-line substitution coverage produced two failures
+  among 95 tests.  Suppressing that blank line and substituting the final
+  filtered line made the same 95 pass.
+- A mode-change regression initially failed in terminal fixture setup.
+  After correcting the fixture, the old implementation failed its cache
+  invalidation and first-page assertions.  Clearing transformed text and
+  restarting display when conversion mode changes made all 96 pass.
+
+The final slice 33 `cmake --workflow rt-default` run passed 1557 tests
+with six skips and no failures.  Coverage includes source retention,
+cache growth and rereads, transfer-decoded scalar fragments, section/EOF
+finalization, unknown and malformed charsets, repeated articles, and #2
+regressions.  Historical conversions for #17 are implemented locally.
+
 ## GitHub 5.0 Milestone
 
 The GitHub 5.0 milestone is the mandatory release scope.  Every issue on
@@ -288,7 +316,8 @@ Open mandatory milestone issues:
 - #5: Support decoding yEnc files.
 - #14: Make trn available as a Windows 32-bit/64-bit application.
 - #16: Ensure posting works properly.
-- #17: Restore original character encoding conversions.
+- #17: Restore original character encoding conversions (implemented
+  locally; ready to close).
 - #18: Update the INSTALL file.
 - #19: All previous Configure script options should be CMake configure
   options.
@@ -387,48 +416,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 33. Header And MIME Charset State
-
-Issues: #17.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #2.
-
-Depends on: 31 and 32.
-
-Files likely touched:
-
-- `libtrn/cache.cpp`
-- `libtrn/mime.cpp`
-- `libtrn/artio.cpp`
-- `libtrn/art.cpp`
-- `libtrn/rt-wumpus.cpp`
-- encoding tests
-
-Tasks:
-
-- Make RFC 2047 encoded-word decoding use explicit charset state and
-  error policy.
-- Make MIME text sections retain a declared or fallback charset decoder.
-- Convert supported MIME text charsets to UTF-8 before display buffering
-  where release scope touches the path.
-- Ensure unknown charsets never inherit previous field, part, article, or
-  view state.
-- Keep `s_art_buf` as a cache for 5.0 if useful; do not require the full
-  article presentation rewrite.
-
-Acceptance:
-
-- Supported RFC 2047 and MIME body charsets decode to UTF-8 before
-  substitution on covered paths.
-- Unknown or malformed charset behavior is deterministic and tested.
-- #17 can close without mutable global decoder state in the restored
-  paths.
-- Header and MIME unit tests cover known, unknown, malformed, and
-  repeated-article charset state.
-- Commit description includes `fixes #17`.
 
 ### 34. UTF-8 To ASCII Configuration
 
@@ -737,8 +724,8 @@ Mandatory open GitHub 5.0 milestone issues:
 - #5: 36.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.
-- #17: 33; strict UTF-8 scalars, historical substitution, and the pipeline
-  contract are implemented.
+- #17: completed by removed slices 31 through 33; the closing commit must
+  include `fixes #17`.
 - #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must
   include `fixes #19`.

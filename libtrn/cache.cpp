@@ -480,82 +480,43 @@ void Article::set_subj_line(std::string_view subj)
 
 static std::string decode_header_impl(std::string_view from)
 {
-    bool        pass2_needed = false;
     std::size_t cursor = 0;
     std::string result;
-    int         decoded_size = static_cast<int>(from.size());
-
     result.reserve(from.size());
-
-    if (from.empty())
+    const auto encoded_word_end = [from](std::size_t start)
     {
-        return {};
-    }
-
-    // Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong)
-    while (cursor < from.size() && from[cursor])
+        if (from.substr(start, 2) != "=?")
+        {
+            return std::string_view::npos;
+        }
+        const std::size_t q = from.find('?', start + 2);
+        if (q == std::string_view::npos || q == start + 2 || q + 3 >= from.size() || from[q + 2] != '?' ||
+            (from[q + 1] != 'q' && from[q + 1] != 'Q' && from[q + 1] != 'b' && from[q + 1] != 'B'))
+        {
+            return std::string_view::npos;
+        }
+        return from.find("?=", q + 3);
+    };
+    while (cursor < from.size())
     {
-        if (from[cursor] == '=' && cursor + 1 < from.size() && from[cursor + 1] == '?')
+        const std::size_t end = encoded_word_end(cursor);
+        if (end != std::string_view::npos)
         {
             const std::size_t q = from.find('?', cursor + 2);
-            const char        ch =
-                (q != std::string_view::npos && q + 2 < from.size() && from[q + 2] == '?') ? from[q + 1] : 0;
-            std::size_t e;
-
-            if (ch == 'q' || ch == 'Q' || ch == 'b' || ch == 'B')
+            const CharsetDecoder decoder{from.substr(cursor + 2, q - cursor - 2)};
+            const std::string    encoded{from.substr(q + 3, end - q - 3)};
+            const char           encoding = from[q + 1];
+            result += decoder.decode(encoding == 'q' || encoding == 'Q' ? qp_decode_string(encoded, true)
+                                                                        : b64_decode_string(encoded));
+            cursor = end + 2;
+            std::size_t next = cursor;
+            while (next < from.size() && (is_hor_space(from[next]) || from[next] == '\r' || from[next] == '\n'))
             {
-                std::string_view old_ics = input_charset_name();
-                std::string_view old_ocs = output_charset_name();
-#ifdef USE_UTF_HACK
-                std::string charset{from.substr(cursor + 2, q - cursor - 2)};
-                utf_init(charset, CHARSET_NAME_UTF8); // FIXME
-#endif
-                e = q + 2;
-                do
-                {
-                    e = from.find('?', e + 1);
-                } while (e != std::string_view::npos && e + 1 < from.size() && from[e + 1] != '=');
-                if (e != std::string_view::npos && e + 1 < from.size())
-                {
-                    int         len = static_cast<int>(e - cursor + 2);
-                    std::string encoded{from.substr(q + 3, e - q - 3)};
-                    std::string decoded;
-                    decoded_size -= len;
-                    cursor = e + 2;
-                    if (ch == 'q' || ch == 'Q')
-                    {
-                        decoded = qp_decode_string(encoded, true);
-                        len = static_cast<int>(decoded.size());
-                    }
-                    else
-                    {
-                        decoded = b64_decode_string(encoded);
-                        len = static_cast<int>(decoded.size());
-                    }
-#ifdef USE_UTF_HACK
-                    std::string utf8_copy = create_utf8_copy(decoded);
-                    len = static_cast<int>(utf8_copy.size());
-                    decoded = std::move(utf8_copy);
-#endif
-                    result += decoded;
-                    decoded_size += len;
-                    // If the next character is whitespace we should eat it now
-                    while (cursor < from.size() && is_hor_space(from[cursor]))
-                    {
-                        ++cursor;
-                    }
-                }
-                else
-                {
-                    result += from[cursor++];
-                }
-#ifdef USE_UTF_HACK
-                utf_init(old_ics, old_ocs);
-#endif
+                ++next;
             }
-            else
+            if (next < from.size() && encoded_word_end(next) != std::string_view::npos)
             {
-                result += from[cursor++];
+                cursor = next;
             }
         }
         else if (from[cursor] != '\n')
@@ -565,21 +526,14 @@ static std::string decode_header_impl(std::string_view from)
         else
         {
             ++cursor;
-            --decoded_size;
         }
-        pass2_needed = true;
     }
-    while (decoded_size > 1 && !result.empty() && result.back() == ' ')
+    result = CharsetDecoder{}.decode(result);
+    while (result.size() > 1 && result.back() == ' ')
     {
         result.pop_back();
-        --decoded_size;
     }
-
-    // Pass 2 to clear out "control" characters
-    if (pass2_needed)
-    {
-        dectrl(result);
-    }
+    dectrl(result);
     return result;
 }
 
@@ -593,14 +547,16 @@ void dectrl(std::string &str)
     for (std::size_t pos = 0; pos < str.size();)
     {
         std::string_view text{str.data() + pos, str.size() - pos};
-        const int        w = byte_length_at(text);
-        if (w <= 0)
+        const Utf8Scalar scalar = decode_utf8_scalar(text);
+        if (scalar.code_point == INVALID_CODE_POINT)
         {
-            break;
+            ++pos;
+            continue;
         }
 
-        const std::size_t byte_count = static_cast<std::size_t>(w);
-        if (!at_norm_char(text) || text.front() == ' ')
+        const std::size_t byte_count = scalar.byte_count;
+        const CodePoint   c = scalar.code_point;
+        if (c < 0x20 || (c >= 0x7F && c < 0xA0) || c == 0x2028 || c == 0x2029)
         {
             for (std::size_t i = 0; i < byte_count; i += 1)
             {
