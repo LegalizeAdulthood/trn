@@ -19,6 +19,13 @@ RFC 2047 encoded words follow the same transfer-before-charset order.
 Each encoded word and MIME text section owns its charset interpretation.
 Raw storage and the decoded presentation buffer are separate objects.
 
+Underlined terminal output consumes complete UTF-8 scalars regardless of
+the legacy charset selection.  Character-by-character underlining moves
+by display columns, including wide and combining characters.  Malformed
+bytes become U+FFFD; C0, DEL, and C1 controls use visible caret notation.
+Start/stop underline output ends underlining before following text,
+including wrapped subject lines.
+
 The strict scalar primitives establish the boundary for Unicode
 substitution and per-header/per-section charset migration.  The broader
 design is described in [charset-handling.md](charset-handling.md).
@@ -233,6 +240,11 @@ embedded NUL, malformed recovery, first-line bounds, and independent TeX
 instances across calls and article lifetimes.  `CompressFromTest`,
 `CompressSubjectTest`, and `TreeRenderingTest` cover substitution before
 compression and decoded header display, including repeated headers.
+The issue #30 subject fixture retains the attached article's mixed Q and
+Base64 encoded words.  `TreeRenderingTest` checks its decoded output,
+wrapped subject lines, balanced underline sequences, and whole-scalar
+character underlining.  It also covers wide and combining characters,
+malformed recovery, visible controls, and legacy charset independence.
 
 `UnicodeSubstitutionTest` checks scalar keys, user precedence, escaped
 and empty replacements, validation, and independent mapping snapshots.

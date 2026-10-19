@@ -11,9 +11,13 @@
 #include <trn/rt-select.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
+#include <trn/utf.h>
+
+#include "support/UnderlineFixture.h"
 
 #include <gtest/gtest.h>
 
+#include <cstdio>
 #include <string>
 
 namespace
@@ -37,6 +41,7 @@ protected:
         m_old_tc_us = g_tc_US;
         m_old_tc_ue = g_tc_UE;
         m_old_tc_uc = g_tc_UC;
+        m_old_tc_bc = g_tc_BC;
         m_old_fire_is_out = g_fire_is_out;
         m_old_erase_screen = g_erase_screen;
 
@@ -61,6 +66,7 @@ protected:
         g_tc_US = m_empty_capability;
         g_tc_UE = m_empty_capability;
         g_tc_UC = m_empty_capability;
+        g_tc_BC = "\b";
         g_fire_is_out = 0;
         g_erase_screen = false;
     }
@@ -83,6 +89,7 @@ protected:
         g_tc_US = m_old_tc_us;
         g_tc_UE = m_old_tc_ue;
         g_tc_UC = m_old_tc_uc;
+        g_tc_BC = m_old_tc_bc;
         g_fire_is_out = m_old_fire_is_out;
         g_erase_screen = m_old_erase_screen;
     }
@@ -107,6 +114,7 @@ protected:
     std::string_view m_old_tc_us;
     std::string_view m_old_tc_ue;
     std::string_view m_old_tc_uc;
+    std::string_view m_old_tc_bc;
     int         m_old_fire_is_out{};
     bool        m_old_erase_screen{};
 };
@@ -275,6 +283,137 @@ TEST_F(TreeRenderingTest, subjectLineGetsSubjectPrefixWhenUnthreaded)
 
     EXPECT_EQ("Subject: Thread title\n", output);
     EXPECT_EQ(ArticleLine{1}, lines);
+}
+
+TEST_F(TreeRenderingTest, issue30SubjectRestoresUnderlineBeforeFollowingText)
+{
+    g_curr_artp = nullptr;
+    g_threaded_group = false;
+    g_do_hiding = true;
+    g_tc_COLS = 120;
+    g_tc_US = "\x1B[4m";
+    g_tc_UE = "\x1B[24m";
+    g_fire_is_out = UNDERLINE | STANDOUT;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    tree_puts(UNDERLINE_SUBJECT, ArticleLine{1}, 1);
+    std::fputs("After\n", stdout);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Subject: \x1B[4m" + std::string{UNDERLINE_DECODED_SUBJECT} + "\x1B[24m\nAfter\n", output);
+}
+
+TEST_F(TreeRenderingTest, issue30SubjectUnderlinesWholeScalarsOnUndercharTerminal)
+{
+    g_curr_artp = nullptr;
+    g_threaded_group = false;
+    g_do_hiding = true;
+    g_tc_COLS = 120;
+    g_tc_UC = "<uc>";
+    init_tree();
+    std::string expected{"Subject: "};
+    expected += "\xE2\x80\x9C\b<uc>";
+    for (char ch : std::string_view{"Microsoft CEO says up to 30% of the company"})
+    {
+        expected += std::string{ch} + "\b<uc>";
+    }
+    expected += "\xE2\x80\x99\b<uc>";
+    for (char ch : std::string_view{"s code was written by AI"})
+    {
+        expected += std::string{ch} + "\b<uc>";
+    }
+    expected += "\xE2\x80\x9D\b<uc>\nAfter\n";
+
+    testing::internal::CaptureStdout();
+    tree_puts(UNDERLINE_SUBJECT, ArticleLine{1}, 1);
+    std::fputs("After\n", stdout);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(expected, output);
+}
+
+TEST_F(TreeRenderingTest, issue30WrappedSubjectRestoresUnderlineOnEveryLine)
+{
+    g_curr_artp = nullptr;
+    g_threaded_group = false;
+    g_do_hiding = true;
+    g_tc_COLS = 40;
+    g_tc_US = "\x1B[4m";
+    g_tc_UE = "\x1B[24m";
+    g_fire_is_out = UNDERLINE | STANDOUT;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    tree_puts(UNDERLINE_SUBJECT, ArticleLine{1}, 1);
+    std::fputs("After\n", stdout);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("Subject: \x1B[4m\xE2\x80\x9CMicrosoft CEO says up to 30%\x1B[24m\n"
+              "+        \x1B[4mof the company\xE2\x80\x99s code was\x1B[24m\n"
+              "+        \x1B[4mwritten by AI\xE2\x80\x9D\x1B[24m\nAfter\n",
+              output);
+}
+
+TEST_F(TreeRenderingTest, underPrintPreservesIssue30SubjectAndRestoresAttributes)
+{
+    g_tc_US = "\x1B[4m";
+    g_tc_UE = "\x1B[24m";
+
+    testing::internal::CaptureStdout();
+    under_print(UNDERLINE_DECODED_SUBJECT);
+    std::fputs("After", stdout);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("\x1B[4m" + std::string{UNDERLINE_DECODED_SUBJECT} + "\x1B[24mAfter", output);
+}
+
+TEST_F(TreeRenderingTest, underPrintHandlesWideCombiningAndMalformedScalars)
+{
+    g_tc_UC = "<uc>";
+    const std::string old_input{input_charset_name()};
+    const std::string old_output{output_charset_name()};
+    utf_init("Latin1", "Latin1");
+
+    testing::internal::CaptureStdout();
+    under_print("\xE7\x95\x8C"
+                "e\xCC\x81\xFFZ");
+    const std::string output = testing::internal::GetCapturedStdout();
+    utf_init(old_input, old_output);
+
+    EXPECT_EQ("\xE7\x95\x8C\b\b<uc><uc>e\b<uc>\xCC\x81\xEF\xBF\xBD\b<uc>Z\b<uc>", output);
+}
+
+TEST_F(TreeRenderingTest, underPrintDisplaysControlsWithoutExecutingThem)
+{
+    g_tc_US = "\x1B[4m";
+    g_tc_UE = "\x1B[24m";
+    std::string text{"\x1B[4m"};
+    text += '\0';
+    text += "\x7F\xC2\x9B";
+    for (const std::string_view capability : {std::string_view{}, std::string_view{"<uc>"}})
+    {
+        g_tc_UC = capability;
+        std::string expected;
+        for (char ch : std::string_view{"^[[4m^@^?^["})
+        {
+            expected += ch;
+            if (!capability.empty())
+            {
+                expected += "\b<uc>";
+            }
+        }
+        if (capability.empty())
+        {
+            expected = "\x1B[4m" + expected + "\x1B[24m";
+        }
+
+        testing::internal::CaptureStdout();
+        under_print(text);
+        const std::string output = testing::internal::GetCapturedStdout();
+
+        EXPECT_EQ(expected, output);
+    }
 }
 
 TEST_F(TreeRenderingTest, siblingBranchesAreRenderedOnSeparateLines)

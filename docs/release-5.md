@@ -380,6 +380,35 @@ extraction paths.  `yenc-extraction.md` documents the format and behavior.
 Issue #5 is implemented locally and ready to close; its closing commit
 must include `Fixes #5`.
 
+## UTF-8 Underline Display
+
+The subject from the article attached to
+[#30](https://github.com/LegalizeAdulthood/trn/issues/30) is retained as a
+small regression fixture with its original mixed Q and Base64 words.
+Earlier charset slices reached the header display path, so this work was
+implemented rather than deferred.  Start/stop underline sequences are
+balanced around ordinary and wrapped subjects.  Underlining one character
+at a time now emits complete scalars before cursor commands, uses display
+widths, and ignores legacy charset selection.
+
+Slice 37 test-first evidence, using `cmake --workflow temp` for all
+focused runs:
+
+- The initial 43-test run failed the attached subject's character
+  underline test: cursor and underline commands split UTF-8 sequences.
+  The start/stop attribute-restoration regression already passed.
+- Expanded coverage failed four of 47 tests before implementation.  Both
+  underline paths damaged UTF-8; wide/combining characters, malformed
+  bytes, legacy charset independence, and visible controls also failed.
+  Wrapped-subject attribute restoration already passed.
+- Whole-scalar terminal output, display-column cursor movement, and
+  visible control rendering made the same 47 tests pass.
+
+The slice 37 `cmake --workflow rt-default` run passed 1626 tests with six
+skips and no failures.  `charset-pipeline.md` documents the display
+contract.  Issue #30 is implemented locally and ready to close; its
+closing commit must include `Fixes #30`.
+
 ## GitHub 5.0 Milestone
 
 The GitHub 5.0 milestone is the mandatory release scope.  Every issue on
@@ -445,10 +474,8 @@ P2 work should not delay 5.0 unless it is moved onto the GitHub 5.0
 milestone.
 
 1. Add moderators support: #25.
-2. Fix the UTF-8 underline repro if it is not covered by #17 or #34:
-   #30.
-3. Refactor AddGroup storage and sort unsubscribed-group listings: #15.
-4. Use archive.org as additional test content: #35.
+2. Refactor AddGroup storage and sort unsubscribed-group listings: #15.
+3. Use archive.org as additional test content: #35.
 
 ## Implementation Rules
 
@@ -494,34 +521,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 37. UTF-8 Underline Display
-
-Issues: #30.
-
-Milestone status: not on the 5.0 milestone.
-
-Depends on: 31 through 35.
-
-Files likely touched:
-
-- terminal display code
-- display tests
-
-Tasks:
-
-- Add a regression using the attached UTF-8 underline message.
-- Ensure decoded header display cannot leave terminal attributes active.
-- Defer if 31 through 35 do not naturally touch the display path.
-
-Acceptance:
-
-- The underline repro no longer leaves terminal state dirty, or #30 is
-  explicitly deferred outside 5.0.
-- Display unit tests cover the attached UTF-8 underline repro when the
-  fix is implemented.
-- If this slice fixes #30 instead of deferring it, commit description
-  includes `fixes #30`.
 
 ### 38. Moderators Support
 
@@ -738,7 +737,8 @@ Non-milestone supporting or follow-up issues:
 - #15: 39 and 40.
 - #25: 38.
 - #29: 19.
-- #30: 37.
+- #30: completed by removed slice 37; the closing commit must include
+  `Fixes #30`.
 - #35: 41.
 
 ## Release Gate

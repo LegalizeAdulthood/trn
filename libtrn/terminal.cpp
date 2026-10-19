@@ -1382,37 +1382,41 @@ void push_char(char_int c)
 
 void under_print(std::string_view text)
 {
-    if (!g_tc_UC.empty()) // char by char underline?
+    const bool per_character = has_underchar_capability();
+    if (!per_character)
     {
-        while (!text.empty())
-        {
-            const char ch = text.front();
-            if (!at_norm_char(text))
-            {
-                std::putchar('^');
-                backspace(); // back up over it
-                underchar(); // and do the underline
-                std::putchar((ch & 0x7F) | 64);
-                backspace(); // back up over it
-                underchar(); // and do the underline
-            }
-            else
-            {
-                std::putchar(ch);
-                backspace(); // back up over it
-                underchar(); // and do the underline
-            }
-            text.remove_prefix(1);
-        }
+        underline();
     }
-    else // start and stop underline
+    while (!text.empty())
     {
-        underline(); // start underlining
-        for (const char ch : text)
+        const Utf8Scalar scalar = decode_utf8_scalar(text);
+        std::string_view output = text.substr(0, scalar.byte_count);
+        char             control[2]{'^', '\0'};
+        if (scalar.code_point < 0x20 || (scalar.code_point >= 0x7F && scalar.code_point < 0xA0))
         {
-            echo_char(ch);
+            control[1] = static_cast<char>((scalar.code_point & 0x7F) ^ 0x40);
+            output = std::string_view{control, 2};
         }
-        un_underline(); // stop underlining
+        while (!output.empty())
+        {
+            const int width = put_utf8_char_adv(output, true);
+            if (per_character)
+            {
+                for (int column = 0; column < width; ++column)
+                {
+                    backspace();
+                }
+                for (int column = 0; column < width; ++column)
+                {
+                    underchar();
+                }
+            }
+        }
+        text.remove_prefix(scalar.byte_count);
+    }
+    if (!per_character)
+    {
+        un_underline();
     }
 }
 
