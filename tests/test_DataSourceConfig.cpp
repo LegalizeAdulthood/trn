@@ -109,3 +109,8 @@ TEST_F(DataSourceConfigTest, recognizesStartTlsPolicyFields)
         EXPECT_NE(nullptr, DataSourceConfig::schema().find(name)) << name;
     }
 }
+
+TEST_F(DataSourceConfigTest, recognizesImplicitTlsField)
+{
+    EXPECT_NE(nullptr, DataSourceConfig::schema().find("Implicit TLS"));
+}

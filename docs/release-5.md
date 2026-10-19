@@ -30,12 +30,14 @@ Source uses `file_ref`, and the config target has direct tests for it.
 Those two areas should be treated as release verification only, not as
 active feature slices.
 
-NNTP capability discovery, modern commands, and STARTTLS are implemented.
+NNTP capability discovery, modern commands, STARTTLS, and implicit TLS
+are implemented.
 `NNTPLink` retains capabilities, a sorted vector of rejected commands,
 transport security state, and group/article selection.  STARTTLS verifies
 certificates and host names, refreshes capabilities, and restores reading
 state.  Data-source policy can require TLS before authentication or POST.
-Implicit TLS and capability-aware authentication remain active slices.
+Implicit TLS starts before the greeting on port 563 or a configured
+port.  Capability-aware authentication remains an active slice.
 
 OpenSSL 3.2 or newer is now required.  The Windows ZIP currently contains
 no runtime DLLs; collecting required DLLs remains an install/package
@@ -55,10 +57,32 @@ Slice 28 test-first evidence, using `cmake --workflow temp` throughout:
 - A final discovery-auth regression failed with duplicate `AUTHINFO USER`
   requests.  Clearing pending forced auth made all 141 tests pass.
 
-The final `cmake --workflow rt-default` run passed 1402 tests with six
+The slice 28 `cmake --workflow rt-default` run passed 1402 tests with six
 skips.  Coverage includes encrypted loopback article reads, certificate
 rejection, TLS policy, reader-mode selection, legacy fallback, rejection
 caching, empty HDR values, and batched overview retrieval.
+
+Slice 29 test-first evidence, using `cmake --workflow temp` throughout:
+
+- Restricted to `DataSourceConfigTest.recognizesImplicitTlsField`, the
+  first run failed because the schema lacked the setting.  The same
+  test passed after the field was added.
+- The first six-test expansion failed five tests for missing data-source
+  wiring, implicit startup, handshake failure handling, and TLS policy.
+- With three encrypted loopback tests added, eight of nine tests failed.
+  Five unit tests failed assertions; three fixture tests timed out while
+  the client waited for a cleartext greeting instead of sending a TLS
+  handshake.  The default-port expectations also require port 563.
+- After wiring configuration, negotiating TLS before the greeting, and
+  accepting either encrypted state for policy checks, the same nine
+  tests passed.  They cover custom ports, reconnects, reader mode, and
+  rejection of untrusted or wrong-host certificates.
+- The broader NNTP/data-source filter passed all 150 tests, including
+  STARTTLS and cleartext compatibility coverage.
+
+The final slice 29 `cmake --workflow rt-default` run passed 1411 tests
+with six skips and no failures.  Direct TLS regression coverage for #32
+now includes encrypted article reads and certificate verification.
 
 ## Script Audit
 
@@ -126,9 +150,9 @@ Documentation gaps and owning work items:
   defaults such as `Rnmail`, `Pnews`, `tail`, and `/bin/sh`.  Item 19
   owns the Windows-safe default policy and documentation fallout.
 - `man/trn.1`, `config/data/access_def.in`, and
-  `HelpFiles/samples/access` describe older NNTP behavior, including
-  `XGTITLE`, hostname-only `NNTPSERVER` wording, and no TLS or nntps
-  policy.  Items 26 through 30 own modern NNTP documentation updates.
+  `HelpFiles/samples/access` now describe implicit TLS.  Item 30 owns
+  authentication policy documentation; older `XGTITLE` wording still
+  needs synchronization.
 - `config/data/access_def.in` omits live access-schema fields such as
   `XHDR Broken` and `Xrefs`, and contains the malformed sample
   `Force Auth = [yes|no}`.  Items 8 and 10 own generated data
@@ -295,37 +319,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 29. NNTP Implicit TLS
-
-Issues: #3.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #32.
-
-Depends on: 28.
-
-Files likely touched:
-
-- `nntp`
-- `libtrn/DataSourceConfig.*`
-- `libtrn/datasrc.cpp`
-- config data and docs
-- NNTP tests
-
-Tasks:
-
-- Add implicit TLS session state.
-- Add `nntps` or implicit TLS server configuration.
-- Preserve direct SSL/nntps behavior from #32.
-- Test direct TLS without a prior cleartext greeting.
-
-Acceptance:
-
-- `nntps` servers can be used for reading.
-- Direct SSL/nntps behavior from #32 remains covered.
-- Unit or fixture tests cover direct TLS without a cleartext greeting.
 
 ### 30. NNTP Auth Policy
 
@@ -779,8 +772,8 @@ unless it is the smallest correct implementation for 31 through 35.
 
 Mandatory open GitHub 5.0 milestone issues:
 
-- #3: 29 and 30; capability discovery, command selection, and STARTTLS are
-  implemented.
+- #3: 30; capability discovery, command selection, STARTTLS, and implicit
+  TLS are implemented.
 - #5: 36.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.

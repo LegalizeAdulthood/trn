@@ -874,6 +874,26 @@ TEST_F(DataSourceInitTest, readsShortTlsPolicyValues)
     EXPECT_TRUE(source->m_nntp_link.require_tls_for_posting);
 }
 
+TEST_F(DataSourceInitTest, readsImplicitTlsFromAccessFile)
+{
+    std::ofstream{m_output_dir / "access"} << "[implicit-tls]\n"
+                                              "NNTP Server = news.example;5563\n"
+                                              "Implicit TLS = Y\n"
+                                              "STARTTLS = no\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("implicit-tls");
+    ASSERT_NE(nullptr, source);
+    EXPECT_EQ("news.example", source->m_news_id);
+    EXPECT_EQ(5563, source->m_nntp_link.port_number);
+    EXPECT_TRUE(source->m_nntp_link.implicit_tls);
+    EXPECT_EQ(NntpSecurity::Cleartext, source->m_nntp_link.security);
+    EXPECT_FALSE(source->m_nntp_link.allow_starttls);
+}
+
 TEST_F(DataSourceInitTest, readsNntpAuthFileForRemoteSource)
 {
     std::ofstream{m_output_dir / ".nntpauth"} << "reader\n"

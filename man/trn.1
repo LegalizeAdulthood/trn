@@ -2363,6 +2363,10 @@ See also NEWSHEADER.
 .Ip NNTPSERVER 8
 The hostname of your NNTPSERVER.
 [This does not apply unless you are running the NNTP version of trn.]
+To use implicit TLS, set "Implicit TLS = yes" in the source's access
+entry.  TLS starts before the server greeting and defaults to port 563
+(nntps).  Append ";5563", for example, to the server name for a custom
+port.  Certificates and server host names are verified.
 .Sp
 Default: the hostname listed in the server file, usually
 /usr/local/lib/rn/server.

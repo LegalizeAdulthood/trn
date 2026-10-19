@@ -170,11 +170,18 @@ Current code:
   host names are verified; the minimum TLS version is 1.2.
 - OpenSSL trust paths and `SSL_CERT_FILE` supply CA certificates.  Windows
   also uses the system ROOT certificate store.
-- There is no implicit TLS port handling.
+- Implicit TLS negotiates on connection, before reading the greeting.
+  It uses port 563 (`nntps`) unless the server has an explicit port.
+  Reconnects repeat the handshake; encrypted sessions do not upgrade
+  again or fall back to cleartext after a failure.
 
 Data-source policy options:
 
+- `Implicit TLS = yes` selects direct TLS; the default is `no`.
+  For a custom port, use `NNTP Server = news.example;5563` with this
+  setting.  Certificate and host-name checks match STARTTLS.
 - `STARTTLS = yes` is the default; `no` disables upgrades.
+  This option does not disable implicit TLS.
 - `Require TLS For Auth = yes` protects password authentication.
 - `Require TLS For Posting = yes` protects the `POST` command.
 - The two requirements default to `no` for legacy compatibility.  Values
@@ -184,7 +191,7 @@ Modern concern:
 
 - RFC 4642 defines `STARTTLS`.
 - RFC 8143 updates NNTP TLS handling to current TLS best practices.
-- Implicit TLS and capability-aware authentication remain release work.
+- Capability-aware authentication remains release work.
 
 ### STAT With Empty Message-ID
 

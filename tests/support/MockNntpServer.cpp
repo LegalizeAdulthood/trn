@@ -66,6 +66,8 @@ struct MockNntpServer::Impl
     std::vector<std::string> failures;
     int                      port{};
     bool                     stopping{};
+    bool                         implicit_tls{};
+    bool                         handshake_failure{};
 };
 
 MockNntpServer::MockNntpServer() :
@@ -133,12 +135,24 @@ void MockNntpServer::expect_quit()
 
 void MockNntpServer::expect_starttls(bool handshake_failure)
 {
+    configure_tls();
+    std::lock_guard guard{m_impl->mutex};
+    m_impl->expected_commands.push_back({"STARTTLS", {"382 continue with TLS negotiation"}, true, handshake_failure});
+}
+
+void MockNntpServer::use_implicit_tls(bool handshake_failure)
+{
+    configure_tls();
+    m_impl->implicit_tls = true;
+    m_impl->handshake_failure = handshake_failure;
+}
+
+void MockNntpServer::configure_tls()
+{
     m_impl->tls_context.use_certificate(asio::buffer(NNTP_TEST_CERTIFICATE, sizeof(NNTP_TEST_CERTIFICATE) - 1),
                                         asio::ssl::context::pem);
     m_impl->tls_context.use_private_key(asio::buffer(NNTP_TEST_PRIVATE_KEY, sizeof(NNTP_TEST_PRIVATE_KEY) - 1),
                                         asio::ssl::context::pem);
-    std::lock_guard guard{m_impl->mutex};
-    m_impl->expected_commands.push_back({"STARTTLS", {"382 continue with TLS negotiation"}, true, handshake_failure});
 }
 
 void MockNntpServer::set_welcome_banner(std::string line)
@@ -325,14 +339,44 @@ void MockNntpServer::run()
         return;
     }
 
-    asio::write(*socket, asio::buffer(banner), ec);
+    std::unique_ptr<asio::ssl::stream<tcp::socket &>> tls;
+    auto                                              negotiate_tls = [&socket, &tls, this](bool handshake_failure)
+    {
+        tls = std::make_unique<asio::ssl::stream<tcp::socket &>>(*socket, m_impl->tls_context);
+        error_code handshake_ec;
+        tls->handshake(asio::ssl::stream_base::server, handshake_ec);
+        if (handshake_ec)
+        {
+            if (!handshake_failure)
+            {
+                record_failure("TLS handshake failed: " + handshake_ec.message());
+            }
+            return false;
+        }
+        if (handshake_failure)
+        {
+            record_failure("TLS handshake unexpectedly succeeded");
+        }
+        return true;
+    };
+    if (m_impl->implicit_tls && !negotiate_tls(m_impl->handshake_failure))
+    {
+        return;
+    }
+    if (tls)
+    {
+        asio::write(*tls, asio::buffer(banner), ec);
+    }
+    else
+    {
+        asio::write(*socket, asio::buffer(banner), ec);
+    }
     if (ec && !stopping())
     {
         record_failure("write failed: " + ec.message());
         return;
     }
 
-    std::unique_ptr<asio::ssl::stream<tcp::socket &>> tls;
     std::string                                       buffer;
     auto read_command = [&socket, &tls, &buffer, this](std::string &command)
     {
@@ -401,23 +445,10 @@ void MockNntpServer::run()
                 return;
             }
         }
-        if (expected.starttls)
+        if (expected.starttls && !negotiate_tls(expected.handshake_failure))
         {
-            tls = std::make_unique<asio::ssl::stream<tcp::socket &>>(*socket, m_impl->tls_context);
-            tls->handshake(asio::ssl::stream_base::server, ec);
-            if (ec)
-            {
-                if (!expected.handshake_failure)
-                {
-                    record_failure("TLS handshake failed: " + ec.message());
-                }
-                consume_expected_command();
-                return;
-            }
-            if (expected.handshake_failure)
-            {
-                record_failure("TLS handshake unexpectedly succeeded");
-            }
+            consume_expected_command();
+            return;
         }
         consume_expected_command();
     }

@@ -25,6 +25,7 @@ public:
     void expect_mode_reader();
     void expect_quit();
     void expect_starttls(bool handshake_failure = false);
+    void use_implicit_tls(bool handshake_failure = false);
     void set_welcome_banner(std::string line);
     void start();
     int  port() const;
@@ -36,6 +37,7 @@ private:
     struct Impl;
 
     bool build_welcome_banner(std::string &line);
+    void configure_tls();
     void consume_expected_command();
     void expect_command(std::string command, std::vector<std::string> response_lines);
     bool next_expected_command(ExpectedCommand &command) const;

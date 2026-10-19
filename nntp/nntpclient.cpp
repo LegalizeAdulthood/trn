@@ -360,7 +360,7 @@ int nntp_group_descriptions(std::string_view pattern)
 
 int nntp_require_tls()
 {
-    if (g_nntp_link.security == NntpSecurity::StartTls)
+    if (g_nntp_link.security != NntpSecurity::Cleartext)
     {
         return 1;
     }
@@ -375,7 +375,7 @@ int nntp_require_tls()
 
 int nntp_start_tls()
 {
-    if (g_nntp_link.security == NntpSecurity::StartTls)
+    if (g_nntp_link.security != NntpSecurity::Cleartext)
     {
         return 1;
     }

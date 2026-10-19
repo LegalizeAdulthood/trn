@@ -187,10 +187,25 @@ int server_init(std::string_view machine)
     g_nntp_link.selected_article = 0;
     g_nntp_link.capabilities = {};
     g_nntp_link.unsupported_commands.clear();
-    g_nntp_link.connection = s_nntp_connection_factory(machine, g_nntp_link.port_number, "nntp");
+    const int port = g_nntp_link.port_number ? g_nntp_link.port_number : g_nntp_link.implicit_tls ? 563 : 0;
+    g_nntp_link.connection = s_nntp_connection_factory(machine, port, g_nntp_link.implicit_tls ? "nntps" : "nntp");
     if (g_nntp_link.connection == nullptr)
     {
         return -1;
+    }
+
+    if (g_nntp_link.implicit_tls)
+    {
+        g_nntp_link.tls_attempted = true;
+        error_code_t ec;
+        g_nntp_link.connection->start_tls(ec);
+        if (ec)
+        {
+            g_ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
+            nntp_close(false);
+            return -1;
+        }
+        g_nntp_link.security = NntpSecurity::ImplicitTls;
     }
 
     // Now get the server's signon message

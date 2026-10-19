@@ -62,7 +62,8 @@ private:
 enum class NntpSecurity
 {
     Cleartext,
-    StartTls
+    StartTls,
+    ImplicitTls
 };
 
 struct NNTPLink
@@ -77,6 +78,7 @@ struct NNTPLink
     std::vector<std::string> unsupported_commands;
     NntpSecurity             security{NntpSecurity::Cleartext};
     bool                     allow_starttls{true};
+    bool                     implicit_tls{};
     bool                     require_tls_for_auth{};
     bool                     require_tls_for_posting{};
     bool                     tls_attempted{};

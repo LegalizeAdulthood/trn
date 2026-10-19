@@ -171,6 +171,60 @@ TEST_F(NNTPTest, nntpConnectConnectionFailedReportsUnavailable)
     EXPECT_EQ("News server \"news.gmane.io\" is unavailable.\n", output);
 }
 
+TEST_F(NNTPTest, connectsImplicitTlsBeforeGreetingAndOnReconnect)
+{
+    g_nntp_link.implicit_tls = true;
+    g_nntp_link.allow_starttls = false;
+    InSequence sequence;
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        EXPECT_CALL(m_factory, Call(std::string_view{m_machine}, 563, std::string_view{"nntps"}))
+            .WillOnce(Return(m_connection));
+        EXPECT_CALL(*m_connection, start_tls(_));
+        EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 encrypted server ready"));
+        expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+    }
+
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        EXPECT_EQ(200, server_init(m_machine));
+        EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp_link.security);
+        nntp_close(false);
+        EXPECT_EQ(NntpSecurity::Cleartext, g_nntp_link.security);
+        EXPECT_TRUE(g_nntp_link.implicit_tls);
+    }
+}
+
+TEST_F(NNTPTest, connectsImplicitTlsOnExplicitPortWithoutAnotherUpgrade)
+{
+    g_nntp_link.implicit_tls = true;
+    g_nntp_link.port_number = 5563;
+    InSequence sequence;
+    EXPECT_CALL(m_factory, Call(std::string_view{m_machine}, 5563, std::string_view{"nntps"}))
+        .WillOnce(Return(m_connection));
+    EXPECT_CALL(*m_connection, start_tls(_));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 encrypted server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "MODE-READER", "STARTTLS", "."});
+    expect_reply("MODE READER", {"201 encrypted reader ready"});
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
+
+    EXPECT_EQ(201, server_init(m_machine));
+    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp_link.security);
+}
+
+TEST_F(NNTPTest, closesImplicitTlsWhenHandshakeFailsBeforeGreeting)
+{
+    g_nntp_link.implicit_tls = true;
+    EXPECT_CALL(m_factory, Call(std::string_view{m_machine}, 563, std::string_view{"nntps"}))
+        .WillOnce(Return(m_connection));
+    EXPECT_CALL(*m_connection, start_tls(_))
+        .WillOnce([](error_code_t &ec) { ec = boost::asio::error::connection_reset; });
+
+    EXPECT_EQ(-1, server_init(m_machine));
+    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_EQ(NntpSecurity::Cleartext, g_nntp_link.security);
+}
+
 class NNTPConnectedTest : public NNTPTest
 {
 public:
@@ -694,6 +748,21 @@ TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
     EXPECT_EQ(483, nntp_response_code(g_ser_line));
 }
 
+TEST_F(NNTPGetStringTest, acceptsImplicitTlsForRequiredOperations)
+{
+    g_nntp_link.security = NntpSecurity::ImplicitTls;
+    g_nntp_link.allow_starttls = false;
+    g_nntp_link.require_tls_for_auth = true;
+    g_nntp_link.require_tls_for_posting = true;
+    EXPECT_CALL(*m_connection, write_line(StrEq("AUTHINFO USER reader"), _));
+    EXPECT_CALL(*m_connection, write_line(StrEq("POST"), _));
+
+    EXPECT_EQ(1, nntp_require_tls());
+    EXPECT_EQ(1, nntp_start_tls());
+    EXPECT_EQ(1, nntp_command("AUTHINFO USER reader"));
+    EXPECT_EQ(1, nntp_command("POST"));
+}
+
 class NntpTlsLoopbackTest : public NNTPTest
 {
 protected:
@@ -785,6 +854,62 @@ TEST_F(NntpTlsLoopbackTest, rejectsStartTlsCertificateForAnotherHost)
     server.expect_starttls(true);
     server.start();
     g_nntp_link.port_number = server.port();
+
+    EXPECT_EQ(0, nntp_connect("127.0.0.1", false));
+    EXPECT_FALSE(g_nntp_link.connection);
+    server.verify();
+}
+
+TEST_F(NntpTlsLoopbackTest, readsArticleThroughImplicitTls)
+{
+    MockNntpServer server;
+    server.use_implicit_tls();
+    server.expect_capabilities({"READER"});
+    server.expect_group("comp.lang.apl", 1, 1, 1);
+    server.expect_body(1, {"encrypted article", "second line"});
+    server.expect_quit();
+    server.start();
+    g_nntp_link.port_number = server.port();
+    g_nntp_link.implicit_tls = true;
+    g_nntp_link.allow_starttls = false;
+
+    ASSERT_EQ(1, nntp_connect("localhost", false));
+    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp_link.security);
+    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, nntp_command("BODY 1"));
+    ASSERT_EQ(1, nntp_check());
+    std::string line;
+    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    EXPECT_EQ("encrypted article", line);
+    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    EXPECT_EQ("second line", line);
+    nntp_finish_list();
+    nntp_close(true);
+    server.verify();
+}
+
+TEST_F(NntpTlsLoopbackTest, rejectsUntrustedImplicitTlsCertificate)
+{
+    set_ca_file((m_certificate.parent_path() / "absent.pem").string());
+    MockNntpServer server;
+    server.use_implicit_tls(true);
+    server.start();
+    g_nntp_link.port_number = server.port();
+    g_nntp_link.implicit_tls = true;
+
+    EXPECT_EQ(0, nntp_connect("localhost", false));
+    EXPECT_FALSE(g_nntp_link.connection);
+    server.verify();
+}
+
+TEST_F(NntpTlsLoopbackTest, rejectsImplicitTlsCertificateForAnotherHost)
+{
+    MockNntpServer server;
+    server.use_implicit_tls(true);
+    server.start();
+    g_nntp_link.port_number = server.port();
+    g_nntp_link.implicit_tls = true;
 
     EXPECT_EQ(0, nntp_connect("127.0.0.1", false));
     EXPECT_FALSE(g_nntp_link.connection);

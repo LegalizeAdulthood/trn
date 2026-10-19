@@ -9,6 +9,11 @@
 # active file, set "Active File" to the appropriate name.  If you want
 # the file refetched after certain intervals, set "Active File Refetch"
 # to the appropriate interval (e.g. "1 day, 5 hours, 3 minutes").
+#   Set "Implicit TLS = yes" to connect with TLS before the greeting.
+# This defaults to port 563 (nntps); an appended port overrides it.
+# The default is no.  "STARTTLS = no" disables cleartext upgrades but
+# does not disable implicit TLS.  Both modes verify certificates and
+# server host names.  TLS failures close the connection.
 #   When defining a local news source (even NFS mounted), set "Active File"
 # and "Spool Dir".
 #   Specify "none" for "Overview Dir" to disable support for the overview
@@ -27,6 +32,10 @@
 
 #[default]
 #NNTP Server = @SERVER_NAME@
+#Implicit TLS = [yes|no]
+#STARTTLS = [yes|no]
+#Require TLS For Auth = [yes|no]
+#Require TLS For Posting = [yes|no]
 #Active File = @ACTIVE@
 #Active File Refetch = [never|1 day, 4 hours, 5 mins]
 #Spool Dir = @NEWS_SPOOL@
