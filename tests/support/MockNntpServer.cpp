@@ -43,6 +43,39 @@ bool has_line_endings(std::string_view line)
     return line.find_first_of("\r\n") != std::string_view::npos;
 }
 
+template <typename Initiate>
+std::size_t wait_for_io(asio::io_context &context, error_code &ec, Initiate initiate)
+{
+    std::size_t transferred{};
+    bool        complete{};
+    context.restart();
+    initiate(
+        [&](error_code result, std::size_t size = 0)
+        {
+            ec = result;
+            transferred = size;
+            complete = true;
+        });
+    while (!complete)
+    {
+        context.run_one();
+    }
+    return transferred;
+}
+
+template <typename Stream>
+void write_data(asio::io_context &context, Stream &stream, std::string_view data, error_code &ec)
+{
+    wait_for_io(context, ec, [&](auto complete) { asio::async_write(stream, asio::buffer(data), complete); });
+}
+
+template <typename Stream>
+std::size_t read_command_line(asio::io_context &context, Stream &stream, std::string &buffer, error_code &ec)
+{
+    return wait_for_io(context, ec, [&](auto complete)
+                       { asio::async_read_until(stream, asio::dynamic_buffer(buffer), "\r\n", complete); });
+}
+
 } // namespace
 
 struct MockNntpServer::ExpectedCommand
@@ -221,23 +254,26 @@ int MockNntpServer::port() const
 
 void MockNntpServer::stop()
 {
-    tcp::socket *socket{};
     {
         std::lock_guard guard{m_impl->mutex};
         m_impl->stopping = true;
-        socket = m_impl->socket.get();
     }
-
-    error_code ec;
-    if (socket != nullptr)
-    {
-        socket->close(ec);
-    }
-    m_impl->acceptor.close(ec);
+    asio::post(m_impl->context,
+               [this]
+               {
+                   error_code ec;
+                   if (m_impl->socket)
+                   {
+                       m_impl->socket->close(ec);
+                   }
+                   m_impl->acceptor.close(ec);
+               });
     if (m_impl->worker.joinable())
     {
         m_impl->worker.join();
     }
+    m_impl->context.restart();
+    m_impl->context.poll();
     {
         std::lock_guard guard{m_impl->mutex};
         m_impl->socket.reset();
@@ -321,15 +357,9 @@ void MockNntpServer::run()
         return;
     }
 
-    tcp::socket *socket{};
-    {
-        std::lock_guard guard{m_impl->mutex};
-        m_impl->socket = std::make_unique<tcp::socket>(m_impl->context);
-        socket = m_impl->socket.get();
-    }
-
+    auto       connection = std::make_unique<tcp::socket>(m_impl->context);
     error_code ec;
-    m_impl->acceptor.accept(*socket, ec);
+    wait_for_io(m_impl->context, ec, [&](auto complete) { m_impl->acceptor.async_accept(*connection, complete); });
     if (ec)
     {
         if (!stopping())
@@ -339,12 +369,24 @@ void MockNntpServer::run()
         return;
     }
 
+    tcp::socket *socket{};
+    {
+        std::lock_guard guard{m_impl->mutex};
+        if (m_impl->stopping)
+        {
+            return;
+        }
+        m_impl->socket = std::move(connection);
+        socket = m_impl->socket.get();
+    }
+
     std::unique_ptr<asio::ssl::stream<tcp::socket &>> tls;
     auto                                              negotiate_tls = [&socket, &tls, this](bool handshake_failure)
     {
         tls = std::make_unique<asio::ssl::stream<tcp::socket &>>(*socket, m_impl->tls_context);
         error_code handshake_ec;
-        tls->handshake(asio::ssl::stream_base::server, handshake_ec);
+        wait_for_io(m_impl->context, handshake_ec,
+                    [&](auto complete) { tls->async_handshake(asio::ssl::stream_base::server, complete); });
         if (handshake_ec)
         {
             if (!handshake_failure)
@@ -365,11 +407,11 @@ void MockNntpServer::run()
     }
     if (tls)
     {
-        asio::write(*tls, asio::buffer(banner), ec);
+        write_data(m_impl->context, *tls, banner, ec);
     }
     else
     {
-        asio::write(*socket, asio::buffer(banner), ec);
+        write_data(m_impl->context, *socket, banner, ec);
     }
     if (ec && !stopping())
     {
@@ -380,9 +422,9 @@ void MockNntpServer::run()
     std::string                                       buffer;
     auto read_command = [&socket, &tls, &buffer, this](std::string &command)
     {
-        error_code  read_ec;
-        const std::size_t size = tls ? asio::read_until(*tls, asio::dynamic_buffer(buffer), "\r\n", read_ec)
-                                     : asio::read_until(*socket, asio::dynamic_buffer(buffer), "\r\n", read_ec);
+        error_code        read_ec;
+        const std::size_t size = tls ? read_command_line(m_impl->context, *tls, buffer, read_ec)
+                                     : read_command_line(m_impl->context, *socket, buffer, read_ec);
         if (read_ec)
         {
             if (!stopping())
@@ -409,11 +451,11 @@ void MockNntpServer::run()
         response += "\r\n";
         if (tls)
         {
-            asio::write(*tls, asio::buffer(response), write_ec);
+            write_data(m_impl->context, *tls, response, write_ec);
         }
         else
         {
-            asio::write(*socket, asio::buffer(response), write_ec);
+            write_data(m_impl->context, *socket, response, write_ec);
         }
         if (write_ec && !stopping())
         {

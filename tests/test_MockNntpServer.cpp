@@ -59,6 +59,52 @@ TEST(MockNntpServerTest, startsOnLoopbackPort)
     server.verify();
 }
 
+TEST(MockNntpServerTest, repeatedlyStopsBeforeClientConnects)
+{
+    MockNntpServer server;
+    for (int pass = 0; pass < 20; ++pass)
+    {
+        SCOPED_TRACE(pass);
+        server.start();
+        EXPECT_GT(server.port(), 0);
+        server.stop();
+    }
+    server.verify();
+}
+
+TEST(MockNntpServerTest, stopsWhileWaitingForCommand)
+{
+    MockNntpServer server;
+    server.expect_mode_reader();
+    server.start();
+
+    asio::io_context context;
+    tcp::socket      socket = connect_to_loopback(context, server.port());
+    std::string      buffer;
+    ASSERT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket, buffer));
+
+    server.stop();
+
+    EXPECT_NONFATAL_FAILURE(server.verify(), "expected NNTP command was not received: MODE READER");
+}
+
+TEST(MockNntpServerTest, stopsDuringStartTlsHandshake)
+{
+    MockNntpServer server;
+    server.expect_starttls(true);
+    server.start();
+
+    asio::io_context context;
+    tcp::socket      socket = connect_to_loopback(context, server.port());
+    std::string      buffer;
+    ASSERT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket, buffer));
+    write_line(socket, "STARTTLS");
+    ASSERT_EQ("382 continue with TLS negotiation\r\n", read_line(socket, buffer));
+
+    server.stop();
+    server.verify();
+}
+
 TEST(MockNntpServerTest, lineReadsPreserveBufferedReplies)
 {
     asio::io_context context;
