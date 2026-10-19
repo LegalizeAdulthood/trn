@@ -8,6 +8,7 @@
 #include <trn/hash.h>
 #include <trn/only.h>
 #include <trn/rcstuff.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
 
@@ -26,6 +27,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace
@@ -70,13 +72,13 @@ class AddGroupStorageTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_first = g_first_add_group;
-        m_old_last = g_last_add_group;
+        m_old_groups = std::move(g_add_groups);
+        g_add_groups = {};
+        m_old_page = std::exchange(g_sel_page_gp, AddGroupIndex::None);
+        m_old_next = std::exchange(g_sel_next_gp, AddGroupIndex::None);
         m_old_data_source = g_data_source;
         m_old_sel_sort = g_sel_sort;
         m_old_sel_direction = g_sel_direction;
-        g_first_add_group = nullptr;
-        g_last_add_group = nullptr;
         g_data_source = nullptr;
         g_sel_sort = SS_NATURAL;
         g_sel_direction = 1;
@@ -84,21 +86,17 @@ protected:
 
     void TearDown() override
     {
-        for (AddGroup *group = g_first_add_group; group != nullptr;)
-        {
-            AddGroup *next = group->m_next;
-            delete group;
-            group = next;
-        }
-        g_first_add_group = m_old_first;
-        g_last_add_group = m_old_last;
+        g_add_groups = std::move(m_old_groups);
+        g_sel_page_gp = m_old_page;
+        g_sel_next_gp = m_old_next;
         g_data_source = m_old_data_source;
         g_sel_sort = m_old_sel_sort;
         g_sel_direction = m_old_sel_direction;
     }
 
-    AddGroup         *m_old_first{};
-    AddGroup         *m_old_last{};
+    AddGroupTable     m_old_groups;
+    AddGroupIndex     m_old_page{};
+    AddGroupIndex     m_old_next{};
     DataSource       *m_old_data_source{};
     SelectionSortMode m_old_sel_sort{};
     int               m_old_sel_direction{};
@@ -116,8 +114,10 @@ protected:
         m_old_nntp_link = g_nntp_link;
         m_old_quick_start = g_quick_start;
         m_old_use_add_selector = g_use_add_selector;
-        m_old_first = g_first_add_group;
-        m_old_last = g_last_add_group;
+        m_old_groups = std::move(g_add_groups);
+        g_add_groups = {};
+        m_old_page = std::exchange(g_sel_page_gp, AddGroupIndex::None);
+        m_old_next = std::exchange(g_sel_next_gp, AddGroupIndex::None);
         m_old_int_count = g_int_count;
         m_old_erase_screen = g_erase_screen;
         m_old_tc_am = g_tc_AM;
@@ -143,8 +143,6 @@ protected:
         g_newsrc_hash = hash_create(17, nullptr);
         nntp_gets_clear_buffer();
         m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-        g_first_add_group = nullptr;
-        g_last_add_group = nullptr;
         g_quick_start = false;
         g_use_add_selector = false;
         g_int_count = 0;
@@ -182,8 +180,9 @@ protected:
         g_nntp_link = m_old_nntp_link;
         g_data_source = m_old_data_source;
         g_multirc = m_old_multirc;
-        g_first_add_group = m_old_first;
-        g_last_add_group = m_old_last;
+        g_add_groups = std::move(m_old_groups);
+        g_sel_page_gp = m_old_page;
+        g_sel_next_gp = m_old_next;
         g_quick_start = m_old_quick_start;
         g_use_add_selector = m_old_use_add_selector;
         g_int_count = m_old_int_count;
@@ -262,8 +261,9 @@ protected:
     NNTPLink                m_old_nntp_link{};
     bool                    m_old_quick_start{};
     bool                    m_old_use_add_selector{};
-    AddGroup               *m_old_first{};
-    AddGroup               *m_old_last{};
+    AddGroupTable                                            m_old_groups;
+    AddGroupIndex                                            m_old_page{};
+    AddGroupIndex                                            m_old_next{};
     char                    m_old_int_count{};
     bool                    m_old_erase_screen{};
     bool                    m_old_tc_am{};
@@ -321,24 +321,26 @@ TEST_F(ActiveListPatternTest, leadingCaretWithTrailingDollarMatchesExactPrefix)
     EXPECT_EQ("comp.lang", active_list_pattern());
 }
 
-TEST_F(AddGroupStorageTest, storesNamesAndLinksWithoutAddingDuplicates)
+TEST_F(AddGroupStorageTest, storesNamesWithoutAddingDuplicates)
 {
-    add_to_list("comp.lang.c++", 42, ':');
-    add_to_list("news.software.readers", -1, '!');
-    add_to_list("comp.lang.c++", 99, '!');
+    const AddGroupIndex first = add_to_list("comp.lang.c++", 42, ':');
+    const AddGroupIndex last = add_to_list("news.software.readers", -1, '!');
+    const AddGroupIndex duplicate = add_to_list("comp.lang.c++", 99, '!');
 
-    ASSERT_NE(nullptr, g_first_add_group);
-    ASSERT_NE(nullptr, g_last_add_group);
-    EXPECT_EQ(g_last_add_group, g_first_add_group->m_next);
-    EXPECT_EQ(g_first_add_group, g_last_add_group->m_prev);
-    EXPECT_EQ(nullptr, g_first_add_group->m_prev);
-    EXPECT_EQ(nullptr, g_last_add_group->m_next);
-    EXPECT_EQ("comp.lang.c++", std::string_view{g_first_add_group->m_name});
-    EXPECT_EQ("news.software.readers", std::string_view{g_last_add_group->m_name});
-    EXPECT_EQ(42, g_first_add_group->m_to_read.value_of());
-    EXPECT_EQ(0, g_last_add_group->m_to_read.value_of());
-    EXPECT_EQ(AGF_SEL, g_first_add_group->m_flags);
-    EXPECT_EQ(AGF_DEL, g_last_add_group->m_flags);
+    ASSERT_EQ(2U, g_add_groups.size());
+    EXPECT_EQ(first, duplicate);
+    EXPECT_EQ(first, g_add_groups.first());
+    EXPECT_EQ(last, g_add_groups.last());
+    EXPECT_EQ(last, g_add_groups.next(first));
+    EXPECT_EQ(first, g_add_groups.prev(last));
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.prev(first));
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.next(last));
+    EXPECT_EQ("comp.lang.c++", g_add_groups[first].m_name);
+    EXPECT_EQ("news.software.readers", g_add_groups[last].m_name);
+    EXPECT_EQ(42, g_add_groups[first].m_to_read.value_of());
+    EXPECT_EQ(0, g_add_groups[last].m_to_read.value_of());
+    EXPECT_EQ(AGF_SEL, g_add_groups[first].m_flags);
+    EXPECT_EQ(AGF_DEL, g_add_groups[last].m_flags);
 }
 
 TEST_F(AddGroupStorageTest, sortAddGroupsOrdersByUnreadCount)
@@ -350,19 +352,96 @@ TEST_F(AddGroupStorageTest, sortAddGroupsOrdersByUnreadCount)
 
     sort_add_groups();
 
-    ASSERT_NE(nullptr, g_first_add_group);
-    AddGroup *second = g_first_add_group->m_next;
-    ASSERT_NE(nullptr, second);
-    AddGroup *third = second->m_next;
-    ASSERT_NE(nullptr, third);
-    EXPECT_EQ(nullptr, third->m_next);
-    EXPECT_EQ("comp.lang.alpha", std::string_view{g_first_add_group->m_name});
-    EXPECT_EQ("comp.lang.beta", std::string_view{second->m_name});
-    EXPECT_EQ("comp.lang.gamma", std::string_view{third->m_name});
-    EXPECT_EQ(nullptr, g_first_add_group->m_prev);
-    EXPECT_EQ(g_first_add_group, second->m_prev);
-    EXPECT_EQ(second, third->m_prev);
-    EXPECT_EQ(third, g_last_add_group);
+    std::vector<std::string> names;
+    for (AddGroupIndex index : g_add_groups.indices())
+    {
+        names.push_back(g_add_groups[index].m_name);
+    }
+    EXPECT_THAT(names, testing::ElementsAre("comp.lang.alpha", "comp.lang.beta", "comp.lang.gamma"));
+    const AddGroupIndex first = g_add_groups.first();
+    const AddGroupIndex second = g_add_groups.next(first);
+    const AddGroupIndex third = g_add_groups.next(second);
+    EXPECT_EQ(first, g_add_groups.prev(second));
+    EXPECT_EQ(second, g_add_groups.prev(third));
+    EXPECT_EQ(third, g_add_groups.last());
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.next(third));
+}
+
+TEST_F(AddGroupStorageTest, emptyTableHasNoTraversal)
+{
+    sort_add_groups();
+
+    EXPECT_TRUE(g_add_groups.empty());
+    EXPECT_TRUE(g_add_groups.indices().empty());
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.first());
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.last());
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.next(AddGroupIndex::None));
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.prev(AddGroupIndex::None));
+}
+
+TEST_F(AddGroupStorageTest, pageAndSelectionIdentitySurvivesGrowthAndSorting)
+{
+    const AddGroupIndex beta = add_to_list("comp.lang.beta", 5, ':');
+    const AddGroupIndex alpha = add_to_list("comp.lang.alpha", 3, '!');
+    g_sel_page_gp = beta;
+    g_sel_next_gp = alpha;
+    Selection item{};
+    item.gp = beta;
+    for (int i = 0; i != 256; ++i)
+    {
+        add_to_list("news.test." + std::to_string(i), i, 0);
+    }
+    g_sel_sort = SS_STRING;
+    sort_add_groups();
+
+    EXPECT_EQ(alpha, g_add_groups.first());
+    EXPECT_EQ("comp.lang.beta", g_add_groups[g_sel_page_gp].m_name);
+    EXPECT_EQ("comp.lang.alpha", g_add_groups[g_sel_next_gp].m_name);
+    EXPECT_EQ(AGF_SEL, g_add_groups[item.gp].m_flags);
+    EXPECT_EQ(beta, add_to_list("comp.lang.beta", 99, '!'));
+
+    g_sel_sort = SS_NATURAL;
+    sort_add_groups();
+
+    EXPECT_EQ(beta, g_add_groups.first());
+    EXPECT_EQ(alpha, g_add_groups.next(beta));
+}
+
+TEST_F(AddGroupStorageTest, nameAndCountSortingUseDirectionAndNameTies)
+{
+    const AddGroupIndex z = add_to_list("comp.Z", 3, ':');
+    const AddGroupIndex a = add_to_list("comp.a", 3, ':');
+    const AddGroupIndex b = add_to_list("comp.b", 9, ':');
+    g_sel_sort = SS_COUNT;
+    sort_add_groups();
+    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(a, z, b));
+    g_sel_direction = -1;
+    sort_add_groups();
+    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(b, z, a));
+    EXPECT_EQ(z, g_add_groups.next(b));
+    EXPECT_EQ(b, g_add_groups.prev(z));
+    g_sel_sort = SS_STRING;
+    sort_add_groups();
+    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(z, b, a));
+    g_sel_sort = SS_NATURAL;
+    sort_add_groups();
+    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(b, a, z));
+}
+
+TEST_F(AddGroupStorageTest, clearDisposesGroupsAndDuplicateLookupState)
+{
+    add_to_list(std::string(256, 'a'), 3, ':');
+    add_to_list(std::string(256, 'a'), 9, '!');
+    ASSERT_EQ(1U, g_add_groups.size());
+
+    g_add_groups.clear();
+
+    EXPECT_TRUE(g_add_groups.empty());
+    EXPECT_EQ(AddGroupIndex::None, g_add_groups.first());
+    const AddGroupIndex replacement = add_to_list(std::string(256, 'a'), 9, '!');
+    ASSERT_EQ(1U, g_add_groups.size());
+    EXPECT_EQ(9, g_add_groups[replacement].m_to_read.value_of());
+    EXPECT_EQ(AGF_DEL, g_add_groups[replacement].m_flags);
 }
 
 TEST_F(ScanActiveTest, reportsCachedActiveFileGroups)
@@ -431,7 +510,47 @@ TEST_F(ScanActiveTest, localNewGroupsIgnoreExcludedActiveGroup)
     const bool changed = find_new_groups();
 
     EXPECT_FALSE(changed);
-    EXPECT_EQ(nullptr, g_first_add_group);
+    EXPECT_TRUE(g_add_groups.empty());
     EXPECT_EQ(201L, source.m_last_new_group);
     EXPECT_EQ(active_times_size, source.m_act_sf.m_recent_cnt);
+}
+
+TEST_F(ScanActiveTest, remoteNewGroupsDiscardDuplicateCandidates)
+{
+    add_remote_active_source("");
+    DataSource         &source = g_data_sources.back();
+    testing::InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("DATE"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("111 19700102000000"));
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("NEWGROUPS 700101 000000 GMT"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("231 list of new newsgroups follows"))
+        .WillOnce(testing::Return("comp.lang.apl 42 7 y"))
+        .WillOnce(testing::Return("comp.lang.apl 99 7 y"))
+        .WillOnce(testing::Return("news.test 3 1 y"))
+        .WillOnce(testing::Return("."));
+
+    new_nntp_groups(&source);
+
+    ASSERT_EQ(2U, g_add_groups.size());
+    const AddGroupIndex apl = g_add_groups.first();
+    EXPECT_EQ("comp.lang.apl", g_add_groups[apl].m_name);
+    EXPECT_EQ(&source, g_add_groups[apl].m_data_src);
+    EXPECT_EQ(35, g_add_groups[apl].m_to_read.value_of());
+    EXPECT_EQ(apl, add_to_list("comp.lang.apl", 0, '!'));
+}
+
+TEST_F(ScanActiveTest, localNewGroupsDiscardDuplicatesAcrossSources)
+{
+    add_local_active_source("comp.lang.apl 42 7 y\n", "comp.lang.apl 200\ncomp.lang.apl 201\n");
+    new_local_groups(&g_data_sources.back());
+    ASSERT_EQ(1U, g_add_groups.size());
+    const AddGroupIndex apl = g_add_groups.first();
+
+    add_local_active_source("comp.lang.apl 99 7 y\n", "comp.lang.apl 202\n");
+    new_local_groups(&g_data_sources.back());
+
+    ASSERT_EQ(1U, g_add_groups.size());
+    EXPECT_EQ(apl, g_add_groups.first());
+    EXPECT_EQ(35, g_add_groups[apl].m_to_read.value_of());
 }

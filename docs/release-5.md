@@ -445,6 +445,27 @@ NNTP replies, folded/crossposted headers, deduplication, approved posts,
 and composer invocation.  Issue #25 is implemented locally and ready to
 close; its closing commit must include `Fixes #25`.
 
+AddGroup storage now owns objects in a vector.  Stable `AddGroupIndex`
+values identify groups, selector cursors, and page items.  Sorting changes
+a separate index vector, with constant-time forward/backward traversal.
+A name-sorted index vector provides binary-search duplicate detection
+before insertion.  Local and NNTP discovery collect directly into this
+table, retaining the first candidate and its source metadata.
+
+Slice 39 test-first evidence, using `cmake --workflow temp` throughout:
+
+- The initial run failed to compile because `AddGroupTable`,
+  `AddGroupIndex`, and the discovery test entry points were absent.
+- After implementing vector ownership and converting selector state and
+  traversal, the same focused selection passed all 36 tests.  Coverage
+  includes duplicate candidates within NNTP replies and across local
+  sources, cleanup and reuse, empty traversal, cursor/page-item identity
+  after growth, natural/name/count sorting, ties, and reverse traversal.
+
+The final slice 39 `cmake --workflow rt-default` run passed 1661 tests
+with six skips and no failures.  Issue #15 still requires the
+unsubscribed-list selector work in slice 40.
+
 ## GitHub 5.0 Milestone
 
 The GitHub 5.0 milestone is the mandatory release scope.  Every issue on
@@ -560,34 +581,6 @@ or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
 
-### 39. AddGroup Storage
-
-Issues: #15.
-
-Milestone status: not on the 5.0 milestone.
-
-Plan source: `ToDo.md`.
-
-Files likely touched:
-
-- `libtrn/addng.cpp`
-- `libtrn/include/trn/addng.h`
-- tests
-
-Tasks:
-
-- Introduce `AddGroupIndex` for selector cursors and page state.
-- Store `AddGroup` objects in `std::vector<AddGroup>`.
-- Replace linked-list traversal with range helpers.
-- Replace temporary home-grown de-duplication storage.
-
-Acceptance:
-
-- AddGroup storage no longer leaks discarded duplicate nodes.
-- Object identity is separate from sorted traversal.
-- AddGroup unit tests cover duplicate disposal, cursor identity, and
-  sorted traversal.
-
 ### 40. Selector Sorting
 
 Issues: #15.
@@ -605,7 +598,6 @@ Files likely touched:
 
 Tasks:
 
-- Make selector paging index-based.
 - Add a sortable selector view for unsubscribed newsgroup results.
 - Let users change sort order and refine the source glob.
 
@@ -742,7 +734,7 @@ Non-milestone supporting or follow-up issues:
 
 - #10: deferred pending a deterministic article and command repro from the
   reporter's spool state.
-- #15: 39 and 40.
+- #15: 40 (storage work in 39 is complete).
 - #29: 19.
 - #30: completed by removed slice 37; the closing commit must include
   `Fixes #30`.

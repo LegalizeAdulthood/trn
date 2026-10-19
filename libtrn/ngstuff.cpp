@@ -1014,7 +1014,7 @@ int add_group_sel_perform(std::string_view command)
     }
     if (len < static_cast<int>(command.size()) && command[static_cast<std::size_t>(len)] == '.')
     {
-        if (g_first_add_group)
+        if (!g_add_groups.empty())
         {
             return -1;
         }
@@ -1030,8 +1030,9 @@ int add_group_sel_perform(std::string_view command)
         goto break_out;
     }
 
-    for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
+    for (AddGroupIndex index : g_add_groups.indices())
     {
+        AddGroup *gp = &g_add_groups[index];
         if (!(gp->m_flags & g_sel_mask) ^ !!bits)
         {
             if (gp->add_group_perform(cmdstr, 0) < 0)

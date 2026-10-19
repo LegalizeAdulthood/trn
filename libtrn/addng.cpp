@@ -46,33 +46,85 @@ struct ActiveLineFields
     char status{'y'};
 };
 
-AddGroup *g_first_add_group{};
-AddGroup *g_last_add_group{};
-AddGroup *g_sel_page_gp{};
-AddGroup *g_sel_next_gp{};
+AddGroupTable g_add_groups;
+AddGroupIndex g_sel_page_gp{};
+AddGroupIndex g_sel_next_gp{};
 bool      g_quick_start{};           // -q
 bool      g_use_add_selector{true}; //
 
-static int s_add_group_count{};
-
-static int  add_newsgroup_cmp(std::string_view key, HashDatum data);
-static int  build_add_group_list(int key_len, HashDatum *data, int extra);
 static void process_list(GetNewsgroupFlags flag);
-static void new_nntp_groups(DataSource *dp);
-static void new_local_groups(DataSource *dp);
 static ActiveLineFields parse_active_line_fields(std::string_view fields);
-static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch);
 static int  list_groups(int key_len, HashDatum *data, int add_matching);
 static void scan_active_line(std::string_view active_line, bool add_matching);
 static int  add_group_order_number(const AddGroup *left, const AddGroup *right);
 static int  add_group_order_group_name(const AddGroup *left, const AddGroup *right);
 static int  add_group_order_count(const AddGroup *left, const AddGroup *right);
 
-static int add_newsgroup_cmp(std::string_view key, HashDatum data)
+AddGroupIndex AddGroupTable::add(std::string_view name, int to_read, int subscription, DataSource *source)
 {
-    const auto *group = (AddGroup *) data.dat_ptr;
+    const auto where =
+        std::lower_bound(m_names.begin(), m_names.end(), name,
+                         [this](AddGroupIndex index, std::string_view key) { return (*this)[index].m_name < key; });
+    if (where != m_names.end() && (*this)[*where].m_name == name)
+    {
+        return *where;
+    }
+    const AddGroupIndex index = static_cast<AddGroupIndex>(m_groups.size() + 1);
+    const AddGroupFlags flags = subscription == ':' ? AGF_SEL : subscription == '!' ? AGF_DEL : AGF_NONE;
+    m_groups.push_back(
+        {source, ArticleNum{std::max(to_read, 0)}, NewsgroupNum{size_cast<int>(m_groups)}, flags, std::string{name}});
+    m_names.insert(where, index);
+    m_positions.push_back(m_order.size());
+    m_order.push_back(index);
+    return index;
+}
 
-    return key.compare(group->m_name);
+void AddGroupTable::clear()
+{
+    m_groups.clear();
+    m_order.clear();
+    m_positions.clear();
+    m_names.clear();
+}
+
+void AddGroupTable::sort(int (*compare)(const AddGroup *, const AddGroup *))
+{
+    std::sort(m_order.begin(), m_order.end(), [this, compare](AddGroupIndex left, AddGroupIndex right)
+              { return compare(&(*this)[left], &(*this)[right]) < 0; });
+    for (std::size_t pos = 0; pos != m_order.size(); ++pos)
+    {
+        m_positions[static_cast<std::size_t>(m_order[pos]) - 1] = pos;
+    }
+}
+
+AddGroupIndex AddGroupTable::first() const
+{
+    return m_order.empty() ? AddGroupIndex::None : m_order.front();
+}
+
+AddGroupIndex AddGroupTable::last() const
+{
+    return m_order.empty() ? AddGroupIndex::None : m_order.back();
+}
+
+AddGroupIndex AddGroupTable::next(AddGroupIndex index) const
+{
+    if (index == AddGroupIndex::None)
+    {
+        return AddGroupIndex::None;
+    }
+    const std::size_t pos = m_positions[static_cast<std::size_t>(index) - 1] + 1;
+    return pos == m_order.size() ? AddGroupIndex::None : m_order[pos];
+}
+
+AddGroupIndex AddGroupTable::prev(AddGroupIndex index) const
+{
+    if (index == AddGroupIndex::None)
+    {
+        return AddGroupIndex::None;
+    }
+    const std::size_t pos = m_positions[static_cast<std::size_t>(index) - 1];
+    return pos == 0 ? AddGroupIndex::None : m_order[pos - 1];
 }
 
 static void skip_active_field_space(std::string_view &text)
@@ -114,25 +166,6 @@ static ActiveLineFields parse_active_line_fields(std::string_view fields)
         result.status = fields.front();
     }
     return result;
-}
-
-static int build_add_group_list(int key_len, HashDatum *data, int extra)
-{
-    AddGroup* node = (AddGroup*)data->dat_ptr;
-
-    value_of(node->m_num) = s_add_group_count++;
-    node->m_next = nullptr;
-    node->m_prev = g_last_add_group;
-    if (g_last_add_group)
-    {
-        g_last_add_group->m_next = node;
-    }
-    else
-    {
-        g_first_add_group = node;
-    }
-    g_last_add_group = node;
-    return 0;
 }
 
 void add_ng_init()
@@ -182,34 +215,31 @@ static void process_list(GetNewsgroupFlags flag)
                        g_multirc->m_first->next ? "s" : "");
         print_lines(line, STANDOUT);
     }
-    AddGroup* node = g_first_add_group;
-    if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
+    if (!g_add_groups.empty() && flag != GNG_NONE && g_use_add_selector)
     {
         add_group_selector(flag);
     }
-    while (node)
+    for (AddGroupIndex index : g_add_groups.indices())
     {
+        const AddGroup &group = g_add_groups[index];
         if (flag == GNG_NONE)
         {
             std::string line;
             line.reserve(CMD_BUF_LEN);
-            fmt::format_to(std::back_inserter(line), "{}\n", node->m_name);
+            fmt::format_to(std::back_inserter(line), "{}\n", group.m_name);
             print_lines(line, NO_MARKING);
         }
         else if (!g_use_add_selector)
         {
-            get_newsgroup(node->m_name, flag); // add newsgroup -- maybe
+            get_newsgroup(group.m_name, flag); // add newsgroup -- maybe
         }
-        AddGroup *prev_node = node;
-        node = node->m_next;
-        delete prev_node;
     }
-    g_first_add_group = nullptr;
-    g_last_add_group = nullptr;
-    s_add_group_count = 0;
+    g_add_groups.clear();
+    g_sel_page_gp = AddGroupIndex::None;
+    g_sel_next_gp = AddGroupIndex::None;
 }
 
-static void new_nntp_groups(DataSource *dp)
+void new_nntp_groups(DataSource *dp)
 {
     bool found_something = false;
 
@@ -225,7 +255,6 @@ static void new_nntp_groups(DataSource *dp)
         fmt::print("Can't get new groups from server:\n{}\n", g_ser_line);
         return;
     }
-    HashTable  *new_newsgroups = hash_create(33, add_newsgroup_cmp);
     std::string new_group_line;
     new_group_line.reserve(NNTP_STRLEN);
 
@@ -291,18 +320,16 @@ static void new_nntp_groups(DataSource *dp)
         {
             continue;
         }
-        add_to_hash(new_newsgroups, group_name, active_fields.high - active_fields.low, auto_subscribe(group_name));
+        add_to_list(group_name, active_fields.high - active_fields.low, auto_subscribe(group_name));
     }
     if (found_something)
     {
-        hash_walk(new_newsgroups, build_add_group_list, 0);
         dp->m_act_sf.end_append(dp->m_extra_name);
         dp->m_last_new_group = server_time;
     }
-    hash_destroy(new_newsgroups);
 }
 
-static void new_local_groups(DataSource *dp)
+void new_local_groups(DataSource *dp)
 {
     g_data_source = dp;
 
@@ -321,7 +348,6 @@ static void new_local_groups(DataSource *dp)
         return;
     }
     std::time_t last_one = std::time(nullptr) - 24L * 60 * 60 - 1;
-    HashTable *new_newsgroups = hash_create(33, add_newsgroup_cmp);
 
     for (std::string active_times_line = get_a_line(fp); !active_times_line.empty(); active_times_line = get_a_line(fp))
     {
@@ -357,81 +383,17 @@ static void new_local_groups(DataSource *dp)
         {
             continue;
         }
-        add_to_hash(new_newsgroups, group_name, active_fields.high - active_fields.low, auto_subscribe(group_name));
+        add_to_list(group_name, active_fields.high - active_fields.low, auto_subscribe(group_name));
     }
     std::fclose(fp);
 
-    hash_walk(new_newsgroups, build_add_group_list, 0);
-    hash_destroy(new_newsgroups);
     dp->m_last_new_group = last_one+1;
     dp->m_act_sf.m_recent_cnt = file_size;
 }
 
-static void add_to_hash(HashTable *ng, std::string_view name, int to_read, char_int ch)
+AddGroupIndex add_to_list(std::string_view name, int to_read, char_int ch)
 {
-    AddGroup *node = new AddGroup{};
-    HashDatum data{reinterpret_cast<char *>(node), static_cast<unsigned>(sizeof *node)};
-    switch (ch)
-    {
-    case ':':
-        node->m_flags = AGF_SEL;
-        break;
-    case '!':
-        node->m_flags = AGF_DEL;
-        break;
-    default:
-        node->m_flags = AGF_NONE;
-        break;
-    }
-    value_of(node->m_to_read) = (to_read < 0) ? 0 : to_read;
-    node->m_name.assign(name);
-    node->m_data_src = g_data_source;
-    node->m_next = nullptr;
-    node->m_prev = nullptr;
-    hash_store(ng, name, data);
-}
-
-void add_to_list(std::string_view name, int to_read, char_int ch)
-{
-    AddGroup *node = g_first_add_group;
-
-    while (node)
-    {
-        if (std::string_view{node->m_name} == name)
-        {
-            return;
-        }
-        node = node->m_next;
-    }
-
-    node = new AddGroup{};
-    switch (ch)
-    {
-    case ':':
-        node->m_flags = AGF_SEL;
-        break;
-    case '!':
-        node->m_flags = AGF_DEL;
-        break;
-    default:
-        node->m_flags = AGF_NONE;
-        break;
-    }
-    value_of(node->m_to_read) = (to_read < 0) ? 0 : to_read;
-    value_of(node->m_num) = s_add_group_count++;
-    node->m_name.assign(name);
-    node->m_data_src = g_data_source;
-    node->m_next = nullptr;
-    node->m_prev = g_last_add_group;
-    if (g_last_add_group)
-    {
-        g_last_add_group->m_next = node;
-    }
-    else
-    {
-        g_first_add_group = node;
-    }
-    g_last_add_group = node;
+    return g_add_groups.add(name, to_read, ch, g_data_source);
 }
 
 std::string active_list_pattern()
@@ -600,24 +562,5 @@ void sort_add_groups()
         break;
     }
 
-    std::vector<AddGroup *> ag_list;
-    ag_list.reserve(static_cast<std::size_t>(s_add_group_count));
-    for (AddGroup *ap = g_first_add_group; ap != nullptr; ap = ap->m_next)
-    {
-        ag_list.push_back(ap);
-    }
-    TRN_ASSERT(size_cast<int>(ag_list) == s_add_group_count);
-
-    std::sort(ag_list.begin(), ag_list.end(),
-              [sort_procedure](const AddGroup *left, const AddGroup *right) { return sort_procedure(left, right) < 0; });
-
-    g_first_add_group = ag_list.front();
-    g_first_add_group->m_prev = nullptr;
-    for (std::size_t i = 1; i < ag_list.size(); ++i)
-    {
-        ag_list[i - 1]->m_next = ag_list[i];
-        ag_list[i]->m_prev = ag_list[i - 1];
-    }
-    g_last_add_group = ag_list.back();
-    g_last_add_group->m_next = nullptr;
+    g_add_groups.sort(sort_procedure);
 }

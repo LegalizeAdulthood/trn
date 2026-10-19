@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include <utility>
+
 namespace
 {
 
@@ -22,8 +24,8 @@ class NewsgroupSearchTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_first_add_group = g_first_add_group;
-        m_old_last_add_group = g_last_add_group;
+        m_old_groups = std::move(g_add_groups);
+        g_add_groups = {};
         m_old_sel_page_gp = g_sel_page_gp;
         m_old_sel_next_gp = g_sel_next_gp;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
@@ -36,14 +38,9 @@ protected:
         m_old_sel_mask = g_sel_mask;
         m_old_int_count = g_int_count;
 
-        m_group.m_name = "comp/lang";
-        m_group.m_next = nullptr;
-        m_group.m_prev = nullptr;
-        m_group.m_flags = AGF_NONE;
-        g_first_add_group = &m_group;
-        g_last_add_group = &m_group;
-        g_sel_page_gp = nullptr;
-        g_sel_next_gp = nullptr;
+        m_group = g_add_groups.add("comp/lang", 0, 0, nullptr);
+        g_sel_page_gp = AddGroupIndex::None;
+        g_sel_next_gp = AddGroupIndex::None;
         g_newsgroup_ptr = nullptr;
         g_newsgroup_to_read = NewsgroupNum{1};
         g_general_mode = GM_READ;
@@ -59,8 +56,7 @@ protected:
 
     void TearDown() override
     {
-        g_first_add_group = m_old_first_add_group;
-        g_last_add_group = m_old_last_add_group;
+        g_add_groups = std::move(m_old_groups);
         g_sel_page_gp = m_old_sel_page_gp;
         g_sel_next_gp = m_old_sel_next_gp;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
@@ -74,11 +70,10 @@ protected:
         g_int_count = m_old_int_count;
     }
 
-    AddGroup       m_group{};
-    AddGroup      *m_old_first_add_group{};
-    AddGroup      *m_old_last_add_group{};
-    AddGroup      *m_old_sel_page_gp{};
-    AddGroup      *m_old_sel_next_gp{};
+    AddGroupTable  m_old_groups;
+    AddGroupIndex  m_group{};
+    AddGroupIndex  m_old_sel_page_gp{};
+    AddGroupIndex  m_old_sel_next_gp{};
     NewsgroupData *m_old_newsgroup_ptr{};
     NewsgroupNum   m_old_newsgroup_to_read{};
     GeneralMode    m_old_general_mode{};
@@ -95,7 +90,7 @@ protected:
 TEST_F(NewsgroupSearchTest, selectsAddGroupWithEscapedDelimiterAndCommand)
 {
     EXPECT_EQ(NGS_DONE, newsgroup_search("/comp\\/lang/:+", false));
-    EXPECT_EQ(AGF_SEL, m_group.m_flags & AGF_SEL);
+    EXPECT_EQ(AGF_SEL, g_add_groups[m_group].m_flags & AGF_SEL);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     EXPECT_EQ(1, g_perform_count);
 }

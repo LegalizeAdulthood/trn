@@ -511,7 +511,7 @@ static void sel_page_init()
 /// - g_sel_exclusive: May be set to false if no objects are included in exclusive mode.
 /// - g_sel_page_np: Set to the current newsgroup page pointer or reset to nullptr.
 /// - g_sel_page_mp: Set to the current multirc page pointer or reset to nullptr.
-/// - g_sel_page_gp: Set to the current add group page pointer or reset to nullptr.
+/// - g_sel_page_gp: Set to the current add group page index or reset.
 /// - g_sel_page_univ_index: Set to the current universal item page index or reset to 0.
 /// - g_sel_page_op: Set to the current option page index.
 /// - g_sel_page_app: Set to the current article page pointer or reset to nullptr.
@@ -666,9 +666,10 @@ try_again:
     {
         sort_add_groups();
         g_obj_count = ArticleNum{};
-        for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
+        for (AddGroupIndex index : g_add_groups.indices())
         {
-            if (g_sel_page_gp == gp)
+            AddGroup *gp = &g_add_groups[index];
+            if (g_sel_page_gp == index)
             {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
@@ -691,14 +692,14 @@ try_again:
         if (!g_sel_total_obj_cnt && g_sel_exclusive)
         {
             g_sel_exclusive = false;
-            g_sel_page_gp = nullptr;
+            g_sel_page_gp = AddGroupIndex::None;
             goto try_again;
         }
-        if (g_sel_page_gp == nullptr)
+        if (g_sel_page_gp == AddGroupIndex::None)
         {
             (void) first_page();
         }
-        else if (g_sel_page_gp == g_last_add_group)
+        else if (g_sel_page_gp == g_add_groups.last())
         {
             (void) last_page();
         }
@@ -1120,13 +1121,13 @@ bool first_page()
 
     case SM_ADD_GROUP:
     {
-        for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
+        for (AddGroupIndex index : g_add_groups.indices())
         {
-            if (gp->m_flags & AGF_INCLUDED)
+            if (g_add_groups[index].m_flags & AGF_INCLUDED)
             {
-                if (g_sel_page_gp != gp)
+                if (g_sel_page_gp != index)
                 {
-                    g_sel_page_gp = gp;
+                    g_sel_page_gp = index;
                     return true;
                 }
                 break;
@@ -1215,7 +1216,7 @@ bool first_page()
 ///   included Multirc if in SM_MULTIRC mode.
 /// - g_sel_page_np: Temporarily set to nullptr and possibly updated to the last
 ///   included NewsgroupData if in SM_NEWSGROUP mode.
-/// - g_sel_page_gp: Temporarily set to nullptr and possibly updated to the last
+/// - g_sel_page_gp: Temporarily reset and possibly updated to the last
 ///   included AddGroup if in SM_ADD_GROUP mode.
 /// - g_sel_page_univ_index: Temporarily set to 0 and possibly updated to the last
 ///   included UniversalItem if in SM_UNIVERSAL mode.
@@ -1264,8 +1265,8 @@ bool last_page()
 
     case SM_ADD_GROUP:
     {
-        AddGroup* gp = g_sel_page_gp;
-        g_sel_page_gp = nullptr;
+        const AddGroupIndex gp = g_sel_page_gp;
+        g_sel_page_gp = AddGroupIndex::None;
         if (!prev_page())
         {
             g_sel_page_gp = gp;
@@ -1386,7 +1387,7 @@ bool next_page()
 
     case SM_ADD_GROUP:
     {
-        if (g_sel_next_gp)
+        if (g_sel_next_gp != AddGroupIndex::None)
         {
             g_sel_page_gp = g_sel_next_gp;
             g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
@@ -1537,20 +1538,20 @@ bool prev_page()
 
     case SM_ADD_GROUP:
     {
-        AddGroup* gp = g_sel_page_gp;
-        AddGroup* page_gp = g_sel_page_gp;
+        AddGroupIndex gp = g_sel_page_gp;
+        AddGroupIndex page_gp = g_sel_page_gp;
 
-        if (!gp)
+        if (gp == AddGroupIndex::None)
         {
-            gp = g_last_add_group;
+            gp = g_add_groups.last();
         }
         else
         {
-            gp = gp->m_prev;
+            gp = g_add_groups.prev(gp);
         }
-        while (gp)
+        while (gp != AddGroupIndex::None)
         {
-            if (gp->m_flags & AGF_INCLUDED)
+            if (g_add_groups[gp].m_flags & AGF_INCLUDED)
             {
                 page_gp = gp;
                 g_sel_prior_obj_cnt--;
@@ -1559,7 +1560,7 @@ bool prev_page()
                     break;
                 }
             }
-            gp = gp->m_prev;
+            gp = g_add_groups.prev(gp);
         }
         if (g_sel_page_gp != page_gp)
         {
@@ -1783,14 +1784,14 @@ try_again:
 
     case SM_ADD_GROUP:
     {
-        AddGroup* gp = g_sel_page_gp;
-        for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->m_next)
+        AddGroupIndex gp = g_sel_page_gp;
+        for (; gp != AddGroupIndex::None && g_sel_page_item_cnt < s_sel_max_per_page; gp = g_add_groups.next(gp))
         {
             if (gp == u.gp)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
-            if (gp->m_flags & AGF_INCLUDED)
+            if (g_add_groups[gp].m_flags & AGF_INCLUDED)
             {
                 g_sel_page_item_cnt++;
             }
@@ -2237,31 +2238,32 @@ start_of_loop:
     }
     else if (g_sel_mode == SM_ADD_GROUP)
     {
-        AddGroup* gp = g_sel_page_gp;
+        AddGroupIndex gp = g_sel_page_gp;
         int max_len = 0;
         if (current_group_display_mode() == 'l')
         {
             int i = 0;
-            for (; gp && i < s_sel_max_per_page; gp = gp->m_next)
+            for (; gp != AddGroupIndex::None && i < s_sel_max_per_page; gp = g_add_groups.next(gp))
             {
-                if (!(gp->m_flags & AGF_INCLUDED))
+                if (!(g_add_groups[gp].m_flags & AGF_INCLUDED))
                 {
                     continue;
                 }
-                int len = static_cast<int>(gp->m_name.size()) + 2;
+                int len = static_cast<int>(g_add_groups[gp].m_name.size()) + 2;
                 max_len = std::max(len, max_len);
                 i++;
             }
             gp = g_sel_page_gp;
         }
-        for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->m_next)
+        for (; gp != AddGroupIndex::None && g_sel_page_item_cnt < s_sel_max_per_page; gp = g_add_groups.next(gp))
         {
-            if (!(gp->m_flags & AGF_INCLUDED))
+            const AddGroup &group = g_add_groups[gp];
+            if (!(group.m_flags & AGF_INCLUDED))
             {
                 continue;
             }
 
-            sel = !!(gp->m_flags & g_sel_mask) + (gp->m_flags & AGF_DEL);
+            sel = !!(group.m_flags & g_sel_mask) + (group.m_flags & AGF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.gp = gp;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -2269,8 +2271,8 @@ start_of_loop:
 
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
-            fmt::print("{:5} ", gp->m_to_read.value_of());
-            display_group(gp->m_data_src, gp->m_name, max_len);
+            fmt::print("{:5} ", group.m_to_read.value_of());
+            display_group(group.m_data_src, group.m_name, max_len);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt)
@@ -2519,7 +2521,7 @@ void update_page()
             break;
 
         case SM_ADD_GROUP:
-            sel = !!(u.gp->m_flags & g_sel_mask) + (u.gp->m_flags & AGF_DEL);
+            sel = !!(g_add_groups[u.gp].m_flags & g_sel_mask) + (g_add_groups[u.gp].m_flags & AGF_DEL);
             break;
 
         case SM_UNIVERSAL:

@@ -18,7 +18,6 @@ enum : bool
     FILL_LAST_PAGE = true
 };
 
-struct AddGroup;
 struct Article;
 struct Multirc;
 struct NewsgroupData;
@@ -34,7 +33,7 @@ union Selection
 {
     Article       *ap;
     Subject       *sp;
-    AddGroup      *gp;
+    AddGroupIndex  gp;
     Multirc       *mp;
     NewsgroupData *np;
     UniversalItem *un;

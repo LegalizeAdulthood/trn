@@ -721,7 +721,7 @@ sel_restart:
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
 /// - g_sel_mask: Set to the selection mask for the selector.
-/// - g_sel_page_gp: Set to nullptr to initialize the page group pointer.
+/// - g_sel_page_gp: Reset to initialize the page group index.
 /// - s_extra_commands: Set to the command handler for add group commands.
 ///
 char add_group_selector(GetNewsgroupFlags flags)
@@ -761,7 +761,7 @@ sel_restart:
     {
         g_sel_mask = AGF_SEL;
     }
-    g_sel_page_gp = nullptr;
+    g_sel_page_gp = AddGroupIndex::None;
     s_extra_commands = add_group_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -782,11 +782,10 @@ sel_restart:
 
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t')
     {
-        AddGroup *gp;
-        int i;
         g_add_new_by_default = ADDNEW_SUB;
-        for (gp = g_first_add_group, i = 0; gp; gp = gp->m_next, i++)
+        for (AddGroupIndex index : g_add_groups.indices())
         {
+            AddGroup *gp = &g_add_groups[index];
             if (gp->m_flags & AGF_SEL)
             {
                 gp->m_flags &= ~AGF_SEL;
@@ -1849,11 +1848,11 @@ static bool select_item(Selection u)
         break;
 
     case SM_ADD_GROUP:
-        if (!(u.gp->m_flags & g_sel_mask))
+        if (!(g_add_groups[u.gp].m_flags & g_sel_mask))
         {
             g_selected_count++;
         }
-        u.gp->m_flags = (u.gp->m_flags & ~AGF_DEL) | g_sel_mask;
+        g_add_groups[u.gp].m_flags = (g_add_groups[u.gp].m_flags & ~AGF_DEL) | g_sel_mask;
         break;
 
     case SM_NEWSGROUP:
@@ -1982,14 +1981,14 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_ADD_GROUP:
-        if (u.gp->m_flags & g_sel_mask)
+        if (g_add_groups[u.gp].m_flags & g_sel_mask)
         {
-            u.gp->m_flags &= ~g_sel_mask;
+            g_add_groups[u.gp].m_flags &= ~g_sel_mask;
             g_selected_count--;
         }
         if (g_sel_rereading)
         {
-            u.gp->m_flags |= AGF_DEL;
+            g_add_groups[u.gp].m_flags |= AGF_DEL;
         }
         break;
 
@@ -2161,8 +2160,9 @@ static void sel_cleanup()
     case SM_ADD_GROUP:
         if (g_sel_rereading)
         {
-            for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
+            for (AddGroupIndex index : g_add_groups.indices())
             {
+                AddGroup *gp = &g_add_groups[index];
                 if (gp->m_flags & AGF_DEL_SEL)
                 {
                     if (!(gp->m_flags & AGF_SEL))
@@ -2176,8 +2176,9 @@ static void sel_cleanup()
         }
         else
         {
-            for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
+            for (AddGroupIndex index : g_add_groups.indices())
             {
+                AddGroup *gp = &g_add_groups[index];
                 if (gp->m_flags & AGF_DEL)
                 {
                     gp->m_flags = (gp->m_flags & ~AGF_DEL) | AGF_EXCLUDED;
@@ -3739,7 +3740,7 @@ reask_sort:
 ///
 /// @globals
 /// - g_sel_rereading: Toggled for rereading mode.
-/// - g_sel_page_gp: Set to nullptr for page state changes.
+/// - g_sel_page_gp: Reset for page state changes.
 /// - g_sel_page_np: Set to nullptr for page state changes.
 /// - g_sel_exclusive: Toggled for exclusive selection mode.
 /// - g_sel_item_index: Reset to 0 for some commands.
@@ -3815,7 +3816,7 @@ reask_sort:
     case 'U':
         sel_cleanup();
         g_sel_rereading = !g_sel_rereading;
-        g_sel_page_gp = nullptr;
+        g_sel_page_gp = AddGroupIndex::None;
         return DS_RESTART;
 
     case 'R':
@@ -3824,7 +3825,7 @@ reask_sort:
             sel_cleanup();
         }
         set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
-        g_sel_page_gp = nullptr;
+        g_sel_page_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -3834,7 +3835,7 @@ reask_sort:
             sel_cleanup();
         }
         g_sel_exclusive = !g_sel_exclusive;
-        g_sel_page_gp = nullptr;
+        g_sel_page_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -3850,17 +3851,18 @@ reask_sort:
     case 'X':  case 'D':  case 'J':
         if (!g_sel_rereading)
         {
-            AddGroup* gp;
+            AddGroupIndex index;
             if (ch == 'D')
             {
-                gp = g_sel_page_gp;
+                index = g_sel_page_gp;
             }
             else
             {
-                gp = g_first_add_group;
+                index = g_add_groups.first();
             }
-            while (gp)
+            while (index != AddGroupIndex::None)
             {
+                AddGroup *gp = &g_add_groups[index];
                 if ((!(gp->m_flags & AGF_SEL) ^ (ch == 'J' ? AGF_SEL : AGF_NONE)) //
                     || (gp->m_flags & AGF_DEL))
                 {
@@ -3870,8 +3872,8 @@ reask_sort:
                     }
                     gp->m_flags &= ~(AGF_DEL|AGF_SEL);
                 }
-                gp = gp->m_next;
-                if (ch == 'D' && gp == g_sel_next_gp)
+                index = g_add_groups.next(index);
+                if (ch == 'D' && index == g_sel_next_gp)
                 {
                     break;
                 }
@@ -3888,9 +3890,9 @@ reask_sort:
         }
         else if (ch == 'J')
         {
-            for (AddGroup *gp = g_first_add_group; gp; gp = gp->m_next)
+            for (AddGroupIndex index : g_add_groups.indices())
             {
-                gp->m_flags &= ~AGF_DEL_SEL;
+                g_add_groups[index].m_flags &= ~AGF_DEL_SEL;
             }
             g_selected_count = 0;
             return DS_DISPLAY;

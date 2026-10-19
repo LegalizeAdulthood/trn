@@ -138,11 +138,11 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     }
 
     const bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
-    if (g_first_add_group)
+    if (!g_add_groups.empty())
     {
-        AddGroup *gp = g_first_add_group;
-        do
+        for (AddGroupIndex index : g_add_groups.indices())
         {
+            AddGroup *gp = &g_add_groups[index];
             if (s_newsgroup_compex.execute(gp->m_name))
             {
                 if (cmdlst.empty())
@@ -158,7 +158,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             {
                 perform_status(g_newsgroup_to_read.value_of(), 50);
             }
-        } while ((gp = gp->m_next) != nullptr);
+        }
         return ret;
     }
 
