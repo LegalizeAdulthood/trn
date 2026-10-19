@@ -374,7 +374,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
         {
             line += '\n';
         }
-        fmt::print(g_art_fp, "{}", line);
+        std::fwrite(line.data(), 1, line.size(), g_art_fp);
         s_body_end = ftell_art();
         had_nl = result == NGSR_FULL_LINE;
     }
