@@ -66,6 +66,13 @@ enum class NntpSecurity
     ImplicitTls
 };
 
+enum class NntpAuthState
+{
+    Unauthenticated,
+    Authenticating,
+    Authenticated
+};
+
 struct NNTPLink
 {
     ConnectionPtr connection;
@@ -77,6 +84,8 @@ struct NNTPLink
     // Sorted command names rejected by this session.
     std::vector<std::string> unsupported_commands;
     NntpSecurity             security{NntpSecurity::Cleartext};
+    NntpAuthState            auth_state{NntpAuthState::Unauthenticated};
+    bool                     allow_legacy_auth{true};
     bool                     allow_starttls{true};
     bool                     implicit_tls{};
     bool                     require_tls_for_auth{};

@@ -29,6 +29,7 @@ enum class DataSourceConfigField
     Xrefs,
     OverviewFormatFile,
     ForceAuth,
+    AllowLegacyAuth,
     StartTls,
     ImplicitTls,
     RequireTlsForAuth,
@@ -56,6 +57,7 @@ public:
     std::optional<std::string_view> xrefs() const;
     std::optional<std::string_view> overview_format_file() const;
     std::optional<std::string_view> force_auth() const;
+    std::optional<std::string_view> allow_legacy_auth() const;
     std::optional<std::string_view> starttls() const;
     std::optional<std::string_view> implicit_tls() const;
     std::optional<std::string_view> require_tls_for_auth() const;
@@ -76,6 +78,7 @@ public:
     void set_xrefs(std::string_view value);
     void set_overview_format_file(std::string_view value);
     void set_force_auth(std::string_view value);
+    void set_allow_legacy_auth(std::string_view value);
     void set_starttls(std::string_view value);
     void set_implicit_tls(std::string_view value);
     void set_require_tls_for_auth(std::string_view value);
@@ -100,6 +103,7 @@ private:
     std::optional<std::string> m_xrefs;
     std::optional<std::string> m_overview_format_file;
     std::optional<std::string> m_force_auth;
+    std::optional<std::string> m_allow_legacy_auth;
     std::optional<std::string> m_starttls;
     std::optional<std::string> m_implicit_tls;
     std::optional<std::string> m_require_tls_for_auth;
@@ -188,6 +192,16 @@ inline std::optional<std::string_view> DataSourceConfig::overview_format_file() 
 inline std::optional<std::string_view> DataSourceConfig::force_auth() const
 {
     return view(m_force_auth);
+}
+
+inline std::optional<std::string_view> DataSourceConfig::allow_legacy_auth() const
+{
+    return view(m_allow_legacy_auth);
+}
+
+inline void DataSourceConfig::set_allow_legacy_auth(std::string_view value)
+{
+    set_value(m_allow_legacy_auth, value);
 }
 
 inline void DataSourceConfig::set_nntp_server(std::string_view value)

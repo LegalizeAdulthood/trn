@@ -47,6 +47,7 @@ const IniSchema s_schema{
         IniField::value(field_id(DataSourceConfigField::Xrefs), "Xrefs"),
         IniField::value(field_id(DataSourceConfigField::OverviewFormatFile), "Overview Format File"),
         IniField::value(field_id(DataSourceConfigField::ForceAuth), "Force Auth"),
+        IniField::value(field_id(DataSourceConfigField::AllowLegacyAuth), "Allow Legacy Auth"),
         IniField::value(field_id(DataSourceConfigField::StartTls), "STARTTLS"),
         IniField::value(field_id(DataSourceConfigField::ImplicitTls), "Implicit TLS"),
         IniField::value(field_id(DataSourceConfigField::RequireTlsForAuth), "Require TLS For Auth"),
@@ -83,6 +84,7 @@ DataSourceConfig DataSourceConfig::from(const IniSectionValues &values)
     config.m_xrefs = value_or_null(values, DataSourceConfigField::Xrefs);
     config.m_overview_format_file = value_or_null(values, DataSourceConfigField::OverviewFormatFile);
     config.m_force_auth = value_or_null(values, DataSourceConfigField::ForceAuth);
+    config.m_allow_legacy_auth = value_or_null(values, DataSourceConfigField::AllowLegacyAuth);
     config.m_starttls = value_or_null(values, DataSourceConfigField::StartTls);
     config.m_implicit_tls = value_or_null(values, DataSourceConfigField::ImplicitTls);
     config.m_require_tls_for_auth = value_or_null(values, DataSourceConfigField::RequireTlsForAuth);

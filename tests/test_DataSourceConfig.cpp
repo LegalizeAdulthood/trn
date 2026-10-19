@@ -114,3 +114,8 @@ TEST_F(DataSourceConfigTest, recognizesImplicitTlsField)
 {
     EXPECT_NE(nullptr, DataSourceConfig::schema().find("Implicit TLS"));
 }
+
+TEST_F(DataSourceConfigTest, recognizesLegacyAuthPolicy)
+{
+    EXPECT_NE(nullptr, DataSourceConfig::schema().find("Allow Legacy Auth"));
+}

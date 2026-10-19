@@ -379,6 +379,11 @@ int nntp_start_tls()
     {
         return 1;
     }
+    if (g_nntp_link.auth_state == NntpAuthState::Authenticated)
+    {
+        g_ser_line = "483 TLS must be negotiated before authentication.";
+        return -1;
+    }
     if (!g_nntp_link.allow_starttls || g_nntp_link.tls_attempted || !g_nntp_link.connection ||
         !(g_nntp_link.flags & NNTP_NEW_CMD_OK))
     {
@@ -522,7 +527,8 @@ read_it:
     }
 #endif
     if (!retried_tls && nntp_response_code(g_ser_line) == NNTP_ENCRYPTION_REQUIRED_VAL &&
-        g_nntp_link.security == NntpSecurity::Cleartext && g_nntp_link.allow_starttls && !g_nntp_link.tls_attempted)
+        g_nntp_link.auth_state != NntpAuthState::Authenticating && g_nntp_link.security == NntpSecurity::Cleartext &&
+        g_nntp_link.allow_starttls && !g_nntp_link.tls_attempted)
     {
         const std::string command = g_last_command;
         if (nntp_start_tls() < 0 || nntp_command(command) <= 0)
@@ -532,10 +538,13 @@ read_it:
         retried_tls = true;
         goto read_it;
     }
-    if (nntp_response_code(g_ser_line) == NNTP_AUTH_NEEDED_VAL && g_last_command != "STARTTLS")
+    if (nntp_response_code(g_ser_line) == NNTP_AUTH_NEEDED_VAL && g_last_command != "STARTTLS" &&
+        g_nntp_link.auth_state == NntpAuthState::Unauthenticated &&
+        !string_case_equal(std::string_view{g_last_command}.substr(0, g_last_command.find(' ')), "AUTHINFO"))
     {
+        const bool reader_mode = g_last_command == "MODE READER";
         ret = nntp_handle_auth_err();
-        if (ret > 0)
+        if (ret > 0 && !reader_mode)
         {
             goto read_it;
         }
@@ -672,6 +681,7 @@ void nntp_close(bool send_quit)
     g_nntp_link.unsupported_commands.clear();
     g_nntp_link.flags |= NNTP_NEW_CMD_OK;
     g_nntp_link.security = NntpSecurity::Cleartext;
+    g_nntp_link.auth_state = NntpAuthState::Unauthenticated;
     g_nntp_link.tls_attempted = false;
     g_nntp_link.selected_group.clear();
     g_nntp_link.selected_article = 0;

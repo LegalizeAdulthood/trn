@@ -14,6 +14,11 @@
 # The default is no.  "STARTTLS = no" disables cleartext upgrades but
 # does not disable implicit TLS.  Both modes verify certificates and
 # server host names.  TLS failures close the connection.
+#   Set "Allow Legacy Auth = no" to require advertised AUTHINFO USER.
+# The default yes permits USER/PASS when AUTHINFO is absent.  An AUTHINFO
+# entry without USER disables this fallback, including SASL-only servers.
+# Set "Require TLS For Auth = yes" to protect credentials; the default
+# no retains cleartext compatibility.  TLS must precede authentication.
 #   When defining a local news source (even NFS mounted), set "Active File"
 # and "Spool Dir".
 #   Specify "none" for "Overview Dir" to disable support for the overview
@@ -56,6 +61,7 @@
 #Auth Password =
 #Auth Command =
 #Force Auth =
+#Allow Legacy Auth =
 #XHDR Broken =
 
 [local1]

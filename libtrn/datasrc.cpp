@@ -348,6 +348,7 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
     const auto yes = [](std::optional<std::string_view> value, bool default_value)
     { return value && !value->empty() ? value->front() == 'y' || value->front() == 'Y' : default_value; };
     dp->m_nntp_link.allow_starttls = yes(config.starttls(), true);
+    dp->m_nntp_link.allow_legacy_auth = yes(config.allow_legacy_auth(), true);
     dp->m_nntp_link.implicit_tls = yes(config.implicit_tls(), false);
     dp->m_nntp_link.require_tls_for_auth = yes(config.require_tls_for_auth(), false);
     dp->m_nntp_link.require_tls_for_posting = yes(config.require_tls_for_posting(), false);

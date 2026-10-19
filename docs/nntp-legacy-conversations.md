@@ -138,12 +138,25 @@ Modern concern:
 
 Current code:
 
-- `nntp/nntpauth.cpp` reacts to auth failures by sending
-  `AUTHINFO USER` and `AUTHINFO PASS`.
-- It does not select `AUTHINFO` variants from capabilities.
-- It has no SASL support.
+- `nntp/nntpauth.cpp` selects USER/PASS when `AUTHINFO USER` is advertised.
+- `Allow Legacy Auth = yes` is the default.  It permits USER/PASS if
+  `AUTHINFO` is absent; `no` requires an advertised USER method.  Empty
+  or unsupported `AUTHINFO` variants disable fallback in either mode.
+- SASL-only advertisements return an unsupported-method error.  Method
+  selection and USER/PASS exchange are separate functions, with a
+  dispatch point for future SASL mechanisms.
+- USER may finish with `281`; PASS is sent only after `381` and must
+  finish with `281`.  Passwords are obtained only when requested.
 - Password exchange honors the data source's TLS policy before obtaining
-  credentials or sending `AUTHINFO`.
+  credentials or sending `AUTHINFO`.  Method selection follows any TLS
+  upgrade, using the refreshed capabilities.
+- A `483` during authentication upgrades TLS when allowed, then starts
+  a new authentication exchange.  PASS is not replayed across upgrades.
+- Success refreshes capabilities, clears cached command rejections, and
+  retries the original command.  A rejected `CAPABILITIES` request is
+  itself the refresh.  Reader mode is not retried after authentication.
+- Session state prevents recursive auth challenges and repeated
+  authentication after success.  Reconnects and closes reset that state.
 - Forced authentication waits until startup discovery and advertised
   STARTTLS negotiation are complete.
 
@@ -191,7 +204,7 @@ Modern concern:
 
 - RFC 4642 defines `STARTTLS`.
 - RFC 8143 updates NNTP TLS handling to current TLS best practices.
-- Capability-aware authentication remains release work.
+- SASL mechanisms remain future work.
 
 ### STAT With Empty Message-ID
 

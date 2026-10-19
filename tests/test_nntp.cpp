@@ -1,5 +1,6 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
+#include <nntp/nntpauth.h>
 #include <nntp/nntpclient.h>
 #include <nntp/nntpinit.h>
 
@@ -761,6 +762,324 @@ TEST_F(NNTPGetStringTest, acceptsImplicitTlsForRequiredOperations)
     EXPECT_EQ(1, nntp_start_tls());
     EXPECT_EQ(1, nntp_command("AUTHINFO USER reader"));
     EXPECT_EQ(1, nntp_command("POST"));
+}
+
+class NntpAuthTest : public NNTPTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_authentication();
+
+    DataSource  m_source;
+    DataSource *m_saved_source{};
+};
+
+void NntpAuthTest::SetUp()
+{
+    NNTPTest::SetUp();
+    m_saved_source = g_data_source;
+    m_source.m_auth_user = "reader";
+    m_source.m_auth_pass = "secret";
+    g_data_source = &m_source;
+    g_nntp_link.connection = m_connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_nntp_link.allow_legacy_auth = false;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("AUTHINFO USER");
+    g_last_command = "GROUP comp.lang.apl";
+}
+
+void NntpAuthTest::TearDown()
+{
+    g_data_source = m_saved_source;
+    NNTPTest::TearDown();
+}
+
+void NntpAuthTest::expect_authentication()
+{
+    expect_reply("AUTHINFO USER reader", {"381 password required"});
+    expect_reply("AUTHINFO PASS secret", {"281 authentication accepted"});
+}
+
+TEST_F(NntpAuthTest, refreshesCapabilitiesAfterAdvertisedUserPass)
+{
+    g_nntp_link.unsupported_commands = {"OVER"};
+    InSequence sequence;
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "OVER", "."});
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+
+    EXPECT_EQ(1, nntp_handle_auth_err());
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("AUTHINFO"));
+    EXPECT_TRUE(g_nntp_link.unsupported_commands.empty());
+}
+
+TEST_F(NntpAuthTest, acceptsUserWithoutSendingPassword)
+{
+    m_source.m_auth_pass.clear();
+    InSequence sequence;
+    expect_reply("AUTHINFO USER reader", {"281 authentication accepted"});
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+
+    EXPECT_EQ(1, nntp_handle_auth_err());
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, rejectsUnadvertisedMethodsInStrictMode)
+{
+    g_nntp_link.capabilities = {};
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+}
+
+TEST_F(NntpAuthTest, refusesEmptyAuthinfoEvenInCompatibilityMode)
+{
+    g_nntp_link.allow_legacy_auth = true;
+    g_nntp_link.capabilities = {};
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("AUTHINFO");
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+}
+
+TEST_F(NntpAuthTest, leavesSaslOnlyServersForFutureMechanisms)
+{
+    g_nntp_link.allow_legacy_auth = true;
+    g_nntp_link.capabilities = {};
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("AUTHINFO SASL");
+    g_nntp_link.capabilities.add("SASL PLAIN SCRAM-SHA-256");
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+}
+
+TEST_F(NntpAuthTest, permitsLegacyUserPassInCompatibilityMode)
+{
+    g_nntp_link.allow_legacy_auth = true;
+    g_nntp_link.capabilities = {};
+    InSequence sequence;
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"500 unknown command"});
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+
+    EXPECT_EQ(1, nntp_handle_auth_err());
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, sendsPasswordOnlyForPasswordRequiredReply)
+{
+    InSequence sequence;
+    expect_reply("AUTHINFO USER reader", {"200 unrelated success"});
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, requiresAuthenticationAcceptedAfterPassword)
+{
+    InSequence sequence;
+    expect_reply("AUTHINFO USER reader", {"381 password required"});
+    expect_reply("AUTHINFO PASS secret", {"381 invalid continuation"});
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, doesNotRecursivelyAuthenticateAnAuthinfoChallenge)
+{
+    InSequence sequence;
+    expect_reply("AUTHINFO USER reader", {"480 invalid authentication challenge"});
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+}
+
+TEST_F(NntpAuthTest, doesNotAuthenticateAgainAfterSuccess)
+{
+    g_nntp_link.auth_state = NntpAuthState::Authenticated;
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+}
+
+TEST_F(NntpAuthTest, refusesCleartextWhenTlsIsRequired)
+{
+    g_nntp_link.require_tls_for_auth = true;
+    g_nntp_link.allow_starttls = false;
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+    EXPECT_EQ(483, nntp_response_code(g_ser_line));
+}
+
+TEST_F(NntpAuthTest, closeClearsAuthenticationState)
+{
+    g_nntp_link.auth_state = NntpAuthState::Authenticated;
+
+    nntp_close(false);
+
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, doesNotUpgradeAfterAuthentication)
+{
+    g_nntp_link.auth_state = NntpAuthState::Authenticated;
+    g_nntp_link.capabilities.add("STARTTLS");
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    EXPECT_LT(nntp_start_tls(), 0);
+}
+
+TEST_F(NntpAuthTest, selectsAuthMethodAfterRequiredTlsUpgrade)
+{
+    g_nntp_link.require_tls_for_auth = true;
+    g_nntp_link.capabilities = {};
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp_link.capabilities.add("AUTHINFO SASL");
+    InSequence sequence;
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "AUTHINFO USER", "."});
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+
+    EXPECT_EQ(1, nntp_handle_auth_err());
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, acceptsImplicitTlsForPasswordAuthentication)
+{
+    g_nntp_link.require_tls_for_auth = true;
+    g_nntp_link.allow_starttls = false;
+    g_nntp_link.security = NntpSecurity::ImplicitTls;
+    InSequence sequence;
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+
+    EXPECT_EQ(1, nntp_handle_auth_err());
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, doesNotRepeatAuthenticationForAnotherChallenge)
+{
+    InSequence sequence;
+    expect_reply("GROUP comp.lang.apl", {"480 authentication required"});
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+    expect_reply("GROUP comp.lang.apl", {"480 still denied"});
+
+    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    EXPECT_LE(nntp_check(), 0);
+    EXPECT_EQ(480, nntp_response_code(g_ser_line));
+}
+
+TEST_F(NntpAuthTest, doesNotReplayReaderModeAfterAuthentication)
+{
+    configure_factory_create(m_connection);
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "MODE-READER", "AUTHINFO USER", "."});
+    expect_reply("MODE READER", {"480 authentication required"});
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+
+    EXPECT_EQ(200, server_init(m_machine));
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, skipsReaderModeAfterDiscoveryAuthentication)
+{
+    configure_factory_create(m_connection);
+    g_nntp_link.allow_legacy_auth = true;
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"480 authentication required"});
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "MODE-READER", "."});
+
+    EXPECT_EQ(200, server_init(m_machine));
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, restartsUserPassAfterPasswordRequiresTls)
+{
+    g_nntp_link.capabilities.add("STARTTLS");
+    InSequence sequence;
+    expect_reply("AUTHINFO USER reader", {"381 password required"});
+    expect_reply("AUTHINFO PASS secret", {"483 encryption required"});
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "AUTHINFO USER", "."});
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+
+    EXPECT_EQ(1, nntp_handle_auth_err());
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+}
+
+TEST_F(NntpAuthTest, reselectsMethodAfterAuthinfoRequiresTls)
+{
+    g_nntp_link.capabilities.add("STARTTLS");
+    InSequence sequence;
+    expect_reply("AUTHINFO USER reader", {"483 encryption required"});
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "AUTHINFO SASL", "SASL SCRAM-SHA-256", "."});
+
+    EXPECT_LT(nntp_handle_auth_err(), 0);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NntpAuthTest, failsStartupWhenPostAuthDiscoveryFailsInReaderMode)
+{
+    configure_factory_create(m_connection);
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "MODE-READER", "AUTHINFO USER", "."});
+    expect_reply("MODE READER", {"480 authentication required"});
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"502 discovery denied"});
+
+    EXPECT_EQ(502, server_init(m_machine));
+}
+
+TEST_F(NntpAuthTest, authenticatesOnceWhenTlsDiscoveryNeedsCredentials)
+{
+    g_nntp_link.require_tls_for_auth = true;
+    g_nntp_link.allow_legacy_auth = true;
+    g_nntp_link.capabilities.add("STARTTLS");
+    InSequence sequence;
+    expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
+    EXPECT_CALL(*m_connection, start_tls(_));
+    expect_reply("CAPABILITIES", {"480 authentication required"});
+    expect_authentication();
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
+    EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
+
+    EXPECT_EQ(1, nntp_handle_auth_err());
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+}
+
+TEST_F(NNTPTest, startupClearsPreviousAuthenticationState)
+{
+    configure_factory_create(nullptr);
+    g_nntp_link.auth_state = NntpAuthState::Authenticated;
+
+    EXPECT_EQ(-1, server_init(m_machine));
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
 }
 
 class NntpTlsLoopbackTest : public NNTPTest

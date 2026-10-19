@@ -2367,6 +2367,10 @@ To use implicit TLS, set "Implicit TLS = yes" in the source's access
 entry.  TLS starts before the server greeting and defaults to port 563
 (nntps).  Append ";5563", for example, to the server name for a custom
 port.  Certificates and server host names are verified.
+In the access entry, "Require TLS For Auth = yes" protects credentials.
+"Allow Legacy Auth = no" requires advertised AUTHINFO USER support.
+The default yes allows legacy USER/PASS when AUTHINFO is absent, while
+an AUTHINFO entry without USER prevents that fallback.
 .Sp
 Default: the hostname listed in the server file, usually
 /usr/local/lib/rn/server.

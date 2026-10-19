@@ -37,7 +37,9 @@ transport security state, and group/article selection.  STARTTLS verifies
 certificates and host names, refreshes capabilities, and restores reading
 state.  Data-source policy can require TLS before authentication or POST.
 Implicit TLS starts before the greeting on port 563 or a configured
-port.  Capability-aware authentication remains an active slice.
+port.  Authentication honors advertised USER support, configurable
+legacy fallback, and TLS policy.  SASL mechanism execution remains
+future work behind a separate method dispatcher.
 
 OpenSSL 3.2 or newer is now required.  The Windows ZIP currently contains
 no runtime DLLs; collecting required DLLs remains an install/package
@@ -83,6 +85,26 @@ Slice 29 test-first evidence, using `cmake --workflow temp` throughout:
 The final slice 29 `cmake --workflow rt-default` run passed 1411 tests
 with six skips and no failures.  Direct TLS regression coverage for #32
 now includes encrypted article reads and certificate verification.
+
+Slice 30 test-first evidence, using `cmake --workflow temp` throughout:
+
+- The first auth/config filter failed 20 of 21 tests for unconditional
+  USER/PASS, missing compatibility policy, reply handling, state resets,
+  repeated challenges, and stale capabilities.  The same 21 tests passed
+  after method selection, reply validation, and session state were added.
+- Three new regressions failed among 24 tests: PASS replay across TLS,
+  stale auth-method selection after TLS, and startup hiding a failed
+  post-auth capability refresh.  The same 24 passed after those fixes.
+- A final discovery-auth test failed with duplicate USER commands when
+  TLS capability discovery authenticated the session.  Reusing that
+  authenticated state made the same 25 tests pass.
+- The broader NNTP/data-source filter passed all 175 tests, covering
+  advertised auth, legacy and strict modes, cleartext refusal, STARTTLS,
+  implicit TLS, command selection, and retained-buffer article reads.
+
+The final slice 30 `cmake --workflow rt-default` run passed 1436 tests
+with six skips and no failures.  The command, STARTTLS, implicit TLS,
+and authentication paths satisfy #3; it is ready to close on publication.
 
 ## Script Audit
 
@@ -150,9 +172,8 @@ Documentation gaps and owning work items:
   defaults such as `Rnmail`, `Pnews`, `tail`, and `/bin/sh`.  Item 19
   owns the Windows-safe default policy and documentation fallout.
 - `man/trn.1`, `config/data/access_def.in`, and
-  `HelpFiles/samples/access` now describe implicit TLS.  Item 30 owns
-  authentication policy documentation; older `XGTITLE` wording still
-  needs synchronization.
+  `HelpFiles/samples/access` now describe implicit TLS and authentication
+  policy.  Older `XGTITLE` wording still needs synchronization.
 - `config/data/access_def.in` omits live access-schema fields such as
   `XHDR Broken` and `Xrefs`, and contains the malformed sample
   `Force Auth = [yes|no}`.  Items 8 and 10 own generated data
@@ -216,7 +237,7 @@ milestone on GitHub.  Closed issues are mandatory regression checks.
 
 Open mandatory milestone issues:
 
-- #3: Add nntps/SSL support.
+- #3: Add nntps/SSL support (implemented locally; ready to close).
 - #5: Support decoding yEnc files.
 - #14: Make trn available as a Windows 32-bit/64-bit application.
 - #16: Ensure posting works properly.
@@ -319,37 +340,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 30. NNTP Auth Policy
-
-Issues: #3.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: 27, 28, and 29.
-
-Files likely touched:
-
-- `nntp/nntpauth.cpp`
-- `nntp/nntpclient.cpp`
-- config data and docs
-- NNTP tests
-
-Tasks:
-
-- Drive auth from `AUTHINFO` capability data.
-- Use `AUTHINFO USER/PASS` only when advertised or in compatibility
-  mode.
-- Refuse password auth over cleartext when policy requires TLS.
-- Leave SASL as a clean future hook unless a small mechanism is needed.
-
-Acceptance:
-
-- Authentication respects the configured TLS policy.
-- #3 can close when command, STARTTLS, nntps, and auth paths pass.
-- NNTP auth unit tests cover advertised auth, compatibility mode, and
-  cleartext refusal.
-- Commit description includes `fixes #3`.
 
 ### 31. Charset Pipeline Contract
 
@@ -772,8 +762,7 @@ unless it is the smallest correct implementation for 31 through 35.
 
 Mandatory open GitHub 5.0 milestone issues:
 
-- #3: 30; capability discovery, command selection, STARTTLS, and implicit
-  TLS are implemented.
+- #3: completed by removed slice 30 and earlier NNTP slices.
 - #5: 36.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.

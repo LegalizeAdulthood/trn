@@ -182,6 +182,7 @@ int init_nntp()
 int server_init(std::string_view machine)
 {
     g_nntp_link.security = NntpSecurity::Cleartext;
+    g_nntp_link.auth_state = NntpAuthState::Unauthenticated;
     g_nntp_link.tls_attempted = false;
     g_nntp_link.selected_group.clear();
     g_nntp_link.selected_article = 0;
@@ -219,6 +220,11 @@ int server_init(std::string_view machine)
             nntp_close(false);
             return -1;
         }
+        if (g_nntp_link.auth_state == NntpAuthState::Authenticated)
+        {
+            g_ser_line = save_line;
+            return nntp_response_code(g_ser_line);
+        }
         if (g_nntp_link.allow_starttls && g_nntp_link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
         {
             return -1;
@@ -229,12 +235,17 @@ int server_init(std::string_view machine)
             return nntp_response_code(g_ser_line);
         }
         // Legacy servers may require reader mode without advertising it.
+        int reader_status{};
         if (nntp_command("MODE READER") <= 0)
         {
             g_ser_line = fmt::format("{} failed to send MODE READER\n", static_cast<int>(NNTP_ACCESS_VAL));
         }
-        else if (nntp_check() <= 0 && (nntp_response_code(g_ser_line) == NNTP_BAD_COMMAND_VAL ||
-                                       nntp_response_code(g_ser_line) == NNTP_SYNTAX_VAL))
+        else if ((reader_status = nntp_check()) <= 0 && (nntp_response_code(g_ser_line) == NNTP_BAD_COMMAND_VAL ||
+                                                         nntp_response_code(g_ser_line) == NNTP_SYNTAX_VAL))
+        {
+            g_ser_line = save_line;
+        }
+        else if (reader_status > 0 && g_nntp_link.auth_state == NntpAuthState::Authenticated)
         {
             g_ser_line = save_line;
         }

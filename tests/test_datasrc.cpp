@@ -909,6 +909,21 @@ TEST_F(DataSourceInitTest, readsNntpAuthFileForRemoteSource)
     EXPECT_EQ("secret", source.m_auth_pass);
 }
 
+TEST_F(DataSourceInitTest, disablesLegacyAuthFromAccessFile)
+{
+    std::ofstream{m_output_dir / "access"} << "[strict-auth]\n"
+                                              "NNTP Server = news.example\n"
+                                              "Allow Legacy Auth = n\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("strict-auth");
+    ASSERT_NE(nullptr, source);
+    EXPECT_FALSE(source->m_nntp_link.allow_legacy_auth);
+}
+
 TEST_F(DataSourceInitTest, parsesNntpServerPort)
 {
     m_env.expect_env("NNTPSERVER", "news.example;119");
