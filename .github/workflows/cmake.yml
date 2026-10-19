@@ -172,7 +172,7 @@ jobs:
         envs: VCPKG_GITHUB_CACHE_TOKEN VCPKG_ROOT
         prepare: |
           /usr/sbin/pkg_add -u cmake ninja-build git gmake bash bison patchelf
-          /usr/sbin/pkg_add -u pkgconf rsync
+          /usr/sbin/pkg_add -u pkgconf rsync gdb
         run: |
           set +e
           set -u
@@ -183,6 +183,11 @@ jobs:
             cmake --version &&
             cmake --workflow --preset ci-linux
             status=$?
+            if [ "${status}" -ne 0 ]; then
+              cmake -DTRN_TEST_EXECUTABLE=../build-default/tests/trn-test \
+                -DTRN_TEST_LOG=../build-default/Testing/Temporary/LastTestsFailed.log \
+                -P cmake/ReportTestFailure.cmake
+            fi
             echo "${status}" > build.status
           } 2>&1 | tee build.log
           cp build.log build.status .netbsd-copyback/
@@ -245,7 +250,7 @@ jobs:
         copyback: true
         envs: VCPKG_GITHUB_CACHE_TOKEN VCPKG_ROOT
         prepare: |
-          pkg_add -I cmake ninja git gmake bash bison patchelf rsync
+          pkg_add -I cmake ninja git gmake bash bison patchelf rsync gdb
         run: |
           set +e
           set -u
@@ -256,6 +261,11 @@ jobs:
             cmake --version &&
             cmake --workflow --preset ci-linux
             status=$?
+            if [ "${status}" -ne 0 ]; then
+              cmake -DTRN_TEST_EXECUTABLE=../build-default/tests/trn-test \
+                -DTRN_TEST_LOG=../build-default/Testing/Temporary/LastTestsFailed.log \
+                -P cmake/ReportTestFailure.cmake
+            fi
             echo "${status}" > build.status
           } 2>&1 | tee build.log
           cp build.log build.status .openbsd-copyback/

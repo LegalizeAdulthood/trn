@@ -1,0 +1,115 @@
+# Copyright (c) 2026, Richard Thomson
+# Backport OpenSSL PR 31172 (Apache-2.0) to OpenSSL 3.6.1.
+# https://github.com/openssl/openssl/pull/31172
+
+--- a/crypto/initthread.c
++++ b/crypto/initthread.c
+@@ -82,6 +82,15 @@
+     return glob_tevent_reg;
+ }
+ #endif
++
++int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
++{
++#ifndef FIPS_MODULE
++    if (!ossl_init_thread())
++        return 0;
++#endif
++    return ossl_thread_init_local(key, cleanup);
++}
+ 
+ #ifndef FIPS_MODULE
+ /*
+@@ -237,24 +246,18 @@
+ }
+ 
+ static CRYPTO_ONCE ossl_init_thread_runonce = CRYPTO_ONCE_STATIC_INIT;
+-static CRYPTO_THREAD_ID recursion_guard = (CRYPTO_THREAD_ID)-1;
+ 
+ DEFINE_RUN_ONCE_STATIC(ossl_init_thread_once)
+ {
+-    recursion_guard = CRYPTO_THREAD_get_current_id();
+-    if (!CRYPTO_THREAD_init_local(&destructor_key.value,
++    if (!ossl_thread_init_local(&destructor_key.value,
+             init_thread_destructor))
+         return 0;
+ 
+-    recursion_guard = (CRYPTO_THREAD_ID)0;
+     return 1;
+ }
+ 
+ int ossl_init_thread(void)
+ {
+-    if (CRYPTO_THREAD_compare_id(recursion_guard,
+-            CRYPTO_THREAD_get_current_id()))
+-        return 1;
+     if (!RUN_ONCE(&ossl_init_thread_runonce, ossl_init_thread_once))
+         return 0;
+     return 1;
+--- a/crypto/threads_none.c
++++ b/crypto/threads_none.c
+@@ -162,14 +162,10 @@
+ 
+ static struct thread_local_storage_entry thread_local_storage[OPENSSL_CRYPTO_THREAD_LOCAL_KEY_MAX];
+ 
+-int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
++int ossl_thread_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
+ {
+     int entry_idx = 0;
+ 
+-#ifndef FIPS_MODULE
+-    if (!ossl_init_thread())
+-        return 0;
+-#endif
+ 
+     for (entry_idx = 0; entry_idx < OPENSSL_CRYPTO_THREAD_LOCAL_KEY_MAX; entry_idx++) {
+         if (!thread_local_storage[entry_idx].used)
+--- a/crypto/threads_pthread.c
++++ b/crypto/threads_pthread.c
+@@ -975,13 +975,9 @@
+     return 1;
+ }
+ 
+-int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
+-{
+-
+-#ifndef FIPS_MODULE
+-    if (!ossl_init_thread())
+-        return 0;
+-#endif
++int ossl_thread_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
++{
++
+ 
+     if (pthread_key_create(key, cleanup) != 0)
+         return 0;
+--- a/crypto/threads_win.c
++++ b/crypto/threads_win.c
+@@ -548,13 +548,9 @@
+     return (*lock == ONCE_DONE);
+ }
+ 
+-int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
+-{
+-
+-#ifndef FIPS_MODULE
+-    if (!ossl_init_thread())
+-        return 0;
+-#endif
++int ossl_thread_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
++{
++
+ 
+     *key = TlsAlloc();
+     if (*key == TLS_OUT_OF_INDEXES)
+--- a/include/internal/cryptlib.h
++++ b/include/internal/cryptlib.h
+@@ -132,6 +132,8 @@
+ 
+ const char *ossl_lib_ctx_get_descriptor(OSSL_LIB_CTX *libctx);
+ 
++int ossl_thread_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *));
++
+ OSSL_LIB_CTX *ossl_crypto_ex_data_get_ossl_lib_ctx(const CRYPTO_EX_DATA *ad);
+ int ossl_crypto_new_ex_data_ex(OSSL_LIB_CTX *ctx, int class_index, void *obj,
+     CRYPTO_EX_DATA *ad);

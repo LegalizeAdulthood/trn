@@ -1023,3 +1023,12 @@ set(ISPELL_OPTIONS "${DEFAULT_ISPELL_OPTIONS}")
 set(SPELL_PROGRAM "${DEFAULT_SPELL_PROGRAM}")
 
 configure_file(cmake/test_generated_config.h.in test_generated_config.h @ONLY)
+
+foreach(case IN ITEMS first missing_log missing_binary missing_debugger)
+    add_test(NAME ConfigCMakeTest.failureBacktrace_${case}
+        COMMAND "${CMAKE_COMMAND}"
+        "-DCASE=${case}"
+        "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/failure-backtrace-${case}"
+        "-DREPORT_SCRIPT=${PROJECT_SOURCE_DIR}/cmake/ReportTestFailure.cmake"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_failure_backtrace.cmake")
+endforeach()
