@@ -16,6 +16,7 @@
 #include <trn/mime.h>
 #include <trn/Subject.h>
 #include <trn/util.h>
+#include <trn/yenc.h>
 #include <util/env.h>
 
 #include <test_config.h>
@@ -312,6 +313,83 @@ TEST_F(DecodePieceDirectoryTest, completesMultipartDecodeUsingSavedTotal)
 TEST(DecodeFixFilenameTest, usesUnixBasename)
 {
     EXPECT_EQ("file_txt", decode_fix_filename("/tmp/path/file_txt"));
+}
+
+class YencExtractionTest : public DecodePieceDirectoryTest
+{
+protected:
+    void SetUp() override
+    {
+        DecodePieceDirectoryTest::SetUp();
+        fs::current_path(m_output_dir);
+    }
+
+    bool extract(std::string_view text)
+    {
+        const auto header = yenc_prescan(text.substr(0, text.find('\n')));
+        EXPECT_TRUE(header);
+        if (!header)
+        {
+            return false;
+        }
+        m_section.m_filename = header->filename;
+        m_section.m_encoding = MENCODE_YENC;
+        m_section.m_part = header->part;
+        m_section.m_total = header->total;
+        set_article_text(text);
+        testing::internal::CaptureStdout();
+        const bool result = decode_piece(nullptr, {});
+        testing::internal::GetCapturedStdout();
+        return result;
+    }
+};
+
+TEST_F(YencExtractionTest, singlePartUsesPlatformFilenamePolicy)
+{
+    ASSERT_TRUE(extract("=ybegin line=128 size=3 name=../../safe name?.bin\n\x6D\x8B\x9E\n"
+                        "=yend size=3 crc32=a6130548\n"));
+    EXPECT_EQ("safename.bin", g_decode_filename);
+    EXPECT_EQ("Cat", file_contents(m_output_dir / "safename.bin"));
+}
+
+TEST_F(YencExtractionTest, assemblesOutOfOrderMultipartData)
+{
+    ASSERT_TRUE(extract("=ybegin part=2 total=2 line=128 size=11 name=hello.bin\n=ypart begin=7 end=11\n"
+                        "\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143 crc32=8bd69e52\n"));
+    EXPECT_FALSE(fs::exists(m_output_dir / "hello.bin"));
+    ASSERT_TRUE(extract("=ybegin part=1 total=2 line=128 size=11 name=hello.bin\n=ypart begin=1 end=6\n"
+                        "r\x8F\x96\x96\x99J\n=yend size=6 part=1 pcrc32=ea2dfcc0\n"));
+    EXPECT_EQ("Hello world", file_contents(m_output_dir / "hello.bin"));
+    EXPECT_TRUE(find_file_named("1").empty());
+    EXPECT_TRUE(find_file_named("2").empty());
+}
+
+TEST_F(YencExtractionTest, infersMissingTotalFromFinalRange)
+{
+    ASSERT_TRUE(extract("=ybegin part=2 line=128 size=11 name=hello.bin\n=ypart begin=7 end=11\n"
+                        "\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143\n"));
+    ASSERT_TRUE(extract("=ybegin part=1 line=128 size=11 name=hello.bin\n=ypart begin=1 end=6\n"
+                        "r\x8F\x96\x96\x99J\n=yend size=6 part=1 pcrc32=ea2dfcc0\n"));
+    EXPECT_EQ("Hello world", file_contents(m_output_dir / "hello.bin"));
+}
+
+TEST_F(YencExtractionTest, invalidCrcPreservesExistingOutput)
+{
+    std::ofstream{m_output_dir / "cat.bin"} << "existing";
+    EXPECT_FALSE(extract("=ybegin line=128 size=3 name=cat.bin\n\x6D\x8B\x9E\n"
+                         "=yend size=3 crc32=00000000\n"));
+    EXPECT_EQ("existing", file_contents(m_output_dir / "cat.bin"));
+    EXPECT_FALSE(g_msg.empty());
+}
+
+TEST_F(YencExtractionTest, invalidWholeCrcDoesNotPublishMultipartOutput)
+{
+    ASSERT_TRUE(extract("=ybegin part=2 total=2 line=128 size=11 name=hello.bin\n=ypart begin=7 end=11\n"
+                        "\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143 crc32=00000000\n"));
+    EXPECT_FALSE(extract("=ybegin part=1 total=2 line=128 size=11 name=hello.bin\n=ypart begin=1 end=6\n"
+                         "r\x8F\x96\x96\x99J\n=yend size=6 part=1 pcrc32=ea2dfcc0\n"));
+    EXPECT_FALSE(fs::exists(m_output_dir / "hello.bin"));
+    EXPECT_FALSE(g_msg.empty());
 }
 
 TEST(DecodeFixFilenameTest, usesWindowsBasename)

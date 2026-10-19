@@ -83,6 +83,7 @@ add_executable(trn-test
     test_univ.cpp
     test_utf.cpp
     test_wildmat.cpp
+    test_yenc.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/test_config.h
     ${CMAKE_CURRENT_BINARY_DIR}/test_data.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/test_mime.h

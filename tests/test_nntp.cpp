@@ -13,12 +13,14 @@
 #include <trn/init.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
+#include <trn/yenc.h>
 
 #include <test_config.h>
 
 #include "MockNNTPConnection.h"
 #include "support/MockNntpServer.h"
 #include "support/NntpTestCertificate.h"
+#include "support/YencFixture.h"
 
 #include <boost/asio/error.hpp>
 
@@ -1804,6 +1806,43 @@ TEST_F(NNTPBodyTest, unstuffsDotPrefixedBodyLines)
     EXPECT_EQ("plain\n", nntp_read_art(NNTP_STRLEN));
     EXPECT_EQ(".dot-stuffed\n", nntp_read_art(NNTP_STRLEN));
     EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
+}
+
+TEST_F(NNTPBodyTest, preservesYencBytesWhenRereadingCachedArticle)
+{
+    std::vector<std::string> lines{"220 7 <message@example.test> article follows", "Subject: binary", ""};
+    std::string_view         text = YENC_ALL_BYTES;
+    while (!text.empty())
+    {
+        const std::size_t end = text.find('\n');
+        lines.emplace_back(text.substr(0, end));
+        text.remove_prefix(end == std::string_view::npos ? text.size() : end + 1);
+    }
+    lines.emplace_back(".");
+    EXPECT_CALL(*m_connection, write_line(StrEq("ARTICLE 7"), _));
+    auto &reads = EXPECT_CALL(*m_connection, read_line(_));
+    for (const std::string &line : lines)
+    {
+        reads.WillOnce(Return(line));
+    }
+    nntp_body(ArticleNum{7});
+    for (int pass = 0; pass < 2; ++pass)
+    {
+        SCOPED_TRACE(pass);
+        std::string article;
+        for (std::string chunk = nntp_read_art(NNTP_STRLEN); !chunk.empty(); chunk = nntp_read_art(NNTP_STRLEN))
+        {
+            article += chunk;
+        }
+        const auto decoded = yenc_decode(article);
+        ASSERT_TRUE(decoded);
+        ASSERT_EQ(256U, decoded->data.size());
+        for (int i = 0; i < 256; ++i)
+        {
+            EXPECT_EQ(i, static_cast<unsigned char>(decoded->data[i]));
+        }
+        ASSERT_EQ(0, nntp_seek_art(ArticlePosition{}));
+    }
 }
 
 TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)

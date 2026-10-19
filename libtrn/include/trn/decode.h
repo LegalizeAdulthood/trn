@@ -21,7 +21,8 @@ enum MimeEncoding
     MENCODE_BASE64 = 1,
     MENCODE_QPRINT = 2,
     MENCODE_UUE = 3,
-    MENCODE_UNHANDLED = 4
+    MENCODE_UNHANDLED = 4,
+    MENCODE_YENC = 5
 };
 
 enum DecodeState

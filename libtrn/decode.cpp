@@ -19,8 +19,9 @@
 #include "trn/string-algos.h"
 #include "trn/terminal.h"
 #include "trn/util.h"
-#include "util/util2.h"
 #include "trn/uudecode.h"
+#include "util/util2.h"
+#include <trn/yenc.h>
 
 #include <fmt/format.h>
 
@@ -28,6 +29,8 @@
 #include <cctype>
 #include <charconv>
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <system_error>
 
 namespace fs = std::filesystem;
@@ -44,6 +47,7 @@ static bool bad_filename(std::string_view filename);
 static DecodeFunc decode_function(MimeEncoding encoding);
 static fs::path decode_mkdir(std::string_view filename);
 static void     decode_rmdir(const fs::path &dir);
+static bool       decode_yenc_piece(MimeCapEntry *mcp, std::string_view first_line);
 
 void decode_init()
 {
@@ -362,6 +366,10 @@ std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
 bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
 {
     g_msg.clear();
+    if (g_mime_section->m_encoding == MENCODE_YENC)
+    {
+        return decode_yenc_piece(mcp, first_line);
+    }
     const auto open_path = [](const fs::path &path, const char *mode)
     { return std::fopen(path.string().c_str(), mode); };
     const auto remove_path = [](const fs::path &path)
@@ -625,4 +633,168 @@ static void decode_rmdir(const fs::path &dir)
     // TODO: conditional-ize this
     std::error_code error;
     fs::remove(dir, error);
+}
+
+static bool decode_yenc_piece(MimeCapEntry *mcp, std::string_view first_line)
+{
+    const auto fail = [](std::string_view message)
+    {
+        g_msg = message;
+        return false;
+    };
+    std::string encoded{first_line};
+    std::string line;
+    while (read_art(line))
+    {
+        if (mime_end_of_section(line))
+        {
+            break;
+        }
+        encoded += line;
+        if (line.substr(0, 6) == "=yend ")
+        {
+            break;
+        }
+    }
+    const auto current = yenc_decode(encoded);
+    if (!current)
+    {
+        return fail("Invalid yEnc data, size, or CRC.");
+    }
+    g_decode_filename = decode_fix_filename(current->header.filename);
+    fs::path output{g_decode_filename};
+    fs::path dir;
+    fs::path staged;
+    int      total = current->header.total;
+    if (current->header.multipart)
+    {
+        dir = decode_mkdir(g_decode_filename);
+        if (dir.empty())
+        {
+            return fail("Cannot create yEnc part directory.");
+        }
+        int saved_total{};
+        std::ifstream{dir / "CT"} >> saved_total;
+        if (current->end == current->header.size)
+        {
+            if (total && total != current->header.part)
+            {
+                return fail("Inconsistent final yEnc part.");
+            }
+            total = current->header.part;
+        }
+        if (saved_total && total && saved_total != total)
+        {
+            return fail("Inconsistent yEnc part count.");
+        }
+        if (!total)
+        {
+            total = saved_total;
+        }
+        if (total && current->header.part > total)
+        {
+            return fail("Invalid yEnc part number.");
+        }
+        {
+            std::ofstream part_file{dir / std::to_string(current->header.part), std::ios::binary};
+            part_file.write(encoded.data(), static_cast<std::streamsize>(encoded.size()));
+            part_file.close();
+            if (!part_file)
+            {
+                return fail("Cannot save yEnc part.");
+            }
+        }
+        if (total)
+        {
+            std::ofstream count_file{dir / "CT"};
+            count_file << total << '\n';
+            count_file.close();
+            if (!count_file)
+            {
+                return fail("Cannot save yEnc part count.");
+            }
+        }
+        fmt::print("Saved yEnc part {} of {} {}\n", current->header.part, total, g_decode_filename);
+        for (int part = 1; part <= total; ++part)
+        {
+            if (!fs::exists(dir / std::to_string(part)))
+            {
+                return true;
+            }
+        }
+        if (!total)
+        {
+            return true;
+        }
+        staged = dir / "decoded";
+        std::ofstream                assembled{staged, std::ios::binary};
+        std::uint64_t                written{};
+        std::uint32_t                crc{};
+        std::optional<std::uint32_t> expected_crc;
+        bool                         valid = static_cast<bool>(assembled);
+        for (int part = 1; valid && part <= total; ++part)
+        {
+            std::ifstream     input{dir / std::to_string(part), std::ios::binary};
+            const std::string text{std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+            const auto        decoded = yenc_decode(text);
+            if (!decoded || !decoded->header.multipart || decoded->header.part != part ||
+                decoded->header.size != current->header.size || decoded->header.filename != current->header.filename ||
+                (decoded->header.total && decoded->header.total != total) || decoded->begin != written + 1)
+            {
+                valid = false;
+                break;
+            }
+            if (decoded->crc32)
+            {
+                if (expected_crc && expected_crc != decoded->crc32)
+                {
+                    valid = false;
+                    break;
+                }
+                expected_crc = decoded->crc32;
+            }
+            assembled.write(decoded->data.data(), static_cast<std::streamsize>(decoded->data.size()));
+            written += decoded->data.size();
+            crc = yenc_crc32(decoded->data, crc);
+            valid = static_cast<bool>(assembled);
+        }
+        assembled.close();
+        if (!valid || !assembled || written != current->header.size || (expected_crc && crc != *expected_crc))
+        {
+            std::error_code error;
+            fs::remove(staged, error);
+            return fail("Invalid yEnc multipart ranges, size, or CRC.");
+        }
+        std::error_code error;
+        fs::copy_file(staged, output, fs::copy_options::overwrite_existing, error);
+        if (error)
+        {
+            return fail("Cannot write decoded yEnc file.");
+        }
+        fs::remove(staged, error);
+        for (int part = 1; part <= total; ++part)
+        {
+            fs::remove(dir / std::to_string(part), error);
+        }
+        fs::remove(dir / "CT", error);
+        decode_rmdir(dir);
+    }
+    else
+    {
+        std::ofstream decoded{output, std::ios::binary};
+        decoded.write(current->data.data(), static_cast<std::streamsize>(current->data.size()));
+        decoded.close();
+        if (!decoded)
+        {
+            return fail("Cannot write decoded yEnc file.");
+        }
+    }
+    fmt::print("Decoded {}\n", g_decode_filename);
+    if (mcp)
+    {
+        mime_exec(mcp->command);
+        std::error_code error;
+        fs::remove(output, error);
+    }
+    return true;
 }

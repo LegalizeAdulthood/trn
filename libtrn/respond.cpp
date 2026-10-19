@@ -30,6 +30,7 @@
 #include <trn/trn.h>
 #include <trn/util.h>
 #include <trn/uudecode.h>
+#include <trn/yenc.h>
 #include <util/env.h>
 #include <util/util2.h>
 
@@ -44,6 +45,11 @@
 #include <fstream>
 #include <string>
 #include <string_view>
+
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -61,6 +67,49 @@ static std::FILE *s_tmp_fp{};
 
 static void follow_it_up();
 static int  invoke(const char *cmd, const char *dir);
+
+#ifdef _WIN32
+namespace
+{
+class ExtractArticleInput
+{
+public:
+    explicit ExtractArticleInput(std::FILE *stream);
+    ~ExtractArticleInput();
+    ExtractArticleInput(const ExtractArticleInput &) = delete;
+    ExtractArticleInput &operator=(const ExtractArticleInput &) = delete;
+    bool                 valid() const;
+
+private:
+    std::FILE *m_stream;
+    int        m_previous{-1};
+};
+
+ExtractArticleInput::ExtractArticleInput(std::FILE *stream) :
+    m_stream{stream}
+{
+    if (m_stream)
+    {
+        m_previous = _setmode(_fileno(m_stream), _O_BINARY);
+    }
+}
+
+ExtractArticleInput::~ExtractArticleInput()
+{
+    if (m_stream && m_previous != -1)
+    {
+        const long position = std::ftell(m_stream);
+        _setmode(_fileno(m_stream), m_previous);
+        std::fseek(m_stream, position, SEEK_SET);
+    }
+}
+
+bool ExtractArticleInput::valid() const
+{
+    return !m_stream || m_previous != -1;
+}
+} // namespace
+#endif
 
 static char response_command_char(std::string_view command)
 {
@@ -169,6 +218,32 @@ SaveResult save_article(std::string_view command)
         term_down(2);
         return SAVE_DONE;
     }
+#ifdef _WIN32
+    ExtractArticleInput binary_input{cmd == 'e' && !(g_data_source->m_flags & DF_REMOTE) ? g_art_fp : nullptr};
+    if (!binary_input.valid())
+    {
+        g_msg = "Cannot read extraction input as binary.";
+        return SAVE_DONE;
+    }
+    if (cmd == 'e' && !(g_data_source->m_flags & DF_REMOTE))
+    {
+        // Text-mode ftell can misreport offsets when a buffered yEnc byte is Ctrl-Z.
+        // Recompute the body position with byte-preserving input before prescan.
+        std::rewind(g_art_fp);
+        std::string header_line;
+        g_save_from = ArticlePosition{};
+        while (read_art(header_line))
+        {
+            if (header_line == "\n" || header_line == "\r\n")
+            {
+                g_save_from = tell_art();
+                g_header_type[PAST_HEADER].min_pos = g_save_from;
+                break;
+            }
+        }
+        seek_art(g_save_from);
+    }
+#endif
     if (change_dir(g_priv_dir))
     {
         fmt::print("Can't chdir to directory {}\n", g_priv_dir);
@@ -297,6 +372,16 @@ SaveResult save_article(std::string_view command)
                     decode_type = 1;
                     break;
                 }
+                if (const auto header = yenc_prescan(line_text))
+                {
+                    filename = header->filename;
+                    part = header->part;
+                    total = header->total;
+                    g_save_from = g_art_pos;
+                    seek_art(g_save_from);
+                    decode_type = 3;
+                    break;
+                }
                 if (uue_prescan(line_text, filename, &part, &total))
                 {
                     g_save_from = g_art_pos;
@@ -321,7 +406,9 @@ SaveResult save_article(std::string_view command)
                 break;
 
             case 2:
-                fmt::print("Extracting uuencoded file into {}:\n", fs::current_path().generic_string());
+            case 3:
+                fmt::print("Extracting {} file into {}:\n", decode_type == 3 ? "yEnc" : "uuencoded",
+                           fs::current_path().generic_string());
                 term_down(1);
                 g_mime_section->m_type = IMAGE_MIME;
                 if (!filename.empty())
@@ -332,7 +419,7 @@ SaveResult save_article(std::string_view command)
                 {
                     g_mime_section->m_filename.reset();
                 }
-                g_mime_section->m_encoding = MENCODE_UUE;
+                g_mime_section->m_encoding = decode_type == 3 ? MENCODE_YENC : MENCODE_UUE;
                 g_mime_section->m_part = part;
                 g_mime_section->m_total = total;
                 if (!decode_piece(nullptr, {}) && !g_msg.empty())

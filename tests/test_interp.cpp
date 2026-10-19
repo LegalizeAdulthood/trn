@@ -41,6 +41,7 @@
 #include <util/env-internal.h>
 #include <util/util2.h>
 
+#include "support/YencFixture.h"
 #include <mock_env.h>
 #include <test_config.h>
 
@@ -1629,7 +1630,7 @@ void InterpolatorNewsgroupTest::TearDown()
     InterpolatorTest::TearDown();
 }
 
-void write_article_body(const fs::path &article_file, std::string_view body)
+void write_article_body(const fs::path &article_file, std::string_view body, std::string_view extra_headers = {})
 {
     std::ofstream{article_file} << "Path: " TRN_TEST_HEADER_PATH "\n"
                                 << "From: " TRN_TEST_HEADER_FROM "\n"
@@ -1638,7 +1639,7 @@ void write_article_body(const fs::path &article_file, std::string_view body)
                                 << "Subject: " TRN_TEST_HEADER_SUBJECT "\n"
                                 << "Date: " TRN_TEST_HEADER_DATE "\n"
                                 << "Message-Id: " TRN_TEST_HEADER_MESSAGE_ID "\n"
-                                << "Lines: 1\n\n"
+                                << extra_headers << "Lines: 1\n\n"
                                 << body;
 }
 
@@ -1785,6 +1786,108 @@ TEST_F(InterpolatorNewsgroupTest, extractCreatesRelativeDestinationDirectory)
     EXPECT_EQ(expected.generic_string(), g_extract_dest);
     EXPECT_TRUE(fs::is_directory(expected));
     EXPECT_EQ("Unable to determine type of file.\n", output);
+}
+
+TEST_F(InterpolatorNewsgroupTest, extractRecognizesYencArticle)
+{
+    const std::string output_path = m_output.path();
+    write_article_body(
+        fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM),
+        "Introduction\n=ybegin line=128 size=3 name=cat.bin\n\x6D\x8B\x9E\n=yend size=3 crc32=a6130548\n");
+    PushDir                 output_dir{output_path};
+    ValueSaver<std::string> private_dir(g_priv_dir, output_path);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
+    m_env.expect_no_envar("SAVEDIR");
+    g_parsed_art = ArticleNum{};
+    art_close();
+
+    testing::internal::CaptureStdout();
+    const SaveResult  result = save_article("e extracted");
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(SAVE_DONE, result);
+    EXPECT_THAT(output, HasSubstr("Extracting yEnc file"));
+    EXPECT_EQ("Cat", file_contents(fs::path{output_path} / "extracted" / "cat.bin"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, extractPreservesAllYencBytes)
+{
+    const std::string output_path = m_output.path();
+    write_article_body(fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM), YENC_ALL_BYTES);
+    PushDir                 output_dir{output_path};
+    ValueSaver<std::string> private_dir(g_priv_dir, output_path);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
+    m_env.expect_no_envar("SAVEDIR");
+    g_parsed_art = ArticleNum{};
+    art_close();
+    testing::internal::CaptureStdout();
+    save_article("e extracted");
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_THAT(output, Not(HasSubstr("Invalid")));
+    EXPECT_THAT(output, HasSubstr("Extracting yEnc file"));
+    std::ifstream     decoded{fs::path{output_path} / "extracted" / "all.bin", std::ios::binary};
+    const std::string bytes{std::istreambuf_iterator<char>{decoded}, std::istreambuf_iterator<char>{}};
+    ASSERT_EQ(256U, bytes.size()) << output;
+    for (int i = 0; i < 256; ++i)
+    {
+        EXPECT_EQ(i, static_cast<unsigned char>(bytes[i]));
+    }
+}
+
+TEST_F(InterpolatorNewsgroupTest, extractRecognizesYencInMimeText)
+{
+    const std::string output_path = m_output.path();
+    write_article_body(
+        fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM),
+        "Introduction\n=ybegin line=128 size=3 name=cat.bin\n\x6D\x8B\x9E\n=yend size=3 crc32=a6130548\n",
+        "MIME-Version: 1.0\nContent-Type: text/plain\nContent-Transfer-Encoding: 8bit\n");
+    PushDir                 output_dir{output_path};
+    ValueSaver<std::string> private_dir(g_priv_dir, output_path);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
+    m_env.expect_no_envar("SAVEDIR");
+    g_parsed_art = ArticleNum{};
+    art_close();
+    testing::internal::CaptureStdout();
+    save_article("e extracted");
+    testing::internal::GetCapturedStdout();
+    EXPECT_EQ("Cat", file_contents(fs::path{output_path} / "extracted" / "cat.bin"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, extractKeepsUuencodeBehavior)
+{
+    const std::string output_path = m_output.path();
+    write_article_body(fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM),
+                       "begin 644 cat.bin\n#0V%T\n`\nend\n");
+    PushDir                 output_dir{output_path};
+    ValueSaver<std::string> private_dir(g_priv_dir, output_path);
+    ValueSaver<std::string> temp_dir(g_tmp_dir, output_path);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
+    m_env.expect_no_envar("SAVEDIR");
+    g_parsed_art = ArticleNum{};
+    art_close();
+    testing::internal::CaptureStdout();
+    save_article("e extracted");
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_THAT(output, HasSubstr("Extracting uuencoded file"));
+    EXPECT_EQ("Cat", file_contents(fs::path{output_path} / "extracted" / "cat.bin"));
+}
+
+TEST_F(InterpolatorNewsgroupTest, extractKeepsShellArchiveBehavior)
+{
+    const std::string output_path = m_output.path();
+    write_article_body(fs::path{output_path} / std::to_string(TRN_TEST_ARTICLE_NUM), "#!/bin/sh\n# archive\n");
+    PushDir                 output_dir{output_path};
+    ValueSaver<std::string> private_dir(g_priv_dir, output_path);
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
+    m_env.expect_no_envar("SAVEDIR");
+    m_env.expect_env("SHARSAVER", ":");
+    g_parsed_art = ArticleNum{};
+    art_close();
+    testing::internal::CaptureStdout();
+    save_article("e extracted");
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_THAT(output, HasSubstr("Extracting shar"));
 }
 
 TEST_F(InterpolatorNewsgroupTest, extractUsesCustomCommand)

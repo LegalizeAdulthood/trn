@@ -280,7 +280,7 @@ void nntp_body(ArticleNum art_num)
         {
             nntp_finish_body(FB_DISCARD);
         }
-        g_art_fp = std::fopen(artname.c_str(), "r");
+        g_art_fp = std::fopen(artname.c_str(), "rb");
         stat_t art_stat{};
         if (g_art_fp && fstat(fileno(g_art_fp), &art_stat) == 0)
         {
@@ -290,7 +290,7 @@ void nntp_body(ArticleNum art_num)
     }
 
     artname = nntp_art_name(art_num, true); // Allocate a tmp file
-    if (!(g_art_fp = std::fopen(artname.c_str(), "w+")))
+    if (!(g_art_fp = std::fopen(artname.c_str(), "w+b")))
     {
         fmt::print(stderr, "\nUnable to write temporary file: '{}'.\n", artname);
         finalize(1);

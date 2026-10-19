@@ -84,6 +84,7 @@ add_library(libtrn
     url.cpp include/trn/url.h
     util.cpp include/trn/util.h
     uudecode.cpp include/trn/uudecode.h
+    yenc.cpp include/trn/yenc.h
 )
 configure_file(include/trn/patchlevel.h.in include/trn/patchlevel.h @ONLY)
 # We require <filesystem>

@@ -348,6 +348,38 @@ table, source-charset interpretation, and mapping policies are documented
 in `charset-pipeline.md`.  Issue #34 is implemented locally and ready to
 close; its closing commit must include `Fixes #34`.
 
+## yEnc Extraction
+
+The `e` command recognizes yEnc headers and decodes original article
+bytes.  Single-part and multipart extraction use the platform filename
+policy, validate sizes and checksums, and assemble complete parts through
+a staging file.  Parts may arrive out of order; a missing total can be
+inferred from the final byte range.  Existing uuencode, custom-command,
+and shell archive extraction paths remain covered.
+
+Slice 36 test-first evidence, using `cmake --workflow temp` for all
+focused runs:
+
+- The initial command test failed among 36 tests because `e` did not
+  recognize yEnc and produced no decoded file.
+- Seven decoder and five extraction tests then failed to compile because
+  the yEnc API was absent.  Implementing prescan, decoding, validation,
+  filename handling, and multipart storage/assembly made all 48 pass.
+- Expanded all-byte and malformed-input coverage failed two of 54 tests.
+  Windows text input lost the article body before prescan, and an escaped
+  raw NUL was accepted.  Reading local extraction input as binary,
+  recomputing its body offset, and rejecting raw NUL made all 54 pass.
+- An NNTP cache regression then failed among 58 tests on the second read
+  of the all-byte article.  Binary cache I/O made the same 58 pass.
+
+The slice 36 `cmake --workflow rt-default` run passed 1620 tests with six
+skips and no failures.  Coverage includes all 256 byte values, critical
+escapes, CRC/size failures, out-of-order and missing-total multipart
+articles, source filenames, ordinary MIME text wrappers, and the existing
+extraction paths.  `yenc-extraction.md` documents the format and behavior.
+Issue #5 is implemented locally and ready to close; its closing commit
+must include `Fixes #5`.
+
 ## GitHub 5.0 Milestone
 
 The GitHub 5.0 milestone is the mandatory release scope.  Every issue on
@@ -358,7 +390,7 @@ milestone on GitHub.  Closed issues are mandatory regression checks.
 Open mandatory milestone issues:
 
 - #3: Add nntps/SSL support (implemented locally; ready to close).
-- #5: Support decoding yEnc files.
+- #5: Support decoding yEnc files (implemented locally; ready to close).
 - #14: Make trn available as a Windows 32-bit/64-bit application.
 - #16: Ensure posting works properly.
 - #17: Restore original character encoding conversions (implemented
@@ -462,36 +494,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 36. YEnc Decode
-
-Issues: #5.
-
-Milestone status: open mandatory 5.0 issue.
-
-Depends on: 18.
-
-Files likely touched:
-
-- `libtrn/decode.cpp`
-- `libtrn/uudecode.cpp`
-- extraction tests
-- fixture articles
-
-Tasks:
-
-- Add yEnc prescan and decode support.
-- Add tests for single-part and multipart yEnc payloads.
-- Validate filenames through the platform filename policy.
-- Keep uuencode and shell archive behavior unchanged.
-
-Acceptance:
-
-- `e` extraction recognizes yEnc articles.
-- Existing extraction tests still pass.
-- Extraction unit tests cover single-part, multipart, filename policy,
-  and existing uuencode behavior.
-- Commit description includes `fixes #5`.
 
 ### 37. UTF-8 Underline Display
 
@@ -700,7 +702,8 @@ unless it is the smallest correct implementation for 31 through 35.
 Mandatory open GitHub 5.0 milestone issues:
 
 - #3: completed by removed slice 30 and earlier NNTP slices.
-- #5: 36.
+- #5: completed by removed slice 36; the closing commit must include
+  `Fixes #5`.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.
 - #17: completed by removed slices 31 through 33; the closing commit must
