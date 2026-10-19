@@ -440,7 +440,9 @@ TEST_F(SourceFileRemoteOpenTest, openFetchesRemoteLinesFromMockServer)
     source_file.m_refetch_secs = DEFAULT_REFETCH_SECS;
 
     MockNntpServer server;
+    server.expect_capabilities({"VERSION 2", "MODE-READER"});
     server.expect_mode_reader();
+    server.expect_capabilities({"VERSION 2", "READER", "LIST ACTIVE NEWSGROUPS"});
     server.expect_list({"comp.lang.apl 10 1 y", "comp.lang.c++ 20 1 y"});
     server.expect_quit();
     server.start();

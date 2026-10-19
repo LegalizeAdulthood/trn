@@ -41,10 +41,11 @@ current TLS best practices.
 
 Current code:
 
-- `nntp/nntpinit.cpp` reads the greeting.
+- `nntp/nntpinit.cpp` reads the greeting and asks `CAPABILITIES`.
 - It then always tries `MODE READER`.
 - It ignores `MODE READER` only if the server replies `500`.
-- It never asks `CAPABILITIES`.
+- It refreshes capabilities after a successful `MODE READER`.
+- A `500` or `501` discovery reply preserves legacy fallback behavior.
 
 Modern concern:
 
@@ -58,7 +59,9 @@ Modern concern:
 
 Current code:
 
-- No production NNTP code sends `CAPABILITIES`.
+- `NntpCapabilities` stores capability labels and arguments in `NNTPLink`.
+- Complete multiline replies replace the session's capability state.
+- Closing or reconnecting discards the previous capability list.
 - Support for `LIST`, `LIST ACTIVE`, `LISTGROUP`, `XOVER`, `XHDR`,
   `XGTITLE`, and `LIST SUBSCRIPTIONS` is discovered by optimistic use and
   fallback.

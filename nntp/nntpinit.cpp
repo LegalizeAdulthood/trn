@@ -126,6 +126,7 @@ int init_nntp()
 
 int server_init(std::string_view machine)
 {
+    g_nntp_link.capabilities = {};
     g_nntp_link.connection = s_nntp_connection_factory(machine, g_nntp_link.port_number, "nntp");
     if (g_nntp_link.connection == nullptr)
     {
@@ -138,6 +139,11 @@ int server_init(std::string_view machine)
     if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_OK)
     {
         const std::string save_line{g_ser_line};
+        if (nntp_refresh_capabilities() < 0)
+        {
+            nntp_close(false);
+            return -1;
+        }
         // Try MODE READER just in case we're talking to innd.
         // If it is not an invalid command, use the new reply.
         if (nntp_command("MODE READER") <= 0)
@@ -147,6 +153,17 @@ int server_init(std::string_view machine)
         else if (nntp_check() <= 0 && nntp_response_code(g_ser_line) == NNTP_BAD_COMMAND_VAL)
         {
             g_ser_line = save_line;
+        }
+        else if (nntp_response_code(g_ser_line) == NNTP_POSTOK_VAL ||
+                 nntp_response_code(g_ser_line) == NNTP_NOPOSTOK_VAL)
+        {
+            const std::string reader_line{g_ser_line};
+            if (nntp_refresh_capabilities() < 0)
+            {
+                nntp_close(false);
+                return -1;
+            }
+            g_ser_line = reader_line;
         }
     }
     return nntp_response_code(g_ser_line);

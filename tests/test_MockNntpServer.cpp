@@ -24,10 +24,11 @@ tcp::socket connect_to_loopback(asio::io_context &context, int port)
     return socket;
 }
 
-std::string read_line(tcp::socket &socket)
+std::string read_line(tcp::socket &socket, std::string &buffer)
 {
-    std::string line;
-    read_until(socket, asio::dynamic_buffer(line), "\r\n");
+    const std::size_t size = asio::read_until(socket, asio::dynamic_buffer(buffer), "\r\n");
+    std::string       line = buffer.substr(0, size);
+    buffer.erase(0, size);
     return line;
 }
 
@@ -35,8 +36,9 @@ std::string read_one_line_from_loopback(int port)
 {
     asio::io_context context;
     tcp::socket      socket = connect_to_loopback(context, port);
+    std::string      buffer;
 
-    return read_line(socket);
+    return read_line(socket, buffer);
 }
 
 void write_line(tcp::socket &socket, std::string_view line)
@@ -55,6 +57,18 @@ TEST(MockNntpServerTest, startsOnLoopbackPort)
 
     EXPECT_GT(server.port(), 0);
     server.verify();
+}
+
+TEST(MockNntpServerTest, lineReadsPreserveBufferedReplies)
+{
+    asio::io_context context;
+    tcp::socket      socket{context};
+    std::string      buffer{"200 first\r\n201 second\r\npartial"};
+
+    EXPECT_EQ("200 first\r\n", read_line(socket, buffer));
+    EXPECT_EQ("201 second\r\npartial", buffer);
+    EXPECT_EQ("201 second\r\n", read_line(socket, buffer));
+    EXPECT_EQ("partial", buffer);
 }
 
 TEST(MockNntpServerTest, sendsDefaultWelcomeBanner)
@@ -86,17 +100,18 @@ TEST(MockNntpServerTest, sendsExpectedListResponse)
 
     asio::io_context context;
     tcp::socket      socket = connect_to_loopback(context, server.port());
+    std::string      buffer;
 
-    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket));
+    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket, buffer));
     write_line(socket, "MODE READER");
-    EXPECT_EQ("200 trn-test reader mode\r\n", read_line(socket));
+    EXPECT_EQ("200 trn-test reader mode\r\n", read_line(socket, buffer));
     write_line(socket, "LIST");
-    EXPECT_EQ("215 list follows\r\n", read_line(socket));
-    EXPECT_EQ("comp.lang.apl 2 1 y\r\n", read_line(socket));
-    EXPECT_EQ("comp.lang.c++ 3 1 y\r\n", read_line(socket));
-    EXPECT_EQ(".\r\n", read_line(socket));
+    EXPECT_EQ("215 list follows\r\n", read_line(socket, buffer));
+    EXPECT_EQ("comp.lang.apl 2 1 y\r\n", read_line(socket, buffer));
+    EXPECT_EQ("comp.lang.c++ 3 1 y\r\n", read_line(socket, buffer));
+    EXPECT_EQ(".\r\n", read_line(socket, buffer));
     write_line(socket, "QUIT");
-    EXPECT_EQ("205 closing connection\r\n", read_line(socket));
+    EXPECT_EQ("205 closing connection\r\n", read_line(socket, buffer));
     server.verify();
 }
 
@@ -112,25 +127,26 @@ TEST(MockNntpServerTest, sendsExpectedGroupAndArticleReadResponses)
 
     asio::io_context context;
     tcp::socket      socket = connect_to_loopback(context, server.port());
+    std::string      buffer;
 
-    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket));
+    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket, buffer));
     write_line(socket, "GROUP comp.lang.apl");
-    EXPECT_EQ("211 1 623 623 comp.lang.apl\r\n", read_line(socket));
+    EXPECT_EQ("211 1 623 623 comp.lang.apl\r\n", read_line(socket, buffer));
     write_line(socket, "LISTGROUP");
-    EXPECT_EQ("211 list follows\r\n", read_line(socket));
-    EXPECT_EQ("623\r\n", read_line(socket));
-    EXPECT_EQ(".\r\n", read_line(socket));
+    EXPECT_EQ("211 list follows\r\n", read_line(socket, buffer));
+    EXPECT_EQ("623\r\n", read_line(socket, buffer));
+    EXPECT_EQ(".\r\n", read_line(socket, buffer));
     write_line(socket, "HEAD 623");
-    EXPECT_EQ("221 623 <message@example.test> header follows\r\n", read_line(socket));
-    EXPECT_EQ("From: reader@example.test\r\n", read_line(socket));
-    EXPECT_EQ("Subject: hello\r\n", read_line(socket));
-    EXPECT_EQ(".\r\n", read_line(socket));
+    EXPECT_EQ("221 623 <message@example.test> header follows\r\n", read_line(socket, buffer));
+    EXPECT_EQ("From: reader@example.test\r\n", read_line(socket, buffer));
+    EXPECT_EQ("Subject: hello\r\n", read_line(socket, buffer));
+    EXPECT_EQ(".\r\n", read_line(socket, buffer));
     write_line(socket, "BODY 623");
-    EXPECT_EQ("222 623 <message@example.test> body follows\r\n", read_line(socket));
-    EXPECT_EQ("body line\r\n", read_line(socket));
-    EXPECT_EQ(".\r\n", read_line(socket));
+    EXPECT_EQ("222 623 <message@example.test> body follows\r\n", read_line(socket, buffer));
+    EXPECT_EQ("body line\r\n", read_line(socket, buffer));
+    EXPECT_EQ(".\r\n", read_line(socket, buffer));
     write_line(socket, "QUIT");
-    EXPECT_EQ("205 closing connection\r\n", read_line(socket));
+    EXPECT_EQ("205 closing connection\r\n", read_line(socket, buffer));
     server.verify();
 }
 
@@ -142,10 +158,11 @@ TEST(MockNntpServerTest, verifyReportsUnexpectedCommand)
 
     asio::io_context context;
     tcp::socket      socket = connect_to_loopback(context, server.port());
+    std::string      buffer;
 
-    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket));
+    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket, buffer));
     write_line(socket, "LIST");
-    EXPECT_EQ("500 unexpected command\r\n", read_line(socket));
+    EXPECT_EQ("500 unexpected command\r\n", read_line(socket, buffer));
 
     EXPECT_NONFATAL_FAILURE(server.verify(), "expected NNTP command `MODE READER`, got `LIST`");
 }

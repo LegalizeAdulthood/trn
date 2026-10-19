@@ -111,6 +111,11 @@ void MockNntpServer::expect_listgroup(std::vector<long> article_numbers)
     expect_command("LISTGROUP", multiline_response("211 list follows", std::move(lines)));
 }
 
+void MockNntpServer::expect_capabilities(std::vector<std::string> lines)
+{
+    expect_command("CAPABILITIES", multiline_response("101 capability list follows", std::move(lines)));
+}
+
 void MockNntpServer::expect_mode_reader()
 {
     expect_command("MODE READER", {"200 trn-test reader mode"});

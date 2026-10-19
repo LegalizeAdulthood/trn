@@ -11,10 +11,12 @@
 #include <boost/system/error_code.hpp>
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <stdlib.h> // size_t
 #include <string>
 #include <string_view>
+#include <vector>
 
 enum NNTPFlags
 {
@@ -42,6 +44,20 @@ using ConnectionPtr = std::shared_ptr<INNTPConnection>;
 
 using ConnectionFactory = std::function<ConnectionPtr(std::string_view machine, int port, std::string_view service)>;
 
+class NntpCapabilities
+{
+public:
+    // True only after a complete CAPABILITIES response.
+    bool available{};
+
+    void add(std::string_view line);
+    bool has(std::string_view capability) const;
+    bool has(std::string_view capability, std::string_view argument) const;
+
+private:
+    std::map<std::string, std::vector<std::string>> m_entries;
+};
+
 struct NNTPLink
 {
     ConnectionPtr connection;
@@ -49,6 +65,7 @@ struct NNTPLink
     int           port_number;
     NNTPFlags     flags;
     bool          trailing_cr;
+    NntpCapabilities capabilities;
 };
 
 // RFC 977 defines these, so don't change them
@@ -63,6 +80,7 @@ enum
 
 enum
 {
+    NNTP_CAPABILITIES_VAL = 101, // Capability list follows
     NNTP_POSTOK_VAL = 200,       // Hello -- you can post
     NNTP_NOPOSTOK_VAL = 201,     // Hello -- you can't post
     NNTP_LIST_FOLLOWS_VAL = 215, // There's a list a-comin' next
@@ -103,6 +121,8 @@ std::string nntp_server_name(std::string_view name);
 int         nntp_command(std::string_view bp);
 int         nntp_xgtitle(std::string_view groupname);
 int         nntp_check();
+// Returns 1 for a complete list, 0 for legacy servers, and -1 on failure.
+int         nntp_refresh_capabilities();
 int         nntp_response_code(std::string_view response);
 bool        nntp_at_list_end(std::string_view s);
 enum NNTPGetsResult

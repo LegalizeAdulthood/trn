@@ -12,12 +12,15 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <charconv>
 #include <cstdio>
 #include <ctime>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <system_error>
+#include <utility>
 
 NNTPLink    g_nntp_link{}; // the current server's file handles
 bool        g_nntp_allow_timeout{};
@@ -25,6 +28,54 @@ std::string g_ser_line;
 std::string g_last_command;
 
 static std::time_t s_last_command_diff{};
+
+static std::string capability_key(std::string_view value)
+{
+    std::string key{value};
+    for (char &ch : key)
+    {
+        if (ch >= 'a' && ch <= 'z')
+        {
+            ch -= 'a' - 'A';
+        }
+    }
+    return key;
+}
+
+void NntpCapabilities::add(std::string_view line)
+{
+    if (line.empty() || !((line.front() >= 'A' && line.front() <= 'Z') || (line.front() >= 'a' && line.front() <= 'z')))
+    {
+        return;
+    }
+
+    std::istringstream input{std::string{line}};
+    std::string        token;
+    input >> token;
+    std::vector<std::string> &arguments = m_entries[capability_key(token)];
+    arguments.clear();
+    while (input >> token)
+    {
+        arguments.push_back(token);
+    }
+}
+
+bool NntpCapabilities::has(std::string_view capability) const
+{
+    return m_entries.find(capability_key(capability)) != m_entries.end();
+}
+
+bool NntpCapabilities::has(std::string_view capability, std::string_view argument) const
+{
+    const auto entry = m_entries.find(capability_key(capability));
+    if (entry == m_entries.end())
+    {
+        return false;
+    }
+    const std::string key = capability_key(argument);
+    return std::any_of(entry->second.begin(), entry->second.end(),
+                       [&key](const std::string &value) { return capability_key(value) == key; });
+}
 
 static std::string_view nntp_response_text()
 {
@@ -271,7 +322,8 @@ read_it:
     }
     // Even though the following check doesn't catch all possible lists, the
     // bit will get set right when the caller checks nntp_at_list_end().
-    if (nntp_response_code(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
+    if (nntp_response_code(g_ser_line) == NNTP_LIST_FOLLOWS_VAL ||
+        nntp_response_code(g_ser_line) == NNTP_CAPABILITIES_VAL)
     {
         g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
     }
@@ -299,6 +351,45 @@ read_it:
         }
     }
     return ret;
+}
+
+int nntp_refresh_capabilities()
+{
+    g_nntp_link.capabilities = {};
+    if (nntp_command("CAPABILITIES") <= 0)
+    {
+        return -1;
+    }
+    const int result = nntp_check();
+    const int code = nntp_response_code(g_ser_line);
+    if (code == NNTP_BAD_COMMAND_VAL || code == NNTP_SYNTAX_VAL)
+    {
+        return 0;
+    }
+    if (result <= 0 || code != NNTP_CAPABILITIES_VAL)
+    {
+        return -1;
+    }
+
+    NntpCapabilities capabilities;
+    for (;;)
+    {
+        error_code_t      ec;
+        const std::string line = g_nntp_link.connection->read_line(ec);
+        if (ec || line.empty())
+        {
+            g_ser_line = "503 Incomplete capability list.";
+            nntp_close(false);
+            return -1;
+        }
+        if (nntp_at_list_end(line))
+        {
+            capabilities.available = true;
+            g_nntp_link.capabilities = std::move(capabilities);
+            return 1;
+        }
+        capabilities.add(line);
+    }
 }
 
 bool nntp_at_list_end(std::string_view s)
@@ -382,5 +473,6 @@ void nntp_close(bool send_quit)
         }
     }
     g_nntp_link.connection.reset();
+    g_nntp_link.capabilities = {};
     g_nntp_link.flags |= NNTP_NEW_CMD_OK;
 }

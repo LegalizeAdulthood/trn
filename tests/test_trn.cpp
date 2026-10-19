@@ -826,7 +826,9 @@ TEST_F(InputNewsgroupTest, readsRemoteArticleFromMockServer)
     m_data_source.m_spool_dir = m_output_dir.generic_string();
 
     MockNntpServer server;
+    server.expect_capabilities({"VERSION 2", "MODE-READER"});
     server.expect_mode_reader();
+    server.expect_capabilities({"VERSION 2", "READER", "LIST ACTIVE NEWSGROUPS"});
     server.expect_group(TRN_TEST_NNTP_NEWSGROUP, 1, TRN_TEST_ARTICLE_NUM, TRN_TEST_ARTICLE_NUM);
     server.expect_listgroup({TRN_TEST_ARTICLE_NUM});
     server.expect_head(TRN_TEST_ARTICLE_NUM, test_article_header());

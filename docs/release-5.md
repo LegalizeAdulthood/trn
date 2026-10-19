@@ -30,6 +30,13 @@ Source uses `file_ref`, and the config target has direct tests for it.
 Those two areas should be treated as release verification only, not as
 active feature slices.
 
+NNTP capability parsing and reader-mode refresh are implemented in
+`NntpCapabilities` and `NNTPLink`.  Focused validation passed 64 tests with
+`cmake --workflow temp`, including legacy fallback, truncated lists,
+loopback startup, and existing overview range coverage.  Command selection
+and TLS remain active slices.  The full `cmake --workflow rt-default` run
+passed 1343 tests with six skips.
+
 ## Script Audit
 
 Repo-owned shell work excludes the `vcpkg` submodule.  The current
@@ -251,39 +258,6 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
-
-### 26. NNTP Capability Model
-
-Issues: #3.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #9.
-
-Plan source: `nntp-legacy-conversations.md`.
-
-Depends on: 24.
-
-Files likely touched:
-
-- `nntp/nntpinit.cpp`
-- `nntp/nntpclient.cpp`
-- `libtrn/nntp.cpp`
-- NNTP tests
-
-Tasks:
-
-- Add an `NntpCapabilities` data type.
-- Parse multiline `CAPABILITIES` replies.
-- Store capability state in the NNTP session.
-- Refresh capabilities after `MODE READER` when needed.
-
-Acceptance:
-
-- Capability parsing is tested for advertised and missing features.
-- Overview performance behavior from #9 is not regressed.
-- NNTP unit tests cover capability refresh after `MODE READER` and
-  fallback behavior.
 
 ### 27. NNTP Modern Commands
 
@@ -830,7 +804,7 @@ unless it is the smallest correct implementation for 31 through 35.
 
 Mandatory open GitHub 5.0 milestone issues:
 
-- #3: 26 through 30.
+- #3: 27 through 30; capability discovery from slice 26 is implemented.
 - #5: 36.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.

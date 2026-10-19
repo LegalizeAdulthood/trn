@@ -16,6 +16,7 @@
 #include <test_config.h>
 
 #include "MockNNTPConnection.h"
+#include "support/MockNntpServer.h"
 
 #include <boost/asio/error.hpp>
 
@@ -34,6 +35,66 @@ namespace fs = std::filesystem;
 
 using namespace testing;
 
+TEST(NntpCapabilitiesTest, recognizesAdvertisedFeaturesAndArguments)
+{
+    NntpCapabilities capabilities;
+    for (const std::string_view line :
+         {"VERSION 2 3", "READER", "POST", "IHAVE", "NEWNEWS", "LIST ACTIVE NEWSGROUPS OVERVIEW.FMT HEADERS",
+          "OVER MSGID", "HDR", "MODE-READER", "STARTTLS", "AUTHINFO USER SASL", "SASL PLAIN SCRAM-SHA-256"})
+    {
+        capabilities.add(line);
+    }
+
+    for (const std::string_view name : {"VERSION", "READER", "POST", "IHAVE", "NEWNEWS", "LIST", "OVER", "HDR",
+                                        "MODE-READER", "STARTTLS", "AUTHINFO", "SASL"})
+    {
+        EXPECT_TRUE(capabilities.has(name)) << name;
+    }
+    EXPECT_TRUE(capabilities.has("VERSION", "2"));
+    EXPECT_TRUE(capabilities.has("VERSION", "3"));
+    EXPECT_TRUE(capabilities.has("LIST", "ACTIVE"));
+    EXPECT_TRUE(capabilities.has("LIST", "NEWSGROUPS"));
+    EXPECT_TRUE(capabilities.has("LIST", "OVERVIEW.FMT"));
+    EXPECT_TRUE(capabilities.has("LIST", "HEADERS"));
+    EXPECT_TRUE(capabilities.has("OVER", "MSGID"));
+    EXPECT_TRUE(capabilities.has("AUTHINFO", "USER"));
+    EXPECT_TRUE(capabilities.has("AUTHINFO", "SASL"));
+    EXPECT_TRUE(capabilities.has("SASL", "SCRAM-SHA-256"));
+    EXPECT_FALSE(capabilities.has("LIST", "SUBSCRIPTIONS"));
+    EXPECT_FALSE(capabilities.has("VERSION", "4"));
+    EXPECT_FALSE(capabilities.has("XGTITLE"));
+    EXPECT_FALSE(capabilities.has("XGTITLE", "comp.lang.apl"));
+    EXPECT_FALSE(capabilities.available);
+}
+
+TEST(NntpCapabilitiesTest, acceptsCaseAndWhitespaceVariants)
+{
+    NntpCapabilities capabilities;
+    capabilities.add("lIsT\tactive  Newsgroups\tOVERVIEW.FMT\r\n");
+    capabilities.add("oVeR\tmsgid\r\n");
+
+    EXPECT_TRUE(capabilities.has("list"));
+    EXPECT_TRUE(capabilities.has("LIST", "ACTIVE"));
+    EXPECT_TRUE(capabilities.has("list", "newsgroups"));
+    EXPECT_TRUE(capabilities.has("LIST", "overview.fmt"));
+    EXPECT_TRUE(capabilities.has("over", "MSGID"));
+    EXPECT_FALSE(capabilities.has("LIST", "NEWS"));
+}
+
+TEST(NntpCapabilitiesTest, ignoresEmptyAndReservedLines)
+{
+    NntpCapabilities capabilities;
+    for (const std::string_view line : {"", "\r\n", ".", "#READER", "1READER", " READER", "\tREADER"})
+    {
+        capabilities.add(line);
+    }
+    capabilities.add("XPRIVATE extension");
+
+    EXPECT_FALSE(capabilities.has("READER"));
+    EXPECT_FALSE(capabilities.has(""));
+    EXPECT_TRUE(capabilities.has("XPRIVATE", "extension"));
+}
+
 using MockNNTPConnectionFactory =
     StrictMock<MockFunction<ConnectionPtr(std::string_view machine, int port, std::string_view service)>>;
 
@@ -46,6 +107,8 @@ protected:
     void SetUp() override
     {
         init_nntp();
+        m_saved_nntp_link = g_nntp_link;
+        g_nntp_link = {};
         set_nntp_connection_factory(m_factory.AsStdFunction());
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
     }
@@ -53,6 +116,7 @@ protected:
     void TearDown() override
     {
         g_nntp_link.connection.reset();
+        g_nntp_link = std::move(m_saved_nntp_link);
         nntp_gets_clear_buffer();
         init_nntp();
     }
@@ -63,6 +127,16 @@ protected:
             .WillOnce(Return(std::move(result)));
     }
 
+    void expect_reply(std::string_view command, const std::vector<std::string> &lines)
+    {
+        EXPECT_CALL(*m_connection, write_line(StrEq(std::string{command}), _));
+        for (const std::string &line : lines)
+        {
+            EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return(line));
+        }
+    }
+
+    NNTPLink                                        m_saved_nntp_link;
     const char *const                               m_machine{"news.gmane.io"};
     MockNNTPConnectionFactory                       m_factory;
     std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;
@@ -71,10 +145,14 @@ protected:
 TEST_F(NNTPTest, server_init_connection_failed)
 {
     configure_factory_create(nullptr);
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("STARTTLS");
 
     const int result = server_init(m_machine);
 
     EXPECT_EQ(-1, result);
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
 }
 
 TEST_F(NNTPTest, nntpConnectConnectionFailedReportsUnavailable)
@@ -106,24 +184,149 @@ TEST_F(NNTPConnectedTest, server_init_ok)
 {
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("200 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting ok)"))
-        .WillOnce(Return("200 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting ok)"));
+        .WillOnce(Return("500 unknown command"))
+        .WillOnce(Return("200 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting ok)"))
+        .WillOnce(Return("500 unknown command"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _)).Times(2);
     EXPECT_CALL(*m_connection, write_line(StrEq("MODE READER"), _)).Times(1);
 
     const int result = server_init(m_machine);
 
     EXPECT_EQ(NNTP_POSTOK_VAL, result);
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
 }
 
 TEST_F(NNTPConnectedTest, server_init_posting_prohibited)
 {
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("201 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting prohibited)"))
-        .WillOnce(Return("201 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting prohibited)"));
+        .WillOnce(Return("500 unknown command"))
+        .WillOnce(Return("201 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting prohibited)"))
+        .WillOnce(Return("500 unknown command"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _)).Times(2);
     EXPECT_CALL(*m_connection, write_line(StrEq("MODE READER"), _)).Times(1);
 
     const int result = server_init(m_machine);
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, result);
+}
+
+TEST_F(NNTPConnectedTest, refreshesCapabilitiesAfterReaderMode)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "STARTTLS", "."});
+    expect_reply("MODE READER", {"201 reader mode, posting prohibited"});
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "OVER MSGID", "HDR", "."});
+
+    EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
+    EXPECT_EQ("201 reader mode, posting prohibited", g_ser_line);
+    EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_TRUE(g_nntp_link.capabilities.has("READER"));
+    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER", "MSGID"));
+    EXPECT_TRUE(g_nntp_link.capabilities.has("HDR"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("MODE-READER"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+}
+
+TEST_F(NNTPConnectedTest, discoversCapabilitiesOnlyAvailableInReaderMode)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"500 unknown command"});
+    expect_reply("MODE READER", {"200 reader ready"});
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "STARTTLS", "."});
+
+    EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
+    EXPECT_EQ("200 reader ready", g_ser_line);
+    EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_TRUE(g_nntp_link.capabilities.has("STARTTLS"));
+}
+
+TEST_F(NNTPConnectedTest, clearsCapabilitiesWhenReaderModeDoesNotSupportDiscovery)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "STARTTLS", "."});
+    expect_reply("MODE READER", {"200 reader ready"});
+    expect_reply("CAPABILITIES", {"501 unsupported command"});
+
+    EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+}
+
+TEST_F(NNTPConnectedTest, preservesCapabilitiesWhenReaderModeIsUnsupported)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("201 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "HDR", "."});
+    expect_reply("MODE READER", {"500 unknown command"});
+
+    EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
+    EXPECT_EQ("201 server ready", g_ser_line);
+    EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_TRUE(g_nntp_link.capabilities.has("HDR"));
+}
+
+TEST_F(NNTPConnectedTest, fallsBackWhenDiscoveryAndReaderModeAreUnsupported)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("201 server ready"));
+    expect_reply("CAPABILITIES", {"500 unknown command"});
+    expect_reply("MODE READER", {"500 unknown command"});
+
+    EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
+    EXPECT_EQ("201 server ready", g_ser_line);
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+}
+
+TEST_F(NNTPConnectedTest, failsWhenDiscoveryClosesConnection)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"400 server shutting down"});
+
+    EXPECT_EQ(-1, server_init(m_machine));
+    EXPECT_EQ("400 server shutting down", g_ser_line);
+    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+}
+
+TEST_F(NNTPConnectedTest, failsWhenReaderModeCapabilityRefreshClosesConnection)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "."});
+    expect_reply("MODE READER", {"200 reader ready"});
+    expect_reply("CAPABILITIES", {"502 service unavailable"});
+
+    EXPECT_EQ(-1, server_init(m_machine));
+    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+}
+
+TEST_F(NNTPTest, discoversCapabilitiesFromMockServer)
+{
+    MockNntpServer server;
+    server.expect_capabilities({"VERSION 2", "MODE-READER"});
+    server.expect_mode_reader();
+    server.expect_capabilities({"VERSION 2", "READER", "LIST ACTIVE NEWSGROUPS", "OVER", "HDR", "AUTHINFO USER"});
+    server.expect_quit();
+    server.start();
+    init_nntp();
+    g_nntp_link.port_number = server.port();
+
+    ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
+    EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_TRUE(g_nntp_link.capabilities.has("LIST", "NEWSGROUPS"));
+    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER"));
+    EXPECT_TRUE(g_nntp_link.capabilities.has("AUTHINFO", "USER"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("MODE-READER"));
+
+    nntp_close(true);
+    server.verify();
 }
 
 TEST_F(NNTPConnectedTest, server_init_temporarily_unavailable)
@@ -234,16 +437,17 @@ protected:
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
         m_old_abs_first = g_abs_first;
         m_old_last_cached = g_last_cached;
-        m_saved_nntp_flags = g_nntp_link.flags;
+        m_saved_nntp_link = g_nntp_link;
         g_nntp_link.connection = m_connection;
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_nntp_link.capabilities = {};
     }
 
     void TearDown() override
     {
         Test::TearDown();
         g_nntp_link.connection.reset();
-        g_nntp_link.flags = m_saved_nntp_flags;
+        g_nntp_link = std::move(m_saved_nntp_link);
         g_abs_first = m_old_abs_first;
         g_last_cached = m_old_last_cached;
     }
@@ -252,8 +456,89 @@ protected:
     boost::system::error_code                       m_ec;
     ArticleNum                                      m_old_abs_first{};
     ArticleNum                                      m_old_last_cached{};
-    NNTPFlags                                       m_saved_nntp_flags{};
+    NNTPLink                                        m_saved_nntp_link;
 };
+
+TEST_F(NNTPGetStringTest, capabilitiesConsumeCompleteListBeforeNextCommand)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("101 capabilities follow\r\n"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("VERSION 2\r\n"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("LIST ACTIVE NEWSGROUPS\r\n"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("OVER MSGID\r\n"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return(".\r\n"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("DATE"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("111 20261019010000\r\n"));
+
+    EXPECT_EQ(1, nntp_refresh_capabilities());
+    EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_TRUE(g_nntp_link.capabilities.has("VERSION", "2"));
+    EXPECT_TRUE(g_nntp_link.capabilities.has("LIST", "ACTIVE"));
+    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER", "MSGID"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("HDR"));
+    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_EQ(1, nntp_command("DATE"));
+    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ("111 20261019010000", g_ser_line);
+}
+
+TEST_F(NNTPGetStringTest, emptyCapabilityListIsAvailable)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("101 capabilities follow")).WillOnce(Return("."));
+
+    EXPECT_EQ(1, nntp_refresh_capabilities());
+    EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
+}
+
+TEST_F(NNTPGetStringTest, unsupportedCapabilitiesClearPreviousList)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("STARTTLS");
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("500 unknown command"));
+
+    EXPECT_EQ(0, nntp_refresh_capabilities());
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+}
+
+TEST_F(NNTPGetStringTest, truncatedCapabilitiesDiscardPartialListAndConnection)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("STARTTLS");
+    EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("101 capabilities follow"))
+        .WillOnce(Return("READER"))
+        .WillOnce(Invoke(
+            [](error_code_t &ec)
+            {
+                ec = boost::asio::error::eof;
+                return std::string{};
+            }));
+
+    EXPECT_EQ(-1, nntp_refresh_capabilities());
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
+    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+}
+
+TEST_F(NNTPGetStringTest, closeDiscardsCapabilities)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("READER");
+
+    nntp_close(false);
+
+    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
+}
 
 TEST_F(NNTPGetStringTest, getALineReturnsServerLine)
 {

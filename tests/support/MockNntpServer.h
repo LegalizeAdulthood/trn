@@ -17,6 +17,7 @@ public:
     MockNntpServer &operator=(const MockNntpServer &) = delete;
 
     void expect_body(long article_number, std::vector<std::string> lines);
+    void expect_capabilities(std::vector<std::string> lines);
     void expect_group(std::string group_name, long count, long first, long last);
     void expect_head(long article_number, std::vector<std::string> lines);
     void expect_list(std::vector<std::string> lines);
