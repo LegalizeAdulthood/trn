@@ -66,6 +66,8 @@ struct NNTPLink
     NNTPFlags     flags;
     bool          trailing_cr;
     NntpCapabilities capabilities;
+    // Sorted command names rejected by this session.
+    std::vector<std::string> unsupported_commands;
 };
 
 // RFC 977 defines these, so don't change them
@@ -119,7 +121,12 @@ void        set_nntp_connection_factory(ConnectionFactory factory);
 int         nntp_connect(std::string_view machine, bool verbose);
 std::string nntp_server_name(std::string_view name);
 int         nntp_command(std::string_view bp);
-int         nntp_xgtitle(std::string_view groupname);
+// These read the status response; callers consume successful multiline data.
+int         nntp_overview(std::string_view range);
+int         nntp_overview_format();
+int         nntp_header_values(std::string_view header, std::string_view range);
+int         nntp_group_description(std::string_view group);
+int         nntp_group_descriptions(std::string_view pattern);
 int         nntp_check();
 // Returns 1 for a complete list, 0 for legacy servers, and -1 on failure.
 int         nntp_refresh_capabilities();

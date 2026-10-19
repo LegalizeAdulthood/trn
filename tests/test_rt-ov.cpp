@@ -63,8 +63,7 @@ protected:
         m_old_int_count = g_int_count;
         m_old_curr_artp = g_curr_artp;
         m_old_sentinel_art_ptr = g_sentinel_art_ptr;
-        m_old_nntp_connection = g_nntp_link.connection;
-        m_old_nntp_flags = g_nntp_link.flags;
+        m_old_nntp_link = g_nntp_link;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -104,7 +103,7 @@ protected:
         g_int_count = 0;
         g_curr_artp = nullptr;
         g_sentinel_art_ptr = nullptr;
-        g_nntp_link.connection.reset();
+        g_nntp_link = {};
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
         nntp_gets_clear_buffer();
 
@@ -145,8 +144,7 @@ protected:
         g_int_count = m_old_int_count;
         g_curr_artp = m_old_curr_artp;
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
-        g_nntp_link.connection = std::move(m_old_nntp_connection);
-        g_nntp_link.flags = m_old_nntp_flags;
+        g_nntp_link = std::move(m_old_nntp_link);
         nntp_gets_clear_buffer();
 
         fs::remove_all(m_output_dir, error);
@@ -184,8 +182,7 @@ protected:
     char        m_old_int_count{};
     Article    *m_old_curr_artp{};
     Article    *m_old_sentinel_art_ptr{};
-    ConnectionPtr m_old_nntp_connection;
-    NNTPFlags     m_old_nntp_flags{};
+    NNTPLink                      m_old_nntp_link;
 };
 
 } // namespace
@@ -225,7 +222,7 @@ TEST_F(OverviewTest, localOverviewLinePopulatesArticleFields)
     EXPECT_EQ("comp.lang.apl:1 comp.lang.cpp:5", *article->m_xrefs);
 }
 
-TEST_F(OverviewTest, remoteOverviewRequestsXoverRange)
+TEST_F(OverviewTest, remoteOverviewFallsBackToXoverRange)
 {
     const std::shared_ptr<testing::StrictMock<MockNNTPConnection>> connection =
         std::make_shared<testing::StrictMock<MockNNTPConnection>>();
@@ -235,8 +232,10 @@ TEST_F(OverviewTest, remoteOverviewRequestsXoverRange)
     m_data_source.m_over_dir.clear();
     m_data_source.m_flags |= DF_REMOTE;
 
+    EXPECT_CALL(*connection, write_line(testing::StrEq("OVER 1-1"), testing::_));
     EXPECT_CALL(*connection, write_line(testing::StrEq("XOVER 1-1"), testing::_));
     EXPECT_CALL(*connection, read_line(testing::_))
+        .WillOnce(testing::Return("500 unknown command"))
         .WillOnce(testing::Return("224 Overview follows"))
         .WillOnce(testing::Return("1\tRe: Overview Subject\tAlice <alice@example.com>\t" + date +
                                   "\t<child@example.com>\t<parent@example.com>\t"
@@ -255,6 +254,8 @@ TEST_F(OverviewTest, initMapsRemoteOverviewFormatFields)
     const std::shared_ptr<testing::StrictMock<MockNNTPConnection>> connection =
         std::make_shared<testing::StrictMock<MockNNTPConnection>>();
     g_nntp_link.connection = connection;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("OVER");
     m_data_source.m_nntp_link = g_nntp_link;
     m_data_source.m_over_dir.clear();
     m_data_source.m_flags |= DF_REMOTE;
@@ -265,11 +266,11 @@ TEST_F(OverviewTest, initMapsRemoteOverviewFormatFields)
     }
 
     testing::InSequence sequence;
-    EXPECT_CALL(*connection, write_line(testing::StrEq("XOVER"), testing::_));
+    EXPECT_CALL(*connection, write_line(testing::StrEq("OVER"), testing::_));
     EXPECT_CALL(*connection, read_line(testing::_))
         .WillOnce(testing::Return("224 Overview follows"))
         .WillOnce(testing::Return("."));
-    EXPECT_CALL(*connection, write_line(testing::StrEq("LIST overview.fmt"), testing::_));
+    EXPECT_CALL(*connection, write_line(testing::StrEq("LIST OVERVIEW.FMT"), testing::_));
     EXPECT_CALL(*connection, read_line(testing::_))
         .WillOnce(testing::Return("215 information follows"))
         .WillOnce(testing::Return("Subject:"))
@@ -293,6 +294,70 @@ TEST_F(OverviewTest, initMapsRemoteOverviewFormatFields)
     EXPECT_EQ(OV_XREF, m_data_source.m_field_num[7]);
     EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_BYTES]);
     EXPECT_EQ(FF_HAS_FIELD | FF_HAS_HDR, m_data_source.m_field_flags[OV_XREF]);
+}
+
+TEST_F(OverviewTest, remoteOverviewFetchesSeveralArticlesInOneOverRequest)
+{
+    const auto        connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    const std::string date{"Tue, 01 Jan 2019 00:00:00 GMT"};
+    g_nntp_link.connection = connection;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("OVER");
+    m_data_source.m_over_dir.clear();
+    m_data_source.m_flags |= DF_REMOTE;
+    g_last_art = ArticleNum{3};
+    m_group.m_ng_max = g_last_art;
+    article_ptr(ArticleNum{2})->m_flags = AF_EXISTS;
+    article_ptr(ArticleNum{3})->m_flags = AF_EXISTS;
+    g_spin_todo = 3;
+
+    EXPECT_CALL(*connection, write_line(testing::StrEq("OVER 1-3"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_))
+        .WillOnce(testing::Return("224 overview follows"))
+        .WillOnce(testing::Return("1\tFirst\tAlice <alice@example.test>\t" + date + "\t<first@example.test>\t\t100\t1"))
+        .WillOnce(
+            testing::Return("2\tSecond\tAlice <alice@example.test>\t" + date + "\t<second@example.test>\t\t100\t1"))
+        .WillOnce(testing::Return("3\tThird\tAlice <alice@example.test>\t" + date + "\t<third@example.test>\t\t100\t1"))
+        .WillOnce(testing::Return("."));
+
+    EXPECT_TRUE(ov_data(ArticleNum{1}, ArticleNum{3}, false));
+    EXPECT_EQ(ArticleNum{3}, g_last_cached);
+    EXPECT_TRUE(g_cached_all_in_range);
+    EXPECT_EQ("First", article_ptr(ArticleNum{1})->get_cached_line_text(SUBJ_LINE, false));
+    EXPECT_EQ("Second", article_ptr(ArticleNum{2})->get_cached_line_text(SUBJ_LINE, false));
+    EXPECT_EQ("Third", article_ptr(ArticleNum{3})->get_cached_line_text(SUBJ_LINE, false));
+}
+
+TEST_F(OverviewTest, initDoesNotProbeMissingOverviewCapability)
+{
+    g_nntp_link.connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("READER");
+    m_data_source.m_over_dir.clear();
+
+    EXPECT_FALSE(ov_init());
+    EXPECT_FALSE(m_data_source.m_flags & DF_TRY_OVERVIEW);
+}
+
+TEST_F(OverviewTest, initUsesBuiltInFormatAfterListVariantIsRejected)
+{
+    const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link.connection = connection;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("OVER");
+    m_data_source.m_over_dir.clear();
+    testing::InSequence sequence;
+    EXPECT_CALL(*connection, write_line(testing::StrEq("OVER"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_)).WillOnce(testing::Return("412 no group selected"));
+    EXPECT_CALL(*connection, write_line(testing::StrEq("LIST OVERVIEW.FMT"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_)).WillOnce(testing::Return("501 unknown LIST variant"));
+    EXPECT_CALL(*connection, write_line(testing::StrEq("OVER"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_)).WillOnce(testing::Return("412 no group selected"));
+
+    EXPECT_TRUE(ov_init());
+    EXPECT_TRUE(ov_init());
+    EXPECT_EQ(OV_SUBJ, m_data_source.m_field_num[1]);
+    EXPECT_EQ(FF_HAS_FIELD, m_data_source.m_field_flags[OV_SUBJ]);
 }
 
 TEST_F(OverviewTest, initMapsOverviewFormatFields)

@@ -147,12 +147,14 @@ TEST_F(NNTPTest, server_init_connection_failed)
     configure_factory_create(nullptr);
     g_nntp_link.capabilities.available = true;
     g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp_link.unsupported_commands.push_back("OVER");
 
     const int result = server_init(m_machine);
 
     EXPECT_EQ(-1, result);
     EXPECT_FALSE(g_nntp_link.capabilities.available);
     EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_TRUE(g_nntp_link.unsupported_commands.empty());
 }
 
 TEST_F(NNTPTest, nntpConnectConnectionFailedReportsUnavailable)
@@ -257,16 +259,37 @@ TEST_F(NNTPConnectedTest, clearsCapabilitiesWhenReaderModeDoesNotSupportDiscover
     EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
 }
 
-TEST_F(NNTPConnectedTest, preservesCapabilitiesWhenReaderModeIsUnsupported)
+TEST_F(NNTPConnectedTest, skipsReaderModeWhenAlreadyReading)
 {
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("201 server ready"));
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "HDR", "."});
-    expect_reply("MODE READER", {"500 unknown command"});
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
     EXPECT_EQ("201 server ready", g_ser_line);
     EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_TRUE(g_nntp_link.capabilities.has("HDR"));
+}
+
+TEST_F(NNTPConnectedTest, skipsUnadvertisedReaderModeOnTransitServer)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "IHAVE", "."});
+
+    EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
+    EXPECT_TRUE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
+}
+
+TEST_F(NNTPConnectedTest, preservesCapabilitiesWhenAdvertisedReaderModeIsUnsupported)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("201 server ready"));
+    expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "HDR", "."});
+    expect_reply("MODE READER", {"501 unsupported mode"});
+
+    EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
     EXPECT_TRUE(g_nntp_link.capabilities.has("HDR"));
 }
 
@@ -441,6 +464,7 @@ protected:
         g_nntp_link.connection = m_connection;
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
         g_nntp_link.capabilities = {};
+        g_nntp_link.unsupported_commands.clear();
     }
 
     void TearDown() override
@@ -458,6 +482,219 @@ protected:
     ArticleNum                                      m_old_last_cached{};
     NNTPLink                                        m_saved_nntp_link;
 };
+
+struct NntpCommandCase
+{
+    const char *modern;
+    const char *legacy;
+    const char *capability;
+    const char *response;
+    const char *legacy_response;
+    int (*request)();
+};
+
+class NntpCommandTest : public NNTPGetStringTest, public WithParamInterface<NntpCommandCase>
+{
+protected:
+    void expect_status(std::string_view command, const char *response)
+    {
+        EXPECT_CALL(*m_connection, write_line(StrEq(std::string{command}), _));
+        EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return(std::string{response}));
+    }
+
+    void expect_list(std::string_view command)
+    {
+        expect_status(command, command == GetParam().legacy ? GetParam().legacy_response : GetParam().response);
+        EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("."));
+    }
+};
+
+TEST_P(NntpCommandTest, prefersAdvertisedModernCommand)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add(GetParam().capability);
+    InSequence sequence;
+    expect_list(GetParam().modern);
+
+    EXPECT_EQ(1, GetParam().request());
+    EXPECT_FALSE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    nntp_finish_list();
+    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+}
+
+TEST_P(NntpCommandTest, cachesModernRejectionAndUsesLegacyCommand)
+{
+    InSequence sequence;
+    expect_status(GetParam().modern, "500 unknown command");
+    expect_list(GetParam().legacy);
+    expect_list(GetParam().legacy);
+
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+}
+
+TEST_P(NntpCommandTest, fallsBackWhenAdvertisedModernCommandIsRejected)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add(GetParam().capability);
+    InSequence sequence;
+    expect_status(GetParam().modern, "500 unknown command");
+    expect_list(GetParam().legacy);
+    expect_list(GetParam().legacy);
+
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+}
+
+TEST_P(NntpCommandTest, cachesRejectionOfBothCommands)
+{
+    InSequence sequence;
+    expect_status(GetParam().modern, "500 unknown command");
+    expect_status(GetParam().legacy, "500 unknown command");
+
+    EXPECT_EQ(-1, GetParam().request());
+    EXPECT_EQ(-1, GetParam().request());
+}
+
+TEST_P(NntpCommandTest, doesNotProbeUnadvertisedCommands)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("VERSION 2");
+
+    EXPECT_EQ(-1, GetParam().request());
+    EXPECT_EQ(-1, GetParam().request());
+}
+
+TEST_P(NntpCommandTest, usesAdvertisedLegacyExtension)
+{
+    g_nntp_link.capabilities.available = true;
+    const std::string_view command{GetParam().legacy};
+    g_nntp_link.capabilities.add(command.substr(0, command.find(' ')));
+    InSequence sequence;
+    expect_list(GetParam().legacy);
+
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+}
+
+TEST_P(NntpCommandTest, doesNotCacheTemporaryErrorsOrFallBack)
+{
+    InSequence sequence;
+    expect_status(GetParam().modern, "403 temporary failure");
+    expect_list(GetParam().modern);
+
+    EXPECT_EQ(0, GetParam().request());
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+}
+
+TEST_P(NntpCommandTest, refreshClearsRejectedCommandState)
+{
+    InSequence sequence;
+    expect_status(GetParam().modern, "500 unknown command");
+    expect_status(GetParam().legacy, "500 unknown command");
+    expect_status("CAPABILITIES", "101 capabilities follow");
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("VERSION 2"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return(std::string{GetParam().capability}));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("."));
+    expect_list(GetParam().modern);
+
+    EXPECT_EQ(-1, GetParam().request());
+    EXPECT_EQ(1, nntp_refresh_capabilities());
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+}
+
+TEST_P(NntpCommandTest, closeClearsRejectedCommandState)
+{
+    InSequence sequence;
+    expect_status(GetParam().modern, "500 unknown command");
+    expect_status(GetParam().legacy, "500 unknown command");
+    expect_list(GetParam().modern);
+
+    EXPECT_EQ(-1, GetParam().request());
+    nntp_close(false);
+    g_nntp_link.connection = m_connection;
+    EXPECT_EQ(1, GetParam().request());
+    nntp_finish_list();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModernCommands, NntpCommandTest,
+    Values(NntpCommandCase{"OVER 1-5", "XOVER 1-5", "OVER", "224 overview follows", "224 overview follows",
+                           [] { return nntp_overview("1-5"); }},
+           NntpCommandCase{"HDR subject 1-5", "XHDR subject 1-5", "HDR", "225 headers follow", "221 headers follow",
+                           [] { return nntp_header_values("subject", "1-5"); }},
+           NntpCommandCase{"LIST NEWSGROUPS comp.lang.apl", "XGTITLE comp.lang.apl", "LIST ACTIVE NEWSGROUPS",
+                           "215 descriptions follow", "282 descriptions follow",
+                           [] { return nntp_group_description("comp.lang.apl"); }}),
+    [](const TestParamInfo<NntpCommandCase> &info)
+    {
+        return std::string{info.index == 0 ? "Overview" : info.index == 1 ? "Headers" : "Descriptions"};
+    });
+
+TEST_F(NNTPGetStringTest, listVariantRejectionIsCached)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(StrEq("LIST NEWSGROUPS comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("501 unknown LIST variant"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("XGTITLE comp.lang.apl"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("282 descriptions follow"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("."));
+    EXPECT_CALL(*m_connection, write_line(StrEq("XGTITLE comp.lang.c++"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("282 descriptions follow"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("."));
+
+    EXPECT_EQ(1, nntp_group_description("comp.lang.apl"));
+    nntp_finish_list();
+    EXPECT_EQ(1, nntp_group_description("comp.lang.c++"));
+    nntp_finish_list();
+}
+
+TEST_F(NNTPGetStringTest, overviewSyntaxErrorDoesNotDisableCommand)
+{
+    InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(StrEq("OVER 1-5"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("501 invalid range"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("OVER 1-6"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("224 overview follows"));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("."));
+
+    EXPECT_EQ(-1, nntp_overview("1-5"));
+    EXPECT_EQ(1, nntp_overview("1-6"));
+    nntp_finish_list();
+}
+
+TEST_F(NNTPGetStringTest, rejectionCacheHandlesDifferentCommandFamilies)
+{
+    InSequence sequence;
+    for (const char *command : {"OVER 1-5", "XOVER 1-5", "HDR subject 1-5", "XHDR subject 1-5",
+                                "LIST NEWSGROUPS comp.lang.apl", "XGTITLE comp.lang.apl"})
+    {
+        EXPECT_CALL(*m_connection, write_line(StrEq(command), _));
+        EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("500 unknown command"));
+    }
+
+    EXPECT_EQ(-1, nntp_overview("1-5"));
+    EXPECT_EQ(-1, nntp_header_values("subject", "1-5"));
+    EXPECT_EQ(-1, nntp_group_description("comp.lang.apl"));
+    EXPECT_EQ(-1, nntp_group_description("comp.lang.c++"));
+    EXPECT_EQ(-1, nntp_header_values("from", "6-10"));
+    EXPECT_EQ(-1, nntp_overview("6-10"));
+}
+
+TEST_F(NNTPGetStringTest, overviewFormatRejectionIsCached)
+{
+    EXPECT_CALL(*m_connection, write_line(StrEq("LIST OVERVIEW.FMT"), _));
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("501 unknown LIST variant"));
+
+    EXPECT_EQ(-1, nntp_overview_format());
+    EXPECT_EQ(-1, nntp_overview_format());
+}
 
 TEST_F(NNTPGetStringTest, capabilitiesConsumeCompleteListBeforeNextCommand)
 {
@@ -890,8 +1127,10 @@ protected:
 
 TEST_F(RemoteHeaderPrefetchTest, readsHeaderLineFromXhdr)
 {
+    EXPECT_CALL(*m_connection, write_line(StrEq("HDR from 1-1"), _));
     EXPECT_CALL(*m_connection, write_line(StrEq("XHDR from 1-1"), _));
     EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("500 unknown command"))
         .WillOnce(Return("221 Header follows"))
         .WillOnce(Return("1 Casey <casey@example.test>\r"))
         .WillOnce(Return("."));
@@ -900,4 +1139,49 @@ TEST_F(RemoteHeaderPrefetchTest, readsHeaderLineFromXhdr)
 
     EXPECT_EQ("Casey <casey@example.test>", from);
     EXPECT_EQ("Casey <casey@example.test>", article_ptr(ArticleNum{1})->get_cached_line_text(FROM_LINE, false));
+}
+
+TEST_F(RemoteHeaderPrefetchTest, readsHdrWithConfiguredBrokenXhdrPolicy)
+{
+    m_data_source.m_flags |= DF_XHDR_BROKEN;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("HDR");
+    EXPECT_CALL(*m_connection, write_line(StrEq("HDR from 1-1"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("225 headers follow"))
+        .WillOnce(Return("1 Casey <casey@example.test>\r\n"))
+        .WillOnce(Return("."));
+
+    EXPECT_EQ("Casey <casey@example.test>", prefetch_lines_copy(ArticleNum{1}, FROM_LINE));
+}
+
+TEST_F(RemoteHeaderPrefetchTest, readsUncachedHeaderFromHdr)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("HDR");
+    EXPECT_CALL(*m_connection, write_line(StrEq("HDR keywords 1"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("225 headers follow"))
+        .WillOnce(Return("1 array programming\r\n"))
+        .WillOnce(Return("."));
+
+    EXPECT_EQ("array programming", prefetch_lines_copy(ArticleNum{1}, KEYW_LINE));
+}
+
+TEST_F(RemoteHeaderPrefetchTest, hdrEmptyValueDoesNotMarkArticleMissing)
+{
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("HDR");
+    g_last_art = ArticleNum{2};
+    article_ptr(ArticleNum{2})->m_flags = AF_EXISTS;
+    EXPECT_CALL(*m_connection, write_line(StrEq("HDR from 1-2"), _));
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("225 headers follow"))
+        .WillOnce(Return("1\r\n"))
+        .WillOnce(Return("2 Casey <casey@example.test>\r\n"))
+        .WillOnce(Return("."));
+
+    EXPECT_TRUE(prefetch_lines_copy(ArticleNum{1}, FROM_LINE).empty());
+    EXPECT_TRUE(article_ptr(ArticleNum{1})->m_flags & AF_EXISTS);
+    EXPECT_EQ("Casey <casey@example.test>", article_ptr(ArticleNum{2})->get_cached_line_text(FROM_LINE, false));
 }

@@ -260,15 +260,92 @@ int nntp_command(std::string_view bp)
     return 1;
 }
 
-int nntp_xgtitle(std::string_view groupname)
+static int unsupported_command(std::string_view command)
 {
-    const int status = nntp_command(fmt::format("XGTITLE {}", groupname));
-    if (status <= 0)
+    g_ser_line = fmt::format("500 {} is unavailable.", command);
+    return -1;
+}
+
+static int cached_command(std::string_view command, std::string_view arguments, bool variant = false)
+{
+    const std::string               name{command};
+    const std::vector<std::string> &unsupported = g_nntp_link.unsupported_commands;
+    if (std::binary_search(unsupported.begin(), unsupported.end(), name))
     {
-        return status;
+        return unsupported_command(command);
+    }
+    if (nntp_command(arguments.empty() ? name : fmt::format("{} {}", command, arguments)) <= 0)
+    {
+        return -2;
     }
 
-    return nntp_check();
+    const int status = nntp_check();
+    const int code = nntp_response_code(g_ser_line);
+    if (code == NNTP_BAD_COMMAND_VAL || (variant && code == NNTP_SYNTAX_VAL))
+    {
+        std::vector<std::string> &commands = g_nntp_link.unsupported_commands;
+        commands.insert(std::lower_bound(commands.begin(), commands.end(), name), name);
+    }
+    if (status > 0)
+    {
+        g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
+    }
+    return status;
+}
+
+static int preferred_command(std::string_view modern, std::string_view legacy, std::string_view arguments,
+                             bool advertised, bool variant = false)
+{
+    const bool try_modern = !g_nntp_link.capabilities.available || advertised;
+    if (try_modern)
+    {
+        const int status = cached_command(modern, arguments, variant);
+        const int code = nntp_response_code(g_ser_line);
+        if (status == -2 || (code != NNTP_BAD_COMMAND_VAL && !(variant && code == NNTP_SYNTAX_VAL)))
+        {
+            return status;
+        }
+    }
+    if (try_modern || g_nntp_link.capabilities.has(legacy))
+    {
+        return cached_command(legacy, arguments);
+    }
+    return unsupported_command(modern);
+}
+
+int nntp_overview(std::string_view range)
+{
+    return preferred_command("OVER", "XOVER", range, g_nntp_link.capabilities.has("OVER"));
+}
+
+int nntp_overview_format()
+{
+    const NntpCapabilities &capabilities = g_nntp_link.capabilities;
+    if (capabilities.available && !capabilities.has("OVER") && !capabilities.has("LIST", "OVERVIEW.FMT"))
+    {
+        return unsupported_command("LIST OVERVIEW.FMT");
+    }
+    return cached_command("LIST OVERVIEW.FMT", {}, true);
+}
+
+int nntp_header_values(std::string_view header, std::string_view range)
+{
+    return preferred_command("HDR", "XHDR", fmt::format("{} {}", header, range), g_nntp_link.capabilities.has("HDR"));
+}
+
+int nntp_group_description(std::string_view group)
+{
+    return preferred_command("LIST NEWSGROUPS", "XGTITLE", group, g_nntp_link.capabilities.has("LIST", "NEWSGROUPS"),
+                             true);
+}
+
+int nntp_group_descriptions(std::string_view pattern)
+{
+    if (g_nntp_link.capabilities.available && !g_nntp_link.capabilities.has("LIST", "NEWSGROUPS"))
+    {
+        return unsupported_command("LIST NEWSGROUPS");
+    }
+    return cached_command("LIST NEWSGROUPS", pattern, true);
 }
 
 int nntp_check()
@@ -356,6 +433,7 @@ read_it:
 int nntp_refresh_capabilities()
 {
     g_nntp_link.capabilities = {};
+    g_nntp_link.unsupported_commands.clear();
     if (nntp_command("CAPABILITIES") <= 0)
     {
         return -1;
@@ -474,5 +552,6 @@ void nntp_close(bool send_quit)
     }
     g_nntp_link.connection.reset();
     g_nntp_link.capabilities = {};
+    g_nntp_link.unsupported_commands.clear();
     g_nntp_link.flags |= NNTP_NEW_CMD_OK;
 }

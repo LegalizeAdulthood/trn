@@ -569,15 +569,46 @@ TEST_F(DataSourceFindActiveGroupTest, fetchesActiveLineFromServerList)
 
 TEST_F(DataSourceFindGroupDescTest, fetchesDescriptionFromServer)
 {
-    EXPECT_CALL(*m_connection, write_line(testing::StrEq("XGTITLE comp.lang.apl"), testing::_));
+    m_data_source.m_nntp_link.capabilities.available = true;
+    m_data_source.m_nntp_link.capabilities.add("LIST ACTIVE NEWSGROUPS");
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST NEWSGROUPS comp.lang.apl"), testing::_));
     EXPECT_CALL(*m_connection, read_line(testing::_))
-        .WillOnce(testing::Return("282 list follows"))
+        .WillOnce(testing::Return("215 list follows"))
         .WillOnce(testing::Return("comp.lang.apl APL discussion"))
         .WillOnce(testing::Return("."));
 
     const std::string_view description = m_data_source.find_group_desc("comp.lang.apl");
 
     EXPECT_EQ("APL discussion\n", description);
+}
+
+TEST_F(DataSourceFindGroupDescTest, fallsBackToXgtitleWithoutRepeatingRejectedList)
+{
+    testing::InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST NEWSGROUPS comp.lang.apl"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("501 unknown LIST variant"));
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("XGTITLE comp.lang.apl"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("282 list follows"))
+        .WillOnce(testing::Return("comp.lang.apl APL discussion"))
+        .WillOnce(testing::Return("."));
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("XGTITLE comp.lang.c++"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("282 list follows"))
+        .WillOnce(testing::Return("comp.lang.c++ C++ discussion"))
+        .WillOnce(testing::Return("."));
+
+    EXPECT_EQ("APL discussion\n", m_data_source.find_group_desc("comp.lang.apl"));
+    EXPECT_EQ("C++ discussion\n", m_data_source.find_group_desc("comp.lang.c++"));
+}
+
+TEST_F(DataSourceFindGroupDescTest, doesNotProbeMissingDescriptionCapability)
+{
+    m_data_source.m_nntp_link.capabilities.available = true;
+    m_data_source.m_nntp_link.capabilities.add("READER");
+
+    EXPECT_TRUE(m_data_source.find_group_desc("comp.lang.apl").empty());
+    EXPECT_TRUE(m_data_source.find_group_desc("comp.lang.c++").empty());
 }
 
 TEST_F(DataSourceFindGroupDescTest, returnsCachedDescription)
@@ -593,9 +624,9 @@ TEST_F(DataSourceFindGroupDescTest, returnsCachedDescription)
 
 TEST_F(DataSourceFindGroupDescTest, storesEmptyDescriptionForEmptyServerList)
 {
-    EXPECT_CALL(*m_connection, write_line(testing::StrEq("XGTITLE comp.lang.apl"), testing::_));
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST NEWSGROUPS comp.lang.apl"), testing::_));
     EXPECT_CALL(*m_connection, read_line(testing::_))
-        .WillOnce(testing::Return("282 list follows"))
+        .WillOnce(testing::Return("215 list follows"))
         .WillOnce(testing::Return("."));
 
     const std::string_view description = m_data_source.find_group_desc("comp.lang.apl");

@@ -784,7 +784,7 @@ std::string_view DataSource::find_group_desc(std::string_view group_name)
                 && g_net_speed < 5)
             {
                 (void) m_desc_sf.open({}, "", "");
-                goto try_xgtitle;
+                goto try_group_description;
             }
             g_spin_todo = m_desc_sf.m_recent_cnt;
             ret = m_desc_sf.open(m_group_desc, "newsgroups", m_news_id);
@@ -819,11 +819,11 @@ std::string_view DataSource::find_group_desc(std::string_view group_name)
         return std::string_view{*source_file_line(data)}.substr(grouplen + 1);
     }
 
-try_xgtitle:
+try_group_description:
     if ((m_flags & (DF_REMOTE | DF_NO_XGTITLE)) == DF_REMOTE)
     {
         set_data_source(this);
-        if (nntp_xgtitle(group_name) > 0)
+        if (nntp_group_description(group_name) > 0)
         {
             std::string description_line;
             description_line.reserve(NNTP_STRLEN);

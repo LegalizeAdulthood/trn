@@ -55,20 +55,27 @@ int nntp_list(std::string_view type, std::string_view arg, std::string &first_li
         return -1;
     }
 #endif
-    std::string command{"LIST"};
-    if (!arg.empty())
+    if (string_case_equal(type, "newsgroups"))
     {
-        fmt::format_to(std::back_inserter(command), " {} {}", type_name, arg);
+        ret = nntp_group_descriptions(arg);
     }
-    else if (!is_active)
+    else
     {
-        fmt::format_to(std::back_inserter(command), " {}", type_name);
+        std::string command{"LIST"};
+        if (!arg.empty())
+        {
+            fmt::format_to(std::back_inserter(command), " {} {}", type_name, arg);
+        }
+        else if (!is_active)
+        {
+            fmt::format_to(std::back_inserter(command), " {}", type_name);
+        }
+        if (nntp_command(command) <= 0)
+        {
+            return -2;
+        }
+        ret = nntp_check();
     }
-    if (nntp_command(command) <= 0)
-    {
-        return -2;
-    }
-    ret = nntp_check();
     if (ret <= 0)
     {
         return ret ? ret : -1;

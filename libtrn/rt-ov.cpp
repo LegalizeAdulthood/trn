@@ -64,16 +64,7 @@ bool ov_init()
     std::ifstream overview;
     if (g_data_source->m_over_dir.empty())
     {
-        // Check if the server is XOVER compliant
-        if (nntp_command("XOVER") <= 0)
-        {
-            return false;
-        }
-        if (nntp_check() < 0)
-        {
-            return false;
-        }
-        if (nntp_response_code(g_ser_line) == NNTP_BAD_COMMAND_VAL)
+        if (nntp_overview({}) < 0)
         {
             return false;
         }
@@ -82,7 +73,7 @@ bool ov_init()
         {
             nntp_finish_list();
         }
-        int ret = nntp_list("overview.fmt", "");
+        int ret = nntp_overview_format();
         if (ret < -1)
         {
             return false;
@@ -262,7 +253,7 @@ beginning:
 
     if (remote)
     {
-        if (nntp_command(fmt::format("XOVER {}-{}", first.value_of(), last.value_of())) <= 0 || nntp_check() <= 0)
+        if (nntp_overview(fmt::format("{}-{}", first.value_of(), last.value_of())) <= 0)
         {
             success = false;
             goto exit;

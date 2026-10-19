@@ -30,12 +30,13 @@ Source uses `file_ref`, and the config target has direct tests for it.
 Those two areas should be treated as release verification only, not as
 active feature slices.
 
-NNTP capability parsing and reader-mode refresh are implemented in
-`NntpCapabilities` and `NNTPLink`.  Focused validation passed 64 tests with
-`cmake --workflow temp`, including legacy fallback, truncated lists,
-loopback startup, and existing overview range coverage.  Command selection
-and TLS remain active slices.  The full `cmake --workflow rt-default` run
-passed 1343 tests with six skips.
+NNTP capability discovery and modern command selection are implemented.
+`NNTPLink` retains capabilities and a sorted vector of rejected commands.
+Focused validation passed 109 tests with `cmake --workflow temp`, including
+reader-mode selection, modern and legacy request order, rejection caching,
+empty HDR values, and batched overview retrieval.  TLS and authentication
+policy remain active slices.  The full `cmake --workflow rt-default` run
+passed 1385 tests with six skips.
 
 ## Script Audit
 
@@ -258,39 +259,6 @@ when CMake can determine the result directly.
 When a slice is the final active slice for an open GitHub issue, its
 commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
-
-### 27. NNTP Modern Commands
-
-Issues: #3.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #9.
-
-Depends on: 26.
-
-Files likely touched:
-
-- `libtrn/rt-ov.cpp`
-- `libtrn/head.cpp`
-- `libtrn/datasrc.cpp`
-- NNTP tests
-
-Tasks:
-
-- Send `MODE READER` only when needed or advertised.
-- Prefer `OVER` before `XOVER`.
-- Prefer `HDR` before `XHDR`.
-- Prefer `LIST NEWSGROUPS group` before `XGTITLE`.
-- Avoid repeated unsupported-command probes within a session.
-
-Acceptance:
-
-- Modern servers use advertised RFC 3977 commands.
-- Old servers still work through explicit fallback paths.
-- Overview retrieval does not regress #9.
-- NNTP unit tests cover command preference order and unsupported-command
-  caching.
 
 ### 28. NNTP STARTTLS
 
@@ -804,7 +772,8 @@ unless it is the smallest correct implementation for 31 through 35.
 
 Mandatory open GitHub 5.0 milestone issues:
 
-- #3: 27 through 30; capability discovery from slice 26 is implemented.
+- #3: 28 through 30; capability discovery and command selection are
+  implemented.
 - #5: 36.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.

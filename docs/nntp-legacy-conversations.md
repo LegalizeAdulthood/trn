@@ -42,8 +42,9 @@ current TLS best practices.
 Current code:
 
 - `nntp/nntpinit.cpp` reads the greeting and asks `CAPABILITIES`.
-- It then always tries `MODE READER`.
-- It ignores `MODE READER` only if the server replies `500`.
+- It sends `MODE READER` when `MODE-READER` is advertised, or as a
+  legacy fallback when capabilities are unavailable.
+- A `500` or `501` reader-mode reply preserves the initial greeting.
 - It refreshes capabilities after a successful `MODE READER`.
 - A `500` or `501` discovery reply preserves legacy fallback behavior.
 
@@ -62,9 +63,12 @@ Current code:
 - `NntpCapabilities` stores capability labels and arguments in `NNTPLink`.
 - Complete multiline replies replace the session's capability state.
 - Closing or reconnecting discards the previous capability list.
-- Support for `LIST`, `LIST ACTIVE`, `LISTGROUP`, `XOVER`, `XHDR`,
-  `XGTITLE`, and `LIST SUBSCRIPTIONS` is discovered by optimistic use and
-  fallback.
+- `OVER`, `HDR`, and `LIST NEWSGROUPS` use advertised commands with
+  compatibility fallbacks for unavailable modern commands.
+- Rejected command names are kept in a sorted vector in the session.
+  Capability refresh, close, and reconnect discard those rejections.
+- `LIST ACTIVE`, `LISTGROUP`, and `LIST SUBSCRIPTIONS` still use
+  optimistic requests and fallback.
 
 Modern concern:
 
@@ -76,9 +80,10 @@ Modern concern:
 
 Current code:
 
-- `libtrn/rt-ov.cpp` probes `XOVER`.
-- Remote overview fetches use `XOVER first-last`.
-- Overview format uses `LIST overview.fmt`.
+- `libtrn/rt-ov.cpp` prefers `OVER first-last` and retains batched ranges.
+- `XOVER` remains a compatibility fallback with rejection caching.
+- Overview format uses `LIST OVERVIEW.FMT`; an unsupported variant falls
+  back to the built-in field layout without repeated format probes.
 
 Modern concern:
 
@@ -90,9 +95,10 @@ Modern concern:
 
 Current code:
 
-- `libtrn/head.cpp` uses `XHDR field article`.
-- It also uses `XHDR field first-last`.
-- `XHDR Broken = y` is a configuration fallback knob.
+- `libtrn/head.cpp` prefers `HDR field article` and `HDR field first-last`.
+- `XHDR` remains a compatibility fallback with rejection caching.
+- Empty `HDR` values preserve the article's existence.
+- `XHDR Broken = y` retains its missing-article inference policy.
 
 Modern concern:
 
@@ -104,8 +110,10 @@ Modern concern:
 
 Current code:
 
-- `libtrn/datasrc.cpp` can fetch descriptions through `LIST NEWSGROUPS`.
-- It falls back to `XGTITLE group`.
+- `libtrn/datasrc.cpp` uses cached descriptions first, then prefers
+  `LIST NEWSGROUPS group` for individual lookups.
+- `XGTITLE group` remains an explicit compatibility fallback.
+- Bulk and individual description requests share rejected-command state.
 
 Modern concern:
 

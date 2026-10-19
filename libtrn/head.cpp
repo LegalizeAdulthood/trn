@@ -608,25 +608,12 @@ std::string fetch_lines(ArticleNum art_num, HeaderLineType which_line)
     return header_line_text(std::string_view{line, static_cast<std::size_t>(std::max(size, 0))});
 }
 
-static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
-{
-    const std::string command = fmt::format("XHDR {} {}", g_header_type[which_line].name, artnum.value_of());
-    return nntp_command(command);
-}
-
-static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum lastnum)
-{
-    const std::string command =
-        fmt::format("XHDR {} {}-{}", g_header_type[which_line].name, artnum.value_of(), lastnum.value_of());
-    return nntp_command(command);
-}
-
 static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line, std::string *owned_result)
 {
     Article   *ap;
     ArticleNum num;
     ArticleNum lastnum;
-    bool       hasxhdr = true;
+    bool       has_header_values = true;
 
     if (owned_result != nullptr)
     {
@@ -641,18 +628,19 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
     {
         lastnum = art_num + ArticleNum{PREFETCH_SIZE - 1};
         lastnum = std::min(lastnum, g_last_art);
-        status = nntp_xhdr(which_line, art_num, lastnum);
+        status = nntp_header_values(g_header_type[which_line].name,
+                                    fmt::format("{}-{}", art_num.value_of(), lastnum.value_of()));
     }
     else
     {
         lastnum = art_num;
-        status = nntp_xhdr(which_line, art_num);
+        status = nntp_header_values(g_header_type[which_line].name, std::to_string(art_num.value_of()));
     }
-    if (status <= 0)
+    if (status == -2)
     {
         finalize(1);
     }
-    if (nntp_check() > 0)
+    if (status > 0)
     {
         while (true)
         {
@@ -671,20 +659,17 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             {
                 line_text = line_text.substr(0, cr);
             }
-            const std::size_t space = line_text.find(' ');
-            if (space == std::string_view::npos)
-            {
-                continue;
-            }
+            const std::size_t            space = line_text.find(' ');
             const std::string_view       number_text = line_text.substr(0, space);
             long                         article_number{};
             const std::from_chars_result result =
                 std::from_chars(number_text.data(), number_text.data() + number_text.size(), article_number);
-            if (result.ec != std::errc{})
+            if (result.ec != std::errc{} || result.ptr != number_text.data() + number_text.size())
             {
                 continue;
             }
-            const std::string_view header_line = line_text.substr(space + 1);
+            const std::string_view header_line =
+                space == std::string_view::npos ? std::string_view{} : line_text.substr(space + 1);
             num = ArticleNum{article_number};
             if (num < art_num || num > lastnum)
             {
@@ -717,7 +702,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
     }
     else
     {
-        hasxhdr = false;
+        has_header_values = false;
         lastnum = art_num;
         if (!parse_header(art_num))
         {
@@ -729,7 +714,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             *owned_result = current_header_line_text(which_line);
         }
     }
-    if (hasxhdr && !(g_data_source->m_flags & DF_XHDR_BROKEN))
+    if (has_header_values && !(g_data_source->m_flags & DF_XHDR_BROKEN))
     {
         for (prior_num = article_first(prior_num); prior_num < lastnum; prior_num = article_next(prior_num))
         {
