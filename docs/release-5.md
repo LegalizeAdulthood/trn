@@ -230,8 +230,10 @@ UTF-8, and keeps TeX prefixes in a `CharSubstitution` instance.  Each
 header or compression call uses fresh substitution state.  Malformed
 bytes become U+FFFD without consuming subsequent valid characters.
 
-Remaining #34 work adds configurable Unicode substitution profiles.
-The larger
+The optional `u` profile and `[unicode substitutions]` configuration now
+support scalar-keyed mappings over built-in punctuation and Latin
+approximations.  Defaults remain unchanged.  Remaining #34 work expands
+mapping and equivalent header/body coverage in slice 35.  The larger
 `ArticlePresentationView` and `PresentationBuffer` architecture can
 remain a follow-up unless it is the smallest correct release change.
 
@@ -302,6 +304,27 @@ with six skips and no failures.  Coverage includes source retention,
 cache growth and rereads, transfer-decoded scalar fragments, section/EOF
 finalization, unknown and malformed charsets, repeated articles, and #2
 regressions.  Historical conversions for #17 are implemented locally.
+
+Slice 34 test-first evidence, using `cmake --workflow temp` for all
+focused runs:
+
+- The initial 87-test run failed the two new Unicode mode tests because
+  punctuation remained unchanged and the status label was missing.
+- Seven new profile/configuration tests then failed to compile because
+  the profile, explicit-profile constructor, and option loader APIs were
+  absent.  Implementing scalar mappings, sorted-vector lookup, section
+  loading, validation, and profile snapshots left one failure among 94
+  tests: an escaped quote swallowed the following INI settings.
+- Adding direct INI and decoded-header regressions produced three
+  failures among 112 tests.  Honoring escaped quotes while scanning INI
+  values and enabling the Unicode profile for headers made all 112 pass.
+
+The slice 34 `cmake --workflow rt-default` run passed 1568 tests with six
+skips and no failures.  Tests cover opt-in/opt-out, unchanged defaults,
+user precedence, escaped and empty replacements, invalid-section
+retention, independent instances, saved configuration, and #2 regressions.
+Configuration syntax and source-byte decoding are documented in
+`charset-pipeline.md` and the shipped help/sample configuration.
 
 ## GitHub 5.0 Milestone
 
@@ -416,42 +439,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 34. UTF-8 To ASCII Configuration
-
-Issues: #34.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #2.
-
-Depends on: 31 and 32.
-
-Files likely touched:
-
-- `libtrn/charsubst.cpp`
-- config data
-- docs
-- encoding tests
-
-Tasks:
-
-- Add an optional Unicode-to-text substitution profile for issue #34.
-- Key user mappings by Unicode scalar values, not encoded byte
-  sequences.
-- Define config syntax for `U+2019`-style keys and escaped replacement
-  text.
-- Define whether user mappings overlay or replace built-in profiles.
-- Keep the substitution off by default.
-
-Acceptance:
-
-- Users can opt into Unicode-to-ASCII conversion.
-- Single-byte examples such as `0x91` are documented as charset bytes
-  that must decode to Unicode before substitution.
-- Default UTF-8 display behavior does not change.
-- Unit tests cover opt-in, opt-out, user mappings, and default-display
-  behavior.
 
 ### 35. UTF-8 To ASCII Mapping Tests
 
@@ -733,7 +720,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #24: 11 and 12.
 - #31: completed by removed slices 8 through 10.
 - #33: see `docs/release-5-test-plan.md`.
-- #34: 34 and 35.
+- #34: 35; configuration completed by removed slice 34.
 - #38: 13.
 
 Mandatory closed GitHub 5.0 milestone regression checklist:

@@ -153,6 +153,7 @@ extern int           g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf);
 void        opt_final();
+void                            load_options(const std::filesystem::path &filename, bool bleat = false);
 void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, std::string_view s);
 void        save_options(const std::filesystem::path &filename);

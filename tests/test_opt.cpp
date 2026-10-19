@@ -5,6 +5,7 @@
 
 #include <config/common.h>
 #include <config/env.h>
+#include <trn/charsubst.h>
 #include <trn/file-contents.h>
 #include <trn/head.h>
 #include <trn/OptionCatalog.h>
@@ -117,6 +118,33 @@ protected:
     fs::path        m_root;
     OptionValueList m_old_def_vals;
     OptionValueList m_old_saved_vals;
+};
+
+class UnicodeConfigurationTest : public SaveOptionsTest
+{
+protected:
+    void SetUp() override
+    {
+        SaveOptionsTest::SetUp();
+        m_old_profile = g_unicode_substitutions;
+        m_old_charsets = g_charsets;
+        m_old_mode = current_char_subst_mode();
+        g_unicode_substitutions = {};
+        g_charsets = "patm";
+        reset_char_subst_mode();
+    }
+
+    void TearDown() override
+    {
+        g_unicode_substitutions = m_old_profile;
+        g_charsets = m_old_charsets;
+        set_char_subst_mode(m_old_mode);
+        SaveOptionsTest::TearDown();
+    }
+
+    UnicodeSubstitutionProfile m_old_profile;
+    std::string                m_old_charsets;
+    char                       m_old_mode{};
 };
 
 class AutoSaveNameOptionTest : public testing::Test
@@ -294,6 +322,53 @@ TEST_F(SaveOptionsTest, preservesNonOptionTextWhenReplacingOptionsSection)
     EXPECT_EQ(std::string::npos, output.find("# old option comment"));
     EXPECT_EQ(std::string::npos, output.find("Bogus Option = old"));
     EXPECT_NE(std::string::npos, output.find("# keep this note\n\n[extra]\nvalue = yes\n"));
+}
+
+TEST_F(UnicodeConfigurationTest, loadsMappingsWithoutEnablingSubstitution)
+{
+    const fs::path path = m_root / "trnrc";
+    std::ofstream{path} << "[unicode substitutions]\nU+2019 = custom\nU+1F60A = ':)'\n";
+    load_options(path);
+
+    const std::string text{"\xE2\x80\x99\xF0\x9F\x98\x8A"};
+    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
+    set_option(OI_CHARSET, "up");
+    reset_char_subst_mode();
+    EXPECT_EQ("custom:)", str_char_subst(text, current_char_subst_mode()));
+    next_char_subst_mode();
+    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
+}
+
+TEST_F(UnicodeConfigurationTest, savesAndReloadsOptInAndEscapedMappings)
+{
+    const fs::path    path = m_root / "trnrc";
+    const std::string section{"[unicode substitutions]\nU+2019 = \"\\t\\n\\\\\"\nU+2014 = \"\"\n"};
+    std::ofstream{path} << "[options]\nCharset = up\n" << section;
+    load_options(path);
+    save_options(path);
+    EXPECT_NE(std::string::npos, file_contents(path).find(section));
+
+    g_unicode_substitutions = {};
+    g_charsets = "patm";
+    load_options(path);
+    reset_char_subst_mode();
+    EXPECT_EQ('u', current_char_subst_mode());
+    EXPECT_EQ("\t\n\\", str_char_subst("\xE2\x80\x99\xE2\x80\x94", current_char_subst_mode()));
+}
+
+TEST_F(UnicodeConfigurationTest, invalidSectionReportsErrorAndKeepsPreviousProfile)
+{
+    const fs::path path = m_root / "trnrc";
+    std::ofstream{path} << "[options]\nCharset = up\n[unicode substitutions]\nU+2019 = old\n";
+    load_options(path);
+    std::ofstream{path} << "[unicode substitutions]\nU+2019 = new\n0x91 = invalid\n";
+    testing::internal::CaptureStdout();
+    load_options(path);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_NE(std::string::npos, output.find("Invalid Unicode substitution section"));
+    reset_char_subst_mode();
+    EXPECT_EQ("old", str_char_subst("\xE2\x80\x99", current_char_subst_mode()));
 }
 
 TEST(QuoteStringTest, leavesSimpleValuesUnquoted)

@@ -17,19 +17,44 @@
 #include <trn/charsubst.h>
 
 #include <config/config2.h>
+#include <trn/IniSection.h>
 #include <trn/trn.h>
 #include <trn/utf.h>
 
+#include <algorithm>
+#include <charconv>
+#include <iterator>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 std::string g_charsets{"patm"};
+UnicodeSubstitutionProfile g_unicode_substitutions;
 
 namespace
 {
 constexpr std::string::size_type NO_CHAR_SUBST = std::string::npos;
 std::string::size_type           s_char_subst_index{NO_CHAR_SUBST};
+
+constexpr std::pair<CodePoint, std::string_view> UNICODE_ASCII[]{
+    {0x2011, "-"}, {0x2013, "--"}, {0x2014, "---"}, {0x2018, "`"},
+    {0x2019, "'"}, {0x201C, "\""}, {0x201D, "\""},  {0x2026, "..."},
+};
+
+bool valid_utf8(std::string_view text)
+{
+    while (!text.empty())
+    {
+        const Utf8Scalar scalar = decode_utf8_scalar(text);
+        if (scalar.code_point == INVALID_CODE_POINT)
+        {
+            return false;
+        }
+        text.remove_prefix(scalar.byte_count);
+    }
+    return true;
+}
 
 void normalize_char_subst_mode()
 {
@@ -118,6 +143,10 @@ std::string current_char_subst()
         show = g_verbose ? "[TeX->ISO] " : "[T] ";
         break;
 
+    case 'u':
+        show = g_verbose ? "[Unicode->ASCII] " : "[A] ";
+        break;
+
     default:
         show = "";
         break;
@@ -172,8 +201,58 @@ static constexpr const char *s_iso_to_ascii[ISO_TABLES][96] =
 };
 // clang-format on
 
+bool UnicodeSubstitutionProfile::configure(const IniSection &section)
+{
+    auto mappings = m_mappings;
+    for (const IniSetting setting : section)
+    {
+        const std::string_view key = setting.name();
+        if (key.size() < 6 || key.size() > 8 || (key[0] != 'U' && key[0] != 'u') || key[1] != '+')
+        {
+            return false;
+        }
+        CodePoint                    scalar{};
+        const std::from_chars_result parsed = std::from_chars(key.data() + 2, key.data() + key.size(), scalar, 16);
+        if (parsed.ec != std::errc{} || parsed.ptr != key.data() + key.size() || encode_utf8_scalar(scalar).empty())
+        {
+            return false;
+        }
+        std::string text = setting.value();
+        if (!valid_utf8(text))
+        {
+            return false;
+        }
+        auto entry = std::lower_bound(mappings.begin(), mappings.end(), scalar,
+                                      [](const auto &mapping, CodePoint value) { return mapping.first < value; });
+        if (entry != mappings.end() && entry->first == scalar)
+        {
+            entry->second = std::move(text);
+        }
+        else
+        {
+            mappings.insert(entry, {scalar, std::move(text)});
+        }
+    }
+    m_mappings = std::move(mappings);
+    return true;
+}
+
+std::optional<std::string_view> UnicodeSubstitutionProfile::replacement(unsigned long scalar) const
+{
+    const auto entry = std::lower_bound(m_mappings.begin(), m_mappings.end(), scalar,
+                                        [](const auto &mapping, CodePoint value) { return mapping.first < value; });
+    return entry != m_mappings.end() && entry->first == scalar ? std::optional<std::string_view>{entry->second}
+                                                               : std::nullopt;
+}
+
 CharSubstitution::CharSubstitution(char_int mode) :
-    m_mode{mode}
+    CharSubstitution{mode, g_unicode_substitutions}
+{
+}
+
+CharSubstitution::CharSubstitution(char_int mode, const UnicodeSubstitutionProfile &profile) :
+    m_mode{mode},
+    m_unicode_profile{mode == 'u' ? profile : UnicodeSubstitutionProfile{}}
 {
 }
 
@@ -187,7 +266,23 @@ std::string CharSubstitution::substitute(std::string_view input)
         const CodePoint        scalar = decoded.code_point == INVALID_CODE_POINT ? 0xFFFD : decoded.code_point;
         const std::string_view original = input.substr(0, decoded.byte_count);
         input.remove_prefix(decoded.byte_count);
-        if ((m_mode == 'a' || m_mode == 'm') && scalar >= 0xA0 && scalar <= 0xFF)
+        if (m_mode == 'u')
+        {
+            if (const auto replacement = m_unicode_profile.replacement(scalar))
+            {
+                result += *replacement;
+                continue;
+            }
+            const auto entry =
+                std::lower_bound(std::begin(UNICODE_ASCII), std::end(UNICODE_ASCII), scalar,
+                                 [](const auto &mapping, CodePoint value) { return mapping.first < value; });
+            if (entry != std::end(UNICODE_ASCII) && entry->first == scalar)
+            {
+                result += entry->second;
+                continue;
+            }
+        }
+        if ((m_mode == 'a' || m_mode == 'm' || m_mode == 'u') && scalar >= 0xA0 && scalar <= 0xFF)
         {
             const char *const replacement = s_iso_to_ascii[m_mode == 'm' ? 0 : 1][scalar - 0xA0];
             if (replacement != nullptr)

@@ -46,7 +46,7 @@ std::size_t find_value_end(std::string_view text, std::size_t position)
     while (position != text.size())
     {
         const char ch = text[position];
-        if (ch == '\\' && position + 1 != text.size() && text[position + 1] == '\n')
+        if (ch == '\\' && position + 1 != text.size())
         {
             position += 2;
             continue;

@@ -72,6 +72,18 @@ TEST(IniSectionTest, continuesValuesAcrossLines)
     EXPECT_EQ("done", (*iterator).value());
 }
 
+TEST(IniSectionTest, escapedQuotesDoNotConsumeFollowingSettings)
+{
+    const IniSection section{"test", {}, "Quote = \"\\\"\"\nNext = done\n"};
+    auto             iterator = section.begin();
+    ASSERT_NE(section.end(), iterator);
+    EXPECT_EQ("\"", (*iterator).value());
+    ++iterator;
+    ASSERT_NE(section.end(), iterator);
+    EXPECT_EQ("Next", (*iterator).name());
+    EXPECT_EQ("done", (*iterator).value());
+}
+
 TEST(IniSectionTest, doesNotModifySectionBody)
 {
     const std::string body{"Alpha Key = one\n"

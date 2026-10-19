@@ -283,11 +283,16 @@ Options include:
           starting trn.
 
      -Q<set>  (Charset)
-          defines the set of available charset conversions.
-          This can be useful to restrict the available
-          conversions to those your terminal can handle and/or
-          to specify an alternate default.  The first element of
-          this set is taken as default for each article.
+          defines the available character substitutions, applied
+          after source charset decoding.  The default is patm:
+          plain, Latin-to-ASCII, TeX-to-Unicode, and monospaced
+          Latin-to-ASCII.  Add u for Unicode-to-ASCII punctuation
+          and Latin approximations.  The first mode is the default
+          for each article; up starts with Unicode conversion and
+          allows cycling to plain UTF-8.  A [unicode substitutions]
+          section in trnrc can override individual Unicode scalars:
+          U+2019 = "'".  Replacements use normal INI escapes and
+          may be empty.  Unmapped scalars retain their UTF-8 text.
 
      -r  (Restart At Last Group)
           causes trn to restart in the last newsgroup read

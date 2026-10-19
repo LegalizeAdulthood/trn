@@ -410,7 +410,7 @@ static std::size_t utf8_prefix_size(std::string_view text, int columns)
 inline bool header_conv()
 {
     const char mode = current_char_subst_mode();
-    return mode == 'a' || mode == 'm' || mode == 't';
+    return mode == 'a' || mode == 'm' || mode == 't' || mode == 'u';
 }
 
 static void print_tree_line(std::string_view tree_line)

@@ -22,6 +22,13 @@ Erase Each Line = #default of no
 Muck Up Clear = #default of no
 Background Spinner = yes
 Charset = #default of patm
+# Use up to start with Unicode-to-ASCII substitution and cycle to plain.
+# Custom mappings belong in a [unicode substitutions] section, e.g.:
+# [unicode substitutions]
+# U+2014 = "---"
+# U+2019 = "'"
+# U+1F60A = ":)"
+# Keys are Unicode scalars; replacements use normal INI escapes.
 Filter Control Characters = #default of yes
 # ==Selector Options========
 Use Newsrc Selector = yes

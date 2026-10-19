@@ -65,8 +65,6 @@
 
 namespace fs = std::filesystem;
 
-static void opt_file(const fs::path &filename, bool bleat);
-
 CompiledRegex g_opt_compex;
 std::string   g_ini_file;
 OptionValueList g_option_def_vals;
@@ -104,7 +102,7 @@ void opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf)
         g_check_flag = true; // so we can optimize for -c
     }
     const std::string global_init_file = do_interp(GLOBAL_INIT);
-    opt_file(global_init_file, false);
+    load_options(global_init_file);
     tcbuf[0] = '\0';
 
     const OptionCatalog catalog;
@@ -130,7 +128,7 @@ void opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf)
     error.clear();
     if (fs::exists(g_ini_file, error))
     {
-        opt_file(g_ini_file, true);
+        load_options(g_ini_file, true);
     }
     std::string switches = g_use_threads ? get_env_var("TRNINIT") : std::string{};
     if (switches.empty())
@@ -186,7 +184,7 @@ void opt_final()
     g_sel_grp_display_mode_index = 0;
 }
 
-static void opt_file(const fs::path &filename, bool bleat)
+void load_options(const fs::path &filename, bool bleat)
 {
     std::string filebuf = file_contents(filename);
 
@@ -215,6 +213,13 @@ static void opt_file(const fs::path &filename, bool bleat)
                 for (const IniSetting setting : section)
                 {
                     set_env_var(setting.name(), setting.value());
+                }
+            }
+            else if (section_name == "unicode substitutions")
+            {
+                if (!g_unicode_substitutions.configure(section))
+                {
+                    fmt::print("Invalid Unicode substitution section in {}\n", filename.string());
                 }
             }
             else if (section_name == "termcap")

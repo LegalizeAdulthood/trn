@@ -17,8 +17,11 @@
 
 #include <config/config2.h>
 
+#include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 extern std::string g_charsets;
@@ -29,12 +32,28 @@ void        reset_char_subst_mode();
 void        next_char_subst_mode();
 std::string current_char_subst();
 
+class IniSection;
+
+class UnicodeSubstitutionProfile
+{
+public:
+    // Overlay a section atomically. Later entries for a scalar take precedence.
+    bool                            configure(const IniSection &section);
+    std::optional<std::string_view> replacement(unsigned long scalar) const;
+
+private:
+    std::vector<std::pair<unsigned long, std::string>> m_mappings;
+};
+
+extern UnicodeSubstitutionProfile g_unicode_substitutions;
+
 // Inputs are complete UTF-8 views. Invalid bytes become U+FFFD, one byte at a time.
 // TeX prefixes may span calls on this instance; finish flushes a trailing prefix.
 class CharSubstitution
 {
 public:
     explicit CharSubstitution(char_int mode);
+    CharSubstitution(char_int mode, const UnicodeSubstitutionProfile &profile);
 
     std::string substitute(std::string_view input);
     std::string finish();
@@ -42,6 +61,7 @@ public:
 private:
     char_int m_mode;
     char     m_tex_prefix{};
+    UnicodeSubstitutionProfile m_unicode_profile;
 };
 
 // Substitute one line, including its first newline, with fresh instance state.

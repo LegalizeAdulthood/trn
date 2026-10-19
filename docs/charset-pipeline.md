@@ -128,7 +128,72 @@ byte sequences themselves as described above.
 `str_char_subst` creates a fresh instance, substitutes through the first
 newline if present, and flushes its prefix.  Author and subject
 compression use this wrapper before layout.  Displayed headers apply
-the selected historical profile after encoded-word decoding.
+the selected profile after encoded-word decoding.
+
+## Optional Unicode-To-ASCII Profile
+
+The `u` substitution mode adds Unicode punctuation approximations to the
+historical `a` Latin table.  It is disabled by default: `Charset = patm`
+is unchanged.  `Charset` selects substitution modes, not source decoding.
+Put `u` first to start with conversion; include `p` to allow cycling back
+to unchanged UTF-8 with the existing conversion-mode command.
+
+For example, put this in the user's `trnrc`:
+
+```text
+[options]
+Charset = up
+
+[unicode substitutions]
+U+2014 = "---"
+U+2019 = "'"
+U+1F60A = ":)"
+```
+
+User entries overlay the built-in profile and apply only in mode `u`.
+Later entries and later sections override earlier entries for the same
+scalar.  Loading mappings alone does not enable conversion.  Plain,
+historical ASCII, monospaced ASCII, and TeX modes retain their behavior.
+Unmapped scalars pass through; the profile does not promise ASCII-only
+output.  Invalid input bytes follow the existing U+FFFD policy.
+
+Keys use `U+` followed by four through six hexadecimal digits, with
+case-insensitive letters.  Surrogates and values above U+10FFFF are
+invalid.  Byte keys such as `0x91` are invalid: Windows-1252 byte 0x91
+must first decode to U+2018, which the profile maps to a backtick.
+Source charset selection still belongs to each encoded word or MIME
+section; substitution never guesses it from a byte value.
+
+Values follow the normal INI quoting and escape rules.  Quotes preserve
+leading and trailing spaces.  `\t`, `\n`, `\r`, `\\`, and `\"` represent
+tab, newline, carriage return, backslash, and double quote.  For example:
+
+```text
+[unicode substitutions]
+U+2014 = "line one\nline two"
+U+2019 = ""
+```
+
+An empty string deletes a scalar.  Replacement strings may contain
+multiple characters or valid UTF-8 and are emitted once, without
+recursive substitution.  Invalid keys or malformed UTF-8 replacement
+text reject the entire section with a diagnostic; previous mappings
+remain intact.  An empty section leaves previous mappings intact.
+Saving options preserves the section.  Each `CharSubstitution` instance
+owns a snapshot of its mappings, so later configuration cannot alter an
+in-progress substitution.
+
+The initial built-in punctuation table is:
+
+| Scalar | Replacement |
+| --- | --- |
+| U+2011 | `-` |
+| U+2013 | `--` |
+| U+2014 | `---` |
+| U+2018 | backtick |
+| U+2019 | `'` |
+| U+201C, U+201D | `"` |
+| U+2026 | `...` |
 
 ## Verification
 
@@ -145,6 +210,11 @@ embedded NUL, malformed recovery, first-line bounds, and independent TeX
 instances across calls and article lifetimes.  `CompressFromTest`,
 `CompressSubjectTest`, and `TreeRenderingTest` cover substitution before
 compression and decoded header display, including repeated headers.
+
+`UnicodeSubstitutionTest` checks scalar keys, user precedence, escaped
+and empty replacements, validation, and independent mapping snapshots.
+`UnicodeConfigurationTest` checks configuration loading, opt-in/opt-out,
+diagnostics, and saving/reloading the profile without changing defaults.
 
 `CharsetDecoderTest` covers aliases, supported mappings, undefined bytes,
 strict UTF-8 fallback, interleaved decoders, and terminal output under a

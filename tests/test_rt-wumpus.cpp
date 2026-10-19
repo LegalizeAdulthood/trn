@@ -172,6 +172,22 @@ TEST_F(TreeRenderingTest, hiddenHeaderSubstitutesDecodedLatinScalars)
     EXPECT_EQ("From: =?ISO-8859-1?Q?=C4?=\xE2\x80\x99", raw);
 }
 
+TEST_F(TreeRenderingTest, unicodeModeSubstitutesDecodedHeaders)
+{
+    const std::string previous_charsets = g_charsets;
+    g_charsets = "up";
+    reset_char_subst_mode();
+    g_curr_artp = nullptr;
+    g_do_hiding = true;
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    tree_puts("From: =?UTF-8?Q?=E2=80=99?=", ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+    g_charsets = previous_charsets;
+    EXPECT_EQ("From: '\n", output);
+}
+
 TEST_F(TreeRenderingTest, texConversionDoesNotLeakBetweenHeaders)
 {
     g_curr_artp = nullptr;

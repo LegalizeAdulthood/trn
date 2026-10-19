@@ -9,6 +9,7 @@
 #include <config/common.h>
 #include <trn/cache.h>
 #include <trn/charsubst.h>
+#include <trn/IniSection.h>
 #include <trn/trn.h>
 
 #include <gtest/gtest.h>
@@ -384,6 +385,25 @@ TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
     EXPECT_EQ("[T] ", current_char_subst());
 }
 
+TEST_F(CurrentCharSubstTest, unicodeProfileIsOptIn)
+{
+    EXPECT_EQ(std::string::npos, g_charsets.find('u'));
+    const std::string text{"\xE2\x80\x99\xE2\x80\x94\xE4\xB8\xAD"};
+    reset_char_subst_mode();
+    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
+
+    g_charsets = "up";
+    reset_char_subst_mode();
+    EXPECT_EQ("'---\xE4\xB8\xAD", str_char_subst(text, current_char_subst_mode()));
+    g_verbose = true;
+    EXPECT_EQ("[Unicode->ASCII] ", current_char_subst());
+    g_verbose = false;
+    EXPECT_EQ("[A] ", current_char_subst());
+
+    next_char_subst_mode();
+    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
+}
+
 TEST_F(CurrentCharSubstTest, returnsCurrentMode)
 {
     set_char_subst_mode('a');
@@ -442,6 +462,59 @@ TEST_F(CurrentCharSubstTest, reassigningCharsetsNormalizesOutOfRangeMode)
 TEST(CharSubstTest, copiesThroughFirstNewline)
 {
     EXPECT_EQ("first\n", str_char_subst("first\nsecond", 'p'));
+}
+
+TEST(CharSubstTest, unicodeProfileMapsPunctuationAndLatinScalars)
+{
+    EXPECT_EQ("`'\"\" - -- --- ... Ae", str_char_subst("\xE2\x80\x98\xE2\x80\x99\xE2\x80\x9C\xE2\x80\x9D "
+                                                       "\xE2\x80\x91 \xE2\x80\x93 \xE2\x80\x94 \xE2\x80\xA6 \xC3\x84",
+                                                       'u'));
+}
+
+TEST(UnicodeSubstitutionTest, userMappingsOverlayBuiltinsOnlyInUnicodeMode)
+{
+    UnicodeSubstitutionProfile profile;
+    ASSERT_TRUE(profile.configure(
+        IniSection{"unicode substitutions", {}, "U+1F60A = ':)'\nU+2019 = first\nU+00C4 = custom\nU+2019 = last\n"}));
+    const std::string text{"\xE2\x80\x99\xE2\x80\x94\xC3\x84\xF0\x9F\x98\x8A"};
+    EXPECT_EQ("last---custom:)", CharSubstitution('u', profile).substitute(text));
+    EXPECT_EQ(text, CharSubstitution('p', profile).substitute(text));
+    EXPECT_EQ("\xE2\x80\x99\xE2\x80\x94"
+              "Ae\xF0\x9F\x98\x8A",
+              CharSubstitution('a', profile).substitute(text));
+}
+
+TEST(UnicodeSubstitutionTest, decodesReplacementEscapesAndAllowsDeletionAndUtf8)
+{
+    UnicodeSubstitutionProfile profile;
+    ASSERT_TRUE(profile.configure(IniSection{
+        "unicode substitutions", {}, "U+2019 = \"\\t\\n\\r\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xC3\xA9\n"}));
+    EXPECT_EQ("\t\n\r\\\"\xC3\xA9",
+              CharSubstitution('u', profile).substitute("\xE2\x80\x99\xE2\x80\x94\xF0\x9F\x98\x8A"));
+}
+
+TEST(UnicodeSubstitutionTest, rejectsInvalidSectionsWithoutChangingPreviousMappings)
+{
+    UnicodeSubstitutionProfile profile;
+    ASSERT_TRUE(profile.configure(IniSection{"unicode substitutions", {}, "U+2019 = old\n"}));
+    for (const std::string_view invalid : {"0x91", "U+123", "U+1234567", "U+201G", "U+D800", "U+110000"})
+    {
+        const std::string body = "U+2019 = new\n" + std::string{invalid} + " = bad\n";
+        EXPECT_FALSE(profile.configure(IniSection{"unicode substitutions", {}, body})) << invalid;
+        EXPECT_EQ("old", CharSubstitution('u', profile).substitute("\xE2\x80\x99"));
+    }
+    EXPECT_FALSE(profile.configure(IniSection{"unicode substitutions", {}, "U+2019 = \xFF\n"}));
+    EXPECT_EQ("old", CharSubstitution('u', profile).substitute("\xE2\x80\x99"));
+}
+
+TEST(UnicodeSubstitutionTest, instancesOwnTheirMappingSnapshot)
+{
+    UnicodeSubstitutionProfile profile;
+    ASSERT_TRUE(profile.configure(IniSection{"unicode substitutions", {}, "U+2019 = old\n"}));
+    CharSubstitution previous{'u', profile};
+    ASSERT_TRUE(profile.configure(IniSection{"unicode substitutions", {}, "U+2019 = new\n"}));
+    EXPECT_EQ("old", previous.substitute("\xE2\x80\x99"));
+    EXPECT_EQ("new", CharSubstitution('u', profile).substitute("\xE2\x80\x99"));
 }
 
 TEST(CharSubstTest, transliteratesLatin1ToAscii)
