@@ -7,15 +7,257 @@
 #include <trn/utf.h>
 
 #include <config/common.h>
+#include <trn/cache.h>
 #include <trn/charsubst.h>
 #include <trn/trn.h>
 
 #include <gtest/gtest.h>
 
+#include <ostream>
 #include <string>
 #include <string_view>
 
 using namespace testing;
+
+namespace
+{
+
+struct Utf8ScalarCase
+{
+    const char      *name;
+    CodePoint        scalar;
+    std::string_view bytes;
+};
+
+void PrintTo(const Utf8ScalarCase &value, std::ostream *out)
+{
+    *out << value.name;
+}
+
+constexpr Utf8ScalarCase UTF8_SCALARS[]{
+    {"Nul", 0, {"\0", 1}},
+    {"Ascii", 0x41, "A"},
+    {"AsciiMaximum", 0x7F, "\x7F"},
+    {"TwoByteMinimum", 0x80, "\xC2\x80"},
+    {"TwoByteMaximum", 0x7FF, "\xDF\xBF"},
+    {"ThreeByteMinimum", 0x800, "\xE0\xA0\x80"},
+    {"Cjk", 0x4E00, "\xE4\xB8\x80"},
+    {"BeforeSurrogates", 0xD7FF, "\xED\x9F\xBF"},
+    {"AfterSurrogates", 0xE000, "\xEE\x80\x80"},
+    {"Replacement", 0xFFFD, "\xEF\xBF\xBD"},
+    {"Noncharacter", 0xFFFE, "\xEF\xBF\xBE"},
+    {"ThreeByteMaximum", 0xFFFF, "\xEF\xBF\xBF"},
+    {"FourByteMinimum", 0x10000, "\xF0\x90\x80\x80"},
+    {"Emoji", 0x1F61A, "\xF0\x9F\x98\x9A"},
+    {"ScalarMaximum", 0x10FFFF, "\xF4\x8F\xBF\xBF"},
+};
+
+struct InvalidUtf8Case
+{
+    const char      *name;
+    std::string_view bytes;
+};
+
+void PrintTo(const InvalidUtf8Case &value, std::ostream *out)
+{
+    *out << value.name;
+}
+
+constexpr InvalidUtf8Case INVALID_UTF8[]{
+    {"ContinuationMinimum", "\x80"},
+    {"ContinuationMaximum", "\xBF"},
+    {"OverlongNul", "\xC0\x80"},
+    {"OverlongAscii", "\xC1\xBF"},
+    {"OverlongThreeByteNul", "\xE0\x80\x80"},
+    {"OverlongThreeByte", "\xE0\x9F\xBF"},
+    {"OverlongFourByteNul", "\xF0\x80\x80\x80"},
+    {"OverlongFourByte", "\xF0\x8F\xBF\xBF"},
+    {"HighSurrogateMinimum", "\xED\xA0\x80"},
+    {"HighSurrogateMaximum", "\xED\xAF\xBF"},
+    {"LowSurrogateMinimum", "\xED\xB0\x80"},
+    {"LowSurrogateMaximum", "\xED\xBF\xBF"},
+    {"AboveScalarMaximum", "\xF4\x90\x80\x80"},
+    {"InvalidFourByteLead", "\xF5\x80\x80\x80"},
+    {"LegacyFiveByte", "\xF8\x88\x80\x80\x80"},
+    {"LegacySixByte", "\xFC\x84\x80\x80\x80\x80"},
+    {"InvalidLeadFe", "\xFE"},
+    {"InvalidLeadFf", "\xFF"},
+    {"TruncatedTwoByte", "\xC2"},
+    {"TruncatedThreeByteLead", "\xE2"},
+    {"TruncatedThreeByte", "\xE2\x82"},
+    {"TruncatedFourByteLead", "\xF0"},
+    {"TruncatedFourByteSecond", "\xF0\x9F"},
+    {"TruncatedFourByteThird", "\xF0\x9F\x98"},
+    {"InvalidTwoByteContinuation", "\xC2"
+                                   "A"},
+    {"InvalidThreeByteSecond", "\xE2"
+                               "(\xA1"},
+    {"InvalidThreeByteThird", "\xE2\x82"
+                              "A"},
+    {"InvalidFourByteSecond", "\xF0"
+                              "(\x80\x80"},
+    {"InvalidFourByteThird", "\xF0\x9F"
+                             "A\x80"},
+    {"InvalidFourByteFourth", "\xF0\x9F\x98"
+                              "A"},
+    {"Cesu8SurrogatePair", "\xED\xA0\xBD\xED\xB8\x9A"},
+    {"NulContinuation", {"\xC2\0", 2}},
+};
+
+class Utf8ScalarTest : public Test
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    std::string_view m_input;
+    std::string_view m_output;
+};
+
+void Utf8ScalarTest::SetUp()
+{
+    m_input = input_charset_name();
+    m_output = output_charset_name();
+}
+
+void Utf8ScalarTest::TearDown()
+{
+    utf_init(m_input, m_output);
+}
+
+class Utf8RoundTripTest : public Utf8ScalarTest, public WithParamInterface<Utf8ScalarCase>
+{
+};
+
+TEST_P(Utf8RoundTripTest, decodesFirstScalar)
+{
+    const Utf8ScalarCase &value = GetParam();
+    const std::string     text = std::string{value.bytes} + "suffix";
+
+    const Utf8Scalar result = decode_utf8_scalar(text);
+
+    EXPECT_EQ(value.scalar, result.code_point);
+    EXPECT_EQ(value.bytes.size(), result.byte_count);
+    EXPECT_EQ("suffix", std::string_view{text}.substr(result.byte_count));
+}
+
+TEST_P(Utf8RoundTripTest, encodesScalar)
+{
+    const Utf8ScalarCase &value = GetParam();
+
+    EXPECT_EQ(value.bytes, encode_utf8_scalar(value.scalar));
+}
+
+INSTANTIATE_TEST_SUITE_P(ModernUtf8, Utf8RoundTripTest, ValuesIn(UTF8_SCALARS));
+
+class Utf8MalformedTest : public Utf8ScalarTest, public WithParamInterface<InvalidUtf8Case>
+{
+};
+
+TEST_P(Utf8MalformedTest, reportsErrorAndConsumesOneByte)
+{
+    const Utf8Scalar result = decode_utf8_scalar(GetParam().bytes);
+
+    EXPECT_EQ(INVALID_CODE_POINT, result.code_point);
+    EXPECT_EQ(1U, result.byte_count);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModernUtf8, Utf8MalformedTest, ValuesIn(INVALID_UTF8));
+
+TEST_F(Utf8ScalarTest, emptyInputMakesNoProgress)
+{
+    const Utf8Scalar result = decode_utf8_scalar({});
+
+    EXPECT_EQ(INVALID_CODE_POINT, result.code_point);
+    EXPECT_EQ(0U, result.byte_count);
+}
+
+TEST_F(Utf8ScalarTest, rejectsNonScalarsWhenEncoding)
+{
+    for (const CodePoint scalar : {0xD800UL, 0xDBFFUL, 0xDC00UL, 0xDFFFUL, 0x110000UL, 0x1FFFFFUL, 0x7FFFFFFFUL,
+                                   static_cast<CodePoint>(INVALID_CODE_POINT)})
+    {
+        SCOPED_TRACE(scalar);
+        EXPECT_TRUE(encode_utf8_scalar(scalar).empty());
+    }
+}
+
+TEST_F(Utf8ScalarTest, operationsIgnoreGlobalCharsetState)
+{
+    for (const std::string_view charset : {CHARSET_NAME_ASCII, CHARSET_NAME_ISO8859_1, CHARSET_NAME_ISO8859_15,
+                                           CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_UTF8})
+    {
+        SCOPED_TRACE(charset);
+        utf_init(charset, charset);
+        const std::string_view input = input_charset_name();
+        const std::string_view output = output_charset_name();
+        for (const Utf8ScalarCase &value : UTF8_SCALARS)
+        {
+            const Utf8Scalar result = decode_utf8_scalar(value.bytes);
+            EXPECT_EQ(value.scalar, result.code_point);
+            EXPECT_EQ(value.bytes.size(), result.byte_count);
+            EXPECT_EQ(value.bytes, encode_utf8_scalar(value.scalar));
+        }
+        EXPECT_EQ(input, input_charset_name());
+        EXPECT_EQ(output, output_charset_name());
+    }
+}
+
+TEST_F(Utf8ScalarTest, malformedInputDoesNotConsumeFollowingAscii)
+{
+    const std::string text{"\xE2"
+                           "(\xA1"};
+    std::string_view  remaining = text;
+    const Utf8Scalar  first = decode_utf8_scalar(remaining);
+    ASSERT_EQ(1U, first.byte_count);
+    remaining.remove_prefix(first.byte_count);
+    const Utf8Scalar second = decode_utf8_scalar(remaining);
+    EXPECT_EQ(static_cast<CodePoint>('('), second.code_point);
+    ASSERT_EQ(1U, second.byte_count);
+    remaining.remove_prefix(second.byte_count);
+    const Utf8Scalar third = decode_utf8_scalar(remaining);
+    EXPECT_EQ(INVALID_CODE_POINT, third.code_point);
+    EXPECT_EQ(1U, third.byte_count);
+    EXPECT_EQ("\xE2"
+              "(\xA1",
+              text);
+}
+
+TEST_F(Utf8ScalarTest, boundedChunksCanBeRetriedWithoutState)
+{
+    constexpr std::string_view text{"\xF0\x9F\x98\x9A"};
+    for (std::size_t size = 1; size < text.size(); ++size)
+    {
+        const Utf8Scalar partial = decode_utf8_scalar(text.substr(0, size));
+        EXPECT_EQ(INVALID_CODE_POINT, partial.code_point);
+        EXPECT_EQ(1U, partial.byte_count);
+    }
+    const Utf8Scalar complete = decode_utf8_scalar(text);
+    EXPECT_EQ(0x1F61AUL, complete.code_point);
+    EXPECT_EQ(4U, complete.byte_count);
+}
+
+TEST_F(Utf8ScalarTest, headerPipelinePreservesRawBytesAndOrdersConversions)
+{
+    for (const std::string_view raw : {"=?ISO-8859-1?Q?=E9?=", "=?ISO-8859-1?B?6Q==?="})
+    {
+        const std::string source{raw};
+        utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_UTF8);
+        const std::string semantic = decode_header(source);
+        ASSERT_EQ("\xC3\xA9", semantic);
+        const std::string presentation = str_char_subst(semantic, 'p');
+        EXPECT_EQ(semantic, presentation);
+        const Utf8Scalar result = decode_utf8_scalar(presentation);
+        EXPECT_EQ(0xE9UL, result.code_point);
+        EXPECT_EQ(2U, result.byte_count);
+        utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
+        EXPECT_EQ(1, visual_length_of(presentation));
+        EXPECT_EQ(raw, source);
+    }
+}
+
+} // namespace
 
 TEST(UTFInitTest, charset_empty_utf8)
 {

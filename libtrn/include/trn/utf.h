@@ -5,6 +5,7 @@
 #ifndef UTF_H_INCLUDED
 #define UTF_H_INCLUDED
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 
@@ -44,6 +45,19 @@ enum : CodePoint
     INVALID_CODE_POINT = static_cast<CodePoint>(~0L)
 };
 CodePoint code_point_at(std::string_view s);
+
+struct Utf8Scalar
+{
+    CodePoint   code_point{INVALID_CODE_POINT};
+    std::size_t byte_count{};
+};
+
+// Pure modern UTF-8 operations; independent of utf_init and charset state.
+// Empty input returns {INVALID_CODE_POINT, 0}; malformed input returns
+// {INVALID_CODE_POINT, 1}, preserving the remaining bytes for the caller.
+Utf8Scalar decode_utf8_scalar(std::string_view text) noexcept;
+// Invalid scalars (surrogates or values above U+10FFFF) return no bytes.
+std::string encode_utf8_scalar(CodePoint scalar);
 
 int put_char_adv(std::string_view &text, bool outputok);
 

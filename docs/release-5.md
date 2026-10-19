@@ -199,8 +199,8 @@ Documentation gaps and owning work items:
 
 Plan source: `charset-handling.md`.
 
-The 5.0 charset work should establish a narrow pipeline invariant rather
-than attempting a full article-display rewrite:
+The release contract is defined in
+[`charset-pipeline.md`](charset-pipeline.md):
 
 - stored or fetched article data remains raw and immutable;
 - transfer encodings are decoded before charset conversion;
@@ -217,16 +217,38 @@ the supported charset set: ASCII, UTF-8, Latin-1, Latin-9, and
 Windows-1252.  MIME structure, alternatives, transfer decoding, and HTML
 filtering are present.  The important gaps are that MIME body text is not
 consistently normalized into a UTF-8 buffer, charset conversion depends
-on global mutable state, `str_char_subst` is byte-oriented and corrupts
-UTF-8, and UTF-8 primitives still accept historical five- and six-byte
-forms.
+on global mutable state, and `str_char_subst` is byte-oriented and
+corrupts UTF-8.  Legacy charset-dependent helpers still accept historical
+five- and six-byte forms.
 
-Release 5.0 should fix the mandatory #17 and #34 behavior by adding
-strict UTF-8 scalar operations, Unicode-aware substitution, explicit
-error policy, and tests for headers and MIME bodies that reach the same
-substitution engine.  The larger `ArticlePresentationView` and
-`PresentationBuffer` architecture can remain a follow-up unless it is the
-smallest way to make the release behavior correct.
+The new `decode_utf8_scalar` and `encode_utf8_scalar` operations enforce
+modern Unicode scalar boundaries without global charset state.  Invalid
+input reports an error with one-byte progress; empty input consumes zero
+bytes.  Encoding rejects surrogates and values above U+10FFFF.
+
+Remaining #17 and #34 work applies these primitives to Unicode-aware
+substitution and explicit header/MIME charset state.  The larger
+`ArticlePresentationView` and `PresentationBuffer` architecture can
+remain a follow-up unless it is the smallest correct release change.
+
+Slice 31 test-first evidence, using `cmake --workflow temp` throughout:
+
+- The test executable failed to link before either new scalar operation
+  was implemented.
+- Temporary adapters to the legacy helpers ran 68 tests; 18 failed for
+  overlong forms, surrogates, out-of-range scalars, obsolete encodings,
+  and global charset dependence.
+- Replacing those adapters with bounded, pure scalar operations made the
+  same 68 tests pass.  Coverage includes all scalar-width boundaries,
+  NUL, noncharacters, CJK, emoji, malformed continuation, truncation,
+  recovery progress, and retrying partial views without retained state.
+- Header pipeline coverage retains raw input, transfer-decodes Q and
+  Base64 before Latin-1 conversion, preserves plain-substitution UTF-8,
+  and gives layout the final UTF-8 text.
+
+The final slice 31 `cmake --workflow rt-default` run passed 1504 tests
+with six skips and no failures, including the existing UTF-8, MIME,
+header, and display regression tests for #2.
 
 ## GitHub 5.0 Milestone
 
@@ -340,43 +362,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 31. Charset Pipeline Contract
-
-Issues: #17.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #2.
-
-Plan source: `charset-handling.md`.
-
-Files likely touched:
-
-- `libtrn/utf.cpp`
-- `libtrn/include/trn/utf.h`
-- encoding tests
-
-Tasks:
-
-- Define the release invariant: raw article bytes stay immutable,
-  decoded semantic text is UTF-8, and layout sees UTF-8 after
-  substitution.
-- Keep MIME transfer decoding before charset decoding.
-- Add strict UTF-8 scalar operations for modern one- through four-byte
-  UTF-8.
-- Define malformed-input policy for invalid continuation, truncated,
-  overlong, surrogate, and out-of-range input.
-- Keep validation independent of process-global charset state.
-
-Acceptance:
-
-- Valid ASCII and two-, three-, and four-byte UTF-8 round-trip in tests.
-- Invalid modern UTF-8 cases follow the explicit malformed-input policy.
-- 5.0 charset work has a tested pipeline contract before behavior is
-  moved.
-- UTF-8 unit tests cover valid, malformed, boundary, and global-state
-  independence cases.
 
 ### 32. Unicode Historical Substitution
 
@@ -766,7 +751,8 @@ Mandatory open GitHub 5.0 milestone issues:
 - #5: 36.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.
-- #17: 31 through 33.
+- #17: 32 and 33; strict UTF-8 scalar operations and the pipeline contract
+  are implemented.
 - #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must
   include `fixes #19`.

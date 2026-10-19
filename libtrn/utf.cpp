@@ -438,6 +438,73 @@ std::string insert_unicode_at(CodePoint c)
     return {};
 }
 
+static bool is_unicode_scalar(CodePoint scalar)
+{
+    return scalar <= 0x10FFFF && !(scalar >= 0xD800 && scalar <= 0xDFFF);
+}
+
+Utf8Scalar decode_utf8_scalar(std::string_view text) noexcept
+{
+    if (text.empty())
+    {
+        return {};
+    }
+    const auto first = static_cast<unsigned char>(text.front());
+    if (first < 0x80)
+    {
+        return {first, 1};
+    }
+
+    CodePoint   scalar;
+    CodePoint   minimum;
+    std::size_t width;
+    if (first >= 0xC2 && first <= 0xDF)
+    {
+        scalar = first & 0x1F;
+        minimum = 0x80;
+        width = 2;
+    }
+    else if (first >= 0xE0 && first <= 0xEF)
+    {
+        scalar = first & 0x0F;
+        minimum = 0x800;
+        width = 3;
+    }
+    else if (first >= 0xF0 && first <= 0xF4)
+    {
+        scalar = first & 0x07;
+        minimum = 0x10000;
+        width = 4;
+    }
+    else
+    {
+        return {INVALID_CODE_POINT, 1};
+    }
+    if (text.size() < width)
+    {
+        return {INVALID_CODE_POINT, 1};
+    }
+    for (std::size_t index = 1; index < width; ++index)
+    {
+        const auto next = static_cast<unsigned char>(text[index]);
+        if ((next & 0xC0) != 0x80)
+        {
+            return {INVALID_CODE_POINT, 1};
+        }
+        scalar = (scalar << 6) | (next & 0x3F);
+    }
+    if (scalar < minimum || !is_unicode_scalar(scalar))
+    {
+        return {INVALID_CODE_POINT, 1};
+    }
+    return {scalar, width};
+}
+
+std::string encode_utf8_scalar(CodePoint scalar)
+{
+    return is_unicode_scalar(scalar) ? utf8_text(scalar) : std::string{};
+}
+
 bool at_norm_char(std::string_view s)
 {
     bool it = !s.empty();
