@@ -155,6 +155,39 @@ TEST_F(TreeRenderingTest, hiddenHeaderDecodesEncodedWords)
     EXPECT_EQ(ArticleLine{1}, lines);
 }
 
+TEST_F(TreeRenderingTest, hiddenHeaderSubstitutesDecodedLatinScalars)
+{
+    g_curr_artp = nullptr;
+    g_do_hiding = true;
+    set_char_subst_mode('a');
+    init_tree();
+    const std::string raw{"From: =?ISO-8859-1?Q?=C4?=\xE2\x80\x99"};
+
+    testing::internal::CaptureStdout();
+    const ArticleLine lines = tree_puts(raw, ArticleLine{1}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: Ae\xE2\x80\x99\n", output);
+    EXPECT_EQ(ArticleLine{1}, lines);
+    EXPECT_EQ("From: =?ISO-8859-1?Q?=C4?=\xE2\x80\x99", raw);
+}
+
+TEST_F(TreeRenderingTest, texConversionDoesNotLeakBetweenHeaders)
+{
+    g_curr_artp = nullptr;
+    g_do_hiding = true;
+    set_char_subst_mode('t');
+    init_tree();
+
+    testing::internal::CaptureStdout();
+    tree_puts("From: =?US-ASCII?Q?=22A?=", ArticleLine{1}, 0);
+    tree_puts("Other: \"", ArticleLine{2}, 0);
+    tree_puts("From: A", ArticleLine{3}, 0);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ("From: \xC3\x84\nOther: \"\nFrom: A\n", output);
+}
+
 TEST_F(TreeRenderingTest, continuationLineUsesPreviousHeaderIndent)
 {
     g_curr_artp = nullptr;

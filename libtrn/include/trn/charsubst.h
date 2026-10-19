@@ -28,6 +28,23 @@ void        set_char_subst_mode(char mode);
 void        reset_char_subst_mode();
 void        next_char_subst_mode();
 std::string current_char_subst();
+
+// Inputs are complete UTF-8 views. Invalid bytes become U+FFFD, one byte at a time.
+// TeX prefixes may span calls on this instance; finish flushes a trailing prefix.
+class CharSubstitution
+{
+public:
+    explicit CharSubstitution(char_int mode);
+
+    std::string substitute(std::string_view input);
+    std::string finish();
+
+private:
+    char_int m_mode;
+    char     m_tex_prefix{};
+};
+
+// Substitute one line, including its first newline, with fresh instance state.
 std::string str_char_subst(std::string_view input, char_int subst);
 
 #endif

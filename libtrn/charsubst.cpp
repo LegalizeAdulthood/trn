@@ -17,12 +17,9 @@
 #include <trn/charsubst.h>
 
 #include <config/config2.h>
-#include <config/typedef.h>
 #include <trn/trn.h>
+#include <trn/utf.h>
 
-#include <fmt/format.h>
-
-#include <cstdio>
 #include <string>
 #include <string_view>
 
@@ -47,9 +44,9 @@ void normalize_char_subst_mode()
 }
 } // namespace
 
-// TeX encoding table - gives ISO char for "x (x=32..127)
-static Uchar s_tex_tbl[96] =
-// clang-format off
+// TeX encoding table - gives a Unicode scalar for "x (x=32..127).
+static constexpr CodePoint s_tex_tbl[96] =
+    // clang-format off
 {
     0,  0,'"',  0,  0,  0,  0,'"',  0,  0,  0,  0,  0,  0,  0,  0,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -59,112 +56,6 @@ static Uchar s_tex_tbl[96] =
     0,  0,  0,223,  0,252,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
 // clang-format on
-static char s_tex_char{};
-
-static int put_subst_char(int c, int limit, bool output_ok);
-static int latin1_to_ascii(Uchar *asc, const Uchar *iso, int limit, int t);
-
-static int put_subst_char(int c, int limit, bool output_ok)
-{
-    Uchar oc[2];
-    Uchar nc[5];
-    int   t;
-    int   i = 0;
-    const char subst = current_char_subst_mode();
-    switch (subst)
-    {
-    case 'm':
-    case 'a':
-        t = subst == 'm' ? 1 : 2;
-        oc[0] = (Uchar)c;
-        oc[1] = '\0';
-        i = latin1_to_ascii(nc, oc, sizeof nc, t);
-        if (i <= limit)
-        {
-            if (output_ok)
-            {
-                for (int t2 = 0; t2 < i; t2++)
-                {
-                    std::putchar((char) nc[t2]);
-                }
-            }
-        }
-        else
-        {
-            i = -1;
-        }
-        break;
-
-    case 't':
-        if (c == '\\' || c == '"')
-        {
-            if (s_tex_char && (c == '\\' || s_tex_char != '\\'))
-            {
-                if (output_ok)
-                {
-                    std::putchar(s_tex_char);
-                }
-                i++;
-            }
-            s_tex_char = (char)c;
-            break;
-        }
-        else if (s_tex_char == '\\')
-        {
-            if (output_ok)
-            {
-                std::putchar('\\');
-            }
-            if (limit == 1)
-            {
-                i = -2;
-                break;
-            }
-            i++;
-        }
-        else if (s_tex_char == '"')
-        {
-            Uchar d;
-            if (c < 32 || c > 128)
-            {
-                d = '\0';
-            }
-            else
-            {
-                d = s_tex_tbl[c - 32];
-            }
-            s_tex_char = '\0';
-            if (d)
-            {
-                c = d;
-            }
-            else
-            {
-                if (output_ok)
-                {
-                    std::putchar('"');
-                }
-                if (limit == 1)
-                {
-                    i = -2;
-                    break;
-                }
-                i++;
-            }
-        }
-        // FALL THROUGH
-
-    default:
-        if (output_ok)
-        {
-            std::putchar(c);
-        }
-        i++;
-        break;
-    }
-    return i;
-}
-
 char current_char_subst_mode()
 {
     normalize_char_subst_mode();
@@ -211,18 +102,6 @@ void next_char_subst_mode()
 
 std::string current_char_subst()
 {
-#ifdef USE_UTF_HACK
-    std::string_view input = input_charset_name();
-    std::string_view output = output_charset_name();
-    constexpr int    maxlen = (50 - 5) / 2;
-    input = input.substr(0, maxlen);
-    output = output.substr(0, maxlen);
-    if (input == output)
-    {
-        return fmt::format("[{}]", input);
-    }
-    return fmt::format("[{}->{}]", input, output);
-#else // !USE_UTF_HACK
     std::string_view show;
 
     switch (current_char_subst_mode())
@@ -244,7 +123,6 @@ std::string current_char_subst()
         break;
     }
     return std::string{show};
-#endif
 }
 
 // The following is an adapted version of iso2asc by Markus Kuhn,
@@ -252,8 +130,8 @@ std::string current_char_subst()
 
 #define ISO_TABLES 2 // originally: 7
 
-// Conversion tables for displaying the G1 set (0xa0-0xff) of
-//   ISO Latin 1 (ISO 8859-1) with 7-bit ASCII characters.
+// Conversion tables for Unicode U+00A0..U+00FF (the ISO Latin 1 G1 set)
+//   with 7-bit ASCII characters.
 //
 //   Version 1.2 -- error corrections are welcome
 //
@@ -272,8 +150,8 @@ std::string current_char_subst()
 
 #define SUB nullptr       // used if no reasonable ASCII string is possible
 
-static const char* s_iso_to_ascii[ISO_TABLES][96] =
-// clang-format off
+static constexpr const char *s_iso_to_ascii[ISO_TABLES][96] =
+    // clang-format off
 {
     {
         " ", "!", "c", SUB, SUB, "Y", "|", SUB, "\"", "c", "a", "<", "-", "-", "R", "-",
@@ -294,96 +172,89 @@ static const char* s_iso_to_ascii[ISO_TABLES][96] =
 };
 // clang-format on
 
-std::string str_char_subst(std::string_view input, char_int subst)
+CharSubstitution::CharSubstitution(char_int mode) :
+    m_mode{mode}
 {
-    if (subst != 'a' && subst != 'm')
-    {
-        const std::size_t newline = input.find('\n');
-        if (newline != std::string_view::npos)
-        {
-            input = input.substr(0, newline + 1);
-        }
-        return std::string{input};
-    }
+}
 
-    const char *const *table = s_iso_to_ascii[subst == 'm' ? 0 : 1];
-    std::string        result;
-    result.reserve(input.size() * 4);
-    for (const char value : input)
+std::string CharSubstitution::substitute(std::string_view input)
+{
+    std::string result;
+    result.reserve(input.size());
+    while (!input.empty())
     {
-        const Uchar ch = static_cast<Uchar>(value);
-        if (ch > 0x9f)
+        const Utf8Scalar       decoded = decode_utf8_scalar(input);
+        const CodePoint        scalar = decoded.code_point == INVALID_CODE_POINT ? 0xFFFD : decoded.code_point;
+        const std::string_view original = input.substr(0, decoded.byte_count);
+        input.remove_prefix(decoded.byte_count);
+        if ((m_mode == 'a' || m_mode == 'm') && scalar >= 0xA0 && scalar <= 0xFF)
         {
-            const char *const replacement = table[ch - 0xa0];
+            const char *const replacement = s_iso_to_ascii[m_mode == 'm' ? 0 : 1][scalar - 0xA0];
             if (replacement != nullptr)
             {
                 result += replacement;
             }
+            continue;
+        }
+        if (m_mode == 't')
+        {
+            if (scalar == '\\' || scalar == '"')
+            {
+                if (m_tex_prefix && (scalar == '\\' || m_tex_prefix != '\\'))
+                {
+                    result.push_back(m_tex_prefix);
+                }
+                m_tex_prefix = static_cast<char>(scalar);
+                continue;
+            }
+            const char prefix = m_tex_prefix;
+            m_tex_prefix = '\0';
+            if (prefix == '"' && scalar >= 32 && scalar < 128)
+            {
+                const CodePoint replacement = s_tex_tbl[scalar - 32];
+                if (replacement != 0)
+                {
+                    result += encode_utf8_scalar(replacement);
+                    continue;
+                }
+            }
+            if (prefix)
+            {
+                result.push_back(prefix);
+            }
+        }
+        if (decoded.code_point == INVALID_CODE_POINT)
+        {
+            result += encode_utf8_scalar(scalar);
         }
         else
         {
-            result.push_back(ch < 0x80 ? static_cast<char>(ch) : ' ');
+            result += original;
         }
     }
     return result;
 }
 
-//
-//  Transform an 8-bit ISO Latin 1 string iso into a 7-bit ASCII string asc
-//  readable on old terminals using conversion table t.
-//
-//  worst case: strlen(iso) == 4*strlen(asc)
-//
-static int latin1_to_ascii(Uchar *asc, const Uchar *iso, int limit, int t)
+std::string CharSubstitution::finish()
 {
-    Uchar *s = asc;
+    std::string result;
+    if (m_tex_prefix)
+    {
+        result.push_back(m_tex_prefix);
+        m_tex_prefix = '\0';
+    }
+    return result;
+}
 
-    if (iso == nullptr || asc == nullptr || limit <= 0)
+std::string str_char_subst(std::string_view input, char_int subst)
+{
+    const std::size_t newline = input.find('\n');
+    if (newline != std::string_view::npos)
     {
-        return 0;
+        input = input.substr(0, newline + 1);
     }
-    if (limit == 1)
-    {
-        *s = '\0';
-        return s - asc;
-    }
-    t--;        // offset correction -ot
-    const char **tab = s_iso_to_ascii[t] - 0xa0;
-    while (*iso)
-    {
-        if (*iso > 0x9f)
-        {
-            const char *p = tab[*iso++];
-            if (p)
-            {
-                while (*p)
-                {
-                    *s++ = *p++;
-                    if (!--limit)
-                    {
-                        *s = '\0';
-                        return s - asc;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (*iso < 0x80)
-            {
-                *s++ = *iso++;
-            }
-            else
-            {
-                *s++ = ' ';
-                iso++;
-            }
-            if (!--limit)
-            {
-                break;
-            }
-        }
-    }
-    *s = '\0';
-    return s - asc;
+    CharSubstitution substitution{subst};
+    std::string      result = substitution.substitute(input);
+    result += substitution.finish();
+    return result;
 }

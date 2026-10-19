@@ -291,6 +291,21 @@ TEST_F(CompressFromTest, returnsEmptyForNonPositiveWidth)
     EXPECT_EQ("", compress_from("Ross Ridge <ross@example.com>", 0));
 }
 
+TEST_F(CompressFromTest, substitutesUnicodeBeforeCompression)
+{
+    set_char_subst_mode('a');
+
+    EXPECT_EQ("Aexyz", compress_from("\xC3\x84xyz <a@example.com>", 5));
+}
+
+TEST_F(CompressFromTest, texStateDoesNotLeakBetweenAuthors)
+{
+    set_char_subst_mode('t');
+
+    EXPECT_EQ("\xC3\x84", compress_from("\"A <a@example.com>", 1));
+    EXPECT_EQ("A", compress_from("A <a@example.com>", 1));
+}
+
 class CompressSubjectTest : public Test
 {
 protected:
@@ -365,6 +380,14 @@ TEST_F(CompressSubjectTest, truncatesLongSubject)
     m_subject.m_str = "    LongSubjectValue";
 
     EXPECT_EQ("LongSubj", compress(&m_article, 8));
+}
+
+TEST_F(CompressSubjectTest, substitutesUnicodeBeforeTruncation)
+{
+    set_char_subst_mode('a');
+    m_subject.m_str = "    \xC3\x84xyz";
+
+    EXPECT_EQ("Aex", compress(&m_article, 3));
 }
 
 class PerformStatusEndTest : public Test

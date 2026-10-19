@@ -61,6 +61,33 @@ consuming it.  The primitive keeps no partial-sequence state.
 The accepted byte forms follow
 [RFC 3629](https://www.rfc-editor.org/rfc/rfc3629.html#section-4).
 
+## Historical Substitution
+
+`CharSubstitution(mode)` consumes complete UTF-8 views and returns UTF-8.
+It uses the strict scalar primitives independently of `utf_init` and
+global charset selection.  Each malformed byte becomes U+FFFD; subsequent
+valid characters remain available for substitution.
+
+The plain (`p`) and off profiles preserve valid UTF-8 bytes exactly.
+The historical ASCII (`a`) and monospaced ASCII (`m`) tables map Unicode
+U+00A0 through U+00FF.  Their original approximations and empty mappings
+remain in force.  Other scalars, including CJK, combining marks, emoji,
+and U+2019, pass through unchanged.  Substitution does not normalize text.
+
+The TeX (`t`) profile converts the historical quote-prefixed umlauts and
+sharp s to Unicode.  It also accepts a backslash before the quote.
+Unrecognized sequences retain their characters.  A pending quote or
+backslash belongs to that instance and can span `substitute` calls.
+`finish()` emits a trailing prefix and clears it; repeated calls are
+empty.  Discarding an instance cannot affect another article or header.
+Callers split views only at UTF-8 scalar boundaries, retaining partial
+byte sequences themselves as described above.
+
+`str_char_subst` creates a fresh instance, substitutes through the first
+newline if present, and flushes its prefix.  Author and subject
+compression use this wrapper before layout.  Displayed headers apply
+the selected historical profile after encoded-word decoding.
+
 ## Verification
 
 `ModernUtf8/Utf8RoundTripTest` fixes the bytes at scalar-width boundaries,
@@ -70,3 +97,9 @@ surrogate boundaries, NUL, CJK, emoji, and the maximum scalar.
 independence, and a header pipeline that preserves source bytes, decodes
 transfer encoding before charset conversion, and gives layout UTF-8
 after plain substitution.
+
+`CharSubstTest` checks Latin approximations, unmapped Unicode, identity,
+embedded NUL, malformed recovery, first-line bounds, and independent TeX
+instances across calls and article lifetimes.  `CompressFromTest`,
+`CompressSubjectTest`, and `TreeRenderingTest` cover substitution before
+compression and decoded header display, including repeated headers.

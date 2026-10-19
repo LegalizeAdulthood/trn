@@ -446,16 +446,151 @@ TEST(CharSubstTest, copiesThroughFirstNewline)
 
 TEST(CharSubstTest, transliteratesLatin1ToAscii)
 {
-    constexpr std::string_view input{"\304\326\334\337"};
+    constexpr std::string_view input{"\xC3\x84\xC3\x96\xC3\x9C\xC3\x9F"};
 
     EXPECT_EQ("AeOeUess", str_char_subst(input, 'a'));
 }
 
 TEST(CharSubstTest, transliteratesLatin1ToMonospacedAscii)
 {
-    constexpr std::string_view input{"\304\326\334\337"};
+    constexpr std::string_view input{"\xC3\x84\xC3\x96\xC3\x9C\xC3\x9F"};
 
     EXPECT_EQ("AOUs", str_char_subst(input, 'm'));
+}
+
+TEST(CharSubstTest, mapsUnicodeLatinSymbolsWithHistoricalTables)
+{
+    constexpr std::string_view input{"\xC2\xA0\xC2\xA3\xC2\xA9\xC2\xAE\xC2\xB1\xC2\xBC\xC3\xBF"};
+
+    EXPECT_EQ(" (c)(R)+/- 1/4ij", str_char_subst(input, 'a'));
+    EXPECT_EQ(" cRy", str_char_subst(input, 'm'));
+}
+
+TEST(CharSubstTest, passesUnmappedUnicodeThroughAllModes)
+{
+    constexpr std::string_view input{"\xC4\x80\xC2\x80\xE5\xA4\xA9"
+                                     "e\xCC\x81\xF0\x9F\x98\x9A\xE2\x80\x99"};
+    for (const char mode : {'\0', 'p', 'a', 'm', 't'})
+    {
+        SCOPED_TRACE(mode);
+        EXPECT_EQ(input, str_char_subst(input, mode));
+    }
+}
+
+TEST(CharSubstTest, identityPreservesEveryValidScalarByteForByte)
+{
+    std::string input;
+    for (const Utf8ScalarCase &value : UTF8_SCALARS)
+    {
+        input += value.bytes;
+    }
+    EXPECT_EQ(input, str_char_subst(input, '\0'));
+    EXPECT_EQ(input, str_char_subst(input, 'p'));
+}
+
+TEST(CharSubstTest, malformedBytesBecomeReplacementScalars)
+{
+    constexpr std::string_view input{"\xFF"
+                                     "x\xC3\xE2\x80\x99"};
+    constexpr std::string_view expected{"\xEF\xBF\xBD"
+                                        "x\xEF\xBF\xBD\xE2\x80\x99"};
+    for (const char mode : {'\0', 'p', 'a', 'm', 't'})
+    {
+        SCOPED_TRACE(mode);
+        EXPECT_EQ(expected, str_char_subst(input, mode));
+    }
+}
+
+TEST(CharSubstTest, asciiModesPreserveEmbeddedNul)
+{
+    const std::string_view input{"\xC3\x84\0\xC3\x9F", 5};
+    EXPECT_EQ(std::string("Ae\0ss", 5), str_char_subst(input, 'a'));
+    EXPECT_EQ(std::string("A\0s", 3), str_char_subst(input, 'm'));
+}
+
+TEST(CharSubstTest, allModesStopAfterFirstNewline)
+{
+    for (const char mode : {'\0', 'p', 'a', 'm', 't'})
+    {
+        SCOPED_TRACE(mode);
+        EXPECT_EQ("first\n", str_char_subst("first\nsecond", mode));
+    }
+}
+
+TEST(CharSubstTest, convertsHistoricalTexUmlautsToUtf8)
+{
+    EXPECT_EQ("\xC3\x84\xC3\x96\xC3\x9C\xC3\xA4\xC3\xB6\xC3\xBC\xC3\x9F", str_char_subst(R"("A"O"U"a"o"u"s)", 't'));
+    EXPECT_EQ("\xC3\xA4", str_char_subst(R"(\"a)", 't'));
+}
+
+TEST(CharSubstTest, texPreservesUnmappedSequencesAndTrailingPrefixes)
+{
+    EXPECT_EQ("\"\xE5\xA4\xA9\\xyz\"q\\", str_char_subst("\"\xE5\xA4\xA9\\xyz\"q\\", 't'));
+    EXPECT_EQ("\"", str_char_subst("\"", 't'));
+    EXPECT_EQ("a", str_char_subst("a", 't'));
+}
+
+TEST(CharSubstTest, texInstancesRetainTheirOwnPendingPrefix)
+{
+    CharSubstitution first{'t'};
+    CharSubstitution second{'t'};
+    CharSubstitution plain{'p'};
+
+    EXPECT_EQ("", first.substitute("\""));
+    EXPECT_EQ("a", second.substitute("a"));
+    EXPECT_EQ("\"a", plain.substitute("\"a"));
+    EXPECT_EQ("\xC3\xA4", first.substitute("a"));
+    EXPECT_EQ("", first.finish());
+    EXPECT_EQ("", second.finish());
+}
+
+TEST(CharSubstTest, texPrefixCanCrossCallsWithoutDuplicatingBackslashes)
+{
+    CharSubstitution subst{'t'};
+
+    EXPECT_EQ("", subst.substitute("\\"));
+    EXPECT_EQ("", subst.substitute("\""));
+    EXPECT_EQ("\xC3\x84", subst.substitute("A"));
+    EXPECT_EQ("\\xyz", subst.substitute("\\xyz"));
+    EXPECT_EQ("\"\xF0\x9F\x98\x9A", subst.substitute("\"\xF0\x9F\x98\x9A"));
+    EXPECT_EQ("", subst.finish());
+}
+
+TEST(CharSubstTest, finishingTexFlushesAndResetsPendingPrefix)
+{
+    CharSubstitution subst{'t'};
+
+    EXPECT_EQ("", subst.substitute("\""));
+    EXPECT_EQ("\"", subst.finish());
+    EXPECT_EQ("", subst.finish());
+    EXPECT_EQ("a", subst.substitute("a"));
+    EXPECT_EQ("", subst.substitute("\\"));
+    EXPECT_EQ("\\", subst.finish());
+    EXPECT_EQ("a", subst.substitute("a"));
+}
+
+TEST(CharSubstTest, discardingTexInstanceDoesNotAffectNextArticle)
+{
+    {
+        CharSubstitution previous{'t'};
+        EXPECT_EQ("", previous.substitute("\""));
+    }
+    CharSubstitution next{'t'};
+
+    EXPECT_EQ("a", next.substitute("a"));
+    EXPECT_EQ("", next.finish());
+}
+
+TEST_F(Utf8ScalarTest, substitutionIgnoresGlobalCharsetState)
+{
+    for (const std::string_view charset :
+         {CHARSET_NAME_ASCII, CHARSET_NAME_ISO8859_1, CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_UTF8})
+    {
+        utf_init(charset, charset);
+        EXPECT_EQ("Ae\xE2\x80\x99", str_char_subst("\xC3\x84\xE2\x80\x99", 'a'));
+        EXPECT_EQ(charset, input_charset_name());
+        EXPECT_EQ(charset, output_charset_name());
+    }
 }
 
 constexpr std::string_view ARBITRARY_ASCII{"a"};

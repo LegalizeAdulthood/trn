@@ -391,7 +391,7 @@ static Article *find_artp(Article *article, int x)
 inline bool header_conv()
 {
     const char mode = current_char_subst_mode();
-    return mode == 'a' || mode == 'm';
+    return mode == 'a' || mode == 'm' || mode == 't';
 }
 
 static void print_tree_line(std::string_view tree_line)

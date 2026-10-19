@@ -217,17 +217,21 @@ the supported charset set: ASCII, UTF-8, Latin-1, Latin-9, and
 Windows-1252.  MIME structure, alternatives, transfer decoding, and HTML
 filtering are present.  The important gaps are that MIME body text is not
 consistently normalized into a UTF-8 buffer, charset conversion depends
-on global mutable state, and `str_char_subst` is byte-oriented and
-corrupts UTF-8.  Legacy charset-dependent helpers still accept historical
-five- and six-byte forms.
+on global mutable state, and legacy charset-dependent helpers still
+accept historical five- and six-byte forms.
 
 The new `decode_utf8_scalar` and `encode_utf8_scalar` operations enforce
 modern Unicode scalar boundaries without global charset state.  Invalid
 input reports an error with one-byte progress; empty input consumes zero
 bytes.  Encoding rejects surrogates and values above U+10FFFF.
 
-Remaining #17 and #34 work applies these primitives to Unicode-aware
-substitution and explicit header/MIME charset state.  The larger
+Historical substitution now consumes Unicode scalars, preserves unmapped
+UTF-8, and keeps TeX prefixes in a `CharSubstitution` instance.  Each
+header or compression call uses fresh substitution state.  Malformed
+bytes become U+FFFD without consuming subsequent valid characters.
+
+Remaining #17 and #34 work adds explicit header/MIME charset state and
+configurable Unicode substitution profiles.  The larger
 `ArticlePresentationView` and `PresentationBuffer` architecture can
 remain a follow-up unless it is the smallest correct release change.
 
@@ -249,6 +253,27 @@ Slice 31 test-first evidence, using `cmake --workflow temp` throughout:
 The final slice 31 `cmake --workflow rt-default` run passed 1504 tests
 with six skips and no failures, including the existing UTF-8, MIME,
 header, and display regression tests for #2.
+
+Slice 32 test-first evidence, using `cmake --workflow temp` throughout
+the focused runs:
+
+- The first run failed 14 of 43 tests for byte-oriented Latin mappings,
+  damaged unmapped Unicode, malformed recovery, line bounds, inactive
+  TeX conversion, and substitution before header/name/subject layout.
+- Four additional tests failed to link before `CharSubstitution` was
+  implemented.  They cover interleaved instances, prefixes across calls,
+  flushing and reset, and discarding state between articles.
+- Scalar substitution and instance-owned TeX prefixes made all 47 tests
+  pass.  Coverage includes identity, embedded NUL, CJK, combining marks,
+  emoji, U+2019, and independence from global charset selection.
+- The first `cmake --workflow rt-default` run found two existing status
+  tests failing: including the scalar header enabled a legacy branch
+  that hid the selected profile.  Retaining the profile status labels
+  made the expanded 55-test focused run pass, including both failures.
+
+The final slice 32 `cmake --workflow rt-default` run passed 1522 tests
+with six skips and no failures.  The UTF-8, MIME, header, and display
+regression coverage for #2 remains green.
 
 ## GitHub 5.0 Milestone
 
@@ -362,45 +387,6 @@ commit description must include `Fixes #nnn`.  If a slice can either fix
 or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
-
-### 32. Unicode Historical Substitution
-
-Issues: #17.
-
-Milestone status: open mandatory 5.0 issue.
-
-Regression checks: #2.
-
-Depends on: 31.
-
-Files likely touched:
-
-- `libtrn/charsubst.cpp`
-- `libtrn/utf.cpp`
-- `libtrn/rt-util.cpp`
-- `libtrn/rt-wumpus.cpp`
-- encoding tests
-
-Tasks:
-
-- Replace byte-oriented substitution for restored modes with a
-  Unicode-scalar transformation.
-- Treat the historical ISO conversion tables as mappings for Unicode
-  values U+00A0 through U+00FF, not raw bytes `0xA0` through `0xFF`.
-- Keep the identity or off profile preserving valid UTF-8 byte-for-byte.
-- Make TeX conversion state owned by a substitution instance.
-- Pass unmapped CJK, combining characters, emoji, and other Unicode
-  through unchanged.
-- Stop interpreting UTF-8 bytes such as `E2 80 99` as Latin-1 bytes.
-
-Acceptance:
-
-- Restored ISO-derived modes produce historical ASCII approximations for
-  Latin characters.
-- Valid UTF-8 is never split or corrupted by substitution.
-- TeX state does not leak between articles, headers, or tests.
-- Substitution unit tests cover Latin mappings, pass-through Unicode, and
-  per-instance TeX state.
 
 ### 33. Header And MIME Charset State
 
@@ -751,8 +737,8 @@ Mandatory open GitHub 5.0 milestone issues:
 - #5: 36.
 - #14: completed by removed slice 20.
 - #16: completed by removed slices 15 and 16.
-- #17: 32 and 33; strict UTF-8 scalar operations and the pipeline contract
-  are implemented.
+- #17: 33; strict UTF-8 scalars, historical substitution, and the pipeline
+  contract are implemented.
 - #18: completed by removed slices 3 and 7.
 - #19: completed by removed slices 5 and 6; the closing commit must
   include `fixes #19`.
