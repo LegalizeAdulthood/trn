@@ -6,9 +6,11 @@
 #include <trn/artio.h>
 
 #include <trn/artstate.h>
+#include <trn/cache.h>
 #include <trn/charsubst.h>
 #include <trn/datasrc.h>
 #include <trn/head.h>
+#include <trn/IniSection.h>
 #include <trn/mime.h>
 #include <trn/terminal.h>
 #include <trn/utf.h>
@@ -49,6 +51,8 @@ protected:
         m_old_input = input_charset_name();
         m_old_output = output_charset_name();
         m_old_subst = current_char_subst_mode();
+        m_old_charsets = g_charsets;
+        m_old_profile = g_unicode_substitutions;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -93,6 +97,8 @@ protected:
         g_tc_COLS = m_old_tc_cols;
         g_word_wrap_offset = m_old_word_wrap_offset;
         utf_init(m_old_input, m_old_output);
+        g_charsets = m_old_charsets;
+        g_unicode_substitutions = m_old_profile;
         set_char_subst_mode(m_old_subst);
 
         std::error_code error;
@@ -147,6 +153,8 @@ protected:
     std::string_view m_old_input;
     std::string_view m_old_output;
     char             m_old_subst{};
+    std::string                m_old_charsets;
+    UnicodeSubstitutionProfile m_old_profile;
 };
 
 } // namespace
@@ -546,6 +554,101 @@ TEST_F(ArticleIoTest, htmlFinalLineIsSubstitutedAfterFiltering)
 
     ASSERT_TRUE(read_art_buf(line, false));
     EXPECT_EQ("Ae \n", line);
+}
+
+TEST_F(ArticleIoTest, unicodeProfileMatchesEncodedHeadersAndMimeBodies)
+{
+    g_charsets = "up";
+    reset_char_subst_mode();
+    g_word_wrap_offset = -1;
+    g_mime_section = &m_mime_section;
+    g_is_mime = true;
+    struct EncodedCase
+    {
+        std::string_view type;
+        std::string_view header;
+        std::string_view body;
+        std::string_view expected;
+    };
+    constexpr EncodedCase cases[]{
+        {"text/plain; charset=UTF-8", "=?UTF-8?Q?=F0=9F=98=8A=E2=80=AF=E2=80=94?=", "=F0=9F=98=8A=E2=80=AF=E2=80=94\n",
+         ":) ---\n"},
+        {"text/plain; charset=windows-1252", "=?windows-1252?Q?=91a=92_=93b=94_=96_=97_=85_=A0x?=",
+         "=91a=92 =93b=94 =96 =97 =85 =A0x\n", "`a' \"b\" -- --- ...  x\n"},
+    };
+    for (const EncodedCase &value : cases)
+    {
+        SCOPED_TRACE(value.type);
+        m_mime_section.mime_parse_type(value.type);
+        m_mime_section.m_encoding = MENCODE_QPRINT;
+        g_mime_state = TEXT_MIME;
+        open_article_text(value.body);
+        std::string line;
+        ASSERT_TRUE(read_art_buf(line, false));
+        EXPECT_EQ(value.expected, line);
+        EXPECT_EQ(str_char_subst(decode_header(value.header), 'u') + "\n", line);
+        EXPECT_FALSE(read_art_buf(line, false));
+        ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
+        ASSERT_TRUE(read_art_buf(line, false));
+        EXPECT_EQ(value.expected, line);
+        std::rewind(g_art_fp);
+        ASSERT_TRUE(read_art(line));
+        EXPECT_EQ(value.body, line);
+        std::fclose(g_art_fp);
+        g_art_fp = nullptr;
+    }
+}
+
+TEST_F(ArticleIoTest, unicodeReplacementEscapesAndDeletionSurviveCacheRereads)
+{
+    g_charsets = "up";
+    reset_char_subst_mode();
+    ASSERT_TRUE(g_unicode_substitutions.configure(IniSection{
+        "unicode substitutions", {}, "U+2019 = \"left\\t\\nright\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\n"}));
+    m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    g_word_wrap_offset = -1;
+    open_article_text("A\xE2\x80\x99"
+                      "B\xE2\x80\x94"
+                      "C\xF0\x9F\x98\x8A"
+                      "D\nNext\n");
+    std::string line;
+
+    for (int pass = 0; pass < 2; ++pass)
+    {
+        ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
+        ASSERT_TRUE(read_art_buf(line, false));
+        EXPECT_EQ("Aleft\t\n", line);
+        ASSERT_TRUE(read_art_buf(line, false));
+        EXPECT_EQ("right\\\"BC\xE2\x80\x94"
+                  "D\n",
+                  line);
+        ASSERT_TRUE(read_art_buf(line, false));
+        EXPECT_EQ("Next\n", line);
+        EXPECT_FALSE(read_art_buf(line, false));
+    }
+    EXPECT_EQ("Aleft\t\nright\\\"BC\xE2\x80\x94"
+              "D",
+              str_char_subst(decode_header("=?UTF-8?Q?A=E2=80=99B=E2=80=94C=F0=9F=98=8AD?="), 'u'));
+}
+
+TEST_F(ArticleIoTest, unicodeProfileMalformedTextMatchesHeaderAndBodyRecovery)
+{
+    g_charsets = "up";
+    reset_char_subst_mode();
+    m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
+    m_mime_section.m_encoding = MENCODE_QPRINT;
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    open_article_text("=FF=E2=80=99\n");
+    std::string line;
+
+    ASSERT_TRUE(read_art_buf(line, false));
+    EXPECT_EQ("\xEF\xBF\xBD'\n", line);
+    EXPECT_EQ(str_char_subst(decode_header("=?UTF-8?Q?=FF=E2=80=99?="), 'u') + "\n", line);
 }
 
 TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)

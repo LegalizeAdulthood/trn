@@ -517,6 +517,119 @@ TEST(UnicodeSubstitutionTest, instancesOwnTheirMappingSnapshot)
     EXPECT_EQ("new", CharSubstitution('u', profile).substitute("\xE2\x80\x99"));
 }
 
+namespace
+{
+struct UnicodeAsciiCase
+{
+    const char      *name;
+    std::string_view utf8;
+    std::string_view ascii;
+};
+
+constexpr UnicodeAsciiCase UNICODE_ASCII_CASES[]{
+    {"NextLine", "\xC2\x85", "\n"},
+    {"NoBreakSpace", "\xC2\xA0", " "},
+    {"NoBreakHyphen", "\xE2\x80\x91", "-"},
+    {"FigureDash", "\xE2\x80\x92", "--"},
+    {"EnDash", "\xE2\x80\x93", "--"},
+    {"EmDash", "\xE2\x80\x94", "---"},
+    {"HorizontalBar", "\xE2\x80\x95", "---"},
+    {"DoubleVerticalLine", "\xE2\x80\x96", "||"},
+    {"DoubleLowLine", "\xE2\x80\x97", "_"},
+    {"LeftSingleQuote", "\xE2\x80\x98", "`"},
+    {"RightSingleQuote", "\xE2\x80\x99", "'"},
+    {"LeftDoubleQuote", "\xE2\x80\x9C", "\""},
+    {"RightDoubleQuote", "\xE2\x80\x9D", "\""},
+    {"Dagger", "\xE2\x80\xA0", "+"},
+    {"DoubleDagger", "\xE2\x80\xA1", "+"},
+    {"Bullet", "\xE2\x80\xA2", "*"},
+    {"TriangularBullet", "\xE2\x80\xA3", ">"},
+    {"OneDotLeader", "\xE2\x80\xA4", "."},
+    {"TwoDotLeader", "\xE2\x80\xA5", ".."},
+    {"Ellipsis", "\xE2\x80\xA6", "..."},
+    {"HyphenationPoint", "\xE2\x80\xA7", "-"},
+    {"LineSeparator", "\xE2\x80\xA8", "\n"},
+    {"ParagraphSeparator", "\xE2\x80\xA9", "\n"},
+    {"NarrowNoBreakSpace", "\xE2\x80\xAF", " "},
+    {"SmilingFace", "\xF0\x9F\x98\x8A", ":)"},
+};
+
+void PrintTo(const UnicodeAsciiCase &value, std::ostream *out)
+{
+    *out << value.name;
+}
+
+class UnicodeAsciiMappingTest : public TestWithParam<UnicodeAsciiCase>
+{
+};
+} // namespace
+
+TEST_P(UnicodeAsciiMappingTest, shipsIssueMappingWithoutChangingPlainText)
+{
+    const UnicodeAsciiCase &value = GetParam();
+    const std::string       input = "before" + std::string{value.utf8} + "after";
+    EXPECT_EQ("before" + std::string{value.ascii} + "after", CharSubstitution('u', {}).substitute(input));
+    EXPECT_EQ(input, CharSubstitution('p', {}).substitute(input));
+}
+
+INSTANTIATE_TEST_SUITE_P(Issue34, UnicodeAsciiMappingTest, ValuesIn(UNICODE_ASCII_CASES),
+                         [](const TestParamInfo<UnicodeAsciiCase> &info) { return info.param.name; });
+
+TEST(UnicodeSubstitutionTest, sourceBytesAreDecodedBeforeScalarSubstitution)
+{
+    struct SourceCase
+    {
+        std::string_view bytes;
+        std::string_view expected;
+    };
+    constexpr SourceCase cases[]{
+        {"\x85", "..."}, {"\x91", "`"},  {"\x92", "'"},   {"\x93", "\""},
+        {"\x94", "\""},  {"\x96", "--"}, {"\x97", "---"}, {"\xA0", " "},
+    };
+    for (const SourceCase &value : cases)
+    {
+        EXPECT_EQ(value.expected,
+                  CharSubstitution('u', {}).substitute(CharsetDecoder{"windows-1252"}.decode(value.bytes)));
+    }
+    EXPECT_EQ("\n", CharSubstitution('u', {}).substitute(CharsetDecoder{"Latin1"}.decode("\x85")));
+    EXPECT_EQ("\xC2\x91", CharSubstitution('u', {}).substitute(CharsetDecoder{"Latin1"}.decode("\x91")));
+    EXPECT_EQ("\xEF\xBF\xBD", CharSubstitution('u', {}).substitute("\x91"));
+}
+
+TEST(UnicodeSubstitutionTest, malformedUtf8RecoversWithoutLosingFollowingMapping)
+{
+    for (const InvalidUtf8Case &value : INVALID_UTF8)
+    {
+        SCOPED_TRACE(value.name);
+        std::string expected;
+        for (const unsigned char byte : value.bytes)
+        {
+            if (byte < 128)
+            {
+                expected += static_cast<char>(byte);
+            }
+            else
+            {
+                expected += "\xEF\xBF\xBD";
+            }
+        }
+        EXPECT_EQ(expected + "'", CharSubstitution('u', {}).substitute(std::string{value.bytes} + "\xE2\x80\x99"));
+    }
+}
+
+TEST(UnicodeSubstitutionTest, preservesUnmappedScalarsAndEmbeddedNul)
+{
+    const std::string_view input{"\0\xC4\x80\xE4\xB8\xAD\xCC\x81\xF0\x9F\x98\x9A", 12};
+    EXPECT_EQ(input, CharSubstitution('u', {}).substitute(input));
+}
+
+TEST(UnicodeSubstitutionTest, replacementTextIsNotRecursivelySubstituted)
+{
+    UnicodeSubstitutionProfile profile;
+    ASSERT_TRUE(profile.configure(IniSection{"unicode substitutions", {}, "U+2019 = \xE2\x80\x94\nU+2014 = nested\n"}));
+    EXPECT_EQ("\xE2\x80\x94", CharSubstitution('u', profile).substitute("\xE2\x80\x99"));
+}
+
 TEST(CharSubstTest, transliteratesLatin1ToAscii)
 {
     constexpr std::string_view input{"\xC3\x84\xC3\x96\xC3\x9C\xC3\x9F"};

@@ -164,6 +164,13 @@ must first decode to U+2018, which the profile maps to a backtick.
 Source charset selection still belongs to each encoded word or MIME
 section; substitution never guesses it from a byte value.
 
+The single-byte examples in [issue #34][issue34] are interpreted through
+their source charset.  In Windows-1252, 0x85 decodes to U+2026 and becomes
+`...`; 0x96 decodes to U+2013 and becomes `--`; 0x97 decodes to U+2014 and
+becomes `---`.  Override those scalars for different approximations.
+In ISO-8859-1, 0x85 instead decodes to U+0085 and becomes a newline.
+An isolated 0x85 or 0x91 in UTF-8 is malformed and becomes U+FFFD.
+
 Values follow the normal INI quoting and escape rules.  Quotes preserve
 leading and trailing spaces.  `\t`, `\n`, `\r`, `\\`, and `\"` represent
 tab, newline, carriage return, backslash, and double quote.  For example:
@@ -183,17 +190,33 @@ Saving options preserves the section.  Each `CharSubstitution` instance
 owns a snapshot of its mappings, so later configuration cannot alter an
 in-progress substitution.
 
-The initial built-in punctuation table is:
+The shipped additions to the historical `a` Latin table are listed
+below.  U+00A0 is also shown to make the two space mappings explicit.
+All other U+00A0 through U+00FF mappings retain the historical `a` table.
 
 | Scalar | Replacement |
 | --- | --- |
+| U+0085 | newline (`\n`) |
+| U+00A0, U+202F | space |
 | U+2011 | `-` |
-| U+2013 | `--` |
-| U+2014 | `---` |
+| U+2012, U+2013 | `--` |
+| U+2014, U+2015 | `---` |
+| U+2016 | two vertical bars |
+| U+2017 | `_` |
 | U+2018 | backtick |
 | U+2019 | `'` |
 | U+201C, U+201D | `"` |
+| U+2020, U+2021 | `+` |
+| U+2022 | `*` |
+| U+2023 | `>` |
+| U+2024 | `.` |
+| U+2025 | `..` |
 | U+2026 | `...` |
+| U+2027 | `-` |
+| U+2028, U+2029 | newline (`\n`) |
+| U+1F60A | `:)` |
+
+[issue34]: https://github.com/LegalizeAdulthood/trn/issues/34
 
 ## Verification
 
@@ -213,8 +236,16 @@ compression and decoded header display, including repeated headers.
 
 `UnicodeSubstitutionTest` checks scalar keys, user precedence, escaped
 and empty replacements, validation, and independent mapping snapshots.
+`Issue34/UnicodeAsciiMappingTest` checks every scalar in the table above
+and verifies that plain mode preserves the same UTF-8 text.  Recovery
+tests cover malformed UTF-8, embedded NUL, unmapped scalars, and emitting
+replacement text without recursively substituting it.
 `UnicodeConfigurationTest` checks configuration loading, opt-in/opt-out,
 diagnostics, and saving/reloading the profile without changing defaults.
+`ArticleIoTest` compares RFC 2047 headers with MIME bodies after charset
+decoding, including Windows-1252 examples and malformed UTF-8.  It also
+checks inserted newlines, escaped whitespace, deletion, original source
+retention, and cache rereads without repeated substitution.
 
 `CharsetDecoderTest` covers aliases, supported mappings, undefined bytes,
 strict UTF-8 fallback, interleaved decoders, and terminal output under a

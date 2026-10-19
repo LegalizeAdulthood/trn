@@ -38,8 +38,10 @@ constexpr std::string::size_type NO_CHAR_SUBST = std::string::npos;
 std::string::size_type           s_char_subst_index{NO_CHAR_SUBST};
 
 constexpr std::pair<CodePoint, std::string_view> UNICODE_ASCII[]{
-    {0x2011, "-"}, {0x2013, "--"}, {0x2014, "---"}, {0x2018, "`"},
-    {0x2019, "'"}, {0x201C, "\""}, {0x201D, "\""},  {0x2026, "..."},
+    {0x0085, "\n"},  {0x2011, "-"}, {0x2012, "--"}, {0x2013, "--"}, {0x2014, "---"}, {0x2015, "---"},
+    {0x2016, "||"},  {0x2017, "_"}, {0x2018, "`"},  {0x2019, "'"},  {0x201C, "\""},  {0x201D, "\""},
+    {0x2020, "+"},   {0x2021, "+"}, {0x2022, "*"},  {0x2023, ">"},  {0x2024, "."},   {0x2025, ".."},
+    {0x2026, "..."}, {0x2027, "-"}, {0x2028, "\n"}, {0x2029, "\n"}, {0x202F, " "},   {0x1F60A, ":)"},
 };
 
 bool valid_utf8(std::string_view text)
