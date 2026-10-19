@@ -80,6 +80,7 @@ struct DataSource
     bool             active_file_hash(std::string_view first_line = {});
     std::string      find_active_group(std::string_view name, ArticleNum high);
     std::string_view find_group_desc(std::string_view group_name);
+    std::string      find_moderator(std::string_view group_name);
     inline NNTPFlags nntp_flags() const;
     void             nntp_server_died();
 
@@ -87,6 +88,7 @@ struct DataSource
     std::string      m_news_id;    // the active file name or host name
     SourceFile       m_act_sf;     // the active file's hashed contents
     std::string      m_group_desc; // the newsgroup description file or tmp
+    std::string      m_moderators_file; // local file, none, or remote/empty
     SourceFile       m_desc_sf;    // the group description's hashed contents
     std::string      m_extra_name; // local active.times or server's active file
     NNTPLink         m_nntp_link;

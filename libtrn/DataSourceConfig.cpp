@@ -52,6 +52,7 @@ const IniSchema s_schema{
         IniField::value(field_id(DataSourceConfigField::ImplicitTls), "Implicit TLS"),
         IniField::value(field_id(DataSourceConfigField::RequireTlsForAuth), "Require TLS For Auth"),
         IniField::value(field_id(DataSourceConfigField::RequireTlsForPosting), "Require TLS For Posting"),
+        IniField::value(field_id(DataSourceConfigField::ModeratorsFile), "Moderators File"),
     }};
 
 } // namespace
@@ -89,5 +90,6 @@ DataSourceConfig DataSourceConfig::from(const IniSectionValues &values)
     config.m_implicit_tls = value_or_null(values, DataSourceConfigField::ImplicitTls);
     config.m_require_tls_for_auth = value_or_null(values, DataSourceConfigField::RequireTlsForAuth);
     config.m_require_tls_for_posting = value_or_null(values, DataSourceConfigField::RequireTlsForPosting);
+    config.m_moderators_file = value_or_null(values, DataSourceConfigField::ModeratorsFile);
     return config;
 }

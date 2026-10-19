@@ -34,6 +34,11 @@
 # custom file name for your newsgroups file.  If this is an NNTP source
 # you can also set "Group Desc Refetch" to a time value when the file
 # expires (something like "7 days" might be good).
+#   "Moderators File" selects an INN-style pattern:address file.  Local
+# sources default to "moderators" beside the active file.  NNTP sources
+# default to advertised LIST MODERATORS; "remote" selects this explicitly.
+# A file name overrides remote lookup; "none" disables moderator routing.
+# Matching moderated posts use MAILPOSTER with the submission address.
 
 #[default]
 #NNTP Server = @SERVER_NAME@
@@ -49,6 +54,7 @@
 #Active Times = @ACTIVE_TIMES@
 #Group Desc = @GROUP_DESC@
 #Group Desc Refetch = [never|7 days 1 hour 90 minutes]
+#Moderators File = [filename|remote|none]
 #Auth User =
 #Auth Password =
 #Auth Command =

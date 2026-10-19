@@ -44,6 +44,7 @@ add_executable(trn-test
     test_last.cpp
     test_makedir.cpp
     test_mime.cpp
+    test_moderators.cpp
     test_MockNntpServer.cpp
     test_nntp.cpp
     test_ng.cpp

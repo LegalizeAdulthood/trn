@@ -855,6 +855,51 @@ TEST_F(DataSourceInitTest, readsTlsPolicyFromAccessFile)
     EXPECT_TRUE(source->m_nntp_link.require_tls_for_posting);
 }
 
+TEST_F(DataSourceInitTest, expandsModeratorFileFromAccessFile)
+{
+    std::ofstream{m_output_dir / "access"} << "[moderators]\nNNTP Server = news.example\n"
+                                              "Moderators File = %./local-moderators\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("moderators");
+    ASSERT_NE(nullptr, source);
+    EXPECT_EQ((m_output_dir / "local-moderators").generic_string(), source->m_moderators_file);
+}
+
+TEST_F(DataSourceInitTest, defaultsModeratorFileBesideLocalActiveFile)
+{
+    const fs::path active = m_output_dir / "active";
+    std::ofstream{m_output_dir / "access"} << "[moderators]\nActive File = " << active.generic_string() << '\n';
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *source = get_data_source("moderators");
+    ASSERT_NE(nullptr, source);
+    EXPECT_EQ((m_output_dir / "moderators").generic_string(), source->m_moderators_file);
+}
+
+TEST_F(DataSourceInitTest, preservesDisabledAndRemoteModeratorPolicies)
+{
+    std::ofstream{m_output_dir / "access"} << "[disabled]\nNNTP Server = news.example\nModerators File = none\n"
+                                              "[remote]\nNNTP Server = news.example\nModerators File = remote\n";
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+
+    data_source_init();
+
+    const DataSource *disabled = get_data_source("disabled");
+    const DataSource *remote = get_data_source("remote");
+    ASSERT_NE(nullptr, disabled);
+    ASSERT_NE(nullptr, remote);
+    EXPECT_EQ("none", disabled->m_moderators_file);
+    EXPECT_EQ("remote", remote->m_moderators_file);
+}
+
 TEST_F(DataSourceInitTest, readsShortTlsPolicyValues)
 {
     std::ofstream{m_output_dir / "access"} << "[tls-policy]\n"

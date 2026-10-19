@@ -33,7 +33,8 @@ enum class DataSourceConfigField
     StartTls,
     ImplicitTls,
     RequireTlsForAuth,
-    RequireTlsForPosting
+    RequireTlsForPosting,
+    ModeratorsFile
 };
 
 class DataSourceConfig
@@ -62,6 +63,7 @@ public:
     std::optional<std::string_view> implicit_tls() const;
     std::optional<std::string_view> require_tls_for_auth() const;
     std::optional<std::string_view> require_tls_for_posting() const;
+    std::optional<std::string_view> moderators_file() const;
 
     void set_nntp_server(std::string_view value);
     void set_active_file(std::string_view value);
@@ -83,6 +85,7 @@ public:
     void set_implicit_tls(std::string_view value);
     void set_require_tls_for_auth(std::string_view value);
     void set_require_tls_for_posting(std::string_view value);
+    void set_moderators_file(std::string_view value);
 
 private:
     static std::optional<std::string_view> view(const std::optional<std::string> &value);
@@ -108,6 +111,7 @@ private:
     std::optional<std::string> m_implicit_tls;
     std::optional<std::string> m_require_tls_for_auth;
     std::optional<std::string> m_require_tls_for_posting;
+    std::optional<std::string> m_moderators_file;
 };
 
 inline std::optional<std::string_view> DataSourceConfig::view(const std::optional<std::string> &value)
@@ -312,6 +316,16 @@ inline void DataSourceConfig::set_implicit_tls(std::string_view value)
 inline void DataSourceConfig::set_require_tls_for_auth(std::string_view value)
 {
     set_value(m_require_tls_for_auth, value);
+}
+
+inline std::optional<std::string_view> DataSourceConfig::moderators_file() const
+{
+    return view(m_moderators_file);
+}
+
+inline void DataSourceConfig::set_moderators_file(std::string_view value)
+{
+    set_value(m_moderators_file, value);
 }
 
 inline void DataSourceConfig::set_require_tls_for_posting(std::string_view value)

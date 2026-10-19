@@ -41,6 +41,7 @@
 #include <util/env-internal.h>
 #include <util/util2.h>
 
+#include "MockNNTPConnection.h"
 #include "support/YencFixture.h"
 #include <mock_env.h>
 #include <test_config.h>
@@ -52,6 +53,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <system_error>
@@ -2102,6 +2104,188 @@ TEST_F(InterpolatorNewsgroupTest, forwardUsesMimeBoundaryFromInterpolatedHeader)
                                    "Content-Type: message/rfc822\n\n"
                                    "Path: " TRN_TEST_HEADER_PATH "\n"));
     EXPECT_THAT(written, HasSubstr("\n--trn-boundary--\n"));
+}
+
+namespace
+{
+
+class ModeratorPostingTest : public InterpolatorNewsgroupTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void compose(std::string_view header, std::string_view command = "F");
+    void compose_without_remote_lookup(std::string_view policy);
+
+    DataSource  m_source{};
+    DataSource *m_saved_source{};
+    std::string m_old_head;
+    std::string m_old_orig_dir;
+    fs::path    m_header;
+};
+
+void ModeratorPostingTest::SetUp()
+{
+    InterpolatorNewsgroupTest::SetUp();
+    m_saved_source = g_data_source;
+    m_old_head = g_head_name;
+    m_old_orig_dir = g_orig_dir;
+    m_header = fs::path{m_output.path()} / "moderator-head";
+    g_head_name = m_header.generic_string();
+    g_orig_dir = m_output.path();
+    const fs::path active = fs::path{m_output.path()} / "moderator-active";
+    std::ofstream{active} << TRN_TEST_NEWSGROUP " 626 623 y\n"
+                                                "list.test 1 1 m\nlist.other 1 1 m\nopen.test 1 1 y\n";
+    EXPECT_EQ(1, m_source.m_act_sf.open(active, "", ""));
+    m_source.m_news_id = active.generic_string();
+    m_source.m_spool_dir = TRN_TEST_LOCAL_SPOOL_DIR;
+    m_source.m_moderators_file = (fs::path{m_output.path()} / "moderators").generic_string();
+    std::ofstream{m_source.m_moderators_file} << "list.*:list@example.test\n*:fallback@example.test\n";
+    g_data_source = &m_source;
+    m_env.expect_env("NEWSPOSTER", "echo news > news-used");
+    m_env.expect_env("MAILPOSTER", "echo mail > mail-used");
+}
+
+void ModeratorPostingTest::TearDown()
+{
+    g_data_source = m_saved_source;
+    g_head_name = m_old_head;
+    g_orig_dir = m_old_orig_dir;
+    m_source.m_act_sf.close();
+    InterpolatorNewsgroupTest::TearDown();
+}
+
+void ModeratorPostingTest::compose(std::string_view header, std::string_view command)
+{
+    const std::string text{header};
+    m_env.expect_env("NEWSHEADER", text.c_str());
+    m_env.expect_env("ATTRIBUTION", "Quoted article:");
+    testing::internal::CaptureStdout();
+    followup(command);
+    (void) testing::internal::GetCapturedStdout();
+}
+
+void ModeratorPostingTest::compose_without_remote_lookup(std::string_view policy)
+{
+    const auto           connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    ValueSaver<NNTPLink> saved_link(g_nntp_link, NNTPLink{});
+    g_nntp_link.connection = connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add(policy == "none" ? "LIST ACTIVE MODERATORS" : "LIST ACTIVE");
+    m_source.m_flags |= DF_REMOTE | DF_USE_LIST_ACTIVE;
+    m_source.m_moderators_file = policy;
+    push_char('\n');
+
+    compose("Newsgroups: list.test\nSubject: topic\n\n", "f");
+
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "news-used"));
+    EXPECT_FALSE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+}
+
+} // namespace
+
+TEST_F(ModeratorPostingTest, routesFollowupThroughMailComposer)
+{
+    compose("Newsgroups: list.test\nSubject: topic\n\n");
+
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+    EXPECT_FALSE(fs::exists(fs::path{m_output.path()} / "news-used"));
+    EXPECT_THAT(file_contents(m_header),
+                StartsWith("To: list@example.test\nNewsgroups: list.test\nSubject: topic\n\n"));
+    EXPECT_THAT(file_contents(m_header), HasSubstr("Quoted article:\n"));
+}
+
+TEST_F(ModeratorPostingTest, routesNewTopicToModerator)
+{
+    push_char('\n');
+    compose("Newsgroups: list.test\nSubject: new topic\n\n", "f");
+
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+    EXPECT_EQ("To: list@example.test\nNewsgroups: list.test\nSubject: new topic\n\n", file_contents(m_header));
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+}
+
+TEST_F(ModeratorPostingTest, unmoderatedGroupsKeepNewsPosting)
+{
+    compose("Newsgroups: open.test\nSubject: topic\n\n");
+
+    EXPECT_FALSE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "news-used"));
+    EXPECT_THAT(file_contents(m_header), StartsWith("Newsgroups: open.test\n"));
+}
+
+TEST_F(ModeratorPostingTest, missingModeratorKeepsNewsPosting)
+{
+    m_source.m_moderators_file += ".missing";
+    compose("Newsgroups: list.test\nSubject: topic\n\n");
+
+    EXPECT_FALSE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "news-used"));
+}
+
+TEST_F(ModeratorPostingTest, approvedPostsKeepNewsPosting)
+{
+    compose("Newsgroups: list.test\nApproved: editor@example.test\n\n");
+
+    EXPECT_FALSE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "news-used"));
+}
+
+TEST_F(ModeratorPostingTest, foldedCrosspostDeduplicatesRecipientsAndReplacesTo)
+{
+    compose("Newsgroups: list.test,\n list.other,open.test\nTo: previous@example.test\n"
+            " ignored@example.test\nSubject: topic\n\n");
+
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+    EXPECT_THAT(file_contents(m_header),
+                StartsWith("To: list@example.test\nNewsgroups: list.test,\n list.other,open.test\nSubject: topic\n\n"));
+    EXPECT_THAT(file_contents(m_header), testing::Not(HasSubstr("previous@example.test")));
+    EXPECT_THAT(file_contents(m_header), testing::Not(HasSubstr("ignored@example.test")));
+}
+
+TEST_F(ModeratorPostingTest, remoteListRoutesNewTopicThroughMailComposer)
+{
+    const auto           connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    ValueSaver<NNTPLink> saved_link(g_nntp_link, NNTPLink{});
+    g_nntp_link.connection = connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_nntp_link.capabilities.available = true;
+    g_nntp_link.capabilities.add("LIST ACTIVE MODERATORS");
+    m_source.m_flags |= DF_REMOTE;
+    m_source.m_moderators_file.clear();
+    EXPECT_CALL(*connection, write_line(testing::StrEq("LIST MODERATORS"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_))
+        .WillOnce(testing::Return("215 list follows"))
+        .WillOnce(testing::Return("list.*:%s@remote.example.test"))
+        .WillOnce(testing::Return("."));
+    push_char('\n');
+
+    compose("Newsgroups: list.test\nSubject: remote topic\n\n", "f");
+
+    EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "mail-used"));
+    EXPECT_FALSE(fs::exists(fs::path{m_output.path()} / "news-used"));
+    EXPECT_THAT(file_contents(m_header), StartsWith("To: list-test@remote.example.test\n"));
+}
+
+TEST_F(ModeratorPostingTest, mailComposerFailureDoesNotResubmitToNews)
+{
+    m_env.expect_env("MAILPOSTER", "exit 42");
+
+    compose("Newsgroups: list.test\nSubject: topic\n\n");
+
+    EXPECT_FALSE(fs::exists(fs::path{m_output.path()} / "news-used"));
+    EXPECT_THAT(file_contents(m_header), StartsWith("To: list@example.test\n"));
+}
+
+TEST_F(ModeratorPostingTest, disabledRoutingDoesNotQueryActiveGroups)
+{
+    compose_without_remote_lookup("none");
+}
+
+TEST_F(ModeratorPostingTest, unadvertisedRoutingDoesNotQueryActiveGroups)
+{
+    compose_without_remote_lookup("remote");
 }
 
 TEST_F(InterpolatorNewsgroupTest, followupWritesInterpolatedHeaderAndQuotedBody)

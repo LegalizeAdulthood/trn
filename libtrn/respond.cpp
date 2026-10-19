@@ -17,6 +17,7 @@
 #include <trn/charsubst.h>
 #include <trn/datasrc.h>
 #include <trn/decode.h>
+#include <trn/file-contents.h>
 #include <trn/final.h>
 #include <trn/head.h>
 #include <trn/intrp.h>
@@ -43,8 +44,11 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #ifdef _WIN32
 #include <fcntl.h>
@@ -912,8 +916,142 @@ static int nntp_date()
     return nntp_command("DATE");
 }
 
+static std::string draft_field(std::string_view text, std::string_view field)
+{
+    std::istringstream input{std::string{text}};
+    std::string        value;
+    std::string        line;
+    bool               collecting = false;
+    while (std::getline(input, line) && !line.empty() && line != "\r")
+    {
+        if (line.front() == ' ' || line.front() == '\t')
+        {
+            if (collecting)
+            {
+                value += ' ';
+                value += line;
+            }
+            continue;
+        }
+        if (collecting)
+        {
+            break;
+        }
+        const std::size_t colon = line.find(':');
+        collecting = colon != std::string::npos && string_case_equal(std::string_view{line}.substr(0, colon), field);
+        if (collecting)
+        {
+            value = line.substr(colon + 1);
+        }
+    }
+    return value;
+}
+
+static std::string post_moderators(std::string_view draft)
+{
+    if (g_data_source == nullptr || g_data_source->m_act_sf.m_hp == nullptr || !draft_field(draft, "Approved").empty())
+    {
+        return {};
+    }
+    const std::string &file = g_data_source->m_moderators_file;
+    const bool         remote_rules = (g_data_source->m_flags & DF_REMOTE) && (file.empty() || file == "remote");
+    if (file == "none" ||
+        (remote_rules && (!g_nntp_link.connection || !g_nntp_link.capabilities.has("LIST", "MODERATORS"))))
+    {
+        return {};
+    }
+    std::istringstream groups{draft_field(draft, "Newsgroups")};
+    if (g_data_source->m_flags & DF_REMOTE)
+    {
+        nntp_finish_body(FB_SILENT);
+    }
+    std::vector<std::string> recipients;
+    std::string              group;
+    while (std::getline(groups, group, ','))
+    {
+        const std::size_t first = group.find_first_not_of(" \t\r");
+        if (first == std::string::npos)
+        {
+            continue;
+        }
+        group = group.substr(first, group.find_last_not_of(" \t\r") - first + 1);
+        std::istringstream active{g_data_source->find_active_group(group, ArticleNum{})};
+        std::string        name;
+        std::string        high;
+        std::string        low;
+        std::string        flag;
+        if (!(active >> name >> high >> low >> flag) || name != group || flag != "m")
+        {
+            continue;
+        }
+        std::string address = g_data_source->find_moderator(group);
+        if (!address.empty())
+        {
+            const auto position = std::lower_bound(recipients.begin(), recipients.end(), address);
+            if (position == recipients.end() || *position != address)
+            {
+                recipients.insert(position, std::move(address));
+            }
+        }
+    }
+    std::string result;
+    for (const std::string &address : recipients)
+    {
+        if (!result.empty())
+        {
+            result += ", ";
+        }
+        result += address;
+    }
+    return result;
+}
+
+static std::string moderator_draft(std::string_view draft, std::string_view recipients)
+{
+    std::string result = fmt::format("To: {}\n", recipients);
+    bool        skip_to = false;
+    while (!draft.empty())
+    {
+        const std::size_t      end = draft.find('\n');
+        const std::size_t      size = end == std::string_view::npos ? draft.size() : end + 1;
+        const std::string_view line = draft.substr(0, size);
+        if (line == "\n" || line == "\r\n")
+        {
+            result += draft;
+            break;
+        }
+        if (line.front() != ' ' && line.front() != '\t')
+        {
+            const std::size_t colon = line.find(':');
+            skip_to = colon != std::string_view::npos && string_case_equal(line.substr(0, colon), "To");
+        }
+        if (!skip_to)
+        {
+            result += line;
+        }
+        draft.remove_prefix(size);
+    }
+    return result;
+}
+
 static void follow_it_up()
 {
+    const std::string draft = file_contents(g_head_name);
+    const std::string recipients = post_moderators(draft);
+    if (!recipients.empty())
+    {
+        std::ofstream output{g_head_name};
+        output << moderator_draft(draft, recipients);
+        output.close();
+        if (!output)
+        {
+            fmt::print("Can't write {}\n", g_head_name);
+            term_down(1);
+            return;
+        }
+        invoke(file_exp(get_env_var("MAILPOSTER", MAIL_POSTER)).c_str(), g_orig_dir.c_str());
+        return;
+    }
     if (invoke(file_exp(get_env_var("NEWSPOSTER", NEWS_POSTER)).c_str(), //
                g_orig_dir.c_str()) == 42)
     {

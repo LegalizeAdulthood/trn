@@ -119,3 +119,18 @@ TEST_F(DataSourceConfigTest, recognizesLegacyAuthPolicy)
 {
     EXPECT_NE(nullptr, DataSourceConfig::schema().find("Allow Legacy Auth"));
 }
+
+TEST_F(DataSourceConfigTest, recognizesModeratorsFile)
+{
+    EXPECT_NE(nullptr, DataSourceConfig::schema().find("Moderators File"));
+}
+
+TEST_F(DataSourceConfigTest, parsesAndPreservesModeratorFilePolicy)
+{
+    const DataSourceConfig config = parse("[source]\nModerators File = ~/moderators\n");
+    expect_value("~/moderators", config.moderators_file());
+    DataSourceConfig copy;
+    EXPECT_FALSE(copy.moderators_file());
+    copy.set_moderators_file("none");
+    expect_value("none", copy.moderators_file());
+}

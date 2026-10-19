@@ -34,6 +34,11 @@
 # custom file name for your newsgroups file.  If this is an NNTP source
 # you can also set "Group Desc Refetch" to a time value when the file
 # expires (something like "7 days" might be good).
+#   "Moderators File" selects an INN-style pattern:address file.  Local
+# sources default to "moderators" beside the active file.  NNTP sources
+# default to advertised LIST MODERATORS; "remote" selects this explicitly.
+# A file name overrides remote lookup; "none" disables moderator routing.
+# Matching moderated posts use MAILPOSTER with the submission address.
 #   Set Auth User and Auth Password if you need to specify them to use a
 # news server.  On the other hand, if you're using the "generic
 # authentication" system, use the Auth Command setting instead.
@@ -57,6 +62,7 @@
 #Active Times =
 #Group Desc =
 #Group Desc Refetch =
+#Moderators File = [filename|remote|none]
 #Auth User =
 #Auth Password =
 #Auth Command =

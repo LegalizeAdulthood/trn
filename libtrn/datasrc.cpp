@@ -17,6 +17,7 @@
 #include <trn/hash.h>
 #include <trn/IniDocument.h>
 #include <trn/IniSectionValues.h>
+#include <trn/moderators.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/rcstuff.h>
@@ -294,6 +295,16 @@ static DataSource *new_data_source(std::string_view name, const DataSourceConfig
 
     dp->m_over_dir = dir_or_empty(dp, config.overview_dir().value_or(std::string_view{}), DF_TRY_OVERVIEW);
     dp->m_over_fmt = file_or_empty(config.overview_format_file().value_or(std::string_view{}));
+    const std::string_view moderators = config.moderators_file().value_or(std::string_view{});
+    if (!moderators.empty())
+    {
+        dp->m_moderators_file =
+            moderators == "none" || moderators == "remote" ? std::string{moderators} : file_exp(moderators);
+    }
+    else if (!(dp->m_flags & DF_REMOTE))
+    {
+        dp->m_moderators_file = (fs::path{dp->m_news_id}.parent_path() / "moderators").generic_string();
+    }
     dp->m_group_desc = dir_or_empty(dp, config.group_desc().value_or(std::string_view{}), DF_NONE);
     dp->m_extra_name = dir_or_empty(dp, config.active_times().value_or(std::string_view{}), DF_ADD_OK);
     if (dp->m_flags & DF_REMOTE)
@@ -770,6 +781,63 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
         return *cached_line;
     }
     return {}; // no such group
+}
+
+std::string DataSource::find_moderator(std::string_view group_name)
+{
+    if (m_moderators_file == "none")
+    {
+        return {};
+    }
+    if (!m_moderators_file.empty() && m_moderators_file != "remote")
+    {
+        return moderator_address(group_name, file_contents(m_moderators_file));
+    }
+    if (!(m_flags & DF_REMOTE))
+    {
+        return {};
+    }
+    DataSource    *old_source = g_data_source;
+    const NNTPLink old_link = g_nntp_link;
+    set_data_source(this);
+    const auto fetch = []() -> std::string
+    {
+        if (!g_nntp_link.connection || !g_nntp_link.capabilities.has("LIST", "MODERATORS") ||
+            nntp_list("MODERATORS", {}) <= 0 || nntp_response_code(g_ser_line) != NNTP_LIST_FOLLOWS_VAL)
+        {
+            return {};
+        }
+        std::string rules;
+        std::string record;
+        std::string line;
+        for (;;)
+        {
+            const NNTPGetsResult result = nntp_gets(line, NNTP_STRLEN);
+            if (result == NGSR_ERROR)
+            {
+                return {};
+            }
+            record += line;
+            if (result == NGSR_PARTIAL_LINE)
+            {
+                continue;
+            }
+            if (nntp_at_list_end(record))
+            {
+                return rules;
+            }
+            rules += record;
+            rules += '\n';
+            record.clear();
+        }
+    };
+    const std::string rules = fetch();
+    set_data_source(old_source);
+    if (old_source == nullptr)
+    {
+        g_nntp_link = old_link;
+    }
+    return moderator_address(group_name, rules);
 }
 
 std::string_view DataSource::find_group_desc(std::string_view group_name)
