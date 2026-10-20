@@ -801,13 +801,6 @@ or stabilize P0 work.
 3. Modernize core NNTP command selection when needed by #3.
 4. Add enough test automation to make #33 meaningful.
 
-### P2: Non-Milestone Follow-Up
-
-P2 work should not delay 5.0 unless it is moved onto the GitHub 5.0
-milestone.
-
-1. Use archive.org as additional test content: #35.
-
 ## Implementation Rules
 
 Use these as review units.  Each numbered item owns at most one open
@@ -853,32 +846,7 @@ or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
 
-### 47. Archive.org Test Samples
-
-Issues: #35.
-
-Milestone status: not on the 5.0 milestone.
-
-Depends on: 23 through 25.
-
-Files likely touched:
-
-- test data
-- test documentation
-
-Tasks:
-
-- Use archive.org content only after deterministic fixtures exist.
-- Import only small, license-acceptable, pinned test samples.
-- Keep downloaded or derived samples reproducible.
-
-Acceptance:
-
-- Archive.org content is optional and not required for default CI.
-- Any imported sample has source, license, and reproduction notes.
-- Imported samples are exercised by optional unit or regression tests
-  with no network dependency.
-- Commit description includes `fixes #35`.
+- No active slices remain.
 
 ## Deferred Slices
 
@@ -984,7 +952,6 @@ Non-milestone supporting or follow-up issues:
   include `Fixes #15`.
 - #30: completed by removed slice 37; the closing commit must include
   `Fixes #30`.
-- #35: 47.
 
 ## Release Gate
 
