@@ -392,7 +392,6 @@ TEST(GeneratedConfigTest, defaultDataFilesAreGenerated)
 
 TEST(GeneratedConfigTest, runtimeHelperFilesAreGenerated)
 {
-    expect_file_exists(TRN_TEST_GENERATED_FILEXP_FILE);
     expect_file_exists(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
     expect_file_exists(TRN_TEST_GENERATED_NORM_SAVER_FILE);
     expect_file_exists(TRN_TEST_GENERATED_PNEWS_FILE);
@@ -568,7 +567,6 @@ TEST(GeneratedConfigTest, windowsHelpersReportUnsupportedFeatures)
         GTEST_SKIP() << "Windows helper diagnostics are only generated on Windows.";
     }
 
-    expect_file_contains(TRN_TEST_GENERATED_FILEXP_FILE, "filexp is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_MBOX_SAVER_FILE, "mbox.saver is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_NORM_SAVER_FILE, "norm.saver is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Pnews is not supported on Windows");
@@ -773,7 +771,6 @@ TEST(GeneratedConfigTest, helperFilesDoNotContainOldToolVariables)
 
 TEST(GeneratedConfigTest, runtimeHelperFilesDoNotContainMetaconfigResidue)
 {
-    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_FILEXP_FILE);
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_NORM_SAVER_FILE);
     expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_FILE);

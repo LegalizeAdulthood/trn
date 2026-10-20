@@ -305,16 +305,16 @@ The supported POSIX runtime layout is:
 
 - `${prefix}/${bindir}`: `trn`, `inews`, `nntplist`, `trn-artchk`,
   `Pnews`, and `Rnmail`.
-- `${prefix}/${private-lib}`: `filexp`, `mbox.saver`, `norm.saver`,
-  `Speller`, `Pnews.header`, `INIT`, `access.def`, `environment`,
-  `newsnews`, and `HelpFiles`.
+- `${prefix}/${private-lib}`: `mbox.saver`, `norm.saver`, `Speller`,
+  `Pnews.header`, `INIT`, `access.def`, `environment`, `newsnews`, and
+  `HelpFiles`.
 - `${prefix}/${mandir}/man1`: `trn.1`, `Pnews.1`, and `Rnmail.1`.
 
 On Windows, the helper entry points are installed as `Pnews.cmd`,
-`Rnmail.cmd`, `filexp.cmd`, `mbox.saver.cmd`, `norm.saver.cmd`, and
-`Speller.cmd`.  They fail with explicit unsupported-feature diagnostics
-until native replacements exist.  `Pnews.header` is not installed on
-Windows because the `Pnews` replacement owns that policy.
+`Rnmail.cmd`, `mbox.saver.cmd`, `norm.saver.cmd`, and `Speller.cmd`.  They
+fail with explicit unsupported-feature diagnostics until native
+replacements exist.  `Pnews.header` is not installed on Windows because
+the `Pnews` replacement owns that policy.
 
 `strn.1` was a stale historical stub and is retired.  `default_topic` is
 a source-distribution sample for sites that want a default scan-mode topic

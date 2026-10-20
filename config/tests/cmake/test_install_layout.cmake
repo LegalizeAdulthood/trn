@@ -52,7 +52,6 @@ expect_executable("${bin_dir}/trn-artchk${TRN_TEST_EXECUTABLE_SUFFIX}")
 expect_executable("${bin_dir}/${TRN_TEST_PNEWS_HELPER_NAME}")
 expect_executable("${bin_dir}/${TRN_TEST_RNMAIL_HELPER_NAME}")
 
-expect_executable("${private_lib_dir}/${TRN_TEST_FILEXP_HELPER_NAME}")
 expect_executable("${private_lib_dir}/${TRN_TEST_MBOX_SAVER_HELPER_NAME}")
 expect_executable("${private_lib_dir}/${TRN_TEST_NORM_SAVER_HELPER_NAME}")
 expect_executable("${private_lib_dir}/${TRN_TEST_SPELLER_HELPER_NAME}")

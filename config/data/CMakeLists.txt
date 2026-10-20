@@ -33,7 +33,6 @@ configure_file(environment.in environment @ONLY)
 configure_file(newsnews.in newsnews @ONLY)
 
 if(WIN32)
-    set(trn_filexp_output "${CMAKE_CURRENT_BINARY_DIR}/filexp.cmd")
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver.cmd")
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver.cmd")
     set(trn_pnews_output "${CMAKE_CURRENT_BINARY_DIR}/Pnews.cmd")
@@ -41,14 +40,12 @@ if(WIN32)
     set(trn_rnmail_output "${CMAKE_CURRENT_BINARY_DIR}/Rnmail.cmd")
     set(trn_speller_output "${CMAKE_CURRENT_BINARY_DIR}/Speller.cmd")
     set(trn_helper_sources
-        filexp.cmd.in
         mbox.saver.cmd.in
         norm.saver.cmd.in
         Pnews.cmd.in
         Rnmail.cmd.in
         Speller.cmd.in)
     set(TRN_GENERATED_WINDOWS_HELPERS ON)
-    set(TRN_INSTALL_FILEXP_HELPER_NAME "filexp.cmd" PARENT_SCOPE)
     set(TRN_INSTALL_MBOX_SAVER_HELPER_NAME "mbox.saver.cmd" PARENT_SCOPE)
     set(TRN_INSTALL_NORM_SAVER_HELPER_NAME "norm.saver.cmd" PARENT_SCOPE)
     set(TRN_INSTALL_PNEWS_HELPER_NAME "Pnews.cmd" PARENT_SCOPE)
@@ -56,14 +53,12 @@ if(WIN32)
     set(TRN_INSTALL_RNMAIL_HELPER_NAME "Rnmail.cmd" PARENT_SCOPE)
     set(TRN_INSTALL_SPELLER_HELPER_NAME "Speller.cmd" PARENT_SCOPE)
 
-    configure_file(filexp.cmd.in "${trn_filexp_output}" COPYONLY)
     configure_file(mbox.saver.cmd.in "${trn_mbox_saver_output}" COPYONLY)
     configure_file(norm.saver.cmd.in "${trn_norm_saver_output}" COPYONLY)
     configure_file(Pnews.cmd.in "${trn_pnews_output}" COPYONLY)
     configure_file(Rnmail.cmd.in "${trn_rnmail_output}" COPYONLY)
     configure_file(Speller.cmd.in "${trn_speller_output}" COPYONLY)
 else()
-    set(trn_filexp_output "${CMAKE_CURRENT_BINARY_DIR}/filexp")
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver")
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver")
     set(trn_pnews_output "${CMAKE_CURRENT_BINARY_DIR}/Pnews")
@@ -71,7 +66,6 @@ else()
     set(trn_rnmail_output "${CMAKE_CURRENT_BINARY_DIR}/Rnmail")
     set(trn_speller_output "${CMAKE_CURRENT_BINARY_DIR}/Speller")
     set(trn_helper_sources
-        filexp.in
         mbox.saver.in
         norm.saver.in
         Pnews.in
@@ -79,7 +73,6 @@ else()
         Rnmail.in
         Speller.in)
     set(TRN_GENERATED_WINDOWS_HELPERS OFF)
-    set(TRN_INSTALL_FILEXP_HELPER_NAME "filexp" PARENT_SCOPE)
     set(TRN_INSTALL_MBOX_SAVER_HELPER_NAME "mbox.saver" PARENT_SCOPE)
     set(TRN_INSTALL_NORM_SAVER_HELPER_NAME "norm.saver" PARENT_SCOPE)
     set(TRN_INSTALL_PNEWS_HELPER_NAME "Pnews" PARENT_SCOPE)
@@ -87,7 +80,6 @@ else()
     set(TRN_INSTALL_RNMAIL_HELPER_NAME "Rnmail" PARENT_SCOPE)
     set(TRN_INSTALL_SPELLER_HELPER_NAME "Speller" PARENT_SCOPE)
 
-    configure_file(filexp.in "${trn_filexp_output}" @ONLY)
     configure_file(mbox.saver.in "${trn_mbox_saver_output}" @ONLY)
     configure_file(norm.saver.in "${trn_norm_saver_output}" @ONLY)
     configure_file(Pnews.in "${trn_pnews_output}" @ONLY)
@@ -96,7 +88,6 @@ else()
     configure_file(Speller.in "${trn_speller_output}" @ONLY)
 endif()
 
-set(TRN_GENERATED_FILEXP_FILE "${trn_filexp_output}" PARENT_SCOPE)
 set(TRN_GENERATED_MBOX_SAVER_FILE "${trn_mbox_saver_output}" PARENT_SCOPE)
 set(TRN_GENERATED_NORM_SAVER_FILE "${trn_norm_saver_output}" PARENT_SCOPE)
 set(TRN_GENERATED_PNEWS_FILE "${trn_pnews_output}" PARENT_SCOPE)
@@ -109,7 +100,6 @@ set(trn_public_helper_outputs
     "${trn_pnews_output}"
     "${trn_rnmail_output}")
 set(trn_private_helper_outputs
-    "${trn_filexp_output}"
     "${trn_mbox_saver_output}"
     "${trn_norm_saver_output}"
     "${trn_speller_output}")

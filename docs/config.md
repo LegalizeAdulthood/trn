@@ -307,11 +307,6 @@ Active generated helpers:
   Required tests: generated POSIX `Speller` has no unresolved configure
   tokens and preserves the current wrapper command flow; Windows
   `Speller.cmd` reports that spell checking is unsupported.
-- `filexp.SH`: generated from `config/data/filexp.in` on POSIX.  Windows
-  generates `filexp.cmd`, an unsupported diagnostic helper for 5.0.
-  Required tests: generated POSIX `filexp` exists and covers `~`, `~~`,
-  and named-user expansion using the configured install prefix; Windows
-  `filexp.cmd` reports that the helper is unsupported.
 - `mbox_saver.SH`: generated from `config/data/mbox.saver.in` on POSIX.
   Windows generates `mbox.saver.cmd`, an unsupported diagnostic helper
   for 5.0; the normal Windows default is to leave `MBOXSAVER` unset so
