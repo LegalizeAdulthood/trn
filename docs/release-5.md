@@ -109,13 +109,15 @@ and authentication paths satisfy #3; it is ready to close on publication.
 ## Script Audit
 
 Repo-owned shell work excludes the `vcpkg` submodule.  Windows normal and
-mailbox savers and `Speller` use working PowerShell implementations.
-`Pnews.cmd` and `Rnmail.cmd` still print unsupported diagnostics.
-Issue #29 requires completing those two ports.  The runtime audit is:
+mailbox savers, `Speller`, and NNTP `Pnews` use PowerShell implementations.
+`Rnmail.cmd` still prints an unsupported diagnostic.  Issue #29 requires
+completing that port and the shared email backend.  The runtime audit is:
 
 - `config/data/Pnews.in`: interactive news poster; sources
   `Pnews.header`, calls `Speller`, `mbox.saver`, `trn-artchk`,
   `nntplist`, `inews`, the editor, the pager, and optional PGP tools.
+  Windows uses `Pnews.cmd`, `Pnews.ps1`, and private `trn-tools.ps1` for
+  composition and native NNTP posting; email integration remains in 46.
 - `config/data/Pnews.header.in`: shell scriptlet sourced by `Pnews`;
   include its behavior in Windows `Pnews`, retain it for Unix `Pnews`,
   and do not treat it as a standalone command.
@@ -152,8 +154,8 @@ or kept only as historical reference.
 ## Helper Implementation Choices
 
 Issue #29 is a mandatory 5.0 milestone issue.  Windows normal and mailbox
-savers and `Speller` are implemented; slices 45 and 46 cover the remaining
-two helpers.
+savers, `Speller`, and NNTP `Pnews` are implemented.  Slice 46 covers
+`Rnmail`, the shared email backend, and `Pnews` email integration.
 PowerShell is the default choice; `Rnmail` remains provisional until its
 submission backend is proved.  For script ports, retain the Unix scripts
 and replace Windows diagnostic stubs with working launchers and scripts.
@@ -186,9 +188,9 @@ Per-helper assessment and planned choice:
 - `Speller`: implemented in PowerShell with protected headers, quotations,
   signatures, native checker invocation, and tested reinsertion after
   edits.  The Unix script remains with shared runtime tool overrides.
-- `Pnews`: larger PowerShell workflow including header/distribution
-  handling.  Reuse `trn-artchk`, `nntplist`, and `inews` for their existing
-  work; do not reimplement their functions in the script.
+- `Pnews`: implemented in PowerShell with header/distribution handling,
+  editing, validation, spelling, PGP, author copies, and draft recovery.
+  It calls native `trn-artchk`, `nntplist`, and C++ `inews -h`.
 - `Rnmail`: larger PowerShell workflow for prompts, editing, checking,
   and draft recovery.  Select and prove the Windows submission backend
   before confirming the script choice; delivery cannot be assumed to
@@ -657,7 +659,8 @@ Slice 43 test-first evidence, using `cmake --workflow temp`:
 The slice 43 `cmake --workflow rt-default` run completed 1748 tests with
 six skips and no failures.  Internal mailbox saving remains the default.
 Windows composer integration for author-copy and sent-mail records stays
-with slices 45 and 46, using the tested eight-argument helper contract.
+with the tested eight-argument helper contract: author copies are complete
+in slice 45, and sent-mail records remain in slice 46.
 
 Slice 44 test-first evidence, using `cmake --workflow temp`:
 
@@ -676,7 +679,32 @@ The slice 44 `cmake --workflow rt-default` run completed 1769 tests with
 six skips and no failures.  Windows `Speller.cmd` uses its installed
 PowerShell companion and native checker tools.  Unix retains its shell
 workflow with successful exit status and word-list error propagation
-corrected.  Windows composer integration remains in slices 45 and 46.
+corrected.  Windows news-composer integration is complete in slice 45;
+mail-composer integration remains in slice 46.
+
+Slice 45 test-first evidence, using `cmake --workflow temp`:
+
+- All 26 initial Windows posting checks failed against the diagnostic
+  stub.  After implementation, five failures pinned distribution lookup
+  and propagation of editor, validation, and missing-tool failures.
+  Correcting those paths made the same 26 checks pass.
+- A default-command regression failed before quoting the header path.
+  The generated C++ command strings then required raw literals to retain
+  those quotes.  Installation and ZIP checks invoke the actual composer
+  and its private author-copy saver.
+- With `POSTING_HOSTNAME=posting.example.test`, the real native `inews`
+  probe reached POST and crashed with status -1073740791.  Its inverted
+  local-pipe check called `pclose` with a null pointer on the NNTP path.
+  Correcting that check made the previously failing probe pass.
+- The final focused run passed all 43 checks: 30 native Windows checks,
+  including real `inews` against a local NNTP server, and 13 shared Unix
+  composer fixtures on Ubuntu 24.04 under WSL.  The retained Unix scripts
+  are unchanged.  The native probe requires a configured posting hostname.
+
+The slice 45 `cmake --workflow rt-default` run completed 1795 tests with
+six skips and no failures.  Windows NNTP posting and author-copy records
+are implemented locally.  Mail copies and unapproved moderated-email
+workflows fail before posting and retain the draft until slice 46.
 
 ## GitHub 5.0 Milestone
 
@@ -701,7 +729,7 @@ Open mandatory milestone issues:
   missing `Group Desc`.
 - #25: Validate/support moderator patterns (implemented locally; ready to
   close).
-- #29: Make Windows equivalents of helper scripts (slices 45 and 46).
+- #29: Finish Windows email helpers and submission (slice 46).
 - #31: All files previously generated by configure script should be
   generated by CMake.
 - #33: Test plan.
@@ -792,58 +820,14 @@ or defer an issue, use `Fixes` only when the issue is actually resolved.
 
 ## Implementation Slices
 
-### 45. Windows Pnews Script
-
-Issues: #29.
-
-Milestone status: mandatory 5.0 work.
-
-Depends on: completed slice 44; uses slice 43 for author-copy records.
-
-Files likely touched:
-
-- Unix `config/data/Pnews.in` and `Pnews.header.in` as references
-- `config/data/Pnews.cmd.in` and a new PowerShell template
-- shared PowerShell support and helper/default configuration
-- posting tests, install/package checks, and `man/Pnews.1`
-
-Tasks:
-
-- Add failing tests for interactive, newsgroup/title, and
-  `-h headerfile [oldarticle]` modes, header generation, distribution
-  prompts, inclusion, signatures, and the edit/check/post/abort loop.
-- Implement the PowerShell composer, incorporating `Pnews.header`
-  behavior.  Honor editor, pager, checker, fast-mode, author-copy, and
-  optional PGP settings; retain User-Agent and MIME handling.
-- Use installed `mbox.saver.cmd` for `AUTHORCOPY` records and honor
-  `POSTSAVER` with the eight-argument, article-zero contract.
-- Exercise `trn-artchk`, `nntplist`, and `inews` integration with native
-  fake tools and posting capture.  Default to the installed C++ `inews -h`
-  with the completed article on standard input.  Preserve drafts after
-  failed posting and cancellation, and propagate child failures.
-- Defer mail copies and moderated-email submission to slice 46.  First
-  add failing tests requiring a clear failure and a recoverable draft
-  when a requested email workflow has no backend, then implement that
-  handling without blocking ordinary NNTP posting.
-- Replace the Windows diagnostic stub and `NEWSPOSTER` default; update
-  this helper's install/package rules and documentation.  Retain Unix
-  `Pnews` and `Pnews.header`.
-
-Acceptance:
-
-- The same previously failing posting tests pass on Windows and Unix.
-- Installed Windows `Pnews` composes and submits through native `inews`
-  without sourcing Unix `Pnews.header`.
-- NNTP posting works independently of the unresolved email backend.
-  Email-dependent workflows retain drafts until slice 46 completes them.
-
 ### 46. Windows Rnmail and Email Submission
 
 Issues: #29.
 
 Milestone status: mandatory 5.0 work; final slice for #29.
 
-Depends on: 44 and 45; uses completed slice 43 for sent-mail records.
+Depends on: completed slices 44 and 45; uses slice 43 for sent-mail
+records.
 
 Files likely touched:
 
@@ -1017,7 +1001,7 @@ Mandatory open GitHub 5.0 milestone issues:
 - #24: 11 and 12.
 - #25: completed by removed slice 38; the closing commit must include
   `Fixes #25`.
-- #29: 45 and 46; the final closing commit must include `Fixes #29`.
+- #29: 46; the final closing commit must include `Fixes #29`.
 - #31: completed by removed slices 8 through 10.
 - #33: see `docs/release-5-test-plan.md`.
 - #34: completed by removed slices 34 and 35; the closing commit must

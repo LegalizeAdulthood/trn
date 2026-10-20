@@ -14,6 +14,37 @@ target_include_directories(config-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_folder(config-test "Tests")
 gtest_discover_tests(config-test PROPERTIES LABELS trn)
 
+add_executable(pnews-test-tool pnews_test_tool.cpp)
+target_compile_features(pnews-test-tool PRIVATE cxx_std_17)
+target_folder(pnews-test-tool "Tests")
+set(pnews_cases header arguments interactive distribution inclusion loop abort eof eight_bit authorcopy saver pgp fetch)
+if(WIN32)
+    list(APPEND pnews_cases editor_failure editor_cancel artcheck_failure poster_failure nntplist_failure spell_failure pager_failure pgp_failure saver_failure missing_tool email_copy moderated poster_reply)
+endif()
+foreach(case IN LISTS pnews_cases)
+    add_test(NAME PnewsTest.${case}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTRN_TEST_PNEWS=${TRN_GENERATED_PNEWS_FILE}"
+            "-DTRN_TEST_PNEWS_TOOL=$<TARGET_FILE:pnews-test-tool>"
+            "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/pnews-${case}"
+            "-DTRN_TEST_CASE=${case}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_pnews.cmake")
+    set_tests_properties(PnewsTest.${case} PROPERTIES LABELS trn TIMEOUT 30)
+endforeach()
+
+if(WIN32 AND POSTING_HOSTNAME MATCHES "^[A-Za-z0-9.-]+\\.[A-Za-z0-9.-]+$")
+    add_test(NAME PnewsTest.nativeInews
+        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_pnews_nntp.ps1"
+            -Helper "${TRN_GENERATED_PNEWS_FILE}"
+            -Tool "$<TARGET_FILE:pnews-test-tool>"
+            -Inews "$<TARGET_FILE:inews>" -Artcheck "$<TARGET_FILE:trn-artchk>"
+            -Cmake "${CMAKE_COMMAND}" -Fixture "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_pnews.cmake"
+            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/pnews-native-inews")
+    set_tests_properties(PnewsTest.nativeInews PROPERTIES LABELS trn TIMEOUT 60)
+endif()
+
 foreach(case IN ITEMS full body first_byte past_end empty append spaces)
     add_test(NAME NormSaverTest.${case}
         COMMAND "${CMAKE_COMMAND}"
@@ -493,6 +524,7 @@ add_test(NAME ConfigCMakeTest.installLayoutContainsRuntimeHelpers
         "-DTRN_TEST_PNEWS_HEADER_NAME=${TRN_INSTALL_PNEWS_HEADER_NAME}"
         "-DTRN_TEST_RNMAIL_HELPER_NAME=${TRN_INSTALL_RNMAIL_HELPER_NAME}"
         "-DTRN_TEST_SPELLER_HELPER_NAME=${TRN_INSTALL_SPELLER_HELPER_NAME}"
+        "-DTRN_TEST_PNEWS_TOOL=$<TARGET_FILE:pnews-test-tool>"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_install_layout.cmake")
 set_tests_properties(
     ConfigCMakeTest.installLayoutContainsRuntimeHelpers
@@ -515,6 +547,7 @@ add_test(NAME ConfigCMakeTest.packageZipContainsInstallContents
         "-DTRN_TEST_PNEWS_HEADER_NAME=${TRN_INSTALL_PNEWS_HEADER_NAME}"
         "-DTRN_TEST_RNMAIL_HELPER_NAME=${TRN_INSTALL_RNMAIL_HELPER_NAME}"
         "-DTRN_TEST_SPELLER_HELPER_NAME=${TRN_INSTALL_SPELLER_HELPER_NAME}"
+        "-DTRN_TEST_PNEWS_TOOL=$<TARGET_FILE:pnews-test-tool>"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_package_layout.cmake")
 set_tests_properties(
     ConfigCMakeTest.packageZipContainsInstallContents

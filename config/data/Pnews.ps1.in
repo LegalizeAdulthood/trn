@@ -1,0 +1,317 @@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
+#requires -Version 5.1
+
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+$byteEncoding = [Text.Encoding]::GetEncoding(28591)
+$utf8 = [Text.UTF8Encoding]::new($false)
+$draft = $null
+$work = $null
+$userHome = $null
+$draftCopy = $null
+$accepted = $false
+$status = 0
+
+function Read-PnewsBytes([string] $Path) {
+    return $byteEncoding.GetString([IO.File]::ReadAllBytes($Path))
+}
+
+function Write-PnewsBytes([string] $Path, [string] $Text) {
+    [IO.File]::WriteAllBytes($Path, $byteEncoding.GetBytes($Text))
+}
+
+function Add-PnewsBytes([string] $Path, [byte[]] $Bytes) {
+    $stream = [IO.File]::Open($Path, 'Append', 'Write', 'Read')
+    try { $stream.Write($Bytes, 0, $Bytes.Length) }
+    finally { $stream.Dispose() }
+}
+
+function Read-PnewsAnswer([string] $Prompt) {
+    [Console]::Write($Prompt)
+    $answer = [Console]::ReadLine()
+    if ($null -eq $answer) { throw [OperationCanceledException]::new('End of input; draft retained.') }
+    return $answer
+}
+
+function Split-PnewsMessage([string] $Text) {
+    $separator = [regex]::Match($Text, '\r?\n[ \t]*\r?\n')
+    if (!$separator.Success) { throw 'Separate the article headers and body with a blank line.' }
+    return @($Text.Substring(0, $separator.Index), $Text.Substring($separator.Index + $separator.Length))
+}
+
+function Get-PnewsHeader([string] $Headers, [string] $Name) {
+    $match = [regex]::Match($Headers, '(?im)^' + [regex]::Escape($Name) + ':[ \t]*(.*(?:\r?\n[ \t].*)*)')
+    if (!$match.Success) { return '' }
+    return [regex]::Replace($match.Groups[1].Value, '\r?\n[ \t]+', ' ').Trim()
+}
+
+function New-PnewsHeader($Words) {
+    if ($Words.Count -gt 0) { $groups = $Words[0] }
+    else { $groups = 'h' }
+    while ($groups -eq 'h' -or !$groups.Trim()) {
+        $groups = Read-PnewsAnswer 'Newsgroup(s): '
+        if ($groups -eq 'h') { Write-Output 'Separate multiple newsgroups with commas.' }
+    }
+    $groups = [regex]::Replace($groups.Trim(), '[, ]+', ',')
+    $distribution = ''
+    if ($groups.Contains('.')) {
+        $default = ''
+        if ($groups.StartsWith('ddn.')) { $default = 'inet' }
+        $known = @('@TRN_PS_LOCAL_DIST@', '@TRN_PS_ORGANIZATION_DIST@', '@TRN_PS_CITY_DIST@',
+            '@TRN_PS_STATE_DIST@', '@TRN_PS_MULTISTATE_DIST@', '@TRN_PS_COUNTRY_DIST@', '@TRN_PS_CONTINENT_DIST@', 'inet')
+        $distributionFile = Join-Path $newsLibrary 'distributions'
+        if ([IO.File]::Exists($distributionFile)) {
+            $distributionText = [IO.File]::ReadAllText($distributionFile)
+            Write-Output $distributionText
+            $known += @([regex]::Matches($distributionText, '(?m)^\S+') | ForEach-Object { $_.Value })
+        }
+        else { Write-Output ('Distribution prefixes: ' + (($known | Where-Object { $_ -ne 'none' }) -join ', ')) }
+        while ($true) {
+            $distribution = Read-PnewsAnswer "Distribution ($default): "
+            if (!$distribution) { $distribution = $default }
+            if ($distribution -eq 'h') { Write-Output 'Use a local prefix, or an empty value for everywhere.'; continue }
+            if ($distribution -match '^(world|comp|news|sci|rec|misc|soc|talk|alt)') { $distribution = '' }
+            if (!$distribution -or $distribution -eq $default -or $known -contains $distribution) { break }
+            Write-Output 'Unrecognized distribution prefix; Return to use anyway, or h for help.'
+            $default = $distribution
+        }
+    }
+    $subject = ($Words | Select-Object -Skip 1) -join ' '
+    while (!$subject.Trim() -or $subject -eq 'h') {
+        $subject = Read-PnewsAnswer 'Title/Subject: '
+        if ($subject -eq 'h') { Write-Output 'Give the article an informative, nonempty subject.' }
+    }
+    $organization = Get-TrnSetting NEWSORG (Get-TrnSetting ORGANIZATION '@TRN_PS_POSTING_ORG_NAME@')
+    if ([IO.File]::Exists($organization)) { $organization = [IO.File]::ReadAllText($organization).Trim() }
+    $reply = Get-TrnSetting REPLYTO ''
+    foreach ($value in @($groups, $subject, $organization, $reply, $distribution)) {
+        if ($value -match '[\r\n]') { throw 'Header values must occupy one line.' }
+    }
+    $text = "Newsgroups: $groups`nSubject: $subject`nSummary: `n"
+    if ($reply) { $text += "Reply-To: $reply`n" }
+    $text += "Followup-To: `nDistribution: $distribution`nOrganization: $organization`nKeywords: `nCc: `n`n"
+    [IO.File]::WriteAllBytes($draft, $utf8.GetBytes($text))
+}
+
+function Test-PnewsEmail($Message) {
+    $groups = (Get-PnewsHeader $Message[0] Newsgroups) -split ','
+    $email = (Get-PnewsHeader $Message[0] Cc).Length -gt 0
+    foreach ($group in $groups) {
+        if ($group.Trim() -eq 'poster' -or $group.Contains('@')) { $email = $true }
+        if (!(Get-PnewsHeader $Message[0] Approved) -and [IO.File]::Exists($active)) {
+            foreach ($line in [IO.File]::ReadAllLines($active)) {
+                $fields = $line -split '\s+'
+                if ($fields.Count -ge 4 -and $fields[0] -eq $group.Trim() -and $fields[3] -eq 'm') { $email = $true }
+            }
+        }
+    }
+    if ($email) { throw 'Windows email submission is not configured; the draft remains recoverable.' }
+}
+
+function Write-PnewsSubmission([string] $Path) {
+    $message = Split-PnewsMessage (Read-PnewsBytes $draft)
+    Test-PnewsEmail $message
+    $groups = Get-PnewsHeader $message[0] Newsgroups
+    if (!$groups -or $groups -match '\s|,,|^,|,$') { throw 'Malformed Newsgroups line.' }
+    if (!(Get-PnewsHeader $message[0] Subject)) { throw 'A Subject header is required.' }
+    $headers = [Collections.Generic.List[string]]::new()
+    foreach ($field in [regex]::Split($message[0], '\r?\n(?![ \t])')) {
+        if ($field -match '^(Cc|X-ORIGINAL-NEWSGROUPS|X-Newsreader|X-Newsposter|User-Agent|Mime-Version|Content-Type|Content-Transfer-Encoding):') { continue }
+        if ($field -match '^[-A-Za-z0-9]+:[ \t]*$' -or $field -match '^Distribution:[ \t]*world') { continue }
+        if ($field -match '^Subject:') { $field = [regex]::Replace($field, 'Re: +', 'Re: ') }
+        $headers.Add($field)
+    }
+    $transfer = '7bit'
+    foreach ($character in $message[1].ToCharArray()) {
+        if ([int] $character -gt 127) { $transfer = '8bit'; break }
+    }
+    $headers.Add('User-Agent: trn/@PROJECT_VERSION@')
+    $headers.Add('Mime-Version: 1.0')
+    $headers.Add('Content-Type: text/plain; charset="' + $charset + '"')
+    $headers.Add('Content-Transfer-Encoding: ' + $transfer)
+    Write-PnewsBytes $Path (($headers -join "`n") + "`n`n" + $message[1])
+}
+
+function Invoke-PnewsPgp([string] $Action, [string] $Identity) {
+    $message = Split-PnewsMessage (Read-PnewsBytes $draft)
+    $signed = $message[1] -match '-----BEGIN PGP (SIG|SIGNED)'
+    $output = Join-Path $work 'pgp-output'
+    if ($Action -eq 'test') {
+        if ($signed) { Invoke-TrnTool $pgp @('+batchmode', '+verbose=0', '-o', $output, $draft) }
+        else { Write-Output 'Article is not PGP-signed.' }
+        return
+    }
+    if (($Action -eq 'sign' -and $signed) -or ($Action -eq 'unsign' -and !$signed)) {
+        Write-Output 'Article was not changed.'
+        return
+    }
+    $bodyPath = Join-Path $work 'pgp-input'
+    Write-PnewsBytes $bodyPath $message[1]
+    $pgpArguments = @('+verbose=0', '-f')
+    if ($Action -eq 'sign') {
+        $pgpArguments = @('+verbose=0', '-fast')
+        if ($Identity) { $pgpArguments = @('-u', $Identity) + $pgpArguments }
+    }
+    Invoke-TrnTool $pgp $pgpArguments $bodyPath $output
+    if (([IO.FileInfo] $output).Length -eq 0) { throw 'PGP returned an empty result.' }
+    Write-PnewsBytes $draft ($message[0] + "`n`n" + (Read-PnewsBytes $output))
+}
+
+try {
+    $privateLibrary = Join-Path $PSScriptRoot '@TRN_PS_PRIVATE_RELATIVE@'
+    if ([IO.File]::Exists((Join-Path $PSScriptRoot 'trn-tools.ps1'))) { $privateLibrary = $PSScriptRoot }
+    . (Join-Path $privateLibrary 'trn-tools.ps1')
+    $userHome = Get-TrnSetting HOME (Get-TrnSetting LOGDIR ([Environment]::GetFolderPath('UserProfile')))
+    $dotDirectory = Get-TrnSetting DOTDIR $userHome
+    [void] [IO.Directory]::CreateDirectory($dotDirectory)
+    $draftCopy = Join-Path $dotDirectory '.article'
+    $draft = $draftCopy + '.' + [Guid]::NewGuid()
+    $work = Join-Path ([IO.Path]::GetTempPath()) ('trn-pnews-' + [Guid]::NewGuid())
+    [void] [IO.Directory]::CreateDirectory($work)
+    $newsLibrary = Get-TrnSetting NEWSLIB '@TRN_PS_NEWS_LIB@'
+    $active = Get-TrnSetting NEWSACTIVE '@TRN_PS_ACTIVE@'
+    $descriptions = Get-TrnSetting NEWSDESCRIPTIONS '@TRN_PS_GROUP_DESC@'
+    if (!$active -or $active -eq 'none') { $active = Join-Path $work 'active' }
+    if (!$descriptions -or $descriptions -eq 'none') { $descriptions = Join-Path $work 'newsgroups' }
+    $editor = Get-TrnSetting VISUAL (Get-TrnSetting EDITOR '@TRN_PS_DEFAULT_EDITOR@')
+    $pager = Get-TrnSetting PAGER '@TRN_PS_PAGER@'
+    $speller = Get-TrnSetting SPELLER (Join-Path $privateLibrary 'Speller.cmd')
+    $saver = Get-TrnSetting POSTSAVER (Join-Path $privateLibrary 'mbox.saver.cmd')
+    $pgp = Get-TrnSetting PGPCOMMAND 'pgp'
+    $inewsDefault = '@TRN_PS_USE_INEWS@'
+    if (@TRN_PNEWS_BUNDLED_INEWS@ -eq 1) { $inewsDefault = Join-Path $PSScriptRoot 'inews.exe' }
+    $inews = Get-TrnSetting INEWS $inewsDefault
+    $artcheck = Get-TrnSetting ARTCHECK (Join-Path $PSScriptRoot 'trn-artchk.exe')
+    $nntplist = Get-TrnSetting NNTPLIST (Join-Path $PSScriptRoot 'nntplist.exe')
+    $charset = 'utf-8'
+    foreach ($setting in @('LC_CTYPE', 'LC_ALL', 'LANG')) {
+        $locale = Get-TrnSetting $setting ''
+        if ($locale -match '\.(.+)') { $charset = $Matches[1].ToLowerInvariant(); break }
+    }
+    $oldarticle = ''
+    $headerfile = ''
+    if ($args.Count -gt 0 -and $args[0] -eq '-h') {
+        if ($args.Count -lt 2 -or $args.Count -gt 3) { throw 'Usage: Pnews -h headerfile [oldarticle]' }
+        $headerfile = [IO.Path]::GetFullPath($args[1])
+        [IO.File]::Copy($headerfile, $draft)
+        if ($args.Count -eq 3) { $oldarticle = $args[2] }
+    }
+    elseif ($args.Count -gt 0 -and $args[0].StartsWith('-')) { throw 'Usage: Pnews [newsgroups title] | -h headerfile [oldarticle]' }
+    else { New-PnewsHeader $args }
+    $fast = (Get-TrnSetting FAST_PNEWS '') -match '^y'
+    if (!$fast) {
+        Write-Output 'This article may be distributed widely.'
+        $answer = Read-PnewsAnswer 'Are you absolutely sure that you want to do this? [ny] '
+        if ($answer -notmatch '^[yf]') { throw [OperationCanceledException]::new('Posting cancelled; draft retained.') }
+    }
+    $include = ''
+    if (!$fast) {
+        do {
+            $include = Read-PnewsAnswer 'Prepared file to include [none]: '
+            if ($include -eq 'h') { Write-Output 'Enter a prepared body filename, or Return to edit.' }
+        } while ($include -eq 'h')
+    }
+    $state = 'edit'
+    if ($include) { Add-PnewsBytes $draft ([IO.File]::ReadAllBytes($include)); $state = 'check' }
+    else { Add-PnewsBytes $draft ([byte[]] @(10)) }
+    $signature = Get-TrnSetting NEWSSIGNATURE (Join-Path $dotDirectory '.news_sig')
+    if ([IO.File]::Exists($signature)) {
+        $lines = @([regex]::Matches((Read-PnewsBytes $signature), '[^\n]*(?:\n|$)') | Where-Object { $_.Length -gt 0 } | Select-Object -First 4)
+        Add-PnewsBytes $draft ($byteEncoding.GetBytes("-- `n" + (($lines | ForEach-Object { $_.Value }) -join '')))
+    }
+    $speed = Get-TrnSetting NETSPEED ''
+    if ($speed -match '^([1-9][0-9]+|[5-9]|f)') {
+        if (![IO.File]::Exists($descriptions)) { Invoke-TrnTool $nntplist @('-o', $descriptions, 'newsgroups') }
+        if (![IO.File]::Exists($active)) { Invoke-TrnTool $nntplist @('-o', $active, 'active') }
+    }
+    while (!$accepted) {
+        try {
+            switch ($state) {
+                'edit' {
+                    if (!$editor) { $editor = Read-PnewsAnswer 'Editor: ' }
+                    $editorArguments = @($draft)
+                    if ($oldarticle) { $editorArguments += $oldarticle }
+                    Invoke-TrnTool $editor $editorArguments
+                    [IO.File]::WriteAllBytes((Join-Path $dotDirectory '.pnewsexpert'), [byte[]] @())
+                    $state = 'check'
+                }
+                'check' {
+                    Invoke-TrnTool $artcheck @($draft, '79', $descriptions, $active)
+                    $state = 'ask'
+                }
+                'ask' {
+                    $answer = Read-PnewsAnswer 'Check spelling, PGP, Send, Edit, List, or Abort? '
+                    switch -Regex ($answer) {
+                        '^[aAqQ]' { throw [OperationCanceledException]::new('Article aborted; draft retained.') }
+                        '^[eE](?:\s+(.*))?$' {
+                            if ($Matches[1]) { $editor = $Matches[1] }
+                            $state = 'edit'; break
+                        }
+                        '^[lL]' { Invoke-TrnTool $pager @($draft); break }
+                        '^[cCiI]|^[sS][pP]' { Invoke-TrnTool $speller @($draft); $state = 'check'; break }
+                        '^[pP](.*)$' {
+                            $action = $Matches[1].Trim()
+                            if (!$action) { $action = Read-PnewsAnswer 'Sign [user], Unsign, Test, or Return? ' }
+                            if ($action -match '^[sS](?:ign)?(?:\s+(.*))?$') { Invoke-PnewsPgp sign $Matches[1] }
+                            elseif ($action -match '^[uU]') { Invoke-PnewsPgp unsign '' }
+                            elseif ($action -match '^[tT]') { Invoke-PnewsPgp test '' }
+                            break
+                        }
+                        '^[sS]' {
+                            $submission = Join-Path $work 'submission'
+                            Write-PnewsSubmission $submission
+                            if ($headerfile -and (Get-TrnSetting TRN_VERSION '') -match '^4\.' -and
+                                (Get-TrnSetting NNTPSERVER '') -notmatch '^(local)?$') {
+                                [IO.File]::Copy($submission, $headerfile, $true)
+                                $status = 42
+                            }
+                            else {
+                                $env:NNTPFDS = ''
+                                Invoke-TrnTool $inews @('-h') $submission
+                                $status = 0
+                            }
+                            $accepted = $true
+                            break
+                        }
+                        '^[hH]' { Write-Output 'c checks spelling; s sends; e edits; l lists; a retains the draft and exits.'; break }
+                    }
+                }
+            }
+        }
+        catch [OperationCanceledException] { throw }
+        catch {
+            if ($state -ne 'ask') { throw }
+            [Console]::Error.WriteLine('Pnews: {0}', $_.Exception.Message)
+            $status = 1
+            $state = 'ask'
+        }
+    }
+    $authorcopy = Get-TrnSetting AUTHORCOPY 'none'
+    if ($authorcopy -and $authorcopy -ne 'none') {
+        $login = Get-TrnSetting USER (Get-TrnSetting LOGNAME $env:USERNAME)
+        $date = [DateTime]::Now.ToString('ddd MMM d HH:mm:ss yyyy', [Globalization.CultureInfo]::InvariantCulture)
+        Invoke-TrnTool $saver @($draft, '.', '.', '0', '0', 'Pnews', $authorcopy, "From $login $date")
+    }
+}
+catch [OperationCanceledException] { [Console]::Error.WriteLine('Pnews: {0}', $_.Exception.Message) }
+catch {
+    [Console]::Error.WriteLine('Pnews: {0}', $_.Exception.Message)
+    $status = 1
+}
+finally {
+    if ($draft -and [IO.File]::Exists($draft)) {
+        try {
+            [IO.File]::Copy($draft, $draftCopy, $true)
+            if (!$accepted -or $status -eq 1) {
+                $dead = Join-Path $userHome 'dead.article'
+                Add-PnewsBytes $dead ([IO.File]::ReadAllBytes($draft))
+                [Console]::Error.WriteLine('Pnews: article appended to {0}', $dead)
+            }
+            [IO.File]::Delete($draft)
+        }
+        catch { [Console]::Error.WriteLine('Pnews: draft retained at {0}: {1}', $draft, $_.Exception.Message); $status = 1 }
+    }
+    if ($work -and [IO.Directory]::Exists($work)) { [IO.Directory]::Delete($work, $true) }
+}
+exit $status

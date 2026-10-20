@@ -120,3 +120,9 @@ check_mbox_saver("${private_lib_dir}/${TRN_TEST_MBOX_SAVER_HELPER_NAME}"
 include("${CMAKE_CURRENT_LIST_DIR}/test_speller.cmake")
 check_speller("${private_lib_dir}/${TRN_TEST_SPELLER_HELPER_NAME}"
     "${TRN_TEST_PACKAGE_DIR}/speller-check" correct)
+
+if(WIN32)
+    include("${CMAKE_CURRENT_LIST_DIR}/test_pnews.cmake")
+    check_pnews("${bin_dir}/${TRN_TEST_PNEWS_HELPER_NAME}" "${TRN_TEST_PNEWS_TOOL}"
+        "${TRN_TEST_PACKAGE_DIR}/pnews-check" authorcopy)
+endif()

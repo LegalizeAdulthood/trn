@@ -238,8 +238,8 @@ Untested: `PREF_SHELL`.
 
 - `USE_INEWS`, `CALL_INEWS`, `NEWS_POSTER`, and `MAIL_POSTER`: posting
   helper command defaults.  On Windows, `NEWS_POSTER` and `MAIL_POSTER`
-  default to generated `.cmd` helpers that report unsupported posting and
-  mail workflows for 5.0.
+  select generated `.cmd` helpers.  `Pnews.cmd` supports NNTP posting;
+  `Rnmail.cmd` reports that email delivery is unsupported until its port.
 - `MAIL_HEADER`, `NEWS_HEADER`, `CANCEL_HEADER`, and `SUPERSEDE_HEADER`:
   posting header templates.
 - `YOU_SAID`, `ATTRIBUTION`, `FORWARD_POSTER`, `FORWARD_HEADER`,
@@ -339,10 +339,28 @@ are evaluated.  `QUOTECHARS` is an anchored regular expression: .NET on
 Windows, POSIX basic on Unix.  Common patterns such as `>` and `[>|:]`
 work on both.  An unset or empty value checks quoted lines too.
 
-`Pnews.cmd` and `Rnmail.cmd` still fail with explicit unsupported-feature
-diagnostics until native replacements exist.
-`Pnews.header` is not installed on Windows because the `Pnews`
-replacement owns that policy.
+`Pnews.cmd` invokes its adjacent `Pnews.ps1` with PowerShell 5.1.
+It incorporates header generation, distribution prompts, prepared bodies,
+signatures, editing, validation, spelling, optional PGP, and draft
+recovery.  It submits the article to the adjacent C++ `inews.exe -h`
+through a byte stream.  Set a qualified `POSTING_HOSTNAME`, or provide
+the configured posting-hostname site file, before using native `inews`.
+`USE_INEWS` still selects a custom submission command at configure time.
+
+Windows `INEWS`, `ARTCHECK`, `NNTPLIST`, and `SPELLER` environment settings
+override the corresponding tool commands.  Editor, pager, and PGP
+commands accept a path or quoted arguments; streamed tools must be native
+executables or PowerShell scripts.  `NEWSLIB` selects the distribution
+library.  `AUTHORCOPY` uses installed `mbox.saver.cmd`, with `POSTSAVER`
+as an override.  Failures retain `.article` and `dead.article`; see
+`man/Pnews.1` for the command and recovery contracts.
+
+Windows email copies and unapproved moderated posts retain their drafts
+with a clear diagnostic until the email backend is implemented.
+`Rnmail.cmd` still reports that sending email is unsupported.
+Unix packages retain `Pnews` and `Pnews.header`; Windows folds the
+scriptlet's behavior into the PowerShell composer.  Shared native tool
+support, `trn-tools.ps1`, is installed in the private library.
 
 `strn.1` was a stale historical stub and is retired.  `default_topic` is
 a source-distribution sample for sites that want a default scan-mode topic

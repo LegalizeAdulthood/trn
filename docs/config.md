@@ -295,12 +295,19 @@ pieces.
 Active generated helpers:
 
 - `Pnews.SH`: generated from `config/data/Pnews.in` on POSIX.  Windows
-  generates `Pnews.cmd`, an unsupported diagnostic helper for 5.0, and
-  does not install a separate `Pnews.header` file because that policy is
-  folded into the Windows `Pnews` replacement strategy.  Required tests:
-  generated POSIX `Pnews` and `Pnews.header` exist and contain no
-  metaconfig wrapper, obsolete substitutions, or unsupported lookup
-  variables; Windows `Pnews.cmd` reports that posting is unsupported.
+  generates `Pnews.cmd` and `Pnews.ps1`, with header generation included.
+  Native tool support is installed as private `trn-tools.ps1`.  The
+  composer supports all three invocation modes, distribution, inclusion,
+  signatures, editing, validation, spelling, PGP, and author copies.
+  The default submits bytes to adjacent `inews.exe -h`; configured
+  `USE_INEWS` and runtime native-tool overrides remain available.
+  Windows `NEWS_POSTER` quotes the header filename; its generated C++
+  string preserves those quotes.  Tests cover native tool arguments,
+  MIME and User-Agent headers, child failures, draft recovery, shared
+  Unix workflows, installation, and packaging.  A configured posting
+  hostname enables the real `inews` local-NNTP integration fixture.
+  Windows email-dependent workflows fail before posting and retain
+  drafts until the `Rnmail` and email-backend slice is complete.
 - `Speller.SH`: generated from `config/data/Speller.in` on POSIX.
   Windows generates `Speller.cmd` and `Speller.ps1` for PowerShell 5.1.
   Both accept multiple drafts and runtime `ISPELL_PROGRAM`,

@@ -1,6 +1,7 @@
 .\" Pnews.1
 .\"
 .\" This software is copyrighted as detailed in the LICENSE file.
+.\" Copyright (c) 2026, Richard Thomson
 .\"
 .de Sh
 .br
@@ -84,12 +85,37 @@ ASCII-only bodies are declared as 7bit; bodies containing non-ASCII bytes
 are declared as 8bit.
 .I Pnews
 does not otherwise recode the body.
+.PP
+On Windows, use Pnews.cmd.  Its adjacent Pnews.ps1 runs with Windows
+PowerShell 5.1 and incorporates the header-generation workflow.
+The installed inews.exe receives the completed article on standard input
+with the -h option.  Configure a qualified POSTING_HOSTNAME or the
+posting-hostname site file before posting, as required by inews.
+Windows does not require a Unix shell or Unix text utilities.
+.PP
+The Windows composer retains a draft in $DOTDIR/.article.
+Abort, end of input, and failed operations also retain it in
+$HOME/dead.article.  Child-tool failures return a nonzero status;
+a failed submission can be edited and retried before exiting.
+The original file supplied with -h is preserved, except for the legacy
+trn 4 connection-sharing handoff, which returns status 42.
+.PP
+Windows mail copies, replies to the special group poster, and unapproved
+posts to groups marked moderated require the email backend completed by
+the Rnmail port.  Until that backend is available, these requests fail
+with a diagnostic and retain the draft before any NNTP submission.
 .SH ENVIRONMENT
 .IP AUTHORCOPY 8
 If defined, contains the name of a file to which the finished article will
 be appended.
 .Sp
 Default: article not saved
+.IP POSTSAVER 8
+Override the author-copy saver command.  The Windows default is the
+installed mbox.saver.cmd.  Arguments are the draft path, two dots,
+article number zero, offset zero, Pnews, the AUTHORCOPY path, and a
+complete From envelope line.  A saver failure after posting is reported
+without resubmitting the article.
 .IP DOTDIR 8
 Where to find your dot files, if they aren't in your home directory.
 This is primarily for accounts which are shared by more than one person.
@@ -99,6 +125,34 @@ Default: $HOME
 The editor you want to use, if VISUAL is undefined.
 .Sp
 Default: whatever your news administrator installed, usually vi.
+.IP FAST_PNEWS 8
+A value beginning with y skips the distribution confirmation and
+prepared-file prompt and enters the editor directly.
+.IP PAGER 8
+The command used by List.  On Windows it must be a native command.
+.IP PGPCOMMAND 8
+The optional PGP command.  Use Sign, Unsign, or Test from the PGP menu;
+the command receives the existing PGP command-line options.
+.IP INEWS 8
+On Windows, override the submission command.  The installed inews.exe
+is the default unless USE_INEWS selected a custom command at configure
+time.  Pnews appends -h and streams the message without recoding it.
+.IP ARTCHECK 8
+On Windows, override the installed trn-artchk.exe validation command.
+.IP NNTPLIST 8
+On Windows, override the installed nntplist.exe metadata command.
+.IP SPELLER 8
+On Windows, override the installed Speller.cmd command.
+.IP NEWSLIB 8
+On Windows, override the configured news library used for distribution
+prefixes.  NEWSACTIVE and NEWSDESCRIPTIONS select metadata files;
+NETSPEED controls fetching missing files with nntplist.
+.PP
+Windows tool settings accept a path or a command with whitespace-separated
+arguments.  Quote an entire argument with single or double quotes when it
+contains spaces.  Shell expressions and redirections are not evaluated.
+Tools receiving streamed input or output must be native executables or
+PowerShell scripts; console tools can also use batch launchers.
 .IP HOME 8
 Your home directory.
 .Sp

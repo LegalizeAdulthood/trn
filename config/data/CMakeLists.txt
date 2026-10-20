@@ -38,6 +38,8 @@ configure_file(newsnews.in newsnews @ONLY)
 set(trn_norm_saver_support_output "")
 set(trn_mbox_saver_support_output "")
 set(trn_speller_support_output "")
+set(trn_pnews_support_output "")
+set(trn_tools_support_output "")
 
 if(WIN32)
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver.cmd")
@@ -45,6 +47,8 @@ if(WIN32)
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver.cmd")
     set(trn_norm_saver_support_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver.ps1")
     set(trn_pnews_output "${CMAKE_CURRENT_BINARY_DIR}/Pnews.cmd")
+    set(trn_pnews_support_output "${CMAKE_CURRENT_BINARY_DIR}/Pnews.ps1")
+    set(trn_tools_support_output "${CMAKE_CURRENT_BINARY_DIR}/trn-tools.ps1")
     set(trn_pnews_header_output "")
     set(trn_rnmail_output "${CMAKE_CURRENT_BINARY_DIR}/Rnmail.cmd")
     set(trn_speller_output "${CMAKE_CURRENT_BINARY_DIR}/Speller.cmd")
@@ -55,6 +59,8 @@ if(WIN32)
         norm.saver.cmd.in
         norm.saver.ps1.in
         Pnews.cmd.in
+        Pnews.ps1.in
+        trn-tools.ps1.in
         Rnmail.cmd.in
         Speller.cmd.in
         Speller.ps1.in)
@@ -77,6 +83,17 @@ if(WIN32)
         string(REPLACE "'" "''" "TRN_PS_${setting}" "${${setting}}")
     endforeach()
     configure_file(Speller.ps1.in "${trn_speller_support_output}" @ONLY)
+    foreach(setting IN ITEMS NEWS_LIB ACTIVE GROUP_DESC DEFAULT_EDITOR PAGER USE_INEWS POSTING_ORG_NAME
+            LOCAL_DIST ORGANIZATION_DIST CITY_DIST STATE_DIST MULTISTATE_DIST COUNTRY_DIST CONTINENT_DIST)
+        string(REPLACE "'" "''" "TRN_PS_${setting}" "${${setting}}")
+    endforeach()
+    file(RELATIVE_PATH TRN_PS_PRIVATE_RELATIVE "/${CMAKE_INSTALL_BINDIR}" "/${trn_private_lib_install_dir}")
+    set(TRN_PNEWS_BUNDLED_INEWS 0)
+    if(USE_INEWS STREQUAL "${BIN_DIR}/inews" OR USE_INEWS STREQUAL "${BIN_DIR}/inews.exe")
+        set(TRN_PNEWS_BUNDLED_INEWS 1)
+    endif()
+    configure_file(Pnews.ps1.in "${trn_pnews_support_output}" @ONLY)
+    configure_file(trn-tools.ps1.in "${trn_tools_support_output}" COPYONLY)
 else()
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver")
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver")
@@ -138,6 +155,8 @@ add_library(data INTERFACE
     ${trn_norm_saver_support_output}
     ${trn_mbox_saver_support_output}
     ${trn_speller_support_output}
+    ${trn_pnews_support_output}
+    ${trn_tools_support_output}
     ${trn_public_helper_outputs}
     ${trn_pnews_header_output}
 )
@@ -147,6 +166,9 @@ source_group("Data Files" REGULAR_EXPRESSION "${CMAKE_CURRENT_BINARY_DIR}/.*")
 target_folder(data "Libraries")
 
 install(PROGRAMS ${trn_public_helper_outputs} DESTINATION "${CMAKE_INSTALL_BINDIR}")
+if(trn_pnews_support_output)
+    install(FILES "${trn_pnews_support_output}" DESTINATION "${CMAKE_INSTALL_BINDIR}")
+endif()
 install(PROGRAMS ${trn_private_helper_outputs} DESTINATION "${trn_private_lib_install_dir}")
 set(trn_private_data_outputs
     "${CMAKE_CURRENT_BINARY_DIR}/INIT"
@@ -161,6 +183,9 @@ if(trn_mbox_saver_support_output)
 endif()
 if(trn_speller_support_output)
     list(APPEND trn_private_data_outputs "${trn_speller_support_output}")
+endif()
+if(trn_tools_support_output)
+    list(APPEND trn_private_data_outputs "${trn_tools_support_output}")
 endif()
 if(trn_pnews_header_output)
     list(APPEND trn_private_data_outputs "${trn_pnews_header_output}")

@@ -1,0 +1,81 @@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
+#requires -Version 5.1
+
+function Get-TrnSetting([string] $Name, [string] $Default) {
+    $value = [Environment]::GetEnvironmentVariable($Name)
+    if ($null -eq $value) { return $Default }
+    return $value
+}
+
+function Split-TrnArguments([string] $Text) {
+    $pattern = [regex]::new('\G\s*(?:"([^"]*)"|''([^'']*)''|([^\s"'']+))')
+    $position = 0
+    while ($position -lt $Text.Length) {
+        if ($Text.Substring($position).Trim().Length -eq 0) { break }
+        $match = $pattern.Match($Text, $position)
+        if (!$match.Success) { throw 'Unmatched quote in tool command.' }
+        foreach ($group in 1..3) {
+            if ($match.Groups[$group].Success) { $match.Groups[$group].Value; break }
+        }
+        $position += $match.Length
+    }
+}
+
+function ConvertTo-TrnArgument([string] $Argument) {
+    $quoted = [regex]::Replace($Argument, '(\\*)"', '$1$1\"')
+    return '"' + [regex]::Replace($quoted, '(\\+)$', '$1$1') + '"'
+}
+
+# Console tools inherit the terminal. Streamed tools receive bytes directly,
+# without PowerShell's text pipeline or its implicit encoding conversions.
+function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
+    [string] $InputPath = '', [string] $OutputPath = '') {
+    if ([IO.File]::Exists($Command)) { $parts = @($Command) }
+    else { $parts = @(Split-TrnArguments $Command) }
+    if ($parts.Count -eq 0) { throw 'No tool configured.' }
+    $program = $parts[0]
+    $toolArguments = @($parts | Select-Object -Skip 1) + $Arguments
+    $global:LASTEXITCODE = 0
+    if (!$InputPath -and !$OutputPath) {
+        & $program @toolArguments
+        if ($LASTEXITCODE -ne 0) { throw "$program exited with status $LASTEXITCODE." }
+        return
+    }
+    if ([IO.Path]::GetExtension($program) -ieq '.ps1') {
+        $toolArguments = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $program) + $toolArguments
+        $program = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    }
+    if ([IO.Path]::GetExtension($program) -imatch '^\.(cmd|bat)$') {
+        throw 'Streamed tools must be native executables or PowerShell scripts.'
+    }
+    $process = [Diagnostics.Process]::new()
+    $source = $null
+    $destination = $null
+    try {
+        $process.StartInfo.FileName = $program
+        $process.StartInfo.Arguments = (@($toolArguments | ForEach-Object { ConvertTo-TrnArgument $_ }) -join ' ')
+        $process.StartInfo.UseShellExecute = $false
+        $process.StartInfo.RedirectStandardInput = [bool] $InputPath
+        $process.StartInfo.RedirectStandardOutput = [bool] $OutputPath
+        [void] $process.Start()
+        $copy = $null
+        if ($OutputPath) {
+            $destination = [IO.File]::Create($OutputPath)
+            $copy = $process.StandardOutput.BaseStream.CopyToAsync($destination)
+        }
+        if ($InputPath) {
+            $source = [IO.File]::OpenRead($InputPath)
+            $source.CopyTo($process.StandardInput.BaseStream)
+            $process.StandardInput.Close()
+        }
+        $process.WaitForExit()
+        if ($null -ne $copy) { $copy.GetAwaiter().GetResult() }
+        if ($process.ExitCode -ne 0) { throw "$program exited with status $($process.ExitCode)." }
+    }
+    finally {
+        if ($source) { $source.Dispose() }
+        if ($destination) { $destination.Dispose() }
+        $process.Dispose()
+    }
+}

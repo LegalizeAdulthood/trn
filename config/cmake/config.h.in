@@ -552,7 +552,7 @@
 // NEWS_POSTER:
 //      command to submit a followup article
 //
-#define NEWS_POSTER "@NEWS_POSTER@"
+#define NEWS_POSTER R"trn(@NEWS_POSTER@)trn"
 
 // MAIL_POSTER:
 //      command to send a reply

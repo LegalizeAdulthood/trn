@@ -107,7 +107,9 @@ void expect_config_define(const char *filename, std::string_view name, bool defi
 
 void expect_config_string(const char *filename, std::string_view name, std::string_view value)
 {
-    const std::string expected = std::string{"#define "} + std::string{name} + " \"" + std::string{value} + "\"";
+    const std::string literal =
+        name == "NEWS_POSTER" ? " R\"trn(" + std::string{value} + ")trn\"" : " \"" + std::string{value} + "\"";
+    const std::string expected = std::string{"#define "} + std::string{name} + literal;
 
     expect_file_contains(filename, expected);
 }
@@ -534,6 +536,10 @@ TEST(GeneratedConfigTest, postingHelperPathsDefaultMatchHistoricalFallbacks)
     expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "CALL_INEWS", TRN_TEST_DEFAULT_CALL_INEWS);
     expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "NEWS_POSTER", TRN_TEST_DEFAULT_NEWS_POSTER);
     expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "MAIL_POSTER", TRN_TEST_DEFAULT_MAIL_POSTER);
+    if (windows_generated_helpers())
+    {
+        EXPECT_EQ("Pnews.cmd -h \"%h\"", std::string{TRN_TEST_DEFAULT_NEWS_POSTER});
+    }
 }
 
 TEST(GeneratedConfigTest, postingHelperPathConfiguredValuesAreEmitted)
@@ -567,7 +573,6 @@ TEST(GeneratedConfigTest, windowsHelpersReportUnsupportedFeatures)
         GTEST_SKIP() << "Windows helper diagnostics are only generated on Windows.";
     }
 
-    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Pnews is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_RNMAIL_FILE, "Rnmail is not supported on Windows");
 }
 
@@ -587,7 +592,7 @@ TEST(GeneratedConfigTest, generatedPnewsSendFilterReplacesOldUserAgent)
 {
     if (windows_generated_helpers())
     {
-        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+        GTEST_SKIP() << "Windows Pnews behavior is covered by posting workflow tests.";
     }
 
     const std::string user_agent = std::string{"user_agent=\"trn/"} + TRN_TEST_PROJECT_VERSION + "\"";
@@ -601,7 +606,7 @@ TEST(GeneratedConfigTest, generatedPnewsSendFilterAddsMimeHeaders)
 {
     if (windows_generated_helpers())
     {
-        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+        GTEST_SKIP() << "Windows Pnews behavior is covered by posting workflow tests.";
     }
 
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Mime-Version: 1.0");
@@ -613,7 +618,7 @@ TEST(GeneratedConfigTest, generatedPnewsTransferEncodingDefaultsAsciiBodiesTo7Bi
 {
     if (windows_generated_helpers())
     {
-        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+        GTEST_SKIP() << "Windows Pnews behavior is covered by posting workflow tests.";
     }
 
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "set_transfer_encoding() {");
@@ -625,7 +630,7 @@ TEST(GeneratedConfigTest, generatedPnewsTransferEncodingMarksNonAsciiBodiesAs8Bi
 {
     if (windows_generated_helpers())
     {
-        GTEST_SKIP() << "Windows Pnews is an unsupported diagnostic helper.";
+        GTEST_SKIP() << "Windows Pnews behavior is covered by posting workflow tests.";
     }
 
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "LC_ALL=C tr -d '\\000-\\177'");

@@ -317,7 +317,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!inews_wr_fp)
+    if (inews_wr_fp)
     {
         return pclose(inews_wr_fp);
     }
