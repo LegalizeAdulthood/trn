@@ -314,12 +314,13 @@ Active generated helpers:
   `mbox.saver` preserves mailbox `From` escaping; Windows
   `mbox.saver.cmd` reports that the helper is unsupported.
 - `norm_saver.SH`: generated from `config/data/norm.saver.in` on POSIX.
-  Windows generates `norm.saver.cmd`, an unsupported diagnostic helper
-  for 5.0; the normal Windows default is to leave `NORMSAVER` unset so
-  trn uses its built-in article saver.  Required tests: generated POSIX
-  `norm.saver` preserves normal-file save behavior from the requested
-  byte offset; Windows `norm.saver.cmd` reports that the helper is
-  unsupported.
+  Windows generates `norm.saver.cmd` and its `norm.saver.ps1` companion.
+  The launcher uses Windows PowerShell 5.1 with a process-local execution
+  policy and passes all seven arguments to the byte-stream saver.  Leave
+  `NORMSAVER` unset for trn's built-in saving; an explicit override must
+  supply the complete command and arguments.  Tests cover full and
+  partial saves, legacy one-based positive offsets, append separators,
+  all byte values, quoted paths, failures, and installed/package use.
 - `Rnmail.SH`: generated from `config/data/Rnmail.in` on POSIX.  Windows
   generates `Rnmail.cmd`, an unsupported diagnostic helper for 5.0.
   Required tests: generated POSIX `Rnmail` exists, contains no

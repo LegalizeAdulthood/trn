@@ -1,0 +1,43 @@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
+#requires -Version 5.1
+
+# Arguments: article, spool, group directory, article number, start byte,
+# group name, destination.  Positive positions follow tail's one-based
+# convention; zero also adds the Article marker.
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+$inputStream = $null
+$outputStream = $null
+$status = 0
+
+try {
+    if ($args.Count -ne 7) {
+        throw 'Expected: article spool group-directory article-number start-byte group-name destination'
+    }
+    $offset = 0L
+    if (-not [long]::TryParse($args[4], [Globalization.NumberStyles]::None,
+            [Globalization.CultureInfo]::InvariantCulture, [ref]$offset)) {
+        throw 'Start byte must be a nonnegative integer'
+    }
+
+    # Open the source first so an unreadable input cannot alter the destination.
+    $inputStream = [IO.File]::Open($args[0], 'Open', 'Read', 'Read')
+    $inputStream.Seek([Math]::Max(0L, $offset - 1), [IO.SeekOrigin]::Begin) | Out-Null
+    $outputStream = [IO.File]::Open($args[6], 'Append', 'Write', 'Read')
+    if ($args[4] -ceq '0') {
+        $marker = [Text.Encoding]::ASCII.GetBytes("Article: $($args[3]) of $($args[5])`n")
+        $outputStream.Write($marker, 0, $marker.Length)
+    }
+    $inputStream.CopyTo($outputStream)
+    $outputStream.WriteByte(10)
+    $outputStream.WriteByte(10)
+    $outputStream.Flush()
+} catch {
+    [Console]::Error.WriteLine('norm.saver: {0}', $_.Exception.Message)
+    $status = 1
+} finally {
+    if ($null -ne $outputStream) { $outputStream.Dispose() }
+    if ($null -ne $inputStream) { $inputStream.Dispose() }
+}
+exit $status

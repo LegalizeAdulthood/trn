@@ -568,7 +568,6 @@ TEST(GeneratedConfigTest, windowsHelpersReportUnsupportedFeatures)
     }
 
     expect_file_contains(TRN_TEST_GENERATED_MBOX_SAVER_FILE, "mbox.saver is not supported on Windows");
-    expect_file_contains(TRN_TEST_GENERATED_NORM_SAVER_FILE, "norm.saver is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Pnews is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_RNMAIL_FILE, "Rnmail is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_SPELLER_FILE, "Speller is not supported on Windows");

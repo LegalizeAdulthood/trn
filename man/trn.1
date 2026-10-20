@@ -1,6 +1,7 @@
 .\" trn.1
 .\"
 .\" This software is copyrighted as detailed in the LICENSE file.
+.\" Copyright (c) 2026, Richard Thomson
 .\"
 .\"
 .de Sh
@@ -974,9 +975,10 @@ question with either the
 or
 .B \-N
 switch.
-If the article is to be saved in mailbox format, the command to do so is
-generated from the environment variable MBOXSAVER.
-Otherwise, NORMSAVER is used.
+By default, both mailbox and normal files are saved internally.
+A nonempty MBOXSAVER command overrides mailbox saves;
+a nonempty NORMSAVER command overrides normal saves.
+These commands undergo % interpretation before execution.
 .Ip "S destination" 8
 Save to a filename or pipe using a preferred shell, such as csh.
 Which shell is used depends first on what you have the environment variable
@@ -2292,7 +2294,9 @@ Default: Rnmail \-h %h
 .Ip "MBOXSAVER (~)" 8
 The shell command to save an article in mailbox format.
 .Sp
-Default: %X/mbox.saver %A %P %c %a %B %C "%b" \e
+Default: unset; trn saves mailbox articles internally.
+.Sp
+Example command: %X/mbox.saver %A %P %c %a %B %C "%b" \e
 .br
 "From %t %`date`"
 .Sp
@@ -2383,7 +2387,22 @@ Default: " (no posting)"
 .Ip "NORMSAVER (~)" 8
 The shell command to save an article in the normal (non-mailbox) format.
 .Sp
-Default: %X/norm.saver %A %P %c %a %B %C "%b"
+Default: unset; trn saves normal articles internally.
+.Sp
+To use the optional helper, supply the complete command with all seven
+arguments. On POSIX:
+.nf
+"%X/norm.saver" "%A" "%P" "%c" %a %B "%C" "%b"
+.fi
+On Windows:
+.nf
+call "%X/norm.saver.cmd" "%A" "%P" "%c" %a %B "%C" "%b"
+.fi
+The arguments are the article file, public spool directory, newsgroup
+directory, article number, start byte, newsgroup name, and destination.
+The helper appends the article and two LF separators without converting
+article bytes. A positive start byte is a one-based position, matching
+the Unix helper; zero copies the whole article and adds an Article marker.
 .Ip ORGANIZATION 8
 Either the name of your organization, or the name of a file containing the
 name of your organization.

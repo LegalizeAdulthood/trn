@@ -456,6 +456,12 @@ The variables:
 
       Default: unset; trn saves normal articles internally.
 
+      Optional POSIX helper command:
+      "%X/norm.saver" "%A" "%P" "%c" %a %B "%C" "%b"
+      Optional Windows helper command:
+      call "%X/norm.saver.cmd" "%A" "%P" "%c" %a %B "%C" "%b"
+      Supply the whole command, including all seven arguments.
+
  ORGANIZATION
       Either the name of your organization, or the name of a file
       containing the name of your organization.  (If NEWSORG is set, it

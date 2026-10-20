@@ -14,6 +14,28 @@ target_include_directories(config-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_folder(config-test "Tests")
 gtest_discover_tests(config-test PROPERTIES LABELS trn)
 
+foreach(case IN ITEMS full body first_byte past_end empty append spaces)
+    add_test(NAME NormSaverTest.${case}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTRN_TEST_NORM_SAVER=${TRN_GENERATED_NORM_SAVER_FILE}"
+            "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/norm-saver-${case}"
+            "-DTRN_TEST_CASE=${case}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_norm_saver.cmake")
+    set_tests_properties(NormSaverTest.${case} PROPERTIES LABELS trn)
+endforeach()
+if(WIN32)
+    foreach(case IN ITEMS bytes invalid_offset arity missing_input missing_parent locked_output same_file)
+        add_test(NAME NormSaverTest.${case}
+            COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+                -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+                -File "${CMAKE_CURRENT_SOURCE_DIR}/test_norm_saver.ps1"
+                -Helper "${TRN_GENERATED_NORM_SAVER_FILE}"
+                -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/norm-saver-${case}"
+                -Case "${case}")
+        set_tests_properties(NormSaverTest.${case} PROPERTIES LABELS trn)
+    endforeach()
+endif()
+
 set(posting_host_match_segments_validation_script
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_posting_host_match_segments_validation.cmake")
 set(posting_host_match_segments_configure_script

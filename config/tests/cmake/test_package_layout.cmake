@@ -108,3 +108,7 @@ expect_exists("${man_dir}/trn.1")
 expect_exists("${man_dir}/Pnews.1")
 expect_exists("${man_dir}/Rnmail.1")
 expect_not_exists("${man_dir}/strn.1")
+
+include("${CMAKE_CURRENT_LIST_DIR}/test_norm_saver.cmake")
+check_norm_saver("${private_lib_dir}/${TRN_TEST_NORM_SAVER_HELPER_NAME}"
+    "${TRN_TEST_PACKAGE_DIR}/norm-saver-check" full)

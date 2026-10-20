@@ -8,6 +8,7 @@
 
 // Directory and environment related content.
 #define TRN_TEST_DATA_DIR                       "@TRN_TEST_DATA_DIR@"
+#define TRN_TEST_WINDOWS_NORM_SAVER             "@PROJECT_BINARY_DIR@/config/data/norm.saver.cmd"
 #define TRN_TEST_HOME_DIR                       "@TRN_TEST_HOME_DIR@"
 #define TRN_TEST_HOME_DIR_CAPITALIZED           "@TRN_TEST_HOME_DIR_CAPITALIZED@"
 #define TRN_TEST_TMP_DIR                        "@TRN_TEST_TMP_DIR@"

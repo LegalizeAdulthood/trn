@@ -311,10 +311,16 @@ The supported POSIX runtime layout is:
 - `${prefix}/${mandir}/man1`: `trn.1`, `Pnews.1`, and `Rnmail.1`.
 
 On Windows, the helper entry points are installed as `Pnews.cmd`,
-`Rnmail.cmd`, `mbox.saver.cmd`, `norm.saver.cmd`, and `Speller.cmd`.  They
-fail with explicit unsupported-feature diagnostics until native
-replacements exist.  `Pnews.header` is not installed on Windows because
-the `Pnews` replacement owns that policy.
+`Rnmail.cmd`, `mbox.saver.cmd`, `norm.saver.cmd`, and `Speller.cmd`.
+`norm.saver.cmd` invokes its adjacent `norm.saver.ps1` using Windows
+PowerShell 5.1.  It accepts the Unix helper's seven arguments, preserves
+article bytes, and returns a failure status for invalid arguments or I/O
+errors.  Normal saves use trn's built-in saver unless `NORMSAVER` contains
+an explicit command; see its entry in `man/trn.1` for examples.
+
+The other Windows helpers still fail with explicit unsupported-feature
+diagnostics until native replacements exist.  `Pnews.header` is not
+installed on Windows because the `Pnews` replacement owns that policy.
 
 `strn.1` was a stale historical stub and is retired.  `default_topic` is
 a source-distribution sample for sites that want a default scan-mode topic

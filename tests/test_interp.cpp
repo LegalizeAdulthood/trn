@@ -1691,6 +1691,30 @@ TEST_F(InterpolatorNewsgroupTest, normalSaveWritesArticleToRelativeDestination)
     EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
 }
 
+#ifdef _WIN32
+TEST_F(InterpolatorNewsgroupTest, normalSaveUsesWindowsNormSaverOverride)
+{
+    ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    ValueSaver<bool>        normal_always(g_norm_always, true);
+    const std::string       saver =
+        std::string{"call \"" TRN_TEST_WINDOWS_NORM_SAVER "\""} + " \"%A\" \"%P\" \"%c\" %a %B \"%C\" \"%b\"";
+    m_env.expect_no_envar("SAVENAME");
+    m_env.expect_env("SAVEDIR", m_output.path().c_str());
+    m_env.expect_env("NORMSAVER", saver.c_str());
+    m_env.expect_no_envars({"NNTPSERVER", "NNTP_FORCE_AUTH", "NEWSACTIVE", "NEWSDESCRIPTIONS", "QUOTECHARS"});
+
+    testing::internal::CaptureStdout();
+    const SaveResult result = save_article("s saved via helper");
+    testing::internal::GetCapturedStdout();
+
+    const fs::path saved_article = fs::path{m_output.path()} / "saved via helper";
+    EXPECT_EQ(SAVE_DONE, result);
+    ASSERT_TRUE(fs::exists(saved_article));
+    EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
+}
+#endif
+
 TEST_F(InterpolatorNewsgroupTest, normalSaveCanRejectMailboxPrompt)
 {
     ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());

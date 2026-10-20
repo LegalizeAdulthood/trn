@@ -31,10 +31,12 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../../INIT.txt" INIT COPYONLY)
 configure_file(access_def.in access.def @ONLY)
 configure_file(environment.in environment @ONLY)
 configure_file(newsnews.in newsnews @ONLY)
+set(trn_norm_saver_support_output "")
 
 if(WIN32)
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver.cmd")
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver.cmd")
+    set(trn_norm_saver_support_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver.ps1")
     set(trn_pnews_output "${CMAKE_CURRENT_BINARY_DIR}/Pnews.cmd")
     set(trn_pnews_header_output "")
     set(trn_rnmail_output "${CMAKE_CURRENT_BINARY_DIR}/Rnmail.cmd")
@@ -42,6 +44,7 @@ if(WIN32)
     set(trn_helper_sources
         mbox.saver.cmd.in
         norm.saver.cmd.in
+        norm.saver.ps1.in
         Pnews.cmd.in
         Rnmail.cmd.in
         Speller.cmd.in)
@@ -55,6 +58,7 @@ if(WIN32)
 
     configure_file(mbox.saver.cmd.in "${trn_mbox_saver_output}" COPYONLY)
     configure_file(norm.saver.cmd.in "${trn_norm_saver_output}" COPYONLY)
+    configure_file(norm.saver.ps1.in "${trn_norm_saver_support_output}" COPYONLY)
     configure_file(Pnews.cmd.in "${trn_pnews_output}" COPYONLY)
     configure_file(Rnmail.cmd.in "${trn_rnmail_output}" COPYONLY)
     configure_file(Speller.cmd.in "${trn_speller_output}" COPYONLY)
@@ -116,6 +120,7 @@ add_library(data INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/environment"
     "${CMAKE_CURRENT_BINARY_DIR}/newsnews"
     ${trn_private_helper_outputs}
+    ${trn_norm_saver_support_output}
     ${trn_public_helper_outputs}
     ${trn_pnews_header_output}
 )
@@ -131,6 +136,9 @@ set(trn_private_data_outputs
     "${CMAKE_CURRENT_BINARY_DIR}/access.def"
     "${CMAKE_CURRENT_BINARY_DIR}/environment"
     "${CMAKE_CURRENT_BINARY_DIR}/newsnews")
+if(trn_norm_saver_support_output)
+    list(APPEND trn_private_data_outputs "${trn_norm_saver_support_output}")
+endif()
 if(trn_pnews_header_output)
     list(APPEND trn_private_data_outputs "${trn_pnews_header_output}")
 endif()
