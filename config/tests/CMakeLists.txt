@@ -32,6 +32,14 @@ if(WIN32)
             -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mail-smtp"
             -Adapter "${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1")
     set_tests_properties(MailSubmissionTest.nativeSmtp PROPERTIES LABELS trn TIMEOUT 90)
+    add_test(NAME ToolStreamTest.utf8Console
+        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_tool_streams.ps1"
+            -Tools "${PROJECT_BINARY_DIR}/config/data/trn-tools.ps1"
+            -Tool "$<TARGET_FILE:pnews-test-tool>"
+            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/tool-streams")
+    set_tests_properties(ToolStreamTest.utf8Console PROPERTIES LABELS trn TIMEOUT 30)
 endif()
 if(UNIX)
     add_test(NAME HelperPackageTest.unix

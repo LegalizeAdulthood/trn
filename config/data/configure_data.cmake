@@ -17,6 +17,7 @@ function(find_program_default name variable)
     endif()
     find_program(program_path "${name}" NO_CACHE)
     configure_data_tool_path_default("${program_path}" "${variable}" "${missing_value}")
+    set("${variable}" "${${variable}}" PARENT_SCOPE)
 endfunction()
 
 function(configure_shell_start_default shell_path)

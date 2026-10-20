@@ -11,6 +11,9 @@ function(expect_equal name actual expected)
 endfunction()
 
 if("${TRN_TEST_SCENARIO}" STREQUAL "found")
+    find_program_default("${CMAKE_COMMAND}" DEFAULT_TEST_PROGRAM)
+    expect_equal("DEFAULT_TEST_PROGRAM" "${DEFAULT_TEST_PROGRAM}" "${CMAKE_COMMAND}")
+
     configure_trn_tool_path_default("/test/bin/editor" DEFAULT_TEST_EDITOR "")
     expect_equal("DEFAULT_TEST_EDITOR" "${DEFAULT_TEST_EDITOR}" "/test/bin/editor")
     configure_trn_tool_path_default("/test/bin/more" DEFAULT_TEST_PAGER "")

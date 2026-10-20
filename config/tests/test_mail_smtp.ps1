@@ -6,6 +6,7 @@ param([string] $WorkDirectory, [string] $Adapter = '',
     [string] $Helper = '', [string] $OnlyCase = '')
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+[Console]::InputEncoding = [Text.UTF8Encoding]::new($true)
 $utf8 = [Text.UTF8Encoding]::new($false)
 [void] [IO.Directory]::CreateDirectory($WorkDirectory)
 $rsa = [Security.Cryptography.RSA]::Create(2048)
@@ -52,7 +53,8 @@ foreach ($case in @('accepted', 'oauth2', 'implicit', 'rejected', 'recipient', '
         $encoding = [Text.UTF8Encoding]::new($false)
         $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
         $listener.Start()
-        [IO.File]::WriteAllText($PortFile, $listener.LocalEndpoint.Port.ToString())
+        [IO.File]::WriteAllText($PortFile + '.tmp', $listener.LocalEndpoint.Port.ToString())
+        [IO.File]::Move($PortFile + '.tmp', $PortFile)
         try {
             $pending = $listener.BeginAcceptTcpClient($null, $null)
             if (!$pending.AsyncWaitHandle.WaitOne(15000)) { throw 'SMTP client did not connect.' }
