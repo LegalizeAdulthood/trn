@@ -751,6 +751,7 @@ Files likely touched:
 - `config/data/norm.saver.cmd.in` and a new PowerShell template
 - CMake generation, defaults, and install rules
 - saver invocation tests and documentation
+- `man/trn.1` normal-save commands and `NORMSAVER` documentation
 
 Tasks:
 
@@ -760,9 +761,14 @@ Tasks:
 - Implement PowerShell/.NET stream I/O with explicit byte offsets and
   matching output.  Do not decode/re-encode copied article bytes; cover
   all byte values and preserve existing destinations on open failures.
-- Wire Windows `NORMSAVER` and ordinary saves to the launcher/script;
-  replace its diagnostic stub and update install/package tests and help.
-  Retain the Unix script and verify its output against common fixtures.
+- Wire explicitly configured Windows `NORMSAVER` commands to the
+  launcher/script; replace its diagnostic stub and update install/package
+  tests and help.  Keep default normal saves internal to trn.  Retain the
+  Unix script and verify its output against common fixtures.
+- Update `man/trn.1` normal-save and `NORMSAVER` entries: the default is
+  unset and trn saves internally.  Document the helper as an optional
+  override with its full command and arguments; remove the stale script
+  default.
 
 Acceptance:
 
@@ -770,6 +776,8 @@ Acceptance:
 - Saving from trn appends the expected article or body without `tail`
   or shell redirection; failed saves return an error.
 - Installed/package invocation exercises the real save path.
+- The man page describes the internal default and optional `NORMSAVER`
+  command override consistently.
 
 ### 43. Windows mbox.saver Script
 
