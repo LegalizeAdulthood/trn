@@ -1,4 +1,6 @@
 @SHELL_START@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
 #   Speller - a script to disassemble a posting; use ispell to spell-
 #   check the body along with the Subject, Keywords, and Summary lines;
 #   and put it all back together again.
@@ -11,11 +13,11 @@ export PATH || (echo "OOPS, this isn't sh.  Desperation time.  I will feed mysel
 # what pager you use--if you have kernal paging use cat
 pager="${PAGER-@PAGER@}"
 # either the ispell program or "none"
-ispell=@ISPELL_PROGRAM@
-ispell_options=@ISPELL_OPTIONS@
+ispell="${ISPELL_PROGRAM-@ISPELL_PROGRAM@}"
+ispell_options="${ISPELL_OPTIONS-@ISPELL_OPTIONS@}"
 diff=@DIFF_PROGRAM@
 ed=@ED_PROGRAM@
-spell=@SPELL_PROGRAM@
+spell="${SPELL_PROGRAM-@SPELL_PROGRAM@}"
 
 tmpdir="${TMPDIR-/tmp}"
 
@@ -35,7 +37,9 @@ if test "X$1" = X; then
     exit 1
 fi
 
-trap "rm -f $hdrs $body $body~ $sig $mine $quoted $bad; exit 1" 0 1 2 15
+trap 'rm -f "$hdrs" "$body" "$body~" "$sig" "$mine" "$quoted" "$bad"' 0
+trap 'exit 1' 1 2 15
+status=0
 
 while test "X$1" != X; do
 
@@ -106,21 +110,25 @@ while test "X$1" != X; do
     # the guts of the article...
 
     if test "X$ispell" = "Xnone"; then
-        $spell $ispell_options $mine > $bad
-        if test -s $bad ; then
+        "$spell" $ispell_options $mine > $bad
+        check_status=$?
+        if test $check_status -eq 0 && test -s $bad ; then
             (echo ---- misspelled words -------------------------------------
              cat $bad | pr -t -4
              echo -----------------------------------------------------------
             ) | $pager
-        else
+            check_status=$?
+        elif test $check_status -eq 0; then
             echo 'No misspelled words.'
         fi
     else
-        $ispell $ispell_options $mine
+        "$ispell" $ispell_options $mine
+        check_status=$?
     fi
 
-    if test $? -ne 0; then
+    if test $check_status -ne 0; then
         echo "$Cmdname: error returned, leaving message untouched"
+        status=1
 
         # don't want to mess with this file again, either
         shift
@@ -135,9 +143,10 @@ while test "X$1" != X; do
     fi
 
     # ..and re-assemble the article.
-    cat $hdrs $body $sig >$1
+    cat $hdrs $body $sig >$1 || status=1
 
     # move to the next filename!
     shift
 
 done
+exit $status

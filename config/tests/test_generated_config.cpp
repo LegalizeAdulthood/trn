@@ -569,7 +569,6 @@ TEST(GeneratedConfigTest, windowsHelpersReportUnsupportedFeatures)
 
     expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, "Pnews is not supported on Windows");
     expect_file_contains(TRN_TEST_GENERATED_RNMAIL_FILE, "Rnmail is not supported on Windows");
-    expect_file_contains(TRN_TEST_GENERATED_SPELLER_FILE, "Speller is not supported on Windows");
 }
 
 TEST(GeneratedConfigTest, generatedPnewsHeaderContainsPostingFields)
@@ -737,23 +736,24 @@ TEST(GeneratedConfigTest, helperToolDefaultsMatchToolDiscovery)
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
                          std::string{"pager=\"${PAGER-"} + TRN_TEST_DEFAULT_PAGER + "}\"");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
-                         std::string{"ispell="} + TRN_TEST_DEFAULT_ISPELL_PROGRAM);
+                         std::string{"ispell=\"${ISPELL_PROGRAM-"} + TRN_TEST_DEFAULT_ISPELL_PROGRAM + "}\"");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
-                         std::string{"ispell_options="} + TRN_TEST_DEFAULT_ISPELL_OPTIONS);
+                         std::string{"ispell_options=\"${ISPELL_OPTIONS-"} + TRN_TEST_DEFAULT_ISPELL_OPTIONS + "}\"");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"diff="} + TRN_TEST_DEFAULT_DIFF_PROGRAM);
     expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"ed="} + TRN_TEST_DEFAULT_ED_PROGRAM);
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"spell="} + TRN_TEST_DEFAULT_SPELL_PROGRAM);
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                         std::string{"spell=\"${SPELL_PROGRAM-"} + TRN_TEST_DEFAULT_SPELL_PROGRAM + "}\"");
 }
 
 TEST(GeneratedConfigTest, helperToolConfiguredValuesAreEmitted)
 {
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "#!/test/sh");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "pager=\"${PAGER-/test/bin/more}\"");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell=/test/bin/ispell");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell_options=-x -Tlatin1");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell=\"${ISPELL_PROGRAM-/test/bin/ispell}\"");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell_options=\"${ISPELL_OPTIONS--x -Tlatin1}\"");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "diff=/test/bin/diff");
     expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ed=/test/bin/ed");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "spell=/test/bin/spell");
+    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "spell=\"${SPELL_PROGRAM-/test/bin/spell}\"");
 }
 
 TEST(GeneratedConfigTest, helperFilesDoNotContainOldToolVariables)

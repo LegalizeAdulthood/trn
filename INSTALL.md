@@ -215,9 +215,9 @@ Untested: `MIMECAP`.
 - `DEFAULT_EDITOR`, `PREF_SHELL`, `SH`, and `PAGER`: editor, shell, and
   pager defaults.
 - `SHELL_START`, `DIFF_PROGRAM`, `ED_PROGRAM`, `ISPELL_PROGRAM`,
-  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: POSIX generated helper tool
-  defaults.  Windows generates diagnostic `.cmd` helpers for the 5.0
-  helper entry points that do not yet have native implementations.
+  `ISPELL_OPTIONS`, and `SPELL_PROGRAM`: generated helper tool defaults.
+  Windows `Speller.cmd` uses native checker programs; it does not require
+  the POSIX differencing or editing tools.
 - `PIPE_SAVER`, `SHAR_SAVER`, and `CUSTOM_SAVER`: save and extraction
   commands.
 - `VERIFY_RIPEM` and `VERIFY_PGP`: optional verifier commands.
@@ -321,8 +321,26 @@ escaping and report argument or I/O failures.  Saves remain internal to
 trn unless `NORMSAVER` or `MBOXSAVER` contains an explicit command; see
 their entries in `man/trn.1` for examples.
 
-`Pnews.cmd`, `Rnmail.cmd`, and `Speller.cmd` still fail with explicit
-unsupported-feature diagnostics until native replacements exist.
+`Speller.cmd` invokes its adjacent `Speller.ps1` with Windows PowerShell
+5.1.  Pass one or more draft filenames.  It checks Subject, Keywords,
+Summary, their continuations, and unquoted body text; other headers,
+quoted lines, and signatures remain protected.  Native checker failures
+leave the draft unchanged.  The checker receives a temporary file in the
+draft's original byte encoding and must preserve that encoding.
+
+Set `ISPELL_PROGRAM` to an in-place native checker, with arguments in
+`ISPELL_OPTIONS`.  Use `ISPELL_PROGRAM=none` and `SPELL_PROGRAM` for a
+word-list checker; its output goes to `PAGER`.  Environment settings
+override the CMake defaults on both platforms.  On Windows, checker
+program values are executable paths, without options or surrounding
+quotes; options and `PAGER` accept whitespace-separated arguments with
+single or double quotes around an entire argument.  No shell expressions
+are evaluated.  `QUOTECHARS` is an anchored regular expression: .NET on
+Windows, POSIX basic on Unix.  Common patterns such as `>` and `[>|:]`
+work on both.  An unset or empty value checks quoted lines too.
+
+`Pnews.cmd` and `Rnmail.cmd` still fail with explicit unsupported-feature
+diagnostics until native replacements exist.
 `Pnews.header` is not installed on Windows because the `Pnews`
 replacement owns that policy.
 

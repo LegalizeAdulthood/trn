@@ -302,11 +302,17 @@ Active generated helpers:
   metaconfig wrapper, obsolete substitutions, or unsupported lookup
   variables; Windows `Pnews.cmd` reports that posting is unsupported.
 - `Speller.SH`: generated from `config/data/Speller.in` on POSIX.
-  Windows generates `Speller.cmd`, an unsupported diagnostic helper for
-  5.0.  Existing tests cover tool probing and configured command values.
-  Required tests: generated POSIX `Speller` has no unresolved configure
-  tokens and preserves the current wrapper command flow; Windows
-  `Speller.cmd` reports that spell checking is unsupported.
+  Windows generates `Speller.cmd` and `Speller.ps1` for PowerShell 5.1.
+  Both accept multiple drafts and runtime `ISPELL_PROGRAM`,
+  `ISPELL_OPTIONS`, `SPELL_PROGRAM`, and `PAGER` overrides.  The Windows
+  port protects headers, quoted text, and signatures as byte strings,
+  aligns unchanged lines to restore protected blocks after edits, and
+  atomically replaces each draft only after successful correction.
+  Tests cover correction, word lists, continuations, quotations,
+  signatures, multiple drafts, native tool failures, cancellation,
+  temporary-file cleanup, installation, and packaging.  Windows tests
+  also cover inserted/deleted lines, header order, all byte values,
+  CRLF text, literal paths, locked files, and invalid settings.
 - `mbox_saver.SH`: generated from `config/data/mbox.saver.in` on POSIX.
   Windows generates `mbox.saver.cmd` and its `mbox.saver.ps1` companion.
   The PowerShell 5.1 helper takes eight arguments and follows `MBOX_CHAR`:

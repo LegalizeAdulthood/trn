@@ -89,6 +89,30 @@ foreach(format IN ITEMS mbox mmdf)
 endforeach()
 set(MBOX_CHAR "${test_saved_mbox_char}")
 
+set(speller_cases correct multiple words clean failure cancel missing_tool pager_failure word_failure quote_pattern no_quotes empty)
+if(WIN32)
+    list(APPEND speller_cases insert delete header_order)
+    foreach(case IN ITEMS bytes arity missing_input locked invalid_pattern invalid_options)
+        add_test(NAME SpellerTest.${case}
+            COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+                -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+                -File "${CMAKE_CURRENT_SOURCE_DIR}/test_speller.ps1"
+                -Helper "${TRN_GENERATED_SPELLER_FILE}"
+                -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/speller-${case}"
+                -Case "${case}")
+        set_tests_properties(SpellerTest.${case} PROPERTIES LABELS trn)
+    endforeach()
+endif()
+foreach(case IN LISTS speller_cases)
+    add_test(NAME SpellerTest.${case}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTRN_TEST_SPELLER=${TRN_GENERATED_SPELLER_FILE}"
+            "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/speller-${case}"
+            "-DTRN_TEST_CASE=${case}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_speller.cmake")
+    set_tests_properties(SpellerTest.${case} PROPERTIES LABELS trn)
+endforeach()
+
 set(posting_host_match_segments_validation_script
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_posting_host_match_segments_validation.cmake")
 set(posting_host_match_segments_configure_script

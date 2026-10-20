@@ -37,6 +37,7 @@ configure_file(environment.in environment @ONLY)
 configure_file(newsnews.in newsnews @ONLY)
 set(trn_norm_saver_support_output "")
 set(trn_mbox_saver_support_output "")
+set(trn_speller_support_output "")
 
 if(WIN32)
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver.cmd")
@@ -47,6 +48,7 @@ if(WIN32)
     set(trn_pnews_header_output "")
     set(trn_rnmail_output "${CMAKE_CURRENT_BINARY_DIR}/Rnmail.cmd")
     set(trn_speller_output "${CMAKE_CURRENT_BINARY_DIR}/Speller.cmd")
+    set(trn_speller_support_output "${CMAKE_CURRENT_BINARY_DIR}/Speller.ps1")
     set(trn_helper_sources
         mbox.saver.cmd.in
         mbox.saver.ps1.in
@@ -54,7 +56,8 @@ if(WIN32)
         norm.saver.ps1.in
         Pnews.cmd.in
         Rnmail.cmd.in
-        Speller.cmd.in)
+        Speller.cmd.in
+        Speller.ps1.in)
     set(TRN_GENERATED_WINDOWS_HELPERS ON)
     set(TRN_INSTALL_MBOX_SAVER_HELPER_NAME "mbox.saver.cmd" PARENT_SCOPE)
     set(TRN_INSTALL_NORM_SAVER_HELPER_NAME "norm.saver.cmd" PARENT_SCOPE)
@@ -70,6 +73,10 @@ if(WIN32)
     configure_file(Pnews.cmd.in "${trn_pnews_output}" COPYONLY)
     configure_file(Rnmail.cmd.in "${trn_rnmail_output}" COPYONLY)
     configure_file(Speller.cmd.in "${trn_speller_output}" COPYONLY)
+    foreach(setting IN ITEMS ISPELL_PROGRAM ISPELL_OPTIONS SPELL_PROGRAM PAGER)
+        string(REPLACE "'" "''" "TRN_PS_${setting}" "${${setting}}")
+    endforeach()
+    configure_file(Speller.ps1.in "${trn_speller_support_output}" @ONLY)
 else()
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver")
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver")
@@ -130,6 +137,7 @@ add_library(data INTERFACE
     ${trn_private_helper_outputs}
     ${trn_norm_saver_support_output}
     ${trn_mbox_saver_support_output}
+    ${trn_speller_support_output}
     ${trn_public_helper_outputs}
     ${trn_pnews_header_output}
 )
@@ -150,6 +158,9 @@ if(trn_norm_saver_support_output)
 endif()
 if(trn_mbox_saver_support_output)
     list(APPEND trn_private_data_outputs "${trn_mbox_saver_support_output}")
+endif()
+if(trn_speller_support_output)
+    list(APPEND trn_private_data_outputs "${trn_speller_support_output}")
 endif()
 if(trn_pnews_header_output)
     list(APPEND trn_private_data_outputs "${trn_pnews_header_output}")

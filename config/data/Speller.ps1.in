@@ -1,0 +1,188 @@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
+
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+
+function Get-Setting([string] $Name, [string] $Default) {
+    $value = [Environment]::GetEnvironmentVariable($Name)
+    if ($null -eq $value) { return $Default }
+    return $value
+}
+
+# Parse arguments without evaluating shell expressions. Tool paths are separate
+# from checker options; PAGER may contain a quoted path followed by options.
+function Split-Arguments([string] $Text) {
+    $pattern = [regex]::new('\G\s*(?:"([^"]*)"|''([^'']*)''|([^\s"'']+))')
+    $position = 0
+    while ($position -lt $Text.Length) {
+        if ($Text.Substring($position).Trim().Length -eq 0) { break }
+        $match = $pattern.Match($Text, $position)
+        if (!$match.Success) { throw 'Unmatched quote in tool options.' }
+        foreach ($group in 1..3) {
+            if ($match.Groups[$group].Success) { $match.Groups[$group].Value; break }
+        }
+        $position += $match.Length
+    }
+}
+
+function Get-Lines([string] $Text) {
+    foreach ($match in [regex]::Matches($Text, '[^\r\n]*(?:\r\n|\n|\r|$)')) {
+        if ($match.Length -gt 0) { $match.Value }
+    }
+}
+
+# Hirschberg alignment uses linear space. Match unchanged lines, then pair
+# replacements within each gap to anchor protected blocks through edits.
+function Get-LcsRow($A, [int] $A0, [int] $AN, $B, [int] $B0, [int] $BN, [bool] $Reverse) {
+    $row = [int[]]::new($BN + 1)
+    for ($i = 0; $i -lt $AN; ++$i) {
+        $diagonal = 0
+        $ai = $A0 + $i
+        if ($Reverse) { $ai = $A0 + $AN - 1 - $i }
+        for ($j = 1; $j -le $BN; ++$j) {
+            $previous = $row[$j]
+            $bi = $B0 + $j - 1
+            if ($Reverse) { $bi = $B0 + $BN - $j }
+            if ($A[$ai] -ceq $B[$bi]) { $row[$j] = $diagonal + 1 }
+            else { $row[$j] = [Math]::Max($row[$j], $row[$j - 1]) }
+            $diagonal = $previous
+        }
+    }
+    return ,$row
+}
+
+function Add-LineMatches($A, [int] $A0, [int] $AN, $B, [int] $B0, [int] $BN, $Matches) {
+    while ($AN -gt 0 -and $BN -gt 0 -and $A[$A0] -ceq $B[$B0]) {
+        $Matches.Add(@($A0, $B0))
+        ++$A0; ++$B0; --$AN; --$BN
+    }
+    if ($AN -eq 0 -or $BN -eq 0) { return }
+    if ($AN -eq 1) {
+        for ($j = $B0; $j -lt $B0 + $BN; ++$j) {
+            if ($A[$A0] -ceq $B[$j]) { $Matches.Add(@($A0, $j)); break }
+        }
+        return
+    }
+    $half = [int][Math]::Floor($AN / 2)
+    $left = Get-LcsRow $A $A0 $half $B $B0 $BN $false
+    $right = Get-LcsRow $A ($A0 + $half) ($AN - $half) $B $B0 $BN $true
+    $split = 0
+    $best = -1
+    for ($j = 0; $j -le $BN; ++$j) {
+        $score = $left[$j] + $right[$BN - $j]
+        if ($score -gt $best) { $best = $score; $split = $j }
+    }
+    $left = $null
+    $right = $null
+    Add-LineMatches $A $A0 $half $B $B0 $split $Matches
+    Add-LineMatches $A ($A0 + $half) ($AN - $half) $B ($B0 + $split) ($BN - $split) $Matches
+}
+
+function Restore-ProtectedText($Before, $After, $Protected) {
+    $matches = [Collections.Generic.List[object]]::new()
+    $matches.Add(@(-1, -1))
+    Add-LineMatches $Before 0 $Before.Count $After 0 $After.Count $matches
+    $matches.Add(@($Before.Count, $After.Count))
+    $blocks = @{}
+    $matchIndex = 1
+    foreach ($block in $Protected) {
+        while ($matches[$matchIndex][0] -lt $block.Position) { ++$matchIndex }
+        $previous = $matches[$matchIndex - 1]
+        $next = $matches[$matchIndex]
+        $position = $previous[1] + 1 + [Math]::Min(
+            $block.Position - $previous[0] - 1, $next[1] - $previous[1] - 1)
+        if ($block.Position -eq $Before.Count) { $position = $After.Count }
+        if (!$blocks.ContainsKey($position)) { $blocks[$position] = [Text.StringBuilder]::new() }
+        [void] $blocks[$position].Append($block.Text)
+    }
+    $result = [Text.StringBuilder]::new()
+    for ($i = 0; $i -le $After.Count; ++$i) {
+        if ($blocks.ContainsKey($i)) { [void] $result.Append($blocks[$i]) }
+        if ($i -lt $After.Count) { [void] $result.Append($After[$i]) }
+    }
+    return $result.ToString()
+}
+
+$status = 0
+$encoding = [Text.Encoding]::GetEncoding(28591)
+try {
+    if ($args.Count -eq 0) { throw 'Usage: Speller <filename> [...]' }
+    $checker = Get-Setting ISPELL_PROGRAM '@TRN_PS_ISPELL_PROGRAM@'
+    $options = @(Split-Arguments (Get-Setting ISPELL_OPTIONS '@TRN_PS_ISPELL_OPTIONS@'))
+    $spell = Get-Setting SPELL_PROGRAM '@TRN_PS_SPELL_PROGRAM@'
+    $pager = @(Split-Arguments (Get-Setting PAGER '@TRN_PS_PAGER@'))
+    $quotechars = Get-Setting QUOTECHARS ''
+    $quotePattern = $null
+    if ($quotechars.Length -gt 0) { $quotePattern = [regex]::new('^(?:' + $quotechars + ')') }
+    foreach ($filename in $args) {
+        $temporary = $null
+        $replacement = $null
+        try {
+            $path = [IO.Path]::GetFullPath($filename)
+            $original = $encoding.GetString([IO.File]::ReadAllBytes($path))
+            $editable = [Collections.Generic.List[string]]::new()
+            $protected = [Collections.Generic.List[object]]::new()
+            $inHeader = $true
+            $checkHeader = $false
+            $inSignature = $false
+            foreach ($line in @(Get-Lines $original)) {
+                $text = $line.TrimEnd([char[]] "`r`n")
+                if ($inHeader -and $text.Length -eq 0) { $inHeader = $false }
+                elseif ($inHeader -and $text -cnotmatch '^[ \t]') {
+                    $checkHeader = $text -cmatch '^(Subject|Keywords|Summary): '
+                }
+                if (!$inHeader -and $text -ceq '-- ') { $inSignature = $true }
+                if (($inHeader -and !$checkHeader) -or $inSignature -or
+                    ($null -ne $quotePattern -and $quotePattern.IsMatch($text))) {
+                    $protected.Add(@{ Position = $editable.Count; Text = $line })
+                }
+                else { $editable.Add($line) }
+            }
+            $temporary = [IO.Path]::Combine([IO.Path]::GetTempPath(), 'trn-speller-' + [Guid]::NewGuid())
+            [void] [IO.Directory]::CreateDirectory($temporary)
+            $mine = [IO.Path]::Combine($temporary, 'draft')
+            $before = [string]::Concat($editable.ToArray())
+            [IO.File]::WriteAllBytes($mine, $encoding.GetBytes($before))
+            $global:LASTEXITCODE = 0
+            if ($checker -ceq 'none') {
+                if (!$spell) { throw 'No word-list spell checker configured.' }
+                $words = @(& $spell @options $mine)
+                if ($LASTEXITCODE -ne 0) { throw "Word-list checker exited with status $LASTEXITCODE." }
+                if ($words.Count -gt 0) {
+                    if ($pager.Count -eq 0) { throw 'No pager configured.' }
+                    $pagerProgram = $pager[0]
+                    $pagerOptions = @($pager | Select-Object -Skip 1)
+                    $words | & $pagerProgram @pagerOptions
+                    if ($LASTEXITCODE -ne 0) { throw "Pager exited with status $LASTEXITCODE." }
+                }
+                else { Write-Output 'No misspelled words.' }
+            }
+            else {
+                if (!$checker) { throw 'No interactive spell checker configured.' }
+                & $checker @options $mine
+                if ($LASTEXITCODE -ne 0) { throw "Checker exited with status $LASTEXITCODE." }
+                $after = $encoding.GetString([IO.File]::ReadAllBytes($mine))
+                if ($before -cne $after) {
+                    $result = Restore-ProtectedText $editable @(Get-Lines $after) $protected
+                    $replacement = $path + '.speller-' + [Guid]::NewGuid()
+                    [IO.File]::WriteAllBytes($replacement, $encoding.GetBytes($result))
+                    [IO.File]::Replace($replacement, $path, [NullString]::Value)
+                }
+            }
+        }
+        catch {
+            [Console]::Error.WriteLine('Speller: {0}: {1}', $filename, $_.Exception.Message)
+            $status = 1
+        }
+        finally {
+            if ($replacement -and [IO.File]::Exists($replacement)) { [IO.File]::Delete($replacement) }
+            if ($temporary -and [IO.Directory]::Exists($temporary)) { [IO.Directory]::Delete($temporary, $true) }
+        }
+    }
+}
+catch {
+    [Console]::Error.WriteLine('Speller: {0}', $_.Exception.Message)
+    $status = 1
+}
+exit $status
