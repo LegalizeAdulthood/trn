@@ -75,3 +75,7 @@ expect_not_exists("${man_dir}/strn.1")
 include("${CMAKE_CURRENT_LIST_DIR}/test_norm_saver.cmake")
 check_norm_saver("${private_lib_dir}/${TRN_TEST_NORM_SAVER_HELPER_NAME}"
     "${TRN_TEST_INSTALL_PREFIX}/norm-saver-check" full)
+
+include("${CMAKE_CURRENT_LIST_DIR}/test_mbox_saver.cmake")
+check_mbox_saver("${private_lib_dir}/${TRN_TEST_MBOX_SAVER_HELPER_NAME}"
+    "${TRN_TEST_INSTALL_PREFIX}/mbox-saver-check" full "${TRN_TEST_MBOX_FORMAT}")

@@ -367,11 +367,13 @@ The variables:
 
       Default: unset; trn saves mailbox articles internally.
 
-      Explanation: the first seven arguments are the same as for
-      NORMSAVER.  The eighth argument to the shell script is the new
-      From line for the article, including the posting date, derived
-      either directly from the Posted: line, or not-so-directly from
-      the Date: line.  Header munging at its finest.
+      The first seven arguments are the same as for NORMSAVER.  The
+      eighth is the complete From envelope line supplied by the caller,
+      including sender and date.  Quote it as a single argument.
+      On Windows, use call "%X/mbox.saver.cmd" followed by those eight
+      arguments.  Its adjacent mbox.saver.ps1 is required.
+      The helper follows the configured MBOX_CHAR format.  Article-zero
+      calls omit the Article marker for author-copy and sent-mail records.
 
  MODSTRING
       The string to insert in the group summary line, which heads each

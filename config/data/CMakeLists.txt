@@ -16,6 +16,10 @@ set(DEFAULT_SPELL_PROGRAM "${DEFAULT_SPELL_PROGRAM}" PARENT_SCOPE)
 configure_helper_tool_cache_defaults()
 # MMDF mailbox magic separator
 string(ASCII 1 CTRL_A)
+set(TRN_MBOX_SAVER_MMDF 0)
+if("${MBOX_CHAR}" STREQUAL "${CTRL_A}")
+    set(TRN_MBOX_SAVER_MMDF 1)
+endif()
 
 set(trn_private_lib_install_dir "${PRIVATE_LIB}")
 foreach(_iteration RANGE 1 2)
@@ -32,9 +36,11 @@ configure_file(access_def.in access.def @ONLY)
 configure_file(environment.in environment @ONLY)
 configure_file(newsnews.in newsnews @ONLY)
 set(trn_norm_saver_support_output "")
+set(trn_mbox_saver_support_output "")
 
 if(WIN32)
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver.cmd")
+    set(trn_mbox_saver_support_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver.ps1")
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver.cmd")
     set(trn_norm_saver_support_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver.ps1")
     set(trn_pnews_output "${CMAKE_CURRENT_BINARY_DIR}/Pnews.cmd")
@@ -43,6 +49,7 @@ if(WIN32)
     set(trn_speller_output "${CMAKE_CURRENT_BINARY_DIR}/Speller.cmd")
     set(trn_helper_sources
         mbox.saver.cmd.in
+        mbox.saver.ps1.in
         norm.saver.cmd.in
         norm.saver.ps1.in
         Pnews.cmd.in
@@ -57,6 +64,7 @@ if(WIN32)
     set(TRN_INSTALL_SPELLER_HELPER_NAME "Speller.cmd" PARENT_SCOPE)
 
     configure_file(mbox.saver.cmd.in "${trn_mbox_saver_output}" COPYONLY)
+    configure_file(mbox.saver.ps1.in "${trn_mbox_saver_support_output}" @ONLY)
     configure_file(norm.saver.cmd.in "${trn_norm_saver_output}" COPYONLY)
     configure_file(norm.saver.ps1.in "${trn_norm_saver_support_output}" COPYONLY)
     configure_file(Pnews.cmd.in "${trn_pnews_output}" COPYONLY)
@@ -121,6 +129,7 @@ add_library(data INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/newsnews"
     ${trn_private_helper_outputs}
     ${trn_norm_saver_support_output}
+    ${trn_mbox_saver_support_output}
     ${trn_public_helper_outputs}
     ${trn_pnews_header_output}
 )
@@ -138,6 +147,9 @@ set(trn_private_data_outputs
     "${CMAKE_CURRENT_BINARY_DIR}/newsnews")
 if(trn_norm_saver_support_output)
     list(APPEND trn_private_data_outputs "${trn_norm_saver_support_output}")
+endif()
+if(trn_mbox_saver_support_output)
+    list(APPEND trn_private_data_outputs "${trn_mbox_saver_support_output}")
 endif()
 if(trn_pnews_header_output)
     list(APPEND trn_private_data_outputs "${trn_pnews_header_output}")

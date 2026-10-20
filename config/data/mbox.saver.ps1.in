@@ -1,0 +1,95 @@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
+#requires -Version 5.1
+
+# Arguments match norm.saver, followed by the complete From envelope line.
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+$useMmdf = @TRN_MBOX_SAVER_MMDF@ -eq 1
+
+function Copy-MboxBody([IO.Stream]$Source, [IO.Stream]$Destination) {
+    $buffer = [byte[]]::new(65536)
+    $prefix = [byte[]]::new(5)
+    $prefixLength = 0
+    $atLineStart = $true
+    while (($count = $Source.Read($buffer, 0, $buffer.Length)) -gt 0) {
+        $offset = 0
+        while ($offset -lt $count) {
+            if ($atLineStart) {
+                # Retain up to five bytes when a From prefix spans reads.
+                $length = [Math]::Min(5 - $prefixLength, $count - $offset)
+                $newline = [Array]::IndexOf($buffer, [byte]10, $offset, $length)
+                if ($newline -ge 0) { $length = $newline - $offset + 1 }
+                [Array]::Copy($buffer, $offset, $prefix, $prefixLength, $length)
+                $offset += $length
+                $prefixLength += $length
+                $last = $prefix[$prefixLength - 1]
+                if ($prefixLength -eq 5 -or $last -eq 10) {
+                    if ($prefixLength -eq 5 -and
+                            ($prefix[0] -eq 70 -or $prefix[0] -eq 102) -and
+                            $prefix[1] -eq 114 -and $prefix[2] -eq 111 -and
+                            $prefix[3] -eq 109 -and $prefix[4] -eq 32) {
+                        $Destination.WriteByte(62)
+                    }
+                    $Destination.Write($prefix, 0, $prefixLength)
+                    $atLineStart = $last -eq 10
+                    $prefixLength = 0
+                }
+            } else {
+                $newline = [Array]::IndexOf($buffer, [byte]10, $offset, $count - $offset)
+                $length = $count - $offset
+                if ($newline -ge 0) { $length = $newline - $offset + 1 }
+                $Destination.Write($buffer, $offset, $length)
+                $offset += $length
+                $atLineStart = $newline -ge 0
+            }
+        }
+    }
+    if ($prefixLength -gt 0) { $Destination.Write($prefix, 0, $prefixLength) }
+}
+
+$inputStream = $null
+$outputStream = $null
+$status = 0
+try {
+    if ($args.Count -ne 8) {
+        throw 'Expected: article spool group-directory article-number start-byte group-name destination envelope'
+    }
+    $offset = 0L
+    if (-not [long]::TryParse($args[4], [Globalization.NumberStyles]::None,
+            [Globalization.CultureInfo]::InvariantCulture, [ref]$offset)) {
+        throw 'Start byte must be a nonnegative integer'
+    }
+    # Open the source first so an unreadable input cannot alter the mailbox.
+    $inputStream = [IO.File]::Open($args[0], 'Open', 'Read', 'Read')
+    $inputStream.Seek([Math]::Max(0L, $offset - 1), [IO.SeekOrigin]::Begin) | Out-Null
+    $outputStream = [IO.File]::Open($args[6], 'Append', 'Write', 'Read')
+    $encoding = [Text.UTF8Encoding]::new($false)
+    if ($useMmdf) {
+        [byte[]]$separator = @(1, 1, 1, 1, 10)
+        $opening = $separator
+    } else {
+        $opening = $encoding.GetBytes($args[7] + "`n")
+    }
+    $outputStream.Write($opening, 0, $opening.Length)
+    if ($args[4] -ceq '0' -and $args[3] -cne '0') {
+        $marker = $encoding.GetBytes("Article: $($args[3]) of $($args[5])`n")
+        $outputStream.Write($marker, 0, $marker.Length)
+    }
+    if ($useMmdf) {
+        $inputStream.CopyTo($outputStream)
+    } else {
+        Copy-MboxBody $inputStream $outputStream
+    }
+    $outputStream.WriteByte(10)
+    $outputStream.WriteByte(10)
+    if ($useMmdf) { $outputStream.Write($separator, 0, $separator.Length) }
+    $outputStream.Flush()
+} catch {
+    [Console]::Error.WriteLine('mbox.saver: {0}', $_.Exception.Message)
+    $status = 1
+} finally {
+    if ($null -ne $outputStream) { $outputStream.Dispose() }
+    if ($null -ne $inputStream) { $inputStream.Dispose() }
+}
+exit $status

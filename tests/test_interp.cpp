@@ -1713,6 +1713,31 @@ TEST_F(InterpolatorNewsgroupTest, normalSaveUsesWindowsNormSaverOverride)
     ASSERT_TRUE(fs::exists(saved_article));
     EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
 }
+TEST_F(InterpolatorNewsgroupTest, mailboxSaveUsesWindowsMboxSaverOverride)
+{
+    ValueSaver<std::string> private_dir(g_priv_dir, m_output.path());
+    ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
+    ValueSaver<bool>        mailbox_always(g_mbox_always, true);
+    const std::string       saver =
+        std::string{"call \"" TRN_TEST_WINDOWS_MBOX_SAVER "\""} +
+        " \"%A\" \"%P\" \"%c\" %a %B \"%C\" \"%b\" \"From supplied@example.test Thu Jan 1 00:00:00 1970\"";
+    m_env.expect_no_envar("SAVENAME");
+    m_env.expect_env("SAVEDIR", m_output.path().c_str());
+    m_env.expect_env("MBOXSAVER", saver.c_str());
+    m_env.expect_no_envars({"NNTPSERVER", "NNTP_FORCE_AUTH", "NEWSACTIVE", "NEWSDESCRIPTIONS", "QUOTECHARS"});
+
+    testing::internal::CaptureStdout();
+    const SaveResult result = save_article("s saved mailbox");
+    testing::internal::GetCapturedStdout();
+
+    const fs::path saved_article = fs::path{m_output.path()} / "saved mailbox";
+    EXPECT_EQ(SAVE_DONE, result);
+    ASSERT_TRUE(fs::exists(saved_article));
+    EXPECT_THAT(file_contents(saved_article), HasSubstr(TRN_TEST_BODY));
+    const std::string prefix =
+        MBOX_CHAR == '\001' ? "\001\001\001\001\n" : "From supplied@example.test Thu Jan 1 00:00:00 1970\n";
+    EXPECT_THAT(file_contents(saved_article), testing::StartsWith(prefix));
+}
 #endif
 
 TEST_F(InterpolatorNewsgroupTest, normalSaveCanRejectMailboxPrompt)

@@ -2296,16 +2296,27 @@ The shell command to save an article in mailbox format.
 .Sp
 Default: unset; trn saves mailbox articles internally.
 .Sp
-Example command: %X/mbox.saver %A %P %c %a %B %C "%b" \e
+Example command (POSIX): %X/mbox.saver %A %P %c %a %B %C "%b" \e
 .br
 "From %t %`date`"
 .Sp
-Explanation: the first seven arguments are the same as for NORMSAVER.
-The eighth argument to the shell script is the new From line
-for the article, including the posting date,
-derived either directly from the Posted: line, or not-so-directly from
-the Date: line.
-Header munging at its finest.
+The first seven arguments are the same as for NORMSAVER.
+The eighth argument is the complete From envelope line supplied by the
+caller, including its sender and date. Quote it as a single argument.
+On Windows, use call "%X/mbox.saver.cmd" followed by the same eight
+arguments. The launcher requires its adjacent mbox.saver.ps1 file.
+.Sp
+With the usual MBOX_CHAR setting, the helper writes the supplied envelope
+and prefixes copied lines beginning with From or from followed by a space
+with a greater-than sign. Already quoted lines are left alone.
+If MBOX_CHAR is control-A, the helper instead writes four control-A bytes
+and LF before and after each message and does not escape From lines.
+Both formats append two LF separators after the copied article.
+A zero start byte adds an Article marker only when the article number
+is nonzero; positive start bytes use the Unix helper's one-based offsets.
+An article number of zero supports author-copy and sent-mail records.
+The Windows helper preserves article bytes apart from required escaping
+and encodes the supplied envelope as UTF-8.
 .Ip MODSTRING 8
 The string to insert in the group summary line, which heads each article,
 for a moderated group.

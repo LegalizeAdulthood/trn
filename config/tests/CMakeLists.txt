@@ -36,6 +36,59 @@ if(WIN32)
     endforeach()
 endif()
 
+set(test_saved_mbox_char "${MBOX_CHAR}")
+string(ASCII 1 CTRL_A)
+set(TRN_TEST_MBOX_FORMAT mbox)
+if(MBOX_CHAR STREQUAL CTRL_A)
+    set(TRN_TEST_MBOX_FORMAT mmdf)
+endif()
+foreach(format IN ITEMS mbox mmdf)
+    set(MBOX_CHAR "F")
+    set(TRN_MBOX_SAVER_MMDF 0)
+    if(format STREQUAL "mmdf")
+        set(MBOX_CHAR "${CTRL_A}")
+        set(TRN_MBOX_SAVER_MMDF 1)
+    endif()
+    set(test_helper_dir "${CMAKE_CURRENT_BINARY_DIR}/mbox-${format}")
+    if(WIN32)
+        set(test_mbox_helper "${test_helper_dir}/mbox.saver.cmd")
+        configure_file(../data/mbox.saver.cmd.in "${test_mbox_helper}" COPYONLY)
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../data/mbox.saver.ps1.in")
+            configure_file(../data/mbox.saver.ps1.in "${test_helper_dir}/mbox.saver.ps1" @ONLY)
+        endif()
+    else()
+        set(test_mbox_helper "${test_helper_dir}/mbox.saver")
+        configure_file(../data/mbox.saver.in "${test_mbox_helper}" @ONLY)
+    endif()
+    set(mbox_cases full body first_byte past_end empty append record)
+    if(WIN32)
+        list(APPEND mbox_cases spaces)
+    endif()
+    foreach(case IN LISTS mbox_cases)
+        add_test(NAME MboxSaverTest.${format}_${case}
+            COMMAND "${CMAKE_COMMAND}"
+                "-DTRN_TEST_MBOX_SAVER=${test_mbox_helper}"
+                "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/mbox-${format}-${case}"
+                "-DTRN_TEST_CASE=${case}"
+                "-DTRN_TEST_MBOX_FORMAT=${format}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_mbox_saver.cmake")
+        set_tests_properties(MboxSaverTest.${format}_${case} PROPERTIES LABELS trn)
+    endforeach()
+    if(WIN32)
+        foreach(case IN ITEMS bytes boundary unicode_envelope invalid_offset arity missing_input missing_parent locked_output same_file)
+            add_test(NAME MboxSaverTest.${format}_${case}
+                COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+                    -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+                    -File "${CMAKE_CURRENT_SOURCE_DIR}/test_mbox_saver.ps1"
+                    -Helper "${test_mbox_helper}"
+                    -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mbox-${format}-${case}"
+                    -Case "${case}" -Mmdf "${TRN_MBOX_SAVER_MMDF}")
+            set_tests_properties(MboxSaverTest.${format}_${case} PROPERTIES LABELS trn)
+        endforeach()
+    endif()
+endforeach()
+set(MBOX_CHAR "${test_saved_mbox_char}")
+
 set(posting_host_match_segments_validation_script
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_posting_host_match_segments_validation.cmake")
 set(posting_host_match_segments_configure_script
@@ -410,6 +463,7 @@ add_test(NAME ConfigCMakeTest.installLayoutContainsRuntimeHelpers
         "-DTRN_TEST_MANDIR=${CMAKE_INSTALL_MANDIR}"
         "-DTRN_TEST_EXECUTABLE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}"
         "-DTRN_TEST_MBOX_SAVER_HELPER_NAME=${TRN_INSTALL_MBOX_SAVER_HELPER_NAME}"
+        "-DTRN_TEST_MBOX_FORMAT=${TRN_TEST_MBOX_FORMAT}"
         "-DTRN_TEST_NORM_SAVER_HELPER_NAME=${TRN_INSTALL_NORM_SAVER_HELPER_NAME}"
         "-DTRN_TEST_PNEWS_HELPER_NAME=${TRN_INSTALL_PNEWS_HELPER_NAME}"
         "-DTRN_TEST_PNEWS_HEADER_NAME=${TRN_INSTALL_PNEWS_HEADER_NAME}"
@@ -431,6 +485,7 @@ add_test(NAME ConfigCMakeTest.packageZipContainsInstallContents
         "-DTRN_TEST_MANDIR=${CMAKE_INSTALL_MANDIR}"
         "-DTRN_TEST_EXECUTABLE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}"
         "-DTRN_TEST_MBOX_SAVER_HELPER_NAME=${TRN_INSTALL_MBOX_SAVER_HELPER_NAME}"
+        "-DTRN_TEST_MBOX_FORMAT=${TRN_TEST_MBOX_FORMAT}"
         "-DTRN_TEST_NORM_SAVER_HELPER_NAME=${TRN_INSTALL_NORM_SAVER_HELPER_NAME}"
         "-DTRN_TEST_PNEWS_HELPER_NAME=${TRN_INSTALL_PNEWS_HELPER_NAME}"
         "-DTRN_TEST_PNEWS_HEADER_NAME=${TRN_INSTALL_PNEWS_HEADER_NAME}"

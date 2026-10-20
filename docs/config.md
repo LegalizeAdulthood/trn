@@ -308,11 +308,14 @@ Active generated helpers:
   tokens and preserves the current wrapper command flow; Windows
   `Speller.cmd` reports that spell checking is unsupported.
 - `mbox_saver.SH`: generated from `config/data/mbox.saver.in` on POSIX.
-  Windows generates `mbox.saver.cmd`, an unsupported diagnostic helper
-  for 5.0; the normal Windows default is to leave `MBOXSAVER` unset so
-  trn uses its built-in article saver.  Required tests: generated POSIX
-  `mbox.saver` preserves mailbox `From` escaping; Windows
-  `mbox.saver.cmd` reports that the helper is unsupported.
+  Windows generates `mbox.saver.cmd` and its `mbox.saver.ps1` companion.
+  The PowerShell 5.1 helper takes eight arguments and follows `MBOX_CHAR`:
+  From envelopes and escaping normally, or control-A separators without
+  escaping.  `MBOXSAVER` remains unset by default for internal saving.
+  Tests cover both formats, supplied envelopes, article-zero records,
+  byte preservation, buffer boundaries, quoted paths, failures, trn
+  overrides, and installed/package use.  Windows author-copy and sent-mail
+  orchestration remains part of the later `Pnews` and `Rnmail` ports.
 - `norm_saver.SH`: generated from `config/data/norm.saver.in` on POSIX.
   Windows generates `norm.saver.cmd` and its `norm.saver.ps1` companion.
   The launcher uses Windows PowerShell 5.1 with a process-local execution

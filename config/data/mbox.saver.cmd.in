@@ -1,6 +1,7 @@
 @rem This software is copyrighted as detailed in the LICENSE file.
 @rem Copyright (c) 2026, Richard Thomson
 @echo off
+setlocal DisableDelayedExpansion
 
-echo mbox.saver is not supported on Windows in this release. 1>&2
-exit /b 1
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0mbox.saver.ps1" %*
+exit /b %errorlevel%
