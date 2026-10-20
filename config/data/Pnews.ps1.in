@@ -12,6 +12,7 @@ $userHome = $null
 $draftCopy = $null
 $accepted = $false
 $status = 0
+$postedDraft = $null
 
 function Read-PnewsBytes([string] $Path) {
     return $byteEncoding.GetString([IO.File]::ReadAllBytes($Path))
@@ -94,30 +95,54 @@ function New-PnewsHeader($Words) {
     [IO.File]::WriteAllBytes($draft, $utf8.GetBytes($text))
 }
 
-function Test-PnewsEmail($Message) {
+function Get-PnewsMailRoute($Message) {
     $groups = (Get-PnewsHeader $Message[0] Newsgroups) -split ','
-    $email = (Get-PnewsHeader $Message[0] Cc).Length -gt 0
+    $recipients = @()
+    $copy = $utf8.GetString($byteEncoding.GetBytes((Get-PnewsHeader $Message[0] Cc)))
+    $blind = $utf8.GetString($byteEncoding.GetBytes((Get-PnewsHeader $Message[0] Bcc)))
+    if ($copy) { $recipients += $copy }
+    $post = $true
     foreach ($group in $groups) {
-        if ($group.Trim() -eq 'poster' -or $group.Contains('@')) { $email = $true }
+        $group = $group.Trim()
+        if ($group -eq 'poster') {
+            if (!$copy) { throw 'Put the requested return address in Cc before sending to poster.' }
+            $post = $false
+        }
+        elseif ($group.Contains('@')) { $recipients += $group; $post = $false }
         if (!(Get-PnewsHeader $Message[0] Approved) -and [IO.File]::Exists($active)) {
             foreach ($line in [IO.File]::ReadAllLines($active)) {
                 $fields = $line -split '\s+'
-                if ($fields.Count -ge 4 -and $fields[0] -eq $group.Trim() -and $fields[3] -eq 'm') { $email = $true }
+                if ($fields.Count -ge 4 -and $fields[0] -eq $group -and $fields[3] -eq 'm') {
+                    $moderators = Get-TrnSetting NEWSMODERATORS (Join-Path $newsLibrary 'moderators')
+                    $address = ''
+                    if ([IO.File]::Exists($moderators)) {
+                        foreach ($rule in [IO.File]::ReadAllLines($moderators)) {
+                            if ($rule.Trim().StartsWith('#') -or !$rule.Contains(':')) { continue }
+                            $pair = $rule -split ':', 2
+                            if ($group -like $pair[0].Trim()) {
+                                $address = $pair[1].Trim().Replace('%s', $group.Replace('.', '-'))
+                                break
+                            }
+                        }
+                    }
+                    if (!$address) { throw "No moderator address for $group; use trn's moderator routing or configure NEWSMODERATORS." }
+                    $recipients += $address
+                    $post = $false
+                }
             }
         }
     }
-    if ($email) { throw 'Windows email submission is not configured; the draft remains recoverable.' }
+    return @{Post=$post; Recipients=($recipients -join ', '); Blind=$blind}
 }
 
 function Write-PnewsSubmission([string] $Path) {
     $message = Split-PnewsMessage (Read-PnewsBytes $draft)
-    Test-PnewsEmail $message
     $groups = Get-PnewsHeader $message[0] Newsgroups
     if (!$groups -or $groups -match '\s|,,|^,|,$') { throw 'Malformed Newsgroups line.' }
     if (!(Get-PnewsHeader $message[0] Subject)) { throw 'A Subject header is required.' }
     $headers = [Collections.Generic.List[string]]::new()
     foreach ($field in [regex]::Split($message[0], '\r?\n(?![ \t])')) {
-        if ($field -match '^(Cc|X-ORIGINAL-NEWSGROUPS|X-Newsreader|X-Newsposter|User-Agent|Mime-Version|Content-Type|Content-Transfer-Encoding):') { continue }
+        if ($field -match '^(Cc|Bcc|X-ORIGINAL-NEWSGROUPS|X-Newsreader|X-Newsposter|User-Agent):') { continue }
         if ($field -match '^[-A-Za-z0-9]+:[ \t]*$' -or $field -match '^Distribution:[ \t]*world') { continue }
         if ($field -match '^Subject:') { $field = [regex]::Replace($field, 'Re: +', 'Re: ') }
         $headers.Add($field)
@@ -127,9 +152,13 @@ function Write-PnewsSubmission([string] $Path) {
         if ([int] $character -gt 127) { $transfer = '8bit'; break }
     }
     $headers.Add('User-Agent: trn/@PROJECT_VERSION@')
-    $headers.Add('Mime-Version: 1.0')
-    $headers.Add('Content-Type: text/plain; charset="' + $charset + '"')
-    $headers.Add('Content-Transfer-Encoding: ' + $transfer)
+    if (!(Get-PnewsHeader $message[0] Mime-Version)) { $headers.Add('Mime-Version: 1.0') }
+    if (!(Get-PnewsHeader $message[0] Content-Type)) {
+        $headers.Add('Content-Type: text/plain; charset="' + $charset + '"')
+    }
+    if (!(Get-PnewsHeader $message[0] Content-Transfer-Encoding)) {
+        $headers.Add('Content-Transfer-Encoding: ' + $transfer)
+    }
     Write-PnewsBytes $Path (($headers -join "`n") + "`n`n" + $message[1])
 }
 
@@ -162,6 +191,7 @@ try {
     $privateLibrary = Join-Path $PSScriptRoot '@TRN_PS_PRIVATE_RELATIVE@'
     if ([IO.File]::Exists((Join-Path $PSScriptRoot 'trn-tools.ps1'))) { $privateLibrary = $PSScriptRoot }
     . (Join-Path $privateLibrary 'trn-tools.ps1')
+    . (Join-Path $privateLibrary 'trn-mail.ps1')
     $userHome = Get-TrnSetting HOME (Get-TrnSetting LOGDIR ([Environment]::GetFolderPath('UserProfile')))
     $dotDirectory = Get-TrnSetting DOTDIR $userHome
     [void] [IO.Directory]::CreateDirectory($dotDirectory)
@@ -260,15 +290,33 @@ try {
                         }
                         '^[sS]' {
                             $submission = Join-Path $work 'submission'
+                            $route = Get-PnewsMailRoute (Split-PnewsMessage (Read-PnewsBytes $draft))
+                            $currentDraft = Read-PnewsBytes $draft
+                            if ($null -ne $postedDraft -and $postedDraft -cne $currentDraft) {
+                                throw 'The article was already posted. Restore the accepted draft before retrying its mail copy.'
+                            }
                             Write-PnewsSubmission $submission
-                            if ($headerfile -and (Get-TrnSetting TRN_VERSION '') -match '^4\.' -and
+                            if ($route.Post -and $null -eq $postedDraft -and $headerfile -and (Get-TrnSetting TRN_VERSION '') -match '^4\.' -and
                                 (Get-TrnSetting NNTPSERVER '') -notmatch '^(local)?$') {
+                                if ($route.Recipients -or $route.Blind) { throw 'Use trn 5 for posting with checked email copies.' }
                                 [IO.File]::Copy($submission, $headerfile, $true)
                                 $status = 42
                             }
                             else {
-                                $env:NNTPFDS = ''
-                                Invoke-TrnTool $inews @('-h') $submission
+                                if ($route.Post -and $null -eq $postedDraft) {
+                                    $env:NNTPFDS = ''
+                                    Invoke-TrnTool $inews @('-h') $submission
+                                    $postedDraft = $currentDraft
+                                }
+                                if ($route.Recipients -or $route.Blind) {
+                                    $mailSubmission = Join-Path $work 'mail-submission'
+                                    $mailText = Read-PnewsBytes $submission
+                                    if ($route.Blind) {
+                                        $mailText = $byteEncoding.GetString($utf8.GetBytes('Bcc: ' + $route.Blind + "`n")) + $mailText
+                                    }
+                                    Write-PnewsBytes $mailSubmission $mailText
+                                    Send-TrnMail $mailSubmission $route.Recipients
+                                }
                                 $status = 0
                             }
                             $accepted = $true

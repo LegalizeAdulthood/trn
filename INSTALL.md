@@ -238,8 +238,7 @@ Untested: `PREF_SHELL`.
 
 - `USE_INEWS`, `CALL_INEWS`, `NEWS_POSTER`, and `MAIL_POSTER`: posting
   helper command defaults.  On Windows, `NEWS_POSTER` and `MAIL_POSTER`
-  select generated `.cmd` helpers.  `Pnews.cmd` supports NNTP posting;
-  `Rnmail.cmd` reports that email delivery is unsupported until its port.
+  select generated `.cmd` helpers for NNTP posting and mail composition.
 - `MAIL_HEADER`, `NEWS_HEADER`, `CANCEL_HEADER`, and `SUPERSEDE_HEADER`:
   posting header templates.
 - `YOU_SAID`, `ATTRIBUTION`, `FORWARD_POSTER`, `FORWARD_HEADER`,
@@ -355,9 +354,26 @@ library.  `AUTHORCOPY` uses installed `mbox.saver.cmd`, with `POSTSAVER`
 as an override.  Failures retain `.article` and `dead.article`; see
 `man/Pnews.1` for the command and recovery contracts.
 
-Windows email copies and unapproved moderated posts retain their drafts
-with a clear diagnostic until the email backend is implemented.
-`Rnmail.cmd` still reports that sending email is unsupported.
+`Rnmail.cmd` invokes adjacent `Rnmail.ps1`.  It supports interactive,
+recipient-list, reply, and MIME-forward modes, signatures, editing,
+spell-checking, optional PGP, and sent records.  `MAILRECORD` uses
+installed `mbox.saver.cmd`; `REPLYSAVER` overrides its eight-argument,
+article-zero contract.  Unaccepted drafts remain in `.letter` and
+`dead.letter`.
+
+Windows mail uses native curl with SMTP and TLS support.  Set
+`RNMAILER_CONFIG` to an account JSON file; `RNMAILER` optionally selects
+another curl-compatible executable.  See
+[Windows mail setup](docs/windows-mail.md) for credentials, OAuth2, TLS,
+recipient handling, and acceptance semantics.  The account setup guide is
+also installed under the documentation directory.  No Unix mailer or
+desktop mail client is assumed.
+
+Pnews uses that adapter for Cc copies and mail-only replies.  Standalone
+moderator routing reads `NEWSMODERATORS`, defaulting to
+`NEWSLIB/moderators`; trn's configured moderator routing invokes Rnmail
+directly.  Mail-copy failure after NNTP acceptance retains the draft;
+retrying the unchanged copy does not repost the article.
 Unix packages retain `Pnews` and `Pnews.header`; Windows folds the
 scriptlet's behavior into the PowerShell composer.  Shared native tool
 support, `trn-tools.ps1`, is installed in the private library.

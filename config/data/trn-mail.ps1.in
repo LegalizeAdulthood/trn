@@ -1,0 +1,196 @@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
+#requires -Version 5.1
+
+. (Join-Path $PSScriptRoot 'trn-tools.ps1')
+
+function Split-TrnMailMessage([string] $Text) {
+    $separator = [regex]::Match($Text, '\r?\n[ \t]*\r?\n')
+    if (!$separator.Success) { throw 'Separate message headers and body with a blank line.' }
+    return @($Text.Substring(0, $separator.Index), $Text.Substring($separator.Index + $separator.Length))
+}
+
+function Get-TrnMailHeader([string] $Headers, [string] $Name) {
+    $values = @([regex]::Matches($Headers, '(?im)^' + [regex]::Escape($Name) + ':[ \t]*(.*(?:\r?\n[ \t].*)*)') |
+        ForEach-Object { [regex]::Replace($_.Groups[1].Value, '\r?\n[ \t]+', ' ').Trim() })
+    return $values -join ', '
+}
+
+function Get-TrnMailAddresses([string] $Text) {
+    if (!$Text.Trim()) { return }
+    $addresses = [Net.Mail.MailAddressCollection]::new()
+    $addresses.Add($Text)
+    foreach ($address in $addresses) {
+        if ($address.Address -match '[^\x21-\x7e]' -or !$address.Host.Contains('.')) {
+            throw 'Use complete ASCII envelope mailboxes; SMTPUTF8 addresses are not supported.'
+        }
+        $address
+    }
+}
+
+function ConvertTo-TrnEncodedHeader([string] $Value) {
+    if ($Value -notmatch '[^\x00-\x7f]') { return $Value }
+    $words = [Collections.Generic.List[string]]::new()
+    $chunk = ''
+    $encoding = [Text.UTF8Encoding]::new($false)
+    $elements = [Globalization.StringInfo]::GetTextElementEnumerator($Value)
+    while ($elements.MoveNext()) {
+        $element = $elements.GetTextElement()
+        if ($encoding.GetByteCount($element) -gt 42) { throw 'Header text element exceeds encoded-word limit.' }
+        if ($encoding.GetByteCount($chunk + $element) -gt 42) {
+            $words.Add('=?utf-8?B?' + [Convert]::ToBase64String($encoding.GetBytes($chunk)) + '?=')
+            $chunk = ''
+        }
+        $chunk += $element
+    }
+    if ($chunk) { $words.Add('=?utf-8?B?' + [Convert]::ToBase64String($encoding.GetBytes($chunk)) + '?=') }
+    return $words -join "`r`n "
+}
+
+function New-TrnMailSubmission([string] $Path, [string] $Sender, [string] $To = '') {
+    $bytes = [Text.Encoding]::GetEncoding(28591)
+    $encoding = [Text.UTF8Encoding]::new($false, $true)
+    $message = Split-TrnMailMessage ($bytes.GetString([IO.File]::ReadAllBytes($Path)))
+    $headers = $encoding.GetString($bytes.GetBytes($message[0]))
+    if ($To) {
+        $headers = [regex]::Replace($headers, '(?im)^To:.*(?:\r?\n[ \t].*)*\r?\n?', '')
+        $headers = "To: $To`r`n" + $headers
+    }
+    $recipients = @()
+    foreach ($name in @('To', 'Cc', 'Bcc')) {
+        $recipients += @(Get-TrnMailAddresses (Get-TrnMailHeader $headers $name) | ForEach-Object { $_.Address })
+    }
+    $recipients = @($recipients | Sort-Object -Unique)
+    if ($recipients.Count -eq 0) { throw 'At least one To, Cc, or Bcc recipient is required.' }
+    $fields = [Collections.Generic.List[string]]::new()
+    foreach ($field in [regex]::Split($headers, '\r?\n(?![ \t])')) {
+        if ($field -notmatch '(?s)^([-A-Za-z0-9]+):[ \t]*(.*)$') { throw 'Malformed message header.' }
+        $name = $Matches[1]
+        $value = $field.Substring($field.IndexOf(':') + 1).Trim()
+        if ($name -ieq 'Bcc' -or !$value) { continue }
+        if ($value -match '[^\x00-\x7f]') {
+            $value = [regex]::Replace($value, '\r?\n[ \t]+', ' ')
+            if ($name -imatch '^(To|Cc|From|Reply-To|Sender)$') {
+                $value = @(Get-TrnMailAddresses $value | ForEach-Object {
+                    if ($_.DisplayName) {
+                        $display = ConvertTo-TrnEncodedHeader $_.DisplayName
+                        if ($_.DisplayName -notmatch '[^\x00-\x7f]') {
+                            $display = '"' + $display.Replace('\', '\\').Replace('"', '\"') + '"'
+                        }
+                        $display + ' <' + $_.Address + '>'
+                    }
+                    else { $_.Address }
+                }) -join ', '
+            }
+            elseif ($name -imatch '^(Subject|Comments|Organization|Keywords|Summary|X-.+)$') {
+                $value = ConvertTo-TrnEncodedHeader $value
+            }
+            else { throw "Encode non-ASCII structured header $name using MIME before sending." }
+            $field = $name + ': ' + $value
+        }
+        $fields.Add([regex]::Replace($field, '\r?\n', "`r`n"))
+    }
+    if (!(Get-TrnMailHeader $headers From)) { $fields.Add('From: ' + $Sender) }
+    if (!(Get-TrnMailHeader $headers Date)) {
+        $date = [DateTimeOffset]::Now.ToString('ddd, dd MMM yyyy HH:mm:ss zzz', [Globalization.CultureInfo]::InvariantCulture)
+        $fields.Add('Date: ' + ($date -replace '([+-]\d{2}):(\d{2})$', '$1$2'))
+    }
+    if (!(Get-TrnMailHeader $headers Message-ID)) { $fields.Add('Message-ID: <' + [Guid]::NewGuid().ToString('N') + '@' + $Sender.Split('@')[-1] + '>') }
+    if (!(Get-TrnMailHeader $headers MIME-Version)) { $fields.Add('MIME-Version: 1.0') }
+    if (!(Get-TrnMailHeader $headers Content-Type)) {
+        $fields.Add('Content-Type: text/plain; charset=utf-8')
+        $fields.Add('Content-Transfer-Encoding: 8bit')
+    }
+    $body = [regex]::Replace($message[1], '\r?\n', "`r`n")
+    if (!$body.EndsWith("`r`n")) { $body += "`r`n" }
+    return @{Recipients=$recipients; Bytes=($encoding.GetBytes(($fields -join "`r`n") + "`r`n`r`n") + $bytes.GetBytes($body))}
+}
+
+function ConvertTo-TrnCurlValue([string] $Value) {
+    if ($Value -match '[\r\n\x00]') { throw 'Account values cannot contain line breaks or NUL.' }
+    return '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
+}
+
+function Send-TrnMail([string] $Path, [string] $To = '') {
+    $accountPath = Get-TrnSetting RNMAILER_CONFIG ''
+    if (!$accountPath) { throw 'Set RNMAILER_CONFIG to a Windows SMTP account JSON file.' }
+    $accountPath = [IO.Path]::GetFullPath($accountPath)
+    $account = [IO.File]::ReadAllText($accountPath) | ConvertFrom-Json
+    $settings = @{credentialFile=''; oauth2TokenFile=''; caFile=''; username=''; url=''; sender=''}
+    foreach ($property in $account.PSObject.Properties) { $settings[$property.Name] = $property.Value }
+    $url = [Uri] [string] $settings.url
+    if (!$url.IsAbsoluteUri -or $url.Scheme -notin @('smtp', 'smtps') -or $url.UserInfo -or
+        $url.Query -or $url.Fragment -or $url.AbsolutePath -notin @('', '/')) { throw 'Use an smtp:// or smtps:// server URL without credentials.' }
+    $sender = @(Get-TrnMailAddresses ([string] $settings.sender))
+    if ($sender.Count -ne 1) { throw 'Configure exactly one sender mailbox.' }
+    $timeout = 120
+    if ($settings.ContainsKey('timeoutSeconds')) { $timeout = [int] $settings.timeoutSeconds }
+    if ($timeout -lt 1 -or $timeout -gt 600) { throw 'timeoutSeconds must be between 1 and 600.' }
+    $submission = New-TrnMailSubmission $Path $sender[0].Address $To
+    $mailFrom = $sender[0].Address
+    foreach ($value in $submission.Bytes) {
+        if ($value -gt 127) {
+            $mailFrom = '<' + $mailFrom + '> BODY=8BITMIME'
+            break
+        }
+    }
+    $options = @('silent', 'show-error', 'ssl-reqd', 'globoff', 'proto = "=smtp,smtps"',
+        ('url = ' + (ConvertTo-TrnCurlValue $url.AbsoluteUri)), ('max-time = ' + $timeout),
+        ('connect-timeout = ' + [Math]::Min($timeout, 30)), 'write-out = "%{response_code}"',
+        ('mail-from = ' + (ConvertTo-TrnCurlValue $mailFrom)))
+    foreach ($recipient in $submission.Recipients) { $options += 'mail-rcpt = ' + (ConvertTo-TrnCurlValue $recipient) }
+    foreach ($name in @('credentialFile', 'oauth2TokenFile', 'caFile')) {
+        if ($settings[$name] -and ![IO.Path]::IsPathRooted($settings[$name])) {
+            $settings[$name] = Join-Path ([IO.Path]::GetDirectoryName($accountPath)) $settings[$name]
+        }
+    }
+    if ($settings.credentialFile -and $settings.oauth2TokenFile) { throw 'Select password or OAuth2 credentials, not both.' }
+    if ($settings.credentialFile) {
+        $credential = Import-Clixml -LiteralPath $settings.credentialFile
+        if ($credential -isnot [Management.Automation.PSCredential]) { throw 'credentialFile must contain an exported PSCredential.' }
+        $options += 'user = ' + (ConvertTo-TrnCurlValue ($credential.UserName + ':' + $credential.GetNetworkCredential().Password))
+    }
+    elseif ($settings.oauth2TokenFile) {
+        if (!$settings.username) { throw 'OAuth2 requires username.' }
+        $options += 'user = ' + (ConvertTo-TrnCurlValue ($settings.username + ':'))
+        $options += 'oauth2-bearer = ' + (ConvertTo-TrnCurlValue ([IO.File]::ReadAllText($settings.oauth2TokenFile).Trim()))
+    }
+    if ($settings.caFile) { $options += 'cacert = ' + (ConvertTo-TrnCurlValue $settings.caFile) }
+    $payload = Join-Path ([IO.Path]::GetTempPath()) ('trn-mail-' + [Guid]::NewGuid() + '.eml')
+    $process = [Diagnostics.Process]::new()
+    $started = $false
+    try {
+        [IO.File]::WriteAllBytes($payload, $submission.Bytes)
+        $options += 'upload-file = ' + (ConvertTo-TrnCurlValue $payload)
+        $command = Get-TrnSetting RNMAILER 'curl.exe'
+        if ([IO.File]::Exists($command)) { $parts = @($command) }
+        else { $parts = @(Split-TrnArguments $command) }
+        if ($parts.Count -eq 0) { throw 'No RNMAILER configured.' }
+        $process.StartInfo.FileName = $parts[0]
+        $arguments = @('--disable') + @($parts | Select-Object -Skip 1) + @('--config', '-')
+        $process.StartInfo.Arguments = (@($arguments | ForEach-Object { ConvertTo-TrnArgument $_ }) -join ' ')
+        $process.StartInfo.UseShellExecute = $false
+        $process.StartInfo.RedirectStandardInput = $true
+        $process.StartInfo.RedirectStandardOutput = $true
+        $process.StartInfo.RedirectStandardError = $true
+        [void] $process.Start()
+        $started = $true
+        $output = $process.StandardOutput.ReadToEndAsync()
+        $errors = $process.StandardError.ReadToEndAsync()
+        $config = [Text.UTF8Encoding]::new($false).GetBytes(($options -join "`n") + "`n")
+        $process.StandardInput.BaseStream.Write($config, 0, $config.Length)
+        $process.StandardInput.Close()
+        if (!$process.WaitForExit(($timeout + 5) * 1000)) { throw 'Mail submission timed out; acceptance is unconfirmed.' }
+        $response = $output.GetAwaiter().GetResult().Trim()
+        $null = $errors.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0 -or $response -ne '250') {
+            throw "Mail submission was not confirmed (sender status $($process.ExitCode), SMTP $response); draft retained."
+        }
+        Write-Host 'Mail accepted by the submission server.'
+    }
+    finally {
+        if ($started -and !$process.HasExited) { $process.Kill(); $process.WaitForExit() }
+        $process.Dispose()
+        if ([IO.File]::Exists($payload)) { [IO.File]::Delete($payload) }
+    }
+}

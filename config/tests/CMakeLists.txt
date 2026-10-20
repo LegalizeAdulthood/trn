@@ -17,9 +17,46 @@ gtest_discover_tests(config-test PROPERTIES LABELS trn)
 add_executable(pnews-test-tool pnews_test_tool.cpp)
 target_compile_features(pnews-test-tool PRIVATE cxx_std_17)
 target_folder(pnews-test-tool "Tests")
+if(WIN32)
+    add_test(NAME MailSubmissionTest.headers
+        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_mail_headers.ps1"
+            -Adapter "${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1"
+            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mail-headers")
+    set_tests_properties(MailSubmissionTest.headers PROPERTIES LABELS trn TIMEOUT 30)
+    add_test(NAME MailSubmissionTest.nativeSmtp
+        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_mail_smtp.ps1"
+            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mail-smtp"
+            -Adapter "${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1")
+    set_tests_properties(MailSubmissionTest.nativeSmtp PROPERTIES LABELS trn TIMEOUT 90)
+endif()
+if(UNIX)
+    add_test(NAME HelperPackageTest.unix
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/unix-helpers"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_unix_helpers.cmake")
+    set_tests_properties(HelperPackageTest.unix PROPERTIES LABELS trn TIMEOUT 120)
+endif()
+set(rnmail_cases header arguments interactive inclusion loop abort eof signature record saver pgp forward)
+if(WIN32)
+    list(APPEND rnmail_cases editor_failure editor_cancel mailer_failure mailer_unconfirmed mailer_handoff saver_failure missing_account)
+endif()
+foreach(case IN LISTS rnmail_cases)
+    add_test(NAME RnmailTest.${case}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTRN_TEST_RNMAIL=${TRN_GENERATED_RNMAIL_FILE}"
+            "-DTRN_TEST_PNEWS_TOOL=$<TARGET_FILE:pnews-test-tool>"
+            "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/rnmail-${case}"
+            "-DTRN_TEST_CASE=${case}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_rnmail.cmake")
+    set_tests_properties(RnmailTest.${case} PROPERTIES LABELS trn TIMEOUT 30)
+endforeach()
 set(pnews_cases header arguments interactive distribution inclusion loop abort eof eight_bit authorcopy saver pgp fetch)
 if(WIN32)
-    list(APPEND pnews_cases editor_failure editor_cancel artcheck_failure poster_failure nntplist_failure spell_failure pager_failure pgp_failure saver_failure missing_tool email_copy moderated poster_reply)
+    list(APPEND pnews_cases editor_failure editor_cancel artcheck_failure poster_failure nntplist_failure spell_failure pager_failure pgp_failure saver_failure missing_tool email_copy blind_copy moderated moderated_mime poster_reply email_failure moderated_failure)
 endif()
 foreach(case IN LISTS pnews_cases)
     add_test(NAME PnewsTest.${case}

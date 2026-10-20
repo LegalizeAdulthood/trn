@@ -1,4 +1,5 @@
 .\" Rnmail.1
+.\" Copyright (c) 2026, Richard Thomson
 .\"
 .\" This software is copyrighted as detailed in the LICENSE file.
 .\"
@@ -75,7 +76,47 @@ You can also modify the the MAILHEADER environment variable to change the
 header file that
 .I [t]rn
 passes to Rnmail.
+.SH WINDOWS
+Use Rnmail.cmd and its adjacent Rnmail.ps1 with Windows PowerShell 5.1.
+No Unix utilities or desktop mail client are required.  All three command
+forms are supported; recipient arguments become a comma-separated list.
+The editor receives the draft and optional oldarticle as separate arguments.
+Editor, pager, spelling, saver, and PGP overrides accept quoted commands.
+The c, e, l, p, s, and a commands check, edit, list, process with PGP, send,
+and abort.  PGP supports sign, encrypt, both, undo, and test operations.
+.PP
+Configure RNMAILER_CONFIG with the SMTP account JSON file described in
+the installed windows-mail.md guide.  Native curl supplies authenticated
+SMTP with mandatory TLS and certificate verification.  RNMAILER selects
+a curl-compatible executable, default curl.exe.  Credentials are read
+from a protected PSCredential export or OAuth2 token file; they are not
+passed on the command line.  To, Cc, and Bcc supply envelope recipients;
+Bcc is removed from uploaded headers.  Envelope mailboxes must be ASCII.
+Unicode display names and unstructured headers are encoded using MIME.
+Complete MIME forwards and custom reply headers are retained.
+.PP
+Only a successful sender exit with SMTP DATA response 250 confirms
+acceptance.  Queueing by the server does not prove inbox delivery.
+Rejection, timeout, cancellation, or unconfirmed acceptance retains
+$DOTDIR/.letter and appends $HOME/dead.letter.  A lost response after DATA
+may mean the server accepted the message; check before retrying.
+There is no desktop-client handoff mode.  MAILRECORD is written only
+after acceptance; a recording failure retains the draft without resending.
 .SH ENVIRONMENT
+.IP RNMAILER_CONFIG 8
+Windows account JSON path.  See windows-mail.md for URL, sender, TLS,
+password and OAuth2 credential setup, and timeout settings.
+.IP RNMAILER 8
+Windows curl-compatible command; Unix native mailer command.
+.IP MAILSIGNATURE 8
+Signature appended before editing; default $DOTDIR/.mail_sig.
+.IP FAST_RNMAIL 8
+A value beginning with y skips the prepared-file inclusion prompt.
+.IP REPLYSAVER 8
+Sent-record saver override.  Windows defaults to installed mbox.saver.cmd.
+Receives draft path, two dots, article zero, offset zero, Pnews, record
+path, and a complete From envelope: eight arguments.  Article zero emits
+no Article marker.  Saver failure returns nonzero and retains the draft.
 .IP DOTDIR 8
 If defined, specifies a place other than your home directory where 'dot' files
 may be stored.

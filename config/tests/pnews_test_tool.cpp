@@ -5,8 +5,10 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 #include <string>
 
 #ifdef _WIN32
@@ -45,7 +47,7 @@ int main(int argc, char **argv)
     {
         return 2;
     }
-    const std::string           role = argv[1];
+    const std::string           role = std::string{argv[1]} == "--disable" && argc > 2 ? argv[2] : argv[1];
     const std::string           mode = environment("PNEWS_TEST_MODE");
     const std::filesystem::path directory = environment("PNEWS_TEST_DIRECTORY");
     std::ofstream               log(directory / "tools.log", std::ios::app);
@@ -64,7 +66,7 @@ int main(int argc, char **argv)
         for (int i = 2; i < argc; ++i)
         {
             const std::filesystem::path path = argv[i];
-            if (path.filename().string().find(".article.") == 0)
+            if (path.filename().string().find(".article.") == 0 || path.filename().string().find(".letter.") == 0)
             {
                 std::string text = read_file(path);
                 text += "mispelled editor body\n";
@@ -82,6 +84,49 @@ int main(int argc, char **argv)
         }
         const std::string text{std::istreambuf_iterator<char>{std::cin}, std::istreambuf_iterator<char>{}};
         write_file(directory / "posted", text);
+        return 0;
+    }
+    if (role == "mailer")
+    {
+        const std::string input{std::istreambuf_iterator<char>{std::cin}, std::istreambuf_iterator<char>{}};
+        if (input.find("silent\n") != 0)
+        {
+            write_file(directory / "mailed", input);
+            return 0;
+        }
+        std::istringstream lines{input};
+        std::string        line;
+        std::string        payload;
+        std::string        recipients;
+        while (std::getline(lines, line))
+        {
+            const auto equal = line.find(" = ");
+            if (equal == std::string::npos)
+            {
+                continue;
+            }
+            std::istringstream value{line.substr(equal + 3)};
+            std::string        text;
+            value >> std::quoted(text);
+            if (line.substr(0, equal) == "upload-file")
+            {
+                payload = text;
+            }
+            else if (line.substr(0, equal) == "mail-rcpt")
+            {
+                recipients += text + '\n';
+            }
+        }
+        if (payload.empty() || recipients.empty())
+        {
+            return 10;
+        }
+        write_file(directory / "mailed", read_file(payload));
+        write_file(directory / "recipients", recipients);
+        if (mode != "mailer_unconfirmed")
+        {
+            std::cout << (mode == "mailer_handoff" ? "202" : "250");
+        }
         return 0;
     }
     if (role == "artcheck")

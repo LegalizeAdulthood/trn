@@ -557,7 +557,7 @@
 // MAIL_POSTER:
 //      command to send a reply
 //
-#define MAIL_POSTER "@MAIL_POSTER@"
+#define MAIL_POSTER R"trn(@MAIL_POSTER@)trn"
 
 // YOU_SAID:
 //      Gives the format of the attribution line in front of the quoted
@@ -578,7 +578,7 @@
 //      program referenced by FORWARD_POSTER.  See also FORWARD_HEADER and
 //      MAIL_POSTER.
 //
-#define FORWARD_POSTER "@FORWARD_POSTER@"
+#define FORWARD_POSTER R"trn(@FORWARD_POSTER@)trn"
 
 // FORWARD_HEADER:
 //      The format of the header file for forwarding messages.  If these

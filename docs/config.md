@@ -306,8 +306,10 @@ Active generated helpers:
   MIME and User-Agent headers, child failures, draft recovery, shared
   Unix workflows, installation, and packaging.  A configured posting
   hostname enables the real `inews` local-NNTP integration fixture.
-  Windows email-dependent workflows fail before posting and retain
-  drafts until the `Rnmail` and email-backend slice is complete.
+  Windows mail copies, poster replies, and moderator submissions use the
+  shared SMTP adapter.  Failed mail-copy retries skip an accepted NNTP
+  post.  Standalone moderator lookup uses `NEWSMODERATORS` or the
+  `NEWSLIB/moderators` file; trn supplies moderator addresses to Rnmail.
 - `Speller.SH`: generated from `config/data/Speller.in` on POSIX.
   Windows generates `Speller.cmd` and `Speller.ps1` for PowerShell 5.1.
   Both accept multiple drafts and runtime `ISPELL_PROGRAM`,
@@ -327,8 +329,8 @@ Active generated helpers:
   escaping.  `MBOXSAVER` remains unset by default for internal saving.
   Tests cover both formats, supplied envelopes, article-zero records,
   byte preservation, buffer boundaries, quoted paths, failures, trn
-  overrides, and installed/package use.  Windows author-copy and sent-mail
-  orchestration remains part of the later `Pnews` and `Rnmail` ports.
+  overrides, and installed/package use.  Windows Pnews author copies and
+  Rnmail sent records use this installed helper by default.
 - `norm_saver.SH`: generated from `config/data/norm.saver.in` on POSIX.
   Windows generates `norm.saver.cmd` and its `norm.saver.ps1` companion.
   The launcher uses Windows PowerShell 5.1 with a process-local execution
@@ -338,11 +340,13 @@ Active generated helpers:
   partial saves, legacy one-based positive offsets, append separators,
   all byte values, quoted paths, failures, and installed/package use.
 - `Rnmail.SH`: generated from `config/data/Rnmail.in` on POSIX.  Windows
-  generates `Rnmail.cmd`, an unsupported diagnostic helper for 5.0.
-  Required tests: generated POSIX `Rnmail` exists, contains no
-  metaconfig wrapper or obsolete substitutions, and the mail/forward
-  poster defaults still configure to `Rnmail -h %h`; Windows
-  `Rnmail.cmd` reports that reply mail is unsupported.
+  generates `Rnmail.cmd` and `Rnmail.ps1`.  Shared `trn-mail.ps1` supplies
+  checked SMTP submission through native curl.  `RNMAILER_CONFIG` selects
+  the account; `RNMAILER` overrides the curl-compatible command.  See
+  [Windows mail setup](windows-mail.md).  Tests cover composition,
+  recipient/header handling, replies, MIME forwards, signatures, tools,
+  PGP, recovery, mail records, packaging, and real local SMTP with TLS and
+  authentication.  Windows mail and forward defaults quote draft paths.
 
 Active generated data files:
 

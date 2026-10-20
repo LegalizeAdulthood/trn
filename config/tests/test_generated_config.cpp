@@ -107,8 +107,9 @@ void expect_config_define(const char *filename, std::string_view name, bool defi
 
 void expect_config_string(const char *filename, std::string_view name, std::string_view value)
 {
-    const std::string literal =
-        name == "NEWS_POSTER" ? " R\"trn(" + std::string{value} + ")trn\"" : " \"" + std::string{value} + "\"";
+    const std::string literal = name == "NEWS_POSTER" || name == "MAIL_POSTER" || name == "FORWARD_POSTER"
+                                    ? " R\"trn(" + std::string{value} + ")trn\""
+                                    : " \"" + std::string{value} + "\"";
     const std::string expected = std::string{"#define "} + std::string{name} + literal;
 
     expect_file_contains(filename, expected);
@@ -539,6 +540,7 @@ TEST(GeneratedConfigTest, postingHelperPathsDefaultMatchHistoricalFallbacks)
     if (windows_generated_helpers())
     {
         EXPECT_EQ("Pnews.cmd -h \"%h\"", std::string{TRN_TEST_DEFAULT_NEWS_POSTER});
+        EXPECT_EQ("Rnmail.cmd -h \"%h\"", std::string{TRN_TEST_DEFAULT_MAIL_POSTER});
     }
 }
 
@@ -556,7 +558,7 @@ TEST(GeneratedConfigTest, postingHelpersUseInstalledHelperPaths)
     if (windows_generated_helpers())
     {
         expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER",
-                             bin_dir + "/Rnmail.cmd -h %h");
+                             "call \"" + bin_dir + "/Rnmail.cmd\" -h \"%h\"");
         return;
     }
 
@@ -566,14 +568,14 @@ TEST(GeneratedConfigTest, postingHelpersUseInstalledHelperPaths)
     expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER", bin_dir + "/Rnmail -h %h");
 }
 
-TEST(GeneratedConfigTest, windowsHelpersReportUnsupportedFeatures)
+TEST(GeneratedConfigTest, windowsMailHelperInvokesPowerShell)
 {
     if (!windows_generated_helpers())
     {
-        GTEST_SKIP() << "Windows helper diagnostics are only generated on Windows.";
+        GTEST_SKIP() << "Windows launchers are only generated on Windows.";
     }
 
-    expect_file_contains(TRN_TEST_GENERATED_RNMAIL_FILE, "Rnmail is not supported on Windows");
+    expect_file_contains(TRN_TEST_GENERATED_RNMAIL_FILE, "Rnmail.ps1");
 }
 
 TEST(GeneratedConfigTest, generatedPnewsHeaderContainsPostingFields)

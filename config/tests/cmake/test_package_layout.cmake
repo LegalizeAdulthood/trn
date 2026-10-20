@@ -88,6 +88,10 @@ expect_executable("${bin_dir}/nntplist${TRN_TEST_EXECUTABLE_SUFFIX}")
 expect_executable("${bin_dir}/trn-artchk${TRN_TEST_EXECUTABLE_SUFFIX}")
 expect_executable("${bin_dir}/${TRN_TEST_PNEWS_HELPER_NAME}")
 expect_executable("${bin_dir}/${TRN_TEST_RNMAIL_HELPER_NAME}")
+expect_not_exists("${bin_dir}/filexp")
+expect_not_exists("${bin_dir}/filexp.cmd")
+expect_not_exists("${private_lib_dir}/filexp")
+expect_not_exists("${private_lib_dir}/filexp.cmd")
 
 expect_executable("${private_lib_dir}/${TRN_TEST_MBOX_SAVER_HELPER_NAME}")
 expect_executable("${private_lib_dir}/${TRN_TEST_NORM_SAVER_HELPER_NAME}")
@@ -122,6 +126,21 @@ check_speller("${private_lib_dir}/${TRN_TEST_SPELLER_HELPER_NAME}"
     "${TRN_TEST_PACKAGE_DIR}/speller-check" correct)
 
 if(WIN32)
+    expect_exists("${bin_dir}/Rnmail.ps1")
+    expect_exists("${private_lib_dir}/trn-mail.ps1")
+    include("${CMAKE_CURRENT_LIST_DIR}/test_rnmail.cmake")
+    check_rnmail("${bin_dir}/${TRN_TEST_RNMAIL_HELPER_NAME}" "${TRN_TEST_PNEWS_TOOL}"
+        "${TRN_TEST_PACKAGE_DIR}/rnmail-check" forward)
+    execute_process(COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+        -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+        -File "${CMAKE_CURRENT_LIST_DIR}/../test_mail_smtp.ps1"
+        -WorkDirectory "${TRN_TEST_PACKAGE_DIR}/native-mail"
+        -Adapter "${private_lib_dir}/trn-mail.ps1"
+        -Helper "${bin_dir}/${TRN_TEST_RNMAIL_HELPER_NAME}" -OnlyCase accepted
+        RESULT_VARIABLE smtp_result OUTPUT_VARIABLE smtp_out ERROR_VARIABLE smtp_err TIMEOUT 30)
+    if(NOT smtp_result EQUAL 0)
+        message(FATAL_ERROR "Installed SMTP workflow failed: ${smtp_out}${smtp_err}")
+    endif()
     include("${CMAKE_CURRENT_LIST_DIR}/test_pnews.cmake")
     check_pnews("${bin_dir}/${TRN_TEST_PNEWS_HELPER_NAME}" "${TRN_TEST_PNEWS_TOOL}"
         "${TRN_TEST_PACKAGE_DIR}/pnews-check" authorcopy)

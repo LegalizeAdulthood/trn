@@ -40,6 +40,8 @@ set(trn_mbox_saver_support_output "")
 set(trn_speller_support_output "")
 set(trn_pnews_support_output "")
 set(trn_tools_support_output "")
+set(trn_rnmail_support_output "")
+set(trn_mail_support_output "")
 
 if(WIN32)
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver.cmd")
@@ -51,6 +53,8 @@ if(WIN32)
     set(trn_tools_support_output "${CMAKE_CURRENT_BINARY_DIR}/trn-tools.ps1")
     set(trn_pnews_header_output "")
     set(trn_rnmail_output "${CMAKE_CURRENT_BINARY_DIR}/Rnmail.cmd")
+    set(trn_rnmail_support_output "${CMAKE_CURRENT_BINARY_DIR}/Rnmail.ps1")
+    set(trn_mail_support_output "${CMAKE_CURRENT_BINARY_DIR}/trn-mail.ps1")
     set(trn_speller_output "${CMAKE_CURRENT_BINARY_DIR}/Speller.cmd")
     set(trn_speller_support_output "${CMAKE_CURRENT_BINARY_DIR}/Speller.ps1")
     set(trn_helper_sources
@@ -62,6 +66,8 @@ if(WIN32)
         Pnews.ps1.in
         trn-tools.ps1.in
         Rnmail.cmd.in
+        Rnmail.ps1.in
+        trn-mail.ps1.in
         Speller.cmd.in
         Speller.ps1.in)
     set(TRN_GENERATED_WINDOWS_HELPERS ON)
@@ -93,7 +99,9 @@ if(WIN32)
         set(TRN_PNEWS_BUNDLED_INEWS 1)
     endif()
     configure_file(Pnews.ps1.in "${trn_pnews_support_output}" @ONLY)
+    configure_file(Rnmail.ps1.in "${trn_rnmail_support_output}" @ONLY)
     configure_file(trn-tools.ps1.in "${trn_tools_support_output}" COPYONLY)
+    configure_file(trn-mail.ps1.in "${trn_mail_support_output}" COPYONLY)
 else()
     set(trn_mbox_saver_output "${CMAKE_CURRENT_BINARY_DIR}/mbox.saver")
     set(trn_norm_saver_output "${CMAKE_CURRENT_BINARY_DIR}/norm.saver")
@@ -157,6 +165,8 @@ add_library(data INTERFACE
     ${trn_speller_support_output}
     ${trn_pnews_support_output}
     ${trn_tools_support_output}
+    ${trn_rnmail_support_output}
+    ${trn_mail_support_output}
     ${trn_public_helper_outputs}
     ${trn_pnews_header_output}
 )
@@ -168,6 +178,11 @@ target_folder(data "Libraries")
 install(PROGRAMS ${trn_public_helper_outputs} DESTINATION "${CMAKE_INSTALL_BINDIR}")
 if(trn_pnews_support_output)
     install(FILES "${trn_pnews_support_output}" DESTINATION "${CMAKE_INSTALL_BINDIR}")
+endif()
+if(trn_rnmail_support_output)
+    install(FILES "${trn_rnmail_support_output}" DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(FILES "${trn_mail_support_output}" DESTINATION "${trn_private_lib_install_dir}")
+    install(FILES "${PROJECT_SOURCE_DIR}/docs/windows-mail.md" DESTINATION "${CMAKE_INSTALL_DOCDIR}")
 endif()
 install(PROGRAMS ${trn_private_helper_outputs} DESTINATION "${trn_private_lib_install_dir}")
 set(trn_private_data_outputs

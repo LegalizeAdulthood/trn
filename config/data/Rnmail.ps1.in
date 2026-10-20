@@ -1,0 +1,201 @@
+# This software is copyrighted as detailed in the LICENSE file.
+# Copyright (c) 2026, Richard Thomson
+#requires -Version 5.1
+
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+$byteEncoding = [Text.Encoding]::GetEncoding(28591)
+$utf8 = [Text.UTF8Encoding]::new($false)
+$draft = $null
+$work = $null
+$accepted = $false
+$status = 0
+
+function Read-RnmailAnswer([string] $Prompt) {
+    [Console]::Write($Prompt)
+    $answer = [Console]::ReadLine()
+    if ($null -eq $answer) { throw [OperationCanceledException]::new('End of input; draft retained.') }
+    return $answer
+}
+
+function Add-RnmailBytes([string] $Path, [byte[]] $Bytes) {
+    $stream = [IO.File]::Open($Path, 'Append', 'Write', 'Read')
+    try { $stream.Write($Bytes, 0, $Bytes.Length) }
+    finally { $stream.Dispose() }
+}
+
+function Invoke-RnmailPgp([string] $Action) {
+    if (!$pgp) { throw 'Set PGPCOMMAND to enable PGP.' }
+    $message = Split-TrnMailMessage ($byteEncoding.GetString([IO.File]::ReadAllBytes($draft)))
+    $output = Join-Path $work 'pgp-output'
+    if ($Action -eq 'test') {
+        if ($message[1] -match '-----BEGIN PGP SIGNED') {
+            Invoke-TrnTool $pgp @('+batchmode', '+verbose=0', '-o', $output, $draft)
+        }
+        return
+    }
+    $inputFile = Join-Path $work 'pgp-input'
+    [IO.File]::WriteAllBytes($inputFile, $byteEncoding.GetBytes($message[1]))
+    $arguments = @('+verbose=0', '-f')
+    if ($Action -eq 'sign') { $arguments = @('+verbose=0', '-fast') }
+    elseif ($Action -in @('encrypt', 'both')) {
+        $headers = $utf8.GetString($byteEncoding.GetBytes($message[0]))
+        $recipients = @()
+        foreach ($name in @('To', 'Cc', 'Bcc')) {
+            $recipients += @(Get-TrnMailAddresses (Get-TrnMailHeader $headers $name) | ForEach-Object { $_.Address })
+        }
+        if ($recipients.Count -eq 0) { throw 'PGP encryption needs recipients.' }
+        $operation = '-e'
+        if ($Action -eq 'both') { $operation = '-es' }
+        $arguments = @('+verbose=0', '-fat', $operation) + $recipients
+    }
+    Invoke-TrnTool $pgp $arguments $inputFile $output
+    if (([IO.FileInfo] $output).Length -eq 0) { throw 'PGP returned an empty result.' }
+    [IO.File]::WriteAllBytes($draft, $byteEncoding.GetBytes($message[0] + "`n`n") + [IO.File]::ReadAllBytes($output))
+}
+
+try {
+    $privateLibrary = Join-Path $PSScriptRoot '@TRN_PS_PRIVATE_RELATIVE@'
+    if ([IO.File]::Exists((Join-Path $PSScriptRoot 'trn-tools.ps1'))) { $privateLibrary = $PSScriptRoot }
+    . (Join-Path $privateLibrary 'trn-mail.ps1')
+    $userHome = Get-TrnSetting HOME (Get-TrnSetting LOGDIR ([Environment]::GetFolderPath('UserProfile')))
+    $dotDirectory = Get-TrnSetting DOTDIR $userHome
+    [void] [IO.Directory]::CreateDirectory($dotDirectory)
+    $draftCopy = Join-Path $dotDirectory '.letter'
+    $draft = $draftCopy + '.' + [Guid]::NewGuid()
+    $work = Join-Path ([IO.Path]::GetTempPath()) ('trn-rnmail-' + [Guid]::NewGuid())
+    [void] [IO.Directory]::CreateDirectory($work)
+    $editor = Get-TrnSetting VISUAL (Get-TrnSetting EDITOR '@TRN_PS_DEFAULT_EDITOR@')
+    $pager = Get-TrnSetting PAGER '@TRN_PS_PAGER@'
+    $speller = Get-TrnSetting SPELLER (Join-Path $privateLibrary 'Speller.cmd')
+    $saver = Get-TrnSetting REPLYSAVER (Join-Path $privateLibrary 'mbox.saver.cmd')
+    if (!$saver) { $saver = Join-Path $privateLibrary 'mbox.saver.cmd' }
+    $pgp = Get-TrnSetting PGPCOMMAND 'pgp'
+    $oldarticle = ''
+    if ($args.Count -gt 0 -and $args[0] -eq '-h') {
+        if ($args.Count -lt 2 -or $args.Count -gt 3) { throw 'Usage: Rnmail -h headerfile [oldarticle]' }
+        [IO.File]::Copy([IO.Path]::GetFullPath($args[1]), $draft)
+        if ($args.Count -eq 3) { $oldarticle = $args[2] }
+    }
+    elseif ($args.Count -gt 0 -and $args[0].StartsWith('-')) { throw 'Usage: Rnmail [recipients] | -h headerfile [oldarticle]' }
+    else {
+        $to = $args -join ', '
+        while (!$to.Trim() -or $to -eq 'h') {
+            $to = Read-RnmailAnswer 'To: '
+            if ($to -eq 'h') { Write-Output 'Enter comma-separated mailboxes.' }
+        }
+        $subject = ''
+        while (!$subject.Trim() -or $subject -eq 'h') {
+            $subject = Read-RnmailAnswer 'Subject: '
+            if ($subject -eq 'h') { Write-Output 'Enter a nonempty subject.' }
+        }
+        $organization = '@TRN_PS_POSTING_ORG_NAME@'
+        if ([IO.File]::Exists($organization)) { $organization = [IO.File]::ReadAllText($organization).Trim() }
+        $reply = Get-TrnSetting REPLYTO ''
+        foreach ($value in @($to, $subject, $organization, $reply)) {
+            if ($value -match '[\r\n]') { throw 'Header values must occupy one line.' }
+        }
+        $text = "To: $to`nSubject: $subject`nOrganization: $organization`n"
+        if ($reply) { $text += "Reply-To: $reply`n" }
+        [IO.File]::WriteAllBytes($draft, $utf8.GetBytes($text + "Cc: `nBcc: `n`n"))
+    }
+    $include = ''
+    if ((Get-TrnSetting FAST_RNMAIL '') -notmatch '^y') {
+        do {
+            $include = Read-RnmailAnswer 'Prepared file to include [none]: '
+            if ($include -eq 'h') { Write-Output 'Enter a body filename, or Return to edit.' }
+        } while ($include -eq 'h')
+    }
+    $state = 'edit'
+    if ($include) { Add-RnmailBytes $draft ([IO.File]::ReadAllBytes($include)); $state = 'ask' }
+    else { Add-RnmailBytes $draft ([byte[]] @(10)) }
+    $signature = Get-TrnSetting MAILSIGNATURE (Join-Path $dotDirectory '.mail_sig')
+    if ([IO.File]::Exists($signature)) {
+        Add-RnmailBytes $draft ($utf8.GetBytes("-- `n") + [IO.File]::ReadAllBytes($signature))
+    }
+    $additionalSignature = Join-Path $dotDirectory '.signature'
+    $signatureDecided = $false
+    while (!$accepted) {
+        try {
+            if ($state -eq 'edit') {
+                if (!$editor) { $editor = Read-RnmailAnswer 'Editor: ' }
+                $editorArguments = @($draft)
+                if ($oldarticle) { $editorArguments += $oldarticle }
+                Invoke-TrnTool $editor $editorArguments
+                if ($pgp) { Invoke-RnmailPgp test }
+                $state = 'ask'
+            }
+            $answer = Read-RnmailAnswer 'Check spelling, PGP, Send, Edit, List, or Abort? '
+            switch -Regex ($answer) {
+                '^[aAqQ]' { throw [OperationCanceledException]::new('Letter aborted; draft retained.') }
+                '^[eE](?:\s+(.*))?$' {
+                    if ($Matches[1]) { $editor = $Matches[1] }
+                    $state = 'edit'; break
+                }
+                '^[lL]' { Invoke-TrnTool $pager @($draft); break }
+                '^[cCiI]|^[sS][pP]' {
+                    Invoke-TrnTool $speller @($draft)
+                    if ($pgp) { Invoke-RnmailPgp test }
+                    break
+                }
+                '^[pP](.*)$' {
+                    $action = $Matches[1].Trim()
+                    if (!$action) { $action = Read-RnmailAnswer 'Sign, Encrypt, Both, Undo, Test, or Return? ' }
+                    switch -Regex ($action) {
+                        '^[sS]' { Invoke-RnmailPgp sign; break }
+                        '^[eE]' { Invoke-RnmailPgp encrypt; break }
+                        '^[bB]' { Invoke-RnmailPgp both; break }
+                        '^[uU]' { Invoke-RnmailPgp undo; break }
+                        '^[tT]' { Invoke-RnmailPgp test; break }
+                    }
+                    break
+                }
+                '^[sS]' {
+                    if (!$signatureDecided -and [IO.File]::Exists($additionalSignature)) {
+                        $answer = Read-RnmailAnswer 'Append .signature file? [y] '
+                        if (!$answer -or $answer -match '^[yY]') {
+                            Add-RnmailBytes $draft ($utf8.GetBytes("-- `n") + [IO.File]::ReadAllBytes($additionalSignature))
+                        }
+                        $signatureDecided = $true
+                    }
+                    Send-TrnMail $draft
+                    $accepted = $true
+                    $status = 0
+                    break
+                }
+                '^[hH]' { Write-Output 'c checks spelling; s sends; e edits; l lists; a retains the draft and exits.'; break }
+            }
+        }
+        catch [OperationCanceledException] { throw }
+        catch {
+            if ($state -ne 'ask') { throw }
+            [Console]::Error.WriteLine('Rnmail: {0}', $_.Exception.Message)
+            $status = 1
+        }
+    }
+    $record = Get-TrnSetting MAILRECORD 'none'
+    if ($record -and $record -ne 'none') {
+        $login = Get-TrnSetting USER (Get-TrnSetting LOGNAME $env:USERNAME)
+        $date = [DateTime]::Now.ToString('ddd MMM d HH:mm:ss yyyy', [Globalization.CultureInfo]::InvariantCulture)
+        Invoke-TrnTool $saver @($draft, '.', '.', '0', '0', 'Pnews', $record, "From $login $date")
+    }
+}
+catch [OperationCanceledException] { [Console]::Error.WriteLine('Rnmail: {0}', $_.Exception.Message) }
+catch { [Console]::Error.WriteLine('Rnmail: {0}', $_.Exception.Message); $status = 1 }
+finally {
+    if ($draft -and [IO.File]::Exists($draft)) {
+        try {
+            [IO.File]::Copy($draft, $draftCopy, $true)
+            if (!$accepted -or $status -ne 0) {
+                $dead = Join-Path $userHome 'dead.letter'
+                if ([IO.Directory]::Exists($dead)) { $dead += '2' }
+                Add-RnmailBytes $dead ([IO.File]::ReadAllBytes($draft))
+                [Console]::Error.WriteLine('Rnmail: letter appended to {0}', $dead)
+            }
+            [IO.File]::Delete($draft)
+        }
+        catch { [Console]::Error.WriteLine('Rnmail: draft retained at {0}: {1}', $draft, $_.Exception.Message); $status = 1 }
+    }
+    if ($work -and [IO.Directory]::Exists($work)) { [IO.Directory]::Delete($work, $true) }
+}
+exit $status

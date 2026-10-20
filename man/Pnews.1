@@ -101,9 +101,22 @@ The original file supplied with -h is preserved, except for the legacy
 trn 4 connection-sharing handoff, which returns status 42.
 .PP
 Windows mail copies, replies to the special group poster, and unapproved
-posts to groups marked moderated require the email backend completed by
-the Rnmail port.  Until that backend is available, these requests fail
-with a diagnostic and retain the draft before any NNTP submission.
+moderated posts use Rnmail's checked native curl SMTP adapter.  Configure
+RNMAILER_CONFIG as described in windows-mail.md.  Cc supplies mail-copy
+recipients and the requested return address for poster replies.  Addresses
+used as newsgroup names select mail-only submission.  Complete article
+headers and body are sent; Bcc is never uploaded as a header.
+.PP
+Standalone moderation reads NEWSMODERATORS, default NEWSLIB/moderators.
+Rules have the form group-pattern:mailbox; the first match wins and %s
+expands to the group name with dots replaced by hyphens.  Missing moderator
+addresses retain the draft.  Within trn, configured moderator routing
+invokes MAILPOSTER with the complete addressed article instead.
+.PP
+Mail acceptance requires sender exit zero and SMTP DATA response 250.
+Failure retains the draft.  If NNTP already accepted the article, retrying
+an unchanged mail copy skips reposting; edit a new article separately.
+Connection-sharing with trn 4 cannot combine posting and checked copies.
 .SH ENVIRONMENT
 .IP AUTHORCOPY 8
 If defined, contains the name of a file to which the finished article will

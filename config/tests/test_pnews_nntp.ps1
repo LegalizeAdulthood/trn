@@ -9,7 +9,7 @@ $ErrorActionPreference = 'Stop'
 $bin = Join-Path $WorkDirectory 'bin & [literal] !'
 [void] [IO.Directory]::CreateDirectory($bin)
 $helperDirectory = Split-Path $Helper
-foreach ($name in @('Pnews.cmd', 'Pnews.ps1', 'trn-tools.ps1', 'Speller.cmd', 'Speller.ps1', 'mbox.saver.cmd', 'mbox.saver.ps1')) {
+foreach ($name in @('Pnews.cmd', 'Pnews.ps1', 'trn-tools.ps1', 'trn-mail.ps1', 'Speller.cmd', 'Speller.ps1', 'mbox.saver.cmd', 'mbox.saver.ps1')) {
     Copy-Item -LiteralPath (Join-Path $helperDirectory $name) -Destination $bin
 }
 Copy-Item -LiteralPath $Inews -Destination (Join-Path $bin 'inews.exe')
