@@ -793,7 +793,8 @@ cleanup2:
 
 // decide what to do at the end of an article
 
-ArticleSwitchResult art_switch(std::string command, const std::function<void(ArticleNum)> &search_progress)
+ArticleSwitchResult art_switch(std::string command, const std::function<void(ArticleNum)> &search_progress,
+                               const std::function<char(char_int)> &select_articles)
 {
     command = apply_article_default_command(command);
     print_article_command(command);
@@ -1619,7 +1620,7 @@ normal_search:
             g_s_follow_temp = true;
             g_univ_follow_temp = true;
             s_art_sel_lock = true;
-            selector_command = article_selector(selector_command);
+            selector_command = select_articles ? select_articles(selector_command) : article_selector(selector_command);
             s_art_sel_lock = false;
             switch (selector_command)
             {

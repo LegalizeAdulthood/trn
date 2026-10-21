@@ -364,6 +364,76 @@ void GroupUnreadArticleTest::TearDown()
     UnreadScopeArticleTest::TearDown();
 }
 
+class SelectorEntryArticleTest : public UnreadScopeArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string run_selector(const std::function<char(char_int)> &selector, ArticleSwitchResult expected);
+
+private:
+    int m_old_lines{g_tc_LINES};
+    int m_old_scrolled{g_term_scrolled};
+    int m_old_check_count{g_check_count};
+    int m_old_dm_count{g_dm_count};
+};
+
+void SelectorEntryArticleTest::SetUp()
+{
+    UnreadScopeArticleTest::SetUp();
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+    g_sa_in = true;
+    g_tc_LINES = 24;
+    g_term_line = 3;
+    g_term_col = 4;
+    g_term_scrolled = 2;
+    g_check_count = 10;
+    g_dm_count = 0;
+}
+
+void SelectorEntryArticleTest::TearDown()
+{
+    g_tc_LINES = m_old_lines;
+    g_term_scrolled = m_old_scrolled;
+    g_check_count = m_old_check_count;
+    g_dm_count = m_old_dm_count;
+    UnreadScopeArticleTest::TearDown();
+}
+
+std::string SelectorEntryArticleTest::run_selector(const std::function<char(char_int)> &selector,
+                                                   ArticleSwitchResult                  expected)
+{
+    const auto current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    int        calls = 0;
+    const auto invoke = [&](char_int command)
+    {
+        ++calls;
+        EXPECT_EQ('+', command);
+        EXPECT_FALSE(g_sa_in);
+        EXPECT_TRUE(g_s_follow_temp);
+        EXPECT_TRUE(g_univ_follow_temp);
+        return selector(command);
+    };
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("+", {}, invoke);
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(1, calls);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_FALSE(g_sa_in);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    return output;
+}
+
 class QuitCommandArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -1346,6 +1416,198 @@ void SubjectFallbackArticleTest::expect_from(char command, long current, long ta
 }
 
 } // namespace
+
+TEST_F(SelectorEntryArticleTest, retainsTheChosenArticleAndSelectionWhenReturningToReading)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    g_recent_art = ArticleNum{2};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_reread = true;
+    g_force_last = true;
+    push_char('n');
+
+    const std::string output = run_selector(
+        [&](char_int)
+        {
+            EXPECT_FALSE(g_selected_only);
+            article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+            g_art = ArticleNum{3};
+            g_artp = article_ptr(g_art);
+            return 'Z';
+        },
+        AS_NORM);
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_artp);
+    expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(SelectorEntryArticleTest, returnsToReadingWhenUnreadArticlesRemainWithoutSelections)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 2);
+
+    const std::string output = run_selector(
+        [&](char_int)
+        {
+            g_art = ArticleNum{1};
+            g_artp = article_ptr(g_art);
+            return 'Z';
+        },
+        AS_NORM);
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD});
+}
+
+TEST_F(SelectorEntryArticleTest, cancellationPreservesSelectionAndAllowsRepeatedEntryAtTheArticlePrompt)
+{
+    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    g_selected_only = true;
+    g_selected_subj_cnt = 1;
+    g_first_subject->m_flags |= SF_SEL;
+    for (int attempt = 1; attempt <= 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+        g_sa_in = true;
+        g_s_follow_temp = false;
+        g_univ_follow_temp = false;
+
+        const std::string output = run_selector([](char_int) { return '+'; }, AS_ASK);
+
+        EXPECT_NE(std::string::npos, output.find('\n'));
+        EXPECT_EQ(std::string::npos, output.find("Already inside article selector"));
+        EXPECT_EQ(g_tc_LINES, g_term_scrolled);
+        EXPECT_EQ(g_tc_LINES - 1, g_term_line);
+        EXPECT_EQ(0, g_term_col);
+        EXPECT_EQ(ArticleNum{1}, g_art);
+        EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+        EXPECT_TRUE(g_selected_only);
+        EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+        EXPECT_EQ(1, g_selected_subj_cnt);
+        EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+        expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD});
+    }
+}
+
+TEST_F(SelectorEntryArticleTest, emptyGroupRequestsCleanupAndAllowsRepeatedSelectorEntry)
+{
+    set_articles({}, 1);
+    for (int attempt = 1; attempt <= 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        EXPECT_TRUE(run_selector([](char_int) { return 'Z'; }, AS_CLEAN).empty());
+
+        EXPECT_EQ(ArticleNum{1}, g_art);
+        EXPECT_EQ(nullptr, g_artp);
+        EXPECT_TRUE(g_article_list.empty());
+        EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{}, g_selected_count);
+        EXPECT_FALSE(g_selected_only);
+    }
+}
+
+TEST_F(SelectorEntryArticleTest, exhaustedGroupPreservesTheEndPositionWhenRequestingCleanup)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 4);
+
+    EXPECT_TRUE(run_selector([](char_int) { return 'Z'; }, AS_CLEAN).empty());
+
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_FALSE(g_selected_only);
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS});
+}
+
+TEST_F(SelectorEntryArticleTest, selectorReadingTheLastUnreadArticleRequestsCleanup)
+{
+    set_articles({AF_EXISTS | AF_UNREAD}, 1);
+
+    const std::string output = run_selector(
+        [&](char_int)
+        {
+            article_ptr(ArticleNum{1})->mark_as_read();
+            g_art = article_after(g_last_art);
+            g_artp = nullptr;
+            return 'Z';
+        },
+        AS_CLEAN);
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_FALSE(g_selected_only);
+    expect_flags({AF_EXISTS});
+}
+
+TEST_F(SelectorEntryArticleTest, cancellationKeepsAnEmptyGroupAtTheArticlePrompt)
+{
+    set_articles({}, 1);
+
+    const std::string output = run_selector([](char_int) { return '+'; }, AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find('\n'));
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_EQ(g_tc_LINES, g_term_scrolled);
+    EXPECT_EQ(g_tc_LINES - 1, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
+TEST_F(SelectorEntryArticleTest, recursiveEntryIsRejectedUntilTheActiveSelectorReturns)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 1);
+    int               recursive_calls = 0;
+    const std::string output = run_selector(
+        [&](char_int)
+        {
+            const ArticleSwitchResult nested = art_switch("+", {},
+                                                          [&](char_int)
+                                                          {
+                                                              ++recursive_calls;
+                                                              return 'Z';
+                                                          });
+            EXPECT_EQ(AS_ASK, nested);
+            EXPECT_EQ(ArticleNum{1}, g_art);
+            EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+            return 'Z';
+        },
+        AS_NORM);
+
+    EXPECT_EQ(0, recursive_calls);
+    EXPECT_NE(std::string::npos, output.find("Already inside article selector!"));
+    EXPECT_EQ(5, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+    EXPECT_TRUE(run_selector([](char_int) { return 'Z'; }, AS_NORM).empty());
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_FALSE(g_selected_only);
+    expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD});
+}
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
 {

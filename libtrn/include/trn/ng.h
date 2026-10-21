@@ -63,7 +63,8 @@ enum ArticleSwitchResult
 
 void                ng_init();
 DoNewsgroupResult   do_newsgroup(std::optional<std::string> start_command);
-ArticleSwitchResult art_switch(std::string command, const std::function<void(ArticleNum)> &search_progress = {});
+ArticleSwitchResult art_switch(std::string command, const std::function<void(ArticleNum)> &search_progress = {},
+                               const std::function<char(char_int)> &select_articles = {});
 #ifdef MAIL_CALL
 void set_mail(bool force);
 #endif
