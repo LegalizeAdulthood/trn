@@ -1474,6 +1474,7 @@ normal_search:
             if (!g_search_ahead)
             {
                 g_art = g_curr_art;
+                g_artp = g_curr_artp;
                 return AS_ASK;
             }
             top_article();

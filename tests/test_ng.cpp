@@ -780,6 +780,101 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     return output;
 }
 
+class KillSubjectArticleTest : public SearchCommandArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        set_kill_articles(long current);
+    std::string kill_subject(ArticleSwitchResult expected, long target,
+                             const std::function<void(ArticleNum)> &progress = {});
+
+private:
+    bool                   m_old_in_ng{g_in_ng};
+    bool                   m_old_sa_follow{g_sa_follow};
+    int                    m_old_check_count{g_check_count};
+    int                    m_old_dm_count{g_dm_count};
+    decltype(g_just_a_sec) m_old_just_a_sec{g_just_a_sec};
+    std::string            m_old_msg{g_msg};
+};
+
+void KillSubjectArticleTest::SetUp()
+{
+    SearchCommandArticleTest::SetUp();
+    g_in_ng = true;
+    g_sa_follow = false;
+    g_check_count = 10;
+    g_dm_count = 1;
+    g_just_a_sec = 0;
+}
+
+void KillSubjectArticleTest::TearDown()
+{
+    g_in_ng = m_old_in_ng;
+    g_sa_follow = m_old_sa_follow;
+    g_check_count = m_old_check_count;
+    g_dm_count = m_old_dm_count;
+    g_just_a_sec = m_old_just_a_sec;
+    g_msg = m_old_msg;
+    SearchCommandArticleTest::TearDown();
+}
+
+void KillSubjectArticleTest::set_kill_articles(long current)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK,
+                         AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+                         AF_EXISTS},
+                        current);
+    m_subjects[0].m_str = "Re: Target subject";
+    m_subjects[1].m_str = "Re: Other subject";
+    m_subjects[2].m_str = "Re: Target subject";
+    for (Subject &subject : m_subjects)
+    {
+        subject.m_flags |= SF_SEL | SF_WAS_SELECTED;
+    }
+    g_selected_only = true;
+    g_selected_subj_cnt = 3;
+    g_force_last = true;
+}
+
+std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, long target,
+                                                 const std::function<void(ArticleNum)> &progress)
+{
+    const auto current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    push_char('n');
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("k", progress);
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(ArticleNum{target}, g_art);
+    EXPECT_EQ(target <= g_last_art.value_of() ? article_ptr(ArticleNum{target}) : nullptr, g_artp);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+class KillSubjectScanArticleTest : public KillSubjectArticleTest,
+                                   public testing::WithParamInterface<std::pair<bool, bool>>
+{
+};
+
+class KillSubjectSearchArticleTest : public KillSubjectArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
 void SearchCommandArticleTest::expect_interrupted_search(long current)
 {
     set_search_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
@@ -2000,6 +2095,129 @@ TEST_P(CancelSelectorPrefixArticleTest, erasingOrKillingThePrefixNeverEntersTheS
 }
 
 INSTANTIATE_TEST_SUITE_P(EraseAndKill, CancelSelectorPrefixArticleTest, testing::Values('\b', Ctl('U')));
+
+TEST_F(KillSubjectArticleTest, cachedKillIncludesSelectedUnreadArticlesAndPreservesOtherSubjectsOnRepeat)
+{
+    set_kill_articles(4);
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        EXPECT_TRUE(kill_subject(AS_NORM, 4).empty());
+
+        expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK, AF_EXISTS,
+                      AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+        EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+        EXPECT_FALSE(m_subjects[1].m_flags & (SF_VISIT | SF_WAS_SELECTED));
+        EXPECT_TRUE(m_subjects[0].m_flags & SF_VISIT);
+        EXPECT_TRUE(m_subjects[2].m_flags & SF_VISIT);
+        EXPECT_FALSE(g_reread);
+        EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    }
+}
+
+TEST_P(KillSubjectScanArticleTest, cachedKillReturnsToScanUnlessFollowingArticles)
+{
+    set_kill_articles(4);
+    g_sa_in = true;
+    g_sa_follow = GetParam().first;
+    g_s_follow_temp = GetParam().second;
+
+    EXPECT_TRUE(kill_subject(g_sa_follow || g_s_follow_temp ? AS_NORM : AS_SA, 4).empty());
+
+    EXPECT_TRUE(g_sa_in);
+    EXPECT_EQ(GetParam().first, g_sa_follow);
+    EXPECT_EQ(GetParam().second, g_s_follow_temp);
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+}
+
+INSTANTIATE_TEST_SUITE_P(FollowPolicy, KillSubjectScanArticleTest,
+                         testing::Values(std::make_pair(false, false), std::make_pair(true, false),
+                                         std::make_pair(false, true)));
+
+TEST_P(KillSubjectSearchArticleTest, fallbackKillsMatchingSubjectsAndRestoresTheCurrentArticlePair)
+{
+    set_kill_articles(2);
+    g_threaded_group = GetParam();
+    g_last_cached = GetParam() ? ArticleNum{5} : g_last_art;
+    std::vector<ArticleNum> visited;
+
+    const std::string output = kill_subject(AS_ASK, 2, [&](ArticleNum number) { visited.push_back(number); });
+
+    EXPECT_NE(std::string::npos, output.find("done"));
+    EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{2}, ArticleNum{3}, ArticleNum{4}, ArticleNum{5}, ArticleNum{6},
+                                       ArticleNum{7}}),
+              visited);
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_reread);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+}
+
+INSTANTIATE_TEST_SUITE_P(UnthreadedOrPartlyCached, KillSubjectSearchArticleTest, testing::Bool());
+
+TEST_F(KillSubjectArticleTest, fallbackWithSubjectSearchAheadResumesAtTheFirstRemainingSelectedArticle)
+{
+    set_kill_articles(2);
+    g_threaded_group = false;
+    g_search_ahead = ArticleNum{-1};
+
+    const std::string output = kill_subject(AS_NORM, 4);
+
+    EXPECT_NE(std::string::npos, output.find("done"));
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+}
+
+TEST_F(KillSubjectArticleTest, interruptingFallbackKeepsCompletedKillsAndRestoresTheCurrentArticlePair)
+{
+    set_kill_articles(2);
+    g_last_cached = ArticleNum{5};
+
+    const std::string output = kill_subject(AS_ASK, 2,
+                                            [](ArticleNum number)
+                                            {
+                                                if (number == ArticleNum{6})
+                                                {
+                                                    g_int_count = 1;
+                                                }
+                                            });
+
+    EXPECT_NE(std::string::npos, output.find("Intr at 6"));
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_TRUE(g_reread);
+}
+
+TEST_F(KillSubjectArticleTest, groupEndReportsTheMissingCurrentArticleWithoutChangingReadState)
+{
+    set_kill_articles(8);
+    g_sa_in = true;
+
+    const std::string output = kill_subject(AS_ASK, 8);
+
+    EXPECT_NE(std::string::npos, output.find("End of group"));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_TRUE(g_sa_in);
+    EXPECT_TRUE(m_subjects[1].m_flags & SF_VISIT);
+    EXPECT_FALSE(g_reread);
+}
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
 {
