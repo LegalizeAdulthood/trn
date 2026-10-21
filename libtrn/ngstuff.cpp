@@ -420,7 +420,11 @@ int thread_perform(std::string_view command)
         len++;
     }
     std::string cmdstr{command.substr(static_cast<std::size_t>(len))};
-    bool        want_unread = !g_sel_rereading && (cmdstr.empty() || cmdstr[0] != 'm');
+    if (cmdstr.empty())
+    {
+        return -1;
+    }
+    bool want_unread = !g_sel_rereading && cmdstr[0] != 'm';
 
     perform_status_init(g_newsgroup_ptr->m_to_read);
     len = static_cast<int>(cmdstr.size());
@@ -484,7 +488,10 @@ int thread_perform(std::string_view command)
         if (!g_art_ptr_list.empty())
         {
             Article **limit = article_ptr_list_end();
-            sp = (g_sel_mode==SM_THREAD? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
+            if (one_thread)
+            {
+                sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
+            }
             for (Article **app = article_ptr_list_begin(); app < limit; app++)
             {
                 ap = *app;

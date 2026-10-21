@@ -1126,7 +1126,7 @@ not_threaded:
     {
         g_page_line = 1;
         const std::string full_command = finish_article_command(command, true);
-        if (full_command.empty() || !thread_perform(full_command))
+        if (full_command.empty() || thread_perform(full_command) <= 0)
         {
             return AS_INP;
         }

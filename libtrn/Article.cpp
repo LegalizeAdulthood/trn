@@ -270,7 +270,8 @@ void Article::one_more()
         {
             if (g_selected_only)
             {
-                if (m_subj->m_flags & static_cast<SubjectFlags>(g_sel_mask))
+                if ((m_subj->m_flags & static_cast<SubjectFlags>(g_sel_mask)) &&
+                    !(m_flags & static_cast<ArticleFlags>(g_sel_mask)))
                 {
                     m_flags |= static_cast<ArticleFlags>(g_sel_mask);
                     g_selected_count++;

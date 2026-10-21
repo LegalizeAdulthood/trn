@@ -13,6 +13,7 @@
 #include <trn/kfile.h>
 #include <trn/ng-internal.h>
 #include <trn/ngdata.h>
+#include <trn/ngstuff.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -974,6 +975,123 @@ std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, l
     EXPECT_EQ('n', read_tty_char());
     EXPECT_FALSE(macro_pending());
     return output;
+}
+
+class BulkSelectionArticleTest : public KillSubjectArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string apply_bulk(std::string_view input, ArticleSwitchResult expected = AS_ASK);
+    void        expect_bulk_unchanged();
+
+private:
+    bool                      m_old_one_command{g_one_command};
+    decltype(g_missing_count) m_old_missing_count{g_missing_count};
+    std::string_view          m_old_tc_cr{g_tc_CR};
+    std::string_view          m_old_tc_ce{g_tc_CE};
+};
+
+void BulkSelectionArticleTest::SetUp()
+{
+    KillSubjectArticleTest::SetUp();
+    g_one_command = false;
+    g_missing_count = 0;
+    g_tc_CR = "\r";
+    g_tc_CE = "\033[K";
+    set_scope({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL,
+               AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+              4);
+    for (Subject &subject : m_subjects)
+    {
+        subject.m_flags |= SF_SEL;
+        subject.m_misc = 1;
+    }
+    g_selected_subj_cnt = 3;
+    g_selected_only = true;
+    g_sel_mode = SM_THREAD;
+    g_recent_art = ArticleNum{2};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{3};
+    g_search_ahead = ArticleNum{4};
+    g_reread = true;
+    g_force_last = true;
+}
+
+void BulkSelectionArticleTest::TearDown()
+{
+    g_one_command = m_old_one_command;
+    g_missing_count = m_old_missing_count;
+    g_tc_CR = m_old_tc_cr;
+    g_tc_CE = m_old_tc_ce;
+    KillSubjectArticleTest::TearDown();
+}
+
+std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, ArticleSwitchResult expected)
+{
+    const auto article = std::make_pair(g_art, g_artp);
+    const auto current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto order = g_art_ptr_list;
+    const auto cursor = g_art_ptr;
+    push_char('n');
+    for (auto it = input.rbegin(); it != input.rend(); ++it)
+    {
+        push_char(*it);
+    }
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{':', FINISH_CMD});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{4}, g_search_ahead);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('n', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+void BulkSelectionArticleTest::expect_bulk_unchanged()
+{
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+}
+
+class BulkArticleOrderTest : public BulkSelectionArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void BulkArticleOrderTest::SetUp()
+{
+    BulkSelectionArticleTest::SetUp();
+    if (GetParam())
+    {
+        for (const long number : {6, 3, 5, 2, 4, 1, 7})
+        {
+            g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+        }
+        g_art_ptr = g_art_ptr_list.data() + 4;
+    }
 }
 
 class PersistentKillArticleTest : public KillSubjectArticleTest
@@ -3140,6 +3258,229 @@ TEST_F(MemorizeArticleTest, unthreadedGroupRejectsThreadMemorizationWithoutPromp
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
     EXPECT_EQ(KFS_NONE, g_kf_state);
     EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+}
+
+TEST_P(BulkArticleOrderTest, junkAffectsOnlySelectedUnreadArticlesAndReportsExactCounts)
+{
+    const std::string output = apply_bulk("j\n");
+    SCOPED_TRACE(output);
+
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(3, g_perform_count);
+    EXPECT_EQ("3 articles killed, 3 deselected.", g_msg);
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_P(BulkArticleOrderTest, deselectLeavesReadSelectionsAndUnselectedArticlesAlone)
+{
+    const std::string output = apply_bulk("-\n");
+    SCOPED_TRACE(output);
+
+    expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(3, g_perform_count);
+    EXPECT_EQ("3 articles deselected.", g_msg);
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_P(BulkArticleOrderTest, inverseSelectionSelectsUnreadArticlesAcrossThreads)
+{
+    article_ptr(ArticleNum{6})->m_flags &= ~AF_SEL;
+    --g_selected_count;
+
+    apply_bulk(":+\n");
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ("2 articles selected.", g_msg);
+}
+
+TEST_P(BulkArticleOrderTest, markUnreadTargetsOnlyReadSelections)
+{
+    apply_bulk("m\n");
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ("1 article unkilled.", g_msg);
+}
+
+TEST_P(BulkArticleOrderTest, currentThreadScopeExcludesSelectedArticlesInOtherThreads)
+{
+    apply_bulk(".j\n");
+
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ("2 articles killed, 2 deselected.", g_msg);
+}
+
+TEST_P(BulkArticleOrderTest, inverseCurrentThreadScopeExcludesOtherThreadsAndReadArticles)
+{
+    article_ptr(ArticleNum{6})->m_flags &= ~AF_SEL;
+    --g_selected_count;
+
+    apply_bulk(":.+\n");
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ("1 article selected.", g_msg);
+}
+
+TEST_P(BulkArticleOrderTest, rereadingModeDeselectsOnlyReadSelections)
+{
+    g_sel_rereading = true;
+
+    apply_bulk("-\n");
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ("1 article deselected.", g_msg);
+}
+
+TEST_P(BulkArticleOrderTest, noUnreadSelectionsReportsNoArticlesAffected)
+{
+    for (const long number : {1, 4, 6})
+    {
+        article_ptr(ArticleNum{number})->m_flags &= ~AF_SEL;
+    }
+    g_selected_count = ArticleUnread{1};
+
+    const std::string output = apply_bulk("j\n");
+
+    expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ("No articles affected.", g_msg);
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_P(BulkArticleOrderTest, bulkActionFromGroupEndRestoresTheNullReadingAnchor)
+{
+    g_art = g_curr_art = ArticleNum{8};
+    g_artp = g_curr_artp = nullptr;
+
+    apply_bulk("j\n");
+
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(3, g_perform_count);
+}
+
+TEST_P(BulkArticleOrderTest, invalidActionStopsAtTheFirstMatchAndPreservesCompletedEffects)
+{
+    const std::string output = apply_bulk("j?\n");
+
+    EXPECT_NE(std::string::npos, output.find("Unknown command: ?"));
+    const long killed = GetParam() ? 6 : 1;
+    for (long number = 1; number <= 7; ++number)
+    {
+        SCOPED_TRACE(number);
+        const ArticleFlags flags[] = {AF_EXISTS | AF_UNREAD | AF_SEL,
+                                      AF_EXISTS | AF_UNREAD,
+                                      AF_EXISTS | AF_SEL,
+                                      AF_EXISTS | AF_UNREAD | AF_SEL,
+                                      AF_EXISTS,
+                                      AF_EXISTS | AF_UNREAD | AF_SEL,
+                                      AF_EXISTS};
+        EXPECT_EQ(number == killed ? AF_EXISTS : flags[number - 1], article_ptr(ArticleNum{number})->m_flags);
+    }
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ("1 article killed, 1 deselected.", g_msg);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingOrder, BulkArticleOrderTest, testing::Bool());
+
+TEST_F(BulkSelectionArticleTest, erasedCommandRequestsInputWithoutAffectingArticles)
+{
+    g_msg = "prior status";
+
+    const std::string output = apply_bulk("\b", AS_INP);
+
+    expect_bulk_unchanged();
+    EXPECT_EQ("prior status", g_msg);
+    EXPECT_EQ(std::string::npos, output.find("prior status"));
+}
+
+TEST_F(BulkSelectionArticleTest, emptyCommandRequestsInputWithoutReportingAStaleStatus)
+{
+    for (const std::string_view input : {"\n", ":\n", ".\n", ":.\n"})
+    {
+        SCOPED_TRACE(input);
+        g_msg = "prior status";
+        g_perform_count = 19;
+
+        const std::string output = apply_bulk(input, AS_INP);
+
+        expect_bulk_unchanged();
+        EXPECT_EQ("prior status", g_msg);
+        EXPECT_EQ(std::string::npos, output.find("prior status"));
+    }
+}
+
+TEST_F(BulkSelectionArticleTest, currentThreadScopeAtGroupEndRequestsInputWithoutAffectingArticles)
+{
+    g_art = g_curr_art = ArticleNum{8};
+    g_artp = g_curr_artp = nullptr;
+    g_msg = "prior status";
+
+    apply_bulk(".j\n", AS_INP);
+
+    expect_bulk_unchanged();
+    EXPECT_EQ("prior status", g_msg);
+}
+
+TEST_F(BulkSelectionArticleTest, threadShortcutKillsWholeSelectedThreadsIncludingUnselectedUnreadArticles)
+{
+    const std::string output = apply_bulk("J\n");
+
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{0}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_FALSE(g_performed_article_loop);
+    EXPECT_EQ("2 threads matched, 4 articles killed, 3 deselected.", g_msg);
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_F(BulkSelectionArticleTest, inverseThreadShortcutLeavesSelectedThreadsAlone)
+{
+    m_subjects[2].m_flags &= ~SF_SEL;
+    --g_selected_subj_cnt;
+    article_ptr(ArticleNum{6})->m_flags &= ~AF_SEL;
+    --g_selected_count;
+
+    apply_bulk(":J\n");
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_FALSE(g_performed_article_loop);
+    EXPECT_EQ("1 thread matched, 1 article killed.", g_msg);
 }
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
