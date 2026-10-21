@@ -213,6 +213,10 @@ class ParentRootArticleTest : public ArticleNavigationTest
 {
 };
 
+class ChildLeafArticleTest : public ArticleNavigationTest
+{
+};
+
 class SubjectThreadArticleTest : public ArticleNavigationTest
 {
 protected:
@@ -974,6 +978,153 @@ TEST_P(ParentRootArticleTest, rejectsUnthreadedGroupWithoutMoving)
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, ParentRootArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Root" : "Parent"; });
+
+TEST_P(ChildLeafArticleTest, followsFirstChildBranchAndPreservesHistoryAndSelection)
+{
+    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    article_ptr(ArticleNum{2})->m_sibling = article_ptr(ArticleNum{5});
+    article_ptr(ArticleNum{4})->m_child1 = nullptr;
+    article_ptr(ArticleNum{5})->m_parent = article_ptr(ArticleNum{1});
+    g_threaded_group = true;
+    g_selected_only = true;
+    g_recent_art = ArticleNum{3};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_search_ahead = ArticleNum{3};
+    const ArticleNum expected{GetParam() ? 4L : 2L};
+
+    EXPECT_EQ(AS_NORM, art_switch(GetParam() ? "}" : "]"));
+
+    EXPECT_EQ(expected, g_art);
+    ASSERT_EQ(article_ptr(expected), g_artp);
+    EXPECT_EQ(AF_EXISTS, g_artp->m_flags);
+    EXPECT_EQ(ArticleNum{1}, g_curr_art);
+    ASSERT_EQ(article_ptr(ArticleNum{1}), g_curr_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_curr_artp->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{5})->m_flags);
+    EXPECT_EQ(ArticleNum{3}, g_recent_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_recent_artp);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_P(ChildLeafArticleTest, preservesPositionWithoutDescendantsWithTerseWarning)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD}, 2);
+    g_threaded_group = true;
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(GetParam() ? "}" : "]");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos, output.find("Last leaf."));
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    ASSERT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(ArticleNum{2}, g_curr_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
+TEST_P(ChildLeafArticleTest, preservesPositionWithoutDescendantsWithVerboseWarning)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD}, 2);
+    g_threaded_group = true;
+    g_verbose = true;
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(GetParam() ? "}" : "]");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos, output.find("This is the last leaf in this tree."));
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    ASSERT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(ArticleNum{2}, g_curr_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
+TEST_P(ChildLeafArticleTest, preservesEndOfGroupWithoutCurrentArticle)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 3);
+    g_threaded_group = true;
+    for (const bool verbose : {false, true})
+    {
+        SCOPED_TRACE(verbose);
+        g_verbose = verbose;
+        g_term_line = 0;
+        g_term_col = 0;
+        testing::internal::CaptureStdout();
+
+        const ArticleSwitchResult result = art_switch(GetParam() ? "}" : "]");
+
+        const std::string output = testing::internal::GetCapturedStdout();
+        EXPECT_EQ(AS_ASK, result);
+        EXPECT_NE(std::string::npos, output.find(verbose ? "You're at the end of the group." : "End of group."));
+        EXPECT_EQ(ArticleNum{3}, g_art);
+        EXPECT_EQ(nullptr, g_artp);
+        EXPECT_EQ(ArticleNum{3}, g_curr_art);
+        EXPECT_EQ(nullptr, g_curr_artp);
+        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+        EXPECT_FALSE(g_reread);
+        EXPECT_FALSE(g_s_follow_temp);
+        EXPECT_FALSE(g_univ_follow_temp);
+        EXPECT_EQ(2, g_term_line);
+        EXPECT_EQ(0, g_term_col);
+    }
+}
+
+TEST_P(ChildLeafArticleTest, rejectsUnthreadedGroupWithoutMoving)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS}, 1);
+    g_threaded_group = false;
+    for (const bool verbose : {false, true})
+    {
+        SCOPED_TRACE(verbose);
+        g_verbose = verbose;
+        g_term_line = 0;
+        g_term_col = 0;
+        testing::internal::CaptureStdout();
+
+        const ArticleSwitchResult result = art_switch(GetParam() ? "}" : "]");
+
+        const std::string output = testing::internal::GetCapturedStdout();
+        EXPECT_EQ(AS_ASK, result);
+        EXPECT_NE(std::string::npos, output.find(verbose ? "This group is not threaded." : "Unthreaded group."));
+        EXPECT_EQ(ArticleNum{1}, g_art);
+        ASSERT_EQ(article_ptr(ArticleNum{1}), g_artp);
+        EXPECT_EQ(ArticleNum{1}, g_curr_art);
+        EXPECT_EQ(g_artp, g_curr_artp);
+        EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+        EXPECT_FALSE(g_reread);
+        EXPECT_FALSE(g_s_follow_temp);
+        EXPECT_FALSE(g_univ_follow_temp);
+        EXPECT_EQ(2, g_term_line);
+        EXPECT_EQ(0, g_term_col);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, ChildLeafArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Leaf" : "Child"; });
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
 {
