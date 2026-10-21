@@ -369,7 +369,8 @@ class SelectorEntryArticleTest : public UnreadScopeArticleTest
 protected:
     void        SetUp() override;
     void        TearDown() override;
-    std::string run_selector(const std::function<char(char_int)> &selector, ArticleSwitchResult expected);
+    std::string run_selector(const std::function<char(char_int)> &selector, ArticleSwitchResult expected,
+                             DoNewsgroupResult exit_code = NG_NORM);
 
 private:
     int m_old_lines{g_tc_LINES};
@@ -402,7 +403,7 @@ void SelectorEntryArticleTest::TearDown()
 }
 
 std::string SelectorEntryArticleTest::run_selector(const std::function<char(char_int)> &selector,
-                                                   ArticleSwitchResult                  expected)
+                                                   ArticleSwitchResult expected, DoNewsgroupResult exit_code)
 {
     const auto current = std::make_pair(g_curr_art, g_curr_artp);
     const auto recent = std::make_pair(g_recent_art, g_recent_artp);
@@ -428,11 +429,45 @@ std::string SelectorEntryArticleTest::run_selector(const std::function<char(char
     EXPECT_FALSE(g_sa_in);
     EXPECT_TRUE(g_s_follow_temp);
     EXPECT_TRUE(g_univ_follow_temp);
-    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(exit_code, g_newsgroup_exit_code);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     return output;
 }
+
+class SelectorExitArticleTest : public SelectorEntryArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    bool m_old_sa_go{g_sa_go};
+    bool m_old_sa_go_explicit{g_sa_go_explicit};
+    bool m_old_sa_do_sel_threads{g_sa_do_sel_threads};
+};
+
+void SelectorExitArticleTest::SetUp()
+{
+    SelectorEntryArticleTest::SetUp();
+    g_newsgroup_exit_code = NG_MINUS;
+    g_sa_go = false;
+    g_sa_go_explicit = false;
+    g_sa_do_sel_threads = false;
+}
+
+void SelectorExitArticleTest::TearDown()
+{
+    g_sa_go = m_old_sa_go;
+    g_sa_go_explicit = m_old_sa_go_explicit;
+    g_sa_do_sel_threads = m_old_sa_do_sel_threads;
+    SelectorEntryArticleTest::TearDown();
+}
+
+class SelectorGroupExitArticleTest : public SelectorExitArticleTest,
+                                     public testing::WithParamInterface<std::pair<char, DoNewsgroupResult>>
+{
+};
 
 class QuitCommandArticleTest : public UnreadScopeArticleTest
 {
@@ -1607,6 +1642,122 @@ TEST_F(SelectorEntryArticleTest, recursiveEntryIsRejectedUntilTheActiveSelectorR
     EXPECT_EQ(ArticleUnread{}, g_selected_count);
     EXPECT_FALSE(g_selected_only);
     expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD});
+}
+
+TEST_P(SelectorGroupExitArticleTest, leavesForTheRequestedGroupDestinationWithoutChangingReadingContext)
+{
+    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    g_selected_only = true;
+    g_selected_subj_cnt = 1;
+    g_first_subject->m_flags |= SF_SEL;
+    g_recent_art = ArticleNum{2};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{2};
+    g_search_ahead = ArticleNum{2};
+    g_reread = true;
+    g_force_last = true;
+    push_char('n');
+
+    const std::string output = run_selector([&](char_int) { return GetParam().first; }, AS_CLEAN, GetParam().second);
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(SF_SEL | SF_VISIT, g_first_subject->m_flags);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleNum{1}, g_first_art);
+    EXPECT_EQ(ArticleNum{2}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{2}, g_search_ahead);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_FALSE(g_sa_go);
+    EXPECT_FALSE(g_sa_go_explicit);
+    EXPECT_FALSE(g_sa_do_sel_threads);
+    EXPECT_EQ(3, g_term_line);
+    EXPECT_EQ(4, g_term_col);
+    EXPECT_EQ(2, g_term_scrolled);
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD});
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(SelectorCommand, SelectorGroupExitArticleTest,
+                         testing::Values(std::make_pair('q', NG_NEXT), std::make_pair('Q', NG_ASK),
+                                         std::make_pair('N', NG_SEL_NEXT), std::make_pair('P', NG_SEL_PRIOR)),
+                         [](const testing::TestParamInfo<std::pair<char, DoNewsgroupResult>> &info)
+                         { return std::string{info.param.first}; });
+
+TEST_F(SelectorExitArticleTest, groupExitAtExhaustionRetainsTheEndPositionAndExistingScanRequests)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 4);
+    g_sa_go_explicit = true;
+    g_sa_do_sel_threads = true;
+
+    EXPECT_TRUE(run_selector([](char_int) { return 'q'; }, AS_CLEAN, NG_NEXT).empty());
+
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_sa_go);
+    EXPECT_TRUE(g_sa_go_explicit);
+    EXPECT_TRUE(g_sa_do_sel_threads);
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS});
+}
+
+TEST_F(SelectorExitArticleTest, scanReturnRequestsExplicitSelectedThreadScanningForTheChosenArticle)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    push_char('n');
+
+    const std::string output = run_selector(
+        [&](char_int)
+        {
+            article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+            g_art = ArticleNum{3};
+            g_artp = article_ptr(g_art);
+            return ';';
+        },
+        AS_SA, NG_MINUS);
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_artp);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_sa_go);
+    EXPECT_TRUE(g_sa_go_explicit);
+    EXPECT_TRUE(g_sa_do_sel_threads);
+    expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL});
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(SelectorExitArticleTest, scanReturnAtExhaustionRetainsTheEndPositionAndGroupExitCode)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 4);
+    g_sa_go_explicit = true;
+    g_sa_do_sel_threads = true;
+
+    EXPECT_TRUE(run_selector([](char_int) { return ';'; }, AS_SA, NG_MINUS).empty());
+
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_sa_go);
+    EXPECT_TRUE(g_sa_go_explicit);
+    EXPECT_TRUE(g_sa_do_sel_threads);
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS});
 }
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
