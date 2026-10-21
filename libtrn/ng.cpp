@@ -1313,13 +1313,10 @@ check_dec_art:
             else
             {
                 g_artp = g_first_subject->m_articles;
-                if (g_artp->m_flags & AF_EXISTS)
+                g_art = g_artp->article_num();
+                if (!(g_artp->m_flags & AF_EXISTS))
                 {
-                    g_art = g_artp->article_num();
-                }
-                else
-                {
-                    inc_article(false,true);
+                    inc_article(false, true);
                 }
             }
         }

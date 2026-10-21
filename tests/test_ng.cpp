@@ -1,6 +1,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
+#include <trn/artstate.h>
 #include <trn/cache.h>
 #include <trn/ng-internal.h>
 #include <trn/ngdata.h>
@@ -20,7 +21,7 @@
 namespace
 {
 
-class NextUnreadArticleTest : public testing::TestWithParam<bool>
+class ArticleNavigationTest : public testing::TestWithParam<bool>
 {
 protected:
     void SetUp() override;
@@ -49,6 +50,8 @@ private:
     bool                     m_old_breadth_first{g_breadth_first};
     SelectionMode            m_old_sel_mode{g_sel_mode};
     bool                     m_old_selected_only{g_selected_only};
+    bool                     m_old_reread{g_reread};
+    bool                     m_old_force_last{g_force_last};
     int                      m_old_scan_on{g_scan_on};
     bool                     m_old_sa_in{g_sa_in};
     bool                     m_old_univ_read_virt_flag{g_univ_read_virt_flag};
@@ -58,7 +61,7 @@ private:
     bool                     m_old_univ_follow_temp{g_univ_follow_temp};
 };
 
-void NextUnreadArticleTest::SetUp()
+void ArticleNavigationTest::SetUp()
 {
     g_article_list.clear();
     g_art_ptr_list.clear();
@@ -74,6 +77,8 @@ void NextUnreadArticleTest::SetUp()
     g_breadth_first = false;
     g_sel_mode = SM_ARTICLE;
     g_selected_only = false;
+    g_reread = false;
+    g_force_last = false;
     g_scan_on = 0;
     g_sa_in = false;
     g_univ_read_virt_flag = false;
@@ -83,7 +88,7 @@ void NextUnreadArticleTest::SetUp()
     g_univ_follow_temp = false;
 }
 
-void NextUnreadArticleTest::TearDown()
+void ArticleNavigationTest::TearDown()
 {
     g_article_list = std::move(m_old_article_list);
     g_art_ptr_list = std::move(m_old_art_ptr_list);
@@ -103,6 +108,8 @@ void NextUnreadArticleTest::TearDown()
     g_breadth_first = m_old_breadth_first;
     g_sel_mode = m_old_sel_mode;
     g_selected_only = m_old_selected_only;
+    g_reread = m_old_reread;
+    g_force_last = m_old_force_last;
     g_scan_on = m_old_scan_on;
     g_sa_in = m_old_sa_in;
     g_univ_read_virt_flag = m_old_univ_read_virt_flag;
@@ -112,7 +119,7 @@ void NextUnreadArticleTest::TearDown()
     g_univ_follow_temp = m_old_univ_follow_temp;
 }
 
-void NextUnreadArticleTest::set_articles(std::initializer_list<ArticleFlags> flags, long current)
+void ArticleNavigationTest::set_articles(std::initializer_list<ArticleFlags> flags, long current)
 {
     Article *previous = nullptr;
     long     number = 1;
@@ -144,6 +151,14 @@ void NextUnreadArticleTest::set_articles(std::initializer_list<ArticleFlags> fla
     g_art = ArticleNum{current};
     g_artp = g_art <= g_last_art ? article_ptr(g_art) : nullptr;
 }
+
+class NextUnreadArticleTest : public ArticleNavigationTest
+{
+};
+
+class NextArticleTest : public ArticleNavigationTest
+{
+};
 
 } // namespace
 
@@ -209,6 +224,89 @@ TEST_P(NextUnreadArticleTest, restartsAtUnreadArticleWhenAlreadyAfterLastArticle
 }
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, NextUnreadArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
+
+TEST_P(NextArticleTest, includesReadArticles)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+
+    EXPECT_EQ(AS_NORM, art_switch("N"));
+
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_P(NextArticleTest, skipsMissingArticlesBeforeReadArticle)
+{
+    set_articles({AF_EXISTS, AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+
+    EXPECT_EQ(AS_NORM, art_switch("N"));
+
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_artp);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_P(NextArticleTest, stopsAfterFinalArticleWithoutWrapping)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 2);
+
+    EXPECT_EQ(AS_NORM, art_switch("N"));
+
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_TRUE(g_force_last);
+}
+
+TEST_P(NextArticleTest, restartsAtFirstArticleIncludingReadArticles)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS}, 4);
+    g_first_art = ArticleNum{2};
+    if (!GetParam())
+    {
+        g_first_subject = nullptr;
+        g_last_subject = nullptr;
+    }
+
+    EXPECT_EQ(AS_NORM, art_switch("N"));
+
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_P(NextArticleTest, skipsMissingFirstCachedArticleWhenRestarting)
+{
+    set_articles({AF_NONE, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 4);
+
+    EXPECT_EQ(AS_NORM, art_switch("N"));
+
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, NextArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
