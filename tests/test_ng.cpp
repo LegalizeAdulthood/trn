@@ -195,6 +195,10 @@ class PreviousUnreadArticleTest : public ArticleNavigationTest
 {
 };
 
+class PreviousArticleTest : public ArticleNavigationTest
+{
+};
+
 } // namespace
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
@@ -437,6 +441,96 @@ TEST_P(PreviousUnreadArticleTest, preservesCurrentArticleWhenNoEarlierSelectedUn
 }
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, PreviousUnreadArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
+
+TEST_P(PreviousArticleTest, includesReadUnselectedArticlesBeforeFirstUnread)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL}, 3);
+    g_first_art = ArticleNum{3};
+    g_selected_only = true;
+
+    EXPECT_EQ(AS_NORM, art_switch("P"));
+
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_reread);
+}
+
+TEST_P(PreviousArticleTest, skipsMissingArticlesBeforeReadArticle)
+{
+    set_articles({AF_EXISTS, AF_UNREAD, AF_EXISTS}, 3);
+
+    EXPECT_EQ(AS_NORM, art_switch("P"));
+
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+}
+
+TEST_P(PreviousArticleTest, findsLastReadArticleFromEndOfGroup)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 4);
+    g_first_art = ArticleNum{4};
+
+    EXPECT_EQ(AS_NORM, art_switch("P"));
+
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_artp);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+}
+
+TEST_P(PreviousArticleTest, preservesFirstArticleWithVerboseWarning)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    g_verbose = true;
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("P");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos, output.find("There are no articles prior to this one."));
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
+TEST_P(PreviousArticleTest, preservesCurrentArticleWhenAllEarlierArticlesAreMissing)
+{
+    set_articles({AF_UNREAD, AF_EXISTS}, 2);
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("P");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos, output.find("No previous articles"));
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, PreviousArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
