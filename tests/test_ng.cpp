@@ -983,9 +983,9 @@ protected:
     void TearDown() override;
 
     std::filesystem::path m_kill_file;
+    trn::testing::MockEnvironment m_env;
 
 private:
-    trn::testing::MockEnvironment m_env;
     std::filesystem::path         m_output_dir;
     KillFileStateFlags            m_old_kf_state{g_kf_state};
     std::FILE                    *m_old_local_kfp{g_local_kfp};
@@ -1026,6 +1026,120 @@ void PersistentKillArticleTest::TearDown()
 
 class PersistentKillScanArticleTest : public PersistentKillArticleTest,
                                       public testing::WithParamInterface<std::pair<bool, bool>>
+{
+};
+
+class MemorizeArticleTest : public PersistentKillArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string memorize(char command, std::string_view replies, ArticleSwitchResult expected = AS_ASK);
+    void        expect_auto_flags(std::initializer_list<int> flags);
+    void        seed_auto_flags();
+
+    std::filesystem::path m_global_file;
+
+private:
+    KillFileStateFlags m_old_thread_change_set{g_kfs_thread_change_set};
+    int                m_old_change_thread_count{g_kf_change_thread_cnt};
+    bool               m_old_kill_thru_kludge{g_kill_thru_kludge};
+    HeaderType         m_old_from_header{g_header_type[FROM_LINE]};
+    HeaderType         m_old_reply_header{g_header_type[REPLY_LINE]};
+    std::string        m_old_head_buf{g_head_buf};
+    std::string_view   m_old_tc_ce{g_tc_CE};
+    std::string_view   m_old_tc_cr{g_tc_CR};
+};
+
+void MemorizeArticleTest::SetUp()
+{
+    PersistentKillArticleTest::SetUp();
+    g_kfs_thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+    g_kf_change_thread_cnt = 0;
+    g_kill_thru_kludge = false;
+    g_header_type[FROM_LINE].flags |= HT_CACHED;
+    g_tc_CE = "\033[K";
+    g_tc_CR = "\r";
+    m_global_file = m_kill_file.parent_path() / "GLOBAL";
+    std::error_code error;
+    std::filesystem::remove(m_global_file, error);
+    ASSERT_FALSE(error) << error.message();
+    m_env.expect_env_repeatedly("KILLGLOBAL", m_global_file.generic_string().c_str());
+    set_kill_articles(2);
+    for (long number = 1; number <= 7; ++number)
+    {
+        article_ptr(ArticleNum{number})->m_from =
+            number == 2 || number == 4 ? "reader@example.org" : "other@example.org";
+    }
+}
+
+void MemorizeArticleTest::TearDown()
+{
+    g_kfs_thread_change_set = m_old_thread_change_set;
+    g_kf_change_thread_cnt = m_old_change_thread_count;
+    g_kill_thru_kludge = m_old_kill_thru_kludge;
+    g_header_type[FROM_LINE] = m_old_from_header;
+    g_header_type[REPLY_LINE] = m_old_reply_header;
+    g_head_buf = m_old_head_buf;
+    g_tc_CE = m_old_tc_ce;
+    g_tc_CR = m_old_tc_cr;
+    std::error_code error;
+    std::filesystem::remove(m_global_file, error);
+    PersistentKillArticleTest::TearDown();
+}
+
+std::string MemorizeArticleTest::memorize(char command, std::string_view replies, ArticleSwitchResult expected)
+{
+    const auto article = std::make_pair(g_art, g_artp);
+    const auto current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    push_char('n');
+    for (auto it = replies.rbegin(); it != replies.rend(); ++it)
+    {
+        push_char(*it);
+    }
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{command});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+void MemorizeArticleTest::expect_auto_flags(std::initializer_list<int> flags)
+{
+    long number = 0;
+    for (const int expected : flags)
+    {
+        SCOPED_TRACE(++number);
+        EXPECT_EQ(expected, article_ptr(ArticleNum{number})->m_auto_flags);
+    }
+    EXPECT_EQ(7, number);
+}
+
+void MemorizeArticleTest::seed_auto_flags()
+{
+    for (long number = 1; number <= 7; ++number)
+    {
+        article_ptr(ArticleNum{number})->m_auto_flags = AUTO_SEL_1 | AUTO_OLD;
+    }
+}
+
+class MemorizeScopeArticleTest : public MemorizeArticleTest, public testing::WithParamInterface<char>
 {
 };
 
@@ -2723,6 +2837,309 @@ TEST_F(PersistentKillArticleTest, failedRuleSaveReportsTheErrorAndStillKillsMatc
                   AF_EXISTS, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+}
+
+TEST_P(MemorizeScopeArticleTest, selectsAndRemembersOnlyTheCurrentSubject)
+{
+    const std::string output = memorize(GetParam(), "S");
+
+    EXPECT_NE(std::string::npos, output.find("Selection memorized"));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    expect_auto_flags({AUTO_SEL_SBJ, AUTO_SEL_SBJ, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+}
+
+TEST_P(MemorizeScopeArticleTest, remembersSingleArticleSelectionWithoutSelectingItImmediately)
+{
+    memorize(GetParam(), "m");
+
+    expect_auto_flags({0, AUTO_SEL_1, 0, 0, 0, 0, 0});
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+}
+
+TEST_P(MemorizeScopeArticleTest, killsAndRemembersOnlyTheCurrentArticle)
+{
+    const std::string output = memorize(GetParam(), "j", AS_NORM);
+
+    EXPECT_NE(std::string::npos, output.find("Kill memorized"));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    expect_auto_flags({0, AUTO_KILL_1, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+}
+
+TEST_P(MemorizeScopeArticleTest, killsAndRemembersOnlyTheCurrentSubject)
+{
+    memorize(GetParam(), "K", AS_NORM);
+
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    expect_auto_flags({AUTO_KILL_SBJ, AUTO_KILL_SBJ, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+}
+
+TEST_P(MemorizeScopeArticleTest, clearsRememberedRepliesAcrossSubjectsWithoutChangingReadOrSelectedState)
+{
+    seed_auto_flags();
+
+    memorize(GetParam(), "c");
+
+    expect_auto_flags(
+        {AUTO_SEL_1 | AUTO_OLD, 0, 0, 0, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD});
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(3, g_kf_change_thread_cnt);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+}
+
+TEST_P(MemorizeScopeArticleTest, helpThenCancellationLeavesNoSavedOrImmediateAction)
+{
+    g_verbose = GetParam() == 'T';
+    seed_auto_flags();
+
+    const std::string output = memorize(GetParam(), "hq");
+
+    EXPECT_NE(std::string::npos, output.find("abort"));
+    expect_auto_flags({AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD,
+                       AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD});
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(KFS_NONE, g_kf_state);
+    EXPECT_EQ(0, g_kf_change_thread_cnt);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+    EXPECT_FALSE(std::filesystem::exists(m_global_file));
+}
+
+TEST_P(MemorizeScopeArticleTest, groupEndRejectsMemorizationWithoutPrompting)
+{
+    g_art = g_curr_art = ArticleNum{8};
+    g_artp = g_curr_artp = nullptr;
+
+    const std::string output = memorize(GetParam(), "");
+
+    EXPECT_NE(std::string::npos, output.find("End of group"));
+    EXPECT_EQ(std::string::npos, output.find("Memorize"));
+    expect_auto_flags({0, 0, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(KFS_NONE, g_kf_state);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+}
+
+INSTANTIATE_TEST_SUITE_P(Command, MemorizeScopeArticleTest, testing::Values('A', 'T'));
+
+TEST_F(MemorizeArticleTest, threadDefaultSelectsAndRemembersTheWholeThreadFromADescendant)
+{
+    memorize('T', " ");
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS});
+    expect_auto_flags({AUTO_SEL_THD, AUTO_SEL_THD, AUTO_SEL_THD, AUTO_SEL_THD, AUTO_SEL_THD, 0, 0});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+}
+
+TEST_F(MemorizeArticleTest, threadDotSelectsAndRemembersRepliesAcrossSubjectsIncludingReadArticles)
+{
+    article_ptr(ArticleNum{4})->m_flags &= ~AF_SEL;
+    --g_selected_count;
+
+    memorize('T', ".");
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    expect_auto_flags({0, AUTO_SEL_FOL, AUTO_SEL_FOL, AUTO_SEL_FOL, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+}
+
+TEST_F(MemorizeArticleTest, threadJunkKillsAndRemembersTheWholeThreadIncludingSelectedArticles)
+{
+    memorize('T', "J", AS_NORM);
+
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS});
+    expect_auto_flags({AUTO_KILL_THD, AUTO_KILL_THD, AUTO_KILL_THD, AUTO_KILL_THD, AUTO_KILL_THD, 0, 0});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+}
+
+TEST_F(MemorizeArticleTest, threadCommaKillsAndRemembersRepliesWithoutKillingSiblingBranches)
+{
+    memorize('T', ",", AS_NORM);
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    expect_auto_flags({0, AUTO_KILL_FOL, AUTO_KILL_FOL, AUTO_KILL_FOL, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+}
+
+TEST_F(MemorizeArticleTest, threadClearRemovesOnlyThisThreadsRememberedActions)
+{
+    seed_auto_flags();
+
+    memorize('T', "C");
+
+    expect_auto_flags({0, 0, 0, 0, 0, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD});
+    EXPECT_EQ(5, g_kf_change_thread_cnt);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+}
+
+TEST_F(MemorizeArticleTest, articleClearRemovesOnlyThisSubjectsRememberedActions)
+{
+    seed_auto_flags();
+
+    memorize('A', "C");
+
+    expect_auto_flags({0, 0, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD, AUTO_SEL_1 | AUTO_OLD,
+                       AUTO_SEL_1 | AUTO_OLD});
+    EXPECT_EQ(2, g_kf_change_thread_cnt);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES, g_kf_state);
+}
+
+TEST_F(MemorizeArticleTest, articleDefaultSavesALocalSubjectSelectionRuleAndSelectsLaterMatches)
+{
+    memorize('A', " ");
+
+    EXPECT_EQ("/: *Target subject/:+\n", file_contents(m_kill_file));
+    EXPECT_FALSE(std::filesystem::exists(m_global_file));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    expect_auto_flags({0, 0, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
+}
+
+TEST_F(MemorizeArticleTest, articleDotSavesAReplySelectionRuleAndSelectsDescendantsOfMatches)
+{
+    article_ptr(ArticleNum{4})->m_flags &= ~AF_SEL;
+    --g_selected_count;
+
+    memorize('A', ".");
+
+    EXPECT_EQ("/: *Target subject/:.\n", file_contents(m_kill_file));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    expect_auto_flags({0, 0, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+}
+
+TEST_F(MemorizeArticleTest, articleJunkSavesASubjectKillRuleAndKillsMatchesFromTheCurrentArticle)
+{
+    memorize('A', "J", AS_NORM);
+
+    EXPECT_EQ("/: *Target subject/:j\n", file_contents(m_kill_file));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS});
+    expect_auto_flags({0, 0, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+}
+
+TEST_F(MemorizeArticleTest, articleCommaSavesAReplyKillRuleAndKillsDescendantsOfMatches)
+{
+    memorize('A', ",", AS_NORM);
+
+    EXPECT_EQ("/: *Target subject/:,\n", file_contents(m_kill_file));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    expect_auto_flags({0, 0, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+}
+
+TEST_F(MemorizeArticleTest, articleCommaAlsoKillsUnreadRepliesWhenTheCurrentArticleWasAlreadyRead)
+{
+    g_artp->m_flags &= ~AF_UNREAD;
+    --m_newsgroup.m_to_read;
+
+    memorize('A', ",", AS_NORM);
+
+    EXPECT_EQ("/: *Target subject/:,\n", file_contents(m_kill_file));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    expect_auto_flags({0, 0, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+}
+
+TEST_F(MemorizeArticleTest, authorAndGlobalTogglesSaveAnAuthorRuleAndApplyItAcrossSubjects)
+{
+    g_parsed_art = g_art;
+    g_head_buf = "From: reader@example.org\n";
+    g_header_type[FROM_LINE].min_pos = ArticlePosition{0};
+    g_header_type[FROM_LINE].max_pos = ArticlePosition{static_cast<long>(g_head_buf.size())};
+    g_header_type[REPLY_LINE].min_pos = ArticlePosition{-1};
+
+    const std::string output = memorize('A', "fgJ", AS_NORM);
+    SCOPED_TRACE(output);
+
+    EXPECT_NE(std::string::npos, output.find("Global-Memorize author command"));
+    EXPECT_EQ("/reader@example\\.org/f:j\n", file_contents(m_global_file));
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+}
+
+TEST_F(MemorizeArticleTest, togglingAuthorAndGlobalBackRestoresLocalSubjectRulesInAnUnthreadedGroup)
+{
+    g_threaded_group = false;
+
+    memorize('A', "fgfg+");
+
+    EXPECT_EQ("/: *Target subject/:+\n", file_contents(m_kill_file));
+    EXPECT_FALSE(std::filesystem::exists(m_global_file));
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+}
+
+TEST_F(MemorizeArticleTest, unthreadedGroupRejectsThreadMemorizationWithoutPrompting)
+{
+    g_threaded_group = false;
+
+    const std::string output = memorize('T', "");
+
+    EXPECT_NE(std::string::npos, output.find("thread"));
+    EXPECT_EQ(std::string::npos, output.find("Memorize"));
+    expect_auto_flags({0, 0, 0, 0, 0, 0, 0});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(KFS_NONE, g_kf_state);
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
 }
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)

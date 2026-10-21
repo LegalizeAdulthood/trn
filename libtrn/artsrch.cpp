@@ -18,6 +18,7 @@
 #include <trn/ngstuff.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
+#include <trn/rthread.h>
 #include <trn/search.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -315,7 +316,14 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
                 {
                     cmd_lst = "j";
                 }
-                article_ptr(g_art)->mark_as_read();       // this article needs to die
+                if (cmd_chr == ',')
+                {
+                    kill_sub_thread(article_ptr(g_art), AFFECT_ALL);
+                }
+                else
+                {
+                    article_ptr(g_art)->mark_as_read();
+                }
             }
             const std::string finding_text = pattern_text.substr(finding_start);
             if (finding_text.empty())
