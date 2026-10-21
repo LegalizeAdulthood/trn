@@ -1305,7 +1305,12 @@ no_previous_article:
         }
         if (g_art > g_last_art)
         {
-            if (!g_first_subject)
+            if (!g_art_ptr_list.empty())
+            {
+                g_artp = nullptr;
+                inc_article(false, true);
+            }
+            else if (!g_first_subject)
             {
                 g_art = g_abs_first;
                 g_artp = article_ptr(g_art);
