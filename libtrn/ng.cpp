@@ -2137,6 +2137,7 @@ reask_catchup:
         if (leave_unread)
         {
             count_subjects(CS_NORM);
+            article_walk(count_uncached_article, 0);
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
         }
         else

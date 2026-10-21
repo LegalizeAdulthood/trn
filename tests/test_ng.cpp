@@ -14,6 +14,7 @@
 #include <trn/ng-internal.h>
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
+#include <trn/rcstuff.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -757,6 +758,188 @@ enum class RestoreOrder
 };
 
 class RestoreOrderArticleTest : public RestoreDelayedArticleTest, public testing::WithParamInterface<RestoreOrder>
+{
+};
+
+class CatchupArticleTest : public RestoreDelayedArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        set_catchup_articles(long current = 4);
+    std::string catch_up(std::string_view input, ArticleSwitchResult expected);
+    void        expect_catchup_unchanged();
+    void        expect_subscription_unchanged();
+
+    static const ArticleFlags CACHED;
+    Newsrc                    m_newsrc{};
+
+private:
+    bool             m_old_in_ng{g_in_ng};
+    std::string      m_old_newsgroup_name{g_newsgroup_name};
+    NewsgroupNum     m_old_newsgroup_to_read{g_newsgroup_to_read};
+    char             m_old_erase_char{g_erase_char};
+    char             m_old_kill_char{g_kill_char};
+    std::string_view m_old_tc_bc{g_tc_BC};
+    bool             m_old_mouse_is_down{g_mouse_is_down};
+    char             m_old_int_count{g_int_count};
+    std::string      m_rc_line;
+};
+
+const ArticleFlags CatchupArticleTest::CACHED = AF_EXISTS | AF_CACHED;
+
+void CatchupArticleTest::SetUp()
+{
+    RestoreDelayedArticleTest::SetUp();
+    g_in_ng = true;
+    g_newsgroup_name = "comp.test.catchup";
+    g_newsgroup_to_read = NewsgroupNum{5};
+    g_erase_char = '\b';
+    g_kill_char = Ctl('U');
+    g_tc_BC = "\b";
+    g_mouse_is_down = false;
+    g_int_count = 0;
+    m_newsrc.flags = RF_ACTIVE;
+    m_newsgroup.m_rc = &m_newsrc;
+    m_newsgroup.m_rc_line = g_newsgroup_name + ": 3,7";
+    m_newsgroup.m_num_offset = static_cast<int>(g_newsgroup_name.size()) + 1;
+    m_newsgroup.m_subscribe_char = ':';
+    m_newsgroup.hide_subscribe_char();
+    m_rc_line = m_newsgroup.m_rc_line;
+}
+
+void CatchupArticleTest::TearDown()
+{
+    g_in_ng = m_old_in_ng;
+    g_newsgroup_name = m_old_newsgroup_name;
+    g_newsgroup_to_read = m_old_newsgroup_to_read;
+    g_erase_char = m_old_erase_char;
+    g_kill_char = m_old_kill_char;
+    g_tc_BC = m_old_tc_bc;
+    g_mouse_is_down = m_old_mouse_is_down;
+    g_int_count = m_old_int_count;
+    RestoreDelayedArticleTest::TearDown();
+}
+
+void CatchupArticleTest::set_catchup_articles(long current)
+{
+    set_scope({CACHED | AF_UNREAD | AF_SEL, CACHED | AF_UNREAD, CACHED | AF_DEL, CACHED | AF_UNREAD | AF_SEL,
+               AF_CACHED | AF_THREADED, CACHED | AF_UNREAD | AF_SEL, CACHED | AF_YANK_BACK},
+              current);
+    for (Subject &subject : m_subjects)
+    {
+        subject.m_flags |= SF_SEL;
+    }
+    g_selected_only = true;
+    g_selected_subj_cnt = 3;
+    g_dm_count = 1;
+    g_sel_mode = SM_THREAD;
+    g_recent_art = ArticleNum{2};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{3};
+    g_search_ahead = ArticleNum{4};
+    g_reread = true;
+    g_force_last = true;
+}
+
+std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchResult expected)
+{
+    const auto current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto order = g_art_ptr_list;
+    const auto cursor = g_art_ptr;
+    const bool threaded = g_threaded_group;
+    const bool breadth_first = g_breadth_first;
+    const bool scan = g_sa_in;
+    push_char('Q');
+    for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
+    {
+        push_char(*ch);
+    }
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("c");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(expected, result);
+    EXPECT_NE(std::string::npos,
+              output.find(g_verbose ? "Mark everything in comp.test.catchup as read?" : "Catchup comp.test.catchup?"));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(threaded, g_threaded_group);
+    EXPECT_EQ(breadth_first, g_breadth_first);
+    EXPECT_EQ(scan, g_sa_in);
+    EXPECT_EQ(SM_THREAD, g_sel_mode);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{4}, g_search_ahead);
+    EXPECT_TRUE(g_reread);
+    EXPECT_EQ(10, g_check_count);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(m_rc_line, m_newsgroup.m_rc_line);
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('Q', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+void CatchupArticleTest::expect_subscription_unchanged()
+{
+    EXPECT_EQ(':', m_newsgroup.m_subscribe_char);
+    EXPECT_EQ(RF_ACTIVE, m_newsrc.flags);
+    EXPECT_EQ(NewsgroupNum{5}, g_newsgroup_to_read);
+}
+
+void CatchupArticleTest::expect_catchup_unchanged()
+{
+    expect_flags({CACHED | AF_UNREAD | AF_SEL, CACHED | AF_UNREAD, CACHED | AF_DEL, CACHED | AF_UNREAD | AF_SEL,
+                  AF_CACHED | AF_THREADED, CACHED | AF_UNREAD | AF_SEL, CACHED | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_EQ(ArticleNum{1}, g_first_art);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_force_last);
+    expect_subscription_unchanged();
+}
+
+class CatchupConfirmArticleTest : public CatchupArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class CatchupCancelArticleTest : public CatchupArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class CatchupHelpArticleTest : public CatchupArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class CatchupTailArticleTest : public CatchupArticleTest, public testing::WithParamInterface<std::string>
+{
+};
+
+class CatchupZeroArticleTest : public CatchupArticleTest, public testing::WithParamInterface<std::string>
+{
+};
+
+class CatchupNumericCancelArticleTest : public CatchupArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class CatchupUnsubscribeArticleTest : public CatchupArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class CatchupUncachedTailArticleTest : public CatchupArticleTest, public testing::WithParamInterface<int>
 {
 };
 
@@ -4402,6 +4585,212 @@ TEST_F(RestoreDelayedArticleTest, expirationAfterMLeavesNoArticleToRestoreAndCle
     EXPECT_EQ(0, g_selected_subj_cnt);
     EXPECT_EQ(ArticleNum{2}, g_first_art);
 }
+
+TEST_P(CatchupConfirmArticleTest, confirmationMarksAllReadAndKeepsTheEndNumberAndPointerTogetherOnRepeat)
+{
+    set_catchup_articles();
+    article_ptr(ArticleNum{7})->m_flags &= ~AF_YANK_BACK;
+    g_dm_count = 0;
+    g_sa_in = true;
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        catch_up(std::string{GetParam()}, AS_NORM);
+
+        expect_flags({CACHED, CACHED, CACHED | AF_DEL, CACHED, AF_CACHED | AF_THREADED, CACHED, CACHED});
+        EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{}, g_selected_count);
+        EXPECT_EQ(0, g_selected_subj_cnt);
+        EXPECT_EQ(0, g_dm_count);
+        EXPECT_FALSE(g_selected_only);
+        EXPECT_FALSE(g_force_last);
+        EXPECT_EQ(ArticleNum{8}, g_art);
+        EXPECT_EQ(nullptr, g_artp);
+        expect_subscription_unchanged();
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(Answer, CatchupConfirmArticleTest, testing::Values('y', ' '));
+
+TEST_P(CatchupCancelArticleTest, cancellationPreservesArticlesCountsAndReadingPositionIncludingGroupEnd)
+{
+    set_catchup_articles();
+    for (const long current : {4, 8})
+    {
+        SCOPED_TRACE(current);
+        g_art = ArticleNum{current};
+        g_artp = current == 8 ? nullptr : article_ptr(g_art);
+        g_curr_art = g_art;
+        g_curr_artp = g_artp;
+
+        catch_up(std::string{GetParam()}, AS_ASK);
+
+        EXPECT_EQ(ArticleNum{current}, g_art);
+        EXPECT_EQ(g_curr_artp, g_artp);
+        expect_catchup_unchanged();
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(Answer, CatchupCancelArticleTest, testing::Values('n', 'q'));
+
+TEST_P(CatchupHelpArticleTest, helpExplainsTheChoicesAndReturnsToThePromptBeforeCancellation)
+{
+    set_catchup_articles();
+    g_verbose = GetParam();
+
+    const std::string output = catch_up("hHn", AS_ASK);
+
+    EXPECT_NE(std::string::npos,
+              output.find(g_verbose ? "Type y or SP to mark all articles as read." : "y or SP to mark all read."));
+    EXPECT_NE(std::string::npos, output.find(g_verbose ? "Type u to mark everything read and unsubscribe."
+                                                       : "u to mark all and unsubscribe."));
+    EXPECT_NE(std::string::npos,
+              output.find(g_verbose ? "The # means enter a number" : "# means enter a number to leave unread."));
+    EXPECT_NE(output.find("comp.test.catchup"), output.rfind("comp.test.catchup"));
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    expect_catchup_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, CatchupHelpArticleTest, testing::Bool());
+
+TEST_P(CatchupTailArticleTest, numericInputLeavesAnApproximateTailAndPreservesReadAndDelayedArticlesInIt)
+{
+    set_catchup_articles();
+
+    catch_up(GetParam(), AS_NORM);
+
+    expect_flags({CACHED, CACHED, CACHED | AF_DEL, CACHED, AF_CACHED | AF_THREADED, CACHED | AF_UNREAD | AF_SEL,
+                  CACHED | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleNum{1}, g_obj_count);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+    EXPECT_EQ(SF_SEL, m_subjects[0].m_flags);
+    EXPECT_EQ(SF_SEL, m_subjects[1].m_flags);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
+    EXPECT_EQ(ArticleNum{6}, g_first_art);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticleNum{8}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_subscription_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(Input, CatchupTailArticleTest,
+                         testing::Values(std::string{"3\n"}, std::string{"#3\n"}, std::string{"04\b3\n"}));
+
+TEST_P(CatchupZeroArticleTest, zeroMarksAllReadButReturnsArticlesThatWereExplicitlyDelayed)
+{
+    set_catchup_articles();
+
+    const std::string output = catch_up(GetParam(), AS_NORM);
+
+    EXPECT_NE(std::string::npos, output.find("Returning 1 Marked article"));
+    expect_flags({CACHED, CACHED, CACHED | AF_DEL, CACHED, AF_CACHED | AF_THREADED, CACHED, CACHED | AF_UNREAD});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticleNum{8}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_subscription_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(Input, CatchupZeroArticleTest, testing::Values(std::string{"0\n"}, std::string{"#0"}));
+
+TEST_P(CatchupNumericCancelArticleTest, deletingTheNumericAnswerReturnsToConfirmationWithoutCatchingUp)
+{
+    set_catchup_articles();
+
+    const std::string output = catch_up(std::string{"4"} + GetParam() + 'n', AS_ASK);
+
+    EXPECT_NE(output.find("Catchup comp.test.catchup?"), output.rfind("Catchup comp.test.catchup?"));
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    expect_catchup_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(Editing, CatchupNumericCancelArticleTest, testing::Values('\b', static_cast<char>(Ctl('U'))));
+
+TEST_F(CatchupArticleTest, aTailLargerThanTheGroupDoesNotMarkAnyArticlesRead)
+{
+    set_catchup_articles();
+
+    catch_up("99\n", AS_NORM);
+
+    expect_flags({CACHED | AF_UNREAD | AF_SEL, CACHED | AF_UNREAD, CACHED | AF_DEL, CACHED | AF_UNREAD | AF_SEL,
+                  AF_CACHED | AF_THREADED, CACHED | AF_UNREAD | AF_SEL, CACHED | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticleNum{8}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_subscription_unchanged();
+}
+
+TEST_P(CatchupUnsubscribeArticleTest, unsubscribeCatchesUpAndRequestsCleanupWhilePreservingTheReadingAnchor)
+{
+    set_catchup_articles(GetParam() ? 8 : 4);
+    const auto article = std::make_pair(g_art, g_artp);
+
+    const std::string output = catch_up("u", AS_CLEAN);
+
+    EXPECT_NE(std::string::npos, output.find("Unsubscribed to newsgroup comp.test.catchup"));
+    EXPECT_NE(std::string::npos, output.find("If you meant to hit 'y' instead of 'u'"));
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    expect_flags({CACHED, CACHED, CACHED | AF_DEL, CACHED, AF_CACHED | AF_THREADED, CACHED, CACHED | AF_UNREAD});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ('!', m_newsgroup.m_subscribe_char);
+    EXPECT_EQ(RF_ACTIVE | RF_RC_CHANGED, m_newsrc.flags);
+    EXPECT_EQ(NewsgroupNum{4}, g_newsgroup_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(GroupEnd, CatchupUnsubscribeArticleTest, testing::Bool());
+
+TEST_P(CatchupUncachedTailArticleTest, partialCatchupCountsCachedAndUncachedUnreadArticlesExactlyOnce)
+{
+    set_catchup_articles();
+    g_last_cached = ArticleNum{5};
+    article_ptr(ArticleNum{6})->m_flags = AF_EXISTS | AF_UNREAD;
+    article_ptr(ArticleNum{6})->m_subj = nullptr;
+    article_ptr(ArticleNum{7})->m_flags = AF_EXISTS | AF_YANK_BACK;
+    article_ptr(ArticleNum{7})->m_subj = nullptr;
+    m_subjects[2].m_articles = nullptr;
+    m_subjects[2].m_flags = SF_NONE;
+    --g_selected_count;
+    --g_selected_subj_cnt;
+    g_selected_only = false;
+
+    catch_up(std::to_string(GetParam()) + '\n', AS_NORM);
+
+    expect_flags({CACHED, CACHED, CACHED | AF_DEL, GetParam() == 4 ? CACHED | AF_UNREAD | AF_SEL : CACHED,
+                  AF_CACHED | AF_THREADED, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{GetParam() == 4 ? 2 : 1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleNum{GetParam() == 4 ? 2 : 1}, g_obj_count);
+    EXPECT_EQ(ArticleUnread{GetParam() == 4 ? 1 : 0}, g_selected_count);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticleNum{8}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_subscription_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(Tail, CatchupUncachedTailArticleTest, testing::Values(3, 4));
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
 {
