@@ -1485,6 +1485,7 @@ normal_search:
             fmt::print("\n\n\n\nNot found.");
             term_down(5);
             g_art = g_curr_art; // restore to current article
+            g_artp = g_curr_artp;
             if (g_sa_in)
             {
                 return AS_SA;
