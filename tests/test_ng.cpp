@@ -420,6 +420,67 @@ void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupRe
     EXPECT_FALSE(macro_pending());
 }
 
+class DefaultCommandArticleTest : public UnreadScopeArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_position(long number, DoNewsgroupResult exit_code = NG_NORM);
+    void expect_pending(std::string_view input);
+
+private:
+    bool          m_old_sa_follow{g_sa_follow};
+    bool          m_old_univ_follow{g_univ_follow};
+    unsigned char m_old_last_char{g_last_char};
+    int           m_old_int_count{g_int_count};
+};
+
+void DefaultCommandArticleTest::SetUp()
+{
+    UnreadScopeArticleTest::SetUp();
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 1);
+    g_sa_follow = false;
+    g_univ_follow = false;
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+    set_default_cmd();
+}
+
+void DefaultCommandArticleTest::TearDown()
+{
+    g_sa_follow = m_old_sa_follow;
+    g_univ_follow = m_old_univ_follow;
+    g_last_char = m_old_last_char;
+    g_int_count = m_old_int_count;
+    UnreadScopeArticleTest::TearDown();
+}
+
+void DefaultCommandArticleTest::expect_position(long number, DoNewsgroupResult exit_code)
+{
+    EXPECT_EQ(ArticleNum{number}, g_art);
+    EXPECT_EQ(number <= g_last_art.value_of() ? article_ptr(ArticleNum{number}) : nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{1}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{-1}, g_recent_art);
+    EXPECT_EQ(nullptr, g_recent_artp);
+    expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(exit_code, g_newsgroup_exit_code);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+}
+
+void DefaultCommandArticleTest::expect_pending(std::string_view input)
+{
+    for (const char ch : input)
+    {
+        ASSERT_TRUE(macro_pending());
+        EXPECT_EQ(ch, read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+}
+
 class SearchCommandArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -2586,6 +2647,191 @@ TEST_F(QuitCommandArticleTest, quitVariantsPreserveTheEndOfGroupPosition)
         SCOPED_TRACE(test_case.command);
         expect_quit(test_case.command, test_case.result);
     }
+}
+
+TEST_F(DefaultCommandArticleTest, spaceExecutesOneDefaultAndLeavesLaterCommandsForTheirOwnDispatch)
+{
+    ASSERT_EQ("npq", g_default_cmd);
+    push_char('Q');
+    push_char('n');
+
+    EXPECT_EQ(AS_NORM, art_switch(" "));
+
+    expect_position(2);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ('n', g_last_char);
+    ASSERT_TRUE(macro_pending());
+    const std::string next_command = get_cmd();
+    ASSERT_EQ((std::string{'n', FINISH_CMD}), next_command);
+
+    EXPECT_EQ(AS_NORM, art_switch(next_command));
+
+    expect_position(3);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    expect_pending("Q");
+}
+
+#ifndef STRICT_CR
+TEST_F(DefaultCommandArticleTest, returnAndCarriageReturnAcceptTheDisplayedDefault)
+{
+    for (const char command : {'\n', '\r'})
+    {
+        SCOPED_TRACE(static_cast<int>(command));
+        g_art = ArticleNum{1};
+        g_artp = article_ptr(g_art);
+        push_char('q');
+
+        EXPECT_EQ(AS_NORM, art_switch(std::string{command, FINISH_CMD}));
+
+        expect_position(2);
+        EXPECT_TRUE(g_s_default_cmd);
+        EXPECT_TRUE(g_univ_default_cmd);
+        EXPECT_EQ('n', g_last_char);
+        expect_pending("q");
+    }
+}
+#endif
+
+TEST_F(DefaultCommandArticleTest, caretDefaultDispatchesTheControlCommandWithoutConsumingQueuedInput)
+{
+    g_search_ahead = ArticleNum{1};
+    set_default_cmd();
+    ASSERT_EQ("^Nnpq", g_default_cmd);
+    push_char('q');
+
+    EXPECT_EQ(AS_NORM, art_switch(" "));
+
+    expect_position(2);
+    EXPECT_EQ(Ctl('n'), g_last_char);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    expect_pending("q");
+}
+
+TEST_F(DefaultCommandArticleTest, acceptingEitherReadingDefaultReturnsToTheScanSelector)
+{
+    g_sa_in = true;
+    for (const long search_ahead : {0, 1})
+    {
+        SCOPED_TRACE(search_ahead);
+        g_search_ahead = ArticleNum{search_ahead};
+        set_default_cmd();
+        push_char('n');
+
+        EXPECT_EQ(AS_SA, art_switch(" "));
+
+        expect_position(1);
+        EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
+        EXPECT_TRUE(g_s_default_cmd);
+        EXPECT_TRUE(g_univ_default_cmd);
+        EXPECT_FALSE(g_s_follow_temp);
+        EXPECT_FALSE(g_univ_follow_temp);
+        expect_pending("n");
+    }
+}
+
+TEST_F(DefaultCommandArticleTest, acceptingEitherReadingDefaultReturnsToTheUniversalSelector)
+{
+    g_univ_read_virt_flag = true;
+    for (const long search_ahead : {0, 1})
+    {
+        SCOPED_TRACE(search_ahead);
+        g_search_ahead = ArticleNum{search_ahead};
+        set_default_cmd();
+        push_char('n');
+
+        EXPECT_EQ(AS_CLEAN, art_switch(" "));
+
+        expect_position(1, NG_NEXT);
+        EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
+        EXPECT_TRUE(g_s_default_cmd);
+        EXPECT_TRUE(g_univ_default_cmd);
+        EXPECT_FALSE(g_s_follow_temp);
+        EXPECT_FALSE(g_univ_follow_temp);
+        expect_pending("n");
+    }
+}
+
+TEST_F(DefaultCommandArticleTest, explicitNextOverridesSelectorReturnAndLaterDefaultsRetainFollowMode)
+{
+    g_sa_in = true;
+    g_univ_read_virt_flag = true;
+    g_sel_mode = SM_SUBJECT;
+    g_s_default_cmd = true;
+    g_univ_default_cmd = true;
+    push_char('q');
+
+    EXPECT_EQ(AS_NORM, art_switch("n"));
+
+    expect_position(2);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+
+    EXPECT_EQ(AS_NORM, art_switch(" "));
+
+    expect_position(3);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    expect_pending("q");
+}
+
+TEST_F(DefaultCommandArticleTest, repeatedDefaultInputUsesTheCurrentConfigurationOnceEachTime)
+{
+    push_char('n');
+    EXPECT_EQ(AS_NORM, art_switch(" "));
+    expect_position(2);
+    g_default_cmd = "Qnpq";
+
+    EXPECT_EQ(AS_CLEAN, art_switch(" "));
+
+    expect_position(2, NG_ASK);
+    EXPECT_EQ('Q', g_last_char);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    expect_pending("n");
+}
+
+TEST_F(DefaultCommandArticleTest, defaultAtAnExhaustedGroupPreservesTheEndPositionAndQueuedInput)
+{
+    g_art = g_curr_art = ArticleNum{4};
+    g_artp = g_curr_artp = nullptr;
+    g_mode = MM_ARTICLE_END;
+    m_newsgroup.m_to_read = ArticleUnread{};
+    for (long number = 1; number <= 3; ++number)
+    {
+        article_ptr(ArticleNum{number})->m_flags = AF_EXISTS;
+    }
+    set_default_cmd();
+    ASSERT_EQ("npq", g_default_cmd);
+    push_char('Q');
+
+    EXPECT_EQ(AS_CLEAN, art_switch(" "));
+
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{4}, g_curr_art);
+    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE_END, g_mode);
+    expect_pending("Q");
 }
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
