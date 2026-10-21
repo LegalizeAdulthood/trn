@@ -364,20 +364,20 @@ void GroupUnreadArticleTest::TearDown()
     UnreadScopeArticleTest::TearDown();
 }
 
-class KillSubthreadArticleTest : public GroupUnreadArticleTest
+class ThreadKillArticleTest : public GroupUnreadArticleTest
 {
 protected:
     void        SetUp() override;
     void        TearDown() override;
-    void        set_subthread(long current);
-    std::string kill_subthread(ArticleSwitchResult expected = AS_NORM);
+    void        set_thread(long current);
+    std::string kill_articles(std::string command, ArticleSwitchResult expected = AS_NORM);
 
 private:
     bool m_old_sa_follow{g_sa_follow};
     int  m_old_check_count{g_check_count};
 };
 
-void KillSubthreadArticleTest::SetUp()
+void ThreadKillArticleTest::SetUp()
 {
     GroupUnreadArticleTest::SetUp();
     g_general_mode = GM_READ;
@@ -386,14 +386,14 @@ void KillSubthreadArticleTest::SetUp()
     g_check_count = 10;
 }
 
-void KillSubthreadArticleTest::TearDown()
+void ThreadKillArticleTest::TearDown()
 {
     g_sa_follow = m_old_sa_follow;
     g_check_count = m_old_check_count;
     GroupUnreadArticleTest::TearDown();
 }
 
-void KillSubthreadArticleTest::set_subthread(long current)
+void ThreadKillArticleTest::set_thread(long current)
 {
     set_scope({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
                AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
@@ -415,7 +415,7 @@ void KillSubthreadArticleTest::set_subthread(long current)
     g_force_last = true;
 }
 
-std::string KillSubthreadArticleTest::kill_subthread(ArticleSwitchResult expected)
+std::string ThreadKillArticleTest::kill_articles(std::string command, ArticleSwitchResult expected)
 {
     const auto article = std::make_pair(g_art, g_artp);
     const auto current = std::make_pair(g_curr_art, g_curr_artp);
@@ -423,7 +423,7 @@ std::string KillSubthreadArticleTest::kill_subthread(ArticleSwitchResult expecte
     push_char('n');
     testing::internal::CaptureStdout();
 
-    const ArticleSwitchResult result = art_switch(",");
+    const ArticleSwitchResult result = art_switch(std::move(command));
 
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
@@ -445,6 +445,19 @@ std::string KillSubthreadArticleTest::kill_subthread(ArticleSwitchResult expecte
     EXPECT_FALSE(macro_pending());
     return output;
 }
+
+class KillSubthreadArticleTest : public ThreadKillArticleTest
+{
+};
+
+class KillThreadArticleTest : public ThreadKillArticleTest
+{
+};
+
+class KillThreadScanArticleTest : public KillThreadArticleTest,
+                                  public testing::WithParamInterface<std::pair<bool, bool>>
+{
+};
 
 class KillSubthreadScanArticleTest : public KillSubthreadArticleTest,
                                      public testing::WithParamInterface<std::pair<bool, bool>>
@@ -874,7 +887,7 @@ protected:
     void        TearDown() override;
     void        set_kill_articles(long current);
     std::string kill_subject(ArticleSwitchResult expected, long target,
-                             const std::function<void(ArticleNum)> &progress = {});
+                             const std::function<void(ArticleNum)> &progress = {}, std::string command = "k");
 
 private:
     bool                   m_old_in_ng{g_in_ng};
@@ -925,14 +938,14 @@ void KillSubjectArticleTest::set_kill_articles(long current)
 }
 
 std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, long target,
-                                                 const std::function<void(ArticleNum)> &progress)
+                                                 const std::function<void(ArticleNum)> &progress, std::string command)
 {
     const auto current = std::make_pair(g_curr_art, g_curr_artp);
     const auto recent = std::make_pair(g_recent_art, g_recent_artp);
     push_char('n');
     testing::internal::CaptureStdout();
 
-    const ArticleSwitchResult result = art_switch("k", progress);
+    const ArticleSwitchResult result = art_switch(std::move(command), progress);
 
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
@@ -952,6 +965,10 @@ std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, l
     EXPECT_FALSE(macro_pending());
     return output;
 }
+
+class KillThreadFallbackArticleTest : public KillSubjectArticleTest
+{
+};
 
 class KillSubjectScanArticleTest : public KillSubjectArticleTest,
                                    public testing::WithParamInterface<std::pair<bool, bool>>
@@ -2308,13 +2325,13 @@ TEST_F(KillSubjectArticleTest, groupEndReportsTheMissingCurrentArticleWithoutCha
 
 TEST_F(KillSubthreadArticleTest, killsDescendantsAcrossSubjectsWithoutTouchingAncestorsOrSiblingBranchesOnRepeat)
 {
-    set_subthread(2);
+    set_thread(2);
     g_breadth_first = true;
     for (int attempt = 0; attempt < 2; ++attempt)
     {
         SCOPED_TRACE(attempt);
 
-        EXPECT_TRUE(kill_subthread().empty());
+        EXPECT_TRUE(kill_articles(",").empty());
 
         expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
                       AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
@@ -2326,9 +2343,9 @@ TEST_F(KillSubthreadArticleTest, killsDescendantsAcrossSubjectsWithoutTouchingAn
 
 TEST_F(KillSubthreadArticleTest, leafKillStopsAtTheSiblingOfAnAncestor)
 {
-    set_subthread(4);
+    set_thread(4);
 
-    EXPECT_TRUE(kill_subthread().empty());
+    EXPECT_TRUE(kill_articles(",").empty());
 
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS,
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
@@ -2338,13 +2355,13 @@ TEST_F(KillSubthreadArticleTest, leafKillStopsAtTheSiblingOfAnAncestor)
 
 TEST_F(KillSubthreadArticleTest, readAndMissingNodesStillLeadToUnreadDescendants)
 {
-    set_subthread(2);
+    set_thread(2);
     article_ptr(ArticleNum{2})->m_flags = AF_EXISTS;
     article_ptr(ArticleNum{3})->m_flags = AF_NONE;
     m_newsgroup.m_to_read = ArticleUnread{4};
     g_selected_count = ArticleUnread{4};
 
-    EXPECT_TRUE(kill_subthread().empty());
+    EXPECT_TRUE(kill_articles(",").empty());
 
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
@@ -2354,9 +2371,9 @@ TEST_F(KillSubthreadArticleTest, readAndMissingNodesStillLeadToUnreadDescendants
 
 TEST_F(KillSubthreadArticleTest, finalThreadEndsAtNullAndPreservesAlreadyReadDescendants)
 {
-    set_subthread(6);
+    set_thread(6);
 
-    EXPECT_TRUE(kill_subthread().empty());
+    EXPECT_TRUE(kill_articles(",").empty());
 
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK});
@@ -2366,14 +2383,14 @@ TEST_F(KillSubthreadArticleTest, finalThreadEndsAtNullAndPreservesAlreadyReadDes
 
 TEST_F(KillSubthreadArticleTest, unthreadedFallbackKillsOnlyTheCurrentArticleOnRepeat)
 {
-    set_subthread(2);
+    set_thread(2);
     g_threaded_group = false;
     g_sel_mode = SM_SUBJECT;
     for (int attempt = 0; attempt < 2; ++attempt)
     {
         SCOPED_TRACE(attempt);
 
-        EXPECT_TRUE(kill_subthread().empty());
+        EXPECT_TRUE(kill_articles(",").empty());
 
         expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
                       AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
@@ -2385,12 +2402,12 @@ TEST_F(KillSubthreadArticleTest, unthreadedFallbackKillsOnlyTheCurrentArticleOnR
 
 TEST_P(KillSubthreadScanArticleTest, scanContinuationHonorsPersistentAndTemporaryFollowSettings)
 {
-    set_subthread(2);
+    set_thread(2);
     g_sa_in = true;
     g_sa_follow = GetParam().first;
     g_s_follow_temp = GetParam().second;
 
-    EXPECT_TRUE(kill_subthread(g_sa_follow || g_s_follow_temp ? AS_NORM : AS_SA).empty());
+    EXPECT_TRUE(kill_articles(",", g_sa_follow || g_s_follow_temp ? AS_NORM : AS_SA).empty());
 
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
@@ -2407,10 +2424,122 @@ INSTANTIATE_TEST_SUITE_P(FollowPolicy, KillSubthreadScanArticleTest,
 
 TEST_F(KillSubthreadArticleTest, groupEndRejectsTheCommandWithoutChangingAnyArticle)
 {
-    set_subthread(8);
+    set_thread(8);
     g_sa_in = true;
 
-    const std::string output = kill_subthread(AS_ASK);
+    const std::string output = kill_articles(",", AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find("End of group"));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_TRUE(g_sa_in);
+}
+
+TEST_F(KillThreadArticleTest, descendantEntryKillsAllSubjectsInItsThreadAndPreservesOtherThreadsOnRepeat)
+{
+    set_thread(4);
+    for (Subject &subject : m_subjects)
+    {
+        subject.m_flags |= SF_WAS_SELECTED;
+    }
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        EXPECT_TRUE(kill_articles("J").empty());
+
+        expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                      AF_EXISTS | AF_YANK_BACK});
+        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+        EXPECT_FALSE(m_subjects[0].m_flags & (SF_VISIT | SF_WAS_SELECTED));
+        EXPECT_FALSE(m_subjects[1].m_flags & (SF_VISIT | SF_WAS_SELECTED));
+        EXPECT_EQ(SF_SEL | SF_VISIT | SF_WAS_SELECTED, m_subjects[2].m_flags);
+    }
+}
+
+TEST_F(KillThreadArticleTest, readArticleInASingleSubjectThreadStillKillsItsEarlierUnreadArticle)
+{
+    set_thread(7);
+
+    EXPECT_TRUE(kill_articles("J").empty());
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_TRUE(m_subjects[0].m_flags & SF_VISIT);
+    EXPECT_TRUE(m_subjects[1].m_flags & SF_VISIT);
+    EXPECT_FALSE(m_subjects[2].m_flags & SF_VISIT);
+}
+
+TEST_F(KillThreadArticleTest, killingTheFinalUnreadThreadLeavesZeroCountsAndPreservesTheArticlePosition)
+{
+    set_thread(4);
+    article_ptr(ArticleNum{6})->m_flags = AF_EXISTS;
+    m_subjects[2].m_flags = SF_NONE;
+    m_newsgroup.m_to_read = ArticleUnread{5};
+    g_selected_count = ArticleUnread{4};
+    g_selected_subj_cnt = 2;
+
+    EXPECT_TRUE(kill_articles("J").empty());
+
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+}
+
+TEST_P(KillThreadScanArticleTest, threadedKillAlwaysReturnsToScanRegardlessOfFollowSettings)
+{
+    set_thread(4);
+    g_sa_in = true;
+    g_sa_follow = GetParam().first;
+    g_s_follow_temp = GetParam().second;
+
+    EXPECT_TRUE(kill_articles("J", AS_SA).empty());
+
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_sa_in);
+    EXPECT_EQ(GetParam().first, g_sa_follow);
+    EXPECT_EQ(GetParam().second, g_s_follow_temp);
+}
+
+INSTANTIATE_TEST_SUITE_P(FollowPolicy, KillThreadScanArticleTest,
+                         testing::Values(std::make_pair(false, false), std::make_pair(true, false),
+                                         std::make_pair(false, true)));
+
+TEST_F(KillThreadFallbackArticleTest, unthreadedFallbackKillsMatchingSubjectsAndRestoresTheCurrentArticlePair)
+{
+    set_kill_articles(2);
+    g_threaded_group = false;
+    std::vector<ArticleNum> visited;
+
+    const std::string output = kill_subject(AS_ASK, 2, [&](ArticleNum number) { visited.push_back(number); }, "J");
+
+    EXPECT_NE(std::string::npos, output.find("done"));
+    EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{2}, ArticleNum{3}, ArticleNum{4}, ArticleNum{5}, ArticleNum{6},
+                                       ArticleNum{7}}),
+              visited);
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_reread);
+}
+
+TEST_F(KillThreadArticleTest, groupEndRejectsTheCommandWithoutChangingAnyThread)
+{
+    set_thread(8);
+    g_sa_in = true;
+
+    const std::string output = kill_articles("J", AS_ASK);
 
     EXPECT_NE(std::string::npos, output.find("End of group"));
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
