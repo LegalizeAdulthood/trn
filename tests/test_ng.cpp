@@ -1010,6 +1010,8 @@ protected:
     void TearDown() override;
     void set_selected_subjects(std::initializer_list<ArticleFlags> flags, long current);
     void expect_previous(long number, std::initializer_list<long> missing = {}, bool force_last = false);
+    void expect_navigation(char command, long number, bool reread, std::initializer_list<long> missing = {},
+                           bool force_last = false);
 
 private:
     int  m_old_selected_subjects{g_selected_subj_cnt};
@@ -1054,6 +1056,12 @@ void SelectedPreviousSubjectThreadArticleTest::set_selected_subjects(std::initia
 void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std::initializer_list<long> missing,
                                                                bool force_last)
 {
+    expect_navigation('<', number, false, missing, force_last);
+}
+
+void SelectedPreviousSubjectThreadArticleTest::expect_navigation(char command, long number, bool reread,
+                                                                 std::initializer_list<long> missing, bool force_last)
+{
     const auto                current = std::make_pair(g_curr_art, g_curr_artp);
     const auto                recent = std::make_pair(g_recent_art, g_recent_artp);
     const auto                first = g_first_art;
@@ -1066,6 +1074,8 @@ void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std:
     const auto                terminal = std::make_pair(g_term_line, g_term_col);
     const auto                follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
     const bool                breadth_first = g_breadth_first;
+    const bool                selected_only = g_selected_only;
+    const bool                threaded_group = g_threaded_group;
     auto                      unread = m_newsgroup.m_to_read;
     auto                      selected = g_selected_count;
     std::vector<ArticleFlags> flags;
@@ -1092,7 +1102,7 @@ void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std:
     g_reread = false;
     g_force_last = false;
     testing::internal::CaptureStdout();
-    const ArticleSwitchResult result = art_switch("<");
+    const ArticleSwitchResult result = art_switch(std::string{command});
     const std::string         output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(AS_NORM, result);
@@ -1112,10 +1122,10 @@ void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std:
     EXPECT_EQ(follow, std::make_pair(g_s_follow_temp, g_univ_follow_temp));
     EXPECT_EQ(first_subject, g_first_subject);
     EXPECT_EQ(last_subject, g_last_subject);
-    EXPECT_TRUE(g_selected_only);
-    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(reread, g_reread);
     EXPECT_EQ(force_last, g_force_last);
-    EXPECT_EQ(GetParam(), g_threaded_group);
+    EXPECT_EQ(threaded_group, g_threaded_group);
     EXPECT_EQ(GetParam() ? SM_THREAD : SM_SUBJECT, g_sel_mode);
     EXPECT_EQ(breadth_first, g_breadth_first);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
@@ -1129,6 +1139,44 @@ void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std:
         SCOPED_TRACE(index);
         EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
     }
+}
+
+class SubjectFallbackArticleTest : public SelectedPreviousSubjectThreadArticleTest
+{
+protected:
+    void set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool selected_only = true);
+    void expect_from(char command, long current, long target, bool reread, std::initializer_list<long> missing = {},
+                     bool force_last = false);
+};
+
+void SubjectFallbackArticleTest::set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool selected_only)
+{
+    set_selected_subjects(flags, 1);
+    g_selected_only = selected_only;
+    g_selected_subj_cnt = 0;
+    for (Subject &subject : m_subjects)
+    {
+        // Visit flags and selections can remain after a scope is read.
+        subject.m_flags = SF_VISIT;
+        for (Article *ap = subject.m_articles; ap; ap = ap->m_subj_next)
+        {
+            if (ap->m_flags & AF_SEL)
+            {
+                subject.m_flags |= SF_SEL;
+            }
+        }
+        g_selected_subj_cnt += (subject.m_flags & SF_SEL) != 0;
+    }
+}
+
+void SubjectFallbackArticleTest::expect_from(char command, long current, long target, bool reread,
+                                             std::initializer_list<long> missing, bool force_last)
+{
+    g_art = ArticleNum{current};
+    g_artp = article_ptr(g_art);
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+    expect_navigation(command, target, reread, missing, force_last);
 }
 
 } // namespace
@@ -2465,6 +2513,119 @@ TEST_P(SelectedPreviousSubjectThreadArticleTest, stopsAtGroupEndWhenEarlierScope
 
     expect_previous(13, {}, true);
 }
+
+TEST_P(SubjectFallbackArticleTest, prefersSelectedReadArticlesInTheConfiguredReadingOrder)
+{
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL,
+                           AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    // Thread 5 has children 6 and 7; article 8 is a child of 6.
+    article_ptr(ArticleNum{6})->m_child1 = article_ptr(ArticleNum{8});
+    article_ptr(ArticleNum{6})->m_sibling = article_ptr(ArticleNum{7});
+    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{5});
+    article_ptr(ArticleNum{7})->m_child1 = nullptr;
+    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{6});
+
+    for (const bool breadth_first : {false, true})
+    {
+        SCOPED_TRACE(breadth_first);
+        g_breadth_first = breadth_first;
+        for (const char command : {'>', '<'})
+        {
+            SCOPED_TRACE(command);
+            const long target = GetParam() ? (breadth_first ? 7 : 8) : (command == '>' ? 4 : 7);
+
+            expect_from(command, command == '>' ? 1 : 9, target, true);
+        }
+    }
+}
+
+TEST_P(SubjectFallbackArticleTest, usesSelectorScopeAndRestoresTheDifferentIncomingThreadingMode)
+{
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS,
+                           AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    g_threaded_group = !GetParam();
+
+    for (const char command : {'>', '<'})
+    {
+        SCOPED_TRACE(command);
+        expect_from(command, command == '>' ? 1 : 9, GetParam() ? 8 : (command == '>' ? 4 : 8), true);
+    }
+}
+
+TEST_P(SubjectFallbackArticleTest, fallsBackToUnselectedUnreadArticleWhenTheScopeHasNoSelections)
+{
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+
+    for (const char command : {'>', '<'})
+    {
+        SCOPED_TRACE(command);
+        expect_from(command, command == '>' ? 1 : 9, GetParam() ? 5 : (command == '>' ? 3 : 7), true);
+    }
+}
+
+TEST_P(SubjectFallbackArticleTest, allReadScopeStartsAtTheFirstArticleWhenSelectedOnlyModeIsOff)
+{
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS,
+                           AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          false);
+
+    for (const char command : {'>', '<'})
+    {
+        SCOPED_TRACE(command);
+        expect_from(command, command == '>' ? 1 : 9, GetParam() ? 5 : (command == '>' ? 3 : 7), true);
+    }
+}
+
+TEST_P(SubjectFallbackArticleTest, skipsMissingParentsBeforeFallingBackToASelectedReadArticle)
+{
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_UNREAD | AF_SEL, AF_EXISTS | AF_SEL,
+                           AF_UNREAD | AF_SEL, AF_EXISTS, AF_UNREAD | AF_SEL, AF_EXISTS | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+
+    for (const char command : {'>', '<'})
+    {
+        SCOPED_TRACE(command);
+        const auto missing = GetParam()
+                                 ? std::initializer_list<long>{5, 7}
+                                 : (command == '>' ? std::initializer_list<long>{3} : std::initializer_list<long>{7});
+
+        expect_from(command, command == '>' ? 1 : 9, GetParam() ? 8 : (command == '>' ? 4 : 8), true, missing);
+    }
+}
+
+TEST_P(SubjectFallbackArticleTest, nextClearsRereadAfterSkippingMissingScopesBeforeAnUnreadTarget)
+{
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                           AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+
+    expect_from('>', 1, 9, false,
+                GetParam() ? std::initializer_list<long>{5, 6, 7, 8} : std::initializer_list<long>{3, 4, 5, 6, 7, 8});
+}
+
+TEST_P(SubjectFallbackArticleTest, exhaustingMissingScopesClearsRereadAndRequestsTheEndOfGroup)
+{
+    set_fallback_subjects({AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL});
+
+    for (const char command : {'>', '<'})
+    {
+        SCOPED_TRACE(command);
+        expect_from(command, command == '>' ? 8 : 5, 13, false,
+                    command == '>' ? std::initializer_list<long>{9, 10, 11, 12}
+                                   : std::initializer_list<long>{1, 2, 3, 4},
+                    true);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, SubjectFallbackArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Thread" : "Subject"; });
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, SelectedPreviousSubjectThreadArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Thread" : "Subject"; });
