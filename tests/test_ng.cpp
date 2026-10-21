@@ -217,6 +217,38 @@ class ChildLeafArticleTest : public ArticleNavigationTest
 {
 };
 
+class SiblingArticleTest : public ArticleNavigationTest
+{
+protected:
+    void set_siblings(long current);
+};
+
+void SiblingArticleTest::set_siblings(long current)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL},
+                 current);
+    g_threaded_group = true;
+    struct ArticleLinks
+    {
+        long parent;
+        long child;
+        long sibling;
+    };
+    // Children: 1:{2,6,7}, 2:{3,5}, 3:{4}, 7:{8,10}, 8:{9}.
+    const ArticleLinks links[]{{0, 2, 0}, {1, 3, 6}, {2, 4, 5},  {3, 0, 0}, {2, 0, 0},
+                               {1, 0, 7}, {1, 8, 0}, {7, 9, 10}, {8, 0, 0}, {7, 0, 0}};
+    long               number = 1;
+    for (const ArticleLinks &link : links)
+    {
+        Article *article = article_ptr(ArticleNum{number++});
+        article->m_parent = link.parent ? article_ptr(ArticleNum{link.parent}) : nullptr;
+        article->m_child1 = link.child ? article_ptr(ArticleNum{link.child}) : nullptr;
+        article->m_sibling = link.sibling ? article_ptr(ArticleNum{link.sibling}) : nullptr;
+    }
+}
+
 class SubjectThreadArticleTest : public ArticleNavigationTest
 {
 protected:
@@ -1125,6 +1157,159 @@ TEST_P(ChildLeafArticleTest, rejectsUnthreadedGroupWithoutMoving)
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, ChildLeafArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Leaf" : "Child"; });
+
+TEST_P(SiblingArticleTest, visitsReadUnselectedSiblingAndPreservesHistoryAndSelection)
+{
+    set_siblings(6);
+    g_selected_only = true;
+    g_recent_art = ArticleNum{4};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_search_ahead = ArticleNum{4};
+    const ArticleNum expected{GetParam() ? 7L : 2L};
+
+    EXPECT_EQ(AS_NORM, art_switch(GetParam() ? ")" : "("));
+
+    EXPECT_EQ(expected, g_art);
+    ASSERT_EQ(article_ptr(expected), g_artp);
+    EXPECT_EQ(AF_EXISTS, g_artp->m_flags);
+    EXPECT_EQ(ArticleNum{6}, g_curr_art);
+    ASSERT_EQ(article_ptr(ArticleNum{6}), g_curr_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_curr_artp->m_flags);
+    EXPECT_EQ(ArticleNum{4}, g_recent_art);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_recent_artp);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(ArticleNum{4}, g_search_ahead);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_P(SiblingArticleTest, visitsCousinAtSameDepthAcrossShallowBranch)
+{
+    const ArticleNum current{GetParam() ? 5L : 8L};
+    set_siblings(current.value_of());
+    g_selected_only = true;
+    const ArticleNum expected{GetParam() ? 8L : 5L};
+
+    EXPECT_EQ(AS_NORM, art_switch(GetParam() ? ")" : "("));
+
+    EXPECT_EQ(expected, g_art);
+    ASSERT_EQ(article_ptr(expected), g_artp);
+    EXPECT_EQ(GetParam() ? AF_EXISTS : AF_EXISTS | AF_UNREAD | AF_SEL, g_artp->m_flags);
+    EXPECT_EQ(current, g_curr_art);
+    EXPECT_EQ(article_ptr(current), g_curr_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{9})->m_flags);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_P(SiblingArticleTest, preservesPositionAtFirstOrLastSiblingWithWarning)
+{
+    const ArticleNum current{GetParam() ? 10L : 3L};
+    set_siblings(current.value_of());
+    for (const bool verbose : {false, true})
+    {
+        SCOPED_TRACE(verbose);
+        g_verbose = verbose;
+        g_term_line = 0;
+        g_term_col = 0;
+        testing::internal::CaptureStdout();
+
+        const ArticleSwitchResult result = art_switch(GetParam() ? ")" : "(");
+
+        const std::string output = testing::internal::GetCapturedStdout();
+        const std::string expected =
+            verbose ? (GetParam() ? "This article has no next sibling." : "This article has no previous sibling.")
+                    : (GetParam() ? "No next sibling." : "No previous sibling.");
+        EXPECT_EQ(AS_ASK, result);
+        EXPECT_NE(std::string::npos, output.find(expected));
+        EXPECT_EQ(current, g_art);
+        EXPECT_EQ(article_ptr(current), g_artp);
+        EXPECT_EQ(current, g_curr_art);
+        EXPECT_EQ(article_ptr(current), g_curr_artp);
+        EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+        EXPECT_FALSE(g_reread);
+        EXPECT_FALSE(g_s_follow_temp);
+        EXPECT_FALSE(g_univ_follow_temp);
+        EXPECT_EQ(2, g_term_line);
+        EXPECT_EQ(0, g_term_col);
+    }
+}
+
+TEST_P(SiblingArticleTest, preservesEndOfGroupWithoutCurrentArticle)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 3);
+    g_threaded_group = true;
+    for (const bool verbose : {false, true})
+    {
+        SCOPED_TRACE(verbose);
+        g_verbose = verbose;
+        g_term_line = 0;
+        g_term_col = 0;
+        testing::internal::CaptureStdout();
+
+        const ArticleSwitchResult result = art_switch(GetParam() ? ")" : "(");
+
+        const std::string output = testing::internal::GetCapturedStdout();
+        EXPECT_EQ(AS_ASK, result);
+        EXPECT_NE(std::string::npos, output.find(verbose ? "You're at the end of the group." : "End of group."));
+        EXPECT_EQ(ArticleNum{3}, g_art);
+        EXPECT_EQ(nullptr, g_artp);
+        EXPECT_EQ(ArticleNum{3}, g_curr_art);
+        EXPECT_EQ(nullptr, g_curr_artp);
+        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+        EXPECT_FALSE(g_reread);
+        EXPECT_FALSE(g_s_follow_temp);
+        EXPECT_FALSE(g_univ_follow_temp);
+        EXPECT_EQ(2, g_term_line);
+        EXPECT_EQ(0, g_term_col);
+    }
+}
+
+TEST_P(SiblingArticleTest, rejectsUnthreadedGroupWithoutMoving)
+{
+    set_siblings(6);
+    g_threaded_group = false;
+    for (const bool verbose : {false, true})
+    {
+        SCOPED_TRACE(verbose);
+        g_verbose = verbose;
+        g_term_line = 0;
+        g_term_col = 0;
+        testing::internal::CaptureStdout();
+
+        const ArticleSwitchResult result = art_switch(GetParam() ? ")" : "(");
+
+        const std::string output = testing::internal::GetCapturedStdout();
+        EXPECT_EQ(AS_ASK, result);
+        EXPECT_NE(std::string::npos, output.find(verbose ? "This group is not threaded." : "Unthreaded group."));
+        EXPECT_EQ(ArticleNum{6}, g_art);
+        ASSERT_EQ(article_ptr(ArticleNum{6}), g_artp);
+        EXPECT_EQ(ArticleNum{6}, g_curr_art);
+        EXPECT_EQ(g_artp, g_curr_artp);
+        EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_artp->m_flags);
+        EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+        EXPECT_FALSE(g_reread);
+        EXPECT_FALSE(g_s_follow_temp);
+        EXPECT_FALSE(g_univ_follow_temp);
+        EXPECT_EQ(2, g_term_line);
+        EXPECT_EQ(0, g_term_col);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, SiblingArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Next" : "Previous"; });
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
 {
