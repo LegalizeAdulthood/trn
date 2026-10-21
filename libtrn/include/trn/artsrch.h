@@ -1,12 +1,14 @@
 /* trn/artsrch.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_ARTSRCH_H
 #define TRN_ARTSRCH_H
 
 #include <trn/head.h>
 #include <trn/search.h>
 
+#include <functional>
 #include <string>
 #include <string_view>
 
@@ -41,6 +43,7 @@ extern bool           g_art_do_read;      // search read articles?
 extern bool           g_kill_thru_kludge; // -k
 
 void            art_search_init();
-ArtSearchResult art_search(std::string_view command, bool get_cmd);
+ArtSearchResult art_search(std::string_view command, bool get_cmd,
+                           const std::function<void(ArticleNum)> &progress = {});
 
 #endif

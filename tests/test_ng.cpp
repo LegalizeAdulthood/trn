@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 #include <cerrno>
+#include <functional>
 #include <initializer_list>
 #include <string>
 #include <utility>
@@ -487,8 +488,11 @@ protected:
     void        SetUp() override;
     void        TearDown() override;
     void        set_search_articles(std::initializer_list<ArticleFlags> flags, long current);
-    std::string search_articles(char direction, std::string_view query, ArticleSwitchResult expected = AS_NORM);
-    std::string enter_search(char direction, std::string_view input, ArticleSwitchResult expected);
+    std::string search_articles(char direction, std::string_view query, ArticleSwitchResult expected = AS_NORM,
+                                const std::function<void(ArticleNum)> &progress = {});
+    std::string enter_search(char direction, std::string_view input, ArticleSwitchResult expected,
+                             const std::function<void(ArticleNum)> &progress = {});
+    void        expect_interrupted_search(long current);
 
 private:
     DataSource            m_data_source{};
@@ -566,14 +570,16 @@ void SearchCommandArticleTest::set_search_articles(std::initializer_list<Article
 }
 
 std::string SearchCommandArticleTest::search_articles(char direction, std::string_view query,
-                                                      ArticleSwitchResult expected)
+                                                      ArticleSwitchResult                    expected,
+                                                      const std::function<void(ArticleNum)> &progress)
 {
-    const std::string output = enter_search(direction, std::string{query} + '\n', expected);
+    const std::string output = enter_search(direction, std::string{query} + '\n', expected, progress);
     EXPECT_FALSE(macro_pending());
     return output;
 }
 
-std::string SearchCommandArticleTest::enter_search(char direction, std::string_view input, ArticleSwitchResult expected)
+std::string SearchCommandArticleTest::enter_search(char direction, std::string_view input, ArticleSwitchResult expected,
+                                                   const std::function<void(ArticleNum)> &progress)
 {
     const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
     const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
@@ -594,7 +600,7 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     }
     testing::internal::CaptureStdout();
 
-    const ArticleSwitchResult result = art_switch(std::string{direction, FINISH_CMD});
+    const ArticleSwitchResult result = art_switch(std::string{direction, FINISH_CMD}, progress);
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
@@ -615,6 +621,60 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
         EXPECT_EQ(expected_flags, article_ptr(number)->m_flags);
     }
     return output;
+}
+
+void SearchCommandArticleTest::expect_interrupted_search(long current)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+                         AF_EXISTS | AF_UNREAD},
+                        current);
+    g_selected_only = true;
+    g_selected_subj_cnt = 2;
+    m_subjects[0].m_flags |= SF_SEL;
+    m_subjects[2].m_flags |= SF_SEL;
+    g_parsed_art = ArticleNum{3};
+    for (const bool verbose : {false, true})
+    {
+        SCOPED_TRACE(verbose);
+        g_verbose = verbose;
+        for (const char direction : {'/', '?'})
+        {
+            SCOPED_TRACE(direction);
+            g_art = g_curr_art = ArticleNum{current};
+            g_artp = g_curr_artp = g_art <= g_last_art ? article_ptr(g_art) : nullptr;
+            g_search_ahead = ArticleNum{4};
+            std::vector<ArticleNum> visited;
+            const auto              progress = [&](ArticleNum article)
+            {
+                EXPECT_EQ(0, g_int_count);
+                visited.push_back(article);
+                if (visited.size() == 2)
+                {
+                    EXPECT_EQ(article_ptr(visited.front()), g_artp);
+                    g_int_count = 1;
+                }
+            };
+
+            const std::string output = search_articles(direction, "absent", AS_ASK, progress);
+
+            const long first = direction == '/' ? (current > g_last_art.value_of() ? 1 : current + 1) : current - 1;
+            const long interrupted = first + (direction == '/' ? 1 : -1);
+            EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{first}, ArticleNum{interrupted}}), visited);
+            EXPECT_NE(std::string::npos, output.find(std::string{verbose ? "(Interrupted at article " : "(Intr at "} +
+                                                     std::to_string(interrupted) + ")"));
+            EXPECT_EQ(std::string::npos, output.find("Not found."));
+            EXPECT_EQ(ArticleNum{current}, g_art);
+            EXPECT_EQ(g_curr_artp, g_artp);
+            EXPECT_EQ(0, g_int_count);
+            EXPECT_EQ("absent", g_last_pat);
+            EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+            EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
+            EXPECT_EQ(SF_VISIT, m_subjects[1].m_flags);
+            EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
+            EXPECT_FALSE(g_force_last);
+        }
+    }
 }
 
 class NextUnreadArticleTest : public ArticleNavigationTest
@@ -3915,6 +3975,16 @@ TEST_F(SearchCommandArticleTest, unsuccessfulSearchFromGroupEndRestoresTheNullCu
         EXPECT_EQ(ArticleNum{8}, g_art);
         EXPECT_EQ(nullptr, g_artp);
     }
+}
+
+TEST_F(SearchCommandArticleTest, interruptionRestoresCurrentArticleNumberAndPointer)
+{
+    expect_interrupted_search(3);
+}
+
+TEST_F(SearchCommandArticleTest, interruptionFromGroupEndRestoresTheNullCurrentPointer)
+{
+    expect_interrupted_search(8);
 }
 
 TEST_F(SearchCommandArticleTest, invalidPatternPreservesPositionAndSelectionFromAnArticleOrGroupEnd)

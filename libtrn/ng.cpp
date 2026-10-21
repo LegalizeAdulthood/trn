@@ -793,7 +793,7 @@ cleanup2:
 
 // decide what to do at the end of an article
 
-ArticleSwitchResult art_switch(std::string command)
+ArticleSwitchResult art_switch(std::string command, const std::function<void(ArticleNum)> &search_progress)
 {
     command = apply_article_default_command(command);
     print_article_command(command);
@@ -1433,7 +1433,7 @@ normal_search:
                 return AS_INP;
             }
         }
-        switch (art_search(command, false))
+        switch (art_search(command, false, search_progress))
         {
         case SRCH_ERROR:
             g_art = g_curr_art;
@@ -1454,6 +1454,7 @@ normal_search:
             }
             term_down(2);
             g_art = g_curr_art; // restore to current article
+            g_artp = g_curr_artp;
             return AS_ASK;
 
         case SRCH_DONE:

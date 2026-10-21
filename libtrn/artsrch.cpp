@@ -33,7 +33,8 @@
 static CompiledRegex s_sub_compex{}; // last compiled subject search
 static CompiledRegex s_art_compex{}; // last compiled normal search
 
-static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd);
+static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
+                                       const std::function<void(ArticleNum)> &progress);
 static void            truncate_notes_pattern(std::string &pattern_text, std::size_t text_start);
 static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
@@ -53,12 +54,13 @@ void art_search_init()
 
 // search for an article containing some pattern
 
-ArtSearchResult art_search(std::string_view command, bool get_cmd)
+ArtSearchResult art_search(std::string_view command, bool get_cmd, const std::function<void(ArticleNum)> &progress)
 {
-    return art_search_impl(command, get_cmd);
+    return art_search_impl(command, get_cmd, progress);
 }
 
-static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
+static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
+                                       const std::function<void(ArticleNum)> &progress)
 {
     std::string completed_command;
     char        cmd_chr = command.empty() ? '\0' : command.front(); // what kind of search?
@@ -488,6 +490,10 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd)
                     : ((g_art = article_next(g_art)) > g_last_art))
         {
             break;
+        }
+        if (progress)
+        {
+            progress(g_art);
         }
         if (g_int_count)
         {
