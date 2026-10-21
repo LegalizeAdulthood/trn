@@ -621,6 +621,76 @@ class NextUnreadArticleTest : public ArticleNavigationTest
 {
 };
 
+class SortedArticleNavigationTest : public ArticleStateTest
+{
+protected:
+    void set_order(std::initializer_list<long> order);
+    void expect_next_unread(long number, long index, ArticleSwitchResult result = AS_NORM);
+};
+
+void SortedArticleNavigationTest::set_order(std::initializer_list<long> order)
+{
+    for (const long number : order)
+    {
+        g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+    }
+    g_art_ptr = nullptr;
+    g_recent_art = g_last_art;
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{1};
+    g_reread = true;
+    g_force_last = true;
+}
+
+void SortedArticleNavigationTest::expect_next_unread(long number, long index, ArticleSwitchResult result)
+{
+    const auto current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto order = g_art_ptr_list;
+    const auto unread = m_newsgroup.m_to_read;
+    const auto selected = g_selected_count;
+    const auto first = g_first_art;
+    const auto parsed = g_parsed_art;
+    const auto search_ahead = g_search_ahead;
+    const auto subject_flags = g_first_subject->m_flags;
+    const bool selected_only = g_selected_only;
+    const bool reread = g_reread;
+    const bool force_last = g_force_last;
+
+    std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
+    for (const auto &[article_number, article] : g_article_list)
+    {
+        flags.emplace_back(article_number, article.m_flags);
+    }
+    EXPECT_EQ(result, art_switch("n"));
+
+    EXPECT_EQ(ArticleNum{number}, g_art);
+    EXPECT_EQ(number <= g_last_art.value_of() ? article_ptr(ArticleNum{number}) : nullptr, g_artp);
+    EXPECT_EQ(article_ptr_list_begin() + index, g_art_ptr);
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(subject_flags, g_first_subject->m_flags);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(reread, g_reread);
+    EXPECT_EQ(force_last, g_force_last);
+    EXPECT_EQ(result == AS_CLEAN ? search_ahead : ArticleNum{}, g_search_ahead);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+    for (const auto &[article_number, expected_flags] : flags)
+    {
+        SCOPED_TRACE(article_number.value_of());
+        EXPECT_EQ(expected_flags, article_ptr(article_number)->m_flags);
+    }
+}
+
 class NextArticleTest : public ArticleNavigationTest
 {
 };
@@ -803,6 +873,105 @@ TEST_P(NextUnreadArticleTest, restartsAtUnreadArticleWhenAlreadyAfterLastArticle
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, NextUnreadArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
+
+TEST_F(SortedArticleNavigationTest, nextUnreadFollowsDisplayedOrderInsteadOfNumericOrThreadOrder)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 4);
+    set_order({2, 4, 1, 3});
+    for (const bool threaded : {false, true})
+    {
+        SCOPED_TRACE(threaded);
+        g_threaded_group = threaded;
+        g_art = ArticleNum{4};
+        g_artp = article_ptr(g_art);
+        g_art_ptr = nullptr;
+
+        expect_next_unread(1, 2);
+        expect_next_unread(3, 3);
+        expect_next_unread(2, 0);
+    }
+}
+
+TEST_F(SortedArticleNavigationTest, nextUnreadSkipsReadEntriesButIncludesUnselectedUnreadArticles)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD}, 4);
+    set_order({4, 2, 1, 3});
+    g_search_ahead = ArticleNum{2};
+
+    expect_next_unread(1, 2);
+    expect_next_unread(3, 3);
+}
+
+TEST_F(SortedArticleNavigationTest, selectedNextUnreadSkipsUnselectedUnreadAndSelectedReadEntries)
+{
+    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD},
+                 4);
+    set_order({4, 2, 3, 1, 5});
+    g_selected_only = true;
+
+    expect_next_unread(1, 3);
+    expect_next_unread(4, 0);
+}
+
+TEST_F(SortedArticleNavigationTest, nextUnreadWrapsToTheFirstEligibleSortedEntry)
+{
+    set_articles(
+        {AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS},
+        3);
+    set_order({5, 4, 2, 1, 3});
+    g_selected_only = true;
+
+    expect_next_unread(2, 2);
+}
+
+TEST_F(SortedArticleNavigationTest, nextUnreadFromGroupEndRestartsAtTheFirstEligibleSortedEntry)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL}, 5);
+    set_order({2, 4, 1, 3});
+    g_art_ptr = article_ptr_list_begin() + 3;
+
+    expect_next_unread(4, 1);
+}
+
+TEST_F(SortedArticleNavigationTest, selectedNextUnreadWrapsBackToTheOnlyEligibleArticle)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL}, 3);
+    set_order({2, 3, 1});
+    g_selected_only = true;
+
+    expect_next_unread(3, 1);
+}
+
+TEST_F(SortedArticleNavigationTest, nextUnreadStopsAtGroupEndThenLeavesWhenAllArticlesAreRead)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 2);
+    set_order({3, 1, 2});
+
+    expect_next_unread(4, 0);
+    expect_next_unread(4, 0, AS_CLEAN);
+}
+
+TEST_F(SortedArticleNavigationTest, selectedNextUnreadRemainsAtGroupEndWhenOnlyUnselectedUnreadArticlesRemain)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS}, 3);
+    set_order({1, 2, 3});
+    g_selected_only = true;
+
+    expect_next_unread(4, 0);
+    expect_next_unread(4, 0);
+}
+
+TEST_F(SortedArticleNavigationTest, nextUnreadRepairsTheSortedCursorAfterAnArticleJump)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 4);
+    set_order({2, 4, 1, 3});
+    expect_next_unread(1, 2);
+    g_art = ArticleNum{2};
+    g_artp = article_ptr(g_art);
+
+    expect_next_unread(4, 1);
+}
 
 TEST_P(NextArticleTest, includesReadArticles)
 {
