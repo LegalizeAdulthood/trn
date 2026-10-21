@@ -1150,8 +1150,7 @@ not_threaded:
         {
             return AS_NORM;
         }
-        g_art = g_abs_first;
-        // FALL THROUGH
+        goto no_previous_article;
 
     case 'P':         // goto previous article
         g_s_follow_temp = true; // keep going until change req.
@@ -1160,6 +1159,7 @@ not_threaded:
 check_dec_art:
         if (g_art < g_abs_first)
         {
+no_previous_article:
             if (g_verbose)
             {
                 fmt::print("\nThere are no{}{} articles prior to this one.\n", command_ch == 'P' ? "" : " unread",

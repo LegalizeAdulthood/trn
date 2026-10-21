@@ -3,6 +3,7 @@
 
 #include <trn/artstate.h>
 #include <trn/cache.h>
+#include <trn/head.h>
 #include <trn/ng-internal.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
@@ -10,6 +11,8 @@
 #include <trn/scanart.h>
 #include <trn/smisc.h>
 #include <trn/Subject.h>
+#include <trn/terminal.h>
+#include <trn/trn.h>
 #include <trn/univ.h>
 
 #include <gtest/gtest.h>
@@ -37,6 +40,9 @@ private:
     Article                **m_old_art_ptr{g_art_ptr};
     ArticleNum               m_old_art{g_art};
     Article                 *m_old_artp{g_artp};
+    ArticleNum               m_old_curr_art{g_curr_art};
+    Article                 *m_old_curr_artp{g_curr_artp};
+    ArticleNum               m_old_parsed_art{g_parsed_art};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
     ArticleNum               m_old_last_art{g_last_art};
@@ -50,8 +56,13 @@ private:
     bool                     m_old_breadth_first{g_breadth_first};
     SelectionMode            m_old_sel_mode{g_sel_mode};
     bool                     m_old_selected_only{g_selected_only};
+    ArticleUnread            m_old_selected_count{g_selected_count};
+    decltype(g_sel_mask)     m_old_sel_mask{g_sel_mask};
     bool                     m_old_reread{g_reread};
     bool                     m_old_force_last{g_force_last};
+    bool                     m_old_verbose{g_verbose};
+    int                      m_old_term_line{g_term_line};
+    int                      m_old_term_col{g_term_col};
     int                      m_old_scan_on{g_scan_on};
     bool                     m_old_sa_in{g_sa_in};
     bool                     m_old_univ_read_virt_flag{g_univ_read_virt_flag};
@@ -77,8 +88,14 @@ void ArticleNavigationTest::SetUp()
     g_breadth_first = false;
     g_sel_mode = SM_ARTICLE;
     g_selected_only = false;
+    g_selected_count = ArticleUnread{};
+    g_sel_mask = AGF_SEL;
+    g_parsed_art = ArticleNum{};
     g_reread = false;
     g_force_last = false;
+    g_verbose = false;
+    g_term_line = 0;
+    g_term_col = 0;
     g_scan_on = 0;
     g_sa_in = false;
     g_univ_read_virt_flag = false;
@@ -95,6 +112,9 @@ void ArticleNavigationTest::TearDown()
     g_art_ptr = m_old_art_ptr;
     g_art = m_old_art;
     g_artp = m_old_artp;
+    g_curr_art = m_old_curr_art;
+    g_curr_artp = m_old_curr_artp;
+    g_parsed_art = m_old_parsed_art;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
     g_last_art = m_old_last_art;
@@ -108,8 +128,13 @@ void ArticleNavigationTest::TearDown()
     g_breadth_first = m_old_breadth_first;
     g_sel_mode = m_old_sel_mode;
     g_selected_only = m_old_selected_only;
+    g_selected_count = m_old_selected_count;
+    g_sel_mask = m_old_sel_mask;
     g_reread = m_old_reread;
     g_force_last = m_old_force_last;
+    g_verbose = m_old_verbose;
+    g_term_line = m_old_term_line;
+    g_term_col = m_old_term_col;
     g_scan_on = m_old_scan_on;
     g_sa_in = m_old_sa_in;
     g_univ_read_virt_flag = m_old_univ_read_virt_flag;
@@ -144,12 +169,18 @@ void ArticleNavigationTest::set_articles(std::initializer_list<ArticleFlags> fla
             ++m_newsgroup.m_to_read;
             m_subject.m_flags = SF_VISIT;
         }
+        if (flag & AF_SEL)
+        {
+            ++g_selected_count;
+        }
         previous = article;
     }
     g_last_art = ArticleNum{number - 1};
     g_last_cached = g_last_art;
     g_art = ArticleNum{current};
     g_artp = g_art <= g_last_art ? article_ptr(g_art) : nullptr;
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
 }
 
 class NextUnreadArticleTest : public ArticleNavigationTest
@@ -157,6 +188,10 @@ class NextUnreadArticleTest : public ArticleNavigationTest
 };
 
 class NextArticleTest : public ArticleNavigationTest
+{
+};
+
+class PreviousUnreadArticleTest : public ArticleNavigationTest
 {
 };
 
@@ -307,6 +342,101 @@ TEST_P(NextArticleTest, skipsMissingFirstCachedArticleWhenRestarting)
 }
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, NextArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
+
+TEST_P(PreviousUnreadArticleTest, skipsReadAndMissingArticles)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_UNREAD, AF_EXISTS, AF_EXISTS}, 4);
+    g_parsed_art = ArticleNum{1};
+
+    EXPECT_EQ(AS_NORM, art_switch("p"));
+
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_P(PreviousUnreadArticleTest, skipsUnselectedUnreadArticlesInSelectedOnlyMode)
+{
+    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS}, 3);
+    g_selected_only = true;
+    g_parsed_art = ArticleNum{1};
+
+    EXPECT_EQ(AS_NORM, art_switch("p"));
+
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_P(PreviousUnreadArticleTest, findsLastUnreadArticleFromEndOfGroup)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS}, 4);
+    g_parsed_art = ArticleNum{2};
+
+    EXPECT_EQ(AS_NORM, art_switch("p"));
+
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_P(PreviousUnreadArticleTest, preservesCurrentArticleAtBeginning)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 1);
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("p");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos, output.find("No previous unread articles"));
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
+TEST_P(PreviousUnreadArticleTest, preservesCurrentArticleWhenNoEarlierSelectedUnreadArticleExists)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL}, 3);
+    g_selected_only = true;
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("p");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos, output.find("No previous unread selected articles"));
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, PreviousUnreadArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
