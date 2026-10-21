@@ -367,6 +367,7 @@ protected:
     void        TearDown() override;
     void        set_search_articles(std::initializer_list<ArticleFlags> flags, long current);
     std::string search_articles(char direction, std::string_view query, ArticleSwitchResult expected = AS_NORM);
+    std::string enter_search(char direction, std::string_view input, ArticleSwitchResult expected);
 
 private:
     DataSource            m_data_source{};
@@ -385,6 +386,9 @@ private:
     bool                  m_old_performed_article_loop{g_performed_article_loop};
     int                   m_old_spin_count{g_spin_count};
     bool                  m_old_mouse_is_down{g_mouse_is_down};
+    char                  m_old_erase_char{g_erase_char};
+    char                  m_old_kill_char{g_kill_char};
+    std::string_view      m_old_tc_bc{g_tc_BC};
 };
 
 void SearchCommandArticleTest::SetUp()
@@ -400,6 +404,9 @@ void SearchCommandArticleTest::SetUp()
     g_general_mode = GM_READ;
     g_mode = MM_ARTICLE;
     g_int_count = 0;
+    g_erase_char = '\b';
+    g_kill_char = Ctl('U');
+    g_tc_BC = "\b";
     search_init();
     art_search_init();
 }
@@ -421,6 +428,9 @@ void SearchCommandArticleTest::TearDown()
     g_performed_article_loop = m_old_performed_article_loop;
     g_spin_count = m_old_spin_count;
     g_mouse_is_down = m_old_mouse_is_down;
+    g_erase_char = m_old_erase_char;
+    g_kill_char = m_old_kill_char;
+    g_tc_BC = m_old_tc_bc;
     UnreadScopeArticleTest::TearDown();
 }
 
@@ -437,6 +447,13 @@ void SearchCommandArticleTest::set_search_articles(std::initializer_list<Article
 std::string SearchCommandArticleTest::search_articles(char direction, std::string_view query,
                                                       ArticleSwitchResult expected)
 {
+    const std::string output = enter_search(direction, std::string{query} + '\n', expected);
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+std::string SearchCommandArticleTest::enter_search(char direction, std::string_view input, ArticleSwitchResult expected)
+{
     const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
     const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
     const ArticleNum                                 first = g_first_art;
@@ -450,8 +467,7 @@ std::string SearchCommandArticleTest::search_articles(char direction, std::strin
     {
         flags.emplace_back(number, article.m_flags);
     }
-    push_char('\n');
-    for (auto ch = query.rbegin(); ch != query.rend(); ++ch)
+    for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
         push_char(*ch);
     }
@@ -461,7 +477,6 @@ std::string SearchCommandArticleTest::search_articles(char direction, std::strin
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
-    EXPECT_FALSE(macro_pending());
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_TRUE(g_reread);
@@ -2347,6 +2362,137 @@ TEST_F(SearchCommandArticleTest, unsuccessfulSearchFromGroupEndRestoresTheNullCu
         EXPECT_EQ(ArticleNum{8}, g_art);
         EXPECT_EQ(nullptr, g_artp);
     }
+}
+
+TEST_F(SearchCommandArticleTest, invalidPatternPreservesPositionAndSelectionFromAnArticleOrGroupEnd)
+{
+    set_search_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS,
+                         AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                        3);
+    g_first_art = ArticleNum{2};
+    g_selected_only = true;
+    g_selected_subj_cnt = 2;
+    m_subjects[0].m_flags |= SF_SEL;
+    m_subjects[2].m_flags |= SF_SEL;
+    struct SearchCase
+    {
+        char direction;
+        long current;
+    };
+    for (const SearchCase test_case : {SearchCase{'/', 3}, SearchCase{'?', 3}, SearchCase{'/', 8}, SearchCase{'?', 8}})
+    {
+        SCOPED_TRACE(testing::Message() << test_case.direction << " at " << test_case.current);
+        g_art = g_curr_art = ArticleNum{test_case.current};
+        g_artp = g_curr_artp = test_case.current == 3 ? article_ptr(g_art) : nullptr;
+
+        const std::string output = search_articles(test_case.direction, "[", AS_INP);
+
+        EXPECT_NE(std::string::npos, output.find("Missing ]"));
+        EXPECT_EQ(std::string::npos, output.find("Not found."));
+        EXPECT_EQ(ArticleNum{test_case.current}, g_art);
+        EXPECT_EQ(g_curr_artp, g_artp);
+        EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
+        EXPECT_EQ(SF_NONE, m_subjects[1].m_flags);
+        EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
+    }
+}
+
+TEST_F(SearchCommandArticleTest, repeatWithoutPreviousPatternReportsAnErrorWithoutMoving)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
+                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                        3);
+    for (const char direction : {'/', '?'})
+    {
+        SCOPED_TRACE(direction);
+
+        const std::string output = search_articles(direction, "", AS_INP);
+
+        EXPECT_NE(std::string::npos, output.find("Null search string"));
+        EXPECT_EQ(std::string::npos, output.find("Not found."));
+        EXPECT_EQ(ArticleNum{3}, g_art);
+        EXPECT_EQ(g_curr_artp, g_artp);
+        EXPECT_TRUE(g_last_pat.empty());
+    }
+}
+
+TEST_F(SearchCommandArticleTest, erasingInitialDelimiterCancelsAndPreservesNextCommand)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
+                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                        3);
+    push_char('n');
+
+    const std::string output = enter_search('/', "\b", AS_INP);
+
+    EXPECT_EQ(std::string::npos, output.find("Not found."));
+    EXPECT_TRUE(g_last_pat.empty());
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(g_curr_artp, g_artp);
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(SearchCommandArticleTest, lineKillCancelsPartialSearchAtGroupEndAndRetainsPreviousPattern)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
+                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                        3);
+    search_articles('/', "needle");
+    ASSERT_EQ(ArticleNum{6}, g_art);
+    g_art = g_curr_art = ArticleNum{8};
+    g_artp = g_curr_artp = nullptr;
+    push_char('p');
+
+    const std::string output = enter_search('?', std::string{"unfinished"} + Ctl('U'), AS_INP);
+
+    EXPECT_EQ(std::string::npos, output.find("Not found."));
+    EXPECT_EQ("needle", g_last_pat);
+    EXPECT_EQ(ARTSCOPE_SUBJECT, g_art_how_much);
+    EXPECT_FALSE(g_art_do_read);
+    EXPECT_EQ(ArticleNum{8}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('p', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(SearchCommandArticleTest, erasingWholePatternCancelsWithoutCompilingOrConsumingNextCommand)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
+                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                        3);
+    push_char('n');
+
+    const std::string output = enter_search('?', "needle\b\b\b\b\b\b\b", AS_INP);
+
+    EXPECT_EQ(std::string::npos, output.find("Not found."));
+    EXPECT_TRUE(g_last_pat.empty());
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(g_curr_artp, g_artp);
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(SearchCommandArticleTest, correctedPatternFindsAnArticleAfterACompileError)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
+                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                        3);
+    const std::string invalid_output = search_articles('/', "[", AS_INP);
+    ASSERT_NE(std::string::npos, invalid_output.find("Missing ]"));
+    ASSERT_EQ(ArticleNum{3}, g_art);
+    ASSERT_EQ(g_curr_artp, g_artp);
+
+    const std::string corrected_output = search_articles('/', "needle");
+
+    EXPECT_EQ(std::string::npos, corrected_output.find("Missing ]"));
+    EXPECT_EQ(std::string::npos, corrected_output.find("Not found."));
+    EXPECT_EQ(ArticleNum{6}, g_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ("needle", g_last_pat);
 }
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
