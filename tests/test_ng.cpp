@@ -209,6 +209,42 @@ class LastVisitedArticleTest : public ArticleNavigationTest
 {
 };
 
+class SubjectThreadArticleTest : public ArticleNavigationTest
+{
+protected:
+    void set_subjects(std::initializer_list<ArticleFlags> flags, long current);
+
+private:
+    Subject m_subjects[4]{};
+};
+
+void SubjectThreadArticleTest::set_subjects(std::initializer_list<ArticleFlags> flags, long current)
+{
+    set_articles(flags, current);
+    g_sel_mode = GetParam() ? SM_THREAD : SM_SUBJECT;
+    g_first_subject = &m_subjects[0];
+    g_last_subject = &m_subjects[3];
+    for (long index = 0; index < 4; ++index)
+    {
+        Subject &subject = m_subjects[index];
+        subject.m_prev = index ? &m_subjects[index - 1] : nullptr;
+        subject.m_next = index < 3 ? &m_subjects[index + 1] : nullptr;
+        subject.m_articles = article_ptr(ArticleNum{2 * index + 1});
+        subject.m_thread = article_ptr(ArticleNum{4 * (index / 2) + 1});
+        subject.m_thread_link = &m_subjects[index ^ 1];
+        subject.m_flags = SF_VISIT;
+        for (long offset = 0; offset < 2; ++offset)
+        {
+            const long number = 2 * index + offset + 1;
+            Article   *article = article_ptr(ArticleNum{number});
+            article->m_subj = &subject;
+            article->m_subj_next = offset ? nullptr : article_ptr(ArticleNum{number + 1});
+            article->m_parent = number % 4 == 1 ? nullptr : article_ptr(ArticleNum{number - 1});
+            article->m_child1 = number % 4 ? article_ptr(ArticleNum{number + 1}) : nullptr;
+        }
+    }
+}
+
 } // namespace
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
@@ -662,6 +698,134 @@ TEST_P(LastVisitedArticleTest, requestsGroupCleanupForNegativeHistoryWithoutMovi
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, LastVisitedArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
+
+TEST_P(SubjectThreadArticleTest, nextSkipsTheCurrentSubjectOrThread)
+{
+    set_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+                 1);
+    const ArticleNum expected{GetParam() ? 6L : 3L};
+
+    EXPECT_EQ(AS_NORM, art_switch(">"));
+
+    EXPECT_EQ(expected, g_art);
+    ASSERT_EQ(article_ptr(expected), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+    EXPECT_EQ(ArticleNum{1}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{-1}, g_recent_art);
+    EXPECT_EQ(nullptr, g_recent_artp);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(GetParam(), g_threaded_group);
+}
+
+TEST_P(SubjectThreadArticleTest, previousSkipsTheCurrentSubjectOrThread)
+{
+    set_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+                 8);
+    const ArticleNum expected{GetParam() ? 2L : 6L};
+
+    EXPECT_EQ(AS_NORM, art_switch("<"));
+
+    EXPECT_EQ(expected, g_art);
+    ASSERT_EQ(article_ptr(expected), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+    EXPECT_EQ(ArticleNum{8}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{8}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{-1}, g_recent_art);
+    EXPECT_EQ(nullptr, g_recent_artp);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(GetParam(), g_threaded_group);
+}
+
+TEST_P(SubjectThreadArticleTest, nextFindsSelectedUnreadArticleWithoutChangingSelection)
+{
+    set_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                 1);
+    g_selected_only = true;
+    const ArticleNum expected{GetParam() ? 7L : 4L};
+
+    EXPECT_EQ(AS_NORM, art_switch(">"));
+
+    EXPECT_EQ(expected, g_art);
+    ASSERT_EQ(article_ptr(expected), g_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_artp->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{6})->m_flags);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(GetParam(), g_threaded_group);
+}
+
+TEST_P(SubjectThreadArticleTest, nextSkipsMissingArticlesAndFallsBackToReadArticle)
+{
+    set_subjects({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_UNREAD, AF_UNREAD, AF_UNREAD, AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS},
+                 1);
+
+    EXPECT_EQ(AS_NORM, art_switch(">"));
+
+    EXPECT_EQ(ArticleNum{7}, g_art);
+    ASSERT_EQ(article_ptr(ArticleNum{7}), g_artp);
+    EXPECT_EQ(AF_EXISTS, g_artp->m_flags);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{5})->m_flags);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{6})->m_flags);
+    EXPECT_EQ(GetParam() ? AF_UNREAD : AF_NONE, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(GetParam() ? AF_UNREAD : AF_NONE, article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(ArticleUnread{GetParam() ? 4L : 2L}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(GetParam(), g_threaded_group);
+}
+
+TEST_P(SubjectThreadArticleTest, entersFromEndAndStopsAtSubjectOrThreadBoundaries)
+{
+    set_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+                 9);
+    struct NavigationCase
+    {
+        const char *command;
+        long        current;
+        long        expected;
+        bool        force_last;
+    };
+    for (const NavigationCase test_case :
+         {NavigationCase{">", 9, 2, false}, NavigationCase{"<", 9, GetParam() ? 6L : 8L, false},
+          NavigationCase{">", 8, 9, true}, NavigationCase{"<", 1, 9, true}})
+    {
+        SCOPED_TRACE(testing::Message() << test_case.command << " from " << test_case.current);
+        g_art = ArticleNum{test_case.current};
+        g_artp = test_case.current <= 8 ? article_ptr(g_art) : nullptr;
+        g_curr_art = g_art;
+        g_curr_artp = g_artp;
+        g_reread = false;
+        g_force_last = false;
+
+        EXPECT_EQ(AS_NORM, art_switch(test_case.command));
+
+        EXPECT_EQ(ArticleNum{test_case.expected}, g_art);
+        EXPECT_EQ(test_case.expected <= 8 ? article_ptr(ArticleNum{test_case.expected}) : nullptr, g_artp);
+        EXPECT_EQ(ArticleNum{test_case.current}, g_curr_art);
+        EXPECT_EQ(test_case.current <= 8 ? article_ptr(ArticleNum{test_case.current}) : nullptr, g_curr_artp);
+        EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+        EXPECT_FALSE(g_reread);
+        EXPECT_EQ(test_case.force_last, g_force_last);
+        EXPECT_EQ(GetParam(), g_threaded_group);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, SubjectThreadArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Thread" : "Subject"; });
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
 {
