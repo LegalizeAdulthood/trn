@@ -42,6 +42,8 @@ private:
     Article                 *m_old_artp{g_artp};
     ArticleNum               m_old_curr_art{g_curr_art};
     Article                 *m_old_curr_artp{g_curr_artp};
+    ArticleNum               m_old_recent_art{g_recent_art};
+    Article                 *m_old_recent_artp{g_recent_artp};
     ArticleNum               m_old_parsed_art{g_parsed_art};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
@@ -91,6 +93,8 @@ void ArticleNavigationTest::SetUp()
     g_selected_count = ArticleUnread{};
     g_sel_mask = AGF_SEL;
     g_parsed_art = ArticleNum{};
+    g_recent_art = ArticleNum{-1};
+    g_recent_artp = nullptr;
     g_reread = false;
     g_force_last = false;
     g_verbose = false;
@@ -114,6 +118,8 @@ void ArticleNavigationTest::TearDown()
     g_artp = m_old_artp;
     g_curr_art = m_old_curr_art;
     g_curr_artp = m_old_curr_artp;
+    g_recent_art = m_old_recent_art;
+    g_recent_artp = m_old_recent_artp;
     g_parsed_art = m_old_parsed_art;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
@@ -196,6 +202,10 @@ class PreviousUnreadArticleTest : public ArticleNavigationTest
 };
 
 class PreviousArticleTest : public ArticleNavigationTest
+{
+};
+
+class LastVisitedArticleTest : public ArticleNavigationTest
 {
 };
 
@@ -531,6 +541,126 @@ TEST_P(PreviousArticleTest, preservesCurrentArticleWhenAllEarlierArticlesAreMiss
 }
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, PreviousArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
+
+TEST_P(LastVisitedArticleTest, returnsToReadUnselectedArticleAndPreservesHistory)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL}, 3);
+    g_recent_art = ArticleNum{1};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_selected_only = true;
+
+    EXPECT_EQ(AS_NORM, art_switch("-"));
+
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(ArticleNum{3}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{1}, g_recent_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_recent_artp);
+    EXPECT_EQ(AF_EXISTS, g_artp->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_curr_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+}
+
+TEST_P(LastVisitedArticleTest, returnsToEndOfGroupAndRetainsSearchAheadMode)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    g_recent_art = ArticleNum{3};
+    g_search_ahead = ArticleNum{2};
+
+    EXPECT_EQ(AS_NORM, art_switch("-"));
+
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{1}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{3}, g_recent_art);
+    EXPECT_EQ(nullptr, g_recent_artp);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+}
+
+TEST_P(LastVisitedArticleTest, acceptsBackspaceAndDeleteAliases)
+{
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 2);
+    g_recent_art = ArticleNum{1};
+    g_recent_artp = article_ptr(g_recent_art);
+    for (const char *command : {"\b", "\177"})
+    {
+        SCOPED_TRACE(static_cast<int>(command[0]));
+        g_art = g_curr_art;
+        g_artp = g_curr_artp;
+        g_reread = false;
+        g_force_last = false;
+
+        EXPECT_EQ(AS_NORM, art_switch(command));
+
+        EXPECT_EQ(ArticleNum{1}, g_art);
+        EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+        EXPECT_EQ(ArticleNum{2}, g_curr_art);
+        EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+        EXPECT_EQ(ArticleNum{1}, g_recent_art);
+        EXPECT_EQ(article_ptr(ArticleNum{1}), g_recent_artp);
+        EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+        EXPECT_TRUE(g_reread);
+        EXPECT_TRUE(g_force_last);
+    }
+}
+
+TEST_P(LastVisitedArticleTest, returnsToVirtualArticleUsingSavedPointer)
+{
+    set_articles({AF_EXISTS}, 1);
+    Article virtual_article{};
+    virtual_article.m_flags = AF_TMP_MEM;
+    g_recent_art = ArticleNum{};
+    g_recent_artp = &virtual_article;
+    g_search_ahead = ArticleNum{-1};
+
+    EXPECT_EQ(AS_NORM, art_switch("-"));
+
+    EXPECT_EQ(ArticleNum{}, g_art);
+    EXPECT_EQ(&virtual_article, g_artp);
+    EXPECT_EQ(ArticleNum{1}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{}, g_recent_art);
+    EXPECT_EQ(&virtual_article, g_recent_artp);
+    EXPECT_EQ(AF_TMP_MEM, virtual_article.m_flags);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+}
+
+TEST_P(LastVisitedArticleTest, requestsGroupCleanupForNegativeHistoryWithoutMoving)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD}, 2);
+    g_search_ahead = ArticleNum{2};
+
+    EXPECT_EQ(AS_CLEAN, art_switch("-"));
+
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(ArticleNum{2}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{-1}, g_recent_art);
+    EXPECT_EQ(nullptr, g_recent_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticleNum{2}, g_search_ahead);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, LastVisitedArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
