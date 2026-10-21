@@ -3271,6 +3271,54 @@ TEST_P(ReadStateArticleTest, marksCurrentArticleForDelayedReturnOnlyOnce)
     }
 }
 
+TEST_P(ReadStateArticleTest, delaysAnAlreadyReadArticleWithoutChangingUnreadOrSelectedCounts)
+{
+    set_articles({AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD},
+                 2);
+    g_selected_only = true;
+    g_artp->m_subj->m_flags = SF_SEL | SF_VISIT;
+    g_first_art = ArticleNum{3};
+    g_recent_art = ArticleNum{4};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{3};
+    g_search_ahead = ArticleNum{4};
+    g_dm_count = 1;
+    for (int attempt = 1; attempt <= 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+        testing::internal::CaptureStdout();
+
+        const ArticleSwitchResult result = art_switch("M");
+
+        const std::string output = testing::internal::GetCapturedStdout();
+        EXPECT_EQ(AS_ASK, result);
+        EXPECT_NE(std::string::npos, output.find("Article 2 will return."));
+        EXPECT_EQ(ArticleNum{2}, g_art);
+        ASSERT_EQ(article_ptr(ArticleNum{2}), g_artp);
+        EXPECT_EQ(AF_EXISTS | AF_DEL | AF_YANK_BACK, g_artp->m_flags);
+        EXPECT_EQ(SF_SEL | SF_VISIT, g_artp->m_subj->m_flags);
+        EXPECT_EQ(ArticleNum{2}, g_curr_art);
+        EXPECT_EQ(g_artp, g_curr_artp);
+        EXPECT_EQ(ArticleNum{4}, g_recent_art);
+        EXPECT_EQ(article_ptr(ArticleNum{4}), g_recent_artp);
+        EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+        EXPECT_EQ(ArticleNum{4}, g_search_ahead);
+        EXPECT_EQ(AF_EXISTS | AF_YANK_BACK, article_ptr(ArticleNum{1})->m_flags);
+        EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{3})->m_flags);
+        EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{4})->m_flags);
+        EXPECT_EQ(ArticleNum{3}, g_first_art);
+        EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+        EXPECT_EQ(2, g_dm_count);
+        EXPECT_EQ(10, g_check_count);
+        EXPECT_TRUE(g_selected_only);
+        EXPECT_EQ(GetParam(), g_threaded_group);
+        EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+        EXPECT_FALSE(g_reread);
+        EXPECT_FALSE(g_force_last);
+    }
+}
+
 TEST_P(ReadStateArticleTest, ignoresEndOfGroupAndExpiredArticlePositions)
 {
     set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS}, 4);
