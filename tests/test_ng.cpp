@@ -6,9 +6,11 @@
 #include <trn/bits.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
+#include <trn/file-contents.h>
 #include <trn/final.h>
 #include <trn/head.h>
 #include <trn/intrp.h>
+#include <trn/kfile.h>
 #include <trn/ng-internal.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
@@ -21,12 +23,20 @@
 #include <trn/trn.h>
 #include <trn/univ.h>
 
+#include <test_config.h>
+
+#include "mock_env.h"
+
 #include <gtest/gtest.h>
 
 #include <cerrno>
+#include <cstdio>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <initializer_list>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -965,6 +975,59 @@ std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, l
     EXPECT_FALSE(macro_pending());
     return output;
 }
+
+class PersistentKillArticleTest : public KillSubjectArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+    std::filesystem::path m_kill_file;
+
+private:
+    trn::testing::MockEnvironment m_env;
+    std::filesystem::path         m_output_dir;
+    KillFileStateFlags            m_old_kf_state{g_kf_state};
+    std::FILE                    *m_old_local_kfp{g_local_kfp};
+    bool                          m_old_novice_delays{g_novice_delays};
+};
+
+void PersistentKillArticleTest::SetUp()
+{
+    KillSubjectArticleTest::SetUp();
+    g_local_kfp = nullptr;
+    g_kf_state = KFS_NONE;
+    g_novice_delays = false;
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_output_dir = std::filesystem::path{TRN_TEST_TMP_DIR} / "PersistentKillArticleTest" / info->name();
+    m_kill_file = m_output_dir / "KILL";
+    std::error_code error;
+    std::filesystem::create_directories(m_output_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    std::filesystem::remove(m_kill_file, error);
+    ASSERT_FALSE(error) << error.message();
+    m_env.expect_env_repeatedly("KILLLOCAL", m_kill_file.generic_string().c_str());
+}
+
+void PersistentKillArticleTest::TearDown()
+{
+    if (g_local_kfp != nullptr && g_local_kfp != m_old_local_kfp)
+    {
+        std::fclose(g_local_kfp);
+    }
+    g_local_kfp = m_old_local_kfp;
+    g_kf_state = m_old_kf_state;
+    g_novice_delays = m_old_novice_delays;
+    std::error_code error;
+    std::filesystem::remove(m_kill_file, error);
+    std::filesystem::remove(m_output_dir, error);
+    KillSubjectArticleTest::TearDown();
+}
+
+class PersistentKillScanArticleTest : public PersistentKillArticleTest,
+                                      public testing::WithParamInterface<std::pair<bool, bool>>
+{
+};
 
 class KillThreadFallbackArticleTest : public KillSubjectArticleTest
 {
@@ -2549,6 +2612,117 @@ TEST_F(KillThreadArticleTest, groupEndRejectsTheCommandWithoutChangingAnyThread)
     EXPECT_EQ(ArticleUnread{5}, g_selected_count);
     EXPECT_EQ(nullptr, g_artp);
     EXPECT_TRUE(g_sa_in);
+}
+
+TEST_F(PersistentKillArticleTest, savesALocalRuleAndKillsEarlierSubjectArticlesAndLaterMatches)
+{
+    set_kill_articles(2);
+
+    const std::string output = kill_subject(AS_NORM, 2, {}, "K");
+
+    EXPECT_NE(std::string::npos, output.find("KILL"));
+    EXPECT_NE(std::string::npos, output.find("done"));
+    EXPECT_EQ("/: *Target subject/:j\n", file_contents(m_kill_file));
+    EXPECT_NE(nullptr, g_local_kfp);
+    EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_F(PersistentKillArticleTest, repeatedKillsAppendToExistingRulesWithoutDoubleCountingArticles)
+{
+    set_kill_articles(2);
+    std::ofstream{m_kill_file} << "/keep/:j";
+    std::string expected{"/keep/:j\n"};
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        kill_subject(AS_NORM, 2, {}, "K");
+
+        expected += "/: *Target subject/:j\n";
+        EXPECT_EQ(expected, file_contents(m_kill_file));
+        expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL,
+                      AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS});
+        EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    }
+}
+
+TEST_F(PersistentKillArticleTest, savedRuleEscapesRegexCharactersAndSearchDelimiters)
+{
+    set_kill_articles(2);
+    m_subjects[0].m_str = "Re: Target v1.0/notes";
+    m_subjects[2].m_str = "Re: Target v1X0/notes";
+
+    kill_subject(AS_NORM, 2, {}, "K");
+
+    EXPECT_EQ("/: *Target v1\\.0\\\\/notes/:j\n", file_contents(m_kill_file));
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+}
+
+TEST_P(PersistentKillScanArticleTest, scanReturnHonorsPersistentAndTemporaryFollowSettings)
+{
+    set_kill_articles(2);
+    g_sa_in = true;
+    g_sa_follow = GetParam().first;
+    g_s_follow_temp = GetParam().second;
+
+    kill_subject(g_sa_follow || g_s_follow_temp ? AS_NORM : AS_SA, 2, {}, "K");
+
+    EXPECT_EQ("/: *Target subject/:j\n", file_contents(m_kill_file));
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_TRUE(g_sa_in);
+    EXPECT_EQ(GetParam().first, g_sa_follow);
+    EXPECT_EQ(GetParam().second, g_s_follow_temp);
+    EXPECT_FALSE(g_reread);
+}
+
+INSTANTIATE_TEST_SUITE_P(FollowPolicy, PersistentKillScanArticleTest,
+                         testing::Values(std::make_pair(false, false), std::make_pair(true, false),
+                                         std::make_pair(false, true)));
+
+TEST_F(PersistentKillArticleTest, groupEndDoesNotCreateARuleOrChangeArticles)
+{
+    set_kill_articles(8);
+    g_sa_in = true;
+
+    const std::string output = kill_subject(AS_ASK, 8, {}, "K");
+
+    EXPECT_NE(std::string::npos, output.find("End of group"));
+    EXPECT_FALSE(std::filesystem::exists(m_kill_file));
+    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_EQ(KFS_NONE, g_kf_state);
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_TRUE(g_sa_in);
+}
+
+TEST_F(PersistentKillArticleTest, failedRuleSaveReportsTheErrorAndStillKillsMatchingArticles)
+{
+    set_kill_articles(2);
+    ASSERT_TRUE(std::filesystem::create_directory(m_kill_file));
+
+    const std::string output = kill_subject(AS_NORM, 2, {}, "K");
+
+    EXPECT_NE(std::string::npos, output.find("Can't open"));
+    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_TRUE(std::filesystem::is_empty(m_kill_file));
+    expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
 }
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
