@@ -371,6 +371,8 @@ protected:
     void        TearDown() override;
     std::string run_selector(const std::function<char(char_int)> &selector, ArticleSwitchResult expected,
                              DoNewsgroupResult exit_code = NG_NORM);
+    std::string run_selector(std::string command, char_int request, const std::function<char(char_int)> &selector,
+                             ArticleSwitchResult expected, DoNewsgroupResult exit_code = NG_NORM);
 
 private:
     int m_old_lines{g_tc_LINES};
@@ -405,21 +407,28 @@ void SelectorEntryArticleTest::TearDown()
 std::string SelectorEntryArticleTest::run_selector(const std::function<char(char_int)> &selector,
                                                    ArticleSwitchResult expected, DoNewsgroupResult exit_code)
 {
+    return run_selector("+", '+', selector, expected, exit_code);
+}
+
+std::string SelectorEntryArticleTest::run_selector(std::string command, char_int request,
+                                                   const std::function<char(char_int)> &selector,
+                                                   ArticleSwitchResult expected, DoNewsgroupResult exit_code)
+{
     const auto current = std::make_pair(g_curr_art, g_curr_artp);
     const auto recent = std::make_pair(g_recent_art, g_recent_artp);
     int        calls = 0;
-    const auto invoke = [&](char_int command)
+    const auto invoke = [&](char_int selector_command)
     {
         ++calls;
-        EXPECT_EQ('+', command);
+        EXPECT_EQ(request, selector_command);
         EXPECT_FALSE(g_sa_in);
         EXPECT_TRUE(g_s_follow_temp);
         EXPECT_TRUE(g_univ_follow_temp);
-        return selector(command);
+        return selector(selector_command);
     };
     testing::internal::CaptureStdout();
 
-    const ArticleSwitchResult result = art_switch("+", {}, invoke);
+    const ArticleSwitchResult result = art_switch(std::move(command), {}, invoke);
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
@@ -434,6 +443,49 @@ std::string SelectorEntryArticleTest::run_selector(const std::function<char(char
     EXPECT_EQ(MM_ARTICLE, g_mode);
     return output;
 }
+
+class AlternateSelectorArticleTest : public SelectorEntryArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    char             m_old_erase_char{g_erase_char};
+    char             m_old_kill_char{g_kill_char};
+    std::string_view m_old_tc_bc{g_tc_BC};
+    bool             m_old_mouse_is_down{g_mouse_is_down};
+};
+
+void AlternateSelectorArticleTest::SetUp()
+{
+    SelectorEntryArticleTest::SetUp();
+    g_erase_char = '\b';
+    g_kill_char = Ctl('U');
+    g_tc_BC = "\b";
+    g_mouse_is_down = false;
+}
+
+void AlternateSelectorArticleTest::TearDown()
+{
+    g_erase_char = m_old_erase_char;
+    g_kill_char = m_old_kill_char;
+    g_tc_BC = m_old_tc_bc;
+    g_mouse_is_down = m_old_mouse_is_down;
+    SelectorEntryArticleTest::TearDown();
+}
+
+class SelectorModeShortcutArticleTest : public AlternateSelectorArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class ReadSelectorPromptArticleTest : public AlternateSelectorArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class CancelSelectorPrefixArticleTest : public AlternateSelectorArticleTest, public testing::WithParamInterface<char>
+{
+};
 
 class SelectorExitArticleTest : public SelectorEntryArticleTest
 {
@@ -1759,6 +1811,195 @@ TEST_F(SelectorExitArticleTest, scanReturnAtExhaustionRetainsTheEndPositionAndGr
     EXPECT_TRUE(g_sa_do_sel_threads);
     expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS});
 }
+
+TEST_P(SelectorModeShortcutArticleTest, typedShortcutForwardsTheRequestedUnreadViewAndRetainsTheChosenArticle)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 2);
+    g_first_art = ArticleNum{2};
+    g_sel_mode = SM_THREAD;
+    push_char('n');
+    push_char(GetParam());
+
+    const std::string output = run_selector(
+        std::string{'_', FINISH_CMD}, GetParam(),
+        [&](char_int)
+        {
+            // The selector interprets a/s/t/T; dispatch must preserve the request.
+            EXPECT_FALSE(g_sel_rereading);
+            EXPECT_EQ(AGF_SEL, g_sel_mask);
+            EXPECT_EQ(SM_THREAD, g_sel_mode);
+            EXPECT_EQ(ArticleNum{2}, g_first_art);
+            expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD});
+            g_art = ArticleNum{3};
+            g_artp = article_ptr(g_art);
+            g_artp->select_article(AUTO_KILL_NONE);
+            return 'Z';
+        },
+        AS_NORM);
+
+    EXPECT_NE(std::string::npos, output.find('_'));
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_artp);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL});
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThreadViews, SelectorModeShortcutArticleTest,
+                         testing::Values('a', 's', 't', 'T'));
+
+TEST_F(AlternateSelectorArticleTest, completedShortcutCancellationPreservesReadingContextAndQueuedInput)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD}, 2);
+    g_first_art = ArticleNum{2};
+    g_selected_only = true;
+    g_selected_subj_cnt = 1;
+    g_first_subject->m_flags |= SF_SEL;
+    g_recent_art = ArticleNum{1};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{2};
+    g_search_ahead = ArticleNum{3};
+    g_reread = true;
+    g_force_last = true;
+    push_char('n');
+
+    run_selector("_s", 's', [](char_int) { return '+'; }, AS_ASK);
+
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_EQ(ArticleNum{2}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD});
+    EXPECT_EQ(g_tc_LINES, g_term_scrolled);
+    EXPECT_EQ(g_tc_LINES - 1, g_term_line);
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(AlternateSelectorArticleTest, readSelectorCanReturnARevivedArticleFromAnExhaustedGroup)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 4);
+    g_first_art = ArticleNum{4};
+    push_char('n');
+    push_char('+');
+
+    const std::string output = run_selector(
+        "U", 'U',
+        [&](char_int)
+        {
+            // U requests already-read articles without unreading the group itself.
+            EXPECT_EQ(ArticleNum{4}, g_art);
+            EXPECT_EQ(nullptr, g_artp);
+            EXPECT_EQ(ArticleNum{4}, g_first_art);
+            EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+            expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS});
+            g_art = ArticleNum{2};
+            g_artp = article_ptr(g_art);
+            g_artp->one_more();
+            g_artp->select_article(AUTO_KILL_NONE);
+            return 'Z';
+        },
+        AS_NORM);
+
+    EXPECT_NE(std::string::npos, output.find("Unkill"));
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_P(ReadSelectorPromptArticleTest, explicitOrDefaultSelectionCancellationPreservesReadAndUnreadArticles)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD}, 1);
+    g_first_art = ArticleNum{2};
+    g_selected_only = true;
+    g_selected_subj_cnt = 1;
+    g_first_subject->m_flags |= SF_SEL;
+    push_char('n');
+    push_char(GetParam());
+
+    const std::string output = run_selector("U", 'U', [](char_int) { return '+'; }, AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find("Unkill"));
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(AGF_SEL, g_sel_mask);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD});
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(PlusAndReturn, ReadSelectorPromptArticleTest, testing::Values('+', '\n'));
+
+TEST_P(CancelSelectorPrefixArticleTest, erasingOrKillingThePrefixNeverEntersTheSelector)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD}, 2);
+    g_selected_only = true;
+    g_selected_subj_cnt = 1;
+    g_first_subject->m_flags |= SF_SEL;
+    push_char('n');
+    push_char(GetParam());
+    int calls = 0;
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{'_', FINISH_CMD}, {},
+                                                  [&](char_int)
+                                                  {
+                                                      ++calls;
+                                                      return 'Z';
+                                                  });
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_INP, result);
+    EXPECT_EQ(0, calls);
+    EXPECT_EQ(std::string::npos, output.find("Type h for help"));
+    EXPECT_EQ(ArticleNum{2}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_sa_in);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD});
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(EraseAndKill, CancelSelectorPrefixArticleTest, testing::Values('\b', Ctl('U')));
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
 {
