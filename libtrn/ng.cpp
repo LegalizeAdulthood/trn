@@ -79,25 +79,12 @@ bool        g_use_threads{THREAD_INIT}; // -x
 bool        g_unsafe_rc_saves{};        // -U
 std::string g_default_cmd;              // 1st char is default command
 
-// art_switch() return values
-enum ArticleSwitchResult
-{
-    AS_NORM = 0,
-    AS_INP = 1,
-    AS_ASK = 2,
-    AS_CLEAN = 3,
-    AS_SA = 4,
-    AS_QUITNOW = 5,
-    AS_SV = 6
-};
-
 static bool count_uncached_article(Article &article, int arg);
 static bool mark_all_read(Article &article, int leave_unread);
 static bool mark_all_unread(Article &article, int arg);
 #ifdef DEBUG
 static bool debug_article_output(Article &article, int arg);
 #endif
-static ArticleSwitchResult art_switch(std::string command);
 
 static DoNewsgroupResult s_exit_code{NG_NORM};
 static bool              s_art_sel_lock{};
@@ -806,7 +793,7 @@ cleanup2:
 
 // decide what to do at the end of an article
 
-static ArticleSwitchResult art_switch(std::string command)
+ArticleSwitchResult art_switch(std::string command)
 {
     command = apply_article_default_command(command);
     print_article_command(command);

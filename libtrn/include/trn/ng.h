@@ -1,6 +1,7 @@
 /* trn/ng.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_NG_H
 #define TRN_NG_H
 
@@ -46,8 +47,20 @@ enum DoNewsgroupResult
     NG_GO_ARTICLE = 7
 };
 
-void              ng_init();
-DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command);
+enum ArticleSwitchResult
+{
+    AS_NORM = 0,
+    AS_INP = 1,
+    AS_ASK = 2,
+    AS_CLEAN = 3,
+    AS_SA = 4,
+    AS_QUITNOW = 5,
+    AS_SV = 6
+};
+
+void                ng_init();
+DoNewsgroupResult   do_newsgroup(std::optional<std::string> start_command);
+ArticleSwitchResult art_switch(std::string command);
 #ifdef MAIL_CALL
 void set_mail(bool force);
 #endif
