@@ -41,6 +41,10 @@ jobs:
         debug: "false"
         trace: "false"
 
+    - name: Set up Windows curl
+      if: runner.os == 'Windows'
+      run: cmake -P cmake/SetupWindowsCurl.cmake
+
     - name: CMake version
       run: cmake --version
 

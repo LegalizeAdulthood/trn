@@ -9,6 +9,15 @@ $ErrorActionPreference = 'Stop'
 [Console]::InputEncoding = [Text.UTF8Encoding]::new($true)
 $utf8 = [Text.UTF8Encoding]::new($false)
 $curl = (Get-Command curl.exe -CommandType Application | Select-Object -First 1).Source
+$curlVersion = @(& $curl --version)
+if ($LASTEXITCODE -ne 0 -or $curlVersion.Count -eq 0 -or
+    $curlVersion[0] -notmatch '^curl (\d+\.\d+\.\d+)') {
+    throw "Cannot determine curl version: $curl"
+}
+if ([version] $Matches[1] -lt [version] '8.16.0') {
+    throw "SMTP envelope parameters require curl 8.16.0 or newer: $curl"
+}
+Write-Output "SMTP sender: $curl; $($curlVersion[0])"
 [void] [IO.Directory]::CreateDirectory($WorkDirectory)
 $rsa = [Security.Cryptography.RSA]::Create(2048)
 $request = [Security.Cryptography.X509Certificates.CertificateRequest]::new(

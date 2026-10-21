@@ -1,8 +1,9 @@
 # Windows Mail Submission
 
 Windows uses PowerShell 5.1 for Rnmail composition and native curl for
-SMTP submission.  Install a maintained curl build with SMTP, SMTPS, and
-TLS support if the Windows copy lacks those protocols.  `RNMAILER`
+SMTP submission.  Install a maintained curl build, version 8.16.0 or
+newer, with SMTP, SMTPS, and TLS support.  Earlier versions cannot pass
+SMTP envelope parameters correctly.  `RNMAILER`
 selects this curl-compatible executable, optionally with fixed arguments;
 the default is `curl.exe`.  Unix Rnmail retains its native mailer
 interface.
@@ -49,6 +50,8 @@ messages use UTF-8 MIME.  SMTP line endings and final newline are supplied.
 Eight-bit bodies require the submission server's 8BITMIME extension;
 the adapter declares BODY=8BITMIME while retaining existing MIME bytes.
 A sender that cannot pass that SMTP envelope parameter fails the probe.
+Curl added address-parameter support in [8.16.0][curl-816].  Windows CI
+downloads a pinned curl build and checks its SHA-256 before testing.
 
 Success requires curl exit zero and a final SMTP DATA response of 250.
 This means the server accepted responsibility, which may include queueing;
@@ -71,3 +74,4 @@ removed without changing the draft or an encapsulated original message.
 [m]: https://learn.microsoft.com/windows/win32/api/mapi/ns-mapi-mapimessage
 [mailkit]: https://github.com/jstedfast/MailKit
 [curl]: https://curl.se/docs/manpage.html
+[curl-816]: https://curl.se/ch/8.16.0.html
