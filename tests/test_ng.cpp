@@ -62,6 +62,7 @@ private:
     Subject                 *m_old_first_subject{g_first_subject};
     Subject                 *m_old_last_subject{g_last_subject};
     NewsgroupData           *m_old_newsgroup_ptr{g_newsgroup_ptr};
+    DoNewsgroupResult        m_old_newsgroup_exit_code{g_newsgroup_exit_code};
     bool                     m_old_threaded_group{g_threaded_group};
     bool                     m_old_breadth_first{g_breadth_first};
     SelectionMode            m_old_sel_mode{g_sel_mode};
@@ -94,6 +95,7 @@ void ArticleStateTest::SetUp()
     g_first_subject = &m_subject;
     g_last_subject = &m_subject;
     g_newsgroup_ptr = &m_newsgroup;
+    g_newsgroup_exit_code = NG_NORM;
     g_threaded_group = true;
     g_breadth_first = false;
     g_sel_mode = SM_ARTICLE;
@@ -138,6 +140,7 @@ void ArticleStateTest::TearDown()
     g_first_subject = m_old_first_subject;
     g_last_subject = m_old_last_subject;
     g_newsgroup_ptr = m_old_newsgroup_ptr;
+    g_newsgroup_exit_code = m_old_newsgroup_exit_code;
     g_threaded_group = m_old_threaded_group;
     g_breadth_first = m_old_breadth_first;
     g_sel_mode = m_old_sel_mode;
@@ -358,6 +361,63 @@ void GroupUnreadArticleTest::TearDown()
     g_obj_count = m_old_obj_count;
     g_dm_count = m_old_dm_count;
     UnreadScopeArticleTest::TearDown();
+}
+
+class QuitCommandArticleTest : public UnreadScopeArticleTest
+{
+protected:
+    void SetUp() override;
+    void expect_quit(std::string_view command, DoNewsgroupResult expected);
+};
+
+void QuitCommandArticleTest::SetUp()
+{
+    UnreadScopeArticleTest::SetUp();
+    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 2);
+    g_selected_only = true;
+    g_selected_subj_cnt = 1;
+    g_first_subject->m_flags |= SF_SEL;
+    g_recent_art = ArticleNum{1};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{2};
+    g_search_ahead = ArticleNum{2};
+    g_reread = true;
+    g_force_last = true;
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+}
+
+void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupResult expected)
+{
+    const auto      position = std::make_pair(g_art, g_artp);
+    const auto      current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto      recent = std::make_pair(g_recent_art, g_recent_artp);
+    const MinorMode mode = g_mode;
+    g_newsgroup_exit_code = NG_MINUS;
+    push_char('n');
+
+    EXPECT_EQ(AS_CLEAN, art_switch(std::string{command}));
+
+    EXPECT_EQ(expected, g_newsgroup_exit_code);
+    EXPECT_EQ(position, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(SF_SEL | SF_VISIT, g_first_subject->m_flags);
+    EXPECT_EQ(ArticleNum{1}, g_first_art);
+    EXPECT_EQ(ArticleNum{2}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{2}, g_search_ahead);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(mode, g_mode);
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
 }
 
 class SearchCommandArticleTest : public UnreadScopeArticleTest
@@ -1055,6 +1115,7 @@ TEST_P(LastVisitedArticleTest, requestsGroupCleanupForNegativeHistoryWithoutMovi
 
     EXPECT_EQ(AS_CLEAN, art_switch("-"));
 
+    EXPECT_EQ(NG_MINUS, g_newsgroup_exit_code);
     EXPECT_EQ(ArticleNum{2}, g_art);
     EXPECT_EQ(article_ptr(ArticleNum{2}), g_artp);
     EXPECT_EQ(ArticleNum{2}, g_curr_art);
@@ -2493,6 +2554,38 @@ TEST_F(SearchCommandArticleTest, correctedPatternFindsAnArticleAfterACompileErro
     EXPECT_EQ(ArticleNum{6}, g_art);
     EXPECT_EQ(article_ptr(g_art), g_artp);
     EXPECT_EQ("needle", g_last_pat);
+}
+
+TEST_F(QuitCommandArticleTest, lowerCaseQuitRequestsTheNextNewsgroup)
+{
+    expect_quit("q", NG_NEXT);
+}
+
+TEST_F(QuitCommandArticleTest, upperCaseQuitRequestsTheNewsgroupPrompt)
+{
+    expect_quit("Q", NG_ASK);
+}
+
+TEST_F(QuitCommandArticleTest, backtickQuitRequestsTheNewsgroupPrompt)
+{
+    expect_quit("`", NG_ASK);
+}
+
+TEST_F(QuitCommandArticleTest, quitVariantsPreserveTheEndOfGroupPosition)
+{
+    g_art = g_curr_art = ArticleNum{4};
+    g_artp = g_curr_artp = nullptr;
+    g_mode = MM_ARTICLE_END;
+    struct QuitCase
+    {
+        const char       *command;
+        DoNewsgroupResult result;
+    };
+    for (const QuitCase test_case : {QuitCase{"q", NG_NEXT}, QuitCase{"Q", NG_ASK}, QuitCase{"`", NG_ASK}})
+    {
+        SCOPED_TRACE(test_case.command);
+        expect_quit(test_case.command, test_case.result);
+    }
 }
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)

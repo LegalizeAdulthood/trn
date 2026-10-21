@@ -47,6 +47,8 @@ enum DoNewsgroupResult
     NG_GO_ARTICLE = 7
 };
 
+extern DoNewsgroupResult g_newsgroup_exit_code;
+
 enum ArticleSwitchResult
 {
     AS_NORM = 0,

@@ -86,7 +86,7 @@ static bool mark_all_unread(Article &article, int arg);
 static bool debug_article_output(Article &article, int arg);
 #endif
 
-static DoNewsgroupResult s_exit_code{NG_NORM};
+DoNewsgroupResult        g_newsgroup_exit_code{NG_NORM};
 static bool              s_art_sel_lock{};
 
 static std::string_view unread_prompt(bool has_current_article, bool verbose)
@@ -291,7 +291,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         return NG_ERROR;
     }
 
-    s_exit_code = NG_NORM;
+    g_newsgroup_exit_code = NG_NORM;
     g_kf_state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES
                  |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
     g_kill_first = ArticleNum{};
@@ -411,7 +411,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 {
                     if (nntp_group(g_newsgroup_name.c_str(), g_newsgroup_ptr) <= 0)
                     {
-                        s_exit_code = NG_NO_SERVER;
+                        g_newsgroup_exit_code = NG_NO_SERVER;
                         goto cleanup;
                     }
                     grow_newsgroup(g_newsgroup_ptr->m_ng_max);
@@ -573,7 +573,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 g_art = nntp_stat_id(*g_artp->m_msg_id);
                 if (g_art < 0)
                 {
-                    s_exit_code = NG_NO_SERVER;
+                    g_newsgroup_exit_code = NG_NO_SERVER;
                     goto cleanup;
                 }
                 if (g_art)
@@ -692,11 +692,11 @@ article_level:
                 continue;               // ...the article (for) loop
 
             case SA_NEXT:             // goto next newsgroup
-                s_exit_code = NG_SEL_NEXT;
+                g_newsgroup_exit_code = NG_SEL_NEXT;
                 goto cleanup;
 
             case SA_PRIOR:            // goto prior newsgroup
-                s_exit_code = NG_SEL_PRIOR;
+                g_newsgroup_exit_code = NG_SEL_PRIOR;
                 goto cleanup;
 
             case SA_QUIT:
@@ -704,7 +704,7 @@ article_level:
                 goto cleanup;
 
             case SA_QUIT_SEL:
-                s_exit_code = NG_ASK;
+                g_newsgroup_exit_code = NG_ASK;
                 goto cleanup;
 
             case SA_FAKE:
@@ -788,7 +788,7 @@ cleanup2:
         g_local_kfp = nullptr;
     }
     set_mode(gmode_save,mode_save);
-    return s_exit_code;
+    return g_newsgroup_exit_code;
 }                                       // Whew!
 
 // decide what to do at the end of an article
@@ -1190,7 +1190,7 @@ no_previous_article:
             g_search_ahead = ArticleNum{-(g_search_ahead.value_of() != 0)};
             return AS_NORM;
         }
-        s_exit_code = NG_MINUS;
+        g_newsgroup_exit_code = NG_MINUS;
         return AS_CLEAN;
 
     case 'n':         // find next unread article?
@@ -1201,7 +1201,7 @@ no_previous_article:
         if (g_univ_read_virt_flag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(g_univ_follow || g_univ_follow_temp))
         {
-            s_exit_code = NG_NEXT;
+            g_newsgroup_exit_code = NG_NEXT;
             return AS_CLEAN;
         }
         if (!g_univ_default_cmd)
@@ -1292,7 +1292,7 @@ no_previous_article:
         if (g_univ_read_virt_flag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(g_univ_follow || g_univ_follow_temp))
         {
-            s_exit_code = NG_NEXT;
+            g_newsgroup_exit_code = NG_NEXT;
             return AS_CLEAN;
         }
         if (!g_univ_default_cmd)
@@ -1395,7 +1395,7 @@ no_previous_article:
         if (g_univ_read_virt_flag && g_univ_default_cmd && command_ch == Ctl('n') &&
             !(g_sa_in && (g_sa_follow || g_s_follow_temp)) && !(g_univ_follow || g_univ_follow_temp))
         {
-            s_exit_code = NG_NEXT;
+            g_newsgroup_exit_code = NG_NEXT;
             return AS_CLEAN;
         }
         if (!g_univ_default_cmd)
@@ -1546,11 +1546,11 @@ normal_search:
 
     case 'Q':
     case '`':
-        s_exit_code = NG_ASK;
+        g_newsgroup_exit_code = NG_ASK;
         return AS_CLEAN;
 
     case 'q': // go back up to newsgroup level?
-        s_exit_code = NG_NEXT;
+        g_newsgroup_exit_code = NG_NEXT;
         return AS_CLEAN;
 
     case 'i':
@@ -1623,19 +1623,19 @@ normal_search:
                 return AS_ASK;
 
             case 'Q':
-                s_exit_code = NG_ASK;
+                g_newsgroup_exit_code = NG_ASK;
                 break;
 
             case 'q':
-                s_exit_code = NG_NEXT;
+                g_newsgroup_exit_code = NG_NEXT;
                 break;
 
             case 'N':
-                s_exit_code = NG_SEL_NEXT;
+                g_newsgroup_exit_code = NG_SEL_NEXT;
                 break;
 
             case 'P':
-                s_exit_code = NG_SEL_PRIOR;
+                g_newsgroup_exit_code = NG_SEL_PRIOR;
                 break;
 
             case ';':
