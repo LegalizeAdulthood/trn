@@ -8,6 +8,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 [Console]::InputEncoding = [Text.UTF8Encoding]::new($true)
 $utf8 = [Text.UTF8Encoding]::new($false)
+$curl = (Get-Command curl.exe -CommandType Application | Select-Object -First 1).Source
 [void] [IO.Directory]::CreateDirectory($WorkDirectory)
 $rsa = [Security.Cryptography.RSA]::Create(2048)
 $request = [Security.Cryptography.X509Certificates.CertificateRequest]::new(
@@ -178,7 +179,7 @@ foreach ($case in @('accepted', 'oauth2', 'implicit', 'rejected', 'recipient', '
             if ($case -ne 'certificate') { $settings.caFile = $ca }
             [IO.File]::WriteAllText($account, ($settings | ConvertTo-Json), $utf8)
             $env:RNMAILER_CONFIG = $account
-            $env:RNMAILER = (Get-Command curl.exe -CommandType Application).Source
+            $env:RNMAILER = $curl
             $inputMessage = Join-Path $directory 'draft.eml'
             [IO.File]::WriteAllText($inputMessage, $text.Insert($text.IndexOf('Subject:'), "Bcc: hidden@example.test`r`n"), $utf8)
             $success = $false
@@ -217,7 +218,7 @@ foreach ($case in @('accepted', 'oauth2', 'implicit', 'rejected', 'recipient', '
         }
         else {
             $process = [Diagnostics.Process]::new()
-            $process.StartInfo.FileName = (Get-Command curl.exe -CommandType Application).Source
+            $process.StartInfo.FileName = $curl
             $process.StartInfo.Arguments = '--disable --silent --show-error --ssl-reqd --max-time 3 --config "' +
                 $config + '" --mail-from "<author@example.test> BODY=8BITMIME" --mail-rcpt reader@example.test --mail-rcpt copy@example.test' +
                 ' --mail-rcpt hidden@example.test --upload-file "' + $message + '"'
