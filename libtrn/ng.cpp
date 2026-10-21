@@ -1321,6 +1321,7 @@ no_previous_article:
                 g_art = g_artp->article_num();
                 if (!(g_artp->m_flags & AF_EXISTS))
                 {
+                    g_artp->one_less();
                     inc_article(false, true);
                 }
             }

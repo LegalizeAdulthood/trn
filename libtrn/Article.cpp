@@ -377,14 +377,44 @@ try_again:
             ap = ap->m_sibling;
             goto done;
         }
-        if (ap->m_parent)
+        int next_depth = 1;
+        for (Article *parent = ap->m_parent; parent; parent = parent->m_parent)
         {
-            ap = ap->m_parent->m_child1;
+            ++next_depth;
         }
-        else
+        // Finish this level, then find the first article on the next one.
+        for (int pass = 0; pass < 2; ++pass)
         {
-            ap = ap->m_subj->m_thread;
+            Article *cursor = pass ? ap->m_subj->m_thread : ap;
+            int      remaining = pass ? next_depth : 0;
+            while (cursor)
+            {
+                if (remaining && cursor->m_child1)
+                {
+                    cursor = cursor->m_child1;
+                    --remaining;
+                }
+                else
+                {
+                    while (cursor && !cursor->m_sibling)
+                    {
+                        cursor = cursor->m_parent;
+                        ++remaining;
+                    }
+                    if (!cursor)
+                    {
+                        break;
+                    }
+                    cursor = cursor->m_sibling;
+                }
+                if (!remaining)
+                {
+                    ap = cursor;
+                    goto done;
+                }
+            }
         }
+        return nullptr;
     }
     do
     {

@@ -728,6 +728,135 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     return output;
 }
 
+class BreadthFirstArticleTest : public UnreadScopeArticleTest
+{
+protected:
+    void set_tree(std::initializer_list<ArticleFlags> flags, long current);
+    void expect_next(char command, long number, std::initializer_list<long> missing = {},
+                     ArticleSwitchResult result = AS_NORM);
+};
+
+void BreadthFirstArticleTest::set_tree(std::initializer_list<ArticleFlags> flags, long current)
+{
+    ASSERT_EQ(12U, flags.size());
+    set_articles(flags, current);
+    g_breadth_first = true;
+    g_sel_mode = SM_THREAD;
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+    g_recent_art = ArticleNum{6};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{1};
+    g_first_subject = &m_subjects[0];
+    g_last_subject = &m_subjects[1];
+    struct ArticleLinks
+    {
+        long parent;
+        long child;
+        long sibling;
+    };
+    // Children: 1:{2,6,7}, 2:{3,5}, 3:{4}, 7:{8,10}, 8:{9}; 11:{12}.
+    // Levels: 1 / 2,6,7 / 3,5,8,10 / 4,9; then thread 11,12.
+    const ArticleLinks links[]{{0, 2, 0}, {1, 3, 6},  {2, 4, 5}, {3, 0, 0}, {2, 0, 0},  {1, 0, 7},
+                               {1, 8, 0}, {7, 9, 10}, {8, 0, 0}, {7, 0, 0}, {0, 12, 0}, {11, 0, 0}};
+    for (int index = 0; index < 2; ++index)
+    {
+        Subject &subject = m_subjects[index];
+        subject.m_articles = article_ptr(ArticleNum{index ? 11 : 1});
+        subject.m_thread = subject.m_articles;
+        subject.m_thread_link = &subject;
+        subject.m_prev = index ? &m_subjects[0] : nullptr;
+        subject.m_next = index ? nullptr : &m_subjects[1];
+    }
+    for (long number = 1; number <= 12; ++number)
+    {
+        Article            *article = article_ptr(ArticleNum{number});
+        const ArticleLinks &link = links[number - 1];
+        article->m_parent = link.parent ? article_ptr(ArticleNum{link.parent}) : nullptr;
+        article->m_child1 = link.child ? article_ptr(ArticleNum{link.child}) : nullptr;
+        article->m_sibling = link.sibling ? article_ptr(ArticleNum{link.sibling}) : nullptr;
+        article->m_subj_next = number == 10 || number == 12 ? nullptr : article_ptr(ArticleNum{number + 1});
+        article->m_subj = &m_subjects[number > 10];
+        if (article->m_flags & AF_UNREAD)
+        {
+            article->m_subj->m_flags |= SF_VISIT;
+        }
+        if (article->m_flags & AF_SEL)
+        {
+            article->m_subj->m_flags |= SF_SEL;
+        }
+    }
+    for (int index = 0; index < 2; ++index)
+    {
+        g_selected_subj_cnt += (m_subjects[index].m_flags & SF_SEL) != 0;
+    }
+}
+
+void BreadthFirstArticleTest::expect_next(char command, long number, std::initializer_list<long> missing,
+                                          ArticleSwitchResult result)
+{
+    const auto    current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto    recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto    first = g_first_art;
+    const auto    parsed = g_parsed_art;
+    const auto    search_ahead = g_search_ahead;
+    const auto    first_subject_flags = m_subjects[0].m_flags;
+    const auto    last_subject_flags = m_subjects[1].m_flags;
+    const int     selected_subjects = g_selected_subj_cnt;
+    const bool    selected_only = g_selected_only;
+    ArticleUnread unread = m_newsgroup.m_to_read;
+    ArticleUnread selected = g_selected_count;
+
+    std::vector<ArticleFlags> flags;
+    for (long article = 1; article <= 12; ++article)
+    {
+        flags.push_back(article_ptr(ArticleNum{article})->m_flags);
+    }
+    for (const long article : missing)
+    {
+        ArticleFlags &expected = flags[article - 1];
+        ASSERT_FALSE(expected & AF_EXISTS);
+        if (expected & AF_UNREAD)
+        {
+            --unread;
+            selected -= (expected & AF_SEL) != 0;
+            expected &= ~(AF_UNREAD | AF_SEL);
+        }
+    }
+    g_reread = false;
+    g_force_last = false;
+
+    EXPECT_EQ(result, art_switch(std::string{command}));
+
+    EXPECT_EQ(ArticleNum{number}, g_art);
+    EXPECT_EQ(number <= 12 ? article_ptr(ArticleNum{number}) : nullptr, g_artp);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(first_subject_flags, m_subjects[0].m_flags);
+    EXPECT_EQ(last_subject_flags, m_subjects[1].m_flags);
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(command == 'N' && number <= 12, g_reread);
+    EXPECT_EQ(command == 'N' && number > 12, g_force_last);
+    EXPECT_EQ(result == AS_CLEAN ? search_ahead : ArticleNum{}, g_search_ahead);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_TRUE(g_art_ptr_list.empty());
+    EXPECT_EQ(nullptr, g_art_ptr);
+    for (long article = 1; article <= 12; ++article)
+    {
+        SCOPED_TRACE(article);
+        EXPECT_EQ(flags[article - 1], article_ptr(ArticleNum{article})->m_flags);
+    }
+}
+
 class NextArticleTest : public ArticleNavigationTest
 {
 };
@@ -1064,6 +1193,146 @@ TEST_F(SortedArticleNavigationTest, nextArticleInASingleEntryListStopsAtGroupEnd
 
     expect_next_article(2, 0);
     expect_next_article(1, 0);
+}
+
+TEST_F(BreadthFirstArticleTest, nextUnreadVisitsEveryLevelBeforeDescendingAndWrapsAfterTheLastThread)
+{
+    set_tree({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+             1);
+    g_search_ahead = ArticleNum{2};
+
+    for (const long number : {2, 6, 7, 3, 5, 8, 10, 4, 9, 11, 12, 1})
+    {
+        SCOPED_TRACE(number);
+        expect_next('n', number);
+    }
+}
+
+TEST_F(BreadthFirstArticleTest, explicitNextIncludesReadAndUnselectedEntriesAndStopsBeforeRestarting)
+{
+    set_tree({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_SEL,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
+             1);
+    g_selected_only = true;
+
+    for (const long number : {2, 6, 7, 3, 5, 8, 10, 4, 9, 11, 12, 13})
+    {
+        SCOPED_TRACE(number);
+        expect_next('N', number);
+    }
+    expect_next('N', 1);
+}
+
+TEST_F(BreadthFirstArticleTest, nextUnreadSkipsReadParentsAndContinuesAcrossThreads)
+{
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+              AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+             1);
+
+    for (const long number : {6, 3, 8, 4, 9, 12, 6})
+    {
+        SCOPED_TRACE(number);
+        expect_next('n', number);
+    }
+}
+
+TEST_F(BreadthFirstArticleTest, selectedNextUnreadSkipsUnselectedAndSelectedReadArticles)
+{
+    set_tree({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+              AF_EXISTS | AF_UNREAD | AF_SEL},
+             1);
+    g_selected_only = true;
+
+    for (const long number : {7, 3, 8, 10, 4, 12, 1})
+    {
+        SCOPED_TRACE(number);
+        expect_next('n', number);
+    }
+}
+
+TEST_F(BreadthFirstArticleTest, missingParentLosesUnreadAndSelectionCountsOnceWhileItsChildrenRemainReachable)
+{
+    set_tree({AF_EXISTS, AF_EXISTS, AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS},
+             7);
+
+    expect_next('n', 5, {3});
+    for (const long number : {8, 10, 4, 9})
+    {
+        SCOPED_TRACE(number);
+        expect_next('n', number);
+    }
+    expect_next('n', 5, {3});
+}
+
+TEST_F(BreadthFirstArticleTest, missingRootAndChildAreSkippedWhenRestartingFromGroupEnd)
+{
+    set_tree({AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS},
+             13);
+
+    expect_next('n', 6, {1, 2});
+    expect_next('n', 7);
+    expect_next('n', 3);
+}
+
+TEST_F(BreadthFirstArticleTest, explicitNextSkipsMissingRootsAndParentsWithoutLosingCountsOrChildren)
+{
+    set_tree({AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+             13);
+
+    expect_next('N', 6, {1, 2});
+    expect_next('N', 7);
+    expect_next('N', 5, {3});
+    for (const long number : {8, 10, 4, 9, 11, 12, 13})
+    {
+        SCOPED_TRACE(number);
+        expect_next('N', number);
+    }
+}
+
+TEST_F(BreadthFirstArticleTest, selectedNextUnreadFromGroupEndStartsAtTheFirstEligibleLevel)
+{
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
+             13);
+    g_selected_only = true;
+
+    for (const long number : {8, 4, 12, 8})
+    {
+        SCOPED_TRACE(number);
+        expect_next('n', number);
+    }
+}
+
+TEST_F(BreadthFirstArticleTest, selectedNextUnreadStaysAtGroupEndWhileUnselectedUnreadArticlesRemain)
+{
+    set_tree({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+             7);
+    g_selected_only = true;
+
+    expect_next('n', 13);
+    expect_next('n', 13);
+}
+
+TEST_F(BreadthFirstArticleTest, allReadGroupAllowsExplicitRestartAndLeavesOnNextUnreadAtGroupEnd)
+{
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS, AF_EXISTS},
+             12);
+
+    expect_next('n', 13);
+    expect_next('N', 1);
+    EXPECT_EQ(AS_NORM, art_switch("$"));
+    expect_next('n', 13, {}, AS_CLEAN);
 }
 
 TEST_P(NextArticleTest, includesReadArticles)
