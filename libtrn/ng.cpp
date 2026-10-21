@@ -1910,6 +1910,7 @@ normal_search:
                 return AS_NORM;
 
             case '+':
+            {
                 if (!g_artp)
                 {
                     goto not_threaded;
@@ -1925,23 +1926,27 @@ normal_search:
                     fmt::print("\nSelected all articles in this subject.\n");
                 }
                 term_down(2);
-                g_artp = g_artp->m_subj->first_art();
-                if (g_artp != nullptr)
+                Article           *first = g_artp->m_subj->first_art();
+                const ArticleFlags desired = g_sel_rereading ? AF_EXISTS : AF_EXISTS | AF_UNREAD;
+                while (first && (first->m_flags & (AF_EXISTS | AF_UNREAD)) != desired)
                 {
-                    if (g_art == g_artp->article_num())
-                    {
-                        return AS_ASK;
-                    }
-                    g_art = g_artp->article_num();
+                    first = first->next_article();
                 }
+                if (!first || first == g_artp)
+                {
+                    return AS_ASK;
+                }
+                g_art = first->article_num();
+                g_artp = first;
                 return AS_NORM;
+            }
 
             case '-':
                 if (!g_artp)
                 {
                     goto not_threaded;
                 }
-                if (g_sel_mode == SM_THREAD)
+                if (g_threaded_group)
                 {
                     g_artp->deselect_articles_thread();
                     fmt::print("\nDeselected all articles in this thread.\n");
