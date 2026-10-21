@@ -575,6 +575,93 @@ class KillSubthreadScanArticleTest : public KillSubthreadArticleTest,
 {
 };
 
+class DelayScopeArticleTest : public ThreadKillArticleTest
+{
+protected:
+    void        set_delay_articles(long current);
+    std::string delay_scope(char action, ArticleSwitchResult expected = AS_NORM);
+};
+
+void DelayScopeArticleTest::set_delay_articles(long current)
+{
+    set_thread(current);
+    article_ptr(ArticleNum{3})->m_flags = AF_EXISTS | AF_YANK_BACK;
+    --m_newsgroup.m_to_read;
+    ++g_dm_count;
+    article_ptr(ArticleNum{4})->m_flags &= ~AF_SEL;
+    --g_selected_count;
+    article_ptr(ArticleNum{2})->m_auto_flags = AUTO_SEL_1;
+    article_ptr(ArticleNum{4})->m_auto_flags = AUTO_KILL_SBJ;
+    for (Subject &subject : m_subjects)
+    {
+        subject.m_flags |= SF_WAS_SELECTED;
+    }
+}
+
+std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult expected)
+{
+    const auto          article = std::make_pair(g_art, g_artp);
+    const auto          current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto          recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto          order = g_art_ptr_list;
+    const auto          cursor = g_art_ptr;
+    const bool          threaded = g_threaded_group;
+    const bool          breadth_first = g_breadth_first;
+    const SelectionMode mode = g_sel_mode;
+    const bool          scan = g_sa_in;
+    const bool          follow = g_sa_follow;
+    const bool          temporary_follow = g_s_follow_temp;
+    const ArticleNum    first = g_first_art;
+    push_char('n');
+    push_char(action);
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{'_', FINISH_CMD});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(threaded, g_threaded_group);
+    EXPECT_EQ(breadth_first, g_breadth_first);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(scan, g_sa_in);
+    EXPECT_EQ(follow, g_sa_follow);
+    EXPECT_EQ(temporary_follow, g_s_follow_temp);
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{4}, g_search_ahead);
+    EXPECT_EQ(10, g_check_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+    EXPECT_EQ(AUTO_SEL_1, article_ptr(ArticleNum{2})->m_auto_flags);
+    EXPECT_EQ(AUTO_KILL_SBJ, article_ptr(ArticleNum{4})->m_auto_flags);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('n', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+class DelaySubthreadOrderArticleTest : public DelayScopeArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class DelayScopeCommandArticleTest : public DelayScopeArticleTest, public testing::WithParamInterface<char>
+{
+};
+
 class SelectorEntryArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -3767,6 +3854,205 @@ TEST_F(ScopeSelectionArticleTest, breadthFirstSelectionSkipsReadAncestorsBeforeC
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
     EXPECT_EQ(2, g_selected_subj_cnt);
 }
+
+TEST_P(DelaySubthreadOrderArticleTest, delaysCrossSubjectDescendantsWithoutAncestorsOrSiblingBranchesOnRepeat)
+{
+    set_delay_articles(2);
+    g_breadth_first = GetParam();
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        delay_scope('m');
+
+        expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK,
+                      AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                      AF_EXISTS | AF_YANK_BACK});
+        EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+        EXPECT_EQ(4, g_dm_count);
+        for (const Subject &subject : m_subjects)
+        {
+            EXPECT_EQ(SF_SEL | SF_VISIT | SF_WAS_SELECTED, subject.m_flags);
+        }
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingOrder, DelaySubthreadOrderArticleTest, testing::Bool());
+
+TEST_F(DelayScopeArticleTest, readCurrentAndIntermediateArticlesAreMarkedForReturnWithoutChangingTheirReadCounts)
+{
+    set_delay_articles(2);
+    g_artp->m_flags = AF_EXISTS | AF_DEL;
+    --m_newsgroup.m_to_read;
+    --g_selected_count;
+    article_ptr(ArticleNum{3})->m_flags = AF_EXISTS;
+    --g_dm_count;
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        delay_scope('m');
+
+        expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_DEL | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK,
+                      AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                      AF_EXISTS | AF_YANK_BACK});
+        EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+        EXPECT_EQ(4, g_dm_count);
+    }
+}
+
+TEST_F(DelayScopeArticleTest, leafSubthreadStopsAtTheSiblingOfAnAncestor)
+{
+    set_delay_articles(4);
+
+    delay_scope('m');
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(3, g_dm_count);
+}
+
+TEST_F(DelayScopeArticleTest, expiredDelayedIntermediateStillLeadsToUnreadDescendants)
+{
+    set_delay_articles(2);
+    article_ptr(ArticleNum{3})->m_flags = AF_YANK_BACK;
+
+    delay_scope('m');
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK, AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(4, g_dm_count);
+}
+
+TEST_F(DelayScopeArticleTest, delaysTheWholeThreadFromAnUnselectedDescendantWithoutDoubleCounting)
+{
+    set_delay_articles(4);
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        delay_scope('M');
+
+        expect_flags({AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK,
+                      AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL,
+                      AF_EXISTS | AF_YANK_BACK});
+        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+        EXPECT_EQ(6, g_dm_count);
+        EXPECT_EQ(SF_SEL, m_subjects[0].m_flags);
+        EXPECT_EQ(SF_SEL, m_subjects[1].m_flags);
+        EXPECT_EQ(SF_SEL | SF_VISIT | SF_WAS_SELECTED, m_subjects[2].m_flags);
+    }
+}
+
+TEST_F(DelayScopeArticleTest, delayingAnAllReadThreadOnlyAddsReturnFlags)
+{
+    set_delay_articles(4);
+    g_breadth_first = true;
+    for (const long number : {1, 2, 4, 5})
+    {
+        article_ptr(ArticleNum{number})->one_less();
+    }
+    g_artp->m_flags |= AF_DEL;
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        delay_scope('M');
+
+        expect_flags({AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK,
+                      AF_EXISTS | AF_DEL | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL,
+                      AF_EXISTS | AF_YANK_BACK});
+        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+        EXPECT_EQ(6, g_dm_count);
+    }
+}
+
+TEST_F(DelayScopeArticleTest, missingThreadDataFallsBackToOnlyTheCurrentSubject)
+{
+    set_delay_articles(4);
+    g_threaded_group = false;
+    g_sel_mode = SM_SUBJECT;
+    m_subjects[1].m_thread = nullptr;
+
+    delay_scope('M');
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(4, g_dm_count);
+    EXPECT_EQ(SF_SEL | SF_VISIT | SF_WAS_SELECTED, m_subjects[0].m_flags);
+    EXPECT_EQ(SF_SEL, m_subjects[1].m_flags);
+}
+
+TEST_P(DelayScopeCommandArticleTest, uncachedUnthreadedArticleFallsBackToOnlyTheCurrentArticle)
+{
+    set_delay_articles(2);
+    g_threaded_group = false;
+    g_sel_mode = SM_ARTICLE;
+    g_artp->m_subj = nullptr;
+    g_artp->m_parent = nullptr;
+    g_artp->m_child1 = nullptr;
+    g_artp->m_sibling = nullptr;
+
+    delay_scope(GetParam());
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(3, g_dm_count);
+}
+
+TEST_P(DelayScopeCommandArticleTest, groupEndRejectsDelayWithoutChangingArticlesOrPendingReturns)
+{
+    set_delay_articles(8);
+
+    const std::string output = delay_scope(GetParam(), AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find("End of group"));
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(2, g_dm_count);
+}
+
+TEST_P(DelayScopeCommandArticleTest, lastThreadStopsAtNullAndContinuesReadingFromScanWithoutFollow)
+{
+    set_delay_articles(6);
+    g_sa_in = true;
+    g_sa_follow = false;
+    g_s_follow_temp = false;
+    for (const long number : {5, 1, 6, 2, 4, 3, 7})
+    {
+        g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+    }
+    g_art_ptr = g_art_ptr_list.data() + 2;
+
+    delay_scope(GetParam());
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(3, g_dm_count);
+}
+
+INSTANTIATE_TEST_SUITE_P(Command, DelayScopeCommandArticleTest, testing::Values('m', 'M'));
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
 {
