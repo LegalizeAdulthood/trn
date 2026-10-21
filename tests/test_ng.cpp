@@ -970,21 +970,24 @@ class SubjectThreadArticleTest : public ArticleNavigationTest
 protected:
     void set_subjects(std::initializer_list<ArticleFlags> flags, long current);
 
-private:
-    Subject m_subjects[4]{};
+    Subject m_subjects[6]{};
 };
 
 void SubjectThreadArticleTest::set_subjects(std::initializer_list<ArticleFlags> flags, long current)
 {
+    ASSERT_NE(0U, flags.size());
+    ASSERT_EQ(0U, flags.size() % 4);
+    ASSERT_LE(flags.size(), 12U);
     set_articles(flags, current);
+    const long subject_count = static_cast<long>(flags.size() / 2);
     g_sel_mode = GetParam() ? SM_THREAD : SM_SUBJECT;
     g_first_subject = &m_subjects[0];
-    g_last_subject = &m_subjects[3];
-    for (long index = 0; index < 4; ++index)
+    g_last_subject = &m_subjects[subject_count - 1];
+    for (long index = 0; index < subject_count; ++index)
     {
         Subject &subject = m_subjects[index];
         subject.m_prev = index ? &m_subjects[index - 1] : nullptr;
-        subject.m_next = index < 3 ? &m_subjects[index + 1] : nullptr;
+        subject.m_next = index + 1 < subject_count ? &m_subjects[index + 1] : nullptr;
         subject.m_articles = article_ptr(ArticleNum{2 * index + 1});
         subject.m_thread = article_ptr(ArticleNum{4 * (index / 2) + 1});
         subject.m_thread_link = &m_subjects[index ^ 1];
@@ -998,6 +1001,133 @@ void SubjectThreadArticleTest::set_subjects(std::initializer_list<ArticleFlags> 
             article->m_parent = number % 4 == 1 ? nullptr : article_ptr(ArticleNum{number - 1});
             article->m_child1 = number % 4 ? article_ptr(ArticleNum{number + 1}) : nullptr;
         }
+    }
+}
+
+class SelectedPreviousSubjectThreadArticleTest : public SubjectThreadArticleTest
+{
+protected:
+    void TearDown() override;
+    void set_selected_subjects(std::initializer_list<ArticleFlags> flags, long current);
+    void expect_previous(long number, std::initializer_list<long> missing = {}, bool force_last = false);
+
+private:
+    int  m_old_selected_subjects{g_selected_subj_cnt};
+    bool m_old_verify{g_verify};
+};
+
+void SelectedPreviousSubjectThreadArticleTest::TearDown()
+{
+    g_selected_subj_cnt = m_old_selected_subjects;
+    g_verify = m_old_verify;
+    SubjectThreadArticleTest::TearDown();
+}
+
+void SelectedPreviousSubjectThreadArticleTest::set_selected_subjects(std::initializer_list<ArticleFlags> flags,
+                                                                     long                                current)
+{
+    set_subjects(flags, current);
+    g_selected_only = true;
+    g_verify = false;
+    g_selected_count = 0;
+    g_selected_subj_cnt = 0;
+    g_recent_art = ArticleNum{1};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{2};
+    g_search_ahead = ArticleNum{3};
+    for (long index = 0; index < static_cast<long>(flags.size() / 2); ++index)
+    {
+        Subject &subject = m_subjects[index];
+        subject.m_flags = SF_NONE;
+        for (Article *ap = subject.m_articles; ap; ap = ap->m_subj_next)
+        {
+            if ((ap->m_flags & (AF_UNREAD | AF_SEL)) == (AF_UNREAD | AF_SEL))
+            {
+                subject.m_flags = SF_SEL | SF_VISIT;
+                ++g_selected_count;
+            }
+        }
+        g_selected_subj_cnt += (subject.m_flags & SF_SEL) != 0;
+    }
+}
+
+void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std::initializer_list<long> missing,
+                                                               bool force_last)
+{
+    const auto                current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto                recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto                first = g_first_art;
+    const auto                parsed = g_parsed_art;
+    const auto                search_ahead = g_search_ahead;
+    const auto                selected_subjects = g_selected_subj_cnt;
+    const auto                mode = std::make_pair(g_general_mode, g_mode);
+    const auto                first_subject = g_first_subject;
+    const auto                last_subject = g_last_subject;
+    const auto                terminal = std::make_pair(g_term_line, g_term_col);
+    const auto                follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
+    const bool                breadth_first = g_breadth_first;
+    auto                      unread = m_newsgroup.m_to_read;
+    auto                      selected = g_selected_count;
+    std::vector<ArticleFlags> flags;
+    for (long article = 1; article <= g_last_art.value_of(); ++article)
+    {
+        flags.push_back(article_ptr(ArticleNum{article})->m_flags);
+    }
+    std::vector<SubjectFlags> subject_flags;
+    for (const Subject &subject : m_subjects)
+    {
+        subject_flags.push_back(subject.m_flags);
+    }
+    for (const long article : missing)
+    {
+        ArticleFlags &expected = flags[article - 1];
+        ASSERT_FALSE(expected & AF_EXISTS);
+        if (expected & AF_UNREAD)
+        {
+            --unread;
+            selected -= (expected & AF_SEL) != 0;
+            expected &= ~(AF_UNREAD | AF_SEL);
+        }
+    }
+    g_reread = false;
+    g_force_last = false;
+    testing::internal::CaptureStdout();
+    const ArticleSwitchResult result = art_switch("<");
+    const std::string         output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(AS_NORM, result);
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(ArticleNum{number}, g_art);
+    EXPECT_EQ(number <= g_last_art.value_of() ? article_ptr(ArticleNum{number}) : nullptr, g_artp);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(search_ahead, g_search_ahead);
+    EXPECT_EQ(mode, std::make_pair(g_general_mode, g_mode));
+    EXPECT_EQ(terminal, std::make_pair(g_term_line, g_term_col));
+    EXPECT_EQ(follow, std::make_pair(g_s_follow_temp, g_univ_follow_temp));
+    EXPECT_EQ(first_subject, g_first_subject);
+    EXPECT_EQ(last_subject, g_last_subject);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(force_last, g_force_last);
+    EXPECT_EQ(GetParam(), g_threaded_group);
+    EXPECT_EQ(GetParam() ? SM_THREAD : SM_SUBJECT, g_sel_mode);
+    EXPECT_EQ(breadth_first, g_breadth_first);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    for (long article = 1; article <= g_last_art.value_of(); ++article)
+    {
+        SCOPED_TRACE(article);
+        EXPECT_EQ(flags[article - 1], article_ptr(ArticleNum{article})->m_flags);
+    }
+    for (long index = 0; index < 6; ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
     }
 }
 
@@ -2234,6 +2364,110 @@ TEST_P(SubjectThreadArticleTest, entersFromEndAndStopsAtSubjectOrThreadBoundarie
         EXPECT_EQ(GetParam(), g_threaded_group);
     }
 }
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, findsSelectedUnreadTargetPastReadAndUnselectedArticles)
+{
+    set_selected_subjects({AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          12);
+
+    expect_previous(GetParam() ? 6 : 10);
+}
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, threadTargetCanBelongToAnotherSubjectThanItsRoot)
+{
+    set_selected_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          12);
+
+    expect_previous(GetParam() ? 8 : 9);
+}
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, skipsUnvisitedSubjectsAndThreadsWithUnselectedUnreadArticles)
+{
+    set_selected_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          9);
+
+    expect_previous(GetParam() ? 1 : 4);
+}
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, skipsMissingScopesAndClearsTheirCountsOnlyOnceWithoutRereading)
+{
+    set_selected_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+                          9);
+
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+        g_art = g_curr_art;
+        g_artp = g_curr_artp;
+        expect_previous(GetParam() ? 2 : 4, {5, 6, 7, 8});
+    }
+}
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, skipsMissingParentsAndSelectedReadArticlesBeforeTheUnreadTarget)
+{
+    set_selected_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_SEL, AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+                          9);
+
+    expect_previous(8, GetParam() ? std::initializer_list<long>{5, 7} : std::initializer_list<long>{7});
+}
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, choosesTheFirstSelectedUnreadArticleInTheConfiguredReadingOrder)
+{
+    set_selected_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          9);
+    // Thread 5 has children 6 and 7; article 8 is a child of 6.
+    article_ptr(ArticleNum{6})->m_child1 = article_ptr(ArticleNum{8});
+    article_ptr(ArticleNum{6})->m_sibling = article_ptr(ArticleNum{7});
+    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{5});
+    article_ptr(ArticleNum{7})->m_child1 = nullptr;
+    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{6});
+
+    for (const bool breadth_first : {false, true})
+    {
+        SCOPED_TRACE(breadth_first);
+        g_breadth_first = breadth_first;
+        g_art = g_curr_art;
+        g_artp = g_curr_artp;
+
+        expect_previous(GetParam() && !breadth_first ? 8 : 7);
+    }
+}
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, entersFromGroupEndAtTheLastEligibleSubjectOrThread)
+{
+    set_selected_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                           AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS},
+                          13);
+
+    expect_previous(6);
+}
+
+TEST_P(SelectedPreviousSubjectThreadArticleTest, stopsAtGroupEndWhenEarlierScopesHaveNoSelectedUnreadArticles)
+{
+    set_selected_subjects({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+                           AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          9);
+
+    expect_previous(13, {}, true);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrder, SelectedPreviousSubjectThreadArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Thread" : "Subject"; });
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, SubjectThreadArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Thread" : "Subject"; });
