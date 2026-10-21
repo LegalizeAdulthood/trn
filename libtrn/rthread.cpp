@@ -775,10 +775,9 @@ void unkill_sub_thread(Article *ap)
         {
             ap->one_more();
         }
-        if (g_selected_only && !(ap->m_flags & AF_SEL))
+        if (g_selected_only && (ap->m_flags & AF_EXISTS))
         {
-            ap->m_flags |= AF_SEL;
-            g_selected_count++;
+            ap->select_article(AUTO_KILL_NONE);
         }
     }
     if (!(sp->m_flags & g_sel_mask))
