@@ -944,6 +944,165 @@ class CatchupUncachedTailArticleTest : public CatchupArticleTest, public testing
 {
 };
 
+class NumericJumpArticleTest : public UnreadScopeArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string enter_number(std::string_view input, ArticleSwitchResult expected = AS_NORM);
+    void        expect_target(long number);
+
+private:
+    char                  m_old_erase_char{g_erase_char};
+    char                  m_old_kill_char{g_kill_char};
+    std::string_view      m_old_tc_bc{g_tc_BC};
+    bool                  m_old_mouse_is_down{g_mouse_is_down};
+    char                  m_old_int_count{g_int_count};
+    std::string           m_old_msg{g_msg};
+    int                   m_old_perform_count{g_perform_count};
+    bool                  m_old_error_occurred{g_error_occurred};
+    decltype(g_subj_line) m_old_subj_line{g_subj_line};
+    int                   m_old_page_line{g_page_line};
+    bool                  m_old_performed_article_loop{g_performed_article_loop};
+    int                   m_old_spin_count{g_spin_count};
+};
+
+void NumericJumpArticleTest::SetUp()
+{
+    UnreadScopeArticleTest::SetUp();
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+    g_erase_char = '\b';
+    g_kill_char = Ctl('U');
+    g_tc_BC = "\b";
+    g_mouse_is_down = false;
+    g_int_count = 0;
+    const ArticleFlags cached = AF_EXISTS | AF_CACHED;
+    set_articles({cached | AF_UNREAD | AF_SEL, cached, cached | AF_UNREAD, cached | AF_UNREAD | AF_SEL, AF_CACHED,
+                  cached | AF_UNREAD | AF_SEL, cached | AF_YANK_BACK, cached | AF_UNREAD, cached | AF_UNREAD, cached,
+                  cached | AF_UNREAD | AF_SEL, cached | AF_UNREAD | AF_SEL},
+                 4);
+    g_selected_only = true;
+    g_first_subject->m_flags |= SF_SEL;
+    g_selected_subj_cnt = 1;
+    g_recent_art = ArticleNum{7};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{4};
+    g_search_ahead = ArticleNum{3};
+}
+
+void NumericJumpArticleTest::TearDown()
+{
+    g_erase_char = m_old_erase_char;
+    g_kill_char = m_old_kill_char;
+    g_tc_BC = m_old_tc_bc;
+    g_mouse_is_down = m_old_mouse_is_down;
+    g_int_count = m_old_int_count;
+    g_msg = m_old_msg;
+    g_perform_count = m_old_perform_count;
+    g_error_occurred = m_old_error_occurred;
+    g_subj_line = m_old_subj_line;
+    g_page_line = m_old_page_line;
+    g_performed_article_loop = m_old_performed_article_loop;
+    g_spin_count = m_old_spin_count;
+    UnreadScopeArticleTest::TearDown();
+}
+
+std::string NumericJumpArticleTest::enter_number(std::string_view input, ArticleSwitchResult expected)
+{
+    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto                                       order = g_art_ptr_list;
+    const auto                                       cursor = g_art_ptr;
+    const auto                                       first = g_first_art;
+    const auto                                       parsed = g_parsed_art;
+    const auto                                       unread = m_newsgroup.m_to_read;
+    const auto                                       selected = g_selected_count;
+    const auto                                       subject_flags = g_first_subject->m_flags;
+    const int                                        selected_subjects = g_selected_subj_cnt;
+    std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
+    for (const auto &[number, article] : g_article_list)
+    {
+        flags.emplace_back(number, article.m_flags);
+    }
+    push_char('Q');
+    const auto suffix = input.substr(1);
+    for (auto ch = suffix.rbegin(); ch != suffix.rend(); ++ch)
+    {
+        push_char(*ch);
+    }
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{input.front(), FINISH_CMD});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(subject_flags, g_first_subject->m_flags);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(g_curr_art > g_last_art ? MM_ARTICLE_END : MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(flags.size(), g_article_list.size());
+    for (const auto &[number, expected_flags] : flags)
+    {
+        SCOPED_TRACE(number.value_of());
+        EXPECT_EQ(expected_flags, article_find(number)->m_flags);
+    }
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('Q', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+void NumericJumpArticleTest::expect_target(long number)
+{
+    EXPECT_EQ(ArticleNum{number}, g_art);
+    EXPECT_EQ(article_find(ArticleNum{number}), g_artp);
+    EXPECT_TRUE(g_reread);
+}
+
+class NumericJumpTargetArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<long>
+{
+};
+
+class NumericJumpInputArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<std::string>
+{
+};
+
+class NumericJumpCancelArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<std::string>
+{
+};
+
+class NumericJumpMissingArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+struct NumericJumpNavigation
+{
+    bool sorted;
+    char command;
+    long target;
+};
+
+class NumericJumpNavigationArticleTest : public NumericJumpArticleTest,
+                                         public testing::WithParamInterface<NumericJumpNavigation>
+{
+};
+
 class UnsubscribeArticleTest : public CatchupArticleTest
 {
 protected:
@@ -8370,6 +8529,176 @@ TEST_F(DefaultCommandArticleTest, defaultAtAnExhaustedGroupPreservesTheEndPositi
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE_END, g_mode);
     expect_pending("Q");
+}
+
+TEST_P(NumericJumpTargetArticleTest, explicitlyJumpsToReadUnselectedOrSelectedArticleWithoutChangingItsState)
+{
+    enter_number(std::to_string(GetParam()) + '\n');
+
+    expect_target(GetParam());
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleKinds, NumericJumpTargetArticleTest, testing::Values(2L, 3L, 6L));
+
+TEST_P(NumericJumpInputArticleTest, completesMultipleDigitsAndHonorsEditingAndTrailingSpaces)
+{
+    const std::string output = enter_number(GetParam());
+
+    expect_target(12);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+    EXPECT_EQ(std::string::npos, output.find("article is"));
+}
+
+INSTANTIATE_TEST_SUITE_P(NumberEntry, NumericJumpInputArticleTest, testing::Values("12\n", "19\b2\r", "0012   \n"));
+
+TEST_P(NumericJumpCancelArticleTest, cancellingTheNumberPreservesTheReadingPositionAndSearchAhead)
+{
+    enter_number(GetParam(), AS_INP);
+
+    EXPECT_EQ(g_curr_art, g_art);
+    EXPECT_EQ(g_curr_artp, g_artp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+}
+
+INSTANTIATE_TEST_SUITE_P(Cancellation, NumericJumpCancelArticleTest, testing::Values("1\b", "12\025"));
+
+TEST_F(NumericJumpArticleTest, clampsZeroToTheFirstAvailableNumberAndWarns)
+{
+    g_abs_first = ArticleNum{2};
+
+    const std::string output = enter_number("0\n");
+
+    expect_target(2);
+    EXPECT_NE(std::string::npos, output.find("(First article is 2)"));
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+}
+
+TEST_F(NumericJumpArticleTest, clampsNumbersBeyondTheGroupToTheLastArticleAndWarns)
+{
+    const std::string output = enter_number("99\n");
+
+    expect_target(12);
+    EXPECT_NE(std::string::npos, output.find("(Last article is 12)"));
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+}
+
+TEST_F(NumericJumpArticleTest, jumpingToTheCurrentArticleRetainsItsPointerAndRequestsAReread)
+{
+    for (const long search_ahead : {0, 3, -1})
+    {
+        SCOPED_TRACE(search_ahead);
+        g_search_ahead = ArticleNum{search_ahead};
+        g_reread = false;
+
+        enter_number("4\n");
+
+        expect_target(4);
+        EXPECT_EQ(ArticleNum{search_ahead == 0 ? 0 : -1}, g_search_ahead);
+    }
+}
+
+TEST_F(NumericJumpArticleTest, jumpsBackIntoAnExhaustedGroup)
+{
+    g_art = g_curr_art = article_after(g_last_art);
+    g_artp = g_curr_artp = nullptr;
+    g_mode = MM_ARTICLE_END;
+
+    enter_number("2\n");
+
+    expect_target(2);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+}
+
+TEST_F(NumericJumpArticleTest, rejectsANumberInAnEmptyGroupWithoutRequestingAReread)
+{
+    g_article_list.clear();
+    g_first_subject->m_articles = nullptr;
+    g_first_subject->m_thread = nullptr;
+    g_last_art = ArticleNum{};
+    g_art = g_curr_art = ArticleNum{1};
+    g_artp = g_curr_artp = nullptr;
+    g_recent_art = ArticleNum{-1};
+    g_recent_artp = nullptr;
+    g_mode = MM_ARTICLE_END;
+    m_newsgroup.m_to_read = ArticleUnread{};
+    g_selected_count = ArticleUnread{};
+
+    const std::string output = enter_number("1\n", AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find("No articles"));
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+}
+
+TEST_P(NumericJumpMissingArticleTest, retainsTheMissingNumberWithoutCreatingAnArticle)
+{
+    if (!GetParam())
+    {
+        g_article_list.erase(ArticleNum{5});
+    }
+    g_threaded_group = false;
+    g_search_ahead = ArticleNum{};
+
+    enter_number("5\n");
+
+    expect_target(5);
+    EXPECT_EQ(GetParam(), article_hasdata(ArticleNum{5}));
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+}
+
+INSTANTIATE_TEST_SUITE_P(CachedAndAbsent, NumericJumpMissingArticleTest, testing::Bool());
+
+TEST_P(NumericJumpNavigationArticleTest, continuesFromTheJumpTargetInTheConfiguredReadingOrder)
+{
+    const NumericJumpNavigation test_case = GetParam();
+    g_threaded_group = false;
+    g_search_ahead = ArticleNum{};
+    if (test_case.sorted)
+    {
+        for (const long number : {4, 11, 2, 3, 6, 1, 12, 7, 8, 9, 10})
+        {
+            g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+        }
+        g_art_ptr = article_ptr_list_begin();
+    }
+    enter_number("2\n");
+    expect_target(2);
+    // The reading loop accepts the jump before the user's next command.
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+
+    EXPECT_EQ(AS_NORM, art_switch(std::string{test_case.command}));
+
+    expect_target(test_case.target);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    EXPECT_TRUE(g_selected_only);
+    if (test_case.sorted)
+    {
+        ASSERT_NE(nullptr, g_art_ptr);
+        EXPECT_EQ(g_artp, *g_art_ptr);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(NumericAndSortedOrder, NumericJumpNavigationArticleTest,
+                         testing::Values(NumericJumpNavigation{false, 'n', 4}, NumericJumpNavigation{false, 'N', 3},
+                                         NumericJumpNavigation{false, 'P', 1}, NumericJumpNavigation{true, 'n', 6},
+                                         NumericJumpNavigation{true, 'N', 3}, NumericJumpNavigation{true, 'P', 11}),
+                         [](const testing::TestParamInfo<NumericJumpNavigation> &info)
+                         { return std::string{info.param.sorted ? "Sorted" : "Numeric"} + info.param.command; });
+
+TEST_F(NumericJumpArticleTest, nextUnreadInAThreadContinuesAfterTheReadJumpTarget)
+{
+    enter_number("2\n");
+    expect_target(2);
+
+    EXPECT_EQ(AS_NORM, art_switch("n"));
+
+    expect_target(4);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
 }
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)

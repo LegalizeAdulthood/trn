@@ -1369,6 +1369,7 @@ no_previous_article:
                 return AS_ASK;
 
             case NN_REREAD:
+                g_artp = article_find(g_art);
                 g_reread = true;
                 if (g_search_ahead)
                 {
