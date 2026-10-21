@@ -558,10 +558,13 @@ static bool yank_article(Article &article, int arg)
 {
     if (article.m_flags & AF_YANK_BACK)
     {
-        article.unmark_as_read();
-        if (g_selected_only)
+        if (article.m_flags & AF_EXISTS)
         {
-            article.select_article(AUTO_KILL_NONE);
+            article.unmark_as_read();
+            if (g_selected_only)
+            {
+                article.select_article(AUTO_KILL_NONE);
+            }
         }
         article.m_flags &= ~AF_YANK_BACK;
     }

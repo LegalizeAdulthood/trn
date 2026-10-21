@@ -662,6 +662,104 @@ class DelayScopeCommandArticleTest : public DelayScopeArticleTest, public testin
 {
 };
 
+class RestoreDelayedArticleTest : public ThreadKillArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string restore_delayed(long first);
+
+private:
+    bool m_old_panic{g_panic};
+};
+
+void RestoreDelayedArticleTest::SetUp()
+{
+    ThreadKillArticleTest::SetUp();
+    g_panic = false;
+}
+
+void RestoreDelayedArticleTest::TearDown()
+{
+    g_panic = m_old_panic;
+    ThreadKillArticleTest::TearDown();
+}
+
+std::string RestoreDelayedArticleTest::restore_delayed(long first)
+{
+    const auto          current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto          recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto          order = g_art_ptr_list;
+    const ArticleNum    parsed = g_parsed_art;
+    const ArticleNum    search_ahead = g_search_ahead;
+    const bool          selected_only = g_selected_only;
+    const bool          threaded = g_threaded_group;
+    const bool          breadth_first = g_breadth_first;
+    const SelectionMode mode = g_sel_mode;
+    const bool          scan = g_sa_in;
+    const bool          follow = g_sa_follow;
+    const bool          temporary_follow = g_s_follow_temp;
+    const bool          reread = g_reread;
+    const bool          force_last = g_force_last;
+    push_char('n');
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("Y");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(AS_NORM, result);
+    EXPECT_EQ(ArticleNum{first}, g_art);
+    EXPECT_EQ(first <= g_last_art.value_of() ? article_find(ArticleNum{first}) : nullptr, g_artp);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(search_ahead, g_search_ahead);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(threaded, g_threaded_group);
+    EXPECT_EQ(breadth_first, g_breadth_first);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(scan, g_sa_in);
+    EXPECT_EQ(follow, g_sa_follow);
+    EXPECT_EQ(temporary_follow, g_s_follow_temp);
+    EXPECT_EQ(reread, g_reread);
+    EXPECT_EQ(force_last, g_force_last);
+    EXPECT_EQ(10, g_check_count);
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('n', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+class RestoreSingleArticleTest : public RestoreDelayedArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class RestoreScopeArticleTest : public RestoreDelayedArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+enum class RestoreOrder
+{
+    Numeric,
+    Subject,
+    DepthFirst,
+    BreadthFirst,
+    Sorted
+};
+
+class RestoreOrderArticleTest : public RestoreDelayedArticleTest, public testing::WithParamInterface<RestoreOrder>
+{
+};
+
 class SelectorEntryArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -4053,6 +4151,257 @@ TEST_P(DelayScopeCommandArticleTest, lastThreadStopsAtNullAndContinuesReadingFro
 }
 
 INSTANTIATE_TEST_SUITE_P(Command, DelayScopeCommandArticleTest, testing::Values('m', 'M'));
+
+TEST_P(RestoreSingleArticleTest, restoresAnUnreadSelectedArticleAfterMWithoutChangingOtherReadState)
+{
+    set_scope({AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+               AF_EXISTS | AF_UNREAD, AF_EXISTS},
+              2);
+    g_threaded_group = GetParam();
+    g_selected_only = true;
+    m_subjects[0].m_flags |= SF_SEL;
+    g_selected_subj_cnt = 1;
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(AS_ASK, art_switch("M"));
+    EXPECT_NE(std::string::npos, testing::internal::GetCapturedStdout().find("Article 2 will return."));
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(1, g_dm_count);
+    g_first_art = ArticleNum{4};
+
+    EXPECT_EQ("\nReturning 1 Marked article...\n", restore_delayed(2));
+
+    expect_flags({AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
+}
+
+TEST_P(RestoreSingleArticleTest, restoresAPreviouslyReadArticleAndRepeatedYDoesNotCountItAgain)
+{
+    set_scope(
+        {AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+        1);
+    g_threaded_group = GetParam();
+    g_first_art = ArticleNum{2};
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(AS_ASK, art_switch("M"));
+    EXPECT_NE(std::string::npos, testing::internal::GetCapturedStdout().find("Article 1 will return."));
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(AF_EXISTS | AF_DEL | AF_YANK_BACK, g_artp->m_flags);
+
+    EXPECT_EQ("\nReturning 1 Marked article...\n", restore_delayed(1));
+
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+        expect_flags({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                      AF_EXISTS, AF_EXISTS});
+        EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{}, g_selected_count);
+        EXPECT_EQ(0, g_selected_subj_cnt);
+        EXPECT_EQ(ArticleNum{1}, g_first_art);
+        EXPECT_TRUE(restore_delayed(1).empty());
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(Threading, RestoreSingleArticleTest, testing::Bool());
+
+TEST_P(RestoreScopeArticleTest, restoresTheDelayedScopeAndEarlierPendingArticlesWithoutChangingUnmarkedReadArticles)
+{
+    set_thread(2);
+    article_ptr(ArticleNum{1})->one_less();
+    push_char(GetParam());
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(AS_NORM, art_switch(std::string{'_', FINISH_CMD}));
+    (void) testing::internal::GetCapturedStdout();
+    EXPECT_EQ(GetParam() == 'm' ? 4 : 6, g_dm_count);
+    g_first_art = ArticleNum{6};
+
+    EXPECT_EQ(GetParam() == 'm' ? "\nReturning 4 Marked articles...\n" : "\nReturning 6 Marked articles...\n",
+              restore_delayed(GetParam() == 'm' ? 2 : 1));
+
+    expect_flags({GetParam() == 'm' ? AF_EXISTS : AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL});
+    EXPECT_EQ(ArticleUnread{GetParam() == 'm' ? 6 : 7}, m_newsgroup.m_to_read);
+    EXPECT_EQ(m_newsgroup.m_to_read, g_selected_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{GetParam() == 'm' ? 2 : 1}, g_first_art);
+    for (const Subject &subject : m_subjects)
+    {
+        EXPECT_EQ(SF_SEL | SF_VISIT, subject.m_flags);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(Command, RestoreScopeArticleTest, testing::Values('m', 'M'));
+
+TEST_F(RestoreDelayedArticleTest, anArticleMadeUnreadBeforeYIsNotCountedOrSelectedTwice)
+{
+    set_thread(2);
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(AS_ASK, art_switch("M"));
+    EXPECT_EQ(AS_ASK, art_switch("m"));
+    (void) testing::internal::GetCapturedStdout();
+    EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(2, g_dm_count);
+
+    EXPECT_EQ("\nReturning 2 Marked articles...\n", restore_delayed(1));
+
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL});
+    EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{6}, g_selected_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+}
+
+TEST_P(RestoreOrderArticleTest, restartsAtTheFirstEligibleArticleInReadingOrderIncludingExistingUnreadArticles)
+{
+    set_scope({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK,
+               AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+              7);
+    g_dm_count = 2;
+    g_selected_only = true;
+    g_selected_subj_cnt = 1;
+    m_subjects[2].m_flags |= SF_SEL;
+    g_first_art = ArticleNum{6};
+    g_threaded_group = GetParam() == RestoreOrder::DepthFirst || GetParam() == RestoreOrder::BreadthFirst;
+    g_breadth_first = GetParam() == RestoreOrder::BreadthFirst;
+    g_search_ahead = GetParam() == RestoreOrder::Subject ? ArticleNum{4} : ArticleNum{};
+    g_sa_in = true;
+    g_sa_follow = false;
+    g_s_follow_temp = false;
+    if (GetParam() == RestoreOrder::Sorted)
+    {
+        for (const long number : {3, 2, 6, 5, 1, 4, 7})
+        {
+            g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+        }
+        g_art_ptr = g_art_ptr_list.data() + 6;
+    }
+    const long first = GetParam() == RestoreOrder::Sorted ? 6 : GetParam() == RestoreOrder::BreadthFirst ? 5 : 4;
+
+    EXPECT_EQ("\nReturning 2 Marked articles...\n", restore_delayed(first));
+
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(2, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{4}, g_first_art);
+    EXPECT_EQ(SF_VISIT, m_subjects[0].m_flags);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[1].m_flags);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
+    EXPECT_EQ(GetParam() == RestoreOrder::Sorted ? g_art_ptr_list.data() + 2 : nullptr, g_art_ptr);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingOrder, RestoreOrderArticleTest,
+                         testing::Values(RestoreOrder::Numeric, RestoreOrder::Subject, RestoreOrder::DepthFirst,
+                                         RestoreOrder::BreadthFirst, RestoreOrder::Sorted));
+
+TEST_F(RestoreDelayedArticleTest, noPendingArticlesStillRestartsAtExistingUnreadArticlesFromGroupEnd)
+{
+    set_scope(
+        {AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+        8);
+    g_first_art = ArticleNum{2};
+
+    EXPECT_TRUE(restore_delayed(2).empty());
+
+    expect_flags(
+        {AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+}
+
+TEST_F(RestoreDelayedArticleTest, emptyRestorationInAnAllReadGroupKeepsTheEndNumberAndNullPointerTogether)
+{
+    set_scope({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_DEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS}, 8);
+    g_first_art = ArticleNum{8};
+    for (int attempt = 0; attempt < 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+
+        EXPECT_TRUE(restore_delayed(8).empty());
+
+        expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_DEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+        EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+        EXPECT_EQ(ArticleUnread{}, g_selected_count);
+        EXPECT_EQ(ArticleNum{8}, g_first_art);
+    }
+}
+
+TEST_F(RestoreDelayedArticleTest, missingMarkedArticlesAreDiscardedWithoutAddingUnreadOrSelectionCounts)
+{
+    set_scope(
+        {AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS}, 8);
+    g_dm_count = 2;
+    g_selected_only = true;
+    g_first_art = ArticleNum{3};
+
+    EXPECT_EQ("\nReturning 2 Marked articles...\n", restore_delayed(2));
+
+    expect_flags(
+        {AF_NONE, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
+    EXPECT_EQ(SF_VISIT, m_subjects[1].m_flags);
+    EXPECT_TRUE(restore_delayed(2).empty());
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+}
+
+TEST_F(RestoreDelayedArticleTest, missingMarkedArticlesInExplicitOrderNeverBecomeReadingTargets)
+{
+    set_scope(
+        {AF_YANK_BACK, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS}, 8);
+    g_dm_count = 2;
+    g_first_art = ArticleNum{3};
+    for (const long number : {1, 2, 3, 4, 5, 6, 7})
+    {
+        g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+    }
+    g_art_ptr = g_art_ptr_list.data() + 6;
+
+    EXPECT_EQ("\nReturning 2 Marked articles...\n", restore_delayed(2));
+
+    expect_flags({AF_NONE, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_EQ(g_art_ptr_list.data() + 1, g_art_ptr);
+}
+
+TEST_F(RestoreDelayedArticleTest, expirationAfterMLeavesNoArticleToRestoreAndClearsThePendingCount)
+{
+    set_scope({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS}, 1);
+    testing::internal::CaptureStdout();
+    EXPECT_EQ(AS_ASK, art_switch("M"));
+    (void) testing::internal::GetCapturedStdout();
+    g_artp->one_missing();
+    g_first_art = ArticleNum{2};
+    EXPECT_EQ(1, g_dm_count);
+
+    EXPECT_EQ("\nReturning 1 Marked article...\n", restore_delayed(2));
+
+    expect_flags(
+        {AF_CACHED | AF_THREADED, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+}
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
 {
