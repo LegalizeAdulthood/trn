@@ -788,18 +788,23 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     return output;
 }
 
-class BranchingArticleTest : public UnreadScopeArticleTest
+class ArticleTraversalTest : public UnreadScopeArticleTest
 {
 protected:
-    void        set_tree(std::initializer_list<ArticleFlags> flags, long current, bool breadth_first = true);
-    void expect_next(char command, long number, std::initializer_list<long> missing = {},
-                     ArticleSwitchResult result = AS_NORM);
+    void        expect_next(char command, long number, std::initializer_list<long> missing = {},
+                            ArticleSwitchResult result = AS_NORM);
     std::string expect_previous(char command, long number, std::initializer_list<long> missing = {},
                                 ArticleSwitchResult result = AS_NORM);
 
 private:
     std::string expect_navigation(char command, long number, std::initializer_list<long> missing,
                                   ArticleSwitchResult result);
+};
+
+class BranchingArticleTest : public ArticleTraversalTest
+{
+protected:
+    void set_tree(std::initializer_list<ArticleFlags> flags, long current, bool breadth_first = true);
 };
 
 void BranchingArticleTest::set_tree(std::initializer_list<ArticleFlags> flags, long current, bool breadth_first)
@@ -858,13 +863,13 @@ void BranchingArticleTest::set_tree(std::initializer_list<ArticleFlags> flags, l
     }
 }
 
-void BranchingArticleTest::expect_next(char command, long number, std::initializer_list<long> missing,
+void ArticleTraversalTest::expect_next(char command, long number, std::initializer_list<long> missing,
                                        ArticleSwitchResult result)
 {
     EXPECT_TRUE(expect_navigation(command, number, missing, result).empty());
 }
 
-std::string BranchingArticleTest::expect_previous(char command, long number, std::initializer_list<long> missing,
+std::string ArticleTraversalTest::expect_previous(char command, long number, std::initializer_list<long> missing,
                                                   ArticleSwitchResult result)
 {
     if (command == 'p' && result == AS_NORM)
@@ -874,7 +879,7 @@ std::string BranchingArticleTest::expect_previous(char command, long number, std
     return expect_navigation(command, number, missing, result);
 }
 
-std::string BranchingArticleTest::expect_navigation(char command, long number, std::initializer_list<long> missing,
+std::string ArticleTraversalTest::expect_navigation(char command, long number, std::initializer_list<long> missing,
                                                     ArticleSwitchResult result)
 {
     const auto    current = std::make_pair(g_curr_art, g_curr_artp);
@@ -882,8 +887,7 @@ std::string BranchingArticleTest::expect_navigation(char command, long number, s
     const auto    first = g_first_art;
     const auto    parsed = g_parsed_art;
     const auto    search_ahead = g_search_ahead;
-    const auto    first_subject_flags = m_subjects[0].m_flags;
-    const auto    last_subject_flags = m_subjects[1].m_flags;
+    const auto    selection_mode = g_sel_mode;
     const int     selected_subjects = g_selected_subj_cnt;
     const bool    selected_only = g_selected_only;
     const bool    threaded_group = g_threaded_group;
@@ -891,6 +895,11 @@ std::string BranchingArticleTest::expect_navigation(char command, long number, s
     ArticleUnread unread = m_newsgroup.m_to_read;
     ArticleUnread selected = g_selected_count;
 
+    std::vector<SubjectFlags> subject_flags;
+    for (const Subject &subject : m_subjects)
+    {
+        subject_flags.push_back(subject.m_flags);
+    }
     std::vector<ArticleFlags> flags;
     for (long article = 1; article <= 12; ++article)
     {
@@ -926,9 +935,12 @@ std::string BranchingArticleTest::expect_navigation(char command, long number, s
     EXPECT_EQ(selected_only, g_selected_only);
     EXPECT_EQ(threaded_group, g_threaded_group);
     EXPECT_EQ(breadth_first, g_breadth_first);
-    EXPECT_EQ(SM_THREAD, g_sel_mode);
-    EXPECT_EQ(first_subject_flags, m_subjects[0].m_flags);
-    EXPECT_EQ(last_subject_flags, m_subjects[1].m_flags);
+    EXPECT_EQ(selection_mode, g_sel_mode);
+    for (int index = 0; index < 3; ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
+    }
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ((command == 'N' || command == 'P') && number <= 12 && result == AS_NORM, g_reread);
@@ -972,6 +984,69 @@ void DepthFirstArticleTest::set_tree(std::initializer_list<ArticleFlags> flags, 
 }
 
 class DepthFirstMissingArticleTest : public DepthFirstArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class SubjectOrderPreviousArticleTest : public ArticleTraversalTest
+{
+protected:
+    void        set_subjects(std::initializer_list<ArticleFlags> flags, long current);
+    std::string expect_subject_previous(char command, long number, std::initializer_list<long> missing = {},
+                                        ArticleSwitchResult result = AS_NORM);
+};
+
+void SubjectOrderPreviousArticleTest::set_subjects(std::initializer_list<ArticleFlags> flags, long current)
+{
+    ASSERT_EQ(12U, flags.size());
+    set_articles(flags, current);
+    g_threaded_group = false;
+    g_sel_mode = SM_SUBJECT;
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+    g_recent_art = ArticleNum{6};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{1};
+    g_first_subject = &m_subjects[0];
+    g_last_subject = &m_subjects[2];
+    g_selected_count = ArticleUnread{};
+    // Each subject's articles are numeric; the subject order is not.
+    const long order[][4]{{5, 7, 10, 12}, {1, 3, 8, 11}, {2, 4, 6, 9}};
+    for (int index = 0; index < 3; ++index)
+    {
+        Subject &subject = m_subjects[index];
+        subject.m_articles = article_ptr(ArticleNum{order[index][0]});
+        subject.m_prev = index ? &m_subjects[index - 1] : nullptr;
+        subject.m_next = index < 2 ? &m_subjects[index + 1] : nullptr;
+        for (int offset = 0; offset < 4; ++offset)
+        {
+            Article *article = article_ptr(ArticleNum{order[index][offset]});
+            article->m_subj = &subject;
+            article->m_subj_next = offset < 3 ? article_ptr(ArticleNum{order[index][offset + 1]}) : nullptr;
+            if (article->m_flags & AF_UNREAD)
+            {
+                subject.m_flags |= SF_VISIT;
+                if (article->m_flags & AF_SEL)
+                {
+                    ++g_selected_count;
+                    subject.m_flags |= SF_SEL;
+                }
+            }
+        }
+        g_selected_subj_cnt += (subject.m_flags & SF_SEL) != 0;
+    }
+}
+
+std::string SubjectOrderPreviousArticleTest::expect_subject_previous(char command, long number,
+                                                                     std::initializer_list<long> missing,
+                                                                     ArticleSwitchResult         result)
+{
+    // Each command starts in search-ahead mode; successful p/P cancels it.
+    g_search_ahead = ArticleNum{-1};
+    return expect_previous(command, number, missing, result);
+}
+
+class SubjectOrderPreviousCommandArticleTest : public SubjectOrderPreviousArticleTest,
+                                               public testing::WithParamInterface<char>
 {
 };
 
@@ -1987,6 +2062,160 @@ TEST_F(DepthFirstArticleTest, previousUnreadPreservesGroupEndWhenNoUnreadArticle
     const std::string output = expect_previous('p', 13, {}, AS_ASK);
 
     EXPECT_NE(std::string::npos, output.find("No previous unread selected articles"));
+}
+
+TEST_F(SubjectOrderPreviousArticleTest, previousAllFollowsSubjectOrderIncludingReadUnselectedSubjects)
+{
+    set_subjects({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
+                 13);
+    g_first_art = ArticleNum{12};
+    g_selected_only = true;
+
+    for (const long number : {9, 6, 4, 2, 11, 8, 3, 1, 12, 10, 7, 5})
+    {
+        SCOPED_TRACE(number);
+        EXPECT_TRUE(expect_subject_previous('P', number).empty());
+    }
+}
+
+TEST_F(SubjectOrderPreviousArticleTest, previousUnreadSkipsReadEntriesAndIncludesUnselectedUnreadArticles)
+{
+    set_subjects({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS},
+                 13);
+
+    for (const long number : {9, 6, 2, 8, 1, 10, 5})
+    {
+        SCOPED_TRACE(number);
+        EXPECT_TRUE(expect_subject_previous('p', number).empty());
+    }
+}
+
+TEST_F(SubjectOrderPreviousArticleTest, selectedPreviousUnreadSkipsReadAndUnselectedEntries)
+{
+    set_subjects({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                  AF_EXISTS},
+                 13);
+    g_selected_only = true;
+
+    for (const long number : {6, 8, 10, 5})
+    {
+        SCOPED_TRACE(number);
+        EXPECT_TRUE(expect_subject_previous('p', number).empty());
+    }
+}
+
+TEST_F(SubjectOrderPreviousArticleTest, previousUnreadSkipsAnEntireReadSubjectWhenCrossingSubjects)
+{
+    set_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS},
+                 2);
+
+    EXPECT_TRUE(expect_subject_previous('p', 10).empty());
+}
+
+TEST_P(SubjectOrderPreviousCommandArticleTest, previousSkipsMissingSubjectTailsAndEntriesWithoutDoubleCounting)
+{
+    set_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                  AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL},
+                 13);
+    g_selected_only = true;
+    for (int attempt = 1; attempt <= 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+        g_art = g_curr_art = ArticleNum{13};
+        g_artp = g_curr_artp = nullptr;
+        EXPECT_TRUE(expect_subject_previous(GetParam(), 6, {9}).empty());
+        EXPECT_TRUE(expect_subject_previous(GetParam(), 2, {4}).empty());
+        EXPECT_TRUE(expect_subject_previous(GetParam(), 8, {11}).empty());
+        EXPECT_TRUE(expect_subject_previous(GetParam(), 1, {3}).empty());
+        EXPECT_TRUE(expect_subject_previous(GetParam(), 10, {12}).empty());
+        EXPECT_TRUE(expect_subject_previous(GetParam(), 5, {7}).empty());
+    }
+}
+
+TEST_P(SubjectOrderPreviousCommandArticleTest, missingEarlierSubjectsPreserveTheFirstBoundaryWithoutDoubleCounting)
+{
+    set_subjects({AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                  AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL,
+                  AF_UNREAD | AF_SEL, AF_UNREAD | AF_SEL},
+                 2);
+    g_selected_only = true;
+    for (int attempt = 1; attempt <= 2; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+        const std::string output = expect_subject_previous(GetParam(), 2, {11, 8, 3, 1, 12, 10, 7, 5}, AS_ASK);
+
+        EXPECT_NE(std::string::npos, output.find(GetParam() == 'p' ? "No previous unread selected articles"
+                                                                   : "No previous selected articles"));
+    }
+}
+
+TEST_P(SubjectOrderPreviousCommandArticleTest, firstSubjectBoundaryPreservesPositionWithoutWrapping)
+{
+    set_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS},
+                 5);
+    g_selected_only = true;
+    for (const bool verbose : {false, true})
+    {
+        SCOPED_TRACE(verbose);
+        g_verbose = verbose;
+        const int line = g_term_line;
+
+        const std::string output = expect_subject_previous(GetParam(), 5, {}, AS_ASK);
+
+        const std::string qualifier = GetParam() == 'p' ? " unread" : "";
+        EXPECT_NE(std::string::npos,
+                  output.find(verbose ? "There are no" + qualifier + " selected articles prior to this one."
+                                      : "No previous" + qualifier + " selected articles"));
+        EXPECT_EQ(line + 2, g_term_line);
+    }
+}
+
+TEST_P(SubjectOrderPreviousCommandArticleTest, successfulPreviousCancelsSearchAheadBeforeTheNextNumericStep)
+{
+    set_subjects({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                 1);
+
+    EXPECT_TRUE(expect_subject_previous(GetParam(), 12).empty());
+    EXPECT_TRUE(expect_previous(GetParam(), 11).empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(PreviousCommand, SubjectOrderPreviousCommandArticleTest, testing::Values('p', 'P'),
+                         [](const testing::TestParamInfo<char> &info) { return std::string{info.param}; });
+
+TEST_F(SubjectOrderPreviousArticleTest, selectedPreviousUnreadPreservesGroupEndWhenNoUnreadArticlesAreSelected)
+{
+    set_subjects({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+                 13);
+    g_selected_only = true;
+
+    const std::string output = expect_subject_previous('p', 13, {}, AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find("No previous unread selected articles"));
+}
+
+TEST_F(SubjectOrderPreviousArticleTest, previousUnreadPreservesGroupEndWhenAllSubjectsAreRead)
+{
+    set_subjects({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS, AF_EXISTS, AF_EXISTS},
+                 13);
+
+    const std::string output = expect_subject_previous('p', 13, {}, AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find("No previous unread articles"));
 }
 
 TEST_P(NextArticleTest, includesReadArticles)

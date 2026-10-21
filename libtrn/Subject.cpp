@@ -23,22 +23,17 @@ Article *Subject::first_art()
 
 Article *Subject::last_art()
 {
-    Article * ap;
-
-    if (!g_threaded_group)
-    {
-        ap = m_articles;
-        while (ap->m_subj_next)
-        {
-            ap = ap->m_subj_next;
-        }
-        return ap;
-    }
-
-    ap = m_thread;
+    Article *ap = g_threaded_group ? m_thread : m_articles;
     if (ap)
     {
-        if (g_breadth_first)
+        if (!g_threaded_group)
+        {
+            while (ap->m_subj_next)
+            {
+                ap = ap->m_subj_next;
+            }
+        }
+        else if (g_breadth_first)
         {
             int depth = 0;
             int last_depth = 0;
