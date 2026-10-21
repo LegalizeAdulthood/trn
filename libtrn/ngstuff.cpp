@@ -232,7 +232,8 @@ NumNumResult num_num(std::string_view command)
     ArticleNum       max;
     std::string      cmdlst;
     std::string_view ranges;
-    ArticleNum       oldart = g_art;
+    const ArticleNum oldart = g_art;
+    Article *const   oldartp = g_artp;
     bool             output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool             justone = true; // assume only one article
     const auto       parse_article_num = [](std::string_view text)
@@ -345,6 +346,8 @@ NumNumResult num_num(std::string_view command)
         if (max < min)
         {
             error_msg("Bad range");
+            g_art = oldart;
+            g_artp = oldartp;
             return NN_ASK;
         }
         if (justone)
@@ -372,6 +375,8 @@ NumNumResult num_num(std::string_view command)
                     g_msg = fmt::format("(Intr at {})", g_art.value_of());
                     error_msg(g_msg);
                 }
+                g_art = oldart;
+                g_artp = oldartp;
                 return NN_ASK;
             }
             if (!output_level)
@@ -385,6 +390,7 @@ NumNumResult num_num(std::string_view command)
         }
     }
     g_art = oldart;
+    g_artp = oldartp;
     return NN_NORM;
 }
 

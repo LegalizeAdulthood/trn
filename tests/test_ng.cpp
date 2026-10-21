@@ -32,6 +32,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdio>
 #include <filesystem>
@@ -1074,6 +1075,148 @@ void NumericJumpArticleTest::expect_target(long number)
     EXPECT_EQ(article_find(ArticleNum{number}), g_artp);
     EXPECT_TRUE(g_reread);
 }
+
+class NumericRangeArticleTest : public NumericJumpArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string apply_range(std::string_view input, ArticleSwitchResult expected = AS_ASK, long search_ahead = -1);
+    void        expect_changes(std::initializer_list<std::pair<long, ArticleFlags>> changes);
+
+    static const ArticleFlags CACHED;
+
+private:
+    bool                                       m_old_one_command{g_one_command};
+    bool                                       m_old_use_threads{g_use_threads};
+    bool                                       m_old_in_ng{g_in_ng};
+    int                                        m_old_check_count{g_check_count};
+    int                                        m_old_dm_count{g_dm_count};
+    decltype(g_missing_count)                  m_old_missing_count{g_missing_count};
+    decltype(g_just_a_sec)                     m_old_just_a_sec{g_just_a_sec};
+    std::string_view                           m_old_tc_cr{g_tc_CR};
+    std::string_view                           m_old_tc_ce{g_tc_CE};
+    std::vector<std::pair<long, ArticleFlags>> m_before_flags;
+};
+
+const ArticleFlags NumericRangeArticleTest::CACHED = AF_EXISTS | AF_CACHED;
+
+void NumericRangeArticleTest::SetUp()
+{
+    NumericJumpArticleTest::SetUp();
+    g_one_command = false;
+    g_use_threads = true;
+    g_in_ng = true;
+    g_check_count = 10;
+    g_dm_count = 1;
+    g_missing_count = 0;
+    g_just_a_sec = 0;
+    g_tc_CR = "\r";
+    g_tc_CE = "\033[K";
+    g_perform_count = 77;
+    g_msg = "prior status";
+}
+
+void NumericRangeArticleTest::TearDown()
+{
+    g_one_command = m_old_one_command;
+    g_use_threads = m_old_use_threads;
+    g_in_ng = m_old_in_ng;
+    g_check_count = m_old_check_count;
+    g_dm_count = m_old_dm_count;
+    g_missing_count = m_old_missing_count;
+    g_just_a_sec = m_old_just_a_sec;
+    g_tc_CR = m_old_tc_cr;
+    g_tc_CE = m_old_tc_ce;
+    NumericJumpArticleTest::TearDown();
+}
+
+std::string NumericRangeArticleTest::apply_range(std::string_view input, ArticleSwitchResult expected,
+                                                 long search_ahead)
+{
+    const auto article = std::make_pair(g_art, g_artp);
+    const auto current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto order = g_art_ptr_list;
+    const auto cursor = g_art_ptr;
+    const auto parsed = g_parsed_art;
+    const bool reread = g_reread;
+    m_before_flags.clear();
+    for (const auto &[number, entry] : g_article_list)
+    {
+        m_before_flags.emplace_back(number.value_of(), entry.m_flags);
+    }
+    push_char('Q');
+    const auto suffix = input.substr(1);
+    for (auto ch = suffix.rbegin(); ch != suffix.rend(); ++ch)
+    {
+        push_char(*ch);
+    }
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{input.front(), FINISH_CMD});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(reread, g_reread);
+    EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(0, g_missing_count);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(current.first > g_last_art ? MM_ARTICLE_END : MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('Q', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+void NumericRangeArticleTest::expect_changes(std::initializer_list<std::pair<long, ArticleFlags>> changes)
+{
+    for (const auto &[number, flags] : changes)
+    {
+        const auto entry = std::find_if(m_before_flags.begin(), m_before_flags.end(),
+                                        [number](const auto &item) { return item.first == number; });
+        ASSERT_NE(m_before_flags.end(), entry);
+        entry->second = flags;
+    }
+    ASSERT_EQ(m_before_flags.size(), g_article_list.size());
+    for (const auto &[number, flags] : m_before_flags)
+    {
+        SCOPED_TRACE(number);
+        const Article *entry = article_find(ArticleNum{number});
+        ASSERT_NE(nullptr, entry);
+        EXPECT_EQ(flags, entry->m_flags);
+    }
+}
+
+class NumericRangeOutputArticleTest : public NumericRangeArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class NumericRangeInvalidArticleTest : public NumericRangeArticleTest, public testing::WithParamInterface<std::string>
+{
+};
+
+class NumericRangeCancelArticleTest : public NumericRangeArticleTest, public testing::WithParamInterface<std::string>
+{
+};
+
+class NumericRangeFailureArticleTest : public NumericRangeArticleTest, public testing::WithParamInterface<bool>
+{
+};
 
 class NumericJumpTargetArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<long>
 {
@@ -8699,6 +8842,269 @@ TEST_F(NumericJumpArticleTest, nextUnreadInAThreadContinuesAfterTheReadJumpTarge
 
     expect_target(4);
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
+}
+
+TEST_P(NumericRangeOutputArticleTest, editedRangeJunksReadSelectedAndUnselectedTargetsWithTheConfiguredStatusOutput)
+{
+    g_use_threads = GetParam();
+    g_verbose = true;
+
+    const std::string output = apply_range("1-9\b3:j\n");
+
+    expect_changes({{1, CACHED}, {3, CACHED}});
+    EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(3, g_perform_count);
+    EXPECT_EQ(12, g_check_count);
+    if (GetParam())
+    {
+        EXPECT_EQ("3 articles matched, 2 killed, 1 deselected.", g_msg);
+        EXPECT_NE(std::string::npos, output.find(g_msg));
+        EXPECT_NE(std::string::npos, output.find("Processing..."));
+    }
+    else
+    {
+        EXPECT_NE(std::string::npos, output.find("1      \tJunked"));
+        EXPECT_NE(std::string::npos, output.find("2      \n"));
+        EXPECT_NE(std::string::npos, output.find("3      \tJunked"));
+        EXPECT_EQ(std::string::npos, output.find("Processing..."));
+        EXPECT_EQ(std::string::npos, output.find("articles matched"));
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(StatusStyle, NumericRangeOutputArticleTest, testing::Bool());
+
+TEST_F(NumericRangeArticleTest, commaSeparatedOverlappingRangesRetainNumericScopeInASortedSelectedOnlyView)
+{
+    for (const long number : {12, 6, 1, 4, 3, 2, 11})
+    {
+        g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+    }
+    g_art_ptr = article_ptr_list_begin() + 3;
+
+    const std::string output = apply_range("3,1-3:j\n");
+
+    expect_changes({{1, CACHED}, {3, CACHED}});
+    EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ("4 articles matched, 2 killed, 1 deselected.", g_msg);
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_F(NumericRangeArticleTest, dotAloneMarksTheCurrentReadArticleUnreadAndSelectedWithoutRequestingAReread)
+{
+    g_art = g_curr_art = ArticleNum{2};
+    g_artp = g_curr_artp = article_ptr(g_art);
+    g_first_art = ArticleNum{4};
+
+    apply_range(".\n");
+
+    expect_changes({{2, CACHED | AF_UNREAD | AF_SEL}});
+    EXPECT_EQ(ArticleUnread{9}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{6}, g_selected_count);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_EQ("1 article unkilled, 1 selected.", g_msg);
+}
+
+TEST_F(NumericRangeArticleTest, aRangeWithoutAnActionDefaultsToMarkingReadArticlesUnread)
+{
+    g_first_art = ArticleNum{4};
+
+    apply_range("2-3\n");
+
+    expect_changes({{2, CACHED | AF_UNREAD | AF_SEL}});
+    EXPECT_EQ(ArticleUnread{9}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{6}, g_selected_count);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ("2 articles matched, 1 unkilled, 1 selected.", g_msg);
+}
+
+TEST_F(NumericRangeArticleTest, currentArticleCanBeTheUpperRangeEndpoint)
+{
+    apply_range("2-.:j\n");
+
+    expect_changes({{3, CACHED}, {4, CACHED}});
+    EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(3, g_perform_count);
+}
+
+TEST_F(NumericRangeArticleTest, dotThroughDollarIncludesTheLastArticleAndSkipsAbsentNumbers)
+{
+    g_article_list.erase(ArticleNum{8});
+    --m_newsgroup.m_to_read;
+
+    apply_range(".-$:j\n");
+
+    expect_changes({{4, CACHED}, {6, CACHED}, {9, CACHED}, {11, CACHED}, {12, CACHED}});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(8, g_perform_count);
+    EXPECT_FALSE(article_hasdata(ArticleNum{8}));
+    EXPECT_EQ(AF_CACHED, article_ptr(ArticleNum{5})->m_flags);
+    EXPECT_EQ("8 articles matched, 5 killed, 4 deselected.", g_msg);
+}
+
+TEST_F(NumericRangeArticleTest, rangeSelectionAndDeselectionChangeOnlyEligibleTargetsAndExactCounts)
+{
+    apply_range("1-4:+\n");
+
+    expect_changes({{3, CACHED | AF_UNREAD | AF_SEL}});
+    EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{6}, g_selected_count);
+    EXPECT_EQ("4 articles matched, 1 selected.", g_msg);
+
+    apply_range("3-4:-\n");
+
+    expect_changes({{3, CACHED | AF_UNREAD}, {4, CACHED | AF_UNREAD}});
+    EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ("2 articles deselected.", g_msg);
+}
+
+TEST_F(NumericRangeArticleTest, rangeWithoutAnyStoredTargetsReportsNoArticlesAffected)
+{
+    g_article_list.erase(ArticleNum{8});
+    --m_newsgroup.m_to_read;
+
+    const std::string output = apply_range("8-8:j\n");
+
+    expect_changes({});
+    EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ("No articles affected.", g_msg);
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_F(NumericRangeArticleTest, clampsBothRangeEndpointsAndWarnsBeforeApplyingTheAction)
+{
+    const std::string output = apply_range("0-99:j\n");
+
+    expect_changes(
+        {{1, CACHED}, {3, CACHED}, {4, CACHED}, {6, CACHED}, {8, CACHED}, {9, CACHED}, {11, CACHED}, {12, CACHED}});
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(12, g_perform_count);
+    EXPECT_NE(std::string::npos, output.find("(First article is 1)"));
+    EXPECT_NE(std::string::npos, output.find("(Last article is 12)"));
+}
+
+TEST_P(NumericRangeInvalidArticleTest, rejectsReversedOrUnfinishedRangesBeforeChangingArticles)
+{
+    const std::string output = apply_range(GetParam());
+
+    expect_changes({});
+    EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_NE(std::string::npos, output.find("Bad range"));
+    EXPECT_EQ(std::string::npos, output.find("prior status"));
+}
+
+INSTANTIATE_TEST_SUITE_P(Malformed, NumericRangeInvalidArticleTest, testing::Values("4-2:j\n", "4-\n"));
+
+TEST_P(NumericRangeCancelArticleTest, cancellingBeforeCompletionChangesNothingAndReturnsToSingleCharacterInput)
+{
+    const std::string output = apply_range(GetParam(), AS_INP, 3);
+
+    expect_changes({});
+    EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(77, g_perform_count);
+    EXPECT_EQ("prior status", g_msg);
+    EXPECT_EQ(std::string::npos, output.find("Processing..."));
+}
+
+INSTANTIATE_TEST_SUITE_P(Editing, NumericRangeCancelArticleTest, testing::Values(".\b", "1-3:j\025"));
+
+TEST_F(NumericRangeArticleTest, malformedLaterRangePreservesCompletedActionsAndRestoresTheReadingAnchor)
+{
+    const std::string output = apply_range("1-2,7-:j\n");
+
+    expect_changes({{1, CACHED}});
+    EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_NE(std::string::npos, output.find("Bad range"));
+}
+
+TEST_P(NumericRangeFailureArticleTest, invalidActionStopsAtTheFirstTargetAndRetainsCompletedEffects)
+{
+    g_verbose = GetParam();
+
+    const std::string output = apply_range("1-3:j?\n");
+
+    expect_changes({{1, CACHED}});
+    EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_NE(std::string::npos, output.find("Unknown command: ?"));
+    EXPECT_NE(std::string::npos, output.find(GetParam() ? "(Interrupted at article 1)" : "(Intr at 1)"));
+}
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, NumericRangeFailureArticleTest, testing::Bool());
+
+TEST_F(NumericRangeArticleTest, rangeExecutorStopsAtAnInterruptionAndRestoresTheReadingAnchor)
+{
+    const auto article = std::make_pair(g_art, g_artp);
+    g_int_count = 1;
+    testing::internal::CaptureStdout();
+
+    // Command input clears prior interrupts; inject one at the executor.
+    const NumNumResult result = num_num("1-3:j");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(NN_ASK, result);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(CACHED, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(CACHED | AF_UNREAD, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(CACHED | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_NE(std::string::npos, output.find("(Intr at 1)"));
+    EXPECT_EQ(std::string::npos, output.find("Unknown command"));
+}
+
+TEST_F(NumericRangeArticleTest, delayedRangeMarksReadAndUnreadTargetsForReturnWithoutChangingOtherArticles)
+{
+    apply_range("2-4:M\n");
+
+    expect_changes({{2, CACHED | AF_YANK_BACK}, {3, CACHED | AF_YANK_BACK}, {4, CACHED | AF_YANK_BACK}});
+    EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+    EXPECT_EQ(4, g_dm_count);
+    EXPECT_EQ(3, g_perform_count);
+}
+
+TEST_F(NumericRangeArticleTest, applyingARangeFromGroupEndRestoresTheNullReadingAnchor)
+{
+    g_art = g_curr_art = article_after(g_last_art);
+    g_artp = g_curr_artp = nullptr;
+    g_mode = MM_ARTICLE_END;
+
+    apply_range("1-3:j\n");
+
+    expect_changes({{1, CACHED}, {3, CACHED}});
+    EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
+}
+
+TEST_F(NumericRangeArticleTest, anExplicitActionOnOneNumberRepromptsInsteadOfJumpingToThatArticle)
+{
+    apply_range("6:m\n");
+
+    expect_changes({});
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{5}, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ("1 article matched.", g_msg);
 }
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
