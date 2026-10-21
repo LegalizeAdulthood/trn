@@ -425,17 +425,20 @@ void dec_article(bool sel_flag, bool rereading)
                 }
             }
         }
-        do
+        Article **previous = g_art_ptr;
+        while (previous != article_ptr_list_begin())
         {
-            if (g_art_ptr == article_ptr_list_begin())
+            ap = *--previous;
+            if ((rereading || (ap->m_flags & AF_UNREAD)) && (!sel_flag || (ap->m_flags & AF_SEL)))
             {
-                break;
+                g_art_ptr = previous;
+                g_artp = ap;
+                g_art = ap->article_num();
+                return;
             }
-            ap = *--g_art_ptr;
-        } while ((!rereading && !(ap->m_flags & AF_UNREAD))
-              || (sel_flag && !(ap->m_flags & AF_SEL)));
-        g_artp = *g_art_ptr;
-        g_art = g_artp->article_num();
+        }
+        g_artp = nullptr;
+        g_art = article_before(g_abs_first);
         return;
     }
 
