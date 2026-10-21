@@ -2526,6 +2526,204 @@ class DepthFirstMissingArticleTest : public DepthFirstArticleTest, public testin
 {
 };
 
+class DirectNavigationArticleTest : public BranchingArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        position(long number);
+    void        set_flags(long number, ArticleFlags flags);
+    void        set_order(std::initializer_list<long> order);
+    std::string navigate(std::string command, long target, bool reread, ArticleSwitchResult result = AS_NORM,
+                         long search_ahead = 0, long order_index = -1, char typed_second = '\0');
+
+    static const ArticleFlags CACHED;
+
+private:
+    char             m_old_erase_char{g_erase_char};
+    char             m_old_kill_char{g_kill_char};
+    std::string_view m_old_tc_bc{g_tc_BC};
+    bool             m_old_mouse_is_down{g_mouse_is_down};
+    char             m_old_int_count{g_int_count};
+};
+
+const ArticleFlags DirectNavigationArticleTest::CACHED = AF_EXISTS | AF_CACHED;
+
+void DirectNavigationArticleTest::SetUp()
+{
+    BranchingArticleTest::SetUp();
+    set_tree({CACHED | AF_UNREAD | AF_SEL, CACHED, CACHED | AF_UNREAD, CACHED | AF_UNREAD | AF_SEL, AF_CACHED,
+              CACHED | AF_UNREAD | AF_SEL, CACHED | AF_YANK_BACK, CACHED | AF_UNREAD, CACHED | AF_UNREAD, CACHED,
+              CACHED | AF_UNREAD | AF_SEL, CACHED | AF_UNREAD | AF_SEL},
+             4, false);
+    g_selected_only = true;
+    g_recent_art = ArticleNum{7};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{4};
+    g_search_ahead = ArticleNum{3};
+    g_erase_char = '\b';
+    g_kill_char = Ctl('U');
+    g_tc_BC = "\b";
+    g_mouse_is_down = false;
+    g_int_count = 0;
+}
+
+void DirectNavigationArticleTest::TearDown()
+{
+    g_erase_char = m_old_erase_char;
+    g_kill_char = m_old_kill_char;
+    g_tc_BC = m_old_tc_bc;
+    g_mouse_is_down = m_old_mouse_is_down;
+    g_int_count = m_old_int_count;
+    BranchingArticleTest::TearDown();
+}
+
+void DirectNavigationArticleTest::position(long number)
+{
+    g_art = g_curr_art = ArticleNum{number};
+    g_artp = g_curr_artp = article_find(g_art);
+    g_mode = g_art > g_last_art ? MM_ARTICLE_END : MM_ARTICLE;
+}
+
+void DirectNavigationArticleTest::set_flags(long number, ArticleFlags flags)
+{
+    Article *article = article_ptr(ArticleNum{number});
+    m_newsgroup.m_to_read += ((flags & AF_UNREAD) != 0) - ((article->m_flags & AF_UNREAD) != 0);
+    g_selected_count += ((flags & AF_SEL) != 0) - ((article->m_flags & AF_SEL) != 0);
+    article->m_flags = flags;
+}
+
+void DirectNavigationArticleTest::set_order(std::initializer_list<long> order)
+{
+    for (const long number : order)
+    {
+        g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+    }
+    g_art_ptr = std::find(g_art_ptr_list.data(), g_art_ptr_list.data() + g_art_ptr_list.size(), g_artp);
+}
+
+std::string DirectNavigationArticleTest::navigate(std::string command, long target, bool reread,
+                                                  ArticleSwitchResult result, long search_ahead, long order_index,
+                                                  char typed_second)
+{
+    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto                                       order = g_art_ptr_list;
+    const auto                                       cursor = g_art_ptr;
+    const auto                                       first = g_first_art;
+    const auto                                       parsed = g_parsed_art;
+    const auto                                       unread = m_newsgroup.m_to_read;
+    const auto                                       selected = g_selected_count;
+    const int                                        selected_subjects = g_selected_subj_cnt;
+    const bool                                       selected_only = g_selected_only;
+    const bool                                       force_last = g_force_last;
+    const bool                                       threaded = g_threaded_group;
+    const bool                                       breadth_first = g_breadth_first;
+    const auto                                       mode = g_mode;
+    const auto                                       follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
+    std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
+    for (const auto &[number, article] : g_article_list)
+    {
+        flags.emplace_back(number, article.m_flags);
+    }
+    std::vector<SubjectFlags> subjects;
+    for (const Subject &subject : m_subjects)
+    {
+        subjects.push_back(subject.m_flags);
+    }
+    push_char('Q');
+    if (typed_second)
+    {
+        push_char(typed_second);
+    }
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult actual = art_switch(std::move(command));
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    SCOPED_TRACE(output);
+    EXPECT_EQ(result, actual);
+    EXPECT_EQ(ArticleNum{target}, g_art);
+    EXPECT_EQ(article_find(ArticleNum{target}), g_artp);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(order_index < 0 ? cursor : article_ptr_list_begin() + order_index, g_art_ptr);
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(force_last, g_force_last);
+    EXPECT_EQ(threaded, g_threaded_group);
+    EXPECT_EQ(breadth_first, g_breadth_first);
+    EXPECT_EQ(reread, g_reread);
+    EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
+    EXPECT_EQ(follow, std::make_pair(g_s_follow_temp, g_univ_follow_temp));
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(mode, g_mode);
+    EXPECT_EQ(flags.size(), g_article_list.size());
+    for (const auto &[number, expected_flags] : flags)
+    {
+        SCOPED_TRACE(number.value_of());
+        const Article *article = article_find(number);
+        EXPECT_NE(nullptr, article);
+        if (article)
+        {
+            EXPECT_EQ(expected_flags, article->m_flags);
+        }
+    }
+    for (int index = 0; index < 3; ++index)
+    {
+        EXPECT_EQ(subjects[index], m_subjects[index].m_flags);
+    }
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('Q', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+class DirectNumericStepArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class DirectNumericInputArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class DirectNumericMissingArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class DirectNumericBoundaryArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+enum class DirectReadingOrder
+{
+    Numeric,
+    DepthFirst,
+    BreadthFirst,
+    Subject,
+    Sorted
+};
+
+class DirectFirstUnreadArticleTest : public DirectNavigationArticleTest,
+                                     public testing::WithParamInterface<DirectReadingOrder>
+{
+};
+
+class DirectFirstExhaustionArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
 class SubjectOrderPreviousArticleTest : public ArticleTraversalTest
 {
 protected:
@@ -9105,6 +9303,206 @@ TEST_F(NumericRangeArticleTest, anExplicitActionOnOneNumberRepromptsInsteadOfJum
     EXPECT_EQ(ArticleUnread{5}, g_selected_count);
     EXPECT_EQ(1, g_perform_count);
     EXPECT_EQ("1 article matched.", g_msg);
+}
+
+TEST_P(DirectNumericStepArticleTest, numericStepBypassesConfiguredOrderAndReadAndSelectionFilters)
+{
+    const char direction = GetParam();
+    position(direction == 'N' ? 1 : 4);
+    g_breadth_first = true;
+    set_order({11, 4, 6, 1, 12, 3, 2, 7, 8, 9, 10});
+
+    EXPECT_TRUE(navigate(std::string{'_', direction}, direction == 'N' ? 2 : 3, true).empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(Direction, DirectNumericStepArticleTest, testing::Values('N', 'P'));
+
+TEST_P(DirectNumericInputArticleTest, typedNumericStepIncludesCachedMissingTargetsAndRetainsQueuedInput)
+{
+    const char direction = GetParam();
+    position(direction == 'N' ? 4 : 6);
+
+    navigate(std::string{'_', FINISH_CMD}, 5, true, AS_NORM, 0, -1, direction);
+
+    EXPECT_EQ(AF_CACHED, article_ptr(ArticleNum{5})->m_flags);
+}
+
+INSTANTIATE_TEST_SUITE_P(TypedDirection, DirectNumericInputArticleTest, testing::Values('N', 'P'));
+
+TEST_P(DirectNumericMissingArticleTest, numericStepRetainsAnAbsentNumberWithoutAllocatingAnArticle)
+{
+    const char direction = GetParam();
+    position(direction == 'N' ? 4 : 6);
+    g_article_list.erase(ArticleNum{5});
+
+    navigate(std::string{'_', direction}, 5, true);
+
+    EXPECT_FALSE(article_hasdata(ArticleNum{5}));
+}
+
+INSTANTIATE_TEST_SUITE_P(AbsentDirection, DirectNumericMissingArticleTest, testing::Values('N', 'P'));
+
+TEST_F(DirectNavigationArticleTest, numericNextReachesGroupEndAndExplicitlyRestartsAtTheFirstNumber)
+{
+    set_flags(1, CACHED);
+    position(12);
+
+    EXPECT_TRUE(navigate("_N", 13, false).empty());
+
+    position(13);
+    g_search_ahead = ArticleNum{3};
+
+    EXPECT_TRUE(navigate("_N", 1, true).empty());
+    EXPECT_EQ(CACHED, article_ptr(ArticleNum{1})->m_flags);
+}
+
+TEST_F(DirectNavigationArticleTest, numericPreviousFromGroupEndIncludesTheLastReadUnselectedArticle)
+{
+    set_flags(12, CACHED);
+    position(13);
+
+    EXPECT_TRUE(navigate("_P", 12, true).empty());
+}
+
+TEST_P(DirectNumericBoundaryArticleTest, numericPreviousAtTheFirstNumberRepromptsWithoutUnreadOrSelectionQualifiers)
+{
+    position(1);
+    g_verbose = GetParam();
+
+    const std::string output = navigate("_P", 1, false, AS_ASK, 3);
+
+    EXPECT_NE(std::string::npos,
+              output.find(GetParam() ? "There are no articles prior to this one." : "No previous articles"));
+    EXPECT_EQ(std::string::npos, output.find("unread"));
+    EXPECT_EQ(std::string::npos, output.find("selected"));
+}
+
+INSTANTIATE_TEST_SUITE_P(WarningStyle, DirectNumericBoundaryArticleTest, testing::Bool());
+
+TEST_P(DirectFirstUnreadArticleTest, caretUsesConfiguredOrderAndSkipsReadAndUnselectedArticles)
+{
+    set_flags(1, CACHED);
+    set_flags(2, CACHED | AF_UNREAD);
+    set_flags(3, CACHED | AF_UNREAD | AF_SEL);
+    g_first_art = ArticleNum{2};
+    long target = 3;
+    long order_index = -1;
+    switch (GetParam())
+    {
+    case DirectReadingOrder::Numeric:
+        g_threaded_group = false;
+        g_search_ahead = ArticleNum{};
+        break;
+    case DirectReadingOrder::DepthFirst:
+        break;
+    case DirectReadingOrder::BreadthFirst:
+        g_breadth_first = true;
+        target = 6;
+        break;
+    case DirectReadingOrder::Subject:
+        g_threaded_group = false;
+        m_subjects[1].m_prev = nullptr;
+        m_subjects[1].m_next = &m_subjects[0];
+        m_subjects[0].m_prev = &m_subjects[1];
+        m_subjects[0].m_next = nullptr;
+        g_first_subject = &m_subjects[1];
+        g_last_subject = &m_subjects[0];
+        target = 11;
+        break;
+    case DirectReadingOrder::Sorted:
+        set_order({2, 8, 11, 3, 6, 1, 4, 12, 7, 9, 10});
+        target = 11;
+        order_index = 2;
+        break;
+    }
+
+    EXPECT_TRUE(navigate("^", target, false, AS_NORM, 0, order_index).empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingOrder, DirectFirstUnreadArticleTest,
+                         testing::Values(DirectReadingOrder::Numeric, DirectReadingOrder::DepthFirst,
+                                         DirectReadingOrder::BreadthFirst, DirectReadingOrder::Subject,
+                                         DirectReadingOrder::Sorted));
+
+TEST_F(DirectNavigationArticleTest, caretIncludesUnselectedUnreadArticlesWhenSelectionFilteringIsOff)
+{
+    set_flags(1, CACHED);
+    set_flags(2, CACHED | AF_UNREAD);
+    g_first_art = ArticleNum{2};
+    g_selected_only = false;
+    g_threaded_group = false;
+    g_search_ahead = ArticleNum{};
+
+    EXPECT_TRUE(navigate("^", 2, false).empty());
+}
+
+TEST_F(DirectNavigationArticleTest, caretSkipsAMissingRootAndContinuesThroughItsThread)
+{
+    set_flags(1, AF_CACHED);
+    g_selected_only = false;
+    g_first_art = ArticleNum{3};
+
+    EXPECT_TRUE(navigate("^", 3, false).empty());
+}
+
+TEST_P(DirectFirstExhaustionArticleTest, caretRetainsAConsistentEndPositionWhenNoEligibleUnreadArticleExists)
+{
+    for (long number = 1; number <= 12; ++number)
+    {
+        const auto flags = article_ptr(ArticleNum{number})->m_flags;
+        set_flags(number, flags & ~(GetParam() ? AF_SEL : AF_UNREAD | AF_SEL));
+    }
+    g_selected_only = GetParam();
+
+    EXPECT_TRUE(navigate("^", 13, false).empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(AllReadOrUnselected, DirectFirstExhaustionArticleTest, testing::Bool());
+
+TEST_F(DirectNavigationArticleTest, caretRestartsFromGroupEndAtTheFirstEligibleUnreadArticle)
+{
+    position(13);
+    set_order({2, 8, 11, 3, 6, 1, 4, 12, 7, 9, 10});
+
+    EXPECT_TRUE(navigate("^", 11, false, AS_NORM, 0, 2).empty());
+}
+
+TEST_F(DirectNavigationArticleTest, configuredNavigationAfterANumericStepRepairsTheOrderCursorFromTheNewPointer)
+{
+    position(1);
+    set_order({11, 4, 6, 1, 12, 3, 2, 7, 8, 9, 10});
+    navigate("_N", 2, true);
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+
+    EXPECT_EQ(AS_NORM, art_switch("N"));
+
+    EXPECT_EQ(ArticleNum{7}, g_art);
+    EXPECT_EQ(article_find(g_art), g_artp);
+    EXPECT_EQ(article_ptr_list_begin() + 7, g_art_ptr);
+    EXPECT_TRUE(g_reread);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+}
+
+TEST_F(DirectNavigationArticleTest, directCommandsKeepNumberAndPointerConsistentInAnEmptyGroup)
+{
+    g_article_list.clear();
+    g_first_subject = g_last_subject = nullptr;
+    g_last_art = g_last_cached = ArticleNum{};
+    m_newsgroup.m_to_read = ArticleUnread{};
+    g_selected_count = ArticleUnread{};
+    g_selected_subj_cnt = 0;
+    g_recent_art = ArticleNum{-1};
+    g_recent_artp = nullptr;
+    position(1);
+    for (const std::string command : {"^", "_N", "_P"})
+    {
+        SCOPED_TRACE(command);
+        g_search_ahead = ArticleNum{3};
+        const bool previous = command == "_P";
+
+        navigate(command, 1, false, previous ? AS_ASK : AS_NORM, previous ? 3 : 0);
+    }
 }
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)

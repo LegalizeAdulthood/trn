@@ -1163,13 +1163,13 @@ check_dec_art:
 no_previous_article:
             if (g_verbose)
             {
-                fmt::print("\nThere are no{}{} articles prior to this one.\n", command_ch == 'P' ? "" : " unread",
-                           g_selected_only ? " selected" : "");
+                fmt::print("\nThere are no{}{} articles prior to this one.\n", command_ch == 'p' ? " unread" : "",
+                           g_selected_only && command_ch != '_' ? " selected" : "");
             }
             else
             {
-                fmt::print("\nNo previous{}{} articles\n", command_ch == 'P' ? "" : " unread",
-                           g_selected_only ? " selected" : "");
+                fmt::print("\nNo previous{}{} articles\n", command_ch == 'p' ? " unread" : "",
+                           g_selected_only && command_ch != '_' ? " selected" : "");
             }
             term_down(2);
             g_art = g_curr_art;
@@ -1892,6 +1892,7 @@ normal_search:
             {
             case 'P':
                 --g_art;
+                g_artp = article_find(g_art);
                 goto check_dec_art;
 
             case 'N':
@@ -1903,6 +1904,7 @@ normal_search:
                 {
                     ++g_art;
                 }
+                g_artp = article_find(g_art);
                 if (g_art <= g_last_art)
                 {
                     g_reread = true;
