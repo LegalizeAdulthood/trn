@@ -1,4 +1,6 @@
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
+
 #include <trn/Subject.h>
 
 #include <config/common.h>
@@ -6,6 +8,7 @@
 #include <trn/artstate.h>
 #include <trn/ngdata.h>
 #include <trn/rt-select.h>
+#include <trn/rthread.h>
 
 Article *Subject::first_art()
 {
@@ -35,19 +38,36 @@ Article *Subject::last_art()
     ap = m_thread;
     if (ap)
     {
-        while (true)
+        if (g_breadth_first)
         {
-            if (ap->m_sibling)
+            int depth = 0;
+            int last_depth = 0;
+            // The breadth-first tail is the rightmost article at the greatest depth.
+            for (Article *cursor = ap; cursor; cursor = cursor->bump_article(depth))
             {
-                ap = ap->m_sibling;
+                if (depth >= last_depth)
+                {
+                    ap = cursor;
+                    last_depth = depth;
+                }
             }
-            else if (ap->m_child1)
+        }
+        else
+        {
+            while (true)
             {
-                ap = ap->m_child1;
-            }
-            else
-            {
-                break;
+                if (ap->m_sibling)
+                {
+                    ap = ap->m_sibling;
+                }
+                else if (ap->m_child1)
+                {
+                    ap = ap->m_child1;
+                }
+                else
+                {
+                    break;
+                }
             }
         }
         if (!(ap->m_flags & AF_EXISTS))

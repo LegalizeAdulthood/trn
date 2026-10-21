@@ -342,20 +342,52 @@ void Article::delay_unmark()
 //
 Article *Article::bump_article()
 {
-    if (m_child1)
+    int depth = 0;
+    return bump_article(depth);
+}
+
+// Track depth while optionally skipping this article's descendants.
+Article *Article::bump_article(int &depth, bool descend)
+{
+    if (descend && m_child1)
     {
+        ++depth;
         return m_child1;
     }
     Article *ap{this};
     while (!ap->m_sibling)
     {
         ap = ap->m_parent;
+        --depth;
         if (!ap)
         {
             return nullptr;
         }
     }
     return ap->m_sibling;
+}
+
+// Find the next article on a level relative to this article's depth.
+// Level zero skips descendants and continues along the current level.
+Article *Article::next_on_level(int level)
+{
+    int      depth = 0;
+    Article *ap = this;
+    do
+    {
+        ap = ap->bump_article(depth, depth < level);
+    } while (ap && depth != level);
+    return ap;
+}
+
+Article *Article::last_on_level(int level, const Article *before)
+{
+    Article *last = nullptr;
+    for (Article *ap = level ? next_on_level(level) : this; ap && ap != before; ap = ap->next_on_level())
+    {
+        last = ap;
+    }
+    return last;
 }
 
 // Bump the param to the next REAL article.  Uses subject order in a
@@ -372,66 +404,20 @@ try_again:
     }
     if (g_breadth_first)
     {
-        if (ap->m_sibling)
+        Article *next = ap->next_on_level();
+        if (!next)
         {
-            ap = ap->m_sibling;
-            goto done;
-        }
-        int next_depth = 1;
-        for (Article *parent = ap->m_parent; parent; parent = parent->m_parent)
-        {
-            ++next_depth;
-        }
-        // Finish this level, then find the first article on the next one.
-        for (int pass = 0; pass < 2; ++pass)
-        {
-            Article *cursor = pass ? ap->m_subj->m_thread : ap;
-            int      remaining = pass ? next_depth : 0;
-            while (cursor)
+            int next_depth = 1;
+            for (Article *parent = ap->m_parent; parent; parent = parent->m_parent)
             {
-                if (remaining && cursor->m_child1)
-                {
-                    cursor = cursor->m_child1;
-                    --remaining;
-                }
-                else
-                {
-                    while (cursor && !cursor->m_sibling)
-                    {
-                        cursor = cursor->m_parent;
-                        ++remaining;
-                    }
-                    if (!cursor)
-                    {
-                        break;
-                    }
-                    cursor = cursor->m_sibling;
-                }
-                if (!remaining)
-                {
-                    ap = cursor;
-                    goto done;
-                }
+                ++next_depth;
             }
+            next = ap->m_subj->m_thread->next_on_level(next_depth);
         }
-        return nullptr;
+        ap = next;
+        goto done;
     }
-    do
-    {
-        if (ap->m_child1)
-        {
-            ap = ap->m_child1;
-            goto done;
-        }
-        while (!ap->m_sibling)
-        {
-            if (!(ap = ap->m_parent))
-            {
-                return nullptr;
-            }
-        }
-        ap = ap->m_sibling;
-    } while (g_breadth_first);
+    ap = ap->bump_article();
 done:
     if (ap && !(ap->m_flags & AF_EXISTS))
     {
@@ -463,6 +449,22 @@ try_again:
                 ap = ap->m_subj_next;
             }
         }
+        goto done;
+    }
+    if (g_breadth_first)
+    {
+        int target_depth = 0;
+        for (Article *parent = ap->m_parent; parent; parent = parent->m_parent)
+        {
+            ++target_depth;
+        }
+        Article *root = ap->m_subj->m_thread;
+        Article *previous = root->last_on_level(target_depth, ap);
+        if (!previous && target_depth)
+        {
+            previous = root->last_on_level(target_depth - 1);
+        }
+        ap = previous;
         goto done;
     }
     ap = (ap->m_parent ? ap->m_parent->m_child1 : ap->m_subj->m_thread);

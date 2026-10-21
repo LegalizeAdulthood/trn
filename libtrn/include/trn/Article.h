@@ -77,6 +77,9 @@ struct Article
     void       delay_unmark();
     void       mark_as_read();
     Article   *bump_article();
+    Article         *bump_article(int &depth, bool descend = true);
+    Article         *next_on_level(int level = 0);
+    Article         *last_on_level(int level, const Article *before = nullptr);
     Article   *next_article();
     Article   *prev_article();
     void       select_article(AutoKillFlags auto_flags);
