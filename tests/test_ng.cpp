@@ -15,6 +15,7 @@
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
 #include <trn/rcstuff.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -940,6 +941,123 @@ class CatchupUnsubscribeArticleTest : public CatchupArticleTest, public testing:
 };
 
 class CatchupUncachedTailArticleTest : public CatchupArticleTest, public testing::WithParamInterface<int>
+{
+};
+
+class UnsubscribeArticleTest : public CatchupArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string unsubscribe();
+
+private:
+    ArticleUnread m_old_newsgroup_min_to_read{g_newsgroup_min_to_read};
+    Subject      *m_old_sel_page_sp{g_sel_page_sp};
+    Article     **m_old_sel_page_app{g_sel_page_app};
+    Article      *m_old_sel_last_ap{g_sel_last_ap};
+    Subject      *m_old_sel_last_sp{g_sel_last_sp};
+};
+
+void UnsubscribeArticleTest::SetUp()
+{
+    CatchupArticleTest::SetUp();
+    g_newsgroup_min_to_read = TR_ONE;
+}
+
+void UnsubscribeArticleTest::TearDown()
+{
+    g_newsgroup_min_to_read = m_old_newsgroup_min_to_read;
+    g_sel_page_sp = m_old_sel_page_sp;
+    g_sel_page_app = m_old_sel_page_app;
+    g_sel_last_ap = m_old_sel_last_ap;
+    g_sel_last_sp = m_old_sel_last_sp;
+    CatchupArticleTest::TearDown();
+}
+
+std::string UnsubscribeArticleTest::unsubscribe()
+{
+    const auto          article = std::make_pair(g_art, g_artp);
+    const auto          current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto          recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto          order = g_art_ptr_list;
+    const auto          cursor = g_art_ptr;
+    const ArticleNum    first = g_first_art;
+    const ArticleUnread unread = m_newsgroup.m_to_read;
+    const ArticleUnread selected = g_selected_count;
+    const int           selected_subjects = g_selected_subj_cnt;
+    const int           delayed = g_dm_count;
+    const bool          selected_only = g_selected_only;
+    const bool          threaded = g_threaded_group;
+    const bool          scan = g_sa_in;
+    const bool          follow = g_sa_follow;
+    const bool          temporary_follow = g_s_follow_temp;
+    const auto          groups = g_newsgroup_to_read;
+    const auto          newsrc_flags = m_newsrc.flags;
+    const auto          rc_line = m_newsgroup.m_rc_line;
+
+    std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
+    for (const auto &[number, entry] : g_article_list)
+    {
+        flags.emplace_back(number, entry.m_flags);
+    }
+    push_char('n');
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{'u', FINISH_CMD});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_CLEAN, result);
+    EXPECT_EQ("\nUnsubscribed to newsgroup comp.test.catchup\n", output);
+    EXPECT_EQ('!', m_newsgroup.m_subscribe_char);
+    EXPECT_EQ(newsrc_flags | RF_RC_CHANGED, m_newsrc.flags);
+    EXPECT_EQ(groups - NewsgroupNum{1}, g_newsgroup_to_read);
+    EXPECT_EQ(rc_line, m_newsgroup.m_rc_line);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
+    EXPECT_EQ(delayed, g_dm_count);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(threaded, g_threaded_group);
+    EXPECT_EQ(scan, g_sa_in);
+    EXPECT_EQ(follow, g_sa_follow);
+    EXPECT_EQ(temporary_follow, g_s_follow_temp);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{4}, g_search_ahead);
+    EXPECT_EQ(SM_THREAD, g_sel_mode);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_TRUE(g_in_ng);
+    EXPECT_EQ(10, g_check_count);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(flags.size(), g_article_list.size());
+    for (const auto &[number, expected] : flags)
+    {
+        const Article *entry = article_find(number);
+        EXPECT_NE(nullptr, entry);
+        if (entry)
+        {
+            EXPECT_EQ(expected, entry->m_flags) << number.value_of();
+        }
+    }
+    EXPECT_TRUE(macro_pending());
+    if (macro_pending())
+    {
+        EXPECT_EQ('n', read_tty_char());
+    }
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+class UnsubscribePositionArticleTest : public UnsubscribeArticleTest, public testing::WithParamInterface<long>
 {
 };
 
@@ -4791,6 +4909,105 @@ TEST_P(CatchupUncachedTailArticleTest, partialCatchupCountsCachedAndUncachedUnre
 }
 
 INSTANTIATE_TEST_SUITE_P(Tail, CatchupUncachedTailArticleTest, testing::Values(3, 4));
+
+TEST_P(UnsubscribePositionArticleTest, requestsCleanupWithoutChangingArticlesOrTheReadingAnchor)
+{
+    set_catchup_articles(GetParam());
+
+    unsubscribe();
+
+    EXPECT_EQ(ArticleNum{GetParam()}, g_art);
+    EXPECT_EQ(GetParam() == 8 ? nullptr : article_find(g_art), g_artp);
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_EQ(NewsgroupNum{4}, g_newsgroup_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(Position, UnsubscribePositionArticleTest, testing::Values(3L, 4L, 8L));
+
+TEST_F(UnsubscribeArticleTest, sortedScanViewStillRequestsGroupCleanupAndRetainsItsCursor)
+{
+    set_catchup_articles();
+    g_threaded_group = false;
+    g_sa_in = true;
+    g_sa_follow = false;
+    g_s_follow_temp = true;
+    for (const long number : {6, 3, 4, 1, 7, 2, 5})
+    {
+        g_art_ptr_list.push_back(article_ptr(ArticleNum{number}));
+    }
+    g_art_ptr = g_art_ptr_list.data() + 2;
+
+    unsubscribe();
+
+    EXPECT_EQ(g_art_ptr_list.data() + 2, g_art_ptr);
+    EXPECT_EQ(article_find(ArticleNum{4}), *g_art_ptr);
+}
+
+TEST_F(UnsubscribeArticleTest, anAlreadyDirtyNewsrcRetainsItsOtherFlags)
+{
+    set_catchup_articles();
+    m_newsrc.flags = RF_ACTIVE | RF_OPEN | RF_RC_CHANGED;
+
+    unsubscribe();
+
+    EXPECT_EQ(RF_ACTIVE | RF_OPEN | RF_RC_CHANGED, m_newsrc.flags);
+}
+
+TEST_F(UnsubscribeArticleTest, unsubscribingTheLastGroupInTheAllGroupsViewLeavesNoGroupsToRead)
+{
+    set_catchup_articles(8);
+    for (auto &[number, entry] : g_article_list)
+    {
+        entry.one_less();
+        entry.m_flags &= ~AF_YANK_BACK;
+    }
+    for (Subject &subject : m_subjects)
+    {
+        subject.m_flags = SF_NONE;
+    }
+    g_selected_only = false;
+    g_selected_subj_cnt = 0;
+    g_dm_count = 0;
+    g_first_art = ArticleNum{8};
+    g_newsgroup_min_to_read = TR_NONE;
+    g_newsgroup_to_read = NewsgroupNum{1};
+
+    unsubscribe();
+
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleNum{8}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+}
+
+TEST_F(UnsubscribeArticleTest, cleanupSerializesTheUnsubscribeWhileKeepingUnreadAndDelayedArticles)
+{
+    set_catchup_articles();
+    unsubscribe();
+    testing::internal::CaptureStdout();
+
+    deselect_all();
+    yank_back();
+    bits_to_rc();
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_NE(std::string::npos, output.find("Returning 1 Marked article"));
+    expect_flags({CACHED | AF_UNREAD, CACHED | AF_UNREAD, CACHED | AF_DEL, CACHED | AF_UNREAD, AF_CACHED | AF_THREADED,
+                  CACHED | AF_UNREAD, CACHED | AF_UNREAD});
+    EXPECT_EQ(TR_UNSUB, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_EQ(NewsgroupNum{4}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_ACTIVE | RF_RC_CHANGED, m_newsrc.flags);
+    EXPECT_EQ('!', m_newsgroup.m_subscribe_char);
+    EXPECT_EQ(" 1-0,3,5", m_newsgroup.rc_numbers());
+    m_newsgroup.show_subscribe_char();
+    EXPECT_EQ("comp.test.catchup! 1-0,3,5", m_newsgroup.m_rc_line);
+}
 
 TEST_P(NextUnreadArticleTest, skipsReadAndMissingArticles)
 {
