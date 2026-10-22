@@ -4042,6 +4042,7 @@ class SelectedPreviousSubjectThreadArticleStateTest : public SubjectThreadArticl
 protected:
     void TearDown() override;
     void set_selected_subjects(std::initializer_list<ArticleFlags> flags, long current, bool threaded);
+    void set_branching_thread();
     void expect_previous(long number, std::initializer_list<long> missing = {}, bool force_last = false);
     void expect_navigation(char command, long number, bool reread, std::initializer_list<long> missing = {},
                            bool force_last = false);
@@ -4086,6 +4087,16 @@ void SelectedPreviousSubjectThreadArticleStateTest::set_selected_subjects(std::i
         }
         g_selected_subj_cnt += (subject.m_flags & SF_SEL) != 0;
     }
+}
+
+void SelectedPreviousSubjectThreadArticleStateTest::set_branching_thread()
+{
+    // Thread 5 has children 6 and 7; article 8 is a child of 6.
+    article_ptr(ArticleNum{6})->m_child1 = article_ptr(ArticleNum{8});
+    article_ptr(ArticleNum{6})->m_sibling = article_ptr(ArticleNum{7});
+    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{5});
+    article_ptr(ArticleNum{7})->m_child1 = nullptr;
+    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{6});
 }
 
 void SelectedPreviousSubjectThreadArticleStateTest::expect_previous(long number, std::initializer_list<long> missing,
@@ -4214,27 +4225,24 @@ void SelectedPreviousReadingOrderArticleTest::SetUp()
                            AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
                            AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
                           9, g_threaded_group);
-    // Thread 5 has children 6 and 7; article 8 is a child of 6.
-    article_ptr(ArticleNum{6})->m_child1 = article_ptr(ArticleNum{8});
-    article_ptr(ArticleNum{6})->m_sibling = article_ptr(ArticleNum{7});
-    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{5});
-    article_ptr(ArticleNum{7})->m_child1 = nullptr;
-    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{6});
+    set_branching_thread();
     g_breadth_first = std::get<1>(GetParam());
     m_target = g_threaded_group && !g_breadth_first ? 8 : 7;
 }
 
-class SubjectFallbackArticleTest : public SelectedPreviousSubjectThreadArticleTest
+class SubjectFallbackArticleStateTest : public SelectedPreviousSubjectThreadArticleStateTest
 {
 protected:
-    void set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool selected_only = true);
+    void set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool threaded, bool selected_only = true);
+    void set_navigation_origin(long current);
     void expect_from(char command, long current, long target, bool reread, std::initializer_list<long> missing = {},
                      bool force_last = false);
 };
 
-void SubjectFallbackArticleTest::set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool selected_only)
+void SubjectFallbackArticleStateTest::set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool threaded,
+                                                            bool selected_only)
 {
-    set_selected_subjects(flags, 1);
+    set_selected_subjects(flags, 1, threaded);
     g_selected_only = selected_only;
     g_selected_subj_cnt = 0;
     for (Subject &subject : m_subjects)
@@ -4252,14 +4260,84 @@ void SubjectFallbackArticleTest::set_fallback_subjects(std::initializer_list<Art
     }
 }
 
-void SubjectFallbackArticleTest::expect_from(char command, long current, long target, bool reread,
-                                             std::initializer_list<long> missing, bool force_last)
+void SubjectFallbackArticleStateTest::set_navigation_origin(long current)
 {
     g_art = ArticleNum{current};
     g_artp = article_ptr(g_art);
     g_curr_art = g_art;
     g_curr_artp = g_artp;
+}
+
+void SubjectFallbackArticleStateTest::expect_from(char command, long current, long target, bool reread,
+                                                  std::initializer_list<long> missing, bool force_last)
+{
+    set_navigation_origin(current);
     expect_navigation(command, target, reread, missing, force_last);
+}
+
+class SubjectFallbackArticleTest : public SubjectFallbackArticleStateTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+    void set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool selected_only = true);
+};
+
+void SubjectFallbackArticleTest::SetUp()
+{
+    SubjectFallbackArticleStateTest::SetUp();
+    g_threaded_group = GetParam();
+}
+
+void SubjectFallbackArticleTest::set_fallback_subjects(std::initializer_list<ArticleFlags> flags, bool selected_only)
+{
+    SubjectFallbackArticleStateTest::set_fallback_subjects(flags, GetParam(), selected_only);
+}
+
+class SubjectFallbackReadingOrderArticleTest : public SubjectFallbackArticleStateTest,
+                                               public testing::WithParamInterface<std::tuple<bool, bool, char>>
+{
+protected:
+    void SetUp() override;
+
+    long m_target{};
+};
+
+void SubjectFallbackReadingOrderArticleTest::SetUp()
+{
+    SubjectFallbackArticleStateTest::SetUp();
+    g_threaded_group = std::get<0>(GetParam());
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL,
+                           AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          g_threaded_group);
+    set_branching_thread();
+    g_breadth_first = std::get<1>(GetParam());
+    const char command = std::get<2>(GetParam());
+    set_navigation_origin(command == '>' ? 1 : 9);
+    m_target = g_threaded_group ? (g_breadth_first ? 7 : 8) : (command == '>' ? 4 : 7);
+}
+
+class SubjectFallbackSelectorScopeArticleTest : public SubjectFallbackArticleStateTest,
+                                                public testing::WithParamInterface<std::tuple<bool, char>>
+{
+protected:
+    void SetUp() override;
+
+    long m_target{};
+};
+
+void SubjectFallbackSelectorScopeArticleTest::SetUp()
+{
+    SubjectFallbackArticleStateTest::SetUp();
+    const bool threaded = std::get<0>(GetParam());
+    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS,
+                           AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          threaded);
+    g_threaded_group = !threaded;
+    const char command = std::get<1>(GetParam());
+    set_navigation_origin(command == '>' ? 1 : 9);
+    m_target = threaded ? 8 : (command == '>' ? 4 : 8);
 }
 
 class RereadArticleTest : public UnreadScopeArticleTest
@@ -8890,45 +8968,21 @@ TEST_P(SelectedPreviousSubjectThreadArticleTest, stopsAtGroupEndWhenEarlierScope
     expect_previous(13, {}, true);
 }
 
-TEST_P(SubjectFallbackArticleTest, prefersSelectedReadArticlesInTheConfiguredReadingOrder)
+TEST_P(SubjectFallbackReadingOrderArticleTest, prefersSelectedReadArticlesInTheConfiguredReadingOrder)
 {
-    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL,
-                           AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_SEL,
-                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
-    // Thread 5 has children 6 and 7; article 8 is a child of 6.
-    article_ptr(ArticleNum{6})->m_child1 = article_ptr(ArticleNum{8});
-    article_ptr(ArticleNum{6})->m_sibling = article_ptr(ArticleNum{7});
-    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{5});
-    article_ptr(ArticleNum{7})->m_child1 = nullptr;
-    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{6});
-
-    for (const bool breadth_first : {false, true})
-    {
-        SCOPED_TRACE(breadth_first);
-        g_breadth_first = breadth_first;
-        for (const char command : {'>', '<'})
-        {
-            SCOPED_TRACE(command);
-            const long target = GetParam() ? (breadth_first ? 7 : 8) : (command == '>' ? 4 : 7);
-
-            expect_from(command, command == '>' ? 1 : 9, target, true);
-        }
-    }
+    expect_navigation(std::get<2>(GetParam()), m_target, true);
 }
 
-TEST_P(SubjectFallbackArticleTest, usesSelectorScopeAndRestoresTheDifferentIncomingThreadingMode)
-{
-    set_fallback_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS,
-                           AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
-                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
-    g_threaded_group = !GetParam();
+INSTANTIATE_TEST_SUITE_P(ScopeOrderAndDirection, SubjectFallbackReadingOrderArticleTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Values('>', '<')));
 
-    for (const char command : {'>', '<'})
-    {
-        SCOPED_TRACE(command);
-        expect_from(command, command == '>' ? 1 : 9, GetParam() ? 8 : (command == '>' ? 4 : 8), true);
-    }
+TEST_P(SubjectFallbackSelectorScopeArticleTest, usesSelectorScopeAndRestoresTheDifferentIncomingThreadingMode)
+{
+    expect_navigation(std::get<1>(GetParam()), m_target, true);
 }
+
+INSTANTIATE_TEST_SUITE_P(ScopeAndDirection, SubjectFallbackSelectorScopeArticleTest,
+                         testing::Combine(testing::Bool(), testing::Values('>', '<')));
 
 TEST_P(SubjectFallbackArticleTest, fallsBackToUnselectedUnreadArticleWhenTheScopeHasNoSelections)
 {
