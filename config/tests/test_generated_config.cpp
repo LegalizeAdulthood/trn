@@ -447,25 +447,27 @@ TEST(GeneratedConfigTest, runtimeHelperFilesAreGenerated)
     expect_file_exists(TRN_TEST_GENERATED_SPELLER_FILE);
 }
 
-TEST(GeneratedConfigTest, articlePathTemplatesDefaultMatchHistoricalFallbacks)
-{
-    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "OV_FILE_NAME", TRN_TEST_DEFAULT_OV_FILE_NAME);
-    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "VARYNAME", TRN_TEST_DEFAULT_VARYNAME);
-    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "HEADNAME", TRN_TEST_DEFAULT_HEADNAME);
-}
+INSTANTIATE_TEST_SUITE_P(ArticlePathDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG,
+                                                            "OV_FILE_NAME", TRN_TEST_DEFAULT_OV_FILE_NAME),
+                                         config_string_case(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "VARYNAME",
+                                                            TRN_TEST_DEFAULT_VARYNAME),
+                                         config_string_case(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG, "HEADNAME",
+                                                            TRN_TEST_DEFAULT_HEADNAME)));
 
-TEST(GeneratedConfigTest, articlePathTemplatesConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG, "OV_FILE_NAME", "/test-overview");
-    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG, "VARYNAME", "%Y/test-vary.%$");
-    expect_config_string(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG, "HEADNAME", "%./test-head.%$");
-}
+INSTANTIATE_TEST_SUITE_P(ConfiguredArticlePaths, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG,
+                                                            "OV_FILE_NAME", "/test-overview"),
+                                         config_string_case(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG,
+                                                            "VARYNAME", "%Y/test-vary.%$"),
+                                         config_string_case(TRN_TEST_ARTICLE_PATH_TEMPLATES_CONFIGURED_CONFIG,
+                                                            "HEADNAME", "%./test-head.%$")));
 
-TEST(GeneratedConfigTest, savePathTemplatesDefaultMatchCMakeSelection)
-{
-    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_DEFAULT_CONFIG, "SAVEDIR", TRN_TEST_DEFAULT_SAVEDIR);
-    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_DEFAULT_CONFIG, "SAVENAME", TRN_TEST_DEFAULT_SAVENAME);
-}
+INSTANTIATE_TEST_SUITE_P(SavePathDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_SAVE_PATH_TEMPLATES_DEFAULT_CONFIG, "SAVEDIR",
+                                                            TRN_TEST_DEFAULT_SAVEDIR),
+                                         config_string_case(TRN_TEST_SAVE_PATH_TEMPLATES_DEFAULT_CONFIG, "SAVENAME",
+                                                            TRN_TEST_DEFAULT_SAVENAME)));
 
 TEST(GeneratedConfigTest, savePathTemplatesCanUseCategoryPolicy)
 {
@@ -473,11 +475,10 @@ TEST(GeneratedConfigTest, savePathTemplatesCanUseCategoryPolicy)
     expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CATEGORY_CONFIG, "SAVENAME", "%a");
 }
 
-TEST(GeneratedConfigTest, savePathTemplatesConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVEDIR", "%p/test-save");
-    expect_config_string(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVENAME", "test-%a");
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredSavePaths, GeneratedDefinitionTest,
+    testing::Values(config_string_case(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVEDIR", "%p/test-save"),
+                    config_string_case(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVENAME", "test-%a")));
 
 TEST(GeneratedConfigTest, killFilePathsDefaultMatchHistoricalFallbacks)
 {
