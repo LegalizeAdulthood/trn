@@ -1896,6 +1896,29 @@ class ScanNextCommandArticleTest : public ScanContinuationArticleTest, public te
 {
 };
 
+class ExplicitScanBoundaryArticleTest : public ScanContinuationArticleTest,
+                                        public testing::WithParamInterface<SelectionMode>
+{
+protected:
+    void SetUp() override;
+
+    long m_target{};
+};
+
+void ExplicitScanBoundaryArticleTest::SetUp()
+{
+    ScanContinuationArticleTest::SetUp();
+    const bool thread = GetParam() == SM_THREAD;
+    m_target = thread ? 6 : 3;
+    set_scan_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                       AF_EXISTS | AF_UNREAD | AF_SEL},
+                      m_target - 1, GetParam());
+    g_selected_only = true;
+    g_search_ahead = ArticleNum{thread ? 5L : 3L};
+    g_s_follow_temp = thread;
+    g_univ_follow_temp = thread;
+}
+
 class SearchCommandArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -12711,32 +12734,26 @@ TEST_F(ScanContinuationArticleTest, nextUnreadSkipsReadMissingAndUnselectedArtic
     EXPECT_FALSE(g_reread);
 }
 
-TEST_F(ScanContinuationArticleTest, explicitUppercaseNextIncludesReadUnselectedArticlesAndCrossesScanBoundaries)
+TEST_P(ExplicitScanBoundaryArticleTest, uppercaseNextIncludesReadUnselectedArticlesAcrossTheBoundary)
 {
-    set_scan_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-                       AF_EXISTS | AF_UNREAD | AF_SEL},
-                      2, SM_SUBJECT);
-    g_selected_only = true;
+    dispatch("N", m_target);
 
-    dispatch("N", 3);
-
-    EXPECT_NE(g_curr_artp->m_subj, g_artp->m_subj);
-    EXPECT_TRUE(g_reread);
-    g_art = g_curr_art = ArticleNum{5};
-    g_artp = g_curr_artp = article_find(g_art);
-    g_sel_mode = SM_THREAD;
-    g_reread = false;
-    g_search_ahead = ArticleNum{5};
-
-    dispatch("N", 6);
-
-    EXPECT_NE(g_curr_artp->m_subj->m_thread, g_artp->m_subj->m_thread);
+    if (GetParam() == SM_THREAD)
+    {
+        EXPECT_NE(g_curr_artp->m_subj->m_thread, g_artp->m_subj->m_thread);
+    }
+    else
+    {
+        EXPECT_NE(g_curr_artp->m_subj, g_artp->m_subj);
+    }
     EXPECT_TRUE(g_reread);
     EXPECT_FALSE(g_force_last);
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
     EXPECT_TRUE(g_s_follow_temp);
     EXPECT_TRUE(g_univ_follow_temp);
 }
+
+INSTANTIATE_TEST_SUITE_P(SelectorBoundary, ExplicitScanBoundaryArticleTest, testing::Values(SM_SUBJECT, SM_THREAD));
 
 TEST_F(ScanContinuationArticleTest, unreadExhaustionReturnsToScanWithoutWrappingAndGroupEndRestartHonorsSelection)
 {
