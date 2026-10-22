@@ -20,6 +20,7 @@
 #include <fstream>
 #include <string>
 #include <string_view>
+#include <tuple>
 
 namespace
 {
@@ -238,6 +239,19 @@ ParsedString parse_test_string(std::string text)
     return {output, std::string{input}};
 }
 
+using StringEscapeCase = std::tuple<std::string_view, std::string_view>;
+
+class StringEscapeTest : public testing::TestWithParam<StringEscapeCase>
+{
+protected:
+    void SetUp() override
+    {
+        m_text = std::get<0>(GetParam());
+    }
+
+    std::string m_text;
+};
+
 } // namespace
 
 TEST_F(TempFilenameTest, returnsUniqueNameInTempDirectory)
@@ -274,13 +288,17 @@ TEST(InStringTest, findsEmptyNeedleOnlyInNonEmptyText)
     EXPECT_FALSE(in_string(std::string_view{}, "", true));
 }
 
-TEST(ParseStringTest, decodesBackslashEscapes)
+TEST_P(StringEscapeTest, decodesOneEscapeForm)
 {
-    const ParsedString parsed = parse_test_string(R"(alpha\nbeta \101\x42)");
+    const ParsedString parsed = parse_test_string(m_text);
 
-    EXPECT_EQ("alpha\nbeta AB", parsed.text);
+    EXPECT_EQ(std::get<1>(GetParam()), parsed.text);
     EXPECT_TRUE(parsed.remaining.empty());
 }
+
+INSTANTIATE_TEST_SUITE_P(NewlineOctalAndHex, StringEscapeTest,
+                         testing::Values(StringEscapeCase{R"(alpha\nbeta)", "alpha\nbeta"},
+                                         StringEscapeCase{R"(\101)", "A"}, StringEscapeCase{R"(\x42)", "B"}));
 
 TEST(ParseStringTest, trimsAfterClosingQuoteBeforeComment)
 {
