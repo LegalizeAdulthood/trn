@@ -15,16 +15,19 @@
 #include <trn/hash.h>
 #include <trn/head.h>
 #include <trn/init.h>
+#include <trn/ng-internal.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-select.h>
+#include <trn/rt-util.h>
 #include <trn/rthread.h>
 #include <trn/scanart.h>
 #include <trn/score.h>
 #include <trn/smisc.h>
+#include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/univ.h>
 #include <util/env.h>
@@ -639,6 +642,186 @@ protected:
     char                              m_empty_tc[1]{};
 };
 
+class OnDemandThreadArticleTest : public InputNewsgroupTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        open_group(bool cache_all = true);
+    std::string display_tree();
+
+private:
+    Subject           *m_old_first_subject{g_first_subject};
+    Subject           *m_old_last_subject{g_last_subject};
+    HashTable         *m_old_msg_id_hash{g_msg_id_hash};
+    int                m_old_subject_count{g_subject_count};
+    ArticleNum         m_old_obj_count{g_obj_count};
+    SelectionMode      m_old_sel_mode{g_sel_mode};
+    SelectionSortMode  m_old_sel_sort{g_sel_sort};
+    SelectionSortMode  m_old_sel_art_sort{g_sel_art_sort};
+    std::string_view   m_old_sel_mode_string{g_sel_mode_string};
+    std::string_view   m_old_sel_sort_string{g_sel_sort_string};
+    int                m_old_sel_direction{g_sel_direction};
+    AddGroupFlags      m_old_sel_mask{g_sel_mask};
+    bool               m_old_sel_rereading{g_sel_rereading};
+    bool               m_old_sel_exclusive{g_sel_exclusive};
+    int                m_old_selected_subj_cnt{g_selected_subj_cnt};
+    int                m_old_added_articles{g_added_articles};
+    KillFileStateFlags m_old_kf_state{g_kf_state};
+    bool               m_old_reread{g_reread};
+    bool               m_old_force_last{g_force_last};
+    bool               m_old_do_fseek{g_do_fseek};
+    ArticleLine        m_old_top_line{g_top_line};
+    int                m_old_page_line{g_page_line};
+    bool               m_old_erase_each_line{g_erase_each_line};
+    bool               m_old_s_default_cmd{g_s_default_cmd};
+};
+
+void OnDemandThreadArticleTest::SetUp()
+{
+    InputNewsgroupTest::SetUp();
+    m_data_source.m_flags = DF_NONE;
+    g_first_subject = g_last_subject = nullptr;
+    g_msg_id_hash = nullptr;
+    g_subject_count = 0;
+    g_obj_count = ArticleNum{};
+    g_sel_mode = SM_ARTICLE;
+    g_sel_art_sort = SS_NATURAL;
+    g_sel_mask = AGF_SEL;
+    g_sel_rereading = g_sel_exclusive = false;
+    g_selected_subj_cnt = 0;
+    g_kf_state = KFS_NONE;
+    g_in_ng = true;
+    g_mode = MM_ARTICLE;
+    g_reread = g_force_last = g_do_fseek = false;
+    g_erase_each_line = false;
+    g_art_line_num = ArticleLine{6};
+    g_top_line = ArticleLine{};
+    g_tc_LINES = 24;
+    g_tc_COLS = 80;
+    g_tc_SO = "<so>";
+    g_tc_SE = "<se>";
+    fs::current_path(m_output_dir);
+
+    std::ofstream{"1"} << "From: Root <root@example.test>\n"
+                          "Subject: Topic\n"
+                          "Date: 21 Oct 2026 10:00:00 GMT\n"
+                          "Message-ID: <root@example.test>\n\nRoot first line\nRoot next line\n";
+    std::ofstream{"2"} << "From: Reply <reply@example.test>\n"
+                          "Subject: Re: Topic\n"
+                          "Date: 21 Oct 2026 11:00:00 GMT\n"
+                          "Message-ID: <reply@example.test>\n"
+                          "References: <root@example.test>\n\nReply body\n";
+    std::ofstream{"3"} << "From: Branch <branch@example.test>\n"
+                          "Subject: Branch\n"
+                          "Date: 21 Oct 2026 12:00:00 GMT\n"
+                          "Message-ID: <branch@example.test>\n"
+                          "References: <root@example.test>\n\nBranch body\n";
+}
+
+void OnDemandThreadArticleTest::TearDown()
+{
+    close_cache();
+    hash_destroy(g_msg_id_hash);
+    g_msg_id_hash = m_old_msg_id_hash;
+    g_first_subject = m_old_first_subject;
+    g_last_subject = m_old_last_subject;
+    g_subject_count = m_old_subject_count;
+    g_obj_count = m_old_obj_count;
+    g_sel_mode = m_old_sel_mode;
+    g_sel_sort = m_old_sel_sort;
+    g_sel_art_sort = m_old_sel_art_sort;
+    g_sel_mode_string = m_old_sel_mode_string;
+    g_sel_sort_string = m_old_sel_sort_string;
+    g_sel_direction = m_old_sel_direction;
+    g_sel_mask = m_old_sel_mask;
+    g_sel_rereading = m_old_sel_rereading;
+    g_sel_exclusive = m_old_sel_exclusive;
+    g_selected_subj_cnt = m_old_selected_subj_cnt;
+    g_added_articles = m_old_added_articles;
+    g_kf_state = m_old_kf_state;
+    g_reread = m_old_reread;
+    g_force_last = m_old_force_last;
+    g_do_fseek = m_old_do_fseek;
+    g_top_line = m_old_top_line;
+    g_page_line = m_old_page_line;
+    g_erase_each_line = m_old_erase_each_line;
+    g_s_default_cmd = m_old_s_default_cmd;
+    InputNewsgroupTest::TearDown();
+}
+
+void OnDemandThreadArticleTest::open_group(bool cache_all)
+{
+    add_newsgroup("comp.lang.cpp", "", ArticleNum{1}, ArticleNum{3});
+    set_current_newsgroup(0);
+    g_last_art = ArticleNum{3};
+    g_thread_always = cache_all;
+    build_cache();
+    g_art = g_curr_art = ArticleNum{1};
+    g_artp = g_curr_artp = article_ptr(g_art);
+    g_recent_art = ArticleNum{2};
+    g_recent_artp = article_ptr(g_recent_art);
+    ASSERT_TRUE(parse_header(g_curr_art));
+    ASSERT_NE(nullptr, art_open(g_curr_art, g_header_type[PAST_HEADER].min_pos));
+    std::string line;
+    ASSERT_TRUE(read_art(line));
+    ASSERT_EQ("Root first line\n", line);
+    g_art_pos = tell_art();
+    ASSERT_FALSE(g_threaded_group);
+    ASSERT_EQ(AF_NONE, g_curr_artp->m_flags & AF_THREADED);
+}
+
+std::string OnDemandThreadArticleTest::display_tree()
+{
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticlePosition                  position = g_art_pos;
+    const ArticlePosition                  file_position = tell_art();
+    const ArticlePosition                  header_end = g_header_type[PAST_HEADER].min_pos;
+    const std::string                      header = g_head_buf;
+    const ArticleUnread                    unread = g_newsgroup_ptr->m_to_read;
+    const ArticleUnread                    selected = g_selected_count;
+    const bool                             selected_only = g_selected_only;
+    push_char('q');
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("t");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_TRUE(g_threaded_group);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(current, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(position, g_art_pos);
+    EXPECT_EQ(g_curr_art, g_open_art);
+    EXPECT_EQ(file_position, tell_art());
+    EXPECT_EQ(g_curr_art, g_parsed_art);
+    EXPECT_EQ(header_end, g_header_type[PAST_HEADER].min_pos);
+    EXPECT_EQ(header, g_head_buf);
+    EXPECT_EQ(ArticleLine{6}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{}, g_top_line);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_EQ('q', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    std::string next_line;
+    EXPECT_TRUE(read_art(next_line));
+    EXPECT_EQ("Root next line\n", next_line);
+    return output;
+}
+
+class SelectedOnDemandThreadArticleTest : public OnDemandThreadArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -653,6 +836,66 @@ constexpr const char *HELP_TEXT = "You can request help from:  trn-users@lists.s
                                   "Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n";
 
 } // namespace
+
+TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
+{
+    open_group();
+    article_ptr(ArticleNum{3})->m_flags &= ~AF_UNREAD;
+    g_newsgroup_ptr->m_to_read--;
+    article_ptr(ArticleNum{2})->select_article(AUTO_KILL_NONE);
+    g_selected_only = GetParam();
+    ASSERT_EQ(1, g_selected_count);
+
+    const std::string output = display_tree();
+
+    SCOPED_TRACE(output);
+    EXPECT_NE(std::string::npos, output.find("Threading the group. "));
+    EXPECT_NE(std::string::npos, output.find("[1] Topic\n[2] Branch\n"));
+    const std::string current_marker = GetParam() ? "<1>" : "[1]";
+    EXPECT_NE(std::string::npos, output.find("<so>" + current_marker + "<se>+-[<so>1<se>]"));
+    EXPECT_NE(std::string::npos, output.find("\\-(2)"));
+    EXPECT_EQ(g_curr_artp, article_ptr(ArticleNum{2})->m_parent);
+    EXPECT_EQ(g_curr_artp, article_ptr(ArticleNum{3})->m_parent);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp->m_child1);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), article_ptr(ArticleNum{2})->m_sibling);
+    EXPECT_NE(AF_NONE, article_ptr(ArticleNum{2})->m_flags & AF_SEL);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{3})->m_flags & AF_UNREAD);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(ArticleNum{1}, g_first_cached);
+    EXPECT_EQ(ArticleNum{3}, g_last_cached);
+    EXPECT_TRUE(g_cached_all_in_range);
+    for (const auto &[number, article] : g_article_list)
+    {
+        if (number > g_last_art)
+        {
+            break;
+        }
+        SCOPED_TRACE(number.value_of());
+        EXPECT_NE(AF_NONE, article.m_flags & AF_THREADED);
+        EXPECT_EQ(g_curr_artp, article.m_subj->m_thread);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingScope, SelectedOnDemandThreadArticleTest, testing::Bool());
+
+TEST_F(OnDemandThreadArticleTest, threadsCurrentHeaderWithoutEagerCaching)
+{
+    open_group(false);
+    ASSERT_EQ(AF_NONE, article_ptr(ArticleNum{2})->m_flags & AF_CACHED);
+
+    const std::string output = display_tree();
+
+    SCOPED_TRACE(output);
+    EXPECT_NE(std::string::npos, output.find("Threading the group. "));
+    EXPECT_NE(std::string::npos, output.find("[1] Topic\n\n  <so>[1]<se>\n"));
+    EXPECT_NE(AF_NONE, g_curr_artp->m_flags & AF_THREADED);
+    EXPECT_EQ(g_curr_artp, g_curr_artp->m_subj->m_thread);
+    EXPECT_EQ(nullptr, g_curr_artp->m_child1);
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{2})->m_flags & (AF_CACHED | AF_THREADED));
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{3})->m_flags & (AF_CACHED | AF_THREADED));
+    EXPECT_EQ(3, g_newsgroup_ptr->m_to_read);
+    EXPECT_FALSE(g_thread_always);
+}
 
 TEST_F(TrnVersionTest, displaysVersionWithoutNewsSources)
 {

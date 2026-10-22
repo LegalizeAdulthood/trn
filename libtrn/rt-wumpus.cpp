@@ -650,6 +650,17 @@ void entire_tree(Article* ap)
         return;
     }
 
+    const auto restore_position = [position = g_art_pos, number = g_art_fp ? g_open_art : ArticleNum{},
+                                   offset = g_art_fp ? tell_art() : ArticlePosition{}]
+    {
+        if (number != 0)
+        {
+            parse_header(number);
+            art_open(number, offset);
+        }
+        g_art_pos = position;
+    };
+
     if (!g_threaded_group)
     {
         g_threaded_group = true;
@@ -658,6 +669,7 @@ void entire_tree(Article* ap)
         thread_open();
         if (!g_threaded_group)
         {
+            restore_position();
             fmt::print("*failed*\n");
             term_down(1);
             return;
@@ -669,6 +681,7 @@ void entire_tree(Article* ap)
     {
         parse_header(ap->article_num());
     }
+    restore_position();
     if (check_page_line())
     {
         return;
