@@ -1919,6 +1919,45 @@ void ExplicitScanBoundaryArticleTest::SetUp()
     g_univ_follow_temp = thread;
 }
 
+struct ScanEndNavigationCase
+{
+    char                command;
+    long                current;
+    long                target;
+    ArticleSwitchResult result;
+    bool                reread;
+    bool                force_last;
+    long                search_ahead;
+};
+
+class ScanEndNavigationArticleTest : public ScanContinuationArticleTest,
+                                     public testing::WithParamInterface<ScanEndNavigationCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void ScanEndNavigationArticleTest::SetUp()
+{
+    ScanContinuationArticleTest::SetUp();
+    const ScanEndNavigationCase &test_case = GetParam();
+    if (test_case.command == 'n')
+    {
+        set_scan_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+                           AF_EXISTS, AF_EXISTS},
+                          test_case.current);
+        g_selected_only = true;
+    }
+    else
+    {
+        set_reading(test_case.current);
+    }
+    const bool restart = test_case.current == 8;
+    g_s_follow_temp = restart;
+    g_univ_follow_temp = restart;
+    g_search_ahead = ArticleNum{test_case.command == 'N' && restart ? 0L : 3L};
+}
+
 class SearchCommandArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -12755,27 +12794,26 @@ TEST_P(ExplicitScanBoundaryArticleTest, uppercaseNextIncludesReadUnselectedArtic
 
 INSTANTIATE_TEST_SUITE_P(SelectorBoundary, ExplicitScanBoundaryArticleTest, testing::Values(SM_SUBJECT, SM_THREAD));
 
-TEST_F(ScanContinuationArticleTest, unreadExhaustionReturnsToScanWithoutWrappingAndGroupEndRestartHonorsSelection)
+TEST_P(ScanEndNavigationArticleTest, advancesFromTheConfiguredReadingBoundary)
 {
-    set_scan_articles(
-        {AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS},
-        7);
-    g_selected_only = true;
+    dispatch(std::string{GetParam().command}, GetParam().target, GetParam().result);
 
-    dispatch("n", 8, AS_SA);
-    EXPECT_EQ(nullptr, g_artp);
-    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
-    g_curr_art = g_art;
-    g_curr_artp = g_artp;
-
-    dispatch("n", 4, AS_SA);
-
-    EXPECT_TRUE(g_s_follow_temp);
-    EXPECT_TRUE(g_univ_follow_temp);
-    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
-    EXPECT_FALSE(g_reread);
-    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(article_find(ArticleNum{GetParam().target}), g_artp);
+    EXPECT_EQ(ArticleNum{GetParam().search_ahead}, g_search_ahead);
+    EXPECT_EQ(GetParam().reread, g_reread);
+    EXPECT_EQ(GetParam().force_last, g_force_last);
+    if (GetParam().current == 8)
+    {
+        EXPECT_TRUE(g_s_follow_temp);
+        EXPECT_TRUE(g_univ_follow_temp);
+    }
 }
+
+INSTANTIATE_TEST_SUITE_P(UnreadOrAllAndOrigin, ScanEndNavigationArticleTest,
+                         testing::Values(ScanEndNavigationCase{'n', 7, 8, AS_SA, false, false, 3},
+                                         ScanEndNavigationCase{'n', 8, 4, AS_SA, false, false, 3},
+                                         ScanEndNavigationCase{'N', 7, 8, AS_NORM, false, true, 0},
+                                         ScanEndNavigationCase{'N', 8, 1, AS_NORM, true, false, 0}));
 
 TEST_F(ScanContinuationArticleTest, groupEndWithoutSelectedUnreadArticlesReturnsToScanWithoutChoosingUnselectedArticles)
 {
@@ -12791,26 +12829,6 @@ TEST_F(ScanContinuationArticleTest, groupEndWithoutSelectedUnreadArticlesReturns
     EXPECT_TRUE(g_univ_follow_temp);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
-}
-
-TEST_F(ScanContinuationArticleTest, uppercaseNextReachesGroupEndAndRestartsWithoutReturningToScan)
-{
-    set_reading(7);
-
-    dispatch("N", 8);
-    EXPECT_TRUE(g_force_last);
-    EXPECT_FALSE(g_reread);
-    EXPECT_EQ(ArticleNum{}, g_search_ahead);
-    g_curr_art = g_art;
-    g_curr_artp = g_artp;
-    g_force_last = false;
-
-    dispatch("N", 1);
-
-    EXPECT_TRUE(g_reread);
-    EXPECT_FALSE(g_force_last);
-    EXPECT_TRUE(g_s_follow_temp);
-    EXPECT_TRUE(g_univ_follow_temp);
 }
 
 TEST_F(ScanContinuationArticleTest, nonThreadedReadingDoesNotApplyTheThreadedScanSubjectBoundary)
