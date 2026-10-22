@@ -1439,6 +1439,7 @@ normal_search:
         {
         case SRCH_ERROR:
             g_art = g_curr_art;
+            g_artp = g_curr_artp;
             return AS_ASK;
 
         case SRCH_ABORT:
