@@ -30,6 +30,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
 #include <map>
 #include <string>
 #include <string_view>
@@ -1558,22 +1559,64 @@ TEST_F(NNTPGetStringTest, overviewSyntaxErrorDoesNotDisableCommand)
     nntp_finish_list();
 }
 
-TEST_F(NNTPGetStringTest, rejectionCacheHandlesDifferentCommandFamilies)
+class RejectedNntpCommandTest : public NNTPGetStringTest
+{
+protected:
+    void expect_rejected(std::initializer_list<const char *> commands);
+};
+
+void RejectedNntpCommandTest::expect_rejected(std::initializer_list<const char *> commands)
 {
     InSequence sequence;
-    for (const char *command : {"OVER 1-5", "XOVER 1-5", "HDR subject 1-5", "XHDR subject 1-5",
-                                "LIST NEWSGROUPS comp.lang.apl", "XGTITLE comp.lang.apl"})
+    for (const char *command : commands)
     {
         EXPECT_CALL(*m_connection, write_line(StrEq(command), _));
         EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("500 unknown command"));
     }
+}
 
-    EXPECT_EQ(-1, nntp_overview("1-5"));
-    EXPECT_EQ(-1, nntp_header_values("subject", "1-5"));
-    EXPECT_EQ(-1, nntp_group_description("comp.lang.apl"));
-    EXPECT_EQ(-1, nntp_group_description("comp.lang.c++"));
-    EXPECT_EQ(-1, nntp_header_values("from", "6-10"));
-    EXPECT_EQ(-1, nntp_overview("6-10"));
+TEST_F(RejectedNntpCommandTest, cachesOverviewRejection)
+{
+    expect_rejected({"OVER 1-5", "XOVER 1-5"});
+    ASSERT_EQ(-1, nntp_overview("1-5"));
+
+    const int result = nntp_overview("6-10");
+
+    EXPECT_EQ(-1, result);
+}
+
+TEST_F(RejectedNntpCommandTest, cachesHeaderRejection)
+{
+    expect_rejected({"HDR subject 1-5", "XHDR subject 1-5"});
+    ASSERT_EQ(-1, nntp_header_values("subject", "1-5"));
+
+    const int result = nntp_header_values("from", "6-10");
+
+    EXPECT_EQ(-1, result);
+}
+
+TEST_F(RejectedNntpCommandTest, cachesGroupDescriptionRejection)
+{
+    expect_rejected({"LIST NEWSGROUPS comp.lang.apl", "XGTITLE comp.lang.apl"});
+    ASSERT_EQ(-1, nntp_group_description("comp.lang.apl"));
+
+    const int result = nntp_group_description("comp.lang.c++");
+
+    EXPECT_EQ(-1, result);
+}
+
+TEST_F(RejectedNntpCommandTest, rejectionDoesNotSuppressOtherCommandFamilies)
+{
+    expect_rejected({"OVER 1-5", "XOVER 1-5", "HDR subject 1-5", "XHDR subject 1-5", "LIST NEWSGROUPS comp.lang.apl",
+                     "XGTITLE comp.lang.apl"});
+
+    const int overview = nntp_overview("1-5");
+    const int header = nntp_header_values("subject", "1-5");
+    const int description = nntp_group_description("comp.lang.apl");
+
+    EXPECT_EQ(-1, overview);
+    EXPECT_EQ(-1, header);
+    EXPECT_EQ(-1, description);
 }
 
 TEST_F(NNTPGetStringTest, overviewFormatRejectionIsCached)
