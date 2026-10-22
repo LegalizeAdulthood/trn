@@ -1293,6 +1293,19 @@ class NumericRangeFailureArticleTest : public NumericRangeArticleTest, public te
 {
 };
 
+class CurrentArticleJumpArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<long>
+{
+protected:
+    void SetUp() override;
+};
+
+void CurrentArticleJumpArticleTest::SetUp()
+{
+    NumericJumpArticleTest::SetUp();
+    g_search_ahead = ArticleNum{GetParam()};
+    g_reread = false;
+}
+
 class NumericJumpTargetArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<long>
 {
 };
@@ -13066,20 +13079,15 @@ TEST_F(NumericJumpArticleTest, clampsNumbersBeyondTheGroupToTheLastArticleAndWar
     EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
 }
 
-TEST_F(NumericJumpArticleTest, jumpingToTheCurrentArticleRetainsItsPointerAndRequestsAReread)
+TEST_P(CurrentArticleJumpArticleTest, retainsItsPointerAndRequestsAReread)
 {
-    for (const long search_ahead : {0, 3, -1})
-    {
-        SCOPED_TRACE(search_ahead);
-        g_search_ahead = ArticleNum{search_ahead};
-        g_reread = false;
+    enter_number("4\n");
 
-        enter_number("4\n");
-
-        expect_target(4);
-        EXPECT_EQ(ArticleNum{search_ahead == 0 ? 0 : -1}, g_search_ahead);
-    }
+    expect_target(4);
+    EXPECT_EQ(ArticleNum{GetParam() == 0 ? 0 : -1}, g_search_ahead);
 }
+
+INSTANTIATE_TEST_SUITE_P(SearchAheadState, CurrentArticleJumpArticleTest, testing::Values(0L, 3L, -1L));
 
 TEST_F(NumericJumpArticleTest, jumpsBackIntoAnExhaustedGroup)
 {
