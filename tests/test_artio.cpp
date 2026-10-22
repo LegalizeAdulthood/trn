@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -157,6 +158,65 @@ protected:
     UnicodeSubstitutionProfile m_old_profile;
 };
 
+constexpr std::string_view ARTICLE_VIEW_HEADER{"Subject: example\n\n"};
+const long                 ARTICLE_VIEW_HEADER_SIZE = static_cast<long>(ARTICLE_VIEW_HEADER.size());
+
+struct ArticleBufferViewCase
+{
+    std::string_view name;
+    bool             buffered_body;
+    long             position;
+    std::string_view expected;
+};
+
+const ArticleBufferViewCase ARTICLE_BUFFER_VIEW_CASES[]{
+    {"HeaderStart", false, 0, ARTICLE_VIEW_HEADER},
+    {"HeaderValue", false, 9, "example\n\n"},
+    {"HeaderLastByte", false, ARTICLE_VIEW_HEADER_SIZE - 1, "\n"},
+    {"BodyStart", true, ARTICLE_VIEW_HEADER_SIZE, "alpha\nbeta\n"},
+    {"BodySecondLine", true, ARTICLE_VIEW_HEADER_SIZE + 6, "beta\n"},
+    {"BodyEnd", true, ARTICLE_VIEW_HEADER_SIZE + 11, {}},
+    {"AfterBodyEnd", true, ARTICLE_VIEW_HEADER_SIZE + 12, {}},
+    {"BeforeArticle", true, -1, {}}};
+
+void PrintTo(const ArticleBufferViewCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class ArticleBufferViewTest : public ArticleIoTest, public testing::WithParamInterface<ArticleBufferViewCase>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    std::string m_old_head_buf{g_head_buf};
+};
+
+void ArticleBufferViewTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    g_head_buf = std::string{ARTICLE_VIEW_HEADER};
+    const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
+    g_header_type[PAST_HEADER].min_pos = body_start;
+    if (GetParam().buffered_body)
+    {
+        ASSERT_NO_FATAL_FAILURE(open_article_text(g_head_buf + "alpha\nbeta\n"));
+        ASSERT_EQ(0, seek_art(body_start));
+        set_art_buf_seek(body_start);
+        std::string line;
+        ASSERT_TRUE(read_art_buf(line, false));
+        ASSERT_TRUE(read_art_buf(line, false));
+    }
+}
+
+void ArticleBufferViewTest::TearDown()
+{
+    ArticleIoTest::TearDown();
+    g_head_buf = m_old_head_buf;
+}
+
 } // namespace
 
 TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
@@ -192,34 +252,16 @@ TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
     EXPECT_TRUE(first.empty());
 }
 
-TEST_F(ArticleIoTest, viewReturnsHeaderBeforeBodyStart)
+TEST_P(ArticleBufferViewTest, returnsTheExpectedViewAtThePosition)
 {
-    g_head_buf = "Subject: example\n\n";
-    g_header_type[PAST_HEADER].min_pos = ArticlePosition{static_cast<long>(g_head_buf.size())};
+    const std::string_view view = art_buf_view(ArticlePosition{GetParam().position});
 
-    EXPECT_EQ(g_head_buf, art_buf_view(ArticlePosition{}));
-    EXPECT_EQ("example\n\n", art_buf_view(ArticlePosition{9}));
-    EXPECT_EQ("\n", art_buf_view(g_header_type[PAST_HEADER].min_pos - ArticlePosition{1}));
+    EXPECT_EQ(GetParam().expected, view);
 }
 
-TEST_F(ArticleIoTest, viewReturnsBufferedBodyAfterHeader)
-{
-    g_head_buf = "Subject: example\n\n";
-    const ArticlePosition body_start{static_cast<long>(g_head_buf.size())};
-    g_header_type[PAST_HEADER].min_pos = body_start;
-    open_article_text(g_head_buf + "alpha\nbeta\n");
-    ASSERT_EQ(0, seek_art(body_start));
-    set_art_buf_seek(body_start);
-    std::string line;
-    ASSERT_TRUE(read_art_buf(line, false));
-    ASSERT_TRUE(read_art_buf(line, false));
-
-    EXPECT_EQ("alpha\nbeta\n", art_buf_view(body_start));
-    EXPECT_EQ("beta\n", art_buf_view(body_start + ArticlePosition{6}));
-    EXPECT_TRUE(art_buf_view(body_start + art_buf_len()).empty());
-    EXPECT_TRUE(art_buf_view(body_start + art_buf_len() + ArticlePosition{1}).empty());
-    EXPECT_TRUE(art_buf_view(ArticlePosition{-1}).empty());
-}
+INSTANTIATE_TEST_SUITE_P(HeaderAndBodyPosition, ArticleBufferViewTest, testing::ValuesIn(ARTICLE_BUFFER_VIEW_CASES),
+                         [](const testing::TestParamInfo<ArticleBufferViewCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(ArticleIoTest, viewExcludesClearedBodyText)
 {
