@@ -1595,7 +1595,8 @@ class SelectorGroupExitArticleTest : public SelectorExitArticleTest,
 {
 };
 
-class QuitCommandArticleTest : public UnreadScopeArticleTest
+class QuitCommandArticleTest : public UnreadScopeArticleTest,
+                               public testing::WithParamInterface<std::tuple<std::pair<char, DoNewsgroupResult>, bool>>
 {
 protected:
     void SetUp() override;
@@ -1617,6 +1618,14 @@ void QuitCommandArticleTest::SetUp()
     g_force_last = true;
     g_general_mode = GM_READ;
     g_mode = MM_ARTICLE;
+    if (std::get<1>(GetParam()))
+    {
+        g_art = g_curr_art = ArticleNum{4};
+        g_artp = g_curr_artp = nullptr;
+        g_mode = MM_ARTICLE_END;
+    }
+    g_newsgroup_exit_code = NG_MINUS;
+    push_char('n');
 }
 
 void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupResult expected)
@@ -1624,9 +1633,7 @@ void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupRe
     const std::pair<ArticleNum, Article *> position = std::make_pair(g_art, g_artp);
     const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
     const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
-    const MinorMode mode = g_mode;
-    g_newsgroup_exit_code = NG_MINUS;
-    push_char('n');
+    const MinorMode                        mode = g_mode;
 
     EXPECT_EQ(AS_CLEAN, art_switch(std::string{command}));
 
@@ -12491,37 +12498,15 @@ TEST_F(SubjectListingArticleTest, aLaterListingReloadsTheSubjectFormatFromTheEnv
     EXPECT_EQ(5, g_page_line);
 }
 
-TEST_F(QuitCommandArticleTest, lowerCaseQuitRequestsTheNextNewsgroup)
+TEST_P(QuitCommandArticleTest, preservesReadingStateAndPendingInputWhileExiting)
 {
-    expect_quit("q", NG_NEXT);
+    expect_quit(std::string{std::get<0>(GetParam()).first}, std::get<0>(GetParam()).second);
 }
 
-TEST_F(QuitCommandArticleTest, upperCaseQuitRequestsTheNewsgroupPrompt)
-{
-    expect_quit("Q", NG_ASK);
-}
-
-TEST_F(QuitCommandArticleTest, backtickQuitRequestsTheNewsgroupPrompt)
-{
-    expect_quit("`", NG_ASK);
-}
-
-TEST_F(QuitCommandArticleTest, quitVariantsPreserveTheEndOfGroupPosition)
-{
-    g_art = g_curr_art = ArticleNum{4};
-    g_artp = g_curr_artp = nullptr;
-    g_mode = MM_ARTICLE_END;
-    struct QuitCase
-    {
-        const char       *command;
-        DoNewsgroupResult result;
-    };
-    for (const QuitCase test_case : {QuitCase{"q", NG_NEXT}, QuitCase{"Q", NG_ASK}, QuitCase{"`", NG_ASK}})
-    {
-        SCOPED_TRACE(test_case.command);
-        expect_quit(test_case.command, test_case.result);
-    }
-}
+INSTANTIATE_TEST_SUITE_P(AliasAndPosition, QuitCommandArticleTest,
+                         testing::Combine(testing::Values(std::make_pair('q', NG_NEXT), std::make_pair('Q', NG_ASK),
+                                                          std::make_pair('`', NG_ASK)),
+                                          testing::Bool()));
 
 TEST_P(ScanEntryArticleTest, semicolonRequestsExplicitScanWithoutChangingTheReadingAnchor)
 {
