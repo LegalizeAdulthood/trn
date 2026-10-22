@@ -34,18 +34,24 @@ namespace fs = std::filesystem;
 class HeaderLineTypeLookupTest : public testing::Test
 {
 protected:
-    void SetUp() override
-    {
-        head_init();
-        g_head_buf.clear();
-        g_header_type[CUSTOM_LINE].name.clear();
-        g_header_type[CUSTOM_LINE].length = 0;
-    }
+    void SetUp() override;
 
     void TearDown() override
     {
         head_final();
     }
+};
+
+void HeaderLineTypeLookupTest::SetUp()
+{
+    head_init();
+    g_head_buf.clear();
+    g_header_type[CUSTOM_LINE].name.clear();
+    g_header_type[CUSTOM_LINE].length = 0;
+}
+
+class HeaderNameCaseTest : public HeaderLineTypeLookupTest, public testing::WithParamInterface<const char *>
+{
 };
 
 class HeaderParseTest : public testing::Test
@@ -141,11 +147,14 @@ protected:
 
 } // namespace
 
-TEST_F(HeaderLineTypeLookupTest, findsKnownHeaderIgnoringCase)
+TEST_P(HeaderNameCaseTest, findsKnownHeaderIgnoringCase)
 {
-    EXPECT_EQ(SUBJ_LINE, set_line_type("Subject"));
-    EXPECT_EQ(SUBJ_LINE, set_line_type("SUBJECT"));
+    const int line_type = set_line_type(GetParam());
+
+    EXPECT_EQ(SUBJ_LINE, line_type);
 }
+
+INSTANTIATE_TEST_SUITE_P(MixedAndUpperCase, HeaderNameCaseTest, testing::Values("Subject", "SUBJECT"));
 
 TEST_F(HeaderLineTypeLookupTest, rejectsHeaderWithWhitespaceBeforeColon)
 {
