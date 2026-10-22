@@ -1668,11 +1668,13 @@ normal_search:
         case '=': // list subjects
         {
             ArticleNum oldart = g_art;
+            Article *const oldartp = g_artp;
             page_start();
             article_walk(output_subject, AF_UNREAD);
             g_int_count = 0;
             g_subj_line = std::nullopt;
             g_art = oldart;
+            g_artp = oldartp;
             return AS_ASK;
         }
 
@@ -2232,6 +2234,7 @@ bool output_subject(Article &article, int flag)
         {
             subject_line.reserve(256);
             g_art = i;
+            g_artp = &article;
             fmt::format_to(std::back_inserter(subject_line), "{:<5} {}", i.value_of(), do_interp(*g_subj_line));
         }
         else

@@ -49,6 +49,7 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -4097,6 +4098,156 @@ void DownloadEndArticleTest::start_download()
     ASSERT_TRUE(testing::Mock::VerifyAndClearExpectations(m_connection.get()));
     EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("Last")).WillOnce(testing::Return("."));
 }
+
+class SubjectListingArticleTest : public RereadArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        set_listing_articles(long current = 4);
+    std::string list_subjects(std::string_view input = {});
+
+    trn::testing::MockEnvironment m_env;
+
+private:
+    DataSource                 m_data_source{};
+    DataSource                *m_old_data_source{g_data_source};
+    HeaderType                 m_old_subject_header{g_header_type[SUBJ_LINE]};
+    std::optional<std::string> m_old_subj_line{g_subj_line};
+    char                       m_old_int_count{g_int_count};
+    int                        m_old_page_line{g_page_line};
+    int                        m_old_tc_cols{g_tc_COLS};
+    int                        m_old_term_scrolled{g_term_scrolled};
+    bool                       m_old_erase_screen{g_erase_screen};
+    bool                       m_old_in_ng{g_in_ng};
+    std::string_view           m_old_tc_ce{g_tc_CE};
+    std::string_view           m_old_tc_so{g_tc_SO};
+    std::string_view           m_old_tc_se{g_tc_SE};
+};
+
+void SubjectListingArticleTest::SetUp()
+{
+    RereadArticleTest::SetUp();
+    g_data_source = &m_data_source;
+    g_header_type[SUBJ_LINE].flags |= HT_CACHED;
+    g_subj_line = std::nullopt;
+    g_int_count = 0;
+    g_page_line = 9;
+    g_tc_COLS = 80;
+    g_term_scrolled = 0;
+    g_erase_screen = false;
+    g_in_ng = true;
+    g_tc_CE = "\033[K";
+    g_tc_SO = "";
+    g_tc_SE = "";
+    m_env.expect_no_envar("SUBJLINE");
+}
+
+void SubjectListingArticleTest::TearDown()
+{
+    g_data_source = m_old_data_source;
+    g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_subj_line = m_old_subj_line;
+    g_int_count = m_old_int_count;
+    g_page_line = m_old_page_line;
+    g_tc_COLS = m_old_tc_cols;
+    g_term_scrolled = m_old_term_scrolled;
+    g_erase_screen = m_old_erase_screen;
+    g_in_ng = m_old_in_ng;
+    g_tc_CE = m_old_tc_ce;
+    g_tc_SO = m_old_tc_so;
+    g_tc_SE = m_old_tc_se;
+    RereadArticleTest::TearDown();
+}
+
+void SubjectListingArticleTest::set_listing_articles(long current)
+{
+    set_reading_position(current);
+    g_parsed_art = ArticleNum{};
+    m_subjects[0].m_str = "Re: First topic";
+    m_subjects[1].m_str = "Re: Middle topic";
+    m_subjects[2].m_str = "Re: Last topic";
+}
+
+std::string SubjectListingArticleTest::list_subjects(std::string_view input)
+{
+    const std::pair<ArticleNum, Article *>           article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticleNum                                 first = g_first_art;
+    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleNum                                 search_ahead = g_search_ahead;
+    const ArticlePosition                            position = g_art_pos;
+    const MinorMode                                  mode = g_mode;
+    const ArticleUnread                              unread = m_newsgroup.m_to_read;
+    const ArticleUnread                              selected = g_selected_count;
+    const int                                        selected_subjects = g_selected_subj_cnt;
+    const bool                                       selected_only = g_selected_only;
+    const bool                                       reread = g_reread;
+    const bool                                       force_last = g_force_last;
+    std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
+    for (const auto &[number, entry] : g_article_list)
+    {
+        flags.emplace_back(number, entry.m_flags);
+    }
+    std::vector<SubjectFlags> subject_flags;
+    for (const Subject &subject : m_subjects)
+    {
+        subject_flags.push_back(subject.m_flags);
+    }
+    push_char('q');
+    for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
+    {
+        push_char(*ch);
+    }
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch("=");
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(search_ahead, g_search_ahead);
+    EXPECT_EQ(position, g_art_pos);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(mode, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(reread, g_reread);
+    EXPECT_EQ(force_last, g_force_last);
+    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_FALSE(g_rotate);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_FALSE(g_subj_line.has_value());
+    EXPECT_EQ(flags.size(), g_article_list.size());
+    for (const auto &[number, expected] : flags)
+    {
+        SCOPED_TRACE(number.value_of());
+        EXPECT_EQ(expected, article_find(number)->m_flags);
+    }
+    for (std::size_t index = 0; index < subject_flags.size(); ++index)
+    {
+        EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
+    }
+    EXPECT_TRUE(macro_pending());
+    EXPECT_EQ('q', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+class SubjectListingPositionArticleTest : public SubjectListingArticleTest, public testing::WithParamInterface<long>
+{
+};
 
 } // namespace
 
@@ -11238,6 +11389,141 @@ TEST_P(DownloadEndArticleTest, finishesThePendingBodyAndTargetsTheEndInTheCurren
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutHiding, DownloadEndArticleTest, testing::Bool());
+
+TEST_P(SubjectListingPositionArticleTest, listsAllUnreadSubjectsInArticleOrderEvenInSelectedOnlyMode)
+{
+    set_listing_articles(GetParam());
+
+    const std::string output = list_subjects();
+
+    EXPECT_EQ("\n1     First topic\n4     Middle topic\n5     Middle topic\n7     Last topic\n", output);
+    EXPECT_EQ(5, g_page_line);
+}
+
+TEST_P(SubjectListingPositionArticleTest, customFormattingUsesEachListedArticleAndRestoresTheReadingAnchor)
+{
+    set_listing_articles(GetParam());
+    m_env.expect_env("SUBJLINE", "%a: %s");
+
+    const std::string output = list_subjects();
+
+    EXPECT_EQ("\n1     1: First topic\n4     4: Middle topic\n5     5: Middle topic\n7     7: Last topic\n", output);
+    EXPECT_EQ(5, g_page_line);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadUnreadAndGroupEnd, SubjectListingPositionArticleTest, testing::Values(2L, 4L, 8L));
+
+TEST_F(SubjectListingArticleTest, noUnreadArticlesProduceNoSubjectRows)
+{
+    set_listing_articles();
+    for (auto &[number, article] : g_article_list)
+    {
+        article.m_flags &= ~(AF_UNREAD | AF_SEL);
+    }
+    m_newsgroup.m_to_read = 0;
+    g_selected_count = 0;
+    g_selected_subj_cnt = 0;
+    g_selected_only = false;
+
+    const std::string output = list_subjects();
+
+    EXPECT_EQ("\n", output);
+    EXPECT_EQ(1, g_page_line);
+}
+
+TEST_F(SubjectListingArticleTest, anEmptyGroupReturnsToItsPromptWithoutCreatingArticles)
+{
+    set_articles({}, 1);
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE_END;
+
+    const std::string output = list_subjects();
+
+    EXPECT_EQ("\n", output);
+    EXPECT_TRUE(g_article_list.empty());
+    EXPECT_EQ(1, g_page_line);
+}
+
+TEST_F(SubjectListingArticleTest, aMissingUnreadArticleDoesNotProduceAStaleCachedSubject)
+{
+    set_listing_articles();
+    article_ptr(ArticleNum{3})->m_flags = AF_UNREAD;
+    ++m_newsgroup.m_to_read;
+
+    const std::string output = list_subjects();
+
+    EXPECT_EQ("\n1     First topic\n4     Middle topic\n5     Middle topic\n7     Last topic\n", output);
+    EXPECT_EQ(5, g_page_line);
+}
+
+TEST_F(SubjectListingArticleTest, anArticleWithoutASubjectIsSkippedWhileLaterSubjectsAreListed)
+{
+    set_listing_articles();
+    g_parsed_art = ArticleNum{4};
+    g_header_type[SUBJ_LINE].min_pos = ArticlePosition{-1};
+
+    const std::string output = list_subjects();
+
+    EXPECT_EQ("\n1     First topic\n5     Middle topic\n7     Last topic\n", output);
+    EXPECT_EQ(4, g_page_line);
+}
+
+TEST_F(SubjectListingArticleTest, aPendingInterruptStopsListingAndClearsTheInterruptAndCachedFormat)
+{
+    set_listing_articles();
+    g_int_count = 1;
+    g_subj_line = "cached: %s";
+
+    const std::string output = list_subjects();
+
+    EXPECT_EQ("\n", output);
+    EXPECT_EQ(1, g_page_line);
+}
+
+TEST_F(SubjectListingArticleTest, quittingTheMorePromptStopsCustomListingAndRetainsTheGroupEndAnchor)
+{
+    set_listing_articles(8);
+    m_env.expect_env("SUBJLINE", "%s");
+    g_tc_LINES = 3;
+    g_force_last = true;
+
+    const std::string output = list_subjects("q");
+
+    EXPECT_NE(std::string::npos, output.find("\n1     First topic\n4     Middle topic\n[MORE] "));
+    EXPECT_EQ(std::string::npos, output.find("5     "));
+    EXPECT_EQ(std::string::npos, output.find("Last topic"));
+    EXPECT_EQ(-1, g_page_line);
+}
+
+TEST_F(SubjectListingArticleTest, spaceAtTheMorePromptContinuesWithTheRemainingUnreadSubjects)
+{
+    set_listing_articles();
+    g_tc_LINES = 3;
+
+    const std::string output = list_subjects(" ");
+
+    EXPECT_NE(std::string::npos, output.find("\n1     First topic\n4     Middle topic\n[MORE] "));
+    EXPECT_NE(std::string::npos, output.find("5     Middle topic\n7     Last topic\n"));
+    EXPECT_EQ(3, g_page_line);
+}
+
+TEST_F(SubjectListingArticleTest, aLaterListingReloadsTheSubjectFormatFromTheEnvironment)
+{
+    set_listing_articles();
+    g_subj_line = "cached: %s";
+    m_env.expect_env("SUBJLINE", "fresh: %s");
+
+    const std::string first_output = list_subjects();
+    const std::string second_output = list_subjects();
+
+    EXPECT_EQ("\n1     cached: First topic\n4     cached: Middle topic\n5     cached: Middle topic\n7     cached: Last "
+              "topic\n",
+              first_output);
+    EXPECT_EQ(
+        "\n1     fresh: First topic\n4     fresh: Middle topic\n5     fresh: Middle topic\n7     fresh: Last topic\n",
+        second_output);
+    EXPECT_EQ(5, g_page_line);
+}
 
 TEST_F(QuitCommandArticleTest, lowerCaseQuitRequestsTheNextNewsgroup)
 {
