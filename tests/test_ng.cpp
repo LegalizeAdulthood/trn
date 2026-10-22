@@ -66,6 +66,7 @@ protected:
     void SetUp() override;
     void TearDown() override;
     void set_articles(std::initializer_list<ArticleFlags> flags, long current);
+    void set_siblings(long current);
 
     NewsgroupData m_newsgroup{};
 
@@ -3976,11 +3977,9 @@ void ReadStateArticleTest::TearDown()
 
 class SiblingArticleTest : public ArticleNavigationTest
 {
-protected:
-    void set_siblings(long current);
 };
 
-void SiblingArticleTest::set_siblings(long current)
+void ArticleStateTest::set_siblings(long current)
 {
     set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD,
@@ -4004,6 +4003,30 @@ void SiblingArticleTest::set_siblings(long current)
         article->m_child1 = link.child ? article_ptr(ArticleNum{link.child}) : nullptr;
         article->m_sibling = link.sibling ? article_ptr(ArticleNum{link.sibling}) : nullptr;
     }
+}
+
+class SiblingBoundaryRejectionArticleTest : public ArticleNavigationRejectionTest
+{
+protected:
+    void SetUp() override;
+};
+
+void SiblingBoundaryRejectionArticleTest::SetUp()
+{
+    ArticleNavigationRejectionTest::SetUp();
+    set_siblings(m_current.value_of());
+}
+
+class UnthreadedSiblingNavigationArticleTest : public SiblingBoundaryRejectionArticleTest
+{
+protected:
+    void SetUp() override;
+};
+
+void UnthreadedSiblingNavigationArticleTest::SetUp()
+{
+    SiblingBoundaryRejectionArticleTest::SetUp();
+    g_threaded_group = false;
 }
 
 class SubjectThreadArticleStateTest : public ArticleStateTest
@@ -9463,101 +9486,61 @@ TEST_P(SiblingArticleTest, visitsCousinAtSameDepthAcrossShallowBranch)
     EXPECT_FALSE(g_force_last);
 }
 
-TEST_P(SiblingArticleTest, preservesPositionAtFirstOrLastSiblingWithWarning)
+TEST_P(SiblingBoundaryRejectionArticleTest, preservesPositionAtFirstOrLastSiblingWithWarning)
 {
-    const ArticleNum current{GetParam() ? 10L : 3L};
-    set_siblings(current.value_of());
-    for (const bool verbose : {false, true})
-    {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        g_term_line = 0;
-        g_term_col = 0;
-        testing::internal::CaptureStdout();
+    const ArticleSwitchResult result = art_switch(std::string{std::get<0>(GetParam())});
 
-        const ArticleSwitchResult result = art_switch(GetParam() ? ")" : "(");
-
-        const std::string output = testing::internal::GetCapturedStdout();
-        const std::string expected =
-            verbose ? (GetParam() ? "This article has no next sibling." : "This article has no previous sibling.")
-                    : (GetParam() ? "No next sibling." : "No previous sibling.");
-        EXPECT_EQ(AS_ASK, result);
-        EXPECT_NE(std::string::npos, output.find(expected));
-        EXPECT_EQ(current, g_art);
-        EXPECT_EQ(article_ptr(current), g_artp);
-        EXPECT_EQ(current, g_curr_art);
-        EXPECT_EQ(article_ptr(current), g_curr_artp);
-        EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
-        EXPECT_EQ(ArticleUnread{3}, g_selected_count);
-        EXPECT_FALSE(g_reread);
-        EXPECT_FALSE(g_s_follow_temp);
-        EXPECT_FALSE(g_univ_follow_temp);
-        EXPECT_EQ(2, g_term_line);
-        EXPECT_EQ(0, g_term_col);
-    }
+    const std::string output = stop_capture();
+    const bool        next = std::get<0>(GetParam()) == ')';
+    const std::string expected =
+        std::get<1>(GetParam()) ? (next ? "This article has no next sibling." : "This article has no previous sibling.")
+                                : (next ? "No next sibling." : "No previous sibling.");
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos, output.find(expected));
+    EXPECT_EQ(m_current, g_art);
+    EXPECT_EQ(article_ptr(m_current), g_artp);
+    EXPECT_EQ(m_current, g_curr_art);
+    EXPECT_EQ(article_ptr(m_current), g_curr_artp);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
 }
 
-TEST_P(SiblingArticleTest, preservesEndOfGroupWithoutCurrentArticle)
+INSTANTIATE_TEST_SUITE_P(DirectionAndVerbosity, SiblingBoundaryRejectionArticleTest,
+                         testing::Values(std::make_tuple('(', false, 3L), std::make_tuple('(', true, 3L),
+                                         std::make_tuple(')', false, 10L), std::make_tuple(')', true, 10L)));
+
+INSTANTIATE_TEST_SUITE_P(Sibling, ThreadNavigationGroupEndArticleTest,
+                         testing::Combine(testing::Values('(', ')'), testing::Bool(), testing::Values(3L)));
+
+TEST_P(UnthreadedSiblingNavigationArticleTest, rejectsUnthreadedGroupWithoutMoving)
 {
-    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 3);
-    g_threaded_group = true;
-    for (const bool verbose : {false, true})
-    {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        g_term_line = 0;
-        g_term_col = 0;
-        testing::internal::CaptureStdout();
+    const ArticleSwitchResult result = art_switch(std::string{std::get<0>(GetParam())});
 
-        const ArticleSwitchResult result = art_switch(GetParam() ? ")" : "(");
-
-        const std::string output = testing::internal::GetCapturedStdout();
-        EXPECT_EQ(AS_ASK, result);
-        EXPECT_NE(std::string::npos, output.find(verbose ? "You're at the end of the group." : "End of group."));
-        EXPECT_EQ(ArticleNum{3}, g_art);
-        EXPECT_EQ(nullptr, g_artp);
-        EXPECT_EQ(ArticleNum{3}, g_curr_art);
-        EXPECT_EQ(nullptr, g_curr_artp);
-        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
-        EXPECT_FALSE(g_reread);
-        EXPECT_FALSE(g_s_follow_temp);
-        EXPECT_FALSE(g_univ_follow_temp);
-        EXPECT_EQ(2, g_term_line);
-        EXPECT_EQ(0, g_term_col);
-    }
+    const std::string output = stop_capture();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_NE(std::string::npos,
+              output.find(std::get<1>(GetParam()) ? "This group is not threaded." : "Unthreaded group."));
+    EXPECT_EQ(m_current, g_art);
+    ASSERT_EQ(article_ptr(m_current), g_artp);
+    EXPECT_EQ(m_current, g_curr_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(2, g_term_line);
+    EXPECT_EQ(0, g_term_col);
 }
 
-TEST_P(SiblingArticleTest, rejectsUnthreadedGroupWithoutMoving)
-{
-    set_siblings(6);
-    g_threaded_group = false;
-    for (const bool verbose : {false, true})
-    {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        g_term_line = 0;
-        g_term_col = 0;
-        testing::internal::CaptureStdout();
-
-        const ArticleSwitchResult result = art_switch(GetParam() ? ")" : "(");
-
-        const std::string output = testing::internal::GetCapturedStdout();
-        EXPECT_EQ(AS_ASK, result);
-        EXPECT_NE(std::string::npos, output.find(verbose ? "This group is not threaded." : "Unthreaded group."));
-        EXPECT_EQ(ArticleNum{6}, g_art);
-        ASSERT_EQ(article_ptr(ArticleNum{6}), g_artp);
-        EXPECT_EQ(ArticleNum{6}, g_curr_art);
-        EXPECT_EQ(g_artp, g_curr_artp);
-        EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, g_artp->m_flags);
-        EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
-        EXPECT_EQ(ArticleUnread{3}, g_selected_count);
-        EXPECT_FALSE(g_reread);
-        EXPECT_FALSE(g_s_follow_temp);
-        EXPECT_FALSE(g_univ_follow_temp);
-        EXPECT_EQ(2, g_term_line);
-        EXPECT_EQ(0, g_term_col);
-    }
-}
+INSTANTIATE_TEST_SUITE_P(DirectionAndVerbosity, UnthreadedSiblingNavigationArticleTest,
+                         testing::Combine(testing::Values('(', ')'), testing::Bool(), testing::Values(6L)));
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, SiblingArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Next" : "Previous"; });
