@@ -82,6 +82,23 @@ std::vector<std::string> ConnectedMockNntpServerTest::read_lines(std::size_t cou
     return lines;
 }
 
+class GroupedMockNntpServerTest : public ConnectedMockNntpServerTest
+{
+protected:
+    void SetUp() override
+    {
+        m_server.expect_group("comp.lang.apl", 1, 623, 623);
+    }
+    void connect_group();
+};
+
+void GroupedMockNntpServerTest::connect_group()
+{
+    ASSERT_NO_FATAL_FAILURE(connect());
+    write_line(m_socket, "GROUP comp.lang.apl");
+    ASSERT_EQ("211 1 623 623 comp.lang.apl\r\n", read_line(m_socket, m_buffer));
+}
+
 } // namespace
 
 TEST(MockNntpServerTest, startsOnLoopbackPort)
@@ -205,39 +222,53 @@ TEST_F(ConnectedMockNntpServerTest, sendsExpectedQuitResponse)
     EXPECT_EQ("205 closing connection\r\n", response);
 }
 
-TEST(MockNntpServerTest, sendsExpectedGroupAndArticleReadResponses)
+TEST_F(ConnectedMockNntpServerTest, sendsExpectedGroupResponse)
 {
-    MockNntpServer server;
-    server.expect_group("comp.lang.apl", 1, 623, 623);
-    server.expect_listgroup({623});
-    server.expect_head(623, {"From: reader@example.test", "Subject: hello"});
-    server.expect_body(623, {"body line"});
-    server.expect_quit();
-    server.start();
+    m_server.expect_group("comp.lang.apl", 1, 623, 623);
+    ASSERT_NO_FATAL_FAILURE(connect());
 
-    asio::io_context context;
-    tcp::socket      socket = connect_to_loopback(context, server.port());
-    std::string      buffer;
+    write_line(m_socket, "GROUP comp.lang.apl");
+    const std::string response = read_line(m_socket, m_buffer);
 
-    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket, buffer));
-    write_line(socket, "GROUP comp.lang.apl");
-    EXPECT_EQ("211 1 623 623 comp.lang.apl\r\n", read_line(socket, buffer));
-    write_line(socket, "LISTGROUP");
-    EXPECT_EQ("211 list follows\r\n", read_line(socket, buffer));
-    EXPECT_EQ("623\r\n", read_line(socket, buffer));
-    EXPECT_EQ(".\r\n", read_line(socket, buffer));
-    write_line(socket, "HEAD 623");
-    EXPECT_EQ("221 623 <message@example.test> header follows\r\n", read_line(socket, buffer));
-    EXPECT_EQ("From: reader@example.test\r\n", read_line(socket, buffer));
-    EXPECT_EQ("Subject: hello\r\n", read_line(socket, buffer));
-    EXPECT_EQ(".\r\n", read_line(socket, buffer));
-    write_line(socket, "BODY 623");
-    EXPECT_EQ("222 623 <message@example.test> body follows\r\n", read_line(socket, buffer));
-    EXPECT_EQ("body line\r\n", read_line(socket, buffer));
-    EXPECT_EQ(".\r\n", read_line(socket, buffer));
-    write_line(socket, "QUIT");
-    EXPECT_EQ("205 closing connection\r\n", read_line(socket, buffer));
-    server.verify();
+    EXPECT_EQ("211 1 623 623 comp.lang.apl\r\n", response);
+}
+
+TEST_F(GroupedMockNntpServerTest, sendsExpectedListGroupResponse)
+{
+    m_server.expect_listgroup({623});
+    ASSERT_NO_FATAL_FAILURE(connect_group());
+    const std::vector<std::string> expected{"211 list follows\r\n", "623\r\n", ".\r\n"};
+
+    write_line(m_socket, "LISTGROUP");
+    const std::vector<std::string> response = read_lines(expected.size());
+
+    EXPECT_EQ(expected, response);
+}
+
+TEST_F(GroupedMockNntpServerTest, sendsExpectedHeadResponse)
+{
+    m_server.expect_head(623, {"From: reader@example.test", "Subject: hello"});
+    ASSERT_NO_FATAL_FAILURE(connect_group());
+    const std::vector<std::string> expected{"221 623 <message@example.test> header follows\r\n",
+                                            "From: reader@example.test\r\n", "Subject: hello\r\n", ".\r\n"};
+
+    write_line(m_socket, "HEAD 623");
+    const std::vector<std::string> response = read_lines(expected.size());
+
+    EXPECT_EQ(expected, response);
+}
+
+TEST_F(GroupedMockNntpServerTest, sendsExpectedBodyResponse)
+{
+    m_server.expect_body(623, {"body line"});
+    ASSERT_NO_FATAL_FAILURE(connect_group());
+    const std::vector<std::string> expected{"222 623 <message@example.test> body follows\r\n", "body line\r\n",
+                                            ".\r\n"};
+
+    write_line(m_socket, "BODY 623");
+    const std::vector<std::string> response = read_lines(expected.size());
+
+    EXPECT_EQ(expected, response);
 }
 
 TEST(MockNntpServerTest, verifyReportsUnexpectedCommand)
