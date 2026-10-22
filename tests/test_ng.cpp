@@ -1891,7 +1891,6 @@ protected:
                                 const std::function<void(ArticleNum)> &progress = {});
     std::string enter_search(char direction, std::string_view input, ArticleSwitchResult expected,
                              const std::function<void(ArticleNum)> &progress = {});
-    void        expect_interrupted_search(long current);
 
 private:
     DataSource            m_data_source{};
@@ -2891,8 +2890,24 @@ class KillSubjectSearchArticleTest : public KillSubjectArticleTest, public testi
 {
 };
 
-void SearchCommandArticleTest::expect_interrupted_search(long current)
+class InterruptedSearchArticleTest : public SearchCommandArticleTest,
+                                     public testing::WithParamInterface<std::tuple<char, bool, long>>
 {
+protected:
+    void SetUp() override;
+
+    ArticleNum                      m_current{};
+    long                            m_first{};
+    long                            m_interrupted{};
+    std::vector<ArticleNum>         m_visited;
+    std::function<void(ArticleNum)> m_progress;
+};
+
+void InterruptedSearchArticleTest::SetUp()
+{
+    SearchCommandArticleTest::SetUp();
+    const long current = std::get<2>(GetParam());
+    m_current = ArticleNum{current};
     set_search_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
                          AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
                          AF_EXISTS | AF_UNREAD},
@@ -2902,47 +2917,21 @@ void SearchCommandArticleTest::expect_interrupted_search(long current)
     m_subjects[0].m_flags |= SF_SEL;
     m_subjects[2].m_flags |= SF_SEL;
     g_parsed_art = ArticleNum{3};
-    for (const bool verbose : {false, true})
+    g_verbose = std::get<1>(GetParam());
+    g_search_ahead = ArticleNum{4};
+    const char direction = std::get<0>(GetParam());
+    m_first = direction == '/' ? (current > g_last_art.value_of() ? 1 : current + 1) : current - 1;
+    m_interrupted = m_first + (direction == '/' ? 1 : -1);
+    m_progress = [this](ArticleNum article)
     {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        for (const char direction : {'/', '?'})
+        EXPECT_EQ(0, g_int_count);
+        m_visited.push_back(article);
+        if (m_visited.size() == 2)
         {
-            SCOPED_TRACE(direction);
-            g_art = g_curr_art = ArticleNum{current};
-            g_artp = g_curr_artp = g_art <= g_last_art ? article_ptr(g_art) : nullptr;
-            g_search_ahead = ArticleNum{4};
-            std::vector<ArticleNum> visited;
-            const auto              progress = [&](ArticleNum article)
-            {
-                EXPECT_EQ(0, g_int_count);
-                visited.push_back(article);
-                if (visited.size() == 2)
-                {
-                    EXPECT_EQ(article_ptr(visited.front()), g_artp);
-                    g_int_count = 1;
-                }
-            };
-
-            const std::string output = search_articles(direction, "absent", AS_ASK, progress);
-
-            const long first = direction == '/' ? (current > g_last_art.value_of() ? 1 : current + 1) : current - 1;
-            const long interrupted = first + (direction == '/' ? 1 : -1);
-            EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{first}, ArticleNum{interrupted}}), visited);
-            EXPECT_NE(std::string::npos, output.find(std::string{verbose ? "(Interrupted at article " : "(Intr at "} +
-                                                     std::to_string(interrupted) + ")"));
-            EXPECT_EQ(std::string::npos, output.find("Not found."));
-            EXPECT_EQ(ArticleNum{current}, g_art);
-            EXPECT_EQ(g_curr_artp, g_artp);
-            EXPECT_EQ(0, g_int_count);
-            EXPECT_EQ("absent", g_last_pat);
-            EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
-            EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
-            EXPECT_EQ(SF_VISIT, m_subjects[1].m_flags);
-            EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
-            EXPECT_FALSE(g_force_last);
+            EXPECT_EQ(article_ptr(m_visited.front()), g_artp);
+            g_int_count = 1;
         }
-    }
+    };
 }
 
 class NextUnreadArticleTest : public ArticleNavigationTest
@@ -11413,15 +11402,28 @@ INSTANTIATE_TEST_SUITE_P(GroupEnd, FailedDirectionalSearchArticleTest,
                          testing::Values(FailedDirectionalSearchCase{'/', "absent", 8, AF_EXISTS, AF_NONE},
                                          FailedDirectionalSearchCase{'?', "absent", 8, AF_EXISTS, AF_NONE}));
 
-TEST_F(SearchCommandArticleTest, interruptionRestoresCurrentArticleNumberAndPointer)
+TEST_P(InterruptedSearchArticleTest, restoresCurrentArticleAndReportsTheInterruption)
 {
-    expect_interrupted_search(3);
+    const std::string output = search_articles(std::get<0>(GetParam()), "absent", AS_ASK, m_progress);
+
+    EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{m_first}, ArticleNum{m_interrupted}}), m_visited);
+    EXPECT_NE(std::string::npos,
+              output.find(std::string{std::get<1>(GetParam()) ? "(Interrupted at article " : "(Intr at "} +
+                          std::to_string(m_interrupted) + ")"));
+    EXPECT_EQ(std::string::npos, output.find("Not found."));
+    EXPECT_EQ(m_current, g_art);
+    EXPECT_EQ(g_curr_artp, g_artp);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_EQ("absent", g_last_pat);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
+    EXPECT_EQ(SF_VISIT, m_subjects[1].m_flags);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
+    EXPECT_FALSE(g_force_last);
 }
 
-TEST_F(SearchCommandArticleTest, interruptionFromGroupEndRestoresTheNullCurrentPointer)
-{
-    expect_interrupted_search(8);
-}
+INSTANTIATE_TEST_SUITE_P(DirectionVerbosityAndPosition, InterruptedSearchArticleTest,
+                         testing::Combine(testing::Values('/', '?'), testing::Bool(), testing::Values(3L, 8L)));
 
 TEST_P(InvalidPatternSearchArticleTest, preservesPositionAndSelection)
 {
