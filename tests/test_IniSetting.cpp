@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
+#include <ostream>
 #include <string>
 #include <string_view>
 
@@ -16,6 +18,33 @@ std::string setting_value(std::string_view name, std::string_view raw_value)
     return setting.value();
 }
 
+struct SettingNormalizationCase
+{
+    const char *name;
+    const char *raw_value;
+    const char *expected;
+};
+
+void PrintTo(const SettingNormalizationCase &value, std::ostream *stream)
+{
+    *stream << value.name;
+}
+
+class SettingNormalizationTest : public testing::TestWithParam<SettingNormalizationCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string               m_source;
+    std::optional<IniSetting> m_setting;
+};
+
+void SettingNormalizationTest::SetUp()
+{
+    m_source = GetParam().raw_value;
+    m_setting.emplace(GetParam().name, m_source);
+}
+
 } // namespace
 
 TEST(IniSettingTest, exposesName)
@@ -25,22 +54,26 @@ TEST(IniSettingTest, exposesName)
     EXPECT_EQ(std::string_view{"Alpha Key"}, setting.name());
 }
 
-TEST(IniSettingTest, normalizesValueText)
+TEST_P(SettingNormalizationTest, normalizesTheSettingValue)
 {
-    EXPECT_EQ("one", setting_value("Alpha Key", " one # comment"));
-    EXPECT_EQ("two # not comment", setting_value("Beta Key", " \"two # not comment\" # comment"));
-    EXPECT_EQ("hello\nthere", setting_value("Escaped Key", " hello\\nthere"));
-    EXPECT_EQ("line continued", setting_value("Continued Key", " line\\\n continued"));
-    EXPECT_EQ("", setting_value("Empty Key", " # comment"));
-    EXPECT_EQ("text", setting_value("Trailing Key", " text     "));
-    EXPECT_EQ("  padded  ", setting_value("Quoted Key", " '  padded  '  # tail"));
+    const std::string value = m_setting->value();
+
+    EXPECT_EQ(GetParam().expected, value);
 }
 
-TEST(IniSettingTest, normalizesNumericEscapes)
-{
-    EXPECT_EQ("AA", setting_value("Octal Key", " \\101A"));
-    EXPECT_EQ("A!", setting_value("Hex Key", " \\x41!"));
-}
+INSTANTIATE_TEST_SUITE_P(
+    ValueText, SettingNormalizationTest,
+    testing::Values(SettingNormalizationCase{"Alpha Key", " one # comment", "one"},
+                    SettingNormalizationCase{"Beta Key", " \"two # not comment\" # comment", "two # not comment"},
+                    SettingNormalizationCase{"Escaped Key", " hello\\nthere", "hello\nthere"},
+                    SettingNormalizationCase{"Continued Key", " line\\\n continued", "line continued"},
+                    SettingNormalizationCase{"Empty Key", " # comment", ""},
+                    SettingNormalizationCase{"Trailing Key", " text     ", "text"},
+                    SettingNormalizationCase{"Quoted Key", " '  padded  '  # tail", "  padded  "}));
+
+INSTANTIATE_TEST_SUITE_P(NumericEscapes, SettingNormalizationTest,
+                         testing::Values(SettingNormalizationCase{"Octal Key", " \\101A", "AA"},
+                                         SettingNormalizationCase{"Hex Key", " \\x41!", "A!"}));
 
 TEST(IniSettingTest, preservesTrailingBackslash)
 {
