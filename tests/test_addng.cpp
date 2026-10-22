@@ -174,6 +174,48 @@ void EmptyAddGroupQueryTest::SetUp()
     sort_add_groups();
 }
 
+class GrownAddGroupIdentityTest : public AddGroupStorageTest
+{
+protected:
+    void SetUp() override;
+
+    AddGroupIndex m_beta{};
+    AddGroupIndex m_alpha{};
+    Selection     m_item{};
+};
+
+void GrownAddGroupIdentityTest::SetUp()
+{
+    AddGroupStorageTest::SetUp();
+    m_beta = add_to_list("comp.lang.beta", 5, ':');
+    m_alpha = add_to_list("comp.lang.alpha", 3, '!');
+    ASSERT_NE(AddGroupIndex::None, m_beta);
+    ASSERT_NE(AddGroupIndex::None, m_alpha);
+    g_sel_page_gp = m_beta;
+    g_sel_next_gp = m_alpha;
+    m_item.gp = m_beta;
+    for (int i = 0; i != 256; ++i)
+    {
+        add_to_list("news.test." + std::to_string(i), i, 0);
+    }
+    g_sel_sort = SS_STRING;
+}
+
+class NaturalAddGroupOrderTest : public GrownAddGroupIdentityTest
+{
+protected:
+    void SetUp() override;
+};
+
+void NaturalAddGroupOrderTest::SetUp()
+{
+    GrownAddGroupIdentityTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    sort_add_groups();
+    ASSERT_EQ(m_beta, add_to_list("comp.lang.beta", 99, '!'));
+    g_sel_sort = SS_NATURAL;
+}
+
 class ScanActiveTest : public testing::Test
 {
 protected:
@@ -626,32 +668,23 @@ TEST_P(EmptyAddGroupQueryTest, reportsNoStoredGroups)
 INSTANTIATE_TEST_SUITE_P(Query, EmptyAddGroupQueryTest, testing::ValuesIn(EMPTY_GROUP_QUERY_CASES),
                          [](const testing::TestParamInfo<EmptyGroupQueryCase> &info) { return info.param.name; });
 
-TEST_F(AddGroupStorageTest, pageAndSelectionIdentitySurvivesGrowthAndSorting)
+TEST_F(GrownAddGroupIdentityTest, preservesPageSelectionAndDuplicateIdentityAcrossSorting)
 {
-    const AddGroupIndex beta = add_to_list("comp.lang.beta", 5, ':');
-    const AddGroupIndex alpha = add_to_list("comp.lang.alpha", 3, '!');
-    g_sel_page_gp = beta;
-    g_sel_next_gp = alpha;
-    Selection item{};
-    item.gp = beta;
-    for (int i = 0; i != 256; ++i)
-    {
-        add_to_list("news.test." + std::to_string(i), i, 0);
-    }
-    g_sel_sort = SS_STRING;
     sort_add_groups();
 
-    EXPECT_EQ(alpha, g_add_groups.first());
+    EXPECT_EQ(m_alpha, g_add_groups.first());
     EXPECT_EQ("comp.lang.beta", g_add_groups[g_sel_page_gp].m_name);
     EXPECT_EQ("comp.lang.alpha", g_add_groups[g_sel_next_gp].m_name);
-    EXPECT_EQ(AGF_SEL, g_add_groups[item.gp].m_flags);
-    EXPECT_EQ(beta, add_to_list("comp.lang.beta", 99, '!'));
+    EXPECT_EQ(AGF_SEL, g_add_groups[m_item.gp].m_flags);
+    EXPECT_EQ(m_beta, add_to_list("comp.lang.beta", 99, '!'));
+}
 
-    g_sel_sort = SS_NATURAL;
+TEST_F(NaturalAddGroupOrderTest, restoresInsertionOrderAfterNameSorting)
+{
     sort_add_groups();
 
-    EXPECT_EQ(beta, g_add_groups.first());
-    EXPECT_EQ(alpha, g_add_groups.next(beta));
+    EXPECT_EQ(m_beta, g_add_groups.first());
+    EXPECT_EQ(m_alpha, g_add_groups.next(m_beta));
 }
 
 TEST_F(AddGroupStorageTest, nameAndCountSortingUseDirectionAndNameTies)
